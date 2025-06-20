@@ -1,0 +1,68 @@
+<?php
+defined('BASEPATH') or exit('No direct script access allowed');
+require_once APPPATH . 'models/my_model.php';
+class qoi_model extends my_model 
+{
+    public function __construct()
+    {
+        parent::__construct();
+        $this->load->database();
+        
+    }
+
+    public function generate_dwg_id(){
+        $data = $this->db->select('NVL(MAX(MID),0) AS MID')->get('QOI_DWGMASTER')->result();
+        return $data[0]->MID+1;
+    }
+
+    public function generate_file_id($mid){
+        $this->db->select('NVL(MAX(FID),0) AS FID')
+                ->from('QOI_ATTFILE')
+                ->where('MID', $mid);
+        return $this->db->get()->result()[0]->FID+1;
+    }
+
+    public function get_qoi_schedule($year)
+    {
+        $next = $year+1;
+        $q = "CASE 
+        WHEN MON IS NULL THEN 'Unspecified'
+        ELSE TO_CHAR(TO_DATE(S.MON,'yyyymm'),'MON')
+        END as MON , M.* ,  S.MON AS MONNUM  , TO_CHAR(TO_DATE(S.MON,'yyyymm'),'MON yyyy')  AS MONSTR , (SELECT LISTAGG(SUBSTR(MON,5,2), ',') WITHIN GROUP (ORDER BY MON) MONLIST  FROM  QOI_DWGSCHEDULE WHERE MID = M.MID) AS SCH ";
+        $q .= ", (SELECT LISTAGG(FID||'|'||SFILE||'|'||UFILE||'|'||FTYPE, ',') WITHIN GROUP (ORDER BY FID) ATTFILE  FROM  QOI_ATTFILE WHERE MID = M.MID) AS ATTFILE ";
+        $this->db->select($q)
+            ->from('QOI_DWGMASTER M')
+            ->join('QOI_DWGSCHEDULE S', 'M.MID = S.MID', 'left')
+            ->where("MON >= $year"."04")
+            ->where("MON <= $next"."03")
+            ->or_where("MON IS NULL")
+            ->order_by('TO_DATE(S.MON,\'yyyymm\') ASC');
+        return $this->db->get()->result();
+    }
+
+    public function deletesch($con){
+        $this->db->where($con);
+        return $this->db->delete('QOI_DWGSCHEDULE');
+    }
+
+    public function execsql($q)
+	{
+		$this->db->query($q);
+	}
+    
+    public function getdatasql($q)
+	{
+		return $this->db->query($q)->result();
+	}
+
+    public function getDwgrev($drawingNo)
+    {
+        $pdm = $this->load->database('pdm', TRUE);
+        $sql="SELECT fml.drawing_no,fml.revision_no,fml.internal_revision_no,vfml.file_seqno,vfml.file_name,vfml.folder_path,vfml.file_extention,vfml.file_name||'_'|| CAST(vfml.internal_revision_no AS TEXT) ||'_DWGVIEW_'||CAST(vfml.file_seqno AS TEXT) AS tifname 
+        FROM(SELECT drawing_no,revision_no,internal_revision_no
+        FROM  pdm.drawing_fml WHERE drawing_no=? AND  latest_released_flg='1' AND drawing_status='9') fml
+        INNER JOIN  pdm.drawing_view_fml  vfml  ON vfml.drawing_no=fml.drawing_no AND vfml.revision_no=fml.revision_no";
+        return $pdm->query($sql,array($drawingNo))->result();
+    }
+
+}

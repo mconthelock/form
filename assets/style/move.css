@@ -1,0 +1,217 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.draw-container {
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-image: linear-gradient(
+    to bottom,
+    #b4b2b3,
+    #b4b2b3 70%,
+    #b4b2b3 71%,
+    #ededed
+  );
+  /* background-color: #222; */
+}
+
+.draw-container .draw {
+  height: 600px;
+  width: 450px;
+  position: relative;
+}
+
+/* Rocket */
+.draw-container .rocket {
+  position: absolute;
+  height: 180px;
+  width: 80px;
+  top: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-radius: 50% 50% 25% 25% / 50% 50% 40% 40%;
+  background-color: #dadada;
+  box-shadow: 0 -3px 0 #fff;
+  transform-style: preserve-3d;
+  z-index: 2;
+  animation: animateRocket 1s linear alternate infinite;
+}
+
+.draw-container .rocket::before,
+.draw-container .rocket:after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.draw-container .rocket::before {
+  width: 55%;
+  height: 10px;
+  background-color: #d43e07;
+  bottom: -10px;
+  border-radius: 0% 0% 25% 25% / 50% 50% 40% 40%;
+}
+
+.draw-container .rocket:after {
+  height: 55px;
+  width: 155%;
+  background-color: #9e554f;
+  bottom: 0;
+  z-index: -10;
+  transform: translateX(-50%) translateZ(-1px);
+  border-radius: 50% 50% 10% 10% / 90% 90% 20% 20%;
+}
+
+.draw-container .rocket .window {
+  position: absolute;
+  height: 30px;
+  width: 30px;
+  top: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background-color: #9e554f;
+  box-sizing: initial;
+  border: 5px solid #adadad;
+}
+
+@keyframes animateRocket {
+  to {
+    transform: translateX(-50%) translateY(75px);
+  }
+}
+
+/* Smoke */
+.draw-container .smoke {
+  height: 200px;
+  width: 32px;
+  top: 260px;
+  left: 50%;
+  transform: translateX(-50%);
+  position: absolute;
+  z-index: 1;
+  background-image: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.1),
+    rgba(255, 255, 255, 0.9)
+  );
+}
+
+.draw-container .smoke > div {
+  position: absolute;
+  border-radius: 50%;
+}
+
+.draw-container .smoke .one {
+  height: 200px;
+  width: 200px;
+  background-color: rgba(255, 255, 255, 0.4);
+  top: 80px;
+  left: -180px;
+  box-shadow: -50px 80px 0 -30px rgba(255, 255, 255, 0.4),
+    160px 80px 0 0px rgba(255, 255, 255, 0.4),
+    290px 80px 0 -50px rgba(255, 255, 255, 0.4);
+  animation: animateSmoke 3s linear alternate infinite;
+  opacity: 0.9;
+}
+
+.draw-container .smoke .two {
+  height: 210px;
+  width: 210px;
+  top: 120px;
+  left: -90px;
+  background-color: rgba(255, 255, 255, 1);
+  box-shadow: -90px 0px 0 -40px rgba(255, 255, 255, 1),
+    90px 60px 0 -80px rgba(255, 255, 255, 1),
+    80px -40px 0 -50px rgba(255, 255, 255, 1);
+  animation: animateSmoke 1s linear alternate-reverse infinite;
+  opacity: 1;
+}
+
+@keyframes animateSmoke {
+  to {
+    opacity: 1;
+    transform: scale(0.5) translate(1px);
+  }
+}
+
+/* Stars */
+.draw-container .stars {
+  top: 150px;
+}
+
+.draw-container .stars .star,
+.draw-container .stars .star:before {
+  position: absolute;
+  background-color: #fff;
+  border-radius: 50% 50% 50% 50% / 50% 50% 50% 50%;
+  box-shadow: 0 0 7px rgba(255, 255, 255, 0.5);
+}
+
+.draw-container .stars .star {
+  height: 15px;
+  width: 2px;
+}
+
+.draw-container .stars .star:before {
+  content: "";
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform: rotate(90deg);
+}
+
+.draw-container .stars .star.small {
+  height: 10px;
+  width: 1px;
+}
+
+.draw-container .stars .star.one {
+  top: 10%;
+  left: 10%;
+}
+
+.draw-container .stars .star.two {
+  top: 40%;
+  height: 10px;
+}
+
+.draw-container .stars .star.three {
+  top: 50%;
+  left: 50%;
+}
+
+.draw-container .stars .star.four {
+  top: 57%;
+  left: 70%;
+}
+
+.draw-container .stars .star.five {
+  top: 25%;
+  left: 70%;
+}
+
+.draw-container .stars .star.six {
+  top: 15%;
+  left: 110%;
+}
+
+.draw-container .stars .star.seven {
+  top: 60%;
+  left: 120%;
+}
+
+.draw-container .stars .star.eight {
+  top: 75%;
+  left: -10%;
+}

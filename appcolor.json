@@ -1,0 +1,256 @@
+{
+    "applications": [
+      {
+        "id": 1000,
+        "code": "PR",
+        "name": "Procurement",
+        "type": "1",
+        "url": "http://webflow/procurement/",
+        "color": "#d946ef",
+        "group": "1"
+      },
+      {
+        "id": 1023,
+        "code": "OIS",
+        "name": "OIS",
+        "type": "2",
+        "url": "https://amecweb.mitsubishielevatorasia.co.th/iedocument/ois/directlogin/",
+        "color": "#0284c7",
+        "group": "1"
+      },
+      {
+        "id": 1024,
+        "code": "OPL",
+        "name": "OPL",
+        "type": "2",
+        "url": "https://amecweb.mitsubishielevatorasia.co.th/iedocument/ois/directlogin/",
+        "color": "#0891b2",
+        "group": "1"
+      },
+      {
+        "id": 20,
+        "code": "HR",
+        "name": "HR Systen",
+        "type": "1",
+        "url": "/gpsystem",
+        "color": "#1e3a8a",
+        "group": "1"
+      },
+      {
+        "id": 17,
+        "code": "MFG",
+        "name": "MFG Moniter",
+        "type": "1",
+        "url": "/mfgmonitor",
+        "color": "#65a30d",
+        "group": "1"
+      },
+      {
+        "id": 12,
+        "code": "ST",
+        "name": "Safety System",
+        "type": "1",
+        "url": "/authen",
+        "color": "#d97706",
+        "group": "1"
+      },
+      {
+        "id": 1001,
+        "code": "GO",
+        "name": "GO Design Information",
+        "type": "2",
+        "url": "http://webflow.mitsubishielevatorasia.co.th/goDesAuto/",
+        "color": "#0ea5e9",
+        "group": "2"
+      },
+      {
+        "id": 1002,
+        "code": "TM",
+        "name": "T-Manual On Web",
+        "type": "2",
+        "url": "http://webflow.mitsubishielevatorasia.co.th/tmanweb/index.asp/",
+        "color": "#0ea5e9",
+        "group": "2"
+      },
+      {
+        "id": 1003,
+        "code": "PDM",
+        "name": "PDM",
+        "type": "2",
+        "url": "http://pdmapp4.mitsubishielevatorasia.co.th/",
+        "color": "#0ea5e9",
+        "group": "2"
+      },
+      {
+        "id": 1004,
+        "code": "ED",
+        "name": "E-Drawing",
+        "type": "2",
+        "url": "http://amecweb/pdmmfg/",
+        "color": "#0ea5e9",
+        "group": "2"
+      },
+      {
+        "id": 1005,
+        "code": "MT",
+        "name": "Material Traceability",
+        "type": "2",
+        "url": "https://portal.mitsubishielevatorasia.co.th/sites/RD/Pages/default.aspx",
+        "color": "#0ea5e9",
+        "group": "2"
+      },
+      {
+        "id": 1006,
+        "code": "DS",
+        "name": "Design & MFG Schedule",
+        "type": "2",
+        "url": "http://webflow/marketing/",
+        "color": "#0ea5e9",
+        "group": "2"
+      },
+      {
+        "id": 1007,
+        "code": "ES",
+        "name": "ELMES",
+        "type": "2",
+        "url": "http://elmesamec/",
+        "color": "#0ea5e9",
+        "group": "2"
+      },
+      {
+        "id": 1008,
+        "code": "SE",
+        "name": "Search ELMES",
+        "type": "2",
+        "url": "http://amecweb/data_elmes",
+        "color": "#0ea5e9",
+        "group": "2"
+      },
+      {
+        "id": 1009,
+        "code": "AT",
+        "name": "Time Attendance Record",
+        "type": "2",
+        "url": "http://webflow/attendance/timeAtt/?chk=1",
+        "color": "#991b1b",
+        "group": "3"
+      },
+      {
+        "id": 1010,
+        "code": "DR",
+        "name": "Door Record",
+        "type": "2",
+        "url": "http://webflow/attendance/timeAtt/?chk=1",
+        "color": "#991b1b",
+        "group": "3"
+      },
+      {
+        "id": 1011,
+        "code": "NS",
+        "name": "First Aid",
+        "type": "2",
+        "url": "http://webflow/firstaid/",
+        "color": "#991b1b",
+        "group": "3"
+      },
+      {
+        "id": 1012,
+        "code": "ML",
+        "name": "Auto reply mail",
+        "type": "2",
+        "url": "https://amecoutlook.mitsubishielevatorasia.co.th/owa/",
+        "color": "#991b1b",
+        "group": "3"
+      },
+      {
+        "id": 1013,
+        "code": "PH",
+        "name": "AMEC Telephone Directory",
+        "type": "2",
+        "url": "http://webflow/form/TelDir/directory.asp",
+        "color": "#991b1b",
+        "group": "3"
+      },
+      {
+        "id": 1014,
+        "code": "FR",
+        "name": "Record Attendance to FINGER SCAN ",
+        "type": "2",
+        "url": "http://webflow/attendance/timeAtt/recTimeAtt.asp",
+        "color": "#991b1b",
+        "group": "3"
+      },
+      {
+        "id": 1015,
+        "code": "DW",
+        "name": "Darwin",
+        "type": "2",
+        "url": "https://www.mitsubishi-elevator.net/DARWIN/",
+        "color": "#334155",
+        "group": "4"
+      },
+      {
+        "id": 1016,
+        "code": "SCM",
+        "name": "SCM",
+        "type": "2",
+        "url": "https://scm.mitsubishielevatorasia.co.th/amecscm/",
+        "color": "#334155",
+        "group": "4"
+      },
+      {
+        "id": 1017,
+        "code": "IMS",
+        "name": "IMS",
+        "type": "2",
+        "url": "http://amecwebtest/ims/",
+        "color": "#334155",
+        "group": "4"
+      },
+      {
+        "id": 1018,
+        "code": "EL",
+        "name": "E-Learning",
+        "type": "2",
+        "url": "http://amecweb/knowledge/welcome",
+        "color": "#334155",
+        "group": "4"
+      },
+      {
+        "id": 1019,
+        "code": "VN",
+        "name": "Vanning System",
+        "type": "2",
+        "url": "http://amecvan/vanning/",
+        "color": "#334155",
+        "group": "4"
+      },
+      {
+        "id": 1020,
+        "code": "SH",
+        "name": "Sharepoint System",
+        "type": "2",
+        "url": "http://webflow/form/sharepoint/sharepoint.asp",
+        "color": "#334155",
+        "group": "4"
+      },
+      {
+        "id": 1021,
+        "code": "MM",
+        "name": "MIMS",
+        "type": "2",
+        "url": "http://amecweb/mims/",
+        "color": "#334155",
+        "group": "4"
+      },
+      {
+        "id": 1022,
+        "code": "MG",
+        "name": "MELGLS",
+        "type": "2",
+        "url": "https://www.mitsubishielectric.com/melgls/index.html",
+        "color": "#334155",
+        "group": "4"
+      }
+    ]
+  }

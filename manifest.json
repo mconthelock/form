@@ -1,0 +1,19 @@
+{
+    "short_name": "Webflow",
+    "name": "Webflow",
+    "icons": [
+      {
+        "src": "assets/images/icon_192.png",
+        "type": "image/png",
+        "sizes": "192x192",
+        "purpose": "any maskable"
+      }
+    ],
+    "start_url": ".",
+    "background_color": "#fff",
+    "display": "standalone",
+    "scope": ".",
+    "theme_color": "#fff",
+    "description": "New Webflow site",
+    "prefer_related_application" : true
+  }

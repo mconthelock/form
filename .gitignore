@@ -1,0 +1,11 @@
+.DS_Store
+.env
+./.vscode
+/node_modules
+/docs
+assets/dist
+application/cache
+application/logs
+application/third_party
+application/vendor
+application/config/database.php
