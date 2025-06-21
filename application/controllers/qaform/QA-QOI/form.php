@@ -10,6 +10,7 @@ class form extends MY_Controller{
 		parent::__construct();
         $this->load->model('form_model', 'frm');
         $this->load->model('user_model', 'usr');
+        $this->load->model('qaform/QA-QOI/qoi_model', 'qoi');
         $this->client = new Client(['verify' => false]);
     }
 
@@ -20,7 +21,7 @@ class form extends MY_Controller{
                 'VORGNO' => $_GET['orgNo'],
                 'CYEAR'  => $_GET['y'],
             ];
-            echo "ifff";
+          
         }else{
             $form = $this->frm->getFormMaster('QA-QOI');
             if(!empty($form)){
@@ -30,23 +31,28 @@ class form extends MY_Controller{
                     'CYEAR'  =>$form[0]->CYEAR,
                 ];
             }
-            echo "else";
+            
         }
         $data['empno'] = isset($_GET["empno"]) ? $_GET['empno'] : '' ;
         if(isset($_GET["runNo"]) && $_GET["runNo"] != "") 
         {
             $data['return']   = false;
-            $data['cextData'] = $this->getExtdata($_GET["no"], $_GET["orgNo"], $_GET["y"], $_GET["y2"], $_GET["runNo"], $data['empno']);
             $data['NRUNNO']   = $_GET["runNo"];
             $data['CYEAR2']   = $_GET["y2"];
-            $data['mode']     = $this->getMode($_GET["no"], $_GET["orgNo"], $_GET["y"], $_GET["y2"], $_GET["runNo"], $data['empno']);
+            $data['cextData'] = $this->getExtdata($data['NFRMNO'], $data['VORGNO'], $data['CYEAR'],  $data['CYEAR2'],  $data['NRUNNO'], $data['empno']);
+            $data['mode']     = $this->getMode($data['NFRMNO'],  $data['VORGNO'], $data['CYEAR'],  $data['CYEAR2'],  $data['NRUNNO'], $data['empno']);
             $form       = [
                 'NFRMNO' => $data['NFRMNO'],
                 'VORGNO' => $data['VORGNO'],
                 'CYEAR'  => $data['CYEAR'],
                 'CYEAR2' => $data['CYEAR2'],
-                'NRUNNO' => $data['NRUNNO'],
+                'NRUNNO' => $data['NRUNNO']
             ];
+            $data['formno'] = $this->toFormNumber($data['NFRMNO'],  $data['VORGNO'], $data['CYEAR'],  $data['CYEAR2'],  $data['NRUNNO']);
+            $data['qoiform'] = $this->qoi->getqoiform($data['NFRMNO'],  $data['VORGNO'], $data['CYEAR'],  $data['CYEAR2'],  $data['NRUNNO'])[0];
+            $data['resultdwg'] = $this->qoi->customSelect("RESULTQOIDWG",array( 'NFRMNO' => $data['NFRMNO'],'VORGNO' => $data['VORGNO'],'CYEAR'  => $data['CYEAR'],'CYEAR2' => $data['CYEAR2'],'NRUNNO' => $data['NRUNNO']),'DWGNO , RESULT , REMARK');
+
+           // customSelect($table, $cond = '', $select='', $distinct='', $order='');
            // $getEmpFlow = $this->frm->getEmpFlow($form, $data['empno']);
             $this->views('qaform/QA-QOI/view', $data);
         }

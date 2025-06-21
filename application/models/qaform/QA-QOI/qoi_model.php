@@ -65,4 +65,20 @@ class qoi_model extends my_model
         return $pdm->query($sql,array($drawingNo))->result();
     }
 
+    public function getqoiform($nfrmno, $vorgno, $cyear, $cyear2, $nrunno)
+    {
+        $this->db
+        ->select('Q.*, F.VREQNO , R.SNAME as REQNAME , F.VINPUTER , I.SNAME as INPNAME')
+        ->from('QOIFORM Q')
+        ->join('FORM F', 'F.NFRMNO = Q.NFRMNO AND F.VORGNO = Q.VORGNO AND F.CYEAR = Q.CYEAR AND F.CYEAR2 = Q.CYEAR2 AND F.NRUNNO = Q.NRUNNO')
+        ->join('AMECUSERALL I', 'I.SEMPNO = F.VINPUTER AND I.CSTATUS = \'1\'')
+        ->join('AMECUSERALL R', 'R.SEMPNO = F.VREQNO AND R.CSTATUS = \'1\'')
+        ->where('Q.NFRMNO', $nfrmno)
+        ->where('Q.VORGNO', $vorgno)
+        ->where('Q.CYEAR', $cyear)
+        ->where('Q.CYEAR2', $cyear2)
+        ->where('Q.NRUNNO', $nrunno);
+    return $this->db->get()->result();
+    }
+
 }

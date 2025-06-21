@@ -1,66 +1,57 @@
+import Cookies from "js-cookie";
+import { io } from "socket.io-client";
+import { BrowserMultiFormatReader } from "@zxing/browser";
 import {
   createCarousel,
   sendSession,
   showLoader,
   host,
   uri,
-  setCkkey,
-  stampApp,
+  showMessage,
 } from "./utils";
-// import { getIP } from "./webservice";
-import {
-  getApp,
-  setAuthen,
-  getLinks,
-  setApp,
-  getAllApps,
-} from "./indexDB/application";
+import { getApp } from "./indexDB/application";
 import { setApplication } from "./indexDB/setIndexDB";
-import { showMessage } from "./jFuntion";
-import { encryptText } from "./inc/_crypto";
-import Cookies from "js-cookie";
 import { setImage, setInfo } from "./indexDB/employee";
-import { BrowserMultiFormatReader } from "@zxing/browser";
-import { io } from "socket.io-client";
+import { directlogin, passwordLogin } from "./webservice";
 
+var camera;
 $(document).ready(async function () {
   await showLoader(true);
   await createCarousel("login");
   if ($("#appid").val() != "1") $("#webflow-link").removeClass("hidden");
   $(".loginform:visible").find("input").first().focus();
-
   //Test Socket.io
-  console.log("Frontend application loaded!");
-  console.log(process.env.APP_API);
-  const socket = io(`http://localhost:3001`);
-  socket.on("connect", () => {
-    console.log("Connected to Socket.io server:", socket.id);
-  });
+  //   console.log("Frontend application loaded!");
+  //   console.log(process.env.APP_API);
+  //   const socket = io(`http://localhost:3001`);
+  //   socket.on("connect", () => {
+  //     console.log("Connected to Socket.io server:", socket.id);
+  //   });
 
-  socket.on("disconnect", () => {
-    console.log("Disconnected from Socket.io server.");
-  });
+  //   socket.on("disconnect", () => {
+  //     console.log("Disconnected from Socket.io server.");
+  //   });
 
-  socket.on("orderViewing", (data) => {
-    console.log("Order viewing update received:", data);
-    // const orderId = data.orderId;
-    // const viewerId = data.viewerId; // The socket ID of the user viewing
-    // const isViewing = data.isViewing;
+  //   socket.on("orderViewing", (data) => {
+  //     console.log("Order viewing update received:", data);
+  // const orderId = data.orderId;
+  // const viewerId = data.viewerId; // The socket ID of the user viewing
+  // const isViewing = data.isViewing;
 
-    // $(`#order-row-${orderId}`).each(function() {
-    //     const $row = $(this);
-    //     // Remove any existing indicators
-    //     $row.removeClass('viewing-indicator');
+  // $(`#order-row-${orderId}`).each(function() {
+  //     const $row = $(this);
+  //     // Remove any existing indicators
+  //     $row.removeClass('viewing-indicator');
 
-    //     if (isViewing) {
-    //         // Add indicator if this order is being viewed by someone else
-    //         // We compare viewerId to socket.id to prevent showing "viewing" on own screen
-    //         if (viewerId !== socket.id) {
-    //             $row.addClass('viewing-indicator');
-    //         }
-    //     }
-    // });
-  });
+  //     if (isViewing) {
+  //         // Add indicator if this order is being viewed by someone else
+  //         // We compare viewerId to socket.id to prevent showing "viewing" on own screen
+  //         if (viewerId !== socket.id) {
+  //             $row.addClass('viewing-indicator');
+  //         }
+  //     }
+  // });
+  //   });
 
   await showLoader(false);
 });
@@ -81,8 +72,8 @@ $(document).on("click", ".toggle-login", function (e) {
       $(this).addClass("hidden");
     } else {
       //if target is "Barcode Login", check camera on device and turn it on.
-      const cammera = await showCamera(target);
-      if (cammera) return;
+      camera = await showCamera(target);
+      if (camera) return;
       $(this).removeClass("hidden");
       $(this).find("input").val("");
       $(this).find("input").first().focus();
@@ -105,36 +96,15 @@ $(document).on("submit", "#passwordLogin", async function (e) {
     appid: $("#appid").val(),
   };
   const user = await passwordLogin(usr);
-  if (!user.status) {
+  if (user.status !== undefined) {
     await showMessage(user.message);
     frm.find(".loading").addClass("hidden");
     frm.find("input").attr("readonly", false);
     frm.find(".btn").attr("disabled", false);
     return;
   }
-
-  const response = user.data;
-  //   const id = `${usr.appid}-${usr.username}`;
-  //   const app = await setApplication(response.apps);
-  const emp = await setInfo(usr.username, response.appuser);
-  const empprofile = await setImage(usr.username, response.appuser.image);
-  //   const group = await setAppGroup(id, response.appgroup);
-  //   const menu = await setAppMenu(id, response.auth, group);
-
-  if (response.apps.APP_ID == 1) {
-    window.location.href = `${process.env.APP_ENV}/home`;
-    return;
-  }
-  if (response.apps.APP_TYPE == "1") {
-    window.location.href = `${process.env.APP_HOST}/${response.apps.APP_LOCATION}/authen/move`;
-    return;
-  }
-  window.location.href = `${process.env.APP_HOST}/${
-    response.apps.APP_LOCATION
-  }/${
-    response.appgroup.GROUP_HOME == null ? "" : response.appgroup.GROUP_HOME
-  }`;
-
+  const url = await successLogin(user);
+  window.location.href = url;
   //await setSession(user.message);
   //const apps = user.message.apps;
   //const location = apps.APP_LOCATION;
@@ -242,6 +212,27 @@ $(document).on("submit", "#barcodeLogin", async function (e) {
   e.preventDefault();
 });
 
+$(document).on("click", "#close-camera", function (e) {
+  e.preventDefault();
+  console.log("close");
+  $("#frm-barcode").removeClass("hidden");
+  $("#open-camera").hide();
+  camera.stop();
+});
+
+async function successLogin(user) {
+  const emp = await setInfo(user.appuser.SEMPNO, user.appuser);
+  const empprofile = await setImage(user.appuser.SEMPNO, user.appuser.image);
+  if (user.apps.APP_ID == 1) return `${process.env.APP_ENV}/home`;
+
+  if (user.apps.APP_TYPE == "1")
+    return `${process.env.APP_HOST}/${user.apps.APP_LOCATION}/authen/move`;
+
+  return `${process.env.APP_HOST}/${user.apps.APP_LOCATION}/${
+    user.appgroup.GROUP_HOME == null ? "" : user.appgroup.GROUP_HOME
+  }`;
+}
+
 export function setSession(data) {
   //สร้าง  Session ในระบบ
   return new Promise((resolve) => {
@@ -266,33 +257,22 @@ export async function getAuth(appid) {
   return app.data.APP_LOGIN;
 }
 
-function passwordLogin(data) {
-  return new Promise((resolve) => {
-    $.ajax({
-      type: "post",
-      url: `${process.env.APP_API}/auth/login/`,
-      dataType: "json",
-      data: data,
-      xhrFields: {
-        withCredentials: true,
-      },
-      success: function (response) {
-        resolve({ status: true, data: response });
-      },
-      error: function (xhr, status, error) {
-        console.error("Login error:", status, error);
-        resolve({ status: false, message: "Login failed. Please try again." });
-      },
-    });
-  });
-}
-
 function cardLogin(data) {
   return new Promise((resolve) => {});
 }
 
-function barcodeLogin(data) {
-  return new Promise((resolve) => {});
+async function barcodeLogin(empcode) {
+  const empno = ("00000" + (empcode / 4 - 92).toString()).slice(-5);
+  const user = await directlogin(empno, 1);
+  if (user.status !== undefined) {
+    await showMessage(user.message);
+    // frm.find(".loading").addClass("hidden");
+    // frm.find("input").attr("readonly", false);
+    // frm.find(".btn").attr("disabled", false);
+    return;
+  }
+  const url = await successLogin(user);
+  window.location.href = url;
 }
 
 function bglogin(data) {
@@ -319,13 +299,9 @@ async function showCamera(target) {
     );
 
     if (videoInputDevices.length === 0) {
-      // ไม่มีกล้อง
-      $("#manual-input").show();
-      $("#result").text("ไม่พบกล้อง กรุณากรอกข้อมูลเอง");
       return;
     }
 
-    $("#manual-input").hide();
     $("#open-camera").show();
     const codeReader = new BrowserMultiFormatReader();
     let selectedDeviceId = videoInputDevices[0].deviceId;
@@ -339,12 +315,13 @@ async function showCamera(target) {
       selectedDeviceId = preferred.deviceId;
     }
 
-    await codeReader.decodeFromVideoDevice(
+    return await codeReader.decodeFromVideoDevice(
       selectedDeviceId,
       videoElement,
-      (result, error, controls) => {
+      async (result, error, controls) => {
         if (result) {
-          $("#result").text("ผลลัพธ์: " + result.getText());
+          await barcodeLogin(result.getText());
+          $("#open-camera").hide();
           controls.stop();
         }
         if (error) {
@@ -352,10 +329,8 @@ async function showCamera(target) {
         }
       }
     );
-    return true;
+    //return true;
   } catch (err) {
     console.error("เกิดข้อผิดพลาด:", err);
-    $("#manual-input").show();
-    $("#result").text("ไม่สามารถเปิดกล้องได้");
   }
 }

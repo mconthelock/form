@@ -8,12 +8,14 @@
     <meta name="base_url" content="{{ base_url() }}">
     <meta name="appname" content="{{ $_ENV['APP_NAME'] }}">
     <meta name="theme-color" content="#C0C0C0">
+    <link rel="manifest" href="{{ base_url() }}manifest.json">
     <link rel="shortcut icon" href="{{ base_url() }}assets/images/favicon.ico">
     <link rel="apple-touch-icon" href="{{ base_url() }}assets/images/favicon.ico">
     <link rel="apple-touch-startup-image" href="{{ base_url() }}assets/images/icon_512.png">
     <title>AMEC Webflow</title>
     <link rel="stylesheet" href="{{ $_ENV['APP_CDN'] }}/icofont/icofont.min.css">
     <link rel="stylesheet" href="{{ base_url() }}assets/dist/css/tailwind.css?ver={{ $_ENV['VERSION'] }}">
+    <script src="{{ base_url() }}script.js?ver={{ $_ENV['VERSION'] }}"></script>
     <script>
         const host = document.querySelector('meta[name="base_url"]').content;
         const isdomain = host.indexOf("mitsubishielevatorasia.co.th");
@@ -128,13 +130,10 @@
                                 <input type="password" name="password" placeholder="Scan Barcode/QR Code your card"
                                     class="input input-bordered" autocomplete="new-password" id="barcode-input"
                                     required>
-
-                                <input type="text" id="manual-input" placeholder="กรอกเอง"
-                                    style="display: none;" />
-                                <div id="result"></div>
                             </div>
-                            <div class="mt-4">
+                            <div class="mt-4 flex flex-col gap-3">
                                 <button type="submit" class="btn btn-primary w-full text-white">Login</button>
+                                <button type="button" class="btn btn-neutral w-full text-white">Open Camera</button>
                             </div>
                         </form>
                     </div>
@@ -167,8 +166,25 @@
                     </div>
                 </div>
             </div>
-            <div class="fixed top-0 left-0 w-[100dvw] h-[100dvh] bg-black hidden z-1" id="open-camera">
-                <video id="video" width="100%" height="100%"></video>
+
+            {{-- Open Camera for Scan QR Code --}}
+            <div class="shadow-xl fixed top-0 left-0 w-full h-full z-1 hidden" id="open-camera">
+                <div id="video-wrapper" class="w-full h-full relative flex">
+                    <video id="video" class="w-full aspect-video bg-white border-2 "></video>
+                </div>
+                <div class="line "></div>
+                <h1 class="absolute text-xl text-center text-white w-full top-0 pt-3">
+                    ให้ Barcode/QR Code อยู่ตรงกลางภาพ
+                </h1>
+
+                <div class="absolute w-full text-center bottom-0 pb-5 flex justify-center items-center gap-8">
+                    <button class="btn btn-circle btn-ghost btn-lg text-white">
+                        <i class="icofont-image text-4xl"></i>
+                    </button>
+                    <button class="btn btn-circle btn-ghost btn-lg text-white" type="button" id="close-camera">
+                        <i class="icofont-close-circled text-4xl"></i>
+                    </button>
+                </div>
             </div>
 
             {{-- Carousel --}}
@@ -183,7 +199,7 @@
         <div class="loader"></div>
     </div>
 
-    <script defer src="{{ base_url() }}script.js?ver={{ $_ENV['VERSION'] }}"></script>
+
     <script src="{{ $_ENV['APP_CDN'] }}/jquery/3.7.1/jquery.min.js"></script>
     <script src="{{ $_ENV['APP_JS'] }}/login.js?ver={{ $_ENV['VERSION'] }}"></script>
 </body>

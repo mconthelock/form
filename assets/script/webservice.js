@@ -12,14 +12,34 @@ export function getNews() {
   });
 }
 
+export function passwordLogin(data) {
+  return new Promise((resolve) => {
+    $.ajax({
+      type: "post",
+      url: `${process.env.APP_API}/auth/login/`,
+      dataType: "json",
+      data: data,
+      //   xhrFields: {
+      //     withCredentials: true,
+      //   },
+      success: function (response) {
+        //resolve({ status: true, data: response });
+        resolve(response);
+      },
+      error: function (xhr, status, error) {
+        console.error("Login error:", status, error);
+        resolve({ status: false, message: "Login failed. Please try again." });
+      },
+    });
+  });
+}
+
 export function directlogin(empno, id) {
-    const url = process.env.APP_API;
   const md5Hash = CryptoJS.MD5(empno).toString().toUpperCase();
   return new Promise((resolve) => {
     $.ajax({
       type: "post",
-    //   url: `${process.env.APP_API}/auth/directlogin/`,
-      url: `${url}/auth/directlogin/`,
+      url: `${process.env.APP_API}/auth/directlogin/`,
       dataType: "json",
       data: {
         username: md5Hash,
@@ -27,6 +47,10 @@ export function directlogin(empno, id) {
       },
       success: function (response) {
         resolve(response);
+      },
+      error: function (xhr, status, error) {
+        console.error("Login error:", status, error);
+        resolve({ status: false, message: "Login failed. Please try again." });
       },
     });
   });
