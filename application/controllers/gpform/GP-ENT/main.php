@@ -117,13 +117,13 @@ class Main extends MY_Controller
         $cyear2 = $post['cyear2'];
         $nrunno = $post['nrunno'];
 
-        if ($post['total_amount'] > 10000) {
-            $this->deleteFlowStep('', $nfrmno, $vorgno, $cyear, $cyear2, $nrunno, '18', '19'); // delete RAF dim
-        } else {
-            $this->deleteFlowStep('', $nfrmno, $vorgno, $cyear, $cyear2, $nrunno, '01', '87'); // delete President
+
+        $getEmp = $this->ent->get_orgpos("020101", "02")[0]; // PRESIDENT
+        if ($post['total_amount'] > 10000 && $post['requested_by'] != $getEmp->VEMPNO) {
+            $this->updateFlowApv("", $getEmp->VEMPNO, $nfrmno, $vorgno, $cyear, $cyear2, $nrunno, "18", "87");
         }
 
-        if ($post['cash_adv'] == '1') {
+        if ($post['cash_adv'] == '0') {
             $this->deleteFlowStep('', $nfrmno, $vorgno, $cyear, $cyear2, $nrunno, '87', '00'); // delete FIN Staff
         }
         // $this->updateFlowApv("", $getEmp->VEMPNO, $nfrmno, $vorgno, $cyear, $cyear2, $nrunno, "18", "00");
@@ -250,7 +250,16 @@ class Main extends MY_Controller
         } else {
             $getEmp = $this->ent->get_orgpos("040101", "10")[0]; // RAF DIM
         }
-        $this->updateFlowApv("", $getEmp->VEMPNO, $nfrmno, $vorgno, $cyear, $cyear2, $nrunno, "18", "00");
+
+        $where       = [
+            'NFRMNO' => $nfrmno,
+            'VORGNO' => $vorgno,
+            'CYEAR'  => $cyear,
+            'CYEAR2' => $cyear2,
+            'NRUNNO' => $nrunno,
+        ];
+        $cstepnextno = $this->ent->select('FLOW', array_merge($where, ['CSTEPNO' => '18']));
+        $this->updateFlowApv("", $getEmp->VEMPNO, $nfrmno, $vorgno, $cyear, $cyear2, $nrunno, "18", $cstepnextno[0]->CSTEPNEXTNO);
 
         $data = [
             'NFRMNO'               => $nfrmno,
@@ -402,6 +411,18 @@ class Main extends MY_Controller
 
     }
 
+    public function UpdateApprove()
+    {
+        $nfrmno        = $this->input->post('nfrmno');
+        $vorgno        = $this->input->post('vorgno');
+        $cyear         = $this->input->post('cyear');
+        $cyear2        = $this->input->post('cyear2');
+        $nrunno        = $this->input->post('nrunno');
+        $approveRemark = $this->input->post('approveRemark');
+        $acceptStatus  = $this->input->post('acceptStatus');
+
+    }
+
     public function preview($filename)
     {
         $filepath = $this->upload_path . $filename;
@@ -416,113 +437,75 @@ class Main extends MY_Controller
         }
     }
 
-    public function JobRejectForm()
+    public function sendMailToApprover()
     {
-        $ent = $this->ent->getGPENTForm();
+        $nfrmno = $this->input->post('nfrmno');
+        $vorgno = $this->input->post('vorgno');
+        $cyear  = $this->input->post('cyear');
+        $cyear2 = $this->input->post('cyear2');
+        $nrunno = $this->input->post('nrunno');
 
-        foreach ($ent as $value) {
-            $filter    = [
-                'NFRMNO' => $value->NFRMNO,
-                'VORGNO' => $value->VORGNO,
-                'CYEAR'  => $value->CYEAR,
-                'CYEAR2' => $value->CYEAR2,
-                'NRUNNO' => $value->NRUNNO,
-            ];
-            $data_form = array_values(array_filter(
-                $this->ent->select('FLOW', $filter),
-                function ($item) {
-                    return $item->CSTEPST === '3' && ($item->CSTEPNO != '00' || $item->CEXTDATA != '01');
-                }
-            ));
+        $nfrmno = '9';
+        $vorgno = '030101';
+        $cyear  = '25';
+        $cyear2 = '2025';
+        $nrunno = '11';
 
-            if (!empty($data_form)) {
-                $response = $this->client->post('http://localhost/api-auth/api-dev/appflow/doaction', [
-                    'form_params' => [
-                        'action' => 'reject',
-                        'frmNo'  => $data_form[0]->NFRMNO,
-                        'orgNo'  => $data_form[0]->VORGNO,
-                        'y'      => $data_form[0]->CYEAR,
-                        'y2'     => $data_form[0]->CYEAR2,
-                        'runNo'  => $data_form[0]->NRUNNO,
-                        'apv'    => $data_form[0]->VAPVNO,
-                        'remark' => ''
-                    ]
-                ]);
+        $where         = [
+            'NFRMNO' => $nfrmno,
+            'VORGNO' => $vorgno,
+            'CYEAR'  => $cyear,
+            'CYEAR2' => $cyear2,
+            'NRUNNO' => $nrunno,
+        ];
+        $flow_approver = $this->ent->select('FLOW', array_merge($where, ['CSTEPST' => '3']));
+        $emp_approver  = $this->ent->select('AMECUSERALL', ['SEMPNO' => $flow_approver[0]->VAPVNO]);
+        $formNumber    = $this->toFormNumber($nfrmno, $vorgno, $cyear, $cyear2, $nrunno);
 
-                $body = json_decode($response->getBody());
-                if ($body->status === true) {
-                    $formNumber = $this->toFormNumber($data_form[0]->NFRMNO, $data_form[0]->VORGNO, $data_form[0]->CYEAR, $data_form[0]->CYEAR2, $data_form[0]->NRUNNO);
-                    $mail_data  = [
-                        'TO'      => 'perapatr@mitsubishielevatorasia.co.th',
-                        'SUBJECT' => 'Form Rejection Notification: ' . $formNumber,
-                        'BODY'    => ['<b>For your Requisition Entertainment form for Approval part has <label style="color:red;">REJECTED</label> because requester don’t get approval from <label style="color:red;">“ President or RAF DIM ”</label> on time</b>']
-                    ];
-                    $this->mail->sendmail($mail_data);
-                }
-                echo json_encode($body);
-            }
+        $arr_m = array_merge((array) $flow_approver[0], (array) $emp_approver[0]);
+        $link  = '<a href="https://amecwebtest.mitsubishielevatorasia.co.th/form/gpform/GP-ENT/main?sr=1&no=9&orgNo=030101&y=25&y2=' . $cyear2 . '&runNo=' . $nrunno . '&empno=' . $emp_approver[0]->SEMPNO . '&m=3&bp=%2Fformtest%2Fworkflow%2FmineList%2Easp&menu=1"> LINK WEBFLOW </a>';
+
+        $emp_aprv = "approver";
+        if ($arr_m['SPOSCODE'] == "10") {
+            $emp_aprv = "RAF DIM.";
+        } else if ($arr_m['SPOSCODE'] == "02") {
+            $emp_aprv = "PRESIDENT.";
         }
 
 
 
-        // $data = $this->ent->getFlow($data);
-        // if ($data[0]->CAPVSTNO == '0') {
-        //     echo "Reject";
-        // }
+        pre_array($arr_m);
 
+        $d['VIEW']    = 'layouts/mail/GP-ENT/mailAlert';
+        $d['SUBJECT'] = 'Remind your Entertainment form not yet get approve from approver';
+        $d['TO']      = 'perapatr@mitsubishielevatorasia.co.th';
+        // $d['TO']      = [$emp_req[0]->SRECMAIL];
+        $d['BODY'] = [
+            '<div style="font-family: Arial, sans-serif; font-size: 14px; color: #333;">
+                <p>Dear ' . $emp_aprv . '</p>
 
-        // $response = $this->client->post('http://localhost/api-auth/api-dev/appflow/doaction', [
-        //     'form_params' => [
-        //         'action' => 'reject',
-        //         'frmNo'  => $ent[0]->NFRMNO,
-        //         'orgNo'  => $ent[0]->VORGNO,
-        //         'y'      => $ent[0]->CYEAR,
-        //         'y2'     => $ent[0]->CYEAR2,
-        //         'runNo'  => $ent[0]->NRUNNO,
-        //         'apv'    => '24012',
-        //         'remark' => ''
-        //     ]
-        // ]);
+                <p>
+                    Your Entertainment form no. <strong>' . $formNumber . '</strong> must get approved by <span style="color: red;">' . $emp_approver[0]->SNAME . ' (Emp. No. ' . $emp_approver[0]->SEMPNO . ')</span>.
+                </p>
+                <p>
+                    Please consideration this Entertainment form on webflow system by Click link ' . $link . '.
+                </p>
+                <p>
+                    For your consideration and Approval.
+                </p>
 
-        // $body = $response->getBody();
-        // echo $body;
+                <p style="margin-top: 24px;">
+                    Best regards,<br>
+                    GA System
+                </p>
+            </div>'
+        ];
+        // $d['ENFILE']  = array(['filename' => 'file.xlsx', 'content' => ob_get_contents]);
+        $mail = $this->mail->sendmail($d);
+        print_r($mail);
+
+        // pre_array($emp_approver);
     }
 
-    public function test_array()
-    {
-        $data = $this->ent->test_array();
-        pre_array($data);
 
-        $arr = [];
-        foreach ($data as $val) {
-            $obj             = new stdClass();
-            $obj->NFRMNO     = $val->NFRMNO;
-            $obj->VORGNO     = $val->VORGNO;
-            $obj->CYEAR      = $val->CYEAR;
-            $obj->CYEAR2     = $val->CYEAR2;
-            $obj->NRUNNO     = $val->NRUNNO;
-            $obj->DPAYDATE   = $val->PAYDATE;
-            $obj->CATEGORY   = 'E';
-            $obj->DPAYDATE2  = '';
-            $obj->SEMPNO     = $val->SEMPNO;
-            $obj->SNAME      = $val->SNAME;
-            $obj->DESCTION   = $val->PURPOSE;
-            $obj->SSEC       = $val->SSEC;
-            $obj->ADVANCEAMT = $val->TOTAL_AMOUNT;
-            $obj->CAT        = '';
-            $obj->CLNFRMNO   = $val->CNFRMNO;
-            $obj->CLVORGNO   = $val->CVORGNO;
-            $obj->CCYEAR     = $val->CCYEAR;
-            $obj->CCYEAR2    = $val->CCYEAR2;
-            $obj->CNRUNNO    = $val->CNRUNNO;
-            $obj->CLEARAMT   = $val->ACTUAL_COST;
-            $obj->CLSTATUS   = $val->CST;
-            $obj->CLAPVDATE  = '';
-            $obj->CHKNO      = '';
-            $obj->CHKNAME    = '';
-            $obj->CHKDATE    = '';
-            $arr[]           = $obj;
-        }
-        pre_array($arr);
-    }
 }

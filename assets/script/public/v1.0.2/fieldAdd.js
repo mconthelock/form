@@ -17,16 +17,33 @@
  * }
  */
 export const fieldAddInit = (option) => {
-    const label = option.label == '' ? '' : `<div class="label">
+    const label = option.label == '' || !option.label ? '' : `<div class="label">
                                                  <span class="label-text">${option.label}</span>
                                              </div>`;
-    return `<label class="form-control w-full">
+    return `<label class="form-control w-full inputfield-group p-3">
                 ${label}
-                <div class="flex gap-1">
+                <div class="flex gap-1 items-center">
                     <div class="flex flex-col flex-1 inputGroup gap-1">
                         ${option.element}
                     </div>
-                    <div class="btn btn-danger tooltip" data-tip="ลบรายการ"><i class="icofont-ui-delete"></i></div>
+                    <div class="btn btn-sm btn-error tooltip ml-auto remove-inputField" data-tip="Delete"><i class="icofont-ui-delete"></i></div>
                 </div>
             </label>`;
 }
+
+export const listInit = (option) => {
+    return `<li class="list-row w-full listField p-3 flex gap-5 items-center">
+            <div class="flex listGroup gap-1">
+                ${option.element}
+            </div>
+            <div class="btn btn-sm btn-error tooltip ml-auto remove-listField" data-tip="Delete"><i class="icofont-ui-delete"></i></div>
+    </li>`;
+}
+
+$(document).on('click', '.remove-inputField', function(){
+    $(this).closest('.inputfield-group').remove();
+});
+
+$(document).on('click', '.remove-listField', function(){
+    $(this).closest('.listField').remove();
+});

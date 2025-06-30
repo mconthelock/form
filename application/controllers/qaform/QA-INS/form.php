@@ -74,8 +74,12 @@ class form extends MY_Controller{
         echo json_encode($section);
     }
 
-    public function getUserBySection($id){
-        $user = $this->atr->getUserByID(['SEC_ID' => $id]);
+    public function getUserBySection($id = ''){
+        if($id == ''){
+            $user = $this->atr->getUserByID();
+        }else{
+            $user = $this->atr->getUserByID(['SEC_ID' => $id]);
+        }
         echo json_encode($user);
     }
 

@@ -132,7 +132,7 @@ $(document).on("click", ".edit-dwg", async function (e) {
           const iconClass = filetype === "D" ? "icofont-image" : "icofont-file-document";
           const fileItem = $(`
             <div class="file-item"  data-id="${fileId}" data-filename="${filename}">
-              <a href="https://amecwebtest.mitsubishielevatorasia.co.th/form/qaform/QA-QOI/manage/mdownload/${filename}/${ofilename}" target="_blank" class="file-link"><i class="${iconClass}" style="margin-right: 4px;color: #007bff;"></i> ${ofilename}</a>
+              <a href="${host}qaform/QA-QOI/manage/mdownload/${filename}/${ofilename}" target="_blank" class="file-link"><i class="${iconClass}" style="margin-right: 4px;color: #007bff;"></i> ${ofilename}</a>
               <i class="icofont-close-line-circled delete-file" style="color: red; font-size: 20px;  margin-left: 8px; vertical-align: middle; cursor: pointer;"></i>
             </div>
           `);

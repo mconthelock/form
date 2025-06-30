@@ -146,18 +146,20 @@
                     <div class="mt-4 flex flex-col gap-3">
                         <a class="btn btn-neutral w-full toggle-login hidden" data-type="frm-password">
                             <span class="loading loading-spinner hidden"></span>
-                            <span class="flex justify-center"><i class="icofont-flikr me-2 text-2xl"></i>Login with
-                                Password</span>
+                            <span class="flex justify-center"><i class="icofont-flikr me-2 text-2xl"></i></span>
+                            <p class="line-clamp-1">Password Login</p>
                         </a>
                         <a class="btn btn-neutral w-full toggle-login" data-type="frm-barcode">
                             <span class="loading loading-spinner hidden"></span>
-                            <span class="flex justify-center"><i class="icofont-qr-code me-2 text-2xl"></i>Login with
-                                Barcode/QR Code</span>
+                            <span class="flex justify-center"><i class="icofont-qr-code me-2 text-2xl"></i></span>
+                            <p class="line-clamp-1">Barcode/QR Code Log in</p>
                         </a>
                         <a class="btn btn-neutral w-full toggle-login" data-type="frm-rfid">
                             <span class="loading loading-spinner hidden"></span>
-                            <span class="flex justify-center"><i class="icofont-penalty-card me-2 text-2xl"></i>Login
-                                with Employee Card</span>
+                            <span class="flex justify-center">
+                                <i class="icofont-penalty-card me-2 text-2xl"></i>
+                            </span>
+                            <p class="line-clamp-1">RFID Card Log in</p>
                         </a>
                     </div>
                     <div class="mt-8 hidden" id="webflow-link">

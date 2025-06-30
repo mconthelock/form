@@ -223,22 +223,86 @@
 
                 @endif
 
+                @if($dataForm->ENTERTAINMENT_DATE < date("d-M-y") && $flowstep[0]->CSTEPNO == '18')
+
+                    <!-- Open the modal using ID.showModal() method -->
+                    <!-- <button class="btn" onclick="my_modal_1.showModal()">open modal</button> -->
+                    <dialog id="my_modal_1" class="modal">
+                        <div class="modal-box w-11/12 max-w-3xl">
+                            <h3 class="text-lg font-bold"><i class="fa-solid fa-triangle-exclamation text-yellow-500 text-2xl"></i> Message Alert</h3>
+                            <p class="py-4">
+                                This Entertainment form, requested on <span class="text-red-500 font-semibold">{{$dataForm->ENTERTAINMENT_DATE}}</span>, was not approved before the event date. Please review and provide your approval by selecting either <span class="text-green-700 font-semibold">'Accept'</span> or <span class="text-red-700 font-semibold">'Not Accept'</span>.
+                            </p>
+                            <p class="py-4">
+                                For your information.
+                            </p>
+                            <p>
+                                (Refer: RAF Practical Regulation : RAF-PR-G-068).
+                            </p>
+                            <div class="modal-action">
+                                <form method="dialog">
+                                    <!-- if there is a button in form, it will close the modal -->
+                                    <button class="btn">Close</button>
+                                </form>
+                            </div>
+                        </div>
+                    </dialog>
+
+                    <div class="border-2 border-orange-500 bg-orange-50 mt-3 p-3 rounded-lg">
+                        <span class="text-xl font-semibold">
+                            *Please consider your approval by selecting accept or not accept. This form wasn’t approved before the entertainment date.
+                        </span>
+                        <div class="flex w-full gap-4">
+                            <!-- Radio options -->
+                            <div class="w-1/4 flex flex-col justify-center">
+                                <div class="flex items-center mt-6 mb-2 pl-6">
+                                    <input type="radio" name="accept" id="accept" class="checkbox checkbox-primary bg-white" value="1" />
+                                    <label for="accept" class="ml-3 cursor-pointer text-black">Accept</label>
+                                </div>
+                                <div class="flex items-center mb-2 pl-6">
+                                    <input type="radio" name="accept" id="notaccept" class="checkbox checkbox-primary bg-white" value="0" />
+                                    <label for="notaccept" class="ml-3 cursor-pointer text-black">Not Accept</label>
+                                </div>
+                            </div>
+                            <!-- Remark inputs -->
+                            <div class="w-3/4 flex flex-col justify-center">
+                                <div class="flex items-center mt-6 mb-2">
+                                    <label for="accept_remark" class="bg-amber-300 rounded-md p-1 mr-2 w-28 text-center">Remark:</label>
+                                    <input type="text" id="accept_remark" name="accept_remark" class="input input-bordered rounded-lg flex-1" placeholder="If any" />
+                                </div>
+                                <div class="flex items-center mb-2">
+                                    <label for="notaccept_remark" class="bg-amber-300 rounded-md p-1 mr-2 w-28 text-center">*Remark:</label>
+                                    <input type="text" id="notaccept_remark" name="notaccept_remark" class="input input-bordered rounded-lg flex-1" placeholder="*Please identify the reason" />
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                @endif
+
                 <div class="flex justify-center mt-6 space-x-4">
+                    <input type="hidden" class="cstepno" value="{{ $flowstep[0]->CSTEPNO }}" />
+                    <input type="hidden" class="cstepnextno" value="{{ $flowstep[0]->CSTEPNEXTNO }}" />
                     <button type="button" class="btn btn-success w-32 transition btn-submit" data-action="approve" id="btn-confirm">
                         Approve
                     </button>
                     <button type="button" class="btn btn-error w-32 transition btn-submit" data-action="reject">
                         Reject
                     </button>
-                    <button type="button" class="btn btn-info w-32 transition btn-submit" data-action="return">
-                        Return
-                    </button>
+                    @if ($flowstep[0]->CSTEPNO == '19' && $flowstep[0]->CSTEPNEXTNO == '18')
+                        <button type="button" class="btn btn-info w-32 transition btn-submit" data-action="return">
+                            Return
+                        </button>
+                    @endif
                 </div>
 
                 <div class="flex justify-center mt-4 no-print">
                     <textarea name="" id="remark_approve" class="textarea textarea-bordered rounded-lg w-full max-w-lg" rows="2" placeholder="Remark..."></textarea>
                 </div>
             @endif
+
+
 
             <div class="flow mt-8">
 

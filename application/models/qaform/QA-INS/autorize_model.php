@@ -38,7 +38,7 @@ class autorize_model extends my_model {
             }
         }
         $this->db->from('USERS')
-                 ->where_not_in('GRP_ID','1,4,7')
+                 ->where_not_in('GRP_ID', [1,4,7])
                  
                  ->where('USR_STATUS', '1');
         return $this->db->get()->result();

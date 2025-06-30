@@ -19,7 +19,7 @@ const dtopt = {
  * html : <div id="tableLoading"></div>
  * js : dataTableSkeleton({show: false, idLoading: 'tableDetailLoading'}); || dataTableSkeleton();
  */
-export function dataTableSkeleton(opt = dtopt){
+export function dataTableSkeleton(opt = {}){
     opt = { ...dtopt, ...opt };
     // console.log(opt);
     if($(`#${opt.idLoading} .dataTableSkeleton`).length == 0) {

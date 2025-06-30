@@ -11,6 +11,20 @@
  * @requires _file
  * @version 1.0.2
  * @note แก้ไข้ชื่อไฟล์ยาวให้ตัด ... เพิ่ม scroll และกำหนดขนาดกับความสูงของ dropZone
+ * @note 2025-06-25 เพิ่มเมื่อไม่ใช่ file type ที่กำหนด ให้มี icon default
+ * @note 2025-06-26 เปลี่ยนการตั้ง format ให้รับเป็น string มา
+ * 
+ * 
+ * ***** สำคัญ *****
+ * ต้อง handleFile ที่ js ของตนเองด้วยเพื่อใช้ประกอบกับเวลาคลิกปุ่มเลือกไฟล์
+ * $(document).on('change', 'input[name="files[]"]', async function(e){
+        handleFiles($(this)[0].files, elementDragDrop($(this)), $(this).data("format"));
+    });
+
+ * หากไม่ตั้งค่า file format ตั้งแต่ตอน init ส่งโดยไม่มีก็ได้
+    $(document).on('change', 'input[name="files[]"]', async function(e){
+        handleFiles($(this)[0].files, elementDragDrop($(this)));
+    });
  */
 
 import { createFancyObjectURL, fancyboxBasic} from "./_fancyBox";
@@ -44,7 +58,8 @@ $(document).on("drop", ".dropZone", async function (e) {
     const format  = $(this).siblings('input').data('format');
     console.log(format);
     // console.log(element);
-    handleFiles(files, element, fileFormats[format]);
+    handleFiles(files, element, format);
+    // handleFiles(files, element, fileFormats[format]);
 });
 
 /**
@@ -126,6 +141,7 @@ export const dragDropInit = (options = {}) => {
         format: '',
         height: 'h-70',
         width: 'w-full', 
+        class: 'req',
         ...options
     }
     return `<div class=" p-3 flex gap-3 ${opt.width} ${opt.height}">
@@ -135,7 +151,7 @@ export const dragDropInit = (options = {}) => {
         </div>
         <div class="drop-list w-full flex-col items-start text-gray-500 hidden p-1 gap"></div>
     </label>
-    <input type="file" class="file-input txt-upper validator req hidden" data-format='${opt.format}' name="${opt.name}" id="${opt.name}" multiple/>
+    <input type="file" class="file-input txt-upper validator ${opt.class} hidden" data-format='${opt.format}' name="${opt.name}" id="${opt.name}" multiple/>
     </div>`;
 };
 
@@ -179,6 +195,7 @@ function addDataFile(fileInput, element) {
     }
     fileInput.files = dataTransfer.files;
     checkDropZone(element);
+    console.log(filesData);
 }
 
 
@@ -214,6 +231,8 @@ function hideList(e){
  * @param {object} fileInput element to show file list e.g. $('#fileInput')
  * @param {object} list element to show file list e.g. $('#fileList')
  * @returns 
+ * @example
+ * 
  */
 const filesData = [];
 export async function handleFiles(files, element, format = '') {
@@ -228,12 +247,13 @@ export async function handleFiles(files, element, format = '') {
         const icon = file.type.includes('image') ? iconfont().image : iconfont()[fileExtension];
         const txt = `
         <li class="flex flex-row gap-2 items-center hover:bg-gray-200 w-full px-2 rounded">
-            ${icon}
+            ${icon || '<i class="icofont-file-alt text-2xl"></i>'}
             <span class="text-lg  overflow-hidden text-ellipsis">${file.name}</span>
             <i class="icofont-close-squared-alt ml-auto text-error text-2xl drop-remove"></i>
         </li>`;
         if(format != ''){
-            if (! await checkFileType(file.name, format.extension, format.msg)) {
+            const fm = fileFormats[format] || {};
+            if (! await checkFileType(file.name, fm.extension, fm.msg)) {
                 // dataTransfer.items.remove(i);
                 continue;
             }

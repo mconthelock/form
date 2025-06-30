@@ -114,7 +114,7 @@ function getameccalendar() {
   var dayoff = [];
   //var schedule = [];
   let calenda = [];
-  let url = `${process.env.APP_API}/api/calendar/getcalendarrange`;
+  let url = `${process.env.APP_WEBSERVICE}/api/calendar/getcalendarrange`;
   $.ajax({
     url: url,
     type: "post",

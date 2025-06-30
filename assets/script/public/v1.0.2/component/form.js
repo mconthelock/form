@@ -4,6 +4,11 @@
  * @since  2025-05-01
  * @version 1.0.2
  * @note 2025-06-19 เพิ่ม attribute สำหรับการกำหนด attribute ของ input, select, radio
+ * @note 2025-06-25 เพิ่ม webflowSubmit สำหรับการสร้างปุ่ม submit ใน webflow create, edit, view mode mode 1, 2, 3
+ * @note 2025-06-25 เพิ่ม getformDetail สำหรับการดึงข้อมูลฟอร์มมาโชว์เวลา view, edit   mode != 1   
+ * return = กลับไป requester ไม่ reset
+ * returnp = กลับไป requester reset
+ * returnb = ย้อนหลัง 1 step
  */
 
 export var btnClass   = 'btn btn-sm ';
@@ -101,6 +106,8 @@ export const input = (option = {}) => {
  * // </select>
  */
 export const select = (option = {}) => {
+    // console.log('select', option);
+    
     const opt = inputAttrs({...elementOpt, ...option});
     let options = opt.data.map((item) => {
         return `<option value="${item.value}">${item.text}</option>`
@@ -139,6 +146,88 @@ export const radio = (option = {}) => {
             </div>` 
 }
 
+/**
+ * Create a webflow submit button
+ * @param {object} option e.g. {remark: true, request: true}
+ * @returns 
+ */
+export const webflowSubmit = (option = {}) => {
+    const opt = {...{
+        actionsForm : true,
+        remark : false,
+        request : false,
+        approve : false,
+        returnb : false,
+        returnp : false,
+        return : false,
+        reject : false,
+        flow : false,
+    }, ...option};
+    return `<div class="card-actions flex-col gap-5 justify-start">
+                <div class="actions-Form ${opt.actionsForm ? '' : 'hidden'}">
+                    <fieldset class="fieldset ${opt.remark ? '' : 'hidden'}">
+                        <span class="fieldset-label">Remark</span>
+                        <textarea class="textarea h-24 w-56" id="remark" ></textarea>
+                    </fieldset>
+                    <div class="flex gap-3 mt-2">
+                        <button type="button" class="btn btn-primary ${opt.request ? '' : 'hidden'}" id="btnRequest">Request</button>
+                        <button type="button" class="btn btn-primary ${opt.approve ? '' : 'hidden'}" name="btnAction" value="approve">Approve</button>
+                        <button type="button" class="btn btn-error mg-l-12 ${opt.reject ? '' : 'hidden'}" name="btnAction" value="reject">Reject</button>
+                        <button type="button" class="btn btn-neutral mg-l-12 btnReturn ${opt.return ? '' : 'hidden'}" name="btnAction" value="return">Return</button>
+                        <button type="button" class="btn btn-neutral mg-l-12 btnReturnb ${opt.returnb ? '' : 'hidden'}" name="btnAction" value="returnb">Return</button>
+                        <button type="button" class="btn btn-neutral mg-l-12 btnReturnp ${opt.returnp ? '' : 'hidden'}" name="btnAction" value="returnp">Return</button>
+                        <button type="button" class="btn btn-neutral mg-l-12" onclick="history.back()">Back</button>
+                    </div>
+                </div>
+            
+                <div id="flow" class="w-full mb-5 ${opt.flow ? '' : 'hidden'}">
+                    <div class="flex justify-center">
+                        <div class="skeleton h-32 w-[36rem]"></div>
+                    </div>
+                </div>
+            </div>`;
+}
+
+
+/**
+ * Get form detail
+ * @param {object} form e.g. {
+    NFRMNO: NFRMNO,
+    VORGNO: VORGNO,
+    CYEAR: CYEAR,
+    CYEAR2: CYEAR2,
+    NRUNNO: NRUNNO,
+  }
+ * @returns 
+ */
+export async function getformDetail(form){
+    const data = await getData({
+            ...ajaxOptions,
+            url: `${host}Authen/getFormDetail`,
+            data: form,
+    });
+    return `<div class="h-full w-full md:w-fit bg-base-200 border border-base-300 p-4 rounded-box relative">
+                <div class="absolute text-lg top-[-13px] font-bold">Form Information</div>
+                <table class="table">
+                    <tbody>
+                        <tr>
+                            <td class="text-primary">Form no:</td>
+                            <td>${data.FORMNO}</td>
+                        </tr>
+                        <tr>
+                            <td class="text-primary">Input by:</td>
+                            <td>(${data.VINPUTER}) ${data.VINPUTNAME}</td>
+                        </tr>
+                        <tr>
+                            <td class="text-primary">Requested by:</td>
+                            <td>(${data.VREQNO})  ${data.VREQNAME}</td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+            </div>`
+}
+
 
 
 function inputAttrs(opt = {}) {
@@ -149,3 +238,6 @@ function inputAttrs(opt = {}) {
     opt.selected = opt.selected ? 'selected' : '';
     return opt;
 }
+
+
+

@@ -10,14 +10,15 @@ class Cler_model extends CI_Model
         $this->load->database();
     }
 
-    public function get_entertain_formAll($nfrmno, $vorgno, $cyear)
+    public function get_entertain_formEMP($nfrmno, $vorgno, $cyear, $empno)
     {
         $this->db->select('f.*')
             ->from('FORM f')
-            ->join('GPENT_FORM gf', 'f.NFRMNO = gf.NFRMNO AND f.VORGNO = gf.VORGNO AND f.CYEAR = gf.CYEAR AND f.CYEAR2 = gf.CYEAR2 AND f.NRUNNO = gf.NRUNNO','left')
+            ->join('GPENT_FORM gf', 'f.NFRMNO = gf.NFRMNO AND f.VORGNO = gf.VORGNO AND f.CYEAR = gf.CYEAR AND f.CYEAR2 = gf.CYEAR2 AND f.NRUNNO = gf.NRUNNO', 'left')
             ->where('f.NFRMNO', $nfrmno)
             ->where('f.VORGNO', $vorgno)
             ->where('f.CYEAR', $cyear)
+            ->where('f.VREQNO', $empno)
             ->where('f.CST !=', 3)
             ->where('gf.STATUS', '1')
             ->order_by('f.NRUNNO', 'ASC');
@@ -42,8 +43,10 @@ class Cler_model extends CI_Model
     public function get_clearance_form($nfrmno, $vorgno, $cyear, $cyear2, $nrunno)
     {
         $this->db
-            ->select('*')
-            ->from('GPCLER_FORM')
+            ->select('gf.*,ai.STNAME INPUT_NAME,ar.STNAME REQ_NAME')
+            ->from('GPCLER_FORM gf')
+            ->join('AMECUSERALL ai', 'ai.SEMPNO = gf.EMP_INPUT', 'left')
+            ->join('AMECUSERALL ar', 'ar.SEMPNO = gf.EMP_REQ', 'left')
             ->where('NFRMNO', $nfrmno)
             ->where('VORGNO', $vorgno)
             ->where('CYEAR', $cyear)

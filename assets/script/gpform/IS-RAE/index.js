@@ -383,8 +383,12 @@ $(function () {
     $("input[name='location']").removeClass("radio-error").addClass("radio-primary");
   });
 
-  $(".guest_type .cash_adv").on("input change", function () {
-    $(".guest_type").removeClass("checkbox-error").addClass("checkbox-primary");
+  $(".guest_type").on("change", function () {
+    $(this).removeClass("checkbox-error").addClass("checkbox-primary");
+  });
+
+  $(".cash_adv").on("change input", function () {
+    $(this).removeClass("checkbox-error").addClass("checkbox-primary");
   });
 
   $("#file-attachment2").on("change", function () {

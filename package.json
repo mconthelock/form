@@ -7,7 +7,7 @@
     "dotenv-webpack": "^8.1.0",
     "style-loader": "^4.0.0",
     "tailwindcss": "^4.0.17",
-    "vitepress": "^0.1.1",
+    "vitepress": "^1.6.3",
     "webpack": "^5.95.0",
     "webpack-cli": "^5.1.4"
   },
@@ -15,7 +15,7 @@
     "@fancyapps/ui": "^5.0.36",
     "@fontsource/kanit": "^5.1.0",
     "@fontsource/roboto": "^5.1.0",
-    "@fortawesome/fontawesome-free": "^6.6.0",
+    "@fortawesome/fontawesome-free": "^6.7.2",
     "@zxing/browser": "^0.1.5",
     "@zxing/library": "^0.21.3",
     "copy-webpack-plugin": "^12.0.2",
@@ -41,6 +41,15 @@
     "webpack:watch": "webpack --watch --mode development",
     "tailwind:watch": "tailwindcss -i ./assets/style/tailwind.css -o ./assets/dist/css/tailwind.css --watch ",
     "tailwind:nodemon": "nodemon --watch assets/style/tailwind.css --exec \"npx tailwindcss -i ./assets/style/tailwind.css -o ./assets/dist/css/tailwind.css\"",
-    "watch": "npm-run-all --parallel tailwind:watch webpack:watch"
+    "sass:watch": "sass --watch assets/style/custom/:assets/dist/css/ --style=compressed",
+    "v1.0.1:watch": "tailwindcss -i ./assets/style/custom/v1.0.1.css -o ./assets/dist/css/v1.0.1.css --watch",
+    "watch": "npm-run-all --parallel tailwind:watch webpack:watch v1.0.1:watch",
+
+    "dataTables": "tailwindcss -i ./assets/style/custom/v1.0.1/dataTable.css -o ./assets/dist/css/dataTable.min.css --minify",
+    "fancyBox": "tailwindcss -i ./assets/style/custom/v1.0.1/fancyBox.css -o ./assets/dist/css/fancyBox.min.css --minify",
+    "flatpickr": "tailwindcss -i ./assets/style/custom/v1.0.1/flatpickr.css -o ./assets/dist/css/flatpickr.min.css --minify",
+    "select2": "tailwindcss -i ./assets/style/custom/v1.0.1/select2.css -o ./assets/dist/css/select2.min.css --minify",
+    "v1.0.1": "tailwindcss -i ./assets/style/custom/v1.0.1.css -o ./assets/dist/css/v1.0.1.css --minify",
+    "minifyCss": "npm-run-all --parallel dataTables fancyBox flatpickr select2 v1.0.1"
   }
 }

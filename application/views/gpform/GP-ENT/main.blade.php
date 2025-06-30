@@ -1,7 +1,7 @@
 @extends('layouts/webflowTemplate')
 
 @section('contents')
-    
+
     <div id="loading-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.7); z-index:9999;">
         <div style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%);">
             <img src="{{base_url()}}assets/images/loading_gif.gif" alt="Loading..." width="150">
@@ -21,7 +21,7 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                     <label class="block mb-1 font-semibold text-blue-700">Input by</label>
-                    <input type="text" id="input-by" class="input input-bordered rounded-xl w-full shadow-sm border-blue-200" placeholder="Input Employee Code " />
+                    <input type="text" id="input-by" class="input input-bordered rounded-xl w-full shadow-sm border-blue-200" value="{{ $_GET['empno'] }}" readonly placeholder="Input Employee Code " />
                 </div>
                 <div>
                     <label class="block mb-1 font-semibold text-blue-700">Requested by</label>
@@ -82,6 +82,7 @@
             <div class="rounded-2xl border border-blue-200 bg-gradient-to-br from-blue-50 via-white to-blue-100 p-4 shadow">
                 <div class="font-bold text-blue-900 text-lg mb-3">Details of Guest</div>
                 <ul class="text-xs text-blue-700 mt-2 mb-2 list-disc list-inside space-y-1">
+                    <li>if has company of guest more than 1 company, Please click "ADD" button for add items.</li>
                     <li>กรณีแขกเป็นหน่วยงานราชการ/รัฐวิสาหกิจ ต้องแนบ Appendix A (Refer AMEC-2303 "Rule for Anti Bribery rule")</li>
                 </ul>
                 <div id="companies-container">
@@ -225,23 +226,28 @@
                         </tfoot>
                     </table>
                     <div class="flex items-center pt-5 rounded-lg space-x-4">
-                        <div class="bg-blue-700 text-white font-semibold px-4 py-2 rounded-l-lg">
+                        <div class="bg-blue-700 text-white font-semibold px-4 py-4 rounded-l-lg">
                             Cash Advance
                         </div>
+                        <div class="space-y-2">
+                            <div class="flex items-center space-x-2">
+                                <input type="radio" id="cashYes" name="cash_advance" class="checkbox checkbox-primary bg-white  cash_adv" value="1" />
+                                <label for="cashYes" class="font-semibold">Yes</label>
+                                <div class="text-xs italic text-gray-500">
+                                    *Receive cash from FIN Department within 3-4 working day
+                                </div>
+                            </div>
 
-                        <div class="flex items-center space-x-2">
-                            <input type="radio" id="cashYes" name="cash_advance" class="checkbox checkbox-primary bg-white  cash_adv" value="1" />
-                            <label for="cashYes" class="font-semibold">Yes</label>
+                            <div class="flex items-center space-x-2">
+                                <input type="radio" id="cashNo" name="cash_advance" class="checkbox checkbox-primary bg-white  cash_adv" value="0" />
+                                <label for="cashNo" class="font-semibold">No</label>
+                                <div class="text-xs italic text-gray-500">
+                                    *Please bring original receipt for clearance expense on Form Clearacnce Expense for Entertainment (Part 2).
+                                </div>
+                            </div>
                         </div>
 
-                        <div class="flex items-center space-x-2">
-                            <input type="radio" id="cashNo" name="cash_advance" class="checkbox checkbox-primary bg-white  cash_adv" value="0" />
-                            <label for="cashNo" class="font-semibold">No</label>
-                        </div>
 
-                        <div class="text-xs italic text-gray-500">
-                            (If select “No” user must be pay by self and take the original receipt for Cash Reimbursement Form (Refund) on system)
-                        </div>
                     </div>
 
 

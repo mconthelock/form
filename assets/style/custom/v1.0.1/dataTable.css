@@ -1,0 +1,221 @@
+
+
+  /* Datatable */
+  div.dt-container .domTop {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  div.dt-container #filterBtnDt{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+  }
+
+  div.dt-container .top-menu {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-bottom: 0.5rem;
+  }
+
+  div.dt-container .lf-opt {
+    display: flex;
+    flex:1;
+    gap: 0.75rem;
+    margin-bottom: 0.5rem;
+  }
+
+  div.dt-container .lf-opt.join {
+    gap: 0 !important;
+  }
+
+   div.dt-container .table-option {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  div.dt-container .dataTable-body {
+    background-color: #fff;
+    border: 1px solid #d1d5db;
+    border-radius: 0.5rem;
+    overflow: scroll;
+  }
+
+  div.dt-container .bottom {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 1.25rem;
+  }
+
+  div.dt-container .dt-search input {
+    /*-= @apply px-3! py-1!; */
+    padding: 0.25rem 0.75rem !important;
+  }
+
+  div.dt-container .dt-length select {
+    /* @apply px-3! py-1!; */
+    padding: 0.2rem 0.75rem !important;
+  }
+
+  div.dt-container thead > tr:last-child > th:not(.row2) {
+    border-bottom: 1px solid #d1d5db !important;
+  }
+
+  div.dt-container tbody > tr > td {
+    border-bottom: 1px solid #d1d5db !important;
+  }
+
+  div.dt-container thead > tr,
+  div.dt-container tbody > tr:last-child,
+  div.dt-container tbody > tr:last-child > td {
+    border-bottom: none !important;
+  }
+
+  .dt-container .dt-input {
+    /* @apply input! input-sm!; */
+    height: 2.5rem !important;
+  }
+
+  .dt-paging > nav {
+    display: flex;
+    gap: 0.5rem;
+  }
+  div.dt-container .dt-paging .dt-paging-button {
+    color: #fff !important;
+    background: var(--color-primary) !important;
+    min-width: 2rem !important;
+    min-height: 2rem !important;
+    border-radius: 9999px !important;
+    padding: 0 0.5rem !important;
+    margin: 0 !important;
+    /* @apply text-white! bg-primary! !min-w-8 !min-h-8  !rounded-full px-2! m-0!; */
+  }
+  div.dt-container .dt-paging .dt-paging-button.disabled,
+  div.dt-container .dt-paging .dt-paging-button.current {
+    color: #fff !important;
+    filter: grayscale(100%) !important;
+    cursor: not-allowed !important;
+    /* @apply grayscale! text-white! cursor-not-allowed!; */
+  }
+
+  div.dt-container .dt-paging .dt-paging-button.next,
+  div.dt-container .dt-paging .dt-paging-button.previous,
+  div.dt-container .dt-paging .dt-paging-button.first,
+  div.dt-container .dt-paging .dt-paging-button.last {
+    color: var(--color-primary) !important;
+    background: transparent !important;
+    font-size: 1.25rem !important;
+    border: none !important;
+    /* @apply text-primary! text-xl! border-none! bg-transparent!; */
+  }
+  div.dt-container .dt-paging .dt-paging-button.next:hover,
+  div.dt-container .dt-paging .dt-paging-button.previous:hover,
+  div.dt-container .dt-paging .dt-paging-button.first:hover,
+  div.dt-container .dt-paging .dt-paging-button.last:hover {
+    background: transparent !important;
+    color: var(--color-neutral) /* var(--color-neutral) */ !important;
+    /* @apply text-neutral!; */
+  }
+
+  div.dt-container .dt-paging .dt-paging-button.disabled,
+  div.dt-container .dt-paging .dt-paging-button.current {
+    /* @apply !grayscale; */
+    filter: grayscale(100%) !important;
+    cursor: not-allowed !important;
+  }
+
+  td.dt-empty {
+    text-align: center;
+  }
+
+  table.dataTable > tbody > tr.child ul.dtr-details > li {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .dt-type-numeric {
+    text-align: center /*!important*/;
+  }
+
+  /* join */
+  .dt-length select.dt-input.join-item {
+    border: 1px solid #d1d5db !important;
+    border-radius: 10px 0 0 10px !important;
+    text-align: center;
+  }
+
+  .dt-search input.dt-input.join-item {
+    margin-left: 0 !important;
+    border: 1px solid #d1d5db !important;
+    border-radius: 0 10px 10px 0 !important;
+  }
+
+  /* .dt-input{
+    @apply !input !input-bordered;
+}  */
+
+  /* vertical text*/
+  .write-vertical-lr .dt-column-title {
+    writing-mode: sideways-lr;
+  }
+  .write-vertical-rl .dt-column-title {
+    writing-mode: sideways-rl;
+  }
+
+  td.details-control {
+    background: url("../../images/details_open.png") no-repeat center center;
+    cursor: pointer;
+  }
+  tr.shown td.details-control {
+    background: url("../../images/details_close.png") no-repeat center center;
+  }
+
+  /* sticky column */
+  table.dataTable thead th.sticky-column {
+    z-index: 100 !important; /* z-index สูงกว่า td */
+    position: sticky !important;
+    /* background: white !important; ป้องกันการทับซ้อน */
+    background-color: inherit !important;
+  }
+  table.dataTable tbody td.sticky-column {
+    z-index: 1 !important; /* z-index ต่ำกว่า th */
+    position: sticky !important;
+    /* background: white !important; ป้องกันการทับซ้อน */
+    background-color: inherit !important;
+  }
+  div.dt-container thead > tr  {
+        background-color: var(--color-dataTable-thead) !important;
+  }  
+  div.dt-container tbody > tr {
+      background-color: #fff !important;
+  }  
+  .table-zebra tbody > tr:nth-child(odd) {
+      background-color: #fff !important;
+  }  
+  .table-zebra tbody > tr:nth-child(even) {
+      background-color: var(--color-base-200) !important;
+  }
+
+  /* Responsive Table */
+  div.dt-container tbody > tr.child > td > .dtr-details {
+    width: 100% !important;
+    /* @apply w-full!; */
+  }
+  div.dt-container tbody > tr.child > td > .dtr-details li {
+    width: 100% !important;
+    /* @apply w-full! flex! gap-3!; */
+  }
+  div.dt-container tbody > tr.child > td > .dtr-details li .dtr-title {
+    /* @apply flex! items-start! justify-start!; */
+    display: flex !important;
+    align-items: flex-start !important;
+    justify-content: flex-start !important;
+  }
+  div.dt-container tbody > tr.child > td > .dtr-details li.action .dtr-title {
+    /* @apply hidden!; */
+    display: none !important;
+  }

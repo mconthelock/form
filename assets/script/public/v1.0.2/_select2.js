@@ -107,12 +107,12 @@ export const formatAvatar = (val) => {
  * @param {object} options e.g. {allowClear: true, width: 'resolve'}
  * @description Create a select2 element with options from data array.
  * @example
- * const selectHTML = setSelect2({...s2disableSearch, element: '.select'});
+ * const selectHTML = setSelect2({...s2disableSearch, element: '.select', data: [{value: '1', text: 'Option 1'}, {value: '2', text: 'Option 2'}]});
  */
 export async function setSelect2(options = {}) {
     const opt = {element: '', placeholder: '' , data:'',...options};
     let { element, placeholder, data,...customOpt} = opt; // เอา object ออกเหลือแต่ opject ของ select2
-    console.log(opt);
+    // console.log(opt);
     
     element = opt.element == '' ? '.s2' : opt.element;
     if( opt.data != '' ){
@@ -135,7 +135,7 @@ export async function setSelect2(options = {}) {
  * @param {array} data [{value: '1', text: 'Option 1'}, {value: '2', text: 'Option 2'}]
  */
 async function setOption(element, data){
-    console.log(data);
+    // console.log(data);
     const option = data.map((item) => {
         return `<option value="${item.value}">${item.text}</option>`
     }).join('');

@@ -232,8 +232,12 @@
                                         <td class="py-2 pl-4 border-b-2 border-green-200">{{ $formCler->PRESIDENT_JOIN == '1' ? 'Join' : 'Not Join' }}</td>
                                     </tr>
                                     <tr>
+                                        <th class="text-left font-semibold py-2 pl-4 border-b-2 border-green-200 bg-green-100">Cash Advance</th>
+                                        <td class="py-2 pl-4 border-b-2 text-orange-700 font-semibold border-green-200">{{ $ENT_FORM->REIMBURSEMENT == '1' ? 'Yes' : 'No' }}</td>
+                                    </tr>
+                                    <tr>
                                         <th class="text-left font-semibold py-2 pl-4 border-b-2 border-green-200 bg-green-100">Actual Cost</th>
-                                        <td class="py-2 pl-4 border-b-2 border-green-200">{{ number_format($formCler->ACTUAL_COST, 2) }}</td>
+                                        <td class="py-2 pl-4 border-b-2 border-green-200">{{ number_format($formCler->ACTUAL_COST, 2) }} </td>
                                     </tr>
                                     @if(!empty($formCler->REASON))
                                         <tr>
@@ -244,7 +248,7 @@
                                     @if(!empty($formCler->REMAIN_BUDGET))
                                         <tr>
                                             <th class="text-left  font-semibold py-2 pl-4 border-b-2 border-green-200 bg-green-100">Remain</th>
-                                            <td class="py-2 pl-4 border-b-2 border-green-200">{{ number_format($formCler->REMAIN_BUDGET, 2) }}</td>
+                                            <td class="py-2 pl-4 border-b-2 border-green-200">{{ number_format($formCler->REMAIN_BUDGET, 2) }} {{ $formCler->REMAIN_BUDGET > 0 ? "(Return cash to company)" : "(Reimbursement to Employee($ENT_FORM->EMP_REQ))" }}</td>
                                         </tr>
                                     @endif
                                     <tr>

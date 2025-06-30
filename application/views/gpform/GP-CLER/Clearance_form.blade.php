@@ -128,7 +128,7 @@
 
             <div class="mt-10">
                 <h3 class="flex items-center gap-2 font-bold text-green-800 mb-3 mt-8 text-xl">
-                    <!-- <svg ... ไอคอน>  --> Expense Cost
+                    <!-- <svg ... ไอคอน>  --> Expense Cost <label class="text-sm inline-block font-light text-red-500">(*If has “Receipt no.” more than 1, Please click “Add row” button for input the details.)</label>
                 </h3>
                 <div class="border-2 border-green-500 rounded-2xl p-4 bg-green-50 shadow-sm transition">
                     <table class="min-w-full text-sm border-1 rounded-xl overflow-hidden" id="expense-table">
@@ -173,6 +173,7 @@
             <div class="mt-8">
                 <div class="bg-green-50 rounded-2xl border-2 border-green-500 p-6 shadow space-y-8">
                     <h2 class="font-bold text-green-800 text-2xl mb-3">Clearance for Expense</h2>
+                    <h2 class="font-bold text-orange-500 text-2xl mb-3 border-3  border-orange-500 inline-block p-2">Cash Advance : {{ $entertainData->REIMBURSEMENT == '1' ? 'Yes' : 'No' }}</h2>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <!-- President join -->
                         <div>

@@ -100,6 +100,7 @@ export function showMessage(msg, type = "error", position = 'toast-end') {
 }
 
 
+
 export const ajaxOptionsLoad = {
     type: "post",
     dataType: "json",
@@ -315,7 +316,7 @@ export function getLastWednesday() {
     return lastWednesday;
 }
 
-export function getAllAttr(element) {
+export async function getAllAttr(element) {
     const attrs = element.attributes;
 
     // แปลงเป็น object หรือ array

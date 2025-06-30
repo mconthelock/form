@@ -29,7 +29,7 @@ class Main extends MY_Controller
 
         $bp = isset($_GET['bp']) ? $_GET['bp'] : '';
 
-        $form_entertain        = $this->clr->get_entertain_formAll('9', $vorgno, $cyear);
+        $form_entertain        = $this->clr->get_entertain_formEMP('9', $vorgno, $cyear, $empno);
         $data['estimate_type'] = $this->ent->get_estimate_type();
         $data['mode']          = $this->getMode($nfrmno, $vorgno, $cyear, $cyear2, $nrunno, $empno);
 
@@ -44,7 +44,7 @@ class Main extends MY_Controller
                 );
             }
             $data['form_entertain'] = $form_entertain;
-            $this->views('gpform/GP-ENT/Clearance', $data);
+            $this->views('gpform/GP-CLER/Clearance', $data);
         } else {
             $data['formCler'] = $formCler = $this->clr->get_clearance_form($nfrmno, $vorgno, $cyear, $cyear2, $nrunno)[0];
 
@@ -66,7 +66,10 @@ class Main extends MY_Controller
                 $keyform1 = $this->parseFormNumber($formCler->FORM_ENT);
                 $FrmENT   = $this->clr->getFormMst($keyform1['vaname'])[0];
 
-                $data['ENT_FORM']         = $this->ent->dataForm($FrmENT->NNO, $FrmENT->VORGNO, $FrmENT->CYEAR, $keyform1['cyear2'], $keyform1['runno'])[0];
+                $data['ENT_FORM'] = $entform = $this->ent->dataForm($FrmENT->NNO, $FrmENT->VORGNO, $FrmENT->CYEAR, $keyform1['cyear2'], $keyform1['runno'])[0];
+                $empno     = $this->ent->getDataEmp($entform->EMP_REQ);
+                // $arr_merge = array_merge((array) $entform, (array) $empno);
+                // print_r($empno);
                 $data['estimate_cost']    = $this->ent->get_estimate_cost($FrmENT->NNO, $FrmENT->VORGNO, $FrmENT->CYEAR, $keyform1['cyear2'], $keyform1['runno']);
                 $data['dataParticipants'] = $this->ent->dataParticipants($FrmENT->NNO, $FrmENT->VORGNO, $FrmENT->CYEAR, $keyform1['cyear2'], $keyform1['runno']);
                 $data['company']          = $this->ent->dataCompany($FrmENT->NNO, $FrmENT->VORGNO, $FrmENT->CYEAR, $keyform1['cyear2'], $keyform1['runno']);
@@ -133,7 +136,7 @@ class Main extends MY_Controller
             $data['dataParticipants'] = $this->ent->dataParticipants($FrmENT->NNO, $FrmENT->VORGNO, $FrmENT->CYEAR, $formno[0], $formno[1]);
             $data['formNumber']       = $this->toFormNumber($FrmENT->NNO, $FrmENT->VORGNO, $FrmENT->CYEAR, $formno[0], $formno[1]);
             $data['company']          = $this->ent->dataCompany($FrmENT->NNO, $FrmENT->VORGNO, $FrmENT->CYEAR, $formno[0], $formno[1]);
-            $this->views('gpform/GP-ENT/Clearance_form', $data);
+            $this->views('gpform/GP-CLER/Clearance_form', $data);
         }
     }
 

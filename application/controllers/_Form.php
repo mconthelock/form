@@ -164,8 +164,8 @@ trait _Form{
      *                           'CYEAR'  => 16,
      *                           'CYEAR2' => 2025,
      *                           'NRUNNO' => 1]
-     * @param array $apr e.g    ['CSTEPNO' => '06', 'CSTEPNEXTNO' => '19', 'apv' => 02035]
-     *                          ['CSTEPNO' => '19', 'CSTEPNEXTNO' => '28', 'apv' => 96321]
+     * @param array $apr e.g    ['CSTEPNO' => '06', 'apv' => 02035]
+     *                          ['CSTEPNO' => '19','apv' => 96321]
      * ส่งแบบอัปเดต step เดียว
      * @param string $frmNo e.g. 17
      * @param string $orgNo e.g. 050601

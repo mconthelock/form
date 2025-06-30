@@ -2,13 +2,13 @@ import { getApplication } from "../webservice";
 import { setApp, getApp } from "./application";
 import { getAllImage, getImage, getInfo, setImage, setInfo } from "./employee";
 import { getGroup, getMenu, setGroup, setMenu } from "./userAuth";
-
+import jsSHA from "jssha";
 
 // IndexedDB
 export async function generateSchemaHash(schema) {
   // ใช้ SHA-256 ในการสร้าง hash ของ schema รองรับ http
   if (!window.crypto || !window.crypto.subtle) {
-    console.log("Web Crypto API not supported in this browser.");
+    // console.log("Web Crypto API not supported in this browser.");
     const schemaString = JSON.stringify(schema);
     const shaObj = new jsSHA("SHA-256", "TEXT");
     shaObj.update(schemaString);
@@ -72,7 +72,7 @@ export async function setAppMenu(id, data, update = false) {
 export async function fillImages(e, empno) {
   const element = $(e);
   const img = await displayEmpImage(empno);
-  console.log(element,e);
+//   console.log(element,e);
   
   element.attr("src", img);
   element.removeClass("hidden");
@@ -87,6 +87,7 @@ export async function fillImages(e, empno) {
  * @note for function formatAvatar in Select2
  */
 export async function setAvatarSelect(allUsers, selectElement){
+    // console.log('setAvatarSelect', allUsers, selectElement);
     const empImage = await getAllImage();
     // console.log(empImage,allUsers);
     allUsers.filter(async user => {
@@ -106,9 +107,6 @@ export async function setAvatarSelect(allUsers, selectElement){
       }
     }
 }
-
-
-
 
 // ดึงรูปภาพจาก IndexedDB
 export async function displayEmpImage(id) {
@@ -144,8 +142,26 @@ export async function displayEmpInfo(id) {
     const response = await fetch(
       `${process.env.APP_API}/users/${id}`
     );
-    const data = await response.json();
-    await setInfo(id, data[0]);
-    return data[0];
+     const text = await response.text();
+
+    if (!text) {
+      // ถ้า response body ว่าง
+      return null;
+    }
+    try {
+      const data = JSON.parse(text);
+      if (!data) return null;
+      await setInfo(id, data);
+      return data;
+    } catch (e) {
+      // parse ไม่ได้
+      console.error("JSON parse error:", e);
+      return null;
+    }
+    // const data = await response.json();
+    // console.log(data);
+    // if(!data) return null;
+    // await setInfo(id, data);
+    // return data;
   }
 }

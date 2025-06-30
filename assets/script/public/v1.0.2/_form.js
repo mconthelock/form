@@ -11,22 +11,11 @@
  */
 
 import { checkAuthen, root } from "./jFuntion";
-import { showLoader } from "./utils";
+import { showLoader } from "../../utils";
 
 const url = root.includes('amecwebtest') ? `${root}api-auth/api-dev/` : `${root}api-auth/api/`;
 console.log(url);
 
-/**
- * check mode for action form
- * @param {string} mode 
- */
-export function toggleActionForm(mode){
-    if (mode == "2") {
-        $(".actions-Form").removeClass("hidden");
-    } else {
-        $(".actions-Form").addClass("hidden");
-    }
-}
 
 /**
  * Redirect to wait for approve
@@ -280,34 +269,6 @@ export function doactionWebservice(NFRMNO, VORGNO, CYEAR, CYEAR2, NRUNNO, action
     });
 }
 
-
-export async function setformDetail(form){
-    const data = await getData({
-            ...ajaxOptions,
-            url: `${host}Authen/getFormDetail`,
-            data: form,
-    });
-    return `<div class="h-full w-full md:w-fit bg-base-200 border border-base-300 p-4 rounded-box relative">
-                <div class="absolute text-lg top-[-13px] font-bold">Form Information</div>
-                <table class="table">
-                    <tbody>
-                        <tr>
-                            <td class="text-primary">Form no:</td>
-                            <td>${data.FORMNO}</td>
-                        </tr>
-                        <tr>
-                            <td class="text-primary">Input by:</td>
-                            <td>(${data.VINPUTER}) ${data.VINPUTNAME}</td>
-                        </tr>
-                        <tr>
-                            <td class="text-primary">Requested by:</td>
-                            <td>(${data.VREQNO})  ${data.VREQNAME}</td>
-                        </tr>
-                    </tbody>
-                </table>
-                
-            </div>`
-}
 
 // export function convToFormNumber(formtype, owner, cyear, cyear2, runno){
 //     return $frmname[0]->VANAME.substr($y2,2,2)."-".str_pad($runNo, 6, "0", STR_PAD_LEFT); // ST-INP24-000001

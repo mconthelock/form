@@ -273,7 +273,7 @@ export async function displayEmpInfo(id) {
   } else {
     // ดึงข้อมูลจาก API
     const response = await fetch(
-      `${process.env.APP_API}/webflow/amecusers/users/`,
+      `${process.env.APP_WEBSERVICE}/webflow/amecusers/users/`,
       {
         method: "POST",
         headers: {

@@ -3,10 +3,16 @@ import flatpickr from "flatpickr";
 import "flatpickr/dist/flatpickr.min.css";
 import { host } from "../../utils.js";
 import Swal from "sweetalert2";
+import "@fortawesome/fontawesome-free/css/all.min.css";
 
 $(document).ready(async function () {
   flatpickr("#start-date", { dateFormat: "Y-m-d" });
   flatpickr("#pay_date", { dateFormat: "Y-m-d" });
+
+  const modal = document.getElementById("my_modal_1");
+  if (modal) {
+    modal.showModal();
+  }
 
   const formData = $(".form-data").data();
   const { nfrmno, vorgno, cyear, cyear2, nrunno, empno } = formData;
@@ -17,7 +23,50 @@ $(document).ready(async function () {
   $(".btn-submit").click(async function () {
     const action = $(this).data("action");
     const remark_approve = $("#remark_approve").val();
+    const cstepno = $(".cstepno").val();
+    const cstepnextno = $(".cstepnextno").val();
     const $pay = $("#pay_date");
+
+    let approveRemark = "";
+    let acceptStatus = "";
+    if ($("input[name='accept']").length > 0) {
+      const acceptStatus = $("input[name='accept']:checked").attr("id");
+      const acceptRemark = $("#accept_remark").val();
+      const notAcceptRemark = $("#notaccept_remark").val();
+
+      if (!acceptStatus) {
+        alert("กรุณาเลือก Accept หรือ Not Accept");
+        return;
+      }
+
+      if (acceptStatus === "notaccept" && !notAcceptRemark.trim()) {
+        alert("กรุณากรอก Remark กรณี Not Accept");
+        $("#notaccept_remark").focus();
+        return;
+      }
+
+      approveRemark = acceptStatus === "accept" ? acceptRemark : notAcceptRemark;
+
+      if (action === "approve") {
+        await $.ajax({
+          type: "post",
+          url: host + "gpform/GP-ENT/main/UpdateApprove",
+          data: {
+            nfrmno,
+            vorgno,
+            cyear,
+            cyear2,
+            nrunno,
+            approveRemark,
+            acceptStatus,
+          },
+          dataType: "json",
+          success: function (response) {},
+        });
+      }
+      // ... และ logic อื่นๆ ต่อได้เลย
+    }
+
     if ($pay.length && !$pay.val() && action === "approve") {
       alert("กรุณาเลือกวันที่ Pay Date");
       $pay.focus();
@@ -25,24 +74,41 @@ $(document).ready(async function () {
     }
 
     if ($pay.val() && action === "approve") {
-      $.ajax({
-        type: "POST",
-        url: host + "gpform/GP-ENT/main/UpdatePayDate",
-        data: {
-          nfrmno: nfrmno,
-          vorgno: vorgno,
-          cyear: cyear,
-          cyear2: cyear2,
-          nrunno: nrunno,
-          pay_date: $pay.val(),
-        },
-        dataType: "dataType",
-        success: function (response) {},
+      await $.post(host + "gpform/GP-ENT/main/UpdatePayDate", {
+        nfrmno,
+        vorgno,
+        cyear,
+        cyear2,
+        nrunno,
+        pay_date: $pay.val(),
       });
+    }
+
+    if (action === "approve" && cstepno === "19" && cstepnextno === "18") {
+      $.getJSON(host + "gpform/GP-ENT/main/sendMailToApprover", {
+        nfrmno,
+        vorgno,
+        cyear,
+        cyear2,
+        nrunno,
+      })
+        .done(console.log)
+        .fail(console.log);
     }
 
     const confirm = await doaction(nfrmno, vorgno, cyear, cyear2, nrunno, action, empno, remark_approve);
     if (confirm.status) redirectWebflow();
+  });
+
+  $("input[name='accept']").on("change", function () {
+    console.log($(this).val());
+    if ($(this).val() === "1") {
+      $("#accept_remark").prop("disabled", false);
+      $("#notaccept_remark").prop("disabled", true);
+    } else {
+      $("#accept_remark").prop("disabled", true);
+      $("#notaccept_remark").prop("disabled", false);
+    }
   });
 
   $("#submit-btn-edit").click(async function (e) {
@@ -144,6 +210,11 @@ $(document).ready(async function () {
       return;
     }
 
+    // if (!$(".cash_adv:checked").val()) {
+    //   showCheckboxToast(".cash_adv", "กรุณาเลือก Cash Advance");
+    //   return;
+    // }
+
     // --- Participant validation ---
     if (guestCount() < 1) return showInputToast("#guest-name-input", "กรุณากรอก guest อย่างน้อง 1 คน");
     if (amecCount() < 1) return showInputToast("#amec-name-input", "กรุณากรอกพนักงาน Amec 1 คน");
@@ -168,6 +239,7 @@ $(document).ready(async function () {
     formData.append("total_amount", $("#total-amount").text());
     formData.append("remark", $("textarea[placeholder*='ระบุเหตุผล']").val());
     formData.append("companies", JSON.stringify(companiesArray));
+    // formData.append("cash_adv", $(".cash_adv:checked").val());
     companiesArray.forEach((c, i) => {
       let fileInput = $("#companies-container .company-group").eq(i).find('input[type="file"]')[0];
       if (fileInput && fileInput.files.length > 0) {

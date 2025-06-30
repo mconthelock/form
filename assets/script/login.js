@@ -214,8 +214,9 @@ $(document).on("submit", "#barcodeLogin", async function (e) {
 
 $(document).on("click", "#close-camera", function (e) {
   e.preventDefault();
-  console.log("close");
   $("#frm-barcode").removeClass("hidden");
+  $("#frm-barcode").find("input").val("");
+  $("#frm-barcode").find("input").first().focus();
   $("#open-camera").hide();
   camera.stop();
 });
@@ -224,7 +225,6 @@ async function successLogin(user) {
   const emp = await setInfo(user.appuser.SEMPNO, user.appuser);
   const empprofile = await setImage(user.appuser.SEMPNO, user.appuser.image);
   if (user.apps.APP_ID == 1) return `${process.env.APP_ENV}/home`;
-
   if (user.apps.APP_TYPE == "1")
     return `${process.env.APP_HOST}/${user.apps.APP_LOCATION}/authen/move`;
 
@@ -262,8 +262,6 @@ function cardLogin(data) {
 }
 
 async function barcodeLogin(empcode) {
-  const empno = ("00000" + (empcode / 4 - 92).toString()).slice(-5);
-  const user = await directlogin(empno, 1);
   if (user.status !== undefined) {
     await showMessage(user.message);
     // frm.find(".loading").addClass("hidden");
@@ -320,9 +318,19 @@ async function showCamera(target) {
       videoElement,
       async (result, error, controls) => {
         if (result) {
-          await barcodeLogin(result.getText());
-          $("#open-camera").hide();
+          const empno = (
+            "00000" + (result.getText() / 4 - 92).toString()
+          ).slice(-5);
+          const user = await directlogin(empno, 1);
+          //await barcodeLogin(result.getText());
+          if (user.status !== undefined) {
+            await showMessage(user.message);
+            return false;
+          }
+          //$("#open-camera").hide();
           controls.stop();
+          const url = await successLogin(user);
+          window.location.href = url;
         }
         if (error) {
           console.warn("อ่านผิดพลาด: ", error.message);

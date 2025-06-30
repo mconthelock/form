@@ -34,7 +34,7 @@ export const initJoin = (id) => {
  * Default datatable
  */
 export const tableOption = {
-  dom: '<"flex mb-3"<"flex-1"f><"flex items-center table-option"l>><"bg-white border border-slate-300 rounded-lg overflow-hidden my-5"t><"flex mt-5"<"flex-1"p><"flex-none"i>>',
+  dom: '<"flex mb-3"<"table-search flex flex-1 gap-5 "f><"flex items-center table-option"l>><"bg-white border border-slate-300 rounded-lg overflow-hidden my-5"t><"flex mt-5"<"flex-1"p><"table-info flex  flex-none gap-5"i>>',
   pageLength: 10,
   autoWidth: false,
   destroy: true,

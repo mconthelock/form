@@ -22,6 +22,17 @@ class qoi_model extends my_model
         return $this->db->get()->result()[0]->FID+1;
     }
 
+    public function generate_attfile_id($nfrmno, $vorgno, $cyear, $cyear2, $nrunno){
+        $this->db->select('NVL(MAX(ITEMNO),0) AS ITEMNO')
+                ->from('ATTQOIFRM')
+                ->where('NFRMNO', $nfrmno)
+                ->where('VORGNO', $vorgno)
+                ->where('CYEAR', $cyear)
+                ->where('CYEAR2', $cyear2)
+                ->where('NRUNNO', $nrunno);
+        return $this->db->get()->result()[0]->ITEMNO+1;
+    }
+
     public function get_qoi_schedule($year)
     {
         $next = $year+1;
@@ -40,6 +51,39 @@ class qoi_model extends my_model
         return $this->db->get()->result();
     }
 
+    public function get_Jstaff()
+    {
+        $this->db->select("SEMPNO , SNAME")
+        ->from('AMECUSERALL')
+        ->where("CSTATUS = '1'")
+        ->where("SSECCODE = '000503'")
+        ->where("SPOSCODE in ('41','42','43','40','35')")
+        ->order_by('SNAME ASC');
+        return $this->db->get()->result();
+    }
+
+    public function get_Engineer()
+    {
+        $this->db->select("SEMPNO , SNAME")
+        ->from('AMECUSERALL')
+        ->where("CSTATUS = '1'")
+        ->where("SSECCODE = '000503'")
+        ->where("SPOSCODE in ('40','35')")
+        ->order_by('SNAME ASC');
+        return $this->db->get()->result();
+    }   
+
+    
+    public function get_SEMING()
+    {
+        $this->db->select("SEMPNO , SNAME")
+        ->from('AMECUSERALL')
+        ->where("CSTATUS = '1'")
+        ->where("SSECCODE in ('000402','000403')")
+        ->where("SPOSCODE in ('30')")
+        ->order_by('SNAME ASC');
+        return $this->db->get()->result();
+    }
     public function deletesch($con){
         $this->db->where($con);
         return $this->db->delete('QOI_DWGSCHEDULE');
@@ -68,7 +112,7 @@ class qoi_model extends my_model
     public function getqoiform($nfrmno, $vorgno, $cyear, $cyear2, $nrunno)
     {
         $this->db
-        ->select('Q.*, F.VREQNO , R.SNAME as REQNAME , F.VINPUTER , I.SNAME as INPNAME')
+        ->select('Q.* , to_char(Q.INSPECDATE,\'dd/mm/YYYY\') as SINSPECDATE, to_char(Q.EXPCHGDATE,\'dd/mm/YYYY\') as SEXPCHGDATE, F.VREQNO , R.SNAME as REQNAME , F.VINPUTER , I.SNAME as INPNAME')
         ->from('QOIFORM Q')
         ->join('FORM F', 'F.NFRMNO = Q.NFRMNO AND F.VORGNO = Q.VORGNO AND F.CYEAR = Q.CYEAR AND F.CYEAR2 = Q.CYEAR2 AND F.NRUNNO = Q.NRUNNO')
         ->join('AMECUSERALL I', 'I.SEMPNO = F.VINPUTER AND I.CSTATUS = \'1\'')

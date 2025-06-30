@@ -61,7 +61,7 @@ export function getAmecwebAccess(q) {
   return new Promise((resolve) => {
     $.ajax({
       type: "post",
-      url: `${process.env.APP_API}/docinv/amecweb/accessright`,
+      url: `${process.env.APP_WEBSERVICE}/docinv/amecweb/accessright`,
       dataType: "json",
       data: q,
       success: function (response) {
@@ -75,7 +75,7 @@ export function getUserGroup(id, program) {
   return new Promise((resolve) => {
     $.ajax({
       type: "post",
-      url: `${process.env.APP_API}/docinv/amecweb/userGroup/`,
+      url: `${process.env.APP_WEBSERVICE}/docinv/amecweb/userGroup/`,
       dataType: "json",
       data: {
         id,
@@ -92,7 +92,7 @@ export function getApplication(q) {
   return new Promise((resolve) => {
     $.ajax({
       type: "post",
-      url: `${process.env.APP_API}/docinv/amecweb/application/`,
+      url: `${process.env.APP_WEBSERVICE}/docinv/amecweb/application/`,
       dataType: "json",
       data: q,
       success: function (response) {
@@ -107,7 +107,7 @@ export function getformlist(q) {
   return new Promise((resolve) => {
     $.ajax({
       type: "post",
-      url: `${process.env.APP_API}/webflow/formlist/listdata/`,
+      url: `${process.env.APP_WEBSERVICE}/webflow/formlist/listdata/`,
       dataType: "json",
       data: q,
       success: function (response) {
@@ -123,7 +123,7 @@ export function getEmployee(q = {}) {
     $.ajax({
       type: "post",
       dataType: "json",
-      url: `${process.env.APP_API}/webflow/amecusers/users/`,
+      url: `${process.env.APP_WEBSERVICE}/webflow/amecusers/users/`,
       data: q,
       success: function (data) {
         resolve(data);
@@ -144,10 +144,52 @@ export function getAmecusers() {
     $.ajax({
       type: "post",
       dataType: "json",
-      url: `${process.env.APP_API}/webflow/amecusers/users/`,
+      url: `${process.env.APP_WEBSERVICE}/webflow/amecusers/users/`,
       data: { status: 1, mode: 1 },
       success: function (data) {
         localStorage.setItem("amecusers", JSON.stringify(data));
+        resolve(data);
+      },
+    });
+  });
+}
+
+export function getDivision(q) {
+  return new Promise((resolve) => {
+    $.ajax({
+      type: "post",
+      dataType: "json",
+      url: `${process.env.APP_WEBSERVICE}/webflow/Organization/division/`,
+      data: q,
+      success: function (data) {
+        resolve(data);
+      },
+    });
+  });
+}
+
+export function getDepartment(q) {
+  return new Promise((resolve) => {
+    $.ajax({
+      type: "post",
+      dataType: "json",
+      url: `${process.env.APP_WEBSERVICE}/webflow/Organization/department/`,
+      data: q,
+      success: function (data) {
+        resolve(data);
+      },
+    });
+  });
+}
+
+export function getSection(q) {
+  return new Promise((resolve) => {
+    $.ajax({
+      type: "post",
+      dataType: "json",
+      url: `${process.env.APP_WEBSERVICE}/webflow/Organization/section/`,
+      data: q,
+      success: function (data) {
         resolve(data);
       },
     });
