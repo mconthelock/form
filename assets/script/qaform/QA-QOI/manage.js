@@ -20,7 +20,7 @@ const columns = [
   {
     data: "DWGNO",
     title: "Drawing No",
-    width: "20%",
+    width: "10%",
     render: function (data, type, row, meta) {
       return data == null ? row.SPEC : data;
     },
@@ -31,6 +31,7 @@ const columns = [
     width: "10%",
   },
   { data: "PARTNAME", title: "Part Name", width: "25%" },
+  { data: "PURITEM", title: "Pur Item No", width: "10%" },
   { data: "SUBCONNAME", title: "Supplier or Subcontrector Name ", width: "15%" },
   { data: "REMARK", title: "Remark", width: "20%" },
   {
@@ -118,7 +119,11 @@ $(document).on("click", ".edit-dwg", async function (e) {
           $(this).prop("checked", $(this).val() == value);
         });
       }
-    }else if(key === "ATTFILE")
+    } else if (target.is("input[type='radio']")) {
+      frm.find(`input[type='radio'][data-map="${key}"]`).each(function () {
+        $(this).prop("checked", $(this).val() == value);
+      });
+    } else if(key === "ATTFILE")
     {
         const p = $("#path").val();
         
@@ -241,10 +246,10 @@ $(document).on('click','#exportExcel', function(){
        {header : 'Drawing' , key : 'DWGNO'},
        {header : 'Spec'    , key : 'SPEC'},
        {header : 'Itemno'     , key : 'ITMNO'},
-       {header : 'Supplier or subcontractor name'     , key : 'SUBCONNAME'},
        {header : 'Part Name'     , key : 'PARTNAME'},
+       {header : 'Pur Item No.'     , key : 'PURITEM'},
+       {header : 'Supplier or subcontractor name'     , key : 'SUBCONNAME'},
        {header : 'Remark'     , key : 'REMARK'},
-       {header : 'Path Dwg'     , key : 'PATHDWG'},
        {header : 'Path Spec'     , key : 'PATHSPEC'},
       ];
   const workbook = defaultExcel(dwgData, columns, opt);

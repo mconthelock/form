@@ -100,25 +100,25 @@ $(document).ready(function () {
     if (!$(".guest_type:checked").val()) return showCheckboxToast(".guest_type", "กรุณาเลือก Guest Type");
 
     // --- Table estimate validation ---
-    let costValid = false;
+    // let costValid = false;
     let remarkValid = true;
-    $("#table_cost tbody tr").each(function () {
-      if ($(this).find("td:eq(0) select").val().trim() !== "") costValid = true;
-      const $remark = $(this).find("input.remark");
-      if (!$remark.is(":disabled") && $remark.val().trim() === "") {
-        showInputToast($remark, "กรุณากรอกเหตุ.. กรณีเงินเกินเงื่อนไข");
-        remarkValid = false;
-        return false;
-      }
-    });
+    // $("#table_cost tbody tr").each(function () {
+    //   if ($(this).find("td:eq(0) select").val().trim() !== "") costValid = true;
+    //   const $remark = $(this).find("input.remark");
+    //   if (!$remark.is(":disabled") && $remark.val().trim() === "") {
+    //     showInputToast($remark, "กรุณากรอกเหตุ.. กรณีเงินเกินเงื่อนไข");
+    //     remarkValid = false;
+    //     return false;
+    //   }
+    // });
     if (!remarkValid) return;
-    if (!costValid) {
-      showInputToast("#table_cost tbody tr:first td:eq(0) select", "กรุณากรอก Estimate อย่างน้อย 1 ");
-      $("#alert-estimate").removeClass("hidden");
-      $("#table_cost tbody tr:first td:eq(0) select").focus();
-      setTimeout(() => $("#alert-estimate").addClass("hidden"), 5000);
-      return;
-    }
+    // if (!costValid) {
+    //   showInputToast("#table_cost tbody tr:first td:eq(0) select", "กรุณากรอก Estimate อย่างน้อย 1 ");
+    //   $("#alert-estimate").removeClass("hidden");
+    //   $("#table_cost tbody tr:first td:eq(0) select").focus();
+    //   setTimeout(() => $("#alert-estimate").addClass("hidden"), 5000);
+    //   return;
+    // }
 
     // --- Participant validation ---
     if (guestCount() < 1) return showInputToast("#guest-name-input", "กรุณากรอก guest อย่างน้อย 1 คน");
@@ -175,7 +175,7 @@ $(document).ready(function () {
     formData.append("location_detail", $("input[placeholder='*Please identify the location.']").val());
     formData.append("guest_type", $(".guest_type:checked").val());
     // formData.append("org_type", $("input[name='orgType']:checked").val());
-    formData.append("entertain_budget", $("#entertain-budget").val());
+    // formData.append("entertain_budget", $("#entertain-budget").val());
     formData.append("total_amount", $("#total-amount").text());
     formData.append("remark", $("textarea[placeholder*='ระบุเหตุผล']").val());
     formData.append("companies", JSON.stringify(companiesArray));
@@ -226,15 +226,15 @@ $(document).ready(function () {
       )
     );
     let estimate_items = [];
-    $("#table_cost tbody tr").each(function () {
-      let details = $(this).find("td:eq(0) select option:selected").val();
-      let qty = $(this).find("td:eq(1) input").val();
-      let cost = $(this).find("td:eq(2) input").val();
-      let total = $(this).find("td:eq(3) input").val();
-      let remark = $(this).find("td:eq(4) input").val();
-      if (details && qty && cost && total) estimate_items.push({ details, qty, cost, total, remark });
-    });
-    formData.append("estimate_items", JSON.stringify(estimate_items));
+    // $("#table_cost tbody tr").each(function () {
+    //   let details = $(this).find("td:eq(0) select option:selected").val();
+    //   let qty = $(this).find("td:eq(1) input").val();
+    //   let cost = $(this).find("td:eq(2) input").val();
+    //   let total = $(this).find("td:eq(3) input").val();
+    //   let remark = $(this).find("td:eq(4) input").val();
+    //   if (details && qty && cost && total) estimate_items.push({ details, qty, cost, total, remark });
+    // });
+    // formData.append("estimate_items", JSON.stringify(estimate_items));
 
     const form = await createForm(nfrmno, vorgno, cyear, $("#requested-by").val(), $("#input-by").val(), "");
     const { runno: NRUNNO, cyear2: CYEAR2 } = form.message;

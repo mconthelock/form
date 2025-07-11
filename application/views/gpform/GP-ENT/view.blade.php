@@ -198,6 +198,64 @@
                         </tr>
                     </tbody>
                 </table>
+
+
+                @if($dataForm->FORM_APPROVE != null)
+                    <div class="bg-white rounded-2xl shadow-lg border-2 border-orange-500 overflow-hidden mt-8">
+                        <!-- แถบ Late Approval -->
+                        <div class="flex items-center gap-3 px-6 py-4 bg-gradient-to-r from-orange-100 to-orange-50">
+                            <span class="inline-flex items-center px-3 py-1 text-sm font-bold text-orange-700 bg-orange-200 rounded-full shadow-sm">
+                                <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path d="M12 8v4l3 3"></path>
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                </svg>
+                                Late Approval
+                            </span>
+                            <span class="text-xs text-orange-500 font-medium">(Approved after event date)</span>
+                        </div>
+
+                        <!-- เนื้อหา -->
+                        <div class="p-6 md:p-8 space-y-5">
+                            <!-- ผลลัพธ์ -->
+                            <div class="flex items-center gap-4">
+                                <span class="text-gray-700 font-semibold text-base">Result</span>
+                                <span class="flex items-center gap-2 text-xl font-extrabold {{ $dataForm->FORM_APPROVE == '1' ? 'text-green-600' : 'text-red-500' }}">
+                                    @if ($dataForm->FORM_APPROVE == '1')
+                                        <svg class="h-7 w-7" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                                        </svg>
+                                        Accept
+                                    @else
+                                        <svg class="h-7 w-7" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                                        </svg>
+                                        Not Accept
+                                    @endif
+                                </span>
+                            </div>
+
+                            <!-- Remark (ถ้ามี) -->
+                            @if ($dataForm->REMARK_APPROVE != null)
+                                <div class="flex items-center gap-3">
+                                    <span class="text-orange-500 font-bold">Remark</span>
+                                    <span class="italic text-gray-700 text-base flex-1">{{ $dataForm->REMARK_APPROVE }}</span>
+                                </div>
+                            @endif
+
+                        </div>
+                    </div>
+
+                @endif
+
+
+
+
+
+
+
+
+
+
             </div>
             @if($form[0]->CST == '2')
                 <div class="flex justify-center mt-8">
@@ -223,7 +281,7 @@
 
                 @endif
 
-                @if($dataForm->ENTERTAINMENT_DATE < date("d-M-y") && $flowstep[0]->CSTEPNO == '18')
+                @if(strtotime($dataForm->ENTERTAINMENT_DATE) < strtotime(date("d-M-y")) && $flowstep[0]->CSTEPNO == '18')
 
                     <!-- Open the modal using ID.showModal() method -->
                     <!-- <button class="btn" onclick="my_modal_1.showModal()">open modal</button> -->
@@ -268,11 +326,11 @@
                             <div class="w-3/4 flex flex-col justify-center">
                                 <div class="flex items-center mt-6 mb-2">
                                     <label for="accept_remark" class="bg-amber-300 rounded-md p-1 mr-2 w-28 text-center">Remark:</label>
-                                    <input type="text" id="accept_remark" name="accept_remark" class="input input-bordered rounded-lg flex-1" placeholder="If any" />
+                                    <input type="text" id="accept_remark" name="accept_remark" class="input input-bordered rounded-lg flex-1" placeholder="If any" disabled />
                                 </div>
                                 <div class="flex items-center mb-2">
                                     <label for="notaccept_remark" class="bg-amber-300 rounded-md p-1 mr-2 w-28 text-center">*Remark:</label>
-                                    <input type="text" id="notaccept_remark" name="notaccept_remark" class="input input-bordered rounded-lg flex-1" placeholder="*Please identify the reason" />
+                                    <input type="text" id="notaccept_remark" name="notaccept_remark" class="input input-bordered rounded-lg flex-1" placeholder="*Please identify the reason" disabled />
                                 </div>
                             </div>
                         </div>

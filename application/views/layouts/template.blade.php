@@ -20,7 +20,7 @@
     <link rel="stylesheet" href="{{ $_ENV['APP_CDN'] }}/datatable/v2.2.2/datatables.min.css">
     <link rel="stylesheet" href="{{ $_ENV['APP_CDN'] }}/datatable/v2.2.2/responsive.dataTables.min.css">
     {{-- <link rel="stylesheet" href="{{ base_url() }}assets/dist/css/tailwind.css?ver={{ $GLOBALS['version'] }}"> --}}
-    <link rel="stylesheet" href="{{ base_url() }}assets/dist/css/v1.0.1.css?ver={{ $GLOBALS['version'] }}">
+    <link rel="stylesheet" href="{{ base_url() }}assets/dist/css/v1.0.1.min.css?ver={{ $GLOBALS['version'] }}">
     <script src="{{ base_url() }}assets/script/inc/auth.js"></script>
     @yield('styles')
 </head>

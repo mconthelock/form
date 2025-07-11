@@ -30,6 +30,7 @@ $(document).ready(async function () {
     let approveRemark = "";
     let acceptStatus = "";
     if ($("input[name='accept']").length > 0) {
+      const acceptval = $("input[name='accept']:checked").val();
       const acceptStatus = $("input[name='accept']:checked").attr("id");
       const acceptRemark = $("#accept_remark").val();
       const notAcceptRemark = $("#notaccept_remark").val();
@@ -58,10 +59,14 @@ $(document).ready(async function () {
             cyear2,
             nrunno,
             approveRemark,
-            acceptStatus,
+            acceptval,
           },
-          dataType: "json",
-          success: function (response) {},
+          success: function (response) {
+            console.log(response);
+          },
+          error: function (xhr) {
+            console.log(xhr);
+          },
         });
       }
       // ... และ logic อื่นๆ ต่อได้เลย

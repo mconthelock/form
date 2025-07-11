@@ -1,0 +1,23 @@
+
+/* Fieldset */
+.field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.field .label-text {
+    font-weight: bold;
+    font-size: 0.875rem;
+}
+
+
+/* input, textarea, select {
+    --input-color: color-mix(in oklab, var(--color-base-content) 20%, #0000);
+    height: var(--height-dataTable-input) !important;
+    background-color: var(--bgcolor-dataTable-input) !important;
+    border-radius: var(--radius-dataTable-input) !important;
+    border: var(--border) solid !important;
+    border-color: var(--input-color) !important;
+    font-size: var(--font-size-dataTable-input) !important;
+} */

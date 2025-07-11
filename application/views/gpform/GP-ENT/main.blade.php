@@ -17,6 +17,9 @@
                 </div>
             </h1>
 
+            <div>
+                <label for="">For Requesting Approval Entertainment (Part1) must get approve from Approver before Entertainment date 1 day. (Refer: RAF Practical Regulation : RAF-PR-G-068)</label>
+            </div>
             <!-- Section 1: Basic Info -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
@@ -30,7 +33,6 @@
                 <div>
                     <label class="block mb-1 font-semibold text-blue-700">Entertainment Date</label>
                     <input type="date" id="entertain-date" class="input input-bordered rounded-xl w-full shadow-sm border-blue-200" />
-                    <label class="label text-red-500 mt-2 text-sm">***For Entertainment Date must be get approve from President or RAF DIM before 1 day</label>
                 </div>
                 <div></div>
                 <div class="md:col-span-2">

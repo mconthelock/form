@@ -3,7 +3,9 @@
  * https://amecwebtest.mitsubishielevatorasia.co.th/joborder
  */
 
-import { showLoader } from "../../utils";
+import { showLoader } from "./preloader";
+
+
 
 // export const host = $("meta[name=base_url]").attr("content");
 export const host = self.location.origin + self.location.pathname.split('/').slice(0,2).join('/');

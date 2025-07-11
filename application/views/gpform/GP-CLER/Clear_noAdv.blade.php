@@ -160,7 +160,7 @@
             </div>
 
             <!-- Section 5: Estimate Table + Budget -->
-            <div class="bg-gradient-to-r from-blue-50 via-white to-blue-100 rounded-2xl border border-blue-200 p-4">
+            {{--<div class="bg-gradient-to-r from-blue-50 via-white to-blue-100 rounded-2xl border border-blue-200 p-4">
                 <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-2">
                     <h2 class="font-bold text-blue-900 text-lg">
                         *Estimate Cost / ประมาณการค่าใช้จ่าย:
@@ -222,7 +222,7 @@
                     1. สำหรับค่ารับรองอื่นๆที่ไม่ใช่ค่าอาหาร เช่น กีฬา, กระเช้า ฯลฯ ให้พิจารณาร่วมกับ RAF
                     <span class="text-gray-400 block">For entertainment other than meals, such as sports expenses, gift baskets, etc., consider with RAF Division.</span>
                 </div>
-            </div>
+            </div>--}}
 
             <!-- Section 6: Quantity of Participant -->
             <div class="bg-gradient-to-r from-blue-50 via-white to-blue-100 rounded-2xl border border-blue-200 p-4 space-y-2">

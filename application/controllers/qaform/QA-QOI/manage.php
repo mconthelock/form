@@ -50,10 +50,15 @@ class manage extends MY_Controller{
                         'DWGNO'     => $_POST["DWGNO"],
                         'SPEC'      => $_POST["SPEC"],
                         'PARTNAME'  => $_POST["PARTNAME"],
+                        'PURITEM'   => $_POST["PURITEM"],
                         'SUBCONNAME' => $_POST["SUBCONNAME"],
                        // 'PATHDWG'   => $_POST["PATHDWG"],
                         'PATHSPEC'   => $_POST["PATHSPEC"],
                         'REMARK'   => $_POST["REMARK"],
+                        'ISSUE'    => isset($_POST["ISSUE"])? $_POST["ISSUE"]:'N',
+                        'TYREQ'    => isset($_POST["TYREQ"])? $_POST["TYREQ"]:'',
+                        'RQQTY'    => $_POST["RQQTY"],
+                        'REMARKOVR'    => $_POST["REMARKOVR"]
                     );
                 }else
                 {
@@ -63,10 +68,15 @@ class manage extends MY_Controller{
                         'DWGNO'     => $_POST["DWGNO"],
                         'SPEC'      => $_POST["SPEC"],
                         'PARTNAME'  => $_POST["PARTNAME"],
+                        'PURITEM'   => $_POST["PURITEM"],
                         'SUBCONNAME' => $_POST["SUBCONNAME"],
                        // 'PATHDWG'   => $_POST["PATHDWG"],
                         'PATHSPEC'   => $_POST["PATHSPEC"],
                         'REMARK'   => $_POST["REMARK"],
+                        'ISSUE'    => isset($_POST["ISSUE"])? $_POST["ISSUE"]:"N",
+                        'TYREQ'    =>  isset($_POST["TYREQ"])? $_POST["TYREQ"]:'',
+                        'RQQTY'    => $_POST["RQQTY"],
+                        'REMARKOVR'    => $_POST["REMARKOVR"]
                     );
 
                 }

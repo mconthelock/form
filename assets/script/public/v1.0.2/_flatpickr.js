@@ -10,14 +10,20 @@
  * @requires dayjs npm install dayjs
  * @requires flatpickr/dist/flatpickr.min.css
  * @version 1.0.2
+ * @note 2025-07-02 
+ *  เพิ่ม tooltip ในปุ่ม toggle, clear, save
+ *  เพิ่มปุ่ม save ใน fieldset
+ * @note 2025-07-11
+ *  เปลี่ยน การตั้งค่าให้ใช้เป็น object แทนการใช้ string
  */
 
 import "flatpickr/dist/flatpickr.min.css";
+import "../../../style/custom/v1.0.1/component.css"
 
 //JS Loader
 import flatpickr    from "flatpickr";
 import dayjs        from 'dayjs';
-import { btnClass, fieldClass, fieldset, inputClass } from "./component/form";
+import { btnClass, fieldClass, fieldset, input, inputClass } from "./component/form";
 
 
 /**
@@ -70,7 +76,12 @@ export const fpkFieldsetOpt = {
     value : '',
     placeholder : 'Select Date',
     join: true,
-    class: ''
+    class: '',
+    inputClass: inputClass,
+    clearClass: btnClass,
+    toggleClass: btnClass,
+    saveClass: btnClass,
+    save: false,
 };
 
 $(document).on('click', '.fpk-clear', function(){
@@ -102,8 +113,8 @@ $(document).on('click', '.fpk-toggle', function(){
  */
 export const fpkClear = (option = {}) => {
     const opt = {...fpkFieldsetOpt, ...option};
-    const cls = opt.class == '' ? btnClass : opt.class;
-    return `<a class="join-item ${cls} fpk-clear" title="clear" data-target="${opt.name}">
+    const cls = opt.clearClass == '' ? btnClass : opt.clearClass;
+    return `<a class="join-item ${cls} fpk-clear tooltip" data-tip="Clear" data-html="Clear" title="Clear" data-target="${opt.name}">
                 <i class="icofont-ui-close"></i>
             </a>`
 }
@@ -119,8 +130,8 @@ export const fpkClear = (option = {}) => {
  */
 export const fpkToggle = (option = {}) => {
     const opt = {...fpkFieldsetOpt, ...option};
-    const cls = opt.class == '' ? btnClass : opt.class;
-    return `<a class="join-item ${cls} fpk-toggle" title="toggle" data-target="${opt.name}">
+    const cls = opt.toggleClass == '' ? btnClass : opt.toggleClass;
+    return `<a class="join-item ${cls} fpk-toggle tooltip" data-tip="Open Calendar" data-html="Open Calendar" title="Open Calendar" data-target="${opt.name}">
                 <i class="icofont-ui-calendar"></i>
             </a>`;
 }
@@ -136,8 +147,16 @@ export const fpkToggle = (option = {}) => {
  */
 export const fpkInput = (option = {}) => {
     const opt = {...fpkFieldsetOpt, ...option};
-    const cls = opt.class == '' ? inputClass : opt.class;
-    return `<input type="text" placeholder="${opt.placeholder}" class="fdate w-full join-item ${cls}" name="${opt.name}" value="${opt.value}" data-current-date="${opt.value}">`;
+    const cls = opt.inputClass == '' ? inputClass : opt.inputClass;
+    return `<input type="text" placeholder="${opt.placeholder}" class="fdate join-item ${cls}" name="${opt.name}" value="${opt.value}" data-current-date="${opt.value}">`;
+}
+
+export const fpkSave = (option = {}) => {
+    const opt = {...fpkFieldsetOpt, ...option};
+    const cls = opt.saveClass == '' ? btnClass : opt.saveClass;
+    return `<a class="join-item ${cls} fpk-save tooltip" data-tip="Save"  data-html="Save" title="save" data-target="${opt.name}">
+                <i class="icofont-save"></i>
+            </a>`;
 }
 
 /**
@@ -166,10 +185,17 @@ export const fpkFieldset = (option = {}) => {
     const opt = inputAttrs({...fpkFieldsetOpt, ...option});
     
     const cls = opt.class == '' ? fieldClass : opt.class;
+    // console.log('flatpickr', opt, cls);
+
+    const save = opt.save == true ? fpkSave(opt) : '';
+     
+    // console.log(fpkFieldsetOpt,opt);
+    
     const flatpickr = `<div class="flatpickr ${opt.join}">
                             ${fpkInput(opt)}
                             ${fpkToggle(opt)}
                             ${fpkClear(opt)}
+                            ${save}
                         </div>`
     return fieldset({element:flatpickr, label:opt.label, class:cls});
 }
@@ -236,7 +262,7 @@ export const fpkDayOff = (storedDayOffs = dayOff) => {
                 const dd = dayjs(dateStr).format("YYYY-M-D"); // แปลงสตริงเป็น fomat วันที่ ที่ต้องการ\
 
                 if (storedDayOffs.value.includes(dd)) {
-                dayElem.classList.add("day-offs"); // เพิ่มคลาส
+                dayElem.classList.add("day-off"); // เพิ่มคลาส
                 }
             } catch (error) {
                 console.error("Error in onDayCreate:", error);
@@ -250,11 +276,15 @@ export const fpkDayOff = (storedDayOffs = dayOff) => {
  * @param {string or object} e string id e.g. #date or element e.g. $('#date') or Class e.g. .fdate
  * @returns 
  */
-export const setDatePicker = (options = {...fpkOpt, ...fpkDayOff()}, e = '') => {
-    const element = e == '' ? '.fdate' : e;
-    const instance = flatpickr(element, {
-        ...options,
-    });
+export const setDatePicker = (options = {}) => {
+    const opt = {
+        element: '.fdate', // default element
+        ...fpkOpt, 
+        ...options
+    };
+    const { element, ...flatpickrOptions } = opt; // แยก element ออกมา
+
+    const instance = flatpickr(element, flatpickrOptions);
     return instance;
 };
 
@@ -265,12 +295,19 @@ export const setDatePicker = (options = {...fpkOpt, ...fpkDayOff()}, e = '') => 
  * @param {string} id 
  * @param {string} date 
  */
-export  function setDatefpk(id, date, opt = {...fpkOpt, ...fpkDayOff()}){
-    const el = $(`input[name="${id}"]`)[0];
+export  function setDatefpk(options = {}){
+    const opt = {
+        name : '',
+        date : '',
+        ...fpkOpt, 
+        ...options
+    };
+    const { name, date, ...flatpickrOptions } = opt; // แยก name และ date ออกมา
+    const el = $(`input[name="${name}"]`)[0];
     if (!el) return; // ถ้าไม่มี input นี้อยู่ใน DOM ข้ามไปเลย
     let instance = el._flatpickr;
     if (!instance) {
-        instance = setDatePicker(opt, $(`input[name="${id}"]`));
+        instance = setDatePicker(flatpickrOptions, $(`input[name="${name}"]`));
     }else{
         instance.setDate(date);
     }

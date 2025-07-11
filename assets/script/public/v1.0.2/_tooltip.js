@@ -6,24 +6,40 @@
  * @since  2025-05-17
  * @requires jQuery npm install jquery
  * @version 1.0.2
+ * @note 2025-07-02
+ *  แก้ไม่มี html ใน tooltip ไม่ต้องโชว์
+ * @note 2025-07-03
+ *  หากมี data-tip ลบทิ้งกันไปทับกับ daisy
+ * @note 2025-07-07
+ *  เพิ่มหากเอาเมาส์ชี้ที่ tooltip แล้ว tooltip จะไม่หาย สามารถนำไปใช้ได้กับที่แนบตารางหลายบรรทัดแล้ว scroll 
  */
 
 // Tooltip
 // how to use 
-// step 0: add customTooltip to body
+// step 0: import this module in your script e.g. import "@v1.0.2/_tooltip";
 // step 1: add class tooltip to element
 // step 2: add class tooltip-bottom, tooltip-top, tooltip-left, tooltip-right to element for position
 // step 3: add data-html="html" to element for content
-export const customTooltip = `<div id="custom-tooltip" class="absolute z-[10000] bg-primary text-white p-3 rounded shadow border border-base-300 text-sm !aspect-auto"></div>` 
+// export const customTooltip = `<div id="custom-tooltip" class="absolute z-[10000] bg-primary text-white p-2 rounded shadow border border-base-300 text-sm !aspect-auto hidden"></div>` 
+export const customTooltip = `<div id="custom-tooltip" class="absolute z-[10000] bg-neutral text-white p-2 rounded shadow text-sm !aspect-auto "></div>` 
 
 $(document).on("mouseover", ".tooltip", async function (e) {
     if($('#custom-tooltip').length == 0) $('body').append(customTooltip);
-    const html = $(this).data("html");
     const tooltip = $("#custom-tooltip");
+    const html = $(this).data("html");
     const target = $(this);
-
+    // console.log(html);
+    
+    if(html){
+        $(this).removeAttr("data-tip");
+        
+    }else{
+        tooltip.remove();
+    }
+    
     // Set HTML content
     tooltip.html(html);
+    
 
     // หาขนาดและตำแหน่งของ element เป้าหมาย
     const offset = target.offset();
@@ -75,59 +91,30 @@ $(document).on("mouseover", ".tooltip", async function (e) {
         left: left + "px"
     });
 
-
-    // const html = $(this).data("html");
-    // const target = $(this);
-    
-    // // ถ้ายังไม่มี tooltip ให้เพิ่มเข้า body
-    // if ($('#custom-tooltip').length === 0) {
-    //     $('body').append(customTooltip);
-    // }
-
-    // const tooltip = $('#custom-tooltip');
-    // tooltip.html(html).removeClass("hidden");
-
-    // // ให้ browser render ก่อน แล้วค่อยคำนวณตำแหน่ง
-    // requestAnimationFrame(() => {
-    //     const rect = target[0].getBoundingClientRect();
-    //     const tooltipWidth = tooltip.outerWidth();
-    //     const tooltipHeight = tooltip.outerHeight();
-    //     const targetWidth = target.outerWidth();
-    //     const targetHeight = target.outerHeight();
-
-    //     // ค่าเริ่มต้น: ด้านบน
-    //     let top = rect.top + window.scrollY - tooltipHeight - 8;
-    //     let left = rect.left + window.scrollX + (targetWidth / 2) - (tooltipWidth / 2);
-
-    //     if (target.hasClass("tooltip-bottom")) {
-    //         top = rect.top + window.scrollY + targetHeight + 8;
-    //     } else if (target.hasClass("tooltip-left")) {
-    //         top = rect.top + window.scrollY + (targetHeight / 2) - (tooltipHeight / 2);
-    //         left = rect.left + window.scrollX - tooltipWidth - 8;
-    //     } else if (target.hasClass("tooltip-right")) {
-    //         top = rect.top + window.scrollY + (targetHeight / 2) - (tooltipHeight / 2);
-    //         left = rect.left + window.scrollX + targetWidth + 8;
-    //     }
-
-    //     // ป้องกันล้นขอบ
-    //     const screenWidth = $(window).width();
-    //     const screenHeight = $(window).height();
-    //     const scrollY = window.scrollY;
-
-    //     if (left + tooltipWidth > screenWidth) left = screenWidth - tooltipWidth - 8;
-    //     if (left < 0) left = 8;
-    //     if (top + tooltipHeight > scrollY + screenHeight) top = scrollY + screenHeight - tooltipHeight - 8;
-    //     if (top < scrollY) top = scrollY + 8;
-
-    //     tooltip.css({ top: `${top}px`, left: `${left}px` });
-    // });
-
-
-
-    // tooltip.removeClass("hidden")
-    $('.tooltip').on("mouseleave", () => {
-        // tooltip.addClass('hidden');
-        tooltip.remove();
+    $(this).on("click", () => {
+        tooltip.addClass('hidden');
     });
-   
+});
+
+let hideTooltipTimeout = null;
+
+$(document).on("mouseenter", ".tooltip", function () {
+    // ... set content/position ...
+    $("#custom-tooltip").removeClass('hidden');
+    clearTimeout(hideTooltipTimeout);
+});
+
+$(document).on("mouseleave", ".tooltip", function () {
+    hideTooltipTimeout = setTimeout(function () {
+        $("#custom-tooltip").addClass('hidden');
+    }, 100);
+});
+
+$(document).on("mouseenter", "#custom-tooltip", function () {
+    clearTimeout(hideTooltipTimeout);
+});
+$(document).on("mouseleave", "#custom-tooltip", function () {
+    hideTooltipTimeout = setTimeout(function () {
+        $("#custom-tooltip").addClass('hidden');
+    }, 100);
 });

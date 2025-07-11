@@ -209,7 +209,7 @@
                 <div class="flex-1">
                 @if (($mode == $MODE_EDIT && (($cextData >= 2) && ($cextData <= 3))) || (($form[0]->CST == "0") && (($empno == $form[0]->VREQNO) || ($empno == $form[0]->VINPUTER))))  
                         <input type="text" name="puritem"
-                        class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-400 req"
+                        class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-400"
                         value="{{ $qoiform->PURITEM }}" />
                 @else
                     <div class="py-2 px-1">
@@ -375,6 +375,7 @@
                       </select>
                 </div>
               </div>
+              <!--
               <div class="flex items-center">
                 <div class="w-55 text-sm font-normal text-gray-600">Engineer in charge</div>
                 <div class="flex-1">
@@ -382,13 +383,23 @@
                             <option value="">------------</option>
                     </select>
                 </div>
-              </div>
+              </div> -->
             @endif
-            @if (($mode == $MODE_EDIT) && ($cextData ==4) && ($RESULTQOIDWG->RESULT == "1"))  
+            @if (($mode == $MODE_EDIT) && ($cextData ==4) && ($NG))  
               <div class="flex items-center">
                 <div class="w-55 text-sm font-normal text-gray-600">SEM. in charge</div>
                 <div class="flex-1">
-                     <select name="seminc" id="seminc" class="select sem_select">
+                     <select name="seminc" id="seminc" class="select sem_select req">
+                            <option value="">------------</option>
+                      </select>
+                </div>
+              </div>
+            @endif
+            @if (($mode == $MODE_EDIT) && ($cextData ==7))  
+              <div class="flex items-center">
+                <div class="w-55 text-sm font-normal text-gray-600">Engineer in charge</div>
+                <div class="flex-1">
+                     <select name="enginc" id="enginc" class="select eng_select req">
                             <option value="">------------</option>
                       </select>
                 </div>
@@ -397,7 +408,7 @@
             <div class="flex items-start">
                 <div class="w-55 text-sm font-normal text-gray-600">Check sheet</div>
                 <div class="flex-1">
-                <div id="dvconchk">
+                <div id="dvconchk" class="py-2 px-1" >
                 @foreach ($attchks as $c)
                              <div class="openfl"  data-id="{{ $c->ITEMNO }}" data-filename="{{ $c->SFILE }}">
                              <a href="{{ base_url('qaform/QA-QOI/form/mdownload/') . $NFRMNO . '_'.$VORGNO.'_'.$CYEAR.'_'.$CYEAR2.'_'.$NRUNNO.'/'.$c->SFILE.'/'.substr($c->SFILE, 13) }}" class="link text-sm text-blue-600 font-semibold" target="_blank">{{ substr($c->SFILE, 13) }}</a>
@@ -440,7 +451,7 @@
                 @endif
                 </div>
             </div>
-            <div class="flex items-start gap-4 mb-4">
+            <div class="flex items-start">
                 <!-- คอลัมน์หลักที่ 1: Label -->
                 <div class="w-55 text-sm font-normal text-gray-600 pt-2">
                     Judgment
@@ -451,11 +462,11 @@
                     <!-- ซ้าย: Radio แนวนอน (ขนาดเล็ก) -->
                     <div class=" flex items-center gap-4">
                     <label class="flex items-center gap-2 cursor-pointer">
-                        <input type="radio" name="judgement" value="1" class="custom-radio radio-primary-custom  req"   @if ($qoiform->JDGMNTNO == '1') checked @endif />
+                        <input type="radio" name="judgement" id="radio-acceptable" value="1"  class="custom-radio radio-primary-custom  req"   @if ($qoiform->JDGMNTNO == '1') checked @endif />
                         <span class="text-sm text-gray-700">Acceptable</span>
                     </label>
                     <label class="flex items-center gap-2 cursor-pointer">
-                        <input type="radio" name="judgement" value="2" class="custom-radio radio-error-custom  req"  @if ($qoiform->JDGMNTNO == '2') checked @endif />
+                        <input type="radio" name="judgement" id="radio-notaccept" value="2" class="custom-radio radio-error-custom  req"  @if ($qoiform->JDGMNTNO == '2') checked @endif />
                         <span class="text-sm text-gray-700">Not Accept</span>
                     </label>
                     </div>
@@ -502,14 +513,25 @@
                     </div>
                 </div>
                 @else
-                     <div class="py-2 px-1">
-                         {{ $qoiform->JDGMNTNO == '1' ? 'Acceptable' : $qoiform->JDGMNTNO == '2' ? 'Not Accept' : '' }}
-                         @foreach($attnot as $n)
-                         <div class="openfl" >
-                         <a href="{{ base_url('qaform/QA-QOI/form/mdownload/') . $NFRMNO . '_'.$VORGNO.'_'.$CYEAR.'_'.$CYEAR2.'_'.$NRUNNO.'/'.$n->SFILE.'/'.substr($n->SFILE, 13) }}" class="link text-sm text-blue-600 font-semibold" target="_blank">{{ substr($n->SFILE, 13) }}</a>
-                         </div>
-                         @endforeach
-                    </div>
+                                  <!-- เนื้อหาด้านขวา -->
+                        <div class="flex-1 text-sm text-gray-800 gap-4">
+                            <!-- แสดงผลคำตัดสิน -->
+                            <div class="text-sm text-gray-800 mb-2">
+                                {{ $qoiform->JDGMNTNO === "1" ? 'Acceptable' : ($qoiform->JDGMNTNO === "2" ? 'Not Accept' : '') }}
+                            </div>
+
+                            <!-- ไฟล์แนบ (แยกบรรทัด) -->
+                            @foreach($attnot as $n)
+                                <div class="openfl">
+                                    <a href="{{ base_url('qaform/QA-QOI/form/mdownload/') . $NFRMNO . '_' . $VORGNO . '_' . $CYEAR . '_' . $CYEAR2 . '_' . $NRUNNO . '/' . $n->SFILE . '/' . substr($n->SFILE, 13) }}"
+                                      class="link text-sm text-blue-600 font-semibold"
+                                      target="_blank">
+                                        {{ substr($n->SFILE, 13) }}
+                                    </a>
+                                </div>
+                            @endforeach
+                        </div>
+
                 @endif
 
                 </div>
@@ -523,11 +545,11 @@
                 @endif
 </div>
  </div>
- @if($resultdwg[0]->RESULT == 1) 
+ @if($NG) 
  <!-- Section 4 -->
  <div class="bg-white rounded-md shadow-md p-6 mb-8 text-sm text-gray-800">
   <h2 class="text-lg font-semibold text-sky-700 mb-4 border-b-2 border-sky-500 pb-2">
-    Quality Observation Report (QOI)
+    Quality Observation Report (QOR)
   </h2>
 
 <!-- Countermeasure Table -->
@@ -547,16 +569,17 @@
       </thead>
       <tbody id="countermeasure-body">
       @if (($mode == $MODE_EDIT) && ($cextData == 8))  
-        @if(count($measure == 0))
-        <tr>
+        @if(count($measure) == 0)
+        <tr class="measure">
           <td class="border border-gray-300 px-4 py-2">
-            <input type="text" name="m_action[]" value="" class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-400" />
+            <textarea name="m_action[]" rows="3" class="m_action w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-400 text-sm resize-y"></textarea>
           </td>
           <td class="border border-gray-300 px-4 py-2">
-            <input type="text" name="m_due_date[]" value="" class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-400" />
+            <textarea name="m_due_date[]"  rows="3" class="m_due_date w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-400 text-sm resize-y"></textarea>
           </td>
           <td class="border border-gray-300 px-4 py-2">
-            <input type="text" name="m_in_charge[]" value="" class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-400" />
+            <textarea name="m_in_charge[]"  rows="3" class="m_in_charge w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-400 text-sm resize-y"></textarea>
+
           </td>
           <td class="border border-gray-300 px-4 py-2 text-center">
             <button type="button"  data-table = "countermeasure-body" class="text-red-500 hover:text-red-700 cursor-pointer del-table-row" >
@@ -566,15 +589,15 @@
         </tr>
         @endif
         @foreach($measure as $m)
-        <tr>
+        <tr class="measure">
           <td class="border border-gray-300 px-4 py-2">
-            <input type="text" name="m_action[]" value="{{ $m->QACTION }}" class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-400" />
+            <textarea name="m_action[]" rows="3" class="m_action w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-400 text-sm resize-y">{{ $m->QACTION }}</textarea>
           </td>
           <td class="border border-gray-300 px-4 py-2">
-            <input type="text" name="m_due_date[]" value="{{ $m->QDUEDATE }}" class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-400" />
+            <textarea name="m_due_date[]" rows="3" class="m_due_date w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-400 text-sm resize-y">{{ $m->QDUEDATE }}</textarea>
           </td>
           <td class="border border-gray-300 px-4 py-2">
-            <input type="text" name="m_in_charge[]" value="{{ $m->QINCHARGE }}" class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-400" />
+            <textarea name="m_in_charge[]" rows="3" class="m_in_charge w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-400 text-sm resize-y">{{ $m->QINCHARGE }}</textarea>
           </td>
           <td class="border border-gray-300 px-4 py-2 text-center">
             <button type="button"  data-table = "countermeasure-body" class="text-red-500 hover:text-red-700 cursor-pointer del-table-row" >
@@ -609,12 +632,16 @@
 <div class="flex items-star">
     <div class="w-55 text-sm font-normal text-gray-600 mt-2">Document/Picture</div>
     <div class="flex-1">
+        <div id="dvconmeasure" class="py-2 px-1" >
         @foreach($attmea as $m)
-                            <span class="sfile">{{ substr($m->SFILE, 13) }}</span>
-                            @if (($mode == $MODE_EDIT) && ($cextData == 8))  
+                            <div class="openfl"  data-id="{{ $m->ITEMNO }}" data-filename="{{ $m->SFILE }}">
+                             <a href="{{ base_url('qaform/QA-QOI/form/mdownload/') . $NFRMNO . '_'.$VORGNO.'_'.$CYEAR.'_'.$CYEAR2.'_'.$NRUNNO.'/'.$m->SFILE.'/'.substr($m->SFILE, 13) }}" class="link text-sm text-blue-600 font-semibold" target="_blank">{{ substr($m->SFILE, 13) }}</a>
+                                @if (($mode == $MODE_EDIT) && ($cextData == 8))  
                                  <button type="button"  data-table = "" class="text-red-500 hover:text-red-700 cursor-pointer del-file" >✕</button>
-                            @endif
+                                @endif
+                            </div>
         @endforeach
+        </div>
         @if (($mode == $MODE_EDIT) && ($cextData == 8))  
                     <div id="dvmeasureFile">
                         <div class="dvSFile flex items-center justify-between gap-2 mb-2">
@@ -666,15 +693,15 @@
       <tbody id="corrective-body">
       @if (($mode == $MODE_EDIT) && ($cextData == 8)) 
           @if(count($correct) == 0)
-          <tr>
+          <tr class="correct">
               <td class="border border-gray-300 px-4 py-2">
-                <input type="text" name="c_action[]" values="" class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-400" />
+                <textarea name="c_action[]" rows="3" class="c_action w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-400 text-sm resize-y"></textarea>
               </td>
               <td class="border border-gray-300 px-4 py-2">
-                <input type="text" name="c_due_date[]" values="" class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-400" />
+                <textarea name="c_due_date[]" rows="3" class="c_due_date w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-400 text-sm resize-y"></textarea>
               </td>
               <td class="border border-gray-300 px-4 py-2">
-                <input type="text" name="c_in_charge[]" values="" class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-400" />
+                <textarea name="c_in_charge[]" rows="3" class="c_in_charge w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-400 text-sm resize-y"></textarea>
               </td>
               <td class="border border-gray-300 px-4 py-2 text-center">
                 <button type="button" data-table = "corrective-body"  class="text-red-500 hover:text-red-700 cursor-pointer del-table-row" >
@@ -684,15 +711,16 @@
             </tr>
           @endif
           @foreach($correct as $c)
-            <tr>
+            <tr class="correct">
               <td class="border border-gray-300 px-4 py-2">
-                <input type="text" name="c_action[]" values="{{$c->QACTION}}" class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-400" />
+                <textarea name="c_action[]" rows="3" class="c_action w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-400 text-sm resize-y">{{$c->QACTION}}</textarea>
               </td>
               <td class="border border-gray-300 px-4 py-2">
-                <input type="text" name="c_due_date[]" values="{{$c->QDUEDATE}}" class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-400" />
+                <textarea name="c_due_date[]" rows="3" class="c_due_date w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-400 text-sm resize-y">{{$c->QDUEDATE}}</textarea>
               </td>
               <td class="border border-gray-300 px-4 py-2">
-                <input type="text" name="c_in_charge[]" values="{{$c->QINCHARGE}}" class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-400" />
+                <textarea name="c_in_charge[]" rows="3" class="c_in_charge w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-400 text-sm resize-y">{{$c->QINCHARGE}}</textarea>
+    
               </td>
               <td class="border border-gray-300 px-4 py-2 text-center">
                 <button type="button" data-table = "corrective-body"  class="text-red-500 hover:text-red-700 cursor-pointer del-table-row" >
@@ -725,12 +753,16 @@
 <div class="flex items-star">
     <div class="w-55 text-sm font-normal text-gray-600 mt-2">Document/Picture</div>
     <div class="flex-1">
+    <div id="dvcorrective" class="py-2 px-1" >
     @foreach($attcor as $c)
-                            <span class="sfile">{{ substr($c->SFILE, 13) }}</span>
-                            @if (($mode == $MODE_EDIT) && ($cextData == 8))  
+                          <div class="openfl"  data-id="{{ $c->ITEMNO }}" data-filename="{{ $c->SFILE }}">
+                             <a href="{{ base_url('qaform/QA-QOI/form/mdownload/') . $NFRMNO . '_'.$VORGNO.'_'.$CYEAR.'_'.$CYEAR2.'_'.$NRUNNO.'/'.$c->SFILE.'/'.substr($c->SFILE, 13) }}" class="link text-sm text-blue-600 font-semibold" target="_blank">{{ substr($c->SFILE, 13) }}</a>
+                                @if (($mode == $MODE_EDIT) && ($cextData == 8))  
                                  <button type="button"  data-table = "" class="text-red-500 hover:text-red-700 cursor-pointer del-file" >✕</button>
-                            @endif
+                                @endif
+                          </div>
     @endforeach
+   </div>
     @if (($mode == $MODE_EDIT) && ($cextData == 8)) 
                     <div id="dvcorrectFile">
                         <div class="dvSFile flex items-center justify-between gap-2 mb-2">
@@ -766,7 +798,7 @@
 <div class="mt-6">
   <h3 class="text-base font-semibold text-gray-700 mb-2">QE</h3>
   <div class="flex flex-col gap-3">
-      @if (($mode == $MODE_EDIT) && ($cextData == 8)) 
+      @if (($mode == $MODE_EDIT) && ($cextData == 11)) 
           <!-- บรรทัด 1: Radio 1 + RQ no. -->
           <div class="flex flex-col md:flex-row gap-4">
             <!-- Radio 1 -->
@@ -817,13 +849,17 @@
 
   <!-- Input Files -->
   <div class="flex-1">
-  @foreach($attqe as $qe)
-                            <span class="sfile">{{ substr($qe->SFILE, 13) }}</span>
-                            @if (($mode == $MODE_EDIT) && ($cextData == 8))  
+  <div id="dvqe" class="py-2 px-1" >
+    @foreach($attqe as $qe)
+                          <div class="openfl"  data-id="{{ $qe->ITEMNO }}" data-filename="{{ $qe->SFILE }}">
+                             <a href="{{ base_url('qaform/QA-QOI/form/mdownload/') . $NFRMNO . '_'.$VORGNO.'_'.$CYEAR.'_'.$CYEAR2.'_'.$NRUNNO.'/'.$qe->SFILE.'/'.substr($qe->SFILE, 13) }}" class="link text-sm text-blue-600 font-semibold" target="_blank">{{ substr($qe->SFILE, 13) }}</a>
+                               @if (($mode == $MODE_EDIT) && ($cextData == 11))   
                                  <button type="button"  data-table = "" class="text-red-500 hover:text-red-700 cursor-pointer del-file" >✕</button>
-                            @endif
-  @endforeach
-  @if (($mode == $MODE_EDIT) && ($cextData == 8)) 
+                                @endif
+                          </div>
+    @endforeach
+   </div>
+  @if (($mode == $MODE_EDIT) && ($cextData == 11)) 
     <div id="dvqeFile" class="pt-1">
       <div class="dvSFile flex items-center justify-between gap-2 mb-2">
         <input type="file" name="QEFILE[]" data-map="QEFILE"
@@ -870,18 +906,46 @@
 
 
 </div>
+
 @endif
 @if ($mode == $MODE_EDIT)
-  <div class="flex justify-center  gap-4 pt-4">
-  <!-- ปุ่ม Approve -->
-  <button type="button" id="btn-approve" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded shadow cursor-pointer btn-submit" data-action="approve">
-    Approve
-  </button>
+<div class="flex justify-center  gap-4 pt-4">
+  @if ($cextData <= "02")
+        <!-- ปุ่ม Approve -->
+        <button type="button" id="btn-approve" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded shadow cursor-pointer btn-submit" data-action="approve">
+          Approve
+        </button>
 
-  <!-- ปุ่ม Reject -->
-  <button type="button" id="btn-reject" class="bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded shadow  cursor-pointer btn-submit" data-action="reject">
-    Reject
-  </button>
+        <!-- ปุ่ม Reject -->
+        <button type="button" id="btn-reject" class="bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded shadow  cursor-pointer btn-submit" data-action="reject">
+          Reject
+        </button>
+  @else
+       @if(($cextData >= "04") && ($cextData <= "05"))
+           @if($NG)
+            <!-- ปุ่ม Reject -->
+            <button type="button" id="btn-reject" class="bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded shadow  cursor-pointer btn-submit" data-action="reject">
+              Reject
+            </button>
+          @else
+              <!-- ปุ่ม Approve -->
+              <button type="button" id="btn-approve" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded shadow cursor-pointer btn-submit" data-action="approve">
+                Approve
+              </button>
+          @endif
+       @else
+            <!-- ปุ่ม Reject -->
+            <button type="button" id="btn-reject" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded shadow cursor-pointer btn-submit" data-action="reject">
+              Approve
+            </button>
+            @if ($cextData == "09")
+              <button type="button" id="btn-return" class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded shadow cursor-pointer btn-submit" data-action="returnb">
+                Return
+              </button>
+            @endif
+       @endif
+  @endif
+
 </div>
 <br/>
 @endif

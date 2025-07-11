@@ -42,14 +42,17 @@
     "tailwind:watch": "tailwindcss -i ./assets/style/tailwind.css -o ./assets/dist/css/tailwind.css --watch ",
     "tailwind:nodemon": "nodemon --watch assets/style/tailwind.css --exec \"npx tailwindcss -i ./assets/style/tailwind.css -o ./assets/dist/css/tailwind.css\"",
     "sass:watch": "sass --watch assets/style/custom/:assets/dist/css/ --style=compressed",
-    "v1.0.1:watch": "tailwindcss -i ./assets/style/custom/v1.0.1.css -o ./assets/dist/css/v1.0.1.css --watch",
+    "v1.0.1:watch": "tailwindcss -i ./assets/style/custom/v1.0.1.css -o ./assets/dist/css/v1.0.1.min.css --watch",
     "watch": "npm-run-all --parallel tailwind:watch webpack:watch v1.0.1:watch",
 
+    "tailwindOld": "tailwindcss -i ./assets/style/--tailwind.css -o ./assets/dist/css/tailwindOld.css",
+    
+    "component": "tailwindcss -i ./assets/style/custom/v1.0.1/component.css -o ./assets/dist/css/component.min.css --minify",
     "dataTables": "tailwindcss -i ./assets/style/custom/v1.0.1/dataTable.css -o ./assets/dist/css/dataTable.min.css --minify",
     "fancyBox": "tailwindcss -i ./assets/style/custom/v1.0.1/fancyBox.css -o ./assets/dist/css/fancyBox.min.css --minify",
     "flatpickr": "tailwindcss -i ./assets/style/custom/v1.0.1/flatpickr.css -o ./assets/dist/css/flatpickr.min.css --minify",
     "select2": "tailwindcss -i ./assets/style/custom/v1.0.1/select2.css -o ./assets/dist/css/select2.min.css --minify",
-    "v1.0.1": "tailwindcss -i ./assets/style/custom/v1.0.1.css -o ./assets/dist/css/v1.0.1.css --minify",
-    "minifyCss": "npm-run-all --parallel dataTables fancyBox flatpickr select2 v1.0.1"
+    "v1.0.1": "tailwindcss -i ./assets/style/custom/v1.0.1.css -o ./assets/dist/css/v1.0.1.min.css --minify",
+    "minifyCss": "npm-run-all --parallel component dataTables fancyBox flatpickr v1.0.1"
   }
 }

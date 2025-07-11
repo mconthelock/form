@@ -46,6 +46,7 @@ class form extends MY_Controller{
             $data['formno'] = $this->toFormNumber($data['NFRMNO'],  $data['VORGNO'], $data['CYEAR'],  $data['CYEAR2'],  $data['NRUNNO']);
             $data['qoiform'] = $this->qoi->getqoiform($data['NFRMNO'],  $data['VORGNO'], $data['CYEAR'],  $data['CYEAR2'],  $data['NRUNNO'])[0];
             $data['resultdwg'] = $this->qoi->customSelect("RESULTQOIDWG",array( 'NFRMNO' => $data['NFRMNO'],'VORGNO' => $data['VORGNO'],'CYEAR'  => $data['CYEAR'],'CYEAR2' => $data['CYEAR2'],'NRUNNO' => $data['NRUNNO']),'DWGNO , RESULT , REMARK');
+
             $data['attdwg'] = $this->qoi->customSelect("ATTQOIFRM",array( 'NFRMNO' => $data['NFRMNO'],'VORGNO' => $data['VORGNO'],'CYEAR'  => $data['CYEAR'],'CYEAR2' => $data['CYEAR2'],'NRUNNO' => $data['NRUNNO'] ,'TYPENO' => '0' ),'ITEMNO , SFILE');
             $data['attspec'] = $this->qoi->customSelect("ATTQOIFRM",array( 'NFRMNO' => $data['NFRMNO'],'VORGNO' => $data['VORGNO'],'CYEAR'  => $data['CYEAR'],'CYEAR2' => $data['CYEAR2'],'NRUNNO' => $data['NRUNNO'] ,'TYPENO' => '1' ),'ITEMNO , SFILE');
             $data['attchks'] = $this->qoi->customSelect("ATTQOIFRM",array( 'NFRMNO' => $data['NFRMNO'],'VORGNO' => $data['VORGNO'],'CYEAR'  => $data['CYEAR'],'CYEAR2' => $data['CYEAR2'],'NRUNNO' => $data['NRUNNO'] ,'TYPENO' => '2' ),'ITEMNO , SFILE');
@@ -60,7 +61,7 @@ class form extends MY_Controller{
                 if($data['cextData'] == 1)
                 {
                     $data['jstaff'] = $this->qoi->get_Jstaff();
-                    $data['enginc'] = $this->qoi->get_Engineer();
+                   // $data['enginc'] = $this->qoi->get_Engineer();
                     
                 }
                 if($data['cextData'] == 4)
@@ -69,6 +70,18 @@ class form extends MY_Controller{
                     
                 }
             }
+            
+            $data["NG"] = false;
+            foreach($data['resultdwg'] as $rs)
+            {
+                    if($rs->RESULT == "1")
+                    {
+                        $data["NG"] = true;
+                        break; 
+                    }
+            }
+        
+            
             //echo $data['cextData'];
             $this->views('qaform/QA-QOI/view', $data);
         }
@@ -77,7 +90,7 @@ class form extends MY_Controller{
 
     }
 
-    public function get_list($type)
+    public function get_list($type,$head='')
     {
         if($type == "J")
         {
@@ -88,6 +101,10 @@ class form extends MY_Controller{
         }else if($type == "S")
         {
             $data = $this->qoi->get_SEMING();
+        }else{
+
+            $sql = "select SEMPNO , SNAME from AMECUSERALL where CSTATUS = '1' AND SEMPNO in (select EMPNO from  SEQUENCEORG WHERE headno = '".$head."') AND SPOSCODE in ('40','41','35') ORDER BY SNAME";
+            $data = $this->qoi->getdatasql($sql);
         }
         echo json_encode($data);
     }
@@ -96,6 +113,7 @@ class form extends MY_Controller{
     {
         $action = $_POST["action"];
         $cextData = $_POST["cextData"];
+        $apvno =  $_POST["empno"];
         $form  = ['NFRMNO' => $_POST["nfrmno"],
                   'VORGNO' => $_POST["vorgno"],
                   'CYEAR'  => $_POST["cyear"],
@@ -113,13 +131,57 @@ class form extends MY_Controller{
                     $enginc = $_POST["enginc"];
                     $dataflow =  [
                         [ 'CSTEPNO' => '57', 'apv' => $jstaff], //jstaff
-                        [ 'CSTEPNO' => '58', 'apv' =>  $enginc], // eng
                     ];
                     $fstatus = $this->updateFlowApv($form , $dataflow);
                     $status = $fstatus['status'];
                 }else if($cextData == "02")
                 {
-                    $this->updateconcern();
+                    $delstep =  [
+                        [ 'CSTEPNO' => '88', 'CSTEPNEXTNO' => '26'], 
+                        [ 'CSTEPNO' => '26', 'CSTEPNEXTNO' => '89'], 
+                        [ 'CSTEPNO' => '89', 'CSTEPNEXTNO' => '81'], 
+                        [ 'CSTEPNO' => '81', 'CSTEPNEXTNO' => '84'], 
+                        [ 'CSTEPNO' => '84', 'CSTEPNEXTNO' => '12'], 
+                        [ 'CSTEPNO' => '12', 'CSTEPNEXTNO' => '14'],
+                        [ 'CSTEPNO' => '14', 'CSTEPNEXTNO' => '00'],  
+                    ];
+                    $this->deleteFlowStep($delstep, $_POST["nfrmno"], $_POST["vorgno"], $_POST["cyear"],  $_POST["cyear2"], $_POST["nrunno"]);
+                    $status = $this->updateconcern();
+                }else{
+                    $status = true;
+                }
+            }else if($action == "reject")
+            {
+                $q = "update FLOW set CSTEPST = '6' , CAPVSTNO = '2' where NFRMNO = '".$_POST["nfrmno"]."' AND VORGNO = '".$_POST["vorgno"]."' and CYEAR = '".$_POST["cyear"]."' and CYEAR2 = '".$_POST["cyear2"]."' and NRUNNO = '".$_POST["nrunno"]."' and VAPVNO = '".$apvno."' and CEXTDATA = '".$cextData."'";
+                $this->qoi->execsql($q);
+                if($cextData == "02")
+                {
+                    $status = $this->updateconcern();
+                }else if($cextData == "04")
+                {
+                    $dataflow =  [
+                        [ 'CSTEPNO' => '88', 'apv' => $_POST["seminc"]], //sem inc
+                        [ 'CSTEPNO' => '89', 'apv' => $_POST["seminc"]]
+                    ];
+                    $fstatus  = $this->updateFlowApv($form , $dataflow);
+                    $status = $fstatus['status'];
+                }else if($cextData == "07"){
+                    $dataflow =  [
+                        [ 'CSTEPNO' => '26', 'apv' => $_POST["enginc"]], //eng inc
+                        
+                    ];
+                    $fstatus  = $this->updateFlowApv($form , $dataflow);
+                    $status = $fstatus['status'];
+
+                }else if($cextData == "08")
+                {
+                    $status = $this->updateQOR();
+                }else if($cextData == "11")
+                {
+                    $status = $this->updateQE();
+                }else
+                {
+                    $status = true;
                 }
             }
         }catch ( Exception $e) {
@@ -186,6 +248,7 @@ class form extends MY_Controller{
         }
         $upfile =  $this->uploadMultiFile($_FILES, ['DWGFILE','SPECFILE','SHEETFILE','NGFILE'], $path);
         $fid = $this->qoi->generate_attfile_id($con["NFRMNO"],$con["VORGNO"],$con["CYEAR"],$con["CYEAR2"],$con["NRUNNO"]);
+        $datadwgfile = array();
         foreach ($upfile["files"] as $fileType => $fileArray) {
          foreach ($fileArray as $file) {
              $datadwgfile[] = array
@@ -213,24 +276,159 @@ class form extends MY_Controller{
          {
              $this->qoi->insert_batch("ATTQOIFRM",$datadwgfile);
          }  
-        
+         return true;
+    }
+
+    private function updateQOR()
+    {
+        $nfrmno = $_POST["nfrmno"];
+        $vorgno = $_POST["vorgno"];
+        $cyear = $_POST["cyear"];
+        $cyear2 = $_POST["cyear2"];
+        $nrunno = $_POST["nrunno"];
+        $m_action = $_POST["m_action"];
+        $m_due_date = $_POST["m_due_date"];
+        $m_in_charge = $_POST["m_in_charge"];
+        $c_action = $_POST["c_action"];
+        $c_due_date = $_POST["c_due_date"];
+        $c_in_charge = $_POST["c_in_charge"];
+        $dataqor = array();
+        $i=0;
+        $qid = 1;
+        foreach($m_action as $m)
+        {
+            if(($m <> "")&&($m_due_date[$i] <> "")&&($m_in_charge[$i] <> ""))
+            {
+                $dataqor[] = array(
+                    'CYEAR2' => $cyear2,
+                    'NRUNNO' => $nrunno,
+                    'TYPENO' => 'M',
+                    'QID'    => $qid,
+                    'QACTION' => $m,
+                    'QDUEDATE' => $m_due_date[$i],
+                    'QINCHARGE' => $m_in_charge[$i]
+                );
+                $qid++;
+            }
+        }
+        $i=0;
+        foreach($c_action as $c)
+        {
+            if(($c <> "")&&($c_due_date[$i] <> "")&&($c_in_charge[$i] <> ""))
+            {
+                $dataqor[] = array(
+                    'CYEAR2' => $cyear2,
+                    'NRUNNO' => $nrunno,
+                    'TYPENO' => 'C',
+                    'QID'    => $qid,
+                    'QACTION' => $c,
+                    'QDUEDATE' => $c_due_date[$i],
+                    'QINCHARGE' => $c_in_charge[$i]
+                );
+                $qid++;
+            }
+        }
+        if(count($dataqor) > 0)
+        {
+            $this->qoi->delete("QOI_QOR", array('CYEAR2' => $cyear2,'NRUNNO' => $nrunno));
+            $this->qoi->insert_batch("QOI_QOR",$dataqor);
+        }
+        $path = $this->upload_path.$nfrmno."_".$vorgno."_".$cyear."_".$cyear2."_".$nrunno;
+        if (!is_dir($path)) 
+        {
+            mkdir($path, 0777, true);
+        }
+        $upfile =  $this->uploadMultiFile($_FILES, ['MEASUREFILE','CORRECTFILE'], $path);
+        $fid = $this->qoi->generate_attfile_id($nfrmno,$vorgno,$cyear,$cyear2,$nrunno);
+        $dataqorfile = array();
+        foreach ($upfile["files"] as $fileType => $fileArray) {
+         foreach ($fileArray as $file) {
+             $dataqorfile[] = array
+             (
+                'NFRMNO' => $nfrmno,
+                'VORGNO' => $vorgno,
+                'CYEAR'  => $cyear,
+                'CYEAR2' => $cyear2,
+                'NRUNNO' => $nrunno,
+                'ITEMNO' => $fid,
+                'TYPENO' => ($fileType == "MEASUREFILE"? "4":($fileType == "CORRECTFILE"? "5":"")),
+                'SFILE'  => $file['file_name'],
+                'SEMPNO' => $_POST["empno"]
+             );
+             $fid++;
+         }
+         }
+         if(count($dataqorfile) > 0)
+         {
+             $this->qoi->insert_batch("ATTQOIFRM",$dataqorfile);
+         } 
+        return true;
+    }
+
+    private function updateQE()
+    {
+        $nfrmno = $_POST["nfrmno"];
+        $vorgno = $_POST["vorgno"];
+        $cyear = $_POST["cyear"];
+        $cyear2 = $_POST["cyear2"];
+        $nrunno = $_POST["nrunno"];
+        $qe_option = $_POST["qe_option"];
+        $con = array(
+            'CYEAR2' => $cyear2,
+            'NRUNNO' => $nrunno
+        );
+        $dataqe = array(
+            'QECHECK' => $qe_option,
+            'RQCN'    => ($qe_option == "1" ? ($_POST["rq_no"] ?? "") : ($qe_option == "2" ? ($_POST["cn_no"] ?? "") : ""))
+        );
+        $this->qoi->update("QOIFORM", $dataqe , $con);
+        $path = $this->upload_path.$nfrmno."_".$vorgno."_".$cyear."_".$cyear2."_".$nrunno;
+        if (!is_dir($path)) 
+        {
+            mkdir($path, 0777, true);
+        }
+        $upfile =  $this->uploadMultiFile($_FILES, ['QEFILE'], $path);
+        $fid = $this->qoi->generate_attfile_id($nfrmno,$vorgno,$cyear,$cyear2,$nrunno);
+        $dataqefile = array();
+        foreach ($upfile["files"] as $fileType => $fileArray) {
+         foreach ($fileArray as $file) {
+             $dataqefile[] = array
+             (
+                'NFRMNO' => $nfrmno,
+                'VORGNO' => $vorgno,
+                'CYEAR'  => $cyear,
+                'CYEAR2' => $cyear2,
+                'NRUNNO' => $nrunno,
+                'ITEMNO' => $fid,
+                'TYPENO' => '6',
+                'SFILE'  => $file['file_name'],
+                'SEMPNO' => $_POST["empno"]
+             );
+             $fid++;
+         }
+         }
+        if(count($dataqefile) > 0)
+        {
+            $this->qoi->insert_batch("ATTQOIFRM",$dataqefile);
+        } 
+       return true;
     }
 
     public function delfile()
     {
         $path = $this->upload_path.$_POST["nfrmno"]."_".$_POST["vorgno"]."_".$_POST["cyear"]."_".$_POST["cyear2"]."_".$_POST["nrunno"]."/";
         $itemno = $_POST['itemno'];
-        $nfile = $_POST['sfile'];
-        $this->deleteFile($nfile,$path);
+        $sfile = $_POST['sfile'];
+        $this->deleteFile($sfile,$path);
         $this->qoi->trans_start();
-        $delfn = $this->qoi->delete("ATTQOIFRM","CYEAR2 ='".$_POST["cyear2"]."' AND NRUNNO = '".$_POST["nrunno"]."' AND ITEMNO = '".$itemno."' AND SFILE = '".$nfile."'");
+        $delfn = $this->qoi->delete("ATTQOIFRM","CYEAR2 ='".$_POST["cyear2"]."' AND NRUNNO = '".$_POST["nrunno"]."' AND ITEMNO = '".$itemno."' AND SFILE = '".$sfile."'");
         $this->qoi->trans_complete();
         $res = [
             'status' => $delfn,
             'message' => ""
         ];
         echo json_encode($res);
-}
+    }
 
     public function mdownload($fd,$file,$ofile)
     {

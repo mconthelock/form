@@ -5,17 +5,18 @@
  * @version 1.0.2
  * @note 2025-06-19 เพิ่ม attribute สำหรับการกำหนด attribute ของ input, select, radio
  * @note 2025-06-25 เพิ่ม webflowSubmit สำหรับการสร้างปุ่ม submit ใน webflow create, edit, view mode mode 1, 2, 3
- * @note 2025-06-25 เพิ่ม getformDetail สำหรับการดึงข้อมูลฟอร์มมาโชว์เวลา view, edit   mode != 1   
+ * @note 2025-06-25 เพิ่ม getformDetail สำหรับการดึงข้อมูลฟอร์มมาโชว์เวลา view, edit   mode != 1  
+ * @note 2025-07-02 เปลี่ยน fieldset ต้อง import css component มาด้วยหากเรียกใช้
  * return = กลับไป requester ไม่ reset
  * returnp = กลับไป requester reset
  * returnb = ย้อนหลัง 1 step
  */
 
 export var btnClass   = 'btn btn-sm ';
-export var inputClass = 'input input-bordered input-sm ';
+export var inputClass = 'input input-bordered input-sm w-full';
 export var selectClass = 'select select-bordered select-sm ';
 export var radioClass = 'radio radio-sm ';
-export var fieldClass = 'form-control w-full max-w-xs ';
+export var fieldClass = 'w-full max-w-xs';
 
 /**
  * @param {string} id e.g. sdate
@@ -72,10 +73,11 @@ export const fieldsetOpt = {
  */
 export const fieldset = (option = {}) => { 
     const opt = {...fieldsetOpt, ...option};  
-    return `<div class="form-control ${opt.class}">
-                <div class="label font-bold">
-                    <span class="label-text">${opt.label}</span>
-                </div>
+    const label = opt.label != '' ? `<div class="label-text">
+                    <span>${opt.label}</span>
+                </div>` : '';
+    return `<div class="field ${opt.class}">
+                ${label}
                 ${opt.element}
             </div>`
 }
@@ -109,6 +111,8 @@ export const select = (option = {}) => {
     // console.log('select', option);
     
     const opt = inputAttrs({...elementOpt, ...option});
+    // console.log('select opt', opt);
+    
     let options = opt.data.map((item) => {
         return `<option value="${item.value}">${item.text}</option>`
     }).join('') || '';

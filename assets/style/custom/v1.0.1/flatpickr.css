@@ -6,15 +6,17 @@
   } */
 
   .flatpickr-calendar {
-    /* @apply bg-base-100 p-5 w-auto !shadow-sm !border !border-solid !border-gray-300 !rounded-lg; */
-    background-color: var(--color-base-100) /* var(--color-base-100) */ !important;
-    border-color: var(--color-gray-300) /* var(--color-gray-300) */ !important;
+      /*@apply bg-base-100 p-5 w-auto !shadow-sm !border !border-solid !border-gray-300 !rounded-lg; */
+      --tw-shadow: 0 1px 3px 0 var(--tw-shadow-color, rgb(0 0 0 / 0.1)), 0 1px 2px -1px var(--tw-shadow-color, rgb(0 0 0 / 0.1)) !important;
+    background-color: var(--color-base-100)  !important;
+    padding: 1.25rem; /* 1.25rem = 20px */
+    width: auto;
+    box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow) !important;
+    /* box-shadow: var(--box-shadow-sm) !important; */
+    border-color: var(--color-gray-300) !important;
     border-style: solid !important;
     border-width: 1px !important;
     border-radius: 0.5rem !important;
-    box-shadow: var(--box-shadow-sm) !important;
-    padding: 1.25rem !important; /* 1.25rem = 20px */
-    width: auto !important;
     /* border: 1px solid var(--base-300) !important; */
   }
   .flatpickr-monthDropdown-months,
@@ -50,9 +52,9 @@
   .flatpickr-day.startRange.nextMonthDay,
   .flatpickr-day.endRange.nextMonthDay {
     /* @apply !text-black !border-primary bg-primary; */
-    background-color: var(--color-primary) /* var(--color-primary) */ !important;
     color: #000 !important;
-    border-color: var(--color-primary) /* var(--color-primary) */ !important;
+    border-color: var(--color-primary)  !important;
+    background-color: var(--color-primary) ;
   }
   .flatpickr-day.startRange {
     border-radius: 50px 0 0 50px !important;
@@ -63,13 +65,13 @@
 
   .flatpickr-day.selected {
     /* @apply !bg-primary !text-white; */
-    background-color: var(--color-primary) /* var(--color-primary) */ !important;
+    background-color: var(--color-primary)  !important;
     color: #fff !important;
   }
 
   .day-off:not(.selected) {
     /* @apply !bg-red-500 !text-white !pointer-events-none !opacity-50; */
-    background-color: var(--color-red-500) /* var(--color-red-500) */ !important;
+    background-color: var(--color-red-500)!important;
     color: #fff !important;
     pointer-events: none !important;
     opacity: 0.5 !important;
@@ -78,5 +80,5 @@
   .flatpickr-prev-month > svg,
   .flatpickr-next-month > svg {
     /* @apply fill-gray-400; */
-    fill: var(--color-gray-400) /* var(--color-gray-400) */ !important;
+    fill: var(--color-gray-400);
   }

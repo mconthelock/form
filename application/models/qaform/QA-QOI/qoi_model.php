@@ -7,6 +7,7 @@ class qoi_model extends my_model
     {
         parent::__construct();
         $this->load->database();
+        $this->dbas = $this->load->database('as400', true);
         
     }
 
@@ -94,11 +95,21 @@ class qoi_model extends my_model
 		$this->db->query($q);
 	}
     
+    public function execAssql($q)
+	{
+		$this->dbas->query($q);
+	}
+
     public function getdatasql($q)
 	{
 		return $this->db->query($q)->result();
 	}
 
+    public function getdataAssql($q)
+	{
+		return $this->dbas->query($q)->result();
+	}
+    
     public function getDwgrev($drawingNo)
     {
         $pdm = $this->load->database('pdm', TRUE);

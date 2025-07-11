@@ -72,8 +72,8 @@ export async function setAppMenu(id, data, update = false) {
 export async function fillImages(e, empno) {
   const element = $(e);
   const img = await displayEmpImage(empno);
-//   console.log(element,e);
-  
+  //   console.log(element,e);
+
   element.attr("src", img);
   element.removeClass("hidden");
 }
@@ -86,26 +86,28 @@ export async function fillImages(e, empno) {
  * @param {string} selectElement '.operator'
  * @note for function formatAvatar in Select2
  */
-export async function setAvatarSelect(allUsers, selectElement){
-    // console.log('setAvatarSelect', allUsers, selectElement);
-    const empImage = await getAllImage();
-    // console.log(empImage,allUsers);
-    allUsers.filter(async user => {
-        let img = empImage.find(img => img.id == user);
-        if(img){
-            setAvatarOption(selectElement, user, img.image);
-        }else{
-            img = await displayEmpImage(user);
-            setAvatarOption(selectElement, user, img);
-        }
-    });
+export async function setAvatarSelect(allUsers, selectElement) {
+  // console.log('setAvatarSelect', allUsers, selectElement);
+  const empImage = await getAllImage();
+  // console.log(empImage,allUsers);
+  allUsers.filter(async (user) => {
+    let img = empImage.find((img) => img.id == user);
+    console.log(`setAvatarSelect: user ${user}`, img);
 
-    function setAvatarOption(selectElement, empno, img) {
-      const option = $(selectElement).find(`option[value="${empno}"]`);
-      if (option.length > 0) {
-        option.data("img", img);
-      }
+    if (img) {
+      setAvatarOption(selectElement, user, img.image);
+    } else {
+      img = await displayEmpImage(user);
+      setAvatarOption(selectElement, user, img);
     }
+  });
+
+  function setAvatarOption(selectElement, empno, img) {
+    const option = $(selectElement).find(`option[value="${empno}"]`);
+    if (option.length > 0) {
+      option.data("img", img);
+    }
+  }
 }
 
 // ดึงรูปภาพจาก IndexedDB
@@ -116,18 +118,19 @@ export async function displayEmpImage(id) {
   } else {
     // ดึงรูปภาพจาก API
     const response = await fetch(
-        // `${process.env.APP_API}/webflow/amecusers/images/${id}`
+      // `${process.env.APP_API}/webflow/amecusers/images/${id}`
       `${process.env.APP_API}/users/image/${id}`
     );
+    // console.log(response);
     if (response.ok) {
-        const img = await response.text()
-        // console.log(img);
-        // บันทึกลง IndexedDB
-        await setImage(id, img);
-        return `${img}`;
-    }else{
-        console.log(`Error fetching image for ID ${id}: ${response.statusText}`);
-        return false;
+      const img = await response.text();
+      console.log(id, img);
+      // บันทึกลง IndexedDB
+      await setImage(id, img);
+      return `${img}`;
+    } else {
+      console.log(`Error fetching image for ID ${id}: ${response.statusText}`);
+      return false;
     }
   }
 }
@@ -139,10 +142,8 @@ export async function displayEmpInfo(id) {
     return cachedInfo.data;
   } else {
     // ดึงข้อมูลจาก API
-    const response = await fetch(
-      `${process.env.APP_API}/users/${id}`
-    );
-     const text = await response.text();
+    const response = await fetch(`${process.env.APP_API}/users/${id}`);
+    const text = await response.text();
 
     if (!text) {
       // ถ้า response body ว่าง

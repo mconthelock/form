@@ -419,7 +419,22 @@ class Main extends MY_Controller
         $cyear2        = $this->input->post('cyear2');
         $nrunno        = $this->input->post('nrunno');
         $approveRemark = $this->input->post('approveRemark');
-        $acceptStatus  = $this->input->post('acceptStatus');
+        $acceptval  = $this->input->post('acceptval');
+
+        // echo json_encode($nfrmno);
+
+        $where = [
+            'NFRMNO' => $nfrmno,
+            'VORGNO' => $vorgno,
+            'CYEAR'  => $cyear,
+            'CYEAR2' => $cyear2,
+            'NRUNNO' => $nrunno,
+        ];
+        $data  = [
+            'FORM_APPROVE'   => $acceptval,
+            'REMARK_APPROVE' => $approveRemark
+        ];
+        $this->ent->update('GPENT_FORM', $data, $where, []);
 
     }
 

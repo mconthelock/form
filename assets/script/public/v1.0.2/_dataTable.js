@@ -12,48 +12,102 @@
  * npm install datatables.net-responsive-dt
  * @version 1.0.2
  * @note ## เพิ่ม sticky column และ btn filter จะจำว่าคลิกปุ่มไหนอยู่
- * @note 2025-06-25 เพิ่ม sticky column
- * @note 2025-06-25 เพิ่ม select column (checkbox)
- * @note 2025-06-25 ปรับปรุง domScroll ให้สามารถกำหนดความสูงได้
- * @note 2025-06-25 เพิ่ม getSelectedData ดึงข้อมูลที่ถูกเลือกจากตาราง
- * @note 2025-06-25 ปรับปรุง initJoin แยก headerSticky ให้กำหนดเพิ่มเอง
- * @note 2025-06-25 เพิ่ม dataTableSm กำหนดให้ขนาดตัวอักษรเล็กลง
- * @note 2025-06-26 ปรับปรุง tableSetup ให้สามารถกำหนดค่าได้ง่ายขึ้น
- * @note 2025-06-26 ปรับปรุง select column ให้เลือกว่าจะ reset ค่า selected หรือไม่เมื่อสร้างตารางใหม่
- * @note 2025-06-27 dataTableSm ปรับปรุงให้สามารถกำหนดขนาดตัวอักษรได้
- * @note 2025-06-28 เปลี่ยนวิธี set id ไว้ที่ setup option
- * @note 2025-06-30 เลือกประเภทของ domScroll เผื่อไม่ได้ใช้ tailwind
+ * @note 2025-06-25 
+ *  เพิ่ม sticky column
+ *  เพิ่ม select column (checkbox)
+ *  ปรับปรุง domScroll ให้สามารถกำหนดความสูงได้
+ *  เพิ่ม getSelectedData ดึงข้อมูลที่ถูกเลือกจากตาราง
+ *  ปรับปรุง initJoin แยก headerSticky ให้กำหนดเพิ่มเอง
+ *  เพิ่ม dataTableSm กำหนดให้ขนาดตัวอักษรเล็กลง
+ * @note 2025-06-26 
+ *  ปรับปรุง tableSetup ให้สามารถกำหนดค่าได้ง่ายขึ้น
+ *  ปรับปรุง select column ให้เลือกว่าจะ reset ค่า selected หรือไม่เมื่อสร้างตารางใหม่
+ * @note 2025-06-27 
+ *  dataTableSm ปรับปรุงให้สามารถกำหนดขนาดตัวอักษรได้
+ * @note 2025-06-28 
+ *  เปลี่ยนวิธี set id ไว้ที่ setup option
+ * @note 2025-06-30 
+ *  เลือกประเภทของ domScroll เผื่อไม่ได้ใช้ tailwind
+ *  เอา _filter มารวมในไฟล์เดียวกัน 
  */
 
-import { createColumnFilters } from "./_filter";
+// import { createColumnFilters } from "./_filter";
 import "datatables.net-dt";
 import "datatables.net-responsive-dt";
 // import "datatables.net-dt/css/dataTables.dataTables.min.css";
 import "datatables.net-responsive-dt/css/responsive.dataTables.min.css";
 
-export const domScrollTailwind4 = (opt) =>{ return `<"top flex flex-col gap-2"<"#filterBtnDt.flex flex-wrap gap-2"><"top-menu flex flex-wrap gap-3 mb-2"<"lf-opt flex-1 join gap-3 "lf><"table-option join  items-center">>><"bg-white border border-slate-300 rounded-lg overflow-scroll ${opt.maxHeight || "max-h-['70vh']"}"rt><"bottom flex justify-between mt-5"pi>`};
+export const domScrollTailwind4 = `
+    <"table-top flex flex-col gap-2 mb-2"
+        <"top-menu flex gap-3 items-start"
+            <"left-menu flex flex-wrap join gap-3 "
+                lf
+                <"#filterBtnDt.flex flex-wrap gap-2">
+            >
+            <"middle-menu flex flex-1 gap-3"
+            >
+            <"right-menu table-option flex join ml-auto">
+        >
+        <"top-menu-row2 flex gap-3">
+    >
+    <"table-body bg-white border border-slate-300 rounded-lg overflow-scroll"rt>
+    <"table-bottom flex justify-between mt-5"
+        <"table-paging flex gap-3"p>
+        <"table-info flex gap-3" i>
+    >`;
 
 /**
  * หากจะใช้ต้องมีการ import CSS ด้วย
- * @param {} opt 
- * @returns 
  */
-export const domScrollDefault = (opt) =>{ return `<"top domTop"<"#filterBtnDt"><"top-menu"<"lf-opt join "lf><"table-option join">>><"dataTable-body  ${opt.maxHeight || "max-h-['70vh']"}"rt><"bottom"pi>`};
-// export const domScroll = '<"top flex flex-wrap gap-3 mb-2"<"lf-opt flex-1 join gap-3 "lf><"table-option join gap-[2px] items-center">><"overflow-scroll max-h-[60vh]"rt><"bottom flex justify-between mt-5"pi>';
+export const domScrollDefault = `
+    <"table-top domTop"
+        <"top-menu"
+            <"left-menu join"
+                lf
+                <"#filterBtnDt.filterBtnDt">
+            >
+            <"middle-menu">
+            <"right-menu table-option join">
+        >
+        <"top-menu-row2">
+    >
+    <"table-body"rt>
+    <"table-bottom"
+        <"table-paging"p>
+        <"table-info" i>
+    >`;
 
 export function initJoin(){
     $(".dt-length").find('select').addClass("join-item");
     $(".dt-search").find('input').addClass("join-item");
-    $('.lf-opt').removeClass('gap-3');
+    $('.left-menu').removeClass('gap-3');
 }
 
 export const headerSticky = (id) => {
-    $(id).find('thead').addClass('sticky top-0 bg-white z-10 shadow-button');
+    // $(id).find('thead').addClass('sticky top-0 bg-white z-10 shadow-button');
+    $(id).find('thead').css({
+        'position': 'sticky',
+        'top': '0',
+        'background-color': 'white',
+        'z-index': '10',
+        'box-shadow': '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)'
+    });
+        
 }
 
 export const dataTableSm = (option) => {
-    $(option.id).find('td').addClass(`!py-[8px] !px-[10px] ${option.sizeTd}`);
-    $(option.id).find('th').addClass(option.sizeTh);
+    // $(option.id).find('td').addClass(`!py-[8px] !px-[10px] ${option.sizeTd}`);
+    // $(option.id).find('th').addClass(option.sizeTh);
+    $(option.id).find('th').css({
+        'padding': option.paddingTh,
+        'font-size': option.fontsizeTh
+    });
+    $(option.id).find('td').css({
+        'padding': option.paddingTd,
+        'font-size': option.fontsizeTd,
+        'height': option.height,
+        'line-height': option.lineheight
+    });
 
 }
 
@@ -61,8 +115,8 @@ export const dataTableSm = (option) => {
  * Default datatable
  */
 export const tableOption = {
-  dom: '<"flex mb-3"<"flex-1"f><"flex items-center table-option"l>><"bg-white border border-slate-300 rounded-lg overflow-hidden my-5"t><"flex mt-5"<"flex-1"p><"flex-none"i>>',
-//   dom: '<"flex mb-3"<"table-search flex flex-1 gap-5 "f><"flex items-center table-option"l>><"bg-white border border-slate-300 rounded-lg overflow-hidden my-5"t><"flex mt-5"<"flex-1"p><"table-info flex  flex-none gap-5"i>>',
+//   dom: '<"flex mb-3"<"flex-1"f><"flex items-center table-option"l>><"bg-white border border-slate-300 rounded-lg overflow-hidden my-5"t><"flex mt-5"<"flex-1"p><"flex-none"i>>',
+  dom: '<"flex mb-3"<"table-search flex flex-1 gap-5 "f><"flex items-center table-option"l>><"bg-white border border-slate-300 rounded-lg overflow-hidden my-5"t><"flex mt-5"<"flex-1"p><"table-info flex  flex-none gap-5"i>>',
   pageLength: 15,
   autoWidth: false,
   destroy: true,
@@ -93,40 +147,47 @@ export const tableOption = {
       orderable: false,
     },
   ],
-//   headerCallback: function(thead, data, start, end, display) {
-//     $(thead).find('th').css({
-//         'background-color': '#000', /* สีพื้นหลัง */
-//         'color': 'white'              /* สีตัวอักษร */
-//     });
-// }
 };
 
 // สร้างคอลัมน์ select (checkbox)
-export const selectColumn = {
-    data: null,
-    className: "max-w-[100px] !text-center",
-    title: `<div class="w-full text-center"><input type="checkbox" class="checkbox checkbox-primary" id="select-dt-rows-all" /></div>`,
-    orderable: false,
-    searchable: false,
-    sortable: false,
-    width: "100px",
-    render: (data, type, row) => {
-        return `<label>
-            <input type="checkbox" class="checkbox checkbox-primary select-dt-row" ${data.selected != undefined ? "checked" : ""} />
-        </label>`;
-    },
+export const selectColumn = (opt) =>  { 
+    return {
+        data: null,
+        className: `max-w-[100px] !text-center ${opt.class}`,
+        title: `<div class="select-dt-all"><input type="checkbox" class="checkbox checkbox-primary" id="select-dt-rows-all" /></div>`,
+        orderable: false,
+        searchable: false,
+        sortable: false,
+        width: "100px",
+        render: (data, type, row) => {
+            return `<label>
+                <input type="checkbox" class="checkbox checkbox-primary select-dt-row" ${data.selected ? "checked" : ""} />
+            </label>`;
+        },
+    };
 };
 
 export const tableSetup = {
     id: '#table', // id ของตาราง
     join: false,
     headerSticky: true, // ใช้ headerSticky() เพื่อสร้าง sticky header
-    dataTableSm : {status: true, sizeTh: '!text-xs', sizeTd: '!text-sm', id: '#table' }, // ใช้ dataTableSm() เพื่อสร้างตารางขนาดเล็ก
+    dataTableSm : {
+        status: false, 
+        fontsizeTh: '0.75rem', 
+        paddingTh: '0.5rem', 
+        fontsizeTd: '0.75rem',
+        paddingTd: '0.25rem 0.625rem',
+        // pTh: '1rem 1.875rem 1rem 0.75rem', 
+        // sizeTd: '0.875rem',
+        // pTd: '0.625rem 0.5rem',
+        height: '1rem',
+        lineheight: '1'
+    }, // ใช้ dataTableSm() เพื่อสร้างตารางขนาดเล็ก
     tableGroup  : {status: false, column: '0'}, 
     buttonFilter: {status: false, column: '0', activeFilter: 0 }, 
     columnFilter: {status: false, column: '0'}, 
-    columnSelect: {status: false, column: '0', resetOnCreate: true}, // สร้างคอลัมน์ select (checkbox)
-    domScroll: {status: false, maxHeight: 'max-h-[70vh]', type: 'default'}, // ใช้ domScroll() เพื่อสร้าง scroll
+    columnSelect: {status: false, column: '0', resetOnCreate: true, resetOnSearch: false, class: ''}, // สร้างคอลัมน์ select (checkbox)
+    domScroll: {status: false, maxHeight: 'var(--max-h-dataTable-body)', type: 'default'}, // ใช้ domScroll() เพื่อสร้าง scroll
 }
 
 export async function createTable(option = {}, setupOpt = {} ) {
@@ -165,16 +226,18 @@ export async function createTable(option = {}, setupOpt = {} ) {
     if (setup.columnSelect && setup.columnSelect.status && Array.isArray(opt.columns)) {
         
         // แทรกคอลัมน์ select ไว้ที่ตำแหน่งที่กำหนด
-        opt.columns.splice(setup.columnSelect.column, 0, selectColumn);
+        opt.columns.splice(setup.columnSelect.column, 0, selectColumn(setup.columnSelect));
         // แทรกไว้ column แรก
         // opt.columns = [selectColumn, ...opt.columns];
     }
     
     if(setup.join || setup.buttonFilter.status || setup.domScroll.status) {
         if(setup.domScroll.type == 'default'){
-            opt.dom = domScrollDefault(setup.domScroll);
+            // opt.dom = domScrollDefault(setup.domScroll);
+            opt.dom = domScrollDefault;
         }else if(setup.domScroll.type == 'tailwind4'){
-            opt.dom = domScrollTailwind4(setup.domScroll);
+            // opt.dom = domScrollTailwind4(setup.domScroll);
+            opt.dom = domScrollTailwind4;
         }
     } // ถ้าต้องการให้มี scroll ให้ใช้ domScroll
 
@@ -190,10 +253,22 @@ export async function createTable(option = {}, setupOpt = {} ) {
 
         // console.log(api, colspan);
         if(setup.join) initJoin();
+        if(setup.headerSticky) headerSticky(setup.id); // ถ้าต้องการให้ header เป็น sticky ให้ใช้ headerSticky
+        // if(setup.dataTableSm.status) {
+        //     setup.dataTableSm.id = setup.id; // กำหนด id ให้กับ dataTableSm
+        //     dataTableSm(setup.dataTableSm); // ถ้าต้องการให้ตารางมีขนาดเล็กให้ใช้ dataTableSm
+        // }
+        if(setup.join || setup.buttonFilter.status || setup.domScroll.status) {
+            $('div.dt-container .table-body').css({
+                'max-height': setup.domScroll.maxHeight,
+            })
+        }
         
         // if(setup.tableGroup.status) tableGroup(colspan, api, setup.tableGroup.column); // เรียกใช้ฟังก์ชัน tableGroup
         if(setup.buttonFilter.status) setBtnFilter(api, setup.buttonFilter.column, setup.buttonFilter.activeFilter); // เรียกใช้ฟังก์ชัน setBtnFilter
         if(setup.columnFilter.status) createColumnFilters(api, setup.columnFilter.column); // เรียกใช้ฟังก์ชัน createColumnFilters
+        setStickyColumns(this);
+
     }
     opt.drawCallback = function (settings) {
         if (typeof option.drawCallback === 'function') {
@@ -206,6 +281,10 @@ export async function createTable(option = {}, setupOpt = {} ) {
             const colspan = api.columns().count(); // จำนวนคอลัมน์ทั้งหมด
             tableGroup(colspan, api, setup.tableGroup.column);
         }
+        if(setup.dataTableSm.status) {
+            setup.dataTableSm.id = setup.id; // กำหนด id ให้กับ dataTableSm
+            dataTableSm(setup.dataTableSm); // ถ้าต้องการให้ตารางมีขนาดเล็กให้ใช้ dataTableSm
+        }
         
         setStickyColumns(this);
     
@@ -216,8 +295,24 @@ export async function createTable(option = {}, setupOpt = {} ) {
         ]
     }
     const table = $(setup.id).DataTable(opt);
-    if(setup.headerSticky) headerSticky(setup.id); // ถ้าต้องการให้ header เป็น sticky ให้ใช้ headerSticky
-    if(setup.dataTableSm.status) dataTableSm(setup.dataTableSm); // ถ้าต้องการให้ตารางมีขนาดเล็กให้ใช้ dataTableSm
+    // if(setup.headerSticky) headerSticky(setup.id); // ถ้าต้องการให้ header เป็น sticky ให้ใช้ headerSticky
+    // if(setup.dataTableSm.status) dataTableSm(setup.dataTableSm); // ถ้าต้องการให้ตารางมีขนาดเล็กให้ใช้ dataTableSm
+    $(setup.id).on('search.dt', function () { // จะทำงานทุกครั้งที่มีการ filter 
+    });
+
+    $('.dt-search input[type="search"]').on('input', function () {
+        if (setup.columnSelect.status && setup.columnSelect.resetOnSearch) {
+            table.rows().every(function () {
+                let data = this.data();
+                if (data.selected) {
+                    delete data.selected;
+                    this.data(data);
+                }
+            });
+            const selectAll = $('#select-dt-rows-all');
+            if(selectAll[0] && (selectAll[0].indeterminate || selectAll[0].checked)) selectAll.trigger('click');
+        }
+    });
 
     
     $("#select-dt-rows-all").on("click", function (e) {
@@ -226,10 +321,10 @@ export async function createTable(option = {}, setupOpt = {} ) {
             let data = this.data();
             if (check) {
                 if (setup.columnSelect.status && setup.columnSelect.resetOnCreate) {
-                    console.log('resetOnCreate',setup.columnSelect.resetOnCreate);
+                    // console.log('resetOnCreate',setup.columnSelect.resetOnCreate);
                     data = { ...data, selected: true };
                 } else {
-                    console.log('notReset',setup,setup.columnSelect.resetOnCreate);
+                    // console.log('notReset',setup,setup.columnSelect.resetOnCreate);
                     data.selected = true;
                 }
 
@@ -238,32 +333,40 @@ export async function createTable(option = {}, setupOpt = {} ) {
             }
             this.data(data);
         });
-        table.draw();
+        table.draw(false);
         const allusers = table.rows().data();
         const selected = allusers.filter((el) => el.selected === true);
-        if (selected.length != allusers.length && selected.length != 0) {
-            $("#select-dt-rows-all").prop("indeterminate", true);
+        // console.log('indeterminate', selected.length, allusers.length);
+        if( selected.length == 0) {
+            $(this).css({'background-color': 'transparent',});
+        } else {
+            $(this).css({'background-color': 'var(--color-primary)',});
         }
-        console.log('selected all',table.rows().data().toArray());
+        if (selected.length != allusers.length && selected.length != 0) {
+            $(this).prop("indeterminate", true);
+            
+            // document.getElementById("select-dt-rows-all").indeterminate = true; // ใช้ indeterminate แทน
+        }
+        // console.log('selected all',table.rows().data().toArray());
     });
 
-    $(".select-dt-row").on("click", function (e) {
+    $(document).on("click", ".select-dt-row", function (e) {
         let data = table.row($(this).parents("tr")).data();
         const check = $(this);
         if (check.is(":checked")) {
             if (setup.columnSelect.status && setup.columnSelect.resetOnCreate) {
-                console.log('resetOnCreate',setup.columnSelect.resetOnCreate);
+                // console.log('resetOnCreate',setup.columnSelect.resetOnCreate);
                 
                 data = { ...data, selected: true };
             } else {
-                console.log('notReset',setup,setup.columnSelect.resetOnCreate);
+                // console.log('notReset',setup,setup.columnSelect.resetOnCreate);
                 data.selected = true ;
             }
         } else {
             delete data.selected;
         }
-        table.row($(this).parents("tr")).data(data).draw();
-        console.log('selected',table.rows().data().toArray());
+        table.row($(this).parents("tr")).data(data).draw(false);
+        // console.log('selected',table.rows().data().toArray());
 
     });
     return table;
@@ -504,3 +607,449 @@ export function destroyTable(id = '#table') {
     //     }
 }
 
+
+/**
+ * Filter dataTable
+ * @description This file is used to manage filtering functionality for data tables.
+ * @author Mr.Sutthipong Tangmongkhoncharoen(24008)
+ * @since  2025-05-01
+ * @note 2025-07-02 แก้ไขให้ appendTo .dt-column-header แทน header และซ่อน .dt-column-order ทุกคอลัมน์
+ */
+
+/**
+ * filter table columns
+ * @param {object} table 
+ * @param {string} columnsToFilter e.g. 1 1,3 1-3 1-3,5 1,3-5
+ */
+export function createColumnFilters(table, columnsToFilter) {
+    const tableId = table.table().node().id;
+    // Parse column ranges
+    const columns = parseColumns(columnsToFilter, table.columns().count());
+
+    /**
+     * Create filter menu
+     */
+    if($('#filter-menu').length == 0){
+        $('body').append(`<div class="filter-menu absolute bg-white border border-solid border-[#ddd] hidden z-[1000] p-2.5" id="filter-menu">
+            <div class="filter-header" id="filter-header"></div>
+            <div id="filter-options" class="h-[400px] w-[200px] overflow-scroll"></div>
+            <div class="buttons join w-full">
+                <button id="cursor: pointer;" class="btn btn-sm btn-primary round-full join-item w-1/2">OK</button>
+                <button id="filter-cancel" class="btn btn-sm btn-neutral round-full join-item w-1/2">Cancel</button>
+            </div>
+        </div>`);
+    }  
+    /* css
+      .filter-menu {
+        position: absolute;
+        background: white;
+        border: 1px solid #ddd;
+        padding: 10px;
+        display: none;
+        z-index: 1000;
+      }
+      #filter-options{
+        height: 300px;
+        width: 200px;
+        overflow: scroll;
+      }
+      .filter-menu label {
+        display: block;
+        margin-bottom: 5px;
+      }
+      .buttons {
+        margin-top: 10px;
+      }
+      .filter-icon {
+        cursor: pointer;
+      } */
+
+    // Add filter menus
+    columns.forEach(columnIndex => {
+        const column  = table.column(columnIndex);
+        const header  = $(column.header());
+        const options = $('#filter-options');
+        const columnName    = `filterHeader-${tableId}-${columnIndex}`;
+        const filterOptions = $(`#filter-options .${columnName}`);
+        // console.log(filterOptions);
+        $('.dt-column-order').addClass('hidden'); // ซ่อนปุ่มเรียงลำดับ
+        // Add filter icon
+        $('<span class="filter-icon ml-1 cursor-pointer"><i class="icofont-filter text-gray-300 "></i></span>').appendTo(header.find('.dt-column-header'));
+        
+        if(filterOptions.length == 0){
+            options.append(`<div class="${columnName}">
+                                <ui class="filter-menu-option menu sticky top-0 bg-white pb-2 pl-1 border-b"></ui>
+                                <div class="filter-menu-data border p-2"></div>
+                            </div>`);
+        }
+
+        const container = $(`.${columnName} .filter-menu-option`);
+        // Search
+        if(container.find('.filter-search').length == 0){
+            container.prepend(`<div class="!flex justify-center">
+                                    <input type="text" name="filter-search" class="input input-xs input-bordered w-full pl-2 mx-1 filter-search" placeholder="Search here">
+                                </div>`);
+        }
+        // Select all
+        if(container.find('.filter-select-all').length == 0){
+            container.prepend(`<div class="cursor-pointer block  ">
+                                    <label class="text-sm cursor-pointer block mb-[5px]">
+                                        <input type="checkbox" name="filter-select-all" class="filter-select-all" checked> 
+                                        Select All
+                                    </label>
+                                </div>`);
+        }
+        // Clear
+        if(container.find('.filter-clear').length == 0){
+            container.prepend(`<li class="filter-clear block  cursor-pointer ">
+                                    <span class="!pl-0">
+                                        <i class="icofont-ui-close text-sm text-red-500"></i> 
+                                        Clear
+                                    </span>
+                                </li>`);
+        }
+        // Sort z-a
+        if(container.find('.filter-sortZA').length == 0){
+            container.prepend(`<li class="filter-sortZA cursor-pointer  block ">
+                                    <span class="!pl-0">
+                                        <i class="icofont-sort-alt "></i> 
+                                        Sort Z to A
+                                    </span>
+                                </li>`);
+        }
+        // Sort a-z
+        if(container.find('.filter-sortAZ').length == 0){
+            container.prepend(`<li class="filter-sortAZ cursor-pointer  block ">
+                                    <span class="!pl-0">
+                                        <i class="icofont-sort-alt "></i> 
+                                        Sort A to Z
+                                    </span>
+                                </li>`);
+        }
+    });
+
+    /**
+     * Open filter menu
+     */
+    $(`#${tableId}`).on('click', '.filter-icon', async   function (e) {
+        hide();
+        const menu = $('#filter-menu');
+        const columnIndex = table.column($(this).closest('th')).index();
+        const column      = table.column(columnIndex);
+        const columnName  = `filterHeader-${tableId}-${columnIndex}`;
+        const filterOptions = $(`#filter-options .${columnName} .filter-menu-data`);
+        
+        // console.log('filtername',columnName);
+        
+        $(`.${columnName}`).removeClass('hidden');
+        $('#filter-menu').attr('current-column', columnIndex);
+                
+        const columnData = column.data().unique().sort((a, b) => {
+            const columnName = column.dataSrc(); // ดึงชื่อ column จาก data attribute
+            // console.log('Column Data Name:', columnName, 'header name : ',column.header().textContent.trim(),'a : ', a,'b : ', b);
+        
+            if (columnName === 'CST') {
+                // console.log(true);
+                
+                // Map CST values
+                const mapCST = {
+                    1: 'Running',
+                    2: 'Approve',
+                    3: 'Reject'
+                };
+                a = mapCST[a] || a;
+                b = mapCST[b] || b;
+            }
+            if (!isNaN(a) && !isNaN(b)) {
+                return a - b; // Sort numerically if both are numbers
+            }
+            // if (a === null || b === null) {
+            //     return 0; // Handle null values
+            // }
+            if (a === null || a === undefined || a === '') return -1;
+            if (b === null || b === undefined || b === '') return 1;
+            return a.localeCompare(b); // Sort lexicographically if both are strings
+        });
+        // console.log(columnData);
+
+        columnData.each(function (value) {
+             
+            const columnName = column.dataSrc(); // ดึงชื่อ column จาก data attribute
+            // console.log('Column Data Name:', columnName, 'header name : ',column.header().textContent.trim(),'a : ', a,'b : ', b);
+        
+            var val = value === null ? '' : value;
+            if (columnName === 'CST') {
+                // console.log(true);
+                
+                // Map CST values
+                const mapCST = {
+                    1: 'Running',
+                    2: 'Approve',
+                    3: 'Reject'
+                };
+                val = mapCST[val] || val;
+            }
+            // console.log(val);
+            
+            const displayValue = val? val : '(Blank)'; 
+            if (filterOptions.find(`input[value="${val}"]`).length === 0) {
+                filterOptions.append(
+                    `<label class="text-sm cursor-pointer filter-list block mb-[5px]"><input type="checkbox" value="${val}" checked> ${displayValue}</label>`
+                );
+            }
+        });
+        
+
+        menu.css({ 
+            // top: e.pageY + 5, 
+            // left: e.pageX 
+            top : Math.min(e.pageY + 5, window.innerHeight - menu.outerHeight() - 10),
+            left : Math.min(e.pageX, window.innerWidth - menu.outerWidth() - 10)
+        }).fadeIn();
+
+    });
+
+    /**
+     * Filter Search
+     */
+    $(document).on('keyup', '.filter-search', function () {
+        const columnIndex = parseInt($('#filter-menu').attr('current-column'));
+        const searchTerm = $(this).val().toLowerCase();
+        const columnName = `filterHeader-${tableId}-${columnIndex}`;
+        const filterOptions = $(`#filter-options .${columnName} .filter-menu-data label`);
+        const selectAll = $(this).closest('.filter-menu-option').find('.filter-select-all');
+        if(selectAll.is(':checked')){
+            selectAll.trigger('click');
+            // selectAll.prop('checked', false);
+
+        }
+        // $('.filter-select-all').trigger('click');
+
+        filterOptions.each(function () {
+            const label = $(this);
+            const input = $(this).find('input');
+            
+            const text = input.val().toLowerCase();
+            // console.log(input, text);
+            if (text.includes(searchTerm)) {
+                label.show();
+            } else {
+                label.hide();
+            }
+        });
+
+    });
+
+    /**
+     * Sort A-Z
+     */
+    $(document).on('click', '.filter-sortAZ', function () {
+        const columnIndex = parseInt($('#filter-menu').attr('current-column'));
+        table.settings()[0].aoColumns[columnIndex].bSortable = true; 
+        // console.log('sort AZ',columnIndex, table, table.settings()[0].aoColumns[columnIndex]);
+
+        table.order([columnIndex, 'asc']).draw(); // A-Z
+        table.settings()[0].aoColumns[columnIndex].bSortable = false; 
+        $('.dt-column-order').addClass('hidden'); // ซ่อนปุ่มเรียงลำดับs
+        $('.dt-orderable-asc.dt-orderable-desc.dt-ordering-desc').addClass('!pr-2.5'); // ซ่อนปุ่มเรียงลำดับs
+
+    });
+
+    /**
+     * Sort Z-A
+     */
+    $(document).on('click', '.filter-sortZA', function () {
+        const columnIndex = parseInt($('#filter-menu').attr('current-column'));
+        table.settings()[0].aoColumns[columnIndex].bSortable = true; 
+        table.order([columnIndex, 'desc']).draw(); // A-Z
+        table.settings()[0].aoColumns[columnIndex].bSortable = false; 
+        
+        $('.dt-column-order').addClass('hidden'); // ซ่อนปุ่มเรียงลำดับs
+        $('.dt-orderable-asc.dt-orderable-desc.dt-ordering-desc').addClass('!pr-2.5'); // ซ่อนปุ่มเรียงลำดับs
+    // }
+    });
+    
+    /**
+     * Clear filter
+     */
+    $(document).on('click', '.filter-clear', function () {
+        // console.log('clear');
+        
+        const columnIndex = $('#filter-menu').attr('current-column');
+        const menuOption = $(this).closest('.filter-menu-option');
+        const ok = menuOption.closest('#filter-options').siblings('.buttons').find('#filter-ok');
+        const selectAll  = menuOption.find('.filter-select-all');
+        if(!selectAll.is(':checked')){
+            selectAll.trigger('click');
+            ok.trigger('click');
+        }
+        $(`th[data-dt-column="${columnIndex}"]`).find('.icofont-filter').removeClass('text-black').addClass('text-gray-300');
+    });
+    
+    // Apply filter
+    $(document).on('click', '#filter-ok', function () {
+        // console.log('filter ok');
+        
+        const columnIndex = $('#filter-menu').attr('current-column');
+        
+        const selectedValues = $(`.filterHeader-${tableId}-${columnIndex} input[type="checkbox"]:checked`)
+            .not('.filter-select-all')
+            .map(function () {
+                return `^${$.fn.dataTable.util.escapeRegex($(this).val())}$`;
+            })
+            .get()
+            .join('|');
+        // console.log(columnIndex, selectedValues);
+        table.column(columnIndex).search(selectedValues, true, false).draw();
+        $('#filter-menu').fadeOut();
+        $(`th[data-dt-column="${columnIndex}"]`).find('.icofont-filter').removeClass('text-gray-300').addClass('text-black');
+    });
+
+    /**
+     * Select all filter
+     */
+    $(document).on('click', '.filter-select-all', function () {
+        // console.log('select all');
+        
+        const columnIndex = $('#filter-menu').attr('current-column');
+        const filterData = `.filterHeader-${tableId}-${columnIndex}`;
+        const filter = $(this).closest(`${filterData}`);
+        // console.log('select all', columnIndex, filter);
+        // console.log('filter',`filterHeader-${tableId}-${columnIndex}`);
+        
+        const isChecked = filter.find(this).is(':checked');
+        if(isChecked){
+            filter.find('.filter-menu-data label').show();
+            filter.find('.filter-search').val('');
+            $(`th[data-dt-column="${columnIndex}"]`).find('.icofont-filter').removeClass('text-black').addClass('text-gray-300');
+        }
+        $(`${filterData} input[type="checkbox"]`).prop('checked', isChecked);
+    });
+
+    // Uncheck select all when any checkbox is unchecked
+    $(document).on('click', '.filter-list input[type="checkbox"]', function () {
+        if($('.filter-select-all').is(':checked')){
+            $('.filter-select-all').prop('checked', false);
+        }
+    });
+
+    // Cancel filter
+    $(document).on('click', '#filter-cancel', function () {
+        $('#filter-menu').fadeOut();
+        hide();
+    });
+
+    // Hide filter menu when clicking outside
+    $(document).on('click', function (e) {
+        if (!$(e.target).closest('#filter-menu, .filter-icon').length) {
+            $('#filter-menu').fadeOut();
+            hide();
+        }
+    });
+
+    /**
+     * Hide filter menu
+     */
+    function hide(){
+        columns.forEach(columnIndex => {
+            // console.log(columnIndex);
+            if($(`.filterHeader-${tableId}-${columnIndex}`)){
+                $(`.filterHeader-${tableId}-${columnIndex}`).addClass('hidden');
+            }
+        });
+
+    }
+
+    /**
+     * Helper function to parse column ranges
+     * @param {string} columnsToFilter 
+     * @param {number} totalColumns 10
+     * @returns 
+     */
+    function parseColumns(columnsToFilter, totalColumns) {
+        const columnSet = new Set();
+        const parts = columnsToFilter.split(',');
+        parts.forEach(part => {
+            if (part.includes('-')) {
+                const [start, end] = part.split('-').map(Number);
+                for (let i = start; i <= end; i++) {
+                    if (i >= 0 && i < totalColumns) {
+                        columnSet.add(i);
+                    }
+                }
+            } else {
+                const index = parseInt(part, 10);
+                if (index >= 0 && index < totalColumns) {
+                    columnSet.add(index);
+                }
+            }
+        });
+        return [...columnSet];
+    }
+}
+
+
+var scrollTimeout;
+/**
+ * Set scroll
+ * @param {string} id ของตาราง e.g. tablelist
+ */
+function setupScrolling(id) {
+  var scrollBody = $("#" + id + "_wrapper .table-body");
+  if (scrollBody.length) {
+    scrollBody.on("scroll", function () {
+      var scrollTop = $(this).scrollTop();
+      var scrollLeft = $(this).scrollLeft();
+      // Clear the previous timeout
+      clearTimeout(scrollTimeout);
+
+      // Set a new timeout to capture the scroll position after scrolling stops
+      scrollTimeout = setTimeout(function () {
+        // Store the scroll position
+        localStorage.setItem("scrollTop", scrollTop);
+        localStorage.setItem("scrollLeft", scrollLeft);
+      }, 100); // Adjust the timeout as needed
+    });
+  } else {
+    console.error("Scroll body not found");
+  }
+}
+
+/**
+ * ฟังก์ชันเพื่อเลื่อนไปทางขวาสุด
+ * @param {string} id ของตาราง e.g. tablelist
+ */
+export function scrollToRight(id) {
+  var scrollBody = $("#" + id + "_wrapper .table-body"); // เลือกส่วนที่ต้องการเลื่อน
+  if (scrollBody.length) {
+    // var ScrollTop = localStorage.getItem("scrollTop") || 0;
+    // scrollBody.scrollLeft(scrollBody[0].scrollWidth); // เลื่อนไปขวาสุด
+    // scrollBody.scrollTop(ScrollTop); // เลื่อนกลับมาตำแหน่งเดิมในแนวตั้ง
+    scrollBody.animate(
+      {
+        scrollLeft: scrollBody[0].scrollWidth,
+      },
+      1000
+    );
+  } else {
+    console.error("Scroll body not found");
+  }
+}
+
+/**
+ * เลื่อนไปยังตำแหน่งล่างสุด
+ * @param {string} id ของตาราง e.g. tablelist
+ */
+export function scrollToBottom(id) {
+  var scrollBody = $("#" + id + "_wrapper .table-body");
+  if (scrollBody.length) {
+    scrollBody.animate(
+      {
+        scrollTop: scrollBody[0].scrollHeight,
+      },
+      1000
+    );
+  } else {
+    console.error("Scroll body not found");
+  }
+}

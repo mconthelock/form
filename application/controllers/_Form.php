@@ -320,6 +320,28 @@ trait _Form{
         }
     }
 
+    private function doaction($NFRMNO, $VORGNO, $CYEAR, $CYEAR2, $NRUNNO, $action, $empno, $remark){
+        try{
+            $response = $this->client->post("http://localhost/webservice/webflow/flow/doaction", [
+                'json' => [
+                    'frmNo'  => $NFRMNO,
+                    'orgNo'  => $VORGNO,
+                    'y'      => $CYEAR,
+                    'y2'     => $CYEAR2,
+                    'runNo'  => $NRUNNO,
+                    'action' => $action,
+                    'apv'    => $empno,
+                    'remark' => $remark
+                ]
+            ]);
+            $result = json_decode($response->getBody(), true);
+            return $result;
+        }catch(Exception $e){
+            return array('status' => false, 'message' => 'Failed to doaction form', 'e' => $e);
+        }
+    }
+
+
 
 
 }

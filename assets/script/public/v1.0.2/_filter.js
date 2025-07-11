@@ -6,7 +6,8 @@
  * @since  2025-05-01
  * @note This file includes functions to handle filtering operations for data tables.
  * @requires jQuery npm install jquery
- * @version 1.0.1
+ * @version 1.0.2
+ * @note 2025-07-02 แก้ไขให้ appendTo .dt-column-header แทน header และซ่อน .dt-column-order ทุกคอลัมน์
  */
 
 /**
@@ -65,9 +66,9 @@ export function createColumnFilters(table, columnsToFilter) {
         const columnName    = `filterHeader-${tableId}-${columnIndex}`;
         const filterOptions = $(`#filter-options .${columnName}`);
         // console.log(filterOptions);
-
+        $('.dt-column-order').addClass('hidden'); // ซ่อนปุ่มเรียงลำดับ
         // Add filter icon
-        $('<span class="filter-icon ml-1 cursor-pointer"><i class="icofont-filter text-gray-300 "></i></span>').appendTo(header);
+        $('<span class="filter-icon ml-1 cursor-pointer"><i class="icofont-filter text-gray-300 "></i></span>').appendTo(header.find('.dt-column-header'));
         
         if(filterOptions.length == 0){
             options.append(`<div class="${columnName}">

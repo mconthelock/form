@@ -29,7 +29,6 @@
                 <div>
                     <label class="block mb-1 font-semibold text-blue-700">Entertainment Date</label>
                     <input type="date" id="entertain-date" class="input input-bordered rounded-xl w-full shadow-sm border-blue-200" value="{{ date('Y-m-d', strtotime($dataForm->ENTERTAINMENT_DATE)) }}" />
-                    <label class="label text-red-500 mt-2 text-sm">***For Entertainment Date must be get approve from President or RAF DIM before 1 day</label>
                 </div>
                 <div></div>
                 <div class="md:col-span-2">
@@ -239,29 +238,29 @@
                     </table>
 
                     <!-- <div class="flex items-center pt-5 rounded-lg space-x-4">
-                        <div class="bg-blue-700 text-white font-semibold px-4 py-4 rounded-l-lg">
-                            Cash Advance
-                        </div>
-                        <div class="space-y-2">
-                            <div class="flex items-center space-x-2">
-                                <input type="radio" id="cashYes" name="cash_advance" class="checkbox checkbox-primary bg-white  cash_adv" value="1" {{ $dataForm->REIMBURSEMENT == "1" ? "checked" : "" }} />
-                                <label for="cashYes" class="font-semibold">Yes</label>
-                                <div class="text-xs italic text-gray-500">
-                                    *Receive cash from FIN Department within 3-4 working day
+                            <div class="bg-blue-700 text-white font-semibold px-4 py-4 rounded-l-lg">
+                                Cash Advance
+                            </div>
+                            <div class="space-y-2">
+                                <div class="flex items-center space-x-2">
+                                    <input type="radio" id="cashYes" name="cash_advance" class="checkbox checkbox-primary bg-white  cash_adv" value="1" {{ $dataForm->REIMBURSEMENT == "1" ? "checked" : "" }} />
+                                    <label for="cashYes" class="font-semibold">Yes</label>
+                                    <div class="text-xs italic text-gray-500">
+                                        *Receive cash from FIN Department within 3-4 working day
+                                    </div>
+                                </div>
+
+                                <div class="flex items-center space-x-2">
+                                    <input type="radio" id="cashNo" name="cash_advance" class="checkbox checkbox-primary bg-white  cash_adv" value="0" {{ $dataForm->REIMBURSEMENT == "0" ? "checked" : "" }} />
+                                    <label for="cashNo" class="font-semibold">No</label>
+                                    <div class="text-xs italic text-gray-500">
+                                        *Please bring original receipt for clearance expense on Form Clearacnce Expense for Entertainment (Part 2).
+                                    </div>
                                 </div>
                             </div>
 
-                            <div class="flex items-center space-x-2">
-                                <input type="radio" id="cashNo" name="cash_advance" class="checkbox checkbox-primary bg-white  cash_adv" value="0" {{ $dataForm->REIMBURSEMENT == "0" ? "checked" : "" }} />
-                                <label for="cashNo" class="font-semibold">No</label>
-                                <div class="text-xs italic text-gray-500">
-                                    *Please bring original receipt for clearance expense on Form Clearacnce Expense for Entertainment (Part 2).
-                                </div>
-                            </div>
-                        </div>
 
-
-                    </div> -->
+                        </div> -->
                 </div>
                 <div class="text-xs mt-2 text-blue-700 italic">
                     1. สำหรับค่ารับรองอื่นๆที่ไม่ใช่ค่าอาหาร เช่น กีฬา, กระเช้า ฯลฯ ให้พิจารณาร่วมกับ RAF

@@ -37,6 +37,12 @@
                     </label>
                     <label class="form-control w-full max-w-sm">
                         <div class="label">
+                            <span class="block tracking-wide text-primary text-md font-bold mb-2">Pur Item No.</span>
+                        </div>
+                        <input class="input input-bordered border-blue-200  w-full max-w-sm" id="PURITEM" name="PURITEM" data-map="PURITEM" >
+                    </label>
+                    <label class="form-control w-full max-w-sm">
+                        <div class="label">
                             <span class="block tracking-wide text-primary text-md font-bold mb-2">*Supplier or Subcontrector name</span>
                         </div>
                         <input class="input input-bordered border-blue-200  w-full max-w-sm req" id="SUBCONNAME" name="SUBCONNAME" data-map="SUBCONNAME" placeholder="e.g. JSV Spring">
@@ -136,6 +142,47 @@
                         </label>
 
                         </div>
+                        <label class="form-control w-full max-w-sm">
+                            <div class="label">
+                                <span class="block tracking-wide text-primary text-md font-bold mb-2">Issue Over Usage</span>
+                            </div>
+                            <label class="flex items-center space-x-2">
+                                <input type="checkbox" value="Y" class="w-5 h-5 rounded-sm checkbox checkbox-primary "  name="ISSUE" id="ISSUE" data-map="ISSUE" />
+                                <span>Yes</span>
+                            </label>
+                        </label>
+                        <label class="form-control w-full max-w-sm">
+                        <div class="label">
+                            <span class="block tracking-wide text-primary text-md font-bold mb-2">Type</span>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                        <label class="flex items-center space-x-2">
+                            <input type="radio" value="1" class="w-5 h-5 radio radio-primary" name="TYREQ" id="TYREQ1" data-map="TYREQ"/>
+                            <span>Bulk</span>
+                        </label>
+                        <label class="flex items-center space-x-2">
+                            <input type="radio" value="3" class="w-5 h-5 radio radio-primary" name="TYREQ" id="TYREQ3" data-map="TYREQ"/>
+                            <span>Materail</span>
+                        </label>
+                        <label class="flex items-center space-x-2">
+                            <input type="radio" value="4" class="w-5 h-5 radio radio-primary" name="TYREQ" id="TYREQ4" data-map="TYREQ"/>
+                            <span>ID TAG Customer</span>
+                        </label>
+                        </div>
+                        </label>
+                        <label class="form-control w-full max-w-sm">
+                        <div class="label">
+                            <span class="block tracking-wide text-primary text-md font-bold mb-2">Req Q'ty (Pcs)</span>
+                        </div>
+                        <input class="input input-bordered border-blue-200  w-full max-w-sm" id="RQQTY" name="RQQTY" data-map="RQQTY" >
+                    </label>
+                        <label class="form-control w-full max-w-sm">
+                        <div class="label">
+                            <span class="block tracking-wide text-primary text-md font-bold mb-2">Remark for Overusage</span>
+                        </div>
+                        <textarea name="REMARKOVR" id="REMARKOVR" class="border-2 textarea  textarea-bordered border-blue-200  rounded-lg h-10 w-full" data-map="REMARKOVR" placeholder=""></textarea>
+      
+                        </label>
                     <div class="btn btn-primary" type="button" id="save-dwg">
                         <span class="loading loading-spinner hidden"></span>
                         <span class="btn-text">Save</span>

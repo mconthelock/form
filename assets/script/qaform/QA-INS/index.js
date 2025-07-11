@@ -9,11 +9,12 @@ import { dataTableSkeleton } from "../../public/v1.0.2/component/skeleton";
 import { checkEmployeeOrFocus } from "../../public/v1.0.2/employee";
 import { ajaxOptions, getAllAttr, getData, host, showMessage } from "../../public/v1.0.2/jFuntion";
 import { getDepartment, getDivision, getSection } from "../../webservice";
-import "../../../dist/css/v.1.0.1.css";
-// import "../../../dist/css/dataTable.min.css";
+// import "../../../dist/css/v1.0.1.min.css";
+import "../../../dist/css/dataTable.min.css";
 
 var formInfo, userIncharge, users, items, qcsection, division, department, section, tableOperator;
 
+// document.querySelectorAll('link[href="https://amecwebtest.mitsubishielevatorasia.co.th/cdn/datatable/v2.2.2/datatables.min.css"]').forEach(link => link.remove());
 $(async function(){
     $('body').addClass('bg-blue-100');
     // $('.attach').html(dragDropInit({width: 'w-1/2'}));
@@ -272,9 +273,11 @@ async function setIncharge(data = ''){
         element: '#incharge',
         templateSelection: formatAvatar, 
         templateResult: formatAvatar,
-        width: '100%'
+        width: '100%',
+        avatar: true,
+        avatarData: data.map(u => u.USR_NO),
     });
-    await setAvatarSelect(data.map(user => user.USR_NO), '#incharge');
+    // await setAvatarSelect(data.map(user => user.USR_NO), '#incharge');
 }
 
 // $(document).on('change', '#operator', async function(){
@@ -343,7 +346,7 @@ async function createTableOperator(data) {
     },{
         id: '#tableOperator',
         columnSelect:{status: true},
-        domScroll: {status: true, maxHeight: 'max-h-[21rem]'},
+        domScroll: {status: true, maxHeight: '21rem', type: 'tailwind4'},
         join: true
     });
 

@@ -57,10 +57,14 @@ export function dataTableSkeleton(opt = {}){
 const eopt = {
     width: 'w-xs',
     height: 'h-11',
-    classLoading : 'sloading'
+    classLoading : '',
+    idLoading : ''
 }
-export function skeleton(opt = eopt){
-    opt = { ...eopt, ...opt };
-    $(`.${opt.classLoading}`).html(`<div class="Pomelo-Peel-White skeleton ${opt.width} ${opt.height}"></div>`)
+export function skeleton(option = {}){
+    const opt = { ...eopt, ...option };
+    const e = opt.idLoading != '' ? $(`#${opt.idLoading}`): (opt.classLoading != '' ? $(`.${opt.classLoading}`) : null);
+    if (e) {
+        e.html(`<div class="Pomelo-Peel-White skeleton ${opt.width} ${opt.height}"></div>`);
+    }
     return ;
 }

@@ -167,36 +167,38 @@
                                 </div>
                             </div>
                         </div>
-                        <h2 class="text-xl font-bold text-blue-700 mb-4">Estimate Cost</h2>
-                        <table class="w-full mt-5 table-fixed border-2 border-blue-200 rounded-xl overflow-hidden bg-white">
-                            <thead>
-                                <tr class="bg-blue-200 text-blue-900">
-                                    <th class="py-2 px-2 text-center font-semibold border-b-2 border-gray-400">Details</th>
-                                    <th class="py-2 px-2 text-center font-semibold border-b-2 border-gray-400">Quantity</th>
-                                    <th class="py-2 px-2 text-center font-semibold border-b-2 border-gray-400">Cost / Person</th>
-                                    <th class="py-2 px-2 text-center font-semibold border-b-2 border-gray-400">Total</th>
-                                    <th class="py-2 px-2 text-center font-semibold border-b-2 border-gray-400">Remark</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @php $sum = 0; @endphp
-                                @foreach ($estimate_cost as $value)
-                                    @php $sum += $value->TOTAL_COST; @endphp
-                                    <tr class="text-center hover:bg-gray-50">
-                                        <td class="py-2 px-2 border-b border-gray-300">{{ $value->DETAILS }}</td>
-                                        <td class="py-2 px-2 border-b border-gray-300">{{ $value->QTY }}</td>
-                                        <td class="py-2 px-2 border-b border-gray-300">{{ $value->UNIT_COST }}</td>
-                                        <td class="py-2 px-2 border-b border-gray-300">{{ number_format($value->TOTAL_COST) }}</td>
-                                        <td class="py-2 px-2 border-b border-gray-300">{{ $value->REMARK }}</td>
+                        @if(!empty($estimate_cost))
+                            <h2 class="text-xl font-bold text-blue-700 mb-4">Estimate Cost</h2>
+                            <table class="w-full mt-5 table-fixed border-2 border-blue-200 rounded-xl overflow-hidden bg-white">
+                                <thead>
+                                    <tr class="bg-blue-200 text-blue-900">
+                                        <th class="py-2 px-2 text-center font-semibold border-b-2 border-gray-400">Details</th>
+                                        <th class="py-2 px-2 text-center font-semibold border-b-2 border-gray-400">Quantity</th>
+                                        <th class="py-2 px-2 text-center font-semibold border-b-2 border-gray-400">Cost / Person</th>
+                                        <th class="py-2 px-2 text-center font-semibold border-b-2 border-gray-400">Total</th>
+                                        <th class="py-2 px-2 text-center font-semibold border-b-2 border-gray-400">Remark</th>
                                     </tr>
-                                @endforeach
-                                <tr class="font-semibold bg-blue-100">
-                                    <td colspan="3" class="text-right py-2 px-2">Total Amount</td>
-                                    <td class="text-center py-2 px-2 text-blue-900" id="total_amount">{{ number_format($sum) }}</td>
-                                    <td class="py-2 px-2"></td>
-                                </tr>
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    @php $sum = 0; @endphp
+                                    @foreach ($estimate_cost as $value)
+                                        @php $sum += $value->TOTAL_COST; @endphp
+                                        <tr class="text-center hover:bg-gray-50">
+                                            <td class="py-2 px-2 border-b border-gray-300">{{ $value->DETAILS }}</td>
+                                            <td class="py-2 px-2 border-b border-gray-300">{{ $value->QTY }}</td>
+                                            <td class="py-2 px-2 border-b border-gray-300">{{ $value->UNIT_COST }}</td>
+                                            <td class="py-2 px-2 border-b border-gray-300">{{ number_format($value->TOTAL_COST) }}</td>
+                                            <td class="py-2 px-2 border-b border-gray-300">{{ $value->REMARK }}</td>
+                                        </tr>
+                                    @endforeach
+                                    <tr class="font-semibold bg-blue-100">
+                                        <td colspan="3" class="text-right py-2 px-2">Total Amount</td>
+                                        <td class="text-center py-2 px-2 text-blue-900" id="total_amount">{{ number_format($sum) }}</td>
+                                        <td class="py-2 px-2"></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        @endif
                     </div>
                     <div>
                         <h2 class="text-xl font-bold text-green-700 mb-4">Expense Cost Detail</h2>

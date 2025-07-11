@@ -10,11 +10,14 @@
  * @version 1.0.2
  * @note 2025-06-19 เปลี่ยนไปใช้เป็น object ในการ set option ของ select2
  * @note 2025-06-19 เพิ่ม option ให้โดยส่ง data มาใน object โดย [{value: '1', text: 'Option 1'}, {value: '2', text: 'Option 2'}]
+ * @note 2025-07-09 
+ *  เพิ่ม avatar สำหรับการแสดงรูปภาพใน select2 โดย ส่ง avatar: true และ avatarData: [24008, 24009, 24010]
  */
 
 import select2      from "select2";
 import "select2/dist/css/select2.min.css";
 import { RequiredElement } from "./jFuntion";
+import { setAvatarSelect } from "../../indexDB/setIndexDB";
 
 export const s2disableSearch = {minimumResultsForSearch: Infinity};
 
@@ -53,6 +56,8 @@ export const formatUser = (val) => {
  * @note เป็น object ที่ใช้ใน select2 templateResult
  */
 export const formatAvatar = (val) => {
+    // console.log($(val.element).data());
+    
     const imgSrc = $(val.element).data("img") || `${process.env.APP_IMG}/Avatar.png`; // ดึง data-img
     const hidden = imgSrc ? '' : 'hidden'; // ถ้าไม่มีรูปให้ซ่อน
     return $(
@@ -110,23 +115,64 @@ export const formatAvatar = (val) => {
  * const selectHTML = setSelect2({...s2disableSearch, element: '.select', data: [{value: '1', text: 'Option 1'}, {value: '2', text: 'Option 2'}]});
  */
 export async function setSelect2(options = {}) {
-    const opt = {element: '', placeholder: '' , data:'',...options};
-    let { element, placeholder, data,...customOpt} = opt; // เอา object ออกเหลือแต่ opject ของ select2
+    const opt = {
+        element: '',        // string e.g. '.s2' or '#select2'
+        size: 'base',       // string e.g. xs, sm, base, lg, xl
+        placeholder: '' ,   // string e.g. 'Select an option' 
+        data:[],            // array e.g. [{value: '1', text: 'Option 1'}, {value: '2', text: 'Option 2'}]
+        avatar:false,       // boolean
+        avatarData: [],     // ใช้สำหรับ avatar [24008, 24009, 24010]
+        ...options
+    }; // กำหนดค่าเริ่มต้นให้กับ options
+    let { element, size, placeholder, data, avatar, avatarData,...customOpt} = opt; // เอา object ออกเหลือแต่ opject ของ select2
     // console.log(opt);
     
     element = opt.element == '' ? '.s2' : opt.element;
-    if( opt.data != '' ){
+
+    // set option data
+    if( opt.data.length > 0 && Array.isArray(opt.data) ){
         await setOption(element, opt.data);
     }
 
+    // create select2 element
     $(element).select2({
         ...s2opt,
         ...customOpt,
         placeholder : opt.placeholder == '' ? $(element).attr('placeholder') : opt.placeholder,
     });
-    $(element).on('select2:close', function (){
+
+    $(element).on('select2:close', function (e){
+        RequiredElement($(e.target));
         $('#custom-tooltip').addClass('hidden');
-    })
+    });
+
+    $(element).on('select2:open', function (e){
+        // console.log(`select2:open`, size);
+        
+        switch (size) {
+            case 'xs':
+                 $(`.select2-results__options`).addClass('select2-xs');
+                break;
+            case 'sm':
+                $(`.select2-results__options`).addClass('select2-sm');
+                break;
+            case 'lg':
+                $(`.select2-results__options`).addClass('select2-lg');
+                break;
+            case 'xl':
+                $(`.select2-results__options`).addClass('select2-xl');
+                break;
+            default:
+                break;
+        }
+    });
+
+    // console.log(`setSelect2:`, opt, avatarData);
+    
+    // set avatar if avatar is true
+    if(avatar){
+        await setAvatarSelect(avatarData,element);
+    }
 }
 
 /**
@@ -168,10 +214,10 @@ $(document).on('change focusout', 'select.req', async function(){
     RequiredElement($(this));
 });
 
-$(document).on('select2:close', function (e) {
-    // console.log(2, $(e.target));
-    RequiredElement($(e.target));
-});
+// $(document).on('select2:close', function (e) {
+//     // console.log(2, $(e.target));
+//     RequiredElement($(e.target));
+// });
 
 // $(document).on('select2:open', function (e){
 //     // checkAvatar();
