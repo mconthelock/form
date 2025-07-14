@@ -17,6 +17,9 @@
 
     --select2-font-size: var(--font-size-base);
     --select2-height: var(--height-base);
+
+    --select2-bg-option: var(--color-primary);
+    --select2-color-option: #fff;
 }
 
 .select2-selection {
@@ -106,4 +109,10 @@
 .select2-xl {
     --select2-font-size: var(--font-size-xl);
     --select2-height: var(--height-xl);
+}
+
+.select2-container--default .select2-results__option--highlighted.select2-results__option--selectable {
+    /* @apply bg-primary !text-white; */
+    background-color: var(--select2-bg-option) !important;
+    color: var(--select2-color-option) !important;
 }

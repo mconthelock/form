@@ -50,8 +50,8 @@ class Jobs extends CI_Controller
                 // send email
                 $d['VIEW']    = 'layouts/mail/GP-ENT/mailAlert';
                 $d['SUBJECT'] = 'Remind your Entertainment form not yet get approve from approver';
-                $d['TO']      = 'perapatr@mitsubishielevatorasia.co.th';
-                // $d['TO']      = [$emp_req[0]->SRECMAIL];
+                // $d['TO']      = 'perapatr@mitsubishielevatorasia.co.th';
+                $d['TO']      = [$emp_req[0]->SRECMAIL];
                 $d['BODY'] = [
                     '<div style="font-family: Arial, sans-serif; font-size: 14px; color: #333;">
                         <p>Dear User,</p>

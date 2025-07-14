@@ -36,9 +36,13 @@ Class autojob extends CI_Controller {
 	public function createQoi()
 	{
 		$y = date("Ym");
-		$inspecdate = "01/".date("m/Y");;
+		$inspecdate = "01/".date("m/Y");
 		$expchgdate = date('t/m/Y',strtotime('today'));
+		$inspecdate = "01/April/2025";
+		$expchgdate = "30/April/2025";
 		$tilte = "Quality Observation Inspection on ".date("M Y");
+		$tilte = "Quality Observation Inspection on April 2025";
+		$y = '202504';
 		$q = "select * From QOI_DWGMASTER M, QOI_DWGSCHEDULE S where M.MID = S.MID and S.MON = '".$y."'";
 		$rs = $this->qoi->getdatasql($q);
 		foreach($rs as $r)

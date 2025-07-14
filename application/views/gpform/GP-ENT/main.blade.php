@@ -18,7 +18,7 @@
             </h1>
 
             <div>
-                <label for="">For Requesting Approval Entertainment (Part1) must get approve from Approver before Entertainment date 1 day. (Refer: RAF Practical Regulation : RAF-PR-G-068)</label>
+                <label for="" class="text-sm text-gray-500"><i>For Requesting Approval Entertainment (Part1) must get approve from Approver before Entertainment date 1 day. <br>(Refer: RAF Practical Regulation : RAF-PR-G-068)</i></label>
             </div>
             <!-- Section 1: Basic Info -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">

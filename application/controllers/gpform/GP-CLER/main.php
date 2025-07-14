@@ -83,6 +83,7 @@ class Main extends MY_Controller
             }
 
 
+
             if (!empty($checkReturnb)) {
                 $data['guest_type'] = $this->ent->get_guest_type();
                 if (!empty($formCler->FORM_ENT)) {

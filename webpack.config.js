@@ -46,13 +46,13 @@ module.exports = {
     licencemasterdetail: "./assets/script/licence/masterdetail.js", //License master page
 
     // Requesting Approval Entertainment
-    requestEntertain: "./assets/script/gpform/IS-RAE/index.js", //Requesting Approval Entertainment page
-    requestEntertainView: "./assets/script/gpform/IS-RAE/view.js", //Requesting Approval Entertainment view page
+    requestEntertain: "./assets/script/gpform/GP-ENT/index.js", //Requesting Approval Entertainment page
+    requestEntertainView: "./assets/script/gpform/GP-ENT/view.js", //Requesting Approval Entertainment view page
 
     // clearance Entertainment
-    clearance: "./assets/script/gpform/IS-CLER/index.js", //Clearance page
-    clearanceNoAdv: "./assets/script/gpform/IS-CLER/noAdv.js", //Clearance page
-    clearanceView: "./assets/script/gpform/IS-CLER/view.js", //Clearance page
+    clearance: "./assets/script/gpform/GP-CLER/index.js", //Clearance page
+    clearanceNoAdv: "./assets/script/gpform/GP-CLER/noAdv.js", //Clearance page
+    clearanceView: "./assets/script/gpform/GP-CLER/view.js", //Clearance page
 
     //manage schedule QOI
     manage: "./assets/script/qaform/QA-QOI/manage.js", //manage page

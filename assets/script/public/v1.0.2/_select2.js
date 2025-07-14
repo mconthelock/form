@@ -12,6 +12,8 @@
  * @note 2025-06-19 เพิ่ม option ให้โดยส่ง data มาใน object โดย [{value: '1', text: 'Option 1'}, {value: '2', text: 'Option 2'}]
  * @note 2025-07-09 
  *  เพิ่ม avatar สำหรับการแสดงรูปภาพใน select2 โดย ส่ง avatar: true และ avatarData: [24008, 24009, 24010]
+ * @note 2025-07-14
+ *  เพิ่ม function clearSelect2 เพื่อเคลียร์ค่า select2
  */
 
 import select2      from "select2";
@@ -223,6 +225,13 @@ $(document).on('change focusout', 'select.req', async function(){
 //     // checkAvatar();
 // });
 
-
+/**
+ * Clear select2 value
+ * @param {string} e e.g. '.s2' or '#select2' 
+ */
+export function clearSelect2(e) {
+    $(e).val('').trigger('change');
+    $(e).select2('close');
+}
 
 

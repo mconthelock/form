@@ -56,7 +56,6 @@
                 </div>
                 <!-- ส่วนสรุป Approval (Part 1) -->
                 <div class="grid grid-cols-1 gap-4">
-
                     <div>
                         <div class="overflow-hidden rounded-xl border-2 border-blue-200 mb-8 bg-blue-50">
                             <table class="w-full text-sm">
@@ -69,11 +68,11 @@
                                     @endif
                                     <tr>
                                         <th class="w-1/4 text-left text-blue-900 font-semibold py-2 pl-4 border-b-2 border-blue-200 bg-blue-100">Input by</th>
-                                        <td class="py-2 pl-4 border-b-2 border-blue-200">{{ $ENT_FORM->EMP_INPUT }}</td>
+                                        <td class="py-2 pl-4 border-b-2 border-blue-200">{{ $form[0]->VINPUTNAME }}</td>
                                     </tr>
                                     <tr class="bg-blue-50">
                                         <th class="text-left text-blue-900 font-semibold py-2 pl-4 border-b-2 border-blue-200 bg-blue-100">Requested by</th>
-                                        <td class="py-2 pl-4 border-b-2 border-blue-200">{{ $ENT_FORM->EMP_REQ }}</td>
+                                        <td class="py-2 pl-4 border-b-2 border-blue-200">{{ $form[0]->VREQNAME }}</td>
                                     </tr>
                                     <tr>
                                         <th class="text-left text-blue-900 font-semibold py-2 pl-4 border-b-2 border-blue-200 bg-blue-100">Purpose for Entertainment</th>
