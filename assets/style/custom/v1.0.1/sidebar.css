@@ -1,6 +1,10 @@
 
  /* sidebar */
 
+    #sidebar {
+        transition: all 0.2s ease-in-out;
+    }
+
     #sidebar.collapsed {
         width: 75px !important;
     }
@@ -12,7 +16,8 @@
 
     #sidebar.collapsed .sidebar-title,
     #sidebar.collapsed .sidebar-text,
-    #sidebar.collapsed #sidebarToggle {
+    #sidebar.collapsed #sidebarToggle,
+    #sidebar.collapsed .sidebar-profile-menu {
         display: none !important;
     }
 
@@ -30,10 +35,10 @@
         flex-direction: column;
     }
 
-    #sidebar.collapsed .sidebar-profile-menu {
+    /* #sidebar.collapsed .sidebar-profile-menu {
         margin: 0 !important;
         flex-direction: column;
-    }
+    } */
 
     #sidebar.collapsed .sidebar-head:hover .sidebar-logo {
         display: none !important;
