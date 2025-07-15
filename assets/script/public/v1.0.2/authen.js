@@ -4,10 +4,26 @@ import { showbgLoader } from "./preloader";
 import { host, root } from "./jFuntion";
 import { decryptText } from "./_crypto";
 import { getAppDataById, getMenu, getGroup, setMenu, setGroup, deleteGroup, deleteMenu } from "../../indexDB/userAuth";
-import { setSidebarMenu, initSidebar } from "./sidebar";
-import { getCookie, setCookie } from "./_jsCookie";
+import { setSidebarMenu, initSidebar } from "./component/sidebar";
+import { deleteCookie, getCookie, setCookie } from "./_jsCookie";
+import { initNavbar } from "./component/navbar";
 
 var indexedDBID;
+// ต้องมีอัันนี้ใน template
+/* <div id="user-login"></div>
+    <div id="navbar"></div>
+    <div class="drawer md:drawer-open">
+        <input id="my-drawer-2" type="checkbox" class="drawer-toggle" />
+        <div class="drawer-content bg-gray-200 shadow-2xl flex flex-col p-5 pb-12 mt-16 md:mt-0 min-h-[calc(100vh-64px)]">
+            <div class="content-wrapper">
+                @section('content')@show
+            </div>
+        </div>
+        <div class="drawer-side z-20">
+            <label for="my-drawer-2" aria-label="close sidebar" class="drawer-overlay"></label>
+            <div id="sidebar"></div>
+        </div>
+    </div> */
 
 export async function initAuthen(options = {}) {
 
@@ -54,6 +70,7 @@ export async function initAuthen(options = {}) {
         $('#user-login').prop('appid', appid);
         $('#user-login').prop('program', indexedDBID);
         
+        initNavbar(opt);
         initSidebar(opt);
         setSidebarMenu(menu, info); // ดึงข้อมูลแอปพลิเคชันตาม ID ที่เก็บไว้ใน indexedDBID
         showbgLoader(false);
@@ -65,7 +82,7 @@ $(document).on('click', '.logout', async function(e){
     e.preventDefault();
     await deleteGroup(indexedDBID);
     await deleteMenu(indexedDBID);
-    Cookies.remove(process.env.APP_NAME);
+    deleteCookie(process.env.APP_NAME);
     window.location.href = `${root}/form/authen/index/${process.env.APP_ID}`;
 });
 

@@ -27,13 +27,14 @@
 export const customTooltip = (hold) => `<div id="custom-tooltip" class="absolute z-[10000] bg-neutral text-white p-2 rounded shadow text-sm !aspect-auto" data-hold="${hold}"></div>` 
 
 $(document).on("mouseover", ".tooltip", async function (e) {
-    const hold = $(this).data("hold") || false;
+    const hold = $(this).attr("data-hold") || false;
     if($('#custom-tooltip').length == 0) $('body').append(customTooltip(hold));
 
     const tooltip = $("#custom-tooltip");
-    const html = $(this).data("html");
+    // const html = $(this).data("html");
+    const html = $(this).attr("data-html");
     const target = $(this);
-    console.log(html);
+    // console.log(html);
     
     if(html){
         $(this).removeAttr("data-tip");

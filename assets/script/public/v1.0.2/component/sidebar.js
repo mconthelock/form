@@ -1,33 +1,58 @@
-import { host } from "./jFuntion";
-import "../../../dist/css/sidebar.min.css";
-import "./_tooltip"
+import { host } from "../jFuntion";
+import "../../../../dist/css/sidebar.min.css";
+import "../_tooltip"
 
 $(document).on('click', '#sidebarToggle', function () {
-    $('#sidebar').toggleClass('collapsed');
+    // $('#sidebar').toggleClass('collapsed');
     if ($('#sidebar').hasClass('collapsed')) {
-        console.log(1);
-        
-        $('#sidebarToggle').data('html', 'Open sidebar');
+        $('#sidebar').removeClass('collapsed');
+        $('#sidebarToggle').attr('data-html', 'Collapse menu');
+    } else if ($('#sidebar').hasClass('collapsed-hover')) {
+        iconMenu();
+        $('#sidebar').removeClass('collapsed-hover collapsed');
+        $('#sidebarToggle').attr('data-html', 'Collapse menu');
     } else {
-        console.log(2);
-        
-        $('#sidebarToggle').data('html', 'Close sidebar');
+        $('#sidebar').addClass('collapsed');
+        $('#sidebarToggle').attr('data-html', 'Expand menu');
     }
 });
 
+
+
+$(document).on('mouseover', '#sidebar #menu, #sidebar #profile', function(){
+    if($('#sidebar').hasClass('collapsed')){
+        $('#sidebarToggle').html(`<i class="icofont-tack-pin text-xl"></i>`);
+        $('#sidebarToggle').attr('data-html', 'Keep menu open');
+        $('#sidebar').removeClass('collapsed').addClass('collapsed-hover');
+    }
+});
+
+$(document).on('mouseleave', '#sidebar', function(){
+    if($('#sidebar').hasClass('collapsed-hover')){
+        iconMenu();
+        $('#sidebarToggle').attr('data-html', 'Expand menu');
+        $('#sidebar').removeClass('collapsed-hover').addClass('collapsed');
+    }
+});
+
+function iconMenu() {
+    $('#sidebarToggle').html(`<i class="icofont-navigation-menu text-xl"></i>`);
+}
+
 export function initSidebar(options) {
     const sidebar = `
-        <div id="sidebar" class="menu transition-all duration-200 w-full md:w-64 lg:w-80 min-h-full bg-primary text-base-100 text-base pt-1" >
+        <div id="sidebar" class="menu transition-all w-full md:w-64 lg:w-80 min-h-full bg-primary text-base-100 text-base pt-1" >
             <div class="flex items-center sidebar-head px-4 py-2 gap-3">
                 <div tabindex="0" role="button" class="sidebar-logo btn btn-ghost btn-circle bg-gray-50 w-12 h-12">
                     <img src="${options.icon}" alt="" srcset="">
                 </div>
                 <span class="text-white text-lg font-bold sidebar-title">${options.programName}</span>
                 <!-- Hamburger icon -->
-                <button id="sidebarToggle" class="ml-auto btn btn-circle btn-ghost tooltip tooltip-right" data-html="Close sidebar">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <button id="sidebarToggle" class="ml-auto btn btn-circle btn-ghost tooltip tooltip-right" data-html="Collapse menu">
+                    <!--- <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-                    </svg>
+                    </svg> --->
+                    <i class="icofont-navigation-menu text-xl"></i>
                 </button>
             </div>
             <div id="menu"></div>
@@ -39,7 +64,11 @@ export function initSidebar(options) {
 };
 
 
-
+/**
+ * set sidebar menu and profile
+ * @param {object} menu 
+ * @param {object} info 
+ */
 export async function setSidebarMenu(menu, info){
     let listMenu = '';
     // sidebar menu
@@ -102,7 +131,6 @@ export async function setSidebarMenu(menu, info){
         // navbar profile
         $('#nav-profile').html(`<img alt="${info.SNAME}" src="${profileImg}" />`) 
     }
-
     menuFocus();
 }
 
