@@ -5,15 +5,18 @@ import "../_tooltip"
 $(document).on('click', '#sidebarToggle', function () {
     // $('#sidebar').toggleClass('collapsed');
     if ($('#sidebar').hasClass('collapsed')) {
-        $('#sidebar').removeClass('collapsed');
-        $('#sidebarToggle').attr('data-html', 'Collapse menu');
+        collapsedMenu();
+        // $('#sidebar').removeClass('collapsed');
+        // $('#sidebarToggle').attr('data-html', 'Collapse menu');
     } else if ($('#sidebar').hasClass('collapsed-hover')) {
         iconMenu();
-        $('#sidebar').removeClass('collapsed-hover collapsed');
-        $('#sidebarToggle').attr('data-html', 'Collapse menu');
+        collapsedMenu();
+        // $('#sidebar').removeClass('collapsed-hover collapsed');
+        // $('#sidebarToggle').attr('data-html', 'Collapse menu');
     } else {
-        $('#sidebar').addClass('collapsed');
-        $('#sidebarToggle').attr('data-html', 'Expand menu');
+        expandMenu();
+        // $('#sidebar').addClass('collapsed');
+        // $('#sidebarToggle').attr('data-html', 'Expand menu');
     }
 });
 
@@ -30,13 +33,24 @@ $(document).on('mouseover', '#sidebar #menu, #sidebar #profile', function(){
 $(document).on('mouseleave', '#sidebar', function(){
     if($('#sidebar').hasClass('collapsed-hover')){
         iconMenu();
-        $('#sidebarToggle').attr('data-html', 'Expand menu');
-        $('#sidebar').removeClass('collapsed-hover').addClass('collapsed');
+        expandMenu();
+        // $('#sidebarToggle').attr('data-html', 'Expand menu');
+        // $('#sidebar').removeClass('collapsed-hover').addClass('collapsed');
     }
 });
 
 function iconMenu() {
     $('#sidebarToggle').html(`<i class="icofont-navigation-menu text-xl"></i>`);
+}
+
+function collapsedMenu() {
+    $('#sidebar').removeClass('collapsed-hover collapsed');
+    $('#sidebarToggle').attr('data-html', 'Collapse menu');
+}
+
+function expandMenu(text = 'Expand menu') {
+    $('#sidebarToggle').attr('data-html', text);
+    $('#sidebar').removeClass('collapsed-hover').addClass('collapsed');
 }
 
 export function initSidebar(options = {}) {
