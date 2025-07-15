@@ -288,7 +288,6 @@ export async function displayEmpInfo(id) {
   }
 }
 
-
 export function setSha256(text) {
   const shaObj = new jsSHA("SHA-256", "TEXT");
   shaObj.update(text);
@@ -296,7 +295,7 @@ export function setSha256(text) {
   return hash;
 }
 
-const intVal = function (i) {
+export const intVal = function (i) {
   return typeof i === "string"
     ? i.replace(/[\$,]/g, "") * 1
     : typeof i === "number"
@@ -304,7 +303,7 @@ const intVal = function (i) {
     : 0;
 };
 
-const digits = function (n, digit) {
+export const digits = function (n, digit) {
   var str = "";
   n = intVal(n);
   if (digit > 0) {
@@ -315,5 +314,5 @@ const digits = function (n, digit) {
     var str = Math.round(n).toString();
     var fstr = str.replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1,");
   }
-  return fstr;
+  return intVal(fstr);
 };
