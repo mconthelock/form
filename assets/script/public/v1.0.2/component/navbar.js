@@ -5,7 +5,13 @@ $(document).on('click', '#navbarToggle', function () {
     $('#sidebar').removeClass('collapsed-hover collapsed');
 });
 
-export function initNavbar(options){
+export function initNavbar(options = {}){
+    const opt = {
+        icon: `${host}/assets/images/${process.env.APP_ICON}`, // จะไปตั้งใน env ก็ได้ถ้า path ตรง ถ้าไม่ก็ส่ง path ที่ถูกต้องมาเลยเช่น `${host}/assets/images/icon.png`,
+        showIcon: true,
+        programName: process.env.APP_NAME,
+        ...options
+    }
     const navbar = `
         <div class="navbar bg-base-100 md:hidden shadow-xl fixed top-0 z-50 h-16 W-lvw">
             <div class="navbar-start">
@@ -16,11 +22,11 @@ export function initNavbar(options){
                     <i class="icofont-navigation-menu text-xl"></i>
                 </label>
                 <div class="flex items-center">
-                    <div tabindex="0" role="button" class="btn btn-ghost btn-circle bg-gray-50 w-12 h-12">
-                        <img src="${options.icon}" alt="" srcset="">
+                    <div tabindex="0" role="button" class="btn btn-ghost btn-circle bg-gray-50 w-12 h-12 ${opt.showIcon ? '' : 'hidden'}">
+                        <img src="${opt.icon}" alt="" srcset="">
                     </div>
                     <div class="ms-2 w-max">
-                        <h1 class="text-2xl font-bold">${options.programName}</h1>
+                        <h1 class="text-2xl font-bold">${opt.programName}</h1>
                     </div>
                 </div>
             </div>
