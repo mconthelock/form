@@ -5,15 +5,18 @@ import "../_tooltip";
 $(document).on("click", "#sidebarToggle", function () {
   // $('#sidebar').toggleClass('collapsed');
   if ($("#sidebar").hasClass("collapsed")) {
-    $("#sidebar").removeClass("collapsed");
-    $("#sidebarToggle").attr("data-html", "Collapse menu");
+    collapsedMenu();
+    // $('#sidebar').removeClass('collapsed');
+    // $('#sidebarToggle').attr('data-html', 'Collapse menu');
   } else if ($("#sidebar").hasClass("collapsed-hover")) {
     iconMenu();
-    $("#sidebar").removeClass("collapsed-hover collapsed");
-    $("#sidebarToggle").attr("data-html", "Collapse menu");
+    collapsedMenu();
+    // $('#sidebar').removeClass('collapsed-hover collapsed');
+    // $('#sidebarToggle').attr('data-html', 'Collapse menu');
   } else {
-    $("#sidebar").addClass("collapsed");
-    $("#sidebarToggle").attr("data-html", "Expand menu");
+    expandMenu();
+    // $('#sidebar').addClass('collapsed');
+    // $('#sidebarToggle').attr('data-html', 'Expand menu');
   }
 });
 
@@ -28,8 +31,9 @@ $(document).on("mouseover", "#sidebar #menu, #sidebar #profile", function () {
 $(document).on("mouseleave", "#sidebar", function () {
   if ($("#sidebar").hasClass("collapsed-hover")) {
     iconMenu();
-    $("#sidebarToggle").attr("data-html", "Expand menu");
-    $("#sidebar").removeClass("collapsed-hover").addClass("collapsed");
+    expandMenu();
+    // $('#sidebarToggle').attr('data-html', 'Expand menu');
+    // $('#sidebar').removeClass('collapsed-hover').addClass('collapsed');
   }
 });
 
@@ -37,14 +41,34 @@ function iconMenu() {
   $("#sidebarToggle").html(`<i class="icofont-navigation-menu text-xl"></i>`);
 }
 
-export function initSidebar(options) {
+function collapsedMenu() {
+  $("#sidebar").removeClass("collapsed-hover collapsed");
+  $("#sidebarToggle").attr("data-html", "Collapse menu");
+}
+
+function expandMenu(text = "Expand menu") {
+  $("#sidebarToggle").attr("data-html", text);
+  $("#sidebar").removeClass("collapsed-hover").addClass("collapsed");
+}
+
+export function initSidebar(options = {}) {
+  const opt = {
+    icon: `${host}/assets/images/${process.env.APP_ICON}`, // จะไปตั้งใน env ก็ได้ถ้า path ตรง ถ้าไม่ก็ส่ง path ที่ถูกต้องมาเลยเช่น `${host}/assets/images/icon.png`,
+    showIcon: true,
+    programName: process.env.APP_NAME,
+    ...options,
+  };
   const sidebar = `
         <div id="sidebar" class="menu transition-all w-full md:w-64 lg:w-80 min-h-full bg-primary text-base-100 text-base pt-1" >
             <div class="flex items-center sidebar-head px-4 py-2 gap-3">
-                <div tabindex="0" role="button" class="sidebar-logo btn btn-ghost btn-circle bg-gray-50 w-12 h-12">
-                    <img src="${options.icon}" alt="" srcset="">
+                <div tabindex="0" role="button" class="sidebar-logo btn btn-ghost btn-circle bg-gray-50 w-12 h-12 ${
+                  opt.showIcon ? "" : "hidden"
+                }">
+                    <img src="${opt.icon}" alt="" srcset="">
                 </div>
-                <span class="text-white text-lg font-bold sidebar-title">${options.programName}</span>
+                <span class="text-white text-lg font-bold sidebar-title">${
+                  opt.programName
+                }</span>
                 <!-- Hamburger icon -->
                 <button id="sidebarToggle" class="ml-auto btn btn-circle btn-ghost tooltip tooltip-right" data-html="Collapse menu">
                     <!--- <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
