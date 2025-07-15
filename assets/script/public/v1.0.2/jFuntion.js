@@ -75,7 +75,7 @@ export function showMessage(msg, type = "error", position = 'toast-end') {
     const dt = prop.find((x) => x.id == type);
     const toast = $(`
           <dialog class="msg-notify toast ${position} ${dt.bg} z-[9999] !p-0 rounded-2xl m-5  alert-message w-80 max-w-80 opacity-100 transition-all duration-1000">
-              <div class="alert flex flex-col gap-2 overflow-hidden relative ${dt.bg}">
+              <div class="alert flex flex-col gap-2 overflow-hidden relative !bg-inherit">
                   <div class="msg-title text-xl font-semibold block w-full text-left ${dt.text}">${dt.title}</div>
                   <div class="msg-txt block w-full text-left max-w-80 text-wrap ${dt.text}">${msg}</div>
                   <div class="msg-close absolute top-2 right-5 z-[102] cursor-pointer">

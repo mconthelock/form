@@ -295,3 +295,25 @@ export function setSha256(text) {
   const hash = shaObj.getHash("HEX");
   return hash;
 }
+
+const intVal = function (i) {
+  return typeof i === "string"
+    ? i.replace(/[\$,]/g, "") * 1
+    : typeof i === "number"
+    ? i
+    : 0;
+};
+
+const digits = function (n, digit) {
+  var str = "";
+  n = intVal(n);
+  if (digit > 0) {
+    n = n.toFixed(digit);
+    str = n.toString().split(".");
+    var fstr = str[0].replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1,") + "." + str[1];
+  } else {
+    var str = Math.round(n).toString();
+    var fstr = str.replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1,");
+  }
+  return fstr;
+};

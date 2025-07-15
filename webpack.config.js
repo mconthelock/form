@@ -61,6 +61,7 @@ module.exports = {
     // QA-INS : E-Self Inspection and Authorize
     eSelf: "./assets/script/qaform/QA-INS/index.js", //E-Self Inspection page
     eSelfView: "./assets/script/qaform/QA-INS/view.js", //E-Self Inspection page
+
   },
   output: {
     filename: "[name].js",

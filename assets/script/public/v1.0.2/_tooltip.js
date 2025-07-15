@@ -12,6 +12,8 @@
  *  หากมี data-tip ลบทิ้งกันไปทับกับ daisy
  * @note 2025-07-07
  *  เพิ่มหากเอาเมาส์ชี้ที่ tooltip แล้ว tooltip จะไม่หาย สามารถนำไปใช้ได้กับที่แนบตารางหลายบรรทัดแล้ว scroll 
+ * @note 2025-07-15
+ *  เพิ่ม data-hold="true" เพื่อให้ tooltip ไม่หายเมื่อเอาเมาส์ชี้ที่ tooltip เพื่อกำหนดแต่ละอันแยก tooltip จะหายหรือไม่ 
  */
 
 // Tooltip
@@ -21,14 +23,17 @@
 // step 2: add class tooltip-bottom, tooltip-top, tooltip-left, tooltip-right to element for position
 // step 3: add data-html="html" to element for content
 // export const customTooltip = `<div id="custom-tooltip" class="absolute z-[10000] bg-primary text-white p-2 rounded shadow border border-base-300 text-sm !aspect-auto hidden"></div>` 
-export const customTooltip = `<div id="custom-tooltip" class="absolute z-[10000] bg-neutral text-white p-2 rounded shadow text-sm !aspect-auto "></div>` 
+// export const customTooltip = `<div id="custom-tooltip" class="absolute z-[10000] bg-neutral text-white p-2 rounded shadow text-sm !aspect-auto "></div>` 
+export const customTooltip = (hold) => `<div id="custom-tooltip" class="absolute z-[10000] bg-neutral text-white p-2 rounded shadow text-sm !aspect-auto" data-hold="${hold}"></div>` 
 
 $(document).on("mouseover", ".tooltip", async function (e) {
-    if($('#custom-tooltip').length == 0) $('body').append(customTooltip);
+    const hold = $(this).data("hold") || false;
+    if($('#custom-tooltip').length == 0) $('body').append(customTooltip(hold));
+
     const tooltip = $("#custom-tooltip");
     const html = $(this).data("html");
     const target = $(this);
-    // console.log(html);
+    console.log(html);
     
     if(html){
         $(this).removeAttr("data-tip");
@@ -106,15 +111,19 @@ $(document).on("mouseenter", ".tooltip", function () {
 
 $(document).on("mouseleave", ".tooltip", function () {
     hideTooltipTimeout = setTimeout(function () {
-        $("#custom-tooltip").addClass('hidden');
+        // $("#custom-tooltip").addClass('hidden');
+        $("#custom-tooltip").remove();
     }, 100);
 });
 
 $(document).on("mouseenter", "#custom-tooltip", function () {
-    clearTimeout(hideTooltipTimeout);
+    if($(this).data("hold") == true) {
+        clearTimeout(hideTooltipTimeout);
+    }
 });
 $(document).on("mouseleave", "#custom-tooltip", function () {
     hideTooltipTimeout = setTimeout(function () {
-        $("#custom-tooltip").addClass('hidden');
+        // $("#custom-tooltip").addClass('hidden');
+        $("#custom-tooltip").remove();
     }, 100);
 });

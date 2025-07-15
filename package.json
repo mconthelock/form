@@ -47,12 +47,14 @@
 
     "tailwindOld": "tailwindcss -i ./assets/style/--tailwind.css -o ./assets/dist/css/tailwindOld.css",
     
+    
     "component": "tailwindcss -i ./assets/style/custom/v1.0.1/component.css -o ./assets/dist/css/component.min.css --minify",
     "dataTables": "tailwindcss -i ./assets/style/custom/v1.0.1/dataTable.css -o ./assets/dist/css/dataTable.min.css --minify",
     "fancyBox": "tailwindcss -i ./assets/style/custom/v1.0.1/fancyBox.css -o ./assets/dist/css/fancyBox.min.css --minify",
     "flatpickr": "tailwindcss -i ./assets/style/custom/v1.0.1/flatpickr.css -o ./assets/dist/css/flatpickr.min.css --minify",
     "select2": "tailwindcss -i ./assets/style/custom/v1.0.1/select2.css -o ./assets/dist/css/select2.min.css --minify",
+    "sidebar": "tailwindcss -i ./assets/style/custom/v1.0.1/sidebar.css -o ./assets/dist/css/sidebar.min.css --minify",
     "v1.0.1": "tailwindcss -i ./assets/style/custom/v1.0.1.css -o ./assets/dist/css/v1.0.1.min.css --minify",
-    "minifyCss": "npm-run-all --parallel component dataTables fancyBox flatpickr v1.0.1"
+    "minifyCss": "npm-run-all --parallel component dataTables fancyBox flatpickr select2 sidebar v1.0.1"
   }
 }
