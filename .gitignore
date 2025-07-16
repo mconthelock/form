@@ -3,7 +3,6 @@
 ./.vscode
 /node_modules
 /docs
-assets/dist
 application/cache
 application/logs
 application/third_party
