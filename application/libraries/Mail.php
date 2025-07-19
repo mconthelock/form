@@ -60,6 +60,11 @@ class Mail {
         }
     }
 
+    private function setMime($mail,$ical){
+        $mail->ContentType = 'multipart/alternative';
+        $mail->addStringAttachment($ical, 'invite.ics', 'base64', 'text/calendar; method=REQUEST; charset=UTF-8');
+    }
+
     /**
      * Send e-mail.
      * @param   array $d => d['VIEW']    = 'mail/message'
@@ -100,6 +105,11 @@ class Mail {
 			}
 		}
 
+        if(isset($d['MIME'])){
+
+            $this->setMime($mail,$d['MIME']);
+        }
+
         $mail->Subject = $d['SUBJECT'];
         $mail->Body = $this->ci->load->view($view, $d, true);
         // return $mail->send();
@@ -110,14 +120,59 @@ class Mail {
 			return ['status' => FALSE, 'message' => $mail->ErrorInfo];
 		} else {
 			return [
-                'status'    => TRUE, 
-                'to'        => $d['TO'], 
+                'status'    => TRUE,
+                'to'        => $d['TO'],
                 'subject'   => $d['SUBJECT'],
                 'body'      => $d['BODY'],
                 'view'      => $view,
                 'message'   => 'Email sent successfully.'
             ];
 		}
+    }
+
+    public function sendmailMIME($d){
+        try {
+            $mail = new PHPMailer();
+            $mail->Mailer	= 'mail';
+            $mail->CharSet 	= 'UTF-8';
+            $mail->Port 	= 25;
+            $mail->From 	= "kanittha@mitsubishielevatorasia.co.th";
+            $mail->FromName	= "OWNER";
+            $mail->isHTML(true);
+
+
+            // เนื้อหาเมล
+            $mail->Subject = $d['SUBJECT'];
+            $this->set_to($mail, $d['TO']);
+            $this->set_cc($mail, $d['CC']);
+            //old
+            /*$mail->Body = $d['BODY'];
+            $mail->AltBody = $d['BODY'];
+            $mail->Ical = $d['MIME'];*/
+            
+            $boundary = "np" . md5(time());
+            $mail->ContentType = "multipart/alternative; boundary=\"$boundary\"";
+            $mail->addCustomHeader('Content-class', 'urn:content-classes:calendarmessage');
+            
+            $ical = $d['MIME']; // ตัวแปรที่เป็น .ics ที่สมบูรณ์
+            
+            $body  = "--$boundary\r\n";
+            $body .= "Content-Type: text/plain; charset=UTF-8\r\n\r\n";
+            $body .= $d['BODY'] . "\r\n\r\n";
+            
+            $body .= "--$boundary\r\n";
+            $body .= "Content-Type: text/calendar; method=REQUEST; charset=UTF-8\r\n";
+            $body .= "Content-Transfer-Encoding: 8bit\r\n\r\n";
+            $body .= $ical . "\r\n";
+            $body .= "--$boundary--";
+            
+            $mail->Body = $body;
+            $mail->AltBody = $d['BODY'];
+            $mail->send();
+            echo 'ส่งเมลสำเร็จ!';
+        }catch (Exception $e) {
+            echo "ส่งเมลไม่สำเร็จ: {$mail->ErrorInfo}";
+        }
     }
 }
 ?>

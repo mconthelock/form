@@ -120,9 +120,10 @@
                             <div class="attachment">
                                 <div class="text-xl font-bold mb-5 flex">
                                     Attachments
-                                    <div class="btn btn-error rounded-full ml-auto tooltip" data-tip="Reset" >
+                                    <div class="drop-reset"></div>
+                                    {{-- <div class="btn btn-error rounded-full ml-auto tooltip" data-tip="Reset" >
                                         <i class="icofont-refresh"></i>
-                                    </div>
+                                    </div> --}}
                                 </div>
                                 <div class="attach"></div>
                             </div>

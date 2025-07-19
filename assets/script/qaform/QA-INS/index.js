@@ -1,24 +1,27 @@
 
 
-import { displayEmpImage, setAvatarSelect } from "../../indexDB/setIndexDB";
-import { createTable} from "../../public/v1.0.2/_dataTable";
-import { dragDropInit, elementDragDrop, handleFiles } from "../../public/v1.0.2/_dragdrop";
-import { formatAvatar, s2disableSearch, setSelect2 } from "../../public/v1.0.2/_select2";
-import { select, webflowSubmit } from "../../public/v1.0.2/component/form";
-import { dataTableSkeleton } from "../../public/v1.0.2/component/skeleton";
-import { checkEmployeeOrFocus } from "../../public/v1.0.2/employee";
-import { ajaxOptions, getAllAttr, getData, host, showMessage } from "../../public/v1.0.2/jFuntion";
-import { getDepartment, getDivision, getSection } from "../../webservice";
+import { displayEmpImage } from "../../public/v1.0.3/setIndexDB";
+import { createTable, destroyTable} from "../../public/v1.0.3/_dataTable";
+import { dragDropInit, dragDropReset, handleFiles } from "../../public/v1.0.3/_dragdrop";
+import { formatAvatar, s2disableSearch, setSelect2 } from "../../public/v1.0.3/_select2";
+import { select, webflowSubmit } from "../../public/v1.0.3/component/form";
+import { dataTableSkeleton } from "../../public/v1.0.3/component/skeleton";
+import { checkEmployeeAndFocus } from "../../public/v1.0.3/employee";
+import { getAllAttr, logFormData, requiredForm, showMessage } from "../../public/v1.0.3/jFuntion";
+import { getEscsItems, getEscsUsers, getEscsUserSection, getDepartment, getDivision, getSection } from "../../api";
+import { showLoader } from "../../public/v1.0.3/preloader";
+// import { getDepartment, getDivision, getSection } from "../../webservice";
 // import "../../../dist/css/v1.0.1.min.css";
 import "../../../dist/css/dataTable.min.css";
 
 var formInfo, userIncharge, users, items, qcsection, division, department, section, tableOperator;
 
-// document.querySelectorAll('link[href="https://amecwebtest.mitsubishielevatorasia.co.th/cdn/datatable/v2.2.2/datatables.min.css"]').forEach(link => link.remove());
 $(async function(){
     $('body').addClass('bg-blue-100');
     // $('.attach').html(dragDropInit({width: 'w-1/2'}));
+    // $('.attach').html(dragDropInit({format: 'excel', class:'req'}));
     $('.attach').html(dragDropInit({format: 'excel'}));
+    $('.drop-reset').replaceWith(dragDropReset({class: 'rounded-full'}));
     formInfo = await getAllAttr(document.querySelector('.form-info'));
     // await directlogin(formInfo.empno, 1);
     
@@ -46,10 +49,10 @@ $(async function(){
 
 
 $(document).on('change', '#requester', async function(e){
-    const empno = $(this).val().trim();
-    console.log(`empno: ${empno}`, empno.length);
-    if(empno.length < 5) return;
-    await checkEmployeeOrFocus($(this));
+    // const empno = $(this).val().trim();
+    // console.log(`empno: ${empno}`, empno.length);
+    // if(empno.length < 5) return;
+    await checkEmployeeAndFocus($(this));
 });
 
 $(document).on('change', '#qcsection', async function(){
@@ -70,7 +73,7 @@ $(document).on('change', '#division', async function(){
     const divCode = $(this).val();
     console.log(divCode);
     if(divCode == '') {
-        await createTableOperator([]);
+        await createTableOperator();
         $('#department').empty().prop('disabled', true);
         $('#section').empty().prop('disabled', true);
         return;
@@ -92,7 +95,7 @@ $(document).on('change', '#department', async function(){
     const deptCode = $(this).val();
     console.log(deptCode);
     if(deptCode == '') {
-        await createTableOperator([]);
+        await createTableOperator();
         $('#section').empty().prop('disabled', true);
         return;
     }
@@ -112,7 +115,7 @@ $(document).on('change', '#section', async function(){
     const secCode = $(this).val();
     console.log(secCode);
     if(secCode == '') {
-        await createTableOperator([]);
+        await createTableOperator();
     }
 });
 
@@ -141,6 +144,7 @@ $(document).on('click', '#searchOperator', async function(e){
     // }
 
     user = users.filter(u => u.SDIVCODE == div && u.SDEPCODE == dept && u.SSECCODE == sec);
+    // user = users.filter(u => u.user.SDIVCODE == div && u.user.SDEPCODE == dept && u.user.SSECCODE == sec);
 
     if(user.length == 0) {
         showMessage('No operator found', 'warning');
@@ -149,29 +153,87 @@ $(document).on('click', '#searchOperator', async function(e){
 });
 
 $(document).on('change', 'input[name="files[]"]', async function(e){
-    handleFiles($(this)[0].files, elementDragDrop($(this)));
+    // handleFiles($(this)[0].files, elementDragDrop($(this)), $(this).attr('data-format'));
+    handleFiles();
+});
+
+$(document).on('click', '#btnRequest', async function(){
+    try {
+        showLoader();
+        const form = $('#qa-form');
+        const alertMsg = [
+            {element: $('#requester'), message: 'Please input requester'},
+            {element: $('#item'), message: 'Please select item'},
+            {element: $('#incharge'), message: 'Please select incharge'},
+            {element: $('#division'), message: 'Please select division'},
+            {element: $('#department'), message: 'Please select department'},
+            {element: $('#section'), message: 'Please select section'},
+            // {element: $('input[name="files[]"]'), message: 'Please choose file to upload'},
+        ];
+        if(!await requiredForm(form, alertMsg)) return;
+        const data = tableOperator.rows().data().toArray();
+        console.log('data', data);
+        
+        const selected = data.filter(row => row.selected == true)
+        
+        console.log(selected);
+        
+        if(selected.length === 0){
+            showMessage('Please select at least one row', 'warning');
+            return;
+        }
+
+        const formData = new FormData(form[0]);
+        logFormData(formData);
+        
+    } catch (error) {
+        console.error(error);
+        
+    } finally {
+        showLoader({ show: false });
+    }
 });
 
 async function setCreate() {
     dataTableSkeleton({
         height : 'h-[27rem]'
     });
-    items = await getData({
-        ...ajaxOptions,
-        url: `${host}/qaform/QA-INS/form/getItem`,
+    // items = await getData({
+    //     ...ajaxOptions,
+    //     url: `${host}/qaform/QA-INS/form/getItem`,
+    // });
+    
+    // users = await getData({
+    //     ...ajaxOptions,
+    //     url: `${host}/qaform/QA-INS/form/getUser`,
+    // });
+    // qcsection = await getData({
+    //     ...ajaxOptions,
+    //     url: `${host}/qaform/QA-INS/form/getSection`,
+    // });
+    // userIncharge = await getData({
+    //     ...ajaxOptions,
+    //     type: 'GET',
+    //     url: `${host}/qaform/QA-INS/form/getUserBySection/`,
+    // });
+
+    items = await getEscsItems({
+        IT_STATUS: 1
     });
-    users = await getData({
-        ...ajaxOptions,
-        url: `${host}/qaform/QA-INS/form/getUser`,
+
+    users = await getEscsUsers({
+        GRP_ID: 1,
+        USR_STATUS: 1,
+        fields: ['SEMPNO', 'SNAME', 'SSEC', 'SDEPT', 'SDIV', 'SSECCODE', 'SDEPCODE', 'SDIVCODE']
     });
-    qcsection = await getData({
-        ...ajaxOptions,
-        url: `${host}/qaform/QA-INS/form/getSection`,
+
+    qcsection = await getEscsUserSection({
+        SEC_STATUS: 1
     });
-    userIncharge = await getData({
-        ...ajaxOptions,
-        type: 'GET',
-        url: `${host}/qaform/QA-INS/form/getUserBySection/`,
+
+    userIncharge = await getEscsUsers({
+        USR_STATUS: 1,
+        fields: ['USR_ID', 'USR_NO', 'USR_NAME', 'USR_EMAIL', 'USR_REGISTDATE', 'USR_USERUPDATE', 'USR_DATEUPDATE', 'GRP_ID', 'USR_STATUS', 'SEC_ID']
     });
 
     // item
@@ -198,22 +260,59 @@ async function setCreate() {
     await setSelect2({...s2disableSearch, element: '#qcsection'});
     await setIncharge(userIncharge);
 
-    await createTableOperator([]);
+    await createTableOperator();
     dataTableSkeleton({ show: false});
+
    // operator
     // $('.operator').html(select({id: 'operator', class: 'select select-sm', placeholder: 'Select Operator',disabled: true}));
     // await setOperator();
     // setSelect2({element: '#operator', templateSelection: formatAvatar, templateResult: formatAvatar});
     // setAvatarSelect(users.map(user => user.SEMPNO), '.operator');
 
-    
-    
-    
     // organize
     // กรองแสดงเฉพาะที่มีในระบบ
-    division   = await getDivision().then(div => div.filter(div => users.map(u => u.SDIVCODE).includes(div.SDIVCODE)));
-    department = await getDepartment().then(dept => dept.filter(dept => users.map(u => u.SDEPCODE).includes(dept.SDEPCODE)));
-    section    = await getSection().then(sec => sec.filter(sec => users.map(u => u.SSECCODE).includes(sec.SSECCODE)));
+    // division   = await getDivision().then(div => div.filter(div => users.map(u => u.SDIVCODE).includes(div.SDIVCODE)));
+    // department = await getDepartment().then(dept => dept.filter(dept => users.map(u => u.SDEPCODE).includes(dept.SDEPCODE)));
+    // section    = await getSection().then(sec => sec.filter(sec => users.map(u => u.SSECCODE).includes(sec.SSECCODE)));
+    // Remove duplicates from division, department, and section arrays
+    division = Array.from(
+        new Map(
+            users.map(u => [u.SDIVCODE, { SDIVCODE: u.SDIVCODE, SDIV: u.SDIV }])
+        ).values()
+    );
+
+    department = Array.from(
+        new Map(
+            users.map(u => [`${u.SDIVCODE}-${u.SDEPCODE}`, {
+                SDIVCODE: u.SDIVCODE,
+                SDIV: u.SDIV,
+                SDEPCODE: u.SDEPCODE,
+                SDEPT: u.SDEPT,
+            }])
+        ).values()
+    );
+
+    section = Array.from(
+        new Map(
+            users.map(u => [`${u.SDIVCODE}-${u.SDEPCODE}-${u.SSECCODE}`, {
+                SDIVCODE: u.SDIVCODE,
+                SDIV: u.SDIV,
+                SDEPCODE: u.SDEPCODE,
+                SDEPT: u.SDEPT,
+                SSECCODE: u.SSECCODE,
+                SSEC: u.SSEC,
+            }])
+        ).values()
+    );
+    // console.log(`division:`, division);
+    // console.log(`department:`, department);
+    // console.log(`section:`, section);
+
+    // console.log(`div:`, users.filter(u => u.SDIVCODE == '00'));
+    // console.log(`dept:`, users.filter(u => u.SDEPCODE == '00'));
+    // console.log(`sec:`, users.filter(u => u.SSECCODE == '00'));
+
+   
     $('.organize').html(
         select({
             data: await division.map(div => {
@@ -320,7 +419,8 @@ async function setIncharge(data = ''){
 //     await setAvatarSelect(data.map(user => user.SEMPNO), '.operator');
 // }
 
-async function createTableOperator(data) {
+async function createTableOperator(data = []) {
+    // destroyTable('#tableOperator');
     const image = await Promise.all(data.map(async user => {
         return {src: await displayEmpImage(user.SEMPNO), empno: user.SEMPNO}
     }));
@@ -343,6 +443,7 @@ async function createTableOperator(data) {
     tableOperator = await createTable({
         data:data,
         columns: column,
+        // order: false
     },{
         id: '#tableOperator',
         columnSelect:{status: true},
@@ -350,6 +451,6 @@ async function createTableOperator(data) {
         join: true
     });
 
-    console.log('data',tableOperator.rows().data().toArray());
+    console.log('data',tableOperator.rows().data().toArray(), tableOperator);
 
 }

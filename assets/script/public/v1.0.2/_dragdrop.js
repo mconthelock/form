@@ -29,6 +29,7 @@
 
 import { createFancyObjectURL, fancyboxBasic} from "./_fancyBox";
 import { checkFileType, fileFormats } from "./_file";
+import "./_tooltip";
 
 /**
  * drag over file
@@ -55,7 +56,7 @@ $(document).on("drop", ".dropZone", async function (e) {
     $(this).removeClass("bg-gray-300");
     const element = elementDragDrop($(this));
     const files   = e.originalEvent.dataTransfer.files;
-    const format  = $(this).siblings('input').data('format');
+    const format  = $(this).siblings('input').attr('data-format');
     console.log(format);
     // console.log(element);
     handleFiles(files, element, format);
@@ -124,7 +125,7 @@ export const iconfont = (textSize='text-2xl') => {
         doc  : `<i class="icofont-file-word text-blue-600 ${textSize}"></i>`,
         pptx : `<i class="icofont-file-powerpoint text-orange-600 ${textSize}"></i>`,
         ppt  : `<i class="icofont-file-powerpoint text-orange-600 ${textSize}"></i>`,
-        image : `<div class="tooltip tooltip-info" data-tip="preview image">
+        image : `<div class="tooltip" data-html="preview image">
             <i class="icofont-image text-primary ${textSize} drop-image"></i>
         </div>`
     }

@@ -22,7 +22,7 @@ class form extends MY_Controller{
                 'VORGNO' => $_GET['orgNo'],
                 'CYEAR'  => $_GET['y'],
             ];
-          
+
         }else{
             $form = $this->frm->getFormMaster('QA-QOI');
             if(!empty($form)){
@@ -32,10 +32,10 @@ class form extends MY_Controller{
                     'CYEAR'  =>$form[0]->CYEAR,
                 ];
             }
-            
+
         }
         $data['empno'] = isset($_GET["empno"]) ? $_GET['empno'] : '' ;
-        if(isset($_GET["runNo"]) && $_GET["runNo"] != "") 
+        if(isset($_GET["runNo"]) && $_GET["runNo"] != "")
         {
             $data['return']   = false;
             $data['NRUNNO']   = $_GET["runNo"];
@@ -62,30 +62,30 @@ class form extends MY_Controller{
                 {
                     $data['jstaff'] = $this->qoi->get_Jstaff();
                    // $data['enginc'] = $this->qoi->get_Engineer();
-                    
+
                 }
                 if($data['cextData'] == 4)
                 {
                     $data['seminc'] = $this->qoi->get_SEMING();
-                    
+
                 }
             }
-            
+
             $data["NG"] = false;
             foreach($data['resultdwg'] as $rs)
             {
                     if($rs->RESULT == "1")
                     {
                         $data["NG"] = true;
-                        break; 
+                        break;
                     }
             }
-        
-            
+
+
             //echo $data['cextData'];
             $this->views('qaform/QA-QOI/view', $data);
         }
-       
+
 
 
     }
@@ -137,13 +137,13 @@ class form extends MY_Controller{
                 }else if($cextData == "02")
                 {
                     $delstep =  [
-                        [ 'CSTEPNO' => '88', 'CSTEPNEXTNO' => '26'], 
-                        [ 'CSTEPNO' => '26', 'CSTEPNEXTNO' => '89'], 
-                        [ 'CSTEPNO' => '89', 'CSTEPNEXTNO' => '81'], 
-                        [ 'CSTEPNO' => '81', 'CSTEPNEXTNO' => '84'], 
-                        [ 'CSTEPNO' => '84', 'CSTEPNEXTNO' => '12'], 
+                        [ 'CSTEPNO' => '88', 'CSTEPNEXTNO' => '26'],
+                        [ 'CSTEPNO' => '26', 'CSTEPNEXTNO' => '89'],
+                        [ 'CSTEPNO' => '89', 'CSTEPNEXTNO' => '81'],
+                        [ 'CSTEPNO' => '81', 'CSTEPNEXTNO' => '84'],
+                        [ 'CSTEPNO' => '84', 'CSTEPNEXTNO' => '12'],
                         [ 'CSTEPNO' => '12', 'CSTEPNEXTNO' => '14'],
-                        [ 'CSTEPNO' => '14', 'CSTEPNEXTNO' => '00'],  
+                        [ 'CSTEPNO' => '14', 'CSTEPNEXTNO' => '00'],
                     ];
                     $this->deleteFlowStep($delstep, $_POST["nfrmno"], $_POST["vorgno"], $_POST["cyear"],  $_POST["cyear2"], $_POST["nrunno"]);
                     $status = $this->updateconcern();
@@ -168,7 +168,7 @@ class form extends MY_Controller{
                 }else if($cextData == "07"){
                     $dataflow =  [
                         [ 'CSTEPNO' => '26', 'apv' => $_POST["enginc"]], //eng inc
-                        
+
                     ];
                     $fstatus  = $this->updateFlowApv($form , $dataflow);
                     $status = $fstatus['status'];
@@ -199,7 +199,7 @@ class form extends MY_Controller{
 
     private function updateconcern()
     {
- 
+
         $con = [
             'NFRMNO' => $_POST["nfrmno"],
             'VORGNO' => $_POST["vorgno"],
@@ -242,7 +242,7 @@ class form extends MY_Controller{
             $i++;
         }
         $path = $this->upload_path.$con["NFRMNO"]."_".$con["VORGNO"]."_".$con["CYEAR"]."_".$con["CYEAR2"]."_".$con["NRUNNO"];
-        if (!is_dir($path)) 
+        if (!is_dir($path))
         {
             mkdir($path, 0777, true);
         }
@@ -275,7 +275,7 @@ class form extends MY_Controller{
          if(count($datadwgfile) > 0)
          {
              $this->qoi->insert_batch("ATTQOIFRM",$datadwgfile);
-         }  
+         }
          return true;
     }
 
@@ -334,7 +334,7 @@ class form extends MY_Controller{
             $this->qoi->insert_batch("QOI_QOR",$dataqor);
         }
         $path = $this->upload_path.$nfrmno."_".$vorgno."_".$cyear."_".$cyear2."_".$nrunno;
-        if (!is_dir($path)) 
+        if (!is_dir($path))
         {
             mkdir($path, 0777, true);
         }
@@ -361,7 +361,7 @@ class form extends MY_Controller{
          if(count($dataqorfile) > 0)
          {
              $this->qoi->insert_batch("ATTQOIFRM",$dataqorfile);
-         } 
+         }
         return true;
     }
 
@@ -383,7 +383,7 @@ class form extends MY_Controller{
         );
         $this->qoi->update("QOIFORM", $dataqe , $con);
         $path = $this->upload_path.$nfrmno."_".$vorgno."_".$cyear."_".$cyear2."_".$nrunno;
-        if (!is_dir($path)) 
+        if (!is_dir($path))
         {
             mkdir($path, 0777, true);
         }
@@ -410,7 +410,7 @@ class form extends MY_Controller{
         if(count($dataqefile) > 0)
         {
             $this->qoi->insert_batch("ATTQOIFRM",$dataqefile);
-        } 
+        }
        return true;
     }
 
@@ -434,7 +434,83 @@ class form extends MY_Controller{
     {
         $path = $this->upload_path.$fd;
         $this->downloadFile($ofile,$file,$path);
-    
+
+    }
+
+    public function testmeeting()
+    {
+        $organizerName = 'ระบบจองห้อง';
+        $organizerEmail = 'kanittha@mitsubishielevatorasia.co.th';
+
+        $attendees = [
+            ['name' => 'Kanittha', 'email' => 'kanittha@mitsubishielevatorasia.co.th'],
+            ['name' => 'EP Fueangfa Room', 'email' => 'fueangfa@mitsubishielevatorasia.co.th'], // เพิ่มห้อง
+        ];
+
+        $start = '2025-07-20 14:00:00';
+        $end = '2025-07-20 15:00:00';
+        $startUTC = gmdate('Ymd\THis\Z', strtotime($start . ' +7 hours'));
+        $endUTC = gmdate('Ymd\THis\Z', strtotime($end . ' +7 hours'));
+        $dtstamp = gmdate('Ymd\THis\Z');
+        $uid = uniqid();
+
+        // สร้าง .ics content
+        $ical = "BEGIN:VCALENDAR\r\n";
+        $ical .= "PRODID:-//Booking System//MEA//EN\r\n";
+        $ical .= "VERSION:2.0\r\n";
+        $ical .= "CALSCALE:GREGORIAN\r\n";
+        $ical .= "METHOD:REQUEST\r\n";
+        $ical .= "BEGIN:VEVENT\r\n";
+        $ical .= "UID:$uid\r\n";
+        $ical .= "DTSTAMP:$dtstamp\r\n";
+        $ical .= "DTSTART:$startUTC\r\n";
+        $ical .= "DTEND:$endUTC\r\n";
+        $ical .= "SUMMARY:จองห้องประชุม EP Fueangfa Room\r\n";
+        $ical .= "DESCRIPTION:ระบบจองห้องโดยคุณขนิษฐา\r\n";
+        $ical .= "LOCATION:EP Fueangfa Room\r\n";
+        $ical .= "ORGANIZER;CN=$organizerName:mailto:$organizerEmail\r\n";
+
+        // foreach ($attendees as $a) {
+        //     $ical .= "ATTENDEE;CN={$a['name']};ROLE=REQ-PARTICIPANT;RSVP=TRUE:mailto:{$a['email']}\r\n";
+        // }
+
+        foreach ($attendees as $a) {
+            if ($a['email'] === 'fueangfa@mitsubishielevatorasia.co.th') {
+                // สำหรับห้องประชุม
+                //$ical .= "ATTENDEE;CN={$a['name']};CUTYPE=RESOURCE;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED:mailto:{$a['email']}\r\n";
+                $ical .= "ATTENDEE;CN={$a['name']};CUTYPE=RESOURCE;ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;RSVP=TRUE:mailto:{$a['email']}\r\n";
+
+            } else {
+                // สำหรับผู้เข้าร่วมทั่วไป
+                $ical .= "ATTENDEE;CN={$a['name']};ROLE=REQ-PARTICIPANT;RSVP=TRUE:mailto:{$a['email']}\r\n";
+            }
+        }
+
+        $ical .= "SEQUENCE:0\r\n";
+        $ical .= "STATUS:CONFIRMED\r\n";
+        $ical .= "TRANSP:OPAQUE\r\n";
+        $ical .= "BEGIN:VALARM\r\n";
+        $ical .= "TRIGGER:-PT10M\r\n";
+        $ical .= "DESCRIPTION:Reminder\r\n";
+        $ical .= "ACTION:DISPLAY\r\n";
+        $ical .= "END:VALARM\r\n";
+        $ical .= "END:VEVENT\r\n";
+        $ical .= "END:VCALENDAR\r\n";
+        echo nl2br(htmlspecialchars($ical));
+
+        //exit;
+        $data = array(
+            "TO" => 'fueangfa@mitsubishielevatorasia.co.th',
+            "CC" => 'kanittha@mitsubishielevatorasia.co.th',
+            //"CC" => ['kanittha@mitsubishielevatorasia.co.th', 'sutthipongt@mitsubishielevatorasia.co.th'],
+            // "CC" => ['sutthipongt@mitsubishielevatorasia.co.th'],
+            "SUBJECT" =>'📅 จองห้องประชุมแบบ PHPMailer',
+            "MIME"    => $ical,
+            "BODY"    => "test"
+        );
+        $this->mail->sendmailMIME($data);
+
+
     }
 
 }

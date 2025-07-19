@@ -122,10 +122,11 @@ export const ajaxOptions = {
     }
 };
 
-export function getData(ajaxOptions){
+export function getData(option = {}) {
     return new Promise((resolve, reject) => {
+        const opt = { ...ajaxOptions, ...option  }
         const options = {
-            ...ajaxOptions,
+            ...opt,
             success: function (res) {
                 resolve(res); 
             },

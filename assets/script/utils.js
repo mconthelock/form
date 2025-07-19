@@ -314,5 +314,5 @@ export const digits = function (n, digit) {
     var str = Math.round(n).toString();
     var fstr = str.replace(/(\d)(?=(\d\d\d)+(?!\d))/g, "$1,");
   }
-  return intVal(fstr);
+  return fstr;
 };

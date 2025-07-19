@@ -92,7 +92,7 @@ export async function setAvatarSelect(allUsers, selectElement) {
   // console.log(empImage,allUsers);
   allUsers.filter(async (user) => {
     let img = empImage.find((img) => img.id == user);
-    console.log(`setAvatarSelect: user ${user}`, img);
+    // console.log(`setAvatarSelect: user ${user}`, img);
 
     if (img) {
       setAvatarOption(selectElement, user, img.image);
@@ -125,6 +125,10 @@ export async function displayEmpImage(id) {
     if (response.ok) {
       const img = await response.text();
       console.log(id, img);
+
+      if(!img.startsWith("data:image/")){
+        throw new Error("Invalid image format");
+      }
       // บันทึกลง IndexedDB
       await setImage(id, img);
       return `${img}`;
