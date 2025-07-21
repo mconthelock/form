@@ -269,3 +269,39 @@ export function getAllDivision(){
     });
 }
 // ------------- Organize API Functions End -------------
+
+// --------------- Form master API Functions ---------------
+export function getFormMasterAll() {
+    return getData({
+        type: 'get',
+        url: `${process.env.APP_APITEST}/formmst/`,
+    });
+}
+
+export function getFormMasterByVaname(vaname) {
+    return getData({
+        type: 'get',
+        url: `${process.env.APP_APITEST}/formmst/${vaname}`,
+    });
+}
+
+/**
+ * search form master by condition
+ * @param {object} q 
+ * @returns 
+ * @example
+ * {
+ *   fields: ["NNO", "VORGNO", "CYEAR", "NRUNNO", "VNAME", "VANAME", "VDESC", "DCREDATE", "CCRETIME", "VAUTHPAGE", "VFORMPAGE", "VDIR", "NLIFETIME", "CSTATUS"], // array
+ *   NNO: 13, // number
+ *   VORGNO: "000101", // string
+ *   CYEAR: "25", // string
+ *   VANAME: "QA-INS" // string
+ * }
+ */
+export function getFormMaster(q = {}) {
+    return getData({
+        url: `${process.env.APP_APITEST}/formmst/getFormmst`,
+        data: q
+    });
+}
+

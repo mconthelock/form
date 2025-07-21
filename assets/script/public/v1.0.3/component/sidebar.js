@@ -107,7 +107,7 @@ export async function setSidebarMenu(menu, info){
                                     </summary>
                                     <ul class="text-sm list-disc">`;
                 m.submenu.forEach(sub => {
-                    listMenu += `<li class="${sub.menu_class}"><a href="${host}}/${sub.menu_link}" class="menu-name sidebar-text">${sub.menu_name}</a></li>`;
+                    listMenu += `<li class="${sub.menu_class}"><a href="${host}/${sub.menu_link}" class="menu-name sidebar-text">${sub.menu_name}</a></li>`;
                 });
                 listMenu += `</ul></details></li>`;
             }else{

@@ -109,14 +109,12 @@ class Main extends MY_Controller
 
     public function InsertForm()
     {
-
         $post   = $this->input->post();
         $nfrmno = $post['nfrmno'];
         $vorgno = $post['vorgno'];
         $cyear  = $post['cyear'];
         $cyear2 = $post['cyear2'];
         $nrunno = $post['nrunno'];
-
 
         $getEmp = $this->ent->get_orgpos("020101", "02")[0]; // PRESIDENT
         if ($post['total_amount'] > 10000 && $post['requested_by'] != $getEmp->VEMPNO) {
@@ -126,7 +124,6 @@ class Main extends MY_Controller
         if ($post['cash_adv'] == '0') {
             $this->deleteFlowStep('', $nfrmno, $vorgno, $cyear, $cyear2, $nrunno, '87', '00'); // delete FIN Staff
         }
-        // $this->updateFlowApv("", $getEmp->VEMPNO, $nfrmno, $vorgno, $cyear, $cyear2, $nrunno, "18", "00");
 
         $data = [
             'NFRMNO'               => $nfrmno,
@@ -201,10 +198,11 @@ class Main extends MY_Controller
         }
 
         $companies = json_decode($_POST['companies'], true);
-        $files     = $_FILES['company_files'];
+
+        // FIX: Check if company_files exists before accessing it
+        $files = isset($_FILES['company_files']) ? $_FILES['company_files'] : null;
 
         foreach ($companies as $idx => $company) {
-
             $data = [
                 'NFRMNO'       => $nfrmno,
                 'VORGNO'       => $vorgno,
@@ -213,9 +211,10 @@ class Main extends MY_Controller
                 'NRUNNO'       => $nrunno,
                 'COMPANY_NAME' => $company['name'],
                 'COMPANY_TYPE' => $company['orgType'],
-                // 'ATTACH_FILE'  => ''
             ];
-            if (isset($files['name'][$idx])) {
+
+            // FIX: Check if files exist and if the specific index exists
+            if ($files && isset($files['name'][$idx]) && !empty($files['name'][$idx])) {
                 $extension = pathinfo($files['name'][$idx], PATHINFO_EXTENSION);
                 $oneFile   = array(
                     'name'     => "File_guest_$idx.$extension",
@@ -227,11 +226,11 @@ class Main extends MY_Controller
 
                 $file = $this->uploadFile($oneFile);
 
-                pre_array($file);
                 if ($file['status'] == '1') {
                     $data['ATTACH_FILE'] = $file['file_name'];
                 }
             }
+
             $this->ent->insert('GPENT_COMPANY', $data);
         }
     }
@@ -344,7 +343,7 @@ class Main extends MY_Controller
         }
 
         $companies = json_decode($_POST['companies'], true);
-        $files     = $_FILES['company_files'];
+        $files = isset($_FILES['company_files']) ? $_FILES['company_files'] : null;
 
         $this->ent->delete('GPENT_COMPANY', $where);
         foreach ($companies as $idx => $company) {
@@ -361,7 +360,7 @@ class Main extends MY_Controller
             ];
 
             // แนบไฟล์ใหม่กรณีอัปโหลด
-            if (isset($files['name'][$idx]) && $files['name'][$idx]) {
+            if ($files && isset($files['name'][$idx]) && !empty($files['name'][$idx])) {
                 $extension = pathinfo($files['name'][$idx], PATHINFO_EXTENSION);
                 $oneFile   = array(
                     'name'     => "File_guest_$idx.$extension",
@@ -419,7 +418,7 @@ class Main extends MY_Controller
         $cyear2        = $this->input->post('cyear2');
         $nrunno        = $this->input->post('nrunno');
         $approveRemark = $this->input->post('approveRemark');
-        $acceptval  = $this->input->post('acceptval');
+        $acceptval     = $this->input->post('acceptval');
 
         // echo json_encode($nfrmno);
 
@@ -478,7 +477,7 @@ class Main extends MY_Controller
         $formNumber    = $this->toFormNumber($nfrmno, $vorgno, $cyear, $cyear2, $nrunno);
 
         $arr_m = array_merge((array) $flow_approver[0], (array) $emp_approver[0]);
-        $link  = '<a href="https://amecwebtest.mitsubishielevatorasia.co.th/form/gpform/GP-ENT/main?sr=1&no=9&orgNo=030101&y=25&y2=' . $cyear2 . '&runNo=' . $nrunno . '&empno=' . $emp_approver[0]->SEMPNO . '&m=3&bp=%2Fformtest%2Fworkflow%2FmineList%2Easp&menu=1"> LINK WEBFLOW </a>';
+        $link  = '<a href="https://amecweb.mitsubishielevatorasia.co.th/form/gpform/GP-ENT/main?sr=1&no=9&orgNo=030101&y=25&y2=' . $cyear2 . '&runNo=' . $nrunno . '&empno=' . $emp_approver[0]->SEMPNO . '&m=3&bp=%2Fform%2Fworkflow%2FmineList%2Easp&menu=1"> LINK WEBFLOW </a>';
 
         $emp_aprv = "approver";
         if ($arr_m['SPOSCODE'] == "10") {

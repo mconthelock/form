@@ -8,7 +8,7 @@ import { select, webflowSubmit } from "../../public/v1.0.3/component/form";
 import { dataTableSkeleton } from "../../public/v1.0.3/component/skeleton";
 import { checkEmployeeAndFocus } from "../../public/v1.0.3/employee";
 import { getAllAttr, logFormData, requiredForm, showMessage } from "../../public/v1.0.3/jFuntion";
-import { getEscsItems, getEscsUsers, getEscsUserSection, getDepartment, getDivision, getSection } from "../../api";
+import { getEscsItems, getEscsUsers, getEscsUserSection, getDepartment, getDivision, getSection, getFormMasterByVaname } from "../../api";
 import { showLoader } from "../../public/v1.0.3/preloader";
 // import { getDepartment, getDivision, getSection } from "../../webservice";
 // import "../../../dist/css/v1.0.1.min.css";
@@ -182,8 +182,13 @@ $(document).on('click', '#btnRequest', async function(){
             showMessage('Please select at least one row', 'warning');
             return;
         }
+        const formmst =  await getFormMasterByVaname('QA-INS');
 
         const formData = new FormData(form[0]);
+        formData.set('NFRMNO', formmst.NFRMNO);
+        formData.set('VORGNO', formmst.VORGNO);
+        formData.set('CYEAR', formmst.CYEAR);
+
         logFormData(formData);
         
     } catch (error) {
