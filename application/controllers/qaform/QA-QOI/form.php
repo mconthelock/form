@@ -513,4 +513,17 @@ class form extends MY_Controller{
 
     }
 
+    public function testmeetingfile()
+    {
+        $data = array(
+            "TO" => 'fueangfa@mitsubishielevatorasia.co.th',
+            "CC" => 'kanittha@mitsubishielevatorasia.co.th',
+            //"CC" => ['kanittha@mitsubishielevatorasia.co.th', 'sutthipongt@mitsubishielevatorasia.co.th'],
+            // "CC" => ['sutthipongt@mitsubishielevatorasia.co.th'],
+            "SUBJECT" =>'📅 จองห้องประชุมแบบ PHPMailer',
+            "BODY"    => "test"
+        );
+        $this->mail->sendfilemail($data);
+    }
+
 }

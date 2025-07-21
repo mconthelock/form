@@ -162,6 +162,8 @@ export function menuFocus(){
     if ($("body").attr("menuTitle")) {
         const title = $("body").attr("menuTitle");
         const menu = $(`.${title}`);
+        const detail = menu.closest("details");
+        detail.attr("open", true);
         // console.log(title, menu);
         
         menu.find("a").addClass("menu-focus");
