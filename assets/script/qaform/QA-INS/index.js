@@ -190,6 +190,13 @@ $(document).on('click', '#btnRequest', async function(){
         formData.set('CYEAR', formmst.CYEAR);
 
         logFormData(formData);
+
+        const res = await getData({
+            url: `${process.env.APP_APITEST}/amec/form/QA-INS`,
+            data: formData,
+            processData: false,
+            contentType: false
+        })
         
     } catch (error) {
         console.error(error);
