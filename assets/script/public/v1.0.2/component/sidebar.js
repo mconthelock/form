@@ -63,9 +63,11 @@ export function initSidebar(options = {}) {
     ...options,
   };
   const sidebar = `
-        <div id="sidebar" class="menu transition-all w-full md:w-64 lg:w-80 min-h-full bg-primary text-base-100 text-base pt-1 ${pin}" >
-            <div class="flex items-center sidebar-head px-4 py-2 gap-3">
-                <div tabindex="0" role="button" class="sidebar-logo btn btn-ghost btn-circle bg-gray-50 w-12 h-12 ${
+        <div id="sidebar" class="menu transition-all w-full md:w-64 lg:w-80 min-h-full ${
+          opt.bgClass ? opt.bgClass : "bg-primary"
+        } text-base-100 text-base pt-1 ${pin}" >
+            <div class="flex items-center sidebar-head py-2 gap-3">
+                <div tabindex="0" role="button" class="sidebar-logo btn btn-ghost btn-circle w-12 h-12 ${
                   opt.showIcon ? "" : "hidden"
                 }">
                     <img src="${opt.icon}" alt="" srcset="">
@@ -81,7 +83,7 @@ export function initSidebar(options = {}) {
                     <i class="icofont-navigation-menu text-xl"></i>
                 </button>
             </div>
-            <div id="menu"></div>
+            <div id="menu" class="mt-3"></div>
             <div id="profile" class="mt-auto"></div>
         </div>
     `;
