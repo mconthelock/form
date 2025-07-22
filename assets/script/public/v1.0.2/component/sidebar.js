@@ -100,7 +100,7 @@ export async function setSidebarMenu(menu, info) {
   if (menu.length > 0) {
     menu.forEach((m) => {
       if (m.submenu) {
-        listMenu += `<li class="mainmenu ${m.menu_class} px-6">
+        listMenu += `<li class="mainmenu ${m.menu_class}">
                                 <details>
                                     <summary class="font-semibold text-base">
                                         <span class="text-2xl">${m.menu_icon}</span>
@@ -112,7 +112,7 @@ export async function setSidebarMenu(menu, info) {
         });
         listMenu += `</ul></details></li>`;
       } else {
-        listMenu += `<li class="${m.menu_class} px-6">
+        listMenu += `<li class="${m.menu_class}">
                                 <a href="${host}/${m.menu_link}" class="sidebar-link">
                                     <span class="text-2xl">${m.menu_icon}</span>
                                     <span class="font-semibold menu-name sidebar-text">${m.menu_name}</span>
