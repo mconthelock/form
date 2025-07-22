@@ -5582,6 +5582,25 @@
     --tw-ordinal: ordinal;
     font-variant-numeric: var(--tw-ordinal,) var(--tw-slashed-zero,) var(--tw-numeric-figure,) var(--tw-numeric-spacing,) var(--tw-numeric-fraction,);
   }
+  .btn-link {
+    text-decoration-line: underline;
+    outline-color: currentColor;
+    --btn-border: #0000;
+    --btn-bg: #0000;
+    --btn-fg: var(--color-primary);
+    --btn-noise: none;
+    --btn-shadow: "";
+    &:is(.btn-active, :hover, :active:focus, :focus-visible) {
+      text-decoration-line: underline;
+      --btn-border: #0000;
+      --btn-bg: #0000;
+    }
+    @media (hover: none) {
+      &:hover:not(.btn-active, :active, :focus-visible, :disabled, [disabled], .btn-disabled) {
+        text-decoration-line: none;
+      }
+    }
+  }
   .link-hover {
     text-decoration-line: none;
     &:hover {
@@ -5592,6 +5611,9 @@
   }
   .line-through {
     text-decoration-line: line-through;
+  }
+  .no-underline {
+    text-decoration-line: none;
   }
   .overline {
     text-decoration-line: overline;
@@ -6287,6 +6309,11 @@
   .lg\:w-80 {
     @media (width >= 64rem) {
       width: calc(var(--spacing) * 80);
+    }
+  }
+  .lg\:w-\[16\.25rem\] {
+    @media (width >= 64rem) {
+      width: 16.25rem;
     }
   }
   .lg\:w-\[70rem\] {
