@@ -1,4 +1,5 @@
 import { host } from "../jFuntion";
+import "../../../../dist/css/navbar.min.css";
 
 
 $(document).on('click', '#navbarToggle', function () {
@@ -15,7 +16,7 @@ export function initNavbar(options = {}){
     }
     
     const navbar = `
-        <div class="navbar bg-base-100 md:hidden shadow-xl fixed top-0 z-50 h-16 W-lvw">
+        <div class="shadow-xl" id="navbar">
             <div class="navbar-start">
                 <label for="${opt.toggleId}" class="btn btn-ghost btn-circle drawer-button" id="navbarToggle">
                     <!--- <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

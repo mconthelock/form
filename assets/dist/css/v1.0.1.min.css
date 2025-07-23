@@ -6311,11 +6311,6 @@
       width: calc(var(--spacing) * 80);
     }
   }
-  .lg\:w-\[16\.25rem\] {
-    @media (width >= 64rem) {
-      width: 16.25rem;
-    }
-  }
   .lg\:w-\[70rem\] {
     @media (width >= 64rem) {
       width: 70rem;
@@ -6986,6 +6981,17 @@ div.dt-processing > div:last-child > div:nth-child(4) {
 }
 #sidebar {
   transition: all 0.2s ease-in-out;
+}
+#sidebar .sidebar-head {
+  width: 100%;
+}
+#sidebar .sidebar-title, #sidebar .sidebar-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+#sidebar #menu {
+  width: 100%;
 }
 #sidebar.collapsed {
   width: 75px !important;

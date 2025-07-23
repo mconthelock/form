@@ -1,0 +1,1 @@
+#navbar{background-color:var(--color-base-100);z-index:50;width:100vw;height:4rem;display:flex;position:fixed;top:0}#navbar .navbar-start{justify-content:flex-start;align-items:center;width:50%;padding:.5rem;display:inline-flex}#navbar .navbar-end{justify-content:flex-end;align-items:center;width:50%;display:inline-flex}@media (min-width:48rem){#navbar{display:none}}

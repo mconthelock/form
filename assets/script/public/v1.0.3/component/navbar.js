@@ -1,4 +1,5 @@
 import { host } from "../jFuntion";
+import "../../../../dist/css/navbar.min.css";
 
 
 $(document).on('click', '#navbarToggle', function () {
@@ -10,11 +11,12 @@ export function initNavbar(options = {}){
         icon: `${host}/assets/images/${process.env.APP_ICON}`, // จะไปตั้งใน env ก็ได้ถ้า path ตรง ถ้าไม่ก็ส่ง path ที่ถูกต้องมาเลยเช่น `${host}/assets/images/icon.png`,
         showIcon: true,
         programName: process.env.APP_NAME,
-        toggleId: 'navbar-sidebar-toggle',
+        toggleId: 'my-drawer-2',
         ...options
     }
+    
     const navbar = `
-        <div class="navbar bg-base-100 md:hidden shadow-xl fixed top-0 z-50 h-16 W-lvw">
+        <div class="shadow-xl" id="navbar">
             <div class="navbar-start">
                 <label for="${opt.toggleId}" class="btn btn-ghost btn-circle drawer-button" id="navbarToggle">
                     <!--- <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

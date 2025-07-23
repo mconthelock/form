@@ -6311,11 +6311,6 @@
       width: calc(var(--spacing) * 80);
     }
   }
-  .lg\:w-\[16\.25rem\] {
-    @media (width >= 64rem) {
-      width: 16.25rem;
-    }
-  }
   .lg\:w-\[70rem\] {
     @media (width >= 64rem) {
       width: 70rem;

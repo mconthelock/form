@@ -62,10 +62,11 @@ export function initSidebar(options = {}) {
         icon: `${host}/assets/images/${process.env.APP_ICON}`, // จะไปตั้งใน env ก็ได้ถ้า path ตรง ถ้าไม่ก็ส่ง path ที่ถูกต้องมาเลยเช่น `${host}/assets/images/icon.png`,
         showIcon: true,
         programName: process.env.APP_NAME,
+        bgClass: "bg-primary", 
         ...options
     }
     const sidebar = `
-        <div id="sidebar" class="menu transition-all w-full md:w-64 lg:w-80 min-h-full bg-primary text-base-100 text-base pt-1 ${pin}" >
+        <div id="sidebar" class="menu ${opt.bgClass ? opt.bgClass : "bg-primary"} text-base-100 text-base pt-1 ${pin}" >
             <div class="flex items-center sidebar-head px-4 py-2 gap-3">
                 <div tabindex="0" role="button" class="sidebar-logo btn btn-ghost btn-circle bg-gray-50 w-12 h-12 ${opt.showIcon ? '' : 'hidden'}">
                     <img src="${opt.icon}" alt="" srcset="">
