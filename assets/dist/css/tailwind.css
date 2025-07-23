@@ -3867,6 +3867,9 @@
     width: var(--size);
     height: var(--size);
   }
+  .\!h-12 {
+    height: calc(var(--spacing) * 12) !important;
+  }
   .h-1 {
     height: calc(var(--spacing) * 1);
   }

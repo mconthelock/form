@@ -3,76 +3,78 @@ import "../../../../dist/css/sidebar.min.css";
 import "../_tooltip";
 
 $(document).on("click", "#sidebarToggle", function () {
-    // $('#sidebar').toggleClass('collapsed');
-    if ($("#sidebar").hasClass("collapsed")) {
-        expandMenu();
-        // $('#sidebar').removeClass('collapsed');
-        // $('#sidebarToggle').attr('data-html', 'Collapse menu');
-    } else if ($("#sidebar").hasClass("collapsed-hover")) {
-        iconMenu();
-        expandMenu();
-        // $('#sidebar').removeClass('collapsed-hover collapsed');
-        // $('#sidebarToggle').attr('data-html', 'Collapse menu');
-    } else {
-        collapsedMenu();
-        // $('#sidebar').addClass('collapsed');
-        // $('#sidebarToggle').attr('data-html', 'Expand menu');
-    }
+  // $('#sidebar').toggleClass('collapsed');
+  if ($("#sidebar").hasClass("collapsed")) {
+    expandMenu();
+    // $('#sidebar').removeClass('collapsed');
+    // $('#sidebarToggle').attr('data-html', 'Collapse menu');
+  } else if ($("#sidebar").hasClass("collapsed-hover")) {
+    iconMenu();
+    expandMenu();
+    // $('#sidebar').removeClass('collapsed-hover collapsed');
+    // $('#sidebarToggle').attr('data-html', 'Collapse menu');
+  } else {
+    collapsedMenu();
+    // $('#sidebar').addClass('collapsed');
+    // $('#sidebarToggle').attr('data-html', 'Expand menu');
+  }
 });
 
 $(document).on("mouseover", "#sidebar #menu, #sidebar #profile", function () {
-    if ($("#sidebar").hasClass("collapsed")) {
-        $("#sidebarToggle").html(`<i class="icofont-tack-pin text-xl"></i>`);
-        $("#sidebarToggle").attr("data-html", "Keep menu open");
-        $("#sidebar").removeClass("collapsed").addClass("collapsed-hover");
-    }
+  if ($("#sidebar").hasClass("collapsed")) {
+    $("#sidebarToggle").html(`<i class="icofont-tack-pin text-xl"></i>`);
+    $("#sidebarToggle").attr("data-html", "Keep menu open");
+    $("#sidebar").removeClass("collapsed").addClass("collapsed-hover");
+  }
 });
 
 $(document).on("mouseleave", "#sidebar", function () {
-    if ($("#sidebar").hasClass("collapsed-hover")) {
-        iconMenu();
-        collapsedMenu();
-        // $('#sidebarToggle').attr('data-html', 'Expand menu');
-        // $('#sidebar').removeClass('collapsed-hover').addClass('collapsed');
-    }
+  if ($("#sidebar").hasClass("collapsed-hover")) {
+    iconMenu();
+    collapsedMenu();
+    // $('#sidebarToggle').attr('data-html', 'Expand menu');
+    // $('#sidebar').removeClass('collapsed-hover').addClass('collapsed');
+  }
 });
 
 function iconMenu() {
-    $("#sidebarToggle").html(`<i class="icofont-navigation-menu text-xl"></i>`);
+  $("#sidebarToggle").html(`<i class="icofont-navigation-menu text-xl"></i>`);
 }
 
 function expandMenu() {
-    $("#sidebar").removeClass("collapsed-hover collapsed");
-    $("#sidebarToggle").attr("data-html", "Collapse menu");
-    localStorage.setItem("pin", true);
+  $("#sidebar").removeClass("collapsed-hover collapsed");
+  $("#sidebarToggle").attr("data-html", "Collapse menu");
+  localStorage.setItem("pin", true);
 }
 
 function collapsedMenu() {
-    $("#sidebarToggle").attr("data-html", "Expand menu");
-    $("#sidebar").removeClass("collapsed-hover").addClass("collapsed");
-    localStorage.setItem("pin", false);
+  $("#sidebarToggle").attr("data-html", "Expand menu");
+  $("#sidebar").removeClass("collapsed-hover").addClass("collapsed");
+  localStorage.setItem("pin", false);
 }
 
 export function initSidebar(options = {}) {
-    const sidebarPin = localStorage.getItem("pin");
-    const pin = sidebarPin == "true" ? "" : "collapsed";
-    const opt = {
-        icon: `${host}/assets/images/${process.env.APP_ICON}`, // จะไปตั้งใน env ก็ได้ถ้า path ตรง ถ้าไม่ก็ส่ง path ที่ถูกต้องมาเลยเช่น `${host}/assets/images/icon.png`,
-        showIcon: true,
-        programName: process.env.APP_NAME,
-        bgClass: "bg-primary",
-        ...options,
-    };
-    const sidebar = `
-        <div id="sidebar" class="menu ${opt.bgClass ? opt.bgClass : "bg-primary"} text-base-100 text-base pt-1 ${pin}" >
+  const sidebarPin = localStorage.getItem("pin");
+  const pin = sidebarPin == "true" ? "" : "collapsed";
+  const opt = {
+    icon: `${host}/assets/images/${process.env.APP_ICON}`, // จะไปตั้งใน env ก็ได้ถ้า path ตรง ถ้าไม่ก็ส่ง path ที่ถูกต้องมาเลยเช่น `${host}/assets/images/icon.png`,
+    showIcon: true,
+    programName: process.env.APP_NAME,
+    bgClass: "bg-primary",
+    ...options,
+  };
+  const sidebar = `
+        <div id="sidebar" class="menu ${
+          opt.bgClass ? opt.bgClass : "bg-primary"
+        } text-base-100 text-base pt-1 ${pin}" >
             <div class="flex items-center sidebar-head py-2 gap-3">
-                <div tabindex="0" role="button" class="sidebar-logo btn btn-circle btn-link no-underline  w-12 h-12 ${
-                    opt.showIcon ? "" : "hidden"
+                <div tabindex="0" role="button" class="sidebar-logo btn btn-circle btn-link no-underline  w-12 !h-12 ${
+                  opt.showIcon ? "" : "hidden"
                 }">
                     <img src="${opt.icon}" alt="" srcset="">
                 </div>
                 <span class="text-white text-lg font-bold sidebar-title">${
-                    opt.programName
+                  opt.programName
                 }</span>
                 <!-- Hamburger icon -->
                 <button id="sidebarToggle" class="ml-auto btn btn-circle btn-ghost tooltip tooltip-right" data-html="Collapse menu">
@@ -86,8 +88,8 @@ export function initSidebar(options = {}) {
             <div id="profile" class="mt-auto"></div>
         </div>
     `;
-    // $('#sidebar').html(sidebar);
-    $("#sidebar").replaceWith(sidebar);
+  // $('#sidebar').html(sidebar);
+  $("#sidebar").replaceWith(sidebar);
 }
 
 /**
@@ -96,43 +98,43 @@ export function initSidebar(options = {}) {
  * @param {object} info
  */
 export async function setSidebarMenu(menu, info) {
-    let listMenu = "";
-    // sidebar menu
-    if (menu.length > 0) {
-        menu.forEach((m) => {
-            if (m.submenu) {
-                listMenu += `<li class="mainmenu ${m.menu_class}">
+  let listMenu = "";
+  // sidebar menu
+  if (menu.length > 0) {
+    menu.forEach((m) => {
+      if (m.submenu) {
+        listMenu += `<li class="mainmenu ${m.menu_class}">
                                 <details>
                                     <summary class="font-semibold text-base">
                                         <span class="text-2xl">${m.menu_icon}</span>
                                         <span class='sidebar-text'>${m.menu_name}</span>
                                     </summary>
                                     <ul class="text-sm list-disc">`;
-                m.submenu.forEach((sub) => {
-                    listMenu += `<li class="${sub.menu_class}"><a href="${host}/${sub.menu_link}" class="menu-name sidebar-text">${sub.menu_name}</a></li>`;
-                });
-                listMenu += `</ul></details></li>`;
-            } else {
-                listMenu += `<li class="${m.menu_class}">
+        m.submenu.forEach((sub) => {
+          listMenu += `<li class="${sub.menu_class}"><a href="${host}/${sub.menu_link}" class="menu-name sidebar-text">${sub.menu_name}</a></li>`;
+        });
+        listMenu += `</ul></details></li>`;
+      } else {
+        listMenu += `<li class="${m.menu_class}">
                                 <a href="${host}/${m.menu_link}" class="sidebar-link">
                                     <span class="text-2xl">${m.menu_icon}</span>
                                     <span class="font-semibold menu-name sidebar-text">${m.menu_name}</span>
                                 </a>
                             </li>`;
-            }
-        });
-        $("#menu").html(listMenu);
-    }
+      }
+    });
+    $("#menu").html(listMenu);
+  }
 
-    if (info) {
-        const fullname = info.SNAME.split(" ");
-        const name = fullname[0];
-        const profileImg = info.image
-            ? info.image
-            : `${host}/assets/img/avatar.png`;
+  if (info) {
+    const fullname = info.SNAME.split(" ");
+    const name = fullname[0];
+    const profileImg = info.image
+      ? info.image
+      : `${host}/assets/img/avatar.png`;
 
-        // sidebar profile
-        $("#profile").html(`
+    // sidebar profile
+    $("#profile").html(`
             <li class="">
                 <hr>
                 <div class="flex sidebar-profile">
@@ -156,22 +158,20 @@ export async function setSidebarMenu(menu, info) {
                 </div>
             </li>
         `);
-        // navbar profile
-        $("#nav-profile").html(
-            `<img alt="${info.SNAME}" src="${profileImg}" />`
-        );
-    }
-    menuFocus();
+    // navbar profile
+    $("#nav-profile").html(`<img alt="${info.SNAME}" src="${profileImg}" />`);
+  }
+  menuFocus();
 }
 
 export function menuFocus() {
-    if ($("body").attr("menuTitle")) {
-        const title = $("body").attr("menuTitle");
-        const menu = $(`.${title}`);
-        const detail = menu.closest("details");
-        detail.attr("open", true);
-        // console.log(title, menu);
+  if ($("body").attr("menuTitle")) {
+    const title = $("body").attr("menuTitle");
+    const menu = $(`.${title}`);
+    const detail = menu.closest("details");
+    detail.attr("open", true);
+    // console.log(title, menu);
 
-        menu.find("a").addClass("menu-focus");
-    }
+    menu.find("a").addClass("menu-focus");
+  }
 }
