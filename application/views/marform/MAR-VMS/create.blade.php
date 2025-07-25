@@ -36,6 +36,9 @@
     font-weight: bold;
     color: white;
   }
+  #tablesch_info {
+    display: none !important;
+  }
 </style>
 @endsection
 @section('contents')
@@ -333,70 +336,85 @@
 </div>
 </div>
   <!-- Tab2 -->
-  <div id="tab2" class="tab-pane hidden w-full max-w-6xl mx-auto mt-8">
+  <div id="tab2" class="tab-pane hidden w-full max-w-7xl mx-auto mt-8">
   <h2 class="text-2xl font-bold text-blue-900 mb-2">Schedule</h2>
   <p class="text-sm text-gray-600 mb-6">Please fill in the schedule of activities during the visit.</p>
+  <div>
+    <table id="tablesch" class="min-w-[1600px] text-sm text-gray-800 w-full ">
+      <thead class="text-blue-800 sticky top-0 z-10 shadow-sm">
+        <tr class="bg-gradient-to-r from-blue-100 via-blue-100 to-blue-100 text-sm">
+          <th class="px-4 py-3 text-left w-32 sticky-column bg-gradient-to-r from-blue-100 via-blue-100 to-blue-100">Time Start</th>
+          <th class="px-4 py-3 text-left w-32 sticky-column bg-gradient-to-r from-blue-100 via-blue-100 to-blue-100">Time End</th>
+          <th class="px-4 py-3 text-left w-36">Duration (Min)</th>
+          <th class="px-4 py-3 text-left w-96">Place</th>
+          <th class="px-4 py-3 text-left w-100">Content</th>
+          <th class="px-4 py-3 text-left w-96">AMEC Participants</th>
+          <th class="px-4 py-3 text-left w-96">Note</th>
+          <th class="px-4 py-3 text-left w-52">Activity</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-blue-100">
+  <tr class="bg-white">
+    <td class="px-2 py-2 w-32 sticky-column">
+      <input name="starttime" type="time"
+        class="w-full rounded-lg border border-blue-200 px-3 py-2 shadow-sm" />
+    </td>
+    <td class="px-2 py-2 w-32 sticky-column">
+      <input name="endtime" type="time"
+        class="w-full rounded-lg border border-blue-200 px-3 py-2 shadow-sm" />
+    </td>
+    <td class="px-2 py-2 w-28">
+      <input name="duration" type="text" placeholder="e.g. 60"
+        class="w-full rounded-lg border border-blue-200 px-3 py-2 shadow-sm" />
+    </td>
 
-  <div class="overflow-x-auto rounded-2xl border border-blue-200 shadow">
-  <table class="min-w-full text-sm text-gray-800">
-    <thead class="bg-blue-100 text-blue-800">
-      <tr>
-        <th class="px-4 py-3 text-left">Activity Details</th>
-        <th class="px-4 py-3 text-left w-24">Action</th>
-      </tr>
-    </thead>
-    <tbody id="scheduleTableBody" class="divide-y divide-blue-100">
-      <tr>
-        <td class="px-4 py-4" colspan="2">
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <label class="block text-sm font-medium mb-1 text-gray-700">Time Start</label>
-              <input type="time" class="input input-bordered w-full rounded-xl border-blue-200" />
-            </div>
-            <div>
-              <label class="block text-sm font-medium mb-1 text-gray-700">Time End</label>
-              <input type="time" class="input input-bordered w-full rounded-xl border-blue-200" />
-            </div>
-            <div>
-              <label class="block text-sm font-medium mb-1 text-gray-700">Duration</label>
-              <input type="text" class="input input-bordered w-full rounded-xl border-blue-200" placeholder="e.g. 1h" />
-            </div>
-            <div>
-              <label class="block text-sm font-medium mb-1 text-gray-700">Place</label>
-              <input type="text" class="input input-bordered w-full rounded-xl border-blue-200" />
-            </div>
-            <div>
-              <label class="block text-sm font-medium mb-1 text-gray-700">Content</label>
-              <input type="text" class="input input-bordered w-full rounded-xl border-blue-200" />
-            </div>
-            <div>
-              <label class="block text-sm font-medium mb-1 text-gray-700">AMEC Participants</label>
-              <input type="text" class="input input-bordered w-full rounded-xl border-blue-200" />
-            </div>
-            <div class="md:col-span-3">
-              <label class="block text-sm font-medium mb-1 text-gray-700">Note</label>
-              <input type="text" class="input input-bordered w-full rounded-xl border-blue-200" />
-            </div>
-          </div>
-        </td>
-        <td class="align-top px-4 pt-8">
-          <button type="button" class="text-red-500 hover:text-red-700 font-medium" onclick="removeRow(this)">Remove</button>
-        </td>
-      </tr>
-    </tbody>
-  </table>
+    <!-- เพิ่มความกว้างให้ Place -->
+    <td class="px-2 py-2  w-100">
+      <input name="place" type="text"
+        class="w-full rounded-lg border border-blue-200 px-3 py-2 shadow-sm" />
+    </td>
+
+    <!-- Content ยาวขึ้น -->
+    <td class="px-2 py-2 w-108">
+      <input name="content" type="text"
+        class="w-full rounded-lg border border-blue-200 px-3 py-2 shadow-sm" />
+    </td>
+
+    <!-- Participants -->
+    <td class="px-2 py-2  w-100">
+      <input name="participants" type="text"
+        class="w-full rounded-lg border border-blue-200 px-3 py-2 shadow-sm" />
+    </td>
+
+    <!-- Note -->
+    <td class="px-2 py-2  w-100">
+      <input name="note" type="text"
+        class="w-full rounded-lg border border-blue-200 px-3 py-2 shadow-sm" />
+    </td>
+
+    <!-- Activity -->
+    <td class="px-2 py-2 w-60">
+      <select name="activity"
+        class="w-full rounded-lg border border-blue-200 px-3 py-2 shadow-sm">
+        <option value="P1">Preparation & Coordination</option>
+        <option value="P2">Presentation</option>
+        <option value="F">Factory Tour</option>
+        <option value="Q">Q&A</option>
+        <option value="L">Lunch Hosting</option>
+      </select>
+    </td>
+  </tr>
+</tbody>
+    </table>
+      <!-- ปุ่มอยู่ชิดขวาใต้ตาราง -->
+  <div class="flex justify-end mt-4">
+    <button id="addRowBtn" type="button"
+      class="bg-blue-600 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-700">
+      + Add Row
+    </button>
+  </div>
+  </div>
 </div>
-
-<!-- ปุ่มเพิ่มแถว -->
-<div class="flex justify-end mt-6">
-  <button type="button"
-    class="inline-flex items-center gap-2 bg-blue-600 text-white px-5 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-all shadow-sm"
-    onclick="addRow()">
-    + Add Activity
-  </button>
-</div>
-
-
 
   <!-- Tab3 -->
   <div id="tab3" class="tab-pane hidden w-full max-w-4xl mx-auto mt-8">
@@ -413,7 +431,7 @@
 @endsection
 
 @section('scripts')
-    <script src="{{ $_ENV['APP_JS'] }}/index.js?ver={{ $GLOBALS['version'] }}"></script>
+    <script src="{{ $_ENV['APP_JS'] }}/vms.js?ver={{ $GLOBALS['version'] }}"></script>
     <script>
           const tabButtons = document.querySelectorAll('#tabs button');
     const tabPanes = document.querySelectorAll('.tab-pane');
@@ -442,52 +460,7 @@
     dinnerDetails.classList.toggle('hidden', !dinnerCheckbox.checked);
   });
 
-function addRow() {
-  const tbody = document.getElementById("scheduleTableBody");
-  const newRow = document.createElement("tr");
-  newRow.innerHTML = `
-    <td class="px-4 py-4" colspan="2">
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div>
-          <label class="block text-sm font-medium mb-1 text-gray-700">Time Start</label>
-          <input type="time" class="input input-bordered w-full rounded-xl border-blue-200" />
-        </div>
-        <div>
-          <label class="block text-sm font-medium mb-1 text-gray-700">Time End</label>
-          <input type="time" class="input input-bordered w-full rounded-xl border-blue-200" />
-        </div>
-        <div>
-          <label class="block text-sm font-medium mb-1 text-gray-700">Duration</label>
-          <input type="text" class="input input-bordered w-full rounded-xl border-blue-200" />
-        </div>
-        <div>
-          <label class="block text-sm font-medium mb-1 text-gray-700">Place</label>
-          <input type="text" class="input input-bordered w-full rounded-xl border-blue-200" />
-        </div>
-        <div>
-          <label class="block text-sm font-medium mb-1 text-gray-700">Content</label>
-          <input type="text" class="input input-bordered w-full rounded-xl border-blue-200" />
-        </div>
-        <div>
-          <label class="block text-sm font-medium mb-1 text-gray-700">AMEC Participants</label>
-          <input type="text" class="input input-bordered w-full rounded-xl border-blue-200" />
-        </div>
-        <div class="md:col-span-3">
-          <label class="block text-sm font-medium mb-1 text-gray-700">Note</label>
-          <input type="text" class="input input-bordered w-full rounded-xl border-blue-200" />
-        </div>
-      </div>
-    </td>
-    <td class="align-top px-4 pt-8">
-      <button type="button" class="text-red-500 hover:text-red-700 font-medium" onclick="removeRow(this)">Remove</button>
-    </td>
-  `;
-  tbody.appendChild(newRow);
-}
 
-function removeRow(btn) {
-  btn.closest("tr").remove();
-}
 
     </script>
 @endsection

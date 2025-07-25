@@ -250,7 +250,7 @@ export async function createTable(option = {}, setupOpt = {} ) {
     opt.initComplete = function (settings, json) {
         // ✅ เรียกฟังก์ชันที่ผู้ใช้ส่งมา (ถ้ามี)
         if (typeof option.initComplete === 'function') {
-            console.log(1, this, settings, json);
+            // console.log(1, this, settings, json);
             
             option.initComplete.call(this, settings, json);
         }

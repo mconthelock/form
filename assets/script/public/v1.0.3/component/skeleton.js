@@ -42,7 +42,7 @@ const dtopt = {
  */
 export function dataTableSkeleton(options = {}){
     const opt = { ...dtopt, ...options };
-    console.log(opt);
+    // console.log(opt);
     if($(`#${opt.idLoading} .dataTableSkeleton`).length == 0) {
         let loader = `
         <div id="dataTableSkeleton" class="s-main ${opt.width} ${opt.height} flex flex-col gap-3 Pomelo-Peel-White dataTableSkeleton bg-inherit">
@@ -51,7 +51,7 @@ export function dataTableSkeleton(options = {}){
         if(opt.middleMenu)  {
             loader += `<div class="flex flex-1 gap-3 h-full">`;
             for(let i = 0; i < opt.numberOfMiddleMenu; i++){
-                console.log(opt.middleSize[i]?.width||opt.middleSize[0].width);
+                // console.log(opt.middleSize[i]?.width||opt.middleSize[0].width);
 
                 loader += `<div class="s-middle-menu skeleton ${opt.middleSize[i]?.width||opt.middleSize[0].width} ${opt.middleSize[i]?.height||opt.middleSize[0].height}"></div>`;
             }

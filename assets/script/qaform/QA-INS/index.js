@@ -7,12 +7,12 @@ import { formatAvatar, s2disableSearch, setSelect2 } from "../../public/v1.0.3/_
 import { select, webflowSubmit } from "../../public/v1.0.3/component/form";
 import { dataTableSkeleton } from "../../public/v1.0.3/component/skeleton";
 import { checkEmployeeAndFocus } from "../../public/v1.0.3/employee";
-import { getAllAttr, logFormData, requiredForm, showMessage } from "../../public/v1.0.3/jFuntion";
+import { getAllAttr, getData, logFormData, requiredForm, showMessage } from "../../public/v1.0.3/jFuntion";
 import { getEscsItems, getEscsUsers, getEscsUserSection, getDepartment, getDivision, getSection, getFormMasterByVaname } from "../../api";
 import { showLoader } from "../../public/v1.0.3/preloader";
 // import { getDepartment, getDivision, getSection } from "../../webservice";
 // import "../../../dist/css/v1.0.1.min.css";
-import "../../../dist/css/dataTable.min.css";
+// import "../../../dist/css/dataTable.min.css";
 
 var formInfo, userIncharge, users, items, qcsection, division, department, section, tableOperator;
 

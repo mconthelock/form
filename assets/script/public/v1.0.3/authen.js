@@ -7,6 +7,11 @@ import { getAppDataById, getMenu, getGroup, setMenu, setGroup, deleteGroup, dele
 import { setSidebarMenu, initSidebar } from "./component/sidebar";
 import { deleteCookie, getCookie, setCookie } from "./_jsCookie";
 import { initNavbar } from "./component/navbar";
+/**
+ * @version 1.0.3
+ * @note 2025-07-25
+ * เพิ่มการตรวจสอบ cookie ทุก 5 นาที เปลี่ยนสถานะออนไลน์/ออฟไลน์
+ */
 
 var indexedDBID;
 // ต้องมีอัันนี้ใน template
@@ -67,14 +72,30 @@ export async function initAuthen(options = {}) {
         }
         
         // $('#user-login').prop('empno', info.SEMPNO);
-        $('#user-login').prop('empno', empno);
-        $('#user-login').prop('appid', appid);
-        $('#user-login').prop('program', indexedDBID);
+        $('#user-login').attr('empno', empno);
+        $('#user-login').attr('appid', appid);
+        $('#user-login').attr('program', indexedDBID);
         
         initNavbar(opt);
         initSidebar(opt);
         setSidebarMenu(menu, info); // ดึงข้อมูลแอปพลิเคชันตาม ID ที่เก็บไว้ใน indexedDBID
         showbgLoader({show: false});
+
+        setInterval(() => {
+            const cookie = getCookie(process.env.APP_NAME);
+            if (!cookie) {
+                console.log('Cookie not found, redirecting to authen page');
+                
+                // $('.logout').trigger('click');
+                console.log($('.sidebar-profile').find('.avatar'));
+                console.log($('#nav-profile').closest('.avatar'));
+                
+                $('.sidebar-profile').find('.avatar').addClass('avatar-offline').removeClass('avatar-online');
+                $('#nav-profile').closest('.avatar').addClass('avatar-offline').removeClass('avatar-online');
+            }else{
+                console.log('Cookie found, updating indexedDBID');
+            }
+        }, 1000 * 60 * 5);
     }
 }
 
