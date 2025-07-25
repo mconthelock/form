@@ -9,7 +9,7 @@
       /*@apply bg-base-100 p-5 w-auto !shadow-sm !border !border-solid !border-gray-300 !rounded-lg; */
       --tw-shadow: 0 1px 3px 0 var(--tw-shadow-color, rgb(0 0 0 / 0.1)), 0 1px 2px -1px var(--tw-shadow-color, rgb(0 0 0 / 0.1)) !important;
     background-color: var(--color-base-100)  !important;
-    padding: 1.25rem; /* 1.25rem = 20px */
+    /* padding: 1.25rem; 1.25rem = 20px */
     width: auto;
     box-shadow: var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow) !important;
     /* box-shadow: var(--box-shadow-sm) !important; */

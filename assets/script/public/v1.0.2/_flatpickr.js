@@ -96,7 +96,7 @@ $(document).on('click', '.fpk-toggle', function(){
     const target = $(this).data('target');
     if(target){
         const instance = $(`input[name="${target}"]`)[0]._flatpickr;
-        // console.log(target, instance);
+        console.log(target, instance);
         instance.toggle();
     }
 });

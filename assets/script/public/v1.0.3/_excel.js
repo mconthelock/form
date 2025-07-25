@@ -109,6 +109,8 @@ export const readInOpt = {
     sheetName: 1,
     headerName: [],
     skipRow: 0,
+    readCustom: false,
+    readHeader: false,
     customSheet: (workbook) => {}
 }
 /**
@@ -116,17 +118,20 @@ export const readInOpt = {
  * @param {object} file 
  * @returns 
  */
-export async function readInput (file, opt = readInOpt){
+export async function readInput (file, options = {}){
+    const opt = {...readInOpt, ...options};
     var data = [];
     const workbook = new ExcelJS.Workbook();
     await workbook.xlsx.load(file);
 
     // console.log(opt.customSheet(workbook));
-    if (opt.customSheet(workbook)) { // read file custom option
+    //  if (opt.customSheet(workbook)) { // read file custom option
+    if (opt.readCustom) { // read file custom option
         console.log('read custom');
         
         data = opt.customSheet(workbook); 
-    }else if (opt.headerName.length > 0){ // read file by header name
+    // }else if (opt.headerName.length > 0){ // read file by header name
+    }else if (opt.readHeader){ // read file by header name
         console.log('read header');
         
         const worksheet = opt.sheetName == 1 ? workbook.worksheets[0] :workbook.getWorksheet(opt.sheetName);

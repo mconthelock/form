@@ -54,14 +54,14 @@ export function createForm(NFRMNO, VORGNO, CYEAR, req, key, remark='', mflag=1){
                 mflag  : mflag
             },
             beforeSend: function (){
-                showLoader(true);
+                showLoader();
             },
             success: function (res) {
                 resolve(res);
             },
             complete: function(xhr, status){
                 checkAuthen(xhr, status);
-                showLoader(false);
+                showLoader({show: false});
             }
         });
     });
@@ -93,14 +93,14 @@ export function createForm2(NFRMNO, VORGNO, CYEAR, req, key, remark='', draft = 
                 draft  : draft
             },
             beforeSend: function (){
-                showLoader(true);
+                showLoader();
             },
             success: function (res) {
                 resolve(res);
             },
             complete: function(xhr, status){
                 checkAuthen(xhr, status);
-                showLoader(false);
+                showLoader({show: false});
             }
         });
     });
@@ -130,14 +130,14 @@ export function deleteForm(NFRMNO, VORGNO, CYEAR, CYEAR2, NRUNNO){
                 runno  : NRUNNO,
             },
             beforeSend: function (){
-                showLoader(true);
+                showLoader();
             },
             success: function (res) {
                 resolve(res);
             },
             complete: function(xhr, status){
                 checkAuthen(xhr, status);
-                showLoader(false);
+                showLoader({show: false});
             }
         });
     });
@@ -168,7 +168,7 @@ export function showFlow(NFRMNO, VORGNO, CYEAR, CYEAR2, NRUNNO){
                 runno  : NRUNNO,
             },
             beforeSend: function (){
-                showLoader(true);
+                showLoader();
             },
             success: function (res) {
                 res.html = res.html.replace(/<table style="/g, '<table style=" display:block; overflow-x:scroll;');
@@ -177,7 +177,7 @@ export function showFlow(NFRMNO, VORGNO, CYEAR, CYEAR2, NRUNNO){
             },
             complete: function(xhr, status){
                 checkAuthen(xhr, status);
-                showLoader(false);
+                showLoader({show: false});
             }
         });
     });
@@ -213,14 +213,14 @@ export function doaction(NFRMNO, VORGNO, CYEAR, CYEAR2, NRUNNO, action, empno, r
                 remark : remark,
             },
             beforeSend: function (){
-                showLoader(true);
+                showLoader();
             },
             success: function (res) {
                 resolve(res);
             },
             complete: function(xhr, status){
                 checkAuthen(xhr, status);
-                showLoader(false);
+                showLoader({show: false});
             }
         });
     });
@@ -256,14 +256,14 @@ export function doactionWebservice(NFRMNO, VORGNO, CYEAR, CYEAR2, NRUNNO, action
                 remark : remark,
             },
             beforeSend: function (){
-                showLoader(true);
+                showLoader();
             },
             success: function (res) {
                 resolve(res);
             },
             complete: function(xhr, status){
                 checkAuthen(xhr, status);
-                showLoader(false);
+                showLoader({show: false});
             }
         });
     });

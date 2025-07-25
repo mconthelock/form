@@ -19,7 +19,7 @@
 import select2      from "select2";
 import "select2/dist/css/select2.min.css";
 import { RequiredElement } from "./jFuntion";
-import { setAvatarSelect } from "../../indexDB/setIndexDB";
+import { setAvatarSelect } from "./setIndexDB";
 
 export const s2disableSearch = {minimumResultsForSearch: Infinity};
 

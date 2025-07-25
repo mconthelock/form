@@ -22,11 +22,16 @@ class Jobs extends CI_Controller
     {
         $data = $this->ent->getGPENTForm();
 
+        // echo "<pre>" . print_r($data, true) . "</pre>";
+
+
         $filtered = array_filter($data, function ($row) {
             $dateTime  = DateTime::createFromFormat('d-M-y', $row->ENTERTAINMENT_DATE);
             $formatted = $dateTime ? $dateTime->format('Y-m-d') : '';
             $date = date("Y-m-d", strtotime("-1 days"));
-            return isset($row->ENTERTAINMENT_DATE) && $formatted == $date;
+
+            // $date = "2025-06-18";
+            return isset($row->ENTERTAINMENT_DATE) && $formatted == $date && $row->CST == '2';
         });
         echo "<pre>" . print_r($filtered, true) . "</pre>";
 
@@ -50,8 +55,8 @@ class Jobs extends CI_Controller
                 // send email
                 $d['VIEW']    = 'layouts/mail/GP-ENT/mailAlert';
                 $d['SUBJECT'] = 'Remind your Entertainment form not yet get approve from approver';
-                // $d['TO']      = 'perapatr@mitsubishielevatorasia.co.th';
-                $d['TO']      = [$emp_req[0]->SRECMAIL];
+                $d['TO']      = 'perapatr@mitsubishielevatorasia.co.th';
+                // $d['TO']      = [$emp_req[0]->SRECMAIL];
                 $d['BODY'] = [
                     '<div style="font-family: Arial, sans-serif; font-size: 14px; color: #333;">
                         <p>Dear User,</p>

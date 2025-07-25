@@ -227,8 +227,8 @@ export async function createTable(option = {}, setupOpt = {} ) {
         },
     };
 
-    console.log('opt', opt);
-    console.log('setup', setup);
+    // console.log('opt', opt);
+    // console.log('setup', setup);
     if (setup.columnSelect && setup.columnSelect.status && Array.isArray(opt.columns)) {
         
         // แทรกคอลัมน์ select ไว้ที่ตำแหน่งที่กำหนด

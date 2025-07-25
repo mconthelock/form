@@ -61,12 +61,16 @@
                         <tbody>
                             @if(!empty($formCler->FORM_ENT))
                                 <tr>
-                                    <th class="w-1/3 text-left text-blue-900 font-semibold py-2 pl-4 border-b-2 border-blue-200 bg-blue-100">Form No.</th>
+                                    <th class="w-1/4 text-left text-blue-900 font-semibold py-2 pl-4 border-b-2 border-blue-200 bg-blue-100">Form No.</th>
                                     <td class="py-2 pl-4 border-b-2 border-blue-200">{{ $formCler->FORM_ENT }}</td>
                                 </tr>
                             @endif
                             <tr>
-                                <th class="w-1/3 text-left text-blue-900 font-semibold py-2 pl-4 border-b-2 border-blue-200 bg-blue-100">Input by</th>
+                                <th class="w-1/4 text-left text-blue-900 font-semibold py-2 pl-4 border-b-2 border-blue-200 bg-blue-100">Form No.</th>
+                                <td class="py-2 pl-4 border-b-2 border-blue-200">{{ $formNumber }}</td>
+                            </tr>
+                            <tr>
+                                <th class="w-1/4 text-left text-blue-900 font-semibold py-2 pl-4 border-b-2 border-blue-200 bg-blue-100">Input by</th>
                                 <td class="py-2 pl-4 border-b-2 border-blue-200">{{ $form[0]->VINPUTNAME }}</td>
                             </tr>
                             <tr>
@@ -86,17 +90,17 @@
                                 <td class="py-2 pl-4 border-b-2 border-blue-200">{{ $dataForm->TYPE_TIME }}</td>
                             </tr>
                             <tr>
-                                <th class="text-left text-blue-900 font-semibold py-2 pl-4 border-b-2 border-blue-200 bg-blue-100">Location</th>
-                                <td class="py-2 pl-4 border-b-2 border-blue-200">{{ $dataForm->LOCATION_TYPE }}</td>
+                                <th class="text-left text-blue-900 font-semibold py-2 pl-4 border-blue-200 bg-blue-100">Location</th>
+                                <td class="py-2 pl-4 border-blue-200">{{ $dataForm->LOCATION_TYPE }}</td>
                             </tr>
-                            <tr>
-                                <th class="text-left text-blue-900 font-semibold py-2 pl-4 border-b-2 border-blue-200 bg-blue-100">Entertainment Budget</th>
-                                <td class="py-2 pl-4 border-b-2 border-blue-200">{{ $dataForm->ENTERTAINMENT_BUDGET ?? '-' }}</td>
-                            </tr>
-                            <tr>
-                                <th class="text-left text-blue-900 font-semibold py-2 pl-4 border-blue-200 bg-blue-100">Guest Type</th>
-                                <td class="py-2 pl-4 border-blue-200">{{ $dataForm->TYPE_NAME }}</td>
-                            </tr>
+                            <!-- <tr>
+                                            <th class="text-left text-blue-900 font-semibold py-2 pl-4 border-blue-200 bg-blue-100">Entertainment Budget</th>
+                                            <td class="py-2 pl-4 border-blue-200">{{ $dataForm->ENTERTAINMENT_BUDGET ?? '-' }}</td>
+                                        </tr>
+                                        <tr>
+                                            <th class="text-left text-blue-900 font-semibold py-2 pl-4 border-blue-200 bg-blue-100">Guest Type</th>
+                                            <td class="py-2 pl-4 border-blue-200">{{ $dataForm->TYPE_NAME }}</td>
+                                        </tr> -->
                         </tbody>
                     </table>
 
@@ -139,6 +143,44 @@
                 </div>
 
                 <div class="mb-8 w-full">
+                    <div class="text-lg font-bold text-blue-800 mb-2">Guest Type</div>
+                    <div class="overflow-hidden rounded-xl border-2 border-blue-200 bg-blue-50 shadow-sm">
+                        <table class="w-full text-sm text-blue-900">
+                            <thead>
+                                <tr class="bg-blue-100">
+                                    <th class="py-2 px-4 border-b border-r border-blue-200 text-left rounded-tl-xl">Guest Type</th>
+                                    <th class="py-2 px-4 border-b border-r border-blue-200 text-center" colspan="2">Participant / Number</th>
+                                    <th class="py-2 px-4 border-b border-blue-200 text-center" colspan="3">Meal expense for guest<br><span class="font-normal text-xs text-blue-600">(Baht / Person / Time)</span></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="bg-amber-50">
+                                    <td class="py-2 px-4 border-r border-blue-100 font-semibold">
+                                        {{ $dataForm->TYPE_NAME }}
+                                    </td>
+                                    <td class="py-2 px-4 border-r border-blue-100 text-center">
+                                        {{ $dataForm->POSITION }}
+                                    </td>
+                                    <td class="py-2 px-4 border-r border-blue-100 text-center">
+                                        {{ str_replace(['>=', '<='], ['≥', '≤'], $dataForm->CONDITION_TEXT) }}
+                                    </td>
+                                    <td class="py-2 px-4 border-r border-blue-100 text-center">
+                                        {{ str_replace(['>=', '<='], ['≥', '≤'], $dataForm->SNACK) }}
+                                    </td>
+                                    <td class="py-2 px-4 border-r border-blue-100 text-center">
+                                        {{ str_replace(['>=', '<='], ['≥', '≤'], $dataForm->LUNCH) }}
+                                    </td>
+                                    <td class="py-2 px-4 border-blue-100 text-center rounded-br-xl">
+                                        {{ str_replace(['>=', '<='], ['≥', '≤'], $dataForm->DINNER) }}
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+
+                <div class="mb-8 w-full">
                     <h3 class="font-semibold text-blue-900 mb-2">Quantity of Participant</h3>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 border-2 border-gray-300 rounded-xl p-3 bg-gray-50">
                         @php
@@ -166,7 +208,13 @@
                             </ul>
                         </div>
                     </div>
+                    <div class="overflow-hidden mt-1 rounded-xl border-2 p-3 border-gray-300 bg-gray-50 shadow-sm flex items-center">
+                        <span class="text-blue-900 font-semibold mr-3">Remark :</span>
+                        <span>{{ $dataForm->REMARK ?? "-" }}</span>
+                    </div>
                 </div>
+
+                
 
                 <h3 class="font-semibold text-blue-900 mb-2 mt-8">Estimate Cost</h3>
                 <table class="w-full mt-2 table-fixed border-2 border-blue-200 rounded-xl overflow-hidden bg-white">
@@ -198,6 +246,16 @@
                         </tr>
                     </tbody>
                 </table>
+
+                <div class="flex items-center justify-start px-4 py-3 bg-blue-50 border-t border-blue-200 rounded-lg">
+                    <span class="text-blue-900 font-semibold mr-3">Cash Advance :</span>
+                    <span class="inline-flex items-center px-3 py-1 rounded-full font-semibold {{ ($dataForm->REIMBURSEMENT ?? '0') == '1' ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-500' }}">
+                        {{ ($dataForm->REIMBURSEMENT ?? '0') == '1' ? 'Yes' : 'No' }}
+                    </span>
+                </div>
+
+
+
 
 
                 @if($dataForm->FORM_APPROVE != null)
@@ -246,15 +304,6 @@
                     </div>
 
                 @endif
-
-
-
-
-
-
-
-
-
 
             </div>
             @if($form[0]->CST == '2')

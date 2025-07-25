@@ -107,11 +107,11 @@ export const ajaxOptionsLoad = {
     type: "post",
     dataType: "json",
     beforeSend: function () {
-        showLoader(true);
+        showLoader();
     },
     complete: function (xhr) {
         checkAuthen(xhr);
-        showLoader(false);
+        showLoader({show: false});
     }
 };
 export const ajaxOptions = {

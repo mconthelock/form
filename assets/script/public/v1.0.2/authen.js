@@ -33,7 +33,7 @@ export async function initAuthen(options = {}) {
         programName: process.env.APP_NAME,
         ...options
     }
-    showbgLoader(true);
+    showbgLoader();
     let menu, info, group, res;
     const cookie = getCookie(process.env.APP_NAME);
     if(!cookie){

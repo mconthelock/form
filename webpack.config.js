@@ -62,6 +62,10 @@ module.exports = {
     eSelf: "./assets/script/qaform/QA-INS/index.js", //E-Self Inspection page
     eSelfView: "./assets/script/qaform/QA-INS/view.js", //E-Self Inspection page
 
+    //VMS
+    vms: "./assets/script/marform/MAR-VMS/index.js", //manage page
+   
+
   },
   output: {
     filename: "[name].js",

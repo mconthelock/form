@@ -130,7 +130,8 @@ class Ent_model extends CI_Model
     {
         $this->db
             ->select('*')
-            ->from('GPENT_FORM')
+            ->from('GPENT_FORM et')
+            ->join('FORM', 'et.NFRMNO = FORM.NFRMNO AND et.VORGNO = FORM.VORGNO AND et.CYEAR = FORM.CYEAR AND et.CYEAR2 = FORM.CYEAR2 AND et.NRUNNO = FORM.NRUNNO')
             ->where('ENTERTAINMENT_DATE < TO_DATE(SYSDATE)', null, false);
         return $this->db->get()->result();
     }

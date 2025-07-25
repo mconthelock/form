@@ -372,8 +372,9 @@ export async function createTable(option = {}, setupOpt = {}) {
     }
     // console.log('selected all',table.rows().data().toArray());
   });
-
-  $(document).on("click", ".select-dt-row", function (e) {
+    $(setup.id).off("click", ".select-dt-row");
+    $(setup.id).on("click", ".select-dt-row", function (e) {
+//   $(document).on("click", ".select-dt-row", function (e) {
     let data = table.row($(this).parents("tr")).data();
     const check = $(this);
     if (check.is(":checked")) {

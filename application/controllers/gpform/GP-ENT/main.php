@@ -459,11 +459,11 @@ class Main extends MY_Controller
         $cyear2 = $this->input->post('cyear2');
         $nrunno = $this->input->post('nrunno');
 
-        $nfrmno = '9';
-        $vorgno = '030101';
-        $cyear  = '25';
-        $cyear2 = '2025';
-        $nrunno = '11';
+        // $nfrmno = '9';
+        // $vorgno = '030101';
+        // $cyear  = '25';
+        // $cyear2 = '2025';
+        // $nrunno = '11';
 
         $where         = [
             'NFRMNO' => $nfrmno,

@@ -33,9 +33,10 @@ export async function initAuthen(options = {}) {
         programName: process.env.APP_NAME,
         ...options
     }
-    showbgLoader(true);
+    showbgLoader();
     let menu, info, group, res;
     const cookie = getCookie(process.env.APP_NAME);
+    // console.log('cookie', cookie);
     if(!cookie){
         window.location.href = `${root}/form/authen/index/${process.env.APP_ID}`;
     }else{
@@ -73,7 +74,7 @@ export async function initAuthen(options = {}) {
         initNavbar(opt);
         initSidebar(opt);
         setSidebarMenu(menu, info); // ดึงข้อมูลแอปพลิเคชันตาม ID ที่เก็บไว้ใน indexedDBID
-        showbgLoader(false);
+        showbgLoader({show: false});
     }
 }
 

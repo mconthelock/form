@@ -1,13 +1,34 @@
+
+/**
+ * Skeleton
+ * @module _dataTable
+ * @description Preloading skeleton for data.
+ * @author Mr.Sutthipong Tangmongkhoncharoen(24008)
+ * @since  2025-07-25
+ * @requires jQuery npm install jquery
+ * @version 1.0.3
+ * @note 2025-07-25
+ * เพิ่ม middleMenu และ numberOfMiddleMenu เพื่อรองรับเมนูกลาง
+ * เพิ่ม middleSize เพื่อรองรับขนาดของเมนูกลาง
+ * เพิ่ม searchSize เพื่อรองรับขนาดของช่องค้นหา
+ */
+
 const dtopt = {
     show : true,
     button : true,
     search : true,
     page : true,
     info : true,
+    middleMenu : false,
     width : 'w-full',
     height : 'h-[80vh]',
     idLoading : 'tableLoading',
-    numberOfButtons : 1
+    numberOfButtons : 1,
+    numberOfMiddleMenu: 1,
+    searchSize: { width: 'w-60', height: 'h-full' },
+    middleSize: [
+        { width: 'w-60', height: 'h-11' },
+    ]
 };
 
 /**
@@ -19,14 +40,23 @@ const dtopt = {
  * html : <div id="tableLoading"></div>
  * js : dataTableSkeleton({show: false, idLoading: 'tableDetailLoading'}); || dataTableSkeleton();
  */
-export function dataTableSkeleton(opt = {}){
-    opt = { ...dtopt, ...opt };
-    // console.log(opt);
+export function dataTableSkeleton(options = {}){
+    const opt = { ...dtopt, ...options };
+    console.log(opt);
     if($(`#${opt.idLoading} .dataTableSkeleton`).length == 0) {
         let loader = `
         <div id="dataTableSkeleton" class="s-main ${opt.width} ${opt.height} flex flex-col gap-3 Pomelo-Peel-White dataTableSkeleton bg-inherit">
-            <div class="s-header flex items-center justify-between h-11">`;
-        if(opt.search) loader += `<div class="s-search skeleton w-60 h-full"></div>`;   
+            <div class="s-header flex items-start justify-between h-11 gap-3">`;
+        if(opt.search) loader += `<div class="s-search skeleton ${opt.searchSize.width} ${opt.searchSize.height}"></div>`; 
+        if(opt.middleMenu)  {
+            loader += `<div class="flex flex-1 gap-3 h-full">`;
+            for(let i = 0; i < opt.numberOfMiddleMenu; i++){
+                console.log(opt.middleSize[i]?.width||opt.middleSize[0].width);
+
+                loader += `<div class="s-middle-menu skeleton ${opt.middleSize[i]?.width||opt.middleSize[0].width} ${opt.middleSize[i]?.height||opt.middleSize[0].height}"></div>`;
+            }
+            loader += `</div>`;
+        }
         if(opt.button) {
             loader += `<div class="s-button-group flex gap-2 h-full  ml-auto">`;
             for(let i = 0; i < opt.numberOfButtons; i++){
