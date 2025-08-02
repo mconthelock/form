@@ -48,6 +48,7 @@ module.exports = {
     // Requesting Approval Entertainment
     requestEntertain: "./assets/script/gpform/GP-ENT/index.js", //Requesting Approval Entertainment page
     requestEntertainView: "./assets/script/gpform/GP-ENT/view.js", //Requesting Approval Entertainment view page
+    entertainReport: "./assets/script/gpform/GP-ENT/report.js", //Requesting Approval Entertainment report page",
 
     // clearance Entertainment
     clearance: "./assets/script/gpform/GP-CLER/index.js", //Clearance page

@@ -29,7 +29,9 @@ class Main extends MY_Controller
 
         $bp = isset($_GET['bp']) ? $_GET['bp'] : '';
 
-        $form_entertain        = $this->clr->get_entertain_formEMP('9', $vorgno, $cyear, $empno);
+        $ent_frmno = $this->_servername() == 'amecweb' ? '17' : '9';
+
+        $form_entertain        = $this->clr->get_entertain_formEMP($ent_frmno, $vorgno, $cyear, $empno);
         $data['estimate_type'] = $this->ent->get_estimate_type();
         $data['mode']          = $this->getMode($nfrmno, $vorgno, $cyear, $cyear2, $nrunno, $empno);
 
@@ -152,6 +154,8 @@ class Main extends MY_Controller
 
         if ($post['p_join'] == "1") {
             $getEmp = $this->ent->get_orgpos("040101", "10")[0]; // RAF DIM
+        }else{
+            $getEmp = $this->ent->get_orgpos("020101", "02")[0]; // PRESIDENT
         }
         $this->updateFlowApv("", $getEmp->VEMPNO, $post['nfrmno'], $post['vorgno'], $post['cyear'], $post['cyear2'], $post['nrunno'], "01", "00");
         $data = [
@@ -212,6 +216,8 @@ class Main extends MY_Controller
 
         if ($post['p_join'] == "1") {
             $getEmp = $this->ent->get_orgpos("040101", "10")[0]; // RAF DIM
+        }else{
+            $getEmp = $this->ent->get_orgpos("020101", "02")[0]; // PRESIDENT
         }
         $this->updateFlowApv("", $getEmp->VEMPNO, $nfrmno, $vorgno, $cyear, $cyear2, $nrunno, "18", "00");
 

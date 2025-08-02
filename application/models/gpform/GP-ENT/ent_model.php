@@ -208,4 +208,146 @@ class Ent_model extends CI_Model
             LEFT JOIN GPCLER_FORM gcf ON gcf.FORM_ENT=D.REFNO";
         return $this->db->query($sql)->result();
     }
+    public function get_Section()
+    {
+        // SELECT *
+        // FROM amec.psection
+        // WHERE ssec NOT LIKE '%Cancel%'
+        // AND ssec NOT LIKE '%CANCEL%'
+        // order by ssec
+
+        $this->db->select('*');
+        $this->db->from('AMEC.PSECTION');
+        $this->db->where('SSEC NOT LIKE', '%Cancel%');
+        $this->db->where('SSEC NOT LIKE', '%CANCEL%');
+        $this->db->order_by('SSEC', 'ASC');
+        return $this->db->get()->result();
+    }
+
+    public function get_Department()
+    {
+        //select * from amec.pdepartment where sdept not like '%Cancel% order by sdept'
+        $this->db->select('*');
+        $this->db->from('AMEC.PDEPARTMENT');
+        $this->db->where('SDEPT NOT LIKE', '%Cancel%');
+        $this->db->where('SDEPT NOT LIKE', '%CANCEL%');
+        $this->db->order_by('SDEPT', 'ASC');
+
+        return $this->db->get()->result();
+    }
+
+    public function get_Division()
+    {
+        // select * from amec.pdivision
+        $this->db->select('*');
+        $this->db->from('AMEC.PDIVISION');
+        $this->db->where('SDIV NOT LIKE', '%Cancel%');
+        $this->db->where('SDIV NOT LIKE', '%CANCEL%');
+        $this->db->order_by('SDIV', 'ASC');
+        return $this->db->get()->result();
+    }
+
+    public function get_report_ent($filters = [])
+    {
+        $this->db->select('*');
+        $this->db->from('GPENT_FORM gf');
+        $this->db->join('AMECUSERALL a', 'gf.EMP_REQ = a.SEMPNO', 'left');
+        $this->db->join('GPENT_GUEST_TYPE gt', 'gf.GUEST_TYPE = gt.GT_ID', 'left');
+        $this->db->join('FORM f', 'gf.NFRMNO = f.NFRMNO AND gf.VORGNO = f.VORGNO AND gf.CYEAR = f.CYEAR AND gf.CYEAR2 = f.CYEAR2 AND gf.NRUNNO = f.NRUNNO', 'left');
+
+        // EmpCode
+        if (!empty($filters['SEMPNO'])) {
+            $this->db->where('a.SEMPNO', $filters['SEMPNO']);
+        }
+
+        // Section
+        if (!empty($filters['SSECCODE'])) {
+            $this->db->where('a.SSECCODE', $filters['SSECCODE']);
+        }
+
+        // Department
+        if (!empty($filters['SDEPCODE'])) {
+            $this->db->where('a.SDEPCODE', $filters['SDEPCODE']);
+        }
+
+        // Division
+        if (!empty($filters['SDIVCODE'])) {
+            $this->db->where('a.SDIVCODE', $filters['SDIVCODE']);
+        }
+
+        // Start Date (TO_DATE) - FIXED
+        if (!empty($filters['start_date'])) {
+            $this->db->where(
+                "ENTERTAINMENT_DATE >= TO_DATE('" . $filters['start_date'] . "', 'YYYY-MM-DD')",
+                null,
+                false
+            );
+        }
+
+        // End Date (TO_DATE) - FIXED
+        if (!empty($filters['end_date'])) {
+            $this->db->where(
+                "ENTERTAINMENT_DATE <= TO_DATE('" . $filters['end_date'] . "', 'YYYY-MM-DD')",
+                null,
+                false
+            );
+        }
+
+        $this->db->order_by('ENTERTAINMENT_DATE', 'asc');
+        $query = $this->db->get();
+        return $query->result();
+    }
+
+    public function get_report_cler($filters = [])
+    {
+        $this->db->select('gf.*, a.*, f.*');
+        $this->db->from('GPCLER_FORM gf');
+        $this->db->join('AMECUSERALL a', 'gf.EMP_REQ = a.SEMPNO', 'left');
+        $this->db->join('FORM f', 'gf.NFRMNO = f.NFRMNO AND gf.VORGNO = f.VORGNO AND gf.CYEAR = f.CYEAR AND gf.CYEAR2 = f.CYEAR2 AND gf.NRUNNO = f.NRUNNO', 'left');
+
+
+        // EmpCode
+        if (!empty($filters['SEMPNO'])) {
+            $this->db->where('a.SEMPNO', $filters['SEMPNO']);
+        }
+
+        // Section
+        if (!empty($filters['SSECCODE'])) {
+            $this->db->where('a.SSECCODE', $filters['SSECCODE']);
+        }
+
+        // Department
+        if (!empty($filters['SDEPCODE'])) {
+            $this->db->where('a.SDEPCODE', $filters['SDEPCODE']);
+        }
+
+        // Division
+        if (!empty($filters['SDIVCODE'])) {
+            $this->db->where('a.SDIVCODE', $filters['SDIVCODE']);
+        }
+
+        // Start Date (TO_DATE) - FIXED
+        if (!empty($filters['start_date'])) {
+            $this->db->where(
+                "DREQDATE >= TO_DATE('" . $filters['start_date'] . "', 'YYYY-MM-DD')",
+                null,
+                false
+            );
+        }
+
+        // End Date (TO_DATE) - FIXED
+        if (!empty($filters['end_date'])) {
+            $this->db->where(
+                "DREQDATE <= TO_DATE('" . $filters['end_date'] . "', 'YYYY-MM-DD')",
+                null,
+                false
+            );
+        }
+
+        $this->db->order_by('DREQDATE', 'asc');
+        $query = $this->db->get();
+        return $query->result();
+    }
+
+
 }
