@@ -200,12 +200,13 @@ export async function readInput(file, options = {}) {
             opt.sheetName == 1
                 ? workbook.worksheets[0]
                 : workbook.getWorksheet(opt.sheetName);
+        let rowIndex = 0;
         worksheet.eachRow((row, rowNumber) => {
 
             if (rowNumber < opt.startRow) return;
             if (rowNumber > opt.maxReadRow) return;
-            const rowIndex =
-                opt.skipRow > 0 ? rowNumber - (opt.skipRow + 1) : rowNumber - 1;
+            // const rowIndex =
+            //     opt.skipRow > 0 ? rowNumber - (opt.skipRow + 1) : rowNumber - 1;
             if (opt.skipRow > 0 && rowNumber <= opt.skipRow) return;
             if (!data[rowIndex]) data[rowIndex] = {};
 
@@ -223,6 +224,7 @@ export async function readInput(file, options = {}) {
                     data[rowIndex][index] = row.values[colIndex] || "";
                 }
             }
+            rowIndex++;
         });
     }
     return data;
