@@ -295,7 +295,7 @@ table.dataTable .select2-container--default .select2-selection--multiple {
       <select id="visitTypes" name="visitTypes" class="input input-bordered rounded-xl w-full shadow-sm border-blue-200 text-gray-900">
         <option value="" ></option>
         @foreach($visittype as $vt)
-                <option value="{{ $vt->VTID }}"   >{{ $vt->VTYPE}}</option>
+                <option value="{{ $vt->VTID }}"  {{ ($mode == "2" && !empty($visit) && $visit[0]->VISITTYPE== $vt->VTID) ? 'selected' : '' }}   >{{ $vt->VTYPE}}</option>
         @endforeach
       </select>
     </div>
@@ -304,7 +304,7 @@ table.dataTable .select2-container--default .select2-selection--multiple {
       <select id="guestType" name="guestType" class="input input-bordered rounded-xl w-full shadow-sm border-blue-200 text-gray-900">
         <option value="" ></option>
         @foreach($guesttype as $gt)
-                <option value="{{ $gt->GT_ID }}"   >{{ $gt->TYPE_NAME}}</option>
+                <option value="{{ $gt->GT_ID }}"  {{ ($mode == "2" && !empty($visit) && $visit[0]->GUESTTYPE== $gt->GT_ID) ? 'selected' : '' }}    >{{ $gt->TYPE_NAME}}</option>
         @endforeach
       </select>
     </div>

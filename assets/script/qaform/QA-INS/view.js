@@ -1,5 +1,5 @@
 // import { downloadOrOpenFile, getEscsUsers, showflow } from "../../api";
-import { downloadOrOpenFile } from '../../api/file';
+import { downloadOrOpenFile } from "../../api/file";
 import { getEscsUsers } from "../../api/escs/user";
 import { showflow } from "../../api/webform/flow";
 import { createTable } from "../../public/v1.0.3/_dataTable";
@@ -58,7 +58,14 @@ $(document).on("click", ".file-link", async function (e) {
 
 async function setPage() {
     $("body").addClass("bg-blue-100");
-    const flow = await showflow(form);
+    // const flow = await showflow(form);
+    const flow = await showflow({
+        NFRMNO: 9,
+        VORGNO: "030101",
+        CYEAR: "25",
+        CYEAR2: "2025",
+        NRUNNO: 22,
+    });
     await setSkeleton();
     const data = await getformData(form);
     qafiles = data.QA_FILES;
@@ -108,7 +115,7 @@ async function setPage() {
                 reject: true,
                 return: true,
                 flow: true,
-                flowhtml: flow.html
+                flowhtml: flow.html,
             })
         );
     } else {
@@ -118,7 +125,7 @@ async function setPage() {
                 actionsForm: false,
                 remark: false,
                 flow: true,
-                flowhtml: flow.html
+                flowhtml: flow.html,
             })
         );
     }
@@ -126,8 +133,14 @@ async function setPage() {
 
 async function setSkeleton() {
     console.log(formInfo.mode);
-    
-    formInfo.mode == 2 ? formSubmitSkeleton({element: '#actionWebflow', mode: 'edit', count:4}) : formSubmitSkeleton({element: '#actionWebflow', mode: 'view'});
+
+    formInfo.mode == 2
+        ? formSubmitSkeleton({
+              element: "#actionWebflow",
+              mode: "edit",
+              count: 4,
+          })
+        : formSubmitSkeleton({ element: "#actionWebflow", mode: "view" });
     formDetailSkeleton(".form-detail");
     // skeleton({ element: ".form-detail", width: "w-lg", height: "h-44" });
     $(".reqDetail").removeClass("hidden");
@@ -179,7 +192,7 @@ async function setSkeleton() {
 }
 
 async function setInchargeForm() {
-    $('#qcForm1').removeClass('hidden');
+    $("#qcForm1").removeClass("hidden");
     const user = await getEscsUsers({
         USR_STATUS: 1,
     });
@@ -282,5 +295,4 @@ async function setInchargeForm() {
         }
     );
     dataTableSkeleton({ show: false });
-    
 }

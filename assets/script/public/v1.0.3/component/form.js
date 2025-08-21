@@ -17,7 +17,7 @@
  * เพิ่มปรับขนาดปุ่ม  webflowSubmit
  */
 
-import { getFormDetail } from "../../api/webform/form";
+import { getFormDetail } from "../../../api/webform/form";
 import { ajaxOptions, getData, host } from "../jFuntion";
 
 export var btnClass = "btn btn-sm ";
