@@ -13,9 +13,9 @@
             //$this->callback = 'https://' . $_SERVER['HTTP_HOST'].'/itadmin';
             //$this->session_expire();
             $this->blade = new PhpBlade($this->views, $this->cache);
-            $GLOBALS['version'] = $_ENV['STATE'] == 'development' ? time() : $_ENV['VERSION'];
-            $this->load->database();
-            $this->load->library('mail');
+            $GLOBALS['version'] = $_ENV['STATE'] == 'production' ? $_ENV['VERSION'] :  time();
+            // $this->load->database();
+            // $this->load->library('mail');
         }
 
         public function views($view_name, $data = array()){
@@ -44,7 +44,7 @@
         }
 
 
-        /** 
+        /**
          * Send email
          */
         public function sendMail(){
