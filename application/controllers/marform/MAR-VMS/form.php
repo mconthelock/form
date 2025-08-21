@@ -24,12 +24,12 @@ class form extends MY_Controller{
             ];
 
         }else{
-            $form = $this->frm->getFormMaster('MAR-VMS');
-            if(!empty($form)){
+            $formmst = $this->frm->getFormMaster('MAR-VMS');
+            if(!empty($formmst)){
                 $data = [
-                    'NFRMNO' => $form[0]->NNO,
-                    'VORGNO' => $form[0]->VORGNO,
-                    'CYEAR'  =>$form[0]->CYEAR,
+                    'NFRMNO' => $formmst[0]->NNO,
+                    'VORGNO' => $formmst[0]->VORGNO,
+                    'CYEAR'  =>$formmst[0]->CYEAR,
                 ];
             }
 
@@ -38,13 +38,40 @@ class form extends MY_Controller{
       
         if(!isset($_GET["runNo"]))
         {
+            $data['mode'] = "1";
+        }else
+        {
+            $data["CYEAR2"] = $_GET["y2"];
+            $data["NRUNNO"] = $_GET["runNo"];
+            $conall = array('NFRMNO' => $data["NFRMNO"],'VORGNO' => $data["VORGNO"],'CYEAR' => $data["CYEAR"],'CYEAR2' => $data["CYEAR2"],'NRUNNO' => $data["NRUNNO"]);
+            $data["form"] = $this->vms->customSelect("FORM",$conall ,'*');
+            if($data["form"][0]->VREQNO ==  $data['empno'])
+            {
+                $data['mode'] = "2";
+            }else
+            {
+                $data['mode'] = "3";
+            }
+           
+        }
+        // mode : ADD or EDIT
+        if(($data['mode']=="1")||($data['mode']=="2"))
+        {
             $data["guesttype"] = $this->vms->get_guest_type();
             $data["purpose"] = $this->vms->get_purpose_visit();
             $data["visittype"] = $this->vms->get_visit_type();
             $data["salecom"] = $this->vms->get_salecompany();
             $data["participants"] = $this->vms->get_participants();
+            if($data['mode']=="2")
+            {
+                $con = array("CYEAR2" => $data["CYEAR2"],"NRUNNO" => $data["NRUNNO"]);
+                $conatt = array("CYEAR2" => $data["CYEAR2"],"NRUNNO" => $data["NRUNNO"],"TYPENO" =>'S');
+                $data["visit"] =  $this->vms->customSelect("VMS_VISIT",$con ,'*');
+                $data["attfile"] =  $this->vms->customSelect("VMS_ATTFILE",$conatt,'*');
+            }
             $this->views('marform/MAR-VMS/create', $data);
         }
+
 
     }
 

@@ -21,15 +21,19 @@ import {
     showErrorMessage,
     showMessage,
 } from "../../public/v1.0.3/jFuntion";
-import {
-    getEscsItems,
-    getEscsUsers,
-    getEscsUserSection,
-    getDepartment,
-    getDivision,
-    getSection,
-    getFormMasterByVaname,
-} from "../../api";
+// import {
+//     getEscsItems,
+//     getEscsUsers,
+//     getEscsUserSection,
+//     getDepartment,
+//     getDivision,
+//     getSection,
+//     getFormMasterByVaname,
+// } from "../../api";
+import { getEscsItems } from '../../api/escs/item'
+import { getEscsUsers } from '../../api/escs/user'
+import { getEscsUserSection } from '../../api/escs/user_section'
+import { getFormMasterByVaname } from '../../api/webform/formmst'
 import { showLoader } from "../../public/v1.0.3/preloader";
 import { redirectWebflow } from "../../public/v1.0.3/_form";
 import { createFormQains } from "./data";

@@ -17,6 +17,7 @@
  * เพิ่มปรับขนาดปุ่ม  webflowSubmit
  */
 
+import { getFormDetail } from "../../api/webform/form";
 import { ajaxOptions, getData, host } from "../jFuntion";
 
 export var btnClass = "btn btn-sm ";
@@ -250,11 +251,12 @@ export const webflowSubmit = (option = {}) => {
  * @returns 
  */
 export async function getformDetail(form) {
-    const data = await getData({
-        ...ajaxOptions,
-        url: `${host}/Authen/getFormDetail`,
-        data: form,
-    });
+    // const data = await getData({
+    //     ...ajaxOptions,
+    //     url: `${host}/Authen/getFormDetail`,
+    //     data: form,
+    // });
+    const data = await getFormDetail(form);
     return `<div class="text-xl font-bold mb-5">Form Information</div>
             <div class="h-fit w-fit md:w-fit bg-base-200 border border-base-300 p-4 rounded-box relative">
                 <table class="table">

@@ -1,5 +1,5 @@
 
-import { directlogin } from "../../api";
+// import { directlogin } from "../../api";
 import { showbgLoader } from "./preloader";
 import { host, root } from "./jFuntion";
 import { decryptText } from "./_crypto";
@@ -7,6 +7,7 @@ import { getAppDataById, getMenu, getGroup, setMenu, setGroup, deleteGroup, dele
 import { setSidebarMenu, initSidebar } from "./component/sidebar";
 import { deleteCookie, getCookie, setCookie } from "./_jsCookie";
 import { initNavbar } from "./component/navbar";
+import { directlogin } from "../api/auth";
 
 var indexedDBID;
 // ต้องมีอัันนี้ใน template

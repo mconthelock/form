@@ -202,8 +202,8 @@ table.dataTable .select2-container--default .select2-selection--multiple {
 <input type="hidden" id="vorgno" name="vorgno" value="{{ $VORGNO }}" />
 <input type="hidden" id="cyear" name="cyear" value="{{ $CYEAR }}" />
 <input type="hidden" id="empno" name="empno" value="{{ $empno }}" />
-<input type="hidden" id="cyear2" name="cyear2" value=""/>
-<input type="hidden" id="nrunno" name="nrunno" value=""/>
+<input type="hidden" id="cyear2" name="cyear2" value="{{ $mode == 2 ? $CYEAR2 : '' }}"/>
+<input type="hidden" id="nrunno" name="nrunno" value="{{ $mode == 2 ? $NRUNNO : '' }}"/>
 <!-- tab-visit arrangment -->
 <form id="form-visitarg"  method="post" enctype="multipart/form-data">
 <div id="tab-visitarg" class="tab-pane w-full max-w-7xl mx-auto ">
@@ -222,6 +222,7 @@ table.dataTable .select2-container--default .select2-selection--multiple {
             id="formVersion"
             name="formVersion"
             maxlength="10"
+            value="{{ $mode == 2 && !empty($visit) ? $visit[0]->FORMVER : '' }}"
             placeholder="Enter form version"
             class="input input-bordered rounded-xl w-full shadow-sm border-blue-200 text-gray-900"
           />
@@ -231,14 +232,14 @@ table.dataTable .select2-container--default .select2-selection--multiple {
         <div>
           <label for="formC1" class="block text-sm text-gray-700 font-medium mb-1">Form C1-1</label>
           <select
-            id="formC1"
-            name="formC1"
-            class="input input-bordered rounded-xl w-full shadow-sm border-blue-200 text-gray-900"
-          >
-            <option value=""></option>
-            <option value="yes">Yes</option>
-            <option value="no">No</option>
-          </select>
+          id="formC1"
+          name="formC1"
+          class="input input-bordered rounded-xl w-full shadow-sm border-blue-200 text-gray-900"
+      >
+          <option value=""></option>
+          <option value="Y" {{ ($mode == "2" && !empty($visit) && $visit[0]->FORMC1_1 == "Y") ? 'selected' : '' }} >Yes</option>
+          <option value="N" {{ ($mode == "2" && !empty($visit) && $visit[0]->FORMC1_1 == "N") ? 'selected' : '' }} >No</option>
+      </select>
         </div>
                 <!-- Sale company -->
           <div>
@@ -250,7 +251,9 @@ table.dataTable .select2-container--default .select2-selection--multiple {
           >
             <option value=""></option>
             @foreach($salecom as $sc)
-            <option value="{{ $sc->ABBREVIATION}}">{{ $sc->ABBREVIATION}}</option>
+              <option value="{{ $sc->ABBREVIATION }}"   {{ ($mode == "2" && !empty($visit) && $visit[0]->SALECOM == $sc->ABBREVIATION) ? 'selected' : '' }}  >
+                  {{ $sc->ABBREVIATION }}
+              </option>
             @endforeach
           </select>
         </div>
@@ -263,7 +266,7 @@ table.dataTable .select2-container--default .select2-selection--multiple {
 
     <div>
       <label for="visitDate" class="block text-sm text-gray-700 font-medium mb-1">Visit Date</label>
-      <input type="date" id="visitDate" name="visitDate" class="input input-bordered rounded-xl w-full shadow-sm border-blue-200 text-gray-900" />
+      <input type="date" id="visitDate" name="visitDate"  value="{{ ($mode == "2" && !empty($visit)) ? date('Y-m-d', strtotime($visit[0]->VISITDATE)) : '' }}" class="input input-bordered rounded-xl w-full shadow-sm border-blue-200 text-gray-900" />
     </div>
     <div>
       <label for="receptionRoom" class="block text-sm text-gray-700 font-medium mb-1">Reception Room</label>
@@ -279,13 +282,13 @@ table.dataTable .select2-container--default .select2-selection--multiple {
       <select id="purposevisit" name="purposevisit" class="input input-bordered rounded-xl w-full shadow-sm border-blue-200 text-gray-900">
         <option value=""></option>
         @foreach($purpose as $p)
-                <option value="{{ $p->PVID }}"   >{{ $p->PURPOSE}}</option>
+                <option value="{{ $p->PVID }}"   {{ ($mode == "2" && !empty($visit) && $visit[0]->PURPOSE== $p->PVID) ? 'selected' : '' }}  >{{ $p->PURPOSE}}</option>
         @endforeach
         </select>
     </div>
     <div>
       <label for="detail" class="block text-sm text-gray-700 font-medium mb-1">Detail</label>
-      <input type="text" id="detail" name="detail" class="input input-bordered rounded-xl w-full shadow-sm border-blue-200 text-gray-900" />
+      <input type="text" id="detail" name="detail" value="{{ $mode == 2 && !empty($visit) ? $visit[0]->PURPOSEDETAIL : '' }}" class="input input-bordered rounded-xl w-full shadow-sm border-blue-200 text-gray-900" />
     </div>
     <div>
       <label for="visitTypes" class="block text-sm text-gray-700 font-medium mb-1">Visit Types</label>

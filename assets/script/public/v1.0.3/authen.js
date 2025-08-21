@@ -1,5 +1,5 @@
 
-import { directlogin } from "../../api";
+import { directlogin } from "../api/auth";
 import { showbgLoader } from "./preloader";
 import { host, root } from "./jFuntion";
 import { decryptText } from "./_crypto";
