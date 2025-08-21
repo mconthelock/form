@@ -8,20 +8,20 @@
     @endif
     <div class="flex justify-center">
 
-        <div class="card bg-base-100 min-w-[70vw] w-fit drop-shadow-lg">
+        <div class="card bg-white min-w-[70vw] w-fit drop-shadow-lg">
             <div class="card-header px-6 pt-6">
                 <h2 class="text-3xl font-bold">E-Self Inspection and Authorize</h2>
                 
             </div>
             <div class="card-body">
-                {{-- <hr class="pb-6"> --}}
+                <hr class="mb-4">
                 
                 <form id="qa-form" class="flex flex-col gap-6">
                     {{-- <fieldset class="fieldset bg-base-200 border-base-300 rounded-box w-xs border p-4"> --}}
                     <div class="flex flex-col gap-3 ">
                         <label class="input">
                             <span class="label font-bold">Create by</span>
-                            <input type="text" value="{{$empno}}" readonly />
+                            <input type="text" value="{{$empno}}" id="created_by" readonly />
                         </label>
                         <label class="input">
                             <span class="label font-bold">Request by</span>
@@ -119,7 +119,7 @@
                             </div>
                             <div class="attachment">
                                 <div class="text-xl font-bold mb-5 flex">
-                                    Attachments
+                                    Attach file
                                     <div class="drop-reset"></div>
                                     {{-- <div class="btn btn-error rounded-full ml-auto tooltip" data-tip="Reset" >
                                         <i class="icofont-refresh"></i>

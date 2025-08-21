@@ -38,9 +38,22 @@ class Rgv_model extends CI_Model
         $this->doc
             ->select('*')
             ->from('AUTHORIZE_INVENTORY')
+            ->group_start()
+            ->where('DATAMANAGER <>', 'NOT')
+            ->or_where('VENDORMANAGEMENT <>', 'NOT')
+            ->or_where('PRODUCT <>', 'NOT')
+            ->or_where('PR <>', 'NOT')
+            ->or_where('USERMANAGER <>', 'NOT')
+            ->or_where('PO <>', 'NOT')
+            ->or_where('REPORT <>', 'NOT')
+            ->or_where('INVOICE <>', 'NOT')
+            ->or_where('GROUPMASTER <>', 'NO')
+            ->group_end()
             ->order_by('SDIV', 'ASC');
+
         return $this->doc->get()->result();
     }
+
 
     public function scm_user()
     {
@@ -128,7 +141,7 @@ class Rgv_model extends CI_Model
 
     public function update($table, $data, $where)
     {
-        
+
         $this->db->update($table, $data, $where);
         echo $this->db->last_query();
     }

@@ -96,4 +96,16 @@ class Cler_model extends CI_Model
         $this->db->where($where);
         $this->db->delete($table);
     }
+
+    public function getFileAttach($nfrmno, $vorgno, $cyear, $cyear2, $nrunno)
+    {
+        $this->db->select('*')
+            ->from('GPCLER_FILE')
+            ->where('NFRMNO', $nfrmno)
+            ->where('VORGNO', $vorgno)
+            ->where('CYEAR', $cyear)
+            ->where('CYEAR2', $cyear2)
+            ->where('NRUNNO', $nrunno);
+        return $this->db->get()->result();
+    }
 }

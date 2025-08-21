@@ -38,7 +38,8 @@
                 <!-- ค้นหาเอกสารขออนุมัติ (อ้างอิงจาก Part 1) -->
                 <div>
                     <label class="block mb-1 font-semibold text-blue-700">Emp.Code <span class="text-red-500">*</span></label>
-                    <input type="text" class="input input-bordered rounded-xl w-full shadow-sm border-blue-200" name="empcode" id="input-empcode" value="{{$EMPNO}}" readonly placeholder="รหัสพนักงานผู้เคลียร์" required>
+                    <input type="hidden" name="inputer" value="{{ $_GET['empno'] }}">
+                    <input type="text" class="input input-bordered rounded-xl w-full shadow-sm border-blue-200" name="empcode" id="input-empcode" value="{{$EMPNO}}" placeholder="รหัสพนักงานผู้เคลียร์" required>
                 </div>
                 <div id="form-entertain">
                     <label class="block mb-1 font-semibold text-blue-700">Entertainment Form No. (Part 1) <span class="text-red-500">*</span></label>

@@ -11,6 +11,8 @@ import { initNavbar } from "./component/navbar";
  * @version 1.0.3
  * @note 2025-07-25
  * เพิ่มการตรวจสอบ cookie ทุก 5 นาที เปลี่ยนสถานะออนไลน์/ออฟไลน์
+ * @note 2025-08-08
+ * เพิ่ม option sidebar และ navbar ในการ initAuthen
  */
 
 var indexedDBID;
@@ -34,6 +36,8 @@ export async function initAuthen(options = {}) {
 
     const opt = {
         setSessionPhp: false,
+        sidebar: true,
+        navbar: true,
         icon: `${host}/assets/images/${process.env.APP_ICON}`, // จะไปตั้งใน env ก็ได้ถ้า path ตรง ถ้าไม่ก็ส่ง path ที่ถูกต้องมาเลยเช่น `${host}/assets/images/icon.png`,
         programName: process.env.APP_NAME,
         ...options
@@ -76,9 +80,14 @@ export async function initAuthen(options = {}) {
         $('#user-login').attr('appid', appid);
         $('#user-login').attr('program', indexedDBID);
         
-        initNavbar(opt);
-        initSidebar(opt);
-        setSidebarMenu(menu, info); // ดึงข้อมูลแอปพลิเคชันตาม ID ที่เก็บไว้ใน indexedDBID
+
+        if(opt.navbar){
+            initNavbar(opt);
+        }
+        if(opt.sidebar){
+            initSidebar(opt);
+            setSidebarMenu(menu, info); // ดึงข้อมูลแอปพลิเคชันตาม ID ที่เก็บไว้ใน indexedDBID
+        }
         showbgLoader({show: false});
 
         setInterval(() => {

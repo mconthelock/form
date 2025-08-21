@@ -1,89 +1,98 @@
 import CryptoJS from "crypto-js";
 import { getData } from "./public/v1.0.2/jFuntion";
+import { showErrorMessage } from "./public/v1.0.3/jFuntion";
 export function getNews() {
-  return new Promise((resolve) => {
-    $.ajax({
-      type: "get",
-      url: `${process.env.APP_API}/gpreport/news/`,
-      dataType: "json",
-      success: function (response) {
-        resolve(response);
-      },
+    return new Promise((resolve) => {
+        $.ajax({
+            type: "get",
+            url: `${process.env.APP_API}/gpreport/news/`,
+            dataType: "json",
+            success: function (response) {
+                resolve(response);
+            },
+        });
     });
-  });
 }
 
 export function passwordLogin(data) {
-  return new Promise((resolve) => {
-    $.ajax({
-      type: "post",
-      url: `${process.env.APP_API}/auth/login/`,
-      dataType: "json",
-      data: data,
-      //   xhrFields: {
-      //     withCredentials: true,
-      //   },
-      success: function (response) {
-        //resolve({ status: true, data: response });
-        resolve(response);
-      },
-      error: function (xhr, status, error) {
-        console.error("Login error:", status, error);
-        resolve({ status: false, message: "Login failed. Please try again." });
-      },
+    return new Promise((resolve) => {
+        $.ajax({
+            type: "post",
+            url: `${process.env.APP_API}/auth/login/`,
+            dataType: "json",
+            data: data,
+            //   xhrFields: {
+            //     withCredentials: true,
+            //   },
+            success: function (response) {
+                //resolve({ status: true, data: response });
+                resolve(response);
+            },
+            error: function (xhr, status, error) {
+                console.error("Login error:", status, error);
+                resolve({
+                    status: false,
+                    message: "Login failed. Please try again.",
+                });
+            },
+        });
     });
-  });
 }
 
 export function directlogin(empno, id) {
-  const md5Hash = CryptoJS.MD5(empno).toString().toUpperCase();
-  return new Promise((resolve) => {
-    $.ajax({
-      type: "post",
-      url: `${process.env.APP_API}/auth/directlogin/`,
-      dataType: "json",
-      data: {
-        username: md5Hash,
-        appid: id,
-      },
-      success: function (response) {
-        resolve(response);
-      },
-      error: function (xhr, status, error) {
-        console.error("Login error:", status, error);
-        resolve({ status: false, message: "Login failed. Please try again." });
-      },
+    const md5Hash = CryptoJS.MD5(empno).toString().toUpperCase();
+    return new Promise((resolve) => {
+        $.ajax({
+            type: "post",
+            url: `${process.env.APP_API}/auth/directlogin/`,
+            dataType: "json",
+            data: {
+                username: md5Hash,
+                appid: id,
+            },
+            success: function (response) {
+                resolve(response);
+            },
+            error: function (xhr, status, error) {
+                console.error("Login error:", status, error);
+                resolve({
+                    status: false,
+                    message: "Login failed. Please try again.",
+                });
+            },
+        });
     });
-  });
 }
 
-export function getEmployee(empno = '') {
-  return new Promise((resolve) => {
-    $.ajax({
-      type: "get",
-      url: `${process.env.APP_API}/amec/employee/${empno}`,
-      dataType: "json",
-      success: function (response) {
-        resolve(response);
-      }
+export function getEmployee(empno = "") {
+    return new Promise((resolve) => {
+        $.ajax({
+            type: "get",
+            url: `${process.env.APP_API}/amec/employee/${empno}`,
+            dataType: "json",
+            success: function (response) {
+                resolve(response);
+            },
+        });
     });
-  });
 }
 
 // --------------- User API Functions ---------------
 export function getUserImage(empno) {
     return new Promise((resolve) => {
         $.ajax({
-        type: "get",
-        url: `${process.env.APP_API}/users/image/${empno}`,
-        dataType: "text",
-        success: function (response) {
-            resolve(response);
-        },
-        error: function (xhr, status, error) {
-            console.log(`Error fetching image for ID ${empno}: ${xhr.statusText}`);
-            resolve(`${process.env.APP_IMG}/Avatar.png`); // Return default avatar if there's an error
-        }
+            type: "get",
+            url: `${process.env.APP_API}/users/image/${empno}`,
+            dataType: "text",
+            success: function (response) {
+                resolve(response);
+            },
+            error: function (xhr, status, error) {
+                console.log(
+                    `Error fetching image for ID ${empno}: ${xhr.statusText}`
+                );
+                resolve(`${process.env.APP_IMG}/Avatar.png`); // Return default avatar if there's an error
+            },
         });
     });
 }
@@ -98,17 +107,21 @@ export function getUser(empno) {
                 resolve(response);
             },
             error: function (xhr, status, error) {
-                console.error(`Error fetching user data for ${empno}:`, status, error);
+                console.error(
+                    `Error fetching user data for ${empno}:`,
+                    status,
+                    error
+                );
                 resolve(null); // Return null if there's an error
-            }
+            },
         });
     });
 }
 
 /**
  * search user by condition
- * @param {object} q 
- * @returns 
+ * @param {object} q
+ * @returns
  * @example
  * {
  *  SEMPNO: "24008",      // string
@@ -119,15 +132,14 @@ export function getUser(empno) {
  *  CSTATUS: "1"          // string
  * }
  */
-export function searchUser(q = {}){
+export function searchUser(q = {}) {
     return getData({
         url: `${process.env.APP_API}/users/search/`,
-        data: q
+        data: q,
     });
 }
 
 // --------------- User API Functions End ---------------
-
 
 // --------------- ESCS API Functions ---------------
 /**
@@ -145,16 +157,16 @@ export function searchUser(q = {}){
 }
  */
 export function getEscsItems(q = {}) {
-  return getData({
-    url: `${process.env.APP_API}/escs/item/getItem`,
-    data: q
-  });
+    return getData({
+        url: `${process.env.APP_API}/escs/item/getItem`,
+        data: q,
+    });
 }
 
 /**
  * get escs users
- * @param {object} q 
- * @returns 
+ * @param {object} q
+ * @returns
  * @example
  * {
  *   USR_ID: 1,         // number
@@ -165,16 +177,16 @@ export function getEscsItems(q = {}) {
  *   fields: array of strings, e.g. ["USR_ID", "USR_NO", "USR_NAME", "USR_EMAIL", "USR_REGISTDATE", "USR_USERUPDATE", "USR_DATEUPDATE", "GRP_ID", "USR_STATUS", "SEC_ID", "SEMPNO", "SNAME", "SRECMAIL", "SSECCODE","SSEC", "SDEPCODE", "SDEPT", "SDIVCODE", "SDIV", "SPOSCODE", "SPOSNAME", "SPASSWORD1", "CSTATUS", "SEMPENCODE", "MEMEML", "STNAME"]
  */
 export function getEscsUsers(q = {}) {
-  return getData({
-    url: `${process.env.APP_API}/escs/user/getUser`,
-    data: q
-  });
+    return getData({
+        url: `${process.env.APP_API}/escs/user/getUser`,
+        data: q,
+    });
 }
 
 /**
  * get escs user section
- * @param {object} q 
- * @returns 
+ * @param {object} q
+ * @returns
  * @example
  * {
  *   SEC_ID: 1,        // number 1:qc1, 2:qc2, 3:qic
@@ -184,10 +196,10 @@ export function getEscsUsers(q = {}) {
  * }
  */
 export function getEscsUserSection(q = {}) {
-  return getData({
-    url: `${process.env.APP_API}/escs/userSection/getSection`,
-    data: q
-  });
+    return getData({
+        url: `${process.env.APP_API}/escs/userSection/getSection`,
+        data: q,
+    });
 }
 
 // --------------- ESCS API Functions End ---------------
@@ -195,10 +207,10 @@ export function getEscsUserSection(q = {}) {
 // --------------- Organize API Functions ---------------
 
 /**
- * get section 
- * @param {object} q 
- * @returns 
- * @example 
+ * get section
+ * @param {object} q
+ * @returns
+ * @example
  * {
  *   fields: ["SDIVCODE", "SDIVISION", "SDIV", "SDEPCODE", "SDEPARTMENT", "SDEPT", "SSECCODE", "SSECTION", "SSEC"], // array
  *   SSECCODE: "050604", // string
@@ -207,17 +219,17 @@ export function getEscsUserSection(q = {}) {
  * }
  */
 export function getSection(q = {}) {
-  return getData({
-    url: `${process.env.APP_API}/amec/section/getSection`,
-    data: q
-  });
+    return getData({
+        url: `${process.env.APP_API}/amec/section/getSection`,
+        data: q,
+    });
 }
 
 /**
  * get department
- * @param {object} q 
- * @returns 
- * @example 
+ * @param {object} q
+ * @returns
+ * @example
  * {
  *   fields: ["SDIVCODE", "SDIVISION", "SDIV", "SDEPCODE", "SDEPARTMENT", "SDEPT"], // array
  *   SDEPCODE: "050601", // string
@@ -225,10 +237,10 @@ export function getSection(q = {}) {
  * }
  */
 export function getDepartment(q = {}) {
-  return getData({
-    url: `${process.env.APP_API}/amec/department/getDepartment`,
-    data: q
-  });
+    return getData({
+        url: `${process.env.APP_API}/amec/department/getDepartment`,
+        data: q,
+    });
 }
 
 /**
@@ -242,29 +254,29 @@ export function getDepartment(q = {}) {
  * }
  */
 export function getDivision(q = {}) {
-  return getData({
-    url: `${process.env.APP_API}/amec/division/getDivision`,
-    data: q
-  });
+    return getData({
+        url: `${process.env.APP_API}/amec/division/getDivision`,
+        data: q,
+    });
 }
 
-export function getAllSection(){
+export function getAllSection() {
     return getData({
-        type: 'get',
+        type: "get",
         url: `${process.env.APP_API}/amec/section/`,
     });
 }
 
-export function getAllDepartment(){
+export function getAllDepartment() {
     return getData({
-        type: 'get',
+        type: "get",
         url: `${process.env.APP_API}/amec/department/`,
     });
 }
 
-export function getAllDivision(){
+export function getAllDivision() {
     return getData({
-        type: 'get',
+        type: "get",
         url: `${process.env.APP_API}/amec/division/`,
     });
 }
@@ -273,22 +285,22 @@ export function getAllDivision(){
 // --------------- Form master API Functions ---------------
 export function getFormMasterAll() {
     return getData({
-        type: 'get',
-        url: `${process.env.APP_APITEST}/formmst/`,
+        type: "get",
+        url: `${process.env.APP_API}/formmst/`,
     });
 }
 
 export function getFormMasterByVaname(vaname) {
     return getData({
-        type: 'get',
-        url: `${process.env.APP_APITEST}/formmst/${vaname}`,
+        type: "get",
+        url: `${process.env.APP_API}/formmst/${vaname}`,
     });
 }
 
 /**
  * search form master by condition
- * @param {object} q 
- * @returns 
+ * @param {object} q
+ * @returns
  * @example
  * {
  *   fields: ["NNO", "VORGNO", "CYEAR", "NRUNNO", "VNAME", "VANAME", "VDESC", "DCREDATE", "CCRETIME", "VAUTHPAGE", "VFORMPAGE", "VDIR", "NLIFETIME", "CSTATUS"], // array
@@ -300,8 +312,86 @@ export function getFormMasterByVaname(vaname) {
  */
 export function getFormMaster(q = {}) {
     return getData({
-        url: `${process.env.APP_APITEST}/formmst/getFormmst`,
-        data: q
+        url: `${process.env.APP_API}/formmst/getFormmst`,
+        data: q,
     });
 }
 
+// -------------- Form master API Functions End --------------
+
+// --------------- Flow API Functions -----------------
+export async function showflow(form) {
+    const res = await fetch(`${process.env.APP_APITEST}/flow/showflow`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+    });
+
+    if (!res.ok) {
+        const text = await res.text().catch(() => "");
+        throw new Error(
+            `HTTP ${res.status} ${res.statusText} ${text?.slice(0, 200)}`
+        );
+    }
+
+    const data = await res.json();
+    // if ($('#flow')) {
+    //     $('#flow').html(data.html);
+    // }
+    return data;
+}
+
+// -------------- Flow API Functions End --------------
+
+// --------------- File API Functions -----------------
+
+export async function downloadOrOpenFile(body) {
+    let href; // ไว้ cleanup แม้เกิด error
+    try {
+        // const res = await fetch(`${process.env.APP_API}/files/OpenOrDownload`, {
+        const res = await fetch(
+            `${process.env.APP_APITEST}/files/OpenOrDownload`,
+            {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(body),
+            }
+        );
+
+        // fetch จะ reject เฉพาะ network error; สเตตัส 4xx/5xx ยังถือว่า ok ทางเครือข่าย
+        if (!res.ok) {
+            // พยายามอ่านข้อความจากเซิร์ฟเวอร์เพื่อเดบัก
+            const text = await res.text().catch(() => "");
+            throw new Error(
+                `HTTP ${res.status} ${res.statusText} ${text?.slice(0, 200)}`
+            );
+        }
+
+        const blob = await res.blob();
+        href = URL.createObjectURL(blob);
+
+        if (body.mode === "download") {
+            const a = document.createElement("a");
+            a.href = href;
+            a.download = body.originalName || body.storedName || "file";
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            // บางเบราว์เซอร์ต้องหน่วงนิดนึงค่อย revoke
+            setTimeout(() => URL.revokeObjectURL(href), 0);
+            href = null; // กัน revoke ซ้ำใน finally
+        } else {
+            window.open(href, "_blank");
+            setTimeout(() => URL.revokeObjectURL(href), 5000);
+            href = null;
+        }
+    } catch (err) {
+        console.error("download/open failed:", err);
+        showErrorMessage("failed to download/open file");
+        throw err; // ถ้าผู้เรียกอยากรู้ว่าพัง ให้ rethrow ต่อ
+    } finally {
+        if (href) URL.revokeObjectURL(href); // cleanup กรณีเกิด error ก่อน revoke ข้างบน
+    }
+}
+
+// --------------- File API Functions End -----------------

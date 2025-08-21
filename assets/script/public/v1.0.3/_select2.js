@@ -37,7 +37,7 @@ export const s2opt = {
 export const formatUser = (val) => {
     // หากจะใช้ tooltip ให้ $('body').append(customTooltip); ก่อนเริ่มใช้งาน
     if (!val.id || val.id == "Select Releaser") return val.text;
-    const imgSrc = $(val.element).data("img"); // ดึง data-img
+    const imgSrc = $(val.element).data("img") || `${process.env.APP_IMG}/Avatar.png`; // ดึง data-img
     const html = $(val.element).data("html"); // ดึง data-name
     const tooltip = html ? 'tooltip' : '';
     
@@ -124,12 +124,31 @@ export async function setSelect2(options = {}) {
         data:[],            // array e.g. [{value: '1', text: 'Option 1'}, {value: '2', text: 'Option 2'}]
         avatar:false,       // boolean
         avatarData: [],     // ใช้สำหรับ avatar [24008, 24009, 24010]
+        disableSearch: false, // boolean
         ...options
     }; // กำหนดค่าเริ่มต้นให้กับ options
-    let { element, size, placeholder, data, avatar, avatarData,...customOpt} = opt; // เอา object ออกเหลือแต่ opject ของ select2
+    let { element, size, placeholder, data, avatar, avatarData, disableSearch,...customOpt} = opt; // เอา object ออกเหลือแต่ opject ของ select2
     // console.log(opt);
     
     element = opt.element == '' ? '.s2' : opt.element;
+
+    let selectClassSize = '';
+    switch (size) {
+        case 'xs':
+            selectClassSize = 'select2-xs';
+            break;
+        case 'sm':
+            selectClassSize = 'select2-sm';
+            break;
+        case 'lg':
+            selectClassSize = 'select2-lg';
+            break;
+        case 'xl':
+            selectClassSize = 'select2-xl';
+            break;
+        default:
+            break;
+    }
 
     // set option data
     if( opt.data.length > 0 && Array.isArray(opt.data) ){
@@ -140,6 +159,10 @@ export async function setSelect2(options = {}) {
     $(element).select2({
         ...s2opt,
         ...customOpt,
+        ...disableSearch ? s2disableSearch : {},
+        ...avatar ? {templateSelection: formatAvatar} : {},
+        ...avatar ? {templateResult: formatAvatar} : {},
+        ...size != 'base' ? {selectionCssClass: selectClassSize} : {},
         placeholder : opt.placeholder == '' ? $(element).attr('placeholder') : opt.placeholder,
     });
 
@@ -171,7 +194,7 @@ export async function setSelect2(options = {}) {
 
     // console.log(`setSelect2:`, opt, avatarData);
     
-    // set avatar if avatar is true
+    // set avatar image if avatar is true
     if(avatar){
         await setAvatarSelect(avatarData,element);
     }

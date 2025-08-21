@@ -216,8 +216,19 @@
                             <textarea name="remark" id="remark" class="textarea textarea-bordered w-full min-h-[44px] rounded-xl border-green-400 focus:ring-2 focus:ring-green-500" placeholder="หากค่าใช้จ่ายเกิน ให้ระบุเหตุผล (บังคับ)"></textarea>
                         </div>
                     </div>
+                    <div class="grid grid-cols-1 gap-6" id="file-group-section" style="display:none;">
+                        <div>
+                            <label class="font-semibold text-green-700 mb-1 block">Attach Memo:</label>
+                            <div class="flex items-center gap-3">
+                                <input type="file" name="file_group" multiple id="file_group" class="file-input file-input-bordered w-full max-w-xs rounded-xl border-green-400">
+                            </div>
+                            <span class="text-xs text-amber-600 mt-2">In case of the expense is over Estimate cost must be prepare memorandum and get approve by President only.</span>
+                            <ul id="file-list" class="mt-4 space-y-1 text-gray-600"></ul>
+                        </div>
+                    </div>
                     <div class="flex justify-end mt-6">
-                        <input type="hidden" id="empcode" value="{{ $empcode }}">
+                        <input type="hidden" id="inputer" value="{{ $inputer }}">
+                        <input type="hidden" id="requester" value="{{ $empcode }}">
                         <input type="hidden" id="formnumber" value="{{ $formNumber }}">
                         <button id="btn-submit" class="btn btn-success btn-lg rounded-2xl px-8 shadow-md transition hover:scale-105">Submit</button>
                     </div>
@@ -238,28 +249,50 @@
 @section('scripts')
     <script src="{{ $_ENV['APP_JS'] }}/clearance.js?ver={{ $GLOBALS['version'] }}"></script>
     <script>
-        $(document).ready(function () {
-            const estimate = $('#total_amount').text().replace(/,/g, '') * 1;
-            const $actualCost = $('#actual-cost');
-            const $remain = $('#remain');
-            const $remainAlert = $('#remain-alert');
-            const $remark = $('#remark');
+        // $(document).ready(function () {
+        //     const estimate = $('#total_amount').text().replace(/,/g, '') * 1;
+        //     const $actualCost = $('#actual-cost');
+        //     const $remain = $('#remain');
+        //     const $remainAlert = $('#remain-alert');
+        //     const $remark = $('#remark');
+        //     const $fileGroupSection = $('#file-group-section');
 
-            $actualCost.on('input', function () {
-                const val = parseFloat($(this).val()) || 0;
-                const remain = estimate - val;
-                $remain.val(remain);
+        //     $actualCost.on('input', function () {
+        //         const val = parseFloat($(this).val()) || 0;
+        //         const remain = estimate - val;
+        //         $remain.val(remain);
 
-                if (remain >= 0) {
-                    $remain.css('color', '#16a34a'); // green
-                    $remainAlert.html('<span class="text-green-700">ค่าใช้จ่ายจริงไม่เกินยอดประมาณการ</span>');
-                    $remark.prop('required', false);
-                } else {
-                    $remain.css('color', '#dc2626'); // red
-                    $remainAlert.html('<span class="text-red-600">ค่าใช้จ่ายจริงเกินยอดประมาณการ กรุณาระบุเหตุผลใน Remark</span>');
-                    $remark.prop('required', true);
-                }
-            });
-        });
+        //         if (val > remain) {
+        //             $fileGroupSection.show();
+        //         } else {
+        //             $fileGroupSection.hide();
+        //         }
+
+        //         if (remain >= 0) {
+        //             $remark.prop('required', false);
+        //             $remain.css('color', '#16a34a'); // green
+        //             $remainAlert.html('<span class="text-green-700">ค่าใช้จ่ายจริงไม่เกินยอดประมาณการ</span>');
+        //         } else {
+        //             $remark.prop('required', true);
+        //             $remain.css('color', '#dc2626'); // red
+        //             $remainAlert.html('<span class="text-red-600">ค่าใช้จ่ายจริงเกินยอดประมาณการ กรุณาระบุเหตุผลใน Remark</span>');
+        //         }
+        //     });
+
+        //     // Trigger on page load
+        //     $actualCost.trigger('input');
+        // });
     </script>
+    <!-- <script>
+                    const input = document.getElementById('file_group');
+                    const fileList = document.getElementById('file-list');
+                    input.addEventListener('change', function () {
+                        fileList.innerHTML = '';
+                        Array.from(input.files).forEach(file => {
+                            const li = document.createElement('li');
+                            li.textContent = "- " + file.name;
+                            fileList.appendChild(li);
+                        });
+                    });
+                </script> -->
 @endsection

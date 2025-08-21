@@ -40,11 +40,13 @@
     </div>
     <div id="pdf-content">
         <div class="form-data" data-nfrmno="{{ $NFRMNO }}" data-vorgno="{{ $VORGNO }}" data-cyear="{{ $CYEAR }}" data-cyear2="{{ $CYEAR2 }}" data-nrunno="{{ $NRUNNO }}" data-empno="{{ $EMPNO }}"></div>
+        <div class="form-ent" data-ent_nfrmno="{{ $ENT_FORM->NFRMNO }}" data-ent_vorgno="{{ $ENT_FORM->VORGNO }}" data-ent_cyear="{{ $ENT_FORM->CYEAR }}" data-ent_cyear2="{{ $ENT_FORM->CYEAR2 }}" data-ent_nrunno="{{ $ENT_FORM->NRUNNO }}" data-ent_empno="{{ $ENT_FORM->EMP_INPUT }}"></div>
+
         <div class="w-full min-h-screen bg-gray-100 px-2 pb-10 ">
-            <div class="max-w-5xl mx-auto bg-white rounded-2xl shadow p-10 border-2 border-gray-300">
+            <div class="max-w-6xl mx-auto bg-white rounded-2xl shadow p-10 border-2 border-gray-300">
                 <div class="mb-8 border-b-2 border-blue-500 pb-4 flex flex-col md:flex-row md:justify-between items-start gap-3">
                     <div>
-                        <h2 class="text-2xl font-bold text-blue-900 tracking-wide">Form Clearance for Expense (Part2)</h2>
+                        <h2 class="text-2xl font-bold text-blue-900 tracking-wide">Form Clearance for Expense (Part2) <span class="text-red-300">[{{ $clearance_formno }}]</span></h2>
                         <div class="text-gray-500 text-base">แบบเคลียร์ค่าใช้จ่ายในการรับรองผู้มาติดต่อ (ส่วนที่2)</div>
                         @if(empty($formCler->FORM_ENT))
                             <div class="text-red-500 text-base">Not has Advance Entertainment Form <Br> (แบบเคลียร์ค่าใช้จ่ายในการรับรองผู้มาติดต่อ *กรณีที่ ไม่ได้มีการขออนุมัติล่วงหน้า)</div>
@@ -56,13 +58,17 @@
                 </div>
                 <!-- ส่วนสรุป Approval (Part 1) -->
                 <div class="grid grid-cols-1 gap-4">
-                    <div>
+
+                    <div class="mb-10 border-2 border-blue-300 bg-blue-50 rounded-xl shadow p-6">
+                        <div class="flex items-center mb-2 gap-2">
+                            <span class="text-2xl font-bold text-blue-800"> Entertainment Request </span>
+                        </div>
                         <div class="overflow-hidden rounded-xl border-2 border-blue-200 mb-8 bg-blue-50">
                             <table class="w-full text-sm">
                                 <tbody>
                                     @if(!empty($formCler->FORM_ENT))
                                         <tr>
-                                            <th class="w-1/4 text-left text-blue-900 font-semibold py-2 pl-4 border-b-2 border-blue-200 bg-blue-100">Form No.</th>
+                                            <th class="w-1/4 text-left text-blue-900 font-semibold py-2 pl-4 border-b-2 border-blue-200 bg-blue-100">ENT Form No.</th>
                                             <td class="py-2 pl-4 border-b-2 border-blue-200">{{ $formCler->FORM_ENT }}</td>
                                         </tr>
                                     @endif
@@ -199,8 +205,12 @@
                             </table>
                         @endif
                     </div>
-                    <div>
-                        <h2 class="text-xl font-bold text-green-700 mb-4">Expense Cost Detail</h2>
+                    <div class="border-2 border-green-300 bg-white rounded-xl shadow p-6">
+                        <div class="flex items-center mb-2 gap-2">
+                            <span class="text-2xl font-bold text-green-700">Clearance for Expense</span>
+                        </div>
+                        <div class="divider"></div>
+                        <h2 class="text-xl font-bold text-green-700 mb-4 mt-8">Expense Cost Detail</h2>
                         <div class="overflow-hidden rounded-xl border-2 border-green-200 bg-green-50">
                             <table class="w-full text-sm border">
                                 <thead>
@@ -221,13 +231,17 @@
                                 </tbody>
                             </table>
                         </div>
-                    </div>
-                    <div>
+
+
                         <!-- <div class="w-full bg-white rounded-2xl shadow p-8 border border-green-100"> -->
-                        <h2 class="text-xl font-bold text-green-700 mb-4">Clearance for Expense Detail</h2>
+                        <h2 class="text-xl font-bold text-green-700 mb-4 mt-8">Clearance for Expense Detail</h2>
                         <div class="overflow-hidden rounded-xl border-2 border-green-200 mb-8 bg-green-50">
                             <table class="w-full text-sm">
                                 <tbody>
+                                    <tr>
+                                        <th class="w-1/4 text-left font-semibold py-2 pl-4 border-b-2 border-green-200 bg-green-100">Clearance Form No.</th>
+                                        <td class="py-2 pl-4 border-b-2 border-green-200">{{ $clearance_formno }}</td>
+                                    </tr>
                                     <tr>
                                         <th class="w-1/4 text-left font-semibold py-2 pl-4 border-b-2 border-green-200 bg-green-100">President</th>
                                         <td class="py-2 pl-4 border-b-2 border-green-200">{{ $formCler->PRESIDENT_JOIN == '1' ? 'Join' : 'Not Join' }}</td>
@@ -286,7 +300,27 @@
                         <button onclick="window.print()" class="btn bg-indigo-600 text-white no-print">Print</button>
                     </div>
                 @endif
+
                 @if ($mode == '02')
+
+                    @if ($flowstep[0]->CSTEPNO == '87' && $flowstep[0]->CSTEPNEXTNO == '00')
+                        <div class="relative flex justify-center mt-4">
+                            <div class="w-full max-w-xs">
+                                <label class="floating-label block">
+                                    <span class="block mb-1 font-medium">Pay Date</span>
+                                    <div class="relative">
+                                        <input type="date" name="pay_date" id="pay_date" class="input input-bordered border-gray-700 w-full pl-10" placeholder="Select Pay Date" />
+                                        <!-- Heroicon Calendar -->
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-500 absolute left-3 top-1/2 transform -translate-y-1/2 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                        </svg>
+                                    </div>
+                                </label>
+
+                            </div>
+                        </div>
+                    @endif
+
                     <div class="flex justify-center mt-6 space-x-4 no-print">
                         <button class="bg-green-600 text-white px-6 py-2 btn rounded-lg shadow hover:bg-green-700 transition btn-submit" data-action="approve" id="btn-confirm">
                             Approve
@@ -308,7 +342,10 @@
         </div>
 
     </div>
+
     <!-- <button id="btn-print-pdf" class="no-print">Save as PDF</button> -->
+
+
 @endsection
 
 @section('scripts')

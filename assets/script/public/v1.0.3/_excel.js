@@ -38,6 +38,18 @@ export function exportExcel(workbook, fileName = "Report") {
     });
 }
 
+export function exportExcelFile(buffer, fileName = "Report") {
+    const blob = new Blob([buffer], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
+
+    // สร้างลิงก์ดาวน์โหลด
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `${fileName}.xlsx`;
+    link.click();
+}
+
 /**
  * Default write file excel
  * @param {object} options
@@ -62,7 +74,12 @@ export async function defaultExcel(options = {}) {
     const sheet = workbook.addWorksheet(opt.sheetName); // เพื่มชีท และตั้งชื่อชีท
 
     // ตั้งชื่อ column และ key เพื่อให้สอดคล้องกับข้อมูล
-    sheet.columns = opt.column;
+    sheet.columns = opt.column.map((col) => {
+        const formatted = { ...col };
+        if (col.type === "date") formatted.style = { numFmt: "yyyy-mm-dd" };
+        if (col.type === "number") formatted.style = { numFmt: "0" };
+        return formatted;
+    });
     // เพิ่มข้อมูลใน Sheet
     sheet.addRows(opt.data);
 
@@ -91,18 +108,18 @@ export async function defaultExcel(options = {}) {
 /**
  * Write Excel file from template
  * @param {File} file arraybuffer
- * @param {object} options 
- * @returns 
+ * @param {object} options
+ * @returns
  */
-export async function writeExcelTemp(file,options = {}) {
+export async function writeExcelTemp(file, options = {}) {
     const opt = {
         write: (workbook) => {},
-        ...options
-    }
+        ...options,
+    };
     var workbook = new ExcelJS.Workbook();
     await workbook.xlsx.load(file);
     opt.write(workbook);
-    
+
     return workbook;
 }
 
@@ -202,7 +219,6 @@ export async function readInput(file, options = {}) {
                 : workbook.getWorksheet(opt.sheetName);
         let rowIndex = 0;
         worksheet.eachRow((row, rowNumber) => {
-
             if (rowNumber < opt.startRow) return;
             if (rowNumber > opt.maxReadRow) return;
             // const rowIndex =

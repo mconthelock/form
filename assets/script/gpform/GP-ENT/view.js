@@ -130,6 +130,18 @@ $(document).ready(async function () {
 
     if ($("input[name='location']:checked").val() === "Outside" && $("#location_detail").val().trim() === "") return showInputToast("#location_detail", "กรุณากรอกรายละเอียด Location");
 
+    // --- Memo file required if memo section is visible ---
+    if ($("#attach-memo-section").is(":visible")) {
+      var memoFileInput = $("#file-memo")[0];
+      var hasCurrentMemoFile = $(".current-memo-file").is(":visible") && $(".current-memo-file a").length > 0;
+      var hasNewMemoFile = memoFileInput && memoFileInput.files.length > 0;
+      
+      if (!hasCurrentMemoFile && !hasNewMemoFile) {
+        showInputToast("#file-memo", "กรุณาแนับไฟล์ Memo");
+        return;
+      }
+    }
+
     // --- Company Validation ---
     let companiesArray = [];
     let companyValid = true,
@@ -251,6 +263,14 @@ $(document).ready(async function () {
         formData.append(`company_files[${i}]`, fileInput.files[0]);
       }
     });
+
+    // แนบไฟล์ Memo ถ้ามี
+    if ($("#attach-memo-section").is(":visible")) {
+      var memoFileInput = $("#file-memo")[0];
+      if (memoFileInput && memoFileInput.files.length > 0) {
+        formData.append("file_memo", memoFileInput.files[0]);
+      }
+    }
 
     // แนบไฟล์
     // if ($("#file-attachment2")[0].files.length > 0) formData.append("file2", $("#file-attachment2")[0].files[0]);

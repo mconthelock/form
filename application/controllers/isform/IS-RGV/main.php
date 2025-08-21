@@ -414,5 +414,15 @@ class Main extends MY_Controller
         }
     }
 
+    public function test()
+    {
+        $this->views('isform/IS-RGV/test');
+    }
+
+    public function test_one()
+    {
+        $this->views('isform/IS-RGV/test_one');
+    }
+
 }
 ?>

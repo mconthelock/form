@@ -9,7 +9,7 @@ class form extends MY_Controller{
     function __construct(){
 		parent::__construct();
         $this->load->model('qaform/QA-INS/autorize_model', 'atr');
-        $this->load->model('form_model', 'fr0m');
+        $this->load->model('form_model', 'form');
         $this->load->model('user_model', 'usr');
         $this->client = new Client(['verify' => false]);
     }
@@ -23,7 +23,7 @@ class form extends MY_Controller{
             ];
 
         }else{
-            $form = $this->frm->getFormMaster('QA-INS');
+            $form = $this->form->getFormMaster('QA-INS');
             if(!empty($form)){
                 $data = [
                     'NFRMNO' => $form[0]->NNO,

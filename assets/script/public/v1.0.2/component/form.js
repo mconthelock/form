@@ -158,7 +158,7 @@ export const radio = (option = {}) => {
 export const webflowSubmit = (option = {}) => {
     const opt = {...{
         actionsForm : true,
-        remark : false,
+        remark : true,
         request : false,
         approve : false,
         returnb : false,

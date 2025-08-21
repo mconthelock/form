@@ -182,10 +182,10 @@
                         </div>
                     </h2>
 
-                    <div>
-                        <span class="font-bold text-blue-900 mr-2">Entertainment’s Budget:</span>
-                        <input type="text" class="input input-bordered input-sm rounded-lg border-blue-200" id="entertain-budget" placeholder="*Please identify (if have)">
-                    </div>
+                    <!-- <div>
+             <span class="font-bold text-blue-900 mr-2">Entertainment’s Budget:</span>
+             <input type="text" class="input input-bordered input-sm rounded-lg border-blue-200" id="entertain-budget" placeholder="*Please identify (if have)">
+            </div> -->
                 </div>
                 <div class="overflow-x-auto mt-3 rounded-lg">
                     <table class="table table-xs md:table-sm w-full rounded-lg overflow-hidden shadow" id="table_cost">
@@ -227,6 +227,15 @@
                             </tr>
                         </tfoot>
                     </table>
+                    <div id="attach-memo-section" style="display:none">
+                        <div class="mt-2">
+                            <label class="block font-semibold text-blue-700 mb-1">Attach Memo:</label>
+                            <div class="flex items-center gap-2">
+                                <input type="file" name="file_memo" id="file-memo" class="file-input file-input-bordered rounded-lg file-input-sm" />
+                                <span class="text-xs text-amber-600">Require "Memorandum" get approve by President only,In case of Cost/Person over condition</span>
+                            </div>
+                        </div>
+                    </div>
                     <div class="flex items-center pt-5 rounded-lg space-x-4">
                         <div class="bg-blue-700 text-white font-semibold px-4 py-4 rounded-l-lg">
                             Cash Advance

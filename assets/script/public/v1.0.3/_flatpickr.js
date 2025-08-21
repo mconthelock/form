@@ -314,6 +314,22 @@ export  function setDatefpk(options = {}){
     // console.log(instance, date, id);
 }
 
+export function clearDatefpk(options = {}){
+    const {
+        element = '.fdate', // default element
+    } = options
+    const el = $(element)[0];
+    console.log('element',el);
+    
+    if (!el) return; // ถ้าไม่มี input นี้อยู่ใน DOM ข้ามไปเลย
+    let instance = el._flatpickr;
+    console.log('instance',instance);
+    
+    if (instance) {
+        instance.clear();
+    }
+}
+
 export function getameccalendar() {
   var today = new Date();
   var sdate = today.getFullYear() - 1 + "-01-01";

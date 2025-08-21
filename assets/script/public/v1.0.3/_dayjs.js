@@ -7,7 +7,50 @@
  * @version 1.0.1
  */
 import dayjs from 'dayjs';
+// time
+import relativeTime from 'dayjs/plugin/relativeTime';
+import isBetween from 'dayjs/plugin/isBetween';
+import isSameOrBefore from 'dayjs/plugin/isSameOrBefore';
+import isSameOrAfter from 'dayjs/plugin/isSameOrAfter';
+import minMax from 'dayjs/plugin/minMax';
+import isLeapYear from 'dayjs/plugin/isLeapYear';
 
+// format
+import localizedFormat from 'dayjs/plugin/localizedFormat';
+import advancedFormat from 'dayjs/plugin/advancedFormat';
+import customParseFormat from 'dayjs/plugin/customParseFormat';
+
+// week/year
+import weekOfYear from 'dayjs/plugin/weekOfYear';
+import isoWeek from 'dayjs/plugin/isoWeek';
+import isoWeeksInYear from 'dayjs/plugin/isoWeeksInYear';
+import quarterOfYear from 'dayjs/plugin/quarterOfYear';
+import weekday from 'dayjs/plugin/weekday';
+
+// timezone
+import utc from 'dayjs/plugin/utc';
+import timezone from 'dayjs/plugin/timezone';
+
+// duration
+import duration from 'dayjs/plugin/duration';
+
+dayjs.extend(relativeTime);
+dayjs.extend(isBetween);
+dayjs.extend(isSameOrBefore);
+dayjs.extend(isSameOrAfter);
+dayjs.extend(minMax);
+dayjs.extend(isLeapYear);
+dayjs.extend(localizedFormat);
+dayjs.extend(advancedFormat);
+dayjs.extend(customParseFormat);
+dayjs.extend(weekOfYear);
+dayjs.extend(isoWeek);
+dayjs.extend(isoWeeksInYear);
+dayjs.extend(quarterOfYear);
+dayjs.extend(weekday);
+dayjs.extend(utc);
+dayjs.extend(timezone);
+dayjs.extend(duration);
 /**
  * Format a date string.
  * @param {string} date 

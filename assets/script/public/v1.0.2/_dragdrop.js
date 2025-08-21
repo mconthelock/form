@@ -150,7 +150,7 @@ export const dragDropInit = (options = {}) => {
         <div class="drop-message flex flex-col justify-center items-center h-full">
             <span>Drag & Drop files here or click to select</span>
         </div>
-        <div class="drop-list w-full flex-col items-start text-gray-500 hidden p-1 gap"></div>
+        <div class="drop-list w-full flex-col items-start text-gray-500 hidden p-1 gap-1"></div>
     </label>
     <input type="file" class="file-input txt-upper validator ${opt.class} hidden" data-format='${opt.format}' name="${opt.name}" id="${opt.name}" multiple/>
     </div>`;
@@ -249,7 +249,7 @@ export async function handleFiles(files, element, format = '') {
         const txt = `
         <li class="flex flex-row gap-2 items-center hover:bg-gray-200 w-full px-2 rounded">
             ${icon || '<i class="icofont-file-alt text-2xl"></i>'}
-            <span class="text-lg  overflow-hidden text-ellipsis">${file.name}</span>
+            <span class="text-base  overflow-hidden text-ellipsis whitespace-nowrap">${file.name}</span>
             <i class="icofont-close-squared-alt ml-auto text-error text-2xl drop-remove"></i>
         </li>`;
         if(format != ''){

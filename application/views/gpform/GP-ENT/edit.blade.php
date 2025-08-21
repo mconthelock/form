@@ -237,6 +237,25 @@
                         </tfoot>
                     </table>
 
+                    <div id="attach-memo-section" style="display:none">
+                        <div class="mt-2">
+                            <label class="block font-semibold text-blue-700 mb-1">Attach Memo:</label>
+                            <div class="flex items-center gap-2">
+                                @if (!empty($dataForm->MEMO_FILE))
+                                    <div class="mb-1 current-memo-file">
+                                        <span class="label">Current memo file:</span>
+                                        <a href="{{ base_url('uploads/' . $dataForm->MEMO_FILE) }}" target="_blank" class="link link-primary btn btn-sm rounded-lg">{{ $dataForm->MEMO_FILE }}</a>
+                                    </div>
+                                    <label class="block text-gray-600 text-xs mb-1">Choose new file to replace (optional):</label>
+                                @else
+                                    <div class="mb-1 current-memo-file" style="display:none"></div>
+                                @endif
+                                <input type="file" name="file_memo" id="file-memo" class="file-input file-input-bordered rounded-lg file-input-sm" />
+                                <span class="text-xs text-amber-600">Require "Memorandum" get approve by President only,In case of Cost/Person over condition</span>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- <div class="flex items-center pt-5 rounded-lg space-x-4">
                             <div class="bg-blue-700 text-white font-semibold px-4 py-4 rounded-l-lg">
                                 Cash Advance
@@ -348,6 +367,13 @@
     <script src="{{ $_ENV['APP_JS'] }}/requestEntertainView.js?ver={{ $GLOBALS['version'] }}"></script>
     <script src="{{ $_ENV['APP_JS'] }}/requestEntertain.js?ver={{ $GLOBALS['version'] }}"></script>
     <script>
+        // Add SweetAlert2 if not already loaded
+        if (typeof Swal === 'undefined') {
+            var script = document.createElement('script');
+            script.src = 'https://cdn.jsdelivr.net/npm/sweetalert2@11';
+            document.head.appendChild(script);
+        }
+
         let companyIndex = $('#companies-container .company-group').length;
 
         function updateRadioNames() {
@@ -394,6 +420,132 @@
             $(this).closest('.company-group').remove();
             updateRadioNames();
         });
+
+        // เพิ่ม event handler สำหรับ estimate table เพื่อ toggle memo section
+        $(document).on("change input", ".estimate-type, .unit-price, .quantity", function () {
+            const $row = $(this).closest("tr");
+            const etCost = Number($row.find(".estimate-type option:selected").data("cost")) || 0;
+            const quantity = Number($row.find(".quantity").val()) || 0;
+            const $remark = $row.find(".remark");
+            
+            // เช็คว่าเกินเงื่อนไขหรือไม่
+            if (quantity > 0 && etCost > 0 && quantity > etCost) {
+                $remark.prop("disabled", false);
+                $remark.addClass("border-red-300");
+            } else {
+                $remark.prop("disabled", true);
+                $remark.removeClass("border-red-300");
+                $remark.val(""); // clear ค่าเมื่อไม่เกินเงื่อนไข
+            }
+            
+            // Check if any row exceeds limit and toggle memo section
+            let showMemo = false;
+            $("#table_cost tbody tr").each(function () {
+                const etCostRow = Number($(this).find(".estimate-type option:selected").data("cost")) || 0;
+                const quantityRow = Number($(this).find(".quantity").val()) || 0;
+                if (quantityRow > 0 && etCostRow > 0 && quantityRow > etCostRow) {
+                    showMemo = true;
+                    return false; // break loop
+                }
+            });
+            
+            if (showMemo) {
+                $("#attach-memo-section").slideDown();
+            } else {
+                $("#attach-memo-section").slideUp();
+            }
+        });
+
+        // เช็คตอน page load ว่ามีไฟล์ที่เกินเงื่อนไขหรือไม่
+        function checkMemoSectionOnLoad() {
+            let showMemo = false;
+            $("#table_cost tbody tr").each(function () {
+                const etCost = Number($(this).find(".estimate-type option:selected").data("cost")) || 0;
+                const quantity = Number($(this).find(".quantity").val()) || 0;
+                const $remark = $(this).find(".remark");
+                
+                if (quantity > 0 && etCost > 0 && quantity > etCost) {
+                    showMemo = true;
+                    $remark.prop("disabled", false);
+                    $remark.addClass("border-red-300");
+                } else {
+                    $remark.prop("disabled", true);
+                    $remark.removeClass("border-red-300");
+                }
+            });
+            
+            if (showMemo) {
+                $("#attach-memo-section").show();
+            } else {
+                $("#attach-memo-section").hide();
+            }
+        }
+
+        // เรียกใช้เมื่อโหลดหน้าเสร็จ
+        checkMemoSectionOnLoad();
+
+        // เพิ่ม helper functions
+        window.showInputToast = function (selector, msg) {
+            $(selector).addClass("input-error").focus();
+            Swal.fire({
+                toast: true,
+                position: "top-end",
+                icon: "warning",
+                title: msg,
+                showConfirmButton: false,
+                timer: 2000,
+                background: "#FBF6D9",
+            });
+        };
+
+        window.showRadioToast = function (selector, msg) {
+            $(selector).removeClass("radio-primary radio-success").addClass("radio-error").first().focus();
+            Swal.fire({
+                toast: true,
+                position: "top-end",
+                icon: "warning",
+                title: msg,
+                showConfirmButton: false,
+                timer: 2000,
+            });
+        };
+
+        window.showCheckboxToast = function (selector, msg) {
+            $(selector).addClass("checkbox-error").removeClass("checkbox-primary").first().focus();
+            Swal.fire({
+                toast: true,
+                position: "top-end",
+                icon: "warning",
+                title: msg,
+                showConfirmButton: false,
+                timer: 2000,
+            });
+        };
+
+        // เพิ่ม calculation functions
+        function calculateTotals() {
+            let totalAmount = 0;
+            $("#table_cost tbody tr").each(function () {
+                const qty = parseFloat($(this).find("td:eq(1) input").val()) || 0;
+                const cost = parseFloat($(this).find("td:eq(2) input").val()) || 0;
+                const rowTotal = qty * cost;
+                $(this).find("td:eq(3) input").val(rowTotal);
+                totalAmount += rowTotal;
+            });
+            $("#total-amount").text(totalAmount);
+        }
+
+        // Bind calculation event
+        $("tbody input").on("input", calculateTotals);
+
+        // Guest และ Amec count functions
+        window.guestCount = function () {
+            return $("#guest-list li").length;
+        };
+
+        window.amecCount = function () {
+            return $("#amec-list li").length;
+        };
     </script>
 
 @endsection

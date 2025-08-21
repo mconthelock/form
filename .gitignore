@@ -2,9 +2,12 @@
 .env
 ./.vscode
 /node_modules
-/docs
+/system
+assets/dist
 application/cache
+application/config
 application/logs
 application/third_party
 application/vendor
-application/config/database.php
+/docs
+/asssets/dist

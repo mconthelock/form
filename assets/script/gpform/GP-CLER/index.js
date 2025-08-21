@@ -20,6 +20,72 @@ $(document).ready(function () {
     }
   });
 
+  let searchTimeout;
+  $("#input-empcode").on("input", function () {
+    const empcode = $(this).val().trim();
+
+    // Clear previous timeout
+    clearTimeout(searchTimeout);
+
+    // If empty, clear the dropdown
+    if (empcode === "") {
+      $("#entertain-form-no").empty();
+      $("#entertain-form-no").append($("<option>").val("").text("กรุณาใส่รหัสพนักงาน"));
+      return;
+    }
+
+    // Set timeout to avoid too many requests
+    searchTimeout = setTimeout(function () {
+      $.ajax({
+        type: "POST",
+        url: host + "gpform/GP-CLER/main/getformEmp",
+        data: {
+          empno: empcode,
+          orgNo: vorgno,
+          y: cyear,
+        },
+        dataType: "json",
+        beforeSend: function () {
+          $("#entertain-form-no").empty();
+          $("#entertain-form-no").append($("<option>").val("").text("กำลังโหลด..."));
+        },
+        success: function (response) {
+          $("#entertain-form-no").empty();
+          if (response.length > 0) {
+            $("#entertain-form-no").append($("<option>").val("").text("เลือก Entertainment Form No."));
+            response.forEach((item) => {
+              console.log(item);
+              $("#entertain-form-no").append(
+                $("<option>")
+                  .val(item.CYEAR2 + "/" + item.NRUNNO)
+                  .text(item.form_number)
+              );
+            });
+          } else {
+            $("#entertain-form-no").append($("<option>").val("").text("ไม่พบข้อมูล Entertainment Form"));
+          }
+        },
+        error: function () {
+          $("#entertain-form-no").empty();
+          $("#entertain-form-no").append($("<option>").val("").text("เกิดข้อผิดพลาดในการโหลดข้อมูล"));
+        },
+      });
+    }, 500); // Wait 500ms after user stops typing
+  });
+
+  $("#file_group").on("change", function () {
+    const fileList = $(this)[0].files;
+    const $list = $("#file-list");
+    $list.empty();
+    if (fileList.length === 0) {
+      $list.append("<li>ไม่พบไฟล์ที่เลือก</li>");
+    } else {
+      Array.from(fileList).forEach((file) => {
+        $list.append(`<li>- ${file.name}</li>`);
+      });
+    }
+  });
+
   $("#btn-submit").on("click", async function (e) {
     e.preventDefault();
 
@@ -83,6 +149,24 @@ $(document).ready(function () {
       return;
     }
 
+    // If file-group-section is visible, require at least one file in #file_group
+    if (parseFloat(remain) < 0) {
+      const fileGroupInput = $("#file_group")[0];
+      if (!fileGroupInput || fileGroupInput.files.length === 0) {
+        Swal.fire({
+          icon: "warning",
+          title: "กรุณาแนบไฟล์ใน Attach File อย่างน้อย 1 ไฟล์",
+          toast: true,
+          position: "top-end",
+          timer: 3000,
+          showConfirmButton: false,
+          background: "#FBF6D9",
+        });
+        $("#file_group").addClass("input-error").focus();
+        return;
+      }
+    }
+
     // ถ้า remain < 0 ต้องมี remark
     if (parseFloat(remain) < 0 && remark === "") {
       Swal.fire({
@@ -105,17 +189,26 @@ $(document).ready(function () {
     formData.append("remain", parseFloat(remain));
     formData.append("remark", remark);
     formData.append("receipt", file);
+    // แนบไฟล์กลุ่ม
+    const fileGroupInput = $("#file_group")[0];
+    if (fileGroupInput && fileGroupInput.files.length > 0) {
+      Array.from(fileGroupInput.files).forEach((f, idx) => {
+        formData.append(`file_group[]`, f);
+      });
+    }
     formData.append("nfrmno", nfrmno);
     formData.append("vorgno", vorgno);
     formData.append("cyear", cyear);
-    formData.append("empcode", $("#empcode").val());
+    // formData.append("empcode", $("#empcode").val());
+    formData.append("inputer", $("#inputer").val());
+    formData.append("requester", $("#requester").val());
     formData.append("formnumber", formnumber);
     formData.append("ent_nfrmno", ent_nfrmno);
     formData.append("ent_vorgno", ent_vorgno);
     formData.append("ent_cyear", ent_cyear);
     formData.append("ent_cyear2", ent_cyear2);
     formData.append("ent_nrunno", ent_nrunno);
-    const form = await createForm(nfrmno, vorgno, cyear, $("#empcode").val(), $("#empcode").val(), "", 1);
+    const form = await createForm(nfrmno, vorgno, cyear, $("#requester").val(), $("#inputer").val(), "", 1);
     const { runno: NRUNNO, cyear2: CYEAR2 } = form.message;
     formData.append("nrunno", NRUNNO);
     formData.append("cyear2", CYEAR2);
@@ -231,4 +324,51 @@ $(document).ready(function () {
 
     console.log("Expense Data:", expense);
   });
+
+  // Clearance_form.blade.js logic for file_group visibility
+  // ดึง estimate ให้ชัวร์ (ตัดทุกอย่างที่ไม่ใช่ตัวเลข จุด ลบ)
+  function getEstimate() {
+    const raw = $("#total_amount").text();
+    const num = Number(String(raw).replace(/[^\d.-]/g, "")) || 0;
+    return num;
+  }
+
+  const $actualCost = $("#actual-cost");
+  const $remain = $("#remain");
+  const $remainAlert = $("#remain-alert");
+  const $remark = $("#remark");
+  const $fileGroupSection = $("#file-group-section");
+
+  // ผูก event ให้มีตัวเดียว
+  $actualCost.off("input.fileGroup").on("input.fileGroup", function () {
+    const estimate = getEstimate(); // อ่านสดทุกครั้งกันค่าถูกอัปเดต
+    const val = Number(this.value) || 0;
+    const remain = estimate - val;
+
+    $remain.val(remain);
+
+    console.log({
+      val,
+      estimate,
+      remain,
+      shouldShow: remain < 0,
+    });
+
+    const shouldShow = remain < 0;
+    // สั่งทั้งสองแบบ กันโดน CSS/class อื่นทับ
+    $fileGroupSection.toggle(shouldShow).toggleClass("hidden", !shouldShow).attr("aria-hidden", !shouldShow);
+
+    if (remain >= 0) {
+      $remark.prop("required", false);
+      $remain.css("color", "#16a34a");
+      $remainAlert.html('<span class="text-green-700">ค่าใช้จ่ายจริงไม่เกินยอดประมาณการ</span>');
+    } else {
+      $remark.prop("required", true);
+      $remain.css("color", "#dc2626");
+      $remainAlert.html('<span class="text-red-600">ค่าใช้จ่ายจริงเกินประมาณการ กรุณาระบุเหตุผลใน Remark</span>');
+    }
+  });
+
+  // ให้ค่าตั้งต้น
+  $actualCost.trigger("input");
 });

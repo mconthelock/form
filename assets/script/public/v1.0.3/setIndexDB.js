@@ -1,65 +1,70 @@
-
 import { setApp, getApp } from "../../indexDB/application";
-import { getAllImage, getImage, getInfo, setImage, setInfo } from "../../indexDB/employee";
+import {
+    getAllImage,
+    getImage,
+    getInfo,
+    setImage,
+    setInfo,
+} from "../../indexDB/employee";
 import { getGroup, getMenu, setGroup, setMenu } from "../../indexDB/userAuth";
 import jsSHA from "jssha";
 
 // IndexedDB
 export async function generateSchemaHash(schema) {
-  // ใช้ SHA-256 ในการสร้าง hash ของ schema รองรับ http
-  if (!window.crypto || !window.crypto.subtle) {
-    // console.log("Web Crypto API not supported in this browser.");
+    // ใช้ SHA-256 ในการสร้าง hash ของ schema รองรับ http
+    if (!window.crypto || !window.crypto.subtle) {
+        // console.log("Web Crypto API not supported in this browser.");
+        const schemaString = JSON.stringify(schema);
+        const shaObj = new jsSHA("SHA-256", "TEXT");
+        shaObj.update(schemaString);
+        return shaObj.getHash("HEX");
+    }
     const schemaString = JSON.stringify(schema);
-    const shaObj = new jsSHA("SHA-256", "TEXT");
-    shaObj.update(schemaString);
-    return shaObj.getHash("HEX");
-  }
-  const schemaString = JSON.stringify(schema);
-  const hash = await crypto.subtle.digest(
-    "SHA-256",
-    new TextEncoder().encode(schemaString)
-  );
-  const hashArray = Array.from(new Uint8Array(hash));
-  const hashHex = hashArray
-    .map((b) => b.toString(16).padStart(2, "0"))
-    .join("");
-  return hashHex;
+    const hash = await crypto.subtle.digest(
+        "SHA-256",
+        new TextEncoder().encode(schemaString)
+    );
+    const hashArray = Array.from(new Uint8Array(hash));
+    const hashHex = hashArray
+        .map((b) => b.toString(16).padStart(2, "0"))
+        .join("");
+    return hashHex;
 }
 
 export async function setApplication(apps) {
-  const data = await getApp(apps.APP_ID);
+    const data = await getApp(apps.APP_ID);
 
-  if (data == undefined || data == null) {
-    // console.log("setApplication", new Date(), apps.APP_ID, apps);
-    await setApp(apps.APP_ID, apps);
-  }
+    if (data == undefined || data == null) {
+        // console.log("setApplication", new Date(), apps.APP_ID, apps);
+        await setApp(apps.APP_ID, apps);
+    }
 }
 
 export async function setAppGroup(id, data) {
-  // console.log("beforeGroup", new Date(), id, data);
-  const res = await getGroup(id);
-  // console.log("getAppGroup", new Date(), id, res);
-  if (
-    res == undefined ||
-    res == null
-    //res.data.UPDATE_DATE < data.UPDATE_DATE
-  ) {
-    // console.log("setAppGroup", new Date(), id, data);
+    // console.log("beforeGroup", new Date(), id, data);
+    const res = await getGroup(id);
+    // console.log("getAppGroup", new Date(), id, res);
+    if (
+        res == undefined ||
+        res == null
+        //res.data.UPDATE_DATE < data.UPDATE_DATE
+    ) {
+        // console.log("setAppGroup", new Date(), id, data);
 
-    await setGroup(id, data);
-    return true;
-  }
-  return false;
+        await setGroup(id, data);
+        return true;
+    }
+    return false;
 }
 
 export async function setAppMenu(id, data, update = false) {
-  // console.log("beforeMenu", new Date(), id, data);
-  const res = await getMenu(id);
-  // console.log("getAppMenu", new Date(), id, res);
-  if (res == undefined || res == null || update) {
-    // console.log("setAppMenu", new Date(), id, data);
-    await setMenu(id, data);
-  }
+    // console.log("beforeMenu", new Date(), id, data);
+    const res = await getMenu(id);
+    // console.log("getAppMenu", new Date(), id, res);
+    if (res == undefined || res == null || update) {
+        // console.log("setAppMenu", new Date(), id, data);
+        await setMenu(id, data);
+    }
 }
 
 /**
@@ -68,12 +73,31 @@ export async function setAppMenu(id, data, update = false) {
  * @param {string} empno e.g. '24008'
  */
 export async function fillImages(e, empno) {
-  const element = $(e);
-  const img = await displayEmpImage(empno);
-  //   console.log(element,e);
+    const element = $(e);
+    const img = await displayEmpImage(empno);
+    //   console.log(element,e);
 
-  element.attr("src", img);
-  element.removeClass("hidden");
+    element.attr("src", img);
+    element.removeClass("hidden");
+}
+
+export async function getImageByUser(empno = []) {
+    //    const image = await Promise.all(
+    //         data.map(async (user) => {
+    //             return {
+    //                 src: await displayEmpImage(user.SEMPNO),
+    //                 empno: user.SEMPNO,
+    //             };
+    //         })
+    //     );
+    const image = [];
+    for (const u of empno) {
+        image.push({
+            src: await displayEmpImage(u),
+            empno: u,
+        });
+    }
+    return image;
 }
 
 /**
@@ -85,84 +109,86 @@ export async function fillImages(e, empno) {
  * @note for function formatAvatar in Select2
  */
 export async function setAvatarSelect(allUsers, selectElement) {
-  // console.log('setAvatarSelect', allUsers, selectElement);
-  const empImage = await getAllImage();
-  // console.log(empImage,allUsers);
-  allUsers.filter(async (user) => {
-    let img = empImage.find((img) => img.id == user);
-    // console.log(`setAvatarSelect: user ${user}`, img);
+    // console.log('setAvatarSelect', allUsers, selectElement);
+    const empImage = await getAllImage();
+    // console.log(empImage,allUsers);
+    allUsers.filter(async (user) => {
+        let img = empImage.find((img) => img.id == user);
+        // console.log(`setAvatarSelect: user ${user}`, img);
 
-    if (img) {
-      setAvatarOption(selectElement, user, img.image);
-    } else {
-      img = await displayEmpImage(user);
-      setAvatarOption(selectElement, user, img);
-    }
-  });
+        if (img) {
+            setAvatarOption(selectElement, user, img.image);
+        } else {
+            img = await displayEmpImage(user);
+            setAvatarOption(selectElement, user, img);
+        }
+    });
 
-  function setAvatarOption(selectElement, empno, img) {
-    const option = $(selectElement).find(`option[value="${empno}"]`);
-    if (option.length > 0) {
-      option.data("img", img);
+    function setAvatarOption(selectElement, empno, img) {
+        const option = $(selectElement).find(`option[value="${empno}"]`);
+        if (option.length > 0) {
+            option.data("img", img);
+        }
     }
-  }
 }
 
 // ดึงรูปภาพจาก IndexedDB
 export async function displayEmpImage(id) {
-  const cachedImage = await getImage(id);
-  if (cachedImage) {
-    return `${cachedImage}`;
-  } else {
-    // ดึงรูปภาพจาก API
-    const response = await fetch(
-      `${process.env.APP_API}/users/image/${id}`
-    );
-    if (response.ok) {
-      const img = await response.text();
-      console.log(id, img);
-
-      if(!img.startsWith("data:image/")){
-        throw new Error("Invalid image format");
-      }
-      // บันทึกลง IndexedDB
-      await setImage(id, img);
-      return `${img}`;
+    const cachedImage = await getImage(id);
+    if (cachedImage) {
+        return `${cachedImage}`;
     } else {
-      console.log(`Error fetching image for ID ${id}: ${response.statusText}`);
-      return '';
+        // ดึงรูปภาพจาก API
+        const response = await fetch(
+            `${process.env.APP_API}/users/image/${id}`
+        );
+        if (response.ok) {
+            const img = await response.text();
+            console.log(id, img);
+
+            if (!img.startsWith("data:image/")) {
+                throw new Error("Invalid image format");
+            }
+            // บันทึกลง IndexedDB
+            await setImage(id, img);
+            return `${img}`;
+        } else {
+            console.log(
+                `Error fetching image for ID ${id}: ${response.statusText}`
+            );
+            return "";
+        }
     }
-  }
 }
 
 // ดึงข้อมูลพนักงานจาก IndexedDB
 export async function displayEmpInfo(id) {
-  const cachedInfo = await getInfo(id);
-  if (cachedInfo) {
-    return cachedInfo.data;
-  } else {
-    // ดึงข้อมูลจาก API
-    const response = await fetch(`${process.env.APP_API}/users/${id}`);
-    const text = await response.text();
+    const cachedInfo = await getInfo(id);
+    if (cachedInfo) {
+        return cachedInfo.data;
+    } else {
+        // ดึงข้อมูลจาก API
+        const response = await fetch(`${process.env.APP_API}/users/${id}`);
+        const text = await response.text();
 
-    if (!text) {
-      // ถ้า response body ว่าง
-      return null;
+        if (!text) {
+            // ถ้า response body ว่าง
+            return null;
+        }
+        try {
+            const data = JSON.parse(text);
+            if (!data) return null;
+            await setInfo(id, data);
+            return data;
+        } catch (e) {
+            // parse ไม่ได้
+            console.error("JSON parse error:", e);
+            return null;
+        }
+        // const data = await response.json();
+        // console.log(data);
+        // if(!data) return null;
+        // await setInfo(id, data);
+        // return data;
     }
-    try {
-      const data = JSON.parse(text);
-      if (!data) return null;
-      await setInfo(id, data);
-      return data;
-    } catch (e) {
-      // parse ไม่ได้
-      console.error("JSON parse error:", e);
-      return null;
-    }
-    // const data = await response.json();
-    // console.log(data);
-    // if(!data) return null;
-    // await setInfo(id, data);
-    // return data;
-  }
 }

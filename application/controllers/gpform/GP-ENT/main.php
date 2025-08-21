@@ -125,6 +125,25 @@ class Main extends MY_Controller
             $this->deleteFlowStep('', $nfrmno, $vorgno, $cyear, $cyear2, $nrunno, '87', '00'); // delete FIN Staff
         }
 
+
+        // Handle Memo File Upload (file_memo)
+        $memoFileName = null;
+        if (isset($_FILES['file_memo']) && $_FILES['file_memo']['error'] == 0) {
+            $file       = $_FILES['file_memo'];
+            $extension  = pathinfo($file['name'], PATHINFO_EXTENSION);
+            $uploadFile = array(
+                'name'     => "Memo_{$cyear2}_{$nrunno}.{$extension}",
+                'type'     => $file['type'],
+                'tmp_name' => $file['tmp_name'],
+                'error'    => $file['error'],
+                'size'     => $file['size']
+            );
+            $result     = $this->uploadFile($uploadFile);
+            if ($result['status'] == '1') {
+                $memoFileName = $result['file_name'];
+            }
+        }
+
         $data = [
             'NFRMNO'               => $nfrmno,
             'VORGNO'               => $vorgno,
@@ -137,13 +156,16 @@ class Main extends MY_Controller
             'TYPE_TIME'            => $post['time'],
             'LOCATION_TYPE'        => $post['location'],
             'LOCATION'             => $post['location_detail'],
-            'ENTERTAINMENT_BUDGET' => $post['entertain_budget'],
+            // 'ENTERTAINMENT_BUDGET' => $post['entertain_budget'],
             'GUEST_TYPE'           => $post['guest_type'],
             'REMARK'               => $post['remark'],
             'REIMBURSEMENT'        => $post['cash_adv'],
             'TOTAL_AMOUNT'         => $post['total_amount'],
             'STATUS'               => '1',
         ];
+        if ($memoFileName) {
+            $data['FILE_MEMO'] = $memoFileName;
+        }
 
         $dateFields = [];
         if (!empty($post['entertain_date'])) {
@@ -260,6 +282,24 @@ class Main extends MY_Controller
         $cstepnextno = $this->ent->select('FLOW', array_merge($where, ['CSTEPNO' => '18']));
         $this->updateFlowApv("", $getEmp->VEMPNO, $nfrmno, $vorgno, $cyear, $cyear2, $nrunno, "18", $cstepnextno[0]->CSTEPNEXTNO);
 
+        // Handle Memo File Upload (file_memo)
+        $memoFileName = null;
+        if (isset($_FILES['file_memo']) && $_FILES['file_memo']['error'] == 0) {
+            $file       = $_FILES['file_memo'];
+            $extension  = pathinfo($file['name'], PATHINFO_EXTENSION);
+            $uploadFile = array(
+                'name'     => "Memo_{$cyear2}_{$nrunno}.{$extension}",
+                'type'     => $file['type'],
+                'tmp_name' => $file['tmp_name'],
+                'error'    => $file['error'],
+                'size'     => $file['size']
+            );
+            $result     = $this->uploadFile($uploadFile);
+            if ($result['status'] == '1') {
+                $memoFileName = $result['file_name'];
+            }
+        }
+
         $data = [
             'NFRMNO'               => $nfrmno,
             'VORGNO'               => $vorgno,
@@ -272,12 +312,17 @@ class Main extends MY_Controller
             'TYPE_TIME'            => $post['time'],
             'LOCATION_TYPE'        => $post['location'],
             'LOCATION'             => $post['location_detail'],
-            'ENTERTAINMENT_BUDGET' => $post['entertain_budget'],
+            // 'ENTERTAINMENT_BUDGET' => $post['entertain_budget'],
             'GUEST_TYPE'           => $post['guest_type'],
             'REMARK'               => $post['remark'],
-            'TOTAL_AMOUNT'         => $post['total-amount'],
+            'TOTAL_AMOUNT'         => $post['total_amount'],
             'STATUS'               => '1',
         ];
+
+        // เพิ่ม memo file ถ้ามีการอัปโหลดใหม่
+        if ($memoFileName) {
+            $data['FILE_MEMO'] = $memoFileName;
+        }
 
         $where = [
             'NFRMNO' => $nfrmno,
@@ -343,7 +388,7 @@ class Main extends MY_Controller
         }
 
         $companies = json_decode($_POST['companies'], true);
-        $files = isset($_FILES['company_files']) ? $_FILES['company_files'] : null;
+        $files     = isset($_FILES['company_files']) ? $_FILES['company_files'] : null;
 
         $this->ent->delete('GPENT_COMPANY', $where);
         foreach ($companies as $idx => $company) {
@@ -439,7 +484,7 @@ class Main extends MY_Controller
 
     public function preview($filename)
     {
-        $filepath = $this->upload_path . $filename;
+        $filepath = $this->upload_path . rawurldecode($filename);
 
         if (file_exists($filepath)) {
             $mime = mime_content_type($filepath);

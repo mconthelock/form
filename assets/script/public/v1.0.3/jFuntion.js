@@ -100,6 +100,13 @@ export function showMessage(msg, type = "error", position = 'toast-end') {
     });
 }
 
+export function showErrorMessage(message) {
+    showMessage(
+        `${message} Please try again. or contact Tel.2038`,
+        "error"
+    );
+}
+
 
 
 export const ajaxOptionsLoad = {

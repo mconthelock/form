@@ -48,7 +48,9 @@ class Main extends MY_Controller
             $data['form_entertain'] = $form_entertain;
             $this->views('gpform/GP-CLER/Clearance', $data);
         } else {
-            $data['formCler'] = $formCler = $this->clr->get_clearance_form($nfrmno, $vorgno, $cyear, $cyear2, $nrunno)[0];
+            $data['formCler']         = $formCler = $this->clr->get_clearance_form($nfrmno, $vorgno, $cyear, $cyear2, $nrunno)[0];
+            $data['clearance_formno'] = $this->toFormNumber($nfrmno, $vorgno, $cyear, $cyear2, $nrunno);
+            $data['file_attach']      = $this->clr->getFileAttach($nfrmno, $vorgno, $cyear, $cyear2, $nrunno);
 
             $form       = [
                 'NFRMNO' => $nfrmno,
@@ -62,14 +64,19 @@ class Main extends MY_Controller
                 $checkReturnb = $this->form->checkReturnb($form, $getEmpFlow[0]->CSTEPNEXTNO);
             }
 
-            $data['expense'] = $this->clr->get_expense($nfrmno, $vorgno, $cyear, $cyear2, $nrunno);
-
+            $data['expense']  = $this->clr->get_expense($nfrmno, $vorgno, $cyear, $cyear2, $nrunno);
+            $data['flowstep'] = $flow = $this->ent->getFlowStep($form, $empno);
+            $data['needPayDate'] = (
+                !empty($flow) &&
+                $flow[0]->CSTEPNO == '87' &&
+                $flow[0]->CSTEPNEXTNO == '00'
+            );
             if (!empty($formCler->FORM_ENT)) {
                 $keyform1 = $this->parseFormNumber($formCler->FORM_ENT);
                 $FrmENT   = $this->clr->getFormMst($keyform1['vaname'])[0];
 
                 $data['ENT_FORM'] = $entform = $this->ent->dataForm($FrmENT->NNO, $FrmENT->VORGNO, $FrmENT->CYEAR, $keyform1['cyear2'], $keyform1['runno'])[0];
-                $empno     = $this->ent->getDataEmp($entform->EMP_REQ);
+                $empno = $this->ent->getDataEmp($entform->EMP_REQ);
                 // $arr_merge = array_merge((array) $entform, (array) $empno);
                 // print_r($empno);
                 $data['estimate_cost']    = $this->ent->get_estimate_cost($FrmENT->NNO, $FrmENT->VORGNO, $FrmENT->CYEAR, $keyform1['cyear2'], $keyform1['runno']);
@@ -95,9 +102,14 @@ class Main extends MY_Controller
                 }
 
             } else {
-                $this->views('gpform/GP-CLER/Clear_report', $data);
+                $this->views('gpform/GP-CLER/Clear_report_new', $data);
             }
         }
+    }
+
+    public function test()
+    {
+        $this->views('gpform/GP-CLER/Clear_report_new');
     }
 
     public function Clearance_form()
@@ -106,9 +118,11 @@ class Main extends MY_Controller
         $FrmCLR    = $this->clr->getFormMst('GP-CLER')[0];
         $formno    = explode("/", $this->input->post('form_no'));
         $empcode   = $this->input->post("empcode");
+        $inputer   = $this->input->post('inputer');
         $entertain = $this->input->post('no_entertain');
 
         $data['empcode'] = $empcode;
+        $data['inputer'] = $inputer;
         $data['NFRMNO']  = $FrmCLR->NNO;
         $data['VORGNO']  = $FrmCLR->VORGNO;
         $data['CYEAR']   = $FrmCLR->CYEAR;
@@ -149,12 +163,13 @@ class Main extends MY_Controller
 
         // print_r($post);
 
+        // print_r($_FILES);
         // print_r(json_decode($post['expense']));
 
 
         if ($post['p_join'] == "1") {
             $getEmp = $this->ent->get_orgpos("040101", "10")[0]; // RAF DIM
-        }else{
+        } else {
             $getEmp = $this->ent->get_orgpos("020101", "02")[0]; // PRESIDENT
         }
         $this->updateFlowApv("", $getEmp->VEMPNO, $post['nfrmno'], $post['vorgno'], $post['cyear'], $post['cyear2'], $post['nrunno'], "01", "00");
@@ -168,8 +183,8 @@ class Main extends MY_Controller
             'ACTUAL_COST'    => $post['actual_cost'],
             'REMAIN_BUDGET'  => $post['remain'],
             'REMARK'         => $post['remark'],
-            'EMP_INPUT'      => $post['empcode'],
-            'EMP_REQ'        => $post['empcode'],
+            'EMP_INPUT'      => $post['inputer'],
+            'EMP_REQ'        => $post['requester'],
             'FORM_ENT'       => $post['formnumber']
         ];
 
@@ -179,6 +194,36 @@ class Main extends MY_Controller
                 $data['RECEIPT_FILE'] = $file['file_name'];
             }
         }
+
+        if (isset($_FILES['file_group'])) {
+            $fileGroup = $_FILES['file_group'];
+            foreach ($fileGroup['name'] as $i => $name) {
+                if ($fileGroup['error'][$i] === UPLOAD_ERR_OK) {
+                    $oneFile = [
+                        'name'     => $name,
+                        'type'     => $fileGroup['type'][$i],
+                        'tmp_name' => $fileGroup['tmp_name'][$i],
+                        'error'    => $fileGroup['error'][$i],
+                        'size'     => $fileGroup['size'][$i]
+                    ];
+                    $file    = $this->uploadFile($oneFile);
+                    if ($file['status'] == '1') {
+                        print_r($file);
+                        $data_file = [
+                            'NFRMNO'    => $post['nfrmno'],
+                            'VORGNO'    => $post['vorgno'],
+                            'CYEAR'     => $post['cyear'],
+                            'CYEAR2'    => $post['cyear2'],
+                            'NRUNNO'    => $post['nrunno'],
+                            'FILE_NAME' => $file['file_name'],
+                            'FILE_PATH' => $file['file_path'],
+                        ];
+                        $this->clr->insert('GPCLER_FILE', $data_file);
+                    }
+                }
+            }
+        }
+
 
         foreach (json_decode($post['expense']) as $key => $value) {
             $data_expense = [
@@ -216,7 +261,7 @@ class Main extends MY_Controller
 
         if ($post['p_join'] == "1") {
             $getEmp = $this->ent->get_orgpos("040101", "10")[0]; // RAF DIM
-        }else{
+        } else {
             $getEmp = $this->ent->get_orgpos("020101", "02")[0]; // PRESIDENT
         }
         $this->updateFlowApv("", $getEmp->VEMPNO, $nfrmno, $vorgno, $cyear, $cyear2, $nrunno, "18", "00");
@@ -393,7 +438,7 @@ class Main extends MY_Controller
 
     public function preview($filename)
     {
-        $filepath = $this->upload_path . $filename;
+        $filepath = $this->upload_path . rawurldecode($filename);
 
         if (file_exists($filepath)) {
             $mime = mime_content_type($filepath);
@@ -616,6 +661,49 @@ class Main extends MY_Controller
         }
 
         $this->clr->update('GPCLER_FORM', $data_cler, $where);
+    }
+
+    public function getformEmp()
+    {
+        $frmmst         = $this->form->getFormMaster('GP-CLER');
+        $empno          = $this->input->post('empno');
+        $vorgno         = $frmmst[0]->VORGNO;
+        $cyear          = $frmmst[0]->CYEAR;
+        $ent_frmno      = $this->_servername() == 'amecweb' ? '17' : '9';
+        $form_entertain = $this->clr->get_entertain_formEMP($ent_frmno, $vorgno, $cyear, $empno);
+        foreach ($form_entertain as &$item) {
+            $item->form_number = $this->toFormNumber(
+                $item->NFRMNO,
+                $item->VORGNO,
+                $item->CYEAR,
+                $item->CYEAR2,
+                $item->NRUNNO
+            );
+        }
+
+        echo json_encode($form_entertain);
+    }
+
+    public function UpdatePayDate()
+    {
+        $nfrmno  = $this->input->post('nfrmno');
+        $vorgno  = $this->input->post('vorgno');
+        $cyear   = $this->input->post('cyear');
+        $cyear2  = $this->input->post('cyear2');
+        $nrunno  = $this->input->post('nrunno');
+        $paydate = $this->input->post('pay_date');
+        $where   = [
+            'NFRMNO' => $nfrmno,
+            'VORGNO' => $vorgno,
+            'CYEAR'  => $cyear,
+            'CYEAR2' => $cyear2,
+            'NRUNNO' => $nrunno
+        ];
+        $data    = [
+            'PAYDATE' => "TO_DATE('{$paydate}', 'YYYY-MM-DD')"
+        ];
+        $this->ent->update('GPCLER_FORM', [], $where, $data);
+
     }
 
 

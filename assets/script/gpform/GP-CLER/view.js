@@ -8,25 +8,83 @@ $(document).ready(async function () {
 
   const formData = $(".form-data").data();
   const { nfrmno, vorgno, cyear, cyear2, nrunno, empno } = formData;
+  const NEED_PAYDATE = !!$(".form-data").data("need-paydate");
+
+  console.log(NEED_PAYDATE);
+
+  const formEnt = $(".form-ent").data() || {};
+  const { ent_nfrmno, ent_vorgno, ent_cyear, ent_cyear2, ent_nrunno, ent_empno } = formEnt;
 
   const flow = await showFlow(nfrmno, vorgno, cyear, cyear2, nrunno);
   $(".flow").html(flow.html);
 
-  $(".btn-submit").click(async function () {
+  if (ent_nfrmno && ent_vorgno && ent_cyear && ent_cyear2 && ent_nrunno && ent_empno) {
+    const flow_ent = await showFlow(ent_nfrmno, ent_vorgno, ent_cyear, ent_cyear2, ent_nrunno, ent_empno);
+    $(".flow_ent").html(flow_ent.html);
+  }
+
+  function todayYMD() {
+    const d = new Date();
+    const local = new Date(d.getTime() - d.getTimezoneOffset() * 60000);
+    return local.toISOString().slice(0, 10); // YYYY-MM-DD
+  }
+
+  $(".btn-submit").on("click", async function () {
     const action = $(this).data("action");
     const remark_approve = $("#remark_approve").val();
 
-    const confirm = await doaction(
-      nfrmno,
-      vorgno,
-      cyear,
-      cyear2,
-      nrunno,
-      action,
-      empno,
-      remark_approve
-    );
-    if (confirm.status) redirectWebflow();
+    if (action === "approve" && NEED_PAYDATE) {
+      const $payInput = $("#pay_date");
+      let payDate = ""; // ← ใช้ let
+
+      if ($payInput.length > 0) {
+        // มี input ให้ผู้อนุมัติกรอกเอง
+        payDate = ($payInput.val() || "").trim();
+        if (!payDate) {
+          await Swal.fire({
+            icon: "warning",
+            title: "กรุณากรอก Pay Date",
+            showConfirmButton: true,
+          });
+          return;
+        }
+      } else {
+        // ไม่มี input → default เป็น “วันนี้”
+        payDate = todayYMD();
+      }
+
+      try {
+        $("#loading-overlay").show();
+        await $.ajax({
+          type: "POST",
+          url: host + "gpform/GP-CLER/main/UpdatePayDate",
+          data: {
+            nfrmno,
+            vorgno,
+            cyear,
+            cyear2,
+            nrunno,
+            empno,
+            pay_date: payDate,
+          },
+        });
+      } catch (xhr) {
+        await Swal.fire({
+          icon: "error",
+          title: "เกิดข้อผิดพลาดในการบันทึก Pay Date",
+          text: xhr?.responseText || "",
+          showConfirmButton: true,
+        });
+        $("#loading-overlay").hide();
+        return;
+      } finally {
+        $("#loading-overlay").hide();
+      }
+    }
+
+    // ทำ action ต่อ
+    const result = await doaction(nfrmno, vorgno, cyear, cyear2, nrunno, action, empno, remark_approve);
+    if (result?.status) redirectWebflow();
   });
 
   // $(".remark").each(function () {
@@ -147,16 +205,7 @@ $(document).ready(async function () {
           showConfirmButton: false,
           timer: 2000,
         });
-        const confirm = await doaction(
-          nfrmno,
-          vorgno,
-          cyear,
-          cyear2,
-          nrunno,
-          "approve",
-          empno,
-          ""
-        );
+        const confirm = await doaction(nfrmno, vorgno, cyear, cyear2, nrunno, "approve", empno, "");
         if (confirm.status) redirectWebflow();
         // location.reload();
       },
@@ -178,24 +227,14 @@ $(document).ready(async function () {
     e.preventDefault();
 
     // --- Basic info validation ---
-    if ($("#input-by").val().trim() === "")
-      return showInputToast("#input-by", "กรุณากรอก Input By");
-    if ($("#requested-by").val().trim() === "")
-      return showInputToast("#requested-by", "กรุณากรอก Request By");
-    if ($("#entertain-date").val().trim() === "")
-      return showInputToast("#entertain-date", "กรุณากรอก Entertainment Date");
-    if ($("#purpose").val().trim() === "")
-      return showInputToast("#purpose", "กรุณาเลือกเหตุผลสำหรับ Entertain");
+    if ($("#input-by").val().trim() === "") return showInputToast("#input-by", "กรุณากรอก Input By");
+    if ($("#requested-by").val().trim() === "") return showInputToast("#requested-by", "กรุณากรอก Request By");
+    if ($("#entertain-date").val().trim() === "") return showInputToast("#entertain-date", "กรุณากรอก Entertainment Date");
+    if ($("#purpose").val().trim() === "") return showInputToast("#purpose", "กรุณาเลือกเหตุผลสำหรับ Entertain");
 
-    if (!$("input[name='time']:checked").val())
-      return showRadioToast("input[name='time']", "กรุณาเลือกช่วงเวลา");
-    if (!$("input[name='location']:checked").val())
-      return showRadioToast("input[name='location']", "กรุณาเลือกสถานที่");
-    if (
-      $("input[name='location']:checked").val() === "Outside" &&
-      $("#location_detail").val().trim() === ""
-    )
-      return showInputToast("#location_detail", "กรุณากรอกรายละเอียด Location");
+    if (!$("input[name='time']:checked").val()) return showRadioToast("input[name='time']", "กรุณาเลือกช่วงเวลา");
+    if (!$("input[name='location']:checked").val()) return showRadioToast("input[name='location']", "กรุณาเลือกสถานที่");
+    if ($("input[name='location']:checked").val() === "Outside" && $("#location_detail").val().trim() === "") return showInputToast("#location_detail", "กรุณากรอกรายละเอียด Location");
 
     // --- เพิ่มส่วน validation แบบเดิม (president_join, actual_cost, remain, remark, receipt) ---
     const p_join = $("input[name='president_join']:checked").val();
@@ -219,9 +258,7 @@ $(document).ready(async function () {
       const fileInput = $g.find('input[type="file"]')[0];
 
       // << ประกาศตรงนี้เลย ไม่ต้องประกาศใน if
-      const hasCurrentFile =
-        $g.find(".current-file").is(":visible") &&
-        $g.find(".current-file").html().trim() !== "";
+      const hasCurrentFile = $g.find(".current-file").is(":visible") && $g.find(".current-file").html().trim() !== "";
       const hasNewFile = fileInput.files && fileInput.files.length > 0;
 
       if (!name) {
@@ -250,9 +287,7 @@ $(document).ready(async function () {
         name: name,
         orgType: orgType,
         fileName: hasNewFile ? fileInput.files[0].name : null,
-        current_file: hasCurrentFile
-          ? $g.find(".current-file a").text().trim()
-          : "",
+        current_file: hasCurrentFile ? $g.find(".current-file a").text().trim() : "",
       });
     });
 
@@ -273,8 +308,7 @@ $(document).ready(async function () {
         timer: 3000,
       });
 
-    if (!$(".guest_type:checked").val())
-      return showCheckboxToast(".guest_type", "กรุณาเลือก Guest Type");
+    if (!$(".guest_type:checked").val()) return showCheckboxToast(".guest_type", "กรุณาเลือก Guest Type");
 
     // --- Table estimate validation ---
     let costValid = false;
@@ -290,10 +324,7 @@ $(document).ready(async function () {
     });
     if (!remarkValid) return;
     if (!costValid) {
-      showInputToast(
-        "#table_cost tbody tr:first td:eq(0) select",
-        "กรุณากรอก Estimate อย่างน้อย 1 "
-      );
+      showInputToast("#table_cost tbody tr:first td:eq(0) select", "กรุณากรอก Estimate อย่างน้อย 1 ");
       $("#alert-estimate").removeClass("hidden");
       $("#table_cost tbody tr:first td:eq(0) select").focus();
       setTimeout(() => $("#alert-estimate").addClass("hidden"), 5000);
@@ -301,22 +332,12 @@ $(document).ready(async function () {
     }
 
     // --- Participant validation ---
-    if (guestCount() < 1)
-      return showInputToast(
-        "#guest-name-input",
-        "กรุณากรอก guest อย่างน้อย 1 คน"
-      );
-    if (amecCount() < 1)
-      return showInputToast("#amec-name-input", "กรุณากรอกพนักงาน Amec 1 คน");
-    if (amecCount() > guestCount() && $("#remark").val() == "")
-      return showInputToast("#remark", "กรณีคน Amec มากกว่ากรุณากรอก Remark");
+    if (guestCount() < 1) return showInputToast("#guest-name-input", "กรุณากรอก guest อย่างน้อย 1 คน");
+    if (amecCount() < 1) return showInputToast("#amec-name-input", "กรุณากรอกพนักงาน Amec 1 คน");
+    if (amecCount() > guestCount() && $("#remark").val() == "") return showInputToast("#remark", "กรณีคน Amec มากกว่ากรุณากรอก Remark");
 
     // Validate president_join
-    if (!p_join)
-      return showRadioToast(
-        "input[name='president_join']",
-        "กรุณาเลือก President Join"
-      );
+    if (!p_join) return showRadioToast("input[name='president_join']", "กรุณาเลือก President Join");
     // Validate actual_cost (required & number & >= 0)
     if (!actual_cost || isNaN(actual_cost) || parseFloat(actual_cost) < 0) {
       return showInputToast("#actual-cost", "กรุณากรอก Actual Cost");
@@ -360,18 +381,9 @@ $(document).ready(async function () {
     formData.append("requested_by", $("#requested-by").val());
     formData.append("entertain_date", $("#entertain-date").val());
     formData.append("purpose", $("#purpose").val());
-    formData.append(
-      "time",
-      $("input[name='time']:checked").next("span").text()
-    );
-    formData.append(
-      "location",
-      $("input[name='location']:checked").next("span").text()
-    );
-    formData.append(
-      "location_detail",
-      $("input[placeholder='*Please identify the location.']").val()
-    );
+    formData.append("time", $("input[name='time']:checked").next("span").text());
+    formData.append("location", $("input[name='location']:checked").next("span").text());
+    formData.append("location_detail", $("input[placeholder='*Please identify the location.']").val());
     formData.append("guest_type", $(".guest_type:checked").val());
     // formData.append("org_type", $("input[name='orgType']:checked").val());
     formData.append("entertain_budget", $("#entertain-budget").val());
@@ -379,9 +391,7 @@ $(document).ready(async function () {
     formData.append("remark", $("textarea[placeholder*='ระบุเหตุผล']").val());
     formData.append("companies", JSON.stringify(companiesArray));
     companiesArray.forEach((c, i) => {
-      let fileInput = $("#companies-container .company-group")
-        .eq(i)
-        .find('input[type="file"]')[0];
+      let fileInput = $("#companies-container .company-group").eq(i).find('input[type="file"]')[0];
       if (fileInput && fileInput.files.length > 0) {
         formData.append(`company_files[${i}]`, fileInput.files[0]);
       }
@@ -424,8 +434,7 @@ $(document).ready(async function () {
       let cost = $(this).find("td:eq(2) input").val();
       let total = $(this).find("td:eq(3) input").val();
       let remark = $(this).find("td:eq(4) input").val();
-      if (details && qty && cost && total)
-        estimate_items.push({ details, qty, cost, total, remark });
+      if (details && qty && cost && total) estimate_items.push({ details, qty, cost, total, remark });
     });
     formData.append("estimate_items", JSON.stringify(estimate_items));
 
@@ -445,16 +454,7 @@ $(document).ready(async function () {
         $("#loading-overlay").show();
       },
       success: async function (response) {
-        const confirm = await doaction(
-          nfrmno,
-          vorgno,
-          cyear,
-          cyear2,
-          nrunno,
-          "approve",
-          empno,
-          ""
-        );
+        const confirm = await doaction(nfrmno, vorgno, cyear, cyear2, nrunno, "approve", empno, "");
         if (confirm.status) redirectWebflow();
         Swal.fire({
           toast: true,
@@ -484,17 +484,12 @@ $(document).ready(async function () {
   });
 
   $("input[name='president_join']").on("change", function () {
-    $("input[name='president_join']")
-      .removeClass("radio-error")
-      .addClass("radio-success");
+    $("input[name='president_join']").removeClass("radio-error").addClass("radio-success");
   });
 
-  $("#actual-cost, #receipt, #reason, #file-memo").on(
-    "input change",
-    function () {
-      clearFieldError(this.id);
-    }
-  );
+  $("#actual-cost, #receipt, #reason, #file-memo").on("input change", function () {
+    clearFieldError(this.id);
+  });
 
   $("#receipt").on("change", function () {
     $("#receipt").removeClass("input-error");

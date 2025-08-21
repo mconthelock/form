@@ -27,16 +27,17 @@ $(function () {
   };
 
   function validateAmecLimit() {
-    const guestType = getGuestType();
-    if (RESTRICTED_TYPES.includes(guestType)) {
-      $("#add-amec-btn").prop("disabled", amecCount() >= guestCount() && guestCount() > 0);
-      if (amecCount() > guestCount()) {
-        $("#amec-list li").slice(guestCount()).remove();
-        updateCount("amec");
-      }
-    } else {
-      updateCount("amec");
-    }
+    // const guestType = getGuestType();
+    // if (RESTRICTED_TYPES.includes(guestType)) {
+    //   $("#add-amec-btn").prop("disabled", amecCount() >= guestCount() && guestCount() > 0);
+    //   if (amecCount() > guestCount()) {
+    //     $("#amec-list li").slice(guestCount()).remove();
+    //     updateCount("amec");
+    //   }
+    // } else {
+    //   updateCount("amec");
+    // }
+    updateCount("amec");
   }
 
   // -------- Add/Remove Guest/Amec --------
@@ -66,8 +67,9 @@ $(function () {
       alert("ไม่พบรหัส พนักงาน");
       return;
     }
-    const guestType = getGuestType();
-    if ((RESTRICTED_TYPES.includes(guestType) && amecCount() >= guestCount() && guestCount() > 0) || (!RESTRICTED_TYPES.includes(guestType) && amecCount() >= AMEC_MAX)) return;
+    // const guestType = getGuestType();
+    // if ((RESTRICTED_TYPES.includes(guestType) && amecCount() >= guestCount() && guestCount() > 0) || (!RESTRICTED_TYPES.includes(guestType) && amecCount() >= AMEC_MAX)) return;
+    if (amecCount() >= AMEC_MAX) return;
     $("#amec-list").append(
       `<li class="flex items-center justify-between gap-2 border border-blue-200 bg-blue-50 shadow-sm rounded-lg px-3 py-1">
         <span data-empno="${empData[0].SEMPNO}">${empData[0].SEMPPRE} ${empData[0].SNAME} (${empData[0].SEMPNO})</span>
@@ -124,6 +126,14 @@ $(function () {
 
     if ($("input[name='location']:checked").val() === "Outside" && $("#location_detail").val().trim() === "") return showInputToast("#location_detail", "กรุณากรอกรายละเอียด Location");
 
+    // --- Memo file required if memo section is visible ---
+    if ($("#attach-memo-section").is(":visible")) {
+      var memoFileInput = $("#file-memo")[0];
+      if (!memoFileInput || memoFileInput.files.length === 0) {
+        showInputToast("#file-memo", "กรุณาแนบไฟล์ Memo");
+        return;
+      }
+    }
     // --- Company Validation ---
     let companiesArray = [];
     let companyValid = true,
@@ -241,6 +251,14 @@ $(function () {
         formData.append(`company_files[${i}]`, fileInput.files[0]);
       }
     });
+
+    // แนบไฟล์ Memo ถ้ามี
+    if ($("#attach-memo-section").is(":visible")) {
+      var memoFileInput = $("#file-memo")[0];
+      if (memoFileInput && memoFileInput.files.length > 0) {
+        formData.append("file_memo", memoFileInput.files[0]);
+      }
+    }
 
     // แนบไฟล์
     // if ($("#file-attachment2")[0].files.length > 0) formData.append("file2", $("#file-attachment2")[0].files[0]);
@@ -408,8 +426,21 @@ $(document).on("change input", ".estimate-type, .quantity", function () {
     $remark.prop("disabled", true);
     $remark.removeClass("input-error");
   }
-  console.log(etCost);
-  console.log(quantity);
+  // Check if any row exceeds limit and toggle memo section
+  let showMemo = false;
+  $("#table_cost tbody tr").each(function () {
+    const etCostRow = Number($(this).find(".estimate-type option:selected").data("cost"));
+    const quantityRow = Number($(this).find(".quantity").val());
+    if (quantityRow > etCostRow) {
+      showMemo = true;
+      return false; // break loop
+    }
+  });
+  if (showMemo) {
+    $("#attach-memo-section").show();
+  } else {
+    $("#attach-memo-section").hide();
+  }
 });
 
 window.clearFieldError = function (inputId) {

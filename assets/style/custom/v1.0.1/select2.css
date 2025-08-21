@@ -15,6 +15,12 @@
     --height-lg: 3rem; /* 48px */
     --height-xl: 3.5rem; /* 56px */
 
+    --avatar-xs: 1rem; /* 16px */
+    --avatar-sm: 1.5rem; /* 24px */
+    --avatar-base: 2rem; /* 32px */
+    --avatar-lg: 2.5rem; /* 40px */
+    --avatar-xl: 3rem; /* 48px */
+
     --select2-font-size: var(--font-size-base);
     --select2-height: var(--height-base);
 
@@ -115,4 +121,21 @@
     /* @apply bg-primary !text-white; */
     background-color: var(--select2-bg-option) !important;
     color: var(--select2-color-option) !important;
+}
+
+.select2-xs .avatar div{
+    width: var(--avatar-xs);
+    height: var(--avatar-xs);
+}
+.select2-sm .avatar div{
+    width: var(--avatar-sm);
+    height: var(--avatar-sm);
+}
+.select2-lg .avatar div{
+    width: var(--avatar-lg);
+    height: var(--avatar-lg);
+}
+.select2-xl .avatar div{
+    width: var(--avatar-xl);
+    height: var(--avatar-xl);
 }

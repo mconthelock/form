@@ -94,13 +94,13 @@
                                 <td class="py-2 pl-4 border-blue-200">{{ $dataForm->LOCATION_TYPE }}</td>
                             </tr>
                             <!-- <tr>
-                                            <th class="text-left text-blue-900 font-semibold py-2 pl-4 border-blue-200 bg-blue-100">Entertainment Budget</th>
-                                            <td class="py-2 pl-4 border-blue-200">{{ $dataForm->ENTERTAINMENT_BUDGET ?? '-' }}</td>
-                                        </tr>
-                                        <tr>
-                                            <th class="text-left text-blue-900 font-semibold py-2 pl-4 border-blue-200 bg-blue-100">Guest Type</th>
-                                            <td class="py-2 pl-4 border-blue-200">{{ $dataForm->TYPE_NAME }}</td>
-                                        </tr> -->
+                                                                                                                                                                                            <th class="text-left text-blue-900 font-semibold py-2 pl-4 border-blue-200 bg-blue-100">Entertainment Budget</th>
+                                                                                                                                                                                            <td class="py-2 pl-4 border-blue-200">{{ $dataForm->ENTERTAINMENT_BUDGET ?? '-' }}</td>
+                                                                                                                                                                                        </tr>
+                                                                                                                                                                                        <tr>
+                                                                                                                                                                                            <th class="text-left text-blue-900 font-semibold py-2 pl-4 border-blue-200 bg-blue-100">Guest Type</th>
+                                                                                                                                                                                            <td class="py-2 pl-4 border-blue-200">{{ $dataForm->TYPE_NAME }}</td>
+                                                                                                                                                                                        </tr> -->
                         </tbody>
                     </table>
 
@@ -214,45 +214,71 @@
                     </div>
                 </div>
 
-                
 
-                <h3 class="font-semibold text-blue-900 mb-2 mt-8">Estimate Cost</h3>
-                <table class="w-full mt-2 table-fixed border-2 border-blue-200 rounded-xl overflow-hidden bg-white">
-                    <thead>
-                        <tr class="bg-blue-200 text-blue-900">
-                            <th class="py-2 px-2 text-center font-semibold border-b-2 border-gray-400">Details</th>
-                            <th class="py-2 px-2 text-center font-semibold border-b-2 border-gray-400">Quantity</th>
-                            <th class="py-2 px-2 text-center font-semibold border-b-2 border-gray-400">Cost / Person</th>
-                            <th class="py-2 px-2 text-center font-semibold border-b-2 border-gray-400">Total</th>
-                            <th class="py-2 px-2 text-center font-semibold border-b-2 border-gray-400">Remark</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @php $sum = 0; @endphp
-                        @foreach ($estimate_cost as $value)
-                            @php $sum += $value->TOTAL_COST; @endphp
-                            <tr class="text-center hover:bg-blue-50">
-                                <td class="py-2 px-2 border-b border-gray-300">{{ $value->DETAILS }}</td>
-                                <td class="py-2 px-2 border-b border-gray-300">{{ $value->QTY }}</td>
-                                <td class="py-2 px-2 border-b border-gray-300">{{ $value->UNIT_COST }}</td>
-                                <td class="py-2 px-2 border-b border-gray-300">{{ number_format($value->TOTAL_COST) }}</td>
-                                <td class="py-2 px-2 border-b border-gray-300">{{ $value->REMARK }}</td>
+
+                <!-- Estimate Cost Section -->
+
+                <h3 class="text-xl font-bold text-blue-900 mb-4 flex items-center gap-2">
+                    Estimate Cost
+                </h3>
+
+                <div class="rounded-2xl shadow-lg overflow-hidden border border-blue-200 bg-white">
+                    <table class="w-full table-auto">
+                        <thead>
+                            <tr class="bg-blue-100 text-blue-900">
+                                <th class="py-3 px-2 font-semibold text-center">Details</th>
+                                <th class="py-3 px-2 font-semibold text-center">Quantity</th>
+                                <th class="py-3 px-2 font-semibold text-center">Cost / Person</th>
+                                <th class="py-3 px-2 font-semibold text-center">Total</th>
+                                <th class="py-3 px-2 font-semibold text-center">Remark</th>
                             </tr>
-                        @endforeach
-                        <tr class="font-semibold bg-blue-100">
-                            <td colspan="3" class="text-right py-2 px-2">Total Amount</td>
-                            <td class="text-center py-2 px-2 text-blue-900" id="total_amount">{{ number_format($sum) }}</td>
-                            <td class="py-2 px-2"></td>
-                        </tr>
-                    </tbody>
-                </table>
-
-                <div class="flex items-center justify-start px-4 py-3 bg-blue-50 border-t border-blue-200 rounded-lg">
-                    <span class="text-blue-900 font-semibold mr-3">Cash Advance :</span>
-                    <span class="inline-flex items-center px-3 py-1 rounded-full font-semibold {{ ($dataForm->REIMBURSEMENT ?? '0') == '1' ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-500' }}">
-                        {{ ($dataForm->REIMBURSEMENT ?? '0') == '1' ? 'Yes' : 'No' }}
-                    </span>
+                        </thead>
+                        <tbody>
+                            @php $sum = 0; @endphp
+                            @foreach ($estimate_cost as $value)
+                                @php $sum += $value->TOTAL_COST; @endphp
+                                <tr class="text-center border-b hover:bg-blue-50 last:border-b-0">
+                                    <td class="py-2 px-2">{{ $value->DETAILS }}</td>
+                                    <td class="py-2 px-2">{{ $value->QTY }}</td>
+                                    <td class="py-2 px-2">{{ $value->UNIT_COST }}</td>
+                                    <td class="py-2 px-2">{{ number_format($value->TOTAL_COST) }}</td>
+                                    <td class="py-2 px-2">{{ $value->REMARK }}</td>
+                                </tr>
+                            @endforeach
+                            <tr class="font-semibold bg-blue-50">
+                                <td colspan="3" class="text-right py-3 px-2 border-t">Total Amount</td>
+                                <td class="text-center py-3 px-2 border-t text-blue-900" id="total_amount">{{ number_format($sum) }}</td>
+                                <td class="py-3 px-2 border-t"></td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
+
+                <div class="mt-5 grid gap-4 grid-cols-1 {{ !empty($dataForm->FILE_MEMO) ? 'md:grid-cols-2' : '' }}">
+                    <!-- Memo File -->
+                    @if(!empty($dataForm->FILE_MEMO))
+                        <div class="flex items-center gap-4 bg-blue-50 rounded-xl border border-blue-200 shadow p-4">
+                            <span class="font-semibold text-blue-900 mb-1">Memo File :</span>
+                            <a href="{{ base_url('gpform/GP-ENT/main/preview/' . $dataForm->FILE_MEMO) }}" class="btn btn-sm text-blue-600 underline text-sm truncate" target="_blank">{{ $dataForm->FILE_MEMO }}</a>
+                        </div>
+                    @endif
+
+                    <!-- Cash Advance -->
+                    <div class="flex items-center gap-4 bg-blue-50 rounded-xl border border-blue-200 shadow p-4">
+                        <span class="font-semibold text-blue-900 mb-1">Cash Advance :</span>
+                        <span class="inline-flex items-center px-4 py-1.5 rounded-full font-semibold w-fit {{ ($dataForm->REIMBURSEMENT ?? '0') == '1' ? 'bg-green-100 text-green-700' : 'bg-gray-100 border border-gray-400 text-gray-700' }}">
+                            {{ ($dataForm->REIMBURSEMENT ?? '0') == '1' ? 'Yes' : 'No' }}
+                        </span>
+                    </div>
+                </div>
+
+                @if ($dataForm->PAYDATE != null)
+                    <div class="overflow-hidden mt-2 rounded-xl border-2 p-3 border-gray-300 bg-orange-100 shadow-sm flex items-center">
+                        <span class="text-blue-900 font-semibold mr-3">PayDate :</span>
+                        <span>{{ $dataForm->PAYDATE ?? "-" }}</span>
+                    </div>                  
+                @endif
+
 
 
 
@@ -280,134 +306,138 @@
                                 <span class="flex items-center gap-2 text-xl font-extrabold {{ $dataForm->FORM_APPROVE == '1' ? 'text-green-600' : 'text-red-500' }}">
                                     @if ($dataForm->FORM_APPROVE == '1')
                                         <svg class="h-7 w-7" fill="currentColor" viewBox="0 0 20 20">
+
                                             <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
                                         </svg>
                                         Accept
                                     @else
                                         <svg class="h-7 w-7" fill="currentColor" viewBox="0 0 20 20">
+
                                             <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
                                         </svg>
                                         Not Accept
                                     @endif
                                 </span>
-                            </div>
-
-                            <!-- Remark (ถ้ามี) -->
-                            @if ($dataForm->REMARK_APPROVE != null)
-                                <div class="flex items-center gap-3">
-                                    <span class="text-orange-500 font-bold">Remark</span>
-                                    <span class="italic text-gray-700 text-base flex-1">{{ $dataForm->REMARK_APPROVE }}</span>
                                 </div>
-                            @endif
 
+                                <!-- Remark (ถ้ามี) -->
+                                @if ($dataForm->REMARK_APPROVE != null)
+                                    <div class="flex items-center gap-3">
+                                               <span class="text-orange-500 font-bold">Remark</span>
+                                        <span class="italic text-gray-700 text-base flex-1">{{ $dataForm->REMARK_APPROVE }}</span>
+                                    </div>
+                                @endif
+
+
+                            </div>
                         </div>
-                    </div>
 
                 @endif
 
-            </div>
-            @if($form[0]->CST == '2')
-                <div class="flex justify-center mt-8">
-                    <button onclick="window.print()" class="btn bg-indigo-600 text-white no-print mb-4 no-print">Print</button>
                 </div>
-            @endif
-            @if ($mode == '02')
-                @if ($flowstep[0]->CSTEPNO == '87' && $flowstep[0]->CSTEPNEXTNO == '00')
-                    <div class="relative flex justify-center mt-4">
-                        <div class="w-full max-w-xs">
-                            <label class="floating-label block">
-                                <span class="block mb-1 font-medium">Pay Date</span>
-                                <div class="relative">
-                                    <input type="date" name="pay_date" id="pay_date" class="input input-bordered border-gray-700 w-full pl-10" placeholder="Select Pay Date" />
-                                    <!-- Heroicon Calendar -->
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-500 absolute left-3 top-1/2 transform -translate-y-1/2 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                    </svg>
-                                </div>
-                            </label>
-                        </div>
+                @if($form[0]->CST == '2')
+                        <div class="flex justify-center mt-8">
+                            <button onclick="window.print()" class="btn bg-indigo-600 text-white no-print mb-4 no-print">Print</button>
                     </div>
-
                 @endif
+                @if ($mode == '02')
+                        @if ($flowstep[0]->CSTEPNO == '87' && $flowstep[0]->CSTEPNEXTNO == '00')
+                            <div class="relative flex justify-center mt-4">
+                                <div class="w-full max-w-xs">
+                                    <label class="floating-label block">
+                                        <span class="block mb-1 font-medium">Pay Date</span>
+                                        <div class="relative">
+                                            <input type="date" name="pay_date" id="pay_date" class="input input-bordered border-gray-700 w-full pl-10" placeholder="Select Pay Date" />
+                                            <!-- Heroicon Calendar -->
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-gray-500 absolute left-3 top-1/2 transform -translate-y-1/2 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                            </svg>
+                                        </div>
+                                    </label>
 
-                @if(strtotime($dataForm->ENTERTAINMENT_DATE) < strtotime(date("d-M-y")) && $flowstep[0]->CSTEPNO == '18')
-
-                    <!-- Open the modal using ID.showModal() method -->
-                    <!-- <button class="btn" onclick="my_modal_1.showModal()">open modal</button> -->
-                    <dialog id="my_modal_1" class="modal">
-                        <div class="modal-box w-11/12 max-w-3xl">
-                            <h3 class="text-lg font-bold"><i class="fa-solid fa-triangle-exclamation text-yellow-500 text-2xl"></i> Message Alert</h3>
-                            <p class="py-4">
-                                This Entertainment form, requested on <span class="text-red-500 font-semibold">{{$dataForm->ENTERTAINMENT_DATE}}</span>, was not approved before the event date. Please review and provide your approval by selecting either <span class="text-green-700 font-semibold">'Accept'</span> or <span class="text-red-700 font-semibold">'Not Accept'</span>.
-                            </p>
-                            <p class="py-4">
-                                For your information.
-                            </p>
-                            <p>
-                                (Refer: RAF Practical Regulation : RAF-PR-G-068).
-                            </p>
-                            <div class="modal-action">
-                                <form method="dialog">
-                                    <!-- if there is a button in form, it will close the modal -->
-                                    <button class="btn">Close</button>
-                                </form>
-                            </div>
-                        </div>
-                    </dialog>
-
-                    <div class="border-2 border-orange-500 bg-orange-50 mt-3 p-3 rounded-lg">
-                        <span class="text-xl font-semibold">
-                            *Please consider your approval by selecting accept or not accept. This form wasn’t approved before the entertainment date.
-                        </span>
-                        <div class="flex w-full gap-4">
-                            <!-- Radio options -->
-                            <div class="w-1/4 flex flex-col justify-center">
-                                <div class="flex items-center mt-6 mb-2 pl-6">
-                                    <input type="radio" name="accept" id="accept" class="checkbox checkbox-primary bg-white" value="1" />
-                                    <label for="accept" class="ml-3 cursor-pointer text-black">Accept</label>
-                                </div>
-                                <div class="flex items-center mb-2 pl-6">
-                                    <input type="radio" name="accept" id="notaccept" class="checkbox checkbox-primary bg-white" value="0" />
-                                    <label for="notaccept" class="ml-3 cursor-pointer text-black">Not Accept</label>
                                 </div>
                             </div>
-                            <!-- Remark inputs -->
-                            <div class="w-3/4 flex flex-col justify-center">
-                                <div class="flex items-center mt-6 mb-2">
-                                    <label for="accept_remark" class="bg-amber-300 rounded-md p-1 mr-2 w-28 text-center">Remark:</label>
-                                    <input type="text" id="accept_remark" name="accept_remark" class="input input-bordered rounded-lg flex-1" placeholder="If any" disabled />
-                                </div>
-                                <div class="flex items-center mb-2">
-                                    <label for="notaccept_remark" class="bg-amber-300 rounded-md p-1 mr-2 w-28 text-center">*Remark:</label>
-                                    <input type="text" id="notaccept_remark" name="notaccept_remark" class="input input-bordered rounded-lg flex-1" placeholder="*Please identify the reason" disabled />
-                                </div>
-                            </div>
-                        </div>
 
+                        @endif
+
+                        @if(strtotime($dataForm->ENTERTAINMENT_DATE) < strtotime(date("d-M-y")) && $flowstep[0]->CSTEPNO == '18')
+
+                            <!-- Open the modal using ID.showModal() method -->
+                            <!-- <button class="btn" onclick="my_modal_1.showModal()">open modal</button> -->
+                            <dialog id="my_modal_1" class="modal">
+                                <div class="modal-box w-11/12 max-w-3xl">
+                                    <h3 class="text-lg font-bold"><i class="fa-solid fa-triangle-exclamation text-yellow-500 text-2xl"></i> Message Alert</h3>
+                                    <p class="py-4">
+                                        This Entertainment form, requested on <span class="text-red-500 font-semibold">{{$dataForm->ENTERTAINMENT_DATE}}</span>, was not approved before the event date. Please review and provide your approval by selecting either <span class="text-green-700 font-semibold">'Accept'</span> or <span class="text-red-700 font-semibold">'Not Accept'</span>.
+                                    </p>
+                                    <p class="py-4">
+                                        For your information.
+                                    </p>
+                                    <p>
+                                        (Refer: RAF Practical Regulation : RAF-PR-G-068).
+                                    </p>
+                                    <div class="modal-action">
+                                        <form method="dialog">
+                                            <!-- if there is a button in form, it will close the modal -->
+                                            <button class="btn">Close</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </dialog>
+
+                            <div class="border-2 border-orange-500 bg-orange-50 mt-3 p-3 rounded-lg">
+                                <span class="text-xl font-semibold">
+                                    *Please consider your approval by selecting accept or not accept. This form wasn’t approved before the entertainment date.
+                                </span>
+                                <div class="flex w-full gap-4">
+                                    <!-- Radio options -->
+                                    <div class="w-1/4 flex flex-col justify-center">
+                                        <div class="flex items-center mt-6 mb-2 pl-6">
+                                            <input type="radio" name="accept" id="accept" class="checkbox checkbox-primary bg-white" value="1" />
+                                            <label for="accept" class="ml-3 cursor-pointer text-black">Accept</label>
+                                        </div>
+                                        <div class="flex items-center mb-2 pl-6">
+                                            <input type="radio" name="accept" id="notaccept" class="checkbox checkbox-primary bg-white" value="0" />
+                                            <label for="notaccept" class="ml-3 cursor-pointer text-black">Not Accept</label>
+                                        </div>
+                                    </div>
+                                    <!-- Remark inputs -->
+                                    <div class="w-3/4 flex flex-col justify-center">
+                                        <div class="flex items-center mt-6 mb-2">
+                                            <label for="accept_remark" class="bg-amber-300 rounded-md p-1 mr-2 w-28 text-center">Remark:</label>
+                                            <input type="text" id="accept_remark" name="accept_remark" class="input input-bordered rounded-lg flex-1" placeholder="If any" disabled />
+                                        </div>
+                                        <div class="flex items-center mb-2">
+                                            <label for="notaccept_remark" class="bg-amber-300 rounded-md p-1 mr-2 w-28 text-center">*Remark:</label>
+                                            <input type="text" id="notaccept_remark" name="notaccept_remark" class="input input-bordered rounded-lg flex-1" placeholder="*Please identify the reason" disabled />
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+
+                        @endif
+
+                            <div class="flex justify-center mt-6 space-x-4">
+                                <input type="hidden" class="cstepno" value="{{ $flowstep[0]->CSTEPNO }}" />
+                                <input type="hidden" class="cstepnextno" value="{{ $flowstep[0]->CSTEPNEXTNO }}" />
+                                <button type="button" class="btn btn-success w-32 transition btn-submit" data-action="approve" id="btn-confirm">
+                                    Approve
+                                </button>
+                                <button type="button" class="btn btn-error w-32 transition btn-submit" data-action="reject">
+                                Reject
+                                </button>
+                                @if ($flowstep[0]->CSTEPNO == '19' && $flowstep[0]->CSTEPNEXTNO == '18')
+                                        <button type="button" class="btn btn-info w-32 transition btn-submit" data-action="return">
+                                    Return
+                                    </button>
+                                @endif
+                            </div>
+
+                                <div class="flex justify-center mt-4 no-print">
+                            <textarea name="" id="remark_approve" class="textarea textarea-bordered rounded-lg w-full max-w-lg" rows="2" placeholder="Remark..."></textarea>
                     </div>
-
                 @endif
-
-                <div class="flex justify-center mt-6 space-x-4">
-                    <input type="hidden" class="cstepno" value="{{ $flowstep[0]->CSTEPNO }}" />
-                    <input type="hidden" class="cstepnextno" value="{{ $flowstep[0]->CSTEPNEXTNO }}" />
-                    <button type="button" class="btn btn-success w-32 transition btn-submit" data-action="approve" id="btn-confirm">
-                        Approve
-                    </button>
-                    <button type="button" class="btn btn-error w-32 transition btn-submit" data-action="reject">
-                        Reject
-                    </button>
-                    @if ($flowstep[0]->CSTEPNO == '19' && $flowstep[0]->CSTEPNEXTNO == '18')
-                        <button type="button" class="btn btn-info w-32 transition btn-submit" data-action="return">
-                            Return
-                        </button>
-                    @endif
-                </div>
-
-                <div class="flex justify-center mt-4 no-print">
-                    <textarea name="" id="remark_approve" class="textarea textarea-bordered rounded-lg w-full max-w-lg" rows="2" placeholder="Remark..."></textarea>
-                </div>
-            @endif
 
 
 
@@ -416,9 +446,9 @@
             </div>
 
         </div>
-    </div>
+            </div>
 @endsection
 
-@section('scripts')
-    <script src="{{ $_ENV['APP_JS'] }}/requestEntertainView.js?ver={{ $GLOBALS['version'] }}"></script>
-@endsection
+    @section('scripts')
+        <script src="{{ $_ENV['APP_JS'] }}/requestEntertainView.js?ver={{ $GLOBALS['version'] }}"></script>
+    @endsection
