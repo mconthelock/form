@@ -18,8 +18,14 @@ var camera;
 $(document).ready(async function () {
   await showLoader(true);
   await createCarousel("login");
+
+  const id = $("#appid").val();
+  const apps = await getApp(id);
+  console.log(`appid: ${id}, data: ${apps}`);
+
   if ($("#appid").val() != "1") $("#webflow-link").removeClass("hidden");
   $(".loginform:visible").find("input").first().focus();
+  await showLoader(false);
   //Test Socket.io
   //   console.log("Frontend application loaded!");
   //   console.log(process.env.APP_API);
@@ -52,8 +58,6 @@ $(document).ready(async function () {
   //     }
   // });
   //   });
-
-  await showLoader(false);
 });
 
 $(document).on("click", ".toggle-login", function (e) {
