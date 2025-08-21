@@ -65,8 +65,6 @@ module.exports = {
 
     //VMS
     vms: "./assets/script/marform/MAR-VMS/index.js", //manage page
-   
-
   },
   output: {
     filename: "[name].js",
