@@ -7,6 +7,7 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <meta name="base_url" content="{{ base_url() }}">
     <meta name="appname" content="{{ $_ENV['APP_NAME'] }}">
+    <meta name="appstatus" content="{{ $_ENV['STATE'] }}">
     <meta name="theme-color" content="#C0C0C0">
     <link rel="manifest" href="{{ base_url() }}manifest.json">
     <link rel="shortcut icon" href="{{ base_url() }}assets/images/favicon.ico">
@@ -18,17 +19,20 @@
     <script src="{{ base_url() }}script.js?ver={{ $_ENV['VERSION'] }}"></script>
     <script>
         const host = document.querySelector('meta[name="base_url"]').content;
-        const isdomain = host.indexOf("mitsubishielevatorasia.co.th");
-        var s = host.split("/");
-        if (isdomain == -1) {
-            window.location = "https://" + s[2] + ".mitsubishielevatorasia.co.th/" + s[3];
-        }
+        const status = document.querySelector('meta[name="appstatus"]').content;
+        if (status != 'local') {
+            const isdomain = host.indexOf("mitsubishielevatorasia.co.th");
+            var s = host.split("/");
+            if (isdomain == -1) {
+                window.location = "https://" + s[2] + ".mitsubishielevatorasia.co.th/" + s[3];
+            }
 
-        const currenturl = window.location.href;
-        const protocol = window.location.protocol;
-        if (protocol == 'http:') {
-            const url = currenturl.replace(protocol, 'https:')
-            window.location.href = url;
+            const currenturl = window.location.href;
+            const protocol = window.location.protocol;
+            if (protocol == 'http:') {
+                const url = currenturl.replace(protocol, 'https:')
+                window.location.href = url;
+            }
         }
 
         var iscookie = '';
