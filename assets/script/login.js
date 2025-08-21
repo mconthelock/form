@@ -108,7 +108,7 @@ $(document).on("submit", "#passwordLogin", async function (e) {
     return;
   }
   const url = await successLogin(user);
-  window.location.href = url;
+  //window.location.href = url;
   //await setSession(user.message);
   //const apps = user.message.apps;
   //const location = apps.APP_LOCATION;
