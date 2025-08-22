@@ -69,8 +69,8 @@ class Authen extends MY_Controller {
     }
 
     public function logout(){
-        unset($_SESSION['user']);
-		unset($_SESSION['profile-img']);
+        // unset($_SESSION['user']);
+		// unset($_SESSION['profile-img']);
 		redirect('/');
     }
 

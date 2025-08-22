@@ -1,28 +1,18 @@
+import "@flaticon/flaticon-uicons/css/all/all.css";
 import Cookies from "js-cookie";
 import { io } from "socket.io-client";
 import { BrowserMultiFormatReader } from "@zxing/browser";
-import {
-  createCarousel,
-  sendSession,
-  showLoader,
-  host,
-  uri,
-  showMessage,
-} from "./utils";
+import { sendSession, showLoader, host, uri, showMessage } from "./utils";
 import { getApp } from "./indexDB/application";
 import { setApplication } from "./indexDB/setIndexDB";
 import { setImage, setInfo } from "./indexDB/employee";
 import { directlogin, passwordLogin } from "./webservice";
+import { createCarousel } from "./api/gpreport/news";
 
 var camera;
 $(document).ready(async function () {
   await showLoader(true);
   await createCarousel("login");
-
-  const id = $("#appid").val();
-  const apps = await getApp(id);
-  console.log(`appid: ${id}, data: ${apps}`);
-
   if ($("#appid").val() != "1") $("#webflow-link").removeClass("hidden");
   $(".loginform:visible").find("input").first().focus();
   await showLoader(false);
@@ -58,6 +48,22 @@ $(document).ready(async function () {
   //     }
   // });
   //   });
+});
+
+$(document).on("click", "#show-password", function (e) {
+  e.preventDefault();
+  const status = $(this).hasClass("show-password");
+  if (status) {
+    $(this).closest("label").find("input").attr("type", "text");
+    $(this).removeClass("show-password");
+    $(this).find(".eye-close").addClass("hidden");
+    $(this).find(".eye-open").removeClass("hidden").addClass("flex");
+  } else {
+    $(this).closest("label").find("input").attr("type", "password");
+    $(this).addClass("show-password");
+    $(this).find(".eye-close").removeClass("hidden");
+    $(this).find(".eye-open").addClass("hidden");
+  }
 });
 
 $(document).on("click", ".toggle-login", function (e) {
@@ -108,7 +114,7 @@ $(document).on("submit", "#passwordLogin", async function (e) {
     return;
   }
   const url = await successLogin(user);
-  //window.location.href = url;
+  window.location.href = url;
   //await setSession(user.message);
   //const apps = user.message.apps;
   //const location = apps.APP_LOCATION;
@@ -237,8 +243,8 @@ async function successLogin(user) {
   }`;
 }
 
+//สร้าง  Session ในระบบ
 export function setSession(data) {
-  //สร้าง  Session ในระบบ
   return new Promise((resolve) => {
     $.ajax({
       type: "post",

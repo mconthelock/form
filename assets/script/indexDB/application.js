@@ -1,6 +1,5 @@
 import { generateSchemaHash } from "./setIndexDB";
 
-
 const apps = "apps";
 const schemaApp = [
   {
@@ -117,8 +116,8 @@ export async function setAmecweb(id, data) {
 export async function setApp(id, data) {
   const db = await openAppDatabase();
   return new Promise((resolve, reject) => {
-    const transaction = db.transaction(apps, "readwrite");
-    const store = transaction.objectStore(apps);
+    const transaction = db.transaction("apps", "readwrite");
+    const store = transaction.objectStore("apps");
     const app = { id: id, data: data };
     const request = store.put(app);
     request.onsuccess = () => resolve("App created successfully");
@@ -129,8 +128,8 @@ export async function setApp(id, data) {
 export async function getApp(id) {
   const db = await openAppDatabase();
   return new Promise((resolve, reject) => {
-    const transaction = db.transaction(apps, "readonly");
-    const store = transaction.objectStore(apps);
+    const transaction = db.transaction("apps", "readonly");
+    const store = transaction.objectStore("apps");
     const request = store.get(id);
     request.onsuccess = (e) => resolve(e.target.result || null);
     request.onerror = () => reject("Failed to fetch app");
@@ -140,8 +139,8 @@ export async function getApp(id) {
 export async function getAllApps() {
   const db = await openAppDatabase();
   return new Promise((resolve, reject) => {
-    const transaction = db.transaction(apps, "readonly");
-    const store = transaction.objectStore(apps);
+    const transaction = db.transaction("apps", "readonly");
+    const store = transaction.objectStore("apps");
     const request = store.getAll();
     request.onsuccess = (e) => resolve(e.target.result || []);
     request.onerror = () => reject("Failed to fetch apps");
@@ -151,8 +150,8 @@ export async function getAllApps() {
 export async function deleteApp(id) {
   const db = await openAppDatabase();
   return new Promise((resolve, reject) => {
-    const transaction = db.transaction(apps, "readwrite");
-    const store = transaction.objectStore(apps);
+    const transaction = db.transaction("apps", "readwrite");
+    const store = transaction.objectStore("apps");
     const request = store.delete(id);
     request.onsuccess = () => resolve("App deleted successfully");
     request.onerror = () => reject("Failed to delete app");
@@ -162,8 +161,8 @@ export async function deleteApp(id) {
 export async function clearApp() {
   const db = await openAppDatabase();
   return new Promise((resolve, reject) => {
-    const transaction = db.transaction(apps, "readwrite");
-    const store = transaction.objectStore(apps);
+    const transaction = db.transaction("apps", "readwrite");
+    const store = transaction.objectStore("apps");
     const request = store.clear();
     request.onsuccess = () => resolve("App cleared successfully");
     request.onerror = () => reject("Failed to clear app");

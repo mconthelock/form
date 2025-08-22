@@ -1,4 +1,5 @@
 const path = require("path");
+const webpack = require("webpack");
 const Dotenv = require("dotenv-webpack");
 const CompressionPlugin = require("compression-webpack-plugin");
 const TerserPlugin = require("terser-webpack-plugin");
@@ -98,10 +99,15 @@ module.exports = {
       threshold: 10240,
       minRatio: 0.8,
     }),
+    new webpack.ProvidePlugin({
+      $: "jquery",
+      jQuery: "jquery",
+      datatables: "DataTables",
+    }),
   ],
-  externals: {
-    jquery: "jQuery",
-    datatables: "DataTables",
-  },
+  //   externals: {
+  //     jquery: "jQuery",
+  //     datatables: "DataTables",
+  //   },
   cache: false,
 };

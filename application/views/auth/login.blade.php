@@ -14,41 +14,41 @@
     <link rel="apple-touch-icon" href="{{ base_url() }}assets/images/favicon.ico">
     <link rel="apple-touch-startup-image" href="{{ base_url() }}assets/images/icon_512.png">
     <title>AMEC Webflow</title>
-    <link rel="stylesheet" href="{{ $_ENV['APP_CDN'] }}/icofont/icofont.min.css">
-    <link rel="stylesheet" href="{{ base_url() }}assets/dist/css/tailwind.css?ver={{ $_ENV['VERSION'] }}">
+    <link rel="stylesheet" href="{{ $_ENV['APP_CDN'] }}/icofont/v2025/icofont.min.css">
+    <link rel="stylesheet" href="{{ $_ENV['APP_CSS'] }}/tailwind.css?ver={{ $_ENV['VERSION'] }}">
     <script src="{{ base_url() }}script.js?ver={{ $_ENV['VERSION'] }}"></script>
     <script>
-        const host = document.querySelector('meta[name="base_url"]').content;
-        const status = document.querySelector('meta[name="appstatus"]').content;
-        if (status != 'local') {
-            const isdomain = host.indexOf("mitsubishielevatorasia.co.th");
-            var s = host.split("/");
-            if (isdomain == -1) {
-                window.location = "https://" + s[2] + ".mitsubishielevatorasia.co.th/" + s[3];
-            }
+        // const host = document.querySelector('meta[name="base_url"]').content;
+        // const status = document.querySelector('meta[name="appstatus"]').content;
+        // if (status != 'local') {
+        //     const isdomain = host.indexOf("mitsubishielevatorasia.co.th");
+        //     var s = host.split("/");
+        //     if (isdomain == -1) {
+        //         window.location = "https://" + s[2] + ".mitsubishielevatorasia.co.th/" + s[3];
+        //     }
 
-            const currenturl = window.location.href;
-            const protocol = window.location.protocol;
-            if (protocol == 'http:') {
-                const url = currenturl.replace(protocol, 'https:')
-                window.location.href = url;
-            }
-        }
+        //     const currenturl = window.location.href;
+        //     const protocol = window.location.protocol;
+        //     if (protocol == 'http:') {
+        //         const url = currenturl.replace(protocol, 'https:')
+        //         window.location.href = url;
+        //     }
+        // }
 
-        var iscookie = '';
-        const name = document.querySelector('meta[name="appname"]').content;
-        const cookies = document.cookie.split(';');
-        for (let cookie of cookies) {
-            cookie = cookie.trim();
-            if (cookie.startsWith(name + '=')) {
-                iscookie = cookie.substring(name.length + 1);
+        // var iscookie = '';
+        // const name = document.querySelector('meta[name="appname"]').content;
+        // const cookies = document.cookie.split(';');
+        // for (let cookie of cookies) {
+        //     cookie = cookie.trim();
+        //     if (cookie.startsWith(name + '=')) {
+        //         iscookie = cookie.substring(name.length + 1);
 
-            }
-        }
+        //     }
+        // }
 
-        if (iscookie != "") {
-            window.location.href = `${host}/home`;
-        }
+        // if (iscookie != "") {
+        //     window.location.href = `${host}/home`;
+        // }
     </script>
 </head>
 
@@ -94,8 +94,10 @@
                                 <label class="input input-bordered flex items-center gap-2">
                                     <input type="password" class="grow password" autocomplete="new-password" required
                                         placeholder="Password" />
-                                    <a href="#" id="option" class="text-primary h-6 w-6">
-                                        @include('svg/eye_slash')
+                                    <a href="#" id="show-password"
+                                        class="text-primary h-6 w-6 flex items-center show-password">
+                                        <i class="fi fi-rs-crossed-eye eye-close flex text-2xl text-gray-600"></i>
+                                        <i class="fi fi-sr-eye eye-open text-2xl text-gray-600 hidden"></i>
                                     </a>
                                 </label>
                             </div>
@@ -207,7 +209,7 @@
 
 
     <script src="{{ $_ENV['APP_CDN'] }}/jquery/3.7.1/jquery.min.js"></script>
-    <script src="{{ $_ENV['APP_JS'] }}/login.js?ver={{ $_ENV['VERSION'] }}"></script>
+    <script src="{{ $_ENV['APP_JS'] }}/login.js?ver={{ $GLOBALS['version'] }}"></script>
 </body>
 
 </html>

@@ -1,16 +1,4 @@
 import CryptoJS from "crypto-js";
-export function getNews() {
-  return new Promise((resolve) => {
-    $.ajax({
-      type: "get",
-      url: `${process.env.APP_API}/gpreport/news/`,
-      dataType: "json",
-      success: function (response) {
-        resolve(response);
-      },
-    });
-  });
-}
 
 export function passwordLogin(data) {
   return new Promise((resolve) => {
@@ -19,11 +7,10 @@ export function passwordLogin(data) {
       url: `${process.env.APP_API}/auth/login/`,
       dataType: "json",
       data: data,
-      //   xhrFields: {
-      //     withCredentials: true,
-      //   },
+      xhrFields: {
+        withCredentials: true,
+      },
       success: function (response) {
-        //resolve({ status: true, data: response });
         resolve(response);
       },
       error: function (xhr, status, error) {

@@ -14,18 +14,21 @@
     <link rel="shortcut icon" href="{{ base_url() }}assets/images/favicon.ico">
     <link rel="apple-touch-icon" href="{{ base_url() }}assets/images/favicon.ico">
     <link rel="apple-touch-startup-image" href="{{ base_url() }}assets/images/icon_512.png">
-    <title>AMEC Webflow</title>
+    <title>AMEC Webflow 🕊️ Document Mananagement System</title>
 
-    <link rel="stylesheet" href="{{ $_ENV['APP_CDN'] }}/icofont/icofont.min.css">
-    <link rel="stylesheet" href="{{ $_ENV['APP_CDN'] }}/datatable/v2.2.2/datatables.min.css">
-    <link rel="stylesheet" href="{{ $_ENV['APP_CDN'] }}/datatable/v2.2.2/responsive.dataTables.min.css">
-    {{-- <link rel="stylesheet" href="{{ base_url() }}assets/dist/css/tailwind.css?ver={{ $GLOBALS['version'] }}"> --}}
-    <link rel="stylesheet" href="{{ base_url() }}assets/dist/css/v1.0.1.min.css?ver={{ $GLOBALS['version'] }}">
+    <link rel="stylesheet" href="{{ $_ENV['APP_CDN'] }}/icofont/v2025/icofont.min.css">
+    <link rel="stylesheet" href="{{ $_ENV['APP_CDN'] }}/select2/css/select2.min.css">
+    <link rel="stylesheet" href="{{ $_ENV['APP_CSS'] }}/v1.0.1.min.css?ver={{ $GLOBALS['version'] }}">
     <script src="{{ base_url() }}assets/script/inc/auth.js"></script>
     @yield('styles')
 </head>
 
 <body class="flex flex-col min-h-screen">
+    <input type="checkbox" id="loading-box" class="modal-toggle" checked />
+    <div class="modal" role="dialog">
+        <div class="loader"></div>
+    </div>
+
     <div class="drawer lg:drawer-open">
         <input id="mastermenu" type="checkbox" class="drawer-toggle" />
 
@@ -42,11 +45,6 @@
         <div class="drawer-side lg:shadow-lg bg-primary">
             @include('layouts.sidebar')
         </div>
-    </div>
-
-    <input type="checkbox" id="loading-box" class="modal-toggle" checked />
-    <div class="modal" role="dialog">
-        <div class="loader"></div>
     </div>
 
     <dialog id="confirm_box" class="modal">

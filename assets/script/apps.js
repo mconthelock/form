@@ -1,3 +1,4 @@
+import "@flaticon/flaticon-uicons/css/all/all.css";
 import Cookies from "js-cookie";
 import { decryptText } from "./inc/_crypto";
 import { getAppDataById } from "./indexDB/userAuth";
