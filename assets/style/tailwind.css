@@ -1,6 +1,5 @@
 @import "tailwindcss";
 
-
 @plugin "daisyui" {
   themes: light --default, dark --prefersdark;
 }
@@ -74,15 +73,14 @@
     /* DataTable */
     --color-dataTable-thead: var(--color-primary);
     --bgcolor-dataTable-thead: #fff;
-    
+
     --bgcolor-dataTable-tbody: #fff;
     --max-h-dataTable-body: 70vh;
-    
+
     --height-dataTable-input: 2.5rem;
     --bgcolor-dataTable-input: #fff;
-    --font-size-dataTable-input: .875rem;
-    --radius-dataTable-input: .25rem;
-
+    --font-size-dataTable-input: 0.875rem;
+    --radius-dataTable-input: 0.25rem;
 
     /* select2 */
     /* --select2-font-size: var(--font-size-base); */
@@ -192,7 +190,7 @@
     }
   }
 
-  .shadow-button{
+  .shadow-button {
     box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1) !important;
   }
 

@@ -10,7 +10,7 @@ import { encryptText } from "../inc/_crypto";
 $(document).ready(async function (e) {
   await showLoader(true);
   $(".nav-form").find("details").attr("open", true);
-  const news = await createCarousel();
+  //   const news = await createCarousel();
   const links = await checkUpdateLinks();
   await createLinks(1, links, $("#amecweb_system"));
   await createLinks(2, links, $("#design_system"));
@@ -39,12 +39,15 @@ $(document).on("click", ".links-stamp", async function (e) {
   };
   await stampApp(curent);
   await setRecentApps();
-  setCookie(curent.location, encryptText(`${curent.id}-${curent.user}`, curent.location));
-//   const response = await directlogin(curent.user, curent.id);
-//   const id = `${curent.id}-${curent.user}`;
-//   const app = await setApplication(response.apps);
-//   const group = await setAppGroup(id, response.appgroup);
-//   const menu = await setAppMenu(id, response.auth, group);
+  setCookie(
+    curent.location,
+    encryptText(`${curent.id}-${curent.user}`, curent.location)
+  );
+  //   const response = await directlogin(curent.user, curent.id);
+  //   const id = `${curent.id}-${curent.user}`;
+  //   const app = await setApplication(response.apps);
+  //   const group = await setAppGroup(id, response.appgroup);
+  //   const menu = await setAppMenu(id, response.auth, group);
   window.location.href = curent.url;
   //   if ([6, 12].includes(response.apps.APP_ID)) {
   //     window.location.href = `${process.env.APP_HOST}/${response.apps.APP_LOCATION}/authen/move`;
