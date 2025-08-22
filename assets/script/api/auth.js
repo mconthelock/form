@@ -3,12 +3,14 @@ export function passwordLogin(data) {
     return new Promise((resolve) => {
         $.ajax({
             type: "post",
-            url: `${process.env.APP_API}/auth/login/`,
+            // url: `${process.env.APP_API}/auth/login/`,
+            url: `${process.env.APP_APITEST}/auth/login/`, // local
             dataType: "json",
             data: data,
-            //   xhrFields: {
-            //     withCredentials: true,
-            //   },
+            // หากเป็น local ให้เปิด
+            xhrFields: {
+                withCredentials: true,
+            },
             success: function (response) {
                 //resolve({ status: true, data: response });
                 resolve(response);
@@ -29,7 +31,8 @@ export function directlogin(empno, id) {
     return new Promise((resolve) => {
         $.ajax({
             type: "post",
-            url: `${process.env.APP_API}/auth/directlogin/`,
+            // url: `${process.env.APP_API}/auth/directlogin/`,
+            url: `${process.env.APP_APITEST}/auth/directlogin/`,
             dataType: "json",
             data: {
                 username: md5Hash,

@@ -58,14 +58,14 @@ $(document).on("click", ".file-link", async function (e) {
 
 async function setPage() {
     $("body").addClass("bg-blue-100");
-    // const flow = await showflow(form);
-    const flow = await showflow({
-        NFRMNO: 9,
-        VORGNO: "030101",
-        CYEAR: "25",
-        CYEAR2: "2025",
-        NRUNNO: 22,
-    });
+    const flow = await showflow(form);
+    // const flow = await showflow({
+    //     NFRMNO: 9,
+    //     VORGNO: "030101",
+    //     CYEAR: "25",
+    //     CYEAR2: "2025",
+    //     NRUNNO: 22,
+    // });
     await setSkeleton();
     const data = await getformData(form);
     qafiles = data.QA_FILES;
@@ -166,6 +166,7 @@ async function setSkeleton() {
     skeleton({ element: ".qcIncharge", width: "w-60", height: "h-4" });
     switch (cextdata) {
         case "01":
+            $("#qcForm1").removeClass("hidden");
             skeleton({
                 element: ".trainingDate",
                 width: "w-[24rem]",
@@ -192,7 +193,6 @@ async function setSkeleton() {
 }
 
 async function setInchargeForm() {
-    $("#qcForm1").removeClass("hidden");
     const user = await getEscsUsers({
         USR_STATUS: 1,
     });

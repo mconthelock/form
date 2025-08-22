@@ -12,7 +12,7 @@ import {
 import { getApp } from "./indexDB/application";
 import { setApplication } from "./indexDB/setIndexDB";
 import { setImage, setInfo } from "./indexDB/employee";
-import { directlogin, passwordLogin } from "./webservice";
+import { directlogin, passwordLogin } from "./api/auth";
 
 var camera;
 $(document).ready(async function () {
