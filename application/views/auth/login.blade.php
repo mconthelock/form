@@ -14,42 +14,8 @@
     <link rel="apple-touch-icon" href="{{ base_url() }}assets/images/favicon.ico">
     <link rel="apple-touch-startup-image" href="{{ base_url() }}assets/images/icon_512.png">
     <title>AMEC Webflow</title>
-    <link rel="stylesheet" href="{{ $_ENV['APP_CDN'] }}/icofont/v2025/icofont.min.css">
     <link rel="stylesheet" href="{{ $_ENV['APP_CSS'] }}/tailwind.css?ver={{ $_ENV['VERSION'] }}">
     <script src="{{ base_url() }}script.js?ver={{ $_ENV['VERSION'] }}"></script>
-    <script>
-        // const host = document.querySelector('meta[name="base_url"]').content;
-        // const status = document.querySelector('meta[name="appstatus"]').content;
-        // if (status != 'local') {
-        //     const isdomain = host.indexOf("mitsubishielevatorasia.co.th");
-        //     var s = host.split("/");
-        //     if (isdomain == -1) {
-        //         window.location = "https://" + s[2] + ".mitsubishielevatorasia.co.th/" + s[3];
-        //     }
-
-        //     const currenturl = window.location.href;
-        //     const protocol = window.location.protocol;
-        //     if (protocol == 'http:') {
-        //         const url = currenturl.replace(protocol, 'https:')
-        //         window.location.href = url;
-        //     }
-        // }
-
-        // var iscookie = '';
-        // const name = document.querySelector('meta[name="appname"]').content;
-        // const cookies = document.cookie.split(';');
-        // for (let cookie of cookies) {
-        //     cookie = cookie.trim();
-        //     if (cookie.startsWith(name + '=')) {
-        //         iscookie = cookie.substring(name.length + 1);
-
-        //     }
-        // }
-
-        // if (iscookie != "") {
-        //     window.location.href = `${host}/home`;
-        // }
-    </script>
 </head>
 
 <body class="flex flex-col min-h-screen">
@@ -152,20 +118,21 @@
                     <div class="mt-4 flex flex-col gap-3">
                         <a class="btn btn-neutral w-full toggle-login hidden" data-type="frm-password">
                             <span class="loading loading-spinner hidden"></span>
-                            <span class="flex justify-center"><i class="icofont-flikr me-2 text-2xl"></i></span>
+                            <span class="flex justify-center"><i
+                                    class="fi fi-rs-password-alt me-2 text-2xl"></i></span>
                             <p class="line-clamp-1">Password Login</p>
                         </a>
                         <a class="btn btn-neutral w-full toggle-login" data-type="frm-barcode">
                             <span class="loading loading-spinner hidden"></span>
-                            <span class="flex justify-center"><i class="icofont-qr-code me-2 text-2xl"></i></span>
+                            <span class="flex justify-center"><i class="fi fi-rr-qrcode me-2 text-2xl"></i></span>
                             <p class="line-clamp-1">Barcode/QR Code Log in</p>
                         </a>
                         <a class="btn btn-neutral w-full toggle-login" data-type="frm-rfid">
                             <span class="loading loading-spinner hidden"></span>
                             <span class="flex justify-center">
-                                <i class="icofont-penalty-card me-2 text-2xl"></i>
+                                <i class="fi fi-rr-credit-card-buyer me-2 text-2xl"></i>
                             </span>
-                            <p class="line-clamp-1">RFID Card Log in</p>
+                            <p class="line-clamp-1">Employee Card Log in</p>
                         </a>
                     </div>
                     <div class="mt-8 hidden" id="webflow-link">

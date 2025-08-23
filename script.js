@@ -4,15 +4,16 @@
     const isdomain = host.indexOf("mitsubishielevatorasia.co.th");
     var s = host.split("/");
     if (isdomain == -1) {
-      window.location =
-        "https://" + s[2] + ".mitsubishielevatorasia.co.th/" + s[3];
+      window.location.replace(
+        "https://" + s[2] + ".mitsubishielevatorasia.co.th/" + s[3]
+      );
     }
 
     const currenturl = window.location.href;
     const protocol = window.location.protocol;
     if (protocol == "http:") {
       const url = currenturl.replace(protocol, "https:");
-      window.location.href = url;
+      window.location.replace(url);
     }
   };
 
@@ -59,5 +60,5 @@
   const state = document.querySelector('meta[name="appstatus"]').content;
   const domain = amecdomain(host, state);
   const cookie = checkCookie();
-  if (cookie != "") window.location.href = `${host}/home`;
+  if (cookie != "") window.location.replace(`${host}home`);
 })();
