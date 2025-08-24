@@ -16,38 +16,6 @@ $(document).ready(async function () {
   if ($("#appid").val() != "1") $("#webflow-link").removeClass("hidden");
   $(".loginform:visible").find("input").first().focus();
   await showLoader(false);
-  //Test Socket.io
-  //   console.log("Frontend application loaded!");
-  //   console.log(process.env.APP_API);
-  //   const socket = io(`http://localhost:3001`);
-  //   socket.on("connect", () => {
-  //     console.log("Connected to Socket.io server:", socket.id);
-  //   });
-
-  //   socket.on("disconnect", () => {
-  //     console.log("Disconnected from Socket.io server.");
-  //   });
-
-  //   socket.on("orderViewing", (data) => {
-  //     console.log("Order viewing update received:", data);
-  // const orderId = data.orderId;
-  // const viewerId = data.viewerId; // The socket ID of the user viewing
-  // const isViewing = data.isViewing;
-
-  // $(`#order-row-${orderId}`).each(function() {
-  //     const $row = $(this);
-  //     // Remove any existing indicators
-  //     $row.removeClass('viewing-indicator');
-
-  //     if (isViewing) {
-  //         // Add indicator if this order is being viewed by someone else
-  //         // We compare viewerId to socket.id to prevent showing "viewing" on own screen
-  //         if (viewerId !== socket.id) {
-  //             $row.addClass('viewing-indicator');
-  //         }
-  //     }
-  // });
-  //   });
 });
 
 $(document).on("click", "#show-password", function (e) {
@@ -284,3 +252,32 @@ async function showCamera(target) {
     console.error("เกิดข้อผิดพลาด:", err);
   }
 }
+
+//Note for Socket.io
+//   console.log("Frontend application loaded!");
+//   console.log(process.env.APP_API);
+//   const socket = io(`http://localhost:3001`);
+//   socket.on("connect", () => {
+//     console.log("Connected to Socket.io server:", socket.id);
+//   });
+//   socket.on("disconnect", () => {
+//     console.log("Disconnected from Socket.io server.");
+//   });
+//   socket.on("orderViewing", (data) => {
+//     console.log("Order viewing update received:", data);
+// const orderId = data.orderId;
+// const viewerId = data.viewerId; // The socket ID of the user viewing
+// const isViewing = data.isViewing;
+// $(`#order-row-${orderId}`).each(function() {
+//     const $row = $(this);
+//     // Remove any existing indicators
+//     $row.removeClass('viewing-indicator');
+//     if (isViewing) {
+//         // Add indicator if this order is being viewed by someone else
+//         // We compare viewerId to socket.id to prevent showing "viewing" on own screen
+//         if (viewerId !== socket.id) {
+//             $row.addClass('viewing-indicator');
+//         }
+//     }
+// });
+//   });

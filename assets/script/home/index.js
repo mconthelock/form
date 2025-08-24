@@ -8,18 +8,18 @@ import { setCookie } from "../inc/_jsCookie";
 import { encryptText } from "../inc/_crypto";
 
 $(document).ready(async function (e) {
-  await showLoader(true);
-  $(".nav-form").find("details").attr("open", true);
+  //   await showLoader(true);
+  //$(".nav-form").find("details").attr("open", true);
   //   const news = await createCarousel();
-  const links = await checkUpdateLinks();
-  await createLinks(1, links, $("#amecweb_system"));
-  await createLinks(2, links, $("#design_system"));
-  await createLinks(3, links, $("#utility_system"));
-  await createLinks(4, links, $("#other_system"));
-  await setRecentApps();
-  await setAmecwebLinks();
+  //   const links = await checkUpdateLinks();
+  //   await createLinks(1, links, $("#amecweb_system"));
+  //   await createLinks(2, links, $("#design_system"));
+  //   await createLinks(3, links, $("#utility_system"));
+  //   await createLinks(4, links, $("#other_system"));
+  //   await setRecentApps();
+  //   await setAmecwebLinks();
   //const waitforapproveData = await waitforapprove({ empno: "02035" });
-  await showLoader(false);
+  //   await showLoader(false);
 });
 
 $(document).on("click", ".links-stamp", async function (e) {

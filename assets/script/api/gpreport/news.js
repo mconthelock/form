@@ -6,43 +6,53 @@ import { fetchMsgErr } from "../errorMsg";
 import { getApp } from "../../indexDB/application";
 import { setApplication } from "../../indexDB/setIndexDB";
 import { getApplication } from "../docinv/application";
+
 export async function getNews() {
-  const res = await fetch(`${process.env.APP_API}/gpreport/news/`);
-  if (!res.ok) {
-    return {
-      status: false,
-      message: `Failed to fetch news : ${await fetchMsgErr(res)}`,
-    };
-  }
-  return res.json();
+  return new Promise((resolve, reject) => {
+    $.ajax({
+      type: "get",
+      url: `${process.env.APP_API}/gpreport/news/`,
+      dataType: "json",
+      success: function (response) {
+        resolve(response);
+      },
+      error: function (xhr, status, error) {
+        reject({ status, error });
+      },
+    });
+  });
 }
 
 //สร้าง Banner ข่าวสาร
 export async function createCarousel(type = "home") {
   const obj = $("#news-carousel");
-  const poster = await addPoster();
-  obj.append(poster);
-  const news = await getNews();
-  if (news.length > 0) {
-    const url = `https://amecweb.mitsubishielevatorasia.co.th/gpsystem/news/`;
-    news.map((el) => {
-      const html = type == "home" ? homeCarousel(el) : loginCarousel(el);
-      obj.append(html);
-    });
-  }
+  try {
+    const poster = await addPoster();
+    obj.append(poster);
+    const news = await getNews();
+    if (news.length > 0) {
+      const url = `https://amecweb.mitsubishielevatorasia.co.th/gpsystem/news/`;
+      news.map((el) => {
+        const html = type == "home" ? homeCarousel(el) : loginCarousel(el);
+        obj.append(html);
+      });
+    }
 
-  const container = document.getElementById("news-carousel");
-  const options = {
-    Navigation: false,
-    Dots: {
-      minCount: 2,
-    },
-    Autoplay: {
-      timeout: 7500,
-      showProgress: false,
-    },
-  };
-  new Carousel(container, options, { Autoplay });
+    const container = document.getElementById("news-carousel");
+    const options = {
+      Navigation: false,
+      Dots: {
+        minCount: 2,
+      },
+      Autoplay: {
+        timeout: 7500,
+        showProgress: false,
+      },
+    };
+    new Carousel(container, options, { Autoplay });
+  } catch (error) {
+    console.log(error);
+  }
   return;
 }
 
@@ -74,8 +84,7 @@ const loginCarousel = (el) => {
 };
 
 const addPoster = async () => {
-  let img =
-    "https://amecwebtest.mitsubishielevatorasia.co.th/form/assets/images/web_flow_2.0.png";
+  let img = `${process.env.APP_IMG}/web_flow_2.0.png`;
   const id = $("#appid").val();
   try {
     const app = await getApplication(id);
@@ -84,6 +93,6 @@ const addPoster = async () => {
     console.log(error);
   }
   return `<div class="f-carousel__slide">
-        <img class="w-[100vw] h-[100vh] object-cover" src="${img}" alt=""/>
-    </div>`;
+          <img class="w-[100vw] h-[100vh] object-cover" src="${img}" alt=""/>
+      </div>`;
 };

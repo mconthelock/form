@@ -1,5 +1,4 @@
 @import "tailwindcss";
-
 @plugin "daisyui" {
   themes: light --default, dark --prefersdark;
 }
@@ -15,7 +14,6 @@
   --color-base-content: oklch(0% 0.042 265.755);
   --color-primary: oklch(0.43 0.181 260.48);
   --color-primary-content: oklch(0.93 0.04 263.36);
-  /* --color-secondary: oklch(80% 0.114 19.571); */
   --color-secondary: oklch(0.7876 0.165783 75.5064);
   --color-secondary-content: oklch(25% 0.092 26.042);
   --color-accent: oklch(84% 0.143 164.978);
@@ -41,29 +39,12 @@
   --input-color: transparent;
 }
 
-/*
-  The default border color has changed to `currentColor` in Tailwind CSS v4,
-  so we've added these compatibility styles to make sure everything still
-  looks the same as it did with Tailwind CSS v3.
-
-  If we ever want to remove these styles, we need to add an explicit border
-  color utility to any element that depends on these defaults.
-*/
-@layer base {
-  *,
-  ::after,
-  ::before,
-  ::backdrop,
-  ::file-selector-button {
-    border-color: var(--color-gray-200, currentColor);
-  }
-}
-
 @layer base {
   :root {
     --font-sans: "LINE Seed EN", "LINE Seed EN Bold", "LINE Seed TH",
       "LINE Seed TH Bold", "LINE Seed JP", "LINE Seed JP Bold", sans-serif;
     --color-primary: 1, 71, 178;
+    --color-primary: 0, 0, 0;
     --color-secondary: 107, 114, 128;
     --color-accent: 232, 159, 2;
     --color-card: 255, 255, 255;
@@ -81,9 +62,14 @@
     --bgcolor-dataTable-input: #fff;
     --font-size-dataTable-input: 0.875rem;
     --radius-dataTable-input: 0.25rem;
+  }
 
-    /* select2 */
-    /* --select2-font-size: var(--font-size-base); */
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentColor);
   }
 
   body {

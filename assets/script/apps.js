@@ -1,9 +1,15 @@
 import "@flaticon/flaticon-uicons/css/all/all.css";
-import Cookies from "js-cookie";
-import { decryptText } from "./inc/_crypto";
-import { getAppDataById } from "./indexDB/userAuth";
+import { initAuthen } from "./public/v1.0.3/authen.js";
+// import Cookies from "js-cookie";
+// import { decryptText } from "./inc/_crypto";
+// import { getAppDataById } from "./indexDB/userAuth";
 
 $(document).ready(async function () {
+  initAuthen({
+    icon: `${process.env.APP_ENV}/assets/images/cube.png`,
+    programName: "Web Flow",
+    sidebarClass: `!w-80 text-gray-300 bg-primary`,
+  });
   //Set user profile
   //   const cookie = Cookies.get(process.env.APP_NAME);
   //   const indexedDBID = decryptText(cookie, process.env.APP_NAME);
