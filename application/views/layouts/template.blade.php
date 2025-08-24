@@ -22,17 +22,12 @@
 </head>
 
 <body class="flex flex-col min-h-screen">
-    <input type="checkbox" id="loading-box" class="modal-toggle" checked />
-    <div class="modal" role="dialog">
-        <div class="loader"></div>
-    </div>
-
     <div class="drawer lg:drawer-open">
         <input id="mastermenu" type="checkbox" class="drawer-toggle" />
 
         <div class="drawer-content flex flex-col items-center justify-start w-full h-full">
             <!-- Navbar -->
-            @include('layouts.navbar')
+            <div id="navbar" class=""></div>
             <!-- Page content here -->
             <div class="flex-1 flex flex-col w-full px-4 md:px-8 lg:mt-5">
                 @yield('contents')
@@ -40,8 +35,8 @@
             <!-- Footer -->
             @include('layouts.footer')
         </div>
-        <div class="drawer-side lg:shadow-lg bg-primary">
-            @include('layouts.sidebar')
+        <div class="drawer-side shadow-2xl">
+            <div id="sidebar"></div>
         </div>
     </div>
 
@@ -58,12 +53,10 @@
                             class="loading loading-spinner hidden"></span>
                         Confirm</button>
                     <button class="btn btn-error text-white" id="confirm_close">Discard</button>
-
                 </div>
             </form>
         </div>
     </dialog>
-
     <script src="{{ $_ENV['APP_JS'] }}/apps.js?ver={{ $GLOBALS['version'] }}"></script>
     @yield('scripts')
 </body>
