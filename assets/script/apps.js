@@ -6,9 +6,13 @@ import { initAuthen } from "./public/v1.0.3/authen.js";
 
 $(document).ready(async function () {
   initAuthen({
-    icon: `${process.env.APP_ENV}/assets/images/cube.png`,
+    icon: `${process.env.APP_IMG}/sidebar/brand_text_w.svg`,
+    iconLogo: `${process.env.APP_IMG}/icon_512.png`,
     programName: "Web Flow",
-    sidebarClass: `!w-80 text-gray-300 bg-primary`,
+    showIcon: false,
+    showProgramName: false,
+    showLogo: true,
+    sidebarClass: `size-xl text-gray-300 bg-primary`,
   });
   //Set user profile
   //   const cookie = Cookies.get(process.env.APP_NAME);
@@ -42,10 +46,4 @@ $(document).on("click", ".mainmenu", function () {
 
 $(document).on("click", "#mastermenu-close", function () {
   $("#mastermenu").prop("checked", false);
-});
-
-$(document).on("click", "#signout", function (e) {
-  e.preventDefault();
-  Cookies.remove(process.env.APP_NAME);
-  location.reload();
 });
