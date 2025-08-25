@@ -58,6 +58,7 @@ export async function initAuthen(options = {}) {
     // ถ้ามี cookie ให้ decrypt ค่า cookie และเก็บค่าในตัวแปร indexedDBID
     setCookie(process.env.APP_NAME, cookie, { expires: 0.5 / 24 }); // Set cookie ทุกครั้งที่โหลดหน้าเว็บ
     indexedDBID = decryptText(cookie, process.env.APP_NAME);
+
     const [appid, empno] = indexedDBID.split("-");
     if (!(await getMenu(indexedDBID)) || !(await getGroup(indexedDBID))) {
       console.log("set indexedDB");

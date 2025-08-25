@@ -1,6 +1,13 @@
 import { host } from "../jFuntion";
 import "../../../../dist/css/sidebar.min.css";
 import "../_tooltip";
+import {
+  deleteCookie,
+  getCookie,
+  setCookie,
+  getTimeLeft,
+  extendSession,
+} from "../_jsCookie";
 
 $(document).on("click", "#sidebarToggle", function () {
   // $('#sidebar').toggleClass('collapsed');
@@ -112,6 +119,14 @@ export function initSidebar(options = {}) {
     <div id="profile" class="mt-auto"></div>
 </div>`;
   $("#sidebar").replaceWith(sidebar);
+  $("body").append(timeOutLayout());
+
+  //   setInterval(() => {
+  //     const timeLeft = getTimeLeft(process.env.APP_NAME);
+  //     if (timeLeft > 0 && timeLeft < 0.5 * 60 * 1000) {
+  //       sessionTimeOut();
+  //     }
+  //   }, 1000);
 }
 
 /**
@@ -161,12 +176,12 @@ export async function setSidebarMenu(menu, info) {
     const name = fullname[0];
     const profileImg = info.image
       ? info.image
-      : `${host}/assets/img/avatar.png`;
+      : `${process.env.APP_IMG}/avatar.png`;
 
     // sidebar profile
     $("#profile").html(`
+        <div class="divider my-1" style="--divider-color: #fff !important"></div>
             <li class="">
-                <hr>
                 <div class="flex sidebar-profile">
                     <div tabindex="0" role="button" class="btn btn-ghost btn-circle avatar avatar-online">
                         <div class="w-10 rounded-full">
@@ -211,3 +226,50 @@ export function menuFocus() {
     menu.find("a").addClass("menu-focus");
   }
 }
+
+export function sessionTimeOut() {
+  $("#handleTimeout").prop("checked", true);
+  let count = 30;
+  const el = document.getElementById("timeout-countdown");
+  el.style.setProperty("--value", count);
+  el.setAttribute("aria-label", count);
+  const timer = setInterval(() => {
+    count--;
+    el.style.setProperty("--value", count);
+    el.setAttribute("aria-label", count);
+    el.textContent = count;
+    if (count <= 0) {
+      clearInterval(timer);
+      deleteCookie(process.env.APP_NAME);
+      window.location.reload();
+    }
+  }, 1000);
+}
+export function timeOutLayout() {
+  return `<input type="checkbox" id="handleTimeout" class="modal-toggle" />
+    <div class="modal" role="dialog">
+        <div class="modal-box">
+            <h3 class="text-lg font-extrabold text-red-500"><i class="fi fi-rr-session-timeout text-2xl"></i>Time Out!!
+            </h3>
+            <div id="handleErrorBox_msg" class="py-4">
+                <h1 class="pb-3 ">Your session had already expired, Would you like to stay on our system?
+                </h1>
+                <div class="flex gap-3 justify-center">
+                    <button class="btn btn-primary" id="extend-cookie">Yes (
+                        <div class="countdown font-mono">
+                            <span class="" id="timeout-countdown" style="--value:30;" aria-live="polite"
+                                aria-label="30"></span>
+                        </div>)
+                    </button>
+                    <button class="btn">No</button>
+                </div>
+            </div>
+        </div>
+    </div>`;
+}
+
+// $(document).on("click", "#extend-cookie", function (e) {
+//   e.preventDefault();
+//   extendSession(process.env.APP_NAME, 30);
+//   $("#handleTimeout").prop("checked", false);
+// });
