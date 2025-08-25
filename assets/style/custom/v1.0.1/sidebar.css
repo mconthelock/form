@@ -15,6 +15,9 @@
   #sidebar {
     width: 18rem;
   }
+  #sidebar.size-xl {
+    width: 20rem;
+  }
 }
 
 #sidebar .sidebar-head {
@@ -79,5 +82,13 @@
 }
 
 #sidebar.collapsed .mainmenu details summary::after {
+  display: none;
+}
+
+#sidebar.collapsed img.sidebar-logo-full {
+  display: none;
+}
+
+#sidebar:not(.collapsed) img.sidebar-logo-mini {
   display: none;
 }
