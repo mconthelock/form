@@ -6,8 +6,8 @@ import { initAuthen } from "./public/v1.0.3/authen.js";
 
 $(document).ready(async function () {
   initAuthen({
-    icon: `${process.env.APP_IMG}/sidebar/brand_text_w.svg`,
-    iconLogo: `${process.env.APP_IMG}/icon_512.png`,
+    icon: `${process.env.APP_IMG}/brand_text_w.svg`,
+    iconLogo: `${process.env.APP_IMG}/logo_w.png`,
     programName: "Web Flow",
     showIcon: false,
     showProgramName: false,

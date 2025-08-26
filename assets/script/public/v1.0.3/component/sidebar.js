@@ -36,6 +36,7 @@ $(document).on("mouseover", "#sidebar #menu, #sidebar #profile", function () {
     );
     $("#sidebarToggle").attr("data-html", "Keep menu open");
     $("#sidebar").removeClass("collapsed").addClass("collapsed-hover");
+    $(".list-disc").removeClass("hidden");
   }
 });
 
@@ -50,13 +51,10 @@ $(document).on("mouseleave", "#sidebar", function () {
 
 function iconMenu() {
   if ($("#sidebar").hasClass("collapsed")) {
-    console.log("collapsed");
-
     $("#sidebarToggle").html(
       `<svg xmlns="http://www.w3.org/2000/svg" class="w-[28px] h-[28px] fill-white" id="arrow-circle-down" viewBox="0 0 24 24"><path d="M0,12A12,12,0,1,0,12,0,12.013,12.013,0,0,0,0,12Zm17.414-1.414a2,2,0,0,1,0,2.828l-4.243,4.243-1.414-1.414L15,13H6V11h9L11.757,7.757l1.414-1.414Z"/></svg>`
     );
   } else {
-    console.log("no collapsed");
     $("#sidebarToggle").html(
       `<svg xmlns="http://www.w3.org/2000/svg" class="w-[28px] h-[28px] fill-white" id="arrow-circle-down" viewBox="0 0 24 24"><path d="M24,12A12,12,0,1,0,12,24,12.013,12.013,0,0,0,24,12ZM9.465,17.707,5.879,14.121h0a3,3,0,0,1,0-4.243L9.465,6.293l.025-.024a1,1,0,1,1,1.389,1.438L7.586,11,18,10.993a1,1,0,0,1,0,2L7.587,13l3.292,3.293a1,1,0,1,1-1.414,1.414Z"/></svg>`
     );
@@ -72,6 +70,7 @@ function expandMenu() {
 function collapsedMenu() {
   $("#sidebarToggle").attr("data-html", "Expand menu");
   $("#sidebar").removeClass("collapsed-hover").addClass("collapsed");
+  $(".list-disc").addClass("hidden");
   localStorage.setItem("pin", false);
 }
 
@@ -111,22 +110,15 @@ export function initSidebar(options = {}) {
             <img src="${opt.icon}" class="sidebar-logo-full">
             <img src="${opt.iconLogo}" class="sidebar-logo-mini">
         </a>
-        <button id="sidebarToggle" class="ml-auto btn btn-circle btn-ghost tooltip tooltip-right hover:bg-transparent" data-html="Collapse menu">
-            <svg xmlns="http://www.w3.org/2000/svg" id="arrow-circle-down" viewBox="0 0 24 24" class="w-[28px] h-[28px] fill-white"><path d="M24,12A12,12,0,1,0,12,24,12.013,12.013,0,0,0,24,12ZM9.465,17.707,5.879,14.121h0a3,3,0,0,1,0-4.243L9.465,6.293l.025-.024a1,1,0,1,1,1.389,1.438L7.586,11,18,10.993a1,1,0,0,1,0,2L7.587,13l3.292,3.293a1,1,0,1,1-1.414,1.414Z"/></svg>
-        </button>
+        <button id="sidebarToggle" class="ml-auto btn btn-circle btn-ghost tooltip tooltip-bottom  hover:bg-transparent hidden lg:flex!" data-html="Collapse menu"></button>
+         <label for="my-drawer-2" aria-label="close sidebar" class="ml-auto btn btn-circle btn-ghost tooltip tooltip-bottom  hover:bg-transparent flex lg:hidden!" data-html="Collapse menu"><svg xmlns="http://www.w3.org/2000/svg" class="w-[28px] h-[28px] fill-white" id="arrow-circle-down" viewBox="0 0 24 24"><path d="M24,12A12,12,0,1,0,12,24,12.013,12.013,0,0,0,24,12ZM9.465,17.707,5.879,14.121h0a3,3,0,0,1,0-4.243L9.465,6.293l.025-.024a1,1,0,1,1,1.389,1.438L7.586,11,18,10.993a1,1,0,0,1,0,2L7.587,13l3.292,3.293a1,1,0,1,1-1.414,1.414Z"/></svg></label>
     </div>
     <div id="menu" class="pt-4 flex flex-col gap-3"></div>
     <div id="profile" class="mt-auto"></div>
 </div>`;
   $("#sidebar").replaceWith(sidebar);
+  iconMenu();
   $("body").append(timeOutLayout());
-
-  //   setInterval(() => {
-  //     const timeLeft = getTimeLeft(process.env.APP_NAME);
-  //     if (timeLeft > 0 && timeLeft < 0.5 * 60 * 1000) {
-  //       sessionTimeOut();
-  //     }
-  //   }, 1000);
 }
 
 /**
@@ -227,24 +219,6 @@ export function menuFocus() {
   }
 }
 
-export function sessionTimeOut() {
-  $("#handleTimeout").prop("checked", true);
-  let count = 30;
-  const el = document.getElementById("timeout-countdown");
-  el.style.setProperty("--value", count);
-  el.setAttribute("aria-label", count);
-  const timer = setInterval(() => {
-    count--;
-    el.style.setProperty("--value", count);
-    el.setAttribute("aria-label", count);
-    el.textContent = count;
-    if (count <= 0) {
-      clearInterval(timer);
-      deleteCookie(process.env.APP_NAME);
-      window.location.reload();
-    }
-  }, 1000);
-}
 export function timeOutLayout() {
   return `<input type="checkbox" id="handleTimeout" class="modal-toggle" />
     <div class="modal" role="dialog">
@@ -267,9 +241,3 @@ export function timeOutLayout() {
         </div>
     </div>`;
 }
-
-// $(document).on("click", "#extend-cookie", function (e) {
-//   e.preventDefault();
-//   extendSession(process.env.APP_NAME, 30);
-//   $("#handleTimeout").prop("checked", false);
-// });
