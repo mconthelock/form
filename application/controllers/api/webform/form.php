@@ -33,7 +33,7 @@ trait formApi{
             $result = trim($response->getBody());
             return $result;
         }catch(Exception $e){
-            return array('status' => "false", 'message' => 'Failed to get mode', 'e' => $e);
+            throw new Exception(json_encode(['status' => "false", 'message' => 'Failed to get mode', 'e' => $e]), 1);
         }
     }
 }

@@ -21,7 +21,6 @@ import {
 import { getAllAttr, showErrorMessage } from "../../public/v1.0.3/jFuntion";
 import { getImageByUser } from "../../public/v1.0.3/setIndexDB";
 import { getformData, openfile } from "./data";
-
 var formInfo, form, qafiles, cextdata, tableAuditor;
 
 $(async function () {

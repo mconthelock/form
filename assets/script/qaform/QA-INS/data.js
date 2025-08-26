@@ -14,7 +14,7 @@ export function getformData(form) {
         $.ajax({
             type: "post",
             // url: `${process.env.APP_API}/qaform/qa-ins/getformData`,
-            url: `${process.env.APP_APITEST}/qaform/qa-ins/getformData`,
+            url: `${process.env.APP_API}/qaform/qa-ins/getformData`,
             dataType: "json",
             data: form,
             success: function (response) {
@@ -42,7 +42,7 @@ export function createFormQains(formData) {
         $.ajax({
             type: "post",
             // url: `${process.env.APP_API}/qaform/qa-ins/request``,
-            url: `${process.env.APP_APITEST}/qaform/qa-ins/request`,
+            url: `${process.env.APP_API}/qaform/qa-ins/request`,
             dataType: "json",
             data: formData,
             processData: false,

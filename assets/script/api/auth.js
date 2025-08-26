@@ -3,8 +3,7 @@ export function passwordLogin(data) {
     return new Promise((resolve) => {
         $.ajax({
             type: "post",
-            // url: `${process.env.APP_API}/auth/login/`,
-            url: `${process.env.APP_APITEST}/auth/login/`, // local
+            url: `${process.env.APP_API}/auth/login/`,
             dataType: "json",
             data: data,
             // หากเป็น local ให้เปิด
@@ -31,8 +30,7 @@ export function directlogin(empno, id) {
     return new Promise((resolve) => {
         $.ajax({
             type: "post",
-            // url: `${process.env.APP_API}/auth/directlogin/`,
-            url: `${process.env.APP_APITEST}/auth/directlogin/`,
+            url: `${process.env.APP_API}/auth/directlogin/`,
             dataType: "json",
             data: {
                 username: md5Hash,

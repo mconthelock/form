@@ -14,47 +14,51 @@ class form extends MY_Controller{
     }
 
     public function main(){
-        if(isset($_GET["no"]) && $_GET["no"] != "" && isset($_GET["orgNo"]) && $_GET["orgNo"] != "" && isset($_GET["y"]) && $_GET["y"] != "" ) {
-            $data = [
-                'NFRMNO' => $_GET['no'],
-                'VORGNO' => $_GET['orgNo'],
-                'CYEAR'  => $_GET['y'],
-            ];
-
-        }else{
-            $form = $this->getFormMasterByVaname('QA-INS');
-            if(!empty($form)){
+        try {
+            if(isset($_GET["no"]) && $_GET["no"] != "" && isset($_GET["orgNo"]) && $_GET["orgNo"] != "" && isset($_GET["y"]) && $_GET["y"] != "" ) {
                 $data = [
-                    'NFRMNO' => $form[0]->NNO,
-                    'VORGNO' => $form[0]->VORGNO,
-                    'CYEAR'  =>$form[0]->CYEAR,
+                    'NFRMNO' => $_GET['no'],
+                    'VORGNO' => $_GET['orgNo'],
+                    'CYEAR'  => $_GET['y'],
                 ];
-            }
-        }
-        $data['empno'] = isset($_GET["empno"]) ? $_GET['empno'] : '' ;
 
-        if(isset($_GET["runNo"]) && $_GET["runNo"] != "") {
-            $data['NRUNNO']   = $_GET["runNo"];
-            $data['CYEAR2']   = $_GET["y2"];
-            $form       = [
-                'NFRMNO' => $data['NFRMNO'],
-                'VORGNO' => $data['VORGNO'],
-                'CYEAR'  => $data['CYEAR'],
-                'CYEAR2' => $data['CYEAR2'],
-                'NRUNNO' => $data['NRUNNO'],
-                'EMPNO' =>  $data['empno']
-            ];
-            $data['cextData'] = $this->getExtData($form);
-            $data['mode']     = $this->getMode($form);
-            $data['return']   = $this->checkReturn($form);
-            if($data['return']){
-                $this->views('qaform/QA-INS/form', $data);
             }else{
-                $this->views('qaform/QA-INS/view', $data);
+                $form = $this->getFormMasterByVaname('QA-INS');
+                if(!empty($form)){
+                    $data = [
+                        'NFRMNO' => $form[0]->NNO,
+                        'VORGNO' => $form[0]->VORGNO,
+                        'CYEAR'  =>$form[0]->CYEAR,
+                    ];
+                }
             }
-        }else{
-            $data['mode']  = 1; // create mode
-            $this->views('qaform/QA-INS/form', $data);
+            $data['empno'] = isset($_GET["empno"]) ? $_GET['empno'] : '' ;
+
+            if(isset($_GET["runNo"]) && $_GET["runNo"] != "") {
+                $data['NRUNNO']   = $_GET["runNo"];
+                $data['CYEAR2']   = $_GET["y2"];
+                $form       = [
+                    'NFRMNO' => $data['NFRMNO'],
+                    'VORGNO' => $data['VORGNO'],
+                    'CYEAR'  => $data['CYEAR'],
+                    'CYEAR2' => $data['CYEAR2'],
+                    'NRUNNO' => $data['NRUNNO'],
+                    'EMPNO' =>  $data['empno']
+                ];
+                $data['cextData'] = $this->getExtData($form);
+                $data['mode']     = $this->getMode($form);
+                $data['return']   = $this->checkReturn($form);
+                if($data['return']){
+                    $this->views('qaform/QA-INS/form', $data);
+                }else{
+                    $this->views('qaform/QA-INS/view', $data);
+                }
+            }else{
+                $data['mode']  = 1; // create mode
+                $this->views('qaform/QA-INS/form', $data);
+            }
+        } catch (Exception $e) {
+            show_error($e->getMessage());
         }
     }
 

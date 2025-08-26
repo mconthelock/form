@@ -22,7 +22,7 @@ trait formmst{
             $result = json_decode($response->getBody(), true);
             return [ 'status' => "true", 'data' => $result ];
         }catch(Exception $e){
-            return array('status' => "false", 'message' => 'Failed to get form master', 'e' => $e);
+            throw new Exception(json_encode(['status' => "false", 'message' => 'Failed to get form master', 'e' => $e]), 1);
         }
     }
 
@@ -34,7 +34,7 @@ trait formmst{
             $result = json_decode($response->getBody(), true);
             return [ 'status' => "true", 'data' => $result ];
         }catch(Exception $e){
-            return array('status' => "false", 'message' => 'Failed to get form master by vaname', 'e' => $e);
+            throw new Exception(json_encode(['status' => "false", 'message' => 'Failed to get form master by vaname', 'e' => $e]), 1);
         }
     }
 }
