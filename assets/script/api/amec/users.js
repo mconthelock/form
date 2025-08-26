@@ -21,8 +21,8 @@ export async function searchUser(q = {}) {
         body: JSON.stringify(q),
     });
     if (!res.ok) {
-        return {status: false, message: `Failed to fetch search user : ${await fetchMsgErr(res)}`};
-        
+        await fetchMsgErr(res)
+        throw new Error("Failed to fetch search user");
     }
     return res.json();
     // return getData({
@@ -35,7 +35,8 @@ export async function searchUser(q = {}) {
 export async function getUser(empno) {
     const res = await fetch(`${process.env.APP_API}/users/${empno}`);
     if (!res.ok) {
-        return {status: false, message: `Failed to fetch user : ${await fetchMsgErr(res)}`};
+        await fetchMsgErr(res)
+        throw new Error("Failed to fetch user");
     }
     return res.json();
 
@@ -62,7 +63,8 @@ export async function getUser(empno) {
 export async function getUserImage(empno) {
      const res = await fetch(`${process.env.APP_API}/users/image/${empno}`);
     if (!res.ok) {
-        return {status: false, message: `Failed to fetch user image : ${await fetchMsgErr(res)}`}
+        await fetchMsgErr(res)
+        throw new Error("Failed to fetch user image");
     }
     return res.text();
 

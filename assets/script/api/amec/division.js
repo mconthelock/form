@@ -3,7 +3,8 @@ import { fetchMsgErr } from "../errorMsg";
 export async function getAllDivision() {
     const res = await fetch(`${process.env.APP_API}/amec/division/`);
     if (!res.ok) {
-        return {status: false, message: `Failed to fetch division : ${await fetchMsgErr(res)}`};
+        await fetchMsgErr(res)
+        throw new Error("Failed to fetch divisions");
     }
     return res.json();
     // return getData({
@@ -32,7 +33,8 @@ export async function getDivision(q = {}) {
         }
     );
     if (!res.ok) {
-        return {status: false, message: `Failed to fetch division : ${await fetchMsgErr(res)}`};
+        await fetchMsgErr(res)
+        throw new Error("Failed to fetch divisions");
     }
     return res.json();
     // return getData({

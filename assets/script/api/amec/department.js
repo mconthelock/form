@@ -3,7 +3,8 @@ import { fetchMsgErr } from "../errorMsg";
 export async function getAllDepartment() {
     const res = await fetch(`${process.env.APP_API}/amec/department/`);
     if (!res.ok) {
-        return {status: false, message: `Failed to fetch departments : ${await fetchMsgErr(res)}`};
+        await fetchMsgErr(res)
+        throw new Error("Failed to fetch departments");
     }
     return res.json();
 
@@ -34,7 +35,8 @@ export async function getDepartment(q = {}) {
         }
     );
     if (!res.ok) {
-        return {status: false, message: `Failed to fetch departments: ${await fetchMsgErr(res)}`};
+        await fetchMsgErr(res)
+        throw new Error("Failed to fetch departments");
     }
     return res.json();
     // return getData({
