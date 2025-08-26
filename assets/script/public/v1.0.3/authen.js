@@ -1,3 +1,4 @@
+import moment from "moment";
 import { directlogin } from "../../api/auth";
 import { showbgLoader } from "./preloader";
 import { host, root } from "./jFuntion";
@@ -12,7 +13,13 @@ import {
   deleteMenu,
 } from "../../indexDB/userAuth";
 import { setSidebarMenu, initSidebar } from "./component/sidebar";
-import { deleteCookie, getCookie, setCookie } from "./_jsCookie";
+import {
+  deleteCookie,
+  getCookie,
+  setCookie,
+  getTimeLeft,
+  extendSession,
+} from "./_jsCookie";
 import { initNavbar } from "./component/navbar";
 /**
  * @version 1.0.3
@@ -22,7 +29,7 @@ import { initNavbar } from "./component/navbar";
  * เพิ่ม option sidebar และ navbar ในการ initAuthen
  */
 
-var indexedDBID;
+var indexedDBID, timer;
 // ต้องมีอัันนี้ใน template
 /* <div id="user-login"></div>
     <div id="navbar"></div>
@@ -44,24 +51,25 @@ export async function initAuthen(options = {}) {
     setSessionPhp: false,
     sidebar: true,
     navbar: true,
-    icon: `${host}/assets/images/${process.env.APP_ICON}`, // จะไปตั้งใน env ก็ได้ถ้า path ตรง ถ้าไม่ก็ส่ง path ที่ถูกต้องมาเลยเช่น `${host}/assets/images/icon.png`,
+    // จะไปตั้งใน env ก็ได้ถ้า path ตรง ถ้าไม่ก็ส่ง path ที่ถูกต้องมาเลยเช่น `${host}/assets/images/icon.png`,
+    icon: `${host}/assets/images/${process.env.APP_ICON}`,
     programName: process.env.APP_NAME,
     ...options,
   };
   showbgLoader();
   let menu, info, group, res;
   const cookie = getCookie(process.env.APP_NAME);
-  // console.log('cookie', cookie);
   if (!cookie) {
     window.location.href = `${root}/form/authen/index/${process.env.APP_ID}`;
   } else {
     // ถ้ามี cookie ให้ decrypt ค่า cookie และเก็บค่าในตัวแปร indexedDBID
-    setCookie(process.env.APP_NAME, cookie, { expires: 0.5 / 24 }); // Set cookie ทุกครั้งที่โหลดหน้าเว็บ
+    // setCookie(process.env.APP_NAME, cookie, { expires: 0.5 / 24 }); // Set cookie ทุกครั้งที่โหลดหน้าเว็บ
+    setCookie(process.env.APP_NAME, cookie, 30);
     indexedDBID = decryptText(cookie, process.env.APP_NAME);
 
     const [appid, empno] = indexedDBID.split("-");
     if (!(await getMenu(indexedDBID)) || !(await getGroup(indexedDBID))) {
-      console.log("set indexedDB");
+      //console.log("set indexedDB");
       res = await directlogin(empno, appid);
       group = res.appgroup;
       info = res.appuser;
@@ -69,7 +77,7 @@ export async function initAuthen(options = {}) {
       setMenu(indexedDBID, menu);
       setGroup(indexedDBID, group);
     } else {
-      console.log("used indexedDB");
+      //console.log("used indexedDB");
       res = await getAppDataById(indexedDBID);
       menu = res.menu.data;
       info = res.info.data;
@@ -97,28 +105,58 @@ export async function initAuthen(options = {}) {
     showbgLoader({ show: false });
 
     setInterval(() => {
-      const cookie = getCookie(process.env.APP_NAME);
-      if (!cookie) {
-        console.log("Cookie not found, redirecting to authen page");
-
-        // $('.logout').trigger('click');
-        console.log($(".sidebar-profile").find(".avatar"));
-        console.log($("#nav-profile").closest(".avatar"));
-
-        $(".sidebar-profile")
-          .find(".avatar")
-          .addClass("avatar-offline")
-          .removeClass("avatar-online");
-        $("#nav-profile")
-          .closest(".avatar")
-          .addClass("avatar-offline")
-          .removeClass("avatar-online");
-      } else {
-        console.log("Cookie found, updating indexedDBID");
+      const timeLeft = getTimeLeft(process.env.APP_NAME);
+      if (timeLeft > 0 && timeLeft <= 0.5 * 60 * 1000) {
+        sessionTimeOut();
       }
-    }, 1000 * 60 * 5);
+
+      //   const cookies = getCookie(process.env.APP_NAME);
+      //   if (!cookies) {
+      //     console.log("Cookie not found, redirecting to authen page");
+      //     // $('.logout').trigger('click');
+      //     console.log($(".sidebar-profile").find(".avatar"));
+      //     console.log($("#nav-profile").closest(".avatar"));
+
+      //     $(".sidebar-profile")
+      //       .find(".avatar")
+      //       .addClass("avatar-offline")
+      //       .removeClass("avatar-online");
+      //     $("#nav-profile")
+      //       .closest(".avatar")
+      //       .addClass("avatar-offline")
+      //       .removeClass("avatar-online");
+      //   } else {
+      //     // console.log("Cookie found, updating indexedDBID");
+      //   }
+    }, 1000 * 5);
   }
 }
+
+export function sessionTimeOut() {
+  $("#handleTimeout").prop("checked", true);
+  let count = 30;
+  const el = document.getElementById("timeout-countdown");
+  el.style.setProperty("--value", count);
+  el.setAttribute("aria-label", count);
+  timer = setInterval(() => {
+    count--;
+    el.style.setProperty("--value", count);
+    el.setAttribute("aria-label", count);
+    el.textContent = count;
+    if (count <= 0) {
+      clearInterval(timer);
+      deleteCookie(process.env.APP_NAME);
+      window.location.reload();
+    }
+  }, 1000);
+}
+
+$(document).on("click", "#extend-cookie", function (e) {
+  e.preventDefault();
+  extendSession(process.env.APP_NAME, 30);
+  $("#handleTimeout").prop("checked", false);
+  clearInterval(timer);
+});
 
 $(document).on("click", ".logout", async function (e) {
   e.preventDefault();

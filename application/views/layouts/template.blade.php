@@ -22,12 +22,11 @@
 </head>
 
 <body class="flex flex-col min-h-screen">
+    <!-- Navbar -->
+    <div id="navbar" class=""></div>
     <div class="drawer lg:drawer-open">
-        <input id="mastermenu" type="checkbox" class="drawer-toggle" />
-
+        <input id="my-drawer-2" type="checkbox" class="drawer-toggle" />
         <div class="drawer-content flex flex-col items-center justify-start w-full h-full">
-            <!-- Navbar -->
-            <div id="navbar" class=""></div>
             <!-- Page content here -->
             <div class="flex-1 flex flex-col w-full px-4 md:px-8 lg:mt-5">
                 @yield('contents')
@@ -35,7 +34,7 @@
             <!-- Footer -->
             @include('layouts.footer')
         </div>
-        <div class="drawer-side shadow-2xl">
+        <div class="drawer-side shadow-2xl z-[51]!">
             <div id="sidebar"></div>
         </div>
     </div>

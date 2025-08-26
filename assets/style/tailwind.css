@@ -84,10 +84,6 @@
     }
   }
 
-  /* .btn{
-    @apply !rounded;
-  } */
-
   .dark {
     --color-primary: 255, 0, 0;
     --color-secondary: 107, 114, 128;
