@@ -33,7 +33,7 @@ trait flow{
             $result = json_decode($response->getBody(), true);
             return $result;
         }catch(Exception $e){
-            return array('status' => "false", 'message' => 'Failed to get Employee Flow StepReady', 'e' => $e);
+            throw new Exception(json_encode(['status' => "false", 'message' => 'Failed to get Employee Flow StepReady', 'e' => $e]), 1);
         }
     }
 
@@ -45,7 +45,7 @@ trait flow{
             $result = trim($response->getBody());
             return $result;
         }catch(Exception $e){
-            return array('status' => "false", 'message' => 'Failed to get Extra Data', 'e' => $e);
+            throw new Exception(json_encode(['status' => "false", 'message' => 'Failed to get Extra Data', 'e' => $e]), 1);
         }
     }
 
@@ -58,7 +58,7 @@ trait flow{
             $decoded = json_decode($result, true);
             return $decoded;
         }catch(Exception $e){
-            return array('status' => "false", 'message' => 'Failed to check Return', 'e' => $e);
+            throw new Exception(json_encode(['status' => "false", 'message' => 'Failed to check Return', 'e' => $e]), 1);
         }
     }
 
@@ -71,7 +71,7 @@ trait flow{
             $decoded = json_decode($result, true);
             return $decoded;
         }catch(Exception $e){
-            return array('status' => "false", 'message' => 'Failed to check Return back', 'e' => $e);
+            throw new Exception(json_encode(['status' => "false", 'message' => 'Failed to check Return back', 'e' => $e]), 1);
         }
     }
 }

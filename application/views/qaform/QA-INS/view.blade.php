@@ -37,7 +37,6 @@
 <div class="apv-data hidden" cextData="{{ $cextData }}" return="{{ $return }}"></div>
 @endif
 <div class="flex justify-center">
-
     <div class="card bg-white min-w-[70vw] w-fit drop-shadow-lg">
         <div class="card-header px-6 pt-6">
             <h2 class="text-3xl font-bold">E-Self Inspection and Authorize</h2>

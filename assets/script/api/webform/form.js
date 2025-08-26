@@ -1,7 +1,7 @@
 import { fetchMsgErr } from "../errorMsg";
 
 export async function getFormDetail(form) {
-    const res = await fetch(`${process.env.APP_APITEST}/form/getFormDetail`, {
+    const res = await fetch(`${process.env.APP_API}/form/getFormDetail`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
