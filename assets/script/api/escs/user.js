@@ -20,7 +20,8 @@ export async function getEscsUsers(q = {}) {
         body: JSON.stringify(q),
     });
     if (!res.ok) {
-        return {status: false, message: `Failed to fetch escs users : ${await fetchMsgErr(res)}`};
+        await fetchMsgErr(res)
+        throw new Error("Failed to fetch escs users");
     }
     return res.json();
 

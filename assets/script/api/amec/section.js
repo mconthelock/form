@@ -3,7 +3,8 @@ import { fetchMsgErr } from "../errorMsg";
 export async function getAllSection() {
     const res = await fetch(`${process.env.APP_API}/amec/section/`);
     if (!res.ok) {
-        return {status: false, message: `Failed to fetch section : ${await fetchMsgErr(res)}`};
+        await fetchMsgErr(res)
+        throw new Error("Failed to fetch sections");
     }
     return res.json();
     // return getData({
@@ -34,7 +35,8 @@ export async function getSection(q = {}) {
         }
     );
     if (!res.ok) {
-        return {status: false, message: `Failed to fetch section : ${await fetchMsgErr(res)}`};
+        await fetchMsgErr(res)
+        throw new Error("Failed to fetch sections");
     }
     return res.json();
     // return getData({

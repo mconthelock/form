@@ -21,7 +21,7 @@ console.log(url);
  * Redirect to wait for approve
  */
 export function redirectWebflow(){
-    const path = window.location.host.includes('amecwebtest') ? 'formtest' : 'form';
+    const path = window.location.host.includes(['amecwebtest', 'localhost']) ? 'formtest' : 'form';
     const redirectUrl = `http://webflow.mitsubishielevatorasia.co.th/${path}/workflow/WaitApv.asp`;
     console.log(redirectUrl);
     window.location = redirectUrl;

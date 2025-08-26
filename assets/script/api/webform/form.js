@@ -8,7 +8,8 @@ export async function getFormDetail(form) {
     });
 
     if (!res.ok) {
-        return { status: false, message: `Failed to fetch getFormDetail : ${await fetchMsgErr(res)}` };
+        await fetchMsgErr(res)
+        throw new Error("Failed to fetch getFormDetail");
     }
 
     const data = await res.json();

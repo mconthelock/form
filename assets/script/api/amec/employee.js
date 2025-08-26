@@ -3,7 +3,8 @@ import { fetchMsgErr } from "../errorMsg";
 export async function getEmployee(empno = "") {
     const res = await fetch(`${process.env.APP_API}/amec/employee/${empno}`);
     if (!res.ok) {
-        return {status: false, message: `Failed to fetch employee : ${await fetchMsgErr(res)}`};
+        await fetchMsgErr(res)
+        throw new Error("Failed to fetch employee");
     }
     return res.json();
     // return new Promise((resolve) => {

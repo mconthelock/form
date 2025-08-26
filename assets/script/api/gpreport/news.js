@@ -3,7 +3,8 @@ import { fetchMsgErr } from "../errorMsg";
 export async function getNews() {
     const res = await fetch(`${process.env.APP_API}/gpreport/news/`);
     if (!res.ok) {
-        return { status: false, message: `Failed to fetch news : ${await fetchMsgErr(res)}` };
+        await fetchMsgErr(res)
+        throw new Error("Failed to fetch news");
     }
     return res.json();
     // return new Promise((resolve) => {

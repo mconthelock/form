@@ -1,3 +1,5 @@
+import { fetchMsgErr } from "../../api/errorMsg";
+
 /**
  * Get form data for QA-INS
  * @param {object} form
@@ -32,9 +34,9 @@ export function getformData(form) {
 }
 
 /**
- * 
- * @param {object} formData 
- * @returns 
+ *
+ * @param {object} formData
+ * @returns
  */
 
 export function createFormQains(formData) {
@@ -59,4 +61,21 @@ export function createFormQains(formData) {
             },
         });
     });
+}
+
+export async function qcConfirm(formdata) {
+    const res = await fetch(`${process.env.APP_API}/qaform/qa-ins/qcConfirm`, {
+        method: "POST",
+        body: formdata,
+    });
+
+    if (!res.ok) {
+        return {
+            status: false,
+            message: `Failed to confirm : ${await fetchMsgErr(res)}`,
+        };
+    }
+
+    const data = await res.json();
+    return data;
 }

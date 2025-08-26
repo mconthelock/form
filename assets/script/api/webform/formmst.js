@@ -4,7 +4,8 @@ export async function getFormMasterAll() {
 
     const res = await fetch(`${process.env.APP_API}/formmst/`);
     if (!res.ok) {
-        return { status: false, message: `Failed to fetch form master all : ${await fetchMsgErr(res)}` };
+        await fetchMsgErr(res)
+        throw new Error("Failed to fetch form master all");
     }
     return res.json();
     // return getData({
@@ -16,7 +17,8 @@ export async function getFormMasterAll() {
 export async function getFormMasterByVaname(vaname) {
     const res = await fetch(`${process.env.APP_API}/formmst/${vaname}`);
     if (!res.ok) {
-        return { status: false, message: `Failed to fetch form master by vaname : ${await fetchMsgErr(res)}` };
+        await fetchMsgErr(res)
+        throw new Error("Failed to fetch form master by vaname");
     }
     return res.json();
     // return getData({
@@ -45,7 +47,8 @@ export async function getFormMaster(q = {}) {
         body: JSON.stringify(q),
     });
     if (!res.ok) {
-        return { status: false, message: `Failed to fetch form master : ${await fetchMsgErr(res)}` };
+        await fetchMsgErr(res)
+        throw new Error("Failed to fetch form master");
     }
     return res.json();
 
