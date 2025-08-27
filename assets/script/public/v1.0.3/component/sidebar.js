@@ -14,11 +14,13 @@ $(document).on("click", "#sidebarToggle", function () {
   if ($("#sidebar").hasClass("collapsed")) {
     expandMenu();
     iconMenu();
+    $(this).css("display", "none !important");
     // $('#sidebar').removeClass('collapsed');
     // $('#sidebarToggle').attr('data-html', 'Collapse menu');
   } else if ($("#sidebar").hasClass("collapsed-hover")) {
     expandMenu();
     iconMenu();
+    $(this).css("display", "flex !important");
     // $('#sidebar').removeClass('collapsed-hover collapsed');
     // $('#sidebarToggle').attr('data-html', 'Collapse menu');
   } else {

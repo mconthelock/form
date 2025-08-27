@@ -8,6 +8,8 @@
     <meta name="base_url" content="{{ base_url() }}">
     <meta name="root_url" content="{{ root_url() }}">
     <link rel="manifest" href="{{ base_url() }}manifest.json?ver={{ $GLOBALS['version'] }}">
+    <meta name="appname" content="{{ $_ENV['APP_NAME'] }}">
+    <meta name="appstatus" content="{{ $_ENV['STATE'] }}">
     <meta name="theme-color" content="#C0C0C0">
     <link rel="shortcut icon" href="{{ base_url() }}assets/images/favicon.ico">
     <link rel="apple-touch-icon" href="{{ base_url() }}assets/images/favicon.ico">
