@@ -1,63 +1,37 @@
+import "@flaticon/flaticon-uicons/css/all/all.css";
 import Cookies from "js-cookie";
 import { io } from "socket.io-client";
 import { BrowserMultiFormatReader } from "@zxing/browser";
-import {
-  createCarousel,
-  sendSession,
-  showLoader,
-  host,
-  uri,
-  showMessage,
-} from "./utils";
+import { sendSession, showLoader, host, uri, showMessage } from "./utils";
 import { getApp } from "./indexDB/application";
 import { setApplication } from "./indexDB/setIndexDB";
 import { setImage, setInfo } from "./indexDB/employee";
-import { directlogin, passwordLogin } from "./webservice";
+import { directlogin, passwordLogin } from "./api/auth";
+import { createCarousel } from "./api/gpreport/news";
 
 var camera;
 $(document).ready(async function () {
   await showLoader(true);
   await createCarousel("login");
-
-  const id = $("#appid").val();
-  const apps = await getApp(id);
-  console.log(`appid: ${id}, data: ${apps}`);
-
   if ($("#appid").val() != "1") $("#webflow-link").removeClass("hidden");
   $(".loginform:visible").find("input").first().focus();
   await showLoader(false);
-  //Test Socket.io
-  //   console.log("Frontend application loaded!");
-  //   console.log(process.env.APP_API);
-  //   const socket = io(`http://localhost:3001`);
-  //   socket.on("connect", () => {
-  //     console.log("Connected to Socket.io server:", socket.id);
-  //   });
+});
 
-  //   socket.on("disconnect", () => {
-  //     console.log("Disconnected from Socket.io server.");
-  //   });
-
-  //   socket.on("orderViewing", (data) => {
-  //     console.log("Order viewing update received:", data);
-  // const orderId = data.orderId;
-  // const viewerId = data.viewerId; // The socket ID of the user viewing
-  // const isViewing = data.isViewing;
-
-  // $(`#order-row-${orderId}`).each(function() {
-  //     const $row = $(this);
-  //     // Remove any existing indicators
-  //     $row.removeClass('viewing-indicator');
-
-  //     if (isViewing) {
-  //         // Add indicator if this order is being viewed by someone else
-  //         // We compare viewerId to socket.id to prevent showing "viewing" on own screen
-  //         if (viewerId !== socket.id) {
-  //             $row.addClass('viewing-indicator');
-  //         }
-  //     }
-  // });
-  //   });
+$(document).on("click", "#show-password", function (e) {
+  e.preventDefault();
+  const status = $(this).hasClass("show-password");
+  if (status) {
+    $(this).closest("label").find("input").attr("type", "text");
+    $(this).removeClass("show-password");
+    $(this).find(".eye-close").addClass("hidden");
+    $(this).find(".eye-open").removeClass("hidden").addClass("flex");
+  } else {
+    $(this).closest("label").find("input").attr("type", "password");
+    $(this).addClass("show-password");
+    $(this).find(".eye-close").removeClass("hidden");
+    $(this).find(".eye-open").addClass("hidden");
+  }
 });
 
 $(document).on("click", ".toggle-login", function (e) {
@@ -108,61 +82,7 @@ $(document).on("submit", "#passwordLogin", async function (e) {
     return;
   }
   const url = await successLogin(user);
-  window.location.href = url;
-  //await setSession(user.message);
-  //const apps = user.message.apps;
-  //const location = apps.APP_LOCATION;
-
-  //เช็คว่าเป็น Webflow หรือไม่ ถ้าใช่ให้ Redirect ไปหน้า Home
-  //   const app = $("#appid").val(); //1 = webflow
-  //   if (app == 1) {
-  //     window.location.href = `${process.env.APP_ENV}/home`;
-  //     return;
-  //   }
-
-  //เก็บข้อมูล App ลง LocalStorage
-  //   const id = `${usr.program}-${usr.username}`;
-  //   await setAuthen(id, user.message);
-
-  //   await setUserAuth(id, user.message); // เก็บข้อมูล Session ลง IndexDB ให้เว็บปลายทางใช้
-  //   const authKey = setCkkey(usr.program, usr.username);
-  //   localStorage.setItem(location, authKey); // เก็บ key cookie ไว้ใน localStorage
-  //   Cookies.set(authKey, encryptText(id, location), { expires: 0.5 / 24 }); // Set cookie for 30 minutes
-
-  // เก็บข้อมูลลง Recent App
-  //   try {
-  //     const links = await getLinks(apps.APP_ID); //.find((el) => el.id == id);
-  //     const appdata = links.data;
-  //     if (appdata !== null) {
-  //       await stampApp(appdata);
-  //     }
-  //   } catch (e) {
-  //     console.log(e);
-  //   }
-
-  //ส่งข้อมูล Session ไปยัง Site ปลายทาง
-  //   if (apps.APP_ID != "28") {
-  //     const dir = await sendSession(
-  //       `${process.env.APP_HOST}/${location}`,
-  //       user.message
-  //     );
-  //     if (!dir.url) {
-  //       showMessage(
-  //         "You have no permission to Access on our system, Please contact admin Tel. 2032-2038"
-  //       );
-  //     } else {
-  //       window.location.href = `${process.env.APP_HOST}/${location}/${dir.url}`;
-  //       return;
-  //     }
-  //   } else {
-  //     const dir =
-  //       user.message.group.length > 0
-  //         ? user.message.group[0].GROUP_HOME
-  //           ? user.message.group[0].GROUP_HOME
-  //           : ""
-  //         : "";
-  //     window.location.href = `${process.env.APP_HOST}/${location}/`;
-  //   }
+  window.location.replace(url);
 });
 
 //RFID Login Button
@@ -197,7 +117,7 @@ $(document).on("keyup", "#rfid-input", async function (e) {
       const location = apps.APP_LOCATION;
       const dir = await sendSession(`${uri}/${location}`, user.message);
       // await setAuthen(id, user.message);
-      window.location.href = `${uri}/${location}/${dir.url}`;
+      window.location.replace(`${uri}/${location}/${dir.url}`);
     } else {
       showMessage(user.message);
       $(this).prop("disabled", false);
@@ -237,8 +157,8 @@ async function successLogin(user) {
   }`;
 }
 
+//สร้าง  Session ในระบบ
 export function setSession(data) {
-  //สร้าง  Session ในระบบ
   return new Promise((resolve) => {
     $.ajax({
       type: "post",
@@ -275,20 +195,6 @@ async function barcodeLogin(empcode) {
   }
   const url = await successLogin(user);
   window.location.href = url;
-}
-
-function bglogin(data) {
-  return new Promise((resolve) => {
-    $.ajax({
-      type: "post",
-      url: `${uri}/webservice/api/authentication/directlogin`,
-      dataType: "json",
-      data: data,
-      success: function (response) {
-        resolve(response);
-      },
-    });
-  });
 }
 
 async function showCamera(target) {
@@ -334,7 +240,7 @@ async function showCamera(target) {
           //$("#open-camera").hide();
           controls.stop();
           const url = await successLogin(user);
-          window.location.href = url;
+          window.location.replace(url);
         }
         if (error) {
           console.warn("อ่านผิดพลาด: ", error.message);
@@ -346,3 +252,32 @@ async function showCamera(target) {
     console.error("เกิดข้อผิดพลาด:", err);
   }
 }
+
+//Note for Socket.io
+//   console.log("Frontend application loaded!");
+//   console.log(process.env.APP_API);
+//   const socket = io(`http://localhost:3001`);
+//   socket.on("connect", () => {
+//     console.log("Connected to Socket.io server:", socket.id);
+//   });
+//   socket.on("disconnect", () => {
+//     console.log("Disconnected from Socket.io server.");
+//   });
+//   socket.on("orderViewing", (data) => {
+//     console.log("Order viewing update received:", data);
+// const orderId = data.orderId;
+// const viewerId = data.viewerId; // The socket ID of the user viewing
+// const isViewing = data.isViewing;
+// $(`#order-row-${orderId}`).each(function() {
+//     const $row = $(this);
+//     // Remove any existing indicators
+//     $row.removeClass('viewing-indicator');
+//     if (isViewing) {
+//         // Add indicator if this order is being viewed by someone else
+//         // We compare viewerId to socket.id to prevent showing "viewing" on own screen
+//         if (viewerId !== socket.id) {
+//             $row.addClass('viewing-indicator');
+//         }
+//     }
+// });
+//   });
