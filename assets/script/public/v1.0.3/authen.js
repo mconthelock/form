@@ -29,7 +29,7 @@ import { initNavbar } from "./component/navbar";
  * เพิ่ม option sidebar และ navbar ในการ initAuthen
  */
 
-var indexedDBID, timer;
+var indexedDBID, timer, intervalId;
 // ต้องมีอัันนี้ใน template
 /* <div id="user-login"></div>
     <div id="navbar"></div>
@@ -47,6 +47,17 @@ var indexedDBID, timer;
     </div> */
 
 export async function initAuthen(options = {}) {
+  //   intervalId = setInterval(() => {
+  //     console.log("ทำงานทุก 1 วินาที");
+  //   }, 1000);
+
+  //   // หยุดการทำงานหลัง 5 วินาที
+  //   setTimeout(() => {
+  //     clearInterval(intervalId);
+  //     console.log("หยุดทำงานแล้ว");
+  //   }, 5000);
+  //   return;
+
   const opt = {
     setSessionPhp: false,
     sidebar: true,
@@ -64,7 +75,7 @@ export async function initAuthen(options = {}) {
   } else {
     // ถ้ามี cookie ให้ decrypt ค่า cookie และเก็บค่าในตัวแปร indexedDBID
     // setCookie(process.env.APP_NAME, cookie, { expires: 0.5 / 24 }); // Set cookie ทุกครั้งที่โหลดหน้าเว็บ
-    setCookie(process.env.APP_NAME, cookie, 30);
+    setCookie(process.env.APP_NAME, cookie, process.env.TIMEOUT || 1);
     indexedDBID = decryptText(cookie, process.env.APP_NAME);
 
     const [appid, empno] = indexedDBID.split("-");
@@ -91,7 +102,10 @@ export async function initAuthen(options = {}) {
     }
 
     // $('#user-login').prop('empno', info.SEMPNO);
+    if ($("#user-login").length == 0)
+      $("body").prepend('<div id="user-login"></div>');
     $("#user-login").attr("empno", empno);
+    $("#user-login").attr("empname", info.SNAME);
     $("#user-login").attr("appid", appid);
     $("#user-login").attr("program", indexedDBID);
 
@@ -106,6 +120,7 @@ export async function initAuthen(options = {}) {
 
     setInterval(() => {
       const timeLeft = getTimeLeft(process.env.APP_NAME);
+      console.log(timeLeft);
       if (timeLeft > 0 && timeLeft <= 0.5 * 60 * 1000) {
         sessionTimeOut();
       }
@@ -138,11 +153,13 @@ export function sessionTimeOut() {
   const el = document.getElementById("timeout-countdown");
   el.style.setProperty("--value", count);
   el.setAttribute("aria-label", count);
+  if (timer) return;
   timer = setInterval(() => {
     count--;
     el.style.setProperty("--value", count);
     el.setAttribute("aria-label", count);
     el.textContent = count;
+    console.log(count, timer);
     if (count <= 0) {
       clearInterval(timer);
       deleteCookie(process.env.APP_NAME);
@@ -153,9 +170,10 @@ export function sessionTimeOut() {
 
 $(document).on("click", "#extend-cookie", function (e) {
   e.preventDefault();
-  extendSession(process.env.APP_NAME, 30);
+  extendSession(process.env.APP_NAME, process.env.TIMEOUT || 1);
   $("#handleTimeout").prop("checked", false);
   clearInterval(timer);
+  timer = undefined;
 });
 
 $(document).on("click", ".logout", async function (e) {

@@ -72,6 +72,10 @@
   display: none;
 }
 
+#sidebar.collapsed .list-disc {
+  display: none;
+}
+
 @media (width >= 48rem) {
   #sidebar {
     width: 16rem;
