@@ -16,81 +16,92 @@ class form extends MY_Controller{
     }
 
     public function main(){
-        if(isset($_GET["no"]) && $_GET["no"] != "" && isset($_GET["orgNo"]) && $_GET["orgNo"] != "" && isset($_GET["y"]) && $_GET["y"] != "" ) {
+        if(isset($_GET["mode"]) && ($_GET["mode"] =="M"))
+        {
             $data = [
                 'NFRMNO' => $_GET['no'],
                 'VORGNO' => $_GET['orgNo'],
                 'CYEAR'  => $_GET['y'],
             ];
-
-        }else{
-            $formmst = $this->frm->getFormMaster('MAR-VMS');
-            if(!empty($formmst)){
-                $data = [
-                    'NFRMNO' => $formmst[0]->NNO,
-                    'VORGNO' => $formmst[0]->VORGNO,
-                    'CYEAR'  =>$formmst[0]->CYEAR,
-                ];
-            }
-
-        }
-        $data['empno'] = isset($_GET["empno"]) ? $_GET['empno'] : '' ;
-        
-        if(!isset($_GET["runNo"]))
-        {
-            $data['mode'] = "1";
+            $data['empno'] = isset($_GET["empno"]) ? $_GET['empno'] : '' ;
+            $this->views('marform/MAR-VMS/main', $data);
         }else
         {
-            $data["CYEAR2"] = $_GET["y2"];
-            $data["NRUNNO"] = $_GET["runNo"];
-            $conall = array('NFRMNO' => $data["NFRMNO"],'VORGNO' => $data["VORGNO"],'CYEAR' => $data["CYEAR"],'CYEAR2' => $data["CYEAR2"],'NRUNNO' => $data["NRUNNO"]);
-            $data["form"] = $this->vms->customSelect("FORM",$conall ,'*');
-            if($data["form"][0]->VREQNO ==  $data['empno'])
+            if(isset($_GET["no"]) && $_GET["no"] != "" && isset($_GET["orgNo"]) && $_GET["orgNo"] != "" && isset($_GET["y"]) && $_GET["y"] != "" ) {
+                $data = [
+                    'NFRMNO' => $_GET['no'],
+                    'VORGNO' => $_GET['orgNo'],
+                    'CYEAR'  => $_GET['y'],
+                ];
+    
+            }else{
+                $formmst = $this->frm->getFormMaster('MAR-VMS');
+                if(!empty($formmst)){
+                    $data = [
+                        'NFRMNO' => $formmst[0]->NNO,
+                        'VORGNO' => $formmst[0]->VORGNO,
+                        'CYEAR'  =>$formmst[0]->CYEAR,
+                    ];
+                }
+    
+            }
+            $data['empno'] = isset($_GET["empno"]) ? $_GET['empno'] : '' ;
+            
+            if(!isset($_GET["runNo"]))
             {
-                $data['mode'] = "2";
+                $data['mode'] = "1";
             }else
             {
-                $data['mode'] = "3";
+                $data["CYEAR2"] = $_GET["y2"];
+                $data["NRUNNO"] = $_GET["runNo"];
+                $conall = array('NFRMNO' => $data["NFRMNO"],'VORGNO' => $data["VORGNO"],'CYEAR' => $data["CYEAR"],'CYEAR2' => $data["CYEAR2"],'NRUNNO' => $data["NRUNNO"]);
+                $data["form"] = $this->vms->customSelect("FORM",$conall ,'*');
+                if($data["form"][0]->VREQNO ==  $data['empno'])
+                {
+                    $data['mode'] = "2";
+                }else
+                {
+                    $data['mode'] = "3";
+                }
+               
             }
-           
-        }
-        // mode : ADD or EDIT
-        if(($data['mode']=="1")||($data['mode']=="2"))
-        {
-            $data["guesttype"] = $this->vms->get_guest_type();
-            $data["purpose"] = $this->vms->get_purpose_visit();
-            $data["visittype"] = $this->vms->get_visit_type();
-            $data["salecom"] = $this->vms->get_salecompany();
-            $data["participants"] = $this->vms->get_participants();
-            $data["activity"] = $this->vms->get_activity();
-            $data["room"] = $this->vms->get_room();
-            $data["attfile"] = array();
-            $data["attbfile"] = array();
-            $data["pstk"] = array();
-            $data["istk"] = array();
-            $date["sch"]  = array();
-            if($data['mode']=="2")
+            // mode : ADD or EDIT
+            if(($data['mode']=="1")||($data['mode']=="2"))
             {
-                $con = array("CYEAR2" => $data["CYEAR2"],"NRUNNO" => $data["NRUNNO"]);
-                $conatt = array("CYEAR2" => $data["CYEAR2"],"NRUNNO" => $data["NRUNNO"],"TYPENO" =>'S');
-                $data["visit"] =  $this->vms->customSelect("VMS_VISIT",$con ,'*');
-                $data["sch"] =  $this->vms->get_schedule($con);
-                $con["TYPEEMP"] = "P";
-                $data["pstk"] = $this->vms->get_stakeholders($con);
-                $con["TYPEEMP"] = "I";
-                $data["istk"] = $this->vms->get_stakeholders($con);
-                $data["attfile"] =  $this->vms->customSelect("VMS_ATTFILE",$conatt,'*');
-                $conatt["TYPENO"] = "B";
-                $data["attbfile"] =  $this->vms->customSelect("VMS_ATTFILE",$conatt,'*');
-            }else
-            {
-                $data["formversion"] = $this->vms->get_formversion();
+                $data["guesttype"] = $this->vms->get_guest_type();
+                $data["purpose"] = $this->vms->get_purpose_visit();
+                $data["visittype"] = $this->vms->get_visit_type();
+                $data["salecom"] = $this->vms->get_salecompany();
+                $data["participants"] = $this->vms->get_participants();
+                $data["activity"] = $this->vms->get_activity();
+                $data["room"] = $this->vms->get_room();
+                $data["attfile"] = array();
+                $data["attbfile"] = array();
+                $data["pstk"] = array();
+                $data["istk"] = array();
+                $date["sch"]  = array();
+                if($data['mode']=="2")
+                {
+                    $con = array("CYEAR2" => $data["CYEAR2"],"NRUNNO" => $data["NRUNNO"]);
+                    $conatt = array("CYEAR2" => $data["CYEAR2"],"NRUNNO" => $data["NRUNNO"],"TYPENO" =>'S');
+                    $data["visit"] =  $this->vms->customSelect("VMS_VISIT",$con ,'*');
+                    $data["sch"] =  $this->vms->get_schedule($con);
+                    $con["TYPEEMP"] = "P";
+                    $data["pstk"] = $this->vms->get_stakeholders($con);
+                    $con["TYPEEMP"] = "I";
+                    $data["istk"] = $this->vms->get_stakeholders($con);
+                    $data["attfile"] =  $this->vms->customSelect("VMS_ATTFILE",$conatt,'*');
+                    $conatt["TYPENO"] = "B";
+                    $data["attbfile"] =  $this->vms->customSelect("VMS_ATTFILE",$conatt,'*');
+                }else
+                {
+                    $data["formversion"] = $this->vms->get_formversion();
+                }
+    
+                $this->views('marform/MAR-VMS/create', $data);
             }
 
-            $this->views('marform/MAR-VMS/create', $data);
         }
-
-
     }
 
     
