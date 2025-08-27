@@ -144,27 +144,71 @@ class Main extends MY_Controller
             }
         }
 
+        // Handle Gift Memo
+        $giftMemoFile = null;
+        if (isset($_FILES['file_memo_gift']) && $_FILES['file_memo_gift']['error'] == 0) {
+            $file       = $_FILES['file_memo_gift'];
+            $extension  = pathinfo($file['name'], PATHINFO_EXTENSION);
+            $uploadFile = array(
+                'name'     => "GiftMemo_{$cyear2}_{$nrunno}.{$extension}",
+                'type'     => $file['type'],
+                'tmp_name' => $file['tmp_name'],
+                'error'    => $file['error'],
+                'size'     => $file['size']
+            );
+            $result     = $this->uploadFile($uploadFile);
+            if ($result['status'] == '1') {
+                $giftMemoFile = $result['file_name'];
+            }
+        }
+
+        // Handle Other Memo
+        $otherMemoFile = null;
+        if (isset($_FILES['file_memo_other']) && $_FILES['file_memo_other']['error'] == 0) {
+            $file       = $_FILES['file_memo_other'];
+            $extension  = pathinfo($file['name'], PATHINFO_EXTENSION);
+            $uploadFile = array(
+                'name'     => "OtherMemo_{$cyear2}_{$nrunno}.{$extension}",
+                'type'     => $file['type'],
+                'tmp_name' => $file['tmp_name'],
+                'error'    => $file['error'],
+                'size'     => $file['size']
+            );
+            $result     = $this->uploadFile($uploadFile);
+            if ($result['status'] == '1') {
+                $otherMemoFile = $result['file_name'];
+            }
+        }
+
+
         $data = [
-            'NFRMNO'               => $nfrmno,
-            'VORGNO'               => $vorgno,
-            'CYEAR'                => $cyear,
-            'CYEAR2'               => $cyear2,
-            'NRUNNO'               => $nrunno,
-            'EMP_INPUT'            => $post['input_by'],
-            'EMP_REQ'              => $post['requested_by'],
-            'PURPOSE'              => $post['purpose'],
-            'TYPE_TIME'            => $post['time'],
-            'LOCATION_TYPE'        => $post['location'],
-            'LOCATION'             => $post['location_detail'],
+            'NFRMNO'        => $nfrmno,
+            'VORGNO'        => $vorgno,
+            'CYEAR'         => $cyear,
+            'CYEAR2'        => $cyear2,
+            'NRUNNO'        => $nrunno,
+            'EMP_INPUT'     => $post['input_by'],
+            'EMP_REQ'       => $post['requested_by'],
+            'PURPOSE'       => $post['purpose'],
+            'TYPE_TIME'     => $post['time'],
+            'LOCATION_TYPE' => $post['location'],
+            'LOCATION'      => $post['location_detail'],
             // 'ENTERTAINMENT_BUDGET' => $post['entertain_budget'],
-            'GUEST_TYPE'           => $post['guest_type'],
-            'REMARK'               => $post['remark'],
-            'REIMBURSEMENT'        => $post['cash_adv'],
-            'TOTAL_AMOUNT'         => $post['total_amount'],
-            'STATUS'               => '1',
+            'OTHER_DETAILS' => $post['other_details'],
+            'GUEST_TYPE'    => $post['guest_type'],
+            'REMARK'        => $post['remark'],
+            'REIMBURSEMENT' => $post['cash_adv'],
+            'TOTAL_AMOUNT'  => $post['total_amount'],
+            'STATUS'        => '1',
         ];
         if ($memoFileName) {
             $data['FILE_MEMO'] = $memoFileName;
+        }
+        if ($giftMemoFile) {
+            $data['FILE_MEMO_GIFT'] = $giftMemoFile;
+        }
+        if ($otherMemoFile) {
+            $data['FILE_MEMO_OTHER'] = $otherMemoFile;
         }
 
         $dateFields = [];
@@ -300,28 +344,71 @@ class Main extends MY_Controller
             }
         }
 
+        // Handle Gift Memo
+        $giftMemoFile = null;
+        if (isset($_FILES['file_memo_gift']) && $_FILES['file_memo_gift']['error'] == 0) {
+            $file       = $_FILES['file_memo_gift'];
+            $extension  = pathinfo($file['name'], PATHINFO_EXTENSION);
+            $uploadFile = array(
+                'name'     => "GiftMemo_{$cyear2}_{$nrunno}.{$extension}",
+                'type'     => $file['type'],
+                'tmp_name' => $file['tmp_name'],
+                'error'    => $file['error'],
+                'size'     => $file['size']
+            );
+            $result     = $this->uploadFile($uploadFile);
+            if ($result['status'] == '1') {
+                $giftMemoFile = $result['file_name'];
+            }
+        }
+
+        // Handle Other Memo
+        $otherMemoFile = null;
+        if (isset($_FILES['file_memo_other']) && $_FILES['file_memo_other']['error'] == 0) {
+            $file       = $_FILES['file_memo_other'];
+            $extension  = pathinfo($file['name'], PATHINFO_EXTENSION);
+            $uploadFile = array(
+                'name'     => "OtherMemo_{$cyear2}_{$nrunno}.{$extension}",
+                'type'     => $file['type'],
+                'tmp_name' => $file['tmp_name'],
+                'error'    => $file['error'],
+                'size'     => $file['size']
+            );
+            $result     = $this->uploadFile($uploadFile);
+            if ($result['status'] == '1') {
+                $otherMemoFile = $result['file_name'];
+            }
+        }
+
         $data = [
-            'NFRMNO'               => $nfrmno,
-            'VORGNO'               => $vorgno,
-            'CYEAR'                => $cyear,
-            'CYEAR2'               => $cyear2,
-            'NRUNNO'               => $nrunno,
-            'EMP_INPUT'            => $post['input_by'],
-            'EMP_REQ'              => $post['requested_by'],
-            'PURPOSE'              => $post['purpose'],
-            'TYPE_TIME'            => $post['time'],
-            'LOCATION_TYPE'        => $post['location'],
-            'LOCATION'             => $post['location_detail'],
+            'NFRMNO'        => $nfrmno,
+            'VORGNO'        => $vorgno,
+            'CYEAR'         => $cyear,
+            'CYEAR2'        => $cyear2,
+            'NRUNNO'        => $nrunno,
+            'EMP_INPUT'     => $post['input_by'],
+            'EMP_REQ'       => $post['requested_by'],
+            'PURPOSE'       => $post['purpose'],
+            'TYPE_TIME'     => $post['time'],
+            'LOCATION_TYPE' => $post['location'],
+            'LOCATION'      => $post['location_detail'],
             // 'ENTERTAINMENT_BUDGET' => $post['entertain_budget'],
-            'GUEST_TYPE'           => $post['guest_type'],
-            'REMARK'               => $post['remark'],
-            'TOTAL_AMOUNT'         => $post['total_amount'],
-            'STATUS'               => '1',
+            'GUEST_TYPE'    => $post['guest_type'],
+            'REMARK'        => $post['remark'],
+            'TOTAL_AMOUNT'  => $post['total_amount'],
+            'STATUS'        => '1',
         ];
 
         // เพิ่ม memo file ถ้ามีการอัปโหลดใหม่
+
         if ($memoFileName) {
             $data['FILE_MEMO'] = $memoFileName;
+        }
+        if ($giftMemoFile) {
+            $data['FILE_MEMO_GIFT'] = $giftMemoFile;
+        }
+        if ($otherMemoFile) {
+            $data['FILE_MEMO_OTHER'] = $otherMemoFile;
         }
 
         $where = [

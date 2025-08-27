@@ -77,6 +77,10 @@ class my_model extends CI_Model {
 			$this->db->set($key, "to_date('".$value."','dd/mm/yyyy')", false);
 		// }else if(in_array($key, array())){
 		// 	$this->db->set($key, $value, false);
+		}elseif(in_array($key, array('SCHSTIME','SCHETIME'))){
+			$this->db->set($key, "TO_TIMESTAMP('".$value."','YYYY-MM-DD HH:MI AM')", false);
+		// }else if(in_array($key, array())){
+		// 	$this->db->set($key, $value, false);
 		}else{
 			$this->db->set($key, $value);
 		}

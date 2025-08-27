@@ -48,14 +48,40 @@
                                 <th class="text-left text-blue-900 font-semibold py-2 pl-4 border-b-2 border-blue-200 bg-blue-100">Time</th>
                                 <td class="py-2 pl-4 border-b-2 border-blue-200">{{ $entertainData->TYPE_TIME }}</td>
                             </tr>
+                            @if ($entertainData->FILE_MEMO_GIFT)
+                                <tr>
+                                    <th class="text-left text-blue-900 font-semibold py-2 pl-4 border-b-2 border-blue-200 bg-blue-100">File Memo Gift</th>
+                                    <td class="py-2 pl-4 border-b-2 border-blue-200">
+                                        <a href="{{ base_url('gpform/GP-ENT/main/preview/' . $entertainData->FILE_MEMO_GIFT) }}" target="_blank" class="text-blue-700 underline btn btn-sm rounded-lg">
+                                            {{ $entertainData->FILE_MEMO_GIFT }}
+                                        </a>
+                                    </td>
+                                </tr>
+                            @endif
+                            @if($entertainData->FILE_MEMO_OTHER)
+                                <tr>
+                                    <th class="text-left text-blue-900 font-semibold py-2 pl-4 border-b-2 border-blue-200 bg-blue-100">File Memo Other</th>
+                                    <td class="py-2 pl-4 border-b-2 border-blue-200">
+                                        <a href="{{ base_url('gpform/GP-ENT/main/preview/' . $entertainData->FILE_MEMO_OTHER) }}" target="_blank" class="text-blue-700 underline btn btn-sm rounded-lg">
+                                            {{ $entertainData->FILE_MEMO_OTHER }}
+                                        </a>
+                                    </td>
+                                </tr>
+                            @endif
+                            @if($entertainData->OTHER_DETAILS)
+                                <tr>
+                                    <th class="text-left text-blue-900 font-semibold py-2 pl-4 border-b-2 border-blue-200 bg-blue-100">Other Details</th>
+                                    <td class="py-2 pl-4 border-b-2 border-blue-200">{{ $entertainData->OTHER_DETAILS }}</td>
+                                </tr>
+                            @endif
                             <tr>
                                 <th class="text-left text-blue-900 font-semibold py-2 pl-4 border-b-2 border-blue-200 bg-blue-100">Location</th>
-                                <td class="py-2 pl-4 border-b-2 border-blue-200">{{ $entertainData->LOCATION_TYPE }}</td>
+                                <td class="py-2 pl-4 border-b-2 border-blue-200">{{ $entertainData->LOCATION_TYPE ?? '-' }}</td>
                             </tr>
-                            <tr>
+                            {{-- <tr>
                                 <th class="text-left text-blue-900 font-semibold py-2 pl-4 border-b-2 border-blue-200 bg-blue-100">Entertainment Budget</th>
                                 <td class="py-2 pl-4 border-b-2 border-blue-200">{{ $entertainData->ENTERTAINMENT_BUDGET ?? '-' }}</td>
-                            </tr>
+                            </tr>--}}
                             <tr>
                                 <th class="text-left text-blue-900 font-semibold py-2 pl-4 border-blue-200 bg-blue-100">Guest Type</th>
                                 <td class="py-2 pl-4 border-blue-200">{{ $entertainData->TYPE_NAME }}</td>
@@ -284,15 +310,15 @@
         // });
     </script>
     <!-- <script>
-                    const input = document.getElementById('file_group');
-                    const fileList = document.getElementById('file-list');
-                    input.addEventListener('change', function () {
-                        fileList.innerHTML = '';
-                        Array.from(input.files).forEach(file => {
-                            const li = document.createElement('li');
-                            li.textContent = "- " + file.name;
-                            fileList.appendChild(li);
+                        const input = document.getElementById('file_group');
+                        const fileList = document.getElementById('file-list');
+                        input.addEventListener('change', function () {
+                            fileList.innerHTML = '';
+                            Array.from(input.files).forEach(file => {
+                                const li = document.createElement('li');
+                                li.textContent = "- " + file.name;
+                                fileList.appendChild(li);
+                            });
                         });
-                    });
-                </script> -->
+                    </script> -->
 @endsection

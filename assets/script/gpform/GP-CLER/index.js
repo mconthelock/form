@@ -214,11 +214,17 @@ $(document).ready(function () {
     formData.append("cyear2", CYEAR2);
     const expense = [];
     $("#expense-table tbody tr").each(function () {
-      expense.push({
-        receipt_no: $(this).find("td:eq(1) input").val().trim(),
-        cost: parseFloat($(this).find("td:eq(2) input").val().trim()) || 0,
-      });
+      const receipt_no = $(this).find("td:eq(1) input").val().trim();
+      const cost = parseFloat($(this).find("td:eq(2) input").val().trim()) || 0;
+
+      if (receipt_no !== "" || cost > 0) {
+        expense.push({
+          receipt_no,
+          cost,
+        });
+      }
     });
+
     formData.append("expense", JSON.stringify(expense));
 
     // Send AJAX request

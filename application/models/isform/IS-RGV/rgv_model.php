@@ -211,6 +211,23 @@ class Rgv_model extends CI_Model
 
     }
 
+    public function test_data()
+    {
+        $sql = "SELECT LEVEL AS MENU_LEVEL,
+        LPAD(' ', LEVEL*2) || MENU_NAME_EN AS MENU_TREE,
+        ilm.MENU_ID,
+        PARENT_MENU_ID,
+        MENU_ORDER,
+        ACTIVE,
+        ila.EMPNO
+        FROM  ISRGV_LN_MST ilm
+        LEFT JOIN ISRGV_LN_AUTHORIZE ila ON ila.MENU_ID = ilm.MENU_ID AND ila.STATUS = 1
+        START WITH PARENT_MENU_ID IS NULL
+        CONNECT BY PRIOR ilm.MENU_ID = PARENT_MENU_ID
+        ORDER SIBLINGS BY MENU_ORDER, MENU_NAME_EN";
+        return $this->db->query($sql)->result();
+    }
+
 
 
 

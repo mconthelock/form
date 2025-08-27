@@ -44,7 +44,7 @@
             <!-- Section 2: Time & Location -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                    <label class="font-semibold text-blue-700 block mb-2">Time</label>
+                    <label class="font-semibold text-blue-700 block mb-2">Type of Entertainment</label>
                     <div class="flex gap-6">
                         <label class="inline-flex items-center space-x-2">
                             <input type="radio" name="time" id="time-lunch" class="radio radio-primary" value="Lunch" />
@@ -54,10 +54,39 @@
                             <input type="radio" name="time" id="time-dinner" class="radio radio-primary" value="Dinner" />
                             <span>Dinner</span>
                         </label>
+                        <label class="inline-flex items-center space-x-2">
+                            <input type="radio" name="time" id="time-gift" class="radio radio-primary" value="Gift" />
+                            <span>Gift</span>
+                        </label>
+                        <label class="inline-flex items-center space-x-2">
+                            <input type="radio" name="time" id="time-other" class="radio radio-primary" value="Other" />
+                            <span>Other</span>
+                        </label>
                     </div>
-                </div>
-                <div>
+                    <!-- ฟิลด์ Attach Memo (กรณี Gift) -->
 
+                </div>
+
+                <div id="gift-memo" class="hidden mt-2">
+                    <label class="block font-semibold text-yellow-800">Attach Memo (Gift)</label>
+                    <input type="file" id="gift-memo-file" name="gift_memo" class="file-input file-input-bordered rounded-lg file-input-sm bg-yellow-100" />
+                    <p class="text-xs text-gray-500">
+                        *Require "Memorandum" get approve by RAF DIM/President, In case of use budget for buying gift to guest (Refer to RAF-PR-G-068-M-Entertainment on topic no.4,no.4.6)
+                    </p>
+                </div>
+                <!-- ฟิลด์ Other + Attach Memo -->
+                <div id="other-fields" class="hidden mt-2">
+                    <label class="block font-semibold text-yellow-800">Other Details</label>
+                    <input type="text" id="other-details" name="other_details" placeholder="Please identify the details" class="input input-bordered rounded-lg input-sm w-full max-w-xs mb-2" />
+
+                    <label class="block font-semibold text-yellow-800">Attach Memo (Other)</label>
+                    <input type="file" id="other-memo-file" name="other_memo" class="file-input file-input-bordered rounded-lg file-input-sm bg-yellow-100" />
+                    <p class="text-xs text-gray-500">
+                        *Require "Memorandum" get approve by RAF DIM/President, In case of use budget for buying other (Refer to RAF-PR-G-068-M-Entertainment on topic no.4,no.4.6)
+                    </p>
+                </div>
+
+                <div id="div_location">
                     <label class="font-semibold text-blue-700 block mb-2">Location</label>
                     <div class="flex flex-wrap gap-6 mb-2">
                         <label class="inline-flex items-center space-x-2">
@@ -118,7 +147,7 @@
 
 
             <!-- Section 3: Guest Type Table -->
-            <div class="rounded-2xl border border-blue-200 bg-gradient-to-br from-blue-50 via-white to-blue-100 p-4 mb-2 shadow">
+            <div class="rounded-2xl border border-blue-200 bg-gradient-to-br from-blue-50 via-white to-blue-100 p-4 mb-2 shadow" id="div_gt">
                 <h2 class="font-bold text-blue-900 mb-2 text-lg">*Details: Please select for guest type</h2>
                 <div class="overflow-x-auto">
                     <table class="table table-xs md:table-sm w-full border rounded-xl overflow-hidden">
@@ -183,9 +212,9 @@
                     </h2>
 
                     <!-- <div>
-             <span class="font-bold text-blue-900 mr-2">Entertainment’s Budget:</span>
-             <input type="text" class="input input-bordered input-sm rounded-lg border-blue-200" id="entertain-budget" placeholder="*Please identify (if have)">
-            </div> -->
+                                             <span class="font-bold text-blue-900 mr-2">Entertainment’s Budget:</span>
+                                             <input type="text" class="input input-bordered input-sm rounded-lg border-blue-200" id="entertain-budget" placeholder="*Please identify (if have)">
+                                            </div> -->
                 </div>
                 <div class="overflow-x-auto mt-3 rounded-lg">
                     <table class="table table-xs md:table-sm w-full rounded-lg overflow-hidden shadow" id="table_cost">

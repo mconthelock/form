@@ -416,12 +416,28 @@ class Main extends MY_Controller
 
     public function test()
     {
-        $this->views('isform/IS-RGV/test');
+        $data['rows'] = $this->rm->test_data();
+        $this->views('isform/IS-RGV/test', $data);
     }
 
     public function test_one()
     {
         $this->views('isform/IS-RGV/test_one');
+    }
+
+    public function insert()
+    {
+        $menu_id    = $this->input->post('menu_id');
+        $is_checked = $this->input->post('is_checked');
+        $empno      = $this->input->post('empno');
+
+        $data = [
+            'MENU_ID' => $menu_id,
+            'STATUS'  => '1',
+            'EMPNO'   => $empno
+        ];
+
+        $this->rm->insert('ISRGV_LN_AUTHORIZE', $data);
     }
 
 }

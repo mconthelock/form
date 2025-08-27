@@ -45,7 +45,7 @@ class Ent_model extends CI_Model
         $this->db
             ->select('*')
             ->from('GPENT_FORM')
-            ->join('GPENT_GUEST_TYPE', 'GUEST_TYPE = GT_ID')
+            ->join('GPENT_GUEST_TYPE', 'GUEST_TYPE = GT_ID', 'left')
             ->where('NFRMNO', $nfrmno)
             ->where('VORGNO', $vorgno)
             ->where('CYEAR', $cyear)

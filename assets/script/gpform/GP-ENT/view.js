@@ -8,6 +8,24 @@ import "@fortawesome/fontawesome-free/css/all.min.css";
 $(document).ready(async function () {
   flatpickr("#start-date", { dateFormat: "Y-m-d" });
   flatpickr("#pay_date", { dateFormat: "Y-m-d" });
+  toggleFieldsByTime();
+
+  function toggleGuestTypeSection() {
+    const val = $("input[name='time']:checked").val();
+    console.log(val);
+    if (val === "Gift" || val === "Other") {
+      $("#guest-type-section").hide();
+      $(".guest_type").prop("checked", false);
+    } else {
+      $("#guest-type-section").show();
+    }
+  }
+
+  // เวลาเปลี่ยนค่า radio time ให้เรียก toggle
+  $("input[name='time']").on("change", toggleGuestTypeSection);
+
+  // โหลดหน้า edit ครั้งแรก ต้องเช็คด้วย
+  toggleGuestTypeSection();
 
   const modal = document.getElementById("my_modal_1");
   if (modal) {
@@ -118,6 +136,11 @@ $(document).ready(async function () {
 
   $("#submit-btn-edit").click(async function (e) {
     e.preventDefault();
+    let type = $("input[name='time']:checked").val();
+    let oldType = $("#old-type").val();
+    let guestType = $(".guest_type:checked").val();
+    let giftMemo = $("#gift-memo-file")[0].files.length;
+    let otherMemo = $("#other-memo-file")[0].files.length;
 
     // --- Basic info validation ---
     if ($("#input-by").val().trim() === "") return showInputToast("#input-by", "กรุณากรอก Input By");
@@ -126,16 +149,21 @@ $(document).ready(async function () {
     if ($("#purpose").val().trim() === "") return showInputToast("#purpose", "กรุณาเลือกเหตุผลสำหรับ Entertain");
 
     if (!$("input[name='time']:checked").val()) return showRadioToast("input[name='time']", "กรุณาเลือกช่วงเวลา");
-    if (!$("input[name='location']:checked").val()) return showRadioToast("input[name='location']", "กรุณาเลือกสถานที่");
 
-    if ($("input[name='location']:checked").val() === "Outside" && $("#location_detail").val().trim() === "") return showInputToast("#location_detail", "กรุณากรอกรายละเอียด Location");
+    if ($("#div_location").is(":visible")) {
+      if (!$("input[name='location']:checked").val()) return showRadioToast("input[name='location']", "กรุณาเลือกสถานที่");
+      if ($("input[name='location']:checked").val() === "Outside" && $("#location_detail").val().trim() === "") return showInputToast("#location_detail", "กรุณากรอกรายละเอียด Location");
+    }
+    // if (!$("input[name='location']:checked").val()) return showRadioToast("input[name='location']", "กรุณาเลือกสถานที่");
+
+    // if ($("input[name='location']:checked").val() === "Outside" && $("#location_detail").val().trim() === "") return showInputToast("#location_detail", "กรุณากรอกรายละเอียด Location");
 
     // --- Memo file required if memo section is visible ---
     if ($("#attach-memo-section").is(":visible")) {
       var memoFileInput = $("#file-memo")[0];
       var hasCurrentMemoFile = $(".current-memo-file").is(":visible") && $(".current-memo-file a").length > 0;
       var hasNewMemoFile = memoFileInput && memoFileInput.files.length > 0;
-      
+
       if (!hasCurrentMemoFile && !hasNewMemoFile) {
         showInputToast("#file-memo", "กรุณาแนับไฟล์ Memo");
         return;
@@ -204,7 +232,22 @@ $(document).ready(async function () {
         timer: 3000,
       });
 
-    if (!$(".guest_type:checked").val()) return showCheckboxToast(".guest_type", "กรุณาเลือก Guest Type");
+    if (type === "Gift" && !giftMemo && oldType !== "Gift" && !$("#gift-memo a").length) {
+      showInputToast("#gift-memo-file", "Please attach gift memo file");
+      return;
+    }
+    if (type === "Other" && $("#other-details").val().trim() === "") {
+      showInputToast("#other-details", "Please enter other details");
+      return;
+    }
+    if (type === "Other" && !otherMemo && oldType !== "Other" && !$("#other-fields a").length) {
+      showInputToast("#other-memo-file", "Please attach memo for other");
+      return;
+    }
+    if (type !== "Gift" && type !== "Other" && !guestType) {
+      showRadioToast(".guest_type", "Please select guest type");
+      return;
+    }
 
     // --- Table estimate validation ---
     let costValid = false;
@@ -250,7 +293,7 @@ $(document).ready(async function () {
     formData.append("time", $("input[name='time']:checked").next("span").text());
     formData.append("location", $("input[name='location']:checked").next("span").text());
     formData.append("location_detail", $("input[placeholder='*Please identify the location.']").val());
-    formData.append("guest_type", $(".guest_type:checked").val());
+    formData.append("guest_type", $(".guest_type:checked").val() || "");
     formData.append("org_type", $("input[name='orgType']:checked").val());
     formData.append("entertain_budget", $("#entertain-budget").val());
     formData.append("total_amount", $("#total-amount").text());
@@ -263,6 +306,26 @@ $(document).ready(async function () {
         formData.append(`company_files[${i}]`, fileInput.files[0]);
       }
     });
+
+    if (type === "Gift") {
+      const gf = $("#gift-memo-file")[0];
+      if (gf && gf.files.length > 0) {
+        formData.append("file_memo_gift", gf.files[0]);
+      } else if (oldType === "Gift" && $("#gift-memo a").length) {
+        // ใช้ไฟล์เดิมถ้าไม่มีการเปลี่ยน
+        formData.append("file_memo_gift_old", $("#gift-memo a").text());
+      }
+    }
+
+    // --- Other memo ---
+    if (type === "Other") {
+      const of = $("#other-memo-file")[0];
+      if (of && of.files.length > 0) {
+        formData.append("file_memo_other", of.files[0]);
+      } else if (oldType === "Other" && $("#other-fields a").length) {
+        formData.append("file_memo_other_old", $("#other-fields a").text());
+      }
+    }
 
     // แนบไฟล์ Memo ถ้ามี
     if ($("#attach-memo-section").is(":visible")) {
@@ -355,4 +418,28 @@ $(document).ready(async function () {
       },
     });
   });
+
+  function toggleFieldsByTime() {
+    const timeVal = $("input[name='time']:checked").val();
+
+    if (timeVal === "Gift") {
+      $("#gift-memo").show();
+      $("#other-fields").hide();
+      $("#div_gt").hide();
+      $("#div_location").hide();
+    } else if (timeVal === "Other") {
+      $("#other-fields").show();
+      $("#gift-memo").hide();
+      $("#div_gt").hide();
+      $("#div_location").hide();
+    } else {
+      $("#gift-memo").hide();
+      $("#other-fields").hide();
+      $("#div_gt").show();
+      $("#div_location").show();
+    }
+  }
+
+  // ✅ เรียกใช้เมื่อมีการเปลี่ยนค่า time
+  $(document).on("change", "input[name='time']", toggleFieldsByTime);
 });

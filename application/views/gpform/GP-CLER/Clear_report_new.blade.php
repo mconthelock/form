@@ -163,7 +163,7 @@
     </div>
 
     <div id="pdf-content">
-        <div class="form-data" data-nfrmno="{{ $NFRMNO }}" data-vorgno="{{ $VORGNO }}" data-cyear="{{ $CYEAR }}" data-cyear2="{{ $CYEAR2 }}" data-nrunno="{{ $NRUNNO }}" data-empno="{{ $EMPNO }}"  data-need-paydate="{{ $needPayDate ? 1 : 0 }}"></div>
+        <div class="form-data" data-nfrmno="{{ $NFRMNO }}" data-vorgno="{{ $VORGNO }}" data-cyear="{{ $CYEAR }}" data-cyear2="{{ $CYEAR2 }}" data-nrunno="{{ $NRUNNO }}" data-empno="{{ $EMPNO }}" data-need-paydate="{{ $needPayDate ? 1 : 0 }}"></div>
         <div class="form-ent" data-ent_nfrmno="{{ $ENT_FORM->NFRMNO }}" data-ent_vorgno="{{ $ENT_FORM->VORGNO }}" data-ent_cyear="{{ $ENT_FORM->CYEAR }}" data-ent_cyear2="{{ $ENT_FORM->CYEAR2 }}" data-ent_nrunno="{{ $ENT_FORM->NRUNNO }}" data-ent_empno="{{ $ENT_FORM->EMP_INPUT }}"></div>
 
         <div class="w-full min-h-screen bg-gray-100 px-2 pb-10">
@@ -214,10 +214,12 @@
                         <div class="text-xs text-gray-500 mb-1">CURRENT FORM</div>
                         <div class="font-semibold">Clearance Details</div>
                     </button>
-                    <button class="tab-button tab-entertainment" onclick="showTab('entertainment', this)">
-                        <div class="text-xs text-gray-500 mb-1">REFERENCE FOR REQUESITION FOR ENTERTAINMENT: <spa class="text-warning animate-bounce">Click</spa>
+                    <button class="tab-button tab-entertainment bg-yellow-50 border-yellow-300 hover:bg-yellow-100 hover:border-yellow-400 cursor-pointer" onclick="showTab('entertainment', this)" title="Click to view Entertainment Form details">
+                        <div class="text-xs text-gray-500 mb-1">
+                            REFERENCE FOR REQUESITION FOR ENTERTAINMENT:
+                            <span class="text-orange-600 animate-bounce font-medium">👆 Click Here!!</span>
                         </div>
-                        <div class="font-semibold">
+                        <div class="font-semibold hover:text-orange-600">
                             Entertainment Form
                             @if(!empty($formCler->FORM_ENT))
                                 ({{ $formCler->FORM_ENT }})
@@ -225,6 +227,7 @@
                                 <span class="text-sm text-red-500">(Not has Advance Entertainment Form)</span>
                             @endif
                         </div>
+                        <div class="text-xs text-orange-500 mt-1">🔍 Click here for details</div>
                     </button>
                 </div>
 
@@ -343,7 +346,11 @@
                         <h3 class="text-xl font-bold text-green-700 mb-2">Remark : </h3>
                         <div class="border-green-200 rounded-xl bg-green-50 p-2 mb-6 border-2">
                             <div class="text-xs pl-2 {{ $formCler->REMAIN_BUDGET > 0 ? 'text-blue-600' : 'text-red-600' }}">
-                                {{ $formCler->REMAIN_BUDGET > 0 ? "The Actual cost not over Estimate cost : Employee return remain cash to Company." : "The Actual cost over Estimate cost : Company reimbursement to Employee.(" . $ENT_FORM->EMP_REQ . " " . $form[0]->VREQNAME . ")" }}
+                                @if($ENT_FORM->REIMBURSEMENT == '1')
+                                    {{ $formCler->REMAIN_BUDGET > 0 ? "The Actual cost not over Estimate cost : Employee return remain cash to Company." : "The Actual cost over Estimate cost : Company reimbursement to Employee.(" . $ENT_FORM->EMP_REQ . " " . $form[0]->VREQNAME . ")" }}
+                                @else
+                                    {{ $formCler->REMAIN_BUDGET > 0 ? "The actual cost did not exceed the estimated cost. As no advance payment was requested, the employee will be reimbursed by the company." : "The Actual cost over Estimate cost : Company reimbursement to Employee.(" . $ENT_FORM->EMP_REQ . " " . $form[0]->VREQNAME . ")" }}
+                                @endif
                             </div>
                         </div>
 
@@ -363,7 +370,7 @@
                                         <tr>
                                             <td class="py-2 px-4 border-b border-green-100">{{ $i + 1 }}</td>
                                             <td class="py-2 px-4 border-b border-green-100">{{ $ex->RECEIPT }}</td>
-                                            <td class="py-2 px-4 border-b border-green-100">{{ number_format($ex->COST) }}</td>
+                                            <td class="py-2 px-4 border-b border-green-100">{{ number_format($ex->COST,2) }}</td>
                                         </tr>
                                     @endforeach
                                 </tbody>
@@ -493,12 +500,38 @@
                                         <td class="py-2 pl-4 border-b-2 border-blue-200">{{ $ENT_FORM->ENTERTAINMENT_DATE }}</td>
                                     </tr>
                                     <tr>
-                                        <th class="text-left text-blue-900 font-semibold py-2 pl-4 border-b-2 border-blue-200 bg-blue-100">Time</th>
+                                        <th class="text-left text-blue-900 font-semibold py-2 pl-4 border-b-2 border-blue-200 bg-blue-100">Type of Entertainment</th>
                                         <td class="py-2 pl-4 border-b-2 border-blue-200">{{ $ENT_FORM->TYPE_TIME }}</td>
                                     </tr>
+                                    @if ($ENT_FORM->FILE_MEMO_GIFT)
+                                        <tr>
+                                            <th class="text-left text-blue-900 font-semibold py-2 pl-4 border-b-2 border-blue-200 bg-blue-100">File Memo Gift</th>
+                                            <td class="py-2 pl-4 border-b-2 border-blue-200">
+                                                <a href="{{ base_url('gpform/GP-ENT/main/preview/' . $ENT_FORM->FILE_MEMO_GIFT) }}" target="_blank" class="text-blue-700 underline btn btn-sm rounded-lg">
+                                                    {{ $ENT_FORM->FILE_MEMO_GIFT }}
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    @endif
+                                    @if($ENT_FORM->FILE_MEMO_OTHER)
+                                        <tr>
+                                            <th class="text-left text-blue-900 font-semibold py-2 pl-4 border-b-2 border-blue-200 bg-blue-100">File Memo Other</th>
+                                            <td class="py-2 pl-4 border-b-2 border-blue-200">
+                                                <a href="{{ base_url('gpform/GP-ENT/main/preview/' . $ENT_FORM->FILE_MEMO_OTHER) }}" target="_blank" class="text-blue-700 underline btn btn-sm rounded-lg">
+                                                    {{ $ENT_FORM->FILE_MEMO_OTHER }}
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    @endif
+                                    @if($ENT_FORM->OTHER_DETAILS)
+                                        <tr>
+                                            <th class="text-left text-blue-900 font-semibold py-2 pl-4 border-b-2 border-blue-200 bg-blue-100">Other Details</th>
+                                            <td class="py-2 pl-4 border-b-2 border-blue-200">{{ $ENT_FORM->OTHER_DETAILS }}</td>
+                                        </tr>
+                                    @endif
                                     <tr class="bg-blue-50">
                                         <th class="text-left text-blue-900 font-semibold py-2 pl-4 border-b-2 border-blue-200 bg-blue-100">Location</th>
-                                        <td class="py-2 pl-4 border-b-2 border-blue-200">{{ $ENT_FORM->LOCATION_TYPE }}</td>
+                                        <td class="py-2 pl-4 border-b-2 border-blue-200">{{ $ENT_FORM->LOCATION_TYPE ?? '-' }}</td>
                                     </tr>
                                     {{-- <tr>
                                         <th class="text-left text-blue-900 font-semibold py-2 pl-4 border-b-2 border-blue-200 bg-blue-100">Entertainment Budget</th>
@@ -506,7 +539,7 @@
                                     </tr> --}}
                                     <tr class="bg-blue-50">
                                         <th class="text-left text-blue-900 font-semibold py-2 pl-4 border-blue-200 bg-blue-100">Guest Type</th>
-                                        <td class="py-2 pl-4 border-blue-200">{{ $ENT_FORM->TYPE_NAME }}</td>
+                                        <td class="py-2 pl-4 border-blue-200">{{ $ENT_FORM->TYPE_NAME ?? '-' }}</td>
                                     </tr>
                                 </tbody>
                             </table>

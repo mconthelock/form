@@ -35,7 +35,7 @@ class form extends MY_Controller{
 
         }
         $data['empno'] = isset($_GET["empno"]) ? $_GET['empno'] : '' ;
-      
+        
         if(!isset($_GET["runNo"]))
         {
             $data['mode'] = "1";
@@ -62,13 +62,31 @@ class form extends MY_Controller{
             $data["visittype"] = $this->vms->get_visit_type();
             $data["salecom"] = $this->vms->get_salecompany();
             $data["participants"] = $this->vms->get_participants();
+            $data["activity"] = $this->vms->get_activity();
+            $data["room"] = $this->vms->get_room();
+            $data["attfile"] = array();
+            $data["attbfile"] = array();
+            $data["pstk"] = array();
+            $data["istk"] = array();
+            $date["sch"]  = array();
             if($data['mode']=="2")
             {
                 $con = array("CYEAR2" => $data["CYEAR2"],"NRUNNO" => $data["NRUNNO"]);
                 $conatt = array("CYEAR2" => $data["CYEAR2"],"NRUNNO" => $data["NRUNNO"],"TYPENO" =>'S');
                 $data["visit"] =  $this->vms->customSelect("VMS_VISIT",$con ,'*');
+                $data["sch"] =  $this->vms->get_schedule($con);
+                $con["TYPEEMP"] = "P";
+                $data["pstk"] = $this->vms->get_stakeholders($con);
+                $con["TYPEEMP"] = "I";
+                $data["istk"] = $this->vms->get_stakeholders($con);
                 $data["attfile"] =  $this->vms->customSelect("VMS_ATTFILE",$conatt,'*');
+                $conatt["TYPENO"] = "B";
+                $data["attbfile"] =  $this->vms->customSelect("VMS_ATTFILE",$conatt,'*');
+            }else
+            {
+                $data["formversion"] = $this->vms->get_formversion();
             }
+
             $this->views('marform/MAR-VMS/create', $data);
         }
 
@@ -93,9 +111,6 @@ class form extends MY_Controller{
             {
                 mkdir($path, 0777, true);
             }
-            if (!empty($_FILES['specificAttachment']['name'][0])) {
-                $this->vms->delete("VMS_ATTFILE",array("CYEAR2" => $cyear2 , "NRUNNO" => $nrunno , "TYPENO" =>'S'));
-            }
             $upfile =  $this->uploadMultiFile($_FILES, ['specificAttachment'], $path);
             $fid = $this->vms->generate_attfile_id($cyear2,$nrunno);
             $datafile = array();
@@ -107,9 +122,9 @@ class form extends MY_Controller{
                     'NRUNNO' => $nrunno,
                     'ITEMNO' => $fid,
                     'TYPENO' => ($fileType == "specificAttachment"? "S":""),
-                    'SFILE'  => $fid."_".date("dmYHis"),
-                    'UFILE'  => $file['file_name']
+                    'SFILE'  => $file['file_name']
                  );
+                 $this->vms->delete("VMS_ATTFILE",array("CYEAR2" => $cyear2 , "NRUNNO" => $nrunno , "TYPENO" =>'S',"SFILE" =>$file['file_name']));
                  $fid++;
              }
             }
@@ -167,6 +182,7 @@ class form extends MY_Controller{
             {
                 $data['CYEAR2'] = $cyear2;
                 $data['NRUNNO'] = $nrunno;
+                $data['REFNO']  = $this->createrefno($cyear2);
                 //insert
                 try {
                     $status = false;
@@ -188,8 +204,276 @@ class form extends MY_Controller{
               
             }
 
+        }else if($tab == "stk")
+        {
+            $pst = $_POST["pst"];
+            $data  = array();
+            foreach($pst as $p)
+            {
+                if($p != "")
+                {
+                    $data[] = array(
+                        'CYEAR2' => $cyear2,
+                        'NRUNNO' => $nrunno,
+                        'SEMPNO' => $p,
+                        'TYPEEMP' => 'P'
+                    );
+                }
+            } 
+            $ist = $_POST["ist"];
+            foreach($ist as $i)
+            {
+                if($i != "")
+                {
+                    $data[] = array(
+                        'CYEAR2' => $cyear2,
+                        'NRUNNO' => $nrunno,
+                        'SEMPNO' => $i,
+                        'TYPEEMP' => 'I'
+                    );
+                }
+            } 
+            $this->vms->trans_start();
+            $delfn = $this->vms->delete("VMS_STAKEHOLDERS","CYEAR2 = '".$cyear2."' AND NRUNNO = '".$nrunno."'");
+            $this->vms->trans_complete();
+
+            if(count($data) > 0)
+            {
+
+                try {
+                    $status = false;
+                    $insert = $this->vms->insert_batch("VMS_STAKEHOLDERS", $data);
+                    if(!$insert){
+                        throw new Exception("Can not insert this Stakeholders", 0);
+                    }else{
+                        $status = true;
+                    }
+                }catch (Exception $e) {
+                    $status = false;
+                } finally {
+                    $result = [
+                        'status'  => $status,
+                        'message' => $status ? 'Data saved successfully' : 'Failed to save data'
+                    ];
+                    echo json_encode($result);
+                }
+            }
+
+        }else if($tab == "sch")
+        {
+            $visitDate = $_POST["visitDate"];
+            $starttime = $_POST["starttime"];
+            $endtime = $_POST["endtime"];
+            $place = $_POST["place"];
+            $content = $_POST["content"];
+            $participants = $_POST["participants"];
+            $note = $_POST["note"];
+            $activity  = $_POST["activity"];
+            $i=0;
+            $id = 0;
+            $data  = array();
+            foreach($starttime as $s)
+            {
+                if($s != "")
+                {
+                    $id++;
+                    $data[] = array(
+                        "CYEAR2"    => $cyear2,
+                        "NRUNNO"    => $nrunno,
+                        "ID"        => $id,
+                        "SCHSTIME" =>  $visitDate." ".$s,
+                        "SCHETIME"   => $visitDate." ".$endtime[$i],
+                        "PLACE"     => $place[$i],
+                        "CONTENT"   => $content[$i],
+                        "AMECP"     => $participants[$i],
+                        "NOTE"      => $note[$i],
+                        "AID"       =>  $activity[$i]
+                    );
+                }
+                $i++;
+
+            }
+            $this->vms->trans_start();
+            $delfn = $this->vms->delete("VMS_SCHEDULE","CYEAR2 = '".$cyear2."' AND NRUNNO = '".$nrunno."'");
+            $this->vms->trans_complete();
+            if(count($data) > 0)
+            {
+
+                try {
+                    $status = false;
+                    foreach($data as $d)
+                    {
+                        $insert = $this->vms->insert("VMS_SCHEDULE",$d);
+                    }
+
+                    if(!$insert){
+                        throw new Exception("Can not insert this Schedule", 0);
+                    }else{
+                        $status = true;
+                    }
+                }catch (Exception $e) {
+                    $status = false;
+                } finally {
+                    $result = [
+                        'status'  => $status,
+                        'message' => $status ? 'Data saved successfully' : 'Failed to save data'
+                    ];
+                    echo json_encode($result);
+                }
+            } 
+
+        }else if($tab == "req")
+        {
+            $con = array(
+                'CYEAR2' => $cyear2,
+                'NRUNNO' => $nrunno,
+            );
+            $data = array(
+                'BOARD' => $_POST["requireWelcomeBoard"]
+            );
+            try {
+                $status = true;
+                $update = $this->vms->update("VMS_VISIT", $data,  $con);
+                $path = $this->upload_path.$nfrmno."_".$vorgno."_".$cyear."_".$cyear2."_".$nrunno;
+                if (!is_dir($path))
+                {
+                    mkdir($path, 0777, true);
+                }
+                $upfile =  $this->uploadMultiFile($_FILES, ['welcomeBoardFile'], $path);
+                $fid = $this->vms->generate_attfile_id($cyear2,$nrunno);
+                $datafile = array();
+                foreach ($upfile["files"] as $fileType => $fileArray) {
+                foreach ($fileArray as $file) {
+                    $datafile[] = array
+                    (
+                        'CYEAR2' => $cyear2,
+                        'NRUNNO' => $nrunno,
+                        'ITEMNO' => $fid,
+                        'TYPENO' => "B",
+                        'SFILE'  => $file['file_name']
+                    );
+                    $this->vms->delete("VMS_ATTFILE",array("CYEAR2" => $cyear2 , "NRUNNO" => $nrunno , "TYPENO" =>'S' , "SFILE" => $file['file_name']));
+                    $fid++;
+                }
+                }
+                if(count($datafile) > 0)
+                {
+                    $this->vms->insert_batch("VMS_ATTFILE", $datafile);
+                }
+            }catch (Exception $e) {
+                $status = false;
+            } finally {
+                $result = [
+                    'status'  => $status,
+                    'message' => $status ? 'Data saved successfully' : 'Failed to save data'
+                ];
+                echo json_encode($result);
+            } 
+        }else if($tab == "inf")
+        {
+            $country = $_POST["country"];
+            $company = $_POST["company"];
+            $name    = $_POST["name"]; 
+            $pos = $_POST["pos"];      
+            $exp = $_POST["exp"];
+            $lunch_provided = $_POST["lunch_provided"];
+            $dinner_provided = $_POST["dinner_provided"];
+            $dietary_require = $_POST["dietary_require"];
+            $con = array(
+                'CYEAR2' => $cyear2,
+                'NRUNNO' => $nrunno,
+            );
+            $i=0;
+            $id = 0;
+            $data  = array();
+            foreach($name as $n)
+            {
+                if($name != "")
+                {
+                    $id++;
+                    $data[] = array(
+                        'CYEAR2'  => $cyear2,
+                        'NRUNNO'  => $nrunno,
+                        'ID'      => $id,
+                        'COUNTRY' => $country[$i],
+                        'COMPANY' => $company[$i],
+                        'NAME'    => $name[$i],
+                        'POSITION'=> $pos[$i],
+                        'VISITEXP'=> $exp[$i],
+                        'LUNCH'   => $lunch_provided[$i],
+                        'DINNER'  => $dinner_provided[$i],
+                        'DIETREQ' => $dietary_require[$i]
+                    );
+                }
+                $i++;
+            }
+            try{
+                if(count($data) > 0)
+                {
+                    $this->vms->trans_start();
+                    $delfn = $this->vms->delete("VMS_VISITINF","CYEAR2 = '".$cyear2."' AND NRUNNO = '".$nrunno."'");
+                    $this->vms->trans_complete();
+                    $this->vms->insert_batch("VMS_VISITINF", $data);
+                }
+            }catch (Exception $e) {
+                $status = false;
+            } finally {
+                $result = [
+                    'status'  => $status,
+                    'message' => $status ? 'Data saved successfully' : 'Failed to save data'
+                ];
+                echo json_encode($result);
+            } 
+
         }
-    
+        
+    }
+
+
+    public function update_form_version()
+    {
+        
+       /* $result = [
+            'status'  => true,
+            'message' => ">>>".$_POST["formVersion"]
+        ];
+        echo json_encode($result);*/
+        $sql = "UPDATE VMS_FORM_VERSION  SET VERSION_NO = '".$_POST["formVersion"]."', UPDATED_AT = SYSTIMESTAMP WHERE ID = '1'";
+        $status = $this->vms->execsql($sql);
+        $result = [
+                'status'  => $status,
+                'message' => $status ? 'Data updated successfully' : 'Failed to update'
+        ];
+        echo json_encode($result);
+    }
+
+
+    public function createrefno($cyear2)
+    {
+          return  $this->vms->generate_id("VMS_VISIT", "REFNO", array('CYEAR2'=>$cyear2));
+    }
+
+    public function delfile()
+    {
+    $fd = $_POST['fd'];
+    $path = $this->upload_path.$fd."/";
+    $fid = $_POST['fid'];
+    $nfile = $_POST['nfile'];
+    $this->deleteFile($nfile,$path);
+    $this->vms->trans_start();
+    $delfn = $this->vms->delete("VMS_ATTFILE","ITEMNO = '".$fid."' AND SFILE = '".$nfile."'");
+    $this->vms->trans_complete();
+    $res = [
+        'status' => $delfn,
+        'message' => ""
+    ];
+    echo json_encode($res);
+    }
+
+    public function mdownload($fd,$file,$ofile)
+    {
+        $path = $this->upload_path.$fd;
+        $this->downloadFile($file,$ofile,$path);
     }
 
 }

@@ -8,29 +8,12 @@ import Swal from "sweetalert2";
 
 var formInfo, userIncharge, users, items, qcsection, division, department, section, tablesch , tablevisitor , tableemp , tablesec , tablepro , tablepst , tableist;
 $(document).ready(function () {
-  $("#salecom").select2();
-  /*
-  $(".participants-select").select2(
-    {
-     multiple:true,
-     placeholder:'Select Participants',
-     matcher:customMatcher,
-     templateResult:function(data)
-     {
-        if(!data.id) return data.text;
-        let div = $(data.element).data('div');
-        let dep = $(data.element).data('dep');
-        let sec = $(data.element).data('sec');
-        let pos = $(data.element).data('pos');
-        return $('<span>' + data.text + '</span>');
-     },
-     templateSelection: function(data) {
-      return data.text; // แสดงเฉพาะชื่อหลังเลือก
-    }
-
-    });*/
-
-
+  const $modal = $('#modal');
+  const $versionInput = $('#formVersion');
+  const $newVersionInput = $('#newVersion');
+    $("#salecom").select2();
+    $("#receptionRoom").select2();
+    $("#lunchPlaceSelect").select2();
     $(".pst-select").select2(
       {
        multiple:false,
@@ -93,6 +76,104 @@ $(document).ready(function () {
           }
       
           });
+
+          $('#dietary_require').select2({
+            tags: true,               // เปิดให้พิมพ์ค่าใหม่เอง
+            placeholder: "",
+            allowClear: true
+          });
+ 
+       
+          $(".dietary_require").on("select2:selecting", function (e) {
+            let data = e.params.args.data;
+            let $select = $(this);
+          
+            if (data.id === "Food Allergies") {
+              e.preventDefault(); // กันไม่ให้ Food Allergies ถูกเลือกจริง
+              let customText = prompt("Please specify your food allergy:");
+              if (customText) {
+                let newVal = "Food Allergies – " + customText;
+                let newOption = new Option(newVal, newVal, true, true);
+                $select.append(newOption).trigger("change");
+              }
+            }
+          
+            if (data.id === "Other") {
+              e.preventDefault(); // กันไม่ให้ Other ถูกเลือกจริง
+              let customText = prompt("Please specify:");
+              if (customText) {
+                let newVal = "Other – " + customText;
+                let newOption = new Option(newVal, newVal, true, true);
+                $select.append(newOption).trigger("change");
+              }
+            }
+          });
+          
+
+         /* $('#dietary_require').on('select2:select', function(e) {
+            var data = e.params.data;
+            var selected = data.text;
+        
+            // ถ้าเลือก Food Allergies หรือ Other แล้ว user พิมพ์เพิ่ม
+            if (selected !== "Food Allergies" && selected !== "Other") return;
+        
+            // prompt ให้ user กรอกเพิ่ม
+            var extra = prompt("Please specify:"); 
+            if (extra) {
+              var finalText = selected + " – " + extra;
+        
+              // เอาค่าใหม่ใส่แทน
+              var newOption = new Option(finalText, finalText, true, true);
+              $('#dietary_require').append(newOption).trigger('change');
+        
+              // ลบ option เดิมออก (กันไม่ให้มี "Food Allergies" ลอยๆ)
+              $('#dietary_require').find("option[value='" + selected + "']").prop("selected", false);
+              $('#dietary_require').trigger('change');
+            }
+          });*/
+
+        $(document).on('click', '#updateBtn', function() {
+            $('#newVersion').val($('#formVersion').val());
+            $('#modal').removeClass('hidden').addClass('flex');
+        });
+        
+        $(document).on('click', '#cancelBtn', function() {
+            $('#modal').removeClass('flex').addClass('hidden');
+        });
+        
+        $(document).on('click', '#saveBtn', function() {
+            const newVersion = $('#newVersion').val();
+            $.ajax({
+                url: host + "marform/MAR-VMS/form/update_form_version",
+                type: "post",
+                dataType: "json",
+                data: {formVersion:newVersion},
+                success: function(data) {
+                
+                      if(data.status) {
+                        $('#formVersion').val(newVersion); // อัปเดต input เฉพาะเมื่อ save สำเร็จ
+                        $('#modal').removeClass('flex').addClass('hidden');
+                    } else {
+                          Swal.fire({
+                            icon: "error",
+                            title: "Failed to update form version",
+                            text: "Please try again",
+                          });
+                    }
+        
+                },
+                error: function(err) { 
+              
+                  console.error(err); 
+                
+                }
+            });
+        
+            $('#modal').removeClass('flex').addClass('hidden');
+        });
+        
+
+
 });
 
 $(async function(){
@@ -350,12 +431,17 @@ $(document).on('click', '#addIstBtn', function () {
 $(document).on('click', '#addVisitorBtn', function () {
   const $tableBody = $('#tablevisitor tbody');
   const $firstRow = $tableBody.find('tr:first');
+
+  $firstRow.find('.dietary_require').select2('destroy');
   const $newRow = $firstRow.clone();
 
   // เคลียร์ค่าภายใน input และ select
   $newRow.find('input, select').each(function () {
     $(this).val('');
   });
+
+  initSelect2(".dietary_require",$firstRow);
+  initSelect2(".dietary_require",$newRow);
 
     // นับจำนวนแถวเพื่อกำหนดหมายเลข No.
     const rowCount = $tableBody.find('tr').length + 1;
@@ -499,6 +585,8 @@ function initSelect2($cls,$context) {
 }
 
 
+
+
 $(document).on('change', '#hasLunch', function () {
   const showLunch = $('#hasLunch').is(':checked');
   const showDinner = $('#hasDinner').is(':checked');
@@ -526,15 +614,18 @@ $(document).on('change', '#hasDinner', function () {
 
 $(document).on("change", ".lunchSelect", function () {
   const value = $(this).val();
-  const $placeInput = $("#lunchPlace");
-
+  const lunchPlaceSelectDiv = $("#lunchPlaceSelectDiv");
+  const lunchPlaceInputDiv = $("#lunchPlaceInputDiv");
   if (value === "I") {
-    $placeInput.val("VIPCanteenRoom").prop("readonly", true);
-  } else if (value === "outside") {
-    $placeInput.val("").prop("readonly", false);
-  } else {
-    $placeInput.val("").prop("readonly", false);
-  }
+    lunchPlaceSelectDiv.removeClass('hidden');
+    lunchPlaceInputDiv.addClass('hidden');
+} else if (value === "O") {
+    lunchPlaceInputDiv.removeClass('hidden');
+    lunchPlaceSelectDiv.addClass('hidden');
+} else {
+    lunchPlaceSelectDiv.addClass('hidden');
+    lunchPlaceInputDiv.addClass('hidden');
+}
 });
 
 /**
@@ -550,8 +641,19 @@ const vorgno = $("#vorgno").val();
 const cyear = $("#cyear").val();
 let nrunno =  $("#nrunno").val(); 
 let cyear2 =  $("#cyear2").val();
+if(tab === "visitarg")
+{
+    if($("#lunch").val() == "I")
+    {
+        
+    }
+
+}
+
+
 let isValid = (tab === "visitarg") ? validateVisitTab(form)
-             : true;
+              : (tab === "req") ? validateReqItemTab(form)
+              : true;
 if (!isValid) return;
 if(nrunno =="")
 {
@@ -562,6 +664,7 @@ if(nrunno =="")
   nrunno = NRUNNO;
   cyear2 = CYEAR2;
 }
+
 const formData = buildFormData(form, {
   "nfrmno": nfrmno,
   "vorgno": vorgno,
@@ -599,8 +702,71 @@ try {
 
 });
 
+
+$(document).on('change', '.pst-select', function() {
+  let selected = $(this).find(":selected");
+
+  let pos  = selected.data("pos");
+  let div  = selected.data("div");
+  let dep  = selected.data("dep");
+  let sec  = selected.data("sec");
+
+  let row = $(this).closest("tr");
+  if($(this).val()=="")
+  {
+    row.find(".pos-col").text("");
+    row.find(".dds-col").text("");
+  }else
+  {
+    row.find(".pos-col").text(pos);
+    row.find(".dds-col").text(div + " / " + dep + " / " + sec);
+  }
+
+});
+
+
+
+$(document).on('change', '.ist-select', function() {
+  let selected = $(this).find(":selected");
+
+  let pos  = selected.data("pos");
+  let div  = selected.data("div");
+  let dep  = selected.data("dep");
+  let sec  = selected.data("sec");
+  let row = $(this).closest("tr");
+  if($(this).val()=="")
+  {
+    row.find(".pos-col").text("");
+    row.find(".dds-col").text("");
+  }else
+  {
+    row.find(".pos-col").text(pos);
+    row.find(".dds-col").text(div + " / " + dep + " / " + sec);
+  }
+});
+
+
+/**
+ * Delete file
+ */
+ $(document).on("click", ".delete-file", async function () {
+  $(this).closest('.file-item').remove();
+  var fid = $(this).closest('.file-item').attr("data-id");
+  var nfile =  $(this).closest('.file-item').attr("data-filename");
+  var fd =  $(this).closest('.file-item').attr("data-folder");
+  const data = { fid: fid, nfile: nfile , fd:fd };
+  const resdel =  await deletefile(data);
+});
+
+
 function buildFormData(form, extraData = {}) {
   const formData = new FormData(form[0]);
+  console.log("form id ="+form.attr("id"));
+  if (form.attr("id") === "form-sch") {
+ 
+    formData.append("visitDate", $("#visitDate").val());
+  }
+
   for (const key in extraData) {
     if (extraData.hasOwnProperty(key)) {
       formData.append(key, extraData[key]);
@@ -718,6 +884,40 @@ function validateVisitTab(form) {
   
   
 
+  function validateReqItemTab(form) {
+    let isValid = true;
+    const reqitm = $("#requireWelcomeBoard").val();
+    const newFiles = $("#welcomeBoardFile")[0].files; // FileList ของไฟล์ใหม่
+    const existingFiles = $("#attachmentreqDisplay .file-item"); // element ของไฟล์เดิม
+    if ($("#nrunno").val() =="")
+    {
+      Swal.fire({
+        icon: "warning",
+        title: "Please complete and save the information in the Visit Arrangement section first.",
+        toast: true,
+        position: "top-end",
+        timer: 3000,
+        showConfirmButton: false,
+        background: "#FBF6D9",
+      });
+      isValid = false;
+
+    }
+    if (reqitm === "Y" && newFiles.length === 0 && existingFiles.length === 0) {
+      Swal.fire({
+        icon: "warning",
+        title: "Please attach at least one file for Welcome Board",
+        toast: true,
+        position: "top-end",
+        timer: 3000,
+        showConfirmButton: false,
+        background: "#FBF6D9",
+      });
+      isValid = false;
+    }
+    return isValid;
+  }
+
 
 /**
  * Save Dwg
@@ -744,4 +944,29 @@ return new Promise((resolve) => {
     },
   });
 });
+}
+
+/**
+ * Delete file
+ * @param {array} data
+ * @returns
+ */
+ function deletefile(data) {
+  return new Promise((resolve) => {
+    $.ajax({
+      url: host + "marform/MAR-VMS/form/delfile",
+      type: "post",
+      dataType: "json",
+      data: data,
+      beforeSend: function () {
+        showLoader({ show: true });
+      },
+      success: function (res) {
+        resolve(res);
+      },
+      complete: function (xhr, status) {
+        showLoader({ show: false });
+      },
+    });
+  });
 }

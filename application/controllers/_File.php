@@ -4,6 +4,8 @@ defined('BASEPATH') or exit('No direct script access allowed');
 trait _File{
     
     public function downloadFile($filename, $oldName, $path = ''){  
+
+
         $path = $this->setPath($path);
         $this->load->helper('download');
         $path = $path."/";

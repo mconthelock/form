@@ -122,9 +122,29 @@ $(function () {
     if ($("#purpose").val().trim() === "") return showInputToast("#purpose", "กรุณาเลือกเหตุผลสำหรับ Entertain");
 
     if (!$("input[name='time']:checked").val()) return showRadioToast("input[name='time']", "กรุณาเลือกช่วงเวลา");
-    if (!$("input[name='location']:checked").val()) return showRadioToast("input[name='location']", "กรุณาเลือกสถานที่");
 
-    if ($("input[name='location']:checked").val() === "Outside" && $("#location_detail").val().trim() === "") return showInputToast("#location_detail", "กรุณากรอกรายละเอียด Location");
+    // บังคับตามประเภทเวลา
+    const timeVal = $("input[name='time']:checked").val();
+    if (timeVal === "Gift") {
+      const gf = $("#gift-memo-file")[0];
+      if (!gf || gf.files.length === 0) {
+        return showInputToast("#gift-memo-file", "กรุณาแนบ Memo (Gift)");
+      }
+    }
+
+    if (timeVal === "Other") {
+      if ($("#other-details").val().trim() === "") {
+        return showInputToast("#other-details", "กรุณากรอก Other Details");
+      }
+      const of = $("#other-memo-file")[0];
+      if (!of || of.files.length === 0) {
+        return showInputToast("#other-memo-file", "กรุณาแนบ Memo (Other)");
+      }
+    }
+    if ($("#div_location").is(":visible")) {
+      if (!$("input[name='location']:checked").val()) return showRadioToast("input[name='location']", "กรุณาเลือกสถานที่");
+      if ($("input[name='location']:checked").val() === "Outside" && $("#location_detail").val().trim() === "") return showInputToast("#location_detail", "กรุณากรอกรายละเอียด Location");
+    }
 
     // --- Memo file required if memo section is visible ---
     if ($("#attach-memo-section").is(":visible")) {
@@ -191,7 +211,11 @@ $(function () {
         timer: 3000,
       });
 
-    if (!$(".guest_type:checked").val()) return showCheckboxToast(".guest_type", "กรุณาเลือก Guest Type");
+    if (timeVal !== "Gift" && timeVal !== "Other") {
+      if (!$(".guest_type:checked").val()) {
+        return showCheckboxToast(".guest_type", "กรุณาเลือก Guest Type");
+      }
+    }
 
     // --- Table estimate validation ---
     let costValid = false;
@@ -226,6 +250,7 @@ $(function () {
 
     // --- Collect Data ---
     let formData = new FormData();
+    const isLocationVisible = $("#div_location").is(":visible");
 
     formData.append("nfrmno", nfrmno);
     formData.append("vorgno", vorgno);
@@ -234,10 +259,10 @@ $(function () {
     formData.append("requested_by", $("#requested-by").val());
     formData.append("entertain_date", $("#entertain-date").val());
     formData.append("purpose", $("#purpose").val());
-    formData.append("time", $("input[name='time']:checked").next("span").text());
-    formData.append("location", $("input[name='location']:checked").next("span").text());
-    formData.append("location_detail", $("input[placeholder='*Please identify the location.']").val());
-    formData.append("guest_type", $(".guest_type:checked").val());
+    formData.append("time", timeVal);
+    formData.append("location", isLocationVisible ? $("input[name='location']:checked").val() : "");
+    formData.append("location_detail", isLocationVisible ? $("#location_detail").val() : "");
+    formData.append("guest_type", $(".guest_type:checked").val() ?? '');
     formData.append("org_type", $("input[name='orgType']:checked").val());
     formData.append("entertain_budget", $("#entertain-budget").val());
     formData.append("total_amount", $("#total-amount").text());
@@ -245,12 +270,25 @@ $(function () {
     formData.append("companies", JSON.stringify(companiesArray));
     // formData.append("reimbursement", $("#reimbursement").is(":checked") ? "1" : "0");
     formData.append("cash_adv", $(".cash_adv:checked").val());
+    formData.append("other_details", $("#other-details").val() || "");
     companiesArray.forEach((c, i) => {
       let fileInput = $("#companies-container .company-group").eq(i).find('input[type="file"]')[0];
       if (fileInput && fileInput.files.length > 0) {
         formData.append(`company_files[${i}]`, fileInput.files[0]);
       }
     });
+    if (timeVal === "Gift") {
+      const gf = $("#gift-memo-file")[0];
+      if (gf && gf.files.length > 0) {
+        formData.append("file_memo_gift", gf.files[0]);
+      }
+    }
+    if (timeVal === "Other") {
+      const of = $("#other-memo-file")[0];
+      if (of && of.files.length > 0) {
+        formData.append("file_memo_other", of.files[0]);
+      }
+    }
 
     // แนบไฟล์ Memo ถ้ามี
     if ($("#attach-memo-section").is(":visible")) {
@@ -411,6 +449,48 @@ $(function () {
 
   $("#file-attachment2").on("change", function () {
     $("#alert-file2").addClass("hidden");
+  });
+
+  $("input[name='time']").on("change", function () {
+    $("input[name='time']").removeClass("radio-error").addClass("radio-primary");
+    const val = $(this).val();
+
+    // ค่าเริ่มต้น: แสดง GT และ Location
+    $("#gift-memo, #other-fields").hide();
+    $("#div_gt").show();
+    $("#div_location").show();
+    $("input[name='location']").prop("disabled", false);
+    $("#location_detail").prop("disabled", false);
+
+    if (val === "Gift") {
+      $("#gift-memo").show();
+      $("#div_gt").hide();
+      $("#div_location").hide();
+      // ล้างค่า/ปิดการใช้งาน Location เมื่อซ่อน
+      $("input[name='location']").prop("checked", false).prop("disabled", true);
+      $("#location_detail").val("").prop("disabled", true);
+      return;
+    }
+
+    if (val === "Other") {
+      $("#other-fields").show();
+      $("#div_gt").hide();
+      $("#div_location").hide();
+      $("input[name='location']").prop("checked", false).prop("disabled", true);
+      $("#location_detail").val("").prop("disabled", true);
+      return;
+    }
+
+    // เคสปกติ: Lunch/Dinner
+    if (val === "Dinner") {
+      $("#location-inside").prop("disabled", true);
+      $("#location-outside").prop("checked", true);
+      $("#location_detail").prop("disabled", false).focus();
+    } else {
+      $("#location-inside").prop("disabled", false);
+      $("#location-outside").prop("checked", false);
+      $("#location_detail").val("");
+    }
   });
 });
 

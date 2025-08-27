@@ -40,7 +40,8 @@
             <!-- Section 2: Time & Location -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                    <label class="font-semibold text-blue-700 block mb-2">Time</label>
+                    <label class="font-semibold text-blue-700 block mb-2">Type of Entertainment</label>
+                    <input type="hidden" id="old-type" value="{{ $dataForm->TYPE_TIME }}">
                     <div class="flex gap-6">
                         <label class="inline-flex items-center space-x-2">
                             <input type="radio" name="time" id="time-lunch" class="radio radio-primary" value="Lunch" {{ $dataForm->TYPE_TIME == 'Lunch' ? 'checked' : '' }} />
@@ -50,9 +51,40 @@
                             <input type="radio" name="time" id="time-dinner" class="radio radio-primary" value="Dinner" {{ $dataForm->TYPE_TIME == 'Dinner' ? 'checked' : '' }} />
                             <span>Dinner</span>
                         </label>
+                        <!-- ✅ เพิ่ม Gift -->
+                        <label class="inline-flex items-center space-x-2">
+                            <input type="radio" name="time" id="time-gift" class="radio radio-primary" value="Gift" {{ $dataForm->TYPE_TIME == 'Gift' ? 'checked' : '' }} />
+                            <span>Gift</span>
+                        </label>
+                        <!-- ✅ เพิ่ม Other -->
+                        <label class="inline-flex items-center space-x-2">
+                            <input type="radio" name="time" id="time-other" class="radio radio-primary" value="Other" {{ $dataForm->TYPE_TIME == 'Other' ? 'checked' : '' }} />
+                            <span>Other</span>
+                        </label>
                     </div>
                 </div>
-                <div>
+
+                <div id="gift-memo" class="hidden mt-4">
+                    <label for="gift-memo-file" class="block font-semibold text-blue-700 mb-1">Attach Memo (Gift):</label>
+                    @if (!empty($dataForm->FILE_MEMO_GIFT) && $dataForm->TYPE_TIME == 'Gift')
+                        <div class="mb-2">
+                            <a href="{{ base_url('uploads/' . $dataForm->FILE_MEMO_GIFT) }}" target="_blank" class="link link-primary btn btn-sm rounded-lg">
+                                {{ $dataForm->FILE_MEMO_GIFT }}
+                            </a>
+                        </div>
+                    @endif
+                    <input type="file" id="gift-memo-file" name="file_memo_gift" class="file-input file-input-bordered rounded-lg w-full max-w-xs" />
+                </div>
+
+                <div id="other-fields" class="hidden mt-4">
+                    <label for="other-details" class="block font-semibold text-blue-700 mb-1">Other Details:</label>
+                    <input type="text" id="other-details" name="other_details" class="input input-bordered rounded-lg w-full max-w-lg" value="{{ $dataForm->OTHER_DETAILS ?? '' }}">
+
+                    <label for="other-memo-file" class="block font-semibold text-blue-700 mt-3 mb-1">Attach Memo (Other):</label>
+                    <input type="file" id="other-memo-file" name="file_memo_other" class="file-input file-input-bordered rounded-lg w-full max-w-xs" />
+                </div>
+
+                <div id="div_location">
                     <label class="font-semibold text-blue-700 block mb-2">Location</label>
                     <div class="flex flex-wrap gap-6 mb-2">
                         <label class="inline-flex items-center space-x-2">
@@ -115,7 +147,7 @@
 
 
             <!-- Section 3: Guest Type Table -->
-            <div class="rounded-2xl border border-blue-200 bg-gradient-to-br from-blue-50 via-white to-blue-100 p-4 mb-2 shadow">
+            <div id="div_gt" class="rounded-2xl border border-blue-200 bg-gradient-to-br from-blue-50 via-white to-blue-100 p-4 mb-2 shadow">
                 <h2 class="font-bold text-blue-900 mb-2 text-lg">*Details: Please select for guest type</h2>
                 <div class="overflow-x-auto">
                     <table class="table table-xs md:table-sm w-full border rounded-xl overflow-hidden">
@@ -256,30 +288,30 @@
                         </div>
                     </div>
 
-                    <!-- <div class="flex items-center pt-5 rounded-lg space-x-4">
-                            <div class="bg-blue-700 text-white font-semibold px-4 py-4 rounded-l-lg">
-                                Cash Advance
-                            </div>
-                            <div class="space-y-2">
-                                <div class="flex items-center space-x-2">
-                                    <input type="radio" id="cashYes" name="cash_advance" class="checkbox checkbox-primary bg-white  cash_adv" value="1" {{ $dataForm->REIMBURSEMENT == "1" ? "checked" : "" }} />
-                                    <label for="cashYes" class="font-semibold">Yes</label>
-                                    <div class="text-xs italic text-gray-500">
-                                        *Receive cash from FIN Department within 3-4 working day
-                                    </div>
-                                </div>
-
-                                <div class="flex items-center space-x-2">
-                                    <input type="radio" id="cashNo" name="cash_advance" class="checkbox checkbox-primary bg-white  cash_adv" value="0" {{ $dataForm->REIMBURSEMENT == "0" ? "checked" : "" }} />
-                                    <label for="cashNo" class="font-semibold">No</label>
-                                    <div class="text-xs italic text-gray-500">
-                                        *Please bring original receipt for clearance expense on Form Clearacnce Expense for Entertainment (Part 2).
-                                    </div>
+                    {{--<div class="flex items-center pt-5 rounded-lg space-x-4">
+                        <div class="bg-blue-700 text-white font-semibold px-4 py-4 rounded-l-lg">
+                            Cash Advance
+                        </div>
+                        <div class="space-y-2">
+                            <div class="flex items-center space-x-2">
+                                <input type="radio" id="cashYes" name="cash_advance" class="checkbox checkbox-primary bg-white  cash_adv" value="1" {{ $dataForm->REIMBURSEMENT == "1" ? "checked" : "" }} />
+                                <label for="cashYes" class="font-semibold">Yes</label>
+                                <div class="text-xs italic text-gray-500">
+                                    *Receive cash from FIN Department within 3-4 working day
                                 </div>
                             </div>
 
+                            <div class="flex items-center space-x-2">
+                                <input type="radio" id="cashNo" name="cash_advance" class="checkbox checkbox-primary bg-white  cash_adv" value="0" {{ $dataForm->REIMBURSEMENT == "0" ? "checked" : "" }} />
+                                <label for="cashNo" class="font-semibold">No</label>
+                                <div class="text-xs italic text-gray-500">
+                                    *Please bring original receipt for clearance expense on Form Clearacnce Expense for Entertainment (Part 2).
+                                </div>
+                            </div>
+                        </div>
 
-                        </div> -->
+
+                    </div>--}}
                 </div>
                 <div class="text-xs mt-2 text-blue-700 italic">
                     1. สำหรับค่ารับรองอื่นๆที่ไม่ใช่ค่าอาหาร เช่น กีฬา, กระเช้า ฯลฯ ให้พิจารณาร่วมกับ RAF
@@ -427,7 +459,7 @@
             const etCost = Number($row.find(".estimate-type option:selected").data("cost")) || 0;
             const quantity = Number($row.find(".quantity").val()) || 0;
             const $remark = $row.find(".remark");
-            
+
             // เช็คว่าเกินเงื่อนไขหรือไม่
             if (quantity > 0 && etCost > 0 && quantity > etCost) {
                 $remark.prop("disabled", false);
@@ -437,7 +469,7 @@
                 $remark.removeClass("border-red-300");
                 $remark.val(""); // clear ค่าเมื่อไม่เกินเงื่อนไข
             }
-            
+
             // Check if any row exceeds limit and toggle memo section
             let showMemo = false;
             $("#table_cost tbody tr").each(function () {
@@ -448,7 +480,7 @@
                     return false; // break loop
                 }
             });
-            
+
             if (showMemo) {
                 $("#attach-memo-section").slideDown();
             } else {
@@ -463,7 +495,7 @@
                 const etCost = Number($(this).find(".estimate-type option:selected").data("cost")) || 0;
                 const quantity = Number($(this).find(".quantity").val()) || 0;
                 const $remark = $(this).find(".remark");
-                
+
                 if (quantity > 0 && etCost > 0 && quantity > etCost) {
                     showMemo = true;
                     $remark.prop("disabled", false);
@@ -473,7 +505,7 @@
                     $remark.removeClass("border-red-300");
                 }
             });
-            
+
             if (showMemo) {
                 $("#attach-memo-section").show();
             } else {
