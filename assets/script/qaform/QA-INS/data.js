@@ -1,4 +1,4 @@
-import { fetchMsgErr } from "../../api/errorMsg";
+import { fetchMsgErr } from "../../api/fetch-utils";
 
 /**
  * Get form data for QA-INS
@@ -11,26 +11,42 @@ import { fetchMsgErr } from "../../api/errorMsg";
  *  "NRUNNO": 1
  * }
  */
-export function getformData(form) {
-    return new Promise((resolve) => {
-        $.ajax({
-            type: "post",
-            // url: `${process.env.APP_API}/qaform/qa-ins/getformData`,
-            url: `${process.env.APP_API}/qaform/qa-ins/getformData`,
-            dataType: "json",
-            data: form,
-            success: function (response) {
-                resolve(response);
-            },
-            error: function (xhr, status, error) {
-                console.error("getformData error:", status, error);
-                resolve({
-                    status: false,
-                    message: "getformData failed. Please try again.",
-                });
-            },
-        });
-    });
+export async function getformData(form) {
+    const res = await fetch(
+        `${process.env.APP_API}/qaform/qa-ins/getformData`,
+        {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(form),
+        }
+    );
+
+    if (!res.ok) {
+        await fetchMsgErr(res);
+        throw new Error("Failed to get form data");
+    }
+
+    const data = await res.json();
+    return data;
+    // return new Promise((resolve) => {
+    //     $.ajax({
+    //         type: "post",
+    //         // url: `${process.env.APP_API}/qaform/qa-ins/getformData`,
+    //         url: `${process.env.APP_API}/qaform/qa-ins/getformData`,
+    //         dataType: "json",
+    //         data: form,
+    //         success: function (response) {
+    //             resolve(response);
+    //         },
+    //         error: function (xhr, status, error) {
+    //             console.error("getformData error:", status, error);
+    //             resolve({
+    //                 status: false,
+    //                 message: "getformData failed. Please try again.",
+    //             });
+    //         },
+    //     });
+    // });
 }
 
 /**
@@ -39,28 +55,40 @@ export function getformData(form) {
  * @returns
  */
 
-export function createFormQains(formData) {
-    return new Promise((resolve) => {
-        $.ajax({
-            type: "post",
-            // url: `${process.env.APP_API}/qaform/qa-ins/request``,
-            url: `${process.env.APP_API}/qaform/qa-ins/request`,
-            dataType: "json",
-            data: formData,
-            processData: false,
-            contentType: false,
-            success: function (response) {
-                resolve(response);
-            },
-            error: function (xhr, status, error) {
-                console.error("create failed:", status, error);
-                resolve({
-                    status: false,
-                    message: "Create failed. Please try again.",
-                });
-            },
-        });
+export async function createFormQains(formData) {
+    const res = await fetch(`${process.env.APP_API}/qaform/qa-ins/request`, {
+        method: "POST",
+        body: formData,
     });
+
+    if (!res.ok) {
+        await fetchMsgErr(res);
+        throw new Error("Failed to Create");
+    }
+
+    const data = await res.json();
+    return data;
+    // return new Promise((resolve) => {
+    //     $.ajax({
+    //         type: "post",
+    //         // url: `${process.env.APP_API}/qaform/qa-ins/request``,
+    //         url: `${process.env.APP_API}/qaform/qa-ins/request`,
+    //         dataType: "json",
+    //         data: formData,
+    //         processData: false,
+    //         contentType: false,
+    //         success: function (response) {
+    //             resolve(response);
+    //         },
+    //         error: function (xhr, status, error) {
+    //             console.error("create failed:", status, error);
+    //             resolve({
+    //                 status: false,
+    //                 message: "Create failed. Please try again.",
+    //             });
+    //         },
+    //     });
+    // });
 }
 
 export async function qcConfirm(formdata) {
@@ -70,10 +98,8 @@ export async function qcConfirm(formdata) {
     });
 
     if (!res.ok) {
-        return {
-            status: false,
-            message: `Failed to confirm : ${await fetchMsgErr(res)}`,
-        };
+        await fetchMsgErr(res);
+        throw new Error("Failed to Approve");
     }
 
     const data = await res.json();

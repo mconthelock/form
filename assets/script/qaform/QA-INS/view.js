@@ -114,12 +114,12 @@ $(document).on("click", 'button[name="btnAction"]', async function () {
         logtest(res);
         if (res.status == true) {
             showMessage(res.message, "success");
-            // redirectWebflow();
+            redirectWebflow();
         } else {
             throw new Error(res.message);
         }
     } catch (error) {
-        console.error('Error: ' + error);
+        console.error("Error: " + error);
         showErrorMessage(error);
     } finally {
         showLoader({ show: false });
@@ -165,7 +165,7 @@ async function setPage() {
 
     switch (cextdata) {
         case "01":
-            await setInchargeForm();
+            await setInchargeForm(data);
             break;
         case "edit":
             // Do something for edit mode
@@ -262,12 +262,17 @@ async function setSkeleton() {
     }
 }
 
-async function setInchargeForm() {
+async function setInchargeForm(data) {
     const user = await getEscsUsers({
         USR_STATUS: 1,
     });
-    
-    const foreman = user.filter((u) => u.GRP_ID === 2);
+
+    const foreman = user.filter(
+        (u) =>
+            u.GRP_ID === 2 &&
+            u.SEC_ID == data.QA_INCHARGE_SECTION &&
+            data.QA_INCHARGE_SECTION_INFO.SEC_NAME.trim() == u.SSEC.trim()
+    );
     const foremanUser = foreman.length > 0 ? foreman.map((u) => u.USR_NO) : [];
     const UserImage = await getImageByUser(
         user.length > 0 ? user.map((u) => u.USR_NO) : []
@@ -312,7 +317,7 @@ async function setInchargeForm() {
     // );
     // logtest(foreman.map((u) => u.USR_NO));
 
-    setDatePicker();
+    setDatePicker({enableTime: true, dateFormat: "Y-m-d H:i", time_24hr: true});
     setSelect2({
         element: "#QCFOREMAN",
         avatar: true,
@@ -353,7 +358,12 @@ async function setInchargeForm() {
     tableAuditor = await createTable(
         {
             data: user.filter(
-                (u) => u.GRP_ID > 1 && ![4, 7].includes(u.GRP_ID)
+                // (u) => u.GRP_ID > 1 && ![4, 7].includes(u.GRP_ID) && u.SEC_ID == secId
+                (u) =>
+                    ![4].includes(u.GRP_ID) &&
+                    u.SEC_ID == data.QA_INCHARGE_SECTION &&
+                    data.QA_INCHARGE_SECTION_INFO.SEC_NAME.trim() ==
+                        u.SSEC.trim()
             ),
             columns: columnAuditor,
             // order: false

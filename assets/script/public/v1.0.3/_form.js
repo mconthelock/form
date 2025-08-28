@@ -10,7 +10,7 @@
  * @version 1.0.1
  */
 
-import { checkAuthen, root } from "./jFuntion";
+import { checkAuthen, logtest, root } from "./jFuntion";
 import { showLoader } from "../../utils";
 
 const url = root.includes('amecwebtest') ? `${root}api-auth/api-dev/` : `${root}api-auth/api/`;
@@ -21,7 +21,8 @@ console.log(url);
  * Redirect to wait for approve
  */
 export function redirectWebflow(){
-    const path = window.location.host.includes(['amecwebtest', 'localhost']) ? 'formtest' : 'form';
+    const path = window.location.host.includes('amecwebtest') ? 'formtest' : 'form';
+    logtest('path webflow', path);
     const redirectUrl = `http://webflow.mitsubishielevatorasia.co.th/${path}/workflow/WaitApv.asp`;
     console.log(redirectUrl);
     window.location = redirectUrl;
