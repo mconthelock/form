@@ -1,4 +1,4 @@
-import { fetchMsgErr } from "../errorMsg";
+import { fetchMsgErr } from "../fetch-utils";
 
 export async function getEmployee(empno = "") {
     const res = await fetch(`${process.env.APP_API}/amec/employee/${empno}`);

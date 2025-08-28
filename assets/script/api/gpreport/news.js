@@ -1,4 +1,4 @@
-import { fetchMsgErr } from "../errorMsg";
+import { fetchMsgErr } from "../fetch-utils";
 
 export async function getNews() {
     const res = await fetch(`${process.env.APP_API}/gpreport/news/`);

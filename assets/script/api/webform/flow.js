@@ -1,4 +1,4 @@
-import { fetchMsgErr } from "../errorMsg";
+import { fetchMsgErr, serializeRequestBody } from "../fetch-utils";
 
 /**
  *
@@ -49,11 +49,7 @@ export async function showflow(form) {
  * @returns
  */
 export async function doaction(formData) {
-    const res = await fetch(`${process.env.APP_API}/flow/doaction`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-    });
+    const res = await fetch(`${process.env.APP_API}/flow/doaction`, serializeRequestBody(formData));
 
     if (!res.ok) {
         await fetchMsgErr(res)

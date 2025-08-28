@@ -1,4 +1,4 @@
-import { fetchMsgErr } from "../errorMsg";
+import { fetchMsgErr } from "../fetch-utils";
 
 /**
  * search user by condition
