@@ -47,17 +47,7 @@ var indexedDBID, timer, intervalId;
     </div> */
 
 export async function initAuthen(options = {}) {
-  //   intervalId = setInterval(() => {
-  //     console.log("ทำงานทุก 1 วินาที");
-  //   }, 1000);
-
-  //   // หยุดการทำงานหลัง 5 วินาที
-  //   setTimeout(() => {
-  //     clearInterval(intervalId);
-  //     console.log("หยุดทำงานแล้ว");
-  //   }, 5000);
-  //   return;
-
+  showbgLoader();
   const opt = {
     setSessionPhp: false,
     sidebar: true,
@@ -67,7 +57,7 @@ export async function initAuthen(options = {}) {
     programName: process.env.APP_NAME,
     ...options,
   };
-  showbgLoader();
+
   let menu, info, group, res;
   const cookie = getCookie(process.env.APP_NAME);
   if (!cookie) {
@@ -118,31 +108,13 @@ export async function initAuthen(options = {}) {
     }
     showbgLoader({ show: false });
 
-    setInterval(() => {
-      const timeLeft = getTimeLeft(process.env.APP_NAME);
-      console.log(timeLeft);
+    setInterval(async () => {
+      const ck = await getCookie(process.env.APP_NAME);
+      if (!ck) window.location.reload();
+      const timeLeft = await getTimeLeft(process.env.APP_NAME);
       if (timeLeft > 0 && timeLeft <= 0.5 * 60 * 1000) {
         sessionTimeOut();
       }
-
-      //   const cookies = getCookie(process.env.APP_NAME);
-      //   if (!cookies) {
-      //     console.log("Cookie not found, redirecting to authen page");
-      //     // $('.logout').trigger('click');
-      //     console.log($(".sidebar-profile").find(".avatar"));
-      //     console.log($("#nav-profile").closest(".avatar"));
-
-      //     $(".sidebar-profile")
-      //       .find(".avatar")
-      //       .addClass("avatar-offline")
-      //       .removeClass("avatar-online");
-      //     $("#nav-profile")
-      //       .closest(".avatar")
-      //       .addClass("avatar-offline")
-      //       .removeClass("avatar-online");
-      //   } else {
-      //     // console.log("Cookie found, updating indexedDBID");
-      //   }
     }, 1000 * 5);
   }
 }
@@ -153,6 +125,7 @@ export function sessionTimeOut() {
   const el = document.getElementById("timeout-countdown");
   el.style.setProperty("--value", count);
   el.setAttribute("aria-label", count);
+  extendSession(process.env.APP_NAME, 1);
   if (timer) return;
   timer = setInterval(() => {
     count--;
@@ -174,6 +147,14 @@ $(document).on("click", "#extend-cookie", function (e) {
   $("#handleTimeout").prop("checked", false);
   clearInterval(timer);
   timer = undefined;
+});
+
+$(document).on("click", "#delete-cookie", async function (e) {
+  e.preventDefault();
+  await deleteGroup(indexedDBID);
+  await deleteMenu(indexedDBID);
+  deleteCookie(process.env.APP_NAME);
+  window.location.href = `${root}/form/authen/index/${process.env.APP_ID}`;
 });
 
 $(document).on("click", ".logout", async function (e) {

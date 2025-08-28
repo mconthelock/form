@@ -231,13 +231,13 @@ export function timeOutLayout() {
                 <h1 class="pb-3 ">Your session had already expired, Would you like to stay on our system?
                 </h1>
                 <div class="flex gap-3 justify-center">
-                    <button class="btn btn-primary" id="extend-cookie">Yes (
+                    <button class="btn btn-primary text-white" id="extend-cookie">Yes (
                         <div class="countdown font-mono">
                             <span class="" id="timeout-countdown" style="--value:30;" aria-live="polite"
                                 aria-label="30"></span>
                         </div>)
                     </button>
-                    <button class="btn">No</button>
+                    <button class="btn " id="delete-cookie">No</button>
                 </div>
             </div>
         </div>

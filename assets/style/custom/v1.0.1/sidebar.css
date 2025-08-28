@@ -76,6 +76,10 @@
   display: none;
 }
 
+#sidebar.collapsed .divider {
+  max-width: 50%;
+}
+
 @media (width >= 48rem) {
   #sidebar {
     width: 16rem;
