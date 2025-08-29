@@ -47,17 +47,18 @@ var indexedDBID, timer, intervalId;
     </div> */
 
 export async function initAuthen(options = {}) {
-  showbgLoader();
   const opt = {
     setSessionPhp: false,
     sidebar: true,
     navbar: true,
+    loader: true,
     // จะไปตั้งใน env ก็ได้ถ้า path ตรง ถ้าไม่ก็ส่ง path ที่ถูกต้องมาเลยเช่น `${host}/assets/images/icon.png`,
     icon: `${host}/assets/images/${process.env.APP_ICON}`,
     programName: process.env.APP_NAME,
     ...options,
   };
 
+  showbgLoader({ show: opt.loader });
   let menu, info, group, res;
   const cookie = getCookie(process.env.APP_NAME);
   if (!cookie) {
