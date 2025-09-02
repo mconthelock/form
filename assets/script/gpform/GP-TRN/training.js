@@ -3,7 +3,6 @@
 // รวม logic ของหน้าจอเลือกฟอร์ม + ฟอร์มย่อย (functional, legal, meth)
 // ==================================================
 document.addEventListener("DOMContentLoaded", () => {
-    var _a, _b, _c;
     // =====================
     // ส่วนกลาง: ตัวแปร DOM ที่ใช้ทุกหน้า
     // =====================
@@ -116,8 +115,33 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
     // =====================
-    // Dynamic List (+/-)
+    // ปุ่มส่งฟอร์มกลาง
     // =====================
+    const sendFormBtn = document.getElementById("sendFormBtn");
+    sendFormBtn === null || sendFormBtn === void 0 ? void 0 : sendFormBtn.addEventListener("click", () => {
+        if (!currentFormType) {
+            showAlert("⚠ แจ้งเตือน", "ยังไม่ได้เลือกฟอร์ม");
+            return;
+        }
+        if (currentFormType === "functional") {
+            if (validateFunctionalForm()) {
+                showAlert("✅ Functional", "ฟอร์ม Functional พร้อมส่ง");
+                // TODO: submit functional
+            }
+        }
+        else if (currentFormType === "legal") {
+            if (validateLegalForm()) {
+                showAlert("✅ Legal", "ฟอร์ม Legal พร้อมส่ง");
+                // TODO: submit legal
+            }
+        }
+        else if (currentFormType === "meth") {
+            if (validateMethForm()) {
+                showAlert("✅ METH", "ฟอร์ม METH พร้อมส่ง");
+                // TODO: submit meth
+            }
+        }
+    });
     function bindDynamicList(listId, inputName, placeholder, type) {
         const list = document.getElementById(listId);
         list === null || list === void 0 ? void 0 : list.addEventListener("click", (e) => {
@@ -203,10 +227,25 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
     // =====================================================================
-    // init + back button ของแต่ละ Form
+    // ฟอร์ม Functional
     // =====================================================================
+    const backBtnFunctional = document.getElementById("backBtn_func");
+    backBtnFunctional === null || backBtnFunctional === void 0 ? void 0 : backBtnFunctional.addEventListener("click", () => {
+        const form = document.getElementById("form_functional");
+        form === null || form === void 0 ? void 0 : form.classList.add("hidden");
+        requestForm === null || requestForm === void 0 ? void 0 : requestForm.classList.add("hidden");
+        selectCard === null || selectCard === void 0 ? void 0 : selectCard.classList.remove("hidden");
+        if (trainingType)
+            trainingType.value = "";
+        if (detailBox)
+            detailBox.classList.add("hidden");
+        toggleSubmit();
+    });
     function initFunctionalForm() {
+        console.log("🚀 init Functional Form");
+        // Request By
         bindEmpLookup(document.getElementById("funcRequestBy"), { SNAME: document.getElementById("funcRequestByName") });
+        // Trainee
         bindEmpLookup(document.getElementById("funcTraineeCode"), {
             SNAME: document.getElementById("funcTraineeName"),
             SPOSITION: document.getElementById("funcTraineePosition"),
@@ -214,9 +253,82 @@ document.addEventListener("DOMContentLoaded", () => {
             SDEPT: document.getElementById("funcDept"),
             SDIV: document.getElementById("funcDiv")
         });
+        // ================================
+        // Part 5 : การพิจารณาค่าใช้จ่าย
+        // ================================
+        const expenseRadios = document.querySelectorAll("input[name='funcExpenseOption']");
+        const reasonBox = document.getElementById("funcReasonBox");
+        const compareUpload = document.getElementById("funcCompareUpload");
+        const part6 = document.getElementById("func_part6");
+        expenseRadios.forEach(radio => {
+            radio.addEventListener("change", () => {
+                if (radio.value === "not_compare" && radio.checked) {
+                    reasonBox === null || reasonBox === void 0 ? void 0 : reasonBox.classList.remove("hidden");
+                    compareUpload === null || compareUpload === void 0 ? void 0 : compareUpload.classList.add("hidden");
+                }
+                else if (radio.value === "compare" && radio.checked) {
+                    reasonBox === null || reasonBox === void 0 ? void 0 : reasonBox.classList.add("hidden");
+                    compareUpload === null || compareUpload === void 0 ? void 0 : compareUpload.classList.remove("hidden");
+                    part6 === null || part6 === void 0 ? void 0 : part6.classList.remove("hidden");
+                }
+            });
+        });
+        // toggle เหตุผล not_compare
+        const reasonRadios = document.querySelectorAll("input[name='funcReason']");
+        reasonRadios.forEach(radio => {
+            radio.addEventListener("change", () => {
+                if (radio.value === "free" && radio.checked) {
+                    part6 === null || part6 === void 0 ? void 0 : part6.classList.add("hidden");
+                }
+                else {
+                    part6 === null || part6 === void 0 ? void 0 : part6.classList.remove("hidden");
+                }
+            });
+        });
+        // ================================
+        // Part 6 : ค่าใช้จ่าย (คำนวณ VAT)
+        // ================================
+        const vatResult = document.getElementById("funcVatResult");
+        const amountInput = document.getElementById("funcAmountInput");
+        vatResult === null || vatResult === void 0 ? void 0 : vatResult.classList.add("hidden");
+        if (amountInput) {
+            amountInput.value = "";
+            amountInput.addEventListener("input", () => {
+                if (!amountInput.value || !vatResult)
+                    return;
+                const amount = parseFloat(amountInput.value);
+                if (isNaN(amount)) {
+                    vatResult.textContent = "";
+                    vatResult.classList.add("hidden");
+                    return;
+                }
+                const vat = amount * 0.07;
+                const total = amount + vat;
+                vatResult.textContent = `รวมทั้งหมด: ${total.toLocaleString()} บาท (VAT 7%: ${vat.toLocaleString()} บาท)`;
+                vatResult.classList.remove("hidden");
+            });
+        }
     }
+    // =====================================================================
+    // ฟอร์ม Legal
+    // =====================================================================
+    const backBtnLegal = document.getElementById("backBtn_legal");
+    backBtnLegal === null || backBtnLegal === void 0 ? void 0 : backBtnLegal.addEventListener("click", () => {
+        const form = document.getElementById("form_legal");
+        form === null || form === void 0 ? void 0 : form.classList.add("hidden");
+        requestForm === null || requestForm === void 0 ? void 0 : requestForm.classList.add("hidden");
+        selectCard === null || selectCard === void 0 ? void 0 : selectCard.classList.remove("hidden");
+        if (trainingType)
+            trainingType.value = "";
+        if (detailBox)
+            detailBox.classList.add("hidden");
+        toggleSubmit();
+    });
     function initLegalForm() {
+        console.log("🚀 init Legal Form");
+        // Request By
         bindEmpLookup(document.getElementById("legalRequestBy"), { SNAME: document.getElementById("legalRequestByName") });
+        // Trainee
         bindEmpLookup(document.getElementById("legalCode"), {
             SNAME: document.getElementById("legalName"),
             SPOSITION: document.getElementById("legalPosition"),
@@ -224,9 +336,78 @@ document.addEventListener("DOMContentLoaded", () => {
             SDEPT: document.getElementById("legalDept"),
             SDIV: document.getElementById("legalDiv")
         });
+        // Part 6 : การพิจารณาค่าใช้จ่าย
+        const expenseRadios = document.querySelectorAll("input[name='legalExpenseOption']");
+        const reasonBox = document.getElementById("legalReasonBox");
+        const compareUpload = document.getElementById("legalCompareUpload");
+        const part7 = document.getElementById("legal_part7");
+        expenseRadios.forEach(radio => {
+            radio.addEventListener("change", () => {
+                if (radio.value === "not_compare" && radio.checked) {
+                    reasonBox === null || reasonBox === void 0 ? void 0 : reasonBox.classList.remove("hidden");
+                    compareUpload === null || compareUpload === void 0 ? void 0 : compareUpload.classList.add("hidden");
+                }
+                else if (radio.value === "compare" && radio.checked) {
+                    reasonBox === null || reasonBox === void 0 ? void 0 : reasonBox.classList.add("hidden");
+                    compareUpload === null || compareUpload === void 0 ? void 0 : compareUpload.classList.remove("hidden");
+                    part7 === null || part7 === void 0 ? void 0 : part7.classList.remove("hidden");
+                }
+            });
+        });
+        // toggle เหตุผล not_compare
+        const reasonRadios = document.querySelectorAll("input[name='legalReason']");
+        reasonRadios.forEach(radio => {
+            radio.addEventListener("change", () => {
+                if (radio.value === "free" && radio.checked) {
+                    part7 === null || part7 === void 0 ? void 0 : part7.classList.add("hidden");
+                }
+                else {
+                    part7 === null || part7 === void 0 ? void 0 : part7.classList.remove("hidden");
+                }
+            });
+        });
+        // Part 7 : ค่าใช้จ่าย (คำนวณ VAT)
+        const vatResult = document.getElementById("legalVatResult");
+        const amountInput = document.getElementById("legalAmount");
+        vatResult === null || vatResult === void 0 ? void 0 : vatResult.classList.add("hidden");
+        if (amountInput) {
+            amountInput.value = "";
+            amountInput.addEventListener("input", () => {
+                if (!amountInput.value || !vatResult)
+                    return;
+                const amount = parseFloat(amountInput.value);
+                if (isNaN(amount)) {
+                    vatResult.textContent = "";
+                    vatResult.classList.add("hidden");
+                    return;
+                }
+                const vat = amount * 0.07;
+                const total = amount + vat;
+                vatResult.textContent = `รวมทั้งหมด: ${total.toLocaleString()} บาท (VAT 7%: ${vat.toLocaleString()} บาท)`;
+                vatResult.classList.remove("hidden");
+            });
+        }
     }
+    // =====================================================================
+    // ฟอร์ม METH
+    // =====================================================================
+    const backBtnMeth = document.getElementById("backBtn_meth");
+    backBtnMeth === null || backBtnMeth === void 0 ? void 0 : backBtnMeth.addEventListener("click", () => {
+        const form = document.getElementById("form_meth");
+        form === null || form === void 0 ? void 0 : form.classList.add("hidden");
+        requestForm === null || requestForm === void 0 ? void 0 : requestForm.classList.add("hidden");
+        selectCard === null || selectCard === void 0 ? void 0 : selectCard.classList.remove("hidden");
+        if (trainingType)
+            trainingType.value = "";
+        if (detailBox)
+            detailBox.classList.add("hidden");
+        toggleSubmit();
+    });
     function initMethForm() {
+        console.log("🚀 init Meth Form");
+        // Request By
         bindEmpLookup(document.getElementById("methRequestBy"), { SNAME: document.getElementById("methRequestByName") });
+        // Trainee
         bindEmpLookup(document.getElementById("methCode"), {
             SNAME: document.getElementById("methName"),
             SPOSITION: document.getElementById("methPosition"),
@@ -234,10 +415,61 @@ document.addEventListener("DOMContentLoaded", () => {
             SDEPT: document.getElementById("methDept"),
             SDIV: document.getElementById("methDiv")
         });
+        // Reset ค่า VAT/Note (Part 6)
+        const vatResult = document.getElementById("methVatResult");
+        if (vatResult) {
+            vatResult.textContent = "";
+            vatResult.classList.add("hidden");
+        }
+        const amountInput = document.getElementById("methAmount");
+        amountInput === null || amountInput === void 0 ? void 0 : amountInput.addEventListener("input", () => {
+            if (!amountInput.value || !vatResult)
+                return;
+            const amount = parseFloat(amountInput.value);
+            if (isNaN(amount)) {
+                vatResult.textContent = "";
+                vatResult.classList.add("hidden");
+                return;
+            }
+            const vat = amount * 0.07;
+            const total = amount + vat;
+            vatResult.textContent = `รวมทั้งหมด: ${total.toLocaleString()} บาท (VAT 7%: ${vat.toLocaleString()} บาท)`;
+            vatResult.classList.remove("hidden");
+        });
+        // toggle Expense Option (Part 5)
+        const expenseRadios = document.querySelectorAll("input[name='methExpenseOption']");
+        const reasonBox = document.getElementById("methReasonBox");
+        const compareUpload = document.getElementById("methCompareUpload");
+        const part6 = document.getElementById("meth_part6");
+        expenseRadios.forEach(radio => {
+            radio.addEventListener("change", () => {
+                if (radio.value === "not_compare" && radio.checked) {
+                    reasonBox === null || reasonBox === void 0 ? void 0 : reasonBox.classList.remove("hidden");
+                    compareUpload === null || compareUpload === void 0 ? void 0 : compareUpload.classList.add("hidden");
+                }
+                else if (radio.value === "compare" && radio.checked) {
+                    reasonBox === null || reasonBox === void 0 ? void 0 : reasonBox.classList.add("hidden");
+                    compareUpload === null || compareUpload === void 0 ? void 0 : compareUpload.classList.remove("hidden");
+                    part6 === null || part6 === void 0 ? void 0 : part6.classList.remove("hidden");
+                }
+            });
+        });
+        // toggle เหตุผล not_compare
+        const reasonRadios = document.querySelectorAll("input[name='methReason']");
+        reasonRadios.forEach(radio => {
+            radio.addEventListener("change", () => {
+                if (radio.value === "free" && radio.checked) {
+                    part6 === null || part6 === void 0 ? void 0 : part6.classList.add("hidden");
+                }
+                else {
+                    part6 === null || part6 === void 0 ? void 0 : part6.classList.remove("hidden");
+                }
+            });
+        });
     }
-    // =====================================================================
-    // Validate Function (ตาม requirement)
-    // =====================================================================
+    // =====================
+    // Validate Functional Form
+    // =====================
     function validateFunctionalForm() {
         var _a, _b;
         // Request By
@@ -251,7 +483,7 @@ document.addEventListener("DOMContentLoaded", () => {
         for (const id of part1Fields) {
             const el = document.getElementById(id);
             if (!(el === null || el === void 0 ? void 0 : el.value.trim())) {
-                showAlert("⚠ แจ้งเตือน", `กรุณากรอกข้อมูลให้ครบถ้วน Part1 `);
+                showAlert("⚠ แจ้งเตือน", `กรุณากรอกข้อมูล Part 1 (${id})`);
                 el === null || el === void 0 ? void 0 : el.focus();
                 return false;
             }
@@ -259,13 +491,15 @@ document.addEventListener("DOMContentLoaded", () => {
         // Part 2
         const objective = document.querySelector("#funcObjectiveList input[name='funcObjective[]']");
         if (!(objective === null || objective === void 0 ? void 0 : objective.value.trim())) {
-            showAlert("⚠ แจ้งเตือน", "กรุณากรอกวัตถุประสงค์");
+            showAlert("⚠ แจ้งเตือน", "กรุณากรอกวัตถุประสงค์ (Part 2)");
+            objective === null || objective === void 0 ? void 0 : objective.focus();
             return false;
         }
         // Part 3
         const expectation = document.querySelector("#funcExpectationList input[name='funcExpectation[]']");
         if (!(expectation === null || expectation === void 0 ? void 0 : expectation.value.trim())) {
-            showAlert("⚠ แจ้งเตือน", "กรุณากรอกความคาดหวัง");
+            showAlert("⚠ แจ้งเตือน", "กรุณากรอกความคาดหวัง / ประโยชน์ (Part 3)");
+            expectation === null || expectation === void 0 ? void 0 : expectation.focus();
             return false;
         }
         // Part 4
@@ -273,7 +507,7 @@ document.addEventListener("DOMContentLoaded", () => {
         for (const id of part4Fields) {
             const el = document.getElementById(id);
             if (!(el === null || el === void 0 ? void 0 : el.value.trim())) {
-                showAlert("⚠ แจ้งเตือน", `กรุณากรอก Part4 (${id})`);
+                showAlert("⚠ แจ้งเตือน", `กรุณากรอกข้อมูล Part 4 (${id})`);
                 el === null || el === void 0 ? void 0 : el.focus();
                 return false;
             }
@@ -281,19 +515,20 @@ document.addEventListener("DOMContentLoaded", () => {
         // Part 5
         const expenseOption = document.querySelector("input[name='funcExpenseOption']:checked");
         if (!expenseOption) {
-            showAlert("⚠ แจ้งเตือน", "กรุณาเลือก Part5 ค่าใช้จ่าย");
+            showAlert("⚠ แจ้งเตือน", "กรุณาเลือก Part 5 (ค่าใช้จ่าย)");
             return false;
         }
         if (expenseOption.value === "not_compare") {
             const reason = document.querySelector("input[name='funcReason']:checked");
             if (!reason) {
-                showAlert("⚠ แจ้งเตือน", "กรุณาเลือกเหตุผล");
+                showAlert("⚠ แจ้งเตือน", "กรุณาเลือกเหตุผล (Part 5)");
                 return false;
             }
             if (reason.value === "other") {
                 const reasonText = document.getElementById("funcReasonOtherText");
                 if (!(reasonText === null || reasonText === void 0 ? void 0 : reasonText.value.trim())) {
-                    showAlert("⚠ แจ้งเตือน", "กรุณาระบุเหตุผลอื่น");
+                    showAlert("⚠ แจ้งเตือน", "กรุณาระบุเหตุผลอื่น (Part 5)");
+                    reasonText === null || reasonText === void 0 ? void 0 : reasonText.focus();
                     return false;
                 }
             }
@@ -301,71 +536,88 @@ document.addEventListener("DOMContentLoaded", () => {
         else if (expenseOption.value === "compare") {
             const files = (_b = document.getElementById("funcCompareFiles")) === null || _b === void 0 ? void 0 : _b.files;
             if (!files || files.length === 0) {
-                showAlert("⚠ แจ้งเตือน", "กรุณาแนบไฟล์เปรียบเทียบราคา");
+                showAlert("⚠ แจ้งเตือน", "กรุณาแนบไฟล์เปรียบเทียบราคา (Part 5)");
                 return false;
             }
         }
         // Part 6
         const amount = document.getElementById("funcAmountInput");
         if (!(amount === null || amount === void 0 ? void 0 : amount.value.trim())) {
-            showAlert("⚠ แจ้งเตือน", "กรุณากรอกจำนวนเงิน");
+            showAlert("⚠ แจ้งเตือน", "กรุณากรอกจำนวนเงิน (Part 6)");
+            amount === null || amount === void 0 ? void 0 : amount.focus();
             return false;
         }
         return true;
     }
+    // =====================
+    // Validate Legal Form
+    // =====================
     function validateLegalForm() {
         var _a, _b;
+        // Request By
         const requestBy = (_a = document.getElementById("legalRequestBy")) === null || _a === void 0 ? void 0 : _a.value.trim();
         if (!requestBy) {
             showAlert("⚠ แจ้งเตือน", "กรุณากรอก Request By");
             return false;
         }
+        // Part 1
         const part1Fields = ["legalSubject", "legalDateFrom", "legalDateTo", "legalTimeFrom", "legalTimeTo", "legalPlace", "legalInstitute"];
         for (const id of part1Fields) {
             const el = document.getElementById(id);
             if (!(el === null || el === void 0 ? void 0 : el.value.trim())) {
-                showAlert("⚠ แจ้งเตือน", `กรุณากรอกข้อมูลให้ครบถ้วน Part1 `);
+                showAlert("⚠ แจ้งเตือน", `กรุณากรอกข้อมูลให้ครบถ้วน Part 1 `);
+                el === null || el === void 0 ? void 0 : el.focus();
                 return false;
             }
         }
+        // Part 2
         const concernLaw = document.getElementById("legalConcernLaw");
         if (!(concernLaw === null || concernLaw === void 0 ? void 0 : concernLaw.value.trim())) {
-            showAlert("⚠ แจ้งเตือน", "กรุณากรอกข้อกฎหมาย");
+            showAlert("⚠ แจ้งเตือน", "กรุณากรอกข้อกฎหมายที่เกี่ยวข้อง (Part 2)");
+            concernLaw === null || concernLaw === void 0 ? void 0 : concernLaw.focus();
             return false;
         }
+        // Part 3
         const objective = document.querySelector("#legalObjectiveList input[name='legalObjective[]']");
         if (!(objective === null || objective === void 0 ? void 0 : objective.value.trim())) {
-            showAlert("⚠ แจ้งเตือน", "กรุณากรอกวัตถุประสงค์");
+            showAlert("⚠ แจ้งเตือน", "กรุณากรอกวัตถุประสงค์ (Part 3)");
+            objective === null || objective === void 0 ? void 0 : objective.focus();
             return false;
         }
+        // Part 4
         const traineeCode = document.getElementById("legalCode");
         if (!(traineeCode === null || traineeCode === void 0 ? void 0 : traineeCode.value.trim())) {
-            showAlert("⚠ แจ้งเตือน", "กรุณากรอกรหัสพนักงาน");
+            showAlert("⚠ แจ้งเตือน", "กรุณากรอกรหัสพนักงาน (Part 4)");
+            traineeCode === null || traineeCode === void 0 ? void 0 : traineeCode.focus();
             return false;
         }
+        // Part 5
         const part5Fields = ["legalName", "legalPosition", "legalSec", "legalDept", "legalDiv"];
         for (const id of part5Fields) {
             const el = document.getElementById(id);
             if (!(el === null || el === void 0 ? void 0 : el.value.trim())) {
-                showAlert("⚠ แจ้งเตือน", `กรุณากรอกข้อมูลให้ครบถ้วน Part5 (${id})`);
+                showAlert("⚠ แจ้งเตือน", `กรุณากรอกข้อมูล Part 5 (${id})`);
+                el === null || el === void 0 ? void 0 : el.focus();
                 return false;
             }
         }
+        // Part 6
         const expenseOption = document.querySelector("input[name='legalExpenseOption']:checked");
         if (!expenseOption) {
-            showAlert("⚠ แจ้งเตือน", "กรุณาเลือก Part6 ค่าใช้จ่าย");
+            showAlert("⚠ แจ้งเตือน", "กรุณาเลือก Part 6 (ค่าใช้จ่าย)");
             return false;
         }
         if (expenseOption.value === "not_compare") {
             const reason = document.querySelector("input[name='legalReason']:checked");
             if (!reason) {
-                showAlert("⚠ แจ้งเตือน", "กรุณาเลือกเหตุผล");
+                showAlert("⚠ แจ้งเตือน", "กรุณาเลือกเหตุผล (Part 6)");
                 return false;
             }
             if (reason.value === "other") {
                 const reasonText = document.getElementById("legalReasonText");
                 if (!(reasonText === null || reasonText === void 0 ? void 0 : reasonText.value.trim())) {
-                    showAlert("⚠ แจ้งเตือน", "กรุณาระบุเหตุผลอื่น");
+                    showAlert("⚠ แจ้งเตือน", "กรุณาระบุเหตุผลอื่น (Part 6)");
+                    reasonText === null || reasonText === void 0 ? void 0 : reasonText.focus();
                     return false;
                 }
             }
@@ -373,65 +625,81 @@ document.addEventListener("DOMContentLoaded", () => {
         else if (expenseOption.value === "compare") {
             const files = (_b = document.getElementById("legalCompareFiles")) === null || _b === void 0 ? void 0 : _b.files;
             if (!files || files.length === 0) {
-                showAlert("⚠ แจ้งเตือน", "กรุณาแนบไฟล์เปรียบเทียบราคา");
+                showAlert("⚠ แจ้งเตือน", "กรุณาแนบไฟล์เปรียบเทียบราคา (Part 6)");
                 return false;
             }
         }
+        // Part 7
         const amount = document.getElementById("legalAmount");
         if (!(amount === null || amount === void 0 ? void 0 : amount.value.trim())) {
-            showAlert("⚠ แจ้งเตือน", "กรุณากรอกจำนวนเงิน");
+            showAlert("⚠ แจ้งเตือน", "กรุณากรอกจำนวนเงิน (Part 7)");
+            amount === null || amount === void 0 ? void 0 : amount.focus();
             return false;
         }
         return true;
     }
+    // =====================
+    // Validate Meth Form
+    // =====================
     function validateMethForm() {
         var _a, _b;
+        // Request By
         const requestBy = (_a = document.getElementById("methRequestBy")) === null || _a === void 0 ? void 0 : _a.value.trim();
         if (!requestBy) {
             showAlert("⚠ แจ้งเตือน", "กรุณากรอก Request By");
             return false;
         }
+        // Part 1
         const part1Fields = ["methSubject", "methDateFrom", "methDateTo", "methTimeFrom", "methTimeTo", "methPlace", "methInstitute"];
         for (const id of part1Fields) {
             const el = document.getElementById(id);
             if (!(el === null || el === void 0 ? void 0 : el.value.trim())) {
-                showAlert("⚠ แจ้งเตือน", `กรุณากรอกข้อมูลให้ครบถ้วน Part1 `);
+                showAlert("⚠ แจ้งเตือน", `กรุณากรอกข้อมูลให้ครบถ้วน Part 1 `);
+                el === null || el === void 0 ? void 0 : el.focus();
                 return false;
             }
         }
+        // Part 2
         const objective = document.querySelector("#methObjectiveList input[name='methObjective[]']");
         if (!(objective === null || objective === void 0 ? void 0 : objective.value.trim())) {
-            showAlert("⚠ แจ้งเตือน", "กรุณากรอกวัตถุประสงค์");
+            showAlert("⚠ แจ้งเตือน", "กรุณากรอกวัตถุประสงค์ (Part 2)");
+            objective === null || objective === void 0 ? void 0 : objective.focus();
             return false;
         }
+        // Part 3
         const expectation = document.querySelector("#methExpectationList input[name='methExpectation[]']");
         if (!(expectation === null || expectation === void 0 ? void 0 : expectation.value.trim())) {
-            showAlert("⚠ แจ้งเตือน", "กรุณากรอกความคาดหวัง");
+            showAlert("⚠ แจ้งเตือน", "กรุณากรอกความคาดหวัง / ประโยชน์ (Part 3)");
+            expectation === null || expectation === void 0 ? void 0 : expectation.focus();
             return false;
         }
+        // Part 4
         const part4Fields = ["methCode", "methName", "methPosition", "methSec", "methDept", "methDiv"];
         for (const id of part4Fields) {
             const el = document.getElementById(id);
             if (!(el === null || el === void 0 ? void 0 : el.value.trim())) {
-                showAlert("⚠ แจ้งเตือน", `กรุณากรอกข้อมูลให้ครบถ้วน Part4 (${id})`);
+                showAlert("⚠ แจ้งเตือน", `กรุณากรอกข้อมูล Part 4 (${id})`);
+                el === null || el === void 0 ? void 0 : el.focus();
                 return false;
             }
         }
+        // Part 5
         const expenseOption = document.querySelector("input[name='methExpenseOption']:checked");
         if (!expenseOption) {
-            showAlert("⚠ แจ้งเตือน", "กรุณาเลือก Part5 ค่าใช้จ่าย");
+            showAlert("⚠ แจ้งเตือน", "กรุณาเลือก Part 5 (ค่าใช้จ่าย)");
             return false;
         }
         if (expenseOption.value === "not_compare") {
             const reason = document.querySelector("input[name='methReason']:checked");
             if (!reason) {
-                showAlert("⚠ แจ้งเตือน", "กรุณาเลือกเหตุผล");
+                showAlert("⚠ แจ้งเตือน", "กรุณาเลือกเหตุผล (Part 5)");
                 return false;
             }
             if (reason.value === "other") {
                 const reasonText = document.getElementById("methReasonText");
                 if (!(reasonText === null || reasonText === void 0 ? void 0 : reasonText.value.trim())) {
-                    showAlert("⚠ แจ้งเตือน", "กรุณาระบุเหตุผลอื่น");
+                    showAlert("⚠ แจ้งเตือน", "กรุณาระบุเหตุผลอื่น (Part 5)");
+                    reasonText === null || reasonText === void 0 ? void 0 : reasonText.focus();
                     return false;
                 }
             }
@@ -439,38 +707,19 @@ document.addEventListener("DOMContentLoaded", () => {
         else if (expenseOption.value === "compare") {
             const files = (_b = document.getElementById("methCompareFiles")) === null || _b === void 0 ? void 0 : _b.files;
             if (!files || files.length === 0) {
-                showAlert("⚠ แจ้งเตือน", "กรุณาแนบไฟล์เปรียบเทียบราคา");
+                showAlert("⚠ แจ้งเตือน", "กรุณาแนบไฟล์เปรียบเทียบราคา (Part 5)");
                 return false;
             }
         }
+        // Part 6
         const amount = document.getElementById("methAmount");
         if (!(amount === null || amount === void 0 ? void 0 : amount.value.trim())) {
-            showAlert("⚠ แจ้งเตือน", "กรุณากรอกจำนวนเงิน");
+            showAlert("⚠ แจ้งเตือน", "กรุณากรอกจำนวนเงิน (Part 6)");
+            amount === null || amount === void 0 ? void 0 : amount.focus();
             return false;
         }
         return true;
     }
-    // =====================================================================
-    // ปุ่มส่งฟอร์มแต่ละ Form
-    // =====================================================================
-    (_a = document.getElementById("sendFuncFormBtn")) === null || _a === void 0 ? void 0 : _a.addEventListener("click", () => {
-        if (validateFunctionalForm()) {
-            showAlert("✅ สำเร็จ", "ฟอร์ม Functional พร้อมส่ง");
-            // TODO: submit functional
-        }
-    });
-    (_b = document.getElementById("sendLegalFormBtn")) === null || _b === void 0 ? void 0 : _b.addEventListener("click", () => {
-        if (validateLegalForm()) {
-            showAlert("✅ สำเร็จ", "ฟอร์ม Legal พร้อมส่ง");
-            // TODO: submit legal
-        }
-    });
-    (_c = document.getElementById("sendMethFormBtn")) === null || _c === void 0 ? void 0 : _c.addEventListener("click", () => {
-        if (validateMethForm()) {
-            showAlert("✅ สำเร็จ", "ฟอร์ม METH พร้อมส่ง");
-            // TODO: submit meth
-        }
-    });
     // =====================
     // เรียกตอนโหลดครั้งแรก
     // =====================
