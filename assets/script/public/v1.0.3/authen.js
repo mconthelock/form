@@ -66,7 +66,7 @@ export async function initAuthen(options = {}) {
   } else {
     // ถ้ามี cookie ให้ decrypt ค่า cookie และเก็บค่าในตัวแปร indexedDBID
     // setCookie(process.env.APP_NAME, cookie, { expires: 0.5 / 24 }); // Set cookie ทุกครั้งที่โหลดหน้าเว็บ
-    setCookie(process.env.APP_NAME, cookie, process.env.TIMEOUT || 1);
+    setCookie(process.env.APP_NAME, cookie, process.env.TIMEOUT || 30);
     indexedDBID = decryptText(cookie, process.env.APP_NAME);
 
     const [appid, empno] = indexedDBID.split("-");
@@ -144,7 +144,7 @@ export function sessionTimeOut() {
 
 $(document).on("click", "#extend-cookie", function (e) {
   e.preventDefault();
-  extendSession(process.env.APP_NAME, process.env.TIMEOUT || 1);
+  extendSession(process.env.APP_NAME, process.env.TIMEOUT || 30);
   $("#handleTimeout").prop("checked", false);
   clearInterval(timer);
   timer = undefined;
