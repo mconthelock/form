@@ -1,7 +1,7 @@
 // import { downloadOrOpenFile, getEscsUsers, showflow } from "../../api";
 import { downloadOrOpenFile } from "../../api/file";
 import { getEscsUsers } from "../../api/escs/user";
-import { showflow } from "../../api/webform/flow";
+import { doaction, showflow } from "../../api/webform/flow";
 import { createTable } from "../../public/v1.0.3/_dataTable";
 import { setDatePicker } from "../../public/v1.0.3/_flatpickr";
 import { setSelect2 } from "../../public/v1.0.3/_select2";
@@ -18,10 +18,18 @@ import {
     skeleton,
     skeletons,
 } from "../../public/v1.0.3/component/skeleton";
-import { getAllAttr, showErrorMessage } from "../../public/v1.0.3/jFuntion";
+import {
+    getAllAttr,
+    logFormData,
+    logtest,
+    requiredForm,
+    showErrorMessage,
+    showMessage,
+} from "../../public/v1.0.3/jFuntion";
 import { getImageByUser } from "../../public/v1.0.3/setIndexDB";
-import { getformData, openfile } from "./data";
-
+import { getformData, openfile, qcConfirm } from "./data";
+import { showLoader } from "../../public/v1.0.3/preloader";
+import { redirectWebflow } from "../../public/v1.0.3/_form";
 var formInfo, form, qafiles, cextdata, tableAuditor;
 
 $(async function () {
@@ -56,16 +64,78 @@ $(document).on("click", ".file-link", async function (e) {
     });
 });
 
+$(document).on("click", 'button[name="btnAction"]', async function () {
+    try {
+        showLoader();
+        let res;
+        const action = $(this).val();
+        const qcform = $("#qcForm1");
+        const formData = new FormData(qcform[0]);
+        formData.set("NFRMNO", form.NFRMNO);
+        formData.set("VORGNO", form.VORGNO);
+        formData.set("CYEAR", form.CYEAR);
+        formData.set("CYEAR2", form.CYEAR2);
+        formData.set("NRUNNO", form.NRUNNO);
+        formData.set("EMPNO", formInfo.empno);
+        formData.set("ACTION", action);
+        formData.set("REMARK", $("#remark").val());
+        if (action == "approve") {
+            const alertMsg = [
+                {
+                    element: $("#TRAINING_DATE"),
+                    message: "Please select training date",
+                },
+                { element: $("#OJTDATE"), message: "Please select OJT date" },
+                {
+                    element: $("#QCFOREMAN"),
+                    message: "Please select QC Foreman",
+                },
+            ];
+            if (!(await requiredForm(qcform, alertMsg))) return;
+
+            const data = tableAuditor.rows().data().toArray();
+            logtest("data", data);
+
+            const selected = data
+                .filter((row) => row.selected == true)
+                .map((row) => row.SEMPNO);
+
+            logtest("selected", selected);
+            if (selected.length === 0) {
+                showMessage("Please select at least one row", "warning");
+                return;
+            }
+            selected.forEach((v) => formData.append("AUDITOR", v));
+            res = await qcConfirm(formData);
+        } else {
+            res = await doaction(formData);
+        }
+        logFormData(formData);
+        logtest(res);
+        if (res.status == true) {
+            showMessage(res.message, "success");
+            redirectWebflow();
+        } else {
+            throw new Error(res.message);
+        }
+    } catch (error) {
+        console.error("Error: " + error);
+        showErrorMessage(error);
+    } finally {
+        showLoader({ show: false });
+    }
+});
+
 async function setPage() {
     $("body").addClass("bg-blue-100");
-    // const flow = await showflow(form);
-    const flow = await showflow({
-        NFRMNO: 9,
-        VORGNO: "030101",
-        CYEAR: "25",
-        CYEAR2: "2025",
-        NRUNNO: 22,
-    });
+    const flow = await showflow(form);
+    // const flow = await showflow({
+    //     NFRMNO: 9,
+    //     VORGNO: "030101",
+    //     CYEAR: "25",
+    //     CYEAR2: "2025",
+    //     NRUNNO: 22,
+    // });
     await setSkeleton();
     const data = await getformData(form);
     qafiles = data.QA_FILES;
@@ -95,7 +165,7 @@ async function setPage() {
 
     switch (cextdata) {
         case "01":
-            await setInchargeForm();
+            await setInchargeForm(data);
             break;
         case "edit":
             // Do something for edit mode
@@ -132,7 +202,7 @@ async function setPage() {
 }
 
 async function setSkeleton() {
-    console.log(formInfo.mode);
+    logtest(formInfo.mode);
 
     formInfo.mode == 2
         ? formSubmitSkeleton({
@@ -166,6 +236,7 @@ async function setSkeleton() {
     skeleton({ element: ".qcIncharge", width: "w-60", height: "h-4" });
     switch (cextdata) {
         case "01":
+            $("#qcForm1").removeClass("hidden");
             skeleton({
                 element: ".trainingDate",
                 width: "w-[24rem]",
@@ -191,36 +262,41 @@ async function setSkeleton() {
     }
 }
 
-async function setInchargeForm() {
-    $("#qcForm1").removeClass("hidden");
+async function setInchargeForm(data) {
     const user = await getEscsUsers({
         USR_STATUS: 1,
     });
-    const foreman = user.filter((u) => u.GRP_ID === 2);
+
+    const foreman = user.filter(
+        (u) =>
+            u.GRP_ID === 2 &&
+            u.SEC_ID == data.QA_INCHARGE_SECTION &&
+            data.QA_INCHARGE_SECTION_INFO.SEC_NAME.trim() == u.SSEC.trim()
+    );
     const foremanUser = foreman.length > 0 ? foreman.map((u) => u.USR_NO) : [];
     const UserImage = await getImageByUser(
         user.length > 0 ? user.map((u) => u.USR_NO) : []
     );
     $(".trainingDate").html(
         input({
-            id: "trainingDate",
-            name: "trainingDate",
+            id: "TRAINING_DATE",
+            name: "TRAINING_DATE",
             class: "input fdate max-w-sm w-full req",
             placeholder: "Select training date",
         })
     );
     $(".ojtDate").html(
         input({
-            id: "ojtDate",
-            name: "ojtDate",
+            id: "OJTDATE",
+            name: "OJTDATE",
             class: "input fdate max-w-sm w-full req",
             placeholder: "Select OJT date",
         })
     );
     $(".qcForeman").html(
         select({
-            id: "qcForeman",
-            name: "qcForeman",
+            id: "QCFOREMAN",
+            name: "QCFOREMAN",
             data:
                 foreman.length > 0
                     ? foreman.map((u) => {
@@ -234,16 +310,16 @@ async function setInchargeForm() {
             placeholder: "Select QC Foreman",
         })
     );
-    // console.log(
+    // logtest(
     //     foreman.map((u) => {
     //         return { value: u.USR_NO, text: `${u.USR_NAME} (${u.USR_NO})` };
     //     })
     // );
-    // console.log(foreman.map((u) => u.USR_NO));
+    // logtest(foreman.map((u) => u.USR_NO));
 
-    setDatePicker();
+    setDatePicker({enableTime: true, dateFormat: "Y-m-d H:i", time_24hr: true});
     setSelect2({
-        element: "#qcForeman",
+        element: "#QCFOREMAN",
         avatar: true,
         avatarData: foremanUser,
         // width: "100%",
@@ -282,7 +358,12 @@ async function setInchargeForm() {
     tableAuditor = await createTable(
         {
             data: user.filter(
-                (u) => u.GRP_ID > 1 && ![4, 7].includes(u.GRP_ID)
+                // (u) => u.GRP_ID > 1 && ![4, 7].includes(u.GRP_ID) && u.SEC_ID == secId
+                (u) =>
+                    ![4].includes(u.GRP_ID) &&
+                    u.SEC_ID == data.QA_INCHARGE_SECTION &&
+                    data.QA_INCHARGE_SECTION_INFO.SEC_NAME.trim() ==
+                        u.SSEC.trim()
             ),
             columns: columnAuditor,
             // order: false

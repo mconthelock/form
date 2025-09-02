@@ -321,7 +321,7 @@ export function getFormMaster(q = {}) {
 
 // --------------- Flow API Functions -----------------
 export async function showflow(form) {
-    const res = await fetch(`${process.env.APP_APITEST}/flow/showflow`, {
+    const res = await fetch(`${process.env.APP_API}/flow/showflow`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
@@ -351,7 +351,7 @@ export async function downloadOrOpenFile(body) {
     try {
         // const res = await fetch(`${process.env.APP_API}/files/OpenOrDownload`, {
         const res = await fetch(
-            `${process.env.APP_APITEST}/files/OpenOrDownload`,
+            `${process.env.APP_API}/files/OpenOrDownload`,
             {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },

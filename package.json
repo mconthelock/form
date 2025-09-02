@@ -39,6 +39,7 @@
     "postcss": "^8.5.6",
     "select2": "^4.1.0-rc.0",
     "socket.io-client": "^4.8.1",
+    "sortablejs": "^1.15.6",
     "sweetalert2": "^11.6.13",
     "tailwindcss-animate": "^1.0.7",
     "tailwindcss-bg-patterns": "^0.3.0"

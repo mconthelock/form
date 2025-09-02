@@ -1,9 +1,9 @@
 <?php
 use GuzzleHttp\Client;
-require_once APPPATH.'controllers/_file.php';
-require_once APPPATH.'controllers/_form.php';
+// require_once APPPATH.'controllers/_file.php';
+// require_once APPPATH.'controllers/_form.php';
 class Authen extends MY_Controller {
-    use _File, _Form;
+    //use _File, _Form;
 
     protected $client;
     public function __construct(){

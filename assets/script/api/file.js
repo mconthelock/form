@@ -5,7 +5,7 @@ export async function downloadOrOpenFile(body) {
     try {
         // const res = await fetch(`${process.env.APP_API}/files/OpenOrDownload`, {
         const res = await fetch(
-            `${process.env.APP_APITEST}/files/OpenOrDownload`,
+            `${process.env.APP_API}/files/OpenOrDownload`,
             {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },

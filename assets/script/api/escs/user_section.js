@@ -1,4 +1,4 @@
-import { fetchMsgErr } from "../errorMsg";
+import { fetchMsgErr } from "../fetch-utils";
 
 /**
  * get escs user section
@@ -19,7 +19,8 @@ export async function getEscsUserSection(q = {}) {
         body: JSON.stringify(q),
     });
     if (!res.ok) {
-        return {status: false, message: `Failed to fetch escs user section : ${await fetchMsgErr(res)}`};
+        await fetchMsgErr(res)
+        throw new Error("Failed to fetch escs user section");
     }
     return res.json();
     // return getData({

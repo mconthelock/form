@@ -1,4 +1,4 @@
-import { fetchMsgErr } from "../errorMsg";
+import { fetchMsgErr } from "../fetch-utils";
 
 /**
  * get escs items
@@ -21,10 +21,8 @@ export async function getEscsItems(q = {}) {
         body: JSON.stringify(q),
     });
     if (!res.ok) {
-        return {
-            status: false,
-            message: `Failed to fetch escs items : ${await fetchMsgErr(res)}`,
-        };
+        await fetchMsgErr(res)
+        throw new Error("Failed to fetch escs items");
     }
     return res.json();
     // return getData({

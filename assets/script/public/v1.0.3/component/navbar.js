@@ -15,7 +15,7 @@ export function initNavbar(options = {}) {
   };
 
   const navbar = `
-        <div class="shadow-xl lg:hidden!" id="navbar">
+        <div class="shadow-lg md:hidden!" id="navbar">
             <div class="navbar-start">
                 <label for="${
                   opt.toggleId

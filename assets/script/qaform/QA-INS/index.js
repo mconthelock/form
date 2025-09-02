@@ -245,7 +245,7 @@ $(document).on("click", "#btnRequest", async function () {
         logFormData(formData);
 
         // const res = await getData({
-        //     url: `${process.env.APP_APITEST}/qaform/qa-ins/request`,
+        //     url: `${process.env.APP_API}/qaform/qa-ins/request`,
         //     data: formData,
         //     processData: false,
         //     contentType: false,

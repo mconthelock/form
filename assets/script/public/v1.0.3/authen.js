@@ -29,7 +29,7 @@ import { initNavbar } from "./component/navbar";
  * เพิ่ม option sidebar และ navbar ในการ initAuthen
  */
 
-var indexedDBID, timer;
+var indexedDBID, timer, intervalId;
 // ต้องมีอัันนี้ใน template
 /* <div id="user-login"></div>
     <div id="navbar"></div>
@@ -51,12 +51,14 @@ export async function initAuthen(options = {}) {
     setSessionPhp: false,
     sidebar: true,
     navbar: true,
+    loader: true,
     // จะไปตั้งใน env ก็ได้ถ้า path ตรง ถ้าไม่ก็ส่ง path ที่ถูกต้องมาเลยเช่น `${host}/assets/images/icon.png`,
     icon: `${host}/assets/images/${process.env.APP_ICON}`,
     programName: process.env.APP_NAME,
     ...options,
   };
-  showbgLoader();
+
+  showbgLoader({ show: opt.loader });
   let menu, info, group, res;
   const cookie = getCookie(process.env.APP_NAME);
   if (!cookie) {
@@ -64,7 +66,7 @@ export async function initAuthen(options = {}) {
   } else {
     // ถ้ามี cookie ให้ decrypt ค่า cookie และเก็บค่าในตัวแปร indexedDBID
     // setCookie(process.env.APP_NAME, cookie, { expires: 0.5 / 24 }); // Set cookie ทุกครั้งที่โหลดหน้าเว็บ
-    setCookie(process.env.APP_NAME, cookie, 30);
+    setCookie(process.env.APP_NAME, cookie, process.env.TIMEOUT || 1);
     indexedDBID = decryptText(cookie, process.env.APP_NAME);
 
     const [appid, empno] = indexedDBID.split("-");
@@ -91,7 +93,10 @@ export async function initAuthen(options = {}) {
     }
 
     // $('#user-login').prop('empno', info.SEMPNO);
+    if ($("#user-login").length == 0)
+      $("body").prepend('<div id="user-login"></div>');
     $("#user-login").attr("empno", empno);
+    $("#user-login").attr("empname", info.SNAME);
     $("#user-login").attr("appid", appid);
     $("#user-login").attr("program", indexedDBID);
 
@@ -104,30 +109,13 @@ export async function initAuthen(options = {}) {
     }
     showbgLoader({ show: false });
 
-    setInterval(() => {
-      const timeLeft = getTimeLeft(process.env.APP_NAME);
+    setInterval(async () => {
+      const ck = await getCookie(process.env.APP_NAME);
+      if (!ck) window.location.reload();
+      const timeLeft = await getTimeLeft(process.env.APP_NAME);
       if (timeLeft > 0 && timeLeft <= 0.5 * 60 * 1000) {
         sessionTimeOut();
       }
-
-      //   const cookies = getCookie(process.env.APP_NAME);
-      //   if (!cookies) {
-      //     console.log("Cookie not found, redirecting to authen page");
-      //     // $('.logout').trigger('click');
-      //     console.log($(".sidebar-profile").find(".avatar"));
-      //     console.log($("#nav-profile").closest(".avatar"));
-
-      //     $(".sidebar-profile")
-      //       .find(".avatar")
-      //       .addClass("avatar-offline")
-      //       .removeClass("avatar-online");
-      //     $("#nav-profile")
-      //       .closest(".avatar")
-      //       .addClass("avatar-offline")
-      //       .removeClass("avatar-online");
-      //   } else {
-      //     // console.log("Cookie found, updating indexedDBID");
-      //   }
     }, 1000 * 5);
   }
 }
@@ -138,11 +126,14 @@ export function sessionTimeOut() {
   const el = document.getElementById("timeout-countdown");
   el.style.setProperty("--value", count);
   el.setAttribute("aria-label", count);
+  extendSession(process.env.APP_NAME, 1);
+  if (timer) return;
   timer = setInterval(() => {
     count--;
     el.style.setProperty("--value", count);
     el.setAttribute("aria-label", count);
     el.textContent = count;
+    console.log(count, timer);
     if (count <= 0) {
       clearInterval(timer);
       deleteCookie(process.env.APP_NAME);
@@ -153,9 +144,18 @@ export function sessionTimeOut() {
 
 $(document).on("click", "#extend-cookie", function (e) {
   e.preventDefault();
-  extendSession(process.env.APP_NAME, 30);
+  extendSession(process.env.APP_NAME, process.env.TIMEOUT || 1);
   $("#handleTimeout").prop("checked", false);
   clearInterval(timer);
+  timer = undefined;
+});
+
+$(document).on("click", "#delete-cookie", async function (e) {
+  e.preventDefault();
+  await deleteGroup(indexedDBID);
+  await deleteMenu(indexedDBID);
+  deleteCookie(process.env.APP_NAME);
+  window.location.href = `${root}/form/authen/index/${process.env.APP_ID}`;
 });
 
 $(document).on("click", ".logout", async function (e) {

@@ -317,8 +317,10 @@ export function autosizeTextarea (el) {
 }
 
 export function logFormData(formData) {
-    for (const [key, value] of formData.entries()) {
-        console.log(`${key}: ${value}`);
+    if (['local', 'development'].includes(process.env.STATE || '')) {
+        for (const [key, value] of formData.entries()) {
+            console.log(`${key}: ${value}`);
+        }
     }
 }
 
@@ -347,4 +349,10 @@ export async function getAllAttr(element) {
     }
     console.log(attrObj);
     return attrObj;
+}
+
+export function logtest(...args) {
+    if (['local', 'development'].includes(process.env.STATE || '')) {
+        console.log(...args);
+    }
 }

@@ -14,11 +14,13 @@ $(document).on("click", "#sidebarToggle", function () {
   if ($("#sidebar").hasClass("collapsed")) {
     expandMenu();
     iconMenu();
+    $(this).css("display", "none !important");
     // $('#sidebar').removeClass('collapsed');
     // $('#sidebarToggle').attr('data-html', 'Collapse menu');
   } else if ($("#sidebar").hasClass("collapsed-hover")) {
     expandMenu();
     iconMenu();
+    $(this).css("display", "flex !important");
     // $('#sidebar').removeClass('collapsed-hover collapsed');
     // $('#sidebarToggle').attr('data-html', 'Collapse menu');
   } else {
@@ -110,8 +112,8 @@ export function initSidebar(options = {}) {
             <img src="${opt.icon}" class="sidebar-logo-full">
             <img src="${opt.iconLogo}" class="sidebar-logo-mini">
         </a>
-        <button id="sidebarToggle" class="ml-auto btn btn-circle btn-ghost tooltip tooltip-bottom  hover:bg-transparent hidden lg:flex!" data-html="Collapse menu"></button>
-         <label for="my-drawer-2" aria-label="close sidebar" class="ml-auto btn btn-circle btn-ghost tooltip tooltip-bottom  hover:bg-transparent flex lg:hidden!" data-html="Collapse menu"><svg xmlns="http://www.w3.org/2000/svg" class="w-[28px] h-[28px] fill-white" id="arrow-circle-down" viewBox="0 0 24 24"><path d="M24,12A12,12,0,1,0,12,24,12.013,12.013,0,0,0,24,12ZM9.465,17.707,5.879,14.121h0a3,3,0,0,1,0-4.243L9.465,6.293l.025-.024a1,1,0,1,1,1.389,1.438L7.586,11,18,10.993a1,1,0,0,1,0,2L7.587,13l3.292,3.293a1,1,0,1,1-1.414,1.414Z"/></svg></label>
+        <button id="sidebarToggle" class="ml-auto btn btn-circle btn-ghost tooltip tooltip-bottom  hover:bg-transparent hidden md:flex!" data-html="Collapse menu"></button>
+         <label for="my-drawer-2" aria-label="close sidebar" class="ml-auto btn btn-circle btn-ghost tooltip tooltip-bottom  hover:bg-transparent flex md:hidden!" data-html="Collapse menu"><svg xmlns="http://www.w3.org/2000/svg" class="w-[28px] h-[28px] fill-white" id="arrow-circle-down" viewBox="0 0 24 24"><path d="M24,12A12,12,0,1,0,12,24,12.013,12.013,0,0,0,24,12ZM9.465,17.707,5.879,14.121h0a3,3,0,0,1,0-4.243L9.465,6.293l.025-.024a1,1,0,1,1,1.389,1.438L7.586,11,18,10.993a1,1,0,0,1,0,2L7.587,13l3.292,3.293a1,1,0,1,1-1.414,1.414Z"/></svg></label>
     </div>
     <div id="menu" class="pt-4 flex flex-col gap-3"></div>
     <div id="profile" class="mt-auto"></div>
@@ -229,13 +231,13 @@ export function timeOutLayout() {
                 <h1 class="pb-3 ">Your session had already expired, Would you like to stay on our system?
                 </h1>
                 <div class="flex gap-3 justify-center">
-                    <button class="btn btn-primary" id="extend-cookie">Yes (
+                    <button class="btn btn-primary text-white" id="extend-cookie">Yes (
                         <div class="countdown font-mono">
                             <span class="" id="timeout-countdown" style="--value:30;" aria-live="polite"
                                 aria-label="30"></span>
                         </div>)
                     </button>
-                    <button class="btn">No</button>
+                    <button class="btn " id="delete-cookie">No</button>
                 </div>
             </div>
         </div>
