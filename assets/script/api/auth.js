@@ -50,3 +50,4 @@ export function directlogin(empno, id) {
     });
   });
 }
+
