@@ -3,9 +3,9 @@ import {
   getData,
   showMessage,
   requiredForm,
-} from "../../jFuntion";
+} from "../../public/v1.0.3/jFuntion";
 import { host, showLoader } from "../../utils";
-import { createTable } from "../../inc/_dataTable";
+import { createTable } from "../../public/v1.0.3/_dataTable";
 import { createColumnFilters } from "../../inc/_filter.js";
 import { excelOptions, exportExcel, defaultExcel } from "../../inc/_excel.js";
 
@@ -276,18 +276,30 @@ async function createTableDwg() {
     url: host + "qaform/QA-QOI/manage/get_qoi_schedule",
     data: { year: year },
   });
-  mtable = createTable(
+  console.log("dwgData =>", dwgData);
+ /* mtable = createTable(
     "#table",
     {
       data: dwgData,
-      ordering: false,
       columns: columns,
+      ordering: false,
     },
     {
       join: true,
       buttonFilter: { status: true, column: "0" },
+      
     }
-  );
+  );*/
+
+  mtable = createTable({
+    data : dwgData,
+    columns:columns,
+    ordering: false
+  },{
+    id: '#table',
+    buttonFilter: { status: true, column: "0" },
+    join: true
+  });
   $("#table").find("thead").removeClass("bg-white");
   $("#table").find("thead").addClass("bg-blue-200");
   $(`#table_wrapper .table-option`).append(`

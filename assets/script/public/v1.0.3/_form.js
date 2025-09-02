@@ -13,7 +13,7 @@
 import { checkAuthen, root } from "./jFuntion";
 import { showLoader } from "../../utils";
 
-const url = root.includes('amecwebtest') ? `${root}api-auth/api-dev/` : `${root}api-auth/api/`;
+const url = root.includes('amecwebtest') ? `${root}/api-auth/api-dev/` : `${root}/api-auth/api/`;
 console.log(url);
 
 
@@ -80,7 +80,7 @@ export function createForm(NFRMNO, VORGNO, CYEAR, req, key, remark='', mflag=1){
 export function createForm2(NFRMNO, VORGNO, CYEAR, req, key, remark='', draft = ''){
     return new Promise((resolve) => {
         $.ajax({
-            url: `${root}webservice/webflow/form/create`,
+            url: `${root}/webservice/webflow/form/create`,
             type: "post",
             dataType: "json",
             data: { 
@@ -118,7 +118,7 @@ export function createForm2(NFRMNO, VORGNO, CYEAR, req, key, remark='', draft = 
 export function deleteForm(NFRMNO, VORGNO, CYEAR, CYEAR2, NRUNNO){
     return new Promise((resolve) => {
         $.ajax({
-            url: `${root}webservice/webflow/form/deleteForm`,
+            url: `${root}/webservice/webflow/form/deleteForm`,
             // url: `${url}flow/deleteForm`,
             type: "post",
             dataType: "json",
@@ -157,7 +157,7 @@ export function showFlow(NFRMNO, VORGNO, CYEAR, CYEAR2, NRUNNO){
         $.ajax({
             // url: `${url}flow/showflow`,
             // url: uri.includes('amecwebtest') ? `${url}flow/showflow` : `${uri}/webservice/webflow/Flow/showflow`,
-            url: `${root}webservice/webflow/Flow/showflow`,
+            url: `${root}/webservice/webflow/Flow/showflow`,
             type: "post",
             dataType: "json",
             data: { 
@@ -242,7 +242,7 @@ export function doactionWebservice(NFRMNO, VORGNO, CYEAR, CYEAR2, NRUNNO, action
     return new Promise((resolve) => {
         $.ajax({
             // url: `http://amecwebtest.mitsubishielevatorasia.co.th/api-auth/api-dev/appflow/doaction`,
-            url: `${root}webservice/webflow/flow/doaction`,
+            url: `${root}/webservice/webflow/flow/doaction`,
             type: "post",
             dataType: "json",
             data: { 

@@ -66,6 +66,10 @@ module.exports = {
 
     //VMS
     vms: "./assets/script/marform/MAR-VMS/index.js", //manage page
+    vmsmst: "./assets/script/marform/MAR-VMS/master.js", //manage page
+
+    // PS-SAR
+    psSar: "./assets/script/psform/PS-SAR/index.js", //Sar page
   },
   output: {
     filename: "[name].js",

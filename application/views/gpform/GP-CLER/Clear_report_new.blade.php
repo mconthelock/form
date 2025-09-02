@@ -331,7 +331,7 @@
                                 </div>
                                 @if($ENT_FORM->REIMBURSEMENT == '1')
                                     <div>
-                                        <div class="text-sm text-gray-600">Remain Cost</div>
+                                        <div class="text-sm text-gray-600">{{$formCler->REMAIN_BUDGET < 0 ? "Over Cost" : "Remain Cost"}}</div>
                                         @if(!empty($formCler->REMAIN_BUDGET))
                                             <div class="text-2xl font-bold {{ $formCler->REMAIN_BUDGET >= 0 ? 'text-blue-600' : 'text-red-600' }}">
                                                 {{ number_format($formCler->REMAIN_BUDGET, 2) }}
@@ -346,10 +346,12 @@
                         <h3 class="text-xl font-bold text-green-700 mb-2">Remark : </h3>
                         <div class="border-green-200 rounded-xl bg-green-50 p-2 mb-6 border-2">
                             <div class="text-xs pl-2 {{ $formCler->REMAIN_BUDGET > 0 ? 'text-blue-600' : 'text-red-600' }}">
-                                @if($ENT_FORM->REIMBURSEMENT == '1')
-                                    {{ $formCler->REMAIN_BUDGET > 0 ? "The Actual cost not over Estimate cost : Employee return remain cash to Company." : "The Actual cost over Estimate cost : Company reimbursement to Employee.(" . $ENT_FORM->EMP_REQ . " " . $form[0]->VREQNAME . ")" }}
-                                @else
-                                    {{ $formCler->REMAIN_BUDGET > 0 ? "The actual cost did not exceed the estimated cost. As no advance payment was requested, the employee will be reimbursed by the company." : "The Actual cost over Estimate cost : Company reimbursement to Employee.(" . $ENT_FORM->EMP_REQ . " " . $form[0]->VREQNAME . ")" }}
+                                @if($formCler->REMAIN_BUDGET != 0)
+                                    @if($ENT_FORM->REIMBURSEMENT == '1')
+                                        {{ $formCler->REMAIN_BUDGET > 0 ? "The Actual cost not over Estimate cost : Employee return remain cash to Company." : "The Actual cost over Estimate cost : Company reimbursement to Employee.(" . $ENT_FORM->EMP_REQ . " " . $form[0]->VREQNAME . ")" }}
+                                    @else
+                                        {{ $formCler->REMAIN_BUDGET > 0 ? "The actual cost did not exceed the estimated cost. As no advance payment was requested, the employee will be reimbursed by the company." : "The Actual cost over Estimate cost : Company reimbursement to Employee.(" . $ENT_FORM->EMP_REQ . " " . $form[0]->VREQNAME . ")" }}
+                                    @endif
                                 @endif
                             </div>
                         </div>
@@ -370,7 +372,7 @@
                                         <tr>
                                             <td class="py-2 px-4 border-b border-green-100">{{ $i + 1 }}</td>
                                             <td class="py-2 px-4 border-b border-green-100">{{ $ex->RECEIPT }}</td>
-                                            <td class="py-2 px-4 border-b border-green-100">{{ number_format($ex->COST,2) }}</td>
+                                            <td class="py-2 px-4 border-b border-green-100">{{ number_format($ex->COST, 2) }}</td>
                                         </tr>
                                     @endforeach
                                 </tbody>

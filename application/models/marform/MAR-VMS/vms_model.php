@@ -54,9 +54,9 @@ class vms_model extends my_model
             }
         }
         $this->db
-        ->select('V.* , SNAME , SSEC , SDEPT , SDIV , SPOSNAME')
+        ->select('V.* ,GNAME , GDETAIL')
         ->from('VMS_STAKEHOLDERS V')
-        ->join('AMECUSERALL A ', 'V.SEMPNO = A.SEMPNO');
+        ->join('VMS_GROUP G', 'V.GID = G.GID');
         return $this->db->get()->result();
 
     }
@@ -145,12 +145,45 @@ class vms_model extends my_model
         ->from('VMS_ROOM')
         ->order_by('ROOMNAME', 'ASC');
           return $this->db->get()->result();
+    }
 
+    
+    public function get_group($cond = '')
+    {
+        if($cond != ''){
+            foreach($cond as $key => $val) {
+            $this->set_where($key, $val);
+        }
+        }
+        $this->db
+        ->select('ROW_NUMBER() OVER (ORDER BY GNAME ASC) AS NO , VMS_GROUP.*')
+        ->from('VMS_GROUP')
+        ->order_by('GNAME', 'ASC');
+          return $this->db->get()->result();
+    }
+
+    public function get_dietary($cond = '')
+    {
+        if($cond != ''){
+            foreach($cond as $key => $val) {
+            $this->set_where($key, $val);
+        }
+        }
+        $this->db
+        ->select('*')
+        ->from('VMS_DIETARY')
+        ->order_by('DID', 'ASC');
+          return $this->db->get()->result();
     }
 
     public function execsql($q)
 	{
 		return $this->db->query($q);
+	}
+
+    public function getdatasql($q)
+	{
+		return $this->db->query($q)->result();
 	}
 
 }

@@ -14,11 +14,11 @@
     <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
 
       <!-- Create Visitor Form -->
-      <a href="{{ base_url('marform/MAR-VMS/form/main?').'no='.$NFRMNO.'&orgNo='.$VORGNO.'&y='.$CYEAR.'&c=1&empno'.$empno }}"
-         class="rounded-2xl p-10 flex flex-col items-center text-center
+      <a href="{{ base_url('marform/MAR-VMS/form/main?mode=A&').'no='.$NFRMNO.'&orgNo='.$VORGNO.'&y='.$CYEAR.'&c=1&empno='.$empno }}"
+         class="block rounded-2xl p-10 flex flex-col items-center text-center
                 bg-gradient-to-br from-blue-50 to-blue-100
                 shadow-md hover:shadow-2xl hover:-translate-y-4
-                transform transition-all duration-300 active:scale-95">
+                transform transition-all duration-300 active:scale-95 overflow-hidden">
 
         <!-- Icon Container -->
         <div class="flex items-center justify-center w-28 h-28 rounded-full bg-gradient-to-br from-blue-200 to-blue-400 mb-6 shadow-inner">
@@ -38,11 +38,11 @@
       </a>
 
       <!-- Group Master -->
-      <a href="{{ base_url('marform/MAR-VMS/form/main/') }}"
-         class="rounded-2xl p-10 flex flex-col items-center text-center
+      <a href="{{ base_url('marform/MAR-VMS/master/master?') }}"
+         class="block rounded-2xl p-10 flex flex-col items-center text-center
                 bg-gradient-to-br from-green-50 to-green-100
                 shadow-md hover:shadow-2xl hover:-translate-y-4
-                transform transition-all duration-300 active:scale-95">
+                transform transition-all duration-300 active:scale-95 overflow-hidden">
 
         <!-- Icon Container -->
         <div class="flex items-center justify-center w-28 h-28 rounded-full bg-gradient-to-br from-green-200 to-green-400 mb-6 shadow-inner">

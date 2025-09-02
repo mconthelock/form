@@ -9,6 +9,8 @@
     <meta name="root_url" content="{{ root_url() }}">
     <link rel="manifest" href="{{ base_url() }}manifest.json?ver={{ $GLOBALS['version'] }}">
     <meta name="theme-color" content="#C0C0C0">
+    <meta name="appname" content="{{ $_ENV['APP_NAME'] }}">
+    <meta name="appstatus" content="{{ $_ENV['STATE'] }}">
     <link rel="shortcut icon" href="{{ base_url() }}assets/images/favicon.ico">
     <link rel="apple-touch-icon" href="{{ base_url() }}assets/images/favicon.ico">
     <link rel="apple-touch-startup-image" href="{{ base_url() }}assets/images/icon_512.png">
@@ -24,7 +26,6 @@
 </head>
 
 <body class="flex flex-col min-h-screen">
-
     <input type="checkbox" id="loading-box" class="modal-toggle" />
     <div class="modal !z-[9999]" role="dialog">
         <div class="loader"></div>

@@ -40,6 +40,40 @@ $(function () {
     updateCount("amec");
   }
 
+  $.ajax({
+    type: "GET",
+    url: host + "gpform/GP-ENT/main/get_estimate_type",
+    dataType: "json",
+    success: function (response) {
+      $(".estimate-type").each(function () {
+        $(this).empty().append(`<option value="">--Select Detail--</option>`);
+        response.forEach((item) => {
+          $(this).append(`<option value="${item.ET_NAME}" id="select-${item.ET_NAME}" data-cost="${item.ET_COST}">${item.ET_NAME}</option>`);
+        });
+      });
+    },
+  });
+
+  // $(document).on("change", ".time", function () {
+  //   const time = $(this).val();
+  //   const $select = $(".estimate-type"); // หรือเจาะจงแต่ละแถว ถ้าหลาย select
+
+  //   $select.empty(); // เคลียร์ options เดิม
+  //   $select.append(`<option value="">--Select Detail--</option>`);
+
+  //   if (time === "Lunch" || time === "Dinner") {
+  //     // ถ้าเลือก Lunch หรือ Dinner ขึ้น 1-4
+  //     lunchDinnerOptions.forEach((val) => {
+  //       $select.append(`<option value="${val}">${val}</option>`);
+  //     });
+  //   } else if (time === "Gift" || time === "Other") {
+  //     // ถ้าเลือก Gift หรือ Other ขึ้นชื่อที่มีใน options
+  //     giftOtherOptions.forEach((opt) => {
+  //       $select.append(`<option value="${opt.value}">${opt.label}</option>`);
+  //     });
+  //   }
+  // });
+
   // -------- Add/Remove Guest/Amec --------
   function addGuest() {
     const name = $("#guest-name-input").val().trim();
@@ -262,7 +296,7 @@ $(function () {
     formData.append("time", timeVal);
     formData.append("location", isLocationVisible ? $("input[name='location']:checked").val() : "");
     formData.append("location_detail", isLocationVisible ? $("#location_detail").val() : "");
-    formData.append("guest_type", $(".guest_type:checked").val() ?? '');
+    formData.append("guest_type", $(".guest_type:checked").val() ?? "");
     formData.append("org_type", $("input[name='orgType']:checked").val());
     formData.append("entertain_budget", $("#entertain-budget").val());
     formData.append("total_amount", $("#total-amount").text());
@@ -556,3 +590,46 @@ function calculateTotals() {
   });
   $("#total-amount").text(totalAmount);
 }
+
+$(document).on("change", ".time", function () {
+  // const $row = $(this).closest("tr");
+  const $select = $(".estimate-type");
+  const time = $(this).val();
+
+  console.log(time);
+
+  $select.find("option").each(function () {
+    const val = $(this).val();
+    console.log(val);
+    // default always show
+    if (val === "") {
+      $(this).show().prop("disabled", false);
+      return;
+    }
+    if (time === "Lunch" || time === "Dinner") {
+      // Show เฉพาะ option ที่ชื่อมี Lunch หรือ Dinner
+      if (val.toLowerCase().includes("gift") || val.toLowerCase().includes("other")) {
+        $(this).hide().prop("disabled", true);
+      } else {
+        $(this).show().prop("disabled", false);
+      }
+    } else if (time === "Gift") {
+      // Show เฉพาะ gift
+      if (val.toLowerCase() === "gift") {
+        $(this).show().prop("disabled", false);
+      } else {
+        $(this).hide().prop("disabled", true);
+      }
+    } else if (time === "Other") {
+      // Show เฉพาะ other
+      if (val.toLowerCase() === "other") {
+        $(this).show().prop("disabled", false);
+      } else {
+        $(this).hide().prop("disabled", true);
+      }
+    }
+  });
+
+  // reset value (optional)
+  $select.val("");
+});

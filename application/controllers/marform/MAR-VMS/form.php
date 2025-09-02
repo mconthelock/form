@@ -16,17 +16,32 @@ class form extends MY_Controller{
     }
 
     public function main(){
-        if(isset($_GET["mode"]) && ($_GET["mode"] =="M"))
+        $cform = true; 
+        if(!isset($_GET["y2"]) && !isset($_GET["runNo"]))
         {
-            $data = [
-                'NFRMNO' => $_GET['no'],
-                'VORGNO' => $_GET['orgNo'],
-                'CYEAR'  => $_GET['y'],
-            ];
-            $data['empno'] = isset($_GET["empno"]) ? $_GET['empno'] : '' ;
-            $this->views('marform/MAR-VMS/main', $data);
-        }else
+            if(isset($_GET["no"]) && $_GET["no"] != "" && isset($_GET["orgNo"]) && $_GET["orgNo"] != "" && isset($_GET["y"]) && $_GET["y"] != "" ) {
+
+                if(isset($_GET["mode"]) && $_GET["mode"] == "A")
+                {
+                    $cform = true;
+             
+                }else
+                {
+                    $data = [
+                        'NFRMNO' => $_GET['no'],
+                        'VORGNO' => $_GET['orgNo'],
+                        'CYEAR'  => $_GET['y'],
+                    ];
+                    $data['empno'] = isset($_GET["empno"]) ? $_GET['empno'] : '' ;
+                    $this->views('marform/MAR-VMS/main', $data);
+                    $cform = false;
+                }
+            }
+        }
+
+        if($cform)
         {
+
             if(isset($_GET["no"]) && $_GET["no"] != "" && isset($_GET["orgNo"]) && $_GET["orgNo"] != "" && isset($_GET["y"]) && $_GET["y"] != "" ) {
                 $data = [
                     'NFRMNO' => $_GET['no'],
@@ -46,7 +61,8 @@ class form extends MY_Controller{
     
             }
             $data['empno'] = isset($_GET["empno"]) ? $_GET['empno'] : '' ;
-            
+            $data['allgroup'] = $this->vms->get_group(array("GSTATUS" => '1')); 
+            $data['participants'] = $this->vms->get_participants();
             if(!isset($_GET["runNo"]))
             {
                 $data['mode'] = "1";
@@ -72,27 +88,48 @@ class form extends MY_Controller{
                 $data["purpose"] = $this->vms->get_purpose_visit();
                 $data["visittype"] = $this->vms->get_visit_type();
                 $data["salecom"] = $this->vms->get_salecompany();
-                $data["participants"] = $this->vms->get_participants();
                 $data["activity"] = $this->vms->get_activity();
                 $data["room"] = $this->vms->get_room();
+                $data["dietary"] = $this->vms->get_dietary();
                 $data["attfile"] = array();
+                $data["attgfile"] = array();
                 $data["attbfile"] = array();
                 $data["pstk"] = array();
                 $data["istk"] = array();
-                $date["sch"]  = array();
+                $data["sch"]  = array();
+                $data["visitinf"] = array();
                 if($data['mode']=="2")
                 {
                     $con = array("CYEAR2" => $data["CYEAR2"],"NRUNNO" => $data["NRUNNO"]);
                     $conatt = array("CYEAR2" => $data["CYEAR2"],"NRUNNO" => $data["NRUNNO"],"TYPENO" =>'S');
                     $data["visit"] =  $this->vms->customSelect("VMS_VISIT",$con ,'*');
                     $data["sch"] =  $this->vms->get_schedule($con);
+                    $data["visitinf"] =   $this->vms->customSelect("VMS_VISITINF",$con,'*');
                     $con["TYPEEMP"] = "P";
                     $data["pstk"] = $this->vms->get_stakeholders($con);
                     $con["TYPEEMP"] = "I";
                     $data["istk"] = $this->vms->get_stakeholders($con);
                     $data["attfile"] =  $this->vms->customSelect("VMS_ATTFILE",$conatt,'*');
+                    $conatt["TYPENO"] = "G";
+                    $data["attgfile"] =  $this->vms->customSelect("VMS_ATTFILE",$conatt,'*');
                     $conatt["TYPENO"] = "B";
                     $data["attbfile"] =  $this->vms->customSelect("VMS_ATTFILE",$conatt,'*');
+                    $customOptions = array();
+                    foreach($data["visitinf"] as $vt)
+                    {
+                       // echo $vt->DIETREQ;
+                        //echo "<br/>";
+                        $customOptions[] =  (object)[ 'DID' => $vt->DIETREQ , 'DIETARY' => $vt->DIETREQ];
+                    }
+                    $dbDIDs = array_column($data["dietary"], 'DIETARY');
+                    foreach ($customOptions as $opt) {
+                        if (!in_array($opt->DIETARY, $dbDIDs)) {
+                            $data["dietary"][] = $opt;
+                            $dbDIDs[] = $opt->DIETARY; // อัปเดต DID list เพื่อกันซ้ำ
+                        }
+                    }
+            
+                  
                 }else
                 {
                     $data["formversion"] = $this->vms->get_formversion();
@@ -100,10 +137,17 @@ class form extends MY_Controller{
     
                 $this->views('marform/MAR-VMS/create', $data);
             }
-
         }
+        
     }
 
+    public function master()
+    {
+
+        $data["participants"] = $this->vms->get_participants();
+        $this->views('marform/MAR-VMS/master', $data);
+
+    }
     
     public function save()
     {
@@ -122,7 +166,7 @@ class form extends MY_Controller{
             {
                 mkdir($path, 0777, true);
             }
-            $upfile =  $this->uploadMultiFile($_FILES, ['specificAttachment'], $path);
+            $upfile =  $this->uploadMultiFile($_FILES, ['specificAttachment','fileAttachment'], $path);
             $fid = $this->vms->generate_attfile_id($cyear2,$nrunno);
             $datafile = array();
             foreach ($upfile["files"] as $fileType => $fileArray) {
@@ -132,7 +176,7 @@ class form extends MY_Controller{
                     'CYEAR2' => $cyear2,
                     'NRUNNO' => $nrunno,
                     'ITEMNO' => $fid,
-                    'TYPENO' => ($fileType == "specificAttachment"? "S":""),
+                    'TYPENO' => ($fileType == "specificAttachment"? "S":"G"),
                     'SFILE'  => $file['file_name']
                  );
                  $this->vms->delete("VMS_ATTFILE",array("CYEAR2" => $cyear2 , "NRUNNO" => $nrunno , "TYPENO" =>'S',"SFILE" =>$file['file_name']));
@@ -152,11 +196,13 @@ class form extends MY_Controller{
                 'SALECOM'       => $_POST["salecom"],
                 'FORMC1_1'      => $_POST["formC1"],
                 'VISITDATE'     => ($_POST["visitDate"] != ""? date("d/m/Y", strtotime($_POST["visitDate"])):""),
+                'BOOKING'       => $_POST["bookingTime"],
                 'RECEPTROOM'    => $_POST["receptionRoom"],
                 'PURPOSE'       => $_POST["purposevisit"],
                 'PURPOSEDETAIL' => $_POST["detail"],
                 'VISITTYPE'     => $_POST["visitTypes"],
                 'GUESTTYPE'     => $_POST["guestType"],
+                'COMTYPE'       => $_POST["guestDetail"],
                 'SHOPTOUR'      => $_POST["shoptour"],
                 'LUNCH'         => $_POST["hasLunch"],
                 'LUNCH_LOC'     => $_POST["lunch"],
@@ -226,7 +272,7 @@ class form extends MY_Controller{
                     $data[] = array(
                         'CYEAR2' => $cyear2,
                         'NRUNNO' => $nrunno,
-                        'SEMPNO' => $p,
+                        'GID' => $p,
                         'TYPEEMP' => 'P'
                     );
                 }
@@ -239,7 +285,7 @@ class form extends MY_Controller{
                     $data[] = array(
                         'CYEAR2' => $cyear2,
                         'NRUNNO' => $nrunno,
-                        'SEMPNO' => $i,
+                        'GID' => $i,
                         'TYPEEMP' => 'I'
                     );
                 }
@@ -363,7 +409,7 @@ class form extends MY_Controller{
                         'TYPENO' => "B",
                         'SFILE'  => $file['file_name']
                     );
-                    $this->vms->delete("VMS_ATTFILE",array("CYEAR2" => $cyear2 , "NRUNNO" => $nrunno , "TYPENO" =>'S' , "SFILE" => $file['file_name']));
+                    $this->vms->delete("VMS_ATTFILE",array("CYEAR2" => $cyear2 , "NRUNNO" => $nrunno , "TYPENO" =>'B'));
                     $fid++;
                 }
                 }
@@ -411,14 +457,15 @@ class form extends MY_Controller{
                         'NAME'    => $name[$i],
                         'POSITION'=> $pos[$i],
                         'VISITEXP'=> $exp[$i],
-                        'LUNCH'   => $lunch_provided[$i],
-                        'DINNER'  => $dinner_provided[$i],
-                        'DIETREQ' => $dietary_require[$i]
+                        'LUNCH'   => (($_POST["hasLunch"]=="Y") ? $lunch_provided[$i] : ""),
+                        'DINNER'  => (($_POST["hasDinner"]=="Y") ? $dinner_provided[$i] : ""),
+                        'DIETREQ' => ((($_POST["hasLunch"]=="Y") || ($_POST["hasDinner"]=="Y")) ? $dietary_require[$i]:"")
                     );
                 }
                 $i++;
             }
             try{
+                $status = true;
                 if(count($data) > 0)
                 {
                     $this->vms->trans_start();

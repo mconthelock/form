@@ -653,5 +653,11 @@ class Main extends MY_Controller
         // pre_array($emp_approver);
     }
 
+    public function get_estimate_type()
+    {
+        $data = $this->ent->get_estimate_type();
+        echo json_encode($data);
+    }
+
 
 }

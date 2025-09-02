@@ -47,19 +47,19 @@
                     <label class="font-semibold text-blue-700 block mb-2">Type of Entertainment</label>
                     <div class="flex gap-6">
                         <label class="inline-flex items-center space-x-2">
-                            <input type="radio" name="time" id="time-lunch" class="radio radio-primary" value="Lunch" />
+                            <input type="radio" name="time" id="time-lunch" class="radio radio-primary time" value="Lunch" />
                             <span>Lunch</span>
                         </label>
                         <label class="inline-flex items-center space-x-2">
-                            <input type="radio" name="time" id="time-dinner" class="radio radio-primary" value="Dinner" />
+                            <input type="radio" name="time" id="time-dinner" class="radio radio-primary time" value="Dinner" />
                             <span>Dinner</span>
                         </label>
                         <label class="inline-flex items-center space-x-2">
-                            <input type="radio" name="time" id="time-gift" class="radio radio-primary" value="Gift" />
+                            <input type="radio" name="time" id="time-gift" class="radio radio-primary time" value="Gift" />
                             <span>Gift</span>
                         </label>
                         <label class="inline-flex items-center space-x-2">
-                            <input type="radio" name="time" id="time-other" class="radio radio-primary" value="Other" />
+                            <input type="radio" name="time" id="time-other" class="radio radio-primary time" value="Other" />
                             <span>Other</span>
                         </label>
                     </div>
@@ -212,9 +212,9 @@
                     </h2>
 
                     <!-- <div>
-                                             <span class="font-bold text-blue-900 mr-2">Entertainment’s Budget:</span>
-                                             <input type="text" class="input input-bordered input-sm rounded-lg border-blue-200" id="entertain-budget" placeholder="*Please identify (if have)">
-                                            </div> -->
+                                                                     <span class="font-bold text-blue-900 mr-2">Entertainment’s Budget:</span>
+                                                                     <input type="text" class="input input-bordered input-sm rounded-lg border-blue-200" id="entertain-budget" placeholder="*Please identify (if have)">
+                                                                    </div> -->
                 </div>
                 <div class="overflow-x-auto mt-3 rounded-lg">
                     <table class="table table-xs md:table-sm w-full rounded-lg overflow-hidden shadow" id="table_cost">
@@ -234,9 +234,9 @@
                                         <!-- <input class="input input-bordered input-xs rounded-lg w-full" placeholder="รายการ (เช่น Set box, Bento food, ฯลฯ)" /> -->
                                         <select class="select select-sm rounded-lg estimate-type">
                                             <option value="">--Select Detail--</option>
-                                            @foreach ($estimate_type as $value)
+                                            <!-- @foreach ($estimate_type as $value)
                                                 <option value="{{ $value->ET_NAME }}" data-cost="{{ $value->ET_COST }}">{{ $value->ET_NAME }}</option>
-                                            @endforeach
+                                            @endforeach -->
                                         </select>
                                     </td>
                                     <td><input type="number" class="input input-bordered input-sm rounded-lg w-full text-center" /></td>

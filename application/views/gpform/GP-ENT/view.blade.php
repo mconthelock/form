@@ -21,7 +21,6 @@
             }
 
 
-
             body>* {
                 /* ย่อทั้ง body ให้เหมือนปรับ scale ใน dialog (เช่น 62%) */
                 transform: scale(0.62);
