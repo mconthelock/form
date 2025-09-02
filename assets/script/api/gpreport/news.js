@@ -2,9 +2,6 @@ import "@fancyapps/ui/dist/carousel/carousel.css";
 import "@fancyapps/ui/dist/carousel/carousel.autoplay.css";
 import { Carousel } from "@fancyapps/ui/dist/carousel/carousel.esm.js";
 import { Autoplay } from "@fancyapps/ui/dist/carousel/carousel.autoplay.esm.js";
-import { fetchMsgErr } from "../errorMsg";
-import { getApp } from "../../indexDB/application";
-import { setApplication } from "../../indexDB/setIndexDB";
 import { getApplication } from "../docinv/application";
 
 export async function getNews() {

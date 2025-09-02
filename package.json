@@ -58,8 +58,12 @@
     "sidebar": "tailwindcss -i ./assets/style/custom/v1.0.1/sidebar.css -o ./assets/dist/css/sidebar.min.css --minify",
     "navbar": "tailwindcss -i ./assets/style/custom/v1.0.1/navbar.css -o ./assets/dist/css/navbar.min.css --minify",
     "minifyCss": "npm-run-all --parallel component dataTables fancyBox flatpickr select2 sidebar navbar v1.0.1",
-    "v1.0.1": "tailwindcss -i ./assets/style/custom/v1.0.1.css -o ./assets/dist/css/v1.0.1.min.css --minify",
     "v1.0.1:watch": "tailwindcss -i ./assets/style/custom/v1.0.1.css -o ./assets/dist/css/v1.0.1.min.css --watch",
-    "watch": "npm-run-all --parallel tailwind:watch v1.0.1:watch webpack:watch"
+    "watch": "npm-run-all --parallel tailwind:watch v1.0.1:watch webpack:watch",
+    
+    "v1.0.1": "tailwindcss -i ./assets/style/custom/v1.0.1.css -o ./assets/dist/css/v1.0.1.min.css --minify",
+    "tailwind:build": "tailwindcss -i ./assets/style/tailwind.css -o ./assets/dist/css/tailwind.css --minify",
+    "webpack:build": "webpack --mode production",
+    "build": "npm-run-all --serial tailwind:build webpack:build minifyCss v1.0.1"
   }
 }
