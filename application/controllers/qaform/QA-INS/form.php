@@ -62,5 +62,10 @@ class form extends MY_Controller{
         }
     }
 
+    public function auditMaster($userId){
+        $data['userId'] = $userId;
+        $this->views('qaform/QA-INS/auditMaster', $data);
+    }
+
 
 }
