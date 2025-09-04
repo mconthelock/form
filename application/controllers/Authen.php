@@ -11,7 +11,7 @@ class Authen extends MY_Controller {
         $this->client = new Client(['verify' => false]);
     }
 
-    public function index($id = 1){
+    public function index($id = 28){
         if(!isset($_SESSION['user'])) {
             $data =  array('pageid' => 'login', 'id' => $id);
             $this->views('auth/login', $data);

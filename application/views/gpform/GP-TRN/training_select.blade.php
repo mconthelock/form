@@ -1,7 +1,11 @@
 @extends('layouts/webflowTemplate')
 @section('contents')
 <div class="min-h-screen flex flex-col items-center bg-blue-50 pt-6 px-4">
-<Input type="hidden" id="txt_base_url" value="<?php echo base_url();?>">
+<input type="hidden" id="txt_base_url" value="<?php echo base_url(); ?>">
+<input type="hidden" id="NFRMNO" value="<?php echo $NFRMNO; ?>">
+<input type="hidden" id="VORGNO" value="<?php echo $VORGNO; ?>">
+<input type="hidden" id="CYEAR" value="<?php echo $CYEAR; ?>">
+
     <!-- Card เลือกประเภท -->
     <div id="selectCard" class="bg-white rounded-2xl shadow-lg p-8 w-full max-w-lg border">
         <h2 class="text-xl font-bold text-gray-700 mb-2 text-center">เลือกประเภทแบบฟอร์ม</h2>
@@ -29,8 +33,6 @@
             disabled>
             ไปยังแบบฟอร์ม
         </button>
-
-
     </div>
 
     <!-- Request Form (ซ่อนอยู่) -->
@@ -45,9 +47,7 @@
             @includeIf('gpform.GP-TRN.training_form_meth')
         </div>
     </div>
-
 </div>
-
 
 <!-- ✅ Modal -->
 <dialog id="alertModal" class="rounded-xl shadow-lg p-0 border-0 bg-transparent">
@@ -56,11 +56,7 @@
     <p id="alertMessage" class="py-4 text-gray-700">ข้อความแจ้งเตือน</p>
     <div class="mt-4 flex justify-end">
       <form method="dialog">
-        <button type="submit"
-          class="bg-indigo-500 text-white rounded-lg px-4 py-2 font-semibold 
-                 hover:bg-indigo-600 transition">
-          ปิด
-        </button>
+        <button type="submit" class="bg-indigo-500 text-white rounded-lg px-4 py-2 font-semibold hover:bg-indigo-600 transition"> ปิด </button>
       </form>
     </div>
   </div>
@@ -87,5 +83,7 @@ dialog::backdrop {
 
 @section('scripts')
     <script>const getEmpUrl = "{{ site_url('gpform/GP-TRN/training/get_emp') }}";</script>
-    <script type="module" src="{{ base_url('assets/script/gpform/GP-TRN/training.js?v=') . time() }}"></script>
+    <!--<script type="module" src="{{ base_url('assets/script/gpform/GP-TRN/training.js?v=') . time() }}"></script>-->
+    <script src="{{ $_ENV['APP_JS'] }}/training.js?ver={{ $GLOBALS['version'] }}"></script>
+
 @endsection

@@ -58,6 +58,8 @@ $(document).ready(function () {
       
         $(".emp-select").select2(
           {
+          width: 'style',          // ใช้ style ของ select เดิม
+           dropdownParent: $('#tableemp'), // บังคับ dropdown อยู่ใน table
            multiple:false,
            placeholder:'',
            allowClear: true,
@@ -214,38 +216,168 @@ $(document).ready(function () {
           
 
            // --- Table emp / employee -> pos-col ---
-          const $tableEmpBody = $('#tableemp tbody');
-          $tableEmpBody.find('.dietary_require').select2({ width: '100%' });
+          const tableEmpBody = $('#tableemp tbody');
+          const tableemp = $('#tableemp');
+          tableEmpBody.find('.dietary_require').select2({ width: '100%' });
 
           // Employee select change -> update pos-col
-          $tableEmpBody.on('change', '.emp-select', function() {
-            const $select = $(this);
-            const $row = $select.closest('tr');
-            const pos = $select.find('option:selected').data('pos') || '';
-            $row.find('.pos-col').text(pos);
+          tableEmpBody.on('change', '.emp-select', function() {
+            const select = $(this);
+            const row = select.closest('tr');
+            const pos = select.find('option:selected').data('pos') || '';
+            row.find('.pos-col').text(pos);
           });
 
           // Dietary_require prompt (Other/Food Allergies) for #tableemp
-          $tableEmpBody.on("change", ".dietary_require", function () {
-            const $select = $(this);
-            const val = $select.val();
+          tableEmpBody.on("change", ".dietary_require", function () {
+            const select = $(this);
+            const val = select.val();
             if (val === "Food Allergies" || val === "Other") {
               const customText = prompt("Please specify:");
               if (customText) {
                 const newVal = val + " – " + customText;
-                if ($select.find("option[value='" + newVal + "']").length === 0) {
+                if (select.find("option[value='" + newVal + "']").length === 0) {
                   const newOption = new Option(newVal, newVal, true, true);
-                  $select.append(newOption);
+                  select.append(newOption);
                 }
-                $select.val(newVal).trigger("change.select2");
+                select.val(newVal).trigger("change.select2");
               } else {
-                $select.val(null).trigger("change.select2");
+                select.val(null).trigger("change.select2");
               }
             }
           });
 
+          $(document).on('click', '#addEmpBtn', function () {
+
+            const firstRow = tableEmpBody.find('tr:first');
+            const newRow = $('<tr/>');
+            firstRow.children('td').each(function (i) {
+              const td = $('<td/>').html($(this).html());
+
+
+
+              td.find('.emp-select').remove();
+              const empSelect = $(this).find('.emp-select');
+              if (empSelect.length) {
+                const freshEmp = $('<select/>', {
+                  name: empSelect.attr('name'),
+                  class: empSelect.attr('class'),
+                  style: 'width:100%',
+                  id: 'emp_' + Date.now() + '_' + Math.floor(Math.random() * 1000)
+                });
+              
+                // copy option ทั้งหมดของ emp-select
+                empSelect.find('option').each(function () {
+                  const val = $(this).val();
+                  const text = $(this).text();
+                  freshEmp.append($('<option/>', { value: val, text: text })
+                    .attr('data-pos', $(this).data('pos'))
+                    .attr('data-div', $(this).data('div'))
+                    .attr('data-dep', $(this).data('dep'))
+                    .attr('data-sec', $(this).data('sec')));
+                });
+              
+                td.empty(); // เคลียร์ของเก่าใน td
+                td.append(freshEmp);
+              
+                // init select2 พร้อมปุ่ม clear
+                freshEmp.select2({
+                  width: 'style',
+                  dropdownParent: $('#tableemp'),
+                  placeholder: '',
+                  allowClear: true
+                });
+              }
+              
           
+              // ลบ select2 เดิม
+              td.find('.dietary_require').remove();
           
+              // สร้าง fresh select
+              const origSelect = $(this).find('.dietary_require');
+              if (origSelect.length) {
+                const freshSelect = $('<select/>', {
+                  name: origSelect.attr('name'),
+                  class: origSelect.attr('class'),
+                  id: 'dietary_' + Date.now() + '_' + Math.floor(Math.random()*1000)
+                });
+          
+                // copy options ปกติเท่านั้น (ไม่เอา custom)
+                origSelect.find('option').each(function () {
+                const val = $(this).val();
+                const text = $(this).text();
+          
+                  // ตรวจสอบว่าเป็น custom หรือไม่
+                  if (val === "Food Allergies" || val === "Other" || !val.includes("–")) {
+                    freshSelect.append($('<option/>', { value: val, text: text }));
+                  }
+                });
+          
+                td.html(freshSelect);
+                freshSelect.select2({ width: '100%' });
+              }
+              if (i === 2) { // index เริ่มที่ 0 → คอลัมน์ 3 คือ index 2
+                td.addClass('pos-col');
+                td.text(''); // reset ค่า
+              }
+              newRow.append(td);
+            });
+            newRow.find('select').each(function() {
+              const name = $(this).attr('name');        
+              // กรณี dietary_require (custom select2)
+              if ($(this).hasClass('dietary_require')) {
+                $(this).val(null).trigger('change'); // reset select2
+              } 
+              // select อื่น ๆ
+              else {
+                $(this).val('Y'); // reset เป็นค่า default ว่าง
+              }
+            });
+
+            // update ลำดับ
+            const rowCount = tableEmpBody.find('tr').length + 1;
+            newRow.find('td:first').text(rowCount);
+            // --- เช็คคอลัมน์ซ่อน/แสดง ตาม header ---
+            const thead = tableemp.find('thead tr th');
+            thead.each(function (i) {
+              const isVisible = $(this).is(':visible'); // ตรวจสอบว่าหัวตารางซ่อนหรือไม่
+              if (!isVisible) {
+                newRow.find('td').eq(i).hide();
+              } else {
+                newRow.find('td').eq(i).show();
+              }
+            });
+
+            newRow.find('td:first').addClass(firstRow.find('td:first').attr('class'))
+            .attr('tabindex', 0)
+            .css('left', '0px');
+          
+            tableEmpBody.append(newRow);
+
+
+            /*
+            $firstRow.find('.emp-select').select2('destroy');
+            const $newRow = $firstRow.clone();
+          
+            // เคลียร์ค่าภายใน input และ select
+            $newRow.find('input, select').each(function () {
+              $(this).val('');
+            });
+            
+            initSelect2(".emp-select",$firstRow);
+            initSelect2(".emp-select",$newRow);
+              // นับจำนวนแถวเพื่อกำหนดหมายเลข No.
+              const rowCount = $tableBody.find('tr').length + 1;
+              $newRow.find('td:first').text(rowCount);
+          
+            // เพิ่มแถวใหม่ลงใน tbody
+            $tableBody.append($newRow);*/
+          
+          });
+          $(".emp-select").each(function() {
+            var pos = $(this).find("option:selected").data("pos") || "";
+            $(this).closest("tr").find(".pos-col").text(pos);
+        });
 
          /* $('#dietary_require').on('select2:select', function(e) {
             var data = e.params.data;
@@ -693,28 +825,7 @@ $(document).on("select2:selecting", ".dietary_require", function (e) {
 
 
 
-$(document).on('click', '#addEmpBtn', function () {
-
-  const $tableBody = $('#tableemp tbody');
-  const $firstRow = $tableBody.find('tr:first');
-  $firstRow.find('.emp-select').select2('destroy');
-  const $newRow = $firstRow.clone();
-
-  // เคลียร์ค่าภายใน input และ select
-  $newRow.find('input, select').each(function () {
-    $(this).val('');
-  });
-  
-  initSelect2(".emp-select",$firstRow);
-  initSelect2(".emp-select",$newRow);
-    // นับจำนวนแถวเพื่อกำหนดหมายเลข No.
-    const rowCount = $tableBody.find('tr').length + 1;
-    $newRow.find('td:first').text(rowCount);
-
-  // เพิ่มแถวใหม่ลงใน tbody
-  $tableBody.append($newRow);
-
-});
+/*
 
 $(document).on('click', '#addSecBtn', function () {
 
@@ -728,11 +839,34 @@ $(document).on('click', '#addSecBtn', function () {
   });
 
     // นับจำนวนแถวเพื่อกำหนดหมายเลข No.
-    const rowCount = $tableBody.find('tr').length + 1;
+    //const rowCount = $tableBody.find('tr').length + 1;
+    const rowCount = $tableBody.find('tr:has(input[type="text"])').length + 1;
     $newRow.find('td:first').text(rowCount);
 
   // เพิ่มแถวใหม่ลงใน tbody
   $tableBody.append($newRow);
+
+});*/
+
+$(document).on('click', '#addSecBtn', function () {
+  const table = $('#tablesec').DataTable(); // DataTable instance
+  const $firstRow = $('#tablesec tbody tr:first');
+
+  // clone แต่ต้อง reset ค่า
+  const $newRow = $firstRow.clone();
+  $newRow.find('input, select').each(function () {
+    $(this).val('');
+  });
+
+  // กำหนดหมายเลข No.
+  const rowCount = $('#tablesec tbody tr:has(input[type="text"])').length + 1;
+  $newRow.find('td:first').text(rowCount);
+
+  // เพิ่มแถวใหม่ด้วย DataTable API
+  const newRowNode = table.row.add($newRow).draw(false).node();
+  
+  // ถ้าต้องการทำให้ sticky หรือ styling เพิ่มเติม
+  $(newRowNode).find('td:first').addClass('px-2 py-2 sticky-column');
 
 });
 
@@ -777,6 +911,68 @@ $(document).on('change', '.emp-select', function() {
 
   $row.find('.pos-col').text(pos); // แสดงใน td.pos-col
 });
+
+
+
+$(document).on('change', '.sproj', async function() {
+  const data = await getPrj({PRJ_NO: $(this).val()});
+  const $row = $(this).closest('tr');
+  const table = $row.closest('table').DataTable();   // ใช้ DataTable instance
+  const rowIdx = table.row($row).index();
+
+  // ลบ detail เดิม
+  while ($row.next().hasClass('detail-row')) {
+    table.row($row.next()).remove().draw(false);
+  }
+   console.log("xxxxxxxxxxx");
+  if (data && data.length > 0) {
+    console.log("else");
+    let insertPos = rowIdx;
+    data.forEach(item => {
+      let expDate = '';
+      if (item.EXPPLAN) {
+        const d = new Date(item.EXPPLAN);
+        const dd = String(d.getDate()).padStart(2,'0');
+        const mm = String(d.getMonth()+1).padStart(2,'0');
+        const yyyy = d.getFullYear();
+        expDate = `${dd}/${mm}/${yyyy}`;
+      }
+      insertPos++;
+      const newRow = table.row.add([
+        '',
+        '',
+        item.PRJ_NAME,
+        item.MODEL,
+        item.SPEC,
+        item.TOTUNIT,
+        expDate
+      ]).draw(false).node();
+     
+      // ใส่ class .detail-row
+      $(newRow).addClass('detail-row');
+      $(newRow).find('td:first').addClass('px-2 py-2 sticky-column dt-type-numeric dtr-control');
+
+    });
+  }
+  //https://amecwebtest.mitsubishielevatorasia.co.th/api/mkt/orders/sproj
+});
+
+export const getPrj = async (data) => {
+  return new Promise((resolve, reject) => {
+    $.ajax({
+      url: `${process.env.APP_API}/mkt/orders/sproj/`,
+      type: "POST",
+      dataType: "json",
+      data: data,
+      success: function (response) {
+        resolve(response);
+      },
+      error: function (error) {
+        reject(error);
+      },
+    });
+  });
+};
 
 
 
@@ -962,7 +1158,7 @@ let nrunno =  $("#nrunno").val();
 let cyear2 =  $("#cyear2").val();
 let isValid = (tab === "visitarg") ? validateVisitTab(form)
               : (tab === "req") ? validateReqItemTab(form)
-              : (tab === "stk" || tab === "sch" || tab === "inf") ? validate(form)
+              : (tab === "stk" || tab === "sch" || tab === "inf" || tab === "meal") ? validate(form)
               : true;
 if (!isValid) return;
 
