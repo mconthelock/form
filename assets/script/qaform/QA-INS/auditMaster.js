@@ -2,11 +2,41 @@ import { getAuditRevision } from "../../api/escs/audit_revision";
 import { skeleton } from "../../public/v1.0.3/component/skeleton";
 import { formatDate } from "../../public/v1.0.3/_dayjs";
 import { getAuditMaster } from "../../api/escs/audit_master";
-import { showErrorMessage } from "../../public/v1.0.3/jFuntion";
+import { logtest, showErrorMessage } from "../../public/v1.0.3/jFuntion";
 
 import Sortable, { create } from "sortablejs";
+import { btnAdd, btnDel, btnStatus, input } from "./component";
 
 let sortables = [];
+
+const sortOpt = ({ handle, clsList, attr }) => ({
+    forceFallback: true,
+    handle: handle,
+    filter: ".hidden",
+    animation: 150,
+    ghostClass: "bg-[#64b0db]!", // เวลาลาก
+    chosenClass: "bg-[#64b0db]!", // เวลาคลิก
+    // dragClass: 'bg-[#64b0db]!'
+    onStart: function (evt) {
+        evt.item.querySelector(handle).classList.remove("cursor-grab");
+        evt.item.querySelector(handle).classList.add("cursor-grabbing");
+    },
+    onEnd: function (/**Event*/ evt) {
+        evt.item.querySelector(handle).classList.remove("cursor-grabbing");
+        evt.item.querySelector(handle).classList.add("cursor-grab");
+        var items = evt.to.querySelectorAll(clsList);
+        items.forEach(function (item, index) {
+            const oldNo = item.getAttribute(attr);
+            if (oldNo != index + 1 && item.getAttribute("New") != "true") {
+                item.setAttribute("edit", true);
+                showReasonArea();
+            } else {
+                // item.removeAttribute("edit");
+            }
+            item.setAttribute("new-no", index + 1);
+        });
+    },
+});
 
 $(async function () {
     try {
@@ -68,19 +98,19 @@ async function createList() {
     $("#edit-button").attr("disabled", false);
     $("#collapse-button").attr("disabled", false);
     $("#expand-button").attr("disabled", false);
-    let html = `<div class="join join-vertical w-full" id="list">`;
+    let html = `<div class="join join-vertical w-full" id="masterList">`;
     for (const item of master) {
         if (item.ARM_TYPE == "H") {
             html += `<div class="collapse collapse-arrow bg-base-100 border-base-300 border join-item">
-                        <input type="checkbox" checked="checked" class='toggle-list'/>
-                        <div class="collapse-title font-semibold bg-[#3c8dbc] text-white flex gap-3 topic" old-no="${item.ARM_NO}"><i class="icofont-drag handle cursor-grab"></i>${item.ARM_DETAIL}</div>
+                        <input type="checkbox" checked="checked" class='toggle-list sr-only'/>
+                        <div class="collapse-title font-semibold bg-[#3c8dbc] text-white flex gap-3 topic" old-no="${item.ARM_NO}" status="${item.ARM_STATUS}"><i class="icofont-drag handle cursor-grab"></i>${item.ARM_DETAIL}</div>
                         <ul class="collapse-content text-sm list" id="list-master-${item.ARM_NO}">`;
         } else {
             const cls =
                 item.ARM_STATUS == 0
                     ? "bg-red-100 text-gray-400 line-through cursor-not-allowed"
                     : handleClassList(item.ARM_SEQ);
-            html += `<li class="list-row rounded-none flex items-center gap-3 ${cls}" old-seq="${item.ARM_SEQ}" status="${item.ARM_STATUS}"><i class="icofont-drag handle cursor-grab"></i>${item.ARM_DETAIL}</li>`;
+            html += `<li class="list-row rounded-none flex items-center gap-3 ${cls}" old-seq="${item.ARM_SEQ}" status="${item.ARM_STATUS}"><i class="icofont-drag handleList cursor-grab"></i>${item.ARM_DETAIL}</li>`;
         }
 
         const nextItem = master[master.indexOf(item) + 1];
@@ -92,70 +122,27 @@ async function createList() {
         }
     }
     html += `</div>`;
-    $("#list").replaceWith(html);
-    $(".toggle-list").addClass("sr-only");
+    $("#masterList").replaceWith(html);
+    // $(".toggle-list").addClass("sr-only");
     await sortablesDestroy();
 
-    const option = {
-        forceFallback: true,
-        handle: ".handle",
-        animation: 150,
-        ghostClass: "bg-[#64b0db]!", // เวลาลาก
-        chosenClass: "bg-[#64b0db]!", // เวลาคลิก
-        // dragClass: 'bg-[#64b0db]!'
-        onStart: function (evt) {
-            evt.item.querySelector(".handle").classList.remove("cursor-grab");
-            evt.item.querySelector(".handle").classList.add("cursor-grabbing");
-        },
-    };
-
-    document.querySelectorAll("#list").forEach(function (el) {
-        let s = new Sortable(el, {
-            ...option,
-            onEnd: function (/**Event*/ evt) {
-                evt.item
-                    .querySelector(".handle")
-                    .classList.remove("cursor-grabbing");
-                evt.item.querySelector(".handle").classList.add("cursor-grab");
-                var items = evt.to.querySelectorAll(".topic");
-                items.forEach(function (item, index) {
-                    const oldNo = item.getAttribute("old-no");
-                    if (oldNo != index + 1) {
-                        item.setAttribute("edit", true);
-                        showReasonArea();
-                    } else {
-                        // item.removeAttribute("edit");
-                    }
-                    item.setAttribute("new-no", index + 1);
-                });
-            },
-        });
+    document.querySelectorAll("#masterList").forEach(function (el) {
+        let s = new Sortable(
+            el,
+            sortOpt({ handle: ".handle", clsList: ".topic", attr: "old-no" })
+        );
         sortables.push(s);
     });
 
     document.querySelectorAll(".list").forEach(function (el) {
-        let s = new Sortable(el, {
-            ...option,
-            onEnd: function (/**Event*/ evt) {
-                evt.item
-                    .querySelector(".handle")
-                    .classList.remove("cursor-grabbing");
-                evt.item.querySelector(".handle").classList.add("cursor-grab");
-                var items = evt.to.querySelectorAll(".list-row");
-                items.forEach(function (item, index) {
-                    const oldSeq = item.getAttribute("old-seq");
-                    if (oldSeq != index + 1) {
-                        item.setAttribute("edit", true);
-                        showReasonArea();
-                    } else {
-                        // item.removeAttribute("edit");
-                    }
-                    item.setAttribute("new-seq", index + 1);
-                    item.classList.remove("bg-base-200", "bg-white");
-                    item.classList.add(handleClassList(index));
-                });
-            },
-        });
+        let s = new Sortable(
+            el,
+            sortOpt({
+                handle: ".handleList",
+                clsList: ".list-row",
+                attr: "old-seq",
+            })
+        );
         sortables.push(s);
     });
 }
@@ -173,19 +160,18 @@ function showReasonArea() {
     $("#save").removeClass("hidden");
 }
 
-function collapseFocus(){
+function collapseFocus() {
     $("#expand-button").addClass("btn-outline");
     $("#collapse-button").removeClass("btn-outline");
 }
 
-function expandFocus(){
+function expandFocus() {
     $("#collapse-button").addClass("btn-outline");
     $("#expand-button").removeClass("btn-outline");
 }
 
+// collapse all
 $(document).on("click", "#collapse-button", function () {
-    // $(this).removeClass("btn-outline");
-    // $("#expand-button").addClass("btn-outline");
     collapseFocus();
     $(".toggle-list").each((index, element) => {
         // $(element).attr("checked", false);
@@ -195,9 +181,8 @@ $(document).on("click", "#collapse-button", function () {
     });
 });
 
+// Expand all
 $(document).on("click", "#expand-button", function () {
-    // $(this).removeClass("btn-outline");
-    // $("#collapse-button").addClass("btn-outline");
     expandFocus();
     $(".toggle-list").each((index, element) => {
         // $(element).attr("checked", true);
@@ -207,40 +192,45 @@ $(document).on("click", "#expand-button", function () {
     });
 });
 
+// click edit
 $(document).on("click", "#edit-button", async function () {
     showReasonArea();
     // await sortablesDestroy();
     $("#edit-button").attr("disabled", true);
-    $("#add-button").removeClass("hidden");
+    $("#add-topic").removeClass("hidden");
     // $(".toggle-list").addClass("hidden");
     // หัวข้อ
     $(".topic").each((index, element) => {
+        const status = $(element).attr("status");
         const text = $(element).text();
-        $(element)
-            .html(`<i class="icofont-drag handle cursor-grab"></i><input type="text" class="input w-full text-black" value="${text}"/>
-            <button class="add-detail btn"><i class="icofont-ui-add"></i> Add list</button>`);
+        $(element).html(`<i class="icofont-drag handle cursor-grab"></i>
+            ${input({ val: text, cls: "topic-input" })}
+            ${btnAdd({ cls: "add-list", text: "Add list" })}
+            ${btnStatus({ status: status })}
+            ${btnDel({ cls: "delete-topic" })}`);
     });
 
     // รายการ
     $(".list-row").each((index, element) => {
         const text = $(element).text();
         const status = $(element).attr("status");
-        $(element).html(`<i class="icofont-drag handle cursor-grab"></i>
-            <input type="text" class="input w-full list-input" value="${text}"/>
-            <div class="btn btn-outline flex items-center gap-2 list-status">
-                Status
-                <input type="checkbox" ${
-                    status == 1 ? 'checked="checked"' : ""
-                } class="toggle toggle-xl toggle-success " />
-            </div>
-            <button class="btn btn-error delete-list"><i class="icofont-ui-delete"></i> Delete</button>
-            `);
+        $(element).html(`<i class="icofont-drag handleList cursor-grab"></i>
+            ${input({ val: text, cls: "list-input" })}
+            ${btnStatus({ status: status })}
+            ${btnDel({ cls: "delete-list" })}`);
     });
 });
 
+// save
+$(document).on("click", "#save-button", async function () {
+    console.log($(".topic"));
+    console.log($(".list-row"));
+});
+
+// cancel
 $(document).on("click", "#cancel-button", async function () {
     $("#save").addClass("hidden");
-    $("#add-button").addClass("hidden");
+    $("#add-topic").addClass("hidden");
     expandFocus();
     await createList();
 });
@@ -251,8 +241,9 @@ $(document).on("click", ".collapse-title.topic", function () {
     $(this).siblings(".toggle-list").trigger("click");
 });
 
-$(document).on("click", ".list-status", function () {
-    const toggle = $(this).find('.list-status input[type="checkbox"]');
+$(document).on("click", ".list-status", function (e) {
+    e.stopPropagation();
+    const toggle = $(this).find('input[type="checkbox"]');
     toggle.trigger("click");
     // toggle.is(':checked') ? toggle.attr("checked", false) : toggle.attr("checked", true);
 });
@@ -262,8 +253,6 @@ $(document).on("click", '.list-status input[type="checkbox"]', function (e) {
     const listRow = $(this).closest(".list-row");
     const listInput = listRow.find(".list-input");
     listRow.attr("edit", true);
-
-    console.log(2);
     if ($(this).is(":checked")) {
         listRow.removeClass("!bg-red-100");
         listInput.attr("disabled", false);
@@ -273,10 +262,67 @@ $(document).on("click", '.list-status input[type="checkbox"]', function (e) {
     }
 });
 
-$(document).on("click", ".topic input", function (e) {
+$(document).on("click", ".topic-input", function (e) {
     e.stopPropagation();
 });
 
-$(document).on("click", ".topic .add-detail", function (e) {
+$(document).on("click", ".add-list", function (e) {
     e.stopPropagation();
+    const list = $(this).closest(".collapse").find(".list");
+    const newSeq = list.find(".list-row").length + 1;
+    const html = `<li class="list-row rounded-none flex items-center gap-3 bg-white" old-seq="${newSeq}" status="1" new="true">
+                        <i class="icofont-drag handleList cursor-grab"></i>
+                        ${input({ cls: "list-input" })}
+                        ${btnStatus()}
+                        ${btnDel({ cls: "delete-list" })}
+                    </li>`;
+    list.append(html);
+});
+
+$(document).on("click", ".delete-topic", function (e) {
+    e.stopPropagation();
+
+});
+
+$(document).on("click", ".delete-list", function () {
+    const list = $(this).closest(".list-row");
+    list.addClass("hidden");
+    list.attr("status", 0);
+    list.attr("edit", true);
+});
+
+$(document).on("click", "#add-topic", function () {
+    const newId = $(".topic").length + 1;
+    const html = `<div class="collapse collapse-arrow bg-base-100 border-base-300 border join-item">
+                        <input type="checkbox" checked="checked" class='toggle-list sr-only'/>
+                        <div class="collapse-title font-semibold bg-[#3c8dbc] text-white flex gap-3 topic" old-no="${newId}" new="true">
+                            <i class="icofont-drag handle cursor-grab"></i>
+                            ${input({ cls: "topic-input" })}
+                            ${btnAdd({ cls: "add-list", text: "Add list" })}
+                            ${btnStatus()}
+                            ${btnDel({ cls: "delete-topic" })}
+                        </div>
+                        <ul class="collapse-content text-sm list" id="list-master-${newId}">
+                            <li class="list-row rounded-none flex items-center gap-3 bg-white" old-seq="1" status="1" new="true">
+                                <i class="icofont-drag handleList cursor-grab"></i>
+                                ${input({ cls: "list-input" })}
+                                ${btnStatus()}
+                                ${btnDel({ cls: "delete-list" })}
+                            </li>
+                        </ul>
+                        
+                    </div>
+                `;
+    $("#masterList").append(html);
+
+    const el = document.querySelector(`#list-master-${newId}`);
+    let s = new Sortable(
+        el,
+        sortOpt({
+            handle: ".handleList",
+            clsList: ".list-row",
+            attr: "old-seq",
+        })
+    );
+    sortables.push(s);
 });

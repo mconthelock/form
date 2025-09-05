@@ -17,10 +17,10 @@
                 <button class="btn btn-secondary btn-outline join-item" id="collapse-button" disabled><i class="icofont-collapse text-xl"></i>Collapse</button>
                 <button class="btn btn-secondary join-item" id="expand-button" disabled><i class="icofont-expand text-xl"></i></i>Expand</button>
             </div>
-            <button class="btn btn-primary hidden" id="add-button"><i class="icofont-ui-add"></i>Add Topic</button>
+            <button class="btn btn-primary hidden" id="add-topic"><i class="icofont-ui-add"></i>Add Topic</button>
         </div>
         <div class="overflow-y-auto w-full  max-h-[60vh] rounded shadow">
-            <div id="list"></div>
+            <div id="masterList"></div>
         </div>
         <div id="save" class="hidden flex flex-col gap-3">
             <div class="reason text-xl font-bold">Reason</div>
