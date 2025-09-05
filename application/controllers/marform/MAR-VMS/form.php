@@ -98,12 +98,14 @@ class form extends MY_Controller{
                 $data["istk"] = array();
                 $data["sch"]  = array();
                 $data["visitinf"] = array();
+                $data["amecmeal"] = array();
                 if($data['mode']=="2")
                 {
                     $con = array("CYEAR2" => $data["CYEAR2"],"NRUNNO" => $data["NRUNNO"]);
                     $conatt = array("CYEAR2" => $data["CYEAR2"],"NRUNNO" => $data["NRUNNO"],"TYPENO" =>'S');
                     $data["visit"] =  $this->vms->customSelect("VMS_VISIT",$con ,'*');
                     $data["sch"] =  $this->vms->get_schedule($con);
+                    $data["amecmeal"] =  $this->vms->customSelect("VMS_AMEC_MEAL",$con ,'*');
                     $data["visitinf"] =   $this->vms->customSelect("VMS_VISITINF",$con,'*');
                     $con["TYPEEMP"] = "P";
                     $data["pstk"] = $this->vms->get_stakeholders($con);
@@ -128,7 +130,7 @@ class form extends MY_Controller{
                             $dbDIDs[] = $opt->DIETARY; // อัปเดต DID list เพื่อกันซ้ำ
                         }
                     }
-            
+                    
                   
                 }else
                 {
@@ -409,12 +411,12 @@ class form extends MY_Controller{
                         'TYPENO' => "B",
                         'SFILE'  => $file['file_name']
                     );
-                    $this->vms->delete("VMS_ATTFILE",array("CYEAR2" => $cyear2 , "NRUNNO" => $nrunno , "TYPENO" =>'B'));
                     $fid++;
                 }
                 }
                 if(count($datafile) > 0)
                 {
+                    $this->vms->delete("VMS_ATTFILE",array("CYEAR2" => $cyear2 , "NRUNNO" => $nrunno , "TYPENO" =>'B'));
                     $this->vms->insert_batch("VMS_ATTFILE", $datafile);
                 }
             }catch (Exception $e) {
@@ -483,6 +485,45 @@ class form extends MY_Controller{
                 echo json_encode($result);
             } 
 
+        }else if($tab == "meal")
+        {
+            $employee = $_POST["employee"];
+            $lunch = $_POST["lunch_provided"];
+            $dinner = $_POST["dinner_provided"];
+            $dietary = $_POST["amecdietary_require"];
+            $data = array();
+            $i = 0;
+            foreach ($employee as $a) {
+               if($a <> "")
+               {    
+                 $data[] = array(
+                    'CYEAR2' => $cyear2,
+                    'NRUNNO' => $nrunno,
+                    'SEMPNO' => $a,
+                    'LUNCH'  => $lunch[$i],
+                    'DINNER' => $dinner[$i],
+                    'DIETREQ' => $dietary[$i]
+                 );
+               }
+               $i++;
+            }
+            try {
+                $status = true;
+                $this->vms->delete("VMS_AMEC_MEAL","CYEAR2 = '".$cyear2."' AND NRUNNO = '".$nrunno."'");
+                if(count($data) > 0)
+                {
+                    $this->vms->insert_batch("VMS_AMEC_MEAL", $data);
+                }
+
+            }catch (Exception $e) {
+                $status = false;
+            } finally {
+                $result = [
+                    'status'  => $status,
+                    'message' => $status ? 'Data saved successfully' : 'Failed to save data'
+                ];
+                echo json_encode($result);
+            } 
         }
         
     }

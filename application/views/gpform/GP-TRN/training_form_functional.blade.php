@@ -12,7 +12,7 @@
             </label>
             <input type="text" id="funcInputBy" name="funcInputBy"
                 class="input input-bordered w-24 text-center"
-                placeholder="รหัส" maxlength="5" value="{{ $EMPNO ?? '' }}" readonly>
+                placeholder="รหัสพนักงาน" maxlength="5" value="{{ $EMPNO ?? '' }}" readonly>
             <span class="font-semibold text-blue-600">
                 {{ $emp_detail[0]->SNAME ?? '' }}
             </span>
@@ -23,22 +23,21 @@
             <label for="funcRequestBy" class="text-sm text-gray-700 whitespace-nowrap font-bold">
                 Request By
             </label>
-            <input type="text" id="funcRequestBy" name="funcRequestBy"
-                class="input input-bordered w-24 text-center"
-                placeholder="รหัส" maxlength="5">
+            <input type="text" id="funcRequestBy" name="funcRequestBy" class="input input-bordered w-24 text-center"
+                placeholder="รหัสพนักงาน" maxlength="5" data-alert="กรุณากรอก Request By (รหัสพนักงาน) !!">
             <span id="funcRequestByName" class="font-semibold text-blue-600"></span>
         </div>
     </div>
 
     <!-- Part 1 -->
     <div class="mb-6" id="func_part1">
-        <h3 class="font-bold text-lg mb-2">ส่วนที่ 1 : หัวข้อฝึกอบรม และ กำหนดการฝึกอบรม</h3>
+        <h3 class="font-bold text-lg mb-2">ส่วนที่ 1 : หัวข้อฝึกอบรม และ กำหนดการฝึกอบรม (Training Subject & Training Schedule)</h3>
         <input type="text" id="funcTrainingSubject" placeholder="1.1 หัวข้อฝึกอบรม" class="input input-bordered w-full mb-2">
         <div class="flex gap-2 mb-2 items-center">
             <span class="self-center font-bold">วันที่</span>
-            <input type="date" id="funcDateFrom" class="input input-bordered w-[200px]">
+            <input type="date" id="funcDateFrom" class="input input-bordered w-[200px]" data-alert="กรุณาเลือกวันที่อบรม">
             <span class="self-center">ถึง</span>
-            <input type="date" id="funcDateTo" class="input input-bordered w-[200px]">
+            <input type="date" id="funcDateTo" class="input input-bordered w-[200px]" data-alert="กรุณาเลือกวันที่อบรม">
 
             <div class="flex items-center gap-2 justify-end">
                 <span class="self-center font-bold ml-[30px]">เวลา</span>
@@ -52,16 +51,16 @@
             </div>
 
         </div>
-        <input type="text" id="funcLocation" placeholder="1.3 สถานที่" class="input input-bordered w-full mb-2">
-        <input type="text" id="funcInstitute" placeholder="1.4 สถาบันฝึกอบรม" class="input input-bordered w-full">
+        <input type="text" id="funcLocation" placeholder="1.3 สถานที่" class="input input-bordered w-full mb-2" data-alert="กรุณาระบุสถานที่">
+        <input type="text" id="funcInstitute" placeholder="1.4 สถาบันฝึกอบรม" class="input input-bordered w-full" data-alert="กรุณาเลือกสถาบัน">
     </div>
 
     <!-- Part 2 -->
     <div class="mb-6" id="func_part2">
-        <h3 class="font-bold text-lg mb-2">ส่วนที่ 2 : วัตถุประสงค์การฝึกอบรม</h3>
+        <h3 class="font-bold text-lg mb-2">ส่วนที่ 2 : วัตถุประสงค์ของการฝึกอบรม (Training Objective)</h3>
         <div id="funcObjectiveList" class="space-y-2">
             <div class="flex items-center gap-2 objective-item">
-            <input type="text" name="funcObjective[]" placeholder="ระบุวัตถุประสงค์..." class="input input-bordered w-full">
+            <input type="text" name="funcObjective[]" placeholder="ระบุวัตถุประสงค์..." class="input input-bordered w-full" data-alert="กรุณากรอกวัตถุประสงค์">
             <button type="button" class="btn btn-sm bg-green-500 text-white add-objective">+</button>
             </div>
         </div>
@@ -69,21 +68,31 @@
 
     <!-- Part 3 -->
     <div class="mb-6" id="func_part3">
-        <h3 class="font-bold text-lg mb-2">ส่วนที่ 3 : ความคาดหวัง / ประโยชน์</h3>
+        <h3 class="font-bold text-lg mb-2">ส่วนที่ 3 : ความคาดหวัง / ประโยชน์ ต่อการดำเนินงานของบริษัทฯ จากการฝึกอบรมครั้งนี้ (Expectation / AMEC's Benefit from this training)</h3>
         <div id="funcExpectationList" class="space-y-2">
             <div class="flex items-center gap-2 expectation-item">
-            <input type="text" name="funcExpectation[]" placeholder="ระบุความคาดหวัง / ประโยชน์..." class="input input-bordered w-full">
+            <input type="text" name="funcExpectation[]" placeholder="ระบุความคาดหวัง / ประโยชน์..." class="input input-bordered w-full" data-alert="กรุณากรอกความคาดหวัง/ประโยชน์">
             <button type="button" class="btn btn-sm bg-green-500 text-white add-expectation">+</button>
             </div>
         </div>
     </div>
 
+    <!-- Remark -->
+    <div class="mb-6 text-sm text-red-600">
+        <b>Remark :</b>
+        <p>
+            แผนก HRD จะติดตามผลการฝึกอบรม ในมิติ "ระดับความสามารถ (Competency)" และ "ผลลัพธ์จากความสามารถ (Working result)" ภายหลังฝึกอบรมครบ 3 เดือน
+        </p>
+        <p class="text-red-600">
+            (HRD Sect. will follow up training result in dimension "Competency level"  and "Working result of competency" after completed training 3 months)
+        </p>
+    </div>
 
     <!-- Part 4 -->
     <div class="mb-6" id="func_part4">
-        <h3 class="font-bold text-lg mb-2">ส่วนที่ 4 : ข้อมูลผู้เข้ารับการฝึกอบรม</h3>
+        <h3 class="font-bold text-lg mb-2">ส่วนที่ 4 : ข้อมูลผู้เข้ารับการฝึกอบรม (Participant Information)</h3>
         <div class="grid grid-cols-2 gap-4 mb-1">
-            <input type="text" id="funcTraineeCode" placeholder="รหัสพนักงาน (Trainee Code)" class="input input-bordered w-50 text-center" maxlength="5">
+            <input type="text" id="funcTraineeCode" placeholder="รหัสพนักงาน (Trainee Code)" class="input input-bordered w-64 text-center" maxlength="5" data-alert="กรุณากรอกรหัสผู้เข้าอบรม">
         </div>
         <div class="grid grid-cols-2 gap-4 mb-1">
             <input type="text" id="funcTraineeName"   placeholder="ชื่อ - นามสกุล"  class="input input-bordered w-full text-blue-600 font-bold"  readonly>
@@ -96,47 +105,47 @@
             <input type="text" id="funcDiv" placeholder="Division"  class="input input-bordered w-full text-blue-600 font-bold"  readonly>
         </div>
 
-        <input type="text" id="funcJdName" placeholder="ชื่อตาม JD" class="input input-bordered w-full mb-1 font-bold">
-        <input type="file" id="funcJdFiles" class="file-input file-input-bordered w-full mb-1" multiple>
-        <textarea id="funcJdRelation" class="textarea textarea-bordered w-full font-bold" rows="3"placeholder="กรุณาอธิบาย ความสัมพันธ์ ระหว่าง JD และหัวข้อฝึกอบรมนี้"></textarea>
+        <input type="text" id="funcJdName" placeholder="ชื่อตาม JD" class="input input-bordered w-full mb-1 font-bold" data-alert="กรุณากรอก JD">
+        <label for="funcJdFiles" class="sr-only">แนบไฟล์ JD</label> <input type="file" id="funcJdFiles" class="file-input file-input-bordered w-full mb-1" multiple data-alert="กรุณาแนบไฟล์">
+        <textarea id="funcJdRelation" class="textarea textarea-bordered w-full font-bold" rows="3"placeholder="กรุณาอธิบาย ความสัมพันธ์ ระหว่าง JD และหัวข้อฝึกอบรมนี้" data-alert="กรุณากรอกรายละเอียด JD"></textarea>
     </div>
 
     <!-- Part 5 -->
     <div class="mb-6" id="func_part5">
-        <h3 class="font-bold text-lg mb-2">ส่วนที่ 5 : การพิจารณาค่าใช้จ่ายฝึกอบรม</h3>
+        <h3 class="font-bold text-lg mb-2">ส่วนที่ 5 : การพิจารณาค่าฝึกอบรม (Training expense consideration)</h3>
 
         <label class="block mb-2">
-            <input type="radio" name="funcExpenseOption" value="not_compare" class="mr-2">
+            <input type="radio" name="funcExpenseOption" value="not_compare" class="mr-2" data-alert="กรุณาเลือกการพิจารณาค่าฝึกอบรม" >
             ไม่มีการเปรียบเทียบราคา ค่าฝึกอบรม (Not compare training expense)
         </label>
 
         <div id="funcReasonBox" class="ml-6 hidden">
             <label class="block mb-2">
-                <input type="radio" name="funcReason" value="free" class="mr-2">
+                <input type="radio" name="funcReason" value="free" class="mr-2" data-alert="กรุณาเลือกเหตุผล" >
                 อบรมฟรี (Free of Charge) 
             </label>
             <label class="block mb-2">
-                <input type="radio" name="funcReason" value="other" class="mr-2">
+                <input type="radio" name="funcReason" value="other" class="mr-2" data-alert="กรุณาเลือกเหตุผล">
                 เหตุผลอื่น (Other reason):
-                <input type="text" id="funcReasonOtherText" class="input input-bordered ml-2 w-1/2" placeholder="โปรดระบุเหตุผล">
+                <input type="text" id="funcReasonOtherText" class="input input-bordered w-full"  placeholder="โปรดระบุเหตุผล" data-alert="กรุณากรอกเหตุผล">
             </label>
         </div>
 
         <label class="block mt-4">
-            <input type="radio" name="funcExpenseOption" value="compare" class="mr-2">
+            <input type="radio" name="funcExpenseOption" value="compare" class="mr-2" data-alert="กรุณาเลือกการพิจารณาค่าฝึกอบรม" >
             มีการเปรียบเทียบราคา ค่าฝึกอบรม (Compared training expense) 
         </label>
 
         <div id="funcCompareUpload" class="ml-6 mt-2 hidden">
-            <input type="file" id="funcCompareFiles" class="file-input file-input-bordered w-full" multiple>
+            <input type="file" id="funcCompareFiles" class="file-input file-input-bordered w-full" multiple data-alert="กรุณาแนบไฟล์">
         </div>
     </div>
 
     <!-- Part 6 -->
     <div id="func_part6" class="mb-6">
-        <h3 class="font-bold text-lg mb-2">ส่วนที่ 6 : ค่าใช้จ่าย</h3>
+        <h3 class="font-bold text-lg mb-2">ส่วนที่ 6 : ค่าใช้จ่ายในการฝึกอบรม (Training Expense)</h3>
         <div class="flex items-center gap-3 mb-2">
-            <input type="number" id="funcAmountInput" placeholder="จำนวนเงิน (บาท)" class="input input-bordered w-1/2">
+            <input type="number" id="funcAmountInput" placeholder="จำนวนเงิน (บาท)" min="0" class="input input-bordered w-1/2" data-alert="กรุณากรอกจำนวนเงิน">
             <span id="funcVatResult" class="font-bold text-indigo-600 text-lg hidden whitespace-nowrap"></span>
         </div>
         <textarea id="funcAmountNote" class="textarea textarea-bordered w-full" rows="2" placeholder="บันทึกเพิ่มเติม..."></textarea>
@@ -144,8 +153,11 @@
 
     <!-- Part 7 -->
     <div class="mb-6" id="func_part7">
-        <h3 class="font-bold text-lg mb-2">ส่วนที่ 7 : หมายเหตุ</h3>
-        <textarea id="funcNote" class="textarea textarea-bordered w-full" rows="3" placeholder="ระบุหมายเหตุ..."></textarea>
+        <h3 class="font-bold text-lg mb-2">ส่วนที่ 7 : หมายเหตุ (Remark)</h3>
+        <p class="text-sm text-gray-600 mb-2">
+            7.1 ) ภายหลังเอกสารนี้ ได้รับอนุมัติจาก RAF Div. แล้ว ผู้เข้ารับการฝึกอบรม หรือ หน่วยงานต้นสังกัด จะต้องเป็นผู้ขออนุญาตใช้รถบริษัทฯ เพื่อการเดินทาง 
+            (After approved by RAF Div., Participant or Direct Section have responsible for request company car for traveling) 
+        </p>
     </div>
 
     <!-- ปุ่ม -->

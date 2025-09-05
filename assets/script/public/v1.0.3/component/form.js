@@ -42,6 +42,7 @@ export var fieldClass = "w-full max-w-xs";
 export const elementOpt = {
     id: "",
     name: "",
+    type: 'text',
     value: "",
     data: [],
     class: "",
@@ -103,7 +104,7 @@ export const fieldset = (option = {}) => {
  */
 export const input = (option = {}) => {
     const opt = inputAttrs({ ...elementOpt, ...option });
-    return `<input type="text" placeholder="${opt.placeholder}" class="w-full join-item ${opt.class}" id="${opt.id}" name="${opt.name}" value="${opt.value}" ${opt.attribute} ${opt.checked} ${opt.disabled} ${opt.required}> `;
+    return `<input type="${opt.type}" placeholder="${opt.placeholder}" class="w-full join-item ${opt.class}" id="${opt.id}" name="${opt.name}" value="${opt.value}" ${opt.attribute} ${opt.checked} ${opt.disabled} ${opt.required}> `;
 };
 
 /**

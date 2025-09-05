@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "target": "ES2019",
+    "module": "ESNext",
+    "moduleResolution": "Node",      // ← เปลี่ยนจาก NodeNext เป็น Node
+    "allowJs": true,                 // โปรเจกต์ JS เป็นหลัก ให้ TS อ่าน .js ได้
+    "checkJs": false,
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true
+  },
+  "include": ["assets/script/**/*"]
+}

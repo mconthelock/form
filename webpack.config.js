@@ -71,6 +71,14 @@ module.exports = {
 
     // PS-SAR
     psSar: "./assets/script/psform/PS-SAR/index.js", //Sar page
+
+    training: "./assets/script/gpform/GP-TRN/training.ts", 
+    alert: "./assets/script/gpform/GP-TRN/alert.ts", 
+    emp_lookup: "./assets/script/gpform/GP-TRN/emp_lookup.ts", 
+    formUtils: "./assets/script/gpform/GP-TRN/formUtils.ts", 
+    initForms: "./assets/script/gpform/GP-TRN/initForms.ts", 
+    validators: "./assets/script/gpform/GP-TRN/validators.ts", 
+
   },
   output: {
     filename: "[name].js",
@@ -92,7 +100,15 @@ module.exports = {
         test: /\.md$/,
         use: "raw-loader",
       },
+      {
+        test: /\.tsx?$/, // ให้ webpack build ts/tsx
+        use: "ts-loader",
+        exclude: /node_modules/,
+      },
     ],
+  },
+  resolve: {
+    extensions: [".ts", ".tsx", ".js"],
   },
   plugins: [
     new Dotenv({

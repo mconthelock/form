@@ -78,6 +78,9 @@ table.dataTable .select2-container--default .select2-selection--multiple {
     border-radius: 0.25rem;
     z-index: 10;
   }
+  .select2-container {
+  max-width: 400px !important;  /* เท่ากับ td */
+}
 </style>
 @endsection
 @section('contents')
@@ -757,9 +760,9 @@ table.dataTable .select2-container--default .select2-selection--multiple {
           <th class="px-4 py-3 text-left w-72">Name (Title Selection: Mr./Ms./Mrs.)</th>
           <th class="px-4 py-3 text-left w-60">Position</th>
           <th class="px-4 py-3 text-left w-60">Previous Visit Experience</th>
-          <th class="px-4 py-3 text-left w-40"  {{ ($mode == "2" && !empty($visit) && $visit[0]->LUNCH == "N") ? 'hidden' : '' }}>Lunch Provided</th>
-          <th class="px-4 py-3 text-left w-40"  {{ ($mode == "2" && !empty($visit) && $visit[0]->DINNER == "N") ? 'hidden' : '' }}>Dinner Provided</th>
-          <th class="px-4 py-3 text-left w-40" {{ ($mode == "2" && !empty($visit) && ($visit[0]->LUNCH == "N") && ($visit[0]->DINNER == "N")) ? 'hidden' : '' }}>Dietary Requirements</th>
+          <th class="px-4 py-3 text-left w-40 {{ ($mode == '2' && !empty($visit) && $visit[0]->LUNCH == 'N') ? 'hidden' : '' }}">Lunch Provided</th>
+          <th class="px-4 py-3 text-left w-40 {{ ($mode == '2' && !empty($visit) && $visit[0]->DINNER == 'N') ? 'hidden' : '' }}">Dinner Provided</th>
+          <th class="px-4 py-3 text-left w-40 {{ ($mode == '2' && !empty($visit) && ($visit[0]->LUNCH == 'N') && ($visit[0]->DINNER == 'N')) ? 'hidden' : '' }}">Dietary Requirements</th>
           
         </tr>
       </thead>
@@ -816,21 +819,21 @@ table.dataTable .select2-container--default .select2-selection--multiple {
                 <option value="N">No</option>
               </select>
             </td>
-            <td class="px-2 py-2" {{ ($mode == "2" && !empty($visit) && $visit[0]->LUNCH == "N") ? 'hidden' : '' }} >
+            <td class="px-2 py-2 {{ ($mode == '2' && !empty($visit) && $visit[0]->LUNCH == 'N') ? 'hidden' : '' }}"  >
               <select name="lunch_provided[]" class="input input-bordered rounded-xl w-full shadow-sm border-blue-200 text-gray-900">
                 <option value=""></option>
                 <option value="Y">Yes</option>
                 <option value="N">No</option>
               </select>
             </td>
-            <td class="px-2 py-2" {{ ($mode == "2" && !empty($visit) && $visit[0]->DINNER == "N") ? 'hidden' : '' }}>
+            <td class="px-2 py-2 {{ ($mode == '2' && !empty($visit) && $visit[0]->DINNER == 'N') ? 'hidden' : '' }}">
               <select name="dinner_provided[]" class="input input-bordered rounded-xl w-full shadow-sm border-blue-200 text-gray-900">
                 <option value=""></option>
                 <option value="Y">Yes</option>
                 <option value="N">No</option>
               </select>
             </td>
-            <td class="px-2 py-2" {{ ($mode == "2" && !empty($visit) && ($visit[0]->LUNCH == "N") && ($visit[0]->DINNER == "N")) ? 'hidden' : '' }}>
+            <td class="px-2 py-2 {{ ($mode == '2' && !empty($visit) && ($visit[0]->LUNCH == 'N') && ($visit[0]->DINNER == 'N')) ? 'hidden' : '' }}">
               <select id="dietary_require" name="dietary_require[]" class="w-full border border-blue-200 rounded-lg px-2 py-1 dietary_require">
                 <option value=""></option>
                 @foreach($dietary as $index => $d)
@@ -869,22 +872,59 @@ table.dataTable .select2-container--default .select2-selection--multiple {
   <h2 class="text-2xl font-bold text-blue-900 mb-2">AMEC Employees Name (Join Lunch/Dinner)</h2>
   <p class="text-sm text-gray-600 mb-6">Please fill in the Employee information.</p>
   <div>
-    <table id="tableemp" class="min-w-[1800px] text-sm text-gray-800 w-full">
+    <table id="tableemp" class="min-w-[1200px] text-sm text-gray-800 w-full">
       <thead class="text-blue-800 sticky top-0 z-10 shadow-sm">
         <tr class="bg-gradient-to-r from-blue-100 via-blue-100 to-blue-100 text-sm">
-          <th class="px-4 py-3 text-left w-20 sticky-column bg-gradient-to-r from-blue-100 via-blue-100 to-blue-100">No.</th>
-          <th class="px-4 py-3 text-left w-72">Name</th>
-          <th class="px-4 py-3 text-left w-60">Position</th>
-          <th class="px-4 py-3 text-left w-40">Lunch Provided</th>
-          <th class="px-4 py-3 text-left w-40">Dinner Provided</th>
-          <th class="px-4 py-3 text-left w-40">Dietary Requirements</th>
+          <th class="px-4 py-3 text-left w-5 sticky-column bg-gradient-to-r from-blue-100 via-blue-100 to-blue-100">No.</th>
+          <th class="px-4 py-3 text-left w-20">Name</th>
+          <th class="px-4 py-3 text-left w-20">Position</th>
+          <th class="px-4 py-3 text-left w-20 {{ ($mode == '2' && !empty($visit) && $visit[0]->LUNCH == 'N') ? 'hidden' : '' }}">Lunch Provided</th>
+          <th class="px-4 py-3 text-left w-20 {{ ($mode == '2' && !empty($visit) && $visit[0]->DINNER == 'N') ? 'hidden' : '' }}">Dinner Provided</th>
+          <th class="px-4 py-3 text-left w-20 {{ ($mode == '2' && !empty($visit) && $visit[0]->LUNCH == 'N' && $visit[0]->DINNER == 'N') ? 'hidden' : '' }}">Dietary Requirements</th>
         </tr>
       </thead>
       <tbody class="divide-y divide-blue-100">
+      @foreach($amecmeal as $index => $m)
+        <tr class="bg-white">
+          <td class="px-2 py-2 sticky-column">{{ $index+1 }}</td>
+          <td class="px-2 py-2" style="width:160px;">
+            <select name="employee[]" class="emp-select w-full"  style="width:100%">
+             <option value=""></option>
+                @foreach($participants as $p)
+                <option value="{{ $p->SEMPNO }}" data-div="{{ $p->SDIV }}" data-dep="{{ $p->SDEPT }}" data-sec="{{ $p->SSEC }}" data-pos="{{ $p->SPOSNAME }}"  {{ ($p->SEMPNO == $m->SEMPNO)? "selected":"" }} >{{ $p->SNAME}}</option>
+                @endforeach
+            </select>
+          </td>
+          <td class="px-2 py-2 pos-col"></td>
+          <td class="px-2 py-2 {{ ($mode == '2' && !empty($visit) && $visit[0]->LUNCH == 'N') ? 'hidden' : '' }}">
+            <select name="lunch_provided[]" class="w-full border border-blue-200 rounded-lg px-2 py-1">
+              <option value=""></option>
+              <option value="Y" {{ ($m->LUNCH == "Y")? "selected":"" }}>Yes</option>
+              <option value="N" {{ ($m->LUNCH == "N")? "selected":"" }}>No</option>
+            </select>
+          </td>
+          <td class="px-2 py-2 {{ ($mode == '2' && !empty($visit) && $visit[0]->DINNER == 'N') ? 'hidden' : '' }}">
+            <select name="dinner_provided[]" class="w-full border border-blue-200 rounded-lg px-2 py-1">
+              <option value=""></option>
+              <option value="Y" {{ ($m->DINNER == "Y")? "selected":"" }}>Yes</option>
+              <option value="N" {{ ($m->DINNER == "N")? "selected":"" }}>No</option>
+            </select>
+          </td>
+          <td class="px-2 py-2 {{ ($mode == '2' && !empty($visit) && $visit[0]->LUNCH == 'N' && $visit[0]->DINNER == 'N') ? 'hidden' : '' }}">
+            <select name="amecdietary_require[]" class="w-full border border-blue-200 rounded-lg px-2 py-1 dietary_require">
+              <option value=""></option>
+              @foreach($dietary as $index => $d)
+                <option value="{{ $d->DIETARY }}"  {{ ($m->DIETREQ == $d->DIETARY)? "selected":"" }}>{{ $d->DIETARY }}</option>
+              @endforeach
+            </select>
+          </td>
+        </tr>
+        @endforeach
+        @if(empty($amecmeal))
         <tr class="bg-white">
           <td class="px-2 py-2 sticky-column">1</td>
-          <td class="px-2 py-2">
-            <select name="employee" class="emp-select">
+          <td class="px-2 py-2" style="width:160px;">
+            <select name="employee[]" class="emp-select w-full"  style="width:100%">
              <option value=""></option>
                 @foreach($participants as $p)
                 <option value="{{ $p->SEMPNO }}" data-div="{{ $p->SDIV }}" data-dep="{{ $p->SDEPT }}" data-sec="{{ $p->SSEC }}" data-pos="{{ $p->SPOSNAME }}"  >{{ $p->SNAME}}</option>
@@ -892,22 +932,22 @@ table.dataTable .select2-container--default .select2-selection--multiple {
             </select>
           </td>
           <td class="px-2 py-2 pos-col"></td>
-          <td class="px-2 py-2">
-            <select name="lunch_provided" class="w-full border border-blue-200 rounded-lg px-2 py-1">
+          <td class="px-2 py-2 ">
+            <select name="lunch_provided[]" class="w-full border border-blue-200 rounded-lg px-2 py-1">
               <option value=""></option>
-              <option value="Yes">Yes</option>
-              <option value="No">No</option>
+              <option value="Y" selected>Yes</option>
+              <option value="N">No</option>
             </select>
           </td>
           <td class="px-2 py-2">
-            <select name="dinner_provided" class="w-full border border-blue-200 rounded-lg px-2 py-1">
+            <select name="dinner_provided[]" class="w-full border border-blue-200 rounded-lg px-2 py-1">
               <option value=""></option>
-              <option value="Yes">Yes</option>
-              <option value="No">No</option>
+              <option value="Y" selected>Yes</option>
+              <option value="N">No</option>
             </select>
           </td>
           <td class="px-2 py-2">
-            <select name="amecdietary_require" class="w-full border border-blue-200 rounded-lg px-2 py-1 dietary_require">
+            <select name="amecdietary_require[]" class="w-full border border-blue-200 rounded-lg px-2 py-1 dietary_require">
               <option value=""></option>
               @foreach($dietary as $index => $d)
                 <option value="{{ $d->DIETARY }}">{{ $d->DIETARY }}</option>
@@ -915,6 +955,7 @@ table.dataTable .select2-container--default .select2-selection--multiple {
             </select>
           </td>
         </tr>
+        @endif
       </tbody>
     </table>
 <!-- ปุ่ม Add -->
@@ -963,14 +1004,14 @@ table.dataTable .select2-container--default .select2-selection--multiple {
         <td class="px-2 py-2 sticky-column">1</td>
         <td class="px-2 py-2">
           <input type="text" name="secured_project_no[]" 
-                 class="w-full border border-blue-200 rounded-lg px-2 py-1"
+                 class="w-full border border-blue-200 rounded-lg px-2 py-1 sproj"
                  placeholder="Enter Project No." />
         </td>
-        <td class="px-2 py-2 text-gray-600">Project A Name</td>
-        <td class="px-2 py-2 text-gray-600">Model X</td>
-        <td class="px-2 py-2 text-gray-600">Basic specs here</td>
-        <td class="px-2 py-2 text-gray-600">100</td>
-        <td class="px-2 py-2 text-gray-600">Ongoing</td>
+        <td class="px-2 py-2 text-gray-600"></td>
+        <td class="px-2 py-2 text-gray-600"></td>
+        <td class="px-2 py-2 text-gray-600"></td>
+        <td class="px-2 py-2 text-gray-600"></td>
+        <td class="px-2 py-2 text-gray-600"></td>
       </tr>
     </tbody>
   </table>
