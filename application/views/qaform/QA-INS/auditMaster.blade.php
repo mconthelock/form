@@ -24,7 +24,7 @@
         </div>
         <div id="save" class="hidden flex flex-col gap-3">
             <div class="reason text-xl font-bold">Reason</div>
-            <textarea class="textarea textarea-bordered req" placeholder="Enter reason"></textarea>
+            <textarea class="textarea textarea-bordered req" placeholder="Enter reason" id="reason"></textarea>
             <div class="flex gap-3">
                 <button class="btn btn-error" id="cancel-button"><i class="icofont-close"></i>Cancel</button>
                 <button class="btn btn-primary" id="save-button"><i class="icofont-save"></i>Save</button>
