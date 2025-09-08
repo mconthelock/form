@@ -105,3 +105,21 @@ export async function qcConfirm(formdata) {
     const data = await res.json();
     return data;
 }
+
+export async function saveMaster(data) {
+    const res = await fetch(
+        `${process.env.APP_API}/escs/audit-report-master/save`,
+        {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(data),
+        }
+    );
+
+    if (!res.ok) {
+        await fetchMsgErr(res);
+        throw new Error("Failed to Save Master data");
+    }
+
+    return await res.json();
+}
