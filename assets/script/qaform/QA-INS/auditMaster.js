@@ -14,7 +14,9 @@ import { btnAdd, btnDel, btnStatus, input } from "./component";
 import { saveMaster } from "./data";
 
 let sortables = [],
-    editMode = false;
+    editMode = false,
+    currentRev = 0,
+    nextRev;
 
 const sortOpt = ({ handle, clsList, attr }) => ({
     forceFallback: true,
@@ -31,28 +33,32 @@ const sortOpt = ({ handle, clsList, attr }) => ({
     onEnd: function (/**Event*/ evt) {
         evt.item.querySelector(handle).classList.remove("cursor-grabbing");
         evt.item.querySelector(handle).classList.add("cursor-grab");
-        var items = evt.to.querySelectorAll(clsList);
+        var items = evt.to.querySelectorAll(`${clsList}:not(.hidden)`);
         items.forEach(function (item, index) {
             const oldNo = item.getAttribute(`${attr}`);
-            if (oldNo != index + 1 && item.getAttribute("type") != "new") {
-                console.log("test", oldNo, index + 1);
+            // if (oldNo != index + 1 && item.getAttribute("type") != "new") {
+            // if (oldNo != index + 1) {
+            console.log("test", oldNo, index + 1);
 
-                item.setAttribute("type", "edit");
-                showReasonArea();
-                item.setAttribute(`new-${attr}`, index + 1);
-                if (clsList == ".topic") {
-                    setListNewTopic(item);
-                }
-            } else {
-                // item.removeAttribute("edit");
+            // item.setAttribute("type", "edit");
+            setTypeEdit(item, item.getAttribute("type"), ["new"]);
+            showReasonArea();
+            item.setAttribute(`new-${attr}`, index + 1);
+            if (clsList == ".topic") {
+                setListNewTopic(item);
             }
+            // } else {
+            //     // item.removeAttribute("edit");
+            // }
         });
     },
 });
 
 $(async function () {
     try {
-        await setPage();
+        $("body").addClass("bg-[#ecf0f5]");
+        await setSkeleton();
+        resetForm();
     } catch (error) {
         showErrorMessage(error);
     }
@@ -65,20 +71,13 @@ $(async function () {
 async function setListNewTopic(topic) {
     const listRow = topic.nextElementSibling.querySelectorAll(".list-row");
     listRow.forEach(function (row) {
-        if(topic.getAttribute("new-topic")){
+        if (topic.getAttribute("new-topic")) {
             row.setAttribute("new-topic", topic.getAttribute("new-topic"));
         }
         // row.setAttribute("type", "edit");
         setTypeEdit(row, row.getAttribute("type"), ["new", "del"]);
         showReasonArea();
     });
-}
-
-async function setPage() {
-    $("body").addClass("bg-[#ecf0f5]");
-    await setSkeleton();
-    await tableRevision();
-    await createList();
 }
 
 async function setSkeleton() {
@@ -88,8 +87,7 @@ async function setSkeleton() {
     skeleton({ element: "#tableMaster", width: "w-full", height: "h-[60vh]" });
 }
 
-async function tableRevision() {
-    const revision = await getAuditRevision();
+async function tableRevision(revision) {
     $("#revision").text("Revision");
     let html = `<table id="tableRevision" class="table table-zebra">
                 <thead class="sticky top-0 z-20 bg-[#3c8dbc] text-white">
@@ -120,9 +118,8 @@ async function tableRevision() {
     $("#tableRevision").replaceWith(html);
 }
 
-async function createList() {
+async function createList(master) {
     try {
-        const master = await getAuditMaster();
         $("#master").text("Master");
         $("#edit-button").attr("disabled", false);
         $("#collapse-button").attr("disabled", false);
@@ -132,14 +129,14 @@ async function createList() {
             if (item.ARM_TYPE == "H") {
                 html += `<div class="collapse collapse-arrow bg-base-100 border-base-300 border join-item">
                         <input type="checkbox" checked="checked" class='toggle-list sr-only'/>
-                        <div class="collapse-title font-semibold bg-[#3c8dbc] text-white flex gap-3 topic" topic="${item.ARM_NO}" status="${item.ARM_STATUS}"><i class="icofont-drag handle cursor-grab"></i><span class="topic-input">${item.ARM_DETAIL}</span></div>
+                        <div class="collapse-title font-semibold bg-[#3c8dbc] text-white flex gap-3 topic" rev="${item.ARM_REV}" topic="${item.ARM_NO}" status="${item.ARM_STATUS}"><i class="icofont-drag handle cursor-grab"></i><span class="topic-input">${item.ARM_DETAIL}</span></div>
                         <ul class="collapse-content text-sm list" id="list-master-${item.ARM_NO}">`;
             } else {
                 const cls =
                     item.ARM_STATUS == 0
-                        ? "bg-red-100 text-gray-400 line-through cursor-not-allowed"
+                        ? "!bg-red-100 text-gray-400 line-through cursor-not-allowed"
                         : handleClassList(item.ARM_SEQ);
-                html += `<li class="list-row rounded-none flex items-center gap-3 ${cls}" topic="${item.ARM_NO}" seq="${item.ARM_SEQ}" status="${item.ARM_STATUS}"><i class="icofont-drag handleList cursor-grab"></i><span class="list-input">${item.ARM_DETAIL}</span></li>`;
+                html += `<li class="list-row rounded-none flex items-center gap-3 ${cls}" rev="${item.ARM_REV}" topic="${item.ARM_NO}" seq="${item.ARM_SEQ}" status="${item.ARM_STATUS}"><i class="icofont-drag handleList cursor-grab"></i><span class="list-input">${item.ARM_DETAIL}</span></li>`;
             }
 
             const nextItem = master[master.indexOf(item) + 1];
@@ -205,6 +202,8 @@ function expandFocus() {
 function renumber(e, attr) {
     const items = document.querySelectorAll(`${e}:not(.hidden)`);
     items.forEach((li, i) => {
+        console.log(li, i + 1);
+
         li.setAttribute(`new-${attr}`, i + 1); // set อันดับใหม่
         // li.setAttribute("type", "edit");
         const type = li.getAttribute("type");
@@ -216,12 +215,20 @@ function renumber(e, attr) {
 }
 
 async function resetForm() {
-    await createList();
-    $("#save").addClass("hidden");
-    $("#add-topic").addClass("hidden");
-    $("#reason").val("");
-    editMode = false;
-    expandFocus();
+    try {
+        const revision = await getAuditRevision();
+        nextRev = revision.length > 0 ? revision[0].ARR_REV + 1 : 0;
+        await tableRevision(revision);
+        const master = await getAuditMaster();
+        await createList(master);
+        $("#save").addClass("hidden");
+        $("#add-topic").addClass("hidden");
+        $("#reason").val("");
+        editMode = false;
+        expandFocus();
+    } catch (error) {
+        showErrorMessage(error);
+    }
 }
 
 /**
@@ -312,7 +319,7 @@ $(document).on("click", '.topic-status input[type="checkbox"]', function (e) {
                 $(element).attr("status", 1);
                 // $(element).attr("type", "edit");
                 setTypeEdit(element, listRow.attr("type"), ["new"]);
-                $(element).removeClass("!bg-red-100");
+                $(element).removeClass("!bg-red-100 line-through");
                 $(element).find(".list-input").attr("disabled", false);
                 $(element).find(".list-status").attr("disabled", false);
                 $(element)
@@ -342,7 +349,7 @@ $(document).on("click", '.topic-status input[type="checkbox"]', function (e) {
                 $(element).attr("status", 0);
                 // $(element).attr("type", "edit");
                 setTypeEdit(element, listRow.attr("type"), ["new"]);
-                $(element).addClass("!bg-red-100");
+                $(element).addClass("!bg-red-100 line-through");
                 $(element).find(".list-input").attr("disabled", true);
                 $(element).find(".list-status").attr("disabled", true);
                 $(element)
@@ -373,11 +380,11 @@ $(document).on("click", '.list-status input[type="checkbox"]', function (e) {
     // if (type != "new") listRow.attr("type", "edit");
     setTypeEdit(listRow[0], listRow.attr("type"), ["new"]);
     if ($(this).is(":checked")) {
-        listRow.removeClass("!bg-red-100");
+        listRow.removeClass("!bg-red-100 line-through");
         listRow.attr("status", 1);
         listInput.attr("disabled", false);
     } else {
-        listRow.addClass("!bg-red-100");
+        listRow.addClass("!bg-red-100 line-through");
         listRow.attr("status", 0);
         listInput.attr("disabled", true);
         listRow.appendTo(`#${id}`); // ย้ายรายการไปไว้ท้ายสุด
@@ -424,7 +431,7 @@ $(document).on("change", ".list-input", function () {
 
 // add topic
 $(document).on("click", "#add-topic", function () {
-    const newId = $(".topic").length + 1;
+    const newId = $(".topic:not(.hidden)").length + 1;
     const html = `<div class="collapse collapse-arrow bg-base-100 border-base-300 border join-item">
                         <input type="checkbox" checked="checked" class='toggle-list sr-only'/>
                         <div class="collapse-title font-semibold bg-[#3c8dbc] text-white flex gap-3 topic" topic="${newId}" new-topic="${newId}" status="1" type="new">
@@ -437,7 +444,7 @@ $(document).on("click", "#add-topic", function () {
                             ${btnDel({ cls: "delete-topic" })}
                         </div>
                         <ul class="collapse-content text-sm list" id="list-master-${newId}">
-                            <li class="list-row rounded-none flex items-center gap-3 bg-white"  topic="${newId}" new-topic="${newId}" seq="1" new-seq="1" status="1" type="new">
+                            <li class="list-row rounded-none flex items-center gap-3 bg-white" topic="${newId}" new-topic="${newId}" seq="1" new-seq="1" status="1" type="new">
                                 <i class="icofont-drag handleList cursor-grab"></i>
                                 ${input({
                                     cls: "list-input",
@@ -497,25 +504,60 @@ $(document).on("click", "#edit-button", async function () {
     $("#add-topic").removeClass("hidden");
     // $(".toggle-list").addClass("hidden");
     // หัวข้อ
+    // $(".topic").each((index, element) => {
+    //     const status = $(element).attr("status");
+    //     const text = $(element).text();
+    //     const disabled = status == 1 ? "" : 'disabled="disabled"';
+    //     const btnAddCls = status == 1 ? "" : "bg-gray-100 text-gray-400 cursor-not-allowed";
+    //     status == 0
+    //         ? $(element).addClass("!bg-[#85b2cc]")
+    //         : $(element).removeClass("!bg-[#85b2cc]");
+    //     $(element).html(`<i class="icofont-drag handle cursor-grab"></i>
+    //         ${input({ val: text, cls: "topic-input", attr: disabled })}
+    //         ${btnAdd({ cls: `add-list ${btnAddCls}`, text: "Add list"})}
+    //         ${btnStatus({ cls: "topic-status", status: status })}
+    //         ${btnDel({ cls: "delete-topic" })}`);
+    // });
     $(".topic").each((index, element) => {
-        const status = $(element).attr("status");
+        const statusT = $(element).attr("status");
         const text = $(element).text();
+        const disabledT = statusT == 1 ? "" : 'disabled="disabled"';
+        const btnAddCls =
+            statusT == 1 ? "" : "bg-gray-100 text-gray-400 cursor-not-allowed";
+        statusT == 0
+            ? $(element).addClass("!bg-[#85b2cc]")
+            : $(element).removeClass("!bg-[#85b2cc]");
         $(element).html(`<i class="icofont-drag handle cursor-grab"></i>
-            ${input({ val: text, cls: "topic-input" })}
-            ${btnAdd({ cls: "add-list", text: "Add list" })}
-            ${btnStatus({ cls: "topic-status", status: status })}
-            ${btnDel({ cls: "delete-topic" })}`);
+        ${input({ val: text, cls: "topic-input", attr: disabledT })}
+        ${btnAdd({ cls: `add-list ${btnAddCls}`, text: "Add list" })}
+        ${btnStatus({ cls: "topic-status", status: statusT })}
+        ${btnDel({ cls: "delete-topic" })}`);
+        // รายการ
+        $(element)
+            .siblings(".list")
+            .find(".list-row")
+            .each((index, element) => {
+                const text = $(element).text();
+                const status = $(element).attr("status");
+                const disabled = status == 0 || statusT == 0 ? 'disabled="disabled"' : '';
+                $(element)
+                    .html(`<i class="icofont-drag handleList cursor-grab"></i>
+                ${input({ val: text, cls: "list-input", attr: disabled })}
+                ${btnStatus({ status: status, attr: disabledT })}
+                ${btnDel({ cls: "delete-list", attr: disabledT })}`);
+            });
     });
 
-    // รายการ
-    $(".list-row").each((index, element) => {
-        const text = $(element).text();
-        const status = $(element).attr("status");
-        $(element).html(`<i class="icofont-drag handleList cursor-grab"></i>
-            ${input({ val: text, cls: "list-input" })}
-            ${btnStatus({ status: status })}
-            ${btnDel({ cls: "delete-list" })}`);
-    });
+    // // รายการ
+    // $(".list-row").each((index, element) => {
+    //     const text = $(element).text();
+    //     const status = $(element).attr("status");
+    //     const disabled = status == 1 ? "" : 'disabled="disabled"';
+    //     $(element).html(`<i class="icofont-drag handleList cursor-grab"></i>
+    //         ${input({ val: text, cls: "list-input", attr: disabled })}
+    //         ${btnStatus({ status: status })}
+    //         ${btnDel({ cls: "delete-list" })}`);
+    // });
 });
 
 // delete topic
@@ -526,13 +568,16 @@ $(document).on("click", ".delete-topic", function (e) {
         topic.closest(".collapse").remove();
         return;
     }
+    topic.closest(".collapse").addClass("hidden");
     topic.addClass("hidden");
+
     topic.attr("type", "del");
     topic.attr("status", 0);
     renumber(`.topic`, "topic");
     const list = topic.siblings(".list");
     list.find(".list-row").each((index, element) => {
         $(element).attr("type", "del");
+        $(element).addClass("hidden");
     });
     // เรียงลำดับ new-topic ให้กับ list-row
     document.querySelectorAll(".topic").forEach(function (t, i) {
@@ -569,7 +614,12 @@ $(document).on("click", "#save-button", async function () {
         }
         const topic = document.querySelectorAll(`.topic`);
         const list = document.querySelectorAll(`.list-row`);
-        const data = { topic: [], list: [], reason: $("#reason").val(), incharge: $('.userid').attr('userid') };
+        const data = {
+            topic: [],
+            list: [],
+            reason: $("#reason").val(),
+            incharge: $(".userid").attr("userid"),
+        };
         topic.forEach((t) => {
             if (
                 (t.getAttribute("type") == "edit" ||
@@ -578,6 +628,7 @@ $(document).on("click", "#save-button", async function () {
                 chooseDetail(t.querySelector(".topic-input"))
             ) {
                 data.topic.push({
+                    rev: t.getAttribute("rev"),
                     topic: t.getAttribute("topic"),
                     new_topic: t.getAttribute("new-topic"),
                     status: t.getAttribute("status"),
@@ -594,6 +645,7 @@ $(document).on("click", "#save-button", async function () {
                 chooseDetail(l.querySelector(".list-input"))
             ) {
                 data.list.push({
+                    rev: l.getAttribute("rev"),
                     topic: l.getAttribute("topic"),
                     new_topic: l.getAttribute("new-topic"),
                     seq: l.getAttribute("seq"),
@@ -611,7 +663,12 @@ $(document).on("click", "#save-button", async function () {
         }
         const res = await saveMaster(data);
         console.log(res);
-        
+        if (res.status) {
+            resetForm();
+            showMessage("Save successfully.", "success");
+        } else {
+            throw new Error("Failed to save data.");
+        }
     } catch (error) {
         showErrorMessage(error);
     }
