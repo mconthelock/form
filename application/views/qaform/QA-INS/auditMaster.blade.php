@@ -5,7 +5,7 @@
 <div class="flex flex-col gap-5">
     <div class="p-5 bg-white rounded-[3px] shadow w-full h-full border-t-3 border-[#3c8dbc]">
         <div id="revision" class="text-2xl font-bold mb-3"></div>
-        <div class="overflow-y-auto w-fit max-w-full max-h-72 rounded shadow">
+        <div class="overflow-y-auto w-fit max-w-full max-h-48 rounded shadow">
             <div id="tableRevision" class="table table-zebra"></div>
         </div>
     </div>
