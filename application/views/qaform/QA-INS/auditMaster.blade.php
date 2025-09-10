@@ -17,6 +17,7 @@
                 <button class="btn btn-secondary btn-outline join-item" id="collapse-button" disabled><i class="icofont-collapse text-xl"></i>Collapse</button>
                 <button class="btn btn-secondary join-item" id="expand-button" disabled><i class="icofont-expand text-xl"></i></i>Expand</button>
             </div>
+            <button class="btn btn-neutral cursor-default"><i class="icofont-calculator-alt-2 text-xl"></i><span id="total">Total</span></button>
             <button class="btn btn-primary hidden" id="add-topic"><i class="icofont-ui-add"></i>Add Topic</button>
         </div>
         <div class="overflow-y-auto w-full  max-h-[60vh] rounded shadow">
