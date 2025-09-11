@@ -3,6 +3,7 @@ import { skeleton } from "../../public/v1.0.3/component/skeleton";
 import { formatDate } from "../../public/v1.0.3/_dayjs";
 import { getAuditMaster } from "../../api/escs/audit_master";
 import {
+    host,
     logtest,
     requiredForm,
     showErrorMessage,
@@ -21,6 +22,7 @@ import {
     radio,
 } from "./component";
 import { saveMaster } from "./data";
+import { handleClassList } from "./function";
 
 let sortables = [],
     editMode = false,
@@ -116,6 +118,7 @@ async function tableRevision(revision) {
                         <th>Date</th>
                         <th>In-charge</th>
                         <th>Reason</th>
+                        <th>View</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -131,6 +134,7 @@ async function tableRevision(revision) {
                         : "SYSTEM"
                 }</td>
                 <td>${rev.ARR_REASON}</td>
+                <td><a href="${host}/qaform/QA-INS/form/preview/${secid}/${rev.ARR_REV}" target="_blank" class="btn btn-sm btn-primary"><i class="icofont-eye-alt"></i></a></td>
             </tr>
         `;
     }
@@ -230,9 +234,7 @@ async function createList(master) {
     }
 }
 
-function handleClassList(num) {
-    return num % 2 === 0 ? "bg-base-200" : "bg-white";
-}
+
 
 async function sortablesDestroy() {
     sortables.forEach((s) => s.destroy());
@@ -315,6 +317,7 @@ function calculateTotal() {
     }
     return sum;
 }
+
 
 // collapse all
 $(document).on("click", "#collapse-button", function () {

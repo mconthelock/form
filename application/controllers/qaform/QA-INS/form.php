@@ -5,8 +5,9 @@ require_once APPPATH.'controllers/api/webform/form.php';
 require_once APPPATH.'controllers/api/webform/flow.php';
 require_once APPPATH.'controllers/api/webform/formmst.php';
 require_once APPPATH.'controllers/api/escs/user_section.php';
+require_once APPPATH.'controllers/api/escs/audit_report_revision.php';
 class form extends MY_Controller{
-    use formApi, flow, formmst, escs_user_section;
+    use formApi, flow, formmst, escs_user_section, audit_report_revision;
     
     protected $client;
     function __construct(){
@@ -64,13 +65,38 @@ class form extends MY_Controller{
     }
 
     public function auditMaster($userId, $secId){
-        $data['userId'] = $userId;
-        $data['secId'] = $secId;
-        $checkSec = $this->getUserSecByID($secId);
-        if($checkSec['status'] == "false"){
-            show_error('Section id not found');
+        try {
+            $data['userId'] = $userId;
+            $data['secId'] = $secId;
+            $checkSec = $this->getUserSecByID($secId);
+            if($checkSec['status'] == "false"){
+                throw new Exception('Section id not found', 1);
+            }
+            $this->views('qaform/QA-INS/auditMaster', $data);
+        } catch (Exception $e) {
+            show_error($e->getMessage());
         }
-        $this->views('qaform/QA-INS/auditMaster', $data);
+    }
+
+    public function preview($secId, $rev){
+        try {
+            $checkSec = $this->getUserSecByID($secId);
+            $revision = $this->getAuditReportRevision(['ARR_SECID' => $secId, 'ARR_REV' => $rev]);
+            // $this->_print_r($revision);
+            if($checkSec['status'] == "false"){
+                throw new Exception('Section id not found', 1);
+            }
+            if(empty($revision)){
+                throw new Exception('Revision not found', 1);
+            }
+            $data['secId'] = $secId;
+            $data['rev'] = $revision[0]['ARR_REV'];
+            $data['revText'] = $revision[0]['ARR_REV'] == 0 ? "\u{002A}" : $revision[0]['ARR_REV_TEXT'];
+            // $this->_print_r($data);
+        $this->views('qaform/QA-INS/preview', $data);
+        } catch (Exception $e) {
+            show_error($e->getMessage());
+        }
     }
 
 
