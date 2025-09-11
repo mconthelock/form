@@ -179,15 +179,28 @@ async function setPage() {
     }
 
     if (formInfo.mode == 2) {
-        $("#actionWebflow").html(
-            webflowSubmit({
-                approve: true,
-                reject: true,
-                return: true,
-                flow: true,
-                flowhtml: flow.html,
-            })
-        );
+        // edit
+        if (cextdata == "01") {
+            $("#actionWebflow").html(
+                webflowSubmit({
+                    approve: true,
+                    reject: true,
+                    return: true,
+                    flow: true,
+                    flowhtml: flow.html,
+                })
+            );
+        } else {
+            $("#actionWebflow").html(
+                webflowSubmit({
+                    approve: true,
+                    reject: true,
+                    remark: true,
+                    flow: true,
+                    flowhtml: flow.html,
+                })
+            );
+        }
     } else {
         // view
         $("#actionWebflow").html(
@@ -317,7 +330,11 @@ async function setInchargeForm(data) {
     // );
     // logtest(foreman.map((u) => u.USR_NO));
 
-    setDatePicker({enableTime: true, dateFormat: "Y-m-d H:i", time_24hr: true});
+    setDatePicker({
+        enableTime: true,
+        dateFormat: "Y-m-d H:i",
+        time_24hr: true,
+    });
     setSelect2({
         element: "#QCFOREMAN",
         avatar: true,

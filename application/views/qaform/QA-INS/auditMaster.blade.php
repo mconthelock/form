@@ -2,6 +2,7 @@
 
 @section('contents')
 <div class="userid" userId="{{$userId}}"></div>
+<div class="secid" secId="{{$secId}}"></div>
 <div class="flex flex-col gap-5">
     <div class="p-5 bg-white rounded-[3px] shadow w-full h-full border-t-3 border-[#3c8dbc]">
         <div id="revision" class="text-2xl font-bold mb-3"></div>
@@ -27,8 +28,8 @@
             <div class="reason text-xl font-bold">Reason</div>
             <textarea class="textarea textarea-bordered req" placeholder="Enter reason" id="reason"></textarea>
             <div class="flex gap-3">
-                <button class="btn btn-error" id="cancel-button"><i class="icofont-close"></i>Cancel</button>
                 <button class="btn btn-primary" id="save-button"><i class="icofont-save"></i>Save</button>
+                <button class="btn btn-error" id="cancel-button"><i class="icofont-close"></i>Cancel</button>
             </div>
         </div>
     </div>

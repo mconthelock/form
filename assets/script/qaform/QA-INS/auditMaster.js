@@ -10,12 +10,22 @@ import {
 } from "../../public/v1.0.3/jFuntion";
 
 import Sortable, { create } from "sortablejs";
-import { btnAdd, btnDel, btnStatus, input } from "./component";
+import {
+    btnAdd,
+    btnDel,
+    btnMinus,
+    btnPlus,
+    btnStatus,
+    input,
+    inputNum,
+    radio,
+} from "./component";
 import { saveMaster } from "./data";
 
 let sortables = [],
     editMode = false,
     currentRev = 0,
+    secid,
     nextRev;
 
 const sortOpt = ({ handle, clsList, attr }) => ({
@@ -75,7 +85,6 @@ async function setListNewTopic(topic) {
         }
         // row.setAttribute("type", "edit");
         setTypeEdit(row, row.getAttribute("type"), ["new", "del"]);
-        showReasonArea();
     });
 }
 
@@ -125,6 +134,9 @@ async function tableRevision(revision) {
             </tr>
         `;
     }
+    if (revision.length === 0) {
+        html += `<tr><td colspan="4" class="text-center">No data available in table</td></tr>`;
+    }
     html += `</tbody></table>`;
     $("#tableRevision").replaceWith(html);
 }
@@ -135,6 +147,7 @@ async function createList(master) {
         $("#edit-button").attr("disabled", false);
         $("#collapse-button").attr("disabled", false);
         $("#expand-button").attr("disabled", false);
+        $("#add-topic").addClass("hidden");
         let html = `<div class="join join-vertical w-full" id="masterList">`;
         for (const item of master) {
             if (item.ARM_TYPE == "H") {
@@ -147,14 +160,30 @@ async function createList(master) {
                     item.ARM_STATUS == 0
                         ? "!bg-red-100 text-gray-400 line-through cursor-not-allowed"
                         : handleClassList(item.ARM_SEQ);
-                html += `<li class="list-row rounded-none flex items-center gap-5 ${cls} relative" rev="${item.ARM_REV}" topic="${item.ARM_NO}" seq="${item.ARM_SEQ}" status="${item.ARM_STATUS}">
+                html += `<li class="list-row rounded-none flex items-center gap-5 ${cls} relative" rev="${
+                    item.ARM_REV
+                }" topic="${item.ARM_NO}" seq="${item.ARM_SEQ}" status="${
+                    item.ARM_STATUS
+                }">
                     <i class="icofont-drag handleList cursor-grab"></i>
                     <span class="list-input">${item.ARM_DETAIL}</span>
-                    <div class="flex hover:gap-3 absolute px-4 py-2 right-8 border shadow-lg rounded group ${item.ARM_STATUS == 0 ? 'bg-gray-400' : 'bg-neutral'} text-white">
-                        <span class="list-factor w-0 group-hover:w-fit opacity-0 translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 group-hover:transition-all group-hover:duration-500 group-hover:ease-out whitespace-nowrap" factor="${item.ARM_FACTOR}">Factor </span>
+                    <div class="flex gap-3 ml-auto px-4 py-2 right-8 border shadow-lg rounded group ${
+                        item.ARM_STATUS == 0 ? "bg-gray-400" : "bg-neutral"
+                    } text-white">
+                        <span class="list-factor whitespace-nowrap" factor="${
+                            item.ARM_FACTOR
+                        }">Factor </span>
                         <span class="font-bold">${item.ARM_FACTOR}</span>
+                        </div>
+                        
+                    <div class="flex gap-3 px-4 py-2 right-8 border shadow-lg rounded group ${
+                        item.ARM_STATUS == 0 ? "bg-gray-400" : "bg-primary"
+                    } text-white">
+                        <div class="list-maxScore" maxScore="${
+                            item.ARM_MAXSCORE
+                        }">Max Score </div>
+                        <span class="font-bold">${item.ARM_MAXSCORE}</span>
                     </div>
-                    <div class="list-maxScore hidden" maxScore="${item.ARM_MAXSCORE}">${item.ARM_MAXSCORE}</div>
                 </li>`;
             }
 
@@ -165,6 +194,11 @@ async function createList(master) {
             </div>
         `;
             }
+        }
+        if (master.length === 0) {
+            $("#edit-button").attr("disabled", true);
+            $("#add-topic").removeClass("hidden");
+            html += `<div class="p-4 text-center w-full" id="no-list">No data available in table</div>`;
         }
         html += `</div>`;
         $("#masterList").replaceWith(html);
@@ -207,6 +241,7 @@ async function sortablesDestroy() {
 
 function showReasonArea() {
     $("#save").removeClass("hidden");
+    editMode = true;
 }
 
 function collapseFocus() {
@@ -233,13 +268,14 @@ function renumber(e, attr) {
 
 async function resetForm() {
     try {
-        const revision = await getAuditRevision();
+        secid = 1 // $(".secid").attr("secid");
+        const revision = await getAuditRevision({ ARR_SECID: secid });
         nextRev = revision.length > 0 ? revision[0].ARR_REV + 1 : 0;
         await tableRevision(revision);
-        const master = await getAuditMaster();
+        const master = await getAuditMaster({ ARM_SECID: secid });
         await createList(master);
         $("#save").addClass("hidden");
-        $("#add-topic").addClass("hidden");
+        // $("#add-topic").addClass("hidden");
         $("#reason").val("");
         editMode = false;
         expandFocus();
@@ -254,6 +290,30 @@ async function resetForm() {
  */
 function chooseDetail(element) {
     return editMode ? element.value.trim() : element.textContent.trim();
+}
+
+function calculateTotal() {
+    let sum = 0;
+    document.querySelectorAll(`.list-row:not(.hidden)`).forEach((l) => {
+        if (l.getAttribute("status") == 1) {
+            const factor = l
+                .querySelector(".list-factor")
+                .getAttribute("factor");
+            const maxScore = l
+                .querySelector(".list-maxScore")
+                .getAttribute("maxScore");
+            sum += parseInt(factor) * parseInt(maxScore);
+        }
+    });
+    $("#total").html(sum);
+    if (sum > 100) {
+        $("#total").closest("button").removeClass("btn-neutral");
+        $("#total").closest("button").addClass("btn-error");
+    } else {
+        $("#total").closest("button").addClass("btn-neutral");
+        $("#total").closest("button").removeClass("btn-error");
+    }
+    return sum;
 }
 
 // collapse all
@@ -320,28 +380,31 @@ $(document).on("click", '.topic-status input[type="checkbox"]', function (e) {
         topic.attr("status", 1);
         input.attr("disabled", false);
         listRow.each((index, element) => {
-            if ($(element).attr("status") == 0) {
-                $(element).attr("status", 1);
-                // $(element).attr("type", "edit");
-                setTypeEdit(element, listRow.attr("type"), ["new"]);
-                $(element).removeClass("!bg-red-100 line-through");
-                $(element).find(".list-input").attr("disabled", false);
-                $(element).find(".list-status").attr("disabled", false);
-                $(element)
-                    .find(".list-status input[type='checkbox']")
-                    .prop("checked", true);
-                $(element).find(".delete-list").attr("disabled", false);
-                $(element)
-                    .find(".list-factor")
-                    .each((i, el) => {
-                        $(el).find("input").prop("disabled", false);
-                    });
-                $(element)
-                    .find(".list-maxScore")
-                    .each((i, el) => {
-                        $(el).find("input").prop("disabled", false);
-                    });
-            }
+            // if ($(element).attr("status") == 0) {
+            $(element).attr("status", 1);
+            // $(element).attr("type", "edit");
+            setTypeEdit(element, listRow.attr("type"), ["new"]);
+            $(element).removeClass(
+                "!bg-red-100 line-through text-gray-400 cursor-not-allowed"
+            );
+            $(element).find(".list-input").attr("disabled", false);
+            $(element).find(".list-status").attr("disabled", false);
+            $(element)
+                .find(".list-status input[type='checkbox']")
+                .prop("checked", true);
+            $(element).find(".delete-list").attr("disabled", false);
+            $(element)
+                .find(".list-factor")
+                .each((i, el) => {
+                    $(el).find("input").prop("disabled", false);
+                });
+            $(element)
+                .find(".list-maxScore")
+                .each((i, el) => {
+                    $(el).find("input").prop("disabled", false);
+                    $(el).find("button").prop("disabled", false);
+                });
+            // }
         });
     } else {
         // status off
@@ -360,28 +423,31 @@ $(document).on("click", '.topic-status input[type="checkbox"]', function (e) {
         listRow.each((index, element) => {
             // $(element).closest('.list').siblings('.topic').attr("new-topic");
             // $(element).attr("new-topic", topic.attr("new-topic"));
-            if ($(element).attr("status") == 1) {
-                $(element).attr("status", 0);
-                // $(element).attr("type", "edit");
-                setTypeEdit(element, listRow.attr("type"), ["new"]);
-                $(element).addClass("!bg-red-100 line-through");
-                $(element).find(".list-input").attr("disabled", true);
-                $(element).find(".list-status").attr("disabled", true);
-                $(element)
-                    .find(".list-status input[type='checkbox']")
-                    .prop("checked", false);
-                $(element).find(".delete-list").attr("disabled", true);
-                $(element)
-                    .find(".list-factor")
-                    .each((i, el) => {
-                        $(el).find("input").prop("disabled", true);
-                    });
-                $(element)
-                    .find(".list-maxScore")
-                    .each((i, el) => {
-                        $(el).find("input").prop("disabled", true);
-                    });
-            }
+            // if ($(element).attr("status") == 1) {
+            $(element).attr("status", 0);
+            // $(element).attr("type", "edit");
+            setTypeEdit(element, listRow.attr("type"), ["new"]);
+            $(element).addClass(
+                "!bg-red-100 line-through text-gray-400 cursor-not-allowed"
+            );
+            $(element).find(".list-input").attr("disabled", true);
+            $(element).find(".list-status").attr("disabled", true);
+            $(element)
+                .find(".list-status input[type='checkbox']")
+                .prop("checked", false);
+            $(element).find(".delete-list").attr("disabled", true);
+            $(element)
+                .find(".list-factor")
+                .each((i, el) => {
+                    $(el).find("input").prop("disabled", true);
+                });
+            $(element)
+                .find(".list-maxScore")
+                .each((i, el) => {
+                    $(el).find("input").prop("disabled", true);
+                    $(el).find("button").prop("disabled", true);
+                });
+            // }
         });
     }
     calculateTotal();
@@ -406,7 +472,9 @@ $(document).on("click", '.list-status input[type="checkbox"]', function (e) {
     // if (type != "new") listRow.attr("type", "edit");
     setTypeEdit(listRow[0], listRow.attr("type"), ["new"]);
     if ($(this).is(":checked")) {
-        listRow.removeClass("!bg-red-100 line-through");
+        listRow.removeClass(
+            "!bg-red-100 line-through text-gray-400 cursor-not-allowed"
+        );
         listRow.attr("status", 1);
         listInput.attr("disabled", false);
         factor.each((i, el) => {
@@ -414,9 +482,12 @@ $(document).on("click", '.list-status input[type="checkbox"]', function (e) {
         });
         maxScore.each((i, el) => {
             $(el).find("input").prop("disabled", false);
+            $(el).find("button").prop("disabled", false);
         });
     } else {
-        listRow.addClass("!bg-red-100 line-through");
+        listRow.addClass(
+            "!bg-red-100 line-through text-gray-400 cursor-not-allowed"
+        );
         listRow.attr("status", 0);
         listInput.attr("disabled", true);
         factor.each((i, el) => {
@@ -424,6 +495,7 @@ $(document).on("click", '.list-status input[type="checkbox"]', function (e) {
         });
         maxScore.each((i, el) => {
             $(el).find("input").prop("disabled", true);
+            $(el).find("button").prop("disabled", true);
         });
         listRow.appendTo(`#${id}`); // ย้ายรายการไปไว้ท้ายสุด
         renumber(`#${id} .list-row`, "seq");
@@ -458,6 +530,7 @@ $(document).on("change", ".topic-input", function () {
                     $(el)
                         .find(".list-maxScore")
                         .each((i, el) => {
+                            $(el).find("button").prop("disabled", false);
                             $(el).find("input").prop("disabled", false);
                         });
                     // $(el).find(".list-status").removeClass("btn-disabled");
@@ -500,15 +573,31 @@ $(document).on("click", "#add-topic", function () {
                                 })}
                                 <div class="list-factor bg-[#ebf0f0] p-1 rounded flex items-center gap-1" factor="1">
                                     <span class="font-bold text-nowrap ">Factor</span>
-                                    <input class="btn btn-sm [&:not(:checked)]:bg-white shadow-sm" type="radio" name="new-${newId}-1" aria-label="1" value="1" checked="checked" disabled="disabled" />
-                                    <input class="btn btn-sm [&:not(:checked)]:bg-white shadow-sm" type="radio" name="new-${newId}-1" aria-label="2" value="2" disabled="disabled"/>
-                                    <input class="btn btn-sm [&:not(:checked)]:bg-white shadow-sm" type="radio" name="new-${newId}-1" aria-label="3" value="3" disabled="disabled"/>
+                                    ${radio({
+                                        name: `new-${newId}-1`,
+                                        val: 1,
+                                        checked: true,
+                                        disabled: true,
+                                    })} 
+                                    ${radio({
+                                        name: `new-${newId}-1`,
+                                        val: 2,
+                                        disabled: true,
+                                    })} 
+                                    ${radio({
+                                        name: `new-${newId}-1`,
+                                        val: 3,
+                                        disabled: true,
+                                    })}
                                 </div>
-                                <div class="list-maxScore  bg-[#ebf0f0] p-1 rounded flex items-center gap-1" maxScore="3">
-                                    <span class="font-bold text-nowrap ">Max score</span>
-                                    <input class="btn btn-sm [&:not(:checked)]:bg-white shadow-sm" type="radio" name="new-max-${newId}-1" aria-label="1" value="1" disabled="disabled"/>
-                                    <input class="btn btn-sm [&:not(:checked)]:bg-white shadow-sm" type="radio" name="new-max-${newId}-1" aria-label="2" value="2" disabled="disabled"/>
-                                    <input class="btn btn-sm [&:not(:checked)]:bg-white shadow-sm" type="radio" name="new-max-${newId}-1" aria-label="3" value="3" checked="checked" disabled="disabled"/>
+                                <div class="list-maxScore bg-[#ebf0f0] border border-gray p-1 rounded flex items-center gap-1" maxScore="3">
+                                    <span class="font-bold text-nowrap">Max score</span>
+                                    ${btnMinus({ disabled: true })}
+                                    ${inputNum({
+                                        name: `new-max-${newId}-1`,
+                                        disabled: true,
+                                    })}
+                                    ${btnPlus({ disabled: true })}
                                 </div>
                                 ${btnDel({ cls: "delete-list btn-disabled" })}
                             </li>
@@ -516,6 +605,10 @@ $(document).on("click", "#add-topic", function () {
                         
                     </div>
                 `;
+    if($("#masterList").find('#no-list').length > 0) {
+        $("#no-list").remove();
+        showReasonArea();
+    } 
     $("#masterList").append(html);
 
     const el = document.querySelector(`#list-master-${newId}`);
@@ -551,15 +644,27 @@ $(document).on("click", ".add-list", function (e) {
                         ${input({ cls: "list-input" })}
                         <div class="list-factor bg-[#ebf0f0] p-1 rounded flex items-center gap-1" factor="1">
                             <span class="font-bold text-nowrap ">Factor</span>
-                            <input class="btn btn-sm [&:not(:checked)]:bg-white shadow-sm" type="radio" name="new-${topicNo}-${newSeq}" aria-label="1" value="1" checked="checked" />
-                            <input class="btn btn-sm [&:not(:checked)]:bg-white shadow-sm" type="radio" name="new-${topicNo}-${newSeq}" aria-label="2" value="2"/>
-                            <input class="btn btn-sm [&:not(:checked)]:bg-white shadow-sm" type="radio" name="new-${topicNo}-${newSeq}" aria-label="3" value="3"/>
+                            ${radio({
+                                name: `new-${topicNo}-${newSeq}`,
+                                val: 1,
+                                checked: true,
+                            })} 
+                            ${radio({
+                                name: `new-${topicNo}-${newSeq}`,
+                                val: 2,
+                            })} 
+                            ${radio({
+                                name: `new-${topicNo}-${newSeq}`,
+                                val: 3,
+                            })}
                         </div>
-                        <div class="list-maxScore  bg-[#ebf0f0] p-1 rounded flex items-center gap-1" maxScore="3">
-                            <span class="font-bold text-nowrap ">Max score</span>
-                            <input class="btn btn-sm [&:not(:checked)]:bg-white shadow-sm" type="radio" name="new-max-${topicNo}-${newSeq}" aria-label="1" value="1"/>
-                            <input class="btn btn-sm [&:not(:checked)]:bg-white shadow-sm" type="radio" name="new-max-${topicNo}-${newSeq}" aria-label="2" value="2"/>
-                            <input class="btn btn-sm [&:not(:checked)]:bg-white shadow-sm" type="radio" name="new-max-${topicNo}-${newSeq}" aria-label="3" value="3" checked="checked"/>
+                        <div class="list-maxScore bg-[#ebf0f0] border border-gray p-1 rounded flex items-center gap-1" maxScore="3">
+                            <span class="font-bold text-nowrap">Max score</span>
+                            ${btnMinus()}
+                            ${inputNum({
+                                name: `new-max-${topicNo}-${newSeq}`,
+                            })}
+                            ${btnPlus()}
                         </div>
                         ${btnDel({ cls: "delete-list" })}
                     </li>`;
@@ -569,7 +674,6 @@ $(document).on("click", ".add-list", function (e) {
 
 // click edit
 $(document).on("click", "#edit-button", async function () {
-    editMode = true;
     showReasonArea();
     $("#edit-button").attr("disabled", true);
     $("#add-topic").removeClass("hidden");
@@ -596,40 +700,112 @@ $(document).on("click", "#edit-button", async function () {
                 const seq = $(e).attr("seq");
                 const text = $(e).find(".list-input").text();
                 const status = $(e).attr("status");
-                const disabled =
-                    status == 0 || statusT == 0 ? 'disabled="disabled"' : "";
+                const disabled = status == 0 || statusT == 0;
                 const factor = $(e).find(".list-factor").attr("factor");
                 const maxScore = $(e).find(".list-maxScore").attr("maxScore");
                 $(e).html(`<i class="icofont-drag handleList cursor-grab"></i>
-                ${input({ val: text, cls: "list-input", attr: disabled })}
+                ${input({ val: text, cls: "list-input", disabled: disabled })} 
                 <div class="list-factor bg-[#ebf0f0] border border-gray p-1 rounded flex items-center gap-1" factor="${factor}">
                     <span class="font-bold text-nowrap ">Factor</span>
-                    <input class="btn btn-sm [&:not(:checked)]:bg-white shadow-sm" type="radio" name="${topic}-${seq}" aria-label="1" value="1" ${
-                    factor == 1 ? 'checked="checked"' : ""
-                } />
-                    <input class="btn btn-sm [&:not(:checked)]:bg-white shadow-sm" type="radio" name="${topic}-${seq}" aria-label="2" value="2" ${
-                    factor == 2 ? 'checked="checked"' : ""
-                } />
-                    <input class="btn btn-sm [&:not(:checked)]:bg-white shadow-sm" type="radio" name="${topic}-${seq}" aria-label="3" value="3" ${
-                    factor == 3 ? 'checked="checked"' : ""
-                } />
+                    ${radio({
+                        name: `${topic}-${seq}`,
+                        val: 1,
+                        checked: factor == 1,
+                        disabled: disabled,
+                    })} 
+                    ${radio({
+                        name: `${topic}-${seq}`,
+                        val: 2,
+                        checked: factor == 2,
+                        disabled: disabled,
+                    })} 
+                    ${radio({
+                        name: `${topic}-${seq}`,
+                        val: 3,
+                        checked: factor == 3,
+                        disabled: disabled,
+                    })} 
                 </div>
-                <div class="list-maxScore  bg-[#ebf0f0] border border-gray p-1 rounded flex items-center gap-1" maxScore="${maxScore}">
-                    <span class="font-bold text-nowrap ">Max score</span>
-                    <input class="btn btn-sm [&:not(:checked)]:bg-white shadow-sm" type="radio" name="max-${topic}-${seq}" aria-label="1" value="1" ${
-                    maxScore == 1 ? 'checked="checked"' : ""
-                } />
-                    <input class="btn btn-sm [&:not(:checked)]:bg-white shadow-sm" type="radio" name="max-${topic}-${seq}" aria-label="2" value="2" ${
-                    maxScore == 2 ? 'checked="checked"' : ""
-                } />
-                    <input class="btn btn-sm [&:not(:checked)]:bg-white shadow-sm" type="radio" name="max-${topic}-${seq}" aria-label="3" value="3" ${
-                    maxScore == 3 ? 'checked="checked"' : ""
-                } />
+                <div class="list-maxScore bg-[#ebf0f0] border border-gray p-1 rounded flex items-center gap-1" maxScore="${maxScore}">
+                    <span class="font-bold text-nowrap">Max score</span>
+                    ${btnMinus({ disabled: disabled })}
+                    ${inputNum({
+                        name: `${topic}-${seq}`,
+                        val: maxScore,
+                        disabled: disabled,
+                    })}
+                    ${btnPlus({ disabled: disabled })}
                 </div>
                 ${btnStatus({ status: status, attr: disabledT })}
                 ${btnDel({ cls: "delete-list", attr: disabledT })}`);
             });
     });
+});
+
+$(document).on("click", ".list-maxScore .minus", function () {
+    const input = $(this).siblings("input");
+    const max = parseInt(input.attr("max"));
+    const min = parseInt(input.attr("min"));
+    const val = parseInt(input.val());
+    const maxScore = $(this).closest(".list-maxScore");
+    if (val - 1 <= min) {
+        input.val(min);
+        maxScore.attr("maxScore", min);
+    } else {
+        input.val(val - 1);
+        maxScore.attr("maxScore", val - 1);
+    }
+    setTypeEdit(
+        maxScore.closest(".list-row")[0],
+        maxScore.closest(".list-row").attr("type"),
+        ["new"]
+    );
+    calculateTotal();
+});
+
+$(document).on("click", ".list-maxScore .plus", function () {
+    const input = $(this).siblings("input");
+    const max = parseInt(input.attr("max"));
+    const min = parseInt(input.attr("min"));
+    const val = parseInt(input.val());
+    const maxScore = $(this).closest(".list-maxScore");
+    if (val >= max) {
+        input.val(max);
+        maxScore.attr("maxScore", max);
+    } else {
+        input.val(val + 1);
+        maxScore.attr("maxScore", val + 1);
+    }
+    setTypeEdit(
+        maxScore.closest(".list-row")[0],
+        maxScore.closest(".list-row").attr("type"),
+        ["new"]
+    );
+    calculateTotal();
+});
+
+$(document).on("change", '.list-maxScore input[type="number"]', function () {
+    const input = $(this);
+    const max = parseInt(input.attr("max"));
+    const min = parseInt(input.attr("min"));
+    const val = parseInt(input.val());
+    const maxScore = $(this).closest(".list-maxScore");
+    if (isNaN(val) || val < min) {
+        input.val(min);
+        maxScore.attr("maxScore", min);
+    } else if (val > max) {
+        input.val(max);
+        maxScore.attr("maxScore", max);
+    } else {
+        input.val(val);
+        maxScore.attr("maxScore", val);
+    }
+    setTypeEdit(
+        maxScore.closest(".list-row")[0],
+        maxScore.closest(".list-row").attr("type"),
+        ["new"]
+    );
+    calculateTotal();
 });
 
 // delete topic
@@ -643,7 +819,7 @@ $(document).on("click", ".delete-topic", function (e) {
     }
     topic.closest(".collapse").addClass("hidden");
     topic.addClass("hidden");
-    
+
     topic.attr("type", "del");
     topic.attr("status", 0);
     renumber(`.topic`, "topic");
@@ -695,6 +871,7 @@ $(document).on("click", "#save-button", async function () {
             list: [],
             reason: $("#reason").val(),
             incharge: $(".userid").attr("userid"),
+            secid: secid,
         };
         topic.forEach((t) => {
             if (
@@ -729,7 +906,9 @@ $(document).on("click", "#save-button", async function () {
                     status: l.getAttribute("status"),
                     type: l.getAttribute("type"),
                     detail: chooseDetail(l.querySelector(".list-input")),
-                    factor: l.querySelector(".list-factor").getAttribute("factor"),
+                    factor: l
+                        .querySelector(".list-factor")
+                        .getAttribute("factor"),
                     maxScore: l
                         .querySelector(".list-maxScore")
                         .getAttribute("maxScore"),
@@ -762,31 +941,6 @@ $(document).on("click", "#save-button", async function () {
 $(document).on("click", "#cancel-button", async function () {
     await resetForm();
 });
-
-function calculateTotal() {
-    let sum = 0;
-    document.querySelectorAll(`.list-row:not(.hidden)`).forEach((l) => {
-        if (l.getAttribute("status") == 1) {
-            const factor = l
-                .querySelector(".list-factor")
-                .getAttribute("factor");
-            const maxScore = l
-                .querySelector(".list-maxScore")
-                .getAttribute("maxScore");
-            sum += parseInt(factor) * parseInt(maxScore);
-        }
-    });
-    $("#total").html(sum);
-    if (sum > 100) {
-        $("#total").closest("button").removeClass("btn-neutral");
-        $("#total").closest("button").addClass("btn-error");
-        showMessage("The total factor must not exceed 100.", "warning");
-    } else {
-        $("#total").closest("button").addClass("btn-neutral");
-        $("#total").closest("button").removeClass("btn-error");
-    }
-    return sum;
-}
 
 $(document).on("click", '.list-factor input[type="radio"]', function () {
     const val = $(this).val();
