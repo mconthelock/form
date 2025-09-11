@@ -4,8 +4,9 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 require_once APPPATH.'controllers/api/webform/form.php';
 require_once APPPATH.'controllers/api/webform/flow.php';
 require_once APPPATH.'controllers/api/webform/formmst.php';
+require_once APPPATH.'controllers/api/escs/user_section.php';
 class form extends MY_Controller{
-    use formApi, flow, formmst;
+    use formApi, flow, formmst, escs_user_section;
     
     protected $client;
     function __construct(){
@@ -62,8 +63,13 @@ class form extends MY_Controller{
         }
     }
 
-    public function auditMaster($userId){
+    public function auditMaster($userId, $secId){
         $data['userId'] = $userId;
+        $data['secId'] = $secId;
+        $checkSec = $this->getUserSecByID($secId);
+        if($checkSec['status'] == "false"){
+            show_error('Section id not found');
+        }
         $this->views('qaform/QA-INS/auditMaster', $data);
     }
 
