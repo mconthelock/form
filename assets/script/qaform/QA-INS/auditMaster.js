@@ -234,8 +234,6 @@ async function createList(master) {
     }
 }
 
-
-
 async function sortablesDestroy() {
     sortables.forEach((s) => s.destroy());
     sortables = [];
