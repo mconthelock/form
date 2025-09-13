@@ -66,6 +66,6 @@
     "v1.0.1": "tailwindcss -i ./assets/style/custom/v1.0.1.css -o ./assets/dist/css/v1.0.1.min.css --minify",
     "tailwind:build": "tailwindcss -i ./assets/style/tailwind.css -o ./assets/dist/css/tailwind.css --minify",
     "webpack:build": "webpack --mode production",
-    "build": "npm-run-all --serial tailwind:build webpack:build minifyCss v1.0.1"
+    "build": "npm-run-all --serial tailwind:build  minifyCss v1.0.1 webpack:build"
   }
 }

@@ -83,13 +83,16 @@ const loginCarousel = (el) => {
 const addPoster = async () => {
   let img = `${process.env.APP_IMG}/web_flow_2.0.png`;
   const id = $("#appid").val();
+  let link = '';
   try {
     const app = await getApplication(id);
     img = app.APP_POSTER != null ? app.APP_POSTER : img;
+    link = app.APP_LICENSE || app.APP_LICENSE_LINK ? `<a href="${app.APP_LICENSE_LINK}" target="_blank" class="absolute bottom-2 right-2 text-primary underline">${app.APP_LICENSE}</a>` : '';
   } catch (error) {
     console.log(error);
   }
-  return `<div class="f-carousel__slide">
+  return `<div class="f-carousel__slide relative">
           <img class="w-[100vw] h-[100vh] object-cover" src="${img}" alt=""/>
+            ${link}
       </div>`;
 };

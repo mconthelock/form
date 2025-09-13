@@ -195,7 +195,7 @@ export async function displayEmpImage(id) {
   } else {
     // ดึงรูปภาพจาก API
     const response = await fetch(
-      `${process.env.APP_API}/webflow/amecusers/images/${id}`
+      `${process.env.APP_WEBSERVICE}/webflow/amecusers/images/${id}`
     );
     const data = await response.json();
     const base64Image = data;
