@@ -13,7 +13,7 @@ const createScoreBoard = () => `
     </div>
 </div>`;
 
-async function createTableAuditMaster(data) {
+async function createTableAuditMaster(data, audit = 0) {
     let total = 0;
     let html = `<div class="overflow-y-auto w-full  max-h-[80vh] rounded-lg shadow" id="auditReport">
         <table class="table w-full">
@@ -40,14 +40,13 @@ async function createTableAuditMaster(data) {
             </thead>
             <tbody>`;
     data.forEach((item, index) => {
-        console.log(item);
         total += parseInt(item.ARM_MAXSCORE) * parseInt(item.ARM_FACTOR);
         if (item.ARM_TYPE == "H") {
             html += `<tr class="bg-gray-300">
                 <td colspan="6" class="font-bold">${item.ARM_NO}. ${item.ARM_DETAIL}</td>
             </tr>`;
         } else {
-            html += `<tr class="list-row ${handleClassList(item.ARM_SEQ)}">
+            html += `<tr class="list-row ${handleClassList(item.ARM_SEQ)}" topic="${item.ARM_NO}" seq="${item.ARM_SEQ}">
                 <td></td>
                 <td>${item.ARM_DETAIL}</td>
                 <td class="flex justify-center text-white font-bold">
@@ -119,7 +118,6 @@ $(document).on('click', '.plus', function(){
     const input = $(this).siblings('.audit-score');
     let val = parseInt(input.val());
     const max = parseInt(input.attr('max'));
-    console.log(input, val, max);
     
     if (val < max) {
         val++;

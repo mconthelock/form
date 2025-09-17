@@ -268,7 +268,7 @@ function renumber(e, attr) {
 
 async function resetForm() {
     try {
-        secid = 1 // $(".secid").attr("secid");
+        secid = $(".secid").attr("secid");
         const revision = await getAuditRevision({ ARR_SECID: secid });
         nextRev = revision.length > 0 ? revision[0].ARR_REV + 1 : 0;
         await tableRevision(revision);
@@ -873,6 +873,7 @@ $(document).on("click", "#save-button", async function () {
             reason: $("#reason").val(),
             incharge: $(".userid").attr("userid"),
             secid: secid,
+            total: $('#total').text(),
         };
         topic.forEach((t) => {
             if (
