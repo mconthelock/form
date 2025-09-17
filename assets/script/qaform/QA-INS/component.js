@@ -27,4 +27,8 @@ const inputNum = ({min = 0, max = 10, name = "", val = 3, disabled = false, cls 
 
 const btnMinus = ({ disabled = false, cls = ""} = {}) => `<button class="btn btn-sm p-2 minus ${cls}" ${disabled ? 'disabled="disabled"' : ""}><i class="icofont-minus text-xl"></i></button>`;
 const btnPlus = ({ disabled = false, cls = ""} = {}) => `<button class="btn btn-sm p-2 plus ${cls}" ${disabled ? 'disabled="disabled"' : ""}><i class="icofont-plus text-xl"></i></button>`;
-export { btnStatus, btnDel, btnAdd, input, radio, btnMinus, btnPlus, inputNum };
+
+const btn = ({ id = "", cls = "", text = "", attr = "", disabled = false } = {}) =>
+    `<button class="btn ${cls}" id="${id}" ${attr} ${disabled ? 'disabled="disabled"' : ""}>${text}</button>`;
+
+export { btnStatus, btnDel, btnAdd, input, radio, btnMinus, btnPlus, inputNum, btn };

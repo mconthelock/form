@@ -20,6 +20,7 @@ import {
 } from "../../public/v1.0.3/component/skeleton";
 import {
     getAllAttr,
+    host,
     logFormData,
     logtest,
     requiredForm,
@@ -27,9 +28,12 @@ import {
     showMessage,
 } from "../../public/v1.0.3/jFuntion";
 import { getImageByUser } from "../../public/v1.0.3/setIndexDB";
-import { getformData, openfile, qcConfirm } from "./data";
+import { getAuditee, getformData, openfile, qcConfirm } from "./data";
 import { showLoader } from "../../public/v1.0.3/preloader";
 import { redirectWebflow } from "../../public/v1.0.3/_form";
+import { formatDate } from "../../public/v1.0.3/_dayjs";
+import { shortName, shortSec } from "./function";
+import { getAuditRevision } from "../../api/escs/audit_revision";
 var formInfo, form, qafiles, cextdata, tableAuditor;
 
 $(async function () {
@@ -89,6 +93,10 @@ $(document).on("click", 'button[name="btnAction"]', async function () {
                 {
                     element: $("#QCFOREMAN"),
                     message: "Please select QC Foreman",
+                },
+                {
+                    element: $("#QA_REV"),
+                    message: "Please select Revision",
                 },
             ];
             if (!(await requiredForm(qcform, alertMsg))) return;
@@ -167,11 +175,8 @@ async function setPage() {
         case "01":
             await setInchargeForm(data);
             break;
-        case "edit":
-            // Do something for edit mode
-            break;
-        case "create":
-            // Do something for create mode
+        case "02":
+            await setAudit(data);
             break;
         default:
             // Handle unknown mode
@@ -215,8 +220,6 @@ async function setPage() {
 }
 
 async function setSkeleton() {
-    logtest(formInfo.mode);
-
     formInfo.mode == 2
         ? formSubmitSkeleton({
               element: "#actionWebflow",
@@ -269,7 +272,14 @@ async function setSkeleton() {
                 height: "h-[27rem]",
             });
             break;
-
+        case "02":
+            $("#qcForm2").removeClass("hidden");
+            skeleton({ element: "#tdateShow", width: "w-24", height: "h-4" });
+            skeleton({ element: "#ojtShow", width: "w-24", height: "h-4" });
+            dataTableSkeleton({
+                height: "h-[27rem]",
+            });
+            break;
         default:
             break;
     }
@@ -290,6 +300,9 @@ async function setInchargeForm(data) {
     const UserImage = await getImageByUser(
         user.length > 0 ? user.map((u) => u.USR_NO) : []
     );
+
+    const revision = await getAuditRevision();
+
     $(".trainingDate").html(
         input({
             id: "TRAINING_DATE",
@@ -323,6 +336,17 @@ async function setInchargeForm(data) {
             placeholder: "Select QC Foreman",
         })
     );
+    $(".inchargeRevision").html(
+        select({
+            id: "QA_REV",
+            name: "QA_REV",
+            data: revision.map((r) => {
+                return { value: r.ARR_REV, text: r.ARR_REV_TEXT };
+            }),
+            class: "select s2 max-w-sm w-full req",
+            placeholder: "Select revision",
+        })
+    );
     // logtest(
     //     foreman.map((u) => {
     //         return { value: u.USR_NO, text: `${u.USR_NAME} (${u.USR_NO})` };
@@ -342,6 +366,13 @@ async function setInchargeForm(data) {
         // width: "100%",
         selectionCssClass: "max-w-sm w-full",
     });
+    setSelect2({
+        element: "#QA_REV",
+        disableSearch: true,
+        // width: "100%",
+        selectionCssClass: "max-w-sm w-full",
+    });
+    $("#QA_REV").val(revision[0].ARR_REV).trigger('change');
     const columnAuditor = [
         {
             data: null,
@@ -394,3 +425,85 @@ async function setInchargeForm(data) {
     );
     dataTableSkeleton({ show: false });
 }
+
+
+async function setAudit(data) {
+    console.log(data);
+    $('#tdateShow').text(formatDate(data.QA_TRAINING_DATE,'DD-MMM-YYYY HH:mm'));
+    $('#ojtShow').text(formatDate(data.QA_OJT_DATE,'DD-MMM-YYYY HH:mm'));
+    let auditor = '', auditee = [];
+    for (const list of data.QA_AUD_OPT) {
+        if(list.QOA_TYPECODE == "ESA"){
+            auditor += `${shortName(list.QOA_EMPNO_INFO.SNAME)} (${list.QOA_EMPNO_INFO.SPOSNAME} ${shortSec(list.QOA_EMPNO_INFO.SSEC)}), `
+        }
+        if(list.QOA_TYPECODE == "ESO"){
+            auditee.push(list);
+        }
+    }
+    $('#auditorShow').text(auditor.slice(0,-2) || ', ');
+    await createTableAuditee(auditee);
+}
+
+async function createTableAuditee(data){
+    console.log(data);
+    
+    await createTable(
+        {
+            data: data,
+            searching: false,
+            lengthChange: false,
+            ordering: false,
+            paging: false,
+            columns: [
+                {data: 'QOA_EMPNO', title: 'Emp. No.'},
+                {data: 'QOA_EMPNO_INFO.SNAME', title: 'Name'},
+                {data: 'QOA_EMPNO_INFO.SPOSNAME', title: 'Position'},
+                {data: 'QOA_EMPNO_INFO.SSEC', title: 'Section'},
+                {
+                    data: 'QOA_RESULT', 
+                    title: 'Result',
+                    render: (data,type,row) => {
+                        return data == 1 ? '<span class="text-green-600 font-bold">Pass</span>' : (data == 0 ? '<span class="text-red-600 font-bold">Not Pass</span>' : '-')
+                    }
+                },
+                {
+                    data: 'QOA_GRADE',
+                    title: 'Grade',
+                    render: (data,type,row) => {
+                        return data || '-'
+                    }
+                },
+                {
+                    data: null, 
+                    title: 'Audit',
+                    render: (data,type,row) => {
+                        if(row.QOA_AUDIT == 1){
+                            return `<div class="text-green-600 font-bold text-xl"><i class="icofont-check-circled"></i></div>`;
+                        }else{
+                            return `<div class="btn btn-primary audit-btn" link="${host}/qaform/QA-INS/form/audit/${row.NFRMNO}/${row.VORGNO}/${row.CYEAR}/${row.CYEAR2}/${row.NRUNNO}/${row.QOA_SEQ}/${formInfo.empno}">Audit</div>`
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            id: "#auditee",
+            domScroll: { status: true, maxHeight: "21rem", type: "tailwind4" },
+            join: true,
+        }
+    );
+    dataTableSkeleton({ show: false });
+}
+
+$(document).on('click', '.audit-btn', function(){
+    const link = $(this).attr('link');
+    window.open(link, 'popup');
+});
+
+// ฟัง event storage
+window.addEventListener("storage", async (e) => {
+  if (e.key === "triggerReload") {
+    const auditee = await getAuditee(form);
+    createTableAuditee(auditee);
+  }
+});

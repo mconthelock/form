@@ -28,25 +28,6 @@ export async function getformData(form) {
 
     const data = await res.json();
     return data;
-    // return new Promise((resolve) => {
-    //     $.ajax({
-    //         type: "post",
-    //         // url: `${process.env.APP_API}/qaform/qa-ins/getformData`,
-    //         url: `${process.env.APP_API}/qaform/qa-ins/getformData`,
-    //         dataType: "json",
-    //         data: form,
-    //         success: function (response) {
-    //             resolve(response);
-    //         },
-    //         error: function (xhr, status, error) {
-    //             console.error("getformData error:", status, error);
-    //             resolve({
-    //                 status: false,
-    //                 message: "getformData failed. Please try again.",
-    //             });
-    //         },
-    //     });
-    // });
 }
 
 /**
@@ -68,27 +49,6 @@ export async function createFormQains(formData) {
 
     const data = await res.json();
     return data;
-    // return new Promise((resolve) => {
-    //     $.ajax({
-    //         type: "post",
-    //         // url: `${process.env.APP_API}/qaform/qa-ins/request``,
-    //         url: `${process.env.APP_API}/qaform/qa-ins/request`,
-    //         dataType: "json",
-    //         data: formData,
-    //         processData: false,
-    //         contentType: false,
-    //         success: function (response) {
-    //             resolve(response);
-    //         },
-    //         error: function (xhr, status, error) {
-    //             console.error("create failed:", status, error);
-    //             resolve({
-    //                 status: false,
-    //                 message: "Create failed. Please try again.",
-    //             });
-    //         },
-    //     });
-    // });
 }
 
 export async function qcConfirm(formdata) {
@@ -121,5 +81,26 @@ export async function saveMaster(data) {
         throw new Error("Failed to Save Master data");
     }
 
+    return await res.json();
+}
+
+// {
+//     "NFRMNO": 13,
+//     "VORGNO": "000101",
+//     "CYEAR": "25",
+//     "CYEAR2": "2025",
+//     "NRUNNO": 1,
+// }
+export async function getAuditee(q = {}){
+    const condition = {...q, QOA_TYPECODE: "ESO"};
+    const res = await fetch(`${process.env.APP_API}/qaform/qa-ins/OA/search`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(condition),
+    });
+    if (!res.ok) {
+        await fetchMsgErr(res);
+        throw new Error("Failed to get Auditee");
+    }
     return await res.json();
 }

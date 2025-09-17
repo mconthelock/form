@@ -66,6 +66,7 @@ class form extends MY_Controller{
 
     public function auditMaster($userId, $secId){
         try {
+            $secId = 1; // รอ qc อื่นขอใช้ด้วยค่อยเอาออก
             $data['userId'] = $userId;
             $data['secId'] = $secId;
             $checkSec = $this->getUserSecByID($secId);
@@ -80,6 +81,7 @@ class form extends MY_Controller{
 
     public function preview($secId, $rev){
         try {
+            $secId = 1; // รอ qc อื่นขอใช้ด้วยค่อยเอาออก
             $checkSec = $this->getUserSecByID($secId);
             $revision = $this->getAuditReportRevision(['ARR_SECID' => $secId, 'ARR_REV' => $rev]);
             // $this->_print_r($revision);
@@ -93,7 +95,24 @@ class form extends MY_Controller{
             $data['rev'] = $revision[0]['ARR_REV'];
             $data['revText'] = $revision[0]['ARR_REV'] == 0 ? "\u{002A}" : $revision[0]['ARR_REV_TEXT'];
             // $this->_print_r($data);
-        $this->views('qaform/QA-INS/preview', $data);
+            $this->views('qaform/QA-INS/preview', $data);
+        } catch (Exception $e) {
+            show_error($e->getMessage());
+        }
+    }
+
+    public function audit($nfmrno, $vorNo, $cyear, $cyear2, $nrunno, $seq, $empno){
+        try {
+            $data = [
+                'NFRMNO' => $nfmrno,
+                'VORGNO' => $vorNo,
+                'CYEAR'  => $cyear,
+                'CYEAR2' => $cyear2,
+                'NRUNNO' => $nrunno,
+                'seq'    => $seq,
+                'empno'  => $empno
+            ];
+            $this->views('qaform/QA-INS/audit', $data);
         } catch (Exception $e) {
             show_error($e->getMessage());
         }

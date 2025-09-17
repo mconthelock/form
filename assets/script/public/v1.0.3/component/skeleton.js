@@ -183,8 +183,6 @@ export function formSubmitSkeleton(option = {}) {
             <div class="skeleton h-[20rem] w-[36rem]"></div>
         </div>
     </div>`;
-    console.log('mode:', mode);
-
     if (element) {
         switch (mode) {
             case 'edit':
