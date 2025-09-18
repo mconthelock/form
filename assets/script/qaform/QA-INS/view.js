@@ -23,6 +23,7 @@ import {
     host,
     logFormData,
     logtest,
+    openNewWindow,
     requiredForm,
     showErrorMessage,
     showMessage,
@@ -372,7 +373,7 @@ async function setInchargeForm(data) {
         // width: "100%",
         selectionCssClass: "max-w-sm w-full",
     });
-    $("#QA_REV").val(revision[0].ARR_REV).trigger('change');
+    $("#QA_REV").val(revision[0].ARR_REV).trigger("change");
     const columnAuditor = [
         {
             data: null,
@@ -426,27 +427,31 @@ async function setInchargeForm(data) {
     dataTableSkeleton({ show: false });
 }
 
-
 async function setAudit(data) {
     console.log(data);
-    $('#tdateShow').text(formatDate(data.QA_TRAINING_DATE,'DD-MMM-YYYY HH:mm'));
-    $('#ojtShow').text(formatDate(data.QA_OJT_DATE,'DD-MMM-YYYY HH:mm'));
-    let auditor = '', auditee = [];
+    $("#tdateShow").text(
+        formatDate(data.QA_TRAINING_DATE, "DD-MMM-YYYY HH:mm")
+    );
+    $("#ojtShow").text(formatDate(data.QA_OJT_DATE, "DD-MMM-YYYY HH:mm"));
+    let auditor = "",
+        auditee = [];
     for (const list of data.QA_AUD_OPT) {
-        if(list.QOA_TYPECODE == "ESA"){
-            auditor += `${shortName(list.QOA_EMPNO_INFO.SNAME)} (${list.QOA_EMPNO_INFO.SPOSNAME} ${shortSec(list.QOA_EMPNO_INFO.SSEC)}), `
+        if (list.QOA_TYPECODE == "ESA") {
+            auditor += `${shortName(list.QOA_EMPNO_INFO.SNAME)} (${
+                list.QOA_EMPNO_INFO.SPOSNAME
+            } ${shortSec(list.QOA_EMPNO_INFO.SSEC)}), `;
         }
-        if(list.QOA_TYPECODE == "ESO"){
+        if (list.QOA_TYPECODE == "ESO") {
             auditee.push(list);
         }
     }
-    $('#auditorShow').text(auditor.slice(0,-2) || ', ');
+    $("#auditorShow").text(auditor.slice(0, -2) || ", ");
     await createTableAuditee(auditee);
 }
 
-async function createTableAuditee(data){
+async function createTableAuditee(data) {
     console.log(data);
-    
+
     await createTable(
         {
             data: data,
@@ -455,36 +460,59 @@ async function createTableAuditee(data){
             ordering: false,
             paging: false,
             columns: [
-                {data: 'QOA_EMPNO', title: 'Emp. No.'},
-                {data: 'QOA_EMPNO_INFO.SNAME', title: 'Name'},
-                {data: 'QOA_EMPNO_INFO.SPOSNAME', title: 'Position'},
-                {data: 'QOA_EMPNO_INFO.SSEC', title: 'Section'},
+                { data: "QOA_EMPNO", title: "Emp. No." },
+                { data: "QOA_EMPNO_INFO.SNAME", title: "Name" },
+                { data: "QOA_EMPNO_INFO.SPOSNAME", title: "Position" },
+                { data: "QOA_EMPNO_INFO.SSEC", title: "Section" },
                 {
-                    data: 'QOA_RESULT', 
-                    title: 'Result',
-                    render: (data,type,row) => {
-                        return data == 1 ? '<span class="text-green-600 font-bold">Pass</span>' : (data == 0 ? '<span class="text-red-600 font-bold">Not Pass</span>' : '-')
-                    }
+                    data: "QOA_RESULT",
+                    title: "Result",
+                    render: (data, type, row) => {
+                        return data == 1
+                            ? '<span class="text-green-600 font-bold">Pass</span>'
+                            : data == 0
+                            ? '<span class="text-red-600 font-bold">Not Pass</span>'
+                            : "-";
+                    },
                 },
                 {
-                    data: 'QOA_GRADE',
-                    title: 'Grade',
-                    render: (data,type,row) => {
-                        return data || '-'
-                    }
+                    data: "QOA_GRADE",
+                    title: "Grade",
+                    render: (data, type, row) => {
+                        return data || "-";
+                    },
                 },
                 {
-                    data: null, 
-                    title: 'Audit',
-                    render: (data,type,row) => {
-                        if(row.QOA_AUDIT == 1){
-                            return `<div class="text-green-600 font-bold text-xl"><i class="icofont-check-circled"></i></div>`;
-                        }else{
-                            return `<div class="btn btn-primary audit-btn" link="${host}/qaform/QA-INS/form/audit/${row.NFRMNO}/${row.VORGNO}/${row.CYEAR}/${row.CYEAR2}/${row.NRUNNO}/${row.QOA_SEQ}/${formInfo.empno}">Audit</div>`
+                    data: null,
+                    title: "Status",
+                    render: (data, type, row) => {
+                        if (row.QOA_AUDIT == 1) {
+                            return '<span class="text-green-600 font-bold">Audited</span>';
+                        } else if (row.QOA_AUDIT == 2) {
+                            return '<span class="text-blue-600 font-bold">Save draft</span>';
+                        } else {
+                            return '<span class="text-red-600 font-bold">Not Audited</span>';
                         }
-                    }
-                }
-            ]
+                    },
+                },
+                {
+                    data: null,
+                    title: "Audit",
+                    render: (data, type, row) => {
+                        return `<div class="btn btn-primary audit-btn" seq="${
+                            row.QOA_SEQ
+                        }" link="${host}/qaform/QA-INS/form/audit/${
+                            row.NFRMNO
+                        }/${row.VORGNO}/${row.CYEAR}/${row.CYEAR2}/${
+                            row.NRUNNO
+                        }/${row.QOA_SEQ}/${formInfo.empno}">${
+                            row.QOA_AUDIT == 1
+                                ? `<i class="icofont-eye-alt"></i>View`
+                                : `<i class="icofont-external-link text-el"></i>Audit`
+                        }</div>`;
+                    },
+                },
+            ],
         },
         {
             id: "#auditee",
@@ -495,15 +523,16 @@ async function createTableAuditee(data){
     dataTableSkeleton({ show: false });
 }
 
-$(document).on('click', '.audit-btn', function(){
-    const link = $(this).attr('link');
-    window.open(link, 'popup');
+$(document).on("click", ".audit-btn", function () {
+    const link = $(this).attr("link");
+    const seq = $(this).attr("seq");
+    openNewWindow({ url: link, name: seq });
 });
 
 // ฟัง event storage
 window.addEventListener("storage", async (e) => {
-  if (e.key === "triggerReload") {
-    const auditee = await getAuditee(form);
-    createTableAuditee(auditee);
-  }
+    if (e.key === "TableAuditeeReload") {
+        const auditee = await getAuditee(form);
+        createTableAuditee(auditee);
+    }
 });

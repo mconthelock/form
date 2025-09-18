@@ -356,3 +356,7 @@ export function logtest(...args) {
         console.log(...args);
     }
 }
+
+export const openNewWindow = ({url, name = '_blank', h = screen.height, w = screen.width} = {}) => {
+    window.open(url, name, `height=${h},width=${w},top=0,left=0,resizable=yes,scrollbars=yes`);
+}

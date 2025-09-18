@@ -1,3 +1,4 @@
+import { logtest } from "../../public/v1.0.3/jFuntion";
 import { btnMinus, btnPlus, inputNum, radio } from "./component";
 import { handleClassList } from "./function";
 
@@ -13,7 +14,10 @@ const createScoreBoard = () => `
     </div>
 </div>`;
 
-async function createTableAuditMaster(data, audit = 0) {
+async function createTableAuditMaster(data, audit = 0, score = []) {
+    logtest("Audit Master Data", data);
+    logtest("Audit Data", audit);
+    logtest("Score Data", score);
     let total = 0;
     let html = `<div class="overflow-y-auto w-full  max-h-[80vh] rounded-lg shadow" id="auditReport">
         <table class="table w-full">
@@ -46,6 +50,9 @@ async function createTableAuditMaster(data, audit = 0) {
                 <td colspan="6" class="font-bold">${item.ARM_NO}. ${item.ARM_DETAIL}</td>
             </tr>`;
         } else {
+            const foundscore = score.find(s => s.QAA_TOPIC == item.ARM_NO && s.QAA_SEQ == item.ARM_SEQ);
+            const valScore = foundscore ? parseInt(foundscore.QAA_AUDIT) : 0;
+            const valComment = foundscore ? foundscore.QAA_COMMENT ?? '-' : '-';
             html += `<tr class="list-row ${handleClassList(item.ARM_SEQ)}" topic="${item.ARM_NO}" seq="${item.ARM_SEQ}">
                 <td></td>
                 <td>${item.ARM_DETAIL}</td>
@@ -56,32 +63,44 @@ async function createTableAuditMaster(data, audit = 0) {
                         ${item.ARM_FACTOR}
                     </span>
                 </td>
-                <td>
+                <td class="text-center">
                     <div class="join list-maxScore" maxScore="${
                         item.ARM_MAXSCORE
-                    }">
-                        ${btnMinus({ cls: "join-item" })}
-                        ${inputNum({
-                            name: `score-${item.ARM_NO}-${item.ARM_SEQ}`,
-                            val: 0,
-                            max: item.ARM_MAXSCORE,
-                            cls: "join-item audit-score text-center req",
-                        })}
-                        ${btnPlus({ cls: "join-item" })}
+                    }">`;
+            if(audit != 1){
+                html += btnMinus({ cls: "join-item" });
+                html += inputNum({
+                    name: `score-${item.ARM_NO}-${item.ARM_SEQ}`,
+                    val: valScore,
+                    max: item.ARM_MAXSCORE,
+                    cls: "join-item audit-score text-center req",
+                });
+                html += btnPlus({ cls: "join-item" });
+            }else{
+                html += `<span class="audit-score">${valScore}</span>`;
+            }
+                html += `
                     </div>
                 </td>
                 <td class="text-center"><span class="result"></span></td>
-                <td class="flex justify-center join">
-                    ${radio({
-                        name: `list-${item.ARM_NO}-${item.ARM_SEQ}`,
-                        val: "S",
-                        cls: "join-item [&:not(:checked)]:bg-white btn-lg",
-                    })}
-                    ${radio({
-                        name: `list-${item.ARM_NO}-${item.ARM_SEQ}`,
-                        val: "C",
-                        cls: "join-item [&:not(:checked)]:bg-white btn-lg",
-                    })}
+                <td class="flex justify-center join">`;
+            if(audit != 1){
+                html += radio({
+                    name: `list-${item.ARM_NO}-${item.ARM_SEQ}`,
+                    val: "S",
+                    cls: "join-item cs-radio [&:not(:checked)]:bg-white btn-lg",
+                    checked: foundscore ? foundscore.QAA_COMMENT == "S" : false,
+                });
+                html += radio({
+                    name: `list-${item.ARM_NO}-${item.ARM_SEQ}`,
+                    val: "C",
+                    cls: "join-item cs-radio [&:not(:checked)]:bg-white btn-lg",
+                    checked: foundscore ? foundscore.QAA_COMMENT == "C" : false,
+                });
+            }else{
+                html += `<span>${valComment}</span>`
+            }
+            html += `
                 </td>
             </tr>`;
         }
@@ -99,11 +118,12 @@ function calScoreTotal() {
     $(".list-row").each((i, el) => {
         const factor = parseInt($(el).find('.list-factor').attr('factor'));
         const maxScore = parseInt($(el).find('.list-maxScore').attr('maxScore'));
-        const input = $(el).find('.audit-score');
-        const res = parseInt(input.val()) * factor;
+        const auditScore = $(el).find('.audit-score');
+        const res = parseInt(auditScore.val() || auditScore.text() || 0) * factor;
         $(el).find('.result').text(res);
         score += res;
         total += maxScore * factor;
+        
     });
     return {total, score};
 }

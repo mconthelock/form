@@ -9,7 +9,7 @@
             <span class="text-2xl font-bold">Strengthen Trouble Report After Shipment</span>
             <span class="text-2xl font-bold" id="revision" rev="{{$rev}}">Revision {{$revText}}</span>
         </u>
-        <div id="score"></div>
+        <div id="score"  class="absolute right-8"></div>
         <div id="auditReport"></div>
     </div>
 </div>
