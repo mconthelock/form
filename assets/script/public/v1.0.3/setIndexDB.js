@@ -133,31 +133,36 @@ export async function setAvatarSelect(allUsers, selectElement) {
 }
 
 // ดึงรูปภาพจาก IndexedDB
+// 2025-09-18 เพิ่ม try catch ให้คืนค่า default image เมื่อ error
 export async function displayEmpImage(id) {
-    const cachedImage = await getImage(id);
-    if (cachedImage) {
-        return `${cachedImage}`;
-    } else {
-        // ดึงรูปภาพจาก API
-        const response = await fetch(
-            `${process.env.APP_API}/users/image/${id}`
-        );
-        if (response.ok) {
-            const img = await response.text();
-            console.log(id, img);
-
-            if (!img.startsWith("data:image/")) {
-                throw new Error("Invalid image format");
-            }
-            // บันทึกลง IndexedDB
-            await setImage(id, img);
-            return `${img}`;
+    try {
+        const cachedImage = await getImage(id);
+        if (cachedImage) {
+            return `${cachedImage}`;
         } else {
-            console.log(
-                `Error fetching image for ID ${id}: ${response.statusText}`
+            // ดึงรูปภาพจาก API
+            const response = await fetch(
+                `${process.env.APP_API}/users/image/${id}`
             );
-            return "";
+            if (response.ok) {
+                const img = await response.text();
+                console.log(id, img);
+
+                if (!img.startsWith("data:image/")) {
+                    throw new Error("Invalid image format");
+                }
+                // บันทึกลง IndexedDB
+                await setImage(id, img);
+                return `${img}`;
+            } else {
+                throw new Error(
+                    `Error fetching image for ID ${id}: ${response.statusText}`
+                );
+            }
         }
+    } catch (error) {
+        console.error("Error in displayEmpImage:", error);
+        return `${process.env.APP_IMG}/Avatar.png`;
     }
 }
 

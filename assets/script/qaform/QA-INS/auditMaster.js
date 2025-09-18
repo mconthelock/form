@@ -23,6 +23,7 @@ import {
 } from "./component";
 import { saveMaster } from "./data";
 import { handleClassList } from "./function";
+import { createTableRevision } from "./template";
 
 let sortables = [],
     editMode = false,
@@ -107,42 +108,6 @@ function setTypeEdit(element, type, condition) {
     if (!condition.includes(type) || !type) {
         element.setAttribute("type", "edit");
     }
-}
-
-async function tableRevision(revision) {
-    $("#revision").text("Revision");
-    let html = `<table id="tableRevision" class="table table-zebra">
-                <thead class="sticky top-0 z-20 bg-[#3c8dbc] text-white">
-                    <tr>
-                        <th>Revision</th>
-                        <th>Date</th>
-                        <th>In-charge</th>
-                        <th>Reason</th>
-                        <th>View</th>
-                    </tr>
-                </thead>
-                <tbody>
-                `;
-    for (const rev of revision) {
-        html += `
-            <tr>
-                <td>${rev.ARR_REV_TEXT}</td>
-                <td class="text-nowrap">${formatDate(rev.ARR_CREATEDATE)}</td>
-                <td>${
-                    rev.ARR_INCHARGE != 0
-                        ? `${rev.ARR_INCHARGE_INFO.USR_NAME} (${rev.ARR_INCHARGE_INFO.USR_NO})`
-                        : "SYSTEM"
-                }</td>
-                <td>${rev.ARR_REASON}</td>
-                <td><a href="${host}/qaform/QA-INS/form/preview/${secid}/${rev.ARR_REV}" target="_blank" class="btn btn-sm btn-primary"><i class="icofont-eye-alt"></i></a></td>
-            </tr>
-        `;
-    }
-    if (revision.length === 0) {
-        html += `<tr><td colspan="4" class="text-center">No data available in table</td></tr>`;
-    }
-    html += `</tbody></table>`;
-    $("#tableRevision").replaceWith(html);
 }
 
 async function createList(master) {
@@ -271,7 +236,9 @@ async function resetForm() {
         secid = $(".secid").attr("secid");
         const revision = await getAuditRevision({ ARR_SECID: secid });
         nextRev = revision.length > 0 ? revision[0].ARR_REV + 1 : 0;
-        await tableRevision(revision);
+        $("#revision").text("Revision");
+        const htmlRevision = await createTableRevision(revision);
+        $("#tableRevision").replaceWith(htmlRevision);
         const master = await getAuditMaster({ ARM_SECID: secid });
         await createList(master);
         $("#save").addClass("hidden");
@@ -289,7 +256,8 @@ async function resetForm() {
  * @param {object} element t.querySelector(".topic-input")
  */
 function chooseDetail(element) {
-    return editMode ? element.value.trim() : element.textContent.trim();
+    return element.value ? element.value.trim() : element.textContent.trim();
+    // return editMode ? element.value.trim() : element.textContent.trim();
 }
 
 function calculateTotal() {
@@ -935,6 +903,7 @@ $(document).on("click", "#save-button", async function () {
             throw new Error("Failed to save data.");
         }
     } catch (error) {
+        console.error(error);
         showErrorMessage(error);
     }
 });
