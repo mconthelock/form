@@ -8,7 +8,7 @@
             <span class="text-2xl font-bold">Quality Built In Line Audit Report</span>
             <span class="text-2xl font-bold">Strengthen Trouble Report After Shipment</span>
         </u>
-        <div id="score"></div>
+        <div id="score" class="absolute right-8"></div>
         <div id="auditReport"></div>
         <div id="action" class="flex gap-5"></div>
     </div>
