@@ -33,7 +33,7 @@ import { getAuditee, getformData, openfile, qcConfirm } from "./data";
 import { showLoader } from "../../public/v1.0.3/preloader";
 import { redirectWebflow } from "../../public/v1.0.3/_form";
 import { formatDate } from "../../public/v1.0.3/_dayjs";
-import { shortName, shortSec } from "./function";
+import { setAuditorToString, shortName, shortSec } from "./function";
 import { getAuditRevision } from "../../api/escs/audit_revision";
 var formInfo, form, qafiles, cextdata, tableAuditor;
 
@@ -433,18 +433,8 @@ async function setAudit(data) {
         formatDate(data.QA_TRAINING_DATE, "DD-MMM-YYYY HH:mm")
     );
     $("#ojtShow").text(formatDate(data.QA_OJT_DATE, "DD-MMM-YYYY HH:mm"));
-    let auditor = "",
-        auditee = [];
-    for (const list of data.QA_AUD_OPT) {
-        if (list.QOA_TYPECODE == "ESA") {
-            auditor += `${shortName(list.QOA_EMPNO_INFO.SNAME)} (${
-                list.QOA_EMPNO_INFO.SPOSNAME
-            } ${shortSec(list.QOA_EMPNO_INFO.SSEC)}), `;
-        }
-        if (list.QOA_TYPECODE == "ESO") {
-            auditee.push(list);
-        }
-    }
+    const auditor = setAuditorToString(data);
+    const auditee = data.QA_AUD_OPT.filter((i) => i.QOA_TYPECODE == "ESO");
     $("#auditorShow").text(auditor.slice(0, -2) || ", ");
     await createTableAuditee(auditee);
 }

@@ -36,6 +36,16 @@ $(document).on('input blur', '.req', function(){
     RequiredElement($(this));
 });
 
+$(document).on('input', 'textarea.autosize:not(.autosize-match)', function(){
+    autosizeTextarea(this);
+});
+
+$(document).on('input', 'textarea.autosize.autosize-match', function(){
+    const height = autosizeTextarea(this);
+    $('.autosize.autosize-match').each(function(){
+        $(this).css('height', height + 'px');
+    });
+});
 
 /**
  * Add minutes to time string
@@ -313,7 +323,9 @@ export function removeClassError(e){
  */
 export function autosizeTextarea (el) {
     el.style.height = 'auto';           // รีเซ็ตก่อน
-    el.style.height = el.scrollHeight + 'px'; // ปรับสูงเท่าคอนเทนต์
+    const height = el.scrollHeight;
+    el.style.height = height + 'px'; // ปรับสูงเท่าคอนเทนต์
+    return height;
 }
 
 export function logFormData(formData) {

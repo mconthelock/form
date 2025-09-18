@@ -9,7 +9,7 @@ $(async function(){
         setSkeleton();
         const master = await getAuditMasterAll({ARM_SECID: $('.secid').attr('secid'), ARM_REV: $('#revision').attr('rev'), ARM_STATUS: 1});
         $("#score").replaceWith(await createScoreBoard());
-        $('#auditReport').replaceWith(await createTableAuditMaster(master));
+        $('#auditReport').replaceWith(await createTableAuditMaster(master, 1));
         setScore();
     } catch (error) {
         showErrorMessage(error);

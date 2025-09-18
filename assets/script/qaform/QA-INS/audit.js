@@ -1,5 +1,7 @@
 import { getAuditMasterAll } from "../../api/escs/audit_master_all";
+import { getAuditRevision } from "../../api/escs/audit_revision";
 import {
+    autosizeTextarea,
     getAllAttr,
     logtest,
     showErrorMessage,
@@ -7,14 +9,17 @@ import {
 } from "../../public/v1.0.3/jFuntion";
 import { btn } from "./component";
 import { getformData, saveAudit } from "./data";
-import { finishAndClose, setSkeleton } from "./function";
+import { finishAndClose, setSkeleton, shortName, shortSec } from "./function";
 import {
     calScoreTotal,
+    createDetail,
     createScoreBoard,
     createTableAuditMaster,
+    createTableCS,
+    createTableRevision,
     setScore,
 } from "./template";
-var formInfo, formData, auditee, master, form;
+var formInfo, formData, auditor, auditee, master, form;
 const typecode = "ESO";
 
 $(async function () {
@@ -22,6 +27,7 @@ $(async function () {
         logtest("------------------- Audit Preview -------------------");
         $("body").addClass("bg-[#ecf0f5]");
         setSkeleton();
+        // return;
         formInfo = await getAllAttr(document.querySelector(".form-info"));
         form = {
             NFRMNO: formInfo.nfrmno,
@@ -31,6 +37,12 @@ $(async function () {
             NRUNNO: formInfo.nrunno,
         };
         formData = await getformData(form);
+        if (!formData || formData.length === 0) {
+            throw new Error("No form data found");
+        }
+        const revision = await getAuditRevision({
+            ARR_SECID: formData.QA_INCHARGE_SECTION,
+        });
         auditee =
             formData.QA_AUD_OPT.find(
                 (i) => i.QOA_TYPECODE == typecode && i.QOA_SEQ == formInfo.seq
@@ -38,44 +50,53 @@ $(async function () {
         if (!auditee || Object.keys(auditee).length === 0) {
             throw new Error("You are not authorized to audit this form.");
         }
-        logtest("Form Info", formInfo);
-        logtest("Form Data", formData);
-        logtest("Auditee", auditee);
-        if (!formData || formData.length === 0) {
-            throw new Error("No form data found");
-        }
-        // master = await getAuditMasterAll({
-        //     ARM_SECID: formData.QA_INCHARGE_SECTION,
-        //     ARM_REV: formData.QA_REV,
-        //     ARM_STATUS: 1,
-        // });
         master = formData.QA_MASTER.filter((i) => i.ARM_STATUS === 1);
         if (!master || master.length === 0) {
             throw new Error("No audit master data found");
         }
+
+        logtest("Form Info", formInfo);
+        logtest("Form Data", formData);
+        logtest("Auditee", auditee);
+        logtest("Auditor", auditor);
+        logtest("Revision", revision);
+
+        $("#rev").html(`Revision: ${formData.QA_REV_INFO.ARR_REV_TEXT}`);
         $("#score").replaceWith(await createScoreBoard());
+        $("#detail").replaceWith(await createDetail(formData, auditee));
+        $("#tableRevision").replaceWith(await createTableRevision(revision));
         $("#auditReport").replaceWith(
-            await createTableAuditMaster(master, auditee.QOA_AUDIT, auditee.QA_AUDIT)
+            await createTableAuditMaster(
+                master,
+                auditee.QOA_AUDIT,
+                auditee.QA_AUDIT
+            )
         );
-        if(auditee.QOA_AUDIT == 0){
+        $("#tableCS").replaceWith(await createTableCS());
+        if (auditee.QOA_AUDIT != 1) {
             $("#action").html(
-                btn({ id: "saveDraft", text: "Save Draft", cls: "btn-neutral" }) +
                 btn({
-                    id: "submit",
-                    text: "Submit",
-                    cls: "btn-primary",
+                    id: "saveDraft",
+                    text: "Save Draft",
+                    cls: "btn-neutral",
                 }) +
-                btn({
-                    id: "reset",
-                    text: "Reset",
-                    cls: "btn-error",
-                })
+                    btn({
+                        id: "submit",
+                        text: "Submit",
+                        cls: "btn-primary",
+                    }) +
+                    btn({
+                        id: "reset",
+                        text: "Reset",
+                        cls: "btn-error",
+                    })
             );
-        }else{
-            $("#action").html('');
+        } else {
+            $("#action").html("");
         }
         logtest("Master", master);
         setScore();
+        logtest(document.getElementById("audit-result"));
     } catch (error) {
         console.error(error);
         showErrorMessage(error);
@@ -131,11 +152,11 @@ $(document).on("click", "#saveDraft", async function () {
             typecode: typecode,
             auditSeq: formInfo.seq,
         });
-        if(res && res.status){
-            showMessage('Save draft successfully', 'success');
+        if (res && res.status) {
+            showMessage("Save draft successfully", "success");
             finishAndClose();
-        }else{
-            throw new Error('Failed to save draft');
+        } else {
+            throw new Error("Failed to save draft");
         }
     } catch (error) {
         logtest("Error saving draft", error);
@@ -148,7 +169,7 @@ $(document).on("click", "#submit", async function () {
         logtest("-------------------Submit-------------------");
         logtest("Form ", form);
         // ดึงคะแนนที่ได้
-        const score = $('#totalScore').text();
+        const score = $("#totalScore").text();
         // คิดเกรด
         // แปลงเป็นผลลัพธ์
         const data = await setDataToSave();
@@ -160,11 +181,11 @@ $(document).on("click", "#submit", async function () {
             auditSeq: formInfo.seq,
             score,
         });
-        if(res && res.status){
-            showMessage('Save draft successfully', 'success');
+        if (res && res.status) {
+            showMessage("Save draft successfully", "success");
             // finishAndClose();
-        }else{
-            throw new Error('Failed to save draft');
+        } else {
+            throw new Error("Failed to save draft");
         }
     } catch (error) {
         logtest("Error submitting form", error);
