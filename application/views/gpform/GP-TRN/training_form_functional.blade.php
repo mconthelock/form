@@ -1,6 +1,6 @@
 <div class="max-w-5xl mx-auto bg-white p-8 mt-8 rounded-xl shadow-lg">
     <h2 class="text-2xl font-bold mb-6 text-center text-gray-800">
-        แบบฟอร์มแจ้งความประสงค์ขอฝึกอบรมภายนอก ต่างประเทศ <br>
+        แบบฟอร์มแจ้งความประสงค์ขอฝึกอบรมภายนอก ในประเทศ <br>
         (Support Specific Functional Competency)
     </h2>
 
@@ -100,13 +100,13 @@
         </div>
 
         <div class="grid grid-cols-3 gap-4 mb-1">
-            <input type="text" id="funcSec" placeholder="Section"  class="input input-bordered w-full text-blue-600 font-bold" readonly>
-            <input type="text" id="funcDept" placeholder="Department" class="input input-bordered w-full text-blue-600 font-bold" readonly>
-            <input type="text" id="funcDiv" placeholder="Division"  class="input input-bordered w-full text-blue-600 font-bold"  readonly>
+            <input type="text" id="funcTraineeSec" placeholder="Section"  class="input input-bordered w-full text-blue-600 font-bold" readonly>
+            <input type="text" id="funcTraineeDept" placeholder="Department" class="input input-bordered w-full text-blue-600 font-bold" readonly>
+            <input type="text" id="funcTraineeDiv" placeholder="Division"  class="input input-bordered w-full text-blue-600 font-bold"  readonly>
         </div>
 
         <input type="text" id="funcJdName" placeholder="ชื่อตาม JD" class="input input-bordered w-full mb-1 font-bold" data-alert="กรุณากรอก JD">
-        <label for="funcJdFiles" class="sr-only">แนบไฟล์ JD</label> <input type="file" id="funcJdFiles" class="file-input file-input-bordered w-full mb-1" multiple data-alert="กรุณาแนบไฟล์">
+        <label for="funcJdFiles" class="sr-only">แนบไฟล์ JD</label> <input type="file" id="funcJdFiles" name="funcJdFiles[]" class="file-input file-input-bordered w-full mb-1" multiple data-alert="กรุณาแนบไฟล์">
         <textarea id="funcJdRelation" class="textarea textarea-bordered w-full font-bold" rows="3"placeholder="กรุณาอธิบาย ความสัมพันธ์ ระหว่าง JD และหัวข้อฝึกอบรมนี้" data-alert="กรุณากรอกรายละเอียด JD"></textarea>
     </div>
 
@@ -137,7 +137,7 @@
         </label>
 
         <div id="funcCompareUpload" class="ml-6 mt-2 hidden">
-            <input type="file" id="funcCompareFiles" class="file-input file-input-bordered w-full" multiple data-alert="กรุณาแนบไฟล์">
+            <input type="file" id="funcCompareFiles"  name="funcCompareFiles[]" class="file-input file-input-bordered w-full" multiple data-alert="กรุณาแนบไฟล์">
         </div>
     </div>
 

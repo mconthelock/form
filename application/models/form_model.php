@@ -124,6 +124,17 @@ class form_model extends my_model {
         return $this->db->get()->result();
     }
 
+    public function checkReturn($form, $empno){
+        foreach($form as $key => $val){
+            $this->set_where($key, $val);
+        }
+        $this->db->from('FLOW')
+                 ->where("(vapvno = '$empno' or vrepno = '$empno') ", null, false)
+                 ->where('CSTEPST', $this->STEP_READY)
+                 ->where("CSTEPNO = '--'");
+        return $this->db->get()->result();
+    }
+
     public function getForm($no, $orgNo, $y, $y2, $runNo){
         $this->db->select("C.VANAME || SUBSTR(F.CYEAR2,3,2) || '-' || LPAD(F.NRUNNO , 6, '0') AS FORMNO, F.*, A.SNAME AS VREQNAME, B.SNAME AS VINPUTNAME")
                  ->from('FORM F')

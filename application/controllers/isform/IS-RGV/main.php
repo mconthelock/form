@@ -37,13 +37,14 @@ class Main extends MY_Controller
             'EMPNO'  => $empno,
         ];
 
-        $data_form       = $this->rm->getForm($no, $orgNo, $y, $y2, $runno)[0];
-        $program         = isset($data_form->PROGRAM) ? $data_form->PROGRAM : null;
-        $data['empform'] = $emp_form = $this->rm->getEmpForm($y2, $runno);
-        $data['form']    = $data_form;
-        $data['program'] = $program;
-        $data['mode']    = $this->getMode($no, $orgNo, $y, $y2, $runno, $empno);
-        $empno           = array_column($emp_form, 'EMPNO');
+        $data_form          = $this->rm->getForm($no, $orgNo, $y, $y2, $runno)[0];
+        $program            = isset($data_form->PROGRAM) ? $data_form->PROGRAM : null;
+        $data['empform']    = $emp_form = $this->rm->getEmpForm($y2, $runno);
+        $data['form']       = $data_form;
+        $data['program']    = $program;
+        $data['mode']       = $this->getMode($no, $orgNo, $y, $y2, $runno, $empno);
+        $empno              = array_column($emp_form, 'EMPNO');
+        $data['formNumber'] = $this->toFormNumber($no, $orgNo, $y, $y2, $runno);
         // print_r($empno);
         // $program = 'scm';
         switch (strtolower($program)) {
@@ -228,6 +229,18 @@ class Main extends MY_Controller
             'STATUS'     => '1',
         ];
         $this->rm->insert('ISRGV_FORM', $data);
+
+        if ($program == 'SCM') {
+            $this->updateFlowApv("", "10001", $NFRMNO, $VORGNO, $CYEAR, $CYEAR2, $NRUNNO, '57', '18');
+        } else if ($program == 'AS400') {
+            $this->updateFlowApv("", "10001", $NFRMNO, $VORGNO, $CYEAR, $CYEAR2, $NRUNNO, '57', '18');
+        } else if ($program == 'Procurement') {
+            $this->updateFlowApv("", "10001", $NFRMNO, $VORGNO, $CYEAR, $CYEAR2, $NRUNNO, '57', '18');
+        } else if ($program == 'Invoice') {
+            $this->updateFlowApv("", "08243", $NFRMNO, $VORGNO, $CYEAR, $CYEAR2, $NRUNNO, '57', '18');
+        } else if ($program == 'Marketing') {
+            $this->updateFlowApv("", "08243", $NFRMNO, $VORGNO, $CYEAR, $CYEAR2, $NRUNNO, '57', '18');
+        }
         $this->updateFlowApv("", $owner, $NFRMNO, $VORGNO, $CYEAR, $CYEAR2, $NRUNNO, '18', '00');
         // print_r($form['message']['runno']);
         // $this->deleteFlowStep('', '7', '050601', '25', '2025', $form['message']['runno'], '01', '00');
@@ -414,7 +427,7 @@ class Main extends MY_Controller
         }
     }
 
-    public function test()
+    public function LN()
     {
         $data['rows'] = $this->rm->test_data();
         $this->views('isform/IS-RGV/test', $data);
@@ -439,6 +452,49 @@ class Main extends MY_Controller
 
         $this->rm->insert('ISRGV_LN_AUTHORIZE', $data);
     }
+
+    public function test_curl()
+    {
+        // // $url = 'https://amecwebtest.mitsubishielevatorasia.co.th/form/gpform/GP-ENT/main/InsertForm22';
+        // $url = base_url('gpform/GP-ENT/main/InsertForm22');
+
+        // $postData = [
+        //     "key1" => "value1",
+        //     "key2" => "value2"
+        // ];
+
+        // $ch = curl_init($url);
+        // curl_setopt($ch, CURLOPT_POST, true);
+        // curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($postData));
+        // curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        // // curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        // // curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+        // // curl_setopt($ch, CURLOPT_SSLVERSION, CURL_SSLVERSION_TLSv1_2);
+
+
+        // $result = curl_exec($ch);
+
+        // if ($result === false) {
+        //     echo "cURL Error: " . curl_error($ch);
+        // } else {
+        //     echo $result; // จะได้ JSON เช่น {"status":"success","message":"Data received successfully","received":{"key1":"value1","key2":"value2"}}
+        // }
+
+        // curl_close($ch);
+        // // echo base_url('gpform/GP-ENT/main/InsertForm22');
+
+        $url = 'https://amecwebtest.mitsubishielevatorasia.co.th/form/gpform/GP-ENT/main/InsertForm22';
+        // $client   = new \GuzzleHttp\Client(['verify' => false]); // ปิด verify
+        $response = $this->client->post($url, [
+            'form_params' => [
+                'key1' => 'value1',
+                'key2' => 'value2'
+            ]
+        ]);
+
+        echo $response->getBody();
+    }
+
 
 }
 ?>

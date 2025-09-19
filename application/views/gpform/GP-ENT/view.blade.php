@@ -455,9 +455,9 @@
                     <button type="button" class="btn btn-error w-32 transition btn-submit" data-action="reject">
                         Reject
                     </button>
-                    <button type="button" class="btn btn-info w-32 transition btn-submit" data-action="return">
+                    <!-- <button type="button" class="btn btn-info w-32 transition btn-submit" data-action="return">
                             Return
-                        </button>
+                        </button> -->
                     @if ($flowstep[0]->CSTEPNO == '19' && $flowstep[0]->CSTEPNEXTNO == '13' || $flowstep[0]->CSTEPNO == '13' && $flowstep[0]->CSTEPNEXTNO == '18')
                         <button type="button" class="btn btn-info w-32 transition btn-submit" data-action="return">
                             Return

@@ -185,9 +185,6 @@ trait _File{
                         throw new Exception("No files uploaded", 0);
                     }
                 }
-                // else{
-                //     throw new Exception("No files found for upload", 1);
-                // }
             }
         } catch (Exception $e) {
             $status = false;

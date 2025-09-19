@@ -92,14 +92,16 @@
     <div class="mb-6" id="meth_part4">
         <h3 class="font-bold text-lg mb-2">ส่วนที่ 4 : ข้อมูลผู้เข้ารับการฝึกอบรม (Participant Information)</h3>
         <div class="grid grid-cols-2 gap-4 mb-3">
-            <input type="text" id="methCode" placeholder="รหัสพนักงาน (Code)" class="input input-bordered w-full">
-            <input type="text" id="methName" placeholder="ชื่อ - นามสกุล" class="input input-bordered w-full" readonly>
-            <input type="text" id="methPosition" placeholder="ตำแหน่ง (Position)" class="input input-bordered w-full" readonly>
+            <input type="text" id="methTraineeCode" placeholder="รหัสพนักงาน (Code)" class="input input-bordered w-full font-bold" maxlength="5" data-alert="กรุณากรอกรหัสผู้เข้าอบรม">
+        </div>
+        <div class="grid grid-cols-2 gap-4 mb-3">
+            <input type="text" id="methTraineeName" placeholder="ชื่อ - นามสกุล" class="input input-bordered w-full text-blue-600 font-bold" readonly>
+            <input type="text" id="methTraineePosition" placeholder="ตำแหน่ง (Position)" class="input input-bordered w-full text-blue-600 font-bold" readonly>
         </div>
         <div class="grid grid-cols-3 gap-4 mb-3">
-            <input type="text" id="methSec" placeholder="Section" class="input input-bordered w-full" readonly>
-            <input type="text" id="methDept" placeholder="Department" class="input input-bordered w-full" readonly>
-            <input type="text" id="methDiv" placeholder="Division" class="input input-bordered w-full" readonly>
+            <input type="text" id="methTraineeSec" placeholder="Section" class="input input-bordered w-full text-blue-600 font-bold" readonly>
+            <input type="text" id="methTraineeDept" placeholder="Department" class="input input-bordered w-full text-blue-600 font-bold" readonly>
+            <input type="text" id="methTraineeDiv" placeholder="Division" class="input input-bordered w-full text-blue-600 font-bold" readonly>
         </div>
     </div>
 
@@ -126,7 +128,7 @@
             มีการเปรียบเทียบราคา ค่าฝึกอบรม (Compared training expense)
         </label>
         <div id="methCompareUpload" class="ml-6 mt-2 hidden">
-            <input type="file" id="methCompareFiles" class="file-input file-input-bordered w-full" multiple>
+            <input type="file" id="methCompareFiles" name="methCompareFiles[]" class="file-input file-input-bordered w-full" multiple>
         </div>
     </div>
 
@@ -137,8 +139,7 @@
             <input type="number" id="methAmount" placeholder="จำนวนเงิน (บาท)" min="0" class="input input-bordered w-1/2">
             <span id="methVatResult" class="font-bold text-indigo-600 text-lg hidden whitespace-nowrap"></span>
         </div>
-        <textarea id="methAmountNote" class="textarea textarea-bordered w-full" rows="2"
-            placeholder="บันทึกเพิ่มเติม..."></textarea>
+        <textarea id="methAmountNote" class="textarea textarea-bordered w-full" rows="2"  placeholder="บันทึกเพิ่มเติม..."></textarea>
     </div>
 
     <!-- Part 7 -->

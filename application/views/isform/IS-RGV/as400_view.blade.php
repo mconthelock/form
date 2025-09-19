@@ -5,9 +5,9 @@
         <div class="rounded-2xl overflow-hidden shadow-sm border border-base-300 mb-8">
             <div class="bg-sky-600 text-white p-6">
                 <div class="flex items-center justify-between gap-4">
-                    <h1 class="text-2xl md:text-3xl font-bold tracking-tight">Regular Review
-                        <span class="ml-2 text-xs md:text-sm font-normal bg-white/15 px-2 py-1 rounded">({{ $program }})</span>
-                    </h1>                   
+                    <h1 class="text-2xl md:text-3xl font-bold tracking-tight">
+                        Regular Review<span class="mx-2 text-xs md:text-sm font-normal bg-white/15 px-2 py-1 rounded">({{ $program }})</span>[{{ $formNumber }}]
+                    </h1>
                 </div>
             </div>
             <div class="p-4 bg-base-100">
@@ -34,19 +34,22 @@
                                 <th class="whitespace-nowrap">Group</th>
                                 <th class="whitespace-nowrap">User</th>
                                 <th class="whitespace-nowrap">EMPNO</th>
+                                <th class="whitespace-nowrap">EMPNAME</th>
                                 <th class="whitespace-nowrap">Status</th>
-                                <th class="whitespace-nowrap">Correct</th>
-                                <th class="whitespace-nowrap">InCorrect</th>
+                                <th class="whitespace-nowrap">Match</th>
+                                <th class="whitespace-nowrap">Unmatch</th>
                                 <th class="whitespace-nowrap">Remark</th>
                             </tr>
                         </thead>
                         <tbody>
+
                             @foreach ($user as $key => $item)
                                 <tr class="text-center hover bg-base-100">
                                     <td class="align-middle">{{ $item->SERVER_NAME }}</td>
                                     <td class="align-middle">{{ $item->GROUP_NAME }}</td>
                                     <td class="align-middle font-medium">{{ $item->USER_LOGIN }}</td>
                                     <td class="align-middle">{{ $item->EMPNO }}</td>
+                                    <td class="align-middle">{{ $item->SNAME }}</td>
                                     <td class="align-middle">
                                         <span class="badge {{ $item->USER_STATUS == '1' ? 'badge-success' : 'badge-neutral' }} badge-outline">
                                             {{ $item->USER_STATUS == '1' ? 'Enable' : 'Disable' }}

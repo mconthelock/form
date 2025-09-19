@@ -77,7 +77,8 @@ module.exports = {
     emp_lookup: "./assets/script/gpform/GP-TRN/emp_lookup.ts", 
     formUtils: "./assets/script/gpform/GP-TRN/formUtils.ts", 
     initForms: "./assets/script/gpform/GP-TRN/initForms.ts", 
-    validators: "./assets/script/gpform/GP-TRN/validators.ts", 
+    validators: "./assets/script/gpform/GP-TRN/validators.ts",
+    type_data: "./assets/script/gpform/GP-TRN/type_data.ts", 
 
   },
   output: {

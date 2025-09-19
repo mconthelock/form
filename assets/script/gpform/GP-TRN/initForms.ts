@@ -1,7 +1,6 @@
 // initForms.ts
 import { bindEmpLookup } from "./emp_lookup.js";
-import { populateSelect } from "./formUtils.js";
-import { toggleSubmit } from "./formUtils.js";
+import { populateSelect, toggleSubmit } from "./formUtils.js";
 
 //Back Button 
 export function initBackButtons(
@@ -74,9 +73,9 @@ export function initFunctionalForm() {
         {
             SNAME: document.getElementById("funcTraineeName") as HTMLInputElement,
             SPOSITION: document.getElementById("funcTraineePosition") as HTMLInputElement,
-            SSEC: document.getElementById("funcSec") as HTMLInputElement,
-            SDEPT: document.getElementById("funcDept") as HTMLInputElement,
-            SDIV: document.getElementById("funcDiv") as HTMLInputElement
+            SSEC: document.getElementById("funcTraineeSec") as HTMLInputElement,
+            SDEPT: document.getElementById("funcTraineeDept") as HTMLInputElement,
+            SDIV: document.getElementById("funcTraineeDiv") as HTMLInputElement
         }
     );
 
@@ -153,13 +152,13 @@ export function initLegalForm() {
 
     // Trainee
     bindEmpLookup(
-        document.getElementById("legalCode") as HTMLInputElement,
+        document.getElementById("legalTraineeCode") as HTMLInputElement,
         {
-            SNAME: document.getElementById("legalName") as HTMLInputElement,
-            SPOSITION: document.getElementById("legalPosition") as HTMLInputElement,
-            SSEC: document.getElementById("legalSec") as HTMLInputElement,
-            SDEPT: document.getElementById("legalDept") as HTMLInputElement,
-            SDIV: document.getElementById("legalDiv") as HTMLInputElement
+            SNAME: document.getElementById("legalTraineeName") as HTMLInputElement,
+            SPOSITION: document.getElementById("legalTraineePosition") as HTMLInputElement,
+            SSEC: document.getElementById("legalTraineeSec") as HTMLInputElement,
+            SDEPT: document.getElementById("legalTraineeDept") as HTMLInputElement,
+            SDIV: document.getElementById("legalTraineeDiv") as HTMLInputElement
         }
     );
 
@@ -236,13 +235,13 @@ export function initMethForm() {
 
     // Trainee
     bindEmpLookup(
-        document.getElementById("methCode") as HTMLInputElement,
+        document.getElementById("methTraineeCode") as HTMLInputElement,
         {
-            SNAME: document.getElementById("methName") as HTMLInputElement,
-            SPOSITION: document.getElementById("methPosition") as HTMLInputElement,
-            SSEC: document.getElementById("methSec") as HTMLInputElement,
-            SDEPT: document.getElementById("methDept") as HTMLInputElement,
-            SDIV: document.getElementById("methDiv") as HTMLInputElement
+            SNAME: document.getElementById("methTraineeName") as HTMLInputElement,
+            SPOSITION: document.getElementById("methTraineePosition") as HTMLInputElement,
+            SSEC: document.getElementById("methTraineeSec") as HTMLInputElement,
+            SDEPT: document.getElementById("methTraineeDept") as HTMLInputElement,
+            SDIV: document.getElementById("methTraineeDiv") as HTMLInputElement
         }
     );
 

@@ -86,7 +86,7 @@ $(function () {
         const receiptList = (item.RECEIPT || []).map((r) => `${r.RECEIPT} / ${r.COST}฿`).join("\r\n");
         const sum = (item.RECEIPT || []).reduce((s, r) => s + Number(r.COST), 0);
 
-        const newRow = sheet.addRow([item.DREQDATE, item.STNAME, item.SSEC, item.FORM_NUMBER, item.DREQDATE, receiptList, sum, item.PRESIDENT_JOIN === "1" ? "join" : "NotJoin", item.ACTUAL_COST, item.REMAIN_BUDGET, item.REMARK, ""]);
+        const newRow = sheet.addRow([item.DREQDATE, item.STNAME, item.SSEC, item.FORM_NUMBER, item.DREQDATE, receiptList, sum, item.PRESIDENT_JOIN === "1" ? "join" : "NotJoin", item.ACTUAL_COST ?? "", item.REMAIN_BUDGET ?? "", item.REMARK ?? "", ""]);
         newRow.eachCell((cell) => (cell.alignment = { vertical: "middle", wrapText: true }));
         setBorder(newRow);
       });

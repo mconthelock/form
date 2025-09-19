@@ -34,4 +34,53 @@ class Training_model extends CI_Model
         return $query->result();
     }
 
+    public function insert_data($table, $data) {
+        if (empty($table) || empty($data) || !is_array($data)) {
+            return false; // ป้องกัน error
+        }
+        $result = $this->db->insert($table, $data);
+        if ($result) {
+             return true;
+        } else {
+            return false;
+        }
+    }
+
+    public function select_all_by_tb($frmno, $orgno, $cyear, $cyear2, $nrunno, $table, $order_by, $extra_where = []) {
+        $this->db->distinct();
+        $this->db->from($table);
+        $this->db->where([
+            'NFRMNO' => $frmno,
+            'VORGNO' => $orgno,
+            'CYEAR'  => $cyear,
+            'CYEAR2' => $cyear2,
+            'NRUNNO' => $nrunno
+        ]);
+
+        // ✅ Where เพิ่มเติม
+        if (!empty($extra_where) && is_array($extra_where)) {
+            $this->db->where($extra_where);
+        }
+
+        $this->db->order_by($order_by, 'ASC');
+        return $this->db->get()->result();
+    }
+
+    function get_main_data($frmno, $orgno, $cyear, $cyear2, $nrunno){
+        $query = "SELECT A.*, C.SEMPNO AS REQ_EMPNO, C.SNAME AS REQ_NAME, D.SEMPNO AS INP_EMPNO, D.SNAME AS INP_NAME,
+            E.SEMPNO AS TRAINEE_EMPNO, E.SNAME AS TRAINEE_NAME, E.SSEC AS TRAINEE_SEC, E.SDEPT AS TRAINEE_DEPT, E.SDIV AS TRAINEE_DIV,
+            E.SPOSITION AS TRAINEE_POS, F.FORM_NAME_TH,F.FORM_NAME_EN
+            FROM GP_TRN_HEAD A 
+            INNER JOIN FORM B ON A.NFRMNO = B.NFRMNO AND A.VORGNO = B.VORGNO AND A.CYEAR = B.CYEAR AND A.CYEAR2 = B.CYEAR2 AND A.NRUNNO = B.NRUNNO
+            LEFT JOIN AMEC.AMECUSERALL C ON B.VREQNO = C.SEMPNO
+            LEFT JOIN AMEC.AMECUSERALL D ON B.VINPUTER = D.SEMPNO
+            LEFT JOIN AMEC.AMECUSERALL E ON A.TRAINEE_ID = E.SEMPNO
+            INNER JOIN GP_TRN_FORM_MST F ON A.FID = F.FID
+            WHERE A.NFRMNO = '".$frmno."' AND A.VORGNO = '".$orgno."' AND A.CYEAR = '".$cyear."' 
+            AND A.CYEAR2 = '".$cyear2."' and A.NRUNNO = '".$nrunno."'";
+        return  $this->db->query($query)->result();
+    }
+
+
+
 }

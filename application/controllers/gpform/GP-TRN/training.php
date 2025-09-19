@@ -1,7 +1,7 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 require_once APPPATH.'controllers/_form.php';
-require_once APPPATH . 'controllers/_file.php';
+require_once APPPATH.'controllers/_file.php';
 
 class Training extends MY_Controller {
     use _Form, _File;
@@ -13,9 +13,7 @@ class Training extends MY_Controller {
         $this->upload_path = "//amecnas/AMECWEB/File/" . ($this->_servername() == 'amecweb' ? 'production' : 'development') . "/Form/GP/GPTRN/";
     }
 
-    public function index()
-    {
-        // หน้าเลือก type
+    public function index(){
         $data = array();
         $bp = isset($_GET['bp']) ? $_GET['bp'] : '';
         $data = [
@@ -28,30 +26,30 @@ class Training extends MY_Controller {
         ];
 
         $data['mode']  = $this->getMode($nfrmno, $vorgno, $cyear, $cyear2, $nrunno, $empno);
-        $data['sects'] = $this->trn->getSect();
-        $data['depts'] = $this->trn->getDept();
-        $data['divs']  = $this->trn->getDiv();
         $data['emp_detail']  = $this->trn->get_empinfo($empno);
         if (!$cyear2 || !$nrunno) { // Create Form
             $this->views('gpform/GP-TRN/training_select', $data);
         }else{ // Approve / View
-           
-        }
+            $data['formno'] =  $this->toFormNumber($nfrmno, $vorgno, $cyear, $cyear2, $nrunno);
+            $data['mode'] = $this->getMode($nfrmno, $vorgno, $cyear, $cyear2, $nrunno, $empno);
+            $data['form'] = $this->form->getForm($nfrmno, $vorgno, $cyear, $cyear2, $nrunno);
+            $data['data_head']  = $this->trn->get_main_data($nfrmno, $vorgno, $cyear, $cyear2, $nrunno);
+            $data['data_purpose']  = $this->trn->select_all_by_tb($nfrmno, $vorgno, $cyear, $cyear2, $nrunno, 'GP_TRN_PURPOSE', 'PID');
+            $data['data_benefit']  = $this->trn->select_all_by_tb($nfrmno, $vorgno, $cyear, $cyear2, $nrunno, 'GP_TRN_BENEFIT', 'BID');
+            $data['data_attach_compare']  = $this->trn->select_all_by_tb($nfrmno, $vorgno, $cyear, $cyear2, $nrunno, 'GP_TRN_ATT', 'ID', ['TYPE_ATT' => 'COMPARE']);
+            if( $data['data_head'][0]->FID == '1'){
+                $data['data_attach_jd']  = $this->trn->select_all_by_tb($nfrmno, $vorgno, $cyear, $cyear2, $nrunno, 'GP_TRN_ATT', 'ID', ['TYPE_ATT' => 'JD']);
+            }
+        
+            $data['data_attach_compare']  = $this->trn->select_all_by_tb($nfrmno, $vorgno, $cyear, $cyear2, $nrunno, 'GP_TRN_ATT', 'ID', ['TYPE_ATT' => 'COMPARE']);
 
-    }
-
-    public function form($type = null){
-        if ($type === null) {
-            show_404();
+            $this->views('gpform/GP-TRN/training_view', $data);
         }
-        $data['type'] = $type;
-        $this->load->view('training_form', $data);
     }
 
     public function get_emp() {
         $empno = $this->input->post('empno');
         $data = $this->trn->get_empinfo($empno);
-
         if (!$data) {
             echo json_encode([
                 'status'  => 'error',
@@ -76,5 +74,155 @@ class Training extends MY_Controller {
     }
 
 
+    public function save_formcreate(){
+        header('Content-Type: application/json; charset=utf-8');
+        try {
+            // ✅ รับค่าจาก FormData (multipart/form-data)
+            $data = $this->input->post();
+            
+            if (empty($data)) {
+                echo json_encode(["status" => "error", "message" => "No POST data received"]);
+                return;
+            }
+
+            $formno = $this->toFormNumber($data["NFRMNO"], $data["VORGNO"], $data["CYEAR"], $data["CYEAR2"], $data["NRUNNO"]);
+            // ✅ เตรียมข้อมูล insert
+            $reason = $data["TRN_EXPENSE_REASON"] ?? "";
+            $cost   = $data["COST"] ?? 0;
+            if (strtolower($reason) === "free") {
+                $cost = 0;
+            }
+            $insert = [
+                "NFRMNO" => $data["NFRMNO"] ?? null,
+                "VORGNO" => $data["VORGNO"] ?? null,
+                "CYEAR"  => $data["CYEAR"] ?? null,
+                "CYEAR2" => $data["CYEAR2"] ?? null,
+                "NRUNNO" => $data["NRUNNO"] ?? null,
+                "FID"    => $data["FID"] ?? null,
+
+                "SUBJECT" => $data["SUBJECT"] ?? "",
+                "DATE_FROM" => !empty($data["DATE_FROM"]) ? $data["DATE_FROM"] : null,
+                "DATE_TO"   => !empty($data["DATE_TO"]) ? $data["DATE_TO"] : null,
+                "TIME_FROM" => $data["TIME_FROM"] ?? "0000",
+                "TIME_TO"   => $data["TIME_TO"] ?? "0000",
+                "PLACE"       => $data["PLACE"] ?? "",
+                "INSTITUTION" => $data["INSTITUTION"] ?? "",
+                "TRAINEE_ID"  => $data["TRAINEE_ID"] ?? "",
+                "JD_NAME"     => $data["JD_NAME"] ?? "",
+                "JD_DESC"     => $data["JD_DESC"] ?? "",
+                "TRN_EXPENSE_STATUS" => $data["TRN_EXPENSE_STATUS"] ?? "",
+                "TRN_EXPENSE_REASON" => $reason,
+                "TRN_EXPENSE_OTHER"  => $data["TRN_EXPENSE_OTHER"] ?? "",
+                "COST"      => $cost,
+                "COST_NOTE" => $data["COST_NOTE"] ?? "",
+                "LAWS" => $data["LAWS"] ?? ""
+            ];
+
+            // ✅ Insert HEAD
+            $result = $this->trn->insert_data("GP_TRN_HEAD", $insert);
+            if (!$result) {
+                $db_error = $this->db->error();
+                echo json_encode([
+                    "status" => "error",
+                    "message" => "Insert failed",
+                    "db_error" => $db_error,
+                    "received" => $data
+                ]);
+                return;
+            }
+
+            // ✅ Base สำหรับ child table
+            $base = [
+                "NFRMNO" => $data["NFRMNO"],
+                "VORGNO" => $data["VORGNO"],
+                "CYEAR"  => $data["CYEAR"],
+                "CYEAR2" => $data["CYEAR2"],
+                "NRUNNO" => $data["NRUNNO"]
+            ];
+
+            $prefix = $this->input->post("PREFIX");
+            $map = [
+                "func"  => ["obj" => "funcObjective",  "exp" => "funcExpectation"],
+                "legal" => ["obj" => "legalObjective", "exp" => "legalExpectation"],
+                "meth"  => ["obj" => "methObjective",  "exp" => "methExpectation"],
+            ];
+
+            if (!isset($map[$prefix])) {throw new Exception("Unknown training form prefix: ".$prefix);}
+            $this->insertListData("GP_TRN_PURPOSE", $base, $data, "PID", "PURPOSE", $data[$map[$prefix]["obj"]]);
+            $this->insertListData("GP_TRN_BENEFIT", $base, $data, "BID", "BENEFIT", $data[$map[$prefix]["exp"]]);
+
+
+            $dest_path = $this->upload_path.$formno;
+            if (!is_dir($dest_path)) {mkdir($dest_path, 0777, true);}
+            // ✅ Upload JD Files
+            if (!empty($_FILES['funcJdFiles']['name'][0])) {
+                foreach ($_FILES['funcJdFiles']['name'] as $i => $name) { $_FILES['funcJdFiles']['name'][$i] = preg_replace('/[^A-Za-z0-9._-]/', '_', $name);}
+                $uploaded_jd = $this->uploadMultiFile($_FILES, ['funcJdFiles'], $dest_path);
+                if ($uploaded_jd['status'] && !empty($uploaded_jd['files']['funcJdFiles'])) {
+                    $filenames = array_column($uploaded_jd['files']['funcJdFiles'], 'file_name');
+                    $this->insert_and_upload("GP_TRN_ATT", $base, $filenames, 'JD');
+                }
+            }
+
+            // ✅ Upload Compare Files
+            if (!empty($_FILES['funcCompareFiles']['name'][0])) {
+                foreach ($_FILES['funcCompareFiles']['name'] as $i => $name) { $_FILES['funcCompareFiles']['name'][$i] = preg_replace('/[^A-Za-z0-9._-]/', '_', $name); }
+                $uploaded_compare = $this->uploadMultiFile($_FILES, ['funcCompareFiles'], $dest_path);
+                if ($uploaded_compare['status'] && !empty($uploaded_compare['files']['funcCompareFiles'])) {
+                    $filenames = array_column($uploaded_compare['files']['funcCompareFiles'], 'file_name');
+                    $this->insert_and_upload("GP_TRN_ATT", $base, $filenames, 'COMPARE');
+                }
+            }
+
+            echo json_encode(["status" => "success", "message" => "Insert successful", "received" => $data]);
+        } catch (Exception $e) {
+            echo json_encode([
+                "status" => "error",
+                "message" => $e->getMessage()
+            ]);
+        }
+    }
+
+    private function insertListData($table, $base, $data, $fieldId, $fieldName, $values) {
+        if (empty($values) || !is_array($values)) return;
+        $no = 1;
+        foreach ($values as $val) {
+            if (trim($val) !== "") {
+                $row = $base;
+                $row[$fieldId]   = $no;
+                $row[$fieldName] = $val;
+                $this->trn->insert_data($table, $row);
+                $no++;
+            }
+        }
+    }
+
+    public function insert_and_upload($table, $base,  $file, $type) {
+        $no = 1;
+        foreach ($file as $val) {
+            if (trim($val) !== "") {
+                $row = $base;
+                $row['ID'] = $no;
+                $row['FILENAME'] = $val;
+                $row['TYPE_ATT'] = $type;
+                $this->trn->insert_data($table, $row);
+                $no++;
+            }
+        }
+    }
+    
+     public function preview_file($filename)
+    {
+        $filepath = $this->upload_path . rawurldecode($filename);
+
+        if (file_exists($filepath)) {
+            $mime = mime_content_type($filepath);
+            header("Content-Type: $mime");
+            readfile($filepath);
+            exit;
+        } else {
+            show_404();
+        }
+    }
 
 }

@@ -101,17 +101,17 @@
     <div class="mb-6" id="legal_part5">
         <h3 class="font-bold text-lg mb-2">ส่วนที่ 5 : ข้อมูลผู้เข้ารับการฝึกอบรม (Participant Information)</h3>
         <div class="grid grid-cols-2 gap-4 mb-1">
-            <input type="text" id="legalCode" placeholder="รหัสพนักงาน (Trainee Code)" class="input input-bordered w-50 text-center" maxlength="5" data-alert="กรุณากรอกรหัสผู้เข้าอบรม">
+            <input type="text" id="legalTraineeCode" placeholder="รหัสพนักงาน (Trainee Code)" class="input input-bordered w-50 text-center" maxlength="5" data-alert="กรุณากรอกรหัสผู้เข้าอบรม">
         </div>
         <div class="grid grid-cols-2 gap-4 mb-2">
-            <input type="text" id="legalName"   placeholder="ชื่อ - นามสกุล"  class="input input-bordered w-full text-blue-600 font-bold"  readonly>
-            <input type="text" id="legalPosition" placeholder="ตำแหน่ง (Position)" class="input input-bordered w-full text-blue-600 font-bold" readonly>
+            <input type="text" id="legalTraineeName"   placeholder="ชื่อ - นามสกุล"  class="input input-bordered w-full text-blue-600 font-bold"  readonly>
+            <input type="text" id="legalTraineePosition" placeholder="ตำแหน่ง (Position)" class="input input-bordered w-full text-blue-600 font-bold" readonly>
         </div>
 
         <div class="grid grid-cols-3 gap-4 mb-3">
-            <input type="text" id="legalSec" placeholder="Section"  class="input input-bordered w-full text-blue-600 font-bold" readonly>
-            <input type="text" id="legalDept" placeholder="Department" class="input input-bordered w-full text-blue-600 font-bold" readonly>
-            <input type="text" id="legalDiv" placeholder="Division"  class="input input-bordered w-full text-blue-600 font-bold"  readonly>
+            <input type="text" id="legalTraineeSec" placeholder="Section"  class="input input-bordered w-full text-blue-600 font-bold" readonly>
+            <input type="text" id="legalTraineeDept" placeholder="Department" class="input input-bordered w-full text-blue-600 font-bold" readonly>
+            <input type="text" id="legalTraineeDiv" placeholder="Division"  class="input input-bordered w-full text-blue-600 font-bold"  readonly>
         </div>
     </div>
 
@@ -141,7 +141,7 @@
             มีการเปรียบเทียบราคา ค่าฝึกอบรม (Compared training expense) 
         </label>
         <div id="legalCompareUpload" class="ml-6 mt-2 hidden">
-            <input type="file" id="legalCompareFiles" class="file-input file-input-bordered w-full" multiple>
+            <input type="file" id="legalCompareFiles"  name="legalCompareFiles[]" class="file-input file-input-bordered w-full" multiple>
         </div>
     </div>
 

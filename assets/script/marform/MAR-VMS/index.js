@@ -3,8 +3,12 @@ import { showLoader } from "../../public/v1.0.3/preloader";
 import { host } from "../../utils";
 import { createTable, destroyTable} from "../../public/v1.0.3/_dataTable";
 import { formatAvatar, s2disableSearch, setSelect2 } from "../../public/v1.0.3/_select2";
-import { createForm, redirectWebflow } from "../../inc/_form.js";
+import { redirectWebflow } from "../../inc/_form.js";
+import { createForm } from "../../api/webform/form";
+//import { createForm, redirectWebflow } from "../../inc/_form.js";
+
 import Swal from "sweetalert2";
+import { ElementFlags } from "typescript";
 
 var formInfo, userIncharge, users, items, qcsection, division, department, section, tablesch , tablevisitor , tableemp , tablesec , tablepro , tablepst , tableist;
 $(document).ready(function () {
@@ -285,7 +289,8 @@ $(document).ready(function () {
                   width: 'style',
                   dropdownParent: $('#tableemp'),
                   placeholder: '',
-                  allowClear: true
+                  allowClear: true,
+                  matcher:customMatcher
                 });
               }
               
@@ -518,29 +523,85 @@ tableemp = await createTable({
   join: true
 });
 
-tablesec = await createTable({
-  //data:data,
-    // columns: [
-    //   {data: null, title:'test'},
-    //   {data: null, title:'test'},
-    //   {data: null, title:'test'},
-    //   {data: null, title:'test'},
-    //   {data: null, title:'test'},
-    //   {data: null, title:'test'},
-    //   {data: null, title:'test'},
-    //   {data: null, title:'test'},
-    //   {data: null, title:'test'},
-    // ],
+
+
+// --- สร้าง DataTable ---
+const tablesec = await createTable({
   ordering: false,
   paging: false,
   searching: false,
-  info: false
+  info: false,
+  createdRow: function (row, data, dataIndex) {
+      $('td:eq(0)', row)
+          .addClass('px-2 py-2 sticky-column text-gray-500')
+          .css({
+              left: 0,
+              position: 'sticky',
+              background: 'white',
+              'z-index': 10
+          });
+  }  
 },{
   id: '#tablesec',
   columnSelect:{status: true},
   domScroll: {status: true, maxHeight: '21rem', type: 'tailwind4'},
   join: true
 });
+
+const table = $('#tablesec').DataTable(); // แทน tablesec
+
+// สร้าง main-row + detail-row
+let rowIndex = 1;
+Object.entries(sproj).forEach(([projno, items]) => {
+
+    const mappedItems = items.map(it => ({
+        PRJ_NO: projno,
+        PRJ_NAME: it.PROJNAME,
+        MODEL: it.MODEL,
+        SPEC: it.SPEC,
+        TOTUNIT: it.QTY,
+        EXPPLAN: it.STATUS
+    }));
+
+    // --- Add Main Row ผ่าน DataTable API ---
+    const mainRowNode = table.row.add([
+        `<td class="px-2 py-2 sticky-column text-gray-500" style="left:0;position:sticky;background:white;z-index:10">${rowIndex}</td>`,
+        `<td><input type="text" name="secured_project_no[]" value="${projno}" class="w-full border border-blue-200 rounded-lg px-2 py-1 sproj"></td>`,
+        '', '', '', '', ''
+    ]).draw(false).node();
+   
+    $(mainRowNode)
+        .addClass('main-row')
+        .attr('data-rowid', rowIndex)
+        .data('details', mappedItems);
+
+    // --- Add Detail Rows ด้วย jQuery หลัง mainRowNode ---
+    mappedItems.forEach(item => {
+        const expDate = item.EXPPLAN ? new Date(item.EXPPLAN).toLocaleDateString('en-GB') : '';
+        console.log("xxxxxx");
+        const detailHtml = `
+            <tr class="detail-row bg-gray-50 text-gray-700">
+                <td class="px-2 py-2 sticky-column" style="left:0;"></td>
+                <td></td>
+                <td>${item.PRJ_NAME}<input type="hidden" name="sprojname_${item.PRJ_NO}[]" value="${item.PRJ_NAME}"></td>
+                <td>${item.MODEL}<input type="hidden" name="sprojmodel_${item.PRJ_NO}[]" value="${item.MODEL}"></td>
+                <td>${item.SPEC}<input type="hidden" name="sprojspec_${item.PRJ_NO}[]" value="${item.SPEC}"></td>
+                <td>${item.TOTUNIT}<input type="hidden" name="sprojqty_${item.PRJ_NO}[]" value="${item.TOTUNIT}"></td>
+                <td>${expDate}<input type="hidden" name="sprojsta_${item.PRJ_NO}[]" value="${expDate}"></td>
+            </tr>
+        `;
+        $(mainRowNode).after(detailHtml); // แทรกหลัง main-row
+    });
+
+    rowIndex++;
+});
+
+// --- redraw DataTable เพื่อให้ sticky column และ scroll ถูกต้อง ---
+table.rows().invalidate().draw(false);
+
+
+
+
 tablepro = await createTable({
   //data:data,
     // columns: [
@@ -693,95 +754,7 @@ $(document).on('click', '#addIstBtn', function () {
 });
 
 
-/*
-function initSelect2($cls, $context) {
-  $context.find($cls).select2({
-    placeholder: "",
-    allowClear: true,
-    matcher: customMatcher,
-    width: '100%'
-  });
-}
 
-// ใช้ delegation เพื่อให้ทุกแถวทำงาน
-$(document).on("select2:selecting", ".dietary_require", function (e) {
-  const data = e.params.args.data;
-  const $select = $(this);
-
-  if (data.id === "Food Allergies") {
-    e.preventDefault();
-    const customText = prompt("Please specify your food allergy:");
-    if (customText) {
-      const newVal = "Food Allergies – " + customText;
-      const newOption = new Option(newVal, newVal, true, true);
-      $select.append(newOption).trigger("change");
-    }
-  }
-
-  if (data.id === "Other") {
-    e.preventDefault();
-    const customText = prompt("Please specify:");
-    if (customText) {
-      const newVal = "Other – " + customText;
-      const newOption = new Option(newVal, newVal, true, true);
-      $select.append(newOption).trigger("change");
-    }
-  }
-});
-
-function sterilizeClonedSelect2($row) {
-  $row.find('.dietary_require').each(function () {
-    const $sel = $(this);
-
-    // ลบรอย Select2 ที่ติดมาจากการ clone
-    $sel.removeClass('select2-hidden-accessible')
-        .removeAttr('data-select2-id')
-        .removeAttr('tabindex')
-        .removeAttr('aria-hidden');
-    $sel.next('.select2').remove(); // เอา container ปลอมออก
-
-    // ถ้ามี id เดิม ให้ตั้ง id ใหม่ไม่ซ้ำ
-    if ($sel.attr('id')) {
-      const uid = 'dietary_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
-      $sel.attr('id', uid);
-    }
-
-    // เคลียร์ option ที่ถูกเลือก
-    $sel.find('option:selected').prop('selected', false);
-  });
-}
-
-$(document).on('click', '#addVisitorBtn', function () {
-  const $tableBody = $('#tablevisitor tbody');
-  const $firstRow = $tableBody.find('tr:first');
-
-  // clone โครงสร้างอย่างเดียว ไม่เอา event/data
-  const $newRow = $firstRow.clone(false, false);
-
-  // เคลียร์ค่าฟิลด์
-  //$newRow.find('input[type="text"], input[type="number"], input[type="email"], textarea').val('');
-    // เคลียร์ input เฉพาะบางฟิลด์ (ยกเว้น country, company)
-    $newRow.find('input[type="text"], select , textarea')
-    .not('[name="country[]"], [name="company[]"]')
-    .val('');
-
-// เคลียร์ checkbox/radio
-$newRow.find('input[type="checkbox"], input[type="radio"]').prop('checked', false);
-
-  $newRow.find('input[type="checkbox"], input[type="radio"]').prop('checked', false);
-  $newRow.find('select').val('');
-
-  // ล้างรอย select2 + ทำ id ให้ยูนีค ก่อน init ใหม่
-  sterilizeClonedSelect2($newRow);
-
-  // กำหนดเลขลำดับแถว
-  const rowCount = $tableBody.find('tr').length + 1;
-  $newRow.find('td:first').text(rowCount);
-
-  // เพิ่มแถวก่อน แล้วค่อย init select2 เฉพาะในแถวใหม่
-  $tableBody.append($newRow);
-  initSelect2(".dietary_require", $newRow);
-});*/
 
 
 
@@ -794,80 +767,108 @@ function initSelect2($cls, $context) {
   });
 }
 
-/*
 
-// delegation ของ select2:selecting (เหมือนเดิม)
-$(document).on("select2:selecting", ".dietary_require", function (e) {
-  const data = e.params.args.data;
-  const $select = $(this);
 
-  if (data.id === "Food Allergies") {
-    e.preventDefault();
-    const customText = prompt("Please specify your food allergy:");
-    if (customText) {
-      const newVal = "Food Allergies – " + customText;
-      const newOption = new Option(newVal, newVal, true, true);
-      $select.append(newOption).trigger("change");
-    }
-  }
 
-  if (data.id === "Other") {
-    e.preventDefault();
-    const customText = prompt("Please specify:");
-    if (customText) {
-      const newVal = "Other – " + customText;
-      const newOption = new Option(newVal, newVal, true, true);
-      $select.append(newOption).trigger("change");
-    }
+// --- Add Main Row ---
+$(document).on('click', '#addSecBtn', function () {
+  const table = $('#tablesec').DataTable();
+  const mainRowCount = $('#tablesec tbody tr.main-row').length + 1;
+
+  const $firstRow = $('#tablesec tbody tr.main-row:first');
+  const tdClasses = [];
+  $firstRow.find('td').each(function(){
+      tdClasses.push($(this).attr('class') || '');
+  });
+
+  const $tr = $('<tr class="main-row" data-rowid="' + mainRowCount + '" data-details="[]"></tr>');
+
+  tdClasses.forEach((cls, idx) => {
+      let $td;
+      if(idx === 0) $td = $('<td></td>').addClass(cls).text(mainRowCount);
+      else if(idx === 1){
+          $td = $('<td></td>').addClass(cls);
+          const $input = $('<input>',{
+              type:'text',
+              name:'secured_project_no[]',
+              class:'w-full border border-blue-200 rounded-lg px-2 py-1 sproj',
+              placeholder:'Enter Project No.'
+          });
+          $td.append($input);
+      } else $td = $('<td></td>').addClass(cls);
+      $tr.append($td);
+  });
+
+  table.row.add($tr).draw(false);
+});
+
+// --- Show Detail Row ---
+$(document).on('change', '.sproj', async function(){
+  const data = await getPrj({ PRJ_NO: $(this).val() });
+  const table = $('#tablesec').DataTable();
+  const $mainRow = $(this).closest('tr');
+
+  // ลบ detail-row เก่า
+  $mainRow.nextUntil('tr.main-row').remove();
+
+  // เก็บ detail data ไว้ใน main-row
+  $mainRow.data('details', data);
+
+
+  // สร้าง detail-row ใหม่
+  if(data && data.length > 0){
+      let detailRows = '';
+      data.forEach((item, idx) => {
+            let expDate = parseEXPPLAN(item.EXPPLAN);
+
+
+          detailRows += `
+              <tr class="detail-row bg-gray-50 text-gray-700">
+                  <td class="px-2 py-2 sticky-column text-gray-500" style="left:0;"></td>
+                  <td class="px-2 py-2"></td>
+                  <td class="px-2 py-2">${item.PRJ_NAME || ''}<input type="hidden" name="sprojname_${item.PRJ_NO}[]" value="${item.PRJ_NAME}"></td>
+                  <td class="px-2 py-2">${item.MODEL || ''}<input type="hidden" name="sprojmodel_${item.PRJ_NO}[]" value="${item.MODEL}"></td>
+                  <td class="px-2 py-2">${item.SPEC || ''}<input type="hidden" name="sprojspec_${item.PRJ_NO}[]" value="${item.SPEC}"></td>
+                  <td class="px-2 py-2">${item.TOTUNIT || ''}<input type="hidden" name="sprojqty_${item.PRJ_NO}[]" value="${item.TOTUNIT}"></td>
+                  <td class="px-2 py-2">${expDate}<input type="hidden" name="sprojsta_${item.PRJ_NO}[]" value="${expDate}"></td>
+              </tr>
+          `;
+      });
+
+      $(detailRows).insertAfter($mainRow);
   }
 });
-*/
 
+// --- เมื่อ DataTable redraw ---
+// render detail-row ใหม่จาก data ที่เก็บ
+$('#tablesec').on('draw.dt', function(){
 
+  $('#tablesec tbody tr.main-row').each(function(){
+      const $mainRow = $(this);
+      const data = $mainRow.data('details') || [];
+      $mainRow.nextUntil('tr.main-row').remove();
+      if(data.length > 0){
+          let detailRows = '';
+          data.forEach((item, idx) => {
+                console.log("ELSE===="+item.EXPPLAN);
+                  let expDate = parseEXPPLAN(item.EXPPLAN);
+                
 
-/*
-
-$(document).on('click', '#addSecBtn', function () {
-
-  const $tableBody = $('#tablesec tbody');
-  const $firstRow = $tableBody.find('tr:first');
-  const $newRow = $firstRow.clone();
-
-  // เคลียร์ค่าภายใน input และ select
-  $newRow.find('input, select').each(function () {
-    $(this).val('');
+              detailRows += `
+                  <tr class="detail-row bg-gray-50 text-gray-700">
+                      <td class="px-2 py-2 sticky-column text-gray-500" style="left:0;" ></td>
+                      <td class="px-2 py-2"></td>
+                      <td class="px-2 py-2">${item.PRJ_NAME || ''}<input type="hidden" name="sprojname_${item.PRJ_NO}[]" value="${item.PRJ_NAME}"></td>
+                      <td class="px-2 py-2">${item.MODEL || ''}<input type="hidden" name="sprojmodel_${item.PRJ_NO}[]" value="${item.MODEL}"></td>
+                      <td class="px-2 py-2">${item.SPEC || ''}<input type="hidden" name="sprojspec_${item.PRJ_NO}[]" value="${item.SPEC}"></td>
+                      <td class="px-2 py-2">${item.TOTUNIT || ''}<input type="hidden" name="sprojqty_${item.PRJ_NO}[]" value="${item.TOTUNIT}"></td>
+                      <td class="px-2 py-2">${expDate}<input type="hidden" name="sprojsta_${item.PRJ_NO}[]" value="${expDate}"></td>
+                  </tr>
+              `;
+          });
+          $(detailRows).insertAfter($mainRow);
+      }
   });
-
-    // นับจำนวนแถวเพื่อกำหนดหมายเลข No.
-    //const rowCount = $tableBody.find('tr').length + 1;
-    const rowCount = $tableBody.find('tr:has(input[type="text"])').length + 1;
-    $newRow.find('td:first').text(rowCount);
-
-  // เพิ่มแถวใหม่ลงใน tbody
-  $tableBody.append($newRow);
-
-});*/
-
-$(document).on('click', '#addSecBtn', function () {
-  const table = $('#tablesec').DataTable(); // DataTable instance
-  const $firstRow = $('#tablesec tbody tr:first');
-
-  // clone แต่ต้อง reset ค่า
-  const $newRow = $firstRow.clone();
-  $newRow.find('input, select').each(function () {
-    $(this).val('');
-  });
-
-  // กำหนดหมายเลข No.
-  const rowCount = $('#tablesec tbody tr:has(input[type="text"])').length + 1;
-  $newRow.find('td:first').text(rowCount);
-
-  // เพิ่มแถวใหม่ด้วย DataTable API
-  const newRowNode = table.row.add($newRow).draw(false).node();
-  
-  // ถ้าต้องการทำให้ sticky หรือ styling เพิ่มเติม
-  $(newRowNode).find('td:first').addClass('px-2 py-2 sticky-column');
-
 });
 
 
@@ -912,7 +913,11 @@ $(document).on('change', '.emp-select', function() {
   $row.find('.pos-col').text(pos); // แสดงใน td.pos-col
 });
 
+$(document).on('click', '#btn-submit-form', function() {
+  loaddata($("#cyear2").val(),$("#nrunno").val());
+});
 
+/*
 
 $(document).on('change', '.sproj', async function() {
   const data = await getPrj({PRJ_NO: $(this).val()});
@@ -956,6 +961,13 @@ $(document).on('change', '.sproj', async function() {
   }
   //https://amecwebtest.mitsubishielevatorasia.co.th/api/mkt/orders/sproj
 });
+
+*/
+
+
+
+
+
 
 export const getPrj = async (data) => {
   return new Promise((resolve, reject) => {
@@ -1146,7 +1158,7 @@ $(document).on("change", ".lunchSelect", function () {
 /**
  * Save
  */
-
+ 
  $(document).on("click", ".save-btn", async function () {
 const tab = $(this).data("tab");
 const formId = "form-" + tab;   // form ไหนที่ถูกกด
@@ -1158,14 +1170,25 @@ let nrunno =  $("#nrunno").val();
 let cyear2 =  $("#cyear2").val();
 let isValid = (tab === "visitarg") ? validateVisitTab(form)
               : (tab === "req") ? validateReqItemTab(form)
-              : (tab === "stk" || tab === "sch" || tab === "inf" || tab === "meal") ? validate(form)
+              : (tab === "stk" || tab === "sch" || tab === "inf" || tab === "meal"|| tab === "proj") ? validate(form)
               : true;
 if (!isValid) return;
 
 if(nrunno =="")
 {
-  const vmsform = await createForm(nfrmno, vorgno, cyear, $("#empno").val(), $("#empno").val(), "", 1);
-  const { runno: NRUNNO, cyear2: CYEAR2 } = vmsform.message;
+  const preform = {
+    NFRMNO: nfrmno,                 // ตัวเลขตัวอย่าง
+    VORGNO: vorgno,                // รหัสตัวอย่าง
+    CYEAR: cyear ,                 // ปีปัจจุบัน
+    REQBY: $("#empno").val(),      // ดึงจาก input
+    INPUTBY: $("#empno").val(),    // ดึงจาก input
+    REMARK: "",                     // remark ว่าง
+    DRAFT: "0"                        // 0 = under preparation, 1 = wait for approval
+  };
+  console.log("create form");
+  const vmsform = await createForm(preform);
+  console.log(vmsform);
+  const { NRUNNO,  CYEAR2 } = vmsform.data;
   $("#nrunno").val(NRUNNO);
   $("#cyear2").val(CYEAR2);
   nrunno = NRUNNO;
@@ -1199,7 +1222,15 @@ try {
       text: rssave.message || "Please try again",
     });
   }
-} catch (err) {
+}catch (err) {
+  const con = {condition : {
+      NFRMNO: nfrmno,                 
+      VORGNO: vorgno,               
+      CYEAR: cyear ,
+      CYEAR2: cyear2,
+      NRUNNO:nrunno
+  }};
+  const delform = await deleteFlowandForm(con);
   Swal.fire({
     icon: "error",
     title: "Error",
@@ -1209,7 +1240,10 @@ try {
 
 });
 
-
+$(document).on("click", ".confirm-btn", async function () {
+      createGPENT();
+      
+});
 
 $(document).on('change', '.pst-select', function() {
   let selected = $(this).find(":selected");
@@ -1274,6 +1308,20 @@ $(document).on("input", 'input[name="starttime[]"], input[name="endtime[]"]', fu
   } else if (diffInput.length) {
     diffInput.val("");
   }
+});
+
+$(document).on("click", ".edit-btn", function() {
+  console.log("YYYYYYYYY");
+  const tab = $(this).data("tab"); // ดึงค่า data-tab ของปุ่มนั้น
+  // ซ่อนทุก tab
+  $(".tab-pane").addClass("hidden");
+  // แสดง tab ที่ต้องการ
+  $("#tab-" + tab).removeClass("hidden");
+     // reset active menu
+     $("li button[data-tab]").removeClass("active-tab border-blue-600 bg-white/30");
+
+     // set active ให้ menu ที่ตรงกับ tab
+     $("li button[data-tab='tab-" + tab + "']").addClass("active-tab border-blue-600 bg-white/30");
 });
 
 
@@ -1539,3 +1587,518 @@ return new Promise((resolve) => {
     });
   });
 }
+
+
+
+async function createGPENT() {
+  
+  if (!$("#hasLunch").is(":checked") && !$("#hasDinner").is(":checked")) return;
+
+  const eno = "9";
+  const evorgno = "030101";
+  const ecyear = "25";
+  const preform = {
+      NFRMNO: eno,
+      VORGNO: evorgno,
+      CYEAR: ecyear,
+      REQBY: $("#empno").val(),
+      INPUTBY: $("#empno").val(),
+      REMARK: ""
+  };
+
+  const orgType = $("input[name='guestDetail']:checked").val();
+  const inputFiles = $("#fileAttachment")[0].files;
+  const fname = inputFiles.length > 0
+      ? inputFiles[0].name
+      : ($("#attachmentfileDisplay .file-item").first().data("filename") || null);
+
+// ฟังก์ชันช่วยประมวลผล table visitor/employee
+const processTable = (tableSelector, mealType) => {
+  const list = [];
+  let qty = 0;
+
+  $(`${tableSelector} tr.bg-white`).each(function (_, el) {
+      const tr = $(el);
+      const selName = mealType + "_provided[]";
+      const val = tr.find(`select[name='${selName}']`).val();
+
+      if (val === "Y") {
+          const personName = tableSelector === "#tablevisitor"
+              ? tr.find("input[name='name[]']").val()
+              : tr.find("select[name='employee[]']").val();
+
+          list.push(personName);
+          qty++;
+          
+      }
+  });
+
+  return { list, qty };
+};
+
+
+  // ฟังก์ชันสร้าง FormData ของแต่ละมื้อ
+  const buildFormDataEnt = async (mealType) => {
+      const GPENTform = await createForm(preform);
+      const { NRUNNO, CYEAR2 } = GPENTform.data;
+
+      const formData = new FormData();
+      formData.append("nfrmno", eno);
+      formData.append("vorgno", evorgno);
+      formData.append("cyear", ecyear);
+      formData.append("cyear2", CYEAR2);
+      formData.append("nrunno", NRUNNO);
+      formData.append("other_details", "");
+      formData.append("remark", "");
+      formData.append("input_by", $("#empno").val());
+      formData.append("requested_by", $("#empno").val());
+      formData.append("entertain_date", $("#visitDate").val());
+
+      const $selectPurpose = $("#purposevisit");
+      const purposeText = $selectPurpose.find("option:selected").text();
+      const purpose = $("#detail").val() !== "" ? $("#detail").val() : purposeText;
+      formData.append("purpose", purpose);
+      formData.append("time", mealType.charAt(0).toUpperCase() + mealType.slice(1)); // Lunch/Dinner
+
+      let location = mealType === "lunch" ? $("#lunch").find("option:selected").text() : "Outside";
+      formData.append("location", location);
+
+      let location_detail = "";
+      let cost = 0;
+      let detail = "";
+
+      if (mealType === "lunch") {
+          if (location === "Inside") {
+              location_detail = $("#lunchPlaceSelect").val();
+              cost = costMap["Lunch->Inside"];
+              detail = "Lunch->Inside";
+          } else if (location === "Outside") {
+              location_detail = $("#lunchPlaceInput").val();
+              cost = costMap["Lunch->Outside"];
+              detail = "Lunch->Outside";
+          }
+      } else { // dinner
+          location_detail = $("#dinnerPlace").val();
+          cost = costMap["Dinner->Outside"];
+          detail = "Dinner->Outside";
+      }
+
+      formData.append("location_detail", location_detail);
+      formData.append("guest_type", $("#guestType").val());
+      formData.append("cash_adv", "1");
+
+      // process tables
+      const visitorResult = processTable("#tablevisitor", mealType);
+      const empResult = processTable("#tableemp", mealType);
+  
+      const guestlist = visitorResult.list;
+      const gqty = visitorResult.qty;
+      const ameclist = empResult.list;
+      const aqty = empResult.qty;
+
+
+      const totalQty = gqty + aqty;
+
+      // estimate items
+      const estimateItems = [{
+          details: detail,
+          qty: totalQty,
+          cost: parseFloat(cost),
+          total: totalQty * parseFloat(cost),
+          remark: ""
+      }];
+
+      // company
+      const firstCompany = $("#tablevisitor input[name='company[]']").first().val();
+      const companies = [{
+          name: firstCompany,
+          orgType: orgType,
+          fileName: fname
+      }];
+
+      formData.append("companies", JSON.stringify(companies));
+      formData.append("estimate_items", JSON.stringify(estimateItems));
+      formData.append("guest_list", JSON.stringify(guestlist));
+      formData.append("amec_list", JSON.stringify(ameclist));
+      formData.append("total_amount", totalQty * parseFloat(cost));
+
+      console.log(`${mealType.toUpperCase()} FormData:`);
+      for (let pair of formData.entries()) {
+          console.log(pair[0], pair[1]);
+      }
+
+      return formData;
+  };
+
+  // สร้างและส่ง FormData สำหรับ Lunch
+  if ($("#hasLunch").is(":checked")) {
+
+      const lunchFormData = await buildFormDataEnt("lunch");
+      const companiesStr = lunchFormData.get("companies");
+      const companiesArr = JSON.parse(companiesStr);
+      InsertGPENT(lunchFormData);
+      SaveVMSENT($("#cyear2").val(),$("#nrunno").val(),lunchFormData.get("cyear2"),lunchFormData.get("nrunno"));
+      if(companiesArr[0].fileName)
+      {
+        
+        saveENTfile($("#nfrmno").val(),$("#vorgno").val(),$("#cyear").val(),$("#cyear2").val(),$("#nrunno").val(),lunchFormData.get("cyear2"),lunchFormData.get("nrunno"),companiesArr[0].fileName);
+      }
+     
+  }
+
+  // สร้างและส่ง FormData สำหรับ Dinner
+  if ($("#hasDinner").is(":checked")) {
+    console.log($("#cyear2").val()+" "+$("#nrunno").val());
+    
+      const dinnerFormData = await buildFormDataEnt("dinner");
+      const companiesStr = dinnerFormData.get("companies");
+      const companiesArr = JSON.parse(companiesStr);
+      InsertGPENT(dinnerFormData);
+      SaveVMSENT($("#cyear2").val(),$("#nrunno").val(),dinnerFormData.get("cyear2"),dinnerFormData.get("nrunno"));
+      if(companiesArr[0].fileName)
+      {
+        saveENTfile($("#nfrmno").val(),$("#vorgno").val(),$("#cyear").val(),$("#cyear2").val(),$("#nrunno").val(),dinnerFormData.get("cyear2"),dinnerFormData.get("nrunno"),companiesArr[0].fileName);
+      }
+      
+      
+  }
+}
+
+function InsertGPENT(formData)
+{
+  $.ajax({
+    type: "POST",
+    url: host + "gpform/GP-ENT/main/InsertForm",
+    data: formData,
+    processData: false,
+    contentType: false,
+    beforeSend: function () {
+      showLoader({ show: true });
+    },
+    success: function (res) {
+      Swal.fire({
+        toast: true,
+        position: "top-end",
+        icon: "success",
+        title: "Success to create Entertainment Approval Request Form",
+        showConfirmButton: false,
+        timer: 2500,
+        timerProgressBar: true,
+        // didClose: () => redirectWebflow(),
+      });
+    },
+    complete: function (xhr, status) {
+      showLoader({ show: false });
+    },
+    error: function (xhr) {
+      Swal.fire({
+        icon: "error",
+        title: "Failed to save data",
+        text: xhr.responseText || "Failed to create Entertainment Approval Request Form",
+      });
+      
+    },
+  });
+  
+}
+
+function SaveVMSENT(vmscyear2,vmsnrunno,entcyear2,entnrunno)
+{
+  $.ajax({
+    url:  host + "marform/MAR-VMS/form/save_vms_gpent",
+    type: "POST",
+    dataType: "json",
+    data: {vmscyear2:vmscyear2,vmsnrunno:vmsnrunno,entcyear2:entcyear2,entnrunno:entnrunno},
+    success: function (response) {
+      Swal.fire({
+        toast: true,
+        position: "top-end",
+        icon: "success",
+        title: "Success save data",
+        showConfirmButton: false,
+        timer: 2500,
+        timerProgressBar: true,
+        // didClose: () => redirectWebflow(),
+      });
+    },
+    error: function (xhr) {
+      Swal.fire({
+        icon: "error",
+        title: "Failed to save data",
+        text: xhr.responseText,
+      });
+      
+    },
+  });
+
+}
+
+function saveENTfile(vmsnfrmno,vmsvorgno,vmscyear,vmscyear2,vmsnrunno,entcyear2,entnrunno,filename)
+{
+
+    $.ajax({
+      url:  host + "marform/MAR-VMS/form/saveENTfile",
+      type: "POST",
+      dataType: "json",
+      data: {vmsnfrmno:vmsnfrmno,vmsvorgno:vmsvorgno,vmscyear:vmscyear,vmscyear2:vmscyear2,vmsnrunno:vmsnrunno,entcyear2:entcyear2,entnrunno:entnrunno,filename:filename},
+      success: function (response) {
+        Swal.fire({
+          toast: true,
+          position: "top-end",
+          icon: "success",
+          title: "Success to save file",
+          showConfirmButton: false,
+          timer: 2500,
+          timerProgressBar: true,
+          // didClose: () => redirectWebflow(),
+        });
+      },
+      error: function (xhr) {
+        Swal.fire({
+          icon: "error",
+          title: "Failed to save file",
+          text: xhr.responseText,
+        });
+        
+      },
+    });
+}
+
+function loaddata(vmscyear2,vmsnrunno)
+{
+
+  const NFRMNO = $("#nfrmno").val();
+  const VORGNO = $("#vorgno").val();
+  const CYEAR  = $("#cyear").val();
+  $.ajax({
+    url:  host + "marform/MAR-VMS/form/getFormData",
+    type: "POST",
+    dataType: "json",
+    data: {vmscyear2:vmscyear2,vmsnrunno:vmsnrunno},
+    beforeSend: function () {
+      showLoader({ show: true });
+    },
+    success: function (response) {
+       console.log(response.dietary);
+       $('[data-field="attn"]').text(response.head.ATT);
+       $('[data-field="cc"]').text(response.head.CC);
+       $('[data-field="purpose"]').text(response.head.PURPOSEVISIT+" "+response.head.PURPOSEDETAIL);
+       $('[data-field="issueDate"]').text(response.head.ISSUEDATE);
+       $('[data-field="refno"]').text(response.head.REFNO);
+       let issueby = response.head.ISSUEBY;
+      
+       let parts = issueby.trim().split(/\s+/);
+       let title = parts[0] ||"";
+       let fname = parts[1] ||"";
+       let lname = parts[2] || "";
+       let nameshort = title+" "+ fname + " " + lname.charAt(0).toUpperCase() + ".";
+       
+       $('[data-field="issueby"]').text(nameshort);
+       $('[data-field="visitdate"]').text(response.head.VISITDATE);
+       $('[data-field="receptroom"]').text(response.head.RECEPTROOM);
+       $('[data-field="visitor"]').text(response.head.VISITOR_COUNT);
+       const item = response.item[0]; 
+       const boardVal = item.BOARD === 'Y' ? 'Yes' : 'No';
+       $('[data-field="board"]').text(boardVal);
+       //$('[data-field="filename"]').text(item.SFILE);
+       console.log("filename = "+item.SFILE);
+       if (item.SFILE && typeof item.SFILE === "string" && item.SFILE.trim() !== "") {
+        $('[data-field="filename"]').html(`
+          <a href="${host}marform/MAR-VMS/form/mdownload/${NFRMNO}_${VORGNO}_${CYEAR}_${vmscyear2}_${vmsnrunno}/${item.SFILE.substring(13)}/${item.SFILE}" 
+            target="_blank" 
+            class="file-list">
+            ${item.SFILE.substring(13)}
+          </a>
+        `);
+      } else {
+        $('[data-field="filename"]').html(""); 
+      }
+
+       $('[data-field="roomlunch"]').text(item.ROOMLUNCH);
+       if(item.ROOMLUNCH && item.ROOMLUNCH.trim() !== "")
+       {
+        $('[data-field="roomdate"]').text(response.head.VISITDATE);
+        $('[data-field="roomtime"]').text("12:00 - 01:00 PM.");
+       }
+      
+       $('[data-field="visitlunch"]').text(item.VISITORS);
+       $('[data-field="ameclunch"]').text(item.AMEC);
+       $('[data-field="totlunch"]').text((+item.VISITORS) + (+item.AMEC));
+       $('[data-field="hotelname"]').text(item.HOTELNAME);
+       const shopVal = item.SHOPTOUR === 'G' 
+       ? 'General' 
+       : item.SHOPTOUR === 'I' 
+         ? 'Inspection' 
+         : 'Specific';
+       $('[data-field="shoptour"]').text(shopVal);
+       const formc1Val = item.FORMC1_1 === 'Y' ? 'Yes (only visit Test Tower)' : 'No';
+       $('[data-field="formc1_1"]').text(formc1Val);
+       const carVal = item.CARHOTEL === 'Y' ? 'Yes' : 'No';
+       $('[data-field="car"]').text(carVal);
+       $('[data-field="cardetail"]').text(item.CARHOTELNOTE);
+       
+
+
+       const tbody = document.getElementById("visitor-body");
+       tbody.innerHTML = ""; 
+       let i = 1;
+       response.visitint.forEach(v => {
+       
+        const row = `
+          <tr>
+            <td class="border px-2">${i}</td>
+            <td class="border px-2">${v.COUNTRY}</td>
+            <td class="border px-2">${v.COMPANY}</td>
+            <td class="border px-2">${v.NAME}</td>
+            <td class="border px-2">${v.POSITION}</td>
+            <td class="border px-2">${v.VISITEXP === "Y" ? "Yes" : "No"}</td>
+          </tr>
+        `;
+        tbody.insertAdjacentHTML("beforeend", row);
+        i++;
+      });
+      i=1;
+      const stbody = document.getElementById("schedule-body");
+      stbody.innerHTML = ""; 
+      response.schedule.forEach(v => {
+      const row = `
+          <tr>
+            <td class="border px-2">${v.SCHSTIME && v.SCHETIME ? v.SCHSTIME + ' - ' + v.SCHETIME : '-'}</td>
+            <td class="border px-2">${v.PLACE}</td>
+            <td class="border px-2">${v.CONTENT}</td>
+            <td class="border px-2">${v.AMECP}</td>
+            <td class="border px-2">${v.NOTE ? v.NOTE : '-'}</td>
+          </tr>
+        `;
+        stbody.insertAdjacentHTML("beforeend", row);
+        i++;
+      });
+
+
+      i=1;
+      const sptbody = document.getElementById("sproject-body");
+      sptbody.innerHTML = ""; 
+      if (response.sproj && response.sproj.length > 0) {
+          response.sproj.forEach(v => {
+            const row = `
+              <tr>
+              <td class="border px-2">${v.PROJNO ? v.PROJNO : ''}</td>
+              <td class="border px-2">${v.PROJNAME ? v.PROJNAME : ''}</td>
+              <td class="border px-2">${v.MODEL ? v.MODEL : ''}</td>
+              <td class="border px-2">${v.SPEC ? v.SPEC : ''}</td>
+              <td class="border px-2">${v.QTY ? v.QTY : ''}</td>
+              <td class="border px-2">${v.STATUS ? v.STATUS : ''}</td>
+            </tr>
+            `;
+            sptbody.insertAdjacentHTML("beforeend", row);
+            i++;
+          });
+      }else{
+            const noDataRow = `
+            <tr>
+              <td class="border px-2 text-center" colspan="6">No Data</td>
+            </tr>
+          `;
+          sptbody.insertAdjacentHTML("beforeend", noDataRow);
+      }
+
+      i=1;
+      const pptbody = document.getElementById("pproject-body");
+      pptbody.innerHTML = ""; 
+      if (response.pproj && response.pproj.length > 0) {
+      response.pproj.forEach(v => {
+        const row = `
+          <tr>
+            <td class="border px-2">${v.PROJNO ? v.PROJNO : ''}</td>
+            <td class="border px-2">${v.PROJNAME ? v.PROJNAME : ''}</td>
+            <td class="border px-2">${v.MODEL ? v.MODEL : ''}</td>
+            <td class="border px-2">${v.SPEC ? v.SPEC : ''}</td>
+            <td class="border px-2">${v.QTY ? v.QTY : ''}</td>
+            <td class="border px-2">${v.STATUS ? v.STATUS : ''}</td>
+          </tr>
+        `;
+        pptbody.insertAdjacentHTML("beforeend", row);
+        i++;
+      });
+    }else{
+          const noDataRow = `
+          <tr>
+            <td class="border px-2 text-center" colspan="6">No Data</td>
+          </tr>
+        `;
+        pptbody.insertAdjacentHTML("beforeend", noDataRow);
+
+    }
+    const dietList = response.dietary
+    .filter(item => item.DIETREQ) 
+    .map(item => `${item.DIETREQ} (${item.CNT})`);
+  
+  // join เป็น string
+  const dietText = dietList.join(", ");
+  
+  $('[data-field="roomdietary"]').text(dietText || "-");
+
+       
+    },
+    complete: function (xhr, status) {
+      showLoader({ show: false });
+    },
+    error: function (xhr) {
+      Swal.fire({
+        icon: "error",
+        title: "Failed to save file",
+        text: xhr.responseText,
+      });
+      
+    },
+  });
+
+}
+
+function parseEXPPLAN(expPlan) {
+  if(!expPlan) return "";
+
+  const str = String(expPlan).trim();
+
+  // Regex ครอบคลุม ISO แบบ Z / offset / space
+  const isoRegex   = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{1,3})?(Z|([+-]\d{2}:\d{2}))?$/i;
+  const spaceRegex = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}(\.\d{1,3})?$/;
+
+  let d;
+
+  if(isoRegex.test(str)){
+      d = new Date(str); // รองรับ UTC / offset
+  } else if(spaceRegex.test(str)){
+      d = new Date(str.replace(' ', 'T')); // แปลง space → T
+  } else {
+      return str; // ไม่ match regex → คืนค่าเดิม
+  }
+
+  if(d && !isNaN(d.getTime())){
+      let day, month, year;
+
+      // ใช้ UTC ถ้าเป็น ISO หรือมี offset
+      if(str.includes('Z') || str.match(/[+-]\d{2}:\d{2}$/)){
+          day   = d.getUTCDate();
+          month = d.getUTCMonth() + 1;
+          year  = d.getUTCFullYear();
+      } else {
+          day   = d.getDate();
+          month = d.getMonth() + 1;
+          year  = d.getFullYear();
+      }
+
+      return `${String(day).padStart(2,'0')}/${String(month).padStart(2,'0')}/${year}`;
+  }
+
+  // Invalid date → คืนค่าเดิม
+  return str;
+}
+
+
+
+
+
+
+
+

@@ -62,28 +62,49 @@
   </div>
 </dialog>
 
+<!-- ✅ Loader Overlay -->
+<div id="loaderOverlay" class="hidden fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+  <div class="bg-white p-16 rounded-3xl shadow-2xl flex flex-col items-center">
+    <img src="{{ base_url('assets/images/smile.gif') }}" 
+         alt="Loading..." 
+         class="w-64 h-64 mx-auto" /> 
+    <p class="mt-8 text-gray-900 text-4xl font-extrabold text-center">
+      กำลังบันทึกข้อมูล<br>กรุณารอสักครู่...นะจ๊ะ
+    </p>
+  </div>
+</div>
+
+
+
 <style>
 dialog {
   border: none;
   padding: 0;
   margin: auto;
-  position: fixed;   /* ให้อยู่ยึดกับหน้าจอ */
-  top: 40%;          /* จัดกึ่งกลางแนวตั้ง */
-  left: 40%;         /* จัดกึ่งกลางแนวนอน */
-  transform: translate(-40%, -40%); /* ชดเชยให้อยู่กลางจริง */
+  position: fixed;
+  top: 40%;
+  left: 40%;
+  transform: translate(-40%, -40%);
 }
-
 dialog::backdrop {
-  background: rgba(0, 0, 0, 0.5); /* พื้นหลังโปร่งดำ */
+  background: rgba(0, 0, 0, 0.5);
 }
+#loaderOverlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(255,255,255,0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+#loaderOverlay.hidden { display: none; }
 </style>
-
 
 @endsection
 
 @section('scripts')
     <script>const getEmpUrl = "{{ site_url('gpform/GP-TRN/training/get_emp') }}";</script>
-    <!--<script type="module" src="{{ base_url('assets/script/gpform/GP-TRN/training.js?v=') . time() }}"></script>-->
+    <script>const mainUrl = "{{ site_url('gpform/GP-TRN/training') }}";</script>
     <script src="{{ $_ENV['APP_JS'] }}/training.js?ver={{ $GLOBALS['version'] }}"></script>
-
 @endsection

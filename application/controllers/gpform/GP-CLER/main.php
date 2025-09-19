@@ -61,11 +61,12 @@ class Main extends MY_Controller
             ];
             $getEmpFlow = $this->form->getEmpFlow($form, $empno);
             if (!empty($getEmpFlow)) {
-                $checkReturnb = $this->form->checkReturnb($form, $getEmpFlow[0]->CSTEPNEXTNO);
+                // $checkReturnb = $this->form->checkReturnb($form, $getEmpFlow[0]->CSTEPNEXTNO);
+                $checkReturnb = $this->form->checkReturn($form, $empno);
             }
 
-            $data['expense']  = $this->clr->get_expense($nfrmno, $vorgno, $cyear, $cyear2, $nrunno);
-            $data['flowstep'] = $flow = $this->ent->getFlowStep($form, $empno);
+            $data['expense']     = $this->clr->get_expense($nfrmno, $vorgno, $cyear, $cyear2, $nrunno);
+            $data['flowstep']    = $flow = $this->ent->getFlowStep($form, $empno);
             $data['needPayDate'] = (
                 !empty($flow) &&
                 $flow[0]->CSTEPNO == '87' &&
@@ -482,6 +483,35 @@ class Main extends MY_Controller
         }
 
         $this->clr->update('GPCLER_FORM', $data, $where);
+
+        if (isset($_FILES['memo'])) {
+            $fileGroup = $_FILES['memo'];
+            foreach ($fileGroup['name'] as $i => $name) {
+                if ($fileGroup['error'][$i] === UPLOAD_ERR_OK) {
+                    $oneFile = [
+                        'name'     => $name,
+                        'type'     => $fileGroup['type'][$i],
+                        'tmp_name' => $fileGroup['tmp_name'][$i],
+                        'error'    => $fileGroup['error'][$i],
+                        'size'     => $fileGroup['size'][$i]
+                    ];
+                    $file    = $this->uploadFile($oneFile);
+                    if ($file['status'] == '1') {
+                        print_r($file);
+                        $data_file = [
+                            'NFRMNO'    => $post['nfrmno'],
+                            'VORGNO'    => $post['vorgno'],
+                            'CYEAR'     => $post['cyear'],
+                            'CYEAR2'    => $post['cyear2'],
+                            'NRUNNO'    => $post['nrunno'],
+                            'FILE_NAME' => $file['file_name'],
+                            'FILE_PATH' => $file['file_path'],
+                        ];
+                        $this->clr->insert('GPCLER_FILE', $data_file);
+                    }
+                }
+            }
+        }
         // $this->clr->insert('GPCLER_FORM', $data);
     }
 
@@ -704,6 +734,34 @@ class Main extends MY_Controller
         ];
         $this->ent->update('GPCLER_FORM', [], $where, $data);
 
+    }
+
+    public function delete_file()
+    {
+        $file   = $this->input->post('file');
+        $nfrmno = $this->input->post('nfrmno');
+        $vorgno = $this->input->post('vorgno');
+        $cyear  = $this->input->post('cyear');
+        $cyear2 = $this->input->post('cyear2');
+        $nrunno = $this->input->post('nrunno');
+
+        $where = [
+            'NFRMNO'    => $nfrmno,
+            'VORGNO'    => $vorgno,
+            'CYEAR'     => $cyear,
+            'CYEAR2'    => $cyear2,
+            'NRUNNO'    => $nrunno,
+            'FILE_NAME' => $file
+        ];
+
+        $this->clr->delete('GPCLER_FILE', $where);
+        // unlink actual file ถ้าอยู่ใน local/server
+        $filePath = $this->upload_path . $file;
+        if (file_exists($filePath)) {
+            unlink($filePath);
+        }
+
+        echo json_encode(['status' => 'success']);
     }
 
 
