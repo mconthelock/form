@@ -80,7 +80,8 @@ table.dataTable .select2-container--default .select2-selection--multiple {
   }
   .select2-container {
   max-width: 400px !important;  /* เท่ากับ td */
-}
+  }
+  [x-cloak] { display: none !important; }
 </style>
 @endsection
 @section('contents')
@@ -352,9 +353,9 @@ table.dataTable .select2-container--default .select2-selection--multiple {
       <label for="bookingTime" class="block text-sm text-gray-700 font-medium mb-1">Booking time</label>
       <select id="bookingTime" name="bookingTime" class="input input-bordered rounded-xl w-full shadow-sm border-blue-200 text-gray-900">
         <option value=""></option>
-        <option value="FT">Full day</option>
-        <option value="AM">Half day (morning)</option>
-        <option value="PM">Half day (afternoon)</option>
+        <option value="FT" data-start="08:00 AM" data-end="17:10 PM" {{ ($mode == "2" && !empty($visit) && $visit[0]->BOOKING== "FT") ? 'selected' : '' }} >Full day</option>
+        <option value="AM" data-start="08:00 AM" data-end="12:10 PM"  {{ ($mode == "2" && !empty($visit) && $visit[0]->BOOKING== "AM") ? 'selected' : '' }} >Half day (morning)</option>
+        <option value="PM" data-start="13:00 PM" data-end="17:10 PM"  {{ ($mode == "2" && !empty($visit) && $visit[0]->BOOKING== "PM") ? 'selected' : '' }} >Half day (afternoon)</option>
       </select>
     </div>
     <div>
@@ -1386,12 +1387,12 @@ table.dataTable .select2-container--default .select2-selection--multiple {
 
       <div class="flex space-x-2">
         <span class="font-semibold text-gray-700 w-32">Visit date:</span>
-        <span class="text-gray-900" data-field="visitdate"></span>
+        <span class="text-gray-900" data-field="visitdate" ></span>
       </div>
 
       <div class="flex space-x-2">
         <span class="font-semibold text-gray-700 w-32">Reception room:</span>
-        <span class="text-gray-900" data-field="receptroom"></span>
+        <span class="text-gray-900" data-field="receptroom" ></span>
       </div>
 
       <div class="flex space-x-2">
@@ -1590,28 +1591,36 @@ table.dataTable .select2-container--default .select2-selection--multiple {
     </div>
 
   </div>
-
-  <!-- Submit Button -->
-  <div class="flex justify-end mt-6  {{ (!empty($form) && ($mode == "2") && ($form[0]->CST == "0")) ? '' : 'hidden' }}">
-    <button type="button" data-tab="submit"
-      class="confirm-btn bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-2 rounded-xl text-sm font-semibold
-             shadow-md hover:shadow-lg hover:from-blue-600 hover:to-blue-700 transition-all duration-300">
-      Submit Form
-    </button>
+  <!-- ปุ่ม -->
+  <div class="flex justify-end space-x-2 mt-6">
+      <button type="button" data-tab="submit" 
+        class="confirm-btn bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-2 rounded-xl text-sm font-semibold
+              shadow-md hover:shadow-lg hover:from-blue-600 hover:to-blue-700 transition-all duration-300
+              {{ (!empty($form) && ($mode == '2') && ($form[0]->CST == '0')) ? '' : 'hidden' }}">
+        Submit Form
+      </button>
+      <button type="button"  id="bookRoomBtn"
+          class="bg-gradient-to-r from-green-500 to-green-600 text-white px-6 py-2 rounded-xl text-sm font-semibold
+                 shadow-md hover:shadow-lg hover:from-green-600 hover:to-green-700 transition-all duration-300">
+        Book Room
+      </button>
   </div>
-  <div class="flex justify-end mt-2">
-  <button type="button" data-tab="bookroom"
-    class="confirm-btn bg-gradient-to-r from-green-500 to-green-600 text-white px-6 py-2 rounded-xl text-sm font-semibold
-           shadow-md hover:shadow-lg hover:from-green-600 hover:to-green-700 transition-all duration-300">
-    Book Room
-  </button>
-</div>
 </div>
 </form>
 
 </div>
-
-
+  </div>
+</div>
+<!-- Modal แยกออกจาก tab -->
+<div id="bookRoomModal" class="hidden fixed inset-0 flex items-center justify-center bg-gray-200 bg-opacity-40 z-50">
+  <div class="bg-white rounded-xl shadow-lg p-6 w-96">
+    <h3 class="text-lg font-semibold mb-4">Enter Password Email</h3>
+    <input type="password" id="passwordInput" placeholder="Password"
+           class="w-full border border-gray-300 rounded-lg px-4 py-2 mb-4 focus:ring-2 focus:ring-green-500 focus:outline-none" />
+           <div class="flex justify-end gap-2">
+              <button id="cancelModalBtn" class="btn btn-sm btn-secondary">Cancel</button>
+              <button id="confirmModalBtn" class="btn btn-sm btn-primary">OK</button>
+          </div>
   </div>
 </div>
 
@@ -1653,7 +1662,6 @@ table.dataTable .select2-container--default .select2-selection--multiple {
   dinnerCheckbox.addEventListener('change', () => {
     dinnerDetails.classList.toggle('hidden', !dinnerCheckbox.checked);
   });
-
 
 
 

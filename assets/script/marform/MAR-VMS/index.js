@@ -683,6 +683,51 @@ toggleColumnByHeader('tableemp', 'Dietary Requirements',  $('#hasLunch').is(':ch
 
 });
 
+const bookRoomBtn = document.getElementById('bookRoomBtn');
+const bookRoomModal = document.getElementById('bookRoomModal');
+const cancelModalBtn = document.getElementById('cancelModalBtn');
+const confirmModalBtn = document.getElementById('confirmModalBtn');
+
+bookRoomBtn.addEventListener('click', () => bookRoomModal.classList.remove('hidden'));
+cancelModalBtn.addEventListener('click', () => bookRoomModal.classList.add('hidden'));
+confirmModalBtn.addEventListener('click', async () => {
+  bookRoomModal.classList.add('hidden');
+  try {
+    const password = $("#passwordInput").val().trim();
+    const email = await getEmail(); // รอให้ได้ email จริงๆ
+    const subject = $('span[data-field="purpose"]').text();
+    const stdate = $("#visitDate").val();
+    const selectedOption = $("#bookingTime option:selected");
+    const startTime = selectedOption.attr("data-start");
+    const endTime = selectedOption.attr("data-end");
+    const room = $('span[data-field="receptroom"]').text();
+
+    const data = {
+      email: email,
+      password: password,
+      subject: subject,
+      message: "",
+      startdate: stdate,
+      starttime: startTime,
+      enddate: stdate,
+      endtime: endTime,
+      room: room,
+      attendees: [email],
+    };
+    // เรียก bookingroom
+    await bookingroom(data);
+  } catch (err) {
+    Swal.fire({
+      icon: "error",
+      title: "Error",
+      text: err,
+    });
+  }
+});
+
+bookRoomModal.addEventListener('click', (e) => {
+  if (e.target === bookRoomModal) bookRoomModal.classList.add('hidden');
+});
 
 
 $(document).on('click', '#addRowBtn', function () {
@@ -850,10 +895,7 @@ $('#tablesec').on('draw.dt', function(){
       if(data.length > 0){
           let detailRows = '';
           data.forEach((item, idx) => {
-                console.log("ELSE===="+item.EXPPLAN);
-                  let expDate = parseEXPPLAN(item.EXPPLAN);
-                
-
+              let expDate = parseEXPPLAN(item.EXPPLAN);
               detailRows += `
                   <tr class="detail-row bg-gray-50 text-gray-700">
                       <td class="px-2 py-2 sticky-column text-gray-500" style="left:0;" ></td>
@@ -916,6 +958,8 @@ $(document).on('change', '.emp-select', function() {
 $(document).on('click', '#btn-submit-form', function() {
   loaddata($("#cyear2").val(),$("#nrunno").val());
 });
+
+
 
 /*
 
@@ -1241,8 +1285,14 @@ try {
 });
 
 $(document).on("click", ".confirm-btn", async function () {
-      createGPENT();
+    createGPENT();
       
+});
+
+
+$(document).on("click", ".bookroom-btn", async function () {
+    console.log("xxxxxxxx");
+  
 });
 
 $(document).on('change', '.pst-select', function() {
@@ -1297,8 +1347,6 @@ $(document).on("input", 'input[name="starttime[]"], input[name="endtime[]"]', fu
   const end   = parentRow.find('input[name="endtime[]"]').val();
   const diffInput = parentRow.find('input[name="diffmin[]"]'); // หาในแถวเดียวกัน
 
-  console.log("diffInput length =", diffInput.length);
-
   if (start && end && diffInput.length) {
     const startTime = new Date("1970-01-01T" + start + ":00");
     const endTime   = new Date("1970-01-01T" + end + ":00");
@@ -1311,7 +1359,7 @@ $(document).on("input", 'input[name="starttime[]"], input[name="endtime[]"]', fu
 });
 
 $(document).on("click", ".edit-btn", function() {
-  console.log("YYYYYYYYY");
+ 
   const tab = $(this).data("tab"); // ดึงค่า data-tab ของปุ่มนั้น
   // ซ่อนทุก tab
   $(".tab-pane").addClass("hidden");
@@ -1327,7 +1375,7 @@ $(document).on("click", ".edit-btn", function() {
 
 function buildFormData(form, extraData = {}) {
   const formData = new FormData(form[0]);
-  console.log("form id ="+form.attr("id"));
+  
   if (form.attr("id") === "form-sch") {
  
     formData.append("visitDate", $("#visitDate").val());
@@ -1588,7 +1636,27 @@ return new Promise((resolve) => {
   });
 }
 
-
+function getEmail() {
+  return new Promise((resolve, reject) => {
+    const empno = $("#empno").val();
+    $.ajax({
+      url: host + "marform/MAR-VMS/form/getEmail",
+      type: "POST",
+      dataType: "json",
+      data: { empno: empno },
+      success: function (response) {
+        if (response && response.length > 0) {
+          resolve(response[0].SRECMAIL); // คืนค่า email
+        } else {
+          reject("No email found");
+        }
+      },
+      error: function (xhr) {
+        reject(xhr.responseText || "Error while getting email");
+      },
+    });
+  });
+}
 
 async function createGPENT() {
   
@@ -1722,7 +1790,7 @@ const processTable = (tableSelector, mealType) => {
       formData.append("amec_list", JSON.stringify(ameclist));
       formData.append("total_amount", totalQty * parseFloat(cost));
 
-      console.log(`${mealType.toUpperCase()} FormData:`);
+     
       for (let pair of formData.entries()) {
           console.log(pair[0], pair[1]);
       }
@@ -1748,7 +1816,7 @@ const processTable = (tableSelector, mealType) => {
 
   // สร้างและส่ง FormData สำหรับ Dinner
   if ($("#hasDinner").is(":checked")) {
-    console.log($("#cyear2").val()+" "+$("#nrunno").val());
+    
     
       const dinnerFormData = await buildFormDataEnt("dinner");
       const companiesStr = dinnerFormData.get("companies");
@@ -1879,7 +1947,6 @@ function loaddata(vmscyear2,vmsnrunno)
       showLoader({ show: true });
     },
     success: function (response) {
-       console.log(response.dietary);
        $('[data-field="attn"]').text(response.head.ATT);
        $('[data-field="cc"]').text(response.head.CC);
        $('[data-field="purpose"]').text(response.head.PURPOSEVISIT+" "+response.head.PURPOSEDETAIL);
@@ -1900,8 +1967,6 @@ function loaddata(vmscyear2,vmsnrunno)
        const item = response.item[0]; 
        const boardVal = item.BOARD === 'Y' ? 'Yes' : 'No';
        $('[data-field="board"]').text(boardVal);
-       //$('[data-field="filename"]').text(item.SFILE);
-       console.log("filename = "+item.SFILE);
        if (item.SFILE && typeof item.SFILE === "string" && item.SFILE.trim() !== "") {
         $('[data-field="filename"]').html(`
           <a href="${host}marform/MAR-VMS/form/mdownload/${NFRMNO}_${VORGNO}_${CYEAR}_${vmscyear2}_${vmsnrunno}/${item.SFILE.substring(13)}/${item.SFILE}" 
@@ -1937,8 +2002,6 @@ function loaddata(vmscyear2,vmsnrunno)
        $('[data-field="car"]').text(carVal);
        $('[data-field="cardetail"]').text(item.CARHOTELNOTE);
        
-
-
        const tbody = document.getElementById("visitor-body");
        tbody.innerHTML = ""; 
        let i = 1;
@@ -2094,6 +2157,41 @@ function parseEXPPLAN(expPlan) {
   // Invalid date → คืนค่าเดิม
   return str;
 }
+
+
+function bookingroom(data) {
+  return $.ajax({
+    url: "https://amecwebtest.mitsubishielevatorasia.co.th/api/automate/meeting/create",
+    type: "POST",
+    data: JSON.stringify(data),
+    contentType: "application/json",
+    beforeSend: function () {
+      showLoader({ show: true });
+    },
+    success: function (res) {
+      Swal.fire({
+        toast: true,
+        position: "top-end",
+        icon: "success",
+        title: "Booking Room success.",
+        showConfirmButton: false,
+        timer: 2500,
+        timerProgressBar: true,
+      });
+    },
+    complete: function () {
+      showLoader({ show: false });
+    },
+    error: function (xhr) {
+      Swal.fire({
+        icon: "error",
+        title: "Failed to Booking Room",
+        text: xhr.responseText || "Failed to Booking Room",
+      });
+    },
+  });
+}
+
 
 
 

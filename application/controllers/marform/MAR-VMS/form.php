@@ -782,7 +782,12 @@ class form extends MY_Controller{
 
     }
 
-
+    public function getEmail()
+    {
+        $empno = $_POST["empno"];
+        $data = $this->vms->customSelect("AMECUSERALL",array("SEMPNO" => $empno), 'SRECMAIL');
+        echo json_encode($data);
+    }
 
 
 
