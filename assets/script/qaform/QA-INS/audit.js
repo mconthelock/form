@@ -1,8 +1,11 @@
 import { getAuditMasterAll } from "../../api/escs/audit_master_all";
 import { getAuditRevision } from "../../api/escs/audit_revision";
+import { handleFiles } from "../../public/v1.0.3/_dragdrop";
+import { fancybox } from "../../public/v1.0.3/_fancyBox";
 import {
     autosizeTextarea,
     getAllAttr,
+    logFormData,
     logtest,
     showErrorMessage,
     showMessage,
@@ -55,10 +58,10 @@ $(async function () {
             throw new Error("No audit master data found");
         }
 
+
         logtest("Form Info", formInfo);
         logtest("Form Data", formData);
         logtest("Auditee", auditee);
-        logtest("Auditor", auditor);
         logtest("Revision", revision);
 
         $("#rev").html(`Revision: ${formData.QA_REV_INFO.ARR_REV_TEXT}`);
@@ -72,7 +75,7 @@ $(async function () {
                 auditee.QA_AUDIT
             )
         );
-        $("#tableCS").replaceWith(await createTableCS());
+        $("#tableCS").replaceWith(await createTableCS(auditee, auditee.QOA_AUDIT));
         if (auditee.QOA_AUDIT != 1) {
             $("#action").html(
                 btn({
@@ -86,8 +89,8 @@ $(async function () {
                         cls: "btn-primary",
                     }) +
                     btn({
-                        id: "reset",
-                        text: "Reset",
+                        id: "cancel",
+                        text: "Cancel",
                         cls: "btn-error",
                     })
             );
@@ -96,6 +99,7 @@ $(async function () {
         }
         logtest("Master", master);
         setScore();
+        fancybox();
         logtest(document.getElementById("audit-result"));
     } catch (error) {
         console.error(error);
@@ -138,6 +142,14 @@ $(document).on("click", ".cs-radio", function (e) {
     }
 });
 
+$(document).on('change', 'input[name="files"]', function(){
+    handleFiles();
+});
+
+$(document).on('click', '#cancel', function(){
+    finishAndClose();
+});
+
 $(document).on("click", "#saveDraft", async function () {
     try {
         logtest("-------------------Save Draft-------------------");
@@ -145,13 +157,51 @@ $(document).on("click", "#saveDraft", async function () {
 
         const data = await setDataToSave();
         logtest("Data to save", data);
-        const res = await saveAudit({
-            ...form,
-            data,
-            draft: 1,
-            typecode: typecode,
-            auditSeq: formInfo.seq,
+        const formData = new FormData($("#part2")[0]);
+        // $("#tableCS")
+        //     .find("input, select, textarea")
+        //     .each(function () {
+        //         const name = $(this).attr("name");
+        //         const value = $(this).val();
+        //         if (name) {
+        //             formData.append(name, value);
+        //         }
+        //     });
+        formData.append("NFRMNO", form.NFRMNO);
+        formData.append("VORGNO", form.VORGNO);
+        formData.append("CYEAR", form.CYEAR);
+        formData.append("CYEAR2", form.CYEAR2);
+        formData.append("NRUNNO", form.NRUNNO);
+        formData.append("typecode", typecode);
+        formData.append("auditSeq", formInfo.seq);
+        formData.append("actionBy", formInfo.empno);
+        formData.append("draft", 1);
+        // formData.append("data", JSON.stringify(data));
+        data.forEach((item, i) => {
+            // NestJS จะมองเป็น data[0][field], data[1][field]
+            Object.keys(item).forEach((key) => {
+                formData.append(`data[${i}][${key}]`, item[key] ?? "");
+            });
         });
+        // ถ้ามี array ของ string เช่น delImageIds
+        // delImageIds?.forEach((id, i) => formData.append(`delImageIds[${i}]`, id));
+        $('.delete-from-db').each(function(i, el) {
+            formData.append(`delImageIds[${i}]`, $(el).attr('file-id'));
+        });
+
+        // บันทึกผลลัพธ์
+        // logFormData(formData);
+        // return
+        const res = await saveAudit(formData);
+        // return;
+
+        // const res = await saveAudit({
+        //     ...form,
+        //     data,
+        //     draft: 1,
+        //     typecode: typecode,
+        //     auditSeq: formInfo.seq,
+        // });
         if (res && res.status) {
             showMessage("Save draft successfully", "success");
             finishAndClose();

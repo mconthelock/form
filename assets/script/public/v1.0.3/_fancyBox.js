@@ -292,7 +292,7 @@ export function fancyboxBasic(img){
         <img src="${base64}">
     </a>
  */
-export function fancybox(dataFancy){
+export function fancybox(dataFancy = 'gallery'){
     Fancybox.bind(`[data-fancybox="${dataFancy}"]`,{
         Slideshow: {
             playOnStart: true,

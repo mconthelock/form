@@ -4,10 +4,10 @@
 
 import { showLoader } from "./preloader";
 
-
-
 // export const host = $("meta[name=base_url]").attr("content");
-export const host = self.location.origin + self.location.pathname.split('/').slice(0,2).join('/');
+export const host =
+    self.location.origin +
+    self.location.pathname.split("/").slice(0, 2).join("/");
 
 /**
  * https://amecwebtest.mitsubishielevatorasia.co.th
@@ -32,29 +32,35 @@ export const selfLocationPath = self.location.pathname;
 /**
  * Required input
  */
-$(document).on('input blur', '.req', function(){
+$(document).on("input blur", ".req", function () {
     RequiredElement($(this));
 });
 
-$(document).on('input', 'textarea.autosize:not(.autosize-match)', function(){
+$(document).on("input", "textarea.autosize:not(.autosize-match)", function () {
     autosizeTextarea(this);
 });
 
-$(document).on('input', 'textarea.autosize.autosize-match', function(){
-    const height = autosizeTextarea(this);
-    $('.autosize.autosize-match').each(function(){
-        $(this).css('height', height + 'px');
+$(document).on("input", "textarea.autosize.autosize-match", function (e) {
+    $(".autosize.autosize-match").each(function (i, el) {
+        el.style.height = "auto"; 
+    });
+    let height = this.scrollHeight;
+    $(".autosize.autosize-match").each(function (i, el) {
+        height = height > el.scrollHeight ? height : el.scrollHeight;
+    });
+    $(".autosize.autosize-match").each(function (el) {
+        $(this).css("height", height + "px");
     });
 });
 
 /**
  * Add minutes to time string
- * @param {string} timeStr 
- * @param {number} minutesToAdd 
+ * @param {string} timeStr
+ * @param {number} minutesToAdd
  * @returns {string} Updated time string
  */
 export function addMinutesToTime(timeStr, minutesToAdd) {
-    let [h, m] = timeStr.split(':').map(Number);
+    let [h, m] = timeStr.split(":").map(Number);
     let date = new Date();
     date.setHours(h);
     date.setMinutes(m + minutesToAdd);
@@ -63,24 +69,33 @@ export function addMinutesToTime(timeStr, minutesToAdd) {
 
 /**
  * Show message popup
- * @param {string} msg 
- * @param {string} type 
+ * @param {string} msg
+ * @param {string} type
  * @param {string} position toast-end | toast-top | toast-center | toast-bottom | toast-start | toast-middle
  */
-export function showMessage(msg, type = "error", position = 'toast-end') {
-
+export function showMessage(msg, type = "error", position = "toast-end") {
     const prop = [
-      {
-        id: "error",
-        bg: "bg-red-800",
-        text: "text-white",
-        title: "Processing Fail!",
-      },
-      { id: "success", bg: "bg-green-800", text: "text-white", title: 'Success' },
-      { id: "info", bg: "bg-blue-800", text: "text-white", title: 'Info' },
-      { id: "warning", bg: "bg-yellow-800", text: "text-white", title: 'Warning!' },
+        {
+            id: "error",
+            bg: "bg-red-800",
+            text: "text-white",
+            title: "Processing Fail!",
+        },
+        {
+            id: "success",
+            bg: "bg-green-800",
+            text: "text-white",
+            title: "Success",
+        },
+        { id: "info", bg: "bg-blue-800", text: "text-white", title: "Info" },
+        {
+            id: "warning",
+            bg: "bg-yellow-800",
+            text: "text-white",
+            title: "Warning!",
+        },
     ];
-  
+
     const dt = prop.find((x) => x.id == type);
     const toast = $(`
           <dialog class="msg-notify toast ${position} ${dt.bg} z-[9999] !p-0 rounded-2xl m-5  alert-message w-80 max-w-80 opacity-100 transition-all duration-1000">
@@ -96,28 +111,23 @@ export function showMessage(msg, type = "error", position = 'toast-end') {
               </div>
           </dialog>
           `);
-    $('.msg-notify').remove();
-    toast.appendTo('body');
+    $(".msg-notify").remove();
+    toast.appendTo("body");
     setTimeout(() => {
-      console.log(toast);
-      toast.find('.msg-close').trigger('click'); 
-    }, 5000); 
-    $('.msg-close').on('click', function () {
-        toast.removeClass('opacity-100').addClass('opacity-0');
+        console.log(toast);
+        toast.find(".msg-close").trigger("click");
+    }, 5000);
+    $(".msg-close").on("click", function () {
+        toast.removeClass("opacity-100").addClass("opacity-0");
         setTimeout(() => {
-            toast.remove(); 
+            toast.remove();
         }, 1000);
     });
 }
 
 export function showErrorMessage(message) {
-    showMessage(
-        `${message} Please try again. or contact Tel.2038`,
-        "error"
-    );
+    showMessage(`${message} Please try again. or contact Tel.2038`, "error");
 }
-
-
 
 export const ajaxOptionsLoad = {
     type: "post",
@@ -127,29 +137,29 @@ export const ajaxOptionsLoad = {
     },
     complete: function (xhr) {
         checkAuthen(xhr);
-        showLoader({show: false});
-    }
+        showLoader({ show: false });
+    },
 };
 export const ajaxOptions = {
     type: "post",
     dataType: "json",
     complete: function (xhr) {
         checkAuthen(xhr);
-    }
+    },
 };
 
 export function getData(option = {}) {
     return new Promise((resolve, reject) => {
-        const opt = { ...ajaxOptions, ...option }
+        const opt = { ...ajaxOptions, ...option };
         const options = {
             ...opt,
             success: function (res) {
-                resolve(res); 
+                resolve(res);
             },
             error: function (xhr, textStatus, errorThrown) {
                 let error = new Error(errorThrown || "Unknown AJAX error");
                 error.status = xhr.status;
-                error.responseText = xhr.responseText; 
+                error.responseText = xhr.responseText;
                 reject(error);
             },
         };
@@ -157,23 +167,22 @@ export function getData(option = {}) {
     });
 }
 
-
 /**
  * Check Authen
- * @param {*} xhr 
- * @param {*} status 
+ * @param {*} xhr
+ * @param {*} status
  */
-export function checkAuthen(xhr, status=''){
-    try{
+export function checkAuthen(xhr, status = "") {
+    try {
         // console.log(xhr);
         if (!xhr.responseJSON) {
-            throw new Error('Response is not JSON');
-        }else{
-            const statusCode  = xhr.responseJSON.status;
+            throw new Error("Response is not JSON");
+        } else {
+            const statusCode = xhr.responseJSON.status;
             const urlRedirect = xhr.responseJSON.url;
             // console.log('statusCode', statusCode);
             // console.log('urlRedirect', urlRedirect);
-            if (statusCode == '403' && urlRedirect) {
+            if (statusCode == "403" && urlRedirect) {
                 window.location.href = urlRedirect;
             }
         }
@@ -183,25 +192,25 @@ export function checkAuthen(xhr, status=''){
     }
 }
 
-
-
 /**
  * reset form and remove class error in .req
  * @param {string} form id or class Form e.g. #chemical-master , .inspection-form
  */
-export function resetForm(form){
+export function resetForm(form) {
     $(form)[0].reset();
-    formRemoveError(form)
+    formRemoveError(form);
 }
 
 /**
  * Remove error class in form
  * @param {string} form id or class Form e.g. #chemical-master , .inspection-form
  */
-export function formRemoveError(form){
-    $(form).find(".req").map(function (i, el) {
-        removeClassError($(el));
-    });
+export function formRemoveError(form) {
+    $(form)
+        .find(".req")
+        .map(function (i, el) {
+            removeClassError($(el));
+        });
 }
 
 /**
@@ -209,49 +218,58 @@ export function formRemoveError(form){
  * @param {object} form element form class or id e.g. #chemical-master , .inspection-form
  * @param {object} fields e.g. [{element: element, message: message}]
  * @param {string} position e.g. toast-end | toast-top | toast-center | toast-bottom | toast-start | toast-middle
- * @returns 
+ * @returns
  */
-export async function requiredForm(form, fields=[], position = ''){
+export async function requiredForm(form, fields = [], position = "") {
     let check = false;
-    $(form).find('input, select, textarea').each(function() {
-        const target = $(this);
-        
-        if(RequiredElement(target)){
-            check = true;
-        }
-    });
-    
+    $(form)
+        .find("input, select, textarea")
+        .each(function () {
+            const target = $(this);
+
+            if (RequiredElement(target)) {
+                check = true;
+            }
+        });
+
     if (fields.length == 0 && check) {
-        showMessage('กรุณากรอกข้อมูลให้ครบถ้วน', 'warning', position);
+        showMessage("กรุณากรอกข้อมูลให้ครบถ้วน", "warning", position);
         return false;
     }
     for (const field of fields) {
         if (!field.element.val() || field.element.val().length === 0) {
-            showMessage(field.message, 'warning', position);
+            showMessage(field.message, "warning", position);
             return false;
         }
     }
     return true;
-
 }
 
 /**
  * Check Required element
- * @param {object} e 
+ * @param {object} e
  */
-export function RequiredElement(e){
-    const groupName = e.attr('name');
-    const isEmptyRadioWithReq = ($(`input[name="${groupName}"].req:checked`).length === 0 && (e.prop('type') === 'radio' || e.prop('type') == 'checkbox') && e.hasClass('req'));
-    const isEmptyWithReq      = ((!e.val() || e.val().length === 0) && e.hasClass('req')); // Fixed '=' to '===' and checked length
+export function RequiredElement(e) {
+    const groupName = e.attr("name");
+    const isEmptyRadioWithReq =
+        $(`input[name="${groupName}"].req:checked`).length === 0 &&
+        (e.prop("type") === "radio" || e.prop("type") == "checkbox") &&
+        e.hasClass("req");
+    const isEmptyWithReq =
+        (!e.val() || e.val().length === 0) && e.hasClass("req"); // Fixed '=' to '===' and checked length
     // if(e.is('.inputDrop.req')){
     // if(e.hasClass('inputDrop') && e.hasClass('req')){
     //------dragDrop.js------//
-    if (e.hasClass('inputDrop')) {
-        if(isEmptyWithReq){
-            e.siblings('.dropZone').addClass('border-red-500 text-red-500').removeClass('border-primary text-primary');
+    if (e.hasClass("inputDrop")) {
+        if (isEmptyWithReq) {
+            e.siblings(".dropZone")
+                .addClass("border-red-500 text-red-500")
+                .removeClass("border-primary text-primary");
             return true;
-        }else{
-            e.siblings('.dropZone').removeClass('border-red-500 text-red-500').addClass('border-primary text-primary');
+        } else {
+            e.siblings(".dropZone")
+                .removeClass("border-red-500 text-red-500")
+                .addClass("border-primary text-primary");
             return false;
         }
     }
@@ -259,7 +277,7 @@ export function RequiredElement(e){
         // console.log('addClassError', e);
         addClassError(e);
         return true;
-    }else{
+    } else {
         // console.log('removeClassError', e);
         removeClassError(e);
         return false;
@@ -268,68 +286,73 @@ export function RequiredElement(e){
 
 /**
  * Add css error class
- * @param {object} e 
+ * @param {object} e
  */
-export function addClassError(e){
-    if(e.is('input')){
-        const groupName = e.attr('name'); 
-        if($(`input[name="${groupName}"].req:checked`).length === 0){
-            if (e.prop('type') == 'radio' ) {
-                $(`input[name="${groupName}"]`).addClass('radio-error');
-            } else if (e.prop('type') == 'checkbox') {
-                $(`input[name="${groupName}"]`).addClass('checkbox-error');
+export function addClassError(e) {
+    if (e.is("input")) {
+        const groupName = e.attr("name");
+        if ($(`input[name="${groupName}"].req:checked`).length === 0) {
+            if (e.prop("type") == "radio") {
+                $(`input[name="${groupName}"]`).addClass("radio-error");
+            } else if (e.prop("type") == "checkbox") {
+                $(`input[name="${groupName}"]`).addClass("checkbox-error");
             } else {
-                e.addClass('input-error');
-                if(e.closest('label').length > 0 && e.closest('label').hasClass('input')){
-                    e.closest('label').addClass('input-error');
+                e.addClass("input-error");
+                if (
+                    e.closest("label").length > 0 &&
+                    e.closest("label").hasClass("input")
+                ) {
+                    e.closest("label").addClass("input-error");
                 }
             }
         }
-    }else if(e.is('select')){
-        e.next('.select2-container').addClass('select-error');
-    }else if(e.is('textarea')){
-        e.addClass('textarea-error');
+    } else if (e.is("select")) {
+        e.next(".select2-container").addClass("select-error");
+    } else if (e.is("textarea")) {
+        e.addClass("textarea-error");
     }
 }
 
 /**
  * Remove css error class
- * @param {object} e 
+ * @param {object} e
  */
-export function removeClassError(e){
-    if(e.is('input')){
-        const groupName = e.attr('name'); 
-        if(e.prop('type') == 'radio'){
-            $(`input[name="${groupName}"]`).removeClass('radio-error');
-        }else if (e.prop('type') == 'checkbox') {
-            $(`input[name="${groupName}"]`).removeClass('checkbox-error');
-        }else{
-            e.removeClass('input-error');
-            if(e.closest('label').length > 0 && e.closest('label').hasClass('input')){
-                e.closest('label').removeClass('input-error');
+export function removeClassError(e) {
+    if (e.is("input")) {
+        const groupName = e.attr("name");
+        if (e.prop("type") == "radio") {
+            $(`input[name="${groupName}"]`).removeClass("radio-error");
+        } else if (e.prop("type") == "checkbox") {
+            $(`input[name="${groupName}"]`).removeClass("checkbox-error");
+        } else {
+            e.removeClass("input-error");
+            if (
+                e.closest("label").length > 0 &&
+                e.closest("label").hasClass("input")
+            ) {
+                e.closest("label").removeClass("input-error");
             }
         }
-    }else if(e.is('select')){
-        e.next('.select2-container').removeClass('select-error');
-    }else if(e.is('textarea')){
-        e.removeClass('textarea-error');
+    } else if (e.is("select")) {
+        e.next(".select2-container").removeClass("select-error");
+    } else if (e.is("textarea")) {
+        e.removeClass("textarea-error");
     }
 }
-
 
 /**
  * Autosize the textarea element.
  * @param {object} el document.getElementById('workcontent')
  */
-export function autosizeTextarea (el) {
-    el.style.height = 'auto';           // รีเซ็ตก่อน
+export function autosizeTextarea(el) {
+    el.style.height = "auto"; // รีเซ็ตก่อน
     const height = el.scrollHeight;
-    el.style.height = height + 'px'; // ปรับสูงเท่าคอนเทนต์
+    el.style.height = height + "px"; // ปรับสูงเท่าคอนเทนต์
     return height;
 }
 
 export function logFormData(formData) {
-    if (['local', 'development'].includes(process.env.STATE || '')) {
+    if (["local", "development"].includes(process.env.STATE || "")) {
         for (const [key, value] of formData.entries()) {
             console.log(`${key}: ${value}`);
         }
@@ -339,7 +362,7 @@ export function logFormData(formData) {
 export function getLastWednesday() {
     const today = new Date();
     let lastWednesday = new Date(today);
-    
+
     // Check if today is Wednesday
     if (today.getDay() === 3) {
         lastWednesday = today;
@@ -364,11 +387,20 @@ export async function getAllAttr(element) {
 }
 
 export function logtest(...args) {
-    if (['local', 'development'].includes(process.env.STATE || '')) {
+    if (["local", "development"].includes(process.env.STATE || "")) {
         console.log(...args);
     }
 }
 
-export const openNewWindow = ({url, name = '_blank', h = screen.height, w = screen.width} = {}) => {
-    window.open(url, name, `height=${h},width=${w},top=0,left=0,resizable=yes,scrollbars=yes`);
-}
+export const openNewWindow = ({
+    url,
+    name = "_blank",
+    h = screen.height,
+    w = screen.width,
+} = {}) => {
+    window.open(
+        url,
+        name,
+        `height=${h},width=${w},top=0,left=0,resizable=yes,scrollbars=yes`
+    );
+};

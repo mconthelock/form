@@ -16,8 +16,6 @@ function shortSec(sec) {
 
 function finishAndClose() {
     // set ค่าใน localStorage เพื่อ trigger main
-    console.log("test");
-
     localStorage.setItem("TableAuditeeReload", Date.now());
     window.close();
 }

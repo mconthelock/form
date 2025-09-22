@@ -76,12 +76,12 @@
                 </table>
             </div>
         </div>
-        <div id="part2">
+        <form id="part2">
             <div class="text-2xl font-bold italic underline">
                 Part II: Summary comment/suggestion Result
             </div>
             <div id="tableCS"></div>
-        </div>
+        </form>
 
         <div id="action" class="flex gap-5"></div>
     </div>

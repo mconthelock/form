@@ -1,4 +1,7 @@
+import { getBase64Image } from "../../api/file";
 import { formatDate } from "../../public/v1.0.3/_dayjs";
+import { dragDropInit, dragDropListImage } from "../../public/v1.0.3/_dragdrop";
+import { fancyDialog } from "../../public/v1.0.3/_fancyBox";
 import { host, logtest } from "../../public/v1.0.3/jFuntion";
 import { displayEmpImage } from "../../public/v1.0.3/setIndexDB";
 import { btnMinus, btnPlus, inputNum, radio } from "./component";
@@ -158,7 +161,9 @@ async function createDetail(data, auditee) {
                 </tr>
                 <tr>
                     <td class="font-bold text-nowrap">Audit date</td>
-                    <td id="detail-audit-date">${formatDate(data.QA_OJT_DATE)}</td>
+                    <td id="detail-audit-date">${formatDate(
+                        data.QA_OJT_DATE
+                    )}</td>
                     <td id="detail-auditee-empno" class="text-center">${empno}</td>
                 </tr>
             </tbody>
@@ -190,7 +195,9 @@ async function createTableRevision(revision) {
                         : "SYSTEM"
                 }</td>
                 <td>${rev.ARR_REASON}</td>
-                <td><a href="${host}/qaform/QA-INS/form/preview/${rev.ARR_SECID}/${
+                <td><a href="${host}/qaform/QA-INS/form/preview/${
+            rev.ARR_SECID
+        }/${
             rev.ARR_REV
         }" target="_blank" class="btn btn-sm btn-primary"><i class="icofont-eye-alt"></i></a></td>
             </tr>
@@ -203,7 +210,32 @@ async function createTableRevision(revision) {
     return html;
 }
 
-async function createTableCS(){
+async function createTableCS(data, audit = 0) {
+    let list = "";
+    if (data.QA_FILES && data.QA_FILES.length > 0) {
+        for (const file of data.QA_FILES) {
+            const path = file.FILE_PATH.endsWith("/")
+                ? file.FILE_PATH + file.FILE_FNAME
+                : file.FILE_PATH + "/" + file.FILE_FNAME;
+            const image = await getBase64Image(path);
+
+            if(audit != 1){
+                list += dragDropListImage({
+                    src: image,
+                    attr: `file-id="${file.FILE_ID}"`,
+                    fromDB: true
+                });
+            }else{
+                list += `<li class="relative">
+                    <a href="${image}" data-fancybox="gallery" class="w-2/5 h-2/5">
+                        <img src="${image}" class="w-44 object-cover rounded-lg" />
+                    </a>
+                </li>`;
+            }
+        }
+    }
+    const readonly = audit == 1 ? "readonly disabled" : "";
+
     let html = `<table id="tableCS" class="table w-full">
         <colgroup>
             <col class="border">
@@ -220,12 +252,23 @@ async function createTableCS(){
         <tbody>
             <tr>
                 <td class="p-0">
-                    <textarea class="w-full h-full p-4 autosize autosize-match" id="audit-result" placeholder="Enter audit result here..."></textarea>   
+                    <textarea class="w-full h-full min-h-72 p-4 autosize autosize-match" id="audit-result" name="auditResult" placeholder="Enter audit result here..." ${readonly}>${
+                        data.QOA_AUDIT_RESULT
+                    }</textarea>   
                 </td>
                 <td class="p-0">
-                    <textarea class="w-full h-full p-4 autosize autosize-match" id="audit-activity" placeholder="Enter audit activity here..."></textarea>   
+                    <textarea class="w-full h-full min-h-72 p-4 autosize autosize-match" id="audit-activity" name="auditActivity" placeholder="Enter audit activity here..." ${readonly}>${
+                        data.QOA_IMPROVMENT_ACTIVITY
+                    }</textarea>   
                 </td>
-                <td></td>
+                <td class="w-3xl">
+                    ${audit != 1 ? dragDropInit({
+                        format: "image",
+                        class: "auditImage",
+                        showImg: true,
+                        list: list,
+                    }) : list}
+                </td>
             </tr>
         </tbody>
     </table>`;
@@ -301,5 +344,5 @@ export {
     setScore,
     createDetail,
     createTableRevision,
-    createTableCS
+    createTableCS,
 };
