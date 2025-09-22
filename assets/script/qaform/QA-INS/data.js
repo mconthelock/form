@@ -108,8 +108,9 @@ export async function getAuditee(q = {}){
 export async function saveAudit(data){
     const res = await fetch(`${process.env.APP_API}/qaform/qa-ins/audit/saveAudit`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+        // headers: { "Content-Type": "application/json" },
+        // body: JSON.stringify(data),
+        body: data
     });
     if (!res.ok) {
         await fetchMsgErr(res);

@@ -4,14 +4,11 @@ export async function downloadOrOpenFile(body) {
     let href; // ไว้ cleanup แม้เกิด error
     try {
         // const res = await fetch(`${process.env.APP_API}/files/OpenOrDownload`, {
-        const res = await fetch(
-            `${process.env.APP_API}/files/OpenOrDownload`,
-            {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(body),
-            }
-        );
+        const res = await fetch(`${process.env.APP_API}/files/OpenOrDownload`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body),
+        });
 
         // fetch จะ reject เฉพาะ network error; สเตตัส 4xx/5xx ยังถือว่า ok ทางเครือข่าย
         if (!res.ok) {
@@ -46,5 +43,29 @@ export async function downloadOrOpenFile(body) {
         throw err; // ถ้าผู้เรียกอยากรู้ว่าพัง ให้ rethrow ต่อ
     } finally {
         if (href) URL.revokeObjectURL(href); // cleanup กรณีเกิด error ก่อน revoke ข้างบน
+    }
+}
+
+export async function getBase64Image(path) {
+    try {
+        const res = await fetch(`${process.env.APP_API}/files/getBase64Image`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                path: path,
+            }),
+        });
+         if (!res.ok) {
+            // พยายามอ่านข้อความจากเซิร์ฟเวอร์เพื่อเดบัก
+            const text = await res.text().catch(() => "");
+            throw new Error(
+                `HTTP ${res.status} ${res.statusText} ${text?.slice(0, 200)}`
+            );
+        }
+        return res.text();
+    } catch (error) {
+        console.log("Error getBase64Image", error);
+        showErrorMessage("Error getBase64Image");
+        throw error;
     }
 }

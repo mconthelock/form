@@ -24,10 +24,12 @@
  * $(document).on('change', 'input[name="files[]"]', async function(e){
         handleFiles();
     });
-
+ * @note 2025-09-22
+    เพิ่มแสดงรูปภาพเฉพาะ format image
+    ส่ง showImg: true ใน dragDropInit และ format: 'image'
  */
 
-import { createFancyObjectURL, fancyboxBasic} from "./_fancyBox";
+import { createFancyObjectURL, fancybox, fancyboxBasic} from "./_fancyBox";
 import { checkFileType, fileFormats } from "./_file";
 import "./_tooltip";
 import { RequiredElement } from "./jFuntion";
@@ -75,13 +77,24 @@ $(document).on('click',   ".drop-remove", async function (e) {
     const dropZone = $(this).closest('.dropZone');
     const element  = elementDragDrop(dropZone);
     const list     = $(this).parent();
+    const numOfLi  = element.list.find('li').length;
     const index    = list.index();
     const fileInput = element.fileInput[0];
-    filesData[element.name].splice(index, 1);
+    filesData[element.name].splice((numOfLi-1)-index, 1);
     list.remove();
     addDataFile(fileInput, element);
     
 });
+
+$(document).on('click', '.drop-remove-db', async function(e){
+    e.preventDefault();
+    const dropZone = $(this).closest('.dropZone');
+    const element  = elementDragDrop(dropZone);
+    const list     = $(this).closest('li');
+    list.addClass('hidden delete-from-db');
+    checkDropZone(element);
+});
+
 
 
 /**
@@ -106,6 +119,7 @@ $(document).on('click', '.drop-image', async function(e){
     const index    = list.index();
     fancyboxBasic([createFancyObjectURL(imagesData[element.name][index])]);
 });
+
 
 $(document).on('mouseenter mouseleave', '.drop-image', function(){
     $(this).toggleClass('icofont-image icofont-eye-alt');
@@ -145,18 +159,35 @@ export const dragDropInit = (options = {}) => {
         height: 'h-70',
         width: 'w-full', 
         class: '',
+        showImg: false,
+        list: '', // กรณีส่ง list มาให้เลย สำหรับ return
         ...options
     }
+    const show = opt.list != '' ? true : false;
     return `<div class=" p-3 flex gap-3 ${opt.width} ${opt.height}">
     <label for='${opt.name}'  class="dropZone border border-primary border-dashed rounded-lg w-full min-h-60 text-primary  cursor-pointer   overflow-scroll">
-        <div class="drop-message flex flex-col justify-center items-center h-full">
+        <div class="drop-message ${show ? 'hidden' : 'flex'} flex-col justify-center items-center h-full">
             <span>Drag & Drop files here or click to select</span>
         </div>
-        <div class="drop-list w-full flex-col items-start text-gray-500 hidden p-1 gap-1"></div>
+        <ul class="drop-list w-full  ${opt.showImg ? 'gap-5 flex-wrap' : 'flex-col'} items-start text-gray-500 ${show ? 'flex' : 'hidden'} p-1 gap-1">
+            ${opt.list}
+        </ul>
     </label>
-    <input type="file" class="inputDrop file-input txt-upper validator ${opt.class} hidden" data-format='${opt.format}' data-msg-region='${opt.msgRegion}' name="${opt.name}" id="${opt.name}" multiple/>
+    <input type="file" class="inputDrop file-input txt-upper validator ${opt.class} hidden" data-showimg="${opt.showImg}" data-format='${opt.format}' data-msg-region='${opt.msgRegion}' name="${opt.name}" id="${opt.name}" multiple/>
     </div>`;
 };
+
+export const dragDropListImage = ({src = '', attr = "", fromDB = false} = {})=>{
+    const clsName = fromDB ? " drop-remove-db" : " drop-remove";
+    return`
+            <li class="fancy-image relative shadow-lg"  ${attr}>
+                <a href="${src}" data-fancybox="gallery" class="w-2/5 h-2/5">
+                    <img src="${src}" class="w-44 object-cover rounded-lg" />
+                </a>
+                <i class="icofont-close-squared-alt bg-white ml-auto text-error text-2xl absolute right-0 top-0 ${clsName}"></i>
+            </li>
+            `
+}
 
 export const dragDropReset = (options = {}) => {
     const opt = {
@@ -215,8 +246,9 @@ function addDataFile(fileInput, element) {
  * @param {object} e
  */
 function checkDropZone(e) {
-    e.fileInput[0].files.length > 0 ? hideList(e) : showList(e);
-    if(e.fileInput[0].files.length > 0) {
+    // e.fileInput[0].files.length > 0 ? hideList(e) : showList(e);
+    
+    if(e.fileInput[0].files.length > 0 || e.list.find('li:not(.hidden)').length > 0){
         hideList(e);
         if(e.fileInput.hasClass('req')) e.fileInput.siblings('.dropZone').removeClass('border-red-500 text-red-500').addClass('border-primary text-primary');
     } else {
@@ -231,7 +263,7 @@ function checkDropZone(e) {
  */
 function showList(e) {
     e.list.addClass("hidden").removeClass("flex");
-    if(e.message) e.message.removeClass('hidden');
+    if(e.message) e.message.removeClass('hidden').addClass('flex');
 }
 
 /**
@@ -240,7 +272,7 @@ function showList(e) {
  */
 function hideList(e){
     e.list.removeClass("hidden").addClass("flex");
-    if(e.message) e.message.addClass('hidden');
+    if(e.message) e.message.addClass('hidden').removeClass('flex');
 }
   
 /**
@@ -270,6 +302,7 @@ export async function handleFiles(options = {}) {
     }
     const element = elementDragDrop(opt.element);
     const format  = element.fileInput.attr('data-format');
+    const showImg = element.fileInput.attr('data-showimg');
     const msgRegion = element.fileInput.attr('data-msg-region') || 'EN';
     const files   = opt.files.length > 0 ? opt.files : element.fileInput[0].files;
     const fileInput = element.fileInput[0];
@@ -279,12 +312,18 @@ export async function handleFiles(options = {}) {
         const file = files[i];
         const fileExtension = file.name.split('.').pop().toLowerCase(); // get file extension
         const icon = file.type.includes('image') ? iconfont(opt.iconSize).image : iconfont(opt.iconSize)[fileExtension];
-        const txt = `
-        <li class="flex flex-row gap-2 items-center hover:bg-gray-200 w-full px-2 rounded">
+        let txt = '';
+        const base64 = URL.createObjectURL(file);
+        if(showImg && format == 'image'){
+            txt = dragDropListImage({src: base64});
+        }else{
+            txt = `
+            <li class="flex flex-row gap-2 items-center hover:bg-gray-200 w-full px-2 rounded">
             ${icon || '<i class="icofont-file-alt text-2xl"></i>'}
             <span class="text-base overflow-hidden text-ellipsis whitespace-nowrap">${file.name}</span>
             <i class="icofont-close-squared-alt ml-auto text-error text-2xl drop-remove"></i>
-        </li>`;
+            </li>`;
+        }
         if(format != ''){
             const fm = fileFormats[format] || {};
             if (! await checkFileType(file.name, fm.extension, msgRegion == 'EN' ? fm.msgEn : fm.msg)) {
@@ -296,10 +335,12 @@ export async function handleFiles(options = {}) {
         }
         // dataTransfer.items.add(file);
         filesData[element.name].push(file);
-        imagesData[element.name].push(URL.createObjectURL(file));
+        imagesData[element.name].push(base64);
         element.list.append(txt);
     }
     console.log('filelength',filesData.length);
+
+    if(showImg && format == 'image')fancybox();
     
     if(filesData.length > 0){
         
