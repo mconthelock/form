@@ -36,7 +36,11 @@ class vms_model extends my_model
         ->select('SEMPNO , SNAME , SSEC , SDEPT , SDIV , SPOSNAME')
         ->from('AMECUSERALL')
         ->where('CSTATUS', '1')
-        ->where('SPOSCODE <=', 40) 
+        ->group_start()               // เริ่มวงเล็บสำหรับเงื่อนไข OR
+        ->where('SPOSCODE <=', 40)
+        ->or_where('SPOSCODE', 49)
+        ->or_where('SPOSCODE', 50)
+        ->group_end() 
         ->order_by('SNAME', 'asc');
     return $this->db->get()->result();
 
@@ -52,7 +56,8 @@ class vms_model extends my_model
         $this->db
         ->select('V.* ,GNAME , GDETAIL')
         ->from('VMS_STAKEHOLDERS V')
-        ->join('VMS_GROUP G', 'V.GID = G.GID');
+        ->join('VMS_GROUP G', 'V.GID = G.GID')
+        ->order_by('SEQ', 'asc');
         return $this->db->get()->result();
 
     }
@@ -154,7 +159,7 @@ class vms_model extends my_model
         $this->db
         ->select('ROW_NUMBER() OVER (ORDER BY GNAME ASC) AS NO , VMS_GROUP.*')
         ->from('VMS_GROUP')
-        ->order_by('GNAME', 'ASC');
+        ->order_by('SEQ , GID', 'ASC');
           return $this->db->get()->result();
     }
 

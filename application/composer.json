@@ -8,6 +8,7 @@
         "fpdf/fpdf": "^1.86",
         "setasign/fpdi-protection": "^2.1",
         "setasign/fpdi": "^2.6",
-        "setasign/fpdi-tcpdf": "^2.3"
+        "setasign/fpdi-tcpdf": "^2.3",
+        "phpoffice/phpspreadsheet": "^1.12"
     }
 }

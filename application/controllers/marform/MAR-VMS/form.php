@@ -1,12 +1,18 @@
 <?php
 use GuzzleHttp\Client;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
+use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use PhpOffice\PhpSpreadsheet\Style\{Border, Fill, Alignment};
+use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 defined('BASEPATH') OR exit('No direct script access allowed');
 //require_once APPPATH.'controllers/_form.php';
 require_once APPPATH.'controllers/_file.php';
 require_once APPPATH.'controllers/api/webform/form.php';
-
+require_once APPPATH.'controllers/_excel.php';
 class form extends MY_Controller{
-    use formApi, _File;
+    use formApi, _File, _excel;
     protected $client;
     private $nfrmno = "14";
     private $vorgno = "090301";
@@ -778,9 +784,127 @@ class form extends MY_Controller{
             "item" => $item,
             "dietary" => $dietary
         );
+        $this->create_save_vmsexcel($data);
         echo json_encode($data);
 
     }
+     // data is data from function getFormData
+    public function create_save_vmsexcel($data)
+    {
+
+        $spreadsheet = IOFactory::load($this->upload_path.'TEMPLATE/VMSTEMP.xlsx');
+        $sheet = $spreadsheet->getActiveSheet();
+
+        // แก้ค่า
+        $sheet->setCellValue('W2', $data['head']['FORMVER']);
+        $sheet->setCellValue('B3', "Attn: ".$data['head']['ATT']);
+        $sheet->setCellValue('B4', "CC: ".$data['head']['CC']);
+        $sheet->setCellValue('E7', $data['head']['PURPOSEVISIT']);
+        $sheet->setCellValue('L7', $data['head']['PURPOSEDETAIL']);
+        $sheet->setCellValue('V3', $data['head']['ISSUEDATE']);
+        $sheet->setCellValue('V4', $data['head']['REFNO']);
+        $parts = preg_split('/\s+/', trim($data['head']['ISSUEBY']));
+        $shortnm = $parts[0] . " " . $parts[1] . " " . $parts[2][0] . ".";
+        $sheet->setCellValue('V5',  $shortnm);
+        $sheet->setCellValue('V6', $data['head']['VISITDATE']);
+        $sheet->setCellValue('W7', $data['head']['RECEPTROOM']);
+        $sheet->setCellValue('W8', $data['head']['VISITOR_COUNT']);
+        $templateStart = 12; // แถวแรกของ template data
+        $templateCount = 2;  // Template มี 3 แถว (12–14)
+        $templateEnd   = $templateStart + $templateCount - 1;
+        $extra = count($data['visitint']) - $templateCount;
+        if ($extra > 0) {
+            $this->insertEmptyRowsWithTemplate($sheet, $templateStart ,$templateCount ,  $extra );
+        }
+        foreach($data['visitint'] as $i => $row)
+        {
+            $currentRow = $templateStart + $i;
+            $sheet->setCellValue("B{$currentRow}", $i+1);
+            $sheet->setCellValue("C{$currentRow}", $row->COUNTRY);
+            $sheet->setCellValue("G{$currentRow}", $row->COMPANY);
+            $sheet->setCellValue("L{$currentRow}", $row->NAME);
+            $sheet->setCellValue("S{$currentRow}", $row->POSITION);
+            $sheet->setCellValue("W{$currentRow}", ($row->VISITEXP == "N"? "No":"Yes"));
+          
+        }
+        $templateStart = $templateStart+ $templateCount +$extra+ 3; // แถวแรกของ template data
+        $templateCount = 2;  // Template มี 3 แถว (12–14)
+        $templateEnd   = $templateStart + $templateCount - 1;
+        $extra = count($data['schedule']) - $templateCount;
+        if ($extra > 0) {
+            $this->insertEmptyRowsWithTemplate($sheet, $templateStart ,$templateCount ,  $extra );
+        }
+        foreach($data['schedule'] as $i => $row)
+        {
+            $currentRow = $templateStart + $i;
+            $sheet->setCellValue(
+                "B{$currentRow}", 
+                !empty($row->SCHSTIME) && !empty($row->SCHETIME)
+                    ? $row->SCHSTIME . ' - ' . $row->SCHETIME
+                    : '-'
+            );
+          
+            $sheet->setCellValue("E{$currentRow}", $row->PLACE);
+            $sheet->setCellValue("H{$currentRow}", $row->CONTENT);
+            $sheet->setCellValue("P{$currentRow}", $row->AMECP);
+            $sheet->setCellValue("W{$currentRow}", !empty($row->NOTE) ? $row->NOTE : '-');
+          
+        }
+        $templateStart = $currentRow + 4;
+        $sheet->setCellValue("P{$templateStart}", $data['item'][0]->HOTELNAME);
+       // $sheet->setCellValue("B{$templateStart+2}",($data['item'][0]->BOARD == "N"? "No":"Yes"));
+       // $sheet->setCellValue("N{$templateStart+4}",($data['item'][0]->SHOPTOUR == "G"? "General":($data['item'][0]->SHOPTOUR == "S"? "Specific":"Inspection")));
+       // $sheet->setCellValue("V{$templateStart+4}",($data['item'][0]->FORMC1_1 == "Y"? "Yes":"No"));
+
+        $writer = new Xlsx($spreadsheet);
+        $filename = $this->upload_path.$data['head']['REFNO'].'vmsform.xlsx';
+        $writer->save($filename);
+    }
+
+    /**
+ * Insert empty row(s) based on template row style
+ *
+ * @param Worksheet $sheet
+ * @param int       $templateStart  แถวแรกของ template data
+ * @param int       $templateCount  จำนวน template row
+ * @param int       $insertCount    จำนวนแถวที่จะเพิ่ม
+ */
+function insertEmptyRowsWithTemplate(Worksheet $sheet, int $templateStart, int $templateCount, int $insertCount)
+{
+    $templateEnd = $templateStart + $templateCount - 1;
+    $highestCol = Coordinate::columnIndexFromString($sheet->getHighestColumn());
+
+    // insert row
+    $sheet->insertNewRowBefore($templateEnd + 1, $insertCount);
+
+    for ($i = 0; $i < $insertCount; $i++) {
+        $targetRow = $templateEnd + 1 + $i;
+
+        // copy row height
+        $sheet->getRowDimension($targetRow)
+              ->setRowHeight($sheet->getRowDimension($templateEnd)->getRowHeight());
+
+        // copy style ของแต่ละ cell
+        for ($col = 1; $col <= $highestCol; $col++) {
+            $colLetter = Coordinate::stringFromColumnIndex($col);
+            $sheet->duplicateStyle(
+                $sheet->getStyle($colLetter . $templateEnd),
+                $colLetter . $targetRow
+            );
+        }
+
+        // copy merge cell ของ template row สุดท้าย
+        foreach ($sheet->getMergeCells() as $merge) {
+            if (preg_match_all('/\d+/', $merge, $matches)) {
+                $rows = $matches[0];
+                if (in_array($templateEnd, $rows)) {
+                    $newMerge = str_replace($templateEnd, $targetRow, $merge);
+                    $sheet->mergeCells($newMerge);
+                }
+            }
+        }
+    }
+}
 
     public function getEmail()
     {
