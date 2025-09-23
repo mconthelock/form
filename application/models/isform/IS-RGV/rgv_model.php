@@ -68,13 +68,22 @@ class Rgv_model extends CI_Model
 
     public function as400_user()
     {
-        $this->ad
-            ->select('*')
-            ->from('ITGC_SPECIALUSER')
-            ->where('USER_TYPE2', 'Human')
-            ->where('CATEGORY', 'APP')
-            ->where('SERVER_NAME', 'AS400');
-        return $this->ad->get()->result();
+        // $this->ad
+        //     ->select('*')
+        //     ->from('ITGC_SPECIALUSER is')
+        //     ->join('AMECUSERALL a', 'is.EMPNO = a.SEMPNO')
+        //     ->where('USER_TYPE2', 'Human')
+        //     ->where('CATEGORY', 'APP')
+        //     ->where('SERVER_NAME', 'AS400');
+        // $this->ad->select('*')
+        //     ->from('v_as400user');
+        $sql = "SELECT *
+                FROM ITGC_SPECIALUSER is2
+                JOIN AMECUserLogin.dbo.TB_SQLAMECUSER ts ON is2.EMPNO = ts.SEMPNO
+                WHERE is2.USER_TYPE2 = 'Human'
+                AND is2.CATEGORY = 'APP'
+                AND is2.SERVER_NAME = 'AS400'";
+        return $this->ad->query($sql)->result();
     }
 
     public function get_data_user($program)

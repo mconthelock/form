@@ -11,7 +11,6 @@ class vms_model extends my_model
         
     }
 
-
     public function generate_attfile_id($cyear2,$nrunno)
     {
         $this->db->select('NVL(MAX(ITEMNO),0) AS ITEMNO')
@@ -20,9 +19,6 @@ class vms_model extends my_model
         ->where('NRUNNO', $nrunno);
         return $this->db->get()->result()[0]->ITEMNO+1;
     }
-
-    
-
 
     public function get_salecompany()
     {
@@ -40,7 +36,11 @@ class vms_model extends my_model
         ->select('SEMPNO , SNAME , SSEC , SDEPT , SDIV , SPOSNAME')
         ->from('AMECUSERALL')
         ->where('CSTATUS', '1')
-        ->where('SPOSCODE <=', 40) 
+        ->group_start()               // เริ่มวงเล็บสำหรับเงื่อนไข OR
+        ->where('SPOSCODE <=', 40)
+        ->or_where('SPOSCODE', 49)
+        ->or_where('SPOSCODE', 50)
+        ->group_end() 
         ->order_by('SNAME', 'asc');
     return $this->db->get()->result();
 
@@ -56,7 +56,8 @@ class vms_model extends my_model
         $this->db
         ->select('V.* ,GNAME , GDETAIL')
         ->from('VMS_STAKEHOLDERS V')
-        ->join('VMS_GROUP G', 'V.GID = G.GID');
+        ->join('VMS_GROUP G', 'V.GID = G.GID')
+        ->order_by('SEQ', 'asc');
         return $this->db->get()->result();
 
     }
@@ -158,7 +159,7 @@ class vms_model extends my_model
         $this->db
         ->select('ROW_NUMBER() OVER (ORDER BY GNAME ASC) AS NO , VMS_GROUP.*')
         ->from('VMS_GROUP')
-        ->order_by('GNAME', 'ASC');
+        ->order_by('SEQ , GID', 'ASC');
           return $this->db->get()->result();
     }
 
@@ -176,6 +177,149 @@ class vms_model extends my_model
           return $this->db->get()->result();
     }
 
+    public function get_vms_ent($cond = '')
+    {
+        if($cond != ''){
+            foreach($cond as $key => $val) {
+            $this->set_where($key, $val);
+        }
+        }
+
+        $this->db
+        ->select('V.VISITDATE', FALSE)
+        ->select('CASE WHEN V.PURPOSEDETAIL IS NULL THEN P.PURPOSE ELSE V.PURPOSEDETAIL END AS PURPOSE', FALSE)
+        ->select('V.COMTYPE, V.LUNCH, V.LUNCH_LOC, V.LUNCH_PLACE, V.DINNER, V.DINNER_PLACE, V.GUESTTYPE', FALSE)
+        ->from('VMS_VISIT V')
+        ->join('VMS_PURPOSE_VISIT P', 'V.PURPOSE = P.PVID');
+        return $this->db->get()->result();
+
+    }
+
+    public function getRcp($cyear2,$nrunno,$typeemp)
+    {
+
+        $this->db
+        ->select("
+        VS.CYEAR2,
+        VS.NRUNNO,  TO_CHAR(
+        RTRIM(
+            XMLAGG(
+                XMLELEMENT(e, VG.GDETAIL || ',').EXTRACT('//text()')
+                ORDER BY VG.GDETAIL
+            ).GetClobVal(),
+            ','
+        )) AS RCP
+    ", FALSE)
+        ->from('VMS_STAKEHOLDERS VS')
+        ->join('VMS_GROUP VG', 'VS.GID = VG.GID')
+        ->where('VS.CYEAR2', $cyear2)
+        ->where('VS.NRUNNO', $nrunno)
+        ->where('VS.TYPEEMP', $typeemp)
+        ->group_by('VS.CYEAR2, VS.NRUNNO');
+        return $this->db->get()->result();
+
+    }
+
+    public function getHeadVisit($nfrmno,$vorgno,$cyear,$cyear2,$nrunno)
+    {
+        $sql = "
+        SELECT FORMVER,
+            'MAR-' || f.CYEAR2 || LPAD(f.NRUNNO, 3, '0') || '-' || v.SALECOM AS REFNO,
+            CASE WHEN f.CST = 0 THEN TO_CHAR(TRUNC(SYSDATE), 'DD-Mon-YY')
+                ELSE TO_CHAR(fl.DAPVDATE, 'DD-Mon-YY')
+            END AS ISSUEDATE,
+            SEMPPRE || ' ' || a.SNAME AS ISSUEBY,
+            TO_CHAR(v.VISITDATE, 'DD-Mon-YY') AS VISITDATE,
+            v.RECEPTROOM,
+            (SELECT COUNT(*) 
+            FROM VMS_VISITINF vi
+            WHERE vi.CYEAR2 = v.CYEAR2
+            AND vi.NRUNNO = v.NRUNNO) AS VISITOR_COUNT,
+            vt.VTYPE,
+            v.PURPOSEDETAIL
+        FROM VMS_VISIT v
+        JOIN FORM f 
+        ON v.CYEAR2 = f.CYEAR2 
+        AND v.NRUNNO = f.NRUNNO
+        JOIN FLOW fl 
+        ON f.NFRMNO = fl.NFRMNO 
+        AND f.VORGNO = fl.VORGNO 
+        AND f.CYEAR  = fl.CYEAR 
+        AND f.CYEAR2 = fl.CYEAR2 
+        AND f.NRUNNO = fl.NRUNNO
+        JOIN AMECUSERALL a 
+        ON f.VREQNO = a.SEMPNO
+        JOIN VMS_VISIT_TYPE vt 
+        ON v.VISITTYPE = vt.VTID
+        WHERE f.NFRMNO  = '{$nfrmno}'
+        AND f.VORGNO  = '{$vorgno}'
+        AND f.CYEAR   = '{$cyear}'
+        AND f.CYEAR2  = '{$cyear2}'
+        AND f.NRUNNO  = '{$nrunno}'
+        AND fl.CSTEPNO = '--'
+        ";
+        return $this->db->query($sql)->result();
+
+    }
+
+    public function getItemReq($cyear2,$nrunno)
+    {
+        $this->db
+        ->select("
+            V.BOARD,
+            CASE 
+                WHEN V.LUNCH = 'Y' AND V.LUNCH_LOC = 'I' THEN V.LUNCH_PLACE
+                ELSE ''
+            END AS ROOMLUNCH,
+            COUNT(DISTINCT VI.ID) AS VISITORS,
+            COUNT(DISTINCT MA.SEMPNO) AS AMEC,
+            V.HOTELNAME,
+            V.SHOPTOUR,
+            V.FORMC1_1,
+            V.CARHOTEL,
+            V.CARHOTELNOTE,
+            AF.SFILE  -- ชื่อไฟล์ประเภท B
+        ", FALSE)
+        ->from('VMS_VISIT V')
+        ->join('VMS_VISITINF VI', 'VI.CYEAR2 = V.CYEAR2 AND VI.NRUNNO = V.NRUNNO AND VI.LUNCH = \'Y\'', 'left')
+        ->join('VMS_AMEC_MEAL MA', 'MA.CYEAR2 = V.CYEAR2 AND MA.NRUNNO = V.NRUNNO AND MA.LUNCH = \'Y\'', 'left')
+        ->join('VMS_ATTFILE AF', "AF.CYEAR2 = V.CYEAR2 AND AF.NRUNNO = V.NRUNNO AND AF.TYPENO = 'B'", 'left') // LEFT JOIN + เงื่อนไข TYPENO
+        ->where('V.CYEAR2', $cyear2)
+        ->where('V.NRUNNO', $nrunno)
+        ->group_by('
+            V.BOARD,
+            V.LUNCH,
+            V.LUNCH_LOC,
+            V.LUNCH_PLACE,
+            V.HOTELNAME,
+            V.SHOPTOUR,
+            V.FORMC1_1,
+            V.CARHOTEL,
+            V.CARHOTELNOTE,
+            AF.SFILE
+        ');
+    return $this->db->get()->result();
+    }
+
+    public function get_dietary_item($cyear2,$nrunno)
+    {
+            $this->db
+            ->select('COUNT(*) AS CNT, DIETREQ')
+            ->from("( 
+                SELECT DIETREQ 
+                FROM VMS_VISITINF 
+                WHERE LUNCH = 'Y' AND CYEAR2 = '{$cyear2}' AND NRUNNO = '{$nrunno}'
+                UNION ALL
+                SELECT DIETREQ 
+                FROM VMS_AMEC_MEAL 
+                WHERE LUNCH = 'Y' AND CYEAR2 = '{$cyear2}' AND NRUNNO = '{$nrunno}'
+            )", FALSE)  // FALSE เพื่อไม่ให้ CI escape SQL
+            ->group_by('DIETREQ');
+
+            return $this->db->get()->result();
+    }
+
+
     public function execsql($q)
 	{
 		return $this->db->query($q);
@@ -185,5 +329,7 @@ class vms_model extends my_model
 	{
 		return $this->db->query($q)->result();
 	}
+
+
 
 }

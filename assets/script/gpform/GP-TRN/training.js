@@ -81,6 +81,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const result = await createForm(formData);
             console.log(`[${formType}] Form created successfully:`, result);
             showAlert("✅ สำเร็จ", `ฟอร์ม ${formType} ส่งเรียบร้อยแล้ว`);
+            setTimeout(() => { window.location.href = "http://webflow.mitsubishielevatorasia.co.th/formtest/workflow/WaitApv.asp"; }, 1500);
         }
         catch (err) {
             console.error(`[${formType}] Error creating form:`, err);
@@ -90,9 +91,11 @@ document.addEventListener("DOMContentLoaded", () => {
     // Event ปุ่มส่งฟอร์ม
     (_a = document.getElementById("sendFuncFormBtn")) === null || _a === void 0 ? void 0 : _a.addEventListener("click", () => {
         var _a, _b;
+        //redirectWebflow();
         if (validateFunctionalForm()) {
             const reqby = ((_a = document.getElementById("funcRequestBy")) === null || _a === void 0 ? void 0 : _a.value) || "";
             const inputby = ((_b = document.getElementById("funcInputBy")) === null || _b === void 0 ? void 0 : _b.value) || "";
+            //setTimeout(() => { window.location.href = "http://webflow.mitsubishielevatorasia.co.th/formtest/workflow/WaitApv.asp";}, 1500); 
             submitForm("functional", reqby, inputby);
         }
     });

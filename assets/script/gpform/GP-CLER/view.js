@@ -114,6 +114,8 @@ $(document).ready(async function () {
     const formnumber = $("#formnumber").val();
     const fileInput = $("#receipt")[0];
     const file = fileInput.files[0];
+    const memoInput = $("#memo")[0];
+    const memoFiles = memoInput && memoInput.files ? memoInput.files : null;
 
     // Validate president_join
     if (!p_join) {
@@ -181,6 +183,9 @@ $(document).ready(async function () {
     formData.append("remain", parseFloat(remain));
     formData.append("remark", remark);
     formData.append("receipt", file);
+    if (memoFiles && memoFiles.length) {
+      for (let i = 0; i < memoFiles.length; i++) formData.append("memo[]", memoFiles[i]);
+    }
     formData.append("nfrmno", nfrmno);
     formData.append("vorgno", vorgno);
     formData.append("cyear", cyear);
@@ -494,4 +499,49 @@ $(document).ready(async function () {
   $("#receipt").on("change", function () {
     $("#receipt").removeClass("input-error");
   });
+
+  $(".del_file").on("click", function () {
+    const fileName = $(this).data("name");
+    deleteFile(fileName);
+  });
+
+  $("#memo").on("change", function () {
+    const fileList = this.files;
+    const $list = $("#file-list");
+    $list.empty();
+
+    if (!fileList.length) {
+        $list.append('<li class="text-red-500">ไม่พบไฟล์ที่เลือก</li>');
+        return;
+    }
+
+    Array.from(fileList).forEach((file, i) => {
+        $list.append(
+            `<li class="flex items-center gap-2">
+                <span class="text-gray-700">- ${file.name}</span>
+                <span class="text-xs text-gray-400">(${(file.size / 1024).toFixed(1)} KB)</span>
+            </li>`
+        );
+    });
+});
+
+
+  function deleteFile(fileName) {
+    if (confirm("คุณต้องการลบไฟล์นี้ใช่หรือไม่?")) {
+      $.post(
+        host + "gpform/GP-CLER/main/delete_file",
+        {
+          file: fileName,
+          nfrmno: nfrmno,
+          vorgno: vorgno,
+          cyear: cyear,
+          cyear2: cyear2,
+          nrunno: nrunno,
+        },
+        function (res) {
+          location.reload();
+        }
+      );
+    }
+  }
 });

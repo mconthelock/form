@@ -1,11 +1,22 @@
 <?php
 use GuzzleHttp\Client;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
+use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use PhpOffice\PhpSpreadsheet\Style\{Border, Fill, Alignment};
+use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 defined('BASEPATH') OR exit('No direct script access allowed');
-require_once APPPATH.'controllers/_form.php';
-require_once APPPATH . 'controllers/_file.php';
+//require_once APPPATH.'controllers/_form.php';
+require_once APPPATH.'controllers/_file.php';
+require_once APPPATH.'controllers/api/webform/form.php';
+require_once APPPATH.'controllers/_excel.php';
 class form extends MY_Controller{
-    use _Form, _File;
+    use formApi, _File, _excel;
     protected $client;
+    private $nfrmno = "14";
+    private $vorgno = "090301";
+    private $cyear = "25";  
     function __construct(){
 		parent::__construct();
         $this->load->model('form_model', 'frm');
@@ -13,6 +24,7 @@ class form extends MY_Controller{
         $this->load->model('marform/MAR-VMS/vms_model', 'vms');
         $this->client = new Client(['verify' => false]);
         $this->upload_path = "//amecnas/AMECWEB/File/" .($this->_servername()=='amecweb' ? 'production' : 'development') ."/Form/MAR/VMS/";
+        $this->ent_path = "//amecnas/AMECWEB/File/" .($this->_servername()=='amecweb' ? 'production' : 'development') ."/Form/GP/GPENT/";
     }
 
     public function main(){
@@ -91,6 +103,7 @@ class form extends MY_Controller{
                 $data["activity"] = $this->vms->get_activity();
                 $data["room"] = $this->vms->get_room();
                 $data["dietary"] = $this->vms->get_dietary();
+                $data["costmst"] = $this->vms->customSelect("GPENT_ESTIMATE_TYPE",array('ET_STATUS' => '1') ,'ET_NAME , ET_COST');
                 $data["attfile"] = array();
                 $data["attgfile"] = array();
                 $data["attbfile"] = array();
@@ -99,10 +112,14 @@ class form extends MY_Controller{
                 $data["sch"]  = array();
                 $data["visitinf"] = array();
                 $data["amecmeal"] = array();
+                $data["sproj"] = array();
+                $data["pproj"] = array();
+
                 if($data['mode']=="2")
                 {
                     $con = array("CYEAR2" => $data["CYEAR2"],"NRUNNO" => $data["NRUNNO"]);
                     $conatt = array("CYEAR2" => $data["CYEAR2"],"NRUNNO" => $data["NRUNNO"],"TYPENO" =>'S');
+                    $conprj =  array("CYEAR2" => $data["CYEAR2"],"NRUNNO" => $data["NRUNNO"],"PROJTYPE" => 'S');
                     $data["visit"] =  $this->vms->customSelect("VMS_VISIT",$con ,'*');
                     $data["sch"] =  $this->vms->get_schedule($con);
                     $data["amecmeal"] =  $this->vms->customSelect("VMS_AMEC_MEAL",$con ,'*');
@@ -130,13 +147,41 @@ class form extends MY_Controller{
                             $dbDIDs[] = $opt->DIETARY; // อัปเดต DID list เพื่อกันซ้ำ
                         }
                     }
-                    
-                  
+                    $rows = $this->vms->customSelect("VMS_PROJECT",$conprj,'*','','','ID');
+                    foreach ($rows as $row) {
+                        $projno = $row->PROJNO;
+                        if (!isset($data["sproj"][$projno])) {
+                            $data["sproj"][$projno] = [];
+                        }
+                        $data["sproj"][$projno][] = [
+                            "PROJNAME" => $row->PROJNAME,
+                            "MODEL"    => $row->MODEL,
+                            "SPEC"     => $row->SPEC,
+                            "QTY"     =>  $row->QTY,
+                            "STATUS"     => $row->STATUS
+                        ];
+                    }
+                    $conprj["PROJTYPE"] = "P";
+                    $data["pproj"] = $this->vms->customSelect("VMS_PROJECT",$conprj,'*','','','ID');
+                
+
+                   /* foreach ($rows as $row) {
+                        $projno = $row->PROJNO;
+                        if (!isset($data["pproj"][$projno])) {
+                            $data["pproj"][$projno] = [];
+                        }
+                        $data["pproj"][$projno][] = [
+                            "PROJNAME" => $row->PROJNAME,
+                            "MODEL"    => $row->MODEL,
+                            "SPEC"     => $row->SPEC,
+                            "QTY"     =>  $row->QTY,
+                            "STATUS"     => $row->STATUS
+                        ];
+                    }  */
                 }else
                 {
                     $data["formversion"] = $this->vms->get_formversion();
                 }
-    
                 $this->views('marform/MAR-VMS/create', $data);
             }
         }
@@ -159,7 +204,7 @@ class form extends MY_Controller{
         $cyear =  $_POST["cyear"];
         $cyear2 = $_POST["cyear2"];
         $nrunno = $_POST["nrunno"];
-        $this->vms->update("FORM", array("CST" => '0') ,array("NFRMNO" => $nfrmno , "VORGNO" => $vorgno , "CYEAR" => $cyear , "CYEAR2" => $cyear2 , "NRUNNO" => $nrunno));
+      //  $this->vms->update("FORM", array("CST" => '0') ,array("NFRMNO" => $nfrmno , "VORGNO" => $vorgno , "CYEAR" => $cyear , "CYEAR2" => $cyear2 , "NRUNNO" => $nrunno));
         if($tab == "visitarg")
         {
 
@@ -524,10 +569,114 @@ class form extends MY_Controller{
                 ];
                 echo json_encode($result);
             } 
+        }else if($tab == "prj")
+        {
+              $projno = $_POST["secured_project_no"];
+              $data = array();
+              $id = 0;
+              foreach($projno as $pj)
+              {
+                    $projname = $_POST["sprojname_".$pj];  
+                    $model = $_POST["sprojmodel_".$pj];
+                    $spec = $_POST["sprojspec_".$pj];
+                    $qty = $_POST["sprojqty_".$pj];
+                    $status = $_POST["sprojsta_".$pj];
+                    $i = 0;
+                    foreach($projname as $prn)
+                    {
+                        if($prn != "")
+                        {
+                            $id++;
+                            $data[] = array(
+                                'CYEAR2'    => $cyear2,
+                                'NRUNNO'    => $nrunno,
+                                'ID'        => $id,
+                                'PROJTYPE'  => 'S',
+                                'PROJNO'    => $pj,
+                                'PROJNAME'  => $projname[$i],
+                                'MODEL'     =>  $model[$i],
+                                'SPEC'      => $spec[$i],
+                                'QTY'       => $qty[$i],
+                                'STATUS'    => $status[$i]
+                            );
+                        }
+                        $i++;
+                    }   
+              }
+              $pprojno = $_POST["prospective_project_no"];
+              $pprojname = $_POST["prospective_project_name"];
+              $pprojmodel = $_POST["prospective_model"];
+              $pprojspec = $_POST["prospective_basic_spec"];
+              $pprojqty = $_POST["prospective_units"];
+              $pprojsta = $_POST["prospective_status"];
+              $i=0;
+              foreach( $pprojno as $pj)
+              {
+                   
+                    if(($pj <> "") || ($pprojname[$i] <> "") || ($pprojmodel[$i] <> "") || ($pprojspec[$i] <> "") || ($pprojqty[$i] <> "")|| ($pprojsta[$i] <> "") )
+                    {
+                        $id++;
+                        $data[] = array(
+                            'CYEAR2'    => $cyear2,
+                            'NRUNNO'    => $nrunno,
+                            'ID'        => $id,
+                            'PROJTYPE'  => 'P',
+                            'PROJNO'    => $pj,
+                            'PROJNAME'  => $pprojname[$i],
+                            'MODEL'     => $pprojmodel[$i],
+                            'SPEC'      => $pprojspec[$i],
+                            'QTY'       => $pprojqty[$i],
+                            'STATUS'    => $pprojsta[$i]
+                        );
+                    }
+                    $i++;
+              }
+              try {
+                $status = true;
+                $this->vms->delete("VMS_PROJECT","CYEAR2 = '".$cyear2."' AND NRUNNO = '".$nrunno."'");
+                if(count($data) > 0)
+                {
+                    $this->vms->insert_batch("VMS_PROJECT", $data);
+                }
+
+            }catch (Exception $e) {
+                $status = false;
+            } finally {
+                $result = [
+                    'status'  => $status,
+                    'message' => $status ? 'Data saved successfully' : 'Failed to save data'
+                ];
+                echo json_encode($result);
+            } 
+              
         }
         
     }
 
+    public function save_vms_gpent()
+    {
+        try
+        {
+            $status = true;
+            $data = array(
+                'VMSCYEAR2' => $_POST["vmscyear2"],
+                'VMSNRUNNO' => $_POST["vmsnrunno"],
+                'ENTCYEAR2' => $_POST["entcyear2"],
+                'ENTNRUNNO' => $_POST["entnrunno"],
+            );
+            $this->vms->delete("VMS_GPENT", $data);
+            $this->vms->insert("VMS_GPENT",$data);
+
+        }catch (Exception $e) {
+                $status = false;
+        } finally {
+                $result = [
+                    'status'  => $status,
+                    'message' => $status ? 'Data saved successfully' : 'Failed to save data'
+                ];
+                echo json_encode($result);
+        } 
+    }
 
     public function update_form_version()
     {
@@ -574,5 +723,197 @@ class form extends MY_Controller{
         $path = $this->upload_path.$fd;
         $this->downloadFile($file,$ofile,$path);
     }
+
+    
+    public function saveENTfile()
+    {
+        $vmsnfrmno = $_POST["vmsnfrmno"];
+        $vmsvorgno = $_POST["vmsvorgno"];
+        $vmscyear = $_POST["vmscyear"];
+        $vmscyear2 = $_POST["vmscyear2"];
+        $vmsnrunno = $_POST["vmsnrunno"];
+        $entcyear2 = $_POST["entcyear2"];
+        $entnrunno = $_POST["entnrunno"];
+        $filename = $_POST["filename"];
+        $this->vms->update("GPENT_COMPANY", array("ATTACH_FILE" => $filename), array("CYEAR2" => $entcyear2 , "NRUNNO" => $entnrunno));
+        $source = $this->upload_path.$vmsnfrmno."_".$vmsvorgno."_".$vmscyear."_".$vmscyear2."_".$vmsnrunno."/".$filename;
+        $dest = $this->ent_path.$filename;
+        copy($source, $dest);
+    }
+
+    public function getFormData()
+    {
+        $vmscyear2 = $_POST["vmscyear2"];
+        $vmsnrunno = $_POST["vmsnrunno"];
+        $con = array(
+            'CYEAR2' => $vmscyear2,
+            'NRUNNO' => $vmsnrunno 
+        );
+        $rs = $this->vms->getRcp($vmscyear2, $vmsnrunno,"P");
+        $head = array();
+        $visitint = $this->vms->customSelect("VMS_VISITINF",$con, '*', '', 'ID');
+        $schedule = $this->vms->customSelect("VMS_SCHEDULE",$con, 'TO_CHAR(SCHSTIME, \'HH:MI AM\') as SCHSTIME , TO_CHAR(SCHETIME, \'HH:MI AM\') as SCHETIME , PLACE , CONTENT , AMECP , NOTE ', '', 'ID');
+        $con["PROJTYPE"] = "S";
+        $sproj = $this->vms->customSelect("VMS_PROJECT",$con, '*', '', 'ID');
+        $con["PROJTYPE"] = "P";
+        $pproj = $this->vms->customSelect("VMS_PROJECT",$con, '*', '', 'ID');
+        $head["ATT"] = (!empty($rs)? $rs[0]->RCP:"");
+        $rs = $this->vms->getRcp($vmscyear2, $vmsnrunno,"I");
+        $head["CC"] =  (!empty($rs)? $rs[0]->RCP:"");
+        $rs = $this->vms->getHeadVisit($this->nfrmno,$this->vorgno,$this->cyear,$vmscyear2,$vmsnrunno);
+        $item = $this->vms->getItemReq($vmscyear2,$vmsnrunno);
+        $dietary = $this->vms->get_dietary_item($vmscyear2,$vmsnrunno);
+        if(!empty($rs))
+        {
+            $head["FORMVER"] = $rs[0]->FORMVER;
+            $head["REFNO"] = $rs[0]->REFNO;
+            $head["ISSUEDATE"] = $rs[0]->ISSUEDATE;
+            $head["ISSUEBY"] = $rs[0]->ISSUEBY;
+            $head["VISITDATE"] = $rs[0]->VISITDATE;
+            $head["RECEPTROOM"] = $rs[0]->RECEPTROOM;
+            $head["VISITOR_COUNT"] = $rs[0]->VISITOR_COUNT;
+            $head["PURPOSEVISIT"] = $rs[0]->VTYPE;
+            $head["PURPOSEDETAIL"] = $rs[0]->PURPOSEDETAIL;
+        }
+        $data = array(
+            "head" => $head,
+            "visitint" => $visitint,
+            "schedule" => $schedule,
+            "sproj" => $sproj,
+            "pproj" => $pproj,
+            "item" => $item,
+            "dietary" => $dietary
+        );
+        $this->create_save_vmsexcel($data);
+        echo json_encode($data);
+
+    }
+     // data is data from function getFormData
+    public function create_save_vmsexcel($data)
+    {
+
+        $spreadsheet = IOFactory::load($this->upload_path.'TEMPLATE/VMSTEMP.xlsx');
+        $sheet = $spreadsheet->getActiveSheet();
+
+        // แก้ค่า
+        $sheet->setCellValue('W2', $data['head']['FORMVER']);
+        $sheet->setCellValue('B3', "Attn: ".$data['head']['ATT']);
+        $sheet->setCellValue('B4', "CC: ".$data['head']['CC']);
+        $sheet->setCellValue('E7', $data['head']['PURPOSEVISIT']);
+        $sheet->setCellValue('L7', $data['head']['PURPOSEDETAIL']);
+        $sheet->setCellValue('V3', $data['head']['ISSUEDATE']);
+        $sheet->setCellValue('V4', $data['head']['REFNO']);
+        $parts = preg_split('/\s+/', trim($data['head']['ISSUEBY']));
+        $shortnm = $parts[0] . " " . $parts[1] . " " . $parts[2][0] . ".";
+        $sheet->setCellValue('V5',  $shortnm);
+        $sheet->setCellValue('V6', $data['head']['VISITDATE']);
+        $sheet->setCellValue('W7', $data['head']['RECEPTROOM']);
+        $sheet->setCellValue('W8', $data['head']['VISITOR_COUNT']);
+        $templateStart = 12; // แถวแรกของ template data
+        $templateCount = 2;  // Template มี 3 แถว (12–14)
+        $templateEnd   = $templateStart + $templateCount - 1;
+        $extra = count($data['visitint']) - $templateCount;
+        if ($extra > 0) {
+            $this->insertEmptyRowsWithTemplate($sheet, $templateStart ,$templateCount ,  $extra );
+        }
+        foreach($data['visitint'] as $i => $row)
+        {
+            $currentRow = $templateStart + $i;
+            $sheet->setCellValue("B{$currentRow}", $i+1);
+            $sheet->setCellValue("C{$currentRow}", $row->COUNTRY);
+            $sheet->setCellValue("G{$currentRow}", $row->COMPANY);
+            $sheet->setCellValue("L{$currentRow}", $row->NAME);
+            $sheet->setCellValue("S{$currentRow}", $row->POSITION);
+            $sheet->setCellValue("W{$currentRow}", ($row->VISITEXP == "N"? "No":"Yes"));
+          
+        }
+        $templateStart = $templateStart+ $templateCount +$extra+ 3; // แถวแรกของ template data
+        $templateCount = 2;  // Template มี 3 แถว (12–14)
+        $templateEnd   = $templateStart + $templateCount - 1;
+        $extra = count($data['schedule']) - $templateCount;
+        if ($extra > 0) {
+            $this->insertEmptyRowsWithTemplate($sheet, $templateStart ,$templateCount ,  $extra );
+        }
+        foreach($data['schedule'] as $i => $row)
+        {
+            $currentRow = $templateStart + $i;
+            $sheet->setCellValue(
+                "B{$currentRow}", 
+                !empty($row->SCHSTIME) && !empty($row->SCHETIME)
+                    ? $row->SCHSTIME . ' - ' . $row->SCHETIME
+                    : '-'
+            );
+          
+            $sheet->setCellValue("E{$currentRow}", $row->PLACE);
+            $sheet->setCellValue("H{$currentRow}", $row->CONTENT);
+            $sheet->setCellValue("P{$currentRow}", $row->AMECP);
+            $sheet->setCellValue("W{$currentRow}", !empty($row->NOTE) ? $row->NOTE : '-');
+          
+        }
+        $templateStart = $currentRow + 4;
+        $sheet->setCellValue("P{$templateStart}", $data['item'][0]->HOTELNAME);
+        $sheet->setCellValue("B".($templateStart + 2),($data['item'][0]->BOARD == "N"? "No":"Yes"));
+        $sheet->setCellValue("N".($templateStart + 4),($data['item'][0]->SHOPTOUR == "G"? "General":($data['item'][0]->SHOPTOUR == "S"? "Specific":"Inspection")));
+        $sheet->setCellValue("V".($templateStart + 4),($data['item'][0]->FORMC1_1 == "Y"? "Yes":"No"));
+        $sheet->setCellValue("B".($templateStart + 7),$data['item'][0]->ROOMLUNCH);
+
+        $writer = new Xlsx($spreadsheet);
+        $filename = $this->upload_path.$data['head']['REFNO'].'vmsform.xlsx';
+        $writer->save($filename);
+    }
+
+    /**
+ * Insert empty row(s) based on template row style
+ *
+ * @param Worksheet $sheet
+ * @param int       $templateStart  แถวแรกของ template data
+ * @param int       $templateCount  จำนวน template row
+ * @param int       $insertCount    จำนวนแถวที่จะเพิ่ม
+ */
+function insertEmptyRowsWithTemplate(Worksheet $sheet, int $templateStart, int $templateCount, int $insertCount)
+{
+    $templateEnd = $templateStart + $templateCount - 1;
+    $highestCol = Coordinate::columnIndexFromString($sheet->getHighestColumn());
+
+    // insert row
+    $sheet->insertNewRowBefore($templateEnd + 1, $insertCount);
+
+    for ($i = 0; $i < $insertCount; $i++) {
+        $targetRow = $templateEnd + 1 + $i;
+
+        // copy row height
+        $sheet->getRowDimension($targetRow)
+              ->setRowHeight($sheet->getRowDimension($templateEnd)->getRowHeight());
+
+        // copy style ของแต่ละ cell
+        for ($col = 1; $col <= $highestCol; $col++) {
+            $colLetter = Coordinate::stringFromColumnIndex($col);
+            $sheet->duplicateStyle(
+                $sheet->getStyle($colLetter . $templateEnd),
+                $colLetter . $targetRow
+            );
+        }
+
+        // copy merge cell ของ template row สุดท้าย
+        foreach ($sheet->getMergeCells() as $merge) {
+            if (preg_match_all('/\d+/', $merge, $matches)) {
+                $rows = $matches[0];
+                if (in_array($templateEnd, $rows)) {
+                    $newMerge = str_replace($templateEnd, $targetRow, $merge);
+                    $sheet->mergeCells($newMerge);
+                }
+            }
+        }
+    }
+}
+
+    public function getEmail()
+    {
+        $empno = $_POST["empno"];
+        $data = $this->vms->customSelect("AMECUSERALL",array("SEMPNO" => $empno), 'SRECMAIL');
+        echo json_encode($data);
+    }
+
+
 
 }

@@ -208,7 +208,35 @@
                                     <a href="{{ base_url('gpform/GP-CLER/main/preview/') . $formCler->RECEIPT_FILE }}" class="link btn rounded-lg text-sm text-blue-600 font-semibold" target="_blank">View Current</a>
                                 @endif
                             </div>
+
+                            <!-- {{ print_r($file_attach) }} -->
                         </div>
+
+                        @if(!empty($file_attach))
+                            <div>
+                                <label class="font-semibold text-green-700 mb-1 block">Attach Memo:</label>
+                                <div class="flex items-center gap-3">
+                                    <input type="file" name="memo[]" id="memo" class="file-input file-input-bordered w-full max-w-xs rounded-xl border-green-400" multiple>
+                                </div>
+
+                                <!-- รายการไฟล์ที่เพิ่งเลือก -->
+                                <ul id="file-list" class="mt-3 text-sm text-gray-700 list-disc list-inside space-y-1"></ul>
+
+                                <!-- รายการไฟล์ที่เคยแนบแล้ว -->
+                                <div class="mt-6 space-y-1">
+                                    @foreach($file_attach as $file)
+                                        <div class="flex items-center justify-between gap-3 border rounded-lg p-2">
+                                            <span class="truncate flex-1">{{ $file->FILE_NAME }}</span>
+                                            <div class="flex gap-2">
+                                                <a href="{{ base_url('gpform/GP-CLER/main/preview/') . $file->FILE_NAME }}" target="_blank" class="btn btn-sm btn-outline btn-primary">View</a>
+                                                <button type="button" class="btn btn-sm btn-outline btn-error del_file" data-name="{{ $file->FILE_NAME }}">Delete</button>
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                        @endif
+
                         <!-- Remark -->
                         <div>
                             <label class="font-semibold text-green-700 mb-1 block">Remark:</label>

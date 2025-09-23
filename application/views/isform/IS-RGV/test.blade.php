@@ -6,15 +6,15 @@
         <div class="flex flex-col md:flex-row items-center justify-between mb-6">
             <h1 class="text-3xl font-bold text-gray-800">User Group in FIN and CAT Department</h1>
             <div class="flex space-x-2">
-                <button class="btn btn-sm btn-outline btn-primary">+ เพิ่มเมนูหลัก</button>
-                <button class="btn btn-sm btn-outline btn-secondary">จัดการเมนู</button>
+                <!-- <button class="btn btn-sm btn-outline btn-primary">+ เพิ่มเมนูหลัก</button>
+                <button class="btn btn-sm btn-outline btn-secondary">จัดการเมนู</button> -->
             </div>
         </div>
 
-        <div class="mb-4">
+        <!-- <div class="mb-4">
             <span>Empno</span>
             <input type="text" class="input input-bordered w-full max-w-xs" id="empno">
-        </div>
+        </div> -->
 
         <div class="overflow-x-auto bg-white shadow-md rounded-lg p-4">
             <table id="menuTable" class="table table-zebra table-sm w-full border rounded-lg">
@@ -39,7 +39,7 @@
                                 </span>
                             </td>
                             <td class="text-center text-xl">
-                                <input type="checkbox" class="create_author checkbox border-black bg-white" data-menu-id="{{ htmlspecialchars($r->MENU_ID) }}">
+                                <!-- <input type="checkbox" class="create_author checkbox border-black bg-white" data-menu-id="{{ htmlspecialchars($r->MENU_ID) }}"> -->
                                 {{ $checked }}
                             </td>
                         </tr>

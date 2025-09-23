@@ -36,4 +36,30 @@ trait formApi{
             throw new Exception(json_encode(['status' => "false", 'message' => 'Failed to get mode', 'e' => $e]), 1);
         }
     }
+
+    private function createForm($condition = []){
+        try{
+            $response = $this->client->post($_ENV['APP_APIPHP'].'/form/createForm', [
+                'json' => $condition
+            ]);
+            $result = trim($response->getBody());
+            return $result;
+        }catch(Exception $e){
+            throw new Exception(json_encode(['status' => "false", 'message' => 'Failed to create form', 'e' => $e]), 1);
+        }
+    }
+
+    private function deleteFlowandForm($condition = []){
+        try{
+            $response = $this->client->post($_ENV['APP_APIPHP'].'/form/deleteForm', [
+                'json' => $condition
+            ]);
+            $result = trim($response->getBody());
+            return $result;
+        }catch(Exception $e){
+            throw new Exception(json_encode(['status' => "false", 'message' => 'Failed to delete form', 'e' => $e]), 1);
+        }
+    }
+    
+
 }

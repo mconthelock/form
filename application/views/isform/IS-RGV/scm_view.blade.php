@@ -1,7 +1,7 @@
 @extends('layouts/webflowTemplate')
 @section('contents')
     <div class="max-w-10xl w-full mx-auto px-5 py-10 bg-white space-y-8 text-gray-800">
-        <h1 class="text-3xl font-bold text-blue-900 border-b pb-4">Regular Review <text class="text-sm">({{ $program }})</text></h1>
+        <h1 class="text-3xl font-bold text-blue-900 border-b pb-4">Regular Review <text class="text-sm">({{ $program }}) </text> [{{ $formNumber }}]</h1>
         <div class="form-data" data-nfrmno="{{ $NFRMNO }}" data-vorgno="{{ $VORGNO }}" data-cyear="{{ $CYEAR }}" data-cyear2="{{ $CYEAR2 }}" data-nrunno="{{ $NRUNNO }}" data-empno="{{ $EMPNO }}"></div>
         <div class="my-6">
             {{-- print_r($form) --}}

@@ -58,7 +58,8 @@ class Main extends MY_Controller
             $getEmpFlow               = $this->form->getEmpFlow($form, $empno);
             $data['flowstep']         = $this->ent->getFlowStep($form, $empno);
             if (!empty($getEmpFlow)) {
-                $checkReturnb = $this->form->checkReturnb($form, $getEmpFlow[0]->CSTEPNEXTNO);
+                // $checkReturnb = $this->form->checkReturnb($form, $getEmpFlow[0]->CSTEPNEXTNO);
+                $checkReturnb = $this->form->checkReturn($form, $empno);
             }
             if (!empty($checkReturnb)) {
                 $this->views('gpform/GP-ENT/edit', $data);
@@ -657,6 +658,28 @@ class Main extends MY_Controller
     {
         $data = $this->ent->get_estimate_type();
         echo json_encode($data);
+    }
+
+    public function InsertForm22()
+    {
+        // รับค่าที่ถูก POST มา
+        $post = $this->input->post();
+
+        // ตัวอย่าง: ดึงค่า key1, key2
+        $key1 = isset($post['key1']) ? $post['key1'] : null;
+        $key2 = isset($post['key2']) ? $post['key2'] : null;
+
+        // ตอบกลับเป็น JSON
+        $response = [
+            'status' => 'success',
+            'message' => 'Data received successfully',
+            'received' => [
+                'key1' => $key1,
+                'key2' => $key2
+            ]
+        ];
+
+        echo json_encode($response);
     }
 
 

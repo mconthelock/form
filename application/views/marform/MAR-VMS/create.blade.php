@@ -80,12 +80,13 @@ table.dataTable .select2-container--default .select2-selection--multiple {
   }
   .select2-container {
   max-width: 400px !important;  /* เท่ากับ td */
-}
+  }
+  [x-cloak] { display: none !important; }
 </style>
 @endsection
 @section('contents')
 <div class="flex flex-col w-full px-4 mt-20 mb-20 md:px-8 lg:mt-5">
-  <div class="flex bg-white rounded-xl shadow-md overflow-hidden w-full max-w-7xl mx-auto">
+  <div class="flex bg-white rounded-xl shadow-md overflow-hidden w-full max-w-full mx-auto">
 
   <div class="flex-[0_0_240px] bg-gradient-to-b from-[#EBF2FA] via-[#E7F1F9] to-[#F2F8FE] border-r shadow-md rounded-l-xl overflow-hidden">
   <ul class="flex flex-col text-sm font-medium text-gray-700" id="tabs">
@@ -214,6 +215,29 @@ table.dataTable .select2-container--default .select2-selection--multiple {
     <span>Projects</span>
   </button>
 </li>
+   <!--  Submit Form-->
+   <li> 
+  <button id="btn-submit-form"
+    class="flex items-center w-full px-6 py-4 space-x-3 border-l-4 border-transparent hover:bg-white/30 hover:border-blue-600 transition-all duration-300"
+    data-tab="tab-submit"
+  >
+    <!-- Full Envelope Icon ขนาดเล็ก -->
+    <svg xmlns="http://www.w3.org/2000/svg" 
+         class="h-4 w-4 text-blue-600 hover:text-blue-700 transition-colors duration-300 ease-in-out"
+         fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+      <!-- Envelope outline -->
+      <rect x="2" y="4" width="20" height="16" rx="2" ry="2" />
+      <!-- Envelope flap -->
+      <polyline points="2,4 12,13 22,4" />
+    </svg>
+
+    <span>Submit Form</span>
+  </button>
+</li>
+
+
+
+
 
   </ul>
 </div>
@@ -226,6 +250,7 @@ table.dataTable .select2-container--default .select2-selection--multiple {
 <input type="hidden" id="empno" name="empno" value="{{ $empno }}" />
 <input type="hidden" id="cyear2" name="cyear2" value="{{ $mode == 2 ? $CYEAR2 : '' }}"/>
 <input type="hidden" id="nrunno" name="nrunno" value="{{ $mode == 2 ? $NRUNNO : '' }}"/>
+
 <!-- tab-visit arrangment -->
 <form id="form-visitarg"  method="post" enctype="multipart/form-data">
 <div id="tab-visitarg" class="tab-pane w-full max-w-7xl mx-auto ">
@@ -328,9 +353,9 @@ table.dataTable .select2-container--default .select2-selection--multiple {
       <label for="bookingTime" class="block text-sm text-gray-700 font-medium mb-1">Booking time</label>
       <select id="bookingTime" name="bookingTime" class="input input-bordered rounded-xl w-full shadow-sm border-blue-200 text-gray-900">
         <option value=""></option>
-        <option value="FT">08:00-17:10</option>
-        <option value="AM">08:00-12:10</option>
-        <option value="PM">13:00-17:10</option>
+        <option value="FT" data-start="08:00 AM" data-end="17:10 PM" {{ ($mode == "2" && !empty($visit) && $visit[0]->BOOKING== "FT") ? 'selected' : '' }} >Full day</option>
+        <option value="AM" data-start="08:00 AM" data-end="12:10 PM"  {{ ($mode == "2" && !empty($visit) && $visit[0]->BOOKING== "AM") ? 'selected' : '' }} >Half day (morning)</option>
+        <option value="PM" data-start="13:00 PM" data-end="17:10 PM"  {{ ($mode == "2" && !empty($visit) && $visit[0]->BOOKING== "PM") ? 'selected' : '' }} >Half day (afternoon)</option>
       </select>
     </div>
     <div>
@@ -356,7 +381,7 @@ table.dataTable .select2-container--default .select2-selection--multiple {
     </label>
 
     <label class="flex items-center space-x-2 relative">
-      <input type="radio" name="guestDetail" value="2" id="gov" >
+      <input type="radio" name="guestDetail" value="2" id="gov" {{ $mode == 2 && !empty($visit) && $visit[0]->COMTYPE == "2" ?  'checked': '' }}>
       <span>Government</span>
 
       <!-- Tooltip -->
@@ -1000,7 +1025,9 @@ table.dataTable .select2-container--default .select2-selection--multiple {
       </tr>
     </thead>
     <tbody class="divide-y divide-blue-100">
-      <tr class="bg-white">
+
+    @if(empty($sproj))
+      <tr class="bg-white main-row" data-rowid="1">
         <td class="px-2 py-2 sticky-column">1</td>
         <td class="px-2 py-2">
           <input type="text" name="secured_project_no[]" 
@@ -1013,6 +1040,7 @@ table.dataTable .select2-container--default .select2-selection--multiple {
         <td class="px-2 py-2 text-gray-600"></td>
         <td class="px-2 py-2 text-gray-600"></td>
       </tr>
+    @endif
     </tbody>
   </table>
   <!-- ปุ่ม Add มุมซ้าย -->
@@ -1040,6 +1068,38 @@ table.dataTable .select2-container--default .select2-selection--multiple {
       </tr>
     </thead>
     <tbody class="divide-y divide-blue-100">
+    @foreach($pproj as $index => $p)
+    <tr class="bg-white">
+        <td class="px-2 py-2 sticky-column">{{ $index+1 }}</td>
+        <td class="px-2 py-2">
+          <input type="text" name="prospective_project_no[]" value="{{ $p->PROJNO }}"
+                 class="w-full border border-blue-200 rounded-lg px-2 py-1" />
+        </td>
+        <td class="px-2 py-2">
+          <input type="text" name="prospective_project_name[]" value="{{ $p->PROJNAME }}"
+                 class="w-full border border-blue-200 rounded-lg px-2 py-1" />
+        </td>
+        <td class="px-2 py-2">
+          <input type="text" name="prospective_model[]" value="{{ $p->MODEL }}"
+                 class="w-full border border-blue-200 rounded-lg px-2 py-1" />
+        </td>
+        <td class="px-2 py-2">
+          <input type="text" name="prospective_basic_spec[]"  value="{{ $p->SPEC }}"
+                 class="w-full border border-blue-200 rounded-lg px-2 py-1" />
+        </td>
+        <td class="px-2 py-2">
+          <input type="number" name="prospective_units[]"  value="{{ $p->QTY }}"
+                 class="w-full border border-blue-200 rounded-lg px-2 py-1" min="0" />
+        </td>
+        <td class="px-2 py-2">
+          <input type="text" name="prospective_status[]" value="{{ $p->STATUS }}"
+                 class="w-full border border-blue-200 rounded-lg px-2 py-1"  />
+        </td>
+      </tr>
+
+
+    @endforeach
+    @if(empty($pproj))
       <tr class="bg-white">
         <td class="px-2 py-2 sticky-column">1</td>
         <td class="px-2 py-2">
@@ -1067,6 +1127,7 @@ table.dataTable .select2-container--default .select2-selection--multiple {
                  class="w-full border border-blue-200 rounded-lg px-2 py-1"  />
         </td>
       </tr>
+    @endif
     </tbody>
   </table>
 <!-- ปุ่ม Add Row อยู่มุมล่างซ้าย -->
@@ -1280,11 +1341,286 @@ table.dataTable .select2-container--default .select2-selection--multiple {
 </div>
 </div>
 </form>
+<form id="form-submit" method="post" enctype="multipart/form-data" class="space-y-6 font-sans">
+<div id="tab-submit" class="tab-pane hidden w-full max-w-7xl mx-auto space-y-6">
+    <!-- Header -->
+    <div class="grid grid-cols-3 gap-4 p-4 bg-white rounded-xl shadow-md text-sm h-40">
+      <!-- Left Side -->
+      <div class="col-span-2 grid gap-y-2 h-full">
+        <!-- Attn -->
+        <div class="grid grid-cols-[auto_1fr] gap-x-2">
+          <span class="font-semibold text-gray-700">Attn:</span>
+          <span class="text-gray-900 break-words" data-field="attn"></span>
+        </div>
 
+        <!-- CC -->
+        <div class="grid grid-cols-[auto_1fr] gap-x-2">
+          <span class="font-semibold text-gray-700">CC:</span>
+          <span class="text-gray-900 break-words" data-field="cc"></span>
+        </div>
+
+        <div class="flex-1"></div>
+
+        <!-- Purpose of visit -->
+        <div class="grid grid-cols-[auto_1fr] gap-x-2">
+          <span class="font-semibold text-gray-700">Purpose of visit:</span>
+          <span class="text-gray-900" data-field="purpose"></span>
+        </div>
+      </div>
+
+      <!-- Right Side -->
+      <div class="col-span-1 flex flex-col justify-between space-y-1 h-full">
+      <div class="flex space-x-2">
+        <span class="font-semibold text-gray-700 w-32">Issue Date:</span>
+        <span class="text-gray-900" data-field="issueDate"></span>
+      </div>
+
+      <div class="flex space-x-2">
+        <span class="font-semibold text-gray-700 w-32">Ref. No.:</span>
+        <span class="text-gray-900" data-field="refno"></span>
+      </div>
+
+      <div class="flex space-x-2">
+        <span class="font-semibold text-gray-700 w-32">Issued by:</span>
+        <span class="text-gray-900" data-field="issueby"></span>
+      </div>
+
+      <div class="flex space-x-2">
+        <span class="font-semibold text-gray-700 w-32">Visit date:</span>
+        <span class="text-gray-900" data-field="visitdate" ></span>
+      </div>
+
+      <div class="flex space-x-2">
+        <span class="font-semibold text-gray-700 w-32">Reception room:</span>
+        <span class="text-gray-900" data-field="receptroom" ></span>
+      </div>
+
+      <div class="flex space-x-2">
+        <span class="font-semibold text-gray-700 w-32">No. of visitors:</span>
+        <span class="text-gray-900" data-field="visitor"></span>
+      </div>
+      </div>
+    </div>
+
+  <!-- Visitor Information -->
+  <div class="bg-white rounded-2xl shadow-lg p-6">
+    <div class="flex justify-between items-center border-b-2 border-blue-400 pb-2">
+    <h2 class="font-semibold text-lg">Visitor Information</h2>
+    <button type="button" data-tab="inf"
+      class="text-blue-600 hover:text-blue-800 text-sm font-semibold flex items-center space-x-1 edit-btn">
+      <span>✎</span>
+      <span>Edit</span>
+    </button>
+    </div>
+    <table class="w-full border border-gray-300 text-sm mt-3 table-auto">
+      <thead class="bg-blue-50 text-gray-700">
+        <tr>
+          <th class="border border-gray-300 px-3 py-2">No.</th>
+          <th class="border border-gray-300 px-3 py-2">Country</th>
+          <th class="border border-gray-300 px-3 py-2">Company</th>
+          <th class="border border-gray-300 px-3 py-2">Name</th>
+          <th class="border border-gray-300 px-3 py-2">Position</th>
+          <th class="border border-gray-300 px-3 py-2">Experience</th>
+        </tr>
+      </thead>
+      <tbody id="visitor-body" class="text-gray-900"></tbody>
+    </table>
+  </div>
+
+  <!-- Schedule -->
+  <div class="bg-white rounded-2xl shadow-lg p-6">
+    <div class="flex justify-between items-center border-b-2 border-blue-400 pb-2">
+    <h2 class="font-semibold text-lg">Schedule</h2>
+    <button type="button" data-tab="sch"
+      class="text-blue-600 hover:text-blue-800 text-sm font-semibold flex items-center space-x-1 edit-btn">
+      <span>✎</span>
+      <span>Edit</span>
+    </button>
+    </div>
+    <table class="w-full border border-gray-300 text-sm mt-3 table-auto">
+      <thead class="bg-blue-50 text-gray-700">
+        <tr>
+          <th class="border border-gray-300 px-3 py-2">Time</th>
+          <th class="border border-gray-300 px-3 py-2">Place</th>
+          <th class="border border-gray-300 px-3 py-2">Content</th>
+          <th class="border border-gray-300 px-3 py-2">AMEC Participants</th>
+          <th class="border border-gray-300 px-3 py-2">Note</th>
+        </tr>
+      </thead>
+      <tbody id="schedule-body" class="text-gray-900"></tbody>
+    </table>
+  </div>
+
+  <!-- Request Items -->
+  <div class="bg-white rounded-2xl shadow-lg p-6 space-y-6">
+    <div class="flex justify-between items-center border-b-2 border-blue-400 pb-2">
+    <h2 class="font-semibold text-lg">Request Items</h2>
+    <button type="button" data-tab="req"
+      class="text-blue-600 hover:text-blue-800 text-sm font-semibold flex items-center space-x-1 edit-btn">
+      <span>✎</span>
+      <span>Edit</span>
+    </button>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+      <!-- Left Column: Arranged by G/P -->
+      <div class="bg-gray-50 p-4 rounded-xl shadow-inner space-y-4">
+        <h3 class="font-semibold text-sm text-blue-600">Arranged by G/P</h3>
+
+        <div class="border rounded-lg p-3 text-sm bg-white shadow-sm">
+          <div class="font-semibold mb-1">Welcome Board</div>
+          <span class="text-gray-900" data-field="board"></span>
+          <span class="sfile text-blue-600" data-field="filename"></span>
+        </div>
+
+        <div class="border rounded-lg p-3 text-sm bg-white shadow-sm">
+          <div class="font-semibold mb-2 text-blue-600" data-field="roomlunch"></div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="space-y-2">
+              <div class="grid grid-cols-[auto_1fr] gap-x-2">
+                <span class="font-semibold text-gray-700">Date:</span>
+                <span class="text-gray-900" data-field="roomdate"></span>
+              </div>
+              <div class="grid grid-cols-[auto_1fr] gap-x-2">
+                <span class="font-semibold text-gray-700">Time:</span>
+                <span class="text-gray-900" data-field="roomtime"></span>
+              </div>
+            </div>
+            <div class="space-y-2">
+              <div class="grid grid-cols-[auto_1fr] gap-x-2">
+                <span class="font-semibold text-gray-700">No. of Visitors:</span>
+                <span class="text-gray-900" data-field="visitlunch"></span>
+              </div>
+              <div class="grid grid-cols-[auto_1fr] gap-x-2">
+                <span class="font-semibold text-gray-700">No. of AMEC:</span>
+                <span class="text-gray-900" data-field="ameclunch"></span>
+              </div>
+              <div class="grid grid-cols-[auto_1fr] gap-x-2">
+                <span class="font-semibold text-gray-700">Total:</span>
+                <span class="text-gray-900" data-field="totlunch"></span>
+              </div>
+            </div>
+
+            <div class="md:col-span-2 grid grid-cols-[auto_1fr] gap-x-2">
+              <span class="font-semibold text-gray-700">Dietary Restrictions:</span>
+              <span class="text-gray-900" data-field="roomdietary"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Column: Arranged by Visitor's Host -->
+      <div class="bg-gray-50 p-4 rounded-xl shadow-inner space-y-3">
+        <h3 class="font-semibold text-sm text-blue-600">Arranged by Visitor's Host</h3>
+
+        <div class="grid grid-cols-[auto_1fr] gap-x-2">
+          <span class="text-sm font-semibold text-gray-700 w-32">Hotel Reservation:</span>
+          <span class="text-sm text-gray-900" data-field="hotelname"></span>
+        </div>
+        <div class="grid grid-cols-[auto_1fr] gap-x-2">
+          <span class="text-sm font-semibold text-gray-700 w-32">Shop tour:</span>
+          <span class="text-sm text-gray-900" data-field="shoptour"></span>
+        </div>
+        <div class="grid grid-cols-[auto_1fr] gap-x-2">
+          <span class="text-sm font-semibold text-gray-700 w-32">Form C1-1:</span>
+          <span class="text-sm text-gray-900" data-field="formc1_1"></span>
+        </div>
+        <div class="grid grid-cols-[auto_1fr] gap-x-2">
+          <span class="text-sm font-semibold text-gray-700 w-32">Car reservation:</span>
+          <span class="text-sm text-gray-900" data-field="car"></span>
+        </div>
+        <div class="md:col-span-2">
+          <span class="text-sm text-gray-900" data-field="cardetail"></span>
+        </div>
+        <div class="md:col-span-2">
+          <span class="text-sm text-gray-900" data-field="formreqent"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Projects (Vertical Stack) -->
+  <div class="space-y-6">
+
+    <div class="bg-white rounded-2xl shadow-lg p-6">
+      <div class="flex justify-between items-center border-b-2 border-blue-400 pb-2">
+      <h2 class="font-semibold text-lg">Secured Projects</h2>
+      <button type="button" data-tab="prj"
+        class="text-blue-600 hover:text-blue-800 text-sm font-semibold flex items-center space-x-1 edit-btn">
+        <span>✎</span>
+        <span>Edit</span>
+      </button>
+      </div>
+      <table class="w-full border border-gray-300 text-sm mt-3 table-auto">
+        <thead class="bg-blue-50 text-gray-700">
+          <tr>
+            <th class="border border-gray-300 px-3 py-2">Project No.</th>
+            <th class="border border-gray-300 px-3 py-2">Project Name</th>
+            <th class="border border-gray-300 px-3 py-2">Model</th>
+            <th class="border border-gray-300 px-3 py-2">Specification</th>
+            <th class="border border-gray-300 px-3 py-2">No. of Units</th>
+            <th class="border border-gray-300 px-3 py-2">Status</th>
+          </tr>
+        </thead>
+        <tbody id="sproject-body" class="text-gray-900"></tbody>
+      </table>
+    </div>
+
+    <div class="bg-white rounded-2xl shadow-lg p-6">
+      <div class="flex justify-between items-center border-b-2 border-blue-400 pb-2">
+      <h2 class="font-semibold text-lg">Prospective Projects</h2>
+      <button type="button" data-tab="prj"
+        class="text-blue-600 hover:text-blue-800 text-sm font-semibold flex items-center space-x-1 edit-btn">
+        <span>✎</span>
+        <span>Edit</span>
+      </button>
+      </div>
+      <table class="w-full border border-gray-300 text-sm mt-3 table-auto">
+        <thead class="bg-blue-50 text-gray-700">
+          <tr>
+            <th class="border border-gray-300 px-3 py-2">Project No.</th>
+            <th class="border border-gray-300 px-3 py-2">Project Name</th>
+            <th class="border border-gray-300 px-3 py-2">Model</th>
+            <th class="border border-gray-300 px-3 py-2">Specification</th>
+            <th class="border border-gray-300 px-3 py-2">No. of Units</th>
+            <th class="border border-gray-300 px-3 py-2">Status</th>
+          </tr>
+        </thead>
+        <tbody id="pproject-body" class="text-gray-900"></tbody>
+      </table>
+    </div>
+
+  </div>
+  <!-- ปุ่ม -->
+  <div class="flex justify-end space-x-2 mt-6">
+      <button type="button" data-tab="submit" 
+        class="confirm-btn bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-2 rounded-xl text-sm font-semibold
+              shadow-md hover:shadow-lg hover:from-blue-600 hover:to-blue-700 transition-all duration-300
+              {{ (!empty($form) && ($mode == '2') && ($form[0]->CST == '0')) ? '' : 'hidden' }}">
+        Submit Form
+      </button>
+      <button type="button"  id="bookRoomBtn"
+          class="bg-gradient-to-r from-green-500 to-green-600 text-white px-6 py-2 rounded-xl text-sm font-semibold
+                 shadow-md hover:shadow-lg hover:from-green-600 hover:to-green-700 transition-all duration-300">
+        Book Room
+      </button>
+  </div>
+</div>
+</form>
 
 </div>
-
-
+  </div>
+</div>
+<!-- Modal แยกออกจาก tab -->
+<div id="bookRoomModal" class="hidden fixed inset-0 flex items-center justify-center bg-gray-200 bg-opacity-40 z-50">
+  <div class="bg-white rounded-xl shadow-lg p-6 w-96">
+    <h3 class="text-lg font-semibold mb-4">Enter Password Email</h3>
+    <input type="password" id="passwordInput" placeholder="Password"
+           class="w-full border border-gray-300 rounded-lg px-4 py-2 mb-4 focus:ring-2 focus:ring-green-500 focus:outline-none" />
+           <div class="flex justify-end gap-2">
+              <button id="cancelModalBtn" class="btn btn-sm btn-secondary">Cancel</button>
+              <button id="confirmModalBtn" class="btn btn-sm btn-primary">OK</button>
+          </div>
   </div>
 </div>
 
@@ -1294,10 +1630,15 @@ table.dataTable .select2-container--default .select2-selection--multiple {
 @section('scripts')
     <script src="{{ $_ENV['APP_JS'] }}/vms.js?ver={{ $GLOBALS['version'] }}"></script>
     <script>
+    window.sproj = @json($sproj);
+    window.costmst = @json($costmst);
+    const costMap = {};
+    window.costmst.forEach(item => {
+        costMap[item.ET_NAME] = item.ET_COST;
+    });
     const tabButtons = document.querySelectorAll('#tabs button');
     const tabPanes = document.querySelectorAll('.tab-pane');
   
-
     tabButtons.forEach(button => {
       button.addEventListener('click', () => {
         // remove active classes
@@ -1321,7 +1662,6 @@ table.dataTable .select2-container--default .select2-selection--multiple {
   dinnerCheckbox.addEventListener('change', () => {
     dinnerDetails.classList.toggle('hidden', !dinnerCheckbox.checked);
   });
-
 
 
 

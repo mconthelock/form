@@ -10,9 +10,12 @@ var table;
 var grpData;
 const columns = [
   {
-    data: "NO",
+    data: null, // ใช้ null เพราะเราจะไม่เอาข้อมูลจาก JSON
     title: "No.",
     width: "10%",
+    render: function (data, type, row, meta) {
+      return meta.row + 1; // meta.row เริ่มจาก 0 ดังนั้น +1
+    },
   },
   {
     data: "GNAME",
@@ -256,6 +259,30 @@ $(document).on("click", ".edit-dwg", function () {
         $("#groupDetail").val(group.GDETAIL);
         $("#modalAddGroup h3").text("Edit Group");
         const $tbody = $("#tbodyModal").empty();
+
+        if (!group.participants || group.participants.length === 0) {
+          const emptyRowHtml = `
+          <tr class="hover:bg-gray-50">
+            <td class="px-3 py-2">1</td>
+            <td class="px-3 py-2">
+              <select class="pst-select w-80 px-2 py-1 border rounded-lg" name="pst[]">
+                <option value=""></option>
+                ${allParticipants.map(pt => `
+                  <option value="${pt.SEMPNO}" 
+                          data-div="${pt.SDIV}" 
+                          data-dep="${pt.SDEPT}" 
+                          data-sec="${pt.SSEC}" 
+                          data-pos="${pt.SPOSNAME}">
+                    ${pt.SNAME}
+                  </option>
+                `).join("")}
+              </select>
+            </td>
+            <td class="px-3 py-2 pos-col"></td>
+            <td class="px-3 py-2 dds-col"></td>
+          </tr>`;
+          $tbody.append(emptyRowHtml);
+        } else {
         group.participants.forEach((p, idx) => {
           const rowHtml = `
           <tr class="hover:bg-gray-50">
@@ -280,6 +307,7 @@ $(document).on("click", ".edit-dwg", function () {
           </tr>`;
         $tbody.append(rowHtml);
         });
+      }
         initSelect2(".pst-select", $("#tbodyModal"));
         $("#modalAddGroup").removeClass("hidden").addClass("flex");
         /*

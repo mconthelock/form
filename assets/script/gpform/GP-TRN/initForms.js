@@ -57,9 +57,9 @@ export function initFunctionalForm() {
     bindEmpLookup(document.getElementById("funcTraineeCode"), {
         SNAME: document.getElementById("funcTraineeName"),
         SPOSITION: document.getElementById("funcTraineePosition"),
-        SSEC: document.getElementById("funcSec"),
-        SDEPT: document.getElementById("funcDept"),
-        SDIV: document.getElementById("funcDiv")
+        SSEC: document.getElementById("funcTraineeSec"),
+        SDEPT: document.getElementById("funcTraineeDept"),
+        SDIV: document.getElementById("funcTraineeDiv")
     });
     // Part 5: Expense toggle
     const expenseRadios = document.querySelectorAll("input[name='funcExpenseOption']");
@@ -125,12 +125,12 @@ export function initLegalForm() {
     // Request By
     bindEmpLookup(document.getElementById("legalRequestBy"), { SNAME: document.getElementById("legalRequestByName") });
     // Trainee
-    bindEmpLookup(document.getElementById("legalCode"), {
-        SNAME: document.getElementById("legalName"),
-        SPOSITION: document.getElementById("legalPosition"),
-        SSEC: document.getElementById("legalSec"),
-        SDEPT: document.getElementById("legalDept"),
-        SDIV: document.getElementById("legalDiv")
+    bindEmpLookup(document.getElementById("legalTraineeCode"), {
+        SNAME: document.getElementById("legalTraineeName"),
+        SPOSITION: document.getElementById("legalTraineePosition"),
+        SSEC: document.getElementById("legalTraineeSec"),
+        SDEPT: document.getElementById("legalTraineeDept"),
+        SDIV: document.getElementById("legalTraineeDiv")
     });
     // Part 6: Expense toggle
     const expenseRadios = document.querySelectorAll("input[name='legalExpenseOption']");
@@ -196,12 +196,12 @@ export function initMethForm() {
     // Request By
     bindEmpLookup(document.getElementById("methRequestBy"), { SNAME: document.getElementById("methRequestByName") });
     // Trainee
-    bindEmpLookup(document.getElementById("methCode"), {
-        SNAME: document.getElementById("methName"),
-        SPOSITION: document.getElementById("methPosition"),
-        SSEC: document.getElementById("methSec"),
-        SDEPT: document.getElementById("methDept"),
-        SDIV: document.getElementById("methDiv")
+    bindEmpLookup(document.getElementById("methTraineeCode"), {
+        SNAME: document.getElementById("methTraineeName"),
+        SPOSITION: document.getElementById("methTraineePosition"),
+        SSEC: document.getElementById("methTraineeSec"),
+        SDEPT: document.getElementById("methTraineeDept"),
+        SDIV: document.getElementById("methTraineeDiv")
     });
     // Part 5: Expense toggle
     const expenseRadios = document.querySelectorAll("input[name='methExpenseOption']");

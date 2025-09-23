@@ -1,5 +1,6 @@
 import { tableOption } from "../../inc/_dataTable.js";
 import { showFlow, doaction, redirectWebflow } from "../../inc/_form.js";
+
 $(document).ready(async function () {
   $("#logTable").DataTable({
     ...tableOption,

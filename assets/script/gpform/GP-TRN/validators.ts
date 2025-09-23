@@ -21,7 +21,7 @@ export function validateFunctionalForm(): boolean {
         "#funcRequestBy", "#funcTrainingSubject", "#funcDateFrom", "#funcDateTo",
         "#funcLocation", "#funcInstitute", "#funcObjectiveList input[name='funcObjective[]']",
         "#funcExpectationList input[name='funcExpectation[]']", "#funcTraineeCode",
-        "#funcJdName", "#funcJdRelation"
+        "#funcJdName", "#funcJdRelation", "#funcJdFiles"
     ];
 
     if (!validateForm(requiredSelectors)) return false;
@@ -76,7 +76,7 @@ export function validateLegalForm(): boolean {
         "#legalPlace", "#legalInstitute", "#legalConcernLaw",
         "#legalObjectiveList input[name='legalObjective[]']",
         "#legalExpectationList input[name='legalExpectation[]']",
-        "#legalCode"
+        "#legalTraineeCode"
     ];
 
     if (!validateForm(requiredSelectors)) return false;
@@ -131,7 +131,7 @@ export function validateMethForm(): boolean {
         "#methPlace", "#methInstitute",
         "#methObjectiveList input[name='methObjective[]']",
         "#methExpectationList input[name='methExpectation[]']",
-        "#methCode"
+        "#methTraineeCode"
     ];
 
     if (!validateForm(requiredSelectors)) return false;

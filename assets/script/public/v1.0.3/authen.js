@@ -58,6 +58,7 @@ export async function initAuthen(options = {}) {
     ...options,
   };
 
+  
   showbgLoader({ show: opt.loader });
   let menu, info, group, res;
   const cookie = getCookie(process.env.APP_NAME);
