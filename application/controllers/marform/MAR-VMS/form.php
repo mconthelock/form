@@ -858,6 +858,22 @@ class form extends MY_Controller{
         $sheet->setCellValue("B".($templateStart + 7),$data['item'][0]->ROOMLUNCH);
         $sheet->setCellValue("D".($templateStart + 8),$data['head']['VISITDATE']);
         $sheet->setCellValue("E".($templateStart + 9), (isset($data['item'][0]->ROOMLUNCH) && $data['item'][0]->ROOMLUNCH !== null ? '12:00 - 13:00 PM': ''));
+        $sheet->setCellValue("K".($templateStart + 7),$data['item'][0]->VISITORS);
+        $sheet->setCellValue("K".($templateStart + 8),$data['item'][0]->AMEC);
+        $sheet->setCellValue("K".($templateStart + 9),($data['item'][0]->VISITORS+$data['item'][0]->AMEC));
+        $dietList = array_map(
+            function($item) {
+                return $item->DIETREQ . ' (' . $item->CNT . ')';
+            },
+            array_filter($data['dietary'], function($item) {
+                return !empty($item->DIETREQ);
+            })
+        );
+        
+        $dietText = implode(", ", $dietList);
+        $sheet->setCellValue("G".($templateStart + 11),$dietText);
+        $sheet->setCellValue("R".($templateStart + 9),($data['item'][0]->CARHOTEL == "Y"? "Yes":"No"));
+
         $writer = new Xlsx($spreadsheet);
         $filename = $this->upload_path.$data['head']['REFNO'].'vmsform.xlsx';
         $writer->save($filename);

@@ -12,9 +12,13 @@
  * @note 2025-07-25
  * เพิ่ม readCustom และ readHeader เพื่อรองรับการอ่านไฟล์แบบกำหนดเอง
  * เปลี่ยนการส่งข้อมูลเข้าฟังก์ชั่นใหม่ทั้งหมดให้เหลือแค่ object options
+ * @note 2025-09-23
+ * เพิ่มฟังก์ชัน toExcelDate ใน _dayjs.js เพื่อแปลงวันที่ให้ถูกต้องก่อนส่งเข้า excel
+ * แก้ไขการคำนวณความกว้างคอลัมน์ให้รองรับค่าที่ไม่ใช่ string
  */
 
 import ExcelJS from "exceljs";
+import { toExcelDate } from "./_dayjs";
 
 /**
  * Export file excel (Download)
@@ -76,12 +80,35 @@ export async function defaultExcel(options = {}) {
     // ตั้งชื่อ column และ key เพื่อให้สอดคล้องกับข้อมูล
     sheet.columns = opt.column.map((col) => {
         const formatted = { ...col };
-        if (col.type === "date") formatted.style = { numFmt: col.numFmt || "yyyy-mm-dd" };
-        if (col.type === "number") formatted.style = { numFmt: col.numFmt || "0" };
+        if (col.type === "date")
+            formatted.style = { numFmt: col.numFmt || "yyyy-mm-dd" };
+        if (col.type === "number")
+            formatted.style = { numFmt: col.numFmt || "0" };
         return formatted;
     });
+
+    const typedRows = opt.data.map((row) => {
+        const o = {};
+        for (const col of opt.column) {
+            const val = row[col.key];
+            if (col.type === "date") {
+                o[col.key] = toExcelDate(val, col.numFmt || ""); // 🔥 จุดเดียวจบ
+            } else if (col.type === "number") {
+                if (val === "" || val == null) o[col.key] = null;
+                else {
+                    const n = Number(val);
+                    o[col.key] = isNaN(n) ? null : n;
+                }
+            } else {
+                o[col.key] = val ?? null;
+            }
+        }
+        return o;
+    });
+    console.log(typedRows);
+    
     // เพิ่มข้อมูลใน Sheet
-    sheet.addRows(opt.data);
+    sheet.addRows(typedRows);
 
     const headerRow = sheet.getRow(1);
     headerRow.font = opt.font;
@@ -95,7 +122,7 @@ export async function defaultExcel(options = {}) {
     sheet.columns.forEach((column) => {
         let maxLength = 0;
         column.eachCell({ includeEmpty: true }, (cell) => {
-            const columnLength = cell.value ? cell.value.toString().length : 10; // คำนวณความยาวของข้อมูลในเซลล์
+            const columnLength = cell.value ? cell.value.length : 10; // คำนวณความยาวของข้อมูลในเซลล์
             if (columnLength > maxLength) {
                 maxLength = columnLength;
             }
