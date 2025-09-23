@@ -23,8 +23,16 @@ function finishAndClose() {
 function setSkeleton() {
     skeleton({ element: "#auditReport", height: "h-[60vh]", width: "w-full" });
     skeleton({ element: "#score", height: "h-24", width: "w-full lg:w-40" });
-    skeleton({ element: "#detail", height: "h-56", width: "w-full xl:w-[50vw]" });
-    skeleton({ element: "#tableRevision", height: "h-56", width: "w-full xl:w-[40vw]" });
+    skeleton({
+        element: "#detail",
+        height: "h-56",
+        width: "w-full xl:w-[50vw]",
+    });
+    skeleton({
+        element: "#tableRevision",
+        height: "h-56",
+        width: "w-full xl:w-[40vw]",
+    });
     skeletons({
         element: "#action",
         count: 3,
@@ -33,6 +41,11 @@ function setSkeleton() {
             { width: "w-28", height: "h-10" },
             { width: "w-28", height: "h-10" },
         ],
+    });
+    skeleton({
+        element: "#tableCS",
+        height: "h-70",
+        width: "w-full",
     });
 }
 
@@ -46,7 +59,6 @@ const setAuditorToString = (data, typecode = "ESA") => {
         )
         .join(", ");
 };
-
 
 export {
     handleClassList,

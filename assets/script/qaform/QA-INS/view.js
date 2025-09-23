@@ -163,7 +163,9 @@ async function setPage() {
 
     let files = '<div class="flex flex-col">';
     data.QA_FILES.forEach((f, i) => {
-        files += `<a href="${f.FILE_PATH}" storedName="${f.FILE_FNAME}" class="file-link text-primary flex items-center gap-2 w-fit"><i class="icofont-download text-base"></i><span class="link link-primary">${f.FILE_ONAME}</span></a>`;
+        if (f.FILE_TYPECODE === "ESF") {
+            files += `<a href="${f.FILE_PATH}" storedName="${f.FILE_FNAME}" class="file-link text-primary flex items-center gap-2 w-fit"><i class="icofont-download text-base"></i><span class="link link-primary">${f.FILE_ONAME}</span></a>`;
+        }
     });
     files += "</div>";
     $(".attachFile").replaceWith(files);
