@@ -56,7 +56,7 @@
         </div>
     </dialog>
 
-    <script defer src="{{ base_url() }}script.js?ver={{ $GLOBALS['version'] }}"></script>
+    {{-- <script defer src="{{ base_url() }}script.js?ver={{ $GLOBALS['version'] }}"></script> --}}
     <script src="{{ $_ENV['APP_CDN'] }}/jquery/3.7.1/jquery.min.js"></script>
     <script src="{{ $_ENV['APP_CDN'] }}/datatable/v2.2.2/datatables.min.js"></script>
     <script src="{{ $_ENV['APP_CDN'] }}/datatable/v2.2.2/dataTables.responsive.min.js"></script>

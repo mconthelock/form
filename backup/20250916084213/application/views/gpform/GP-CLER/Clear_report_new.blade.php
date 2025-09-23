@@ -389,7 +389,7 @@
                             </div>
                         @endif
 
-                        @if(!empty($formCler->PAYDATE) && ($ENT_FORM->REIMBURSEMENT == '1' && $formCler->REMAIN_BUDGET < 0 || $ENT_FORM->REIMBURSEMENT == '0'))
+                        @if(!empty($formCler->PAYDATE))
                             <div class="flex justify-center mt-6">
                                 <div class="w-full max-w-md  rounded-xl shadow-lg p-5 border border-base-300">
                                     <label class="block mb-3">
@@ -669,13 +669,6 @@
                                     </span>
                                 </div>
                             </div>
-
-                            @if ($ENT_FORM->PAYDATE != null)
-                                <div class="overflow-hidden mt-2 rounded-xl border-2 p-3 border-gray-300 bg-orange-100 shadow-sm flex items-center">
-                                    <span class="text-blue-900 font-semibold mr-3">PayDate :</span>
-                                    <span>{{ $ENT_FORM->PAYDATE ?? "-" }}</span>
-                                </div>
-                            @endif
                         @endif
                         <div class="flow_ent mt-8">
 
