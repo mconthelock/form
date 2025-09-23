@@ -146,9 +146,9 @@ module.exports = {
       datatables: "DataTables",
     }),
   ],
-  externals: {
-    jquery: "jQuery",
-    datatables: "DataTables",
-  },
+    externals: {
+      jquery: "jQuery",
+      datatables: "DataTables",
+    },
   cache: false,
 };
