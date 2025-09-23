@@ -852,9 +852,10 @@ class form extends MY_Controller{
         }
         $templateStart = $currentRow + 4;
         $sheet->setCellValue("P{$templateStart}", $data['item'][0]->HOTELNAME);
-       // $sheet->setCellValue("B{$templateStart+2}",($data['item'][0]->BOARD == "N"? "No":"Yes"));
-       // $sheet->setCellValue("N{$templateStart+4}",($data['item'][0]->SHOPTOUR == "G"? "General":($data['item'][0]->SHOPTOUR == "S"? "Specific":"Inspection")));
-       // $sheet->setCellValue("V{$templateStart+4}",($data['item'][0]->FORMC1_1 == "Y"? "Yes":"No"));
+        $sheet->setCellValue("B".($templateStart + 2),($data['item'][0]->BOARD == "N"? "No":"Yes"));
+        $sheet->setCellValue("N".($templateStart + 4),($data['item'][0]->SHOPTOUR == "G"? "General":($data['item'][0]->SHOPTOUR == "S"? "Specific":"Inspection")));
+        $sheet->setCellValue("V".($templateStart + 4),($data['item'][0]->FORMC1_1 == "Y"? "Yes":"No"));
+        $sheet->setCellValue("B".($templateStart + 7),$data['item'][0]->ROOMLUNCH);
 
         $writer = new Xlsx($spreadsheet);
         $filename = $this->upload_path.$data['head']['REFNO'].'vmsform.xlsx';

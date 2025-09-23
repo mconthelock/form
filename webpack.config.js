@@ -72,14 +72,13 @@ module.exports = {
     // PS-SAR
     psSar: "./assets/script/psform/PS-SAR/index.js", //Sar page
 
-    training: "./assets/script/gpform/GP-TRN/training.ts", 
-    alert: "./assets/script/gpform/GP-TRN/alert.ts", 
-    emp_lookup: "./assets/script/gpform/GP-TRN/emp_lookup.ts", 
-    formUtils: "./assets/script/gpform/GP-TRN/formUtils.ts", 
-    initForms: "./assets/script/gpform/GP-TRN/initForms.ts", 
+    training: "./assets/script/gpform/GP-TRN/training.ts",
+    alert: "./assets/script/gpform/GP-TRN/alert.ts",
+    emp_lookup: "./assets/script/gpform/GP-TRN/emp_lookup.ts",
+    formUtils: "./assets/script/gpform/GP-TRN/formUtils.ts",
+    initForms: "./assets/script/gpform/GP-TRN/initForms.ts",
     validators: "./assets/script/gpform/GP-TRN/validators.ts",
-    type_data: "./assets/script/gpform/GP-TRN/type_data.ts", 
-
+    type_data: "./assets/script/gpform/GP-TRN/type_data.ts",
   },
   output: {
     filename: "[name].js",
@@ -127,9 +126,9 @@ module.exports = {
       datatables: "DataTables",
     }),
   ],
-  //   externals: {
-  //     jquery: "jQuery",
-  //     datatables: "DataTables",
-  //   },
+  externals: {
+    jquery: "jQuery",
+    datatables: "DataTables",
+  },
   cache: false,
 };
