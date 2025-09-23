@@ -8,12 +8,15 @@ import { setApplication } from "./indexDB/setIndexDB";
 import { setImage, setInfo } from "./indexDB/employee";
 import { directlogin, passwordLogin } from "./api/auth";
 import { createCarousel } from "./api/gpreport/news";
+import { redirectProduction } from "./public/v1.0.3/authen";
 
 var camera;
 $(document).ready(async function () {
   await showLoader(true);
   await createCarousel("login");
-  if ($("#appid").val() != "1") $("#webflow-link").removeClass("hidden");
+  const id = $("#appid").val();
+  await redirectProduction(id);
+  if (id != "1") $("#webflow-link").removeClass("hidden");
   $(".loginform:visible").find("input").first().focus();
   await showLoader(false);
 });
