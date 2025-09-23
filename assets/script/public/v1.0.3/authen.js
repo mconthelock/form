@@ -52,10 +52,7 @@ export async function redirectProduction(id) {
     );
     if (
         prod.includes(id) &&
-        ![
-            "https://amecwebtest.mitsubishielevatorasia.co.th",
-            "http://localhost:8080",
-        ].includes(window.location.origin)
+        !process.env.URL_PRODUCTION.split(",").includes(window.location.origin)
     ) {
         console.log(window.location.origin);
 
