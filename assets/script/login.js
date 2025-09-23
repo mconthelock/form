@@ -13,9 +13,9 @@ import { redirectProduction } from "./public/v1.0.3/authen";
 var camera;
 $(document).ready(async function () {
   await showLoader(true);
-  await createCarousel("login");
   const id = $("#appid").val();
   await redirectProduction(id);
+  await createCarousel("login");
   if (id != "1") $("#webflow-link").removeClass("hidden");
   $(".loginform:visible").find("input").first().focus();
   await showLoader(false);

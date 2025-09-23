@@ -50,12 +50,20 @@ export async function redirectProduction(id) {
     const prod = process.env.REDIRECT_PRODUCTION.split(",").map((i) =>
         i.trim()
     );
-    console.log(prod, id);
-    if (prod.includes(id) && window.location.hostname !== "localhost")
+    if (
+        prod.includes(id) &&
+        ![
+            "https://amecwebtest.mitsubishielevatorasia.co.th",
+            "http://localhost:8080",
+        ].includes(window.location.origin)
+    ) {
+        console.log(window.location.origin);
+
         window.location.href = window.location.href.replace(
             "amecwebtest",
             "amecweb"
         );
+    }
 }
 
 export async function initAuthen(options = {}) {
