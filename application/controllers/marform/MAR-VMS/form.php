@@ -856,7 +856,8 @@ class form extends MY_Controller{
         $sheet->setCellValue("N".($templateStart + 4),($data['item'][0]->SHOPTOUR == "G"? "General":($data['item'][0]->SHOPTOUR == "S"? "Specific":"Inspection")));
         $sheet->setCellValue("V".($templateStart + 4),($data['item'][0]->FORMC1_1 == "Y"? "Yes":"No"));
         $sheet->setCellValue("B".($templateStart + 7),$data['item'][0]->ROOMLUNCH);
-
+        $sheet->setCellValue("D".($templateStart + 8),$data['head']['VISITDATE']);
+        $sheet->setCellValue("E".($templateStart + 9), (isset($data['item'][0]->ROOMLUNCH) && $data['item'][0]->ROOMLUNCH !== null ? '12:00 - 13:00 PM': ''));
         $writer = new Xlsx($spreadsheet);
         $filename = $this->upload_path.$data['head']['REFNO'].'vmsform.xlsx';
         $writer->save($filename);

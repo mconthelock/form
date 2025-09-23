@@ -76,8 +76,8 @@ export async function defaultExcel(options = {}) {
     // ตั้งชื่อ column และ key เพื่อให้สอดคล้องกับข้อมูล
     sheet.columns = opt.column.map((col) => {
         const formatted = { ...col };
-        if (col.type === "date") formatted.style = { numFmt: "yyyy-mm-dd" };
-        if (col.type === "number") formatted.style = { numFmt: "0" };
+        if (col.type === "date") formatted.style = { numFmt: col.numFmt || "yyyy-mm-dd" };
+        if (col.type === "number") formatted.style = { numFmt: col.numFmt || "0" };
         return formatted;
     });
     // เพิ่มข้อมูลใน Sheet
