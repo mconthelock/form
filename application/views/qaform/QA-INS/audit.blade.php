@@ -83,6 +83,86 @@
             <div id="tableCS"></div>
         </form>
 
+        <div id="part3">
+            <div class="text-2xl font-bold italic underline">
+                Part III: Summary self inspection audit result
+            </div>
+            <div class="flex flex-col xl:flex-row gap-5">
+                <table id="tableResult" class="table">
+                    <colgroup>
+                        <col class="w-fit border">
+                        <col class="w-fit border">
+                    </colgroup>
+                    <tbody>
+                        <tr>
+                            <td class="font-bold">Process Confirmation Result:</td>
+                            <td>
+                                <div id="res" class="text-center"></div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="font-bold">Degree of compliance:</td>
+                            <td>
+                                <div id="percent" class="text-center"></div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="font-bold">Rating Grade:</td>
+                            <td>
+                                <div id="grade" class="text-center"></div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="font-bold">Comment item</td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td class="font-bold">Suggestion item</td>
+                            <td></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <table class="table">
+                    <colgroup>
+                        <col class="w-fit border">
+                        <col class="w-fit border">
+                        <col class="w-fit border">
+                    </colgroup>
+                    <thead>
+                        <tr>
+                            <th colspan="3" class="font-bold text-xl text-black">Ranking Classification Detail</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="font-bold">
+                            <td>Grade</td>
+                            <td>Description</td>
+                            <td>% Complied</td>
+                        </tr>
+                        <tr>
+                            <td>A</td>
+                            <td>Fully Compliance</td>
+                            <td>90% and Up</td>
+                        </tr>
+                        <tr>
+                            <td>B</td>
+                            <td>Predominant Compliance</td>
+                            <td>80-89%</td>
+                        </tr>
+                        <tr>
+                            <td>C</td>
+                            <td>Partial Compliance</td>
+                            <td>79% and below</td>
+                        </tr>
+                        {{-- <tr>
+                            <td colspan="3">MFG must maintain score above 80% as preferable.(incase of audit#2 MFG must maintain score above 90% as preferable.)</td>
+                        </tr> --}}
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+
         <div id="action" class="flex gap-5"></div>
     </div>
 </div>

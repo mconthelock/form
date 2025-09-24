@@ -1,7 +1,7 @@
 import { getAuditMasterAll } from "../../api/escs/audit_master_all";
 import { showErrorMessage } from "../../public/v1.0.3/jFuntion";
 import { setSkeleton } from "./function";
-import { calScoreTotal, createScoreBoard, createTableAuditMaster, setScore} from "./template";
+import { createScoreBoard, createTableAuditMaster, setScore} from "./template";
 
 $(async function(){
     try {
