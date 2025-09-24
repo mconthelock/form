@@ -14,7 +14,6 @@ import { btn } from "./component";
 import { getformData, saveAudit } from "./data";
 import { finishAndClose, setSkeleton, shortName, shortSec } from "./function";
 import {
-    calScoreTotal,
     createDetail,
     createScoreBoard,
     createTableAuditMaster,
@@ -58,7 +57,6 @@ $(async function () {
             throw new Error("No audit master data found");
         }
 
-
         logtest("Form Info", formInfo);
         logtest("Form Data", formData);
         logtest("Auditee", auditee);
@@ -75,7 +73,9 @@ $(async function () {
                 auditee.QA_AUDIT
             )
         );
-        $("#tableCS").replaceWith(await createTableCS(auditee, auditee.QOA_AUDIT));
+        $("#tableCS").replaceWith(
+            await createTableCS(auditee, auditee.QOA_AUDIT)
+        );
         if (auditee.QOA_AUDIT != 1) {
             $("#action").html(
                 btn({
@@ -125,7 +125,37 @@ async function setDataToSave() {
                 .val(),
         });
     });
-    return data;
+    logtest("Data to save", data);
+    const formData = new FormData($("#part2")[0]);
+    // $("#tableCS")
+    //     .find("input, select, textarea")
+    //     .each(function () {
+    //         const name = $(this).attr("name");
+    //         const value = $(this).val();
+    //         if (name) {
+    //             formData.append(name, value);
+    //         }
+    //     });
+    formData.append("NFRMNO", form.NFRMNO);
+    formData.append("VORGNO", form.VORGNO);
+    formData.append("CYEAR", form.CYEAR);
+    formData.append("CYEAR2", form.CYEAR2);
+    formData.append("NRUNNO", form.NRUNNO);
+    formData.append("typecode", typecode);
+    formData.append("auditSeq", formInfo.seq);
+    formData.append("actionBy", formInfo.empno);
+    data.forEach((item, i) => {
+        // NestJS จะมองเป็น data[0][field], data[1][field]
+        Object.keys(item).forEach((key) => {
+            formData.append(`data[${i}][${key}]`, item[key] ?? "");
+        });
+    });
+    // ถ้ามี array ของ string เช่น delImageIds
+    // delImageIds?.forEach((id, i) => formData.append(`delImageIds[${i}]`, id));
+    $(".delete-from-db").each(function (i, el) {
+        formData.append(`delImageIds[${i}]`, $(el).attr("file-id"));
+    });
+    return formData;
 }
 
 $(document).on("click", ".cs-radio", function (e) {
@@ -142,11 +172,11 @@ $(document).on("click", ".cs-radio", function (e) {
     }
 });
 
-$(document).on('change', 'input[name="files"]', function(){
+$(document).on("change", 'input[name="files"]', function () {
     handleFiles();
 });
 
-$(document).on('click', '#cancel', function(){
+$(document).on("click", "#cancel", function () {
     finishAndClose();
 });
 
@@ -155,53 +185,9 @@ $(document).on("click", "#saveDraft", async function () {
         logtest("-------------------Save Draft-------------------");
         logtest("Form ", form);
 
-        const data = await setDataToSave();
-        logtest("Data to save", data);
-        const formData = new FormData($("#part2")[0]);
-        // $("#tableCS")
-        //     .find("input, select, textarea")
-        //     .each(function () {
-        //         const name = $(this).attr("name");
-        //         const value = $(this).val();
-        //         if (name) {
-        //             formData.append(name, value);
-        //         }
-        //     });
-        formData.append("NFRMNO", form.NFRMNO);
-        formData.append("VORGNO", form.VORGNO);
-        formData.append("CYEAR", form.CYEAR);
-        formData.append("CYEAR2", form.CYEAR2);
-        formData.append("NRUNNO", form.NRUNNO);
-        formData.append("typecode", typecode);
-        formData.append("auditSeq", formInfo.seq);
-        formData.append("actionBy", formInfo.empno);
-        formData.append("draft", 1);
-        // formData.append("data", JSON.stringify(data));
-        data.forEach((item, i) => {
-            // NestJS จะมองเป็น data[0][field], data[1][field]
-            Object.keys(item).forEach((key) => {
-                formData.append(`data[${i}][${key}]`, item[key] ?? "");
-            });
-        });
-        // ถ้ามี array ของ string เช่น delImageIds
-        // delImageIds?.forEach((id, i) => formData.append(`delImageIds[${i}]`, id));
-        $('.delete-from-db').each(function(i, el) {
-            formData.append(`delImageIds[${i}]`, $(el).attr('file-id'));
-        });
-
-        // บันทึกผลลัพธ์
-        // logFormData(formData);
-        // return
+        const formData = await setDataToSave();
+        formData.append("draft", true);
         const res = await saveAudit(formData);
-        // return;
-
-        // const res = await saveAudit({
-        //     ...form,
-        //     data,
-        //     draft: 1,
-        //     typecode: typecode,
-        //     auditSeq: formInfo.seq,
-        // });
         if (res && res.status) {
             showMessage("Save draft successfully", "success");
             finishAndClose();
@@ -214,23 +200,21 @@ $(document).on("click", "#saveDraft", async function () {
     }
 });
 
+
+
 $(document).on("click", "#submit", async function () {
     try {
         logtest("-------------------Submit-------------------");
         logtest("Form ", form);
-        // ดึงคะแนนที่ได้
-        const score = $("#totalScore").text();
-        // คิดเกรด
-        // แปลงเป็นผลลัพธ์
-        const data = await setDataToSave();
+        const {total, score, result, grade, percent} = await setScore();
+        const formData = await setDataToSave();
+        formData.append('score', score);
+        formData.append('res', result);
+        formData.append('grade', grade);
+        formData.append('percent', percent);
+        formData.append("draft", 0);
         // บันทึกผลลัพธ์
-        const res = await saveAudit({
-            ...form,
-            data,
-            typecode: typecode,
-            auditSeq: formInfo.seq,
-            score,
-        });
+       const res = await saveAudit(formData);
         if (res && res.status) {
             showMessage("Save draft successfully", "success");
             // finishAndClose();

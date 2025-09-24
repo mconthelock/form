@@ -5,13 +5,13 @@ import { fancyDialog } from "../../public/v1.0.3/_fancyBox";
 import { host, logtest } from "../../public/v1.0.3/jFuntion";
 import { displayEmpImage } from "../../public/v1.0.3/setIndexDB";
 import { btnMinus, btnPlus, inputNum, radio } from "./component";
-import { handleClassList, setAuditorToString } from "./function";
+import { handleClassList, setAuditorToString, shortSec } from "./function";
 
 const createScoreBoard = () => `
 <div class="lg:absolute right-8 w-full lg:w-40 rounded-2xl border border-slate-200 shadow-sm overflow-hidden z-[20]" id="score">
     <div class="bg-[#3c8dbc] text-white px-3 py-1.5 text-sm text-center font-bold">Total Score</div>
     <div class="p-3 text-center">
-        <div class="text-4xl font-extrabold leading-none" id="totalScore">0</div>
+        <div class="text-4xl font-extrabold leading-none"  id="totalScore">0</div>
         <div class="text-xs text-slate-500 mt-1">
             <span>/</span>
             <span id="total">100</span>
@@ -124,9 +124,10 @@ async function createTableAuditMaster(data, audit = 0, score = []) {
 async function createDetail(data, auditee) {
     const auditor = setAuditorToString(data);
     const item = data.QA_ITEM;
-    const auditees = setAuditorToString(data, "ESO");
+    // const auditees = setAuditorToString(data, "ESO");
     const name = auditee.QOA_EMPNO_INFO.SNAME;
     const empno = auditee.QOA_EMPNO_INFO.SEMPNO;
+    const auditees = `${name} (${auditee.QOA_EMPNO_INFO.SPOSNAME} ${shortSec(auditee.QOA_EMPNO_INFO.SSEC)})`;
     const img = await displayEmpImage(empno);
 
     let html = `
@@ -253,12 +254,12 @@ async function createTableCS(data, audit = 0) {
             <tr>
                 <td class="p-0">
                     <textarea class="w-full h-full min-h-72 p-4 autosize autosize-match" id="audit-result" name="auditResult" placeholder="Enter audit result here..." ${readonly}>${
-                        data.QOA_AUDIT_RESULT
+                        data.QOA_AUDIT_RESULT || "-"
                     }</textarea>   
                 </td>
                 <td class="p-0">
                     <textarea class="w-full h-full min-h-72 p-4 autosize autosize-match" id="audit-activity" name="auditActivity" placeholder="Enter audit activity here..." ${readonly}>${
-                        data.QOA_IMPROVMENT_ACTIVITY
+                        data.QOA_IMPROVMENT_ACTIVITY || "-"
                     }</textarea>   
                 </td>
                 <td class="w-3xl">
@@ -275,7 +276,24 @@ async function createTableCS(data, audit = 0) {
     return html;
 }
 
-function calScoreTotal() {
+async function calGrade(score, total) {
+    const percent = (score / total) * 100 ?? 0;
+    let grade = "";
+    let result = 0;
+    if (percent >= 90) {
+        grade = "A";
+        result = 1;
+    } else if (percent >= 80) {
+        grade = "B";
+        result = 1;
+    } else {
+        grade = "C";
+        result = 0;
+    }
+    return { result, grade, percent };
+}
+
+async function calScoreTotal() {
     let total = 0;
     let score = 0;
     $(".list-row").each((i, el) => {
@@ -293,10 +311,15 @@ function calScoreTotal() {
     return { total, score };
 }
 
-function setScore() {
-    const { total, score } = calScoreTotal();
+async function setScore() {
+    const { total, score } = await calScoreTotal();
+    const { result, grade, percent } = await calGrade(score, total);
     $("#totalScore").text(score);
     $("#total").text(total);
+    $("#grade").text(grade);
+    $("#percent").text(percent.toFixed(2)+'%');
+    $("#res").html(result == 1 ? "<span class='text-green-500'>PASS</span>" : "<span class='text-red-500'>NOT PASS</span>");
+    return { total, score, result, grade, percent };
 }
 
 $(document).on("click", ".plus", function () {
