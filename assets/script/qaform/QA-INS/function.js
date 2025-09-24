@@ -1,4 +1,5 @@
 import { skeleton, skeletons } from "../../public/v1.0.3/component/skeleton";
+import { getAuditee, getOA } from "./data";
 
 function handleClassList(num) {
     return num % 2 === 0 ? "bg-base-200" : "bg-white";
@@ -44,20 +45,28 @@ function setSkeleton() {
     });
     skeleton({
         element: "#tableCS",
-        height: "h-70",
+        height: "h-96",
         width: "w-full",
     });
 }
 
-const setAuditorToString = (data, typecode = "ESA") => {
-    return data.QA_AUD_OPT.filter((i) => i.QOA_TYPECODE == typecode)
-        .map(
+const setAuditorToString = async (form, typecode = "ESA") => {
+    const data = await getOA({...form, QOA_TYPECODE: typecode});
+    return data.map(
             (list) =>
                 `${shortName(list.QOA_EMPNO_INFO.SNAME)} (${
                     list.QOA_EMPNO_INFO.SPOSNAME
                 } ${shortSec(list.QOA_EMPNO_INFO.SSEC)})`
         )
         .join(", ");
+    // return data.QA_AUD_OPT.filter((i) => i.QOA_TYPECODE == typecode)
+    //     .map(
+    //         (list) =>
+    //             `${shortName(list.QOA_EMPNO_INFO.SNAME)} (${
+    //                 list.QOA_EMPNO_INFO.SPOSNAME
+    //             } ${shortSec(list.QOA_EMPNO_INFO.SSEC)})`
+    //     )
+    //     .join(", ");
 };
 
 export {

@@ -1,10 +1,11 @@
+import { getEscsItemStation } from "../../api/escs/item_station";
 import { getBase64Image } from "../../api/file";
 import { formatDate } from "../../public/v1.0.3/_dayjs";
 import { dragDropInit, dragDropListImage } from "../../public/v1.0.3/_dragdrop";
 import { fancyDialog } from "../../public/v1.0.3/_fancyBox";
 import { host, logtest } from "../../public/v1.0.3/jFuntion";
 import { displayEmpImage } from "../../public/v1.0.3/setIndexDB";
-import { btnMinus, btnPlus, inputNum, radio } from "./component";
+import { btnMinus, btnPlus, checkbox, inputNum, radio } from "./component";
 import { handleClassList, setAuditorToString, shortSec } from "./function";
 
 const createScoreBoard = () => `
@@ -92,24 +93,27 @@ async function createTableAuditMaster(data, audit = 0, score = []) {
                     </div>
                 </td>
                 <td class="text-center"><span class="result"></span></td>
-                <td class="flex justify-center join">`;
+                <td class="flex justify-center join">
+                    <div class="audit-comment-suggestion" type="${valComment}">`;
+
             if (audit != 1) {
                 html += radio({
                     name: `list-${item.ARM_NO}-${item.ARM_SEQ}`,
                     val: "S",
-                    cls: "join-item cs-radio [&:not(:checked)]:bg-white btn-lg",
+                    cls: "join-item cs-radio [&:not(:checked)]:bg-white btn-lg audit-comment",
                     checked: foundscore ? foundscore.QAA_COMMENT == "S" : false,
                 });
                 html += radio({
                     name: `list-${item.ARM_NO}-${item.ARM_SEQ}`,
                     val: "C",
-                    cls: "join-item cs-radio [&:not(:checked)]:bg-white btn-lg",
+                    cls: "join-item cs-radio [&:not(:checked)]:bg-white btn-lg audit-suggestion",
                     checked: foundscore ? foundscore.QAA_COMMENT == "C" : false,
                 });
             } else {
-                html += `<span>${valComment}</span>`;
+                html += `<span >${valComment}</span>`;
             }
             html += `
+                    </div>
                 </td>
             </tr>`;
         }
@@ -122,12 +126,21 @@ async function createTableAuditMaster(data, audit = 0, score = []) {
 }
 
 async function createDetail(data, auditee) {
-    const auditor = setAuditorToString(data);
+    const auditor = await setAuditorToString({
+        NFRMNO: data.NFRMNO,
+        VORGNO: data.VORGNO,
+        CYEAR: data.CYEAR,
+        CYEAR2: data.CYEAR2,
+        NRUNNO: data.NRUNNO,
+    });
     const item = data.QA_ITEM;
+    const station = await getEscsItemStation({ ITS_ITEM: item });
     // const auditees = setAuditorToString(data, "ESO");
     const name = auditee.QOA_EMPNO_INFO.SNAME;
     const empno = auditee.QOA_EMPNO_INFO.SEMPNO;
-    const auditees = `${name} (${auditee.QOA_EMPNO_INFO.SPOSNAME} ${shortSec(auditee.QOA_EMPNO_INFO.SSEC)})`;
+    const auditees = `${name} (${auditee.QOA_EMPNO_INFO.SPOSNAME} ${shortSec(
+        auditee.QOA_EMPNO_INFO.SSEC
+    )})`;
     const img = await displayEmpImage(empno);
 
     let html = `
@@ -169,6 +182,24 @@ async function createDetail(data, auditee) {
                 </tr>
             </tbody>
         </table>`;
+    if (station && station.length > 0) {
+        html += `<div class="mt-4 p-4 border rounded-lg shadow">
+                <h3 class="font-bold mb-2">Station</h3>
+                <div class="flex flex-wrap gap-2 ${auditee.QOA_AUDIT == 1 ? "cursor-not-allowed" : ""}">`;
+
+        for (const st of station) {
+            html += checkbox({
+                name: "station",
+                val: st.ITS_NO,
+                label: st.ITS_STATION_NAME,
+                cls: "checkbox-neutral",
+                disabled: auditee.QOA_AUDIT == 1,
+                checked: auditee.QOA_STATION && auditee.QOA_STATION.split('|').includes(String(st.ITS_NO))
+            });
+        }
+        html += `</div>
+        </div>`;
+    }
     return html;
 }
 
@@ -220,13 +251,13 @@ async function createTableCS(data, audit = 0) {
                 : file.FILE_PATH + "/" + file.FILE_FNAME;
             const image = await getBase64Image(path);
 
-            if(audit != 1){
+            if (audit != 1) {
                 list += dragDropListImage({
                     src: image,
                     attr: `file-id="${file.FILE_ID}"`,
-                    fromDB: true
+                    fromDB: true,
                 });
-            }else{
+            } else {
                 list += `<li class="relative">
                     <a href="${image}" data-fancybox="gallery" class="w-2/5 h-2/5">
                         <img src="${image}" class="w-44 object-cover rounded-lg" />
@@ -253,22 +284,27 @@ async function createTableCS(data, audit = 0) {
         <tbody>
             <tr>
                 <td class="p-0">
-                    <textarea class="w-full h-full min-h-72 p-4 autosize autosize-match" id="audit-result" name="auditResult" placeholder="Enter audit result here..." ${readonly}>${
-                        data.QOA_AUDIT_RESULT || "-"
-                    }</textarea>   
+                    <textarea class="w-full h-full min-h-70 p-4 autosize autosize-match" id="audit-result" name="auditResult" placeholder="Enter audit result here..." ${readonly}>${
+        data.QOA_AUDIT_RESULT || "-"
+    }</textarea>   
                 </td>
                 <td class="p-0">
-                    <textarea class="w-full h-full min-h-72 p-4 autosize autosize-match" id="audit-activity" name="auditActivity" placeholder="Enter audit activity here..." ${readonly}>${
-                        data.QOA_IMPROVMENT_ACTIVITY || "-"
-                    }</textarea>   
+                    <textarea class="w-full h-full min-h-70 p-4 autosize autosize-match" id="audit-activity" name="auditActivity" placeholder="Enter audit activity here..." ${readonly}>${
+        data.QOA_IMPROVMENT_ACTIVITY || "-"
+    }</textarea>   
                 </td>
                 <td class="w-3xl">
-                    ${audit != 1 ? dragDropInit({
-                        format: "image",
-                        class: "auditImage",
-                        showImg: true,
-                        list: list,
-                    }) : list}
+                    ${
+                        audit != 1
+                            ? dragDropInit({
+                                  format: "image",
+                                  class: "auditImage",
+                                  showImg: true,
+                                  list: list,
+                                  height: "min-h-70 max-h-96",
+                              })
+                            : `<ul class="flex flex-wrap gap-2">${list}</ul>`
+                    }
                 </td>
             </tr>
         </tbody>
@@ -290,37 +326,53 @@ async function calGrade(score, total) {
         grade = "C";
         result = 0;
     }
-    return { result, grade, percent };
+    return { result, grade, percent: percent.toFixed(2) };
 }
 
 async function calScoreTotal() {
     let total = 0;
     let score = 0;
+    let s = 0;
+    let c = 0;
     $(".list-row").each((i, el) => {
         const factor = parseInt($(el).find(".list-factor").attr("factor"));
         const maxScore = parseInt(
             $(el).find(".list-maxScore").attr("maxScore")
         );
         const auditScore = $(el).find(".audit-score");
+        const valComment = $(el).find(".audit-comment-suggestion").attr("type");
+        valComment == "S" ? s++ : valComment == "C" ? c++ : "";
         const res =
             parseInt(auditScore.val() || auditScore.text() || 0) * factor;
         $(el).find(".result").text(res);
         score += res;
         total += maxScore * factor;
     });
-    return { total, score };
+    return { total, score, s, c };
 }
 
 async function setScore() {
-    const { total, score } = await calScoreTotal();
+    const { total, score, s, c } = await calScoreTotal();
     const { result, grade, percent } = await calGrade(score, total);
     $("#totalScore").text(score);
     $("#total").text(total);
     $("#grade").text(grade);
-    $("#percent").text(percent.toFixed(2)+'%');
-    $("#res").html(result == 1 ? "<span class='text-green-500'>PASS</span>" : "<span class='text-red-500'>NOT PASS</span>");
+    $("#commentItem").text(c);
+    $("#suggestionItem").text(s);
+    $("#percent").text(percent + "%");
+    $("#res").html(
+        result == 1
+            ? "<span class='text-green-500'>PASS</span>"
+            : "<span class='text-red-500'>NOT PASS</span>"
+    );
     return { total, score, result, grade, percent };
 }
+
+$(document).on("click", ".audit-comment, .audit-suggestion", function () {
+    const parent = $(this).parent();
+    parent.attr("type", $(this).val());
+    setScore();
+});
 
 $(document).on("click", ".plus", function () {
     const input = $(this).siblings(".audit-score");

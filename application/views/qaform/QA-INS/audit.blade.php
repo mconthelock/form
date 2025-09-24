@@ -12,11 +12,11 @@
         </u>
         <div id="rev" class="absolute left-4 text-sm text-gray-500 font-bold"></div>
         <div id="score" class="lg:absolute right-8"></div>
-        <div class="flex flex-col xl:flex-row gap-5 justify-between mt-10">
-            <div class="overflow-auto w-full xl:w-1/2">
+        <div class="flex flex-col xl:flex-row gap-5 justify-between mt-10 h-fit">
+            <div class="overflow-auto w-full xl:w-1/2 h-full">
                 <div id="detail"></div>
             </div>
-            <div class="overflow-y-auto w-full xl:w-fit xl:max-w-[45vw] max-h-48 rounded shadow">
+            <div class="overflow-y-auto w-full xl:w-fit xl:max-w-[45vw] h-full max-h-[23.5rem] rounded shadow">
                 <div id="tableRevision"></div>
             </div>
         </div>
@@ -81,6 +81,15 @@
                 Part II: Summary comment/suggestion Result
             </div>
             <div id="tableCS"></div>
+            <div class="font-bold mt-5">
+                Route of Self inspection audit:
+            </div>
+            <span>
+                Self inspection audit--> 1) First report(Comment/Suggestion) --> Draft Report --> Final report --> Keep
+                file - Input to Score ranking table / send result to MFG
+                --> 2) First report(No Comment/Suggestion) --> Final report --> Keep file - Input to Score ranking table
+                / send result to MFG
+            </span>
         </form>
 
         <div id="part3">
@@ -114,11 +123,11 @@
                         </tr>
                         <tr>
                             <td class="font-bold">Comment item</td>
-                            <td></td>
+                            <td><div id="commentItem"  class="text-center"></div></td>
                         </tr>
                         <tr>
                             <td class="font-bold">Suggestion item</td>
-                            <td></td>
+                            <td><div id="suggestionItem"  class="text-center"></div></td>
                         </tr>
                     </tbody>
                 </table>
@@ -155,7 +164,8 @@
                             <td>79% and below</td>
                         </tr>
                         {{-- <tr>
-                            <td colspan="3">MFG must maintain score above 80% as preferable.(incase of audit#2 MFG must maintain score above 90% as preferable.)</td>
+                            <td colspan="3">MFG must maintain score above 80% as preferable.(incase of audit#2 MFG must
+                                maintain score above 90% as preferable.)</td>
                         </tr> --}}
                     </tbody>
                 </table>
