@@ -29,13 +29,21 @@ import {
     showMessage,
 } from "../../public/v1.0.3/jFuntion";
 import { getImageByUser } from "../../public/v1.0.3/setIndexDB";
-import { getAuditee, getformData, openfile, qcConfirm } from "./data";
+import {
+    searchAuditees,
+    getformData,
+    openfile,
+    qcConfirm,
+    getOA,
+    getAuditee,
+    getQaFiles,
+} from "./data";
 import { showLoader } from "../../public/v1.0.3/preloader";
 import { redirectWebflow } from "../../public/v1.0.3/_form";
 import { formatDate } from "../../public/v1.0.3/_dayjs";
 import { setAuditorToString, shortName, shortSec } from "./function";
 import { getAuditRevision } from "../../api/escs/audit_revision";
-var formInfo, form, qafiles, cextdata, tableAuditor;
+var formInfo, form, qafiles, cextdata, tableAuditor, tableAuditee;
 
 $(async function () {
     try {
@@ -85,42 +93,68 @@ $(document).on("click", 'button[name="btnAction"]', async function () {
         formData.set("ACTION", action);
         formData.set("REMARK", $("#remark").val());
         if (action == "approve") {
-            const alertMsg = [
-                {
-                    element: $("#TRAINING_DATE"),
-                    message: "Please select training date",
-                },
-                { element: $("#OJTDATE"), message: "Please select OJT date" },
-                {
-                    element: $("#QCFOREMAN"),
-                    message: "Please select QC Foreman",
-                },
-                {
-                    element: $("#QA_REV"),
-                    message: "Please select Revision",
-                },
-            ];
-            if (!(await requiredForm(qcform, alertMsg))) return;
+            switch (cextdata) {
+                case "01":
+                    const alertMsg = [
+                        {
+                            element: $("#TRAINING_DATE"),
+                            message: "Please select training date",
+                        },
+                        {
+                            element: $("#OJTDATE"),
+                            message: "Please select OJT date",
+                        },
+                        {
+                            element: $("#QCFOREMAN"),
+                            message: "Please select QC Foreman",
+                        },
+                        {
+                            element: $("#QA_REV"),
+                            message: "Please select Revision",
+                        },
+                    ];
+                    if (!(await requiredForm(qcform, alertMsg))) return;
 
-            const data = tableAuditor.rows().data().toArray();
-            logtest("data", data);
+                    const data = tableAuditor.rows().data().toArray();
+                    logtest("data", data);
 
-            const selected = data
-                .filter((row) => row.selected == true)
-                .map((row) => row.SEMPNO);
+                    const selected = data
+                        .filter((row) => row.selected == true)
+                        .map((row) => row.SEMPNO);
 
-            logtest("selected", selected);
-            if (selected.length === 0) {
-                showMessage("Please select at least one row", "warning");
-                return;
+                    logtest("selected", selected);
+                    if (selected.length === 0) {
+                        showMessage(
+                            "Please select at least one row",
+                            "warning"
+                        );
+                        return;
+                    }
+                    selected.forEach((v) => formData.append("AUDITOR", v));
+                    res = await qcConfirm(formData);
+                    break;
+                case "02":
+                    logtest("tableAuditee", tableAuditee);
+                    const auditeeData = tableAuditee.rows().data().toArray();
+                    logtest("auditeeData", auditeeData);
+                    const notAudited = auditeeData.filter(
+                        (row) => row.QOA_AUDIT != 1
+                    );
+                    if (notAudited.length > 0) {
+                        showMessage(
+                            "There are auditees who have not been audited.",
+                            "warning"
+                        );
+                        return;
+                    }
+                    res = await doaction(formData);
+                    break;
+                default:
+                    break;
             }
-            selected.forEach((v) => formData.append("AUDITOR", v));
-            res = await qcConfirm(formData);
         } else {
             res = await doaction(formData);
         }
-        logFormData(formData);
-        logtest(res);
         if (res.status == true) {
             showMessage(res.message, "success");
             redirectWebflow();
@@ -138,35 +172,29 @@ $(document).on("click", 'button[name="btnAction"]', async function () {
 async function setPage() {
     $("body").addClass("bg-blue-100");
     const flow = await showflow(form);
-    // const flow = await showflow({
-    //     NFRMNO: 9,
-    //     VORGNO: "030101",
-    //     CYEAR: "25",
-    //     CYEAR2: "2025",
-    //     NRUNNO: 22,
-    // });
     await setSkeleton();
     const data = await getformData(form);
-    qafiles = data.QA_FILES;
+    qafiles = await getQaFiles({ ...form, FILE_TYPECODE: "ESF" });
     const formDetail = await getformDetail(form);
     $(".form-detail").html(formDetail);
     $(".item").replaceWith(data.QA_ITEM);
 
-    let operator = '<div class="flex flex-col">';
-    data.QA_AUD_OPT.forEach((o) => {
-        if (o.QOA_TYPECODE == "ESO") {
-            operator += `<span>${o.QOA_EMPNO_INFO.SNAME} (${o.QOA_EMPNO})</span>`;
-        }
+    const operator = await searchAuditees({ ...form, QOA_TYPECODE: "ESO" });
+    let operatorHtml = '<div class="flex flex-col">';
+    operator.forEach((o) => {
+        operatorHtml += `<span>${o.QOA_EMPNO_INFO.SNAME} (${o.QOA_EMPNO})</span>`;
     });
-    operator += "</div>";
-    $(".operator").replaceWith(operator);
+    operatorHtml += "</div>";
+    $(".operator").replaceWith(operatorHtml);
 
     let files = '<div class="flex flex-col">';
-    data.QA_FILES.forEach((f, i) => {
-        if (f.FILE_TYPECODE === "ESF") {
+    if(qafiles.length === 0) {
+        files += `<span>-</span>`;
+    }else{
+        qafiles.forEach((f, i) => {
             files += `<a href="${f.FILE_PATH}" storedName="${f.FILE_FNAME}" class="file-link text-primary flex items-center gap-2 w-fit"><i class="icofont-download text-base"></i><span class="link link-primary">${f.FILE_ONAME}</span></a>`;
-        }
-    });
+        });
+    }
     files += "</div>";
     $(".attachFile").replaceWith(files);
 
@@ -227,7 +255,7 @@ async function setSkeleton() {
         ? formSubmitSkeleton({
               element: "#actionWebflow",
               mode: "edit",
-              count: 4,
+              count: cextdata == "01" ? 4: 3,
           })
         : formSubmitSkeleton({ element: "#actionWebflow", mode: "view" });
     formDetailSkeleton(".form-detail");
@@ -435,8 +463,13 @@ async function setAudit(data) {
         formatDate(data.QA_TRAINING_DATE, "DD-MMM-YYYY HH:mm")
     );
     $("#ojtShow").text(formatDate(data.QA_OJT_DATE, "DD-MMM-YYYY HH:mm"));
-    const auditor = setAuditorToString(data);
-    const auditee = data.QA_AUD_OPT.filter((i) => i.QOA_TYPECODE == "ESO");
+    const auditor = await setAuditorToString(form);
+    console.log("auditor", auditor);
+
+    const auditee = await searchAuditees(form);
+    console.log("auditee", auditee);
+
+    // const auditee = data.QA_AUD_OPT.filter((i) => i.QOA_TYPECODE == "ESO");
     $("#auditorShow").text(auditor.slice(0, -2) || ", ");
     await createTableAuditee(auditee);
 }
@@ -444,7 +477,7 @@ async function setAudit(data) {
 async function createTableAuditee(data) {
     console.log(data);
 
-    await createTable(
+    tableAuditee = await createTable(
         {
             data: data,
             searching: false,
@@ -524,7 +557,7 @@ $(document).on("click", ".audit-btn", function () {
 // ฟัง event storage
 window.addEventListener("storage", async (e) => {
     if (e.key === "TableAuditeeReload") {
-        const auditee = await getAuditee(form);
+        const auditee = await searchAuditees(form);
         createTableAuditee(auditee);
     }
 });

@@ -53,7 +53,7 @@ export const domScrollTailwind4 = `
         >
         <"top-menu-row2 flex gap-3">
     >
-    <"table-body bg-white border border-slate-300 rounded-lg overflow-scroll"rt>
+    <"table-body bg-white border border-slate-300 rounded-lg overflow-auto"rt>
     <"table-bottom flex justify-between mt-5"
         <"table-paging flex gap-3"p>
         <"table-info flex gap-3" i>
@@ -643,7 +643,7 @@ export function createColumnFilters(table, columnsToFilter) {
     if($('#filter-menu').length == 0){
         $('body').append(`<div class="filter-menu absolute bg-white border border-solid border-[#ddd] hidden z-[1000] p-2.5" id="filter-menu">
             <div class="filter-header" id="filter-header"></div>
-            <div id="filter-options" class="h-[400px] w-[200px] overflow-scroll"></div>
+            <div id="filter-options" class="h-[400px] w-[200px] overflow-auto"></div>
             <div class="buttons join w-full">
                 <button id="cursor: pointer;" class="btn btn-sm btn-primary round-full join-item w-1/2">OK</button>
                 <button id="filter-cancel" class="btn btn-sm btn-neutral round-full join-item w-1/2">Cancel</button>

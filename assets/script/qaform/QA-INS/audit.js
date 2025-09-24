@@ -10,8 +10,9 @@ import {
     showErrorMessage,
     showMessage,
 } from "../../public/v1.0.3/jFuntion";
+import { showbgLoader } from "../../public/v1.0.3/preloader";
 import { btn } from "./component";
-import { getformData, saveAudit } from "./data";
+import { getAuditee, getformData, saveAudit } from "./data";
 import { finishAndClose, setSkeleton, shortName, shortSec } from "./function";
 import {
     createDetail,
@@ -21,6 +22,7 @@ import {
     createTableRevision,
     setScore,
 } from "./template";
+
 var formInfo, formData, auditor, auditee, master, form;
 const typecode = "ESO";
 
@@ -39,23 +41,19 @@ $(async function () {
             NRUNNO: formInfo.nrunno,
         };
         formData = await getformData(form);
-        if (!formData || formData.length === 0) {
-            throw new Error("No form data found");
-        }
         const revision = await getAuditRevision({
             ARR_SECID: formData.QA_INCHARGE_SECTION,
         });
-        auditee =
-            formData.QA_AUD_OPT.find(
-                (i) => i.QOA_TYPECODE == typecode && i.QOA_SEQ == formInfo.seq
-            ) || {};
-        if (!auditee || Object.keys(auditee).length === 0) {
-            throw new Error("You are not authorized to audit this form.");
-        }
-        master = formData.QA_MASTER.filter((i) => i.ARM_STATUS === 1);
-        if (!master || master.length === 0) {
-            throw new Error("No audit master data found");
-        }
+        auditee = await getAuditee({...form, QOA_SEQ: formInfo.seq});
+        master = await getAuditMasterAll({
+            ARM_REV: formData.QA_REV,
+            ARM_SECID: formData.QA_INCHARGE_SECTION,
+            ARM_STATUS: 1,
+        })
+        // master = formData.QA_MASTER.filter((i) => i.ARM_STATUS === 1);
+        // if (!master || master.length === 0) {
+        //     throw new Error("No audit master data found");
+        // }
 
         logtest("Form Info", formInfo);
         logtest("Form Data", formData);
@@ -109,6 +107,7 @@ $(async function () {
 
 async function setDataToSave() {
     const data = [];
+    let station = '';
     $(".list-row").each((i, el) => {
         const input = $(el).find(".audit-score");
         const topic = $(el).attr("topic");
@@ -126,6 +125,13 @@ async function setDataToSave() {
         });
     });
     logtest("Data to save", data);
+
+    $('input[name="station"]').each((i, el) => {
+        if ($(el).is(":checked")) {
+            station += $(el).val() + "|";
+        }
+    });
+
     const formData = new FormData($("#part2")[0]);
     // $("#tableCS")
     //     .find("input, select, textarea")
@@ -144,6 +150,7 @@ async function setDataToSave() {
     formData.append("typecode", typecode);
     formData.append("auditSeq", formInfo.seq);
     formData.append("actionBy", formInfo.empno);
+    formData.append("station", station.substring(0, station.length - 1));
     data.forEach((item, i) => {
         // NestJS จะมองเป็น data[0][field], data[1][field]
         Object.keys(item).forEach((key) => {
@@ -212,17 +219,17 @@ $(document).on("click", "#submit", async function () {
         formData.append('res', result);
         formData.append('grade', grade);
         formData.append('percent', percent);
-        formData.append("draft", 0);
+        formData.append("draft", false);
         // บันทึกผลลัพธ์
        const res = await saveAudit(formData);
         if (res && res.status) {
-            showMessage("Save draft successfully", "success");
-            // finishAndClose();
+            showMessage("Successfully", "success");
+            finishAndClose();
         } else {
-            throw new Error("Failed to save draft");
+            throw new Error("Failed to submit");
         }
     } catch (error) {
-        logtest("Error submitting form", error);
+        logtest("Error submitting ", error);
         showErrorMessage(error);
     }
 });

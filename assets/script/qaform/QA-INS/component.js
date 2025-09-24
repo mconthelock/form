@@ -23,6 +23,14 @@ const radio = ({ name = "", val = "", cls = "", checked = false, attr = "", disa
         checked ? 'checked="checked"' : ""
     } ${disabled ? 'disabled="disabled"' : ""} ${attr}  aria-label="${val}" value="${val}" />`;
 
+const checkbox = ({ name = "", val = "", label = "", cls = "", checked = false, attr = "", disabled = false } = {}) =>
+    `<label class="label btn ${disabled ? "btn-disabled" : ""}">
+        <input type="checkbox" name="${name}" value="${val}" class="checkbox ${cls}" ${
+                checked ? 'checked="checked"' : ""
+            } ${disabled ? 'disabled="disabled"' : ""} ${attr}  aria-label="${val}" value="${val}" />
+        <span class="label-text ml-2">${label}</span>
+  </label>`;
+
 const inputNum = ({min = 0, max = 10, name = "", val = 3, disabled = false, cls = ""} = {}) => `<input type="number" class="input input-sm ${cls}" value="${val}" min="${min}" max="${max}" name="${name}" ${disabled ? 'disabled="disabled"' : ""} />`;
 
 const btnMinus = ({ disabled = false, cls = ""} = {}) => `<button class="btn btn-sm p-2 minus ${cls}" ${disabled ? 'disabled="disabled"' : ""}><i class="icofont-minus text-xl"></i></button>`;
@@ -31,4 +39,4 @@ const btnPlus = ({ disabled = false, cls = ""} = {}) => `<button class="btn btn-
 const btn = ({ id = "", cls = "", text = "", attr = "", disabled = false } = {}) =>
     `<button class="btn ${cls}" id="${id}" ${attr} ${disabled ? 'disabled="disabled"' : ""}>${text}</button>`;
 
-export { btnStatus, btnDel, btnAdd, input, radio, btnMinus, btnPlus, inputNum, btn };
+export { btnStatus, btnDel, btnAdd, input, radio, btnMinus, btnPlus, inputNum, btn, checkbox };

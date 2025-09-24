@@ -31,6 +31,32 @@ export async function getformData(form) {
 }
 
 /**
+ * {
+    "NFRMNO": 13,
+    "VORGNO": "000101",
+    "CYEAR": "25",
+    "CYEAR2": "2025",
+    "NRUNNO": 1,
+    "FILE_TYPECODE" : "ESI"
+}
+ */
+export async function getQaFiles(q = {}) {
+    const res = await fetch(`${process.env.APP_API}/qa-file/getQaFile`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(q),
+    });
+
+    if (!res.ok) {
+        await fetchMsgErr(res);
+        throw new Error("Failed to Create");
+    }
+
+    const data = await res.json();
+    return data;
+}
+
+/**
  *
  * @param {object} formData
  * @returns
@@ -91,9 +117,27 @@ export async function saveMaster(data) {
 //     "CYEAR2": "2025",
 //     "NRUNNO": 1,
 // }
-export async function getAuditee(q = {}){
-    const condition = {...q, QOA_TYPECODE: "ESO"};
-    const res = await fetch(`${process.env.APP_API}/qaform/qa-ins/OA/search`, {
+export async function getOA(q = {}) {
+    const res = await fetch(`${process.env.APP_API}/qaform/qa-ins/OA/searchQainsOA`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(q),
+    });
+    if (!res.ok) {
+        await fetchMsgErr(res);
+        throw new Error("Failed to get Auditee");
+    }
+    return await res.json();
+}
+
+export async function searchAuditees(q = {}) {
+    const condition = { ...q, QOA_TYPECODE: "ESO" };
+    return await getOA(condition);
+}
+
+export async function getAuditee(q = {}) {
+    const condition = { ...q, QOA_TYPECODE: "ESO" };
+    const res = await fetch(`${process.env.APP_API}/qaform/qa-ins/OA/findOneQainsOA`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(condition),
@@ -105,13 +149,16 @@ export async function getAuditee(q = {}){
     return await res.json();
 }
 
-export async function saveAudit(data){
-    const res = await fetch(`${process.env.APP_API}/qaform/qa-ins/audit/saveAudit`, {
-        method: "POST",
-        // headers: { "Content-Type": "application/json" },
-        // body: JSON.stringify(data),
-        body: data
-    });
+export async function saveAudit(data) {
+    const res = await fetch(
+        `${process.env.APP_API}/qaform/qa-ins/audit/saveAudit`,
+        {
+            method: "POST",
+            // headers: { "Content-Type": "application/json" },
+            // body: JSON.stringify(data),
+            body: data,
+        }
+    );
     if (!res.ok) {
         await fetchMsgErr(res);
         throw new Error("Failed to Save Audit");

@@ -13,7 +13,7 @@ import { fetchMsgErr } from "../fetch-utils";
  */
 export async function getAuditRevision(q = {}) {
     const res = await fetch(
-        `${process.env.APP_API}/escs/audit-report-revision/search`,
+        `${process.env.APP_API}/escs/audit-report-revision/getAuditReportRevision`,
         {
             method: "POST",
             headers: { "Content-Type": "application/json" },

@@ -92,6 +92,8 @@ $(document).on('click', '.drop-remove-db', async function(e){
     const element  = elementDragDrop(dropZone);
     const list     = $(this).closest('li');
     list.addClass('hidden delete-from-db');
+    const fancy = list.find('a');
+    fancy.removeAttr('data-fancybox');
     checkDropZone(element);
 });
 
@@ -165,7 +167,7 @@ export const dragDropInit = (options = {}) => {
     }
     const show = opt.list != '' ? true : false;
     return `<div class=" p-3 flex gap-3 ${opt.width} ${opt.height}">
-    <label for='${opt.name}'  class="dropZone border border-primary border-dashed rounded-lg w-full min-h-60 text-primary  cursor-pointer   overflow-scroll">
+    <label for='${opt.name}'  class="dropZone border border-primary border-dashed rounded-lg w-full min-h-60 text-primary  cursor-pointer   overflow-auto">
         <div class="drop-message ${show ? 'hidden' : 'flex'} flex-col justify-center items-center h-full">
             <span>Drag & Drop files here or click to select</span>
         </div>
