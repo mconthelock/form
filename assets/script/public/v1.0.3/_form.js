@@ -14,7 +14,6 @@ import { checkAuthen, logtest, root } from "./jFuntion";
 import { showLoader } from "../../utils";
 
 const url = root.includes('amecwebtest') ? `${root}/api-auth/api-dev/` : `${root}/api-auth/api/`;
-console.log(url);
 
 
 /**

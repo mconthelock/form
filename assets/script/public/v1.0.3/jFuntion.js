@@ -382,7 +382,7 @@ export async function getAllAttr(element) {
     for (let attr of attrs) {
         attrObj[attr.name] = attr.value;
     }
-    console.log(attrObj);
+    logtest(attrObj);
     return attrObj;
 }
 
