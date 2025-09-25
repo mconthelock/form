@@ -56,7 +56,7 @@ $(async function () {
         $("body").addClass("bg-blue-100");
         // $('.attach').html(dragDropInit({width: 'w-1/2'}));
         // $('.attach').html(dragDropInit({format: 'excel', class:'req'}));
-        $(".attach").html(dragDropInit({ format: "excel" }));
+        $(".attach").html(dragDropInit());
         $(".drop-reset").replaceWith(dragDropReset({ class: "rounded-full" }));
         formInfo = await getAllAttr(document.querySelector(".form-info"));
         // await directlogin(formInfo.empno, 1);

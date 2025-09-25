@@ -37,13 +37,14 @@ import {
     getOA,
     getAuditee,
     getQaFiles,
+    lastApprove,
 } from "./data";
 import { showLoader } from "../../public/v1.0.3/preloader";
 import { redirectWebflow } from "../../public/v1.0.3/_form";
 import { formatDate } from "../../public/v1.0.3/_dayjs";
 import { setAuditorToString, shortName, shortSec } from "./function";
 import { getAuditRevision } from "../../api/escs/audit_revision";
-var formInfo, form, qafiles, cextdata, tableAuditor, tableAuditee;
+var formInfo, form, cextdata, tableAuditor, tableAuditee;
 
 $(async function () {
     try {
@@ -116,13 +117,9 @@ $(document).on("click", 'button[name="btnAction"]', async function () {
                     if (!(await requiredForm(qcform, alertMsg))) return;
 
                     const data = tableAuditor.rows().data().toArray();
-                    logtest("data", data);
-
                     const selected = data
                         .filter((row) => row.selected == true)
                         .map((row) => row.SEMPNO);
-
-                    logtest("selected", selected);
                     if (selected.length === 0) {
                         showMessage(
                             "Please select at least one row",
@@ -149,7 +146,11 @@ $(document).on("click", 'button[name="btnAction"]', async function () {
                     }
                     res = await doaction(formData);
                     break;
+                case "06":
+                    res = await lastApprove(formData);
+                    break;
                 default:
+                    res = await doaction(formData);
                     break;
             }
         } else {
@@ -162,6 +163,8 @@ $(document).on("click", 'button[name="btnAction"]', async function () {
             throw new Error(res.message);
         }
     } catch (error) {
+        console.log(error);
+        
         console.error("Error: " + error);
         showErrorMessage(error);
     } finally {
@@ -171,26 +174,27 @@ $(document).on("click", 'button[name="btnAction"]', async function () {
 
 async function setPage() {
     $("body").addClass("bg-blue-100");
-    const flow = await showflow(form);
     await setSkeleton();
+    const flow = await showflow(form);
     const data = await getformData(form);
-    qafiles = await getQaFiles({ ...form, FILE_TYPECODE: "ESF" });
+    const qafiles = await getQaFiles({ ...form, FILE_TYPECODE: "ESF" });
     const formDetail = await getformDetail(form);
+    const operator = await searchAuditees({ ...form, QOA_TYPECODE: "ESO" });
+
     $(".form-detail").html(formDetail);
     $(".item").replaceWith(data.QA_ITEM);
-
-    const operator = await searchAuditees({ ...form, QOA_TYPECODE: "ESO" });
     let operatorHtml = '<div class="flex flex-col">';
     operator.forEach((o) => {
+        logtest(o);
         operatorHtml += `<span>${o.QOA_EMPNO_INFO.SNAME} (${o.QOA_EMPNO})</span>`;
     });
     operatorHtml += "</div>";
     $(".operator").replaceWith(operatorHtml);
 
     let files = '<div class="flex flex-col">';
-    if(qafiles.length === 0) {
+    if (qafiles.length === 0) {
         files += `<span>-</span>`;
-    }else{
+    } else {
         qafiles.forEach((f, i) => {
             files += `<a href="${f.FILE_PATH}" storedName="${f.FILE_FNAME}" class="file-link text-primary flex items-center gap-2 w-fit"><i class="icofont-download text-base"></i><span class="link link-primary">${f.FILE_ONAME}</span></a>`;
         });
@@ -210,7 +214,8 @@ async function setPage() {
             await setAudit(data);
             break;
         default:
-            // Handle unknown mode
+            const showOperator = await checkFinishAudit();
+            if (showOperator) await setAudit(data);
             break;
     }
 
@@ -255,7 +260,7 @@ async function setSkeleton() {
         ? formSubmitSkeleton({
               element: "#actionWebflow",
               mode: "edit",
-              count: cextdata == "01" ? 4: 3,
+              count: cextdata == "01" ? 4 : 3,
           })
         : formSubmitSkeleton({ element: "#actionWebflow", mode: "view" });
     formDetailSkeleton(".form-detail");
@@ -304,16 +309,39 @@ async function setSkeleton() {
             });
             break;
         case "02":
-            $("#qcForm2").removeClass("hidden");
-            skeleton({ element: "#tdateShow", width: "w-24", height: "h-4" });
-            skeleton({ element: "#ojtShow", width: "w-24", height: "h-4" });
-            dataTableSkeleton({
-                height: "h-[27rem]",
-            });
+            await setSkeletonAudit();
             break;
         default:
+            const showOperator = await checkFinishAudit();
+            if (showOperator) await setSkeletonAudit();
             break;
     }
+}
+
+async function setSkeletonAudit() {
+    $("#qcForm2").removeClass("hidden");
+    skeleton({
+        element: "#tdateShow",
+        width: "w-24",
+        height: "h-4",
+    });
+    skeleton({ element: "#ojtShow", width: "w-24", height: "h-4" });
+    dataTableSkeleton({
+        idLoading: "tableAuditeeLoading",
+        height: "h-[27rem]",
+        page: false,
+        search: false,
+        button: false,
+    });
+}
+
+async function checkFinishAudit() {
+    const operator = await searchAuditees({ ...form, QOA_TYPECODE: "ESO" });
+    let status = true;
+    operator.forEach((o) => {
+        if (o.QOA_AUDIT != 1) status = false;
+    });
+    return status;
 }
 
 async function setInchargeForm(data) {
@@ -378,13 +406,6 @@ async function setInchargeForm(data) {
             placeholder: "Select revision",
         })
     );
-    // logtest(
-    //     foreman.map((u) => {
-    //         return { value: u.USR_NO, text: `${u.USR_NAME} (${u.USR_NO})` };
-    //     })
-    // );
-    // logtest(foreman.map((u) => u.USR_NO));
-
     setDatePicker({
         enableTime: true,
         dateFormat: "Y-m-d H:i",
@@ -458,25 +479,18 @@ async function setInchargeForm(data) {
 }
 
 async function setAudit(data) {
-    console.log(data);
     $("#tdateShow").text(
         formatDate(data.QA_TRAINING_DATE, "DD-MMM-YYYY HH:mm")
     );
     $("#ojtShow").text(formatDate(data.QA_OJT_DATE, "DD-MMM-YYYY HH:mm"));
     const auditor = await setAuditorToString(form);
-    console.log("auditor", auditor);
-
     const auditee = await searchAuditees(form);
-    console.log("auditee", auditee);
-
     // const auditee = data.QA_AUD_OPT.filter((i) => i.QOA_TYPECODE == "ESO");
     $("#auditorShow").text(auditor.slice(0, -2) || ", ");
     await createTableAuditee(auditee);
 }
 
 async function createTableAuditee(data) {
-    console.log(data);
-
     tableAuditee = await createTable(
         {
             data: data,

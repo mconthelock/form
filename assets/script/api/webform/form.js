@@ -12,7 +12,6 @@ import { fetchMsgErr } from "../fetch-utils.js";
  * @returns
  */
 export async function getFormDetail(form) {
-    console.log(`${process.env.APP_API}/form/getFormDetail`);
     const res = await fetch(`${process.env.APP_API}/form/getFormDetail`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },

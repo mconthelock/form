@@ -165,3 +165,18 @@ export async function saveAudit(data) {
     }
     return await res.json();
 }
+
+export async function lastApprove(data) {
+     const res = await fetch(
+        `${process.env.APP_API}/qaform/qa-ins/lastApprove`,
+        {
+            method: "POST",
+            body: data,
+        }
+    );
+    if (!res.ok) {
+        await fetchMsgErr(res);
+        throw new Error("Failed to approve");
+    }
+    return await res.json();
+}
