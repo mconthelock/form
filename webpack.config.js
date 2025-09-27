@@ -72,13 +72,20 @@ module.exports = {
     // PS-SAR
     psSar: "./assets/script/psform/PS-SAR/index.js", //Sar page
 
-    training: "./assets/script/gpform/GP-TRN/training.ts",
-    alert: "./assets/script/gpform/GP-TRN/alert.ts",
-    emp_lookup: "./assets/script/gpform/GP-TRN/emp_lookup.ts",
-    formUtils: "./assets/script/gpform/GP-TRN/formUtils.ts",
-    initForms: "./assets/script/gpform/GP-TRN/initForms.ts",
-    validators: "./assets/script/gpform/GP-TRN/validators.ts",
-    type_data: "./assets/script/gpform/GP-TRN/type_data.ts",
+    training: "./assets/script/gpform/GP-TRN/training.js",
+    alert: "./assets/script/gpform/GP-TRN/alert.js",
+    formUtils: "./assets/script/gpform/GP-TRN/formUtils.js",
+    initForms: "./assets/script/gpform/GP-TRN/initForms.js",
+    validators: "./assets/script/gpform/GP-TRN/validators.js",
+    type_data: "./assets/script/gpform/GP-TRN/type_data.js",
+    view_train : "./assets/script/gpform/GP-TRN/view_train.js",
+
+    emp_lookup:  "./assets/script/gpform/GP-TRN/emp_lookup.js",
+    training_select : "./assets/script/gpform/GP-TRN/training_select.js",
+    training_functional : "./assets/script/gpform/GP-TRN/training_functional.js",
+    training_legal : "./assets/script/gpform/GP-TRN/training_legal.js",
+    training_meth : "./assets/script/gpform/GP-TRN/training_meth.js",
+    initButtons : "./assets/script/gpform/GP-TRN/initButtons.js",
   },
   output: {
     filename: "[name].js",

@@ -159,11 +159,6 @@ class Mail {
 
     public function sendfilemail($d)
     {
-      
-
-        
-
-            
             $subject = "จองห้องประชุม EP Fueangfa Room";
             $description = "ระบบจองห้องโดยคุณขนิษฐา";
             $location = "EP Fueangfa Room";

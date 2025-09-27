@@ -1,42 +1,65 @@
-import { showAlert } from "./alert.js";
-// ฟังก์ชันกลาง validate
+"use strict";
+
+/**
+ * ฟังก์ชันกลาง ใช้ตรวจสอบว่าฟิลด์ที่บังคับต้องมีค่า
+ * - รองรับ querySelectorAll (ตรวจสอบหลาย input)
+ * - ตรวจว่าอย่างน้อยต้องมี input และต้องไม่ว่าง
+ */
 function validateForm(requiredSelectors) {
     for (const sel of requiredSelectors) {
-        const el = document.querySelector(sel);
-        if (el && !el.value.trim()) {
-            showAlert("⚠ แจ้งเตือน", el.dataset.alert || "กรุณากรอกข้อมูลให้ครบถ้วน");
-            el.focus();
+        const els = document.querySelectorAll(sel);
+
+        // ถ้าไม่มี element เลย → ผิด
+        if (els.length === 0) {
+            showAlert("⚠ แจ้งเตือน", "ต้องมีข้อมูลอย่างน้อย 1 รายการ");
+            return false;
+        }
+
+        // ตรวจว่ามีค่าอย่างน้อย 1 ช่อง
+        let valid = false;
+        els.forEach(el => {
+            if (el.value && el.value.trim() !== "") {
+                valid = true;
+            }
+        });
+
+        if (!valid) {
+            showAlert("⚠ แจ้งเตือน", els[0].dataset.alert || "กรุณากรอกข้อมูลให้ครบถ้วน");
+            els[0].focus();
             return false;
         }
     }
     return true;
 }
+
 // =====================================================================
 // Functional
 // =====================================================================
-export function validateFunctionalForm() {
-    var _a;
+function validateFunctionalForm() {
     const requiredSelectors = [
         "#funcRequestBy", "#funcTrainingSubject", "#funcDateFrom", "#funcDateTo",
-        "#funcLocation", "#funcInstitute", "#funcObjectiveList input[name='funcObjective[]']",
-        "#funcExpectationList input[name='funcExpectation[]']", "#funcTraineeCode",
-        "#funcJdName", "#funcJdRelation"
+        "#funcLocation", "#funcInstitute",
+        "#funcObjectiveList input[name='funcObjective[]']",
+        "#funcExpectationList input[name='funcExpectation[]']",
+        "#funcTraineeCode",
+        "#funcJdName", "#funcJdRelation", "#funcJdFiles"
     ];
-    if (!validateForm(requiredSelectors))
-        return false;
+    if (!validateForm(requiredSelectors)) return false;
+
+    // Part 5: Expense
     const expense = document.querySelector("input[name='funcExpenseOption']:checked");
     if (!expense) {
         showAlert("⚠ แจ้งเตือน", "กรุณาเลือกวิธีการพิจารณาค่าใช้จ่าย (Part 5)");
         return false;
     }
+
     if (expense.value === "not_compare") {
         const chk_reason = document.querySelector("input[name='funcReason']:checked");
         const reasonOther = document.querySelector("input[name='funcReason'][value='other']:checked");
         if (!chk_reason) {
-            showAlert("⚠ แจ้งเตือน", "กรุณาเลือกเหตุผลของการไม่มีการเปรียบเทียบราคา ค่าฝึกอบรม ");
+            showAlert("⚠ แจ้งเตือน", "กรุณาเลือกเหตุผลของการไม่มีการเปรียบเทียบราคา");
             return false;
-        }
-        else if (reasonOther) {
+        } else if (reasonOther) {
             const txt = document.getElementById("funcReasonOtherText");
             if (!txt.value.trim()) {
                 showAlert("⚠ แจ้งเตือน", txt.dataset.alert || "กรุณาระบุเหตุผลอื่น");
@@ -44,14 +67,15 @@ export function validateFunctionalForm() {
                 return false;
             }
         }
-    }
-    else if (expense.value === "compare") {
-        const files = (_a = document.getElementById("funcCompareFiles")) === null || _a === void 0 ? void 0 : _a.files;
+    } else if (expense.value === "compare") {
+        const files = document.getElementById("funcCompareFiles")?.files;
         if (!files || files.length === 0) {
             showAlert("⚠ แจ้งเตือน", "กรุณาแนบไฟล์เปรียบเทียบราคาอย่างน้อย 1 ไฟล์");
             return false;
         }
     }
+
+    // ถ้าไม่ได้เลือก "อบรมฟรี" ต้องกรอกจำนวนเงิน
     const freeSelected = document.querySelector("input[name='funcReason'][value='free']:checked");
     if (!freeSelected) {
         const amount = document.getElementById("funcAmountInput");
@@ -61,35 +85,36 @@ export function validateFunctionalForm() {
             return false;
         }
     }
+
     return true;
 }
+
 // =====================================================================
 // Legal
 // =====================================================================
-export function validateLegalForm() {
-    var _a;
+function validateLegalForm() {
     const requiredSelectors = [
         "#legalRequestBy", "#legalSubject", "#legalDateFrom", "#legalDateTo",
         "#legalPlace", "#legalInstitute", "#legalConcernLaw",
         "#legalObjectiveList input[name='legalObjective[]']",
         "#legalExpectationList input[name='legalExpectation[]']",
-        "#legalCode"
+        "#legalTraineeCode"
     ];
-    if (!validateForm(requiredSelectors))
-        return false;
+    if (!validateForm(requiredSelectors)) return false;
+
     const expense = document.querySelector("input[name='legalExpenseOption']:checked");
     if (!expense) {
         showAlert("⚠ แจ้งเตือน", "กรุณาเลือกวิธีการพิจารณาค่าใช้จ่าย (Part 6)");
         return false;
     }
+
     if (expense.value === "not_compare") {
-        const reasonOther = document.querySelector("input[name='legalReason'][value='other']:checked");
         const chk_reason = document.querySelector("input[name='legalReason']:checked");
+        const reasonOther = document.querySelector("input[name='legalReason'][value='other']:checked");
         if (!chk_reason) {
-            showAlert("⚠ แจ้งเตือน", "กรุณาเลือกเหตุผลของการไม่มีการเปรียบเทียบราคา ค่าฝึกอบรม ");
+            showAlert("⚠ แจ้งเตือน", "กรุณาเลือกเหตุผลของการไม่มีการเปรียบเทียบราคา");
             return false;
-        }
-        else if (reasonOther) {
+        } else if (reasonOther) {
             const txt = document.getElementById("legalReasonText");
             if (!txt.value.trim()) {
                 showAlert("⚠ แจ้งเตือน", txt.dataset.alert || "กรุณาระบุเหตุผลอื่น");
@@ -97,14 +122,14 @@ export function validateLegalForm() {
                 return false;
             }
         }
-    }
-    else if (expense.value === "compare") {
-        const files = (_a = document.getElementById("legalCompareFiles")) === null || _a === void 0 ? void 0 : _a.files;
+    } else if (expense.value === "compare") {
+        const files = document.getElementById("legalCompareFiles")?.files;
         if (!files || files.length === 0) {
             showAlert("⚠ แจ้งเตือน", "กรุณาแนบไฟล์เปรียบเทียบราคา");
             return false;
         }
     }
+
     const freeSelected = document.querySelector("input[name='legalReason'][value='free']:checked");
     if (!freeSelected) {
         const amount = document.getElementById("legalAmount");
@@ -114,35 +139,36 @@ export function validateLegalForm() {
             return false;
         }
     }
+
     return true;
 }
+
 // =====================================================================
 // Meth
 // =====================================================================
-export function validateMethForm() {
-    var _a;
+function validateMethForm() {
     const requiredSelectors = [
         "#methRequestBy", "#methSubject", "#methDateFrom", "#methDateTo",
         "#methPlace", "#methInstitute",
         "#methObjectiveList input[name='methObjective[]']",
         "#methExpectationList input[name='methExpectation[]']",
-        "#methCode"
+        "#methTraineeCode"
     ];
-    if (!validateForm(requiredSelectors))
-        return false;
+    if (!validateForm(requiredSelectors)) return false;
+
     const expense = document.querySelector("input[name='methExpenseOption']:checked");
     if (!expense) {
         showAlert("⚠ แจ้งเตือน", "กรุณาเลือกวิธีการพิจารณาค่าใช้จ่าย (Part 5)");
         return false;
     }
+
     if (expense.value === "not_compare") {
-        const reasonOther = document.querySelector("input[name='methReason'][value='other']:checked");
         const chk_reason = document.querySelector("input[name='methReason']:checked");
+        const reasonOther = document.querySelector("input[name='methReason'][value='other']:checked");
         if (!chk_reason) {
-            showAlert("⚠ แจ้งเตือน", "กรุณาเลือกเหตุผลของการไม่มีการเปรียบเทียบราคา ค่าฝึกอบรม ");
+            showAlert("⚠ แจ้งเตือน", "กรุณาเลือกเหตุผลของการไม่มีการเปรียบเทียบราคา");
             return false;
-        }
-        else if (reasonOther) {
+        } else if (reasonOther) {
             const txt = document.getElementById("methReasonText");
             if (!txt.value.trim()) {
                 showAlert("⚠ แจ้งเตือน", txt.dataset.alert || "กรุณาระบุเหตุผลอื่น");
@@ -150,14 +176,14 @@ export function validateMethForm() {
                 return false;
             }
         }
-    }
-    else if (expense.value === "compare") {
-        const files = (_a = document.getElementById("methCompareFiles")) === null || _a === void 0 ? void 0 : _a.files;
+    } else if (expense.value === "compare") {
+        const files = document.getElementById("methCompareFiles")?.files;
         if (!files || files.length === 0) {
             showAlert("⚠ แจ้งเตือน", "กรุณาแนบไฟล์เปรียบเทียบราคา");
             return false;
         }
     }
+
     const freeSelected = document.querySelector("input[name='methReason'][value='free']:checked");
     if (!freeSelected) {
         const amount = document.getElementById("methAmount");
@@ -167,5 +193,6 @@ export function validateMethForm() {
             return false;
         }
     }
+
     return true;
 }

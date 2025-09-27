@@ -73,7 +73,7 @@ class my_model extends CI_Model {
     private function setData($key, $value){
 		if($value == 'sysdate'){
             $this->db->set($key, $value, false);
-        }elseif(in_array($key, array('TID_REQ_DATE', 'TID_COMP_DATE', 'TID_DISABLE_DATE','INSPECDATE','EXPCHGDATE','VISITDATE'))){
+        }elseif(in_array($key, array('DAPVDATE','TID_REQ_DATE', 'TID_COMP_DATE', 'TID_DISABLE_DATE','INSPECDATE','EXPCHGDATE','VISITDATE'))){
 			$this->db->set($key, "to_date('".$value."','dd/mm/yyyy')", false);
 		// }else if(in_array($key, array())){
 		// 	$this->db->set($key, $value, false);

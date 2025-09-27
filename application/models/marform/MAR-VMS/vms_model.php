@@ -181,18 +181,14 @@ class vms_model extends my_model
     {
         if($cond != ''){
             foreach($cond as $key => $val) {
-            $this->set_where($key, $val);
+                $this->set_where($key, $val);
+            }
         }
-        }
-
         $this->db
-        ->select('V.VISITDATE', FALSE)
-        ->select('CASE WHEN V.PURPOSEDETAIL IS NULL THEN P.PURPOSE ELSE V.PURPOSEDETAIL END AS PURPOSE', FALSE)
-        ->select('V.COMTYPE, V.LUNCH, V.LUNCH_LOC, V.LUNCH_PLACE, V.DINNER, V.DINNER_PLACE, V.GUESTTYPE', FALSE)
-        ->from('VMS_VISIT V')
-        ->join('VMS_PURPOSE_VISIT P', 'V.PURPOSE = P.PVID');
+        ->select("'GP-ENT'|| SUBSTR(ENTCYEAR2, 3, 2) ||'-'|| LPAD(ENTNRUNNO, 6, '0') AS REQENT", FALSE)
+        ->select('ENTCYEAR2 , ENTNRUNNO', FALSE)
+        ->from('VMS_GPENT V');
         return $this->db->get()->result();
-
     }
 
     public function getRcp($cyear2,$nrunno,$typeemp)
@@ -220,6 +216,23 @@ class vms_model extends my_model
 
     }
 
+    public function getRcpMail($cyear2,$nrunno,$typeno)
+    {
+        $this->db->distinct();
+        $this->db->select('SRECMAIL');
+        $this->db->from('VMS_STAKEHOLDERS S');
+        $this->db->join('VMS_GROUP_EMPNO G', 'S.GID = G.GID');
+        $this->db->join('AMECUSERALL A', 'G.SEMPNO = A.SEMPNO');
+        $this->db->where('S.CYEAR2', $cyear2);
+        $this->db->where('S.NRUNNO', $nrunno);
+        $this->db->where('S.TYPEEMP', $typeno);
+        $this->db->where('A.CSTATUS', '1');
+        $query = $this->db->get();
+        $result = $query->result_array(); 
+        $emails = array_column($result, 'SRECMAIL');
+        return  $emails;
+    }
+
     public function getHeadVisit($nfrmno,$vorgno,$cyear,$cyear2,$nrunno)
     {
         $sql = "
@@ -228,7 +241,7 @@ class vms_model extends my_model
             CASE WHEN f.CST = 0 THEN TO_CHAR(TRUNC(SYSDATE), 'DD-Mon-YY')
                 ELSE TO_CHAR(fl.DAPVDATE, 'DD-Mon-YY')
             END AS ISSUEDATE,
-            SEMPPRE || ' ' || a.SNAME AS ISSUEBY,
+            SEMPPRE || ' ' || a.SNAME AS ISSUEBY, a.SRECMAIL ,
             TO_CHAR(v.VISITDATE, 'DD-Mon-YY') AS VISITDATE,
             v.RECEPTROOM,
             (SELECT COUNT(*) 

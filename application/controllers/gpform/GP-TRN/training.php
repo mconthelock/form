@@ -34,6 +34,7 @@ class Training extends MY_Controller {
             $data['mode'] = $this->getMode($nfrmno, $vorgno, $cyear, $cyear2, $nrunno, $empno);
             $data['form'] = $this->form->getForm($nfrmno, $vorgno, $cyear, $cyear2, $nrunno);
             $data['data_head']  = $this->trn->get_main_data($nfrmno, $vorgno, $cyear, $cyear2, $nrunno);
+            $data['data_trainee']  = $this->trn->get_trainee($nfrmno, $vorgno, $cyear, $cyear2, $nrunno);
             $data['data_purpose']  = $this->trn->select_all_by_tb($nfrmno, $vorgno, $cyear, $cyear2, $nrunno, 'GP_TRN_PURPOSE', 'PID');
             $data['data_benefit']  = $this->trn->select_all_by_tb($nfrmno, $vorgno, $cyear, $cyear2, $nrunno, 'GP_TRN_BENEFIT', 'BID');
             $data['data_attach_compare']  = $this->trn->select_all_by_tb($nfrmno, $vorgno, $cyear, $cyear2, $nrunno, 'GP_TRN_ATT', 'ID', ['TYPE_ATT' => 'COMPARE']);
@@ -107,7 +108,7 @@ class Training extends MY_Controller {
                 "TIME_TO"   => $data["TIME_TO"] ?? "0000",
                 "PLACE"       => $data["PLACE"] ?? "",
                 "INSTITUTION" => $data["INSTITUTION"] ?? "",
-                "TRAINEE_ID"  => $data["TRAINEE_ID"] ?? "",
+                "EMPNO"  => $data["EMPNO"] ?? "",
                 "JD_NAME"     => $data["JD_NAME"] ?? "",
                 "JD_DESC"     => $data["JD_DESC"] ?? "",
                 "TRN_EXPENSE_STATUS" => $data["TRN_EXPENSE_STATUS"] ?? "",
@@ -173,6 +174,14 @@ class Training extends MY_Controller {
                     $this->insert_and_upload("GP_TRN_ATT", $base, $filenames, 'COMPARE');
                 }
             }
+
+            //INSERT TRAINEE
+            $trn_id = 1;
+            $arr_trainee = $base;
+            $arr_trainee['ID'] = $trn_id;
+            $arr_trainee['EMPNO'] = $trn_id;
+            $arr_trainee['JD_DESC'] = $trn_id;
+            $result_trainee = $this->trn->insert_data("GP_TRN_TRAINEE", $arr_trainee);
 
             echo json_encode(["status" => "success", "message" => "Insert successful", "received" => $data]);
         } catch (Exception $e) {

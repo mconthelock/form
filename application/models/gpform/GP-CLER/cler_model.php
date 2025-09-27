@@ -19,7 +19,7 @@ class Cler_model extends CI_Model
             ->where('f.VORGNO', $vorgno)
             ->where('f.CYEAR', $cyear)
             ->where('f.VREQNO', $empno)
-            ->where('f.CST !=', 3)
+            ->where('f.CST', 2)
             ->where('gf.STATUS', '1')
             ->order_by('f.NRUNNO', 'ASC');
 

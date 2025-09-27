@@ -1505,6 +1505,10 @@ table.dataTable .select2-container--default .select2-selection--multiple {
               <span class="font-semibold text-gray-700">Dietary Restrictions:</span>
               <span class="text-gray-900" data-field="roomdietary"></span>
             </div>
+            <div class="md:col-span-2 grid grid-cols-[auto_1fr] gap-x-2">
+              <span class="font-semibold text-gray-700" data-field="headent"></span>
+              <span class="text-gray-900" data-field="reqent"></span>
+            </div>
           </div>
         </div>
       </div>
@@ -1529,10 +1533,11 @@ table.dataTable .select2-container--default .select2-selection--multiple {
           <span class="text-sm font-semibold text-gray-700 w-32">Car reservation:</span>
           <span class="text-sm text-gray-900" data-field="car"></span>
         </div>
-        <div class="md:col-span-2">
-          <span class="text-sm text-gray-900" data-field="cardetail"></span>
+        <div class="grid grid-cols-[auto_1fr] gap-x-2">
+        <span class="text-sm font-semibold text-gray-700 w-32" data-field="cardetail"></span>
         </div>
         <div class="md:col-span-2">
+        <span class="text-sm font-semibold text-gray-700 w-32">Entertainment Form:</span>
           <span class="text-sm text-gray-900" data-field="formreqent"></span>
         </div>
       </div>
@@ -1554,12 +1559,12 @@ table.dataTable .select2-container--default .select2-selection--multiple {
       <table class="w-full border border-gray-300 text-sm mt-3 table-auto">
         <thead class="bg-blue-50 text-gray-700">
           <tr>
-            <th class="border border-gray-300 px-3 py-2">Project No.</th>
-            <th class="border border-gray-300 px-3 py-2">Project Name</th>
-            <th class="border border-gray-300 px-3 py-2">Model</th>
-            <th class="border border-gray-300 px-3 py-2">Specification</th>
-            <th class="border border-gray-300 px-3 py-2">No. of Units</th>
-            <th class="border border-gray-300 px-3 py-2">Status</th>
+            <th class="border border-gray-300 px-3 py-2  w-24">Project No.</th>
+            <th class="border border-gray-300 px-3 py-2 w-56">Project Name</th>
+            <th class="border border-gray-300 px-3 py-2 w-56">Model</th>
+            <th class="border border-gray-300 px-3 py-2 w-32">Specification</th>
+            <th class="border border-gray-300 px-3 py-2 w-20">No. of Units</th>
+            <th class="border border-gray-300 px-3 py-2  w-16">Status</th>
           </tr>
         </thead>
         <tbody id="sproject-body" class="text-gray-900"></tbody>
@@ -1578,12 +1583,12 @@ table.dataTable .select2-container--default .select2-selection--multiple {
       <table class="w-full border border-gray-300 text-sm mt-3 table-auto">
         <thead class="bg-blue-50 text-gray-700">
           <tr>
-            <th class="border border-gray-300 px-3 py-2">Project No.</th>
-            <th class="border border-gray-300 px-3 py-2">Project Name</th>
-            <th class="border border-gray-300 px-3 py-2">Model</th>
-            <th class="border border-gray-300 px-3 py-2">Specification</th>
-            <th class="border border-gray-300 px-3 py-2">No. of Units</th>
-            <th class="border border-gray-300 px-3 py-2">Status</th>
+            <th class="border border-gray-300 px-3 py-2  w-24">Project No.</th>
+            <th class="border border-gray-300 px-3 py-2 w-56">Project Name</th>
+            <th class="border border-gray-300 px-3 py-2 w-56">Model</th>
+            <th class="border border-gray-300 px-3 py-2 w-32">Specification</th>
+            <th class="border border-gray-300 px-3 py-2 w-20">No. of Units</th>
+            <th class="border border-gray-300 px-3 py-2  w-16">Status</th>
           </tr>
         </thead>
         <tbody id="pproject-body" class="text-gray-900"></tbody>
@@ -1593,16 +1598,23 @@ table.dataTable .select2-container--default .select2-selection--multiple {
   </div>
   <!-- ปุ่ม -->
   <div class="flex justify-end space-x-2 mt-6">
+      <button type="button"  id="bookRoomBtn"
+          class="bg-gradient-to-r from-green-500 to-green-600 text-white px-6 py-2 rounded-xl text-sm font-semibold
+                 shadow-md hover:shadow-lg hover:from-green-600 hover:to-green-700 transition-all duration-300">
+        Book Room
+      </button>
+      <button type="button" data-tab="submit" 
+        class="send-btn px-6 py-2 rounded-xl text-white font-semibold 
+         bg-gradient-to-r from-teal-500 to-teal-600 
+         hover:from-teal-600 hover:to-teal-700 
+         shadow-md hover:shadow-lg">
+        Sent Mail
+      </button>
       <button type="button" data-tab="submit" 
         class="confirm-btn bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-2 rounded-xl text-sm font-semibold
               shadow-md hover:shadow-lg hover:from-blue-600 hover:to-blue-700 transition-all duration-300
               {{ (!empty($form) && ($mode == '2') && ($form[0]->CST == '0')) ? '' : 'hidden' }}">
         Submit Form
-      </button>
-      <button type="button"  id="bookRoomBtn"
-          class="bg-gradient-to-r from-green-500 to-green-600 text-white px-6 py-2 rounded-xl text-sm font-semibold
-                 shadow-md hover:shadow-lg hover:from-green-600 hover:to-green-700 transition-all duration-300">
-        Book Room
       </button>
   </div>
 </div>

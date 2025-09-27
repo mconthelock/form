@@ -20,7 +20,6 @@
         <input type="hidden" name="CYEAR2" value="{{ $CYEAR2 }}">
         <input type="hidden" name="NRUNNO" value="{{ $NRUNNO }}">
         <input type="hidden" name="PREFIX" value="{{ $data_head[0]->FID }}">
-
         <h3 class="font-bold text-lg mb-3 text-black-700 border-b pb-1">
             รายละเอียดฟอร์ม
         </h3>
@@ -147,14 +146,16 @@
                 </tr>
             </thead>
             <tbody>
-                <tr>
-                    <td class="text-blue-600 p-2 border font-semibold">{{ $data_head[0]->TRAINEE_ID }}</td>
-                    <td class="text-blue-600 p-2 border font-semibold">{{ $data_head[0]->TRAINEE_NAME }}</td>
-                    <td class="text-blue-600 p-2 border font-semibold">{{ $data_head[0]->TRAINEE_POS }}</td>
-                    <td class="text-blue-600 p-2 border font-semibold">{{ $data_head[0]->TRAINEE_SEC }}</td>
-                    <td class="text-blue-600 p-2 border font-semibold">{{ $data_head[0]->TRAINEE_DEPT }}</td>
-                    <td class="text-blue-600 p-2 border font-semibold">{{ $data_head[0]->TRAINEE_DIV }}</td>
-                </tr>
+                @foreach($data_trainee as $row_trainee)
+                    <tr>
+                         <td class="text-blue-600 p-2 border font-semibold">{{ $row_trainee->EMPNO }}</td>
+                        <td class="text-blue-600 p-2 border font-semibold">{{ $row_trainee->TRAINEE_NAME }}</td>
+                        <td class="text-blue-600 p-2 border font-semibold">{{ $row_trainee->TRAINEE_POS }}</td>
+                        <td class="text-blue-600 p-2 border font-semibold">{{ $row_trainee->TRAINEE_SEC }}</td>
+                        <td class="text-blue-600 p-2 border font-semibold">{{ $row_trainee->TRAINEE_DEPT }}</td>
+                        <td class="text-blue-600 p-2 border font-semibold">{{ $row_trainee->TRAINEE_DIV }}</td>
+                    </tr>
+                @endforeach
             </tbody>
         </table>
         <?if($data_head[0]->FID == '1'){?>
@@ -162,7 +163,7 @@
                 <table class="w-full">
                     <tr class="bg-gray-50">
                         <td class="p-3 font-bold w-48">หัวข้อกชื่อตาม JD </td>
-                        <td class="p-3 text-blue-600 font-semibold">{{ $data_head[0]->JD_NAME }}</td>
+                        <td class="p-3 text-blue-600 font-semibold">{{ $data_trainee[0]->JD_NAME }}</td>
                     </tr>
                     <tr>
                         <td class="p-3 font-bold">เอกสารประกอบ JD </td>
@@ -176,12 +177,11 @@
                     </tr>
                      <tr class="bg-gray-50">
                         <td class="p-3 font-bold w-48">รายละเอียด JD </td>
-                        <td class="p-3 text-blue-600 font-semibold">{{ $data_head[0]->JD_DESC }}</td>
+                        <td class="p-3 text-blue-600 font-semibold">{{ $data_trainee[0]->JD_DESC }}</td>
                     </tr>
                 </table>
         </div>
             <?}?>
-
 
             <!-- Part 5 -->
             <h3 class="font-bold text-lg mb-3 text-black-700 border-b pb-1">
@@ -265,7 +265,15 @@
                     </button>
                 </div>
             @endif
-
+            <div class="form-data" 
+                data-nfrmno="{{ $NFRMNO }}" 
+                data-vorgno="{{ $VORGNO }}" 
+                data-cyear="{{ $CYEAR }}" 
+                data-cyear2="{{ $CYEAR2 }}" 
+                data-nrunno="{{ $NRUNNO }}" 
+                data-empno="{{ $EMPNO }}">
+            </div>
+            <div class="flow mt-6" style="overflow: hidden"></div>
 
         </div>
 
@@ -276,4 +284,7 @@
 
     </form>
 </div>
+@endsection
+@section('scripts')
+    <script src="{{ $_ENV['APP_JS'] }}/view_train.js?ver={{ $GLOBALS['version'] }}"></script>
 @endsection

@@ -1286,8 +1286,14 @@ try {
 
 $(document).on("click", ".confirm-btn", async function () {
     createGPENT();
-      
+    updateform();
 });
+$(document).on("click", ".send-btn", async function () {
+  // $(this).prop('disabled', true);
+  sendmailpic(); 
+});
+
+
 
 
 $(document).on("click", ".bookroom-btn", async function () {
@@ -1659,7 +1665,7 @@ function getEmail() {
 }
 
 async function createGPENT() {
-  
+  console.log("createGPENT");
   if (!$("#hasLunch").is(":checked") && !$("#hasDinner").is(":checked")) return;
 
   const eno = "9";
@@ -1791,24 +1797,34 @@ const processTable = (tableSelector, mealType) => {
       formData.append("total_amount", totalQty * parseFloat(cost));
 
      
-      for (let pair of formData.entries()) {
-          console.log(pair[0], pair[1]);
-      }
+      //for (let pair of formData.entries()) {
+      //    console.log(pair[0], pair[1]);
+      //}
 
       return formData;
   };
 
   // สร้างและส่ง FormData สำหรับ Lunch
+  let field = $('[data-field="formreqent"]');
+  let links = []; 
   if ($("#hasLunch").is(":checked")) {
-
+      console.log("lunch");
       const lunchFormData = await buildFormDataEnt("lunch");
+      const eno = lunchFormData.get("nfrmno");
+      const evorgno = lunchFormData.get("vorgno");
+      const ecyear = lunchFormData.get("cyear");
+      const ecyear2 = lunchFormData.get("cyear2");
+      const enrunno = lunchFormData.get("nrunno");
+      links.push({
+        url: host +`gpform/GP-ENT/main?sr=4&no=${eno}&orgNo=${evorgno}&y=${ecyear}&y2=${ecyear2}&runNo=${enrunno}`,
+        text: `GP-ENT${ecyear2.slice(-2)}-${enrunno.padStart(6, "0")}`
+      });
       const companiesStr = lunchFormData.get("companies");
       const companiesArr = JSON.parse(companiesStr);
       InsertGPENT(lunchFormData);
       SaveVMSENT($("#cyear2").val(),$("#nrunno").val(),lunchFormData.get("cyear2"),lunchFormData.get("nrunno"));
       if(companiesArr[0].fileName)
       {
-        
         saveENTfile($("#nfrmno").val(),$("#vorgno").val(),$("#cyear").val(),$("#cyear2").val(),$("#nrunno").val(),lunchFormData.get("cyear2"),lunchFormData.get("nrunno"),companiesArr[0].fileName);
       }
      
@@ -1816,9 +1832,17 @@ const processTable = (tableSelector, mealType) => {
 
   // สร้างและส่ง FormData สำหรับ Dinner
   if ($("#hasDinner").is(":checked")) {
-    
-    
+      console.log("dinner");
       const dinnerFormData = await buildFormDataEnt("dinner");
+      const eno = dinnerFormData.get("nfrmno");
+      const evorgno = dinnerFormData.get("vorgno");
+      const ecyear = dinnerFormData.get("cyear");
+      const ecyear2 = dinnerFormData.get("cyear2");
+      const enrunno = dinnerFormData.get("nrunno");
+      links.push({
+        url: host +`gpform/GP-ENT/main?sr=4&no=${eno}&orgNo=${evorgno}&y=${ecyear}&y2=${ecyear2}&runNo=${enrunno}`,
+        text: `GP-ENT${ecyear2.slice(-2)}-${enrunno.padStart(6, "0")}`
+      });
       const companiesStr = dinnerFormData.get("companies");
       const companiesArr = JSON.parse(companiesStr);
       InsertGPENT(dinnerFormData);
@@ -1827,9 +1851,87 @@ const processTable = (tableSelector, mealType) => {
       {
         saveENTfile($("#nfrmno").val(),$("#vorgno").val(),$("#cyear").val(),$("#cyear2").val(),$("#nrunno").val(),dinnerFormData.get("cyear2"),dinnerFormData.get("nrunno"),companiesArr[0].fileName);
       }
-      
-      
   }
+  field.html(''); // เคลียร์ก่อน
+  links.forEach((link, index) => {
+      field.append(`<a href="${link.url}" target="_blank" class="text-blue-600 hover:text-blue-800 underline">${link.text}</a>`);
+      if (index < links.length - 1) field.append(' | ');
+  });
+}
+
+function sendmailpic()
+{
+  const vmscyear2 = $("#cyear2").val();
+  const vmsnrunno = $("#nrunno").val();
+  $.ajax({
+    type: "POST",
+    url: host + "marform/MAR-VMS/form/sendmailpic",
+    data: {vmscyear2: vmscyear2, vmsnrunno:vmsnrunno},
+    beforeSend: function () {
+      showLoader({ show: true });
+    },
+    success: function (res) {
+      Swal.fire({
+        toast: true,
+        position: "top-end",
+        icon: "success",
+        title: "Success to sent mail PIC.",
+        showConfirmButton: false,
+        timer: 2500,
+        timerProgressBar: true,
+        // didClose: () => redirectWebflow(),
+      });
+    },
+    complete: function (xhr, status) {
+      showLoader({ show: false });
+    },
+    error: function (xhr) {
+      Swal.fire({
+        icon: "error",
+        title: "Failed to sent mail PIC.",
+        text: xhr.responseText || "Failed to sent mail PIC.",
+      });
+      
+    },
+  });
+
+}
+
+function updateform()
+{
+  const vmscyear2 = $("#cyear2").val();
+  const vmsnrunno = $("#nrunno").val();
+  $.ajax({
+    type: "POST",
+    url: host + "marform/MAR-VMS/form/updateform",
+    data: {vmscyear2: vmscyear2, vmsnrunno:vmsnrunno},
+    beforeSend: function () {
+      showLoader({ show: true });
+    },
+    success: function (res) {
+      Swal.fire({
+        toast: true,
+        position: "top-end",
+        icon: "success",
+        title: "Success to update form status.",
+        showConfirmButton: false,
+        timer: 2500,
+        timerProgressBar: true,
+        // didClose: () => redirectWebflow(),
+      });
+    },
+    complete: function (xhr, status) {
+      showLoader({ show: false });
+    },
+    error: function (xhr) {
+      Swal.fire({
+        icon: "error",
+        title: "Failed to update form status.",
+        text: xhr.responseText || "Failed to update form status.",
+      });
+      
+    },
+  });
 }
 
 function InsertGPENT(formData)
@@ -1939,7 +2041,7 @@ function loaddata(vmscyear2,vmsnrunno)
   const VORGNO = $("#vorgno").val();
   const CYEAR  = $("#cyear").val();
   $.ajax({
-    url:  host + "marform/MAR-VMS/form/getFormData",
+    url:  host + "marform/MAR-VMS/form/showFormData",
     type: "POST",
     dataType: "json",
     data: {vmscyear2:vmscyear2,vmsnrunno:vmsnrunno},
@@ -2042,6 +2144,7 @@ function loaddata(vmscyear2,vmsnrunno)
       const sptbody = document.getElementById("sproject-body");
       sptbody.innerHTML = ""; 
       if (response.sproj && response.sproj.length > 0) {
+         let totalQty = 0;
           response.sproj.forEach(v => {
             const row = `
               <tr>
@@ -2049,13 +2152,22 @@ function loaddata(vmscyear2,vmsnrunno)
               <td class="border px-2">${v.PROJNAME ? v.PROJNAME : ''}</td>
               <td class="border px-2">${v.MODEL ? v.MODEL : ''}</td>
               <td class="border px-2">${v.SPEC ? v.SPEC : ''}</td>
-              <td class="border px-2">${v.QTY ? v.QTY : ''}</td>
-              <td class="border px-2">${v.STATUS ? v.STATUS : ''}</td>
+              <td class="border px-2 text-center">${v.QTY ? v.QTY : ''}</td>
+              <td class="border px-2 text-center">${v.STATUS ? v.STATUS : ''}</td>
             </tr>
             `;
             sptbody.insertAdjacentHTML("beforeend", row);
+            totalQty += Number(v.QTY) || 0;
             i++;
           });
+          const summaryRow = `
+          <tr class="font-bold bg-blue-50">
+            <td class="border px-2 text-center" colspan="4">Total</td>
+            <td class="border px-2 text-center">${totalQty}</td>
+            <td class="border px-2"></td>
+          </tr>
+        `;
+        sptbody.insertAdjacentHTML("beforeend", summaryRow);
       }else{
             const noDataRow = `
             <tr>
@@ -2069,6 +2181,7 @@ function loaddata(vmscyear2,vmsnrunno)
       const pptbody = document.getElementById("pproject-body");
       pptbody.innerHTML = ""; 
       if (response.pproj && response.pproj.length > 0) {
+      let totalQty = 0;
       response.pproj.forEach(v => {
         const row = `
           <tr>
@@ -2076,13 +2189,22 @@ function loaddata(vmscyear2,vmsnrunno)
             <td class="border px-2">${v.PROJNAME ? v.PROJNAME : ''}</td>
             <td class="border px-2">${v.MODEL ? v.MODEL : ''}</td>
             <td class="border px-2">${v.SPEC ? v.SPEC : ''}</td>
-            <td class="border px-2">${v.QTY ? v.QTY : ''}</td>
-            <td class="border px-2">${v.STATUS ? v.STATUS : ''}</td>
+            <td class="border px-2 text-center">${v.QTY ? v.QTY : ''}</td>
+            <td class="border px-2 text-center">${v.STATUS ? v.STATUS : ''}</td>
           </tr>
         `;
         pptbody.insertAdjacentHTML("beforeend", row);
+        totalQty += Number(v.QTY) || 0;
         i++;
       });
+       const summaryRow = `
+        <tr class="font-bold bg-blue-50">
+          <td class="border px-2 text-center" colspan="4">Total</td>
+          <td class="border px-2 text-center">${totalQty}</td>
+          <td class="border px-2"></td>
+        </tr>
+      `;
+        pptbody.insertAdjacentHTML("beforeend", summaryRow);
     }else{
           const noDataRow = `
           <tr>
@@ -2100,6 +2222,14 @@ function loaddata(vmscyear2,vmsnrunno)
   const dietText = dietList.join(", ");
   
   $('[data-field="roomdietary"]').text(dietText || "-");
+  if(response.ent && response.ent.length > 0){
+    // สร้างลิงก์แต่ละตัวพร้อมคล่อม [ ]
+    let html = response.ent.map(e => {
+        return `<a href="`+host +`gpform/GP-ENT/main?sr=4&no=9&orgNo=030101&y=25&y2=${e.ENTCYEAR2}&runNo=${e.ENTNRUNNO}" target="_blank" class="text-blue-600 hover:text-blue-800 underline">[${e.REQENT}]</a>`;
+    }).join(', ');
+    // ใส่ใน span
+    document.querySelector('[data-field="formreqent"]').innerHTML = html;
+}
 
        
     },
