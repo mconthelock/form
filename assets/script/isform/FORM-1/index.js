@@ -1,5 +1,6 @@
 import { displayEmpInfo } from "@public/setIndexDB";
 $(document).ready(async function () {
+  $(".requester-info").addClass("hidden");
   await setInputter();
   await setObjective();
   await setWage($("#select-position"));

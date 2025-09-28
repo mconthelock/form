@@ -8,7 +8,7 @@
                 <fieldset class="fieldset flex-1">
                     <legend class="fieldset-legend">Requrst By</legend>
                     <input type="text" class="input req" placeholder="Employee No." id="requester" />
-                    <div class="hidden flex items-start gap-3 requester-info">
+                    <div class="flex items-start gap-3 requester-info">
                         <div class="avatar flex-none">
                             <div class="w-16 rounded-full">
                                 <img src="#" />

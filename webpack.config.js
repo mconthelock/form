@@ -91,13 +91,6 @@ module.exports = {
     training_legal: "./assets/script/gpform/GP-TRN/training_legal.js",
     training_meth: "./assets/script/gpform/GP-TRN/training_meth.js",
     initButtons: "./assets/script/gpform/GP-TRN/initButtons.js",
-    training: "./assets/script/gpform/GP-TRN/training.ts",
-    alert: "./assets/script/gpform/GP-TRN/alert.ts",
-    emp_lookup: "./assets/script/gpform/GP-TRN/emp_lookup.ts",
-    formUtils: "./assets/script/gpform/GP-TRN/formUtils.ts",
-    initForms: "./assets/script/gpform/GP-TRN/initForms.ts",
-    validators: "./assets/script/gpform/GP-TRN/validators.ts",
-    type_data: "./assets/script/gpform/GP-TRN/type_data.ts",
   },
   output: {
     filename: "[name].js",
