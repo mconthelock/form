@@ -1,62 +1,78 @@
-"use strict";
 
-function initFunctionalForm() {
-    console.log("🚀 init Functional Form");
+import { bindEmpLookup } from "./emp_lookup.js";  
+import { populateSelect } from "./formUtils.js";
 
-    // Select Time
-    populateSelect(document.getElementById("funcTimeFromHour"), 0, 23);
-    populateSelect(document.getElementById("funcTimeToHour"), 0, 23);
-    populateSelect(document.getElementById("funcTimeFromMin"), 0, 59);
-    populateSelect(document.getElementById("funcTimeToMin"), 0, 59);
+// ✅ export ให้ training_select.js import ไปใช้ได้
+export function initMethForm() {
+    console.log("🚀 init Meth Form");
 
-    // Request By
-    bindEmpLookup(document.getElementById("funcRequestBy"), {
-        SNAME: document.getElementById("funcRequestByName")
+    // กันไม่ให้ init ซ้ำ
+    if (initMethForm.initialized) return;
+    initMethForm.initialized = true;
+
+    // =========================
+    // 🔹 Populate Time Select (ใช้จาก formUtils.js)
+    // =========================
+    populateSelect(document.getElementById("methTimeFromHour"), 0, 23);
+    populateSelect(document.getElementById("methTimeToHour"), 0, 23);
+    populateSelect(document.getElementById("methTimeFromMin"), 0, 59);
+    populateSelect(document.getElementById("methTimeToMin"), 0, 59);
+
+    // =========================
+    // 🔹 Request By + Trainee
+    // =========================
+    bindEmpLookup(document.getElementById("methRequestBy"), {
+        SNAME: document.getElementById("methRequestByName")
     });
 
-    // Trainee
-    bindEmpLookup(document.getElementById("funcTraineeCode"), {
-        SNAME: document.getElementById("funcTraineeName"),
-        SPOSITION: document.getElementById("funcTraineePosition"),
-        SSEC: document.getElementById("funcTraineeSec"),
-        SDEPT: document.getElementById("funcTraineeDept"),
-        SDIV: document.getElementById("funcTraineeDiv")
+    bindEmpLookup(document.getElementById("methTraineeCode"), {
+        SNAME: document.getElementById("methTraineeName"),
+        SPOSITION: document.getElementById("methTraineePosition"),
+        SSEC: document.getElementById("methTraineeSec"),
+        SDEPT: document.getElementById("methTraineeDept"),
+        SDIV: document.getElementById("methTraineeDiv")
     });
 
-    // Expense toggle
-    const expenseRadios = document.querySelectorAll("input[name='funcExpenseOption']");
-    const reasonBox = document.getElementById("funcReasonBox");
-    const compareUpload = document.getElementById("funcCompareUpload");
-    const part6 = document.getElementById("func_part6");
+    // =========================
+    // 🔹 Expense toggle
+    // =========================
+    const expenseRadios = document.querySelectorAll("input[name='methExpenseOption']");
+    const reasonBox = document.getElementById("methReasonBox");
+    const compareUpload = document.getElementById("methCompareUpload");
+    const part6 = document.getElementById("meth_part6");
 
     expenseRadios.forEach(radio => {
         radio.addEventListener("change", () => {
             if (radio.value === "not_compare" && radio.checked) {
-                reasonBox.classList.remove("hidden");
-                compareUpload.classList.add("hidden");
+                reasonBox?.classList.remove("hidden");
+                compareUpload?.classList.add("hidden");
             } else if (radio.value === "compare" && radio.checked) {
-                reasonBox.classList.add("hidden");
-                compareUpload.classList.remove("hidden");
-                part6.classList.remove("hidden");
+                reasonBox?.classList.add("hidden");
+                compareUpload?.classList.remove("hidden");
+                part6?.classList.remove("hidden");
             }
         });
     });
 
-    // Free reason toggle
-    const reasonRadios = document.querySelectorAll("input[name='funcReason']");
+    // =========================
+    // 🔹 Free reason toggle
+    // =========================
+    const reasonRadios = document.querySelectorAll("input[name='methReason']");
     reasonRadios.forEach(radio => {
         radio.addEventListener("change", () => {
             if (radio.value === "free" && radio.checked) {
-                part6.classList.add("hidden");
+                part6?.classList.add("hidden");
             } else {
-                part6.classList.remove("hidden");
+                part6?.classList.remove("hidden");
             }
         });
     });
 
-    // VAT calculation
-    const vatResult = document.getElementById("funcVatResult");
-    const amountInput = document.getElementById("funcAmountInput");
+    // =========================
+    // 🔹 VAT calculation
+    // =========================
+    const vatResult = document.getElementById("methVatResult");
+    const amountInput = document.getElementById("methAmount");
     if (vatResult) vatResult.classList.add("hidden");
 
     if (amountInput) {
@@ -73,8 +89,12 @@ function initFunctionalForm() {
 
             const vat = amount * 0.07;
             const total = amount + vat;
-            vatResult.textContent = `รวมทั้งหมด: ${total.toLocaleString()} บาท (VAT 7%: ${vat.toLocaleString()} บาท)`;
+            vatResult.textContent =
+                `รวมทั้งหมด: ${total.toLocaleString()} บาท (VAT 7%: ${vat.toLocaleString()} บาท)`;
             vatResult.classList.remove("hidden");
         });
     }
 }
+
+// ✅ เพิ่ม flag ไว้กันการ init ซ้ำ
+initMethForm.initialized = false;

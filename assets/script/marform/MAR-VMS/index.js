@@ -698,9 +698,9 @@ confirmModalBtn.addEventListener('click', async () => {
     const subject = $('span[data-field="purpose"]').text();
     const stdate = $("#visitDate").val();
     const selectedOption = $("#bookingTime option:selected");
-    const startTime = selectedOption.attr("data-start");
-    const endTime = selectedOption.attr("data-end");
-    const room = $('span[data-field="receptroom"]').text();
+    let startTime = selectedOption.attr("data-start");
+    let endTime = selectedOption.attr("data-end");
+    let room = $('span[data-field="receptroom"]').text();
 
     const data = {
       email: email,
@@ -715,7 +715,21 @@ confirmModalBtn.addEventListener('click', async () => {
       attendees: [email],
     };
     // เรียก bookingroom
+    console.log(room);
     await bookingroom(data);
+    room = $('span[data-field="roomlunch"]').text();
+    if(room != "")
+    {   
+      console.log(room);
+      const lunchData = {
+        ...data,
+        starttime: "12:00 PM",
+        endtime: "01:00 PM",
+        room: room,
+      };
+      await bookingroom(lunchData);
+    }
+
   } catch (err) {
     Swal.fire({
       icon: "error",
@@ -1285,6 +1299,7 @@ try {
 });
 
 $(document).on("click", ".confirm-btn", async function () {
+    $(this).prop('disabled', true);
     createGPENT();
     updateform();
 });
@@ -1293,12 +1308,39 @@ $(document).on("click", ".send-btn", async function () {
   sendmailpic(); 
 });
 
-
-
-
 $(document).on("click", ".bookroom-btn", async function () {
     console.log("xxxxxxxx");
   
+});
+
+$(document).on("click", ".export-btn", async function () {
+  const vmscyear2 = $("#cyear2").val();
+  const vmsnrunno = $("#nrunno").val();
+  $.ajax({
+    type: "POST",
+    url: host + "marform/MAR-VMS/form/exportexcel",
+    data: {vmscyear2: vmscyear2, vmsnrunno:vmsnrunno},
+    dataType: 'json',
+    beforeSend: function () {
+      showLoader({ show: true });
+    },
+    success: function (res) {
+             openExcel(res.filename, res.content);
+    },
+    complete: function (xhr, status) {
+      showLoader({ show: false });
+    },
+    error: function (xhr) {
+      Swal.fire({
+        icon: "error",
+        title: "Failed to export file.",
+        text: xhr.responseText || "Failed to export file.",
+      });
+      
+    },
+  });
+
+
 });
 
 $(document).on('change', '.pst-select', function() {
@@ -1534,7 +1576,17 @@ function validateVisitTab(form) {
   return isValid;
   }
   
-  
+  function openExcel(fileName, dataBase64){
+		var fileType = fileName.split('.').pop();
+		fileType = "data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,";
+		var $a = $("<a>");
+		$a.attr("href", fileType + dataBase64);
+		$("body").append($a);
+		$a.attr("download", fileName);
+		$a[0].click();
+		$a.remove();
+		
+   }
 
   function validateReqItemTab(form) {
     let isValid = true;
@@ -1665,7 +1717,7 @@ function getEmail() {
 }
 
 async function createGPENT() {
-  console.log("createGPENT");
+ 
   if (!$("#hasLunch").is(":checked") && !$("#hasDinner").is(":checked")) return;
 
   const eno = "9";
@@ -1929,7 +1981,7 @@ function updateform()
         title: "Failed to update form status.",
         text: xhr.responseText || "Failed to update form status.",
       });
-      
+      $(".confirm-btn").prop("disabled", false);
     },
   });
 }

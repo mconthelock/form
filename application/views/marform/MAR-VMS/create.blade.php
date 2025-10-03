@@ -1483,7 +1483,7 @@ table.dataTable .select2-container--default .select2-selection--multiple {
               </div>
               <div class="grid grid-cols-[auto_1fr] gap-x-2">
                 <span class="font-semibold text-gray-700">Time:</span>
-                <span class="text-gray-900" data-field="roomtime"></span>
+                <span class="text-gray-900" data-field="roomtime" ></span>
               </div>
             </div>
             <div class="space-y-2">
@@ -1615,6 +1615,14 @@ table.dataTable .select2-container--default .select2-selection--multiple {
               shadow-md hover:shadow-lg hover:from-blue-600 hover:to-blue-700 transition-all duration-300
               {{ (!empty($form) && ($mode == '2') && ($form[0]->CST == '0')) ? '' : 'hidden' }}">
         Submit Form
+      </button>
+      <button type="button" data-tab="submit" 
+        class="export-btn flex items-center gap-2 bg-gradient-to-r from-orange-500 to-orange-600 
+         text-white px-6 py-2 rounded-xl text-sm font-semibold
+         shadow-md hover:shadow-lg hover:from-orange-600 hover:to-orange-700
+         transition-all duration-300
+              {{ (!empty($form) && ($mode == '2') && ($form[0]->CST == '0')) ? '' : 'hidden' }}">
+        Export
       </button>
   </div>
 </div>

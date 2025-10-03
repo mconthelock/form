@@ -1,4 +1,13 @@
-async function bindEmpLookup(inputEl, outputMap) {
+
+import { showAlert } from "./formUtils.js";
+
+/**
+ * Bind employee lookup ให้กับ input
+ * @param {HTMLInputElement} inputEl - ช่องรหัสพนักงาน
+ * @param {Object<string, HTMLElement>} outputMap - ช่อง output mapping เช่น { SNAME: span, SPOSITION: input }
+ * @param {string} getEmpUrl - URL API สำหรับค้นหาพนักงาน
+ */
+export async function bindEmpLookup(inputEl, outputMap, getEmpUrl) {
     if (!inputEl) return;
     let empTimer;
 
@@ -19,11 +28,12 @@ async function bindEmpLookup(inputEl, outputMap) {
 
         empTimer = setTimeout(async () => {
             try {
-                const res = await fetch(getEmpUrl, {
+                const res = await fetch(window.getEmpUrl, {
                     method: "POST",
                     headers: { "Content-Type": "application/x-www-form-urlencoded" },
                     body: "empno=" + encodeURIComponent(empno)
                 });
+
 
                 let data;
                 try {

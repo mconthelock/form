@@ -1,4 +1,3 @@
-"use strict";
 
 // =======================
 // Collect Functions

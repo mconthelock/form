@@ -1,25 +1,25 @@
-"use strict";
+import { populateSelect } from "./formUtils.js";
+import { bindEmpLookup } from "./emp_lookup.js";
 
-let functionalInitialized = false;
-
-function initFunctionalForm() {
+// ✅ ใช้ property ที่ตัว function แทน global variable
+export function initFunctionalForm() {
     console.log("🚀 init Functional Form");
 
-    if (functionalInitialized) return;
-    functionalInitialized = true;
+    if (initFunctionalForm.initialized) return;
+    initFunctionalForm.initialized = true;
 
-    // Select Time
+    // --- Select Time ---
     populateSelect(document.getElementById("funcTimeFromHour"), 0, 23);
     populateSelect(document.getElementById("funcTimeToHour"), 0, 23);
     populateSelect(document.getElementById("funcTimeFromMin"), 0, 59);
     populateSelect(document.getElementById("funcTimeToMin"), 0, 59);
 
-    // Request By
+    // --- Request By ---
     bindEmpLookup(document.getElementById("funcRequestBy"), {
         SNAME: document.getElementById("funcRequestByName")
     });
 
-    // Trainee
+    // --- Trainee ---
     bindEmpLookup(document.getElementById("funcTraineeCode"), {
         SNAME: document.getElementById("funcTraineeName"),
         SPOSITION: document.getElementById("funcTraineePosition"),
@@ -27,6 +27,7 @@ function initFunctionalForm() {
         SDEPT: document.getElementById("funcTraineeDept"),
         SDIV: document.getElementById("funcTraineeDiv")
     });
+
 
     // --- Expense toggle ---
     const expenseRadios = document.querySelectorAll("input[name='funcExpenseOption']");
@@ -78,36 +79,12 @@ function initFunctionalForm() {
 
             const vat = amount * 0.07;
             const total = amount + vat;
-            vatResult.textContent = `รวมทั้งหมด: ${total.toLocaleString()} บาท (VAT 7%: ${vat.toLocaleString()} บาท)`;
+            vatResult.textContent =
+                `รวมทั้งหมด: ${total.toLocaleString()} บาท (VAT 7%: ${vat.toLocaleString()} บาท)`;
             vatResult.classList.remove("hidden");
         });
     }
-
-    // --- Submit button ---
-    const sendBtn = document.getElementById("sendFuncFormBtn");
-    if (sendBtn) {
-        sendBtn.addEventListener("click", () => {
-            console.log("👉 Click Send Functional");
-            showAlert("📤 ส่งฟอร์ม", "ระบบกำลังพัฒนา...");
-        });
-    }
-
-    // --- Dynamic Objective & Expectation ---
-    document.body.addEventListener("click", e => {
-        if (e.target.classList.contains("add-objective")) {
-            console.log("🔥 Add Objective");
-            const container = document.getElementById("funcObjectiveList");
-            const newItem = e.target.closest(".objective-item").cloneNode(true);
-            newItem.querySelector("input").value = "";
-            container.appendChild(newItem);
-        }
-
-        if (e.target.classList.contains("add-expectation")) {
-            console.log("🔥 Add Expectation");
-            const container = document.getElementById("funcExpectationList");
-            const newItem = e.target.closest(".expectation-item").cloneNode(true);
-            newItem.querySelector("input").value = "";
-            container.appendChild(newItem);
-        }
-    });
 }
+
+// ✅ กัน init ซ้ำ
+initFunctionalForm.initialized = false;

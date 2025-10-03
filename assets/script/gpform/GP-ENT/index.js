@@ -394,7 +394,7 @@ $(function () {
           timerProgressBar: true,
           // didClose: () => redirectWebflow(),
         });
-        // redirectWebflow();
+        redirectWebflow();
       },
       complete: function () {
         $("#loading-overlay").hide();

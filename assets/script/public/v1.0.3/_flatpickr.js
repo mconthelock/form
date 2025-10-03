@@ -23,6 +23,7 @@ import "../../../style/custom/v1.0.1/component.css"
 //JS Loader
 import flatpickr    from "flatpickr";
 import dayjs        from 'dayjs';
+import monthSelectPlugin from "flatpickr/dist/plugins/monthSelect";
 import { btnClass, fieldClass, fieldset, input, inputClass } from "./component/form";
 
 

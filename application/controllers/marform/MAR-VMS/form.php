@@ -1057,7 +1057,19 @@ class form extends MY_Controller{
         return $dFile;
     }
 
+    public function exportexcel()
+    {
 
+        $vmscyear2 = $_POST["vmscyear2"]; 
+        $vmsnrunno = $_POST["vmsnrunno"];
+        $data = $this->getFormData();
+        $f = $this->create_save_vmsexcel($data);
+        $dFile = array(
+            'content'  =>  base64_encode($f['content']),
+            'filename' =>  $f['filename'],
+        );
+        echo json_encode($dFile);
+    }
 
     /**
  * Insert empty row(s) based on template row style

@@ -87,7 +87,6 @@ class Training extends MY_Controller {
             }
 
             $formno = $this->toFormNumber($data["NFRMNO"], $data["VORGNO"], $data["CYEAR"], $data["CYEAR2"], $data["NRUNNO"]);
-            // ✅ เตรียมข้อมูล insert
             $reason = $data["TRN_EXPENSE_REASON"] ?? "";
             $cost   = $data["COST"] ?? 0;
             if (strtolower($reason) === "free") {
@@ -108,9 +107,6 @@ class Training extends MY_Controller {
                 "TIME_TO"   => $data["TIME_TO"] ?? "0000",
                 "PLACE"       => $data["PLACE"] ?? "",
                 "INSTITUTION" => $data["INSTITUTION"] ?? "",
-                "EMPNO"  => $data["EMPNO"] ?? "",
-                "JD_NAME"     => $data["JD_NAME"] ?? "",
-                "JD_DESC"     => $data["JD_DESC"] ?? "",
                 "TRN_EXPENSE_STATUS" => $data["TRN_EXPENSE_STATUS"] ?? "",
                 "TRN_EXPENSE_REASON" => $reason,
                 "TRN_EXPENSE_OTHER"  => $data["TRN_EXPENSE_OTHER"] ?? "",
@@ -143,9 +139,9 @@ class Training extends MY_Controller {
 
             $prefix = $this->input->post("PREFIX");
             $map = [
-                "func"  => ["obj" => "funcObjective",  "exp" => "funcExpectation"],
-                "legal" => ["obj" => "legalObjective", "exp" => "legalExpectation"],
-                "meth"  => ["obj" => "methObjective",  "exp" => "methExpectation"],
+                "func"  => ["obj" => "funcObjective",  "exp" => "funcExpectation", "trainee" => "funcTraineeCode"],
+                "legal" => ["obj" => "legalObjective", "exp" => "legalExpectation", "trainee" => "legalTraineeCode"],
+                "meth"  => ["obj" => "methObjective",  "exp" => "methExpectation", "trainee" => "methTraineeCode"],
             ];
 
             if (!isset($map[$prefix])) {throw new Exception("Unknown training form prefix: ".$prefix);}
@@ -155,9 +151,11 @@ class Training extends MY_Controller {
 
             $dest_path = $this->upload_path.$formno;
             if (!is_dir($dest_path)) {mkdir($dest_path, 0777, true);}
-            // ✅ Upload JD Files
-            if (!empty($_FILES['funcJdFiles']['name'][0])) {
-                foreach ($_FILES['funcJdFiles']['name'] as $i => $name) { $_FILES['funcJdFiles']['name'][$i] = preg_replace('/[^A-Za-z0-9._-]/', '_', $name);}
+            // ✅ Upload JD Files (มีเฉพาะ functional)
+            if ($prefix === "func" && !empty($_FILES['funcJdFiles']['name'][0])) {
+                foreach ($_FILES['funcJdFiles']['name'] as $i => $name) {
+                    $_FILES['funcJdFiles']['name'][$i] = preg_replace('/[^A-Za-z0-9._-]/', '_', $name);
+                }
                 $uploaded_jd = $this->uploadMultiFile($_FILES, ['funcJdFiles'], $dest_path);
                 if ($uploaded_jd['status'] && !empty($uploaded_jd['files']['funcJdFiles'])) {
                     $filenames = array_column($uploaded_jd['files']['funcJdFiles'], 'file_name');
@@ -165,23 +163,43 @@ class Training extends MY_Controller {
                 }
             }
 
-            // ✅ Upload Compare Files
-            if (!empty($_FILES['funcCompareFiles']['name'][0])) {
-                foreach ($_FILES['funcCompareFiles']['name'] as $i => $name) { $_FILES['funcCompareFiles']['name'][$i] = preg_replace('/[^A-Za-z0-9._-]/', '_', $name); }
-                $uploaded_compare = $this->uploadMultiFile($_FILES, ['funcCompareFiles'], $dest_path);
-                if ($uploaded_compare['status'] && !empty($uploaded_compare['files']['funcCompareFiles'])) {
-                    $filenames = array_column($uploaded_compare['files']['funcCompareFiles'], 'file_name');
+            // ✅ Upload Compare Files (ทุกฟอร์มใช้ได้)
+            if (!empty($_FILES[$prefix.'CompareFiles']['name'][0])) {
+                foreach ($_FILES[$prefix.'CompareFiles']['name'] as $i => $name) {
+                    $_FILES[$prefix.'CompareFiles']['name'][$i] = preg_replace('/[^A-Za-z0-9._-]/', '_', $name);
+                }
+                $uploaded_compare = $this->uploadMultiFile($_FILES, [$prefix.'CompareFiles'], $dest_path);
+                if ($uploaded_compare['status'] && !empty($uploaded_compare['files'][$prefix.'CompareFiles'])) {
+                    $filenames = array_column($uploaded_compare['files'][$prefix.'CompareFiles'], 'file_name');
                     $this->insert_and_upload("GP_TRN_ATT", $base, $filenames, 'COMPARE');
                 }
             }
 
             //INSERT TRAINEE
+            /* 
             $trn_id = 1;
             $arr_trainee = $base;
             $arr_trainee['ID'] = $trn_id;
             $arr_trainee['EMPNO'] = $trn_id;
             $arr_trainee['JD_DESC'] = $trn_id;
             $result_trainee = $this->trn->insert_data("GP_TRN_TRAINEE", $arr_trainee);
+            */
+            // ✅ Insert Trainee
+            $traineeCodes = $this->input->post($map[$prefix]["trainee"]);
+            if (!empty($traineeCodes) && is_array($traineeCodes)) {
+                $id = 1;
+                foreach ($traineeCodes as $code) {
+                    if (trim($code) !== "") {
+                        $arr_trainee = $base;
+                        $arr_trainee['ID']    = $id;
+                        $arr_trainee['EMPNO'] = $code;
+                        $arr_trainee['JD_NAME'] = $data["JD_NAME"] ?? "";
+                        $arr_trainee['JD_DESC'] = $data["JD_DESC"] ?? "";
+                        $this->trn->insert_data("GP_TRN_TRAINEE", $arr_trainee);
+                        $id++;
+                    }
+                }
+            }
 
             echo json_encode(["status" => "success", "message" => "Insert successful", "received" => $data]);
         } catch (Exception $e) {

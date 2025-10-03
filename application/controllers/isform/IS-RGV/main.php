@@ -92,13 +92,20 @@ class Main extends MY_Controller
                 $data['user'] = $this->mergeResultToUser($filtered, $emp_form, 'EMPNO');
                 $this->views('isform/IS-RGV/as400_view', $data);
                 break;
-
+            case 'ln':
+                $data['rows'] = $this->rm->test_data($data_form->EMPCHECKER);
+                $this->views('isform/IS-RGV/test', $data);
+                break;
             default:
                 # code...
                 break;
         }
         // pre_array($filtered);
         // $this->views('isform/IS-RGV/view', $data);
+    }
+
+    public function createSummaryView(){
+        $this->views('isform/IS-RGV/summary_view');
     }
 
     public function test_view()
@@ -240,6 +247,9 @@ class Main extends MY_Controller
             $this->updateFlowApv("", "08243", $NFRMNO, $VORGNO, $CYEAR, $CYEAR2, $NRUNNO, '57', '18');
         } else if ($program == 'Marketing') {
             $this->updateFlowApv("", "08243", $NFRMNO, $VORGNO, $CYEAR, $CYEAR2, $NRUNNO, '57', '18');
+        } else if ($program == 'LN') {
+            // $this->updateFlowApv("", "13255", $NFRMNO, $VORGNO, $CYEAR, $CYEAR2, $NRUNNO, '57', '18');
+            $this->deleteFlowStep('', $NFRMNO, $VORGNO, $CYEAR, $CYEAR2, $NRUNNO, '57', '18');
         }
         $this->updateFlowApv("", $owner, $NFRMNO, $VORGNO, $CYEAR, $CYEAR2, $NRUNNO, '18', '00');
         // print_r($form['message']['runno']);
@@ -354,41 +364,70 @@ class Main extends MY_Controller
                 }
             }
 
+            // echo "<pre>";
+            // print_r($groupedData);
+            // echo "</pre>";
+
+
+
+
+
             // สร้างฟอร์มและ insert ข้อมูล
-            foreach ($groupedData as $pic => $userGroup) {
-                $owner  = $userGroup['owner'];
-                $form   = $this->createform(trim($pic), $programItem->PROGRAM, $owner);
-                $NRUNNO = $form['runno'];
-                $CYEAR2 = $form['cyear2'];
 
-                echo "--------------------------------------$programName ($pic)-------------------------------------------------------------<br>";
+            // foreach ($groupedData as $pic => $userGroup) {
+            //     $owner  = $userGroup['owner'];
+            //     $form   = $this->createform(trim($pic), $programItem->PROGRAM, $owner);
+            //     $NRUNNO = $form['runno'];
+            //     $CYEAR2 = $form['cyear2'];
 
-                foreach ($userGroup['users'] as $item) {
-                    $empno = $item->SEMPNO;
+            //     echo "--------------------------------------$programName ($pic)-------------------------------------------------------------<br>";
 
-                    if ($programName === 'scm') {
-                        $loginList = isset($scmUsrMap[$empno]) ? $scmUsrMap[$empno] : [$empno];
+            //     foreach ($userGroup['users'] as $item) {
+            //         $empno = $item->SEMPNO;
 
-                        foreach ($loginList as $usr_login) {
-                            $data = [
-                                'NRUNNO' => $NRUNNO,
-                                'CYEAR2' => $CYEAR2,
-                                'EMPNO'  => $usr_login,
-                            ];
-                            // pre_array($data);
-                            $this->rm->insert('ISRGV_EMP', $data);
-                        }
-                    } else {
-                        $data = [
-                            'NRUNNO' => $NRUNNO,
-                            'CYEAR2' => $CYEAR2,
-                            'EMPNO'  => $empno,
-                        ];
-                        $this->rm->insert('ISRGV_EMP', $data);
-                    }
-                }
-            }
+            //         if ($programName === 'scm') {
+            //             $loginList = isset($scmUsrMap[$empno]) ? $scmUsrMap[$empno] : [$empno];
+
+            //             foreach ($loginList as $usr_login) {
+            //                 $data = [
+            //                     'NRUNNO' => $NRUNNO,
+            //                     'CYEAR2' => $CYEAR2,
+            //                     'EMPNO'  => $usr_login,
+            //                 ];
+            //                 // pre_array($data);
+            //                 $this->rm->insert('ISRGV_EMP', $data);
+            //             }
+            //         } else {
+            //             $data = [
+            //                 'NRUNNO' => $NRUNNO,
+            //                 'CYEAR2' => $CYEAR2,
+            //                 'EMPNO'  => $empno,
+            //             ];
+            //             $this->rm->insert('ISRGV_EMP', $data);
+            //         }
+            //     }
+            // }
         }
+
+        $authorizeList = $this->rm->getLnauthorize();
+        $lnUsers       = array_column($authorizeList, 'EMPNO');
+        // $lnOwner       = $this->rm->get_orgpos("040101", "10")[0];
+        foreach ($lnUsers as $key => $val) {
+            $lnOwner = $this->rm->get_orgpos("040101", "10")[0];
+            $form    = $this->createform(trim($val), 'LN', $lnOwner->VEMPNO);
+            $NRUNNO  = $form['runno'];
+            $CYEAR2  = $form['cyear2'];
+            $data    = [
+                'NRUNNO' => $NRUNNO,
+                'CYEAR2' => $CYEAR2,
+                'EMPNO'  => $val,
+            ];
+            // pre_array($data);
+            $this->rm->insert('ISRGV_EMP', $data);
+        }
+        echo "<pre>";
+        print_r($lnUsers);
+        echo "</pre>";
     }
 
 
@@ -452,6 +491,57 @@ class Main extends MY_Controller
 
         $this->rm->insert('ISRGV_LN_AUTHORIZE', $data);
     }
+
+    public function read_excel()
+    {
+        $path = FCPATH . 'assets/files/data2.csv';
+        if (!file_exists($path)) {
+            echo "ไม่พบไฟล์: $path";
+            return;
+        }
+
+        $file = fopen($path, "r");
+
+        $header = fgetcsv($file, 1000, ","); // อ่านหัวตาราง
+        $empnos = array_slice($header, 4);   // เอาเฉพาะคอลัมน์พนักงาน (ตั้งแต่คอลัมน์ที่ 5)
+
+        // echo "<table border='1' cellpadding='5'>";
+        // echo "<tr><th>MENU_LEVEL</th><th>MENU_TREE</th><th>MENU_ID</th><th>EMPNO</th><th>STATUS</th></tr>";
+
+        while (($row = fgetcsv($file, 1000, ",")) !== FALSE) {
+            $menu_level = trim($row[0]);
+            $menu_tree  = trim($row[1]);
+            $menu_id    = trim($row[2]);
+
+            foreach ($empnos as $i => $empno) {
+                $val = trim($row[$i + 4]); // เริ่มนับจากคอลัมน์ที่ 5
+                if ($val !== '') { // มีค่า เช่น 'P'
+
+                    $data = [
+                        'EMPNO'   => $empno,
+                        'MENU_ID' => $menu_id,
+                        'STATUS'  => ($val === 'P') ? '1' : '0'
+                    ];
+                    $this->rm->insert('ISRGV_LN_AUTHORIZE', $data);
+
+                    // echo "<pre>";
+                    // print_r($data);
+                    // echo "</pre>";
+                    // echo "<tr>
+                    //     <td>$menu_level</td>
+                    //     <td>$menu_tree</td>
+                    //     <td>$menu_id</td>
+                    //     <td>$empno</td>
+                    //     <td>$val</td>
+                    //   </tr>";
+                }
+            }
+        }
+
+        // echo "</table>";
+        fclose($file);
+    }
+
 
     public function test_curl()
     {

@@ -1,21 +1,20 @@
-"use strict";
+
+import { showAlert } from "./formUtils.js";  // ✅ ต้อง import มาด้วย
 
 /**
  * ฟังก์ชันกลาง ใช้ตรวจสอบว่าฟิลด์ที่บังคับต้องมีค่า
  * - รองรับ querySelectorAll (ตรวจสอบหลาย input)
  * - ตรวจว่าอย่างน้อยต้องมี input และต้องไม่ว่าง
  */
-function validateForm(requiredSelectors) {
+export function validateForm(requiredSelectors) {
     for (const sel of requiredSelectors) {
         const els = document.querySelectorAll(sel);
 
-        // ถ้าไม่มี element เลย → ผิด
         if (els.length === 0) {
             showAlert("⚠ แจ้งเตือน", "ต้องมีข้อมูลอย่างน้อย 1 รายการ");
             return false;
         }
 
-        // ตรวจว่ามีค่าอย่างน้อย 1 ช่อง
         let valid = false;
         els.forEach(el => {
             if (el.value && el.value.trim() !== "") {
@@ -35,7 +34,7 @@ function validateForm(requiredSelectors) {
 // =====================================================================
 // Functional
 // =====================================================================
-function validateFunctionalForm() {
+export function validateFunctionalForm() {
     const requiredSelectors = [
         "#funcRequestBy", "#funcTrainingSubject", "#funcDateFrom", "#funcDateTo",
         "#funcLocation", "#funcInstitute",
@@ -46,7 +45,6 @@ function validateFunctionalForm() {
     ];
     if (!validateForm(requiredSelectors)) return false;
 
-    // Part 5: Expense
     const expense = document.querySelector("input[name='funcExpenseOption']:checked");
     if (!expense) {
         showAlert("⚠ แจ้งเตือน", "กรุณาเลือกวิธีการพิจารณาค่าใช้จ่าย (Part 5)");
@@ -75,7 +73,6 @@ function validateFunctionalForm() {
         }
     }
 
-    // ถ้าไม่ได้เลือก "อบรมฟรี" ต้องกรอกจำนวนเงิน
     const freeSelected = document.querySelector("input[name='funcReason'][value='free']:checked");
     if (!freeSelected) {
         const amount = document.getElementById("funcAmountInput");
@@ -92,13 +89,12 @@ function validateFunctionalForm() {
 // =====================================================================
 // Legal
 // =====================================================================
-function validateLegalForm() {
+export function validateLegalForm() {
     const requiredSelectors = [
-        "#legalRequestBy", "#legalSubject", "#legalDateFrom", "#legalDateTo",
-        "#legalPlace", "#legalInstitute", "#legalConcernLaw",
+        "#legalRequestBy", "#legalTrainingSubject", "#legalDateFrom", "#legalDateTo",
+        "#legalLocation", "#legalInstitute", "#legalConcernLaw",
         "#legalObjectiveList input[name='legalObjective[]']",
-        "#legalExpectationList input[name='legalExpectation[]']",
-        "#legalTraineeCode"
+        "#legalExpectationList input[name='legalExpectation[]']"
     ];
     if (!validateForm(requiredSelectors)) return false;
 
@@ -146,10 +142,10 @@ function validateLegalForm() {
 // =====================================================================
 // Meth
 // =====================================================================
-function validateMethForm() {
+export function validateMethForm() {
     const requiredSelectors = [
-        "#methRequestBy", "#methSubject", "#methDateFrom", "#methDateTo",
-        "#methPlace", "#methInstitute",
+        "#methRequestBy", "#methTrainingSubject", "#methDateFrom", "#methDateTo",
+        "#methLocation", "#methInstitute",
         "#methObjectiveList input[name='methObjective[]']",
         "#methExpectationList input[name='methExpectation[]']",
         "#methTraineeCode"

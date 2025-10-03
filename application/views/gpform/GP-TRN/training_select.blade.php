@@ -41,7 +41,7 @@
           @includeIf('gpform.GP-TRN.training_form_functional')
       </div>
       <div id="form_legal" class="hidden">
-          @includeIf('gpform.GP-TRN.training_form_legel')
+          @includeIf('gpform.GP-TRN.training_form_legal') <!-- ✅ แก้ spelling -->
       </div>
       <div id="form_meth" class="hidden">
           @includeIf('gpform.GP-TRN.training_form_meth')
@@ -87,37 +87,26 @@ dialog {
 dialog::backdrop {
   background: rgba(0, 0, 0, 0.5);
 }
-#loaderOverlay {
-  position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(255,255,255,0.7);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 9999;
-}
 #loaderOverlay.hidden { display: none; }
 </style>
 @endsection
 
+
 @section('scripts')
-    <!-- ✅ Global constants -->
-    <script>
-      const getEmpUrl = "{{ site_url('gpform/GP-TRN/training/get_emp') }}";
-      const mainUrl   = "{{ site_url('gpform/GP-TRN/training') }}";
-    </script>
+  <script>
+   /*window.process = {
+      env: {
+        APP_API: "{{ site_url() }}/"
+      }
+    };
+*/
 
-    <!-- ✅ Utils -->
-    <script src="{{ base_url('assets/script/gpform/GP-TRN/validators.js') }}?ver={{ $GLOBALS['version'] }}"></script>
-    <script src="{{ base_url('assets/script/gpform/GP-TRN/initButtons.js') }}?ver={{ $GLOBALS['version'] }}"></script>
-    <script src="{{ base_url('assets/script/gpform/GP-TRN/formUtils.js') }}?ver={{ $GLOBALS['version'] }}"></script>
-    <script src="{{ base_url('assets/script/gpform/GP-TRN/emp_lookup.js') }}?ver={{ $GLOBALS['version'] }}"></script>
+    window.getEmpUrl = "{{ site_url('gpform/GP-TRN/training/get_emp') }}";
+    window.mainUrl   = "{{ site_url('gpform/GP-TRN/training') }}";
+  </script>  
 
-    <!-- ✅ Form scripts -->
-    <script src="{{ base_url('assets/script/gpform/GP-TRN/training_functional.js') }}?ver={{ $GLOBALS['version'] }}"></script>
-    <script src="{{ base_url('assets/script/gpform/GP-TRN/training_legal.js') }}?ver={{ $GLOBALS['version'] }}"></script>
-    <script src="{{ base_url('assets/script/gpform/GP-TRN/training_meth.js') }}?ver={{ $GLOBALS['version'] }}"></script>
-
-    <!-- ✅ Main selector -->
-    <script src="{{ base_url('assets/script/gpform/GP-TRN/training_select.js') }}?ver={{ $GLOBALS['version'] }}"></script>
+  <!-- โหลด js -->
+  <!-- <script  src="{{ base_url('assets/script/gpform/GP-TRN/training_main.js') }}"></script> -->
+   <script  src="{{ base_url('assets/dist/js/training_select.js') }}"></script>
 @endsection
+

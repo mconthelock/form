@@ -7,6 +7,8 @@
 @section('contents')
 
 <form id="form-submit" method="post" enctype="multipart/form-data" class="space-y-6 font-sans">
+<input type="hidden" id="cyear2" name="cyear2" value="{{ $CYEAR2 }}"/>
+<input type="hidden" id="nrunno" name="nrunno" value="{{ $NRUNNO }}"/>
 <div id="tab-submit" class="tab-pane w-full max-w-7xl mx-auto space-y-6">
     <!-- Header -->
     <div class="grid grid-cols-3 gap-4 p-4 bg-white rounded-xl shadow-md text-sm h-40">
@@ -253,7 +255,7 @@
             if (!empty($ent)) {
             $links = [];
             foreach ($ent as $e) {
-                $url = $host . "gpform/GP-ENT/main?sr=4&no=9&orgNo=030101&y=25"
+                $url = base_url('gpform/GP-ENT') . "/main?sr=4&no=9&orgNo=030101&y=25"
                 . "&y2=" . $e->ENTCYEAR2
                 . "&runNo=" . $e->ENTNRUNNO;
 
@@ -266,7 +268,7 @@
             @endphp
         <div class="md:col-span-2">
         <span class="text-sm font-semibold text-gray-700 w-32">Entertainment Form:</span>
-          <span class="text-sm text-gray-900" data-field="formreqent">{{ $html }}</span>
+          <span class="text-sm text-gray-900" data-field="formreqent">{!! $html !!}</span>
         </div>
       </div>
     </div>
@@ -282,15 +284,33 @@
       <table class="w-full border border-gray-300 text-sm mt-3 table-auto">
         <thead class="bg-blue-50 text-gray-700">
           <tr>
-            <th class="border border-gray-300 px-3 py-2">Project No.</th>
-            <th class="border border-gray-300 px-3 py-2">Project Name</th>
-            <th class="border border-gray-300 px-3 py-2">Model</th>
-            <th class="border border-gray-300 px-3 py-2">Specification</th>
-            <th class="border border-gray-300 px-3 py-2">No. of Units</th>
-            <th class="border border-gray-300 px-3 py-2">Status</th>
+            <th class="border border-gray-300 px-3 py-2 w-48">Project No.</th>
+            <th class="border border-gray-300 px-3 py-2 w-72">Project Name</th>
+            <th class="border border-gray-300 px-3 py-2 w-96">Model</th>
+            <th class="border border-gray-300 px-3 py-2 w-96">Specification</th>
+            <th class="border border-gray-300 px-3 py-2 w-40">No. of Units</th>
+            <th class="border border-gray-300 px-3 py-2 w-48">Status</th>
           </tr>
         </thead>
-        <tbody id="sproject-body" class="text-gray-900"></tbody>
+        <tbody id="sproject-body" class="text-gray-900">
+        @php $tot =0; @endphp
+        @foreach($sproj as $s)
+              <tr>
+              <td class="border px-2">{{ $s->PROJNO }}</td>
+              <td class="border px-2">{{ $s->PROJNAME }}</td>
+              <td class="border px-2">{{ $s->MODEL }}</td>
+              <td class="border px-2">{{ $s->SPEC }}</td>
+              <td class="border px-2 text-center">{{ $s->QTY }}</td>
+              <td class="border px-2 text-center">{{ $s->STATUS }}</td>
+            </tr>
+            @php $tot += $s->QTY; @endphp
+        @endforeach
+            <tr class="bg-blue-50 text-gr">
+                <td colspan="4" class="border px-2 text-right font-bold">Total</td>
+                <td class="border px-2 text-center font-bold">{{ $tot }}</td>
+                <td class="border px-2"></td>
+            </tr>
+        </tbody>
       </table>
     </div>
 
@@ -301,20 +321,46 @@
       <table class="w-full border border-gray-300 text-sm mt-3 table-auto">
         <thead class="bg-blue-50 text-gray-700">
           <tr>
-            <th class="border border-gray-300 px-3 py-2">Project No.</th>
-            <th class="border border-gray-300 px-3 py-2">Project Name</th>
-            <th class="border border-gray-300 px-3 py-2">Model</th>
-            <th class="border border-gray-300 px-3 py-2">Specification</th>
-            <th class="border border-gray-300 px-3 py-2">No. of Units</th>
-            <th class="border border-gray-300 px-3 py-2">Status</th>
+            <th class="border border-gray-300 px-3 py-2 w-48">Project No.</th>
+            <th class="border border-gray-300 px-3 py-2 w-72">Project Name</th>
+            <th class="border border-gray-300 px-3 py-2 w-96">Model</th>
+            <th class="border border-gray-300 px-3 py-2 w-96">Specification</th>
+            <th class="border border-gray-300 px-3 py-2 w-40">No. of Units</th>
+            <th class="border border-gray-300 px-3 py-2 w-48">Status</th>
           </tr>
         </thead>
-        <tbody id="pproject-body" class="text-gray-900"></tbody>
+        <tbody id="pproject-body" class="text-gray-900">
+        @php $tot =0; @endphp
+        @foreach($pproj as $p)
+              <tr>
+              <td class="border px-2">{{ $p->PROJNO }}</td>
+              <td class="border px-2">{{ $p->PROJNAME }}</td>
+              <td class="border px-2">{{ $p->MODEL }}</td>
+              <td class="border px-2">{{ $p->SPEC }}</td>
+              <td class="border px-2 text-center">{{ $p->QTY }}</td>
+              <td class="border px-2 text-center">{{ $p->STATUS }}</td>
+            </tr>
+            @php $tot += $p->QTY; @endphp
+        @endforeach
+            <tr class="bg-blue-50 text-gr">
+                <td colspan="4" class="border px-2 text-right font-bold">Total</td>
+                <td class="border px-2 text-center font-bold">{{ $tot }}</td>
+                <td class="border px-2"></td>
+            </tr>
+        </tbody>
       </table>
     </div>
 
   </div>
-
+  <div class="flex justify-end space-x-2 mt-6">
+      <button type="button" data-tab="submit" 
+        class="export-btn flex items-center gap-2 bg-gradient-to-r from-orange-500 to-orange-600 
+         text-white px-6 py-2 rounded-xl text-sm font-semibold
+         shadow-md hover:shadow-lg hover:from-orange-600 hover:to-orange-700
+         transition-all duration-300">
+        Export
+      </button>
+  </div>
 </div>
 </form>
 
@@ -325,7 +371,6 @@
 @endsection
 
 @section('scripts')
-    <script src=""></script>
-    <script>
-    </script>
+<script src="{{ $_ENV['APP_JS'] }}/vmsview.js?ver={{ $GLOBALS['version'] }}"></script>
+    
 @endsection

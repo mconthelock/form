@@ -26,7 +26,8 @@
             </label>
             <input type="text" id="legalRequestBy" name="legalRequestBy"
                 class="input input-bordered w-24 text-center"
-                placeholder="รหัสพนักงาน" maxlength="5" data-alert="กรุณากรอก Request By (รหัสพนักงาน) !!">
+                placeholder="รหัสพนักงาน" maxlength="5"
+                data-alert="กรุณากรอก Request By (รหัสพนักงาน) !!">
             <span id="legalRequestByName" class="font-semibold text-blue-600"></span>
         </div>
     </div>
@@ -34,12 +35,15 @@
     <!-- Part 1 -->
     <div class="mb-6" id="legal_part1">
         <h3 class="font-bold text-lg mb-2">ส่วนที่ 1 : หัวข้อฝึกอบรม และ กำหนดการฝึกอบรม</h3>
-        <input type="text" id="legalTrainingSubject" placeholder="1.1 หัวข้อฝึกอบรม" class="input input-bordered w-full mb-2">
+        <input type="text" id="legalTrainingSubject"
+            placeholder="1.1 หัวข้อฝึกอบรม"
+            class="input input-bordered w-full mb-2"
+            data-alert="กรุณากรอกหัวข้อฝึกอบรม">
         <div class="flex gap-2 mb-2 items-center">
             <span class="self-center font-bold">วันที่</span>
-            <input type="date" id="legalDateFrom" class="input input-bordered w-[200px]">
+            <input type="date" id="legalDateFrom" class="input input-bordered w-[200px]" data-alert="กรุณาเลือกวันที่อบรม">
             <span class="self-center">ถึง</span>
-            <input type="date" id="legalDateTo" class="input input-bordered w-[200px]">
+            <input type="date" id="legalDateTo" class="input input-bordered w-[200px]" data-alert="กรุณาเลือกวันที่อบรม">
 
             <div class="flex items-center gap-2 justify-end">
                 <span class="self-center font-bold ml-[30px]">เวลา</span>
@@ -52,22 +56,30 @@
                 <select id="legalTimeToMin" class="input input-bordered w-20 text-center"></select>
             </div>
         </div>
-        <input type="text" id="legalLocation" placeholder="1.3 สถานที่" class="input input-bordered w-full mb-2">
-        <input type="text" id="legalInstitute" placeholder="1.4 สถาบันฝึกอบรม" class="input input-bordered w-full">
+        <input type="text" id="legalLocation" placeholder="1.3 สถานที่"
+            class="input input-bordered w-full mb-2"
+            data-alert="กรุณาระบุสถานที่">
+        <input type="text" id="legalInstitute" placeholder="1.4 สถาบันฝึกอบรม"
+            class="input input-bordered w-full"
+            data-alert="กรุณาระบุสถาบันฝึกอบรม">
     </div>
 
     <!-- Part 2 -->
     <div class="mb-6" id="legal_part2">
         <h3 class="font-bold text-lg mb-2">ส่วนที่ 2 : ชื่อกฎหมายที่เกี่ยวข้อง</h3>
-        <textarea id="legalConcernLaw" class="textarea textarea-bordered w-full" rows="3"></textarea>
+        <textarea id="legalConcernLaw" class="textarea textarea-bordered w-full" rows="3"
+            data-alert="กรุณาระบุชื่อกฎหมายที่เกี่ยวข้อง"></textarea>
     </div>
 
     <!-- Part 3 -->
     <div class="mb-6" id="legal_part3">
-        <h3 class="font-bold text-lg mb-2">ส่วนที่ 3 : วัตถุประสงค์ของการฝึกอบรม</h3>
+        <h3 class="font-bold text-lg mb-2">ส่วนที่ 3 : วัตถุประสงค์</h3>
         <div id="legalObjectiveList" class="space-y-2">
             <div class="flex items-center gap-2 objective-item">
-                <input type="text" name="legalObjective[]" placeholder="ระบุวัตถุประสงค์..." class="input input-bordered w-full">
+                <input type="text" name="legalObjective[]"
+                    placeholder="ระบุวัตถุประสงค์..."
+                    class="input input-bordered w-full"
+                    data-alert="กรุณากรอกวัตถุประสงค์">
                 <button type="button" class="btn btn-sm bg-green-500 text-white add-objective">+</button>
             </div>
         </div>
@@ -75,24 +87,16 @@
 
     <!-- Part 4 -->
     <div class="mb-6" id="legal_part4">
-        <h3 class="font-bold text-lg mb-2">ส่วนที่ 4 : ความคาดหวัง / ประโยชน์</h3>
+        <h3 class="font-bold text-lg mb-2">ส่วนที่ 4 : ความคาดหวัง</h3>
         <div id="legalExpectationList" class="space-y-2">
             <div class="flex items-center gap-2 expectation-item">
-                <input type="text" name="legalExpectation[]" placeholder="ระบุความคาดหวัง / ประโยชน์..." class="input input-bordered w-full">
+                <input type="text" name="legalExpectation[]"
+                    placeholder="ระบุความคาดหวัง / ประโยชน์..."
+                    class="input input-bordered w-full"
+                    data-alert="กรุณากรอกความคาดหวัง/ประโยชน์">
                 <button type="button" class="btn btn-sm bg-green-500 text-white add-expectation">+</button>
             </div>
         </div>
-    </div>
-
-    <!-- Remark -->
-    <div class="mb-6 text-sm text-red-600">
-        <b>Remark :</b>
-        <p>
-            แผนก HRD จะติดตามผลการฝึกอบรม ในมิติ "ระดับความสามารถ (Competency)" และ "ผลลัพธ์จากความสามารถ (Working result)" ภายหลังฝึกอบรมครบ 3 เดือน
-        </p>
-        <p class="text-red-600">
-            (HRD Sect. will follow up training result in dimension "Competency level" and "Working result of competency" after completed training 3 months)
-        </p>
     </div>
 
     <!-- Part 5 -->
@@ -115,9 +119,9 @@
                 <tr class="participant-row">
                     <td class="row-index border">1</td>
                     <td class="border">
-                        <input type="text" name="empno[]"
-                               class="input input-bordered input-sm w-20 text-center empno-input"
-                               maxlength="5" placeholder="รหัส">
+                        <input type="text" name="legalTraineecode[]"
+                            class="input input-bordered input-sm w-20 text-center legalTraineecode-input"
+                            maxlength="5" placeholder="รหัส">
                     </td>
                     <td class="emp-name border text-blue-600 font-bold"></td>
                     <td class="emp-pos border text-blue-600 font-bold"></td>
@@ -138,7 +142,7 @@
         <h3 class="font-bold text-lg mb-2">ส่วนที่ 6 : การพิจารณาค่าฝึกอบรม</h3>
         <label class="block mb-2">
             <input type="radio" name="legalExpenseOption" value="not_compare" class="mr-2">
-            ไม่มีการเปรียบเทียบราคา ค่าฝึกอบรม
+            ไม่มีการเปรียบเทียบราคา
         </label>
         <div id="legalReasonBox" class="ml-6 hidden">
             <label class="block mb-2">
@@ -146,15 +150,18 @@
             </label>
             <label class="block mb-2">
                 <input type="radio" name="legalReason" value="other" class="mr-2"> เหตุผลอื่น:
-                <input type="text" id="legalReasonText" class="input input-bordered ml-2 w-1/2">
+                <input type="text" id="legalReasonText" class="input input-bordered ml-2 w-1/2"
+                    data-alert="กรุณาระบุเหตุผลอื่น">
             </label>
         </div>
         <label class="block mt-4">
             <input type="radio" name="legalExpenseOption" value="compare" class="mr-2">
-            มีการเปรียบเทียบราคา ค่าฝึกอบรม
+            มีการเปรียบเทียบราคา
         </label>
         <div id="legalCompareUpload" class="ml-6 mt-2 hidden">
-            <input type="file" id="legalCompareFiles" name="legalCompareFiles[]" class="file-input file-input-bordered w-full" multiple>
+            <input type="file" id="legalCompareFiles" name="legalCompareFiles[]"
+                class="file-input file-input-bordered w-full" multiple
+                data-alert="กรุณาแนบไฟล์เปรียบเทียบราคา">
         </div>
     </div>
 
@@ -162,7 +169,9 @@
     <div class="mb-6" id="legal_part7">
         <h3 class="font-bold text-lg mb-2">ส่วนที่ 7 : ค่าใช้จ่ายในการฝึกอบรม</h3>
         <div class="flex items-center gap-3 mb-2">
-            <input type="number" id="legalAmount" placeholder="จำนวนเงิน (บาท)" min="0" class="input input-bordered w-1/2">
+            <input type="number" id="legalAmount" placeholder="จำนวนเงิน (บาท)" min="0"
+                class="input input-bordered w-1/2"
+                data-alert="กรุณากรอกจำนวนเงิน">
             <span id="legalVatResult" class="font-bold text-indigo-600 text-lg hidden whitespace-nowrap"></span>
         </div>
         <textarea id="legalAmountNote" class="textarea textarea-bordered w-full" rows="2" placeholder="บันทึกเพิ่มเติม..."></textarea>
@@ -170,14 +179,35 @@
 
     <!-- Part 8 -->
     <div class="mb-6" id="legal_part8">
-        <h3 class="font-bold text-lg mb-2">ส่วนที่ 8 : หมายเหตุ</h3>
-        <p class="text-sm text-gray-600 mb-2">
-            8.1 หน่วยงานที่รับผิดชอบกฎหมาย ต้องคัดกรองคุณสมบัติ เช่น การศึกษา, ประสบการณ์, สุขภาพ ก่อนแจ้งรายชื่อผู้เข้าอบรมไปยัง HRD
-        </p>
-        <p class="text-sm text-gray-600">
-            8.2 ภายหลังเอกสารถูกเห็นชอบจาก RAF Div. และ HRD ต้องดำเนินการใช้รถยนต์บริษัทเพื่อการเดินทาง
-        </p>
+    <h3 class="font-bold text-lg mb-2">ส่วนที่ 8 : หมายเหตุ (Remark)</h3>
+    
+    <!-- ช่องกรอกเพิ่มเติม -->
+    <textarea id="legalRemark" 
+                class="textarea textarea-bordered w-full mb-3" 
+                rows="2" 
+                placeholder="หมายเหตุเพิ่มเติม..."></textarea>
+
+        <!-- กล่องคำเตือน -->
+        <div class="p-3 rounded-lg border border-red-300 bg-red-50 text-red-700 text-xs leading-relaxed space-y-2">
+            <p>
+            <b>8.1)</b> หน่วยงานที่รับผิดชอบกฎหมาย จะต้องคัดกรองคุณสมบัติของผู้เข้ารับการฝึกอบรม 
+            เช่น วุฒิการศึกษา, ประสบการณ์, ภาวะสุขภาพ เป็นต้น ให้เรียบร้อย 
+            ก่อนแจ้งรายชื่อให้กับแผนก HRD  
+            <br>
+            <i>(Any Section who has responsible for the law have to complete screening participant qualification 
+            such as Education, Experience, Health Condition, etc. before inform participant name list to HRD Section.)</i>
+            </p>
+
+            <p>
+            <b>8.2)</b> ภายหลังเอกสารนี้ ได้รับอนุมัติจาก RAF Div. เรียบร้อยแล้ว 
+            แผนก HRD จะเป็นผู้ขออนุญาตใช้รถบริษัทฯ เพื่อการเดินทาง  
+            <br>
+            <i>(After approved by RAF Div., HRD Sect. has responsible for request company car for traveling)</i>
+            </p>
+        </div>
     </div>
+
+
 
     <!-- ปุ่ม -->
     <div class="flex justify-between mt-6">
@@ -191,62 +221,3 @@
         </button>
     </div>
 </div>
-
-<script type="module">
-//import { bindEmpLookup } from "./emp_lookup.js";
-
-document.addEventListener("DOMContentLoaded", () => {
-    function resetRowIndex() {
-        document.querySelectorAll("#legal_participants .participant-row").forEach((row, i) => {
-            row.querySelector(".row-index").textContent = i + 1;
-        });
-    }
-
-    function bindRow(row) {
-        const empInput = row.querySelector(".empno-input");
-        if (empInput) {
-            bindEmpLookup(empInput, {
-                SNAME: row.querySelector(".emp-name"),
-                SPOSITION: row.querySelector(".emp-pos"),
-                SSEC: row.querySelector(".emp-sec"),
-                SDEPT: row.querySelector(".emp-dept"),
-                SDIV: row.querySelector(".emp-div")
-            });
-        }
-    }
-
-    // bind แถวแรก
-    document.querySelectorAll("#legal_participants .participant-row").forEach(row => bindRow(row));
-
-    // เพิ่มแถว
-    document.getElementById("add-participant").addEventListener("click", () => {
-        const tbody = document.querySelector("#legal_participants tbody");
-        const firstRow = tbody.querySelector(".participant-row");
-        const newRow = firstRow.cloneNode(true);
-
-        // reset ค่า
-        newRow.querySelectorAll("input").forEach(el => el.value = "");
-        newRow.querySelectorAll("td.emp-name, td.emp-pos, td.emp-sec, td.emp-dept, td.emp-div")
-              .forEach(el => el.textContent = "");
-
-        tbody.appendChild(newRow);
-        resetRowIndex();
-        bindRow(newRow); // bindEmpLookup แถวใหม่
-    });
-
-    // ลบแถว
-    document.addEventListener("click", (e) => {
-        if (e.target.classList.contains("remove-row")) {
-            const tbody = document.querySelector("#legal_participants tbody");
-            if (tbody.querySelectorAll(".participant-row").length > 1) {
-                e.target.closest("tr").remove();
-                resetRowIndex();
-            } else {
-                alert("ต้องมีผู้เข้าอบรมอย่างน้อย 1 คน");
-            }
-        }
-    });
-
-    resetRowIndex();
-});
-</script>

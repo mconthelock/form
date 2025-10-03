@@ -13,6 +13,16 @@ class Rgv_model extends CI_Model
         $this->scm = $this->load->database('scm', TRUE);
     }
 
+    public function get_orgpos($vorgno, $vposno)
+    {
+        $this->db
+            ->select('*')
+            ->from('ORGPOS')
+            ->where('VORGNO', $vorgno)
+            ->where('VPOSNO', $vposno);
+        return $this->db->get()->result();
+    }
+
     public function invoice_user()
     {
         $this->ad
@@ -174,6 +184,18 @@ class Rgv_model extends CI_Model
         return $this->db->query($sql)->result();
     }
 
+    public function getLnauthorize()
+    {
+        return $this->db
+            ->distinct()
+            ->select('EMPNO')
+            ->from('ISRGV_LN_AUTHORIZE')
+            ->where('STATUS', 1)
+            ->get()
+            ->result();
+    }
+
+
     public function getUserIncharge()
     {
         $this->db
@@ -220,20 +242,69 @@ class Rgv_model extends CI_Model
 
     }
 
-    public function test_data()
+    public function test_data($empno)
     {
-        $sql = "SELECT LEVEL AS MENU_LEVEL,
-        LPAD(' ', LEVEL*2) || MENU_NAME_EN AS MENU_TREE,
-        ilm.MENU_ID,
-        PARENT_MENU_ID,
-        MENU_ORDER,
-        ACTIVE,
-        ila.EMPNO
-        FROM  ISRGV_LN_MST ilm
-        LEFT JOIN ISRGV_LN_AUTHORIZE ila ON ila.MENU_ID = ilm.MENU_ID AND ila.STATUS = 1
-        START WITH PARENT_MENU_ID IS NULL
-        CONNECT BY PRIOR ilm.MENU_ID = PARENT_MENU_ID
-        ORDER SIBLINGS BY MENU_ORDER, MENU_NAME_EN";
+        // $sql = "SELECT LEVEL AS MENU_LEVEL,
+        // LPAD(' ', LEVEL*2) || MENU_NAME_EN AS MENU_TREE,
+        // ilm.MENU_ID,
+        // PARENT_MENU_ID,
+        // MENU_ORDER,
+        // ACTIVE,
+        // ila.EMPNO
+        // FROM  ISRGV_LN_MST ilm
+        // LEFT JOIN ISRGV_LN_AUTHORIZE ila ON ila.MENU_ID = ilm.MENU_ID AND ila.STATUS = 1
+        // START WITH PARENT_MENU_ID IS NULL
+        // CONNECT BY PRIOR ilm.MENU_ID = PARENT_MENU_ID
+        // ORDER SIBLINGS BY MENU_ORDER, MENU_NAME_EN";
+
+        // $sql = "SELECT LEVEL AS MENU_LEVEL,
+        //             LPAD(' ', LEVEL*2) || MENU_NAME_EN AS MENU_TREE,
+        //             ilm.MENU_ID,
+        //             PARENT_MENU_ID,
+        //             MENU_ORDER,
+        //             ACTIVE,
+        //             CASE WHEN ila.EMPNO = '13255' THEN ila.EMPNO END AS EMPNO
+        //         FROM ISRGV_LN_MST ilm
+        //         LEFT JOIN ISRGV_LN_AUTHORIZE ila 
+        //             ON ila.MENU_ID = ilm.MENU_ID 
+        //             AND ila.STATUS = 1
+        //             AND ila.EMPNO = '13255'
+        //         START WITH PARENT_MENU_ID IS NULL
+        //         CONNECT BY PRIOR ilm.MENU_ID = PARENT_MENU_ID
+        //         ORDER SIBLINGS BY MENU_ORDER, MENU_NAME_EN";
+
+        $sql = "WITH all_chain AS (
+                    SELECT DISTINCT
+                        ilm.MENU_ID,
+                        ilm.PARENT_MENU_ID,
+                        ilm.MENU_NAME_EN,
+                        ilm.MENU_ORDER,
+                        ilm.ACTIVE
+                    FROM ISRGV_LN_MST ilm
+                    CONNECT BY PRIOR ilm.PARENT_MENU_ID = ilm.MENU_ID
+                    START WITH ilm.MENU_ID IN (
+                        SELECT MENU_ID
+                        FROM ISRGV_LN_AUTHORIZE
+                        WHERE EMPNO = '$empno'
+                        AND STATUS = 1
+                    )
+                )
+                SELECT
+                    LEVEL AS MENU_LEVEL,
+                    LPAD(' ', (LEVEL-1)*2) || ac.MENU_NAME_EN AS MENU_TREE,
+                    ac.MENU_ID,
+                    ac.PARENT_MENU_ID,
+                    ac.MENU_ORDER,
+                    ac.ACTIVE,
+                    ila.EMPNO
+                FROM all_chain ac
+                LEFT JOIN ISRGV_LN_AUTHORIZE ila
+                    ON ila.MENU_ID = ac.MENU_ID
+                    AND ila.EMPNO = '$empno'
+                    AND ila.STATUS = 1
+                START WITH ac.PARENT_MENU_ID IS NULL
+                CONNECT BY PRIOR ac.MENU_ID = ac.PARENT_MENU_ID
+                ORDER SIBLINGS BY ac.MENU_ORDER, ac.MENU_NAME_EN";
         return $this->db->query($sql)->result();
     }
 

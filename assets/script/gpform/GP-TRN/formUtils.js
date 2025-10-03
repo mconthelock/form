@@ -1,7 +1,6 @@
-"use strict";
 
-// เปิด/ปิดปุ่ม submit
-function toggleSubmit(trainingType, submitBtn) {
+
+export function toggleSubmit(trainingType, submitBtn) {
     if (!trainingType || !submitBtn) return;
     if (trainingType.value === "") {
         submitBtn.disabled = true;
@@ -14,8 +13,7 @@ function toggleSubmit(trainingType, submitBtn) {
     }
 }
 
-// เติม select option
-function populateSelect(selectEl, start, end) {
+export function populateSelect(selectEl, start, end) {
     if (!selectEl) return;
     selectEl.innerHTML = "";
     for (let i = start; i <= end; i++) {
@@ -26,12 +24,18 @@ function populateSelect(selectEl, start, end) {
     }
 }
 
-// Alert Modal
-function showAlert(title, message) {
+export function showAlert(title, message) {
     const modal = document.getElementById("alertModal");
-    if (!modal) return;
+    const titleEl = document.getElementById("alertTitle");
+    const messageEl = document.getElementById("alertMessage");
 
-    document.getElementById("alertTitle").textContent = title;
-    document.getElementById("alertMessage").textContent = message;
-    modal.showModal();
+    if (titleEl) titleEl.textContent = title;
+    if (messageEl) messageEl.textContent = message;
+
+    if (modal && typeof modal.showModal === "function") {
+        modal.showModal();
+    } else {
+        // fallback ถ้า browser ไม่รองรับ <dialog>
+        alert(`${title}\n\n${message}`);
+    }
 }
