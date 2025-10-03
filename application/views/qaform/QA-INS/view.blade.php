@@ -142,7 +142,7 @@
                             </tr>
                         </tbody>
                     </table>
-                    <div class="text-xl font-bold mt-8">Auditee</div>
+                    <div class="text-xl font-bold mt-8" id="topicAuditee"></div>
                     <table id="auditee" class="table"></table>
                     <div id="tableAuditeeLoading"></div>
                 </div>

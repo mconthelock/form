@@ -164,7 +164,7 @@ $(document).on("click", 'button[name="btnAction"]', async function () {
         }
     } catch (error) {
         console.log(error);
-        
+
         console.error("Error: " + error);
         showErrorMessage(error);
     } finally {
@@ -210,12 +210,8 @@ async function setPage() {
         case "01":
             await setInchargeForm(data);
             break;
-        case "02":
-            await setAudit(data);
-            break;
         default:
-            const showOperator = await checkFinishAudit();
-            if (showOperator) await setAudit(data);
+            await setAudit(data);
             break;
     }
 
@@ -253,95 +249,6 @@ async function setPage() {
             })
         );
     }
-}
-
-async function setSkeleton() {
-    formInfo.mode == 2
-        ? formSubmitSkeleton({
-              element: "#actionWebflow",
-              mode: "edit",
-              count: cextdata == "01" ? 4 : 3,
-          })
-        : formSubmitSkeleton({ element: "#actionWebflow", mode: "view" });
-    formDetailSkeleton(".form-detail");
-    // skeleton({ element: ".form-detail", width: "w-lg", height: "h-44" });
-    $(".reqDetail").removeClass("hidden");
-    skeleton({ element: ".item", width: "w-24", height: "h-4" });
-    skeletons({
-        element: ".operator",
-        count: 3,
-        pattern: [
-            { width: "w-40", height: "h-4" },
-            { width: "w-48", height: "h-4" },
-            { width: "w-36", height: "h-4" },
-        ],
-    });
-    skeletons({
-        element: ".attachFile",
-        count: 3,
-        pattern: [
-            { width: "w-40", height: "h-4" },
-            { width: "w-48", height: "h-4" },
-            { width: "w-56", height: "h-4" },
-        ],
-    });
-    skeleton({ element: ".qcIncharge", width: "w-60", height: "h-4" });
-    switch (cextdata) {
-        case "01":
-            $("#qcForm1").removeClass("hidden");
-            skeleton({
-                element: ".trainingDate",
-                width: "w-[24rem]",
-                height: "h-12",
-            });
-            skeleton({
-                element: ".ojtDate",
-                width: "w-[24rem]",
-                height: "h-12",
-            });
-            skeleton({
-                element: ".qcForeman",
-                width: "w-[24rem]",
-                height: "h-12",
-            });
-            dataTableSkeleton({
-                height: "h-[27rem]",
-            });
-            break;
-        case "02":
-            await setSkeletonAudit();
-            break;
-        default:
-            const showOperator = await checkFinishAudit();
-            if (showOperator) await setSkeletonAudit();
-            break;
-    }
-}
-
-async function setSkeletonAudit() {
-    $("#qcForm2").removeClass("hidden");
-    skeleton({
-        element: "#tdateShow",
-        width: "w-24",
-        height: "h-4",
-    });
-    skeleton({ element: "#ojtShow", width: "w-24", height: "h-4" });
-    dataTableSkeleton({
-        idLoading: "tableAuditeeLoading",
-        height: "h-[27rem]",
-        page: false,
-        search: false,
-        button: false,
-    });
-}
-
-async function checkFinishAudit() {
-    const operator = await searchAuditees({ ...form, QOA_TYPECODE: "ESO" });
-    let status = true;
-    operator.forEach((o) => {
-        if (o.QOA_AUDIT != 1) status = false;
-    });
-    return status;
 }
 
 async function setInchargeForm(data) {
@@ -480,14 +387,18 @@ async function setInchargeForm(data) {
 
 async function setAudit(data) {
     $("#tdateShow").text(
-        formatDate(data.QA_TRAINING_DATE, "DD-MMM-YYYY HH:mm")
+        formatDate(data.QA_TRAINING_DATE, "DD-MMM-YYYY HH:mm") || "-"
     );
-    $("#ojtShow").text(formatDate(data.QA_OJT_DATE, "DD-MMM-YYYY HH:mm"));
+    $("#ojtShow").text(
+        formatDate(data.QA_OJT_DATE, "DD-MMM-YYYY HH:mm") || "-"
+    );
     const auditor = await setAuditorToString(form);
-    const auditee = await searchAuditees(form);
-    // const auditee = data.QA_AUD_OPT.filter((i) => i.QOA_TYPECODE == "ESO");
-    $("#auditorShow").text(auditor.slice(0, -2) || ", ");
-    await createTableAuditee(auditee);
+    $("#auditorShow").text(auditor.slice(0, -2) || "-");
+    const showOperator = await checkFinishAudit();
+    if (showOperator || cextdata == "02") {
+        const auditee = await searchAuditees(form);
+        await createTableAuditee(auditee);
+    }
 }
 
 async function createTableAuditee(data) {
@@ -561,6 +472,101 @@ async function createTableAuditee(data) {
     );
     dataTableSkeleton({ show: false });
 }
+
+async function setSkeleton() {
+    formInfo.mode == 2
+        ? formSubmitSkeleton({
+              element: "#actionWebflow",
+              mode: "edit",
+              count: cextdata == "01" ? 4 : 3,
+          })
+        : formSubmitSkeleton({ element: "#actionWebflow", mode: "view" });
+    formDetailSkeleton(".form-detail");
+    $(".reqDetail").removeClass("hidden");
+    skeleton({ element: ".item", width: "w-24", height: "h-4" });
+    skeletons({
+        element: ".operator",
+        count: 3,
+        pattern: [
+            { width: "w-40", height: "h-4" },
+            { width: "w-48", height: "h-4" },
+            { width: "w-36", height: "h-4" },
+        ],
+    });
+    skeletons({
+        element: ".attachFile",
+        count: 3,
+        pattern: [
+            { width: "w-40", height: "h-4" },
+            { width: "w-48", height: "h-4" },
+            { width: "w-56", height: "h-4" },
+        ],
+    });
+    skeleton({ element: ".qcIncharge", width: "w-60", height: "h-4" });
+    switch (cextdata) {
+        case "01":
+            $("#qcForm1").removeClass("hidden");
+            skeleton({
+                element: ".trainingDate",
+                width: "w-[24rem]",
+                height: "h-12",
+            });
+            skeleton({
+                element: ".ojtDate",
+                width: "w-[24rem]",
+                height: "h-12",
+            });
+            skeleton({
+                element: ".qcForeman",
+                width: "w-[24rem]",
+                height: "h-12",
+            });
+            dataTableSkeleton({
+                height: "h-[27rem]",
+            });
+            break;
+        default:
+            await setSkeletonAudit();
+            break;
+    }
+}
+
+async function setSkeletonAudit() {
+    $("#qcForm2").removeClass("hidden");
+    skeleton({
+        element: "#auditorShow",
+        width: "w-64",
+        height: "h-4",
+    });
+    skeleton({
+        element: "#tdateShow",
+        width: "w-24",
+        height: "h-4",
+    });
+    skeleton({ element: "#ojtShow", width: "w-24", height: "h-4" });
+    const showOperator = await checkFinishAudit();
+    if (showOperator || cextdata == "02") {
+        $("#topicAuditee").text("Auditee");
+        dataTableSkeleton({
+            idLoading: "tableAuditeeLoading",
+            height: "h-[27rem]",
+            page: false,
+            search: false,
+            button: false,
+        });
+    }
+}
+
+async function checkFinishAudit() {
+    const operator = await searchAuditees({ ...form, QOA_TYPECODE: "ESO" });
+    let status = true;
+    operator.forEach((o) => {
+        if (o.QOA_AUDIT != 1) status = false;
+    });
+    return status;
+}
+
+
 
 $(document).on("click", ".audit-btn", function () {
     const link = $(this).attr("link");
