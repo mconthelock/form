@@ -12,22 +12,19 @@ import {
 $(document).on("click", "#sidebarToggle", function () {
   // $('#sidebar').toggleClass('collapsed');
   if ($("#sidebar").hasClass("collapsed")) {
+    console.log("Action 1: Menu หุบอยู่ แล้วกางออก");
     expandMenu();
     iconMenu();
     $(this).css("display", "none !important");
-    // $('#sidebar').removeClass('collapsed');
-    // $('#sidebarToggle').attr('data-html', 'Collapse menu');
   } else if ($("#sidebar").hasClass("collapsed-hover")) {
+    console.log("Action 2");
     expandMenu();
     iconMenu();
     $(this).css("display", "flex !important");
-    // $('#sidebar').removeClass('collapsed-hover collapsed');
-    // $('#sidebarToggle').attr('data-html', 'Collapse menu');
   } else {
+    console.log("Action 3: Menu กางอยู่ แล้วหุบไป");
     collapsedMenu();
     iconMenu();
-    // $('#sidebar').addClass('collapsed');
-    // $('#sidebarToggle').attr('data-html', 'Expand menu');
   }
 });
 
@@ -37,6 +34,7 @@ $(document).on("mouseover", "#sidebar #menu, #sidebar #profile", function () {
       `<svg xmlns="http://www.w3.org/2000/svg" class="w-[20px] h-[20px] fill-white" id="Layer_1" data-name="Layer 1" viewBox="0 0 24 24"><path d="M7.535,17.9,1.707,23.707.293,22.293l5.828-5.809Zm6.3,2.765a7.478,7.478,0,0,0,1.942-7.146l-.312-1.276,3.62-3.64.57.571a2.578,2.578,0,0,0,3.293.346,2.5,2.5,0,0,0,.318-3.805L18.344.788A2.581,2.581,0,0,0,15.051.442a2.5,2.5,0,0,0-.319,3.806l.647.646-3.621,3.64L10.49,8.223a7.479,7.479,0,0,0-7.154,1.941l-.353.354,10.5,10.5Z"/></svg>`
     );
     $("#sidebarToggle").attr("data-html", "Keep menu open");
+    $("#sidebarToggle").toggleClass("md:flex!");
     $("#sidebar").removeClass("collapsed").addClass("collapsed-hover");
     $(".list-disc").removeClass("hidden");
   }
@@ -46,26 +44,29 @@ $(document).on("mouseleave", "#sidebar", function () {
   if ($("#sidebar").hasClass("collapsed-hover")) {
     iconMenu();
     collapsedMenu();
-    // $('#sidebarToggle').attr('data-html', 'Expand menu');
-    // $('#sidebar').removeClass('collapsed-hover').addClass('collapsed');
+    $("#sidebarToggle").removeClass("md:flex!");
   }
 });
 
 function iconMenu() {
   if ($("#sidebar").hasClass("collapsed")) {
+    //Menu หุบอยู่
     $("#sidebarToggle").html(
       `<svg xmlns="http://www.w3.org/2000/svg" class="w-[28px] h-[28px] fill-white" id="arrow-circle-down" viewBox="0 0 24 24"><path d="M0,12A12,12,0,1,0,12,0,12.013,12.013,0,0,0,0,12Zm17.414-1.414a2,2,0,0,1,0,2.828l-4.243,4.243-1.414-1.414L15,13H6V11h9L11.757,7.757l1.414-1.414Z"/></svg>`
     );
+    $("#sidebarToggle").removeClass("md:flex!");
   } else {
     $("#sidebarToggle").html(
       `<svg xmlns="http://www.w3.org/2000/svg" class="w-[28px] h-[28px] fill-white" id="arrow-circle-down" viewBox="0 0 24 24"><path d="M24,12A12,12,0,1,0,12,24,12.013,12.013,0,0,0,24,12ZM9.465,17.707,5.879,14.121h0a3,3,0,0,1,0-4.243L9.465,6.293l.025-.024a1,1,0,1,1,1.389,1.438L7.586,11,18,10.993a1,1,0,0,1,0,2L7.587,13l3.292,3.293a1,1,0,1,1-1.414,1.414Z"/></svg>`
     );
+    $("#sidebarToggle").addClass("md:flex!");
   }
 }
 
 function expandMenu() {
   $("#sidebar").removeClass("collapsed-hover collapsed");
   $("#sidebarToggle").attr("data-html", "Collapse menu");
+  $(".list-disc").removeClass("hidden");
   localStorage.setItem("pin", true);
 }
 
@@ -80,7 +81,6 @@ export function initSidebar(options = {}) {
   const sidebarPin = localStorage.getItem("pin");
   const pin = sidebarPin == "true" ? "" : "collapsed";
   const opt = {
-    // จะไปตั้งใน env ก็ได้ถ้า path ตรง ถ้าไม่ก็ส่ง path ที่ถูกต้องมาเลยเช่น `${host}/assets/images/icon.png`,
     icon: `${host}/assets/images/${process.env.APP_ICON}`,
     iconLogo: `${host}/assets/images/${process.env.APP_ICON}`,
     showIcon: true,
@@ -91,6 +91,7 @@ export function initSidebar(options = {}) {
     toggleId: "my-drawer-2",
     ...options,
   };
+
   const sidebar = `<label for="${
     opt.toggleId
   }" aria-label="close sidebar" class="drawer-overlay"></label>
@@ -98,7 +99,7 @@ export function initSidebar(options = {}) {
     opt.sidebarClass
   } ${pin}">
     <div class="flex w-full items-center sidebar-head p-2 gap-3">
-        <div tabindex="0" role="button" class="sidebar-logo btn btn-ghost btn-circle bg-gray-50 w-12 h-12 ${
+        <div tabindex="0" role="button" class="sidebar-logo btn btn-ghost btn-circle hover:bg-transparent! hover:border-none! w-12! h-12! ${
           opt.showIcon ? "" : "hidden"
         }"><img src="${opt.icon}">
         </div>
@@ -113,7 +114,7 @@ export function initSidebar(options = {}) {
             <img src="${opt.iconLogo}" class="sidebar-logo-mini">
         </a>
         <button id="sidebarToggle" class="ml-auto btn btn-circle btn-ghost tooltip tooltip-bottom  hover:bg-transparent hidden md:flex!" data-html="Collapse menu"></button>
-         <label for="my-drawer-2" aria-label="close sidebar" class="ml-auto btn btn-circle btn-ghost tooltip tooltip-bottom  hover:bg-transparent flex md:hidden!" data-html="Collapse menu"><svg xmlns="http://www.w3.org/2000/svg" class="w-[28px] h-[28px] fill-white" id="arrow-circle-down" viewBox="0 0 24 24"><path d="M24,12A12,12,0,1,0,12,24,12.013,12.013,0,0,0,24,12ZM9.465,17.707,5.879,14.121h0a3,3,0,0,1,0-4.243L9.465,6.293l.025-.024a1,1,0,1,1,1.389,1.438L7.586,11,18,10.993a1,1,0,0,1,0,2L7.587,13l3.292,3.293a1,1,0,1,1-1.414,1.414Z"/></svg></label>
+         <label for="my-drawer-2" aria-label="close sidebar" class="ml-auto btn btn-circle btn-ghost w-12! h-12! tooltip tooltip-bottom  hover:bg-transparent flex md:hidden!" data-html="Collapse menu"><svg xmlns="http://www.w3.org/2000/svg" class="w-[28px] h-[28px] fill-white" id="arrow-circle-down" viewBox="0 0 24 24"><path d="M24,12A12,12,0,1,0,12,24,12.013,12.013,0,0,0,24,12ZM9.465,17.707,5.879,14.121h0a3,3,0,0,1,0-4.243L9.465,6.293l.025-.024a1,1,0,1,1,1.389,1.438L7.586,11,18,10.993a1,1,0,0,1,0,2L7.587,13l3.292,3.293a1,1,0,1,1-1.414,1.414Z"/></svg></label>
     </div>
     <div id="menu" class="pt-4 flex flex-col gap-3"></div>
     <div id="profile" class="mt-auto"></div>
