@@ -37,6 +37,7 @@ import { getFormMasterByVaname } from '../../api/webform/formmst'
 import { showLoader } from "../../public/v1.0.3/preloader";
 import { redirectWebflow } from "../../public/v1.0.3/_form";
 import { createFormQains } from "./data";
+import { searchUser } from "../../api/amec/users";
 // import { getDepartment, getDivision, getSection } from "../../webservice";
 // import "../../../dist/css/v1.0.1.min.css";
 // import "../../../dist/css/dataTable.min.css";
@@ -293,20 +294,24 @@ async function setCreate() {
         IT_STATUS: 1,
     });
 
-    users = await getEscsUsers({
-        GRP_ID: 1,
-        USR_STATUS: 1,
-        fields: [
-            "SEMPNO",
-            "SNAME",
-            "SSEC",
-            "SDEPT",
-            "SDIV",
-            "SSECCODE",
-            "SDEPCODE",
-            "SDIVCODE",
-        ],
-    });
+    users = await searchUser({
+        CSTATUS: '1',
+        SPOSCODE: '<80'
+    })
+    // users = await getEscsUsers({
+    //     GRP_ID: 1,
+    //     USR_STATUS: 1,
+    //     fields: [
+    //         "SEMPNO",
+    //         "SNAME",
+    //         "SSEC",
+    //         "SDEPT",
+    //         "SDIV",
+    //         "SSECCODE",
+    //         "SDEPCODE",
+    //         "SDIVCODE",
+    //     ],
+    // });
 
     qcsection = await getEscsUserSection({
         SEC_STATUS: 1,
