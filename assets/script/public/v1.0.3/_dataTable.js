@@ -394,7 +394,7 @@ export function getSelectedData(table) {
  * @param {object} table 
  * @note หากต้องการใช้ให้ add class sticky-column ให้กับคอลัมน์ที่ต้องการให้เป็น sticky
  */
-function setStickyColumns(table) {
+export function setStickyColumns(table) {
     // console.log(table,$(table));
     // let left = 0;
     // let index = 0;
