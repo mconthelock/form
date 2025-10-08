@@ -418,30 +418,30 @@ export function getSelectedData(table) {
  * @param {object} table
  * @note หากต้องการใช้ให้ add class sticky-column ให้กับคอลัมน์ที่ต้องการให้เป็น sticky
  */
-function setStickyColumns(table) {
-  // console.log(table,$(table));
-  // let left = 0;
-  // let index = 0;
-  // table.find('thead th').each(function(i) {
-  //     if ($(this).hasClass('sticky-column')) {
-  //         // console.log(
-  //         //     i,
-  //         //     $(this).text(),
-  //         //     'is visible?', $(this).is(':visible'),
-  //         //     'outerWidth', $(this).outerWidth(),
-  //         //     'offsetWidth', this.offsetWidth
-  //         //     );
-  //         console.log($(this).outerWidth());
-
-  //         if(index > 0){
-  //             left += $(this).outerWidth();
-  //         }
-  //         // console.log($(this).text(),'left:', left, 'px');
-
-  //         $(this).css('left', left + 'px'); // กำหนดตำแหน่งซ้ายของคอลัมน์
-  //         index++;
-  //     }
-  // });
+export function setStickyColumns(table) {
+    // console.log(table,$(table));
+    // let left = 0;
+    // let index = 0;
+    // table.find('thead th').each(function(i) {
+    //     if ($(this).hasClass('sticky-column')) {
+    //         // console.log(
+    //         //     i,
+    //         //     $(this).text(),
+    //         //     'is visible?', $(this).is(':visible'),
+    //         //     'outerWidth', $(this).outerWidth(),
+    //         //     'offsetWidth', this.offsetWidth
+    //         //     );
+    //         console.log($(this).outerWidth());
+            
+    //         if(index > 0){
+    //             left += $(this).outerWidth();
+    //         }
+    //         // console.log($(this).text(),'left:', left, 'px');
+            
+    //         $(this).css('left', left + 'px'); // กำหนดตำแหน่งซ้ายของคอลัมน์
+    //         index++;
+    //     }
+    // });
 
   // left = 0;
   // index = 0;

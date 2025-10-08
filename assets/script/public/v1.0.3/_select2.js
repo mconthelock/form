@@ -116,6 +116,7 @@ export const formatAvatar = (val) => {
  * @example
  * const selectHTML = setSelect2({...s2disableSearch, element: '.select', data: [{value: '1', text: 'Option 1'}, {value: '2', text: 'Option 2'}]});
  */
+// selectionCssClass: 'w-full' เพิ่ม class ให้กับ select2
 export async function setSelect2(options = {}) {
     const opt = {
         element: '',        // string e.g. '.s2' or '#select2'

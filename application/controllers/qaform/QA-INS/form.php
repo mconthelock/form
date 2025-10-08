@@ -118,5 +118,10 @@ class form extends MY_Controller{
         }
     }
 
+    public function authorizeReportList($userId){
+        $data['userId'] = $userId;
+        $this->views('qaform/QA-INS/authorizeReportList', $data);
+    }
+
 
 }
