@@ -16,7 +16,7 @@
 :root {
     --bgcolor-dataTable-thead: #fff;
     --bgcolor-dataTable-tbody: #fff;
-    --color-dataTable-thead: var(--color-base-200);
+    --color-dataTable-thead: var(--color-primary);
     --height-dataTable-input: 2.5rem;
     --bgcolor-dataTable-input: #fff;
     --font-size-dataTable-input: .875rem;
