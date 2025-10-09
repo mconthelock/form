@@ -32,6 +32,8 @@
  * @version 1.0.3
  * @note 2025-07-18
  *  แก้ bug select column เมื่อสร้างตารางเดิมอีกรอบใช้ไม่ได้
+ * @note 2025-10-09
+ *  แก้ไข setStickyColumns ให้หาคอลัมน์ sticky ได้ถูกต้อง
  */
 
 // import { createColumnFilters } from "./_filter";
@@ -395,61 +397,33 @@ export function getSelectedData(table) {
  * @note หากต้องการใช้ให้ add class sticky-column ให้กับคอลัมน์ที่ต้องการให้เป็น sticky
  */
 export function setStickyColumns(table) {
-    // console.log(table,$(table));
-    // let left = 0;
-    // let index = 0;
-    // table.find('thead th').each(function(i) {
-    //     if ($(this).hasClass('sticky-column')) {
-    //         // console.log(
-    //         //     i,
-    //         //     $(this).text(),
-    //         //     'is visible?', $(this).is(':visible'),
-    //         //     'outerWidth', $(this).outerWidth(),
-    //         //     'offsetWidth', this.offsetWidth
-    //         //     );
-    //         console.log($(this).outerWidth());
-            
-    //         if(index > 0){
-    //             left += $(this).outerWidth();
-    //         }
-    //         // console.log($(this).text(),'left:', left, 'px');
-            
-    //         $(this).css('left', left + 'px'); // กำหนดตำแหน่งซ้ายของคอลัมน์
-    //         index++;
-    //     }
-    // });
-
-    // left = 0;
-    // index = 0;
-    // table.find('tbody tr td').each(function(i) {
-    //     if ($(this).hasClass('sticky-column')) {
-    //         if(index > 0){
-    //             left += $(this).outerWidth();
-    //         }
-    //         index++;
-    //     }
-    // });
-    
     const stickyIndexes = [];
     let left = 0;
-    // หา index ของคอลัมน์ sticky
-    table.find('thead th').each(function(i) {
-        if ($(this).hasClass('sticky-column')) {
-            stickyIndexes.push(i);
-        }
+
+    // แก้ไขวันที่ 2025-10-09
+    table.find('tbody tr').each(function(i) {
+        $(this).find('td.sticky-column').each(function(j) {
+            if(!stickyIndexes.includes(j)) stickyIndexes.push(j);
+        });
+        return false; // หยุดหลังจากแถวแรก
     });
+    
     // วนแต่ละ sticky column
     stickyIndexes.forEach(function(colIdx, order) {
         // บวกความกว้างคอลัมน์ก่อนหน้า
         if (order > 0) {
             // left = ผลรวมความกว้างคอลัมน์ sticky ก่อนหน้า
-            left += table.find('thead th').eq(stickyIndexes[order - 1]).outerWidth();
+            left += table.find('thead th.sticky-column').eq(stickyIndexes[order - 1]).outerWidth();
         }
         
         // set left ให้ทั้ง head, body ของคอลัมน์นี้
-        table.find('thead th').eq(colIdx).css('left', left + 'px');
+        table.find('thead th.sticky-column').eq(colIdx).css('left', left + 'px');
         table.find('tbody tr').each(function() {
-            $(this).find('td').eq(colIdx).css('left', left + 'px');
+            $(this).find('td.sticky-column').each(function(j) {
+                if(j == colIdx) {
+                    $(this).css('left', left + 'px');
+                }
+            });
         });
     });
 }

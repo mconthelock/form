@@ -123,6 +123,11 @@ export function skeleton(option = {}) {
     return;
 }
 
+/**
+ * 
+ * @param {object} option 
+ * @returns 
+ */
 export function skeletons(option = {}) {
     const opt = {
         classLoading: "",
