@@ -4,116 +4,211 @@ import { getUserAuthorizeView } from "../../api/escs/user_authorize";
 import { setStickyColumns } from "../../public/v1.0.3/_dataTable";
 import { setSelect2 } from "../../public/v1.0.3/_select2";
 import { select } from "../../public/v1.0.3/component/form";
-import { skeleton } from "../../public/v1.0.3/component/skeleton";
+import { skeleton, skeletons } from "../../public/v1.0.3/component/skeleton";
+import { showErrorMessage } from "../../public/v1.0.3/jFuntion";
 
 var userID = "",
     user = [],
-    item = [];
+    item = [],
+    authData = [];
 $(async function () {
-    userID = $(".userid").attr("userid");
-    skeleton({
-        idLoading: "selectSection",
-    });
-    // user = await getEscsUsers({
-    //     USR_STATUS: 1,
-    // });
-    item = await getEscsItems({
-        IS_STATUS: 1,
-    });
-    user = await getUserAuthorizeView({
-        USR_STATUS: 1,
-    });
+    try {
+        userID = $(".userid").attr("userid");
+        skeleton({
+            idLoading: "selectSection",
+        });
+        skeletonTable();
+        user = await getEscsUsers({
+            USR_STATUS: 1,
+        });
+        item = await getEscsItems({
+            IS_STATUS: 1,
+        });
 
-    // กรองและลบตัวซ้ำของ section
-    const uniqueSections = user
-        .map((u) => ({
-            value: u.SSECCODE,
-            text: u.SSEC,
-        }))
-        .filter(
-            (section, index, arr) =>
-                arr.findIndex((s) => s.value === section.value) === index &&
-                section.value != "00"
-        )
-        .sort((a, b) => a.text.localeCompare(b.text)); // เรียงลำดับตามชื่อ section
+        // กรองและลบตัวซ้ำของ section
+        const uniqueSections = user
+            .map((u) => ({
+                value: u.SSECCODE,
+                text: u.SSEC,
+            }))
+            .filter(
+                (section, index, arr) =>
+                    arr.findIndex((s) => s.value === section.value) === index &&
+                    section.value != "00"
+            )
+            .sort((a, b) => a.text.localeCompare(b.text)); // เรียงลำดับตามชื่อ section
 
-    $("#selectSection").replaceWith(
-        select({
-            id: "selectSection",
-            name: "selectSection",
-            data: [{ value: "0", text: "All" }, ...uniqueSections],
-            placeholder: "Select section",
-            class: "w-40",
-        })
-    );
-    await setSelect2({
-        element: "#selectSection",
-        selectionCssClass: "w-40",
-    });
-    $("#selectSection").val("0").trigger("change");
+        $("#selectSection").replaceWith(
+            select({
+                id: "selectSection",
+                name: "selectSection",
+                data: [{ value: "0", text: "All" }, ...uniqueSections],
+                placeholder: "Select section",
+                class: "w-40",
+            })
+        );
+        await setSelect2({
+            element: "#selectSection",
+            selectionCssClass: "w-40",
+        });
+        $("#selectSection").val("0").trigger("change");
 
-    await createReportTable();
-    setStickyColumns($("#tableReport"));
-
+        await setTable("0");
+    } catch (err) {
+        console.log(err);
+        showErrorMessage(err.message || err);
+    }
 });
 
-async function createReportTable(section = "0") {
+function skeletonTable() {
+    skeletons({
+        idLoading: "reportList",
+        pattern: [
+            { width: "w-96", height: "h-11" },
+            { width: "w-full", height: "h-[70vh]" },
+        ],
+        count: 2,
+    });
+}
+
+async function setTable(section) {
+    try {
+        skeletonTable();
+        const { data, allItem, secName } = await getDataAuthorize(section);
+        authData = data;
+        await createReportTable(data, allItem, secName);
+        setStickyColumns($("#tableReport"));
+    } catch (err) {
+        console.log(err);
+        showErrorMessage(err.message || err);
+    }
+}
+
+async function getDataAuthorize(section = "0") {
+    const condition =
+        section == "0"
+            ? { USR_STATUS: 1 }
+            : { USR_STATUS: 1, SSECCODE: section };
+    const auth = await getUserAuthorizeView(condition);
     const allItem = item.map((i) => i.IT_NO);
     const secName =
         section == "0"
             ? "All Sections"
             : user.find((u) => u.SSECCODE == section)?.SSEC || "";
 
-    const data = user.filter((d, index) => {
-        if (section == "0") return d;
-        if (d.SSECCODE == section) {
-            return d;
-        }
-    });
-    let html = `<div class="text-2xl font-bold mb-3 text-primary">New: Quality built in line (Section)</div>
-    <div class="max-h-[70vh] overflow-auto border">
-        <table class="table table-zebra dataTable" id="tableReport">
-            <thead>
-                <tr class="border border-black">
-                    <th colspan="10" class="text-xl font-bold sticky left-0 no-border">List quality built in line : ${secName}</th>
-                </tr>
-                <tr class="bg-white">
+    const data = user
+        .filter((d, index) => {
+            if (section == "0") return d;
+            if (d.SSECCODE == section) {
+                return d;
+            }
+        })
+        .map((u) => {
+            u.auth = auth.filter((a) => a.USR_NO == u.USR_NO);
+            return u;
+        });
+    return { data, allItem, secName };
+}
+
+async function createReportTable(data, allItem, secName) {
+    let html = `<div class="text-2xl font-bold mb-3 text-primary">New: Quality built in line (Section) : ${secName}</div>
+    <div class="max-h-[70vh] overflow-auto border border-gray-400 rounded-sm">
+        <table class="table table-zebra dataTable border-spacing-0 border-separate text-xs" id="tableReport">
+            <thead class="sticky top-0 z-20">
+                <tr class="bg-[#bdd7ee]">
                     <th rowspan="2" class="text-center sticky-column">No</th>
                     <th rowspan="2" class="text-center sticky-column">Empno</th>
                     <th rowspan="2" class="text-center sticky-column">Name</th>
-                    <th rowspan="2" class="text-center sticky-column">Position</th>
-                    <th colspan="${item.length}" class="text-center">Item</th>
+                    <th rowspan="2" class="text-center sticky-column border-r-1 border-gray-400">Position</th>
+                    <th colspan="${
+                        allItem.length
+                    }" class="text-center">Item</th>
                 </tr>
-                <tr>
-                    ${item
+                <tr class="bg-[#bdd7ee]">
+                    ${allItem
                         .map(
                             (i) =>
-                                `<th class="text-center text-nowrap">${i.IT_NO}</th>`
+                                `<th class="text-center text-nowrap border-r-1 border-gray-400">${i}</th>`
                         )
                         .join("")}
                 </tr>
             </thead>
             <tbody>
-                ${data.map((d, index) => {
-                    let checkedItems = "";
-                    allItem.forEach((it) => {
-                        if(d.IT_NO && d.IT_NO.includes(it)){
-                            checkedItems += `<td class="text-center">✓</td>`;
-                        }else{
-                            checkedItems += `<td class="text-center"></td>`;
-                        }
-                    });
-                    let html = `<tr>
-                        <td class="text-center sticky-column">${index + 1}</td>
-                        <td class="text-center sticky-column">${d.USR_NO || ""}</td>
-                        <td class="text-left sticky-column">${d.USR_NAME || ""}</td>
-                        <td class="text-left sticky-column">${d.SPOSITION || ""}</td>
+                ${data
+                    .map((d, index) => {
+                        let checkedItems = "";
+                        allItem.forEach((it) => {
+                            if (d.auth.find((a) => a.IT_NO == it)) {
+                                checkedItems += `<td class="text-center border-r-1 border-gray-400 showScore" item="${it}"><i class="icofont-check-circled text-success text-xl"></i></td>`;
+                            } else {
+                                checkedItems += `<td class="text-center border-r-1 border-gray-400"></td>`;
+                            }
+                        });
+                        let html = `<tr>
+                        <td class="text-center text-nowrap sticky-column">${
+                            index + 1
+                        }</td>
+                        <td class="text-center text-nowrap sticky-column">${
+                            d.USR_NO || ""
+                        }</td>
+                        <td class="text-left text-nowrap sticky-column">${
+                            d.USR_NAME || ""
+                        }</td>
+                        <td class="text-left text-nowrap sticky-column border-r-1 border-gray-400">${
+                            d.SPOSITION || ""
+                        }</td>
                         ${checkedItems}
-                    </tr>`
-                    return html;
-                })}
+                    </tr>`;
+                        return html;
+                    })
+                    .join("")}
             </tbody>
         </table>
     </div>`;
     $("#reportList").html(html);
 }
+
+$(document).on("change", "#selectSection", async function () {
+    const section = $(this).val();
+    await setTable(section);
+});
+
+$(document).on("click", ".showScore", function () {
+    const rowIndex = $(this).closest("tr").index();
+    const userData = authData[rowIndex];
+    const itemNo = $(this).attr("item");
+
+    console.log(itemNo);
+    console.log(userData);
+
+    const scoreList = userData?.auth
+        .filter((u) => u.IT_NO == itemNo)
+        .map((a) => {
+            console.log(a);
+            
+            return `<tr>
+                <td class="text-left">${a.STATION_NO == 0 ? 'MASTER' : a?.STATION.ITS_STATION_NAME || '-'}</td>
+                <td class="text-center"><i class="icofont-check-circled text-success text-xl"></i></td>
+                <td class="text-center">${a.SCORE || '-'}</td>
+                <td class="text-center">${a.GRADE || '-'}</td>
+            </tr>`;
+        })
+        .join("");
+    const html = `<table class="table table-zebra w-full" id="tableScoreboard">
+        <thead>
+            <tr class="bg-[#bdd7ee]">
+                <th class="text-center">Station</th>
+                <th class="text-center">Result</th>
+                <th class="text-center">Score</th>
+                <th class="text-center">Grade</th>
+            </tr>
+        </thead>
+        <tbody>
+            ${scoreList}
+        </tbody>
+    </table>`;
+    $("#itemNo").text(itemNo);
+    $("#fullName").text(`${userData?.SEMPPRE || ''} ${userData?.SNAME || ''}`);
+    $("#tableScoreboard").html(html);
+    $("#scoreBoard").prop("checked", true);
+});
