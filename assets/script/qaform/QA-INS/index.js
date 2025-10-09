@@ -21,26 +21,22 @@ import {
     showErrorMessage,
     showMessage,
 } from "../../public/v1.0.3/jFuntion";
-// import {
-//     getEscsItems,
-//     getEscsUsers,
-//     getEscsUserSection,
-//     getDepartment,
-//     getDivision,
-//     getSection,
-//     getFormMasterByVaname,
-// } from "../../api";
-import { getEscsItems } from '../../api/escs/item'
-import { getEscsUsers } from '../../api/escs/user'
-import { getEscsUserSection } from '../../api/escs/user_section'
-import { getFormMasterByVaname } from '../../api/webform/formmst'
+import { getEscsItems } from "../../api/escs/item";
+import { getEscsUsers } from "../../api/escs/user";
+import { getEscsUserSection } from "../../api/escs/user_section";
+import { getFormMasterByVaname } from "../../api/webform/formmst";
 import { showLoader } from "../../public/v1.0.3/preloader";
 import { redirectWebflow } from "../../public/v1.0.3/_form";
-import { createFormQains } from "./data";
+import {
+    createFormQains,
+    getAuditee,
+    getformData,
+    getQaFiles,
+    searchAuditees,
+} from "./data";
 import { searchUser } from "../../api/amec/users";
-// import { getDepartment, getDivision, getSection } from "../../webservice";
-// import "../../../dist/css/v1.0.1.min.css";
-// import "../../../dist/css/dataTable.min.css";
+import { showflow } from "../../api/webform/flow";
+import { downloadOrOpenFile, getFile } from "../../api/file";
 
 var formInfo,
     userIncharge,
@@ -50,17 +46,23 @@ var formInfo,
     division,
     department,
     section,
-    tableOperator;
+    tableOperator,
+    form;
 
 $(async function () {
     try {
         $("body").addClass("bg-blue-100");
-        // $('.attach').html(dragDropInit({width: 'w-1/2'}));
-        // $('.attach').html(dragDropInit({format: 'excel', class:'req'}));
         $(".attach").html(dragDropInit());
         $(".drop-reset").replaceWith(dragDropReset({ class: "rounded-full" }));
         formInfo = await getAllAttr(document.querySelector(".form-info"));
-        // await directlogin(formInfo.empno, 1);
+        form = {
+            NFRMNO: formInfo.nfrmno,
+            VORGNO: formInfo.vorgno,
+            CYEAR: formInfo.cyear,
+            CYEAR2: $(".form-no").attr("CYEAR2"),
+            NRUNNO: $(".form-no").attr("NRUNNO"),
+        };
+        await setCreate();
 
         if (formInfo.mode == 1) {
             $("#actionWebflow").html(
@@ -69,15 +71,17 @@ $(async function () {
                 })
             );
         } else if (formInfo.mode == 2) {
+            const flow = await showflow(form);
             $("#actionWebflow").html(
                 webflowSubmit({
                     approve: true,
                     reject: true,
+                    flow: true,
+                    flowhtml: flow.html,
                 })
             );
+            await setFormReturn();
         }
-
-        await setCreate();
     } catch (err) {
         console.error(err);
         showErrorMessage(err);
@@ -85,9 +89,6 @@ $(async function () {
 });
 
 $(document).on("change", "#requester", async function (e) {
-    // const empno = $(this).val().trim();
-    // console.log(`empno: ${empno}`, empno.length);
-    // if(empno.length < 5) return;
     await checkEmployeeAndFocus($(this));
 });
 
@@ -194,7 +195,6 @@ $(document).on("click", "#searchOperator", async function (e) {
 });
 
 $(document).on("change", 'input[name="files"]', async function (e) {
-    // handleFiles($(this)[0].files, elementDragDrop($(this)), $(this).attr('data-format'));
     handleFiles();
 });
 
@@ -221,8 +221,6 @@ $(document).on("click", "#btnRequest", async function () {
 
         console.log(selected);
 
-        // return;
-
         if (selected.length === 0) {
             showMessage("Please select at least one row", "warning");
             return;
@@ -241,16 +239,8 @@ $(document).on("click", "#btnRequest", async function () {
         formData.set("QA_INCHARGE_EMPNO", $("#incharge").val());
         formData.set("REMARK", $("#remark").val());
         selected.forEach((v) => formData.append("OPERATOR", v));
-        // formData.set("OPERATOR", selected);
-
         logFormData(formData);
 
-        // const res = await getData({
-        //     url: `${process.env.APP_API}/qaform/qa-ins/request`,
-        //     data: formData,
-        //     processData: false,
-        //     contentType: false,
-        // });
         const res = await createFormQains(formData);
 
         if (res.status == true) {
@@ -266,6 +256,63 @@ $(document).on("click", "#btnRequest", async function () {
         showLoader({ show: false });
     }
 });
+
+async function setFormReturn() {
+    try {
+        const formData = await getformData(form);
+        const auditee = await searchAuditees(form);
+
+        $("#created_by").val(formData.FORM.VINPUTER);
+        $("#requester").val(formData.FORM.VREQNO);
+        $("#item").val(formData.QA_ITEM).trigger("change");
+        $("#qcsection").val(formData.QA_INCHARGE_SECTION).trigger("change");
+        $("#incharge").val(formData.QA_INCHARGE_EMPNO).trigger("change");
+        $("#incharge").removeAttr("disabled");
+
+        auditee.forEach((a) => {
+            $("#division").val(a.QOA_EMPNO_INFO.SDIVCODE).trigger("change");
+            $("#department").val(a.QOA_EMPNO_INFO.SDEPCODE).trigger("change");
+            $("#section").val(a.QOA_EMPNO_INFO.SSECCODE).trigger("change");
+        });
+        // $("#searchOperator").trigger("click");
+        const div = $("#division").val();
+        const dept = $("#department").val();
+        const sec = $("#section").val();
+        await createTableOperator(
+            users.filter(
+                (u) =>
+                    u.SDIVCODE == div && u.SDEPCODE == dept && u.SSECCODE == sec
+            )
+        );
+        tableOperator.rows().every(function (rowIdx, tableLoop, rowLoop) {
+            const data = this.data();
+            if (auditee.find((a) => a.QOA_EMPNO == data.SEMPNO)) {
+                data.selected = true;
+                this.data(data).draw(false);
+            }
+        });
+
+        const qafiles = await getQaFiles({ ...form, FILE_TYPECODE: "ESF" });
+        if (qafiles.length > 0) {
+            let fileInput = $("#files")[0];
+            const dataTransfer = new DataTransfer();
+            for (const f of qafiles) {
+                const file = await getFile({
+                    baseDir: f.FILE_PATH,
+                    storedName: f.FILE_FNAME,
+                    originalName: f.FILE_ONAME,
+                    mode: "download",
+                });
+                dataTransfer.items.add(file);
+            }
+            fileInput.files = dataTransfer.files;
+            handleFiles();
+        }
+    } catch (err) {
+        console.error(err);
+        showErrorMessage(err);
+    }
+}
 
 async function setCreate() {
     dataTableSkeleton({
@@ -295,9 +342,9 @@ async function setCreate() {
     });
 
     users = await searchUser({
-        CSTATUS: '1',
-        SPOSCODE: '<80'
-    })
+        CSTATUS: "1",
+        SPOSCODE: "<80",
+    });
     // users = await getEscsUsers({
     //     GRP_ID: 1,
     //     USR_STATUS: 1,
