@@ -180,3 +180,18 @@ export async function lastApprove(data) {
     }
     return await res.json();
 }
+
+export async function returnApproval(data){
+    const res = await fetch(
+        `${process.env.APP_API}/qaform/qa-ins/returnApproval`,
+        {
+            method: "POST",
+            body: data,
+        }
+    );
+    if (!res.ok) {
+        await fetchMsgErr(res);
+        throw new Error("Failed to return approval");
+    }
+    return await res.json();
+}

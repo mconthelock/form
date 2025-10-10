@@ -4,6 +4,7 @@ import {
     dragDropInit,
     dragDropReset,
     handleFiles,
+    setFilePathToDragDrop,
 } from "../../public/v1.0.3/_dragdrop";
 import {
     formatAvatar,
@@ -11,7 +12,11 @@ import {
     setSelect2,
 } from "../../public/v1.0.3/_select2";
 import { select, webflowSubmit } from "../../public/v1.0.3/component/form";
-import { dataTableSkeleton } from "../../public/v1.0.3/component/skeleton";
+import {
+    dataTableSkeleton,
+    skeleton,
+    skeletons,
+} from "../../public/v1.0.3/component/skeleton";
 import { checkEmployeeAndFocus } from "../../public/v1.0.3/employee";
 import {
     getAllAttr,
@@ -32,6 +37,7 @@ import {
     getAuditee,
     getformData,
     getQaFiles,
+    returnApproval,
     searchAuditees,
 } from "./data";
 import { searchUser } from "../../api/amec/users";
@@ -54,6 +60,7 @@ $(async function () {
         $("body").addClass("bg-blue-100");
         $(".attach").html(dragDropInit());
         $(".drop-reset").replaceWith(dragDropReset({ class: "rounded-full" }));
+        await setSkeleton();
         formInfo = await getAllAttr(document.querySelector(".form-info"));
         form = {
             NFRMNO: formInfo.nfrmno,
@@ -62,8 +69,8 @@ $(async function () {
             CYEAR2: $(".form-no").attr("CYEAR2"),
             NRUNNO: $(".form-no").attr("NRUNNO"),
         };
-        await setCreate();
 
+        await setCreate();
         if (formInfo.mode == 1) {
             $("#actionWebflow").html(
                 webflowSubmit({
@@ -71,6 +78,7 @@ $(async function () {
                 })
             );
         } else if (formInfo.mode == 2) {
+            showLoader({ show: true });
             const flow = await showflow(form);
             $("#actionWebflow").html(
                 webflowSubmit({
@@ -85,6 +93,8 @@ $(async function () {
     } catch (err) {
         console.error(err);
         showErrorMessage(err);
+    } finally {
+        showLoader({ show: false });
     }
 });
 
@@ -108,7 +118,6 @@ $(document).on("change", "#qcsection", async function () {
 
 $(document).on("change", "#division", async function () {
     const divCode = $(this).val();
-    console.log(divCode);
     if (divCode == "") {
         await createTableOperator();
         $("#department").empty().prop("disabled", true);
@@ -132,7 +141,6 @@ $(document).on("change", "#division", async function () {
 
 $(document).on("change", "#department", async function () {
     const deptCode = $(this).val();
-    console.log(deptCode);
     if (deptCode == "") {
         await createTableOperator();
         $("#section").empty().prop("disabled", true);
@@ -154,7 +162,6 @@ $(document).on("change", "#department", async function () {
 
 $(document).on("change", "#section", async function () {
     const secCode = $(this).val();
-    console.log(secCode);
     if (secCode == "") {
         await createTableOperator();
     }
@@ -166,28 +173,13 @@ $(document).on("click", "#searchOperator", async function (e) {
     const dept = $("#department").val();
     const sec = $("#section").val();
     let user = [];
-
-    console.log(`div: ${div}, dept: ${dept}, sec: ${sec}`);
     if (!sec || !dept || !div) {
         showMessage("Please select filter", "warning");
         return;
     }
-    // if(!sec && !dept && !div) {
-    //     showMessage('Please select at least one filter', 'warning');
-    //     // return;
-    // } else if (!sec && !dept) {
-    //     user = users.filter(u => u.SDIVCODE == div);
-    // } else if (!sec) {
-    //     user = users.filter(u => u.SDIVCODE == div && u.SDEPCODE == dept);
-    // } else {
-    //     user = users.filter(u => u.SDIVCODE == div && u.SDEPCODE == dept && u.SSECCODE == sec);
-    // }
-
     user = users.filter(
         (u) => u.SDIVCODE == div && u.SDEPCODE == dept && u.SSECCODE == sec
     );
-    // user = users.filter(u => u.user.SDIVCODE == div && u.user.SDEPCODE == dept && u.user.SSECCODE == sec);
-
     if (user.length == 0) {
         showMessage("No operator found", "warning");
     }
@@ -201,7 +193,7 @@ $(document).on("change", 'input[name="files"]', async function (e) {
 $(document).on("click", "#btnRequest", async function () {
     try {
         showLoader();
-        const form = $("#qa-form");
+        const qaform = $("#qa-form");
         const alertMsg = [
             { element: $("#requester"), message: "Please input requester" },
             { element: $("#item"), message: "Please select item" },
@@ -211,15 +203,12 @@ $(document).on("click", "#btnRequest", async function () {
             { element: $("#section"), message: "Please select section" },
             // {element: $('input[name="files[]"]'), message: 'Please choose file to upload'},
         ];
-        if (!(await requiredForm(form, alertMsg))) return;
+        if (!(await requiredForm(qaform, alertMsg))) return;
         const data = tableOperator.rows().data().toArray();
-        console.log("data", data);
 
         const selected = data
             .filter((row) => row.selected == true)
             .map((row) => row.SEMPNO);
-
-        console.log(selected);
 
         if (selected.length === 0) {
             showMessage("Please select at least one row", "warning");
@@ -227,7 +216,7 @@ $(document).on("click", "#btnRequest", async function () {
         }
         const formmst = await getFormMasterByVaname("QA-INS");
 
-        const formData = new FormData(form[0]);
+        const formData = new FormData(qaform[0]);
         formData.set("NFRMNO", formmst.NNO);
         formData.set("VORGNO", formmst.VORGNO);
         formData.set("CYEAR", formmst.CYEAR);
@@ -240,7 +229,7 @@ $(document).on("click", "#btnRequest", async function () {
         formData.set("REMARK", $("#remark").val());
         selected.forEach((v) => formData.append("OPERATOR", v));
         logFormData(formData);
-
+        return;
         const res = await createFormQains(formData);
 
         if (res.status == true) {
@@ -257,13 +246,87 @@ $(document).on("click", "#btnRequest", async function () {
     }
 });
 
+$(document).on("click", 'button[name="btnAction"]', async function () {
+    try {
+        showLoader();
+        let res;
+        const action = $(this).val();
+        const qaform = $("#qa-form");
+        const formData = new FormData(qaform[0]);
+        formData.set("NFRMNO", form.NFRMNO);
+        formData.set("VORGNO", form.VORGNO);
+        formData.set("CYEAR", form.CYEAR);
+        formData.set("CYEAR2", form.CYEAR2);
+        formData.set("NRUNNO", form.NRUNNO);
+        formData.set("EMPNO", formInfo.empno);
+        formData.set("ACTION", action);
+        formData.set("REMARK", $("#remark").val());
+        if (action == "approve") {
+            const alertMsg = [
+                { element: $("#requester"), message: "Please input requester" },
+                { element: $("#item"), message: "Please select item" },
+                { element: $("#incharge"), message: "Please select incharge" },
+                { element: $("#division"), message: "Please select division" },
+                {
+                    element: $("#department"),
+                    message: "Please select department",
+                },
+                { element: $("#section"), message: "Please select section" },
+                // {element: $('input[name="files[]"]'), message: 'Please choose file to upload'},
+            ];
+            if (!(await requiredForm(qaform, alertMsg))) return;
+            const data = tableOperator.rows().data().toArray();
+            const selected = data
+                .filter((row) => row.selected == true)
+                .map((row) => row.SEMPNO);
+
+            if (selected.length === 0) {
+                showMessage("Please select at least one row", "warning");
+                return;
+            }
+            selected.forEach((v) => formData.append("OPERATOR", v));
+            formData.set("QA_ITEM", $("#item").val());
+            formData.set("QA_INCHARGE_SECTION", $("#qcsection").val());
+            formData.set("QA_INCHARGE_EMPNO", $("#incharge").val());
+            logFormData(formData);
+
+            res = await returnApproval(formData);
+        } else {
+            res = await doaction(formData);
+        }
+        if (res.status == true) {
+            showMessage(res.message, "success");
+            redirectWebflow();
+        } else {
+            throw new Error(res.message);
+        }
+    } catch (error) {
+        console.error("Error: " + error);
+        showErrorMessage(error);
+    } finally {
+        showLoader({ show: false });
+    }
+});
+
 async function setFormReturn() {
     try {
         const formData = await getformData(form);
         const auditee = await searchAuditees(form);
+        const qafiles = await getQaFiles({ ...form, FILE_TYPECODE: "ESF" });
+        if (qafiles.length > 0) {
+            await setFilePathToDragDrop({
+                filesInfo: qafiles.map((f) => ({
+                    baseDir: f.FILE_PATH,
+                    storedName: f.FILE_FNAME,
+                    originalName: f.FILE_ONAME,
+                })),
+                element: "#files",
+            });
+        }
 
         $("#created_by").val(formData.FORM.VINPUTER);
         $("#requester").val(formData.FORM.VREQNO);
+        $("#requester").prop("readonly", true);
         $("#item").val(formData.QA_ITEM).trigger("change");
         $("#qcsection").val(formData.QA_INCHARGE_SECTION).trigger("change");
         $("#incharge").val(formData.QA_INCHARGE_EMPNO).trigger("change");
@@ -291,52 +354,40 @@ async function setFormReturn() {
                 this.data(data).draw(false);
             }
         });
-
-        const qafiles = await getQaFiles({ ...form, FILE_TYPECODE: "ESF" });
-        if (qafiles.length > 0) {
-            let fileInput = $("#files")[0];
-            const dataTransfer = new DataTransfer();
-            for (const f of qafiles) {
-                const file = await getFile({
-                    baseDir: f.FILE_PATH,
-                    storedName: f.FILE_FNAME,
-                    originalName: f.FILE_ONAME,
-                    mode: "download",
-                });
-                dataTransfer.items.add(file);
-            }
-            fileInput.files = dataTransfer.files;
-            handleFiles();
-        }
     } catch (err) {
         console.error(err);
         showErrorMessage(err);
     }
 }
 
-async function setCreate() {
+async function setSkeleton() {
     dataTableSkeleton({
         height: "h-[27rem]",
     });
-    // items = await getData({
-    //     ...ajaxOptions,
-    //     url: `${host}/qaform/QA-INS/form/getItem`,
-    // });
+    skeleton({
+        element: ".item",
+        class: "w-40 h-10",
+    });
+    skeletons({
+        element: ".incharge",
+        count: 2,
+        pattern: [
+            { width: "w-40", height: "h-10" },
+            { width: "w-xs", height: "h-10" },
+        ],
+    });
+    skeletons({
+        element: ".organize",
+        count: 3,
+        pattern: [
+            { width: "w-40", height: "h-10" },
+            { width: "w-40", height: "h-10" },
+            { width: "w-40", height: "h-10" },
+        ],
+    });
+}
 
-    // users = await getData({
-    //     ...ajaxOptions,
-    //     url: `${host}/qaform/QA-INS/form/getUser`,
-    // });
-    // qcsection = await getData({
-    //     ...ajaxOptions,
-    //     url: `${host}/qaform/QA-INS/form/getSection`,
-    // });
-    // userIncharge = await getData({
-    //     ...ajaxOptions,
-    //     type: 'GET',
-    //     url: `${host}/qaform/QA-INS/form/getUserBySection/`,
-    // });
-
+async function setCreate() {
     items = await getEscsItems({
         IT_STATUS: 1,
     });
@@ -345,20 +396,6 @@ async function setCreate() {
         CSTATUS: "1",
         SPOSCODE: "<80",
     });
-    // users = await getEscsUsers({
-    //     GRP_ID: 1,
-    //     USR_STATUS: 1,
-    //     fields: [
-    //         "SEMPNO",
-    //         "SNAME",
-    //         "SSEC",
-    //         "SDEPT",
-    //         "SDIV",
-    //         "SSECCODE",
-    //         "SDEPCODE",
-    //         "SDIVCODE",
-    //     ],
-    // });
 
     qcsection = await getEscsUserSection({
         SEC_STATUS: 1,
@@ -422,18 +459,6 @@ async function setCreate() {
     await createTableOperator();
     dataTableSkeleton({ show: false });
 
-    // operator
-    // $('.operator').html(select({id: 'operator', class: 'select select-sm', placeholder: 'Select Operator',disabled: true}));
-    // await setOperator();
-    // setSelect2({element: '#operator', templateSelection: formatAvatar, templateResult: formatAvatar});
-    // setAvatarSelect(users.map(user => user.SEMPNO), '.operator');
-
-    // organize
-    // กรองแสดงเฉพาะที่มีในระบบ
-    // division   = await getDivision().then(div => div.filter(div => users.map(u => u.SDIVCODE).includes(div.SDIVCODE)));
-    // department = await getDepartment().then(dept => dept.filter(dept => users.map(u => u.SDEPCODE).includes(dept.SDEPCODE)));
-    // section    = await getSection().then(sec => sec.filter(sec => users.map(u => u.SSECCODE).includes(sec.SSECCODE)));
-    // Remove duplicates from division, department, and section arrays
     division = Array.from(
         new Map(
             users.map((u) => [
@@ -472,13 +497,6 @@ async function setCreate() {
             ])
         ).values()
     );
-    // console.log(`division:`, division);
-    // console.log(`department:`, department);
-    // console.log(`section:`, section);
-
-    // console.log(`div:`, users.filter(u => u.SDIVCODE == '00'));
-    // console.log(`dept:`, users.filter(u => u.SDEPCODE == '00'));
-    // console.log(`sec:`, users.filter(u => u.SSECCODE == '00'));
 
     $(".organize").html(
         select({
@@ -543,51 +561,9 @@ async function setIncharge(data = "") {
         avatar: true,
         avatarData: data.map((u) => u.USR_NO),
     });
-    // await setAvatarSelect(data.map(user => user.USR_NO), '#incharge');
 }
 
-// $(document).on('change', '#operator', async function(){
-//     if($(this).val() == '') return;
-//     const operator = $(this).val();
-//     const info = await displayEmpInfo(operator);
-//     if(operator){
-//         let list = `<div class="flex items-center gap-6">
-//             <div class="avatar"><div class="w-10 rounded-full border"><img src="${await displayEmpImage(info.SEMPNO)}" class=""></div></div>
-//             <span class="operator-selected">${info.SEMPNO}</span>
-//             <span>${info.SNAME}</span>
-//         </div>`
-
-//         if ($('.operator-selected').filter(function() { return $(this).text() == info.SEMPNO; }).length === 0) {
-//             $('.operatorList').append(listInit({element: list}));
-//         }else {
-//             showMessage('This operator has already been selected', 'warning');
-//         }
-
-//     }else{
-//         showMessage('Please select an operator', 'warning');
-//     }
-// });
-
-// async function setOperator(data = ''){
-//     if(data == '') {
-//         await setSelect2({element: '#operator', templateSelection: formatAvatar, templateResult: formatAvatar});
-//         return;
-//     }
-//     await setSelect2({
-//         data: data.map(u => {
-//             return {
-//                 value: u.SEMPNO,
-//                 text: `(${u.SEMPNO})${u.SNAME}`,
-//             }
-//         }),
-//         element: '#operator',
-//         templateSelection: formatAvatar, templateResult: formatAvatar
-//     });
-//     await setAvatarSelect(data.map(user => user.SEMPNO), '.operator');
-// }
-
 async function createTableOperator(data = []) {
-    // destroyTable('#tableOperator');
     const image = await Promise.all(
         data.map(async (user) => {
             return {
@@ -596,7 +572,6 @@ async function createTableOperator(data = []) {
             };
         })
     );
-
     const column = [
         {
             data: null,
@@ -626,7 +601,6 @@ async function createTableOperator(data = []) {
         {
             data: data,
             columns: column,
-            // order: false
         },
         {
             id: "#tableOperator",
@@ -635,6 +609,4 @@ async function createTableOperator(data = []) {
             join: true,
         }
     );
-
-    // console.log("data", tableOperator.rows().data().toArray(), tableOperator);
 }

@@ -108,12 +108,9 @@
                                 <div class="grid grid-flow-rows grid-cols-[fit-content(100%)_1fr] gap-5">
                                     <div class="flex items-center gap-3">Item<span class="ml-auto">:</span></div>
                                     <div class="item">
-                                        <div class="skeleton w-40 h-10"></div>
                                     </div>
                                     <div class="flex items-center gap-3 text-nowrap self-start">QC Section in-charge<span class="ml-auto">:</span></div>
                                     <div class="incharge flex flex-col gap-3">
-                                        <div class="skeleton w-40 h-10"></div>
-                                        <div class="skeleton w-xs h-10"></div>
                                     </div>
                                 </div>
                             </div>
@@ -133,19 +130,12 @@
                             <div class="flex flex-col mb-4">
                                 <div class="flex gap-5">
                                     <div class="organize flex gap-3">
-                                        <div class="skeleton w-40  h-10"></div>
-                                        <div class="skeleton w-40  h-10"></div>
-                                        <div class="skeleton w-40  h-10"></div>
                                     </div>
                                     <div class="btn btn-primary rounded-full tooltip" data-tip="Search" id="searchOperator"><i class="icofont-search-2 text-2xl"></i></div>
-                                    {{-- <div class="operator w-full">
-                                        <div class="skeleton w-xs h-10"></div>
-                                    </div> --}}
                                 </div>
                             </div>
                             <div id="tableLoading"></div>
                             <table class="table !table-zebra" id="tableOperator"></table>
-                            {{-- <div class="operatorList flex flex-col w-full list bg-base-100 rounded-box shadow-md"></div>    --}}
                         </div>
                     </div>
                     <hr>

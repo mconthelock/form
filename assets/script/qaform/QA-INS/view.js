@@ -131,9 +131,7 @@ $(document).on("click", 'button[name="btnAction"]', async function () {
                     res = await qcConfirm(formData);
                     break;
                 case "02":
-                    logtest("tableAuditee", tableAuditee);
                     const auditeeData = tableAuditee.rows().data().toArray();
-                    logtest("auditeeData", auditeeData);
                     const notAudited = auditeeData.filter(
                         (row) => row.QOA_AUDIT != 1
                     );
@@ -163,8 +161,6 @@ $(document).on("click", 'button[name="btnAction"]', async function () {
             throw new Error(res.message);
         }
     } catch (error) {
-        console.log(error);
-
         console.error("Error: " + error);
         showErrorMessage(error);
     } finally {
@@ -185,7 +181,6 @@ async function setPage() {
     $(".item").replaceWith(data.QA_ITEM);
     let operatorHtml = '<div class="flex flex-col">';
     operator.forEach((o) => {
-        logtest(o);
         operatorHtml += `<span>${o.QOA_EMPNO_INFO.SNAME} (${o.QOA_EMPNO})</span>`;
     });
     operatorHtml += "</div>";
