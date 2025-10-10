@@ -206,7 +206,7 @@ export const webflowSubmit = (option = {}) => {
             break;
     }
     return `<div class="card-actions flex-col gap-5 justify-start">
-                <div class="actions-Form ${opt.actionsForm ? "" : "hidden"}">
+                <div class="actions-Form ${opt.actionsForm ? "" : "hidden"} flex flex-col items-center jusitfy-center w-full">
                     <fieldset class="fieldset ${opt.remark ? "" : "hidden"}">
                         <span class="fieldset-label">Remark</span>
                         <textarea class="textarea h-24 w-56" id="remark" ></textarea>
