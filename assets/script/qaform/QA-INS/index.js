@@ -41,7 +41,7 @@ import {
     searchAuditees,
 } from "./data";
 import { searchUser } from "../../api/amec/users";
-import { showflow } from "../../api/webform/flow";
+import { doaction, showflow } from "../../api/webform/flow";
 import { downloadOrOpenFile, getFile } from "../../api/file";
 
 var formInfo,
@@ -229,7 +229,6 @@ $(document).on("click", "#btnRequest", async function () {
         formData.set("REMARK", $("#remark").val());
         selected.forEach((v) => formData.append("OPERATOR", v));
         logFormData(formData);
-        return;
         const res = await createFormQains(formData);
 
         if (res.status == true) {
