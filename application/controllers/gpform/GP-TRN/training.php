@@ -43,7 +43,6 @@ class Training extends MY_Controller {
             }
         
             $data['data_attach_compare']  = $this->trn->select_all_by_tb($nfrmno, $vorgno, $cyear, $cyear2, $nrunno, 'GP_TRN_ATT', 'ID', ['TYPE_ATT' => 'COMPARE']);
-
             $this->views('gpform/GP-TRN/training_view', $data);
         }
     }
@@ -86,6 +85,10 @@ class Training extends MY_Controller {
                 return;
             }
 
+            //Update Flow Training Officer  01027/14001
+            $this->trn->update_flow($data["NFRMNO"], $data["VORGNO"], $data["CYEAR"], $data["CYEAR2"], $data["NRUNNO"], 'VAPVNO', '01027', 'CEXTDATA', '04');
+            $this->trn->update_flow($data["NFRMNO"], $data["VORGNO"], $data["CYEAR"], $data["CYEAR2"], $data["NRUNNO"], 'VREPNO', '14001', 'CEXTDATA', '04');
+
             $formno = $this->toFormNumber($data["NFRMNO"], $data["VORGNO"], $data["CYEAR"], $data["CYEAR2"], $data["NRUNNO"]);
             $reason = $data["TRN_EXPENSE_REASON"] ?? "";
             $cost   = $data["COST"] ?? 0;
@@ -99,7 +102,6 @@ class Training extends MY_Controller {
                 "CYEAR2" => $data["CYEAR2"] ?? null,
                 "NRUNNO" => $data["NRUNNO"] ?? null,
                 "FID"    => $data["FID"] ?? null,
-
                 "SUBJECT" => $data["SUBJECT"] ?? "",
                 "DATE_FROM" => !empty($data["DATE_FROM"]) ? $data["DATE_FROM"] : null,
                 "DATE_TO"   => !empty($data["DATE_TO"]) ? $data["DATE_TO"] : null,
@@ -175,30 +177,48 @@ class Training extends MY_Controller {
                 }
             }
 
-            //INSERT TRAINEE
-            /* 
-            $trn_id = 1;
-            $arr_trainee = $base;
-            $arr_trainee['ID'] = $trn_id;
-            $arr_trainee['EMPNO'] = $trn_id;
-            $arr_trainee['JD_DESC'] = $trn_id;
-            $result_trainee = $this->trn->insert_data("GP_TRN_TRAINEE", $arr_trainee);
-            */
             // ✅ Insert Trainee
-            $traineeCodes = $this->input->post($map[$prefix]["trainee"]);
-            if (!empty($traineeCodes) && is_array($traineeCodes)) {
-                $id = 1;
+            // อ่านค่ารหัสพนักงานจาก form (จะได้เป็น array หรือ string)
+            $traineeCodes = $this->input->post('TRAINEE_ID');
+
+            // ถ้าเป็น string เดียวให้แปลงเป็น array เพื่อวน loop ได้เหมือนกัน
+            if (!empty($traineeCodes) && !is_array($traineeCodes)) {
+                $traineeCodes = [$traineeCodes];
+            }
+
+            // ถ้ามีข้อมูลจริง
+            if (!empty($traineeCodes)) {
                 foreach ($traineeCodes as $code) {
                     if (trim($code) !== "") {
                         $arr_trainee = $base;
-                        $arr_trainee['ID']    = $id;
-                        $arr_trainee['EMPNO'] = $code;
-                        $arr_trainee['JD_NAME'] = $data["JD_NAME"] ?? "";
-                        $arr_trainee['JD_DESC'] = $data["JD_DESC"] ?? "";
+                        $arr_trainee['EMPNO']    = $code;
+                        $arr_trainee['JD_NAME']  = $data["JD_NAME"] ?? "";
+                        $arr_trainee['JD_DESC']  = $data["JD_DESC"] ?? "";
                         $this->trn->insert_data("GP_TRN_TRAINEE", $arr_trainee);
-                        $id++;
                     }
                 }
+            }
+
+            //Update flow 
+            if($prefix == 'meth'){
+                $where = " AND CSTEPNO = '--'";
+                $get_first_step = $this->trn->get_data_flow($data["NFRMNO"], $data["VORGNO"], $data["CYEAR"], $data["CYEAR2"], $data["NRUNNO"], $where);
+                $this->trn->update_flow($data["NFRMNO"], $data["VORGNO"], $data["CYEAR"], $data["CYEAR2"], $data["NRUNNO"], 'CSTEPNEXTNO', '10', 'CSTEPNEXTNO', '52');
+                $this->trn->update_flow($data["NFRMNO"], $data["VORGNO"], $data["CYEAR"], $data["CYEAR2"], $data["NRUNNO"], 'CSTEPNEXTNO', '52', 'CSTEPNO', '--');
+                $this->trn->update_flow($data["NFRMNO"], $data["VORGNO"], $data["CYEAR"], $data["CYEAR2"], $data["NRUNNO"], 'CSTEPNEXTNO', $get_first_step[0]->CSTEPNEXTNO, 'CSTEPNO', '52');
+
+                $this->trn->update_flow($data["NFRMNO"], $data["VORGNO"], $data["CYEAR"], $data["CYEAR2"], $data["NRUNNO"], 'CSTEPST', '3', 'CSTEPNO', '52');
+                $this->trn->update_flow($data["NFRMNO"], $data["VORGNO"], $data["CYEAR"], $data["CYEAR2"], $data["NRUNNO"], 'CSTEPST', '1', 'CSTEPST', '2');
+                $this->trn->update_flow($data["NFRMNO"], $data["VORGNO"], $data["CYEAR"], $data["CYEAR2"], $data["NRUNNO"], 'CSTEPST', '2', 'CSTEPNO', $get_first_step[0]->CSTEPNEXTNO);
+            }else if($prefix == 'legal'){
+                $this->trn->delete_flow($data["NFRMNO"], $data["VORGNO"], $data["CYEAR"], $data["CYEAR2"], $data["NRUNNO"], 'CSTEPNO', '06');
+                $this->trn->delete_flow($data["NFRMNO"], $data["VORGNO"], $data["CYEAR"], $data["CYEAR2"], $data["NRUNNO"], 'CSTEPNO', '04');
+                $this->trn->delete_flow($data["NFRMNO"], $data["VORGNO"], $data["CYEAR"], $data["CYEAR2"], $data["NRUNNO"], 'CSTEPNO', '02');
+                $this->trn->update_flow($data["NFRMNO"], $data["VORGNO"], $data["CYEAR"], $data["CYEAR2"], $data["NRUNNO"], 'CSTEPNEXTNO', '52', 'CSTEPNO', '--');
+
+                $this->trn->update_flow($data["NFRMNO"], $data["VORGNO"], $data["CYEAR"], $data["CYEAR2"], $data["NRUNNO"], 'CSTEPST', '3', 'CSTEPNO', '52');
+                $this->trn->update_flow($data["NFRMNO"], $data["VORGNO"], $data["CYEAR"], $data["CYEAR2"], $data["NRUNNO"], 'CSTEPST', '1', 'CSTEPST', '2');
+                $this->trn->update_flow($data["NFRMNO"], $data["VORGNO"], $data["CYEAR"], $data["CYEAR2"], $data["NRUNNO"], 'CSTEPST', '2', 'CSTEPNO', '10');
             }
 
             echo json_encode(["status" => "success", "message" => "Insert successful", "received" => $data]);

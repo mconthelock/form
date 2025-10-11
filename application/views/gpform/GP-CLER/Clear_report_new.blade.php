@@ -345,12 +345,12 @@
 
                         <h3 class="text-xl font-bold text-green-700 mb-2">Remark : </h3>
                         <div class="border-green-200 rounded-xl bg-green-50 p-2 mb-6 border-2">
-                            <div class="text-xs pl-2 {{ $formCler->REMAIN_BUDGET > 0 ? 'text-blue-600' : 'text-red-600' }}">
-                                    @if($ENT_FORM->REIMBURSEMENT == '1')
-                                        {{ $formCler->REMAIN_BUDGET > 0 ? "The Actual cost not over Estimate cost : Employee return remain cash to Company." : "The Actual cost over Estimate cost : Company reimbursement to Employee.(" . $ENT_FORM->EMP_REQ . " " . $form[0]->VREQNAME . ")" }}
-                                    @else
-                                        {{ $formCler->REMAIN_BUDGET >= 0 ? "The actual cost did not exceed the estimated cost. As no advance payment was requested, the employee will be reimbursed by the company." : "The Actual cost over Estimate cost : Company reimbursement to Employee.(" . $ENT_FORM->EMP_REQ . " " . $form[0]->VREQNAME . ")" }}
-                                    @endif
+                            <div class="text-xs pl-2 {{ $formCler->REMAIN_BUDGET >= 0 ? 'text-blue-600' : 'text-red-600' }}">
+                                @if($ENT_FORM->REIMBURSEMENT == '1')
+                                    {{ $formCler->REMAIN_BUDGET >= 0 ? "The actual cost did not exceed the estimated cost. As advance payment was requested, and employee no remain cost." : "The Actual cost over Estimate cost : Company reimbursement to Employee.(" . $ENT_FORM->EMP_REQ . " " . $form[0]->VREQNAME . ")" }}
+                                @else
+                                    {{ $formCler->REMAIN_BUDGET >= 0 ? "The actual cost did not exceed the estimated cost. As no advance payment was requested, the employee will be reimbursed by the company." : "The Actual cost over Estimate cost : Company reimbursement to Employee.(" . $ENT_FORM->EMP_REQ . " " . $form[0]->VREQNAME . ")" }}
+                                @endif
                             </div>
                         </div>
 
@@ -666,6 +666,56 @@
                                         {{ ($ENT_FORM->REIMBURSEMENT ?? '0') == '1' ? 'Yes' : 'No' }}
                                     </span>
                                 </div>
+
+                                @if($ENT_FORM->FORM_APPROVE != null)
+                                    <div class="bg-white rounded-2xl shadow-lg border-2 border-orange-500 overflow-hidden mt-8">
+                                        <!-- แถบ Late Approval -->
+                                        <div class="flex items-center gap-3 px-6 py-4 bg-gradient-to-r from-orange-100 to-orange-50">
+                                            <span class="inline-flex items-center px-3 py-1 text-sm font-bold text-orange-700 bg-orange-200 rounded-full shadow-sm">
+                                                <svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                                    <path d="M12 8v4l3 3"></path>
+                                                    <circle cx="12" cy="12" r="10"></circle>
+                                                </svg>
+                                                Late Approval
+                                            </span>
+                                            <span class="text-xs text-orange-500 font-medium">(Approved after event date)</span>
+                                        </div>
+
+                                        <!-- เนื้อหา -->
+                                        <div class="p-6 md:p-8 space-y-5">
+                                            <!-- ผลลัพธ์ -->
+                                            <div class="flex items-center gap-4">
+                                                <span class="text-gray-700 font-semibold text-base">Result</span>
+                                                <span class="flex items-center gap-2 text-xl font-extrabold {{ $ENT_FORM->FORM_APPROVE == '1' ? 'text-green-600' : 'text-red-500' }}">
+                                                    @if ($ENT_FORM->FORM_APPROVE == '1')
+                                                        <svg class="h-7 w-7" fill="currentColor" viewBox="0 0 20 20">
+
+                                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                                                        </svg>
+                                                        Accept
+                                                    @else
+                                                        <svg class="h-7 w-7" fill="currentColor" viewBox="0 0 20 20">
+
+                                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                                                        </svg>
+                                                        Not Accept
+                                                    @endif
+                                                </span>
+                                            </div>
+
+                                            <!-- Remark (ถ้ามี) -->
+                                            @if ($ENT_FORM->REMARK_APPROVE != null)
+                                                <div class="flex items-center gap-3">
+                                                    <span class="text-orange-500 font-bold">Remark</span>
+                                                    <span class="italic text-gray-700 text-base flex-1">{{ $ENT_FORM->REMARK_APPROVE }}</span>
+                                                </div>
+                                            @endif
+
+
+                                        </div>
+                                    </div>
+
+                                @endif
                             </div>
 
                             @if ($ENT_FORM->PAYDATE != null)

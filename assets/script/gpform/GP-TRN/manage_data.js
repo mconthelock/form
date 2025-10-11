@@ -39,8 +39,6 @@ export function buildFormDataGeneric(headResult, fid, prefix) {
     fd.append("PLACE", getVal("Location"));
     fd.append("INSTITUTION", getVal("Institute"));
 
-    // ✅ Trainee (เก็บเป็นเดี่ยว ถ้าอยากทำ array ค่อยปรับ querySelectorAll)
-    fd.append("TRAINEE_ID", getVal("TraineeCode"));
 
     fd.append("COST", getVal("AmountInput", "0"));
     fd.append("COST_NOTE", getVal("AmountNote"));
@@ -76,6 +74,7 @@ export function buildFormDataGeneric(headResult, fid, prefix) {
     // ✅ Special case by form type
     switch (prefix) {
         case "func":
+            fd.append("TRAINEE_ID", getVal("TraineeCode")); // ✅ prefix + id = funcTraineeCode
             fd.append("JD_NAME", getVal("JdName"));
             fd.append("JD_DESC", getVal("JdRelation"));
             const jdFiles = document.getElementById(`${prefix}JdFiles`)?.files;
@@ -86,10 +85,14 @@ export function buildFormDataGeneric(headResult, fid, prefix) {
             }
             break;
         case "legal":
+            document.querySelectorAll("input[name='legalTraineecode[]']").forEach(el => {
+                if (el.value.trim()) fd.append("TRAINEE_ID[]", el.value.trim());
+            });
             fd.append("LAWS", getVal("ConcernLaw"));
             break;
         case "meth":
-            // fd.append("METHOD", getVal("Method"));
+            //fd.append("TRAINEE_ID", getVal("methTraineeCode"));
+            fd.append("TRAINEE_ID", getVal("TraineeCode"));
             break;
         default:
             console.warn(`Unhandled prefix: ${prefix}`);

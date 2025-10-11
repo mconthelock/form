@@ -32,7 +32,7 @@ class report extends MY_Controller{
             $data = array();
             $this->views('marform/MAR-VMS/report', $data);
         }
-        public function get_report_vms()
+    public function get_report_vms()
         {
             $datemode = $_POST["datemode"];
             $reporttype = $_POST["reporttype"];
@@ -43,6 +43,15 @@ class report extends MY_Controller{
             }else if($reporttype == "VO")
             {
                 echo json_encode($this->vms->get_visitor_overview_report($datemode , $startdate , $enddate));   
+            }else if($reporttype == "VF")
+            {
+                echo json_encode($this->vms->get_visitor_Frequency_report($datemode , $startdate , $enddate));   
+            }else if($reporttype == "WE")
+            {
+                echo json_encode($this->vms->get_activity_duration_report($datemode , $startdate , $enddate));   
+            }else if($reporttype == "CE")
+            {
+                echo json_encode($this->vms->get_gpent_report($datemode , $startdate , $enddate)); 
             }
         }
         

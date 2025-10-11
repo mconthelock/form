@@ -95,7 +95,7 @@
 
         </form>
           <!-- พื้นที่แสดงผลลัพธ์ -->
-            <div>
+            <div id="result" class="" >
                 <h2 class="text-lg font-semibold text-gray-800 mb-4"></h2>
                 <table id="reportTable" class="display w-full text-sm"></table>
             </div>

@@ -7,14 +7,14 @@
             <h1 class="text-3xl font-bold text-gray-800">User Group in FIN and CAT Department</h1>
             <div class="flex space-x-2">
                 <!-- <button class="btn btn-sm btn-outline btn-primary">+ เพิ่มเมนูหลัก</button>
-                                                                                    <button class="btn btn-sm btn-outline btn-secondary">จัดการเมนู</button> -->
+                        <button class="btn btn-sm btn-outline btn-secondary">จัดการเมนู</button> -->
             </div>
         </div>
 
         <!-- <div class="mb-4">
-                                                                                <span>Empno</span>
-                                                                                <input type="text" class="input input-bordered w-full max-w-xs" id="empno">
-                                                                            </div> -->
+                    <span>Empno</span>
+                    <input type="text" class="input input-bordered w-full max-w-xs" id="empno">
+                </div> -->
 
         <div class="overflow-x-auto bg-white shadow-md rounded-lg p-4">
             <table id="menuTable" class="table table-sm w-full border rounded-lg">
@@ -32,7 +32,7 @@
                             $checked  = !empty($r->EMPNO) ? '✔' : '';
                           @endphp
                         {{-- เพิ่ม hover effect ด้วย utility class ของ Tailwind โดยตรง --}}
-                        <tr class="hover:bg-blue-100! hover:cursor-pointer {{ $lvl === 1 ? 'bg-red-100!' : '' }}">
+                        <tr class="hover:bg-gray-100! hover:cursor-pointer {{ $lvl === 1 ? 'bg-blue-100!' : '' }}">
                             <td>
                                 <span class="{{ $lvl === 1 ? 'font-bold' : '' }}" style="margin-left: {{ $indentPx }}px">
                                     {{ htmlspecialchars($r->MENU_TREE) }}
@@ -109,8 +109,8 @@
             </div>
         </div>
     </div>
-    
-    
+
+
 
 @endsection
 

@@ -282,6 +282,13 @@ $(function () {
     if (amecCount() < 1) return showInputToast("#amec-name-input", "กรุณากรอกพนักงาน Amec 1 คน");
     if (amecCount() > guestCount() && $("#remark").val() == "") return showInputToast("#remark", "กรณีคน Amec มากกว่ากรุณากรอก Remark");
 
+    if ($("#guest-name-input").val().trim() !== "") {
+      return showInputToast("#guest-name-input", "คุณพิมพ์ชื่อ Guest ไว้แต่ยังไม่ได้กด ADD");
+    }
+    if ($("#amec-name-input").val().trim() !== "") {
+      return showInputToast("#amec-name-input", "คุณพิมพ์รหัสพนักงานไว้แต่ยังไม่ได้กด ADD");
+    }
+
     // --- Collect Data ---
     let formData = new FormData();
     const isLocationVisible = $("#div_location").is(":visible");

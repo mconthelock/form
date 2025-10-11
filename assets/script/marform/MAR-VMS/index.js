@@ -6,7 +6,7 @@ import { formatAvatar, s2disableSearch, setSelect2 } from "../../public/v1.0.3/_
 import { redirectWebflow } from "../../inc/_form.js";
 import { createForm } from "../../api/webform/form";
 //import { createForm, redirectWebflow } from "../../inc/_form.js";
-
+import { readInput } from "../../public/v1.0.3/_excel";
 import Swal from "sweetalert2";
 import { ElementFlags } from "typescript";
 
@@ -446,6 +446,78 @@ $(document).ready(function () {
             $('#modal').removeClass('flex').addClass('hidden');
         });
         
+      
+        $(document).on('change', '#visitor_file', async function(e)  {
+          const file = e.target.files[0];
+          if (!file) return;
+      
+          const data = await readInput(file, { startRow: 2, maxReadRow: 500 });
+      
+          const $tbody = $('#tablevisitor tbody');
+          $tbody.empty();
+      
+         // const dietaryOptions = ['Vegetarian','Vegan','Halal','Kosher']; // ใส่ list จริงของคุณแทน
+
+     
+      
+          $.each(data, function(index, row) {
+              const tr = $('<tr class="bg-white"></tr>');
+      
+              // No.
+              tr.append(`<td class="px-2 py-2 sticky left-0 bg-white z-15">${index+1}</td>`);
+      
+              // Country, Company, Name, Position
+              tr.append(`<td class="px-2 py-2"><input type="text" name="country[]" value="${row[0]||''}" class="input input-bordered rounded-xl w-full"/></td>`);
+              tr.append(`<td class="px-2 py-2"><input type="text" name="company[]" value="${row[1]||''}" class="input input-bordered rounded-xl w-full"/></td>`);
+              tr.append(`<td class="px-2 py-2"><input type="text" name="name[]" value="${row[2]||''}" class="input input-bordered rounded-xl w-full"/></td>`);
+              tr.append(`<td class="px-2 py-2"><input type="text" name="pos[]" value="${row[3]||''}" class="input input-bordered rounded-xl w-full"/></td>`);
+      
+              // Previous Visit Experience (select)
+              const expSelect = $('<select name="exp[]" class="input input-bordered rounded-xl w-full"></select>');
+              expSelect.append('<option value=""></option>');
+              expSelect.append('<option value="Y">Yes</option>');
+              expSelect.append('<option value="N">No</option>');
+              if(row[4]) {
+                expSelect.find('option').filter(function() {
+                    return $(this).text() === row[4]; // row[4] = "Yes" หรือ "No" จาก Excel
+                }).prop('selected', true);
+            }
+              tr.append($('<td class="px-2 py-2"></td>').append(expSelect));
+      
+              // Lunch Provided (select)
+              const lunchSelect = $('<select name="lunch_provided[]" class="input input-bordered rounded-xl w-full"></select>');
+              lunchSelect.append('<option value=""></option>');
+              lunchSelect.append('<option value="Y">Yes</option>');
+              lunchSelect.append('<option value="N">No</option>');
+              if(row[5]) {
+                lunchSelect.find('option').filter(function() {
+                    return $(this).text() === row[5]; // row[5] = "Yes" หรือ "No"
+                }).prop('selected', true);
+              }
+              tr.append($('<td class="px-2 py-2"></td>').append(lunchSelect));
+      
+              // Dinner Provided (select)
+              const dinnerSelect = $('<select name="dinner_provided[]" class="input input-bordered rounded-xl w-full"></select>');
+              dinnerSelect.append('<option value=""></option>');
+              dinnerSelect.append('<option value="Y">Yes</option>');
+              dinnerSelect.append('<option value="N">No</option>');
+              if(row[6]) {
+                dinnerSelect.find('option').filter(function() {
+                    return $(this).text() === row[6]; // row[6] = "Yes" หรือ "No" จาก Excel
+                }).prop('selected', true);
+            }
+              tr.append($('<td class="px-2 py-2"></td>').append(dinnerSelect));
+      
+              // Dietary Requirements (select)
+              const dietarySelect = $('<select name="dietary_require[]"  class="dietary_require input input-bordered rounded-xl w-full"></select>');
+              dietarySelect.append('<option value=""></option>');
+              dietaryOptions.forEach(opt => dietarySelect.append(`<option value="${opt}">${opt}</option>`));
+              if(row[7]) dietarySelect.val(row[7]);
+              tr.append($('<td class="px-2 py-2"></td>').append(dietarySelect));
+      
+              $tbody.append(tr);
+          });
+      });
 
 
 });
@@ -682,7 +754,7 @@ toggleColumnByHeader('tablevisitor', 'Dietary Requirements',  $('#hasLunch').is(
 toggleColumnByHeader('tableemp', 'Dietary Requirements',  $('#hasLunch').is(':checked') || $('#hasDinner').is(':checked'));
 
 });
-
+/*
 const bookRoomBtn = document.getElementById('bookRoomBtn');
 const bookRoomModal = document.getElementById('bookRoomModal');
 const cancelModalBtn = document.getElementById('cancelModalBtn');
@@ -742,7 +814,7 @@ confirmModalBtn.addEventListener('click', async () => {
 bookRoomModal.addEventListener('click', (e) => {
   if (e.target === bookRoomModal) bookRoomModal.classList.add('hidden');
 });
-
+*/
 
 $(document).on('click', '#addRowBtn', function () {
   const $tableBody = $('#tablesch tbody');
@@ -970,7 +1042,18 @@ $(document).on('change', '.emp-select', function() {
 });
 
 $(document).on('click', '#btn-submit-form', function() {
-  loaddata($("#cyear2").val(),$("#nrunno").val());
+  const cyear2 = $("#cyear2").val();
+  const nrunno = $("#nrunno").val();
+    // ตรวจสอบว่ามีค่า
+    if (cyear2 && nrunno) {
+        loaddata(cyear2, nrunno);
+    } 
+    if($("#mode").val() == "1")
+    {
+       $('.confirm-btn').removeClass('hidden');
+       $('.export-btn').removeClass('hidden');
+    }
+  //loaddata($("#cyear2").val(),$("#nrunno").val());
 });
 
 
@@ -1216,7 +1299,7 @@ $(document).on("change", ".lunchSelect", function () {
 /**
  * Save
  */
- 
+
  $(document).on("click", ".save-btn", async function () {
 const tab = $(this).data("tab");
 const formId = "form-" + tab;   // form ไหนที่ถูกกด
@@ -1299,48 +1382,56 @@ try {
 });
 
 $(document).on("click", ".confirm-btn", async function () {
+  if(validate($("#form-submit")))
+  {
     $(this).prop('disabled', true);
     createGPENT();
     updateform();
+  }
 });
 $(document).on("click", ".send-btn", async function () {
   // $(this).prop('disabled', true);
-  sendmailpic(); 
+  if(validate($("#form-submit")))
+  {
+      sendmailpic(); 
+  }
 });
 
-$(document).on("click", ".bookroom-btn", async function () {
+/*$(document).on("click", ".bookroom-btn", async function () {
     console.log("xxxxxxxx");
   
-});
+});*/
 
 $(document).on("click", ".export-btn", async function () {
-  const vmscyear2 = $("#cyear2").val();
-  const vmsnrunno = $("#nrunno").val();
-  $.ajax({
-    type: "POST",
-    url: host + "marform/MAR-VMS/form/exportexcel",
-    data: {vmscyear2: vmscyear2, vmsnrunno:vmsnrunno},
-    dataType: 'json',
-    beforeSend: function () {
-      showLoader({ show: true });
-    },
-    success: function (res) {
-             openExcel(res.filename, res.content);
-    },
-    complete: function (xhr, status) {
-      showLoader({ show: false });
-    },
-    error: function (xhr) {
-      Swal.fire({
-        icon: "error",
-        title: "Failed to export file.",
-        text: xhr.responseText || "Failed to export file.",
-      });
-      
-    },
-  });
+  if(validate($("#form-submit")))
+  {
+    const vmscyear2 = $("#cyear2").val();
+    const vmsnrunno = $("#nrunno").val();
+    $.ajax({
+      type: "POST",
+      url: host + "marform/MAR-VMS/form/exportexcel",
+      data: {vmscyear2: vmscyear2, vmsnrunno:vmsnrunno},
+      dataType: 'json',
+      beforeSend: function () {
+        showLoader({ show: true });
+      },
+      success: function (res) {
+              openExcel(res.filename, res.content);
+      },
+      complete: function (xhr, status) {
+        showLoader({ show: false });
+      },
+      error: function (xhr) {
+        Swal.fire({
+          icon: "error",
+          title: "Failed to export file.",
+          text: xhr.responseText || "Failed to export file.",
+        });
+        
+      },
+    });
 
-
+  }
 });
 
 $(document).on('change', '.pst-select', function() {
@@ -1915,6 +2006,21 @@ function sendmailpic()
 {
   const vmscyear2 = $("#cyear2").val();
   const vmsnrunno = $("#nrunno").val();
+  let attn = $('[data-field="attn"]').text().trim();
+  if(attn=="")
+  {
+    Swal.fire({
+      icon: "warning",
+      title: "Please enter Primary Stakeholders",
+      toast: true,
+      position: "top-end",
+      timer: 3000,
+      showConfirmButton: false,
+      background: "#FBF6D9",
+    });
+    return false;
+  }
+
   $.ajax({
     type: "POST",
     url: host + "marform/MAR-VMS/form/sendmailpic",
@@ -2297,6 +2403,8 @@ function loaddata(vmscyear2,vmsnrunno)
       
     },
   });
+
+
 
 }
 

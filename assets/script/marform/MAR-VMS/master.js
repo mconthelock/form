@@ -51,7 +51,7 @@ const columns = [
                     <div class="flex items-center justify-center gap-3">
                       <button 
                         type="button"
-                        class="btn btn-sm btn-ghost btn-circle edit-dwg tooltip flex items-center"  
+                        class="btn btn-sm btn-ghost btn-circle edit-group tooltip flex items-center"  
                         data-id="${row.GID}"
                         title="Edit">
                         <i class="icofont-ui-edit text-base"></i>
@@ -62,26 +62,8 @@ const columns = [
 ];
 $(document).ready(async function () {
   table = await createTableGrp();
-  $(".pst-select").select2(
-    {
-     multiple:false,
-     placeholder:'',
-     allowClear: true,
-     matcher:customMatcher,
-     templateResult:function(data)
-     {
-        if(!data.id) return data.text;
-        let div = $(data.element).data('div');
-        let dep = $(data.element).data('dep');
-        let sec = $(data.element).data('sec');
-        let pos = $(data.element).data('pos');
-        return $('<span>' + data.text + '</span>');
-     },
-     templateSelection: function(data) {
-      return data.text; // แสดงเฉพาะชื่อหลังเลือก
-    }
   
-    });
+
 });
 
 $(document).on("click", ".toggle-btn", function () {
@@ -213,23 +195,42 @@ $(document).on('change', '.pst-select', function() {
 
 });
 
+$(document).on("input", ".emailinp", function() {
+    const email = $(this).val().trim();
+    const row = $(this).closest("tr");
+    $.ajax({
+      url: host + "marform/MAR-VMS/master/get_detail_email",
+      type: "POST",
+      data: { email: email },
+      dataType: "json",
+      success: function (res) {
+        if (res && res.length > 0) {
+            const data = res[0];
+            row.find(".name-col").text(data.SNAME);
+            row.find(".dds-col").text( data.SSEC  + "/" + data.SDEPT + "/" + data.SDIV);
+            row.find(".pos-col").text(data.SPOSNAME);
+        } else {
+
+            row.find(".name-col, .dds-col, .pos-col").text("");
+        }
+        }
+    });
+});
 
 $(document).on('click', '#addPstBtn', function () {
   const $tableBody = $('#tablepstModal tbody');
   const $firstRow = $tableBody.find('tr:first');
 
-  $firstRow.find('.pst-select').select2('destroy');
+
   const $newRow = $firstRow.clone();
 
   // เคลียร์ค่าภายใน input และ select
-  $newRow.find('input, select').each(function () {
+  $newRow.find('input').each(function () {
     $(this).val('');
   });
 
-  $newRow.find('.pos-col, .dds-col').text('');
+  $newRow.find('.name-col,.pos-col, .dds-col').text('');
 
-  initSelect2(".pst-select",$firstRow);
-  initSelect2(".pst-select",$newRow);
 
   const rowCount = $tableBody.find('tr').length + 1;
   $newRow.find('td:first').text(rowCount);
@@ -241,11 +242,11 @@ $(document).on('click', '#addPstBtn', function () {
 
 
 
-$(document).on("click", ".edit-dwg", function () {
+$(document).on("click", ".edit-group", function () {
   const gid = $(this).data("id"); // เอา GID ที่ส่งมา
   // เรียก API หรือหาข้อมูลจาก datatable row
   $.ajax({
-    url: host + "marform/MAR-VMS/master/get_group_empno",
+    url: host + "marform/MAR-VMS/master/get_group_email",
     type: "POST",
     data: { GID: gid },
     dataType: "json",
@@ -259,25 +260,15 @@ $(document).on("click", ".edit-dwg", function () {
         $("#groupDetail").val(group.GDETAIL);
         $("#modalAddGroup h3").text("Edit Group");
         const $tbody = $("#tbodyModal").empty();
-
+        console.log(group.participants);
         if (!group.participants || group.participants.length === 0) {
           const emptyRowHtml = `
           <tr class="hover:bg-gray-50">
             <td class="px-3 py-2">1</td>
             <td class="px-3 py-2">
-              <select class="pst-select w-80 px-2 py-1 border rounded-lg" name="pst[]">
-                <option value=""></option>
-                ${allParticipants.map(pt => `
-                  <option value="${pt.SEMPNO}" 
-                          data-div="${pt.SDIV}" 
-                          data-dep="${pt.SDEPT}" 
-                          data-sec="${pt.SSEC}" 
-                          data-pos="${pt.SPOSNAME}">
-                    ${pt.SNAME}
-                  </option>
-                `).join("")}
-              </select>
-            </td>
+            <input type="text" name="pst[]" value=""  class="emailinp input input-bordered rounded-xl w-full shadow-sm border-green-200 text-gray-900" />
+             </td>
+            <td class="px-3 py-2 name-col"></td>
             <td class="px-3 py-2 pos-col"></td>
             <td class="px-3 py-2 dds-col"></td>
           </tr>`;
@@ -288,27 +279,16 @@ $(document).on("click", ".edit-dwg", function () {
           <tr class="hover:bg-gray-50">
             <td class="px-3 py-2">${idx + 1}</td>
             <td class="px-3 py-2">
-              <select class="pst-select w-80 px-2 py-1 border rounded-lg" name="pst[]">
-                <option value=""></option>
-                ${allParticipants.map(pt => `
-                  <option value="${pt.SEMPNO}" 
-                          data-div="${pt.SDIV}" 
-                          data-dep="${pt.SDEPT}" 
-                          data-sec="${pt.SSEC}" 
-                          data-pos="${pt.SPOSNAME}"
-                          ${pt.SEMPNO == p.SEMPNO ? "selected" : ""}>
-                    ${pt.SNAME}
-                  </option>
-                `).join("")}
-              </select>
-            </td>
+            <input type="text" name="pst[]" value="${p.EMAIL || ""}"  class="emailinp input input-bordered rounded-xl w-full shadow-sm border-green-200 text-gray-900" />
+             </td>
+            <td class="px-3 py-2 name-col">${p.SNAME || ""}</td>
             <td class="px-3 py-2 pos-col">${p.SPOSNAME || ""}</td>
             <td class="px-3 py-2 dds-col">${[p.SDIV, p.SDEPT, p.SSEC].filter(Boolean).join("/")}</td>
           </tr>`;
         $tbody.append(rowHtml);
         });
       }
-        initSelect2(".pst-select", $("#tbodyModal"));
+        //initSelect2(".pst-select", $("#tbodyModal"));
         $("#modalAddGroup").removeClass("hidden").addClass("flex");
         /*
          group.participants.forEach((p, idx) => {
@@ -417,26 +397,16 @@ function clearGroupModal()
     <tr class="hover:bg-gray-50">
       <td class="px-3 py-2">1</td>
       <td class="px-3 py-2">
-        <select class="pst-select w-80 px-2 py-1 border rounded-lg" name="pst[]">
-          <option value=""></option>
-          ${allParticipants.map(pt => `
-            <option value="${pt.SEMPNO}" 
-                    data-div="${pt.SDIV}" 
-                    data-dep="${pt.SDEPT}" 
-                    data-sec="${pt.SSEC}" 
-                    data-pos="${pt.SPOSNAME}">
-              ${pt.SNAME}
-            </option>
-          `).join("")}
-        </select>
+        <input type="text" name="pst[]" value=""  class="emailinp input input-bordered rounded-xl w-full shadow-sm border-green-200 text-gray-900" />
       </td>
+      <td class="px-3 py-2 name-col"></td>
       <td class="px-3 py-2 pos-col"></td>
       <td class="px-3 py-2 dds-col"></td>
     </tr>`;
   $("#tbodyModal").append(rowHtml);
 
   // init select2
-  initSelect2(".pst-select", $("#tbodyModal"));
+  //initSelect2(".pst-select", $("#tbodyModal"));
 
   // ตั้ง header
   $("#modalAddGroup h3").text("Add Group");

@@ -107,5 +107,33 @@ class Training_model extends CI_Model
         return  $this->db->query($query)->result();
     }
 
+    function get_data_flow($frmno, $orgno, $cyear, $cyear2, $nrunno, $where){
+        $query = "SELECT * FROM FLOW A
+            WHERE A.NFRMNO = '".$frmno."' AND A.VORGNO = '".$orgno."' AND A.CYEAR = '".$cyear."' 
+            AND A.CYEAR2 = '".$cyear2."' and A.NRUNNO = '".$nrunno."' ".$where;
+        return  $this->db->query($query)->result();
+    }
 
+    function update_flow($frmno, $orgno, $cyear, $cyear2, $nrunno, $conname, $convalue, $where_col, $where_val){
+        $this->db->set($conname, $convalue);
+        $this->db->where('NFRMNO', $frmno);
+        $this->db->where('VORGNO', $orgno);
+        $this->db->where('CYEAR', $cyear);
+        $this->db->where('CYEAR2', $cyear2);
+        $this->db->where('NRUNNO', $nrunno);
+        $this->db->where($where_col,$where_val);
+        $this->db->update('FLOW');
+        return true;
+    }
+
+    function delete_flow($nfrmno,$vorgno,$cyear,$cyear2,$runno, $where_col, $where_val){
+        $this->db->where('NFRMNO', $nfrmno);
+        $this->db->where('VORGNO', $vorgno);
+        $this->db->where('CYEAR', $cyear);
+        $this->db->where('CYEAR2', $cyear2);
+        $this->db->where('NRUNNO', $runno);
+        $this->db->where($where_col, $where_val);
+        $this->db->delete('FLOW');
+        return true;
+    }
 }

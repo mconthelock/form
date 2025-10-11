@@ -29,8 +29,8 @@ $(document).ready(function () {
     if ($("#purpose").val().trim() === "") return showInputToast("#purpose", "กรุณาเลือกเหตุผลสำหรับ Entertain");
 
     if (!$("input[name='time']:checked").val()) return showRadioToast("input[name='time']", "กรุณาเลือกช่วงเวลา");
-    if (!$("input[name='location']:checked").val()) return showRadioToast("input[name='location']", "กรุณาเลือกสถานที่");
-    if ($("input[name='location']:checked").val() === "Outside" && $("#location_detail").val().trim() === "") return showInputToast("#location_detail", "กรุณากรอกรายละเอียด Location");
+    // if (!$("input[name='location']:checked").val()) return showRadioToast("input[name='location']", "กรุณาเลือกสถานที่");
+    // if ($("input[name='location']:checked").val() === "Outside" && $("#location_detail").val().trim() === "") return showInputToast("#location_detail", "กรุณากรอกรายละเอียด Location");
 
     // --- เพิ่มส่วน validation แบบเดิม (president_join, actual_cost, remain, remark, receipt) ---
     const p_join = $("input[name='president_join']:checked").val();
@@ -43,6 +43,27 @@ $(document).ready(function () {
     const fileReceipt = fileInput?.files?.[0];
     const fileMemo = fileInputMemo?.files?.[0];
 
+    const timeVal = $("input[name='time']:checked").val();
+    if (timeVal === "Gift") {
+      const gf = $("#gift-memo-file")[0];
+      if (!gf || gf.files.length === 0) {
+        return showInputToast("#gift-memo-file", "กรุณาแนบ Memo (Gift)");
+      }
+    }
+
+    if (timeVal === "Other") {
+      if ($("#other-details").val().trim() === "") {
+        return showInputToast("#other-details", "กรุณากรอก Other Details");
+      }
+      const of = $("#other-memo-file")[0];
+      if (!of || of.files.length === 0) {
+        return showInputToast("#other-memo-file", "กรุณาแนบ Memo (Other)");
+      }
+    }
+    if ($("#div_location").is(":visible")) {
+      if (!$("input[name='location']:checked").val()) return showRadioToast("input[name='location']", "กรุณาเลือกสถานที่");
+      if ($("input[name='location']:checked").val() === "Outside" && $("#location_detail").val().trim() === "") return showInputToast("#location_detail", "กรุณากรอกรายละเอียด Location");
+    }
     // --- Company Validation ---
     let companiesArray = [];
     let companyValid = true,
@@ -97,7 +118,13 @@ $(document).ready(function () {
         timer: 3000,
       });
 
-    if (!$(".guest_type:checked").val()) return showCheckboxToast(".guest_type", "กรุณาเลือก Guest Type");
+    if (timeVal !== "Gift" && timeVal !== "Other") {
+      if (!$(".guest_type:checked").val()) {
+        return showCheckboxToast(".guest_type", "กรุณาเลือก Guest Type");
+      }
+    }
+
+    // if (!$(".guest_type:checked").val()) return showCheckboxToast(".guest_type", "กรุณาเลือก Guest Type");
 
     // --- Table estimate validation ---
     // let costValid = false;
@@ -125,6 +152,19 @@ $(document).ready(function () {
     if (amecCount() < 1) return showInputToast("#amec-name-input", "กรุณากรอกพนักงาน Amec 1 คน");
     if (amecCount() > guestCount() && $("#remark").val() == "") return showInputToast("#remark", "กรณีคน Amec มากกว่ากรุณากรอก Remark");
 
+    const expense = [];
+    let hasExpense = false;
+    $("#expense-table tbody tr").each(function () {
+      const receipt_no = $(this).find("td:eq(1) input").val().trim();
+      const cost = parseFloat($(this).find("td:eq(2) input").val().trim()) || 0;
+      if (receipt_no !== "" || cost > 0) {
+        hasExpense = true;
+      }
+      expense.push({ receipt_no, cost });
+    });
+    if (!hasExpense) {
+      return showInputToast("#expense-table", "กรุณากรอกข้อมูลค่าใช้จ่ายอย่างน้อย 1 แถว");
+    }
     // Validate president_join
     if (!p_join) return showRadioToast("input[name='president_join']", "กรุณาเลือก President Join");
     // Validate actual_cost (required & number & >= 0)
@@ -161,6 +201,7 @@ $(document).ready(function () {
     }
     // --- Collect Data ---
     let formData = new FormData();
+    const isLocationVisible = $("#div_location").is(":visible");
 
     // เพิ่ม field ที่จำเป็น
     formData.append("nfrmno", nfrmno);
@@ -170,10 +211,10 @@ $(document).ready(function () {
     formData.append("requested_by", $("#requested-by").val());
     formData.append("entertain_date", $("#entertain-date").val());
     formData.append("purpose", $("#purpose").val());
-    formData.append("time", $("input[name='time']:checked").next("span").text());
-    formData.append("location", $("input[name='location']:checked").next("span").text());
-    formData.append("location_detail", $("input[placeholder='*Please identify the location.']").val());
-    formData.append("guest_type", $(".guest_type:checked").val());
+    formData.append("time", timeVal);
+    formData.append("location", isLocationVisible ? $("input[name='location']:checked").val() : "");
+    formData.append("location_detail", isLocationVisible ? $("#location_detail").val() : "");
+    formData.append("guest_type", $(".guest_type:checked").val() ?? "");
     // formData.append("org_type", $("input[name='orgType']:checked").val());
     // formData.append("entertain_budget", $("#entertain-budget").val());
     formData.append("total_amount", $("#total-amount").text());
@@ -185,14 +226,19 @@ $(document).ready(function () {
         formData.append(`company_files[${i}]`, fileInput.files[0]);
       }
     });
+    if (timeVal === "Gift") {
+      const gf = $("#gift-memo-file")[0];
+      if (gf && gf.files.length > 0) {
+        formData.append("file_memo_gift", gf.files[0]);
+      }
+    }
+    if (timeVal === "Other") {
+      const of = $("#other-memo-file")[0];
+      if (of && of.files.length > 0) {
+        formData.append("file_memo_other", of.files[0]);
+      }
+    }
 
-    const expense = [];
-    $("#expense-table tbody tr").each(function () {
-      expense.push({
-        receipt_no: $(this).find("td:eq(1) input").val().trim(),
-        cost: parseFloat($(this).find("td:eq(2) input").val().trim()) || 0,
-      });
-    });
     formData.append("expense", JSON.stringify(expense));
 
     // ------- ส่วนข้อมูลของ president/receipt/actual_cost/remark/remain ที่เพิ่มมา ---------
@@ -316,7 +362,6 @@ $(function () {
 
   // ลบแถว
   $("#expense-table").on("click", ".remove-row", function () {
-    
     $(this).closest("tr").remove();
     updateRowNumbers();
     calculateTotals();

@@ -237,13 +237,13 @@ class form extends MY_Controller{
         
     }
 
-    public function master()
+    /*public function master()
     {
 
         $data["participants"] = $this->vms->get_participants();
         $this->views('marform/MAR-VMS/master', $data);
 
-    }
+    }*/
     
     public function save()
     {
@@ -867,7 +867,20 @@ class form extends MY_Controller{
         $data = $this->getFormData();
         $d['VIEW']    = 'layouts/mail/message';
         $f = $this->create_save_vmsexcel($data);
-        $d['ENFILE']  = array(['filename'=> $f['filename'], 'content'=> $f['content']]);
+        $d['ENFILE'][]   = ['filename'=> $f['filename'], 'content'=> $f['content']];
+        $conatt = array(
+            'CYEAR2' =>  $vmscyear2,
+            'NRUNNO' =>  $vmsnrunno,
+            'TYPENO' => 'B'
+        );
+        $rsf =  $this->vms->customSelect("VMS_ATTFILE",$conatt,'*');
+        foreach($rsf as $f)
+        {
+            $d['ENFILE'][] = [
+                'filename' => $f->SFILE,
+                'content'  => file_get_contents($this->upload_path.$this->nfrmno."_".$this->vorgno."_".$this->cyear."_".$vmscyear2."_".$vmsnrunno."/".$f->SFILE)
+            ];
+        }
         $d['SUBJECT'] = "VISITOR NOTICE : ".$data['head']['PURPOSEDETAIL'];
         $d['TO']  = $this->vms->getRcpMail($vmscyear2 , $vmsnrunno,"P");
         $d['CC']  = $this->vms->getRcpMail($vmscyear2 , $vmsnrunno,"I");

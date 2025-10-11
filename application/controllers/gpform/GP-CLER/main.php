@@ -267,6 +267,41 @@ class Main extends MY_Controller
         }
         $this->updateFlowApv("", $getEmp->VEMPNO, $nfrmno, $vorgno, $cyear, $cyear2, $nrunno, "18", "00");
 
+        // Handle Gift Memo
+        $giftMemoFile = null;
+        if (isset($_FILES['file_memo_gift']) && $_FILES['file_memo_gift']['error'] == 0) {
+            $file       = $_FILES['file_memo_gift'];
+            $extension  = pathinfo($file['name'], PATHINFO_EXTENSION);
+            $uploadFile = array(
+                'name'     => "GiftMemo_{$cyear2}_{$nrunno}.{$extension}",
+                'type'     => $file['type'],
+                'tmp_name' => $file['tmp_name'],
+                'error'    => $file['error'],
+                'size'     => $file['size']
+            );
+            $result     = $this->uploadFile($uploadFile, "//amecnas/AMECWEB/File/" . ($this->_servername() == 'amecweb' ? 'production' : 'development') . "/Form/GP/GPENT/");
+            if ($result['status'] == '1') {
+                $giftMemoFile = $result['file_name'];
+            }
+        }
+
+        // Handle Other Memo
+        $otherMemoFile = null;
+        if (isset($_FILES['file_memo_other']) && $_FILES['file_memo_other']['error'] == 0) {
+            $file       = $_FILES['file_memo_other'];
+            $extension  = pathinfo($file['name'], PATHINFO_EXTENSION);
+            $uploadFile = array(
+                'name'     => "OtherMemo_{$cyear2}_{$nrunno}.{$extension}",
+                'type'     => $file['type'],
+                'tmp_name' => $file['tmp_name'],
+                'error'    => $file['error'],
+                'size'     => $file['size']
+            );
+            $result     = $this->uploadFile($uploadFile, "//amecnas/AMECWEB/File/" . ($this->_servername() == 'amecweb' ? 'production' : 'development') . "/Form/GP/GPENT/");
+            if ($result['status'] == '1') {
+                $otherMemoFile = $result['file_name'];
+            }
+        }
         $data = [
             'NFRMNO'               => $nfrmno,
             'VORGNO'               => $vorgno,
@@ -285,6 +320,13 @@ class Main extends MY_Controller
             'STATUS'               => '1',
         ];
 
+        if ($giftMemoFile) {
+            $data['FILE_MEMO_GIFT'] = $giftMemoFile;
+        }
+        if ($otherMemoFile) {
+            $data['FILE_MEMO_OTHER'] = $otherMemoFile;
+        }
+
         $dateFields = [];
         if (!empty($post['entertain_date'])) {
             $dateFields['ENTERTAINMENT_DATE'] = "TO_DATE('{$post['entertain_date']}', 'YYYY-MM-DD')";
@@ -292,21 +334,23 @@ class Main extends MY_Controller
 
         $this->ent->insert('GPENT_FORM', $data, $dateFields);
 
-        foreach (json_decode($post['estimate_items']) as $key => $value) {
-            $data_estimate = [
-                'NFRMNO'     => $nfrmno,
-                'VORGNO'     => $vorgno,
-                'CYEAR'      => $cyear,
-                'CYEAR2'     => $cyear2,
-                'NRUNNO'     => $nrunno,
-                'DETAILS'    => $value->details,
-                'QTY'        => $value->qty,
-                'UNIT_COST'  => $value->cost,
-                'TOTAL_COST' => $value->total,
-                'REMARK'     => $value->remark
-            ];
+        if (!empty($post['estimate_items'])) {
+            foreach (json_decode($post['estimate_items']) as $key => $value) {
+                $data_estimate = [
+                    'NFRMNO'     => $nfrmno,
+                    'VORGNO'     => $vorgno,
+                    'CYEAR'      => $cyear,
+                    'CYEAR2'     => $cyear2,
+                    'NRUNNO'     => $nrunno,
+                    'DETAILS'    => $value->details,
+                    'QTY'        => $value->qty,
+                    'UNIT_COST'  => $value->cost,
+                    'TOTAL_COST' => $value->total,
+                    'REMARK'     => $value->remark
+                ];
 
-            $this->ent->insert('GPENT_ESTIMATE', $data_estimate);
+                $this->ent->insert('GPENT_ESTIMATE', $data_estimate);
+            }
         }
 
         foreach (json_decode($post['guest_list']) as $key => $value) {
@@ -338,7 +382,7 @@ class Main extends MY_Controller
         }
 
         $companies = json_decode($_POST['companies'], true);
-        $files     = $_FILES['company_files'];
+        $files     = isset($_FILES['company_files']) ? $_FILES['company_files'] : null;
 
         foreach ($companies as $idx => $company) {
 
@@ -401,14 +445,14 @@ class Main extends MY_Controller
         ];
 
         if (isset($_FILES['receipt'])) {
-            $file = $this->uploadFile($_FILES['receipt']);
+            $file = $this->uploadFile($_FILES['receipt'], "//amecnas/AMECWEB/File/" . ($this->_servername() == 'amecweb' ? 'production' : 'development') . "/Form/GP/GPCLER/");
             if ($file['status'] == '1') {
                 $data_cler['RECEIPT_FILE'] = $file['file_name'];
             }
         }
 
         if (isset($_FILES['file_memo'])) {
-            $file = $this->uploadFile($_FILES['file_memo']);
+            $file = $this->uploadFile($_FILES['file_memo'], "//amecnas/AMECWEB/File/" . ($this->_servername() == 'amecweb' ? 'production' : 'development') . "/Form/GP/GPCLER/");
             if ($file['status'] == '1') {
                 $data_cler['MEMO_FILE'] = $file['file_name'];
             }

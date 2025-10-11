@@ -22,8 +22,8 @@ class master extends MY_Controller{
     public function master()
     {
 
-        $data["participants"] = $this->vms->get_participants();
-        $this->views('marform/MAR-VMS/master', $data);
+       // $data["participants"] = $this->vms->get_participants();
+        $this->views('marform/MAR-VMS/master');
 
     }
 
@@ -33,11 +33,22 @@ class master extends MY_Controller{
         echo json_encode($this->vms->get_group());
     }
 
-    public function get_group_empno()
+    public function get_detail_email()
+    {
+        $email = trim($_POST["email"]);
+        $con = array('SRECMAIL' => $email);
+        echo json_encode($this->vms->get_participants($con));
+    }
+
+    public function get_group_email()
     {
         $GID = $_POST["GID"];
         $group = $this->vms->get_group(array('GID' => $GID));
-        $sql = "select SEMPNO , SNAME , SSEC , SDEPT , SDIV , SPOSNAME from AMECUSERALL where SEMPNO in (SELECT SEMPNO FROM VMS_GROUP_EMPNO where GID = '".$GID."') order by SPOSCODE ";
+        $sql = "SELECT g.*, u.SNAME, u.SPOSNAME, u.SSEC, u.SDEPT, u.SDIV
+        FROM VMS_GROUP_EMAIL g
+        LEFT JOIN AMECUSERALL u
+               ON g.EMAIL = u.SRECMAIL
+        WHERE g.GID = '".$GID."'";
         $participants = $this->vms->getdatasql($sql);
         $data = array(
             "status" => true,
@@ -50,6 +61,8 @@ class master extends MY_Controller{
         );
         echo json_encode($data);
     }
+
+
 
     public function update_status_group()
     {
@@ -107,15 +120,15 @@ class master extends MY_Controller{
                     {
                         $datap[] = array(
                             'GID' =>  $GID,
-                            'SEMPNO' => $s
+                            'EMAIL' => $s
                         ); 
 
                     }
                 }
                 if(count($datap) > 0)
                 {
-                    $this->vms->delete("VMS_GROUP_EMPNO", array('GID' => $GID));
-                    $this->vms->insert_batch("VMS_GROUP_EMPNO",  $datap);
+                    $this->vms->delete("VMS_GROUP_EMAIL", array('GID' => $GID));
+                    $this->vms->insert_batch("VMS_GROUP_EMAIL",  $datap);
                 }
                 echo json_encode([
                     "status" => true,

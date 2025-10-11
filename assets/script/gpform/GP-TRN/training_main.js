@@ -82,7 +82,6 @@ async function submitForm(formType, reqby, inputby, fid) {
             REQBY: reqby, 
             INPUTBY: inputby, 
             REMARK: "", 
-            DRAFT: "1" 
         };
         console.log("📤 createForm payload:", formDatakey);
 

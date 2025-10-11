@@ -104,8 +104,50 @@ class Main extends MY_Controller
         // $this->views('isform/IS-RGV/view', $data);
     }
 
-    public function createSummaryView(){
-        $this->views('isform/IS-RGV/summary_view');
+    public function createSummaryView()
+    {
+        $systems = [
+            [
+                'id'               => 1,
+                'main_system_name' => 'Purchasing system',
+                'total_users'      => 476,
+                'unmatched'        => 2,
+                'programs'         => [
+                    ['name' => 'AS400'],
+                    ['name' => 'Procurement'],
+                ]
+            ],
+            [
+                'id'               => 2,
+                'main_system_name' => 'Financial system',
+                'total_users'      => 76,
+                'unmatched'        => 2,
+                'programs'         => [
+                    ['name' => 'Invoice'],
+                    ['name' => 'LN'],
+                ]
+            ],
+            [
+                'id'               => 3,
+                'main_system_name' => 'Marketing system',
+                'total_users'      => 98,
+                'unmatched'        => 5,
+                'programs'         => [
+                    ['name' => 'Invoice System'],
+                    ['name' => 'Marketing System'],
+                ]
+            ],
+            [
+                'id'               => 4,
+                'main_system_name' => 'Production & Logistics system',
+                'total_users'      => 125,
+                'unmatched'        => 0,
+                'programs'         => [
+                    ['name' => 'AS400'], // ตัวอย่างระบบที่มีโปรแกรมเดียว
+                ]
+            ],
+        ];
+        $this->views('isform/IS-RGV/summary_view', ['systems' => $systems]);
     }
 
     public function test_view()
@@ -215,7 +257,7 @@ class Main extends MY_Controller
         return $userList;
     }
 
-    public function createform($empno, $program, $owner)
+    public function createform($empno, $program, $owner, $org_code)
     {
         $form = $this->create('7', '050601', '25', $empno, $empno, '', 1);
         pre_array($form);
@@ -234,6 +276,7 @@ class Main extends MY_Controller
             'PROGRAM'    => $program,
             'EMPCHECKER' => $empno,
             'STATUS'     => '1',
+            'ORGCODE'   => $org_code
         ];
         $this->rm->insert('ISRGV_FORM', $data);
 
@@ -361,12 +404,13 @@ class Main extends MY_Controller
                 if (isset($orgMap[$pic]) && in_array($org, $orgMap[$pic])) {
                     $groupedData[$pic]['users'][$index] = $user;
                     $groupedData[$pic]['owner']         = $main_apv;
+                    $groupedData[$pic]['org']           = $org;
                 }
             }
 
-            // echo "<pre>";
-            // print_r($groupedData);
-            // echo "</pre>";
+            echo "<pre>";
+            print_r($groupedData);
+            echo "</pre>";
 
 
 
@@ -374,39 +418,39 @@ class Main extends MY_Controller
 
             // สร้างฟอร์มและ insert ข้อมูล
 
-            // foreach ($groupedData as $pic => $userGroup) {
-            //     $owner  = $userGroup['owner'];
-            //     $form   = $this->createform(trim($pic), $programItem->PROGRAM, $owner);
-            //     $NRUNNO = $form['runno'];
-            //     $CYEAR2 = $form['cyear2'];
+            foreach ($groupedData as $pic => $userGroup) {
+                $owner  = $userGroup['owner'];
+                $form   = $this->createform(trim($pic), $programItem->PROGRAM, $owner, $userGroup['org']);
+                $NRUNNO = $form['runno'];
+                $CYEAR2 = $form['cyear2'];
 
-            //     echo "--------------------------------------$programName ($pic)-------------------------------------------------------------<br>";
+                echo "--------------------------------------$programName ($pic)-------------------------------------------------------------<br>";
 
-            //     foreach ($userGroup['users'] as $item) {
-            //         $empno = $item->SEMPNO;
+                foreach ($userGroup['users'] as $item) {
+                    $empno = $item->SEMPNO;
 
-            //         if ($programName === 'scm') {
-            //             $loginList = isset($scmUsrMap[$empno]) ? $scmUsrMap[$empno] : [$empno];
+                    if ($programName === 'scm') {
+                        $loginList = isset($scmUsrMap[$empno]) ? $scmUsrMap[$empno] : [$empno];
 
-            //             foreach ($loginList as $usr_login) {
-            //                 $data = [
-            //                     'NRUNNO' => $NRUNNO,
-            //                     'CYEAR2' => $CYEAR2,
-            //                     'EMPNO'  => $usr_login,
-            //                 ];
-            //                 // pre_array($data);
-            //                 $this->rm->insert('ISRGV_EMP', $data);
-            //             }
-            //         } else {
-            //             $data = [
-            //                 'NRUNNO' => $NRUNNO,
-            //                 'CYEAR2' => $CYEAR2,
-            //                 'EMPNO'  => $empno,
-            //             ];
-            //             $this->rm->insert('ISRGV_EMP', $data);
-            //         }
-            //     }
-            // }
+                        foreach ($loginList as $usr_login) {
+                            $data = [
+                                'NRUNNO' => $NRUNNO,
+                                'CYEAR2' => $CYEAR2,
+                                'EMPNO'  => $usr_login,
+                            ];
+                            // pre_array($data);
+                            $this->rm->insert('ISRGV_EMP', $data);
+                        }
+                    } else {
+                        $data = [
+                            'NRUNNO' => $NRUNNO,
+                            'CYEAR2' => $CYEAR2,
+                            'EMPNO'  => $empno,
+                        ];
+                        $this->rm->insert('ISRGV_EMP', $data);
+                    }
+                }
+            }
         }
 
         $authorizeList = $this->rm->getLnauthorize();
@@ -414,7 +458,7 @@ class Main extends MY_Controller
         // $lnOwner       = $this->rm->get_orgpos("040101", "10")[0];
         foreach ($lnUsers as $key => $val) {
             $lnOwner = $this->rm->get_orgpos("040101", "10")[0];
-            $form    = $this->createform(trim($val), 'LN', $lnOwner->VEMPNO);
+            $form    = $this->createform(trim($val), 'LN', $lnOwner->VEMPNO, '040101');
             $NRUNNO  = $form['runno'];
             $CYEAR2  = $form['cyear2'];
             $data    = [
@@ -492,98 +536,6 @@ class Main extends MY_Controller
         $this->rm->insert('ISRGV_LN_AUTHORIZE', $data);
     }
 
-    public function read_excel()
-    {
-        $path = FCPATH . 'assets/files/data2.csv';
-        if (!file_exists($path)) {
-            echo "ไม่พบไฟล์: $path";
-            return;
-        }
-
-        $file = fopen($path, "r");
-
-        $header = fgetcsv($file, 1000, ","); // อ่านหัวตาราง
-        $empnos = array_slice($header, 4);   // เอาเฉพาะคอลัมน์พนักงาน (ตั้งแต่คอลัมน์ที่ 5)
-
-        // echo "<table border='1' cellpadding='5'>";
-        // echo "<tr><th>MENU_LEVEL</th><th>MENU_TREE</th><th>MENU_ID</th><th>EMPNO</th><th>STATUS</th></tr>";
-
-        while (($row = fgetcsv($file, 1000, ",")) !== FALSE) {
-            $menu_level = trim($row[0]);
-            $menu_tree  = trim($row[1]);
-            $menu_id    = trim($row[2]);
-
-            foreach ($empnos as $i => $empno) {
-                $val = trim($row[$i + 4]); // เริ่มนับจากคอลัมน์ที่ 5
-                if ($val !== '') { // มีค่า เช่น 'P'
-
-                    $data = [
-                        'EMPNO'   => $empno,
-                        'MENU_ID' => $menu_id,
-                        'STATUS'  => ($val === 'P') ? '1' : '0'
-                    ];
-                    $this->rm->insert('ISRGV_LN_AUTHORIZE', $data);
-
-                    // echo "<pre>";
-                    // print_r($data);
-                    // echo "</pre>";
-                    // echo "<tr>
-                    //     <td>$menu_level</td>
-                    //     <td>$menu_tree</td>
-                    //     <td>$menu_id</td>
-                    //     <td>$empno</td>
-                    //     <td>$val</td>
-                    //   </tr>";
-                }
-            }
-        }
-
-        // echo "</table>";
-        fclose($file);
-    }
-
-
-    public function test_curl()
-    {
-        // // $url = 'https://amecwebtest.mitsubishielevatorasia.co.th/form/gpform/GP-ENT/main/InsertForm22';
-        // $url = base_url('gpform/GP-ENT/main/InsertForm22');
-
-        // $postData = [
-        //     "key1" => "value1",
-        //     "key2" => "value2"
-        // ];
-
-        // $ch = curl_init($url);
-        // curl_setopt($ch, CURLOPT_POST, true);
-        // curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($postData));
-        // curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        // // curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-        // // curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
-        // // curl_setopt($ch, CURLOPT_SSLVERSION, CURL_SSLVERSION_TLSv1_2);
-
-
-        // $result = curl_exec($ch);
-
-        // if ($result === false) {
-        //     echo "cURL Error: " . curl_error($ch);
-        // } else {
-        //     echo $result; // จะได้ JSON เช่น {"status":"success","message":"Data received successfully","received":{"key1":"value1","key2":"value2"}}
-        // }
-
-        // curl_close($ch);
-        // // echo base_url('gpform/GP-ENT/main/InsertForm22');
-
-        $url = 'https://amecwebtest.mitsubishielevatorasia.co.th/form/gpform/GP-ENT/main/InsertForm22';
-        // $client   = new \GuzzleHttp\Client(['verify' => false]); // ปิด verify
-        $response = $this->client->post($url, [
-            'form_params' => [
-                'key1' => 'value1',
-                'key2' => 'value2'
-            ]
-        ]);
-
-        echo $response->getBody();
-    }
 
 
 }

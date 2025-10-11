@@ -204,11 +204,11 @@
                         <?}?>
                     <?}else{?>
                         <tr class="bg-gray-50">
-                            <td class="p-3 font-bold w-48 text-blue-600" colspan='2'> {{ " มีการเปรียบเทียบราคา ค่าฝึกอบรม (Compared training expense)" }}</td>
+                            <td class="p-3 font-bold" colspan='2'> {{ " มีการเปรียบเทียบราคา ค่าฝึกอบรม (Compared training expense)" }}</td>
                         </tr>   
                         <tr>
-                            <td class="p-3 font-bold w-48 text-blue-600">เอกสารที่เกี่ยวข้อง</td>
-                            <td class="p-3 font-bold w-48">
+                            <td class="p-3 font-bold ">เอกสารที่เกี่ยวข้อง</td>
+                            <td class="p-3 text-blue-600 font-semibold">
                                 @foreach($data_attach_compare as $row_cp)
                                      <a href="{{ base_url('gpform/GP-TRN/training/preview_file/' . $row_cp->FILENAME) }}" target="_blank" class="text-blue-700 underline btn btn-sm rounded-lg">
                                         {{ $row_cp->FILENAME }}
