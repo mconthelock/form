@@ -1,8 +1,11 @@
 {
-  "scripts": {
-    "docs:dev": "vitepress dev src",
-    "docs:build": "vitepress build src",
-    "docs:preview": "vitepress preview src",
-    "docs:copy": "xcopy \\\\172.21.255.188\\amecweb\\wwwroot\\development\\form\\docs\\src\\.vitepress\\dist \\\\172.21.255.188\\amecweb\\wwwroot\\development\\form\\docs /E /I /Y"
-  }
+    "devDependencies": {
+        "vue": "^3.5.16"
+    },
+    "scripts": {
+        "docs:dev": "vitepress dev src",
+        "docs:build": "vitepress build src",
+        "docs:preview": "vitepress preview src",
+        "docs:copy": "xcopy \\\\172.21.255.188\\amecweb\\wwwroot\\development\\form\\docs\\src\\.vitepress\\dist \\\\172.21.255.188\\amecweb\\wwwroot\\development\\form\\docs /E /I /Y"
+    }
 }
