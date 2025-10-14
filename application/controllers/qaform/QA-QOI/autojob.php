@@ -38,11 +38,11 @@ Class autojob extends CI_Controller {
 		$y = date("Ym");
 		$inspecdate = "01/".date("m/Y");
 		$expchgdate = date('t/m/Y',strtotime('today'));
-		$inspecdate = "01/April/2025";
-		$expchgdate = "30/April/2025";
+		//$inspecdate = "01/April/2025";
+		//$expchgdate = "30/April/2025";
 		$tilte = "Quality Observation Inspection on ".date("M Y");
-		$tilte = "Quality Observation Inspection on April 2025";
-		$y = '202504';
+		//$tilte = "Quality Observation Inspection on April 2025";
+		//$y = '202504';
 		$q = "select * From QOI_DWGMASTER M, QOI_DWGSCHEDULE S where M.MID = S.MID and S.MON = '".$y."'";
 		$rs = $this->qoi->getdatasql($q);
 		foreach($rs as $r)
@@ -79,7 +79,7 @@ Class autojob extends CI_Controller {
 				//create folder 
 				$dstfolder = $this->NFRMNO."_".$this->VORGNO."_".$this->CYEAR."_".$flow["message"]["cyear2"]."_". $flow["message"]["runno"];
 				//$dstFile = '\\\\webflow\\iscompaq24\\qa\\qoi\\file\\'.$dstfolder."\\";
-				$dstFile = '\\\\amecnas\\AMECWEB\\file\\development\\Form\\QA\QOI\\'.$dstfolder."\\";
+				$dstFile = '\\\\amecnas\\AMECWEB\\file\\production\\Form\\QA\QOI\\'.$dstfolder."\\";
 				$this->createPath($dstFile); //check create path 
 				$fid = 0;
 				$datafile = array();
@@ -141,7 +141,7 @@ Class autojob extends CI_Controller {
 					// End
 				}
 				// get file from Dwg master of QOI
-				$srcFile = "\\\\amecnas\\AMECWEB\\file\\development\\Form\\QA\QOI\\master\\";
+				$srcFile = "\\\\amecnas\\AMECWEB\\file\\production\\Form\\QA\QOI\\master\\";
 				$rsatt = $this->qoi->customSelect("QOI_ATTFILE",array('MID' => $r->MID),'SFILE , FTYPE');
 				foreach($rsatt as $att)
 				{
@@ -343,7 +343,7 @@ Class autojob extends CI_Controller {
 		foreach ($itmlst as  $items) {
 			//$itmnoList = "'" . implode("','", $items) . "'";
 			$q = "select M.* From QOI_DWGMASTER M, QOI_DWGSCHEDULE S where M.MID = S.MID and S.MON = '".$y."' and ISSUE = 'Y' and TYREQ = '4' and SUBSTR(ITMNO,1,1) = $items";
-			echo "<br/>";
+			//echo "<br/>";
 			$rsitm = $this->qoi->getdatasql($q);
 			if(count($rsitm) > 0)
 			{
@@ -463,7 +463,7 @@ Class autojob extends CI_Controller {
 			$obj->folder_path = str_replace('Y:\\', '\\\\amecnas\\xfiles\\localpdm\\', $obj->folder_path);
 			$srcFile  	 = $obj->folder_path . '\\' . $obj->file_name . '_' . $obj->internal_revision_no . '_DWGVIEW_' . $obj->file_seqno;
 			//$dstFile 	 = '\\\\webflow\\iscompaq24\\qa\\qoi\\file\\'.$dstfolder."\\"; //file for qa
-			$dstFile = '\\\\amecnas\\AMECWEB\\file\\development\\Form\\QA\QOI\\'.$dstfolder."\\";
+			$dstFile = '\\\\amecnas\\AMECWEB\\file\\production\\Form\\QA\QOI\\'.$dstfolder."\\";
 			$filename    = $this->get_microtime().$obj->file_name;
 			$fileTIF 	 = $dstFile .$filename .".tif";
 			$dwgname = explode('_', $filename); //change file name drawing.pdf by extract drawing only underscore file time_drawing_revision.pdf
