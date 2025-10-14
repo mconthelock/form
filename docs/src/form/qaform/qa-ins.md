@@ -87,11 +87,11 @@ outline: deep # เปิดให้เมนูย่อยแสดงระ�
 >**หมายเหตุ: หากไม่พบข้อมูลในระบบ จะไม่มีการแสดงรายชื่อผู้ทดสอบ**
 
 ## การนัดหมายและดำเนินการทดสอบโดยฝ่าย QC
-<FancyLightboxImage :images="[{src:'/image/qaform/qa-ins/qc-detail.png'}, {src:'/image/qaform/qa-ins/qc-incharge.png'}]"  hero-height="420px"
+<!-- <FancyLightboxImage :images="[{src:'/image/qaform/qa-ins/qc-detail.png'}, {src:'/image/qaform/qa-ins/qc-incharge.png'}]"  hero-height="420px" -->
   :autoplay-ms="3500"   
   :pause-on-hover="true"/>
-<!-- <FancyLightboxImage src="/image/qaform/qa-ins/qc-detail.png"/>
-<FancyLightboxImage src="/image/qaform/qa-ins/qc-incharge.png"/> -->
+<FancyLightboxImage src="/image/qaform/qa-ins/qc-detail.png"/>
+<FancyLightboxImage src="/image/qaform/qa-ins/qc-incharge.png"/>
 
 ### วิธีการใช้งาน
 #### 1 : Form Information
@@ -149,6 +149,34 @@ Attach file สามารถคลิกเพื่อดาวน์โห�
 
 #### 5 : Audit
 คลิกเพื่อทดสอบ
+
+<FancyLightboxImage src="/image/qaform/qa-ins/qc-audit-head.png"/>
+<FancyLightboxImage src="/image/qaform/qa-ins/qc-audit-score.png"/>
+<FancyLightboxImage src="/image/qaform/qa-ins/qc-audit-comment.png"/>
+<FancyLightboxImage src="/image/qaform/qa-ins/qc-audit-result.png"/>
+<!-- <FancyLightboxImage :images="[
+    {src:'/image/qaform/qa-ins/qc-audit-head.png'},
+    {src:'/image/qaform/qa-ins/qc-audit-score.png'},
+    {src:'/image/qaform/qa-ins/qc-audit-comment.png'},
+    {src:'/image/qaform/qa-ins/qc-audit-result.png'}]"  
+    hero-height="420px"
+  :autoplay-ms="3500"   
+  :pause-on-hover="true"/> -->
+
+### การใช้งานหน้าทดสอบ
+#### ข้อมูลการทดสอบ
+หมายเลข `2` แสดงรายละเอียดของผู้เข้าทดสอบ  
+**หาก Item ประกอบด้วย station ระบบจะแสดง Station ให้ผู้ตรวจสอบพิจารณาเลือก Station ที่จะดำเนินการประเมินดังรูปด้านล่าง**
+<FancyLightboxImage src="/image/qaform/qa-ins/qc-audit-station.png"/>
+
+#### ข้อมูล Revision ของเอกสาร
+หมายเลข `3` เป็น Revision ทั้งหมดของเอกสารการทดสอบสามารถคลิดดูรายละเอียดแต่ละ revision ได้ที่หมายเลข `4`
+
+#### การประเมิน
+- ผู้ตรวจสอบสามารถให้คะแนน โดยการคลิกเครื่องหมาย `+` `-` หรือพิมพ์คะแนนที่หมายเลข `6` โดยระบบจะมีคะแนนสูงสุดที่สามารถให้ได้ตามแต่ละ Revision ของเอกสาร
+- หมายเลข 8 เลือกระหว่าง `S` `C` อย่างใดอย่างหนึ่ง **(ไม่บังคับ)**
+
+
 ::: tip
 เมื่อทำการทดสอบเสร็จแล้วยังสามารถคลิกดูข้อมูลได้
 :::

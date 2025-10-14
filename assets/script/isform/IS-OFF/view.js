@@ -38,6 +38,8 @@ const column = [
                 </div>`;
     },
   },
+  { data: "OFF_EMPNO", title: "EMPNO" },
+  { data: "OFF_USERNAME", title: "Name" },
   { data: "ORGANIZE", title: "Organize" },
   {
     data: "REA_TEXT",
