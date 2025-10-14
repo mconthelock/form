@@ -80,7 +80,8 @@ class Mail {
         $d['SUBJECT'] = isset($d['SUBJECT']) ? $d['SUBJECT'] : $mail->Subject;
 
         // Set TO.
-        if((isset($d['TO'])) && (count($d['TO']) != 0)){
+        if(!empty($d['TO']) && ((is_array($d['TO']) && count($d['TO']) > 0) || is_string($d['TO']))){
+        // if((isset($d['TO'])) && (count($d['TO']) != 0)){
             $mail = $this->set_to($mail, $d['TO']);
             $mail = $this->set_bcc($mail, $this->admin);
         }else{

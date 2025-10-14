@@ -50,7 +50,7 @@
                                 ? ($logDateTime < $startDateTime || $logDateTime > $endDateTime)
                                 : false;
                         @endphp
-                        <tr @if((empty($log->TID_DATA) || $isOutOfRange) && $log->LOG_USER != "QSECOFR") style="background-color: #fca5a5 !important;" @endif>
+                        <tr @if((empty($log->TID_DATA) || $isOutOfRange) && $log->LOG_USER != "QSECOFR") style="background-color: #fca5a5;" @endif>
                             <td>{{ $i + 1 }}</td>
                             <td>{{ $log->LOG_DATE }}</td>
                             <td>{{ $log->LOG_TIME }}</td>

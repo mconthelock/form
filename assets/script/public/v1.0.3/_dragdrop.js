@@ -30,6 +30,7 @@
  */
 /**
  * @note 2025-10-10 เพิ่ม setFilePathToDragDrop สำหรับดึงไฟล์จาก path มาใส่ใน input file
+ * @note 2025-10-11 แก้ .drop-remove ลบ index ผิด เปลี่ยนจาก numOfli -1 - index เป็นแค่ index
  */
 
 import { getFile } from "../../api/file";
@@ -83,7 +84,7 @@ $(document).on("click", ".drop-remove", async function (e) {
     const numOfLi = element.list.find("li").length;
     const index = list.index();
     const fileInput = element.fileInput[0];
-    filesData[element.name].splice(numOfLi - 1 - index, 1);
+    filesData[element.name].splice(index, 1);
     list.remove();
     addDataFile(fileInput, element);
 });

@@ -388,7 +388,7 @@ async function setAudit(data) {
         formatDate(data.QA_OJT_DATE, "DD-MMM-YYYY HH:mm") || "-"
     );
     const auditor = await setAuditorToString(form);
-    $("#auditorShow").text(auditor.slice(0, -2) || "-");
+    $("#auditorShow").text(auditor || "-");
     const showOperator = await checkFinishAudit();
     if (showOperator || cextdata == "02") {
         const auditee = await searchAuditees(form);

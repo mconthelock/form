@@ -2,6 +2,8 @@
 import { h } from 'vue'
 import DefaultTheme from 'vitepress/theme'
 import './style.css'
+import Indent  from './components/Indent.vue'
+import FancyLightboxImage from './components/FancyLightboxImage.vue'
 
 /** @type {import('vitepress').Theme} */
 export default {
@@ -12,6 +14,7 @@ export default {
     })
   },
   enhanceApp({ app, router, siteData }) {
-    
+        app.component('Indent', Indent )
+        app.component('FancyLightboxImage', FancyLightboxImage)
   }
 }
