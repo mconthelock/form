@@ -34,6 +34,7 @@ class Training extends MY_Controller {
             $data['mode'] = $this->getMode($nfrmno, $vorgno, $cyear, $cyear2, $nrunno, $empno);
             $data['form'] = $this->form->getForm($nfrmno, $vorgno, $cyear, $cyear2, $nrunno);
             $data['data_head']  = $this->trn->get_main_data($nfrmno, $vorgno, $cyear, $cyear2, $nrunno);
+            $data['data_trainee']  = $this->trn->get_trainee($nfrmno, $vorgno, $cyear, $cyear2, $nrunno);
             $data['data_purpose']  = $this->trn->select_all_by_tb($nfrmno, $vorgno, $cyear, $cyear2, $nrunno, 'GP_TRN_PURPOSE', 'PID');
             $data['data_benefit']  = $this->trn->select_all_by_tb($nfrmno, $vorgno, $cyear, $cyear2, $nrunno, 'GP_TRN_BENEFIT', 'BID');
             $data['data_attach_compare']  = $this->trn->select_all_by_tb($nfrmno, $vorgno, $cyear, $cyear2, $nrunno, 'GP_TRN_ATT', 'ID', ['TYPE_ATT' => 'COMPARE']);
@@ -42,7 +43,6 @@ class Training extends MY_Controller {
             }
         
             $data['data_attach_compare']  = $this->trn->select_all_by_tb($nfrmno, $vorgno, $cyear, $cyear2, $nrunno, 'GP_TRN_ATT', 'ID', ['TYPE_ATT' => 'COMPARE']);
-
             $this->views('gpform/GP-TRN/training_view', $data);
         }
     }
@@ -85,8 +85,11 @@ class Training extends MY_Controller {
                 return;
             }
 
+            //Update Flow Training Officer  01027/14001
+            $this->trn->update_flow($data["NFRMNO"], $data["VORGNO"], $data["CYEAR"], $data["CYEAR2"], $data["NRUNNO"], 'VAPVNO', '01027', 'CEXTDATA', '04');
+            $this->trn->update_flow($data["NFRMNO"], $data["VORGNO"], $data["CYEAR"], $data["CYEAR2"], $data["NRUNNO"], 'VREPNO', '14001', 'CEXTDATA', '04');
+
             $formno = $this->toFormNumber($data["NFRMNO"], $data["VORGNO"], $data["CYEAR"], $data["CYEAR2"], $data["NRUNNO"]);
-            // ✅ เตรียมข้อมูล insert
             $reason = $data["TRN_EXPENSE_REASON"] ?? "";
             $cost   = $data["COST"] ?? 0;
             if (strtolower($reason) === "free") {
@@ -99,7 +102,6 @@ class Training extends MY_Controller {
                 "CYEAR2" => $data["CYEAR2"] ?? null,
                 "NRUNNO" => $data["NRUNNO"] ?? null,
                 "FID"    => $data["FID"] ?? null,
-
                 "SUBJECT" => $data["SUBJECT"] ?? "",
                 "DATE_FROM" => !empty($data["DATE_FROM"]) ? $data["DATE_FROM"] : null,
                 "DATE_TO"   => !empty($data["DATE_TO"]) ? $data["DATE_TO"] : null,
@@ -107,9 +109,6 @@ class Training extends MY_Controller {
                 "TIME_TO"   => $data["TIME_TO"] ?? "0000",
                 "PLACE"       => $data["PLACE"] ?? "",
                 "INSTITUTION" => $data["INSTITUTION"] ?? "",
-                "TRAINEE_ID"  => $data["TRAINEE_ID"] ?? "",
-                "JD_NAME"     => $data["JD_NAME"] ?? "",
-                "JD_DESC"     => $data["JD_DESC"] ?? "",
                 "TRN_EXPENSE_STATUS" => $data["TRN_EXPENSE_STATUS"] ?? "",
                 "TRN_EXPENSE_REASON" => $reason,
                 "TRN_EXPENSE_OTHER"  => $data["TRN_EXPENSE_OTHER"] ?? "",
@@ -142,9 +141,9 @@ class Training extends MY_Controller {
 
             $prefix = $this->input->post("PREFIX");
             $map = [
-                "func"  => ["obj" => "funcObjective",  "exp" => "funcExpectation"],
-                "legal" => ["obj" => "legalObjective", "exp" => "legalExpectation"],
-                "meth"  => ["obj" => "methObjective",  "exp" => "methExpectation"],
+                "func"  => ["obj" => "funcObjective",  "exp" => "funcExpectation", "trainee" => "funcTraineeCode"],
+                "legal" => ["obj" => "legalObjective", "exp" => "legalExpectation", "trainee" => "legalTraineeCode"],
+                "meth"  => ["obj" => "methObjective",  "exp" => "methExpectation", "trainee" => "methTraineeCode"],
             ];
 
             if (!isset($map[$prefix])) {throw new Exception("Unknown training form prefix: ".$prefix);}
@@ -154,9 +153,11 @@ class Training extends MY_Controller {
 
             $dest_path = $this->upload_path.$formno;
             if (!is_dir($dest_path)) {mkdir($dest_path, 0777, true);}
-            // ✅ Upload JD Files
-            if (!empty($_FILES['funcJdFiles']['name'][0])) {
-                foreach ($_FILES['funcJdFiles']['name'] as $i => $name) { $_FILES['funcJdFiles']['name'][$i] = preg_replace('/[^A-Za-z0-9._-]/', '_', $name);}
+            // ✅ Upload JD Files (มีเฉพาะ functional)
+            if ($prefix === "func" && !empty($_FILES['funcJdFiles']['name'][0])) {
+                foreach ($_FILES['funcJdFiles']['name'] as $i => $name) {
+                    $_FILES['funcJdFiles']['name'][$i] = preg_replace('/[^A-Za-z0-9._-]/', '_', $name);
+                }
                 $uploaded_jd = $this->uploadMultiFile($_FILES, ['funcJdFiles'], $dest_path);
                 if ($uploaded_jd['status'] && !empty($uploaded_jd['files']['funcJdFiles'])) {
                     $filenames = array_column($uploaded_jd['files']['funcJdFiles'], 'file_name');
@@ -164,14 +165,60 @@ class Training extends MY_Controller {
                 }
             }
 
-            // ✅ Upload Compare Files
-            if (!empty($_FILES['funcCompareFiles']['name'][0])) {
-                foreach ($_FILES['funcCompareFiles']['name'] as $i => $name) { $_FILES['funcCompareFiles']['name'][$i] = preg_replace('/[^A-Za-z0-9._-]/', '_', $name); }
-                $uploaded_compare = $this->uploadMultiFile($_FILES, ['funcCompareFiles'], $dest_path);
-                if ($uploaded_compare['status'] && !empty($uploaded_compare['files']['funcCompareFiles'])) {
-                    $filenames = array_column($uploaded_compare['files']['funcCompareFiles'], 'file_name');
+            // ✅ Upload Compare Files (ทุกฟอร์มใช้ได้)
+            if (!empty($_FILES[$prefix.'CompareFiles']['name'][0])) {
+                foreach ($_FILES[$prefix.'CompareFiles']['name'] as $i => $name) {
+                    $_FILES[$prefix.'CompareFiles']['name'][$i] = preg_replace('/[^A-Za-z0-9._-]/', '_', $name);
+                }
+                $uploaded_compare = $this->uploadMultiFile($_FILES, [$prefix.'CompareFiles'], $dest_path);
+                if ($uploaded_compare['status'] && !empty($uploaded_compare['files'][$prefix.'CompareFiles'])) {
+                    $filenames = array_column($uploaded_compare['files'][$prefix.'CompareFiles'], 'file_name');
                     $this->insert_and_upload("GP_TRN_ATT", $base, $filenames, 'COMPARE');
                 }
+            }
+
+            // ✅ Insert Trainee
+            // อ่านค่ารหัสพนักงานจาก form (จะได้เป็น array หรือ string)
+            $traineeCodes = $this->input->post('TRAINEE_ID');
+
+            // ถ้าเป็น string เดียวให้แปลงเป็น array เพื่อวน loop ได้เหมือนกัน
+            if (!empty($traineeCodes) && !is_array($traineeCodes)) {
+                $traineeCodes = [$traineeCodes];
+            }
+
+            // ถ้ามีข้อมูลจริง
+            if (!empty($traineeCodes)) {
+                foreach ($traineeCodes as $code) {
+                    if (trim($code) !== "") {
+                        $arr_trainee = $base;
+                        $arr_trainee['EMPNO']    = $code;
+                        $arr_trainee['JD_NAME']  = $data["JD_NAME"] ?? "";
+                        $arr_trainee['JD_DESC']  = $data["JD_DESC"] ?? "";
+                        $this->trn->insert_data("GP_TRN_TRAINEE", $arr_trainee);
+                    }
+                }
+            }
+
+            //Update flow 
+            if($prefix == 'meth'){
+                $where = " AND CSTEPNO = '--'";
+                $get_first_step = $this->trn->get_data_flow($data["NFRMNO"], $data["VORGNO"], $data["CYEAR"], $data["CYEAR2"], $data["NRUNNO"], $where);
+                $this->trn->update_flow($data["NFRMNO"], $data["VORGNO"], $data["CYEAR"], $data["CYEAR2"], $data["NRUNNO"], 'CSTEPNEXTNO', '10', 'CSTEPNEXTNO', '52');
+                $this->trn->update_flow($data["NFRMNO"], $data["VORGNO"], $data["CYEAR"], $data["CYEAR2"], $data["NRUNNO"], 'CSTEPNEXTNO', '52', 'CSTEPNO', '--');
+                $this->trn->update_flow($data["NFRMNO"], $data["VORGNO"], $data["CYEAR"], $data["CYEAR2"], $data["NRUNNO"], 'CSTEPNEXTNO', $get_first_step[0]->CSTEPNEXTNO, 'CSTEPNO', '52');
+
+                $this->trn->update_flow($data["NFRMNO"], $data["VORGNO"], $data["CYEAR"], $data["CYEAR2"], $data["NRUNNO"], 'CSTEPST', '3', 'CSTEPNO', '52');
+                $this->trn->update_flow($data["NFRMNO"], $data["VORGNO"], $data["CYEAR"], $data["CYEAR2"], $data["NRUNNO"], 'CSTEPST', '1', 'CSTEPST', '2');
+                $this->trn->update_flow($data["NFRMNO"], $data["VORGNO"], $data["CYEAR"], $data["CYEAR2"], $data["NRUNNO"], 'CSTEPST', '2', 'CSTEPNO', $get_first_step[0]->CSTEPNEXTNO);
+            }else if($prefix == 'legal'){
+                $this->trn->delete_flow($data["NFRMNO"], $data["VORGNO"], $data["CYEAR"], $data["CYEAR2"], $data["NRUNNO"], 'CSTEPNO', '06');
+                $this->trn->delete_flow($data["NFRMNO"], $data["VORGNO"], $data["CYEAR"], $data["CYEAR2"], $data["NRUNNO"], 'CSTEPNO', '04');
+                $this->trn->delete_flow($data["NFRMNO"], $data["VORGNO"], $data["CYEAR"], $data["CYEAR2"], $data["NRUNNO"], 'CSTEPNO', '02');
+                $this->trn->update_flow($data["NFRMNO"], $data["VORGNO"], $data["CYEAR"], $data["CYEAR2"], $data["NRUNNO"], 'CSTEPNEXTNO', '52', 'CSTEPNO', '--');
+
+                $this->trn->update_flow($data["NFRMNO"], $data["VORGNO"], $data["CYEAR"], $data["CYEAR2"], $data["NRUNNO"], 'CSTEPST', '3', 'CSTEPNO', '52');
+                $this->trn->update_flow($data["NFRMNO"], $data["VORGNO"], $data["CYEAR"], $data["CYEAR2"], $data["NRUNNO"], 'CSTEPST', '1', 'CSTEPST', '2');
+                $this->trn->update_flow($data["NFRMNO"], $data["VORGNO"], $data["CYEAR"], $data["CYEAR2"], $data["NRUNNO"], 'CSTEPST', '2', 'CSTEPNO', '10');
             }
 
             echo json_encode(["status" => "success", "message" => "Insert successful", "received" => $data]);

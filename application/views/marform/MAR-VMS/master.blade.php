@@ -80,6 +80,7 @@
             <thead class="sticky top-0 z-10 bg-gradient-to-r from-green-100 to-green-200">
               <tr class="text-left text-gray-700 font-semibold">
                 <th class="px-3 py-2 w-10">No.</th>
+                <th class="px-3 py-2 w-64">Email</th>
                 <th class="px-3 py-2 w-64">Name</th>
                 <th class="px-3 py-2 w-48">Position</th>
                 <th class="px-3 py-2 w-64">Div./Dept./Sec.</th>
@@ -113,8 +114,5 @@
 @endsection
 
 @section('scripts')
-<script>
-  const allParticipants = @json($participants);
-</script>
 <script src="{{ $_ENV['APP_JS'] }}/vmsmst.js?ver={{ $GLOBALS['version'] }}"></script>
 @endsection

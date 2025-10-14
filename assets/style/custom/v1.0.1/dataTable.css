@@ -11,8 +11,22 @@
     --radius-field: .25rem;
     --border:1px;
     --color-base-content: #000;
+    --border-table: #000
      */
-
+:root {
+    --bgcolor-dataTable-thead: #fff;
+    --bgcolor-dataTable-tbody: #fff;
+    --color-dataTable-thead: var(--color-primary);
+    --height-dataTable-input: 2.5rem;
+    --bgcolor-dataTable-input: #fff;
+    --font-size-dataTable-input: .875rem;
+    --radius-dataTable-input: .25rem;
+    --max-h-dataTable-body: 70vh;
+    --radius-field: .25rem;
+    --border:1px;
+    --color-base-content: #000;
+    --border-table: #000
+}
 /* Datatable */
 div.dt-container .table-top {
     display: flex;
@@ -82,7 +96,7 @@ div.dt-container .table-body {
     background-color: #fff;
     border: 1px solid #d1d5db;
     border-radius: 0.5rem;
-    overflow: scroll;
+    overflow: auto;
     max-height: var(--max-h-dataTable-body);
 }
 
@@ -366,7 +380,7 @@ div.dt-processing > div:last-child > div:nth-child(4) {
 #filter-options {
     height: 400px;
     width: 200px;
-    overflow: scroll;
+    overflow: auto;
 }
 .filter-menu label {
     display: block;

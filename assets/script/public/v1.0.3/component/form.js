@@ -104,7 +104,7 @@ export const fieldset = (option = {}) => {
  */
 export const input = (option = {}) => {
     const opt = inputAttrs({ ...elementOpt, ...option });
-    return `<input type="${opt.type}" placeholder="${opt.placeholder}" class="w-full join-item ${opt.class}" id="${opt.id}" name="${opt.name}" value="${opt.value}" ${opt.attribute} ${opt.checked} ${opt.disabled} ${opt.required}> `;
+    return `<input type="${opt.type}" placeholder="${opt.placeholder}" class="${opt.class}" id="${opt.id}" name="${opt.name}" value="${opt.value}" ${opt.attribute} ${opt.checked} ${opt.disabled} ${opt.required}> `;
 };
 
 /**
@@ -131,7 +131,7 @@ export const select = (option = {}) => {
                 return `<option value="${item.value}">${item.text}</option>`;
             })
             .join("") || "";
-    return `<select id="${opt.id}" name="${opt.id}" placeholder="${opt.placeholder}" class="w-full join-item ${opt.class}" ${opt.attribute} ${opt.disabled} ${opt.required}>
+    return `<select id="${opt.id}" name="${opt.name}" placeholder="${opt.placeholder}" class="${opt.class}" ${opt.attribute} ${opt.disabled} ${opt.required}>
                 <option value=""></option>
                 ${options}
             </select>`;
@@ -157,7 +157,7 @@ export const radio = (option = {}) => {
     const opt = inputAttrs({ ...elementOpt, ...option });
     let radio = opt.data
         .map((item) => {
-            return `<input type="radio" name="${opt.name}" value="${item.value}" class="radio w-full join-item ${opt.class}" aria-label="${item.text}" ${opt.attribute} ${opt.checked} ${opt.disabled} ${opt.required}/>`;
+            return `<input type="radio" name="${opt.name}" value="${item.value}" class="radio ${opt.class}" aria-label="${item.text}" ${opt.attribute} ${opt.checked} ${opt.disabled} ${opt.required}/>`;
         })
         .join("");
     return `<div class="w-full join my-2 ${opt.vertical}">
@@ -206,7 +206,7 @@ export const webflowSubmit = (option = {}) => {
             break;
     }
     return `<div class="card-actions flex-col gap-5 justify-start">
-                <div class="actions-Form ${opt.actionsForm ? "" : "hidden"}">
+                <div class="actions-Form ${opt.actionsForm ? "" : "hidden"} flex flex-col items-center jusitfy-center w-full">
                     <fieldset class="fieldset ${opt.remark ? "" : "hidden"}">
                         <span class="fieldset-label">Remark</span>
                         <textarea class="textarea h-24 w-56" id="remark" ></textarea>

@@ -1,55 +1,72 @@
-import { showAlert } from "./alert.js";
-export async function bindEmpLookup(inputEl, outputMap) {
-    inputEl === null || inputEl === void 0 ? void 0 : inputEl.addEventListener("input", async () => {
+
+import { showAlert } from "./formUtils.js";
+
+/**
+ * Bind employee lookup ให้กับ input
+ * @param {HTMLInputElement} inputEl - ช่องรหัสพนักงาน
+ * @param {Object<string, HTMLElement>} outputMap - ช่อง output mapping เช่น { SNAME: span, SPOSITION: input }
+ * @param {string} getEmpUrl - URL API สำหรับค้นหาพนักงาน
+ */
+export async function bindEmpLookup(inputEl, outputMap, getEmpUrl) {
+    if (!inputEl) return;
+    let empTimer;
+
+    inputEl.addEventListener("input", () => {
+        clearTimeout(empTimer);
+
         const empno = inputEl.value.trim();
-        if (empno.length === 5) {
+
+        if (empno.length !== 5) {
+            // Reset ถ้าไม่ครบ
+            Object.values(outputMap).forEach(el => {
+                if (!el) return;
+                if ("value" in el) el.value = "";
+                else el.textContent = "";
+            });
+            return;
+        }
+
+        empTimer = setTimeout(async () => {
             try {
-                const res = await fetch(getEmpUrl, {
+                const res = await fetch(window.getEmpUrl, {
                     method: "POST",
                     headers: { "Content-Type": "application/x-www-form-urlencoded" },
                     body: "empno=" + encodeURIComponent(empno)
                 });
-                const data = await res.json();
+
+
+                let data;
+                try {
+                    data = await res.json();
+                } catch {
+                    showAlert("⚠ แจ้งเตือน", "ข้อมูลที่ได้ไม่ถูกต้องจาก server");
+                    return;
+                }
+
                 if (data.status === "success") {
                     Object.entries(outputMap).forEach(([key, el]) => {
-                        var _a, _b;
-                        if (!el)
-                            return;
-                        if ("value" in el) {
-                            el.value = (_a = data[key]) !== null && _a !== void 0 ? _a : "";
-                        }
-                        else {
-                            el.textContent = (_b = data[key]) !== null && _b !== void 0 ? _b : "";
-                        }
+                        if (!el) return;
+                        if ("value" in el) el.value = data[key] ?? "";
+                        else el.textContent = data[key] ?? "";
                     });
-                }
-                else {
+                } else {
                     inputEl.value = "";
                     Object.values(outputMap).forEach(el => {
-                        if (!el)
-                            return;
-                        if ("value" in el)
-                            el.value = "";
-                        else
-                            el.textContent = "";
+                        if (!el) return;
+                        if ("value" in el) el.value = "";
+                        else el.textContent = "";
                     });
-                    showAlert("⚠ แจ้งเตือน", data.message);
+                    showAlert("⚠ แจ้งเตือน", data.message || "ไม่พบข้อมูลพนักงาน");
                 }
-            }
-            catch (err) {
-                console.error(err);
+            } catch (err) {
+                console.error("emp_lookup fetch error:", err);
                 showAlert("⚠ แจ้งเตือน", "เกิดข้อผิดพลาดในการเชื่อมต่อ");
             }
-        }
-        else {
-            Object.values(outputMap).forEach(el => {
-                if (!el)
-                    return;
-                if ("value" in el)
-                    el.value = "";
-                else
-                    el.textContent = "";
-            });
-        }
+        }, 300);
+    });
+
+    // กัน Enter กดส่งฟอร์มโดยไม่ตั้งใจ
+    inputEl.addEventListener("keypress", e => {
+        if (e.key === "Enter") e.preventDefault();
     });
 }

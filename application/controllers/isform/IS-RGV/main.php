@@ -92,13 +92,62 @@ class Main extends MY_Controller
                 $data['user'] = $this->mergeResultToUser($filtered, $emp_form, 'EMPNO');
                 $this->views('isform/IS-RGV/as400_view', $data);
                 break;
-
+            case 'ln':
+                $data['rows'] = $this->rm->test_data($data_form->EMPCHECKER);
+                $this->views('isform/IS-RGV/test', $data);
+                break;
             default:
                 # code...
                 break;
         }
         // pre_array($filtered);
         // $this->views('isform/IS-RGV/view', $data);
+    }
+
+    public function createSummaryView()
+    {
+        $systems = [
+            [
+                'id'               => 1,
+                'main_system_name' => 'Purchasing system',
+                'total_users'      => 476,
+                'unmatched'        => 2,
+                'programs'         => [
+                    ['name' => 'AS400'],
+                    ['name' => 'Procurement'],
+                ]
+            ],
+            [
+                'id'               => 2,
+                'main_system_name' => 'Financial system',
+                'total_users'      => 76,
+                'unmatched'        => 2,
+                'programs'         => [
+                    ['name' => 'Invoice'],
+                    ['name' => 'LN'],
+                ]
+            ],
+            [
+                'id'               => 3,
+                'main_system_name' => 'Marketing system',
+                'total_users'      => 98,
+                'unmatched'        => 5,
+                'programs'         => [
+                    ['name' => 'Invoice System'],
+                    ['name' => 'Marketing System'],
+                ]
+            ],
+            [
+                'id'               => 4,
+                'main_system_name' => 'Production & Logistics system',
+                'total_users'      => 125,
+                'unmatched'        => 0,
+                'programs'         => [
+                    ['name' => 'AS400'], // ตัวอย่างระบบที่มีโปรแกรมเดียว
+                ]
+            ],
+        ];
+        $this->views('isform/IS-RGV/summary_view', ['systems' => $systems]);
     }
 
     public function test_view()
@@ -208,7 +257,7 @@ class Main extends MY_Controller
         return $userList;
     }
 
-    public function createform($empno, $program, $owner)
+    public function createform($empno, $program, $owner, $org_code)
     {
         $form = $this->create('7', '050601', '25', $empno, $empno, '', 1);
         pre_array($form);
@@ -227,6 +276,7 @@ class Main extends MY_Controller
             'PROGRAM'    => $program,
             'EMPCHECKER' => $empno,
             'STATUS'     => '1',
+            'ORGCODE'   => $org_code
         ];
         $this->rm->insert('ISRGV_FORM', $data);
 
@@ -240,6 +290,9 @@ class Main extends MY_Controller
             $this->updateFlowApv("", "08243", $NFRMNO, $VORGNO, $CYEAR, $CYEAR2, $NRUNNO, '57', '18');
         } else if ($program == 'Marketing') {
             $this->updateFlowApv("", "08243", $NFRMNO, $VORGNO, $CYEAR, $CYEAR2, $NRUNNO, '57', '18');
+        } else if ($program == 'LN') {
+            // $this->updateFlowApv("", "13255", $NFRMNO, $VORGNO, $CYEAR, $CYEAR2, $NRUNNO, '57', '18');
+            $this->deleteFlowStep('', $NFRMNO, $VORGNO, $CYEAR, $CYEAR2, $NRUNNO, '57', '18');
         }
         $this->updateFlowApv("", $owner, $NFRMNO, $VORGNO, $CYEAR, $CYEAR2, $NRUNNO, '18', '00');
         // print_r($form['message']['runno']);
@@ -351,13 +404,23 @@ class Main extends MY_Controller
                 if (isset($orgMap[$pic]) && in_array($org, $orgMap[$pic])) {
                     $groupedData[$pic]['users'][$index] = $user;
                     $groupedData[$pic]['owner']         = $main_apv;
+                    $groupedData[$pic]['org']           = $org;
                 }
             }
 
+            echo "<pre>";
+            print_r($groupedData);
+            echo "</pre>";
+
+
+
+
+
             // สร้างฟอร์มและ insert ข้อมูล
+
             foreach ($groupedData as $pic => $userGroup) {
                 $owner  = $userGroup['owner'];
-                $form   = $this->createform(trim($pic), $programItem->PROGRAM, $owner);
+                $form   = $this->createform(trim($pic), $programItem->PROGRAM, $owner, $userGroup['org']);
                 $NRUNNO = $form['runno'];
                 $CYEAR2 = $form['cyear2'];
 
@@ -389,6 +452,26 @@ class Main extends MY_Controller
                 }
             }
         }
+
+        $authorizeList = $this->rm->getLnauthorize();
+        $lnUsers       = array_column($authorizeList, 'EMPNO');
+        // $lnOwner       = $this->rm->get_orgpos("040101", "10")[0];
+        foreach ($lnUsers as $key => $val) {
+            $lnOwner = $this->rm->get_orgpos("040101", "10")[0];
+            $form    = $this->createform(trim($val), 'LN', $lnOwner->VEMPNO, '040101');
+            $NRUNNO  = $form['runno'];
+            $CYEAR2  = $form['cyear2'];
+            $data    = [
+                'NRUNNO' => $NRUNNO,
+                'CYEAR2' => $CYEAR2,
+                'EMPNO'  => $val,
+            ];
+            // pre_array($data);
+            $this->rm->insert('ISRGV_EMP', $data);
+        }
+        echo "<pre>";
+        print_r($lnUsers);
+        echo "</pre>";
     }
 
 
@@ -453,47 +536,6 @@ class Main extends MY_Controller
         $this->rm->insert('ISRGV_LN_AUTHORIZE', $data);
     }
 
-    public function test_curl()
-    {
-        // // $url = 'https://amecwebtest.mitsubishielevatorasia.co.th/form/gpform/GP-ENT/main/InsertForm22';
-        // $url = base_url('gpform/GP-ENT/main/InsertForm22');
-
-        // $postData = [
-        //     "key1" => "value1",
-        //     "key2" => "value2"
-        // ];
-
-        // $ch = curl_init($url);
-        // curl_setopt($ch, CURLOPT_POST, true);
-        // curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($postData));
-        // curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        // // curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-        // // curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
-        // // curl_setopt($ch, CURLOPT_SSLVERSION, CURL_SSLVERSION_TLSv1_2);
-
-
-        // $result = curl_exec($ch);
-
-        // if ($result === false) {
-        //     echo "cURL Error: " . curl_error($ch);
-        // } else {
-        //     echo $result; // จะได้ JSON เช่น {"status":"success","message":"Data received successfully","received":{"key1":"value1","key2":"value2"}}
-        // }
-
-        // curl_close($ch);
-        // // echo base_url('gpform/GP-ENT/main/InsertForm22');
-
-        $url = 'https://amecwebtest.mitsubishielevatorasia.co.th/form/gpform/GP-ENT/main/InsertForm22';
-        // $client   = new \GuzzleHttp\Client(['verify' => false]); // ปิด verify
-        $response = $this->client->post($url, [
-            'form_params' => [
-                'key1' => 'value1',
-                'key2' => 'value2'
-            ]
-        ]);
-
-        echo $response->getBody();
-    }
 
 
 }

@@ -37,7 +37,7 @@
 <div class="apv-data hidden" cextData="{{ $cextData }}" return="{{ $return }}"></div>
 @endif
 <div class="flex justify-center">
-    <div class="card bg-white min-w-[70vw] w-fit drop-shadow-lg">
+    <div class="card bg-white min-w-[70vw] max-w-[80vw] w-fit drop-shadow-lg">
         <div class="card-header px-6 pt-6">
             <h2 class="text-3xl font-bold">E-Self Inspection and Authorize</h2>
         </div>
@@ -48,8 +48,8 @@
 
             <hr class="my-4">
 
-            <div class="reqDetail hidden">
-                <div class="text-xl font-bold mb-5">Requester Details</div>
+            <div class="reqDetail flex flex-col gap-5 hidden">
+                <div class="text-xl font-bold">Requester Details</div>
                 <table class="mytable table">
                     <tbody>
                         <tr>
@@ -102,6 +102,12 @@
                                             <div class="qcForeman"></div>
                                         </td>
                                     </tr>
+                                    <tr>
+                                        <td>Revision</td>
+                                        <td>
+                                            <div class="inchargeRevision"></div>
+                                        </td>
+                                    </tr>
                                 </tbody>
                             </table>
                         </div>
@@ -112,6 +118,34 @@
                         </div>
                     </div>
                 </form>
+                <div id="qcForm2" class="flex flex-col gap-5 hidden">
+                    <div class="text-xl font-bold mt-8">QC Auditor</div>
+                    <table class="mytable table  w-full">
+                        <tbody>
+                            <tr>
+                                <td>Auditor</td>
+                                <td>
+                                    <div id="auditorShow"></div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Training Date</td>
+                                <td>
+                                    <div id="tdateShow"></div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>OJT Date</td>
+                                <td>
+                                    <div id="ojtShow"></div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div class="text-xl font-bold mt-8" id="topicAuditee"></div>
+                    <table id="auditee" class="table"></table>
+                    <div id="tableAuditeeLoading"></div>
+                </div>
                 <div id="actionWebflow" class="mt-5"></div>
             </div>
         </div>

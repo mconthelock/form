@@ -85,7 +85,7 @@ export function dataTableSkeleton(options = {}) {
                     <div class="skeleton w-8"></div>
                 </div>`;
         if (opt.info)
-            loader += `<div class="s-info skeleton w-40 h-full ml-auto"></div>`;
+            loader += `<div class="s-info skeleton w-40 h-8 ml-auto"></div>`;
         loader += `</div>
         </div>`;
         $(`#${opt.idLoading}`).html(loader);
@@ -123,6 +123,11 @@ export function skeleton(option = {}) {
     return;
 }
 
+/**
+ * 
+ * @param {object} option 
+ * @returns 
+ */
 export function skeletons(option = {}) {
     const opt = {
         classLoading: "",
@@ -183,8 +188,6 @@ export function formSubmitSkeleton(option = {}) {
             <div class="skeleton h-[20rem] w-[36rem]"></div>
         </div>
     </div>`;
-    console.log('mode:', mode);
-
     if (element) {
         switch (mode) {
             case 'edit':

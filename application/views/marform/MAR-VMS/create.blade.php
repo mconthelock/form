@@ -250,6 +250,7 @@ table.dataTable .select2-container--default .select2-selection--multiple {
 <input type="hidden" id="empno" name="empno" value="{{ $empno }}" />
 <input type="hidden" id="cyear2" name="cyear2" value="{{ $mode == 2 ? $CYEAR2 : '' }}"/>
 <input type="hidden" id="nrunno" name="nrunno" value="{{ $mode == 2 ? $NRUNNO : '' }}"/>
+<input type="hidden" id="mode" name="mode" value="{{ $mode }}" />
 
 <!-- tab-visit arrangment -->
 <form id="form-visitarg"  method="post" enctype="multipart/form-data">
@@ -775,6 +776,20 @@ table.dataTable .select2-container--default .select2-selection--multiple {
 <div id="tab-inf" class="tab-pane hidden w-full max-w-7xl mx-auto">
   <h2 class="text-2xl font-bold text-blue-900 mb-2">Visitor Information</h2>
   <p class="text-sm text-gray-600 mb-6">Please fill in the visitor information.</p>
+  <div >
+  <label for="visitor_file" class="block text-sm font-semibold text-gray-700 mb-2">
+    Upload Excel File
+  </label>
+  <input type="file" id="visitor_file" name="visitor_file"
+    accept=".xlsx"
+    class="hidden" />
+  
+  <label for="visitor_file"
+    class="inline-block bg-blue-500 text-white px-4 py-2 rounded-lg shadow cursor-pointer hover:bg-blue-600">
+    Browse Excel
+  </label>
+  <p class="mt-1 text-xs text-gray-500">Supported format: .xlsx</p>
+</div>
   <div>
     <table id="tablevisitor" class="min-w-[1800px] text-sm text-gray-800 w-full">
       <thead class="text-blue-800 sticky top-0 z-10 shadow-sm">
@@ -1220,16 +1235,16 @@ table.dataTable .select2-container--default .select2-selection--multiple {
   <table id="tablepst" class="min-w-[1200px] text-sm text-gray-800 w-full">
     <thead class="text-blue-800 sticky top-0 z-10 shadow-sm">
       <tr class="bg-gradient-to-r from-blue-100 via-blue-100 to-blue-100 text-sm">
-        <th class="px-4 py-3 text-left w-28 sticky-column bg-gradient-to-r from-blue-100 via-blue-100 to-blue-100">No.</th>
-        <th class="px-4 py-3 text-left w-48">Group Name</th>
-        <th class="px-4 py-3 text-left w-72">Detail</th>
+        <th class="px-4 py-3 text-left w-20 sticky-column bg-gradient-to-r from-blue-100 via-blue-100 to-blue-100">No.</th>
+        <th class="px-4 py-3 text-left w-30">Group Name</th>
+        <th class="px-4 py-3 text-left w-50">Detail</th>
       </tr>
     </thead>
     <tbody class="divide-y divide-blue-100">
       @foreach($pstk as $index => $ps)
       <tr class="bg-white">
-        <td class="px-2 py-2 sticky-column">{{ $index+1 }}</td>
-        <td  class="px-2 py-2  w-50">
+        <td class="px-2 py-2 w-20 sticky-column">{{ $index+1 }}</td>
+        <td  class="px-2 py-2  w-30">
           <select class="pst-select" style="width: 50px;" name="pst[]">
             <option value=""></option>
             @foreach($allgroup as $p)
@@ -1241,13 +1256,13 @@ table.dataTable .select2-container--default .select2-selection--multiple {
             @endforeach
           </select>
         </td>
-        <td class="px-2 py-2 text-gray-600 grp-col">{{ $ps->GDETAIL }}</td>
+        <td class="px-2 py-2 w-50 text-gray-600 grp-col">{{ $ps->GDETAIL }}</td>
       </tr>
       @endforeach
       @if(empty($pstk))
       <tr class="bg-white">
-        <td class="px-2 py-2 sticky-column">1</td>
-        <td class="px-2 py-2  w-50">
+        <td class="px-2 py-2 w-20 sticky-column">1</td>
+        <td class="px-2 py-2  w-30">
         <select class="pst-select" style="width: 50px;" name ="pst[]">
                 <option value=""></option>
                 @foreach($allgroup as $p)
@@ -1259,7 +1274,7 @@ table.dataTable .select2-container--default .select2-selection--multiple {
         </select>
         
     </td>
-        <td class="px-2 py-2 text-gray-600 grp-col"></td>
+        <td class="px-2 py-2  w-50 text-gray-600 grp-col"></td>
       </tr>
       @endif
     </tbody>
@@ -1279,17 +1294,17 @@ table.dataTable .select2-container--default .select2-selection--multiple {
   <table id="tableist" class="min-w-[1200px] text-sm text-gray-800 w-full">
     <thead class="text-blue-800 sticky top-0 z-10 shadow-sm">
       <tr class="bg-gradient-to-r from-blue-100 via-blue-100 to-blue-100 text-sm">
-        <th class="px-4 py-3 text-left w-28 sticky-column bg-gradient-to-r from-blue-100 via-blue-100 to-blue-100">No.</th>
-        <th class="px-4 py-3 text-left w-48">Group Name</th>
-        <th class="px-4 py-3 text-left w-72">Detail</th>
+        <th class="px-4 py-3 text-left w-20 sticky-column bg-gradient-to-r from-blue-100 via-blue-100 to-blue-100">No.</th>
+        <th class="px-4 py-3 text-left w-30">Group Name</th>
+        <th class="px-4 py-3 text-left w-50">Detail</th>
        
       </tr>
     </thead>
     <tbody class="divide-y divide-blue-100">
     @foreach($istk as $index => $is)
       <tr class="bg-white">
-        <td class="px-2 py-2 sticky-column">{{ $index+1 }}</td>
-        <td class="px-2 py-2  w-50">
+        <td class="px-2 py-2  w-20 sticky-column">{{ $index+1 }}</td>
+        <td class="px-2 py-2  w-30">
           <select class="ist-select"   style="width: 50px;"" name="ist[]">
             <option value=""></option>
             @foreach($allgroup as $p)
@@ -1301,15 +1316,15 @@ table.dataTable .select2-container--default .select2-selection--multiple {
             @endforeach
           </select>
         </td>
-        <td class="px-2 py-2 text-gray-600 grp-col">{{ $is->GDETAIL }}</td>
+        <td class="px-2 py-2 w-50 text-gray-600 grp-col">{{ $is->GDETAIL }}</td>
       </tr>
       @endforeach
 
 
     @if(empty($istk)) 
       <tr class="bg-white">
-        <td class="px-2 py-2 sticky-column">1</td>
-        <td class="px-2 py-2  w-50">
+        <td class="px-2 py-2  w-20  sticky-column">1</td>
+        <td class="px-2 py-2  w-30">
         <select class="ist-select"  style="width: 50px;" name ="ist[]">
                 <option value=""></option>
                 @foreach($allgroup as $p)
@@ -1317,7 +1332,7 @@ table.dataTable .select2-container--default .select2-selection--multiple {
                 @endforeach
         </select>
         </td>
-        <td class="px-2 py-2 text-gray-600 grp-col"></td>
+        <td class="px-2 py-2 w-50  text-gray-600 grp-col"></td>
       </tr>
     @endif
 
@@ -1483,7 +1498,7 @@ table.dataTable .select2-container--default .select2-selection--multiple {
               </div>
               <div class="grid grid-cols-[auto_1fr] gap-x-2">
                 <span class="font-semibold text-gray-700">Time:</span>
-                <span class="text-gray-900" data-field="roomtime"></span>
+                <span class="text-gray-900" data-field="roomtime" ></span>
               </div>
             </div>
             <div class="space-y-2">
@@ -1504,6 +1519,10 @@ table.dataTable .select2-container--default .select2-selection--multiple {
             <div class="md:col-span-2 grid grid-cols-[auto_1fr] gap-x-2">
               <span class="font-semibold text-gray-700">Dietary Restrictions:</span>
               <span class="text-gray-900" data-field="roomdietary"></span>
+            </div>
+            <div class="md:col-span-2 grid grid-cols-[auto_1fr] gap-x-2">
+              <span class="font-semibold text-gray-700" data-field="headent"></span>
+              <span class="text-gray-900" data-field="reqent"></span>
             </div>
           </div>
         </div>
@@ -1529,10 +1548,11 @@ table.dataTable .select2-container--default .select2-selection--multiple {
           <span class="text-sm font-semibold text-gray-700 w-32">Car reservation:</span>
           <span class="text-sm text-gray-900" data-field="car"></span>
         </div>
-        <div class="md:col-span-2">
-          <span class="text-sm text-gray-900" data-field="cardetail"></span>
+        <div class="grid grid-cols-[auto_1fr] gap-x-2">
+        <span class="text-sm font-semibold text-gray-700 w-32" data-field="cardetail"></span>
         </div>
         <div class="md:col-span-2">
+        <span class="text-sm font-semibold text-gray-700 w-32">Entertainment Form:</span>
           <span class="text-sm text-gray-900" data-field="formreqent"></span>
         </div>
       </div>
@@ -1554,12 +1574,12 @@ table.dataTable .select2-container--default .select2-selection--multiple {
       <table class="w-full border border-gray-300 text-sm mt-3 table-auto">
         <thead class="bg-blue-50 text-gray-700">
           <tr>
-            <th class="border border-gray-300 px-3 py-2">Project No.</th>
-            <th class="border border-gray-300 px-3 py-2">Project Name</th>
-            <th class="border border-gray-300 px-3 py-2">Model</th>
-            <th class="border border-gray-300 px-3 py-2">Specification</th>
-            <th class="border border-gray-300 px-3 py-2">No. of Units</th>
-            <th class="border border-gray-300 px-3 py-2">Status</th>
+            <th class="border border-gray-300 px-3 py-2  w-24">Project No.</th>
+            <th class="border border-gray-300 px-3 py-2 w-56">Project Name</th>
+            <th class="border border-gray-300 px-3 py-2 w-56">Model</th>
+            <th class="border border-gray-300 px-3 py-2 w-32">Specification</th>
+            <th class="border border-gray-300 px-3 py-2 w-20">No. of Units</th>
+            <th class="border border-gray-300 px-3 py-2  w-16">Status</th>
           </tr>
         </thead>
         <tbody id="sproject-body" class="text-gray-900"></tbody>
@@ -1578,12 +1598,12 @@ table.dataTable .select2-container--default .select2-selection--multiple {
       <table class="w-full border border-gray-300 text-sm mt-3 table-auto">
         <thead class="bg-blue-50 text-gray-700">
           <tr>
-            <th class="border border-gray-300 px-3 py-2">Project No.</th>
-            <th class="border border-gray-300 px-3 py-2">Project Name</th>
-            <th class="border border-gray-300 px-3 py-2">Model</th>
-            <th class="border border-gray-300 px-3 py-2">Specification</th>
-            <th class="border border-gray-300 px-3 py-2">No. of Units</th>
-            <th class="border border-gray-300 px-3 py-2">Status</th>
+            <th class="border border-gray-300 px-3 py-2  w-24">Project No.</th>
+            <th class="border border-gray-300 px-3 py-2 w-56">Project Name</th>
+            <th class="border border-gray-300 px-3 py-2 w-56">Model</th>
+            <th class="border border-gray-300 px-3 py-2 w-32">Specification</th>
+            <th class="border border-gray-300 px-3 py-2 w-20">No. of Units</th>
+            <th class="border border-gray-300 px-3 py-2  w-16">Status</th>
           </tr>
         </thead>
         <tbody id="pproject-body" class="text-gray-900"></tbody>
@@ -1593,16 +1613,31 @@ table.dataTable .select2-container--default .select2-selection--multiple {
   </div>
   <!-- ปุ่ม -->
   <div class="flex justify-end space-x-2 mt-6">
+      <!--button type="button"  id="bookRoomBtn"
+          class="bg-gradient-to-r from-green-500 to-green-600 text-white px-6 py-2 rounded-xl text-sm font-semibold
+                 shadow-md hover:shadow-lg hover:from-green-600 hover:to-green-700 transition-all duration-300">
+        Book Room
+      </button -->
+      <button type="button" data-tab="submit" 
+        class="send-btn px-6 py-2 rounded-xl text-white font-semibold 
+         bg-gradient-to-r from-teal-500 to-teal-600 
+         hover:from-teal-600 hover:to-teal-700 
+         shadow-md hover:shadow-lg">
+        Sent Mail
+      </button>
       <button type="button" data-tab="submit" 
         class="confirm-btn bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-2 rounded-xl text-sm font-semibold
               shadow-md hover:shadow-lg hover:from-blue-600 hover:to-blue-700 transition-all duration-300
               {{ (!empty($form) && ($mode == '2') && ($form[0]->CST == '0')) ? '' : 'hidden' }}">
         Submit Form
       </button>
-      <button type="button"  id="bookRoomBtn"
-          class="bg-gradient-to-r from-green-500 to-green-600 text-white px-6 py-2 rounded-xl text-sm font-semibold
-                 shadow-md hover:shadow-lg hover:from-green-600 hover:to-green-700 transition-all duration-300">
-        Book Room
+      <button type="button" data-tab="submit" 
+        class="export-btn flex items-center gap-2 bg-gradient-to-r from-orange-500 to-orange-600 
+         text-white px-6 py-2 rounded-xl text-sm font-semibold
+         shadow-md hover:shadow-lg hover:from-orange-600 hover:to-orange-700
+         transition-all duration-300
+              {{ (!empty($form) && ($mode == '2') && ($form[0]->CST == '0')) ? '' : 'hidden' }}">
+        Export
       </button>
   </div>
 </div>
@@ -1636,6 +1671,11 @@ table.dataTable .select2-container--default .select2-selection--multiple {
     window.costmst.forEach(item => {
         costMap[item.ET_NAME] = item.ET_COST;
     });
+    const dietaryOptions = [
+        @foreach($dietary as $d)
+            "{{ $d->DIETARY }}",
+        @endforeach
+    ];
     const tabButtons = document.querySelectorAll('#tabs button');
     const tabPanes = document.querySelectorAll('.tab-pane');
   

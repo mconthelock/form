@@ -1,0 +1,183 @@
+@extends('layouts/webflowTemplate')
+
+@section('contents')
+<div class="hidden form-info" nfrmno="{{$NFRMNO}}" vorgno="{{$VORGNO}}" cyear="{{$CYEAR}}" cyear2="{{ $CYEAR2 }}"
+    nrunno="{{ $NRUNNO }}" seq="{{ $seq }}" empno="{{$empno}}"></div>
+<div class="flex flex-col gap-5">
+    <div
+        class="flex flex-col gap-5 p-5 bg-white rounded-[3px] shadow w-full h-full border-t-3 border-[#3c8dbc] relative">
+        <u class="flex flex-col items-center mb-5">
+            <span class="text-2xl font-bold">Quality Built In Line Audit Report</span>
+            <span class="text-2xl font-bold">Strengthen Trouble Report After Shipment</span>
+        </u>
+        <div id="rev" class="absolute left-4 text-sm text-gray-500 font-bold"></div>
+        <div id="score" class="lg:absolute right-8"></div>
+        <div class="flex flex-col xl:flex-row gap-5 justify-between mt-10 h-fit">
+            <div class="overflow-auto w-full xl:w-1/2 h-full">
+                <div id="detail"></div>
+            </div>
+            <div class="overflow-y-auto w-full xl:w-fit xl:max-w-[45vw] h-full max-h-[23.5rem] rounded shadow">
+                <div id="tableRevision"></div>
+            </div>
+        </div>
+        <div id="part1" class="flex flex-col gap-3">
+            <div class="text-2xl font-bold italic underline">
+                Part I: Self inspection audit item
+            </div>
+            <div id="auditReport"></div>
+        </div>
+        <div class="flex flex-col xl:flex-row gap-5 justify-between">
+            <div id="comment-suggestion">
+                <div class="text-2xl font-bold underline">
+                    Comment/Suggestion
+                </div>
+                <table class="table">
+                    <colgroup>
+                        <col class="w-fit border">
+                        <col class="w-fit border">
+                    </colgroup>
+                    <tr>
+                        <td class="text-center font-bold">C</td>
+                        <td>Comment(Must improvement) ข้อคิดเห็นต้องมีการปรับปรุง</td>
+                    </tr>
+                    <tr>
+                        <td class="text-center font-bold">S</td>
+                        <td>Suggestion(No need improvement) ข้อเสนอแนะไม่จำเป็นต้องปรับปรุง</td>
+                    </tr>
+                </table>
+            </div>
+            <div id="score-rank">
+                <div class="text-2xl font-bold underline">
+                    Score Ranking
+                </div>
+                <table class="table">
+                    <colgroup>
+                        <col class="w-fit border">
+                        <col class="w-fit border">
+                    </colgroup>
+                    <tr>
+                        <td class="text-center">0</td>
+                        <td>ไม่เข้าใจวิธีการตรวจสอบงาน และไม่เข้าใจระบบ E-check sheet</td>
+                    </tr>
+                    <tr>
+                        <td class="text-center">1</td>
+                        <td>เข้าใจในการตรวจสอบคุณภาพ และเข้าใจระบบ E-check sheet ในระดับน้อย (ต้องปรับปรุง)</td>
+                    </tr>
+                    <tr>
+                        <td class="text-center">2</td>
+                        <td>เข้าใจในการตรวจสอบคุณภาพ และเข้าใจระบบ E-check sheet ในระดับปานกลาง
+                            (สามารถปฏิบัติงานด้วยตนเองได้)</td>
+                    </tr>
+                    <tr>
+                        <td class="text-center">3</td>
+                        <td>เข้าใจในการตรวจสอบคุณภาพ และเข้าใจระบบ E-check sheet ในระดับดีมาก (สามารถปฏิบัติงานด้วยตนเอง
+                            และสอนผู้อื่นได้)</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        <form id="part2">
+            <div class="text-2xl font-bold italic underline">
+                Part II: Summary comment/suggestion Result
+            </div>
+            <div id="tableCS"></div>
+            <div class="font-bold mt-5">
+                Route of Self inspection audit:
+            </div>
+            <span>
+                Self inspection audit--> 1) First report(Comment/Suggestion) --> Draft Report --> Final report --> Keep
+                file - Input to Score ranking table / send result to MFG
+                --> 2) First report(No Comment/Suggestion) --> Final report --> Keep file - Input to Score ranking table
+                / send result to MFG
+            </span>
+        </form>
+
+        <div id="part3">
+            <div class="text-2xl font-bold italic underline">
+                Part III: Summary self inspection audit result
+            </div>
+            <div class="flex flex-col xl:flex-row gap-5">
+                <table id="tableResult" class="table">
+                    <colgroup>
+                        <col class="w-fit border">
+                        <col class="w-fit border">
+                    </colgroup>
+                    <tbody>
+                        <tr>
+                            <td class="font-bold">Process Confirmation Result:</td>
+                            <td>
+                                <div id="res" class="text-center"></div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="font-bold">Degree of compliance:</td>
+                            <td>
+                                <div id="percent" class="text-center"></div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="font-bold">Rating Grade:</td>
+                            <td>
+                                <div id="grade" class="text-center"></div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="font-bold">Comment item</td>
+                            <td><div id="commentItem"  class="text-center"></div></td>
+                        </tr>
+                        <tr>
+                            <td class="font-bold">Suggestion item</td>
+                            <td><div id="suggestionItem"  class="text-center"></div></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <table class="table">
+                    <colgroup>
+                        <col class="w-fit border">
+                        <col class="w-fit border">
+                        <col class="w-fit border">
+                    </colgroup>
+                    <thead>
+                        <tr>
+                            <th colspan="3" class="font-bold text-xl text-black">Ranking Classification Detail</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="font-bold">
+                            <td>Grade</td>
+                            <td>Description</td>
+                            <td>% Complied</td>
+                        </tr>
+                        <tr>
+                            <td>A</td>
+                            <td>Fully Compliance</td>
+                            <td>90% and Up</td>
+                        </tr>
+                        <tr>
+                            <td>B</td>
+                            <td>Predominant Compliance</td>
+                            <td>80-89%</td>
+                        </tr>
+                        <tr>
+                            <td>C</td>
+                            <td>Partial Compliance</td>
+                            <td>79% and below</td>
+                        </tr>
+                        {{-- <tr>
+                            <td colspan="3">MFG must maintain score above 80% as preferable.(incase of audit#2 MFG must
+                                maintain score above 90% as preferable.)</td>
+                        </tr> --}}
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+
+        <div id="action" class="flex gap-5"></div>
+    </div>
+</div>
+@endsection
+
+@section('scripts')
+<script src="{{ $_ENV['APP_JS'] }}/eSelfAudit.js?ver={{ $GLOBALS['version'] }}"></script>
+@endsection

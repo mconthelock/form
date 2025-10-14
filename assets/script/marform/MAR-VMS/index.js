@@ -6,7 +6,7 @@ import { formatAvatar, s2disableSearch, setSelect2 } from "../../public/v1.0.3/_
 import { redirectWebflow } from "../../inc/_form.js";
 import { createForm } from "../../api/webform/form";
 //import { createForm, redirectWebflow } from "../../inc/_form.js";
-
+import { readInput } from "../../public/v1.0.3/_excel";
 import Swal from "sweetalert2";
 import { ElementFlags } from "typescript";
 
@@ -446,6 +446,78 @@ $(document).ready(function () {
             $('#modal').removeClass('flex').addClass('hidden');
         });
         
+      
+        $(document).on('change', '#visitor_file', async function(e)  {
+          const file = e.target.files[0];
+          if (!file) return;
+      
+          const data = await readInput(file, { startRow: 2, maxReadRow: 500 });
+      
+          const $tbody = $('#tablevisitor tbody');
+          $tbody.empty();
+      
+         // const dietaryOptions = ['Vegetarian','Vegan','Halal','Kosher']; // ใส่ list จริงของคุณแทน
+
+     
+      
+          $.each(data, function(index, row) {
+              const tr = $('<tr class="bg-white"></tr>');
+      
+              // No.
+              tr.append(`<td class="px-2 py-2 sticky left-0 bg-white z-15">${index+1}</td>`);
+      
+              // Country, Company, Name, Position
+              tr.append(`<td class="px-2 py-2"><input type="text" name="country[]" value="${row[0]||''}" class="input input-bordered rounded-xl w-full"/></td>`);
+              tr.append(`<td class="px-2 py-2"><input type="text" name="company[]" value="${row[1]||''}" class="input input-bordered rounded-xl w-full"/></td>`);
+              tr.append(`<td class="px-2 py-2"><input type="text" name="name[]" value="${row[2]||''}" class="input input-bordered rounded-xl w-full"/></td>`);
+              tr.append(`<td class="px-2 py-2"><input type="text" name="pos[]" value="${row[3]||''}" class="input input-bordered rounded-xl w-full"/></td>`);
+      
+              // Previous Visit Experience (select)
+              const expSelect = $('<select name="exp[]" class="input input-bordered rounded-xl w-full"></select>');
+              expSelect.append('<option value=""></option>');
+              expSelect.append('<option value="Y">Yes</option>');
+              expSelect.append('<option value="N">No</option>');
+              if(row[4]) {
+                expSelect.find('option').filter(function() {
+                    return $(this).text() === row[4]; // row[4] = "Yes" หรือ "No" จาก Excel
+                }).prop('selected', true);
+            }
+              tr.append($('<td class="px-2 py-2"></td>').append(expSelect));
+      
+              // Lunch Provided (select)
+              const lunchSelect = $('<select name="lunch_provided[]" class="input input-bordered rounded-xl w-full"></select>');
+              lunchSelect.append('<option value=""></option>');
+              lunchSelect.append('<option value="Y">Yes</option>');
+              lunchSelect.append('<option value="N">No</option>');
+              if(row[5]) {
+                lunchSelect.find('option').filter(function() {
+                    return $(this).text() === row[5]; // row[5] = "Yes" หรือ "No"
+                }).prop('selected', true);
+              }
+              tr.append($('<td class="px-2 py-2"></td>').append(lunchSelect));
+      
+              // Dinner Provided (select)
+              const dinnerSelect = $('<select name="dinner_provided[]" class="input input-bordered rounded-xl w-full"></select>');
+              dinnerSelect.append('<option value=""></option>');
+              dinnerSelect.append('<option value="Y">Yes</option>');
+              dinnerSelect.append('<option value="N">No</option>');
+              if(row[6]) {
+                dinnerSelect.find('option').filter(function() {
+                    return $(this).text() === row[6]; // row[6] = "Yes" หรือ "No" จาก Excel
+                }).prop('selected', true);
+            }
+              tr.append($('<td class="px-2 py-2"></td>').append(dinnerSelect));
+      
+              // Dietary Requirements (select)
+              const dietarySelect = $('<select name="dietary_require[]"  class="dietary_require input input-bordered rounded-xl w-full"></select>');
+              dietarySelect.append('<option value=""></option>');
+              dietaryOptions.forEach(opt => dietarySelect.append(`<option value="${opt}">${opt}</option>`));
+              if(row[7]) dietarySelect.val(row[7]);
+              tr.append($('<td class="px-2 py-2"></td>').append(dietarySelect));
+      
+              $tbody.append(tr);
+          });
+      });
 
 
 });
@@ -682,7 +754,7 @@ toggleColumnByHeader('tablevisitor', 'Dietary Requirements',  $('#hasLunch').is(
 toggleColumnByHeader('tableemp', 'Dietary Requirements',  $('#hasLunch').is(':checked') || $('#hasDinner').is(':checked'));
 
 });
-
+/*
 const bookRoomBtn = document.getElementById('bookRoomBtn');
 const bookRoomModal = document.getElementById('bookRoomModal');
 const cancelModalBtn = document.getElementById('cancelModalBtn');
@@ -698,9 +770,9 @@ confirmModalBtn.addEventListener('click', async () => {
     const subject = $('span[data-field="purpose"]').text();
     const stdate = $("#visitDate").val();
     const selectedOption = $("#bookingTime option:selected");
-    const startTime = selectedOption.attr("data-start");
-    const endTime = selectedOption.attr("data-end");
-    const room = $('span[data-field="receptroom"]').text();
+    let startTime = selectedOption.attr("data-start");
+    let endTime = selectedOption.attr("data-end");
+    let room = $('span[data-field="receptroom"]').text();
 
     const data = {
       email: email,
@@ -715,7 +787,21 @@ confirmModalBtn.addEventListener('click', async () => {
       attendees: [email],
     };
     // เรียก bookingroom
+    console.log(room);
     await bookingroom(data);
+    room = $('span[data-field="roomlunch"]').text();
+    if(room != "")
+    {   
+      console.log(room);
+      const lunchData = {
+        ...data,
+        starttime: "12:00 PM",
+        endtime: "01:00 PM",
+        room: room,
+      };
+      await bookingroom(lunchData);
+    }
+
   } catch (err) {
     Swal.fire({
       icon: "error",
@@ -728,7 +814,7 @@ confirmModalBtn.addEventListener('click', async () => {
 bookRoomModal.addEventListener('click', (e) => {
   if (e.target === bookRoomModal) bookRoomModal.classList.add('hidden');
 });
-
+*/
 
 $(document).on('click', '#addRowBtn', function () {
   const $tableBody = $('#tablesch tbody');
@@ -956,7 +1042,18 @@ $(document).on('change', '.emp-select', function() {
 });
 
 $(document).on('click', '#btn-submit-form', function() {
-  loaddata($("#cyear2").val(),$("#nrunno").val());
+  const cyear2 = $("#cyear2").val();
+  const nrunno = $("#nrunno").val();
+    // ตรวจสอบว่ามีค่า
+    if (cyear2 && nrunno) {
+        loaddata(cyear2, nrunno);
+    } 
+    if($("#mode").val() == "1")
+    {
+       $('.confirm-btn').removeClass('hidden');
+       $('.export-btn').removeClass('hidden');
+    }
+  //loaddata($("#cyear2").val(),$("#nrunno").val());
 });
 
 
@@ -1202,7 +1299,7 @@ $(document).on("change", ".lunchSelect", function () {
 /**
  * Save
  */
- 
+
  $(document).on("click", ".save-btn", async function () {
 const tab = $(this).data("tab");
 const formId = "form-" + tab;   // form ไหนที่ถูกกด
@@ -1285,14 +1382,56 @@ try {
 });
 
 $(document).on("click", ".confirm-btn", async function () {
+  if(validate($("#form-submit")))
+  {
+    $(this).prop('disabled', true);
     createGPENT();
-      
+    updateform();
+  }
+});
+$(document).on("click", ".send-btn", async function () {
+  // $(this).prop('disabled', true);
+  if(validate($("#form-submit")))
+  {
+      sendmailpic(); 
+  }
 });
 
-
-$(document).on("click", ".bookroom-btn", async function () {
+/*$(document).on("click", ".bookroom-btn", async function () {
     console.log("xxxxxxxx");
   
+});*/
+
+$(document).on("click", ".export-btn", async function () {
+  if(validate($("#form-submit")))
+  {
+    const vmscyear2 = $("#cyear2").val();
+    const vmsnrunno = $("#nrunno").val();
+    $.ajax({
+      type: "POST",
+      url: host + "marform/MAR-VMS/form/exportexcel",
+      data: {vmscyear2: vmscyear2, vmsnrunno:vmsnrunno},
+      dataType: 'json',
+      beforeSend: function () {
+        showLoader({ show: true });
+      },
+      success: function (res) {
+              openExcel(res.filename, res.content);
+      },
+      complete: function (xhr, status) {
+        showLoader({ show: false });
+      },
+      error: function (xhr) {
+        Swal.fire({
+          icon: "error",
+          title: "Failed to export file.",
+          text: xhr.responseText || "Failed to export file.",
+        });
+        
+      },
+    });
+
+  }
 });
 
 $(document).on('change', '.pst-select', function() {
@@ -1528,7 +1667,17 @@ function validateVisitTab(form) {
   return isValid;
   }
   
-  
+  function openExcel(fileName, dataBase64){
+		var fileType = fileName.split('.').pop();
+		fileType = "data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,";
+		var $a = $("<a>");
+		$a.attr("href", fileType + dataBase64);
+		$("body").append($a);
+		$a.attr("download", fileName);
+		$a[0].click();
+		$a.remove();
+		
+   }
 
   function validateReqItemTab(form) {
     let isValid = true;
@@ -1659,7 +1808,7 @@ function getEmail() {
 }
 
 async function createGPENT() {
-  
+ 
   if (!$("#hasLunch").is(":checked") && !$("#hasDinner").is(":checked")) return;
 
   const eno = "9";
@@ -1791,24 +1940,34 @@ const processTable = (tableSelector, mealType) => {
       formData.append("total_amount", totalQty * parseFloat(cost));
 
      
-      for (let pair of formData.entries()) {
-          console.log(pair[0], pair[1]);
-      }
+      //for (let pair of formData.entries()) {
+      //    console.log(pair[0], pair[1]);
+      //}
 
       return formData;
   };
 
   // สร้างและส่ง FormData สำหรับ Lunch
+  let field = $('[data-field="formreqent"]');
+  let links = []; 
   if ($("#hasLunch").is(":checked")) {
-
+      console.log("lunch");
       const lunchFormData = await buildFormDataEnt("lunch");
+      const eno = lunchFormData.get("nfrmno");
+      const evorgno = lunchFormData.get("vorgno");
+      const ecyear = lunchFormData.get("cyear");
+      const ecyear2 = lunchFormData.get("cyear2");
+      const enrunno = lunchFormData.get("nrunno");
+      links.push({
+        url: host +`gpform/GP-ENT/main?sr=4&no=${eno}&orgNo=${evorgno}&y=${ecyear}&y2=${ecyear2}&runNo=${enrunno}`,
+        text: `GP-ENT${ecyear2.slice(-2)}-${enrunno.padStart(6, "0")}`
+      });
       const companiesStr = lunchFormData.get("companies");
       const companiesArr = JSON.parse(companiesStr);
       InsertGPENT(lunchFormData);
       SaveVMSENT($("#cyear2").val(),$("#nrunno").val(),lunchFormData.get("cyear2"),lunchFormData.get("nrunno"));
       if(companiesArr[0].fileName)
       {
-        
         saveENTfile($("#nfrmno").val(),$("#vorgno").val(),$("#cyear").val(),$("#cyear2").val(),$("#nrunno").val(),lunchFormData.get("cyear2"),lunchFormData.get("nrunno"),companiesArr[0].fileName);
       }
      
@@ -1816,9 +1975,17 @@ const processTable = (tableSelector, mealType) => {
 
   // สร้างและส่ง FormData สำหรับ Dinner
   if ($("#hasDinner").is(":checked")) {
-    
-    
+      console.log("dinner");
       const dinnerFormData = await buildFormDataEnt("dinner");
+      const eno = dinnerFormData.get("nfrmno");
+      const evorgno = dinnerFormData.get("vorgno");
+      const ecyear = dinnerFormData.get("cyear");
+      const ecyear2 = dinnerFormData.get("cyear2");
+      const enrunno = dinnerFormData.get("nrunno");
+      links.push({
+        url: host +`gpform/GP-ENT/main?sr=4&no=${eno}&orgNo=${evorgno}&y=${ecyear}&y2=${ecyear2}&runNo=${enrunno}`,
+        text: `GP-ENT${ecyear2.slice(-2)}-${enrunno.padStart(6, "0")}`
+      });
       const companiesStr = dinnerFormData.get("companies");
       const companiesArr = JSON.parse(companiesStr);
       InsertGPENT(dinnerFormData);
@@ -1827,9 +1994,102 @@ const processTable = (tableSelector, mealType) => {
       {
         saveENTfile($("#nfrmno").val(),$("#vorgno").val(),$("#cyear").val(),$("#cyear2").val(),$("#nrunno").val(),dinnerFormData.get("cyear2"),dinnerFormData.get("nrunno"),companiesArr[0].fileName);
       }
-      
-      
   }
+  field.html(''); // เคลียร์ก่อน
+  links.forEach((link, index) => {
+      field.append(`<a href="${link.url}" target="_blank" class="text-blue-600 hover:text-blue-800 underline">${link.text}</a>`);
+      if (index < links.length - 1) field.append(' | ');
+  });
+}
+
+function sendmailpic()
+{
+  const vmscyear2 = $("#cyear2").val();
+  const vmsnrunno = $("#nrunno").val();
+  let attn = $('[data-field="attn"]').text().trim();
+  if(attn=="")
+  {
+    Swal.fire({
+      icon: "warning",
+      title: "Please enter Primary Stakeholders",
+      toast: true,
+      position: "top-end",
+      timer: 3000,
+      showConfirmButton: false,
+      background: "#FBF6D9",
+    });
+    return false;
+  }
+
+  $.ajax({
+    type: "POST",
+    url: host + "marform/MAR-VMS/form/sendmailpic",
+    data: {vmscyear2: vmscyear2, vmsnrunno:vmsnrunno},
+    beforeSend: function () {
+      showLoader({ show: true });
+    },
+    success: function (res) {
+      Swal.fire({
+        toast: true,
+        position: "top-end",
+        icon: "success",
+        title: "Success to sent mail PIC.",
+        showConfirmButton: false,
+        timer: 2500,
+        timerProgressBar: true,
+        // didClose: () => redirectWebflow(),
+      });
+    },
+    complete: function (xhr, status) {
+      showLoader({ show: false });
+    },
+    error: function (xhr) {
+      Swal.fire({
+        icon: "error",
+        title: "Failed to sent mail PIC.",
+        text: xhr.responseText || "Failed to sent mail PIC.",
+      });
+      
+    },
+  });
+
+}
+
+function updateform()
+{
+  const vmscyear2 = $("#cyear2").val();
+  const vmsnrunno = $("#nrunno").val();
+  $.ajax({
+    type: "POST",
+    url: host + "marform/MAR-VMS/form/updateform",
+    data: {vmscyear2: vmscyear2, vmsnrunno:vmsnrunno},
+    beforeSend: function () {
+      showLoader({ show: true });
+    },
+    success: function (res) {
+      Swal.fire({
+        toast: true,
+        position: "top-end",
+        icon: "success",
+        title: "Success to update form status.",
+        showConfirmButton: false,
+        timer: 2500,
+        timerProgressBar: true,
+        // didClose: () => redirectWebflow(),
+      });
+    },
+    complete: function (xhr, status) {
+      showLoader({ show: false });
+    },
+    error: function (xhr) {
+      Swal.fire({
+        icon: "error",
+        title: "Failed to update form status.",
+        text: xhr.responseText || "Failed to update form status.",
+      });
+      $(".confirm-btn").prop("disabled", false);
+    },
+  });
 }
 
 function InsertGPENT(formData)
@@ -1939,7 +2199,7 @@ function loaddata(vmscyear2,vmsnrunno)
   const VORGNO = $("#vorgno").val();
   const CYEAR  = $("#cyear").val();
   $.ajax({
-    url:  host + "marform/MAR-VMS/form/getFormData",
+    url:  host + "marform/MAR-VMS/form/showFormData",
     type: "POST",
     dataType: "json",
     data: {vmscyear2:vmscyear2,vmsnrunno:vmsnrunno},
@@ -2042,6 +2302,7 @@ function loaddata(vmscyear2,vmsnrunno)
       const sptbody = document.getElementById("sproject-body");
       sptbody.innerHTML = ""; 
       if (response.sproj && response.sproj.length > 0) {
+         let totalQty = 0;
           response.sproj.forEach(v => {
             const row = `
               <tr>
@@ -2049,13 +2310,22 @@ function loaddata(vmscyear2,vmsnrunno)
               <td class="border px-2">${v.PROJNAME ? v.PROJNAME : ''}</td>
               <td class="border px-2">${v.MODEL ? v.MODEL : ''}</td>
               <td class="border px-2">${v.SPEC ? v.SPEC : ''}</td>
-              <td class="border px-2">${v.QTY ? v.QTY : ''}</td>
-              <td class="border px-2">${v.STATUS ? v.STATUS : ''}</td>
+              <td class="border px-2 text-center">${v.QTY ? v.QTY : ''}</td>
+              <td class="border px-2 text-center">${v.STATUS ? v.STATUS : ''}</td>
             </tr>
             `;
             sptbody.insertAdjacentHTML("beforeend", row);
+            totalQty += Number(v.QTY) || 0;
             i++;
           });
+          const summaryRow = `
+          <tr class="font-bold bg-blue-50">
+            <td class="border px-2 text-center" colspan="4">Total</td>
+            <td class="border px-2 text-center">${totalQty}</td>
+            <td class="border px-2"></td>
+          </tr>
+        `;
+        sptbody.insertAdjacentHTML("beforeend", summaryRow);
       }else{
             const noDataRow = `
             <tr>
@@ -2069,6 +2339,7 @@ function loaddata(vmscyear2,vmsnrunno)
       const pptbody = document.getElementById("pproject-body");
       pptbody.innerHTML = ""; 
       if (response.pproj && response.pproj.length > 0) {
+      let totalQty = 0;
       response.pproj.forEach(v => {
         const row = `
           <tr>
@@ -2076,13 +2347,22 @@ function loaddata(vmscyear2,vmsnrunno)
             <td class="border px-2">${v.PROJNAME ? v.PROJNAME : ''}</td>
             <td class="border px-2">${v.MODEL ? v.MODEL : ''}</td>
             <td class="border px-2">${v.SPEC ? v.SPEC : ''}</td>
-            <td class="border px-2">${v.QTY ? v.QTY : ''}</td>
-            <td class="border px-2">${v.STATUS ? v.STATUS : ''}</td>
+            <td class="border px-2 text-center">${v.QTY ? v.QTY : ''}</td>
+            <td class="border px-2 text-center">${v.STATUS ? v.STATUS : ''}</td>
           </tr>
         `;
         pptbody.insertAdjacentHTML("beforeend", row);
+        totalQty += Number(v.QTY) || 0;
         i++;
       });
+       const summaryRow = `
+        <tr class="font-bold bg-blue-50">
+          <td class="border px-2 text-center" colspan="4">Total</td>
+          <td class="border px-2 text-center">${totalQty}</td>
+          <td class="border px-2"></td>
+        </tr>
+      `;
+        pptbody.insertAdjacentHTML("beforeend", summaryRow);
     }else{
           const noDataRow = `
           <tr>
@@ -2100,6 +2380,14 @@ function loaddata(vmscyear2,vmsnrunno)
   const dietText = dietList.join(", ");
   
   $('[data-field="roomdietary"]').text(dietText || "-");
+  if(response.ent && response.ent.length > 0){
+    // สร้างลิงก์แต่ละตัวพร้อมคล่อม [ ]
+    let html = response.ent.map(e => {
+        return `<a href="`+host +`gpform/GP-ENT/main?sr=4&no=9&orgNo=030101&y=25&y2=${e.ENTCYEAR2}&runNo=${e.ENTNRUNNO}" target="_blank" class="text-blue-600 hover:text-blue-800 underline">[${e.REQENT}]</a>`;
+    }).join(', ');
+    // ใส่ใน span
+    document.querySelector('[data-field="formreqent"]').innerHTML = html;
+}
 
        
     },
@@ -2115,6 +2403,8 @@ function loaddata(vmscyear2,vmsnrunno)
       
     },
   });
+
+
 
 }
 

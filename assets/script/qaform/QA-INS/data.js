@@ -28,25 +28,32 @@ export async function getformData(form) {
 
     const data = await res.json();
     return data;
-    // return new Promise((resolve) => {
-    //     $.ajax({
-    //         type: "post",
-    //         // url: `${process.env.APP_API}/qaform/qa-ins/getformData`,
-    //         url: `${process.env.APP_API}/qaform/qa-ins/getformData`,
-    //         dataType: "json",
-    //         data: form,
-    //         success: function (response) {
-    //             resolve(response);
-    //         },
-    //         error: function (xhr, status, error) {
-    //             console.error("getformData error:", status, error);
-    //             resolve({
-    //                 status: false,
-    //                 message: "getformData failed. Please try again.",
-    //             });
-    //         },
-    //     });
-    // });
+}
+
+/**
+ * {
+    "NFRMNO": 13,
+    "VORGNO": "000101",
+    "CYEAR": "25",
+    "CYEAR2": "2025",
+    "NRUNNO": 1,
+    "FILE_TYPECODE" : "ESI"
+}
+ */
+export async function getQaFiles(q = {}) {
+    const res = await fetch(`${process.env.APP_API}/qa-file/getQaFile`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(q),
+    });
+
+    if (!res.ok) {
+        await fetchMsgErr(res);
+        throw new Error("Failed to Create");
+    }
+
+    const data = await res.json();
+    return data;
 }
 
 /**
@@ -68,27 +75,6 @@ export async function createFormQains(formData) {
 
     const data = await res.json();
     return data;
-    // return new Promise((resolve) => {
-    //     $.ajax({
-    //         type: "post",
-    //         // url: `${process.env.APP_API}/qaform/qa-ins/request``,
-    //         url: `${process.env.APP_API}/qaform/qa-ins/request`,
-    //         dataType: "json",
-    //         data: formData,
-    //         processData: false,
-    //         contentType: false,
-    //         success: function (response) {
-    //             resolve(response);
-    //         },
-    //         error: function (xhr, status, error) {
-    //             console.error("create failed:", status, error);
-    //             resolve({
-    //                 status: false,
-    //                 message: "Create failed. Please try again.",
-    //             });
-    //         },
-    //     });
-    // });
 }
 
 export async function qcConfirm(formdata) {
@@ -104,4 +90,108 @@ export async function qcConfirm(formdata) {
 
     const data = await res.json();
     return data;
+}
+
+export async function saveMaster(data) {
+    const res = await fetch(
+        `${process.env.APP_API}/escs/audit-report-master/save`,
+        {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(data),
+        }
+    );
+
+    if (!res.ok) {
+        await fetchMsgErr(res);
+        throw new Error("Failed to Save Master data");
+    }
+
+    return await res.json();
+}
+
+// {
+//     "NFRMNO": 13,
+//     "VORGNO": "000101",
+//     "CYEAR": "25",
+//     "CYEAR2": "2025",
+//     "NRUNNO": 1,
+// }
+export async function getOA(q = {}) {
+    const res = await fetch(`${process.env.APP_API}/qaform/qa-ins/OA/searchQainsOA`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(q),
+    });
+    if (!res.ok) {
+        await fetchMsgErr(res);
+        throw new Error("Failed to get Auditee");
+    }
+    return await res.json();
+}
+
+export async function searchAuditees(q = {}) {
+    const condition = { ...q, QOA_TYPECODE: "ESO" };
+    return await getOA(condition);
+}
+
+export async function getAuditee(q = {}) {
+    const condition = { ...q, QOA_TYPECODE: "ESO" };
+    const res = await fetch(`${process.env.APP_API}/qaform/qa-ins/OA/findOneQainsOA`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(condition),
+    });
+    if (!res.ok) {
+        await fetchMsgErr(res);
+        throw new Error("Failed to get Auditee");
+    }
+    return await res.json();
+}
+
+export async function saveAudit(data) {
+    const res = await fetch(
+        `${process.env.APP_API}/qaform/qa-ins/audit/saveAudit`,
+        {
+            method: "POST",
+            // headers: { "Content-Type": "application/json" },
+            // body: JSON.stringify(data),
+            body: data,
+        }
+    );
+    if (!res.ok) {
+        await fetchMsgErr(res);
+        throw new Error("Failed to Save Audit");
+    }
+    return await res.json();
+}
+
+export async function lastApprove(data) {
+     const res = await fetch(
+        `${process.env.APP_API}/qaform/qa-ins/lastApprove`,
+        {
+            method: "POST",
+            body: data,
+        }
+    );
+    if (!res.ok) {
+        await fetchMsgErr(res);
+        throw new Error("Failed to approve");
+    }
+    return await res.json();
+}
+
+export async function returnApproval(data){
+    const res = await fetch(
+        `${process.env.APP_API}/qaform/qa-ins/returnApproval`,
+        {
+            method: "POST",
+            body: data,
+        }
+    );
+    if (!res.ok) {
+        await fetchMsgErr(res);
+        throw new Error("Failed to return approval");
+    }
+    return await res.json();
 }

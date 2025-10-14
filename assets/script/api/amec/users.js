@@ -25,10 +25,6 @@ export async function searchUser(q = {}) {
         throw new Error("Failed to fetch search user");
     }
     return res.json();
-    // return getData({
-    //     url: `${process.env.APP_API}/users/search/`,
-    //     data: q,
-    // });
 }
 
 
@@ -39,25 +35,6 @@ export async function getUser(empno) {
         throw new Error("Failed to fetch user");
     }
     return res.json();
-
-    // return new Promise((resolve) => {
-    //     $.ajax({
-    //         type: "get",
-    //         url: `${process.env.APP_API}/users/${empno}`,
-    //         dataType: "json",
-    //         success: function (response) {
-    //             resolve(response);
-    //         },
-    //         error: function (xhr, status, error) {
-    //             console.error(
-    //                 `Error fetching user data for ${empno}:`,
-    //                 status,
-    //                 error
-    //             );
-    //             resolve(null); // Return null if there's an error
-    //         },
-    //     });
-    // });
 }
 
 export async function getUserImage(empno) {
@@ -67,21 +44,4 @@ export async function getUserImage(empno) {
         throw new Error("Failed to fetch user image");
     }
     return res.text();
-
-    // return new Promise((resolve) => {
-    //     $.ajax({
-    //         type: "get",
-    //         url: `${process.env.APP_API}/users/image/${empno}`,
-    //         dataType: "text",
-    //         success: function (response) {
-    //             resolve(response);
-    //         },
-    //         error: function (xhr, status, error) {
-    //             console.log(
-    //                 `Error fetching image for ID ${empno}: ${xhr.statusText}`
-    //             );
-    //             resolve(`${process.env.APP_IMG}/Avatar.png`); // Return default avatar if there's an error
-    //         },
-    //     });
-    // });
 }

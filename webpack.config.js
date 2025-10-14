@@ -41,6 +41,11 @@ module.exports = {
     // result confirmation
     resultConf: "./assets/script/isform/IS-JDR/view.js", //Job result confirmation
 
+    // Annual development
+    "form-1": "./assets/script/isform/FORM-1/index.js",
+    "form-1-ui": "./assets/script/isform/FORM-1/ui.js",
+    "is-dev": "./assets/script/isform/IS-DEV/index.js",
+
     //Licence Control
     licence: "./assets/script/licence/index.js", //License page
     licencemaster: "./assets/script/licence/master.js", //License master page
@@ -64,21 +69,34 @@ module.exports = {
     eSelf: "./assets/script/qaform/QA-INS/index.js", //E-Self Inspection page
     eSelfView: "./assets/script/qaform/QA-INS/view.js", //E-Self view page
     eSelfAuditMaster: "./assets/script/qaform/QA-INS/auditMaster.js", //E-Self Audit Master page
+    eSelfPreview: "./assets/script/qaform/QA-INS/preview.js", //E-Self Preview page
+    eSelfAudit: "./assets/script/qaform/QA-INS/audit.js", //E-Self Audit page
+    eSelfAuthorizeReportList: "./assets/script/qaform/QA-INS/authorizeReportList.js", //E-Self Authorize Report List page
 
     //VMS
-    vms: "./assets/script/marform/MAR-VMS/index.js", //manage page
+    vms: "./assets/script/marform/MAR-VMS/index.js", //create page
     vmsmst: "./assets/script/marform/MAR-VMS/master.js", //manage page
+    vmsview: "./assets/script/marform/MAR-VMS/view.js", //view page
+    vmsreport: "./assets/script/marform/MAR-VMS/report.js", //view page
 
     // PS-SAR
     psSar: "./assets/script/psform/PS-SAR/index.js", //Sar page
 
-    training: "./assets/script/gpform/GP-TRN/training.ts",
-    alert: "./assets/script/gpform/GP-TRN/alert.ts",
-    emp_lookup: "./assets/script/gpform/GP-TRN/emp_lookup.ts",
-    formUtils: "./assets/script/gpform/GP-TRN/formUtils.ts",
-    initForms: "./assets/script/gpform/GP-TRN/initForms.ts",
-    validators: "./assets/script/gpform/GP-TRN/validators.ts",
-    type_data: "./assets/script/gpform/GP-TRN/type_data.ts",
+
+    alert: "./assets/script/gpform/GP-TRN/alert.js",
+    formUtils: "./assets/script/gpform/GP-TRN/formUtils.js",
+    validators: "./assets/script/gpform/GP-TRN/validators.js",
+    type_data: "./assets/script/gpform/GP-TRN/type_data.js",
+    view_train: "./assets/script/gpform/GP-TRN/view_train.js",
+
+    manage_data: "./assets/script/gpform/GP-TRN/manage_data.js",
+    emp_lookup: "./assets/script/gpform/GP-TRN/emp_lookup.js",
+    training_select: "./assets/script/gpform/GP-TRN/training_select.js",
+    training_functional: "./assets/script/gpform/GP-TRN/training_functional.js",
+    training_legal: "./assets/script/gpform/GP-TRN/training_legal.js",
+    training_meth: "./assets/script/gpform/GP-TRN/training_meth.js",
+    form_client: "./assets/script/gpform/GP-TRN/form_client.js",
+    training_main: "./assets/script/gpform/GP-TRN/training_main.js",
   },
   output: {
     filename: "[name].js",
@@ -109,6 +127,9 @@ module.exports = {
   },
   resolve: {
     extensions: [".ts", ".tsx", ".js"],
+    alias: {
+      "@public": path.resolve(__dirname, "assets/script/public/v1.0.3"),
+    },
   },
   plugins: [
     new Dotenv({
@@ -126,9 +147,9 @@ module.exports = {
       datatables: "DataTables",
     }),
   ],
-  externals: {
-    jquery: "jQuery",
-    datatables: "DataTables",
-  },
+    externals: {
+      jquery: "jQuery",
+      datatables: "DataTables",
+    },
   cache: false,
 };
