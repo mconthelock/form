@@ -43,19 +43,46 @@
             <!-- Section 2: Time & Location -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                    <label class="font-semibold text-blue-700 block mb-2">Time</label>
+                    <label class="font-semibold text-blue-700 block mb-2">Type of Entertainment</label>
                     <div class="flex gap-6">
                         <label class="inline-flex items-center space-x-2">
-                            <input type="radio" name="time" id="time-lunch" class="radio radio-primary" value="Lunch" />
+                            <input type="radio" name="time" id="time-lunch" class="radio radio-primary time" value="Lunch" />
                             <span>Lunch</span>
                         </label>
                         <label class="inline-flex items-center space-x-2">
-                            <input type="radio" name="time" id="time-dinner" class="radio radio-primary" value="Dinner" />
+                            <input type="radio" name="time" id="time-dinner" class="radio radio-primary time" value="Dinner" />
                             <span>Dinner</span>
+                        </label>
+                        <label class="inline-flex items-center space-x-2">
+                            <input type="radio" name="time" id="time-gift" class="radio radio-primary time" value="Gift" />
+                            <span>Gift</span>
+                        </label>
+                        <label class="inline-flex items-center space-x-2">
+                            <input type="radio" name="time" id="time-other" class="radio radio-primary time" value="Other" />
+                            <span>Other</span>
                         </label>
                     </div>
                 </div>
-                <div>
+
+                <div id="gift-memo" class="hidden mt-2">
+                    <label class="block font-semibold text-yellow-800">Attach Memo (Gift)</label>
+                    <input type="file" id="gift-memo-file" name="gift_memo" class="file-input file-input-bordered rounded-lg file-input-sm bg-yellow-100" />
+                    <p class="text-xs text-gray-500">
+                        *Require "Memorandum" get approve by RAF DIM/President, In case of use budget for buying gift to guest (Refer to RAF-PR-G-068-M-Entertainment on topic no.4,no.4.6)
+                    </p>
+                </div>
+                <!-- ฟิลด์ Other + Attach Memo -->
+                <div id="other-fields" class="hidden mt-2">
+                    <label class="block font-semibold text-yellow-800">Other Details</label>
+                    <input type="text" id="other-details" name="other_details" placeholder="Please identify the details" class="input input-bordered rounded-lg input-sm w-full max-w-xs mb-2" />
+
+                    <label class="block font-semibold text-yellow-800">Attach Memo (Other)</label>
+                    <input type="file" id="other-memo-file" name="other_memo" class="file-input file-input-bordered rounded-lg file-input-sm bg-yellow-100" />
+                    <p class="text-xs text-gray-500">
+                        *Require "Memorandum" get approve by RAF DIM/President, In case of use budget for buying other (Refer to RAF-PR-G-068-M-Entertainment on topic no.4,no.4.6)
+                    </p>
+                </div>
+                <div id="div_location">
                     <label class="font-semibold text-blue-700 block mb-2">Location</label>
                     <div class="flex flex-wrap gap-6 mb-2">
                         <label class="inline-flex items-center space-x-2">
@@ -68,13 +95,21 @@
                         </label>
                     </div>
                     <input type="text" class="input input-bordered rounded-xl w-full shadow-sm border-blue-200" id="location_detail" placeholder="*Please identify the location." />
+
+                    {{--<label class="font-semibold text-blue-700 block mb-2">Reimbursement</label>
+                    <div class="flex flex-wrap gap-6 mb-2">
+                        <label class="inline-flex items-center space-x-2">
+                            <input type="checkbox" name="reimbursement" id="reimbursement" class="checkbox checkbox-primary" value="1" />
+                            <span>Reimbursement</span>
+                        </label>
+                    </div>--}}
                 </div>
             </div>
 
             <div class="rounded-2xl border border-blue-200 bg-gradient-to-br from-blue-50 via-white to-blue-100 p-4 shadow">
                 <div class="font-bold text-blue-900 text-lg mb-3">Details of Guest</div>
                 <ul class="text-xs text-blue-700 mt-2 mb-2 list-disc list-inside space-y-1">
-                    <!-- <li>กรณีแขกเยอะ สามารถแนบไฟล์รายชื่อ</li> -->
+                    <li>if has company of guest more than 1 company, Please click "ADD" button for add items.</li>
                     <li>กรณีแขกเป็นหน่วยงานราชการ/รัฐวิสาหกิจ ต้องแนบ Appendix A (Refer AMEC-2303 "Rule for Anti Bribery rule")</li>
                 </ul>
                 <div id="companies-container">
@@ -108,7 +143,7 @@
 
 
             <!-- Section 3: Guest Type Table -->
-            <div class="rounded-2xl border border-blue-200 bg-gradient-to-br from-blue-50 via-white to-blue-100 p-4 mb-2 shadow">
+            <div class="rounded-2xl border border-blue-200 bg-gradient-to-br from-blue-50 via-white to-blue-100 p-4 mb-2 shadow" id="div_gt">
                 <h2 class="font-bold text-blue-900 mb-2 text-lg">*Details: Please select for guest type</h2>
                 <div class="overflow-x-auto">
                     <table class="table table-xs md:table-sm w-full border rounded-xl overflow-hidden">
@@ -189,25 +224,24 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @for ($i = 0; $i < 5; $i++)
-                                <tr>
-                                    <td class="border-l border-gray-200">
-                                        <!-- <input class="input input-bordered input-xs rounded-lg w-full" placeholder="รายการ (เช่น Set box, Bento food, ฯลฯ)" /> -->
-                                        <select class="select select-sm rounded-lg estimate-type">
-                                            <option value="">--Select Detail--</option>
-                                            @foreach ($estimate_type as $value)
-                                                <option value="{{ $value->ET_NAME }}" data-cost="{{ $value->ET_COST }}">{{ $value->ET_NAME }}</option>
-                                            @endforeach
-                                        </select>
-                                    </td>
-                                    <td><input type="number" class="input input-bordered input-sm rounded-lg w-full text-center" /></td>
-                                    <td><input type="number" class="input input-bordered input-sm rounded-lg w-full text-center quantity" /></td>
-                                    <td class="border-r border-gray-200"><input type="number" class="input input-bordered input-xs input-ghost rounded-lg w-full text-center" readonly /></td>
-                                    <td>
-                                        <input type="text" class="input input-bordered input-sm rounded-lg w-full remark" placeholder="กรณีเกินเงื่อนไข (ถ้ามี)" disabled />
-                                    </td>
+                            @for ($i = 0; $i < 5; $i++) <tr>
+                                <td class="border-l border-gray-200">
+                                    <!-- <input class="input input-bordered input-xs rounded-lg w-full" placeholder="รายการ (เช่น Set box, Bento food, ฯลฯ)" /> -->
+                                    <select class="select select-sm rounded-lg estimate-type">
+                                        <option value="">--Select Detail--</option>
+                                        @foreach ($estimate_type as $value)
+                                        <option value="{{ $value->ET_NAME }}" data-cost="{{ $value->ET_COST }}">{{ $value->ET_NAME }}</option>
+                                        @endforeach
+                                    </select>
+                                </td>
+                                <td><input type="number" class="input input-bordered input-sm rounded-lg w-full text-center" /></td>
+                                <td><input type="number" class="input input-bordered input-sm rounded-lg w-full text-center quantity" /></td>
+                                <td class="border-r border-gray-200"><input type="number" class="input input-bordered input-xs input-ghost rounded-lg w-full text-center" readonly /></td>
+                                <td>
+                                    <input type="text" class="input input-bordered input-sm rounded-lg w-full remark" placeholder="กรณีเกินเงื่อนไข (ถ้ามี)" disabled />
+                                </td>
                                 </tr>
-                            @endfor
+                                @endfor
                         </tbody>
                         <tfoot class="bg-amber-200 font-bold rounded-b-lg">
                             <tr>
@@ -340,10 +374,10 @@
                             </div>
                             <!-- Remain -->
                             <!-- <div>
-                                                                                        <label class="block font-semibold text-green-700 mb-1">Remain:</label>
-                                                                                        <input type="text" class="input input-bordered rounded-xl w-full border-green-200 text-lg font-bold" placeholder="คำนวณอัตโนมัติ" readonly id="remain" style="color: #16a34a;" />
-                                                                                        <div id="remain-alert" class="text-xs mt-1"></div>
-                                                                                    </div> -->
+                                                                                                        <label class="block font-semibold text-green-700 mb-1">Remain:</label>
+                                                                                                        <input type="text" class="input input-bordered rounded-xl w-full border-green-200 text-lg font-bold" placeholder="คำนวณอัตโนมัติ" readonly id="remain" style="color: #16a34a;" />
+                                                                                                        <div id="remain-alert" class="text-xs mt-1"></div>
+                                                                                                    </div> -->
                         </div>
                         <div class="grid grid-cols-2">
                             <div>
@@ -371,8 +405,8 @@
                         </div>
 
                         <!-- <div class="text-right mt-6">
-                                                                                    <button id="btn-submit" class="btn btn-success btn-lg rounded-2xl px-8 shadow-md transition hover:scale-105">Submit</button>
-                                                                                </div> -->
+                            <button id="btn-submit" class="btn btn-success btn-lg rounded-2xl px-8 shadow-md transition hover:scale-105">Submit</button>
+                        </div> -->
                     </div>
                 </form>
 

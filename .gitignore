@@ -13,3 +13,4 @@ application/vendor
 application/core/MY_Controller.php
 application/composer.lock
 /docs
+backup

@@ -60,8 +60,41 @@ class Main extends MY_Controller
         $datetime = date("Y-m-d", strtotime("-1 day"));
         $logdata  = $this->dm->getLog($datetime);
         if ($logdata) {
-            $fm   = $this->fm->getFormMaster('IS-DLC')[0];
-            $flow = $this->create($fm->NNO, $fm->VORGNO, $fm->CYEAR, '92260', '92260', '', 1);
+            $fm      = $this->fm->getFormMaster('IS-DLC')[0];
+            $flow    = $this->create($fm->NNO, $fm->VORGNO, $fm->CYEAR, '92260', '92260', '', 1);
+            $form    = $flow['message'];
+            $empData = $this->dm->getDataUser($form['empno']);
+
+            $mail = [
+                'SUBJECT' => 'Daily Log Check Sheet Reminder',
+                // 'TO'      => 'sutthipongt@MitsubishiElevatorAsia.co.th',
+                'TO'      => $empData[0]->SRECMAIL,
+                'CC'      => 'perapatr@MitsubishiElevatorAsia.co.th',
+                'BODY'    => [
+                    '<div style="font-family: Arial, sans-serif; font-size: 14px; color: #333;">
+                    <p>Dear K.' . $empData[0]->SNAME . '</p>
+
+                    <p>
+                        This is a reminder to complete your Daily Log Check Sheet for today.<br>
+                        Please fill out the form using the link below.
+                    </p>
+                    <p>
+                        Form Link: <a href="' . base_url('isform/IS-DLC/main?no=' . $fm->NNO . '&orgNo=' . $fm->VORGNO . '&y=' . $form['cyear'] . '&y2=' . $form['cyear2'] . '&runNo=' . $form['runno'] . '&empno=' . $form['empno']) . '">Click Here to page</a>
+                    </p>
+                    <p>
+                        For your consideration and Approval.
+                    </p>
+
+                    <p style="margin-top: 24px;">
+                        Best regards,<br>
+                        Thank you,<br>
+                        IS Department
+                    </p>
+                </div>'
+                ],
+                'VIEW'    => 'layouts/mail/GP-ENT/mailAlert',
+            ];
+            echo json_encode($this->mail->sendmail($mail));
         }
     }
 }

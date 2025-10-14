@@ -23,11 +23,17 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 | a PHP script and you can easily do that on your own.
 |
 */
-$config['base_url'] =  ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == "on") ?  "https" : "http");
-$config['base_url'] .=  "://".$_SERVER['HTTP_HOST'];
-$config['base_url'] .=  str_replace(basename($_SERVER['SCRIPT_NAME']),"",$_SERVER['SCRIPT_NAME']);
+
+if(is_cli()){
+	$server = preg_replace('/\d+/u', '', gethostname());
+	$config['base_url'] = 'http://'.$server.'/form';
+}else{
+    $config['base_url'] =  ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == "on") ?  "https" : "http");
+    $config['base_url'] .=  "://".$_SERVER['HTTP_HOST'];
+    $config['base_url'] .=  str_replace(basename($_SERVER['SCRIPT_NAME']),"",$_SERVER['SCRIPT_NAME']);
+    $config['base_uri'] = ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == "on") ?  "https" : "http").'://' . $_SERVER['HTTP_HOST'];
+}
 $config['program_id'] = 1;
-$config['base_uri'] = ((isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == "on") ?  "https" : "http").'://' . $_SERVER['HTTP_HOST'];
 /*
 |--------------------------------------------------------------------------
 | Index File

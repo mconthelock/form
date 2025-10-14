@@ -35,5 +35,14 @@ class Dlc_model extends CI_Model
         return $query->result();
     }
 
+    public function getDataUser($empno)
+    {
+        $this->db->select('*');
+        $this->db->from('AMECUSERALL');
+        $this->db->where('SEMPNO', $empno);
+        $query = $this->db->get();
+        return $query->result();
+    }
+
 
 }
