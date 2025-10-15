@@ -13,16 +13,6 @@ application/vendor
 application/core/MY_Controller.php
 application/composer.lock
 
-
-docs/*.html
-docs/assets
-docs/*.png
-docs/*.css
-docs/**/*.db
-docs/hashmap.json
-docs/form
-docs/image
-docs/node_modules
-docs/src/.vitepress/dist
-docs/src/.vitepress/cache
+docs/dist
+docs/.vitepress/cache
 backup
