@@ -346,10 +346,14 @@
                         <h3 class="text-xl font-bold text-green-700 mb-2">Remark : </h3>
                         <div class="border-green-200 rounded-xl bg-green-50 p-2 mb-6 border-2">
                             <div class="text-xs pl-2 {{ $formCler->REMAIN_BUDGET >= 0 ? 'text-blue-600' : 'text-red-600' }}">
-                                @if($ENT_FORM->REIMBURSEMENT == '1')
-                                    {{ $formCler->REMAIN_BUDGET >= 0 ? "The actual cost did not exceed the estimated cost. As advance payment was requested, and employee no remain cost." : "The Actual cost over Estimate cost : Company reimbursement to Employee.(" . $ENT_FORM->EMP_REQ . " " . $form[0]->VREQNAME . ")" }}
+                                @if(empty($formCler->FORM_ENT))
+                                    This form has no estimate cost. Due to as no request entertainment in advance . The employee will be reimbursed by the company
                                 @else
-                                    {{ $formCler->REMAIN_BUDGET >= 0 ? "The actual cost did not exceed the estimated cost. As no advance payment was requested, the employee will be reimbursed by the company." : "The Actual cost over Estimate cost : Company reimbursement to Employee.(" . $ENT_FORM->EMP_REQ . " " . $form[0]->VREQNAME . ")" }}
+                                    @if($ENT_FORM->REIMBURSEMENT == '1')
+                                        {{ $formCler->REMAIN_BUDGET >= 0 ? "The actual cost did not exceed the estimated cost. As advance payment was requested, and employee no remain cost." : "The Actual cost over Estimate cost : Company reimbursement to Employee.(" . $ENT_FORM->EMP_REQ . " " . $form[0]->VREQNAME . ")" }}
+                                    @else
+                                        {{ $formCler->REMAIN_BUDGET >= 0 ? "The actual cost did not exceed the estimated cost. As no advance payment was requested, the employee will be reimbursed by the company." : "The Actual cost over Estimate cost : Company reimbursement to Employee.(" . $ENT_FORM->EMP_REQ . " " . $form[0]->VREQNAME . ")" }}
+                                    @endif
                                 @endif
                             </div>
                         </div>
