@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onBeforeUnmount } from "vue";
+import { withBase } from "vitepress";
 
 type Img = {
     src: string;
@@ -47,15 +48,25 @@ const props = withDefaults(
         pauseOnHover: true,
     }
 );
+// helper ให้ path ถูกกับ base เสมอ
+const r = (s?: string) => (s ? withBase(s) : "");
 
 const isOpen = ref(false);
 const activeIndex = ref(0);
 
+// const list = computed<Img[]>(() => {
+//     if (props.images && props.images.length) return props.images;
+//     if (props.src)
+//         return [{ src: props.src, alt: props.alt, caption: props.caption }];
+//     return [];
+// });
+
 const list = computed<Img[]>(() => {
-    if (props.images && props.images.length) return props.images;
-    if (props.src)
-        return [{ src: props.src, alt: props.alt, caption: props.caption }];
-    return [];
+  const arr = props.images && props.images.length
+    ? props.images
+    : (props.src ? [{ src: props.src, alt: props.alt, caption: props.caption }] : []);
+  // map ให้ src/thumb ผ่าน withBase ตั้งแต่ต้น
+  return arr.map(it => ({ ...it, src: r(it.src), thumb: r(it.thumb) }));
 });
 
 function open(idx = 0) {
@@ -148,7 +159,7 @@ onBeforeUnmount(() => {
     <!-- Inline single image mode -->
     <figure v-if="(!images || images.length === 0) && src" class="fancy-fig">
         <img
-            :src="src"
+            :src="withBase(src)"
             :alt="alt"
             class="fancy-thumb"
             :style="{ width: width || 'auto', height: height || 'auto' }"
