@@ -6,12 +6,14 @@ Class autojob extends CI_Controller {
 	private $NFRMNO = "2";
 	private $VORGNO = "050301";
 	private $CYEAR = "13";  
+	private $PIC = array("wuttipon@MitsubishiElevatorAsia.co.th","chortip@MitsubishiElevatorAsia.co.th","kanittha@MitsubishiElevatorAsia.co.th");
 	use _Form;
 	protected $client;
 	function __construct()
 	{
 		parent::__construct();
 		$this->load->model('qaform/QA-QOI/qoi_model', 'qoi');
+		$this->load->library('Mail');
 		$this->client = new Client(['verify' => false]);
 	}
 	
@@ -27,9 +29,18 @@ Class autojob extends CI_Controller {
 	public function createQoiSch()
 	{
 		$y = date("Y");
-		$ny = $y+1;
-		$q = "INSERT INTO QOI_DWGSCHEDULE SELECT TO_CHAR(TO_NUMBER(SUBSTR(MON, 1, 4)) + 1) || SUBSTR(MON, 5, 2) AS NEXT_MON , MID FROM QOI_DWGSCHEDULE WHERE MON >= '".$y."04' AND MON <= '".$ny."03'";
+		$ny = $y-1;
+		$q = "INSERT INTO QOI_DWGSCHEDULE SELECT TO_CHAR(TO_NUMBER(SUBSTR(MON, 1, 4)) + 1) || SUBSTR(MON, 5, 2) AS NEXT_MON , MID FROM QOI_DWGSCHEDULE WHERE MON >= '".$ny."04' AND MON <= '".$y."03'";
 		$this->qoi->execsql($q);
+		$d['VIEW']    = 'layouts/mail/message';
+		$d['SUBJECT'] = "QOI Master Schedule complete";
+        $d['TO']  = $this->PIC;
+        $d['BODY'] = [
+            '<div style="font-family: Arial, sans-serif; font-size: 14px; color: #333;">
+			QOI Master Schedule for this year created successfully.
+            </div>'
+        ];
+		$this->mail->sendmail($d);
 	}
 
 
@@ -216,6 +227,15 @@ Class autojob extends CI_Controller {
 			}
 			
 		}
+		$d['VIEW']    = 'layouts/mail/message';
+		$d['SUBJECT'] = $tilte;
+        $d['TO']  = $this->PIC;;
+        $d['BODY'] = [
+            '<div style="font-family: Arial, sans-serif; font-size: 14px; color: #333;">
+			 {$tilte} created successfully.
+            </div>'
+        ];
+		$this->mail->sendmail($d);
 	}
 
     /* create over usage*/
@@ -226,9 +246,10 @@ Class autojob extends CI_Controller {
 		$vorgno = "050501";
 		$cyear = "12";
 		//$nextMonth = date('Ym', strtotime('first day of next month'));
-		$y = '202504';
+		//$y = '202504';
+		//เอาของเดือนถัดไป
+		$y =  date('Ym', strtotime('first day of next month'));
 		$q = "select distinct TYREQ From QOI_DWGMASTER M, QOI_DWGSCHEDULE S where M.MID = S.MID and S.MON = '".$y."' and ISSUE = 'Y' and TYREQ in ('1','3')";
-		echo "<br/>";
 		$rs = $this->qoi->getdatasql($q);
 		foreach($rs as $r)
 		{
@@ -448,6 +469,16 @@ Class autojob extends CI_Controller {
 	
 
 		}
+		$cy =  date('M Y', strtotime('first day of next month'));
+		$d['VIEW']    = 'layouts/mail/message';
+		$d['SUBJECT'] = "Create Over usage automation for ".$cy;
+        $d['TO']  = $this->PIC;;
+        $d['BODY'] = [
+            '<div style="font-family: Arial, sans-serif; font-size: 14px; color: #333;">
+			 Create Over usage automation for {$cy} created successfully.
+            </div>'
+        ];
+		$this->mail->sendmail($d);
 	}
 
 
@@ -463,7 +494,7 @@ Class autojob extends CI_Controller {
 			$obj->folder_path = str_replace('Y:\\', '\\\\amecnas\\xfiles\\localpdm\\', $obj->folder_path);
 			$srcFile  	 = $obj->folder_path . '\\' . $obj->file_name . '_' . $obj->internal_revision_no . '_DWGVIEW_' . $obj->file_seqno;
 			//$dstFile 	 = '\\\\webflow\\iscompaq24\\qa\\qoi\\file\\'.$dstfolder."\\"; //file for qa
-			$dstFile = '\\\\amecnas\\AMECWEB\\file\\development\\Form\\QA\QOI\\'.$dstfolder."\\";
+			$dstFile = '\\\\amecnas\\AMECWEB\\file\\production\\Form\\QA\QOI\\'.$dstfolder."\\";
 			$filename    = $this->get_microtime().$obj->file_name;
 			$fileTIF 	 = $dstFile .$filename .".tif";
 			$dwgname = explode('_', $filename); //change file name drawing.pdf by extract drawing only underscore file time_drawing_revision.pdf

@@ -148,14 +148,25 @@ class manage extends MY_Controller{
 
 public function del(){
     $mid = $_POST['mid'];
-    $mon = $_POST['mon'];
-    $this->qoi->trans_start();
-    $delsch = $this->qoi->deletesch("MID = ".$mid." and MON = '".$mon."'");
-    $this->qoi->trans_complete();
-    $res = [
-        'status' => $delsch,
-        'message' => ""
-    ];
+    if(isset($_POST['mon']))
+    {
+        $mon = $_POST['mon'];
+        $this->qoi->trans_start();
+        $delsch = $this->qoi->deletesch("MID = ".$mid." and MON = '".$mon."'");
+        $this->qoi->trans_complete();
+        $res = [
+            'status' => $delsch,
+            'message' => ""
+        ];
+
+    }else
+    {
+        $this->qoi->delete("QOI_DWGMASTER", array("MID"=>$mid));
+        $res = [
+           'status' => true,
+           'message' => ""
+       ];
+    }
     echo json_encode($res);
 }
 
