@@ -7,7 +7,7 @@ dotenv.config();
 export default defineConfig({
     title: "New Webflow",
     description: "Manual for New Webflow",
-    base: "/form/docs/dist",
+    base: "/form/docs/", // หากไม่ชี้ตาม outDir ต้องมี .htaccess 
     outDir: "dist", // โฟลเดอร์ปลายทางเมื่อ build
     head: [["link", { rel: "icon", href: `${process.env.VITE_APP_HOST}/assets/images/favicon.ico` }]],
     markdown: {

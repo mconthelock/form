@@ -1,0 +1,17 @@
+<IfModule mod_rewrite.c>
+RewriteEngine On
+RewriteBase /form/docs/
+
+# 1) /form/docs (ไม่มี / ท้าย) → เติม / ให้เรียบ ๆ
+RewriteRule ^$ index.html [L]
+
+# 2) เสิร์ฟไฟล์จริงจาก dist (css/js/img/fonts/html ฯลฯ)
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*\.(?:css|js|mjs|map|json|png|jpg|jpeg|gif|svg|webp|ico|woff2?|ttf|html))$ dist/$1 [L]
+
+# 3) SPA fallback: เส้นทางลึก ๆ ที่ไม่มีไฟล์ → ส่ง dist/index.html
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule . dist/index.html [L]
+</IfModule>
