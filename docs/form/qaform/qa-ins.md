@@ -87,9 +87,9 @@ outline: deep # เปิดให้เมนูย่อยแสดงระ�
 >**หมายเหตุ: หากไม่พบข้อมูลในระบบ จะไม่มีการแสดงรายชื่อผู้ทดสอบ**
 
 ## การนัดหมายและดำเนินการทดสอบโดยฝ่าย QC
-<!-- <FancyLightboxImage :images="[{src:'/image/qaform/qa-ins/qc-detail.png'}, {src:'/image/qaform/qa-ins/qc-incharge.png'}]"  hero-height="420px" -->
+<!-- <FancyLightboxImage :images="[{src:'/image/qaform/qa-ins/qc-detail.png'}, {src:'/image/qaform/qa-ins/qc-incharge.png'}]"  hero-height="420px" 
   :autoplay-ms="3500"   
-  :pause-on-hover="true"/>
+  :pause-on-hover="true"/> -->
 <FancyLightboxImage src="/image/qaform/qa-ins/qc-detail.png"/>
 <FancyLightboxImage src="/image/qaform/qa-ins/qc-incharge.png"/>
 
