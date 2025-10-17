@@ -16,3 +16,5 @@ application/composer.lock
 docs/dist
 docs/.vitepress/cache
 backup
+
+docs-functions
