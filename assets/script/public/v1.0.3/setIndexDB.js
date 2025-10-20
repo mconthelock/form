@@ -146,7 +146,7 @@ export async function displayEmpImage(id) {
             );
             if (response.ok) {
                 const img = await response.text();
-                console.log(id, img);
+                // console.log(id, img);
 
                 if (!img.startsWith("data:image/")) {
                     throw new Error("Invalid image format");

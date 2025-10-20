@@ -362,7 +362,8 @@ async function setInchargeForm(data) {
             data: user.filter(
                 // (u) => u.GRP_ID > 1 && ![4, 7].includes(u.GRP_ID) && u.SEC_ID == secId
                 (u) =>
-                    ![4].includes(u.GRP_ID) &&
+                    ![4, 7].includes(u.GRP_ID) &&
+                    u.SDIVCODE == "000101" &&
                     u.SEC_ID == data.QA_INCHARGE_SECTION &&
                     data.QA_INCHARGE_SECTION_INFO.SEC_NAME.trim() ==
                         u.SSEC.trim()

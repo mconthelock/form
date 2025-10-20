@@ -402,18 +402,18 @@ async function setCreate() {
 
     userIncharge = await getEscsUsers({
         USR_STATUS: 1,
-        fields: [
-            "USR_ID",
-            "USR_NO",
-            "USR_NAME",
-            "USR_EMAIL",
-            "USR_REGISTDATE",
-            "USR_USERUPDATE",
-            "USR_DATEUPDATE",
-            "GRP_ID",
-            "USR_STATUS",
-            "SEC_ID",
-        ],
+        // fields: [
+        //     "USR_ID",
+        //     "USR_NO",
+        //     "USR_NAME",
+        //     "USR_EMAIL",
+        //     "USR_REGISTDATE",
+        //     "USR_USERUPDATE",
+        //     "USR_DATEUPDATE",
+        //     "GRP_ID",
+        //     "USR_STATUS",
+        //     "SEC_ID",
+        // ],
     });
 
     // item
@@ -550,7 +550,7 @@ async function setIncharge(data = "") {
     }
     await setSelect2({
         data: data
-        .filter((u) => u.GRP_ID != 4)
+        .filter((u) => ![4,7].includes(u.GRP_ID) && u.SDIVCODE == '000101') // filter out users with GRP_ID 4 and 7
         .map((u) => {
             return {
                 value: u.USR_NO,
