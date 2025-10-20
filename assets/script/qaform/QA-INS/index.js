@@ -107,7 +107,7 @@ $(document).on("change", "#qcsection", async function () {
     const secId = $(this).val();
     const incharge = qcsection.find((sec) => sec.SEC_ID == secId);
     if (secId != "") {
-        const user = userIncharge.filter((u) => u.SEC_ID == secId);
+        const user = userIncharge.filter((u) => u?.SSECCODE == incharge?.SSECCODE);
         $("#incharge").removeAttr("disabled");
         await setIncharge(user);
         if (incharge.INCHARGE) {
@@ -548,10 +548,17 @@ async function setIncharge(data = "") {
         });
         return;
     }
+
+    const sec = qcsection.find((sec) => sec.SEC_ID == $('#qcsection').val());
+    
     await setSelect2({
         data: data
-        .filter((u) => ![4,7].includes(u.GRP_ID) && u.SDIVCODE == '000101') // filter out users with GRP_ID 4 and 7
+        .filter((u) => {
+            return sec ? u?.SSECCODE == sec?.SSECCODE : false;
+        })
         .map((u) => {
+            console.log(u);
+            
             return {
                 value: u.USR_NO,
                 text: `${u.USR_NAME} (${u.USR_NO})`,
