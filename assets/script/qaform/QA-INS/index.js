@@ -549,7 +549,9 @@ async function setIncharge(data = "") {
         return;
     }
     await setSelect2({
-        data: data.map((u) => {
+        data: data
+        .filter((u) => u.GRP_ID != 4)
+        .map((u) => {
             return {
                 value: u.USR_NO,
                 text: `${u.USR_NAME} (${u.USR_NO})`,
