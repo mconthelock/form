@@ -142,7 +142,7 @@ $(document).on("change", "#serverName", async function () {
       return el.SERVER_NAME.trim() == serverName.trim()
         ? `<option value="${
             el.USER_LOGIN
-          }" data-html="${el.USER_OWNER.trim()} (${el.EMPNO.trim()})" data-img="${
+          }" data-html="${el?.USER_OWNER.trim()} (${el?.EMPNO.trim()})" data-img="${
             empImage[el.EMPNO]
           }">
                 ${el.USER_LOGIN}
@@ -156,7 +156,7 @@ $(document).on("change", "#serverName", async function () {
       return el.SERVER_NAME.trim() == serverName.trim()
         ? `<option value="${
             el.USER_LOGIN
-          }" data-html="${el.USER_OWNER.trim()} (${el.EMPNO.trim()})" data-img="${
+          }" data-html="${el?.USER_OWNER.trim()} (${el.EMPNO?.trim()})" data-img="${
             empImage[el.EMPNO]
           }">
                 ${el.USER_LOGIN}
