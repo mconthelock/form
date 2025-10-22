@@ -331,7 +331,7 @@ $(document).on("submit", "#form", async function (e) {
         if (changeData) {
             formCFS = await getData({
                 ...ajaxOptionsLoad,
-                url: `${host}isform/IS-CFS/form/createForm`,
+                url: `${host}/isform/IS-CFS/form/createForm`,
                 data: formData,
                 processData: false,
                 contentType: false,
@@ -345,7 +345,7 @@ $(document).on("submit", "#form", async function (e) {
         }
         const res = await getData({
             ...ajaxOptionsLoad,
-            url: `${host}isform/IS-TID/form/createForm`,
+            url: `${host}/isform/IS-TID/form/createForm`,
             data: formData,
             processData: false,
             contentType: false,
@@ -367,7 +367,7 @@ $(document).on("submit", "#form", async function (e) {
             };
             getData({
                 ...ajaxOptions,
-                url: `${host}isform/IS-CFS/form/delete`,
+                url: `${host}/isform/IS-CFS/form/delete`,
                 data: {
                     form: cond,
                 },
