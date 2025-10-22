@@ -23,7 +23,6 @@ export function redirectWebflow(){
     const path = window.location.host.includes('amecwebtest') ? 'formtest' : 'form';
     logtest('path webflow', path);
     const redirectUrl = `http://webflow.mitsubishielevatorasia.co.th/${path}/workflow/WaitApv.asp`;
-    console.log(redirectUrl);
     window.location = redirectUrl;
 }
 

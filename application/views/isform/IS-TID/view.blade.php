@@ -1,6 +1,15 @@
 @extends('layouts/webflowTemplate')
 
 @section('contents')
+@php
+    function convdate($date){
+        if($date != null){
+            return date('d-M-y', strtotime($date) + 7*3600);
+        }else{
+            return '-';
+        }
+    }
+@endphp
     <div class="hidden form-info" NFRMNO="{{$NFRMNO}}" VORGNO="{{$VORGNO}}" CYEAR="{{$CYEAR}}" CYEAR2="{{$CYEAR2}}" NRUNNO="{{$NRUNNO}}"></div>
     <div class="apv-data hidden" apv="{{ $apv }}" mode="{{ $mode }}" cextData="{{ $cextData }}"></div>
     <div class="flex flex-col w-full px-4 my-5 font-sans">
@@ -33,62 +42,6 @@
                 </h2>
 
                 <div class="flex flex-col md:flex-row gap-5 ">
-                    {{-- <fieldset  class="fieldset w-full md:w-fit bg-base-200 border border-base-300 p-4 rounded-box">
-                        <legend class="fieldset-legend text-lg">Requester Information</legend> 
-                        <fieldset class="fieldset w-full">  
-                            <label class="fieldset-label">Requester</label>
-                            {{$data->TID_REQUESTER}}
-                        </fieldset>
-
-                        <fieldset class="fieldset w-full">  
-                            <label class="fieldset-label">Requester date</label>
-                            {{$data->TID_REQ_DATE}}
-                        </fieldset>
-
-                        <fieldset class="fieldset w-full">   
-                            <label class="fieldset-label">Usage period</label>
-                                {{$data->TID_TIMESTART}} - {{$data->TID_TIMEEND}}
-                        </fieldset>
-                    </fieldset>
-                    <fieldset  class="fieldset w-full md:w-fit bg-base-200 border border-base-300 p-4 rounded-box">
-                        <legend class="fieldset-legend text-lg">Access Request Details</legend>
-                        <fieldset class="fieldset w-full">
-                        
-                            <label class="fieldset-label">Webflow request No.
-                                @if ($data->TID_CHANGEDATA == 1)
-                                    <div class="text-error">(Change Data)</div>
-                                @endif
-                            </label>
-                            @if (is_array($link))
-                                @foreach ($link as $l)
-                                    <a href="{{$l['url']}}" class="link link-primary" target="_blank"> {{$l['req']}}</a>
-                                    
-                                @endforeach
-                                
-                            @else 
-                                <a href="{{$link}}" class="link link-primary" target="_blank"> {{$data->TID_REQNO}}</a>
-                            @endif
-                        </fieldset>
-
-                        <fieldset class="fieldset w-full">
-                            <label class="fieldset-label">Server name</label>
-                            {{$data->TID_SERVERNAME}}
-                        </fieldset>
-
-                        <fieldset class="fieldset w-full">
-                            <label class="fieldset-label">Production User ID</label>
-                            {{$data->TID_USERLOGIN}}
-                        </fieldset>
-
-                        @if (!empty($data->TID_CONTROLLER))
-                            <div class="divCon w-full">
-                                <fieldset class="fieldset">
-                                    <label class="fieldset-label">Controller</label>
-                                    {{$data->TID_CONTROLLER}}
-                                </fieldset>
-                            </div>
-                        @endif
-                    </fieldset> --}}
                     <div class="form-info"></div>
 
                     <div  class="w-full md:w-fit bg-base-200 border border-base-300 p-4 rounded-box relative">
@@ -98,16 +51,19 @@
                             <tbody>
                                 <tr>
                                     <td class="text-primary">Requester date:</td>
-                                    <td>{{$data->TID_REQ_DATE}}</td>
+                                    <td>{{ convdate($data['TID_REQ_DATE']) }}</td>
                                 </tr>
                                 <tr>
                                     <td class="text-primary">Usage period:</td>
-                                    <td>{{$data->TID_TIMESTART}} - {{$data->TID_TIMEEND}}</td>
+                                    <td>{{$data['TID_TIMESTART']}} - {{$data['TID_TIMEEND']}}</td>
                                 </tr>
                                 <tr>
                                     <td class="text-primary">Webflow request No:
-                                        @if ($data->TID_CHANGEDATA == 1)
+                                        @if ($data['TID_CHANGEDATA'] == 1)
                                             <div class="text-error">(Change Data)</div>
+                                        @endif
+                                        @if ($data['TID_LATE'] == 1)
+                                            <div class="text-error">(Late)</div>
                                         @endif
                                     </td>
                                     <td>
@@ -116,24 +72,24 @@
                                                 <a href="{{$l['url']}}" class="link link-primary" target="_blank"> {{$l['req']}}</a>
                                                 <br>
                                             @endforeach
-                                            
-                                        @else 
-                                            <a href="{{$link}}" class="link link-primary" target="_blank"> {{$data->TID_REQNO}}</a>
+
+                                        @else
+                                            <a href="{{$link}}" class="link link-primary" target="_blank"> {{$data['TID_REQNO']}}</a>
                                         @endif
                                     </td>
                                 </tr>
                                 <tr>
                                     <td class="text-primary">Server name:</td>
-                                    <td>{{$data->TID_SERVERNAME}}</td>
+                                    <td>{{$data['TID_SERVERNAME']}}</td>
                                 </tr>
                                 <tr>
                                     <td class="text-primary">Production User ID:</td>
-                                    <td>{{$data->TID_USERLOGIN}}</td>
+                                    <td>{{$data['TID_USERLOGIN']}}</td>
                                 </tr>
-                                @if (!empty($data->TID_CONTROLLER))
+                                @if (!empty($data['TID_CONTROLLER']))
                                     <tr>
                                         <td class="text-primary">Controller:</td>
-                                        <td>{{$data->TID_CONTROLLER}}</td>
+                                        <td>{{$data['TID_CONTROLLER']}}</td>
                                     </tr>
                                 @endif
                             </tbody>
@@ -146,15 +102,13 @@
                     <div class="border border-black font-bold bg-gray-300"><p class="ml-2 text-xl font-bold">Work content</p></div>
                     <div class="border border-black h-fit">
                         <div class="m-5">
-                            <textarea class="w-full resize-none overflow-y-auto p-2" id="workcontent" readonly>{!! htmlspecialchars(e($data->TID_WORKCONTENT ?? '-')) !!}</textarea>
-                            {{-- {!! nl2br(e($data->TID_WORKCONTENT ?? '-')) !!} --}}
+                            <textarea class="w-full resize-none overflow-y-auto p-2" id="workcontent" readonly>{!! htmlspecialchars(e($data['TID_WORKCONTENT'] ?? '-')) !!}</textarea>
                         </div>
                     </div>
                     <div class="border border-black font-bold bg-gray-300"><p class="ml-2 text-xl font-bold">Reason of Necessity</p></div>
                     <div class="border border-black h-fit">
                         <div class="m-5">
-                            <textarea class="w-full resize-none overflow-y-auto p-2" id="reason" readonly>{!! htmlspecialchars(e($data->TID_REASON ?? '-')) !!}</textarea>
-                            {{-- {!! nl2br(e($data->TID_REASON ?? '-')) !!} --}}
+                            <textarea class="w-full resize-none overflow-y-auto p-2" id="reason" readonly>{!! htmlspecialchars(e($data['TID_REASON'] ?? '-')) !!}</textarea>
                         </div>
                     </div>
                 </div>
@@ -173,15 +127,15 @@
                     </fieldset>
                 @endif
 
-                @if ($data->TID_COMP_DATE != null)
+                @if ($data['TID_COMP_DATE'] != null)
                     <div class="divider"></div>
                     <fieldset class="fieldset w-full md:w-fit bg-base-200 border border-base-300 p-4 rounded-box">
                         <legend class="fieldset-legend text-lg">Production Environment ID work completion report</legend>
                         <label class="fieldset-label">Completed date</label>
-                        {{$data->TID_COMP_DATE}}
+                        {{convdate($data['TID_COMP_DATE'])}}
                         <fieldset class="fieldset w-full">  
                             <label class="fieldset-label">Completed time</label>
-                            {{$data->TID_COMP_TIME}}
+                            {{$data['TID_COMP_TIME']}}
                         </fieldset>
                     </fieldset>
                 @endif
@@ -201,39 +155,22 @@
                         </label>
                     </fieldset>
                 @endif
-                
-                @if ($data->TID_DISABLE_DATE != null)
+
+                @if ($data['TID_DISABLE_DATE'] != null)
                     <div class="divider"></div>
                     <fieldset class="fieldset w-full md:w-fit bg-base-200 border border-base-300 p-4 rounded-box">
                         <legend class="fieldset-legend text-lg">Production Environment disable completion report</legend>
                         <label class="fieldset-label">Disabled date</label>
-                        {{$data->TID_DISABLE_DATE}}
+                        {{ convdate($data['TID_DISABLE_DATE'])}}
                         <fieldset class="fieldset w-full">  
                             <label class="fieldset-label">Disabled time</label>
-                            {{$data->TID_DISABLE_TIME}}
+                            {{$data['TID_DISABLE_TIME']}}
                         </fieldset>
                     </fieldset>
                 @endif
             </form>
-            {{-- <div class="card-actions flex-col gap-5 justify-start pl-6">
-                <div class="my-5 hidden actions-Form ">
-                    <fieldset class="fieldset">
-                        <span class="fieldset-label">Remark</span>
-                        <textarea class="textarea h-24 w-56" id="remark" ></textarea>
-                    </fieldset>
-                    <div class="flex gap-3  mt-2">
-                        <button type="button" class="btn btn-primary" name="btnAction" value="approve">Approve</button>
-                        <button type="button" class="btn btn-neutral mg-l-12" name="btnAction" value="reject">Reject</button>
-                    </div>
-                </div>
-              
-                <div id="flow" class="w-full">
-                    <div class="flex justify-center">
-                        <div class="skeleton h-32 w-[36rem]"></div>
-                    </div>
-                </div>
-            </div> --}}
-            @include('component.webflow.formAction')
+            {{-- @include('component.webflow.formAction') --}}
+            <div class="action-form"></div>
         </div>
     </div>
 @endsection

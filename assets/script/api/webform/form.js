@@ -137,3 +137,24 @@ export async function deleteFlowandForm(form){
     const data = await res.json();
     return data;
 }
+
+/**
+ * 
+ * @param {string} reqNo e.g. IS-DEV21-000007
+ * @returns 
+ */
+export async function getRequestNo(reqNo){
+    const res = await fetch(`${process.env.APP_API}/form/getRequestNo`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reqNo }),
+    });
+
+    if (!res.ok) {
+        await fetchMsgErr(res)
+        throw new Error("Failed to fetch getRequestNo");
+    }
+
+    const data = await res.json();
+    return data;
+}

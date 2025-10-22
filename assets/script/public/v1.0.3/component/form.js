@@ -251,32 +251,56 @@ export const webflowSubmit = (option = {}) => {
   }
  * @returns 
  */
-export async function getformDetail(form) {
-    // const data = await getData({
-    //     ...ajaxOptions,
-    //     url: `${host}/Authen/getFormDetail`,
-    //     data: form,
-    // });
+export async function getformDetail(form, style = '') {
+    let html = '';
     const data = await getFormDetail(form);
-    return `<div class="text-xl font-bold mb-5">Form Information</div>
-            <div class="h-fit w-fit md:w-fit bg-base-200 border border-base-300 p-4 rounded-box relative">
+    switch (style) {
+        case 'card-header':
+            html = `<div class="h-full w-full md:w-fit bg-base-200 border border-base-300 p-4 rounded-box relative">
+                <div class="absolute text-lg top-[-13px] font-bold">Form Information</div>
                 <table class="table">
                     <tbody>
                         <tr>
-                            <td class="text-primary font-bold">Form no:</td>
+                            <td class="text-primary">Form no:</td>
                             <td>${data.FORMNO}</td>
                         </tr>
                         <tr>
-                            <td class="text-primary font-bold">Input by:</td>
+                            <td class="text-primary">Input by:</td>
                             <td>${data.VINPUTNAME} (${data.VINPUTER})</td>
                         </tr>
                         <tr>
-                            <td class="text-primary font-bold">Requested by:</td>
+                            <td class="text-primary">Requested by:</td>
                             <td>${data.VREQNAME} (${data.VREQNO})</td>
                         </tr>
                     </tbody>
                 </table>
-            </div>`;
+
+            </div>`
+            break;
+    
+        default:
+            html = `<div class="text-xl font-bold mb-5">Form Information</div>
+                    <div class="h-fit w-fit md:w-fit bg-base-200 border border-base-300 p-4 rounded-box relative">
+                        <table class="table">
+                            <tbody>
+                                <tr>
+                                    <td class="text-primary font-bold">Form no:</td>
+                                    <td>${data.FORMNO}</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-primary font-bold">Input by:</td>
+                                    <td>${data.VINPUTNAME} (${data.VINPUTER})</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-primary font-bold">Requested by:</td>
+                                    <td>${data.VREQNAME} (${data.VREQNO})</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>`;
+            break;
+    }
+    return html;
 }
 
 function inputAttrs(opt = {}) {

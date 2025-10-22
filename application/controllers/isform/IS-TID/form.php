@@ -2,15 +2,19 @@
 use GuzzleHttp\Client;
 defined('BASEPATH') OR exit('No direct script access allowed');
 require_once APPPATH.'controllers/_form.php';
+require_once APPPATH.'controllers/api/webform/form.php';
+require_once APPPATH.'controllers/api/webform/flow.php';
+require_once APPPATH.'controllers/api/webform/formmst.php';
+require_once APPPATH.'controllers/api/webform/isTid.php';
 class form extends MY_Controller{
-    use _Form;
+    use formApi, flow, formmst, isTid;
     protected $title;
     protected $client;
     function __construct(){
 		parent::__construct();
-        $this->load->model('isform/IS-TID/userEnv_model', 'en');
-        $this->load->model('form_model', 'frm');
-        $this->load->model('user_model', 'usr');
+        // $this->load->model('isform/IS-TID/userEnv_model', 'en');
+        // $this->load->model('form_model', 'frm');
+        // $this->load->model('user_model', 'usr');
         $this->client = new Client(['verify' => false]);
     }
 
@@ -23,7 +27,8 @@ class form extends MY_Controller{
             ];
 
         }else{
-            $form = $this->frm->getFormMaster('IS-TID');
+            $form = $this->getFormMasterByVaname('IS-TID');
+            // $form = $this->frm->getFormMaster('IS-TID');
             if(!empty($form)){
                 $data = [
                     'NFRMNO' => $form[0]->NNO,
@@ -32,41 +37,47 @@ class form extends MY_Controller{
                 ];
             }
         }
-        $data['serverName'] = $this->en->getServerName();
+        $data['serverName'] = $this->getServerName();
+        $data['cextData'] = '';
+        $data['mode']     = '';
+        // $data['serverName'] = $this->en->getServerName();
 
+        $empno = isset($_GET["empno"]) ? $_GET['empno'] : '' ;
+        $data['apv'] = $empno;
         if(isset($_GET["runNo"]) && $_GET["runNo"] != "") {
-            $empno            = isset($_GET["empno"]) ? $_GET['empno'] : '' ;
-            $formData         = $this->en->getData($_GET["no"], $_GET["orgNo"], $_GET["y"], $_GET["y2"], $_GET["runNo"])[0];
-            $data['NRUNNO']   = $_GET["runNo"];
-            $data['CYEAR2']   = $_GET["y2"];
-            $data['apv']      = $empno;
-            $data['cextData'] = $this->getExtdata($_GET["no"], $_GET["orgNo"], $_GET["y"], $_GET["y2"], $_GET["runNo"] , $empno);
-            $data['mode']     = $this->getMode($_GET["no"], $_GET["orgNo"], $_GET["y"], $_GET["y2"], $_GET["runNo"], $empno);
+            $data['CYEAR2'] = $_GET['y2'];
+            $data['NRUNNO'] = $_GET['runNo'];
+            $form = [
+                'NFRMNO' => $data['NFRMNO'],
+                'VORGNO' => $data['VORGNO'],
+                'CYEAR'  => $data['CYEAR'],
+                'CYEAR2' => $data['CYEAR2'],
+                'NRUNNO' => $data['NRUNNO'],
+            ];
+            $formData = $this->getFormData($form);
             $data['data']     = $formData;
-            // $data['data']     = $this->en->getData($_GET["no"], $_GET["orgNo"], $_GET["y"], $_GET["y2"], $_GET["runNo"])[0];
-            // $data['link']     = $this->getRequestNo($formData->TID_REQNO)['form'][0]->LINK;
-            if(strpos($formData->TID_REQNO, '|') !== false){
-                $reqNo = explode('|', $formData->TID_REQNO);
+            $form['EMPNO']    = $empno;
+            if(!empty($empno)){
+                $data['cextData'] = $this->getExtData($form);
+                $data['mode']     = $this->getMode($form);
+            }
+            // $formData         = $this->en->getData($_GET["no"], $_GET["orgNo"], $_GET["y"], $_GET["y2"], $_GET["runNo"])[0];
+            // $data['cextData'] = $this->getExtdata($_GET["no"], $_GET["orgNo"], $_GET["y"], $_GET["y2"], $_GET["runNo"] , $empno);
+            // $data['mode']     = $this->getMode($_GET["no"], $_GET["orgNo"], $_GET["y"], $_GET["y2"], $_GET["runNo"], $empno);
+            if(strpos($formData['TID_REQNO'], '|') !== false){
+                $reqNo = explode('|', $formData['TID_REQNO']);
                 foreach($reqNo as $key => $r){
-                    $link[$key]['url'] = $this->getRequestNo(trim($r))['form'][0]->LINK;
+                    $link[$key]['url'] = $this->getRequestNo(trim($r))['data'][0]['LINK'];
                     $link[$key]['req'] = trim($r);
                 }
             }else{
-                $link = $this->getRequestNo($formData->TID_REQNO)['form'][0]->LINK;
+                $link = $this->getRequestNo($formData['TID_REQNO'])['data'][0]['LINK'];
             }
             $data['link'] = $link;
             $this->views('isform/IS-TID/view', $data);
         }else{
             $this->views('isform/IS-TID/form', $data);
         }
-    }
-
-    public function getDataOnLoad(){
-        $res = [
-            'ctrl'      => $this->en->getController(),
-            'userLogin' => $this->en->getUserLogin()
-        ];
-        echo json_encode($res);
     }
 
     public function createForm(){
@@ -109,6 +120,7 @@ class form extends MY_Controller{
                 'TID_REASON'      => $post['reason'],
                 'TID_CHANGEDATA'  => $post['changeData'],
                 'TID_FORMTYPE'    => $post['formType'],
+                'TID_LATE'        => $post['late']
             ];
             $updateFlowStep[] = $this->setFlow($form1, isset($post['ctrlRequester']) ? $post['ctrlRequester'] : '');
             if($post['formType'] == '2'){
@@ -128,6 +140,7 @@ class form extends MY_Controller{
                     'TID_WORKCONTENT' => $post['ctrlWorkCon'],
                     'TID_CHANGEDATA'  => $post['changeData'],
                     'TID_FORMTYPE'    => $post['formType'],
+                    'TID_LATE'        => $post['late']
                 ];
                 $updateFlowStep[] = $this->setFlow($form2);
                 $deleteFlowStep[] = $this->deleteFlowStep($stepDelete, $form2['NFRMNO'], $form2['VORGNO'], $form2['CYEAR'], $form2['CYEAR2'], $form2['NRUNNO']);

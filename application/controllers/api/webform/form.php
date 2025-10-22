@@ -42,7 +42,8 @@ trait formApi{
             $response = $this->client->post($_ENV['APP_APIPHP'].'/form/createForm', [
                 'json' => $condition
             ]);
-            $result = trim($response->getBody());
+            // $result = trim($response->getBody());
+            $result = json_decode($response->getBody(), true);
             return $result;
         }catch(Exception $e){
             throw new Exception(json_encode(['status' => "false", 'message' => 'Failed to create form', 'e' => $e]), 1);
@@ -60,6 +61,23 @@ trait formApi{
             throw new Exception(json_encode(['status' => "false", 'message' => 'Failed to delete form', 'e' => $e]), 1);
         }
     }
+
+    /**
+     * @param string $reqNo e.g. ST-INP24-000001
+     * @return array
+     */
+    private function getRequestNo($reqNo){
+        try{
+            $response = $this->client->post($_ENV['APP_APIPHP'].'/form/getRequestNo', [
+                'json' => ['reqNo' => $reqNo]
+            ]);
+            $result = json_decode($response->getBody(), true);
+            return $result;
+        }catch(Exception $e){
+            throw new Exception(json_encode(['status' => "false", 'message' => 'Failed to get request number', 'e' => $e]), 1);
+        }
+    }
+    
     
 
 }

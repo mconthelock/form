@@ -144,12 +144,10 @@ module.exports = {
     new webpack.ProvidePlugin({
       $: "jquery",
       jQuery: "jquery",
-      datatables: "DataTables",
     }),
   ],
     externals: {
       jquery: "jQuery",
-      datatables: "DataTables",
     },
   cache: false,
 };

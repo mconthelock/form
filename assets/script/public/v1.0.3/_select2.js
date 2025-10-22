@@ -199,6 +199,8 @@ export async function setSelect2(options = {}) {
     if(avatar){
         await setAvatarSelect(avatarData,element);
     }
+
+    return $(element);
 }
 
 /**

@@ -2,6 +2,7 @@
 
 @section('contents')
     <div class="hidden form-info" NFRMNO="{{$NFRMNO}}" VORGNO="{{$VORGNO}}" CYEAR="{{$CYEAR}}"></div>
+    <div class="apv-data hidden" apv="{{ $apv }}"></div>
     <div class="flex flex-col w-full px-4 my-5 font-sans">
         <div class="card bg-base-100 w-full lg:w-[70rem] place-self-center shadow-sm">
             <div class="load flex flex-col gap-5 h-screen w-full p-6">
@@ -77,6 +78,13 @@
                         </fieldset>
                         {{-- <p class="validator-hint">กรอกเฉพาะตัวอักษร a-z, A-Z, 0-9 และ - </p> --}}
 
+                        <fieldset class="fieldset late hidden">
+                            <label class="fieldset-label">
+                                <input type="checkbox" class="checkbox checked:checkbox-primary" id="late" name="late" />
+                                Late
+                            </label>
+                        </fieldset>
+
                         <fieldset class="fieldset changeData hidden">
                             <label class="fieldset-label">
                                 <input type="checkbox" class="checkbox checked:checkbox-primary" id="changeData" name="changeData" />
@@ -89,7 +97,7 @@
                                 <select class="select validator req" name="serverName" id="serverName" placeholder="Select Server Name" disabled>
                                     <option value=''></option>
                                     @foreach ($serverName as $s)
-                                        <option value='{{$s->SERVER_NAME}}'>{{$s->SERVER_NAME}}</option>
+                                        <option value='{{$s['SERVER_NAME']}}'>{{$s['SERVER_NAME']}}</option>
                                     @endforeach
                                 </select>
                                 {{-- <input type="text" class="input validator" name="serverName" id="serverName" placeholder="e.g. SCMDB" required /> --}}
