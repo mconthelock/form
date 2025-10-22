@@ -387,7 +387,7 @@ $(document).on("submit", "#form", async function (e) {
             `เกิดข้อผิดพลาด: ${e.message} กรุณาลองใหม่อีกครั้งหรือติดต่อ Admin Tel:2038`
         );
         const mail = { ...mailOpt };
-        mail.BODY = [
+        mail.body = [
             `IS-TID Form Error : Create Form`,
             // mailForm(NFRMNO, VORGNO, CYEAR, CYEAR2, NRUNNO),
             e,

@@ -74,4 +74,31 @@ trait flow{
             throw new Exception(json_encode(['status' => "false", 'message' => 'Failed to check Return back', 'e' => $e]), 1);
         }
     }
+
+    /**
+     * Update flow
+     * @param array $condition
+     * [
+     *   "condition"=> [
+     *      "NFRMNO"=> 13,          //number
+     *      "VORGNO"=> "000101",    //string
+     *      "CYEAR"=> "25",     //string
+     *      "CYEAR2"=> "2025",  //string
+     *      "NRUNNO"=> 2,       //number    
+     *      "CSTART"=> "1"      //string
+     *   ],
+     *   data ที่ต้องการเปลี่ยนแปลงได้ทุก column ใน flow เช่น
+     *   "CSTEPNEXTNO"=> "-1"   //string
+     */
+    private function updateFlow($condition){
+        try{
+            $response = $this->client->patch($_ENV['APP_APIPHP'].'/flow/updateFlow', [
+                'json' => $condition
+            ]);
+            $result = trim($response->getBody());
+            return $result;
+        }catch(Exception $e){
+            throw new Exception(json_encode(['status' => "false", 'message' => 'Failed to update flow', 'e' => $e]), 1);
+        }
+    }
 }

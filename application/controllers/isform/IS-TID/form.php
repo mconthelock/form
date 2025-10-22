@@ -7,7 +7,12 @@ require_once APPPATH.'controllers/api/webform/flow.php';
 require_once APPPATH.'controllers/api/webform/formmst.php';
 require_once APPPATH.'controllers/api/webform/isTid.php';
 class form extends MY_Controller{
-    use formApi, flow, formmst, isTid;
+    use _Form, formApi, flow, formmst, isTid{
+        formApi::getMode insteadOf _Form;
+        formApi::getRequestNo  insteadOf _Form;
+        flow::getExtData insteadOf _Form;
+        _Form::getMode as getModeWebservice;
+    }
     protected $title;
     protected $client;
     function __construct(){
