@@ -12,9 +12,9 @@ class form extends MY_Controller{
     protected $client;
     function __construct(){
 		parent::__construct();
-        // $this->load->model('isform/IS-TID/userEnv_model', 'en');
-        // $this->load->model('form_model', 'frm');
-        // $this->load->model('user_model', 'usr');
+        $this->load->model('isform/IS-TID/userEnv_model', 'en');
+        $this->load->model('form_model', 'frm');
+        $this->load->model('user_model', 'usr');
         $this->client = new Client(['verify' => false]);
     }
 
