@@ -195,3 +195,18 @@ export async function returnApproval(data){
     }
     return await res.json();
 }
+
+export async function setIncharge(data){
+    const res = await fetch(
+        `${process.env.APP_API}/qaform/qa-ins/setIncharge`,
+        {
+            method: "POST",
+            body: data,
+        }
+    );
+    if (!res.ok) {
+        await fetchMsgErr(res);
+        throw new Error("Failed to set incharge");
+    }
+    return await res.json();
+}

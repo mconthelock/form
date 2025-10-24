@@ -185,7 +185,9 @@ async function createDetail(data, auditee) {
     if (station && station.length > 0) {
         html += `<div class="mt-4 p-4 border rounded-lg shadow">
                 <h3 class="font-bold mb-2">Station</h3>
-                <div class="flex flex-wrap gap-2 ${auditee.QOA_AUDIT == 1 ? "cursor-not-allowed" : ""}">`;
+                <div class="flex flex-wrap gap-2 ${
+                    auditee.QOA_AUDIT == 1 ? "cursor-not-allowed" : ""
+                }">`;
 
         for (const st of station) {
             html += checkbox({
@@ -194,7 +196,9 @@ async function createDetail(data, auditee) {
                 label: st.ITS_STATION_NAME,
                 cls: "checkbox-neutral",
                 disabled: auditee.QOA_AUDIT == 1,
-                checked: auditee.QOA_STATION && auditee.QOA_STATION.split('|').includes(String(st.ITS_NO))
+                checked:
+                    auditee.QOA_STATION &&
+                    auditee.QOA_STATION.split("|").includes(String(st.ITS_NO)),
             });
         }
         html += `</div>
@@ -329,6 +333,42 @@ async function calGrade(score, total) {
     return { result, grade, percent: percent.toFixed(2) };
 }
 
+function setMedalReportList(persent, yearText) {
+    let html = ``;
+    if (persent >= 90) {
+        html += `
+            <!-- 🥇 Gold -->
+            <div class="flex gap-6 items-center justify-center">
+                <div class="relative w-8 h-8 rounded-full bg-gradient-to-br from-yellow-300 via-yellow-400 to-amber-500 shadow-lg">
+                    <div class="absolute inset-1 rounded-full bg-gradient-to-br from-yellow-100 to-yellow-300 flex items-center justify-center font-bold  text-amber-800">
+                    ${yearText}
+                    </div>
+                </div>
+            </div>`;
+    } else if (persent >= 80) {
+        html += `
+            <!-- 🥈 Silver -->
+            <div class="flex gap-6 items-center justify-center">
+                <div class="relative w-8 h-8 rounded-full bg-gradient-to-br from-gray-400 via-gray-300 to-gray-500 shadow-lg">
+                    <div class="absolute inset-1 rounded-full bg-gradient-to-br from-gray-100 to-gray-300 flex items-center justify-center font-bold text-gray-700">
+                    ${yearText}
+                    </div>
+                </div>
+            </div>`;
+    } else {
+        html += `
+            <!-- 🥉 Bronze -->
+            <div class="flex gap-6 items-center justify-center">
+                <div class="relative w-8 h-8 rounded-full bg-gradient-to-br from-[oklch(0.9_0.05_56.04)] via-[oklch(0.72_0.23_43.31)] to-[oklch(0.84_0.12_82.91)] shadow-lg">
+                    <div class="absolute inset-1 rounded-full bg-gradient-to-br from-white to-[#fe6300] flex items-center justify-center font-bold text-[#3f0606]">
+                    X
+                    </div>
+                </div>
+            </div>`;
+    }
+    return html;
+}
+
 async function calScoreTotal() {
     let total = 0;
     let score = 0;
@@ -420,4 +460,5 @@ export {
     createDetail,
     createTableRevision,
     createTableCS,
+    setMedalReportList
 };

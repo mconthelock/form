@@ -7,6 +7,7 @@
  * @version 1.0.1
  * @version 1.0.3
  * @note 2025-07-17 เปลี่ยนชื่อ function checkEmployeeAndFocus
+ * @note 2025-10-23 เปลี่ยน return data function checkEmployeeAndFocus
  */
 
 import { showMessage } from "./jFuntion";
@@ -37,6 +38,6 @@ export async function checkEmployeeAndFocus(element) {
         element.val('').trigger('focus');
         showMessage(checked.message, 'warning');
     }
-    return checked.status;
+    return checked;
 }
 

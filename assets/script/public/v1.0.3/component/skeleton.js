@@ -176,13 +176,14 @@ export function formDetailSkeleton(element) {
 
 export function formSubmitSkeleton(option = {}) {
     const { count = 3, element = "", mode = 'edit' } = option;
-    let html = `
+    let html = `<div class="flex flex-col items-center">
     <div class="skeleton  min-h-24 w-56 mb-5"></div>
     <div class="flex gap-1">`;
     for (let i = 0; i < count; i++) {
         html += `<div class="skeleton h-10 w-24"></div>`;
     }
-    html += `</div>`;
+    html += `</div>
+    </div>`;
     const flow = `<div id="flow" class="w-full my-5">
         <div class="flex justify-center">
             <div class="skeleton h-[20rem] w-[36rem]"></div>

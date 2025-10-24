@@ -388,16 +388,16 @@ export async function createTable(option = {}, setupOpt = {}) {
   $(setup.id).on("click", ".select-dt-row", function (e) {
     // $( ".select-dt-row").on("click", function (e) {
     let data = table.row($(this).parents("tr")).data();
-    console.log("select-dt-row", data);
+    // console.log("select-dt-row", data);
 
     const check = $(this);
     if (check.is(":checked")) {
       if (setup.columnSelect.status && setup.columnSelect.resetOnCreate) {
-        console.log("resetOnCreate", setup.columnSelect.resetOnCreate);
+        // console.log("resetOnCreate", setup.columnSelect.resetOnCreate);
 
         data = { ...data, selected: true };
       } else {
-        console.log("notReset", setup, setup.columnSelect.resetOnCreate);
+        // console.log("notReset", setup, setup.columnSelect.resetOnCreate);
         data.selected = true;
       }
     } else {
@@ -513,10 +513,10 @@ function tableGroup(colspan, api, groupCol = 0) {
  */
 function clickTableGroup(table, row, e) {
   const group = e.data("group"); // รับค่าหมวดหมู่
-  console.log(group);
+//   console.log(group);
 
   const rows = table.rows({ page: "current" }).data(); // ดึงข้อมูลปัจจุบันทั้งหมด
-  console.log(rows);
+//   console.log(rows);
 
   const icon = e.find("i"); // หาไอคอนใน row นี้
 
@@ -546,7 +546,7 @@ function setBtnFilter(table, col, active = 0) {
   // เมื่อกดปุ่มให้กรองข้อมูลตามหมวดหมู่
   $("#filterBtnDt").on("click", ".filter-btn-dt", function () {
     var filterValue = $(this).attr("data-filter");
-    console.log(`^${$.fn.dataTable.util.escapeRegex(filterValue)}$`);
+    // console.log(`^${$.fn.dataTable.util.escapeRegex(filterValue)}$`);
 
     tableSetup.buttonFilter.activeFilter = $(this).index(); // เก็บ index ของปุ่มที่ถูกคลิก
 
@@ -590,7 +590,7 @@ function setBtnFilter(table, col, active = 0) {
         uniqueCategories.push(value);
       }
     });
-  console.log(uniqueCategories);
+//   console.log(uniqueCategories);
 
   if (uniqueCategories.length > 0) {
     // เพิ่มปุ่ม "ทั้งหมด" ไว้ที่จุดเริ่มต้น
@@ -616,7 +616,7 @@ function setBtnFilter(table, col, active = 0) {
 
 export async function destroyTable(id = "#table") {
   id.includes("#") || (id = `#${id}`); // ตรวจสอบว่า id มี # หรือไม่
-  console.log("destroyTable", id);
+//   console.log("destroyTable", id);
   const table = $(id).DataTable();
   if (table) {
     table.destroy();

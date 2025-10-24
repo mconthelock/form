@@ -103,6 +103,12 @@
                                         </td>
                                     </tr>
                                     <tr>
+                                        <td>QC Leader</td>
+                                        <td>
+                                            <div class="qcLeader"></div>
+                                        </td>
+                                    </tr>
+                                    <tr>
                                         <td>Revision</td>
                                         <td>
                                             <div class="inchargeRevision"></div>

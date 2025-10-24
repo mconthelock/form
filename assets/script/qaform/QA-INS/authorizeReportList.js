@@ -6,6 +6,7 @@ import { setSelect2 } from "../../public/v1.0.3/_select2";
 import { select } from "../../public/v1.0.3/component/form";
 import { skeleton, skeletons } from "../../public/v1.0.3/component/skeleton";
 import { showErrorMessage } from "../../public/v1.0.3/jFuntion";
+import { setMedalReportList } from "./template";
 
 var userID = "",
     user = [],
@@ -23,6 +24,17 @@ $(async function () {
         });
         item = await getEscsItems({
             IS_STATUS: 1,
+        });
+
+        const auth = await getUserAuthorizeView({
+            USR_STATUS: 1,
+        });
+        user = await user.filter((u) => {
+            if (
+                ![3, 4, 6, 7].includes(u.GRP_ID) &&
+                auth.find((a) => a.USR_NO == u.USR_NO && a.IT_NO)
+            )
+                return u;
         });
 
         // กรองและลบตัวซ้ำของ section
@@ -138,8 +150,32 @@ async function createReportTable(data, allItem, secName) {
                     .map((d, index) => {
                         let checkedItems = "";
                         allItem.forEach((it) => {
-                            if (d.auth.find((a) => a.IT_NO == it)) {
-                                checkedItems += `<td class="text-center border-r-1 border-gray-400 showScore" item="${it}"><i class="icofont-check-circled text-success text-xl"></i></td>`;
+                            const itemAuth = d.auth.filter(
+                                (a) => a.IT_NO == it
+                            );
+                            if (itemAuth.length > 0) {
+                                const item = itemAuth.find(
+                                    (a) => a.STATION_NO == 0
+                                );
+                                // แปลงปีเป็น 2 หลัก
+                                let yearText = "",
+                                    medal = "";
+
+                                if (item.TEST_DATE) {
+                                    const year = new Date(
+                                        item.TEST_DATE
+                                    ).getFullYear();
+                                    yearText = year.toString().slice(-2); // เอา 2 หลักสุดท้าย
+                                    medal = setMedalReportList(
+                                        item.PERCENT,
+                                        yearText
+                                    );
+                                }
+                                checkedItems += `<td class="text-center border-r-1 border-gray-400 showScore cursor-pointer" item="${it}">${
+                                    medal
+                                        ? medal
+                                        : '<i class="icofont-check-circled text-success text-xl"></i>'
+                                }</td>`;
                             } else {
                                 checkedItems += `<td class="text-center border-r-1 border-gray-400"></td>`;
                             }
@@ -177,20 +213,18 @@ $(document).on("click", ".showScore", function () {
     const rowIndex = $(this).closest("tr").index();
     const userData = authData[rowIndex];
     const itemNo = $(this).attr("item");
-
-    console.log(itemNo);
-    console.log(userData);
-
     const scoreList = userData?.auth
         .filter((u) => u.IT_NO == itemNo)
         .map((a) => {
-            console.log(a);
-            
             return `<tr>
-                <td class="text-left">${a.STATION_NO == 0 ? 'MASTER' : a?.STATION.ITS_STATION_NAME || '-'}</td>
-                <td class="text-center"><i class="icofont-check-circled text-success text-xl"></i></td>
-                <td class="text-center">${a.SCORE || '-'}</td>
-                <td class="text-center">${a.GRADE || '-'}</td>
+                <td class="text-left">${
+                    a.STATION_NO == 0
+                        ? "MASTER"
+                        : a?.STATION.ITS_STATION_NAME || "-"
+                }</td>
+                <td class="text-center">${a.GRADE != 'C' ? '<i class="icofont-check-circled text-success text-xl"></i>': '<i class="icofont-close-circled text-error text-xl"></i>'}</td>
+                <td class="text-center">${a.SCORE ?? "-"}</td>
+                <td class="text-center">${a.GRADE ?? "-"}</td>
             </tr>`;
         })
         .join("");
@@ -208,7 +242,13 @@ $(document).on("click", ".showScore", function () {
         </tbody>
     </table>`;
     $("#itemNo").text(itemNo);
-    $("#fullName").text(`${userData?.SEMPPRE || ''} ${userData?.SNAME || ''}`);
+    $("#fullName").text(`${userData?.SEMPPRE || ""} ${userData?.SNAME || ""}`);
     $("#tableScoreboard").html(html);
     $("#scoreBoard").prop("checked", true);
+});
+
+$(document).on('select2:clear', '#selectSection', async function () {
+    $('#selectSection').val('0').trigger('change');
+    setTimeout(() => $('#selectSection').select2('close'), 100); 
+    await setTable('0');
 });

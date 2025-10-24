@@ -133,15 +133,6 @@ async function setDataToSave() {
     });
 
     const formData = new FormData($("#part2")[0]);
-    // $("#tableCS")
-    //     .find("input, select, textarea")
-    //     .each(function () {
-    //         const name = $(this).attr("name");
-    //         const value = $(this).val();
-    //         if (name) {
-    //             formData.append(name, value);
-    //         }
-    //     });
     formData.append("NFRMNO", form.NFRMNO);
     formData.append("VORGNO", form.VORGNO);
     formData.append("CYEAR", form.CYEAR);

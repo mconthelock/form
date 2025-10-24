@@ -43,6 +43,7 @@ import {
 import { searchUser } from "../../api/amec/users";
 import { doaction, showflow } from "../../api/webform/flow";
 import { downloadOrOpenFile, getFile } from "../../api/file";
+import { readonly } from "vue";
 
 var formInfo,
     userIncharge,
@@ -99,22 +100,29 @@ $(async function () {
 });
 
 $(document).on("change", "#requester", async function (e) {
-    await checkEmployeeAndFocus($(this));
-});
-
-$(document).on("change", "#qcsection", async function () {
-    $("#incharge").empty();
-    const secId = $(this).val();
-    const incharge = qcsection.find((sec) => sec.SEC_ID == secId);
-    if (secId != "") {
-        const user = userIncharge.filter((u) => u?.SSECCODE == incharge?.SSECCODE);
-        $("#incharge").removeAttr("disabled");
-        await setIncharge(user);
-        if (incharge.INCHARGE) {
-            $("#incharge").val(incharge.INCHARGE).trigger("change");
-        }
+    const checked = await checkEmployeeAndFocus($(this));
+    if (checked.status) {
+        const empInfo = checked.data;
+        console.log(empInfo);
+        $("#division").val(empInfo.SDIVCODE).trigger("change");
+        $("#department").val(empInfo.SDEPCODE).trigger("change");
+        $("#section").val(empInfo.SSECCODE).trigger("change");
     }
 });
+
+// $(document).on("change", "#qcsection", async function () {
+//     $("#incharge").empty();
+//     const secId = $(this).val();
+//     const incharge = qcsection.find((sec) => sec.SEC_ID == secId);
+//     if (secId != "") {
+//         const user = userIncharge.filter((u) => u?.SSECCODE == incharge?.SSECCODE);
+//         $("#incharge").removeAttr("disabled");
+//         await setIncharge(user);
+//         if (incharge.INCHARGE) {
+//             $("#incharge").val(incharge.INCHARGE).trigger("change");
+//         }
+//     }
+// });
 
 $(document).on("change", "#division", async function () {
     const divCode = $(this).val();
@@ -197,10 +205,10 @@ $(document).on("click", "#btnRequest", async function () {
         const alertMsg = [
             { element: $("#requester"), message: "Please input requester" },
             { element: $("#item"), message: "Please select item" },
-            { element: $("#incharge"), message: "Please select incharge" },
-            { element: $("#division"), message: "Please select division" },
-            { element: $("#department"), message: "Please select department" },
-            { element: $("#section"), message: "Please select section" },
+            { element: $("#qcsection"), message: "Please select QC Section" },
+            // { element: $("#division"), message: "Please select division" },
+            // { element: $("#department"), message: "Please select department" },
+            // { element: $("#section"), message: "Please select section" },
             // {element: $('input[name="files[]"]'), message: 'Please choose file to upload'},
         ];
         if (!(await requiredForm(qaform, alertMsg))) return;
@@ -225,7 +233,7 @@ $(document).on("click", "#btnRequest", async function () {
         formData.set("CREATEBY", $("#created_by").val());
         formData.set("QA_ITEM", $("#item").val());
         formData.set("QA_INCHARGE_SECTION", $("#qcsection").val());
-        formData.set("QA_INCHARGE_EMPNO", $("#incharge").val());
+        // formData.set("QA_INCHARGE_EMPNO", $("#incharge").val());
         formData.set("REMARK", $("#remark").val());
         selected.forEach((v) => formData.append("OPERATOR", v));
         logFormData(formData);
@@ -264,13 +272,11 @@ $(document).on("click", 'button[name="btnAction"]', async function () {
             const alertMsg = [
                 { element: $("#requester"), message: "Please input requester" },
                 { element: $("#item"), message: "Please select item" },
-                { element: $("#incharge"), message: "Please select incharge" },
-                { element: $("#division"), message: "Please select division" },
-                {
-                    element: $("#department"),
-                    message: "Please select department",
-                },
-                { element: $("#section"), message: "Please select section" },
+                { element: $("#qcsection"), message: "Please select QC Section" },
+                // { element: $("#incharge"), message: "Please select incharge" },
+                // { element: $("#division"), message: "Please select division" },
+                // { element: $("#department"), message: "Please select department" },
+                // { element: $("#section"), message: "Please select section" },
                 // {element: $('input[name="files[]"]'), message: 'Please choose file to upload'},
             ];
             if (!(await requiredForm(qaform, alertMsg))) return;
@@ -286,7 +292,7 @@ $(document).on("click", 'button[name="btnAction"]', async function () {
             selected.forEach((v) => formData.append("OPERATOR", v));
             formData.set("QA_ITEM", $("#item").val());
             formData.set("QA_INCHARGE_SECTION", $("#qcsection").val());
-            formData.set("QA_INCHARGE_EMPNO", $("#incharge").val());
+            // formData.set("QA_INCHARGE_EMPNO", $("#incharge").val());
             logFormData(formData);
 
             res = await returnApproval(formData);
@@ -328,8 +334,8 @@ async function setFormReturn() {
         $("#requester").prop("readonly", true);
         $("#item").val(formData.QA_ITEM).trigger("change");
         $("#qcsection").val(formData.QA_INCHARGE_SECTION).trigger("change");
-        $("#incharge").val(formData.QA_INCHARGE_EMPNO).trigger("change");
-        $("#incharge").removeAttr("disabled");
+        // $("#incharge").val(formData.QA_INCHARGE_EMPNO).trigger("change");
+        // $("#incharge").removeAttr("disabled");
 
         auditee.forEach((a) => {
             $("#division").val(a.QOA_EMPNO_INFO.SDIVCODE).trigger("change");
@@ -369,10 +375,10 @@ async function setSkeleton() {
     });
     skeletons({
         element: ".incharge",
-        count: 2,
+        count: 1,
         pattern: [
             { width: "w-40", height: "h-10" },
-            { width: "w-xs", height: "h-10" },
+            // { width: "w-xs", height: "h-10" },
         ],
     });
     skeletons({
@@ -400,21 +406,9 @@ async function setCreate() {
         SEC_STATUS: 1,
     });
 
-    userIncharge = await getEscsUsers({
-        USR_STATUS: 1,
-        // fields: [
-        //     "USR_ID",
-        //     "USR_NO",
-        //     "USR_NAME",
-        //     "USR_EMAIL",
-        //     "USR_REGISTDATE",
-        //     "USR_USERUPDATE",
-        //     "USR_DATEUPDATE",
-        //     "GRP_ID",
-        //     "USR_STATUS",
-        //     "SEC_ID",
-        // ],
-    });
+    // userIncharge = await getEscsUsers({
+    //     USR_STATUS: 1,
+    // });
 
     // item
     $(".item").html(
@@ -444,16 +438,17 @@ async function setCreate() {
             id: "qcsection",
             class: "select select-sm max-w-40",
             placeholder: "Select Section",
-        }) +
-            select({
-                id: "incharge",
-                class: "select select-sm req",
-                placeholder: "Select In-Charge",
-                disabled: true,
-            })
+        })
+        // +
+        //     select({
+        //         id: "incharge",
+        //         class: "select select-sm req",
+        //         placeholder: "Select In-Charge",
+        //         disabled: true,
+        //     })
     );
     await setSelect2({ disableSearch: true, element: "#qcsection" });
-    await setIncharge(userIncharge);
+    // await setIncharge(userIncharge);
 
     await createTableOperator();
     dataTableSkeleton({ show: false });
@@ -499,7 +494,7 @@ async function setCreate() {
 
     $(".organize").html(
         select({
-            data: await division.map((div) => {
+            data: division.map((div) => {
                 return {
                     value: div.SDIVCODE,
                     text: div.SDIV,
@@ -508,6 +503,7 @@ async function setCreate() {
             id: "division",
             class: "select select-sm max-w-40 req",
             placeholder: "Select Division",
+            disabled: true,
         }) +
             select({
                 data: department.map((dept) => {
@@ -539,37 +535,37 @@ async function setCreate() {
     setSelect2({ element: "#section", width: "10rem" });
 }
 
-async function setIncharge(data = "") {
-    if (data == "") {
-        await setSelect2({
-            element: "#incharge",
-            avatar: true,
-            width: "100%",
-        });
-        return;
-    }
+// async function setIncharge(data = "") {
+//     if (data == "") {
+//         await setSelect2({
+//             element: "#incharge",
+//             avatar: true,
+//             width: "100%",
+//         });
+//         return;
+//     }
 
-    const sec = qcsection.find((sec) => sec.SEC_ID == $('#qcsection').val());
-    
-    await setSelect2({
-        data: data
-        .filter((u) => {
-            return sec ? u?.SSECCODE == sec?.SSECCODE : false;
-        })
-        .map((u) => {
-            console.log(u);
-            
-            return {
-                value: u.USR_NO,
-                text: `${u.USR_NAME} (${u.USR_NO})`,
-            };
-        }),
-        element: "#incharge",
-        width: "100%",
-        avatar: true,
-        avatarData: data.map((u) => u.USR_NO),
-    });
-}
+//     const sec = qcsection.find((sec) => sec.SEC_ID == $('#qcsection').val());
+
+//     await setSelect2({
+//         data: data
+//         .filter((u) => {
+//             return sec ? u?.SSECCODE == sec?.SSECCODE : false;
+//         })
+//         .map((u) => {
+//             console.log(u);
+
+//             return {
+//                 value: u.USR_NO,
+//                 text: `${u.USR_NAME} (${u.USR_NO})`,
+//             };
+//         }),
+//         element: "#incharge",
+//         width: "100%",
+//         avatar: true,
+//         avatarData: data.map((u) => u.USR_NO),
+//     });
+// }
 
 async function createTableOperator(data = []) {
     const image = await Promise.all(

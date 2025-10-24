@@ -17,6 +17,7 @@
  * เพิ่มปรับขนาดปุ่ม  webflowSubmit
  */
 
+import { readonly } from "vue";
 import { getFormDetail } from "../../../api/webform/form";
 import { ajaxOptions, getData, host } from "../jFuntion";
 
@@ -53,6 +54,7 @@ export const elementOpt = {
     disabled: false,
     required: false,
     selected: false,
+    readonly: false,
 };
 
 /**
@@ -104,7 +106,7 @@ export const fieldset = (option = {}) => {
  */
 export const input = (option = {}) => {
     const opt = inputAttrs({ ...elementOpt, ...option });
-    return `<input type="${opt.type}" placeholder="${opt.placeholder}" class="${opt.class}" id="${opt.id}" name="${opt.name}" value="${opt.value}" ${opt.attribute} ${opt.checked} ${opt.disabled} ${opt.required}> `;
+    return `<input type="${opt.type}" placeholder="${opt.placeholder}" class="${opt.class}" id="${opt.id}" name="${opt.name}" value="${opt.value}" ${opt.attribute} ${opt.checked} ${opt.disabled} ${opt.required} ${opt.readonly}> `;
 };
 
 /**
@@ -131,7 +133,7 @@ export const select = (option = {}) => {
                 return `<option value="${item.value}">${item.text}</option>`;
             })
             .join("") || "";
-    return `<select id="${opt.id}" name="${opt.name}" placeholder="${opt.placeholder}" class="${opt.class}" ${opt.attribute} ${opt.disabled} ${opt.required}>
+    return `<select id="${opt.id}" name="${opt.name}" placeholder="${opt.placeholder}" class="${opt.class}" ${opt.attribute} ${opt.disabled} ${opt.required} ${opt.readonly}>
                 <option value=""></option>
                 ${options}
             </select>`;
@@ -157,7 +159,7 @@ export const radio = (option = {}) => {
     const opt = inputAttrs({ ...elementOpt, ...option });
     let radio = opt.data
         .map((item) => {
-            return `<input type="radio" name="${opt.name}" value="${item.value}" class="radio ${opt.class}" aria-label="${item.text}" ${opt.attribute} ${opt.checked} ${opt.disabled} ${opt.required}/>`;
+            return `<input type="radio" name="${opt.name}" value="${item.value}" class="radio ${opt.class}" aria-label="${item.text}" ${opt.attribute} ${opt.checked} ${opt.disabled} ${opt.required} ${opt.readonly}/>`;
         })
         .join("");
     return `<div class="w-full join my-2 ${opt.vertical}">
@@ -309,5 +311,6 @@ function inputAttrs(opt = {}) {
     opt.disabled = opt.disabled ? "disabled" : "";
     opt.required = opt.required ? "required" : "";
     opt.selected = opt.selected ? "selected" : "";
+    opt.readonly = opt.readonly ? "readonly" : "";
     return opt;
 }

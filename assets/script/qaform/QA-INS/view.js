@@ -38,12 +38,15 @@ import {
     getAuditee,
     getQaFiles,
     lastApprove,
+    setIncharge,
 } from "./data";
 import { showLoader } from "../../public/v1.0.3/preloader";
 import { redirectWebflow } from "../../public/v1.0.3/_form";
 import { formatDate } from "../../public/v1.0.3/_dayjs";
 import { setAuditorToString, shortName, shortSec } from "./function";
 import { getAuditRevision } from "../../api/escs/audit_revision";
+import { getEscsUserSection } from "../../api/escs/user_section";
+import { searchUser } from "../../api/amec/users";
 var formInfo, form, cextdata, tableAuditor, tableAuditee;
 
 $(async function () {
@@ -78,8 +81,16 @@ $(document).on("click", ".file-link", async function (e) {
     });
 });
 
-$(document).on("click", 'button[name="btnAction"]', async function () {
+var isButtonProcessing = false;
+$(document).on("click", 'button[name="btnAction"]', async function (e) {
     try {
+        // ป้องกันการคลิกซ้ำ
+        if (isButtonProcessing) {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            return;
+        }
+        isButtonProcessing = true;
         showLoader();
         let res;
         const action = $(this).val();
@@ -95,7 +106,31 @@ $(document).on("click", 'button[name="btnAction"]', async function () {
         formData.set("REMARK", $("#remark").val());
         if (action == "approve") {
             switch (cextdata) {
+                case "00":
+                    // Incharge approve
+                    if (
+                        !(await requiredForm($(".qcIncharge"), [
+                            {
+                                element: $("#incharge"),
+                                message: "Please select incharge",
+                            },
+                        ]))
+                    )
+                        return;
+                    formData.set("QA_INCHARGE_EMPNO", $("#incharge").val());
+                    res = await setIncharge(formData);
+                    break;
                 case "01":
+                    if (
+                        $("#QCFOREMAN").val() == "" &&
+                        $("#QCLEADER").val() == ""
+                    ) {
+                        showMessage(
+                            "Please select QC Foreman or QC Leader",
+                            "warning"
+                        );
+                        return;
+                    }
                     const alertMsg = [
                         {
                             element: $("#TRAINING_DATE"),
@@ -104,10 +139,6 @@ $(document).on("click", 'button[name="btnAction"]', async function () {
                         {
                             element: $("#OJTDATE"),
                             message: "Please select OJT date",
-                        },
-                        {
-                            element: $("#QCFOREMAN"),
-                            message: "Please select QC Foreman",
                         },
                         {
                             element: $("#QA_REV"),
@@ -165,6 +196,10 @@ $(document).on("click", 'button[name="btnAction"]', async function () {
         showErrorMessage(error);
     } finally {
         showLoader({ show: false });
+        // Reset flag
+        setTimeout(() => {
+            isButtonProcessing = false;
+        }, 2000);
     }
 });
 
@@ -197,11 +232,20 @@ async function setPage() {
     files += "</div>";
     $(".attachFile").replaceWith(files);
 
-    $(".qcIncharge").replaceWith(
-        `<div class="flex gap-3"><span>${data.QA_INCHARGE_INFO.SNAME} (${data.QA_INCHARGE_SECTION_INFO.SEC_NAME})</span></div>`
-    );
+    if (data.QA_INCHARGE_EMPNO) {
+        $(".qcIncharge").replaceWith(
+            `<div class="flex gap-3"><span>${data.QA_INCHARGE_INFO.SNAME} (${data.QA_INCHARGE_SECTION_INFO.SEC_NAME})</span></div>`
+        );
+    }else{
+        $(".qcIncharge").html(
+            `<div class="flex gap-3"><span>-</span></div>`
+        );
+    }
 
     switch (cextdata) {
+        case "00":
+            await setQCIncharge(data);
+            break;
         case "01":
             await setInchargeForm(data);
             break;
@@ -212,7 +256,7 @@ async function setPage() {
 
     if (formInfo.mode == 2) {
         // edit
-        if (cextdata == "01") {
+        if (cextdata == "00") {
             $("#actionWebflow").html(
                 webflowSubmit({
                     approve: true,
@@ -246,20 +290,61 @@ async function setPage() {
     }
 }
 
-async function setInchargeForm(data) {
-    const user = await getEscsUsers({
-        USR_STATUS: 1,
-    });
-
-    const foreman = user.filter(
-        (u) =>
-            u.GRP_ID === 2 &&
-            u.SEC_ID == data.QA_INCHARGE_SECTION &&
-            data.QA_INCHARGE_SECTION_INFO.SEC_NAME.trim() == u.SSEC.trim()
+async function setQCIncharge(data) {
+    $(".qcIncharge").html(
+        select({
+            id: "incharge",
+            class: "select select-sm req",
+            placeholder: "Select In-Charge",
+        })
     );
-    const foremanUser = foreman.length > 0 ? foreman.map((u) => u.USR_NO) : [];
+    const users = await searchUser({
+        CSTATUS: "1",
+        SPOSCODE: "<80",
+    });
+    const sectionData = await getEscsUserSection({
+        SEC_ID: data.QA_INCHARGE_SECTION,
+    });
+    await setSelect2({
+        data: users
+            .filter((u) => {
+                return u?.SSECCODE == sectionData?.[0]?.SSECCODE;
+            })
+            .map((u) => {
+                return {
+                    value: u.SEMPNO,
+                    text: `${u.SNAME} (${u.SEMPNO})`,
+                };
+            }),
+        element: "#incharge",
+        selectionCssClass: "select-sm",
+        avatar: true,
+        avatarData: users.map((u) => u.SEMPNO),
+    });
+}
+
+async function setInchargeForm(data) {
+    const user = await searchUser({
+        CSTATUS: "1",
+        SPOSCODE: "<80",
+        SSECCODE: data.QA_INCHARGE_SECTION_INFO.SSECCODE,
+    });
+    const foreman = await searchUser({
+        CSTATUS: "1",
+        SPOSCODE: "50",
+        SSECCODE: data.QA_INCHARGE_SECTION_INFO.SSECCODE,
+    });
+    const foremanUser = foreman.length > 0 ? foreman.map((u) => u.SEMPNO) : [];
+
+    const leader = await searchUser({
+        CSTATUS: "1",
+        SPOSCODE: "55",
+        SSECCODE: data.QA_INCHARGE_SECTION_INFO.SSECCODE,
+    });
+    const leaderUser = leader.length > 0 ? leader.map((u) => u.SEMPNO) : [];
+
     const UserImage = await getImageByUser(
-        user.length > 0 ? user.map((u) => u.USR_NO) : []
+        user.length > 0 ? user.map((u) => u.SEMPNO) : []
     );
 
     const revision = await getAuditRevision();
@@ -288,13 +373,30 @@ async function setInchargeForm(data) {
                 foreman.length > 0
                     ? foreman.map((u) => {
                           return {
-                              value: u.USR_NO,
-                              text: `${u.USR_NAME} (${u.USR_NO})`,
+                              value: u.SEMPNO,
+                              text: `${u.SNAME} (${u.SEMPNO})`,
                           };
                       })
                     : [],
             class: "select s2 max-w-sm w-full req",
             placeholder: "Select QC Foreman",
+        })
+    );
+    $(".qcLeader").html(
+        select({
+            id: "QCLEADER",
+            name: "QCLEADER",
+            data:
+                leader.length > 0
+                    ? leader.map((u) => {
+                          return {
+                              value: u.SEMPNO,
+                              text: `${u.SNAME} (${u.SEMPNO})`,
+                          };
+                      })
+                    : [],
+            class: "select s2 max-w-sm w-full req",
+            placeholder: "Select QC Leader",
         })
     );
     $(".inchargeRevision").html(
@@ -317,6 +419,13 @@ async function setInchargeForm(data) {
         element: "#QCFOREMAN",
         avatar: true,
         avatarData: foremanUser,
+        // width: "100%",
+        selectionCssClass: "max-w-sm w-full",
+    });
+    setSelect2({
+        element: "#QCLEADER",
+        avatar: true,
+        avatarData: leaderUser,
         // width: "100%",
         selectionCssClass: "max-w-sm w-full",
     });
@@ -359,13 +468,7 @@ async function setInchargeForm(data) {
 
     tableAuditor = await createTable(
         {
-            data: user.filter(
-                // (u) => u.GRP_ID > 1 && ![4, 7].includes(u.GRP_ID) && u.SEC_ID == secId
-                (u) => {
-                    // console.log(data.QA_INCHARGE_SECTION_INFO.SSECCODE, u.SSECCODE);
-                    return data.QA_INCHARGE_SECTION_INFO.SSECCODE == u.SSECCODE;
-                }
-            ),
+            data: user,
             columns: columnAuditor,
             // order: false
         },
@@ -472,7 +575,7 @@ async function setSkeleton() {
         ? formSubmitSkeleton({
               element: "#actionWebflow",
               mode: "edit",
-              count: cextdata == "01" ? 4 : 3,
+              count: cextdata == "00" ? 4 : 3,
           })
         : formSubmitSkeleton({ element: "#actionWebflow", mode: "view" });
     formDetailSkeleton(".form-detail");
@@ -498,6 +601,8 @@ async function setSkeleton() {
     });
     skeleton({ element: ".qcIncharge", width: "w-60", height: "h-4" });
     switch (cextdata) {
+        case "00":
+            break;
         case "01":
             $("#qcForm1").removeClass("hidden");
             skeleton({
@@ -512,6 +617,11 @@ async function setSkeleton() {
             });
             skeleton({
                 element: ".qcForeman",
+                width: "w-[24rem]",
+                height: "h-12",
+            });
+            skeleton({
+                element: ".qcLeader",
                 width: "w-[24rem]",
                 height: "h-12",
             });
@@ -571,5 +681,9 @@ window.addEventListener("storage", async (e) => {
     if (e.key === "TableAuditeeReload") {
         const auditee = await searchAuditees(form);
         createTableAuditee(auditee);
+        const checkedSuccess = await checkFinishAudit(form);
+        if (checkedSuccess) {
+            $("button[name='btnAction']").trigger("click");
+        }
     }
 });
