@@ -5,16 +5,16 @@ import {
     getData,
     requiredForm,
     showMessage,
-} from "../../public/v1.0.3/jFuntion";
-import { mailOpt, sendMail, mailForm } from "../../public/v1.0.3/_sendmail";
+} from "@public/jFuntion";
+import { mailOpt, sendMail, mailForm } from "@public/_sendmail";
 import { showflow } from "../../api/webform/flow";
 import {
     getformDetail,
     webflowSubmit,
-} from "../../public/v1.0.3/component/form";
-import { doactionWebservice } from "../../public/v1.0.3/_form";
-import { redirectWebflow } from "../../public/v1.0.3/_form";
-import { fpkTimeOpt, setDatePicker } from "../../public/v1.0.3/_flatpickr";
+} from "@public/component/form";
+import { doactionWebservice } from "@public/_form";
+import { redirectWebflow } from "@public/_form";
+import { fpkTimeOpt, setDatePicker } from "@public/_flatpickr";
 
 var NFRMNO, VORGNO, CYEAR, CYEAR2, NRUNNO, empno, cextData, mode;
 $(async function () {

@@ -1,5 +1,5 @@
 import "@flaticon/flaticon-uicons/css/all/all.css";
-import { initAuthen } from "./public/v1.0.3/authen.js";
+import { initAuthen } from "@public/authen.js";
 // import Cookies from "js-cookie";
 // import { decryptText } from "./inc/_crypto";
 // import { getAppDataById } from "./indexDB/userAuth";

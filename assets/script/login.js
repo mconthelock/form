@@ -8,7 +8,7 @@ import { setApplication } from "./indexDB/setIndexDB";
 import { setImage, setInfo } from "./indexDB/employee";
 import { directlogin, passwordLogin } from "./api/auth";
 import { createCarousel } from "./api/gpreport/news";
-import { redirectProduction } from "./public/v1.0.3/authen";
+import { redirectProduction } from "@public/authen";
 
 var camera;
 $(document).ready(async function () {

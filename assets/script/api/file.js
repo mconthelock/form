@@ -1,4 +1,4 @@
-import { showErrorMessage } from "../public/v1.0.3/jFuntion";
+import { showErrorMessage } from "@public/jFuntion";
 
 /**
  * 

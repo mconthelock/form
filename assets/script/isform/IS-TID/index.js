@@ -8,21 +8,21 @@ import {
     ajaxOptionsLoad,
     autosizeTextarea,
     addMinutesToTime,
-} from "../../public/v1.0.3/jFuntion";
-import { fpkTimeOpt, setDatePicker } from "../../public/v1.0.3/_flatpickr";
-import { mailOpt, sendMail } from "../../public/v1.0.3/_sendmail";
-import { addInput, removeInput } from "../../public/v1.0.3/addRemoveInput";
-import { showLoader } from "../../public/v1.0.3/preloader";
-import "../../public/v1.0.3/_tooltip";
+} from "@public/jFuntion";
+import { fpkTimeOpt, setDatePicker } from "@public/_flatpickr";
+import { mailOpt, sendMail } from "@public/_sendmail";
+import { addInput, removeInput } from "@public/addRemoveInput";
+import { showLoader } from "@public/preloader";
+import "@public/_tooltip";
 import { getController, getUserLogin } from "./data";
-import { displayEmpImage } from "../../public/v1.0.3/setIndexDB";
+import { displayEmpImage } from "@public/setIndexDB";
 import { searchUser } from "../../api/amec/users";
 import { getRequestNo } from "../../api/webform/form";
 import {
     createForm2,
     deleteForm,
     redirectWebflow,
-} from "../../public/v1.0.3/_form";
+} from "@public/_form";
 
 import {
     flagSelect,
@@ -30,7 +30,7 @@ import {
     s2disableSearch,
     s2opt,
     setSelect2,
-} from "../../public/v1.0.3/_select2";
+} from "@public/_select2";
 
 var emp,
     empno,
