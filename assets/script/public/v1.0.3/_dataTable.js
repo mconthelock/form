@@ -39,7 +39,7 @@
 // import { createColumnFilters } from "./_filter";
 import "datatables.net-dt";
 import "datatables.net-responsive-dt";
-// import "datatables.net-dt/css/dataTables.dataTables.min.css";
+import "datatables.net-dt/css/dataTables.dataTables.min.css";
 import "datatables.net-responsive-dt/css/responsive.dataTables.min.css";
 
 export const domScrollTailwind4 = `

@@ -19,10 +19,6 @@
     <title>AMEC Webflow</title>
 
     <link rel="stylesheet" href="{{ $_ENV['APP_CDN'] }}/icofont/icofont.min.css">
-    <link rel="stylesheet" href="{{ $_ENV['APP_CDN'] }}/datatable/v2.2.2/datatables.min.css">
-    <link rel="stylesheet" href="{{ $_ENV['APP_CDN'] }}/datatable/v2.2.2/responsive.dataTables.min.css">
-    {{-- <link rel="stylesheet" href="{{ base_url() }}assets/dist/css/tailwind.css?ver={{ $GLOBALS['version'] }}"> --}}
-    {{-- <link rel="stylesheet" href="{{ base_url() }}assets/dist/css/tailwindOld.css?ver={{ $GLOBALS['version'] }}"> --}}
     <link rel="stylesheet" href="{{ base_url() }}assets/dist/css/v1.0.1.min.css?ver={{ $GLOBALS['version'] }}">
     @yield('styles')
 </head>
@@ -55,12 +51,6 @@
             </form>
         </div>
     </dialog>
-
-    {{-- <script defer src="{{ base_url() }}script.js?ver={{ $GLOBALS['version'] }}"></script> --}}
-    <script src="{{ $_ENV['APP_CDN'] }}/jquery/3.7.1/jquery.min.js"></script>
-    <script src="{{ $_ENV['APP_CDN'] }}/datatable/v2.2.2/datatables.min.js"></script>
-    <script src="{{ $_ENV['APP_CDN'] }}/datatable/v2.2.2/dataTables.responsive.min.js"></script>
-    {{-- <script src="{{ $_ENV['APP_JS'] }}/apps.js?ver={{ $GLOBALS['version'] }}"></script> --}}
     @yield('scripts')
 </body>
 

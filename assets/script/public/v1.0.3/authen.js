@@ -103,7 +103,7 @@ export async function initAuthen(options = {}) {
 
     // กรณีเว็บ set menu และ group ใน PHP จะส่งไปทำงานแบบเดิม
     if (opt.setSessionPhp) {
-      const direct = await setSession(res);
+      const direct = await setSession(group, info, menu);
       window.location.href = `${host}/${direct.url}`;
     }
 
@@ -182,19 +182,16 @@ $(document).on("click", ".logout", async function (e) {
   window.location.href = `${root}/form/authen/index/${process.env.APP_ID}`;
 });
 
-export function setSession(res) {
+export function setSession(group, info, menu) {
   return new Promise((resolve) => {
     $.ajax({
       type: "post",
       dataType: "json",
       url: `${host}/authen/setSession`,
       data: {
-        group: res.appgroup,
-        info: res.appuser,
-        menu: res.auth,
-        // group: res.group.data,
-        // info: res.info.data,
-        // menu: res.menu.data,
+        group: group,
+        info: info,
+        menu: menu,
       },
       success: function (data) {
         resolve(data);

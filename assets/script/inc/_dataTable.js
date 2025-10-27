@@ -13,6 +13,11 @@
 
 import { createColumnFilters } from "./_filter";
 
+import "datatables.net-dt";
+import "datatables.net-responsive-dt";
+import "datatables.net-dt/css/dataTables.dataTables.min.css";
+import "datatables.net-responsive-dt/css/responsive.dataTables.min.css";
+
 export const domScroll =
     '<"top flex flex-col gap-2"<"#filterBtnDt.flex flex-wrap gap-2"><"top-menu flex flex-wrap gap-3 mb-2"<"lf-opt flex-1 join gap-3 "lf><"table-option join  items-center">>><"bg-white border border-slate-300 rounded-lg overflow-scroll max-h-[60vh]"rt><"bottom flex justify-between mt-5"pi>';
 // export const domScroll = '<"top flex flex-wrap gap-3 mb-2"<"lf-opt flex-1 join gap-3 "lf><"table-option join gap-[2px] items-center">><"overflow-scroll max-h-[60vh]"rt><"bottom flex justify-between mt-5"pi>';

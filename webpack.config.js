@@ -150,8 +150,8 @@ module.exports = {
       jQuery: "jquery",
     }),
   ],
-  externals: {
-    jquery: "jQuery",
-  },
+//   externals: {
+//     jquery: "jQuery",
+//   },
   cache: false,
 };

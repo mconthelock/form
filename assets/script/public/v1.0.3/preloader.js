@@ -14,10 +14,10 @@
 export const showLoader = (options = {})=> {
     const opt = {
         show: true, // true = show, false = hide
-        src: `${process.env.APP_ENV}/assets/images/${process.env.PRELOADER}`,
+        src: process.env.PRELOADER ?`${process.env.APP_ENV}/assets/images/${process.env.PRELOADER}` : `${process.env.APP_HOST}/form/assets/images/ghost_loader.gif`,
         ...options
     }
-
+    
     if($('#preload').length == 0) {
         const loader = `<div class="preload" id="preload"> 
             <div class="fixed inset-0 flex items-center justify-center bg-gray-200/50 z-[9999]">
@@ -33,7 +33,7 @@ export const showLoader = (options = {})=> {
 export const showbgLoader = (options = {})=> {
     const opt = {
         show: true, // true = show, false = hide
-        src: `${process.env.APP_ENV}/assets/images/${process.env.PRELOADER}`,
+        src: process.env.PRELOADER ?`${process.env.APP_ENV}/assets/images/${process.env.PRELOADER}` : `${process.env.APP_HOST}/form/assets/images/ghost_loader.gif`,
         ...options
     }
     if($('#bgpreload').length == 0) {
