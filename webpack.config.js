@@ -35,6 +35,10 @@ module.exports = {
     RgvView: "./assets/script/isform/IS-RGV/view.js", //Regular review page
     RgvIncharge: "./assets/script/isform/IS-RGV/incharge.js", //Regular review page
 
+    // User ID and Authorization regular review result
+    RgrSummary: "./assets/script/isform/IS-RGR/summary.js", //Regular review page
+    RgrSummaryReport: "./assets/script/isform/IS-RGR/RgrSummaryReport.js", //Regular review page
+
     // varied off
     variedOff: "./assets/script/isform/IS-OFF/view.js", //Varied Off AS400 display
 
@@ -82,19 +86,19 @@ module.exports = {
     // PS-SAR
     psSar: "./assets/script/psform/PS-SAR/index.js", //Sar page
 
-
+    //GP-TRN
     alert: "./assets/script/gpform/GP-TRN/alert.js",
     formUtils: "./assets/script/gpform/GP-TRN/formUtils.js",
     validators: "./assets/script/gpform/GP-TRN/validators.js",
-    type_data: "./assets/script/gpform/GP-TRN/type_data.js",
     view_train: "./assets/script/gpform/GP-TRN/view_train.js",
-
     manage_data: "./assets/script/gpform/GP-TRN/manage_data.js",
     emp_lookup: "./assets/script/gpform/GP-TRN/emp_lookup.js",
     training_select: "./assets/script/gpform/GP-TRN/training_select.js",
     training_functional: "./assets/script/gpform/GP-TRN/training_functional.js",
     training_legal: "./assets/script/gpform/GP-TRN/training_legal.js",
     training_meth: "./assets/script/gpform/GP-TRN/training_meth.js",
+    training_pos: "./assets/script/gpform/GP-TRN/training_pos.js",
+    training_out: "./assets/script/gpform/GP-TRN/training_out.js",
     form_client: "./assets/script/gpform/GP-TRN/form_client.js",
     training_main: "./assets/script/gpform/GP-TRN/training_main.js",
   },
@@ -146,8 +150,8 @@ module.exports = {
       jQuery: "jquery",
     }),
   ],
-    externals: {
-      jquery: "jQuery",
-    },
+  externals: {
+    jquery: "jQuery",
+  },
   cache: false,
 };
