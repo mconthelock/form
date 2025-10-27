@@ -1,4 +1,4 @@
-import { skeleton, skeletons } from "../../public/v1.0.3/component/skeleton";
+import { skeleton, skeletons } from "@public/component/skeleton";
 import { getAuditee, getOA } from "./data";
 
 function handleClassList(num) {

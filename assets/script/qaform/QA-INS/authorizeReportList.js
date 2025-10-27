@@ -1,11 +1,11 @@
 import { getEscsItems } from "../../api/escs/item";
 import { getEscsUsers } from "../../api/escs/user";
 import { getUserAuthorizeView } from "../../api/escs/user_authorize";
-import { setStickyColumns } from "../../public/v1.0.3/_dataTable";
-import { setSelect2 } from "../../public/v1.0.3/_select2";
-import { select } from "../../public/v1.0.3/component/form";
-import { skeleton, skeletons } from "../../public/v1.0.3/component/skeleton";
-import { showErrorMessage } from "../../public/v1.0.3/jFuntion";
+import { setStickyColumns } from "@public/_dataTable";
+import { setSelect2 } from "@public/_select2";
+import { select } from "@public/component/form";
+import { skeleton, skeletons } from "@public/component/skeleton";
+import { showErrorMessage } from "@public/jFuntion";
 import { setMedalReportList } from "./template";
 
 var userID = "",

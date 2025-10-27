@@ -1,23 +1,23 @@
-import { displayEmpImage } from "../../public/v1.0.3/setIndexDB";
-import { createTable, destroyTable } from "../../public/v1.0.3/_dataTable";
+import { displayEmpImage } from "@public/setIndexDB";
+import { createTable, destroyTable } from "@public/_dataTable";
 import {
     dragDropInit,
     dragDropReset,
     handleFiles,
     setFilePathToDragDrop,
-} from "../../public/v1.0.3/_dragdrop";
+} from "@public/_dragdrop";
 import {
     formatAvatar,
     s2disableSearch,
     setSelect2,
-} from "../../public/v1.0.3/_select2";
-import { select, webflowSubmit } from "../../public/v1.0.3/component/form";
+} from "@public/_select2";
+import { select, webflowSubmit } from "@public/component/form";
 import {
     dataTableSkeleton,
     skeleton,
     skeletons,
-} from "../../public/v1.0.3/component/skeleton";
-import { checkEmployeeAndFocus } from "../../public/v1.0.3/employee";
+} from "@public/component/skeleton";
+import { checkEmployeeAndFocus } from "@public/employee";
 import {
     getAllAttr,
     getData,
@@ -25,13 +25,13 @@ import {
     requiredForm,
     showErrorMessage,
     showMessage,
-} from "../../public/v1.0.3/jFuntion";
+} from "@public/jFuntion";
 import { getEscsItems } from "../../api/escs/item";
 import { getEscsUsers } from "../../api/escs/user";
 import { getEscsUserSection } from "../../api/escs/user_section";
 import { getFormMasterByVaname } from "../../api/webform/formmst";
-import { showLoader } from "../../public/v1.0.3/preloader";
-import { redirectWebflow } from "../../public/v1.0.3/_form";
+import { showLoader } from "@public/preloader";
+import { redirectWebflow } from "@public/_form";
 import {
     createFormQains,
     getAuditee,

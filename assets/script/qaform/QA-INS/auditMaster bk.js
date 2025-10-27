@@ -1,8 +1,8 @@
 import { getAuditRevision } from "../../api/escs/audit_revision";
-import { skeleton } from "../../public/v1.0.3/component/skeleton";
-import { formatDate } from "../../public/v1.0.3/_dayjs";
+import { skeleton } from "@public/component/skeleton";
+import { formatDate } from "@public/_dayjs";
 import { getAuditMaster } from "../../api/escs/audit_master";
-import { logtest, showErrorMessage } from "../../public/v1.0.3/jFuntion";
+import { logtest, showErrorMessage } from "@public/jFuntion";
 
 import Sortable, { create } from "sortablejs";
 import { btnAdd, btnDel, btnStatus, input } from "./component";

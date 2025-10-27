@@ -1,7 +1,7 @@
 import { getAuditMasterAll } from "../../api/escs/audit_master_all";
 import { getAuditRevision } from "../../api/escs/audit_revision";
-import { handleFiles } from "../../public/v1.0.3/_dragdrop";
-import { fancybox } from "../../public/v1.0.3/_fancyBox";
+import { handleFiles } from "@public/_dragdrop";
+import { fancybox } from "@public/_fancyBox";
 import {
     autosizeTextarea,
     getAllAttr,
@@ -9,8 +9,8 @@ import {
     logtest,
     showErrorMessage,
     showMessage,
-} from "../../public/v1.0.3/jFuntion";
-import { showbgLoader } from "../../public/v1.0.3/preloader";
+} from "@public/jFuntion";
+import { showbgLoader } from "@public/preloader";
 import { btn } from "./component";
 import { getAuditee, getformData, saveAudit } from "./data";
 import { finishAndClose, setSkeleton, shortName, shortSec } from "./function";

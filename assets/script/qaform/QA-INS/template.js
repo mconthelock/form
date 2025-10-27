@@ -1,10 +1,10 @@
 import { getEscsItemStation } from "../../api/escs/item_station";
 import { getBase64Image } from "../../api/file";
-import { formatDate } from "../../public/v1.0.3/_dayjs";
-import { dragDropInit, dragDropListImage } from "../../public/v1.0.3/_dragdrop";
-import { fancyDialog } from "../../public/v1.0.3/_fancyBox";
-import { host, logtest } from "../../public/v1.0.3/jFuntion";
-import { displayEmpImage } from "../../public/v1.0.3/setIndexDB";
+import { formatDate } from "@public/_dayjs";
+import { dragDropInit, dragDropListImage } from "@public/_dragdrop";
+import { fancyDialog } from "@public/_fancyBox";
+import { host, logtest } from "@public/jFuntion";
+import { displayEmpImage } from "@public/setIndexDB";
 import { btnMinus, btnPlus, checkbox, inputNum, radio } from "./component";
 import { handleClassList, setAuditorToString, shortSec } from "./function";
 

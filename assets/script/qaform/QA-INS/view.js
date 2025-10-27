@@ -2,22 +2,22 @@
 import { downloadOrOpenFile } from "../../api/file";
 import { getEscsUsers } from "../../api/escs/user";
 import { doaction, showflow } from "../../api/webform/flow";
-import { createTable } from "../../public/v1.0.3/_dataTable";
-import { setDatePicker } from "../../public/v1.0.3/_flatpickr";
-import { setSelect2 } from "../../public/v1.0.3/_select2";
+import { createTable } from "@public/_dataTable";
+import { setDatePicker } from "@public/_flatpickr";
+import { setSelect2 } from "@public/_select2";
 import {
     getformDetail,
     input,
     select,
     webflowSubmit,
-} from "../../public/v1.0.3/component/form";
+} from "@public/component/form";
 import {
     dataTableSkeleton,
     formDetailSkeleton,
     formSubmitSkeleton,
     skeleton,
     skeletons,
-} from "../../public/v1.0.3/component/skeleton";
+} from "@public/component/skeleton";
 import {
     getAllAttr,
     host,
@@ -27,8 +27,8 @@ import {
     requiredForm,
     showErrorMessage,
     showMessage,
-} from "../../public/v1.0.3/jFuntion";
-import { getImageByUser } from "../../public/v1.0.3/setIndexDB";
+} from "@public/jFuntion";
+import { getImageByUser } from "@public/setIndexDB";
 import {
     searchAuditees,
     getformData,
@@ -40,9 +40,9 @@ import {
     lastApprove,
     setIncharge,
 } from "./data";
-import { showLoader } from "../../public/v1.0.3/preloader";
-import { redirectWebflow } from "../../public/v1.0.3/_form";
-import { formatDate } from "../../public/v1.0.3/_dayjs";
+import { showLoader } from "@public/preloader";
+import { redirectWebflow } from "@public/_form";
+import { formatDate } from "@public/_dayjs";
 import { setAuditorToString, shortName, shortSec } from "./function";
 import { getAuditRevision } from "../../api/escs/audit_revision";
 import { getEscsUserSection } from "../../api/escs/user_section";

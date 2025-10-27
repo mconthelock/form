@@ -1,5 +1,5 @@
 import { getAuditMasterAll } from "../../api/escs/audit_master_all";
-import { showErrorMessage } from "../../public/v1.0.3/jFuntion";
+import { showErrorMessage } from "@public/jFuntion";
 import { setSkeleton } from "./function";
 import { createScoreBoard, createTableAuditMaster, setScore} from "./template";
 
