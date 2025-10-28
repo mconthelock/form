@@ -11,7 +11,7 @@
  */
 
 import { checkAuthen, logtest, root } from "./jFuntion";
-import { showLoader } from "../../utils";
+import { showLoader } from "./preloader";
 
 const url = root.includes('amecwebtest') ? `${root}/api-auth/api-dev/` : `${root}/api-auth/api/`;
 
