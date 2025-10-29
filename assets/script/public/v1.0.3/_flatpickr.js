@@ -300,8 +300,7 @@ export const setDatePicker = ({
     const opt = {
         ...dayOff ? fpkDayOff() : {},
         ...readOnly ? fpkReadonly : {},
-        ...time ? fpkTimeOpt : {},
-        ...fpkOpt,
+        ...time ? fpkTimeOpt : fpkOpt,
         ...options,
     };
 
