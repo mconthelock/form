@@ -58,11 +58,11 @@ $(async function () {
     setDatePicker({ dayOff: true, defaultDate: new Date() });
     setDatePicker({
         element: "#pStart",
-        ...fpkTimeOpt,
+        time: true
     });
     setDatePicker({
         element: "#pEnd",
-        ...fpkTimeOpt,
+        time: true
     });
     await setSelect2({
         element: "#serverName",

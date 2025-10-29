@@ -33,7 +33,7 @@ export const fileWordFormat = {
     layoutMsg: "toast-end",
 };
 export const fileExcelFormat = {
-    extension: [".xlsx", ".xls"],
+    extension: [".xlsx", ".xls", ".xlsm"],
     msg: "ไฟล์ไม่ถูกต้อง กรุณาแนบไฟล์ Excel เท่านั้น",
     msgEn: "Invalid file. Please attach an Excel file only.",
     layoutMsg: "toast-end",
@@ -116,6 +116,7 @@ export async function checkFileType(
 
     // console.log(/[ก-๙]/.test(filename));
     // console.log(isValidFormat);
+    // console.log(format);
 
     if (/[ก-๙]/.test(filename) || !isValidFormat) {
         showMessage(msg, "warning", layoutMsg);

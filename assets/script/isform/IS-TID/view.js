@@ -37,10 +37,10 @@ $(async function () {
 
     if (cextData == "03") {
         setDatePicker();
-        setDatePicker(fpkTimeOpt, "#compTime");
+        setDatePicker({element:"#compTime", time: true});
     } else if (cextData == "05") {
         setDatePicker();
-        setDatePicker(fpkTimeOpt, "#disTime");
+        setDatePicker({element:"#disTime", time: true});
     }
     const flow = await showflow(form);
     if (mode == "2") {

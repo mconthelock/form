@@ -192,7 +192,7 @@ export async function readInput(file, options = {}) {
         startRow: 1,
         startCol: 1, // A
         endCol: 1, // A
-        sheetName: 1,
+        sheetName: 1, // string
         headerName: [],
         skipRow: 0,
         readCustom: false,

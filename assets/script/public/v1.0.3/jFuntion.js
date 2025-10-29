@@ -42,7 +42,7 @@ $(document).on("input", "textarea.autosize:not(.autosize-match)", function () {
 
 $(document).on("input", "textarea.autosize.autosize-match", function (e) {
     $(".autosize.autosize-match").each(function (i, el) {
-        el.style.height = "auto"; 
+        el.style.height = "auto";
     });
     let height = this.scrollHeight;
     $(".autosize.autosize-match").each(function (i, el) {
@@ -80,25 +80,34 @@ export function showMessage(msg, type = "error", position = "toast-end") {
             bg: "bg-red-800",
             text: "text-white",
             title: "Processing Fail!",
+            icon: '<i class="icofont-ban"></i>',
         },
         {
             id: "success",
             bg: "bg-green-800",
             text: "text-white",
             title: "Success",
+            icon: '<i class="icofont-check-circled"></i>',
         },
-        { id: "info", bg: "bg-blue-800", text: "text-white", title: "Info" },
+        {
+            id: "info",
+            bg: "bg-blue-800",
+            text: "text-white",
+            title: "Info",
+            icon: '<i class="icofont-info-circle"></i>',
+        },
         {
             id: "warning",
             bg: "bg-yellow-800",
             text: "text-white",
             title: "Warning!",
+            icon: '<i class="icofont-exclamation-circle"></i>',
         },
     ];
 
     const dt = prop.find((x) => x.id == type);
     const toast = $(`
-          <dialog class="msg-notify toast ${position} ${dt.bg} z-[9999] !p-0 rounded-2xl m-5  alert-message w-80 max-w-80 opacity-100 transition-all duration-1000">
+          <dialog class="msg-notify toast ${dt.id} ${position} ${dt.bg} z-[9999] !p-0 rounded-2xl m-5  alert-message w-80 max-w-80 opacity-100 transition-all duration-1000">
               <div class="alert flex flex-col gap-2 overflow-hidden relative !bg-inherit">
                   <div class="msg-title text-xl font-semibold block w-full text-left ${dt.text}">${dt.title}</div>
                   <div class="msg-txt block w-full text-left max-w-80 text-wrap ${dt.text}">${msg}</div>
@@ -106,7 +115,7 @@ export function showMessage(msg, type = "error", position = "toast-end") {
                       <i class="icofont-ui-close"></i>
                   </div>
                   <div class="absolute right-[-30px] top-[-10px] text-[120px] z-0 opacity-20">
-                      <i class="icofont-exclamation-circle"></i>
+                      ${dt.icon}
                   </div>
               </div>
           </dialog>
@@ -127,7 +136,7 @@ export function showMessage(msg, type = "error", position = "toast-end") {
 
 /**
  * show error message
- * @param {string} message e.g. "An error occurred." 
+ * @param {string} message e.g. "An error occurred."
  */
 export function showErrorMessage(message) {
     showMessage(`${message} Please try again. or contact Tel.2038`, "error");
@@ -408,3 +417,8 @@ export const openNewWindow = ({
         `height=${h},width=${w},top=0,left=0,resizable=yes,scrollbars=yes`
     );
 };
+
+export function setVarCss(variable, value) {
+    variable = variable.startsWith("--") ? variable : `--${variable}`;
+    document.documentElement.style.setProperty(variable, value);
+}

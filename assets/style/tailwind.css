@@ -43,27 +43,6 @@
   :root {
     --font-sans: "LINE Seed EN", "LINE Seed EN Bold", "LINE Seed TH",
       "LINE Seed TH Bold", "LINE Seed JP", "LINE Seed JP Bold", sans-serif;
-    --color-primary: 1, 71, 178;
-    --color-primary: 0, 0, 0;
-    --color-secondary: 107, 114, 128;
-    --color-accent: 232, 159, 2;
-    --color-card: 255, 255, 255;
-    --color-border: 216, 218, 223;
-    --color-body: 229, 231, 235;
-
-    /* DataTable */
-    --color-dataTable-thead: var(--color-primary);
-    --bgcolor-dataTable-thead: #fff;
-
-    --bgcolor-dataTable-tbody: #fff;
-    --max-h-dataTable-body: 70vh;
-
-    --height-dataTable-input: 2.5rem;
-    --bgcolor-dataTable-input: #fff;
-    --font-size-dataTable-input: 0.875rem;
-    --radius-dataTable-input: 0.25rem;
-
-    
   }
 
   *,
