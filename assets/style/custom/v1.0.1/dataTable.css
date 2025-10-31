@@ -57,6 +57,8 @@ div.dt-container .left-menu #filterBtnDt {
     display: flex;
     flex-wrap: wrap;
     gap: 0.5rem;
+    align-items: start;
+    margin-left: .75rem;
     /* margin-bottom: 0.5rem; */
 }
 

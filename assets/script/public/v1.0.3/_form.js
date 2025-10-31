@@ -8,13 +8,12 @@
  * @requires jFuntion
  * @requires utils
  * @version 1.0.1
+ * @version 1.0.3 
+ * @note 2025-10-31 เปลี่ยนไปยิงที่ API ทั้งหมด
  */
 
 import { checkAuthen, logtest, root } from "./jFuntion";
 import { showLoader } from "./preloader";
-
-const url = root.includes('amecwebtest') ? `${root}/api-auth/api-dev/` : `${root}/api-auth/api/`;
-
 
 /**
  * Redirect to wait for approve
@@ -37,21 +36,23 @@ export function redirectWebflow(){
  * @param {number} mflag
  * @returns 
  */
-export function createForm(NFRMNO, VORGNO, CYEAR, req, key, remark='', mflag=1){
+export function createForm(NFRMNO, VORGNO, CYEAR, req, key, remark='', draft=''){
+     const form = {
+        NFRMNO: NFRMNO,
+        VORGNO: VORGNO,
+        CYEAR: CYEAR,
+        REQBY: req,
+        INPUTBY: key,
+        REMARK: remark,
+    };
+    if (draft) form.DRAFT = draft;
+
     return new Promise((resolve) => {
         $.ajax({
-            url: `${url}flow/create2`,
+            url: `${process.env.APP_API}/form/createForm`,
             type: "post",
             dataType: "json",
-            data: { 
-                empno: req, 
-                inputempno: key, 
-                remark : remark,
-                nfrmno : NFRMNO,
-                vorgno : VORGNO,
-                cyear  : CYEAR,
-                mflag  : mflag
-            },
+            data: form,
             beforeSend: function (){
                 showLoader();
             },
@@ -65,6 +66,7 @@ export function createForm(NFRMNO, VORGNO, CYEAR, req, key, remark='', mflag=1){
         });
     });
 }
+
 /**
  * Create Form and Flow
  * @param {string} NFRMNO 
@@ -76,21 +78,23 @@ export function createForm(NFRMNO, VORGNO, CYEAR, req, key, remark='', mflag=1){
  * @param {string} draft  0 == under preparation, 1 = wait for approval
  * @returns 
  */
+// prettier-ignore
 export function createForm2(NFRMNO, VORGNO, CYEAR, req, key, remark='', draft = ''){
+    const form = {
+        NFRMNO: NFRMNO,
+        VORGNO: VORGNO,
+        CYEAR: CYEAR,
+        REQBY: req,
+        INPUTBY: key,
+        REMARK: remark,
+    };
+    if (draft) form.DRAFT = draft;
     return new Promise((resolve) => {
         $.ajax({
-            url: `${root}/webservice/webflow/form/create`,
+            url: `${process.env.APP_API}/form/createForm`,
             type: "post",
             dataType: "json",
-            data: { 
-                empno: req, 
-                inputempno: key, 
-                remark : remark,
-                nfrmno : NFRMNO,
-                vorgno : VORGNO,
-                cyear  : CYEAR,
-                draft  : draft
-            },
+            data: form,
             beforeSend: function (){
                 showLoader();
             },
@@ -117,16 +121,15 @@ export function createForm2(NFRMNO, VORGNO, CYEAR, req, key, remark='', draft = 
 export function deleteForm(NFRMNO, VORGNO, CYEAR, CYEAR2, NRUNNO){
     return new Promise((resolve) => {
         $.ajax({
-            url: `${root}/webservice/webflow/form/deleteForm`,
-            // url: `${url}flow/deleteForm`,
+            url: `${process.env.APP_API}/form/deleteForm`,
             type: "post",
             dataType: "json",
             data: { 
-                nfrmno : NFRMNO,
-                vorgno : VORGNO,
-                cyear  : CYEAR,
-                cyear2 : CYEAR2,
-                runno  : NRUNNO,
+                NFRMNO : NFRMNO,
+                VORGNO : VORGNO,
+                CYEAR  : CYEAR,
+                CYEAR2 : CYEAR2,
+                NRUNNO : NRUNNO,
             },
             beforeSend: function (){
                 showLoader();
@@ -154,9 +157,7 @@ export function deleteForm(NFRMNO, VORGNO, CYEAR, CYEAR2, NRUNNO){
 export function showFlow(NFRMNO, VORGNO, CYEAR, CYEAR2, NRUNNO){
     return new Promise((resolve) => {
         $.ajax({
-            // url: `${url}flow/showflow`,
-            // url: uri.includes('amecwebtest') ? `${url}flow/showflow` : `${uri}/webservice/webflow/Flow/showflow`,
-            url: `${root}/webservice/webflow/Flow/showflow`,
+            url: `${process.env.APP_API}/flow/showflow`,
             type: "post",
             dataType: "json",
             data: { 
@@ -197,8 +198,7 @@ export function showFlow(NFRMNO, VORGNO, CYEAR, CYEAR2, NRUNNO){
 export function doaction(NFRMNO, VORGNO, CYEAR, CYEAR2, NRUNNO, action, empno, remark){
     return new Promise((resolve) => {
         $.ajax({
-            // url: `http://amecwebtest.mitsubishielevatorasia.co.th/api-auth/api-dev/appflow/doaction`,
-            url: `${url}appflow/doaction`,
+            url: `${process.env.APP_API}/flow/doaction`,
             type: "post",
             dataType: "json",
             data: { 
@@ -240,8 +240,7 @@ export function doaction(NFRMNO, VORGNO, CYEAR, CYEAR2, NRUNNO, action, empno, r
 export function doactionWebservice(NFRMNO, VORGNO, CYEAR, CYEAR2, NRUNNO, action, empno, remark){
     return new Promise((resolve) => {
         $.ajax({
-            // url: `http://amecwebtest.mitsubishielevatorasia.co.th/api-auth/api-dev/appflow/doaction`,
-            url: `${root}/webservice/webflow/flow/doaction`,
+            url: `${process.env.APP_API}/flow/doaction`,
             type: "post",
             dataType: "json",
             data: { 
@@ -267,11 +266,6 @@ export function doactionWebservice(NFRMNO, VORGNO, CYEAR, CYEAR2, NRUNNO, action
         });
     });
 }
-
-
-// export function convToFormNumber(formtype, owner, cyear, cyear2, runno){
-//     return $frmname[0]->VANAME.substr($y2,2,2)."-".str_pad($runNo, 6, "0", STR_PAD_LEFT); // ST-INP24-000001
-// }
 
 
 

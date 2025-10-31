@@ -62,33 +62,36 @@ trait _Form{
 
     private function create($NNO, $VORGNO, $CYEAR, $req, $key, $remark='', $draft=''){
         try{
-            $response = $this->client->post("http://localhost/webservice/webflow/form/create", [
-                'json' => [
-                    "nfrmno" => $NNO,
-                    "vorgno" => $VORGNO,
-                    "cyear"  => $CYEAR,
-                    "empno"  => $req,
-                    "inputempno" => $key,
-                    "remark" => $remark,
-                    "draft"  => $draft,
-                ]
+            $condition =  [
+                    "NFRMNO" => $NNO,
+                    "VORGNO" => $VORGNO,
+                    "CYEAR"  => $CYEAR,
+                    "REQBY"  => $req,
+                    "INPUTBY" => $key,
+                    "REMARK"  => $remark,
+            ];
+            if($draft !== ''){
+                $condition['DRAFT'] = $draft;
+            }
+            $response = $this->client->post($_ENV['APP_APIPHP'].'/form/createForm', [
+                'json' => $condition
             ]);
             $result = json_decode($response->getBody(), true);
             return $result;
         }catch(Exception $e){
-            return array('status' => false, 'message' => 'Failed to create form', 'e' => $e);
+            throw new Exception(json_encode(['status' => "false", 'message' => 'Failed to create form', 'e' => $e]), 1);
         }
     }
 
     private function deleteForm($NFRMNO, $VORGNO, $CYEAR, $CYEAR2, $NRUNNO){
         try{
-            $response = $this->client->post("http://localhost/webservice/webflow/form/deleteForm", [
+            $response = $this->client->post($_ENV['APP_APIPHP'].'/form/deleteForm', [
                 'json' => [
-                    "nfrmno" => $NFRMNO,
-                    "vorgno" => $VORGNO,
-                    "cyear"  => $CYEAR,
-                    "cyear2" => $CYEAR2,
-                    "runno"  => $NRUNNO,
+                    "NFRMNO" => $NFRMNO,
+                    "VORGNO" => $VORGNO,
+                    "CYEAR"  => $CYEAR,
+                    "CYEAR2" => $CYEAR2,
+                    "NRUNNO" => $NRUNNO,
                 ]
             ]);
             $result = json_decode($response->getBody(), true);
@@ -140,22 +143,6 @@ trait _Form{
         }
     }
 
-    /**
-     * Delete flow step
-     * @param array $form is form detail 
-     * @param array $step is step to delete e.g. [['CSTEPNO' => '19', 'CSTEPNEXTNO' => '28']]
-     */
-    private function sendDeleteFlowStep($form, $step){
-        $res = [];
-        foreach ($step as $key => $s) {
-            $res[$key] = new StdClass();
-            $res[$key]->DELETE_STATUS = $this->deleteFlowStep($form['NFRMNO'], $form['VORGNO'], $form['CYEAR'], $form['CYEAR2'], $form['NRUNNO'], $s['CSTEPNO'], $s['CSTEPNEXTNO']);
-            $res[$key]->STEP = $s; 
-        }
-        $res['FORM'] = (object)$form; 
-        return $res;
-    }
-
      /**
      * update approve by stepno
      * ส่งแบบ array ที่เดียวหลายค่าหลาย step
@@ -197,26 +184,6 @@ trait _Form{
             return array('status' => false, 'message' => 'Failed to update flow step', 'error' => $e->getMessage());
         }
     }
-    // private function updateFlowApv($frmNo, $orgNo, $y, $y2, $runNo, $step, $stepNext, $apv){
-    //     try{
-    //         $response = $this->client->post("http://localhost/webservice/webflow/flow/updateFlowApv", [
-    //             'json' => [
-    //                 'frmNo' => $frmNo,
-    //                 'orgNo' => $orgNo,
-    //                 'y'     => $y,
-    //                 'y2'    => $y2,
-    //                 'runNo' => $runNo,
-    //                 'step'  => $step,
-    //                 'stepNext'=> $stepNext,
-    //                 'apv'   => $apv
-    //             ]
-    //         ]);
-    //         $result = json_decode($response->getBody(), true);
-    //         return $result;
-    //     }catch(Exception $e){
-    //         return array('status' => false, 'message' => 'Failed to delete flow step');
-    //     }
-    // }
     
     /**
      * Crack request number to get form data

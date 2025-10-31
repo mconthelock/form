@@ -15,6 +15,9 @@
  *  เพิ่มปุ่ม save ใน fieldset
  * @note 2025-07-11
  *  เปลี่ยน การตั้งค่าให้ใช้เป็น object แทนการใช้ string
+ * @version 1.0.3
+ * @note 2025-10-29
+ *  เพิ่ม time ใน setDatePicker หากส่งมาเป็น true จะตั้งค่าเป็น time picker ให้เลือกได้แค่เวลาหากไม่ส่งจะเป็น date picker ปกติ
  */
 
 import "flatpickr/dist/flatpickr.min.css";

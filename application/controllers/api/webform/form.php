@@ -36,7 +36,18 @@ trait formApi{
             throw new Exception(json_encode(['status' => "false", 'message' => 'Failed to get mode', 'e' => $e]), 1);
         }
     }
-
+    /**
+     * @param array $condition 
+     * [
+     *     NFRMNO   => number,
+     *     VORGNO   => string,
+     *     CYEAR    => string,
+     *     REQBY    => string, e.g.24008
+     *     INPUTBY  => string, e.g.24008
+     *     REMARK   => string,
+     *     DRAFT    => string e.g. 0 == under preparation, 1 = wait for approval 
+     * ]
+    */
     private function createForm($condition = []){
         try{
             $response = $this->client->post($_ENV['APP_APIPHP'].'/form/createForm', [
@@ -50,6 +61,17 @@ trait formApi{
         }
     }
 
+    /**
+     * @param array $condition
+      * [
+     *     NFRMNO => number,
+     *     VORGNO => string,
+     *     CYEAR  => string,
+     *     CYEAR2 => string,
+     *     NRUNNO => number
+     * ]
+     * @return boolean 
+     */
     private function deleteFlowandForm($condition = []){
         try{
             $response = $this->client->post($_ENV['APP_APIPHP'].'/form/deleteForm', [

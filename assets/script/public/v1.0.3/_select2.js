@@ -14,6 +14,10 @@
  *  เพิ่ม avatar สำหรับการแสดงรูปภาพใน select2 โดย ส่ง avatar: true และ avatarData: [24008, 24009, 24010]
  * @note 2025-07-14
  *  เพิ่ม function clearSelect2 เพื่อเคลียร์ค่า select2
+ * @version 1.0.3
+ * @note 2025-10-29
+ *  เพิ่ม function setSelect2Data เพื่อเพิ่ม option ให้ select2 จาก data array แต่แบบนี้มันจะรี select2 ทำให้อันที่สร้างมาก่อนค่าจะหาย ใช้แบบเดิม setSelect2 ก็ได้ส่งมาอีกรอบมันสร้างสร้างใหม่ได้
+ *  แก้ setOption ให้ล้างค่าเดิมก่อนเพิ่ม option ใหม่
  */
 
 import select2      from "select2";
@@ -205,7 +209,7 @@ export async function setSelect2(options = {}) {
 
 /**
  * Set options for select2 element
- * @param {string} element 
+ * @param {string} element '#select'
  * @param {array} data [{value: '1', text: 'Option 1'}, {value: '2', text: 'Option 2'}]
  */
 async function setOption(element, data){
@@ -213,7 +217,23 @@ async function setOption(element, data){
     const option = data.map((item) => {
         return `<option value="${item.value}">${item.text}</option>`
     }).join('');
-    $(element).append(`<option value=""></option>${option}`);
+    $(element).empty().append(`<option value=""></option>${option}`);
+}
+
+/**
+ * Set data for select2 element
+ * 
+ * @typedef {Object} Select2Data
+ * @property {string} id - The value of the option.
+ * @property {string} text - The display text of the option.
+ * 
+ * @param {string | object} element e.g. '#select' || $('#select')
+ * @param {Select2Data} data 
+ */
+export async function setSelect2Data(element, data){
+    $(element).select2({
+        data: data
+    });
 }
 
 /**
