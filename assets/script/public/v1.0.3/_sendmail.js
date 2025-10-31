@@ -22,16 +22,14 @@ export const mailsubject = (subject = 'ITAdmin System JS ERROR 😭 : ') =>{
     return `${subject}${day}/${month}/${year} :: ${hour}:${minute}:${seccond}`;
 } ;
 export const mailOpt = {
-    view: 'layout/mail/mailAlert',
-    subject: mailsubject(),
-    to: process.env.MAIL_ADMIN,
-    // to: 'sutthipongt@MitsubishiElevatorAsia.co.th',
-    cc: [],
-    // bcc: 'sutthipongt@MitsubishiElevatorAsia.co.th',
-    bcc: process.env.MAIL_ADMIN,
-    body: [],
-    enfile: [],
-    path: selfLocationPath,
+    VIEW: "layouts/mail/mailAlert",
+    SUBJECT: mailsubject(),
+    TO: process.env.MAIL_ADMIN,
+    CC: [],
+    BCC: process.env.MAIL_ADMIN,
+    BODY: [],
+    ENFILE: [],
+    PATH: selfLocationPath,
 }
 
 export const mailForm = (NFRMNO, VORGNO, CYEAR, CYEAR2, NRUNNO, header = '') =>{
