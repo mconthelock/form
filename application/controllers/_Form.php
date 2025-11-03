@@ -127,7 +127,7 @@ trait _Form{
      */
     private function deleteFlowStep($stepDel='', $frmNo='', $orgNo='', $y='', $y2='', $runNo='', $step='', $stepNext=''){
         try{
-            $response = $this->client->post($_ENV['APP_APIPHP'].'/webservice/webflow/flow/deleteFlowStep', [
+            $response = $this->client->post('http://localhost/webservice/webflow/flow/deleteFlowStep', [
                 'json' => [
                     'stepDel' => $stepDel,
                     'frmNo' => $frmNo,
@@ -168,7 +168,7 @@ trait _Form{
      */
     private function updateFlowApv($form="", $apv="", $frmNo="", $orgNo="", $y="", $y2="", $runNo="", $step="", $stepNext=""){
         try{
-            $response = $this->client->post($_ENV['APP_APIPHP'].'/webservice/webflow/flow/updateFlowApv', [
+            $response = $this->client->post('http://localhost/webservice/webflow/flow/updateFlowApv', [
                 'json' => [
                     'form' => $form,
                     'apv'  => $apv,
@@ -190,7 +190,7 @@ trait _Form{
 
     private function doaction($NFRMNO, $VORGNO, $CYEAR, $CYEAR2, $NRUNNO, $action, $empno, $remark){
         try{
-            $response = $this->client->post($_ENV['APP_APIPHP'].'/webservice/webflow/flow/doaction', [
+            $response = $this->client->post($_ENV['APP_APIPHP'].'/flow/doaction', [
                 'headers' => $this->buildForwardHeaders(),
                 'json' => [
                     'frmNo'  => $NFRMNO,
