@@ -166,11 +166,11 @@ export function showFlow(NFRMNO, VORGNO, CYEAR, CYEAR2, NRUNNO){
             type: "post",
             dataType: "json",
             data: { 
-                nfrmno : NFRMNO,
-                vorgno : VORGNO,
-                cyear  : CYEAR,
-                cyear2 : CYEAR2,
-                runno  : NRUNNO,
+                NFRMNO : NFRMNO,
+                VORGNO : VORGNO,
+                CYEAR  : CYEAR,
+                CYEAR2 : CYEAR2,
+                NRUNNO  : NRUNNO,
             },
             beforeSend: function (){
                 showLoader();
@@ -207,14 +207,14 @@ export function doaction(NFRMNO, VORGNO, CYEAR, CYEAR2, NRUNNO, action, empno, r
             type: "post",
             dataType: "json",
             data: { 
-                frmNo  : NFRMNO,
-                orgNo  : VORGNO,
-                y      : CYEAR,
-                y2     : CYEAR2,
-                runNo  : NRUNNO,
-                action : action,
-                apv    : empno,
-                remark : remark,
+                NFRMNO  : NFRMNO,
+                VORGNO  : VORGNO,
+                CYEAR   : CYEAR,
+                CYEAR2  : CYEAR2,
+                NRUNNO : NRUNNO,
+                ACTION : action,
+                EMPNO  : empno,
+                REMARK : remark,
             },
             beforeSend: function (){
                 showLoader();
@@ -249,14 +249,14 @@ export function doactionWebservice(NFRMNO, VORGNO, CYEAR, CYEAR2, NRUNNO, action
             type: "post",
             dataType: "json",
             data: { 
-                frmNo  : NFRMNO,
-                orgNo  : VORGNO,
-                y      : CYEAR,
-                y2     : CYEAR2,
-                runNo  : NRUNNO,
-                action : action,
-                apv    : empno,
-                remark : remark,
+                NFRMNO  : NFRMNO,
+                VORGNO  : VORGNO,
+                CYEAR  : CYEAR,
+                CYEAR2 : CYEAR2,
+                NRUNNO : NRUNNO,
+                ACTION : action,
+                EMPNO  : empno,
+                REMARK : remark,
             },
             beforeSend: function (){
                 showLoader();

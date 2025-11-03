@@ -453,7 +453,7 @@ $(document).on("click", "button[name='btnAction']", async function () {
     formData.append("id", $("#sysCode").find(":selected").data("id"));
     formData.append("type", $("#sysCode").find(":selected").data("type"));
     formData.append("code", $("#sysCode").find(":selected").data("code"));
-    if (firstStep) {
+    if (firstStep && action == "approve") {
       const res = await getData({
         ...ajaxOptionsLoad,
         url: `${host}isform/IS-CFS/form/update`,

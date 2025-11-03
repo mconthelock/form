@@ -7,11 +7,11 @@
  * @note   Apache, Set run by user iswin
  */
 defined('BASEPATH') or exit('No direct script access allowed');
-
+require_once APPPATH.'controllers/api/nestHeader.php';
 use GuzzleHttp\Psr7\Request;
 
 trait flow{
-
+    use NestRequestHelper;
 
     /**
      * Get form mode
@@ -32,6 +32,8 @@ trait flow{
             ]);
             $result = json_decode($response->getBody(), true);
             return $result;
+        }catch(guzzlehttp\Exception\RequestException $e){
+            throw new Exception(json_encode(['status' => "false", 'message' => 'Failed to get Extra Data', 'e' => $e->getMessage()]), 1);
         }catch(Exception $e){
             throw new Exception(json_encode(['status' => "false", 'message' => 'Failed to get Employee Flow StepReady', 'e' => $e]), 1);
         }
@@ -40,10 +42,13 @@ trait flow{
     private function getExtData($condition = []){
         try{
             $response = $this->client->post($_ENV['APP_APIPHP'].'/flow/getExtData', [
+                'headers' => $this->buildForwardHeaders(),
                 'json' => $condition
             ]);
             $result = trim($response->getBody());
             return $result;
+        }catch(guzzlehttp\Exception\RequestException $e){
+            throw new Exception(json_encode(['status' => "false", 'message' => 'Failed to get Extra Data', 'e' => $e->getMessage()]), 1);
         }catch(Exception $e){
             throw new Exception(json_encode(['status' => "false", 'message' => 'Failed to get Extra Data', 'e' => $e]), 1);
         }
@@ -57,6 +62,8 @@ trait flow{
             $result = trim($response->getBody());
             $decoded = json_decode($result, true);
             return $decoded;
+        }catch(guzzlehttp\Exception\RequestException $e){
+            throw new Exception(json_encode(['status' => "false", 'message' => 'Failed to get Extra Data', 'e' => $e->getMessage()]), 1);
         }catch(Exception $e){
             throw new Exception(json_encode(['status' => "false", 'message' => 'Failed to check Return', 'e' => $e]), 1);
         }
@@ -70,6 +77,8 @@ trait flow{
             $result = trim($response->getBody());
             $decoded = json_decode($result, true);
             return $decoded;
+        }catch(guzzlehttp\Exception\RequestException $e){
+            throw new Exception(json_encode(['status' => "false", 'message' => 'Failed to get Extra Data', 'e' => $e->getMessage()]), 1);
         }catch(Exception $e){
             throw new Exception(json_encode(['status' => "false", 'message' => 'Failed to check Return back', 'e' => $e]), 1);
         }

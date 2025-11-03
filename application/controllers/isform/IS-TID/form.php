@@ -53,15 +53,15 @@ class form extends MY_Controller{
             $data['CYEAR2'] = $_GET['y2'];
             $data['NRUNNO'] = $_GET['runNo'];
             $form = [
-                'NFRMNO' => $data['NFRMNO'],
-                'VORGNO' => $data['VORGNO'],
-                'CYEAR'  => $data['CYEAR'],
-                'CYEAR2' => $data['CYEAR2'],
-                'NRUNNO' => $data['NRUNNO'],
+                'NFRMNO' => (int)$data['NFRMNO'],
+                'VORGNO' => (string)$data['VORGNO'],
+                'CYEAR'  => (string)$data['CYEAR'],
+                'CYEAR2' => (string)$data['CYEAR2'],
+                'NRUNNO' => (int)$data['NRUNNO'],
             ];
             $formData = $this->getFormData($form);
             $data['data']     = $formData;
-            $form['EMPNO']    = $empno;
+            $form['EMPNO']    = (string)$empno;
             if(!empty($empno)){
                 $data['cextData'] = $this->getExtData($form);
                 $data['mode']     = $this->getMode($form);
