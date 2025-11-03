@@ -213,8 +213,21 @@ export async function createTable(option = {}, setupOpt = {}) {
     // *** ถ้ามีฟังก์ชันใน object (เช่น callback) — มันจะไม่ถูก clone (จะ error ด้วย)
     // *** ถ้าเจอกรณีแบบนั้นใช้ lodash.cloneDeep() แทนได้เลย:
     // *** import cloneDeep from 'lodash/cloneDeep';
+
     const opt = { ...structuredClone(tableOption), ...option }; // merge options with default tableOption
-    const setup = { ...structuredClone(tableSetup), ...setupOpt };
+    // const setup = { ...structuredClone(tableSetup), ...setupOpt };
+    // กัน reference ซ้อน
+    const baseSetup = structuredClone(tableSetup);
+    let setup = { ...baseSetup, ...setupOpt };
+    setup = {
+        ...setup,
+        dataTableSm: { ...baseSetup.dataTableSm, ...setupOpt.dataTableSm },
+        tableGroup: { ...baseSetup.tableGroup, ...setupOpt.tableGroup },
+        buttonFilter: { ...baseSetup.buttonFilter, ...setupOpt.buttonFilter },
+        columnFilter: { ...baseSetup.columnFilter, ...setupOpt.columnFilter },
+        columnSelect: { ...baseSetup.columnSelect, ...setupOpt.columnSelect },
+        domScroll: { ...baseSetup.domScroll, ...setupOpt.domScroll },
+    };
 
     // prettier-ignore
     // แทรกคอลัมน์ select ไว้ที่ตำแหน่งที่กำหนด
@@ -513,7 +526,7 @@ function clickTableGroup(table, row, e) {
 function setBtnFilter(table, id, col, active = 0) {
     const tblEl = $(id).closest('.dt-container');
     const btnFilter = tblEl.find('#filterBtnDt');
-
+    const column = table.column(col);
     console.log(tableSetup.buttonFilter.activeFilter);
     
 
@@ -545,13 +558,14 @@ function setBtnFilter(table, id, col, active = 0) {
     var uniqueCategories = [];
 
     table
-        .column(col)
-        .data()
-        .each(function (value) {
-            if (uniqueCategories.indexOf(value) === -1) {
-                uniqueCategories.push(value);
-            }
-        });
+    .cells(null, col) // ทุก cell ในคอลัมน์ col
+    .every(function () {
+        const dataValue = this.data();              //  ค่าดิบ (มาจาก data source)
+        const renderValue = this.render('display'); //  ค่าหลัง render (ค่าที่เห็นบนจอ)
+        console.log(dataValue, renderValue);
+        if(!uniqueCategories.some(cat => cat.data === dataValue && cat.render === renderValue))
+        uniqueCategories.push({ data: dataValue, render: renderValue });
+    });
 
     if (uniqueCategories.length > 0) {
         // เพิ่มปุ่ม "ทั้งหมด" ไว้ที่จุดเริ่มต้น
@@ -561,11 +575,13 @@ function setBtnFilter(table, id, col, active = 0) {
 
         // สร้างปุ่มสำหรับแต่ละหมวดหมู่
         for (const category of uniqueCategories) {
+            console.log(category);
+            
             btnFilter.append(
                 '<button class="filter-btn-dt btn btn-sm w-fit" data-filter="' +
-                    category +
+                    category.data +
                     '">' +
-                    category +
+                    category.render +
                     "</button>"
             );
         }
