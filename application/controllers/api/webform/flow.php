@@ -7,11 +7,9 @@
  * @note   Apache, Set run by user iswin
  */
 defined('BASEPATH') or exit('No direct script access allowed');
-require_once APPPATH.'controllers/api/nestHeader.php';
 use GuzzleHttp\Psr7\Request;
 
 trait flow{
-    use NestRequestHelper;
 
     /**
      * Get form mode
@@ -42,7 +40,7 @@ trait flow{
     private function getExtData($condition = []){
         try{
             $response = $this->client->post($_ENV['APP_APIPHP'].'/flow/getExtData', [
-                'headers' => $this->buildForwardHeaders(),
+                'headers' => build_forward_headers(),
                 'json' => $condition
             ]);
             $result = trim($response->getBody());

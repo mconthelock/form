@@ -1,10 +1,7 @@
 <?php
 defined('BASEPATH') or exit('No direct script access allowed');
 
-require_once APPPATH.'controllers/api/nestHeader.php';
 trait _Form{
-    use NestRequestHelper;
-
     /**
     * @param number $no e.g. 5
     * @param string $orgNo e.g. 050601
@@ -76,7 +73,7 @@ trait _Form{
                 $condition['DRAFT'] = (string)$draft;
             }
             $response = $this->client->post($_ENV['APP_APIPHP'].'/form/createForm', [
-                'headers' => $this->buildForwardHeaders(),
+                'headers' => build_forward_headers(),
                 'json' => $condition
             ]);
             $result = json_decode($response->getBody(), true);
@@ -191,7 +188,7 @@ trait _Form{
     private function doaction($NFRMNO, $VORGNO, $CYEAR, $CYEAR2, $NRUNNO, $action, $empno, $remark){
         try{
             $response = $this->client->post($_ENV['APP_APIPHP'].'/flow/doaction', [
-                'headers' => $this->buildForwardHeaders(),
+                'headers' => build_forward_headers(),
                 'json' => [
                     'frmNo'  => $NFRMNO,
                     'orgNo'  => $VORGNO,
