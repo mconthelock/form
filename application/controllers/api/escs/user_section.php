@@ -21,6 +21,8 @@ trait escs_user_section{
                 return [ 'status' => "false", 'data' => null ];
             }
             return [ 'status' => "true", 'data' => $result ];
+        }catch(guzzlehttp\Exception\RequestException $e){
+            throw new Exception(json_encode(['status' => "false", 'message' => 'Failed to create form', 'e' => $e->getMessage()]), 1);
         }catch(Exception $e){
             throw new Exception(json_encode(['status' => "false", 'message' => 'Failed to get user section by ID', 'e' => $e]), 1);
         }

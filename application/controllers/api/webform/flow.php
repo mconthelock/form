@@ -104,6 +104,8 @@ trait flow{
             ]);
             $result = trim($response->getBody());
             return $result;
+        }catch(guzzlehttp\Exception\RequestException $e){
+            throw new Exception(json_encode(['status' => "false", 'message' => 'Failed to create form', 'e' => $e->getMessage()]), 1);
         }catch(Exception $e){
             throw new Exception(json_encode(['status' => "false", 'message' => 'Failed to update flow', 'e' => $e]), 1);
         }

@@ -21,6 +21,8 @@ trait formmst{
             ]);
             $result = json_decode($response->getBody(), true);
             return [ 'status' => "true", 'data' => $result ];
+        }catch(guzzlehttp\Exception\RequestException $e){
+            throw new Exception(json_encode(['status' => "false", 'message' => 'Failed to create form', 'e' => $e->getMessage()]), 1);
         }catch(Exception $e){
             throw new Exception(json_encode(['status' => "false", 'message' => 'Failed to get form master', 'e' => $e]), 1);
         }
@@ -33,6 +35,8 @@ trait formmst{
             $response = $this->client->get($_ENV['APP_APIPHP']."/formmst/$vaname"); // docker
             $result = json_decode($response->getBody(), true);
             return [ 'status' => "true", 'data' => $result ];
+        }catch(guzzlehttp\Exception\RequestException $e){
+            throw new Exception(json_encode(['status' => "false", 'message' => 'Failed to create form', 'e' => $e->getMessage()]), 1);
         }catch(Exception $e){
             throw new Exception(json_encode(['status' => "false", 'message' => 'Failed to get form master by vaname', 'e' => $e]), 1);
         }

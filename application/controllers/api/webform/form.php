@@ -32,6 +32,8 @@ trait formApi{
             ]);
             $result = trim($response->getBody());
             return $result;
+        }catch(guzzlehttp\Exception\RequestException $e){
+            throw new Exception(json_encode(['status' => "false", 'message' => 'Failed to create form', 'e' => $e->getMessage()]), 1);
         }catch(Exception $e){
             throw new Exception(json_encode(['status' => "false", 'message' => 'Failed to get mode', 'e' => $e]), 1);
         }
@@ -56,6 +58,8 @@ trait formApi{
             // $result = trim($response->getBody());
             $result = json_decode($response->getBody(), true);
             return $result;
+        }catch(guzzlehttp\Exception\RequestException $e){
+            throw new Exception(json_encode(['status' => "false", 'message' => 'Failed to create form', 'e' => $e->getMessage()]), 1);
         }catch(Exception $e){
             throw new Exception(json_encode(['status' => "false", 'message' => 'Failed to create form', 'e' => $e]), 1);
         }
@@ -79,6 +83,8 @@ trait formApi{
             ]);
             $result = trim($response->getBody());
             return $result;
+        }catch(guzzlehttp\Exception\RequestException $e){
+            throw new Exception(json_encode(['status' => "false", 'message' => 'Failed to create form', 'e' => $e->getMessage()]), 1);
         }catch(Exception $e){
             throw new Exception(json_encode(['status' => "false", 'message' => 'Failed to delete form', 'e' => $e]), 1);
         }
@@ -95,6 +101,8 @@ trait formApi{
             ]);
             $result = json_decode($response->getBody(), true);
             return $result;
+        }catch(guzzlehttp\Exception\RequestException $e){
+            throw new Exception(json_encode(['status' => "false", 'message' => 'Failed to create form', 'e' => $e->getMessage()]), 1);
         }catch(Exception $e){
             throw new Exception(json_encode(['status' => "false", 'message' => 'Failed to get request number', 'e' => $e]), 1);
         }

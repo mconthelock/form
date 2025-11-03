@@ -19,6 +19,8 @@ trait audit_report_revision{
             ]);
             $result = json_decode($response->getBody(), true);
             return $result;
+        }catch(guzzlehttp\Exception\RequestException $e){
+            throw new Exception(json_encode(['status' => "false", 'message' => 'Failed to create form', 'e' => $e->getMessage()]), 1);
         }catch(Exception $e){
             throw new Exception(json_encode(['status' => "false", 'message' => 'Failed to get revision', 'e' => $e]), 1);
         }

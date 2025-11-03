@@ -78,6 +78,8 @@ trait _Form{
             ]);
             $result = json_decode($response->getBody(), true);
             return $result;
+        }catch(guzzlehttp\Exception\RequestException $e){
+            throw new Exception(json_encode(['status' => "false", 'message' => 'Failed to create form', 'e' => $e->getMessage()]), 1);
         }catch(Exception $e){
             throw new Exception(json_encode(['status' => "false", 'message' => 'Failed to create form', 'e' => $e]), 1);
         }
@@ -96,6 +98,8 @@ trait _Form{
             ]);
             $result = json_decode($response->getBody(), true);
             return $result;
+        }catch(guzzlehttp\Exception\RequestException $e){
+            throw new Exception(json_encode(['status' => "false", 'message' => 'Failed to create form', 'e' => $e->getMessage()]), 1);
         }catch(Exception $e){
             return array('status' => false, 'message' => 'Failed to delete form');
         }
@@ -138,6 +142,8 @@ trait _Form{
             ]);
             $result = json_decode($response->getBody(), true);
             return $result;
+        }catch(guzzlehttp\Exception\RequestException $e){
+            throw new Exception(json_encode(['status' => "false", 'message' => 'Failed to create form', 'e' => $e->getMessage()]), 1);
         }catch(Exception $e){
             return array('status' => false, 'message' => 'Failed to delete flow step');
         }
@@ -180,6 +186,8 @@ trait _Form{
             ]);
             $result = json_decode($response->getBody(), true);
             return $result;
+        }catch(guzzlehttp\Exception\RequestException $e){
+            throw new Exception(json_encode(['status' => "false", 'message' => 'Failed to create form', 'e' => $e->getMessage()]), 1);
         }catch(Exception $e){
             return array('status' => false, 'message' => 'Failed to update flow step', 'error' => $e->getMessage());
         }
@@ -202,6 +210,8 @@ trait _Form{
             ]);
             $result = json_decode($response->getBody(), true);
             return $result;
+        }catch(guzzlehttp\Exception\RequestException $e){
+            throw new Exception(json_encode(['status' => "false", 'message' => 'Failed to create form', 'e' => $e->getMessage()]), 1);
         }catch(Exception $e){
             return array('status' => false, 'message' => 'Failed to doaction form', 'e' => $e);
         }
