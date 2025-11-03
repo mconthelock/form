@@ -1,7 +1,9 @@
 <?php
 defined('BASEPATH') or exit('No direct script access allowed');
 
+require_once APPPATH.'controllers/api/nestHeader.php';
 trait _Form{
+    use NestRequestHelper;
 
     /**
     * @param number $no e.g. 5
@@ -62,33 +64,37 @@ trait _Form{
 
     private function create($NNO, $VORGNO, $CYEAR, $req, $key, $remark='', $draft=''){
         try{
-            $response = $this->client->post("http://localhost/webservice/webflow/form/create", [
-                'json' => [
-                    "nfrmno" => $NNO,
-                    "vorgno" => $VORGNO,
-                    "cyear"  => $CYEAR,
-                    "empno"  => $req,
-                    "inputempno" => $key,
-                    "remark" => $remark,
-                    "draft"  => $draft,
-                ]
+            $condition =  [
+                    "NFRMNO" => (int)$NNO,
+                    "VORGNO" => (string)$VORGNO,
+                    "CYEAR"  => (string)$CYEAR,
+                    "REQBY"  => (string)$req,
+                    "INPUTBY" => (string)$key,
+                    "REMARK"  => (string)$remark,
+            ];
+            if($draft !== ''){
+                $condition['DRAFT'] = (string)$draft;
+            }
+            $response = $this->client->post($_ENV['APP_APIPHP'].'/form/createForm', [
+                'headers' => $this->buildForwardHeaders(),
+                'json' => $condition
             ]);
             $result = json_decode($response->getBody(), true);
             return $result;
         }catch(Exception $e){
-            return array('status' => false, 'message' => 'Failed to create form', 'e' => $e);
+            throw new Exception(json_encode(['status' => "false", 'message' => 'Failed to create form', 'e' => $e]), 1);
         }
     }
 
     private function deleteForm($NFRMNO, $VORGNO, $CYEAR, $CYEAR2, $NRUNNO){
         try{
-            $response = $this->client->post("http://localhost/webservice/webflow/form/deleteForm", [
+            $response = $this->client->delete($_ENV['APP_APIPHP'].'/form/deleteForm', [
                 'json' => [
-                    "nfrmno" => $NFRMNO,
-                    "vorgno" => $VORGNO,
-                    "cyear"  => $CYEAR,
-                    "cyear2" => $CYEAR2,
-                    "runno"  => $NRUNNO,
+                    "NFRMNO" => (int)$NFRMNO,
+                    "VORGNO" => (string)$VORGNO,
+                    "CYEAR"  => (string)$CYEAR,
+                    "CYEAR2" => (string)$CYEAR2,
+                    "NRUNNO" => (int)$NRUNNO,
                 ]
             ]);
             $result = json_decode($response->getBody(), true);
@@ -121,7 +127,7 @@ trait _Form{
      */
     private function deleteFlowStep($stepDel='', $frmNo='', $orgNo='', $y='', $y2='', $runNo='', $step='', $stepNext=''){
         try{
-            $response = $this->client->post("http://localhost/webservice/webflow/flow/deleteFlowStep", [
+            $response = $this->client->post($_ENV['APP_APIPHP'].'/webservice/webflow/flow/deleteFlowStep', [
                 'json' => [
                     'stepDel' => $stepDel,
                     'frmNo' => $frmNo,
@@ -138,22 +144,6 @@ trait _Form{
         }catch(Exception $e){
             return array('status' => false, 'message' => 'Failed to delete flow step');
         }
-    }
-
-    /**
-     * Delete flow step
-     * @param array $form is form detail 
-     * @param array $step is step to delete e.g. [['CSTEPNO' => '19', 'CSTEPNEXTNO' => '28']]
-     */
-    private function sendDeleteFlowStep($form, $step){
-        $res = [];
-        foreach ($step as $key => $s) {
-            $res[$key] = new StdClass();
-            $res[$key]->DELETE_STATUS = $this->deleteFlowStep($form['NFRMNO'], $form['VORGNO'], $form['CYEAR'], $form['CYEAR2'], $form['NRUNNO'], $s['CSTEPNO'], $s['CSTEPNEXTNO']);
-            $res[$key]->STEP = $s; 
-        }
-        $res['FORM'] = (object)$form; 
-        return $res;
     }
 
      /**
@@ -178,7 +168,7 @@ trait _Form{
      */
     private function updateFlowApv($form="", $apv="", $frmNo="", $orgNo="", $y="", $y2="", $runNo="", $step="", $stepNext=""){
         try{
-            $response = $this->client->post("http://localhost/webservice/webflow/flow/updateFlowApv", [
+            $response = $this->client->post($_ENV['APP_APIPHP'].'/webservice/webflow/flow/updateFlowApv', [
                 'json' => [
                     'form' => $form,
                     'apv'  => $apv,
@@ -197,26 +187,28 @@ trait _Form{
             return array('status' => false, 'message' => 'Failed to update flow step', 'error' => $e->getMessage());
         }
     }
-    // private function updateFlowApv($frmNo, $orgNo, $y, $y2, $runNo, $step, $stepNext, $apv){
-    //     try{
-    //         $response = $this->client->post("http://localhost/webservice/webflow/flow/updateFlowApv", [
-    //             'json' => [
-    //                 'frmNo' => $frmNo,
-    //                 'orgNo' => $orgNo,
-    //                 'y'     => $y,
-    //                 'y2'    => $y2,
-    //                 'runNo' => $runNo,
-    //                 'step'  => $step,
-    //                 'stepNext'=> $stepNext,
-    //                 'apv'   => $apv
-    //             ]
-    //         ]);
-    //         $result = json_decode($response->getBody(), true);
-    //         return $result;
-    //     }catch(Exception $e){
-    //         return array('status' => false, 'message' => 'Failed to delete flow step');
-    //     }
-    // }
+
+    private function doaction($NFRMNO, $VORGNO, $CYEAR, $CYEAR2, $NRUNNO, $action, $empno, $remark){
+        try{
+            $response = $this->client->post($_ENV['APP_APIPHP'].'/webservice/webflow/flow/doaction', [
+                'headers' => $this->buildForwardHeaders(),
+                'json' => [
+                    'frmNo'  => $NFRMNO,
+                    'orgNo'  => $VORGNO,
+                    'y'      => $CYEAR,
+                    'y2'     => $CYEAR2,
+                    'runNo'  => $NRUNNO,
+                    'action' => $action,
+                    'apv'    => $empno,
+                    'remark' => $remark
+                ]
+            ]);
+            $result = json_decode($response->getBody(), true);
+            return $result;
+        }catch(Exception $e){
+            return array('status' => false, 'message' => 'Failed to doaction form', 'e' => $e);
+        }
+    }
     
     /**
      * Crack request number to get form data
@@ -319,29 +311,4 @@ trait _Form{
             return $data;
         }
     }
-
-    private function doaction($NFRMNO, $VORGNO, $CYEAR, $CYEAR2, $NRUNNO, $action, $empno, $remark){
-        try{
-            $response = $this->client->post("http://localhost/webservice/webflow/flow/doaction", [
-                'json' => [
-                    'frmNo'  => $NFRMNO,
-                    'orgNo'  => $VORGNO,
-                    'y'      => $CYEAR,
-                    'y2'     => $CYEAR2,
-                    'runNo'  => $NRUNNO,
-                    'action' => $action,
-                    'apv'    => $empno,
-                    'remark' => $remark
-                ]
-            ]);
-            $result = json_decode($response->getBody(), true);
-            return $result;
-        }catch(Exception $e){
-            return array('status' => false, 'message' => 'Failed to doaction form', 'e' => $e);
-        }
-    }
-
-
-
-
 }

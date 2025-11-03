@@ -18,7 +18,7 @@ const day     = date.getDay();
 const month   = date.getMonth();
 const year    = date.getFullYear();
 
-export const mailsubject = (subject = 'ITAdmin System JS ERROR 😭 : ') =>{
+export const mailsubject = (subject = 'Webflow System JS ERROR 😭 : ') =>{
     return `${subject}${day}/${month}/${year} :: ${hour}:${minute}:${seccond}`;
 } ;
 export const mailOpt = {

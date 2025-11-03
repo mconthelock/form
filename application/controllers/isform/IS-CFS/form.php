@@ -245,7 +245,6 @@ class form extends MY_Controller{
                         'NRUNNO' => $d['NRUNNO'],
                     ];
                     $this->delete($cond);
-                    // $this->conf->delete('ISCFS_FORM', $cond);
                 }
             }
             $status = false;

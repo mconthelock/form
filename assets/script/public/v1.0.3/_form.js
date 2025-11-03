@@ -122,7 +122,7 @@ export function deleteForm(NFRMNO, VORGNO, CYEAR, CYEAR2, NRUNNO){
     return new Promise((resolve) => {
         $.ajax({
             url: `${process.env.APP_API}/form/deleteForm`,
-            type: "post",
+            type: "Delete",
             dataType: "json",
             data: { 
                 NFRMNO : NFRMNO,
@@ -136,6 +136,11 @@ export function deleteForm(NFRMNO, VORGNO, CYEAR, CYEAR2, NRUNNO){
             },
             success: function (res) {
                 resolve(res);
+            },
+            error: function (err) {
+                console.log(err);
+                
+                resolve(err);
             },
             complete: function(xhr, status){
                 checkAuthen(xhr, status);

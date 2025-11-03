@@ -143,7 +143,7 @@ $(document).on("click", "button[name='btnAction']", async function () {
             `เกิดข้อผิดพลาด: ${e.message} กรุณาลองใหม่อีกครั้งหรือติดต่อ Admin Tel:2038`
         );
         const mail = { ...mailOpt };
-        mail.body = [
+        mail.BODY = [
             ` Form Error : do action`,
             mailForm(NFRMNO, VORGNO, CYEAR, CYEAR2, NRUNNO),
             e,
