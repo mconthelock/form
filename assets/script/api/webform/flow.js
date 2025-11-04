@@ -8,7 +8,7 @@ import { fetchMsgErr, serializeRequestBody } from "../fetch-utils";
  * @property {string} CYEAR
  * @property {string} CYEAR2
  * @property {number} NRUNNO
- * @property {boolean} showStep
+ * @property {boolean} showStep default false
  *
  * @typedef {object} showflowResponse
  * @property {boolean} status true = success, false = failed
