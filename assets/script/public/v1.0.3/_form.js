@@ -171,6 +171,7 @@ export function showFlow(NFRMNO, VORGNO, CYEAR, CYEAR2, NRUNNO, showStep=false){
                 CYEAR  : CYEAR,
                 CYEAR2 : CYEAR2,
                 NRUNNO  : NRUNNO,
+                showStep: showStep
             },
             beforeSend: function (){
                 showLoader();
