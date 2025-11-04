@@ -15,23 +15,11 @@
  * @note 2025-08-20
  * เพิ่ม margin-bottom สำหรับ skeletons
  * เพิ่ม formDetailSkeleton
+ * @note 2025-11-04
+ * เพิ่ม method remove ใน dataTableSkeleton
+ * เรียกใช้งานแบบ const load = dataTableSkeleton();
+ * load.remove();
  */
-
-const dtopt = {
-    show: true,
-    button: true,
-    search: true,
-    page: true,
-    info: true,
-    middleMenu: false,
-    width: "w-full",
-    height: "h-[80vh]",
-    idLoading: "tableLoading",
-    numberOfButtons: 1,
-    numberOfMiddleMenu: 1,
-    searchSize: { width: "w-60", height: "h-full" },
-    middleSize: [{ width: "w-60", height: "h-11" }],
-};
 
 /**
  * loading data table skeleton
@@ -42,31 +30,51 @@ const dtopt = {
  * html : <div id="tableLoading"></div>
  * js : dataTableSkeleton({show: false, idLoading: 'tableDetailLoading'}); || dataTableSkeleton();
  */
-export function dataTableSkeleton(options = {}) {
-    const opt = { ...dtopt, ...options };
-    // console.log(opt);
-    if ($(`#${opt.idLoading} .dataTableSkeleton`).length == 0) {
+export function dataTableSkeleton({
+    show = true,
+    button = true,
+    search = true,
+    page = true,
+    info = true,
+    middleMenu = false,
+    width = "w-full",
+    height = "h-[80vh]",
+    idLoading = "tableLoading",
+    numberOfButtons = 1,
+    numberOfMiddleMenu = 1,
+    searchSize = {},
+    middleSize = [],
+} = {}) {
+    const defaultSearchSize = { width: "w-60", height: "h-full" };
+    const defaultMiddleSize = [{ width: "w-60", height: "h-11" }];
+    searchSize = { ...defaultSearchSize, ...searchSize };
+    middleSize =
+        middleSize.length > 0
+            ? { ...middleSize, ...defaultMiddleSize }
+            : defaultMiddleSize;
+    const id = idLoading.startsWith("#") ? idLoading : `#${idLoading}`;
+    const element = $(id);
+    var dataTableSkeleton = $(`${id} .dataTableSkeleton`);
+    if (dataTableSkeleton.length == 0) {
         let loader = `
-        <div id="dataTableSkeleton" class="s-main ${opt.width} ${opt.height} flex flex-col gap-3 Pomelo-Peel-White dataTableSkeleton bg-inherit">
+        <div id="dataTableSkeleton" class="s-main ${width} ${height} flex flex-col gap-3 Pomelo-Peel-White dataTableSkeleton bg-inherit">
             <div class="s-header flex items-start justify-between h-11 gap-3">`;
-        if (opt.search)
-            loader += `<div class="s-search skeleton ${opt.searchSize.width} ${opt.searchSize.height}"></div>`;
-        if (opt.middleMenu) {
+        if (search)
+            loader += `<div class="s-search skeleton ${searchSize.width} ${searchSize.height}"></div>`;
+        if (middleMenu) {
             loader += `<div class="flex flex-1 gap-3 h-full">`;
-            for (let i = 0; i < opt.numberOfMiddleMenu; i++) {
-                // console.log(opt.middleSize[i]?.width||opt.middleSize[0].width);
+            for (let i = 0; i < numberOfMiddleMenu; i++) {
+                // console.log(middleSize[i]?.width||middleSize[0].width);
 
                 loader += `<div class="s-middle-menu skeleton ${
-                    opt.middleSize[i]?.width || opt.middleSize[0].width
-                } ${
-                    opt.middleSize[i]?.height || opt.middleSize[0].height
-                }"></div>`;
+                    middleSize[i]?.width || middleSize[0].width
+                } ${middleSize[i]?.height || middleSize[0].height}"></div>`;
             }
             loader += `</div>`;
         }
-        if (opt.button) {
+        if (button) {
             loader += `<div class="s-button-group flex gap-2 h-full  ml-auto">`;
-            for (let i = 0; i < opt.numberOfButtons; i++) {
+            for (let i = 0; i < numberOfButtons; i++) {
                 loader += `<div class="s-button skeleton w-12 h-full"></div>`;
             }
             loader += `</div>`;
@@ -74,7 +82,7 @@ export function dataTableSkeleton(options = {}) {
         loader += `</div>
             <div class="s-table skeleton w-full h-full "></div>
             <div class="s-footer flex">`;
-        if (opt.page)
+        if (page)
             loader += `
                 <div class="s-page flex gap-2 h-8 rounded-full">
                     <div class="skeleton w-8"></div>
@@ -84,15 +92,25 @@ export function dataTableSkeleton(options = {}) {
                     <div class="skeleton w-8"></div>
                     <div class="skeleton w-8"></div>
                 </div>`;
-        if (opt.info)
+        if (info)
             loader += `<div class="s-info skeleton w-40 h-8 ml-auto"></div>`;
         loader += `</div>
         </div>`;
-        $(`#${opt.idLoading}`).html(loader);
+        element.html(loader);
+        dataTableSkeleton = $(`${id} .dataTableSkeleton`);
     }
-    opt.show
-        ? $(".dataTableSkeleton").removeClass("hidden")
-        : $(".dataTableSkeleton").addClass("hidden");
+    if (show) {
+        element.removeClass("hidden")
+        dataTableSkeleton.removeClass("hidden");
+    } else {
+        element.addClass("hidden")
+        dataTableSkeleton.addClass("hidden");
+    }
+
+    element.remove = function () {
+        dataTableSkeleton.remove();
+    };
+    return element;
 }
 
 export function skeleton(option = {}) {
@@ -124,9 +142,9 @@ export function skeleton(option = {}) {
 }
 
 /**
- * 
- * @param {object} option 
- * @returns 
+ *
+ * @param {object} option
+ * @returns
  */
 export function skeletons(option = {}) {
     const opt = {
@@ -175,7 +193,7 @@ export function formDetailSkeleton(element) {
 }
 
 export function formSubmitSkeleton(option = {}) {
-    const { count = 3, element = "", mode = 'edit' } = option;
+    const { count = 3, element = "", mode = "edit" } = option;
     let html = `<div class="flex flex-col items-center">
     <div class="skeleton  min-h-24 w-56 mb-5"></div>
     <div class="flex gap-1">`;
@@ -191,10 +209,10 @@ export function formSubmitSkeleton(option = {}) {
     </div>`;
     if (element) {
         switch (mode) {
-            case 'edit':
+            case "edit":
                 $(element).html(html + flow);
                 break;
-            case 'view':
+            case "view":
                 $(element).html(flow);
                 break;
             default:

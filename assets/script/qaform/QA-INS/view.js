@@ -236,10 +236,8 @@ async function setPage() {
         $(".qcIncharge").replaceWith(
             `<div class="flex gap-3"><span>${data.QA_INCHARGE_INFO.SNAME} (${data.QA_INCHARGE_SECTION_INFO.SEC_NAME})</span></div>`
         );
-    }else{
-        $(".qcIncharge").html(
-            `<div class="flex gap-3"><span>-</span></div>`
-        );
+    } else {
+        $(".qcIncharge").html(`<div class="flex gap-3"><span>-</span></div>`);
     }
 
     switch (cextdata) {
@@ -496,6 +494,10 @@ async function setAudit(data) {
         const auditee = await searchAuditees(form);
         await createTableAuditee(auditee);
     }
+    dataTableSkeleton({
+        idLoading: "tableAuditeeLoading",
+        show: false,
+    });
 }
 
 async function createTableAuditee(data) {
