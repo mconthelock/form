@@ -526,19 +526,12 @@ function clickTableGroup(table, row, e) {
 function setBtnFilter(table, id, col, active = 0) {
     const tblEl = $(id).closest('.dt-container');
     const btnFilter = tblEl.find('#filterBtnDt');
-    const column = table.column(col);
-    console.log(tableSetup.buttonFilter.activeFilter);
-    
-
     // เมื่อกดปุ่มให้กรองข้อมูลตามหมวดหมู่
     btnFilter.on("click", ".filter-btn-dt", function () {
         var filterValue = $(this).attr("data-filter");
-
         tableSetup.buttonFilter.activeFilter = $(this).index(); // เก็บ index ของปุ่มที่ถูกคลิก
-
         if (filterValue == "") {
             table.column(col).search(filterValue).draw();
-
             // เครียร์ค่าทั้งหมดใน filter-menu
             const filterClear = $(".filter-clear");
             if (filterClear.length > 0) {
@@ -553,20 +546,16 @@ function setBtnFilter(table, id, col, active = 0) {
         btnFilter.find(".filter-btn-dt.btn-primary").removeClass("btn-primary"); // ลบ class btn-primary
         $(this).addClass("btn-primary"); // เพิ่ม class btn-primary ให้กับปุ่มที่ถูกคลิก
     });
-
     // ดึงค่าหมวดหมู่จากคอลัมน์ที่กำหนด
     var uniqueCategories = [];
-
     table
     .cells(null, col) // ทุก cell ในคอลัมน์ col
     .every(function () {
         const dataValue = this.data();              //  ค่าดิบ (มาจาก data source)
         const renderValue = this.render('display'); //  ค่าหลัง render (ค่าที่เห็นบนจอ)
-        console.log(dataValue, renderValue);
         if(!uniqueCategories.some(cat => cat.data === dataValue && cat.render === renderValue))
         uniqueCategories.push({ data: dataValue, render: renderValue });
     });
-
     if (uniqueCategories.length > 0) {
         // เพิ่มปุ่ม "ทั้งหมด" ไว้ที่จุดเริ่มต้น
         btnFilter.append(
@@ -575,8 +564,6 @@ function setBtnFilter(table, id, col, active = 0) {
 
         // สร้างปุ่มสำหรับแต่ละหมวดหมู่
         for (const category of uniqueCategories) {
-            console.log(category);
-            
             btnFilter.append(
                 '<button class="filter-btn-dt btn btn-sm w-fit" data-filter="' +
                     category.data +

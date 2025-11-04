@@ -1,16 +1,41 @@
 import { fetchMsgErr, serializeRequestBody } from "../fetch-utils";
 
 /**
+ * Show Flow
+ * @typedef {object} showflow
+ * @property {number} NFRMNO
+ * @property {string} VORGNO
+ * @property {string} CYEAR
+ * @property {string} CYEAR2
+ * @property {number} NRUNNO
+ * @property {boolean} showStep
  *
- * @param {object} form
- * {
- *     NFRMNO: number,
- *     VORGNO: string,
- *     CYEAR: string,
- *     CYEAR2: string,
- *     NRUNNO: number
- * }
- * @returns
+ * @typedef {object} showflowResponse
+ * @property {boolean} status true = success, false = failed
+ * @property {string} html html flow
+ * @property {flowTree} data
+ *
+ * @typedef {object} flowTree
+ * @property {number} LEVEL
+ * @property {string} CSTEPNO
+ * @property {string} CSTEPNEXTNO
+ * @property {string} CSTEPST
+ * @property {string} VAPVNO
+ * @property {number} NFRMNO
+ * @property {string} VORGNO
+ * @property {string} CYEAR
+ * @property {string} CYEAR2
+ * @property {number} NRUNNO
+ * @property {string} SNAME
+ * @property {string} VNAME
+ * @property {date}   DAPVDATE
+ * @property {string} CAPVTIME
+ * @property {string} VREMARK
+ * @property {string} VREPNO
+ * @property {string} VREALAPV
+ *
+ * @param {showflow} form
+ * @returns {Promise<showflowResponse>}
  */
 export async function showflow(form) {
     const res = await fetch(`${process.env.APP_API}/flow/showflow`, {
@@ -49,10 +74,13 @@ export async function showflow(form) {
  * @returns
  */
 export async function doaction(formData) {
-    const res = await fetch(`${process.env.APP_API}/flow/doaction`, serializeRequestBody(formData));
+    const res = await fetch(
+        `${process.env.APP_API}/flow/doaction`,
+        serializeRequestBody(formData)
+    );
 
     if (!res.ok) {
-        await fetchMsgErr(res)
+        await fetchMsgErr(res);
         throw new Error("Failed to fetch flow");
     }
 
@@ -61,8 +89,8 @@ export async function doaction(formData) {
 }
 
 /**
- * 
- * @param {object} formData 
+ *
+ * @param {object} formData
  * {
  *     NFRMNO: number,
  *     VORGNO: string,
@@ -71,9 +99,9 @@ export async function doaction(formData) {
  *     NRUNNO: number,
  *     EMPNO: string
  * }
- * @returns 
+ * @returns
  */
-export async function getExtData(formData){
+export async function getExtData(formData) {
     const res = await fetch(`${process.env.APP_API}/flow/getExtData`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -81,7 +109,7 @@ export async function getExtData(formData){
     });
 
     if (!res.ok) {
-        await fetchMsgErr(res)
+        await fetchMsgErr(res);
         throw new Error("Failed to fetch getExtData");
     }
 
@@ -90,8 +118,8 @@ export async function getExtData(formData){
 }
 
 /**
- * 
- * @param {object} formData 
+ *
+ * @param {object} formData
  *  {
  *     NFRMNO: number,
  *     VORGNO: string,
@@ -102,7 +130,7 @@ export async function getExtData(formData){
  * }
  * @returns boolean
  */
-export async function checkReturn(formData){
+export async function checkReturn(formData) {
     const res = await fetch(`${process.env.APP_API}/flow/checkReturn`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -110,7 +138,7 @@ export async function checkReturn(formData){
     });
 
     if (!res.ok) {
-        await fetchMsgErr(res)
+        await fetchMsgErr(res);
         throw new Error("Failed to fetch check Return");
     }
 
@@ -119,8 +147,8 @@ export async function checkReturn(formData){
 }
 
 /**
- * 
- * @param {object} formData 
+ *
+ * @param {object} formData
  *  {
  *     NFRMNO: number,
  *     VORGNO: string,
@@ -131,7 +159,7 @@ export async function checkReturn(formData){
  * }
  * @returns boolean
  */
-export async function checkReturnb(formData){
+export async function checkReturnb(formData) {
     const res = await fetch(`${process.env.APP_API}/flow/checkReturnb`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -139,7 +167,7 @@ export async function checkReturnb(formData){
     });
 
     if (!res.ok) {
-        await fetchMsgErr(res)
+        await fetchMsgErr(res);
         throw new Error("Failed to fetch check Return back");
     }
 
@@ -153,11 +181,11 @@ export async function checkReturnb(formData){
  * {
  *    condition: object
  *    **column ที่จะทำการ update ในตาราง flow**
- * } 
- * @returns 
+ * }
+ * @returns
  */
 
-export async function updateFlow(formData){
+export async function updateFlow(formData) {
     const res = await fetch(`${process.env.APP_API}/flow/updateFlow`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -165,7 +193,7 @@ export async function updateFlow(formData){
     });
 
     if (!res.ok) {
-        await fetchMsgErr(res)
+        await fetchMsgErr(res);
         throw new Error("Failed to fetch update Flow");
     }
 

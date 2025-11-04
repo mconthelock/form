@@ -159,7 +159,7 @@ export function deleteForm(NFRMNO, VORGNO, CYEAR, CYEAR2, NRUNNO){
  * @param {string} NRUNNO
  * @return {Promise}
  */
-export function showFlow(NFRMNO, VORGNO, CYEAR, CYEAR2, NRUNNO){
+export function showFlow(NFRMNO, VORGNO, CYEAR, CYEAR2, NRUNNO, showStep=false){
     return new Promise((resolve) => {
         $.ajax({
             url: `${process.env.APP_API}/flow/showflow`,
