@@ -125,7 +125,7 @@ export function showMessage(msg, type = "error", position = "toast-end") {
     setTimeout(() => {
         console.log(toast);
         toast.find(".msg-close").trigger("click");
-    }, 5000);
+    }, process.env.SHOWERROR_TIMEOUT || 5000);
     $(".msg-close").on("click", function () {
         toast.removeClass("opacity-100").addClass("opacity-0");
         setTimeout(() => {
@@ -328,7 +328,10 @@ export function addClassError(e) {
 
 /**
  * Remove css error class
- * @param {object} e
+ * @param {object} e - element jQuery
+ * @returns {void}
+ * @example
+ * removeClassError($('#inputField'));
  */
 export function removeClassError(e) {
     if (e.is("input")) {

@@ -22,7 +22,7 @@
 
 import select2 from "select2";
 import "select2/dist/css/select2.min.css";
-import { RequiredElement } from "./jFuntion";
+import { removeClassError, RequiredElement } from "./jFuntion";
 import { setAvatarSelect } from "./setIndexDB";
 
 export const s2disableSearch = { minimumResultsForSearch: Infinity };
@@ -316,4 +316,18 @@ $(document).on("change focusout", "select.req", async function () {
 export function clearSelect2(e) {
     $(e).val("").trigger("change");
     $(e).select2("close");
+}
+
+/**
+ * Trigger change data select2 and remove error class
+ * @param {string | JQuery} element 
+ * @param {string | number} data
+ * @returns {void}
+ * @example
+ * changeDataSelect2('#select2', '1');
+ */
+export function changeDataSelect2(element, data) {
+    element = typeof element === "string" ? $(element) : element;
+    element.val(data).trigger("change");
+    removeClassError(element);
 }

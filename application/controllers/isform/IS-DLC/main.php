@@ -61,7 +61,7 @@ class Main extends MY_Controller
         $logdata  = $this->dm->getLog($datetime);
         if ($logdata) {
             $fm      = $this->fm->getFormMaster('IS-DLC')[0];
-            $flow    = $this->create($fm->NNO, $fm->VORGNO, $fm->CYEAR, '92260', '92260', '', 1);
+            $flow    = $this->create($fm->NNO, $fm->VORGNO, $fm->CYEAR, '13214', '13214', '', 1);
             $form    = $flow['message'];
             $empData = $this->dm->getDataUser($form['empno']);
 

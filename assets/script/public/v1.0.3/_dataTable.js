@@ -34,6 +34,8 @@
  *  แก้ bug select column เมื่อสร้างตารางเดิมอีกรอบใช้ไม่ได้
  * @note 2025-10-09
  *  แก้ไข setStickyColumns ให้หาคอลัมน์ sticky ได้ถูกต้อง
+ * @note 2025-11-05
+ *  เพิ่มกำหนด language เป็น th/en default เป็น th
  */
 
 // import { createColumnFilters } from "./_filter";
@@ -178,6 +180,7 @@ export const tableSetup = {
     id: "#table", // id ของตาราง
     join: false,
     headerSticky: true, // ใช้ headerSticky() เพื่อสร้าง sticky header
+    language: "th", // กำหนดภาษา th/en
     // ใช้ dataTableSm() เพื่อสร้างตารางขนาดเล็ก
     dataTableSm: {
         status: false,
@@ -228,6 +231,27 @@ export async function createTable(option = {}, setupOpt = {}) {
         columnSelect: { ...baseSetup.columnSelect, ...setupOpt.columnSelect },
         domScroll: { ...baseSetup.domScroll, ...setupOpt.domScroll },
     };
+
+    // กำหนดภาษา
+    if (setup.language == "en") {
+        opt.language = {
+                info: "Showing _START_ to _END_ of _TOTAL_ entries",
+                infoEmpty: "",
+                paginate: {
+                    previous: '<i class="icofont-circled-left"></i>',
+                    next: '<i class="icofont-circled-right"></i>',
+                    first: '<i class="icofont-double-left"></i>',
+                    last: '<i class="icofont-double-right"></i>',
+                },
+                search: "",
+                searchPlaceholder: "Search",
+                loadingRecords: "Loading...",
+                emptyTable: "No data available in table",
+                zeroRecords: "No matching records found",
+                lengthMenu: "_MENU_",
+                infoFiltered: "(filtered from _MAX_ total entries)",
+        };
+    }
 
     // prettier-ignore
     // แทรกคอลัมน์ select ไว้ที่ตำแหน่งที่กำหนด
