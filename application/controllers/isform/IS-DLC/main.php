@@ -33,8 +33,9 @@ class Main extends MY_Controller
         foreach ($logdata as $log) {
             $tidList         = $this->dm->get_TID($log->LOG_SERVER, $log->LOG_USER, $log->LOG_DATE);
             $log->TID_DATA   = $tidList;
-            $log->TID_FORMNO = !empty($tidList[0])
-                ? $this->toFormNumber($tidList[0]->NFRMNO, $tidList[0]->VORGNO, $tidList[0]->CYEAR, $tidList[0]->CYEAR2, $tidList[0]->NRUNNO)
+            $lastTid         = !empty($tidList) ? end($tidList) : null;
+            $log->TID_FORMNO = $lastTid
+                ? $this->toFormNumber($lastTid->NFRMNO, $lastTid->VORGNO, $lastTid->CYEAR, $lastTid->CYEAR2, $lastTid->NRUNNO)
                 : '-';
         }
 
