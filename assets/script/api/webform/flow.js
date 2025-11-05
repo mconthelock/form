@@ -8,7 +8,7 @@ import { fetchMsgErr, serializeRequestBody } from "../fetch-utils";
  * @property {string} CYEAR
  * @property {string} CYEAR2
  * @property {number} NRUNNO
- * @property {boolean} showStep default false
+ * @property {boolean} [showStep] default false
  *
  * @typedef {object} showflowResponse
  * @property {boolean} status true = success, false = failed
@@ -36,6 +36,16 @@ import { fetchMsgErr, serializeRequestBody } from "../fetch-utils";
  *
  * @param {showflow} form
  * @returns {Promise<showflowResponse>}
+ * @example
+ * const form = {
+ *      NFRMNO: 13,
+ *      VORGNO: '030101',
+ *      CYEAR: '25',
+ *      CYEAR2: '2025',
+ *      NRUNNO: 1,
+ *      showStep: true // default false (optional)
+ * };
+ * const flow = await showflow(form);
  */
 export async function showflow(form) {
     const res = await fetch(`${process.env.APP_API}/flow/showflow`, {
@@ -52,26 +62,40 @@ export async function showflow(form) {
     }
 
     const data = await res.json();
-    // if ($('#flow')) {
-    //     $('#flow').html(data.html);
-    // }
     return data;
 }
 
 /**
+ * Doaction Flow
+ * @param {doaction} formData
  *
- * @param {object} formData
- * {
- *     NFRMNO: number,
- *     VORGNO: string,
- *     CYEAR: string,
- *     CYEAR2: string,
- *     NRUNNO: number,
- *     ACTION: string, e.g. approve || return || returnb || returnp || reject
- *     EMPNO: string,
- *     REMARK: string
- * }
- * @returns
+ * @typedef {object} doaction
+ * @property {number} NFRMNO
+ * @property {string} VORGNO
+ * @property {string} CYEAR
+ * @property {string} CYEAR2
+ * @property {number} NRUNNO
+ * @property {string} ACTION - e.g. approve || return || returnb || returnp || reject
+ * @property {string} EMPNO
+ * @property {string} [REMARK]
+ *
+ * @typedef {object} doactionResponse
+ * @property {boolean} status true = success, false = failed
+ * @property {string} message message response
+ *
+ * @returns {Promise<doactionResponse>}
+ * @example
+ * const formData = {
+ *     NFRMNO: 13,
+ *     VORGNO: '030101',
+ *     CYEAR: '25',
+ *     CYEAR2: '2025',
+ *     NRUNNO: 1,
+ *     ACTION: 'approve',
+ *     EMPNO: 'E123',
+ *     REMARK: 'Approved' // optional
+ * };
+ * const res = await doaction(formData);
  */
 export async function doaction(formData) {
     const res = await fetch(
@@ -89,17 +113,28 @@ export async function doaction(formData) {
 }
 
 /**
+ * Get Ext Data
+ * @param {getExtData} formData
  *
- * @param {object} formData
- * {
- *     NFRMNO: number,
- *     VORGNO: string,
- *     CYEAR: string,
- *     CYEAR2: string,
- *     NRUNNO: number,
- *     EMPNO: string
- * }
- * @returns
+ * @typedef {object} getExtData
+ * @property {number} NFRMNO
+ * @property {string} VORGNO
+ * @property {string} CYEAR
+ * @property {string} CYEAR2
+ * @property {number} NRUNNO
+ * @property {string} EMPNO
+ *
+ * @returns {Promise<string>}
+ * @example
+ * const formData = {
+ *     NFRMNO: 13,
+ *     VORGNO: '030101',
+ *     CYEAR: '25',
+ *     CYEAR2: '2025',
+ *     NRUNNO: 1,
+ *     EMPNO: "24008"
+ * };
+ * const extData = await getExtData(formData);
  */
 export async function getExtData(formData) {
     const res = await fetch(`${process.env.APP_API}/flow/getExtData`, {
@@ -118,17 +153,28 @@ export async function getExtData(formData) {
 }
 
 /**
+ * Check Return
+ * @param {checkReturn} formData
  *
- * @param {object} formData
- *  {
- *     NFRMNO: number,
- *     VORGNO: string,
- *     CYEAR: string,
- *     CYEAR2: string,
- *     NRUNNO: number,
- *     EMPNO: string
- * }
- * @returns boolean
+ * @typedef {object} checkReturn
+ * @property {number} NFRMNO
+ * @property {string} VORGNO
+ * @property {string} CYEAR
+ * @property {string} CYEAR2
+ * @property {number} NRUNNO
+ * @property {string} EMPNO
+ *
+ * @example
+ * const formData = {
+ *     NFRMNO: 13,
+ *     VORGNO: '030101',
+ *     CYEAR: '25',
+ *     CYEAR2: '2025',
+ *     NRUNNO: 1,
+ *     EMPNO: "24008"
+ * };
+ * const return = await checkReturn(formData);
+ * @returns {Promise<boolean>}
  */
 export async function checkReturn(formData) {
     const res = await fetch(`${process.env.APP_API}/flow/checkReturn`, {
@@ -147,17 +193,28 @@ export async function checkReturn(formData) {
 }
 
 /**
+ * Check Return Back
+ * @param {checkReturnb} formData
  *
- * @param {object} formData
- *  {
- *     NFRMNO: number,
- *     VORGNO: string,
- *     CYEAR: string,
- *     CYEAR2: string,
- *     NRUNNO: number,
- *     EMPNO: string
- * }
- * @returns boolean
+ * @typedef {object} checkReturnb
+ * @property {number} NFRMNO
+ * @property {string} VORGNO
+ * @property {string} CYEAR
+ * @property {string} CYEAR2
+ * @property {number} NRUNNO
+ * @property {string} EMPNO
+ *
+ * @example
+ * const formData = {
+ *     NFRMNO: 13,
+ *     VORGNO: '030101',
+ *     CYEAR: '25',
+ *     CYEAR2: '2025',
+ *     NRUNNO: 1,
+ *     EMPNO: "24008"
+ * };
+ * const return = await checkReturn(formData);
+ * @returns {Promise<boolean>}
  */
 export async function checkReturnb(formData) {
     const res = await fetch(`${process.env.APP_API}/flow/checkReturnb`, {
@@ -177,12 +234,73 @@ export async function checkReturnb(formData) {
 
 /**
  * update flow
- * @param {object} formData
- * {
- *    condition: object
- *    **column ที่จะทำการ update ในตาราง flow**
- * }
- * @returns
+ * @param {updateFlow} formData
+ *
+ * @typedef {object} updateFlow
+ * @property {condition} condition
+ * @property {number} [NFRMNO]
+ * @property {string} [VORGNO]
+ * @property {string} [CYEAR]
+ * @property {string} [CYEAR2]
+ * @property {number} [NRUNNO]
+ * @property {string} [CSTEPNO]
+ * @property {string} [CSTEPNEXTNO]
+ * @property {string} [CSTEPST]
+ * @property {string} [CTYPE]
+ * @property {string} [VPOSNO]
+ * @property {string} [VAPVNO]
+ * @property {string} [VREPNO]
+ * @property {string} [VREALAPV]
+ * @property {string} [CAPVSTNO]
+ * @property {Date}   [DAPVDATE]
+ * @property {string} [CAPVTIME]
+ * @property {string} [CEXTDATA]
+ * @property {string} [CAPVTYPE]
+ * @property {string} [CREJTYPE]
+ * @property {string} [CAPPLYALL]
+ * @property {string} [VURL]
+ * @property {string} [VREMARK]
+ * @property {string} [VREMOTE]
+ *
+ * @typedef {object} condition
+ * @property {number} NFRMNO
+ * @property {string} VORGNO
+ * @property {string} CYEAR
+ * @property {string} CYEAR2
+ * @property {number} NRUNNO
+ * @property {string} [CSTEPNO]
+ * @property {string} [CSTEPNEXTNO]
+ * @property {string} [CSTEPST]
+ * @property {string} [CTYPE]
+ * @property {string} [VPOSNO]
+ * @property {string} [VAPVNO]
+ * @property {string} [VREPNO]
+ * @property {string} [VREALAPV]
+ * @property {string} [CAPVSTNO]
+ * @property {Date}   [DAPVDATE]
+ * @property {string} [CAPVTIME]
+ * @property {string} [CEXTDATA]
+ * @property {string} [CAPVTYPE]
+ * @property {string} [CREJTYPE]
+ * @property {string} [CAPPLYALL]
+ * @property {string} [VURL]
+ * @property {string} [VREMARK]
+ * @property {string} [VREMOTE]
+ *
+ * @returns {Promise<boolean>}
+ * @example
+ * const formData = {
+ *     condition: {
+ *         NFRMNO: 13,
+ *         VORGNO: '030101',
+ *         CYEAR: '25',
+ *         CYEAR2: '2025',
+ *         NRUNNO: 1,
+ *         CSTEPNO: '07'
+ *     },
+ *     CSTEPNEXTNO: '10'
+ * };
+ * const update = await updateFlow(formData);
  */
 
 export async function updateFlow(formData) {
