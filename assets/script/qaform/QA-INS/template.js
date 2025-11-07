@@ -333,9 +333,16 @@ async function calGrade(score, total) {
     return { result, grade, percent: percent.toFixed(2) };
 }
 
-function setMedalReportList(persent, yearText) {
+function setMedalReportList(percent, testDate) {
     let html = ``;
-    if (persent >= 90) {
+    let range = "none";
+    console.log(percent, testDate);
+
+    if (!percent || !testDate) return { html, range };
+    const year = new Date(testDate).getFullYear();
+    const yearText = year.toString().slice(-2);
+    if (percent >= 90) {
+        range = "Gold";
         html += `
             <!-- 🥇 Gold -->
             <div class="flex gap-6 items-center justify-center">
@@ -345,7 +352,8 @@ function setMedalReportList(persent, yearText) {
                     </div>
                 </div>
             </div>`;
-    } else if (persent >= 80) {
+    } else if (percent >= 80) {
+        range = "Silver";
         html += `
             <!-- 🥈 Silver -->
             <div class="flex gap-6 items-center justify-center">
@@ -356,6 +364,7 @@ function setMedalReportList(persent, yearText) {
                 </div>
             </div>`;
     } else {
+        range = "Bronze";
         html += `
             <!-- 🥉 Bronze -->
             <div class="flex gap-6 items-center justify-center">
@@ -366,7 +375,7 @@ function setMedalReportList(persent, yearText) {
                 </div>
             </div>`;
     }
-    return html;
+    return { html, range };
 }
 
 async function calScoreTotal() {
@@ -460,5 +469,5 @@ export {
     createDetail,
     createTableRevision,
     createTableCS,
-    setMedalReportList
+    setMedalReportList,
 };

@@ -193,24 +193,23 @@ async function createReportTable(data, allItem, secName, itemList) {
                 EmpNo: d.USR_NO,
                 Name: d.USR_NAME,
                 Position: d.SPOSITION,
-                Items: d.auth.map((a) => a.IT_NO)
+                Items: d.auth.map((a) => a.IT_NO),
+                Range: d.auth.map((a) => {
+                    return {item: a.IT_NO, range: setMedalReportList(a.PERCENT, a.TEST_DATE).range };
+                })
             });
             allItem.forEach((it) => {
                 const itemAuth = d.auth.filter((a) => a.IT_NO == it);
                 if (itemAuth.length > 0) {
                     const item = itemAuth.find((a) => a.STATION_NO == 0);
-                    // แปลงปีเป็น 2 หลัก
-                    let yearText = "",
-                        medal = "";
-
+                    
+                    let medal = "";
                     if (item.TEST_DATE) {
-                        const year = new Date(item.TEST_DATE).getFullYear();
-                        yearText = year.toString().slice(-2); // เอา 2 หลักสุดท้าย
-                        medal = setMedalReportList(item.PERCENT, yearText);
+                        medal = setMedalReportList(item.PERCENT, item.TEST_DATE);
                     }
-                    checkedItems += `<td class="text-center border-r-1 border-gray-400 showScore cursor-pointer" item="${it}">${
-                        medal
-                            ? medal
+                    checkedItems += `<td class="text-center border-r-1 border-gray-400 showScore cursor-pointer" item="${it}" range="${medal.range || 'none'}">${
+                        medal.html
+                            ? medal.html
                             : '<i class="icofont-check-circled text-success text-xl"></i>'
                     }</td>`;
                 } else {
@@ -317,19 +316,26 @@ function searchInTable(empno, item) {
         }).map(function() {
             return $(this).attr('item');
         }).get();
+        const itemRange = $(this).find('td').filter(function() {
+            return $(this).attr('range') !== undefined;
+        }).map(function() {
+            return {item: $(this).attr('item'), range: $(this).attr('range')};
+        }).get();
+        console.log(itemRange);
+        
 
         // กรองข้อมูลตาม empno และ item
         if ((item === null || item === "") && (empno === null || empno === "")) { // ถ้าไม่มีการกรอง
             emp.push(rowEmpNo);
             it.push(itemList);
-            dataExcel.push({ EmpNo: rowEmpNo, Name: rowEmpName, Position: rowPosition, Items: itemList });
+            dataExcel.push({ EmpNo: rowEmpNo, Name: rowEmpName, Position: rowPosition, Items: itemList, Range: itemRange});
             $(this).show();
             return;
         } else if (item === null || item === "") { // กรองเฉพาะ empno
             if (rowEmpNo === empno) {
                 emp.push(rowEmpNo);
                 it.push(itemList);
-                dataExcel.push({ EmpNo: rowEmpNo, Name: rowEmpName, Position: rowPosition, Items: itemList });
+                dataExcel.push({ EmpNo: rowEmpNo, Name: rowEmpName, Position: rowPosition, Items: itemList, Range: itemRange });
                 $(this).show();
             } else {
                 $(this).hide();
@@ -338,7 +344,7 @@ function searchInTable(empno, item) {
             if (itemList.includes(item)) {
                 emp.push(rowEmpNo);
                 it.push(itemList);
-                dataExcel.push({ EmpNo: rowEmpNo, Name: rowEmpName, Position: rowPosition, Items: itemList });
+                dataExcel.push({ EmpNo: rowEmpNo, Name: rowEmpName, Position: rowPosition, Items: itemList, Range: itemRange});
                 $(this).show();
             } else {
                 $(this).hide();
@@ -351,7 +357,7 @@ function searchInTable(empno, item) {
             ) {
                 emp.push(rowEmpNo);
                 it.push(itemList);
-                dataExcel.push({ EmpNo: rowEmpNo, Name: rowEmpName, Position: rowPosition, Items: itemList });
+                dataExcel.push({ EmpNo: rowEmpNo, Name: rowEmpName, Position: rowPosition, Items: itemList, Range: itemRange});
                 $(this).show();
             } else {
                 $(this).hide();
@@ -585,7 +591,10 @@ $(document).on("click", "#exportExcel", async function () {
                 itemRow.eachCell((cell, colNumber) => {
                     const itemNo = cell.value;
                     if (d.Items.includes(itemNo)) {
-                        row.getCell(colNumber).value = "✔";
+                        const medal = d.Range.find((r) => r.item === itemNo && r.range != 'Bronze');
+                        console.log(medal, d.Range);
+                        
+                        row.getCell(colNumber).value = medal ? "✔" : "✖";
                         row.getCell(colNumber).alignment = { horizontal: "center" };
                     }
                 });
