@@ -15,6 +15,8 @@
  * @note 2025-09-23
  * เพิ่มฟังก์ชัน toExcelDate ใน _dayjs.js เพื่อแปลงวันที่ให้ถูกต้องก่อนส่งเข้า excel
  * แก้ไขการคำนวณความกว้างคอลัมน์ให้รองรับค่าที่ไม่ใช่ string
+ * @note 2025-11-07
+ * เปลี่ยนฟังก์ชัน mergeCell ใหม่ให้สามารถระบุช่วงแถวและคอลัมน์ได้
  */
 
 import ExcelJS from "exceljs";
@@ -22,12 +24,16 @@ import { toExcelDate } from "./_dayjs";
 
 /**
  * Export file excel (Download)
- * @param {object} workbook
- * @param {string} fileName
+ * @param {object} workbook - ExcelJS workbook
+ * @param {string} [fileName] - default 'Report' (optional)
+ * @returns {void}
+ * @example
+ * exportExcel(workbook, 'Report');
  */
 export function exportExcel(workbook, fileName = "Report") {
-    // console.log(workbook);
-
+    if (fileName.endsWith(".xlsx")) {
+        fileName = fileName.slice(0, -5);
+    }
     // สร้างไฟล์ Excel เป็น Blob
     workbook.xlsx.writeBuffer().then(function (buffer) {
         const blob = new Blob([buffer], {
@@ -42,43 +48,44 @@ export function exportExcel(workbook, fileName = "Report") {
     });
 }
 
-export function exportExcelFile(buffer, fileName = "Report") {
-    const blob = new Blob([buffer], {
-        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    });
-
-    // สร้างลิงก์ดาวน์โหลด
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
-    link.download = `${fileName}.xlsx`;
-    link.click();
-}
-
 /**
  * Default write file excel
- * @param {object} options
- * @returns
+ * @typedef {Object} defaultExcel
+ * @property {Array} data - Array of data objects to be written to the Excel sheet.
+ * @property {Array} column - Array of column definitions. Each definition should include 'key' and 'header'.
+ * @property {string} [sheetName="Sheet1"] - Name of the sheet. Default is 'Sheet1'.
+ * @property {Object} [font={ bold: true }] - Font style for the header row. Default is bold.
+ * @property {Object} [alignment={ vertical: "middle", horizontal: "center" }] - Alignment for the header row. Default is centered both vertically and horizontally.
+ * @property {number} [extraWidth=8] - Extra width to add to each column for better readability. Default is 8.
+ * @property {boolean} [manual=false] - If true, allows for manual actions on the sheet. Default is false.
+ * @property {Function} [manualActions=(sheet) => {}] - Function to perform manual actions on the sheet if 'manual' is true.
+ * @property {boolean} [autoWidth=true] - If true, automatically adjusts column widths based on content. Default is true.
+ * 
+ * @param {defaultExcel} options
+ * @returns {Promise<object>} workbook - ExcelJS workbook
+ * @example
+ * const workbook = await defaultExcel({
+ *   data: [{AMEC_SDS_ID: 'SDS001', NAME: 'Sample SDS'}],
+ *   column: [{key:'AMEC_SDS_ID', header: 'AMEC SDS ID'}]
+ * });
  */
-export async function defaultExcel(options = {}) {
-    const opt = {
-        data: [],
-        column: [], // [{key:'AMEC_SDS_ID', header: 'AMEC SDS ID'}]
-        sheetName: "Sheet1",
-        font: { bold: true }, // ทำให้ตัวหนา
-        alignment: { vertical: "middle", horizontal: "center" }, // จัดข้อความให้อยู่ตรงกลาง
-        extraWidth: 8,
-        manual: false,
-        manualActions: (sheet) => {},
-        ...options,
-    };
-
-    // console.log(data, column, option);
+export async function defaultExcel({
+        data = [],
+        column = [], 
+        sheetName = "Sheet1",
+        font = { bold: true }, // ทำให้ตัวหนา
+        alignment = { vertical: "middle", horizontal: "center" }, // จัดข้อความให้อยู่ตรงกลาง
+        extraWidth = 8,
+        manual = false,
+        manualActions = (sheet) => {},
+        autoWidth = true,
+    } = {}) {
 
     const workbook = new ExcelJS.Workbook();
-    const sheet = workbook.addWorksheet(opt.sheetName); // เพื่มชีท และตั้งชื่อชีท
+    const sheet = workbook.addWorksheet(sheetName); // เพื่มชีท และตั้งชื่อชีท
 
     // ตั้งชื่อ column และ key เพื่อให้สอดคล้องกับข้อมูล
-    sheet.columns = opt.column.map((col) => {
+    sheet.columns = column.map((col) => {
         const formatted = { ...col };
         if (col.type === "date")
             formatted.style = { numFmt: col.numFmt || "yyyy-mm-dd" };
@@ -87,9 +94,9 @@ export async function defaultExcel(options = {}) {
         return formatted;
     });
 
-    const typedRows = opt.data.map((row) => {
+    const typedRows = data.map((row) => {
         const o = {};
-        for (const col of opt.column) {
+        for (const col of column) {
             const val = row[col.key];
             if (col.type === "date") {
                 o[col.key] = toExcelDate(val, col.numFmt || ""); // 🔥 จุดเดียวจบ
@@ -105,48 +112,107 @@ export async function defaultExcel(options = {}) {
         }
         return o;
     });
-    console.log(typedRows);
-    
+
     // เพิ่มข้อมูลใน Sheet
     sheet.addRows(typedRows);
 
     const headerRow = sheet.getRow(1);
-    headerRow.font = opt.font;
-    headerRow.alignment = opt.alignment;
+    headerRow.font = font;
+    headerRow.alignment = alignment;
     // ตรวจสอบว่ามีฟังก์ชัน manualActions หรือไม่
-    if (opt.manual) {
-        opt.manualActions(sheet); // ส่ง sheet เพื่อให้ปรับแต่งตามที่กำหนด
+    if (manual) {
+        manualActions(sheet); // ส่ง sheet เพื่อให้ปรับแต่งตามที่กำหนด
     }
 
-    // คำนวณความยาวของข้อมูลในแต่ละคอลัมน์ และปรับความกว้าง
-    sheet.columns.forEach((column) => {
-        let maxLength = 0;
-        column.eachCell({ includeEmpty: true }, (cell) => {
-            const columnLength = cell.value ? cell.value.length : 10; // คำนวณความยาวของข้อมูลในเซลล์
-            if (columnLength > maxLength) {
-                maxLength = columnLength;
-            }
+    // prettier-ignore
+    if (autoWidth) {
+        // คำนวณความยาวของข้อมูลในแต่ละคอลัมน์ และปรับความกว้าง
+        sheet.columns.forEach((column) => {
+            let maxLength = 0;
+            column.eachCell({ includeEmpty: true }, (cell) => {
+                if (cell.isMerged && cell.address !== cell.master.address) return;
+                const columnLength = cell.value ? cell.value.length : 10; // คำนวณความยาวของข้อมูลในเซลล์
+                if (columnLength > maxLength) {
+                    maxLength = columnLength;
+                }
+            });
+            console.log(maxLength);
+            // จำกัดความกว้างไม่ให้เกินค่าใดค่าหนึ่ง (กันพัง)
+            if (maxLength > 40) maxLength = 40;
+            
+            column.width = maxLength + extraWidth; // เพิ่มความกว้างอีกเล็กน้อยเพื่อไม่ให้ข้อมูลชนขอบ
         });
-        column.width = maxLength + opt.extraWidth; // เพิ่มความกว้างอีกเล็กน้อยเพื่อไม่ให้ข้อมูลชนขอบ
-    });
+    }
     return workbook;
 }
 
 /**
  * Write Excel file from template
+ * @typedef {Object} writeExcelTemplateOptions
+ * @property {Function} [options.write=(workbook) => {}] - Function to write data to the workbook.
+ * 
  * @param {File} file arraybuffer
- * @param {object} options
- * @returns
+ * @param {writeExcelTemplateOptions} options
+ * @returns {Promise<object>} workbook - ExcelJS workbook
+ * @example
+ * const workbook = await writeExcelTemp(file, {
+ *     write: async (workbook) => {
+ *         if (isProcessed) return; // ถ้าเคยทำงานแล้ว ให้หยุด
+            isProcessed = true;
+            const sheet = workbook.worksheets[0];
+            const currentYear = new Date().getFullYear();
+            sheet.headerFooter = {
+                oddHeader: `&L Rev. No. ${revisionList.MASTER}`, // ตรงกลางของ Header
+            };
+            sheet.getCell(1, 1).value = `LIST OF SDS_CHEMICAL USER OR HANDLING in ${currentYear}`;
+            sheet.autoFilter = {
+                from: `A${opt.startRow-1}`, 
+                to:   `${numberToCol(Object.keys(data[0]).length+1)}${opt.startRow-1}`, 
+            };
+            await sheet.duplicateRow(opt.startRow, data.length, true);
+            data.forEach( (d, index) => {
+                const rowIndex = opt.startRow + index; 
+                let colIndex   = opt.startCol;
+                const Ystyle       = {fill: fill('FFA4FFA4'), border: border(), alignment: alignment('center')};
+                const headSecStyle = {font: {bold: true}, fill: fill('FFBDD7EE'), border: border(), alignment: alignment('center','bottom','90')};
+                const thinCen      = {border: border(), alignment: alignment('center')};
+                sheet.getCell(rowIndex, 1).value = index+1; // No.
+                Object.entries(d).forEach(([key, value]) => {
+                    if ((key.includes('SEC') || key.includes('DEPT') || key.includes('Sec')) ) {
+                        sheet.getCell(opt.startRow-1, colIndex).value = key;
+                        sheet.getCell(opt.startRow-1, colIndex).style = JSON.parse(JSON.stringify(headSecStyle));
+                        
+                        if(value == 'Y'){
+                            sheet.getCell(rowIndex, colIndex).style = JSON.parse(JSON.stringify(Ystyle)); 
+                        }else{
+                            sheet.getCell(rowIndex, colIndex).style = JSON.parse(JSON.stringify(thinCen));
+                        }
+                    }
+
+                    if(key.includes('AMEC_SDS_ID')){
+                        sheet.getCell(rowIndex, colIndex+2).value = parseInt(value); 
+                        sheet.getCell(rowIndex, colIndex+2).style = JSON.parse(JSON.stringify(thinCen));
+                    }else if(['RECEIVED_SDS_DATE', 'EFFECTIVE_DATE'].includes(key)){
+                        sheet.getCell(rowIndex, colIndex-1).value = value; 
+                    }else if(key.includes('UN_CLASS')){
+                        sheet.getCell(rowIndex, colIndex).value = parseInt(value); 
+                        sheet.getCell(rowIndex, colIndex).style = JSON.parse(JSON.stringify(thinCen));
+                    }else if(key.includes('REV')){
+                        sheet.getCell(rowIndex, colIndex).style = JSON.parse(JSON.stringify(thinCen));
+                        sheet.getCell(rowIndex, colIndex).value = value; 
+                    }else{
+                        sheet.getCell(rowIndex, colIndex).value = value; 
+                    }
+                    colIndex++;
+                });
+            });
+ *     }
+ * });
  */
-export async function writeExcelTemp(file, options = {}) {
-    const opt = {
-        write: (workbook) => {},
-        ...options,
-    };
+export async function writeExcelTemp(file, {write = (workbook) => {}} = {}) {
     var workbook = new ExcelJS.Workbook();
     await workbook.xlsx.load(file);
-    opt.write(workbook);
-
+    write(workbook);
     return workbook;
 }
 
@@ -186,44 +252,41 @@ export async function writeExcelTemp(file, options = {}) {
             }
         });
  */
-export async function readInput(file, options = {}) {
-    const opt = {
-        maxReadRow: 500,
-        startRow: 1,
-        startCol: 1, // A
-        endCol: 1, // A
-        sheetName: 1, // string
-        headerName: [],
-        skipRow: 0,
-        readCustom: false,
-        readHeader: false,
-        customSheet: (workbook) => {},
-        ...options,
-    };
+export async function readInput(file, {
+    maxReadRow = 500,
+    startRow = 1,
+    startCol = 1, // A
+    endCol = 1, // A
+    sheetName = 1, // string
+    headerName = [],
+    skipRow = 0,
+    readCustom = false,
+    readHeader = false,
+    customSheet = (workbook) => {},
+} = {}) {
     var data = [];
     const workbook = new ExcelJS.Workbook();
     await workbook.xlsx.load(file);
 
-    if (opt.readCustom) {
+    if (readCustom) {
         // read file custom option
         console.log("read custom");
 
-        data = opt.customSheet(workbook);
-    } else if (opt.readHeader) {
+        data = customSheet(workbook);
+    } else if (readHeader) {
         // read file by header name
         console.log("read header");
 
         const worksheet =
-            opt.sheetName == 1
+            sheetName == 1
                 ? workbook.worksheets[0]
-                : workbook.getWorksheet(opt.sheetName);
+                : workbook.getWorksheet(sheetName);
         worksheet.eachRow((row, rowNumber) => {
-            // console.log(opt.startCol, opt.startRow, opt.endCol, row.values);
-            if (rowNumber < opt.startRow) return;
-            if (rowNumber > opt.maxReadRow) return;
+            if (rowNumber < startRow) return;
+            if (rowNumber > maxReadRow) return;
             for (
-                let colIndex = opt.startCol;
-                colIndex <= opt.endCol;
+                let colIndex = startCol;
+                colIndex <= endCol;
                 colIndex++
             ) {
                 if (row.values[1] != "" && typeof row.values[1] == "number") {
@@ -231,7 +294,7 @@ export async function readInput(file, options = {}) {
                     if (!data[index]) {
                         data[index] = {};
                     }
-                    data[index][opt.headerName[colIndex]] =
+                    data[index][headerName[colIndex]] =
                         row.values[colIndex] || "";
                 }
             }
@@ -241,27 +304,25 @@ export async function readInput(file, options = {}) {
         console.log("read default");
 
         const worksheet =
-            opt.sheetName == 1
+            sheetName == 1
                 ? workbook.worksheets[0]
-                : workbook.getWorksheet(opt.sheetName);
+                : workbook.getWorksheet(sheetName);
         let rowIndex = 0;
         worksheet.eachRow((row, rowNumber) => {
-            if (rowNumber < opt.startRow) return;
-            if (rowNumber > opt.maxReadRow) return;
-            // const rowIndex =
-            //     opt.skipRow > 0 ? rowNumber - (opt.skipRow + 1) : rowNumber - 1;
-            if (opt.skipRow > 0 && rowNumber <= opt.skipRow) return;
+            if (rowNumber < startRow) return;
+            if (rowNumber > maxReadRow) return;
+            if (skipRow > 0 && rowNumber <= skipRow) return;
             if (!data[rowIndex]) data[rowIndex] = {};
 
-            if (opt.endCol == 1) {
+            if (endCol == 1) {
                 row.eachCell(function (cell, colNumber) {
                     data[rowIndex][colNumber - 1] = cell.value;
                 });
             } else {
                 let index = 0;
                 for (
-                    let colIndex = opt.startCol;
-                    colIndex <= opt.endCol;
+                    let colIndex = startCol;
+                    colIndex <= endCol;
                     colIndex++, index++
                 ) {
                     data[rowIndex][index] = row.values[colIndex] || "";
@@ -274,38 +335,43 @@ export async function readInput(file, options = {}) {
 }
 
 /**
- * merge
- * @param {object} worksheet
- * @param {number} row
- * @param {number} col
- * @param {number} range
- * @param {string} value
+ * Merge cell in excel
+ * @param {object} worksheet - ExcelJS worksheet
+ * @param {number} rowStart - 1
+ * @param {number} colStart - 1
+ * @param {number} rowEnd - 1
+ * @param {number} colEnd - 2
+ * @param {string} value - value to set
+ * @returns {void}
+ * @example
+ * mergeCell(worksheet, 1, 1, 1, 2, 'Merged Data');
  */
-export function mergeCell(worksheet, row, col, range, value) {
-    // console.log('value',value);
-
-    const cell = worksheet.getCell(row, col);
-    // console.log(cell);
-
-    cell.value = value;
-    worksheet.mergeCells(row, col, row, col + range);
-    // worksheet.getCell(row, col).alignment = { horizontal: 'center', vertical: 'middle' };
+export function mergeCell(
+    worksheet,
+    rowStart,
+    colStart,
+    rowEnd,
+    colEnd,
+    value = ""
+) {
+    const cell = worksheet.getCell(rowStart, colStart);
+    if (value != "") cell.value = value;
+    worksheet.mergeCells(rowStart, colStart, rowEnd, colEnd);
 }
 
 /**
  * ฟังก์ชันที่ใช้ใส่สไตล์แบบ range
- * @param {object} worksheet
- * @param {number} startCol '8'
- * @param {number} endCol '10'
- * @param {number} row '1'
- * @param {object} style
+ * @param {object} worksheet - ExcelJS worksheet
+ * @param {number} startCol - '8'
+ * @param {number} endCol - '10'
+ * @param {number} row - '1'
+ * @param {object} style - e.g. { font: { bold: true }, fill: { type: 'pattern', pattern:'solid', fgColor:{argb:'FFFF0000'} }  }
+ * @returns {void}
+ * @example
+ * applyStyleToRange(worksheet, 8, 10, 1, { font: { bold: true }, fill: { type: 'pattern', pattern:'solid', fgColor:{argb:'FFFF0000'} } });
  */
 export function applyStyleToRange(worksheet, startCol, endCol, row, style) {
-    // console.log('colper: ',percentCols);
-    // console.log('row',row);
-
     for (let col = startCol; col <= endCol; col++) {
-        // worksheet.getCell(`${String.fromCharCode(64 + col)}${row}`).style = style;
         const cell = worksheet.getCell(row, col); // ใช้รูปแบบการระบุตำแหน่งเซลล์ที่ถูกต้อง
         const originalNumFmt = cell.numFmt;
         // ตั้งค่าสไตล์ใหม่
@@ -319,13 +385,17 @@ export function applyStyleToRange(worksheet, startCol, endCol, row, style) {
 
 /**
  * Set format in excel
+ * @param {object} worksheet - ExcelJS worksheet
  * @param {array} cols ['A','B','C']
  * @param {string} format '0.00%' OR '0'
+ * @param {number} row - 1
+ * @returns {void}
+ * @example
+ * setFormat(worksheet, 2, ['B','C','D'], '0.00%');
  */
 export function setFormat(worksheet, row, cols, format) {
     cols.forEach((col) => {
         const cell = worksheet.getCell(col + row);
-        console.log("cell:", cell, "row:", row, "col:", col);
         cell.numFmt = format;
     });
 }
@@ -333,7 +403,11 @@ export function setFormat(worksheet, row, cols, format) {
 /**
  * ฟังก์ชันแปลงตัวอักษรคอลัมน์เป็นตัวเลขคอลัมน์
  * @param {string} col
- * @returns
+ * @returns {number}
+ * @example
+ * colToNumber('A') // 1
+ * colToNumber('AB') // 28
+ * colToNumber('ZZ') // 702
  */
 export function colToNumber(col) {
     let number = 0;
@@ -344,9 +418,13 @@ export function colToNumber(col) {
 }
 
 /**
- *
+ * Convert a column number to a column letter
  * @param {number} num
- * @returns
+ * @returns {string|undefined}
+ * @example
+ * numberToCol(1) // A
+ * numberToCol(28) // AB
+ * numberToCol(702) // ZZ
  */
 export function numberToCol(num) {
     if (typeof num !== "number" || num <= 0 || !Number.isInteger(num)) {
@@ -366,9 +444,19 @@ export function numberToCol(num) {
 /**
  * fill style
  * @param {string} fgColor  argb color
- * @param {string} type
- * @param {string} pattern
- * @returns
+ * @param {string} [type] - default 'pattern' (optional)
+ * @param {string} [pattern] - default 'solid' (optional)
+ *
+ * @typedef {Object} fillStyle
+ * @property {string} type
+ * @property {string} pattern
+ * @property {Object} fgColor
+ * @property {string} fgColor.argb
+ *
+ * @returns {fillStyle}
+ * @example
+ * fill('FFFF0000') // red solid fill
+ * fill('FF00FF00', 'pattern', 'darkVertical') // green darkVertical fill
  */
 export const fill = (fgColor, type = "pattern", pattern = "solid") => {
     return {
@@ -380,7 +468,20 @@ export const fill = (fgColor, type = "pattern", pattern = "solid") => {
 /**
  * Border style
  * @param {string} style thin, dotted, dashDot, hair, dashDotDot, slantDashDot, mediumDashed, mediumDashDotDot, mediumDashDot, medium, double, thick
- * @returns
+ * 
+ * @typedef {Object} borderStyle
+ * @property {Object} top
+ * @property {string} top.style
+ * @property {Object} left
+ * @property {string} left.style
+ * @property {Object} bottom
+ * @property {string} bottom.style
+ * @property {Object} right
+ * @property {string} right.style
+ * 
+ * @returns {borderStyle}
+ * @example
+ * border('thin')
  */
 export const border = (style = "thin") => {
     return {
@@ -463,37 +564,37 @@ export const alignment = (
 //     alignment: { horizontal: 'center', vertical: 'middle' }
 // }
 
-/*
-// Iterate over all sheets
-// Note: workbook.worksheets.forEach will still work but this is better
-workbook.eachSheet(function(worksheet, sheetId) {
-    // ...
-  });
-  
-  // fetch sheet by name
-  const worksheet = workbook.getWorksheet('My Sheet');
-  
-//   fetch sheet by id
-//   INFO: Be careful when using it!
-//   It tries to access to `worksheet.id` field. Sometimes (really very often) workbook has worksheets with id not starting from 1.
-//   For instance It happens when any worksheet has been deleted.
-//   It's much more safety when you assume that ids are random. And stop to use this function.
-//   If you need to access all worksheets in a loop please look to the next example.
-  const worksheet = workbook.getWorksheet(1);
-  
-  // access by `worksheets` array:
-  workbook.worksheets[0]; //the first one;
 
-*/
+// // Iterate over all sheets
+// // Note: workbook.worksheets.forEach will still work but this is better
+// workbook.eachSheet(function(worksheet, sheetId) {
+//     // ...
+//   });
+  
+//   // fetch sheet by name
+//   const worksheet = workbook.getWorksheet('My Sheet');
+  
+// //   fetch sheet by id
+// //   INFO: Be careful when using it!
+// //   It tries to access to `worksheet.id` field. Sometimes (really very often) workbook has worksheets with id not starting from 1.
+// //   For instance It happens when any worksheet has been deleted.
+// //   It's much more safety when you assume that ids are random. And stop to use this function.
+// //   If you need to access all worksheets in a loop please look to the next example.
+//   const worksheet = workbook.getWorksheet(1);
+  
+//   // access by `worksheets` array:
+//   workbook.worksheets[0]; //the first one;
+
+
 
 // export async function getFileExcelJS(path){
-// const workbook = new ExcelJS.Workbook();
-// // สร้าง Stream จากไฟล์
-// // ใช้ stream เพื่อโหลดไฟล์ Excel
-// await workbook.xlsx.readFile(path);
-// console.log(workbook);
+//     const workbook = new ExcelJS.Workbook();
+//     // สร้าง Stream จากไฟล์
+//     // ใช้ stream เพื่อโหลดไฟล์ Excel
+//     await workbook.xlsx.readFile(path);
+//     console.log(workbook);
 
-// return workbook;
+//     return workbook;
 // }
 
 // export const excelOptions = {

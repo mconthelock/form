@@ -408,7 +408,7 @@ export function getSelectedData(table) {
 
 /**
  * จำเป็นต้องให้แสดงผลบนหน้าจอไม่อย่างนั้นจะไม่สามารถอ่านค่าขนาดได้เพราะยังถูกซ่อนไว้
- * @param {object} table
+ * @param {object} table e.g. $('#table'); || table = $('#table').DataTable();
  * @note หากต้องการใช้ให้ add class sticky-column ให้กับคอลัมน์ที่ต้องการให้เป็น sticky
  */
 export function setStickyColumns(table) {

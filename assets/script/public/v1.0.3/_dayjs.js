@@ -59,10 +59,13 @@ dayjs.extend(duration);
  * @param {string} format 
  * @returns 
  */
-export function formatDate(date, format = 'YYYY-MM-DD') {
+export function formatDate(date, format = 'YYYY-MM-DD', formatInput = 'YYYY-MM-DD') {
     if (!date) return '';
     if (typeof date === 'number') {
         return dayjs(String(date), "YYYYMMDD").format(format);
+    }
+    if(formatInput !== 'YYYY-MM-DD'){
+        return dayjs(date, formatInput).format(format);
     }
     return dayjs(date).format(format);
 }

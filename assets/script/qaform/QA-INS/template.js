@@ -288,12 +288,12 @@ async function createTableCS(data, audit = 0) {
         <tbody>
             <tr>
                 <td class="p-0">
-                    <textarea class="w-full h-full min-h-70 p-4 autosize autosize-match" id="audit-result" name="auditResult" placeholder="Enter audit result here..." ${readonly}>${
+                    <textarea class="w-full h-full min-h-70 p-4 autosize autosize-match" id="audit-result" name="auditResult" maxlength="3000" placeholder="Enter audit result here..." ${readonly}>${
         data.QOA_AUDIT_RESULT || "-"
     }</textarea>   
                 </td>
                 <td class="p-0">
-                    <textarea class="w-full h-full min-h-70 p-4 autosize autosize-match" id="audit-activity" name="auditActivity" placeholder="Enter audit activity here..." ${readonly}>${
+                    <textarea class="w-full h-full min-h-70 p-4 autosize autosize-match" id="audit-activity" name="auditActivity" maxlength="3000" placeholder="Enter audit activity here..." ${readonly}>${
         data.QOA_IMPROVMENT_ACTIVITY || "-"
     }</textarea>   
                 </td>

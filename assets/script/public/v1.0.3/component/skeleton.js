@@ -19,16 +19,47 @@
  * เพิ่ม method remove ใน dataTableSkeleton
  * เรียกใช้งานแบบ const load = dataTableSkeleton();
  * load.remove();
+ * @note 2025-11-07
+ * แก้ไข skeletons ให้รองรับการสร้าง skeleton แนวนอนภายใน skeleton แนวตั้ง
  */
 
 /**
  * loading data table skeleton
- * @description Create a skeleton loader for data tables.
- * @param {object} opt
  * ให้ไปสร้าง html ที่มี id ก่อนและนำ id มาอ้างอิงใน opt.idLoading
+ * ** update 2025-11-04 เพิ่ม method remove ใน element ที่ return กลับไป และไม่ต้องไปเพิ่มที่ html ใหม่ทุกครั้งที่เรียกใช้
+ * @typedef {Object} dataTableSkeleton
+ * @property {boolean} [show=true] - แสดงหรือซ่อน skeleton
+ * @property {boolean} [button=true] - แสดงหรือซ่อน ปุ่มด้านบนขวา
+ * @property {boolean} [search=true] - แสดงหรือซ่อน ช่องค้นหาด้านบนซ้าย
+ * @property {boolean} [page=true] - แสดงหรือซ่อน ตัวเลือกหน้าด้านล่างซ้าย
+ * @property {boolean} [info=true] - แสดงหรือซ่อน ข้อมูลสถิติด้านล่างขวา
+ * @property {boolean} [middleMenu=false] - แสดงหรือซ่อน เมนูกลางด้านบน
+ * @property {string} [width="w-full"] - ความกว้างของ skeleton
+ * @property {string} [height="h-[80vh]"] - ความสูงของ skeleton
+ * @property {string} [idLoading="tableLoading"] - id ของ element ที่จะให้ไปสร้าง skeleton
+ * @property {number} [numberOfButtons=1] - จำนวนปุ่มด้านบนขวา
+ * @property {number} [numberOfMiddleMenu=1] - จำนวนเมนูกลางด้านบน
+ * @property {searchSize} [searchSize={}] - ขนาดของช่องค้นหาด้านบนซ้าย
+ * @property {Array<middleSize>} [middleSize=[]] - ขนาดของเมนูกลางด้านบน
+ * 
+ * @typedef {Object} searchSize
+ * @property {string} [width="w-60"] - ความกว้างของช่องค้นหาด้านบนซ้าย
+ * @property {string} [height="h-full"] - ความสูงของช่องค้นหาด้านบนซ้าย
+ * 
+ * @typedef {Object} middleSize
+ * @property {string} [width="w-60"] - ความกว้างของเมนูกลางด้านบน
+ * @property {string} [height="h-11"] - ความสูงของเมนูกลางด้านบน
+ * 
+ * @param {dataTableSkeleton} option
+ * @returns {JQuery<HTMLElement>} - คืนค่าเป็น jQuery element ที่สร้าง skeleton ขึ้นมา
  * @example
- * html : <div id="tableLoading"></div>
- * js : dataTableSkeleton({show: false, idLoading: 'tableDetailLoading'}); || dataTableSkeleton();
+ * dataTableSkeleton({show: false, idLoading: 'tableDetailLoading'}); || dataTableSkeleton();
+ * const tableSkeleton = dataTableSkeleton({
+ *     idLoading: "#table-master",
+ *     numberOfButtons: 4,
+ *     searchSize: {height: 'h-8'},
+ *     height: 'h-[70vh]',
+ * });
  */
 export function dataTableSkeleton({
     show = true,
@@ -100,10 +131,10 @@ export function dataTableSkeleton({
         dataTableSkeleton = $(`${id} .dataTableSkeleton`);
     }
     if (show) {
-        element.removeClass("hidden")
+        element.removeClass("hidden");
         dataTableSkeleton.removeClass("hidden");
     } else {
-        element.addClass("hidden")
+        element.addClass("hidden");
         dataTableSkeleton.addClass("hidden");
     }
 
@@ -113,73 +144,124 @@ export function dataTableSkeleton({
     return element;
 }
 
-export function skeleton(option = {}) {
-    const opt = {
-        width: "w-xs",
-        height: "h-11",
-        classLoading: "",
-        idLoading: "",
-        element: "", // #loading
-        ...option,
-    };
+/**
+ * Create a skeleton loader element.
+ * @typedef {Object} skeletonOpt
+ * @property {string} [width="w-xs"] - The width class of the skeleton (e.g., "w-xs").
+ * @property {string} [height="h-11"] - The height class of the skeleton (e.g., "h-11").
+ * @property {string} [classLoading=""] - The class name of the element to contain the skeleton.
+ * @property {string} [idLoading=""] - The ID of the element to contain the skeleton.
+ * @property {string} [element=""] - The selector for the element to contain the skeleton (e.g., "#loading").
+ *
+ * @param {skeletonOpt} option
+ * @returns {void}
+ * @example
+ * skeleton({
+ *       idLoading: "loading",
+ *       height: "h-20",
+ *       width: "w-96",
+ *   });
+ */
+// prettier-ignore
+export function skeleton({
+    element = "", // #loading
+    idLoading = "",
+    classLoading = "",
+    height = "h-11",
+    width = "w-xs",
+} = {}) {
     let e;
-    if (opt.element != "") {
-        e = $(opt.element);
+    if (element != "") {
+        e = $(element);
     } else {
         e =
-            opt.idLoading != ""
-                ? $(`#${opt.idLoading}`)
-                : opt.classLoading != ""
-                ? $(`.${opt.classLoading}`)
-                : null;
+            idLoading != "" ? $(`#${idLoading}`) : classLoading != "" ? $(`.${classLoading}`) : null;
     }
     if (e) {
         e.html(
-            `<div class="Pomelo-Peel-White skeleton ${opt.width} ${opt.height}"></div>`
+            `<div class="Pomelo-Peel-White skeleton ${width} ${height}"></div>`
         );
     }
-    return;
 }
 
 /**
+ * loading multiple skeletons
+ * @typedef {Object} skeletonsOpt
+ * @property {string} [element=""] - The selector for the element to contain the skeletons (e.g., "#loading").
+ * @property {string} [classLoading=""] - The class name of the element to contain the skeletons.
+ * @property {string} [idLoading=""] - The ID of the element to contain the skeletons.
+ * @property {number} [count=1] - The number of skeletons to create.
+ * @property {string} [mb="mb-1"] - The margin-bottom
+ * @property {Array<{pattern}>} [pattern=[{width: "w-xs", height: "h-11", type: "vertical", flag: ""}]] - An array defining the width, height, type, and flag of each skeleton pattern.
  *
- * @param {object} option
- * @returns
+ * @typedef {Object} pattern
+ * @property {string} width - The width class of the skeleton (e.g., "w-xs").
+ * @property {string} height - The height class of the skeleton (e.g., "h-11").
+ * @property {string} [type="vertical"] - The type of skeleton, either "vertical" or "horizontal".
+ * @property {string} [flag=""] - The flag for horizontal skeletons, can be "start" or "end" to denote the beginning or end of a horizontal group.
+ *
+ * @param {skeletonsOpt} option
+ * @returns {void}
+ * @example
+ * skeletons({
+ *       idLoading: "reportList",
+ *       pattern: [
+ *           { width: "w-96", height: "h-11" },
+ *           { width: "w-48", height: "h-11", type: "horizontal", flag: "start"},
+ *           { width: "w-48", height: "h-11", type: "horizontal"},
+ *           { width: "w-24", height: "h-11", type: "horizontal"},
+ *           { width: "w-24", height: "h-11", type: "horizontal", flag: "end"},
+ *           { width: "w-full", height: "h-[70vh]" },
+ *       ],
+ *       count: 6,
+ *   });
  */
-export function skeletons(option = {}) {
-    const opt = {
-        classLoading: "",
-        idLoading: "",
-        element: "", // #loading
-        count: 1,
-        mb: "mb-1",
-        pattern: [{ width: "w-xs", height: "h-11" }],
-        ...option,
-    };
+// prettier-ignore
+export function skeletons({
+    element = "", // #loading
+    classLoading = "",
+    idLoading = "",
+    count = 1,
+    mb = "mb-1",
+    pattern = [{ width: "w-xs", height: "h-11", type: "vertical", flag: "" }],
+} = {}) {
     let e;
-    if (opt.element != "") {
-        e = $(opt.element);
+    if (element != "") {
+        e = $(element);
     } else {
-        e =
-            opt.idLoading != ""
-                ? $(`#${opt.idLoading}`)
-                : opt.classLoading != ""
-                ? $(`.${opt.classLoading}`)
-                : null;
+        e = idLoading != "" ? $(`#${idLoading}`) : classLoading != "" ? $(`.${classLoading}`) : null;
     }
     if (e) {
         e.empty();
-        for (let i = 0; i < opt.count; i++) {
-            const { width, height } = opt.pattern[i % opt.pattern.length];
-            if (opt.count - i == 1) opt.mb = "";
-            e.append(
-                `<div class="Pomelo-Peel-White skeleton ${width} ${height} ${opt.mb}"></div>`
-            );
+        let html = '';
+        for (let i = 0; i < count; i++) {
+            if (count - i == 1) mb = "";
+            const { width, height, type, flag } = pattern[i % pattern.length];
+            // set skeleton horizontal
+            if (type && type.toLowerCase() === "horizontal") {
+                if(flag == "start"){
+                    html += `<div class="flex gap-2 w-full h-full ${mb}">`;
+                }
+                html += `<div class="skeleton ${width} ${height}"></div>`
+                if(flag == "end"){
+                    html += `</div>`;
+                }
+            }else{
+            // set skeleton vertical
+                html +=`<div class="Pomelo-Peel-White skeleton ${width} ${height} ${mb}"></div>`;
+            }
         }
+        e.append(html);
     }
-    return;
 }
 
+/**
+ * loading form detail skeleton
+ * @param {Object} element - The selector for the element to contain the skeletons (e.g., "#loading").
+ * @returns {void}
+ * @example
+ * formDetailSkeleton("#loading");
+ */
 export function formDetailSkeleton(element) {
     skeletons({
         element: element,
@@ -192,8 +274,26 @@ export function formDetailSkeleton(element) {
     });
 }
 
-export function formSubmitSkeleton(option = {}) {
-    const { count = 3, element = "", mode = "edit" } = option;
+/**
+ * loading form submit skeleton
+ * @typedef {Object} formSubmitSkeleton
+ * @property {number} [count=3] - The number of button skeletons to create.
+ * @property {string} [element=""] - The selector for the element to contain the skeleton (e.g., "#loading").
+ * @property {string} [mode="edit"] - The mode of the form, either "edit" or "view".
+ * @param {formSubmitSkeleton} option
+ * @returns {void}
+ * @example
+ * formSubmitSkeleton({
+ *       count: 3, // จำนวนปุ่ม
+ *       element: "#loading",
+ *       mode: "edit",
+ *   });
+ */
+export function formSubmitSkeleton({
+    count = 3,
+    element = "",
+    mode = "edit",
+} = {}) {
     let html = `<div class="flex flex-col items-center">
     <div class="skeleton  min-h-24 w-56 mb-5"></div>
     <div class="flex gap-1">`;

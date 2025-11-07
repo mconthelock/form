@@ -138,8 +138,8 @@ export function showMessage(msg, type = "error", position = "toast-end") {
  * show error message
  * @param {string} message e.g. "An error occurred."
  */
-export function showErrorMessage(message) {
-    showMessage(`${message} Please try again. or contact Tel.2038`, "error");
+export function showErrorMessage(message, tel = '2038') {
+    showMessage(`${message} Please try again. or contact Tel.${tel}`, "error");
 }
 
 export const ajaxOptionsLoad = {
