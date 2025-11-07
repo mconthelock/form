@@ -321,8 +321,6 @@ function searchInTable(empno, item) {
         }).map(function() {
             return {item: $(this).attr('item'), range: $(this).attr('range')};
         }).get();
-        console.log(itemRange);
-        
 
         // กรองข้อมูลตาม empno และ item
         if ((item === null || item === "") && (empno === null || empno === "")) { // ถ้าไม่มีการกรอง
@@ -533,9 +531,6 @@ $(document).on("click", "#clearFilter", async function () {
 
 $(document).on("click", "#exportExcel", async function () {
     const data = await getDataAuthorize($("#selectSection").val());
-
-    console.log(data, dataExcel);
-
     // prettier-ignore
     const excel = await defaultExcel({
         manual: true,
@@ -592,8 +587,6 @@ $(document).on("click", "#exportExcel", async function () {
                     const itemNo = cell.value;
                     if (d.Items.includes(itemNo)) {
                         const medal = d.Range.find((r) => r.item === itemNo && r.range != 'Bronze');
-                        console.log(medal, d.Range);
-                        
                         row.getCell(colNumber).value = medal ? "✔" : "✖";
                         row.getCell(colNumber).alignment = { horizontal: "center" };
                     }

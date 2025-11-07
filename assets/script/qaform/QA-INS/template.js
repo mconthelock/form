@@ -336,7 +336,6 @@ async function calGrade(score, total) {
 function setMedalReportList(percent, testDate) {
     let html = ``;
     let range = "none";
-    console.log(percent, testDate);
 
     if (!percent || !testDate) return { html, range };
     const year = new Date(testDate).getFullYear();
