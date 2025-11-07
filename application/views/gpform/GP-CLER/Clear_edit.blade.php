@@ -259,29 +259,4 @@
 
 @section('scripts')
     <script src="{{ $_ENV['APP_JS'] }}/clearanceView.js?ver={{ $GLOBALS['version'] }}"></script>
-    <script>
-        $(document).ready(function () {
-            const estimate = $('#total_amount').text().replace(/,/g, '') * 1;
-            const $actualCost = $('#actual-cost');
-            const $remain = $('#remain');
-            const $remainAlert = $('#remain-alert');
-            const $remark = $('#remark');
-
-            $actualCost.on('input', function () {
-                const val = parseFloat($(this).val()) || 0;
-                const remain = estimate - val;
-                $remain.val(remain);
-
-                if (remain >= 0) {
-                    $remain.css('color', '#16a34a'); // green
-                    $remainAlert.html('<span class="text-green-700">ค่าใช้จ่ายจริงไม่เกินยอดประมาณการ</span>');
-                    $remark.prop('required', false);
-                } else {
-                    $remain.css('color', '#dc2626'); // red
-                    $remainAlert.html('<span class="text-red-600">ค่าใช้จ่ายจริงเกินยอดประมาณการ กรุณาระบุเหตุผลใน Remark</span>');
-                    $remark.prop('required', true);
-                }
-            });
-        });
-    </script>
 @endsection

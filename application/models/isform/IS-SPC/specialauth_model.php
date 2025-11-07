@@ -12,6 +12,16 @@ class Specialauth_model extends CI_Model
         $this->ad = $this->load->database('auditDB', true);
     }
 
+    public function select($table, $where = [])
+    {
+        $this->db->select('*');
+        $this->db->from($table);
+        if (!empty($where)) {
+            $this->db->where($where);
+        }
+        return $this->db->get()->result();
+    }
+
     public function insert($table, $data, $rawFields = [])
     {
         $this->db->set($data);
@@ -70,4 +80,6 @@ class Specialauth_model extends CI_Model
         $this->db->where('SEMPNO', $empno);
         return $this->db->get()->row();
     }
+
+
 }

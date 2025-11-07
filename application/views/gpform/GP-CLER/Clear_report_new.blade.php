@@ -350,7 +350,13 @@
                                     This form has no estimate cost. Due to as no request entertainment in advance . The employee will be reimbursed by the company
                                 @else
                                     @if($ENT_FORM->REIMBURSEMENT == '1')
-                                        {{ $formCler->REMAIN_BUDGET >= 0 ? "The actual cost did not exceed the estimated cost. As advance payment was requested, and employee no remain cost." : "The Actual cost over Estimate cost : Company reimbursement to Employee.(" . $ENT_FORM->EMP_REQ . " " . $form[0]->VREQNAME . ")" }}
+                                        @if($formCler->REMAIN_BUDGET == 0)
+                                            The actual cost did not exceed the estimated cost. As advance payment was requested, and employee no remain cost.
+                                        @elseif($formCler->REMAIN_BUDGET > 0)
+                                            The actual cost did not exceed the estimated cost. As advance payment was requested, and employee return remain cost to company
+                                        @else
+                                            The Actual cost over Estimate cost : Company reimbursement to Employee.({{ $ENT_FORM->EMP_REQ }} {{ $form[0]->VREQNAME }})
+                                        @endif
                                     @else
                                         {{ $formCler->REMAIN_BUDGET >= 0 ? "The actual cost did not exceed the estimated cost. As no advance payment was requested, the employee will be reimbursed by the company." : "The Actual cost over Estimate cost : Company reimbursement to Employee.(" . $ENT_FORM->EMP_REQ . " " . $form[0]->VREQNAME . ")" }}
                                     @endif
@@ -415,9 +421,7 @@
 
                         <!-- Approval Section -->
                         @if ($mode == '02')
-
-
-                            @if ($flowstep[0]->CSTEPNO == '87' && $flowstep[0]->CSTEPNEXTNO == '00')
+                            @if (in_array($flowstep[0]->CSTEPNO, ['87', '19']) && $flowstep[0]->CSTEPNEXTNO == '00')
                                 @if($ENT_FORM->REIMBURSEMENT == '1' && $formCler->REMAIN_BUDGET < 0 || $ENT_FORM->REIMBURSEMENT == '0')
                                     <div class="relative flex justify-center mt-4">
                                         <div class="w-full max-w-xs">
@@ -768,30 +772,6 @@
             } else {
                 button.classList.remove('tab-clearance');
             }
-        }
-
-        $(document).ready(function () {
-            const estimate = $('#total_amount').text().replace(/,/g, '') * 1; // Convert to number
-            const $actualCost = $('#actual-cost');
-            const $remain = $('#remain');
-            const $remainAlert = $('#remain-alert');
-            const $remark = $('#remark');
-
-            $actualCost.on('input', function () {
-                const val = parseFloat($(this).val()) || 0;
-                const remain = estimate - val;
-                $remain.val(remain.toLocaleString() + ' บาท');
-
-                if (remain >= 0) {
-                    $remain.css('color', '#16a34a'); // เขียว
-                    $remainAlert.html('<span class="text-green-700">ค่าใช้จ่ายจริงไม่เกินยอดประมาณการ</span>');
-                    $remark.prop('required', false);
-                } else {
-                    $remain.css('color', '#dc2626'); // แดง
-                    $remainAlert.html('<span class="text-red-600">ค่าใช้จ่ายจริงเกินยอดประมาณการ กรุณาระบุเหตุผลใน Remark</span>');
-                    $remark.prop('required', true);
-                }
-            });
-        });
+        }       
     </script>
 @endsection

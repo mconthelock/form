@@ -1,4 +1,4 @@
-import { showFlow, doaction, redirectWebflow } from "../../inc/_form.js";
+import { showFlow, doaction, redirectWebflow } from "@public/_form.js";
 import flatpickr from "flatpickr";
 import "flatpickr/dist/flatpickr.min.css";
 import { host } from "../../utils.js";
@@ -15,11 +15,11 @@ $(document).ready(async function () {
   const formEnt = $(".form-ent").data() || {};
   const { ent_nfrmno, ent_vorgno, ent_cyear, ent_cyear2, ent_nrunno, ent_empno } = formEnt;
 
-  const flow = await showFlow(nfrmno, vorgno, cyear, cyear2, nrunno);
+  const flow = await showFlow(nfrmno, vorgno, cyear, cyear2, nrunno, true);
   $(".flow").html(flow.html);
 
   if (ent_nfrmno && ent_vorgno && ent_cyear && ent_cyear2 && ent_nrunno && ent_empno) {
-    const flow_ent = await showFlow(ent_nfrmno, ent_vorgno, ent_cyear, ent_cyear2, ent_nrunno, ent_empno);
+    const flow_ent = await showFlow(ent_nfrmno, ent_vorgno, ent_cyear, ent_cyear2, ent_nrunno , true);
     $(".flow_ent").html(flow_ent.html);
   }
 
@@ -511,20 +511,19 @@ $(document).ready(async function () {
     $list.empty();
 
     if (!fileList.length) {
-        $list.append('<li class="text-red-500">ไม่พบไฟล์ที่เลือก</li>');
-        return;
+      $list.append('<li class="text-red-500">ไม่พบไฟล์ที่เลือก</li>');
+      return;
     }
 
     Array.from(fileList).forEach((file, i) => {
-        $list.append(
-            `<li class="flex items-center gap-2">
+      $list.append(
+        `<li class="flex items-center gap-2">
                 <span class="text-gray-700">- ${file.name}</span>
                 <span class="text-xs text-gray-400">(${(file.size / 1024).toFixed(1)} KB)</span>
             </li>`
-        );
+      );
     });
-});
-
+  });
 
   function deleteFile(fileName) {
     if (confirm("คุณต้องการลบไฟล์นี้ใช่หรือไม่?")) {
@@ -544,4 +543,26 @@ $(document).ready(async function () {
       );
     }
   }
+
+  const estimate = $("#total_amount").text().replace(/,/g, "") * 1; // Convert to number
+  const $actualCost = $("#actual-cost");
+  const $remain = $("#remain");
+  const $remainAlert = $("#remain-alert");
+  const $remark = $("#remark");
+
+  $actualCost.on("input", function () {
+    const val = parseFloat($(this).val()) || 0;
+    const remain = estimate - val;
+    $remain.val(remain.toLocaleString() + " บาท");
+
+    if (remain >= 0) {
+      $remain.css("color", "#16a34a"); // เขียว
+      $remainAlert.html('<span class="text-green-700">ค่าใช้จ่ายจริงไม่เกินยอดประมาณการ</span>');
+      $remark.prop("required", false);
+    } else {
+      $remain.css("color", "#dc2626"); // แดง
+      $remainAlert.html('<span class="text-red-600">ค่าใช้จ่ายจริงเกินยอดประมาณการ กรุณาระบุเหตุผลใน Remark</span>');
+      $remark.prop("required", true);
+    }
+  });
 });

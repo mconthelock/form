@@ -1,23 +1,56 @@
-import { getAllAttr, logFormData, requiredForm, showMessage } from "../../public/v1.0.3/jFuntion";
-import { showLoader } from "../../public/v1.0.3/preloader";
+import { getAllAttr, logFormData, requiredForm, showMessage } from "@public/jFuntion";
+import { showLoader } from "@public/preloader";
 import { host } from "../../utils";
-import { createTable, destroyTable} from "../../public/v1.0.3/_dataTable";
-import { formatAvatar, s2disableSearch, setSelect2 } from "../../public/v1.0.3/_select2";
-import { redirectWebflow } from "../../inc/_form.js";
+import { createTable, destroyTable} from "@public/_dataTable";
+import { setSelect2 , destroySelect2 } from "@public/_select2";
+//import "select2";
+//import "select2/dist/css/select2.min.css";
+import { redirectWebflow } from "@public/_form.js";
 import { createForm } from "../../api/webform/form";
+import { setDatePicker } from "@public/_flatpickr";
 //import { createForm, redirectWebflow } from "../../inc/_form.js";
-import { readInput } from "../../public/v1.0.3/_excel";
+import { readInput } from "@public/_excel";
 import Swal from "sweetalert2";
 import { ElementFlags } from "typescript";
 
 var formInfo, userIncharge, users, items, qcsection, division, department, section, tablesch , tablevisitor , tableemp , tablesec , tablepro , tablepst , tableist;
-$(document).ready(function () {
+
+$(async function () {
+
+  setDatePicker({ element: '.datesel', dateFormat: "Y-m-d" });
   const $modal = $('#modal');
   const $versionInput = $('#formVersion');
   const $newVersionInput = $('#newVersion');
-    $("#salecom").select2();
-    $("#receptionRoom").select2();
-    $("#lunchPlaceSelect").select2();
+    //$("#salecom").select2();
+    await setSelect2({ element: '#salecom',  selectionCssClass: "w-72", width: '280px'});
+    await setSelect2({ element: '#receptionRoom',  selectionCssClass: "w-72", width: '280px'});
+    await setSelect2({ element: '#lunchPlaceSelect',  selectionCssClass: "w-72", width: '280px'});
+    await setSelect2({ element: '.pst-select' , selectionCssClass: "w-96", width: '384px'});
+    await setSelect2({ element: '.ist-select' , selectionCssClass: "w-96", width: '384px'});
+    await setSelect2({ element: '.emp-select' , selectionCssClass: "w-96", width: '384px'});
+    // --- Tab control ---
+    const $tabButtons = $('#tabs button');
+    const $tabPanes = $('.tab-pane');
+
+    $tabButtons.on('click', function() {
+        $tabButtons.removeClass('active-tab');
+        $tabPanes.addClass('hidden');
+
+        $(this).addClass('active-tab');
+        const tab = $(this).data('tab');
+        $('#' + tab).removeClass('hidden');
+    });
+
+    // --- Lunch toggle ---
+    $('#hasLunch').on('change', function() {
+        $('#lunchDetails').toggleClass('hidden', !$(this).is(':checked'));
+    });
+
+    // --- Dinner toggle ---
+    $('#hasDinner').on('change', function() {
+        $('#dinnerDetails').toggleClass('hidden', !$(this).is(':checked'));
+    });
+    /*
     $(".pst-select").select2(
       {
        multiple:false,
@@ -58,8 +91,10 @@ $(document).ready(function () {
           return data.text; // แสดงเฉพาะชื่อหลังเลือก
         }
     
-        });
-      
+        }); */
+         
+
+        /*
         $(".emp-select").select2(
           {
           width: 'style',          // ใช้ style ของ select เดิม
@@ -81,7 +116,7 @@ $(document).ready(function () {
             return data.text; // แสดงเฉพาะชื่อหลังเลือก
           }
       
-          });
+          });*/
 
         /*  $('#dietary_require').select2({
             tags: true,               // เปิดให้พิมพ์ค่าใหม่เอง
@@ -94,7 +129,9 @@ $(document).ready(function () {
           const $tableBody = $('#tablevisitor tbody');
           const $table = $('#tablevisitor');
           // init แถวแรก
-          $tableBody.find('.dietary_require').select2({ width: '100%' });
+          //$tableBody.find('.dietary_require').select2({ width: '100%' });
+          const iddietary  = $tableBody.find('.dietary_require');
+          await setSelect2({ element: iddietary , selectionCssClass: "w-40", width: '100%'});
           
           // Event Delegation: ตรวจสอบเมื่อค่าเปลี่ยนแล้ว
           $tableBody.on("change", ".dietary_require", function () {
@@ -119,110 +156,109 @@ $(document).ready(function () {
               }
             }
           });
-          
-          $(document).on('click', '#addVisitorBtn', function () {
+
+          $(document).on('click', '#addVisitorBtn', async function () {
             const $firstRow = $tableBody.find('tr:first');
             const $newRow = $('<tr/>');
             const countryVal = $firstRow.find('[name="country[]"]').val();
             const companyVal = $firstRow.find('[name="company[]"]').val();
-
+        
+            const selectPromises = []; // เก็บ promise ของ setSelect2
+        
             $firstRow.children('td').each(function () {
-              const $td = $('<td/>').html($(this).html());
-          
-              // ลบ select2 เดิม
-              $td.find('.dietary_require').remove();
-          
-              // สร้าง fresh select
-              const $origSelect = $(this).find('.dietary_require');
-              if ($origSelect.length) {
-                const $freshSelect = $('<select/>', {
-                  name: $origSelect.attr('name'),
-                  class: $origSelect.attr('class'),
-                  id: 'dietary_' + Date.now() + '_' + Math.floor(Math.random()*1000)
-                });
-          
-                // copy options ปกติเท่านั้น (ไม่เอา custom)
-                $origSelect.find('option').each(function () {
-                  const val = $(this).val();
-                  const text = $(this).text();
-          
-                  // ตรวจสอบว่าเป็น custom หรือไม่
-                  if (val === "Food Allergies" || val === "Other" || !val.includes("–")) {
-                    $freshSelect.append($('<option/>', { value: val, text: text }));
-                  }
-                });
-          
-                $td.html($freshSelect);
-                $freshSelect.select2({ width: '100%' });
-              }
-            // ใส่ค่าที่เก็บไว้กลับไป
+                const $td = $('<td/>').html($(this).html());
+        
+                // -------------------------- dietary_require
+                $td.find('.dietary_require').remove();
+                const $origSelect = $(this).find('.dietary_require');
+                if ($origSelect.length) {
+                    const $freshSelect = $('<select/>', {
+                        name: $origSelect.attr('name'),
+                        class: $origSelect.attr('class'),
+                        id: 'dietary_' + Date.now() + '_' + Math.floor(Math.random() * 1000)
+                    });
+        
+                    // copy options ปกติเท่านั้น
+                    $origSelect.find('option').each(function () {
+                        const val = $(this).val();
+                        const text = $(this).text();
+        
+                        if (val === "Food Allergies" || val === "Other" || !val.includes("–")) {
+                            $freshSelect.append($('<option/>', { value: val, text: text }));
+                        }
+                    });
+        
+                    $td.empty().append($freshSelect);
+        
+                    // ใช้ setSelect2 และเก็บ promise
+                    selectPromises.push(setSelect2({
+                        element: $freshSelect,
+                        size: 'base',
+                        placeholder: 'Select Dietary Requirements',
+                        width: '100%'
+
+                    }));
+                }
+        
+                $newRow.append($td);
+            });
+        
+            // append แถวก่อน เพื่อให้ dropdownParent ทำงานถูกต้อง
+            $tableBody.append($newRow);
+        
+            // รอให้ทุก select2 ทำงานเสร็จแบบ parallel
+            await Promise.all(selectPromises);
+        
+            // -------------------------- ใส่ค่าที่เก็บไว้กลับไป
             $newRow.find('[name="country[]"]').val(countryVal);
             $newRow.find('[name="company[]"]').val(companyVal);
-              $newRow.append($td);
+        
+            // -------------------------- reset input, textarea
+            $newRow.find('input[type="text"], textarea').each(function () {
+                const name = $(this).attr('name');
+                if (name !== 'country[]' && name !== 'company[]') {
+                    $(this).val('');
+                }
             });
-          
-            // reset input, checkbox, radio
-            //$newRow.find('input[type="text"], textarea').val('');
-           /* $newRow.find('input[type="text"], textarea').each(function() {
-              const name = $(this).attr('name') || '';
-              if (!name.startsWith('country') && !name.startsWith('company')) {
-                  $(this).val('');
-                  console.log("if");
-              }else
-              {
-                  console.log("else");
-              }
-          });*/
-          $newRow.find('input[type="text"], textarea').each(function() {
-            const name = $(this).attr('name');
-            if (name === 'country[]' || name === 'company[]') {
-            } else {
-            
-              $(this).val('');
-            }
-          });
-          
-
+        
+            // -------------------------- reset checkbox, radio, select อื่น ๆ
             $newRow.find('input[type="checkbox"], input[type="radio"]').prop('checked', false);
-
-            $newRow.find('select').each(function() {
-              const name = $(this).attr('name');        
-              // กรณี dietary_require (custom select2)
-              if ($(this).hasClass('dietary_require')) {
-                $(this).val(null).trigger('change'); // reset select2
-              } 
-              // select อื่น ๆ
-              else {
-                $(this).val(''); // reset เป็นค่า default ว่าง
-              }
+        
+            $newRow.find('select').each(function () {
+                if ($(this).hasClass('dietary_require')) {
+                    $(this).val(null).trigger('change'); // reset select2
+                } else {
+                    $(this).val(''); // reset ค่า default
+                }
             });
-          
-            // update ลำดับ
-            const rowCount = $tableBody.find('tr').length + 1;
+        
+            // -------------------------- update ลำดับ
+            const rowCount = $tableBody.find('tr').length;
             $newRow.find('td:first').text(rowCount);
-            // --- เช็คคอลัมน์ซ่อน/แสดง ตาม header ---
+        
+            // -------------------------- แสดง/ซ่อน column ตาม header
             const $thead = $table.find('thead tr th');
             $thead.each(function (i) {
-              const isVisible = $(this).is(':visible'); // ตรวจสอบว่าหัวตารางซ่อนหรือไม่
-              if (!isVisible) {
-                $newRow.find('td').eq(i).hide();
-              } else {
-                $newRow.find('td').eq(i).show();
-              }
+                const isVisible = $(this).is(':visible');
+                if (!isVisible) $newRow.find('td').eq(i).hide();
+                else $newRow.find('td').eq(i).show();
             });
-
+        
             $newRow.find('td:first').addClass($firstRow.find('td:first').attr('class'))
-            .attr('tabindex', 0)
-            .css('left', '0px');
+                .attr('tabindex', 0)
+                .css('left', '0px');
+        });
+        
           
-            $tableBody.append($newRow);
-          });
+
           
 
            // --- Table emp / employee -> pos-col ---
           const tableEmpBody = $('#tableemp tbody');
           const tableemp = $('#tableemp');
-          tableEmpBody.find('.dietary_require').select2({ width: '100%' });
+         // tableEmpBody.find('.dietary_require').select2({ width: '100%' });
+         await setSelect2({ element: tableEmpBody.find('.dietary_require') , selectionCssClass: "w-40", width: '100%'});
+
 
           // Employee select change -> update pos-col
           tableEmpBody.on('change', '.emp-select', function() {
@@ -251,134 +287,127 @@ $(document).ready(function () {
             }
           });
 
-          $(document).on('click', '#addEmpBtn', function () {
 
+
+
+
+          $(document).on('click', '#addEmpBtn', async function () {
             const firstRow = tableEmpBody.find('tr:first');
             const newRow = $('<tr/>');
-            firstRow.children('td').each(function (i) {
-              const td = $('<td/>').html($(this).html());
-
-
-
-              td.find('.emp-select').remove();
-              const empSelect = $(this).find('.emp-select');
-              if (empSelect.length) {
-                const freshEmp = $('<select/>', {
-                  name: empSelect.attr('name'),
-                  class: empSelect.attr('class'),
-                  style: 'width:100%',
-                  id: 'emp_' + Date.now() + '_' + Math.floor(Math.random() * 1000)
-                });
-              
-                // copy option ทั้งหมดของ emp-select
-                empSelect.find('option').each(function () {
-                  const val = $(this).val();
-                  const text = $(this).text();
-                  freshEmp.append($('<option/>', { value: val, text: text })
-                    .attr('data-pos', $(this).data('pos'))
-                    .attr('data-div', $(this).data('div'))
-                    .attr('data-dep', $(this).data('dep'))
-                    .attr('data-sec', $(this).data('sec')));
-                });
-              
-                td.empty(); // เคลียร์ของเก่าใน td
-                td.append(freshEmp);
-              
-                // init select2 พร้อมปุ่ม clear
-                freshEmp.select2({
-                  width: 'style',
-                  dropdownParent: $('#tableemp'),
-                  placeholder: '',
-                  allowClear: true,
-                  matcher:customMatcher
-                });
-              }
-              
-          
-              // ลบ select2 เดิม
-              td.find('.dietary_require').remove();
-          
-              // สร้าง fresh select
-              const origSelect = $(this).find('.dietary_require');
-              if (origSelect.length) {
-                const freshSelect = $('<select/>', {
-                  name: origSelect.attr('name'),
-                  class: origSelect.attr('class'),
-                  id: 'dietary_' + Date.now() + '_' + Math.floor(Math.random()*1000)
-                });
-          
-                // copy options ปกติเท่านั้น (ไม่เอา custom)
-                origSelect.find('option').each(function () {
-                const val = $(this).val();
-                const text = $(this).text();
-          
-                  // ตรวจสอบว่าเป็น custom หรือไม่
-                  if (val === "Food Allergies" || val === "Other" || !val.includes("–")) {
-                    freshSelect.append($('<option/>', { value: val, text: text }));
-                  }
-                });
-          
-                td.html(freshSelect);
-                freshSelect.select2({ width: '100%' });
-              }
-              if (i === 2) { // index เริ่มที่ 0 → คอลัมน์ 3 คือ index 2
-                td.addClass('pos-col');
-                td.text(''); // reset ค่า
-              }
-              newRow.append(td);
+        
+            const tds = firstRow.children('td').toArray();
+            const selectPromises = []; // เก็บ promise ของ setSelect2
+        
+            for (let i = 0; i < tds.length; i++) {
+                const tdElem = tds[i];
+                const td = $('<td/>').html($(tdElem).html());
+        
+                // -------------------------- emp-select
+                td.find('.emp-select').remove();
+                const empSelect = $(tdElem).find('.emp-select');
+                if (empSelect.length) {
+                    const freshEmp = $('<select/>', {
+                        name: empSelect.attr('name'),
+                        class: empSelect.attr('class'),
+                        style: 'width:100%',
+                        id: 'emp_' + Date.now() + '_' + Math.floor(Math.random() * 1000)
+                    });
+        
+                    empSelect.find('option').each(function () {
+                        const val = $(this).val();
+                        const text = $(this).text();
+                        freshEmp.append(
+                            $('<option/>', { value: val, text: text })
+                                .attr('data-pos', $(this).data('pos'))
+                                .attr('data-div', $(this).data('div'))
+                                .attr('data-dep', $(this).data('dep'))
+                                .attr('data-sec', $(this).data('sec'))
+                        );
+                    });
+        
+                    td.empty().append(freshEmp);
+        
+                    // เก็บ promise ของ setSelect2
+                    selectPromises.push(setSelect2({
+                        element: freshEmp,
+                        size: 'base',
+                        placeholder: 'Select Name',
+                        dropdownParent: $('#tableemp'),
+                        selectionCssClass: "w-96",
+                        width: '384px',
+                        matcher: customMatcher
+                    }));
+                }
+        
+                // -------------------------- dietary_require
+                td.find('.dietary_require').remove();
+                const origSelect = $(tdElem).find('.dietary_require');
+                if (origSelect.length) {
+                    const freshSelect = $('<select/>', {
+                        name: origSelect.attr('name'),
+                        class: origSelect.attr('class'),
+                        id: 'dietary_' + Date.now() + '_' + Math.floor(Math.random() * 1000)
+                    });
+        
+                    origSelect.find('option').each(function () {
+                        const val = $(this).val();
+                        const text = $(this).text();
+                        if (val === "Food Allergies" || val === "Other" || !val.includes("–")) {
+                            freshSelect.append($('<option/>', { value: val, text: text }));
+                        }
+                    });
+        
+                    td.empty().append(freshSelect);
+        
+                    selectPromises.push(setSelect2({
+                        element: freshSelect,
+                        size: 'base',
+                        placeholder: 'Select Dietary Requirements',
+                        width: '100%'
+                    }));
+                }
+        
+                // -------------------------- คอลัมน์ที่ 3 (index 2)
+                if (i === 2) {
+                    td.addClass('pos-col').text('');
+                }
+        
+                newRow.append(td);
+            }
+        
+            // append แถวก่อน เพื่อให้ dropdownParent ทำงานได้ถูกต้อง
+            tableEmpBody.append(newRow);
+        
+            // รอให้ setSelect2 ของทุก select ทำงานแบบ parallel
+            await Promise.all(selectPromises);
+        
+            // -------------------------- reset select value
+            newRow.find('select').each(function () {
+                if ($(this).hasClass('dietary_require')) {
+                    $(this).val(null).trigger('change');
+                } else {
+                    $(this).val('Y');
+                }
             });
-            newRow.find('select').each(function() {
-              const name = $(this).attr('name');        
-              // กรณี dietary_require (custom select2)
-              if ($(this).hasClass('dietary_require')) {
-                $(this).val(null).trigger('change'); // reset select2
-              } 
-              // select อื่น ๆ
-              else {
-                $(this).val('Y'); // reset เป็นค่า default ว่าง
-              }
-            });
-
-            // update ลำดับ
-            const rowCount = tableEmpBody.find('tr').length + 1;
+        
+            // -------------------------- update ลำดับ
+            const rowCount = tableEmpBody.find('tr').length;
             newRow.find('td:first').text(rowCount);
-            // --- เช็คคอลัมน์ซ่อน/แสดง ตาม header ---
+        
+            // -------------------------- แสดง/ซ่อน column ตาม header
             const thead = tableemp.find('thead tr th');
             thead.each(function (i) {
-              const isVisible = $(this).is(':visible'); // ตรวจสอบว่าหัวตารางซ่อนหรือไม่
-              if (!isVisible) {
-                newRow.find('td').eq(i).hide();
-              } else {
-                newRow.find('td').eq(i).show();
-              }
+                const isVisible = $(this).is(':visible');
+                if (!isVisible) newRow.find('td').eq(i).hide();
+                else newRow.find('td').eq(i).show();
             });
-
+        
             newRow.find('td:first').addClass(firstRow.find('td:first').attr('class'))
-            .attr('tabindex', 0)
-            .css('left', '0px');
-          
-            tableEmpBody.append(newRow);
+                .attr('tabindex', 0)
+                .css('left', '0px');
+        });
 
-
-            /*
-            $firstRow.find('.emp-select').select2('destroy');
-            const $newRow = $firstRow.clone();
-          
-            // เคลียร์ค่าภายใน input และ select
-            $newRow.find('input, select').each(function () {
-              $(this).val('');
-            });
-            
-            initSelect2(".emp-select",$firstRow);
-            initSelect2(".emp-select",$newRow);
-              // นับจำนวนแถวเพื่อกำหนดหมายเลข No.
-              const rowCount = $tableBody.find('tr').length + 1;
-              $newRow.find('td:first').text(rowCount);
-          
-            // เพิ่มแถวใหม่ลงใน tbody
-            $tableBody.append($newRow);*/
-          
-          });
+        
           $(".emp-select").each(function() {
             var pos = $(this).find("option:selected").data("pos") || "";
             $(this).closest("tr").find(".pos-col").text(pos);
@@ -841,7 +870,8 @@ $(document).on('click', '#addPstBtn', function () {
   const $tableBody = $('#tablepst tbody');
   const $firstRow = $tableBody.find('tr:first');
 
-  $firstRow.find('.pst-select').select2('destroy');
+  //$firstRow.find('.pst-select').select2('destroy');
+  destroySelect2($firstRow.find('.pst-select'));
   const $newRow = $firstRow.clone();
 
   // เคลียร์ค่าภายใน input และ select
@@ -865,7 +895,8 @@ $(document).on('click', '#addIstBtn', function () {
   const $tableBody = $('#tableist tbody');
   const $firstRow = $tableBody.find('tr:first');
 
-  $firstRow.find('.ist-select').select2('destroy');
+  //$firstRow.find('.ist-select').select2('destroy');
+  destroySelect2($firstRow.find('.ist-select'));
   const $newRow = $firstRow.clone();
 
   // เคลียร์ค่าภายใน input และ select
@@ -886,18 +917,12 @@ $(document).on('click', '#addIstBtn', function () {
 
 
 
-
-
-
-function initSelect2($cls, $context) {
-  $context.find($cls).select2({
-    placeholder: "",
-    allowClear: true,
-    matcher: customMatcher,
-    width: '100%'
+async function initSelect2($cls, $context) {
+  await setSelect2({
+    element: $context.find($cls),
+    selectionCssClass: "w-96", width: '384px'
   });
 }
-
 
 
 
@@ -2007,6 +2032,9 @@ function sendmailpic()
   const vmscyear2 = $("#cyear2").val();
   const vmsnrunno = $("#nrunno").val();
   let attn = $('[data-field="attn"]').text().trim();
+  let visitdate = $('[data-field="visitdate"]').text().trim();
+  let purpose = $('[data-field="purpose"]').text().trim();
+  
   if(attn=="")
   {
     Swal.fire({
@@ -2019,6 +2047,32 @@ function sendmailpic()
       background: "#FBF6D9",
     });
     return false;
+  }
+  if(visitdate=="")
+  {
+      Swal.fire({
+        icon: "warning",
+        title: "Please enter Visit Date",
+        toast: true,
+        position: "top-end",
+        timer: 3000,
+        showConfirmButton: false,
+        background: "#FBF6D9",
+      });
+      return false;
+  }
+  if(purpose=="")
+  {
+      Swal.fire({
+        icon: "warning",
+        title: "Please enter Purpose",
+        toast: true,
+        position: "top-end",
+        timer: 3000,
+        showConfirmButton: false,
+        background: "#FBF6D9",
+      });
+      return false;
   }
 
   $.ajax({
@@ -2209,7 +2263,14 @@ function loaddata(vmscyear2,vmsnrunno)
     success: function (response) {
        $('[data-field="attn"]').text(response.head.ATT);
        $('[data-field="cc"]').text(response.head.CC);
-       $('[data-field="purpose"]').text(response.head.PURPOSEVISIT+" "+response.head.PURPOSEDETAIL);
+       if((response.head.PURPOSEVISIT == null) && (response.head.PURPOSEDETAIL == null))
+       {
+          $('[data-field="purpose"]').text('');
+       }else{
+          $('[data-field="purpose"]').text(response.head.PURPOSEVISIT+" "+response.head.PURPOSEDETAIL);
+       }
+      
+
        $('[data-field="issueDate"]').text(response.head.ISSUEDATE);
        $('[data-field="refno"]').text(response.head.REFNO);
        let issueby = response.head.ISSUEBY;

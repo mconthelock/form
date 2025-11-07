@@ -303,7 +303,7 @@
 
                 @if ($mode == '02')
 
-                    @if ($flowstep[0]->CSTEPNO == '87' && $flowstep[0]->CSTEPNEXTNO == '00')
+                    @if (in_array($flowstep[0]->CSTEPNO, ['87', '19']) && $flowstep[0]->CSTEPNEXTNO == '00')
                         <div class="relative flex justify-center mt-4">
                             <div class="w-full max-w-xs">
                                 <label class="floating-label block">
@@ -349,34 +349,5 @@
 @endsection
 
 @section('scripts')
-
     <script src="{{ $_ENV['APP_JS'] }}/clearanceView.js?ver={{ $GLOBALS['version'] }}"></script>
-    <script>
-        $(document).ready(function () {
-            const estimate = $('#total_amount').text().replace(/,/g, '') * 1; // Convert to number
-            const $actualCost = $('#actual-cost');
-            const $remain = $('#remain');
-            const $remainAlert = $('#remain-alert');
-            const $remark = $('#remark');
-
-            $actualCost.on('input', function () {
-                const val = parseFloat($(this).val()) || 0;
-                const remain = estimate - val;
-                $remain.val(remain.toLocaleString() + ' บาท');
-
-                if (remain >= 0) {
-                    $remain.css('color', '#16a34a'); // เขียว
-                    $remainAlert.html('<span class="text-green-700">ค่าใช้จ่ายจริงไม่เกินยอดประมาณการ</span>');
-                    $remark.prop('required', false);
-                } else {
-                    $remain.css('color', '#dc2626'); // แดง
-                    $remainAlert.html('<span class="text-red-600">ค่าใช้จ่ายจริงเกินยอดประมาณการ กรุณาระบุเหตุผลใน Remark</span>');
-                    $remark.prop('required', true);
-                }
-            });
-        });
-    </script>
-
-
-
 @endsection

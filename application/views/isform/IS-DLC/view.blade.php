@@ -37,20 +37,27 @@
                 </thead>
                 <tbody class="text-sm text-gray-700">
                     @foreach ($logdata as $i => $log)
+                        <!-- <pre>
+                                    {{ print_r($log) }}
+                                </pre> -->
                         @php
-                            $logDateTime = strtotime("{$log->LOG_DATE} {$log->LOG_TIME}");
                             $reqDate     = $log->TID_DATA[0]->TID_REQ_DATE ?? null;
-                            $timeStart   = $log->TID_DATA[0]->TID_TIMESTART ?? null;
-                            $timeEnd     = $log->TID_DATA[0]->TID_TIMEEND ?? null;
+                            $logDateTime = strtotime("{$log->LOG_DATE} {$log->LOG_TIME}");
 
-                            $startDateTime = $reqDate && $timeStart ? strtotime("{$reqDate} {$timeStart}") : null;
-                            $endDateTime   = $reqDate && $timeEnd ? strtotime("{$reqDate} {$timeEnd}") : null;
+                            $timeStarts = array_filter(array_column($log->TID_DATA ?? [], 'TID_TIMESTART'));
+                            $timeEnds   = array_filter(array_column($log->TID_DATA ?? [], 'TID_TIMEEND'));
 
-                            $isOutOfRange = $startDateTime && $endDateTime
+                            $timeStart = $timeStarts ? min($timeStarts) : null;
+                            $timeEnd   = $timeEnds ? max($timeEnds) : null;
+
+                            $startDateTime = ($reqDate && $timeStart) ? strtotime("{$reqDate} {$timeStart}") : null;
+                            $endDateTime   = ($reqDate && $timeEnd) ? strtotime("{$reqDate} {$timeEnd}") : null;
+
+                            $isOutOfRange = ($startDateTime && $endDateTime)
                                 ? ($logDateTime < $startDateTime || $logDateTime > $endDateTime)
                                 : false;
                         @endphp
-                        <tr @if((empty($log->TID_DATA) || $isOutOfRange) && $log->LOG_USER != "QSECOFR") style="background-color: #fca5a5;" @endif>
+                        <tr @if((empty($log->TID_DATA) || $isOutOfRange) && $log->LOG_USER != "QSECOFR") style="background-color: #fca5a5 !important;" @endif>
                             <td>{{ $i + 1 }}</td>
                             <td>{{ $log->LOG_DATE }}</td>
                             <td>{{ $log->LOG_TIME }}</td>
@@ -61,7 +68,7 @@
                             <td>{{ $log->LOG_MSG }}</td>
                             <td>{{ $log->TID_FORMNO }}</td>
                             <td>{{ $log->TID_DATA[0]->TID_REQ_DATE ?? '-' }}</td>
-                            <td>{{ $log->TID_DATA[0]->TID_TIMESTART ?? '' }} - {{ $log->TID_DATA[0]->TID_TIMEEND ?? '' }}</td>
+                            <td>{{ $timeStart ?? '' }} - {{ $timeEnd ?? '' }}</td>
                         </tr>
                     @endforeach
                 </tbody>

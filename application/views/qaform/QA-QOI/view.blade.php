@@ -62,7 +62,7 @@
     </div>
     <!-- Container ที่ควบคุมความกว้าง -->
     <div class="form-data" data-nfrmno="{{ $NFRMNO }}" data-vorgno="{{ $VORGNO }}" data-cyear="{{ $CYEAR }}"
-        data-cyear2="{{ $CYEAR2 }}" data-nrunno="{{ $NRUNNO }}" data-empno="{{ $empno }}"></div>
+        data-cyear2="{{ $CYEAR2 }}" data-nrunno="{{ $NRUNNO }}" data-empno="{{ $empno }}" ></div>
     <div class="max-w-6xl w-full mx-auto">
 
         <!-- Header -->
@@ -73,6 +73,7 @@
         <form id="qoi-form" method="post" enctype="multipart/form-data"> 
         <input type="hidden" name="cextData" id="cextData" value="{{ $cextData }}">
         <input type="hidden" name="stepreq" id="stepreq" value="{{ (($form[0]->CST == '0') && (($empno == $form[0]->VREQNO) || ($empno == $form[0]->VINPUTER))) ? '1' : '0'}}" >
+        <input type="hidden" name="havesem" id="havesem" value="{{ $havesem ? 'true' : 'false' }}">
         <!-- Section ติด Header (หัวข้อละแถว) -->
         <div class="bg-white rounded-b-md shadow-md p-6 mb-8  max-w-6xl w-full mx-auto text-sm text-gray-800 space-y-3">
             <div class="flex items-center">
@@ -134,6 +135,7 @@
                         </thead>
                         <tbody>
                             @foreach ($resultdwg as $d)
+        
                                 <tr>
                                     <td class="border border-sky-300 px-4 py-2">
                                            @if (($mode == $MODE_EDIT && (($cextData >= 2) && ($cextData <= 3))) || (($form[0]->CST == "0") && (($empno == $form[0]->VREQNO) || ($empno == $form[0]->VINPUTER))))
@@ -148,10 +150,10 @@
                                             @endif
                                     </td>
                                     <td class="border border-sky-300 px-4 py-2">
-                                           @if (($mode == $MODE_EDIT && (($cextData >= 2) && ($cextData <= 3))) || (($form[0]->CST == "0") && (($empno == $form[0]->VREQNO) || ($empno == $form[0]->VINPUTER))))
+                                           @if (($mode == $MODE_EDIT) && (($cextData >= 2) && ($cextData <= 3))) 
         
                                                     <label class="flex items-center gap-2 cursor-pointer">
-                                                        <input type="radio" name="result[]" value="0" class="custom-radio radio-primary-custom radio-result req"   @if ($d->RESULT == '0') checked @endif   />
+                                                        <input type="radio" name="result[{{ $loop->index }}]" value="0"  class="custom-radio radio-primary-custom radio-result req"   @if ($d->RESULT == '0') checked @endif   />
                                                     </label>
                                             @else
                                                 @if ($d->RESULT == '0')
@@ -160,10 +162,10 @@
                                             @endif
                                     </td>
                                     <td class="border border-sky-300 px-4 py-2">
-                                           @if (($mode == $MODE_EDIT && (($cextData >= 2) && ($cextData <= 3))) || (($form[0]->CST == "0") && (($empno == $form[0]->VREQNO) || ($empno == $form[0]->VINPUTER))))
+                                           @if (($mode == $MODE_EDIT) && (($cextData >= 2) && ($cextData <= 3))) 
         
                                                  <label class="flex items-center gap-2 cursor-pointer">
-                                                    <input type="radio" name="result[]" value="1" class="custom-radio radio-error-custom radio-result req"   @if ($d->RESULT == '1') checked @endif  />
+                                                    <input type="radio" name="result[{{ $loop->index }}]" value="1"   class="custom-radio radio-error-custom radio-result req"   @if ($d->RESULT == '1') checked @endif  />
                                                 </label>
                                             @else
                                                 @if ($d->RESULT == '1')
@@ -173,7 +175,7 @@
                                             @endif
                                     </td>
                                     <td class="border border-sky-300 px-4 py-2">
-                                            @if (($mode == $MODE_EDIT && (($cextData >= 2) && ($cextData <= 3))) || (($form[0]->CST == "0") && (($empno == $form[0]->VREQNO) || ($empno == $form[0]->VINPUTER))))
+                                            @if (($mode == $MODE_EDIT) && (($cextData >= 2) && ($cextData <= 3))) 
           
                                                 <input type="text" name="dwgrem[]"
                                                     class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-400"
@@ -385,7 +387,7 @@
                 </div>
               </div> -->
             @endif
-            @if (($mode == $MODE_EDIT) && ($cextData ==4) && ($NG))  
+            @if (($mode == $MODE_EDIT) && ($cextData ==4) && ($NG) && $havesem)  
               <div class="flex items-center">
                 <div class="w-55 text-sm font-normal text-gray-600">SEM. in charge</div>
                 <div class="flex-1">
@@ -405,6 +407,7 @@
                 </div>
               </div>
             @endif
+
             <div class="flex items-start">
                 <div class="w-55 text-sm font-normal text-gray-600">Check sheet</div>
                 <div class="flex-1">
@@ -451,6 +454,7 @@
                 @endif
                 </div>
             </div>
+            @if($form[0]->DREQDATE < '2025-11-01')
             <div class="flex items-start">
                 <!-- คอลัมน์หลักที่ 1: Label -->
                 <div class="w-55 text-sm font-normal text-gray-600 pt-2">
@@ -535,7 +539,8 @@
                 @endif
 
                 </div>
-                @if ($mode == $MODE_EDIT && (($cextData >= 1) && ($cextData <= 3)))    
+                @endif 
+                @if ($mode == $MODE_EDIT && (($cextData >= 1) && ($cextData <= 5)))    
                 <div class="flex items-star">
                 <div class="w-55  text-sm font-normal text-gray-600">Remark</div>
                 <div class="flex-1">
@@ -545,7 +550,9 @@
                 @endif
 </div>
  </div>
- @if($NG) 
+
+
+ @if($NG && $form[0]->DREQDATE >= '2025-11-01')
  <!-- Section 4 -->
  <div class="bg-white rounded-md shadow-md p-6 mb-8 text-sm text-gray-800">
   <h2 class="text-lg font-semibold text-sky-700 mb-4 border-b-2 border-sky-500 pb-2">
@@ -568,6 +575,7 @@
         </tr>
       </thead>
       <tbody id="countermeasure-body">
+
       @if (($mode == $MODE_EDIT) && ($cextData == 8))  
         @if(count($measure) == 0)
         <tr class="measure">
@@ -627,8 +635,8 @@
     </button>
   </div>
   @endif
-
 </div>
+
 <div class="flex items-star">
     <div class="w-55 text-sm font-normal text-gray-600 mt-2">Document/Picture</div>
     <div class="flex-1">
@@ -675,6 +683,7 @@
 
     </div>
 </div>
+
 <!-- Corrective and Preventive Table -->
 <div class="mt-6">
   <h3 class="text-base font-semibold text-gray-700 mb-2">Corrective and Preventive Action</h3>
@@ -741,6 +750,7 @@
       </tbody>
     </table>
   </div>
+
   @if (($mode == $MODE_EDIT) && ($cextData == 8)) 
   <!-- Add Row Button -->
   <div class="mt-4">
@@ -750,6 +760,7 @@
   </div>
   @endif
 </div>
+
 <div class="flex items-star">
     <div class="w-55 text-sm font-normal text-gray-600 mt-2">Document/Picture</div>
     <div class="flex-1">
@@ -795,6 +806,7 @@
       @endif
     </div>
 </div>
+
 <div class="mt-6">
   <h3 class="text-base font-semibold text-gray-700 mb-2">QE</h3>
   <div class="flex flex-col gap-3">
@@ -842,6 +854,7 @@
                   </div>
       @endif
   </div>
+  
 <!-- Document/Picture Section -->
 <div class="flex items-start mt-6">
   <!-- Label -->
@@ -892,7 +905,7 @@
 
   </div>
 </div>
-@if (($mode == $MODE_EDIT) && ($cextData >= 7)) 
+@if (($mode == $MODE_EDIT)&& ($cextData >= 7)) 
 <div class="flex items-star">
                 <div class="w-55  text-sm font-normal text-gray-600">Remark</div>
                 <div class="flex-1 mt-2">
@@ -910,7 +923,19 @@
 @endif
 @if ($mode == $MODE_EDIT)
 <div class="flex justify-center  gap-4 pt-4">
-  @if ($cextData <= "02")
+
+
+  @if ($cextData < "02")
+        <!-- ปุ่ม Approve -->
+        <button type="button" id="btn-approve" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded shadow cursor-pointer btn-submit" data-action="approve">
+                Approve
+        </button>
+        <!-- ปุ่ม Reject -->
+        <button type="button" id="btn-reject" class="bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded shadow  cursor-pointer btn-submit" data-action="reject">
+          Reject
+        </button>
+
+  @elseif ($cextData == "02")
         <!-- ปุ่ม Approve -->
         <button type="button" id="btn-approve" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded shadow cursor-pointer btn-submit" data-action="approve">
           Approve
@@ -920,8 +945,12 @@
         <button type="button" id="btn-reject" class="bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded shadow  cursor-pointer btn-submit" data-action="reject">
           Reject
         </button>
+
+        <button type="button" id="btn-cancel" class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded shadow  cursor-pointer btn-submit" data-action="cancel">
+          Cancel
+        </button>
   @else
-       @if(($cextData >= "04") && ($cextData <= "05"))
+       @if(($cextData >= "03") && ($cextData <= "05"))
            @if($NG)
             <!-- ปุ่ม Reject -->
             <button type="button" id="btn-reject" class="bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded shadow  cursor-pointer btn-submit" data-action="reject">
@@ -948,9 +977,21 @@
 
 </div>
 <br/>
+@else
+  @if(($form[0]->CST == "0") && (($empno == $form[0]->VREQNO) || ($empno == $form[0]->VINPUTER)))
+  <div class="flex justify-center  gap-4 pt-4">
+        <button type="button" id="btn-approve" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded shadow cursor-pointer btn-submit" data-action="save">
+           Save
+        </button>
+        <button type="button" id="btn-approve" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded shadow cursor-pointer btn-submit" data-action="request">
+           Request
+        </button>
+  </div>
+  @endif
 @endif
+
   </form>
-        <div class="flow">
+        <div class="flow {{ ($form[0]->CST == '0' && ($empno == $form[0]->VREQNO || $empno == $form[0]->VINPUTER)) ? 'hidden' : '' }}">
 
         </div>
     </div>

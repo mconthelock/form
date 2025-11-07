@@ -1,4 +1,4 @@
-import { showLoader } from "../../public/v1.0.3/preloader";
+import { showLoader } from "@public/preloader";
 import { host } from "../../utils";
 import Swal from "sweetalert2";
 
