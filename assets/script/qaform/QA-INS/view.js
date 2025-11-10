@@ -51,7 +51,7 @@ var formInfo, form, cextdata, tableAuditor, tableAuditee;
 
 $(async function () {
     try {
-        formInfo = await getAllAttr(document.querySelector(".form-info"));
+        formInfo = await getAllAttr(".form-info");
         form = {
             NFRMNO: formInfo.nfrmno,
             VORGNO: formInfo.vorgno,

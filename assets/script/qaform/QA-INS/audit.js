@@ -32,7 +32,7 @@ $(async function () {
         $("body").addClass("bg-[#ecf0f5]");
         setSkeleton();
         // return;
-        formInfo = await getAllAttr(document.querySelector(".form-info"));
+        formInfo = await getAllAttr(".form-info");
         form = {
             NFRMNO: formInfo.nfrmno,
             VORGNO: formInfo.vorgno,

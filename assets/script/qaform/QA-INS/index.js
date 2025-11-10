@@ -62,7 +62,7 @@ $(async function () {
         $(".attach").html(dragDropInit());
         $(".drop-reset").replaceWith(dragDropReset({ class: "rounded-full" }));
         await setSkeleton();
-        formInfo = await getAllAttr(document.querySelector(".form-info"));
+        formInfo = await getAllAttr(".form-info");
         form = {
             NFRMNO: formInfo.nfrmno,
             VORGNO: formInfo.vorgno,
