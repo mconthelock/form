@@ -509,7 +509,7 @@ Class autojob extends CI_Controller {
 		$cy =  date('M Y', strtotime('first day of next month'));
 		$d['VIEW']    = 'layouts/mail/message';
 		$d['SUBJECT'] = "Create Over usage automation for ".$cy;
-        $d['TO']  = $this->PIC;;
+        $d['TO']  = $this->PIC;
         $d['BODY'] = [
             '<div style="font-family: Arial, sans-serif; font-size: 14px; color: #333;">'
 			. "Create Over usage automation for {$cy} created successfully."

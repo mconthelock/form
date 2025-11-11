@@ -69,7 +69,7 @@ class Main extends MY_Controller
             $data['flowstep']    = $flow = $this->ent->getFlowStep($form, $empno);
             $data['needPayDate'] = (
                 !empty($flow) &&
-                $flow[0]->CSTEPNO == '87' &&
+                in_array($flow[0]->CSTEPNO, ['87', '19']) &&
                 $flow[0]->CSTEPNEXTNO == '00'
             );
             if (!empty($formCler->FORM_ENT)) {

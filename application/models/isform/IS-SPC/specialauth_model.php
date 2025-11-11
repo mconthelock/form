@@ -67,7 +67,7 @@ class Specialauth_model extends CI_Model
     {
         $this->ad->select('*');
         $this->ad->from('ITGC_SPECIALUSER');
-        $this->ad->where('SERVER_NAME', $servername);
+        $this->ad->like('SERVER_NAME', $servername, 'both');
         $this->ad->where('ACTIVE_STATUS', '1');
 
         return $this->ad->get()->result();
