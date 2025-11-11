@@ -1,14 +1,14 @@
-import { showLoader } from "../../public/v1.0.3/preloader";
+import { showLoader } from "@public/preloader";
 import {
   requiredForm,
   ajaxOptions,
   getData
-} from "../../public/v1.0.3/jFuntion";
+} from "@public/jFuntion";
 import { host } from "../../utils";
 import Swal from "sweetalert2";
-import { setDatePicker , setDatefpk } from "../../public/v1.0.3/_flatpickr";
-import { createTable } from "../../public/v1.0.3/_dataTable";
-import {  exportExcel, defaultExcel } from "../../public/v1.0.3/_excel";
+import { setDatePicker , setDatefpk } from "@public/_flatpickr";
+import { createTable } from "@public/_dataTable";
+import {  exportExcel, defaultExcel } from "@public/_excel";
 setDatePicker({ element: '.datesel', dateFormat: "Y-m-d" });
 setDatePicker({
   element: '.monthsel',

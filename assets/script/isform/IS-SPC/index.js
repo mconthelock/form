@@ -8,6 +8,9 @@ $(document).ready(async function () {
   flatpickr("#request-date", { dateFormat: "Y-m-d", defaultDate: "today" });
   // await setSelect2({...s2opt, ...s2disableSearch,}, '#user_del');
   $("#user_del").select2();
+  $("#platform").select2({
+    tags: true,
+  });
   // setSelect2(s2opt, '#user_del');
   const requiredFields = [
     { id: "#request-date" },
@@ -120,17 +123,20 @@ $(document).ready(async function () {
   async function fetchAdmins(platform, selector) {
     const response = await $.get(`${host}isform/IS-SPC/main/getController`);
     const admins = JSON.parse(response);
-    const select = $(selector)
-      .empty()
-      .append('<option value="">Choose an admin</option>');
+    const select = $(selector).empty().append('<option value="">Choose an admin</option>');
+    const ssaEngineer = await $.get(`${host}isform/IS-SPC/main/get_SSA_engineer`);
 
-    admins
-      .filter((a) => a.SERVER_NAME === platform)
-      .forEach((a) =>
-        select.append(
-          `<option value="${a.EMPNO}">${a.USER_LOGIN} <span class="text-sm">(${a.USER_OWNER})</ห></option>`
-        )
-      );
+    const filtered = admins.filter((a) => a.SERVER_NAME === platform);
+    if (filtered.length === 0) {
+      const ssa = JSON.parse(ssaEngineer);
+      console.log(ssa);
+      ssa.forEach((a) => select.append(`<option value="${a.SEMPNO}">${a.SNAME}</option>`));
+      // select.append('<option value="">ไม่พบผู้ดูแลระบบ1</option>');
+      // select.append('<option value="">ไม่พบผู้ดูแลระบบ2</option>');
+      // select.append('<option value="">ไม่พบผู้ดูแลระบบ3</option>');
+    } else {
+      filtered.forEach((a) => select.append(`<option value="${a.EMPNO}">${a.USER_LOGIN} <span class="text-sm">(${a.USER_OWNER})</span></option>`));
+    }
   }
 
   async function fetchUsers(platform) {
@@ -144,13 +150,9 @@ $(document).ready(async function () {
       },
     });
 
-    const userSelect = $("#user_del")
-      .empty()
-      .append('<option value="">Choose an User</option>');
+    const userSelect = $("#user_del").empty().append('<option value="">Choose an User</option>');
     data.forEach((u) => {
-      userSelect.append(
-        `<option value="${u.USER_LOGIN}">${u.USER_LOGIN}</option>`
-      );
+      userSelect.append(`<option value="${u.USER_LOGIN}">${u.USER_LOGIN}</option>`);
     });
   }
 

@@ -6,6 +6,11 @@
             color: red;
             font-weight: bold;
         }
+
+        .select2-container--default .select2-selection--single {
+            border-radius: 10px !important;
+            background-color: white !important;
+        }
     </style>
 @endsection
 
@@ -31,7 +36,7 @@
 
             <div class="mb-6">
                 <label class="block text-sm font-semibold mb-2 text-blue-900">Requester <label style="color:red">*</label></label>
-                <input type="text" class="input rounded-lg input-bordered w-full bg-white" id="requester"placeholder="Employee ID (e.g. 24012)" />
+                <input type="text" class="input rounded-lg input-bordered w-full bg-white" id="requester" placeholder="Employee ID (e.g. 24012)" />
                 <input type="hidden" class="input rounded-lg input-bordered w-full bg-white" id="inputer" value="{{ $_GET['empno'] }}" />
             </div>
         </div>
@@ -56,15 +61,16 @@
                     <legend class="fieldset-legend text-sm font-semibold text-blue-900">Detail</legend>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <label class="floating-label mb-3">
-                            <span class="label text-xl text-blue-500">Platform <p style="color:red">*</p></span>
-                            <select name="" id="platform" class="select rounded-lg bg-white w-full">
-                                <option value="" selected disabled>Choose a platform</option>
-                                @foreach ($serverName as $server)
-                                    <option value="{{ $server->SERVER_NAME }}">{{ $server->SERVER_NAME }}</option>
-                                @endforeach
-                            </select>
-                        </label>
+                        <!-- <label class="floating-label mb-3">
+                                <span class="label text-xl text-blue-500">Platform <p style="color:red">*</p></span>
+
+                            </label> -->
+                        <select name="" id="platform" class="select rounded-lg bg-white w-full">
+                            <option value="" selected disabled>Choose a platform</option>
+                            @foreach ($serverName as $server)
+                                <option value="{{ $server->SERVER_NAME }}">{{ $server->SERVER_NAME }}</option>
+                            @endforeach
+                        </select>
 
                         <label class="floating-label mb-3">
                             <span class="label text-2xl text-blue-500">Class</span>
@@ -163,7 +169,7 @@
 
                         {{-- <label class="floating-label mb-3">
                             <span class="label text-2xl text-blue-500">User For Delete</span>
-                            
+
                         </label> --}}
                         <label for="">
                             <span class="label text-blue-500">User For Delete <span class="text-red-500">*</span></span>

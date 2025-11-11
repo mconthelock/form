@@ -367,6 +367,13 @@ export function autosizeTextarea(el) {
     return height;
 }
 
+/**
+ * Log FormData key-value pairs to the console for debugging.
+ * @param {} formData 
+ * @returns {void}
+ * @example
+ * logFormData(new FormData($('#form')[0]));
+ */
 export function logFormData(formData) {
     if (["local", "development"].includes(process.env.STATE || "")) {
         for (const [key, value] of formData.entries()) {
@@ -390,7 +397,15 @@ export function getLastWednesday() {
     return lastWednesday;
 }
 
-export async function getAllAttr(element) {
+/**
+ * Get all attributes of a DOM element.
+ * @param {string} selector - class or id selector e.g. '.form-info' , '#form-info'
+ * @returns {Promise<Object>} - A promise that resolves to an object containing all attributes of the element.
+ * @example
+ * const attrs = await getAllAttr('.form-info');
+ */
+export async function getAllAttr(selector) {
+    const element = document.querySelector(selector);
     const attrs = element.attributes;
 
     // แปลงเป็น object หรือ array

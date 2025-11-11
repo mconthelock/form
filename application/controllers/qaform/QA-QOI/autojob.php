@@ -47,6 +47,7 @@ Class autojob extends CI_Controller {
 	public function createQoi()
 	{
 		$y = date("Ym");
+	
 		$inspecdate = "01/".date("m/Y");
 		$expchgdate = date('t/m/Y',strtotime('today'));
 		//$inspecdate = "01/April/2025";
@@ -54,13 +55,14 @@ Class autojob extends CI_Controller {
 		$tilte = "Quality Observation Inspection on ".date("M Y");
 		//$tilte = "Quality Observation Inspection on April 2025";
 		//$y = '202504';
-		$q = "select * From QOI_DWGMASTER M, QOI_DWGSCHEDULE S where M.MID = S.MID and S.MON = '".$y."'";
+		$q = "select * From QOI_DWGMASTER M, QOI_DWGSCHEDULE S where M.MID = S.MID and S.MON = '".$y."' order by ITMNO";
 		$rs = $this->qoi->getdatasql($q);
+	
 		foreach($rs as $r)
 		{
 			
 			$flow = $this->create($this->NFRMNO, $this->VORGNO, $this->CYEAR, '02051', '02051', $r->REMARK,'');
-			
+		
 			if(isset($flow["message"]["runno"]))
 			{
 				$this->doaction($this->NFRMNO, $this->VORGNO, $this->CYEAR, $flow["message"]["cyear2"], $flow["message"]["runno"],"approve","09058", "approve auto");
@@ -73,20 +75,43 @@ Class autojob extends CI_Controller {
 					'TITLE'  => $tilte,
 					'ITEMNO' => $r->ITMNO,
 					'PRTNAME' => $r->PARTNAME,
+					'PURITEM' => $r->PURITEM,
 					'SVENDNAME' => $r->SUBCONNAME,
 					'INSPECDATE' => $inspecdate,
 					'EXPCHGDATE' => $expchgdate
 				);
 				$this->qoi->insert("QOIFORM", $data);
-				$datadwg = array(
-					'NFRMNO' => $this->NFRMNO,
-					'VORGNO' => $this->VORGNO,
-					'CYEAR'  => $this->CYEAR,
-					'CYEAR2' => $flow["message"]["cyear2"],
-					'NRUNNO' => $flow["message"]["runno"],
-					'DWGNO'  => (is_null($r->DWGNO)? $r->SPEC : $r->DWGNO)
-				);
-				$this->qoi->insert("RESULTQOIDWG", $datadwg);
+				//echo "DWGNO =".$r->DWGNO;
+				if(is_null($r->DWGNO))
+				{
+					$dwgno  = $r->SPEC;
+					$datadwg = array(
+						'NFRMNO' => $this->NFRMNO,
+						'VORGNO' => $this->VORGNO,
+						'CYEAR'  => $this->CYEAR,
+						'CYEAR2' => $flow["message"]["cyear2"],
+						'NRUNNO' => $flow["message"]["runno"],
+						'DWGNO'  => $dwgno 
+					);
+					//var_dump();
+					$this->qoi->insert("RESULTQOIDWG", $datadwg);
+				}else{
+					$d = explode(",", $r->DWGNO); 
+					foreach($d as  $dwgno)
+					{
+						$datadwg = array(
+							'NFRMNO' => $this->NFRMNO,
+							'VORGNO' => $this->VORGNO,
+							'CYEAR'  => $this->CYEAR,
+							'CYEAR2' => $flow["message"]["cyear2"],
+							'NRUNNO' => $flow["message"]["runno"],
+							'DWGNO'  => $dwgno
+						);
+						$this->qoi->insert("RESULTQOIDWG", $datadwg);
+					}
+
+				}
+		        
 				//create folder 
 				$dstfolder = $this->NFRMNO."_".$this->VORGNO."_".$this->CYEAR."_".$flow["message"]["cyear2"]."_". $flow["message"]["runno"];
 				//$dstFile = '\\\\webflow\\iscompaq24\\qa\\qoi\\file\\'.$dstfolder."\\";
@@ -231,9 +256,9 @@ Class autojob extends CI_Controller {
 		$d['SUBJECT'] = $tilte;
         $d['TO']  = $this->PIC;;
         $d['BODY'] = [
-            '<div style="font-family: Arial, sans-serif; font-size: 14px; color: #333;">
-			 {$tilte} created successfully.
-            </div>'
+            '<div style="font-family: Arial, sans-serif; font-size: 14px; color: #333;">'
+			."{$tilte} created successfully."
+            .'</div>'
         ];
 		$this->mail->sendmail($d);
 	}
@@ -250,6 +275,7 @@ Class autojob extends CI_Controller {
 		//เอาของเดือนถัดไป
 		$y =  date('Ym', strtotime('first day of next month'));
 		$q = "select distinct TYREQ From QOI_DWGMASTER M, QOI_DWGSCHEDULE S where M.MID = S.MID and S.MON = '".$y."' and ISSUE = 'Y' and TYREQ in ('1','3')";
+	
 		$rs = $this->qoi->getdatasql($q);
 		foreach($rs as $r)
 		{
@@ -365,12 +391,15 @@ Class autojob extends CI_Controller {
 			//$itmnoList = "'" . implode("','", $items) . "'";
 			$q = "select M.* From QOI_DWGMASTER M, QOI_DWGSCHEDULE S where M.MID = S.MID and S.MON = '".$y."' and ISSUE = 'Y' and TYREQ = '4' and SUBSTR(ITMNO,1,1) = $items";
 			//echo "<br/>";
+	
 			$rsitm = $this->qoi->getdatasql($q);
+			//var_dump($rsitm);
 			if(count($rsitm) > 0)
 			{
 				$flow = $this->create($nfrmno, $vorgno , $cyear, '02051', '02051', $rsitm[0]->REMARKOVR,'');
 				if(isset($flow["message"]["runno"]))
 				{
+					   
 						$form  = ['NFRMNO' => $nfrmno,
 						'VORGNO' => $vorgno,
 						'CYEAR'  => $cyear,
@@ -392,8 +421,11 @@ Class autojob extends CI_Controller {
 							[ 'CSTEPNO' => '59', 'CSTEPNEXTNO' => '11'],
 							[ 'CSTEPNO' => '56', 'CSTEPNEXTNO' => '00']
 						];
+						
 						$this->deleteFlowStep($dataflow, $nfrmno, $vorgno, $cyear, $flow["message"]["cyear2"], $flow["message"]["runno"], '', '');
+					
 						$dataflow = array();
+					
 						$q = "select distinct VAPVNO From FLOW where NFRMNO = '".$nfrmno."' AND VORGNO = '".$vorgno."' AND CYEAR = '".$cyear."' AND CYEAR2 = '".$flow["message"]["cyear2"]."' AND NRUNNO = '".$flow["message"]["runno"]."'";
 						$rsflow = $this->qoi->getdatasql($q);
 						if(($items == "1")||($items == "2")||($items == "3"))
@@ -402,7 +434,7 @@ Class autojob extends CI_Controller {
 						}else{
 							$typeorder = "2";
 						}
-
+					
 						$dataovu = array(
 							'NFRMNO' => $nfrmno,
 							'VORGNO' => $vorgno,
@@ -417,12 +449,16 @@ Class autojob extends CI_Controller {
 						);
 						$dataitm = array();
 						$id = 1;
+					
 						foreach($rsitm as $itm)
 						{
+						
 							$dwg = explode(" ",$itm->DWGNO);
-		
+		             
 							$q = "select distinct BMHINM , PNZUBA , PARTNAME FROM DATALIBO.PNPNLVIEW WHERE PNZUBA = '".$dwg[0]."' and pnhing = '".$dwg[1]."'";
+							
 							$rsas = $this->qoi->getdataAssql($q);
+						
 							if(count($rsas) > 0)
 							{
 								$dataitm[] = array(
@@ -460,6 +496,7 @@ Class autojob extends CI_Controller {
 						
 							
 						}
+				
 						$this->qoi->insert("OVRUSGFORM",$dataovu);
 						$this->qoi->insert_batch("ITEMAPVLIST",$dataitm);
 						$this->qoi->insert_batch("OVUFLOW",$dataflow);
@@ -472,11 +509,11 @@ Class autojob extends CI_Controller {
 		$cy =  date('M Y', strtotime('first day of next month'));
 		$d['VIEW']    = 'layouts/mail/message';
 		$d['SUBJECT'] = "Create Over usage automation for ".$cy;
-        $d['TO']  = $this->PIC;;
+        $d['TO']  = $this->PIC;
         $d['BODY'] = [
-            '<div style="font-family: Arial, sans-serif; font-size: 14px; color: #333;">
-			 Create Over usage automation for {$cy} created successfully.
-            </div>'
+            '<div style="font-family: Arial, sans-serif; font-size: 14px; color: #333;">'
+			. "Create Over usage automation for {$cy} created successfully."
+            .'</div>'
         ];
 		$this->mail->sendmail($d);
 	}
@@ -578,7 +615,7 @@ Class autojob extends CI_Controller {
 			$tplidx = $pdf->importPage($loop);
 			$pdf->addPage();
 			$pdf->useTemplate($tplidx, 0, 0,297,210);
-			$pdf->SetFont('sarabun','',12);
+			$pdf->SetFont('Times','',12);
 			$pdf->SetTextColor(216, 0, 0);
 			$pdf->TextWithRotation(4,120,$stamptext." - ".date("Y/m/d"),90);
 		}
@@ -616,7 +653,7 @@ Class autojob extends CI_Controller {
 			$numrun .= $this->strtobit(substr($tempnum, 2, 1));
 			$numrun = number_format((float)$numrun / 7, 2, '.', ''); // แบ่งแล้ว format ทศนิยม 2 ตำแหน่ง
 			$scrap = substr($numrun, strpos($numrun, ".") + 1, 1);    // ดึงหลักทศนิยมตัวแรก
-			$preor .= $this->scrap($scrap);		
+			$preor .= $this->scrap($scrap);	
 			return $preor;
 		// end Order
 
@@ -645,7 +682,7 @@ Class autojob extends CI_Controller {
 			case "7": return 5;
 			case "8": return 6;
 			case "9": return 0;
-			default:  return (int)$str;
+			default:  return (int)$numscrap;
 		}
 
 	}

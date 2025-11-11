@@ -1,9 +1,9 @@
-import { getAllAttr , getData , ajaxOptions, logFormData, requiredForm, showMessage } from "../../public/v1.0.3/jFuntion";
-import { showLoader } from "../../public/v1.0.3/preloader";
+import { getAllAttr , getData , ajaxOptions, logFormData, requiredForm, showMessage } from "@public/jFuntion";
+import { showLoader } from "@public/preloader";
 import { host } from "../../utils";
-import { createTable, destroyTable} from "../../public/v1.0.3/_dataTable";
-import { formatAvatar, s2disableSearch, setSelect2 } from "../../public/v1.0.3/_select2";
-import { createForm, redirectWebflow } from "../../inc/_form.js";
+import { createTable, destroyTable} from "@public/_dataTable";
+import { formatAvatar, s2disableSearch, setSelect2 } from "@public/_select2";
+import { createForm, redirectWebflow } from "@public/_form.js";
 import Swal from "sweetalert2";
 
 var table;

@@ -14,7 +14,7 @@ require_once APPPATH.'controllers/_excel.php';
 class form extends MY_Controller{
     use formApi, _File, _excel;
     protected $client;
-    private $nfrmno = "14";
+    private $nfrmno = "21";
     private $vorgno = "090301";
     private $cyear = "25";  
     function __construct(){
@@ -962,6 +962,7 @@ class form extends MY_Controller{
         if ($extra > 0) {
             $this->insertEmptyRowsWithTemplate($sheet, $templateStart ,$templateCount ,  $extra );
         }
+        $currentRow = $templateStart;
         foreach($data['schedule'] as $i => $row)
         {
             $currentRow = $templateStart + $i;
@@ -1010,6 +1011,7 @@ class form extends MY_Controller{
         if ($extra > 0) {
             $this->insertEmptyRowsWithTemplate($sheet, $templateStart ,$templateCount ,  $extra );
         }
+        $currentRow = $templateStart;
         $total = 0;
         foreach($data['sproj'] as $i => $row)
         {
@@ -1037,6 +1039,7 @@ class form extends MY_Controller{
         if ($extra > 0) {
             $this->insertEmptyRowsWithTemplate($sheet, $templateStart ,$templateCount ,  $extra );
         }
+        $currentRow = $templateStart;
         $total = 0;
         foreach($data['pproj'] as $i => $row)
         {

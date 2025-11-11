@@ -68,7 +68,7 @@
                     <label for="gift-memo-file" class="block font-semibold text-blue-700 mb-1">Attach Memo (Gift):</label>
                     @if (!empty($dataForm->FILE_MEMO_GIFT) && $dataForm->TYPE_TIME == 'Gift')
                         <div class="mb-2">
-                            <a href="{{ base_url('uploads/' . $dataForm->FILE_MEMO_GIFT) }}" target="_blank" class="link link-primary btn btn-sm rounded-lg">
+                            <a href="{{ base_url('gpform/GP-ENT/main/preview/' . $dataForm->FILE_MEMO_GIFT) }}" target="_blank" class="link link-primary btn btn-sm rounded-lg">
                                 {{ $dataForm->FILE_MEMO_GIFT }}
                             </a>
                         </div>
@@ -129,7 +129,7 @@
                                 @if (!empty($value->ATTACH_FILE))
                                     <div class="mb-1 current-file">
                                         <span class="label">Current file:</span>
-                                        <a href="{{ base_url('uploads/' . $value->ATTACH_FILE) }}" target="_blank" class="link link-primary btn btn-sm rounded-lg">{{ $value->ATTACH_FILE }}</a>
+                                        <a href="{{ base_url('gpform/GP-ENT/main/preview/' . $value->ATTACH_FILE) }}" target="_blank" class="link link-primary btn btn-sm rounded-lg">{{ $value->ATTACH_FILE }}</a>
                                     </div>
                                     <label class="block text-gray-600 text-xs mb-1">Choose new file to replace (optional):</label>
                                 @else
@@ -276,7 +276,7 @@
                                 @if (!empty($dataForm->MEMO_FILE))
                                     <div class="mb-1 current-memo-file">
                                         <span class="label">Current memo file:</span>
-                                        <a href="{{ base_url('uploads/' . $dataForm->MEMO_FILE) }}" target="_blank" class="link link-primary btn btn-sm rounded-lg">{{ $dataForm->MEMO_FILE }}</a>
+                                        <a href="{{ base_url('gpform/GP-ENT/main/preview/' . $dataForm->MEMO_FILE) }}" target="_blank" class="link link-primary btn btn-sm rounded-lg">{{ $dataForm->MEMO_FILE }}</a>
                                     </div>
                                     <label class="block text-gray-600 text-xs mb-1">Choose new file to replace (optional):</label>
                                 @else
@@ -398,186 +398,4 @@
 @section('scripts')
     <script src="{{ $_ENV['APP_JS'] }}/requestEntertainView.js?ver={{ $GLOBALS['version'] }}"></script>
     <script src="{{ $_ENV['APP_JS'] }}/requestEntertain.js?ver={{ $GLOBALS['version'] }}"></script>
-    <script>
-        // Add SweetAlert2 if not already loaded
-        if (typeof Swal === 'undefined') {
-            var script = document.createElement('script');
-            script.src = 'https://cdn.jsdelivr.net/npm/sweetalert2@11';
-            document.head.appendChild(script);
-        }
-
-        let companyIndex = $('#companies-container .company-group').length;
-
-        function updateRadioNames() {
-            $('#companies-container .company-group').each(function (i, group) {
-                $(group).find('.org-type').each(function () {
-                    $(this).attr('name', 'orgType-' + i);
-                });
-            });
-        }
-
-        $('#add-company-btn').on('click', function () {
-            let $lastGroup = $('#companies-container .company-group').last();
-            let $newGroup = $lastGroup.clone();
-
-            // reset ค่า input
-            $newGroup.find('input[type="text"]').val('');
-            $newGroup.find('input[type="file"]').val('');
-            $newGroup.find('.org-type').prop('checked', false);
-            // ซ่อน appendix section
-            $newGroup.find('.appendix-section').addClass('hidden');
-            // reset ชื่อไฟล์เดิม
-            $newGroup.find('.current-file').hide().html('');
-            // show ปุ่มลบ
-            $newGroup.find('.remove-company-btn').removeClass('hidden');
-
-            $('#companies-container').append($newGroup);
-            updateRadioNames();
-        });
-
-        // toggle ช่องแนบไฟล์ในแต่ละชุด
-        $('#companies-container').on('change', '.org-type', function () {
-            let $group = $(this).closest('.company-group');
-            if ($(this).val() === '2') {
-                $group.find('.appendix-section').removeClass('hidden');
-            } else {
-                $group.find('.appendix-section').addClass('hidden');
-                $group.find('input[type="file"]').val('');
-                $group.find('.current-file').hide().html('');
-            }
-        });
-
-        // ลบชุดบริษัท
-        $('#companies-container').on('click', '.remove-company-btn', function () {
-            $(this).closest('.company-group').remove();
-            updateRadioNames();
-        });
-
-        // เพิ่ม event handler สำหรับ estimate table เพื่อ toggle memo section
-        $(document).on("change input", ".estimate-type, .unit-price, .quantity", function () {
-            const $row = $(this).closest("tr");
-            const etCost = Number($row.find(".estimate-type option:selected").data("cost")) || 0;
-            const quantity = Number($row.find(".quantity").val()) || 0;
-            const $remark = $row.find(".remark");
-
-            // เช็คว่าเกินเงื่อนไขหรือไม่
-            if (quantity > 0 && etCost > 0 && quantity > etCost) {
-                $remark.prop("disabled", false);
-                $remark.addClass("border-red-300");
-            } else {
-                $remark.prop("disabled", true);
-                $remark.removeClass("border-red-300");
-                $remark.val(""); // clear ค่าเมื่อไม่เกินเงื่อนไข
-            }
-
-            // Check if any row exceeds limit and toggle memo section
-            let showMemo = false;
-            $("#table_cost tbody tr").each(function () {
-                const etCostRow = Number($(this).find(".estimate-type option:selected").data("cost")) || 0;
-                const quantityRow = Number($(this).find(".quantity").val()) || 0;
-                if (quantityRow > 0 && etCostRow > 0 && quantityRow > etCostRow) {
-                    showMemo = true;
-                    return false; // break loop
-                }
-            });
-
-            if (showMemo) {
-                $("#attach-memo-section").slideDown();
-            } else {
-                $("#attach-memo-section").slideUp();
-            }
-        });
-
-        // เช็คตอน page load ว่ามีไฟล์ที่เกินเงื่อนไขหรือไม่
-        function checkMemoSectionOnLoad() {
-            let showMemo = false;
-            $("#table_cost tbody tr").each(function () {
-                const etCost = Number($(this).find(".estimate-type option:selected").data("cost")) || 0;
-                const quantity = Number($(this).find(".quantity").val()) || 0;
-                const $remark = $(this).find(".remark");
-
-                if (quantity > 0 && etCost > 0 && quantity > etCost) {
-                    showMemo = true;
-                    $remark.prop("disabled", false);
-                    $remark.addClass("border-red-300");
-                } else {
-                    $remark.prop("disabled", true);
-                    $remark.removeClass("border-red-300");
-                }
-            });
-
-            if (showMemo) {
-                $("#attach-memo-section").show();
-            } else {
-                $("#attach-memo-section").hide();
-            }
-        }
-
-        // เรียกใช้เมื่อโหลดหน้าเสร็จ
-        checkMemoSectionOnLoad();
-
-        // เพิ่ม helper functions
-        window.showInputToast = function (selector, msg) {
-            $(selector).addClass("input-error").focus();
-            Swal.fire({
-                toast: true,
-                position: "top-end",
-                icon: "warning",
-                title: msg,
-                showConfirmButton: false,
-                timer: 2000,
-                background: "#FBF6D9",
-            });
-        };
-
-        window.showRadioToast = function (selector, msg) {
-            $(selector).removeClass("radio-primary radio-success").addClass("radio-error").first().focus();
-            Swal.fire({
-                toast: true,
-                position: "top-end",
-                icon: "warning",
-                title: msg,
-                showConfirmButton: false,
-                timer: 2000,
-            });
-        };
-
-        window.showCheckboxToast = function (selector, msg) {
-            $(selector).addClass("checkbox-error").removeClass("checkbox-primary").first().focus();
-            Swal.fire({
-                toast: true,
-                position: "top-end",
-                icon: "warning",
-                title: msg,
-                showConfirmButton: false,
-                timer: 2000,
-            });
-        };
-
-        // เพิ่ม calculation functions
-        function calculateTotals() {
-            let totalAmount = 0;
-            $("#table_cost tbody tr").each(function () {
-                const qty = parseFloat($(this).find("td:eq(1) input").val()) || 0;
-                const cost = parseFloat($(this).find("td:eq(2) input").val()) || 0;
-                const rowTotal = qty * cost;
-                $(this).find("td:eq(3) input").val(rowTotal);
-                totalAmount += rowTotal;
-            });
-            $("#total-amount").text(totalAmount);
-        }
-
-        // Bind calculation event
-        $("tbody input").on("input", calculateTotals);
-
-        // Guest และ Amec count functions
-        window.guestCount = function () {
-            return $("#guest-list li").length;
-        };
-
-        window.amecCount = function () {
-            return $("#amec-list li").length;
-        };
-    </script>
-
 @endsection

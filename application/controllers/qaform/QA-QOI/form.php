@@ -56,6 +56,12 @@ class form extends MY_Controller{
             $data['attqe'] = $this->qoi->customSelect("ATTQOIFRM",array( 'NFRMNO' => $data['NFRMNO'],'VORGNO' => $data['VORGNO'],'CYEAR'  => $data['CYEAR'],'CYEAR2' => $data['CYEAR2'],'NRUNNO' => $data['NRUNNO'] ,'TYPENO' => '6' ),'ITEMNO , SFILE');
             $data['measure'] =  $this->qoi->customSelect("QOI_QOR",array('CYEAR2' => $data['CYEAR2'],'NRUNNO' => $data['NRUNNO'] ,'TYPENO' => 'M' ),'QACTION , QDUEDATE , QINCHARGE','','QID');
             $data['correct'] =  $this->qoi->customSelect("QOI_QOR",array('CYEAR2' => $data['CYEAR2'],'NRUNNO' => $data['NRUNNO'] ,'TYPENO' => 'C' ),'QACTION , QDUEDATE , QINCHARGE','','QID');
+            $rs = $this->qoi->customSelect("FLOW",array( 'NFRMNO' => $data['NFRMNO'],'VORGNO' => $data['VORGNO'],'CYEAR'  => $data['CYEAR'],'CYEAR2' => $data['CYEAR2'],'NRUNNO' => $data['NRUNNO'] ,'CEXTDATA' => '07'));
+            $data['havesem'] = false; 
+            if(count($rs) > 0)
+            {
+                $data['havesem'] = true; 
+            }
             if($data['mode'] == 2)
             {
                 if($data['cextData'] == 1)
@@ -128,7 +134,7 @@ class form extends MY_Controller{
                 if($cextData == "01")
                 {
                     $jstaff = $_POST["jstaff"];
-                    $enginc = $_POST["enginc"];
+                    //$enginc = $_POST["enginc"];
                     $dataflow =  [
                         [ 'CSTEPNO' => '57', 'apv' => $jstaff], //jstaff
                     ];
@@ -159,12 +165,18 @@ class form extends MY_Controller{
                     $status = $this->updateconcern();
                 }else if($cextData == "04")
                 {
-                    $dataflow =  [
-                        [ 'CSTEPNO' => '88', 'apv' => $_POST["seminc"]], //sem inc
-                        [ 'CSTEPNO' => '89', 'apv' => $_POST["seminc"]]
-                    ];
-                    $fstatus  = $this->updateFlowApv($form , $dataflow);
-                    $status = $fstatus['status'];
+                    $status = true;
+                    if(isset($_POST["seminc"]))
+                    {
+                        $dataflow =  [
+                            [ 'CSTEPNO' => '88', 'apv' => $_POST["seminc"]], //sem inc
+                            [ 'CSTEPNO' => '89', 'apv' => $_POST["seminc"]]
+                        ];
+    
+                        $fstatus  = $this->updateFlowApv($form , $dataflow);
+                        $status = $fstatus['status'];
+                    }
+            
                 }else if($cextData == "07"){
                     $dataflow =  [
                         [ 'CSTEPNO' => '26', 'apv' => $_POST["enginc"]], //eng inc
@@ -183,6 +195,32 @@ class form extends MY_Controller{
                 {
                     $status = true;
                 }
+            }else if($action == "cancel")
+            {
+                $q = "update FLOW set CSTEPST = '6' , CAPVSTNO = '2' where NFRMNO = '".$_POST["nfrmno"]."' AND VORGNO = '".$_POST["vorgno"]."' and CYEAR = '".$_POST["cyear"]."' and CYEAR2 = '".$_POST["cyear2"]."' and NRUNNO = '".$_POST["nrunno"]."' and VAPVNO = '".$apvno."' and CEXTDATA = '".$cextData."'";
+                $this->qoi->execsql($q);
+                $delstep =  [
+                    [ 'CSTEPNO' => '88', 'CSTEPNEXTNO' => '26'],
+                    [ 'CSTEPNO' => '26', 'CSTEPNEXTNO' => '89'],
+                    [ 'CSTEPNO' => '89', 'CSTEPNEXTNO' => '81'],
+                    [ 'CSTEPNO' => '81', 'CSTEPNEXTNO' => '84'],
+                    [ 'CSTEPNO' => '84', 'CSTEPNEXTNO' => '12'],
+                    [ 'CSTEPNO' => '12', 'CSTEPNEXTNO' => '14'],
+                    [ 'CSTEPNO' => '14', 'CSTEPNEXTNO' => '00'],
+                ];
+                $this->deleteFlowStep($delstep, $_POST["nfrmno"], $_POST["vorgno"], $_POST["cyear"],  $_POST["cyear2"], $_POST["nrunno"]);
+                $status = $this->updateconcern();
+            }else if($action == "save")
+            {
+                $status =  $this->updaterequest();
+
+            }else if($action == "request")
+            {
+                $status =  $this->updaterequest();
+                $q = "update form set cst='1' where NFRMNO = '".$_POST["nfrmno"]."' AND VORGNO = '".$_POST["vorgno"]."' and CYEAR = '".$_POST["cyear"]."' and CYEAR2 = '".$_POST["cyear2"]."' and NRUNNO = '".$_POST["nrunno"]."'"; 
+                $this->qoi->execsql($q);
+                $q = "update flow set DAPVDATE = to_date('".date('d/m/Y')."','dd/MM/yyyy') , CAPVTIME = '".date('H:i:s')."' where NFRMNO = '".$_POST["nfrmno"]."' AND VORGNO = '".$_POST["vorgno"]."' and CYEAR = '".$_POST["cyear"]."' and CYEAR2 = '".$_POST["cyear2"]."' and NRUNNO = '".$_POST["nrunno"]."' and CSTEPNO = '--'"; 
+                $this->qoi->execsql($q);
             }
         }catch ( Exception $e) {
             $status = false;
@@ -195,6 +233,77 @@ class form extends MY_Controller{
             echo json_encode($res);
         }
 
+    }
+
+    private function updaterequest()
+    {
+        $con = [
+            'NFRMNO' => $_POST["nfrmno"],
+            'VORGNO' => $_POST["vorgno"],
+            'CYEAR'  => $_POST["cyear"],
+            'CYEAR2' => $_POST["cyear2"],
+            'NRUNNO' => $_POST["nrunno"]
+        ];
+        $dataqoi = [
+            'TITLE'     => $_POST["title"],
+            'ITEMNO'    => $_POST["itemno"],
+            'PRTNAME'   => $_POST["prtname"],
+            'PURITEM'   => $_POST["puritem"],
+            'SVENDNAME' => $_POST["svendname"],
+            'INSPECDATE' => $_POST["request_date"],
+            'EXPCHGDATE' => $_POST["expect_date"]
+        ];
+        $this->qoi->update("QOIFORM", $dataqoi , $con);
+        $dwg = $_POST["dwgno"];
+        $arrdwg = array();
+        $i = 0;
+        foreach($dwg as $d)
+        {
+            if($d <> "")
+            {
+                $arrdwg[] = array(
+                    'NFRMNO' => $con["NFRMNO"],
+                    'VORGNO' => $con["VORGNO"],
+                    'CYEAR'  => $con["CYEAR"],
+                    'CYEAR2' => $con["CYEAR2"],
+                    'NRUNNO' => $con["NRUNNO"],
+                    "DWGNO" => $d
+                );
+            }
+            $i++;
+        }
+        $this->qoi->delete("RESULTQOIDWG", $con);
+        $this->qoi->insert_batch("RESULTQOIDWG",$arrdwg);
+        $path = $this->upload_path.$con["NFRMNO"]."_".$con["VORGNO"]."_".$con["CYEAR"]."_".$con["CYEAR2"]."_".$con["NRUNNO"];
+        if (!is_dir($path))
+        {
+            mkdir($path, 0777, true);
+        }
+        $upfile =  $this->uploadMultiFile($_FILES, ['DWGFILE','SPECFILE'], $path);
+        $fid = $this->qoi->generate_attfile_id($con["NFRMNO"],$con["VORGNO"],$con["CYEAR"],$con["CYEAR2"],$con["NRUNNO"]);
+        $datadwgfile = array();
+        foreach ($upfile["files"] as $fileType => $fileArray) {
+         foreach ($fileArray as $file) {
+             $datadwgfile[] = array
+             (
+                'NFRMNO' => $con["NFRMNO"],
+                'VORGNO' => $con["VORGNO"],
+                'CYEAR'  => $con["CYEAR"],
+                'CYEAR2' => $con["CYEAR2"],
+                'NRUNNO' => $con["NRUNNO"],
+                'ITEMNO' => $fid,
+                'TYPENO' => ($fileType == "DWGFILE"? "0":($fileType == "SPECFILE"? "1":($fileType == "SHEETFILE"? "2":($fileType == "NGFILE"? "3":"")))),
+                'SFILE'  => $file['file_name'],
+                'SEMPNO' => $_POST["empno"]
+             );
+             $fid++;
+         }
+         }
+         if(count($datadwgfile) > 0)
+         {
+             $this->qoi->insert_batch("ATTQOIFRM",$datadwgfile);
+         }
+         return true;
     }
 
     private function updateconcern()
@@ -215,7 +324,7 @@ class form extends MY_Controller{
             'SVENDNAME' => $_POST["svendname"],
             'INSPECDATE' => $_POST["request_date"],
             'EXPCHGDATE' => $_POST["expect_date"],
-            'JDGMNTNO'   => $_POST["judgement"]
+            'JDGMNTNO'   => isset($_POST["judgement"]) ? $_POST["judgement"] : ""
         ];
         $this->qoi->update("QOIFORM", $dataqoi , $con);
         $dwg = $_POST["dwgno"];

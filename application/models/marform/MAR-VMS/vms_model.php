@@ -278,7 +278,7 @@ class vms_model extends my_model
         AND f.NRUNNO = fl.NRUNNO
         JOIN AMECUSERALL a 
         ON f.VREQNO = a.SEMPNO
-        JOIN VMS_VISIT_TYPE vt 
+        LEFT JOIN VMS_VISIT_TYPE vt 
         ON v.VISITTYPE = vt.VTID
         WHERE f.NFRMNO  = '{$nfrmno}'
         AND f.VORGNO  = '{$vorgno}'

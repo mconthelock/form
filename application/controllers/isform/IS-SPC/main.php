@@ -61,7 +61,7 @@ class Main extends MY_Controller
             'CYEAR2'      => $p['CYEAR2'],
             'NRUNNO'      => $p['NRUNNO'],
             'ACTION'      => $p['action'],
-            'PLATFORM'    => $p['platform'],
+            'PLATFORM'    => strtoupper($p['platform']),
             'REASON'      => $p['reason'],
             'STATUS'      => '1',
             'EMP_INPUT'   => $p['inputer'],
@@ -193,6 +193,12 @@ class Main extends MY_Controller
     {
         $servername = $this->input->post('platform');
         $data       = $this->sa->getUser($servername);
+        echo json_encode($data);
+    }
+
+    public function get_SSA_engineer()
+    {
+        $data = $this->sa->select('AMECUSERALL', ['SSECCODE' => '050603', 'SPOSCODE' => '35', 'CSTATUS' => '1']);
         echo json_encode($data);
     }
 }

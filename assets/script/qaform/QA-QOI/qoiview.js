@@ -1,14 +1,18 @@
-import { showFlow, doaction, redirectWebflow } from "../../inc/_form.js";
+import { doaction, redirectWebflow } from "@public/_form.js";
 import { host, showLoader } from "../../utils";
 import "select2";
 import "select2/dist/css/select2.min.css";
 import flatpickr from "flatpickr";
+//import { setDatePicker } from "@public/_flatpickr";
 import "flatpickr/dist/flatpickr.min.css";
-import { ajaxOptions, getAllAttr, getData, showMessage , requiredForm} from "../../public/v1.0.2/jFuntion";
+import { ajaxOptions, getAllAttr, getData, showMessage , requiredForm} from "@public/jFuntion";
+import { showflow } from "../../api/webform/flow";
 $(document).ready(async function () {
   const formData = $(".form-data").data();
   flatpickr("#request_date", { dateFormat: "d/m/Y", defaultDate: $("#request_date").val() });
   flatpickr("#expect_date", { dateFormat: "d/m/Y", defaultDate: $("#expect_date").val() });
+ //setDatePicker({ element: '#request_date"', dateFormat: "Y-m-d" , defaultDate: $("#request_date").val() });
+ //setDatePicker({ element: '#expect_date"', dateFormat: "Y-m-d" , defaultDate: $("#expect_date").val() });
   function loadUsersToSelect($select,$type,$empno) {
     $.get(
       host + "qaform/QA-QOI/form/get_list/"+$type+"/"+$empno,
@@ -25,7 +29,13 @@ $(document).ready(async function () {
     );
   }
   const { nfrmno, vorgno, cyear, cyear2, nrunno, empno } = formData;
-  const flow = await showFlow(nfrmno, vorgno, cyear, cyear2, nrunno);
+  const flow = await showflow({
+    NFRMNO:nfrmno, 
+    VORGNO: vorgno, 
+    CYEAR:  cyear.toString(),
+    CYEAR2: cyear2.toString(), 
+    NRUNNO: nrunno
+  });
   if($("#cextData").val() == "01") loadUsersToSelect($(".jstaff_select"),'J','');
   if($("#cextData").val() == "04") loadUsersToSelect($(".sem_select"),'S','');
   //loadUsersToSelect($(".eng_select"),'E');
@@ -46,6 +56,7 @@ $(document).ready(async function () {
           }
       }
 
+
       const frm = $("#qoi-form");
       var formData = new FormData(frm[0]);
       formData.append("nfrmno", nfrmno);
@@ -57,8 +68,6 @@ $(document).ready(async function () {
       formData.append("empno", empno);
       if(action == "reject")
       {
-       
-        
             if(cextdata == "01")
             {
               if(remark != "")
@@ -99,6 +108,31 @@ $(document).ready(async function () {
           {
               showMessage('Please input remark for reason Return', 'warning');
           }
+      }else if(action == "cancel")
+      {
+            if(checkData())
+            {
+              
+              if (!(await requiredForm("#qoi-form"))) return;
+              const confirm = await doaction(nfrmno, vorgno, cyear, cyear2, nrunno, "approve", empno, remark);
+              if (confirm.status) 
+              {
+                const statusact = await actionfrm(formData);
+                if (statusact.status) redirectWebflow(); 
+              }else
+              {
+                showMessage('An error has occurred. Please contact the administrator(#2034).', 'error');
+              }
+            }
+      }else if((action == "save")||(action == "request"))
+      {
+        const statusact = await actionfrm(formData);
+        if (statusact.status)
+        { 
+          redirectWebflow();
+        }else{
+          showMessage('An error has occurred. Please contact the administrator(#2034).', 'error');
+        }
       }
       else
       {
@@ -160,12 +194,14 @@ $(document).on("change", ".radio-result", function (e) {
   {
     $("#btn-approve").removeClass('hidden'); // แสดงปุ่ม
     $("#btn-reject").addClass('hidden');     // ซ่อนปุ่ม
+    $("#btn-cancel").addClass('hidden');     // ซ่อนปุ่ม
     $('#radio-acceptable').prop('checked', true);
     
   }else{
     //Result NG
     $("#btn-approve").addClass('hidden'); // แสดงปุ่ม
     $("#btn-reject").removeClass('hidden');     // ซ่อนปุ่ม
+    $("#btn-cancel").removeClass('hidden');     // ซ่อนปุ่ม
     $('#radio-notaccept').prop('checked', true);
   }
  // const tableid =  $(this).attr("data-table");
@@ -261,6 +297,14 @@ function checkData()
         return false;
       }
     } 
+  }else if((cextdata == "04") && ($("#havesem").val()=="true"))
+  {
+    if($("#seminc").val()=="")
+    {
+        showMessage('Please select SEM. in charge', 'warning');
+        return false;
+    }
+
   }else if(cextdata == "08")
   {
      var m = 0;

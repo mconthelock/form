@@ -3,11 +3,10 @@ import {
   getData,
   showMessage,
   requiredForm,
-} from "../../public/v1.0.3/jFuntion";
+} from "@public/jFuntion";
 import { host, showLoader } from "../../utils";
-import { createTable } from "../../public/v1.0.3/_dataTable";
-import { createColumnFilters } from "../../inc/_filter.js";
-import { excelOptions, exportExcel, defaultExcel } from "../../inc/_excel.js";
+import { createTable } from "@public/_dataTable";
+import { exportExcel, defaultExcel } from "@public/_excel.js";
 
 var table;
 var dwgData;
@@ -228,7 +227,7 @@ $(document).on("click", "#save-dwg", async function () {
 /**
  * Create export excel
  */
-$(document).on('click','#exportExcel', function(){
+$(document).on('click','#exportExcel', async function(){
   const year = parseInt($("#year").html());
   var now = new Date();
   var timestamp = 
@@ -239,8 +238,6 @@ $(document).on('click','#exportExcel', function(){
     ('0' + now.getMinutes()).slice(-2) +
     ('0' + now.getSeconds()).slice(-2);
   var fileName = `DrawingMasterFY${year}_${timestamp}`;
-  const opt = {...excelOptions};
-  opt.sheetName = 'Drawing Master';
   const columns = [
        {header : 'Month' , key : 'MONSTR'},
        {header : 'Drawing' , key : 'DWGNO'},
@@ -252,7 +249,11 @@ $(document).on('click','#exportExcel', function(){
        {header : 'Remark'     , key : 'REMARK'},
        {header : 'Path Spec'     , key : 'PATHSPEC'},
       ];
-  const workbook = defaultExcel(dwgData, columns, opt);
+  const workbook = await defaultExcel({
+    data: dwgData, 
+    column: columns, 
+    sheetName: 'Drawing Master'
+  });
   exportExcel(workbook, fileName);
 });
 

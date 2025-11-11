@@ -369,7 +369,7 @@
                 </div>
             @endif
             @if ($mode == '02')
-                @if ($flowstep[0]->CSTEPNO == '87' && $flowstep[0]->CSTEPNEXTNO == '00')
+                @if ((in_array($flowstep[0]->CSTEPNO, ['87', '19']) && $flowstep[0]->CSTEPNEXTNO == '00'))
                     <div class="relative flex justify-center mt-4">
                         <div class="w-full max-w-xs">
                             <label class="floating-label block">
@@ -458,7 +458,7 @@
                     <!-- <button type="button" class="btn btn-info w-32 transition btn-submit" data-action="return">
                             Return
                         </button> -->
-                    @if ($flowstep[0]->CSTEPNO == '19' && $flowstep[0]->CSTEPNEXTNO == '13' || $flowstep[0]->CSTEPNO == '13' && $flowstep[0]->CSTEPNEXTNO == '18')
+                    @if (in_array($flowstep[0]->CSTEPNO, ['19', '34']) && $flowstep[0]->CSTEPNEXTNO == '13' || $flowstep[0]->CSTEPNO == '13' && $flowstep[0]->CSTEPNEXTNO == '18')
                         <button type="button" class="btn btn-info w-32 transition btn-submit" data-action="return">
                             Return
                         </button>
