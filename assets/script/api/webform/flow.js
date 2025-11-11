@@ -75,9 +75,15 @@ export async function showflow(form) {
  * @property {string} CYEAR
  * @property {string} CYEAR2
  * @property {number} NRUNNO
- * @property {string} ACTION - e.g. approve || return || returnb || returnp || reject
+ * @property {string} ACTION - e.g. approve || return || returnb || returnp || returnE || reject
  * @property {string} EMPNO
  * @property {string} [REMARK]
+ * @property {string} [CEXTDATA]
+ * @description 
+ * - return คือส่งกลับไป requester เมื่อ requester กด approve จะกลับมาอยู่ที่ approver คนเดิม
+ * - returnb คือส่งกลับไป approver ก่อนหน้า
+ * - returnp คือส่งกลับไป requester และรีเซ็ท flow ทั้งหมดเริ่ม approve ใหม่
+ * - returnE คือส่งกลับไป approver ที่ระบุในช่อง CEXTDATA ใน flow step นั้นๆ และดำเนินการ approve ต่อจากที่กำหนด ** จำเป็นต้องส่ง CEXTDATA มาด้วย **
  *
  * @typedef {object} doactionResponse
  * @property {boolean} status true = success, false = failed
