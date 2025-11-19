@@ -9,6 +9,7 @@ import { showErrorMessage } from "./jFuntion";
  * @since  2025-11-18
  * @requires Api module:api/file
  * @requires Public module:public/jFuntion
+ * @requires Tailwind 4.1.12
  * @requires icofont for https://amecwebtest.mitsubishielevatorasia.co.th/cdn/icofont/icofont.min.css
  * @version 1.0.3
  */
@@ -130,6 +131,9 @@ export async function createExplorer({
     el.data = data;
     el.init = 1; // ใช้บอกว่า สร้าง element เสร็จแล้ว
     el.id = id;
+    el.actions = actions;
+    el.download = download;
+    el.allow = allow;
     el.path = () => {
         return el.querySelector("#fe_path").value;
     }
@@ -155,7 +159,7 @@ export async function createExplorer({
     el.reset = async (html) => {
         const newData = await getListInFolder({baseDir: root, allow: allow});
         el.innerHTML = html;
-        el.querySelector("#fe_path").value = root;
+        // el.querySelector("#fe_path").value = root;
         el.data = newData;
         el.back = [];
         el.forward = [];
@@ -220,7 +224,7 @@ export async function createExplorer({
         }
         // เมื่อ ดับเบิลคลิกที่ไฟล์ ให้ดาวน์โหลดไฟล์นั้น
         if (event.target.closest('.fe-file')) {
-            if(download != 'download') return;
+            if(!download) return;
             try {
                 const fileElement = event.target.closest('.fe-file');
                 const fileName = fileElement.textContent.trim();
@@ -336,17 +340,52 @@ export async function createExplorer({
     return el;
 }
 
+/**
+ * @description Show or hide loading indicator
+ * @param {HTMLElement} element - The element to show loading for
+ * @param {boolean} [show=true] - (optional) default is true
+ * @returns {void}
+ * @example
+ * loading(element); // show loading
+ * loading(element, false); // hide loading
+ */
 const loading = (element, show = true) => {
     const loading = document.getElementById("fe_loading");
     if(show){
         loading.classList.remove("hidden");
+        if(element.actions)
         element.querySelector("#fe_choose").classList.add("btn-disabled");
     }else{
+        if(element.actions)
         element.querySelector("#fe_choose").classList.remove("btn-disabled");
         loading.classList.add("hidden");
     }
 }
 
+/**
+ * @description Update the content of the file explorer
+ * @typedef {Object} filesData
+ * @property {string} name - The name of the file or folder.
+ * @property {boolean} isDir - Whether the item is a directory.
+ * @property {string} path - The path of the file or folder.
+ * @property {string} [extension] - The file extension (empty for folders).
+ * @property {string} [mimeType] - The MIME type of the file (empty for folders).
+ * @property {number} [size] - The size of the file (empty for folders).
+ * 
+ * @typedef {Object} updateContentParams
+ * @property {HTMLElement} element 
+ * @property {filesData} data 
+ * @property {string} [iconClass=""] 
+ * 
+ * @param {Object} updateContentParams
+ * @returns {void}
+ * @example
+ * updateContent({
+ *      element: element,       // (required) explorer element
+ *      data: data,             // (required) array of filesData  
+ *      iconClass: "text-lg"    // (optional) default is ""
+ * });
+ */
 function updateContent({ element, data, iconClass = "" }) {
     const contentEl = element.querySelector("#fe_content");
     let html = "";
@@ -368,6 +407,22 @@ function updateContent({ element, data, iconClass = "" }) {
     }
 }
 
+/**
+ * @description Create HTML list items for files and folders
+ * @typedef {Object} createListItemParams
+ * @property {filesData} data - Array of file and folder data.
+ * @property {string} [iconClass=""] - CSS class for icons.
+ * @property {string} [className="px-3 hover:text-primary-content hover:bg-primary hover:cursor-pointer"] - CSS class for list items.
+ * 
+ * @param {Object} createListItemParams
+ * @returns {string} - Returns HTML string of list items.
+ * @example
+ * const html = createListItem({    
+ *   data: data,                // (required) array of filesData
+ *   iconClass: "text-lg",      // (optional) default is ""
+ *   className: "custom-class", // (optional) default is "px-3 hover:text-primary-content hover:bg-primary hover:cursor-pointer"
+ * });
+ */
 function createListItem({
     data = [],
     iconClass = "",
@@ -390,6 +445,14 @@ function createListItem({
     return html;
 }
 
+/**
+ * @description Get the icon class for a given file extension
+ * @param {string} ext - file extension 
+ * @param {string} [className=""] - additional class name
+ * @returns {string} - Returns the combined icon class string
+ * @example
+ * const iconClass = classIcofont("pdf", "text-lg");
+ */
 const classIcofont = (ext, className = "") => {
     ext = ext.toLowerCase();
     let cls = "";
