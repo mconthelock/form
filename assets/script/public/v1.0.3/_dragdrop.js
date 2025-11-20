@@ -152,6 +152,7 @@ export const iconfont = (textSize = "text-2xl") => {
  * @param {string} forInput e.g. fileResult[]
  * @returns
  */
+// prettier-ignore
 export const dragDropInit = (options = {}) => {
     const opt = {
         id: "files",
@@ -163,31 +164,20 @@ export const dragDropInit = (options = {}) => {
         class: "",
         showImg: false,
         list: "", // กรณีส่ง list มาให้เลย สำหรับ return
+        text: "Drag & Drop files here or click to select",
         ...options,
     };
     const show = opt.list != "" ? true : false;
     return `<div class=" p-3 flex gap-3 ${opt.width} ${opt.height}">
-    <label for='${
-        opt.name
-    }'  class="dropZone border border-primary border-dashed rounded-lg w-full min-h-60 text-primary  cursor-pointer   overflow-auto">
-        <div class="drop-message ${
-            show ? "hidden" : "flex"
-        } flex-col justify-center items-center h-full">
-            <span>Drag & Drop files here or click to select</span>
+    <label for='${opt.name}'  class="dropZone border border-primary border-dashed rounded-lg w-full min-h-60 text-primary  cursor-pointer   overflow-auto">
+        <div class="drop-message ${show ? "hidden" : "flex"} flex-col justify-center items-center h-full">
+            <span>${opt.text}</span>
         </div>
-        <ul class="drop-list w-full  ${
-            opt.showImg ? "gap-5 flex-wrap" : "flex-col"
-        } items-start text-gray-500 ${show ? "flex" : "hidden"} p-1 gap-1">
+        <ul class="drop-list w-full  ${opt.showImg ? "gap-5 flex-wrap" : "flex-col"} items-start text-gray-500 ${show ? "flex" : "hidden"} p-1 gap-1">
             ${opt.list}
         </ul>
     </label>
-    <input type="file" class="inputDrop file-input txt-upper validator ${
-        opt.class
-    } hidden" data-showimg="${opt.showImg}" data-format='${
-        opt.format
-    }' data-msg-region='${opt.msgRegion}' name="${opt.name}" id="${
-        opt.id
-    }" multiple/>
+    <input type="file" class="inputDrop file-input txt-upper validator ${opt.class} hidden" data-showimg="${opt.showImg}" data-format='${opt.format}' data-msg-region='${opt.msgRegion}' name="${opt.name}" id="${opt.id}" multiple/>
     </div>`;
 };
 
@@ -195,16 +185,17 @@ export const dragDropListImage = ({
     src = "",
     attr = "",
     fromDB = false,
+    remove = true,
+    width = 'w-44'
 } = {}) => {
     const clsName = fromDB ? " drop-remove-db" : " drop-remove";
-    return `
+    let html = `
             <li class="fancy-image relative shadow-lg"  ${attr}>
                 <a href="${src}" data-fancybox="gallery" class="w-2/5 h-2/5">
-                    <img src="${src}" class="w-44 object-cover rounded-lg" />
-                </a>
-                <i class="icofont-close-squared-alt bg-white ml-auto text-error text-2xl absolute right-0 top-0 ${clsName}"></i>
-            </li>
-            `;
+                    <img src="${src}" class="${width} object-cover rounded-lg" />
+                </a>`;
+    html += remove ? `<i class="icofont-close-squared-alt bg-white ml-auto text-error text-2xl absolute right-0 top-0 ${clsName}"></i>` : ``;
+    html += `</li>`;
 };
 
 export const dragDropReset = (options = {}) => {
