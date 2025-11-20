@@ -231,6 +231,15 @@ export async function createTable(option = {}, setupOpt = {}) {
         columnSelect: { ...baseSetup.columnSelect, ...setupOpt.columnSelect },
         domScroll: { ...baseSetup.domScroll, ...setupOpt.domScroll },
     };
+    if(option.buttons && Array.isArray(option.buttons) && option.buttons.length > 0){
+        await import('datatables.net-buttons');
+        await import('datatables.net-buttons-dt/css/buttons.dataTables.min.css');
+        await import('datatables.net-buttons/js/buttons.html5.mjs');
+        await import('datatables.net-buttons/js/buttons.print.mjs');
+        await import('datatables.net-buttons/js/buttons.colVis.mjs');
+        const { default: JSZip } = await import('jszip'); // ✅ แบบถูก
+        window.JSZip = JSZip; //
+    }
 
     // กำหนดภาษา
     if (setup.language == "en") {
