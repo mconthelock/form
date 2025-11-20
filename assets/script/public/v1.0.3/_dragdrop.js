@@ -165,8 +165,11 @@ export const dragDropInit = (options = {}) => {
         showImg: false,
         list: "", // กรณีส่ง list มาให้เลย สำหรับ return
         text: "Drag & Drop files here or click to select",
+        multiple: true,
         ...options,
     };
+    console.log(opt);
+    
     const show = opt.list != "" ? true : false;
     return `<div class=" p-3 flex gap-3 ${opt.width} ${opt.height}">
     <label for='${opt.name}'  class="dropZone border border-primary border-dashed rounded-lg w-full min-h-60 text-primary  cursor-pointer   overflow-auto">
@@ -177,7 +180,7 @@ export const dragDropInit = (options = {}) => {
             ${opt.list}
         </ul>
     </label>
-    <input type="file" class="inputDrop file-input txt-upper validator ${opt.class} hidden" data-showimg="${opt.showImg}" data-format='${opt.format}' data-msg-region='${opt.msgRegion}' name="${opt.name}" id="${opt.id}" multiple/>
+    <input type="file" class="inputDrop file-input txt-upper validator ${opt.class} hidden" data-showimg="${opt.showImg}" data-format='${opt.format}' data-msg-region='${opt.msgRegion}' name="${opt.name}" id="${opt.id}" ${opt.multiple ? "" : ""}/>
     </div>`;
 };
 
@@ -321,6 +324,7 @@ export async function handleFiles({
     const format = e.fileInput.attr("data-format");
     const showImg = e.fileInput.attr("data-showimg");
     const msgRegion = e.fileInput.attr("data-msg-region") || "EN";
+    const multiple = e.fileInput.attr("multiple") !== undefined;
     const fs = files.length > 0 ? files : e.fileInput[0].files;
     const fileInput = e.fileInput[0];
     e.list.innerHTML = "";
@@ -360,10 +364,18 @@ export async function handleFiles({
                 continue;
             }
         }
+        if(filesData[e.name].length > 0 && !multiple){
+            console.log(filesData[e.name],filesData);
+            filesData[e.name] = [file];
+            imagesData[e.name] = [base64];
+            e.list.html(txt);
+            break;
+        }
         // dataTransfer.items.add(file);
         filesData[e.name].push(file);
         imagesData[e.name].push(base64);
         e.list.append(txt);
+        if (!multiple) break;
     }
 
     if (showImg && format == "image") fancybox();
