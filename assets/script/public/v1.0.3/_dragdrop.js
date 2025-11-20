@@ -196,6 +196,7 @@ export const dragDropListImage = ({
                 </a>`;
     html += remove ? `<i class="icofont-close-squared-alt bg-white ml-auto text-error text-2xl absolute right-0 top-0 ${clsName}"></i>` : ``;
     html += `</li>`;
+    return html;
 };
 
 export const dragDropReset = (options = {}) => {
