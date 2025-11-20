@@ -168,7 +168,6 @@ export const dragDropInit = (options = {}) => {
         multiple: true,
         ...options,
     };
-    console.log(opt);
     
     const show = opt.list != "" ? true : false;
     return `<div class=" p-3 flex gap-3 ${opt.width} ${opt.height}">
@@ -250,7 +249,7 @@ function addDataFile(fileInput, element) {
     }
     fileInput.files = dataTransfer.files;
     checkDropZone(element);
-    console.log(filesData);
+    // console.log(filesData);
 }
 
 /**
@@ -365,7 +364,6 @@ export async function handleFiles({
             }
         }
         if(filesData[e.name].length > 0 && !multiple){
-            console.log(filesData[e.name],filesData);
             filesData[e.name] = [file];
             imagesData[e.name] = [base64];
             e.list.html(txt);
