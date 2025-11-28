@@ -11,6 +11,7 @@ class form extends MY_Controller{
         formApi::getMode insteadOf _Form;
         formApi::getRequestNo  insteadOf _Form;
         flow::getExtData insteadOf _Form;
+        flow::doaction insteadOf _Form;
         _Form::getMode as getModeWebservice;
     }
     protected $title;
@@ -209,7 +210,52 @@ class form extends MY_Controller{
             [ 'CSTEPNO' => '08', 'CSTEPNEXTNO' => '04', 'apv' => $controller],
         ];
         $this->frm->insert('ISTID_FORM', $form);
-        return $this->updateFlowApv($form, $apv);
+        
+        $updateflow = $this->updateFlowApv($form, $apv);
+        // 2025-11-28  auto approve step 06 and 19
+        $this->doaction([
+            'NFRMNO' => $form['NFRMNO'],
+            'VORGNO' => $form['VORGNO'],
+            'CYEAR'  => $form['CYEAR'],
+            'CYEAR2' => $form['CYEAR2'],
+            'NRUNNO' => $form['NRUNNO'],
+            'ACTION' => 'approve',
+            'EMPNO'  => $sem,
+        ]);
+        $this->updateFlow([
+            'condition' => [
+                'NFRMNO' => $form['NFRMNO'],
+                'VORGNO' => $form['VORGNO'],
+                'CYEAR'  => $form['CYEAR'],
+                'CYEAR2' => $form['CYEAR2'],
+                'NRUNNO' => $form['NRUNNO'],
+                'CSTEPNO'=> '06'
+            ],
+            'CAPVTIME' => date('H:i:s', strtotime('+4 minutes')),
+        ]);
+        if($controller != ''){
+            $this->doaction([
+                'NFRMNO' => $form['NFRMNO'],
+                'VORGNO' => $form['VORGNO'],
+                'CYEAR'  => $form['CYEAR'],
+                'CYEAR2' => $form['CYEAR2'],
+                'NRUNNO' => $form['NRUNNO'],
+                'ACTION' => 'approve',
+                'EMPNO'  => $controller,
+            ]);
+             $this->updateFlow([
+                'condition' => [
+                    'NFRMNO' => $form['NFRMNO'],
+                    'VORGNO' => $form['VORGNO'],
+                    'CYEAR'  => $form['CYEAR'],
+                    'CYEAR2' => $form['CYEAR2'],
+                    'NRUNNO' => $form['NRUNNO'],
+                    'CSTEPNO'=> '19'
+                ],
+                'CAPVTIME' => date('H:i:s', strtotime('+7 minutes')),
+            ]);
+        }
+        return $updateflow;
         // return $this->updateFlowApv("", $sem, $form['NFRMNO'], $form['VORGNO'], $form['CYEAR'], $form['CYEAR2'], $form['NRUNNO'], '06', '19');
     }
 

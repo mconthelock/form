@@ -110,4 +110,58 @@ trait flow{
             throw new Exception(json_encode(['status' => "false", 'message' => 'Failed to update flow', 'e' => $e]), 1);
         }
     }
+
+    /**
+     * Doaction Flow
+     * @param {doaction} formData
+     *
+     * @typedef {object} doaction
+     * @property {number} NFRMNO
+     * @property {string} VORGNO
+     * @property {string} CYEAR
+     * @property {string} CYEAR2
+     * @property {number} NRUNNO
+     * @property {string} ACTION - e.g. approve || return || returnb || returnp || returnE || reject
+     * @property {string} EMPNO
+     * @property {string} [REMARK]
+     * @property {string} [CEXTDATA]
+     * @description 
+     * - return คือส่งกลับไป requester เมื่อ requester กด approve จะกลับมาอยู่ที่ approver คนเดิม
+     * - returnb คือส่งกลับไป approver ก่อนหน้า
+     * - returnp คือส่งกลับไป requester และรีเซ็ท flow ทั้งหมดเริ่ม approve ใหม่
+     * - returnE คือส่งกลับไป approver ที่ระบุในช่อง CEXTDATA ใน flow step นั้นๆ และดำเนินการ approve ต่อจากที่กำหนด ** จำเป็นต้องส่ง CEXTDATA มาด้วย **
+     *
+     * @typedef {object} doactionResponse
+     * @property {boolean} status true = success, false = failed
+     * @property {string} message message response
+     *
+     * @returns {Promise<doactionResponse>}
+     * @example
+     * const formData = {
+     *     NFRMNO: 13,
+     *     VORGNO: '030101',
+     *     CYEAR: '25',
+     *     CYEAR2: '2025',
+     *     NRUNNO: 1,
+     *     ACTION: 'approve',
+     *     EMPNO: 'E123',
+     *     REMARK: 'Approved' // optional
+     * };
+     * const res = await doaction(formData);
+     */
+    private function doaction($condition){
+        try{
+            $response = $this->client->post($_ENV['APP_APIPHP'].'/flow/doaction', [
+                'headers' => build_forward_headers(),
+                'json' => $condition
+            ]);
+            $result = trim($response->getBody());
+            $decoded = json_decode($result, true);
+            return $decoded;
+        }catch(guzzlehttp\Exception\RequestException $e){
+            throw new Exception(json_encode(['status' => "false", 'message' => 'Failed to get Extra Data', 'e' => $e->getMessage()]), 1);
+        }catch(Exception $e){
+            throw new Exception(json_encode(['status' => "false", 'message' => 'Failed to check Return back', 'e' => $e]), 1);
+        }
+    }
 }
