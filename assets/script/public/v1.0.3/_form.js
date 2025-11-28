@@ -12,6 +12,7 @@
  * @note 2025-10-31 เปลี่ยนไปยิงที่ API ทั้งหมด
  */
 
+import { getFormDetail } from "../../api/webform/form";
 import { checkAuthen, logtest, root } from "./jFuntion";
 import { showLoader } from "./preloader";
 
@@ -23,6 +24,42 @@ export function redirectWebflow(){
     logtest('path webflow', path);
     const redirectUrl = `http://webflow.mitsubishielevatorasia.co.th/${path}/workflow/WaitApv.asp`;
     window.location = redirectUrl;
+}
+
+/**
+ * check mode for action form
+ * @param {string} mode
+ */
+export function toggleActionForm(mode) {
+  if (mode == "2") {
+    $(".actions-Form").removeClass("hidden");
+  } else {
+    $(".actions-Form").addClass("hidden");
+  }
+}
+
+export async function setformDetail(form) {
+  const data = await getFormDetail(form);
+  return `<div class="h-full w-full md:w-fit bg-base-200 border border-base-300 p-4 rounded-box relative">
+                <div class="absolute text-lg top-[-13px] font-bold">Form Information</div>
+                <table class="table">
+                    <tbody>
+                        <tr>
+                            <td class="text-primary">Form no:</td>
+                            <td>${data.FORMNO}</td>
+                        </tr>
+                        <tr>
+                            <td class="text-primary">Input by:</td>
+                            <td>(${data.VINPUTER}) ${data.VINPUTNAME}</td>
+                        </tr>
+                        <tr>
+                            <td class="text-primary">Requested by:</td>
+                            <td>(${data.VREQNO})  ${data.VREQNAME}</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+            </div>`;
 }
 
 /**

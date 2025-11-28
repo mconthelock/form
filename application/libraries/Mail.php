@@ -19,7 +19,12 @@ class Mail {
 
 	private function begining(){
         $mail = new PHPMailer();
-        $mail->Mailer	= 'mail';
+        if($_ENV['STATE'] == 'local'){
+            $mail->isSMTP();
+            $mail->Host = $_ENV['MAIL_HOST'];
+        }else{
+            $mail->Mailer = 'mail';
+        }
 		$mail->CharSet 	= 'UTF-8';
 		$mail->Port 	= 25;
         $mail->From 	= $this->from;

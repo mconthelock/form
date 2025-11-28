@@ -324,3 +324,78 @@ export async function updateFlow(formData) {
     const data = await res.json();
     return data;
 }
+
+
+/**
+ * 
+ * @typedef {object} searchFlow
+ * @property {number} NFRMNO
+ * @property {string} VORGNO
+ * @property {string} CYEAR
+ * @property {string} CYEAR2
+ * @property {number} NRUNNO
+ * @property {string} [VAPVNO]
+ * @property {string} [CSTEPNO]
+ * @property {string} [CSTEPNEXTNO]
+ * @property {string} [CSTEPST]
+ * @property {string} [CSTART]
+ * @property {string} [CEXTDATA]
+ * @property {string} [CAPVSTNO]
+ * @property {boolean} [distinct]
+ * @property {Array<string>} [fields]
+ * 
+ * @typedef {object} flowData
+ * @property {number} NFRMNO : 8,
+ * @property {string} VORGNO :  050601 ,
+ * @property {string} CYEAR :  25 ,
+ * @property {string} CYEAR2 :  2025 ,
+ * @property {number} NRUNNO : 14,
+ * @property {string} CSTEPNO :  19 ,
+ * @property {string} CSTEPNEXTNO :  00 ,
+ * @property {string} CSTART :  0 ,
+ * @property {string} CSTEPST :  1 ,
+ * @property {string} CTYPE :  3 ,
+ * @property {string} VPOSNO : null,
+ * @property {string} VAPVNO :  02035 ,
+ * @property {string} VREPNO :  02035 ,
+ * @property {string} VREALAPV : null,
+ * @property {string} CAPVSTNO :  0 ,
+ * @property {DATE} DAPVDATE : null,
+ * @property {string} CAPVTIME : null,
+ * @property {string} CEXTDATA :  02 ,
+ * @property {string} CAPVTYPE :  1 ,
+ * @property {string} CREJTYPE : null,
+ * @property {string} CAPPLYALL :  0 ,
+ * @property {string} VURL :  http://amecwebtest.mitsubishielevatorasia.co.th/form/isform/IS-OFF/form/main/ ,
+ * @property {string} VREMARK : null,
+ * @property {string} VREMOTE : null
+ * 
+ * @param {searchFlow} condition 
+ * @returns {Promise<flowData[]>}
+ * @example
+ * const condition = {
+ *     NFRMNO: 8,
+ *     VORGNO: '050601',
+ *     CYEAR: '25',
+ *     CYEAR2: '2025',
+ *     NRUNNO: 14,
+ *     distinct: true,
+ *     fields: ['NFRMNO', 'VAPVNO', 'CSTEPNO']
+ * };
+ * const flows = await searchFlow(condition);
+ */
+export async function searchFlow(condition) {
+    const res = await fetch(`${process.env.APP_API}/flow/search`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(condition),
+    });
+
+    if (!res.ok) {
+        await fetchMsgErr(res);
+        throw new Error("Failed to fetch search Flow");
+    }
+
+    const data = await res.json();
+    return data;
+}
