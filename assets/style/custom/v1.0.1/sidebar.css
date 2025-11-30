@@ -77,7 +77,7 @@
 }
 
 #sidebar.collapsed .divider {
-  max-width: 50%;
+  /* max-width: 50%; */
 }
 
 @media (width >= 48rem) {
