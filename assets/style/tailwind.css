@@ -173,3 +173,168 @@
     text-align: center !important;
   }
 }
+
+/* The main splash screen container */
+.splash-screen {
+  position: fixed;
+  inset: 0; /* (top, right, bottom, left = 0) */
+  background-color: #1a1a1a; /* Dark background */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+
+  /* REMOVED animation and animation-delay.
+              We will now control this with JavaScript by adding a '.hidden' class.
+              We add a transition for a smooth fade-out.
+            */
+}
+
+/* This new class will be added by JavaScript to hide the splash screen */
+.splash-screen.hidden {
+  animation: fadeOutSplash 0.5s ease-in-out forwards;
+}
+
+/* Logo container */
+.logo {
+  display: flex;
+  align-items: center; /* Align arrow and text */
+  font-size: 3.5rem; /* Responsive font size */
+  font-weight: 600;
+  color: #ffffff;
+}
+
+/* This is the container for the 'w' and its swoosh */
+.w-container {
+  position: relative;
+  /* We'll animate the children, not the container */
+  margin-right: 12px; /* Keep the spacing */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* This is the 'w' character */
+.w-char {
+  font-size: 3.5rem; /* Match logo size */
+  font-weight: 600;
+  color: #4353ff; /* Make the 'w' blue */
+  position: relative; /* To be on top of the swoosh */
+  z-index: 2;
+
+  /* Animation for the 'w' */
+  opacity: 0;
+  transform: scale(0.5);
+  animation: wFadeIn 0.6s cubic-bezier(0.17, 0.84, 0.44, 1) forwards;
+  animation-delay: 0.2s;
+}
+
+/* This is the curved arrow "swoosh" behind the 'w' */
+.w-arrow-swoosh {
+  position: absolute;
+  z-index: 1; /* Behind the 'w' */
+  width: 50px;
+  height: 50px;
+  border: 8px solid transparent;
+  border-top: 8px solid #4353ff;
+  border-right: 8px solid #4353ff;
+  border-radius: 50%;
+  transform-origin: center;
+
+  /* Animation for the swoosh */
+  opacity: 0;
+  animation: spinIn 0.8s cubic-bezier(0.17, 0.84, 0.44, 1) forwards;
+  animation-delay: 0.3s; /* Slightly after the 'w' starts */
+}
+
+/* The arrowhead for the swoosh */
+.w-arrow-swoosh::after {
+  content: "";
+  position: absolute;
+  width: 0;
+  height: 0;
+  border: 10px solid transparent;
+  border-top-color: #4353ff; /* ปลายแหลมชี้ 'ขึ้น' (ก่อนหมุน) */
+
+  /* 1. จัดให้อยู่กึ่งกลางแนวตั้ง (ตำแหน่ง 3 นาฬิกา) */
+  top: 50%;
+
+  /* 2. ย้ายตำแหน่งให้ถูกต้อง */
+  /* -8px คือตำแหน่งขอบนอกของเส้นโค้ง
+               -10px คือขนาดของหัวลูกศร
+               เพื่อให้ "ปลาย" ของลูกศรมาแตะที่ขอบพอดี
+            */
+  right: -18px;
+
+  /* ย้ายตัวเองขึ้น 50% (ของความสูงตัวเอง) เพื่อให้จุดศูนย์กลางอยู่ตรงกลาง
+               แล้วค่อยหมุน 90 องศา ให้ชี้ไปทางขวา
+            */
+  transform: translateY(-50%) rotate(90deg);
+}
+
+/* Styling for each letter span (ebflow) */
+.logo .char {
+  display: inline-block;
+  opacity: 0;
+  transform: translateY(20px) scale(0.8);
+
+  /* Animation for each letter */
+  animation: fadeInLetter 0.5s cubic-bezier(0.17, 0.84, 0.44, 1) forwards;
+  /* Stagger the animation delay using the CSS variable */
+  animation-delay: calc(var(--i) * 0.1s + 0.8s);
+}
+
+/* Dummy content to show after splash screen */
+.app-content {
+  padding: 2rem;
+  text-align: center;
+}
+.app-content h1 {
+  color: #1a1a1a;
+}
+
+/* --- Keyframe Animations --- */
+
+/* Animation for the 'w' character */
+@keyframes wFadeIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Animation for the arrow spinning in */
+@keyframes spinIn {
+  0% {
+    opacity: 0;
+    transform: rotate(-270deg) scale(0.5);
+  }
+  100% {
+    opacity: 1;
+    transform: rotate(0deg) scale(1);
+  }
+}
+
+/* Animation for each letter fading in and moving up */
+@keyframes fadeInLetter {
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Animation to fade out the splash screen */
+@keyframes fadeOutSplash {
+  0% {
+    opacity: 1;
+    visibility: visible;
+  }
+  100% {
+    opacity: 0;
+    visibility: hidden; /* Hide it completely after fade */
+  }
+}

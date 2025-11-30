@@ -10,5 +10,13 @@
         "setasign/fpdi": "^2.6",
         "setasign/fpdi-tcpdf": "^2.3",
         "phpoffice/phpspreadsheet": "^1.12"
+    },
+    "config": {
+        "platform": {
+            "php": "7.4.33"
+        },
+        "allow-plugins": {
+            "kylekatarnls/update-helper": true
+        }
     }
 }
