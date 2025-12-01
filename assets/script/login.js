@@ -11,14 +11,23 @@ import { createCarousel } from "./api/gpreport/news";
 import { redirectProduction } from "@public/authen";
 
 var camera;
+const startTime = Date.now();
+const MIN_DISPLAY_TIME = 2000;
 $(document).ready(async function () {
-  await showLoader(true);
+  await splashScreen();
   const id = $("#appid").val();
   await redirectProduction(id);
   await createCarousel("login");
-  if (id != "1") $("#webflow-link").removeClass("hidden");
+
+  if (id == "1") {
+    const cookie = await getCookie(process.env.APP_NAME);
+    if (cookie) {
+      window.location.href = `${process.env.APP_ENV}/home`;
+    }
+  } else {
+    $("#webflow-link").removeClass("hidden");
+  }
   $(".loginform:visible").find("input").first().focus();
-  await showLoader(false);
 });
 
 $(document).on("click", "#show-password", function (e) {
@@ -254,6 +263,27 @@ async function showCamera(target) {
   } catch (err) {
     console.error("เกิดข้อผิดพลาด:", err);
   }
+}
+
+function splashScreen() {
+  //   console.log("Page content is fully loaded.");
+  const timeElapsed = Date.now() - startTime;
+  if (timeElapsed >= MIN_DISPLAY_TIME) {
+    hideSplashScreen();
+  } else {
+    const timeToWait = MIN_DISPLAY_TIME - timeElapsed;
+    // console.log(`Content loaded fast. Waiting ${timeToWait}ms more.`);
+    setTimeout(hideSplashScreen, timeToWait);
+  }
+}
+
+function hideSplashScreen() {
+  //   console.log("Hiding splash screen.");
+  const splashScreen = document.querySelector(".splash-screen");
+  if (splashScreen) {
+    splashScreen.classList.add("hidden");
+  }
+  document.body.style.overflow = "auto";
 }
 
 //Note for Socket.io

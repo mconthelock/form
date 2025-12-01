@@ -19,9 +19,10 @@
 </head>
 
 <body class="flex flex-col min-h-screen">
+    @include('layouts/splash')
     <div class="flex-1 flex flex-col w-full">
         <input type="hidden" id="appid" value="{{ $id }}">
-        <div class="relative flex flex-col min-h-[100vh] w-full p-4 overflow-x-hidden">
+        <div class="relative flex flex-col min-h-screen w-full p-4 overflow-x-hidden">
             {{-- Braner && Background --}}
             <div class="px-8 py-4">
                 @include('svg/brand_text_w')
@@ -174,8 +175,7 @@
         <div class="loader"></div>
     </div>
 
-
-    <script src="{{ $_ENV['APP_CDN'] }}/jquery/3.7.1/jquery.min.js"></script>
+    {{-- <script src="{{ $_ENV['APP_CDN'] }}/jquery/3.7.1/jquery.min.js"></script> --}}
     <script src="{{ $_ENV['APP_JS'] }}/login.js?ver={{ $GLOBALS['version'] }}"></script>
 </body>
 
