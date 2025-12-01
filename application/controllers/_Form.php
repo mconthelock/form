@@ -203,9 +203,9 @@ trait _Form{
                     'CYEAR'      => $CYEAR,
                     'CYEAR2'     => $CYEAR2,
                     'NRUNNO'  => $NRUNNO,
-                    'action' => $action,
-                    'empno'    => $empno,
-                    'remark' => $remark
+                    'ACTION' => $action,
+                    'EMPNO'    => $empno,
+                    'REMARK' => $remark
                 ]
             ]);
             $result = json_decode($response->getBody(), true);
