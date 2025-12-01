@@ -99,7 +99,7 @@ trait _Form{
             $result = json_decode($response->getBody(), true);
             return $result;
         }catch(guzzlehttp\Exception\RequestException $e){
-            throw new Exception(json_encode(['status' => "false", 'message' => 'Failed to create form', 'e' => $e->getMessage()]), 1);
+            throw new Exception(json_encode(['status' => "false", 'message' => 'Failed to delete form', 'e' => $e->getMessage()]), 1);
         }catch(Exception $e){
             return array('status' => false, 'message' => 'Failed to delete form');
         }
@@ -143,7 +143,7 @@ trait _Form{
             $result = json_decode($response->getBody(), true);
             return $result;
         }catch(guzzlehttp\Exception\RequestException $e){
-            throw new Exception(json_encode(['status' => "false", 'message' => 'Failed to create form', 'e' => $e->getMessage()]), 1);
+            throw new Exception(json_encode(['status' => "false", 'message' => 'Failed to delete flow step', 'e' => $e->getMessage()]), 1);
         }catch(Exception $e){
             return array('status' => false, 'message' => 'Failed to delete flow step');
         }
@@ -187,7 +187,7 @@ trait _Form{
             $result = json_decode($response->getBody(), true);
             return $result;
         }catch(guzzlehttp\Exception\RequestException $e){
-            throw new Exception(json_encode(['status' => "false", 'message' => 'Failed to create form', 'e' => $e->getMessage()]), 1);
+            throw new Exception(json_encode(['status' => "false", 'message' => 'Failed to update flow step', 'e' => $e->getMessage()]), 1);
         }catch(Exception $e){
             return array('status' => false, 'message' => 'Failed to update flow step', 'error' => $e->getMessage());
         }
@@ -198,20 +198,20 @@ trait _Form{
             $response = $this->client->post($_ENV['APP_APIPHP'].'/flow/doaction', [
                 'headers' => build_forward_headers(),
                 'json' => [
-                    'frmNo'  => $NFRMNO,
-                    'orgNo'  => $VORGNO,
-                    'y'      => $CYEAR,
-                    'y2'     => $CYEAR2,
-                    'runNo'  => $NRUNNO,
+                    'NFRMNO'  => $NFRMNO,
+                    'VORGNO'  => $VORGNO,
+                    'CYEAR'      => $CYEAR,
+                    'CYEAR2'     => $CYEAR2,
+                    'NRUNNO'  => $NRUNNO,
                     'action' => $action,
-                    'apv'    => $empno,
+                    'empno'    => $empno,
                     'remark' => $remark
                 ]
             ]);
             $result = json_decode($response->getBody(), true);
             return $result;
         }catch(guzzlehttp\Exception\RequestException $e){
-            throw new Exception(json_encode(['status' => "false", 'message' => 'Failed to create form', 'e' => $e->getMessage()]), 1);
+            throw new Exception(json_encode(['status' => "false", 'message' => 'Failed to doaction form', 'e' => $e->getMessage()]), 1);
         }catch(Exception $e){
             return array('status' => false, 'message' => 'Failed to doaction form', 'e' => $e);
         }
