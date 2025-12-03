@@ -1,90 +1,92 @@
-import { populateSelect } from "./formUtils.js";
+// =====================================================
+// 📦 GP-TRN: Functional Training Form (jQuery Version)
+// =====================================================
+
+import { populateSelect, bindMaxLengthAlert } from "./formUtils.js";
 import { bindEmpLookup } from "./emp_lookup.js";
 
-// ✅ ใช้ property ที่ตัว function แทน global variable
+/**
+ * 🔹 Initialize Functional Form (init ครั้งเดียว)
+ */
 export function initFunctionalForm() {
-    console.log("🚀 init Functional Form");
+  console.log("🚀 init Functional Form");
+  if (initFunctionalForm.initialized) return;
+  initFunctionalForm.initialized = true;
 
-    if (initFunctionalForm.initialized) return;
-    initFunctionalForm.initialized = true;
+  /* --------------------------------------------------
+     🔹 Time Selects
+     -------------------------------------------------- */
+  [["#funcTimeFromHour", 0, 23],
+   ["#funcTimeToHour", 0, 23],
+   ["#funcTimeFromMin", 0, 59],
+   ["#funcTimeToMin", 0, 59]
+  ].forEach(([sel, s, e]) => populateSelect($(sel), s, e));
 
-    // --- Select Time ---
-    populateSelect(document.getElementById("funcTimeFromHour"), 0, 23);
-    populateSelect(document.getElementById("funcTimeToHour"), 0, 23);
-    populateSelect(document.getElementById("funcTimeFromMin"), 0, 59);
-    populateSelect(document.getElementById("funcTimeToMin"), 0, 59);
+  /* --------------------------------------------------
+     🔹 Employee Lookup
+     -------------------------------------------------- */
+  //bindEmpLookup("#funcRequestBy", { SNAME: "#funcRequestByName" });
 
-    // --- Request By ---
-    bindEmpLookup(document.getElementById("funcRequestBy"), {
-        SNAME: document.getElementById("funcRequestByName")
-    });
+  bindEmpLookup("#funcTraineeCode", {
+    SNAME: "#funcTraineeName",
+    SPOSITION: "#funcTraineePosition",
+    SSEC: "#funcTraineeSec",
+    SDEPT: "#funcTraineeDept",
+    SDIV: "#funcTraineeDiv",
+    SPOSCODE: "input[name='funcTraineeposcode']"
+  });
+//, window.getEmpUrl
+  /* --------------------------------------------------
+     🔹 Expense Option Toggle
+     -------------------------------------------------- */
+  const $reasonBox = $("#funcReasonBox");
+  const $compareUpload = $("#funcCompareUpload");
+  const $part6 = $("#func_part6");
 
-    // --- Trainee ---
-    bindEmpLookup(document.getElementById("funcTraineeCode"), {
-        SNAME: document.getElementById("funcTraineeName"),
-        SPOSITION: document.getElementById("funcTraineePosition"),
-        SSEC: document.getElementById("funcTraineeSec"),
-        SDEPT: document.getElementById("funcTraineeDept"),
-        SDIV: document.getElementById("funcTraineeDiv")
-    });
-
-
-    // --- Expense toggle ---
-    const expenseRadios = document.querySelectorAll("input[name='funcExpenseOption']");
-    const reasonBox = document.getElementById("funcReasonBox");
-    const compareUpload = document.getElementById("funcCompareUpload");
-    const part6 = document.getElementById("func_part6");
-
-    expenseRadios.forEach(radio => {
-        radio.addEventListener("change", () => {
-            if (radio.value === "not_compare" && radio.checked) {
-                reasonBox?.classList.remove("hidden");
-                compareUpload?.classList.add("hidden");
-            } else if (radio.value === "compare" && radio.checked) {
-                reasonBox?.classList.add("hidden");
-                compareUpload?.classList.remove("hidden");
-                part6?.classList.remove("hidden");
-            }
-        });
-    });
-
-    // --- Free reason toggle ---
-    const reasonRadios = document.querySelectorAll("input[name='funcReason']");
-    reasonRadios.forEach(radio => {
-        radio.addEventListener("change", () => {
-            if (radio.value === "free" && radio.checked) {
-                part6?.classList.add("hidden");
-            } else {
-                part6?.classList.remove("hidden");
-            }
-        });
-    });
-
-    // --- VAT calculation ---
-    const vatResult = document.getElementById("funcVatResult");
-    const amountInput = document.getElementById("funcAmountInput");
-    if (vatResult) vatResult.classList.add("hidden");
-
-    if (amountInput) {
-        amountInput.value = "";
-        amountInput.addEventListener("input", () => {
-            if (!amountInput.value || !vatResult) return;
-
-            const amount = parseFloat(amountInput.value);
-            if (isNaN(amount)) {
-                vatResult.textContent = "";
-                vatResult.classList.add("hidden");
-                return;
-            }
-
-            const vat = amount * 0.07;
-            const total = amount + vat;
-            vatResult.textContent =
-                `รวมทั้งหมด: ${total.toLocaleString()} บาท (VAT 7%: ${vat.toLocaleString()} บาท)`;
-            vatResult.classList.remove("hidden");
-        });
+  $("input[name='funcExpenseOption']").on("change", function () {
+    const val = $(this).val();
+    if (val === "0") {
+      $reasonBox.removeClass("hidden");
+      $compareUpload.addClass("hidden");
+    } else if (val === "1") {
+      $reasonBox.addClass("hidden");
+      $compareUpload.removeClass("hidden");
+      $part6.removeClass("hidden");
     }
+  });
+
+  /* --------------------------------------------------
+     🔹 Free Reason Toggle
+     -------------------------------------------------- */
+  $("input[name='funcReason']").on("change", function () {
+    if ($(this).val() === "1") $part6.addClass("hidden");
+    else $part6.removeClass("hidden");
+  });
+
+  /* --------------------------------------------------
+     🔹 VAT Calculation (Auto 7%)
+     -------------------------------------------------- */
+  const $amountInput = $("#funcAmountInput");
+  const $vatResult = $("#funcVatResult").addClass("hidden").text("");
+
+  $amountInput.val("").on("input", function () {
+    const val = parseFloat($(this).val());
+    if (isNaN(val)) {
+      $vatResult.text("").addClass("hidden");
+      return;
+    }
+    const vat = val * 0.07;
+    const total = val + vat;
+    $vatResult
+      .text(`รวมทั้งหมด: ${total.toLocaleString()} บาท (VAT 7%: ${vat.toLocaleString()} บาท)`)
+      .removeClass("hidden");
+  });
+
+  console.log("✅ Functional Form initialized successfully");
 }
+
+
+
 
 // ✅ กัน init ซ้ำ
 initFunctionalForm.initialized = false;

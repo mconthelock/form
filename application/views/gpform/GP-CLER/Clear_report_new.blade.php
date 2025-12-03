@@ -733,6 +733,14 @@
                                 </div>
                             @endif
                         @endif
+
+                        @if($form[0]->CST == '2')
+                            <div class="flex justify-center mt-8 no-print">
+                                <button onclick="window.print()" class="btn bg-indigo-600 text-white hover:bg-indigo-700 px-6 py-2 rounded-lg shadow">
+                                    🖨️ Print Report
+                                </button>
+                            </div>
+                        @endif
                         <div class="flow_ent mt-8">
 
                         </div>

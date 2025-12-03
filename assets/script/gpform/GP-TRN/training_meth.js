@@ -1,100 +1,85 @@
+// =====================================================
+// 📦 GP-TRN: Method-Based Training Form (jQuery Version)
+// =====================================================
 
-import { bindEmpLookup } from "./emp_lookup.js";  
-import { populateSelect } from "./formUtils.js";
+import { bindEmpLookup } from "./emp_lookup.js";
+import { populateSelect, bindMaxLengthAlert } from "./formUtils.js";
 
-// ✅ export ให้ training_select.js import ไปใช้ได้
 export function initMethForm() {
-    console.log("🚀 init Meth Form");
+  console.log("🚀 init Meth Form");
+  if (initMethForm.initialized) return;
+  initMethForm.initialized = true;
 
-    // กันไม่ให้ init ซ้ำ
-    if (initMethForm.initialized) return;
-    initMethForm.initialized = true;
+  /* =====================================================
+     🔹 Populate Time Select (ใช้จาก formUtils.js)
+     ===================================================== */
+  [
+    ["#methTimeFromHour", 0, 23],
+    ["#methTimeToHour", 0, 23],
+    ["#methTimeFromMin", 0, 59],
+    ["#methTimeToMin", 0, 59]
+  ].forEach(([sel, s, e]) => populateSelect($(sel), s, e));
 
-    // =========================
-    // 🔹 Populate Time Select (ใช้จาก formUtils.js)
-    // =========================
-    populateSelect(document.getElementById("methTimeFromHour"), 0, 23);
-    populateSelect(document.getElementById("methTimeToHour"), 0, 23);
-    populateSelect(document.getElementById("methTimeFromMin"), 0, 59);
-    populateSelect(document.getElementById("methTimeToMin"), 0, 59);
+  /* =====================================================
+     🔹 Employee Lookup (Request By + Trainee)
+     ===================================================== */
+  bindEmpLookup("#methTraineeCode", {
+    SNAME: "#methTraineeName",
+    SPOSITION: "#methTraineePosition",
+    SSEC: "#methTraineeSec",
+    SDEPT: "#methTraineeDept",
+    SDIV: "#methTraineeDiv",
+    SPOSCODE: "input[name='methTraineeposcode']"
+  });
 
-    // =========================
-    // 🔹 Request By + Trainee
-    // =========================
-    bindEmpLookup(document.getElementById("methRequestBy"), {
-        SNAME: document.getElementById("methRequestByName")
-    });
+  /* =====================================================
+     🔹 Expense Toggle
+     ===================================================== */
+  const $reasonBox = $("#methReasonBox");
+  const $compareUpload = $("#methCompareUpload");
+  const $part6 = $("#meth_part6");
 
-    bindEmpLookup(document.getElementById("methTraineeCode"), {
-        SNAME: document.getElementById("methTraineeName"),
-        SPOSITION: document.getElementById("methTraineePosition"),
-        SSEC: document.getElementById("methTraineeSec"),
-        SDEPT: document.getElementById("methTraineeDept"),
-        SDIV: document.getElementById("methTraineeDiv")
-    });
-
-    // =========================
-    // 🔹 Expense toggle
-    // =========================
-    const expenseRadios = document.querySelectorAll("input[name='methExpenseOption']");
-    const reasonBox = document.getElementById("methReasonBox");
-    const compareUpload = document.getElementById("methCompareUpload");
-    const part6 = document.getElementById("meth_part6");
-
-    expenseRadios.forEach(radio => {
-        radio.addEventListener("change", () => {
-            if (radio.value === "not_compare" && radio.checked) {
-                reasonBox?.classList.remove("hidden");
-                compareUpload?.classList.add("hidden");
-            } else if (radio.value === "compare" && radio.checked) {
-                reasonBox?.classList.add("hidden");
-                compareUpload?.classList.remove("hidden");
-                part6?.classList.remove("hidden");
-            }
-        });
-    });
-
-    // =========================
-    // 🔹 Free reason toggle
-    // =========================
-    const reasonRadios = document.querySelectorAll("input[name='methReason']");
-    reasonRadios.forEach(radio => {
-        radio.addEventListener("change", () => {
-            if (radio.value === "free" && radio.checked) {
-                part6?.classList.add("hidden");
-            } else {
-                part6?.classList.remove("hidden");
-            }
-        });
-    });
-
-    // =========================
-    // 🔹 VAT calculation
-    // =========================
-    const vatResult = document.getElementById("methVatResult");
-    const amountInput = document.getElementById("methAmount");
-    if (vatResult) vatResult.classList.add("hidden");
-
-    if (amountInput) {
-        amountInput.value = "";
-        amountInput.addEventListener("input", () => {
-            if (!amountInput.value || !vatResult) return;
-
-            const amount = parseFloat(amountInput.value);
-            if (isNaN(amount)) {
-                vatResult.textContent = "";
-                vatResult.classList.add("hidden");
-                return;
-            }
-
-            const vat = amount * 0.07;
-            const total = amount + vat;
-            vatResult.textContent =
-                `รวมทั้งหมด: ${total.toLocaleString()} บาท (VAT 7%: ${vat.toLocaleString()} บาท)`;
-            vatResult.classList.remove("hidden");
-        });
+  $("input[name='methExpenseOption']").on("change", function () {
+    const val = $(this).val();
+    if (val === "0") {
+      $reasonBox.removeClass("hidden");
+      $compareUpload.addClass("hidden");
+    } else if (val === "1") {
+      $reasonBox.addClass("hidden");
+      $compareUpload.removeClass("hidden");
+      $part6.removeClass("hidden");
     }
+  });
+
+  /* =====================================================
+     🔹 Free Reason Toggle
+     ===================================================== */
+  $("input[name='methReason']").on("change", function () {
+    if ($(this).val() === "1") $part6.addClass("hidden");
+    else $part6.removeClass("hidden");
+  });
+
+  /* =====================================================
+     🔹 VAT Calculation (Auto 7%)
+     ===================================================== */
+  const $vatResult = $("#methVatResult").addClass("hidden").text("");
+  const $amountInput = $("#methAmountInput").val("");
+
+  $amountInput.on("input", function () {
+    const val = parseFloat($(this).val());
+    if (isNaN(val)) {
+      $vatResult.text("").addClass("hidden");
+      return;
+    }
+    const vat = val * 0.07;
+    const total = val + vat;
+    $vatResult
+      .text(`รวมทั้งหมด: ${total.toLocaleString()} บาท (VAT 7%: ${vat.toLocaleString()} บาท)`)
+      .removeClass("hidden");
+  });
+
+  console.log("✅ Meth Form initialized successfully");
 }
 
-// ✅ เพิ่ม flag ไว้กันการ init ซ้ำ
+// ✅ Flag กันการ init ซ้ำ
 initMethForm.initialized = false;

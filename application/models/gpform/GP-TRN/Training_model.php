@@ -16,6 +16,12 @@ class Training_model extends CI_Model
         return $query->result();
     }
 
+    public function get_headinfo($empno) {
+        $sql = "SELECT A.EMPNO, A.SPOSCODE AS REQ_POS, A.HEADNO, A.SPOSCODE1, B.* FROM SEQUENCEORG A INNER JOIN AMECUSERALL B ON A.HEADNO = B.SEMPNO WHERE A.EMPNO = '".$empno."'";
+        $query = $this->db->query($sql);
+        return $query->result();
+    }
+
     public function getSect() {
         $sql = "SELECT SSECCODE, SSEC  FROM AMEC.PSECTION  WHERE UPPER(SSEC) NOT LIKE '%CANCEL%'  AND SSECCODE <> '00' ORDER BY SSEC";
         $query = $this->db->query($sql);
@@ -46,6 +52,20 @@ class Training_model extends CI_Model
         }
     }
 
+    public function update_data($table, $data, $where) {
+        if (empty($table) || empty($data) || !is_array($data)) {
+            return false; // ป้องกัน error
+        }
+        $this->db->where($where);
+        $result = $this->db->update($table, $data);
+        if ($result) {
+             return true;
+        } else {
+            return false;
+        }
+    }
+
+
     public function select_all_by_tb($frmno, $orgno, $cyear, $cyear2, $nrunno, $table, $order_by, $extra_where = []) {
         $this->db->distinct();
         $this->db->from($table);
@@ -65,24 +85,11 @@ class Training_model extends CI_Model
         $this->db->order_by($order_by, 'ASC');
         return $this->db->get()->result();
     }
-/*
-    function get_main_data($frmno, $orgno, $cyear, $cyear2, $nrunno){
-        $query = "SELECT A.*, C.SEMPNO AS REQ_EMPNO, C.SNAME AS REQ_NAME, D.SEMPNO AS INP_EMPNO, D.SNAME AS INP_NAME,
-            E.SEMPNO AS TRAINEE_EMPNO, E.SNAME AS TRAINEE_NAME, E.SSEC AS TRAINEE_SEC, E.SDEPT AS TRAINEE_DEPT, E.SDIV AS TRAINEE_DIV,
-            E.SPOSITION AS TRAINEE_POS, F.FORM_NAME_TH,F.FORM_NAME_EN
-            FROM GP_TRN_HEAD A 
-            INNER JOIN FORM B ON A.NFRMNO = B.NFRMNO AND A.VORGNO = B.VORGNO AND A.CYEAR = B.CYEAR AND A.CYEAR2 = B.CYEAR2 AND A.NRUNNO = B.NRUNNO
-            LEFT JOIN GP_TRN_TRAINEE TB ON A.NFRMNO = TB.NFRMNO AND A.VORGNO = TB.VORGNO AND A.CYEAR = TB.CYEAR AND A.CYEAR2 = TB.CYEAR2 AND A.NRUNNO = TB.NRUNNO
-            LEFT JOIN AMEC.AMECUSERALL C ON B.VREQNO = C.SEMPNO
-            LEFT JOIN AMEC.AMECUSERALL D ON B.VINPUTER = D.SEMPNO
-            LEFT JOIN AMEC.AMECUSERALL E ON A.TRAINEE_ID = E.SEMPNO
-            INNER JOIN GP_TRN_FORM_MST F ON A.FID = F.FID
-            WHERE A.NFRMNO = '".$frmno."' AND A.VORGNO = '".$orgno."' AND A.CYEAR = '".$cyear."' 
-            AND A.CYEAR2 = '".$cyear2."' and A.NRUNNO = '".$nrunno."'";
+
+    function get_training_form_mst($where = ''){
+        $query = "SELECT * FROM GP_TRN_FORM_MST ".$where." ORDER BY FID";
         return  $this->db->query($query)->result();
     }
-*/
-
     
     function get_main_data($frmno, $orgno, $cyear, $cyear2, $nrunno){
         $query = "SELECT A.*, C.SEMPNO AS REQ_EMPNO, C.SNAME AS REQ_NAME, D.SEMPNO AS INP_EMPNO, D.SNAME AS INP_NAME, F.FORM_NAME_TH,F.FORM_NAME_EN
@@ -103,16 +110,16 @@ class Training_model extends CI_Model
             FROM GP_TRN_TRAINEE A 
             LEFT JOIN AMEC.AMECUSERALL E ON A.EMPNO = E.SEMPNO
             WHERE A.NFRMNO = '".$frmno."' AND A.VORGNO = '".$orgno."' AND A.CYEAR = '".$cyear."' 
-            AND A.CYEAR2 = '".$cyear2."' and A.NRUNNO = '".$nrunno."'";
+            AND A.CYEAR2 = '".$cyear2."' and A.NRUNNO = '".$nrunno."' ORDER BY A.EMPNO";
         return  $this->db->query($query)->result();
     }
 
-    function get_data_flow($frmno, $orgno, $cyear, $cyear2, $nrunno, $where){
-        $query = "SELECT * FROM FLOW A
-            WHERE A.NFRMNO = '".$frmno."' AND A.VORGNO = '".$orgno."' AND A.CYEAR = '".$cyear."' 
-            AND A.CYEAR2 = '".$cyear2."' and A.NRUNNO = '".$nrunno."' ".$where;
-        return  $this->db->query($query)->result();
-    }
+        function get_data_flow($frmno, $orgno, $cyear, $cyear2, $nrunno, $where){
+            $query = "SELECT * FROM FLOW A
+                WHERE A.NFRMNO = '".$frmno."' AND A.VORGNO = '".$orgno."' AND A.CYEAR = '".$cyear."' 
+                AND A.CYEAR2 = '".$cyear2."' and A.NRUNNO = '".$nrunno."' ".$where;
+            return  $this->db->query($query)->result();
+        }
 
     function update_flow($frmno, $orgno, $cyear, $cyear2, $nrunno, $conname, $convalue, $where_col, $where_val){
         $this->db->set($conname, $convalue);
@@ -121,7 +128,7 @@ class Training_model extends CI_Model
         $this->db->where('CYEAR', $cyear);
         $this->db->where('CYEAR2', $cyear2);
         $this->db->where('NRUNNO', $nrunno);
-        $this->db->where($where_col,$where_val);
+        $this->db->where($where_col, $where_val);
         $this->db->update('FLOW');
         return true;
     }
@@ -132,8 +139,135 @@ class Training_model extends CI_Model
         $this->db->where('CYEAR', $cyear);
         $this->db->where('CYEAR2', $cyear2);
         $this->db->where('NRUNNO', $runno);
-        $this->db->where($where_col, $where_val);
+            // ✅ ตรวจสอบ ถ้า where_val เป็น array → ใช้ where_in()
+        if (is_array($where_val)) {
+            $this->db->where_in($where_col, $where_val);
+        } else {
+            $this->db->where($where_col, $where_val);
+        }
         $this->db->delete('FLOW');
         return true;
+    }
+
+    public function get_form($frmno, $orgno, $cyear, $cyear2, $nrunno) {
+        $query = "SELECT A.* FROM FORM A
+                WHERE A.NFRMNO = '".$frmno."' 
+                    AND A.VORGNO = '".$orgno."' 
+                    AND A.CYEAR = '".$cyear."' 
+                    AND A.CYEAR2 = '".$cyear2."' 
+                    AND A.NRUNNO = '".$nrunno."'";
+        return $this->db->query($query)->result();
+    }
+
+    function delete_all_table($nfrmno,$vorgno,$cyear,$cyear2,$runno, $table){
+        $this->db->where('NFRMNO', $nfrmno);
+        $this->db->where('VORGNO', $vorgno);
+        $this->db->where('CYEAR', $cyear);
+        $this->db->where('CYEAR2', $cyear2);
+        $this->db->where('NRUNNO', $runno);
+        $this->db->delete($table);
+        return true;
+    }
+
+
+    function get_data_trnrp_head($frmno, $orgno, $cyear, $cyear2, $nrunno){
+        $query = "SELECT A.*, C.FORM_NAME_TH, C.FORM_NAME_EN, B.SUBJECT,
+            TO_CHAR(TO_DATE(B.DATE_FROM, 'YYYYMMDD'), 'DD/MM/YYYY') AS DATE_FROM,
+            TO_CHAR(TO_DATE(B.DATE_TO, 'YYYYMMDD'), 'DD/MM/YYYY') AS DATE_TO,
+            SUBSTR(B.TIME_FROM, 1, 2) || ':' || SUBSTR(B.TIME_FROM, 3, 2) AS TIME_FROM,
+            SUBSTR(B.TIME_TO, 1, 2) || ':' || SUBSTR(B.TIME_TO, 3, 2) AS TIME_TO,
+            B.PLACE, B.INSTITUTION, B.COST, B.COST_NOTE,
+            E.SEMPNO, E.SNAME, E.STNAME, E.SPOSITION,E.SSEC, E.SDEPT, E.SDIV, E.SPOSCODE,
+            B.NFRMNO AS REF_NFRMNO, B.VORGNO AS REF_VORGNO, B.CYEAR AS REF_CYEAR
+            FROM GP_TRNRP_HEAD A
+            INNER JOIN GP_TRN_HEAD B ON A.REF_CYEAR2 = B.CYEAR2 AND A.REF_NRUNNO = B.NRUNNO
+            LEFT JOIN GP_TRN_FORM_MST C ON B.FID = C.FID
+            LEFT JOIN GP_TRN_TRAINEE D ON B.CYEAR2 = D.CYEAR2 AND B.NRUNNO = D.NRUNNO
+            LEFT JOIN AMECUSERALL E ON D.EMPNO = E.SEMPNO
+            WHERE A.NFRMNO = '".$frmno."' AND A.VORGNO = '".$orgno."' AND A.CYEAR = '".$cyear."' 
+            AND A.CYEAR2 = '".$cyear2."' and A.NRUNNO = '".$nrunno."' ";
+        return  $this->db->query($query)->result();
+    }
+
+    public function update_data_report($frmno, $orgno, $cyear, $cyear2, $nrunno, $content, $apply) {
+        try {
+            $this->db->where('NFRMNO', $frmno);
+            $this->db->where('VORGNO', $orgno);
+            $this->db->where('CYEAR', $cyear);
+            $this->db->where('CYEAR2', $cyear2);
+            $this->db->where('NRUNNO', $nrunno);
+            $this->db->set('CONTENT', $content);
+            $this->db->set('APPLY', $apply);
+            $this->db->update('GP_TRNRP_HEAD');
+
+            if ($this->db->affected_rows() > 0) {
+                return ['status' => true, 'message' => ' Date updated successfully'];
+            } else {
+                return ['status' => false, 'message' => 'No record updated'];
+            }
+        } catch (Exception $e) {
+            return ['status' => false, 'message' => $e->getMessage()];
+        }
+    }
+
+    function get_data_clrtrn_head($frmno, $orgno, $cyear, $cyear2, $nrunno){
+        $query = "SELECT A.*, C.FORM_NAME_TH, C.FORM_NAME_EN, B.SUBJECT,
+            TO_CHAR(TO_DATE(B.DATE_FROM, 'YYYYMMDD'), 'DD/MM/YYYY') AS DATE_FROM,
+            TO_CHAR(TO_DATE(B.DATE_TO, 'YYYYMMDD'), 'DD/MM/YYYY') AS DATE_TO,
+            SUBSTR(B.TIME_FROM, 1, 2) || ':' || SUBSTR(B.TIME_FROM, 3, 2) AS TIME_FROM,
+            SUBSTR(B.TIME_TO, 1, 2) || ':' || SUBSTR(B.TIME_TO, 3, 2) AS TIME_TO,
+            B.PLACE, B.INSTITUTION, B.COST, B.COST_NOTE,
+            E.SEMPNO, E.SNAME, E.STNAME, E.SPOSITION,E.SSEC, E.SDEPT, E.SDIV, E.SPOSCODE,
+            B.NFRMNO AS REF_NFRMNO, B.VORGNO AS REF_VORGNO, B.CYEAR AS REF_CYEAR
+            FROM GP_CLRTRN_HEAD A
+            INNER JOIN GP_TRN_HEAD B ON A.REF_CYEAR2 = B.CYEAR2 AND A.REF_NRUNNO = B.NRUNNO
+            LEFT JOIN GP_TRN_FORM_MST C ON B.FID = C.FID
+            LEFT JOIN GP_TRN_TRAINEE D ON B.CYEAR2 = D.CYEAR2 AND B.NRUNNO = D.NRUNNO
+            LEFT JOIN AMECUSERALL E ON D.EMPNO = E.SEMPNO
+            WHERE A.NFRMNO = '".$frmno."' AND A.VORGNO = '".$orgno."' AND A.CYEAR = '".$cyear."' 
+            AND A.CYEAR2 = '".$cyear2."' and A.NRUNNO = '".$nrunno."' ";
+        return  $this->db->query($query)->result();
+    }
+
+    function get_group_train($cyear2){
+        $query = "SELECT MAX(SUBSTR(GROUP_TRAIN,4,4)) AS GP_TRAIN FROM GP_TRN_HEAD WHERE GROUP_TRAIN LIKE '".$cyear2."%'";
+        return  $this->db->query($query)->result();
+    }
+
+    function get_data_group_train($where){
+        $query = "SELECT DISTINCT 'GP-TRN' || SUBSTR(A.CYEAR2,3,2) || '-' || LPAD(A.NRUNNO, 6, '0') AS FORMNO, A.*,  E.SEMPNO, E.SNAME, E.STNAME, A.GROUP_TRAIN
+        FROM GP_TRN_HEAD A 
+        INNER JOIN FORM B ON A.NFRMNO = B.NFRMNO AND A.VORGNO = B.VORGNO AND A.CYEAR = B.CYEAR AND A.CYEAR2 = B.CYEAR2 AND A.NRUNNO = B.NRUNNO 
+        INNER JOIN GP_TRN_TRAINEE D ON A.CYEAR2 = D.CYEAR2 AND A.NRUNNO = D.NRUNNO
+        INNER JOIN AMECUSERALL E ON E.SEMPNO = D.EMPNO
+        WHERE B.CST = '1' ".$where." 
+        ORDER BY A.CYEAR2, A.NRUNNO";
+        return  $this->db->query($query)->result();
+    }
+
+    function get_data_group_train_view($where){
+        $query = "SELECT DISTINCT 'GP-TRN' || SUBSTR(A.CYEAR2,3,2) || '-' || LPAD(A.NRUNNO, 6, '0') AS FORMNO, A.*,  E.SEMPNO, E.SNAME, E.STNAME, A.GROUP_TRAIN, C.CSTEPST , D.COST_PERSON 
+        FROM GP_TRN_HEAD A 
+        INNER JOIN FORM B ON A.NFRMNO = B.NFRMNO AND A.VORGNO = B.VORGNO AND A.CYEAR = B.CYEAR AND A.CYEAR2 = B.CYEAR2 AND A.NRUNNO = B.NRUNNO  
+        INNER JOIN FLOW C ON A.NFRMNO = C.NFRMNO AND A.VORGNO = C.VORGNO AND A.CYEAR = C.CYEAR AND A.CYEAR2 = C.CYEAR2 AND A.NRUNNO = C.NRUNNO AND CSTEPNEXTNO = '00'
+        INNER JOIN GP_TRN_TRAINEE D ON A.CYEAR2 = D.CYEAR2 AND A.NRUNNO = D.NRUNNO
+        INNER JOIN AMECUSERALL E ON E.SEMPNO = D.EMPNO
+        WHERE B.CST = '1' ".$where." 
+        ORDER BY A.CYEAR2, A.NRUNNO";
+        return  $this->db->query($query)->result();
+    }
+
+    function get_data_report($where){
+        $query = "SELECT A.FID, C.FORM_NAME_TH, C.FORM_NAME_EN, A.SUBJECT, E.SEMPNO, E.SPOSITION, E.SSEC, E.SDEPT, E.SDIV, E.STNAME, 
+            A.DATE_FROM, A.DATE_TO, A.COST, ROUND(A.COST * 0.07) AS VAT, A.COST + ROUND(A.COST * 0.07) AS TOTAL, FM.CST
+            FROM GP_TRN_HEAD A
+            INNER JOIN GP_TRN_LIST B ON A.CYEAR2 = B.CYEAR2 AND A.NRUNNO = B.NRUNNO 
+            INNER JOIN FORM FM ON A.NFRMNO = FM.NFRMNO AND A.VORGNO = FM.VORGNO AND A.CYEAR = FM.CYEAR AND A.CYEAR2 = FM.CYEAR2 AND A.NRUNNO = FM.NRUNNO
+            LEFT JOIN GP_TRN_FORM_MST C ON A.FID = C.FID
+            LEFT JOIN GP_TRN_TRAINEE D ON A.NFRMNO = D.NFRMNO AND A.VORGNO = D.VORGNO AND A.CYEAR = D.CYEAR AND A.CYEAR2 = D.CYEAR2 AND A.NRUNNO = D.NRUNNO
+            LEFT JOIN AMECUSERALL E ON D.EMPNO = E.SEMPNO
+        WHERE A.FID IS NOT NULL ".$where." 
+        ORDER BY A.FID,A.DATE_FROM, E.SEMPNO";
+        return  $this->db->query($query)->result();
     }
 }

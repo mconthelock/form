@@ -173,7 +173,7 @@ class Main extends MY_Controller
         } else {
             $getEmp = $this->ent->get_orgpos("020101", "02")[0]; // PRESIDENT
         }
-        $this->updateFlowApv("", $getEmp->VEMPNO, $post['nfrmno'], $post['vorgno'], $post['cyear'], $post['cyear2'], $post['nrunno'], "01", "00");
+        $this->updateFlowApv("", $getEmp->VEMPNO, $post['nfrmno'], $post['vorgno'], $post['cyear'], $post['cyear2'], $post['nrunno'], "18", "19");
         $data = [
             'NFRMNO'         => $post['nfrmno'],
             'VORGNO'         => $post['vorgno'],

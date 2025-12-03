@@ -35,7 +35,7 @@
                                 <td class="border border-gray-500 text-center">
                                     @php
                                         $countUnmath = count(array_filter($user, function ($item) {
-                                            return isset($item->RESULT) && $item->RESULST == 0;
+                                            return isset($item->RESULT) && $item->RESULT == 0;
                                         }));
                                     @endphp
                                     {{ $countUnmath }}

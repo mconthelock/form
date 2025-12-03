@@ -14,7 +14,7 @@ require_once APPPATH.'controllers/_excel.php';
 class report extends MY_Controller{
     use formApi, _File, _excel;
     protected $client;
-    private $nfrmno = "21";
+    private $nfrmno = "14";
     private $vorgno = "090301";
     private $cyear = "25";  
     function __construct(){

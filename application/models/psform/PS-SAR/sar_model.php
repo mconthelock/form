@@ -17,6 +17,7 @@ class Sar_model extends CI_Model
         $this->db->select('*')
             ->from('PSSAR_FORM')
             ->join('K13098KP k', 'PSSAR_FORM.CODE_ITEM = k.CODE', 'left')
+            ->join('PSSAR_TYPE', 'PSSAR_FORM.TYPE = PSSAR_TYPE.TYPE_ID', 'left')
             ->where('NFRMNO', $nfrmno)
             ->where('VORGNO', $vorgno)
             ->where('CYEAR', $cyear)

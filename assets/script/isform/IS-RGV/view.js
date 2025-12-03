@@ -1,5 +1,10 @@
 import { showFlow, doaction, redirectWebflow } from "../../inc/_form.js";
 import { host } from "../../utils.js";
+import "datatables.net-dt";
+import "datatables.net-responsive-dt";
+import "datatables.net-dt/css/dataTables.dataTables.min.css";
+import "datatables.net-responsive-dt/css/responsive.dataTables.min.css";
+
 
 $(document).ready(async function () {
   const formData = $(".form-data").data();
@@ -41,6 +46,8 @@ $(document).ready(async function () {
         const value = $radio.val();
         const remarkText = $remark.val().trim();
 
+        const userLoginData = $radio.data("userlogin") || "";
+
         if (value === "0" && remarkText === "") {
           errorMsg = "กรุณาระบุ Remark ในแถวที่เลือก Unmatch";
           hasError = true;
@@ -50,6 +57,7 @@ $(document).ready(async function () {
 
         resultData.push({
           usr_login: usrLogin,
+          userLoginData,
           result: value,
           remark: remarkText,
           nfrmno,
@@ -94,6 +102,7 @@ $(document).ready(async function () {
       return;
     }
 
+    console.log(resultData);
     // --- ส่งข้อมูล ---
     $.ajax({
       url: host + "isform/IS-RGV/Main/Update_Result",
@@ -115,5 +124,42 @@ $(document).ready(async function () {
     const action = $(this).data("action");
     const confirm = await doaction(nfrmno, vorgno, cyear, cyear2, nrunno, action, empno, "");
     if (confirm.status) redirectWebflow();
+  });
+
+  const dt = $("#menuTable").DataTable({
+    ordering: false,
+  });
+
+  $(document).on("change", ".create_author", function () {
+    const menuId = $(this).data("menu-id");
+    const isChecked = $(this).is(":checked");
+    const empno = $("#empno").val().trim();
+
+    if (!empno) {
+      alert("Please enter an Employee No.");
+      $(this).prop("checked", !isChecked); // Revert the checkbox
+      return; // Stop the execution
+    }
+
+    $.ajax({
+      type: "POST",
+      url: `${host}isform/IS-RGV/main/insert`, // ใช้ template literal เพื่อความกระชับ
+      data: {
+        menu_id: menuId,
+        is_checked: isChecked,
+        empno,
+      },
+      // dataType: 'json',
+      success: function (response) {
+        // ควรมีการจัดการ response ที่ดี เช่น แสดงข้อความสำเร็จ
+        console.log("Update successful:", response);
+      },
+      error: function (xhr, status, error) {
+        // จัดการ error เพื่อให้ debug ง่ายขึ้น
+        console.error("AJAX Error:", status, error);
+        alert("An error occurred while updating permissions.");
+        $(this).prop("checked", !isChecked); // Revert on error
+      },
+    });
   });
 });

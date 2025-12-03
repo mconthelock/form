@@ -1,121 +1,197 @@
+// =====================================================
+// 📦 GP-TRN: Form Data Builder & Saver (jQuery Version)
+// =====================================================
+
+import { showAlert } from "./formUtils.js";
+
 /**
- * Build FormData สำหรับทุกรูปแบบฟอร์ม
- * @param {object} headResult - ผลลัพธ์จาก createForm()
- * @param {string} fid - form id (1=functional,2=legal,3=meth)
- * @param {string} prefix - prefix form ("func","legal","meth")
+ * 🔹 Build FormData สำหรับทุกประเภทฟอร์ม (func/legal/meth/pos/out)
+ * @param {object} head - ผลลัพธ์จาก createForm()
+ * @param {string} fid - form id (1=functional,2=legal,3=meth,4=pos,5=out)
+ * @param {string} prefix - prefix form เช่น "func", "legal", "meth"
+ * @returns {FormData}
  */
-export function buildFormDataGeneric(headResult, fid, prefix) {
-    const fd = new FormData();
+export function buildFormDataGeneric(head, fid, prefix) {
+  const fd = new FormData();
 
-    // ✅ Base Head
-    fd.append("PREFIX", prefix);
-    fd.append("NFRMNO", headResult.data.NFRMNO);
-    fd.append("VORGNO", headResult.data.VORGNO);
-    fd.append("CYEAR", headResult.data.CYEAR);
-    fd.append("CYEAR2", headResult.data.CYEAR2);
-    fd.append("NRUNNO", headResult.data.NRUNNO);
-    fd.append("FID", fid);
+  // 🧩 Base head info
+  const base = head?.data || {};
+  ["NFRMNO", "VORGNO", "CYEAR", "CYEAR2", "NRUNNO"].forEach(k => fd.append(k, base[k] || ""));
+  fd.append("PREFIX", prefix);
+  fd.append("FID", fid);
 
-    // helper get value
-    const getVal = (id, def = "") =>
-        document.getElementById(`${prefix}${id}`)?.value || def;
+  // 🔹 Helper
+  const getVal = (id, def = "") => $(`#${prefix}${id}`).val()?.trim() || def;
+  fd.append("SUBJECT", getVal("TrainingSubject"));
+  
 
-    // ✅ Mapping field (ทุกฟอร์มใช้ได้)
-    fd.append("SUBJECT", getVal("TrainingSubject"));
+  ["DateFrom", "DateTo"].forEach(k => {
+    const v = getVal(k);
+    if (v) fd.append(k === "DateFrom" ? "DATE_FROM" : "DATE_TO", v.replace(/-/g, ""));
+  });
 
-    const dateFrom = getVal("DateFrom");
-    if (dateFrom) fd.append("DATE_FROM", dateFrom.replace(/-/g, ""));
-    const dateTo = getVal("DateTo");
-    if (dateTo) fd.append("DATE_TO", dateTo.replace(/-/g, ""));
+  fd.append("TIME_FROM", getVal("TimeFromHour", "00") + getVal("TimeFromMin", "00"));
+  fd.append("TIME_TO", getVal("TimeToHour", "00") + getVal("TimeToMin", "00"));
+  fd.append("PLACE", getVal("Location"));
+  fd.append("INSTITUTION", getVal("Institute"));
+  fd.append("COST", getVal("AmountInput", "0"));
+  fd.append("COST_NOTE", getVal("AmountNote"));
+  
 
-    const timeFromHour = getVal("TimeFromHour", "00");
-    const timeFromMin = getVal("TimeFromMin", "00");
-    fd.append("TIME_FROM", timeFromHour + timeFromMin);
+  // 🔹 Radio group
+  fd.append("TRN_EXPENSE_STATUS", $(`input[name='${prefix}ExpenseOption']:checked`).val() || "");
+  fd.append("TRN_EXPENSE_REASON", $(`input[name='${prefix}Reason']:checked`).val() || "");
+  fd.append("TRN_EXPENSE_OTHER", getVal("ReasonOtherText"));
 
-    const timeToHour = getVal("TimeToHour", "00");
-    const timeToMin = getVal("TimeToMin", "00");
-    fd.append("TIME_TO", timeToHour + timeToMin);
+  // 🔹 Arrays (objective, expectation)
+  $(`input[name='${prefix}Objective[]']`).each((_, el) => {
+    const v = $(el).val()?.trim();
+    if (v) fd.append(`${prefix}Objective[]`, v);
+  });
 
-    fd.append("PLACE", getVal("Location"));
-    fd.append("INSTITUTION", getVal("Institute"));
+  $(`input[name='${prefix}Expectation[]']`).each((_, el) => {
+    const v = $(el).val()?.trim();
+    if (v) fd.append(`${prefix}Expectation[]`, v);
+  });
 
+  // 🔹 Helper สำหรับแนบไฟล์
+  const appendFiles = (name) => {
+    const files = $(`#${prefix}${name}`)[0]?.files;
+    if (files) for (const f of files) fd.append(`${prefix}${name}[]`, f);
+  };
 
-    fd.append("COST", getVal("AmountInput", "0"));
-    fd.append("COST_NOTE", getVal("AmountNote"));
+  // แนบไฟล์เปรียบเทียบ (ทุกฟอร์มมี)
+  appendFiles("CompareFiles");
+  appendFiles("OtherFiles");
+  // 🔹 Special Logic ต่อฟอร์ม
+  switch (prefix) {
+    case "func":
+      fd.append("TRAINEE_ID[]", getVal("TraineeCode"));
+      fd.append("JD_NAME", getVal("JdName"));
+      fd.append("JD_DESC", getVal("JdRelation"));
+      appendFiles("JdFiles");
+      break;
 
-    // ✅ Radio
-    const expenseOption =
-        document.querySelector(`input[name='${prefix}ExpenseOption']:checked`)?.value || "";
-    fd.append("TRN_EXPENSE_STATUS", expenseOption);
-
-    const reason =
-        document.querySelector(`input[name='${prefix}Reason']:checked`)?.value || "";
-    fd.append("TRN_EXPENSE_REASON", reason);
-
-    fd.append("TRN_EXPENSE_OTHER", getVal("ReasonOtherText"));
-
-    // ✅ Arrays (objective, expectation)
-    document.querySelectorAll(`input[name='${prefix}Objective[]']`).forEach(el => {
-        if (el.value.trim()) fd.append(`${prefix}Objective[]`, el.value.trim());
-    });
-
-    document.querySelectorAll(`input[name='${prefix}Expectation[]']`).forEach(el => {
-        if (el.value.trim()) fd.append(`${prefix}Expectation[]`, el.value.trim());
-    });
-
-    // ✅ Files
-    const compareFiles = document.getElementById(`${prefix}CompareFiles`)?.files;
-    if (compareFiles) {
-        for (let i = 0; i < compareFiles.length; i++) {
-            fd.append(`${prefix}CompareFiles[]`, compareFiles[i]);
+    case "legal":
+      $("#legal_participants tbody tr").each(function () {
+        const id = $(this).find("input[name='legalTraineecode[]']").val()?.trim();
+        const poscode = $(this).find("input[name='legalTraineeposcode[]']").val()?.trim();
+        const cost = $(this).find("input[name='legalTraineecost[]']").val()?.trim();
+        if (id) {
+          fd.append("TRAINEE_ID[]", id);
+          fd.append("TRAINEE_COST[]", cost || "0");
+          fd.append("SPOSCODE[]", poscode || "");
         }
-    }
+      });
+      fd.append("LAWS", getVal("ConcernLaw"));
+      break;
 
-    // ✅ Special case by form type
-    switch (prefix) {
-        case "func":
-            fd.append("TRAINEE_ID", getVal("TraineeCode")); // ✅ prefix + id = funcTraineeCode
-            fd.append("JD_NAME", getVal("JdName"));
-            fd.append("JD_DESC", getVal("JdRelation"));
-            const jdFiles = document.getElementById(`${prefix}JdFiles`)?.files;
-            if (jdFiles) {
-                for (let i = 0; i < jdFiles.length; i++) {
-                    fd.append(`${prefix}JdFiles[]`, jdFiles[i]);
-                }
-            }
-            break;
-        case "legal":
-            document.querySelectorAll("input[name='legalTraineecode[]']").forEach(el => {
-                if (el.value.trim()) fd.append("TRAINEE_ID[]", el.value.trim());
-            });
-            fd.append("LAWS", getVal("ConcernLaw"));
-            break;
-        case "meth":
-            //fd.append("TRAINEE_ID", getVal("methTraineeCode"));
-            fd.append("TRAINEE_ID", getVal("TraineeCode"));
-            break;
-        default:
-            console.warn(`Unhandled prefix: ${prefix}`);
-    }
+    case "meth":
+    case "pos":
+      fd.append("TRAINEE_ID[]", getVal("TraineeCode"));
+      break;
+    case "out":
+      $("input[name='legalTraineecode[]']").each((_, el) => {
+        const v = $(el).val()?.trim();
+        if (v) fd.append("TRAINEE_ID[]", v);
+      });
+      break;
 
-    return fd;
+    default:
+      console.warn(`⚠️ Unhandled prefix: ${prefix}`);
+  }
+
+  return fd;
 }
 
 /**
- * Save form detail ไปยัง API save_formcreate
+ * 🔹 Save Form Detail ไปยัง API save_formcreate
+ * @param {FormData} fd - ข้อมูลฟอร์มทั้งหมด
+ * @returns {Promise<object>} - JSON response จาก server
  */
-export async function savedetailForm(formData) {
-    const res = await fetch(`${process.env.APP_ENVX}/gpform/GP-TRN/training/save_formcreate`, {
-    //const res = await fetch(`${mainUrl}/save_formcreate`, {
-        method: "POST",
-        body: formData
+export async function savedetailForm(fd) {
+  const API = window.mainUrl || "{{ site_url('gpform/GP-TRN') }}";
+  try {
+    const res = await fetch(`${API}/save_formcreate`, {
+      method: "POST",
+      body: fd
     });
 
     const text = await res.text();
-    try {
-        return JSON.parse(text);
-    } catch {
-        console.error("❌ Response is not JSON:", text);
-        throw new Error("Invalid JSON response");
+    console.log("🧩 Raw response:", text); // <--- เพิ่มบรรทัดนี้
+    const json = JSON.parse(text);
+
+    // ถ้าสำเร็จ แสดง alert
+    if (json.status === "success") {
+      //showAlert("✅ บันทึกสำเร็จ", "ข้อมูลฟอร์มถูกบันทึกเรียบร้อยแล้ว");
+    } else {
+      showAlert("⚠ แจ้งเตือน", json.message || "ไม่สามารถบันทึกข้อมูลได้");
     }
+
+    return json;
+
+  } catch (err) {
+    console.error("❌ save_formcreate error:", err);
+    showAlert("❌ ข้อผิดพลาด", "ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้");
+    throw err;
+  }
+}
+
+
+export async function createClearanceForm(fd_clr) {
+  const API = window.mainUrl || "{{ site_url('gpform/GP-TRN') }}";
+  try {
+    const res = await fetch(`${API}/save_formcreate_clearance`, {
+      method: "POST",
+      body: fd_clr
+    });
+
+    const text = await res.text();
+    console.log("🧩 Raw response clearance form:", text); // <--- เพิ่มบรรทัดนี้
+    const json = JSON.parse(text);
+
+    if (json.status === "success") {
+      //showAlert("✅ บันทึกสำเร็จ", "ข้อมูลฟอร์มถูกบันทึกเรียบร้อยแล้ว");
+    } else {
+      showAlert("⚠ แจ้งเตือน", json.message || "ไม่สามารถบันทึกข้อมูลได้");
+    }
+
+    return json;
+
+  } catch (err) {
+    console.error("❌ save formcreate clearance error:", err);
+    showAlert("❌ ข้อผิดพลาด", "ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้");
+    throw err;
+  }
+}
+
+
+
+
+export async function createReportForm(fd_report) {
+  const API = window.mainUrl || "{{ site_url('gpform/GP-TRN') }}";
+  try {
+    const res = await fetch(`${API}/save_formcreate_report`, {
+      method: "POST",
+      body: fd_report
+    });
+
+    const text = await res.text();
+    console.log("🧩 Raw response training report form :", text); // <--- เพิ่มบรรทัดนี้
+    const json = JSON.parse(text);
+
+    // ถ้าสำเร็จ แสดง alert
+    if (json.status === "success") {
+      //showAlert("✅ บันทึกสำเร็จ", "ข้อมูลฟอร์มถูกบันทึกเรียบร้อยแล้ว");
+    } else {
+      showAlert("⚠ แจ้งเตือน", json.message || "ไม่สามารถบันทึกข้อมูลได้");
+    }
+
+    return json;
+
+  } catch (err) {
+    console.error("❌ save_formcreate report error:", err);
+    showAlert("❌ ข้อผิดพลาด", "ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้");
+    throw err;
+  }
 }

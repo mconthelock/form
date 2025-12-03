@@ -1,0 +1,78 @@
+-- ตาราง ISLN_FORM สำหรับเก็บข้อมูลฟอร์ม LN User Registration
+-- CREATE TABLE IF NOT EXISTS ISLN_FORM (
+--     NFRMNO VARCHAR(10) NOT NULL,
+--     VORGNO VARCHAR(10) NOT NULL,
+--     CYEAR VARCHAR(4) NOT NULL,
+--     CYEAR2 VARCHAR(4) NOT NULL,
+--     NRUNNO INT NOT NULL,
+--     INPUT_BY VARCHAR(10),
+--     REQUEST_BY VARCHAR(10),
+--     ACTION_ID INT,
+--     GROUP_CODE VARCHAR(50),
+--     REMARK TEXT,
+--     DCREDTE DATETIME DEFAULT GETDATE(),
+--     DUPDDTE DATETIME DEFAULT GETDATE(),
+--     PRIMARY KEY (NFRMNO, VORGNO, CYEAR, CYEAR2, NRUNNO),
+--     FOREIGN KEY (NFRMNO, VORGNO, CYEAR) REFERENCES FORMMST(NNO, VORGNO, CYEAR)
+-- );
+
+-- ตาราง ISLN_FORM_PERMISSION สำหรับเก็บ permissions ของแต่ละ module
+-- CREATE TABLE IF NOT EXISTS ISLN_FORM_PERMISSION (
+--     ID INT IDENTITY(1,1) PRIMARY KEY,
+--     NFRMNO VARCHAR(10) NOT NULL,
+--     VORGNO VARCHAR(10) NOT NULL,
+--     CYEAR VARCHAR(4) NOT NULL,
+--     CYEAR2 VARCHAR(4) NOT NULL,
+--     NRUNNO INT NOT NULL,
+--     MODULE_ID INT NOT NULL,
+--     ROLE_ID INT NOT NULL,
+--     FOREIGN KEY (NFRMNO, VORGNO, CYEAR, CYEAR2, NRUNNO) REFERENCES ISLN_FORM(NFRMNO, VORGNO, CYEAR, CYEAR2, NRUNNO),
+--     FOREIGN KEY (MODULE_ID) REFERENCES ISLN_MODULE(ID),
+--     FOREIGN KEY (ROLE_ID) REFERENCES ISLN_ROLE(ID)
+-- );
+
+-- ตาราง ISLN_ACTION สำหรับเก็บประเภทของ action
+-- CREATE TABLE IF NOT EXISTS ISLN_ACTION (
+--     ID INT IDENTITY(1,1) PRIMARY KEY,
+--     ACTION_NAME NVARCHAR(100) NOT NULL,
+--     DESCRIPTION NVARCHAR(255)
+-- );
+
+-- ตาราง ISLN_MODULE สำหรับเก็บ modules ต่างๆ ใน LN System
+-- CREATE TABLE IF NOT EXISTS ISLN_MODULE (
+--     ID INT IDENTITY(1,1) PRIMARY KEY,
+--     MODULE_NAME NVARCHAR(100) NOT NULL,
+--     MODULE_CODE VARCHAR(50),
+--     DESCRIPTION NVARCHAR(255)
+-- );
+
+-- ตาราง ISLN_ROLE สำหรับเก็บ roles/permissions ต่างๆ
+-- CREATE TABLE IF NOT EXISTS ISLN_ROLE (
+--     ID INT IDENTITY(1,1) PRIMARY KEY,
+--     ROLE_NAME NVARCHAR(100) NOT NULL,
+--     ROLE_CODE VARCHAR(50),
+--     DESCRIPTION NVARCHAR(255)
+-- );
+
+-- ข้อมูลตัวอย่างสำหรับ ISLN_ACTION
+-- INSERT INTO ISLN_ACTION (ACTION_NAME, DESCRIPTION) VALUES
+-- ('Add new user', 'เพิ่มผู้ใช้งานใหม่'),
+-- ('Delete user', 'ลบผู้ใช้งาน'),
+-- ('Transfer user', 'โอนย้ายผู้ใช้งาน'),
+-- ('Add new role', 'เพิ่ม role ใหม่'),
+-- ('Update role', 'อัพเดท role');
+
+-- ข้อมูลตัวอย่างสำหรับ ISLN_MODULE
+-- INSERT INTO ISLN_MODULE (MODULE_NAME, MODULE_CODE, DESCRIPTION) VALUES
+-- ('AP and Payment', 'AP', 'Accounts Payable and Payment Module'),
+-- ('AR and Collection', 'AR', 'Accounts Receivable and Collection Module'),
+-- ('General Ledger', 'GL', 'General Ledger Module'),
+-- ('Fixed Assets', 'FA', 'Fixed Assets Module'),
+-- ('Tax and E-Invoice', 'TAX', 'Tax and E-Invoice Module');
+
+-- ข้อมูลตัวอย่างสำหรับ ISLN_ROLE
+-- INSERT INTO ISLN_ROLE (ROLE_NAME, ROLE_CODE, DESCRIPTION) VALUES
+-- ('Add and Import', 'ADD', 'สิทธิ์เพิ่มและนำเข้าข้อมูล'),
+-- ('Update', 'UPDATE', 'สิทธิ์แก้ไขข้อมูล'),
+-- ('Delete', 'DELETE', 'สิทธิ์ลบข้อมูล'),
+-- ('Read and Export', 'READ', 'สิทธิ์อ่านและส่งออกข้อมูล');

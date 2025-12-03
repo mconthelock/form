@@ -1,8 +1,7 @@
 <?php
 defined('BASEPATH') or exit('No direct script access allowed');
 
-class Ent_model extends CI_Model
-{
+class Ent_model extends CI_Model {
 
     public function __construct()
     {
@@ -348,6 +347,29 @@ class Ent_model extends CI_Model
         $query = $this->db->get();
         return $query->result();
     }
+
+    public function UpdateRep($nfrmno, $vorgno, $cyear, $cyear2, $nrunno, $RepApv)
+    {
+        $this->db->where('NFRMNO', $nfrmno);
+        $this->db->where('VORGNO', $vorgno);
+        $this->db->where('CYEAR', $cyear);
+        $this->db->where('CYEAR2', $cyear2);
+        $this->db->where('NRUNNO', $nrunno);
+        $this->db->where('CSTEPNO', '--');
+        $this->db->update('FLOW', ['VREPNO' => $RepApv]);
+    }
+
+    // public function getForm($nfrmno, $vorgno, $cyear, $cyear2, $nrunno)
+    // {
+    //     $this->db->select('*')
+    //         ->from('FORM')
+    //         ->where('NFRMNO', $nfrmno)
+    //         ->where('VORGNO', $vorgno)
+    //         ->where('CYEAR', $cyear)
+    //         ->where('CYEAR2', $cyear2)
+    //         ->where('NRUNNO', $nrunno);
+    //     return $this->db->get()->result();
+    // }
 
 
 }

@@ -91,18 +91,20 @@
                     </div>
                 </div>
 
-                <div class="flex justify-center gap-4 mb-5">
-                    @if($form->STATUS == '1')
-                        <button class="bg-green-600 text-white px-6 py-2 btn rounded-lg shadow hover:bg-green-700 transition btn-submit" data-action="approve" id="btn-confirm">
-                            Approve
-                        </button>
-                    @else
-                        <button class="bg-green-600 text-white px-6 py-2 btn rounded-lg shadow hover:bg-green-700 transition btn-approve" data-action="approve" id="btn-confirm">
-                            Approve
-                        </button>
-                    @endif
-                    <button class="bg-red-600 text-white px-6 py-2 btn rounded-lg shadow hover:bg-red-700 transition btn-approve" data-action="reject">Reject</button>
-                </div>
+                @if($mode == '2')
+                    <div class="flex justify-center gap-4 mb-5">
+                        @if($form->STATUS == '1')
+                            <button class="bg-green-600 text-white px-6 py-2 btn rounded-lg shadow hover:bg-green-700 transition btn-submit" data-action="approve" id="btn-confirm">
+                                Approve
+                            </button>
+                        @else
+                            <button class="bg-green-600 text-white px-6 py-2 btn rounded-lg shadow hover:bg-green-700 transition btn-approve" data-action="approve" id="btn-confirm">
+                                Approve
+                            </button>
+                        @endif
+                        <button class="bg-red-600 text-white px-6 py-2 btn rounded-lg shadow hover:bg-red-700 transition btn-approve" data-action="reject">Reject</button>
+                    </div>
+                @endif
             </form>
             <div class="flow">
 
@@ -115,46 +117,5 @@
 @endsection
 
 @section('scripts')
-    <script src="{{ $_ENV['APP_JS'] }}/RgvView.js?ver={{ $GLOBALS['version'] }}"></script>
-    <script>
-        $(function () {
-            const host = $("meta[name=base_url]").attr("content");
-            const dt = $('#menuTable').DataTable({
-                ordering: false
-            });
-
-            $(document).on('change', '.create_author', function () {
-                const menuId = $(this).data('menu-id');
-                const isChecked = $(this).is(':checked');
-                const empno = $('#empno').val().trim();
-
-                if (!empno) {
-                    alert('Please enter an Employee No.');
-                    $(this).prop('checked', !isChecked); // Revert the checkbox
-                    return; // Stop the execution
-                }
-
-                $.ajax({
-                    type: 'POST',
-                    url: `${host}isform/IS-RGV/main/insert`, // ใช้ template literal เพื่อความกระชับ
-                    data: {
-                        menu_id: menuId,
-                        is_checked: isChecked,
-                        empno
-                    },
-                    // dataType: 'json',
-                    success: function (response) {
-                        // ควรมีการจัดการ response ที่ดี เช่น แสดงข้อความสำเร็จ
-                        console.log('Update successful:', response);
-                    },
-                    error: function (xhr, status, error) {
-                        // จัดการ error เพื่อให้ debug ง่ายขึ้น
-                        console.error('AJAX Error:', status, error);
-                        alert('An error occurred while updating permissions.');
-                        $(this).prop('checked', !isChecked); // Revert on error
-                    }
-                });
-            });
-        });
-    </script>
+    <script src="{{ $_ENV['APP_JS'] }}/RgvView.js?ver={{ $GLOBALS['version'] }}"></script> 
 @endsection

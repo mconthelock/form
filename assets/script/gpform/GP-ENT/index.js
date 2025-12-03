@@ -1,13 +1,34 @@
 import { host } from "../../utils.js";
 import Swal from "sweetalert2";
 import { createForm, redirectWebflow } from "../../inc/_form.js";
+import { dayOff } from "@public/_flatpickr";
 
 $(function () {
+  console.log(dayOff);
   const formData = $(".form-data").data();
   const { nfrmno, vorgno, cyear } = formData;
   const GUEST_MAX = 100,
     AMEC_MAX = 100;
   const RESTRICTED_TYPES = ["3", "4", "6"];
+
+  // -------- Initialize Flatpickr --------
+  const entertainPicker = flatpickr("#entertain-date", {
+    dateFormat: "Y-m-d",
+    minDate: "today",
+  });
+
+  const payablePicker = flatpickr("#payable-date", {
+    dateFormat: "Y-m-d",
+    minDate: "today",
+  });
+
+  // Icon triggers
+  $("#entertain-date-icon").on("click", function () {
+    entertainPicker.open();
+  });
+  $("#payable-date-icon").on("click", function () {
+    payablePicker.open();
+  });
 
   // -------- Utility Functions --------
   window.getGuestType = function () {
@@ -48,7 +69,7 @@ $(function () {
       $(".estimate-type").each(function () {
         $(this).empty().append(`<option value="">--Select Detail--</option>`);
         response.forEach((item) => {
-          $(this).append(`<option value="${item.ET_NAME}" id="select-${item.ET_NAME}" data-cost="${item.ET_COST}">${item.ET_NAME}</option>`);
+          $(this).append(`<option value="${item.ET_NAME}" id="${item.ET_ID}" data-cost="${item.ET_COST}">${item.ET_NAME}</option>`);
         });
       });
     },
@@ -106,7 +127,7 @@ $(function () {
     if (amecCount() >= AMEC_MAX) return;
     $("#amec-list").append(
       `<li class="flex items-center justify-between gap-2 border border-blue-200 bg-blue-50 shadow-sm rounded-lg px-3 py-1">
-        <span data-empno="${empData[0].SEMPNO}">${empData[0].SEMPPRE} ${empData[0].SNAME} (${empData[0].SEMPNO})</span>
+        <span data-empno="${empData[0].SEMPNO}">${empData[0].SEMPPRE ?? ''} ${empData[0].SNAME} (${empData[0].SEMPNO})</span>
         <button type="button" class="remove-li bg-red-200 text-red-700 cursor-pointer rounded px-2 py-0.5 text-xs">ลบ</button>
       </li>`
     );
@@ -124,6 +145,60 @@ $(function () {
   });
   $("#amec-name-input").keydown((e) => {
     if (e.key === "Enter") addAmec();
+  });
+
+  // -------- Urgent Case Attachment Logic --------
+  $("#entertain-date").on("change", function () {
+    const selectedDate = new Date($(this).val());
+    const today = new Date();
+    const urgentAttachmentDiv = $("#urgent-attachment");
+    const urgentNoteDiv = $("#urgent-note");
+    const urgentFile = $("#urgent-file");
+
+    // Reset time part for accurate day calculation
+    selectedDate.setHours(0, 0, 0, 0);
+    today.setHours(0, 0, 0, 0);
+
+    if (isNaN(selectedDate.getTime())) {
+      urgentAttachmentDiv.addClass("hidden");
+      urgentNoteDiv.addClass("hidden");
+      return;
+    }
+
+    // Calculate working days
+    let workingDays = 0;
+    let currentDate = new Date(today);
+    currentDate.setDate(currentDate.getDate() + 1); // Start counting from tomorrow
+
+    // Helper to format date as YYYY-M-D to match dayOff.value format
+    const formatDate = (date) => {
+      return `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
+    };
+
+    // If selected date is in the past, workingDays remains 0
+    while (currentDate <= selectedDate) {
+      const dateString = formatDate(currentDate);
+      // Check if it is a day off (weekend or holiday included in dayOff.value)
+      if (dayOff && dayOff.value && !dayOff.value.includes(dateString)) {
+        workingDays++;
+      } else if (!dayOff || !dayOff.value) {
+        // Fallback if dayOff is not available: exclude weekends
+        const dayOfWeek = currentDate.getDay();
+        if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+          workingDays++;
+        }
+      }
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
+
+    if (workingDays < 5) {
+      urgentAttachmentDiv.removeClass("hidden");
+      urgentNoteDiv.removeClass("hidden");
+    } else {
+      urgentAttachmentDiv.addClass("hidden");
+      urgentNoteDiv.addClass("hidden");
+      urgentFile.val(""); // Clear file if hidden
+    }
   });
 
   // Remove Guest/Amec (event delegation)
@@ -153,16 +228,29 @@ $(function () {
     if ($("#input-by").val().trim() === "") return showInputToast("#input-by", "กรุณากรอก Input By");
     if ($("#requested-by").val().trim() === "") return showInputToast("#requested-by", "กรุณากรอก Request By");
     if ($("#entertain-date").val().trim() === "") return showInputToast("#entertain-date", "กรุณากรอก Entertainment Date");
+
+    // Urgent case validation
+    if (!$("#urgent-attachment").hasClass("hidden")) {
+      const uf = $("#urgent-file")[0];
+      if (!uf || uf.files.length === 0) {
+        return showInputToast("#urgent-file", "กรุณาแนบไฟล์ Memo (Urgent Case)");
+      }
+    }
+
     if ($("#purpose").val().trim() === "") return showInputToast("#purpose", "กรุณาเลือกเหตุผลสำหรับ Entertain");
 
-    if (!$("input[name='time']:checked").val()) return showRadioToast("input[name='time']", "กรุณาเลือกช่วงเวลา");
+    if (!$(".time-radio:checked").val()) return showRadioToast(".time-radio", "กรุณาเลือกช่วงเวลา");
 
     // บังคับตามประเภทเวลา
-    const timeVal = $("input[name='time']:checked").val();
+    const timeVal = $(".time-radio:checked").val();
     if (timeVal === "Gift") {
       const gf = $("#gift-memo-file")[0];
       if (!gf || gf.files.length === 0) {
         return showInputToast("#gift-memo-file", "กรุณาแนบ Memo (Gift)");
+      }
+      // Payable date is required when Gift
+      if ($("#payable-date").val().trim() === "") {
+        return showInputToast("#payable-date", "กรุณาเลือก Payable Date");
       }
     }
 
@@ -299,12 +387,21 @@ $(function () {
     formData.append("input_by", $("#input-by").val());
     formData.append("requested_by", $("#requested-by").val());
     formData.append("entertain_date", $("#entertain-date").val());
+
+    // Attach Urgent File if visible and provided
+    if (!$("#urgent-attachment").hasClass("hidden")) {
+      const uf = $("#urgent-file")[0];
+      if (uf && uf.files.length > 0) {
+        formData.append("urgent_file", uf.files[0]);
+      }
+    }
+
     formData.append("purpose", $("#purpose").val());
     formData.append("time", timeVal);
     formData.append("location", isLocationVisible ? $("input[name='location']:checked").val() : "");
     formData.append("location_detail", isLocationVisible ? $("#location_detail").val() : "");
     formData.append("guest_type", $(".guest_type:checked").val() ?? "");
-    formData.append("org_type", $("input[name='orgType']:checked").val());
+    // formData.append("org_type", $("input[name='orgType']:checked").val());
     formData.append("entertain_budget", $("#entertain-budget").val());
     formData.append("total_amount", $("#total-amount").text());
     formData.append("remark", $("textarea[placeholder*='ระบุเหตุผล']").val());
@@ -323,12 +420,20 @@ $(function () {
       if (gf && gf.files.length > 0) {
         formData.append("file_memo_gift", gf.files[0]);
       }
+      // Include payable date when Gift
+      formData.append("payable_date", $("#payable-date").val() || "");
     }
     if (timeVal === "Other") {
       const of = $("#other-memo-file")[0];
       if (of && of.files.length > 0) {
         formData.append("file_memo_other", of.files[0]);
       }
+    }
+
+    // Attach Visitor Notice file if provided
+    const vn = $("#visitor-notice")[0];
+    if (vn && vn.files.length > 0) {
+      formData.append("visitor_notice", vn.files[0]);
     }
 
     // แนบไฟล์ Memo ถ้ามี
@@ -366,12 +471,13 @@ $(function () {
     let estimate_items = [];
     $("#table_cost tbody tr").each(function () {
       let details = $(this).find("td:eq(0) select option:selected").val();
+      let id = $(this).find("td:eq(0) select option:selected").attr("id");
       let qty = $(this).find("td:eq(1) input").val();
       let cost = $(this).find("td:eq(2) input").val();
       let total = $(this).find("td:eq(3) input").val();
       let remark = $(this).find("td:eq(4) input").val();
       console.log(details);
-      if (details && qty && cost && total) estimate_items.push({ details, qty, cost, total, remark });
+      if (details && qty && cost && total) estimate_items.push({ details, qty, cost, total, remark, id });
     });
     formData.append("estimate_items", JSON.stringify(estimate_items));
 
@@ -401,7 +507,7 @@ $(function () {
           timerProgressBar: true,
           // didClose: () => redirectWebflow(),
         });
-        redirectWebflow();
+        // redirectWebflow();
       },
       complete: function () {
         $("#loading-overlay").hide();
@@ -455,7 +561,7 @@ $(function () {
     });
   };
 
-  $("#input-by, #requested-by, #entertain-date, #purpose, #location_detail, #file-attachment2, #guest-name-input, #amec-name-input, #remark").on("input change", function () {
+  $("#input-by, #requested-by, #entertain-date, #payable-date, #purpose, #location_detail, #file-attachment2, #guest-name-input, #amec-name-input, #remark").on("input change", function () {
     clearFieldError(this.id);
   });
 
@@ -463,8 +569,8 @@ $(function () {
     $(this).removeClass("input-error");
   });
 
-  $("input[name='time']").on("change", function () {
-    $("input[name='time']").removeClass("radio-error").addClass("radio-primary");
+  $(".time-radio").on("change", function () {
+    $(".time-radio").removeClass("radio-error").addClass("radio-primary");
 
     if ($(this).val() == "Dinner") {
       $("#location-inside").prop("disabled", true); // ปิด (disabled)
@@ -492,12 +598,12 @@ $(function () {
     $("#alert-file2").addClass("hidden");
   });
 
-  $("input[name='time']").on("change", function () {
-    $("input[name='time']").removeClass("radio-error").addClass("radio-primary");
+  $(".time-radio").on("change", function () {
+    $(".time-radio").removeClass("radio-error").addClass("radio-primary");
     const val = $(this).val();
 
-    // ค่าเริ่มต้น: แสดง GT และ Location
-    $("#gift-memo, #other-fields").hide();
+    // ค่าเริ่มต้น: แสดง GT และ Location, ซ่อน Payable Date
+    $("#gift-memo, #other-fields, #payable-date-section").hide();
     $("#div_gt").show();
     $("#div_location").show();
     $("input[name='location']").prop("disabled", false);
@@ -505,6 +611,7 @@ $(function () {
 
     if (val === "Gift") {
       $("#gift-memo").show();
+      $("#payable-date-section").show();
       $("#div_gt").hide();
       $("#div_location").hide();
       // ล้างค่า/ปิดการใช้งาน Location เมื่อซ่อน
@@ -519,6 +626,9 @@ $(function () {
       $("#div_location").hide();
       $("input[name='location']").prop("checked", false).prop("disabled", true);
       $("#location_detail").val("").prop("disabled", true);
+      // hide payable date for non-gift
+      $("#payable-date-section").addClass("hidden");
+      $("#payable-date").removeClass("input-error").val("");
       return;
     }
 
@@ -531,6 +641,9 @@ $(function () {
       $("#location-inside").prop("disabled", false);
       $("#location-outside").prop("checked", false);
       $("#location_detail").val("");
+      // hide payable date for non-gift
+      $("#payable-date-section").addClass("hidden");
+      $("#payable-date").removeClass("input-error").val("");
     }
   });
 

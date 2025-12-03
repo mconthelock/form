@@ -9,8 +9,7 @@ function pre_array($array)
     print_r($array);
     echo "</pre>";
 }
-class Main extends MY_Controller
-{
+class Main extends MY_Controller {
     use _File;
     use _Form;
     protected $client;
@@ -39,6 +38,8 @@ class Main extends MY_Controller
         $data['mode']          = $this->getMode($nfrmno, $vorgno, $cyear, $cyear2, $nrunno, $empno);
         $data['guest_type']    = $this->ent->get_guest_type();
         $data['estimate_type'] = $this->ent->get_estimate_type();
+        $data['PRESIDENT']     = $this->ent->get_orgpos("020101", "02")[0]; // PRESIDENT
+        $data['RAF']           = $this->ent->get_orgpos("040101", "10")[0]; // RAF DIM
         if (!$cyear2 || !$nrunno) {
             $this->views('gpform/GP-ENT/main', $data);
         } else {
@@ -117,15 +118,36 @@ class Main extends MY_Controller
         $cyear2 = $post['cyear2'];
         $nrunno = $post['nrunno'];
 
-        $getEmp = $this->ent->get_orgpos("020101", "02")[0]; // PRESIDENT
-        if ($post['total_amount'] > 10000 && $post['requested_by'] != $getEmp->VEMPNO) {
-            $this->updateFlowApv("", $getEmp->VEMPNO, $nfrmno, $vorgno, $cyear, $cyear2, $nrunno, "18", "87");
+        $amecArr = json_decode($post['amec_list'], true);
+
+        $PRESIDENT = $this->ent->get_orgpos("020101", "02")[0]; // PRESIDENT
+        $RAF       = $this->ent->get_orgpos("040101", "10")[0]; // RAF DIM
+        // เช็คทั้ง requested_by และ amecArr สำหรับประธานและ raf
+        $isPresidentInArr     = in_array($PRESIDENT->VEMPNO, $amecArr);
+        $isRAFInArr           = in_array($RAF->VEMPNO, $amecArr);
+        $isPresidentRequester = $post['requested_by'] == $PRESIDENT->VEMPNO;
+        $isRAFRequester       = $post['requested_by'] == $RAF->VEMPNO;
+
+        if ($isPresidentInArr || $isPresidentRequester) {
+            // ถ้ามีประธานใน amecArr หรือเป็นคน request จะเป็น raf approve
+        } else if ($isRAFInArr || $isRAFRequester) {
+            // ถ้า raf อยู่ใน amecArr หรือเป็นคน request จะเป็นประธาน approve
+        } else {
+            // คนทั่วไป request
+            if ($post['total_amount'] > 10000) {
+                if ($isPresidentInArr) {
+                    // ถ้าประธานเข้าด้วยจะเป็น raf แทน
+                } else {
+                    // ถ้าไม่มีประธานใน amecArr จะเป็นประธาน approve
+                }
+            } else {
+                // ถ้าเงินไม่เกิน 10000
+            }
         }
 
-        if ($post['cash_adv'] == '0') {
-            $this->deleteFlowStep('', $nfrmno, $vorgno, $cyear, $cyear2, $nrunno, '87', '00'); // delete FIN Staff
-        }
-
+        // if ($post['cash_adv'] == '0') {
+        //     $this->deleteFlowStep('', $nfrmno, $vorgno, $cyear, $cyear2, $nrunno, '19', '00'); // delete FIN Staff
+        // }
 
         // Handle Memo File Upload (file_memo)
         $memoFileName = null;
@@ -181,27 +203,64 @@ class Main extends MY_Controller
             }
         }
 
+        // Handle Visitor Notice file upload
+        $visitorFileName = null;
+        if (isset($_FILES['visitor_notice']) && $_FILES['visitor_notice']['error'] == 0) {
+            $file       = $_FILES['visitor_notice'];
+            $extension  = pathinfo($file['name'], PATHINFO_EXTENSION);
+            $uploadFile = array(
+                'name'     => "VisitorNotice_{$cyear2}_{$nrunno}.{$extension}",
+                'type'     => $file['type'],
+                'tmp_name' => $file['tmp_name'],
+                'error'    => $file['error'],
+                'size'     => $file['size']
+            );
+            $result     = $this->uploadFile($uploadFile);
+            if ($result['status'] == '1') {
+                $visitorFileName = $result['file_name'];
+            }
+        }
+
+        // Handle Urgent File upload (กรณีเลือกวันกระชั้นชิด)
+        $urgentFileName = null;
+        if (isset($_FILES['urgent_file']) && $_FILES['urgent_file']['error'] == 0) {
+            $file       = $_FILES['urgent_file'];
+            $extension  = pathinfo($file['name'], PATHINFO_EXTENSION);
+            $uploadFile = array(
+                'name'     => "UrgentApproval_{$cyear2}_{$nrunno}.{$extension}",
+                'type'     => $file['type'],
+                'tmp_name' => $file['tmp_name'],
+                'error'    => $file['error'],
+                'size'     => $file['size']
+            );
+            $result     = $this->uploadFile($uploadFile);
+            if ($result['status'] == '1') {
+                $urgentFileName = $result['file_name'];
+            }
+        }
 
         $data = [
-            'NFRMNO'        => $nfrmno,
-            'VORGNO'        => $vorgno,
-            'CYEAR'         => $cyear,
-            'CYEAR2'        => $cyear2,
-            'NRUNNO'        => $nrunno,
-            'EMP_INPUT'     => $post['input_by'],
-            'EMP_REQ'       => $post['requested_by'],
-            'PURPOSE'       => $post['purpose'],
-            'TYPE_TIME'     => $post['time'],
-            'LOCATION_TYPE' => $post['location'],
-            'LOCATION'      => $post['location_detail'],
-            // 'ENTERTAINMENT_BUDGET' => $post['entertain_budget'],
-            'OTHER_DETAILS' => $post['other_details'],
-            'GUEST_TYPE'    => $post['guest_type'],
-            'REMARK'        => $post['remark'],
-            'REIMBURSEMENT' => $post['cash_adv'],
-            'TOTAL_AMOUNT'  => $post['total_amount'],
-            'STATUS'        => '1',
+            'NFRMNO'               => $nfrmno,
+            'VORGNO'               => $vorgno,
+            'CYEAR'                => $cyear,
+            'CYEAR2'               => $cyear2,
+            'NRUNNO'               => $nrunno,
+            'EMP_INPUT'            => $post['input_by'],
+            'EMP_REQ'              => $post['requested_by'],
+            'PURPOSE'              => $post['purpose'],
+            'TYPE_TIME'            => $post['time'],
+            'LOCATION_TYPE'        => $post['location'],
+            'LOCATION'             => $post['location_detail'],
+            'ENTERTAINMENT_BUDGET' => $post['entertain_budget'] ?? null,
+            'OTHER_DETAILS'        => $post['other_details'] ?? null,
+            'GUEST_TYPE'           => $post['guest_type'],
+            // 'ORG_TYPE'             => $post['org_type'] ?? null,
+            'REMARK'               => $post['remark'],
+            'REIMBURSEMENT'        => $post['cash_adv'],
+            'TOTAL_AMOUNT'         => $post['total_amount'],
+            'STATUS'               => '1',
         ];
+
         if ($memoFileName) {
             $data['FILE_MEMO'] = $memoFileName;
         }
@@ -211,10 +270,19 @@ class Main extends MY_Controller
         if ($otherMemoFile) {
             $data['FILE_MEMO_OTHER'] = $otherMemoFile;
         }
+        if ($visitorFileName) {
+            $data['FILE_VISITOR_NOTICE'] = $visitorFileName;
+        }
+        if ($urgentFileName) {
+            $data['FILE_URGENT'] = $urgentFileName;
+        }
 
         $dateFields = [];
         if (!empty($post['entertain_date'])) {
             $dateFields['ENTERTAINMENT_DATE'] = "TO_DATE('{$post['entertain_date']}', 'YYYY-MM-DD')";
+        }
+        if (!empty($post['payable_date'])) {
+            $dateFields['PAYABLE_DATE_GIFT'] = "TO_DATE('{$post['payable_date']}', 'YYYY-MM-DD')";
         }
 
         $this->ent->insert('GPENT_FORM', $data, $dateFields);
@@ -227,6 +295,7 @@ class Main extends MY_Controller
                 'CYEAR2'     => $cyear2,
                 'NRUNNO'     => $nrunno,
                 'DETAILS'    => $value->details,
+                'ET_ID'      => $value->id,
                 'QTY'        => $value->qty,
                 'UNIT_COST'  => $value->cost,
                 'TOTAL_COST' => $value->total,
@@ -266,7 +335,7 @@ class Main extends MY_Controller
 
         $companies = json_decode($_POST['companies'], true);
 
-        // FIX: Check if company_files exists before accessing it
+        // Check if company_files exists before accessing it
         $files = isset($_FILES['company_files']) ? $_FILES['company_files'] : null;
 
         foreach ($companies as $idx => $company) {
@@ -280,11 +349,11 @@ class Main extends MY_Controller
                 'COMPANY_TYPE' => $company['orgType'],
             ];
 
-            // FIX: Check if files exist and if the specific index exists
+            // Check if files exist and if the specific index exists
             if ($files && isset($files['name'][$idx]) && !empty($files['name'][$idx])) {
                 $extension = pathinfo($files['name'][$idx], PATHINFO_EXTENSION);
                 $oneFile   = array(
-                    'name'     => "File_guest_$idx.$extension",
+                    'name'     => "File_guest_{$cyear2}_{$nrunno}_{$idx}.{$extension}",
                     'type'     => $files['type'][$idx],
                     'tmp_name' => $files['tmp_name'][$idx],
                     'error'    => $files['error'][$idx],
@@ -300,6 +369,8 @@ class Main extends MY_Controller
 
             $this->ent->insert('GPENT_COMPANY', $data);
         }
+
+        echo json_encode(['status' => true, 'message' => 'Insert successful']);
     }
 
     public function update()
@@ -381,23 +452,62 @@ class Main extends MY_Controller
             }
         }
 
+        // Handle Visitor Notice file upload (edit/update)
+        $visitorFileName = null;
+        if (isset($_FILES['visitor_notice']) && $_FILES['visitor_notice']['error'] == 0) {
+            $file       = $_FILES['visitor_notice'];
+            $extension  = pathinfo($file['name'], PATHINFO_EXTENSION);
+            $uploadFile = array(
+                'name'     => "VisitorNotice_{$cyear2}_{$nrunno}.{$extension}",
+                'type'     => $file['type'],
+                'tmp_name' => $file['tmp_name'],
+                'error'    => $file['error'],
+                'size'     => $file['size']
+            );
+            $result     = $this->uploadFile($uploadFile);
+            if ($result['status'] == '1') {
+                $visitorFileName = $result['file_name'];
+            }
+        }
+
+        // Handle Urgent File upload (กรณีเลือกวันกระชั้นชิด)
+        $urgentFileName = null;
+        if (isset($_FILES['urgent_file']) && $_FILES['urgent_file']['error'] == 0) {
+            $file       = $_FILES['urgent_file'];
+            $extension  = pathinfo($file['name'], PATHINFO_EXTENSION);
+            $uploadFile = array(
+                'name'     => "UrgentApproval_{$cyear2}_{$nrunno}.{$extension}",
+                'type'     => $file['type'],
+                'tmp_name' => $file['tmp_name'],
+                'error'    => $file['error'],
+                'size'     => $file['size']
+            );
+            $result     = $this->uploadFile($uploadFile);
+            if ($result['status'] == '1') {
+                $urgentFileName = $result['file_name'];
+            }
+        }
+
         $data = [
-            'NFRMNO'        => $nfrmno,
-            'VORGNO'        => $vorgno,
-            'CYEAR'         => $cyear,
-            'CYEAR2'        => $cyear2,
-            'NRUNNO'        => $nrunno,
-            'EMP_INPUT'     => $post['input_by'],
-            'EMP_REQ'       => $post['requested_by'],
-            'PURPOSE'       => $post['purpose'],
-            'TYPE_TIME'     => $post['time'],
-            'LOCATION_TYPE' => $post['location'],
-            'LOCATION'      => $post['location_detail'],
-            // 'ENTERTAINMENT_BUDGET' => $post['entertain_budget'],
-            'GUEST_TYPE'    => $post['guest_type'],
-            'REMARK'        => $post['remark'],
-            'TOTAL_AMOUNT'  => $post['total_amount'],
-            'STATUS'        => '1',
+            'NFRMNO'               => $nfrmno,
+            'VORGNO'               => $vorgno,
+            'CYEAR'                => $cyear,
+            'CYEAR2'               => $cyear2,
+            'NRUNNO'               => $nrunno,
+            'EMP_INPUT'            => $post['input_by'],
+            'EMP_REQ'              => $post['requested_by'],
+            'PURPOSE'              => $post['purpose'],
+            'TYPE_TIME'            => $post['time'],
+            'LOCATION_TYPE'        => $post['location'],
+            'LOCATION'             => $post['location_detail'],
+            'ENTERTAINMENT_BUDGET' => $post['entertain_budget'] ?? null,
+            'OTHER_DETAILS'        => $post['other_details'] ?? null,
+            'GUEST_TYPE'           => $post['guest_type'],
+            // 'ORG_TYPE'             => $post['org_type'] ?? null,
+            'REMARK'               => $post['remark'],
+            'REIMBURSEMENT'        => $post['cash_adv'] ?? null,
+            'TOTAL_AMOUNT'         => $post['total_amount'],
+            'STATUS'               => '1',
         ];
 
         // เพิ่ม memo file ถ้ามีการอัปโหลดใหม่
@@ -410,6 +520,12 @@ class Main extends MY_Controller
         }
         if ($otherMemoFile) {
             $data['FILE_MEMO_OTHER'] = $otherMemoFile;
+        }
+        if ($visitorFileName) {
+            $data['FILE_VISITOR_NOTICE'] = $visitorFileName;
+        }
+        if ($urgentFileName) {
+            $data['FILE_URGENT'] = $urgentFileName;
         }
 
         $where = [
@@ -424,11 +540,15 @@ class Main extends MY_Controller
         if (!empty($post['entertain_date'])) {
             $dateFields['ENTERTAINMENT_DATE'] = "TO_DATE('{$post['entertain_date']}', 'YYYY-MM-DD')";
         }
+        if (!empty($post['payable_date'])) {
+            $dateFields['PAYABLE_DATE_GIFT'] = "TO_DATE('{$post['payable_date']}', 'YYYY-MM-DD')";
+        }
 
         $this->ent->update('GPENT_FORM', $data, $where, $dateFields);
 
         $this->ent->delete('GPENT_ESTIMATE', $where);
         foreach (json_decode($post['estimate_items']) as $key => $value) {
+            print_r($value);
             $data_estimate = [
                 'NFRMNO'     => $nfrmno,
                 'VORGNO'     => $vorgno,
@@ -436,6 +556,7 @@ class Main extends MY_Controller
                 'CYEAR2'     => $cyear2,
                 'NRUNNO'     => $nrunno,
                 'DETAILS'    => $value->details,
+                'ET_ID'      => $value->id,
                 'QTY'        => $value->qty,
                 'UNIT_COST'  => $value->cost,
                 'TOTAL_COST' => $value->total,
@@ -570,6 +691,17 @@ class Main extends MY_Controller
 
     }
 
+    public function NewApproveController()
+    {
+        $approver = $this->input->post('approver');
+        $nfrmno   = $this->input->post('nfrmno');
+        $vorgno   = $this->input->post('vorgno');
+        $cyear    = $this->input->post('cyear');
+        $cyear2   = $this->input->post('cyear2');
+        $nrunno   = $this->input->post('nrunno');
+        $this->updateFlowApv("", $approver, $nfrmno, $vorgno, $cyear, $cyear2, $nrunno, "18", "19");
+    }
+
     public function preview($filename)
     {
         $filepath = $this->upload_path . rawurldecode($filename);
@@ -660,27 +792,37 @@ class Main extends MY_Controller
         echo json_encode($data);
     }
 
-    public function InsertForm22()
+    public function returnAction()
     {
-        // รับค่าที่ถูก POST มา
-        $post = $this->input->post();
+        // nfrmno,
+        //     vorgno,
+        //     cyear,
+        //     cyear2,
+        //     nrunno,
+        $nfrmno = $this->input->post('nfrmno');
+        $vorgno = $this->input->post('vorgno');
+        $cyear  = $this->input->post('cyear');
+        $cyear2 = $this->input->post('cyear2');
+        $nrunno = $this->input->post('nrunno');
 
-        // ตัวอย่าง: ดึงค่า key1, key2
-        $key1 = isset($post['key1']) ? $post['key1'] : null;
-        $key2 = isset($post['key2']) ? $post['key2'] : null;
+        // $nfrmno = '9';
+        // $vorgno = '030101';
+        // $cyear  = '25';
+        // $cyear2 = '2025';
+        // $nrunno = '11';
+        $data = $this->form->getForm($nfrmno, $vorgno, $cyear, $cyear2, $nrunno);
 
-        // ตอบกลับเป็น JSON
-        $response = [
-            'status' => 'success',
-            'message' => 'Data received successfully',
-            'received' => [
-                'key1' => $key1,
-                'key2' => $key2
-            ]
-        ];
-
-        echo json_encode($response);
+        if ($data[0]->VREQNO != $data[0]->VINPUTER) {
+            // $this->updateFlowReturn("", $data[0]->VREQNO, $nfrmno, $vorgno, $cyear, $cyear2, $nrunno);
+            $this->ent->UpdateRep($nfrmno, $vorgno, $cyear, $cyear2, $nrunno, $data[0]->VINPUTER);
+        }
+        // print_r($data);
     }
+
+    // public function delete_manual()
+    // {
+    //     $this->deleteFlowStep('', '17', '030101', '25', '2025', '106', '19', '00');
+    // }
 
 
 }

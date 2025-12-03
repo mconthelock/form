@@ -4,170 +4,169 @@ const Dotenv = require("dotenv-webpack");
 const CompressionPlugin = require("compression-webpack-plugin");
 const TerserPlugin = require("terser-webpack-plugin");
 module.exports = {
-    entry: {
-        apps: "./assets/script/apps.js", //general function
-        login: "./assets/script/login.js", //Login page
-        home: "./assets/script/home/index.js", //Home page
-        redirect: "./assets/script/home/redirect.js", //Redirect page
-        form: "./assets/script/form/index.js", //Form page
+  entry: {
+    apps: "./assets/script/apps.js", //general function
+    login: "./assets/script/login.js", //Login page
+    home: "./assets/script/home/index.js", //Home page
+    redirect: "./assets/script/home/redirect.js", //Redirect page
+    form: "./assets/script/form/index.js", //Form page
 
-        //IS FORM
-        // user environment IS-TID
-        userEnv: "./assets/script/isform/IS-TID/index.js", //user environment page
-        userEnvView: "./assets/script/isform/IS-TID/view.js",
+    //IS FORM
+    // user environment IS-TID
+    userEnv: "./assets/script/isform/IS-TID/index.js", //user environment page
+    userEnvView: "./assets/script/isform/IS-TID/view.js",
 
-        // confirm sheet IS-CFS
-        confirmSheet: "./assets/script/isform/IS-CFS/index.js", //confirm sheet page
-        confirmSheetView: "./assets/script/isform/IS-CFS/view.js", //confirm sheet page
+    // confirm sheet IS-CFS
+    confirmSheet: "./assets/script/isform/IS-CFS/index.js", //confirm sheet page
+    confirmSheetView: "./assets/script/isform/IS-CFS/view.js", //confirm sheet page
 
-        // Special Authorization ID
-        specialAuth: "./assets/script/isform/IS-SPC/index.js", //Special Authorization ID page
-        specialAuthView: "./assets/script/isform/IS-SPC/view.js", //Special Authorization ID page
+    // Special Authorization ID
+    specialAuth: "./assets/script/isform/IS-SPC/index.js", //Special Authorization ID page
+    specialAuthView: "./assets/script/isform/IS-SPC/view.js", //Special Authorization ID page
 
-        // IS Trouble Report
-        troubleReport: "./assets/script/isform/IS-TRB/index.js", //IS Trouble Report page
-        troubleReportView: "./assets/script/isform/IS-TRB/view.js", //IS Trouble Report page
+    // IS Trouble Report
+    troubleReport: "./assets/script/isform/IS-TRB/index.js", //IS Trouble Report page
+    troubleReportView: "./assets/script/isform/IS-TRB/view.js", //IS Trouble Report page
 
-        // Daily Log Checksheet
-        DailyLogView: "./assets/script/isform/IS-DLC/view.js",
+    // Daily Log Checksheet
+    DailyLogView: "./assets/script/isform/IS-DLC/view.js",
 
-        // Regular review
-        RgvView: "./assets/script/isform/IS-RGV/view.js", //Regular review page
-        RgvIncharge: "./assets/script/isform/IS-RGV/incharge.js", //Regular review page
+    // Regular review
+    RgvView: "./assets/script/isform/IS-RGV/view.js", //Regular review page
+    RgvIncharge: "./assets/script/isform/IS-RGV/incharge.js", //Regular review page
 
-        // LN User Registration
-        lnUserReg: "./assets/script/isform/IS-LN/index.js", //LN User Registration page
-        lnUserRegView: "./assets/script/isform/IS-LN/view.js", //LN User Registration view page
+    // User ID and Authorization regular review result
+    RgrSummary: "./assets/script/isform/IS-RGR/summary.js", //Regular review page
+    RgrSummaryReport: "./assets/script/isform/IS-RGR/RgrSummaryReport.js", //Regular review page
 
-        // varied off
-        variedOff: "./assets/script/isform/IS-OFF/view.js", //Varied Off AS400 display
+    // varied off
+    variedOff: "./assets/script/isform/IS-OFF/view.js", //Varied Off AS400 display
 
-        // result confirmation
-        resultConf: "./assets/script/isform/IS-JDR/view.js", //Job result confirmation
+    // result confirmation
+    resultConf: "./assets/script/isform/IS-JDR/view.js", //Job result confirmation
 
-        // Annual development
-        "form-1": "./assets/script/isform/FORM-1/index.js",
-        "form-1-ui": "./assets/script/isform/FORM-1/ui.js",
-        "is-dev": "./assets/script/isform/IS-DEV/index.js",
+    // LN User Registration
+    lnUserReg: "./assets/script/isform/IS-LN/index.js", //LN User Registration page
+    lnUserRegView: "./assets/script/isform/IS-LN/view.js", //LN User Registration view page
 
-        //Licence Control
-        licence: "./assets/script/licence/index.js", //License page
-        licencemaster: "./assets/script/licence/master.js", //License master page
-        licencemasterdetail: "./assets/script/licence/masterdetail.js", //License master page
+    // Annual development
+    "form-1": "./assets/script/isform/FORM-1/index.js",
+    "form-1-ui": "./assets/script/isform/FORM-1/ui.js",
+    "is-dev": "./assets/script/isform/IS-DEV/index.js",
 
-        // Requesting Approval Entertainment
-        requestEntertain: "./assets/script/gpform/GP-ENT/index.js", //Requesting Approval Entertainment page
-        requestEntertainView: "./assets/script/gpform/GP-ENT/view.js", //Requesting Approval Entertainment view page
-        entertainReport: "./assets/script/gpform/GP-ENT/report.js", //Requesting Approval Entertainment report page",
+    //Licence Control
+    licence: "./assets/script/licence/index.js", //License page
+    licencemaster: "./assets/script/licence/master.js", //License master page
+    licencemasterdetail: "./assets/script/licence/masterdetail.js", //License master page
 
-        // clearance Entertainment
-        clearance: "./assets/script/gpform/GP-CLER/index.js", //Clearance page
-        clearanceNoAdv: "./assets/script/gpform/GP-CLER/noAdv.js", //Clearance page
-        clearanceView: "./assets/script/gpform/GP-CLER/view.js", //Clearance page
+    // Requesting Approval Entertainment
+    requestEntertain: "./assets/script/gpform/GP-ENT/index.js", //Requesting Approval Entertainment page
+    requestEntertainView: "./assets/script/gpform/GP-ENT/view.js", //Requesting Approval Entertainment view page
+    entertainReport: "./assets/script/gpform/GP-ENT/report.js", //Requesting Approval Entertainment report page",
 
-        //manage schedule QOI
-        manage: "./assets/script/qaform/QA-QOI/manage.js", //manage page
-        qoiview: "./assets/script/qaform/QA-QOI/qoiview.js", //Qoi page
+    // clearance Entertainment
+    clearance: "./assets/script/gpform/GP-CLER/index.js", //Clearance page
+    clearanceNoAdv: "./assets/script/gpform/GP-CLER/noAdv.js", //Clearance page
+    clearanceView: "./assets/script/gpform/GP-CLER/view.js", //Clearance page
 
-        // QA-INS : E-Self Inspection and Authorize
-        eSelf: "./assets/script/qaform/QA-INS/index.js", //E-Self Inspection page
-        eSelfView: "./assets/script/qaform/QA-INS/view.js", //E-Self view page
-        eSelfAuditMaster: "./assets/script/qaform/QA-INS/auditMaster.js", //E-Self Audit Master page
-        eSelfPreview: "./assets/script/qaform/QA-INS/preview.js", //E-Self Preview page
-        eSelfAudit: "./assets/script/qaform/QA-INS/audit.js", //E-Self Audit page
-        eSelfAuthorizeReportList:
-            "./assets/script/qaform/QA-INS/authorizeReportList.js", //E-Self Authorize Report List page
+    //manage schedule QOI
+    manage: "./assets/script/qaform/QA-QOI/manage.js", //manage page
+    qoiview: "./assets/script/qaform/QA-QOI/qoiview.js", //Qoi page
 
-        //VMS
-        vms: "./assets/script/marform/MAR-VMS/index.js", //create page
-        vmsmst: "./assets/script/marform/MAR-VMS/master.js", //manage page
-        vmsview: "./assets/script/marform/MAR-VMS/view.js", //view page
-        vmsreport: "./assets/script/marform/MAR-VMS/report.js", //view page
+    // QA-INS : E-Self Inspection and Authorize
+    eSelf: "./assets/script/qaform/QA-INS/index.js", //E-Self Inspection page
+    eSelfView: "./assets/script/qaform/QA-INS/view.js", //E-Self view page
+    eSelfAuditMaster: "./assets/script/qaform/QA-INS/auditMaster.js", //E-Self Audit Master page
+    eSelfPreview: "./assets/script/qaform/QA-INS/preview.js", //E-Self Preview page
+    eSelfAudit: "./assets/script/qaform/QA-INS/audit.js", //E-Self Audit page
+    eSelfAuthorizeReportList: "./assets/script/qaform/QA-INS/authorizeReportList.js", //E-Self Authorize Report List page
 
-        // PS-SAR
-        psSar: "./assets/script/psform/PS-SAR/index.js", //Sar page
+    //VMS
+    vms: "./assets/script/marform/MAR-VMS/index.js", //create page
+    vmsmst: "./assets/script/marform/MAR-VMS/master.js", //manage page
+    vmsview: "./assets/script/marform/MAR-VMS/view.js", //view page
+    vmsreport: "./assets/script/marform/MAR-VMS/report.js", //view page
 
-        //GP-TRN
-        alert: "./assets/script/gpform/GP-TRN/alert.js",
-        formUtils: "./assets/script/gpform/GP-TRN/formUtils.js",
-        validators: "./assets/script/gpform/GP-TRN/validators.js",
-        view_train: "./assets/script/gpform/GP-TRN/view_train.js",
-        manage_data: "./assets/script/gpform/GP-TRN/manage_data.js",
-        emp_lookup: "./assets/script/gpform/GP-TRN/emp_lookup.js",
-        training_select: "./assets/script/gpform/GP-TRN/training_select.js",
-        training_functional:
-            "./assets/script/gpform/GP-TRN/training_functional.js",
-        training_legal: "./assets/script/gpform/GP-TRN/training_legal.js",
-        training_meth: "./assets/script/gpform/GP-TRN/training_meth.js",
-        form_client: "./assets/script/gpform/GP-TRN/form_client.js",
-        training_main: "./assets/script/gpform/GP-TRN/training_main.js",
-    },
-    output: {
-        filename: "[name].js",
-        path: path.resolve(__dirname, "assets/dist/js"),
-    },
-    mode: process.env.STATE,
-    optimization: {
-        concatenateModules: true,
-        minimize: true,
-        minimizer: [
-            new TerserPlugin({
-                parallel: true, // ✅ เปิด multi-core minify
-                terserOptions: {
-                    format: {
-                        comments: false, // ลบคอมเมนต์ทิ้ง
-                    },
-                },
-                extractComments: false, // ไม่แยก LICENSE ออกมาเป็นไฟล์ .txt
-            }),
-        ],
-    },
-    module: {
-        rules: [
-            {
-                test: /\.css$/,
-                use: ["style-loader", "css-loader"],
-            },
-            {
-                test: /\.md$/,
-                use: "raw-loader",
-            },
-            {
-                test: /\.tsx?$/, // ให้ webpack build ts/tsx
-                use: "ts-loader",
-                exclude: /node_modules/,
-            },
-        ],
-    },
-    resolve: {
-        extensions: [".ts", ".tsx", ".js"],
-        alias: {
-            "@public": path.resolve(__dirname, "assets/script/public/v1.0.3"),
-        },
-    },
-    plugins: [
-        new Dotenv({
-            path: path.resolve(__dirname, "./.env"),
-        }),
-        new CompressionPlugin({
-            algorithm: "gzip", // หรือใช้ "brotliCompress" ก็ได้
-            test: /\.(js|css|html|svg)$/,
-            threshold: 10240,
-            minRatio: 0.8,
-        }),
-        new webpack.ProvidePlugin({
-            $: "jquery",
-            jQuery: "jquery",
-        }),
+    // PS-SAR
+    psSar: "./assets/script/psform/PS-SAR/index.js", //Sar page
+
+    //GP-TRN
+    alert: "./assets/script/gpform/GP-TRN/alert.js",
+    formUtils: "./assets/script/gpform/GP-TRN/formUtils.js",
+    validators: "./assets/script/gpform/GP-TRN/validators.js",
+    view_train: "./assets/script/gpform/GP-TRN/view_train.js",
+    manage_data: "./assets/script/gpform/GP-TRN/manage_data.js",
+    emp_lookup: "./assets/script/gpform/GP-TRN/emp_lookup.js",
+    training_select: "./assets/script/gpform/GP-TRN/training_select.js",
+    training_functional: "./assets/script/gpform/GP-TRN/training_functional.js",
+    training_legal: "./assets/script/gpform/GP-TRN/training_legal.js",
+    training_meth: "./assets/script/gpform/GP-TRN/training_meth.js",
+    training_pos: "./assets/script/gpform/GP-TRN/training_pos.js",
+    training_out: "./assets/script/gpform/GP-TRN/training_out.js",
+    form_client: "./assets/script/gpform/GP-TRN/form_client.js",
+    training_main: "./assets/script/gpform/GP-TRN/training_main.js",
+    view_train_report: "./assets/script/gpform/GP-TRN/view_train_report.js",
+    manage_group: "./assets/script/gpform/GP-TRN/manage_group.js",
+    show_sum_report: "./assets/script/gpform/GP-TRN/show_sum_report.js",
+  },
+  output: {
+    filename: "[name].js",
+    path: path.resolve(__dirname, "assets/dist/js"),
+  },
+  mode: process.env.STATE,
+  optimization: {
+    concatenateModules: true,
+    minimize: true,
+    minimizer: [new TerserPlugin()],
+  },
+  module: {
+    rules: [
+      {
+        test: /\.css$/,
+        use: ["style-loader", "css-loader"],
+      },
+      {
+        test: /\.md$/,
+        use: "raw-loader",
+      },
+      {
+        test: /\.tsx?$/, // ให้ webpack build ts/tsx
+        use: "ts-loader",
+        exclude: /node_modules/,
+      },
     ],
-    cache:
-        process.env.STATE === "production"
-            ? false
-            : {
-                  type: "filesystem",
-                  //   cacheDirectory: path.resolve(__dirname, '.cache/webpack'),
-                  buildDependencies: {
-                      config: [__filename],
-                  },
+  },
+  resolve: {
+    extensions: [".ts", ".tsx", ".js"],
+    alias: {
+      "@public": path.resolve(__dirname, "assets/script/public/v1.0.3") 
+    },
+  },
+  plugins: [
+    new Dotenv({
+      path: path.resolve(__dirname, "./.env"),
+    }),
+    new CompressionPlugin({
+      algorithm: "gzip", // หรือใช้ "brotliCompress" ก็ได้
+      test: /\.(js|css|html|svg)$/,
+      threshold: 10240,
+      minRatio: 0.8,
+    }),
+    new webpack.ProvidePlugin({
+      $: "jquery",
+      jQuery: "jquery",
+    }),
+  ],
+//   externals: {
+//     jquery: "jQuery",
+//   },
+  cache: process.env.STATE === "production"
+        ? false
+        : {
+              type: "filesystem",
+            //   cacheDirectory: path.resolve(__dirname, '.cache/webpack'),
+              buildDependencies: {
+                  config: [__filename],
               },
+          },
 };

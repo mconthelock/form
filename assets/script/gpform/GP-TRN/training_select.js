@@ -1,123 +1,159 @@
+// =====================================================
+// 📦 GP-TRN: Training Form Selector (jQuery Version)
+// =====================================================
 
 import { initLegalForm } from "./training_legal.js";
 import { initFunctionalForm } from "./training_functional.js";
 import { initMethForm } from "./training_meth.js";
-import { toggleSubmit, showAlert } from "./formUtils.js";
-import { initFormButtons } from "./training_main.js";   // ✅ เรียกใช้ปุ่มจาก main.js
+import { initPosForm } from "./training_pos.js";
+import { initOutForm } from "./training_out.js";
+import { showAlert } from "./formUtils.js";
+import { initFormButtons } from "./training_main.js";
 
-console.log(process.env.APP_API);
-// ================
-// 🔹 Dynamic List
-// ================
+
+console.log("✅ training_select.js loaded (jQuery version)");
+
+/* =====================================================
+   🔹 Helper: Dynamic Add / Remove List Rows
+===================================================== */
 function bindDynamicList(containerId, listId, addClass, removeClass) {
-    const container = document.getElementById(containerId);
-    if (!container || container.dataset.bound) return;
+  const $container = $("#" + containerId);
+  if (!$container.length || $container.data("bound")) return;
 
-    container.addEventListener("click", e => {
-        if (e.target.classList.contains(addClass)) {
-            const list = document.getElementById(listId);
-            if (!list) return;
-            const template = list.firstElementChild;
-            if (!template) return;
+  // ➕ Add new row
+  $container.on("click", "." + addClass, function () {
+    const $list = $("#" + listId);
+    if (!$list.length || !$list.children().first().length) return;
 
-            const newItem = template.cloneNode(true);
-            newItem.querySelectorAll("input").forEach(inp => inp.value = "");
+    const $newRow = $list.children().first().clone();
+    $newRow.find("input").val("");
 
-            const btn = newItem.querySelector("button");
-            if (btn) {
-                btn.classList.remove(addClass, "bg-green-500");
-                btn.classList.add(removeClass, "bg-red-500");
-                btn.textContent = "−";
-            }
-            list.appendChild(newItem);
-        }
+    const $btn = $newRow.find("button");
+    if ($btn.length) {
+      $btn.removeClass(`${addClass} bg-green-500`)
+          .addClass(`${removeClass} bg-red-500`)
+          .text("−");
+    }
+    $list.append($newRow);
+  });
 
-        if (e.target.classList.contains(removeClass)) {
-            const row = e.target.closest(".objective-item, .expectation-item");
-            if (row) row.remove();
-        }
-    });
+  // ➖ Remove row
+  $container.on("click", "." + removeClass, function () {
+    $(this).closest(".objective-item, .expectation-item").remove();
+  });
 
-    container.dataset.bound = "1";
+  $container.data("bound", 1);
 }
 
-// ================
-// 🔹 Main
-// ================
-document.addEventListener("DOMContentLoaded", () => {
-    console.log("✅ training_select.js loaded");
+/* =====================================================
+   🔹 Initialization
+===================================================== */
+$(function () {
+  const $selectCard  = $("#selectCard");
+  const $requestForm = $("#requestForm");
+  const $listItems   = $(".training-item");
 
-    const trainingType = document.getElementById("trainingType");
-    const submitBtn    = document.getElementById("submitBtn");
-    const selectCard   = document.getElementById("selectCard");
-    const requestForm  = document.getElementById("requestForm");
-    const detailBox    = document.getElementById("detailBox");
-    const detailTitle  = document.getElementById("detailTitle");
-    const detailDesc   = document.getElementById("detailDesc");
+  if (!$selectCard.length || !$requestForm.length || !$listItems.length) {
+    console.error("❌ DOM not ready or elements missing");
+    return;
+  }
 
-    const details = {
-        functional: { title: "Support Specific Functional Competency", desc: "ฟอร์ม Functional" },
-        legal: { title: "Support Legal Requirement", desc: "ฟอร์ม Legal" },
-        meth: { title: "Support ME-TH Training subject", desc: "ฟอร์ม Meth" },
-    };
+  // ----------------------------------------------
+  // 🔹 Bind Dynamic Lists (ทุกฟอร์ม)
+  // ----------------------------------------------
+  [
+    ["func_part2", "funcObjectiveList"],
+    ["func_part3", "funcExpectationList"],
+    ["legal_part3", "legalObjectiveList"],
+    ["legal_part4", "legalExpectationList"],
+    ["meth_part2", "methObjectiveList"],
+    ["meth_part3", "methExpectationList"],
+    ["pos_part2", "posObjectiveList"],
+    ["pos_part3", "posExpectationList"],
+    ["out_part2", "outObjectiveList"],
+    ["out_part3", "outExpectationList"]
+  ].forEach(([cid, lid], i) => {
+    const isExpect = i % 2;
+    bindDynamicList(
+      cid,
+      lid,
+      isExpect ? "add-expectation" : "add-objective",
+      isExpect ? "remove-expectation" : "remove-objective"
+    );
+  });
 
-    // 🔹 Bind Dynamic List
-    bindDynamicList("func_part2", "funcObjectiveList", "add-objective", "remove-objective");
-    bindDynamicList("func_part3", "funcExpectationList", "add-expectation", "remove-expectation");
-    bindDynamicList("legal_part3", "legalObjectiveList", "add-objective", "remove-objective");
-    bindDynamicList("legal_part4", "legalExpectationList", "add-expectation", "remove-expectation");
-    bindDynamicList("meth_part2", "methObjectiveList", "add-objective", "remove-objective");
-    bindDynamicList("meth_part3", "methExpectationList", "add-expectation", "remove-expectation");
+  // ----------------------------------------------
+  // 🔹 Card Click → Open Form
+  // ----------------------------------------------
+  $listItems.on("click", function () {
+    const $item = $(this);
+    const type  = $item.data("type");
+    if (!type) return;
 
-    // 🔹 เมื่อเปลี่ยน dropdown
-    trainingType?.addEventListener("change", () => {
-        const val = trainingType.value;
-        if (details[val]) {
-            detailTitle.textContent = details[val].title;
-            detailDesc.textContent  = details[val].desc;
-            detailBox.classList.remove("hidden");
-        } else {
-            detailBox.classList.add("hidden");
-        }
-        toggleSubmit(trainingType, submitBtn);
-    });
+    // highlight active
+    $listItems.removeClass("ring-2 ring-indigo-500 bg-indigo-50");
+    $item.addClass("ring-2 ring-indigo-500 bg-indigo-50");
 
-    // 🔹 ปุ่ม "ไปยังแบบฟอร์ม"
-    submitBtn?.addEventListener("click", () => {
-        const val = trainingType.value;
-        if (!val) {
-            showAlert("⚠ แจ้งเตือน", "กรุณาเลือกประเภทการฝึกอบรมก่อน !!");
-            return;
-        }
+    // redirect summary
+    if (type === "summary_report") {
+      location.href = `${window.mainUrl}/show_summary_report`;
+      return;
+    }
 
-        console.log("▶ เปิดฟอร์ม:", val);
+    console.log("▶ เปิดฟอร์ม:", type);
 
-        selectCard.classList.add("hidden");
-        document.querySelectorAll("#requestForm > div").forEach(div => div.classList.add("hidden"));
+    // hide list / show form
+    $selectCard.addClass("hidden");
+    $("#requestForm > div").addClass("hidden");
 
-        const selectedForm = document.getElementById("form_" + val);
-        if (selectedForm) {
-            requestForm.classList.remove("hidden");
-            selectedForm.classList.remove("hidden");
+    const $form = $("#form_" + type);
+    if (!$form.length) {
+      console.warn(`⚠️ ไม่พบ #form_${type}`);
+      showAlert("ไม่พบแบบฟอร์ม", `ไม่พบ element #form_${type}`);
+      return;
+    }
 
-            if (val === "functional" && !selectedForm.dataset.inited) {
-                initFunctionalForm();
-                selectedForm.dataset.inited = "1";
-            }
-            if (val === "legal" && !selectedForm.dataset.inited) {
-                initLegalForm();
-                selectedForm.dataset.inited = "1";
-            }
-            if (val === "meth" && !selectedForm.dataset.inited) {
-                initMethForm();
-                selectedForm.dataset.inited = "1";
-            }
+    $requestForm.removeClass("hidden");
+    $form.removeClass("hidden");
 
-            // ✅ bind ปุ่ม back & send หลังจากฟอร์มแสดงแล้ว
-            initFormButtons(val);
-        }
-    });
+    // init form (ครั้งเดียวต่อ type)
+    if (!$form.data("inited")) {
+      ({
+        functional: initFunctionalForm,
+        legal: initLegalForm,
+        meth: initMethForm,
+        pos: initPosForm,
+        out: initOutForm,
+        form_report: () => {},
+        manage_group: () => {}
+      }[type] || (() => {}))();
 
-    // init
-    toggleSubmit(trainingType, submitBtn);
+      $form.data("inited", 1);
+    }
+
+    // bind ปุ่ม Back / Send
+    initFormButtons(type);
+  });
 });
+
+
+/* =====================================================
+   🔹 Manage Group → Lazy Load Partial
+===================================================== */
+function initManageGroup() {
+  const base = $("#txt_base_url").val() || "";
+  const url  = base + "gpform/GP-TRN/Training_manage";
+
+  const $container = $("#form_manage_group");
+  $container.html('<div class="p-6 text-center text-gray-600">กำลังโหลดหน้าจัดการกลุ่ม...</div>');
+
+  // โหลด partial view เข้า div
+  $container.load(url, function () {
+    console.log("✔ Manage Group view loaded");
+
+    // โหลด JS หลังจาก DOM partial พร้อม
+    $.getScript(window.manageGroupJs, function () {
+      console.log("✔ manage_group.js loaded");
+    });
+  });
+}

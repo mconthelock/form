@@ -96,6 +96,19 @@ class Rgv_model extends CI_Model
         return $this->ad->query($sql)->result();
     }
 
+    public function is_user($section)
+    {
+        $this->ad
+            ->select('*')
+            ->from('ITGC_SPECIALUSER is')
+            ->join('AMECUserLogin.dbo.TB_SQLAMECUSER a', 'is.EMPNO = a.SEMPNO', 'left')
+            ->where('CATEGORY !=', 'APP')
+            ->where('AUTH_OGANIZE', $section)
+            ->where('ACTIVE_STATUS', '1')
+            ->where('USER_TYPE2', 'Human');
+        return $this->ad->get()->result();
+    }
+
     public function get_data_user($program)
     {
         // $this->db
@@ -153,14 +166,18 @@ class Rgv_model extends CI_Model
 
 
 
+
+
     public function insert($table, $data)
     {
         return $this->db->insert($table, $data);
     }
 
-    public function update($table, $data, $where)
+    public function update($table, $data, $where, $dateColumn = null)
     {
-
+        if ($dateColumn) {
+            $this->db->set($dateColumn, 'SYSDATE', false);
+        }
         $this->db->update($table, $data, $where);
         echo $this->db->last_query();
     }
@@ -306,6 +323,14 @@ class Rgv_model extends CI_Model
                 CONNECT BY PRIOR ac.MENU_ID = ac.PARENT_MENU_ID
                 ORDER SIBLINGS BY ac.MENU_ORDER, ac.MENU_NAME_EN";
         return $this->db->query($sql)->result();
+    }
+
+    public function getUserall($empno)
+    {
+        $this->db->select('*')
+            ->from('AMECUSERALL')
+            ->where('SEMPNO', (string) $empno);
+        return $this->db->get()->result();
     }
 
 

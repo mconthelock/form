@@ -38,7 +38,7 @@
 @section('contents')
     <div id="loading-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.85); z-index:9999;">
         <div style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%);">
-            <img src="{{base_url()}}assets/images/loading_gif.gif" alt="Loading..." width="120">
+            <img src="{{ base_url() }}assets/images/loading_gif.gif" alt="Loading..." width="120">
         </div>
     </div>
     <div class="form-data" data-nfrmno="{{ $NFRMNO }}" data-vorgno="{{ $VORGNO }}" data-cyear="{{ $CYEAR }}" data-cyear2="{{ $CYEAR2 }}" data-nrunno="{{ $NRUNNO }}" data-empno="{{ $EMPNO }}"></div>
@@ -58,7 +58,7 @@
                 <div class="overflow-hidden rounded-xl border-2 border-blue-200 mb-8 bg-blue-50">
                     <table class="w-full text-sm">
                         <tbody>
-                            @if(!empty($formCler->FORM_ENT))
+                            @if (!empty($formCler->FORM_ENT))
                                 <tr>
                                     <th class="w-1/4 text-left text-blue-900 font-semibold py-2 pl-4 border-b-2 border-blue-200 bg-blue-100">Form No.</th>
                                     <td class="py-2 pl-4 border-b-2 border-blue-200">{{ $formCler->FORM_ENT }}</td>
@@ -98,7 +98,7 @@
                                     </td>
                                 </tr>
                             @endif
-                            @if($dataForm->FILE_MEMO_OTHER)
+                            @if ($dataForm->FILE_MEMO_OTHER)
                                 <tr>
                                     <th class="text-left text-blue-900 font-semibold py-2 pl-4 border-b-2 border-blue-200 bg-blue-100">File Memo Other</th>
                                     <td class="py-2 pl-4 border-b-2 border-blue-200">
@@ -108,25 +108,61 @@
                                     </td>
                                 </tr>
                             @endif
-                            @if($dataForm->OTHER_DETAILS)
+                            @if ($dataForm->OTHER_DETAILS)
                                 <tr>
                                     <th class="text-left text-blue-900 font-semibold py-2 pl-4 border-b-2 border-blue-200 bg-blue-100">Other Details</th>
                                     <td class="py-2 pl-4 border-b-2 border-blue-200">{{ $dataForm->OTHER_DETAILS }}</td>
                                 </tr>
                             @endif
+                            @if ($dataForm->FILE_VISITOR_NOTICE)
+                                <tr>
+                                    <th class="text-left text-blue-900 font-semibold py-2 pl-4 border-b-2 border-blue-200 bg-blue-100">Visitor Notice</th>
+                                    <td class="py-2 pl-4 border-b-2 border-blue-200">
+                                        <a href="{{ base_url('gpform/GP-ENT/main/preview/' . $dataForm->FILE_VISITOR_NOTICE) }}" target="_blank" class="text-blue-700 underline btn btn-sm rounded-lg">
+                                            {{ $dataForm->FILE_VISITOR_NOTICE }}
+                                        </a>
+                                    </td>
+                                </tr>
+                            @endif
                             <tr>
-                                <th class="text-left text-blue-900 font-semibold py-2 pl-4 border-blue-200 bg-blue-100">Location</th>
-                                <td class="py-2 pl-4 border-blue-200">{{ $dataForm->LOCATION_TYPE ?? '-' }}</td>
+                                <th class="text-left text-blue-900 font-semibold py-2 pl-4 border-b-2 border-blue-200 bg-blue-100">Location</th>
+                                <td class="py-2 pl-4 border-b-2 border-blue-200">{{ $dataForm->LOCATION_TYPE ?? '-' }}</td>
                             </tr>
+                            @if ($dataForm->LOCATION)
+                                <tr>
+                                    <th class="text-left text-blue-900 font-semibold py-2 pl-4 border-b-2 border-blue-200 bg-blue-100">Location Detail</th>
+                                    <td class="py-2 pl-4 border-b-2 border-blue-200">{{ $dataForm->LOCATION }}</td>
+                                </tr>
+                            @endif
+                            @if ($dataForm->ENTERTAINMENT_BUDGET)
+                                <tr>
+                                    <th class="text-left text-blue-900 font-semibold py-2 pl-4 border-b-2 border-blue-200 bg-blue-100">Entertainment Budget</th>
+                                    <td class="py-2 pl-4 border-b-2 border-blue-200">{{ $dataForm->ENTERTAINMENT_BUDGET }}</td>
+                                </tr>
+                            @endif
+                            @if ($dataForm->PAYABLE_DATE_GIFT)
+                                <tr class=" border-yellow-400">
+                                    <th class="text-left text-blue-900 bg-yellow-100 font-semibold py-2 pl-4 border-b-2 border-blue-200">
+                                        Payable Date
+                                    </th>
+                                    <td class="py-2 pl-4 border-b-2 border-blue-200 bg-yellow-50  font-bold text-gray-800">
+                                        {{ $dataForm->PAYABLE_DATE_GIFT }}
+                                    </td>
+                                </tr>
+                            @endif
 
-                            {{-- <tr>
-                                <th class="text-left text-blue-900 font-semibold py-2 pl-4 border-blue-200 bg-blue-100">Entertainment Budget</th>
-                                <td class="py-2 pl-4 border-blue-200">{{ $dataForm->ENTERTAINMENT_BUDGET ?? '-' }}</td>
-                            </tr>
-                            <tr>
-                                <th class="text-left text-blue-900 font-semibold py-2 pl-4 border-blue-200 bg-blue-100">Guest Type</th>
-                                <td class="py-2 pl-4 border-blue-200">{{ $dataForm->TYPE_NAME }}</td>
-                            </tr>--}}
+                            @if ($dataForm->FILE_URGENT)
+                                <tr class=" border-red-400">
+                                    <th class="text-left text-blue-900 bg-red-100 font-semibold py-2 pl-4 border-blue-200">
+                                        Urgent Approval File
+                                    </th>
+                                    <td class="py-2 pl-4 border-blue-200 bg-red-50 font-bold">
+                                        <a href="{{ base_url('gpform/GP-ENT/main/preview/' . $dataForm->FILE_URGENT) }}" target="_blank" class="text-red-700 underline font-semibold">
+                                            {{ $dataForm->FILE_URGENT }}
+                                        </a>
+                                    </td>
+                                </tr>
+                            @endif
                         </tbody>
                     </table>
 
@@ -145,7 +181,7 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach($company as $i => $guest)
+                                @foreach ($company as $i => $guest)
                                     <tr>
                                         <td class="py-2 px-4 border-b border-blue-100">{{ $i + 1 }}</td>
                                         <td class="py-2 px-4 border-b border-blue-100">{{ $guest->COMPANY_NAME }}</td>
@@ -168,7 +204,7 @@
                     </div>
                 </div>
 
-                @if($dataForm->GUEST_TYPE)
+                @if ($dataForm->GUEST_TYPE)
                     <div class="mb-8 w-full">
                         <div class="text-lg font-bold text-blue-800 mb-2">Guest Type</div>
                         <div class="overflow-hidden rounded-xl border-2 border-blue-200 bg-blue-50 shadow-sm">
@@ -212,7 +248,7 @@
                     <h3 class="font-semibold text-blue-900 mb-2">Quantity of Participant</h3>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 border-2 border-gray-300 rounded-xl p-3 bg-gray-50">
                         @php
-                            $amec  = array_filter($dataParticipants, function ($item) {
+                            $amec = array_filter($dataParticipants, function ($item) {
                                 return $item->TYPE === 'amec';
                             });
                             $guest = array_filter($dataParticipants, function ($item) {
@@ -231,14 +267,14 @@
                             <div class="font-semibold text-blue-700 mb-1">AMEC: {{ count($amec) }} person</div>
                             <ul class="list-disc list-inside text-gray-800 ml-4">
                                 @foreach ($amec as $value)
-                                    <li>{{ $value->SEMPPRE . " " . $value->SNAME }}</li>
+                                    <li>{{ $value->SEMPPRE . ' ' . $value->SNAME }}</li>
                                 @endforeach
                             </ul>
                         </div>
                     </div>
                     <div class="overflow-hidden mt-1 rounded-xl border-2 p-3 border-gray-300 bg-gray-50 shadow-sm flex items-center">
                         <span class="text-blue-900 font-semibold mr-3">Remark :</span>
-                        <span>{{ $dataForm->REMARK ?? "-" }}</span>
+                        <span>{{ $dataForm->REMARK ?? '-' }}</span>
                     </div>
                 </div>
 
@@ -269,13 +305,13 @@
                                     <td class="py-2 px-2">{{ $value->DETAILS }}</td>
                                     <td class="py-2 px-2">{{ $value->QTY }}</td>
                                     <td class="py-2 px-2">{{ $value->UNIT_COST }}</td>
-                                    <td class="py-2 px-2">{{ number_format($value->TOTAL_COST) }}</td>
+                                    <td class="py-2 px-2">{{ number_format($value->TOTAL_COST, 2) }}</td>
                                     <td class="py-2 px-2">{{ $value->REMARK }}</td>
                                 </tr>
                             @endforeach
                             <tr class="font-semibold bg-blue-50">
                                 <td colspan="3" class="text-right py-3 px-2 border-t">Total Amount</td>
-                                <td class="text-center py-3 px-2 border-t text-blue-900" id="total_amount">{{ number_format($sum) }}</td>
+                                <td class="text-center py-3 px-2 border-t text-blue-900" id="total_amount">{{ number_format($sum, 2) }}</td>
                                 <td class="py-3 px-2 border-t"></td>
                             </tr>
                         </tbody>
@@ -284,7 +320,7 @@
 
                 <div class="mt-5 grid gap-4 grid-cols-1 {{ !empty($dataForm->FILE_MEMO) ? 'md:grid-cols-2' : '' }}">
                     <!-- Memo File -->
-                    @if(!empty($dataForm->FILE_MEMO))
+                    @if (!empty($dataForm->FILE_MEMO))
                         <div class="flex items-center gap-4 bg-blue-50 rounded-xl border border-blue-200 shadow p-4">
                             <span class="font-semibold text-blue-900 mb-1">Memo File :</span>
                             <a href="{{ base_url('gpform/GP-ENT/main/preview/' . $dataForm->FILE_MEMO) }}" class="btn btn-sm text-blue-600 underline text-sm truncate" target="_blank">{{ $dataForm->FILE_MEMO }}</a>
@@ -303,7 +339,7 @@
                 @if ($dataForm->PAYDATE != null)
                     <div class="overflow-hidden mt-2 rounded-xl border-2 p-3 border-gray-300 bg-orange-100 shadow-sm flex items-center">
                         <span class="text-blue-900 font-semibold mr-3">PayDate :</span>
-                        <span>{{ $dataForm->PAYDATE ?? "-" }}</span>
+                        <span>{{ $dataForm->PAYDATE ?? '-' }}</span>
                     </div>
                 @endif
 
@@ -312,7 +348,7 @@
 
 
 
-                @if($dataForm->FORM_APPROVE != null)
+                @if ($dataForm->FORM_APPROVE != null)
                     <div class="bg-white rounded-2xl shadow-lg border-2 border-orange-500 overflow-hidden mt-8">
                         <!-- แถบ Late Approval -->
                         <div class="flex items-center gap-3 px-6 py-4 bg-gradient-to-r from-orange-100 to-orange-50">
@@ -341,7 +377,8 @@
                                     @else
                                         <svg class="h-7 w-7" fill="currentColor" viewBox="0 0 20 20">
 
-                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                                                clip-rule="evenodd" />
                                         </svg>
                                         Not Accept
                                     @endif
@@ -359,17 +396,16 @@
 
                         </div>
                     </div>
-
                 @endif
 
             </div>
-            @if($form[0]->CST == '2')
+            @if ($form[0]->CST == '2')
                 <div class="flex justify-center mt-8">
                     <button onclick="window.print()" class="btn bg-indigo-600 text-white no-print mb-4 no-print">Print</button>
                 </div>
             @endif
             @if ($mode == '02')
-                @if ((in_array($flowstep[0]->CSTEPNO, ['87', '19']) && $flowstep[0]->CSTEPNEXTNO == '00'))
+                @if (in_array($flowstep[0]->CSTEPNO, ['87', '19']) && $flowstep[0]->CSTEPNEXTNO == '00')
                     <div class="relative flex justify-center mt-4">
                         <div class="w-full max-w-xs">
                             <label class="floating-label block">
@@ -385,18 +421,17 @@
 
                         </div>
                     </div>
-
                 @endif
 
-                @if(strtotime($dataForm->ENTERTAINMENT_DATE) < strtotime(date("d-M-y")) && $flowstep[0]->CSTEPNO == '18')
-
+                @if (strtotime($dataForm->ENTERTAINMENT_DATE) < strtotime(date('d-M-y')) && $flowstep[0]->CSTEPNO == '18')
                     <!-- Open the modal using ID.showModal() method -->
                     <!-- <button class="btn" onclick="my_modal_1.showModal()">open modal</button> -->
                     <dialog id="my_modal_1" class="modal">
                         <div class="modal-box w-11/12 max-w-3xl">
                             <h3 class="text-lg font-bold"><i class="fa-solid fa-triangle-exclamation text-yellow-500 text-2xl"></i> Message Alert</h3>
                             <p class="py-4">
-                                This Entertainment form, requested on <span class="text-red-500 font-semibold">{{$dataForm->ENTERTAINMENT_DATE}}</span>, was not approved before the event date. Please review and provide your approval by selecting either <span class="text-green-700 font-semibold">'Accept'</span> or <span class="text-red-700 font-semibold">'Not Accept'</span>.
+                                This Entertainment form, requested on <span class="text-red-500 font-semibold">{{ $dataForm->ENTERTAINMENT_DATE }}</span>, was not approved before the event date. Please review and provide your approval by selecting either <span
+                                    class="text-green-700 font-semibold">'Accept'</span> or <span class="text-red-700 font-semibold">'Not Accept'</span>.
                             </p>
                             <p class="py-4">
                                 For your information.
@@ -443,7 +478,21 @@
                         </div>
 
                     </div>
+                @endif
 
+                @php
+                    $amecIds = array_map(function ($x) {
+                        return $x->SEMPNO;
+                    }, $amec);
+                @endphp
+                @if (in_array($flowstep[0]->CSTEPNO, ['19', '34']) && $flowstep[0]->CSTEPNEXTNO == '13' && isset($PRESIDENT->VEMPNO) && isset($RAF->VEMPNO) && in_array($PRESIDENT->VEMPNO, $amecIds) && in_array($RAF->VEMPNO, $amecIds))
+                    <div class="flex items-center justify-center mt-4 space-x-3">
+                        <label for="emp_select" class="font-medium text-blue-900">Select Approver:</label>
+                        <select id="emp_select" name="emp_select" class="select select-bordered w-80 bg-blue-50 focus:bg-white focus:border-blue-500 transition">
+                            <option value="" disabled selected>Select an option</option>
+                            {{-- รายชื่อ Approver จะถูกเติมโดย JS --}}
+                        </select>
+                    </div>
                 @endif
 
                 <div class="flex justify-center mt-6 space-x-4">
@@ -455,14 +504,14 @@
                     <button type="button" class="btn btn-error w-32 transition btn-submit" data-action="reject">
                         Reject
                     </button>
-                    <!-- <button type="button" class="btn btn-info w-32 transition btn-submit" data-action="return">
+                    {{-- <button type="button" class="btn btn-info w-32 transition btn-submit" data-action="return">
                             Return
-                        </button> -->
-                    @if (in_array($flowstep[0]->CSTEPNO, ['19', '34']) && $flowstep[0]->CSTEPNEXTNO == '13' || $flowstep[0]->CSTEPNO == '13' && $flowstep[0]->CSTEPNEXTNO == '18')
-                        <button type="button" class="btn btn-info w-32 transition btn-submit" data-action="return">
-                            Return
-                        </button>
-                    @endif
+                        </button> --}}
+                    {{-- @if ((in_array($flowstep[0]->CSTEPNO, ['19', '34']) && $flowstep[0]->CSTEPNEXTNO == '13') || ($flowstep[0]->CSTEPNO == '13' && $flowstep[0]->CSTEPNEXTNO == '18')) --}}
+                    <button type="button" class="btn btn-info w-32 transition btn-submit" data-action="return">
+                        Return
+                    </button>
+                    {{-- @endif --}}
                 </div>
 
                 <div class="flex justify-center mt-4 no-print">

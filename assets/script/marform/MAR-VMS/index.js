@@ -1837,6 +1837,7 @@ async function createGPENT() {
   if (!$("#hasLunch").is(":checked") && !$("#hasDinner").is(":checked")) return;
 
   const eno = "9";
+  //const eno = "17";
   const evorgno = "030101";
   const ecyear = "25";
   const preform = {
@@ -1859,7 +1860,7 @@ const processTable = (tableSelector, mealType) => {
   const list = [];
   let qty = 0;
 
-  $(`${tableSelector} tr.bg-white`).each(function (_, el) {
+  $(`${tableSelector} tr`).each(function (_, el) {
       const tr = $(el);
       const selName = mealType + "_provided[]";
       const val = tr.find(`select[name='${selName}']`).val();
@@ -1932,7 +1933,8 @@ const processTable = (tableSelector, mealType) => {
       // process tables
       const visitorResult = processTable("#tablevisitor", mealType);
       const empResult = processTable("#tableemp", mealType);
-  
+      console.log(visitorResult);
+      console.log(empResult);
       const guestlist = visitorResult.list;
       const gqty = visitorResult.qty;
       const ameclist = empResult.list;
@@ -1951,12 +1953,25 @@ const processTable = (tableSelector, mealType) => {
       }];
 
       // company
-      const firstCompany = $("#tablevisitor input[name='company[]']").first().val();
-      const companies = [{
-          name: firstCompany,
-          orgType: orgType,
-          fileName: fname
-      }];
+      // const firstCompany = $("#tablevisitor input[name='company[]']").first().val();
+      // const companies = [{
+      //     name: firstCompany,
+      //     orgType: orgType,
+      //     fileName: fname
+      // }];
+      const companies = [];
+      const companySet = new Set(); 
+      $("#tablevisitor input[name='company[]']").each(function () {
+        const comp = $(this).val();
+        if (comp && !companySet.has(comp)) {
+            companySet.add(comp);
+            companies.push({
+                name: comp,
+                orgType: orgType,
+                fileName: fname
+            });
+        }
+    });
 
       formData.append("companies", JSON.stringify(companies));
       formData.append("estimate_items", JSON.stringify(estimateItems));
@@ -2148,6 +2163,7 @@ function updateform()
 
 function InsertGPENT(formData)
 {
+  console.log(formData);
   $.ajax({
     type: "POST",
     url: host + "gpform/GP-ENT/main/InsertForm",
@@ -2261,6 +2277,7 @@ function loaddata(vmscyear2,vmsnrunno)
       showLoader({ show: true });
     },
     success: function (response) {
+      console.log(response.head);
        $('[data-field="attn"]').text(response.head.ATT);
        $('[data-field="cc"]').text(response.head.CC);
        if((response.head.PURPOSEVISIT == null) && (response.head.PURPOSEDETAIL == null))
@@ -2274,7 +2291,7 @@ function loaddata(vmscyear2,vmsnrunno)
        $('[data-field="issueDate"]').text(response.head.ISSUEDATE);
        $('[data-field="refno"]').text(response.head.REFNO);
        let issueby = response.head.ISSUEBY;
-      
+   ;
        let parts = issueby.trim().split(/\s+/);
        let title = parts[0] ||"";
        let fname = parts[1] ||"";

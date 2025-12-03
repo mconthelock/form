@@ -809,21 +809,21 @@ table.dataTable .select2-container--default .select2-selection--multiple {
                 <option value="N" {{ ($v->VISITEXP == "N")? "selected":"" }}>No</option>
               </select>
             </td>
-            <td  class="{{ ($mode == "2" && !empty($visit) && $visit[0]->LUNCH == "N") ? 'hidden' : '' }} >
+            <td  class="{{ ($mode == "2" && !empty($visit) && $visit[0]->LUNCH == "N") ? 'hidden' : '' }}" >
               <select name="lunch_provided[]" class="input input-bordered rounded-xl w-full shadow-sm border-blue-200 text-gray-900">
                 <option value=""></option>
-                <option value="Y" {{ ($v->LUNCH == "Y")? "selected":"" }}>Yes</option>
-                <option value="N" {{ ($v->LUNCH == "N")? "selected":"" }}>No</option>
+                <option value="Y" {{ ($v->LUNCH == "Y")? "selected":"" }} >Yes</option>
+                <option value="N" {{ ($v->LUNCH == "N")? "selected":"" }} >No</option>
               </select>
             </td>
-            <td  class="{{ ($mode == "2" && !empty($visit) && $visit[0]->DINNER == "N") ? 'hidden' : '' }}>
+            <td  class="{{ ($mode == "2" && !empty($visit) && $visit[0]->DINNER == "N") ? 'hidden' : '' }}">
               <select name="dinner_provided[]" class="input input-bordered rounded-xl w-full shadow-sm border-blue-200 text-gray-900">
                 <option value=""></option>
                 <option value="Y" {{ ($v->DINNER == "Y")? "selected":"" }}>Yes</option>
                 <option value="N" {{ ($v->DINNER == "N")? "selected":"" }}>No</option>
               </select>
             </td>
-            <td  class="{{ ($mode == "2" && !empty($visit) && ($visit[0]->LUNCH == "N") && ($visit[0]->DINNER == "N")) ? 'hidden' : '' }}>
+            <td  class="{{ ($mode == "2" && !empty($visit) && ($visit[0]->LUNCH == "N") && ($visit[0]->DINNER == "N")) ? 'hidden' : '' }}">
               <select id="dietary_require" name="dietary_require[]" class="input input-bordered rounded-xl w-full shadow-sm border-blue-200 text-gray-900 dietary_require" placeholder = "Select Dietary Requirements">
                 <option value=""></option>
                 @foreach($dietary as $index => $d)

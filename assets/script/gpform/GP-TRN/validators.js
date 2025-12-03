@@ -1,194 +1,193 @@
+// =====================================================
+// 📦 GP-TRN: Form Validators (jQuery Version)
+// =====================================================
 
-import { showAlert } from "./formUtils.js";  // ✅ ต้อง import มาด้วย
-
+import { showAlert } from "./formUtils.js";
+import Swal from "sweetalert2";
 /**
- * ฟังก์ชันกลาง ใช้ตรวจสอบว่าฟิลด์ที่บังคับต้องมีค่า
- * - รองรับ querySelectorAll (ตรวจสอบหลาย input)
- * - ตรวจว่าอย่างน้อยต้องมี input และต้องไม่ว่าง
+ * 🔹 ฟังก์ชันกลาง ตรวจสอบว่าฟิลด์ที่บังคับต้องมีค่า
+ * - รองรับหลาย input/selector
+ * - แสดง alert อัตโนมัติเมื่อไม่ครบ
  */
-export function validateForm(requiredSelectors) {
-    for (const sel of requiredSelectors) {
-        const els = document.querySelectorAll(sel);
+export function validateForm(requiredSelectors, fid) {
+  for (const sel of requiredSelectors) {
+    const $els = $(sel);
 
-        if (els.length === 0) {
-            showAlert("⚠ แจ้งเตือน", "ต้องมีข้อมูลอย่างน้อย 1 รายการ");
-            return false;
-        }
 
-        let valid = false;
-        els.forEach(el => {
-            if (el.value && el.value.trim() !== "") {
-                valid = true;
-            }
-        });
-
-        if (!valid) {
-            showAlert("⚠ แจ้งเตือน", els[0].dataset.alert || "กรุณากรอกข้อมูลให้ครบถ้วน");
-            els[0].focus();
-            return false;
-        }
+    const valid = $els.toArray().some(el => $(el).val()?.trim());
+    if (!valid) {
+      const msg = $els.eq(0).data("alert") || "กรุณากรอกข้อมูลให้ครบถ้วน";
+      showAlert("⚠ แจ้งเตือน", msg);
+      $els.eq(0).focus();
+      return false;
     }
-    return true;
+  }
+  return true;
 }
 
-// =====================================================================
-// Functional
-// =====================================================================
+/* =====================================================
+   🔹 Common Helper
+   ===================================================== */
+function checkExpense(prefix, partText) {
+  const $exp = $(`input[name='${prefix}ExpenseOption']:checked`);
+  if (!$exp.length) {
+    showAlert("⚠ แจ้งเตือน", `กรุณาเลือกวิธีการพิจารณาค่าใช้จ่าย (${partText})`);
+    return false;
+  }
+
+  // ❌ ไม่มีการเปรียบเทียบราคา
+  if ($exp.val() === "0") {
+    const $reason = $(`input[name='${prefix}Reason']:checked`);
+    const $reasonOther = $(`input[name='${prefix}Reason'][value='other']:checked`);
+
+    if (!$reason.length) {
+      showAlert("⚠ แจ้งเตือน", "กรุณาเลือกเหตุผลของการไม่มีการเปรียบเทียบราคา");
+      return false;
+    }
+    if ($reasonOther.length) {
+      const $txt = $(`#${prefix}ReasonText, #${prefix}ReasonOtherText`);
+      if (!$txt.val()?.trim()) {
+        showAlert("⚠ แจ้งเตือน", $txt.data("alert") || "กรุณาระบุเหตุผลอื่น");
+        $txt.focus();
+        return false;
+      }
+    }
+  }
+
+  // ✅ มีการเปรียบเทียบ ต้องแนบไฟล์
+  if ($exp.val() === "1") {
+    const files = $(`#${prefix}CompareFiles`)[0]?.files;
+    if (!files || !files.length) {
+      showAlert("⚠ แจ้งเตือน", "กรุณาแนบไฟล์เปรียบเทียบราคาอย่างน้อย 1 ไฟล์");
+      return false;
+    }
+  }
+
+  // ✅ ตรวจกรณีฟรีหรือไม่
+  const freeSelected = $(`input[name='${prefix}Reason'][value='1']:checked`);
+  if (!freeSelected.length) {
+    const $amt = $(`#${prefix}AmountInput`);
+    if (!$amt.val()?.trim()) {
+      showAlert("⚠ แจ้งเตือน", "กรุณากรอกจำนวนเงิน");
+      $amt.focus();
+      return false;
+    }
+  }
+
+  return true;
+}
+
+/* =====================================================
+   🔹 Functional
+   ===================================================== */
 export function validateFunctionalForm() {
-    const requiredSelectors = [
-        "#funcRequestBy", "#funcTrainingSubject", "#funcDateFrom", "#funcDateTo",
-        "#funcLocation", "#funcInstitute",
-        "#funcObjectiveList input[name='funcObjective[]']",
-        "#funcExpectationList input[name='funcExpectation[]']",
-        "#funcTraineeCode",
-        "#funcJdName", "#funcJdRelation", "#funcJdFiles"
-    ];
-    if (!validateForm(requiredSelectors)) return false;
-
-    const expense = document.querySelector("input[name='funcExpenseOption']:checked");
-    if (!expense) {
-        showAlert("⚠ แจ้งเตือน", "กรุณาเลือกวิธีการพิจารณาค่าใช้จ่าย (Part 5)");
-        return false;
-    }
-
-    if (expense.value === "not_compare") {
-        const chk_reason = document.querySelector("input[name='funcReason']:checked");
-        const reasonOther = document.querySelector("input[name='funcReason'][value='other']:checked");
-        if (!chk_reason) {
-            showAlert("⚠ แจ้งเตือน", "กรุณาเลือกเหตุผลของการไม่มีการเปรียบเทียบราคา");
-            return false;
-        } else if (reasonOther) {
-            const txt = document.getElementById("funcReasonOtherText");
-            if (!txt.value.trim()) {
-                showAlert("⚠ แจ้งเตือน", txt.dataset.alert || "กรุณาระบุเหตุผลอื่น");
-                txt.focus();
-                return false;
-            }
-        }
-    } else if (expense.value === "compare") {
-        const files = document.getElementById("funcCompareFiles")?.files;
-        if (!files || files.length === 0) {
-            showAlert("⚠ แจ้งเตือน", "กรุณาแนบไฟล์เปรียบเทียบราคาอย่างน้อย 1 ไฟล์");
-            return false;
-        }
-    }
-
-    const freeSelected = document.querySelector("input[name='funcReason'][value='free']:checked");
-    if (!freeSelected) {
-        const amount = document.getElementById("funcAmountInput");
-        if (amount && amount.value === "") {
-            showAlert("⚠ แจ้งเตือน", "กรุณากรอกจำนวนเงิน");
-            amount.focus();
-            return false;
-        }
-    }
-
-    return true;
+  const required = [
+    "#funcTrainingSubject", "#funcDateFrom", "#funcDateTo",
+    "#funcLocation", "#funcInstitute",
+    "#funcObjectiveList input[name='funcObjective[]']",
+    "#funcExpectationList input[name='funcExpectation[]']",
+    "#funcTraineeCode", "#funcJdName", "#funcJdRelation", "#funcJdFiles"
+  ];
+  if (!validateForm(required, "1")) return false;
+  return checkExpense("func", "Part 5");
 }
 
-// =====================================================================
-// Legal
-// =====================================================================
+/* =====================================================
+   🔹 Legal
+   ===================================================== */
 export function validateLegalForm() {
-    const requiredSelectors = [
-        "#legalRequestBy", "#legalTrainingSubject", "#legalDateFrom", "#legalDateTo",
-        "#legalLocation", "#legalInstitute", "#legalConcernLaw",
-        "#legalObjectiveList input[name='legalObjective[]']",
-        "#legalExpectationList input[name='legalExpectation[]']"
-    ];
-    if (!validateForm(requiredSelectors)) return false;
-
-    const expense = document.querySelector("input[name='legalExpenseOption']:checked");
-    if (!expense) {
-        showAlert("⚠ แจ้งเตือน", "กรุณาเลือกวิธีการพิจารณาค่าใช้จ่าย (Part 6)");
-        return false;
-    }
-
-    if (expense.value === "not_compare") {
-        const chk_reason = document.querySelector("input[name='legalReason']:checked");
-        const reasonOther = document.querySelector("input[name='legalReason'][value='other']:checked");
-        if (!chk_reason) {
-            showAlert("⚠ แจ้งเตือน", "กรุณาเลือกเหตุผลของการไม่มีการเปรียบเทียบราคา");
-            return false;
-        } else if (reasonOther) {
-            const txt = document.getElementById("legalReasonText");
-            if (!txt.value.trim()) {
-                showAlert("⚠ แจ้งเตือน", txt.dataset.alert || "กรุณาระบุเหตุผลอื่น");
-                txt.focus();
-                return false;
-            }
-        }
-    } else if (expense.value === "compare") {
-        const files = document.getElementById("legalCompareFiles")?.files;
-        if (!files || files.length === 0) {
-            showAlert("⚠ แจ้งเตือน", "กรุณาแนบไฟล์เปรียบเทียบราคา");
-            return false;
-        }
-    }
-
-    const freeSelected = document.querySelector("input[name='legalReason'][value='free']:checked");
-    if (!freeSelected) {
-        const amount = document.getElementById("legalAmount");
-        if (amount && amount.value === "") {
-            showAlert("⚠ แจ้งเตือน", "กรุณากรอกจำนวนเงิน");
-            amount.focus();
-            return false;
-        }
-    }
-
-    return true;
+  const required = [
+    "#legalTrainingSubject", "#legalDateFrom", "#legalDateTo",
+    "#legalLocation", "#legalInstitute", "#legalConcernLaw", 
+    "#legalObjectiveList input[name='legalObjective[]']",
+    "#legalExpectationList input[name='legalExpectation[]']"
+  ];
+  if (!validateForm(required, "2")) return false;
+  return checkExpense("legal", "Part 6");
 }
 
-// =====================================================================
-// Meth
-// =====================================================================
+/* =====================================================
+   🔹 Method-Based
+   ===================================================== */
 export function validateMethForm() {
-    const requiredSelectors = [
-        "#methRequestBy", "#methTrainingSubject", "#methDateFrom", "#methDateTo",
-        "#methLocation", "#methInstitute",
-        "#methObjectiveList input[name='methObjective[]']",
-        "#methExpectationList input[name='methExpectation[]']",
-        "#methTraineeCode"
-    ];
-    if (!validateForm(requiredSelectors)) return false;
+  const required = [
+    "#methTrainingSubject", "#methDateFrom", "#methDateTo",
+    "#methLocation", "#methInstitute",
+    "#methObjectiveList input[name='methObjective[]']",
+    "#methExpectationList input[name='methExpectation[]']",
+    "#methTraineeCode"
+  ];
+  if (!validateForm(required, "3")) return false;
+  return checkExpense("meth", "Part 5");
+}
 
-    const expense = document.querySelector("input[name='methExpenseOption']:checked");
-    if (!expense) {
-        showAlert("⚠ แจ้งเตือน", "กรุณาเลือกวิธีการพิจารณาค่าใช้จ่าย (Part 5)");
-        return false;
+/* =====================================================
+   🔹 Position-Based
+   ===================================================== */
+export function validatePosForm() {
+  const required = [
+    "#posTrainingSubject", "#posDateFrom", "#posDateTo",
+    "#posLocation", "#posInstitute",
+    "#posObjectiveList input[name='posObjective[]']",
+    "#posExpectationList input[name='posExpectation[]']",
+    "#posTraineeCode"
+  ];
+  if (!validateForm(required, "4")) return false;
+  return checkExpense("pos", "Part 5");
+}
+
+/* =====================================================
+   🔹 Outside Learning
+   ===================================================== */
+export function validateOutForm() {
+  const required = [
+    "#outTrainingSubject", "#outDateFrom", "#outDateTo",
+    "#outLocation",
+    "#outObjectiveList input[name='outObjective[]']",
+    "#outExpectationList input[name='outExpectation[]']"
+  ];
+  return validateForm(required, "5");
+}
+
+
+/* =====================================================
+   🔹 Validate Training Dates (DateTo >= DateFrom)
+   ✅ รองรับหลายฟอร์มผ่าน prefix (func / legal / meth / pos / out)
+   ===================================================== */
+export function validateDateRange(prefix) {
+  if (!prefix) return;
+
+  const $from = $(`#${prefix}DateFrom`);
+  const $to = $(`#${prefix}DateTo`);
+
+  if (!$from.length || !$to.length) {
+    console.warn(`⚠️ validateDateRange: ไม่พบ element สำหรับ prefix "${prefix}"`);
+    return;
+  }
+
+  const checkDate = () => {
+    const dateFrom = $.trim($from.val());
+    const dateTo = $.trim($to.val());
+
+    if (dateFrom && dateTo) {
+      const fromDate = new Date(dateFrom);
+      const toDate = new Date(dateTo);
+
+      if (dateTo < dateFrom) {
+        Swal.fire({
+          icon: "warning",
+          title: "⚠ กรุณาเลือกวันที่ให้ถูกต้อง",
+          text: "กรุณาเลือกวันที่ให้ถูกต้อง",
+          confirmButtonText: "ตกลง",
+        });
+        // เคลียร์ค่า dateTo และโฟกัสกลับไป
+        $(`#${prefix}DateTo`).val("").focus();
+      }
     }
+  };
 
-    if (expense.value === "not_compare") {
-        const chk_reason = document.querySelector("input[name='methReason']:checked");
-        const reasonOther = document.querySelector("input[name='methReason'][value='other']:checked");
-        if (!chk_reason) {
-            showAlert("⚠ แจ้งเตือน", "กรุณาเลือกเหตุผลของการไม่มีการเปรียบเทียบราคา");
-            return false;
-        } else if (reasonOther) {
-            const txt = document.getElementById("methReasonText");
-            if (!txt.value.trim()) {
-                showAlert("⚠ แจ้งเตือน", txt.dataset.alert || "กรุณาระบุเหตุผลอื่น");
-                txt.focus();
-                return false;
-            }
-        }
-    } else if (expense.value === "compare") {
-        const files = document.getElementById("methCompareFiles")?.files;
-        if (!files || files.length === 0) {
-            showAlert("⚠ แจ้งเตือน", "กรุณาแนบไฟล์เปรียบเทียบราคา");
-            return false;
-        }
-    }
+  $from.on("change", checkDate);
+  $to.on("change", checkDate);
 
-    const freeSelected = document.querySelector("input[name='methReason'][value='free']:checked");
-    if (!freeSelected) {
-        const amount = document.getElementById("methAmount");
-        if (amount && amount.value === "") {
-            showAlert("⚠ แจ้งเตือน", "กรุณากรอกจำนวนเงิน");
-            amount.focus();
-            return false;
-        }
-    }
-
-    return true;
+  //console.log(`✅ validateDateRange(${prefix}) พร้อมใช้งาน`);
 }

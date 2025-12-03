@@ -14,7 +14,7 @@ require_once APPPATH.'controllers/_excel.php';
 class form extends MY_Controller{
     use formApi, _File, _excel;
     protected $client;
-    private $nfrmno = "21";
+    private $nfrmno = "14";
     private $vorgno = "090301";
     private $cyear = "25";  
     function __construct(){
@@ -826,6 +826,7 @@ class form extends MY_Controller{
         $rs = $this->vms->getRcp($vmscyear2, $vmsnrunno,"I");
         $head["CC"] =  (!empty($rs)? $rs[0]->RCP:"");
         $rs = $this->vms->getHeadVisit($this->nfrmno,$this->vorgno,$this->cyear,$vmscyear2,$vmsnrunno);
+          
         $item = $this->vms->getItemReq($vmscyear2,$vmsnrunno);
         $dietary = $this->vms->get_dietary_item($vmscyear2,$vmsnrunno);
         if(!empty($rs))
