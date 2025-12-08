@@ -81,7 +81,7 @@ export function dataTableSkeleton({
     searchSize = { ...defaultSearchSize, ...searchSize };
     middleSize =
         middleSize.length > 0
-            ? { ...middleSize, ...defaultMiddleSize }
+            ? {  ...defaultMiddleSize, ...middleSize}
             : defaultMiddleSize;
     const id = idLoading.startsWith("#") ? idLoading : `#${idLoading}`;
     const element = $(id);
