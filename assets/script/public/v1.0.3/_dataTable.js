@@ -36,14 +36,15 @@
  *  แก้ไข setStickyColumns ให้หาคอลัมน์ sticky ได้ถูกต้อง
  * @note 2025-11-05
  *  เพิ่มกำหนด language เป็น th/en default เป็น th
+ * @note 2025-12-09
+ * เพิ่ม dataTableCss ใน setup เพื่อเลือกว่าจะโหลด css ของ datatable หรือไม่
  */
 
 // import { createColumnFilters } from "./_filter";
 import DataTable from "datatables.net-dt";
 import "datatables.net-dt";
 import "datatables.net-responsive-dt";
-import "datatables.net-dt/css/dataTables.dataTables.min.css";
-import "datatables.net-responsive-dt/css/responsive.dataTables.min.css";
+
 
 export const domScrollTailwind4 = `
     <"table-top flex flex-col gap-2 mb-2"
@@ -208,6 +209,7 @@ export const tableSetup = {
         maxHeight: "var(--max-h-dataTable-body)",
         type: "default",
     },
+    dataTableCss: true
 };
 
 export async function createTable(option = {}, setupOpt = {}) {
@@ -239,6 +241,10 @@ export async function createTable(option = {}, setupOpt = {}) {
         await import('datatables.net-buttons/js/buttons.colVis.mjs');
         const { default: JSZip } = await import('jszip'); // ✅ แบบถูก
         window.JSZip = JSZip; //
+    }
+    if(setup.dataTableCss){
+        await import("datatables.net-dt/css/dataTables.dataTables.min.css");
+        await import("datatables.net-responsive-dt/css/responsive.dataTables.min.css");
     }
 
     // กำหนดภาษา
