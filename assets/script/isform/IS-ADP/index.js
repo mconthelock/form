@@ -1,19 +1,20 @@
 import { createTable } from "@public/_dataTable";
-import { getFyear, insertData } from "./data";
-import {
-    addClassError,
-    showErrorMessage,
-    showMessage,
-} from "@public/jFuntion";
+import { getData, getFyear, insertData } from "./data";
+import { addClassError, showErrorMessage, showMessage, getAllAttr } from "@public/jFuntion";
 import { webflowSubmit } from "@public/component/form";
-import { dataTableSkeleton, formSubmitSkeleton } from "@public/component/skeleton";
+import {
+    dataTableSkeleton,
+    formSubmitSkeleton,
+} from "@public/component/skeleton";
 import { redirectWebflow } from "@public/_form";
+import { doaction, showflow } from "../../api/webform/flow";
+import { showLoader } from "../../public/v1.0.3/preloader";
 
-var nfrmno,
-    vorgno,
-    cyear,
+var formInfo,
     empno,
     fyear,
+    mode,
+    form,
     table = null;
 
 //prettier-ignore
@@ -34,7 +35,7 @@ const columns = (fyear) => [
         width: "20%",
         className: "!text-end",
         render: function (data, type, row) {
-            return `<input type="number"  class="input req dev-confirm" value="${data == 0 ? '' : data}" min="0" oninput="this.value = this.value.replace(/[^0-9]/g, '');" />`;
+            return mode == 1 ?`<input type="number"  class="input req dev-confirm" value="${data == 0 ? '' : data}" min="0" oninput="this.value = this.value.replace(/[^0-9]/g, '');" />` : data;
         },
     },
     { 
@@ -69,29 +70,51 @@ $(async function () {
         height:"h-[50vh]"
     });
     try {
-        const formInfo = $(".form-info");
-        nfrmno = formInfo.attr("nfrmno");
-        vorgno = formInfo.attr("vorgno");
-        cyear = formInfo.attr("cyear");
-        empno = $(".apv-data").attr("empno");
-
+        formInfo = await getAllAttr(".form-info");
         const month = new Date().getMonth() + 1;
         const year = new Date().getFullYear();
+        mode = Number(formInfo.mode);
+        empno = $(".apv-data").attr("empno");
         fyear = month <= 4 ? year - 1 : year;
+        form = {
+            NFRMNO: formInfo.nfrmno,
+            VORGNO: formInfo.vorgno,
+            CYEAR: formInfo.cyear,
+            CYEAR2: formInfo.cyear2,
+            NRUNNO: formInfo.nrunno,
+        };
+        const flow = await showflow(form);
 
         $(".fyear").text(fyear);
-        const data = await getFyear(fyear);
-        formSubmitSkeleton({
-            count: 2,
-            element: "#btnAction",
-            mode: "create",
-        });
+        const data = mode == 1 ? await getFyear(fyear) : await getData(form);
+        switch (mode) {
+            case 1:
+                formSubmitSkeleton({
+                    count: 2,
+                    element: "#btnAction",
+                    mode: "create",
+                });
+                break;
+            case 2:
+                formSubmitSkeleton({
+                    count: 2,
+                    element: "#btnAction",
+                    mode: "edit",
+                });
+                break;
+            default:
+                formSubmitSkeleton({
+                    element: "#btnAction",
+                    mode: "view",
+                });
+                break;
+        }
         table = await createTable(
             {
-                data: data.map((item) => ({
+                data: mode == 1 ? data.map((item) => ({
                     ...item,
                     DEV_PLAN: 0,
-                })),
+                })) : data,
                 columns: columns(fyear),
                 searching: false,
                 lengthChange: false,
@@ -127,7 +150,19 @@ $(async function () {
             }
         );
         tableLoading.remove();
-        $("#btnAction").html(webflowSubmit({ request: true }));
+        let flowsubmit = "";
+        switch (mode) {
+            case 1:
+                flowsubmit = webflowSubmit({ request: true })
+                break;
+            case 2:
+                flowsubmit = webflowSubmit({ flow: true, flowhtml: flow.html, approve: true });
+                break;
+            default:
+                flowsubmit = webflowSubmit({ flow: true, flowhtml: flow.html, actionsForm: false});
+                break;
+        }
+        $("#btnAction").html(flowsubmit);
     } catch (error) {
         console.error("Error initializing the form:", error);
         showErrorMessage(error.message);
@@ -178,9 +213,9 @@ $(document).on('click', '#btnRequest', async function () {
             return;
         }
         const formData = new FormData($('#form')[0]);
-        formData.append("NFRMNO", nfrmno);
-        formData.append("VORGNO", vorgno);
-        formData.append("CYEAR", cyear);
+        formData.append("NFRMNO", formInfo.nfrmno);
+        formData.append("VORGNO", formInfo.vorgno);
+        formData.append("CYEAR", formInfo.cyear);
         formData.append("REMARK", $('#remark').val());
         formData.append("REQUESTER", empno);
         formData.append("CREATEBY", empno);
@@ -204,5 +239,43 @@ $(document).on('click', '#btnRequest', async function () {
     } catch (error) {
         console.error("Error submitting the form:", error);
         showErrorMessage(error.message);
+    }
+});
+
+var isButtonProcessing = false;
+$(document).on("click", 'button[name="btnAction"]', async function (e) {
+    try {
+        // ป้องกันการคลิกซ้ำ
+        if (isButtonProcessing) {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            return;
+        }
+        isButtonProcessing = true;
+        showLoader();
+        let res;
+        const action = $(this).val();
+        res = await doaction({
+            ...form,
+            EMPNO: empno,
+            ACTION: action,
+            REMARK: $("#remark").val(),
+        });
+        
+        if (res.status == true) {
+            showMessage(res.message, "success");
+            redirectWebflow();
+        } else {
+            throw new Error(res.message);
+        }
+    } catch (error) {
+        console.error("Error: " + error);
+        showErrorMessage(error);
+    } finally {
+        showLoader({ show: false });
+        // Reset flag
+        setTimeout(() => {
+            isButtonProcessing = false;
+        }, 2000);
     }
 });
