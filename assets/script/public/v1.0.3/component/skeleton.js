@@ -315,6 +315,9 @@ export function formSubmitSkeleton({
             case "view":
                 $(element).html(flow);
                 break;
+            case "create":
+                $(element).html(html);
+                break;
             default:
                 $(element).html();
                 break;

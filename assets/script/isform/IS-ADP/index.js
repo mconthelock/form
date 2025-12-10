@@ -1,12 +1,13 @@
 import { createTable } from "@public/_dataTable";
-import { getFyear } from "./data";
+import { getFyear, insertData } from "./data";
 import {
     addClassError,
     showErrorMessage,
     showMessage,
-} from "../../public/v1.0.3/jFuntion";
-import { webflowSubmit } from "../../public/v1.0.3/component/form";
-import { render } from "vue";
+} from "@public/jFuntion";
+import { webflowSubmit } from "@public/component/form";
+import { dataTableSkeleton, formSubmitSkeleton } from "@public/component/skeleton";
+import { redirectWebflow } from "@public/_form";
 
 var nfrmno,
     vorgno,
@@ -58,6 +59,15 @@ const columns = (fyear) => [
 
 //prettier-ignore
 $(async function () {
+    const tableLoading = dataTableSkeleton({
+        button: false,
+        search: false,
+        page: false,
+        info: false,
+        middleMenu: false,
+        idLoading: "table",
+        height:"h-[50vh]"
+    });
     try {
         const formInfo = $(".form-info");
         nfrmno = formInfo.attr("nfrmno");
@@ -71,6 +81,11 @@ $(async function () {
 
         $(".fyear").text(fyear);
         const data = await getFyear(fyear);
+        formSubmitSkeleton({
+            count: 2,
+            element: "#btnAction",
+            mode: "create",
+        });
         table = await createTable(
             {
                 data: data.map((item) => ({
@@ -111,11 +126,12 @@ $(async function () {
                 dataTableCss: false,
             }
         );
+        tableLoading.remove();
         $("#btnAction").html(webflowSubmit({ request: true }));
     } catch (error) {
         console.error("Error initializing the form:", error);
         showErrorMessage(error.message);
-    }
+    } 
 });
 
 //prettier-ignore
@@ -156,6 +172,34 @@ $(document).on('click', '#btnRequest', async function () {
             showMessage("กรุณากรอก Development Plan ให้ครบถ้วน", 'warning');
             return;
         }
+        if($('#file')[0].files.length == 0){
+            addClassError($('#file'));
+            showMessage("กรุณาแนบไฟล์ Attachment Annual plan", 'warning');
+            return;
+        }
+        const formData = new FormData($('#form')[0]);
+        formData.append("NFRMNO", nfrmno);
+        formData.append("VORGNO", vorgno);
+        formData.append("CYEAR", cyear);
+        formData.append("REMARK", $('#remark').val());
+        formData.append("REQUESTER", empno);
+        formData.append("CREATEBY", empno);
+        data.forEach((item, i) => {
+            // NestJS จะมองเป็น data[0][field], data[1][field]
+            Object.keys(item).forEach((key) => {
+                formData.append(`data[${i}][${key}]`, item[key] ?? "");
+            });
+        });
+
+        const res = await insertData(formData);
+        console.log(res);
+        if (res.status == true) {
+            showMessage(res.message, "success");
+            redirectWebflow();
+        } else {
+            throw new Error(res.message);
+        }
+        
         
     } catch (error) {
         console.error("Error submitting the form:", error);

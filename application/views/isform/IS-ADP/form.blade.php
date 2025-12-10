@@ -1,7 +1,7 @@
 @extends('layouts/webflowTemplate')
 
 @section('contents')
-    <div class="hidden form-info" nfrmno="{{$NFRMNO}}" vorgno="{{$VORGNO}}" cyear="{{$CYEAR}}"></div>
+    <div class="hidden form-info" nfrmno="{{$NFRMNO}}" vorgno="{{$VORGNO}}" cyear="{{$CYEAR}}" mode="{{$mode}}" cyear2={{$mode != 1 ? $CYEAR2 : ''}} nrunno={{$mode != 1 ? $NRUNNO : ''}}></div>
     <div class="hidden apv-data" empno="{{$empno}}"></div>
     <div class="flex flex-col w-full px-4 my-5 font-sans">
         <div class="card bg-base-100 w-full lg:w-[70rem] place-self-center shadow-sm">
@@ -46,7 +46,12 @@
                             </tfoot>
                         </table>
                     </div>
-                    <input type="file" name="" id="" class="file-input">
+                    @If($mode == 1)
+                    <form id="form" action="" class="rounded-xl border bg-base-200 p-5 w-96">
+                        <label for="file" class="font-bold text-xl">Attachment Annual plan <span class="text-error">*</span></label>
+                        <input type="file" name="file" id="file" class="file-input mt-3 req" accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel" >
+                    </form>
+                    @endIf
                 </div>
                 <div id="btnAction"></div>
             </div>
