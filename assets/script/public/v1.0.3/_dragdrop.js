@@ -363,7 +363,8 @@ export async function handleFiles({
                 continue;
             }
         }
-        if(filesData[e.name].length > 0 && !multiple){
+        
+        if((filesData[e.name].length > 0 || $('.drop-remove-db').length > 0) && !multiple){
             filesData[e.name] = [file];
             imagesData[e.name] = [base64];
             e.list.html(txt);
