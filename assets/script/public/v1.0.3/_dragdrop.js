@@ -179,7 +179,7 @@ export const dragDropInit = (options = {}) => {
             ${opt.list}
         </ul>
     </label>
-    <input type="file" class="inputDrop file-input txt-upper validator ${opt.class} hidden" data-showimg="${opt.showImg}" data-format='${opt.format}' data-msg-region='${opt.msgRegion}' name="${opt.name}" id="${opt.id}" ${opt.multiple ? "" : ""}/>
+    <input type="file" class="inputDrop file-input txt-upper validator ${opt.class} hidden" data-showimg="${opt.showImg}" data-format='${opt.format}' data-msg-region='${opt.msgRegion}' name="${opt.name}" id="${opt.id}" ${opt.multiple ? "multiple" : ""}/>
     </div>`;
 };
 
