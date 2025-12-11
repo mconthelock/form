@@ -1,16 +1,5 @@
 import { fetchMsgErr } from "../../api/fetch-utils";
 
-export async function getFyear(fyear) {
-    const res = await fetch(
-        `${process.env.APP_API}/docinv/work-annual-dev-plan/${fyear}`
-    );
-    if (!res.ok) {
-        await fetchMsgErr(res);
-        throw new Error("Failed to fetch data");
-    }
-    return res.json();
-}
-
 /**
  * @typedef {Object} insertData
  * @property {number} NFRMNO
@@ -60,6 +49,40 @@ export async function insertData(body) {
 }
 
 
+/**
+ * @typedef {Object} getDataResponse
+ * @property {number} NFRMNO
+ * @property {string} VORGNO
+ * @property {string} CYEAR
+ * @property {string} CYEAR2
+ * @property {number} NRUNNO
+ * @property {number} PLANYEAR
+ * @property {string} REQ_DIV
+ * @property {number} USER_REQ
+ * @property {number} DEV_PLAN
+ * @property {number} MH
+ * @property {number} COST
+ * @property {string} SDIV
+ * 
+ * @typedef {Object} form
+ * @property {number} NFRMNO
+ * @property {string} VORGNO
+ * @property {string} CYEAR
+ * @property {string} CYEAR2
+ * @property {number} NRUNNO
+ * 
+ * @param {form} body 
+ * @returns {Promise<getDataResponse[]>}
+ * @example
+ * const form = {
+ *   NFRMNO: 12345,
+ *   VORGNO: "67890",
+ *   CYEAR: "2024",
+ *   CYEAR2: "2025",
+ *   NRUNNO: 1
+ * };
+ * const data = await getData(form);
+ */
 export async function getData(body) {
     const res = await fetch(`${process.env.APP_API}/isform/is-adp/getData`, {
         method: "POST",
