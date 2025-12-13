@@ -116,7 +116,7 @@ trait _Form{
      * @param string $y e.g. 16
      * @param string $y2 e.g. 2025
      * @param string $runNo e.g. 1
-     * 
+     *
      * ส่งแบบอัปเดต step เดียว
      * @param string $frmNo e.g. 17
      * @param string $orgNo e.g. 050601
@@ -216,7 +216,7 @@ trait _Form{
             return array('status' => false, 'message' => 'Failed to doaction form', 'e' => $e);
         }
     }
-    
+
     /**
      * Crack request number to get form data
      * @param string $reqNo e.g. ST-INP24-000001
@@ -279,12 +279,12 @@ trait _Form{
             foreach($form as $key => $f){
                 $f = (object)$f;
                 $data = $this->frm->getForm($f->NFRMNO, $f->VORGNO, $f->CYEAR, $f->CYEAR2, $f->NRUNNO);
-                if(!empty($data)) { 
+                if(!empty($data)) {
                     $data[0]->LINK = $this->createLink($f->NFRMNO, $f->VORGNO, $f->CYEAR, $f->CYEAR2, $f->NRUNNO);
                     $res['status'] = 1;
                     $res['form'][] = $data[0];
                     // print_r($res);
-                }  
+                }
             }
         }
         if( $this->isAjaxRequest() ){
@@ -313,7 +313,6 @@ trait _Form{
             if(!empty($data)){
                 $data = $data[0];
                 $data->LINK = $this->createLink($NFRMNO, $VORGNO, $CYEAR, $CYEAR2, $NRUNNO);
-
             }
             return $data;
         }
