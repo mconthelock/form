@@ -658,7 +658,7 @@ export function createColumnFilters(table, columnsToFilter) {
             <div class="filter-header" id="filter-header"></div>
             <div id="filter-options" class="h-[400px] w-[200px] overflow-auto"></div>
             <div class="buttons join w-full">
-                <button id="cursor: pointer;" class="btn btn-sm btn-primary round-full join-item w-1/2">OK</button>
+                <button id="filter-ok" class="btn btn-sm btn-primary round-full join-item w-1/2">OK</button>
                 <button id="filter-cancel" class="btn btn-sm btn-neutral round-full join-item w-1/2">Cancel</button>
             </div>
         </div>`);
@@ -829,15 +829,38 @@ export function createColumnFilters(table, columnsToFilter) {
             }
         });
 
-        menu.css({
-            // top: e.pageY + 5,
-            // left: e.pageX
-            top: Math.min(
-                e.pageY + 5,
-                window.innerHeight - menu.outerHeight() - 10
-            ),
-            left: Math.min(e.pageX, window.innerWidth - menu.outerWidth() - 10),
-        }).fadeIn();
+        const icon = e.currentTarget; // ไอคอน filter
+        const rect = icon.getBoundingClientRect();
+
+        // 2025-12-16 แบบไม่อิงทั้ง document
+        // menu.css({
+        //     top: rect.bottom + window.scrollY + 5,
+        //     left: rect.left + window.scrollX,
+        // }).fadeIn();
+
+        // 2025-12-16 แบบอิงขอบหน้าจอ
+        const top = Math.min(
+        rect.bottom + window.scrollY + 5,
+        window.scrollY + window.innerHeight - menu.outerHeight() - 10
+        );
+
+        const left = Math.min(
+        rect.left + window.scrollX,
+        window.scrollX + window.innerWidth - menu.outerWidth() - 10
+        );
+
+        menu.css({ top, left }).fadeIn();
+
+        // 2025-12-16 แบบเดิม อิงทั้ง document
+        // menu.css({
+        //     // top: e.pageY + 5,
+        //     // left: e.pageX
+        //     top: Math.min(
+        //         e.pageY + 5,
+        //         window.innerHeight - menu.outerHeight() - 10
+        //     ),
+        //     left: Math.min(e.pageX, window.innerWidth - menu.outerWidth() - 10),
+        // }).fadeIn();
     });
 
     /**
