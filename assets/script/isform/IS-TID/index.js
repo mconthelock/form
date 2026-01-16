@@ -16,7 +16,7 @@ import { showLoader } from "@public/preloader";
 import "@public/_tooltip";
 import { getController, getUserLogin } from "./data";
 import { displayEmpImage } from "@public/setIndexDB";
-import { searchUser } from "../../api/amec/users";
+import { searchUser } from "@amec/webasset/api/amec";
 import { getRequestNo } from "../../api/webform/form";
 import { createForm2, deleteForm, redirectWebflow } from "@public/_form";
 

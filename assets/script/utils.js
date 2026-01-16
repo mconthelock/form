@@ -78,7 +78,7 @@ export function showMessage(msg, type = "error") {
               <div class="msg-close absolute top-2 right-5 z-10">
                   <i class="icofont-ui-close"></i>
               </div>
-              <div class="absolute right-[-30px] top-[-10px] text-[120px] z-0 opacity-20">
+              <div class="absolute -right-7.5 -top-2.5 text-[120px] z-0 opacity-20">
                   <i class="icofont-exclamation-circle"></i>
               </div>
           </div>

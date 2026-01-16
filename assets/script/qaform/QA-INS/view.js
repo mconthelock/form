@@ -46,7 +46,7 @@ import { formatDate } from "@public/_dayjs";
 import { setAuditorToString, shortName, shortSec } from "./function";
 import { getAuditRevision } from "../../api/escs/audit_revision";
 import { getEscsUserSection } from "../../api/escs/user_section";
-import { searchUser } from "../../api/amec/users";
+import { searchUser } from "@amec/webasset/api/amec";
 var formInfo, form, cextdata, tableAuditor, tableAuditee;
 
 $(async function () {

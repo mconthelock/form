@@ -13,7 +13,7 @@ export async function createLinks(id, data, obj) {
 	data.map((el) => {
 		const apps = el.data;
 		if (apps.group == id) {
-			content += `<li class="min-w-[250px]">
+			content += `<li class="min-w-62.5">
         <a class="link link-hover links-stamp"
             data-id="${apps.iid}"
             target="${apps.type == 1 ? "_self" : "_blank"}"
