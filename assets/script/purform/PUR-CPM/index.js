@@ -7,6 +7,7 @@ import {
 } from "@amec/webasset/utils";
 import { webflowSubmit } from "@amec/webasset/components/form";
 import { formSubmitSkeleton } from "@amec/webasset/skeleton";
+import { dragDropInit } from "@amec/webasset/dragdrop";
 // import { redirectWebflow } from "@public/_form";
 // import { showLoader } from "@public/preloader";
 import { doaction, showflow } from "@amec/webasset/api/webform";
@@ -18,27 +19,30 @@ var formInfo, empno, mode, form;
 //prettier-ignore
 $(async function () {
     try {
-        showMessage('test');
+        const dragdropField = dragDropInit();
+        $('#attachFile').html(dragdropField);
         formInfo = await getAllAttr(".form-info");  // get form info from html attribute
         mode = Number(formInfo.mode); // get mode
         empno = $(".apv-data").attr("empno"); // get employee number
-        form = {
-            NFRMNO: formInfo.nfrmno,
-            VORGNO: formInfo.vorgno,
-            CYEAR: formInfo.cyear,
-            CYEAR2: formInfo.cyear2,
-            NRUNNO: formInfo.nrunno,
-        };
-        const flow = await showflow(form);
-        // const file = await getIsFile(form);
-        // if(file.length > 0){
-        //     let fileLink = "<div class='flex flex-col gap-3 mt-5'>";
-        //     file.forEach(f => {
-        //         fileLink +=  `<a href="${f.FILE_PATH}" storedName="${f.FILE_FNAME}" class="file-link text-primary flex items-center gap-3 w-full border rounded-lg bg-base-100 p-3"><i class="icofont-file-excel text-success text-4xl"></i><span class="link link-primary">${f.FILE_ONAME}</span></a>`;
-        //     });
-        //     fileLink += "</div>";
-        //     $("#attachFile").html(fileLink);
-        // }
+        if(mode != 1){
+            form = {
+                NFRMNO: formInfo.nfrmno,
+                VORGNO: formInfo.vorgno,
+                CYEAR: formInfo.cyear,
+                CYEAR2: formInfo.cyear2,
+                NRUNNO: formInfo.nrunno,
+            };
+            const flow = await showflow(form);
+            // const file = await getIsFile(form);
+            // if(file.length > 0){
+            //     let fileLink = "<div class='flex flex-col gap-3 mt-5'>";
+            //     file.forEach(f => {
+            //         fileLink +=  `<a href="${f.FILE_PATH}" storedName="${f.FILE_FNAME}" class="file-link text-primary flex items-center gap-3 w-full border rounded-lg bg-base-100 p-3"><i class="icofont-file-excel text-success text-4xl"></i><span class="link link-primary">${f.FILE_ONAME}</span></a>`;
+            //     });
+            //     fileLink += "</div>";
+            //     $("#attachFile").html(fileLink);
+            // }
+        }
         // set skeleton
         await setSkeleton(mode);
         // create button submit form
@@ -58,7 +62,35 @@ $(async function () {
     } catch (error) {
         console.error("Error initializing the form:", error);
         showErrorMessage(error.message);
+        showMessage("Cannot load form data", "error");
     } 
+});
+
+$(document).on('click', 'input[name="invoice-type"]', function(){
+    const value = $(this).val();
+    if(value == "other"){
+        $('#other-invoice').attr('disabled', false);
+    } else {
+        $('#other-invoice').attr('disabled', true);
+        $('#other-invoice').val('');
+    }
+});
+
+$(document).on('click', 'input[name="accept-po"]', function(){
+    const value = $(this).val();
+    if(value == "subcon"){
+        $('#subcon-detail').attr('disabled', false);
+    } else {
+        $('#subcon-detail').attr('disabled', true);
+        $('#subcon-detail').val('');
+    }
+
+    if(value == "other"){
+        $('#other-accept').attr('disabled', false);
+    } else {
+        $('#other-accept').attr('disabled', true);
+        $('#other-accept').val('');
+    }
 });
 
 // //prettier-ignore

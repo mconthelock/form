@@ -18,7 +18,7 @@
         width: fit-content;
     }
 
-    label {
+    label:not(:has(input[name="delivery-locate"])):not(:has(input[name="type-form"])) {
         width: 100%;
     }
 </style>
@@ -26,7 +26,7 @@
 
 @section('contents')
 <div class="hidden form-info" nfrmno="{{$NFRMNO}}" vorgno="{{$VORGNO}}" cyear="{{$CYEAR}}" mode="{{$mode}}"
-    cyear2={{$mode !=1 ? $CYEAR2 : '' }} nrunno={{$mode !=1 ? $NRUNNO : '' }}></div>
+    cyear2="{{$mode !=1 ? $CYEAR2 : '' }}" nrunno="{{$mode !=1 ? $NRUNNO : '' }}"></div>
 <div class="hidden apv-data" empno="{{$empno}}"></div>
 <div class="flex flex-col w-full px-4 my-5 font-sans">
     <div class="card bg-white w-full lg:w-[70rem] place-self-center shadow-sm">
@@ -154,7 +154,7 @@
                             </fieldset>
                         </div>
                     </div>
-                    <fieldset class="flex-col">
+                    <fieldset class="gap-4">
                         <label>
                             <input type="radio" name="type-form" value="document">
                             Print out Documents or E-mail
@@ -230,6 +230,11 @@
                     </div>
                 </section>
             </form>
+            <div class="divider"></div>
+            <section>
+                <h2 class="font-bold text-xl mb-3">Attach file</h2>
+                <div id="attachFile"></div>
+            </section>
             <div class="divider"></div>
             <div id="btnAction"></div>
         </div>
