@@ -68,7 +68,7 @@
                 </a>
               </td>
 
-              <td class="p-2 truncate max-w-[200px]">${row.SUBJECT ?? "-"}</td>
+              <td class="py-2 px-3 max-w-[240px] break-words whitespace-normal">${row.SUBJECT ?? "-"}</td>
               <td class="p-2 whitespace-nowrap">${formatDate(row.DATE_FROM)}</td>
               <td class="p-2 whitespace-nowrap">${formatDate(row.DATE_TO)}</td>
               <td class="p-2 whitespace-nowrap">

@@ -1,4 +1,4 @@
-import { showFlow, doaction, redirectWebflow } from "../../inc/_form.js";
+import { showFlow, doaction, redirectWebflow } from "@public/_form.js";
 import { host } from "../../utils.js";
 import "datatables.net-dt";
 import "datatables.net-responsive-dt";

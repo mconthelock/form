@@ -2,8 +2,7 @@
 use GuzzleHttp\Client;
 defined('BASEPATH') or exit('No direct script access allowed');
 require_once APPPATH . 'controllers/_form.php';
-class Main extends MY_Controller
-{
+class Main extends MY_Controller {
     use _Form;
     protected $client;
     public function __construct()
@@ -38,12 +37,16 @@ class Main extends MY_Controller
 
     public function DataSummaryReport()
     {
-        $nfrmno = '17';
-        $vorgno = '050601';
-        $cyear  = '25';
-        $cyear2 = '2025';
-        $nrunno = '5';
-
+        $nfrmno = $this->input->post('nfrmno');
+        $vorgno = $this->input->post('vorgno');
+        $cyear  = $this->input->post('cyear');
+        $cyear2 = $this->input->post('cyear2');
+        $nrunno = $this->input->post('nrunno');
+        // $nfrmno = '17';
+        // $vorgno = '050601';
+        // $cyear  = '25';
+        // $cyear2 = '2025';
+        // $nrunno = '9';
         $data   = $this->rm->getSummaryReport($nfrmno, $vorgno, $cyear, $cyear2, $nrunno);
         $result = [];
 
@@ -60,8 +63,10 @@ class Main extends MY_Controller
                 ];
             }
 
+            $formUnmatch = $this->rm->getUnmatchForm($row->ID, $row->PERIOD, $row->FYEAR);
+
             $result[$group]["total_users"] += $row->TOTAL_MATCH + $row->TOTAL_UNMATCH;
-            $result[$group]["unmatched"] += $row->TOTAL_UNMATCH;
+            $result[$group]["unmatched"]   += $row->TOTAL_UNMATCH;
 
             $result[$group]["programs"][] = [
                 "name"          => $row->PROGRAM_NAME,
@@ -69,13 +74,14 @@ class Main extends MY_Controller
                 "uncheck"       => $row->TOTAL_UNMATCH,
                 "delete_count"  => $row->COUNT_DELETE,
                 "change_count"  => $row->COUNT_CHANGE,
-                "detail_remark" => $row->REMARK ?: "-"
+                "detail_remark" => $row->REMARK ?: "-",
+                'form_unmatch'  => $formUnmatch
             ];
         }
 
         $period  = $data[0]->PERIOD ?? null;
-        $year    = $data[0]->CYEAR2 ?? null;
-        $remark  = $data[0]->REMARK ?? null;
+        $year    = $data[0]->FYEAR ?? null;
+        $remark  = $data[0]->REMARK_HEAD ?? null;
         $systems = array_values($result);
 
         echo json_encode(['systems' => $systems, 'period' => $period, 'year' => $year, 'remark' => $remark]);
@@ -102,10 +108,12 @@ class Main extends MY_Controller
                     'programs'         => []
                 ];
             }
+            $formUnmatch = $this->rm->getUnmatchForm($row->ID, $period, $year);
 
             $grouped[$group]['total_users'] += $row->EMP_COUNT;
-            $grouped[$group]['unmatched'] += $row->RESULT_0;
-            $grouped[$group]['programs'][]  = ['name' => $row->PROGRAM_NAME, 'matched' => $row->RESULT_1, 'unmatched' => $row->RESULT_0, 'uncheck' => $row->RESULT_NULL, 'program_id' => $row->ID];
+            $grouped[$group]['unmatched']   += $row->RESULT_0;
+            // $grouped[$group]['form_unmatch'][]  = $formUnmatch;
+            $grouped[$group]['programs'][] = ['name' => $row->PROGRAM_NAME, 'matched' => $row->RESULT_1, 'unmatched' => $row->RESULT_0, 'uncheck' => $row->RESULT_NULL, 'program_id' => $row->ID, 'form_unmatch' => $formUnmatch];
         }
 
         $systems = array_values($grouped);
@@ -136,8 +144,8 @@ class Main extends MY_Controller
             }
 
             $grouped[$group]['total_users'] += $row->EMP_COUNT;
-            $grouped[$group]['unmatched'] += $row->RESULT_0;
-            $grouped[$group]['programs'][]  = ['name' => $row->PROGRAM_NAME, 'matched' => $row->RESULT_1, 'unmatched' => $row->RESULT_0, 'uncheck' => $row->RESULT_NULL, 'program_id' => $row->ID];
+            $grouped[$group]['unmatched']   += $row->RESULT_0;
+            $grouped[$group]['programs'][]   = ['name' => $row->PROGRAM_NAME, 'matched' => $row->RESULT_1, 'unmatched' => $row->RESULT_0, 'uncheck' => $row->RESULT_NULL, 'program_id' => $row->ID];
         }
 
         $systems = array_values($grouped);
@@ -187,6 +195,7 @@ class Main extends MY_Controller
             'NRUNNO'    => $nrunno,
             'EMPNO'     => $empno,
             'PERIOD'    => $this->input->post('period'),
+            'FYEAR'     => $this->input->post('fyear'),
             'REMARK'    => $this->input->post('remark'),
             'CREATE_BY' => $empno,
         ];

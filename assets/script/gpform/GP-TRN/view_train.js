@@ -1,5 +1,5 @@
 console.log("✅ view_train.js loaded");
-console.log("version =", "OMG V1.4");
+console.log("version =", "OMG V1.1");
 
 import { showFlow, redirectWebflow } from "../../public/v1.0.3/_form.js";
 import { doaction } from "../../api/webform/flow.js";
@@ -151,8 +151,8 @@ $(document).ready(async function () {
     // ------------------------------------------------------------------
     $(".btn-submit").on("click", async function () {
         const action = $(this).data("action");
+        const exdata = $("#txt_exdata").val();
         const remark = $("#txt_remark").val()?.trim() || "";
-
         if ((action === "reject" || action === "returnE") && !remark) {
             Swal.fire({ icon: "warning", title: "⚠ กรุณากรอก Remark ก่อนทำรายการ" });
             return;
@@ -170,21 +170,68 @@ $(document).ready(async function () {
                 REMARK: remark,
                 CEXTDATA: "19"
             });
+            
+            if(exdata === "12" && action === "approve") {
+                 const confirmResult = await Swal.fire({
+                    icon: "question",
+                    title: "ยืนยันการทำรายการ",
+                    html: "ต้องการ Approve และ บันทึกไปที่ Training Record ใช่หรือไม่ ?",
+                    showCancelButton: true,
+                    confirmButtonText: "ยืนยัน",
+                    cancelButtonText: "ยกเลิก"
+                });
+
+                if (!confirmResult.isConfirmed) return;
+
+                const formData = $(".form-data").data();
+                let allRows = [];
+                let items_for_detail = [];
+                for (const row of $(".cash-row")) {
+                    const $row = $(row);
+                    const nfrmno = $row.data("nfrmno");
+                    const vorgno = $row.data("vorgno");
+                    const cyear = $row.data("cyear");
+                    const cyear2 = $row.data("cyear2");
+                    const nrunno = $row.data("nrunno");
+
+                    items_for_detail.push({
+                        NFRMNO: String(nfrmno),
+                        VORGNO: String(vorgno),
+                        CYEAR: String(cyear),
+                        CYEAR2: String(cyear2),
+                        NRUNNO: String(nrunno)
+                    });
+
+                    allRows.push(`CYEAR2: ${cyear2} — NRUNNO: ${nrunno}`);
+                }
+
+                //Form Finsish -> Insert to Training Record
+                await fetch(`${host}gpform/GP-TRN/training/add_to_training_record`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        itemsx: items_for_detail
+                    })
+                });
+            }
 
             if (result?.status) {
                 Swal.fire({
                     icon: "success",
-                    title: "ดำเนินการสำเร็จ",
+                    title: "ดำเนินการสำเร็จแล้ว",
                     timer: 1500,
                     showConfirmButton: false
                 });
+                console.log("go action =", "add_to_training_record 4");
                 redirectWebflow();
             } else {
                 Swal.fire({ icon: "error", title: "เกิดข้อผิดพลาด" });
             }
 
+            console.log("go action =", "add_to_training_record 4");
+            redirectWebflow();
         } catch (err) {
-            Swal.fire({ icon: "error", title: "ไม่สามารถเชื่อมต่อระบบได้" });
+            Swal.fire({ icon: "error", title: "ไม่สามารถเชื่อมต่อระบบได้ =>".err.message });
         }
     });
 
@@ -254,13 +301,14 @@ $(document).ready(async function () {
     // 🔹 TEST Approve (btn-test-submit)
     // ------------------------------------------------------------------
     $(".btn-test-submit").on("click", async function () {
+        const cyearx  = $("#txt_year_text").val();
         const formno  = $("#txt_form_text").val();
         const empTest = $("#txt_emp_text").val();
         const resultx = await doaction({
             NFRMNO: "15",
             VORGNO: "030101",
             CYEAR: "25",
-            CYEAR2: "2025",
+            CYEAR2: cyearx,
             NRUNNO: formno,
             ACTION: "approve",
             EMPNO: empTest,
@@ -302,7 +350,6 @@ $(document).ready(async function () {
         });
 
         if (!confirmResult.isConfirmed) return;
-
         // =============================================================
         // 1) APPROVE ทุกแถวผ่าน doaction
         // =============================================================
@@ -365,8 +412,6 @@ $(document).ready(async function () {
         };
         const headcash = await createForm(payload_cash);
         const headData_cash = headcash.data || {};
-
-    
         const payload_clear = {
             NFRMNO: "6",
             VORGNO: "080101",

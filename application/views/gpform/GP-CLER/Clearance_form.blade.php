@@ -9,7 +9,7 @@
     <div class="form-data" data-nfrmno="{{ $NFRMNO }}" data-vorgno="{{ $VORGNO }}" data-cyear="{{ $CYEAR }}"></div>
     <div class="form-ent" data-nfrmno="{{ $ent['NFRMNO'] }}" data-vorgno="{{ $ent['VORGNO'] }}" data-cyear="{{ $ent['CYEAR'] }}" data-cyear2="{{ $ent['CYEAR2'] }}" data-nrunno="{{ $ent['NRUNNO'] }}"></div>
     <div class="w-full min-h-screen bg-gray-100 px-2 pb-10">
-        <div class="max-w-5xl mx-auto bg-white rounded-2xl shadow p-10 border-2 border-gray-300">
+        <div class="max-w-6xl mx-auto bg-white rounded-2xl shadow p-10 border-2 border-gray-300">
             <div class="mb-8 border-b-2 border-blue-500 pb-4 flex flex-col md:flex-row md:justify-between items-start gap-3">
                 <div>
                     <h2 class="text-2xl font-bold text-blue-900 tracking-wide">Form Clearance for Expense (Part2)</h2>
@@ -192,6 +192,7 @@
                                     <th class="py-2 px-4 text-center">Receipt No.</th>
                                     <th class="py-2 px-4 text-center">Cost</th>
                                     <th class="py-2 px-4 text-center">Date issue receipt</th>
+                                    <th class="py-2 px-4 text-center">Attach Receipt</th>
                                     <th class="py-2 px-4 w-12 rounded-tr-xl"></th>
                                 </tr>
                             </thead>
@@ -202,10 +203,13 @@
                                         <input type="text" name="receipt_no_1[]" class="input input-sm border rounded-lg px-3 py-1 w-full focus:ring-2 bg-white focus:ring-cyan-400 transition" placeholder="Receipt No.">
                                     </td>
                                     <td class="py-2 px-4">
-                                        <input type="text" name="cost_1[]" class="input input-sm border rounded-lg px-3 py-1 w-full focus:ring-2 bg-white focus:ring-cyan-400 transition cost-input" placeholder="Cost">
+                                        <input type="number" name="cost_1[]" class="input input-sm border rounded-lg px-3 py-1 w-full focus:ring-2 bg-white focus:ring-cyan-400 transition cost-input" placeholder="Cost">
                                     </td>
                                     <td class="py-2 px-4">
                                         <input type="date" name="date_issue_1[]" class="input input-sm border rounded-lg px-3 py-1 w-full focus:ring-2 bg-white focus:ring-cyan-400 transition">
+                                    </td>
+                                    <td class="py-2 px-4">
+                                        <input type="file" name="receipt_file_1[]" class="file-input file-input-sm file-input-bordered w-full max-w-xs rounded-lg border-cyan-400">
                                     </td>
                                     <td class="py-2 px-4 text-center">
                                         <button type="button" class="remove-row bg-red-500 hover:bg-red-600 text-white rounded-full w-8 h-8 flex items-center cursor-pointer justify-center shadow transition" title="Remove row">
@@ -247,6 +251,7 @@
                                     <th class="py-2 px-4 text-center">Receipt No.</th>
                                     <th class="py-2 px-4 text-center">Cost</th>
                                     <th class="py-2 px-4 text-center">Date issue receipt</th>
+                                    <th class="py-2 px-4 text-center">Attach Receipt</th>
                                     <th class="py-2 px-4 w-12 rounded-tr-xl"></th>
                                 </tr>
                             </thead>
@@ -257,10 +262,13 @@
                                         <input type="text" name="receipt_no_4[]" class="input input-sm border rounded-lg px-3 py-1 w-full focus:ring-2 bg-white focus:ring-purple-400 transition" placeholder="Receipt No.">
                                     </td>
                                     <td class="py-2 px-4">
-                                        <input type="text" name="cost_4[]" class="input input-sm border rounded-lg px-3 py-1 w-full focus:ring-2 bg-white focus:ring-purple-400 transition cost-input" placeholder="Cost">
+                                        <input type="number" name="cost_4[]" class="input input-sm border rounded-lg px-3 py-1 w-full focus:ring-2 bg-white focus:ring-purple-400 transition cost-input" placeholder="Cost">
                                     </td>
                                     <td class="py-2 px-4">
                                         <input type="date" name="date_issue_4[]" class="input input-sm border rounded-lg px-3 py-1 w-full focus:ring-2 bg-white focus:ring-purple-400 transition">
+                                    </td>
+                                    <td class="py-2 px-4">
+                                        <input type="file" name="receipt_file_4[]" class="file-input file-input-sm file-input-bordered w-full max-w-xs rounded-lg border-purple-400">
                                     </td>
                                     <td class="py-2 px-4 text-center">
                                         <button type="button" class="remove-row bg-red-500 hover:bg-red-600 text-white rounded-full w-8 h-8 flex items-center cursor-pointer justify-center shadow transition" title="Remove row">
@@ -302,6 +310,8 @@
                                     <th class="py-2 px-4 text-center w-12 rounded-tl-xl">No.</th>
                                     <th class="py-2 px-4 text-center">Receipt No.</th>
                                     <th class="py-2 px-4 text-center">Cost</th>
+                                    <th class="py-2 px-4 text-center">Date issue receipt</th>
+                                    <th class="py-2 px-4 text-center">Attach Receipt</th>
                                     <th class="py-2 px-4 w-12 rounded-tr-xl"></th>
                                 </tr>
                             </thead>
@@ -309,10 +319,16 @@
                                 <tr>
                                     <td class="py-2 px-4 text-center">1</td>
                                     <td class="py-2 px-4">
-                                        <input type="text" class="input input-sm border rounded-lg px-3 py-1 w-full focus:ring-2 bg-white focus:ring-green-400 transition" placeholder="Receipt No.">
+                                        <input type="text" name="receipt_no[]" class="input input-sm border rounded-lg px-3 py-1 w-full focus:ring-2 bg-white focus:ring-green-400 transition" placeholder="Receipt No.">
                                     </td>
                                     <td class="py-2 px-4">
-                                        <input type="text" class="input input-sm border rounded-lg px-3 py-1 w-full focus:ring-2 bg-white focus:ring-green-400 transition" placeholder="Cost">
+                                        <input type="number" name="cost[]" class="input input-sm border rounded-lg px-3 py-1 w-full focus:ring-2 bg-white focus:ring-green-400 transition cost-input" placeholder="Cost">
+                                    </td>
+                                    <td class="py-2 px-4">
+                                        <input type="date" name="date_issue[]" class="input input-sm border rounded-lg px-3 py-1 w-full focus:ring-2 bg-white focus:ring-green-400 transition">
+                                    </td>
+                                    <td class="py-2 px-4">
+                                        <input type="file" name="receipt_file[]" class="file-input file-input-sm file-input-bordered w-full max-w-xs rounded-lg border-green-400">
                                     </td>
                                     <td class="py-2 px-4 text-center">
                                         <button type="button" class="remove-row bg-red-500 hover:bg-red-600 text-white rounded-full w-8 h-8 flex items-center cursor-pointer justify-center shadow transition" title="Remove row">
@@ -370,12 +386,12 @@
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <!-- Attach Receipt -->
-                        <div>
+                        {{-- <div>
                             <label class="font-semibold text-green-700 mb-1 block">Attach Receipt:</label>
                             <div class="flex items-center gap-3">
                                 <input type="file" name="receipt" id="receipt" class="file-input file-input-bordered w-full max-w-xs rounded-xl border-green-400">
                             </div>
-                        </div>
+                        </div> --}}
                         <!-- Remark -->
                         <div>
                             <label class="font-semibold text-green-700 mb-1 block">Remark:</label>

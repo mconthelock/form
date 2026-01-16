@@ -1,8 +1,7 @@
 <?php
 defined('BASEPATH') or exit('No direct script access allowed');
 
-class Rgv_model extends CI_Model
-{
+class Rgv_model extends CI_Model {
 
     public function __construct()
     {
@@ -333,6 +332,359 @@ class Rgv_model extends CI_Model
         return $this->db->get()->result();
     }
 
+    public function getUnmatchHistory($cyear2, $nrunno)
+    {
+        $sql = "
+            SELECT 
+                e.EMPNO as SEMPNO, 
+                u.SNAME, 
+                u.SDIV,
+                u.SDEPT,
+                u.SSEC,
+                e.RESULT,
+                e.DETAIL,
+                e.UPDATE_AT,
+                'NOT' as DATAMANAGER,
+                'NOT' as VENDORMANAGEMENT,
+                'NOT' as PRODUCT,
+                'NOT' as PR,
+                'NOT' as USERMANAGER,
+                'NOT' as PO,
+                'NOT' as REPORT,
+                'NOT' as INVOICE,
+                'NO' as GROUPMASTER,
+                NULL as CREUSRDATE,
+                NULL as UPDUSRDATE,
+                1 as IS_HISTORY
+            FROM ISRGV_EMP e
+            LEFT JOIN AMECUSERALL u ON e.EMPNO = u.SEMPNO
+            WHERE e.CYEAR2 = '$cyear2'
+            AND e.NRUNNO = '$nrunno'
+            AND e.RESULT = '0'
+            ORDER BY e.UPDATE_AT DESC
+        ";
+        return $this->db->query($sql)->result();
+    }
+
+    // ===== New methods: JOIN with ISRGV_EMP =====
+
+    public function getUsersForView($cyear2, $nrunno, $program)
+    {
+        $program = strtoupper($program);
+
+        switch ($program) {
+            case 'INVOICE':
+                return $this->getInvoiceUsersForView($cyear2, $nrunno);
+            case 'MARKETING':
+                return $this->getMarketingUsersForView($cyear2, $nrunno);
+            case 'PROCUREMENT':
+                return $this->getProcurementUsersForView($cyear2, $nrunno);
+            case 'SCM':
+                return $this->getScmUsersForView($cyear2, $nrunno);
+            case 'AS400':
+                return $this->getAs400UsersForView($cyear2, $nrunno);
+            case 'WSD':
+            case 'AAS':
+            case 'SSA':
+                return $this->getIsUsersForView($cyear2, $nrunno, $program);
+            default:
+                return [];
+        }
+    }
+
+    public function getProcurementUsersForView($cyear2, $nrunno)
+    {
+        // 1. Query ISRGV_EMP ดึง EMPNO, RESULT, DETAIL
+        $empData = $this->db
+            ->select('EMPNO, RESULT, DETAIL')
+            ->from('ISRGV_EMP')
+            ->where('CYEAR2', $cyear2)
+            ->where('NRUNNO', $nrunno)
+            ->get()
+            ->result();
+
+        if (empty($empData))
+            return [];
+
+        $empnos = array_column($empData, 'EMPNO');
+        $empMap = [];
+        foreach ($empData as $e) {
+            $empMap[$e->EMPNO] = ['RESULT' => $e->RESULT, 'DETAIL' => $e->DETAIL];
+        }
+
+        // 2. Query AUTHORIZE_INVENTORY จาก DOCINV
+        $this->doc->select('*')
+            ->from('AUTHORIZE_INVENTORY')
+            ->where_in('SEMPNO', $empnos);
+        $users = $this->doc->get()->result();
+
+        // 3. Merge RESULT และ DETAIL และคำนวณ IS_HISTORY
+        foreach ($users as $u) {
+            $empno = $u->SEMPNO;
+            if (isset($empMap[$empno])) {
+                $u->RESULT = $empMap[$empno]['RESULT'];
+                $u->DETAIL = $empMap[$empno]['DETAIL'];
+
+                // ตรวจสอบว่าเป็น history หรือไม่
+                $u->IS_HISTORY = (
+                    $u->RESULT == '0' &&
+                    $u->DATAMANAGER == 'NOT' &&
+                    $u->VENDORMANAGEMENT == 'NOT' &&
+                    $u->PRODUCT == 'NOT' &&
+                    $u->PR == 'NOT' &&
+                    $u->USERMANAGER == 'NOT' &&
+                    $u->PO == 'NOT' &&
+                    $u->REPORT == 'NOT' &&
+                    $u->INVOICE == 'NOT' &&
+                    $u->GROUPMASTER == 'NO'
+                ) ? 1 : 0;
+            }
+        }
+
+        // 4. Sort: IS_HISTORY อยู่ท้าย
+        usort($users, function ($a, $b) {
+            if ($a->IS_HISTORY != $b->IS_HISTORY) {
+                return $a->IS_HISTORY - $b->IS_HISTORY;
+            }
+            return strcmp($a->SDIV ?? '', $b->SDIV ?? '');
+        });
+
+        return $users;
+    }
+
+    public function getInvoiceUsersForView($cyear2, $nrunno)
+    {
+        // 1. Query ISRGV_EMP
+        $empData = $this->db
+            ->select('EMPNO, RESULT, DETAIL')
+            ->from('ISRGV_EMP')
+            ->where('CYEAR2', $cyear2)
+            ->where('NRUNNO', $nrunno)
+            ->get()
+            ->result();
+
+        if (empty($empData))
+            return [];
+
+        $empnos = array_column($empData, 'EMPNO');
+        $empMap = [];
+        foreach ($empData as $e) {
+            $empMap[$e->EMPNO] = ['RESULT' => $e->RESULT, 'DETAIL' => $e->DETAIL];
+        }
+
+        // 2. Query invoice users จาก auditDB
+        $this->ad->select('*')
+            ->from('invoice..v_user_permission2')
+            ->where_in('user_id', $empnos)
+            ->order_by('sect_id', 'ASC');
+        $users = $this->ad->get()->result();
+
+        // 3. Merge RESULT และ DETAIL
+        foreach ($users as $u) {
+            $empno = $u->user_id;
+            if (isset($empMap[$empno])) {
+                $u->RESULT = $empMap[$empno]['RESULT'];
+                $u->DETAIL = $empMap[$empno]['DETAIL'];
+            }
+            $u->IS_HISTORY = 0;
+        }
+
+        return $users;
+    }
+
+    public function getMarketingUsersForView($cyear2, $nrunno)
+    {
+        // 1. Query ISRGV_EMP
+        $empData = $this->db
+            ->select('EMPNO, RESULT, DETAIL')
+            ->from('ISRGV_EMP')
+            ->where('CYEAR2', $cyear2)
+            ->where('NRUNNO', $nrunno)
+            ->get()
+            ->result();
+
+        if (empty($empData))
+            return [];
+
+        $empnos = array_column($empData, 'EMPNO');
+        $empMap = [];
+        foreach ($empData as $e) {
+            $empMap[$e->EMPNO] = ['RESULT' => $e->RESULT, 'DETAIL' => $e->DETAIL];
+        }
+
+        // 2. Query marketing users จาก auditDB
+        $this->ad->select('*')
+            ->from('mkt..v_usergroup')
+            ->where_in('user_id', $empnos)
+            ->order_by('group_id', 'ASC');
+        $users = $this->ad->get()->result();
+
+        // 3. Merge RESULT และ DETAIL
+        foreach ($users as $u) {
+            $empno = $u->user_id;
+            if (isset($empMap[$empno])) {
+                $u->RESULT = $empMap[$empno]['RESULT'];
+                $u->DETAIL = $empMap[$empno]['DETAIL'];
+            }
+            $u->IS_HISTORY = 0;
+        }
+
+        return $users;
+    }
+
+    public function getScmUsersForView($cyear2, $nrunno)
+    {
+        // 1. Query ISRGV_EMP
+        $empData = $this->db
+            ->select('EMPNO, RESULT, DETAIL')
+            ->from('ISRGV_EMP')
+            ->where('CYEAR2', $cyear2)
+            ->where('NRUNNO', $nrunno)
+            ->get()
+            ->result();
+
+        if (empty($empData))
+            return [];
+
+        $empnos = array_column($empData, 'EMPNO');
+        $empMap = [];
+        foreach ($empData as $e) {
+            $empMap[$e->EMPNO] = ['RESULT' => $e->RESULT, 'DETAIL' => $e->DETAIL];
+        }
+
+        // 2. Query SCM users จาก SCM database
+        $this->scm->select('*')
+            ->from('AUTHORIZE_INVENTORY')
+            ->where_in('USR_LOGIN', $empnos)
+            ->order_by('GRP_NAME', 'ASC');
+        $users = $this->scm->get()->result();
+
+        // 3. Merge RESULT และ DETAIL
+        foreach ($users as $u) {
+            $empno = $u->USR_LOGIN;
+            if (isset($empMap[$empno])) {
+                $u->RESULT = $empMap[$empno]['RESULT'];
+                $u->DETAIL = $empMap[$empno]['DETAIL'];
+            }
+            $u->IS_HISTORY = 0;
+        }
+
+        return $users;
+    }
+
+    public function getAs400UsersForView($cyear2, $nrunno)
+    {
+        // 1. Query ISRGV_EMP
+        $empData = $this->db
+            ->select('EMPNO, RESULT, DETAIL')
+            ->from('ISRGV_EMP')
+            ->where('CYEAR2', $cyear2)
+            ->where('NRUNNO', $nrunno)
+            ->get()
+            ->result();
+
+        if (empty($empData))
+            return [];
+
+        $empnos = array_column($empData, 'EMPNO');
+        $empMap = [];
+        foreach ($empData as $e) {
+            $empMap[$e->EMPNO] = ['RESULT' => $e->RESULT, 'DETAIL' => $e->DETAIL];
+        }
+
+        // 2. Query AS400 users จาก auditDB
+        $sql   = "SELECT is2.*, ts.SNAME, ts.SEMPNO
+                FROM ITGC_SPECIALUSER is2
+                JOIN AMECUserLogin.dbo.TB_SQLAMECUSER ts ON is2.EMPNO = ts.SEMPNO
+                WHERE is2.USER_TYPE2 = 'Human'
+                AND is2.CATEGORY = 'APP'
+                AND is2.SERVER_NAME = 'AS400'
+                AND is2.EMPNO IN ('" . implode("','", $empnos) . "')";
+        $users = $this->ad->query($sql)->result();
+
+        // 3. Merge RESULT และ DETAIL
+        foreach ($users as $u) {
+            $empno = trim($u->EMPNO);
+            if (isset($empMap[$empno])) {
+                $u->RESULT = $empMap[$empno]['RESULT'];
+                $u->DETAIL = $empMap[$empno]['DETAIL'];
+            }
+            $u->IS_HISTORY = 0;
+        }
+
+        return $users;
+    }
+
+    public function getIsUsersForView($cyear2, $nrunno, $section)
+    {
+        // 1. Query ISRGV_EMP
+        $empData = $this->db
+            ->select('EMPNO, RESULT, DETAIL, USER_LOGIN')
+            ->from('ISRGV_EMP')
+            ->where('CYEAR2', $cyear2)
+            ->where('NRUNNO', $nrunno)
+            ->get()
+            ->result();
+
+        if (empty($empData))
+            return [];
+
+        $empnos         = array_column($empData, 'EMPNO');
+        $empMap         = [];
+        $userConditions = []; // สำหรับ WHERE clause
+
+        foreach ($empData as $e) {
+            // แยก USER_LOGIN_SERVER_NAME เป็น USER_LOGIN และ SERVER_NAME
+            $parts = explode('_', $e->USER_LOGIN, 2); // แยกแค่ครั้งแรก
+            if (count($parts) == 2) {
+                $userLogin  = $parts[0];
+                $serverName = $parts[1];
+
+                $empMap[$e->USER_LOGIN] = [
+                    'RESULT' => $e->RESULT,
+                    'DETAIL' => $e->DETAIL,
+                    'EMPNO'  => $e->EMPNO
+                ];
+
+                $userConditions[] = "(is2.USER_LOGIN = '{$userLogin}' AND is2.SERVER_NAME = '{$serverName}')";
+            }
+        }
+
+        if (empty($userConditions))
+            return [];
+
+        // 2. Query IS users จาก auditDB โดย WHERE ด้วย USER_LOGIN และ SERVER_NAME
+        $whereCondition = implode(' OR ', $userConditions);
+        $sql            = "
+            SELECT is2.*, a.SNAME, a.SEMPNO
+            FROM ITGC_SPECIALUSER is2
+            LEFT JOIN AMECUserLogin.dbo.TB_SQLAMECUSER a ON is2.EMPNO = a.SEMPNO
+            WHERE is2.CATEGORY != 'APP'
+            AND is2.AUTH_OGANIZE = '{$section}'
+            AND is2.ACTIVE_STATUS = '1'
+            AND is2.USER_TYPE2 = 'Human'
+            AND ({$whereCondition})
+        ";
+        $users          = $this->ad->query($sql)->result();
+
+        // 3. Merge RESULT และ DETAIL โดยใช้ USER_LOGIN_SERVER_NAME
+        foreach ($users as $u) {
+            $userLoginKey = $u->USER_LOGIN . '_' . $u->SERVER_NAME;
+
+            if (isset($empMap[$userLoginKey])) {
+                $u->RESULT          = $empMap[$userLoginKey]['RESULT'];
+                $u->DETAIL          = $empMap[$userLoginKey]['DETAIL'];
+                $u->USER_LOGIN_FULL = $userLoginKey;
+            } else {
+                $u->RESULT          = null;
+                $u->DETAIL          = null;
+                $u->USER_LOGIN_FULL = $userLoginKey;
+            }
+            $u->IS_HISTORY = 0;
+        }
+
+        return $users;
+    }
 
 
 

@@ -3,6 +3,7 @@ import flatpickr from "flatpickr";
 import "flatpickr/dist/flatpickr.min.css";
 import { host } from "../../utils.js";
 import Swal from "sweetalert2";
+import "@flaticon/flaticon-uicons/css/all/all.css";
 $(document).ready(async function () {
   flatpickr("#start-date", { dateFormat: "Y-m-d" });
 

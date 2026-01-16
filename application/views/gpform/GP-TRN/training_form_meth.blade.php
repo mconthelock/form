@@ -22,7 +22,7 @@
 
     <!-- Part 1 -->
     <div class="mb-6" id="meth_part1">
-        <h3 class="font-bold text-lg mb-2">ส่วนที่ 1 : หัวข้อฝึกอบรม และ กำหนดการฝึกอบรม (Training Subject & Training Schedule)</h3>
+        <h3 class="font-bold text-lg mb-2">ส่วนที่ 1 : หัวข้อฝึกอบรม และ กำหนดการฝึกอบรม (Training Subject & Training Schedule) <b style="color:red">*</b></h3>
         <input type="text" id="methTrainingSubject"
             placeholder="1.1 หัวข้อฝึกอบรม" maxlength="200"
             class="input input-bordered w-full mb-2"
@@ -54,7 +54,7 @@
 
     <!-- Part 2 -->
     <div class="mb-6" id="meth_part2">
-        <h3 class="font-bold text-lg mb-2">ส่วนที่ 2 : วัตถุประสงค์ของการฝึกอบรม (Training Objective)</h3>
+        <h3 class="font-bold text-lg mb-2">ส่วนที่ 2 : วัตถุประสงค์ของการฝึกอบรม (Training Objective) <b style="color:red">*</b></h3>
         <div id="methObjectiveList" class="space-y-2">
             <div class="flex items-center gap-2 objective-item">
                 <input type="text" name="methObjective[]"
@@ -68,7 +68,7 @@
 
     <!-- Part 3 -->
     <div class="mb-6" id="meth_part3">
-        <h3 class="font-bold text-lg mb-2">ส่วนที่ 3 : ความคาดหวัง / ประโยชน์</h3>
+        <h3 class="font-bold text-lg mb-2">ส่วนที่ 3 : ความคาดหวัง / ประโยชน์ <b style="color:red">*</b></h3>
         <div id="methExpectationList" class="space-y-2">
             <div class="flex items-center gap-2 expectation-item">
                 <input type="text" name="methExpectation[]"
@@ -82,7 +82,7 @@
 
     <!-- Part 4 -->
     <div class="mb-6" id="meth_part4">
-        <h3 class="font-bold text-lg mb-2">ส่วนที่ 4 : ข้อมูลผู้เข้ารับการฝึกอบรม</h3>
+        <h3 class="font-bold text-lg mb-2">ส่วนที่ 4 : ข้อมูลผู้เข้ารับการฝึกอบรม <b style="color:red">*</b></h3>
         <div class="grid grid-cols-2 gap-4 mb-3">
             <input type="text" id="methTraineeCode" placeholder="รหัสพนักงาน (Code)"
                 class="input input-bordered w-full font-bold"
@@ -108,7 +108,7 @@
 
     <!-- Part 5 -->
     <div class="mb-6" id="meth_part5">
-        <h3 class="font-bold text-lg mb-2">ส่วนที่ 5 : การพิจารณาค่าฝึกอบรม</h3>
+        <h3 class="font-bold text-lg mb-2">ส่วนที่ 5 : การพิจารณาค่าฝึกอบรม <b style="color:red">*</b></h3>
         <label class="block mb-2">
             <input type="radio" name="methExpenseOption" value="0" class="mr-2">
             ไม่มีการเปรียบเทียบราคา
@@ -137,7 +137,7 @@
 
     <!-- Part 6 -->
     <div class="mb-6" id="meth_part6">
-        <h3 class="font-bold text-lg mb-2">ส่วนที่ 6 : ค่าใช้จ่ายในการฝึกอบรม</h3>
+        <h3 class="font-bold text-lg mb-2">ส่วนที่ 6 : ค่าใช้จ่ายในการฝึกอบรม <b style="color:red">*</b></h3>
         <div class="flex items-center gap-3 mb-2">
             <input type="number" id="methAmountInput" name="methAmountInput" placeholder="จำนวนเงิน (บาท)" min="0"
                 class="input input-bordered w-1/2"

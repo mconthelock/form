@@ -3,6 +3,7 @@
 // =====================================================
 
 import { showAlert } from "./formUtils.js";
+import { redirectWebflow } from "../../public/v1.0.3/_form.js";
 
 /**
  * 🔹 Build FormData สำหรับทุกประเภทฟอร์ม (func/legal/meth/pos/out)
@@ -129,7 +130,7 @@ export async function savedetailForm(fd) {
     }
 
     return json;
-
+    redirectWebflow();
   } catch (err) {
     console.error("❌ save_formcreate error:", err);
     showAlert("❌ ข้อผิดพลาด", "ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้");
@@ -188,7 +189,6 @@ export async function createReportForm(fd_report) {
     }
 
     return json;
-
   } catch (err) {
     console.error("❌ save_formcreate report error:", err);
     showAlert("❌ ข้อผิดพลาด", "ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้");

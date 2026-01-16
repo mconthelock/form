@@ -8,8 +8,7 @@ function pre_array($array)
     print_r($array);
     echo '</pre>';
 }
-class Main extends MY_Controller
-{
+class Main extends MY_Controller {
     use _Form;
 
     protected $client;
@@ -111,19 +110,10 @@ class Main extends MY_Controller
             return;
         }
 
-        $cfg      = $this->programMap[$program];
-        $userList = call_user_func([$this->rm, $cfg['user_fn']], strtoupper($program));
-        $key      = $cfg['key'];
+        // ใช้ query ใหม่ที่ JOIN กับ ISRGV_EMP ตั้งแต่ต้น
+        $data['user'] = $this->rm->getUsersForView($req['y2'], $req['runNo'], $program);
 
-        $filtered = [];
-        foreach ($userList as $u) {
-            $k = isset($u->$key) ? trim($u->$key) : null;
-            if ($k !== null && isset($empSet[$k]))
-                $filtered[] = $u;
-        }
-
-        $data['user'] = $this->mergeResultToUser($filtered, $emp_form, $key, $program);
-        $this->views($cfg['view'], $data);
+        $this->views($this->programMap[$program]['view'], $data);
     }
 
     public function getSummaryData()
@@ -145,8 +135,8 @@ class Main extends MY_Controller
                 ];
             }
 
-            $grouped[$group]['total_users']  += $row->EMP_COUNT;
-            $grouped[$group]['programs'][]    = ['name' => $row->PROGRAM_NAME, 'checked' => $row->RESULT_1, 'uncheck' => $row->RESULT_NULL];
+            $grouped[$group]['total_users'] += $row->EMP_COUNT;
+            $grouped[$group]['programs'][]   = ['name' => $row->PROGRAM_NAME, 'checked' => $row->RESULT_1, 'uncheck' => $row->RESULT_NULL];
         }
 
         $systems = array_values($grouped);
@@ -545,7 +535,7 @@ class Main extends MY_Controller
                 // ใช้ program จากฟอร์มแรกเป็นชื่อหลักใน subject
                 $programName = isset($forms[0]['program']) ? $forms[0]['program'] : 'Regular Review';
                 $formCount   = count($forms);
-                
+
                 echo "Sending email to: " . $pic . " with " . $formCount . " form(s)<br>";
                 $this->sendmail($pic, $programName, $formCount, $forms);
             }

@@ -5,11 +5,11 @@
 import { showAlert, toggleSubmit, bindMaxLengthAlert } from "./formUtils.js";
 import { validateFunctionalForm, validateLegalForm, validateMethForm, validatePosForm, validateOutForm, validateDateRange } from "./validators.js";
 import { createForm } from "../../api/webform/form.js";
-import { redirectWebflow } from "../../inc/_form.js";
+import { showFlow, redirectWebflow } from "../../public/v1.0.3/_form.js";
 import { buildFormDataGeneric, savedetailForm, createReportForm } from "./manage_data.js"; 
 import { host } from "../../utils.js";
 
-console.log("training_main.js : version =", 'OMG V4');
+console.log("training_main.js : version =", 'OMG V1');
 
 /* =====================================================
    🔹 Loader Control
@@ -80,7 +80,6 @@ function bindSendButton(btnSel, formType, fid) {
    ===================================================== */
 async function handleFormSubmit(formType, fid) {
   let isValid = false, reqby = "", inputby = "";
-
   const getVal = id => $(`#${id}`).val()?.trim() || "";
 
   switch (formType) {
@@ -230,7 +229,6 @@ async function submitForm(formType, reqby, inputby, fid) {
       fd.append("GROUP_TRAIN", group_train);
       if (poscode) fd.append("SPOSCODE", poscode);
       
-
       const saveResult = await savedetailForm(fd);
       const status = saveResult?.status || "error";
       results.push({ traineeCode: trainee_req, status });
@@ -269,6 +267,7 @@ async function submitForm(formType, reqby, inputby, fid) {
       showAlert("⚠ บางรายการไม่สำเร็จ", `สำเร็จ ${successCount} / ${results.length} รายการ`);
     } else {
       showAlert("✅ สำเร็จ", `บันทึกข้อมูลผู้เข้าอบรมทั้งหมด ${successCount} รายการเรียบร้อยแล้ว`);
+      redirectWebflow();
     }
 
   } catch (err) {

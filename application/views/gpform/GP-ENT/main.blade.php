@@ -113,7 +113,6 @@
                             </svg>
                         </button>
                     </div>
-                    <div class="text-xs text-red-500 mt-1">เมื่อ Requester เลือก Gift จะมี Payable Date ขึ้นมา</div>
                 </div>
                 <!-- ฟิลด์ Other + Attach Memo -->
                 <div id="other-fields" class="hidden mt-2">

@@ -5,12 +5,22 @@ require_once APPPATH.'controllers/_file.php';
 
 class Training extends MY_Controller {
     use _Form, _File;
+	protected $start_time;
+    protected $lap;
+    protected $timing;
+	
     function __construct(){
 		parent::__construct();
         $this->load->model('form_model', 'form');
         $this->load->model('user_model', 'usr');
         $this->load->model('gpform/GP-TRN/training_model', 'trn');
         $this->upload_path = "//amecnas/AMECWEB/File/" . ($this->_servername() == 'amecweb' ? 'production' : 'development') . "/Form/GP/GPTRN/";
+		
+		//Benchmark
+		$this->start_time = microtime(true); 
+		$this->lap = $this->start_time;
+		$this->timing = [];
+
     }
 
     public function index(){
@@ -171,6 +181,9 @@ class Training extends MY_Controller {
             //Update Flow Training Officer  01027/14001
             $this->trn->update_flow($data["NFRMNO"], $data["VORGNO"], $data["CYEAR"], $data["CYEAR2"], $data["NRUNNO"], 'VAPVNO', '01027', 'CEXTDATA', '04');
             $this->trn->update_flow($data["NFRMNO"], $data["VORGNO"], $data["CYEAR"], $data["CYEAR2"], $data["NRUNNO"], 'VREPNO', '14001', 'CEXTDATA', '04');
+			//Benchmark
+			$this->benchmark('update_flow');
+			//Benchmark
             $formno = $this->toFormNumber($data["NFRMNO"], $data["VORGNO"], $data["CYEAR"], $data["CYEAR2"], $data["NRUNNO"]);
             $reason = $data["TRN_EXPENSE_REASON"] ?? "";
             $cost   = $data["COST"] ?? 0;
@@ -201,6 +214,9 @@ class Training extends MY_Controller {
 
             // ✅ Insert HEAD
             $result = $this->trn->insert_data("GP_TRN_HEAD", $insert);
+			//Benchmark
+			$this->benchmark('insert_head');
+			//Benchmark
             if (!$result) {
                 $db_error = $this->db->error();
                 echo json_encode([
@@ -251,6 +267,9 @@ class Training extends MY_Controller {
                         ];
                     }
                     $this->insert_and_upload("GP_TRN_ATT", $base, $files, 'JD', $formno, $dest_path);
+					//Benchmark
+			$this->benchmark('upload_jd');
+			//Benchmark
                 }
             }
 
@@ -271,6 +290,9 @@ class Training extends MY_Controller {
                         ];
                     }
                     $this->insert_and_upload("GP_TRN_ATT", $base, $files, 'COMPARE', $formno, $dest_path);
+					//Benchmark
+			$this->benchmark('upload_compare_cost');
+			//Benchmark
                 }
             }
 
@@ -291,6 +313,9 @@ class Training extends MY_Controller {
                         ];
                     }
                     $this->insert_and_upload("GP_TRN_ATT", $base, $files, 'OTHER', $formno, $dest_path);
+					//Benchmark
+			$this->benchmark('upload_other');
+			//Benchmark
                 }
             }
 
@@ -311,6 +336,10 @@ class Training extends MY_Controller {
                     $arr_trainee['JD_NAME']     = $data["JD_NAME"] ?? "";
                     $arr_trainee['JD_DESC']     = $data["JD_DESC"] ?? "";
                     $this->trn->insert_data("GP_TRN_TRAINEE", $arr_trainee);
+					
+					//Benchmark
+			$this->benchmark('insert_trainee');
+			//Benchmark
 
                     $get_head_req = $this->trn->get_headinfo($arr_trainee['EMPNO']);
                     $req_posx = $get_head_req[0]->REQ_POS;
@@ -329,17 +358,27 @@ class Training extends MY_Controller {
             //Update flow 
             $this->trn->update_flow($data["NFRMNO"], $data["VORGNO"], $data["CYEAR"], $data["CYEAR2"], $data["NRUNNO"], 'VREPNO', '14001', 'CSTEPNO', '18');
             $this->trn->update_flow($data["NFRMNO"], $data["VORGNO"], $data["CYEAR"], $data["CYEAR2"], $data["NRUNNO"], 'VREPNO', '14001', 'CSTEPNO', '19');
-            
+            //Benchmark
+			$this->benchmark('update_flow');
+			//Benchmark
+			
             if($prefix == 'meth' || $prefix == 'pos' ){
                 $this->trn->delete_flow($data["NFRMNO"], $data["VORGNO"], $data["CYEAR"], $data["CYEAR2"], $data["NRUNNO"], 'CEXTDATA', ['19']);
                 $this->trn->update_flow($data["NFRMNO"], $data["VORGNO"], $data["CYEAR"], $data["CYEAR2"], $data["NRUNNO"], 'CSTEPNEXTNO', '10', 'CSTEPNEXTNO', '19');
                 $this->trn->update_flow($data["NFRMNO"], $data["VORGNO"], $data["CYEAR"], $data["CYEAR2"], $data["NRUNNO"], 'CEXTDATA', '19', 'CSTEPNO', '--');
                 $this->trn->update_flow($data["NFRMNO"], $data["VORGNO"], $data["CYEAR"], $data["CYEAR2"], $data["NRUNNO"], 'VAPVNO', $data["INPUTBY"], 'CSTEPNO', '--');
                 $this->trn->update_flow($data["NFRMNO"], $data["VORGNO"], $data["CYEAR"], $data["CYEAR2"], $data["NRUNNO"], 'VREPNO', $data["INPUTBY"], 'CSTEPNO', '--');
+				
+				//Benchmark
+			$this->benchmark('update_meth_or_pos');
+			//Benchmark
             }else if($prefix == 'legal'){
                 $this->trn->update_flow($data["NFRMNO"], $data["VORGNO"], $data["CYEAR"], $data["CYEAR2"], $data["NRUNNO"], 'CSTEPST', '1', 'CSTEPST', '3');
                 $this->trn->update_flow($data["NFRMNO"], $data["VORGNO"], $data["CYEAR"], $data["CYEAR2"], $data["NRUNNO"], 'CSTEPST', '1', 'CSTEPST', '2');
-                $get_head_inputer = $this->trn->get_headinfo($data["INPUTBY"]);
+                //Benchmark
+			$this->benchmark('update_legal_flow');
+			//Benchmark
+				$get_head_inputer = $this->trn->get_headinfo($data["INPUTBY"]);
                     $data_legal = [
                         'NFRMNO'      => $data["NFRMNO"],
                         'VORGNO'      => $data["VORGNO"],
@@ -372,6 +411,9 @@ class Training extends MY_Controller {
                 $this->trn->update_flow($data["NFRMNO"], $data["VORGNO"], $data["CYEAR"], $data["CYEAR2"], $data["NRUNNO"], 'CSTEPNEXTNO', '57', 'CSTEPNO', '--');
                 $this->trn->update_flow($data["NFRMNO"], $data["VORGNO"], $data["CYEAR"], $data["CYEAR2"], $data["NRUNNO"], 'CSTEPST', '2', 'CSTEPNO', '19');
                    
+				   //Benchmark
+			$this->benchmark('generic_insert_data');
+			//Benchmark
                 $where = " AND CSTEPNO in ('07','63','06','05','04','03','02')";
                 $get_first_step = $this->trn->get_data_flow($data["NFRMNO"], $data["VORGNO"], $data["CYEAR"], $data["CYEAR2"], $data["NRUNNO"], $where);
                 $steps = array_map(function($r){
@@ -398,8 +440,14 @@ class Training extends MY_Controller {
                 }
 
                 $this->trn->update_flow($data["NFRMNO"], $data["VORGNO"], $data["CYEAR"], $data["CYEAR2"], $data["NRUNNO"], 'CSTEPNEXTNO', $nextno, 'CSTEPNO', '19');
+				//Benchmark
+			$this->benchmark('update_flow_19');
+			//Benchmark
                 if( $nextno != "10"){
                     $this->trn->update_flow($data["NFRMNO"], $data["VORGNO"], $data["CYEAR"], $data["CYEAR2"], $data["NRUNNO"], 'CSTEPNEXTNO', '10', 'CSTEPNO', '02');
+					//Benchmark
+			$this->benchmark('update_flow_nextno');
+			//Benchmark
                 }  
             }
 
@@ -408,6 +456,12 @@ class Training extends MY_Controller {
                 $where = " AND CSTEPNEXTNO = '00'";
                 $get_step = $this->trn->get_data_flow($data["NFRMNO"], $data["VORGNO"], $data["CYEAR"], $data["CYEAR2"], $data["NRUNNO"], $where);
             }
+			
+			//Benchmark
+			$this->benchmark('Final');
+			//Benchmark
+			
+			log_message('debug', 'Performance Profile: ' . json_encode($this->timing));
             
             echo json_encode([
                 "status" => "success", 
@@ -446,6 +500,10 @@ class Training extends MY_Controller {
                 $row['TYPE'] = $type;
                 $this->trn->insert_data($table, $row);
                 $no++;
+				
+				//Benchmark
+			$this->benchmark('insert_line');
+			//Benchmark
             }
         }
     }
@@ -591,7 +649,14 @@ class Training extends MY_Controller {
             $cyear2 = $row["CYEAR2"];
             $nrunno = $row["NRUNNO"];
 
-            $flowRows = $this->trn->get_data_flow($nfrmno, $orgno, $cyear,  $cyear2,$nrunno, " AND CEXTDATA = '10'");
+            $flowRows = $this->trn->get_data_flow(
+                $nfrmno,
+                $orgno,
+                $cyear,
+                $cyear2,
+                $nrunno,
+                " AND CEXTDATA = '10' "
+            );
 
             foreach ($flowRows as $f) {
                 if (!empty($f->DAPVDATE)) {
@@ -606,7 +671,6 @@ class Training extends MY_Controller {
                 }
             }
         }
-
 
         // ถ้าไม่มี DAPVDATE เลย → จบ
         if (empty($dapvList)) {
@@ -708,20 +772,8 @@ class Training extends MY_Controller {
         ]);
         $this->trn->insert_data('CASHADVLIST', $insert_list);
 
-    // UPDATE REF CASH ADVANCE TO GP_TRN_HEAD ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-        $data_ref_cash = array();
-        $data_main = array();
-        $data_main["NFRMNO"] = $nfrmno ;
-        $data_main["VORGNO"] = $orgno ;
-        $data_main["CYEAR"]  = $cyear ;
-        $data_main["CYEAR2"] = $cyear2 ;
-        $data_main["NRUNNO"] = $nrunno ;
-        $data_ref_cash["REF_CASH_CYEAR2"] = $cashHead["CYEAR2"];
-        $data_ref_cash["REF_CASH_NRUNNO"] = $cashHead["NRUNNO"];
-        $this->trn->update_data("GP_TRN_HEAD", $data_ref_cash, $data_main);
-
         // ====================================================
-        // 5) (Commented) CLEAR FORM 
+        // 5) (Commented) CLEAR FORM - ยังไม่ใช้งาน
         // ====================================================
         
         $clearHead = $data["clearHead"]; // ฟอร์ม clear head
@@ -740,16 +792,10 @@ class Training extends MY_Controller {
         ]);
         $this->trn->insert_data('CLRFORM', $insert_head_clear);
 
-        $this->trn->delete_flow($data["NFRMNO"], $data["VORGNO"], $data["CYEAR"], $data["CYEAR2"], $data["NRUNNO"], 'CSTEPNO', '61');
+        $this->trn->delete_flow($data["NFRMNO"], $data["VORGNO"], $data["CYEAR"], $data["CYEAR2"], $data["NRUNNO"], 'CSTEPNO', ['61']);
         $this->trn->update_flow($clearHead["NFRMNO"], $clearHead["VORGNO"], $clearHead["CYEAR"], $clearHead["CYEAR2"], $clearHead["NRUNNO"], 'CSTEPNEXTNO','06', 'CSTEPNO', '--');
         $this->trn->update_flow($clearHead["NFRMNO"], $clearHead["VORGNO"], $clearHead["CYEAR"], $clearHead["CYEAR2"], $clearHead["NRUNNO"], 'CSTEPST','3', 'CSTEPNO', '--');
-        $this->trn->update_flow($clearHead["NFRMNO"], $clearHead["VORGNO"], $clearHead["CYEAR"], $clearHead["CYEAR2"], $clearHead["NRUNNO"], 'CAPVSTNO','0', 'CSTEPNO', '--');
 
-    // UPDATE REF Clear ADVANCE TO GP_TRN_HEAD ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-        $data_ref_clear = array();
-        $data_ref_clear["REF_CLR_CYEAR2"] = $clearHead["CYEAR2"];
-        $data_ref_clear["REF_CLR_NRUNNO"] = $clearHead["NRUNNO"];
-        $this->trn->update_data("GP_TRN_HEAD", $data_ref_clear, $data_main);
 
         // ====================================================
         // 6) ส่งผลกลับให้ frontend
@@ -799,87 +845,15 @@ class Training extends MY_Controller {
         echo json_encode($data);
     }
 
-    public function add_to_training_record(){
-        $raw  = file_get_contents("php://input");
-        $data = json_decode($raw, true);
+    public function check_for_aprv3month(){
 
-        if (!is_array($data)) {
-            echo json_encode([
-                "status"  => false,
-                "message" => "Invalid JSON payload"
-            ]);
-            return;
-        }
-
-        $items = $data["itemsx"] ?? [];
-
-        // start a DB transaction
-        $this->training_db = $this->load->database('training_record', TRUE);
-        $this->training_db->trans_start();
-
-        foreach ($items as $item) {
-            $mainData = $this->trn->get_main_data($item["NFRMNO"],  $item["VORGNO"], $item["CYEAR"], $item["CYEAR2"], $item["NRUNNO"]);
-            $get_next_runno = $this->trn->get_traing_record();
-
-            // --- HEAD ---
-            $headData = [
-                'CYEAR' => date('y'),
-                'NRUNNO' => $get_next_runno[0]->NEXT_RUNNO,
-                'SUBJECT' => $mainData[0]->SUBJECT,
-                'DID' => '107',
-                'PLCID' => '67',
-                'CODEID' => 'EXTRN',
-                'COST' => 0,
-                'VAT' => 0
-            ];
-
-            $this->trn->insert_trainsys("TRAINHEADREC", $headData);
-            // --- SCHEDULE ---
-            $scheduleData = [
-                'CYEAR'    => $headData["CYEAR"],
-                'NRUNNO'    => $headData["NRUNNO"]
-            ];
-
-            if (!empty($mainData)) {
-                $scheduleData['FRMDATE']   = $mainData[0]->DATE_FROM;
-                $scheduleData['ENDDATE']   = $mainData[0]->DATE_TO;
-                $scheduleData['STARTTIME'] = $mainData[0]->TIME_FROM;
-                $scheduleData['ENDTIME']   = $mainData[0]->TIME_TO;
-            }
-            $this->trn->insert_trainsys("TRAINSCHEDULE", $scheduleData);
-            $scheduleData['INSID']   = '47';
-            $this->trn->insert_trainsys("DETAILINSRUCTOR", $scheduleData);
-
-            // --- TRAINEE ---
-            $trainees = $this->trn->get_trainee( $item["NFRMNO"], $item["VORGNO"], $item["CYEAR"], $item["CYEAR2"], $item["NRUNNO"]);
-
-            foreach ($trainees as $t) {
-                $traineeData = [
-                    'CYEAR'    => $headData["CYEAR"],
-                    'NRUNNO'    => $headData["NRUNNO"],
-                    'SEMPNO'    => $t->EMPNO,
-                    'CSTATUS'    => '1',
-                    'ADD_DATE' => date("Y-m-d")
-                ];
-
-                $this->trn->insert_trainsys("TRAINEEREC", $traineeData);
-            }
-        }
-
-        // commit / rollback
-        $this->training_db->trans_complete();
-        if ($this->training_db->trans_status() === false) {
-            echo json_encode([
-                "status"  => false,
-                "message" => "Insert failed"
-            ]);
-        } else {
-            echo json_encode([
-                "status"  => true,
-                "message" => "Insert success"
-            ]);
-        }
     }
-  
+    
+	
+	//Benchmark
+	private function benchmark($event){
+		$this->timing[$event] = round(microtime(true) - $this->lap, 4);
+        $this->lap = microtime(true);
+	}
 
 }

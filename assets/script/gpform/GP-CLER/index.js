@@ -95,8 +95,8 @@ $(document).ready(function () {
     const remain = $("#remain").val().trim();
     const remark = $("#remark").val().trim();
     const formnumber = $("#formnumber").val();
-    const fileInput = $("#receipt")[0];
-    const file = fileInput.files[0];
+    // const fileInput = $("#receipt")[0];
+    // const file = fileInput.files[0];
 
     const ent = $(".form-ent").data();
     const ent_nfrmno = ent.nfrmno;
@@ -104,6 +104,131 @@ $(document).ready(function () {
     const ent_cyear = ent.cyear;
     const ent_cyear2 = ent.cyear2;
     const ent_nrunno = ent.nrunno;
+
+    // Validate all required fields in tables
+    let hasEmptyField = false;
+    let emptyFieldName = "";
+
+    // ตรวจสอบตารางปกติ
+    if ($("#expense-table").length > 0) {
+      $("#expense-table tbody tr").each(function (index) {
+        const row = index + 1;
+        const receiptNo = $(this).find("input[name='receipt_no[]']").val()?.trim();
+        const cost = $(this).find("input[name='cost[]']").val()?.trim();
+        const dateIssue = $(this).find("input[name='date_issue[]']").val()?.trim();
+        const receiptFile = $(this).find("input[name='receipt_file[]']")[0];
+
+        if (!receiptNo) {
+          hasEmptyField = true;
+          emptyFieldName = `Receipt No. (แถวที่ ${row})`;
+          $(this).find("input[name='receipt_no[]']").addClass("input-error").focus();
+          return false;
+        }
+        if (!cost) {
+          hasEmptyField = true;
+          emptyFieldName = `Cost (แถวที่ ${row})`;
+          $(this).find("input[name='cost[]']").addClass("input-error").focus();
+          return false;
+        }
+        if (!dateIssue) {
+          hasEmptyField = true;
+          emptyFieldName = `Date issue receipt (แถวที่ ${row})`;
+          $(this).find("input[name='date_issue[]']").addClass("input-error").focus();
+          return false;
+        }
+        if (!receiptFile || receiptFile.files.length === 0) {
+          hasEmptyField = true;
+          emptyFieldName = `Attach Receipt (แถวที่ ${row})`;
+          $(this).find("input[name='receipt_file[]']").addClass("input-error").focus();
+          return false;
+        }
+      });
+    }
+
+    // ตรวจสอบตารางแยก (Lunch)
+    if ($(".expense-table-split[data-type='1']").length > 0 && !hasEmptyField) {
+      $(".expense-table-split[data-type='1'] tbody tr").each(function (index) {
+        const row = index + 1;
+        const receiptNo = $(this).find("input[name='receipt_no_1[]']").val()?.trim();
+        const cost = $(this).find("input[name='cost_1[]']").val()?.trim();
+        const dateIssue = $(this).find("input[name='date_issue_1[]']").val()?.trim();
+        const receiptFile = $(this).find("input[name='receipt_file_1[]']")[0];
+
+        if (!receiptNo) {
+          hasEmptyField = true;
+          emptyFieldName = `Lunch - Receipt No. (แถวที่ ${row})`;
+          $(this).find("input[name='receipt_no_1[]']").addClass("input-error").focus();
+          return false;
+        }
+        if (!cost) {
+          hasEmptyField = true;
+          emptyFieldName = `Lunch - Cost (แถวที่ ${row})`;
+          $(this).find("input[name='cost_1[]']").addClass("input-error").focus();
+          return false;
+        }
+        if (!dateIssue) {
+          hasEmptyField = true;
+          emptyFieldName = `Lunch - Date issue receipt (แถวที่ ${row})`;
+          $(this).find("input[name='date_issue_1[]']").addClass("input-error").focus();
+          return false;
+        }
+        if (!receiptFile || receiptFile.files.length === 0) {
+          hasEmptyField = true;
+          emptyFieldName = `Lunch - Attach Receipt (แถวที่ ${row})`;
+          $(this).find("input[name='receipt_file_1[]']").addClass("input-error").focus();
+          return false;
+        }
+      });
+    }
+
+    // ตรวจสอบตารางแยก (Break)
+    if ($(".expense-table-split[data-type='4']").length > 0 && !hasEmptyField) {
+      $(".expense-table-split[data-type='4'] tbody tr").each(function (index) {
+        const row = index + 1;
+        const receiptNo = $(this).find("input[name='receipt_no_4[]']").val()?.trim();
+        const cost = $(this).find("input[name='cost_4[]']").val()?.trim();
+        const dateIssue = $(this).find("input[name='date_issue_4[]']").val()?.trim();
+        const receiptFile = $(this).find("input[name='receipt_file_4[]']")[0];
+
+        if (!receiptNo) {
+          hasEmptyField = true;
+          emptyFieldName = `Break - Receipt No. (แถวที่ ${row})`;
+          $(this).find("input[name='receipt_no_4[]']").addClass("input-error").focus();
+          return false;
+        }
+        if (!cost) {
+          hasEmptyField = true;
+          emptyFieldName = `Break - Cost (แถวที่ ${row})`;
+          $(this).find("input[name='cost_4[]']").addClass("input-error").focus();
+          return false;
+        }
+        if (!dateIssue) {
+          hasEmptyField = true;
+          emptyFieldName = `Break - Date issue receipt (แถวที่ ${row})`;
+          $(this).find("input[name='date_issue_4[]']").addClass("input-error").focus();
+          return false;
+        }
+        if (!receiptFile || receiptFile.files.length === 0) {
+          hasEmptyField = true;
+          emptyFieldName = `Break - Attach Receipt (แถวที่ ${row})`;
+          $(this).find("input[name='receipt_file_4[]']").addClass("input-error").focus();
+          return false;
+        }
+      });
+    }
+
+    if (hasEmptyField) {
+      Swal.fire({
+        icon: "warning",
+        title: `กรุณากรอก ${emptyFieldName}`,
+        toast: true,
+        position: "top-end",
+        timer: 3000,
+        showConfirmButton: false,
+        background: "#FBF6D9",
+      });
+      return;
+    }
 
     // Validate president_join
     if (!p_join) {
@@ -135,19 +260,19 @@ $(document).ready(function () {
     }
 
     // Validate file
-    if (!file) {
-      Swal.fire({
-        icon: "warning",
-        title: "กรุณาแนบไฟล์ใบเสร็จรับเงิน",
-        toast: true,
-        position: "top-end",
-        timer: 3000,
-        showConfirmButton: false,
-        background: "#FBF6D9",
-      });
-      $("#receipt").addClass("input-error").focus();
-      return;
-    }
+    // if (!file) {
+    //   Swal.fire({
+    //     icon: "warning",
+    //     title: "กรุณาแนบไฟล์ใบเสร็จรับเงิน",
+    //     toast: true,
+    //     position: "top-end",
+    //     timer: 3000,
+    //     showConfirmButton: false,
+    //     background: "#FBF6D9",
+    //   });
+    //   $("#receipt").addClass("input-error").focus();
+    //   return;
+    // }
 
     // Validate memo files for split expense (if visible)
     if ($(".expense-table-split").length > 0) {
@@ -227,7 +352,7 @@ $(document).ready(function () {
     formData.append("actual_cost", actual_cost);
     formData.append("remain", parseFloat(remain));
     formData.append("remark", remark);
-    formData.append("receipt", file);
+    // formData.append("receipt", file);
     // แนบไฟล์กลุ่ม
     const fileGroupInput = $("#file_group")[0];
     if (fileGroupInput && fileGroupInput.files.length > 0) {
@@ -262,25 +387,37 @@ $(document).ready(function () {
     // ตรวจสอบว่าเป็นตารางปกติหรือตารางแยก
     if ($("#expense-table").length > 0) {
       // กรณีตารางปกติ
+      let rowIndex = 0;
       $("#expense-table tbody tr").each(function () {
-        const receipt_no = $(this).find("td:eq(1) input").val().trim();
-        const cost = parseFloat($(this).find("td:eq(2) input").val().trim()) || 0;
+        const receipt_no = $(this).find("input[name='receipt_no[]']").val().trim();
+        const cost = parseFloat($(this).find("input[name='cost[]']").val().trim()) || 0;
+        const date_issue = $(this).find("input[name='date_issue[]']").val().trim();
+        const receiptFile = $(this).find("input[name='receipt_file[]']")[0];
 
         if (receipt_no !== "" || cost > 0) {
           expense.push({
             receipt_no,
             cost,
+            date_issue,
           });
+          
+          // แนบไฟล์ receipt ถ้ามี
+          if (receiptFile && receiptFile.files.length > 0) {
+            formData.append(`receipt_file_${rowIndex}`, receiptFile.files[0]);
+          }
         }
+        rowIndex++;
       });
       formData.append("expense", JSON.stringify(expense));
     } else {
       // กรณีตารางแยก (Lunch และ Break)
       // รวบรวม Lunch (type=1)
+      let lunchIndex = 0;
       $(".expense-table-split[data-type='1'] tbody tr").each(function () {
         const receipt_no = $(this).find("input[name='receipt_no_1[]']").val().trim();
         const cost = parseFloat($(this).find("input[name='cost_1[]']").val().trim()) || 0;
         const date_issue = $(this).find("input[name='date_issue_1[]']").val().trim();
+        const receiptFile = $(this).find("input[name='receipt_file_1[]']")[0];
 
         if (receipt_no !== "" || cost > 0) {
           expenseSplit.lunch.push({
@@ -289,14 +426,22 @@ $(document).ready(function () {
             date_issue,
             type: 1
           });
+          
+          // แนบไฟล์ receipt ถ้ามี
+          if (receiptFile && receiptFile.files.length > 0) {
+            formData.append(`receipt_file_lunch_${lunchIndex}`, receiptFile.files[0]);
+          }
         }
+        lunchIndex++;
       });
       
       // รวบรวม Break (type=4)
+      let breakIndex = 0;
       $(".expense-table-split[data-type='4'] tbody tr").each(function () {
         const receipt_no = $(this).find("input[name='receipt_no_4[]']").val().trim();
         const cost = parseFloat($(this).find("input[name='cost_4[]']").val().trim()) || 0;
         const date_issue = $(this).find("input[name='date_issue_4[]']").val().trim();
+        const receiptFile = $(this).find("input[name='receipt_file_4[]']")[0];
 
         if (receipt_no !== "" || cost > 0) {
           expenseSplit.break.push({
@@ -305,7 +450,13 @@ $(document).ready(function () {
             date_issue,
             type: 4
           });
+          
+          // แนบไฟล์ receipt ถ้ามี
+          if (receiptFile && receiptFile.files.length > 0) {
+            formData.append(`receipt_file_break_${breakIndex}`, receiptFile.files[0]);
+          }
         }
+        breakIndex++;
       });
       
       formData.append("expenseSplit", JSON.stringify(expenseSplit));
@@ -341,7 +492,7 @@ $(document).ready(function () {
           timer: 2000,
         });
         // location.reload();
-        redirectWebflow();
+        // redirectWebflow();
       },
       complete: function () {
         $("#loading-overlay").hide();
@@ -361,6 +512,11 @@ $(document).ready(function () {
     $("#receipt").removeClass("input-error");
   });
 
+  // ลบ class error เมื่อผู้ใช้กรอกข้อมูล
+  $(document).on("input change", "input.input-error", function () {
+    $(this).removeClass("input-error");
+  });
+
   $(function () {
     // เพิ่มแถวสำหรับตารางปกติ
     $("#add-row").click(function () {
@@ -369,10 +525,16 @@ $(document).ready(function () {
       var newRow = `<tr>
             <td class="py-2 px-4 text-center">${rowCount}</td>
             <td class="py-2 px-4">
-                <input type="text" class="input input-sm border rounded-lg px-3 py-1 w-full focus:ring-2 bg-white focus:ring-green-400 transition" placeholder="Receipt No.">
+                <input type="text" name="receipt_no[]" class="input input-sm border rounded-lg px-3 py-1 w-full focus:ring-2 bg-white focus:ring-green-400 transition" placeholder="Receipt No.">
             </td>
-            <td class="py-2 px-4"> 
-                <input type="text" class="input input-sm border rounded-lg px-3 py-1 w-full focus:ring-2 bg-white focus:ring-green-400 transition cost-input" placeholder="Cost">
+            <td class="py-2 px-4">
+                <input type="number" name="cost[]" class="input input-sm border rounded-lg px-3 py-1 w-full focus:ring-2 bg-white focus:ring-green-400 transition cost-input" placeholder="Cost">
+            </td>
+            <td class="py-2 px-4">
+                <input type="date" name="date_issue[]" class="input input-sm border rounded-lg px-3 py-1 w-full focus:ring-2 bg-white focus:ring-green-400 transition">
+            </td>
+            <td class="py-2 px-4">
+                <input type="file" name="receipt_file[]" class="file-input file-input-sm file-input-bordered w-full max-w-xs rounded-lg border-green-400">
             </td>
             <td class="py-2 px-4 text-center">
                 <button type="button" class="remove-row bg-red-500 hover:bg-red-600 text-white rounded-full w-8 h-8 flex items-center cursor-pointer justify-center shadow transition" title="Remove row"> &times; </button>
@@ -397,10 +559,13 @@ $(document).ready(function () {
                 <input type="text" name="receipt_no_${type}[]" class="input input-sm border rounded-lg px-3 py-1 w-full focus:ring-2 bg-white focus:ring-${colorClass}-400 transition" placeholder="Receipt No.">
             </td>
             <td class="py-2 px-4">
-                <input type="text" name="cost_${type}[]" class="input input-sm border rounded-lg px-3 py-1 w-full focus:ring-2 bg-white focus:ring-${colorClass}-400 transition cost-input" placeholder="Cost">
+                <input type="number" name="cost_${type}[]" class="input input-sm border rounded-lg px-3 py-1 w-full focus:ring-2 bg-white focus:ring-${colorClass}-400 transition cost-input" placeholder="Cost">
             </td>
             <td class="py-2 px-4">
                 <input type="date" name="date_issue_${type}[]" class="input input-sm border rounded-lg px-3 py-1 w-full focus:ring-2 bg-white focus:ring-${colorClass}-400 transition">
+            </td>
+            <td class="py-2 px-4">
+                <input type="file" name="receipt_file_${type}[]" class="file-input file-input-sm file-input-bordered w-full max-w-xs rounded-lg border-${colorClass}-400">
             </td>
             <td class="py-2 px-4 text-center">
                 <button type="button" class="remove-row bg-red-500 hover:bg-red-600 text-white rounded-full w-8 h-8 flex items-center cursor-pointer justify-center shadow transition" title="Remove row"> &times; </button>
@@ -450,7 +615,7 @@ $(document).ready(function () {
     function calculateTotals() {
       let totalAmount = 0;
       $("#expense-table tbody tr").each(function () {
-        const cost = parseFloat($(this).find("td:eq(2) input").val()) || 0;
+        const cost = parseFloat($(this).find("input[name='cost[]']").val()) || 0;
         totalAmount += cost;
       });
       console.log("Total (normal table):", totalAmount);

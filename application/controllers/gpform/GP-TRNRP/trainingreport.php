@@ -11,6 +11,7 @@ class Trainingreport extends MY_Controller {
         $this->load->model('user_model', 'usr');
         $this->load->model('gpform/GP-TRN/training_model', 'trn');
         $this->upload_path = "//amecnas/AMECWEB/File/" . ($this->_servername() == 'amecweb' ? 'production' : 'development') . "/Form/GP/GPTRN/";
+        $this->upload_path_report = "//amecnas/AMECWEB/File/" . ($this->_servername() == 'amecweb' ? 'production' : 'development') . "/Form/GP/GPTRNRP/";
     }
 
     public function index(){
@@ -31,6 +32,8 @@ class Trainingreport extends MY_Controller {
         $data['exdata'] =  $this->getExtData($nfrmno, $vorgno, $cyear, $cyear2, $nrunno, $empno);
         $data['form'] = $this->form->getForm($nfrmno, $vorgno, $cyear, $cyear2, $nrunno);
         $data['data_head']  = $this->trn->get_data_trnrp_head($nfrmno, $vorgno, $cyear, $cyear2, $nrunno);
+        $data['data_attach_report']  = $this->trn->select_all_by_tb($nfrmno, $vorgno, $cyear, $cyear2, $nrunno, 'GP_TRN_ATT', 'ID', ['TYPE_ATT' => 'REPORT']);
+        $data['chk_attach_report'] = !empty($data['data_attach_report']) ? 'yes' : 'no';
         $data['ref_formno'] =  $this->toFormNumber( $data['data_head'][0]->REF_NFRMNO, $data['data_head'][0]->REF_VORGNO, $data['data_head'][0]->REF_CYEAR, $data['data_head'][0]->REF_CYEAR2, $data['data_head'][0]->REF_NRUNNO);
         $this->views('gpform/GP-TRNRP/training_report_view', $data);  
     }
@@ -52,7 +55,7 @@ class Trainingreport extends MY_Controller {
                 return;
             }
 
-            $result = $this->trn->update_data_report($frmno, $orgno, $cyear, $cyear2, $nrunno, $content, $apply);
+            $result = $this->trn->update_data_report($frmno, $orgno, $cyear, $cyear2, $nrunno, 'req',$content, $apply);
         } catch (Exception $e) {
             echo json_encode(['status' => false, 'message' => $e->getMessage()]);
         }
@@ -66,31 +69,35 @@ class Trainingreport extends MY_Controller {
         $cyear  = $this->input->post('cyear');
         $cyear2 = $this->input->post('cyear2');
         $nrunno = $this->input->post('nrunno');
-
+        $exdata = $this->input->post('exdata');
+        $formno =  $this->toFormNumber($frmno, $orgno, $cyear, $cyear2, $nrunno);
         try {
-
             /* ============================================================
-            *  MODE 1 : UPLOAD FILE (ตำแหน่ง 55/60/61/62/63)
+            *  MODE 1 : UPLOAD FILE (ตำแหน่ง >= 55 to <= 69)
             * ============================================================ */
             if ($mode === "upload") {
-
                 if (empty($_FILES['txt_trn_att']['name'][0])) {
                     echo json_encode(['status' => false, 'message' => 'No file uploaded']);
                     return;
                 }
 
-                $dest = rtrim($this->upload_path, '/\\') . '/' . $frmno . '/';
+                $dest = rtrim($this->upload_path_report, '/\\') . '/' . $formno . '/';
 
                 if (!is_dir($dest)) {
                     mkdir($dest, 0777, true);
                 }
 
                 // อัปโหลดทั้งหมด
-                $uploadedList = $this->uploadMultiFile("txt_trn_att", $dest);
+                $uploadedList = $this->uploadMultiFile($_FILES,['txt_trn_att'],$dest);
+                //$uploadedList = $this->uploadMultiFile($_FILES['txt_trn_att'], "txt_trn_att", $dest);
+
 
                 // ถ้า upload fail ทั้งหมด
-                if (empty($uploadedList)) {
-                    echo json_encode(['status' => false, 'message' => 'Upload failed']);
+                if (!$uploadedList['status']) {
+                    echo json_encode([
+                        'status'  => false,
+                        'message' => $uploadedList['msg']
+                    ]);
                     return;
                 }
 
@@ -103,21 +110,24 @@ class Trainingreport extends MY_Controller {
                     'NRUNNO' => $nrunno
                 ];
 
-                $this->insert_and_upload("GP_TRN_ATT", $base, $uploadedList, "REPORT", $frmno, $dest);
-
-                echo json_encode(['status' => true, 'message' => 'Upload success']);
+                //$this->insert_and_upload("GP_TRN_ATT", $base, $uploadedList, "REPORT", $frmno, $dest);
+                $this->insert_and_upload("GP_TRN_ATT", $base, $uploadedList['files']['txt_trn_att'], "REPORT", $formno, $dest);
+                $result = ['status' => true, 'message' => ' Upload File successfully'];
+                echo json_encode($result);
                 return;
-            }
-
+            }else if ($mode === "update_only") {
             /* ============================================================
             *  MODE 2 : UPDATE ONLY (CONTENT + APPLY)
             * ============================================================ */
-            if ($mode === "update_only") {
                 $content = $this->input->post('content');
                 $apply   = $this->input->post('apply');
-                
-                $result = $this->trn->update_data_report($frmno, $orgno, $cyear, $cyear2, $nrunno, $content, $apply );
-
+                $result = $this->trn->update_data_report($frmno, $orgno, $cyear, $cyear2, $nrunno, 'req',$content, $apply);
+                echo json_encode($result);
+                return;
+            }else if ($mode === "manager_score") {
+                $score = $this->input->post('score');
+                $comment   = $this->input->post('comment');
+                $result = $this->trn->update_data_report($frmno, $orgno, $cyear, $cyear2, $nrunno, 'manager', $score, $comment );
                 echo json_encode($result);
                 return;
             }
@@ -128,8 +138,6 @@ class Trainingreport extends MY_Controller {
             echo json_encode(['status' => false, 'message' => $e->getMessage()]);
         }
     }
-
-
 
 
     public function get_emp() {
@@ -149,7 +157,7 @@ class Trainingreport extends MY_Controller {
             return;
         }
 
-         echo json_encode([
+        echo json_encode([
             'status'    => 'success',
             'SNAME'     => $data[0]->STNAME,
             'SPOSITION' => $data[0]->SPOSITION,
@@ -210,8 +218,8 @@ class Trainingreport extends MY_Controller {
         log_message('debug', "🟢 insert_and_upload start: {$formno} ({$type})");
 
         foreach ($files as $f) {
-            $orig_name = $f['ORIGIN_FILENAME'] ?? '';
-            $real_name = $f['FILENAME'] ?? ''; // ✅ ตอนนี้คือชื่อจริงจาก uploadMultiFile เช่น 202510301044_F1_1_High_Work.pdf
+            $orig_name = $f['file_origin_name'] ?? '';
+            $real_name = $f['file_name'] ?? '';
 
             if (trim($orig_name) !== '' && trim($real_name) !== '') {
                 $ext = pathinfo($orig_name, PATHINFO_EXTENSION);
@@ -230,6 +238,7 @@ class Trainingreport extends MY_Controller {
                 } else {
                     log_message('error', "❌ File not found: {$old_path}");
                 }
+                
 
                 // ✅ Insert ลงฐานข้อมูล
                 $row = $base;
@@ -252,14 +261,89 @@ class Trainingreport extends MY_Controller {
         }
     }
 
-
-
-
-
     
     public function preview_file($formno, $filename, $origin_name){
         $filepath = $this->upload_path."/".$formno;
         $this->downloadFile($origin_name, $filename, $filepath);
+    }
+
+    public function update_flow_after_3month(){
+        $nfrmno = 19;
+        $vorgno = '030101';
+        $cyear = '25';
+        $month = (int) date('m');
+        $year  = date('Y');
+        $cyear2 = ($month <= 3) ? $year - 1 : $year;
+        $nrunno = '--';
+        echo $month."|".$cyear2."<BR>";
+
+        //$get_form_2month = $this->trn->get_3month_train_report($nfrmno, $vorgno, $cyear, $cyear2);
+        $get_form_2month = $this->trn->get_3month_train_report_for_test($nfrmno, $vorgno, $cyear, $cyear2, '15');
+        foreach($get_form_2month as $val){
+            echo $val->CYEAR2."_".$val->NRUNNO."<br>";
+            $nrunno = $val->NRUNNO;
+            $cyear2 = $val->CYEAR2;
+            $where_form = [
+                'NFRMNO' => $nfrmno,
+                'VORGNO' => $vorgno,
+                'CYEAR'  => $cyear,
+                'CYEAR2' => $cyear2,
+                'NRUNNO' => $val->NRUNNO
+            ];
+            $data_update_form = ['CST' => 1];
+            $result = $this->trn->update_data('FORM', $data_update_form, $where_form);
+
+            //--- update flow ---
+            $where_flow = [
+                'NFRMNO' => $nfrmno,
+                'VORGNO' => $vorgno,
+                'CYEAR'  => $cyear,
+                'CYEAR2' => $val->CYEAR2,
+                'NRUNNO' => $val->NRUNNO,
+                'CEXTDATA' => '01'
+            ];
+            $data_update_flow = [ 'CSTEPNEXTNO' => '18'];
+            $result = $this->trn->update_data('FLOW', $data_update_flow, $where_flow);
+            
+            $data_add_flow = [
+                'NFRMNO' => $nfrmno,
+                'VORGNO' => $vorgno,
+                'CYEAR'  => $cyear,
+                'CYEAR2' => $val->CYEAR2,
+                'NRUNNO' => $val->NRUNNO,
+                'CSTEPNO'     => '18',
+                'CSTEPNEXTNO' => '19',
+                'CSTART'      => '0',
+                'CSTEPST'     => '3',
+                'CTYPE'       => '3',
+                'VPOSNO'      => null,
+                'VAPVNO'      => $val->VAPVNO,
+                'VREPNO'      => $val->VREPNO,
+                'VREALAPV'    => null,
+                'CAPVSTNO'    => '0',
+                'DAPVDATE'    => null,
+                'CAPVTIME'    => null,
+                'CEXTDATA'    => '02',
+                'CAPVTYPE'    => '1',
+                'CREJTYPE'    => null,
+                'CAPPLYALL'   => '0',
+                'VURL'        => 'http://amecwebtest.mitsubishielevatorasia.co.th/form/gpform/GP-TRNRP/trainingreport?sr=1',
+                'VREMARK'     => null,
+                'VREMOTE'     => null
+            ];
+            $result = $this->trn->insert_data('FLOW', $data_add_flow);
+
+            //inset flow Job controller
+            $data_add_flow['CSTEPNO'] = '19';
+            $data_add_flow['CSTEPNEXTNO'] = '00';
+            $data_add_flow['CSTEPST'] = '2';
+            $data_add_flow['VAPVNO'] = '01027'; // 
+            $data_add_flow['VREPNO'] = '14001';
+            $data_add_flow['CEXTDATA'] = '03';
+            $result = $this->trn->insert_data('FLOW', $data_add_flow);
+            echo "insert flow successful !!";
+        }
+           
     }
 
 

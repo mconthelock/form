@@ -14,7 +14,7 @@ require_once APPPATH.'controllers/_excel.php';
 class form extends MY_Controller{
     use formApi, _File, _excel;
     protected $client;
-    private $nfrmno = "14";
+    private $nfrmno = "21";
     private $vorgno = "090301";
     private $cyear = "25";  
     function __construct(){
@@ -386,17 +386,17 @@ class form extends MY_Controller{
                     );
                 }
             } 
+            
             $this->vms->trans_start();
-            $delfn = $this->vms->delete("VMS_STAKEHOLDERS","CYEAR2 = '".$cyear2."' AND NRUNNO = '".$nrunno."'");
+            $delfn = $this->vms->delete("VMS_STAKEHOLDERS",array("CYEAR2" => $cyear2 , "NRUNNO" => $nrunno));
             $this->vms->trans_complete();
-
+      
             if(count($data) > 0)
             {
-
                 try {
                     $status = false;
-                    $insert = $this->vms->insert_batch("VMS_STAKEHOLDERS", $data);
-                    if(!$insert){
+                    $insertrow = $this->vms->insert_batch("VMS_STAKEHOLDERS", $data);
+                    if(!$insertrow ){
                         throw new Exception("Can not insert this Stakeholders", 0);
                     }else{
                         $status = true;
@@ -410,7 +410,8 @@ class form extends MY_Controller{
                     ];
                     echo json_encode($result);
                 }
-            }
+            } 
+     
 
         }else if($tab == "sch")
         {
@@ -434,8 +435,8 @@ class form extends MY_Controller{
                         "CYEAR2"    => $cyear2,
                         "NRUNNO"    => $nrunno,
                         "ID"        => $id,
-                        "SCHSTIME" =>  $visitDate." ".$s,
-                        "SCHETIME"   => $visitDate." ".$endtime[$i],
+                        "SCHSTIME" =>  date('Y-m-d h:i A', strtotime($visitDate.' '.$s)),
+                        "SCHETIME"   => date('Y-m-d h:i A', strtotime($visitDate.' '.$endtime[$i])),
                         "PLACE"     => $place[$i],
                         "CONTENT"   => $content[$i],
                         "AMECP"     => $participants[$i],
@@ -446,17 +447,18 @@ class form extends MY_Controller{
                 $i++;
 
             }
+       
             $this->vms->trans_start();
-            $delfn = $this->vms->delete("VMS_SCHEDULE","CYEAR2 = '".$cyear2."' AND NRUNNO = '".$nrunno."'");
+            $delfn = $this->vms->delete("VMS_SCHEDULE",array("CYEAR2" => $cyear2 , "NRUNNO" => $nrunno));
             $this->vms->trans_complete();
             if(count($data) > 0)
             {
-
                 try {
                     $status = false;
                     foreach($data as $d)
                     {
                         $insert = $this->vms->insert("VMS_SCHEDULE",$d);
+
                     }
 
                     if(!$insert){
@@ -473,7 +475,9 @@ class form extends MY_Controller{
                     ];
                     echo json_encode($result);
                 }
+    
             } 
+         
 
         }else if($tab == "req")
         {
@@ -541,7 +545,7 @@ class form extends MY_Controller{
             $data  = array();
             foreach($name as $n)
             {
-                if($name != "")
+                if($n != "")
                 {
                     $id++;
                     $data[] = array(
@@ -565,7 +569,7 @@ class form extends MY_Controller{
                 if(count($data) > 0)
                 {
                     $this->vms->trans_start();
-                    $delfn = $this->vms->delete("VMS_VISITINF","CYEAR2 = '".$cyear2."' AND NRUNNO = '".$nrunno."'");
+                    $delfn = $this->vms->delete("VMS_VISITINF",array("CYEAR2" => $cyear2 , "NRUNNO" => $nrunno));
                     $this->vms->trans_complete();
                     $this->vms->insert_batch("VMS_VISITINF", $data);
                 }
@@ -603,7 +607,7 @@ class form extends MY_Controller{
             }
             try {
                 $status = true;
-                $this->vms->delete("VMS_AMEC_MEAL","CYEAR2 = '".$cyear2."' AND NRUNNO = '".$nrunno."'");
+                $this->vms->delete("VMS_AMEC_MEAL",array("CYEAR2" => $cyear2 , "NRUNNO" => $nrunno));
                 if(count($data) > 0)
                 {
                     $this->vms->insert_batch("VMS_AMEC_MEAL", $data);
@@ -682,7 +686,7 @@ class form extends MY_Controller{
               }
               try {
                 $status = true;
-                $this->vms->delete("VMS_PROJECT","CYEAR2 = '".$cyear2."' AND NRUNNO = '".$nrunno."'");
+                $this->vms->delete("VMS_PROJECT",array("CYEAR2" => $cyear2 , "NRUNNO" => $nrunno));
                 if(count($data) > 0)
                 {
                     $this->vms->insert_batch("VMS_PROJECT", $data);
@@ -758,7 +762,8 @@ class form extends MY_Controller{
     $nfile = $_POST['nfile'];
     $this->deleteFile($nfile,$path);
     $this->vms->trans_start();
-    $delfn = $this->vms->delete("VMS_ATTFILE","ITEMNO = '".$fid."' AND SFILE = '".$nfile."'");
+   
+    $delfn = $this->vms->delete("VMS_ATTFILE",array("ITEMNO" => $fid , "SFILE" => $nfile));
     $this->vms->trans_complete();
     $res = [
         'status' => $delfn,
@@ -813,9 +818,11 @@ class form extends MY_Controller{
             'CYEAR2' => $vmscyear2,
             'NRUNNO' => $vmsnrunno 
         );
+     
         $rs = $this->vms->getRcp($vmscyear2, $vmsnrunno,"P");
         $head = array();
         $ent = $this->vms->get_vms_ent(array('VMSCYEAR2' => $vmscyear2 , 'VMSNRUNNO' => $vmsnrunno));
+        
         $visitint = $this->vms->customSelect("VMS_VISITINF",$con, '*', '', 'ID');
         $schedule = $this->vms->customSelect("VMS_SCHEDULE",$con, 'TO_CHAR(SCHSTIME, \'HH:MI AM\') as SCHSTIME , TO_CHAR(SCHETIME, \'HH:MI AM\') as SCHETIME , PLACE , CONTENT , AMECP , NOTE ', '', 'ID');
         $con["PROJTYPE"] = "S";
@@ -826,7 +833,6 @@ class form extends MY_Controller{
         $rs = $this->vms->getRcp($vmscyear2, $vmsnrunno,"I");
         $head["CC"] =  (!empty($rs)? $rs[0]->RCP:"");
         $rs = $this->vms->getHeadVisit($this->nfrmno,$this->vorgno,$this->cyear,$vmscyear2,$vmsnrunno);
-          
         $item = $this->vms->getItemReq($vmscyear2,$vmsnrunno);
         $dietary = $this->vms->get_dietary_item($vmscyear2,$vmsnrunno);
         if(!empty($rs))
@@ -858,6 +864,7 @@ class form extends MY_Controller{
 
     public function showFormData()
     {
+          
         echo json_encode($this->getFormData());
     }
 
@@ -1057,7 +1064,7 @@ class form extends MY_Controller{
         {
             $totalRow = $currentRow + 2;
         }else{
-            $totalRow = $currentRow + 3;
+            $totalRow = $currentRow + 4;
         }
         $sheet->setCellValue("S{$totalRow}",   $total);   
         $writer = new Xlsx($spreadsheet);

@@ -1,7 +1,5 @@
 <div class="min-h-[200px] bg-blue-50 py-6 px-4 flex flex-col items-center">
-
-  <div class="bg-white w-full max-w-6xl rounded-2xl shadow-lg p-8 border">
-
+  <div class="bg-white w-full max-w-7xl rounded-2xl shadow-lg p-8 border">
     <h2 class="text-lg font-extrabold text-center text-indigo-700 mb-6">
       จัดการกลุ่มแบบฟอร์ม External Training
     </h2>
@@ -27,7 +25,7 @@
             <tr>
               <th class="py-2 px-2 text-center w-10"> <input type="checkbox" id="chkAll"></th>
               <th class="py-2 px-3 text-left whitespace-nowrap w-32"> FORMNO</th>
-              <th class="py-2 px-3 text-left whitespace-nowrap max-w-[240px] truncate"> SUBJECT</th>
+              <th class="py-2 px-3 text-left whitespace-nowrap max-w-[240px] "> SUBJECT</th>
               <th class="py-2 px-3 text-left whitespace-nowrap w-32">DATE FROM </th>
               <th class="py-2 px-3 text-left whitespace-nowrap w-32"> DATE TO</th>
               <th class="py-2 px-3 text-left whitespace-nowrap max-w-[260px] truncate"> TRAINEE</th>
