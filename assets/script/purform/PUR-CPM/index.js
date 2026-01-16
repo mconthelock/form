@@ -18,6 +18,7 @@ var formInfo, empno, mode, form;
 //prettier-ignore
 $(async function () {
     try {
+        showMessage('test');
         formInfo = await getAllAttr(".form-info");  // get form info from html attribute
         mode = Number(formInfo.mode); // get mode
         empno = $(".apv-data").attr("empno"); // get employee number

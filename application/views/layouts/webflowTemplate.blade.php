@@ -19,7 +19,7 @@
     <title>AMEC Webflow</title>
 
     <link rel="stylesheet" href="{{ $_ENV['APP_CDN'] }}/icofont/icofont.min.css">
-    <link rel="stylesheet" href="{{ base_url() }}assets/dist/css/v1.0.1.min.css?ver={{ $GLOBALS['version'] }}">
+    <link rel="stylesheet" href="{{ base_url() }}assets/dist/css/tailwind.css?ver={{ $GLOBALS['version'] }}">
     @yield('styles')
 </head>
 

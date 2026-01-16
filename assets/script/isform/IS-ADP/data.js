@@ -1,4 +1,4 @@
-import { fetchMsgErr } from "../../api/fetch-utils";
+import { fetchMsgErr } from "@amec/webasset/fetch-utils";
 
 /**
  * @typedef {Object} insertData

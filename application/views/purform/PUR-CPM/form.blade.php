@@ -8,7 +8,7 @@
         gap: 0.75rem;
     }
 
-    fieldset {
+    fieldset:not(:has(.fieldset-label)) {
         display: flex;
     }
 
@@ -230,6 +230,7 @@
                     </div>
                 </section>
             </form>
+            <div class="divider"></div>
             <div id="btnAction"></div>
         </div>
     </div>

@@ -1,22 +1,22 @@
-import { createTable } from "@public/_dataTable";
-import { getData, insertData } from "./data";
+import { createTable } from "@amec/webasset/dataTable";
 import {
     addClassError,
     showErrorMessage,
     showMessage,
     getAllAttr,
-} from "@public/jFuntion";
-import { webflowSubmit } from "@public/component/form";
+} from "@amec/webasset/utils";
+import { webflowSubmit } from "@amec/webasset/components/form";
 import {
     dataTableSkeleton,
     formSubmitSkeleton,
-} from "@public/component/skeleton";
-import { redirectWebflow } from "@public/_form";
-import { showLoader } from "@public/preloader";
-import { doaction, showflow } from "../../api/webform/flow";
-import { getIsFile } from "../../api/isform/is-file";
-import { downloadOrOpenFile } from "../../api/file";
-import { getAnnualFyear } from "../../api/docinv/work-annual-dev-plan";
+} from "@amec/webasset/skeleton";
+import { getData, insertData } from "./data";
+import { redirectWebflow } from "@amec/webasset/form";
+import { showLoader } from "@amec/webasset/preloader";
+import { doaction, showflow } from "@amec/webasset/api/webform";
+import { getIsFile } from "@amec/webasset/api/isform";
+import { downloadOrOpenFile } from "@amec/webasset/api/file";
+import { getAnnualFyear } from "@amec/webasset/api/docinv";
 
 var formInfo,
     empno,
