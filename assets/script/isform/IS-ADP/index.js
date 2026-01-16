@@ -5,7 +5,7 @@ import {
     showMessage,
     getAllAttr,
 } from "@amec/webasset/utils";
-import { webflowSubmit } from "@amec/webasset/components/form";
+import { webflowSubmit, getformDetail } from "@amec/webasset/components/form";
 import {
     dataTableSkeleton,
     formSubmitSkeleton,
@@ -84,26 +84,34 @@ $(async function () {
         mode = Number(formInfo.mode); // get mode
         empno = $(".apv-data").attr("empno"); // get employee number
         fyear = month <= 4 ? year - 1 : year; 
-        form = {
-            NFRMNO: formInfo.nfrmno,
-            VORGNO: formInfo.vorgno,
-            CYEAR: formInfo.cyear,
-            CYEAR2: formInfo.cyear2,
-            NRUNNO: formInfo.nrunno,
-        };
+        
         $(".fyear").text(fyear);
-        const flow = await showflow(form);
-        const file = await getIsFile(form);
-        if(file.length > 0){
-            let fileLink = "<div class='flex flex-col gap-3 mt-5'>";
-            file.forEach(f => {
-                fileLink +=  `<a href="${f.FILE_PATH}" storedName="${f.FILE_FNAME}" class="file-link text-primary flex items-center gap-3 w-full border rounded-lg bg-base-100 p-3"><i class="icofont-file-excel text-success text-4xl"></i><span class="link link-primary">${f.FILE_ONAME}</span></a>`;
-            });
-            fileLink += "</div>";
-            $("#attachFile").html(fileLink);
-        }
+        
         // set skeleton
         await setSkeleton(mode);
+
+        let flow = null;
+        if(mode != 1){
+            form = {
+                NFRMNO: formInfo.nfrmno,
+                VORGNO: formInfo.vorgno,
+                CYEAR: formInfo.cyear,
+                CYEAR2: formInfo.cyear2,
+                NRUNNO: formInfo.nrunno,
+            };
+            flow = await showflow(form);
+            const file = await getIsFile(form);
+            if(file.length > 0){
+                let fileLink = "<div class='flex flex-col gap-3 mt-5'>";
+                file.forEach(f => {
+                    fileLink +=  `<a href="${f.FILE_PATH}" storedName="${f.FILE_FNAME}" class="file-link text-primary flex items-center gap-3 w-full border rounded-lg bg-base-100 p-3"><i class="icofont-file-excel text-success text-4xl"></i><span class="link link-primary">${f.FILE_ONAME}</span></a>`;
+                });
+                fileLink += "</div>";
+                $("#attachFile").html(fileLink);
+            }
+            const formdetail = await getformDetail(form);
+            $("#form-detail").html(formdetail);
+        }
         // create datatable
         table = await createDataTable();
         tableLoading.remove();

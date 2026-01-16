@@ -14,6 +14,7 @@
             <div class="absolute right-10 top-10 ml-auto px-2 font-bold text-2xl text-error border-3 border-error">
                 CONFIDENTAIL</div>
             <div id="detail" class="flex flex-col gap-5">
+                <div id="form-detail"></div>
                 <div class="detail-topic">
                     <u class="text-xl font-bold">1. FY<span class="fyear"></span> Development policy</u>
                 </div>
