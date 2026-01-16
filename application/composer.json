@@ -13,7 +13,10 @@
     },
     "config": {
         "platform": {
-            "php": "7.4.33"
+            "php": "7.2.15"
+        },
+        "audit": {
+            "block-insecure": false
         },
         "allow-plugins": {
             "kylekatarnls/update-helper": true

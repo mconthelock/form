@@ -1,20 +1,14 @@
 .DS_Store
 .env
-package-lock.json
-./.vscode
+.env.development
+.env.production
+.env.backup
 /node_modules
-system
 assets/dist
 application/cache
-application/config
 application/logs
-application/third_party
 application/vendor
-application/core/MY_Controller.php
-application/composer.lock
 
 docs/dist
 docs/.vitepress/cache
 backup
-
-docs-functions
