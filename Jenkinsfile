@@ -72,7 +72,7 @@ pipeline {
         stage('PHP Prep (Composer)') {
             steps {
                 dir('application') {
-                    sh 'composer update --optimize-autoloader'
+                    sh 'composer update --optimize-autoloader --ignore-platform-req=ext-curl'
                 }
                 echo "PHP preparation with Composer done."
             }
