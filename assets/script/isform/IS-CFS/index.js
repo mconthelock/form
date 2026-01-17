@@ -1,13 +1,13 @@
-import { elementDragDrop, handleFiles } from "../../inc/_dragdrop";
-import { fileFormats } from "../../inc/_file";
+import { elementDragDrop, handleFiles } from "@amec/webasset/dragdrop";
+import { fileFormats } from "@amec/webasset/file";
 import {
 	toggleActionForm,
 	doactionWebservice,
 	redirectWebflow,
 	showFlow,
-} from "../../inc/_form";
-import { destroySelect2, s2opt, setSelect2 } from "../../inc/_select2";
-import { mailForm, mailOpt, sendMail } from "../../inc/_sendmail";
+} from "@amec/webasset/form";
+import { destroySelect2, s2opt, setSelect2 } from "@amec/webasset/select2";
+import { mailForm, mailOpt, sendMail } from "@amec/webasset/sendmail";
 import {
 	ajaxOptions,
 	ajaxOptionsLoad,
@@ -16,10 +16,10 @@ import {
 	removeClassError,
 	requiredForm,
 	showMessage,
-} from "../../jFuntion";
-import { displayEmpImage, host, showLoader } from "../../utils";
-import { getAmecusers } from "../../webservice";
-import { searchUser } from "amec/webassets/api/amec";
+} from "@amec/webasset/utils";
+import { searchUser } from "@amec/webasset/api/amec";
+import { displayEmpImage } from "@amec/webasset/indexDB";
+import { host, showLoader } from "../../utils";
 
 var programs,
 	NFRMNO,
@@ -81,7 +81,7 @@ $(async function () {
 				return data.id;
 			},
 		},
-		"#sysCode"
+		"#sysCode",
 	);
 	await setReleaser();
 	programs = await getProgramList();
@@ -119,7 +119,7 @@ async function setReleaser() {
                         <div class="w-8 rounded-full"><img src="${imgSrc}" /></div>
                     </div>
                     <div>${val.text}</div>
-                </div>`
+                </div>`,
 		);
 	};
 
@@ -132,7 +132,7 @@ async function setReleaser() {
 			(el.SSECCODE == "050604" || el.SSECCODE == "050602")
 		) {
 			$("#select-developer").append(
-				`<option value="${el.SEMPNO}" data-img="${img}">${el.SNAME} (${el.SEMPNO})</option>`
+				`<option value="${el.SEMPNO}" data-img="${img}">${el.SNAME} (${el.SEMPNO})</option>`,
 			);
 		}
 	});
@@ -147,7 +147,7 @@ async function setReleaser() {
 				return markup; // ปิดการ escape เพื่อแสดง HTML
 			},
 		},
-		"#select-developer"
+		"#select-developer",
 	);
 }
 
@@ -161,7 +161,7 @@ async function setProgram(division, type) {
 	console.log(division, type);
 
 	const filteredPrograms = programs.filter(
-		(p) => p.DIVCODE == division && p.PROTID == type
+		(p) => p.DIVCODE == division && p.PROTID == type,
 	);
 	console.log(filteredPrograms);
 
@@ -184,7 +184,7 @@ async function setProgram(division, type) {
 	$("#program_name").append(`<option value="" ></option>`);
 	uniqueFilteredPrograms.forEach((program) => {
 		$("#program_name").append(
-			`<option value="${program.PROMID}" data-name="${program.PROMNAME}" data-id="${program.PROMID}">${program.TITLE}</option>`
+			`<option value="${program.PROMID}" data-name="${program.PROMNAME}" data-id="${program.PROMID}">${program.TITLE}</option>`,
 		);
 	});
 	setSelect2(s2opt, "#program_name");
@@ -193,7 +193,7 @@ async function setProgram(division, type) {
 async function setNewProgram() {
 	await destroySelect2("#program_name");
 	$("#program_name").replaceWith(
-		`<input type="text" class="input w-full req" name="program_name" id="program_name" placeholder="e.g. SCM" required />`
+		`<input type="text" class="input w-full req" name="program_name" id="program_name" placeholder="e.g. SCM" required />`,
 	);
 }
 
@@ -346,7 +346,7 @@ $(document).on("click", "#savenewprogram", async function () {
 		// programs = await getProgramList();
 		programs.forEach((program) => {
 			$("#sysCode").append(
-				`<option value="${program.SYSCODE}" data-name="${program.PROMNAME}"  data-id="${program.PROMID}" data-type="${program.PROTID}" data-code="${program.DIVCODE}">${program.TITLE}</option>`
+				`<option value="${program.SYSCODE}" data-name="${program.PROMNAME}"  data-id="${program.PROMID}" data-type="${program.PROTID}" data-code="${program.DIVCODE}">${program.TITLE}</option>`,
 			);
 		});
 		// module   = await getModule();
@@ -393,7 +393,7 @@ $(document).on("blur", 'input[name="reqNo"]', async function () {
 		$(this).val("");
 		showMessage(
 			"กรุณากรอกเลขที่คำร้องให้ถูกต้อง เช่น IS-DEV25-000127",
-			"warning"
+			"warning",
 		);
 		return;
 	}
@@ -435,7 +435,7 @@ $(document).on(
 
 		// handleFiles($(this)[0].files, element, format);
 		handleFiles($(this)[0].files, element, fileFormats[format]);
-	}
+	},
 );
 
 $(document).on("click", "button[name='btnAction']", async function () {
@@ -477,7 +477,7 @@ $(document).on("click", "button[name='btnAction']", async function () {
 			NRUNNO,
 			action,
 			empno,
-			remark
+			remark,
 		);
 
 		if (formStatus.status == true) {
@@ -488,7 +488,7 @@ $(document).on("click", "button[name='btnAction']", async function () {
 		}
 	} catch (e) {
 		showMessage(
-			`เกิดข้อผิดพลาด: ${e.message} กรุณาลองใหม่อีกครั้งหรือติดต่อ Admin Tel:2038`
+			`เกิดข้อผิดพลาด: ${e.message} กรุณาลองใหม่อีกครั้งหรือติดต่อ Admin Tel:2038`,
 		);
 		const mail = { ...mailOpt };
 		mail.BODY = [

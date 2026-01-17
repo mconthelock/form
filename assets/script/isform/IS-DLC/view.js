@@ -1,4 +1,4 @@
-import { tableOption } from "../../inc/_dataTable.js";
+import { tableOption } from "@amec/webasset/dataTable";
 import { showFlow, doaction, redirectWebflow } from "@amec/webasset/form";
 
 $(document).ready(async function () {
@@ -21,7 +21,7 @@ $(document).ready(async function () {
 			nrunno,
 			action,
 			empno,
-			""
+			"",
 		);
 		if (confirm.status) redirectWebflow();
 	});

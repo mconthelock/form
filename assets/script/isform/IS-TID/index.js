@@ -10,14 +10,14 @@ import {
 	addMinutesToTime,
 } from "@amec/webasset/utils";
 import { fpkTimeOpt, setDatePicker } from "@amec/webasset/flatpickr";
-import { mailOpt, sendMail } from "@public/_sendmail";
-import { addInput, removeInput } from "@public/addRemoveInput";
+import { mailOpt, sendMail } from "@amec/webasset/sendmail";
+import { addInput, removeInput } from "@amec/webasset/input-crud";
 import { showLoader } from "@amec/webasset/preloader";
-import "@public/_tooltip";
+import "@amec/webasset/tooltip";
 import { getController, getUserLogin } from "./data";
 import { displayEmpImage } from "@amec/webasset/indexDB";
 import { searchUser } from "@amec/webasset/api/amec";
-import { getRequestNo } from "../../api/webform/form";
+import { getRequestNo } from "@amec/webasset/api/webform";
 import { createForm2, deleteForm, redirectWebflow } from "@amec/webasset/form";
 
 import {
@@ -109,7 +109,7 @@ $(document).on("blur", 'input[name="reqNo[]"]', async function () {
 		$(this).val("");
 		showMessage(
 			"กรุณากรอกเลขที่คำร้องให้ถูกต้อง เช่น IS-DEV25-000127",
-			"warning"
+			"warning",
 		);
 		return;
 	}
@@ -158,9 +158,9 @@ const optUserLogin = (serverName) => {
 			return el.SERVER_NAME.trim() == serverName.trim()
 				? `<option value="${
 						el.USER_LOGIN
-				  }" data-html="${el?.USER_OWNER.trim()} (${el?.EMPNO.trim()})" data-img="${
+					}" data-html="${el?.USER_OWNER.trim()} (${el?.EMPNO.trim()})" data-img="${
 						empImage[el.EMPNO]
-				  }">
+					}">
                 ${el.USER_LOGIN}
         </option>`
 				: "";
@@ -174,9 +174,9 @@ const optCtrl = (serverName) => {
 			return el.SERVER_NAME.trim() == serverName.trim()
 				? `<option value="${
 						el.USER_LOGIN
-				  }" data-html="${el?.USER_OWNER.trim()} (${el.EMPNO?.trim()})" data-img="${
+					}" data-html="${el?.USER_OWNER.trim()} (${el.EMPNO?.trim()})" data-img="${
 						empImage[el.EMPNO]
-				  }">
+					}">
                 ${el.USER_LOGIN}
         </option>`
 				: "";
@@ -281,12 +281,12 @@ $(document).on("submit", "#form", async function (e) {
 			if (round == 2) {
 				const ctrlRequester = (
 					ctrl.find(
-						(el) => el.USER_LOGIN == $("#controller").val()
+						(el) => el.USER_LOGIN == $("#controller").val(),
 					) || {}
 				).EMPNO;
 				formData.set(
 					"ctrlPEnd",
-					addMinutesToTime($("#pEnd").val(), 30)
+					addMinutesToTime($("#pEnd").val(), 30),
 				);
 				formData.set("ctrlUserID", $("#controller").val());
 				formData.set("ctrlRequester", ctrlRequester.trim());
@@ -294,7 +294,7 @@ $(document).on("submit", "#form", async function (e) {
 				formData.set("ctrlController", "");
 				formData.set(
 					"ctrlWorkCon",
-					`Enable and disable for user : ${$("#userID").val()}`
+					`Enable and disable for user : ${$("#userID").val()}`,
 				);
 				formInfo = await createForm2(
 					NFRMNO,
@@ -302,7 +302,7 @@ $(document).on("submit", "#form", async function (e) {
 					CYEAR,
 					ctrlRequester.trim(),
 					ctrlRequester.trim(),
-					""
+					"",
 				);
 				formCreate.push(formInfo.message);
 				for (const key in formInfo.message) {
@@ -315,7 +315,7 @@ $(document).on("submit", "#form", async function (e) {
 					CYEAR,
 					empno,
 					empno,
-					""
+					"",
 				);
 				formCreate.push(formInfo.message);
 				for (const key in formInfo.message) {
@@ -373,14 +373,14 @@ $(document).on("submit", "#form", async function (e) {
 				el.message.owner,
 				el.message.cyear,
 				el.message.cyear2,
-				el.message.runno
+				el.message.runno,
 			);
 		});
 		formCreate.forEach((el) => {
 			deleteForm(el.formtype, el.owner, el.cyear, el.cyear2, el.runno);
 		});
 		showMessage(
-			`เกิดข้อผิดพลาด: ${e.message} กรุณาลองใหม่อีกครั้งหรือติดต่อ Admin Tel:2038`
+			`เกิดข้อผิดพลาด: ${e.message} กรุณาลองใหม่อีกครั้งหรือติดต่อ Admin Tel:2038`,
 		);
 		const mail = { ...mailOpt };
 		mail.BODY = [
