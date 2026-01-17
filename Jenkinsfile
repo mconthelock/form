@@ -60,7 +60,7 @@ pipeline {
                             npm install
                             npm update @amec/webasset
                             npm run build
-                            npm run build:docs
+                            npm run docs:build
 
                             git config --global --unset url."https://${GIT_USER}:${GIT_PASS}@webhub.mitsubishielevatorasia.co.th/".insteadOf
                         '''
