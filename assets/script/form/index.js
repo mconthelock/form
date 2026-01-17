@@ -1,9 +1,5 @@
-import {
-	tableOption,
-	showLoader,
-	displayEmpImage,
-	displayEmpInfo,
-} from "../utils.js";
+import { tableOption, showLoader } from "../utils.js";
+import { displayEmpImage, displayEmpInfo } from "@amec/webasset/indexDB";
 
 var table;
 $(document).ready(async function () {
@@ -152,7 +148,7 @@ async function createTable(data) {
 					}
 					return `<div class="text-center text-nowrap">${data} ${row.CREQTIME.substring(
 						0,
-						5
+						5,
 					)}</div>`;
 				}
 				return data == null
@@ -171,7 +167,7 @@ async function createTable(data) {
 					}
 					return `<div class="text-center text-nowrap">${data} ${row.PREV_APVTIME.substring(
 						0,
-						5
+						5,
 					)}</div>`;
 				}
 				return data == null
@@ -198,12 +194,12 @@ $(document).on(
 			const data = rows.data();
 			await fillImgs(row, data);
 		}
-	}
+	},
 );
 
 async function fillImgs(row, data) {
 	const obj1 = $(row).find(
-		`#input-${data.NFRMNO}-${data.VORGNO}-${data.CYEAR}-${data.CYEAR2}-${data.NRUNNO}`
+		`#input-${data.NFRMNO}-${data.VORGNO}-${data.CYEAR}-${data.CYEAR2}-${data.NRUNNO}`,
 	);
 	//const element = $(row).find(obj1);
 	const img = await displayEmpImage(data.VINPUTER);
@@ -211,7 +207,7 @@ async function fillImgs(row, data) {
 	obj1.removeClass("hidden");
 
 	const obj2 = $(row).find(
-		`#req-${data.NFRMNO}-${data.VORGNO}-${data.CYEAR}-${data.CYEAR2}-${data.NRUNNO}`
+		`#req-${data.NFRMNO}-${data.VORGNO}-${data.CYEAR}-${data.CYEAR2}-${data.NRUNNO}`,
 	);
 	//const element2 = $(row).find(obj2);
 	const img2 = await displayEmpImage(data.VREQNO);
@@ -221,13 +217,13 @@ async function fillImgs(row, data) {
 
 async function fillOrg(row, data) {
 	const obj1 = $(row).find(
-		`#inputorg-${data.NFRMNO}-${data.VORGNO}-${data.CYEAR}-${data.CYEAR2}-${data.NRUNNO}`
+		`#inputorg-${data.NFRMNO}-${data.VORGNO}-${data.CYEAR}-${data.CYEAR2}-${data.NRUNNO}`,
 	);
 	const info = await displayEmpInfo(data.VINPUTER);
 	obj1.html(`${info.SDIV}-${info.SDEPT}-${info.SSEC}`);
 
 	const obj2 = $(row).find(
-		`#reqorg-${data.NFRMNO}-${data.VORGNO}-${data.CYEAR}-${data.CYEAR2}-${data.NRUNNO}`
+		`#reqorg-${data.NFRMNO}-${data.VORGNO}-${data.CYEAR}-${data.CYEAR2}-${data.NRUNNO}`,
 	);
 	const info2 = await displayEmpInfo(data.VREQNO);
 	obj2.html(`${info2.SDIV}-${info2.SDEPT}-${info2.SSEC}`);
