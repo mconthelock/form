@@ -12,8 +12,6 @@ class Authen extends MY_Controller {
     }
 
     public function index($id = 1){
-        echo $_ENV['APP_APIPHP'];
-        exit;
         if(!isset($_SESSION['user'])) {
             $data =  array('pageid' => 'login', 'id' => $id);
             $this->views('auth/login', $data);
