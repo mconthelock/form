@@ -1,20 +1,25 @@
-import { getEscsItems } from "../../api/escs/item";
-import { getEscsUsers } from "../../api/escs/user";
-import { getUserAuthorizeView } from "../../api/escs/user_authorize";
-import { setStickyColumns } from "@public/_dataTable";
-import { setSelect2 } from "@public/_select2";
-import { select } from "@public/component/form";
-import { skeleton, skeletons } from "@public/component/skeleton";
-import { showErrorMessage } from "@public/jFuntion";
+import { getEscsItems } from "@amec/webasset/api/escs";
+import { getEscsUsers } from "@amec/webasset/api/escs";
+import { getUserAuthorizeView } from "@amec/webasset/api/escs";
+import { setStickyColumns } from "@amec/webasset/dataTable";
+import { setSelect2 } from "@amec/webasset/select2";
+import { select } from "@amec/webasset/components/form";
+import { skeleton, skeletons } from "@amec/webasset/skeleton";
+import { showErrorMessage } from "@amec/webasset/utils";
 import { setMedalReportList } from "./template";
-import { defaultExcel, exportExcel, mergeCell, border } from "@public/_excel";
+import {
+	defaultExcel,
+	exportExcel,
+	mergeCell,
+	border,
+} from "@amec/webasset/excel";
 
 var userID = "",
-    user = [],
-    item = [],
-    authData = [],
-    dataExcel = [],
-    flagFilter = false;
+	user = [],
+	item = [],
+	authData = [],
+	dataExcel = [],
+	flagFilter = false;
 
 // prettier-ignore
 $(async function () {
@@ -77,18 +82,23 @@ $(async function () {
  * skeletonTable();
  */
 function skeletonTable() {
-    skeletons({
-        idLoading: "reportList",
-        pattern: [
-            { width: "w-96", height: "h-11" },
-            { width: "w-48", height: "h-11", type: "horizontal", flag: "start"},
-            { width: "w-48", height: "h-11", type: "horizontal"},
-            { width: "w-24", height: "h-11", type: "horizontal"},
-            { width: "w-24", height: "h-11", type: "horizontal", flag: "end"},
-            { width: "w-full", height: "h-[70vh]" },
-        ],
-        count: 6,
-    });
+	skeletons({
+		idLoading: "reportList",
+		pattern: [
+			{ width: "w-96", height: "h-11" },
+			{
+				width: "w-48",
+				height: "h-11",
+				type: "horizontal",
+				flag: "start",
+			},
+			{ width: "w-48", height: "h-11", type: "horizontal" },
+			{ width: "w-24", height: "h-11", type: "horizontal" },
+			{ width: "w-24", height: "h-11", type: "horizontal", flag: "end" },
+			{ width: "w-full", height: "h-[70vh]" },
+		],
+		count: 6,
+	});
 }
 
 /**
@@ -103,18 +113,18 @@ function skeletonTable() {
  * await setTable("0");
  */
 async function setTable(section) {
-    try {
-        skeletonTable();
-        const { data, allItem, secName, itemList } = await getDataAuthorize(
-            section
-        );
-        authData = data;
-        await createReportTable(data, allItem, secName, itemList);
-        setStickyColumns($("#tableReport"));
-    } catch (err) {
-        console.log(err);
-        showErrorMessage(err.message || err);
-    }
+	try {
+		skeletonTable();
+		const { data, allItem, secName, itemList } = await getDataAuthorize(
+			section
+		);
+		authData = data;
+		await createReportTable(data, allItem, secName, itemList);
+		setStickyColumns($("#tableReport"));
+	} catch (err) {
+		console.log(err);
+		showErrorMessage(err.message || err);
+	}
 }
 
 /**
@@ -135,37 +145,37 @@ async function setTable(section) {
  * await getDataAuthorize("0");
  */
 async function getDataAuthorize(section = "0") {
-    const condition =
-        section == "0"
-            ? { USR_STATUS: 1 }
-            : { USR_STATUS: 1, SSECCODE: section };
-    const auth = await getUserAuthorizeView(condition);
-    const allItem = item.map((i) => i.IT_NO);
-    const secName =
-        section == "0"
-            ? "All Sections"
-            : user.find((u) => u.SSECCODE == section)?.SSEC || "";
+	const condition =
+		section == "0"
+			? { USR_STATUS: 1 }
+			: { USR_STATUS: 1, SSECCODE: section };
+	const auth = await getUserAuthorizeView(condition);
+	const allItem = item.map((i) => i.IT_NO);
+	const secName =
+		section == "0"
+			? "All Sections"
+			: user.find((u) => u.SSECCODE == section)?.SSEC || "";
 
-    // กรองข้อมูล user ตาม section
-    const data = user
-        .filter((d, index) => {
-            if (section == "0") return d;
-            if (d.SSECCODE == section) {
-                return d;
-            }
-        })
-        // ผูกข้อมูล authorize กับ user
-        .map((u) => {
-            u.auth = auth.filter((a) => a.USR_NO == u.USR_NO);
-            return u;
-        });
-    // สร้างรายการ item ที่มี authorize ไม่ซ้ำ
-    const itemList = data
-        .map((d) => d.auth.map((a) => a.IT_NO))
-        .flat()
-        .filter((item, index, self) => self.indexOf(item) === index)
-        .sort();
-    return { data, allItem, secName, itemList };
+	// กรองข้อมูล user ตาม section
+	const data = user
+		.filter((d, index) => {
+			if (section == "0") return d;
+			if (d.SSECCODE == section) {
+				return d;
+			}
+		})
+		// ผูกข้อมูล authorize กับ user
+		.map((u) => {
+			u.auth = auth.filter((a) => a.USR_NO == u.USR_NO);
+			return u;
+		});
+	// สร้างรายการ item ที่มี authorize ไม่ซ้ำ
+	const itemList = data
+		.map((d) => d.auth.map((a) => a.IT_NO))
+		.flat()
+		.filter((item, index, self) => self.indexOf(item) === index)
+		.sort();
+	return { data, allItem, secName, itemList };
 }
 
 /**
@@ -202,7 +212,7 @@ async function createReportTable(data, allItem, secName, itemList) {
                 const itemAuth = d.auth.filter((a) => a.IT_NO == it);
                 if (itemAuth.length > 0) {
                     const item = itemAuth.find((a) => a.STATION_NO == 0);
-                    
+
                     let medal = "";
                     if (item.TEST_DATE) {
                         medal = setMedalReportList(item.PERCENT, item.TEST_DATE);
@@ -304,7 +314,7 @@ function searchInTable(empno, item) {
     let emp = [],
         it = [];
     dataExcel = [];
-    
+
     $(`#tableReport tbody tr`).each(function () {
         if($(this).hasClass('no-data-row')) return;
         const rowEmpNo = $(this).find("td:nth-child(2)").text();
@@ -381,35 +391,35 @@ function searchInTable(empno, item) {
 }
 
 $(document).on("change", "#selectSection", async function () {
-    const section = $(this).val();
-    await setTable(section);
+	const section = $(this).val();
+	await setTable(section);
 });
 
 // แสดง modal คะแนน เมื่อทำการคลิกที่ไอคอนเหรียญ
 $(document).on("click", ".showScore", function () {
-    const rowIndex = $(this).closest("tr").index();
-    const userData = authData[rowIndex];
-    const itemNo = $(this).attr("item");
-    const scoreList = userData?.auth
-        .filter((u) => u.IT_NO == itemNo)
-        .map((a) => {
-            return `<tr>
+	const rowIndex = $(this).closest("tr").index();
+	const userData = authData[rowIndex];
+	const itemNo = $(this).attr("item");
+	const scoreList = userData?.auth
+		.filter((u) => u.IT_NO == itemNo)
+		.map((a) => {
+			return `<tr>
                 <td class="text-left">${
-                    a.STATION_NO == 0
-                        ? "MASTER"
-                        : a?.STATION.ITS_STATION_NAME || "-"
-                }</td>
+					a.STATION_NO == 0
+						? "MASTER"
+						: a?.STATION.ITS_STATION_NAME || "-"
+				}</td>
                 <td class="text-center">${
-                    a.GRADE != "C"
-                        ? '<i class="icofont-check-circled text-success text-xl"></i>'
-                        : '<i class="icofont-close-circled text-error text-xl"></i>'
-                }</td>
+					a.GRADE != "C"
+						? '<i class="icofont-check-circled text-success text-xl"></i>'
+						: '<i class="icofont-close-circled text-error text-xl"></i>'
+				}</td>
                 <td class="text-center">${a.SCORE ?? "-"}</td>
                 <td class="text-center">${a.GRADE ?? "-"}</td>
             </tr>`;
-        })
-        .join("");
-    const html = `<table class="table table-zebra w-full" id="tableScoreboard">
+		})
+		.join("");
+	const html = `<table class="table table-zebra w-full" id="tableScoreboard">
         <thead>
             <tr class="bg-[#bdd7ee]">
                 <th class="text-center">Station</th>
@@ -422,17 +432,17 @@ $(document).on("click", ".showScore", function () {
             ${scoreList}
         </tbody>
     </table>`;
-    $("#itemNo").text(itemNo);
-    $("#fullName").text(`${userData?.SEMPPRE || ""} ${userData?.SNAME || ""}`);
-    $("#tableScoreboard").html(html);
-    $("#scoreBoard").prop("checked", true);
+	$("#itemNo").text(itemNo);
+	$("#fullName").text(`${userData?.SEMPPRE || ""} ${userData?.SNAME || ""}`);
+	$("#tableScoreboard").html(html);
+	$("#scoreBoard").prop("checked", true);
 });
 
 // หากมีการล้างค่า section ให้รีเซ็ตตาราง
 $(document).on("select2:clear", "#selectSection", async function () {
-    $("#selectSection").val("0").trigger("change");
-    setTimeout(() => $("#selectSection").select2("close"), 100);
-    await setTable("0");
+	$("#selectSection").val("0").trigger("change");
+	setTimeout(() => $("#selectSection").select2("close"), 100);
+	await setTable("0");
 });
 
 // prettier-ignore
@@ -440,7 +450,7 @@ $(document).on("change", "#searchEmp", async function () {
     if(!flagFilter){
         flagFilter = true;
         $(this).prop('disabled', true);
-    } 
+    }
     const empNo = $(this).val();
     const eIt = $("#searchItem");
     const { emp, it } = searchInTable(empNo, eIt.val());
@@ -470,7 +480,7 @@ $(document).on("change", "#searchEmp", async function () {
             })),
         });
     }
-    
+
     // สร้าง select2 ใหม่
     await setSelect2({
         element: "#searchItem",
@@ -522,17 +532,17 @@ $(document).on("change", "#searchItem", async function () {
 
 // ล้างการกรอง
 $(document).on("click", "#clearFilter", async function () {
-    $("#searchEmp").val("").trigger("change");
-    $("#searchItem").val("").trigger("change");
-    $("#searchEmp").prop("disabled", false);
-    $("#searchItem").prop("disabled", false);
-    flagFilter = false;
+	$("#searchEmp").val("").trigger("change");
+	$("#searchItem").val("").trigger("change");
+	$("#searchEmp").prop("disabled", false);
+	$("#searchItem").prop("disabled", false);
+	flagFilter = false;
 });
 
 $(document).on("click", "#exportExcel", async function () {
-    const data = await getDataAuthorize($("#selectSection").val());
-    // prettier-ignore
-    const excel = await defaultExcel({
+	const data = await getDataAuthorize($("#selectSection").val());
+	// prettier-ignore
+	const excel = await defaultExcel({
         manual: true,
         extraWidth: 5,
         autoWidth: false,
@@ -606,5 +616,5 @@ $(document).on("click", "#exportExcel", async function () {
 
         },
     });
-    exportExcel(excel, `Authorize_Report_${data.secName.replace(/ /g, "_")}`);
+	exportExcel(excel, `Authorize_Report_${data.secName.replace(/ /g, "_")}`);
 });

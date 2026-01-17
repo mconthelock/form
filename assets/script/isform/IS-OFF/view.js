@@ -5,12 +5,12 @@ import {
     setformDetail,
     showFlow,
     toggleActionForm,
-} from "@public/_form";
+} from "@amec/webasset/form";
 import { mailForm, mailOpt, sendMail } from "../../inc/_sendmail";
 import { ajaxOptionsLoad, getData, showMessage } from "../../jFuntion";
 import { displayEmpImage, host, showLoader } from "../../utils";
-import { doaction, searchFlow, updateFlow } from "../../api/webform/flow";
-import { formatDate } from "@public/_dayjs";
+import { doaction, searchFlow, updateFlow } from @amec/webasset/webform;
+import { formatDate } from "@amec/webasset/dayjs";
 
 var NFRMNO,
     VORGNO,
@@ -192,7 +192,7 @@ $(document).on("click", "button[name='btnAction']", async function () {
         }
     } catch (e) {
         console.error(e);
-        
+
         showMessage(
             `เกิดข้อผิดพลาด: ${e.message} กรุณาลองใหม่อีกครั้งหรือติดต่อ Admin Tel:2038`
         );

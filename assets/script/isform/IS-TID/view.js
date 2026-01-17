@@ -5,12 +5,12 @@ import {
 	getData,
 	requiredForm,
 	showMessage,
-} from "@public/jFuntion";
+} from "@amec/webasset/utils";
 import { mailOpt, sendMail, mailForm } from "@public/_sendmail";
-import { showflow } from "../../api/webform/flow";
-import { getformDetail, webflowSubmit } from "@public/component/form";
-import { doactionWebservice } from "@public/_form";
-import { redirectWebflow } from "@public/_form";
+import { showflow } from "@amec/webasset/form";
+import { getformDetail, webflowSubmit } from "@amec/webasset/components/form";
+import { doactionWebservice } from "@amec/webasset/form";
+import { redirectWebflow } from "@amec/webasset/form";
 import { fpkTimeOpt, setDatePicker } from "@amec/webasset/flatpickr";
 
 var NFRMNO, VORGNO, CYEAR, CYEAR2, NRUNNO, empno, cextData, mode;

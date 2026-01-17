@@ -5,11 +5,15 @@ import {
 	logFormData,
 	requiredForm,
 	showMessage,
-} from "@public/jFuntion";
-import { showLoader } from "@public/preloader";
+} from "@amec/webasset/utils";
+import { showLoader } from "@amec/webasset/preloader";
 import { host } from "../../utils";
-import { createTable, destroyTable } from "@public/_dataTable";
-import { formatAvatar, s2disableSearch, setSelect2 } from "@public/_select2";
+import { createTable, destroyTable } from "@amec/webasset/dataTable";
+import {
+	formatAvatar,
+	s2disableSearch,
+	setSelect2,
+} from "@amec/webasset/select2";
 import { createForm, redirectWebflow } from "@amec/webasset/form";
 import Swal from "sweetalert2";
 

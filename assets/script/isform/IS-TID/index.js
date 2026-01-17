@@ -8,17 +8,17 @@ import {
 	ajaxOptionsLoad,
 	autosizeTextarea,
 	addMinutesToTime,
-} from "@public/jFuntion";
+} from "@amec/webasset/utils";
 import { fpkTimeOpt, setDatePicker } from "@amec/webasset/flatpickr";
 import { mailOpt, sendMail } from "@public/_sendmail";
 import { addInput, removeInput } from "@public/addRemoveInput";
-import { showLoader } from "@public/preloader";
+import { showLoader } from "@amec/webasset/preloader";
 import "@public/_tooltip";
 import { getController, getUserLogin } from "./data";
-import { displayEmpImage } from "@public/setIndexDB";
+import { displayEmpImage } from "@amec/webasset/indexDB";
 import { searchUser } from "@amec/webasset/api/amec";
 import { getRequestNo } from "../../api/webform/form";
-import { createForm2, deleteForm, redirectWebflow } from "@public/_form";
+import { createForm2, deleteForm, redirectWebflow } from "@amec/webasset/form";
 
 import {
 	flagSelect,
@@ -26,7 +26,7 @@ import {
 	s2disableSearch,
 	s2opt,
 	setSelect2,
-} from "@public/_select2";
+} from "@amec/webasset/select2";
 
 var emp,
 	empno,

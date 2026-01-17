@@ -1,10 +1,10 @@
-import { showLoader } from "@public/preloader";
-import { requiredForm, ajaxOptions, getData } from "@public/jFuntion";
+import { showLoader } from "@amec/webasset/preloader";
+import { requiredForm, ajaxOptions, getData } from "@amec/webasset/utils";
 import { host } from "../../utils";
 import Swal from "sweetalert2";
 import { setDatePicker, setDatefpk } from "@amec/webasset/flatpickr";
-import { createTable } from "@public/_dataTable";
-import { exportExcel, defaultExcel } from "@public/_excel";
+import { createTable } from "@amec/webasset/dataTable";
+import { exportExcel, defaultExcel } from "@amec/webasset/excel";
 setDatePicker({ element: ".datesel", dateFormat: "Y-m-d" });
 setDatePicker({
 	element: ".monthsel",

@@ -1,23 +1,23 @@
 // import { downloadOrOpenFile, getEscsUsers, showflow } from "../../api";
-import { downloadOrOpenFile } from "../../api/file";
-import { getEscsUsers } from "../../api/escs/user";
-import { doaction, showflow } from "../../api/webform/flow";
-import { createTable } from "@public/_dataTable";
+import { downloadOrOpenFile } from "@amec/webasset/api/file";
+import { getEscsUsers } from "@amec/webasset/api/escs";
+import { doaction, showflow } from "@amec/webasset/api/webform";
+import { createTable } from "@amec/webasset/dataTable";
 import { setDatePicker } from "@amec/webasset/flatpickr";
-import { setSelect2 } from "@public/_select2";
+import { setSelect2 } from "@amec/webasset/select2";
 import {
 	getformDetail,
 	input,
 	select,
 	webflowSubmit,
-} from "@public/component/form";
+} from "@amec/webasset/components/form";
 import {
 	dataTableSkeleton,
 	formDetailSkeleton,
 	formSubmitSkeleton,
 	skeleton,
 	skeletons,
-} from "@public/component/skeleton";
+} from "@amec/webasset/skeleton";
 import {
 	getAllAttr,
 	host,
@@ -27,8 +27,8 @@ import {
 	requiredForm,
 	showErrorMessage,
 	showMessage,
-} from "@public/jFuntion";
-import { getImageByUser } from "@public/setIndexDB";
+} from "@amec/webasset/utils";
+import { getImageByUser } from "@amec/webasset/indexDB";
 import {
 	searchAuditees,
 	getformData,
@@ -40,12 +40,12 @@ import {
 	lastApprove,
 	setIncharge,
 } from "./data";
-import { showLoader } from "@public/preloader";
-import { redirectWebflow } from "@public/_form";
-import { formatDate } from "@public/_dayjs";
+import { showLoader } from "@amec/webasset/preloader";
+import { redirectWebflow } from "@amec/webasset/form";
+import { formatDate } from "@amec/webasset/dayjs";
 import { setAuditorToString, shortName, shortSec } from "./function";
-import { getAuditRevision } from "../../api/escs/audit_revision";
-import { getEscsUserSection } from "../../api/escs/user_section";
+import { getAuditRevision } from "@amec/webasset/api/escs";
+import { getEscsUserSection } from "@amec/webasset/api/escs";
 import { searchUser } from "@amec/webasset/api/amec";
 var formInfo, form, cextdata, tableAuditor, tableAuditee;
 

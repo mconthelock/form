@@ -1,4 +1,4 @@
-import { fetchMsgErr } from "../../api/fetch-utils";
+import { fetchMsgErr } from "@amec/webasset/api/fetch-utils";
 
 /**
  * Get form data for QA-INS
@@ -12,22 +12,22 @@ import { fetchMsgErr } from "../../api/fetch-utils";
  * }
  */
 export async function getformData(form) {
-    const res = await fetch(
-        `${process.env.APP_API}/qaform/qa-ins/getformData`,
-        {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(form),
-        }
-    );
+	const res = await fetch(
+		`${process.env.APP_API}/qaform/qa-ins/getformData`,
+		{
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify(form),
+		}
+	);
 
-    if (!res.ok) {
-        await fetchMsgErr(res);
-        throw new Error("Failed to get form data");
-    }
+	if (!res.ok) {
+		await fetchMsgErr(res);
+		throw new Error("Failed to get form data");
+	}
 
-    const data = await res.json();
-    return data;
+	const data = await res.json();
+	return data;
 }
 
 /**
@@ -41,19 +41,19 @@ export async function getformData(form) {
 }
  */
 export async function getQaFiles(q = {}) {
-    const res = await fetch(`${process.env.APP_API}/qa-file/getQaFile`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(q),
-    });
+	const res = await fetch(`${process.env.APP_API}/qa-file/getQaFile`, {
+		method: "POST",
+		headers: { "Content-Type": "application/json" },
+		body: JSON.stringify(q),
+	});
 
-    if (!res.ok) {
-        await fetchMsgErr(res);
-        throw new Error("Failed to Create");
-    }
+	if (!res.ok) {
+		await fetchMsgErr(res);
+		throw new Error("Failed to Create");
+	}
 
-    const data = await res.json();
-    return data;
+	const data = await res.json();
+	return data;
 }
 
 /**
@@ -63,51 +63,51 @@ export async function getQaFiles(q = {}) {
  */
 
 export async function createFormQains(formData) {
-    const res = await fetch(`${process.env.APP_API}/qaform/qa-ins/request`, {
-        method: "POST",
-        body: formData,
-    });
+	const res = await fetch(`${process.env.APP_API}/qaform/qa-ins/request`, {
+		method: "POST",
+		body: formData,
+	});
 
-    if (!res.ok) {
-        await fetchMsgErr(res);
-        throw new Error("Failed to Create");
-    }
+	if (!res.ok) {
+		await fetchMsgErr(res);
+		throw new Error("Failed to Create");
+	}
 
-    const data = await res.json();
-    return data;
+	const data = await res.json();
+	return data;
 }
 
 export async function qcConfirm(formdata) {
-    const res = await fetch(`${process.env.APP_API}/qaform/qa-ins/qcConfirm`, {
-        method: "POST",
-        body: formdata,
-    });
+	const res = await fetch(`${process.env.APP_API}/qaform/qa-ins/qcConfirm`, {
+		method: "POST",
+		body: formdata,
+	});
 
-    if (!res.ok) {
-        await fetchMsgErr(res);
-        throw new Error("Failed to Approve");
-    }
+	if (!res.ok) {
+		await fetchMsgErr(res);
+		throw new Error("Failed to Approve");
+	}
 
-    const data = await res.json();
-    return data;
+	const data = await res.json();
+	return data;
 }
 
 export async function saveMaster(data) {
-    const res = await fetch(
-        `${process.env.APP_API}/escs/audit-report-master/save`,
-        {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(data),
-        }
-    );
+	const res = await fetch(
+		`${process.env.APP_API}/escs/audit-report-master/save`,
+		{
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify(data),
+		}
+	);
 
-    if (!res.ok) {
-        await fetchMsgErr(res);
-        throw new Error("Failed to Save Master data");
-    }
+	if (!res.ok) {
+		await fetchMsgErr(res);
+		throw new Error("Failed to Save Master data");
+	}
 
-    return await res.json();
+	return await res.json();
 }
 
 // {
@@ -118,95 +118,101 @@ export async function saveMaster(data) {
 //     "NRUNNO": 1,
 // }
 export async function getOA(q = {}) {
-    const res = await fetch(`${process.env.APP_API}/qaform/qa-ins/OA/searchQainsOA`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(q),
-    });
-    if (!res.ok) {
-        await fetchMsgErr(res);
-        throw new Error("Failed to get Auditee");
-    }
-    return await res.json();
+	const res = await fetch(
+		`${process.env.APP_API}/qaform/qa-ins/OA/searchQainsOA`,
+		{
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify(q),
+		}
+	);
+	if (!res.ok) {
+		await fetchMsgErr(res);
+		throw new Error("Failed to get Auditee");
+	}
+	return await res.json();
 }
 
 export async function searchAuditees(q = {}) {
-    const condition = { ...q, QOA_TYPECODE: "ESO" };
-    return await getOA(condition);
+	const condition = { ...q, QOA_TYPECODE: "ESO" };
+	return await getOA(condition);
 }
 
 export async function getAuditee(q = {}) {
-    const condition = { ...q, QOA_TYPECODE: "ESO" };
-    const res = await fetch(`${process.env.APP_API}/qaform/qa-ins/OA/findOneQainsOA`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(condition),
-    });
-    if (!res.ok) {
-        await fetchMsgErr(res);
-        throw new Error("Failed to get Auditee");
-    }
-    return await res.json();
+	const condition = { ...q, QOA_TYPECODE: "ESO" };
+	const res = await fetch(
+		`${process.env.APP_API}/qaform/qa-ins/OA/findOneQainsOA`,
+		{
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify(condition),
+		}
+	);
+	if (!res.ok) {
+		await fetchMsgErr(res);
+		throw new Error("Failed to get Auditee");
+	}
+	return await res.json();
 }
 
 export async function saveAudit(data) {
-    const res = await fetch(
-        `${process.env.APP_API}/qaform/qa-ins/audit/saveAudit`,
-        {
-            method: "POST",
-            // headers: { "Content-Type": "application/json" },
-            // body: JSON.stringify(data),
-            body: data,
-        }
-    );
-    if (!res.ok) {
-        await fetchMsgErr(res);
-        throw new Error("Failed to Save Audit");
-    }
-    return await res.json();
+	const res = await fetch(
+		`${process.env.APP_API}/qaform/qa-ins/audit/saveAudit`,
+		{
+			method: "POST",
+			// headers: { "Content-Type": "application/json" },
+			// body: JSON.stringify(data),
+			body: data,
+		}
+	);
+	if (!res.ok) {
+		await fetchMsgErr(res);
+		throw new Error("Failed to Save Audit");
+	}
+	return await res.json();
 }
 
 export async function lastApprove(data) {
-     const res = await fetch(
-        `${process.env.APP_API}/qaform/qa-ins/lastApprove`,
-        {
-            method: "POST",
-            body: data,
-        }
-    );
-    if (!res.ok) {
-        await fetchMsgErr(res);
-        throw new Error("Failed to approve");
-    }
-    return await res.json();
+	const res = await fetch(
+		`${process.env.APP_API}/qaform/qa-ins/lastApprove`,
+		{
+			method: "POST",
+			body: data,
+		}
+	);
+	if (!res.ok) {
+		await fetchMsgErr(res);
+		throw new Error("Failed to approve");
+	}
+	return await res.json();
 }
 
-export async function returnApproval(data){
-    const res = await fetch(
-        `${process.env.APP_API}/qaform/qa-ins/returnApproval`,
-        {
-            method: "POST",
-            body: data,
-        }
-    );
-    if (!res.ok) {
-        await fetchMsgErr(res);
-        throw new Error("Failed to return approval");
-    }
-    return await res.json();
+export async function returnApproval(data) {
+	const res = await fetch(
+		`${process.env.APP_API}/qaform/qa-ins/returnApproval`,
+		{
+			method: "POST",
+			body: data,
+		}
+	);
+	if (!res.ok) {
+		await fetchMsgErr(res);
+		throw new Error("Failed to return approval");
+	}
+	return await res.json();
 }
 
-export async function setIncharge(data){
-    const res = await fetch(
-        `${process.env.APP_API}/qaform/qa-ins/setIncharge`,
-        {
-            method: "POST",
-            body: data,
-        }
-    );
-    if (!res.ok) {
-        await fetchMsgErr(res);
-        throw new Error("Failed to set incharge");
-    }
-    return await res.json();
+export async function setIncharge(data) {
+	const res = await fetch(
+		`${process.env.APP_API}/qaform/qa-ins/setIncharge`,
+		{
+			method: "POST",
+			body: data,
+		}
+	);
+	if (!res.ok) {
+		await fetchMsgErr(res);
+		throw new Error("Failed to set incharge");
+	}
+	return await res.json();
 }

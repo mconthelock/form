@@ -1,19 +1,23 @@
-import { displayEmpImage } from "@public/setIndexDB";
-import { createTable, destroyTable } from "@public/_dataTable";
+import { displayEmpImage } from "@amec/webasset/indexDB";
+import { createTable, destroyTable } from "@amec/webasset/dataTable";
 import {
 	dragDropInit,
 	dragDropReset,
 	handleFiles,
 	setFilePathToDragDrop,
-} from "@public/_dragdrop";
-import { formatAvatar, s2disableSearch, setSelect2 } from "@public/_select2";
-import { select, webflowSubmit } from "@public/component/form";
+} from "@amec/webasset/dragdrop";
+import {
+	formatAvatar,
+	s2disableSearch,
+	setSelect2,
+} from "@amec/webasset/select2";
+import { select, webflowSubmit } from "@amec/webasset/components/form";
 import {
 	dataTableSkeleton,
 	skeleton,
 	skeletons,
-} from "@public/component/skeleton";
-import { checkEmployeeAndFocus } from "@public/employee";
+} from "@amec/webasset/skeleton";
+import { checkEmployeeAndFocus } from "@amec/webasset/employee";
 import {
 	getAllAttr,
 	getData,
@@ -21,13 +25,13 @@ import {
 	requiredForm,
 	showErrorMessage,
 	showMessage,
-} from "@public/jFuntion";
-import { getEscsItems } from "../../api/escs/item";
-import { getEscsUsers } from "../../api/escs/user";
-import { getEscsUserSection } from "../../api/escs/user_section";
-import { getFormMasterByVaname } from "../../api/webform/formmst";
-import { showLoader } from "@public/preloader";
-import { redirectWebflow } from "@public/_form";
+} from "@amec/webasset/utils";
+import { getEscsItems } from "@amec/webasset/api/escs";
+import { getEscsUsers } from "@amec/webasset/api/escs";
+import { getEscsUserSection } from "@amec/webasset/api/escs";
+import { getFormMasterByVaname } from "@amec/webasset/api/webform";
+import { showLoader } from "@amec/webasset/preloader";
+import { redirectWebflow } from "@amec/webasset/form";
 import {
 	createFormQains,
 	getAuditee,
@@ -37,8 +41,8 @@ import {
 	searchAuditees,
 } from "./data";
 import { searchUser } from "@amec/webasset/api/amec";
-import { doaction, showflow } from "../../api/webform/flow";
-import { downloadOrOpenFile, getFile } from "../../api/file";
+import { doaction, showflow } from "@amec/webasset/api/webform";
+import { downloadOrOpenFile, getFile } from "@amec/webasset/api/file";
 import { readonly } from "vue";
 
 var formInfo,

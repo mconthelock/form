@@ -1,18 +1,18 @@
 // // import { getData, insertData } from "./data";
 import {
-    addClassError,
-    showErrorMessage,
-    showMessage,
-    getAllAttr,
+	addClassError,
+	showErrorMessage,
+	showMessage,
+	getAllAttr,
 } from "@amec/webasset/utils";
 import { webflowSubmit } from "@amec/webasset/components/form";
 import { formSubmitSkeleton } from "@amec/webasset/skeleton";
 import { dragDropInit } from "@amec/webasset/dragdrop";
-// import { redirectWebflow } from "@public/_form";
-// import { showLoader } from "@public/preloader";
+// import { redirectWebflow } from "@amec/webasset/form";
+// import { showLoader } from "@amec/webasset/preloader";;
 import { doaction, showflow } from "@amec/webasset/api/webform";
 // import { getIsFile } from "../../api/isform/is-file";
-// import { downloadOrOpenFile } from "../../api/file";
+// import { downloadOrOpenFile } from "@amec/webasset/api/file";
 
 var formInfo, empno, mode, form;
 
@@ -63,34 +63,34 @@ $(async function () {
         console.error("Error initializing the form:", error);
         showErrorMessage(error.message);
         showMessage("Cannot load form data", "error");
-    } 
-});
-
-$(document).on('click', 'input[name="invoice-type"]', function(){
-    const value = $(this).val();
-    if(value == "other"){
-        $('#other-invoice').attr('disabled', false);
-    } else {
-        $('#other-invoice').attr('disabled', true);
-        $('#other-invoice').val('');
     }
 });
 
-$(document).on('click', 'input[name="accept-po"]', function(){
-    const value = $(this).val();
-    if(value == "subcon"){
-        $('#subcon-detail').attr('disabled', false);
-    } else {
-        $('#subcon-detail').attr('disabled', true);
-        $('#subcon-detail').val('');
-    }
+$(document).on("click", 'input[name="invoice-type"]', function () {
+	const value = $(this).val();
+	if (value == "other") {
+		$("#other-invoice").attr("disabled", false);
+	} else {
+		$("#other-invoice").attr("disabled", true);
+		$("#other-invoice").val("");
+	}
+});
 
-    if(value == "other"){
-        $('#other-accept').attr('disabled', false);
-    } else {
-        $('#other-accept').attr('disabled', true);
-        $('#other-accept').val('');
-    }
+$(document).on("click", 'input[name="accept-po"]', function () {
+	const value = $(this).val();
+	if (value == "subcon") {
+		$("#subcon-detail").attr("disabled", false);
+	} else {
+		$("#subcon-detail").attr("disabled", true);
+		$("#subcon-detail").val("");
+	}
+
+	if (value == "other") {
+		$("#other-accept").attr("disabled", false);
+	} else {
+		$("#other-accept").attr("disabled", true);
+		$("#other-accept").val("");
+	}
 });
 
 // //prettier-ignore
@@ -201,26 +201,26 @@ $(document).on('click', 'input[name="accept-po"]', function(){
 // });
 
 async function setSkeleton(mode) {
-    switch (mode) {
-        case 1:
-            formSubmitSkeleton({
-                count: 2,
-                element: "#btnAction",
-                mode: "create",
-            });
-            break;
-        case 2:
-            formSubmitSkeleton({
-                count: 2,
-                element: "#btnAction",
-                mode: "edit",
-            });
-            break;
-        default:
-            formSubmitSkeleton({
-                element: "#btnAction",
-                mode: "view",
-            });
-            break;
-    }
+	switch (mode) {
+		case 1:
+			formSubmitSkeleton({
+				count: 2,
+				element: "#btnAction",
+				mode: "create",
+			});
+			break;
+		case 2:
+			formSubmitSkeleton({
+				count: 2,
+				element: "#btnAction",
+				mode: "edit",
+			});
+			break;
+		default:
+			formSubmitSkeleton({
+				element: "#btnAction",
+				mode: "view",
+			});
+			break;
+	}
 }

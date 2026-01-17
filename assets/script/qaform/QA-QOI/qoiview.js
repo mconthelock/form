@@ -11,8 +11,8 @@ import {
 	getData,
 	showMessage,
 	requiredForm,
-} from "@public/jFuntion";
-import { showflow } from "../../api/webform/flow";
+} from "@amec/webasset/utils";
+import { showflow } from "@amec/webasset/api/webform";
 $(document).ready(async function () {
 	const formData = $(".form-data").data();
 	flatpickr("#request_date", {

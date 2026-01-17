@@ -1,4 +1,4 @@
-import { fetchMsgErr } from "@amec/webasset/fetch-utils";
+import { fetchMsgErr } from "@amec/webasset/api/fetch-utils";
 
 /**
  * @typedef {Object} insertData
@@ -30,24 +30,23 @@ import { fetchMsgErr } from "@amec/webasset/fetch-utils";
  * const result = await insertData(data);
  */
 export async function insertData(body) {
-    const res = await fetch(`${process.env.APP_API}/isform/is-adp/insert`, {
-        method: "POST",
-        // headers: { "Content-Type": "application/json" },
-        // body: JSON.stringify(body),
-        body: body,
-    });
+	const res = await fetch(`${process.env.APP_API}/isform/is-adp/insert`, {
+		method: "POST",
+		// headers: { "Content-Type": "application/json" },
+		// body: JSON.stringify(body),
+		body: body,
+	});
 
-    if (!res.ok) {
-        return {
-            status: false,
-            message: `Failed to insert data: ${await fetchMsgErr(res)}`,
-        };
-    }
+	if (!res.ok) {
+		return {
+			status: false,
+			message: `Failed to insert data: ${await fetchMsgErr(res)}`,
+		};
+	}
 
-    const data = await res.json();
-    return data;
+	const data = await res.json();
+	return data;
 }
-
 
 /**
  * @typedef {Object} getDataResponse
@@ -63,15 +62,15 @@ export async function insertData(body) {
  * @property {number} MH
  * @property {number} COST
  * @property {string} SDIV
- * 
+ *
  * @typedef {Object} form
  * @property {number} NFRMNO
  * @property {string} VORGNO
  * @property {string} CYEAR
  * @property {string} CYEAR2
  * @property {number} NRUNNO
- * 
- * @param {form} body 
+ *
+ * @param {form} body
  * @returns {Promise<getDataResponse[]>}
  * @example
  * const form = {
@@ -84,19 +83,19 @@ export async function insertData(body) {
  * const data = await getData(form);
  */
 export async function getData(body) {
-    const res = await fetch(`${process.env.APP_API}/isform/is-adp/getData`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-    });
+	const res = await fetch(`${process.env.APP_API}/isform/is-adp/getData`, {
+		method: "POST",
+		headers: { "Content-Type": "application/json" },
+		body: JSON.stringify(body),
+	});
 
-    if (!res.ok) {
-        return {
-            status: false,
-            message: `Failed to get data: ${await fetchMsgErr(res)}`,
-        };
-    }
+	if (!res.ok) {
+		return {
+			status: false,
+			message: `Failed to get data: ${await fetchMsgErr(res)}`,
+		};
+	}
 
-    const data = await res.json();
-    return data;
+	const data = await res.json();
+	return data;
 }
