@@ -24,7 +24,7 @@ trait isTid{
      */
     private function getFormData($condition){
         try{
-            $response = $this->client->post($_env['APP_API']."/isform/is-tid/getFormData", [
+            $response = $this->client->post($_ENV['APP_APIPHP']."/isform/is-tid/getFormData", [
                 'json' => $condition
             ]);
             $result = json_decode($response->getBody(), true);
@@ -38,7 +38,7 @@ trait isTid{
 
     private function getServerName(){
         try{
-            $response = $this->client->get($_env['APP_API']."/itgc/specialuser/getServerName");
+            $response = $this->client->get($_ENV['APP_APIPHP']."/itgc/specialuser/getServerName");
             $result = json_decode($response->getBody(), true);
             return $result;
         }catch(guzzlehttp\Exception\RequestException $e){
@@ -50,7 +50,7 @@ trait isTid{
 
     private function getUserLogin(){
         try{
-            $response = $this->client->get($_env['APP_API']."/itgc/specialuser/getUserLogin");
+            $response = $this->client->get($_ENV['APP_APIPHP']."/itgc/specialuser/getUserLogin");
             $result = json_decode($response->getBody(), true);
             return $result;
         }catch(guzzlehttp\Exception\RequestException $e){
@@ -62,7 +62,7 @@ trait isTid{
 
     private function getController(){
         try{
-            $response = $this->client->get($_env['APP_API']."/itgc/specialuser/getController");
+            $response = $this->client->get($_ENV['APP_APIPHP']."/itgc/specialuser/getController");
             $result = json_decode($response->getBody(), true);
             return $result;
         }catch(guzzlehttp\Exception\RequestException $e){

@@ -25,7 +25,7 @@ trait flow{
      */
     private function getEmpFlowStepReady($condition = []){
         try{
-            $response = $this->client->post($_env['APP_API'].'/flow/getEmpFlowStepReady', [
+            $response = $this->client->post($_ENV['APP_APIPHP'].'/flow/getEmpFlowStepReady', [
                 'json' => $condition
             ]);
             $result = json_decode($response->getBody(), true);
@@ -39,7 +39,7 @@ trait flow{
 
     private function getExtData($condition = []){
         try{
-            $response = $this->client->post($_env['APP_API'].'/flow/getExtData', [
+            $response = $this->client->post($_ENV['APP_APIPHP'].'/flow/getExtData', [
                 'headers' => build_forward_headers(),
                 'json' => $condition
             ]);
@@ -54,7 +54,7 @@ trait flow{
 
     private function checkReturn($condition = []){
         try{
-            $response = $this->client->post($_env['APP_API'].'/flow/checkReturn', [
+            $response = $this->client->post($_ENV['APP_APIPHP'].'/flow/checkReturn', [
                 'json' => $condition
             ]);
             $result = trim($response->getBody());
@@ -69,7 +69,7 @@ trait flow{
 
     private function checkReturnb($condition = []){
         try{
-            $response = $this->client->post($_env['APP_API'].'/flow/checkReturnb', [
+            $response = $this->client->post($_ENV['APP_APIPHP'].'/flow/checkReturnb', [
                 'json' => $condition
             ]);
             $result = trim($response->getBody());
@@ -99,7 +99,7 @@ trait flow{
      */
     private function updateFlow($condition){
         try{
-            $response = $this->client->patch($_env['APP_API'].'/flow/updateFlow', [
+            $response = $this->client->patch($_ENV['APP_APIPHP'].'/flow/updateFlow', [
                 'json' => $condition
             ]);
             $result = trim($response->getBody());
@@ -151,7 +151,7 @@ trait flow{
      */
     private function doaction($condition){
         try{
-            $response = $this->client->post($_env['APP_API'].'/flow/doaction', [
+            $response = $this->client->post($_ENV['APP_APIPHP'].'/flow/doaction', [
                 'headers' => build_forward_headers(),
                 'json' => $condition
             ]);

@@ -16,7 +16,7 @@ trait formmst{
     private function getFormMaster($condition = []){
         try{
             // $response = $this->client->post("http://localhost:3001/formmst/getFormmst", [
-            $response = $this->client->post($_env['APP_API']."/formmst/getFormmst", [
+            $response = $this->client->post($_ENV['APP_APIPHP']."/formmst/getFormmst", [
                 'json' => $condition
             ]);
             $result = json_decode($response->getBody(), true);
@@ -32,7 +32,7 @@ trait formmst{
     private function getFormMasterByVaname($vaname){
         try{
             // $response = $this->client->get("http://localhost:3001/formmst/$vaname");
-            $response = $this->client->get($_env['APP_API']."/formmst/$vaname"); // docker
+            $response = $this->client->get($_ENV['APP_APIPHP']."/formmst/$vaname"); // docker
             $result = json_decode($response->getBody(), true);
             return [ 'status' => "true", 'data' => $result ];
         }catch(guzzlehttp\Exception\RequestException $e){

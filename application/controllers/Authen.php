@@ -11,7 +11,9 @@ class Authen extends MY_Controller {
         $this->client = new Client(['verify' => false]);
     }
 
-    public function index($id = 28){
+    public function index($id = 1){
+        echo $_ENV['APP_APIPHP'];
+        exit;
         if(!isset($_SESSION['user'])) {
             $data =  array('pageid' => 'login', 'id' => $id);
             $this->views('auth/login', $data);
@@ -96,7 +98,7 @@ class Authen extends MY_Controller {
 
     private function application($id){
         try{
-            $response = $this->client->post("{$_ENV['APP_API']}/docinv/amecweb/application/", [
+            $response = $this->client->post("{$_ENV['APP_APIPHP']}/docinv/amecweb/application/", [
                 'json' => ["id" => $id]
             ]);
             $result = json_decode($response->getBody(), true);
@@ -108,7 +110,7 @@ class Authen extends MY_Controller {
 
     private function directLogon($program, $auth){
         try{
-            $response = $this->client->post("{$_ENV['APP_API']}/api/authentication/directlogin/", [
+            $response = $this->client->post("{$_ENV['APP_APIPHP']}/api/authentication/directlogin/", [
                 'json' => [
                     'username' => md5($_SESSION['user']->SEMPNO),
                     'program'  => $program,
