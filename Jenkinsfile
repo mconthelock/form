@@ -72,7 +72,7 @@ pipeline {
         stage('PHP Prep (Composer)') {
             steps {
                 dir('application') {
-                    sh 'composer install --optimize-autoloader'
+                    sh 'composer update --optimize-autoloader'
                 }
                 echo "PHP preparation with Composer done."
             }
