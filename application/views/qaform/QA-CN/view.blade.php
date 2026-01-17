@@ -803,6 +803,256 @@
             @endif  
             </td>
         </tr>
+{{-- ส่วน J-Staff In Charge --}}
+@if ($mode == $MODE_EDIT && $cextData == 1)
+    <tr>
+        <td class="force-w-350 align-top pt-2">J-Staff In Charge</td>
+        <td class="px-3 py-1 bg-gray-100 border-b border-white">
+            <select name="selJInchrg" class="w-full h-8 px-2 border border-gray-300 bg-white focus:outline-none focus:ring-1 focus:ring-sky-400 rounded-sm">
+                @foreach ($jstaff as $s)
+                    <option value="{{ $s->SEMPNO }}">
+                        {{ $s->SNAME }}
+                    </option>
+                @endforeach
+            </select>
+        </td>
+    </tr>
+
+    {{-- ส่วน Engineer In Charge --}}
+    <tr>
+        <td class="force-w-350 align-top pt-2">Engineer In Charge</td>
+        <td class="px-3 py-1 bg-gray-100 border-b border-white">
+            <select name="selEInchrg" class="w-full h-8 px-2 border border-gray-300 bg-white focus:outline-none focus:ring-1 focus:ring-sky-400 rounded-sm">
+                @foreach ($eng as $e)
+                    <option value="{{ $e->SEMPNO }}">{{ $e->SNAME }}</option>
+                @endforeach
+            </select>
+        </td>
+    </tr>
+@endif
+
+@if (($mode == $MODE_EDIT) && ($cextData == 6) && is_null($cnform->MSTATUS))
+    <tr>
+        <td class="force-w-350" style="padding:5px;">Change To</td>
+        <td class="px-3 py-1 bg-gray-100 border-b border-white">
+             <select name="Foreman" class="w-full h-8 px-2 border border-gray-300 bg-white focus:outline-none focus:ring-1 focus:ring-sky-400 rounded-sm">
+                @foreach ($foreman as $f)
+                    <option value="{{ $f->SEMPNO }}">{{ $f->SNAME }}</option>
+                @endforeach
+            </select>
+        </td>
+    </tr>     
+@endif
+
+{{-- ส่วน Operator --}}
+@if ($mode == $MODE_EDIT && $cextData == 6)
+    <tr>
+        <td class="force-w-350 align-top pt-2">Operator</td>
+        <td class="px-3 py-1 bg-gray-100 border-b border-white">
+            <select name="Operator" class="w-full h-8 px-2 border border-gray-300 bg-white focus:outline-none focus:ring-1 focus:ring-sky-400 rounded-sm">
+                @foreach ($operatorList as $op)
+                    <option value="{{ $op->sempno }}">{{ $op->sname }}</option>
+                @endforeach
+            </select>
+        </td>
+    </tr>
+@endif
+
+
+
+{{-- ส่วน Check Sheet & Files --}}
+@if ($form[0]->CST == "0")
+    <tr>
+        <td class="force-w-350" style="padding:5px;">Check Sheet</td>
+        <td class="px-3 py-1 bg-gray-100 border-b border-white">
+            {{-- Function showAttFile ควรถูกแปลงเป็น Component หรือ Include --}}
+            @include('components.show-att-file', ['type' => 6])
+        </td>
+    </tr>
+
+    @if ($mode == $MODE_EDIT && $stepExt >= "02" && $stepExt < "08")
+        <tr>
+            <td class="force-w-350" style="padding:5px;">
+                <button type="button" name="upload2" onclick="addUpload(6,1000);" id="xx_file"
+                        class="px-2 py-1 bg-gray-200 border border-gray-400 hover:bg-gray-300 rounded text-sm">
+                    Attach File
+                </button>
+            </td>
+            <td class="px-3 py-1 bg-gray-100 border-b border-white">
+                <div id="uploadFile6" name="uploadFile6"></div>
+            </td>
+        </tr>
+    @endif
+
+    {{-- ส่วน Judgement --}}
+    <tr>
+        <td class="force-w-350" valign="top">Judgement</td>
+        
+        @if ($mode == $MODE_EDIT && $stepExt >= "02" && $stepExt < "08")
+            <td class="px-3 py-1 bg-gray-100 border-b border-white">
+                @foreach ($judgementList as $j)
+                    @php
+                        $isMainInteger = !str_contains($j->jdgmntno, '.');
+                        $firstChar = substr($j->jdgmntno, 0, 1);
+                    @endphp
+
+                    {{-- Logic การแสดงผล Radio Button --}}
+                    @if ($isMainInteger && in_array($j->jdgmntno, [1, 2, 3]))
+                        <label class="inline-flex items-center mr-3">
+                            <input type="radio" name="radJudge" value="{{ $j->jdgmntno }}" 
+                                   {{ $cnform->jdgmntno == $j->jdgmntno ? 'checked' : '' }}
+                                   class="form-radio h-4 w-4 text-sky-600">
+                            <span class="ml-2">{{ $j->judgement }}</span>
+                        </label>
+
+                        @if ($j->jdgmntno == 2) <br><span class="text-blue-700 font-bold">Not Accept</span> @endif
+                        @if ($j->jdgmntno == 4) <span class="text-blue-700 font-bold">Cancel</span> @endif
+
+                    @elseif (!$isMainInteger && ($firstChar == 2 || $firstChar == 4))
+                        <label class="inline-flex items-center mr-3">
+                            <input type="radio" name="radJudge" value="{{ $j->jdgmntno }}" 
+                                   {{ $cnform->jdgmntno == $j->jdgmntno ? 'checked' : '' }}
+                                   class="form-radio h-4 w-4 text-sky-600">
+                            <span class="ml-2">{{ $j->judgement }}</span>
+                        </label>
+
+                        {{-- Case 4.1: Upload File --}}
+                        @if ($j->jdgmntno == 4.1)
+                            @include('components.show-att-file', ['type' => 7])
+                            <span class="text-red-500 text-sm">(Max 300 KB)</span>
+                            <button type="button" name="upload" onclick="window.document.frmMain.radJudge[7].checked = true; addUpload(7,300);"
+                                    class="ml-2 px-2 py-0.5 bg-gray-200 border border-gray-400 rounded text-xs">
+                                Attach File
+                            </button>
+                            <div id="uploadFile7" name="uploadFile7" class="inline-block ml-2"></div>
+                        @endif
+                    @endif
+
+                    {{-- Case 2.5: Other Text Input --}}
+                    @if ($j->jdgmntno == 2.5)
+                        <input type="text" name="txtJdgOther1" 
+                               class="w-full mt-1 h-8 px-2 border border-gray-300 bg-white focus:outline-none focus:ring-1 focus:ring-sky-400 rounded-sm"
+                               onclick="javascript: window.document.frmMain.radJudge[6].checked = true;"
+                               value="{{ $cnform->jdgmntno == 2.5 ? $cnform->jdgOther : '' }}">
+                    @endif
+
+                    {{-- Case 4.2: Other Text Input --}}
+                    @if ($j->jdgmntno == 4.2)
+                        <input type="text" name="txtJdgOther2"
+                               class="w-full mt-1 h-8 px-2 border border-gray-300 bg-white focus:outline-none focus:ring-1 focus:ring-sky-400 rounded-sm"
+                               onclick="javascript: window.document.frmMain.radJudge[8].checked = true;"
+                               value="{{ $cnform->jdgmntno == 4.2 ? $cnform->jdgOther : '' }}">
+                    @endif
+                    
+                    <br>
+                @endforeach
+            </td>
+        @else
+            {{-- View Mode --}}
+            <td class="px-3 py-1 bg-gray-100 border-b border-white">
+                {{ $cnform->judgement }}&nbsp;{{ $cnform->jdgOther }}
+                &nbsp;
+                @include('components.show-att-file', ['type' => 7])
+            </td>
+        @endif
+    </tr>
+@endif
+
+{{-- ส่วน Remark --}}
+@if ($mode == $MODE_EDIT)
+    <tr>
+        <td class="force-w-350" valign="top">Remark</td>
+        <td class="px-3 py-1 bg-gray-100 border-b border-white">
+            <textarea name="txtRemark" rows="3" 
+                      class="w-full p-2 border border-gray-300 bg-white focus:outline-none focus:ring-1 focus:ring-sky-400 rounded-sm"></textarea>
+        </td>
+    </tr>
+@endif
+
+{{-- ส่วน Action Buttons --}}
+<tr>
+    <td colspan="2" class="py-4 text-center">
+        @if ($mode == $MODE_EDIT && $requester != session('uid'))
+            <div class="inline-block">
+                <button type="button" name="btnApprove" 
+                        onclick="if(CheckData('approve')) { document.frmMain.act.value = 'approve'; document.frmMain.submit()}"
+                        class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded shadow mx-1">
+                    Approve
+                </button>
+
+                @if (($stepExt <= "04" || $stepExt == "08") && ($requester != session('uid')))
+                    <button type="button" name="btnReturn" 
+                            onclick="if(CheckData('return')) {document.frmMain.act.value = 'return'; document.frmMain.submit()}"
+                            class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded shadow mx-1">
+                        Return
+                    </button>
+                @endif
+            </div>
+            <button type="button" name="btnReject" 
+                    onclick="if(CheckData('reject')){document.frmMain.act.value = 'reject'; document.frmMain.submit()}"
+                    class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded shadow mx-1">
+                Reject
+            </button>
+        @endif
+
+        @if (($flowst == $FLOW_PREPARE || $mode == $MODE_EDIT) && ($requester == session('uid') || $inputer == session('uid')))
+            <button type="button" name="btnSave" 
+                    onclick="if(CheckData('saveData')) { document.frmMain.act.value = 'saveData'; document.frmMain.submit()}"
+                    class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded shadow mx-1">
+                Save Data
+            </button>
+
+            @if ($flowst == $FLOW_PREPARE)
+                <button type="button" name="btnSndApv" 
+                        onclick="if(CheckData('sendApv')) { document.frmMain.act.value = 'sendApv'; document.frmMain.submit()}"
+                        class="bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded shadow mx-1">
+                    Send Approve
+                </button>
+            @else
+                <button type="button" name="btnSndApv" 
+                        onclick="if(CheckData('approve')) { document.frmMain.act.value = 'approve'; document.frmMain.submit()}"
+                        class="bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded shadow mx-1">
+                    Send Approve
+                </button>
+            @endif
+
+            <button type="button" name="btnDelete" 
+                    onclick="document.frmMain.act.value = 'deleteApv'; document.frmMain.submit()"
+                    class="bg-red-700 hover:bg-red-800 text-white px-4 py-2 rounded shadow mx-1">
+                Delete Form
+            </button>
+        @endif
+
+        {{-- Export / Print Buttons --}}
+        @if ($flowst == $FLOW_APPROVE)
+            <button type="button" onclick="window.location.href='{{ route('cn.excel-rpt', ['no' => request('no')]) }}'"
+                    class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded shadow mx-1">
+                Export Excel
+            </button>
+        @endif
+
+        @if (in_array(session('secCode'), ['000502', '000503']))
+            <button type="button" onclick="window.location.href='{{ route('cn.print-frm', ['no' => request('no')]) }}'"
+                    class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded shadow mx-1">
+                Print Form
+            </button>
+        @endif
+        
+        @if ($mode == $MODE_VIEW)
+             @if (($requester == session('uid') || $inputer == session('uid')) && $demapv == 0)
+                <button type="button" name="btnReturn" 
+                        onclick="document.frmMain.act.value = 'return'; document.frmMain.submit()"
+                        class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded shadow mx-1">
+                    Return
+                </button>
+             @endif
+             <button type="button" onclick="window.location.href='{{ route('cn.excel-rpt2', ['no' => request('no')]) }}'"
+                    class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded shadow mx-1">
+                Export Excel
+            </button>
+        @endif
+    </td>
+</tr>
         
     </table>
 </div>

@@ -40,6 +40,7 @@ class form extends MY_Controller{
             $data['return']   = false;
             $data['NRUNNO']   = $_GET["runNo"];
             $data['CYEAR2']   = $_GET["y2"];
+            $data['empinf']   = $this->cn->customSelect("AMEC.AEMPLOYEE",array('SEMPNO' =>  $data['empno'] ),'*');
             $data['cextData'] = intval($this->getExtdata($data['NFRMNO'], $data['VORGNO'], $data['CYEAR'],  $data['CYEAR2'],  $data['NRUNNO'], $data['empno']));
             $data['mode']     = $this->getMode($data['NFRMNO'],  $data['VORGNO'], $data['CYEAR'],  $data['CYEAR2'],  $data['NRUNNO'], $data['empno']);
             $data['form']     = $this->frm->getForm($data['NFRMNO'],  $data['VORGNO'], $data['CYEAR'],  $data['CYEAR2'],  $data['NRUNNO']);
@@ -59,8 +60,9 @@ class form extends MY_Controller{
             $data['attjud'] = $this->cn->customSelect("ATTCNFRM",array( 'NFRMNO' => $data['NFRMNO'],'VORGNO' => $data['VORGNO'],'CYEAR'  => $data['CYEAR'],'CYEAR2' => $data['CYEAR2'],'NRUNNO' => $data['NRUNNO'] ,'TYPENO' => '7' ),'ITEMNO , SFILE');
             $data['chkopr'] = $this->chkopr($data['NFRMNO'],$data['VORGNO'],$data['CYEAR'],$data['CYEAR2'], $data['NRUNNO']);
             $data['demapv'] = $this->demapv($data['NFRMNO'],$data['VORGNO'],$data['CYEAR'],$data['CYEAR2'], $data['NRUNNO']);
-        
-
+            $data['jstaff'] = $this->getjstaff($data['empinf']);
+            $data['eng'] = $this->getjstaff($data['empinf']);
+            $data['foreman'] = $this->getForeman($data['empno']);
             //echo $data['cextData'];
             $this->views('qaform/QA-CN/view', $data);
         }
@@ -69,24 +71,59 @@ class form extends MY_Controller{
 
     }
 
-    public function getjstaff()
+    public function getjstaff($head)
     {
-        if($type == "J")
+        if(($head[0]->SDEPCODE=="000401") && ($head[0]->SSECCODE=="00"))
         {
-            $data = $this->qoi->get_Jstaff();
-        }else if($type == "E")
+            $sql = "select SEMPNO , SNAME from AMEC.AEMPLOYEE where CSTATUS = '1' and SSECCODE = '000404' and ( SPOSCODE in ('41','42','43','40','35') or SEMPNO IN ('09019','13067')) order by sname";
+        }else if(($head[0]->SDEPCODE=="000501"))
         {
-            $data = $this->qoi->get_Engineer();
-        }else if($type == "S")
+            if(($head[0]->SSECCODE=="00"))
+            {
+                $sql = "select SEMPNO , SNAME from AMEC.AEMPLOYEE where CSTATUS = '1' and SSECCODE = '000502' and SPOSCODE in ('40','41','42','43') order by sname";
+            }else
+            {
+                $sql = "select SEMPNO , SNAME from AMEC.AEMPLOYEE where CSTATUS = '1' and SSECCODE = '".$head[0]->SSECCODE."' and SPOSCODE in ('40','41','42','43') order by sname";
+            }
+        }else
         {
-            $data = $this->qoi->get_SEMING();
-        }else{
-
-            $sql = "select SEMPNO , SNAME from AMECUSERALL where CSTATUS = '1' AND SEMPNO in (select EMPNO from  SEQUENCEORG WHERE headno = '".$head."') AND SPOSCODE in ('40','41','35') ORDER BY SNAME";
-            $data = $this->qoi->getdatasql($sql);
+            $sql = "select SEMPNO , SNAME from AMEC.AEMPLOYEE where CSTATUS = '1' and SSECCODE = '000303' and SPOSCODE in ('41','42','43') order by sname";
+  
         }
+        $data = $this->cn->getdatasql($sql);
         echo json_encode($data);
     }
+    
+    public function geteng($head)
+    {
+        if(($head[0]->SDEPCODE=="000401") && ($head[0]->SSECCODE=="00"))
+        {
+            $sql = "select SEMPNO , SNAME from AMEC.AEMPLOYEE where CSTATUS = '1' and SSECCODE = '000404' and SPOSCODE in ('35','40') order by sname";
+        }else if(($head[0]->SDEPCODE=="000501"))
+        {
+            if(($head[0]->SSECCODE=="00"))
+            {
+                $sql = "select SEMPNO , SNAME from AMEC.AEMPLOYEE where CSTATUS = '1' and SSECCODE = '000502' and SPOSCODE in ('35','40')  order by sname";
+            }else
+            {
+                $sql = "select SEMPNO , SNAME from AMEC.AEMPLOYEE where CSTATUS = '1' and SSECCODE = '".$head[0]->SSECCODE."' and SPOSCODE in ('35','40') order by sname";
+            }
+        }else
+        {
+            $sql = "select SEMPNO , SNAME from AMEC.AEMPLOYEE where CSTATUS = '1' and SSECCODE = '000303' and SPOSCODE in ('35','40')  order by sname";
+        }
+        $data = $this->cn->getdatasql($sql);
+        echo json_encode($data);
+    }
+
+    public function getForeman($emp)
+    {
+        $sql = "select SEMPNO , SNAME from AMEC.AEMPLOYEE where CSTATUS = '1' and SEMPNO IN ('96261','06188','01004') and SEMPNO <> ".$emp." order by SNAME";
+        $data = $this->cn->getdatasql($sql);
+        echo json_encode($data);
+    }
+
+
 
     public function action()
     {

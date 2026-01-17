@@ -1,8 +1,11 @@
 const path = require("path");
 module.exports = {
-	//manage schedule QOI
+	// QA-QOI
 	manage: "./assets/script/qaform/QA-QOI/manage.js", //manage page
 	qoiview: "./assets/script/qaform/QA-QOI/qoiview.js", //Qoi page
+
+	// QA-CN
+	cnview: "./assets/script/qaform/QA-CN/cnview.js", //CN page
 
 	// QA-INS : E-Self Inspection and Authorize
 	eSelf: "./assets/script/qaform/QA-INS/index.js", //E-Self Inspection page
