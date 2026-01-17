@@ -11,12 +11,11 @@ import { setSelect2, destroySelect2 } from "@amec/webasset/select2";
 //import "select2";
 //import "select2/dist/css/select2.min.css";
 import { redirectWebflow } from "@amec/webasset/form";
-import { createForm } from "../../api/webform/form";
+import { createForm } from "@amec/webasset/api/webform";
 import { setDatePicker } from "@amec/webasset/flatpickr";
 //import { createForm, redirectWebflow } from "@amec/webasset/form";
 import { readInput } from "@amec/webasset/excel";
 import Swal from "sweetalert2";
-import { ElementFlags } from "typescript";
 
 var formInfo,
 	userIncharge,
