@@ -1,22 +1,22 @@
-import { createTable } from "@public/_dataTable";
-import { getData, insertData } from "./data";
+import { createTable } from "@amec/webasset/dataTable";
 import {
     addClassError,
     showErrorMessage,
     showMessage,
     getAllAttr,
-} from "@public/jFuntion";
-import { webflowSubmit } from "@public/component/form";
+} from "@amec/webasset/utils";
+import { webflowSubmit, getformDetail } from "@amec/webasset/components/form";
 import {
     dataTableSkeleton,
     formSubmitSkeleton,
-} from "@public/component/skeleton";
-import { redirectWebflow } from "@public/_form";
-import { showLoader } from "@public/preloader";
-import { doaction, showflow } from "../../api/webform/flow";
-import { getIsFile } from "../../api/isform/is-file";
-import { downloadOrOpenFile } from "../../api/file";
-import { getAnnualFyear } from "../../api/docinv/work-annual-dev-plan";
+} from "@amec/webasset/skeleton";
+import { getData, insertData } from "./data";
+import { redirectWebflow } from "@amec/webasset/form";
+import { showLoader } from "@amec/webasset/preloader";
+import { doaction, showflow } from "@amec/webasset/api/webform";
+import { getIsFile } from "@amec/webasset/api/isform";
+import { downloadOrOpenFile } from "@amec/webasset/api/file";
+import { getAnnualFyear } from "@amec/webasset/api/docinv";
 
 var formInfo,
     empno,
@@ -84,26 +84,34 @@ $(async function () {
         mode = Number(formInfo.mode); // get mode
         empno = $(".apv-data").attr("empno"); // get employee number
         fyear = month <= 4 ? year - 1 : year; 
-        form = {
-            NFRMNO: formInfo.nfrmno,
-            VORGNO: formInfo.vorgno,
-            CYEAR: formInfo.cyear,
-            CYEAR2: formInfo.cyear2,
-            NRUNNO: formInfo.nrunno,
-        };
+        
         $(".fyear").text(fyear);
-        const flow = await showflow(form);
-        const file = await getIsFile(form);
-        if(file.length > 0){
-            let fileLink = "<div class='flex flex-col gap-3 mt-5'>";
-            file.forEach(f => {
-                fileLink +=  `<a href="${f.FILE_PATH}" storedName="${f.FILE_FNAME}" class="file-link text-primary flex items-center gap-3 w-full border rounded-lg bg-base-100 p-3"><i class="icofont-file-excel text-success text-4xl"></i><span class="link link-primary">${f.FILE_ONAME}</span></a>`;
-            });
-            fileLink += "</div>";
-            $("#attachFile").html(fileLink);
-        }
+        
         // set skeleton
         await setSkeleton(mode);
+
+        let flow = null;
+        if(mode != 1){
+            form = {
+                NFRMNO: formInfo.nfrmno,
+                VORGNO: formInfo.vorgno,
+                CYEAR: formInfo.cyear,
+                CYEAR2: formInfo.cyear2,
+                NRUNNO: formInfo.nrunno,
+            };
+            flow = await showflow(form);
+            const file = await getIsFile(form);
+            if(file.length > 0){
+                let fileLink = "<div class='flex flex-col gap-3 mt-5'>";
+                file.forEach(f => {
+                    fileLink +=  `<a href="${f.FILE_PATH}" storedName="${f.FILE_FNAME}" class="file-link text-primary flex items-center gap-3 w-full border rounded-lg bg-base-100 p-3"><i class="icofont-file-excel text-success text-4xl"></i><span class="link link-primary">${f.FILE_ONAME}</span></a>`;
+                });
+                fileLink += "</div>";
+                $("#attachFile").html(fileLink);
+            }
+            const formdetail = await getformDetail(form);
+            $("#form-detail").html(formdetail);
+        }
         // create datatable
         table = await createDataTable();
         tableLoading.remove();
