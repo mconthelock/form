@@ -72,7 +72,7 @@ trait _Form{
             if($draft !== ''){
                 $condition['DRAFT'] = (string)$draft;
             }
-            $response = $this->client->post($_ENV['APP_APIPHP'].'/form/createForm', [
+            $response = $this->client->post($_env['APP_API'].'/form/createForm', [
                 'headers' => build_forward_headers(),
                 'json' => $condition
             ]);
@@ -87,7 +87,7 @@ trait _Form{
 
     private function deleteForm($NFRMNO, $VORGNO, $CYEAR, $CYEAR2, $NRUNNO){
         try{
-            $response = $this->client->delete($_ENV['APP_APIPHP'].'/form/deleteForm', [
+            $response = $this->client->delete($_env['APP_API'].'/form/deleteForm', [
                 'json' => [
                     "NFRMNO" => (int)$NFRMNO,
                     "VORGNO" => (string)$VORGNO,
@@ -195,7 +195,7 @@ trait _Form{
 
     private function doaction($NFRMNO, $VORGNO, $CYEAR, $CYEAR2, $NRUNNO, $action, $empno, $remark){
         try{
-            $response = $this->client->post($_ENV['APP_APIPHP'].'/flow/doaction', [
+            $response = $this->client->post($_env['APP_API'].'/flow/doaction', [
                 'headers' => build_forward_headers(),
                 'json' => [
                     'NFRMNO'  => $NFRMNO,

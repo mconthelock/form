@@ -9,7 +9,7 @@ export const deviceType = () => {
 		return "tablet";
 	} else if (
 		/Mobile|Android|iP(hone|od)|IEMobile|BlackBerry|Kindle|Silk-Accelerated|(hpw|web)OS|Opera M(obi|ini)/.test(
-			ua
+			ua,
 		)
 	) {
 		return "mobile";
@@ -101,7 +101,7 @@ export const showConfirm = (
 	message,
 	icon,
 	key = "",
-	text = false
+	text = false,
 ) => {
 	$("#confirm_accept").addClass(func);
 	$("#confirm_accept").attr("data-function", func);
@@ -150,7 +150,7 @@ export const stampApp = (data) => {
 
 	const value = recentApp.data || [];
 	const existingAppIndex = value.findIndex(
-		(app) => app.id == data.id && app.user == $("#login-id").val()
+		(app) => app.id == data.id && app.user == $("#login-id").val(),
 	);
 
 	if (existingAppIndex !== -1) {
@@ -161,7 +161,7 @@ export const stampApp = (data) => {
 	value.sort((a, b) => new Date(b.updateDate) - new Date(a.updateDate));
 	localStorage.setItem(
 		"recentapp",
-		JSON.stringify({ ver: process.env.VERSION, data: value })
+		JSON.stringify({ ver: process.env.VERSION, data: value }),
 	);
 };
 
@@ -178,7 +178,7 @@ export async function generateSchemaHash(schema) {
 	const schemaString = JSON.stringify(schema);
 	const hash = await crypto.subtle.digest(
 		"SHA-256",
-		new TextEncoder().encode(schemaString)
+		new TextEncoder().encode(schemaString),
 	);
 	const hashArray = Array.from(new Uint8Array(hash));
 	const hashHex = hashArray
@@ -187,46 +187,46 @@ export async function generateSchemaHash(schema) {
 	return hashHex;
 }
 
-// ดึงรูปภาพจาก IndexedDB
-export async function displayEmpImage(id) {
-	const cachedImage = await getImage(id);
-	if (cachedImage) {
-		return `${cachedImage}`;
-	} else {
-		// ดึงรูปภาพจาก API
-		const response = await fetch(
-			`${process.env.APP_WEBSERVICE}/webflow/amecusers/images/${id}`
-		);
-		const data = await response.json();
-		const base64Image = data;
-		// บันทึกลง IndexedDB
-		await setImage(id, base64Image);
-		return `${base64Image}`;
-	}
-}
+// ดึงรูปภาพจาก IndexedDB 2025-01-17
+// export async function displayEmpImage(id) {
+// 	const cachedImage = await getImage(id);
+// 	if (cachedImage) {
+// 		return `${cachedImage}`;
+// 	} else {
+// 		// ดึงรูปภาพจาก API
+// 		const response = await fetch(
+// 			`${process.env.APP_WEBSERVICE}/webflow/amecusers/images/${id}`
+// 		);
+// 		const data = await response.json();
+// 		const base64Image = data;
+// 		// บันทึกลง IndexedDB
+// 		await setImage(id, base64Image);
+// 		return `${base64Image}`;
+// 	}
+// }
 
-// ดึงข้อมูลพนักงานจาก IndexedDB
-export async function displayEmpInfo(id) {
-	const cachedInfo = await getInfo(id);
-	if (cachedInfo) {
-		return cachedInfo.data;
-	} else {
-		// ดึงข้อมูลจาก API
-		const response = await fetch(
-			`${process.env.APP_WEBSERVICE}/webflow/amecusers/users/`,
-			{
-				method: "POST",
-				headers: {
-					"Content-Type": "application/json",
-				},
-				body: JSON.stringify({ id: id, mode: 1 }),
-			}
-		);
-		const data = await response.json();
-		await setInfo(id, data[0]);
-		return data[0];
-	}
-}
+// ดึงข้อมูลพนักงานจาก IndexedDB 2025-01-17
+// export async function displayEmpInfo(id) {
+// 	const cachedInfo = await getInfo(id);
+// 	if (cachedInfo) {
+// 		return cachedInfo.data;
+// 	} else {
+// 		// ดึงข้อมูลจาก API
+// 		const response = await fetch(
+// 			`${process.env.APP_WEBSERVICE}/webflow/amecusers/users/`,
+// 			{
+// 				method: "POST",
+// 				headers: {
+// 					"Content-Type": "application/json",
+// 				},
+// 				body: JSON.stringify({ id: id, mode: 1 }),
+// 			}
+// 		);
+// 		const data = await response.json();
+// 		await setInfo(id, data[0]);
+// 		return data[0];
+// 	}
+// }
 
 export function setSha256(text) {
 	const shaObj = new jsSHA("SHA-256", "TEXT");
@@ -239,8 +239,8 @@ export const intVal = function (i) {
 	return typeof i === "string"
 		? i.replace(/[\$,]/g, "") * 1
 		: typeof i === "number"
-		? i
-		: 0;
+			? i
+			: 0;
 };
 
 export const digits = function (n, digit) {

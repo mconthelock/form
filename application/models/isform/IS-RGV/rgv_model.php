@@ -7,7 +7,7 @@ class Rgv_model extends CI_Model {
     {
         parent::__construct();
         $this->load->database();
-        $this->ad  = $this->load->database('auditDB', TRUE);
+        $this->ad  = $this->load->database('aud', TRUE);
         $this->doc = $this->load->database('docinv', TRUE);
         $this->scm = $this->load->database('scm', TRUE);
     }
@@ -281,8 +281,8 @@ class Rgv_model extends CI_Model {
         //             ACTIVE,
         //             CASE WHEN ila.EMPNO = '13255' THEN ila.EMPNO END AS EMPNO
         //         FROM ISRGV_LN_MST ilm
-        //         LEFT JOIN ISRGV_LN_AUTHORIZE ila 
-        //             ON ila.MENU_ID = ilm.MENU_ID 
+        //         LEFT JOIN ISRGV_LN_AUTHORIZE ila
+        //             ON ila.MENU_ID = ilm.MENU_ID
         //             AND ila.STATUS = 1
         //             AND ila.EMPNO = '13255'
         //         START WITH PARENT_MENU_ID IS NULL
@@ -335,9 +335,9 @@ class Rgv_model extends CI_Model {
     public function getUnmatchHistory($cyear2, $nrunno)
     {
         $sql = "
-            SELECT 
-                e.EMPNO as SEMPNO, 
-                u.SNAME, 
+            SELECT
+                e.EMPNO as SEMPNO,
+                u.SNAME,
                 u.SDIV,
                 u.SDEPT,
                 u.SSEC,

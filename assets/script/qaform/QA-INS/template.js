@@ -9,7 +9,7 @@ import { btnMinus, btnPlus, checkbox, inputNum, radio } from "./component";
 import { handleClassList, setAuditorToString, shortSec } from "./function";
 
 const createScoreBoard = () => `
-<div class="lg:absolute right-8 w-full lg:w-40 rounded-2xl border border-slate-200 shadow-sm overflow-hidden z-[20]" id="score">
+<div class="lg:absolute right-8 w-full lg:w-40 rounded-2xl border border-slate-200 shadow-sm overflow-hidden z-20" id="score">
     <div class="bg-[#3c8dbc] text-white px-3 py-1.5 text-sm text-center font-bold">Total Score</div>
     <div class="p-3 text-center">
         <div class="text-4xl font-extrabold leading-none"  id="totalScore">0</div>
@@ -345,8 +345,8 @@ function setMedalReportList(percent, testDate) {
 		html += `
             <!-- 🥇 Gold -->
             <div class="flex gap-6 items-center justify-center">
-                <div class="relative w-8 h-8 rounded-full bg-gradient-to-br from-yellow-300 via-yellow-400 to-amber-500 shadow-lg">
-                    <div class="absolute inset-1 rounded-full bg-gradient-to-br from-yellow-100 to-yellow-300 flex items-center justify-center font-bold  text-amber-800">
+                <div class="relative w-8 h-8 rounded-full bg-linear-to-br from-yellow-300 via-yellow-400 to-amber-500 shadow-lg">
+                    <div class="absolute inset-1 rounded-full bg-linear-to-br from-yellow-100 to-yellow-300 flex items-center justify-center font-bold  text-amber-800">
                     ${yearText}
                     </div>
                 </div>
@@ -356,8 +356,8 @@ function setMedalReportList(percent, testDate) {
 		html += `
             <!-- 🥈 Silver -->
             <div class="flex gap-6 items-center justify-center">
-                <div class="relative w-8 h-8 rounded-full bg-gradient-to-br from-gray-400 via-gray-300 to-gray-500 shadow-lg">
-                    <div class="absolute inset-1 rounded-full bg-gradient-to-br from-gray-100 to-gray-300 flex items-center justify-center font-bold text-gray-700">
+                <div class="relative w-8 h-8 rounded-full bg-linear-to-br from-gray-400 via-gray-300 to-gray-500 shadow-lg">
+                    <div class="absolute inset-1 rounded-full bg-linear-to-br from-gray-100 to-gray-300 flex items-center justify-center font-bold text-gray-700">
                     ${yearText}
                     </div>
                 </div>
@@ -367,8 +367,8 @@ function setMedalReportList(percent, testDate) {
 		html += `
             <!-- 🥉 Bronze -->
             <div class="flex gap-6 items-center justify-center">
-                <div class="relative w-8 h-8 rounded-full bg-gradient-to-br from-[oklch(0.9_0.05_56.04)] via-[oklch(0.72_0.23_43.31)] to-[oklch(0.84_0.12_82.91)] shadow-lg">
-                    <div class="absolute inset-1 rounded-full bg-gradient-to-br from-white to-[#fe6300] flex items-center justify-center font-bold text-[#3f0606]">
+                <div class="relative w-8 h-8 rounded-full bg-linear-to-br from-[oklch(0.9_0.05_56.04)] via-[oklch(0.72_0.23_43.31)] to-[oklch(0.84_0.12_82.91)] shadow-lg">
+                    <div class="absolute inset-1 rounded-full bg-linear-to-br from-white to-[#fe6300] flex items-center justify-center font-bold text-[#3f0606]">
                     X
                     </div>
                 </div>

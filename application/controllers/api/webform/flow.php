@@ -25,7 +25,7 @@ trait flow{
      */
     private function getEmpFlowStepReady($condition = []){
         try{
-            $response = $this->client->post($_ENV['APP_APIPHP'].'/flow/getEmpFlowStepReady', [
+            $response = $this->client->post($_env['APP_API'].'/flow/getEmpFlowStepReady', [
                 'json' => $condition
             ]);
             $result = json_decode($response->getBody(), true);
@@ -39,7 +39,7 @@ trait flow{
 
     private function getExtData($condition = []){
         try{
-            $response = $this->client->post($_ENV['APP_APIPHP'].'/flow/getExtData', [
+            $response = $this->client->post($_env['APP_API'].'/flow/getExtData', [
                 'headers' => build_forward_headers(),
                 'json' => $condition
             ]);
@@ -54,7 +54,7 @@ trait flow{
 
     private function checkReturn($condition = []){
         try{
-            $response = $this->client->post($_ENV['APP_APIPHP'].'/flow/checkReturn', [
+            $response = $this->client->post($_env['APP_API'].'/flow/checkReturn', [
                 'json' => $condition
             ]);
             $result = trim($response->getBody());
@@ -69,7 +69,7 @@ trait flow{
 
     private function checkReturnb($condition = []){
         try{
-            $response = $this->client->post($_ENV['APP_APIPHP'].'/flow/checkReturnb', [
+            $response = $this->client->post($_env['APP_API'].'/flow/checkReturnb', [
                 'json' => $condition
             ]);
             $result = trim($response->getBody());
@@ -91,7 +91,7 @@ trait flow{
      *      "VORGNO"=> "000101",    //string
      *      "CYEAR"=> "25",     //string
      *      "CYEAR2"=> "2025",  //string
-     *      "NRUNNO"=> 2,       //number    
+     *      "NRUNNO"=> 2,       //number
      *      "CSTART"=> "1"      //string
      *   ],
      *   data ที่ต้องการเปลี่ยนแปลงได้ทุก column ใน flow เช่น
@@ -99,7 +99,7 @@ trait flow{
      */
     private function updateFlow($condition){
         try{
-            $response = $this->client->patch($_ENV['APP_APIPHP'].'/flow/updateFlow', [
+            $response = $this->client->patch($_env['APP_API'].'/flow/updateFlow', [
                 'json' => $condition
             ]);
             $result = trim($response->getBody());
@@ -125,7 +125,7 @@ trait flow{
      * @property {string} EMPNO
      * @property {string} [REMARK]
      * @property {string} [CEXTDATA]
-     * @description 
+     * @description
      * - return คือส่งกลับไป requester เมื่อ requester กด approve จะกลับมาอยู่ที่ approver คนเดิม
      * - returnb คือส่งกลับไป approver ก่อนหน้า
      * - returnp คือส่งกลับไป requester และรีเซ็ท flow ทั้งหมดเริ่ม approve ใหม่
@@ -151,7 +151,7 @@ trait flow{
      */
     private function doaction($condition){
         try{
-            $response = $this->client->post($_ENV['APP_APIPHP'].'/flow/doaction', [
+            $response = $this->client->post($_env['APP_API'].'/flow/doaction', [
                 'headers' => build_forward_headers(),
                 'json' => $condition
             ]);

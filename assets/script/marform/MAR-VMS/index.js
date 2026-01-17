@@ -7,6 +7,7 @@ import {
 import { showLoader } from "@amec/webasset/preloader";
 import { host } from "../../utils";
 import { createTable, destroyTable } from "@amec/webasset/dataTable";
+import select2 from "select2";
 import { setSelect2, destroySelect2 } from "@amec/webasset/select2";
 //import "select2";
 //import "select2/dist/css/select2.min.css";
@@ -16,6 +17,7 @@ import { setDatePicker } from "@amec/webasset/flatpickr";
 //import { createForm, redirectWebflow } from "@amec/webasset/form";
 import { readInput } from "@amec/webasset/excel";
 import Swal from "sweetalert2";
+select2();
 
 var formInfo,
 	userIncharge,
