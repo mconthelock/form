@@ -15,7 +15,7 @@ trait escs_user_section{
      private function getUserSecByID($id){
         try{
             // $response = $this->client->get("http://localhost:3001/formmst/$id");
-            $response = $this->client->get($_ENV['APP_APIPHP']."/escs/userSection/$id"); // docker
+            $response = $this->client->get($_env['APP_API']."/escs/userSection/$id"); // docker
             $result = json_decode($response->getBody(), true);
             if(empty($result)) {
                 return [ 'status' => "false", 'data' => null ];

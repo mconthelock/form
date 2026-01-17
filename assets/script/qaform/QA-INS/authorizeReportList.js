@@ -217,13 +217,13 @@ async function createReportTable(data, allItem, secName, itemList) {
                     if (item.TEST_DATE) {
                         medal = setMedalReportList(item.PERCENT, item.TEST_DATE);
                     }
-                    checkedItems += `<td class="text-center border-r-1 border-gray-400 showScore cursor-pointer" item="${it}" range="${medal.range || 'none'}">${
+                    checkedItems += `<td class="text-center border-r border-gray-400 showScore cursor-pointer" item="${it}" range="${medal.range || 'none'}">${
                         medal.html
                             ? medal.html
                             : '<i class="icofont-check-circled text-success text-xl"></i>'
                     }</td>`;
                 } else {
-                    checkedItems += `<td class="text-center border-r-1 border-gray-400"></td>`;
+                    checkedItems += `<td class="text-center border-r border-gray-400"></td>`;
                 }
             });
             let html = `<tr>
@@ -236,7 +236,7 @@ async function createReportTable(data, allItem, secName, itemList) {
                         <td class="text-left text-nowrap sticky-column">${
                             d.USR_NAME || ""
                         }</td>
-                        <td class="text-left text-nowrap sticky-column border-r-1 border-gray-400">${
+                        <td class="text-left text-nowrap sticky-column border-r border-gray-400">${
                             d.SPOSITION || ""
                         }</td>
                         ${checkedItems}
@@ -258,7 +258,7 @@ async function createReportTable(data, allItem, secName, itemList) {
                     <th rowspan="2" class="text-center sticky-column">No</th>
                     <th rowspan="2" class="text-center sticky-column">Empno</th>
                     <th rowspan="2" class="text-center sticky-column">Name</th>
-                    <th rowspan="2" class="text-center sticky-column border-r-1 border-gray-400">Position</th>
+                    <th rowspan="2" class="text-center sticky-column border-r border-gray-400">Position</th>
                     <th colspan="${
                         allItem.length
                     }" class="text-center">Item</th>
@@ -267,7 +267,7 @@ async function createReportTable(data, allItem, secName, itemList) {
                     ${allItem
                         .map(
                             (i) =>
-                                `<th class="text-center text-nowrap border-r-1 border-gray-400">${i}</th>`
+                                `<th class="text-center text-nowrap border-r border-gray-400">${i}</th>`
                         )
                         .join("")}
                 </tr>

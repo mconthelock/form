@@ -38,7 +38,7 @@ class Training extends MY_Controller {
             $data['data_purpose']  = $this->trn->select_all_by_tb($nfrmno, $vorgno, $cyear, $cyear2, $nrunno, 'GP_TRN_LIST', 'LID', ['TYPE' => '1']);
             $data['data_benefit']  = $this->trn->select_all_by_tb($nfrmno, $vorgno, $cyear, $cyear2, $nrunno, 'GP_TRN_LIST', 'LID', ['TYPE' => '2']);
             $where_gp = "AND A.FID = '".$data['data_head'][0]->FID."' ";
-            
+
             if($data['data_head'][0]->FID == '2' || $data['data_head'][0]->FID == '5'){
                 $data['show_cost'] = $data['data_trainee'][0]->COST_PERSON;
                 $where_gp .= "AND A.GROUP_TRAIN = '".$data['data_head'][0]->GROUP_TRAIN."'";
@@ -99,7 +99,7 @@ class Training extends MY_Controller {
             "group_train" => $new_group
         ]);
     }
-    
+
 
     public function get_emp() {
         $chk_cost = 0;
@@ -167,7 +167,7 @@ class Training extends MY_Controller {
             }
             //SET CEXTDATA = '99' FOR REQUESTER
             $this->trn->update_flow($data["NFRMNO"], $data["VORGNO"], $data["CYEAR"], $data["CYEAR2"], $data["NRUNNO"], 'CEXTDATA', '99', 'CSTEPNO', '--');
-            
+
             //Update Flow Training Officer  01027/14001
             $this->trn->update_flow($data["NFRMNO"], $data["VORGNO"], $data["CYEAR"], $data["CYEAR2"], $data["NRUNNO"], 'VAPVNO', '01027', 'CEXTDATA', '04');
             $this->trn->update_flow($data["NFRMNO"], $data["VORGNO"], $data["CYEAR"], $data["CYEAR2"], $data["NRUNNO"], 'VREPNO', '14001', 'CEXTDATA', '04');
@@ -294,7 +294,7 @@ class Training extends MY_Controller {
                 }
             }
 
-            // ✅ Insert Trainee 
+            // ✅ Insert Trainee
             $req_trngp = "";
             if (!empty($data["TRAINEE_ID"])) {
                 // แปลงให้เป็น array เสมอ
@@ -314,7 +314,7 @@ class Training extends MY_Controller {
 
                     $get_head_req = $this->trn->get_headinfo($arr_trainee['EMPNO']);
                     $req_posx = $get_head_req[0]->REQ_POS;
-                   
+
                     $reqPos = (int)$get_head_req[0]->REQ_POS;
                     if ($reqPos >= 55 && $reqPos <= 69) {
                         $req_trngp = $get_head_req[0]->HEADNO;
@@ -326,10 +326,10 @@ class Training extends MY_Controller {
                 log_message('error', '❌ No trainee data found: ' . json_encode($data));
             }
 
-            //Update flow 
+            //Update flow
             $this->trn->update_flow($data["NFRMNO"], $data["VORGNO"], $data["CYEAR"], $data["CYEAR2"], $data["NRUNNO"], 'VREPNO', '14001', 'CSTEPNO', '18');
             $this->trn->update_flow($data["NFRMNO"], $data["VORGNO"], $data["CYEAR"], $data["CYEAR2"], $data["NRUNNO"], 'VREPNO', '14001', 'CSTEPNO', '19');
-            
+
             if($prefix == 'meth' || $prefix == 'pos' ){
                 $this->trn->delete_flow($data["NFRMNO"], $data["VORGNO"], $data["CYEAR"], $data["CYEAR2"], $data["NRUNNO"], 'CEXTDATA', ['19']);
                 $this->trn->update_flow($data["NFRMNO"], $data["VORGNO"], $data["CYEAR"], $data["CYEAR2"], $data["NRUNNO"], 'CSTEPNEXTNO', '10', 'CSTEPNEXTNO', '19');
@@ -371,7 +371,7 @@ class Training extends MY_Controller {
                 $result = $this->trn->insert_data('FLOW', $data_legal);
                 $this->trn->update_flow($data["NFRMNO"], $data["VORGNO"], $data["CYEAR"], $data["CYEAR2"], $data["NRUNNO"], 'CSTEPNEXTNO', '57', 'CSTEPNO', '--');
                 $this->trn->update_flow($data["NFRMNO"], $data["VORGNO"], $data["CYEAR"], $data["CYEAR2"], $data["NRUNNO"], 'CSTEPST', '2', 'CSTEPNO', '19');
-                   
+
                 $where = " AND CSTEPNO in ('07','63','06','05','04','03','02')";
                 $get_first_step = $this->trn->get_data_flow($data["NFRMNO"], $data["VORGNO"], $data["CYEAR"], $data["CYEAR2"], $data["NRUNNO"], $where);
                 $steps = array_map(function($r){
@@ -400,7 +400,7 @@ class Training extends MY_Controller {
                 $this->trn->update_flow($data["NFRMNO"], $data["VORGNO"], $data["CYEAR"], $data["CYEAR2"], $data["NRUNNO"], 'CSTEPNEXTNO', $nextno, 'CSTEPNO', '19');
                 if( $nextno != "10"){
                     $this->trn->update_flow($data["NFRMNO"], $data["VORGNO"], $data["CYEAR"], $data["CYEAR2"], $data["NRUNNO"], 'CSTEPNEXTNO', '10', 'CSTEPNO', '02');
-                }  
+                }
             }
 
             //ไม่มีค่าใช้จ่าย ลบ Last step
@@ -408,10 +408,10 @@ class Training extends MY_Controller {
                 $where = " AND CSTEPNEXTNO = '00'";
                 $get_step = $this->trn->get_data_flow($data["NFRMNO"], $data["VORGNO"], $data["CYEAR"], $data["CYEAR2"], $data["NRUNNO"], $where);
             }
-            
+
             echo json_encode([
-                "status" => "success", 
-                "message" => "Insert successful", 
+                "status" => "success",
+                "message" => "Insert successful",
                 "req_by" => $req_trngp,
                 "req_pos" => $req_posx,
                 "received" => $data]
@@ -492,8 +492,8 @@ class Training extends MY_Controller {
             }
         }
     }
-    
-    
+
+
     public function preview_file($formno, $filename, $origin_name){
         $filepath = $this->upload_path."/".$formno;
         $this->downloadFile($origin_name, $filename, $filepath);
@@ -721,9 +721,9 @@ class Training extends MY_Controller {
         $this->trn->update_data("GP_TRN_HEAD", $data_ref_cash, $data_main);
 
         // ====================================================
-        // 5) (Commented) CLEAR FORM 
+        // 5) (Commented) CLEAR FORM
         // ====================================================
-        
+
         $clearHead = $data["clearHead"]; // ฟอร์ม clear head
         $base_clear_adv = [
             "NFRMNO" => $clearHead["NFRMNO"],
@@ -814,7 +814,7 @@ class Training extends MY_Controller {
         $items = $data["itemsx"] ?? [];
 
         // start a DB transaction
-        $this->training_db = $this->load->database('training_record', TRUE);
+        $this->training_db = $this->load->database('TRAIN', TRUE);
         $this->training_db->trans_start();
 
         foreach ($items as $item) {
@@ -880,6 +880,6 @@ class Training extends MY_Controller {
             ]);
         }
     }
-  
+
 
 }

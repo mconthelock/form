@@ -7,7 +7,7 @@ class Training_model extends CI_Model
     public function __construct(){
         parent::__construct();
         $this->load->database();
-        $this->training_db = $this->load->database('training_record', TRUE);
+        $this->training_db = $this->load->database('TRAIN', TRUE);
     }
 
     public function get_empinfo($empno) {
@@ -89,33 +89,33 @@ class Training_model extends CI_Model
         $query = "SELECT * FROM GP_TRN_FORM_MST ".$where." ORDER BY FID";
         return  $this->db->query($query)->result();
     }
-    
+
     function get_main_data($frmno, $orgno, $cyear, $cyear2, $nrunno){
         $query = "SELECT A.*, C.SEMPNO AS REQ_EMPNO, C.SNAME AS REQ_NAME, D.SEMPNO AS INP_EMPNO, D.SNAME AS INP_NAME, F.FORM_NAME_TH,F.FORM_NAME_EN
-            FROM GP_TRN_HEAD A 
+            FROM GP_TRN_HEAD A
             INNER JOIN FORM B ON A.NFRMNO = B.NFRMNO AND A.VORGNO = B.VORGNO AND A.CYEAR = B.CYEAR AND A.CYEAR2 = B.CYEAR2 AND A.NRUNNO = B.NRUNNO
             LEFT JOIN AMEC.AMECUSERALL C ON B.VREQNO = C.SEMPNO
             LEFT JOIN AMEC.AMECUSERALL D ON B.VINPUTER = D.SEMPNO
             INNER JOIN GP_TRN_FORM_MST F ON A.FID = F.FID
-            WHERE A.NFRMNO = '".$frmno."' AND A.VORGNO = '".$orgno."' AND A.CYEAR = '".$cyear."' 
+            WHERE A.NFRMNO = '".$frmno."' AND A.VORGNO = '".$orgno."' AND A.CYEAR = '".$cyear."'
             AND A.CYEAR2 = '".$cyear2."' and A.NRUNNO = '".$nrunno."'";
         return  $this->db->query($query)->result();
     }
 
     function get_trainee($frmno, $orgno, $cyear, $cyear2, $nrunno){
-        $query = "SELECT A.*, 
-            E.SEMPNO AS TRAINEE_EMPNO, E.STNAME AS TRAINEE_NAME, E.SSEC AS TRAINEE_SEC, E.SDEPT AS TRAINEE_DEPT, 
+        $query = "SELECT A.*,
+            E.SEMPNO AS TRAINEE_EMPNO, E.STNAME AS TRAINEE_NAME, E.SSEC AS TRAINEE_SEC, E.SDEPT AS TRAINEE_DEPT,
             E.SDIV AS TRAINEE_DIV, E.SPOSITION AS TRAINEE_POS
-            FROM GP_TRN_TRAINEE A 
+            FROM GP_TRN_TRAINEE A
             LEFT JOIN AMEC.AMECUSERALL E ON A.EMPNO = E.SEMPNO
-            WHERE A.NFRMNO = '".$frmno."' AND A.VORGNO = '".$orgno."' AND A.CYEAR = '".$cyear."' 
+            WHERE A.NFRMNO = '".$frmno."' AND A.VORGNO = '".$orgno."' AND A.CYEAR = '".$cyear."'
             AND A.CYEAR2 = '".$cyear2."' and A.NRUNNO = '".$nrunno."' ORDER BY A.EMPNO";
         return  $this->db->query($query)->result();
     }
 
         function get_data_flow($frmno, $orgno, $cyear, $cyear2, $nrunno, $where){
             $query = "SELECT * FROM FLOW A
-                WHERE A.NFRMNO = '".$frmno."' AND A.VORGNO = '".$orgno."' AND A.CYEAR = '".$cyear."' 
+                WHERE A.NFRMNO = '".$frmno."' AND A.VORGNO = '".$orgno."' AND A.CYEAR = '".$cyear."'
                 AND A.CYEAR2 = '".$cyear2."' and A.NRUNNO = '".$nrunno."' ".$where;
             return  $this->db->query($query)->result();
         }
@@ -150,10 +150,10 @@ class Training_model extends CI_Model
 
     public function get_form($frmno, $orgno, $cyear, $cyear2, $nrunno) {
         $query = "SELECT A.* FROM FORM A
-                WHERE A.NFRMNO = '".$frmno."' 
-                    AND A.VORGNO = '".$orgno."' 
-                    AND A.CYEAR = '".$cyear."' 
-                    AND A.CYEAR2 = '".$cyear2."' 
+                WHERE A.NFRMNO = '".$frmno."'
+                    AND A.VORGNO = '".$orgno."'
+                    AND A.CYEAR = '".$cyear."'
+                    AND A.CYEAR2 = '".$cyear2."'
                     AND A.NRUNNO = '".$nrunno."'";
         return $this->db->query($query)->result();
     }
@@ -183,7 +183,7 @@ class Training_model extends CI_Model
             LEFT JOIN GP_TRN_FORM_MST C ON B.FID = C.FID
             LEFT JOIN GP_TRN_TRAINEE D ON B.CYEAR2 = D.CYEAR2 AND B.NRUNNO = D.NRUNNO
             LEFT JOIN AMECUSERALL E ON D.EMPNO = E.SEMPNO
-            WHERE A.NFRMNO = '".$frmno."' AND A.VORGNO = '".$orgno."' AND A.CYEAR = '".$cyear."' 
+            WHERE A.NFRMNO = '".$frmno."' AND A.VORGNO = '".$orgno."' AND A.CYEAR = '".$cyear."'
             AND A.CYEAR2 = '".$cyear2."' and A.NRUNNO = '".$nrunno."' ";
         return  $this->db->query($query)->result();
     }
@@ -229,7 +229,7 @@ class Training_model extends CI_Model
             LEFT JOIN GP_TRN_FORM_MST C ON B.FID = C.FID
             LEFT JOIN GP_TRN_TRAINEE D ON B.CYEAR2 = D.CYEAR2 AND B.NRUNNO = D.NRUNNO
             LEFT JOIN AMECUSERALL E ON D.EMPNO = E.SEMPNO
-            WHERE A.NFRMNO = '".$frmno."' AND A.VORGNO = '".$orgno."' AND A.CYEAR = '".$cyear."' 
+            WHERE A.NFRMNO = '".$frmno."' AND A.VORGNO = '".$orgno."' AND A.CYEAR = '".$cyear."'
             AND A.CYEAR2 = '".$cyear2."' and A.NRUNNO = '".$nrunno."' ";
         return  $this->db->query($query)->result();
     }
@@ -241,33 +241,33 @@ class Training_model extends CI_Model
 
     function get_data_group_train($where){
         $query = "SELECT DISTINCT 'GP-TRN' || SUBSTR(A.CYEAR2,3,2) || '-' || LPAD(A.NRUNNO, 6, '0') AS FORMNO, A.*,  E.SEMPNO, E.SNAME, E.STNAME, A.GROUP_TRAIN
-        FROM GP_TRN_HEAD A 
-        INNER JOIN FORM B ON A.NFRMNO = B.NFRMNO AND A.VORGNO = B.VORGNO AND A.CYEAR = B.CYEAR AND A.CYEAR2 = B.CYEAR2 AND A.NRUNNO = B.NRUNNO 
+        FROM GP_TRN_HEAD A
+        INNER JOIN FORM B ON A.NFRMNO = B.NFRMNO AND A.VORGNO = B.VORGNO AND A.CYEAR = B.CYEAR AND A.CYEAR2 = B.CYEAR2 AND A.NRUNNO = B.NRUNNO
         INNER JOIN GP_TRN_TRAINEE D ON A.CYEAR2 = D.CYEAR2 AND A.NRUNNO = D.NRUNNO
         INNER JOIN AMECUSERALL E ON E.SEMPNO = D.EMPNO
-        WHERE B.CST = '1' ".$where." 
+        WHERE B.CST = '1' ".$where."
         ORDER BY A.CYEAR2, A.NRUNNO";
         return  $this->db->query($query)->result();
     }
 
     function get_data_group_train_view($where){
-        $query = "SELECT DISTINCT 'GP-TRN' || SUBSTR(A.CYEAR2,3,2) || '-' || LPAD(A.NRUNNO, 6, '0') AS FORMNO, A.*,  E.SEMPNO, E.SNAME, E.STNAME, A.GROUP_TRAIN, C.CSTEPST , D.COST_PERSON 
-        FROM GP_TRN_HEAD A 
-        INNER JOIN FORM B ON A.NFRMNO = B.NFRMNO AND A.VORGNO = B.VORGNO AND A.CYEAR = B.CYEAR AND A.CYEAR2 = B.CYEAR2 AND A.NRUNNO = B.NRUNNO  
+        $query = "SELECT DISTINCT 'GP-TRN' || SUBSTR(A.CYEAR2,3,2) || '-' || LPAD(A.NRUNNO, 6, '0') AS FORMNO, A.*,  E.SEMPNO, E.SNAME, E.STNAME, A.GROUP_TRAIN, C.CSTEPST , D.COST_PERSON
+        FROM GP_TRN_HEAD A
+        INNER JOIN FORM B ON A.NFRMNO = B.NFRMNO AND A.VORGNO = B.VORGNO AND A.CYEAR = B.CYEAR AND A.CYEAR2 = B.CYEAR2 AND A.NRUNNO = B.NRUNNO
         INNER JOIN FLOW C ON A.NFRMNO = C.NFRMNO AND A.VORGNO = C.VORGNO AND A.CYEAR = C.CYEAR AND A.CYEAR2 = C.CYEAR2 AND A.NRUNNO = C.NRUNNO AND CSTEPNEXTNO = '00'
         INNER JOIN GP_TRN_TRAINEE D ON A.CYEAR2 = D.CYEAR2 AND A.NRUNNO = D.NRUNNO
         INNER JOIN AMECUSERALL E ON E.SEMPNO = D.EMPNO
-        WHERE B.CST = '1' ".$where." 
+        WHERE B.CST = '1' ".$where."
         ORDER BY A.CYEAR2, A.NRUNNO";
         return  $this->db->query($query)->result();
     }
 
     function get_data_report($where){
-        $query = "SELECT DISTINCT A.CYEAR2, A.NRUNNO, F.CID, F.CATEGORY,A.FID, C.FORM_NAME_TH, C.FORM_NAME_EN, A.SUBJECT, E.SEMPNO, E.SPOSITION, 
+        $query = "SELECT DISTINCT A.CYEAR2, A.NRUNNO, F.CID, F.CATEGORY,A.FID, C.FORM_NAME_TH, C.FORM_NAME_EN, A.SUBJECT, E.SEMPNO, E.SPOSITION,
             E.SSEC, E.SDEPT, E.SDIV, E.STNAME, A.DATE_FROM, A.DATE_TO, A.COST, ROUND(A.COST * 0.07) AS VAT,
             A.COST + ROUND(A.COST * 0.07) AS TOTAL, FM.CST
             FROM GP_TRN_HEAD A
-            INNER JOIN GP_TRN_LIST B ON A.CYEAR2 = B.CYEAR2 AND A.NRUNNO = B.NRUNNO 
+            INNER JOIN GP_TRN_LIST B ON A.CYEAR2 = B.CYEAR2 AND A.NRUNNO = B.NRUNNO
             INNER JOIN FORM FM ON A.NFRMNO = FM.NFRMNO AND A.VORGNO = FM.VORGNO AND A.CYEAR = FM.CYEAR AND A.CYEAR2 = FM.CYEAR2 AND A.NRUNNO = FM.NRUNNO
             LEFT JOIN GP_TRN_FORM_MST C ON A.FID = C.FID
             LEFT JOIN GP_TRN_TRAINEE D ON A.NFRMNO = D.NFRMNO AND A.VORGNO = D.VORGNO AND A.CYEAR = D.CYEAR AND A.CYEAR2 = D.CYEAR2 AND A.NRUNNO = D.NRUNNO
@@ -280,8 +280,8 @@ class Training_model extends CI_Model
 
     function get_3month_train_report($frmno, $orgno, $cyear, $cyear2){
         $query = "SELECT * FROM FLOW
-            WHERE NFRMNO = ".$frmno." AND VORGNO = '".$orgno."' AND CYEAR = '".$cyear."' AND CYEAR2 = '".$cyear2."' 
-            AND CEXTDATA = '01' AND TO_CHAR(ADD_MONTHS(DAPVDATE, 3),'MM/DD/YYYY') = TO_CHAR(SYSDATE, 'MM/DD/YYYY') 
+            WHERE NFRMNO = ".$frmno." AND VORGNO = '".$orgno."' AND CYEAR = '".$cyear."' AND CYEAR2 = '".$cyear2."'
+            AND CEXTDATA = '01' AND TO_CHAR(ADD_MONTHS(DAPVDATE, 3),'MM/DD/YYYY') = TO_CHAR(SYSDATE, 'MM/DD/YYYY')
             ORDER BY CYEAR2, NRUNNO
         ";
         return  $this->db->query($query)->result();
@@ -289,7 +289,7 @@ class Training_model extends CI_Model
 
     function get_3month_train_report_for_test($frmno, $orgno, $cyear, $cyear2, $nrunno){
         $query = "SELECT * FROM FLOW
-            WHERE NFRMNO = ".$frmno." AND VORGNO = '".$orgno."' AND CYEAR = '".$cyear."' AND CYEAR2 = '".$cyear2."' 
+            WHERE NFRMNO = ".$frmno." AND VORGNO = '".$orgno."' AND CYEAR = '".$cyear."' AND CYEAR2 = '".$cyear2."'
             AND NRUNNO = '".$nrunno."' AND CEXTDATA = '01'";
         return  $this->db->query($query)->result();
     }

@@ -9,7 +9,7 @@ class Dlc_model extends CI_Model
         parent::__construct();
         // Load database
         $this->load->database();
-        $this->ad = $this->load->database('auditDB', TRUE);
+        $this->ad = $this->load->database('AUD', TRUE);
     }
 
     public function getLog($date)
