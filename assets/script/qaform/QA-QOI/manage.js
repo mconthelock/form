@@ -4,9 +4,10 @@ import {
 	showMessage,
 	requiredForm,
 } from "@amec/webasset/utils";
-import { host, showLoader } from "../../utils";
+import { host } from "../../utils";
 import { createTable } from "@amec/webasset/dataTable";
 import { exportExcel, defaultExcel } from "@amec/webasset/excel";
+import { showLoader } from "@amec/webasset/preloader";
 
 var table;
 var dwgData;
@@ -124,7 +125,7 @@ $(document).on("click", ".edit-dwg", async function (e) {
 			frm.find(`input[type='radio'][data-map="${key}"]`).each(
 				function () {
 					$(this).prop("checked", $(this).val() == value);
-				}
+				},
 			);
 		} else if (key === "ATTFILE") {
 			const p = $("#path").val();
@@ -305,7 +306,7 @@ async function createTableDwg() {
 			id: "#table",
 			buttonFilter: { status: true, column: "0" },
 			join: true,
-		}
+		},
 	);
 	$("#table").find("thead").removeClass("bg-white");
 	$("#table").find("thead").addClass("bg-blue-200");
@@ -343,13 +344,13 @@ function save(data) {
 			contentType: false,
 			data: data,
 			beforeSend: function () {
-				showLoader(true);
+				showLoader();
 			},
 			success: function (res) {
 				resolve(res);
 			},
 			complete: function (xhr, status) {
-				showLoader(false);
+				showLoader({ show: false });
 			},
 		});
 	});
@@ -368,13 +369,13 @@ function deletesch(data) {
 			dataType: "json",
 			data: data,
 			beforeSend: function () {
-				showLoader(true);
+				showLoader();
 			},
 			success: function (res) {
 				resolve(res);
 			},
 			complete: function (xhr, status) {
-				showLoader(false);
+				showLoader({ show: false });
 			},
 		});
 	});
@@ -393,13 +394,13 @@ function deletefile(data) {
 			dataType: "json",
 			data: data,
 			beforeSend: function () {
-				showLoader(true);
+				showLoader();
 			},
 			success: function (res) {
 				resolve(res);
 			},
 			complete: function (xhr, status) {
-				showLoader(false);
+				showLoader({ show: false });
 			},
 		});
 	});

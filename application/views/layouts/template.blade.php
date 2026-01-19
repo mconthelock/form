@@ -16,11 +16,12 @@
 
     <title>AMEC Webflow 🕊️ Document Mananagement System</title>
     <link rel="stylesheet" href="{{ $_ENV['APP_CDN'] }}/select2/css/select2.min.css">
-    <link rel="stylesheet" href="{{ $_ENV['APP_CSS'] }}/tailwind.css?ver={{ $GLOBALS['version'] }}">
+    <link rel="stylesheet" href="{{ base_url() }}assets/dist/css/tailwind.css?ver={{ $GLOBALS['version'] }}">
     @yield('styles')
 </head>
 
 <body class="flex flex-col min-h-screen">
+    <input type="hidden" id="appid" value="{{ $_ENV['APP_ID'] }}">
     <!-- Navbar -->
     <div id="navbar" class=""></div>
     <div class="drawer lg:drawer-open">
@@ -33,7 +34,7 @@
             <!-- Footer -->
             @include('layouts.footer')
         </div>
-        <div class="drawer-side shadow-2xl z-51!">
+        <div class="drawer-side z-51!" style="box-shadow: 8px 0 12px rgba(0,0,0,0.25);">
             <div id="sidebar"></div>
         </div>
     </div>

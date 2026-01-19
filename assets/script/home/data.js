@@ -13,7 +13,7 @@ export async function createLinks(id, data, obj) {
 		const apps = el.data;
 		if (apps.group == id) {
 			content += `<li class="min-w-62.5">
-        <a class="link link-hover links-stamp"
+        <a class="link link-hover links-stamp block w-full"
             data-id="${apps.iid}"
             target="${apps.type == 1 ? "_self" : "_blank"}"
             href="${apps.url}">
@@ -163,6 +163,98 @@ export const appColors = async () => {
 	});
 	return response;
 };
+
+export async function setRecentApps() {
+	let recentApp = JSON.parse(localStorage.getItem("recentapp")) || [];
+	if (!(recentApp.data && recentApp.data.length)) {
+		$(".recent-apps").hide();
+		return;
+	}
+
+	let content = "";
+	recentApp.data
+		.filter((el) => el.user == $("#login-id").val())
+		.map((el, i) => {
+			if (i < 10) {
+				content += `<a class="flex flex-col items-center gap-3 w-28 links-stamp"
+        href="${el.url}"
+        data-id="${el.id}"
+        target="${el.type == 1 ? "_self" : "_blank"}"
+        >
+            <div
+                class="flex items-center justify-center text-xl font-bold rounded-full w-12 h-12"
+                    style="background-color: rgba(${hexToRgb(
+						el.color,
+					)}, 0.5); color: ${el.color};"
+            >
+                ${el.label}
+            </div>
+            <div class="text-sm text-gray-500 text-wrap text-center">
+                ${
+					el.name.length > 8
+						? el.name.substring(0, 8) + "..."
+						: el.name
+				}
+            </div>
+        </a>`;
+			}
+		});
+	if (content == "") $(".recent-apps").hide();
+	$("#recent-apps").html(content);
+}
+
+export async function setAmecwebLinks() {
+	const amecweb = await amecwebData($("#login-id").val());
+	if (amecweb.length == 0) {
+		$("#amecweb_links").html(
+			`<h1 class="text-lg italic text-gray-400">No access right any system</h1>`,
+		);
+		return;
+	}
+	const obj = $("#amecweb_links");
+	obj.html("");
+	amecweb.map(async (val) => {
+		const app = val.application;
+		const groups = val.appsgroups;
+		//await setApplication(app);
+		//await setAppGroup(`${app.APP_ID}-${val.USERS_ID}`, groups);
+		const url = `${process.env.APP_HOST}/${app.APP_LOCATION}/${
+			app.APP_TYPE == "1" ? "authen/move/" : ""
+		}`;
+
+		const bg =
+			app.APP_ICON != null
+				? ""
+				: `style="background-color: rgba(${hexToRgb(
+						app.APP_COLOR,
+					)}, 0.5); color:${app.APP_COLOR};"`;
+		const label = `<div class="flex flex-none rounded-full w-16 h-16 justify-center items-center" ${bg}>
+            ${
+				app.APP_ICON == null
+					? app.APP_LABEL == null
+						? ""
+						: `<span class="font-bold text-2xl">${app.APP_LABEL}</span>`
+					: `<img src="${app.APP_ICON}" class="w-16 h-16" />`
+			}
+        </div>`;
+		const str = `<a class="card bg-white bordered w-full h-auto shadow-xl flex gap-3 flex-row items-center p-3 lg:w-72 lg:max-w-[18rem] links-stamp"
+        href="${url}"
+        data-id="${app.APP_ID}"
+        data-color="${app.APP_COLOR}"
+        data-label="${app.APP_LABEL}"
+        data-name="${app.APP_NAME}"
+        data-type="${app.APP_TYPE}"
+        data-location="${app.APP_LOCATION}"
+        target="${app.APP_TYPE == "1" ? "_self" : "_blank"}">
+            ${label}
+            <div class="flex-1 flex flex-col gap-0">
+                <div class="font-bold">${app.APP_NAME}</div>
+                <div class="text-md">${app.APP_LOCATION}</div>
+            </div>
+        </a>`;
+		obj.append(str);
+	});
+}
 
 export async function amecwebData(id) {
 	return new Promise((resolve, reject) => {

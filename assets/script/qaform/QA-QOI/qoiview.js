@@ -1,5 +1,6 @@
 import { doaction, redirectWebflow } from "@amec/webasset/form";
-import { host, showLoader } from "../../utils";
+import { showLoader } from "@amec/webasset/preloader";
+import { host } from "../../utils";
 import "select2";
 import "select2/dist/css/select2.min.css";
 import flatpickr from "flatpickr";
@@ -32,16 +33,16 @@ $(document).ready(async function () {
 				$select
 					.empty()
 					.append(
-						'<option value="">------------Select------------</option>'
+						'<option value="">------------Select------------</option>',
 					);
 				data.forEach(function (user) {
 					$select.append(
-						`<option value="${user.SEMPNO}">${user.SNAME}</option>`
+						`<option value="${user.SEMPNO}">${user.SNAME}</option>`,
 					);
 				});
 				$select.select2();
 			},
-			"json"
+			"json",
 		);
 	}
 	const { nfrmno, vorgno, cyear, cyear2, nrunno, empno } = formData;
@@ -70,7 +71,7 @@ $(document).ready(async function () {
 			if ($("#jstaff").val() == "" || $("#enginc").val() == "") {
 				showMessage(
 					"Please select J-Staff in charge and Engineer in charge",
-					"warning"
+					"warning",
 				);
 				return false;
 			}
@@ -96,13 +97,13 @@ $(document).ready(async function () {
 						nrunno,
 						action,
 						empno,
-						remark
+						remark,
 					);
 					if (confirm.status) redirectWebflow();
 				} else {
 					showMessage(
 						"Please input remark for reason Reject",
-						"warning"
+						"warning",
 					);
 				}
 			} else {
@@ -120,7 +121,7 @@ $(document).ready(async function () {
 						nrunno,
 						act,
 						empno,
-						remark
+						remark,
 					);
 					if (confirm.status) {
 						const statusact = await actionfrm(formData);
@@ -138,7 +139,7 @@ $(document).ready(async function () {
 					nrunno,
 					action,
 					empno,
-					remark
+					remark,
 				);
 				if (confirm.status) redirectWebflow();
 			} else {
@@ -155,7 +156,7 @@ $(document).ready(async function () {
 					nrunno,
 					"approve",
 					empno,
-					remark
+					remark,
 				);
 				if (confirm.status) {
 					const statusact = await actionfrm(formData);
@@ -163,7 +164,7 @@ $(document).ready(async function () {
 				} else {
 					showMessage(
 						"An error has occurred. Please contact the administrator(#2034).",
-						"error"
+						"error",
 					);
 				}
 			}
@@ -174,7 +175,7 @@ $(document).ready(async function () {
 			} else {
 				showMessage(
 					"An error has occurred. Please contact the administrator(#2034).",
-					"error"
+					"error",
 				);
 			}
 		} else {
@@ -190,13 +191,13 @@ $(document).ready(async function () {
 						nrunno,
 						action,
 						empno,
-						remark
+						remark,
 					);
 					if (confirm.status) redirectWebflow();
 				} else {
 					showMessage(
 						"An error has occurred. Please contact the administrator(#2034).",
-						"error"
+						"error",
 					);
 				}
 			}
@@ -307,13 +308,13 @@ function actionfrm(data) {
 			contentType: false,
 			data: data,
 			beforeSend: function () {
-				showLoader(true);
+				showLoader();
 			},
 			success: function (res) {
 				resolve(res);
 			},
 			complete: function (xhr, status) {
-				showLoader(false);
+				showLoader({ show: false });
 			},
 		});
 	});
@@ -374,7 +375,7 @@ function checkData() {
 		if (c == 0) {
 			showMessage(
 				"Please input Corrective and Preventive Action",
-				"warning"
+				"warning",
 			);
 			return false;
 		}
@@ -382,7 +383,7 @@ function checkData() {
 		if ($('input[name="qe_option"]:checked').length === 0) {
 			showMessage(
 				"Please select an option in the QE section.",
-				"warning"
+				"warning",
 			);
 			return false;
 		}
@@ -415,13 +416,13 @@ function deletefile(data) {
 			dataType: "json",
 			data: data,
 			beforeSend: function () {
-				showLoader(true);
+				showLoader();
 			},
 			success: function (res) {
 				resolve(res);
 			},
 			complete: function (xhr, status) {
-				showLoader(false);
+				showLoader({ show: false });
 			},
 		});
 	});

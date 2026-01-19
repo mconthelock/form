@@ -27,7 +27,7 @@ var NFRMNO,
 	cextData,
 	firstStep; //openModal = true ;//,module,;
 $(async function () {
-	showLoader(true);
+	showLoader();
 	NFRMNO = $(".form-info").attr("NFRMNO");
 	VORGNO = $(".form-info").attr("VORGNO");
 	CYEAR = $(".form-info").attr("CYEAR");
@@ -52,7 +52,7 @@ $(async function () {
 
 	$("#form").removeClass("hidden");
 	$(".load").addClass("hidden");
-	showLoader(false);
+	showLoader({ show: false });
 	const before = carouselAuto("fileBefore", {
 		...carouselAutoOption,
 		Dots: false,

@@ -18,14 +18,20 @@
     <link rel="apple-touch-startup-image" href="{{ base_url() }}assets/images/icon_512.png">
     <title>AMEC Webflow</title>
     <link rel="stylesheet" href="{{ $_ENV['APP_CDN'] }}/icofont/icofont.min.css">
-    <link rel="stylesheet" href="{{ $_ENV['APP_CSS'] }}/tailwind.css?ver={{ $GLOBALS['version'] }}">
+    <link rel="stylesheet" href="{{ base_url() }}assets/dist/css/tailwind.css?ver={{ $GLOBALS['version'] }}">
     @yield('styles')
 </head>
 
 <body class="flex flex-col min-h-screen">
-    <input type="checkbox" id="loading-box" class="modal-toggle" />
-    <div class="modal z-9999!" role="dialog">
-        <div class="loader"></div>
+    <input type="checkbox" id="loading-box" class="modal-toggle" checked />
+    <div class="modal" role="dialog" id="loading-box-modal">
+        <div
+            class="modal-box w-screen! max-w-[100vw]! h-screen! max-h-screen! rounded-none! flex items-center justify-center glass bg-white/5 ">
+            <div class="">
+                <img src="{{ $_ENV['APP_IMG'] }}/preloader.gif" class="h-28" />
+                <h1 class="text-center text-white text-lg font-bold">Loading....</h1>
+            </div>
+        </div>
     </div>
 
     <div class="flex flex-col w-full px-4 mt-20 mb-20 md:px-8 lg:mt-5">
