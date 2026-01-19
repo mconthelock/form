@@ -33,7 +33,7 @@
             <!-- Footer -->
             @include('layouts.footer')
         </div>
-        <div class="drawer-side shadow-2xl z-[51]!">
+        <div class="drawer-side shadow-2xl z-51!">
             <div id="sidebar"></div>
         </div>
     </div>

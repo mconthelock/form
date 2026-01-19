@@ -9,7 +9,7 @@ class Task_model extends my_model{
 
     public function getReport($cond = ''){
         if($cond['JOBSECTION'] == 'AAS'){
-            $this->db = $this->load->database('docinv', TRUE);
+            $this->db = $this->load->database('DOCINV', TRUE);
         }else{
             $this->db = $this->load->database('AUD', TRUE);
         }
@@ -39,9 +39,9 @@ class Task_model extends my_model{
 
     public function getMonthly($cond = ''){
         if($cond['JOBSECTION'] == 'AAS'){
-            $this->db = $this->load->database('docinv', TRUE);
+            $this->db = $this->load->database('DOCINV', TRUE);
         }else{
-            $this->db = $this->load->database('aud', TRUE);
+            $this->db = $this->load->database('AUD', TRUE);
         }
         if($cond) $this->db->where($cond);
         $this->db->select("JOBSECTION, LOG_DATE,
@@ -59,9 +59,9 @@ class Task_model extends my_model{
 
     public function getEndAb($cond){
         if($cond['JOBSECTION'] == 'AAS'){
-            $this->db = $this->load->database('docinv', TRUE);
+            $this->db = $this->load->database('DOCINV', TRUE);
         }else{
-            $this->db = $this->load->database('aud', TRUE);
+            $this->db = $this->load->database('AUD', TRUE);
         }
         if($cond) $this->db->where($cond);
         $this->db->from('JOB_RESULT_CONFIRMATION')

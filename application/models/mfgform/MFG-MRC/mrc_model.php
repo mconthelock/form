@@ -7,7 +7,7 @@ class Mrc_model extends CI_Model
         parent::__construct();
         // Load database if not autoloaded
         $this->load->database();
-        $this->wk = $this->load->database('workload', TRUE);
+        $this->wk = $this->load->database('WORKLOAD', TRUE);
     }
 
     public function getGroupData()
