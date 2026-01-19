@@ -833,7 +833,7 @@
 
 @if (($mode == $MODE_EDIT) && ($cextData == 6) && is_null($cnform->MSTATUS))
     <tr>
-        <td class="force-w-350" style="padding:5px;">Change To</td>
+        <td class="force-w-350 align-top pt-2 " style="padding:5px;">Change To</td>
         <td class="px-3 py-1 bg-gray-100 border-b border-white">
              <select name="Foreman" class="w-full h-8 px-2 border border-gray-300 bg-white focus:outline-none focus:ring-1 focus:ring-sky-400 rounded-sm">
                 @foreach ($foreman as $f)
@@ -850,8 +850,9 @@
         <td class="force-w-350 align-top pt-2">Operator</td>
         <td class="px-3 py-1 bg-gray-100 border-b border-white">
             <select name="Operator" class="w-full h-8 px-2 border border-gray-300 bg-white focus:outline-none focus:ring-1 focus:ring-sky-400 rounded-sm">
-                @foreach ($operatorList as $op)
-                    <option value="{{ $op->sempno }}">{{ $op->sname }}</option>
+                <option value="">-----Operator-----</option>
+                @foreach ($opr as $o)
+                    <option value="{{ $o->SEMPNO }}">{{ $o->SNAME }}</option>
                 @endforeach
             </select>
         </td>
@@ -863,85 +864,142 @@
 {{-- ส่วน Check Sheet & Files --}}
 @if ($form[0]->CST == "0")
     <tr>
-        <td class="force-w-350" style="padding:5px;">Check Sheet</td>
+        <td class="force-w-350 align-top pt-2 " style="padding:5px;">Check Sheet</td>
         <td class="px-3 py-1 bg-gray-100 border-b border-white">
-            {{-- Function showAttFile ควรถูกแปลงเป็น Component หรือ Include --}}
-            @include('components.show-att-file', ['type' => 6])
+        <div id="dvmak" class="py-2 px-1 w-[600px]" >
+                @foreach($attchk as $d)
+                                    <div class="openfl"  data-id="{{ $d->ITEMNO }}" data-filename="{{ $d->SFILE }}">
+                                        <a href="{{ base_url('qaform/QA-CN/form/mdownload/') . $NFRMNO . '_'.$VORGNO.'_'.$CYEAR.'_'.$CYEAR2.'_'.$NRUNNO.'/'.$d->SFILE.'/'.substr($d->SFILE, 13) }}" class="link text-sm text-blue-600 font-semibold" target="_blank">{{ substr($d->SFILE, 13) }}</a>
+                                            @if (
+                                                ($mode == $MODE_EDIT)
+                                                || ((($form[0]->CST == "0")||($mode == $MODE_EDIT)) && in_array($empno, [$form[0]->VREQNO, $form[0]->VINPUTER]))
+                                            )
+                                                <button type="button"  data-table = "" class="text-red-500 hover:text-red-700 cursor-pointer del-file" >✕</button>
+                                            @endif
+                                    </div>
+                @endforeach
+            </div>
+            @if (($mode == $MODE_EDIT) && ($cextData >= 2) && ($cextData < 8))
+                <div id="dvchkFile" class="pt-1 w-[600px]">
+                <div class="dvSFile flex items-center justify-between gap-2 mb-2">
+                    <input type="file" name="CHKFILE[]" data-map="CHKFILE"
+                    class="file-input file-input-bordered border-blue-200 w-full" multiple>
+
+                    <!-- ปุ่มลบ -->
+                    <button type="button"
+                    class="reset-file btn-square bg-red-200 hover:bg-red-300 text-red-800 rounded-md w-8 h-8 flex items-center justify-center shadow transition cursor-pointer"
+                    title="Reset file input">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none"
+                        viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                    </button>
+                </div>
+                </div>
+
+                <!-- ปุ่มเพิ่ม -->
+                <div class="flex justify-end mt-2  w-[600px]">
+                <button type="button"
+                    class="add-row btn-square bg-green-200 hover:bg-green-300 text-green-800 rounded-md w-8 h-8 flex items-center justify-center shadow transition cursor-pointer"
+                    title="Add row" data-var1="CHKFILE" data-var2="dvchkFile">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none"
+                    viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+                    </svg>
+                </button>
+                </div>
+            @endif
         </td>
     </tr>
 
-    @if ($mode == $MODE_EDIT && $stepExt >= "02" && $stepExt < "08")
-        <tr>
-            <td class="force-w-350" style="padding:5px;">
-                <button type="button" name="upload2" onclick="addUpload(6,1000);" id="xx_file"
-                        class="px-2 py-1 bg-gray-200 border border-gray-400 hover:bg-gray-300 rounded text-sm">
-                    Attach File
-                </button>
-            </td>
-            <td class="px-3 py-1 bg-gray-100 border-b border-white">
-                <div id="uploadFile6" name="uploadFile6"></div>
-            </td>
-        </tr>
-    @endif
 
     {{-- ส่วน Judgement --}}
     <tr>
-        <td class="force-w-350" valign="top">Judgement</td>
+        <td class="force-w-350 align-top pt-2" valign="top">Judgement</td>
         
-        @if ($mode == $MODE_EDIT && $stepExt >= "02" && $stepExt < "08")
+        @if ($mode == $MODE_EDIT && $cextData >= 2 && $cextData < 8)
             <td class="px-3 py-1 bg-gray-100 border-b border-white">
-                @foreach ($judgementList as $j)
+                @foreach ($cnjudg as $j)
                     @php
-                        $isMainInteger = !str_contains($j->jdgmntno, '.');
-                        $firstChar = substr($j->jdgmntno, 0, 1);
+                        $isMainInteger = !str_contains($j->JDGMNTNO, '.');
+                        $firstChar = substr($j->JDGMNTNO, 0, 1);
                     @endphp
 
                     {{-- Logic การแสดงผล Radio Button --}}
-                    @if ($isMainInteger && in_array($j->jdgmntno, [1, 2, 3]))
+                    @if ($isMainInteger && in_array($j->JDGMNTNO, [1, 2, 3]))
                         <label class="inline-flex items-center mr-3">
-                            <input type="radio" name="radJudge" value="{{ $j->jdgmntno }}" 
-                                   {{ $cnform->jdgmntno == $j->jdgmntno ? 'checked' : '' }}
+                            <input type="radio" name="radJudge" value="{{ $j->JDGMNTNO }}" 
+                                   {{ $cnform->JDGMNTNO == $j->JDGMNTNO ? 'checked' : '' }}
                                    class="form-radio h-4 w-4 text-sky-600">
-                            <span class="ml-2">{{ $j->judgement }}</span>
+                            <span class="ml-2">{{ $j->JUDGEMENT }}</span>
                         </label>
 
-                        @if ($j->jdgmntno == 2) <br><span class="text-blue-700 font-bold">Not Accept</span> @endif
-                        @if ($j->jdgmntno == 4) <span class="text-blue-700 font-bold">Cancel</span> @endif
+                        @if ($j->JDGMNTNO == 2) <br><span class="text-blue-700 font-bold">Not Accept</span> @endif
+                        @if ($j->JDGMNTNO == 4) <span class="text-blue-700 font-bold">Cancel</span> @endif
 
                     @elseif (!$isMainInteger && ($firstChar == 2 || $firstChar == 4))
                         <label class="inline-flex items-center mr-3">
-                            <input type="radio" name="radJudge" value="{{ $j->jdgmntno }}" 
-                                   {{ $cnform->jdgmntno == $j->jdgmntno ? 'checked' : '' }}
+                            <input type="radio" name="radJudge" value="{{ $j->JDGMNTNO }}" 
+                                   {{ $cnform->JDGMNTNO == $j->JDGMNTNO ? 'checked' : '' }}
                                    class="form-radio h-4 w-4 text-sky-600">
-                            <span class="ml-2">{{ $j->judgement }}</span>
+                            <span class="ml-2">{{ $j->JUDGEMENT }}</span>
                         </label>
 
                         {{-- Case 4.1: Upload File --}}
-                        @if ($j->jdgmntno == 4.1)
-                            @include('components.show-att-file', ['type' => 7])
-                            <span class="text-red-500 text-sm">(Max 300 KB)</span>
-                            <button type="button" name="upload" onclick="window.document.frmMain.radJudge[7].checked = true; addUpload(7,300);"
-                                    class="ml-2 px-2 py-0.5 bg-gray-200 border border-gray-400 rounded text-xs">
-                                Attach File
+                        @if ($j->JDGMNTNO == 4.1)
+                        <div id="dvmak" class="py-2 px-1 w-[600px]" >
+                            @foreach($attjud as $d)
+                                                <div class="openfl"  data-id="{{ $d->ITEMNO }}" data-filename="{{ $d->SFILE }}">
+                                                    <a href="{{ base_url('qaform/QA-CN/form/mdownload/') . $NFRMNO . '_'.$VORGNO.'_'.$CYEAR.'_'.$CYEAR2.'_'.$NRUNNO.'/'.$d->SFILE.'/'.substr($d->SFILE, 13) }}" class="link text-sm text-blue-600 font-semibold" target="_blank">{{ substr($d->SFILE, 13) }}</a>
+                                           
+                                                    <button type="button"  data-table = "" class="text-red-500 hover:text-red-700 cursor-pointer del-file" >✕</button>
+                                                        
+                                                </div>
+                            @endforeach
+                        </div>
+                        <div id="dvjudFile" class="pt-1 w-[600px]">
+                        <div class="dvSFile flex items-center justify-between gap-2 mb-2">
+                            <input type="file" name="JUDFILE[]" data-map="JUDFILE"
+                            class="file-input file-input-bordered border-blue-200 w-full" multiple>
+
+                            <!-- ปุ่มลบ -->
+                            <button type="button"
+                            class="reset-file btn-square bg-red-200 hover:bg-red-300 text-red-800 rounded-md w-8 h-8 flex items-center justify-center shadow transition cursor-pointer"
+                            title="Reset file input">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none"
+                                viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
                             </button>
-                            <div id="uploadFile7" name="uploadFile7" class="inline-block ml-2"></div>
-                        @endif
+                        </div>
+                        </div>
+                        <!-- ปุ่มเพิ่ม -->
+                        <div class="flex justify-end mt-2  w-[600px]">
+                        <button type="button"
+                            class="add-row btn-square bg-green-200 hover:bg-green-300 text-green-800 rounded-md w-8 h-8 flex items-center justify-center shadow transition cursor-pointer"
+                            title="Add row" data-var1="JUDFILE" data-var2="dvjudFile">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none"
+                            viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+                            </svg>
+                        </button>
+                        </div>
+
+                    @endif
                     @endif
 
                     {{-- Case 2.5: Other Text Input --}}
-                    @if ($j->jdgmntno == 2.5)
+                    @if ($j->JDGMNTNO == 2.5)
                         <input type="text" name="txtJdgOther1" 
                                class="w-full mt-1 h-8 px-2 border border-gray-300 bg-white focus:outline-none focus:ring-1 focus:ring-sky-400 rounded-sm"
-                               onclick="javascript: window.document.frmMain.radJudge[6].checked = true;"
-                               value="{{ $cnform->jdgmntno == 2.5 ? $cnform->jdgOther : '' }}">
+                               value="{{ $cnform->JDGMNTNO == 2.5 ? $cnform->JDGOTHER : '' }}">
                     @endif
 
                     {{-- Case 4.2: Other Text Input --}}
-                    @if ($j->jdgmntno == 4.2)
+                    @if ($j->JDGMNTNO == 4.2)
                         <input type="text" name="txtJdgOther2"
                                class="w-full mt-1 h-8 px-2 border border-gray-300 bg-white focus:outline-none focus:ring-1 focus:ring-sky-400 rounded-sm"
-                               onclick="javascript: window.document.frmMain.radJudge[8].checked = true;"
-                               value="{{ $cnform->jdgmntno == 4.2 ? $cnform->jdgOther : '' }}">
+                               value="{{ $cnform->JDGMNTNO == 4.2 ? $cnform->JDGOTHER : '' }}">
                     @endif
                     
                     <br>
@@ -950,9 +1008,14 @@
         @else
             {{-- View Mode --}}
             <td class="px-3 py-1 bg-gray-100 border-b border-white">
-                {{ $cnform->judgement }}&nbsp;{{ $cnform->jdgOther }}
-                &nbsp;
-                @include('components.show-att-file', ['type' => 7])
+                {{ $cnform->JUDGEMENT }}&nbsp;{{ $cnform->JDGOTHER }}
+                <div id="dvmak" class="py-2 px-1 w-[600px]" >
+                        @foreach($attjud as $d)
+                            <div class="openfl"  data-id="{{ $d->ITEMNO }}" data-filename="{{ $d->SFILE }}">
+                                <a href="{{ base_url('qaform/QA-CN/form/mdownload/') . $NFRMNO . '_'.$VORGNO.'_'.$CYEAR.'_'.$CYEAR2.'_'.$NRUNNO.'/'.$d->SFILE.'/'.substr($d->SFILE, 13) }}" class="link text-sm text-blue-600 font-semibold" target="_blank">{{ substr($d->SFILE, 13) }}</a>                      
+                            </div>
+                        @endforeach
+                </div>
             </td>
         @endif
     </tr>
@@ -972,7 +1035,7 @@
 {{-- ส่วน Action Buttons --}}
 <tr>
     <td colspan="2" class="py-4 text-center">
-        @if ($mode == $MODE_EDIT && $requester != session('uid'))
+        @if ($mode == $MODE_EDIT)
             <div class="inline-block">
                 <button type="button" name="btnApprove" 
                         onclick="if(CheckData('approve')) { document.frmMain.act.value = 'approve'; document.frmMain.submit()}"
@@ -980,7 +1043,7 @@
                     Approve
                 </button>
 
-                @if (($stepExt <= "04" || $stepExt == "08") && ($requester != session('uid')))
+                @if (($cextData <= 4) || ($cextData == 8))
                     <button type="button" name="btnReturn" 
                             onclick="if(CheckData('return')) {document.frmMain.act.value = 'return'; document.frmMain.submit()}"
                             class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded shadow mx-1">
@@ -995,14 +1058,14 @@
             </button>
         @endif
 
-        @if (($flowst == $FLOW_PREPARE || $mode == $MODE_EDIT) && ($requester == session('uid') || $inputer == session('uid')))
+        @if (($form[0]->CST == "0" || $mode == $MODE_EDIT) && in_array($empno, [$form[0]->VREQNO, $form[0]->VINPUTER]))
             <button type="button" name="btnSave" 
                     onclick="if(CheckData('saveData')) { document.frmMain.act.value = 'saveData'; document.frmMain.submit()}"
                     class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded shadow mx-1">
                 Save Data
             </button>
 
-            @if ($flowst == $FLOW_PREPARE)
+            @if ($form[0]->CST == "0")
                 <button type="button" name="btnSndApv" 
                         onclick="if(CheckData('sendApv')) { document.frmMain.act.value = 'sendApv'; document.frmMain.submit()}"
                         class="bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded shadow mx-1">
@@ -1022,31 +1085,22 @@
                 Delete Form
             </button>
         @endif
-
-        {{-- Export / Print Buttons --}}
-        @if ($flowst == $FLOW_APPROVE)
-            <button type="button" onclick="window.location.href='{{ route('cn.excel-rpt', ['no' => request('no')]) }}'"
-                    class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded shadow mx-1">
-                Export Excel
-            </button>
-        @endif
-
-        @if (in_array(session('secCode'), ['000502', '000503']))
-            <button type="button" onclick="window.location.href='{{ route('cn.print-frm', ['no' => request('no')]) }}'"
+        @if (in_array($empinf[0]->SSECCODE, ['000502', '000503']))
+            <button type="button" 
                     class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded shadow mx-1">
                 Print Form
             </button>
         @endif
         
         @if ($mode == $MODE_VIEW)
-             @if (($requester == session('uid') || $inputer == session('uid')) && $demapv == 0)
+             @if (in_array($empno, [$form[0]->VREQNO, $form[0]->VINPUTER]) && $form[0]->CST == "1" && (!$demapv))
                 <button type="button" name="btnReturn" 
                         onclick="document.frmMain.act.value = 'return'; document.frmMain.submit()"
                         class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded shadow mx-1">
                     Return
                 </button>
              @endif
-             <button type="button" onclick="window.location.href='{{ route('cn.excel-rpt2', ['no' => request('no')]) }}'"
+             <button type="button" 
                     class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded shadow mx-1">
                 Export Excel
             </button>

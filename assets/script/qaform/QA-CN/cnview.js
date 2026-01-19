@@ -1,12 +1,12 @@
-import { doaction, redirectWebflow } from "@public/_form.js";
+import { doaction, redirectWebflow } from "@amec/webasset/form";
 import { host, showLoader } from "../../utils";
 import "select2";
 import "select2/dist/css/select2.min.css";
 import flatpickr from "flatpickr";
 //import { setDatePicker } from "@public/_flatpickr";
 import "flatpickr/dist/flatpickr.min.css";
-import { ajaxOptions, getAllAttr, getData, showMessage , requiredForm} from "@public/jFuntion";
-import { showflow } from "../../api/webform/flow";
+import { ajaxOptions, getAllAttr, getData, showMessage , requiredForm} from "@amec/webasset/utils";
+import { showflow } from "@amec/webasset/api/webform";
 $(document).ready(async function () {
   const formData = $(".form-data").data();
   flatpickr("#part_date", { dateFormat: "d/m/Y", defaultDate: $("#part_date").val() });
@@ -151,6 +151,11 @@ $(document).ready(async function () {
         }
       }
   });
+});
+
+
+$(document).on("click", ".add-table-row", function (e) {
+  console.log("xxxxxxxxxxx");
 });
 
 $(document).on("click", ".add-row", function (e) {

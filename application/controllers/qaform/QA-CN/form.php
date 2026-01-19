@@ -49,6 +49,7 @@ class form extends MY_Controller{
             $data['resultdwg'] = $this->cn->customSelect("RESULTCHKDWG",array( 'NFRMNO' => $data['NFRMNO'],'VORGNO' => $data['VORGNO'],'CYEAR'  => $data['CYEAR'],'CYEAR2' => $data['CYEAR2'],'NRUNNO' => $data['NRUNNO']),'DWGNO , REVNO , RESULT , REMARK');
             $data['cncls'] = $this->cn->customSelect("CNCLSCHANGE",array(),'CLSNO , CLSCHANGE');
             $data['cnreason'] = $this->cn->customSelect("CNREASON",array(),'RSNNO , REASON');
+            $data['cnjudg'] = $this->cn->customSelect("CNJUDGEMENT",array(),'JDGMNTNO , JUDGEMENT');
             
             $data['attdwg'] = $this->cn->customSelect("ATTCNFRM",array( 'NFRMNO' => $data['NFRMNO'],'VORGNO' => $data['VORGNO'],'CYEAR'  => $data['CYEAR'],'CYEAR2' => $data['CYEAR2'],'NRUNNO' => $data['NRUNNO'] ,'TYPENO' => '0' ),'ITEMNO , SFILE');
             $data['attmat'] = $this->cn->customSelect("ATTCNFRM",array( 'NFRMNO' => $data['NFRMNO'],'VORGNO' => $data['VORGNO'],'CYEAR'  => $data['CYEAR'],'CYEAR2' => $data['CYEAR2'],'NRUNNO' => $data['NRUNNO'] ,'TYPENO' => '1' ),'ITEMNO , SFILE');
@@ -63,7 +64,7 @@ class form extends MY_Controller{
             $data['jstaff'] = $this->getjstaff($data['empinf']);
             $data['eng'] = $this->getjstaff($data['empinf']);
             $data['foreman'] = $this->getForeman($data['empno']);
-            //echo $data['cextData'];
+            $data['opr'] =  $this->getOpr($data['cnform']->MSTATUS,$data['empno']);
             $this->views('qaform/QA-CN/view', $data);
         }
 
@@ -91,7 +92,8 @@ class form extends MY_Controller{
   
         }
         $data = $this->cn->getdatasql($sql);
-        echo json_encode($data);
+       return   $data;
+        // echo json_encode($data);
     }
     
     public function geteng($head)
@@ -113,14 +115,29 @@ class form extends MY_Controller{
             $sql = "select SEMPNO , SNAME from AMEC.AEMPLOYEE where CSTATUS = '1' and SSECCODE = '000303' and SPOSCODE in ('35','40')  order by sname";
         }
         $data = $this->cn->getdatasql($sql);
-        echo json_encode($data);
+        //echo json_encode($data);
+        return   $data;
     }
 
     public function getForeman($emp)
     {
-        $sql = "select SEMPNO , SNAME from AMEC.AEMPLOYEE where CSTATUS = '1' and SEMPNO IN ('96261','06188','01004') and SEMPNO <> ".$emp." order by SNAME";
+        $sql = "select DISTINCT SEMPNO , SNAME from AMEC.AEMPLOYEE , CNSHOPPIC where CSTATUS = '1' and SEMPNO = FM and SEMPNO <> ".$emp." order by SNAME";
         $data = $this->cn->getdatasql($sql);
-        echo json_encode($data);
+       // echo json_encode($data);
+       return   $data;
+    }
+
+    public function getOpr($mstauts,$headno)
+    {
+        if(!is_null($mstauts))
+        {
+            $sql = "select SEMPNO , SNAME from AMEC.AEMPLOYEE , SEQUENCEORG where SEMPNO = EMPNO and HEADNO ='".$headno."' and CSTATUS = '1' and SEMPNO in ('08181','15141','15254','13165','14252','15196','11297','06011','13268','06191','08418','14073','14354','15085','16018') ";
+        }else{
+            $sql = "select SEMPNO , SNAME from AMEC.AEMPLOYEE where CSTATUS = '1' and SSECCODE = '000404' and SPOSCODE in ('61') order by SNAME";
+        }
+        $data = $this->cn->getdatasql($sql);
+       // echo json_encode($data);
+       return   $data;
     }
 
 
