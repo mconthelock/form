@@ -109,7 +109,7 @@ $(async function () {
 			);
 		}
 	}
-	const table = createTable("#table", {
+	const table = createTable({
 		data: data,
 		columns: column,
 		searching: false,
