@@ -2,14 +2,52 @@
 
 ## Update 2026-01-16
 
--   Change Build Tools from <mark>webpack</mark> to be <mark>Rspack</mark>
+- Change Build Tools from <mark>webpack</mark> to be <mark>Rspack</mark>
 
     > ### Rspack
     >
     > เป็น Build tool ตัวใหม่จากทีม ByteDance (TikTok) ที่สร้างมาเพื่อเป็น Drop-in replacement ของ Webpack
     >
-    > -   ทำไมถึงเร็ว: เขียนด้วยภาษา Rust และออกแบบมาให้ทำงานแบบ Parallel ได้เต็มประสิทธิภาพ
-    > -   เหมาะกับ: โปรเจกต์ที่ใช้ Webpack อยู่แล้วและมี Config ที่ซับซ้อน แต่อยากได้ความเร็วเพิ่มขึ้นโดยไม่ต้องย้ายไป Vite (ซึ่งต้องแก้เยอะกว่า)
+    > - ทำไมถึงเร็ว: เขียนด้วยภาษา Rust และออกแบบมาให้ทำงานแบบ Parallel ได้เต็มประสิทธิภาพ
+    > - เหมาะกับ: โปรเจกต์ที่ใช้ Webpack อยู่แล้วและมี Config ที่ซับซ้อน แต่อยากได้ความเร็วเพิ่มขึ้นโดยไม่ต้องย้ายไป Vite (ซึ่งต้องแก้เยอะกว่า)
+
+- Revise database.php
+  การ Config database จะเปลี่ยนไปกำหนดค่าที่ .env ไฟล์แทน ซึ่งถ้ามีการแก้ไขจะได้ไปแก้ที่ env ที่เดียว
+
+```php
+<?php
+defined('BASEPATH') OR exit('No direct script access allowed');
+
+$active_group = 'DEFAULT';
+$query_builder = TRUE;
+$list = $_ENV['DBLIST'];
+foreach (explode(',', $list) as $db_name) {
+    $db_name = trim($db_name);
+    if (!empty($db_name)) {
+        $db[$db_name] = array(
+            'dsn'	=> '',
+            'hostname' => $_ENV[strtoupper($db_name) . '_HOST'],
+            'username' => $_ENV[strtoupper($db_name) . '_USER'],
+            'password' => $_ENV[strtoupper($db_name) . '_PASS'],
+            'database' => $_ENV[strtoupper($db_name) . '_NAME'],
+            'dbdriver' => $_ENV[strtoupper($db_name) . '_DRIVER'],
+            'dbprefix' => '',
+            'pconnect' => FALSE,
+            'db_debug' => (ENVIRONMENT !== 'production'),
+            'cache_on' => FALSE,
+            'cachedir' => '',
+            'char_set' => 'utf8',
+            'dbcollat' => 'utf8_general_ci',
+            'swap_pre' => '',
+            'encrypt' => FALSE,
+            'compress' => FALSE,
+            'stricton' => FALSE,
+            'failover' => array(),
+            'save_queries' => TRUE
+        );
+    }
+}
+```
 
 # Backup Code
 
@@ -279,6 +317,6 @@ module.exports = {
 					buildDependencies: {
 						config: [__filename],
 					},
-			  },
+				},
 };
 ```

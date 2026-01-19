@@ -1,4 +1,3 @@
-import { sys } from "typescript";
 import { showFlow, doaction, redirectWebflow } from "@amec/webasset/form";
 // 'doaction' และ 'redirectWebflow' ไม่ถูกเรียกใช้ในไฟล์นี้ จึงลบออกเพื่อความกระชับ
 import { host } from "../../utils.js";
@@ -81,15 +80,15 @@ $(async function () {
 						new Map(
 							programs
 								.flatMap((p) => p.form_unmatch || [])
-								.map((f) => [f.NRUNNO, f])
-						).values()
+								.map((f) => [f.NRUNNO, f]),
+						).values(),
 					);
 					console.log(uniqueForms); // เก็บไว้สำหรับ debug
 					// สร้าง helper function สำหรับ render cell ของ system - matching create page
 					const systemCells = (rspan) => `
           <td rowspan="${rspan}" class="bg-base-200/50 text-center text-lg font-black border-r border-base-300">${
-						sysIdx + 1
-					}</td>
+				sysIdx + 1
+			}</td>
           <td rowspan="${rspan}" class="align-top p-4 border-r border-base-300">
             <div class="font-bold text-2xl text-primary mb-1">${
 				system.main_system_name || "N/A"
@@ -120,7 +119,7 @@ $(async function () {
                         class="btn btn-xs btn-outline btn-info no-underline normal-case justify-start">
                         Form No :  ${form.NRUNNO}
                     </a>
-                `
+                `,
 					)
 					.join("")}
               </div>
@@ -211,7 +210,7 @@ $(async function () {
 				nrunno,
 				action,
 				empno,
-				""
+				"",
 			);
 			if (confirm.status) redirectWebflow();
 		});

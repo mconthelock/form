@@ -16,8 +16,7 @@
 
     <title>AMEC Webflow 🕊️ Document Mananagement System</title>
     <link rel="stylesheet" href="{{ $_ENV['APP_CDN'] }}/select2/css/select2.min.css">
-    <link rel="stylesheet" href="{{ $_ENV['APP_CSS'] }}/v1.0.1.min.css?ver={{ $GLOBALS['version'] }}">
-    <script src="{{ base_url() }}assets/script/inc/auth.js"></script>
+    <link rel="stylesheet" href="{{ $_ENV['APP_CSS'] }}/tailwind.css?ver={{ $GLOBALS['version'] }}">
     @yield('styles')
 </head>
 

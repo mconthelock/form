@@ -27,7 +27,7 @@ trait formApi{
      */
     private function getMode($condition = []){
         try{
-            $response = $this->client->post($_env['APP_API'].'/form/getMode', [
+            $response = $this->client->post($_ENV['APP_APIPHP'].'/form/getMode', [
                 'json' => $condition
             ]);
             $result = trim($response->getBody());
@@ -52,7 +52,7 @@ trait formApi{
     */
     private function createForm($condition = []){
         try{
-            $response = $this->client->post($_env['APP_API'].'/form/createForm', [
+            $response = $this->client->post($_ENV['APP_APIPHP'].'/form/createForm', [
                 'json' => $condition
             ]);
             // $result = trim($response->getBody());
@@ -78,7 +78,7 @@ trait formApi{
      */
     private function deleteFlowandForm($condition = []){
         try{
-            $response = $this->client->post($_env['APP_API'].'/form/deleteForm', [
+            $response = $this->client->post($_ENV['APP_APIPHP'].'/form/deleteForm', [
                 'json' => $condition
             ]);
             $result = trim($response->getBody());
@@ -96,7 +96,7 @@ trait formApi{
      */
     private function getRequestNo($reqNo){
         try{
-            $response = $this->client->post($_env['APP_API'].'/form/getRequestNo', [
+            $response = $this->client->post($_ENV['APP_APIPHP'].'/form/getRequestNo', [
                 'json' => ['reqNo' => $reqNo]
             ]);
             $result = json_decode($response->getBody(), true);

@@ -14,7 +14,7 @@ trait audit_report_revision{
 
      private function getAuditReportRevision($condition = []){
          try{
-            $response = $this->client->post($_env['APP_API'].'/escs/audit-report-revision/getAuditReportRevision', [
+            $response = $this->client->post($_ENV['APP_APIPHP'].'/escs/audit-report-revision/getAuditReportRevision', [
                 'json' => $condition
             ]);
             $result = json_decode($response->getBody(), true);

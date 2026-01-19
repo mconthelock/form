@@ -6,8 +6,8 @@ import {
 	requiredForm,
 	showMessage,
 } from "@amec/webasset/utils";
-import { mailOpt, sendMail, mailForm } from "@public/_sendmail";
-import { showflow } from "@amec/webasset/form";
+import { mailOpt, sendMail, mailForm } from "@amec/webasset/sendmail";
+import { showflow } from "@amec/webasset/api/webform";
 import { getformDetail, webflowSubmit } from "@amec/webasset/components/form";
 import { doactionWebservice } from "@amec/webasset/form";
 import { redirectWebflow } from "@amec/webasset/form";
@@ -47,7 +47,7 @@ $(async function () {
 				reject: true,
 				flow: true,
 				flowhtml: flow.html,
-			})
+			}),
 		);
 	} else {
 		$(".action-form").html(
@@ -56,7 +56,7 @@ $(async function () {
 				remark: false,
 				flow: true,
 				flowhtml: flow.html,
-			})
+			}),
 		);
 	}
 	//   $("#flow").html(flow.html);
@@ -126,7 +126,7 @@ $(document).on("click", "button[name='btnAction']", async function () {
 			NRUNNO,
 			action,
 			empno,
-			remark
+			remark,
 		);
 
 		if (formStatus.status == true) {
@@ -137,7 +137,7 @@ $(document).on("click", "button[name='btnAction']", async function () {
 		}
 	} catch (e) {
 		showMessage(
-			`เกิดข้อผิดพลาด: ${e.message} กรุณาลองใหม่อีกครั้งหรือติดต่อ Admin Tel:2038`
+			`เกิดข้อผิดพลาด: ${e.message} กรุณาลองใหม่อีกครั้งหรือติดต่อ Admin Tel:2038`,
 		);
 		const mail = { ...mailOpt };
 		mail.BODY = [

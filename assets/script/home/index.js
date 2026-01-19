@@ -14,8 +14,15 @@ import { checkUpdateLinks, createLinks, amecwebData } from "./data";
 import { showLoader, createCarousel, stampApp, hexToRgb } from "../utils";
 
 $(document).ready(async function (e) {
-	//   await showLoader(true);
-	//$(".nav-form").find("details").attr("open", true);
+	await showLoader(true);
+	$(".nav-form").find("details").attr("open", true);
+	// try {
+	// } catch (error) {
+	// 	console.error("Error loading home page data:", error);
+	// } finally {
+	// 	await showLoader(false);
+	// }
+
 	//   const news = await createCarousel();
 	//   const links = await checkUpdateLinks();
 	//   await createLinks(1, links, $("#amecweb_system"));
@@ -47,7 +54,7 @@ $(document).on("click", ".links-stamp", async function (e) {
 	await setRecentApps();
 	setCookie(
 		curent.location,
-		encryptText(`${curent.id}-${curent.user}`, curent.location)
+		encryptText(`${curent.id}-${curent.user}`, curent.location),
 	);
 	//   const response = await directlogin(curent.user, curent.id);
 	//   const id = `${curent.id}-${curent.user}`;
@@ -75,7 +82,7 @@ $(document).on("click", "#reload_amecweb", async function () {
 		await setAmecweb(id, links);
 	} else {
 		$("#amecweb_links").html(
-			`<h1 class="text-lg italic text-gray-400">No access right any system</h1>`
+			`<h1 class="text-lg italic text-gray-400">No access right any system</h1>`,
 		);
 	}
 	await setAmecwebLinks();
@@ -86,7 +93,7 @@ async function setAmecwebLinks() {
 	const amecweb = await amecwebData($("#login-id").val());
 	if (amecweb.length == 0) {
 		$("#amecweb_links").html(
-			`<h1 class="text-lg italic text-gray-400">No access right any system</h1>`
+			`<h1 class="text-lg italic text-gray-400">No access right any system</h1>`,
 		);
 		return;
 	}
@@ -105,8 +112,8 @@ async function setAmecwebLinks() {
 			app.APP_ICON != null
 				? ""
 				: `style="background-color: rgba(${hexToRgb(
-						app.APP_COLOR
-				  )}, 0.5); color:${app.APP_COLOR};"`;
+						app.APP_COLOR,
+					)}, 0.5); color:${app.APP_COLOR};"`;
 		const label = `<div class="flex flex-none rounded-full w-16 h-16 justify-center items-center" ${bg}>
             ${
 				app.APP_ICON == null
@@ -155,7 +162,7 @@ async function setRecentApps() {
             <div
                 class="flex items-center justify-center text-xl font-bold rounded-full w-12 h-12"
                     style="background-color: rgba(${hexToRgb(
-						el.color
+						el.color,
 					)}, 0.5); color: ${el.color};"
             >
                 ${el.label}

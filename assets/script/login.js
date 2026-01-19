@@ -7,6 +7,7 @@ import {
 	setInfo,
 	getApp,
 } from "@amec/webasset/indexDB";
+import { getCookie } from "@amec/webasset/jsCookie";
 import { directlogin, passwordLogin } from "@amec/webasset/api/auth";
 import { createCarousel } from "@amec/webasset/api/gpreport";
 import { redirectProduction } from "@amec/webasset/authen";
@@ -217,7 +218,7 @@ async function showCamera(target) {
 	try {
 		const devices = await navigator.mediaDevices.enumerateDevices();
 		const videoInputDevices = devices.filter(
-			(device) => device.kind === "videoinput"
+			(device) => device.kind === "videoinput",
 		);
 
 		if (videoInputDevices.length === 0) {
@@ -230,7 +231,7 @@ async function showCamera(target) {
 		const preferred = videoInputDevices.find(
 			(device) =>
 				/back|rear/i.test(device.label) &&
-				!/depth|ultrawide/i.test(device.label)
+				!/depth|ultrawide/i.test(device.label),
 		);
 
 		if (preferred) {
@@ -259,7 +260,7 @@ async function showCamera(target) {
 				if (error) {
 					console.warn("อ่านผิดพลาด: ", error.message);
 				}
-			}
+			},
 		);
 		//return true;
 	} catch (err) {
