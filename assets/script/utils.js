@@ -24,67 +24,6 @@ export const initApp = async (opt = {}) => {
 	return;
 };
 
-// export const errorMessage = async function (error) {
-// 	try {
-// 		let str = `<ul class="list-disc ml-5">`;
-// 		const respose = error.responseJSON;
-// 		const title = respose.message.error;
-// 		if (typeof respose.message === "string") {
-// 			str += `<li>${respose.message}</li>`;
-// 			str += `</ul>`;
-// 			await showMessage(str, { type: "error", title });
-// 			return;
-// 		}
-
-// 		for (const [key, value] of Object.entries(respose.message)) {
-// 			for (const [k, val] of Object.entries(value)) {
-// 				str += `<li>${val}</li>`;
-// 			}
-// 		}
-// 		str += `</ul>`;
-// 		await showMessage(str, { type: "error", title });
-// 		return;
-// 	} catch (e) {
-// 		//console.log(e);
-// 		showMessage("An unexpected error occurred.");
-// 		return;
-// 	}
-// };
-
-// export const showMessage = async function (msg, type = "error") {
-// 	const prop = [
-// 		{
-// 			id: "error",
-// 			bg: "bg-red-800",
-// 			text: "text-white",
-// 			title: "Processing Fail!",
-// 		},
-// 		{ id: "success", bg: "bg-green-800", text: "text-white" },
-// 		{ id: "info", bg: "bg-blue-800", text: "text-white" },
-// 		{ id: "warning", bg: "bg-yellow-800", text: "text-white" },
-// 	];
-
-// 	const dt = prop.find((x) => x.id == type);
-// 	const toast = `<div class="toast toast-end z-50 alert-message w-80 max-w-80 transition-all duration-1000">
-//           <div class="alert flex flex-col gap-2 overflow-hidden relative ${dt.bg}">
-//               <div class="msg-title text-xl font-semibold block w-full text-left ${dt.text}">${dt.title}</div>
-//               <div class="msg-txt block w-full text-left max-w-80 text-wrap ${dt.text}">${msg}</div>
-//               <div class="msg-close absolute top-2 right-5 z-10">
-//                   <i class="icofont-ui-close"></i>
-//               </div>
-//               <div class="absolute -right-7.5 -top-2.5 text-[120px] z-0 opacity-20">
-//                   <i class="icofont-exclamation-circle"></i>
-//               </div>
-//           </div>
-//       </div>
-//   </div>
-//     `;
-// 	$(document.body).append(toast);
-// 	setTimeout(() => {
-// 		$(".msg-close").click();
-// 	}, 1000);
-// };
-
 export const deviceType = () => {
 	const ua = navigator.userAgent;
 	if (/(tablet|ipad|playbook|silk)|(android(?!.*mobi))/i.test(ua)) {
@@ -138,18 +77,6 @@ export const tableOption = {
 		}
 	},
 };
-
-// export const showLoader = (opt = { show: true }) => {
-// 	$("#loading-box").prop("checked", opt.show);
-// 	$("#loading-box-modal")
-// 		.find("h1")
-// 		.html(`${opt.title == undefined ? "Loading" : opt.title}`);
-// 	if (opt.clsbox !== undefined)
-// 		$("#loading-box-modal")
-// 			.find(".modal-box")
-// 			.addClass(opt.clsbox)
-// 			.removeClass("glass");
-// };
 
 export const showConfirm = (
 	func,

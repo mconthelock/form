@@ -1,19 +1,15 @@
-import {
-	getAmecweb,
-	getLinks,
-	setAmecweb,
-	setImage,
-	setInfo,
-	setAppGroup,
-	setApplication,
-	setAppMenu,
-} from "@amec/webasset/indexDB";
+import { setAmecweb } from "@amec/webasset/indexDB";
 import { setCookie } from "@amec/webasset/jsCookie";
 import { encryptText } from "@amec/webasset/crypto";
 import { showLoader } from "@amec/webasset/preloader";
 import { showErrorMessage } from "@amec/webasset/utils";
 import { createCarousel } from "@amec/webasset/api/gpreport";
-import { checkUpdateLinks, createLinks, setRecentApps } from "./data";
+import {
+	checkUpdateLinks,
+	createLinks,
+	setRecentApps,
+	setAmecwebLinks,
+} from "./data";
 import * as utils from "../utils";
 
 $(document).ready(async function (e) {
@@ -26,7 +22,7 @@ $(document).ready(async function (e) {
 		await createLinks(3, links, $("#utility_system"));
 		await createLinks(4, links, $("#other_system"));
 		await setRecentApps();
-		//await setAmecwebLinks();
+		await setAmecwebLinks();
 		// await waitforapprove({ empno: "02035" });
 	} catch (error) {
 		console.log(error);
@@ -40,7 +36,7 @@ $(document).ready(async function (e) {
 $(document).on("click", ".links-stamp", async function (e) {
 	e.preventDefault();
 	try {
-		await showbgLoader();
+		await showLoader();
 		const curent = {
 			id: $(this).attr("data-id"),
 			user: $("#login-id").val(),
@@ -53,7 +49,7 @@ $(document).on("click", ".links-stamp", async function (e) {
 			location: $(this).attr("data-location"),
 			updateDate: new Date().toISOString(),
 		};
-		await stampApp(curent);
+		await utils.stampApp(curent);
 		await setRecentApps();
 		setCookie(
 			curent.location,
@@ -65,7 +61,7 @@ $(document).on("click", ".links-stamp", async function (e) {
 		showErrorMessage();
 		return;
 	} finally {
-		await showbgLoader({ show: false });
+		await showLoader({ show: false });
 	}
 });
 

@@ -22,6 +22,7 @@
 
 <body class="flex flex-col min-h-screen">
     <input type="hidden" id="appid" value="{{ $_ENV['APP_ID'] }}">
+    <input type="checkbox" id="loading-box" class="modal-toggle" checked />
     <!-- Navbar -->
     <div id="navbar" class=""></div>
     <div class="drawer lg:drawer-open">

@@ -5,6 +5,7 @@ import {
 	getAmecweb,
 	setAmecweb,
 } from "@amec/webasset/indexDB";
+import { hexToRgb } from "../utils";
 
 //สร้าง Link ของ Other Links section
 export async function createLinks(id, data, obj) {
