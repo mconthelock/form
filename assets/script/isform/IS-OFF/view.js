@@ -11,7 +11,8 @@ import { ajaxOptionsLoad, getData, showMessage } from "@amec/webasset/utils";
 import { doaction, searchFlow, updateFlow } from "@amec/webasset/api/webform";
 import { formatDate } from "@amec/webasset/dayjs";
 import { displayEmpImage } from "@amec/webasset/indexDB";
-import { host, showLoader } from "../../utils";
+import { showLoader } from "@amec/webasset/preloader";
+import { host } from "../../utils";
 
 var NFRMNO,
 	VORGNO,

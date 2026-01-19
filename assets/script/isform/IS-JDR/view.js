@@ -15,7 +15,8 @@ import {
 } from "@amec/webasset/utils";
 import * as tooltip from "@amec/webasset/tooltip";
 import { displayEmpImage } from "@amec/webasset/indexDB";
-import { host, showLoader } from "../../utils";
+import { showLoader } from "@amec/webasset/preloader";
+import { host } from "../../utils";
 
 var NFRMNO,
 	VORGNO,

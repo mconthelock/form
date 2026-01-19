@@ -14,7 +14,7 @@ import {
 } from "@amec/webasset/form";
 import { mailForm, mailOpt, sendMail } from "@amec/webasset/sendmail";
 import { autosizeTextarea, showMessage } from "@amec/webasset/utils";
-import { showLoader } from "../../utils";
+import { showLoader } from "@amec/webasset/preloader";
 
 var NFRMNO,
 	VORGNO,

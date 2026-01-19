@@ -19,7 +19,8 @@ import {
 } from "@amec/webasset/utils";
 import { searchUser } from "@amec/webasset/api/amec";
 import { displayEmpImage } from "@amec/webasset/indexDB";
-import { host, showLoader } from "../../utils";
+import { showLoader } from "@amec/webasset/preloader";
+import { host } from "../../utils";
 
 var programs,
 	NFRMNO,
