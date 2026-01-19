@@ -10,6 +10,7 @@ class form extends MY_Controller{
     function __construct(){
 		parent::__construct();
         $this->client = new Client(['verify' => false]);
+        // $this->doc = $this->load->database('AS400',true);
     }
 
     public function main(){
