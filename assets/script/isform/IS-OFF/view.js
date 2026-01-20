@@ -11,7 +11,8 @@ import { ajaxOptionsLoad, getData, showMessage } from "@amec/webasset/utils";
 import { doaction, searchFlow, updateFlow } from "@amec/webasset/api/webform";
 import { formatDate } from "@amec/webasset/dayjs";
 import { displayEmpImage } from "@amec/webasset/indexDB";
-import { host, showLoader } from "../../utils";
+import { showLoader } from "@amec/webasset/preloader";
+import { host } from "../../utils";
 
 var NFRMNO,
 	VORGNO,
@@ -75,7 +76,7 @@ const column = [
 
 var form = {};
 $(async function () {
-	showLoader(true);
+	showLoader();
 	NFRMNO = $(".form-info").attr("NFRMNO");
 	VORGNO = $(".form-info").attr("VORGNO");
 	CYEAR = $(".form-info").attr("CYEAR");
@@ -108,7 +109,7 @@ $(async function () {
 			);
 		}
 	}
-	const table = createTable("#table", {
+	const table = createTable({
 		data: data,
 		columns: column,
 		searching: false,
@@ -117,7 +118,7 @@ $(async function () {
 	toggleActionForm(mode);
 	$("#form").removeClass("hidden");
 	$(".load").addClass("hidden");
-	showLoader(false);
+	showLoader({ show: false });
 });
 
 $(document).on("click", "button[name='btnAction']", async function () {

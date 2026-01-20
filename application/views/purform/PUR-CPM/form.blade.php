@@ -81,13 +81,19 @@
                             <input type="text" name="other-invoice" id="other-invoice" class="input input-sm w-full" disabled>
                         </div>
                     </fieldset>
+                    <fieldset class="gap-10">
+                        <span>Third Party: </span>
+                        <label>
+                            <select name="third-party" id="third-party" class="select select-sm"></select>
+                        </label>
+                    </fieldset>
                 </section>
                 <div class="divider"></div>
                 <section id="section-2">
                     <fieldset class="gap-8">
                         <span>Subject: </span>
                         <label>
-                            <textarea name="subject" id="subject" maxlength="512" class="textarea w-full"></textarea>
+                            <textarea name="subject" id="subject" maxlength="512" class="textarea w-full" placeholder="Device UTP Cat6 for LAN Access point (2 Points) ESA Factory"></textarea>
                         </label>
                     </fieldset>
                 </section>
@@ -101,7 +107,7 @@
                                 <span class="text-nowrap w-fit">
                                     Sub-con / Vendor
                                 </span>
-                                <input type="text" name="subcon-detail" id="subcon-detail" class="input input-sm w-full" disabled>
+                                <input type="text" name="subcon-detail" id="subcon-detail" class="input input-sm w-full" placeholder="CREATOR DESIGN SYSTEM CO.,LTD." disabled>
                             </label>
                             <label class="flex items-center gap-2">
                                 <input type="radio" name="accept-po" value="other">
@@ -117,13 +123,13 @@
                             <fieldset class="gap-4">
                                 <span>Quotation No.</span>
                                 <label>
-                                    <input type="text" name="quotation-no" id="quotation-no" class="input input-sm w-full">
+                                    <input type="text" name="quotation-no" id="quotation-no" class="input input-sm w-full" placeholder="CDS-2K24-00074">
                                 </label>
                             </fieldset>
                             <fieldset class="gap-10">
                                 <span>PR/PO No.</span>
                                 <label>
-                                    <input type="text" name="prpo-no" id="prpo-no" class="input input-sm w-full">
+                                    <input type="text" name="prpo-no" id="prpo-no" class="input input-sm w-full" placeholder="AMEC00440693">
                                 </label>
                             </fieldset>
                             <fieldset class="gap-9">
@@ -137,19 +143,19 @@
                             <fieldset class="gap-11">
                                 <span>Date: (version)</span>
                                 <label>
-                                    <input type="date" name="quo-date" id="quo-date" class="input input-sm w-full">
+                                    <input type="date" name="quo-date" id="quo-date" class="input input-sm w-full fdate" placeholder="2026-01-19">
                                 </label>
                             </fieldset>
                             <fieldset class="gap-2">
                                 <span>Total Amount (THB)</span>
                                 <label>
-                                    <input type="text" name="total-amount" id="total-amount" class="input input-sm w-full">
+                                    <input type="text" name="total-amount" id="total-amount" class="input input-sm w-full" placeholder="47,300.00">
                                 </label>
                             </fieldset>
                             <fieldset class="gap-24">
                                 <span>DATE : </span>
                                 <label>
-                                    <input type="date" name="po-sign-date" id="po-sign-date" class="input input-sm w-full">
+                                    <input type="date" name="po-sign-date" id="po-sign-date" class="input input-sm w-full fdate" placeholder="2026-01-19">
                                 </label>
                             </fieldset>
                         </div>
@@ -172,7 +178,7 @@
                             <fieldset class="gap-4">
                                 <span>INVOICE NO.</span>
                                 <label>
-                                    <input type="text" name="invoice-no" id="invoice-no" class="input input-sm w-full">
+                                    <input type="text" name="invoice-no" id="invoice-no" class="input input-sm w-full" placeholder="INV68-00109, 110">
                                 </label>
                             </fieldset>
                             <fieldset class="gap-4">
@@ -186,13 +192,13 @@
                             <fieldset class="gap-4">
                                 <span>Amount (THB)</span>
                                 <label>
-                                    <input type="text" name="invoice-amount" id="invoice-amount" class="input input-sm w-full">
+                                    <input type="text" name="invoice-amount" id="invoice-amount" class="input input-sm w-full" placeholder="47,300.00">
                                 </label>
                             </fieldset>
                             <fieldset class="gap-18">
                                 <span>DATE : </span>
                                 <label>
-                                    <input type="date" name="person-in-charge-date" id="person-in-charge-date" class="input input-sm w-full">
+                                    <input type="date" name="person-in-charge-date" id="person-in-charge-date" class="input input-sm w-full fdate" placeholder="2026-01-19">
                                 </label>
                             </fieldset>
                         </div>
@@ -213,7 +219,7 @@
                             </label>
                             <label>
                                 <input type="radio" name="payment-type" value="others">
-                                <input type="text" name="num-payment" id="num-payment" disabled="disabled" class="input input-sm w-24">
+                                <input type="number" step="1" min="0" name="num-payment" id="num-payment" disabled="disabled" class="input input-sm w-24" placeholder="3">
                                 payment condition (If any)
                             </label>
                             <label>
@@ -224,7 +230,7 @@
                         <fieldset>
                             <label>
                                 (THB)
-                                <input type="number" name="payment" id="payment" class="input input-sm w-48" disabled>
+                                <input type="number" step="1" min="0" name="payment" id="payment" class="input input-sm w-48" placeholder="47,300.00" disabled>
                             </label>
                         </fieldset>
                     </div>

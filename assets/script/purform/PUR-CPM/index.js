@@ -13,6 +13,7 @@ import { dragDropInit } from "@amec/webasset/dragdrop";
 import { doaction, showflow } from "@amec/webasset/api/webform";
 // import { getIsFile } from "../../api/isform/is-file";
 // import { downloadOrOpenFile } from "@amec/webasset/api/file";
+import { setDatePicker } from "@amec/webasset/flatpickr";
 
 var formInfo, empno, mode, form;
 
@@ -42,6 +43,8 @@ $(async function () {
             //     fileLink += "</div>";
             //     $("#attachFile").html(fileLink);
             // }
+        }else{
+            setDatePicker();
         }
         // set skeleton
         await setSkeleton(mode);
@@ -66,7 +69,8 @@ $(async function () {
     }
 });
 
-$(document).on("click", 'input[name="invoice-type"]', function () {
+// เมื่อเลือก Invoice Type เป็น Other ให้เปิดช่องกรอกข้อมูล
+$(document).on("change", 'input[name="invoice-type"]', function () {
 	const value = $(this).val();
 	if (value == "other") {
 		$("#other-invoice").attr("disabled", false);
@@ -74,9 +78,14 @@ $(document).on("click", 'input[name="invoice-type"]', function () {
 		$("#other-invoice").attr("disabled", true);
 		$("#other-invoice").val("");
 	}
+
+    if(value == "service"){
+
+    }
 });
 
-$(document).on("click", 'input[name="accept-po"]', function () {
+// เมื่อเลือก Accept PO เป็น Subcon หรือ Other ให้เปิดช่องกรอกข้อมูล
+$(document).on("change", 'input[name="accept-po"]', function () {
 	const value = $(this).val();
 	if (value == "subcon") {
 		$("#subcon-detail").attr("disabled", false);
@@ -91,6 +100,22 @@ $(document).on("click", 'input[name="accept-po"]', function () {
 		$("#other-accept").attr("disabled", true);
 		$("#other-accept").val("");
 	}
+});
+
+// เมื่อเลือก PAYMENT CONDITIONS & TERMS 
+$(document).on("change", 'input[name="payment-type"]', function () {
+    const value = $(this).val();
+    $('input[name="num-payment"]').val("");
+    $('input[name="payment"]').attr("disabled", false);
+    if (value == "others") {
+        $('input[name="num-payment"]').attr("disabled", false);
+    } else {
+        $('input[name="num-payment"]').attr("disabled", true);
+    }
+});
+
+$(document).on("input", "input[name='num-payment']", function () {
+    $(this).val($(this).val().replace(/[^0-9]/g, ''));
 });
 
 // //prettier-ignore

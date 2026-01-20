@@ -1,9 +1,10 @@
-import { tableOption, showLoader } from "../utils.js";
 import { displayEmpImage, displayEmpInfo } from "@amec/webasset/indexDB";
+import { showLoader } from "@amec/webasset/preloader";
+import { tableOption } from "../utils.js";
 
 var table;
 $(document).ready(async function () {
-	showLoader(true);
+	showLoader();
 	$(".nav-form").find("details").attr("open", true);
 	const status = $("#status").val();
 	const res = [];
@@ -12,7 +13,7 @@ $(document).ready(async function () {
 	//     type: $("#status").val(),
 	//   });
 	table = await createTable(res.data);
-	showLoader(false);
+	showLoader({ show: false });
 });
 
 async function createTable(data) {

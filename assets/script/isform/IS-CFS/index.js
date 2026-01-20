@@ -19,7 +19,8 @@ import {
 } from "@amec/webasset/utils";
 import { searchUser } from "@amec/webasset/api/amec";
 import { displayEmpImage } from "@amec/webasset/indexDB";
-import { host, showLoader } from "../../utils";
+import { showLoader } from "@amec/webasset/preloader";
+import { host } from "../../utils";
 
 var programs,
 	NFRMNO,
@@ -34,7 +35,7 @@ var programs,
 	firstStep,
 	data; //openModal = true ;//,module,;
 $(async function () {
-	showLoader(true);
+	showLoader();
 	NFRMNO = $(".form-info").attr("NFRMNO");
 	VORGNO = $(".form-info").attr("VORGNO");
 	CYEAR = $(".form-info").attr("CYEAR");
@@ -88,7 +89,7 @@ $(async function () {
 	// module = await getModule();
 	await setSelect2({ ...s2opt }, "#program_owner");
 	await setSelect2({ ...s2opt }, "#program_type");
-	showLoader(false);
+	showLoader({ show: false });
 	const wk = document.getElementById("workCon");
 	wk.addEventListener("input", () => autosizeTextarea(wk));
 });

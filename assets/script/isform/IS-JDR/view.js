@@ -15,7 +15,8 @@ import {
 } from "@amec/webasset/utils";
 import * as tooltip from "@amec/webasset/tooltip";
 import { displayEmpImage } from "@amec/webasset/indexDB";
-import { host, showLoader } from "../../utils";
+import { showLoader } from "@amec/webasset/preloader";
+import { host } from "../../utils";
 
 var NFRMNO,
 	VORGNO,
@@ -183,7 +184,7 @@ const columnMonthly = [
 ];
 
 $(async function () {
-	showLoader(true);
+	showLoader();
 	NFRMNO = $(".form-info").attr("NFRMNO");
 	VORGNO = $(".form-info").attr("VORGNO");
 	CYEAR = $(".form-info").attr("CYEAR");
@@ -243,7 +244,7 @@ $(async function () {
 	toggleActionForm(mode);
 	$("#form").removeClass("hidden");
 	$(".load").addClass("hidden");
-	showLoader(false);
+	showLoader({ show: false });
 });
 
 $(document).on("click", "button[name='btnAction']", async function () {

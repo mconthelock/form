@@ -11,7 +11,8 @@ import { getCookie } from "@amec/webasset/jsCookie";
 import { directlogin, passwordLogin } from "@amec/webasset/api/auth";
 import { createCarousel } from "@amec/webasset/api/gpreport";
 import { redirectProduction } from "@amec/webasset/authen";
-import { sendSession, showLoader, host, uri, showMessage } from "./utils";
+import { showMessage, showErrorMessage } from "@amec/webasset/utils";
+import { sendSession, host, uri } from "./utils";
 
 var camera;
 const startTime = Date.now();
@@ -90,7 +91,7 @@ $(document).on("submit", "#passwordLogin", async function (e) {
 	};
 	const user = await passwordLogin(usr);
 	if (user.status !== undefined) {
-		await showMessage(user.message);
+		await showErrorMessage(user.message);
 		frm.find(".loading").addClass("hidden");
 		frm.find("input").attr("readonly", false);
 		frm.find(".btn").attr("disabled", false);
@@ -202,7 +203,7 @@ function cardLogin(data) {
 
 async function barcodeLogin(empcode) {
 	if (user.status !== undefined) {
-		await showMessage(user.message);
+		await showErrorMessage(user.message);
 		// frm.find(".loading").addClass("hidden");
 		// frm.find("input").attr("readonly", false);
 		// frm.find(".btn").attr("disabled", false);
@@ -249,7 +250,7 @@ async function showCamera(target) {
 					const user = await directlogin(empno, 1);
 					//await barcodeLogin(result.getText());
 					if (user.status !== undefined) {
-						await showMessage(user.message);
+						await showErrorMessage(user.message);
 						return false;
 					}
 					//$("#open-camera").hide();
