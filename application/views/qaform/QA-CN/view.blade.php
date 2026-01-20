@@ -33,7 +33,7 @@
 <div class="form-data" data-nfrmno="{{ $NFRMNO }}" data-vorgno="{{ $VORGNO }}" data-cyear="{{ $CYEAR }}"
         data-cyear2="{{ $CYEAR2 }}" data-nrunno="{{ $NRUNNO }}" data-empno="{{ $empno }}" ></div>
 <form id="cn-form" method="post" enctype="multipart/form-data"> 
-<input type="hidden" name="stepExt" value="{{ $cextData}}" />
+<input type="hidden" name="cextData" value="{{ $cextData}}" />
 <div class="w-full border border-gray-300 text-sm font-sans">
     
     <style>
@@ -88,7 +88,7 @@
                 || ((($form[0]->CST == "0")||($mode == $MODE_EDIT)) && in_array($empno, [$form[0]->VREQNO, $form[0]->VINPUTER]))
             )
                 <input type="text" name="txtTitle" 
-                       class="w-1/3 h-8 px-2 border border-gray-300 bg-white focus:outline-none focus:ring-1 focus:ring-sky-400 rounded-sm"
+                       class="w-1/3 h-8 px-2 border border-gray-300 bg-white focus:outline-none focus:ring-1 focus:ring-sky-400 rounded-sm req"
                        value="{{ $cnform->TITLE ?? 'New item' }}" maxlenght="256">
             @else
                 {{ $cnform->TITLE }}
@@ -122,21 +122,21 @@
         <tr>
             <td class="force-w-350 align-top pt-2">Drawing No</td>
             <td class="p-2 bg-white border-b border-white">
-                <table class="w-2/3 text-center text-xs">
+                <table class="w-4/5  text-center text-xs">
                     <thead>
                         <tr class="text-white" style="background-color: #009688;">
-                            <th class="py-1 border-r border-white w-2/3 font-normal">DWG No.</th>
+                            <th class="py-1 border-r border-white w-[700px] font-normal">DWG No.</th>
                             <th class="py-1 border-r border-white w-16 font-normal">OK</th>
                             <th class="py-1 border-r border-white w-16 font-normal">NG</th>
                             <th class="py-1 font-normal">Remark</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody  id="dwg-body">
                     @php
                         $cnt = 0;
                     @endphp
                     @foreach ($resultdwg as $d)
-                    <tr class="text-white" style="background-color: #8BC34A;">
+                    <tr class="dwg-template text-white" style="background-color: #8BC34A;">
                     <td class="py-1 border-r border-white font-bold text-blue-900">
                         @if ((($form[0]->CST == "0")||($mode == $MODE_EDIT)) && in_array($empno, [$form[0]->VREQNO, $form[0]->VINPUTER]))
                         @php
@@ -170,6 +170,11 @@
                                 {{ $d->REVNO }}
                             @endif  
                         </span>
+                        @if ((($form[0]->CST == "0")||($mode == $MODE_EDIT)) && in_array($empno, [$form[0]->VREQNO, $form[0]->VINPUTER]))
+                        <span class="px-2">
+                        <button type="button"  data-table = "dwg-body" class="text-red-500 hover:text-red-700 cursor-pointer del-table-row" >✕</button>  
+                        </span>
+                        @endif  
                     </td>
                     <td class="py-1 border-r border-white">
                       @if ($d->RESULT == '0')
@@ -213,7 +218,7 @@
                     <tfoot>
 							<tr>
 								<td colspan="4" style="text-align:right" >
-                                <button type="button" data-table = "corrective-body" class="bg-sky-500 hover:bg-sky-600 text-white px-4 py-2 rounded shadow cursor-pointer add-table-row">
+                                <button type="button" data-table = "dwg-body" class="bg-sky-500 hover:bg-sky-600 text-white px-4 py-2 rounded shadow cursor-pointer add-table-row">
       + Add Row
     </button>
                                 </td>
@@ -232,7 +237,7 @@
                 || ((($form[0]->CST == "0")||($mode == $MODE_EDIT)) && in_array($empno, [$form[0]->VREQNO, $form[0]->VINPUTER]))
             )
                 <input type="text" name="txtPrtName" 
-                       class="w-1/3 h-8 px-2 border border-gray-300 bg-white focus:outline-none focus:ring-1 focus:ring-sky-400 rounded-sm"
+                       class="w-1/3 h-8 px-2 border border-gray-300 bg-white focus:outline-none focus:ring-1 focus:ring-sky-400 rounded-sm req"
                        value="{{ $cnform->PRTNAME }}" maxlenght="256">
             @else
                     {{ $cnform->PRTNAME }}    
@@ -248,7 +253,7 @@
                 || ((($form[0]->CST == "0")||($mode == $MODE_EDIT)) && in_array($empno, [$form[0]->VREQNO, $form[0]->VINPUTER]))
             )
                 <input type="text" name="txtPurItem" 
-                       class="w-48 h-8 px-2 border border-gray-300 bg-white focus:outline-none focus:ring-1 focus:ring-sky-400 rounded-sm"
+                       class="w-48 h-8 px-2 border border-gray-300 bg-white focus:outline-none focus:ring-1 focus:ring-sky-400 rounded-sm req"
                        value="{{ $cnform->PURITEM }}" maxlength="10" >
             </td>
             @else
@@ -264,7 +269,7 @@
                 || ((($form[0]->CST == "0")||($mode == $MODE_EDIT)) && in_array($empno, [$form[0]->VREQNO, $form[0]->VINPUTER]))
             )
                 <input type="text" name="txtInvNo" 
-                       class="w-1/3 h-8 px-2 border border-gray-300 bg-white focus:outline-none focus:ring-1 focus:ring-sky-400 rounded-sm"
+                       class="w-1/3 h-8 px-2 border border-gray-300 bg-white focus:outline-none focus:ring-1 focus:ring-sky-400 rounded-sm req"
                        value="{{ $cnform->INVNO }}" maxlength="90" >
             @else
                     {{ $cnform->INVNO }}    
@@ -281,7 +286,7 @@
                 || ((($form[0]->CST == "0")||($mode == $MODE_EDIT)) && in_array($empno, [$form[0]->VREQNO, $form[0]->VINPUTER]))
             )
                 <input type="text" name="txtOrdQ" 
-                       class="w-24 h-8 px-2 border border-gray-300 bg-white focus:outline-none focus:ring-1 focus:ring-sky-400 rounded-sm"
+                       class="w-24 h-8 px-2 border border-gray-300 bg-white focus:outline-none focus:ring-1 focus:ring-sky-400 rounded-sm req"
                        value="{{ $cnform->ORDQ }}" maxlength="15">
             @else
                     {{ $cnform->ORDQ }}    
@@ -297,7 +302,7 @@
                 || ((($form[0]->CST == "0")||($mode == $MODE_EDIT)) && in_array($empno, [$form[0]->VREQNO, $form[0]->VINPUTER]))
             )
                 <input type="text" name="txtSupName" 
-                       class="w-1/3 h-8 px-2 border border-gray-300 bg-white focus:outline-none focus:ring-1 focus:ring-sky-400 rounded-sm"
+                       class="w-1/3 h-8 px-2 border border-gray-300 bg-white focus:outline-none focus:ring-1 focus:ring-sky-400 rounded-sm req"
                        value="{{ $cnform->SVENDNAME }}">
             @else
                     {{ $cnform->SVENDNAME }}    
@@ -338,7 +343,7 @@
                         <input type="radio" name="radReason" class="h-4 w-4" value="{{ $r->RSNNO}}"  {{ ($cnform->RSNNO == $r->RSNNO) ? 'checked' : '' }}  >
                         <span>{{ $r->REASON }}</span>
                         @if($r->RSNNO == "5")
-                        <span class="px-2 inline-block w-[450px]"><input type="text" name="txtOther" value="{{ $cnform->RSNOTHER }}"  class="w-full h-8 px-2 border border-gray-300 bg-white focus:outline-none focus:ring-1 focus:ring-sky-400 rounded-sm" /></span>
+                        <span class="px-2 inline-block w-[450px]"><input type="text" name="txtOther" id="txtOther" value="{{ $cnform->RSNOTHER }}"  class="w-full h-8 px-2 border border-gray-300 bg-white focus:outline-none focus:ring-1 focus:ring-sky-400 rounded-sm" /></span>
                         @endif
                     </label>
 
@@ -363,12 +368,12 @@
                     </label>
                     <label class="flex items-center space-x-2 cursor-pointer">
                         <input type="radio" name="radSample" class="h-4 w-4" value="2"  {{ ($cnform->TRANSNO == "2") ? 'checked' : '' }}  >
-                        <span class="w-20">Return to</span><span class="px-2 inline-block w-[450px]"><input type="text" name="txtReturn" value="{{ $cnform->TRANSNO == 2 ? $cnform->DETTRANS :'' }}"  class="w-full h-8 px-2 border border-gray-300 bg-white focus:outline-none focus:ring-1 focus:ring-sky-400 rounded-sm" /></span>
+                        <span class="w-20">Return to</span><span class="px-2 inline-block w-[450px]"><input type="text" name="txtReturn" id="txtReturn" value="{{ $cnform->TRANSNO == 2 ? $cnform->DETTRANS :'' }}"  class="w-full h-8 px-2 border border-gray-300 bg-white focus:outline-none focus:ring-1 focus:ring-sky-400 rounded-sm" /></span>
                   
                     </label>
                     <label class="flex items-center space-x-2 cursor-pointer">
                         <input type="radio" name="radSample" class="h-4 w-4" value="2"  {{ ($cnform->TRANSNO == "3") ? 'checked' : '' }}  >
-                        <span class="w-20">Other</span><span class="px-2 inline-block w-[450px]"><input type="text" name="txtOth" value="{{ $cnform->TRANSNO == 3 ? $cnform->DETTRANS :'' }}"  class="w-full h-8 px-2 border border-gray-300 bg-white focus:outline-none focus:ring-1 focus:ring-sky-400 rounded-sm" /></span>
+                        <span class="w-20">Other</span><span class="px-2 inline-block w-[450px]"><input type="text" name="txtOth" id="txtOth" value="{{ $cnform->TRANSNO == 3 ? $cnform->DETTRANS :'' }}"  class="w-full h-8 px-2 border border-gray-300 bg-white focus:outline-none focus:ring-1 focus:ring-sky-400 rounded-sm" /></span>
                   
                     </label>
                 </div>
@@ -835,7 +840,7 @@
     <tr>
         <td class="force-w-350 align-top pt-2 " style="padding:5px;">Change To</td>
         <td class="px-3 py-1 bg-gray-100 border-b border-white">
-             <select name="Foreman" class="w-full h-8 px-2 border border-gray-300 bg-white focus:outline-none focus:ring-1 focus:ring-sky-400 rounded-sm">
+             <select name="Foreman" id="Foreman" class="w-full h-8 px-2 border border-gray-300 bg-white focus:outline-none focus:ring-1 focus:ring-sky-400 rounded-sm">
                 @foreach ($foreman as $f)
                     <option value="{{ $f->SEMPNO }}">{{ $f->SNAME }}</option>
                 @endforeach
@@ -849,7 +854,7 @@
     <tr>
         <td class="force-w-350 align-top pt-2">Operator</td>
         <td class="px-3 py-1 bg-gray-100 border-b border-white">
-            <select name="Operator" class="w-full h-8 px-2 border border-gray-300 bg-white focus:outline-none focus:ring-1 focus:ring-sky-400 rounded-sm">
+            <select name="Operator" id="Operator" class="w-full h-8 px-2 border border-gray-300 bg-white focus:outline-none focus:ring-1 focus:ring-sky-400 rounded-sm">
                 <option value="">-----Operator-----</option>
                 @foreach ($opr as $o)
                     <option value="{{ $o->SEMPNO }}">{{ $o->SNAME }}</option>
@@ -1038,56 +1043,63 @@
         @if ($mode == $MODE_EDIT)
             <div class="inline-block">
                 <button type="button" name="btnApprove" 
-                        onclick="if(CheckData('approve')) { document.frmMain.act.value = 'approve'; document.frmMain.submit()}"
-                        class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded shadow mx-1">
+                        data-action="approve"
+                        class="btn-submit bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded shadow mx-1">
                     Approve
                 </button>
-
+                @if(!is_null($cnform->MSTATUS) &&($cextData == 6))
+                <button type="button" name="btnChange" 
+                        data-action="chagne"
+                        class="btn-submit bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded shadow mx-1">
+                    Change
+                </button>
+                @endif
                 @if (($cextData <= 4) || ($cextData == 8))
-                    <button type="button" name="btnReturn" 
-                            onclick="if(CheckData('return')) {document.frmMain.act.value = 'return'; document.frmMain.submit()}"
-                            class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded shadow mx-1">
+                    <button type="button" name="btnReturn"
+                             data-action="return"
+                            class="btn-submit bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded shadow mx-1">
                         Return
                     </button>
                 @endif
             </div>
             <button type="button" name="btnReject" 
-                    onclick="if(CheckData('reject')){document.frmMain.act.value = 'reject'; document.frmMain.submit()}"
-                    class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded shadow mx-1">
+                    data-action="reject"
+                    class="btn-submit bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded shadow mx-1">
                 Reject
             </button>
         @endif
 
         @if (($form[0]->CST == "0" || $mode == $MODE_EDIT) && in_array($empno, [$form[0]->VREQNO, $form[0]->VINPUTER]))
-            <button type="button" name="btnSave" 
-                    onclick="if(CheckData('saveData')) { document.frmMain.act.value = 'saveData'; document.frmMain.submit()}"
-                    class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded shadow mx-1">
+            <button type="button" name="btnSave"
+                    data-action="saveData"
+                    class="btn-submit bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded shadow mx-1">
                 Save Data
             </button>
 
             @if ($form[0]->CST == "0")
                 <button type="button" name="btnSndApv" 
-                        onclick="if(CheckData('sendApv')) { document.frmMain.act.value = 'sendApv'; document.frmMain.submit()}"
-                        class="bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded shadow mx-1">
+                        data-action="sendApv"
+                        class="btn-submit bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded shadow mx-1">
                     Send Approve
                 </button>
             @else
                 <button type="button" name="btnSndApv" 
-                        onclick="if(CheckData('approve')) { document.frmMain.act.value = 'approve'; document.frmMain.submit()}"
-                        class="bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded shadow mx-1">
-                    Send Approve
+                        data-action="approve"
+                        class="btn-submit bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded shadow mx-1">
+                    Approve
                 </button>
             @endif
 
             <button type="button" name="btnDelete" 
-                    onclick="document.frmMain.act.value = 'deleteApv'; document.frmMain.submit()"
-                    class="bg-red-700 hover:bg-red-800 text-white px-4 py-2 rounded shadow mx-1">
+                    data-action="delete"
+                    class="btn-submit bg-red-700 hover:bg-red-800 text-white px-4 py-2 rounded shadow mx-1">
                 Delete Form
             </button>
         @endif
         @if (in_array($empinf[0]->SSECCODE, ['000502', '000503']))
             <button type="button" 
-                    class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded shadow mx-1">
+                    data-action="printFrm"
+                    class="btn-submit bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded shadow mx-1">
                 Print Form
             </button>
         @endif
@@ -1095,13 +1107,13 @@
         @if ($mode == $MODE_VIEW)
              @if (in_array($empno, [$form[0]->VREQNO, $form[0]->VINPUTER]) && $form[0]->CST == "1" && (!$demapv))
                 <button type="button" name="btnReturn" 
-                        onclick="document.frmMain.act.value = 'return'; document.frmMain.submit()"
-                        class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded shadow mx-1">
+                         data-action="return"
+                        class="btn-submit bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded shadow mx-1">
                     Return
                 </button>
              @endif
-             <button type="button" 
-                    class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded shadow mx-1">
+             <button type="button"    data-action="export"
+                    class="btn-export bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded shadow mx-1">
                 Export Excel
             </button>
         @endif

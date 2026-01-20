@@ -45,118 +45,14 @@ $(document).ready(async function () {
 
   $(".btn-submit").click(async function () {
       const action = $(this).data("action");
-      const remark = $("#remark").val();
-      const cextdata =  $("#cextData").val();
-      if((cextdata == "01") && (action == "approve"))
-      {
-          if(($("#jstaff").val() == "")||($("#enginc").val() == ""))
-          {
-            showMessage('Please select J-Staff in charge and Engineer in charge', 'warning');
-            return false;
-          }
-      }
-
-
-      const frm = $("#qoi-form");
-      var formData = new FormData(frm[0]);
-      formData.append("nfrmno", nfrmno);
-      formData.append("vorgno", vorgno);
-      formData.append("cyear", cyear);
-      formData.append("cyear2", cyear2);
-      formData.append("nrunno", nrunno);
-      formData.append("action", action);
-      formData.append("empno", empno);
-      if(action == "reject")
-      {
-            if(cextdata == "01")
-            {
-              if(remark != "")
-              {
-                const confirm = await doaction(nfrmno, vorgno, cyear, cyear2, nrunno, action, empno, remark);
-                if (confirm.status) redirectWebflow();
-              }else
-              {
-                showMessage('Please input remark for reason Reject', 'warning');
-              }
-            }else
-            {
-              if (!(await requiredForm("#qoi-form"))) return;
-              if(checkData())
-              {
-                var act = "approve";
-                if(cextdata == "13")
-                {
-                   act = "reject";
-                }
-                const confirm = await doaction(nfrmno, vorgno, cyear, cyear2, nrunno, act, empno, remark);
-                if (confirm.status) 
-                {
-                  const statusact = await actionfrm(formData);
-                  if (statusact.status) redirectWebflow(); 
-                }
-              }
-            }
-
-     
-      }else if(action == "returnb")
-      {   
-          if(remark != "")
-          {
-              const confirm = await doaction(nfrmno, vorgno, cyear, cyear2, nrunno, action, empno, remark);
-              if (confirm.status) redirectWebflow();
-          }else
-          {
-              showMessage('Please input remark for reason Return', 'warning');
-          }
-      }else if(action == "cancel")
-      {
-            if(checkData())
-            {
-              
-              if (!(await requiredForm("#qoi-form"))) return;
-              const confirm = await doaction(nfrmno, vorgno, cyear, cyear2, nrunno, "approve", empno, remark);
-              if (confirm.status) 
-              {
-                const statusact = await actionfrm(formData);
-                if (statusact.status) redirectWebflow(); 
-              }else
-              {
-                showMessage('An error has occurred. Please contact the administrator(#2034).', 'error');
-              }
-            }
-      }else if((action == "save")||(action == "request"))
-      {
-        const statusact = await actionfrm(formData);
-        if (statusact.status)
-        { 
-          redirectWebflow();
-        }else{
-          showMessage('An error has occurred. Please contact the administrator(#2034).', 'error');
-        }
-      }
-      else
-      {
-        if(checkData())
-        {
-          if (!(await requiredForm("#qoi-form"))) return;
-          const statusact = await actionfrm(formData);
-          if (statusact.status)
-          {
-            const confirm = await doaction(nfrmno, vorgno, cyear, cyear2, nrunno, action, empno, remark);
-            if (confirm.status) redirectWebflow();
-          }else
-          {
-            showMessage('An error has occurred. Please contact the administrator(#2034).', 'error');
-          }
-        }
-      }
+      checkData();
+      //console.log(action);
+      
   });
 });
 
 
-$(document).on("click", ".add-table-row", function (e) {
-  console.log("xxxxxxxxxxx");
-});
+
 
 $(document).on("click", ".add-row", function (e) {
   e.preventDefault();
@@ -187,7 +83,7 @@ $(document).on("click", ".add-table-row", function (e) {
   const tableid =  $(this).attr("data-table");
   const lastRow = $("#"+tableid+" tr:last");
   const newRow = lastRow.clone(); 
-  newRow.find("textarea").val("");
+  newRow.find("input").val("");
   $("#"+tableid).append(newRow);
 });
 
@@ -258,7 +154,7 @@ function actionfrm(data)
  
   return new Promise((resolve) => {
     $.ajax({
-      url: host + "qaform/QA-QOI/form/action",
+      url: host + "qaform/QA-CN/form/action",
       type: "post",
       dataType: "json",
       processData: false,
@@ -278,87 +174,38 @@ function actionfrm(data)
 
 }
 
-function checkData()
+function checkData(act)
 {
   const cextdata =  $("#cextData").val();
-  if(cextdata == "02")
+  if(act == "saveData" || act == "sendApv")
   {
-    if ($('.radio-result:checked').length === 0) 
-    {
-      showMessage('Please Check result for Drawing', 'warning');
-      return false;
-    }
-    if ($('#dvconchk .openfl').length == 0) {
-      let hasFile = false;
-      $('input[name="SHEETFILE[]"]').each(function () {
-        if (this.files.length > 0) {
-          hasFile = true;
-          return false; // ออกจาก loop ทันทีเมื่อเจอไฟล์
-        }
-      });
-      if(!hasFile)
+      let reason = $('input[name="radReason"]:checked').val();
+      let sample = $('input[name="radSample"]:checked').val();
+      if((reason == "5") && ($("#txtOther").val() == ""))
       {
-        showMessage('Please attach Check sheet', 'warning');
+          showMessage('Please input Reason for others', 'warning');
+          return false;
+      }
+      if((sample == "2")&&(("#txtReturn").val() == ""))
+      {
+        showMessage('Please input Return to', 'warning');
         return false;
       }
-    } 
-  }else if((cextdata == "04") && ($("#havesem").val()=="true"))
-  {
-    if($("#seminc").val()=="")
-    {
-        showMessage('Please select SEM. in charge', 'warning');
+      if((sample == "3")&&(("#txtOth").val() == ""))
+      {
+        showMessage('Please input Other', 'warning');
         return false;
-    }
+      }
 
-  }else if(cextdata == "08")
+  }else if($act == "change")
   {
-     var m = 0;
-     var c = 0;
-		$('.measure').each(function (){
-			if(($(this).find(".m_action").val() != "") && ($(this).find(".m_due_date").val() != "") && ($(this).find(".m_in_charge").val() != ""))
-			{
-				m++;
+      if($("#Foreman").val() == "")
+      {
+        showMessage('Please select Foreman', 'warning');
         return false;
-			}
-		});
-		$('.correct').each(function (){
-			if(($(this).find(".c_action").val() != "") && ($(this).find(".c_due_date").val() != "") && ($(this).find(".c_in_charge").val() != ""))
-			{
-				c++;
-        return false;
-			}
-		});
-    if(m == 0)
-    {
-        showMessage('Please input Countermeasure', 'warning');
-       return false;
-    }
-     if(c == 0)
-     {
-        showMessage('Please input Corrective and Preventive Action', 'warning');
-        return false;
-     }
-  }else if(cextdata == "11")
-  {
-    if ($('input[name="qe_option"]:checked').length === 0) {
-        showMessage('Please select an option in the QE section.', 'warning');
-        return false;
-    }
-    var qe = $('input[name="qe_option"]:checked').val();
-    var rq = $('input[name="rq_no"]').val();
-    var cn = $('input[name="cn_no"]').val();
-    if((qe == 1) && (rq == ""))
-    {
-      showMessage('Please input RQ no.', 'warning');
-      return false;
-    }
-    if((qe == 2) && (cn == ""))
-    {
-      showMessage('Please input CN no.', 'warning');
-      return false;
-    }
-
+      }
   }
+
 
   return true;
 }

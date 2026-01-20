@@ -1,14 +1,14 @@
 <?php
 defined('BASEPATH') or exit('No direct script access allowed');
 require_once APPPATH . 'models/my_model.php';
-class qoi_model extends my_model 
+class qoi_model extends my_model
 {
     public function __construct()
     {
         parent::__construct();
         $this->load->database();
-        // $this->dbas = $this->load->database('as400', true);
-        
+       
+
     }
 
     public function generate_dwg_id(){
@@ -37,7 +37,7 @@ class qoi_model extends my_model
     public function get_qoi_schedule($year)
     {
         $next = $year+1;
-        $q = "CASE 
+        $q = "CASE
         WHEN MON IS NULL THEN 'Unspecified'
         ELSE TO_CHAR(TO_DATE(S.MON,'yyyymm'),'MON')
         END as MON , M.* ,  S.MON AS MONNUM  , TO_CHAR(TO_DATE(S.MON,'yyyymm'),'MON yyyy')  AS MONSTR , (SELECT LISTAGG(SUBSTR(MON,5,2), ',') WITHIN GROUP (ORDER BY MON) MONLIST  FROM  QOI_DWGSCHEDULE WHERE MID = M.MID) AS SCH ";
@@ -72,9 +72,9 @@ class qoi_model extends my_model
         ->where("SPOSCODE in ('40','35')")
         ->order_by('SNAME ASC');
         return $this->db->get()->result();
-    }   
+    }
 
-    
+
     public function get_SEMING()
     {
         $this->db->select("SEMPNO , SNAME")
@@ -94,26 +94,20 @@ class qoi_model extends my_model
 	{
 		$this->db->query($q);
 	}
-    
-    public function execAssql($q)
-	{
-		$this->dbas->query($q);
-	}
+
+
 
     public function getdatasql($q)
 	{
 		return $this->db->query($q)->result();
 	}
 
-    public function getdataAssql($q)
-	{
-		return $this->dbas->query($q)->result();
-	}
-    
+
+
     public function getDwgrev($drawingNo)
     {
-        $pdm = $this->load->database('pdm', TRUE);
-        $sql="SELECT fml.drawing_no,fml.revision_no,fml.internal_revision_no,vfml.file_seqno,vfml.file_name,vfml.folder_path,vfml.file_extention,vfml.file_name||'_'|| CAST(vfml.internal_revision_no AS TEXT) ||'_DWGVIEW_'||CAST(vfml.file_seqno AS TEXT) AS tifname 
+        $pdm = $this->load->database('PDM', TRUE);
+        $sql="SELECT fml.drawing_no,fml.revision_no,fml.internal_revision_no,vfml.file_seqno,vfml.file_name,vfml.folder_path,vfml.file_extention,vfml.file_name||'_'|| CAST(vfml.internal_revision_no AS TEXT) ||'_DWGVIEW_'||CAST(vfml.file_seqno AS TEXT) AS tifname
         FROM(SELECT drawing_no,revision_no,internal_revision_no
         FROM  pdm.drawing_fml WHERE drawing_no=? AND  latest_released_flg='1' AND drawing_status='9') fml
         INNER JOIN  pdm.drawing_view_fml  vfml  ON vfml.drawing_no=fml.drawing_no AND vfml.revision_no=fml.revision_no";

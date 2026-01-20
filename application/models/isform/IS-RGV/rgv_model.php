@@ -7,9 +7,9 @@ class Rgv_model extends CI_Model {
     {
         parent::__construct();
         $this->load->database();
-        $this->ad  = $this->load->database('aud', TRUE);
-        $this->doc = $this->load->database('docinv', TRUE);
-        $this->scm = $this->load->database('scm', TRUE);
+        $this->ad  = $this->load->database('AUD', TRUE);
+        $this->doc = $this->load->database('DOCINV', TRUE);
+        $this->scm = $this->load->database('SCM', TRUE);
     }
 
     public function get_orgpos($vorgno, $vposno)

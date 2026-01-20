@@ -2,7 +2,7 @@
 class Notification_model extends CI_Model {
     public function __construct() {
         parent::__construct();
-        $this->db = $this->load->database('default',true);
+        $this->db = $this->load->database('DEFAULT',true);
     }
 
     // function saveSubscription($data) {

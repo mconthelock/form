@@ -4,7 +4,7 @@ require_once APPPATH . 'models/my_model.php';
 class autorize_model extends my_model {
     public function __construct(){
         parent::__construct();
-        $this->db = $this->load->database('escs', TRUE);
+        $this->db = $this->load->database('ESCS', TRUE);
     }
 
     public function getItem($cond = ''){
@@ -39,7 +39,7 @@ class autorize_model extends my_model {
         }
         $this->db->from('USERS')
                  ->where_not_in('GRP_ID', [1,4,7])
-                 
+
                  ->where('USR_STATUS', '1');
         return $this->db->get()->result();
     }
@@ -66,14 +66,14 @@ class autorize_model extends my_model {
             }
         }
         $this->db->distinct()
-                 ->select("CASE 
-                                WHEN SDEPCODE = '00' THEN SDIV 
-                                WHEN SSECCODE = '00' THEN SDEPT 
+                 ->select("CASE
+                                WHEN SDEPCODE = '00' THEN SDIV
+                                WHEN SSECCODE = '00' THEN SDEPT
                                 ELSE SSEC
                             END AS ORGANIZE,
-                            CASE 
-                                WHEN SDEPCODE = '00' THEN SDIVCODE 
-                                WHEN SSECCODE = '00' THEN SDEPCODE  
+                            CASE
+                                WHEN SDEPCODE = '00' THEN SDIVCODE
+                                WHEN SSECCODE = '00' THEN SDEPCODE
                                 ELSE SSECCODE
                             END AS ORGANIZECODE", false)
                  ->from('USERS A')
