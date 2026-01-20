@@ -53,7 +53,7 @@
 	--border: 1px;
 	--depth: 1;
 	--noise: 1;
-	--input-color: transparent;
+	/* --input-color: transparent; */
 }
 
 @layer base {

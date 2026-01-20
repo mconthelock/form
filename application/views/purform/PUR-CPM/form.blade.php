@@ -18,7 +18,7 @@
         width: fit-content;
     }
 
-    label:not(:has(input[name="delivery-locate"])):not(:has(input[name="type-form"])) {
+    label:not(:has(input[name="DELIVELY"])):not(:has(input[name="FORM_TYPE"])) {
         width: 100%;
     }
 </style>
@@ -35,15 +35,30 @@
                 <h1 class="text-3xl text-center text-primary font-bold mb-15">Cover Payment For Invoice Receive</h1>
             </h2>
             <form id="form" class="flex flex-col gap-5">
+                <section id="section-0">
+                    <fieldset class="flex gap-8">
+                        <span>Input by</span>
+                        <label>
+                            <input type="text" name="INPUTBY" id="INPUTBY" class="input input-sm w-40" readonly>
+                        </label>
+                    </fieldset>
+                    <fieldset class="flex gap-3">
+                        <span>Request by</span>
+                        <label>
+                            <input type="text" name="REQBY" id="REQBY" class="input input-sm w-40 req">
+                        </label>
+                    </fieldset>
+                </section>
+                <div class="divider"></div>
                 <section id="section-1">
                     <fieldset class="gap-4">
                         <span>Delivery locate: </span>
                         <label>
-                            <input type="radio" name="delivery-locate" value="internal">
+                            <input type="radio" name="DELIVELY" value="internal" class="radio radio-xs req">
                             Internal AMEC 
                         </label>
                         <label>
-                            <input type="radio" name="delivery-locate" value="outside">
+                            <input type="radio" name="DELIVELY" value="outside" class="radio radio-xs req">
                             Out Side AMEC 
                         </label>
                     </fieldset>
@@ -51,40 +66,40 @@
                         <span>Invoice Type: </span>
                         <div class="flex flex-col gap-2 w-full">
                             <label>
-                                <input type="radio" name="invoice-type" value="trial">
+                                <input type="radio" name="INVOICE_TYPE" value="trial" class="radio radio-xs req">
                                 Trial Parts, Sample Parts (Ship to other)
                             </label>
                             <label>
-                                <input type="radio" name="invoice-type" value="indirect">
+                                <input type="radio" name="INVOICE_TYPE" value="indirect" class="radio radio-xs req">
                                 Indirec Parts, None Production Parts (Ship direct to requester's area.)
                             </label>
                             <label>
-                                <input type="radio" name="invoice-type" value="service">
+                                <input type="radio" name="INVOICE_TYPE" value="service" class="radio radio-xs req">
                                 Services / Construction / Building
                             </label>
                             <label>
-                                <input type="radio" name="invoice-type" value="molds">
+                                <input type="radio" name="INVOICE_TYPE" value="molds" class="radio radio-xs req">
                                 Molds, DIE
                             </label>
                             <label>
-                                <input type="radio" name="invoice-type" value="machine">
+                                <input type="radio" name="INVOICE_TYPE" value="machine" class="radio radio-xs req">
                                 Machine
                             </label>
                             <label>
-                                <input type="radio" name="invoice-type" value="maintenance">
+                                <input type="radio" name="INVOICE_TYPE" value="maintenance" class="radio radio-xs req">
                                 Maintenance, Rental, Software, etc.
                             </label>
                             <label >
-                                <input type="radio" name="invoice-type" value="other">
+                                <input type="radio" name="INVOICE_TYPE" value="other" class="radio radio-xs req">
                                 Other
                             </label>
-                            <input type="text" name="other-invoice" id="other-invoice" class="input input-sm w-full" disabled>
+                            <input type="text" name="INVOICE_OTHER" id="INVOICE_OTHER" class="input input-sm w-full" disabled>
                         </div>
                     </fieldset>
-                    <fieldset class="gap-10">
+                    <fieldset class="gap-10 !hidden">
                         <span>Third Party: </span>
                         <label>
-                            <select name="third-party" id="third-party" class="select select-sm"></select>
+                            <select name="THIRD_PARTY" id="THIRD_PARTY" class="select select-sm w-full" placeholder="Select third party"></select>
                         </label>
                     </fieldset>
                 </section>
@@ -93,7 +108,7 @@
                     <fieldset class="gap-8">
                         <span>Subject: </span>
                         <label>
-                            <textarea name="subject" id="subject" maxlength="512" class="textarea w-full" placeholder="Device UTP Cat6 for LAN Access point (2 Points) ESA Factory"></textarea>
+                            <textarea name="SUBJECT" id="SUBJECT" maxlength="512" class="textarea w-full req" placeholder="Device UTP Cat6 for LAN Access point (2 Points) ESA Factory"></textarea>
                         </label>
                     </fieldset>
                 </section>
@@ -103,18 +118,18 @@
                         <span>ACCEPT P/O BY</span>
                         <div class="flex flex-col gap-2 w-full">
                             <label class="flex items-center gap-2">
-                                <input type="radio" name="accept-po" value="subcon">
+                                <input type="radio" name="ACCEPT_PO" value="subcon" class="radio radio-xs req">
                                 <span class="text-nowrap w-fit">
                                     Sub-con / Vendor
                                 </span>
-                                <input type="text" name="subcon-detail" id="subcon-detail" class="input input-sm w-full" placeholder="CREATOR DESIGN SYSTEM CO.,LTD." disabled>
+                                <input type="text" name="ACCEPT_SUBCON" id="ACCEPT_SUBCON" class="input input-sm w-full" placeholder="CREATOR DESIGN SYSTEM CO.,LTD." disabled>
                             </label>
                             <label class="flex items-center gap-2">
-                                <input type="radio" name="accept-po" value="other">
+                                <input type="radio" name="ACCEPT_PO" value="other" class="radio radio-xs req">
                                 <span class="text-nowrap w-fit">
                                     Other
                                 </span>
-                                <input type="text" name="other-accept" id="other-accept" class="input input-sm w-full" disabled>
+                                <input type="text" name="ACCEPT_OTHER" id="ACCEPT_OTHER" class="input input-sm w-full" disabled>
                             </label>
                         </div>
                     </fieldset>
@@ -123,19 +138,19 @@
                             <fieldset class="gap-4">
                                 <span>Quotation No.</span>
                                 <label>
-                                    <input type="text" name="quotation-no" id="quotation-no" class="input input-sm w-full" placeholder="CDS-2K24-00074">
+                                    <input type="text" name="QUOTATION" id="QUOTATION" class="input input-sm w-full req" placeholder="CDS-2K24-00074">
                                 </label>
                             </fieldset>
                             <fieldset class="gap-10">
                                 <span>PR/PO No.</span>
                                 <label>
-                                    <input type="text" name="prpo-no" id="prpo-no" class="input input-sm w-full" placeholder="AMEC00440693">
+                                    <input type="text" name="PONO" id="PONO" class="input input-sm w-full req" placeholder="AMEC00440693">
                                 </label>
                             </fieldset>
                             <fieldset class="gap-9">
                                 <span>P/O sign by</span>
                                 <label>
-                                    <input type="text" name="po-sign-by" id="po-sign-by" class="input input-sm w-full">
+                                    <input type="text" name="PO_SIGNBY" id="PO_SIGNBY" class="input input-sm w-full">
                                 </label>
                             </fieldset>
                         </div>
@@ -143,30 +158,30 @@
                             <fieldset class="gap-11">
                                 <span>Date: (version)</span>
                                 <label>
-                                    <input type="date" name="quo-date" id="quo-date" class="input input-sm w-full fdate" placeholder="2026-01-19">
+                                    <input type="date" name="QUOTATION_DATE" id="QUOTATION_DATE" class="input input-sm w-full fdate" placeholder="2026-01-19">
                                 </label>
                             </fieldset>
                             <fieldset class="gap-2">
                                 <span>Total Amount (THB)</span>
                                 <label>
-                                    <input type="text" name="total-amount" id="total-amount" class="input input-sm w-full" placeholder="47,300.00">
+                                    <input type="number" step="1" min="0" name="TOTAL_AMOUNT" id="TOTAL_AMOUNT" class="input input-sm w-full req" placeholder="47,300.00">
                                 </label>
                             </fieldset>
                             <fieldset class="gap-24">
                                 <span>DATE : </span>
                                 <label>
-                                    <input type="date" name="po-sign-date" id="po-sign-date" class="input input-sm w-full fdate" placeholder="2026-01-19">
+                                    <input type="date" name="PO_SIGNDATE" id="PO_SIGNDATE" class="input input-sm w-full fdate" placeholder="2026-01-19">
                                 </label>
                             </fieldset>
                         </div>
                     </div>
                     <fieldset class="gap-4">
                         <label>
-                            <input type="radio" name="type-form" value="document">
+                            <input type="radio" name="FORM_TYPE" value="document" class="radio radio-xs">
                             Print out Documents or E-mail
                         </label>
                         <label>
-                            <input type="radio" name="type-form" value="electronic">
+                            <input type="radio" name="FORM_TYPE" value="electronic" class="radio radio-xs">
                             Electronic Form (SCM)
                         </label>
                     </fieldset>
@@ -178,13 +193,13 @@
                             <fieldset class="gap-4">
                                 <span>INVOICE NO.</span>
                                 <label>
-                                    <input type="text" name="invoice-no" id="invoice-no" class="input input-sm w-full" placeholder="INV68-00109, 110">
+                                    <input type="text" name="INVOICE_NO" id="INVOICE_NO" class="input input-sm w-full req" placeholder="INV68-00109, 110">
                                 </label>
                             </fieldset>
                             <fieldset class="gap-4">
                                 <span>AMEC Person in charge</span>
                                 <label>
-                                    <input type="text" name="person-in-charge" id="person-in-charge" class="input input-sm w-full">
+                                    <input type="text" name="PERSON_INCHARGE" id="PERSON_INCHARGE" class="input input-sm w-full">
                                 </label>
                             </fieldset>
                         </div>
@@ -192,13 +207,13 @@
                             <fieldset class="gap-4">
                                 <span>Amount (THB)</span>
                                 <label>
-                                    <input type="text" name="invoice-amount" id="invoice-amount" class="input input-sm w-full" placeholder="47,300.00">
+                                    <input type="number" step="1" min="0" name="INVOICE_AMOUNT" id="INVOICE_AMOUNT" class="input input-sm w-full req" placeholder="47,300.00">
                                 </label>
                             </fieldset>
                             <fieldset class="gap-18">
                                 <span>DATE : </span>
                                 <label>
-                                    <input type="date" name="person-in-charge-date" id="person-in-charge-date" class="input input-sm w-full fdate" placeholder="2026-01-19">
+                                    <input type="date" name="INVOICE_DATE" id="INVOICE_DATE" class="input input-sm w-full fdate" placeholder="2026-01-19">
                                 </label>
                             </fieldset>
                         </div>
@@ -210,39 +225,39 @@
                     <div class="flex gap-8 justify-between">
                         <fieldset class="flex-col gap-4">
                             <label>
-                                <input type="radio" name="payment-type" value="first">
+                                <input type="radio" name="PAYMENT_TYPE" value="first" class="radio radio-xs req">
                                 FIRST payment condition (If any)
                             </label>
                             <label>
-                                <input type="radio" name="payment-type" value="second">
+                                <input type="radio" name="PAYMENT_TYPE" value="second" class="radio radio-xs req">
                                 2 <sup>nd</sup> payment condition or
                             </label>
                             <label>
-                                <input type="radio" name="payment-type" value="others">
-                                <input type="number" step="1" min="0" name="num-payment" id="num-payment" disabled="disabled" class="input input-sm w-24" placeholder="3">
+                                <input type="radio" name="PAYMENT_TYPE" value="others" class="radio radio-xs req">
+                                <input type="number" step="1" min="0" name="PAYMENT_NUM" id="PAYMENT_NUM" disabled="disabled" class="input input-sm w-24" placeholder="3">
                                 payment condition (If any)
                             </label>
                             <label>
-                                <input type="radio" name="payment-type" value="final">
+                                <input type="radio" name="PAYMENT_TYPE" value="final" class="radio radio-xs req">
                                 Final payment condition (or 100% payment)
                             </label>
                         </fieldset>
                         <fieldset>
                             <label>
                                 (THB)
-                                <input type="number" step="1" min="0" name="payment" id="payment" class="input input-sm w-48" placeholder="47,300.00" disabled>
+                                <input type="number" step="1" min="0" name="PAYMENT" id="PAYMENT" class="input input-sm w-48 req" placeholder="47,300.00" disabled>
                             </label>
                         </fieldset>
                     </div>
                 </section>
+                <div class="divider"></div>
+                <section>
+                    <h2 class="font-bold text-xl mb-3">Attach files</h2>
+                    <div id="attachFile"></div>
+                </section>
+                <div class="divider"></div>
+                <div id="btnAction"></div>
             </form>
-            <div class="divider"></div>
-            <section>
-                <h2 class="font-bold text-xl mb-3">Attach file</h2>
-                <div id="attachFile"></div>
-            </section>
-            <div class="divider"></div>
-            <div id="btnAction"></div>
         </div>
     </div>
 </div>
