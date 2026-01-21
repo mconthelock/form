@@ -1,3 +1,4 @@
+import select2 from "select2";
 import {
 	host,
 	showMessage,
@@ -28,12 +29,14 @@ import {
 	setSelect2,
 } from "@amec/webasset/select2";
 
+select2();
 var emp,
 	empno,
 	ctrl,
 	userLogin,
 	formType,
 	empImage = {};
+
 $(async function () {
 	showLoader();
 	// emp = await getEmployee({ status: 1 });
