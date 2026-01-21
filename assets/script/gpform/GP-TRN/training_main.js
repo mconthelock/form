@@ -261,7 +261,7 @@ async function submitForm(formType, reqby, inputby, fid) {
 				CYEAR: cyear,
 				REQBY: trainee_req,
 				INPUTBY: inputby,
-				REMARK: "",
+				REMARK: ""
 			};
 			console.log(payload);
 			const headResult = await createForm(payload);
