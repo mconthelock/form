@@ -1,7 +1,6 @@
 <?php
 
-class Rgr_model extends CI_Model
-{
+class Rgr_model extends CI_Model {
     public function __construct()
     {
         parent::__construct();
@@ -55,6 +54,20 @@ class Rgr_model extends CI_Model
         return $this->db->query($sql)->result();
     }
 
+    public function getUnmatchForm($groupId, $period, $year)
+    {
+        $this->db->select('*')
+            ->from('ISRGV_EMP ie ')
+            ->join('ISRGV_FORM t', 'ie.CYEAR2 = t.CYEAR2 AND ie.NRUNNO = t.NRUNNO ', 'left')
+            ->where('RESULT', '0')
+            ->where('ie.SUMMARY_GROUP', $groupId)
+            ->where('t.CYEAR2', $year)
+            ->where('t.PERIOD', $period);
+
+        $query = $this->db->get();
+        return $query->result();
+    }
+
     public function insert($table, $data)
     {
         return $this->db->insert($table, $data);
@@ -69,7 +82,7 @@ class Rgr_model extends CI_Model
 
     public function getSummaryReport($nfrmno, $vorgno, $cyear, $cyear2, $nrunno)
     {
-        $sql   = "SELECT *
+        $sql   = "SELECT ish.*,isd.*,ism.*,ish.REMARK AS REMARK_HEAD
                 FROM ISRGV_SUMMARY_HDR ish
                 JOIN ISRGV_SUMMARY_DTL isd ON
                     ish.ID = isd.HDR_ID

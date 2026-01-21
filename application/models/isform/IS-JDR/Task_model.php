@@ -9,9 +9,9 @@ class Task_model extends my_model{
 
     public function getReport($cond = ''){
         if($cond['JOBSECTION'] == 'AAS'){
-            $this->db = $this->load->database('docinv', TRUE);
+            $this->db = $this->load->database('DOCINV', TRUE);
         }else{
-            $this->db = $this->load->database('auditDB', TRUE);
+            $this->db = $this->load->database('AUD', TRUE);
         }
         if($cond) $this->db->where($cond);
         $this->db->select("JOBSECTION AS SECTION,
@@ -20,7 +20,7 @@ class Task_model extends my_model{
                             COUNT(CASE WHEN JOBSTATUS = 'END ABNORMAL' THEN 1 END) AS END_ABNORMAL,
                             COUNT(CASE WHEN RC_ACTION = 0 THEN 1 END) AS SKIP,
                             COUNT(CASE WHEN RC_ACTION = 1 THEN 1 END) AS RERUN")
-                            
+
                 ->from('JOB_RESULT_CONFIRMATION A')
                 ->group_by('JOBSECTION');
         return $this->db->get()->result();
@@ -39,17 +39,17 @@ class Task_model extends my_model{
 
     public function getMonthly($cond = ''){
         if($cond['JOBSECTION'] == 'AAS'){
-            $this->db = $this->load->database('docinv', TRUE);
+            $this->db = $this->load->database('DOCINV', TRUE);
         }else{
-            $this->db = $this->load->database('auditDB', TRUE);
+            $this->db = $this->load->database('AUD', TRUE);
         }
         if($cond) $this->db->where($cond);
         $this->db->select("JOBSECTION, LOG_DATE,
             COUNT(LOG_DATE) AS ALLPLAN,
             COUNT(CASE WHEN JOBSTATUS = 'COMPLETED' THEN 1 END) AS COMPLETED,
-            CASE 
-                WHEN COUNT(LOG_DATE) != COUNT(CASE WHEN JOBSTATUS = 'COMPLETED' THEN 1 END) 
-                THEN 'END ABNORMAL' 
+            CASE
+                WHEN COUNT(LOG_DATE) != COUNT(CASE WHEN JOBSTATUS = 'COMPLETED' THEN 1 END)
+                THEN 'END ABNORMAL'
                 ELSE 'COMPLETED' END AS  JOBSTATUS")
                  ->from('JOB_RESULT_CONFIRMATION')
                  ->group_by('JOBSECTION, LOG_DATE')
@@ -59,9 +59,9 @@ class Task_model extends my_model{
 
     public function getEndAb($cond){
         if($cond['JOBSECTION'] == 'AAS'){
-            $this->db = $this->load->database('docinv', TRUE);
+            $this->db = $this->load->database('DOCINV', TRUE);
         }else{
-            $this->db = $this->load->database('auditDB', TRUE);
+            $this->db = $this->load->database('AUD', TRUE);
         }
         if($cond) $this->db->where($cond);
         $this->db->from('JOB_RESULT_CONFIRMATION')

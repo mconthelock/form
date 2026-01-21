@@ -39,7 +39,7 @@ trait formApi{
         }
     }
     /**
-     * @param array $condition 
+     * @param array $condition
      * [
      *     NFRMNO   => number,
      *     VORGNO   => string,
@@ -47,7 +47,7 @@ trait formApi{
      *     REQBY    => string, e.g.24008
      *     INPUTBY  => string, e.g.24008
      *     REMARK   => string,
-     *     DRAFT    => string e.g. 0 == under preparation, 1 = wait for approval 
+     *     DRAFT    => string e.g. 0 == under preparation, 1 = wait for approval
      * ]
     */
     private function createForm($condition = []){
@@ -74,7 +74,7 @@ trait formApi{
      *     CYEAR2 => string,
      *     NRUNNO => number
      * ]
-     * @return boolean 
+     * @return boolean
      */
     private function deleteFlowandForm($condition = []){
         try{
@@ -107,7 +107,7 @@ trait formApi{
             throw new Exception(json_encode(['status' => "false", 'message' => 'Failed to get request number', 'e' => $e]), 1);
         }
     }
-    
-    
+
+
 
 }

@@ -26,4 +26,3 @@ trait audit_report_revision{
         }
     }
 }
-

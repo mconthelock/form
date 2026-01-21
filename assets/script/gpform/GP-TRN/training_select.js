@@ -96,7 +96,8 @@ $(function () {
 
     // redirect summary
     if (type === "summary_report") {
-      location.href = `${window.mainUrl}/show_summary_report`;
+      const emp = $("#EMPNO").val();
+      location.href = `${window.mainUrl}/show_summary_report?emp=${emp}`;
       return;
     }
 

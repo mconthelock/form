@@ -1,5 +1,5 @@
 // import { sendSession, setCkkey } from "../utils";
-// import { getIP, getUserGroup } from "../webservice";
+
 // import { getAuthen, setAuthen } from "../indexDB/application";
 // import { showMessage } from "../jFuntion";
 // import { getAuth } from "../login";
@@ -58,7 +58,6 @@
 //     if (user.status === true) {
 //         const apps = user.message.apps;
 //         const location = apps.APP_LOCATION;
-
 
 //         await setUserAuth(id, user.message); // เก็บข้อมูล Session ลง IndexDB ให้เว็บปลายทางใช้
 //         const authKey = setCkkey($("#appid").val(),$("#empno").val());

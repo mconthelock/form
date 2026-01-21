@@ -4,7 +4,7 @@ require_once APPPATH . 'models/my_model.php';
 class confirm_model extends my_model {
     public function __construct(){
         parent::__construct();
-        $this->doc = $this->load->database('docinv',true);
+        $this->doc = $this->load->database('DOCINV',true);
     }
 
     public function getProgram(){
@@ -38,7 +38,7 @@ class confirm_model extends my_model {
                     ->order_by('PROTID', 'ASC');
         return $this->doc->get()->result();
     }
-    
+
     //PROGRAM_MSTLST
     public function insertPrograms($data){
         $this->doc->insert('PROGRAM_MSTLST', $data);

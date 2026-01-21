@@ -1,94 +1,181 @@
-console.log("✅ show_sum_report.js loaded (OMG V1)");
+console.log("✅ show_sum_report.js loaded (OMG FIXED v100%)");
+import { createTable } from "@amec/webasset/dataTable";
 
-window.initFormReport = function () {
-    console.log("📊 initFormReport() started");
+// 1. inject css
+(function injectRowStyles() {
+	const style = document.createElement("style");
+	style.innerHTML = `
+        .row-approved td { background-color: #e6ffe6 !important; }
+        .row-running  td { background-color: #e6f2ff !important; }
+        .row-reject   td { background-color: #ffe6e6 !important; }
+    `;
+	document.head.appendChild(style);
+})();
 
-    var table = new Tabulator("#report_table", {
-        height: "calc(100vh - 250px)",        // สูงตามหน้าจอแบบพอดี
-        layout: "fitDataStretch",
-        placeholder: "ไม่มีข้อมูล",
-        pagination: "local",
-        paginationSize: 20,
+window.table = null;
+window.initFormReport = async function () {
+	console.log("📊 initFormReport() started x1");
+	const columns = [
+		{
+			title: "Formno",
+			data: "FORMNO_DISPLAY",
+			className: "dt-nowrap text-center",
+		},
+		{ title: "Category1", data: "CATEGORY", className: "dt-nowrap" },
+		{ title: "Category2", data: "FORM_NAME_EN", className: "dt-nowrap" },
+		{ title: "Code", data: "SEMPNO", className: "dt-nowrap text-center" },
+		{ title: "Name", data: "STNAME", className: "dt-nowrap" },
+		{
+			title: "Position",
+			data: "SPOSITION",
+			className: "dt-nowrap text-center",
+		},
+		{ title: "Sect.", data: "SSEC", className: "dt-nowrap text-center" },
+		{ title: "Dept.", data: "SDEPT", className: "dt-nowrap text-center" },
+		{ title: "Div.", data: "SDIV", className: "dt-nowrap text-center" },
+		{ title: "Subject", data: "SUBJECT", className: "dt-nowrap" },
+		{
+			title: "From",
+			data: "DATE_FROM_DISPLAY",
+			className: "dt-nowrap text-center",
+		},
+		{
+			title: "To",
+			data: "DATE_TO_DISPLAY",
+			className: "dt-nowrap text-center",
+		},
+		{
+			title: "Status",
+			data: "STATUS_TEXT",
+			className: "dt-nowrap text-center",
+			render: function (data) {
+				if (data === "Approved")
+					return `<span style="color:green;font-weight:bold">${data}</span>`;
+				if (data === "Running")
+					return `<span style="color:blue;font-weight:bold">${data}</span>`;
+				if (data === "Reject")
+					return `<span style="color:red;font-weight:bold">${data}</span>`;
+				return data;
+			},
+		},
+		{
+			title: "Amount",
+			data: "COST",
+			className: "dt-nowrap text-end",
+			render: $.fn.dataTable.render.number(",", ".", 0),
+		},
+		{
+			title: "Vat7%",
+			data: "VAT",
+			className: "dt-nowrap text-end",
+			render: $.fn.dataTable.render.number(",", ".", 0),
+		},
+		{
+			title: "Total Amount",
+			data: "TOTAL",
+			className: "dt-nowrap text-end",
+			render: $.fn.dataTable.render.number(",", ".", 0),
+		},
+	];
 
-        rowFormatter: function (row) {
-            const data = row.getData();
-            if (data.CST == 2) {
-                row.getElement().style.backgroundColor = "#e6ffe6";  // เขียวอ่อน
-            } else if (data.CST == 1) {
-                row.getElement().style.backgroundColor = "#e6f2ff";  // ฟ้าอ่อน
-            } else if (data.CST == 3) {
-                row.getElement().style.backgroundColor = "#ffe6e6";  // แดงอ่อน
-            }
-        },
+	//const options = { data: [],  columns: columns,};
+	const options = {
+		data: [],
+		columns: columns,
+		pageLength: 30,
+		lengthChange: false,
+		order: [],
+	};
 
-        columns: [
-            { title: "No", formatter: "rownum", width: 65, hozAlign: "center", headerHozAlign: "center"  },
+	// ⭐ สร้าง table ก่อน
+	window.table = await createTable(
+		{
+			data: [],
+			columns: columns,
+			scrollX: true,
+			scrollCollapse: true,
+			autoWidth: false,
+			searching: false,
+			dom: "rtip",
+			createdRow: function (row, data) {
+				if (data.STATUS_TEXT === "Approved") {
+					row.classList.add("row-approved");
+				} else if (data.STATUS_TEXT === "Running") {
+					row.classList.add("row-running");
+				} else if (data.STATUS_TEXT === "Reject") {
+					row.classList.add("row-reject");
+				}
+			},
+			buttons: [
+				{
+					extend: "excelHtml5",
+					title: "Training_Summary",
+				},
+			],
+		},
+		{ id: "report_table" }
+	);
 
-            { title: "Category", field: "FORM_NAME_EN", width: 220 , headerHozAlign: "center"  },
-            { title: "Code", field: "SEMPNO", width: 90, hozAlign: "center", headerHozAlign: "center"  },
-            { title: "Name", field: "STNAME", width: 220 , headerHozAlign: "center" },
-            { title: "Position", field: "SPOSITION", width: 140 , headerHozAlign: "center" },
-            { title: "Sect.", field: "SSEC", width: 100, hozAlign: "center" , headerHozAlign: "center" },
-            { title: "Dept.", field: "SDEPT", width: 100, hozAlign: "center" , headerHozAlign: "center" },
-            { title: "Div.", field: "SDIV", width: 100, hozAlign: "center" , headerHozAlign: "center" },
-            { title: "Subject", field: "SUBJECT", width: 350 , headerHozAlign: "center" },
+	// ⭐ โหลดข้อมูลครั้งแรก
+	window.loadReportData();
 
-            {
-                title: "From",
-                field: "DATE_FROM",
-                width: 100,
-                formatter: cell => {
-                    let v = cell.getValue();
-                    if (!v || v.length !== 8) return v;
-                    return v.substring(6,8) + "/" + v.substring(4,6) + "/" + v.substring(0,4);
-                }, hozAlign: "center", headerHozAlign: "center" 
-            },
+	$("#btnSearchSubmit")
+		.off("click")
+		.on("click", function () {
+			filterModal.close();
+			loadReportData();
+		});
 
-            {
-                title: "To",
-                field: "DATE_TO",
-                width: 100,
-                formatter: cell => {
-                    let v = cell.getValue();
-                    if (!v || v.length !== 8) return v;
-                    return v.substring(6,8) + "/" + v.substring(4,6) + "/" + v.substring(0,4);
-                }, hozAlign: "center", headerHozAlign: "center" 
-            },
+	$("#btnCloseModal").on("click", function () {
+		filterModal.close();
+	});
 
-            {
-                title: "Status",
-                field: "CST",
-                width: 100,
-                formatter: function (cell) {
-                    let v = cell.getValue();
-                    if (v == 2) return "<span style='color:green;font-weight:bold;'>Approve</span>";
-                    if (v == 1) return "<span style='color:blue;font-weight:bold;'>Running</span>";
-                    if (v == 3) return "<span style='color:red;font-weight:bold;'>Reject</span>";
-                    return "-";
-                },
-                hozAlign: "center", headerHozAlign: "center" 
-            },
+	$("#report_excel").on("click", function () {
+		window.table.button(".buttons-excel").trigger();
+	});
+};
 
-            { title: "Amount", field: "COST", hozAlign: "right", width: 120,
-                formatter: "money", formatterParams: { thousand: ",", precision: 0 } , headerHozAlign: "center" },
+// 🔧 Utilities
+function formatDate(v) {
+	if (!v || v.length !== 8) return v;
+	return `${v.substring(6, 8)}/${v.substring(4, 6)}/${v.substring(0, 4)}`;
+}
 
-            { title: "Vat7%", field: "VAT", hozAlign: "right", width: 100,
-                formatter: "money", formatterParams: { thousand: ",", precision: 0 } , headerHozAlign: "center" },
+function getStatusText(v) {
+	if (v == 2) return "Approved";
+	if (v == 1) return "Running";
+	if (v == 3) return "Reject";
+	return "-";
+}
 
-            { title: "Total Amount", field: "TOTAL", hozAlign: "right", width: 140,
-                formatter: "money", formatterParams: { thousand: ",", precision: 0 } , headerHozAlign: "center" }
-        ]
-    });
+window.loadReportData = function () {
+	if (!window.table) return;
 
-    $("#report_search").on("click", function () {
-        table.setData(window.baseUrl + "gpform/GP-TRN/training/load_data", {
-            from: $("#report_from").val(),
-            to: $("#report_to").val(),
-            type: $("#report_type").val()
-        });
-    });
+	$.get(
+		window.baseUrl + "gpform/GP-TRN/training/load_data",
+		{
+			from: $("#filter_from").val(),
+			to: $("#filter_to").val(),
+			type: $("#filter_type").val(),
+			empno: $("#filter_empno").val(),
+			sec: $("#filter_sec").val(),
+			dept: $("#filter_dept").val(),
+			div: $("#filter_div").val(),
+		},
+		function (res) {
+			let data = JSON.parse(res).map((row, i) => {
+				let cy2 = row.CYEAR2 ? row.CYEAR2.toString().slice(-2) : "";
+				let run = row.NRUNNO
+					? row.NRUNNO.toString().padStart(6, "0")
+					: "";
+				row.FORMNO_DISPLAY = `GP-TRN${cy2}-${run}`;
+				row.DATE_FROM_DISPLAY = formatDate(row.DATE_FROM);
+				row.DATE_TO_DISPLAY = formatDate(row.DATE_TO);
+				row.STATUS_TEXT = getStatusText(row.CST);
+				return row;
+			});
 
-    $("#report_excel").on("click", function () {
-        table.download("xlsx", "Training_Summary.xlsx");
-    });
+			window.table.clear().rows.add(data).draw();
+		}
+	);
 };

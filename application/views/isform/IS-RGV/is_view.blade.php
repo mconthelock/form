@@ -34,9 +34,11 @@
                                 <td class="border border-gray-500">Unmatch</td>
                                 <td class="border border-gray-500 text-center">
                                     @php
-                                        $countUnmath = count(array_filter($user, function ($item) {
-                                            return isset($item->RESULT) && $item->RESULT == 0;
-                                        }));
+                                        $countUnmath = count(
+                                            array_filter($user, function ($item) {
+                                                return isset($item->RESULT) && $item->RESULT == 0;
+                                            })
+                                        );
                                     @endphp
                                     {{ $countUnmath }}
                                 </td>
@@ -70,7 +72,7 @@
                             <tbody>
                                 @foreach ($user as $key => $item)
                                     <tr class="text-center hover:bg-gray-200!">
-                                        <td class="border border-gray-300">{{ ($key + 1) }}</td>
+                                        <td class="border border-gray-300">{{ $key + 1 }}</td>
                                         <td class="border border-gray-300"></td>
                                         <td class="border border-gray-300">{{ $item->ROLE }}</td>
                                         <td class="border border-gray-300">{{ $item->SERVER_NAME }}</td>
@@ -112,7 +114,7 @@
         {{-- ===== Actions ===== --}}
         @if ($mode == '02')
             <div class="flex justify-center mt-6 space-x-4">
-                @if($form->STATUS == '1')
+                @if ($form->STATUS == '1')
                     <button class="bg-green-600 text-white px-6 py-2 btn rounded-lg shadow hover:bg-green-700 transition btn-submit" data-action="approve" id="btn-confirm">
                         Approve
                     </button>

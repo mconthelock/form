@@ -15,7 +15,7 @@ trait isTid{
 
     /**
      * @param array $condition
-     * @property int $NFRMNO 
+     * @property int $NFRMNO
      * @property string $VORGNO
      * @property string $CYEAR
      * @property string $CYEAR2
@@ -38,7 +38,7 @@ trait isTid{
 
     private function getServerName(){
         try{
-            $response = $this->client->get($_ENV['APP_APIPHP']."/itgc/specialuser/getServerName"); 
+            $response = $this->client->get($_ENV['APP_APIPHP']."/itgc/specialuser/getServerName");
             $result = json_decode($response->getBody(), true);
             return $result;
         }catch(guzzlehttp\Exception\RequestException $e){
@@ -50,7 +50,7 @@ trait isTid{
 
     private function getUserLogin(){
         try{
-            $response = $this->client->get($_ENV['APP_APIPHP']."/itgc/specialuser/getUserLogin"); 
+            $response = $this->client->get($_ENV['APP_APIPHP']."/itgc/specialuser/getUserLogin");
             $result = json_decode($response->getBody(), true);
             return $result;
         }catch(guzzlehttp\Exception\RequestException $e){
@@ -62,7 +62,7 @@ trait isTid{
 
     private function getController(){
         try{
-            $response = $this->client->get($_ENV['APP_APIPHP']."/itgc/specialuser/getController"); 
+            $response = $this->client->get($_ENV['APP_APIPHP']."/itgc/specialuser/getController");
             $result = json_decode($response->getBody(), true);
             return $result;
         }catch(guzzlehttp\Exception\RequestException $e){
@@ -72,6 +72,6 @@ trait isTid{
         }
     }
 
-    
+
 
 }

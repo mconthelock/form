@@ -1,15 +1,15 @@
-import { getEscsItemStation } from "../../api/escs/item_station";
-import { getBase64Image } from "../../api/file";
-import { formatDate } from "@public/_dayjs";
-import { dragDropInit, dragDropListImage } from "@public/_dragdrop";
-import { fancyDialog } from "@public/_fancyBox";
-import { host, logtest } from "@public/jFuntion";
-import { displayEmpImage } from "@public/setIndexDB";
+import { getEscsItemStation } from "@amec/webasset/api/escs";
+import { getBase64Image } from "@amec/webasset/api/file";
+import { formatDate } from "@amec/webasset/dayjs";
+import { dragDropInit, dragDropListImage } from "@amec/webasset/dragdrop";
+import { fancyDialog } from "@amec/webasset/fancybox";
+import { host, logtest } from "@amec/webasset/utils";
+import { displayEmpImage } from "@amec/webasset/indexDB";
 import { btnMinus, btnPlus, checkbox, inputNum, radio } from "./component";
 import { handleClassList, setAuditorToString, shortSec } from "./function";
 
 const createScoreBoard = () => `
-<div class="lg:absolute right-8 w-full lg:w-40 rounded-2xl border border-slate-200 shadow-sm overflow-hidden z-[20]" id="score">
+<div class="lg:absolute right-8 w-full lg:w-40 rounded-2xl border border-slate-200 shadow-sm overflow-hidden z-20" id="score">
     <div class="bg-[#3c8dbc] text-white px-3 py-1.5 text-sm text-center font-bold">Total Score</div>
     <div class="p-3 text-center">
         <div class="text-4xl font-extrabold leading-none"  id="totalScore">0</div>
@@ -21,11 +21,11 @@ const createScoreBoard = () => `
 </div>`;
 
 async function createTableAuditMaster(data, audit = 0, score = []) {
-    logtest("Audit Master Data", data);
-    logtest("Audit Data", audit);
-    logtest("Score Data", score);
-    let total = 0;
-    let html = `<div class="overflow-y-auto w-full  max-h-[80vh] rounded-lg shadow" id="auditReport">
+	logtest("Audit Master Data", data);
+	logtest("Audit Data", audit);
+	logtest("Score Data", score);
+	let total = 0;
+	let html = `<div class="overflow-y-auto w-full  max-h-[80vh] rounded-lg shadow" id="auditReport">
         <table class="table w-full">
             <colgroup>
                 <col class="w-fit border">
@@ -49,101 +49,101 @@ async function createTableAuditMaster(data, audit = 0, score = []) {
                 </tr>
             </thead>
             <tbody>`;
-    data.forEach((item, index) => {
-        total += parseInt(item.ARM_MAXSCORE) * parseInt(item.ARM_FACTOR);
-        if (item.ARM_TYPE == "H") {
-            html += `<tr class="bg-gray-300">
+	data.forEach((item, index) => {
+		total += parseInt(item.ARM_MAXSCORE) * parseInt(item.ARM_FACTOR);
+		if (item.ARM_TYPE == "H") {
+			html += `<tr class="bg-gray-300">
                 <td colspan="6" class="font-bold">${item.ARM_NO}. ${item.ARM_DETAIL}</td>
             </tr>`;
-        } else {
-            const foundscore = score.find(
-                (s) => s.QAA_TOPIC == item.ARM_NO && s.QAA_SEQ == item.ARM_SEQ
-            );
-            const valScore = foundscore ? parseInt(foundscore.QAA_AUDIT) : 0;
-            const valComment = foundscore ? foundscore.QAA_COMMENT ?? "-" : "-";
-            html += `<tr class="list-row ${handleClassList(
-                item.ARM_SEQ
-            )}" topic="${item.ARM_NO}" seq="${item.ARM_SEQ}">
+		} else {
+			const foundscore = score.find(
+				(s) => s.QAA_TOPIC == item.ARM_NO && s.QAA_SEQ == item.ARM_SEQ
+			);
+			const valScore = foundscore ? parseInt(foundscore.QAA_AUDIT) : 0;
+			const valComment = foundscore ? foundscore.QAA_COMMENT ?? "-" : "-";
+			html += `<tr class="list-row ${handleClassList(
+				item.ARM_SEQ
+			)}" topic="${item.ARM_NO}" seq="${item.ARM_SEQ}">
                 <td></td>
                 <td>${item.ARM_DETAIL}</td>
                 <td class="flex justify-center text-white font-bold">
                     <span class="px-4 py-2 right-8 border shadow-lg rounded bg-neutral list-factor" factor="${
-                        item.ARM_FACTOR
-                    }">
+						item.ARM_FACTOR
+					}">
                         ${item.ARM_FACTOR}
                     </span>
                 </td>
                 <td class="text-center">
                     <div class="join list-maxScore" maxScore="${
-                        item.ARM_MAXSCORE
-                    }">`;
-            if (audit != 1) {
-                html += btnMinus({ cls: "join-item" });
-                html += inputNum({
-                    name: `score-${item.ARM_NO}-${item.ARM_SEQ}`,
-                    val: valScore,
-                    max: item.ARM_MAXSCORE,
-                    cls: "join-item audit-score text-center req",
-                });
-                html += btnPlus({ cls: "join-item" });
-            } else {
-                html += `<span class="audit-score">${valScore}</span>`;
-            }
-            html += `
+						item.ARM_MAXSCORE
+					}">`;
+			if (audit != 1) {
+				html += btnMinus({ cls: "join-item" });
+				html += inputNum({
+					name: `score-${item.ARM_NO}-${item.ARM_SEQ}`,
+					val: valScore,
+					max: item.ARM_MAXSCORE,
+					cls: "join-item audit-score text-center req",
+				});
+				html += btnPlus({ cls: "join-item" });
+			} else {
+				html += `<span class="audit-score">${valScore}</span>`;
+			}
+			html += `
                     </div>
                 </td>
                 <td class="text-center"><span class="result"></span></td>
                 <td class="flex justify-center join">
                     <div class="audit-comment-suggestion" type="${valComment}">`;
 
-            if (audit != 1) {
-                html += radio({
-                    name: `list-${item.ARM_NO}-${item.ARM_SEQ}`,
-                    val: "S",
-                    cls: "join-item cs-radio [&:not(:checked)]:bg-white btn-lg audit-comment",
-                    checked: foundscore ? foundscore.QAA_COMMENT == "S" : false,
-                });
-                html += radio({
-                    name: `list-${item.ARM_NO}-${item.ARM_SEQ}`,
-                    val: "C",
-                    cls: "join-item cs-radio [&:not(:checked)]:bg-white btn-lg audit-suggestion",
-                    checked: foundscore ? foundscore.QAA_COMMENT == "C" : false,
-                });
-            } else {
-                html += `<span >${valComment}</span>`;
-            }
-            html += `
+			if (audit != 1) {
+				html += radio({
+					name: `list-${item.ARM_NO}-${item.ARM_SEQ}`,
+					val: "S",
+					cls: "join-item cs-radio [&:not(:checked)]:bg-white btn-lg audit-comment",
+					checked: foundscore ? foundscore.QAA_COMMENT == "S" : false,
+				});
+				html += radio({
+					name: `list-${item.ARM_NO}-${item.ARM_SEQ}`,
+					val: "C",
+					cls: "join-item cs-radio [&:not(:checked)]:bg-white btn-lg audit-suggestion",
+					checked: foundscore ? foundscore.QAA_COMMENT == "C" : false,
+				});
+			} else {
+				html += `<span >${valComment}</span>`;
+			}
+			html += `
                     </div>
                 </td>
             </tr>`;
-        }
-    });
+		}
+	});
 
-    html += `</tbody>
+	html += `</tbody>
         </table>
     </div>`;
-    return html;
+	return html;
 }
 
 async function createDetail(data, auditee) {
-    const auditor = await setAuditorToString({
-        NFRMNO: data.NFRMNO,
-        VORGNO: data.VORGNO,
-        CYEAR: data.CYEAR,
-        CYEAR2: data.CYEAR2,
-        NRUNNO: data.NRUNNO,
-    });
-    const item = data.QA_ITEM;
-    const station = await getEscsItemStation({ ITS_ITEM: item });
-    // const auditees = setAuditorToString(data, "ESO");
-    const name = auditee.QOA_EMPNO_INFO.SNAME;
-    const empno = auditee.QOA_EMPNO_INFO.SEMPNO;
-    const auditees = `${name} (${auditee.QOA_EMPNO_INFO.SPOSNAME} ${shortSec(
-        auditee.QOA_EMPNO_INFO.SSEC
-    )})`;
-    const img = await displayEmpImage(empno);
+	const auditor = await setAuditorToString({
+		NFRMNO: data.NFRMNO,
+		VORGNO: data.VORGNO,
+		CYEAR: data.CYEAR,
+		CYEAR2: data.CYEAR2,
+		NRUNNO: data.NRUNNO,
+	});
+	const item = data.QA_ITEM;
+	const station = await getEscsItemStation({ ITS_ITEM: item });
+	// const auditees = setAuditorToString(data, "ESO");
+	const name = auditee.QOA_EMPNO_INFO.SNAME;
+	const empno = auditee.QOA_EMPNO_INFO.SEMPNO;
+	const auditees = `${name} (${auditee.QOA_EMPNO_INFO.SPOSNAME} ${shortSec(
+		auditee.QOA_EMPNO_INFO.SSEC
+	)})`;
+	const img = await displayEmpImage(empno);
 
-    let html = `
+	let html = `
         <table class="table w-full">
             <colgroup>
                 <col class="w-fit border">
@@ -176,39 +176,39 @@ async function createDetail(data, auditee) {
                 <tr>
                     <td class="font-bold text-nowrap">Audit date</td>
                     <td id="detail-audit-date">${formatDate(
-                        data.QA_OJT_DATE
-                    )}</td>
+						data.QA_OJT_DATE
+					)}</td>
                     <td id="detail-auditee-empno" class="text-center">${empno}</td>
                 </tr>
             </tbody>
         </table>`;
-    if (station && station.length > 0) {
-        html += `<div class="mt-4 p-4 border rounded-lg shadow">
+	if (station && station.length > 0) {
+		html += `<div class="mt-4 p-4 border rounded-lg shadow">
                 <h3 class="font-bold mb-2">Station</h3>
                 <div class="flex flex-wrap gap-2 ${
-                    auditee.QOA_AUDIT == 1 ? "cursor-not-allowed" : ""
-                }">`;
+					auditee.QOA_AUDIT == 1 ? "cursor-not-allowed" : ""
+				}">`;
 
-        for (const st of station) {
-            html += checkbox({
-                name: "station",
-                val: st.ITS_NO,
-                label: st.ITS_STATION_NAME,
-                cls: "checkbox-neutral",
-                disabled: auditee.QOA_AUDIT == 1,
-                checked:
-                    auditee.QOA_STATION &&
-                    auditee.QOA_STATION.split("|").includes(String(st.ITS_NO)),
-            });
-        }
-        html += `</div>
+		for (const st of station) {
+			html += checkbox({
+				name: "station",
+				val: st.ITS_NO,
+				label: st.ITS_STATION_NAME,
+				cls: "checkbox-neutral",
+				disabled: auditee.QOA_AUDIT == 1,
+				checked:
+					auditee.QOA_STATION &&
+					auditee.QOA_STATION.split("|").includes(String(st.ITS_NO)),
+			});
+		}
+		html += `</div>
         </div>`;
-    }
-    return html;
+	}
+	return html;
 }
 
 async function createTableRevision(revision) {
-    let html = `<table id="tableRevision" class="table table-zebra">
+	let html = `<table id="tableRevision" class="table table-zebra">
                 <thead class="sticky top-0 z-20 bg-[#3c8dbc] text-white">
                     <tr>
                         <th>Revision</th>
@@ -220,59 +220,59 @@ async function createTableRevision(revision) {
                 </thead>
                 <tbody>
                 `;
-    for (const rev of revision) {
-        html += `
+	for (const rev of revision) {
+		html += `
             <tr>
                 <td>${rev.ARR_REV_TEXT}</td>
                 <td class="text-nowrap">${formatDate(rev.ARR_CREATEDATE)}</td>
                 <td>${
-                    rev.ARR_INCHARGE != 0
-                        ? `${rev.ARR_INCHARGE_INFO.USR_NAME} (${rev.ARR_INCHARGE_INFO.USR_NO})`
-                        : "SYSTEM"
-                }</td>
+					rev.ARR_INCHARGE != 0
+						? `${rev.ARR_INCHARGE_INFO.USR_NAME} (${rev.ARR_INCHARGE_INFO.USR_NO})`
+						: "SYSTEM"
+				}</td>
                 <td>${rev.ARR_REASON}</td>
                 <td><a href="${host}/qaform/QA-INS/form/preview/${
-            rev.ARR_SECID
-        }/${
-            rev.ARR_REV
-        }" target="_blank" class="btn btn-sm btn-primary"><i class="icofont-eye-alt"></i></a></td>
+			rev.ARR_SECID
+		}/${
+			rev.ARR_REV
+		}" target="_blank" class="btn btn-sm btn-primary"><i class="icofont-eye-alt"></i></a></td>
             </tr>
         `;
-    }
-    if (revision.length === 0) {
-        html += `<tr><td colspan="4" class="text-center">No data available in table</td></tr>`;
-    }
-    html += `</tbody></table>`;
-    return html;
+	}
+	if (revision.length === 0) {
+		html += `<tr><td colspan="4" class="text-center">No data available in table</td></tr>`;
+	}
+	html += `</tbody></table>`;
+	return html;
 }
 
 async function createTableCS(data, audit = 0) {
-    let list = "";
-    if (data.QA_FILES && data.QA_FILES.length > 0) {
-        for (const file of data.QA_FILES) {
-            const path = file.FILE_PATH.endsWith("/")
-                ? file.FILE_PATH + file.FILE_FNAME
-                : file.FILE_PATH + "/" + file.FILE_FNAME;
-            const image = await getBase64Image(path);
+	let list = "";
+	if (data.QA_FILES && data.QA_FILES.length > 0) {
+		for (const file of data.QA_FILES) {
+			const path = file.FILE_PATH.endsWith("/")
+				? file.FILE_PATH + file.FILE_FNAME
+				: file.FILE_PATH + "/" + file.FILE_FNAME;
+			const image = await getBase64Image(path);
 
-            if (audit != 1) {
-                list += dragDropListImage({
-                    src: image,
-                    attr: `file-id="${file.FILE_ID}"`,
-                    fromDB: true,
-                });
-            } else {
-                list += `<li class="relative">
+			if (audit != 1) {
+				list += dragDropListImage({
+					src: image,
+					attr: `file-id="${file.FILE_ID}"`,
+					fromDB: true,
+				});
+			} else {
+				list += `<li class="relative">
                     <a href="${image}" data-fancybox="gallery" class="w-2/5 h-2/5">
                         <img src="${image}" class="w-44 object-cover rounded-lg" />
                     </a>
                 </li>`;
-            }
-        }
-    }
-    const readonly = audit == 1 ? "readonly disabled" : "";
+			}
+		}
+	}
+	const readonly = audit == 1 ? "readonly disabled" : "";
 
-    let html = `<table id="tableCS" class="table w-full">
+	let html = `<table id="tableCS" class="table w-full">
         <colgroup>
             <col class="border">
             <col class="border">
@@ -289,184 +289,184 @@ async function createTableCS(data, audit = 0) {
             <tr>
                 <td class="p-0">
                     <textarea class="w-full h-full min-h-70 p-4 autosize autosize-match" id="audit-result" name="auditResult" maxlength="3000" placeholder="Enter audit result here..." ${readonly}>${
-        data.QOA_AUDIT_RESULT || "-"
-    }</textarea>   
+		data.QOA_AUDIT_RESULT || "-"
+	}</textarea>
                 </td>
                 <td class="p-0">
                     <textarea class="w-full h-full min-h-70 p-4 autosize autosize-match" id="audit-activity" name="auditActivity" maxlength="3000" placeholder="Enter audit activity here..." ${readonly}>${
-        data.QOA_IMPROVMENT_ACTIVITY || "-"
-    }</textarea>   
+		data.QOA_IMPROVMENT_ACTIVITY || "-"
+	}</textarea>
                 </td>
                 <td class="w-3xl">
                     ${
-                        audit != 1
-                            ? dragDropInit({
-                                  format: "image",
-                                  class: "auditImage",
-                                  showImg: true,
-                                  list: list,
-                                  height: "min-h-70 max-h-96",
-                              })
-                            : `<ul class="flex flex-wrap gap-2">${list}</ul>`
-                    }
+						audit != 1
+							? dragDropInit({
+									format: "image",
+									class: "auditImage",
+									showImg: true,
+									list: list,
+									height: "min-h-70 max-h-96",
+							  })
+							: `<ul class="flex flex-wrap gap-2">${list}</ul>`
+					}
                 </td>
             </tr>
         </tbody>
     </table>`;
-    return html;
+	return html;
 }
 
 async function calGrade(score, total) {
-    const percent = (score / total) * 100 ?? 0;
-    let grade = "";
-    let result = 0;
-    if (percent >= 90) {
-        grade = "A";
-        result = 1;
-    } else if (percent >= 80) {
-        grade = "B";
-        result = 1;
-    } else {
-        grade = "C";
-        result = 0;
-    }
-    return { result, grade, percent: percent.toFixed(2) };
+	const percent = (score / total) * 100 ?? 0;
+	let grade = "";
+	let result = 0;
+	if (percent >= 90) {
+		grade = "A";
+		result = 1;
+	} else if (percent >= 80) {
+		grade = "B";
+		result = 1;
+	} else {
+		grade = "C";
+		result = 0;
+	}
+	return { result, grade, percent: percent.toFixed(2) };
 }
 
 function setMedalReportList(percent, testDate) {
-    let html = ``;
-    let range = "none";
+	let html = ``;
+	let range = "none";
 
-    if (!percent || !testDate) return { html, range };
-    const year = new Date(testDate).getFullYear();
-    const yearText = year.toString().slice(-2);
-    if (percent >= 90) {
-        range = "Gold";
-        html += `
+	if (!percent || !testDate) return { html, range };
+	const year = new Date(testDate).getFullYear();
+	const yearText = year.toString().slice(-2);
+	if (percent >= 90) {
+		range = "Gold";
+		html += `
             <!-- 🥇 Gold -->
             <div class="flex gap-6 items-center justify-center">
-                <div class="relative w-8 h-8 rounded-full bg-gradient-to-br from-yellow-300 via-yellow-400 to-amber-500 shadow-lg">
-                    <div class="absolute inset-1 rounded-full bg-gradient-to-br from-yellow-100 to-yellow-300 flex items-center justify-center font-bold  text-amber-800">
+                <div class="relative w-8 h-8 rounded-full bg-linear-to-br from-yellow-300 via-yellow-400 to-amber-500 shadow-lg">
+                    <div class="absolute inset-1 rounded-full bg-linear-to-br from-yellow-100 to-yellow-300 flex items-center justify-center font-bold  text-amber-800">
                     ${yearText}
                     </div>
                 </div>
             </div>`;
-    } else if (percent >= 80) {
-        range = "Silver";
-        html += `
+	} else if (percent >= 80) {
+		range = "Silver";
+		html += `
             <!-- 🥈 Silver -->
             <div class="flex gap-6 items-center justify-center">
-                <div class="relative w-8 h-8 rounded-full bg-gradient-to-br from-gray-400 via-gray-300 to-gray-500 shadow-lg">
-                    <div class="absolute inset-1 rounded-full bg-gradient-to-br from-gray-100 to-gray-300 flex items-center justify-center font-bold text-gray-700">
+                <div class="relative w-8 h-8 rounded-full bg-linear-to-br from-gray-400 via-gray-300 to-gray-500 shadow-lg">
+                    <div class="absolute inset-1 rounded-full bg-linear-to-br from-gray-100 to-gray-300 flex items-center justify-center font-bold text-gray-700">
                     ${yearText}
                     </div>
                 </div>
             </div>`;
-    } else {
-        range = "Bronze";
-        html += `
+	} else {
+		range = "Bronze";
+		html += `
             <!-- 🥉 Bronze -->
             <div class="flex gap-6 items-center justify-center">
-                <div class="relative w-8 h-8 rounded-full bg-gradient-to-br from-[oklch(0.9_0.05_56.04)] via-[oklch(0.72_0.23_43.31)] to-[oklch(0.84_0.12_82.91)] shadow-lg">
-                    <div class="absolute inset-1 rounded-full bg-gradient-to-br from-white to-[#fe6300] flex items-center justify-center font-bold text-[#3f0606]">
+                <div class="relative w-8 h-8 rounded-full bg-linear-to-br from-[oklch(0.9_0.05_56.04)] via-[oklch(0.72_0.23_43.31)] to-[oklch(0.84_0.12_82.91)] shadow-lg">
+                    <div class="absolute inset-1 rounded-full bg-linear-to-br from-white to-[#fe6300] flex items-center justify-center font-bold text-[#3f0606]">
                     X
                     </div>
                 </div>
             </div>`;
-    }
-    return { html, range };
+	}
+	return { html, range };
 }
 
 async function calScoreTotal() {
-    let total = 0;
-    let score = 0;
-    let s = 0;
-    let c = 0;
-    $(".list-row").each((i, el) => {
-        const factor = parseInt($(el).find(".list-factor").attr("factor"));
-        const maxScore = parseInt(
-            $(el).find(".list-maxScore").attr("maxScore")
-        );
-        const auditScore = $(el).find(".audit-score");
-        const valComment = $(el).find(".audit-comment-suggestion").attr("type");
-        valComment == "S" ? s++ : valComment == "C" ? c++ : "";
-        const res =
-            parseInt(auditScore.val() || auditScore.text() || 0) * factor;
-        $(el).find(".result").text(res);
-        score += res;
-        total += maxScore * factor;
-    });
-    return { total, score, s, c };
+	let total = 0;
+	let score = 0;
+	let s = 0;
+	let c = 0;
+	$(".list-row").each((i, el) => {
+		const factor = parseInt($(el).find(".list-factor").attr("factor"));
+		const maxScore = parseInt(
+			$(el).find(".list-maxScore").attr("maxScore")
+		);
+		const auditScore = $(el).find(".audit-score");
+		const valComment = $(el).find(".audit-comment-suggestion").attr("type");
+		valComment == "S" ? s++ : valComment == "C" ? c++ : "";
+		const res =
+			parseInt(auditScore.val() || auditScore.text() || 0) * factor;
+		$(el).find(".result").text(res);
+		score += res;
+		total += maxScore * factor;
+	});
+	return { total, score, s, c };
 }
 
 async function setScore() {
-    const { total, score, s, c } = await calScoreTotal();
-    const { result, grade, percent } = await calGrade(score, total);
-    $("#totalScore").text(score);
-    $("#total").text(total);
-    $("#grade").text(grade);
-    $("#commentItem").text(c);
-    $("#suggestionItem").text(s);
-    $("#percent").text(percent + "%");
-    $("#res").html(
-        result == 1
-            ? "<span class='text-green-500'>PASS</span>"
-            : "<span class='text-red-500'>NOT PASS</span>"
-    );
-    return { total, score, result, grade, percent };
+	const { total, score, s, c } = await calScoreTotal();
+	const { result, grade, percent } = await calGrade(score, total);
+	$("#totalScore").text(score);
+	$("#total").text(total);
+	$("#grade").text(grade);
+	$("#commentItem").text(c);
+	$("#suggestionItem").text(s);
+	$("#percent").text(percent + "%");
+	$("#res").html(
+		result == 1
+			? "<span class='text-green-500'>PASS</span>"
+			: "<span class='text-red-500'>NOT PASS</span>"
+	);
+	return { total, score, result, grade, percent };
 }
 
 $(document).on("click", ".audit-comment, .audit-suggestion", function () {
-    const parent = $(this).parent();
-    parent.attr("type", $(this).val());
-    setScore();
+	const parent = $(this).parent();
+	parent.attr("type", $(this).val());
+	setScore();
 });
 
 $(document).on("click", ".plus", function () {
-    const input = $(this).siblings(".audit-score");
-    let val = parseInt(input.val());
-    const max = parseInt(input.attr("max"));
+	const input = $(this).siblings(".audit-score");
+	let val = parseInt(input.val());
+	const max = parseInt(input.attr("max"));
 
-    if (val < max) {
-        val++;
-        input.val(val);
-    }
-    setScore();
+	if (val < max) {
+		val++;
+		input.val(val);
+	}
+	setScore();
 });
 
 $(document).on("click", ".minus", function () {
-    const input = $(this).siblings(".audit-score");
-    const min = parseInt(input.attr("min")) || 0;
-    let val = parseInt(input.val());
-    if (val > min) {
-        val--;
-        input.val(val);
-    }
-    setScore();
+	const input = $(this).siblings(".audit-score");
+	const min = parseInt(input.attr("min")) || 0;
+	let val = parseInt(input.val());
+	if (val > min) {
+		val--;
+		input.val(val);
+	}
+	setScore();
 });
 
 $(document).on("change", ".audit-score", function () {
-    let val = parseInt($(this).val());
-    const max = parseInt($(this).attr("max"));
-    const min = parseInt($(this).attr("min")) || 0;
-    if (val > max) {
-        val = max;
-        $(this).val(val);
-    }
-    if (val < min || isNaN(val)) {
-        val = min;
-        $(this).val(val);
-    }
-    setScore();
+	let val = parseInt($(this).val());
+	const max = parseInt($(this).attr("max"));
+	const min = parseInt($(this).attr("min")) || 0;
+	if (val > max) {
+		val = max;
+		$(this).val(val);
+	}
+	if (val < min || isNaN(val)) {
+		val = min;
+		$(this).val(val);
+	}
+	setScore();
 });
 
 export {
-    createTableAuditMaster,
-    createScoreBoard,
-    calScoreTotal,
-    setScore,
-    createDetail,
-    createTableRevision,
-    createTableCS,
-    setMedalReportList,
+	createTableAuditMaster,
+	createScoreBoard,
+	calScoreTotal,
+	setScore,
+	createDetail,
+	createTableRevision,
+	createTableCS,
+	setMedalReportList,
 };

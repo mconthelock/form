@@ -91,7 +91,7 @@
                 {{-- ===== Actions ===== --}}
                 @if ($mode == '02')
                     <div class="flex justify-center mt-6 space-x-4">
-                        @if($form->STATUS == '1')
+                        @if ($form->STATUS == '1')
                             <button class="bg-green-600 text-white px-6 py-2 btn rounded-lg shadow hover:bg-green-700 transition btn-submit" data-action="approve" id="btn-confirm">Approve</button>
                         @else
                             <button class="bg-green-600 text-white px-6 py-2 btn rounded-lg shadow hover:bg-green-700 transition btn-approve" data-action="approve" id="btn-confirm">Approve</button>

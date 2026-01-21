@@ -4,9 +4,9 @@ require_once APPPATH . 'models/my_model.php';
 class userEnv_model extends my_model {
     public function __construct(){
         parent::__construct();
-        $this->ad = $this->load->database('auditDB',true);
+        $this->ad = $this->load->database('AUD',true);
     }
-    
+
     public function getController(){
         $this->ad->from('ITGC_SPECIALUSER')
                  ->where('AUTH_CLASS', 'Almighty')

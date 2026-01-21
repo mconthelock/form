@@ -33,7 +33,7 @@
     </div>
 
     {{-- Header --}}
-    <h3 class="font-bold text-xl mb-3 text-blue-700 border-b pb-1">
+    <h3 class="font-bold text-xl mb-3 text-red-700 border-b pb-1">
       แบบฟอร์ม {{ $data_head[0]->FORM_NAME_TH }} ({{ $data_head[0]->FORM_NAME_EN }})
     </h3><br>
 
@@ -112,16 +112,15 @@
       </div>
     </div>
 
-    <p class="text-[14px] text-red-600 font-semibold mt-1 ml-2">
-      ※ สามารถส่งฟอร์มนี้ได้ตั้งแต่วันที่ {{ $data_head[0]->DATE_TO }}
-    </p>
-
     {{-- Editable --}}
     @if ($mode == '02' && $exdata == '99')
-
+      <p class="text-[14px] text-red-600 font-semibold mt-1 ml-2"> ※ สามารถส่งฟอร์มนี้ได้ตั้งแต่วันที่ {{ $data_head[0]->DATE_TO }}</p>
       {{-- CASE 1: ต้องแนบไฟล์ --}}
-      @if(in_array($data_head[0]->SPOSCODE, ['55','60','61','62','63']))
-
+      @php
+        $pos_chk = (int) $data_head[0]->SPOSCODE;
+      @endphp
+      
+      @if($pos_chk >= 55 && $pos_chk <= 69)
         <div class="border border-sky-300 bg-sky-50 p-4 rounded-xl mb-6">
             <label class="font-semibold text-lg text-sky-900">
               แนบไฟล์สิ่งที่ได้รับจากการอบรม
@@ -129,10 +128,8 @@
             <input type="file" id="txt_trn_att" name="txt_trn_att[]" multiple
                 class="block w-full mt-2 p-2 border border-sky-300 rounded-lg file:bg-sky-600 file:text-white"/>
         </div>
-
       {{-- CASE 2 --}}
       @else
-
         <div class="border border-gray-400 p-3 mb-4 rounded-lg bg-gray-50">
           <label class="font-semibold block mb-2">สรุปเนื้อหา ที่ได้รับจากการฝึกอบรม (Training content)</label>
           <textarea id="CONTENT" rows="10"
@@ -149,18 +146,128 @@
 
     {{-- VIEW ONLY --}}
     @else
-
-      <div class="border border-gray-400 p-3 mb-4 rounded-lg bg-gray-50 whitespace-pre-line">
+      @if($chk_attach_report == 'yes')
+        <label class="font-semibold block mb-2">เอกสาร สรุปเนื้อหา ที่ได้รับจากการฝึกอบรม (Document of Training content)</label>
+        <div class="p-3 mb-6 rounded-lg bg-gray-50 font-semibold text-lg text-blue-700">
+         @foreach ($data_attach_report as $row_att)
+              <a href="{{ base_url('gpform/GP-TRN/training/preview_file/' . $formno . '/' . $row_att->FILENAME . '/' . $row_att->ORIGIN_FILENAME) }}"
+                  target="_blank" class="text-blue-700 underline btn btn-sm rounded-lg">
+                  {{ $row_att->ORIGIN_FILENAME }}
+              </a>
+          @endforeach
+        </div>
+      @else
         <label class="font-semibold block mb-2">สรุปเนื้อหา ที่ได้รับจากการฝึกอบรม (Training content)</label>
-        {{ $data_head[0]->CONTENT }}
+        <div class="p-3 mb-6 rounded-lg bg-gray-50 whitespace-pre-line font-semibold text-lg text-blue-700">
+          {{ $data_head[0]->CONTENT }}
+        </div>
+
+        <label class="font-semibold block mb-2">ท่านจะประยุกต์ใช้ ความรู้ / ทักษะ / คุณลักษณะหรือพฤติกรรม จากการฝึกอบรม ต่อการปฏิบัติงานในบริษัทฯ ได้อย่างไร <br>(How to apply knowledge / skill / attribute or behavior from training class to your organization ?)</label>
+        <div class="p-3 mb-6 rounded-lg bg-gray-50 whitespace-pre-line font-semibold text-lg text-blue-700">
+          {{ $data_head[0]->APPLY }}
+        </div>
+      @endif
+
+      <br>
+      <h3 class="font-bold text-xl mb-3 text-red-700 border-b pb-1">การประเมินผลหลังการอบรม </h3>
+      <label class="font-semibold block mb-2">ระดับความเข้าใจและการนำไปใช้ (Level of understanding and application)</label>
+      <div class="p-3 mb-6 rounded-lg bg-gray-50 font-semibold text-lg text-blue-700">
+        @php
+            $scoreText = '';
+            switch ((string)($data_head[0]->SCORE ?? '')) {
+                case '0':
+                    $scoreText = 'ระดับ 0 => Not Understand (ไม่เข้าใจเนื้อหาการฝึกอบรม)';
+                    break;
+                case '1':
+                    $scoreText = 'ระดับ 1 => Remember / Cannot apply (จดจำเนื้อหาได้, นำไปใช้ในงานยังไม่ได้)';
+                    break;
+                case '2':
+                    $scoreText = 'ระดับ 2 => Understand & Apply (เข้าใจเนื้อหาและนำไปใช้ในงานอย่างมีประสิทธิภาพ) ';
+                    break;
+                case '3':
+                    $scoreText = 'ระดับ 3 => Understand & Apply & Transfer to other (เข้าใจเนื้อหา, นำไปใช้ในงานอย่างมีประสิทธิภาพ, สามารถถ่ายทอดสู่ผู้อื่นได้)';
+                    break;
+                default:
+                    $scoreText = '';
+            }
+        @endphp
+
+        {{ $scoreText }}
       </div>
 
-      <div class="border border-gray-400 p-3 mb-6 rounded-lg bg-gray-50 whitespace-pre-line">
-        <label class="font-semibold block mb-2">ท่านจะประยุกต์ใช้ ความรู้ / ทักษะ / คุณลักษณะหรือพฤติกรรม จากการฝึกอบรม ต่อการปฏิบัติงานในบริษัทฯ ได้อย่างไร <br>(How to apply knowledge / skill / attribute or behavior from training class to your organization ?)</label>
-        {{ $data_head[0]->APPLY }}
+      <label class="font-semibold block mb-2">ความเห็นผู้บังคับบัญชา (Direct Manager Opinion)</label>
+      <div class="p-3 mb-6 rounded-lg bg-gray-50 whitespace-pre-line font-semibold text-lg text-blue-700">
+         {{ $data_head[0]->MANAGER_COMMENT }}
       </div>
 
     @endif
+
+    @if ($mode == '02' && $exdata == '02') 
+      <div class="border border-emerald-300 bg-emerald-50 p-6 rounded-xl mb-6">
+          <h3 class="font-bold text-2xl mb-4" style="color:blue"> การประเมินผลหลังการอบรม </h3>
+          <label class="block font-semibold text-sm text-gray-800 mb-1">
+            กรุณาประเมิน ระดับความเข้าใจของผู้ใต้บังคับบัญชา ภายหลังฝึกอบรมครบ 3 เดือน <br>(Please evaluate understanding level after attend class complete 3 months)
+          </label><br>
+
+          {{-- Score --}}
+          <div class="space-y-3">
+              <label class="block font-semibold text-gray-800 mb-1">
+                  ระดับความเข้าใจและการนำไปใช้
+              </label>
+              {{-- 0 --}}
+              <label class="flex items-start gap-3 p-3 border border-gray-300 rounded-lg bg-white hover:bg-gray-50 cursor-pointer">
+                  <input type="radio" id="rd_manager_score_0" name="rd_manager_score" value="0" class="mt-1" required>
+                  <div class="text-sm">
+                      <span class="font-semibold">0 = Not Understand</span><br>
+                      <span class="text-gray-600">ไม่เข้าใจเนื้อหาการฝึกอบรม</span>
+                  </div>
+              </label>
+              {{-- 1 --}}
+              <label class="flex items-start gap-3 p-3 border border-gray-300 rounded-lg bg-white hover:bg-gray-50 cursor-pointer">
+                  <input type="radio" id="rd_manager_score_1" name="rd_manager_score" value="1" class="mt-1" required>
+                  <div class="text-sm">
+                      <span class="font-semibold">1 = Remember / Cannot apply</span><br>
+                      <span class="text-gray-600">จดจำเนื้อหาได้ แต่นำไปใช้ในงานยังไม่ได้</span>
+                  </div>
+              </label>
+              {{-- 2 --}}
+              <label class="flex items-start gap-3 p-3 border border-gray-300 rounded-lg bg-white hover:bg-gray-50 cursor-pointer">
+                  <input type="radio" id="rd_manager_score_2" name="rd_manager_score" value="2" class="mt-1" required>
+                  <div class="text-sm">
+                      <span class="font-semibold">2 = Understand & Apply</span><br>
+                      <span class="text-gray-600">
+                          เข้าใจเนื้อหาและนำไปใช้ในงานอย่างมีประสิทธิภาพ
+                      </span>
+                  </div>
+              </label>
+              {{-- 3 --}}
+              <label class="flex items-start gap-3 p-3 border border-gray-300 rounded-lg bg-white hover:bg-gray-50 cursor-pointer">
+                  <input type="radio" id="rd_manager_score_3" name="rd_manager_score" value="3" class="mt-1" required>
+                  <div class="text-sm">
+                      <span class="font-semibold">3 = Understand & Apply & Transfer to other</span><br>
+                      <span class="text-gray-600">
+                          เข้าใจ นำไปใช้ได้ และสามารถถ่ายทอดให้ผู้อื่นได้
+                      </span>
+                  </div>
+              </label>
+          </div>
+
+          {{-- Comment --}}
+          <div class="mt-5">
+              <label class="block font-semibold text-gray-800 mb-1">
+                  ความเห็นผู้บังคับบัญชา (Direct Manager Opinion)
+              </label>
+              <textarea
+                  id="txt_manager_comment" name="txt_manager_comment"
+                  rows="4"
+                  class="w-full bg-white border border-gray-300 rounded-lg p-3 resize-none
+                        focus:outline-none focus:ring-2 focus:ring-gray-400"
+                  placeholder="ระบุความคิดเห็น ข้อเสนอแนะ หรือแนวทางพัฒนาเพิ่มเติม..."
+              ></textarea>
+          </div>
+      </div>
+    @endif
+
 
     @if ($mode == '02')
       <div class="text-center mt-6">
@@ -174,6 +281,16 @@
     @endif
 
   </form>
+
+    <div class="form-data" 
+                data-nfrmno="{{ $NFRMNO }}" 
+                data-vorgno="{{ $VORGNO }}" 
+                data-cyear="{{ $CYEAR }}" 
+                data-cyear2="{{ $CYEAR2 }}" 
+                data-nrunno="{{ $NRUNNO }}" 
+                data-empno="{{ $EMPNO }}">
+            </div>
+            <div class="flow mt-6" style="overflow: hidden"></div>
 </div>
 
 @endsection
@@ -183,6 +300,7 @@
 @endsection
 
 {{-- Disable Submit Button if not reached end date --}}
+
 <script>
 document.addEventListener("DOMContentLoaded", function () {
   const btn = document.getElementById("btnSubmit");
@@ -223,4 +341,5 @@ document.addEventListener("DOMContentLoaded", function () {
     btn.parentElement.prepend(warnMsg);
   }
 });
+
 </script>

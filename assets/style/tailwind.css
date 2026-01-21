@@ -1,190 +1,161 @@
 @import "tailwindcss";
 @plugin "daisyui" {
-  themes: light --default, dark --prefersdark;
+	themes:
+		light --default,
+		dark --prefersdark;
 }
 
+@import "@amec/webasset/css/font.css"; /* เพิ่ม font จาก @amec/webasset */
+
+/* ใช้สำหรับบอก tailwind ว่าให้ watch class ที่ไหนบ้าง*/
+/* view */
+@source "../../application/views/**/*.php";
+
+/* css */
+@source "../style/**/*.css";
+
+/* js */
+@source "../script/**/*.js";
+
+/* function public อ่าน class tailwind ใน webasset*/
+@source "../../node_modules/@amec/webasset/src/**/*.js";
+
 @plugin "daisyui/theme" {
-  name: "light";
-  default: true;
-  prefersdark: true;
-  color-scheme: "light";
-  --color-base-100: oklch(98% 0.003 247.858);
-  --color-base-200: oklch(96% 0.007 247.896);
-  --color-base-300: oklch(92% 0.013 255.508);
-  --color-base-content: oklch(0% 0.042 265.755);
-  --color-primary: oklch(0.43 0.181 260.48);
-  --color-primary-content: oklch(0.93 0.04 263.36);
-  --color-secondary: oklch(0.7876 0.165783 75.5064);
-  --color-secondary-content: oklch(25% 0.092 26.042);
-  --color-accent: oklch(84% 0.143 164.978);
-  --color-accent-content: oklch(26% 0.051 172.552);
-  --color-neutral: oklch(37% 0.044 257.287);
-  --color-neutral-content: oklch(98% 0.003 247.858);
-  --color-info: oklch(54% 0.245 262.881);
-  --color-info-content: oklch(97% 0.014 254.604);
-  --color-success: oklch(59% 0.145 163.225);
-  --color-success-content: oklch(97% 0.021 166.113);
-  --color-warning: oklch(64% 0.222 41.116);
-  --color-warning-content: oklch(98% 0.016 73.684);
-  --color-error: oklch(57% 0.245 27.325);
-  --color-error-content: oklch(97% 0.013 17.38);
-  --radius-selector: 0.5rem;
-  --radius-field: 0.25rem;
-  --radius-box: 1rem;
-  --size-selector: 0.25rem;
-  --size-field: 0.25rem;
-  --border: 1px;
-  --depth: 1;
-  --noise: 1;
-  --input-color: transparent;
+	name: "light";
+	default: true;
+	prefersdark: true;
+	color-scheme: "light";
+	--color-base-100: oklch(98% 0.003 247.858);
+	--color-base-200: oklch(96% 0.007 247.896);
+	--color-base-300: oklch(92% 0.013 255.508);
+	--color-base-content: oklch(0% 0.042 265.755);
+	--color-primary: oklch(0.43 0.181 260.48);
+	--color-primary-content: oklch(0.93 0.04 263.36);
+	--color-secondary: oklch(0.7876 0.165783 75.5064);
+	--color-secondary-content: oklch(25% 0.092 26.042);
+	--color-accent: oklch(84% 0.143 164.978);
+	--color-accent-content: oklch(26% 0.051 172.552);
+	--color-neutral: oklch(37% 0.044 257.287);
+	--color-neutral-content: oklch(98% 0.003 247.858);
+	--color-info: oklch(54% 0.245 262.881);
+	--color-info-content: oklch(97% 0.014 254.604);
+	--color-success: oklch(59% 0.145 163.225);
+	--color-success-content: oklch(97% 0.021 166.113);
+	--color-warning: oklch(64% 0.222 41.116);
+	--color-warning-content: oklch(98% 0.016 73.684);
+	--color-error: oklch(57% 0.245 27.325);
+	--color-error-content: oklch(97% 0.013 17.38);
+	--radius-selector: 0.5rem;
+	--radius-field: 0.25rem;
+	--radius-box: 1rem;
+	--size-selector: 0.25rem;
+	--size-field: 0.25rem;
+	--border: 1px;
+	--depth: 1;
+	--noise: 1;
+	/* --input-color: transparent; */
 }
 
 @layer base {
-  :root {
-    --font-sans: "LINE Seed EN", "LINE Seed EN Bold", "LINE Seed TH",
-      "LINE Seed TH Bold", "LINE Seed JP", "LINE Seed JP Bold", sans-serif;
-  }
+	:root {
+		--font-sans:
+			"LINE Seed EN", "LINE Seed EN Bold", "LINE Seed TH",
+			"LINE Seed TH Bold", "LINE Seed JP", "LINE Seed JP Bold", sans-serif;
+	}
 
-  *,
-  ::after,
-  ::before,
-  ::backdrop,
-  ::file-selector-button {
-    border-color: var(--color-gray-200, currentColor);
-  }
+	*,
+	::after,
+	::before,
+	::backdrop,
+	::file-selector-button {
+		border-color: var(--color-gray-200, currentColor);
+	}
 
-  body {
-    @apply font-sans;
-  }
+	body {
+		@apply font-sans;
+	}
 
-  .input {
-    &:focus,
-    &:focus-within {
-      outline-offset: 0px !important;
-      outline: 1px solid var(--input-color) !important;
-    }
-  }
+	.input {
+		&:focus,
+		&:focus-within {
+			outline-offset: 0px !important;
+			outline: 1px solid var(--input-color) !important;
+		}
+	}
 
-  .dark {
-    --color-primary: 255, 0, 0;
-    --color-secondary: 107, 114, 128;
-    --color-accent: 232, 159, 2;
-    --color-card: 0, 0, 0;
-    --color-border: 216, 218, 223;
-    --color-body: 229, 231, 235;
-  }
+	.dark {
+		--color-primary: 255, 0, 0;
+		--color-secondary: 107, 114, 128;
+		--color-accent: 232, 159, 2;
+		--color-card: 0, 0, 0;
+		--color-border: 216, 218, 223;
+		--color-body: 229, 231, 235;
+	}
 
-  @font-face {
-    font-family: "LINE Seed EN";
-    src: url("../../fonts/lineseed/en/LINESeedSans_W_Rg.woff2") format("woff2"),
-      url("../../fonts/lineseed/en/LINESeedSans_W_Rg.woff") format("woff");
-    font-weight: 400;
-    font-style: normal;
-  }
+	.loader {
+		height: 5rem;
+		aspect-ratio: 1;
+		border: 3px solid #ffffff;
+		animation: l4 2s infinite;
+	}
 
-  @font-face {
-    font-family: "LINE Seed EN Bold";
-    src: url("../../fonts/lineseed/en/LINESeedSans_W_Bd.woff2") format("woff2"),
-      url("../../fonts/lineseed/en/LINESeedSans_W_Bd.woff") format("woff");
-    font-weight: 700;
-    font-style: normal;
-  }
+	@keyframes l4 {
+		0% {
+			aspect-ratio: 1;
+			border-radius: 50px;
+		}
+		25% {
+			aspect-ratio: 2;
+			border-radius: 50px;
+		}
+		50% {
+			aspect-ratio: 2;
+			border-radius: 0;
+		}
+		75% {
+			aspect-ratio: 1;
+			border-radius: 0;
+		}
+		100% {
+			aspect-ratio: 1;
+			border-radius: 50px;
+		}
+	}
 
-  @font-face {
-    font-family: "LINE Seed TH";
-    src: url("../../fonts/lineseed/th/LINESeedSansTH_W_Rg.woff2")
-        format("woff2"),
-      url("../../fonts/lineseed/th/LINESeedSansTH_W_Rg.woff") format("woff");
-    font-weight: 400;
-    font-style: normal;
-  }
+	.shadow-button {
+		box-shadow:
+			0 4px 6px -1px rgb(0 0 0 / 0.1),
+			0 2px 4px -2px rgb(0 0 0 / 0.1) !important;
+	}
 
-  @font-face {
-    font-family: "LINE Seed TH Bold";
-    src: url("../../fonts/lineseed/th/LINESeedSansTH_W_Bd.woff2")
-        format("woff2"),
-      url("../../fonts/lineseed/th/LINESeedSansTH_W_Bd.woff") format("woff");
-    font-weight: 700;
-    font-style: normal;
-  }
+	.txt-upper {
+		text-transform: uppercase;
+	}
 
-  @font-face {
-    font-family: "LINE Seed JP";
-    src: url("../../fonts/lineseed/jp/LINESeedJP_OTF_Rg.woff2") format("woff2"),
-      url("../../fonts/lineseed/jp/LINESeedJP_OTF_Rg.woff") format("woff");
-    font-weight: 400;
-    font-style: normal;
-  }
+	.drawer-side {
+		z-index: 11 !important;
+	}
 
-  @font-face {
-    font-family: "LINE Seed JP Bold";
-    src: url("../../fonts/lineseed/jp/LINESeedJP_OTF_Bd.woff2") format("woff2"),
-      url("../../fonts/lineseed/jp/LINESeedJP_OTF_Bd.woff") format("woff");
-    font-weight: 700;
-    font-style: normal;
-  }
+	.tooltip:before {
+		z-index: 12 !important;
+	}
 
-  .loader {
-    height: 5rem;
-    aspect-ratio: 1;
-    border: 3px solid #ffffff;
-    animation: l4 2s infinite;
-  }
-  @keyframes l4 {
-    0% {
-      aspect-ratio: 1;
-      border-radius: 50px;
-    }
-    25% {
-      aspect-ratio: 2;
-      border-radius: 50px;
-    }
-    50% {
-      aspect-ratio: 2;
-      border-radius: 0;
-    }
-    75% {
-      aspect-ratio: 1;
-      border-radius: 0;
-    }
-    100% {
-      aspect-ratio: 1;
-      border-radius: 50px;
-    }
-  }
-
-  .shadow-button {
-    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1) !important;
-  }
-
-  .txt-upper {
-    text-transform: uppercase;
-  }
-
-  .drawer-side {
-    z-index: 11 !important;
-  }
-
-  .tooltip:before {
-    z-index: 12 !important;
-  }
-
-  .text-center {
-    text-align: center !important;
-  }
+	.text-center {
+		text-align: center !important;
+	}
 }
 
 /* The main splash screen container */
 .splash-screen {
-  position: fixed;
-  inset: 0; /* (top, right, bottom, left = 0) */
-  background-color: #1a1a1a; /* Dark background */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 9999;
+	position: fixed;
+	inset: 0; /* (top, right, bottom, left = 0) */
+	background-color: #1a1a1a; /* Dark background */
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	z-index: 9999;
 
-  /* REMOVED animation and animation-delay.
+	/* REMOVED animation and animation-delay.
               We will now control this with JavaScript by adding a '.hidden' class.
               We add a transition for a smooth fade-out.
             */
@@ -192,149 +163,149 @@
 
 /* This new class will be added by JavaScript to hide the splash screen */
 .splash-screen.hidden {
-  animation: fadeOutSplash 0.5s ease-in-out forwards;
+	animation: fadeOutSplash 0.5s ease-in-out forwards;
 }
 
 /* Logo container */
 .logo {
-  display: flex;
-  align-items: center; /* Align arrow and text */
-  font-size: 3.5rem; /* Responsive font size */
-  font-weight: 600;
-  color: #ffffff;
+	display: flex;
+	align-items: center; /* Align arrow and text */
+	font-size: 3.5rem; /* Responsive font size */
+	font-weight: 600;
+	color: #ffffff;
 }
 
 /* This is the container for the 'w' and its swoosh */
 .w-container {
-  position: relative;
-  /* We'll animate the children, not the container */
-  margin-right: 12px; /* Keep the spacing */
-  display: flex;
-  align-items: center;
-  justify-content: center;
+	position: relative;
+	/* We'll animate the children, not the container */
+	margin-right: 12px; /* Keep the spacing */
+	display: flex;
+	align-items: center;
+	justify-content: center;
 }
 
 /* This is the 'w' character */
 .w-char {
-  font-size: 3.5rem; /* Match logo size */
-  font-weight: 600;
-  color: #4353ff; /* Make the 'w' blue */
-  position: relative; /* To be on top of the swoosh */
-  z-index: 2;
+	font-size: 3.5rem; /* Match logo size */
+	font-weight: 600;
+	color: #4353ff; /* Make the 'w' blue */
+	position: relative; /* To be on top of the swoosh */
+	z-index: 2;
 
-  /* Animation for the 'w' */
-  opacity: 0;
-  transform: scale(0.5);
-  animation: wFadeIn 0.6s cubic-bezier(0.17, 0.84, 0.44, 1) forwards;
-  animation-delay: 0.2s;
+	/* Animation for the 'w' */
+	opacity: 0;
+	transform: scale(0.5);
+	animation: wFadeIn 0.6s cubic-bezier(0.17, 0.84, 0.44, 1) forwards;
+	animation-delay: 0.2s;
 }
 
 /* This is the curved arrow "swoosh" behind the 'w' */
 .w-arrow-swoosh {
-  position: absolute;
-  z-index: 1; /* Behind the 'w' */
-  width: 50px;
-  height: 50px;
-  border: 8px solid transparent;
-  border-top: 8px solid #4353ff;
-  border-right: 8px solid #4353ff;
-  border-radius: 50%;
-  transform-origin: center;
+	position: absolute;
+	z-index: 1; /* Behind the 'w' */
+	width: 50px;
+	height: 50px;
+	border: 8px solid transparent;
+	border-top: 8px solid #4353ff;
+	border-right: 8px solid #4353ff;
+	border-radius: 50%;
+	transform-origin: center;
 
-  /* Animation for the swoosh */
-  opacity: 0;
-  animation: spinIn 0.8s cubic-bezier(0.17, 0.84, 0.44, 1) forwards;
-  animation-delay: 0.3s; /* Slightly after the 'w' starts */
+	/* Animation for the swoosh */
+	opacity: 0;
+	animation: spinIn 0.8s cubic-bezier(0.17, 0.84, 0.44, 1) forwards;
+	animation-delay: 0.3s; /* Slightly after the 'w' starts */
 }
 
 /* The arrowhead for the swoosh */
 .w-arrow-swoosh::after {
-  content: "";
-  position: absolute;
-  width: 0;
-  height: 0;
-  border: 10px solid transparent;
-  border-top-color: #4353ff; /* ปลายแหลมชี้ 'ขึ้น' (ก่อนหมุน) */
+	content: "";
+	position: absolute;
+	width: 0;
+	height: 0;
+	border: 10px solid transparent;
+	border-top-color: #4353ff; /* ปลายแหลมชี้ 'ขึ้น' (ก่อนหมุน) */
 
-  /* 1. จัดให้อยู่กึ่งกลางแนวตั้ง (ตำแหน่ง 3 นาฬิกา) */
-  top: 50%;
+	/* 1. จัดให้อยู่กึ่งกลางแนวตั้ง (ตำแหน่ง 3 นาฬิกา) */
+	top: 50%;
 
-  /* 2. ย้ายตำแหน่งให้ถูกต้อง */
-  /* -8px คือตำแหน่งขอบนอกของเส้นโค้ง
+	/* 2. ย้ายตำแหน่งให้ถูกต้อง */
+	/* -8px คือตำแหน่งขอบนอกของเส้นโค้ง
                -10px คือขนาดของหัวลูกศร
                เพื่อให้ "ปลาย" ของลูกศรมาแตะที่ขอบพอดี
             */
-  right: -18px;
+	right: -18px;
 
-  /* ย้ายตัวเองขึ้น 50% (ของความสูงตัวเอง) เพื่อให้จุดศูนย์กลางอยู่ตรงกลาง
+	/* ย้ายตัวเองขึ้น 50% (ของความสูงตัวเอง) เพื่อให้จุดศูนย์กลางอยู่ตรงกลาง
                แล้วค่อยหมุน 90 องศา ให้ชี้ไปทางขวา
             */
-  transform: translateY(-50%) rotate(90deg);
+	transform: translateY(-50%) rotate(90deg);
 }
 
 /* Styling for each letter span (ebflow) */
 .logo .char {
-  display: inline-block;
-  opacity: 0;
-  transform: translateY(20px) scale(0.8);
+	display: inline-block;
+	opacity: 0;
+	transform: translateY(20px) scale(0.8);
 
-  /* Animation for each letter */
-  animation: fadeInLetter 0.5s cubic-bezier(0.17, 0.84, 0.44, 1) forwards;
-  /* Stagger the animation delay using the CSS variable */
-  animation-delay: calc(var(--i) * 0.1s + 0.8s);
+	/* Animation for each letter */
+	animation: fadeInLetter 0.5s cubic-bezier(0.17, 0.84, 0.44, 1) forwards;
+	/* Stagger the animation delay using the CSS variable */
+	animation-delay: calc(var(--i) * 0.1s + 0.8s);
 }
 
 /* Dummy content to show after splash screen */
 .app-content {
-  padding: 2rem;
-  text-align: center;
+	padding: 2rem;
+	text-align: center;
 }
 .app-content h1 {
-  color: #1a1a1a;
+	color: #1a1a1a;
 }
 
 /* --- Keyframe Animations --- */
 
 /* Animation for the 'w' character */
 @keyframes wFadeIn {
-  0% {
-    opacity: 0;
-    transform: scale(0.5);
-  }
-  100% {
-    opacity: 1;
-    transform: scale(1);
-  }
+	0% {
+		opacity: 0;
+		transform: scale(0.5);
+	}
+	100% {
+		opacity: 1;
+		transform: scale(1);
+	}
 }
 
 /* Animation for the arrow spinning in */
 @keyframes spinIn {
-  0% {
-    opacity: 0;
-    transform: rotate(-270deg) scale(0.5);
-  }
-  100% {
-    opacity: 1;
-    transform: rotate(0deg) scale(1);
-  }
+	0% {
+		opacity: 0;
+		transform: rotate(-270deg) scale(0.5);
+	}
+	100% {
+		opacity: 1;
+		transform: rotate(0deg) scale(1);
+	}
 }
 
 /* Animation for each letter fading in and moving up */
 @keyframes fadeInLetter {
-  100% {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
+	100% {
+		opacity: 1;
+		transform: translateY(0) scale(1);
+	}
 }
 
 /* Animation to fade out the splash screen */
 @keyframes fadeOutSplash {
-  0% {
-    opacity: 1;
-    visibility: visible;
-  }
-  100% {
-    opacity: 0;
-    visibility: hidden; /* Hide it completely after fade */
-  }
+	0% {
+		opacity: 1;
+		visibility: visible;
+	}
+	100% {
+		opacity: 0;
+		visibility: hidden; /* Hide it completely after fade */
+	}
 }

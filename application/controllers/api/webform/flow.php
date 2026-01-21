@@ -91,7 +91,7 @@ trait flow{
      *      "VORGNO"=> "000101",    //string
      *      "CYEAR"=> "25",     //string
      *      "CYEAR2"=> "2025",  //string
-     *      "NRUNNO"=> 2,       //number    
+     *      "NRUNNO"=> 2,       //number
      *      "CSTART"=> "1"      //string
      *   ],
      *   data ที่ต้องการเปลี่ยนแปลงได้ทุก column ใน flow เช่น
@@ -125,7 +125,7 @@ trait flow{
      * @property {string} EMPNO
      * @property {string} [REMARK]
      * @property {string} [CEXTDATA]
-     * @description 
+     * @description
      * - return คือส่งกลับไป requester เมื่อ requester กด approve จะกลับมาอยู่ที่ approver คนเดิม
      * - returnb คือส่งกลับไป approver ก่อนหน้า
      * - returnp คือส่งกลับไป requester และรีเซ็ท flow ทั้งหมดเริ่ม approve ใหม่

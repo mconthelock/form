@@ -22,7 +22,7 @@
 
     <!-- Part 1 -->
     <div class="mb-6" id="func_part1">
-        <h3 class="font-bold text-lg mb-2">ส่วนที่ 1 : หัวข้อฝึกอบรม และ กำหนดการฝึกอบรม</h3>
+        <h3 class="font-bold text-lg mb-2">ส่วนที่ 1 : หัวข้อฝึกอบรม และ กำหนดการฝึกอบรม <b style="color:red">*</b></h3>
         <input type="text" id="funcTrainingSubject"
             placeholder="1.1 หัวข้อฝึกอบรม"
             class="input input-bordered w-full mb-2" maxlength="200"
@@ -56,7 +56,7 @@
 
     <!-- Part 2 -->
     <div class="mb-6" id="func_part2">
-        <h3 class="font-bold text-lg mb-2">ส่วนที่ 2 : วัตถุประสงค์</h3>
+        <h3 class="font-bold text-lg mb-2">ส่วนที่ 2 : วัตถุประสงค์ <b style="color:red">*</b></h3>
         <div id="funcObjectiveList" class="space-y-2">
             <div class="flex items-center gap-2 objective-item">
                 <input type="text" name="funcObjective[]"
@@ -70,7 +70,7 @@
 
     <!-- Part 3 -->
     <div class="mb-6" id="func_part3">
-        <h3 class="font-bold text-lg mb-2">ส่วนที่ 3 : ความคาดหวัง / ประโยชน์</h3>
+        <h3 class="font-bold text-lg mb-2">ส่วนที่ 3 : ความคาดหวัง / ประโยชน์ <b style="color:red">*</b></h3>
         <div id="funcExpectationList" class="space-y-2">
             <div class="flex items-center gap-2 expectation-item">
                 <input type="text" name="funcExpectation[]"
@@ -84,7 +84,7 @@
 
     <!-- Part 4 -->
     <div class="mb-6" id="func_part4">
-        <h3 class="font-bold text-lg mb-2">ส่วนที่ 4 : ข้อมูลผู้เข้ารับการฝึกอบรม</h3>
+        <h3 class="font-bold text-lg mb-2">ส่วนที่ 4 : ข้อมูลผู้เข้ารับการฝึกอบรม <b style="color:red">*</b></h3>
         <div class="grid grid-cols-2 gap-4 mb-1">
             <input type="text" id="funcTraineeCode" 
                 placeholder="รหัสพนักงาน (Trainee Code)"
@@ -124,7 +124,7 @@
 
     <!-- Part 5 -->
     <div class="mb-6" id="func_part5">
-        <h3 class="font-bold text-lg mb-2">ส่วนที่ 5 : การพิจารณาค่าฝึกอบรม</h3>
+        <h3 class="font-bold text-lg mb-2">ส่วนที่ 5 : การพิจารณาค่าฝึกอบรม <b style="color:red">*</b></h3>
         <label class="block mb-2">
             <input type="radio" name="funcExpenseOption" value="0" class="mr-2">
             ไม่มีการเปรียบเทียบราคา
@@ -155,7 +155,7 @@
 
     <!-- Part 6 -->
     <div id="func_part6" class="mb-6">
-        <h3 class="font-bold text-lg mb-2">ส่วนที่ 6 : ค่าใช้จ่าย</h3>
+        <h3 class="font-bold text-lg mb-2">ส่วนที่ 6 : ค่าใช้จ่าย <b style="color:red">*</b></h3>
         <div class="flex items-center gap-3 mb-2">
             <input type="number" id="funcAmountInput"
                 placeholder="จำนวนเงิน (บาท)"

@@ -1,7 +1,32 @@
 @extends('layouts/webflowTemplate')
-@section('contents')
-<div class="w-full max-w-5xl mx-auto bg-white p-6 rounded-xl shadow">
+<style>
+    .training-view {
+        font-size: 16px;         
+        line-height: 1.7;
+        color: #111827;
+    }
 
+    .main-text {
+        color: #374151;          
+        font-weight: 800;
+        font-size: 1.125rem;  /* 16px */
+    }
+
+    .value-text {
+        color: #111827;          
+        font-weight: 500;
+        font-size: 1.125rem;  /* 16px */
+    }
+
+    .value-sp-text {
+        color: #1d4ed8;        
+        font-weight: 600;
+        font-size: 1.125rem;  /* 18px */
+    }
+</style>
+
+@section('contents')
+<div class="w-full max-w-7xl mx-auto bg-white p-6 rounded-xl shadow">
     {{-- Header --}}
   <h2 class="text-3xl font-extrabold mb-8 text-center text-[#DC143C] tracking-wide drop-shadow-lg">
     {{ "แบบฟอร์มแจ้งความประสงค์ฝึกอบรมภายนอก ในประเทศ"}}<br>
@@ -21,35 +46,35 @@
         <input type="hidden" name="NRUNNO" value="{{ $NRUNNO }}">
         <input type="hidden" name="txt_exdata" id="txt_exdata" value="{{ $exdata }}">
         <input type="hidden" name="txt_fid" value="{{ $data_head[0]->FID }}">
-        <h3 class="font-bold text-lg mb-3 text-black-700 border-b pb-1">
+        <h3 class="font-bold text-lg mb-3 text-black-800 border-b pb-1">
             รายละเอียดฟอร์ม
         </h3>
          <div class="border border-gray-300 rounded-lg overflow-hidden text-sm mb-6">
             <table class="w-full">
                 <tr class="bg-gray-50">
-                    <td class="p-3 font-bold w-48">Form no </td>
-                    <td class="p-3 text-blue-600 font-semibold">{{ $formno }}
+                    <td class="p-3 main-text w-48">Form no </td>
+                    <td class="p-3 value-sp-text">{{ $formno }}
                     </td>
                 </tr>
                 <tr>
-                    <td class="p-3 font-bold">Request By</td>
-                    <td class="p-3 text-blue-600 font-semibold">{{ $data_head[0]->REQ_EMPNO."_".$data_head[0]->REQ_NAME }}</td>
+                    <td class="p-3 main-text w-48">Request By</td>
+                    <td class="p-3 value-text">{{ $data_head[0]->REQ_EMPNO."_".$data_head[0]->REQ_NAME }}</td>
                 </tr>
                 <tr class="bg-gray-50">
-                    <td class="p-3 font-bold">Input By</td>
-                    <td class="p-3 text-blue-600 font-semibold">{{ $data_head[0]->INP_EMPNO."_".$data_head[0]->INP_NAME }}</td>
+                    <td class="p-3 main-text w-48">Input By</td>
+                    <td class="p-3 value-text">{{ $data_head[0]->INP_EMPNO."_".$data_head[0]->INP_NAME }}</td>
                 </tr>
             </table>
         </div>
         <!-- Part 1 -->
-        <h3 class="font-bold text-lg mb-3 text-black-700 border-b pb-1">
+        <h3 class="font-bold text-lg mb-3 text-black-800 border-b pb-1">
             หัวข้อฝึกอบรม และ กำหนดการฝึกอบรม (Training Subject & Schedule)
         </h3>
         <div class="border border-gray-300 rounded-lg overflow-hidden text-sm mb-6">
             <table class="w-full">
                 <tr class="bg-gray-50">
-                    <td class="p-3 font-bold w-48">หัวข้อการอบรม</td>
-                    <td class="p-3 text-blue-600 font-semibold">
+                    <td class="p-3 main-text w-48">หัวข้อการอบรม</td>
+                    <td class="p-3 value-sp-text">
                         @if ($mode == '02' && $exdata == '19x')
                             <input type="text" id="viewTrainingSubject" name="viewTrainingSubject" maxlength="200" class="input input-bordered w-full mb-2" data-alert="กรุณากรอกหัวข้อฝึกอบรม" value=" {{ $data_head[0]->SUBJECT }}">
                         @else
@@ -59,8 +84,8 @@
                     </td>
                 </tr>
                 <tr>
-                    <td class="p-3 font-bold">สถานที่อบรม</td>
-                    <td class="p-3 text-blue-600 font-semibold">
+                    <td class="p-3 main-text w-48">สถานที่อบรม</td>
+                    <td class="p-3 value-text">
                         @if ($mode == '02' && $exdata == '19x')
                             <input type="text" id="viewLocation"  class="input input-bordered w-full mb-2" maxlength="200" data-alert="กรุณาระบุสถานที่" value="{{ $data_head[0]->PLACE }}">
                         @else
@@ -70,8 +95,8 @@
                 </tr>
                 @if ($data_head[0]->FID != '5')
                     <tr class="bg-gray-50">
-                        <td class="p-3 font-bold">สถาบันที่อบรม</td>
-                        <td class="p-3 text-blue-600 font-semibold">
+                        <td class="p-3 main-text w-48">สถาบันที่อบรม</td>
+                        <td class="p-3 value-text">
                             @if ($mode == '02' && $exdata == '19x')
                                 <input type="text" id="viewInstitute" class="input input-bordered w-full" maxlength="200"
                                 data-alert="กรุณาระบุสถาบันฝึกอบรม" value="{{ $data_head[0]->INSTITUTION }}">
@@ -82,8 +107,8 @@
                     </tr>
                 @endif
                 <tr class="bg-gray-50">
-                    <td class="p-3 font-bold">วันที่อบรม</td>
-                    <td class="p-3 text-blue-600 font-semibold">
+                    <td class="p-3 main-text w-48">วันที่อบรม</td>
+                    <td class="p-3 value-text">
                         @if ($mode == '02' && $exdata == '19x')
                             <input type="date" id="viewDateFrom" class="input input-bordered w-[200px]" maxlength="8" data-alert="กรุณาเลือกวันที่อบรม"
                              value="{{ \Carbon\Carbon::createFromFormat('Ymd', $data_head[0]->DATE_FROM)->format('Y-m-d') }}">
@@ -99,8 +124,8 @@
                     </td>
                 </tr>
                 <tr>
-                    <td class="p-3 font-bold">เวลาที่อบรม</td>
-                    <td class="p-3 text-blue-600 font-semibold">
+                    <td class="p-3 main-text w-48">เวลาที่อบรม</td>
+                    <td class="p-3 value-text">
                         @if ($mode == '02' && $exdata == '19x')
                             <select id="viewTimeFromHour" class="input input-bordered w-20 text-center" value="{{ substr($data_head[0]->TIME_FROM,0,2)}}"></select>
                             <span class="self-center">:</span>
@@ -130,7 +155,7 @@
                          <textarea id="viewConcernLaw" class="textarea textarea-bordered w-full" rows="3" maxlength="200"
                             data-alert="กรุณาระบุชื่อกฎหมายที่เกี่ยวข้อง"> {{ $data_head[0]->LAWS }}</textarea>
                     @else
-                        <td class="text-blue-600 p-2 border text-left font-semibold">{{ $data_head[0]->LAWS }}</td>
+                        <td class="p-3 value-text">{{ $data_head[0]->LAWS }}</td>
                     @endif
                 </tr>
             </table>
@@ -139,30 +164,30 @@
         <h3 class="font-bold text-lg mb-3 text-black-700 border-b pb-1"> วัตถุประสงค์ของการฝึกอบรม (Training Objective)</h3>
         <div class="border border-gray-300 rounded-lg overflow-hidden text-sm mb-6">
             <table id="tblObjective" class="w-full text-sm table-fixed">
-                <thead class="bg-gray-100 font-bold">
+                <thead class="bg-gray-100 main-text w-48">
                     <tr>
-                        <th class="p-2 text-center w-[7%]">ลำดับ</th>
-                        <th class="p-2 text-left w-[83%]">วัตถุประสงค์</th>
+                        <th class="p-3 text-center w-[7%]">ลำดับ</th>
+                        <th class="p-3 text-left w-[83%]">วัตถุประสงค์</th>
                         @if ($mode == '02' && $exdata == '19x')
-                            <th class="p-2 text-center w-[10%]">จัดการ</th>
+                            <th class="p-3 text-center w-[10%]">จัดการ</th>
                         @endif
                     </tr>
                 </thead>
                 <tbody>
                     @foreach($data_purpose as $row_pp)
                         <tr>
-                            <td class="text-blue-600 p-2 border text-center font-semibold">{{ $loop->iteration }}</td>
-                            <td class="p-2 border">
+                            <td class="p-3 border text-center font-semibold">{{ $loop->iteration }}</td>
+                            <td class="p-3 border">
                                 @if ($mode == '02' && $exdata == '19x')
                                     <input type="text" class="input input-bordered w-full objective-input"
                                         value="{{ $row_pp->DETAIL }}" maxlength="200"
                                         data-alert="กรุณากรอกวัตถุประสงค์">
                                 @else
-                                    <span class="text-blue-600 font-semibold">{{ $row_pp->DETAIL }}</span>
+                                    <span class="value-text">{{ $row_pp->DETAIL }}</span>
                                 @endif
                             </td>
                             @if ($mode == '02' && $exdata == '19x')
-                                <td class="p-2 text-center border">
+                                <td class="p-3 text-center border">
                                     <button type="button" id="btnDelObjective" class="btn btn-sm bg-red-500 hover:bg-red-600 text-white font-bold btnDelObjective">−</button>
                                 </td>
                             @endif
@@ -180,35 +205,35 @@
             @endif
         </div>
 
-        <h3 class="font-bold text-lg mb-3 text-black-700 border-b pb-1">
+        <h3 class="font-bold text-lg mb-3 text-black-800 border-b pb-1">
             ความคาดหวัง / ประโยชน์ที่คาดว่าจะได้รับ (Expectation / AMEC's Benefit)
         </h3>
         <div class="border border-gray-300 rounded-lg overflow-hidden text-sm mb-6">
             <table id="tblBenefit" class="w-full text-sm table-fixed">
-                <thead class="bg-gray-100 font-bold">
+                <thead class="bg-gray-100 main-text w-48">
                     <tr>
-                        <th class="p-2 text-center w-[7%]">ลำดับ</th>
-                        <th class="p-2 text-left w-[83%]">ความคาดหวัง / ประโยชน์</th>
+                        <th class="p-3 text-center w-[7%]">ลำดับ</th>
+                        <th class="p-3 text-left w-[83%]">ความคาดหวัง / ประโยชน์</th>
                         @if ($mode == '02' && $exdata == '19x')
-                            <th class="p-2 text-center w-[10%]">จัดการ</th>
+                            <th class="p-3 text-center w-[10%]">จัดการ</th>
                         @endif
                     </tr>
                 </thead>
                 <tbody>
                     @foreach($data_benefit as $row_bnf)
                         <tr>
-                            <td class="text-blue-600 p-2 border text-center font-semibold">{{ $loop->iteration }}</td>
-                            <td class="p-2 border">
+                            <td class="p-3 border text-center font-semibold">{{ $loop->iteration }}</td>
+                            <td class="p-3 border">
                                 @if ($mode == '02' && $exdata == '19x')
                                     <input type="text" class="input input-bordered w-full benefit-input"
                                         value="{{ $row_bnf->DETAIL }}" maxlength="200"
                                         data-alert="กรุณากรอกความคาดหวัง">
                                 @else
-                                    <span class="text-blue-600 font-semibold">{{ $row_bnf->DETAIL }}</span>
+                                    <span class="value-text">{{ $row_bnf->DETAIL }}</span>
                                 @endif
                             </td>
                             @if ($mode == '02' && $exdata == '19x')
-                                <td class="p-2 text-center border">
+                                <td class="p-3 text-center border">
                                     <button type="button" id="btnDelBenefit" class="btn btn-sm bg-red-500 hover:bg-red-600 text-white font-bold btnDelBenefit">−</button>
                                 </td>
                             @endif
@@ -224,29 +249,29 @@
         </div>
 
          <!-- Part 4 -->
-        <h3 class="font-bold text-lg mb-3 text-black-700 border-b pb-1">
+        <h3 class="font-bold text-lg mb-3 text-black-800 border-b pb-1">
             ผู้เข้าร่วมฝึกอบรม (Participant Information)
         </h3>
         <table class="w-full text-sm border border-gray-300 rounded-lg mb-6">
-            <thead class="bg-gray-100 font-bold">
+            <thead class="bg-gray-100 main-text w-48">
                 <tr>
-                    <th class="p-2 text-left">รหัสพนักงาน</th>
-                    <th class="p-2 text-left">ชื่อ-สกุล</th>
-                    <th class="p-2 text-left">ตำแหน่ง</th>
-                    <th class="p-2 text-left">Sec.</th>
-                    <th class="p-2 text-left">Dept.</th>
-                    <th class="p-2 text-left">Div.</th>
+                    <th class="p-3 main-text">รหัสพนักงาน</th>
+                    <th class="p-3 main-text">ชื่อ-สกุล</th>
+                    <th class="p-3 main-text">ตำแหน่ง</th>
+                    <th class="p-3 main-text">Section</th>
+                    <th class="p-3 main-text">Department</th>
+                    <th class="p-3 main-text">Division</th>
                 </tr>
             </thead>
             <tbody>
                 @foreach($data_trainee as $row_trainee)
                     <tr>
-                        <td class="text-blue-600 p-2 border font-semibold">{{ $row_trainee->EMPNO }}</td>
-                        <td class="text-blue-600 p-2 border font-semibold">{{ $row_trainee->TRAINEE_NAME }}</td>
-                        <td class="text-blue-600 p-2 border font-semibold">{{ $row_trainee->TRAINEE_POS }}</td>
-                        <td class="text-blue-600 p-2 border font-semibold">{{ $row_trainee->TRAINEE_SEC }}</td>
-                        <td class="text-blue-600 p-2 border font-semibold">{{ $row_trainee->TRAINEE_DEPT }}</td>
-                        <td class="text-blue-600 p-2 border font-semibold">{{ $row_trainee->TRAINEE_DIV }}</td>
+                        <td class="p-3 value-sp-text text-center">{{ $row_trainee->EMPNO }}</td>
+                        <td class="p-3 value-sp-text">{{ $row_trainee->TRAINEE_NAME }}</td>
+                        <td class="p-3 value-sp-text text-center">{{ $row_trainee->TRAINEE_POS }}</td>
+                        <td class="p-3 value-sp-text text-center">{{ $row_trainee->TRAINEE_SEC }}</td>
+                        <td class="p-3 value-sp-text text-center">{{ $row_trainee->TRAINEE_DEPT }}</td>
+                        <td class="p-3 value-sp-text text-center">{{ $row_trainee->TRAINEE_DIV }}</td>
                     </tr>
                 @endforeach
             </tbody>
@@ -255,12 +280,12 @@
              <div class="border border-gray-300 rounded-lg overflow-hidden text-sm mb-6">
                 <table class="w-full">
                     <tr class="bg-gray-50">
-                        <td class="p-3 font-bold w-48">ชื่องานตาม JD </td>
-                        <td class="p-3 text-blue-600 font-semibold">{{ $data_trainee[0]->JD_NAME }}</td>
+                        <td class="p-3 main-text w-48">ชื่องานตาม JD </td>
+                        <td class="p-3 value-text">{{ $data_trainee[0]->JD_NAME }}</td>
                     </tr>
                     <tr>
-                        <td class="p-3 font-bold">เอกสารประกอบ JD </td>
-                        <td class="p-3 text-blue-600 font-semibold">
+                        <td class="p-3 main-text w-48">เอกสารประกอบ JD </td>
+                        <td class="p-3 value-text">
                             @foreach($data_attach_jd as $row_jd)
                                 <a href="{{ base_url('gpform/GP-TRN/training/preview_file/' . $formno.'/'.$row_jd->FILENAME.'/'.$row_jd->ORIGIN_FILENAME) }}" target="_blank" class="text-blue-700 underline btn btn-sm rounded-lg">
                                     {{ $row_jd->ORIGIN_FILENAME }}
@@ -284,30 +309,30 @@
                         </td>
                     </tr>
                      <tr class="bg-gray-50">
-                        <td class="p-3 font-bold w-48">รายละเอียด JD </td>
-                        <td class="p-3 text-blue-600 font-semibold">{{ $data_trainee[0]->JD_DESC }}</td>
+                        <td class="p-3 main-text w-48">รายละเอียด JD </td>
+                        <td class="p-3 value-text">{{ $data_trainee[0]->JD_DESC }}</td>
                     </tr>
                 </table>
             </div>
         <?}?>
         <?if($data_head[0]->FID == '1' || $data_head[0]->FID == '2' || $data_head[0]->FID == '3' || $data_head[0]->FID == '4'){?>    
             <!-- Part 5 -->
-            <h3 class="font-bold text-lg mb-3 text-black-700 border-b pb-1">
+            <h3 class="font-bold text-lg mb-3 text-black-800 border-b pb-1">
                 การพิจารณาค่าฝึกอบรม (Training expense consideration)
             </h3>
             <div class="border border-gray-300 rounded-lg overflow-hidden text-sm mb-6">
                 <table class="w-full">
                     <?if($data_head[0]->TRN_EXPENSE_STATUS == '0'){?> 
                         <tr class="bg-gray-50">
-                            <td class="p-3 font-bold w-48 text-blue-600" colspan='2'> {{ "ไม่มีการเปรียบเทียบราคา ค่าฝึกอบรม (Not compare training expense)" }}</td>
+                            <td class="p-3 value-text" colspan='2'> {{ "ไม่มีการเปรียบเทียบราคา ค่าฝึกอบรม (Not compare training expense)" }}</td>
                         </tr>
                         <?if($data_head[0]->TRN_EXPENSE_REASON == '1'){?>
                             <tr class="bg-gray-50">
-                                <td class="p-3 font-bold w-48 text-blue-600" colspan='2'> {{ "- อบรมฟรี (Free of Charge)" }}</td>
+                                <td class="p-3 value-text" colspan='2'> {{ "- อบรมฟรี (Free of Charge)" }}</td>
                             </tr>
                         <?}else{?>
                             <tr class="bg-gray-50">
-                                <td class="p-3 font-bold w-48 text-blue-600" colspan='2'> {{ "- เหตุผลอื่น: ". $data_head[0]->TRN_EXPENSE_OTHER }}</td>
+                                <td class="p-3 value-text" colspan='2'> {{ "- เหตุผลอื่น: ". $data_head[0]->TRN_EXPENSE_OTHER }}</td>
                             </tr>
                         <?}?>
                     <?}else{?>
@@ -315,8 +340,8 @@
                             <td class="p-3 font-bold" colspan='2'> {{ " มีการเปรียบเทียบราคา ค่าฝึกอบรม (Compared training expense)" }}</td>
                         </tr>
                         <tr>
-                            <td class="p-3 font-bold w-48">เอกสารที่เกี่ยวข้อง</td>
-                            <td class="p-3 text-blue-600 font-semibold">
+                            <td class="p-3 main-text w-48">เอกสารที่เกี่ยวข้อง</td>
+                            <td class="p-3 value-text">
                                 @foreach($data_attach_compare as $row_cp)
                                      <a href="{{ base_url('gpform/GP-TRN/training/preview_file/'.$formno.'/'.$row_cp->FILENAME.'/'.$row_cp->ORIGIN_FILENAME) }}" target="_blank" class="text-blue-700 underline btn btn-sm rounded-lg">
                                         {{ $row_cp->ORIGIN_FILENAME }}
@@ -345,15 +370,15 @@
             </div>
 
             <!-- Part 6 -->
-            <h3 class="font-bold text-lg mb-3 text-black-700 border-b pb-1">
+            <h3 class="font-bold text-lg mb-3 text-black-800 border-b pb-1">
                 ค่าใช้จ่ายในการฝึกอบรม (Training Expense)
             </h3>
             <div class="border border-gray-300 rounded-lg overflow-hidden text-sm mb-6">
                 <table class="w-full">
                      @if ($data_head[0]->TRN_EXPENSE_REASON == '0' || $data_head[0]->TRN_EXPENSE_STATUS == '1')  
                         <tr class="bg-gray-50">
-                            <td class="p-3 font-bold w-48">ค่าใช้จ่าย </td>
-                                <td class="p-3 text-blue-600 font-semibold">
+                            <td class="p-3 main-text w-48">ค่าใช้จ่าย </td>
+                                <td class="p-3 value-sp-text">
                                     @if ($mode == '02' && $exdata == '19x')
                                         <input type="number" id="viewAmountInput" class="input input-bordered w-1/2" data-alert="กรุณากรอกจำนวนเงิน" value="{{ $show_cost }}">
                                     @else
@@ -362,8 +387,8 @@
                                 </td>
                         </tr>
                         <tr>
-                            <td class="p-3 font-bold w-48">(รวม VAT 7%) </td>
-                            <td class="p-3 text-blue-600 font-semibold">
+                            <td class="p-3 main-text w-48">(รวม VAT 7%) </td>
+                            <td class="p-3 value-sp-text">
                                 @if ($mode == '02' && $exdata == '19x')
                                     <span id="viewVatResult" class="font-bold text-indigo-600 text-lg whitespace-nowrap">
                                         {{ number_format($show_cost * 1.07, 2) }}
@@ -375,7 +400,7 @@
                         </tr>
                         <tr class="bg-gray-50">
                             <td class="p-3 font-bold w-48" valign="top">บันทึกเพิ่มเติม </td>
-                            <td class="p-3 text-blue-600 font-semibold">
+                            <td class="p-3 value-text">
                                  @if ($mode == '02' && $exdata == '19x')
                                     <textarea id="viewAmountNote" class="textarea textarea-bordered w-full" maxlength="200" rows="2" >
                                          {{ trim($data_head[0]->COST_NOTE) }}
@@ -387,7 +412,7 @@
                         </tr>
                     @else
                         <tr class="bg-gray-50">
-                            <td colspan="2" class="p-3 font-bold w-48" style="color:red">ไม่มีค่าใช้จ่าย </td>
+                            <td colspan="2" class="p-3 value-text" style="color:red">ไม่มีค่าใช้จ่าย </td>
                         </tr>
                     @endif
                 </table>
@@ -396,8 +421,8 @@
             <div class="border border-gray-300 rounded-lg overflow-hidden text-sm mb-6">
                 <table class="w-full">
                    <tr>
-                        <td class="p-3 font-bold w-48">เอกสารที่เกี่ยวข้อง</td>
-                        <td class="p-3 text-blue-600 font-semibold">
+                        <td class="p-3 main-text w-48">เอกสารที่เกี่ยวข้อง</td>
+                        <td class="p-3 value-text">
                             @foreach($data_attach_other as $row_other)
                                 <a href="{{ base_url('gpform/GP-TRN/training/preview_file/'.$formno.'/'.$row_other->FILENAME.'/'.$row_other->ORIGIN_FILENAME) }}" target="_blank" class="text-blue-700 underline btn btn-sm rounded-lg">
                                     {{ $row_other->ORIGIN_FILENAME }}
@@ -427,8 +452,8 @@
             {{-- Remark & Action --}}
             @if ($mode == '02')
                 <div class="mb-4 mt-6">
-                    <span class="font-bold text-gray-700">Remark :</span>
-                    <textarea name="txt_remark" id="txt_remark" class="w-full border p-2 rounded mb-3" placeholder="หมายเหตุ"></textarea>
+                    <span class="font-bold text-gray-800">Remark :</span>
+                    <textarea name="txt_remark" id="txt_remark" class="w-full border p-3 rounded mb-3" placeholder="หมายเหตุ"></textarea>
                 </div>
 
                 {{-- ================================================================= --}}
@@ -438,19 +463,19 @@
                     @php  
                         $sum_cost = 0; 
                     @endphp
-                    <h3 class="text-lg mb-3 font-bold text-blue-700 flex items-center gap-2">
-                        <span class="bg-blue-100 text-blue-700 px-3 py-1 rounded-md shadow-sm">
+                    <h3 class="text-lg mb-3 font-bold text-blue-800 flex items-center gap-3">
+                        <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-md shadow-sm">
                             รายการฟอร์มที่อยู่ใน Group เดียวกัน
                         </span>
                     </h3>
                     <div class="border border-purple-300 bg-purple-50 rounded-xl shadow-sm overflow-hidden text-xs mb-6 p-3">
                         <table class="w-full table-auto text-xs">
-                            <thead class="bg-purple-100 font-bold">
+                            <thead class="bg-purple-100 main-text w-48">
                                 <tr>
-                                    <th class="p-2 text-center w-48">FORMNO</th>
-                                    <th class="p-2 text-left">SUBJECT</th>
-                                    <th class="p-2 text-center w-20">TRAINEE</th>
-                                    <th class="p-2 text-center w-32">STATUS</th>
+                                    <th class="p-3 main-text text-center w-48">FORMNO</th>
+                                    <th class="p-3 main-text text-left">SUBJECT</th>
+                                    <th class="p-3 main-text text-center w-20">TRAINEE</th>
+                                    <th class="p-3 main-text text-center w-32">STATUS</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -467,7 +492,7 @@
                                     @endphp
 
                                     <tr data-nfrmno="{{$row->NFRMNO}}" data-vorgno="{{$row->VORGNO}}" data-cyear="{{$row->CYEAR}}" data-cyear2="{{$row->CYEAR2}}" data-nrunno="{{$row->NRUNNO}}" class="cash-row {{$isReady?'bg-white hover:bg-purple-50':'bg-gray-100' }}" data-status="{{ $isReady ? 'READY' : 'WAIT' }}">
-                                       <td class="border p-2 whitespace-nowrap">
+                                       <td class="border p-3 whitespace-nowrap">
                                             @php
                                                 $url = site_url("gpform/GP-TRN/training?no={$row->NFRMNO}&orgNo={$row->VORGNO}&y={$row->CYEAR}&y2={$row->CYEAR2}&runNo={$row->NRUNNO}");
                                             @endphp
@@ -481,9 +506,9 @@
                                             </a>
                                         </td>
 
-                                        <td class="border p-2 text-blue-600 font-semibold">{{ $row->SUBJECT }}</td>
-                                        <td class="border p-2 text-blue-600 font-semibold whitespace-nowrap max-w-xs truncate">  {{ "(".$row->SEMPNO.") ".$row->STNAME }}</td>
-                                        <td class="border p-2 text-center {{ $statusClass }}">{{ $statusText }} </td>
+                                        <td class="border p-3 value-text">{{ $row->SUBJECT }}</td>
+                                        <td class="border p-3 value-sp-text whitespace-nowrap max-w-xs truncate">  {{ "(".$row->SEMPNO.") ".$row->STNAME }}</td>
+                                        <td class="border p-3 text-center {{ $statusClass }}">{{ $statusText }} </td>
                                     </tr>
                                 @endforeach
                             </tbody>
@@ -499,6 +524,7 @@
                         data-action="approve">
                         ✅ Approve  ✅
                     </button>
+
 
                     {{-- ปุ่มปกติ --}}
                     <button type="button" id="btn-submit"
@@ -532,8 +558,11 @@
         </div>
 
         <div>
+            Cyear2 :
+            <input type="text" name="txt_year_text"  id="txt_year_text" class="input input-bordered w-20 mb-2" value="{{ $CYEAR2 }}" maxlength='4'>
             Formno :
             <input type="text" name="txt_form_text"  id="txt_form_text" class="input input-bordered w-20 mb-2" value="{{ $NRUNNO }}" maxlength='3'>
+
             Empno for approve :
             <input type="text" name="txt_emp_text"  id="txt_emp_text"  class="input input-bordered w-20 mb-2" maxlength='5' value="{{ $EMPNO }}">
             <button type="button" class="btn-test-submit px-6 py-3 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700" data-action="approve">✅ TEST Approve</button>

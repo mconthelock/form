@@ -17,17 +17,13 @@
     <link rel="apple-touch-icon" href="{{ base_url() }}assets/images/favicon.ico">
     <link rel="apple-touch-startup-image" href="{{ base_url() }}assets/images/icon_512.png">
     <title>AMEC Webflow</title>
-
     <link rel="stylesheet" href="{{ $_ENV['APP_CDN'] }}/icofont/icofont.min.css">
-    <link rel="stylesheet" href="{{ base_url() }}assets/dist/css/v1.0.1.min.css?ver={{ $GLOBALS['version'] }}">
+    <link rel="stylesheet" href="{{ base_url() }}assets/dist/css/tailwind.css?ver={{ $GLOBALS['version'] }}">
     @yield('styles')
 </head>
 
 <body class="flex flex-col min-h-screen">
-    <input type="checkbox" id="loading-box" class="modal-toggle" />
-    <div class="modal !z-[9999]" role="dialog">
-        <div class="loader"></div>
-    </div>
+    <input type="checkbox" id="loading-box" class="modal-toggle" checked />
 
     <div class="flex flex-col w-full px-4 mt-20 mb-20 md:px-8 lg:mt-5">
         @yield('contents')

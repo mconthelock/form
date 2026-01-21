@@ -21,7 +21,7 @@
 
     <!-- Part 1 -->
     <div class="mb-6" id="out_part1">
-        <h3 class="font-bold text-lg mb-2">ส่วนที่ 1 : หัวข้อฝึกอบรม และ กำหนดการฝึกอบรม (Training Subject & Training Schedule)</h3>
+        <h3 class="font-bold text-lg mb-2">ส่วนที่ 1 : หัวข้อฝึกอบรม และ กำหนดการฝึกอบรม (Training Subject & Training Schedule)<b style="color:red">*</b></h3>
         <input type="text" id="outTrainingSubject"
             placeholder="1.1 หัวข้อฝึกอบรม" maxlength="200"
             class="input input-bordered w-full mb-2"
@@ -50,7 +50,7 @@
 
     <!-- Part 2 -->
     <div class="mb-6" id="out_part2">
-        <h3 class="font-bold text-lg mb-2">ส่วนที่ 2 : วัตถุประสงค์ของการฝึกอบรม (Training Objective)</h3>
+        <h3 class="font-bold text-lg mb-2">ส่วนที่ 2 : วัตถุประสงค์ของการฝึกอบรม (Training Objective)<b style="color:red">*</b></h3>
         <div id="outObjectiveList" class="space-y-2">
             <div class="flex items-center gap-2 objective-item">
                 <input type="text" name="outObjective[]"
@@ -64,7 +64,7 @@
 
     <!-- Part 3 -->
     <div class="mb-6" id="out_part3">
-        <h3 class="font-bold text-lg mb-2">ส่วนที่ 3 : ความคาดหวัง / ประโยชน์</h3>
+        <h3 class="font-bold text-lg mb-2">ส่วนที่ 3 : ความคาดหวัง / ประโยชน์ <b style="color:red">*</b></h3>
         <div id="outExpectationList" class="space-y-2">
             <div class="flex items-center gap-2 expectation-item">
                 <input type="text" name="outExpectation[]"
@@ -78,7 +78,7 @@
 
     <!-- Part 4  new-->
     <div class="mb-6" id="out_part5">
-        <h3 class="font-bold text-lg mb-2">ส่วนที่ 4 : ข้อมูลผู้ขอศึกษาดูงานนอกสถานที่</h3>
+        <h3 class="font-bold text-lg mb-2">ส่วนที่ 4 : ข้อมูลผู้ขอศึกษาดูงานนอกสถานที่ <b style="color:red">*</b></h3>
         <table class="table-auto border border-gray-300 text-xs w-full text-center" id="out_participants">
             <thead class="bg-gray-100 text-sm">
                 <tr>

@@ -5,13 +5,16 @@
         <div class="rounded-2xl overflow-hidden shadow-sm border border-base-300 mb-8">
             <div class="bg-sky-600 text-white p-6">
                 <h1 class="text-2xl md:text-3xl font-bold tracking-tight">
-                    Regular Review <span class="mx-2 text-xs md:text-sm font-normal bg-white/15 px-2 py-1 rounded">({{ $program }}) </span> [{{ $formNumber }}]
+                    Regular Review <span
+                        class="mx-2 text-xs md:text-sm font-normal bg-white/15 px-2 py-1 rounded">({{ $program }}) </span>
+                    [{{ $formNumber }}]
                 </h1>
 
             </div>
         </div>
 
-        <div class="form-data" data-nfrmno="{{ $NFRMNO }}" data-vorgno="{{ $VORGNO }}" data-cyear="{{ $CYEAR }}" data-cyear2="{{ $CYEAR2 }}" data-nrunno="{{ $NRUNNO }}" data-empno="{{ $EMPNO }}"></div>
+        <div class="form-data" data-nfrmno="{{ $NFRMNO }}" data-vorgno="{{ $VORGNO }}" data-cyear="{{ $CYEAR }}"
+            data-cyear2="{{ $CYEAR2 }}" data-nrunno="{{ $NRUNNO }}" data-empno="{{ $EMPNO }}"></div>
 
         <div class="my-6">
             {{-- ===== Result Summary ===== --}}
@@ -34,9 +37,11 @@
                                 <td class="border border-gray-500">Unmatch</td>
                                 <td class="border border-gray-500 text-center">
                                     @php
-                                        $countUnmath = count(array_filter($user, function ($item) {
-                                            return isset($item->RESULT) && $item->RESULT == 0;
-                                        }));
+                                        $countUnmath = count(
+                                            array_filter($user, function ($item) {
+                                                return isset($item->RESULT) && $item->RESULT == 0;
+                                            })
+                                        );
                                     @endphp
                                     {{ $countUnmath }}
                                 </td>
@@ -84,16 +89,29 @@
                             </thead>
                             <tbody>
                                 @foreach ($user as $key => $item)
-                                    <tr class="text-center hover:bg-gray-200!">
-                                        <td class="border border-gray-300">{{ $item->SDIV }}</td>
-                                        <td class="border border-gray-300">{{ $item->SDEPT }}</td>
-                                        <td class="border border-gray-300">{{ $item->SSEC }}</td>
+                                    @php
+                                        $isHistory = isset($item->IS_HISTORY) && $item->IS_HISTORY == 1;
+                                        $rowClass = $isHistory ? 'bg-amber-50 hover:bg-amber-100' : 'hover:bg-gray-200';
+                                    @endphp
+                                    <tr class="text-center {{ $rowClass }}">
+                                        <td class="border border-gray-300">
+                                            {{ $item->SDIV ?? '' }}
+                                            @if ($isHistory)
+                                                <span class="badge badge-warning badge-sm ml-1">History</span>
+                                            @endif
+                                        </td>
+                                        <td class="border border-gray-300">{{ $item->SDEPT ?? '' }}</td>
+                                        <td class="border border-gray-300">{{ $item->SSEC ?? '' }}</td>
                                         <td class="border border-gray-300">{{ $item->SEMPNO }}</td>
                                         <td class="border border-gray-300 text-left">{{ $item->SNAME }}</td>
                                         <td class="border border-gray-300">
-                                            {{ \Carbon\Carbon::parse($item->CREUSRDATE)->format('d/m/Y') }}
-                                        </td></td>
-                                        <td class="border border-gray-300">{{ $item->UPDUSRDATE }}</td>
+                                            @if (isset($item->CREUSRDATE) && $item->CREUSRDATE)
+                                                {{ \Carbon\Carbon::parse($item->CREUSRDATE)->format('d/m/Y') }}
+                                            @else
+                                                -
+                                            @endif
+                                        </td>
+                                        <td class="border border-gray-300">{{ $item->UPDUSRDATE ?? '-' }}</td>
                                         <td class="border border-gray-300">{{ $item->DATAMANAGER }}</td>
                                         <td class="border border-gray-300">{{ $item->VENDORMANAGEMENT }}</td>
                                         <td class="border border-gray-300">{{ $item->PRODUCT }}</td>
@@ -104,22 +122,34 @@
                                         <td class="border border-gray-300">{{ $item->INVOICE }}</td>
                                         <td class="border border-gray-300">{{ $item->GROUPMASTER }}</td>
                                         <td class="border border-gray-300">
-                                            @if (is_null($item->RESULT))
-                                                <input type="radio" id="correct-{{ $item->SEMPNO }}" checked name="result[{{ $item->SEMPNO }}{{ $key }}]" class="radio result-radio radio-success" value="1">
+                                            @if ($isHistory)
+                                                {!! $item->RESULT == '1' ? '&#x2714;' : '' !!}
+                                            @elseif (is_null($item->RESULT))
+                                                <input type="radio" id="correct-{{ $item->SEMPNO }}" checked
+                                                    name="result[{{ $item->SEMPNO }}{{ $key }}]"
+                                                    class="radio result-radio radio-success" value="1">
                                             @else
                                                 {!! $item->RESULT == '1' ? '&#x2714;' : '' !!}
                                             @endif
                                         </td>
                                         <td class="border border-gray-300">
-                                            @if (is_null($item->RESULT))
-                                                <input type="radio" id="incorrect-{{ $item->SEMPNO }}" name="result[{{ $item->SEMPNO }}{{ $key }}]" class="radio result-radio radio-error" value="0">
+                                            @if ($isHistory)
+                                                {!! $item->RESULT == '0' ? '&#x2714;' : '' !!}
+                                            @elseif (is_null($item->RESULT))
+                                                <input type="radio" id="incorrect-{{ $item->SEMPNO }}"
+                                                    name="result[{{ $item->SEMPNO }}{{ $key }}]"
+                                                    class="radio result-radio radio-error" value="0">
                                             @else
                                                 {!! $item->RESULT == '0' ? '&#x2714;' : '' !!}
                                             @endif
                                         </td>
                                         <td class="border border-gray-300">
-                                            @if (is_null($item->RESULT))
-                                                <input type="text" id="remark-{{ $item->SEMPNO }}" class="input input-bordered rounded-lg remark-input" name="remark[{{ $item->SEMPNO }}]">
+                                            @if ($isHistory)
+                                                {{ $item->DETAIL }}
+                                            @elseif (is_null($item->RESULT))
+                                                <input type="text" id="remark-{{ $item->SEMPNO }}"
+                                                    class="input input-bordered rounded-lg remark-input"
+                                                    name="remark[{{ $item->SEMPNO }}]">
                                             @else
                                                 {{ $item->DETAIL }}
                                             @endif
@@ -136,16 +166,20 @@
         {{-- ===== Actions ===== --}}
         @if ($mode == '02')
             <div class="flex justify-center mt-6 space-x-4">
-                @if($form->STATUS == '1')
-                    <button class="bg-green-600 text-white px-6 py-2 btn rounded-lg shadow hover:bg-green-700 transition btn-submit" data-action="approve" id="btn-confirm">
+                @if ($form->STATUS == '1')
+                    <button class="bg-green-600 text-white px-6 py-2 btn rounded-lg shadow hover:bg-green-700 transition btn-submit"
+                        data-action="approve" id="btn-confirm">
                         Approve
                     </button>
                 @else
-                    <button class="bg-green-600 text-white px-6 py-2 btn rounded-lg shadow hover:bg-green-700 transition btn-approve" data-action="approve" id="btn-confirm">
+                    <button
+                        class="bg-green-600 text-white px-6 py-2 btn rounded-lg shadow hover:bg-green-700 transition btn-approve"
+                        data-action="approve" id="btn-confirm">
                         Approve
                     </button>
                 @endif
-                <button class="bg-red-600 text-white px-6 py-2 btn rounded-lg shadow hover:bg-red-700 transition btn-approve" data-action="reject">
+                <button class="bg-red-600 text-white px-6 py-2 btn rounded-lg shadow hover:bg-red-700 transition btn-approve"
+                    data-action="reject">
                     Reject
                 </button>
             </div>
