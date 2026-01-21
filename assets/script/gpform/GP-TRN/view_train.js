@@ -172,8 +172,8 @@ $(document).ready(async function () {
 		}
 
 		try {
-			console.log("ACTION =", action, typeof action);
-			console.log("EMPNO =", formData.empno, typeof formData.empno);
+			console.log("ACTION =>", action, typeof action);
+			console.log("EMPNO =>", formData.empno, typeof formData.empno);
 			const result = await doaction({
 				NFRMNO: String(formData.nfrmno),
 				VORGNO: String(formData.vorgno),
