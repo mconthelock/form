@@ -178,9 +178,10 @@ $(document).ready(async function () {
 				CYEAR: String(formData.cyear),
 				CYEAR2: String(formData.cyear2),
 				NRUNNO: String(formData.nrunno),
-				ACTION: String(action),
+				ACTION: action,
 				EMPNO: String(formData.empno),
-				REMARK: remark
+				REMARK: remark,
+				CEXTDATA: "19",
 			});
 
 			if (exdata === "12" && action === "approve") {
