@@ -1,5 +1,6 @@
 import { doaction, redirectWebflow } from "@amec/webasset/form";
-import { host, showLoader } from "../../utils";
+import { host } from "../../utils";
+import {showLoader} from "@amec/webasset/preloader";
 import "select2";
 import "select2/dist/css/select2.min.css";
 import flatpickr from "flatpickr";
@@ -46,7 +47,14 @@ $(document).ready(async function () {
   $(".btn-submit").click(async function () {
       const action = $(this).data("action");
       checkData();
-      //console.log(action);
+      // console.log($("#chkopr").val() );
+      // console.log(">>>"||$("#demapv").val()||"<<<<");
+      // if($("#demapv").val()=="1")
+      // {
+      //   console.log("IF");
+      // }else{
+      //   console.log("ELSE");
+      // }
       
   });
 });
@@ -176,7 +184,9 @@ function actionfrm(data)
 
 function checkData(act)
 {
-  const cextdata =  $("#cextData").val();
+  let cextdata =  parseInt($("#cextData").val());
+  const chkopr =  $("#chkopr").val();
+  const demapv =  $("#demapv").val();
   if(act == "saveData" || act == "sendApv")
   {
       let reason = $('input[name="radReason"]:checked').val();
@@ -197,16 +207,81 @@ function checkData(act)
         return false;
       }
 
-  }else if($act == "change")
+  }else if(act == "change")
   {
       if($("#Foreman").val() == "")
       {
         showMessage('Please select Foreman', 'warning');
         return false;
       }
-  }
+      return true;
+  }else if(act != "")
+  {
+      if(($("#mstatus").val() == "1") && (act == "approve"))
+      {
+          if((cextdata == 6) && ($("#Operator").val() == ""))
+          {
+            showMessage('Please select Operator', 'warning');
+            return false;
+          }
+      }
 
+      const needOther =
+      ((chkopr != "1") && (cextdata >= 2 ) && (cextdata < 8 )) ||
+      (chkopr == "1" && (((cextdata >= 3) && (cextdata <= 5)) ||(cextdata == 7)));
+      if (!needOther) return true;
+      let radJudge = $('input[name="radJudge"]:checked').val();
+      if((radJudge == "2.5") && ($("#txtJdgOther1").val() == ""))
+      {
+          showMessage('Please input Judgement for Not Accept', 'warning');
+          return false;
+      }
+      if((radJudge == "4.2") && ($("#txtJdgOther2").val() == ""))
+      {
+          showMessage('Please input Judgement for Cancel', 'warning');
+          return false;
+      }
+      if(cextdata == 2)
+      {
+        if (!$('#cn-form').find('[name=radJudge]:checked').length) {
+          showMessage('Please select Judgement.', 'warning');
+          return false;
 
+        }
+        if(chkopr == "1" && act == "approve")
+        {
+            let hasOldFile = false;
+            if ($('#dvmak .openfl').length > 0) {
+                hasOldFile = true;
+             }
+            let hasNewFile = false;
+            $('input[type="file"][name="CHKFILE[]"]').each(function () {
+                if (this.files && this.files.length > 0) {
+                    hasNewFile = true;
+                }
+            });
+            if(!hasOldFile && !hasNewFile)
+            {
+              showMessage('Please attach Check Sheet.', 'warning');
+              return false;
+            }
+        }
+
+      }
+      if(cextdata == 7)
+      {
+        let count = 0;
+        while ($('#cn-form').find(`[name='radDwg${count}']`).length) {
+
+          const rad = $('#cn-form').find(`[name='radDwg${count}']`);
+          if (!rad.is(':checked')) {
+              alert("Please Check result for Drawing");
+              return false;
+          }
+          count++;
+      }
+      }
+  } // end else
   return true;
 }
 

@@ -15,6 +15,30 @@ class form extends MY_Controller{
         $this->upload_path = "//amecnas/AMECWEB/File/" .($this->_servername()=='amecweb' ? 'production' : 'development') ."/Form/QA/CN/";
     }
 
+       /**
+     * @param array $condition
+     * [
+     *     NFRMNO   => number,
+     *     VORGNO   => string,
+     *     CYEAR    => string,
+     *    VEMPNO    => string
+     * ]
+    */
+    private function getRep($condition = []){
+        try{
+            $response = $this->client->post($_ENV['APP_APIPHP'].'/rep/getRep', [
+                'json' => $condition
+            ]);
+            $result = trim($response->getBody());
+            // $result = json_decode($response->getBody(), true); 
+            return $result;
+        }catch(guzzlehttp\Exception\RequestException $e){
+            throw new Exception(json_encode(['status' => "false", 'message' => 'Failed to create form', 'e' => $e->getMessage()]), 1);
+        }catch(Exception $e){
+            throw new Exception(json_encode(['status' => "false", 'message' => 'Failed to create form', 'e' => $e]), 1);
+        }
+    }
+
     public function main(){
         if(isset($_GET["no"]) && $_GET["no"] != "" && isset($_GET["orgNo"]) && $_GET["orgNo"] != "" && isset($_GET["y"]) && $_GET["y"] != "" ) {
             $data = [
@@ -34,7 +58,7 @@ class form extends MY_Controller{
             }
 
         }
-        $data['empno'] = isset($_GET["empno"]) ? $_GET['empno'] : '' ;
+        $data['empno'] = isset($_GET["empno"]) ? $_GET['empno'] : '' ; 
         if(isset($_GET["runNo"]) && $_GET["runNo"] != "")
         {
             $data['return']   = false;
@@ -139,20 +163,60 @@ class form extends MY_Controller{
        // echo json_encode($data);
        return   $data;
     }
-
-
-
+    
     public function action()
     {
         $action = $_POST["action"];
-        $cextData = $_POST["cextData"];
+        $cextData = intval($_POST["cextData"]);
         $apvno =  $_POST["empno"];
-        $form  = ['NFRMNO' => $_POST["nfrmno"],
-                  'VORGNO' => $_POST["vorgno"],
-                  'CYEAR'  => $_POST["cyear"],
-                  'CYEAR2' => $_POST["cyear2"],
-                  'NRUNNO' => $_POST["nrunno"]
+        $nfrmno = $_POST["nfrmno"];
+        $vorgno = $_POST["vorgno"];
+        $cyear =  $_POST["cyear"];
+        $cyear2 = $_POST["cyear2"];
+        $nrunno = $_POST["nrunno"];
+        $form  = ['NFRMNO' => $nfrmno,
+                  'VORGNO' => $vorgno,
+                  'CYEAR'  => $cyear,
+                  'CYEAR2' => $cyear2,
+                  'NRUNNO' => $nrunno
          ];
+         if (isset($_POST['selJInchrg']) || $_POST['selJInchrg'] != '') {
+            $rep = $this->getRep(array('NFRMNO' =>  $nfrmno , 'VORGNO' => $vorgno , 'CYEAR' => $cyear , 'VEMPNO' => $_POST['selJInchrg']));
+            $dataapv = [
+                    'VAPVNO' => $_POST['selJInchrg'],
+                    'VREPNO' => $rep
+            ];
+            $form["CEXTDATA"] = '02';
+            $this->cn->update("FLOW",  $dataapv , $form);
+        }
+        if (isset($_POST['selEInchrg']) || $_POST['selEInchrg'] != '') {
+            $rep = $this->getRep(array('NFRMNO' =>  $nfrmno , 'VORGNO' => $vorgno , 'CYEAR' => $cyear , 'VEMPNO' => $_POST['selEInchrg']));
+            $dataapv = [
+                    'VAPVNO' => $_POST['selEInchrg'],
+                    'VREPNO' => $rep
+            ];
+            $form["CEXTDATA"] = '02';
+            $this->cn->update("FLOW",  $dataapv , $form);
+        }
+        if (isset($_POST['Operator']) || $_POST['Operator'] != ''){
+            $rep = $this->getRep(array('NFRMNO' =>  $nfrmno , 'VORGNO' => $vorgno , 'CYEAR' => $cyear , 'VEMPNO' => $_POST['Operator']));
+            $dataapv = [
+                    'VAPVNO' => $_POST['Operator'],
+                    'VREPNO' => $rep
+            ];
+            $form["CEXTDATA"] = '07';
+            $this->cn->update("FLOW",  $dataapv , $form);
+        }
+        if(($cextData >= 2) && ($cextData >= 8))
+        {
+            $data = array(
+                'JDGMNTNO' => $_POST["radJudge"],
+                'CLSNO'    => 
+            );
+
+        }
+    
+
         try{
             $status = false;
             $message = '';
@@ -261,7 +325,11 @@ class form extends MY_Controller{
         }
 
     }
-
+    
+    
+    
+    
+    
     private function updaterequest()
     {
         $con = [

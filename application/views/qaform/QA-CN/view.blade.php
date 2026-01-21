@@ -33,7 +33,12 @@
 <div class="form-data" data-nfrmno="{{ $NFRMNO }}" data-vorgno="{{ $VORGNO }}" data-cyear="{{ $CYEAR }}"
         data-cyear2="{{ $CYEAR2 }}" data-nrunno="{{ $NRUNNO }}" data-empno="{{ $empno }}" ></div>
 <form id="cn-form" method="post" enctype="multipart/form-data"> 
-<input type="hidden" name="cextData" value="{{ $cextData}}" />
+<input type="hidden" name="cextData" id="cextData" value="{{ $cextData}}" />
+<input type="hidden" name="mstatus" id="mstatus" value="{{ $cnform->MSTATUS }}" />
+<input type="hidden" name="chkopr" id="chkopr" value="{{ $chkopr }}" />
+<input type="hidden" name="demapv" id="demapv" value="{{ $demapv }}" />
+<input type="hidden" name="empno" id="empno" value="{{ $empno }}" />
+
 <div class="w-full border border-gray-300 text-sm font-sans">
     
     <style>
@@ -867,11 +872,11 @@
 
 
 {{-- ส่วน Check Sheet & Files --}}
-@if ($form[0]->CST == "0")
+@if ($form[0]->CST <> "0")
     <tr>
         <td class="force-w-350 align-top pt-2 " style="padding:5px;">Check Sheet</td>
         <td class="px-3 py-1 bg-gray-100 border-b border-white">
-        <div id="dvmak" class="py-2 px-1 w-[600px]" >
+        <div id="dvchk" class="py-2 px-1 w-[600px]" >
                 @foreach($attchk as $d)
                                     <div class="openfl"  data-id="{{ $d->ITEMNO }}" data-filename="{{ $d->SFILE }}">
                                         <a href="{{ base_url('qaform/QA-CN/form/mdownload/') . $NFRMNO . '_'.$VORGNO.'_'.$CYEAR.'_'.$CYEAR2.'_'.$NRUNNO.'/'.$d->SFILE.'/'.substr($d->SFILE, 13) }}" class="link text-sm text-blue-600 font-semibold" target="_blank">{{ substr($d->SFILE, 13) }}</a>
@@ -995,14 +1000,14 @@
 
                     {{-- Case 2.5: Other Text Input --}}
                     @if ($j->JDGMNTNO == 2.5)
-                        <input type="text" name="txtJdgOther1" 
+                        <input type="text" name="txtJdgOther1" id="txtJdgOther1"
                                class="w-full mt-1 h-8 px-2 border border-gray-300 bg-white focus:outline-none focus:ring-1 focus:ring-sky-400 rounded-sm"
                                value="{{ $cnform->JDGMNTNO == 2.5 ? $cnform->JDGOTHER : '' }}">
                     @endif
 
                     {{-- Case 4.2: Other Text Input --}}
                     @if ($j->JDGMNTNO == 4.2)
-                        <input type="text" name="txtJdgOther2"
+                        <input type="text" name="txtJdgOther2"  id="txtJdgOther2"
                                class="w-full mt-1 h-8 px-2 border border-gray-300 bg-white focus:outline-none focus:ring-1 focus:ring-sky-400 rounded-sm"
                                value="{{ $cnform->JDGMNTNO == 4.2 ? $cnform->JDGOTHER : '' }}">
                     @endif
