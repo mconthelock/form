@@ -2,8 +2,7 @@ console.log("✅ view_train.js loaded");
 console.log("version =", "OMG V1.2x");
 
 import { showFlow, redirectWebflow } from "@amec/webasset/form";
-import { doaction } from "@amec/webasset/form";
-import { createForm } from "@amec/webasset/form";
+import { doaction, createForm } from "@amec/webasset/api/webflow";
 import flatpickr from "flatpickr";
 import "flatpickr/dist/flatpickr.min.css";
 import { host } from "../../utils.js";
