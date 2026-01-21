@@ -1,5 +1,5 @@
 console.log("✅ view_train.js loaded");
-console.log("version =", "OMG V1.1");
+console.log("version =", "OMG V1.2x");
 
 import { showFlow, redirectWebflow } from "@amec/webasset/form";
 import { doaction } from "@amec/webasset/form";
@@ -179,10 +179,9 @@ $(document).ready(async function () {
 				CYEAR: String(formData.cyear),
 				CYEAR2: String(formData.cyear2),
 				NRUNNO: String(formData.nrunno),
-				ACTION: action,
+				ACTION: String(action),
 				EMPNO: String(formData.empno),
-				REMARK: remark,
-				CEXTDATA: "19",
+				REMARK: remark
 			});
 
 			if (exdata === "12" && action === "approve") {
