@@ -11,8 +11,7 @@ import {
 	validateOutForm,
 	validateDateRange,
 } from "./validators.js";
-//import { createForm } from "@amec/webasset/form";
-import { createForm } from "@amec/webasset/api/webflow/form";
+import { createForm } from "@amec/webasset/api/webform";
 import { showFlow , redirectWebflow } from "@amec/webasset/form";
 import { buildFormDataGeneric, savedetailForm, createReportForm,} from "./manage_data.js";
 import { host } from "../../utils.js";
@@ -213,161 +212,128 @@ async function handleFormSubmit(formType, fid) {
    🔹 Submit Form (API call)
    ===================================================== */
 async function submitForm(formType, reqby, inputby, fid) {
-  try {
-    showLoader();
+	try {
+		showLoader();
 
-    const getVal = (id) => $(`#${id}`).val()?.trim() || "";
+		const getVal = (id) => $(`#${id}`).val()?.trim() || "";
+		const nfrmno = getVal("NFRMNO");
+		const vorgno = getVal("VORGNO");
+		const cyear = getVal("CYEAR");
 
-    const nfrmno = Number(getVal("NFRMNO"));
-    const vorgno = getVal("VORGNO");
-    const cyear  = getVal("CYEAR");
+		if (!nfrmno || !vorgno || !cyear || !reqby || !inputby) {
+			hideLoader();
+			showAlert("⚠ แจ้งเตือน", "ข้อมูลไม่ครบถ้วน");
+			return;
+		}
 
-    if (
-      !nfrmno || Number.isNaN(nfrmno) ||
-      !vorgno || !cyear ||
-      !reqby || !inputby
-    ) {
-      hideLoader();
-      showAlert("⚠ แจ้งเตือน", "ข้อมูลไม่ครบถ้วน");
-      return;
-    }
+		const traineeList = Array.isArray(reqby) ? reqby : [reqby];
+		const results = [];
 
-    const traineeList = Array.isArray(reqby) ? reqby : [reqby];
-    const results = [];
+		//Generate GROUP_TRAIN
+		let group_train = "";
+		if (formType === "legal" || formType === "out") {
+			const cyear2_val = String(new Date().getFullYear()).slice(-2);
+			const resGroup = await fetch(
+				`${host}gpform/GP-TRN/training/get_new_group_train`,
+				{
+					method: "POST",
+					headers: {
+						"Content-Type": "application/x-www-form-urlencoded",
+					},
+					body: new URLSearchParams({ cyear2: cyear2_val }),
+				}
+			);
 
-    /* ===============================
-       Generate GROUP_TRAIN
-    =============================== */
-    let group_train = "";
-    if (formType === "legal" || formType === "out") {
-      const cyear2_val = String(new Date().getFullYear()).slice(-2);
+			const json = await resGroup.json();
+			group_train = json.group_train || "";
+		}
+		console.log("Group Train =", group_train);
 
-      const resGroup = await fetch(
-        `${host}gpform/GP-TRN/training/get_new_group_train`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/x-www-form-urlencoded" },
-          body: new URLSearchParams({ cyear2: cyear2_val }),
-        }
-      );
+		for (const traineeCode of traineeList) {
+			const trainee_req = traineeCode.code;
+			const poscode = traineeCode.pos || "";
+			const cost = traineeCode.cost || "0";
 
-      const json = await resGroup.json();
-      group_train = String(json.group_train || "");
-    }
+			/* 🔹 Create Form & Flow */
+			const payload = {
+				NFRMNO: nfrmno,
+				VORGNO: vorgno,
+				CYEAR: cyear,
+				REQBY: trainee_req,
+				INPUTBY: inputby,
+				REMARK: "",
+			};
+			console.log(payload);
+			const headResult = await createForm(payload);
+			const ref_cyear2 = headResult?.data?.CYEAR2;
+			const ref_nrunno = headResult?.data?.NRUNNO;
 
-    console.log("Group Train =", group_train);
+			if (!headResult || headResult.status === "error") {
+				results.push({ traineeCode: trainee_req, status: "error" });
+				continue;
+			}
 
-    /* ===============================
-       Loop Trainees
-    =============================== */
-    for (const trainee of traineeList) {
-      const trainee_req = String(trainee.code ?? "").trim();
-      const poscode = String(trainee.pos ?? "").trim();
-      const cost = String(trainee.cost ?? "0");
+			/* 🔹 Create Detail */
+			const prefix = formType === "functional" ? "func" : formType;
+			const fd = buildFormDataGeneric(headResult, fid, prefix);
 
-      if (!trainee_req) {
-        results.push({ traineeCode: "", status: "error" });
-        continue;
-      }
+			fd.append("TRAINEE_ID", trainee_req);
+			fd.append("INPUTBY", inputby);
+			fd.append("COST_PERSON", cost);
+			fd.append("GROUP_TRAIN", group_train);
+			if (poscode) fd.append("SPOSCODE", poscode);
 
-      /* ===============================
-         Create Form (JSON ONLY)
-      =============================== */
-      const payload = {
-        NFRMNO: nfrmno,
-        VORGNO: vorgno,
-        CYEAR: cyear,
-        REQBY: trainee_req,
-        INPUTBY: String(inputby),
-        REMARK: "",
-      };
+			const saveResult = await savedetailForm(fd);
+			const status = saveResult?.status || "error";
+			results.push({ traineeCode: trainee_req, status });
 
-      console.log("createForm payload =", payload);
+			/* 🔹 Create Training Report Form */
+			if (status === "success") {
+				const payload_report = {
+					NFRMNO: "19",
+					VORGNO: "030101",
+					CYEAR: "25",
+					REQBY: saveResult?.req_by,
+					INPUTBY: saveResult?.req_by,
+					REMARK: "",
+					DRAFT: "1",
+				};
 
-      const headResult = await createForm(payload);
-      if (!headResult || headResult.status === "error") {
-        results.push({ traineeCode: trainee_req, status: "error" });
-        continue;
-      }
+				const headResult_trnrp = await createForm(payload_report);
 
-      const ref_cyear2 = headResult?.data?.CYEAR2;
-      const ref_nrunno = headResult?.data?.NRUNNO;
+				const fd_report = new FormData();
+				const base_report = headResult_trnrp?.data || {};
+				["NFRMNO", "VORGNO", "CYEAR", "CYEAR2", "NRUNNO"].forEach((k) =>
+					fd_report.append(k, base_report[k] || "")
+				);
+				fd_report.append("REF_CYEAR2", ref_cyear2);
+				fd_report.append("REF_NRUNNO", ref_nrunno);
+				fd_report.append("REQBY", saveResult?.req_by);
 
-      /* ===============================
-         Create Detail (FormData)
-      =============================== */
-      const prefix = formType === "functional" ? "func" : formType;
-      const fd = buildFormDataGeneric(headResult, fid, prefix);
+				await createReportForm(fd_report);
+			}
+		}
 
-      fd.append("TRAINEE_ID", trainee_req);
-      fd.append("INPUTBY", String(inputby));
-      fd.append("COST_PERSON", cost);
-      fd.append("GROUP_TRAIN", group_train);
-      if (poscode) fd.append("SPOSCODE", poscode);
+		hideLoader();
 
-      const saveResult = await savedetailForm(fd);
-      const status = saveResult?.status || "error";
-      results.push({ traineeCode: trainee_req, status });
+		const failCount = results.filter((r) => r.status !== "success").length;
+		const successCount = results.length - failCount;
 
-      /* ===============================
-         Create Training Report
-      =============================== */
-      if (status === "success") {
-        const payload_report = {
-          NFRMNO: 19,
-          VORGNO: "030101",
-          CYEAR: "25",
-          REQBY: String(saveResult?.req_by),
-          INPUTBY: String(saveResult?.req_by),
-          REMARK: "",
-          DRAFT: "1",
-        };
-
-        const headResult_trnrp = await createForm(payload_report);
-        if (!headResult_trnrp?.data) continue;
-
-        const base_report = headResult_trnrp.data;
-        const fd_report = new FormData();
-
-        ["NFRMNO", "VORGNO", "CYEAR", "CYEAR2", "NRUNNO"].forEach((k) => {
-          if (base_report[k] !== undefined) {
-            fd_report.append(k, String(base_report[k]));
-          }
-        });
-
-        fd_report.append("REF_CYEAR2", String(ref_cyear2));
-        fd_report.append("REF_NRUNNO", String(ref_nrunno));
-        fd_report.append("REQBY", String(saveResult?.req_by));
-
-        await createReportForm(fd_report);
-      }
-    }
-
-    hideLoader();
-
-    /* ===============================
-       Result Summary
-    =============================== */
-    const failCount = results.filter((r) => r.status !== "success").length;
-    const successCount = results.length - failCount;
-
-    if (failCount > 0) {
-      showAlert(
-        "⚠ บางรายการไม่สำเร็จ",
-        `สำเร็จ ${successCount} / ${results.length} รายการ`
-      );
-    } else {
-      showAlert(
-        "✅ สำเร็จ",
-        `บันทึกข้อมูลผู้เข้าอบรมทั้งหมด ${successCount} รายการเรียบร้อยแล้ว`
-      );
-      redirectWebflow();
-    }
-
-  } catch (err) {
-    hideLoader();
-    console.error(`[${formType}] error:`, err);
-    showAlert("❌ ล้มเหลว", `ฟอร์ม ${formType} ส่งไม่สำเร็จ`);
-  }
+		if (failCount > 0) {
+			showAlert(
+				"⚠ บางรายการไม่สำเร็จ",
+				`สำเร็จ ${successCount} / ${results.length} รายการ`
+			);
+		} else {
+			showAlert(
+				"✅ สำเร็จ",
+				`บันทึกข้อมูลผู้เข้าอบรมทั้งหมด ${successCount} รายการเรียบร้อยแล้ว`
+			);
+			redirectWebflow();
+		}
+	} catch (err) {
+		hideLoader();
+		console.error(`[${formType}] error:`, err);
+		showAlert("❌ ล้มเหลว", `ฟอร์ม ${formType} ส่งไม่สำเร็จ`);
+	}
 }
-

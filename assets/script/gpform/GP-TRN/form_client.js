@@ -1,5 +1,4 @@
 // assets/script/gpform/GP-TRN/form_client.js
-import * as base from "@amec/webasset/form";
 
 // กำหนดค่าจริงจาก Blade แทน process.env
 const APP_API = window.mainUrl || "{{ site_url('gpform/GP-TRN') }}";

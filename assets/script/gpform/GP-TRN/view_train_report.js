@@ -1,7 +1,7 @@
 console.log("✅ view_train_report.js loaded (OMG V1.1)");
 
 import { showFlow, redirectWebflow } from "@amec/webasset/form";
-import { doaction } from "@amec/webasset/form";
+import { doaction } from "@amec/webasset/api/webform";
 import { host } from "../../utils.js";
 import Swal from "sweetalert2";
 
