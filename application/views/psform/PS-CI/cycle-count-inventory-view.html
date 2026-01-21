@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="th" data-theme="corporate">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cycle Count Inventory Sheet - View</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.6.0/dist/full.min.css" rel="stylesheet" type="text/css" />
+</head>
+<body class="bg-base-200 p-4 md:p-8">
+    <div class="max-w-[1600px] mx-auto">
+        <!-- Header Section -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+            <div class="text-center mb-6">
+                <h1 class="text-sm font-medium text-gray-600">MITSUBISHI ELEVATOR ASIA CO.,LTD.</h1>
+                <h2 class="text-2xl font-bold text-gray-800 mt-1">Cycle Count Inventory Sheet</h2>
+            </div>
+
+            <!-- Document Info Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mt-6">
+                <div class="border-l-4 border-blue-500 pl-3">
+                    <p class="text-xs text-gray-500">Data Date</p>
+                    <p class="text-base font-semibold text-gray-800">2025-12-24</p>
+                </div>
+                <div class="border-l-4 border-blue-500 pl-3">
+                    <p class="text-xs text-gray-500">Check Date</p>
+                    <p class="text-base font-semibold text-gray-800">2025-12-25</p>
+                </div>
+                <div class="border-l-4 border-blue-500 pl-3">
+                    <p class="text-xs text-gray-500">Department / Section</p>
+                    <p class="text-base font-semibold text-gray-800">PS / WH1</p>
+                </div>
+                <div class="border-l-4 border-blue-500 pl-3">
+                    <p class="text-xs text-gray-500">Check By</p>
+                    <p class="text-base font-semibold text-gray-800">WH1</p>
+                </div>
+            </div>
+
+            <!-- Part Type Badges -->
+            <div class="flex flex-wrap gap-3 mt-4">
+                <div class="badge badge-outline badge-lg">
+                    <span class="text-xs">BULK PART</span>
+                </div>
+                <div class="badge badge-outline badge-lg">
+                    <span class="text-xs">STOCK PART</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Summary Result Section -->
+        <div class="bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg shadow-md p-6 mb-6 border border-orange-200">
+            <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center">
+                <svg class="w-5 h-5 mr-2 text-orange-600" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/>
+                    <path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clip-rule="evenodd"/>
+                </svg>
+                The Result of Monthly Inventory Group (ผลสรุป)
+            </h3>
+            
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                <!-- Total Item -->
+                <div class="stat bg-white rounded-lg shadow-sm">
+                    <div class="stat-title text-xs">Total Item</div>
+                    <div class="stat-value text-2xl text-primary">1,248</div>
+                    <div class="stat-desc">รายการทั้งหมด</div>
+                </div>
+
+                <!-- Checking Item -->
+                <div class="stat bg-white rounded-lg shadow-sm">
+                    <div class="stat-title text-xs">Checking Item</div>
+                    <div class="stat-value text-2xl text-info">1,245</div>
+                    <div class="stat-desc">ตรวจแล้ว</div>
+                </div>
+
+                <!-- LD Random Check -->
+                <div class="stat bg-white rounded-lg shadow-sm">
+                    <div class="stat-title text-xs">LD Random Check</div>
+                    <div class="stat-value text-2xl text-secondary">125</div>
+                    <div class="stat-desc">สุ่มตรวจโดย LD</div>
+                </div>
+
+                <!-- Diff Item (First Time) -->
+                <div class="stat bg-white rounded-lg shadow-sm">
+                    <div class="stat-title text-xs">Diff Item (First Time)</div>
+                    <div class="stat-value text-2xl text-warning">48</div>
+                    <div class="stat-desc">ผิดพลาดครั้งแรก</div>
+                </div>
+
+                <!-- Diff Item (After Re-check) -->
+                <div class="stat bg-white rounded-lg shadow-sm border-2 border-yellow-400">
+                    <div class="stat-title text-xs font-semibold">Diff Item (After Re-check)</div>
+                    <div class="stat-value text-2xl text-error">12</div>
+                    <div class="stat-desc text-error font-semibold">ยังผิดพลาดหลังตรวจซ้ำ</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Inventory Detail Table -->
+        <div class="bg-white rounded-lg shadow-md overflow-hidden">
+            <div class="bg-gradient-to-r from-gray-700 to-gray-800 text-white px-6 py-4">
+                <h3 class="text-lg font-bold">Inventory Detail (รายละเอียดการตรวจนับ)</h3>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="table table-zebra table-pin-rows table-pin-cols">
+                    <thead class="bg-gray-100">
+                        <tr class="text-xs">
+                            <th class="bg-gray-100 z-20">No.</th>
+                            <th class="bg-gray-100 z-20">Buyer</th>
+                            <th class="bg-gray-200">Item Code</th>
+                            <th class="bg-gray-200 min-w-[250px]">Description</th>
+                            <th class="bg-gray-200">Drawing No.</th>
+                            <th class="bg-gray-200">Location</th>
+                            <th class="bg-yellow-100 text-yellow-900 font-bold">Controller</th>
+                            <th class="bg-blue-50 text-blue-900">On hand</th>
+                            <th class="bg-gray-200">W/H U.M.</th>
+                            <th class="bg-gray-200">Unit Price</th>
+                            <th class="bg-gray-200">Amount</th>
+                            <th class="bg-green-50 text-green-900">Actual QTY</th>
+                            <th class="bg-purple-50 text-purple-900">Diff</th>
+                            <th class="bg-orange-50 text-orange-900">L/D Random Check</th>
+                            <th class="bg-gray-200 min-w-[200px]">Reason From</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-sm">
+                        <!-- Sample Row 1 - Normal -->
+                        <tr class="hover">
+                            <td class="font-medium">1</td>
+                            <td>BUYER-01</td>
+                            <td class="font-mono text-xs">IC-2024-0001</td>
+                            <td>Motor Assembly Type A-150 Series with Bracket</td>
+                            <td class="text-xs">DWG-2024-A001</td>
+                            <td class="badge badge-ghost badge-sm">A1-B2-C3</td>
+                            <td class="text-center">
+                                <span class="badge badge-warning badge-sm font-semibold">CTRL-01</span>
+                            </td>
+                            <td class="text-right font-semibold">1,500</td>
+                            <td>PCS</td>
+                            <td class="text-right">45.50</td>
+                            <td class="text-right font-semibold">68,250.00</td>
+                            <td class="text-right font-bold text-green-700">1,500</td>
+                            <td class="text-center">
+                                <span class="badge badge-success badge-sm">0</span>
+                            </td>
+                            <td class="text-center">
+                                <input type="checkbox" class="checkbox checkbox-sm checkbox-primary" checked disabled />
+                            </td>
+                            <td class="text-xs text-gray-600">-</td>
+                        </tr>
+
+                        <!-- Sample Row 2 - Has Difference (Positive) -->
+                        <tr class="hover bg-green-50">
+                            <td class="font-medium">2</td>
+                            <td>BUYER-02</td>
+                            <td class="font-mono text-xs">IC-2024-0002</td>
+                            <td>Cable Connector 24V DC Power Supply</td>
+                            <td class="text-xs">DWG-2024-B052</td>
+                            <td class="badge badge-ghost badge-sm">B2-C4-D1</td>
+                            <td class="text-center">
+                                <span class="badge badge-warning badge-sm font-semibold">CTRL-02</span>
+                            </td>
+                            <td class="text-right font-semibold">2,400</td>
+                            <td>PCS</td>
+                            <td class="text-right">12.75</td>
+                            <td class="text-right font-semibold">30,600.00</td>
+                            <td class="text-right font-bold text-green-700">2,450</td>
+                            <td class="text-center">
+                                <span class="badge badge-success badge-sm font-bold">+50</span>
+                            </td>
+                            <td class="text-center">
+                                <input type="checkbox" class="checkbox checkbox-sm checkbox-primary" checked disabled />
+                            </td>
+                            <td class="text-xs text-gray-600">พบสต็อกเพิ่ม ตรวจสอบแล้ว</td>
+                        </tr>
+
+                        <!-- Sample Row 3 - Has Difference (Negative) -->
+                        <tr class="hover bg-red-50">
+                            <td class="font-medium">3</td>
+                            <td>BUYER-01</td>
+                            <td class="font-mono text-xs">IC-2024-0003</td>
+                            <td>Bearing Ball Type NSK 6205-2RS</td>
+                            <td class="text-xs">DWG-2024-C103</td>
+                            <td class="badge badge-ghost badge-sm">C1-D2-E3</td>
+                            <td class="text-center">
+                                <span class="badge badge-warning badge-sm font-semibold">CTRL-01</span>
+                            </td>
+                            <td class="text-right font-semibold">800</td>
+                            <td>PCS</td>
+                            <td class="text-right">85.00</td>
+                            <td class="text-right font-semibold">68,000.00</td>
+                            <td class="text-right font-bold text-red-700">765</td>
+                            <td class="text-center">
+                                <span class="badge badge-error badge-sm font-bold">-35</span>
+                            </td>
+                            <td class="text-center">
+                                <input type="checkbox" class="checkbox checkbox-sm checkbox-error" disabled />
+                            </td>
+                            <td class="text-xs text-red-700 font-semibold">มีการเบิกใช้ยังไม่บันทึก</td>
+                        </tr>
+
+                        <!-- Sample Row 4 - Normal -->
+                        <tr class="hover">
+                            <td class="font-medium">4</td>
+                            <td>BUYER-03</td>
+                            <td class="font-mono text-xs">IC-2024-0004</td>
+                            <td>Screw M6x20 Stainless Steel 304</td>
+                            <td class="text-xs">DWG-2024-D204</td>
+                            <td class="badge badge-ghost badge-sm">D3-E1-F2</td>
+                            <td class="text-center">
+                                <span class="badge badge-warning badge-sm font-semibold">CTRL-03</span>
+                            </td>
+                            <td class="text-right font-semibold">15,000</td>
+                            <td>PCS</td>
+                            <td class="text-right">2.50</td>
+                            <td class="text-right font-semibold">37,500.00</td>
+                            <td class="text-right font-bold text-green-700">15,000</td>
+                            <td class="text-center">
+                                <span class="badge badge-success badge-sm">0</span>
+                            </td>
+                            <td class="text-center">
+                                <input type="checkbox" class="checkbox checkbox-sm checkbox-primary" disabled />
+                            </td>
+                            <td class="text-xs text-gray-600">-</td>
+                        </tr>
+
+                        <!-- Sample Row 5 - Has Difference (Negative) -->
+                        <tr class="hover bg-red-50">
+                            <td class="font-medium">5</td>
+                            <td>BUYER-02</td>
+                            <td class="font-mono text-xs">IC-2024-0005</td>
+                            <td>Relay Module 24VDC OMRON MY4N</td>
+                            <td class="text-xs">DWG-2024-E305</td>
+                            <td class="badge badge-ghost badge-sm">E2-F3-G1</td>
+                            <td class="text-center">
+                                <span class="badge badge-warning badge-sm font-semibold">CTRL-02</span>
+                            </td>
+                            <td class="text-right font-semibold">450</td>
+                            <td>PCS</td>
+                            <td class="text-right">125.00</td>
+                            <td class="text-right font-semibold">56,250.00</td>
+                            <td class="text-right font-bold text-red-700">438</td>
+                            <td class="text-center">
+                                <span class="badge badge-error badge-sm font-bold">-12</span>
+                            </td>
+                            <td class="text-center">
+                                <input type="checkbox" class="checkbox checkbox-sm checkbox-primary" checked disabled />
+                            </td>
+                            <td class="text-xs text-red-700 font-semibold">ส่วนต่างยังไม่ชัดเจน</td>
+                        </tr>
+
+                        <!-- Sample Row 6 - Normal -->
+                        <tr class="hover">
+                            <td class="font-medium">6</td>
+                            <td>BUYER-01</td>
+                            <td class="font-mono text-xs">IC-2024-0006</td>
+                            <td>Proximity Sensor E2E-X5ME1 DC12-24V</td>
+                            <td class="text-xs">DWG-2024-F406</td>
+                            <td class="badge badge-ghost badge-sm">F1-G2-H3</td>
+                            <td class="text-center">
+                                <span class="badge badge-warning badge-sm font-semibold">CTRL-01</span>
+                            </td>
+                            <td class="text-right font-semibold">320</td>
+                            <td>PCS</td>
+                            <td class="text-right">450.00</td>
+                            <td class="text-right font-semibold">144,000.00</td>
+                            <td class="text-right font-bold text-green-700">320</td>
+                            <td class="text-center">
+                                <span class="badge badge-success badge-sm">0</span>
+                            </td>
+                            <td class="text-center">
+                                <input type="checkbox" class="checkbox checkbox-sm checkbox-primary" checked disabled />
+                            </td>
+                            <td class="text-xs text-gray-600">-</td>
+                        </tr>
+
+                        <!-- Sample Row 7 - Has Difference (Positive) -->
+                        <tr class="hover bg-green-50">
+                            <td class="font-medium">7</td>
+                            <td>BUYER-03</td>
+                            <td class="font-mono text-xs">IC-2024-0007</td>
+                            <td>Safety Switch IDEC HW1P-2T44</td>
+                            <td class="text-xs">DWG-2024-G507</td>
+                            <td class="badge badge-ghost badge-sm">G3-H1-I2</td>
+                            <td class="text-center">
+                                <span class="badge badge-warning badge-sm font-semibold">CTRL-03</span>
+                            </td>
+                            <td class="text-right font-semibold">180</td>
+                            <td>PCS</td>
+                            <td class="text-right">850.00</td>
+                            <td class="text-right font-semibold">153,000.00</td>
+                            <td class="text-right font-bold text-green-700">185</td>
+                            <td class="text-center">
+                                <span class="badge badge-success badge-sm font-bold">+5</span>
+                            </td>
+                            <td class="text-center">
+                                <input type="checkbox" class="checkbox checkbox-sm checkbox-primary" disabled />
+                            </td>
+                            <td class="text-xs text-gray-600">รับเข้าล่าช้า บันทึกแล้ว</td>
+                        </tr>
+                    </tbody>
+                    <tfoot class="bg-gray-100 font-bold">
+                        <tr>
+                            <td colspan="10" class="text-right">Total Amount:</td>
+                            <td class="text-right text-primary text-lg">557,600.00</td>
+                            <td colspan="4"></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+
+        <!-- Footer Info -->
+        <div class="mt-6 text-center text-sm text-gray-500">
+            <p>Document generated on: <span class="font-semibold">2026-01-07 14:30:45</span></p>
+            <p class="mt-1">© MITSUBISHI ELEVATOR ASIA CO.,LTD. - Internal Use Only</p>
+        </div>
+    </div>
+</body>
+</html>

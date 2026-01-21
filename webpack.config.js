@@ -88,8 +88,8 @@ module.exports = {
         vmsview: "./assets/script/marform/MAR-VMS/view.js", //view page
         vmsreport: "./assets/script/marform/MAR-VMS/report.js", //view page
 
-        // PS-SAR
-        psSar: "./assets/script/psform/PS-SAR/index.js", //Sar page
+        // PS-CI
+        psCi: "./assets/script/psform/PS-CI/index.js", //CI page
 
         //GP-TRN
         alert: "./assets/script/gpform/GP-TRN/alert.js",
