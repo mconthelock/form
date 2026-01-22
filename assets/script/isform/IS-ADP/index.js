@@ -122,7 +122,7 @@ $(async function () {
                 flowsubmit = webflowSubmit({ request: true })
                 break;
             case 2:
-                flowsubmit = webflowSubmit({ flow: true, flowhtml: flow.html, approve: true });
+                flowsubmit = webflowSubmit({ flow: true, flowhtml: flow.html, approve: true, reject: true });
                 break;
             default:
                 flowsubmit = webflowSubmit({ flow: true, flowhtml: flow.html, actionsForm: false});
