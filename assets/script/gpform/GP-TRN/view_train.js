@@ -1,5 +1,5 @@
 console.log("✅ view_train.js loaded");
-console.log("version =", "OMG V1.3");
+console.log("version =", "OMG V1.4");
 
 import { showFlow, redirectWebflow } from "@amec/webasset/form";
 import { doaction, createForm } from "@amec/webasset/api/webform";
