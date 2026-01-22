@@ -716,9 +716,6 @@ class Training extends MY_Controller {
         $data_main["CYEAR"]  = $cyear ;
         $data_main["CYEAR2"] = $cyear2 ;
         $data_main["NRUNNO"] = $nrunno ;
-        $data_ref_cash["REF_CASH_CYEAR2"] = $cashHead["CYEAR2"];
-        $data_ref_cash["REF_CASH_NRUNNO"] = $cashHead["NRUNNO"];
-        $this->trn->update_data("GP_TRN_HEAD", $data_ref_cash, $data_main);
 
         // ====================================================
         // 5) (Commented) CLEAR FORM
@@ -745,11 +742,26 @@ class Training extends MY_Controller {
         $this->trn->update_flow($clearHead["NFRMNO"], $clearHead["VORGNO"], $clearHead["CYEAR"], $clearHead["CYEAR2"], $clearHead["NRUNNO"], 'CSTEPST','3', 'CSTEPNO', '--');
         $this->trn->update_flow($clearHead["NFRMNO"], $clearHead["VORGNO"], $clearHead["CYEAR"], $clearHead["CYEAR2"], $clearHead["NRUNNO"], 'CAPVSTNO','0', 'CSTEPNO', '--');
 
-    // UPDATE REF Clear ADVANCE TO GP_TRN_HEAD ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-        $data_ref_clear = array();
-        $data_ref_clear["REF_CLR_CYEAR2"] = $clearHead["CYEAR2"];
-        $data_ref_clear["REF_CLR_NRUNNO"] = $clearHead["NRUNNO"];
-        $this->trn->update_data("GP_TRN_HEAD", $data_ref_clear, $data_main);
+        $this->db->trans_start(); // เริ่ม Transaction
+        $update_payload = [
+            "REF_CASH_CYEAR2" => $cashHead["CYEAR2"],
+            "REF_CASH_NRUNNO" => $cashHead["NRUNNO"],
+            "REF_CLR_CYEAR2"  => $clearHead["CYEAR2"],
+            "REF_CLR_NRUNNO"  => $clearHead["NRUNNO"]
+        ];
+
+        foreach ($items as $row) {
+            $where_gp = [
+                "NFRMNO" => $row["NFRMNO"],
+                "VORGNO" => $row["VORGNO"],
+                "CYEAR"  => $row["CYEAR"],
+                "CYEAR2" => $row["CYEAR2"],
+                "NRUNNO" => $row["NRUNNO"],
+            ];
+            // อัปเดตทีเดียว 4 ฟิลด์เลย
+            $this->trn->update_data("GP_TRN_HEAD", $update_payload, $where_gp);
+        }
+        $this->db->trans_complete(); // ยืนยันข้อมูล (ถ้าพังจะ Rollback ทั้งหมด)
 
         // ====================================================
         // 6) ส่งผลกลับให้ frontend
