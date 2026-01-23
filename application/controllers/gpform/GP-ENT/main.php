@@ -2,6 +2,7 @@
 defined('BASEPATH') or exit('No direct script access allowed');
 require_once APPPATH . 'controllers/_file.php';
 require_once APPPATH . 'controllers/_form.php';
+require_once APPPATH . 'controllers/api/webform/flow.php';
 use GuzzleHttp\Client;
 function pre_array($array)
 {
@@ -11,7 +12,10 @@ function pre_array($array)
 }
 class Main extends MY_Controller {
     use _File;
-    use _Form;
+    use _Form, flow {
+        flow::getExtData insteadof _Form;
+        flow::doaction insteadof _Form;
+    }
     protected $client;
     public function __construct()
     {
@@ -120,30 +124,52 @@ class Main extends MY_Controller {
 
         $amecArr = json_decode($post['amec_list'], true);
 
-        $PRESIDENT = $this->ent->get_orgpos("020101", "02")[0]; // PRESIDENT
-        $RAF       = $this->ent->get_orgpos("040101", "10")[0]; // RAF DIM
-        // เช็คทั้ง requested_by และ amecArr สำหรับประธานและ raf
+        $PRESIDENT = $this->ent->get_orgpos("020101", "02")[0];
+        $RAF       = $this->ent->get_orgpos("040101", "10")[0];
+
         $isPresidentInArr     = in_array($PRESIDENT->VEMPNO, $amecArr);
         $isRAFInArr           = in_array($RAF->VEMPNO, $amecArr);
         $isPresidentRequester = $post['requested_by'] == $PRESIDENT->VEMPNO;
         $isRAFRequester       = $post['requested_by'] == $RAF->VEMPNO;
 
+        $condition = [
+            'NFRMNO'  => $nfrmno,
+            'VORGNO'  => $vorgno,
+            'CYEAR'   => $cyear,
+            'CYEAR2'  => $cyear2,
+            'NRUNNO'  => $nrunno,
+            'CSTEPNO' => "18"
+        ];
+
+        $approveEmp = null;
+
+        /* === logic หา approver === */
+
+        // ประธานเกี่ยวข้อง
         if ($isPresidentInArr || $isPresidentRequester) {
-            // ถ้ามีประธานใน amecArr หรือเป็นคน request จะเป็น raf approve
+            $approveEmp = $RAF->VEMPNO;
+
+            // RAF เกี่ยวข้อง
         } else if ($isRAFInArr || $isRAFRequester) {
-            // ถ้า raf อยู่ใน amecArr หรือเป็นคน request จะเป็นประธาน approve
+            $approveEmp = $PRESIDENT->VEMPNO;
+
+            // คนทั่วไป
         } else {
-            // คนทั่วไป request
             if ($post['total_amount'] > 10000) {
-                if ($isPresidentInArr) {
-                    // ถ้าประธานเข้าด้วยจะเป็น raf แทน
-                } else {
-                    // ถ้าไม่มีประธานใน amecArr จะเป็นประธาน approve
-                }
-            } else {
-                // ถ้าเงินไม่เกิน 10000
+                $approveEmp = $isPresidentInArr
+                    ? $RAF->VEMPNO
+                    : $PRESIDENT->VEMPNO;
             }
         }
+
+        /* === update flow === */
+        if ($approveEmp) {
+            $this->updateFlow([
+                'condition' => $condition,
+                'VAPVNO'    => $approveEmp
+            ]);
+        }
+
 
         // if ($post['cash_adv'] == '0') {
         //     $this->deleteFlowStep('', $nfrmno, $vorgno, $cyear, $cyear2, $nrunno, '19', '00'); // delete FIN Staff

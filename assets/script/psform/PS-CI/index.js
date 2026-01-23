@@ -1,6 +1,6 @@
 import { host } from "../../utils";
-import { showFlow, doaction, redirectWebflow } from "@public/_form.js";
-import { createTable } from "@public/_dataTable";
+import { showFlow, doaction, redirectWebflow } from "@amec/webasset/form";
+import { createTable } from "@amec/webasset/dataTable";
 
 $(document).ready(async function () {
     const { nfrmno, vorgno, cyear, cyear2, nrunno, empno } = $(".form-data").data();
