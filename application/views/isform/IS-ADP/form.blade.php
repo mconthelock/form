@@ -14,7 +14,25 @@
             <div class="absolute right-10 top-10 ml-auto px-2 font-bold text-2xl text-error border-3 border-error">
                 CONFIDENTAIL</div>
             <div id="detail" class="flex flex-col gap-5">
+                @If($mode == 1)
+                <form id="form" action="">
+                @endIf
                 <div id="form-detail"></div>
+                <section id="form-Requester" class="flex flex-col gap-5 hidden w-2xs">
+                    <fieldset class="flex justify-between gap-3">
+                        <span class="text-lg font-bold">Input by</span>
+                        <label>
+                            <input type="text" name="CREATEBY" id="CREATEBY" class="input input-sm w-40" value="{{ $empno }}" readonly>
+                        </label>
+                    </fieldset>
+                    <fieldset class="flex justify-between gap-3">
+                        <span class="text-lg font-bold">Request by</span>
+                        <label>
+                            <input type="text" name="REQUESTER" id="REQUESTER" class="input input-sm w-40 req">
+                        </label>
+                    </fieldset>
+                </section>
+                <div class="divider"></div>
                 <div class="detail-topic">
                     <u class="text-xl font-bold">1. FY<span class="fyear"></span> Development policy</u>
                 </div>
@@ -60,11 +78,12 @@
                     </table>
                 </div>
                 @If($mode == 1)
-                <form id="form" action="" class="rounded-xl border bg-base-200 p-5 w-96">
-                    <label for="file" class="font-bold text-xl">Attachment Annual plan <span
-                            class="text-error">*</span></label>
-                    <input type="file" name="file" id="file" class="file-input mt-3 req"
-                        accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel">
+                    <div  class="rounded-xl border bg-base-200 p-5 w-96">
+                        <label for="file" class="font-bold text-xl">Attachment Annual plan <span
+                                class="text-error">*</span></label>
+                        <input type="file" name="file" id="file" class="file-input mt-3 req"
+                            accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel">
+                    </div>
                 </form>
                 @else
                 <div class="rounded-xl border bg-base-200 p-5 min-w-96 w-fit max-w-full mb-8">

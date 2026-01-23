@@ -4,6 +4,7 @@ import {
     showErrorMessage,
     showMessage,
     getAllAttr,
+    requiredForm,
 } from "@amec/webasset/utils";
 import { webflowSubmit, getformDetail } from "@amec/webasset/components/form";
 import {
@@ -17,6 +18,7 @@ import { doaction, showflow } from "@amec/webasset/api/webform";
 import { getIsFile } from "@amec/webasset/api/isform";
 import { downloadOrOpenFile } from "@amec/webasset/api/file";
 import { getAnnualFyear } from "@amec/webasset/api/docinv";
+import { getUser } from "@amec/webasset/api/amec";
 
 var formInfo,
     empno,
@@ -111,6 +113,8 @@ $(async function () {
             }
             const formdetail = await getformDetail(form);
             $("#form-detail").html(formdetail);
+        }else{
+            $('#form-Requester').removeClass('hidden');
         }
         // create datatable
         table = await createDataTable();
@@ -134,6 +138,35 @@ $(async function () {
         showErrorMessage(error.message);
     } 
 });
+
+$(document).on('input', '#REQUESTER', async function(){
+    try {
+        const empno = $(this).val();
+        if(empno.length == 5){
+            const data = await getUser(empno);
+        }
+        
+    } catch (error) {
+        $(this).val('');
+        console.error("Error:", error);
+        showErrorMessage(error.message);
+    }
+});
+
+$(document).on('focusout', '#REQUESTER', async function(){
+    try {
+        const empno = $(this).val();
+        if(empno.length < 5){
+            $(this).val('');
+            showMessage('Please enter 5 digit Employee Number', 'warning');
+        }
+        
+    } catch (error) {
+        console.error("Error:", error);
+        showErrorMessage(error.message);
+    }
+});
+
 
 //prettier-ignore
 $(document).on('change', '.dev-confirm', function(){
@@ -168,23 +201,32 @@ $(document).on('click', '#btnRequest', async function () {
                 COST: d.COST,
             }
         });
-        if(!isValid){
-            addClassError($('.dev-confirm[value=""]'));
-            showMessage("กรุณากรอก Development Plan ให้ครบถ้วน", 'warning');
-            return;
-        }
-        if($('#file')[0].files.length == 0){
-            addClassError($('#file'));
-            showMessage("กรุณาแนบไฟล์ Attachment Annual plan", 'warning');
-            return;
-        }
+        const requiredMessage = [
+            {element: $('#REQUESTER'), message: "Please input requester."},
+            {element: $('.dev-confirm[value=""]'), message: "Please input Development Plan."},
+            {element: $('#file'), message: "Please attach file."}
+        ];
+                
+        if(!(await requiredForm('#form', requiredMessage))) return;
+
+        // if(!isValid){
+        //     addClassError($('.dev-confirm[value=""]'));
+        //     showMessage("กรุณากรอก Development Plan ให้ครบถ้วน", 'warning');
+        //     return;
+        // }
+        
+        // if($('#file')[0].files.length == 0){
+        //     addClassError($('#file'));
+        //     showMessage("กรุณาแนบไฟล์ Attachment Annual plan", 'warning');
+        //     return;
+        // }
         const formData = new FormData($('#form')[0]);
         formData.append("NFRMNO", formInfo.nfrmno);
         formData.append("VORGNO", formInfo.vorgno);
         formData.append("CYEAR", formInfo.cyear);
         formData.append("REMARK", $('#remark').val());
-        formData.append("REQUESTER", empno);
-        formData.append("CREATEBY", empno);
+        // formData.append("REQUESTER", empno);
+        // formData.append("CREATEBY", empno);
         data.forEach((item, i) => {
             // NestJS จะมองเป็น data[0][field], data[1][field]
             Object.keys(item).forEach((key) => {
