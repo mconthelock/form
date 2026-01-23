@@ -47,6 +47,8 @@ class form extends MY_Controller{
             $data['CYEAR2']   = $_GET["y2"];
             $data['cextData'] = $this->getExtdata($form);
             $data['mode']     = $this->getMode($form);
+            $this->views('purform/PUR-CPM/view', $data);
+            exit();
         }
         $this->views('purform/PUR-CPM/form', $data);
     }

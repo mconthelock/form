@@ -1,9 +1,8 @@
 console.log("✅ view_train.js loaded");
-console.log("version =", "OMG V1.1");
+console.log("version =", "OMG V1.4");
 
 import { showFlow, redirectWebflow } from "@amec/webasset/form";
-import { doaction } from "@amec/webasset/form";
-import { createForm } from "@amec/webasset/form";
+import { doaction, createForm } from "@amec/webasset/api/webform";
 import flatpickr from "flatpickr";
 import "flatpickr/dist/flatpickr.min.css";
 import { host } from "../../utils.js";
@@ -173,6 +172,8 @@ $(document).ready(async function () {
 		}
 
 		try {
+			console.log("ACTION =>", action, typeof action);
+			console.log("EMPNO =>", formData.empno, typeof formData.empno);
 			const result = await doaction({
 				NFRMNO: String(formData.nfrmno),
 				VORGNO: String(formData.vorgno),

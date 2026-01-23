@@ -1,0 +1,329 @@
+import { doaction, redirectWebflow } from "@amec/webasset/form";
+import { host } from "../../utils";
+import {showLoader} from "@amec/webasset/preloader";
+import "select2";
+import "select2/dist/css/select2.min.css";
+import flatpickr from "flatpickr";
+//import { setDatePicker } from "@public/_flatpickr";
+import "flatpickr/dist/flatpickr.min.css";
+import { ajaxOptions, getAllAttr, getData, showMessage , requiredForm} from "@amec/webasset/utils";
+import { showflow } from "@amec/webasset/api/webform";
+$(document).ready(async function () {
+  const formData = $(".form-data").data();
+  flatpickr("#part_date", { dateFormat: "d/m/Y", defaultDate: $("#part_date").val() });
+  flatpickr("#submit_date", { dateFormat: "d/m/Y", defaultDate: $("#submit_date").val() });
+  flatpickr("#inspec_date", { dateFormat: "d/m/Y", defaultDate: $("#inspec_date").val() });
+  flatpickr("#expchg_date", { dateFormat: "d/m/Y", defaultDate: $("#expchg_date").val() });
+  function loadUsersToSelect($select,$type,$empno) {
+    $.get(
+      host + "qaform/QA-QOI/form/get_list/"+$type+"/"+$empno,
+      function (data) {
+        $select.empty().append('<option value="">------------Select------------</option>');
+        data.forEach(function (user) {
+          $select.append(
+            `<option value="${user.SEMPNO}">${user.SNAME}</option>`
+          );
+        });
+        $select.select2();
+      },
+      "json"
+    );
+  }
+  const { nfrmno, vorgno, cyear, cyear2, nrunno, empno } = formData;
+  const flow = await showflow({
+    NFRMNO:nfrmno, 
+    VORGNO: vorgno, 
+    CYEAR:  cyear.toString(),
+    CYEAR2: cyear2.toString(), 
+    NRUNNO: nrunno
+  });
+  if($("#cextData").val() == "01") loadUsersToSelect($(".jstaff_select"),'J','');
+  if($("#cextData").val() == "04") loadUsersToSelect($(".sem_select"),'S','');
+  //loadUsersToSelect($(".eng_select"),'E');
+  console.log(empno);
+  if($("#cextData").val() == "07") loadUsersToSelect($(".eng_select"),'W',empno);
+  $(".flow").html(flow.html);
+
+  $(".btn-submit").click(async function () {
+      const action = $(this).data("action");
+      checkData();
+      // console.log($("#chkopr").val() );
+      // console.log(">>>"||$("#demapv").val()||"<<<<");
+      // if($("#demapv").val()=="1")
+      // {
+      //   console.log("IF");
+      // }else{
+      //   console.log("ELSE");
+      // }
+      
+  });
+});
+
+
+
+
+$(document).on("click", ".add-row", function (e) {
+  e.preventDefault();
+  const var1 = $(this).attr("data-var1");
+  const var2 = $(this).attr("data-var2");
+  add_more(var1, var2);
+});
+
+$(document).on("click", ".reset-file", function (e) {
+  e.preventDefault();
+  const container = $(this).closest(".dvSFile");
+  container.find('input[type="file"]').val("");
+});
+
+
+$(document).on("click", ".del-table-row", function (e) {
+  const tableid =  $(this).attr("data-table");
+  const row = $(this).closest("tr");
+  const totalRows = $("#"+tableid+" tr").length;
+  console.log(totalRows);
+  if(totalRows > 1)
+  {
+    row.remove();
+  }
+});
+
+$(document).on("click", ".add-table-row", function (e) {
+  const tableid =  $(this).attr("data-table");
+  const lastRow = $("#"+tableid+" tr:last");
+  const newRow = lastRow.clone(); 
+  newRow.find("input").val("");
+  $("#"+tableid).append(newRow);
+});
+
+
+
+$(document).on("change", ".radio-result", function (e) {
+  //Result OK
+  if($(this).val() == 0)
+  {
+    $("#btn-approve").removeClass('hidden'); // แสดงปุ่ม
+    $("#btn-reject").addClass('hidden');     // ซ่อนปุ่ม
+    $("#btn-cancel").addClass('hidden');     // ซ่อนปุ่ม
+    $('#radio-acceptable').prop('checked', true);
+    
+  }else{
+    //Result NG
+    $("#btn-approve").addClass('hidden'); // แสดงปุ่ม
+    $("#btn-reject").removeClass('hidden');     // ซ่อนปุ่ม
+    $("#btn-cancel").removeClass('hidden');     // ซ่อนปุ่ม
+    $('#radio-notaccept').prop('checked', true);
+  }
+ // const tableid =  $(this).attr("data-table");
+ // const lastRow = $("#"+tableid+" tr:last");
+ // const newRow = lastRow.clone(); 
+ // newRow.find("input").val("");
+ // $("#"+tableid).append(newRow);
+});
+
+
+
+/**
+ * Delete file
+ */
+ $(document).on("click", ".del-file", async function () {
+  const nfrmno =  $(".form-data").attr("data-nfrmno");
+  const vorgno =  $(".form-data").attr("data-vorgno");
+  const cyear =  $(".form-data").attr("data-cyear");
+  const cyear2 = $(".form-data").attr("data-cyear2");
+  const nrunno = $(".form-data").attr("data-nrunno");
+  $(this).closest('.openfl').remove();
+  var itemno = $(this).closest('.openfl').attr("data-id");
+  var sfile =  $(this).closest('.openfl').attr("data-filename");
+  const data = { nfrmno : nfrmno , vorgno : vorgno , cyear : cyear , cyear2 : cyear2 , nrunno : nrunno , itemno: itemno, sfile: sfile };
+  console.log(data);
+  const resdel =  await deletefile(data);
+
+
+});
+
+function add_more(fl, dv) {
+  var div = document.createElement("DIV");
+  var str =
+    '<div class="dvSFile flex items-center justify-between gap-2 mb-2"><input type="file" name="' +
+    fl +
+    '[]" data-map="' +
+    fl +
+    '" class="file-input file-input-bordered border-blue-200 w-full" multiple> <button type="button" ';
+  str +=
+    'class="reset-file btn-square bg-red-200 hover:bg-red-300 text-red-800 rounded-md w-8 h-8 flex items-center justify-center shadow transition cursor-pointer" title="Reset file input"> ';
+  str +=
+    '<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg> </button></div>';
+  div.innerHTML = str;
+  document.getElementById(dv).appendChild(div);
+}
+
+function actionfrm(data)
+{
+ 
+  return new Promise((resolve) => {
+    $.ajax({
+      url: host + "qaform/QA-CN/form/action",
+      type: "post",
+      dataType: "json",
+      processData: false,
+      contentType: false,
+      data: data,
+      beforeSend: function () {
+        showLoader(true);
+      },
+      success: function (res) {
+        resolve(res);
+      },
+      complete: function (xhr, status) {
+        showLoader(false);
+      },
+    });
+  });
+
+}
+
+function checkData(act)
+{
+  let cextdata =  parseInt($("#cextData").val());
+  const chkopr =  $("#chkopr").val();
+  const demapv =  $("#demapv").val();
+  if(act == "saveData" || act == "sendApv")
+  {
+      let reason = $('input[name="radReason"]:checked').val();
+      let sample = $('input[name="radSample"]:checked').val();
+      if((reason == "5") && ($("#txtOther").val() == ""))
+      {
+          showMessage('Please input Reason for others', 'warning');
+          return false;
+      }
+      if((sample == "2")&&(("#txtReturn").val() == ""))
+      {
+        showMessage('Please input Return to', 'warning');
+        return false;
+      }
+      if((sample == "3")&&(("#txtOth").val() == ""))
+      {
+        showMessage('Please input Other', 'warning');
+        return false;
+      }
+
+  }else if(act == "change")
+  {
+      if($("#Foreman").val() == "")
+      {
+        showMessage('Please select Foreman', 'warning');
+        return false;
+      }
+      return true;
+  }else if(act != "")
+  {
+      if(($("#mstatus").val() == "1") && (act == "approve"))
+      {
+          if((cextdata == 6) && ($("#Operator").val() == ""))
+          {
+            showMessage('Please select Operator', 'warning');
+            return false;
+          }
+      }
+
+      const needOther =
+      ((chkopr != "1") && (cextdata >= 2 ) && (cextdata < 8 )) ||
+      (chkopr == "1" && (((cextdata >= 3) && (cextdata <= 5)) ||(cextdata == 7)));
+      if (!needOther) return true;
+      let radJudge = $('input[name="radJudge"]:checked').val();
+      if((radJudge == "2.5") && ($("#txtJdgOther1").val() == ""))
+      {
+          showMessage('Please input Judgement for Not Accept', 'warning');
+          return false;
+      }
+      if((radJudge == "4.2") && ($("#txtJdgOther2").val() == ""))
+      {
+          showMessage('Please input Judgement for Cancel', 'warning');
+          return false;
+      }
+      if(cextdata == 2)
+      {
+        if (!$('#cn-form').find('[name=radJudge]:checked').length) {
+          showMessage('Please select Judgement.', 'warning');
+          return false;
+
+        }
+        if(chkopr == "1" && act == "approve")
+        {
+            let hasOldFile = false;
+            if ($('#dvmak .openfl').length > 0) {
+                hasOldFile = true;
+             }
+            let hasNewFile = false;
+            $('input[type="file"][name="CHKFILE[]"]').each(function () {
+                if (this.files && this.files.length > 0) {
+                    hasNewFile = true;
+                }
+            });
+            if(!hasOldFile && !hasNewFile)
+            {
+              showMessage('Please attach Check Sheet.', 'warning');
+              return false;
+            }
+        }
+
+      }
+      if(cextdata == 7)
+      {
+        let count = 0;
+        while ($('#cn-form').find(`[name='radDwg${count}']`).length) {
+
+          const rad = $('#cn-form').find(`[name='radDwg${count}']`);
+          if (!rad.is(':checked')) {
+              alert("Please Check result for Drawing");
+              return false;
+          }
+          count++;
+      }
+      }
+  } // end else
+  return true;
+}
+
+/**
+ * Delete file
+ * @param {array} data
+ * @returns
+ */
+ function deletefile(data) {
+  return new Promise((resolve) => {
+    $.ajax({
+      url: host + "qaform/QA-QOI/form/delfile",
+      type: "post",
+      dataType: "json",
+      data: data,
+      beforeSend: function () {
+        showLoader(true);
+      },
+      success: function (res) {
+        resolve(res);
+      },
+      complete: function (xhr, status) {
+        showLoader(false);
+      },
+    });
+  });
+}
+
+function opendwg(dwg,rev)
+{
+    //alert("xxx"+dwg);
+  if(rev == "*")
+  {
+    rev = "0";
+  }
+  if(rev != "")
+  {
+    window.open("http://amecweb.mitsubishielevatorasia.co.th/pdmopendwg/menu_control/openfile2?dwg="+dwg+"&rev="+rev,"dwg",NOTOP_WIN_CONF);
+  }else{
+    window.open("http://amecweb.mitsubishielevatorasia.co.th/pdmopendwg/menu_control/openfile2?dwg="+dwg,"dwg",NOTOP_WIN_CONF);
+  }
+  winAtch.focus(); 
+  void(0);
+}
+

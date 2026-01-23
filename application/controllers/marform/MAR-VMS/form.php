@@ -629,6 +629,8 @@ class form extends MY_Controller{
               $id = 0;
               foreach($projno as $pj)
               {
+                 if(!empty($pj))
+                 {
                     $projname = $_POST["sprojname_".$pj];  
                     $model = $_POST["sprojmodel_".$pj];
                     $spec = $_POST["sprojspec_".$pj];
@@ -654,7 +656,8 @@ class form extends MY_Controller{
                             );
                         }
                         $i++;
-                    }   
+                    } 
+                 }
               }
               $pprojno = $_POST["prospective_project_no"];
               $pprojname = $_POST["prospective_project_name"];

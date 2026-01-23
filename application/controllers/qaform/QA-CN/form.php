@@ -1,0 +1,659 @@
+<?php
+use GuzzleHttp\Client;
+defined('BASEPATH') OR exit('No direct script access allowed');
+require_once APPPATH.'controllers/_form.php';
+require_once APPPATH . 'controllers/_file.php';
+class form extends MY_Controller{
+    use _Form, _File;
+    protected $client;
+    function __construct(){
+		parent::__construct();
+        $this->load->model('form_model', 'frm');
+        $this->load->model('user_model', 'usr');
+        $this->load->model('qaform/QA-CN/cn_model', 'cn');
+        $this->client = new Client(['verify' => false]);
+        $this->upload_path = "//amecnas/AMECWEB/File/" .($this->_servername()=='amecweb' ? 'production' : 'development') ."/Form/QA/CN/";
+    }
+
+       /**
+     * @param array $condition
+     * [
+     *     NFRMNO   => number,
+     *     VORGNO   => string,
+     *     CYEAR    => string,
+     *    VEMPNO    => string
+     * ]
+    */
+    private function getRep($condition = []){
+        try{
+            $response = $this->client->post($_ENV['APP_APIPHP'].'/rep/getRep', [
+                'json' => $condition
+            ]);
+            $result = trim($response->getBody());
+            // $result = json_decode($response->getBody(), true); 
+            return $result;
+        }catch(guzzlehttp\Exception\RequestException $e){
+            throw new Exception(json_encode(['status' => "false", 'message' => 'Failed to create form', 'e' => $e->getMessage()]), 1);
+        }catch(Exception $e){
+            throw new Exception(json_encode(['status' => "false", 'message' => 'Failed to create form', 'e' => $e]), 1);
+        }
+    }
+
+    public function main(){
+        if(isset($_GET["no"]) && $_GET["no"] != "" && isset($_GET["orgNo"]) && $_GET["orgNo"] != "" && isset($_GET["y"]) && $_GET["y"] != "" ) {
+            $data = [
+                'NFRMNO' => $_GET['no'],
+                'VORGNO' => $_GET['orgNo'],
+                'CYEAR'  => $_GET['y'],
+            ];
+
+        }else{
+            $form = $this->frm->getFormMaster('QA-CN');
+            if(!empty($form)){
+                $data = [
+                    'NFRMNO' => $form[0]->NNO,
+                    'VORGNO' => $form[0]->VORGNO,
+                    'CYEAR'  =>$form[0]->CYEAR,
+                ];
+            }
+
+        }
+        $data['empno'] = isset($_GET["empno"]) ? $_GET['empno'] : '' ; 
+        if(isset($_GET["runNo"]) && $_GET["runNo"] != "")
+        {
+            $data['return']   = false;
+            $data['NRUNNO']   = $_GET["runNo"];
+            $data['CYEAR2']   = $_GET["y2"];
+            $data['empinf']   = $this->cn->customSelect("AMEC.AEMPLOYEE",array('SEMPNO' =>  $data['empno'] ),'*');
+            $data['cextData'] = intval($this->getExtdata($data['NFRMNO'], $data['VORGNO'], $data['CYEAR'],  $data['CYEAR2'],  $data['NRUNNO'], $data['empno']));
+            $data['mode']     = $this->getMode($data['NFRMNO'],  $data['VORGNO'], $data['CYEAR'],  $data['CYEAR2'],  $data['NRUNNO'], $data['empno']);
+            $data['form']     = $this->frm->getForm($data['NFRMNO'],  $data['VORGNO'], $data['CYEAR'],  $data['CYEAR2'],  $data['NRUNNO']);
+            $data['formno'] = $this->toFormNumber($data['NFRMNO'],  $data['VORGNO'], $data['CYEAR'],  $data['CYEAR2'],  $data['NRUNNO']);
+            $data['cnform'] = $this->cn->getcnform($data['NFRMNO'],  $data['VORGNO'], $data['CYEAR'],  $data['CYEAR2'],  $data['NRUNNO'])[0];
+            $data['resultdwg'] = $this->cn->customSelect("RESULTCHKDWG",array( 'NFRMNO' => $data['NFRMNO'],'VORGNO' => $data['VORGNO'],'CYEAR'  => $data['CYEAR'],'CYEAR2' => $data['CYEAR2'],'NRUNNO' => $data['NRUNNO']),'DWGNO , REVNO , RESULT , REMARK');
+            $data['cncls'] = $this->cn->customSelect("CNCLSCHANGE",array(),'CLSNO , CLSCHANGE');
+            $data['cnreason'] = $this->cn->customSelect("CNREASON",array(),'RSNNO , REASON');
+            $data['cnjudg'] = $this->cn->customSelect("CNJUDGEMENT",array(),'JDGMNTNO , JUDGEMENT');
+            
+            $data['attdwg'] = $this->cn->customSelect("ATTCNFRM",array( 'NFRMNO' => $data['NFRMNO'],'VORGNO' => $data['VORGNO'],'CYEAR'  => $data['CYEAR'],'CYEAR2' => $data['CYEAR2'],'NRUNNO' => $data['NRUNNO'] ,'TYPENO' => '0' ),'ITEMNO , SFILE');
+            $data['attmat'] = $this->cn->customSelect("ATTCNFRM",array( 'NFRMNO' => $data['NFRMNO'],'VORGNO' => $data['VORGNO'],'CYEAR'  => $data['CYEAR'],'CYEAR2' => $data['CYEAR2'],'NRUNNO' => $data['NRUNNO'] ,'TYPENO' => '1' ),'ITEMNO , SFILE');
+            $data['attmaker'] = $this->cn->customSelect("ATTCNFRM",array( 'NFRMNO' => $data['NFRMNO'],'VORGNO' => $data['VORGNO'],'CYEAR'  => $data['CYEAR'],'CYEAR2' => $data['CYEAR2'],'NRUNNO' => $data['NRUNNO'] ,'TYPENO' => '2' ),'ITEMNO , SFILE');
+            $data['attrohs'] = $this->cn->customSelect("ATTCNFRM",array( 'NFRMNO' => $data['NFRMNO'],'VORGNO' => $data['VORGNO'],'CYEAR'  => $data['CYEAR'],'CYEAR2' => $data['CYEAR2'],'NRUNNO' => $data['NRUNNO'] ,'TYPENO' => '3' ),'ITEMNO , SFILE');
+            $data['attpur'] = $this->cn->customSelect("ATTCNFRM",array( 'NFRMNO' => $data['NFRMNO'],'VORGNO' => $data['VORGNO'],'CYEAR'  => $data['CYEAR'],'CYEAR2' => $data['CYEAR2'],'NRUNNO' => $data['NRUNNO'] ,'TYPENO' => '4' ),'ITEMNO , SFILE');
+            $data['attsubcon'] = $this->cn->customSelect("ATTCNFRM",array( 'NFRMNO' => $data['NFRMNO'],'VORGNO' => $data['VORGNO'],'CYEAR'  => $data['CYEAR'],'CYEAR2' => $data['CYEAR2'],'NRUNNO' => $data['NRUNNO'] ,'TYPENO' => '8' ),'ITEMNO , SFILE');
+            $data['attchk'] = $this->cn->customSelect("ATTCNFRM",array( 'NFRMNO' => $data['NFRMNO'],'VORGNO' => $data['VORGNO'],'CYEAR'  => $data['CYEAR'],'CYEAR2' => $data['CYEAR2'],'NRUNNO' => $data['NRUNNO'] ,'TYPENO' => '6' ),'ITEMNO , SFILE');
+            $data['attjud'] = $this->cn->customSelect("ATTCNFRM",array( 'NFRMNO' => $data['NFRMNO'],'VORGNO' => $data['VORGNO'],'CYEAR'  => $data['CYEAR'],'CYEAR2' => $data['CYEAR2'],'NRUNNO' => $data['NRUNNO'] ,'TYPENO' => '7' ),'ITEMNO , SFILE');
+            $data['chkopr'] = $this->chkopr($data['NFRMNO'],$data['VORGNO'],$data['CYEAR'],$data['CYEAR2'], $data['NRUNNO']);
+            $data['demapv'] = $this->demapv($data['NFRMNO'],$data['VORGNO'],$data['CYEAR'],$data['CYEAR2'], $data['NRUNNO']);
+            $data['jstaff'] = $this->getjstaff($data['empinf']);
+            $data['eng'] = $this->getjstaff($data['empinf']);
+            $data['foreman'] = $this->getForeman($data['empno']);
+            $data['opr'] =  $this->getOpr($data['cnform']->MSTATUS,$data['empno']);
+            $this->views('qaform/QA-CN/view', $data);
+        }
+
+
+
+    }
+
+    public function getjstaff($head)
+    {
+        if(($head[0]->SDEPCODE=="000401") && ($head[0]->SSECCODE=="00"))
+        {
+            $sql = "select SEMPNO , SNAME from AMEC.AEMPLOYEE where CSTATUS = '1' and SSECCODE = '000404' and ( SPOSCODE in ('41','42','43','40','35') or SEMPNO IN ('09019','13067')) order by sname";
+        }else if(($head[0]->SDEPCODE=="000501"))
+        {
+            if(($head[0]->SSECCODE=="00"))
+            {
+                $sql = "select SEMPNO , SNAME from AMEC.AEMPLOYEE where CSTATUS = '1' and SSECCODE = '000502' and SPOSCODE in ('40','41','42','43') order by sname";
+            }else
+            {
+                $sql = "select SEMPNO , SNAME from AMEC.AEMPLOYEE where CSTATUS = '1' and SSECCODE = '".$head[0]->SSECCODE."' and SPOSCODE in ('40','41','42','43') order by sname";
+            }
+        }else
+        {
+            $sql = "select SEMPNO , SNAME from AMEC.AEMPLOYEE where CSTATUS = '1' and SSECCODE = '000303' and SPOSCODE in ('41','42','43') order by sname";
+  
+        }
+        $data = $this->cn->getdatasql($sql);
+       return   $data;
+        // echo json_encode($data);
+    }
+    
+    public function geteng($head)
+    {
+        if(($head[0]->SDEPCODE=="000401") && ($head[0]->SSECCODE=="00"))
+        {
+            $sql = "select SEMPNO , SNAME from AMEC.AEMPLOYEE where CSTATUS = '1' and SSECCODE = '000404' and SPOSCODE in ('35','40') order by sname";
+        }else if(($head[0]->SDEPCODE=="000501"))
+        {
+            if(($head[0]->SSECCODE=="00"))
+            {
+                $sql = "select SEMPNO , SNAME from AMEC.AEMPLOYEE where CSTATUS = '1' and SSECCODE = '000502' and SPOSCODE in ('35','40')  order by sname";
+            }else
+            {
+                $sql = "select SEMPNO , SNAME from AMEC.AEMPLOYEE where CSTATUS = '1' and SSECCODE = '".$head[0]->SSECCODE."' and SPOSCODE in ('35','40') order by sname";
+            }
+        }else
+        {
+            $sql = "select SEMPNO , SNAME from AMEC.AEMPLOYEE where CSTATUS = '1' and SSECCODE = '000303' and SPOSCODE in ('35','40')  order by sname";
+        }
+        $data = $this->cn->getdatasql($sql);
+        //echo json_encode($data);
+        return   $data;
+    }
+
+    public function getForeman($emp)
+    {
+        $sql = "select DISTINCT SEMPNO , SNAME from AMEC.AEMPLOYEE , CNSHOPPIC where CSTATUS = '1' and SEMPNO = FM and SEMPNO <> ".$emp." order by SNAME";
+        $data = $this->cn->getdatasql($sql);
+       // echo json_encode($data);
+       return   $data;
+    }
+
+    public function getOpr($mstauts,$headno)
+    {
+        if(!is_null($mstauts))
+        {
+            $sql = "select SEMPNO , SNAME from AMEC.AEMPLOYEE , SEQUENCEORG where SEMPNO = EMPNO and HEADNO ='".$headno."' and CSTATUS = '1' and SEMPNO in ('08181','15141','15254','13165','14252','15196','11297','06011','13268','06191','08418','14073','14354','15085','16018') ";
+        }else{
+            $sql = "select SEMPNO , SNAME from AMEC.AEMPLOYEE where CSTATUS = '1' and SSECCODE = '000404' and SPOSCODE in ('61') order by SNAME";
+        }
+        $data = $this->cn->getdatasql($sql);
+       // echo json_encode($data);
+       return   $data;
+    }
+    
+    public function action()
+    {
+        $action = $_POST["action"];
+        $cextData = intval($_POST["cextData"]);
+        $apvno =  $_POST["empno"];
+        $nfrmno = $_POST["nfrmno"];
+        $vorgno = $_POST["vorgno"];
+        $cyear =  $_POST["cyear"];
+        $cyear2 = $_POST["cyear2"];
+        $nrunno = $_POST["nrunno"];
+        $form  = ['NFRMNO' => $nfrmno,
+                  'VORGNO' => $vorgno,
+                  'CYEAR'  => $cyear,
+                  'CYEAR2' => $cyear2,
+                  'NRUNNO' => $nrunno
+         ];
+         if (isset($_POST['selJInchrg']) || $_POST['selJInchrg'] != '') {
+            $rep = $this->getRep(array('NFRMNO' =>  $nfrmno , 'VORGNO' => $vorgno , 'CYEAR' => $cyear , 'VEMPNO' => $_POST['selJInchrg']));
+            $dataapv = [
+                    'VAPVNO' => $_POST['selJInchrg'],
+                    'VREPNO' => $rep
+            ];
+            $form["CEXTDATA"] = '02';
+            $this->cn->update("FLOW",  $dataapv , $form);
+        }
+        if (isset($_POST['selEInchrg']) || $_POST['selEInchrg'] != '') {
+            $rep = $this->getRep(array('NFRMNO' =>  $nfrmno , 'VORGNO' => $vorgno , 'CYEAR' => $cyear , 'VEMPNO' => $_POST['selEInchrg']));
+            $dataapv = [
+                    'VAPVNO' => $_POST['selEInchrg'],
+                    'VREPNO' => $rep
+            ];
+            $form["CEXTDATA"] = '02';
+            $this->cn->update("FLOW",  $dataapv , $form);
+        }
+        if (isset($_POST['Operator']) || $_POST['Operator'] != ''){
+            $rep = $this->getRep(array('NFRMNO' =>  $nfrmno , 'VORGNO' => $vorgno , 'CYEAR' => $cyear , 'VEMPNO' => $_POST['Operator']));
+            $dataapv = [
+                    'VAPVNO' => $_POST['Operator'],
+                    'VREPNO' => $rep
+            ];
+            $form["CEXTDATA"] = '07';
+            $this->cn->update("FLOW",  $dataapv , $form);
+        }
+        if(($cextData >= 2) && ($cextData >= 8))
+        {
+            $data = array(
+                'JDGMNTNO' => $_POST["radJudge"],
+                'CLSNO'    => 
+            );
+
+        }
+    
+
+        try{
+            $status = false;
+            $message = '';
+            if($action == "approve")
+            {
+                if($cextData == "01")
+                {
+                    $jstaff = $_POST["jstaff"];
+                    //$enginc = $_POST["enginc"];
+                    $dataflow =  [
+                        [ 'CSTEPNO' => '57', 'apv' => $jstaff], //jstaff
+                    ];
+                    $fstatus = $this->updateFlowApv($form , $dataflow);
+                    $status = $fstatus['status'];
+                }else if($cextData == "02")
+                {
+                    $delstep =  [
+                        [ 'CSTEPNO' => '88', 'CSTEPNEXTNO' => '26'],
+                        [ 'CSTEPNO' => '26', 'CSTEPNEXTNO' => '89'],
+                        [ 'CSTEPNO' => '89', 'CSTEPNEXTNO' => '81'],
+                        [ 'CSTEPNO' => '81', 'CSTEPNEXTNO' => '84'],
+                        [ 'CSTEPNO' => '84', 'CSTEPNEXTNO' => '12'],
+                        [ 'CSTEPNO' => '12', 'CSTEPNEXTNO' => '14'],
+                        [ 'CSTEPNO' => '14', 'CSTEPNEXTNO' => '00'],
+                    ];
+                    $this->deleteFlowStep($delstep, $_POST["nfrmno"], $_POST["vorgno"], $_POST["cyear"],  $_POST["cyear2"], $_POST["nrunno"]);
+                    $status = $this->updateconcern();
+                }else{
+                    $status = true;
+                }
+            }else if($action == "reject")
+            {
+                $q = "update FLOW set CSTEPST = '6' , CAPVSTNO = '2' where NFRMNO = '".$_POST["nfrmno"]."' AND VORGNO = '".$_POST["vorgno"]."' and CYEAR = '".$_POST["cyear"]."' and CYEAR2 = '".$_POST["cyear2"]."' and NRUNNO = '".$_POST["nrunno"]."' and VAPVNO = '".$apvno."' and CEXTDATA = '".$cextData."'";
+                $this->qoi->execsql($q);
+                if($cextData == "02")
+                {
+                    $status = $this->updateconcern();
+                }else if($cextData == "04")
+                {
+                    $status = true;
+                    if(isset($_POST["seminc"]))
+                    {
+                        $dataflow =  [
+                            [ 'CSTEPNO' => '88', 'apv' => $_POST["seminc"]], //sem inc
+                            [ 'CSTEPNO' => '89', 'apv' => $_POST["seminc"]]
+                        ];
+    
+                        $fstatus  = $this->updateFlowApv($form , $dataflow);
+                        $status = $fstatus['status'];
+                    }
+            
+                }else if($cextData == "07"){
+                    $dataflow =  [
+                        [ 'CSTEPNO' => '26', 'apv' => $_POST["enginc"]], //eng inc
+
+                    ];
+                    $fstatus  = $this->updateFlowApv($form , $dataflow);
+                    $status = $fstatus['status'];
+
+                }else if($cextData == "08")
+                {
+                    $status = $this->updateQOR();
+                }else if($cextData == "11")
+                {
+                    $status = $this->updateQE();
+                }else
+                {
+                    $status = true;
+                }
+            }else if($action == "cancel")
+            {
+                $q = "update FLOW set CSTEPST = '6' , CAPVSTNO = '2' where NFRMNO = '".$_POST["nfrmno"]."' AND VORGNO = '".$_POST["vorgno"]."' and CYEAR = '".$_POST["cyear"]."' and CYEAR2 = '".$_POST["cyear2"]."' and NRUNNO = '".$_POST["nrunno"]."' and VAPVNO = '".$apvno."' and CEXTDATA = '".$cextData."'";
+                $this->qoi->execsql($q);
+                $delstep =  [
+                    [ 'CSTEPNO' => '88', 'CSTEPNEXTNO' => '26'],
+                    [ 'CSTEPNO' => '26', 'CSTEPNEXTNO' => '89'],
+                    [ 'CSTEPNO' => '89', 'CSTEPNEXTNO' => '81'],
+                    [ 'CSTEPNO' => '81', 'CSTEPNEXTNO' => '84'],
+                    [ 'CSTEPNO' => '84', 'CSTEPNEXTNO' => '12'],
+                    [ 'CSTEPNO' => '12', 'CSTEPNEXTNO' => '14'],
+                    [ 'CSTEPNO' => '14', 'CSTEPNEXTNO' => '00'],
+                ];
+                $this->deleteFlowStep($delstep, $_POST["nfrmno"], $_POST["vorgno"], $_POST["cyear"],  $_POST["cyear2"], $_POST["nrunno"]);
+                $status = $this->updateconcern();
+            }else if($action == "save")
+            {
+                $status =  $this->updaterequest();
+
+            }else if($action == "request")
+            {
+                $status =  $this->updaterequest();
+                $q = "update form set cst='1' where NFRMNO = '".$_POST["nfrmno"]."' AND VORGNO = '".$_POST["vorgno"]."' and CYEAR = '".$_POST["cyear"]."' and CYEAR2 = '".$_POST["cyear2"]."' and NRUNNO = '".$_POST["nrunno"]."'"; 
+                $this->qoi->execsql($q);
+                $q = "update flow set DAPVDATE = to_date('".date('d/m/Y')."','dd/MM/yyyy') , CAPVTIME = '".date('H:i:s')."' where NFRMNO = '".$_POST["nfrmno"]."' AND VORGNO = '".$_POST["vorgno"]."' and CYEAR = '".$_POST["cyear"]."' and CYEAR2 = '".$_POST["cyear2"]."' and NRUNNO = '".$_POST["nrunno"]."' and CSTEPNO = '--'"; 
+                $this->qoi->execsql($q);
+            }
+        }catch ( Exception $e) {
+            $status = false;
+            $message = "Failed to save data.";
+        } finally {
+            $res = [
+                'status' => $status,
+                'message' => $message
+            ];
+            echo json_encode($res);
+        }
+
+    }
+    
+    
+    
+    
+    
+    private function updaterequest()
+    {
+        $con = [
+            'NFRMNO' => $_POST["nfrmno"],
+            'VORGNO' => $_POST["vorgno"],
+            'CYEAR'  => $_POST["cyear"],
+            'CYEAR2' => $_POST["cyear2"],
+            'NRUNNO' => $_POST["nrunno"]
+        ];
+        $dataqoi = [
+            'TITLE'     => $_POST["title"],
+            'ITEMNO'    => $_POST["itemno"],
+            'PRTNAME'   => $_POST["prtname"],
+            'PURITEM'   => $_POST["puritem"],
+            'SVENDNAME' => $_POST["svendname"],
+            'INSPECDATE' => $_POST["request_date"],
+            'EXPCHGDATE' => $_POST["expect_date"]
+        ];
+        $this->qoi->update("QOIFORM", $dataqoi , $con);
+        $dwg = $_POST["dwgno"];
+        $arrdwg = array();
+        $i = 0;
+        foreach($dwg as $d)
+        {
+            if($d <> "")
+            {
+                $arrdwg[] = array(
+                    'NFRMNO' => $con["NFRMNO"],
+                    'VORGNO' => $con["VORGNO"],
+                    'CYEAR'  => $con["CYEAR"],
+                    'CYEAR2' => $con["CYEAR2"],
+                    'NRUNNO' => $con["NRUNNO"],
+                    "DWGNO" => $d
+                );
+            }
+            $i++;
+        }
+        $this->qoi->delete("RESULTQOIDWG", $con);
+        $this->qoi->insert_batch("RESULTQOIDWG",$arrdwg);
+        $path = $this->upload_path.$con["NFRMNO"]."_".$con["VORGNO"]."_".$con["CYEAR"]."_".$con["CYEAR2"]."_".$con["NRUNNO"];
+        if (!is_dir($path))
+        {
+            mkdir($path, 0777, true);
+        }
+        $upfile =  $this->uploadMultiFile($_FILES, ['DWGFILE','SPECFILE'], $path);
+        $fid = $this->qoi->generate_attfile_id($con["NFRMNO"],$con["VORGNO"],$con["CYEAR"],$con["CYEAR2"],$con["NRUNNO"]);
+        $datadwgfile = array();
+        foreach ($upfile["files"] as $fileType => $fileArray) {
+         foreach ($fileArray as $file) {
+             $datadwgfile[] = array
+             (
+                'NFRMNO' => $con["NFRMNO"],
+                'VORGNO' => $con["VORGNO"],
+                'CYEAR'  => $con["CYEAR"],
+                'CYEAR2' => $con["CYEAR2"],
+                'NRUNNO' => $con["NRUNNO"],
+                'ITEMNO' => $fid,
+                'TYPENO' => ($fileType == "DWGFILE"? "0":($fileType == "SPECFILE"? "1":($fileType == "SHEETFILE"? "2":($fileType == "NGFILE"? "3":"")))),
+                'SFILE'  => $file['file_name'],
+                'SEMPNO' => $_POST["empno"]
+             );
+             $fid++;
+         }
+         }
+         if(count($datadwgfile) > 0)
+         {
+             $this->qoi->insert_batch("ATTQOIFRM",$datadwgfile);
+         }
+         return true;
+    }
+
+    private function updateconcern()
+    {
+
+        $con = [
+            'NFRMNO' => $_POST["nfrmno"],
+            'VORGNO' => $_POST["vorgno"],
+            'CYEAR'  => $_POST["cyear"],
+            'CYEAR2' => $_POST["cyear2"],
+            'NRUNNO' => $_POST["nrunno"]
+        ];
+        $dataqoi = [
+            'TITLE'     => $_POST["title"],
+            'ITEMNO'    => $_POST["itemno"],
+            'PRTNAME'   => $_POST["prtname"],
+            'PURITEM'   => $_POST["puritem"],
+            'SVENDNAME' => $_POST["svendname"],
+            'INSPECDATE' => $_POST["request_date"],
+            'EXPCHGDATE' => $_POST["expect_date"],
+            'JDGMNTNO'   => isset($_POST["judgement"]) ? $_POST["judgement"] : ""
+        ];
+        $this->qoi->update("QOIFORM", $dataqoi , $con);
+        $dwg = $_POST["dwgno"];
+        $result = $_POST["result"];
+        $dwgrem = $_POST["dwgrem"];
+        $arrdwg = array();
+        $i = 0;
+        foreach($dwg as $d)
+        {
+            if($d <> "")
+            {
+                $arrdwg[] = array(
+                    'NFRMNO' => $con["NFRMNO"],
+                    'VORGNO' => $con["VORGNO"],
+                    'CYEAR'  => $con["CYEAR"],
+                    'CYEAR2' => $con["CYEAR2"],
+                    'NRUNNO' => $con["NRUNNO"],
+                    "DWGNO" => $d,
+                    "RESULT" => $result[$i],
+                    "REMARK" => $dwgrem[$i]
+                );
+            }
+
+            $i++;
+        }
+        $path = $this->upload_path.$con["NFRMNO"]."_".$con["VORGNO"]."_".$con["CYEAR"]."_".$con["CYEAR2"]."_".$con["NRUNNO"];
+        if (!is_dir($path))
+        {
+            mkdir($path, 0777, true);
+        }
+        $upfile =  $this->uploadMultiFile($_FILES, ['DWGFILE','SPECFILE','SHEETFILE','NGFILE'], $path);
+        $fid = $this->qoi->generate_attfile_id($con["NFRMNO"],$con["VORGNO"],$con["CYEAR"],$con["CYEAR2"],$con["NRUNNO"]);
+        $datadwgfile = array();
+        foreach ($upfile["files"] as $fileType => $fileArray) {
+         foreach ($fileArray as $file) {
+             $datadwgfile[] = array
+             (
+                'NFRMNO' => $con["NFRMNO"],
+                'VORGNO' => $con["VORGNO"],
+                'CYEAR'  => $con["CYEAR"],
+                'CYEAR2' => $con["CYEAR2"],
+                'NRUNNO' => $con["NRUNNO"],
+                'ITEMNO' => $fid,
+                'TYPENO' => ($fileType == "DWGFILE"? "0":($fileType == "SPECFILE"? "1":($fileType == "SHEETFILE"? "2":($fileType == "NGFILE"? "3":"")))),
+                'SFILE'  => $file['file_name'],
+                'SEMPNO' => $_POST["empno"]
+             );
+             $fid++;
+         }
+
+         }
+         if(count($arrdwg) > 0)
+         {
+             $this->qoi->delete("RESULTQOIDWG", $con);
+             $this->qoi->insert_batch("RESULTQOIDWG",$arrdwg);
+         }
+         if(count($datadwgfile) > 0)
+         {
+             $this->qoi->insert_batch("ATTQOIFRM",$datadwgfile);
+         }
+         return true;
+    }
+
+    private function updateQOR()
+    {
+        $nfrmno = $_POST["nfrmno"];
+        $vorgno = $_POST["vorgno"];
+        $cyear = $_POST["cyear"];
+        $cyear2 = $_POST["cyear2"];
+        $nrunno = $_POST["nrunno"];
+        $m_action = $_POST["m_action"];
+        $m_due_date = $_POST["m_due_date"];
+        $m_in_charge = $_POST["m_in_charge"];
+        $c_action = $_POST["c_action"];
+        $c_due_date = $_POST["c_due_date"];
+        $c_in_charge = $_POST["c_in_charge"];
+        $dataqor = array();
+        $i=0;
+        $qid = 1;
+        foreach($m_action as $m)
+        {
+            if(($m <> "")&&($m_due_date[$i] <> "")&&($m_in_charge[$i] <> ""))
+            {
+                $dataqor[] = array(
+                    'CYEAR2' => $cyear2,
+                    'NRUNNO' => $nrunno,
+                    'TYPENO' => 'M',
+                    'QID'    => $qid,
+                    'QACTION' => $m,
+                    'QDUEDATE' => $m_due_date[$i],
+                    'QINCHARGE' => $m_in_charge[$i]
+                );
+                $qid++;
+            }
+        }
+        $i=0;
+        foreach($c_action as $c)
+        {
+            if(($c <> "")&&($c_due_date[$i] <> "")&&($c_in_charge[$i] <> ""))
+            {
+                $dataqor[] = array(
+                    'CYEAR2' => $cyear2,
+                    'NRUNNO' => $nrunno,
+                    'TYPENO' => 'C',
+                    'QID'    => $qid,
+                    'QACTION' => $c,
+                    'QDUEDATE' => $c_due_date[$i],
+                    'QINCHARGE' => $c_in_charge[$i]
+                );
+                $qid++;
+            }
+        }
+        if(count($dataqor) > 0)
+        {
+            $this->qoi->delete("QOI_QOR", array('CYEAR2' => $cyear2,'NRUNNO' => $nrunno));
+            $this->qoi->insert_batch("QOI_QOR",$dataqor);
+        }
+        $path = $this->upload_path.$nfrmno."_".$vorgno."_".$cyear."_".$cyear2."_".$nrunno;
+        if (!is_dir($path))
+        {
+            mkdir($path, 0777, true);
+        }
+        $upfile =  $this->uploadMultiFile($_FILES, ['MEASUREFILE','CORRECTFILE'], $path);
+        $fid = $this->qoi->generate_attfile_id($nfrmno,$vorgno,$cyear,$cyear2,$nrunno);
+        $dataqorfile = array();
+        foreach ($upfile["files"] as $fileType => $fileArray) {
+         foreach ($fileArray as $file) {
+             $dataqorfile[] = array
+             (
+                'NFRMNO' => $nfrmno,
+                'VORGNO' => $vorgno,
+                'CYEAR'  => $cyear,
+                'CYEAR2' => $cyear2,
+                'NRUNNO' => $nrunno,
+                'ITEMNO' => $fid,
+                'TYPENO' => ($fileType == "MEASUREFILE"? "4":($fileType == "CORRECTFILE"? "5":"")),
+                'SFILE'  => $file['file_name'],
+                'SEMPNO' => $_POST["empno"]
+             );
+             $fid++;
+         }
+         }
+         if(count($dataqorfile) > 0)
+         {
+             $this->qoi->insert_batch("ATTQOIFRM",$dataqorfile);
+         }
+        return true;
+    }
+
+    private function updateQE()
+    {
+        $nfrmno = $_POST["nfrmno"];
+        $vorgno = $_POST["vorgno"];
+        $cyear = $_POST["cyear"];
+        $cyear2 = $_POST["cyear2"];
+        $nrunno = $_POST["nrunno"];
+        $qe_option = $_POST["qe_option"];
+        $con = array(
+            'CYEAR2' => $cyear2,
+            'NRUNNO' => $nrunno
+        );
+        $dataqe = array(
+            'QECHECK' => $qe_option,
+            'RQCN'    => ($qe_option == "1" ? ($_POST["rq_no"] ?? "") : ($qe_option == "2" ? ($_POST["cn_no"] ?? "") : ""))
+        );
+        $this->qoi->update("QOIFORM", $dataqe , $con);
+        $path = $this->upload_path.$nfrmno."_".$vorgno."_".$cyear."_".$cyear2."_".$nrunno;
+        if (!is_dir($path))
+        {
+            mkdir($path, 0777, true);
+        }
+        $upfile =  $this->uploadMultiFile($_FILES, ['QEFILE'], $path);
+        $fid = $this->qoi->generate_attfile_id($nfrmno,$vorgno,$cyear,$cyear2,$nrunno);
+        $dataqefile = array();
+        foreach ($upfile["files"] as $fileType => $fileArray) {
+         foreach ($fileArray as $file) {
+             $dataqefile[] = array
+             (
+                'NFRMNO' => $nfrmno,
+                'VORGNO' => $vorgno,
+                'CYEAR'  => $cyear,
+                'CYEAR2' => $cyear2,
+                'NRUNNO' => $nrunno,
+                'ITEMNO' => $fid,
+                'TYPENO' => '6',
+                'SFILE'  => $file['file_name'],
+                'SEMPNO' => $_POST["empno"]
+             );
+             $fid++;
+         }
+         }
+        if(count($dataqefile) > 0)
+        {
+            $this->qoi->insert_batch("ATTQOIFRM",$dataqefile);
+        }
+       return true;
+    }
+
+    public function delfile()
+    {
+        $path = $this->upload_path.$_POST["nfrmno"]."_".$_POST["vorgno"]."_".$_POST["cyear"]."_".$_POST["cyear2"]."_".$_POST["nrunno"]."/";
+        $itemno = $_POST['itemno'];
+        $sfile = $_POST['sfile'];
+        $this->deleteFile($sfile,$path);
+        $this->qoi->trans_start();
+        $delfn = $this->qoi->delete("ATTQOIFRM","CYEAR2 ='".$_POST["cyear2"]."' AND NRUNNO = '".$_POST["nrunno"]."' AND ITEMNO = '".$itemno."' AND SFILE = '".$sfile."'");
+        $this->qoi->trans_complete();
+        $res = [
+            'status' => $delfn,
+            'message' => ""
+        ];
+        echo json_encode($res);
+    }
+
+    public function mdownload($fd,$file,$ofile)
+    {
+        $path = $this->upload_path.$fd;
+        $this->downloadFile($ofile,$file,$path);
+
+    }
+
+    private function chkopr($nfrmno,$vorgno,$cyear,$cyear2,$nrunno)
+    {
+        $rs = $this->cn->customSelect("FLOW",array( 'NFRMNO' => $nfrmno,'VORGNO' => $vorgno,'CYEAR'  => $cyear,'CYEAR2' => $cyear2,'NRUNNO' => $nrunno ,'CEXTDATA' => '07' ),'');
+        return count($rs) > 0;
+    }
+
+    private function demapv($nfrmno,$vorgno,$cyear,$cyear2,$nrunno)
+    {
+        $rs = $this->cn->customSelect("FLOW",array( 'NFRMNO' => $nfrmno,'VORGNO' => $vorgno,'CYEAR'  => $cyear,'CYEAR2' => $cyear2,'NRUNNO' => $nrunno ,'CEXTDATA' => '04' , "CSTEPST IN ('1','2','3')" => null ),'');
+        return count($rs) > 0;
+    }
+
+    
+
+
+}

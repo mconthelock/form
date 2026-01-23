@@ -4,17 +4,41 @@
 <div class="hidden form-info" nfrmno="{{$NFRMNO}}" vorgno="{{$VORGNO}}" cyear="{{$CYEAR}}" mode="{{$mode}}"
     cyear2={{$mode !=1 ? $CYEAR2 : '' }} nrunno={{$mode !=1 ? $NRUNNO : '' }}></div>
 <div class="hidden apv-data" empno="{{$empno}}"></div>
+@If($mode == 1)
+<form id="form" action="">
+@endIf
 <div class="flex flex-col w-full px-4 my-5 font-sans">
     <div class="card bg-base-100 w-full lg:w-[70rem] place-self-center shadow-sm">
         <div class="card-body p-6 lg:p-10">
-            <h2 class="card-title justify-center">
-                <u class="text-3xl text-primary font-bold mb-5">Annual Development Plan FY <span
-                        class="fyear"></span></u>
+            <h2 class="card-title justify-center items-start">
+                <u class="text-3xl text-primary font-bold mb-5">Annual Development Plan FY 
+                    @if($mode != 1)
+                    <span class="fyear"></span>
+                    @endIf
+                </u>
+                @If($mode == 1)
+                <input type="text" name="fyear" id="fyear" maxlength="4" class="input w-16">
+                @endIf
             </h2>
             <div class="absolute right-10 top-10 ml-auto px-2 font-bold text-2xl text-error border-3 border-error">
                 CONFIDENTAIL</div>
             <div id="detail" class="flex flex-col gap-5">
                 <div id="form-detail"></div>
+                <section id="form-Requester" class="flex flex-col gap-5 hidden w-2xs">
+                    <fieldset class="flex justify-between gap-3">
+                        <span class="text-lg font-bold">Input by</span>
+                        <label>
+                            <input type="text" name="CREATEBY" id="CREATEBY" class="input input-sm w-40" value="{{ $empno }}" readonly>
+                        </label>
+                    </fieldset>
+                    <fieldset class="flex justify-between gap-3">
+                        <span class="text-lg font-bold">Request by</span>
+                        <label>
+                            <input type="text" name="REQUESTER" id="REQUESTER"  maxlength="5"  class="input input-sm w-40 req">
+                        </label>
+                    </fieldset>
+                </section>
+                <div class="divider"></div>
                 <div class="detail-topic">
                     <u class="text-xl font-bold">1. FY<span class="fyear"></span> Development policy</u>
                 </div>
@@ -60,12 +84,12 @@
                     </table>
                 </div>
                 @If($mode == 1)
-                <form id="form" action="" class="rounded-xl border bg-base-200 p-5 w-96">
-                    <label for="file" class="font-bold text-xl">Attachment Annual plan <span
-                            class="text-error">*</span></label>
-                    <input type="file" name="file" id="file" class="file-input mt-3 req"
-                        accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel">
-                </form>
+                    <div  class="rounded-xl border bg-base-200 p-5 w-96">
+                        <label for="file" class="font-bold text-xl">Attachment Annual plan <span
+                                class="text-error">*</span></label>
+                        <input type="file" name="file" id="file" class="file-input mt-3 req"
+                            accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel">
+                    </div>
                 @else
                 <div class="rounded-xl border bg-base-200 p-5 min-w-96 w-fit max-w-full mb-8">
                     <label class="font-bold text-xl">Attachment Annual plan </label>
@@ -77,6 +101,9 @@
         </div>
     </div>
 </div>
+@If($mode == 1)
+</form>
+@endIf
 @endsection
 
 @section('scripts')
