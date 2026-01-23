@@ -278,9 +278,9 @@ class Training_model extends CI_Model
         return  $this->db->query($query)->result();
     }
 
-    function get_3month_train_report($frmno, $orgno, $cyear, $cyear2){
+    function get_3month_train_report($frmno, $orgno, $cyear){
         $query = "SELECT * FROM FLOW
-            WHERE NFRMNO = ".$frmno." AND VORGNO = '".$orgno."' AND CYEAR = '".$cyear."' AND CYEAR2 = '".$cyear2."'
+            WHERE NFRMNO = ".$frmno." AND VORGNO = '".$orgno."' AND CYEAR = '".$cyear."' 
             AND CEXTDATA = '01' AND TO_CHAR(ADD_MONTHS(DAPVDATE, 3),'MM/DD/YYYY') = TO_CHAR(SYSDATE, 'MM/DD/YYYY')
             ORDER BY CYEAR2, NRUNNO
         ";
