@@ -154,12 +154,12 @@
                                     <input type="text" name="PONO" id="PONO" class="input input-sm w-full" placeholder="AMEC00440693">
                                 </label>
                             </fieldset>
-                            <fieldset class="gap-9">
+                            {{-- <fieldset class="gap-9">
                                 <span>P/O sign by</span>
                                 <label>
                                     <input type="text" name="PO_SIGNBY" id="PO_SIGNBY" class="input input-sm w-full">
                                 </label>
-                            </fieldset>
+                            </fieldset> --}}
                         </div>
                         <div class="flex flex-col gap-2 w-1/2">
                             <fieldset class="gap-11">
@@ -174,15 +174,15 @@
                                     <input type="number" step="1" min="0" name="TOTAL_AMOUNT" id="TOTAL_AMOUNT" class="input input-sm w-full" placeholder="47,300.00">
                                 </label>
                             </fieldset>
-                            <fieldset class="gap-24">
+                            {{-- <fieldset class="gap-24">
                                 <span>DATE : </span>
                                 <label>
                                     <input type="date" name="PO_SIGNDATE" id="PO_SIGNDATE" class="input input-sm w-full fdate" placeholder="2026-01-19">
                                 </label>
-                            </fieldset>
+                            </fieldset> --}}
                         </div>
                     </div>
-                    <fieldset class="gap-4">
+                    {{-- <fieldset class="gap-4">
                         <label>
                             <input type="radio" name="FORM_TYPE" value="Print out Documents or E-mail" class="radio radio-xs">
                             Print out Documents or E-mail
@@ -191,7 +191,7 @@
                             <input type="radio" name="FORM_TYPE" value="Electronic Form (SCM)" class="radio radio-xs">
                             Electronic Form (SCM)
                         </label>
-                    </fieldset>
+                    </fieldset> --}}
                 </section>
                 <div class="divider"></div>
                 <section id="section-4">

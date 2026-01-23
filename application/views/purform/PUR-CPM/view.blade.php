@@ -163,10 +163,10 @@
                                 <span>PR/PO No.</span>
                                 <div id="PONO" class="subject-text"></div>
                             </fieldset>
-                            <fieldset class="gap-9">
+                            {{-- <fieldset class="gap-9">
                                 <span>P/O sign by</span>
                                 <div id="PO_SIGNBY" class="subject-text"></div>
-                            </fieldset>
+                            </fieldset> --}}
                         </div>
                         <div class="flex flex-col gap-2 w-1/2">
                             <fieldset class="gap-11">
@@ -177,13 +177,13 @@
                                 <span>Total Amount (THB)</span>
                                 <div id="TOTAL_AMOUNT" class="subject-text"></div>
                             </fieldset>
-                            <fieldset class="gap-24">
+                            {{-- <fieldset class="gap-24">
                                 <span>DATE : </span>
                                 <div id="PO_SIGNDATE" class="subject-text"></div>
-                            </fieldset>
+                            </fieldset> --}}
                         </div>
                     </div>
-                    <fieldset class="gap-4">
+                    {{-- <fieldset class="gap-4">
                         <label>
                             <input type="radio" name="FORM_TYPE" value="Print out Documents or E-mail"
                                 class="radio radio-xs" disabled>
@@ -194,7 +194,7 @@
                                 disabled>
                             Electronic Form (SCM)
                         </label>
-                    </fieldset>
+                    </fieldset> --}}
                 </section>
                 <div class="divider"></div>
                 <section id="section-4">

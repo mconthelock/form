@@ -439,11 +439,11 @@ async function setView(flow) {
         $('#ACCEPT_OTHER').text(data.ACCEPT_OTHER || '-');
         $('#QUOTATION').text(data.QUOTATION || '-');
         $('#PONO').text(data.PONO || '-');
-        $('#PO_SIGNBY').text(data.PO_SIGNBY || '-');
+        // $('#PO_SIGNBY').text(data.PO_SIGNBY || '-');
         $('#QUOTATION_DATE').text(data.QUOTATION_DATE ? formatDate(data.QUOTATION_DATE) : '-');
         $('#TOTAL_AMOUNT').text(data.TOTAL_AMOUNT || '0');
-        $('#PO_SIGNDATE').text(data.PO_SIGNDATE ? formatDate(data.PO_SIGNDATE) : '-');
-        $('input[name="FORM_TYPE"][value="' + data.FORM_TYPE + '"]').prop("checked",true,);
+        // $('#PO_SIGNDATE').text(data.PO_SIGNDATE ? formatDate(data.PO_SIGNDATE) : '-');
+        // $('input[name="FORM_TYPE"][value="' + data.FORM_TYPE + '"]').prop("checked",true,);
         $('#INVOICE_NO').text(data.INVOICE_NO || '-');
         $('#INVOICE_AMOUNT').text(data.INVOICE_AMOUNT || '0');
         $('#PERSON_INCHARGE').text(data.PERSON_INCHARGE || '-');
