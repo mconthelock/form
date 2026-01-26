@@ -174,6 +174,7 @@ class form extends MY_Controller{
         $cyear =  $_POST["cyear"];
         $cyear2 = $_POST["cyear2"];
         $nrunno = $_POST["nrunno"];
+     
         $form  = ['NFRMNO' => $nfrmno,
                   'VORGNO' => $vorgno,
                   'CYEAR'  => $cyear,
@@ -210,7 +211,7 @@ class form extends MY_Controller{
                 $form["CEXTDATA"] = '07';
                 $this->cn->update("FLOW",  $dataapv , $form);
             }
-            if(($cextData >= 2) && ($cextData >= 8))
+            if(($cextData >= 2) && ($cextData < 8))
             {
                 unset($form["CEXTDATA"]);
                 $this->updaterequest($form);
