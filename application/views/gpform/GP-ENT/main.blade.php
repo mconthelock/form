@@ -55,7 +55,7 @@
                             *Require "Memorandum" get approve by RAF DIM/President, In case of use budget for buying gift to guest (Refer to RAF-PR-G-068-M-Entertainment on topic no.4,no.4.6)
                         </div>
                         <div class="mt-2 text-sm font-bold text-blue-600">
-                            Download file: <a href="{{ base_url('assets/files/Special_Form_for_Request_Entertainment.pdf') }}" target="_blank" class="underline hover:text-blue-800">Special Form for Request Entertainment.pdf</a>
+                            Download file: <a href="{{ base_url('assets/files/Special_Form_for_Request_Entertainment.pdf') }}" download class="underline hover:text-blue-800">Special Form for Request Entertainment.pdf</a>
                         </div>
                     </div>
                 </div>
@@ -194,7 +194,7 @@
                         <thead class="bg-blue-800 text-white text-center text-xs rounded-t-xl">
                             <tr class="text-center">
                                 <th>#</th>
-                                <th class="border-blue-100">Guest Type</th>
+                                <th class="border-blue-100 w-64">Guest Type</th>
                                 <th class="border-blue-100" colspan="2">Participant / Number</th>
                                 <th class="border-blue-100" colspan="3">Meal expense for guest (Baht / Person / Time)</th>
                             </tr>
@@ -202,8 +202,8 @@
                         <tbody class="bg-amber-50">
                             @foreach ($guest_type as $gt)
                                 <tr>
-                                    <td><input type="radio" name="guest_type" class="checkbox bg-white checkbox-primary guest_type" value="{{ $gt->GT_ID }}"></td>
-                                    <td class="text-center">{{ $gt->TYPE_NAME }}</td>
+                                    <td><input type="radio" name="guest_type" class="checkbox bg-white text-blue-500 checkbox-primary guest_type" value="{{ $gt->GT_ID }}"></td>
+                                    <td class="text-left">{{ $gt->TYPE_NAME }}</td>
                                     <td class="font-semibold">{{ $gt->POSITION }}</td>
                                     <td class="text-center">{{ str_replace(['>=', '<='], ['≥', '≤'], $gt->CONDITION_TEXT) }}</td>
                                     <td class="text-left">{{ str_replace(['>=', '<='], ['≥', '≤'], $gt->SNACK) }}</td>
@@ -307,7 +307,7 @@
                         </div>
                         <div class="space-y-2">
                             <div class="flex items-center space-x-2">
-                                <input type="radio" id="cashYes" name="cash_advance" class="checkbox checkbox-primary bg-white  cash_adv" value="1" />
+                                <input type="radio" id="cashYes" name="cash_advance" class="checkbox checkbox-primary text-blue-500 bg-white  cash_adv" value="1" />
                                 <label for="cashYes" class="font-semibold">Yes</label>
                                 <div class="text-xs italic text-gray-500">
                                     *Receive cash from FIN Department within 3-4 working day
@@ -315,7 +315,7 @@
                             </div>
 
                             <div class="flex items-center space-x-2">
-                                <input type="radio" id="cashNo" name="cash_advance" class="checkbox checkbox-primary bg-white  cash_adv" value="0" />
+                                <input type="radio" id="cashNo" name="cash_advance" class="checkbox checkbox-primary text-blue-500 bg-white  cash_adv" value="0" />
                                 <label for="cashNo" class="font-semibold">No</label>
                                 <div class="text-xs italic text-gray-500">
                                     *Please bring original receipt for clearance expense on Form Clearacnce Expense for Entertainment (Part 2).

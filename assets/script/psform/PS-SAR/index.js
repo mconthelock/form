@@ -1,6 +1,6 @@
 // import { tableOption } from "../../inc/_dataTable.js";
+import { showflow } from "@amec/webasset/api/webform";
 import { host } from "../../utils";
-import { showFlow, doaction, redirectWebflow } from "@amec/webasset/form";
 $(document).ready(async function () {
 	// Initialize DataTable
 	//  $("#table-detail").DataTable();
@@ -16,7 +16,7 @@ $(document).ready(async function () {
 	});
 	$("#form-date").text(formattedDate);
 
-	const flow = await showFlow(nfrmno, vorgno, cyear, cyear2, nrunno);
+	const flow = await showflow(nfrmno, vorgno, cyear, cyear2, nrunno);
 	$(".flow").html(flow.html);
 
 	const dataForm = await $.post(

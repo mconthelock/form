@@ -7,11 +7,10 @@ import {
 	showMessage,
 } from "@amec/webasset/utils";
 import { mailOpt, sendMail, mailForm } from "@amec/webasset/sendmail";
-import { showflow } from "@amec/webasset/api/webform";
+import { doaction, showflow } from "@amec/webasset/api/webform";
 import { getformDetail, webflowSubmit } from "@amec/webasset/components/form";
-import { doactionWebservice } from "@amec/webasset/form";
 import { redirectWebflow } from "@amec/webasset/form";
-import { fpkTimeOpt, setDatePicker } from "@amec/webasset/flatpickr";
+import { setDatePicker } from "@amec/webasset/flatpickr";
 
 var NFRMNO, VORGNO, CYEAR, CYEAR2, NRUNNO, empno, cextData, mode;
 $(async function () {
@@ -118,16 +117,16 @@ $(document).on("click", "button[name='btnAction']", async function () {
 			}
 		}
 
-		const formStatus = await doactionWebservice(
-			NFRMNO,
-			VORGNO,
-			CYEAR,
-			CYEAR2,
-			NRUNNO,
-			action,
-			empno,
-			remark,
-		);
+		const formStatus = await doaction({
+            NFRMNO,
+            VORGNO,
+            CYEAR,
+            CYEAR2,
+            NRUNNO,
+            ACTION: action,
+            EMPNO: empno,
+            REMARK: remark,
+        });
 
 		if (formStatus.status == true) {
 			showMessage(`${$(this).text()}!`, "success");

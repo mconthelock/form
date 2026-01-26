@@ -1,7 +1,8 @@
 import "select2";
 import "select2/dist/css/select2.min.css";
 import { host } from "../../utils.js";
-import { createForm, redirectWebflow } from "@amec/webasset/form";
+import { redirectWebflow } from "@amec/webasset/form";
+import { createForm } from "@amec/webasset/api/webform"
 import Swal from "sweetalert2";
 import { dayOff } from "@amec/webasset/flatpickr";
 
@@ -87,8 +88,7 @@ $(function () {
 		if (amecCount() >= AMEC_MAX) return;
 		$("#amec-list").append(
 			`<li class="flex items-center justify-between gap-2 border border-blue-200 bg-blue-50 shadow-sm rounded-lg px-3 py-1">
-        <span data-empno="${empData[0].SEMPNO}">${empData[0].SEMPPRE ?? ""} ${
-				empData[0].SNAME
+        <span data-empno="${empData[0].SEMPNO}">${empData[0].SEMPPRE ?? ""} ${empData[0].SNAME
 			} (${empData[0].SEMPNO})</span>
         <button type="button" class="remove-li bg-red-200 text-red-700 cursor-pointer rounded px-2 py-0.5 text-xs">ลบ</button>
       </li>`
@@ -545,12 +545,14 @@ $(function () {
 		);
 
 		const form = await createForm(
-			nfrmno,
-			vorgno,
-			cyear,
-			$("#requested-by").val(),
-			$("#input-by").val(),
-			""
+			{
+				NFRMNO: nfrmno,
+				VORGNO: vorgno,
+				CYEAR: cyear,
+				REQBY: $("#requested-by").val(),
+				INPUTBY: $("#input-by").val(),
+				REMARK: ""
+			}
 		);
 		const { runno: NRUNNO, cyear2: CYEAR2 } = form.message;
 		formDataSubmit.append("nrunno", NRUNNO);

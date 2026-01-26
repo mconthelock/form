@@ -577,8 +577,6 @@
                             @endif
                         @endif
 
-
-
                         @if ($form[0]->CST == '2')
                             <div class="flex justify-center mt-8 no-print">
                                 <button onclick="window.print()" class="btn bg-indigo-600 text-white hover:bg-indigo-700 px-6 py-2 rounded-lg shadow">
@@ -633,6 +631,24 @@
                                         </div>
                                     </div>
                                 @endif
+                            @endif
+                            @php
+                                $amec = array_filter($dataParticipants, function ($item) {
+                                    return $item->TYPE === 'amec';
+                                });
+
+                                $amecIds = array_map(function ($x) {
+                                    return $x->SEMPNO;
+                                }, $amec);
+                            @endphp
+                            @if (in_array($flowstep[0]->CSTEPNO, ['19', '34']) && $flowstep[0]->CSTEPNEXTNO == '18' && isset($PRESIDENT->VEMPNO) && isset($RAF->VEMPNO) && in_array($PRESIDENT->VEMPNO, $amecIds) && in_array($RAF->VEMPNO, $amecIds))
+                                <div class="flex items-center justify-center mt-4 space-x-3">
+                                    <label for="emp_select" class="font-medium text-blue-900">Select Approver:</label>
+                                    <select id="emp_select" name="emp_select" class="select select-bordered w-80 bg-blue-50 focus:bg-white focus:border-blue-500 transition">
+                                        <option value="" disabled selected>Select an option</option>
+                                        {{-- รายชื่อ Approver จะถูกเติมโดย JS --}}
+                                    </select>
+                                </div>
                             @endif
 
                             <div class="flex justify-center mt-6 space-x-4 no-print">
@@ -784,10 +800,8 @@
                         <div class="mb-8 w-full">
                             <h3 class="text-xl font-bold text-blue-700 mb-4">Quantity of Participant</h3>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 border-2 border-gray-300 rounded-xl p-3 bg-gray-50">
+
                                 @php
-                                    $amec = array_filter($dataParticipants, function ($item) {
-                                        return $item->TYPE === 'amec';
-                                    });
                                     $guest = array_filter($dataParticipants, function ($item) {
                                         return $item->TYPE === 'guest';
                                     });

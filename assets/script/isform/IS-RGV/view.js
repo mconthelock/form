@@ -1,14 +1,21 @@
-import { showFlow, doaction, redirectWebflow } from "@amec/webasset/form";
+import { redirectWebflow } from "@amec/webasset/form";
 import { host } from "../../utils.js";
 import "datatables.net-dt";
 import "datatables.net-responsive-dt";
 import "datatables.net-dt/css/dataTables.dataTables.min.css";
 import "datatables.net-responsive-dt/css/responsive.dataTables.min.css";
+import { doaction, showflow } from "@amec/webasset/api/webform";
 
 $(document).ready(async function () {
 	const formData = $(".form-data").data();
 	const { nfrmno, vorgno, cyear, cyear2, nrunno, empno } = formData;
-	const flow = await showFlow(nfrmno, vorgno, cyear, cyear2, nrunno);
+	const flow = await showflow({
+        NFRMNO: nfrmno, 
+        VORGNO: vorgno,
+        CYEAR: cyear,
+        CYEAR2: cyear2,
+        NRUNNO: nrunno
+    });
 	$(".flow").html(flow.html);
 
 	$(".btn-submit").on("click", async function (e) {
@@ -108,16 +115,16 @@ $(document).ready(async function () {
 			method: "POST",
 			data: { data: resultData },
 			success: async function (response) {
-				const confirm = await doaction(
-					nfrmno,
-					vorgno,
-					cyear,
-					cyear2,
-					nrunno,
-					action,
-					empno,
-					""
-				);
+				const confirm = await doaction({
+					NFRMNO: nfrmno,
+					VORGNO: vorgno,
+					CYEAR: cyear,
+					CYEAR2: cyear2,
+					NRUNNO: nrunno,
+					ACTION: action,
+					EMPNO: empno,
+					REMARK: ""
+                });
 				if (confirm.status) redirectWebflow();
 				console.log(response);
 			},
@@ -130,16 +137,16 @@ $(document).ready(async function () {
 	$(".btn-approve").on("click", async function (e) {
 		e.preventDefault();
 		const action = $(this).data("action");
-		const confirm = await doaction(
-			nfrmno,
-			vorgno,
-			cyear,
-			cyear2,
-			nrunno,
-			action,
-			empno,
-			""
-		);
+		const confirm = await doaction({
+			NFRMNO: nfrmno,
+			VORGNO: vorgno,
+			CYEAR: cyear,
+			CYEAR2: cyear2,
+			NRUNNO: nrunno,
+			ACTION: action,
+			EMPNO: empno,
+			REMARK: ""
+		});
 		if (confirm.status) redirectWebflow();
 	});
 

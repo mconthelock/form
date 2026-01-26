@@ -1,8 +1,15 @@
-import "select2";
+import select2 from "select2";
 import "select2/dist/css/select2.min.css";
 import { host } from "../../utils.js";
-import { createForm, redirectWebflow } from "@amec/webasset/form";
+import { redirectWebflow } from "@amec/webasset/form";
+import { createForm } from "@amec/webasset/api/webform"
 import Swal from "sweetalert2";
+
+// Ensure jQuery plugin is loaded
+// require("select2");
+
+select2();
+
 $(document).ready(function () {
 	$("#entertain-form-no").select2();
 	const formData = $(".form-data").data();
@@ -464,15 +471,22 @@ $(document).ready(function () {
 		formData.append("ent_cyear", ent_cyear);
 		formData.append("ent_cyear2", ent_cyear2);
 		formData.append("ent_nrunno", ent_nrunno);
-		const form = await createForm(
-			nfrmno,
-			vorgno,
-			cyear,
-			$("#requester").val(),
-			$("#inputer").val(),
-			"",
-			1
-		);
+		// const form = await createForm(
+		// 	nfrmno,
+		// 	vorgno,
+		// 	cyear,
+		// 	$("#requester").val(),
+		// 	$("#inputer").val(),
+		// 	"",
+		// 	1
+		// );
+		const form = await createForm({
+			NFRMNO: nfrmno,
+			VORGNO: vorgno,
+			CYEAR: cyear,
+			REQBY: $("#requester").val(),
+			INPUTBY: $("#inputer").val(),
+		});
 		const { runno: NRUNNO, cyear2: CYEAR2 } = form.message;
 		formData.append("nrunno", NRUNNO);
 		formData.append("cyear2", CYEAR2);

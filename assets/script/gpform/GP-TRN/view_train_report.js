@@ -1,7 +1,7 @@
 console.log("✅ view_train_report.js loaded (OMG V1.1)");
 
-import { showFlow, redirectWebflow } from "@amec/webasset/form";
-import { doaction } from "@amec/webasset/form";
+import { redirectWebflow } from "@amec/webasset/form";
+import { doaction, showflow } from "@amec/webasset/api/webform";
 import { host } from "../../utils.js";
 import Swal from "sweetalert2";
 
@@ -22,7 +22,7 @@ $(document).ready(async function () {
        🔄 Load Flow
     ============================================================ */
 	try {
-		const flow = await showFlow(nfrmno, vorgno, cyear, cyear2, nrunno);
+		const flow = await showflow({NFRMNO: nfrmno, VORGNO: vorgno, CYEAR: cyear, CYEAR2: cyear2, NRUNNO: nrunno});
 		$(".flow").html(flow.html);
 	} catch (err) {
 		console.error("❌ Error loading flow:", err);

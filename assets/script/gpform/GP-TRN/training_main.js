@@ -11,13 +11,9 @@ import {
 	validateOutForm,
 	validateDateRange,
 } from "./validators.js";
-import { createForm } from "@amec/webasset/form";
-import { showFlow, redirectWebflow } from "@amec/webasset/form";
-import {
-	buildFormDataGeneric,
-	savedetailForm,
-	createReportForm,
-} from "./manage_data.js";
+import { createForm } from "@amec/webasset/api/webform";
+import { showFlow , redirectWebflow } from "@amec/webasset/form";
+import { buildFormDataGeneric, savedetailForm, createReportForm,} from "./manage_data.js";
 import { host } from "../../utils.js";
 
 console.log("training_main.js : version =", "OMG V1");
@@ -265,9 +261,9 @@ async function submitForm(formType, reqby, inputby, fid) {
 				CYEAR: cyear,
 				REQBY: trainee_req,
 				INPUTBY: inputby,
-				REMARK: "",
+				REMARK: ""
 			};
-
+			console.log(payload);
 			const headResult = await createForm(payload);
 			const ref_cyear2 = headResult?.data?.CYEAR2;
 			const ref_nrunno = headResult?.data?.NRUNNO;

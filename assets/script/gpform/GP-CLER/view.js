@@ -1,9 +1,16 @@
-import { showFlow, doaction, redirectWebflow } from "@amec/webasset/form";
+import { doaction, showflow } from "@amec/webasset/api/webform";
+import { redirectWebflow } from "@amec/webasset/form";
 import flatpickr from "flatpickr";
 import "flatpickr/dist/flatpickr.min.css";
 import { host } from "../../utils.js";
 import Swal from "sweetalert2";
 import "@flaticon/flaticon-uicons/css/all/all.css";
+import { searchUser } from "@amec/webasset/api/amec";
+
+import { s2disableSearch, s2opt, setSelect2 } from "@amec/webasset/select2";
+import select2 from "select2";
+import "select2/dist/css/select2.min.css";
+select2();
 $(document).ready(async function () {
 	flatpickr("#start-date", { dateFormat: "Y-m-d" });
 
@@ -23,7 +30,7 @@ $(document).ready(async function () {
 		ent_empno,
 	} = formEnt;
 
-	const flow = await showFlow(nfrmno, vorgno, cyear, cyear2, nrunno, true);
+	const flow = await showflow({ NFRMNO: nfrmno, VORGNO: vorgno, CYEAR: cyear, CYEAR2: cyear2, NRUNNO: nrunno });
 	$(".flow").html(flow.html);
 
 	if (
@@ -34,21 +41,234 @@ $(document).ready(async function () {
 		ent_nrunno &&
 		ent_empno
 	) {
-		const flow_ent = await showFlow(
-			ent_nfrmno,
-			ent_vorgno,
-			ent_cyear,
-			ent_cyear2,
-			ent_nrunno,
-			true
-		);
+		const flow_ent = await showflow({
+			NFRMNO: ent_nfrmno,
+			VORGNO: ent_vorgno,
+			CYEAR: ent_cyear,
+			CYEAR2: ent_cyear2,
+			NRUNNO: ent_nrunno,
+		});
 		$(".flow_ent").html(flow_ent.html);
+	}
+
+	// ดึงข้อมูล expense มาแสดงในตาราง
+	await loadExpenseData();
+
+	async function loadExpenseData() {
+		try {
+			const response = await $.ajax({
+				type: "POST",
+				url: host + "gpform/GP-CLER/main/getExpenseData",
+				data: {
+					nfrmno: nfrmno,
+					vorgno: vorgno,
+					cyear: cyear,
+					cyear2: cyear2,
+					nrunno: nrunno
+				},
+				dataType: "json"
+			});
+
+			// ฟังก์ชันแปลงวันที่จาก DD-MMM-YY เป็น YYYY-MM-DD
+			function convertDate(dateStr) {
+				if (!dateStr) return '';
+				try {
+					const months = {
+						'JAN': '01', 'FEB': '02', 'MAR': '03', 'APR': '04',
+						'MAY': '05', 'JUN': '06', 'JUL': '07', 'AUG': '08',
+						'SEP': '09', 'OCT': '10', 'NOV': '11', 'DEC': '12'
+					};
+					const parts = dateStr.split('-');
+					if (parts.length === 3) {
+						const day = parts[0].padStart(2, '0');
+						const month = months[parts[1]];
+						const year = '20' + parts[2];
+						return `${year}-${month}-${day}`;
+					}
+				} catch (e) {
+					console.error('Date conversion error:', e);
+				}
+				return dateStr;
+			}
+
+			// response คือ array โดยตรงจาก controller
+			if (response && Array.isArray(response) && response.length > 0) {
+				const expenses = response;
+				
+				// ตรวจสอบว่าเป็นตารางปกติหรือตารางแยก
+				if ($("#expense-table").length > 0) {
+					// กรณีตารางปกติ
+					const $tbody = $("#expense-table tbody");
+					$tbody.empty();
+					
+					expenses.forEach((expense, index) => {
+						const receiptNo = expense.RECEIPT || expense.RECEIPT_NO || '';
+						const cost = expense.COST || '';
+						const dateIssue = convertDate(expense.DATE_ISSUE);
+						const receiptFile = expense.RECEIPT_FILE;
+						
+						const row = `<tr>
+							<td class="py-2 px-4 text-center">${index + 1}</td>
+							<td class="py-2 px-4">
+								<input type="text" name="receipt_no[]" class="input input-sm border rounded-lg px-3 py-1 w-full focus:ring-2 bg-white focus:ring-green-400 transition" placeholder="Receipt No." value="${receiptNo}">
+							</td>
+							<td class="py-2 px-4">
+								<input type="number" name="cost[]" class="input input-sm border rounded-lg px-3 py-1 w-full focus:ring-2 bg-white focus:ring-green-400 transition cost-input" placeholder="Cost" value="${cost}">
+							</td>
+							<td class="py-2 px-4">
+								<input type="date" name="date_issue[]" class="input input-sm border rounded-lg px-3 py-1 w-full focus:ring-2 bg-white focus:ring-green-400 transition" value="${dateIssue}">
+							</td>
+							<td class="py-2 px-4">
+								${receiptFile ? 
+									`<div class="flex items-center gap-2">
+										<a href="${host}gpform/GP-CLER/main/preview/${receiptFile}" target="_blank" class="text-blue-600 text-xs underline">View</a>
+										<input type="file" name="receipt_file[]" class="file-input file-input-sm file-input-bordered w-full max-w-xs rounded-lg border-green-400">
+									</div>` :
+									`<input type="file" name="receipt_file[]" class="file-input file-input-sm file-input-bordered w-full max-w-xs rounded-lg border-green-400">`
+								}
+							</td>
+							<td class="py-2 px-4 text-center">
+								<button type="button" class="remove-row bg-red-500 hover:bg-red-600 text-white rounded-full w-8 h-8 flex items-center cursor-pointer justify-center shadow transition" title="Remove row"> &times; </button>
+							</td>
+						</tr>`;
+						$tbody.append(row);
+					});
+					
+					calculateTotals();
+				} else if ($(".expense-table-split").length > 0) {
+					// กรณีตารางแยก
+					const lunchExpenses = expenses.filter(e => e.TYPE == 1);
+					const breakExpenses = expenses.filter(e => e.TYPE == 4);
+					
+					// โหลดข้อมูล Lunch
+					if (lunchExpenses.length > 0) {
+						const $lunchTbody = $(".expense-table-split[data-type='1'] tbody");
+						$lunchTbody.empty();
+						
+						lunchExpenses.forEach((expense, index) => {
+							const receiptNo = expense.RECEIPT || expense.RECEIPT_NO || '';
+							const cost = expense.COST || '';
+							const dateIssue = convertDate(expense.DATE_ISSUE);
+							const receiptFile = expense.RECEIPT_FILE;
+							
+							const row = `<tr>
+								<td class="py-2 px-4 text-center">${index + 1}</td>
+								<td class="py-2 px-4">
+									<input type="text" name="receipt_no_1[]" class="input input-sm border rounded-lg px-3 py-1 w-full focus:ring-2 bg-white focus:ring-cyan-400 transition" placeholder="Receipt No." value="${receiptNo}">
+								</td>
+								<td class="py-2 px-4">
+									<input type="number" name="cost_1[]" class="input input-sm border rounded-lg px-3 py-1 w-full focus:ring-2 bg-white focus:ring-cyan-400 transition cost-input" placeholder="Cost" value="${cost}">
+								</td>
+								<td class="py-2 px-4">
+									<input type="date" name="date_issue_1[]" class="input input-sm border rounded-lg px-3 py-1 w-full focus:ring-2 bg-white focus:ring-cyan-400 transition" value="${dateIssue}">
+								</td>
+								<td class="py-2 px-4">
+									${receiptFile ? 
+										`<div class="flex items-center gap-2">
+											<a href="${host}gpform/GP-CLER/main/preview/${receiptFile}" target="_blank" class="text-blue-600 text-xs underline">View</a>
+											<input type="file" name="receipt_file_1[]" class="file-input file-input-sm file-input-bordered w-full max-w-xs rounded-lg border-cyan-400">
+										</div>` :
+										`<input type="file" name="receipt_file_1[]" class="file-input file-input-sm file-input-bordered w-full max-w-xs rounded-lg border-cyan-400">`
+									}
+								</td>
+								<td class="py-2 px-4 text-center">
+									<button type="button" class="remove-row bg-red-500 hover:bg-red-600 text-white rounded-full w-8 h-8 flex items-center cursor-pointer justify-center shadow transition" title="Remove row"> &times; </button>
+								</td>
+							</tr>`;
+							$lunchTbody.append(row);
+						});
+					}
+					
+					// โหลดข้อมูล Break
+					if (breakExpenses.length > 0) {
+						const $breakTbody = $(".expense-table-split[data-type='4'] tbody");
+						$breakTbody.empty();
+						
+						breakExpenses.forEach((expense, index) => {
+							const receiptNo = expense.RECEIPT || expense.RECEIPT_NO || '';
+							const cost = expense.COST || '';
+							const dateIssue = convertDate(expense.DATE_ISSUE);
+							const receiptFile = expense.RECEIPT_FILE;
+							
+							const row = `<tr>
+								<td class="py-2 px-4 text-center">${index + 1}</td>
+								<td class="py-2 px-4">
+									<input type="text" name="receipt_no_4[]" class="input input-sm border rounded-lg px-3 py-1 w-full focus:ring-2 bg-white focus:ring-purple-400 transition" placeholder="Receipt No." value="${receiptNo}">
+								</td>
+								<td class="py-2 px-4">
+									<input type="number" name="cost_4[]" class="input input-sm border rounded-lg px-3 py-1 w-full focus:ring-2 bg-white focus:ring-purple-400 transition cost-input" placeholder="Cost" value="${cost}">
+								</td>
+								<td class="py-2 px-4">
+									<input type="date" name="date_issue_4[]" class="input input-sm border rounded-lg px-3 py-1 w-full focus:ring-2 bg-white focus:ring-purple-400 transition" value="${dateIssue}">
+								</td>
+								<td class="py-2 px-4">
+									${receiptFile ? 
+										`<div class="flex items-center gap-2">
+											<a href="${host}gpform/GP-CLER/main/preview/${receiptFile}" target="_blank" class="text-blue-600 text-xs underline">View</a>
+											<input type="file" name="receipt_file_4[]" class="file-input file-input-sm file-input-bordered w-full max-w-xs rounded-lg border-purple-400">
+										</div>` :
+										`<input type="file" name="receipt_file_4[]" class="file-input file-input-sm file-input-bordered w-full max-w-xs rounded-lg border-purple-400">`
+									}
+								</td>
+								<td class="py-2 px-4 text-center">
+									<button type="button" class="remove-row bg-red-500 hover:bg-red-600 text-white rounded-full w-8 h-8 flex items-center cursor-pointer justify-center shadow transition" title="Remove row"> &times; </button>
+								</td>
+							</tr>`;
+							$breakTbody.append(row);
+						});
+					}
+					
+					calculateTotalsSplit();
+				}
+			}
+		} catch (error) {
+			console.error("Error loading expense data:", error);
+		}
 	}
 
 	function todayYMD() {
 		const d = new Date();
 		const local = new Date(d.getTime() - d.getTimezoneOffset() * 60000);
 		return local.toISOString().slice(0, 10); // YYYY-MM-DD
+	}
+
+	if ($("#emp_select").length) {
+		$("#emp_select").select2();
+
+		const employees = await searchUser({ CSTATUS: "1" });
+
+		const participants = await $.ajax({
+			type: "POST",
+			url: host + "gpform/GP-ENT/main/getamecParticipants",
+			data: {
+				nfrmno: ent_nfrmno,
+				vorgno: ent_vorgno,
+				cyear: ent_cyear,
+				cyear2: ent_cyear2,
+				nrunno: ent_nrunno
+			},
+			dataType: "json"
+		});
+
+		// ดึงเฉพาะ EMP_CODE / SEMPNO ของ participant
+		const participantEmpCodes = participants.map(p => p.EMP_CODE);
+		// หรือถ้าใช้ชื่อฟิลด์ SEMPNO
+		// const participantEmpCodes = participants.map(p => p.SEMPNO);
+
+		const emp_manager = employees
+			.filter(emp =>
+				emp.SPOSCODE <= "20" &&
+				emp.SDIVCODE !== "140101" &&
+				!participantEmpCodes.includes(emp.SEMPNO)
+			)
+			.sort((a, b) => a.SPOSCODE.localeCompare(b.SPOSCODE));
+
+		emp_manager.forEach(emp => {
+			const option = `<option value="${emp.SEMPNO}">
+				${emp.SEMPNO} - ${emp.SNAME} (${emp.SPOSNAME})
+			</option>`;
+			$("#emp_select").append(option);
+		});
 	}
 
 	$(".btn-submit").on("click", async function () {
@@ -104,16 +324,49 @@ $(document).ready(async function () {
 			}
 		}
 
+		if (action === "approve" && $("#emp_select").length) {
+			const approver = $("#emp_select").val();
+			if (!approver) {
+				alert("กรุณาเลือก Approver");
+				$("#emp_select").focus();
+				return;
+			}
+			$("#loading-overlay").show(); // Show loading overlay before sending the request
+			await $.ajax({
+				type: "post",
+				url: host + "gpform/GP-ENT/main/NewApproveController",
+				data: {
+					approver,
+					nfrmno,
+					vorgno,
+					cyear,
+					cyear2,
+					nrunno,
+				},
+				success: function (response) {
+					console.log(response);
+				},
+				error: function (xhr) {
+					console.log(xhr);
+				},
+				complete: function () {
+					$("#loading-overlay").hide(); // Hide loading overlay after the request completes
+				},
+			});
+		}
+
 		// ทำ action ต่อ
 		const result = await doaction(
-			nfrmno,
-			vorgno,
-			cyear,
-			cyear2,
-			nrunno,
-			action,
-			empno,
-			remark_approve
+			{
+				NFRMNO: nfrmno,
+				VORGNO: vorgno,
+				CYEAR: cyear,
+				CYEAR2: cyear2,
+				NRUNNO: nrunno,
+				ACTION: action,
+				EMPNO: empno,
+				REMARK: remark_approve // optional
+			}
 		);
 		if (result?.status) redirectWebflow();
 	});
@@ -144,9 +397,178 @@ $(document).ready(async function () {
 		const remark = $("#remark").val().trim();
 		const formnumber = $("#formnumber").val();
 		const fileInput = $("#receipt")[0];
-		const file = fileInput.files[0];
+		const file = fileInput ? fileInput.files[0] : null;
 		const memoInput = $("#memo")[0];
 		const memoFiles = memoInput && memoInput.files ? memoInput.files : null;
+
+		// Validate all required fields in tables
+		let hasEmptyField = false;
+		let emptyFieldName = "";
+
+		// ตรวจสอบตารางปกติ
+		if ($("#expense-table").length > 0) {
+			$("#expense-table tbody tr").each(function (index) {
+				const row = index + 1;
+				const receiptNo = $(this)
+					.find("input[name='receipt_no[]']")
+					.val()
+					?.trim();
+				const cost = $(this).find("input[name='cost[]']").val()?.trim();
+				const dateIssue = $(this)
+					.find("input[name='date_issue[]']")
+					.val()
+					?.trim();
+				const receiptFile = $(this).find(
+					"input[name='receipt_file[]']"
+				)[0];
+
+				if (!receiptNo) {
+					hasEmptyField = true;
+					emptyFieldName = `Receipt No. (แถวที่ ${row})`;
+					$(this)
+						.find("input[name='receipt_no[]']")
+						.addClass("input-error")
+						.focus();
+					return false;
+				}
+				if (!cost) {
+					hasEmptyField = true;
+					emptyFieldName = `Cost (แถวที่ ${row})`;
+					$(this)
+						.find("input[name='cost[]']")
+						.addClass("input-error")
+						.focus();
+					return false;
+				}
+				if (!dateIssue) {
+					hasEmptyField = true;
+					emptyFieldName = `Date issue receipt (แถวที่ ${row})`;
+					$(this)
+						.find("input[name='date_issue[]']")
+						.addClass("input-error")
+						.focus();
+					return false;
+				}
+				// ไม่บังคับไฟล์ในโหมด edit ถ้ามีไฟล์เดิมอยู่แล้ว
+			});
+		}
+
+		// ตรวจสอบตารางแยก (Lunch)
+		if (
+			$(".expense-table-split[data-type='1']").length > 0 &&
+			!hasEmptyField
+		) {
+			$(".expense-table-split[data-type='1'] tbody tr").each(function (
+				index
+			) {
+				const row = index + 1;
+				const receiptNo = $(this)
+					.find("input[name='receipt_no_1[]']")
+					.val()
+					?.trim();
+				const cost = $(this)
+					.find("input[name='cost_1[]']")
+					.val()
+					?.trim();
+				const dateIssue = $(this)
+					.find("input[name='date_issue_1[]']")
+					.val()
+					?.trim();
+
+				if (!receiptNo) {
+					hasEmptyField = true;
+					emptyFieldName = `Lunch - Receipt No. (แถวที่ ${row})`;
+					$(this)
+						.find("input[name='receipt_no_1[]']")
+						.addClass("input-error")
+						.focus();
+					return false;
+				}
+				if (!cost) {
+					hasEmptyField = true;
+					emptyFieldName = `Lunch - Cost (แถวที่ ${row})`;
+					$(this)
+						.find("input[name='cost_1[]']")
+						.addClass("input-error")
+						.focus();
+					return false;
+				}
+				if (!dateIssue) {
+					hasEmptyField = true;
+					emptyFieldName = `Lunch - Date issue receipt (แถวที่ ${row})`;
+					$(this)
+						.find("input[name='date_issue_1[]']")
+						.addClass("input-error")
+						.focus();
+					return false;
+				}
+			});
+		}
+
+		// ตรวจสอบตารางแยก (Break)
+		if (
+			$(".expense-table-split[data-type='4']").length > 0 &&
+			!hasEmptyField
+		) {
+			$(".expense-table-split[data-type='4'] tbody tr").each(function (
+				index
+			) {
+				const row = index + 1;
+				const receiptNo = $(this)
+					.find("input[name='receipt_no_4[]']")
+					.val()
+					?.trim();
+				const cost = $(this)
+					.find("input[name='cost_4[]']")
+					.val()
+					?.trim();
+				const dateIssue = $(this)
+					.find("input[name='date_issue_4[]']")
+					.val()
+					?.trim();
+
+				if (!receiptNo) {
+					hasEmptyField = true;
+					emptyFieldName = `Break - Receipt No. (แถวที่ ${row})`;
+					$(this)
+						.find("input[name='receipt_no_4[]']")
+						.addClass("input-error")
+						.focus();
+					return false;
+				}
+				if (!cost) {
+					hasEmptyField = true;
+					emptyFieldName = `Break - Cost (แถวที่ ${row})`;
+					$(this)
+						.find("input[name='cost_4[]']")
+						.addClass("input-error")
+						.focus();
+					return false;
+				}
+				if (!dateIssue) {
+					hasEmptyField = true;
+					emptyFieldName = `Break - Date issue receipt (แถวที่ ${row})`;
+					$(this)
+						.find("input[name='date_issue_4[]']")
+						.addClass("input-error")
+						.focus();
+					return false;
+				}
+			});
+		}
+
+		if (hasEmptyField) {
+			Swal.fire({
+				icon: "warning",
+				title: `กรุณากรอก ${emptyFieldName}`,
+				toast: true,
+				position: "top-end",
+				timer: 3000,
+				showConfirmButton: false,
+				background: "#FBF6D9",
+			});
+			return;
+		}
 
 		// Validate president_join
 		if (!p_join) {
@@ -177,20 +599,44 @@ $(document).ready(async function () {
 			return;
 		}
 
-		// Validate file
-		// if (!file) {
-		//   Swal.fire({
-		//     icon: "warning",
-		//     title: "กรุณาแนบไฟล์ใบเสร็จรับเงิน",
-		//     toast: true,
-		//     position: "top-end",
-		//     timer: 3000,
-		//     showConfirmButton: false,
-		//     background: "#FBF6D9",
-		//   });
-		//   $("#receipt").addClass("input-error").focus();
-		//   return;
-		// }
+		// Validate memo files for split expense (if visible)
+		if ($(".expense-table-split").length > 0) {
+			// ตรวจสอบ Lunch
+			if ($("#memo-section-1").is(":visible")) {
+				const memoFile1 = $("input[name='memo_1']")[0];
+				if (!memoFile1 || memoFile1.files.length === 0) {
+					Swal.fire({
+						icon: "warning",
+						title: "กรุณาแนบ Memo สำหรับ Lunch เนื่องจากค่าใช้จ่ายเกินงบประมาณ",
+						toast: true,
+						position: "top-end",
+						timer: 3000,
+						showConfirmButton: false,
+						background: "#FBF6D9",
+					});
+					$("input[name='memo_1']").addClass("input-error").focus();
+					return;
+				}
+			}
+
+			// ตรวจสอบ Break
+			if ($("#memo-section-4").is(":visible")) {
+				const memoFile4 = $("input[name='memo_4']")[0];
+				if (!memoFile4 || memoFile4.files.length === 0) {
+					Swal.fire({
+						icon: "warning",
+						title: "กรุณาแนบ Memo สำหรับ Break เนื่องจากค่าใช้จ่ายเกินงบประมาณ",
+						toast: true,
+						position: "top-end",
+						timer: 3000,
+						showConfirmButton: false,
+						background: "#FBF6D9",
+					});
+					$("input[name='memo_4']").addClass("input-error").focus();
+					return;
+				}
+			}
+		}
 
 		// ถ้า remain < 0 ต้องมี remark
 		if (parseFloat(remain) < 0 && remark === "") {
@@ -213,7 +659,7 @@ $(document).ready(async function () {
 		formData.append("actual_cost", actual_cost);
 		formData.append("remain", parseFloat(remain));
 		formData.append("remark", remark);
-		formData.append("receipt", file);
+		if (file) formData.append("receipt", file);
 		if (memoFiles && memoFiles.length) {
 			for (let i = 0; i < memoFiles.length; i++)
 				formData.append("memo[]", memoFiles[i]);
@@ -223,8 +669,144 @@ $(document).ready(async function () {
 		formData.append("cyear", cyear);
 		formData.append("cyear2", cyear2);
 		formData.append("nrunno", nrunno);
-		// formData.append("empcode", $("#empcode").val());
-		// formData.append("formnumber", formnumber);
+
+		// รวบรวมข้อมูล expense
+		const expense = [];
+		const expenseSplit = {
+			lunch: [],
+			break: [],
+		};
+
+		// ตรวจสอบว่าเป็นตารางปกติหรือตารางแยก
+		if ($("#expense-table").length > 0) {
+			// กรณีตารางปกติ
+			let rowIndex = 0;
+			$("#expense-table tbody tr").each(function () {
+				const receipt_no = $(this)
+					.find("input[name='receipt_no[]']")
+					.val()
+					.trim();
+				const cost =
+					parseFloat(
+						$(this).find("input[name='cost[]']").val().trim()
+					) || 0;
+				const date_issue = $(this)
+					.find("input[name='date_issue[]']")
+					.val()
+					.trim();
+				const receiptFile = $(this).find(
+					"input[name='receipt_file[]']"
+				)[0];
+
+				if (receipt_no !== "" || cost > 0) {
+					expense.push({
+						receipt_no,
+						cost,
+						date_issue,
+					});
+
+					// แนบไฟล์ receipt ถ้ามี
+					if (receiptFile && receiptFile.files.length > 0) {
+						formData.append(
+							`receipt_file_${rowIndex}`,
+							receiptFile.files[0]
+						);
+					}
+				}
+				rowIndex++;
+			});
+			formData.append("expense", JSON.stringify(expense));
+		} else {
+			// กรณีตารางแยก (Lunch และ Break)
+			// รวบรวม Lunch (type=1)
+			let lunchIndex = 0;
+			$(".expense-table-split[data-type='1'] tbody tr").each(function () {
+				const receipt_no = $(this)
+					.find("input[name='receipt_no_1[]']")
+					.val()
+					.trim();
+				const cost =
+					parseFloat(
+						$(this).find("input[name='cost_1[]']").val().trim()
+					) || 0;
+				const date_issue = $(this)
+					.find("input[name='date_issue_1[]']")
+					.val()
+					.trim();
+				const receiptFile = $(this).find(
+					"input[name='receipt_file_1[]']"
+				)[0];
+
+				if (receipt_no !== "" || cost > 0) {
+					expenseSplit.lunch.push({
+						receipt_no,
+						cost,
+						date_issue,
+						type: 1,
+					});
+
+					// แนบไฟล์ receipt ถ้ามี
+					if (receiptFile && receiptFile.files.length > 0) {
+						formData.append(
+							`receipt_file_lunch_${lunchIndex}`,
+							receiptFile.files[0]
+						);
+					}
+				}
+				lunchIndex++;
+			});
+
+			// รวบรวม Break (type=4)
+			let breakIndex = 0;
+			$(".expense-table-split[data-type='4'] tbody tr").each(function () {
+				const receipt_no = $(this)
+					.find("input[name='receipt_no_4[]']")
+					.val()
+					.trim();
+				const cost =
+					parseFloat(
+						$(this).find("input[name='cost_4[]']").val().trim()
+					) || 0;
+				const date_issue = $(this)
+					.find("input[name='date_issue_4[]']")
+					.val()
+					.trim();
+				const receiptFile = $(this).find(
+					"input[name='receipt_file_4[]']"
+				)[0];
+
+				if (receipt_no !== "" || cost > 0) {
+					expenseSplit.break.push({
+						receipt_no,
+						cost,
+						date_issue,
+						type: 4,
+					});
+
+					// แนบไฟล์ receipt ถ้ามี
+					if (receiptFile && receiptFile.files.length > 0) {
+						formData.append(
+							`receipt_file_break_${breakIndex}`,
+							receiptFile.files[0]
+						);
+					}
+				}
+				breakIndex++;
+			});
+
+			formData.append("expenseSplit", JSON.stringify(expenseSplit));
+
+			// แนบไฟล์ memo สำหรับแต่ละ type
+			const memoFile1 = $("input[name='memo_1']")[0];
+			if (memoFile1 && memoFile1.files.length > 0) {
+				formData.append("memo_1", memoFile1.files[0]);
+			}
+
+			const memoFile4 = $("input[name='memo_4']")[0];
+			if (memoFile4 && memoFile4.files.length > 0) {
+				formData.append("memo_4", memoFile4.files[0]);
+			}
+		}
 
 		$.ajax({
 			type: "POST",
@@ -243,14 +825,16 @@ $(document).ready(async function () {
 					timer: 2000,
 				});
 				const confirm = await doaction(
-					nfrmno,
-					vorgno,
-					cyear,
-					cyear2,
-					nrunno,
-					"approve",
-					empno,
-					""
+					{
+						NFRMNO: nfrmno,
+						VORGNO: vorgno,
+						CYEAR: cyear,
+						CYEAR2: cyear2,
+						NRUNNO: nrunno,
+						ACTION: 'approve',
+						EMPNO: empno,
+						REMARK: "" // optional
+					}
 				);
 				if (confirm.status) redirectWebflow();
 				// location.reload();
@@ -565,14 +1149,16 @@ $(document).ready(async function () {
 			},
 			success: async function (response) {
 				const confirm = await doaction(
-					nfrmno,
-					vorgno,
-					cyear,
-					cyear2,
-					nrunno,
-					"approve",
-					empno,
-					""
+					{
+						NFRMNO: nfrmno,
+						VORGNO: vorgno,
+						CYEAR: cyear,
+						CYEAR2: cyear2,
+						NRUNNO: nrunno,
+						ACTION: 'approve',
+						EMPNO: empno,
+						REMARK: "" // optional
+					}
 				);
 				if (confirm.status) redirectWebflow();
 				Swal.fire({
@@ -611,7 +1197,7 @@ $(document).ready(async function () {
 	$("#actual-cost, #receipt, #reason, #file-memo").on(
 		"input change",
 		function () {
-			clearFieldError(this.id);
+			// clearFieldError(this.id);
 		}
 	);
 
@@ -665,29 +1251,227 @@ $(document).ready(async function () {
 		}
 	}
 
-	const estimate = $("#total_amount").text().replace(/,/g, "") * 1; // Convert to number
+	// ลบ class error เมื่อผู้ใช้กรอกข้อมูล
+	$(document).on("input change", "input.input-error", function () {
+		$(this).removeClass("input-error");
+	});
+
+	// เพิ่มแถวสำหรับตารางปกติ
+	$(document).on("click", "#add-row", function () {
+		var table = $("#expense-table tbody");
+		var rowCount = table.find("tr").length + 1;
+		var newRow = `<tr>
+            <td class="py-2 px-4 text-center">${rowCount}</td>
+            <td class="py-2 px-4">
+                <input type="text" name="receipt_no[]" class="input input-sm border rounded-lg px-3 py-1 w-full focus:ring-2 bg-white focus:ring-green-400 transition" placeholder="Receipt No.">
+            </td>
+            <td class="py-2 px-4">
+                <input type="number" name="cost[]" class="input input-sm border rounded-lg px-3 py-1 w-full focus:ring-2 bg-white focus:ring-green-400 transition cost-input" placeholder="Cost">
+            </td>
+            <td class="py-2 px-4">
+                <input type="date" name="date_issue[]" class="input input-sm border rounded-lg px-3 py-1 w-full focus:ring-2 bg-white focus:ring-green-400 transition">
+            </td>
+            <td class="py-2 px-4">
+                <input type="file" name="receipt_file[]" class="file-input file-input-sm file-input-bordered w-full max-w-xs rounded-lg border-green-400">
+            </td>
+            <td class="py-2 px-4 text-center">
+                <button type="button" class="remove-row bg-red-500 hover:bg-red-600 text-white rounded-full w-8 h-8 flex items-center cursor-pointer justify-center shadow transition" title="Remove row"> &times; </button>
+            </td>
+        </tr>`;
+		table.append(newRow);
+		updateRowNumbers();
+	});
+
+	// เพิ่มแถวสำหรับตารางแยก (Lunch/Break)
+	$(document).on("click", ".add-row-split", function () {
+		const type = $(this).data("type");
+		const table = $(`.expense-table-split[data-type="${type}"] tbody`);
+		const rowCount = table.find("tr").length + 1;
+
+		// กำหนดสีตาม type
+		const colorClass = type == 1 ? "cyan" : "purple";
+
+		const newRow = `<tr>
+            <td class="py-2 px-4 text-center">${rowCount}</td>
+            <td class="py-2 px-4">
+                <input type="text" name="receipt_no_${type}[]" class="input input-sm border rounded-lg px-3 py-1 w-full focus:ring-2 bg-white focus:ring-${colorClass}-400 transition" placeholder="Receipt No.">
+            </td>
+            <td class="py-2 px-4">
+                <input type="number" name="cost_${type}[]" class="input input-sm border rounded-lg px-3 py-1 w-full focus:ring-2 bg-white focus:ring-${colorClass}-400 transition cost-input" placeholder="Cost">
+            </td>
+            <td class="py-2 px-4">
+                <input type="date" name="date_issue_${type}[]" class="input input-sm border rounded-lg px-3 py-1 w-full focus:ring-2 bg-white focus:ring-${colorClass}-400 transition">
+            </td>
+            <td class="py-2 px-4">
+                <input type="file" name="receipt_file_${type}[]" class="file-input file-input-sm file-input-bordered w-full max-w-xs rounded-lg border-${colorClass}-400">
+            </td>
+            <td class="py-2 px-4 text-center">
+                <button type="button" class="remove-row bg-red-500 hover:bg-red-600 text-white rounded-full w-8 h-8 flex items-center cursor-pointer justify-center shadow transition" title="Remove row"> &times; </button>
+            </td>
+        </tr>`;
+		table.append(newRow);
+		updateRowNumbersSplit(table);
+		calculateTotalsSplit();
+	});
+
+	// ลบแถวสำหรับตารางปกติ
+	$(document).on("click", "#expense-table .remove-row", function () {
+		$(this).closest("tr").remove();
+		updateRowNumbers();
+		calculateTotals();
+	});
+
+	// ลบแถวสำหรับตารางแยก
+	$(document).on("click", ".expense-table-split .remove-row", function () {
+		const table = $(this).closest("tbody");
+		$(this).closest("tr").remove();
+		updateRowNumbersSplit(table);
+		calculateTotalsSplit();
+	});
+
+	// อัปเดตลำดับแถวสำหรับตารางปกติ
+	function updateRowNumbers() {
+		$("#expense-table tbody tr").each(function (index) {
+			$(this)
+				.find("td:first")
+				.text(index + 1);
+		});
+	}
+
+	// อัปเดตลำดับแถวสำหรับตารางแยก
+	function updateRowNumbersSplit(table) {
+		table.find("tr").each(function (index) {
+			$(this)
+				.find("td:first")
+				.text(index + 1);
+		});
+	}
+
+	// คำนวณรวมสำหรับตารางปกติ
+	$(document).on("input", "#expense-table tbody input.cost-input", calculateTotals);
+
+	function calculateTotals() {
+		let totalAmount = 0;
+		$("#expense-table tbody tr").each(function () {
+			const cost =
+				parseFloat($(this).find("input[name='cost[]']").val()) || 0;
+			totalAmount += cost;
+		});
+		console.log("Total (normal table):", totalAmount);
+		$("#actual-cost").val(totalAmount).trigger("input");
+	}
+
+	// คำนวณรวมสำหรับตารางแยก
+	$(document).on("input", ".expense-table-split tbody input.cost-input", calculateTotalsSplit);
+
+	function calculateTotalsSplit() {
+		let totalAmount = 0;
+		let lunchTotal = 0;
+		let breakTotal = 0;
+
+		// รวมค่าใช้จ่ายจากตาราง Lunch (type=1)
+		$(".expense-table-split[data-type='1'] tbody tr").each(function () {
+			const cost =
+				parseFloat($(this).find("input[name='cost_1[]']").val()) ||
+				0;
+			lunchTotal += cost;
+		});
+
+		// รวมค่าใช้จ่ายจากตาราง Break (type=4)
+		$(".expense-table-split[data-type='4'] tbody tr").each(function () {
+			const cost =
+				parseFloat($(this).find("input[name='cost_4[]']").val()) ||
+				0;
+			breakTotal += cost;
+		});
+
+		totalAmount = lunchTotal + breakTotal;
+
+		// ตรวจสอบงบประมาณสำหรับแต่ละประเภท
+		checkBudgetExceed(1, lunchTotal);
+		checkBudgetExceed(4, breakTotal);
+
+		console.log(
+			"Total (split tables):",
+			totalAmount,
+			"Lunch:",
+			lunchTotal,
+			"Break:",
+			breakTotal
+		);
+		$("#actual-cost").val(totalAmount).trigger("input");
+	}
+
+	// ฟังก์ชันตรวจสอบงบประมาณเกิน
+	function checkBudgetExceed(type, actualCost) {
+		// ดึงงบประมาณจาก data-estimate attribute
+		const estimate =
+			parseFloat(
+				$(`.expense-table-split[data-type='${type}']`)
+					.closest("div[data-estimate]")
+					.data("estimate")
+			) || 0;
+
+		console.log(
+			`Type ${type} - Actual: ${actualCost}, Estimate: ${estimate}`
+		);
+
+		// แสดง/ซ่อน Attach Memo section
+		if (actualCost > estimate) {
+			$(`#memo-section-${type}`).show();
+		} else {
+			$(`#memo-section-${type}`).hide();
+		}
+	}
+
+	// เรียกคำนวณตอน load page
+	if ($("#expense-table").length > 0) {
+		calculateTotals();
+	} else if ($(".expense-table-split").length > 0) {
+		calculateTotalsSplit();
+	}
+
+	// ดึง estimate ให้ชัวร์ (ตัดทุกอย่างที่ไม่ใช่ตัวเลข จุด ลบ)
+	function getEstimate() {
+		const raw = $("#total_amount").text();
+		const num = Number(String(raw).replace(/[^\d.-]/g, "")) || 0;
+		return num;
+	}
+
 	const $actualCost = $("#actual-cost");
 	const $remain = $("#remain");
 	const $remainAlert = $("#remain-alert");
 	const $remark = $("#remark");
 
-	$actualCost.on("input", function () {
-		const val = parseFloat($(this).val()) || 0;
+	// ผูก event ให้มีตัวเดียว
+	$actualCost.off("input.remain").on("input.remain", function () {
+		const estimate = getEstimate(); // อ่านสดทุกครั้งกันค่าถูกอัปเดต
+		const val = Number(this.value) || 0;
 		const remain = estimate - val;
-		$remain.val(remain.toLocaleString() + " บาท");
+
+		$remain.val(remain);
+
+		console.log({
+			val,
+			estimate,
+			remain,
+		});
 
 		if (remain >= 0) {
-			$remain.css("color", "#16a34a"); // เขียว
+			$remark.prop("required", false);
+			$remain.css("color", "#16a34a");
 			$remainAlert.html(
 				'<span class="text-green-700">ค่าใช้จ่ายจริงไม่เกินยอดประมาณการ</span>'
 			);
-			$remark.prop("required", false);
 		} else {
-			$remain.css("color", "#dc2626"); // แดง
+			$remark.prop("required", true);
+			$remain.css("color", "#dc2626");
 			$remainAlert.html(
 				'<span class="text-red-600">ค่าใช้จ่ายจริงเกินยอดประมาณการ กรุณาระบุเหตุผลใน Remark</span>'
 			);
-			$remark.prop("required", true);
 		}
 	});
+
+	// ให้ค่าตั้งต้น
+	$actualCost.trigger("input");
 });
