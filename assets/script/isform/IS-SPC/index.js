@@ -1,7 +1,7 @@
 import flatpickr from "flatpickr";
 import "flatpickr/dist/flatpickr.min.css";
 import { host } from "../../utils.js";
-import { createForm, redirectWebflow } from "@amec/webasset/form";
+import { redirectWebflow } from "@amec/webasset/form";
 import { s2disableSearch, s2opt, setSelect2 } from "@amec/webasset/select2";
 
 $(document).ready(async function () {
@@ -75,7 +75,14 @@ $(document).ready(async function () {
 
 		const req = $("#requester").val();
 		const key = $("#inputer").val();
-		const form = await createForm(NFRMNO, VORGNO, CYEAR, req, key, "");
+		const form = await createForm({
+            NFRMNO, 
+            VORGNO, 
+            CYEAR, 
+            REQBY: req, 
+            INPUTBY: key, 
+            REMARK:""
+        });
 		const { runno: NRUNNO, cyear2: CYEAR2 } = form.message;
 
 		const data = {
@@ -197,7 +204,14 @@ $(document).ready(async function () {
 		const CYEAR = $(".form-info").attr("CYEAR");
 		const req = $("#requester").val();
 		const key = $("#inputer").val();
-		const form = await createForm(NFRMNO, VORGNO, CYEAR, req, key, "");
+		const form = await createForm({
+            NFRMNO, 
+            VORGNO, 
+            CYEAR, 
+            REQBY: req, 
+            INPUTBY: key, 
+            REMARK:""
+        });
 		const { runno: NRUNNO, cyear2: CYEAR2 } = form.message;
 
 		const data = {

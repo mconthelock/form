@@ -1,14 +1,12 @@
 import { createTable } from "@amec/webasset/dataTable";
 import {
-	doactionWebservice,
 	redirectWebflow,
 	setformDetail,
-	showFlow,
 	toggleActionForm,
 } from "@amec/webasset/form";
 import { mailForm, mailOpt, sendMail } from "@amec/webasset/sendmail";
 import { ajaxOptionsLoad, getData, showMessage } from "@amec/webasset/utils";
-import { doaction, searchFlow, updateFlow } from "@amec/webasset/api/webform";
+import { doaction, searchFlow, showflow, updateFlow } from "@amec/webasset/api/webform";
 import { formatDate } from "@amec/webasset/dayjs";
 import { displayEmpImage } from "@amec/webasset/indexDB";
 import { showLoader } from "@amec/webasset/preloader";
@@ -114,7 +112,7 @@ $(async function () {
 		columns: column,
 		searching: false,
 	});
-	await showFlow(NFRMNO, VORGNO, CYEAR, CYEAR2, NRUNNO);
+	await showflow({NFRMNO, VORGNO, CYEAR, CYEAR2, NRUNNO});
 	toggleActionForm(mode);
 	$("#form").removeClass("hidden");
 	$(".load").addClass("hidden");
@@ -148,16 +146,16 @@ $(document).on("click", "button[name='btnAction']", async function () {
 			}
 		}
 
-		const formStatus = await doactionWebservice(
+		const formStatus = await doaction({
 			NFRMNO,
 			VORGNO,
 			CYEAR,
 			CYEAR2,
 			NRUNNO,
-			action,
-			apv,
-			remark,
-		);
+			ACTION: action,
+			EMPNO: apv,
+			REMARK: remark,
+		});
 
 		if (formStatus.status == true) {
 			if (action == "approve") {

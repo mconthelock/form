@@ -18,8 +18,8 @@ import "@amec/webasset/tooltip";
 import { getController, getUserLogin } from "./data";
 import { displayEmpImage } from "@amec/webasset/indexDB";
 import { searchUser } from "@amec/webasset/api/amec";
-import { getRequestNo } from "@amec/webasset/api/webform";
-import { createForm2, deleteForm, redirectWebflow } from "@amec/webasset/form";
+import { createForm, deleteFlowandForm, getRequestNo } from "@amec/webasset/api/webform";
+import { redirectWebflow } from "@amec/webasset/form";
 
 import {
 	flagSelect,
@@ -299,27 +299,25 @@ $(document).on("submit", "#form", async function (e) {
 					"ctrlWorkCon",
 					`Enable and disable for user : ${$("#userID").val()}`,
 				);
-				formInfo = await createForm2(
+				formInfo = await createForm({
 					NFRMNO,
 					VORGNO,
 					CYEAR,
-					ctrlRequester.trim(),
-					ctrlRequester.trim(),
-					"",
-				);
+					REQBY: ctrlRequester.trim(),
+					INPUTBY: ctrlRequester.trim(),
+                });
 				formCreate.push(formInfo.message);
 				for (const key in formInfo.message) {
 					formData.append(`ctrl${key}`, formInfo.message[key]);
 				}
 			} else {
-				formInfo = await createForm2(
-					NFRMNO,
-					VORGNO,
-					CYEAR,
-					empno,
-					empno,
-					"",
-				);
+				formInfo = await createForm({
+                    NFRMNO,
+                    VORGNO,
+                    CYEAR,
+                    REQBY: empno,
+                    INPUTBY: empno,
+                });
 				formCreate.push(formInfo.message);
 				for (const key in formInfo.message) {
 					formData.append(key, formInfo.message[key]);
@@ -371,16 +369,22 @@ $(document).on("submit", "#form", async function (e) {
 					form: cond,
 				},
 			});
-			deleteForm(
-				el.message.formtype,
-				el.message.owner,
-				el.message.cyear,
-				el.message.cyear2,
-				el.message.runno,
-			);
+			deleteFlowandForm({
+                NFRMNO: el.message.formtype,
+                VORGNO: el.message.owner,
+                CYEAR: el.message.cyear,
+                CYEAR2: el.message.cyear2,
+                NRUNNO: el.message.runno,
+            });
 		});
 		formCreate.forEach((el) => {
-			deleteForm(el.formtype, el.owner, el.cyear, el.cyear2, el.runno);
+			deleteFlowandForm({
+                NFRMNO:el.formtype, 
+                VORGNO:el.owner, 
+                CYEAR:el.cyear, 
+                CYEAR2:el.cyear2, 
+                NRUNNO:el.runno
+            });
 		});
 		showMessage(
 			`เกิดข้อผิดพลาด: ${e.message} กรุณาลองใหม่อีกครั้งหรือติดต่อ Admin Tel:2038`,

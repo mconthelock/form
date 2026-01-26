@@ -3,7 +3,8 @@ import "select2";
 import "select2/dist/css/select2.min.css";
 import flatpickr from "flatpickr";
 import "flatpickr/dist/flatpickr.min.css";
-import { createForm, redirectWebflow } from "@amec/webasset/form";
+import { redirectWebflow } from "@amec/webasset/form";
+import { createForm } from "@amec/webasset/api/webform";
 
 $(document).ready(async function () {
 	const NFRMNO = $(".form-info").attr("NFRMNO");
@@ -180,7 +181,14 @@ $(document).ready(async function () {
 		formData.append("VORGNO", VORGNO);
 		formData.append("CYEAR", CYEAR);
 
-		const form = await createForm(NFRMNO, VORGNO, CYEAR, req, key, "");
+		const form = await createForm({
+            NFRMNO, 
+            VORGNO, 
+            CYEAR, 
+            REQBY: req, 
+            INPUTBY: key, 
+            REMARK:""
+        });
 		const { runno: NRUNNO, cyear2: CYEAR2 } = form.message;
 
 		formData.append("NRUNNO", NRUNNO);

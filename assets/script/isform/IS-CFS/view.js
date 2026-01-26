@@ -7,14 +7,13 @@ import {
 } from "@amec/webasset/fancybox";
 import {
 	toggleActionForm,
-	doactionWebservice,
 	redirectWebflow,
-	showFlow,
 	setformDetail,
 } from "@amec/webasset/form";
 import { mailForm, mailOpt, sendMail } from "@amec/webasset/sendmail";
 import { autosizeTextarea, showMessage } from "@amec/webasset/utils";
 import { showLoader } from "@amec/webasset/preloader";
+import { doaction, showflow } from "@amec/webasset/api/webform";
 
 var NFRMNO,
 	VORGNO,
@@ -47,7 +46,7 @@ $(async function () {
 	};
 
 	$(".form-info").html(await setformDetail(form));
-	await showFlow(NFRMNO, VORGNO, CYEAR, CYEAR2, NRUNNO);
+	await showflow({NFRMNO, VORGNO, CYEAR, CYEAR2, NRUNNO});
 	toggleActionForm(mode);
 
 	$("#form").removeClass("hidden");
@@ -79,16 +78,16 @@ $(document).on("click", "button[name='btnAction']", async function () {
 		const action = $(this).val();
 		const remark = $("#remark").val();
 
-		const formStatus = await doactionWebservice(
+		const formStatus = await doaction({
 			NFRMNO,
 			VORGNO,
 			CYEAR,
 			CYEAR2,
 			NRUNNO,
-			action,
-			apv,
-			remark,
-		);
+			ACTION: action,
+			APV: apv,
+			REMARK: remark,
+		});
 
 		if (formStatus.status == true) {
 			showMessage(`${$(this).text()}!`, "success");

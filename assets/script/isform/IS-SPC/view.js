@@ -1,7 +1,8 @@
-import { showFlow, doaction, redirectWebflow } from "@amec/webasset/form";
+import { redirectWebflow } from "@amec/webasset/form";
 import flatpickr from "flatpickr";
 import "flatpickr/dist/flatpickr.min.css";
 import { host } from "../../utils.js";
+import { doaction, showflow } from "@amec/webasset/api/webform";
 
 $(document).ready(async function () {
 	flatpickr("#start-date", { dateFormat: "Y-m-d" });
@@ -9,7 +10,13 @@ $(document).ready(async function () {
 	const formData = $(".form-data").data();
 	const { nfrmno, vorgno, cyear, cyear2, nrunno, empno } = formData;
 
-	const flow = await showFlow(nfrmno, vorgno, cyear, cyear2, nrunno);
+	const flow = await showflow({
+        NFRMNO: nfrmno, 
+        VORGNO: vorgno,
+        CYEAR: cyear,
+        CYEAR2: cyear2,
+        NRUNNO: nrunno
+    });
 	$(".flow").html(flow.html);
 
 	$(".btn-submit").click(async function () {
@@ -58,16 +65,16 @@ $(document).ready(async function () {
 				});
 			}
 		}
-		const confirm = await doaction(
-			nfrmno,
-			vorgno,
-			cyear,
-			cyear2,
-			nrunno,
-			action,
-			empno,
-			""
-		);
+		const confirm = await doaction({
+            NFRMNO: nfrmno,
+			VORGNO: vorgno,
+			CYEAR: cyear,
+			CYEAR2: cyear2,
+			NRUNNO: nrunno,
+			ACTION: action,
+			EMPNO: empno,
+			REMARK: ""
+        });
 		if (confirm.status) redirectWebflow();
 	});
 });

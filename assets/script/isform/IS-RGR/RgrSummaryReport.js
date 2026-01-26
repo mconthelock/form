@@ -1,6 +1,7 @@
-import { showFlow, doaction, redirectWebflow } from "@amec/webasset/form";
+import { redirectWebflow } from "@amec/webasset/form";
 // 'doaction' และ 'redirectWebflow' ไม่ถูกเรียกใช้ในไฟล์นี้ จึงลบออกเพื่อความกระชับ
 import { host } from "../../utils.js";
+import { doaction, showflow } from "@amec/webasset/api/webform";
 
 // ใช้ $(async function() { ... }) ที่สั้นกว่า $(document).ready(async function () { ... })
 $(async function () {
@@ -32,7 +33,13 @@ $(async function () {
 
 		// 2. เรียก AJAX และ showFlow พร้อมกันด้วย Promise.all เพื่อประสิทธิภาพที่ดีขึ้น
 		const [flow, data] = await Promise.all([
-			showFlow(nfrmno, vorgno, cyear, cyear2, nrunno),
+			showflow({
+                NFRMNO: nfrmno, 
+                VORGNO: vorgno,
+                CYEAR: cyear,
+                CYEAR2: cyear2,
+                NRUNNO: nrunno
+            }),
 			$.ajax({
 				url: host + "isform/IS-RGR/Main/DataSummaryReport",
 				method: "POST",
@@ -202,16 +209,16 @@ $(async function () {
 		$(".btn-submit").on("click", async function (e) {
 			e.preventDefault();
 			const action = $(this).data("action");
-			const confirm = await doaction(
-				nfrmno,
-				vorgno,
-				cyear,
-				cyear2,
-				nrunno,
-				action,
-				empno,
-				"",
-			);
+			const confirm = await doaction({
+                NFRMNO: nfrmno, 
+                VORGNO: vorgno,
+                CYEAR: cyear,
+                CYEAR2: cyear2,
+                NRUNNO: nrunno,
+                ACTION: action,
+                EMPNO: empno,
+                REMARK: ""
+            });
 			if (confirm.status) redirectWebflow();
 		});
 	} catch (error) {
