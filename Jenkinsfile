@@ -103,11 +103,41 @@ pipeline {
     post {
         always {
             script {
+                // 1. หาชื่อคนสั่ง Build (ดึงจาก Build Causes)
+                def buildCauses = currentBuild.getBuildCauses()
+                def buildUser = "Automated/Webhook"
+                for (cause in buildCauses) {
+                    if (cause.shortDescription.contains('Started by user')) {
+                        buildUser = cause.shortDescription.replace('Started by user ', '')
+                    }
+                }
+
+                // 2. จัดการเรื่องเวลา (แปลงจาก milliseconds เป็นวันที่ที่อ่านออก)
+                def startTime = new Date(currentBuild.startTimeInMillis).format("dd/MM/yyyy HH:mm:ss", TimeZone.getTimeZone('Asia/Bangkok'))
+                def endTime = new Date().format("dd/MM/yyyy HH:mm:ss", TimeZone.getTimeZone('Asia/Bangkok'))
+
                 mail (
                     to: 'chalorms@MitsubishiElevatorAsia.co.th',
                     subject: "Build ${currentBuild.currentResult}: ${env.JOB_NAME} [#${env.BUILD_NUMBER}]",
-                    body: "Check console output at: ${env.BUILD_URL}",
                     from: 'jenkins-notify@mitsubishi-elevator.co.th'
+                    body: """
+                        ข้อมูลการ Build เบื้องต้น:
+                        -------------------------------------------
+                        ผลการทำงาน: ${currentBuild.currentResult}
+                        ผู้ดำเนินการ: ${buildUser}
+                        เวลาที่เริ่ม: ${startTime}
+                        เวลาที่เสร็จ: ${endTime}
+                        ระยะเวลาทั้งหมด: ${currentBuild.durationString.replace(' and counting', '')}
+
+                        รายละเอียดสภาพแวดล้อม:
+                        -------------------------------------------
+                        Environment: ${env.NODE_ENV}
+                        Target Directory: ${env.TARGET_DIR}
+
+                        สามารถตรวจสอบ Log อย่างละเอียดได้ที่:
+                        ${env.BUILD_URL}console
+                        -------------------------------------------
+                    """
                 )
             }
         }
