@@ -99,4 +99,31 @@ pipeline {
             }
         }
     }
+
+    post {
+        always {
+            // ส่งเมลเสมอ ไม่ว่าจะสำเร็จหรือล้มเหลว
+            script {
+                def subject = "Build ${currentBuild.currentResult}: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]'"
+                def details = """<p>Build Result: <b>${currentBuild.currentResult}</b></p>
+                                 <p>Environment: ${env.NODE_ENV}</p>
+                                 <p>Target Directory: ${env.TARGET_DIR}</p>
+                                 <p>Check console output at: <a href="${env.BUILD_URL}">${env.BUILD_URL}</a></p>"""
+
+                emailext (
+                    subject: subject,
+                    body: details,
+                    to: 'chalorms@MitsubishiElevatorAsia.co.th',
+                    from: 'jenkins@MitsubishiElevatorAsia.co.th',
+                    mimeType: 'text/html'
+                )
+            }
+        }
+        success {
+            echo "Deployment to ${env.TARGET_DIR} successful!"
+        }
+        failure {
+            echo "Deployment failed. Please check the logs."
+        }
+    }
 }
