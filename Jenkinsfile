@@ -119,7 +119,7 @@ pipeline {
                 mail (
                     to: 'chalorms@MitsubishiElevatorAsia.co.th',
                     subject: "Build ${currentBuild.currentResult}: ${env.JOB_NAME} [#${env.BUILD_NUMBER}]",
-                    from: 'jenkins-notify@mitsubishi-elevator.co.th'
+                    from: 'jenkins-notify@mitsubishi-elevator.co.th',
                     body: """
                         ข้อมูลการ Build เบื้องต้น:
                         -------------------------------------------
