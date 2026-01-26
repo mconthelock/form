@@ -1,8 +1,8 @@
 console.log("✅ view_train.js loaded");
-console.log("version =", "OMG V1.3");
+console.log("version =", "OMG V1.4");
 
-import { showFlow, redirectWebflow } from "@amec/webasset/form";
-import { doaction, createForm } from "@amec/webasset/api/webform";
+import { redirectWebflow } from "@amec/webasset/form";
+import { doaction, createForm, showflow } from "@amec/webasset/api/webform";
 import flatpickr from "flatpickr";
 import "flatpickr/dist/flatpickr.min.css";
 import { host } from "../../utils.js";
@@ -147,13 +147,13 @@ $(document).ready(async function () {
 
 	// Load flow
 	const formData = $(".form-data").data();
-	const flow = await showFlow(
-		formData.nfrmno,
-		formData.vorgno,
-		formData.cyear,
-		formData.cyear2,
-		formData.nrunno
-	);
+	const flow = await showflow({
+		NFRMNO: formData.nfrmno,
+		VORGNO: formData.vorgno,
+		CYEAR: formData.cyear,
+		CYEAR2: formData.cyear2,
+		NRUNNO: formData.nrunno,
+	});
 	$(".flow").html(flow.html);
 
 	// ------------------------------------------------------------------

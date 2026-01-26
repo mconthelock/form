@@ -2,9 +2,7 @@ import { elementDragDrop, handleFiles } from "@amec/webasset/dragdrop";
 import { fileFormats } from "@amec/webasset/file";
 import {
 	toggleActionForm,
-	doactionWebservice,
 	redirectWebflow,
-	showFlow,
 } from "@amec/webasset/form";
 import { destroySelect2, s2opt, setSelect2 } from "@amec/webasset/select2";
 import { mailForm, mailOpt, sendMail } from "@amec/webasset/sendmail";
@@ -21,6 +19,7 @@ import { searchUser } from "@amec/webasset/api/amec";
 import { displayEmpImage } from "@amec/webasset/indexDB";
 import { showLoader } from "@amec/webasset/preloader";
 import { host } from "../../utils";
+import { doaction, showflow } from "@amec/webasset/api/webform";
 
 var programs,
 	NFRMNO,
@@ -47,7 +46,7 @@ $(async function () {
 		apv = $(".apv-data").attr("apv");
 		cextData = $(".apv-data").attr("cextData");
 		firstStep = $(".apv-data").attr("firstStep");
-		await showFlow(NFRMNO, VORGNO, CYEAR, CYEAR2, NRUNNO);
+		await showflow({NFRMNO, VORGNO, CYEAR, CYEAR2, NRUNNO});
 		data = await getData({
 			...ajaxOptionsLoad,
 			url: `${host}isform/IS-CFS/form/getData`,
@@ -470,16 +469,16 @@ $(document).on("click", "button[name='btnAction']", async function () {
 			}
 		}
 
-		const formStatus = await doactionWebservice(
+		const formStatus = await doaction({
 			NFRMNO,
 			VORGNO,
 			CYEAR,
 			CYEAR2,
 			NRUNNO,
-			action,
-			empno,
-			remark,
-		);
+			ACTION: action,
+			EMPNO: empno,
+			REMARK: remark,
+        });
 
 		if (formStatus.status == true) {
 			showMessage(`${$(this).text()}!`, "success");

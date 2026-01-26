@@ -1,4 +1,4 @@
-import { doaction, redirectWebflow } from "@amec/webasset/form";
+import { redirectWebflow } from "@amec/webasset/form";
 import { showLoader } from "@amec/webasset/preloader";
 import { host } from "../../utils";
 import "select2";
@@ -7,13 +7,10 @@ import flatpickr from "flatpickr";
 //import { setDatePicker } from "@amec/webasset/flatpickr";
 import "flatpickr/dist/flatpickr.min.css";
 import {
-	ajaxOptions,
-	getAllAttr,
-	getData,
 	showMessage,
 	requiredForm,
 } from "@amec/webasset/utils";
-import { showflow } from "@amec/webasset/api/webform";
+import { doaction, showflow } from "@amec/webasset/api/webform";
 $(document).ready(async function () {
 	const formData = $(".form-data").data();
 	flatpickr("#request_date", {
@@ -89,16 +86,16 @@ $(document).ready(async function () {
 		if (action == "reject") {
 			if (cextdata == "01") {
 				if (remark != "") {
-					const confirm = await doaction(
-						nfrmno,
-						vorgno,
-						cyear,
-						cyear2,
-						nrunno,
-						action,
-						empno,
-						remark,
-					);
+					const confirm = await doaction({
+                        NFRMNO: nfrmno,
+                        VORGNO: vorgno,
+                        CYEAR: cyear,
+                        CYEAR2: cyear2,
+                        NRUNNO: nrunno,
+                        ACTION: action,
+                        EMPNO: empno,
+                        REMARK: remark,
+                    });
 					if (confirm.status) redirectWebflow();
 				} else {
 					showMessage(
@@ -113,16 +110,16 @@ $(document).ready(async function () {
 					if (cextdata == "13") {
 						act = "reject";
 					}
-					const confirm = await doaction(
-						nfrmno,
-						vorgno,
-						cyear,
-						cyear2,
-						nrunno,
-						act,
-						empno,
-						remark,
-					);
+					const confirm = await doaction({
+                        NFRMNO: nfrmno,
+                        VORGNO: vorgno,
+                        CYEAR: cyear,
+                        CYEAR2: cyear2,
+                        NRUNNO: nrunno,
+                        ACTION: act,
+                        EMPNO: empno,
+                        REMARK: remark,
+                    });
 					if (confirm.status) {
 						const statusact = await actionfrm(formData);
 						if (statusact.status) redirectWebflow();
@@ -131,16 +128,16 @@ $(document).ready(async function () {
 			}
 		} else if (action == "returnb") {
 			if (remark != "") {
-				const confirm = await doaction(
-					nfrmno,
-					vorgno,
-					cyear,
-					cyear2,
-					nrunno,
-					action,
-					empno,
-					remark,
-				);
+				const confirm = await doaction({
+					NFRMNO: nfrmno,
+					VORGNO: vorgno,
+					CYEAR: cyear,
+					CYEAR2: cyear2,
+					NRUNNO: nrunno,
+					ACTION: action,
+					EMPNO: empno,
+					REMARK: remark,
+				});
 				if (confirm.status) redirectWebflow();
 			} else {
 				showMessage("Please input remark for reason Return", "warning");
@@ -148,16 +145,16 @@ $(document).ready(async function () {
 		} else if (action == "cancel") {
 			if (checkData()) {
 				if (!(await requiredForm("#qoi-form"))) return;
-				const confirm = await doaction(
-					nfrmno,
-					vorgno,
-					cyear,
-					cyear2,
-					nrunno,
-					"approve",
-					empno,
-					remark,
-				);
+				const confirm = await doaction({
+                    NFRMNO: nfrmno,
+                    VORGNO: vorgno,
+                    CYEAR: cyear,
+                    CYEAR2: cyear2,
+                    NRUNNO: nrunno,
+                    ACTION: "approve",
+                    EMPNO: empno,
+                    REMARK: remark,
+                });
 				if (confirm.status) {
 					const statusact = await actionfrm(formData);
 					if (statusact.status) redirectWebflow();
@@ -183,16 +180,16 @@ $(document).ready(async function () {
 				if (!(await requiredForm("#qoi-form"))) return;
 				const statusact = await actionfrm(formData);
 				if (statusact.status) {
-					const confirm = await doaction(
-						nfrmno,
-						vorgno,
-						cyear,
-						cyear2,
-						nrunno,
-						action,
-						empno,
-						remark,
-					);
+					const confirm = await doaction({
+                        NFRMNO: nfrmno,
+                        VORGNO: vorgno,
+                        CYEAR: cyear,
+                        CYEAR2: cyear2,
+                        NRUNNO: nrunno,
+                        ACTION: action,
+                        EMPNO: empno,
+                        REMARK: remark,
+                    });
 					if (confirm.status) redirectWebflow();
 				} else {
 					showMessage(

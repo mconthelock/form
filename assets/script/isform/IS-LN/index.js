@@ -1,5 +1,5 @@
 import { host } from "../../utils.js";
-import { showFlow, doaction, redirectWebflow } from "@amec/webasset/form";
+import { redirectWebflow } from "@amec/webasset/form";
 $(document).ready(function () {
 	let debounceTimer;
 

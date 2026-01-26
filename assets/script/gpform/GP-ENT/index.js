@@ -1,7 +1,9 @@
 import { host } from "../../utils.js";
 import Swal from "sweetalert2";
-import { createForm, redirectWebflow } from "@amec/webasset/form";
+import { redirectWebflow } from "@amec/webasset/form";
+import { createForm } from "@amec/webasset/api/webform"
 import { dayOff } from "@amec/webasset/flatpickr";
+import { checkEmployee } from "@amec/webasset/employee";
 
 $(function () {
 	console.log(dayOff);
@@ -20,6 +22,17 @@ $(function () {
 	const payablePicker = flatpickr("#payable-date", {
 		dateFormat: "Y-m-d",
 		minDate: "today",
+	});
+
+	$("#requested-by").on('keyup', async function () {
+		const value = $(this).val().trim();
+		if (value.length >= 5) {
+			const empData = await checkEmployee(value);
+			if (empData.status === false) {
+				alert("ไม่พบรหัส พนักงาน");
+				$(this).val('').trigger('focus');
+			}
+		}
 	});
 
 	// Icon triggers
@@ -124,10 +137,12 @@ $(function () {
 		if (!amecName) return;
 		$("#amec-loading").removeClass("hidden");
 		$("#add-amec-btn").prop("disabled", true);
-		const empData = await getDataEmp(amecName);
+		const empData = await checkEmployee(amecName);
+		console.log(empData);
+		console.log(empData.status);
 		$("#amec-loading").addClass("hidden");
 		$("#add-amec-btn").prop("disabled", false);
-		if (!empData.length) {
+		if (empData.status === false) {
 			alert("ไม่พบรหัส พนักงาน");
 			return;
 		}
@@ -136,11 +151,10 @@ $(function () {
 		if (amecCount() >= AMEC_MAX) return;
 		$("#amec-list").append(
 			`<li class="flex items-center justify-between gap-2 border border-blue-200 bg-blue-50 shadow-sm rounded-lg px-3 py-1">
-        <span data-empno="${empData[0].SEMPNO}">${empData[0].SEMPPRE ?? ""} ${
-				empData[0].SNAME
-			} (${empData[0].SEMPNO})</span>
-        <button type="button" class="remove-li bg-red-200 text-red-700 cursor-pointer rounded px-2 py-0.5 text-xs">ลบ</button>
-      </li>`
+				<span data-empno="${empData.data.SEMPNO}">${empData.data.SEMPPRE ?? ""} ${empData.data.SNAME
+			} (${empData.data.SEMPNO})</span>
+				<button type="button" class="remove-li bg-red-200 text-red-700 cursor-pointer rounded px-2 py-0.5 text-xs">ลบ</button>
+			</li>`
 		);
 		$("#amec-name-input").val("");
 		updateCount("amec");
@@ -183,9 +197,8 @@ $(function () {
 
 		// Helper to format date as YYYY-M-D to match dayOff.value format
 		const formatDate = (date) => {
-			return `${date.getFullYear()}-${
-				date.getMonth() + 1
-			}-${date.getDate()}`;
+			return `${date.getFullYear()}-${date.getMonth() + 1
+				}-${date.getDate()}`;
 		};
 
 		// If selected date is in the past, workingDays remains 0
@@ -573,14 +586,13 @@ $(function () {
 		});
 		formData.append("estimate_items", JSON.stringify(estimate_items));
 
-		const form = await createForm(
-			nfrmno,
-			vorgno,
-			cyear,
-			$("#requested-by").val(),
-			$("#input-by").val(),
-			""
-		);
+		const form = await createForm({
+			NFRMNO: nfrmno,
+			VORGNO: vorgno,
+			CYEAR: cyear,
+			REQBY: $("#requested-by").val(),
+			INPUTBY: $("#input-by").val(),
+		});
 		const { runno: NRUNNO, cyear2: CYEAR2 } = form.message;
 		formData.append("nrunno", NRUNNO);
 		formData.append("cyear2", CYEAR2);
@@ -853,20 +865,6 @@ window.clearFieldError = function (inputId) {
 };
 
 // --------- OUTSIDE ASYNC FUNCTIONS ---------
-function getDataEmp(empcode) {
-	return new Promise((resolve, reject) => {
-		$.ajax({
-			url: `${host}gpform/GP-ENT/main/getDataEmp`,
-			method: "POST",
-			data: { empcode },
-			dataType: "json",
-			success: resolve,
-			error: function (_, __, error) {
-				reject(error);
-			},
-		});
-	});
-}
 
 function calculateTotals() {
 	let totalAmount = 0;

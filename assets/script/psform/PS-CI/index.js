@@ -1,11 +1,11 @@
 import { host } from "../../utils";
-import { showFlow, doaction, redirectWebflow } from "@public/_form.js";
-import { createTable } from "@public/_dataTable";
+import { createTable } from "@amec/webasset/dataTable";
+import { showflow } from "@amec/webasset/api/webform";
 
 $(document).ready(async function () {
     const { nfrmno, vorgno, cyear, cyear2, nrunno, empno } = $(".form-data").data();
 
-    const flow = await showFlow(nfrmno, vorgno, cyear, cyear2, nrunno);
+    const flow = await showflow(nfrmno, vorgno, cyear, cyear2, nrunno);
     $(".flow").html(flow.html);
 
     const data = await $.ajax({

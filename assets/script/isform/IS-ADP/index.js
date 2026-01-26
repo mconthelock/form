@@ -4,6 +4,7 @@ import {
     showErrorMessage,
     showMessage,
     getAllAttr,
+    requiredForm,
 } from "@amec/webasset/utils";
 import { webflowSubmit, getformDetail } from "@amec/webasset/components/form";
 import {
@@ -17,6 +18,7 @@ import { doaction, showflow } from "@amec/webasset/api/webform";
 import { getIsFile } from "@amec/webasset/api/isform";
 import { downloadOrOpenFile } from "@amec/webasset/api/file";
 import { getAnnualFyear } from "@amec/webasset/api/docinv";
+import { getUser } from "@amec/webasset/api/amec";
 
 var formInfo,
     empno,
@@ -83,14 +85,11 @@ $(async function () {
         const year = new Date().getFullYear(); // get year
         mode = Number(formInfo.mode); // get mode
         empno = $(".apv-data").attr("empno"); // get employee number
-        fyear = month <= 4 ? year - 1 : year; 
-        
-        $(".fyear").text(fyear);
-        
         // set skeleton
         await setSkeleton(mode);
-
+        fyear = month <= 4 ? year - 1 : year; 
         let flow = null;
+        let data = [];
         if(mode != 1){
             form = {
                 NFRMNO: formInfo.nfrmno,
@@ -111,9 +110,22 @@ $(async function () {
             }
             const formdetail = await getformDetail(form);
             $("#form-detail").html(formdetail);
+            data = await getData(form);
+            fyear = data[0]?.PLANYEAR;
+        }else{
+            $('#form-Requester').removeClass('hidden');
+            $("#fyear").val(fyear);
+            data = await getAnnualFyear(fyear)
+            .then((data) => 
+                data.map((item) => ({
+                    ...item,
+                    DEV_PLAN: 0,
+                })
+            ));
         }
+        $(".fyear").text(fyear);
         // create datatable
-        table = await createDataTable();
+        table = await createDataTable(data);
         tableLoading.remove();
         // create button submit form
         let flowsubmit = "";
@@ -122,7 +134,7 @@ $(async function () {
                 flowsubmit = webflowSubmit({ request: true })
                 break;
             case 2:
-                flowsubmit = webflowSubmit({ flow: true, flowhtml: flow.html, approve: true });
+                flowsubmit = webflowSubmit({ flow: true, flowhtml: flow.html, approve: true, reject: true });
                 break;
             default:
                 flowsubmit = webflowSubmit({ flow: true, flowhtml: flow.html, actionsForm: false});
@@ -135,8 +147,73 @@ $(async function () {
     } 
 });
 
+$(document).on('input', '#fyear', async function(){
+    try {
+        if($(this).val().length == 4) {
+            fyear = $(this).val();
+            $(".fyear").text(fyear);
+            const data = await getAnnualFyear(fyear)
+            .then((data) => 
+                data.map((item) => ({
+                    ...item,
+                    DEV_PLAN: 0,
+                })
+            ))
+            table = await createDataTable(data);
+        }
+    } catch (error) {
+        console.error("Error:", error);
+        showErrorMessage(error.message);
+    }
+});
+
+$(document).on('focusout', '#fyear', async function(){
+    try {
+        if($(this).val().length < 4) {
+            $(this).val('');
+            $(this).focus();
+            $(".fyear").text('');
+            fyear = null;
+            table = await createDataTable();
+            showMessage('Please enter 4 digit Year', 'warning');
+        }
+    } catch (error) {
+        console.error("Error:", error);
+        showErrorMessage(error.message);
+    }
+});
+
+$(document).on('input', '#REQUESTER', async function(){
+    try {
+        const empno = $(this).val();
+        if(empno.length == 5){
+            const data = await getUser(empno);
+        }
+        
+    } catch (error) {
+        $(this).val('');
+        console.error("Error:", error);
+        showErrorMessage(error.message);
+    }
+});
+
+$(document).on('focusout', '#REQUESTER', async function(){
+    try {
+        const empno = $(this).val();
+        if(empno.length < 5){
+            $(this).val('');
+            showMessage('Please enter 5 digit Employee Number', 'warning');
+        }
+        
+    } catch (error) {
+        console.error("Error:", error);
+        showErrorMessage(error.message);
+    }
+});
+
+
 //prettier-ignore
-$(document).on('change', '.dev-confirm', function(){
+$(document).on('input', '.dev-confirm', function(){
     const row = $(this).closest('tr');
     const rowIndex = table.row(row).index();
     const value = Number($(this).val()) || 0;
@@ -168,23 +245,19 @@ $(document).on('click', '#btnRequest', async function () {
                 COST: d.COST,
             }
         });
-        if(!isValid){
-            addClassError($('.dev-confirm[value=""]'));
-            showMessage("กรุณากรอก Development Plan ให้ครบถ้วน", 'warning');
-            return;
-        }
-        if($('#file')[0].files.length == 0){
-            addClassError($('#file'));
-            showMessage("กรุณาแนบไฟล์ Attachment Annual plan", 'warning');
-            return;
-        }
+        const requiredMessage = [
+            {element: $('#fyear'), message: "Please input fiscal year."},
+            {element: $('#REQUESTER'), message: "Please input requester."},
+            {element: $('.dev-confirm[value=""]'), message: "Please input Development Plan."},
+            {element: $('#file'), message: "Please attach file."}
+        ];
+                
+        if(!(await requiredForm('#form', requiredMessage))) return;
         const formData = new FormData($('#form')[0]);
         formData.append("NFRMNO", formInfo.nfrmno);
         formData.append("VORGNO", formInfo.vorgno);
         formData.append("CYEAR", formInfo.cyear);
         formData.append("REMARK", $('#remark').val());
-        formData.append("REQUESTER", empno);
-        formData.append("CREATEBY", empno);
         data.forEach((item, i) => {
             // NestJS จะมองเป็น data[0][field], data[1][field]
             Object.keys(item).forEach((key) => {
@@ -259,16 +332,10 @@ $(document).on("click", ".file-link", async function (e) {
 });
 
 //prettier-ignore
-async function createDataTable(){
+async function createDataTable(data = []){
     return await createTable(
         {
-            data: mode == 1 ? await getAnnualFyear(fyear)
-            .then((data) => 
-                data.map((item) => ({
-                    ...item,
-                    DEV_PLAN: 0,
-                })
-            )) : await getData(form),
+            data: data,
             columns: columns(fyear),
             searching: false,
             lengthChange: false,

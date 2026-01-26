@@ -1,7 +1,8 @@
 // IS-LN View Page Script
-import { showFlow, doaction, redirectWebflow } from "@amec/webasset/form";
+import { redirectWebflow } from "@amec/webasset/form";
 import { host, showLoader } from "../../utils.js";
 import Swal from "sweetalert2";
+import { doaction, showflow } from "@amec/webasset/api/webform";
 
 $(document).ready(async function () {
 	console.log("IS-LN View page loaded");
@@ -20,7 +21,7 @@ $(document).ready(async function () {
 
 	// Load workflow/flow
 	try {
-		const flow = await showFlow(nfrmno, vorgno, cyear, cyear2, nrunno);
+		const flow = await showflow({NFRMNO: nfrmno, VORGNO: vorgno, CYEAR: cyear, CYEAR2: cyear2, NRUNNO: nrunno});
 		if (flow && flow.html) {
 			$(".flow").html(flow.html);
 		}
@@ -117,16 +118,15 @@ $(document).ready(async function () {
 
 	$(".btn-submit").click(async function () {
 		const action = $(this).data("action");
-		const confirm = await doaction(
-			nfrmno,
-			vorgno,
-			cyear,
-			cyear2,
-			nrunno,
-			action,
-			empno,
-			""
-		);
+		const confirm = await doaction({
+			NFRMNO: nfrmno,
+			VORGNO: vorgno,
+			CYEAR: cyear,
+			CYEAR2: cyear2,
+			NRUNNO: nrunno,
+			ACTION: action,
+			EMPNO: empno,
+		});
 		if (confirm.status) redirectWebflow();
 	});
 });

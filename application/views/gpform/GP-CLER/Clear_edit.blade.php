@@ -174,6 +174,8 @@
                                 <th class="py-2 px-4 text-center w-12 rounded-tl-xl">No.</th>
                                 <th class="py-2 px-4 text-center">Receipt No.</th>
                                 <th class="py-2 px-4 text-center">Cost</th>
+                                <th class="py-2 px-4 text-center">Date issue receipt</th>
+                                <th class="py-2 px-4 text-center">Attach Receipt</th>
                                 <th class="py-2 px-4 w-12 rounded-tr-xl"></th>
                             </tr>
                         </thead>
@@ -184,7 +186,13 @@
                                     <input type="text" class="input input-sm border rounded-lg px-3 py-1 w-full focus:ring-2 bg-white focus:ring-green-400 transition" placeholder="Receipt No.">
                                 </td>
                                 <td class="py-2 px-4">
-                                    <input type="text" class="input input-sm border rounded-lg px-3 py-1 w-full focus:ring-2 bg-white focus:ring-green-400 transition" placeholder="Cost">
+                                    <input type="number" class="input input-sm border rounded-lg px-3 py-1 w-full focus:ring-2 bg-white focus:ring-green-400 transition cost-input" placeholder="Cost">
+                                </td>
+                                <td class="py-2 px-4">
+                                    <input type="date" class="input input-sm border rounded-lg px-3 py-1 w-full focus:ring-2 bg-white focus:ring-green-400 transition">
+                                </td>
+                                <td class="py-2 px-4">
+                                    <input type="file" class="file-input file-input-sm file-input-bordered w-full max-w-xs rounded-lg border-green-400">
                                 </td>
                                 <td class="py-2 px-4 text-center">
                                     <button type="button" class="remove-row bg-red-500 hover:bg-red-600 text-white rounded-full w-8 h-8 flex items-center cursor-pointer justify-center shadow transition" title="Remove row">
@@ -239,7 +247,7 @@
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <!-- Attach Receipt -->
-                        <div>
+                        {{-- <div>
                             <label class="font-semibold text-green-700 mb-1 block">Attach Receipt:</label>
                             <div class="flex items-center gap-3">
                                 <input type="file" name="receipt" id="receipt" class="file-input file-input-bordered w-full max-w-xs rounded-xl border-green-400" {{ $formCler->RECEIPT_FILE ? '' : 'required' }}>
@@ -253,7 +261,7 @@
                             </div>
 
                             <!-- {{ print_r($file_attach) }} -->
-                        </div>
+                        </div> --}}
 
                         @if (!empty($file_attach))
                             <div>

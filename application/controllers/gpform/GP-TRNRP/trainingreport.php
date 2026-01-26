@@ -277,9 +277,10 @@ class Trainingreport extends MY_Controller {
         $nrunno = '--';
         echo $month."|".$cyear2."<BR>";
 
-        //$get_form_2month = $this->trn->get_3month_train_report($nfrmno, $vorgno, $cyear, $cyear2);
-        $get_form_2month = $this->trn->get_3month_train_report_for_test($nfrmno, $vorgno, $cyear, $cyear2, '15');
-        foreach($get_form_2month as $val){
+        $get_form_3month = $this->trn->get_3month_train_report($nfrmno, $vorgno, $cyear);
+        //$get_form_3month = $this->trn->get_3month_train_report_for_test($nfrmno, $vorgno, $cyear, $cyear2, '15');
+        print_r($get_form_3month);
+        foreach($get_form_3month as $val){
             echo $val->CYEAR2."_".$val->NRUNNO."<br>";
             $nrunno = $val->NRUNNO;
             $cyear2 = $val->CYEAR2;

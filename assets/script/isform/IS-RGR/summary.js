@@ -1,5 +1,6 @@
+import { createForm } from "@amec/webasset/api/webform";
 import { host } from "../../utils.js";
-import { createForm, redirectWebflow } from "@amec/webasset/form";
+import { redirectWebflow } from "@amec/webasset/form";
 import Swal from "sweetalert2";
 
 $(document).ready(function () {
@@ -274,7 +275,14 @@ $(document).ready(function () {
 
 		// console.log(result);
 
-		const form = await createForm(nfrmno, vorgno, cyear, empno, empno, "");
+		const form = await createForm({
+            NFRMNO: nfrmno, 
+            VORGNO: vorgno,
+            CYEAR: cyear,
+            REQBY: empno, 
+            INPUTBY: empno, 
+            REMARK:""
+        });
 		const { runno: NRUNNO, cyear2: CYEAR2 } = form.message;
 
 		$.ajax({

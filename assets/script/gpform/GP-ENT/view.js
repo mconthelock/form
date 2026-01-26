@@ -1,4 +1,5 @@
-import { showFlow, doaction, redirectWebflow } from "@amec/webasset/form";
+import { doaction, showflow } from "@amec/webasset/api/webform";
+import { redirectWebflow } from "@amec/webasset/form";
 import flatpickr from "flatpickr";
 import "flatpickr/dist/flatpickr.min.css";
 
@@ -8,8 +9,14 @@ import "@fortawesome/fontawesome-free/css/all.min.css";
 import { searchUser } from "@amec/webasset/api/amec";
 import { s2disableSearch, s2opt, setSelect2 } from "@amec/webasset/select2";
 import { dayOff } from "@amec/webasset/flatpickr";
+import select2 from "select2";
+import "select2/dist/css/select2.min.css";
+select2();
 
 $(document).ready(async function () {
+
+	const formData = $(".form-data").data();
+	const { nfrmno, vorgno, cyear, cyear2, nrunno, empno } = formData;
 	const GUEST_MAX = 100,
 		AMEC_MAX = 100;
 
@@ -83,9 +90,8 @@ $(document).ready(async function () {
 
 		// Helper to format date as YYYY-M-D to match dayOff.value format
 		const formatDate = (date) => {
-			return `${date.getFullYear()}-${
-				date.getMonth() + 1
-			}-${date.getDate()}`;
+			return `${date.getFullYear()}-${date.getMonth() + 1
+				}-${date.getDate()}`;
 		};
 
 		// If selected date is in the past, workingDays remains 0
@@ -149,8 +155,7 @@ $(document).ready(async function () {
 		if (amecCount() >= AMEC_MAX) return;
 		$("#amec-list").append(
 			`<li class="flex items-center justify-between gap-2 border border-blue-200 bg-blue-50 shadow-sm rounded-lg px-3 py-1">
-        <span data-empno="${empData[0].SEMPNO}">${empData[0].SEMPPRE ?? ""} ${
-				empData[0].SNAME
+        <span data-empno="${empData[0].SEMPNO}">${empData[0].SEMPPRE ?? ""} ${empData[0].SNAME
 			} (${empData[0].SEMPNO})</span>
         <button type="button" class="remove-li bg-red-200 text-red-700 cursor-pointer rounded px-2 py-0.5 text-xs">ลบ</button>
       </li>`
@@ -192,16 +197,39 @@ $(document).ready(async function () {
 
 	if ($("#emp_select").length) {
 		$("#emp_select").select2();
+
 		const employees = await searchUser({ CSTATUS: "1" });
-		// console.log(employees);
+
+		const participants = await $.ajax({
+			type: "POST",
+			url: host + "gpform/GP-ENT/main/getamecParticipants",
+			data: {
+				nfrmno: nfrmno,
+				vorgno: vorgno,
+				cyear: cyear,
+				cyear2: cyear2,
+				nrunno: nrunno
+			},
+			dataType: "json"
+		});
+
+		// ดึงเฉพาะ EMP_CODE / SEMPNO ของ participant
+		const participantEmpCodes = participants.map(p => p.EMP_CODE);
+		// หรือถ้าใช้ชื่อฟิลด์ SEMPNO
+		// const participantEmpCodes = participants.map(p => p.SEMPNO);
 
 		const emp_manager = employees
-			.filter((emp) => emp.SPOSCODE <= "20" && emp.SDIVCODE !== "140101")
+			.filter(emp =>
+				emp.SPOSCODE <= "20" &&
+				emp.SDIVCODE !== "140101" &&
+				!participantEmpCodes.includes(emp.SEMPNO)
+			)
 			.sort((a, b) => a.SPOSCODE.localeCompare(b.SPOSCODE));
-		console.log(emp_manager);
 
-		emp_manager.forEach((emp) => {
-			const option = `<option value="${emp.SEMPNO}">${emp.SEMPNO} - ${emp.SNAME} (${emp.SPOSNAME})</option>`;
+		emp_manager.forEach(emp => {
+			const option = `<option value="${emp.SEMPNO}">
+            ${emp.SEMPNO} - ${emp.SNAME} (${emp.SPOSNAME})
+        </option>`;
 			$("#emp_select").append(option);
 		});
 	}
@@ -229,10 +257,17 @@ $(document).ready(async function () {
 		modal.showModal();
 	}
 
-	const formData = $(".form-data").data();
-	const { nfrmno, vorgno, cyear, cyear2, nrunno, empno } = formData;
 
-	const flow = await showFlow(nfrmno, vorgno, cyear, cyear2, nrunno, true);
+
+	const flow = await showflow(
+		{
+			NFRMNO: nfrmno,
+			VORGNO: vorgno,
+			CYEAR: cyear,
+			CYEAR2: cyear2,
+			NRUNNO: nrunno,
+		}
+	);
 	$(".flow").html(flow.html);
 
 	$(".btn-submit").click(async function () {
@@ -338,17 +373,17 @@ $(document).ready(async function () {
 			});
 		}
 
-		if (action === "approve" && cstepno === "19" && cstepnextno === "18") {
-			$.getJSON(host + "gpform/GP-ENT/main/sendMailToApprover", {
-				nfrmno,
-				vorgno,
-				cyear,
-				cyear2,
-				nrunno,
-			})
-				.done(console.log)
-				.fail(console.log);
-		}
+		// if (action === "approve" && cstepno === "19" && cstepnextno === "18") {
+		// 	$.getJSON(host + "gpform/GP-ENT/main/sendMailToApprover", {
+		// 		nfrmno,
+		// 		vorgno,
+		// 		cyear,
+		// 		cyear2,
+		// 		nrunno,
+		// 	})
+		// 		.done(console.log)
+		// 		.fail(console.log);
+		// }
 
 		if (action === "return") {
 			$.ajax({

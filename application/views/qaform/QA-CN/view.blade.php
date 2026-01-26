@@ -117,7 +117,7 @@
             )
                 <input type="text" name="txtItemno" 
                        class="w-24 h-8 px-2 border border-gray-300 bg-white focus:outline-none focus:ring-1 focus:ring-sky-400 rounded-sm"
-                       value="  {{ $cnform->ITEMNO }}" maxlenght="3">
+                       value="{{ $cnform->ITEMNO }}" maxlenght="3">
                        @else
                 {{ $cnform->ITEMNO }}
             @endif    
@@ -150,13 +150,13 @@
                             $g = $parts[1] ?? ''; 
                             $l = $parts[2] ?? ''; 
                         @endphp
-                            <span><input type="text" name="txtDwgNo" 
+                            <span><input type="text" name="txtDwgNo[]" 
                             class="w-40 h-8 px-2 border border-gray-300 bg-white focus:outline-none focus:ring-1 focus:ring-sky-400 rounded-sm"
                             value="{{ $dwg }}">
-                            <input type="text" name="txtG" 
+                            <input type="text" name="txtG[]" 
                             class="w-40 h-8 px-2 border border-gray-300 bg-white focus:outline-none focus:ring-1 focus:ring-sky-400 rounded-sm"
                             value="{{ $g }}">
-                            <input type="text" name="txtL" 
+                            <input type="text" name="txtL[]" 
                             class="w-40 h-8 px-2 border border-gray-300 bg-white focus:outline-none focus:ring-1 focus:ring-sky-400 rounded-sm"
                             value="{{ $l }}"></span>
                         @else
@@ -168,7 +168,7 @@
                         <span class="px-2">Rev no. :</span>
                         <span>
                             @if ((($form[0]->CST == "0")||($mode == $MODE_EDIT)) && in_array($empno, [$form[0]->VREQNO, $form[0]->VINPUTER]))
-                                 <input type="text" name="revNo" 
+                                 <input type="text" name="revNo[]" 
                             class="w-20 h-8 px-2 border border-gray-300 bg-white focus:outline-none focus:ring-1 focus:ring-sky-400 rounded-sm"
                             value="{{ $d->REVNO }}">
                             @else
@@ -209,7 +209,7 @@
                     </td>
                     <td class="py-1 text-black">
                         @if (($mode == $MODE_EDIT)&&($cextData >= 1) && ($cextData <= 3))
-                            <input type="text" name="txtDwgRem" 
+                            <input type="text" name="txtDwgRem{{ $cnt }}" 
                             class="w-20 h-8 px-2 border border-gray-300 bg-white focus:outline-none focus:ring-1 focus:ring-sky-400 rounded-sm"
                             value="{{ $d->REMARK }}">
                         @else
@@ -217,9 +217,13 @@
                         @endif 
                     </td>
                      </tr>
+                     @php
+                        $cnt++;
+                     @endphp
                      @endforeach
+                      <input type="hidden" name="cnt" value="{{ $cnt }}" />
                     </tbody>
-                    @if ((($form[0]->CST == "0")||($mode == $MODE_EDIT)) && in_array($empno, [$form[0]->VREQNO, $form[0]->VINPUTER]))
+                    @if ((($form[0]->CST == "0")) && in_array($empno, [$form[0]->VREQNO, $form[0]->VINPUTER]))
                     <tfoot>
 							<tr>
 								<td colspan="4" style="text-align:right" >

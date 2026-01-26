@@ -14,39 +14,70 @@ $(document).ready(async function () {
   flatpickr("#submit_date", { dateFormat: "d/m/Y", defaultDate: $("#submit_date").val() });
   flatpickr("#inspec_date", { dateFormat: "d/m/Y", defaultDate: $("#inspec_date").val() });
   flatpickr("#expchg_date", { dateFormat: "d/m/Y", defaultDate: $("#expchg_date").val() });
-  function loadUsersToSelect($select,$type,$empno) {
-    $.get(
-      host + "qaform/QA-QOI/form/get_list/"+$type+"/"+$empno,
-      function (data) {
-        $select.empty().append('<option value="">------------Select------------</option>');
-        data.forEach(function (user) {
-          $select.append(
-            `<option value="${user.SEMPNO}">${user.SNAME}</option>`
-          );
-        });
-        $select.select2();
-      },
-      "json"
-    );
-  }
+
   const { nfrmno, vorgno, cyear, cyear2, nrunno, empno } = formData;
   const flow = await showflow({
-    NFRMNO:nfrmno, 
+    NFRMNO: nfrmno, 
     VORGNO: vorgno, 
     CYEAR:  cyear.toString(),
     CYEAR2: cyear2.toString(), 
     NRUNNO: nrunno
   });
-  if($("#cextData").val() == "01") loadUsersToSelect($(".jstaff_select"),'J','');
-  if($("#cextData").val() == "04") loadUsersToSelect($(".sem_select"),'S','');
-  //loadUsersToSelect($(".eng_select"),'E');
-  console.log(empno);
-  if($("#cextData").val() == "07") loadUsersToSelect($(".eng_select"),'W',empno);
+
   $(".flow").html(flow.html);
 
   $(".btn-submit").click(async function () {
       const action = $(this).data("action");
-      checkData();
+      if(checkData(action))
+      {
+        	const frm = $("#cn-form");
+          var cnformData = new FormData(frm[0]);
+          cnformData.append("nfrmno", nfrmno);
+          cnformData.append("vorgno", vorgno);
+          cnformData.append("cyear", cyear);
+          cnformData.append("cyear2", cyear2);
+          cnformData.append("nrunno", nrunno);
+          cnformData.append("action", action);
+          cnformData.append("empno", empno);
+          for (let pair of cnformData.entries()) {
+          console.log(pair[0] + ' = ' + pair[1]);
+      }
+          
+         // return false;
+          if(action == "approve" || action == "reject" || action == "return" )
+          {
+                  
+                  let cextData =  parseInt($("#cextData").val());
+                  if(cextData >1 && cextData != 5 && action == "reject")
+                  {
+                      $act = "approve";
+                  }else{
+                      $act = action;
+                  }
+                  const confirm = await doaction(
+                    nfrmno,
+                    vorgno,
+                    cyear,
+                    cyear2,
+                    nrunno,
+                    act,
+                    empno,
+                    remark,
+                  );
+                  if (confirm.status) {
+                    const statusact = await actionfrm(cnformData);
+                    if (statusact.status) redirectWebflow();
+                  }
+              
+          }else
+          {
+              const statusact = await actionfrm(cnformData);
+              if (statusact.status) redirectWebflow();
+          }
+
+
+      }
+      
       // console.log($("#chkopr").val() );
       // console.log(">>>"||$("#demapv").val()||"<<<<");
       // if($("#demapv").val()=="1")
@@ -196,7 +227,7 @@ function checkData(act)
           showMessage('Please input Reason for others', 'warning');
           return false;
       }
-      if((sample == "2")&&(("#txtReturn").val() == ""))
+      if((sample == "2")&&($("#txtReturn").val() == ""))
       {
         showMessage('Please input Return to', 'warning');
         return false;
