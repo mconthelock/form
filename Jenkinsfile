@@ -119,9 +119,9 @@ pipeline {
                 def endTime = new Date().format("dd/MM/yyyy HH:mm:ss", TimeZone.getTimeZone('Asia/Bangkok'))
 
                 mail (
-                    to: 'chalorms@MitsubishiElevatorAsia.co.th',
+                    to: 'sec_wsd@MitsubishiElevatorAsia.co.th',
                     subject: "Build ${currentBuild.currentResult}: ${env.JOB_NAME} [#${env.BUILD_NUMBER}]",
-                    from: 'jenkins-notify@mitsubishi-elevator.co.th',
+                    from: 'jenkins-notify@MitsubishiElevatorAsia.co.th',
                     body: """
                         ข้อมูลการ Build เบื้องต้น:
                         -------------------------------------------
