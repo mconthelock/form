@@ -105,10 +105,12 @@ pipeline {
             script {
                 // 1. หาชื่อคนสั่ง Build (ดึงจาก Build Causes)
                 def buildCauses = currentBuild.getBuildCauses()
-                def buildUser = "Automated/Webhook"
+                def buildUser = ""
                 for (cause in buildCauses) {
                     if (cause.shortDescription.contains('Started by user')) {
                         buildUser = cause.shortDescription.replace('Started by user ', '')
+                    }else{
+                        buildUser = cause.shortDescription.replace('Started by GitLab push by ', '')
                     }
                 }
 
