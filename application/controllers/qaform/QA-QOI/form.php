@@ -374,8 +374,8 @@ class form extends MY_Controller{
              );
              $fid++;
          }
-
          }
+         
          if(count($arrdwg) > 0)
          {
              $this->qoi->delete("RESULTQOIDWG", $con);
