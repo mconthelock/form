@@ -719,13 +719,25 @@ class Main extends MY_Controller {
 
     public function NewApproveController()
     {
-        $approver = $this->input->post('approver');
-        $nfrmno   = $this->input->post('nfrmno');
-        $vorgno   = $this->input->post('vorgno');
-        $cyear    = $this->input->post('cyear');
-        $cyear2   = $this->input->post('cyear2');
-        $nrunno   = $this->input->post('nrunno');
-        $this->updateFlowApv("", $approver, $nfrmno, $vorgno, $cyear, $cyear2, $nrunno, "18", "19");
+        $approver  = $this->input->post('approver');
+        $nfrmno    = $this->input->post('nfrmno');
+        $vorgno    = $this->input->post('vorgno');
+        $cyear     = $this->input->post('cyear');
+        $cyear2    = $this->input->post('cyear2');
+        $nrunno    = $this->input->post('nrunno');
+        $condition = [
+            'NFRMNO'  => $nfrmno,
+            'VORGNO'  => $vorgno,
+            'CYEAR'   => $cyear,
+            'CYEAR2'  => $cyear2,
+            'NRUNNO'  => $nrunno,
+            'CSTEPNO' => "18"
+        ];
+        $this->updateFlow([
+            'condition' => $condition,
+            'VAPVNO'    => $approver
+        ]);
+        // $this->updateFlowApv("", $approver, $nfrmno, $vorgno, $cyear, $cyear2, $nrunno, "18", "19");
     }
 
     public function preview($filename)
@@ -768,13 +780,16 @@ class Main extends MY_Controller {
         $formNumber    = $this->toFormNumber($nfrmno, $vorgno, $cyear, $cyear2, $nrunno);
 
         $arr_m = array_merge((array) $flow_approver[0], (array) $emp_approver[0]);
-        $link  = '<a href="https://amecweb.mitsubishielevatorasia.co.th/form/gpform/GP-ENT/main?sr=1&no=9&orgNo=030101&y=25&y2=' . $cyear2 . '&runNo=' . $nrunno . '&empno=' . $emp_approver[0]->SEMPNO . '&m=3&bp=%2Fform%2Fworkflow%2FmineList%2Easp&menu=1"> LINK WEBFLOW </a>';
+        $link  = "<a href=\"https://amecweb.mitsubishielevatorasia.co.th/form/gpform/GP-ENT/main?sr=1&no=9&orgNo=030101&y=25&y2=$cyear2&runNo=$nrunno&empno=" . $emp_approver[0]->SEMPNO . '&m=3&bp=%2Fform%2Fworkflow%2FmineList%2Easp&menu=1"> LINK WEBFLOW </a>';
 
         $emp_aprv = "approver";
-        if ($arr_m['SPOSCODE'] == "10") {
-            $emp_aprv = "RAF DIM.";
-        } else if ($arr_m['SPOSCODE'] == "02") {
-            $emp_aprv = "PRESIDENT.";
+        switch ($arr_m['SPOSCODE']) {
+            case "10":
+                $emp_aprv = "RAF DIM.";
+                break;
+            case "02":
+                $emp_aprv = "PRESIDENT.";
+                break;
         }
 
 
@@ -786,11 +801,7 @@ class Main extends MY_Controller {
         $d['TO']      = 'perapatr@mitsubishielevatorasia.co.th';
         // $d['TO']      = [$emp_req[0]->SRECMAIL];
         $d['BODY'] = [
-            '<div style="font-family: Arial, sans-serif; font-size: 14px; color: #333;">
-                <p>Dear ' . $emp_aprv . '</p>
-
-                <p>
-                    Your Entertainment form no. <strong>' . $formNumber . '</strong> must get approved by <span style="color: red;">' . $emp_approver[0]->SNAME . ' (Emp. No. ' . $emp_approver[0]->SEMPNO . ')</span>.
+            "<div style=\"font-family: Arial, sans-serif; font-size: 14px; color: #333;\">\r\n                <p>Dear $emp_aprv</p>\r\n\r\n                <p>\r\n                    Your Entertainment form no. <strong>$formNumber</strong> must get approved by <span style=\"color: red;\">" . $emp_approver[0]->SNAME . ' (Emp. No. ' . $emp_approver[0]->SEMPNO . ')</span>.
                 </p>
                 <p>
                     Please consideration this Entertainment form on webflow system by Click link ' . $link . '.
@@ -851,4 +862,14 @@ class Main extends MY_Controller {
     // }
 
 
+    public function getamecParticipants()
+    {
+        $nfrmno = $this->input->post('nfrmno');
+        $vorgno = $this->input->post('vorgno');
+        $cyear  = $this->input->post('cyear');
+        $cyear2 = $this->input->post('cyear2');
+        $nrunno = $this->input->post('nrunno');
+        $data   = $this->ent->getamecParticipants($nfrmno, $vorgno, $cyear, $cyear2, $nrunno);
+        echo json_encode($data);
+    }
 }
