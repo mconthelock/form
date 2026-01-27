@@ -382,7 +382,16 @@ $(function () {
     });
     formData.append("estimate_items", JSON.stringify(estimate_items));
 
-    const form = await createForm(nfrmno, vorgno, cyear, $("#requested-by").val(), $("#input-by").val(), "");
+    const form = await createForm(
+      {
+        NFRMNO: nfrmno,
+        VORGNO: vorgno,
+        CYEAR: cyear,
+        REQBY: $("#requested-by").val(),
+        INPUTBY: $("#input-by").val(),
+        REMARK: ""
+      }
+    );
     const { runno: NRUNNO, cyear2: CYEAR2 } = form.message;
     formData.append("nrunno", NRUNNO);
     formData.append("cyear2", CYEAR2);

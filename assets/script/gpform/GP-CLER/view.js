@@ -16,11 +16,27 @@ $(document).ready(async function () {
   const formEnt = $(".form-ent").data() || {};
   const { ent_nfrmno, ent_vorgno, ent_cyear, ent_cyear2, ent_nrunno, ent_empno } = formEnt;
 
-  const flow = await showFlow(nfrmno, vorgno, cyear, cyear2, nrunno, true);
+  const flow = await showflow(
+    {
+      NFRMNO: nfrmno,
+      VORGNO: vorgno,
+      CYEAR: cyear,
+      CYEAR2: cyear2,
+      NRUNNO: nrunno,
+    }
+  );
   $(".flow").html(flow.html);
 
   if (ent_nfrmno && ent_vorgno && ent_cyear && ent_cyear2 && ent_nrunno && ent_empno) {
-    const flow_ent = await showFlow(ent_nfrmno, ent_vorgno, ent_cyear, ent_cyear2, ent_nrunno , true);
+    const flow_ent = await showflow(
+      {
+        NFRMNO: ent_nfrmno,
+        VORGNO: ent_vorgno,
+        CYEAR: ent_cyear,
+        CYEAR2: ent_cyear2,
+        NRUNNO: ent_nrunno,
+      }
+    );
     $(".flow_ent").html(flow_ent.html);
   }
 
@@ -84,7 +100,18 @@ $(document).ready(async function () {
     }
 
     // ทำ action ต่อ
-    const result = await doaction(nfrmno, vorgno, cyear, cyear2, nrunno, action, empno, remark_approve);
+    const result = await doaction(
+      {
+        NFRMNO: nfrmno,
+        VORGNO: vorgno,
+        CYEAR: cyear,
+        CYEAR2: cyear2,
+        NRUNNO: nrunno,
+        ACTION: action,
+        EMPNO: empno,
+        REMARK: remark_approve // optional
+      }
+    );
     if (result?.status) redirectWebflow();
   });
 
@@ -211,7 +238,18 @@ $(document).ready(async function () {
           showConfirmButton: false,
           timer: 2000,
         });
-        const confirm = await doaction(nfrmno, vorgno, cyear, cyear2, nrunno, "approve", empno, "");
+        const confirm = await doaction(
+          {
+            NFRMNO: nfrmno,
+            VORGNO: vorgno,
+            CYEAR: cyear,
+            CYEAR2: cyear2,
+            NRUNNO: nrunno,
+            ACTION: 'approve',
+            EMPNO: empno,
+            REMARK: '' // optional
+          }
+        );
         if (confirm.status) redirectWebflow();
         // location.reload();
       },
@@ -460,7 +498,18 @@ $(document).ready(async function () {
         $("#loading-overlay").show();
       },
       success: async function (response) {
-        const confirm = await doaction(nfrmno, vorgno, cyear, cyear2, nrunno, "approve", empno, "");
+        const confirm = await doaction(
+          {
+            NFRMNO: nfrmno,
+            VORGNO: vorgno,
+            CYEAR: cyear,
+            CYEAR2: cyear2,
+            NRUNNO: nrunno,
+            ACTION: 'approve',
+            EMPNO: empno,
+            REMARK: '' // optional
+          }
+        );
         if (confirm.status) redirectWebflow();
         Swal.fire({
           toast: true,
