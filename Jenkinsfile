@@ -17,7 +17,7 @@ pipeline {
                     if (isManualTrigger && params.DEPLOY_ENV == 'production') {
                         env.TARGET_DIR = '/var/amecweb/wwwroot/production/form'
                         env.ENV_CRED_ID = 'form-env-prod'
-                        env.NODE_ENV = 'production'
+                        env.NODE_ENV = 'development'
                         echo ">>> MANUAL BUILD: Deploying to PRODUCTION"
                     }else {
                         env.TARGET_DIR = '/var/amecweb/wwwroot/development/form'
