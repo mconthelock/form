@@ -7,7 +7,7 @@ class psci_model extends CI_Model {
     {
         parent::__construct();
         $this->load->database();
-        $this->sk = $this->load->database('skid', TRUE);
+        $this->sk = $this->load->database('SKID', TRUE);
 
     }
 

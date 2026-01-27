@@ -9,7 +9,7 @@
     <div class="form-data" data-nfrmno="{{ $NFRMNO }}" data-vorgno="{{ $VORGNO }}" data-cyear="{{ $CYEAR }}"></div>
     <div class="form-ent" data-nfrmno="{{ $ent['NFRMNO'] }}" data-vorgno="{{ $ent['VORGNO'] }}" data-cyear="{{ $ent['CYEAR'] }}" data-cyear2="{{ $ent['CYEAR2'] }}" data-nrunno="{{ $ent['NRUNNO'] }}"></div>
     <div class="w-full min-h-screen bg-gray-100 px-2 pb-10">
-        <div class="max-w-6xl mx-auto bg-white rounded-2xl shadow p-10 border-2 border-gray-300">
+        <div class="max-w-5xl mx-auto bg-white rounded-2xl shadow p-10 border-2 border-gray-300">
             <div class="mb-8 border-b-2 border-blue-500 pb-4 flex flex-col md:flex-row md:justify-between items-start gap-3">
                 <div>
                     <h2 class="text-2xl font-bold text-blue-900 tracking-wide">Form Clearance for Expense (Part2)</h2>
@@ -139,217 +139,61 @@
                                 <td class="py-2 px-2 border-b border-gray-300">{{ $value->DETAILS }}</td>
                                 <td class="py-2 px-2 border-b border-gray-300">{{ $value->QTY }}</td>
                                 <td class="py-2 px-2 border-b border-gray-300">{{ $value->UNIT_COST }}</td>
-                                <td class="py-2 px-2 border-b border-gray-300">{{ number_format($value->TOTAL_COST) }}</td>
+                                <td class="py-2 px-2 border-b border-gray-300">{{ number_format($value->TOTAL_COST, 2) }}</td>
                                 <td class="py-2 px-2 border-b border-gray-300">{{ $value->REMARK }}</td>
                             </tr>
                         @endforeach
                         <tr class="font-semibold bg-blue-100">
                             <td colspan="3" class="text-right py-2 px-2">Total Amount</td>
-                            <td class="text-center py-2 px-2 text-blue-900" id="total_amount">{{ number_format($sum) }}</td>
+                            <td class="text-center py-2 px-2 text-blue-900" id="total_amount">{{ number_format($sum, 2) }}</td>
                             <td class="py-2 px-2"></td>
                         </tr>
                     </tbody>
                 </table>
             </div>
 
-            @php
-                $hasLunch = false;
-                $hasBreak = false;
-                foreach ($estimate_cost as $item) {
-                    if ($item->ET_ID == 1) {
-                        $hasLunch = true;
-                    }
-                    if ($item->ET_ID == 4) {
-                        $hasBreak = true;
-                    }
-                }
-                $splitExpense = $hasLunch && $hasBreak;
-            @endphp
-
-            @if ($splitExpense)
-                <div class="mt-10">
-                    {{-- Lunch Section --}}
-                    @php
-                        $lunchEstimate = 0;
-                        $breakEstimate = 0;
-                        foreach ($estimate_cost as $item) {
-                            if ($item->ET_ID == 1) {
-                                $lunchEstimate = $item->TOTAL_COST;
-                            }
-                            if ($item->ET_ID == 4) {
-                                $breakEstimate = $item->TOTAL_COST;
-                            }
-                        }
-                    @endphp
-                    <h3 class="flex items-center gap-2 font-bold text-cyan-600 mb-3 mt-8 text-xl">
-                        Lunch -> Inside
-                    </h3>
-                    <div class="border-2 border-cyan-500 rounded-2xl p-4 bg-cyan-50 shadow-sm transition mb-8" data-estimate="{{ $lunchEstimate }}">
-                        <table class="min-w-full text-sm border-1 rounded-xl overflow-hidden expense-table-split" data-type="1">
-                            <thead>
-                                <tr class="bg-cyan-200 text-cyan-900">
-                                    <th class="py-2 px-4 text-center w-12 rounded-tl-xl">No.</th>
-                                    <th class="py-2 px-4 text-center">Receipt No.</th>
-                                    <th class="py-2 px-4 text-center">Cost</th>
-                                    <th class="py-2 px-4 text-center">Date issue receipt</th>
-                                    <th class="py-2 px-4 text-center">Attach Receipt</th>
-                                    <th class="py-2 px-4 w-12 rounded-tr-xl"></th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td class="py-2 px-4 text-center">1</td>
-                                    <td class="py-2 px-4">
-                                        <input type="text" name="receipt_no_1[]" class="input input-sm border rounded-lg px-3 py-1 w-full focus:ring-2 bg-white focus:ring-cyan-400 transition" placeholder="Receipt No.">
-                                    </td>
-                                    <td class="py-2 px-4">
-                                        <input type="number" name="cost_1[]" class="input input-sm border rounded-lg px-3 py-1 w-full focus:ring-2 bg-white focus:ring-cyan-400 transition cost-input" placeholder="Cost">
-                                    </td>
-                                    <td class="py-2 px-4">
-                                        <input type="date" name="date_issue_1[]" class="input input-sm border rounded-lg px-3 py-1 w-full focus:ring-2 bg-white focus:ring-cyan-400 transition">
-                                    </td>
-                                    <td class="py-2 px-4">
-                                        <input type="file" name="receipt_file_1[]" class="file-input file-input-sm file-input-bordered w-full max-w-xs rounded-lg border-cyan-400">
-                                    </td>
-                                    <td class="py-2 px-4 text-center">
-                                        <button type="button" class="remove-row bg-red-500 hover:bg-red-600 text-white rounded-full w-8 h-8 flex items-center cursor-pointer justify-center shadow transition" title="Remove row">
-                                            &times;
-                                        </button>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                        <div class="flex justify-end mt-4">
-                            <button type="button" class="add-row-split bg-cyan-600 hover:bg-cyan-700 text-white font-semibold py-2 px-6 rounded-xl shadow cursor-pointer transition flex items-center gap-2" data-type="1">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                                </svg>
-                                Add Row
-                            </button>
-                        </div>
-
-                        <div class="grid grid-cols-1 gap-6 mt-6 border-t border-cyan-200 pt-4" id="memo-section-1" style="display:none;">
-                            <div>
-                                <label class="font-semibold text-cyan-700 mb-1 block">Attach Memo:</label>
-                                <div class="flex items-center gap-3">
-                                    <input type="file" name="memo_1" class="file-input file-input-bordered w-full max-w-xs rounded-xl border-cyan-400">
-                                </div>
-                                <span class="text-xs text-red-500 mt-1">Require "Memorandum" if cost exceeds budget.</span>
-                            </div>
-                        </div>
+            <div class="mt-10">
+                <h3 class="flex items-center gap-2 font-bold text-green-800 mb-3 mt-8 text-xl">
+                    <!-- <svg ... ไอคอน>  --> Expense Cost <label class="text-sm inline-block font-light text-red-500">(*If has “Receipt no.” more than 1, Please click “Add row” button for input the details.)</label>
+                </h3>
+                <div class="border-2 border-green-500 rounded-2xl p-4 bg-green-50 shadow-sm transition">
+                    <table class="min-w-full text-sm border-1 rounded-xl overflow-hidden" id="expense-table">
+                        <thead>
+                            <tr class="bg-green-200 text-green-900">
+                                <th class="py-2 px-4 text-center w-12 rounded-tl-xl">No.</th>
+                                <th class="py-2 px-4 text-center">Receipt No.</th>
+                                <th class="py-2 px-4 text-center">Cost</th>
+                                <th class="py-2 px-4 w-12 rounded-tr-xl"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="py-2 px-4 text-center">1</td>
+                                <td class="py-2 px-4">
+                                    <input type="text" class="input input-sm border rounded-lg px-3 py-1 w-full focus:ring-2 bg-white focus:ring-green-400 transition" placeholder="Receipt No.">
+                                </td>
+                                <td class="py-2 px-4">
+                                    <input type="text" class="input input-sm border rounded-lg px-3 py-1 w-full focus:ring-2 bg-white focus:ring-green-400 transition" placeholder="Cost">
+                                </td>
+                                <td class="py-2 px-4 text-center">
+                                    <button type="button" class="remove-row bg-red-500 hover:bg-red-600 text-white rounded-full w-8 h-8 flex items-center cursor-pointer justify-center shadow transition" title="Remove row">
+                                        &times;
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div class="flex justify-end mt-4">
+                        <button type="button" id="add-row" class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-6 rounded-xl shadow cursor-pointer transition flex items-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                            </svg>
+                            Add Row
+                        </button>
                     </div>
-
-                    {{-- Break Section --}}
-                    <h3 class="flex items-center gap-2 font-bold text-purple-800 mb-3 mt-8 text-xl">
-                        Break(Snack Box)
-                    </h3>
-                    <div class="border-2 border-purple-500 rounded-2xl p-4 bg-purple-50 shadow-sm transition" data-estimate="{{ $breakEstimate }}">
-                        <table class="min-w-full text-sm border-1 rounded-xl overflow-hidden expense-table-split" data-type="4">
-                            <thead>
-                                <tr class="bg-purple-200 text-purple-900">
-                                    <th class="py-2 px-4 text-center w-12 rounded-tl-xl">No.</th>
-                                    <th class="py-2 px-4 text-center">Receipt No.</th>
-                                    <th class="py-2 px-4 text-center">Cost</th>
-                                    <th class="py-2 px-4 text-center">Date issue receipt</th>
-                                    <th class="py-2 px-4 text-center">Attach Receipt</th>
-                                    <th class="py-2 px-4 w-12 rounded-tr-xl"></th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td class="py-2 px-4 text-center">1</td>
-                                    <td class="py-2 px-4">
-                                        <input type="text" name="receipt_no_4[]" class="input input-sm border rounded-lg px-3 py-1 w-full focus:ring-2 bg-white focus:ring-purple-400 transition" placeholder="Receipt No.">
-                                    </td>
-                                    <td class="py-2 px-4">
-                                        <input type="number" name="cost_4[]" class="input input-sm border rounded-lg px-3 py-1 w-full focus:ring-2 bg-white focus:ring-purple-400 transition cost-input" placeholder="Cost">
-                                    </td>
-                                    <td class="py-2 px-4">
-                                        <input type="date" name="date_issue_4[]" class="input input-sm border rounded-lg px-3 py-1 w-full focus:ring-2 bg-white focus:ring-purple-400 transition">
-                                    </td>
-                                    <td class="py-2 px-4">
-                                        <input type="file" name="receipt_file_4[]" class="file-input file-input-sm file-input-bordered w-full max-w-xs rounded-lg border-purple-400">
-                                    </td>
-                                    <td class="py-2 px-4 text-center">
-                                        <button type="button" class="remove-row bg-red-500 hover:bg-red-600 text-white rounded-full w-8 h-8 flex items-center cursor-pointer justify-center shadow transition" title="Remove row">
-                                            &times;
-                                        </button>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                        <div class="flex justify-end mt-4">
-                            <button type="button" class="add-row-split bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 px-6 rounded-xl shadow cursor-pointer transition flex items-center gap-2" data-type="4">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                                </svg>
-                                Add Row
-                            </button>
-                        </div>
-
-                        <div class="grid grid-cols-1 gap-6 mt-6 border-t border-purple-200 pt-4" id="memo-section-4" style="display:none;">
-                            <div>
-                                <label class="font-semibold text-purple-700 mb-1 block">Attach Memo:</label>
-                                <div class="flex items-center gap-3">
-                                    <input type="file" name="memo_4" class="file-input file-input-bordered w-full max-w-xs rounded-xl border-purple-400">
-                                </div>
-                                <span class="text-xs text-red-500 mt-1">Require "Memorandum" if cost exceeds budget.</span>
-                            </div>
-                        </div>
-                    </div>
+                    <!-- <button class="btn btn-success" id="test-submit">Test</button> -->
                 </div>
-            @else
-                <div class="mt-10">
-                    <h3 class="flex items-center gap-2 font-bold text-green-800 mb-3 mt-8 text-xl">
-                        <!-- <svg ... ไอคอน>  --> Expense Cost <label class="text-sm inline-block font-light text-red-500">(*If has “Receipt no.” more than 1, Please click “Add row” button for input the details.)</label>
-                    </h3>
-                    <div class="border-2 border-green-500 rounded-2xl p-4 bg-green-50 shadow-sm transition">
-                        <table class="min-w-full text-sm border-1 rounded-xl overflow-hidden" id="expense-table">
-                            <thead>
-                                <tr class="bg-green-200 text-green-900">
-                                    <th class="py-2 px-4 text-center w-12 rounded-tl-xl">No.</th>
-                                    <th class="py-2 px-4 text-center">Receipt No.</th>
-                                    <th class="py-2 px-4 text-center">Cost</th>
-                                    <th class="py-2 px-4 text-center">Date issue receipt</th>
-                                    <th class="py-2 px-4 text-center">Attach Receipt</th>
-                                    <th class="py-2 px-4 w-12 rounded-tr-xl"></th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td class="py-2 px-4 text-center">1</td>
-                                    <td class="py-2 px-4">
-                                        <input type="text" name="receipt_no[]" class="input input-sm border rounded-lg px-3 py-1 w-full focus:ring-2 bg-white focus:ring-green-400 transition" placeholder="Receipt No.">
-                                    </td>
-                                    <td class="py-2 px-4">
-                                        <input type="number" name="cost[]" class="input input-sm border rounded-lg px-3 py-1 w-full focus:ring-2 bg-white focus:ring-green-400 transition cost-input" placeholder="Cost">
-                                    </td>
-                                    <td class="py-2 px-4">
-                                        <input type="date" name="date_issue[]" class="input input-sm border rounded-lg px-3 py-1 w-full focus:ring-2 bg-white focus:ring-green-400 transition">
-                                    </td>
-                                    <td class="py-2 px-4">
-                                        <input type="file" name="receipt_file[]" class="file-input file-input-sm file-input-bordered w-full max-w-xs rounded-lg border-green-400">
-                                    </td>
-                                    <td class="py-2 px-4 text-center">
-                                        <button type="button" class="remove-row bg-red-500 hover:bg-red-600 text-white rounded-full w-8 h-8 flex items-center cursor-pointer justify-center shadow transition" title="Remove row">
-                                            &times;
-                                        </button>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                        <div class="flex justify-end mt-4">
-                            <button type="button" id="add-row" class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-6 rounded-xl shadow cursor-pointer transition flex items-center gap-2">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                                </svg>
-                                Add Row
-                            </button>
-                        </div>
-                        <!-- <button class="btn btn-success" id="test-submit">Test</button> -->
-                    </div>
-                </div>
-            @endif
+            </div>
 
             <!-- Section Clearance for Expense -->
             <div class="mt-8">
@@ -386,12 +230,12 @@
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <!-- Attach Receipt -->
-                        {{-- <div>
+                        <div>
                             <label class="font-semibold text-green-700 mb-1 block">Attach Receipt:</label>
                             <div class="flex items-center gap-3">
                                 <input type="file" name="receipt" id="receipt" class="file-input file-input-bordered w-full max-w-xs rounded-xl border-green-400">
                             </div>
-                        </div> --}}
+                        </div>
                         <!-- Remark -->
                         <div>
                             <label class="font-semibold text-green-700 mb-1 block">Remark:</label>

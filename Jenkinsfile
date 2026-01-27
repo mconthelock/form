@@ -5,11 +5,6 @@ pipeline {
         choice(name: 'DEPLOY_ENV', choices: ['development', 'production'], description: 'Select Environment to deploy')
     }
 
-    environment {
-        NAS_PATH = "\\\\172.21.255.188\\amecweb\\wwwroot\\development"
-        GIT_SSL_NO_VERIFY = 'true'
-    }
-
     tools {
         nodejs 'node'
     }
@@ -57,7 +52,7 @@ pipeline {
 
                             git config --global url."https://${GIT_USER}:${GIT_PASS}@webhub.mitsubishielevatorasia.co.th/".insteadOf "https://webhub.mitsubishielevatorasia.co.th/"
 
-                            npm install
+                            npm install --include=dev
                             npm update @amec/webasset
                             npm run build
                             npm run docs:build

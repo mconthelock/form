@@ -365,217 +365,28 @@
 
                         <!-- Expense Details -->
                         <h2 class="text-xl font-bold text-green-700 mb-4">Expense Cost Detail</h2>
-
-                        @php
-                            // แยก expense ตาม TYPE
-                            $expenseNormal = array_filter($expense, function ($ex) {
-                                return empty($ex->TYPE);
-                            });
-                            $expenseLunch = array_filter($expense, function ($ex) {
-                                return isset($ex->TYPE) && $ex->TYPE == '1';
-                            });
-                            $expenseBreak = array_filter($expense, function ($ex) {
-                                return isset($ex->TYPE) && $ex->TYPE == '4';
-                            });
-                            $hasSplitExpense = count($expenseLunch) > 0 || count($expenseBreak) > 0;
-                        @endphp
-
-                        @if (!$hasSplitExpense)
-                            {{-- ตารางปกติ --}}
-                            <div class="overflow-hidden rounded-xl border-2 border-green-200 bg-green-50 mb-6">
-                                <table class="w-full text-sm border">
-                                    <thead>
-                                        <tr class="bg-green-100">
-                                            <th class="py-2 px-4 border-b border-green-200 text-left">#</th>
-                                            <th class="py-2 px-4 border-b border-green-200 text-left">Receipt No.</th>
-                                            <th class="py-2 px-4 border-b border-green-200 text-left">Cost</th>
-                                            <th class="py-2 px-4 border-b border-green-200 text-left">Date issue receipt</th>
-                                            <th class="py-2 px-4 border-b border-green-200 text-left">Attach Receipt</th>
+                        <div class="overflow-hidden rounded-xl border-2 border-green-200 bg-green-50 mb-6">
+                            <table class="w-full text-sm border">
+                                <thead>
+                                    <tr class="bg-green-100">
+                                        <th class="py-2 px-4 border-b border-green-200 text-left">#</th>
+                                        <th class="py-2 px-4 border-b border-green-200 text-left">Receipt No.</th>
+                                        <th class="py-2 px-4 border-b border-green-200 text-left">Cost</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach ($expense as $i => $ex)
+                                        <tr>
+                                            <td class="py-2 px-4 border-b border-green-100">{{ $i + 1 }}</td>
+                                            <td class="py-2 px-4 border-b border-green-100">{{ $ex->RECEIPT }}</td>
+                                            <td class="py-2 px-4 border-b border-green-100">{{ number_format($ex->COST, 2) }}</td>
                                         </tr>
-                                    </thead>
-                                    <tbody>
-                                        @foreach ($expense as $i => $ex)
-                                            <tr>
-                                                <td class="py-2 px-4 border-b border-green-100">{{ $i + 1 }}</td>
-                                                <td class="py-2 px-4 border-b border-green-100">{{ $ex->RECEIPT }}</td>
-                                                <td class="py-2 px-4 border-b border-green-100">{{ number_format($ex->COST, 2) }}</td>
-                                                <td class="py-2 px-4 border-b border-green-100">{{ $ex->DATE_ISSUE ?? '-' }}</td>
-                                                <td class="py-2 px-4 border-b border-green-100">
-                                                    @if (!empty($ex->RECEIPT_FILE))
-                                                        <a href="{{ base_url('gpform/GP-CLER/main/preview/') . rawurlencode($ex->RECEIPT_FILE) }}"
-                                                            class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-blue-50 border border-blue-300 text-blue-700 hover:bg-blue-100 hover:text-blue-900 font-medium shadow-sm transition focus:outline-none focus:ring-2 focus:ring-blue-400"
-                                                            target="_blank">
-                                                            <i class="fi fi-sr-paperclip-vertical"></i>
-                                                            Attach Receipt
-                                                        </a>
-                                                    @else
-                                                        <span class="text-gray-400">-</span>
-                                                    @endif
-                                                </td>
-                                            </tr>
-                                        @endforeach
-                                    </tbody>
-                                </table>
-                            </div>
-                        @else
-                            {{-- ตารางแยก Lunch และ Break --}}
-                            @php
-                                $memoLunch = array_filter(is_array($file_attach) ? $file_attach : iterator_to_array($file_attach), function ($f) {
-                                    return isset($f->FILE_TYPE) && $f->FILE_TYPE == 'MEMO_LUNCH';
-                                });
-                                $memoBreak = array_filter(is_array($file_attach) ? $file_attach : iterator_to_array($file_attach), function ($f) {
-                                    return isset($f->FILE_TYPE) && $f->FILE_TYPE == 'MEMO_BREAK';
-                                });
-                            @endphp
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
 
-                            @if (count($expenseLunch) > 0)
-                                <div class="mb-6">
-                                    <h3 class="text-lg font-semibold text-cyan-700 mb-2 flex items-center gap-2">
-                                        <span class="inline-block w-3 h-3 bg-cyan-500 rounded-full"></span>
-                                        Lunch Expenses
-                                    </h3>
-                                    <div class="overflow-hidden rounded-xl border-2 border-cyan-200 bg-cyan-50">
-                                        <table class="w-full text-sm border">
-                                            <thead>
-                                                <tr class="bg-cyan-100">
-                                                    <th class="py-2 px-4 border-b border-cyan-200 text-left">#</th>
-                                                    <th class="py-2 px-4 border-b border-cyan-200 text-left">Receipt No.</th>
-                                                    <th class="py-2 px-4 border-b border-cyan-200 text-left">Cost</th>
-                                                    <th class="py-2 px-4 border-b border-cyan-200 text-left">Date Issue</th>
-                                                    <th class="py-2 px-4 border-b border-cyan-200 text-left">Attach Receipt</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                @php $lunchTotal = 0; @endphp
-                                                @foreach ($expenseLunch as $i => $ex)
-                                                    @php $lunchTotal += $ex->COST; @endphp
-                                                    <tr>
-                                                        <td class="py-2 px-4 border-b border-cyan-100">{{ $loop->iteration }}</td>
-                                                        <td class="py-2 px-4 border-b border-cyan-100">{{ $ex->RECEIPT }}</td>
-                                                        <td class="py-2 px-4 border-b border-cyan-100">{{ number_format($ex->COST, 2) }}</td>
-                                                        <td class="py-2 px-4 border-b border-cyan-100">{{ $ex->DATE_ISSUE ?? '-' }}</td>
-                                                        <td class="py-2 px-4 border-b border-cyan-100">
-                                                            @if (!empty($ex->RECEIPT_FILE))
-                                                                <a href="{{ base_url('gpform/GP-CLER/main/preview/') . rawurlencode($ex->RECEIPT_FILE) }}"
-                                                                    class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-blue-50 border border-blue-300 text-blue-700 hover:bg-blue-100 hover:text-blue-900 font-medium shadow-sm transition focus:outline-none focus:ring-2 focus:ring-blue-400"
-                                                                    target="_blank">
-                                                                    <i class="fi fi-sr-paperclip-vertical"></i>
-                                                                    Attach Receipt
-                                                                </a>
-                                                            @else
-                                                                -
-                                                            @endif
-                                                        </td>
-                                                    </tr>
-                                                @endforeach
-                                                <tr class="bg-cyan-100 font-semibold">
-                                                    <td colspan="2" class="py-2 px-4 text-right">Lunch Total:</td>
-                                                    <td class="py-2 px-4 text-cyan-700">{{ number_format($lunchTotal, 2) }}</td>
-                                                    <td colspan="2"></td>
-                                                </tr>
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                    {{-- Memo for Lunch --}}
-                                    @if (count($memoLunch) > 0)
-                                        <div class="bg-cyan-50 border-2 border-cyan-200 rounded-xl p-4 mt-3">
-                                            <h4 class="font-semibold text-cyan-700 mb-2 flex items-center gap-2">
-                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                                </svg>
-                                                Memo for Lunch (Over Budget)
-                                            </h4>
-                                            <div class="flex flex-wrap gap-2">
-                                                @foreach ($memoLunch as $memo)
-                                                    <a href="{{ base_url('gpform/GP-CLER/main/preview/') . rawurlencode($memo->FILE_NAME) }}"
-                                                        class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white border border-cyan-300 text-cyan-700 hover:bg-cyan-100 hover:text-cyan-900 font-medium shadow-sm transition focus:outline-none focus:ring-2 focus:ring-cyan-400"
-                                                        target="_blank">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
-                                                        </svg>
-                                                        {{ $memo->FILE_NAME }}
-                                                    </a>
-                                                @endforeach
-                                            </div>
-                                        </div>
-                                    @endif
-                                </div>
-                            @endif
 
-                            @if (count($expenseBreak) > 0)
-                                <div class="mb-6">
-                                    <h3 class="text-lg font-semibold text-purple-700 mb-2 flex items-center gap-2">
-                                        <span class="inline-block w-3 h-3 bg-purple-500 rounded-full"></span>
-                                        Break Expenses
-                                    </h3>
-                                    <div class="overflow-hidden rounded-xl border-2 border-purple-200 bg-purple-50">
-                                        <table class="w-full text-sm border">
-                                            <thead>
-                                                <tr class="bg-purple-100">
-                                                    <th class="py-2 px-4 border-b border-purple-200 text-left">#</th>
-                                                    <th class="py-2 px-4 border-b border-purple-200 text-left">Receipt No.</th>
-                                                    <th class="py-2 px-4 border-b border-purple-200 text-left">Cost</th>
-                                                    <th class="py-2 px-4 border-b border-purple-200 text-left">Date Issue</th>
-                                                    <th class="py-2 px-4 border-b border-purple-200 text-left">Attach Receipt</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                @php $breakTotal = 0; @endphp
-                                                @foreach ($expenseBreak as $i => $ex)
-                                                    @php $breakTotal += $ex->COST; @endphp
-                                                    <tr>
-                                                        <td class="py-2 px-4 border-b border-purple-100">{{ $loop->iteration }}</td>
-                                                        <td class="py-2 px-4 border-b border-purple-100">{{ $ex->RECEIPT }}</td>
-                                                        <td class="py-2 px-4 border-b border-purple-100">{{ number_format($ex->COST, 2) }}</td>
-                                                        <td class="py-2 px-4 border-b border-purple-100">{{ $ex->DATE_ISSUE ?? '-' }}</td>
-                                                        <td class="py-2 px-4 border-b border-purple-100">
-                                                            @if (!empty($ex->RECEIPT_FILE))
-                                                                <a href="{{ base_url('gpform/GP-CLER/main/preview/') . rawurlencode($ex->RECEIPT_FILE) }}"
-                                                                    class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-blue-50 border border-blue-300 text-blue-700 hover:bg-blue-100 hover:text-blue-900 font-medium shadow-sm transition focus:outline-none focus:ring-2 focus:ring-blue-400"
-                                                                    target="_blank">
-                                                                    <i class="fi fi-sr-paperclip-vertical"></i>
-                                                                    Attach Receipt
-                                                                </a>
-                                                            @else
-                                                                -
-                                                            @endif
-                                                        </td>
-                                                    </tr>
-                                                @endforeach
-                                                <tr class="bg-purple-100 font-semibold">
-                                                    <td colspan="2" class="py-2 px-4 text-right">Break Total:</td>
-                                                    <td class="py-2 px-4 text-purple-700">{{ number_format($breakTotal, 2) }}</td>
-                                                    <td colspan="2"></td>
-                                                </tr>
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                    {{-- Memo for Break --}}
-                                    @if (count($memoBreak) > 0)
-                                        <div class="bg-purple-50 border-2 border-purple-200 rounded-xl p-4 mt-3">
-                                            <h4 class="font-semibold text-purple-700 mb-2 flex items-center gap-2">
-                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                                </svg>
-                                                Memo for Break (Over Budget)
-                                            </h4>
-                                            <div class="flex flex-wrap gap-2">
-                                                @foreach ($memoBreak as $memo)
-                                                    <a href="{{ base_url('gpform/GP-CLER/main/preview/') . rawurlencode($memo->FILE_NAME) }}"
-                                                        class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white border border-purple-300 text-purple-700 hover:bg-purple-100 hover:text-purple-900 font-medium shadow-sm transition focus:outline-none focus:ring-2 focus:ring-purple-400"
-                                                        target="_blank">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
-                                                        </svg>
-                                                        {{ $memo->FILE_NAME }}
-                                                    </a>
-                                                @endforeach
-                                            </div>
-                                        </div>
-                                    @endif
-                                </div>
-                            @endif
-                        @endif
 
                         @if ($form[0]->CST == '2')
                             <div class="flex justify-center mt-8 no-print">
@@ -631,24 +442,6 @@
                                         </div>
                                     </div>
                                 @endif
-                            @endif
-                            @php
-                                $amec = array_filter($dataParticipants, function ($item) {
-                                    return $item->TYPE === 'amec';
-                                });
-
-                                $amecIds = array_map(function ($x) {
-                                    return $x->SEMPNO;
-                                }, $amec);
-                            @endphp
-                            @if (in_array($flowstep[0]->CSTEPNO, ['19', '34']) && $flowstep[0]->CSTEPNEXTNO == '18' && isset($PRESIDENT->VEMPNO) && isset($RAF->VEMPNO) && in_array($PRESIDENT->VEMPNO, $amecIds) && in_array($RAF->VEMPNO, $amecIds))
-                                <div class="flex items-center justify-center mt-4 space-x-3">
-                                    <label for="emp_select" class="font-medium text-blue-900">Select Approver:</label>
-                                    <select id="emp_select" name="emp_select" class="select select-bordered w-80 bg-blue-50 focus:bg-white focus:border-blue-500 transition">
-                                        <option value="" disabled selected>Select an option</option>
-                                        {{-- รายชื่อ Approver จะถูกเติมโดย JS --}}
-                                    </select>
-                                </div>
                             @endif
 
                             <div class="flex justify-center mt-6 space-x-4 no-print">
@@ -800,8 +593,10 @@
                         <div class="mb-8 w-full">
                             <h3 class="text-xl font-bold text-blue-700 mb-4">Quantity of Participant</h3>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 border-2 border-gray-300 rounded-xl p-3 bg-gray-50">
-
                                 @php
+                                    $amec = array_filter($dataParticipants, function ($item) {
+                                        return $item->TYPE === 'amec';
+                                    });
                                     $guest = array_filter($dataParticipants, function ($item) {
                                         return $item->TYPE === 'guest';
                                     });
@@ -850,13 +645,13 @@
                                             <td class="py-2 px-2 border-b border-gray-300">{{ $value->DETAILS }}</td>
                                             <td class="py-2 px-2 border-b border-gray-300">{{ $value->QTY }}</td>
                                             <td class="py-2 px-2 border-b border-gray-300">{{ $value->UNIT_COST }}</td>
-                                            <td class="py-2 px-2 border-b border-gray-300">{{ number_format($value->TOTAL_COST) }}</td>
+                                            <td class="py-2 px-2 border-b border-gray-300">{{ number_format($value->TOTAL_COST, 2) }}</td>
                                             <td class="py-2 px-2 border-b border-gray-300">{{ $value->REMARK }}</td>
                                         </tr>
                                     @endforeach
                                     <tr class="font-semibold bg-blue-100">
                                         <td colspan="3" class="text-right py-2 px-2">Total Amount</td>
-                                        <td class="text-center py-2 px-2 text-blue-900" id="total_amount">{{ number_format($sum) }}</td>
+                                        <td class="text-center py-2 px-2 text-blue-900" id="total_amount">{{ number_format($sum, 2) }}</td>
                                         <td class="py-2 px-2"></td>
                                     </tr>
                                 </tbody>

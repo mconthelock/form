@@ -16,9 +16,6 @@
                 </div>
             </h1>
 
-            <div>
-                <label for="" class="text-sm text-gray-500"><i>For Requesting Approval Entertainment (Part1) must get approve from Approver before Entertainment date 1 day. <br>(Refer: RAF Practical Regulation : RAF-PR-G-068)</i></label>
-            </div>
             <!-- Section 1: Basic Info -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
@@ -29,42 +26,9 @@
                     <label class="block mb-1 font-semibold text-blue-700">Requested by</label>
                     <input type="text" id="requested-by" class="input input-bordered rounded-xl w-full shadow-sm border-blue-200" placeholder="Input Employee Code" value="{{ $dataForm->EMP_REQ }}" />
                 </div>
-                <div class="col-span-2">
+                <div>
                     <label class="block mb-1 font-semibold text-blue-700">Entertainment Date</label>
-                    <div class="relative max-w-xs" id="entertain-date-wrapper">
-                        <input type="text" id="entertain-date" class="input input-bordered rounded-xl w-full shadow-sm border-blue-200 pr-10" value="{{ date('Y-m-d', strtotime($dataForm->ENTERTAINMENT_DATE)) }}" />
-                        <button type="button" class="absolute right-2 top-1/2 -translate-y-1/2 text-blue-600 hover:text-blue-800" id="entertain-date-icon" aria-label="Open calendar">
-                            <!-- Heroicon: Calendar -->
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                                <line x1="16" y1="2" x2="16" y2="6"></line>
-                                <line x1="8" y1="2" x2="8" y2="6"></line>
-                                <line x1="3" y1="10" x2="21" y2="10"></line>
-                            </svg>
-                        </button>
-                    </div>
-
-                    <div id="urgent-note" class="hidden mt-2 p-2 bg-red-50 border border-red-200 rounded text-xs text-red-600 font-semibold">
-                        Note: "As the requester did not obtain prior approval for the entertainment at least 5 working days in advance, please download the file for approve URGENT case by P or RAF DIM before submit"
-                    </div>
-
-                    <div id="urgent-attachment" class="hidden mt-2 p-4 bg-white rounded-lg border-2 border-red-500 shadow-sm">
-                        <label class="block mb-2 font-bold text-red-600 text-sm">*Attach Memo (In case of not submit Request Entertainment form (before 5 day))</label>
-                        @if (!empty($dataForm->FILE_URGENT))
-                            <div class="mb-2">
-                                <a href="{{ base_url('gpform/GP-ENT/main/preview/' . $dataForm->FILE_URGENT) }}" target="_blank" class="link link-primary btn btn-sm rounded-lg">
-                                    {{ $dataForm->FILE_URGENT }}
-                                </a>
-                            </div>
-                        @endif
-                        <input type="file" id="urgent-file" name="urgent_file" class="file-input file-input-bordered file-input-sm w-full max-w-xs file-input-error bg-yellow-50" />
-                        <div class="mt-2 text-xs text-gray-500">
-                            *Require "Memorandum" get approve by RAF DIM/President, In case of use budget for buying gift to guest (Refer to RAF-PR-G-068-M-Entertainment on topic no.4,no.4.6)
-                        </div>
-                        <div class="mt-2 text-sm font-bold text-blue-600">
-                            Download file: <a href="{{ base_url('assets/files/Special_Form_for_Request_Entertainment.pdf') }}" target="_blank" class="underline hover:text-blue-800">Special Form for Request Entertainment.pdf</a>
-                        </div>
-                    </div>
+                    <input type="date" id="entertain-date" class="input input-bordered rounded-xl w-full shadow-sm border-blue-200" value="{{ date('Y-m-d', strtotime($dataForm->ENTERTAINMENT_DATE)) }}" />
                 </div>
                 <div></div>
                 <div class="md:col-span-2">
@@ -80,41 +44,28 @@
                     <input type="hidden" id="old-type" value="{{ $dataForm->TYPE_TIME }}">
                     <div class="flex gap-6">
                         <label class="inline-flex items-center space-x-2">
-                            <input type="radio" name="time" id="time-lunch" class="radio radio-primary time time-radio" value="Lunch" {{ $dataForm->TYPE_TIME == 'Lunch' ? 'checked' : '' }} />
+                            <input type="radio" name="time" id="time-lunch" class="radio radio-primary" value="Lunch" {{ $dataForm->TYPE_TIME == 'Lunch' ? 'checked' : '' }} />
                             <span>Lunch</span>
                         </label>
                         <label class="inline-flex items-center space-x-2">
-                            <input type="radio" name="time" id="time-dinner" class="radio radio-primary time time-radio" value="Dinner" {{ $dataForm->TYPE_TIME == 'Dinner' ? 'checked' : '' }} />
+                            <input type="radio" name="time" id="time-dinner" class="radio radio-primary" value="Dinner" {{ $dataForm->TYPE_TIME == 'Dinner' ? 'checked' : '' }} />
                             <span>Dinner</span>
                         </label>
+                        <!-- ✅ เพิ่ม Gift -->
                         <label class="inline-flex items-center space-x-2">
-                            <input type="radio" name="time" id="time-gift" class="radio radio-primary time time-radio" value="Gift" {{ $dataForm->TYPE_TIME == 'Gift' ? 'checked' : '' }} />
+                            <input type="radio" name="time" id="time-gift" class="radio radio-primary" value="Gift" {{ $dataForm->TYPE_TIME == 'Gift' ? 'checked' : '' }} />
                             <span>Gift</span>
                         </label>
+                        <!-- ✅ เพิ่ม Other -->
                         <label class="inline-flex items-center space-x-2">
-                            <input type="radio" name="time" id="time-other" class="radio radio-primary time time-radio" value="Other" {{ $dataForm->TYPE_TIME == 'Other' ? 'checked' : '' }} />
+                            <input type="radio" name="time" id="time-other" class="radio radio-primary" value="Other" {{ $dataForm->TYPE_TIME == 'Other' ? 'checked' : '' }} />
                             <span>Other</span>
                         </label>
                     </div>
-                    <div id="payable-date-section" class="hidden mt-4">
-                        <label class="block font-semibold text-red-700">Payable Date:</label>
-                        <div class="relative max-w-xs" id="payable-date-wrapper">
-                            <input type="text" id="payable-date" class="input input-bordered rounded-xl w-full shadow-sm border-red-200 pr-10" value="{{ $dataForm->PAYABLE_DATE_GIFT ? date('Y-m-d', strtotime($dataForm->PAYABLE_DATE_GIFT)) : '' }}" />
-                            <button type="button" class="absolute right-2 top-1/2 -translate-y-1/2 text-red-600 hover:text-red-800" id="payable-date-icon" aria-label="Open calendar">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                                    <line x1="16" y1="2" x2="16" y2="6"></line>
-                                    <line x1="8" y1="2" x2="8" y2="6"></line>
-                                    <line x1="3" y1="10" x2="21" y2="10"></line>
-                                </svg>
-                            </button>
-                        </div>
-                        <div class="text-xs text-red-500 mt-1">เมื่อ Requester เลือก Gift จะมี Payable Date ขึ้นมา</div>
-                    </div>
                 </div>
 
-                <div id="gift-memo" class="hidden mt-2">
-                    <label class="block font-semibold text-yellow-800">Attach Memo (Gift)</label>
+                <div id="gift-memo" class="hidden mt-4">
+                    <label for="gift-memo-file" class="block font-semibold text-blue-700 mb-1">Attach Memo (Gift):</label>
                     @if (!empty($dataForm->FILE_MEMO_GIFT) && $dataForm->TYPE_TIME == 'Gift')
                         <div class="mb-2">
                             <a href="{{ base_url('gpform/GP-ENT/main/preview/' . $dataForm->FILE_MEMO_GIFT) }}" target="_blank" class="link link-primary btn btn-sm rounded-lg">
@@ -122,30 +73,15 @@
                             </a>
                         </div>
                     @endif
-                    <input type="file" id="gift-memo-file" name="gift_memo" class="file-input file-input-bordered rounded-lg file-input-sm bg-yellow-100" />
-                    <p class="text-xs text-gray-500">
-                        *Require "Memorandum" get approve by RAF DIM/President, In case of use budget for buying gift to guest (Refer to RAF-PR-G-068-M-Entertainment on topic no.4,no.4.6)
-                    </p>
+                    <input type="file" id="gift-memo-file" name="file_memo_gift" class="file-input file-input-bordered rounded-lg w-full max-w-xs" />
                 </div>
 
+                <div id="other-fields" class="hidden mt-4">
+                    <label for="other-details" class="block font-semibold text-blue-700 mb-1">Other Details:</label>
+                    <input type="text" id="other-details" name="other_details" class="input input-bordered rounded-lg w-full max-w-lg" value="{{ $dataForm->OTHER_DETAILS ?? '' }}">
 
-
-                <div id="other-fields" class="hidden mt-2">
-                    <label class="block font-semibold text-yellow-800">Other Details</label>
-                    <input type="text" id="other-details" name="other_details" placeholder="Please identify the details" class="input input-bordered rounded-lg input-sm w-full max-w-xs mb-2" value="{{ $dataForm->OTHER_DETAILS ?? '' }}">
-
-                    <label class="block font-semibold text-yellow-800">Attach Memo (Other)</label>
-                    @if (!empty($dataForm->FILE_MEMO_OTHER) && $dataForm->TYPE_TIME == 'Other')
-                        <div class="mb-2">
-                            <a href="{{ base_url('gpform/GP-ENT/main/preview/' . $dataForm->FILE_MEMO_OTHER) }}" target="_blank" class="link link-primary btn btn-sm rounded-lg">
-                                {{ $dataForm->FILE_MEMO_OTHER }}
-                            </a>
-                        </div>
-                    @endif
-                    <input type="file" id="other-memo-file" name="other_memo" class="file-input file-input-bordered rounded-lg file-input-sm bg-yellow-100" />
-                    <p class="text-xs text-gray-500">
-                        *Require "Memorandum" get approve by RAF DIM/President, In case of use budget for buying other (Refer to RAF-PR-G-068-M-Entertainment on topic no.4,no.4.6)
-                    </p>
+                    <label for="other-memo-file" class="block font-semibold text-blue-700 mt-3 mb-1">Attach Memo (Other):</label>
+                    <input type="file" id="other-memo-file" name="file_memo_other" class="file-input file-input-bordered rounded-lg w-full max-w-xs" />
                 </div>
 
                 <div id="div_location">
@@ -327,7 +263,7 @@
                                     </td>
                                     <td>
                                         <input type="text" name="estimate_remark[{{ $i }}]" class="input input-bordered input-sm rounded-lg w-full remark" placeholder="กรณีเกินเงื่อนไข (ถ้ามี)" value="{{ $row ? $row->REMARK : '' }}"
-                                            {{ $row && !empty($row->REMARK) ? '' : 'disabled' }} />
+                                               {{ $row && !empty($row->REMARK) ? '' : 'disabled' }} />
                                     </td>
                                 </tr>
                             @endfor
@@ -360,13 +296,13 @@
                         </div>
                     </div>
 
-                    <div class="flex items-center pt-5 rounded-lg space-x-4">
+                    {{-- <div class="flex items-center pt-5 rounded-lg space-x-4">
                         <div class="bg-blue-700 text-white font-semibold px-4 py-4 rounded-l-lg">
                             Cash Advance
                         </div>
                         <div class="space-y-2">
                             <div class="flex items-center space-x-2">
-                                <input type="radio" id="cashYes" name="cash_advance" class="checkbox checkbox-primary bg-white cash_adv" value="1" {{ $dataForm->REIMBURSEMENT == '1' ? 'checked' : '' }} />
+                                <input type="radio" id="cashYes" name="cash_advance" class="checkbox checkbox-primary bg-white  cash_adv" value="1" {{ $dataForm->REIMBURSEMENT == "1" ? "checked" : "" }} />
                                 <label for="cashYes" class="font-semibold">Yes</label>
                                 <div class="text-xs italic text-gray-500">
                                     *Receive cash from FIN Department within 3-4 working day
@@ -374,14 +310,16 @@
                             </div>
 
                             <div class="flex items-center space-x-2">
-                                <input type="radio" id="cashNo" name="cash_advance" class="checkbox checkbox-primary bg-white cash_adv" value="0" {{ $dataForm->REIMBURSEMENT == '0' ? 'checked' : '' }} />
+                                <input type="radio" id="cashNo" name="cash_advance" class="checkbox checkbox-primary bg-white  cash_adv" value="0" {{ $dataForm->REIMBURSEMENT == "0" ? "checked" : "" }} />
                                 <label for="cashNo" class="font-semibold">No</label>
                                 <div class="text-xs italic text-gray-500">
                                     *Please bring original receipt for clearance expense on Form Clearacnce Expense for Entertainment (Part 2).
                                 </div>
                             </div>
                         </div>
-                    </div>
+
+
+                    </div> --}}
                 </div>
                 <div class="text-xs mt-2 text-blue-700 italic">
                     1. สำหรับค่ารับรองอื่นๆที่ไม่ใช่ค่าอาหาร เช่น กีฬา, กระเช้า ฯลฯ ให้พิจารณาร่วมกับ RAF
@@ -466,9 +404,6 @@
 @endsection
 
 @section('scripts')
-    <!-- Flatpickr -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="{{ $_ENV['APP_JS'] }}/requestEntertainView.js?ver={{ $GLOBALS['version'] }}"></script>
     <script src="{{ $_ENV['APP_JS'] }}/requestEntertain.js?ver={{ $GLOBALS['version'] }}"></script>
 @endsection

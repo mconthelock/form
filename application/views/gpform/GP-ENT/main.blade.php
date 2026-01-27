@@ -1,6 +1,7 @@
 @extends('layouts/webflowTemplate')
 
 @section('contents')
+
     <div id="loading-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.7); z-index:9999;">
         <div style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%);">
             <img src="{{ base_url() }}assets/images/loading_gif.gif" alt="Loading..." width="150">
@@ -29,35 +30,9 @@
                     <label class="block mb-1 font-semibold text-blue-700">Requested by</label>
                     <input type="text" id="requested-by" class="input input-bordered rounded-xl w-full shadow-sm border-blue-200" placeholder="Input Employee Code" />
                 </div>
-                <div class="col-span-2">
+                <div>
                     <label class="block mb-1 font-semibold text-blue-700">Entertainment Date</label>
-                    <div class="relative max-w-xs" id="entertain-date-wrapper">
-                        <input type="text" id="entertain-date" class="input input-bordered rounded-xl w-full shadow-sm border-blue-200 pr-10" />
-                        <button type="button" class="absolute right-2 top-1/2 -translate-y-1/2 text-blue-600 hover:text-blue-800" id="entertain-date-icon" aria-label="Open calendar">
-                            <!-- Heroicon: Calendar -->
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                                <line x1="16" y1="2" x2="16" y2="6"></line>
-                                <line x1="8" y1="2" x2="8" y2="6"></line>
-                                <line x1="3" y1="10" x2="21" y2="10"></line>
-                            </svg>
-                        </button>
-                    </div>
-
-                    <div id="urgent-note" class="hidden mt-2 p-2 bg-red-50 border border-red-200 rounded text-xs text-red-600 font-semibold">
-                        Note: “As the requester did not obtain prior approval for the entertainment at least 5 working days in advance, please download the file for approve URGENT case by P or RAF DIM before submit”
-                    </div>
-
-                    <div id="urgent-attachment" class="hidden mt-2 p-4 bg-white rounded-lg border-2 border-red-500 shadow-sm">
-                        <label class="block mb-2 font-bold text-red-600 text-sm">*Attach Memo (In case of not submit Request Entertainment form (before 5 day))</label>
-                        <input type="file" id="urgent-file" name="urgent_file" class="file-input file-input-bordered file-input-sm w-full max-w-xs file-input-error bg-yellow-50" />
-                        <div class="mt-2 text-xs text-gray-500">
-                            *Require "Memorandum" get approve by RAF DIM/President, In case of use budget for buying gift to guest (Refer to RAF-PR-G-068-M-Entertainment on topic no.4,no.4.6)
-                        </div>
-                        <div class="mt-2 text-sm font-bold text-blue-600">
-                            Download file: <a href="{{ base_url('assets/files/Special_Form_for_Request_Entertainment.pdf') }}" download class="underline hover:text-blue-800">Special Form for Request Entertainment.pdf</a>
-                        </div>
-                    </div>
+                    <input type="date" id="entertain-date" class="input input-bordered rounded-xl w-full shadow-sm border-blue-200" />
                 </div>
                 <div></div>
                 <div class="md:col-span-2">
@@ -72,19 +47,19 @@
                     <label class="font-semibold text-blue-700 block mb-2">Type of Entertainment</label>
                     <div class="flex gap-6">
                         <label class="inline-flex items-center space-x-2">
-                            <input type="radio" name="time" id="time-lunch" class="radio radio-primary time time-radio" value="Lunch" />
+                            <input type="radio" name="time" id="time-lunch" class="radio radio-primary time" value="Lunch" />
                             <span>Lunch</span>
                         </label>
                         <label class="inline-flex items-center space-x-2">
-                            <input type="radio" name="time" id="time-dinner" class="radio radio-primary time time-radio" value="Dinner" />
+                            <input type="radio" name="time" id="time-dinner" class="radio radio-primary time" value="Dinner" />
                             <span>Dinner</span>
                         </label>
                         <label class="inline-flex items-center space-x-2">
-                            <input type="radio" name="time" id="time-gift" class="radio radio-primary time time-radio" value="Gift" />
+                            <input type="radio" name="time" id="time-gift" class="radio radio-primary time" value="Gift" />
                             <span>Gift</span>
                         </label>
                         <label class="inline-flex items-center space-x-2">
-                            <input type="radio" name="time" id="time-other" class="radio radio-primary time time-radio" value="Other" />
+                            <input type="radio" name="time" id="time-other" class="radio radio-primary time" value="Other" />
                             <span>Other</span>
                         </label>
                     </div>
@@ -98,21 +73,6 @@
                     <p class="text-xs text-gray-500">
                         *Require "Memorandum" get approve by RAF DIM/President, In case of use budget for buying gift to guest (Refer to RAF-PR-G-068-M-Entertainment on topic no.4,no.4.6)
                     </p>
-                </div>
-
-                <div id="payable-date-section" class="hidden mt-4">
-                    <label class="block font-semibold text-red-700">Payable Date:</label>
-                    <div class="relative max-w-xs" id="payable-date-wrapper">
-                        <input type="text" id="payable-date" class="input input-bordered rounded-xl w-full shadow-sm border-red-200 pr-10" />
-                        <button type="button" class="absolute right-2 top-1/2 -translate-y-1/2 text-red-600 hover:text-red-800" id="payable-date-icon" aria-label="Open calendar">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                                <line x1="16" y1="2" x2="16" y2="6"></line>
-                                <line x1="8" y1="2" x2="8" y2="6"></line>
-                                <line x1="3" y1="10" x2="21" y2="10"></line>
-                            </svg>
-                        </button>
-                    </div>
                 </div>
                 <!-- ฟิลด์ Other + Attach Memo -->
                 <div id="other-fields" class="hidden mt-2">
@@ -194,7 +154,7 @@
                         <thead class="bg-blue-800 text-white text-center text-xs rounded-t-xl">
                             <tr class="text-center">
                                 <th>#</th>
-                                <th class="border-blue-100 w-64">Guest Type</th>
+                                <th class="border-blue-100">Guest Type</th>
                                 <th class="border-blue-100" colspan="2">Participant / Number</th>
                                 <th class="border-blue-100" colspan="3">Meal expense for guest (Baht / Person / Time)</th>
                             </tr>
@@ -202,8 +162,8 @@
                         <tbody class="bg-amber-50">
                             @foreach ($guest_type as $gt)
                                 <tr>
-                                    <td><input type="radio" name="guest_type" class="checkbox bg-white text-blue-500 checkbox-primary guest_type" value="{{ $gt->GT_ID }}"></td>
-                                    <td class="text-left">{{ $gt->TYPE_NAME }}</td>
+                                    <td><input type="radio" name="guest_type" class="checkbox bg-white checkbox-primary guest_type" value="{{ $gt->GT_ID }}"></td>
+                                    <td class="text-center">{{ $gt->TYPE_NAME }}</td>
                                     <td class="font-semibold">{{ $gt->POSITION }}</td>
                                     <td class="text-center">{{ str_replace(['>=', '<='], ['≥', '≤'], $gt->CONDITION_TEXT) }}</td>
                                     <td class="text-left">{{ str_replace(['>=', '<='], ['≥', '≤'], $gt->SNACK) }}</td>
@@ -251,10 +211,10 @@
                         </div>
                     </h2>
 
-                    <div>
-                        <span class="font-bold text-blue-900 mr-2">Entertainment's Budget:</span>
-                        <input type="text" class="input input-bordered input-sm rounded-lg border-blue-200" id="entertain-budget" placeholder="*Please identify (if have)">
-                    </div>
+                    <!-- <div>
+                                                                                 <span class="font-bold text-blue-900 mr-2">Entertainment’s Budget:</span>
+                                                                                 <input type="text" class="input input-bordered input-sm rounded-lg border-blue-200" id="entertain-budget" placeholder="*Please identify (if have)">
+                                                                                </div> -->
                 </div>
                 <div class="overflow-x-auto mt-3 rounded-lg">
                     <table class="table table-xs md:table-sm w-full rounded-lg overflow-hidden shadow" id="table_cost">
@@ -271,8 +231,12 @@
                             @for ($i = 0; $i < 5; $i++)
                                 <tr>
                                     <td class="border-l border-gray-200">
+                                        <!-- <input class="input input-bordered input-xs rounded-lg w-full" placeholder="รายการ (เช่น Set box, Bento food, ฯลฯ)" /> -->
                                         <select class="select select-sm rounded-lg estimate-type">
                                             <option value="">--Select Detail--</option>
+                                            <!-- @foreach ($estimate_type as $value)
+    <option value="{{ $value->ET_NAME }}" data-cost="{{ $value->ET_COST }}">{{ $value->ET_NAME }}</option>
+    @endforeach -->
                                         </select>
                                     </td>
                                     <td><input type="number" class="input input-bordered input-sm rounded-lg w-full text-center" /></td>
@@ -307,7 +271,7 @@
                         </div>
                         <div class="space-y-2">
                             <div class="flex items-center space-x-2">
-                                <input type="radio" id="cashYes" name="cash_advance" class="checkbox checkbox-primary text-blue-500 bg-white  cash_adv" value="1" />
+                                <input type="radio" id="cashYes" name="cash_advance" class="checkbox checkbox-primary bg-white  cash_adv" value="1" />
                                 <label for="cashYes" class="font-semibold">Yes</label>
                                 <div class="text-xs italic text-gray-500">
                                     *Receive cash from FIN Department within 3-4 working day
@@ -315,7 +279,7 @@
                             </div>
 
                             <div class="flex items-center space-x-2">
-                                <input type="radio" id="cashNo" name="cash_advance" class="checkbox checkbox-primary text-blue-500 bg-white  cash_adv" value="0" />
+                                <input type="radio" id="cashNo" name="cash_advance" class="checkbox checkbox-primary bg-white  cash_adv" value="0" />
                                 <label for="cashNo" class="font-semibold">No</label>
                                 <div class="text-xs italic text-gray-500">
                                     *Please bring original receipt for clearance expense on Form Clearacnce Expense for Entertainment (Part 2).
@@ -387,8 +351,5 @@
 @endsection
 
 @section('scripts')
-    <!-- Flatpickr -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="{{ $_ENV['APP_JS'] }}/requestEntertain.js?ver={{ $GLOBALS['version'] }}"></script>
 @endsection
