@@ -1,7 +1,8 @@
 <?php
 defined('BASEPATH') or exit('No direct script access allowed');
 
-class Cler_model extends CI_Model {
+class Cler_model extends CI_Model
+{
 
     public function __construct()
     {
@@ -79,11 +80,8 @@ class Cler_model extends CI_Model {
         return $this->db->get()->result();
     }
 
-    public function insert($table, $data, $dateFields = [])
+    public function insert($table, $data)
     {
-        foreach ($dateFields as $key => $value) {
-            $this->db->set($key, $value, false); // <-- ไม่ escape
-        }
         $this->db->insert($table, $data);
     }
 

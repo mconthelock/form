@@ -5,7 +5,15 @@ import { showflow } from "@amec/webasset/api/webform";
 $(document).ready(async function () {
     const { nfrmno, vorgno, cyear, cyear2, nrunno, empno } = $(".form-data").data();
 
-    const flow = await showflow(nfrmno, vorgno, cyear, cyear2, nrunno);
+    const flow = await showflow(
+        {
+            NFRMNO: nfrmno,
+            VORGNO: vorgno,
+            CYEAR: cyear,
+            CYEAR2: cyear2,
+            NRUNNO: nrunno,
+        }
+    );
     $(".flow").html(flow.html);
 
     const data = await $.ajax({

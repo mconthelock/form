@@ -3,7 +3,7 @@
 @section('contents')
     <div id="loading-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.85); z-index:9999;">
         <div style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%);">
-            <img src="{{ base_url() }}assets/images/loading_gif.gif" alt="Loading..." width="120">
+            <img src="{{base_url()}}assets/images/loading_gif.gif" alt="Loading..." width="120">
         </div>
     </div>
     <div class="w-full min-h-screen bg-gradient-to-b from-blue-100 to-blue-50 py-10 px-2 md:px-0">
@@ -29,16 +29,9 @@
                     <label class="block mb-1 font-semibold text-blue-700">Requested by</label>
                     <input type="text" id="requested-by" class="input input-bordered rounded-xl w-full shadow-sm border-blue-200" value="{{ $empcode }}" placeholder="Input Employee Code" />
                 </div>
-                <div class="col-span-2">
+                <div>
                     <label class="block mb-1 font-semibold text-blue-700">Entertainment Date</label>
-                    <div class="relative max-w-xs" id="entertain-date-wrapper">
-                        <input type="text" id="entertain-date" class="input input-bordered rounded-xl w-full shadow-sm border-blue-200 pr-10" placeholder="Select Date" readonly />
-                        <button type="button" id="entertain-date-icon" class="absolute right-2 top-1/2 -translate-y-1/2 text-blue-500 hover:text-blue-700">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                            </svg>
-                        </button>
-                    </div>
+                    <input type="date" id="entertain-date" class="input input-bordered rounded-xl w-full shadow-sm border-blue-200" />
                 </div>
                 <div></div>
                 <div class="md:col-span-2">
@@ -103,13 +96,13 @@
                     </div>
                     <input type="text" class="input input-bordered rounded-xl w-full shadow-sm border-blue-200" id="location_detail" placeholder="*Please identify the location." />
 
-                    {{-- <label class="font-semibold text-blue-700 block mb-2">Reimbursement</label>
+                    {{--<label class="font-semibold text-blue-700 block mb-2">Reimbursement</label>
                     <div class="flex flex-wrap gap-6 mb-2">
                         <label class="inline-flex items-center space-x-2">
                             <input type="checkbox" name="reimbursement" id="reimbursement" class="checkbox checkbox-primary" value="1" />
                             <span>Reimbursement</span>
                         </label>
-                    </div> --}}
+                    </div>--}}
                 </div>
             </div>
 
@@ -197,12 +190,12 @@
             <!-- Section 4: Attach File -->
             <div class="bg-blue-50 rounded-2xl border border-blue-200 p-4">
                 <label class="block font-semibold text-blue-700 mb-1">*Attach File:</label>
-                <input type="file" name="visitor_notice" id="visitor-notice" class="file-input file-input-bordered rounded-lg w-full max-w-xs" />
+                <input type="file" class="file-input file-input-bordered rounded-lg w-full max-w-xs" />
                 <span class="ml-2 text-xs text-amber-600">"Visitor Notice" if any</span>
             </div>
 
             <!-- Section 5: Estimate Table + Budget -->
-            {{-- <div class="bg-gradient-to-r from-blue-50 via-white to-blue-100 rounded-2xl border border-blue-200 p-4">
+            {{--<div class="bg-gradient-to-r from-blue-50 via-white to-blue-100 rounded-2xl border border-blue-200 p-4">
                 <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-2">
                     <h2 class="font-bold text-blue-900 text-lg">
                         *Estimate Cost / ประมาณการค่าใช้จ่าย:
@@ -263,7 +256,7 @@
                     1. สำหรับค่ารับรองอื่นๆที่ไม่ใช่ค่าอาหาร เช่น กีฬา, กระเช้า ฯลฯ ให้พิจารณาร่วมกับ RAF
                     <span class="text-gray-400 block">For entertainment other than meals, such as sports expenses, gift baskets, etc., consider with RAF Division.</span>
                 </div>
-            </div> --}}
+            </div>--}}
 
             <!-- Section 6: Quantity of Participant -->
             <div class="bg-gradient-to-r from-blue-50 via-white to-blue-100 rounded-2xl border border-blue-200 p-4 space-y-2">
@@ -305,14 +298,14 @@
                     <span class="text-xs text-red-500 block mb-1">
                         If AMEC more than guest, please identify the reason.
                     </span>
-                    <textarea class="textarea textarea-bordered rounded-xl w-full min-h-[40px]" id="remark-participant" placeholder="เช่น ระบุเหตุผล..."></textarea>
+                    <textarea class="textarea textarea-bordered rounded-xl w-full min-h-[40px]" id="remark" placeholder="เช่น ระบุเหตุผล..."></textarea>
                 </div>
 
             </div>
 
             <div class="mt-10">
                 <h3 class="flex items-center gap-2 font-bold text-green-800 mb-3 mt-8 text-xl">
-                    <!-- <svg ... ไอคอน>  --> Expense Cost <label class="text-sm inline-block font-light text-red-500">(*If has "Receipt no." more than 1, Please click "Add row" button for input the details.)</label>
+                    <!-- <svg ... ไอคอน>  --> Expense Cost
                 </h3>
                 <div class="border-2 border-green-500 rounded-2xl p-4 bg-green-50 shadow-sm transition">
                     <table class="min-w-full text-sm border-1 rounded-xl overflow-hidden" id="expense-table">
@@ -321,8 +314,6 @@
                                 <th class="py-2 px-4 text-center w-12 rounded-tl-xl">No.</th>
                                 <th class="py-2 px-4 text-center">Receipt No.</th>
                                 <th class="py-2 px-4 text-center">Cost</th>
-                                <th class="py-2 px-4 text-center">Date issue receipt</th>
-                                <th class="py-2 px-4 text-center">Attach Receipt</th>
                                 <th class="py-2 px-4 w-12 rounded-tr-xl"></th>
                             </tr>
                         </thead>
@@ -330,16 +321,10 @@
                             <tr>
                                 <td class="py-2 px-4 text-center">1</td>
                                 <td class="py-2 px-4">
-                                    <input type="text" name="receipt_no[]" class="input input-sm border rounded-lg px-3 py-1 w-full focus:ring-2 bg-white focus:ring-green-400 transition" placeholder="Receipt No.">
+                                    <input type="text" class="input input-sm border rounded-lg px-3 py-1 w-full focus:ring-2 bg-white focus:ring-green-400 transition" placeholder="Receipt No.">
                                 </td>
                                 <td class="py-2 px-4">
-                                    <input type="number" name="cost[]" class="input input-sm border rounded-lg px-3 py-1 w-full focus:ring-2 bg-white focus:ring-green-400 transition cost-input" placeholder="Cost">
-                                </td>
-                                <td class="py-2 px-4">
-                                    <input type="date" name="date_issue[]" class="input input-sm border rounded-lg px-3 py-1 w-full focus:ring-2 bg-white focus:ring-green-400 transition">
-                                </td>
-                                <td class="py-2 px-4">
-                                    <input type="file" name="receipt_file[]" class="file-input file-input-sm file-input-bordered w-full max-w-xs rounded-lg border-green-400">
+                                    <input type="text" class="input input-sm border rounded-lg px-3 py-1 w-full focus:ring-2 bg-white focus:ring-green-400 transition" placeholder="Cost">
                                 </td>
                                 <td class="py-2 px-4 text-center">
                                     <button type="button" class="remove-row bg-red-500 hover:bg-red-600 text-white rounded-full w-8 h-8 flex items-center cursor-pointer justify-center shadow transition" title="Remove row">
@@ -389,10 +374,10 @@
                             </div>
                             <!-- Remain -->
                             <!-- <div>
-                                                                                                                <label class="block font-semibold text-green-700 mb-1">Remain:</label>
-                                                                                                                <input type="text" class="input input-bordered rounded-xl w-full border-green-200 text-lg font-bold" placeholder="คำนวณอัตโนมัติ" readonly id="remain" style="color: #16a34a;" />
-                                                                                                                <div id="remain-alert" class="text-xs mt-1"></div>
-                                                                                                            </div> -->
+                                                                                                        <label class="block font-semibold text-green-700 mb-1">Remain:</label>
+                                                                                                        <input type="text" class="input input-bordered rounded-xl w-full border-green-200 text-lg font-bold" placeholder="คำนวณอัตโนมัติ" readonly id="remain" style="color: #16a34a;" />
+                                                                                                        <div id="remain-alert" class="text-xs mt-1"></div>
+                                                                                                    </div> -->
                         </div>
                         <div class="grid grid-cols-2">
                             <div>
@@ -409,19 +394,19 @@
                         <!-- Attach/Remark -->
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mt-2">
                             <div>
-                                <label for="reason" class="block font-semibold text-green-700 mb-1">Reason:</label>
-                                <textarea name="reason" id="reason" class="textarea textarea-bordered rounded-xl w-full min-h-[44px]" placeholder="เหตุผลว่าทำไมถึงไม่สามารถทำการขอ Entertainment ล่วงหน้า"></textarea>
+                                <label for="" class="block font-semibold text-green-700 mb-1">Reason:</label>
+                                <textarea name="" id="reason" class="textarea rounded-xl w-full min-h-[44px]" id="reason" placeholder="เหตุผลว่าทำไมถึงไม่สามารถทำการขอ Entertainment ล่วงหน้า"></textarea>
                             </div>
 
                             <div>
                                 <label class="block font-semibold text-green-700 mb-1">Remark:</label>
-                                <textarea class="textarea textarea-bordered rounded-xl w-full min-h-[44px]" id="remark" placeholder="หากค่าใช้จ่ายเกิน ให้ระบุเหตุผล (บังคับ)"></textarea>
+                                <textarea class="textarea input-bordered rounded-xl w-full min-h-[44px]" id="remark" placeholder="หากค่าใช้จ่ายเกิน ให้ระบุเหตุผล (บังคับ)"></textarea>
                             </div>
                         </div>
 
                         <!-- <div class="text-right mt-6">
-                                    <button id="btn-submit" class="btn btn-success btn-lg rounded-2xl px-8 shadow-md transition hover:scale-105">Submit</button>
-                                </div> -->
+                            <button id="btn-submit" class="btn btn-success btn-lg rounded-2xl px-8 shadow-md transition hover:scale-105">Submit</button>
+                        </div> -->
                     </div>
                 </form>
 
@@ -440,9 +425,6 @@
 @endsection
 
 @section('scripts')
-    <!-- Flatpickr -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="{{ $_ENV['APP_JS'] }}/requestEntertain.js?ver={{ $GLOBALS['version'] }}"></script>
     <script src="{{ $_ENV['APP_JS'] }}/clearanceNoAdv.js?ver={{ $GLOBALS['version'] }}"></script>
 @endsection
