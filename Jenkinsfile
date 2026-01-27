@@ -5,11 +5,6 @@ pipeline {
         choice(name: 'DEPLOY_ENV', choices: ['development', 'production'], description: 'Select Environment to deploy')
     }
 
-    environment {
-        NAS_PATH = "\\\\172.21.255.188\\amecweb\\wwwroot\\development"
-        GIT_SSL_NO_VERIFY = 'true'
-    }
-
     tools {
         nodejs 'node'
     }
@@ -22,12 +17,14 @@ pipeline {
                     if (isManualTrigger && params.DEPLOY_ENV == 'production') {
                         env.TARGET_DIR = '/var/amecweb/wwwroot/production/form'
                         env.ENV_CRED_ID = 'form-env-prod'
-                        env.NODE_ENV = 'production'
+                        env.NODE_ENV = 'development'
+                        env.DEPLOY_ENV = 'production'
                         echo ">>> MANUAL BUILD: Deploying to PRODUCTION"
                     }else {
                         env.TARGET_DIR = '/var/amecweb/wwwroot/development/form'
                         env.ENV_CRED_ID = 'form-env-dev'
                         env.NODE_ENV = 'development'
+                        env.DEPLOY_ENV = 'development'
 
                         if (!isManualTrigger) {
                             echo ">>> WEBHOOK DETECTED: Auto-deploying to DEVELOPMENT"
@@ -57,7 +54,7 @@ pipeline {
 
                             git config --global url."https://${GIT_USER}:${GIT_PASS}@webhub.mitsubishielevatorasia.co.th/".insteadOf "https://webhub.mitsubishielevatorasia.co.th/"
 
-                            npm install
+                            npm install --include=dev
                             npm update @amec/webasset
                             npm run build
                             npm run docs:build
@@ -133,7 +130,7 @@ pipeline {
 
                         รายละเอียดสภาพแวดล้อม:
                         -------------------------------------------
-                        Environment: ${env.NODE_ENV}
+                        Environment: ${env.DEPLOY_ENV}
                         Target Directory: ${env.TARGET_DIR}
 
                         สามารถตรวจสอบ Log อย่างละเอียดได้ที่:

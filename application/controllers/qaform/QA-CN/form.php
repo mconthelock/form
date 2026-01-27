@@ -345,11 +345,11 @@ class form extends MY_Controller{
             foreach ($upfile["files"] as $fileType => $fileArray) {
             foreach ($fileArray as $file) {
                     $datadwgfile[] = [
-                        'NFRMNO' => $con['NFRMNO'],
-                        'VORGNO' => $con['VORGNO'],
-                        'CYEAR'  => $con['CYEAR'],
-                        'CYEAR2' => $con['CYEAR2'],
-                        'NRUNNO' => $con['NRUNNO'],
+                        'NFRMNO' => $form['NFRMNO'],
+                        'VORGNO' => $form['VORGNO'],
+                        'CYEAR'  => $form['CYEAR'],
+                        'CYEAR2' => $form['CYEAR2'],
+                        'NRUNNO' => $form['NRUNNO'],
                         'ITEMNO' => $fid,
                         'TYPENO' => $typeMap[$fileType] ?? null, // หรือ '' ถ้าต้องการ
                         'SFILE'  => $file['file_name'],
@@ -440,6 +440,7 @@ class form extends MY_Controller{
         $dwg = $_POST["txtDwgNo"];
         $g = $_POST["txtG"];
         $l = $_POST["txtL"];
+        $r = $_POST["revNo"];
         $i = 0;
         
         foreach($dwg as $d)
@@ -453,8 +454,9 @@ class form extends MY_Controller{
                     'CYEAR2' => $form["CYEAR2"],
                     'NRUNNO' => $form["NRUNNO"],
                     "DWGNO" => $d.(trim($g[$i]) != "" ? " ".trim($g[$i]) : "").(trim($l[$i]) != "" ? " ".trim($l[$i]) : "" ),
+                    "REVNO" => $r[$i],
                 );
-                var_dump($data);
+                //var_dump($data);
                 $this->cn->insert("RESULTCHKDWG", $data);
             }
             $i++;

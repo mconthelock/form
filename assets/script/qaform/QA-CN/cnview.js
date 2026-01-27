@@ -15,7 +15,7 @@ $(document).ready(async function () {
   flatpickr("#inspec_date", { dateFormat: "d/m/Y", defaultDate: $("#inspec_date").val() });
   flatpickr("#expchg_date", { dateFormat: "d/m/Y", defaultDate: $("#expchg_date").val() });
 
-  
+
   const { nfrmno, vorgno, cyear, cyear2, nrunno, empno } = formData;
   const flow = await showflow({
     NFRMNO: nfrmno, 
@@ -98,7 +98,10 @@ $(document).on("click", ".add-row", function (e) {
   e.preventDefault();
   const var1 = $(this).attr("data-var1");
   const var2 = $(this).attr("data-var2");
-  add_more(var1, var2);
+  const maxsize = $(this).attr("data-var3");
+
+  
+  add_more(var1 ,  var2, maxsize);
 });
 
 $(document).on("click", ".reset-file", function (e) {
@@ -173,14 +176,15 @@ $(document).on("change", ".radio-result", function (e) {
 
 });
 
-function add_more(fl, dv) {
+function add_more(fl,dv,s) {
+  
   var div = document.createElement("DIV");
   var str =
     '<div class="dvSFile flex items-center justify-between gap-2 mb-2"><input type="file" name="' +
     fl +
     '[]" data-map="' +
-    fl +
-    '" class="file-input file-input-bordered border-blue-200 w-full" multiple> <button type="button" ';
+    fl +'"'+ 'data-max-kb="'+s+'"' +
+    ' class="file-input file-input-bordered border-blue-200 w-full" multiple> <button type="button" ';
   str +=
     'class="reset-file btn-square bg-red-200 hover:bg-red-300 text-red-800 rounded-md w-8 h-8 flex items-center justify-center shadow transition cursor-pointer" title="Reset file input"> ';
   str +=
@@ -188,6 +192,23 @@ function add_more(fl, dv) {
   div.innerHTML = str;
   document.getElementById(dv).appendChild(div);
 }
+
+ $(document).on("change", ".file-input", async function () {
+    const maxKB = parseInt($(this).attr("data-max-kb"), 10);
+    const maxSize = maxKB * 1024; // byte
+
+    if (!this.files || this.files.length === 0) return;
+
+    for (let i = 0; i < this.files.length; i++) {
+        const file = this.files[i];
+
+        if (file.size > maxSize) {
+            showMessage(file.name+" "+(file.size / 1024).toFixed(0) +" KB over "+maxKB+" KB", 'warning');
+            $(this).val(''); // ล้างเฉพาะ input นี้
+            return;
+        }
+    }
+});
 
 function actionfrm(data)
 {
@@ -233,7 +254,7 @@ function checkData(act)
         showMessage('Please input Return to', 'warning');
         return false;
       }
-      if((sample == "3")&&(("#txtOth").val() == ""))
+      if((sample == "3")&&($("#txtOth").val() == ""))
       {
         showMessage('Please input Other', 'warning');
         return false;
@@ -325,7 +346,7 @@ function checkData(act)
  function deletefile(data) {
   return new Promise((resolve) => {
     $.ajax({
-      url: host + "qaform/QA-QOI/form/delfile",
+      url: host + "qaform/QA-CN/form/delfile",
       type: "post",
       dataType: "json",
       data: data,
