@@ -345,11 +345,11 @@ class form extends MY_Controller{
             foreach ($upfile["files"] as $fileType => $fileArray) {
             foreach ($fileArray as $file) {
                     $datadwgfile[] = [
-                        'NFRMNO' => $con['NFRMNO'],
-                        'VORGNO' => $con['VORGNO'],
-                        'CYEAR'  => $con['CYEAR'],
-                        'CYEAR2' => $con['CYEAR2'],
-                        'NRUNNO' => $con['NRUNNO'],
+                        'NFRMNO' => $form['NFRMNO'],
+                        'VORGNO' => $form['VORGNO'],
+                        'CYEAR'  => $form['CYEAR'],
+                        'CYEAR2' => $form['CYEAR2'],
+                        'NRUNNO' => $form['NRUNNO'],
                         'ITEMNO' => $fid,
                         'TYPENO' => $typeMap[$fileType] ?? null, // หรือ '' ถ้าต้องการ
                         'SFILE'  => $file['file_name'],
