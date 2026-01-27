@@ -340,6 +340,7 @@ class Training extends MY_Controller {
                 $this->trn->update_flow($data["NFRMNO"], $data["VORGNO"], $data["CYEAR"], $data["CYEAR2"], $data["NRUNNO"], 'CSTEPST', '1', 'CSTEPST', '3');
                 $this->trn->update_flow($data["NFRMNO"], $data["VORGNO"], $data["CYEAR"], $data["CYEAR2"], $data["NRUNNO"], 'CSTEPST', '1', 'CSTEPST', '2');
                 $get_head_inputer = $this->trn->get_headinfo($data["INPUTBY"]);
+                    $ref_vurl = "http://".$this->_servername().".mitsubishielevatorasia.co.th/form/gpform/GP-TRN/training?sr=1";
                     $data_legal = [
                         'NFRMNO'      => $data["NFRMNO"],
                         'VORGNO'      => $data["VORGNO"],
@@ -362,7 +363,7 @@ class Training extends MY_Controller {
                         'CAPVTYPE'    => '1',
                         'CREJTYPE'    => null,
                         'CAPPLYALL'   => '0',
-                        'VURL'        => 'http://amecwebtest.mitsubishielevatorasia.co.th/form/gpform/GP-TRN/training?sr=1',
+                        'VURL'        => $ref_vurl,
                         'VREMARK'     => null,
                         'VREMOTE'     => null
                     ];

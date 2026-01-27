@@ -36,7 +36,15 @@ $(document).ready(async function () {
   const formData = $(".form-data").data();
   const { nfrmno, vorgno, cyear, cyear2, nrunno, empno } = formData;
 
-  const flow = await showFlow(nfrmno, vorgno, cyear, cyear2, nrunno, true);
+  const flow = await showflow(
+    {
+      NFRMNO: nfrmno,
+      VORGNO: vorgno,
+      CYEAR: cyear,
+      CYEAR2: cyear2,
+      NRUNNO: nrunno,
+    }
+  );
   $(".flow").html(flow.html);
 
   $(".btn-submit").click(async function () {
@@ -138,7 +146,18 @@ $(document).ready(async function () {
       });
     }
 
-    const confirm = await doaction(nfrmno, vorgno, cyear, cyear2, nrunno, action, empno, remark_approve);
+    const confirm = await doaction(
+      {
+        NFRMNO: nfrmno,
+        VORGNO: vorgno,
+        CYEAR: cyear,
+        CYEAR2: cyear2,
+        NRUNNO: nrunno,
+        ACTION: action,
+        EMPNO: empno,
+        REMARK: remark_approve // optional
+      }
+    );
     if (confirm.status) redirectWebflow();
   });
 
@@ -425,7 +444,18 @@ $(document).ready(async function () {
 
         const action = "approve";
 
-        const confirm = await doaction(nfrmno, vorgno, cyear, cyear2, nrunno, action, empno, "");
+        const confirm = await doaction(
+          {
+            NFRMNO: nfrmno,
+            VORGNO: vorgno,
+            CYEAR: cyear,
+            CYEAR2: cyear2,
+            NRUNNO: nrunno,
+            ACTION: action,
+            EMPNO: empno,
+            REMARK: '' // optional
+          }
+        );
         if (confirm.status) redirectWebflow();
       },
       complete: function () {
