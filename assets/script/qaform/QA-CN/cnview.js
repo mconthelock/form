@@ -15,6 +15,7 @@ $(document).ready(async function () {
   flatpickr("#inspec_date", { dateFormat: "d/m/Y", defaultDate: $("#inspec_date").val() });
   flatpickr("#expchg_date", { dateFormat: "d/m/Y", defaultDate: $("#expchg_date").val() });
 
+  
   const { nfrmno, vorgno, cyear, cyear2, nrunno, empno } = formData;
   const flow = await showflow({
     NFRMNO: nfrmno, 
