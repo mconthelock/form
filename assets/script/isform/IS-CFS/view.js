@@ -46,7 +46,8 @@ $(async function () {
 	};
 
 	$(".form-info").html(await setformDetail(form));
-	await showflow({NFRMNO, VORGNO, CYEAR, CYEAR2, NRUNNO});
+	const flow = await showflow({NFRMNO, VORGNO, CYEAR, CYEAR2, NRUNNO});
+    $('#flow').html(flow.html);
 	toggleActionForm(mode);
 
 	$("#form").removeClass("hidden");

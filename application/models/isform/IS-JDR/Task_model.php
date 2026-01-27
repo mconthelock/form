@@ -9,7 +9,7 @@ class Task_model extends my_model{
 
     public function getReport($cond = ''){
         if($cond['JOBSECTION'] == 'AAS'){
-            $this->db = $this->load->database('DOC', TRUE);
+            $this->db = $this->load->database('DOCINV', TRUE);
         }else{
             $this->db = $this->load->database('AUD', TRUE);
         }
@@ -39,7 +39,7 @@ class Task_model extends my_model{
 
     public function getMonthly($cond = ''){
         if($cond['JOBSECTION'] == 'AAS'){
-            $this->db = $this->load->database('DOC', TRUE);
+            $this->db = $this->load->database('DOCINV', TRUE);
         }else{
             $this->db = $this->load->database('AUD', TRUE);
         }
@@ -59,7 +59,7 @@ class Task_model extends my_model{
 
     public function getEndAb($cond){
         if($cond['JOBSECTION'] == 'AAS'){
-            $this->db = $this->load->database('DOC', TRUE);
+            $this->db = $this->load->database('DOCINV', TRUE);
         }else{
             $this->db = $this->load->database('AUD', TRUE);
         }

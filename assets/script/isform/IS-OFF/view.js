@@ -112,7 +112,8 @@ $(async function () {
 		columns: column,
 		searching: false,
 	});
-	await showflow({NFRMNO, VORGNO, CYEAR, CYEAR2, NRUNNO});
+	const flow = await showflow({NFRMNO, VORGNO, CYEAR, CYEAR2, NRUNNO});
+    $('#flow').html(flow.html);
 	toggleActionForm(mode);
 	$("#form").removeClass("hidden");
 	$(".load").addClass("hidden");
