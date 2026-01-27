@@ -85,9 +85,13 @@ class form extends MY_Controller{
             $data['attjud'] = $this->cn->customSelect("ATTCNFRM",array( 'NFRMNO' => $data['NFRMNO'],'VORGNO' => $data['VORGNO'],'CYEAR'  => $data['CYEAR'],'CYEAR2' => $data['CYEAR2'],'NRUNNO' => $data['NRUNNO'] ,'TYPENO' => '7' ),'ITEMNO , SFILE');
             $data['chkopr'] = $this->chkopr($data['NFRMNO'],$data['VORGNO'],$data['CYEAR'],$data['CYEAR2'], $data['NRUNNO']);
             $data['demapv'] = $this->demapv($data['NFRMNO'],$data['VORGNO'],$data['CYEAR'],$data['CYEAR2'], $data['NRUNNO']);
-            $data['jstaff'] = $this->getjstaff($data['empinf']);
-            $data['eng'] = $this->getjstaff($data['empinf']);
-
+            $data['jstaff'] = array();
+            $data['eng'] = array();
+            if(!empty($data['empinf']))
+            {
+                $data['jstaff'] = $this->getjstaff($data['empinf']);
+                $data['eng'] = $this->getjstaff($data['empinf']);
+            }
             $data['foreman'] = $this->getForeman($data['empno']);
             $data['opr'] =  $this->getOpr($data['cnform']->MSTATUS,$data['empno']);
             $this->views('qaform/QA-CN/view', $data);
