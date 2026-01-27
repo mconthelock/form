@@ -56,6 +56,8 @@ $(document).ready(async function () {
                   }else{
                       act = action;
                   }
+                  console.log("action ="+act);
+                  
                   const confirm = await doaction({
                       NFRMNO: nfrmno,
                       VORGNO: vorgno,
@@ -64,7 +66,7 @@ $(document).ready(async function () {
                       NRUNNO: nrunno,
                       ACT: act,
                       EMPNO: empno,
-                      REMARK: remark,
+                      REMARK: $("#txtRemark").val()
                     });
                   if (confirm.status) {
                     const statusact = await actionfrm(cnformData);
