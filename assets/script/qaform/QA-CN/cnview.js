@@ -254,7 +254,7 @@ function checkData(act)
         showMessage('Please input Return to', 'warning');
         return false;
       }
-      if((sample == "3")&&(("#txtOth").val() == ""))
+      if((sample == "3")&&($("#txtOth").val() == ""))
       {
         showMessage('Please input Other', 'warning');
         return false;
@@ -346,7 +346,7 @@ function checkData(act)
  function deletefile(data) {
   return new Promise((resolve) => {
     $.ajax({
-      url: host + "qaform/QA-QOI/form/delfile",
+      url: host + "qaform/QA-CN/form/delfile",
       type: "post",
       dataType: "json",
       data: data,
