@@ -440,6 +440,7 @@ class form extends MY_Controller{
         $dwg = $_POST["txtDwgNo"];
         $g = $_POST["txtG"];
         $l = $_POST["txtL"];
+        $r = $_POST["revNo"];
         $i = 0;
         
         foreach($dwg as $d)
@@ -453,8 +454,9 @@ class form extends MY_Controller{
                     'CYEAR2' => $form["CYEAR2"],
                     'NRUNNO' => $form["NRUNNO"],
                     "DWGNO" => $d.(trim($g[$i]) != "" ? " ".trim($g[$i]) : "").(trim($l[$i]) != "" ? " ".trim($l[$i]) : "" ),
+                    "REVNO" => $r[$i],
                 );
-                var_dump($data);
+                //var_dump($data);
                 $this->cn->insert("RESULTCHKDWG", $data);
             }
             $i++;

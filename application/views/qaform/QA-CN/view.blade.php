@@ -381,7 +381,7 @@
                   
                     </label>
                     <label class="flex items-center space-x-2 cursor-pointer">
-                        <input type="radio" name="radSample" class="h-4 w-4" value="2"  {{ ($cnform->TRANSNO == "3") ? 'checked' : '' }}  >
+                        <input type="radio" name="radSample" class="h-4 w-4" value="3"  {{ ($cnform->TRANSNO == "3") ? 'checked' : '' }}  >
                         <span class="w-20">Other</span><span class="px-2 inline-block w-[450px]"><input type="text" name="txtOth" id="txtOth" value="{{ $cnform->TRANSNO == 3 ? $cnform->DETTRANS :'' }}"  class="w-full h-8 px-2 border border-gray-300 bg-white focus:outline-none focus:ring-1 focus:ring-sky-400 rounded-sm" /></span>
                   
                     </label>
@@ -429,7 +429,7 @@
             )
                 <div id="dvdwgFile" class="pt-1 w-[600px]">
                 <div class="dvSFile flex items-center justify-between gap-2 mb-2">
-                    <input type="file" name="DWGFILE[]" data-map="DWGFILE"
+                    <input type="file" name="DWGFILE[]" data-map="DWGFILE" data-max-kb="1500"
                     class="file-input file-input-bordered border-blue-200 w-full" multiple>
 
                     <!-- ปุ่มลบ -->
@@ -448,7 +448,7 @@
                 <div class="flex justify-end mt-2  w-[600px]">
                 <button type="button"
                     class="add-row btn-square bg-green-200 hover:bg-green-300 text-green-800 rounded-md w-8 h-8 flex items-center justify-center shadow transition cursor-pointer"
-                    title="Add row" data-var1="DWGFILE" data-var2="dvdwgFile">
+                    title="Add row" data-var1="DWGFILE" data-var2="dvdwgFile" data-var3="1500">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none"
                     viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
@@ -480,7 +480,7 @@
             )
                 <div id="dvmatFile" class="pt-1 w-[600px]">
                 <div class="dvSFile flex items-center justify-between gap-2 mb-2">
-                    <input type="file" name="MATFILE[]" data-map="MATFILE"
+                    <input type="file" name="MATFILE[]" data-map="MATFILE" data-max-kb="1000"
                     class="file-input file-input-bordered border-blue-200 w-full" multiple>
 
                     <!-- ปุ่มลบ -->
@@ -499,7 +499,7 @@
                 <div class="flex justify-end mt-2  w-[600px]">
                 <button type="button"
                     class="add-row btn-square bg-green-200 hover:bg-green-300 text-green-800 rounded-md w-8 h-8 flex items-center justify-center shadow transition cursor-pointer"
-                    title="Add row" data-var1="MATFILE" data-var2="dvmatFile">
+                    title="Add row" data-var1="MATFILE" data-var2="dvmatFile" data-var3="1000">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none"
                     viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
@@ -531,7 +531,7 @@
             )
                 <div id="dvmakFile" class="pt-1 w-[600px]">
                 <div class="dvSFile flex items-center justify-between gap-2 mb-2">
-                    <input type="file" name="MAKFILE[]" data-map="MAKFILE"
+                    <input type="file" name="MAKFILE[]" data-map="MAKFILE" data-max-kb="1000" 
                     class="file-input file-input-bordered border-blue-200 w-full" multiple>
 
                     <!-- ปุ่มลบ -->
@@ -550,7 +550,7 @@
                 <div class="flex justify-end mt-2  w-[600px]">
                 <button type="button"
                     class="add-row btn-square bg-green-200 hover:bg-green-300 text-green-800 rounded-md w-8 h-8 flex items-center justify-center shadow transition cursor-pointer"
-                    title="Add row" data-var1="MAKFILE" data-var2="dvmakFile">
+                    title="Add row" data-var1="MAKFILE" data-var2="dvmakFile" data-var3="1000">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none"
                     viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
@@ -582,7 +582,7 @@
             )
                 <div id="dvrohFile" class="pt-1 w-[600px]">
                 <div class="dvSFile flex items-center justify-between gap-2 mb-2">
-                    <input type="file" name="ROHFILE[]" data-map="ROHFILE"
+                    <input type="file" name="ROHFILE[]" data-map="ROHFILE" data-max-kb="300"
                     class="file-input file-input-bordered border-blue-200 w-full" multiple>
 
                     <!-- ปุ่มลบ -->
@@ -601,7 +601,7 @@
                 <div class="flex justify-end mt-2  w-[600px]">
                 <button type="button"
                     class="add-row btn-square bg-green-200 hover:bg-green-300 text-green-800 rounded-md w-8 h-8 flex items-center justify-center shadow transition cursor-pointer"
-                    title="Add row" data-var1="ROHFILE" data-var2="dvrohFile">
+                    title="Add row" data-var1="ROHFILE" data-var2="dvrohFile" data-var3="300">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none"
                     viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
@@ -633,7 +633,7 @@
             )
                 <div id="dvpurFile" class="pt-1 w-[600px]">
                 <div class="dvSFile flex items-center justify-between gap-2 mb-2">
-                    <input type="file" name="PURFILE[]" data-map="PURFILE"
+                    <input type="file" name="PURFILE[]" data-map="PURFILE" data-max-kb="1000"
                     class="file-input file-input-bordered border-blue-200 w-full" multiple>
 
                     <!-- ปุ่มลบ -->
@@ -652,7 +652,7 @@
                 <div class="flex justify-end mt-2  w-[600px]">
                 <button type="button"
                     class="add-row btn-square bg-green-200 hover:bg-green-300 text-green-800 rounded-md w-8 h-8 flex items-center justify-center shadow transition cursor-pointer"
-                    title="Add row" data-var1="PURFILE" data-var2="dvpurFile">
+                    title="Add row" data-var1="PURFILE" data-var2="dvpurFile" data-var3="1000">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none"
                     viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
@@ -684,7 +684,7 @@
             )
                 <div id="dvsubFile" class="pt-1 w-[600px]">
                 <div class="dvSFile flex items-center justify-between gap-2 mb-2">
-                    <input type="file" name="SUBFILE[]" data-map="SUBFILE"
+                    <input type="file" name="SUBFILE[]" data-map="SUBFILE" data-max-kb="1000"
                     class="file-input file-input-bordered border-blue-200 w-full" multiple>
 
                     <!-- ปุ่มลบ -->
@@ -703,7 +703,7 @@
                 <div class="flex justify-end mt-2  w-[600px]">
                 <button type="button"
                     class="add-row btn-square bg-green-200 hover:bg-green-300 text-green-800 rounded-md w-8 h-8 flex items-center justify-center shadow transition cursor-pointer"
-                    title="Add row" data-var1="SUBFILE" data-var2="dvsubFile">
+                    title="Add row" data-var1="SUBFILE" data-var2="dvsubFile" data-var3="1000">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none"
                     viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
@@ -753,7 +753,7 @@
                 || ((($form[0]->CST == "0")||($mode == $MODE_EDIT)) && in_array($empno, [$form[0]->VREQNO, $form[0]->VINPUTER]))
             )
           
-            <textarea name="txtBefChg" id="txtBefChg" rows="3" class="w-1/3 bg-white border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-400 req resize-none"> {{ $cnform->BEFCHANGE }}  </textarea>
+            <textarea name="txtBefChg" id="txtBefChg" rows="3" class="w-1/3 bg-white border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-400 req resize-none">{{ $cnform->BEFCHANGE }}</textarea>
          
              @else
                     {{ $cnform->BEFCHANGE }}    
@@ -768,7 +768,7 @@
                 || ((($form[0]->CST == "0")||($mode == $MODE_EDIT)) && in_array($empno, [$form[0]->VREQNO, $form[0]->VINPUTER]))
             )
           
-            <textarea name="txtAftChg" id="txtAftChg" rows="3" class="w-1/3 bg-white border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-400 req resize-none"> {{ $cnform->AFTCHANGE }}  </textarea>
+            <textarea name="txtAftChg" id="txtAftChg" rows="3" class="w-1/3 bg-white border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-400 req resize-none">{{ $cnform->AFTCHANGE }}</textarea>
          
              @else
                     {{ $cnform->AFTCHANGE }}    
