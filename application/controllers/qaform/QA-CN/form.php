@@ -87,13 +87,15 @@ class form extends MY_Controller{
             $data['demapv'] = $this->demapv($data['NFRMNO'],$data['VORGNO'],$data['CYEAR'],$data['CYEAR2'], $data['NRUNNO']);
             $data['jstaff'] = array();
             $data['eng'] = array();
+            $data['foreman'] = array();
+            $data['opr'] = array();
             if(!empty($data['empinf']))
             {
                 $data['jstaff'] = $this->getjstaff($data['empinf']);
                 $data['eng'] = $this->getjstaff($data['empinf']);
+                $data['foreman'] = $this->getForeman($data['empno']);
+                $data['opr'] =  $this->getOpr($data['cnform']->MSTATUS,$data['empno']);
             }
-            $data['foreman'] = $this->getForeman($data['empno']);
-            $data['opr'] =  $this->getOpr($data['cnform']->MSTATUS,$data['empno']);
             $this->views('qaform/QA-CN/view', $data);
         }
 

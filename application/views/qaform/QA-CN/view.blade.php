@@ -1105,7 +1105,7 @@
                 Delete Form
             </button>
         @endif
-        @if (in_array($empinf[0]->SSECCODE, ['000502', '000503']))
+        @if (!empty($empinf) && in_array($empinf[0]->SSECCODE, ['000502', '000503']))
             <button type="button" 
                     data-action="printFrm"
                     class="btn-submit bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded shadow mx-1">
