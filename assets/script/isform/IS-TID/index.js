@@ -20,14 +20,7 @@ import { displayEmpImage } from "@amec/webasset/indexDB";
 import { searchUser } from "@amec/webasset/api/amec";
 import { createForm, deleteFlowandForm, getRequestNo } from "@amec/webasset/api/webform";
 import { redirectWebflow } from "@amec/webasset/form";
-
-import {
-	flagSelect,
-	formatUser,
-	s2disableSearch,
-	s2opt,
-	setSelect2,
-} from "@amec/webasset/select2";
+import { flagSelect, formatUser, setSelect2} from "@amec/webasset/select2";
 
 select2();
 var emp,
@@ -193,7 +186,7 @@ function setAllUserLogin(serverName, e = $("#late")) {
 	const merge = c + u;
 
 	if ($("#userID option:selected").length != 0) {
-		flagSelect = true;
+		flagSelect.status = true;
 		$("#userID").val(null).trigger("change");
 	}
 	if (e.is(":checked")) {
@@ -242,15 +235,15 @@ $(document).on("change", 'input[name="formType"]', function () {
 	$("#late").prop("checked", false);
 
 	if ($("#serverName option:selected").length != 0) {
-		flagSelect = true;
+		flagSelect.status = true;
 		$("#serverName").val(null).trigger("change");
 	}
 	if ($("#userID option:selected").length != 0) {
-		flagSelect = true;
+		flagSelect.status = true;
 		$("#userID").val(null).trigger("change");
 	}
 	if ($("#controller option:selected").length != 0) {
-		flagSelect = true;
+		flagSelect.status = true;
 		$("#controller").val(null).trigger("change");
 	}
 });

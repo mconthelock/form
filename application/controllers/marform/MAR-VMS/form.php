@@ -361,6 +361,7 @@ class form extends MY_Controller{
         {
             $pst = $_POST["pst"];
             $data  = array();
+            $seq = 1;
             foreach($pst as $p)
             {
                 if($p != "")
@@ -369,8 +370,10 @@ class form extends MY_Controller{
                         'CYEAR2' => $cyear2,
                         'NRUNNO' => $nrunno,
                         'GID' => $p,
-                        'TYPEEMP' => 'P'
+                        'TYPEEMP' => 'P',
+                        'SEQ' => $seq
                     );
+                    $seq++;
                 }
             } 
             $ist = $_POST["ist"];
@@ -382,8 +385,10 @@ class form extends MY_Controller{
                         'CYEAR2' => $cyear2,
                         'NRUNNO' => $nrunno,
                         'GID' => $i,
-                        'TYPEEMP' => 'I'
+                        'TYPEEMP' => 'I',
+                        'SEQ' => $seq
                     );
+                    $seq++;
                 }
             } 
             
@@ -997,7 +1002,7 @@ class form extends MY_Controller{
         $sheet->setCellValue("V".($templateStart + 4),($data['item'][0]->FORMC1_1 == "Y"? "Yes":"No"));
         $sheet->setCellValue("B".($templateStart + 7),$data['item'][0]->ROOMLUNCH);
         $sheet->setCellValue("D".($templateStart + 8),$data['head']['VISITDATE']);
-        $sheet->setCellValue("E".($templateStart + 9), (isset($data['item'][0]->ROOMLUNCH) && $data['item'][0]->ROOMLUNCH !== null ? '12:00 - 13:00 PM': ''));
+        $sheet->setCellValue("E".($templateStart + 9), (isset($data['item'][0]->VISITORS)  ? '12:00 - 13:00 PM': ''));
         $sheet->setCellValue("K".($templateStart + 7),$data['item'][0]->VISITORS);
         $sheet->setCellValue("K".($templateStart + 8),$data['item'][0]->AMEC);
         $sheet->setCellValue("K".($templateStart + 9),($data['item'][0]->VISITORS+$data['item'][0]->AMEC));

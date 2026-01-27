@@ -2548,13 +2548,11 @@ function loaddata(vmscyear2, vmsnrunno) {
 			} else {
 				$('[data-field="filename"]').html("");
 			}
-
 			$('[data-field="roomlunch"]').text(item.ROOMLUNCH);
-			if (item.ROOMLUNCH && item.ROOMLUNCH.trim() !== "") {
+			if (item.VISITORS) {
 				$('[data-field="roomdate"]').text(response.head.VISITDATE);
 				$('[data-field="roomtime"]').text("12:00 - 01:00 PM.");
 			}
-
 			$('[data-field="visitlunch"]').text(item.VISITORS);
 			$('[data-field="ameclunch"]').text(item.AMEC);
 			$('[data-field="totlunch"]').text(+item.VISITORS + +item.AMEC);

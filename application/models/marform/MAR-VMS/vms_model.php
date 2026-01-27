@@ -62,7 +62,7 @@ class vms_model extends my_model
         ->select('V.* ,GNAME , GDETAIL')
         ->from('VMS_STAKEHOLDERS V')
         ->join('VMS_GROUP G', 'V.GID = G.GID')
-        ->order_by('SEQ', 'asc');
+        ->order_by('V.SEQ', 'asc');
         return $this->db->get()->result();
 
     }
@@ -206,7 +206,7 @@ class vms_model extends my_model
         RTRIM(
             XMLAGG(
                 XMLELEMENT(e, VG.GDETAIL || ',').EXTRACT('//text()')
-                ORDER BY VG.GDETAIL
+                ORDER BY VS.SEQ
             ).GetClobVal(),
             ','
         )) AS RCP
