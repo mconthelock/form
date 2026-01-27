@@ -1,4 +1,4 @@
-import { doaction, redirectWebflow } from "@amec/webasset/form";
+import { redirectWebflow } from "@amec/webasset/form";
 import { host } from "../../utils";
 import {showLoader} from "@amec/webasset/preloader";
 import "select2";
@@ -7,7 +7,7 @@ import flatpickr from "flatpickr";
 //import { setDatePicker } from "@public/_flatpickr";
 import "flatpickr/dist/flatpickr.min.css";
 import { ajaxOptions, getAllAttr, getData, showMessage , requiredForm} from "@amec/webasset/utils";
-import { showflow } from "@amec/webasset/api/webform";
+import { showflow, doaction } from "@amec/webasset/api/webform";
 $(document).ready(async function () {
   const formData = $(".form-data").data();
   flatpickr("#part_date", { dateFormat: "d/m/Y", defaultDate: $("#part_date").val() });
@@ -54,16 +54,16 @@ $(document).ready(async function () {
                   }else{
                       $act = action;
                   }
-                  const confirm = await doaction(
-                    nfrmno,
-                    vorgno,
-                    cyear,
-                    cyear2,
-                    nrunno,
-                    act,
-                    empno,
-                    remark,
-                  );
+                  const confirm = await doaction({
+                      NFRMNO: nfrmno,
+                      VORGNO: vorgno,
+                      CYEAR: cyear,
+                      CYEAR2: cyear2,
+                      NRUNNO: nrunno,
+                      ACT: act,
+                      EMPNO: empno,
+                      REMARK: remark,
+                    });
                   if (confirm.status) {
                     const statusact = await actionfrm(cnformData);
                     if (statusact.status) redirectWebflow();
