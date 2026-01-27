@@ -12,7 +12,7 @@ import { setSelect2, destroySelect2 } from "@amec/webasset/select2";
 //import "select2";
 //import "select2/dist/css/select2.min.css";
 import { redirectWebflow } from "@amec/webasset/form";
-import { createForm } from "@amec/webasset/api/webform";
+import { createForm, getFormMaster, getFormMasterByVaname } from "@amec/webasset/api/webform";
 import { setDatePicker } from "@amec/webasset/flatpickr";
 //import { createForm, redirectWebflow } from "@amec/webasset/form";
 import { readInput } from "@amec/webasset/excel";
@@ -2010,14 +2010,16 @@ async function createGPENT() {
 	if (!$("#hasLunch").is(":checked") && !$("#hasDinner").is(":checked"))
 		return;
 
-	const eno = "9";
+	//const eno = "9";
 	//const eno = "17";
-	const evorgno = "030101";
-	const ecyear = "25";
+	//const evorgno = "030101";
+	//const ecyear = "25";
+
+	const form = await getFormMasterByVaname('GP-ENT');
 	const preform = {
-		NFRMNO: eno,
-		VORGNO: evorgno,
-		CYEAR: ecyear,
+		NFRMNO: form.NNO,
+		VORGNO: form.VORGNO,
+		CYEAR: form.CYEAR,
 		REQBY: $("#empno").val(),
 		INPUTBY: $("#empno").val(),
 		REMARK: "",
@@ -2061,9 +2063,9 @@ async function createGPENT() {
 		const { NRUNNO, CYEAR2 } = GPENTform.data;
 
 		const formData = new FormData();
-		formData.append("nfrmno", eno);
-		formData.append("vorgno", evorgno);
-		formData.append("cyear", ecyear);
+		formData.append("nfrmno", form.NNO);
+		formData.append("vorgno", form.VORGNO);
+		formData.append("cyear", form.CYEAR);
 		formData.append("cyear2", CYEAR2);
 		formData.append("nrunno", NRUNNO);
 		formData.append("other_details", "");
