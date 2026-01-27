@@ -17,12 +17,14 @@ pipeline {
                     if (isManualTrigger && params.DEPLOY_ENV == 'production') {
                         env.TARGET_DIR = '/var/amecweb/wwwroot/production/form'
                         env.ENV_CRED_ID = 'form-env-prod'
-                        env.NODE_ENV = 'production'
+                        env.NODE_ENV = 'development'
+                        env.DEPLOY_ENV = 'production'
                         echo ">>> MANUAL BUILD: Deploying to PRODUCTION"
                     }else {
                         env.TARGET_DIR = '/var/amecweb/wwwroot/development/form'
                         env.ENV_CRED_ID = 'form-env-dev'
                         env.NODE_ENV = 'development'
+                        env.DEPLOY_ENV = 'development'
 
                         if (!isManualTrigger) {
                             echo ">>> WEBHOOK DETECTED: Auto-deploying to DEVELOPMENT"
@@ -128,7 +130,7 @@ pipeline {
 
                         รายละเอียดสภาพแวดล้อม:
                         -------------------------------------------
-                        Environment: ${env.NODE_ENV}
+                        Environment: ${env.DEPLOY_ENV}
                         Target Directory: ${env.TARGET_DIR}
 
                         สามารถตรวจสอบ Log อย่างละเอียดได้ที่:
