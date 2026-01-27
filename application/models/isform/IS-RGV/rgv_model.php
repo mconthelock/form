@@ -8,7 +8,7 @@ class Rgv_model extends CI_Model {
         parent::__construct();
         $this->load->database();
         $this->ad  = $this->load->database('AUD', TRUE);
-        $this->doc = $this->load->database('DOC', TRUE);
+        $this->doc = $this->load->database('DOCINV', TRUE);
         $this->scm = $this->load->database('SCM', TRUE);
     }
 
