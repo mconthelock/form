@@ -378,6 +378,7 @@ class Training extends MY_Controller {
                 //Benchmark
 			$this->benchmark('update_legal_flow');
 			//Benchmark
+                $ref_vurl = "http://".$this->_servername().".mitsubishielevatorasia.co.th/form/gpform/GP-TRN/training?sr=1";
 				$get_head_inputer = $this->trn->get_headinfo($data["INPUTBY"]);
                     $data_legal = [
                         'NFRMNO'      => $data["NFRMNO"],
@@ -401,7 +402,7 @@ class Training extends MY_Controller {
                         'CAPVTYPE'    => '1',
                         'CREJTYPE'    => null,
                         'CAPPLYALL'   => '0',
-                        'VURL'        => 'http://amecwebtest.mitsubishielevatorasia.co.th/form/gpform/GP-TRN/training?sr=1',
+                        'VURL'        => $ref_vurl,
                         'VREMARK'     => null,
                         'VREMOTE'     => null
                     ];

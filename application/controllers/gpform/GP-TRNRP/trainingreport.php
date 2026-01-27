@@ -271,12 +271,7 @@ class Trainingreport extends MY_Controller {
         $nfrmno = 19;
         $vorgno = '030101';
         $cyear = '25';
-        $month = (int) date('m');
-        $year  = date('Y');
-        $cyear2 = ($month <= 3) ? $year - 1 : $year;
-        $nrunno = '--';
-        echo $month."|".$cyear2."<BR>";
-
+        
         $get_form_3month = $this->trn->get_3month_train_report($nfrmno, $vorgno, $cyear);
         //$get_form_3month = $this->trn->get_3month_train_report_for_test($nfrmno, $vorgno, $cyear, $cyear2, '15');
         print_r($get_form_3month);
@@ -289,7 +284,7 @@ class Trainingreport extends MY_Controller {
                 'VORGNO' => $vorgno,
                 'CYEAR'  => $cyear,
                 'CYEAR2' => $cyear2,
-                'NRUNNO' => $val->NRUNNO
+                'NRUNNO' => $nrunno
             ];
             $data_update_form = ['CST' => 1];
             $result = $this->trn->update_data('FORM', $data_update_form, $where_form);
@@ -299,13 +294,14 @@ class Trainingreport extends MY_Controller {
                 'NFRMNO' => $nfrmno,
                 'VORGNO' => $vorgno,
                 'CYEAR'  => $cyear,
-                'CYEAR2' => $val->CYEAR2,
-                'NRUNNO' => $val->NRUNNO,
+                'CYEAR2' => $cyear2,
+                'NRUNNO' => $nrunno,
                 'CEXTDATA' => '01'
             ];
             $data_update_flow = [ 'CSTEPNEXTNO' => '18'];
             $result = $this->trn->update_data('FLOW', $data_update_flow, $where_flow);
             
+            $ref_vurl = "http://".$this->_servername().".mitsubishielevatorasia.co.th/form/gpform/GP-TRNRP/trainingreport?sr=1";
             $data_add_flow = [
                 'NFRMNO' => $nfrmno,
                 'VORGNO' => $vorgno,
@@ -328,7 +324,7 @@ class Trainingreport extends MY_Controller {
                 'CAPVTYPE'    => '1',
                 'CREJTYPE'    => null,
                 'CAPPLYALL'   => '0',
-                'VURL'        => 'http://amecwebtest.mitsubishielevatorasia.co.th/form/gpform/GP-TRNRP/trainingreport?sr=1',
+                'VURL'        => $ref_vurl,
                 'VREMARK'     => null,
                 'VREMOTE'     => null
             ];
