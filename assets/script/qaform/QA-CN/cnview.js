@@ -7,7 +7,7 @@ import flatpickr from "flatpickr";
 //import { setDatePicker } from "@public/_flatpickr";
 import "flatpickr/dist/flatpickr.min.css";
 import { ajaxOptions, getAllAttr, getData, showMessage , requiredForm} from "@amec/webasset/utils";
-import { showflow, doaction,getFormStatus } from "@amec/webasset/api/webform";
+import { showflow, doaction, getFormStatus } from "@amec/webasset/api/webform";
 
 $(document).ready(async function () {
   const formData = $(".form-data").data();
@@ -64,7 +64,7 @@ $(document).ready(async function () {
                       CYEAR: cyear,
                       CYEAR2: cyear2,
                       NRUNNO: nrunno,
-                      ACT: act,
+                      ACTION: act,
                       EMPNO: empno,
                       REMARK: $("#txtRemark").val()
                     });
