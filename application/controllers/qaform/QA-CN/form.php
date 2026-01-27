@@ -688,9 +688,9 @@ class form extends MY_Controller{
         $itemno = $_POST['itemno'];
         $sfile = $_POST['sfile'];
         $this->deleteFile($sfile,$path);
-        $this->qoi->trans_start();
-        $delfn = $this->qoi->delete("ATTQOIFRM","CYEAR2 ='".$_POST["cyear2"]."' AND NRUNNO = '".$_POST["nrunno"]."' AND ITEMNO = '".$itemno."' AND SFILE = '".$sfile."'");
-        $this->qoi->trans_complete();
+        $this->cn->trans_start();
+        $delfn = $this->cn->delete("ATTCNFRM ","CYEAR2 ='".$_POST["cyear2"]."' AND NRUNNO = '".$_POST["nrunno"]."' AND ITEMNO = '".$itemno."' AND SFILE = '".$sfile."'");
+        $this->cn->trans_complete();
         $res = [
             'status' => $delfn,
             'message' => ""

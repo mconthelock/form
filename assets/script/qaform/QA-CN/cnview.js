@@ -67,12 +67,15 @@ $(document).ready(async function () {
                     });
                   if (confirm.status) {
                     const statusact = await actionfrm(cnformData);
+                    console.log(statusact);
+                    
                     if (statusact.status) redirectWebflow();
                   }
               
           }else
           {
               const statusact = await actionfrm(cnformData);
+              console.log(statusact);
               if (statusact.status) redirectWebflow();
           }
 
@@ -223,12 +226,16 @@ function actionfrm(data)
       data: data,
       beforeSend: function () {
         showLoader(true);
+        console.log("beforeSend");
+        
       },
       success: function (res) {
         resolve(res);
+        console.log("success");
       },
       complete: function (xhr, status) {
         showLoader(false);
+        console.log("complete");
       },
     });
   });
