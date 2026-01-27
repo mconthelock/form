@@ -7,7 +7,8 @@ import flatpickr from "flatpickr";
 //import { setDatePicker } from "@public/_flatpickr";
 import "flatpickr/dist/flatpickr.min.css";
 import { ajaxOptions, getAllAttr, getData, showMessage , requiredForm} from "@amec/webasset/utils";
-import { showflow, doaction } from "@amec/webasset/api/webform";
+import { showflow, doaction,getFormStatus } from "@amec/webasset/api/webform";
+
 $(document).ready(async function () {
   const formData = $(".form-data").data();
   flatpickr("#part_date", { dateFormat: "d/m/Y", defaultDate: $("#part_date").val() });
@@ -47,13 +48,13 @@ $(document).ready(async function () {
          // return false;
           if(action == "approve" || action == "reject" || action == "return" )
           {
-                  
+                  let act;
                   let cextData =  parseInt($("#cextData").val());
                   if(cextData >1 && cextData != 5 && action == "reject")
                   {
-                      $act = "approve";
+                      act = "approve";
                   }else{
-                      $act = action;
+                      act = action;
                   }
                   const confirm = await doaction({
                       NFRMNO: nfrmno,
@@ -67,15 +68,21 @@ $(document).ready(async function () {
                     });
                   if (confirm.status) {
                     const statusact = await actionfrm(cnformData);
-                    console.log(statusact);
-                    
+                    const formStatus = await getFormStatus({
+                        NFRMNO: nfrmno,
+                        VORGNO: vorgno,
+                        CYEAR: cyear,
+                        CYEAR2: cyear2,
+                        NRUNNO: nrunno
+                    }); 
+                    console.log("flow status = "+formStatus);
                     if (statusact.status) redirectWebflow();
                   }
               
           }else
           {
               const statusact = await actionfrm(cnformData);
-              console.log(statusact);
+              //console.log(statusact);
               if (statusact.status) redirectWebflow();
           }
 
