@@ -4,6 +4,7 @@ import { getEscsUsers } from "@amec/webasset/api/escs";
 import { doaction, showflow } from "@amec/webasset/api/webform";
 import { createTable } from "@amec/webasset/dataTable";
 import { setDatePicker } from "@amec/webasset/flatpickr";
+import select2 from "select2";
 import { setSelect2 } from "@amec/webasset/select2";
 import {
 	getformDetail,
@@ -48,7 +49,7 @@ import { getAuditRevision } from "@amec/webasset/api/escs";
 import { getEscsUserSection } from "@amec/webasset/api/escs";
 import { searchUser } from "@amec/webasset/api/amec";
 var formInfo, form, cextdata, tableAuditor, tableAuditee;
-
+select2();
 $(async function () {
 	try {
 		formInfo = await getAllAttr(".form-info");

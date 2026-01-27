@@ -183,6 +183,8 @@ const columnMonthly = [
 ];
 
 $(async function () {
+    try{
+
 	showLoader();
 	NFRMNO = $(".form-info").attr("NFRMNO");
 	VORGNO = $(".form-info").attr("VORGNO");
@@ -211,10 +213,9 @@ $(async function () {
 	});
 
 	const monthly = await setData(data);
-	console.log(monthly);
 
 	$("#header").html(`List for Job result confirmation in ${data.my}`);
-	const table = createTable("#table", {
+	const table = await createTable( {
 		data: data.data,
 		columns: column,
 		searching: false,
@@ -225,25 +226,34 @@ $(async function () {
 		dom: '<"top flex flex-col"<"table-option join  items-center"><"bg-white border border-slate-300 rounded-lg"rt>',
 	});
 
-	createTable(
-		"#table1",
+	const table1 = await createTable(
 		{
 			data: monthly,
 			columns: columnMonthly,
 		},
 		{
+            id: "#table1",
 			buttonFilter: { status: true, column: "1" },
 		},
 	);
 
+    
+
 	$("#table1 thead").addClass("text-xs");
 	$("#table1 body").addClass("text-xs");
 
-	await showflow({NFRMNO, VORGNO, CYEAR, CYEAR2, NRUNNO});
+	const flow =await showflow({NFRMNO, VORGNO, CYEAR, CYEAR2, NRUNNO});
+    $('#flow').html(flow.html);
 	toggleActionForm(mode);
 	$("#form").removeClass("hidden");
 	$(".load").addClass("hidden");
-	showLoader({ show: false });
+    }catch(e){
+        showMessage(e.message);
+        console.error(e.message);
+        
+    } finally {
+        showLoader({show:false});
+    }
 });
 
 $(document).on("click", "button[name='btnAction']", async function () {
@@ -293,7 +303,6 @@ async function setData(data) {
 			empImage[d.RC_CHECKER] = await displayEmpImage(d.RC_CHECKER);
 		}
 	}
-	console.log(empImage);
 
 	const summary = data.monthly.map((item) => ({ ...item, type: "summary" }));
 	const detail = data.endAb.map((item) => ({ ...item, type: "detail" }));
@@ -318,12 +327,10 @@ async function setData(data) {
 		return dateA - dateB;
 	});
 
-	console.log(typeof merged, merged);
 
 	for (const key in merged) {
 		if (Object.prototype.hasOwnProperty.call(merged, key)) {
 			const data = merged[key];
-			console.log(key, data);
 			if (data.type == "detail" && merged[key - 1].type == "summary") {
 				data.type = "summary";
 				merged[key - 1] = {
@@ -345,7 +352,6 @@ async function setData(data) {
 	//     }
 	//     return data;
 	// })
-	console.log(merged);
 
 	return merged;
 }

@@ -2,6 +2,7 @@ import { getEscsItems } from "@amec/webasset/api/escs";
 import { getEscsUsers } from "@amec/webasset/api/escs";
 import { getUserAuthorizeView } from "@amec/webasset/api/escs";
 import { setStickyColumns } from "@amec/webasset/dataTable";
+import select2 from "select2";
 import { setSelect2 } from "@amec/webasset/select2";
 import { select } from "@amec/webasset/components/form";
 import { skeleton, skeletons } from "@amec/webasset/skeleton";
@@ -13,7 +14,7 @@ import {
 	mergeCell,
 	border,
 } from "@amec/webasset/excel";
-
+select2();
 var userID = "",
 	user = [],
 	item = [],
