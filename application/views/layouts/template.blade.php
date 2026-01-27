@@ -15,12 +15,13 @@
     <link rel="apple-touch-startup-image" href="{{ base_url() }}assets/images/icon_512.png">
 
     <title>AMEC Webflow 🕊️ Document Mananagement System</title>
-    <link rel="stylesheet" href="{{ $_ENV['APP_CDN'] }}/select2/css/select2.min.css">
-    <link rel="stylesheet" href="{{ base_url() }}assets/dist/css/tailwind.css?ver={{ $GLOBALS['version'] }}">
+    <link rel="stylesheet"
+        href="{{ base_url() }}assets/dist/css/tailwind.css?ver={{ date() }}{{ $GLOBALS['version'] }}">
     @yield('styles')
 </head>
 
 <body class="flex flex-col min-h-screen">
+    @php echo base_url(); @endphp
     <input type="hidden" id="appid" value="{{ $_ENV['APP_ID'] }}">
     <input type="checkbox" id="loading-box" class="modal-toggle" checked />
     <!-- Navbar -->
