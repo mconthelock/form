@@ -4,7 +4,7 @@ require_once APPPATH . 'models/my_model.php';
 class confirm_model extends my_model {
     public function __construct(){
         parent::__construct();
-        $this->doc = $this->load->database('DOCINV',true);
+        $this->doc = $this->load->database('DOC',true);
     }
 
     public function getProgram(){

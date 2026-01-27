@@ -82,7 +82,7 @@
                                 </div>
                                 <ui class="drop-list w-full flex-col items-start text-gray-500 hidden p-1 gap"></ui>
                             </label>
-                            <input type="file" class="file-input txt-upper validator req hidden" data-format="IPE" name="fileBefore[]" id="fileBefore[]" multiple/>
+                            <input type="file" class="file-input txt-upper validator req hidden" data-format="ipe" name="fileBefore[]" id="fileBefore[]" multiple/>
                         </div>
                         <div class="border border-black  p-3 flex gap-3 w-1/2">
                             <label for="fileResult[]" class="border border-primary border-dashed rounded-lg overflow-y-scroll w-full min-h-60 text-primary cursor-pointer dropZone">
@@ -91,7 +91,7 @@
                                 </div>
                                 <ui class="drop-list w-full flex-col items-start text-gray-500 hidden p-1 gap"></ui>
                             </label>
-                            <input type="file" class="file-input txt-upper validator req hidden" data-format="IPE" name="fileResult[]" id="fileResult[]" multiple/>
+                            <input type="file" class="file-input txt-upper validator req hidden" data-format="ipe" name="fileResult[]" id="fileResult[]" multiple/>
                         </div>
                     </div>
                 </div>

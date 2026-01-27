@@ -4,7 +4,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 class Template_model extends CI_Model {
     public function __construct(){
         parent::__construct();
-        $this->db = $this->load->database('DOCINV', true);
+        $this->db = $this->load->database('DOC', TRUE);
     }
 
     public function getDocCategory(){

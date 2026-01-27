@@ -209,7 +209,16 @@ $(document).ready(function () {
     formData.append("ent_cyear", ent_cyear);
     formData.append("ent_cyear2", ent_cyear2);
     formData.append("ent_nrunno", ent_nrunno);
-    const form = await createForm(nfrmno, vorgno, cyear, $("#requester").val(), $("#inputer").val(), "", 1);
+    const form = await createForm(
+      {
+        NFRMNO: nfrmno,
+        VORGNO: vorgno,
+        CYEAR: cyear,
+        REQBY: $("#requester").val(),
+        INPUTBY: $("#inputer").val(),
+        REMARK: ""
+      }
+    );
     const { runno: NRUNNO, cyear2: CYEAR2 } = form.message;
     formData.append("nrunno", NRUNNO);
     formData.append("cyear2", CYEAR2);

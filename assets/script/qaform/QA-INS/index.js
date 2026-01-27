@@ -6,6 +6,7 @@ import {
 	handleFiles,
 	setFilePathToDragDrop,
 } from "@amec/webasset/dragdrop";
+import select2 from "select2";
 import {
 	formatAvatar,
 	s2disableSearch,
@@ -45,6 +46,7 @@ import { doaction, showflow } from "@amec/webasset/api/webform";
 import { downloadOrOpenFile, getFile } from "@amec/webasset/api/file";
 import { readonly } from "vue";
 
+select2();
 var formInfo,
 	userIncharge,
 	users,

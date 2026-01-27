@@ -1,3 +1,4 @@
+import select2 from "select2";
 import { elementDragDrop, handleFiles } from "@amec/webasset/dragdrop";
 import { fileFormats } from "@amec/webasset/file";
 import {
@@ -20,6 +21,8 @@ import { displayEmpImage } from "@amec/webasset/indexDB";
 import { showLoader } from "@amec/webasset/preloader";
 import { host } from "../../utils";
 import { doaction, showflow } from "@amec/webasset/api/webform";
+
+select2();
 
 var programs,
 	NFRMNO,
@@ -46,7 +49,8 @@ $(async function () {
 		apv = $(".apv-data").attr("apv");
 		cextData = $(".apv-data").attr("cextData");
 		firstStep = $(".apv-data").attr("firstStep");
-		await showflow({NFRMNO, VORGNO, CYEAR, CYEAR2, NRUNNO});
+		const flow = await showflow({NFRMNO, VORGNO, CYEAR, CYEAR2, NRUNNO});
+        $('#flow').html(flow.html);
 		data = await getData({
 			...ajaxOptionsLoad,
 			url: `${host}isform/IS-CFS/form/getData`,
@@ -72,7 +76,7 @@ $(async function () {
 	$(".load").addClass("hidden");
 	await setSelect2(
 		{
-			...s2opt,
+            id: 'sysCode',
 			templateSelection: function (data) {
 				// console.log(data);
 				if (data.id == "") {
@@ -81,13 +85,12 @@ $(async function () {
 				return data.id;
 			},
 		},
-		"#sysCode",
 	);
 	await setReleaser();
 	programs = await getProgramList();
 	// module = await getModule();
-	await setSelect2({ ...s2opt }, "#program_owner");
-	await setSelect2({ ...s2opt }, "#program_type");
+	await setSelect2({ id:"program_owner"});
+	await setSelect2({ id:"program_type"});
 	showLoader({ show: false });
 	const wk = document.getElementById("workCon");
 	wk.addEventListener("input", () => autosizeTextarea(wk));
@@ -139,7 +142,7 @@ async function setReleaser() {
 
 	await setSelect2(
 		{
-			...s2opt,
+			id: "select-developer",
 			dropdownParent: $("#newprogram_module"),
 			templateResult: formatUser,
 			templateSelection: formatUser,
@@ -147,7 +150,6 @@ async function setReleaser() {
 				return markup; // ปิดการ escape เพื่อแสดง HTML
 			},
 		},
-		"#select-developer",
 	);
 }
 
@@ -187,7 +189,7 @@ async function setProgram(division, type) {
 			`<option value="${program.PROMID}" data-name="${program.PROMNAME}" data-id="${program.PROMID}">${program.TITLE}</option>`,
 		);
 	});
-	setSelect2(s2opt, "#program_name");
+	setSelect2({id:"program_name"});
 }
 
 async function setNewProgram() {
@@ -434,7 +436,8 @@ $(document).on(
 		// console.log(format);
 
 		// handleFiles($(this)[0].files, element, format);
-		handleFiles($(this)[0].files, element, fileFormats[format]);
+		// handleFiles($(this)[0].files, element, fileFormats[format]);
+		await handleFiles({element: $(this)});
 	},
 );
 
