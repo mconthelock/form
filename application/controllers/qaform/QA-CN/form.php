@@ -87,6 +87,7 @@ class form extends MY_Controller{
             $data['demapv'] = $this->demapv($data['NFRMNO'],$data['VORGNO'],$data['CYEAR'],$data['CYEAR2'], $data['NRUNNO']);
             $data['jstaff'] = $this->getjstaff($data['empinf']);
             $data['eng'] = $this->getjstaff($data['empinf']);
+
             $data['foreman'] = $this->getForeman($data['empno']);
             $data['opr'] =  $this->getOpr($data['cnform']->MSTATUS,$data['empno']);
             $this->views('qaform/QA-CN/view', $data);
@@ -145,7 +146,7 @@ class form extends MY_Controller{
 
     public function getForeman($emp)
     {
-        $sql = "select DISTINCT SEMPNO , SNAME from AMEC.AEMPLOYEE , CNSHOPPIC where CSTATUS = '1' and SEMPNO = FM and SEMPNO <> ".$emp." order by SNAME";
+        $sql = "select DISTINCT SEMPNO , SNAME from AMEC.AEMPLOYEE , CNSHOPPIC where CSTATUS = '1' and SEMPNO = FM and SEMPNO <> '".$emp."' order by SNAME";
         $data = $this->cn->getdatasql($sql);
        // echo json_encode($data);
        return   $data;
