@@ -29,7 +29,7 @@ $(document).ready(async function () {
   $(".flow").html(flow.html);
 
   $(".btn-submit").click(async function () {
-      const action = $(this).data("action");
+      let action = $(this).data("action");
       if(checkData(action))
       {
         	const frm = $("#cn-form");
@@ -44,10 +44,8 @@ $(document).ready(async function () {
           //for (let pair of cnformData.entries()) {
           //console.log(pair[0] + ' = ' + pair[1]);
       ///}
-          if(action == "returnrem")
-            {
-                action = "return";
-            }
+       
+          action = (action === "returnrem") ? "return" : action;
          // return false;
           if(action == "approve" || action == "reject")
           {
@@ -256,6 +254,8 @@ function actionfrm(data)
 
 function checkData(act)
 {
+  
+  
   let cextdata =  parseInt($("#cextData").val());
   const chkopr =  $("#chkopr").val();
   const demapv =  $("#demapv").val();

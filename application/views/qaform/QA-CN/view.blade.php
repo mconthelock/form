@@ -1050,7 +1050,7 @@
     <tr>
         <td class="force-w-350" valign="top">Remark</td>
         <td class="px-3 py-1 bg-gray-100 border-b border-white">
-            <textarea name="txtRemark" rows="3" 
+            <textarea name="txtRemark" id="txtRemark" rows="3" 
                       class="w-full p-2 border border-gray-300 bg-white focus:outline-none focus:ring-1 focus:ring-sky-400 rounded-sm"></textarea>
         </td>
     </tr>
