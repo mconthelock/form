@@ -283,7 +283,7 @@ class Trainingreport extends MY_Controller {
 
     
     public function preview_file($formno, $filename, $origin_name){
-        $filepath = $this->upload_path."/".$formno;
+        $filepath = $this->upload_path_report."/".$formno;
         $this->downloadFile($origin_name, $filename, $filepath);
     }
 
