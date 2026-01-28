@@ -12,6 +12,7 @@ class Trainingreport extends MY_Controller {
         $this->load->model('gpform/GP-TRN/training_model', 'trn');
         $this->upload_path = "//amecnas/AMECWEB/File/" . ($this->_servername() == 'amecweb' ? 'production' : 'development') . "/Form/GP/GPTRN/";
         $this->upload_path_report = "//amecnas/AMECWEB/File/" . ($this->_servername() == 'amecweb' ? 'production' : 'development') . "/Form/GP/GPTRNRP/";
+
     }
 
     public function index(){
@@ -95,8 +96,6 @@ class Trainingreport extends MY_Controller {
 
                 // อัปโหลดทั้งหมด
                 $uploadedList = $this->uploadMultiFile($_FILES,['txt_trn_att'],$dest);
-                //$uploadedList = $this->uploadMultiFile($_FILES['txt_trn_att'], "txt_trn_att", $dest);
-
 
                 // ถ้า upload fail ทั้งหมด
                 if (!$uploadedList['status']) {
@@ -107,7 +106,6 @@ class Trainingreport extends MY_Controller {
                     return;
                 }
 
-                //$this->insert_and_upload("GP_TRN_ATT", $base, $uploadedList, "REPORT", $frmno, $dest);
                 $this->insert_and_upload("GP_TRN_ATT", $base, $uploadedList['files']['txt_trn_att'], "REPORT", $formno, $dest);
                 $result = ['status' => true, 'message' => ' Upload File successfully'];
                 echo json_encode($result);
@@ -118,25 +116,23 @@ class Trainingreport extends MY_Controller {
             * ============================================================ */
                 $content = $this->input->post('content');
                 $apply   = $this->input->post('apply');
-                $result = $this->trn->update_data_report($frmno, $orgno, $cyear, $cyear2, $nrunno, 'req', $content, $apply);
 
-                // 2️⃣ เช็คว่ามีไฟล์แนบไหม
-                if (isset($_FILES['txt_trn_att']) && !empty(array_filter($_FILES['txt_trn_att']['name']))) {
-                    
+                $result = $this->trn->update_data_report(
+                    $frmno, $orgno, $cyear, $cyear2, $nrunno,
+                    'req', $content, $apply
+                );
+
+                if (!$result['status']) {
+                    echo json_encode($result);
+                    return;
+                }
+
+                // ✅ เช็คว่ามีไฟล์จริงไหมก่อน
+                if (!empty(array_filter($_FILES['txt_trn_att_other']['name'] ?? []))) {
                     $dest = rtrim($this->upload_path_report, '/\\') . '/' . $formno . '/';
-                    $dest = rtrim($pathx, '/\\') . DIRECTORY_SEPARATOR . $formno . DIRECTORY_SEPARATOR;
-                    if (!is_dir($dest)) {
-                        if (!mkdir($dest, 0777, true) && !is_dir($dest)) {
-                            echo json_encode([
-                                'status' => false,
-                                'message' => 'ไม่สามารถสร้างโฟลเดอร์ปลายทางได้'
-                            ]);
-                            return;
-                        }
-                    }
-                    //if (!is_dir($dest)) { mkdir($dest, 0777, true);}
+                    if (!is_dir($dest)) { mkdir($dest, 0777, true); }
+                    $uploadedList = $this->uploadMultiFile($_FILES, ['txt_trn_att_other'], $dest);
 
-                    $uploadedList = $this->uploadMultiFile($_FILES, ['txt_trn_att'], $dest);
                     if (!$uploadedList['status']) {
                         echo json_encode($uploadedList);
                         return;
@@ -145,15 +141,14 @@ class Trainingreport extends MY_Controller {
                     $this->insert_and_upload(
                         "GP_TRN_ATT",
                         $base,
-                        $uploadedList['files']['txt_trn_att'],
-                        "REPORT",
+                        $uploadedList['files']['txt_trn_att_other'],
+                        "REPORT_OTHER",
                         $formno,
                         $dest
                     );
                 }
 
-
-                echo json_encode($result);
+                echo json_encode(['status' => true, 'message' => 'Update successfully']);
                 return;
             }else if ($mode === "manager_score") {
                 $score = $this->input->post('score');

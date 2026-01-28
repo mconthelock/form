@@ -113,7 +113,7 @@
       @if ($mode == '02' && $exdata == '99')
         <div class="col-span-2 flex py-1">
               <label class="w-56 font-semibold">แนบไฟล์เพิ่มเติม (ถ้ามี)</label>  
-              <input type="file" id="txt_trn_att" name="txt_trn_att[]" multiple
+              <input type="file" id="txt_trn_att_other" name="txt_trn_att_other[]" multiple
                   class="block w-full mt-2 p-2 border border-sky-300 rounded-lg file:bg-sky-600 file:text-white"/>
         </div>
       @else
