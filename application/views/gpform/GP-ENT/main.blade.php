@@ -32,7 +32,18 @@
                 </div>
                 <div>
                     <label class="block mb-1 font-semibold text-blue-700">Entertainment Date</label>
-                    <input type="date" id="entertain-date" class="input input-bordered rounded-xl w-full shadow-sm border-blue-200" />
+                    <div class="relative max-w-xs" id="entertain-date-wrapper">
+                        <input type="text" id="entertain-date" class="input input-bordered rounded-xl w-full shadow-sm border-blue-200 pr-10" />
+                        <button type="button" class="absolute right-2 top-1/2 -translate-y-1/2 text-blue-600 hover:text-blue-800" id="entertain-date-icon" aria-label="Open calendar">
+                            <!-- Heroicon: Calendar -->
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                <line x1="16" y1="2" x2="16" y2="6"></line>
+                                <line x1="8" y1="2" x2="8" y2="6"></line>
+                                <line x1="3" y1="10" x2="21" y2="10"></line>
+                            </svg>
+                        </button>
+                    </div>
                 </div>
                 <div></div>
                 <div class="md:col-span-2">
@@ -212,9 +223,9 @@
                     </h2>
 
                     <!-- <div>
-                                                                                 <span class="font-bold text-blue-900 mr-2">Entertainment’s Budget:</span>
-                                                                                 <input type="text" class="input input-bordered input-sm rounded-lg border-blue-200" id="entertain-budget" placeholder="*Please identify (if have)">
-                                                                                </div> -->
+                                                                                         <span class="font-bold text-blue-900 mr-2">Entertainment’s Budget:</span>
+                                                                                         <input type="text" class="input input-bordered input-sm rounded-lg border-blue-200" id="entertain-budget" placeholder="*Please identify (if have)">
+                                                                                        </div> -->
                 </div>
                 <div class="overflow-x-auto mt-3 rounded-lg">
                     <table class="table table-xs md:table-sm w-full rounded-lg overflow-hidden shadow" id="table_cost">
