@@ -120,7 +120,7 @@
        <div class="col-span-2 flex py-1">
          <label class="w-56 font-semibold">ไฟล์เพิ่มเติม </label>  
          @foreach ($data_attach_report_other as $row_att_oth)
-              <a href="{{ base_url('gpform/GP-TRN/training/preview_file/' . $formno . '/' . $row_att_oth->FILENAME . '/' . $row_att_oth->ORIGIN_FILENAME) }}"
+              <a href="{{ base_url('gpform/GP-TRNRP/trainingreport/preview_file/' . $formno . '/' . $row_att_oth->FILENAME . '/' . $row_att_oth->ORIGIN_FILENAME) }}"
                   target="_blank" class="text-blue-700 underline btn btn-sm rounded-lg">
                   {{ $row_att_oth->ORIGIN_FILENAME }}
               </a>
