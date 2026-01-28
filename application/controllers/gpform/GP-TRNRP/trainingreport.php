@@ -87,6 +87,8 @@ class Trainingreport extends MY_Controller {
             *  MODE 1 : UPLOAD FILE (ตำแหน่ง >= 55 to <= 69)
             * ============================================================ */
             if ($mode === "upload") {
+                error_reporting(E_ALL);
+                ini_set('display_errors', 1);
                 if (empty($_FILES['txt_trn_att']['name'][0])) {
                     echo json_encode(['status' => false, 'message' => 'No file uploaded']);
                     return;
@@ -107,9 +109,8 @@ class Trainingreport extends MY_Controller {
                     return;
                 }
                 $this->insert_and_upload("GP_TRN_ATT", $base, $uploadedList['files']['txt_trn_att'], "REPORT", $formno, $dest);
-                $result = ['status' => true, 'message' => ' Upload File successfully'];
 
-                if ( isset($_FILES['txt_trn_att_other'])) {
+                if (!empty($_FILES['txt_trn_att_other']['name'][0])) {
                     $uploadedList = $this->uploadMultiFile($_FILES, ['txt_trn_att_other'], $dest);
 
                     if (!$uploadedList['status']) {
