@@ -128,7 +128,7 @@ class Trainingreport extends MY_Controller {
                 }
 
                 // ✅ เช็คว่ามีไฟล์จริงไหมก่อน
-                if (!empty(array_filter($_FILES['txt_trn_att_other']['name'] ?? []))) {
+                if ( isset($_FILES['txt_trn_att_other'])) {
                     $dest = rtrim($this->upload_path_report, '/\\') . '/' . $formno . '/';
                     if (!is_dir($dest)) { mkdir($dest, 0777, true); }
                     $uploadedList = $this->uploadMultiFile($_FILES, ['txt_trn_att_other'], $dest);
@@ -137,7 +137,7 @@ class Trainingreport extends MY_Controller {
                         echo json_encode($uploadedList);
                         return;
                     }
-                    
+
                     $this->insert_and_upload("GP_TRN_ATT", $base, $uploadedList['files']['txt_trn_att_other'], "REPORT_OTHER", $formno, $dest);
                 }
 
