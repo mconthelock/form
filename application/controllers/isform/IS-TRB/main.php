@@ -11,7 +11,7 @@ class Main extends MY_Controller
     {
         parent::__construct();
         $this->load->model('isform/IS-TRB/trouble_model', 'tm');
-        $this->upload_path = "//amecnas/AMECWEB/File/" . ($this->_servername() == 'amecweb' ? 'production' : 'development') . "/Form/IS/ISTRB/";
+        $this->upload_path = $_ENV['AMEC_FILE_PATH'] . ($this->_servername() == 'amecweb' ? 'production' : 'development') . "/Form/IS/ISTRB/";
     }
 
     public function index()

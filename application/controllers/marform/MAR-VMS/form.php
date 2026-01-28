@@ -24,8 +24,8 @@ class form extends MY_Controller{
         $this->load->model('marform/MAR-VMS/vms_model', 'vms');
         $this->load->library('Mail');
         $this->client = new Client(['verify' => false]);
-        $this->upload_path = "//amecnas/AMECWEB/File/" .($this->_servername()=='amecweb' ? 'production' : 'development') ."/Form/MAR/VMS/";
-        $this->ent_path = "//amecnas/AMECWEB/File/" .($this->_servername()=='amecweb' ? 'production' : 'development') ."/Form/GP/GPENT/";
+        $this->upload_path = $_ENV['AMEC_FILE_PATH'] .($this->_servername()=='amecweb' ? 'production' : 'development') ."/Form/MAR/VMS/";
+        $this->ent_path = $_ENV['AMEC_FILE_PATH'] .($this->_servername()=='amecweb' ? 'production' : 'development') ."/Form/GP/GPENT/";
     }
 
     public function main(){
