@@ -31,7 +31,7 @@
                     <input type="text" id="requested-by" class="input input-bordered rounded-xl w-full shadow-sm border-blue-200" placeholder="Input Employee Code" />
                 </div>
                 <div>
-                    <label class="block mb-1 font-semibold text-blue-700">Entertainment Date</label>
+                    <label class="block mb-1 font-semibold text-blue-700">Entertainment Date 123</label>
                     <div class="relative max-w-xs" id="entertain-date-wrapper">
                         <input type="text" id="entertain-date" class="input input-bordered rounded-xl w-full shadow-sm border-blue-200 pr-10" />
                         <button type="button" class="absolute right-2 top-1/2 -translate-y-1/2 text-blue-600 hover:text-blue-800" id="entertain-date-icon" aria-label="Open calendar">
@@ -223,9 +223,9 @@
                     </h2>
 
                     <!-- <div>
-                                                                                         <span class="font-bold text-blue-900 mr-2">Entertainment’s Budget:</span>
-                                                                                         <input type="text" class="input input-bordered input-sm rounded-lg border-blue-200" id="entertain-budget" placeholder="*Please identify (if have)">
-                                                                                        </div> -->
+                                                                                             <span class="font-bold text-blue-900 mr-2">Entertainment’s Budget:</span>
+                                                                                             <input type="text" class="input input-bordered input-sm rounded-lg border-blue-200" id="entertain-budget" placeholder="*Please identify (if have)">
+                                                                                            </div> -->
                 </div>
                 <div class="overflow-x-auto mt-3 rounded-lg">
                     <table class="table table-xs md:table-sm w-full rounded-lg overflow-hidden shadow" id="table_cost">
