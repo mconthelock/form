@@ -29,9 +29,10 @@ $(document).ready(async function () {
   $(".flow").html(flow.html);
 
   $(".btn-submit").click(async function () {
-      const action = $(this).data("action");
+      let action = $(this).data("action");
       if(checkData(action))
       {
+          action = (action === "returnrem") ? "return" : action;
         	const frm = $("#cn-form");
           var cnformData = new FormData(frm[0]);
           cnformData.append("nfrmno", nfrmno);
@@ -41,12 +42,16 @@ $(document).ready(async function () {
           cnformData.append("nrunno", nrunno);
           cnformData.append("action", action);
           cnformData.append("empno", empno);
-          for (let pair of cnformData.entries()) {
-          console.log(pair[0] + ' = ' + pair[1]);
-      }
+          //for (let pair of cnformData.entries()) {
+          //console.log(pair[0] + ' = ' + pair[1]);
+      ///}
+       
+         // console.log(empno);
           
          // return false;
-          if(action == "approve" || action == "reject" || action == "return" )
+         
+         
+          if(action == "approve" || action == "reject")
           {
                   let act;
                   let cextData =  parseInt($("#cextData").val());
@@ -253,6 +258,8 @@ function actionfrm(data)
 
 function checkData(act)
 {
+  
+  
   let cextdata =  parseInt($("#cextData").val());
   const chkopr =  $("#chkopr").val();
   const demapv =  $("#demapv").val();
@@ -286,6 +293,15 @@ function checkData(act)
       return true;
   }else if(act != "")
   {
+      if(act =="returnrem")
+      {
+          if($("#txtRemark").val() == "")
+          {
+            showMessage('Please input Remark for reason return', 'warning');
+            return false;
+          }
+
+      }
       if(($("#mstatus").val() == "1") && (act == "approve"))
       {
           if((cextdata == 6) && ($("#Operator").val() == ""))

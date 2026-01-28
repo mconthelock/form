@@ -159,7 +159,6 @@ class Training extends MY_Controller {
     public function save_formcreate(){
         header('Content-Type: application/json; charset=utf-8');
         try {
-            // ✅ รับค่าจาก FormData (multipart/form-data)
             $data = $this->input->post();
             if (empty($data)) {
                 echo json_encode(["status" => "error", "message" => "No POST data received"]);

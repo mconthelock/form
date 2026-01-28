@@ -94,7 +94,7 @@
             )
                 <input type="text" name="txtTitle" 
                        class="w-1/3 h-8 px-2 border border-gray-300 bg-white focus:outline-none focus:ring-1 focus:ring-sky-400 rounded-sm req"
-                       value="{{ $cnform->TITLE ?? 'New item' }}" maxlenght="256">
+                       value="{{ $cnform->TITLE ?? 'New item' }}" maxlength="256">
             @else
                 {{ $cnform->TITLE }}
             @endif
@@ -104,7 +104,17 @@
         <tr>
             <td class="force-w-350">Order No.</td>
             <td class="px-3 py-1 bg-gray-100 text-gray-800 border-b border-white">
+                       @if (
+                ($mode == $MODE_EDIT && $cextData >= 2 )
+                || ((($form[0]->CST == "0")||($mode == $MODE_EDIT)) && in_array($empno, [$form[0]->VREQNO, $form[0]->VINPUTER]))
+            )
+                <input type="text" name="txtOrder" 
+                       class="w-1/3 h-8 px-2 border border-gray-300 bg-white focus:outline-none focus:ring-1 focus:ring-sky-400 rounded-sm req"
+                       value="{{ $cnform->ORDERNO ?? 'New item' }}" maxlength="9" maxlength>
+            @else
                 {{ $cnform->ORDERNO }}
+            @endif
+                
             </td>
         </tr>
 
@@ -117,7 +127,7 @@
             )
                 <input type="text" name="txtItemno" 
                        class="w-24 h-8 px-2 border border-gray-300 bg-white focus:outline-none focus:ring-1 focus:ring-sky-400 rounded-sm"
-                       value="{{ $cnform->ITEMNO }}" maxlenght="3">
+                       value="{{ $cnform->ITEMNO }}" maxlength="3">
                        @else
                 {{ $cnform->ITEMNO }}
             @endif    
@@ -152,7 +162,7 @@
                         @endphp
                             <span><input type="text" name="txtDwgNo[]" 
                             class="w-40 h-8 px-2 border border-gray-300 bg-white focus:outline-none focus:ring-1 focus:ring-sky-400 rounded-sm"
-                            value="{{ $dwg }}">
+                            value="{{ $dwg }}" maxlength="9">
                             <input type="text" name="txtG[]" 
                             class="w-40 h-8 px-2 border border-gray-300 bg-white focus:outline-none focus:ring-1 focus:ring-sky-400 rounded-sm"
                             value="{{ $g }}">
@@ -247,7 +257,7 @@
             )
                 <input type="text" name="txtPrtName" 
                        class="w-1/3 h-8 px-2 border border-gray-300 bg-white focus:outline-none focus:ring-1 focus:ring-sky-400 rounded-sm req"
-                       value="{{ $cnform->PRTNAME }}" maxlenght="256">
+                       value="{{ $cnform->PRTNAME }}" maxlength="256">
             @else
                     {{ $cnform->PRTNAME }}    
             @endif           
@@ -845,7 +855,7 @@
     </tr>
 @endif
 
-@if (($mode == $MODE_EDIT) && ($cextData == 6) && is_null($cnform->MSTATUS))
+@if (($mode == $MODE_EDIT) && ($cextData == 6) && !is_null($cnform->MSTATUS))
     <tr>
         <td class="force-w-350 align-top pt-2 " style="padding:5px;">Change To</td>
         <td class="px-3 py-1 bg-gray-100 border-b border-white">
@@ -1040,7 +1050,7 @@
     <tr>
         <td class="force-w-350" valign="top">Remark</td>
         <td class="px-3 py-1 bg-gray-100 border-b border-white">
-            <textarea name="txtRemark" rows="3" 
+            <textarea name="txtRemark" id="txtRemark" rows="3" 
                       class="w-full p-2 border border-gray-300 bg-white focus:outline-none focus:ring-1 focus:ring-sky-400 rounded-sm"></textarea>
         </td>
     </tr>
@@ -1051,11 +1061,13 @@
     <td colspan="2" class="py-4 text-center">
         @if ($mode == $MODE_EDIT)
             <div class="inline-block">
+                @if(!in_array($empno, [$form[0]->VREQNO, $form[0]->VINPUTER]))
                 <button type="button" name="btnApprove" 
                         data-action="approve"
                         class="btn-submit bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded shadow mx-1">
                     Approve
                 </button>
+                @endif
                 @if(!is_null($cnform->MSTATUS) &&($cextData == 6))
                 <button type="button" name="btnChange" 
                         data-action="chagne"
@@ -1063,19 +1075,21 @@
                     Change
                 </button>
                 @endif
-                @if (($cextData <= 4) || ($cextData == 8))
+                @if ((($cextData <= 4) || ($cextData == 8)) && !in_array($empno, [$form[0]->VREQNO, $form[0]->VINPUTER]))
                     <button type="button" name="btnReturn"
-                             data-action="return"
+                             data-action="returnrem"
                             class="btn-submit bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded shadow mx-1">
                         Return
                     </button>
                 @endif
             </div>
+            @if(!in_array($empno, [$form[0]->VREQNO, $form[0]->VINPUTER]))
             <button type="button" name="btnReject" 
                     data-action="reject"
                     class="btn-submit bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded shadow mx-1">
                 Reject
             </button>
+             @endif    
         @endif
 
         @if (($form[0]->CST == "0" || $mode == $MODE_EDIT) && in_array($empno, [$form[0]->VREQNO, $form[0]->VINPUTER]))
@@ -1095,7 +1109,7 @@
                 <button type="button" name="btnSndApv" 
                         data-action="approve"
                         class="btn-submit bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded shadow mx-1">
-                    Approve
+                    Submit
                 </button>
             @endif
 

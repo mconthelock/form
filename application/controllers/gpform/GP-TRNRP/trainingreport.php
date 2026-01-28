@@ -56,6 +56,7 @@ class Trainingreport extends MY_Controller {
             }
 
             $result = $this->trn->update_data_report($frmno, $orgno, $cyear, $cyear2, $nrunno, 'req',$content, $apply);
+
         } catch (Exception $e) {
             echo json_encode(['status' => false, 'message' => $e->getMessage()]);
         }
@@ -71,6 +72,14 @@ class Trainingreport extends MY_Controller {
         $nrunno = $this->input->post('nrunno');
         $exdata = $this->input->post('exdata');
         $formno =  $this->toFormNumber($frmno, $orgno, $cyear, $cyear2, $nrunno);
+        $base = [
+                'NFRMNO' => $frmno,
+                'VORGNO' => $orgno,
+                'CYEAR'  => $cyear,
+                'CYEAR2' => $cyear2,
+                'NRUNNO' => $nrunno
+            ];
+
         try {
             /* ============================================================
             *  MODE 1 : UPLOAD FILE (ตำแหน่ง >= 55 to <= 69)
@@ -82,10 +91,7 @@ class Trainingreport extends MY_Controller {
                 }
 
                 $dest = rtrim($this->upload_path_report, '/\\') . '/' . $formno . '/';
-
-                if (!is_dir($dest)) {
-                    mkdir($dest, 0777, true);
-                }
+                if (!is_dir($dest)) { mkdir($dest, 0777, true);}
 
                 // อัปโหลดทั้งหมด
                 $uploadedList = $this->uploadMultiFile($_FILES,['txt_trn_att'],$dest);
@@ -101,15 +107,6 @@ class Trainingreport extends MY_Controller {
                     return;
                 }
 
-                // Insert + rename ชื่อไฟล์
-                $base = [
-                    'NFRMNO' => $frmno,
-                    'VORGNO' => $orgno,
-                    'CYEAR'  => $cyear,
-                    'CYEAR2' => $cyear2,
-                    'NRUNNO' => $nrunno
-                ];
-
                 //$this->insert_and_upload("GP_TRN_ATT", $base, $uploadedList, "REPORT", $frmno, $dest);
                 $this->insert_and_upload("GP_TRN_ATT", $base, $uploadedList['files']['txt_trn_att'], "REPORT", $formno, $dest);
                 $result = ['status' => true, 'message' => ' Upload File successfully'];
@@ -121,7 +118,41 @@ class Trainingreport extends MY_Controller {
             * ============================================================ */
                 $content = $this->input->post('content');
                 $apply   = $this->input->post('apply');
-                $result = $this->trn->update_data_report($frmno, $orgno, $cyear, $cyear2, $nrunno, 'req',$content, $apply);
+                $result = $this->trn->update_data_report($frmno, $orgno, $cyear, $cyear2, $nrunno, 'req', $content, $apply);
+
+                // 2️⃣ เช็คว่ามีไฟล์แนบไหม
+                if (isset($_FILES['txt_trn_att']) && !empty(array_filter($_FILES['txt_trn_att']['name']))) {
+                    
+                    $dest = rtrim($this->upload_path_report, '/\\') . '/' . $formno . '/';
+                    $dest = rtrim($pathx, '/\\') . DIRECTORY_SEPARATOR . $formno . DIRECTORY_SEPARATOR;
+                    if (!is_dir($dest)) {
+                        if (!mkdir($dest, 0777, true) && !is_dir($dest)) {
+                            echo json_encode([
+                                'status' => false,
+                                'message' => 'ไม่สามารถสร้างโฟลเดอร์ปลายทางได้'
+                            ]);
+                            return;
+                        }
+                    }
+                    //if (!is_dir($dest)) { mkdir($dest, 0777, true);}
+
+                    $uploadedList = $this->uploadMultiFile($_FILES, ['txt_trn_att'], $dest);
+                    if (!$uploadedList['status']) {
+                        echo json_encode($uploadedList);
+                        return;
+                    }
+
+                    $this->insert_and_upload(
+                        "GP_TRN_ATT",
+                        $base,
+                        $uploadedList['files']['txt_trn_att'],
+                        "REPORT",
+                        $formno,
+                        $dest
+                    );
+                }
+
+
                 echo json_encode($result);
                 return;
             }else if ($mode === "manager_score") {
