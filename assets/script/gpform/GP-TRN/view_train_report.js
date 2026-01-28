@@ -73,14 +73,14 @@ $(document).ready(async function () {
 				formData.append("content", content);
 				formData.append("apply", apply);
 
-				if (isUploadCase) {
-					// 🔥 ส่งไฟล์หลัก
+				if (mode == 'upload') {
 					if (fileInput?.files?.length) {
 						for (let f of fileInput.files) {
 							formData.append("txt_trn_att[]", f);
 						}
 					}
 				} 
+				
 				// 🔥 ส่งไฟล์ other
 				const fileOther = document.querySelector("input[name='txt_trn_att_other[]']");
 				if (fileOther?.files?.length) {
