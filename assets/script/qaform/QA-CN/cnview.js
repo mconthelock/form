@@ -46,7 +46,7 @@ $(document).ready(async function () {
       }
           
          // return false;
-          if(action == "approve" || action == "reject" || action == "return" )
+          if(action == "approve" || action == "reject")
           {
                   let act;
                   let cextData =  parseInt($("#cextData").val());

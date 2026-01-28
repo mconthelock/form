@@ -293,6 +293,15 @@ class form extends MY_Controller{
                         $this->cn->execsql($sqlOra);
                     }
                 }
+            }else if($act == "return")
+            {
+                $sqlOra = "update flow set CSTEPST = '1' where NFRMNO = '".$nfrmno."' AND VORGNO = '".$vorgno."' and CYEAR = '".$cyear."' and CYEAR2 = '".$cyear2."' and NRUNNO = '".$nrunno."' and CSTEPST = '2'";
+                $this->cn->execsql($sqlOra);
+                $sqlOra = "update flow set CSTEPST = '2' where NFRMNO = '".$nfrmno."' AND VORGNO = '".$vorgno."' and CYEAR = '".$cyear."' and CYEAR2 = '".$cyear2."' and NRUNNO = '".$nrunno."' and CSTEPST = '3'";
+                $this->cn->execsql($sqlOra);
+                $sqlOra = "update flow set CSTEPST = '3' , CAPVSTNO = '0' , DAPVDATE ='' , CAPVTIME = ''  where NFRMNO = '".$nfrmno."' AND VORGNO = '".$vorgno."' and CYEAR = '".$cyear."' and CYEAR2 = '".$cyear2."' and NRUNNO = '".$nrunno."' and CSTART = '1'";
+                $this->cn->execsql($sqlOra);
+
             }else if($act == "sendApv")
             {
                 unset($form["CEXTDATA"]);
@@ -403,7 +412,8 @@ class form extends MY_Controller{
                 'RQCNREF' => $_POST["txtNoRef"],
                 'TRANSNO' => $_POST["radSample"],
                 'DETTRANS' => ($_POST["radSample"]==2? $_POST["txtReturn"] : ($_POST["radSample"]==3? $_POST["txtOth"] : "")),
-                'PRDCTNAME' => $_POST["part_date"]
+                'PRDCTNAME' => $_POST["part_date"],
+                'ORDERNO' => $_POST["txtOrder"]
                 
             );
             if(isset($_POST["submit_date"]) && $_POST["submit_date"] != "")
