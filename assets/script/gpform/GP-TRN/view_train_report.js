@@ -80,15 +80,15 @@ $(document).ready(async function () {
 							formData.append("txt_trn_att[]", f);
 						}
 					}
-				} else {
-					// 🔥 ส่งไฟล์ other
-					const fileOther = document.querySelector("input[name='txt_trn_att_other[]']");
-					if (fileOther?.files?.length) {
-						for (let f of fileOther.files) {
-							formData.append("txt_trn_att_other[]", f);
-						}
+				} 
+				// 🔥 ส่งไฟล์ other
+				const fileOther = document.querySelector("input[name='txt_trn_att_other[]']");
+				if (fileOther?.files?.length) {
+					for (let f of fileOther.files) {
+						formData.append("txt_trn_att_other[]", f);
 					}
 				}
+				
 
 				const res = await fetch(
 					`${host}gpform/GP-TRNRP/trainingreport/handle_trnrp`,
