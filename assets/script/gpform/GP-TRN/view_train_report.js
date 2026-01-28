@@ -61,7 +61,9 @@ $(document).ready(async function () {
 				}
 
 				const formData = new FormData();
-				formData.append("mode", isUploadCase ? "upload" : "update_only");
+				const mode = isUploadCase ? "upload" : "update_only";
+
+				formData.append("mode", mode);
 				formData.append("frmno", nfrmno);
 				formData.append("orgno", vorgno);
 				formData.append("cyear", cyear);
@@ -71,9 +73,20 @@ $(document).ready(async function () {
 				formData.append("content", content);
 				formData.append("apply", apply);
 
-				if (fileInput?.files?.length) {
-					for (let f of fileInput.files) {
-						formData.append("txt_trn_att[]", f);
+				if (isUploadCase) {
+					// 🔥 ส่งไฟล์หลัก
+					if (fileInput?.files?.length) {
+						for (let f of fileInput.files) {
+							formData.append("txt_trn_att[]", f);
+						}
+					}
+				} else {
+					// 🔥 ส่งไฟล์ other
+					const fileOther = document.querySelector("input[name='txt_trn_att_other[]']");
+					if (fileOther?.files?.length) {
+						for (let f of fileOther.files) {
+							formData.append("txt_trn_att_other[]", f);
+						}
 					}
 				}
 
@@ -83,9 +96,8 @@ $(document).ready(async function () {
 				);
 
 				const json = await res.json();
-				if (!json?.status) throw json?.message || "บันทึกข้อมูลไม่สำเร็จ";
-				
-			}else if (exdata === "02") {
+				if (!json?.status) throw json?.message || "บันทึกข้อมูลไม่สำเร็จ";	
+ 			} else if (exdata === "02") {
 				const checkedScore = $(
 					"input[name='rd_manager_score']:checked"
 				).val();

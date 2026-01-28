@@ -137,15 +137,8 @@ class Trainingreport extends MY_Controller {
                         echo json_encode($uploadedList);
                         return;
                     }
-
-                    $this->insert_and_upload(
-                        "GP_TRN_ATT",
-                        $base,
-                        $uploadedList['files']['txt_trn_att_other'],
-                        "REPORT_OTHER",
-                        $formno,
-                        $dest
-                    );
+                    
+                    $this->insert_and_upload("GP_TRN_ATT", $base, $uploadedList['files']['txt_trn_att_other'], "REPORT_OTHER", $formno, $dest);
                 }
 
                 echo json_encode(['status' => true, 'message' => 'Update successfully']);
