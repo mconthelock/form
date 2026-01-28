@@ -167,7 +167,7 @@
         <label class="font-semibold block mb-2">เอกสาร สรุปเนื้อหา ที่ได้รับจากการฝึกอบรม (Document of Training content)</label>
         <div class="p-3 mb-6 rounded-lg bg-gray-50 font-semibold text-lg text-blue-700">
          @foreach ($data_attach_report as $row_att)
-              <a href="{{ base_url('gpform/GP-TRN/training/preview_file/' . $formno . '/' . $row_att->FILENAME . '/' . $row_att->ORIGIN_FILENAME) }}"
+              <a href="{{ base_url('gpform/GP-TRNRP/trainingreport/preview_file/' . $formno . '/' . $row_att->FILENAME . '/' . $row_att->ORIGIN_FILENAME) }}"
                   target="_blank" class="text-blue-700 underline btn btn-sm rounded-lg">
                   {{ $row_att->ORIGIN_FILENAME }}
               </a>
