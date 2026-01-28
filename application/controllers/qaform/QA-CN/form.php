@@ -12,7 +12,7 @@ class form extends MY_Controller{
         $this->load->model('user_model', 'usr');
         $this->load->model('qaform/QA-CN/cn_model', 'cn');
         $this->client = new Client(['verify' => false]);
-        $this->upload_path = "//amecnas/AMECWEB/File/" .($this->_servername()=='amecweb' ? 'production' : 'development') ."/Form/QA/CN/";
+        $this->upload_path = $_ENV['AMEC_FILE_PATH'] .($this->_servername()=='amecweb' ? 'production' : 'development') ."/Form/QA/CN/";
     }
 
        /**
@@ -85,10 +85,17 @@ class form extends MY_Controller{
             $data['attjud'] = $this->cn->customSelect("ATTCNFRM",array( 'NFRMNO' => $data['NFRMNO'],'VORGNO' => $data['VORGNO'],'CYEAR'  => $data['CYEAR'],'CYEAR2' => $data['CYEAR2'],'NRUNNO' => $data['NRUNNO'] ,'TYPENO' => '7' ),'ITEMNO , SFILE');
             $data['chkopr'] = $this->chkopr($data['NFRMNO'],$data['VORGNO'],$data['CYEAR'],$data['CYEAR2'], $data['NRUNNO']);
             $data['demapv'] = $this->demapv($data['NFRMNO'],$data['VORGNO'],$data['CYEAR'],$data['CYEAR2'], $data['NRUNNO']);
-            $data['jstaff'] = $this->getjstaff($data['empinf']);
-            $data['eng'] = $this->getjstaff($data['empinf']);
-            $data['foreman'] = $this->getForeman($data['empno']);
-            $data['opr'] =  $this->getOpr($data['cnform']->MSTATUS,$data['empno']);
+            $data['jstaff'] = array();
+            $data['eng'] = array();
+            $data['foreman'] = array();
+            $data['opr'] = array();
+            if(!empty($data['empinf']))
+            {
+                $data['jstaff'] = $this->getjstaff($data['empinf']);
+                $data['eng'] = $this->getjstaff($data['empinf']);
+                $data['foreman'] = $this->getForeman($data['empno']);
+                $data['opr'] =  $this->getOpr($data['cnform']->MSTATUS,$data['empno']);
+            }
             $this->views('qaform/QA-CN/view', $data);
         }
 
@@ -145,7 +152,7 @@ class form extends MY_Controller{
 
     public function getForeman($emp)
     {
-        $sql = "select DISTINCT SEMPNO , SNAME from AMEC.AEMPLOYEE , CNSHOPPIC where CSTATUS = '1' and SEMPNO = FM and SEMPNO <> ".$emp." order by SNAME";
+        $sql = "select DISTINCT SEMPNO , SNAME from AMEC.AEMPLOYEE , CNSHOPPIC where CSTATUS = '1' and SEMPNO = FM and SEMPNO <> '".$emp."' order by SNAME";
         $data = $this->cn->getdatasql($sql);
        // echo json_encode($data);
        return   $data;
@@ -286,6 +293,15 @@ class form extends MY_Controller{
                         $this->cn->execsql($sqlOra);
                     }
                 }
+            }else if($act == "return")
+            {
+                $sqlOra = "update flow set CSTEPST = '1' where NFRMNO = '".$nfrmno."' AND VORGNO = '".$vorgno."' and CYEAR = '".$cyear."' and CYEAR2 = '".$cyear2."' and NRUNNO = '".$nrunno."' and CSTEPST = '2'";
+                $this->cn->execsql($sqlOra);
+                $sqlOra = "update flow set CSTEPST = '2' where NFRMNO = '".$nfrmno."' AND VORGNO = '".$vorgno."' and CYEAR = '".$cyear."' and CYEAR2 = '".$cyear2."' and NRUNNO = '".$nrunno."' and CSTEPST = '3'";
+                $this->cn->execsql($sqlOra);
+                $sqlOra = "update flow set CSTEPST = '3' , CAPVSTNO = '0' , DAPVDATE ='' , CAPVTIME = ''  where NFRMNO = '".$nfrmno."' AND VORGNO = '".$vorgno."' and CYEAR = '".$cyear."' and CYEAR2 = '".$cyear2."' and NRUNNO = '".$nrunno."' and CSTART = '1'";
+                $this->cn->execsql($sqlOra);
+
             }else if($act == "sendApv")
             {
                 unset($form["CEXTDATA"]);
@@ -396,7 +412,8 @@ class form extends MY_Controller{
                 'RQCNREF' => $_POST["txtNoRef"],
                 'TRANSNO' => $_POST["radSample"],
                 'DETTRANS' => ($_POST["radSample"]==2? $_POST["txtReturn"] : ($_POST["radSample"]==3? $_POST["txtOth"] : "")),
-                'PRDCTNAME' => $_POST["part_date"]
+                'PRDCTNAME' => $_POST["part_date"],
+                'ORDERNO' => $_POST["txtOrder"]
                 
             );
             if(isset($_POST["submit_date"]) && $_POST["submit_date"] != "")

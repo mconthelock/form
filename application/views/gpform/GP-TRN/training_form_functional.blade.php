@@ -118,7 +118,7 @@
         <textarea id="funcJdRelation"
             class="textarea textarea-bordered w-full font-bold"
             rows="3" maxlength="200"
-            placeholder="กรุณาอธิบาย ความสัมพันธ์ ระหว่าง ความสามารถเฉพาะสายงาน (Specific Functional Competency) ใน JD ของผู้เข้ารับการฝึกอบรม กับ หัวข้อฝึกอบรมนี้ "
+            placeholder="กรุณาอธิบาย ความสอดคล้องของหัวข้อฝึกอบรม กับ Job Description ของผู้ฝึกอบรม"
             data-alert="กรุณากรอกความสัมพันธ์ Job Description"></textarea>
     </div>
 

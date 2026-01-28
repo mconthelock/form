@@ -6,6 +6,7 @@ import {
     requiredForm,
     logFormData,
     ordinalIndicator,
+    filterFormData,
 } from "@amec/webasset/utils";
 import { webflowSubmit } from "@amec/webasset/components/form";
 import { formSubmitSkeleton } from "@amec/webasset/skeleton";
@@ -280,13 +281,15 @@ $(document).on('click', '#btnRequest', async function () {
         formData.append("CYEAR", formInfo.cyear);
         formData.append("REMARK", $('#remark').val());
         
+        
         // กรองเฉพาะ field ที่มีค่า
-        const filteredFormData = new FormData();
-        for (let [key, value] of formData.entries()) {
-            if (value !== undefined && value !== null && value !== "") {
-                filteredFormData.append(key, value);
-            }
-        }
+        // const filteredFormData = new FormData();
+        // for (let [key, value] of formData.entries()) {
+        //     if (value !== undefined && value !== null && value !== "") {
+        //         filteredFormData.append(key, value);
+        //     }
+        // }
+        const filteredFormData = filterFormData(formData);
         logFormData(filteredFormData);
 
         const res = await create(filteredFormData);

@@ -10,7 +10,7 @@ class clearance_training extends MY_Controller {
         $this->load->model('form_model', 'form');
         $this->load->model('user_model', 'usr');
         $this->load->model('gpform/GP-TRN/training_model', 'trn');
-        $this->upload_path = "//amecnas/AMECWEB/File/" . ($this->_servername() == 'amecweb' ? 'production' : 'development') . "/Form/GP/GPTRN/";
+        $this->upload_path = $_ENV['AMEC_FILE_PATH'] . ($this->_servername() == 'amecweb' ? 'production' : 'development') . "/Form/GP/GPTRN/";
     }
 
     public function index(){

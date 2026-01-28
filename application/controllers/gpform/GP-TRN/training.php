@@ -10,7 +10,7 @@ class Training extends MY_Controller {
         $this->load->model('form_model', 'form');
         $this->load->model('user_model', 'usr');
         $this->load->model('gpform/GP-TRN/training_model', 'trn');
-        $this->upload_path = "//amecnas/AMECWEB/File/" . ($this->_servername() == 'amecweb' ? 'production' : 'development') . "/Form/GP/GPTRN/";
+        $this->upload_path = $_ENV['AMEC_FILE_PATH'] . ($this->_servername() == 'amecweb' ? 'production' : 'development') . "/Form/GP/GPTRN/";
     }
 
     public function index(){
@@ -159,7 +159,6 @@ class Training extends MY_Controller {
     public function save_formcreate(){
         header('Content-Type: application/json; charset=utf-8');
         try {
-            // ✅ รับค่าจาก FormData (multipart/form-data)
             $data = $this->input->post();
             if (empty($data)) {
                 echo json_encode(["status" => "error", "message" => "No POST data received"]);

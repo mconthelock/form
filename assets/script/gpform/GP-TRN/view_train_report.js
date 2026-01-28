@@ -43,70 +43,61 @@ $(document).ready(async function () {
 		const hasFile = fileInput && fileInput.files.length > 0;
 		try {
 			if (exdata === "99") {
-				/* CASE 1: Upload File */
-				if (trainee_pos_x >= 55 && trainee_pos_x <= 69) {
-					if (!hasFile) {
-						return Swal.fire({
-							icon: "warning",
-							title: "⚠ กรุณาแนบไฟล์",
-							text: "ตำแหน่งนี้ต้องแนบไฟล์เท่านั้น",
-						});
-					}
-
-					const formData = new FormData();
-					formData.append("mode", "upload");
-					formData.append("frmno", nfrmno);
-					formData.append("orgno", vorgno);
-					formData.append("cyear", cyear);
-					formData.append("cyear2", cyear2);
-					formData.append("nrunno", nrunno);
-					formData.append("exdata", exdata);
-
-					for (let f of fileInput.files) {
-						formData.append("txt_trn_att[]", f);
-					}
-
-					const res = await fetch(
-						`${host}gpform/GP-TRNRP/trainingreport/handle_trnrp`,
-						{ method: "POST", body: formData }
-					);
-					const json = await res.json();
-					if (!json.status) throw json.message;
-				} else {
-					if (!content || !apply) {
-						return Swal.fire({
-							icon: "warning",
-							title: "⚠ กรอกข้อมูลไม่ครบ",
-							text: "กรุณากรอกเนื้อหาและการประยุกต์ใช้งาน",
-						});
-					}
-
-					const res = await fetch(
-						`${host}gpform/GP-TRNRP/trainingreport/handle_trnrp`,
-						{
-							method: "POST",
-							headers: {
-								"Content-Type":
-									"application/x-www-form-urlencoded",
-							},
-							body: new URLSearchParams({
-								mode: "update_only",
-								frmno: nfrmno,
-								orgno: vorgno,
-								cyear: cyear,
-								cyear2: cyear2,
-								nrunno: nrunno,
-								exdata: exdata,
-								content: content,
-								apply: apply,
-							}),
-						}
-					);
-
-					const json = await res.json();
-					if (!json.status) throw json.message;
+				const isUploadCase = trainee_pos_x >= 55 && trainee_pos_x <= 69;
+				if (isUploadCase && !fileInput?.files?.length) {
+					return Swal.fire({
+						icon: "warning",
+						title: "⚠ กรุณาแนบไฟล์",
+						text: "ตำแหน่งนี้ต้องแนบไฟล์เท่านั้น",
+					});
 				}
-			} else if (exdata === "02") {
+
+				if (!isUploadCase && (!content || !apply)) {
+					return Swal.fire({
+						icon: "warning",
+						title: "⚠ กรอกข้อมูลไม่ครบ",
+						text: "กรุณากรอกเนื้อหาและการประยุกต์ใช้งาน",
+					});
+				}
+
+				const formData = new FormData();
+				const mode = isUploadCase ? "upload" : "update_only";
+
+				formData.append("mode", mode);
+				formData.append("frmno", nfrmno);
+				formData.append("orgno", vorgno);
+				formData.append("cyear", cyear);
+				formData.append("cyear2", cyear2);
+				formData.append("nrunno", nrunno);
+				formData.append("exdata", exdata);
+				formData.append("content", content);
+				formData.append("apply", apply);
+
+				if (mode == 'upload') {
+					if (fileInput?.files?.length) {
+						for (let f of fileInput.files) {
+							formData.append("txt_trn_att[]", f);
+						}
+					}
+				} 
+				
+				// 🔥 ส่งไฟล์ other
+				const fileOther = document.querySelector("input[name='txt_trn_att_other[]']");
+				if (fileOther?.files?.length) {
+					for (let f of fileOther.files) {
+						formData.append("txt_trn_att_other[]", f);
+					}
+				}
+				
+
+				const res = await fetch(
+					`${host}gpform/GP-TRNRP/trainingreport/handle_trnrp`,
+					{ method: "POST", body: formData }
+				);
+
+				const json = await res.json();
+				if (!json?.status) throw json?.message || "บันทึกข้อมูลไม่สำเร็จ";	
+ 			} else if (exdata === "02") {
 				const checkedScore = $(
 					"input[name='rd_manager_score']:checked"
 				).val();
@@ -211,3 +202,34 @@ $(document).ready(async function () {
 		}
 	});
 });
+
+function validateReport(trainee_pos_x, hasFile, content, apply) {
+    // เคสตำแหน่ง 55-69 → บังคับแนบไฟล์
+    if (trainee_pos_x >= 55 && trainee_pos_x <= 69) {
+        if (!hasFile) {
+            return {
+                valid: false,
+                alert: {
+                    icon: "warning",
+                    title: "⚠ กรุณาแนบไฟล์",
+                    text: "ตำแหน่งนี้ต้องแนบไฟล์เท่านั้น",
+                }
+            };
+        }
+    }
+    // เคสนอกช่วง → บังคับกรอก content/apply
+    else {
+        if (!content || !apply) {
+            return {
+                valid: false,
+                alert: {
+                    icon: "warning",
+                    title: "⚠ กรอกข้อมูลไม่ครบ",
+                    text: "กรุณากรอกเนื้อหาและการประยุกต์ใช้งาน",
+                }
+            };
+        }
+    }
+
+    return { valid: true };
+}

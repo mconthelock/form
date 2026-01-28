@@ -7,7 +7,8 @@ import flatpickr from "flatpickr";
 //import { setDatePicker } from "@public/_flatpickr";
 import "flatpickr/dist/flatpickr.min.css";
 import { ajaxOptions, getAllAttr, getData, showMessage , requiredForm} from "@amec/webasset/utils";
-import { showflow, doaction } from "@amec/webasset/api/webform";
+import { showflow, doaction, getFormStatus } from "@amec/webasset/api/webform";
+
 $(document).ready(async function () {
   const formData = $(".form-data").data();
   flatpickr("#part_date", { dateFormat: "d/m/Y", defaultDate: $("#part_date").val() });
@@ -28,9 +29,10 @@ $(document).ready(async function () {
   $(".flow").html(flow.html);
 
   $(".btn-submit").click(async function () {
-      const action = $(this).data("action");
+      let action = $(this).data("action");
       if(checkData(action))
       {
+          action = (action === "returnrem") ? "return" : action;
         	const frm = $("#cn-form");
           var cnformData = new FormData(frm[0]);
           cnformData.append("nfrmno", nfrmno);
@@ -40,42 +42,54 @@ $(document).ready(async function () {
           cnformData.append("nrunno", nrunno);
           cnformData.append("action", action);
           cnformData.append("empno", empno);
-          for (let pair of cnformData.entries()) {
-          console.log(pair[0] + ' = ' + pair[1]);
-      }
+          //for (let pair of cnformData.entries()) {
+          //console.log(pair[0] + ' = ' + pair[1]);
+      ///}
+       
+         // console.log(empno);
           
          // return false;
-          if(action == "approve" || action == "reject" || action == "return" )
+         
+         
+          if(action == "approve" || action == "reject")
           {
-                  
+                  let act;
                   let cextData =  parseInt($("#cextData").val());
                   if(cextData >1 && cextData != 5 && action == "reject")
                   {
-                      $act = "approve";
+                      act = "approve";
                   }else{
-                      $act = action;
+                      act = action;
                   }
+                  console.log("action ="+act);
+                  
                   const confirm = await doaction({
                       NFRMNO: nfrmno,
                       VORGNO: vorgno,
                       CYEAR: cyear,
                       CYEAR2: cyear2,
                       NRUNNO: nrunno,
-                      ACT: act,
+                      ACTION: act,
                       EMPNO: empno,
-                      REMARK: remark,
+                      REMARK: $("#txtRemark").val()
                     });
                   if (confirm.status) {
                     const statusact = await actionfrm(cnformData);
-                    console.log(statusact);
-                    
+                    const formStatus = await getFormStatus({
+                        NFRMNO: nfrmno,
+                        VORGNO: vorgno,
+                        CYEAR: cyear,
+                        CYEAR2: cyear2,
+                        NRUNNO: nrunno
+                    }); 
+                    console.log("flow status = "+formStatus);
                     if (statusact.status) redirectWebflow();
                   }
               
           }else
           {
               const statusact = await actionfrm(cnformData);
-              console.log(statusact);
+              //console.log(statusact);
               if (statusact.status) redirectWebflow();
           }
 
@@ -244,6 +258,8 @@ function actionfrm(data)
 
 function checkData(act)
 {
+  
+  
   let cextdata =  parseInt($("#cextData").val());
   const chkopr =  $("#chkopr").val();
   const demapv =  $("#demapv").val();
@@ -277,6 +293,15 @@ function checkData(act)
       return true;
   }else if(act != "")
   {
+      if(act =="returnrem")
+      {
+          if($("#txtRemark").val() == "")
+          {
+            showMessage('Please input Remark for reason return', 'warning');
+            return false;
+          }
+
+      }
       if(($("#mstatus").val() == "1") && (act == "approve"))
       {
           if((cextdata == 6) && ($("#Operator").val() == ""))
