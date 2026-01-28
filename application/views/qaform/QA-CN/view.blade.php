@@ -855,7 +855,7 @@
     </tr>
 @endif
 
-@if (($mode == $MODE_EDIT) && ($cextData == 6) && is_null($cnform->MSTATUS))
+@if (($mode == $MODE_EDIT) && ($cextData == 6) && !is_null($cnform->MSTATUS))
     <tr>
         <td class="force-w-350 align-top pt-2 " style="padding:5px;">Change To</td>
         <td class="px-3 py-1 bg-gray-100 border-b border-white">
