@@ -108,7 +108,6 @@ class Trainingreport extends MY_Controller {
                 }
                 $this->insert_and_upload("GP_TRN_ATT", $base, $uploadedList['files']['txt_trn_att'], "REPORT", $formno, $dest);
                 $result = ['status' => true, 'message' => ' Upload File successfully'];
-                echo json_encode($result);
 
                 if ( isset($_FILES['txt_trn_att_other'])) {
                     $uploadedList = $this->uploadMultiFile($_FILES, ['txt_trn_att_other'], $dest);
