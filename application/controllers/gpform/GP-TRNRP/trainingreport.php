@@ -34,6 +34,7 @@ class Trainingreport extends MY_Controller {
         $data['form'] = $this->form->getForm($nfrmno, $vorgno, $cyear, $cyear2, $nrunno);
         $data['data_head']  = $this->trn->get_data_trnrp_head($nfrmno, $vorgno, $cyear, $cyear2, $nrunno);
         $data['data_attach_report']  = $this->trn->select_all_by_tb($nfrmno, $vorgno, $cyear, $cyear2, $nrunno, 'GP_TRN_ATT', 'ID', ['TYPE_ATT' => 'REPORT']);
+        $data['data_attach_report_other']  = $this->trn->select_all_by_tb($nfrmno, $vorgno, $cyear, $cyear2, $nrunno, 'GP_TRN_ATT', 'ID', ['TYPE_ATT' => 'REPORT_OTHER']);
         $data['chk_attach_report'] = !empty($data['data_attach_report']) ? 'yes' : 'no';
         $data['ref_formno'] =  $this->toFormNumber( $data['data_head'][0]->REF_NFRMNO, $data['data_head'][0]->REF_VORGNO, $data['data_head'][0]->REF_CYEAR, $data['data_head'][0]->REF_CYEAR2, $data['data_head'][0]->REF_NRUNNO);
         $this->views('gpform/GP-TRNRP/training_report_view', $data);  
