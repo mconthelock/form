@@ -12,3 +12,5 @@ application/vendor
 docs/dist
 docs/.vitepress/cache
 backup
+
+package-lock.json

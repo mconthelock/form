@@ -41,10 +41,13 @@ $(document).ready(async function () {
           cnformData.append("nrunno", nrunno);
           cnformData.append("action", action);
           cnformData.append("empno", empno);
-          for (let pair of cnformData.entries()) {
-          console.log(pair[0] + ' = ' + pair[1]);
-      }
-          
+          //for (let pair of cnformData.entries()) {
+          //console.log(pair[0] + ' = ' + pair[1]);
+      ///}
+          if(action == "returnrem")
+            {
+                action = "return";
+            }
          // return false;
           if(action == "approve" || action == "reject")
           {
@@ -286,6 +289,15 @@ function checkData(act)
       return true;
   }else if(act != "")
   {
+      if(act =="returnrem")
+      {
+          if($("#txtRemark").val() == "")
+          {
+            showMessage('Please input Remark for reason return', 'warning');
+            return false;
+          }
+
+      }
       if(($("#mstatus").val() == "1") && (act == "approve"))
       {
           if((cextdata == 6) && ($("#Operator").val() == ""))
