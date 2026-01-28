@@ -32,6 +32,7 @@ $(document).ready(async function () {
       let action = $(this).data("action");
       if(checkData(action))
       {
+          action = (action === "returnrem") ? "return" : action;
         	const frm = $("#cn-form");
           var cnformData = new FormData(frm[0]);
           cnformData.append("nfrmno", nfrmno);
@@ -45,8 +46,10 @@ $(document).ready(async function () {
           //console.log(pair[0] + ' = ' + pair[1]);
       ///}
        
-          action = (action === "returnrem") ? "return" : action;
+          
          // return false;
+         
+         
           if(action == "approve" || action == "reject")
           {
                   let act;
