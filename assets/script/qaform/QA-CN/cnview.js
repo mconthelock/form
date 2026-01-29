@@ -193,6 +193,20 @@ $(document).on("change", ".radio-result", function (e) {
 
 });
 
+$(document).on('change', '.radDwg', function () {
+    let val = $(this).val();
+
+    if (val === "0") {
+        $('#btnApprove').show();
+        $('#btnReject').hide();
+         $('#btnReturn').show();
+    } else {
+        $('#btnApprove').hide();
+        $('#btnReject').show();
+        $('#btnReturn').hide();
+    }
+});
+
 function add_more(fl,dv,s) {
   
   var div = document.createElement("DIV");
