@@ -3,9 +3,8 @@ use GuzzleHttp\Client;
 defined('BASEPATH') OR exit('No direct script access allowed');
 require_once APPPATH.'controllers/_form.php';
 require_once APPPATH . 'controllers/_file.php';
-require_once APPPATH . 'controllers/api/file/file.php';
 class form extends MY_Controller{
-    use _Form, _File , fileApi;
+    use _Form, _File;
     protected $client;
     function __construct(){
 		parent::__construct();
@@ -289,7 +288,7 @@ class form extends MY_Controller{
                 }
                 if($cextData >1 && $cextData != 5)
                 {
-                    $sqlOra = "update flowxxx set CSTEPST = '6' , CAPVSTNO = '2' where NFRMNO = '".$nfrmno."' AND VORGNO = '".$vorgno."' and CYEAR = '".$cyear."' and CYEAR2 = '".$cyear2."' and NRUNNO = '".$nrunno."' and (VAPVNO = '".$apvno."' or VREPNO = '".$apvno."') and CEXTDATA = '".$cextData."'";
+                    $sqlOra = "update flow set CSTEPST = '6' , CAPVSTNO = '2' where NFRMNO = '".$nfrmno."' AND VORGNO = '".$vorgno."' and CYEAR = '".$cyear."' and CYEAR2 = '".$cyear2."' and NRUNNO = '".$nrunno."' and (VAPVNO = '".$apvno."' or VREPNO = '".$apvno."')";
                     $this->cn->execsql($sqlOra);
                 }
                 if($cextData == 4)
@@ -355,8 +354,8 @@ class form extends MY_Controller{
             // {
             //     mkdir($path, 0777, true);
             // }
-            // $upfile =  $this->uploadMultiFile($_FILES, ['DWGFILE','MATFILE','MAKFILE','ROHFILE','PURFILE','SUBFILE','CHKFILE','JUDFILE'], $path);
-            $upfile = $this->saveFile($_FILES, $path);
+            $upfile =  $this->uploadMultiFile($_FILES, ['DWGFILE','MATFILE','MAKFILE','ROHFILE','PURFILE','SUBFILE','CHKFILE','JUDFILE'], $path);
+            // $upfile = $this->saveFile($_FILES, $path);
             unset($form["CEXTDATA"]);
             $fid = $this->cn->generate_id("ATTCNFRM", "ITEMNO", $form);
             $datadwgfile = array();
@@ -370,7 +369,7 @@ class form extends MY_Controller{
                     'JUDFILE' => '7',
                     'SUBFILE' => '8',
                 ];
-            foreach ($upfile["data"] as $fileType => $fileArray) {
+            foreach ($upfile["files"] as $fileType => $fileArray) {
                 foreach ($fileArray as $file) {
                         $datadwgfile[] = [
                             'NFRMNO' => $form['NFRMNO'],
@@ -380,7 +379,7 @@ class form extends MY_Controller{
                             'NRUNNO' => $form['NRUNNO'],
                             'ITEMNO' => $fid,
                             'TYPENO' => $typeMap[$fileType] ?? null, // หรือ '' ถ้าต้องการ
-                            'SFILE'  => $file['newName'],
+                            'SFILE'  => $file['file_name'],
                             'SEMPNO' => $apvno
                         ];
                     $fid++;
