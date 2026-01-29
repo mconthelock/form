@@ -312,17 +312,7 @@
             </div>
             <div class="flow mt-6" style="overflow: hidden"></div>
 </div>
-<!-- ✅ Loader Overlay -->
-<div id="loaderOverlay" class="hidden fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-  <div class="bg-white p-16 rounded-3xl shadow-2xl flex flex-col items-center">
-    <img src="{{ base_url('assets/images/catcatcat.gif') }}" 
-         alt="Loading..." 
-         class="w-40 h-40 mx-auto" />
-    <p class="mt-6 text-gray-900 text-2xl font-bold text-center">
-      กำลังดำเนินการ...<br>กรุณารอสักครู่
-    </p>
-  </div>
-</div>
+
 @endsection
 
 @section('scripts')
