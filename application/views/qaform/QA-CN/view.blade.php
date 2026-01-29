@@ -950,7 +950,7 @@
                     @endphp
 
                     {{-- Logic การแสดงผล Radio Button --}}
-                    @if ($isMainInteger && in_array($j->JDGMNTNO, [1, 2, 3]))
+                    @if ($isMainInteger && in_array($j->JDGMNTNO, [1, 2]))
                         <label class="inline-flex items-center mr-3">
                             <input type="radio" name="radJudge" value="{{ $j->JDGMNTNO }}" 
                                    {{ $cnform->JDGMNTNO == $j->JDGMNTNO ? 'checked' : '' }}
@@ -958,10 +958,9 @@
                             <span class="ml-2">{{ $j->JUDGEMENT }}</span>
                         </label>
 
-                        @if ($j->JDGMNTNO == 2) <br><span class="text-blue-700 font-bold">Not Accept</span> @endif
-                        @if ($j->JDGMNTNO == 4) <span class="text-blue-700 font-bold">Cancel</span> @endif
-
+                        @if ($j->JDGMNTNO == 2) <br/><span class="text-blue-700 font-bold">Not Accept</span> @endif
                     @elseif (!$isMainInteger && ($firstChar == 2 || $firstChar == 4))
+                        @if ($j->JDGMNTNO == 4.1) <span class="text-blue-700 font-bold">Cancel</span><br/> @endif
                         <label class="inline-flex items-center mr-3">
                             <input type="radio" name="radJudge" value="{{ $j->JDGMNTNO }}" 
                                    {{ $cnform->JDGMNTNO == $j->JDGMNTNO ? 'checked' : '' }}
@@ -1015,14 +1014,14 @@
                     {{-- Case 2.5: Other Text Input --}}
                     @if ($j->JDGMNTNO == 2.5)
                         <input type="text" name="txtJdgOther1" id="txtJdgOther1"
-                               class="w-full mt-1 h-8 px-2 border border-gray-300 bg-white focus:outline-none focus:ring-1 focus:ring-sky-400 rounded-sm"
+                               class="w-1/3 mt-1 h-8 px-2 border border-gray-300 bg-white focus:outline-none focus:ring-1 focus:ring-sky-400 rounded-sm"
                                value="{{ $cnform->JDGMNTNO == 2.5 ? $cnform->JDGOTHER : '' }}">
                     @endif
 
                     {{-- Case 4.2: Other Text Input --}}
                     @if ($j->JDGMNTNO == 4.2)
                         <input type="text" name="txtJdgOther2"  id="txtJdgOther2"
-                               class="w-full mt-1 h-8 px-2 border border-gray-300 bg-white focus:outline-none focus:ring-1 focus:ring-sky-400 rounded-sm"
+                               class="w-1/3 mt-1 h-8 px-2 border border-gray-300 bg-white focus:outline-none focus:ring-1 focus:ring-sky-400 rounded-sm"
                                value="{{ $cnform->JDGMNTNO == 4.2 ? $cnform->JDGOTHER : '' }}">
                     @endif
                     

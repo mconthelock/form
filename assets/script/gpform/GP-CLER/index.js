@@ -1,9 +1,10 @@
-import "select2";
+import select2 from "select2";
 import "select2/dist/css/select2.min.css";
 import { host } from "../../utils.js";
 import { redirectWebflow } from "@amec/webasset/form";
 import { createForm } from "@amec/webasset/api/webform"
 import Swal from "sweetalert2";
+select2();
 $(document).ready(function () {
   $("#entertain-form-no").select2();
   const formData = $(".form-data").data();

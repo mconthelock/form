@@ -81,9 +81,10 @@ $(document).ready(async function () {
                         CYEAR: cyear,
                         CYEAR2: cyear2,
                         NRUNNO: nrunno
-                    }); 
-                    console.log("flow status = "+formStatus);
-                    if (statusact.status) redirectWebflow();
+                    });
+                     
+                    //console.log("flow status = "+formStatus);
+                    //if (statusact.status) redirectWebflow();
                   }
               
           }else
@@ -193,7 +194,7 @@ $(document).on("change", ".radio-result", function (e) {
 
 });
 
-$(document).on('change', '.radDwg', function () {
+$(document).on('click', '.radDwg', function () {
     let val = $(this).val();
 
     if (val === "0") {
