@@ -10,8 +10,8 @@ class Trainingreport extends MY_Controller {
         $this->load->model('form_model', 'form');
         $this->load->model('user_model', 'usr');
         $this->load->model('gpform/GP-TRN/training_model', 'trn');
-        $this->upload_path = "//amecnas/AMECWEB/File/" . ($this->_servername() == 'amecweb' ? 'production' : 'development') . "/Form/GP/GPTRN/";
-        $this->upload_path_report = "//amecnas/AMECWEB/File/" . ($this->_servername() == 'amecweb' ? 'production' : 'development') . "/Form/GP/GPTRNRP/";
+        $this->upload_path = $_ENV['AMEC_FILE_PATH'] . ($this->_servername() == 'amecweb' ? 'production' : 'development') . "/Form/GP/GPTRN/";
+        $this->upload_path_report = $_ENV['AMEC_FILE_PATH'] . ($this->_servername() == 'amecweb' ? 'production' : 'development') . "/Form/GP/GPTRNRP/";
 
     }
 
@@ -87,8 +87,6 @@ class Trainingreport extends MY_Controller {
             *  MODE 1 : UPLOAD FILE (ตำแหน่ง >= 55 to <= 69)
             * ============================================================ */
             if ($mode === "upload") {
-                error_reporting(E_ALL);
-                ini_set('display_errors', 1);
                 if (empty($_FILES['txt_trn_att']['name'][0])) {
                     echo json_encode(['status' => false, 'message' => 'No file uploaded']);
                     return;
@@ -110,13 +108,8 @@ class Trainingreport extends MY_Controller {
                 }
                 $this->insert_and_upload("GP_TRN_ATT", $base, $uploadedList['files']['txt_trn_att'], "REPORT", $formno, $dest);
 
-                if (!empty($_FILES['txt_trn_att_other']['name'][0])) {
+                if (isset($_FILES['txt_trn_att_other'])) {
                     $uploadedList = $this->uploadMultiFile($_FILES, ['txt_trn_att_other'], $dest);
-
-                    if (!$uploadedList['status']) {
-                        echo json_encode($uploadedList);
-                        return;
-                    }
                     $this->insert_and_upload("GP_TRN_ATT", $base, $uploadedList['files']['txt_trn_att_other'], "REPORT_OTHER", $formno, $dest);
                 }
 

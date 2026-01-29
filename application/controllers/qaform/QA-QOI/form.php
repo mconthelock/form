@@ -12,7 +12,7 @@ class form extends MY_Controller{
         $this->load->model('user_model', 'usr');
         $this->load->model('qaform/QA-QOI/qoi_model', 'qoi');
         $this->client = new Client(['verify' => false]);
-        $this->upload_path = "//amecnas/AMECWEB/File/" .($this->_servername()=='amecweb' ? 'production' : 'development') ."/Form/QA/QOI/";
+        $this->upload_path = $_ENV['AMEC_FILE_PATH'] .($this->_servername()=='amecweb' ? 'production' : 'development') ."/Form/QA/QOI/";
     }
 
     public function main(){

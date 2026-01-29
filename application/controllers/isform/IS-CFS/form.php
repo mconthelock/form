@@ -14,7 +14,7 @@ class form extends MY_Controller{
         $this->load->model('form_model', 'frm');
         $this->load->model('user_model', 'usr');
         $this->client = new Client(['verify' => false]);
-        $this->upload_path = "//amecnas/AMECWEB/File/" .($this->_servername()=='amecweb' ? 'production' : 'development') ."/Form/IS/ISCFS/";
+        $this->upload_path = $_ENV['AMEC_FILE_PATH'] .($this->_servername()=='amecweb' ? 'production' : 'development') ."/Form/IS/ISCFS/";
     }
 
     public function main(){

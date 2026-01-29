@@ -20,7 +20,6 @@
 </head>
 
 <body class="flex flex-col min-h-screen">
-    @php echo base_url(); @endphp
     <input type="hidden" id="appid" value="{{ $_ENV['APP_ID'] }}">
     <input type="checkbox" id="loading-box" class="modal-toggle" checked />
     <!-- Navbar -->

@@ -28,6 +28,10 @@ trait fileApi{
                 [
                     'name'     => 'path',
                     'contents' => $path
+                ],
+                [
+                    'name'     => 'isPhp',
+                    'contents' => true
                 ]
             ], $files);
             $response = $this->client->post($_ENV['APP_APIPHP']."/files/saveFile", [
@@ -58,6 +62,11 @@ trait fileApi{
                     'contents' => fopen($file['tmp_name'], 'r'),
                     'filename' => $file['name'],
                 ];
+                $result[] = [
+                    'name'     => 'newName',
+                    'contents' => date('YmdHi').'_'.$file['name'],
+                ];
+                
             } else {
                 foreach ($file['tmp_name'] as $i => $tmp) {
                     if (
@@ -71,6 +80,10 @@ trait fileApi{
                         'name'     => $field . '[]',
                         'contents' => fopen($tmp, 'r'),
                         'filename' => $file['name'][$i],
+                    ];
+                    $result[] = [
+                        'name'     => 'newName['.$i.']',
+                        'contents' => date('YmdHi').'_'.$file['name'][$i],
                     ];
                 }
             }
