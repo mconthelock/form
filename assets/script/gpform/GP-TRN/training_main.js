@@ -290,17 +290,21 @@ async function submitForm(formType, reqby, inputby, fid) {
 			/* 🔹 Create Training Report Form */
 			if (status === "success") {
 				const payload_report = {
-					NFRMNO: "19",
+					//FOR TEST
+					//NFRMNO: "19",
+					//VORGNO: "030101",
+					//CYEAR: "25",
+					NFRMNO: "2",
 					VORGNO: "030101",
-					CYEAR: "25",
+					CYEAR: "26",
 					REQBY: saveResult?.req_by,
 					INPUTBY: saveResult?.req_by,
 					REMARK: "",
 					DRAFT: "1",
 				};
 
-				const headResult_trnrp = await createForm(payload_report);
 
+				const headResult_trnrp = await createForm(payload_report);
 				const fd_report = new FormData();
 				const base_report = headResult_trnrp?.data || {};
 				["NFRMNO", "VORGNO", "CYEAR", "CYEAR2", "NRUNNO"].forEach((k) =>
