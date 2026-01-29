@@ -7,7 +7,6 @@ import Swal from "sweetalert2";
 
 $(document).ready(async function () {
 	console.log("view_train_report.js : version =", "OMG V2");
-
 	const fd = $(".form-data").data();
 	const nfrmno = fd.nfrmno;
 	const vorgno = fd.vorgno;
@@ -23,13 +22,7 @@ $(document).ready(async function () {
        🔄 Load Flow
     ============================================================ */
 	try {
-		const flow = await showflow({
-			NFRMNO: nfrmno,
-			VORGNO: vorgno,
-			CYEAR: cyear,
-			CYEAR2: cyear2,
-			NRUNNO: nrunno
-		});
+		const flow = await showflow({NFRMNO: nfrmno, VORGNO: vorgno, CYEAR: cyear, CYEAR2: cyear2, NRUNNO: nrunno});
 		$(".flow").html(flow.html);
 	} catch (err) {
 		console.error("❌ Error loading flow:", err);
@@ -40,28 +33,18 @@ $(document).ready(async function () {
     ============================================================ */
 	$(".btnSubmit").on("click", async function (e) {
 		e.preventDefault();
-
 		if ($(this).prop("disabled")) {
 			return false;
 		}
-
-		// 🔥 SHOW LOADER
-		if (typeof showLoader === "function") showLoader();
-
 		console.log("Start Submit Action");
-
 		const content = $("#CONTENT").val()?.trim() || "";
 		const apply = $("#APPLY").val()?.trim() || "";
 		const fileInput = $("input[name='txt_trn_att[]']")[0];
 		const hasFile = fileInput && fileInput.files.length > 0;
-
 		try {
-
 			if (exdata === "99") {
 				const isUploadCase = trainee_pos_x >= 55 && trainee_pos_x <= 69;
-
 				if (isUploadCase && !fileInput?.files?.length) {
-					if (typeof hideLoader === "function") hideLoader();
 					return Swal.fire({
 						icon: "warning",
 						title: "⚠ กรุณาแนบไฟล์",
@@ -70,7 +53,6 @@ $(document).ready(async function () {
 				}
 
 				if (!isUploadCase && (!content || !apply)) {
-					if (typeof hideLoader === "function") hideLoader();
 					return Swal.fire({
 						icon: "warning",
 						title: "⚠ กรอกข้อมูลไม่ครบ",
@@ -91,18 +73,22 @@ $(document).ready(async function () {
 				formData.append("content", content);
 				formData.append("apply", apply);
 
-				if (mode === "upload" && fileInput?.files?.length) {
-					for (let f of fileInput.files) {
-						formData.append("txt_trn_att[]", f);
+				if (mode == 'upload') {
+					if (fileInput?.files?.length) {
+						for (let f of fileInput.files) {
+							formData.append("txt_trn_att[]", f);
+						}
 					}
-				}
-
+				} 
+				
+				// 🔥 ส่งไฟล์ other
 				const fileOther = document.querySelector("input[name='txt_trn_att_other[]']");
 				if (fileOther?.files?.length) {
 					for (let f of fileOther.files) {
 						formData.append("txt_trn_att_other[]", f);
 					}
 				}
+				
 
 				const res = await fetch(
 					`${host}gpform/GP-TRNRP/trainingreport/handle_trnrp`,
@@ -110,21 +96,19 @@ $(document).ready(async function () {
 				);
 
 				const json = await res.json();
-				if (!json?.status) throw json?.message || "บันทึกข้อมูลไม่สำเร็จ";
-
-			} else if (exdata === "02") {
-
-				const checkedScore = $("input[name='rd_manager_score']:checked").val();
-
+				if (!json?.status) throw json?.message || "บันทึกข้อมูลไม่สำเร็จ";	
+ 			} else if (exdata === "02") {
+				const checkedScore = $(
+					"input[name='rd_manager_score']:checked"
+				).val();
 				if (!checkedScore) {
-					if (typeof hideLoader === "function") hideLoader();
-
 					await Swal.fire({
 						icon: "warning",
 						title: "กรุณาประเมินผล",
 						text: "กรุณาเลือกผลการประเมินระดับความเข้าใจก่อนส่งฟอร์ม",
 					});
 
+					// scroll กลับไปยัง section manager evaluation
 					$("input[name='rd_manager_score']")
 						.first()
 						.closest(".border")
@@ -134,47 +118,49 @@ $(document).ready(async function () {
 							block: "center",
 						});
 
-					return false;
+					return false; // ❗ หยุดทุกอย่างตรงนี้
+				} else {
+					const score = $(
+						"input[name='rd_manager_score']:checked"
+					).val();
+					const comment =
+						$("#txt_manager_comment").val()?.trim() || "";
+					const res = await fetch(
+						`${host}gpform/GP-TRNRP/trainingreport/handle_trnrp`,
+						{
+							method: "POST",
+							headers: {
+								"Content-Type":
+									"application/x-www-form-urlencoded",
+							},
+							body: new URLSearchParams({
+								mode: "manager_score",
+								frmno: nfrmno,
+								orgno: vorgno,
+								cyear: cyear,
+								cyear2: cyear2,
+								nrunno: nrunno,
+								exdata: exdata,
+								score: score,
+								comment: comment,
+							}),
+						}
+					);
 				}
-
-				const score = checkedScore;
-				const comment = $("#txt_manager_comment").val()?.trim() || "";
-
-				await fetch(
-					`${host}gpform/GP-TRNRP/trainingreport/handle_trnrp`,
-					{
-						method: "POST",
-						headers: {
-							"Content-Type": "application/x-www-form-urlencoded",
-						},
-						body: new URLSearchParams({
-							mode: "manager_score",
-							frmno: nfrmno,
-							orgno: vorgno,
-							cyear: cyear,
-							cyear2: cyear2,
-							nrunno: nrunno,
-							exdata: exdata,
-							score: score,
-							comment: comment,
-						}),
-					}
-				);
 			}
 
 			console.log("Step Approve/Reject");
-
+			//Apprrove --------------------------------------------------------------------------
 			const action = $(this).data("action");
 			const remark = "";
 
 			if ((action === "reject" || action === "returnE") && !remark) {
-				if (typeof hideLoader === "function") hideLoader();
-				return Swal.fire({
+				Swal.fire({
 					icon: "warning",
 					title: "⚠ กรุณากรอก Remark ก่อนทำรายการ",
 				});
+				return;
 			}
-
 			try {
 				const result = await doaction({
 					NFRMNO: String(nfrmno),
@@ -193,27 +179,21 @@ $(document).ready(async function () {
 						title: "ดำเนินการสำเร็จ",
 						timer: 1500,
 						showConfirmButton: false,
-					}).then(() => {
-						redirectWebflow();
 					});
+					redirectWebflow();
 				} else {
-					if (typeof hideLoader === "function") hideLoader();
 					Swal.fire({
 						icon: "error",
-						title: "เกิดข้อผิดพลาดในการ Approve/Reject",
+						title: "เกิดข้อผิดพลาดในการ Apprve/Reject",
 					});
 				}
-
 			} catch (err) {
-				if (typeof hideLoader === "function") hideLoader();
 				Swal.fire({
 					icon: "error",
 					title: "ไม่สามารถเชื่อมต่อระบบได้",
 				});
 			}
-
 		} catch (err) {
-			if (typeof hideLoader === "function") hideLoader();
 			Swal.fire({
 				icon: "error",
 				title: "เกิดข้อผิดพลาด",
@@ -222,3 +202,34 @@ $(document).ready(async function () {
 		}
 	});
 });
+
+function validateReport(trainee_pos_x, hasFile, content, apply) {
+    // เคสตำแหน่ง 55-69 → บังคับแนบไฟล์
+    if (trainee_pos_x >= 55 && trainee_pos_x <= 69) {
+        if (!hasFile) {
+            return {
+                valid: false,
+                alert: {
+                    icon: "warning",
+                    title: "⚠ กรุณาแนบไฟล์",
+                    text: "ตำแหน่งนี้ต้องแนบไฟล์เท่านั้น",
+                }
+            };
+        }
+    }
+    // เคสนอกช่วง → บังคับกรอก content/apply
+    else {
+        if (!content || !apply) {
+            return {
+                valid: false,
+                alert: {
+                    icon: "warning",
+                    title: "⚠ กรอกข้อมูลไม่ครบ",
+                    text: "กรุณากรอกเนื้อหาและการประยุกต์ใช้งาน",
+                }
+            };
+        }
+    }
+
+    return { valid: true };
+}
