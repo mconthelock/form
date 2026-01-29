@@ -113,16 +113,16 @@
       @if ($mode == '02' && $exdata == '99')
         <div class="col-span-2 flex py-1">
               <label class="w-56 font-semibold">แนบไฟล์เพิ่มเติม (ถ้ามี)</label>  
-              <input type="file" id="txt_trn_att" name="txt_trn_att[]" multiple
+              <input type="file" id="txt_trn_att_other" name="txt_trn_att_other[]" multiple
                   class="block w-full mt-2 p-2 border border-sky-300 rounded-lg file:bg-sky-600 file:text-white"/>
         </div>
       @else
        <div class="col-span-2 flex py-1">
          <label class="w-56 font-semibold">ไฟล์เพิ่มเติม </label>  
-         @foreach ($data_attach_report as $row_att)
-              <a href="{{ base_url('gpform/GP-TRN/training/preview_file/' . $formno . '/' . $row_att->FILENAME . '/' . $row_att->ORIGIN_FILENAME) }}"
+         @foreach ($data_attach_report_other as $row_att_oth)
+              <a href="{{ base_url('gpform/GP-TRNRP/trainingreport/preview_file/' . $formno . '/' . $row_att_oth->FILENAME . '/' . $row_att_oth->ORIGIN_FILENAME) }}"
                   target="_blank" class="text-blue-700 underline btn btn-sm rounded-lg">
-                  {{ $row_att->ORIGIN_FILENAME }}
+                  {{ $row_att_oth->ORIGIN_FILENAME }}
               </a>
           @endforeach
         </div>
@@ -167,7 +167,7 @@
         <label class="font-semibold block mb-2">เอกสาร สรุปเนื้อหา ที่ได้รับจากการฝึกอบรม (Document of Training content)</label>
         <div class="p-3 mb-6 rounded-lg bg-gray-50 font-semibold text-lg text-blue-700">
          @foreach ($data_attach_report as $row_att)
-              <a href="{{ base_url('gpform/GP-TRN/training/preview_file/' . $formno . '/' . $row_att->FILENAME . '/' . $row_att->ORIGIN_FILENAME) }}"
+              <a href="{{ base_url('gpform/GP-TRNRP/trainingreport/preview_file/' . $formno . '/' . $row_att->FILENAME . '/' . $row_att->ORIGIN_FILENAME) }}"
                   target="_blank" class="text-blue-700 underline btn btn-sm rounded-lg">
                   {{ $row_att->ORIGIN_FILENAME }}
               </a>

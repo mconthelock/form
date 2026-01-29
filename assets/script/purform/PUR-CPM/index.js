@@ -281,6 +281,7 @@ $(document).on('click', '#btnRequest', async function () {
         formData.append("CYEAR", formInfo.cyear);
         formData.append("REMARK", $('#remark').val());
         
+        
         // กรองเฉพาะ field ที่มีค่า
         // const filteredFormData = new FormData();
         // for (let [key, value] of formData.entries()) {

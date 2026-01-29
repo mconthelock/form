@@ -12,7 +12,7 @@ class form extends MY_Controller{
         $this->load->model('user_model', 'usr');
         $this->load->model('qaform/QA-CN/cn_model', 'cn');
         $this->client = new Client(['verify' => false]);
-        $this->upload_path = "//amecnas/AMECWEB/File/" .($this->_servername()=='amecweb' ? 'production' : 'development') ."/Form/QA/CN/";
+        $this->upload_path = $_ENV['AMEC_FILE_PATH'] .($this->_servername()=='amecweb' ? 'production' : 'development') ."/Form/QA/CN/";
     }
 
        /**
@@ -91,11 +91,13 @@ class form extends MY_Controller{
             $data['opr'] = array();
             if(!empty($data['empinf']))
             {
+                
                 $data['jstaff'] = $this->getjstaff($data['empinf']);
                 $data['eng'] = $this->getjstaff($data['empinf']);
                 $data['foreman'] = $this->getForeman($data['empno']);
-                $data['opr'] =  $this->getOpr($data['cnform']->MSTATUS,$data['empno']);
+                $data['opr'] =  $this->getOpr($data['cnform']->MSTATUS, $data['empinf']);
             }
+          
             $this->views('qaform/QA-CN/view', $data);
         }
 
@@ -158,14 +160,21 @@ class form extends MY_Controller{
        return   $data;
     }
 
-    public function getOpr($mstauts,$headno)
+    public function getOpr($mstauts,$head)
     {
         if(!is_null($mstauts))
         {
-            $sql = "select SEMPNO , SNAME from AMEC.AEMPLOYEE , SEQUENCEORG where SEMPNO = EMPNO and HEADNO ='".$headno."' and CSTATUS = '1' and SEMPNO in ('08181','15141','15254','13165','14252','15196','11297','06011','13268','06191','08418','14073','14354','15085','16018') ";
+            if($head[0]->SSECCODE == "000404")
+            {
+                $sql = "select SEMPNO , SNAME from AMEC.AEMPLOYEE A , SEQUENCEORG S where A.SEMPNO = S.EMPNO and S.HEADNO ='".$head[0]->SEMPNO."' and A.CSTATUS = '1' and A.SPOSCODE in ('64','65') order by SNAME ";      
+            }else
+            {
+                $sql = "select SEMPNO , SNAME from AMEC.AEMPLOYEE where  CSTATUS = '1' and SPOSCODE in ('64','65') and SSECCODE = '".$head[0]->SSECCODE."' order by SNAME";    
+            }
         }else{
             $sql = "select SEMPNO , SNAME from AMEC.AEMPLOYEE where CSTATUS = '1' and SSECCODE = '000404' and SPOSCODE in ('64','65') order by SNAME";
         }
+        //echo $sql;
         $data = $this->cn->getdatasql($sql);
        // echo json_encode($data);
        return   $data;
@@ -247,6 +256,7 @@ class form extends MY_Controller{
             if($act == "approve")
             {
                     
+                
                     if($cextData == 8)
                     {
                         if($_POST["chkClass"] == "2")
@@ -263,7 +273,7 @@ class form extends MY_Controller{
 
                             }
                         }
-                    }else if($cextData == 7)
+                    }else if($cextData == 7 )
                     {
                         $sqlOra = "update RTNLIBF.J736KP set J36K05 = 'Y' where J36K04 = '".$this->toFormNumber($nfrmno,  $vorgno, $cyear,  $cyear2,  $nrunno)."'";
                         $this->cn->execAssql($sqlOra);
@@ -274,12 +284,12 @@ class form extends MY_Controller{
                 if($cextData == 7)
                 {
                     $sqlOra = "update RTNLIBF.J736KP set J36K05 = 'Y' where J36K04 = '".$this->toFormNumber($nfrmno,  $vorgno, $cyear,  $cyear2,  $nrunno)."'";
-                    $this->cn->execAssql($sqlOra);
+                   // $this->cn->execAssql($sqlOra);
                 }
                 if($cextData >1 && $cextData != 5)
                 {
-                    $sqlOra = "update flow set CSTEPST = '6' , CAPVSTNO = '2' where NFRMNO = '".$nfrmno."' AND VORGNO = '".$vorgno."' and CYEAR = '".$cyear."' and CYEAR2 = '".$cyear2."' and NRUNNO = '".$nrunno."' and (VAPVNO = '".$apvno."' or VREPNO = '".$apvno."') and CEXTDATA = '".$cextData."'";
-                    $this->cn->execAssql($sqlOra);
+                    $sqlOra = "update flow set CSTEPST = '6' , CAPVSTNO = '2' where NFRMNO = '".$nfrmno."' AND VORGNO = '".$vorgno."' and CYEAR = '".$cyear."' and CYEAR2 = '".$cyear2."' and NRUNNO = '".$nrunno."' and (VAPVNO = '".$apvno."' or VREPNO = '".$apvno."')";
+                    $this->cn->execsql($sqlOra);
                 }
                 if($cextData == 4)
                 {
@@ -340,11 +350,12 @@ class form extends MY_Controller{
             }
 
             $path = $this->upload_path . $nfrmno."_".$vorgno."_".$cyear."_".$cyear2."_".$nrunno. "/";
-            if (!is_dir($path))
-            {
-                mkdir($path, 0777, true);
-            }
+            // if (!is_dir($path))
+            // {
+            //     mkdir($path, 0777, true);
+            // }
             $upfile =  $this->uploadMultiFile($_FILES, ['DWGFILE','MATFILE','MAKFILE','ROHFILE','PURFILE','SUBFILE','CHKFILE','JUDFILE'], $path);
+            // $upfile = $this->saveFile($_FILES, $path);
             unset($form["CEXTDATA"]);
             $fid = $this->cn->generate_id("ATTCNFRM", "ITEMNO", $form);
             $datadwgfile = array();
@@ -359,20 +370,20 @@ class form extends MY_Controller{
                     'SUBFILE' => '8',
                 ];
             foreach ($upfile["files"] as $fileType => $fileArray) {
-            foreach ($fileArray as $file) {
-                    $datadwgfile[] = [
-                        'NFRMNO' => $form['NFRMNO'],
-                        'VORGNO' => $form['VORGNO'],
-                        'CYEAR'  => $form['CYEAR'],
-                        'CYEAR2' => $form['CYEAR2'],
-                        'NRUNNO' => $form['NRUNNO'],
-                        'ITEMNO' => $fid,
-                        'TYPENO' => $typeMap[$fileType] ?? null, // หรือ '' ถ้าต้องการ
-                        'SFILE'  => $file['file_name'],
-                        'SEMPNO' => $apvno
-                    ];
-                $fid++;
-            }
+                foreach ($fileArray as $file) {
+                        $datadwgfile[] = [
+                            'NFRMNO' => $form['NFRMNO'],
+                            'VORGNO' => $form['VORGNO'],
+                            'CYEAR'  => $form['CYEAR'],
+                            'CYEAR2' => $form['CYEAR2'],
+                            'NRUNNO' => $form['NRUNNO'],
+                            'ITEMNO' => $fid,
+                            'TYPENO' => $typeMap[$fileType] ?? null, // หรือ '' ถ้าต้องการ
+                            'SFILE'  => $file['file_name'],
+                            'SEMPNO' => $apvno
+                        ];
+                    $fid++;
+                }
             }
             if(!empty($datadwgfile)){
                 $this->cn->insert_batch("ATTCNFRM", $datadwgfile);

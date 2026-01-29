@@ -10,8 +10,9 @@ class Trainingreport extends MY_Controller {
         $this->load->model('form_model', 'form');
         $this->load->model('user_model', 'usr');
         $this->load->model('gpform/GP-TRN/training_model', 'trn');
-        $this->upload_path = "//amecnas/AMECWEB/File/" . ($this->_servername() == 'amecweb' ? 'production' : 'development') . "/Form/GP/GPTRN/";
-        $this->upload_path_report = "//amecnas/AMECWEB/File/" . ($this->_servername() == 'amecweb' ? 'production' : 'development') . "/Form/GP/GPTRNRP/";
+        $this->upload_path = $_ENV['AMEC_FILE_PATH'] . ($this->_servername() == 'amecweb' ? 'production' : 'development') . "/Form/GP/GPTRN/";
+        $this->upload_path_report = $_ENV['AMEC_FILE_PATH'] . ($this->_servername() == 'amecweb' ? 'production' : 'development') . "/Form/GP/GPTRNRP/";
+
     }
 
     public function index(){
@@ -33,6 +34,7 @@ class Trainingreport extends MY_Controller {
         $data['form'] = $this->form->getForm($nfrmno, $vorgno, $cyear, $cyear2, $nrunno);
         $data['data_head']  = $this->trn->get_data_trnrp_head($nfrmno, $vorgno, $cyear, $cyear2, $nrunno);
         $data['data_attach_report']  = $this->trn->select_all_by_tb($nfrmno, $vorgno, $cyear, $cyear2, $nrunno, 'GP_TRN_ATT', 'ID', ['TYPE_ATT' => 'REPORT']);
+        $data['data_attach_report_other']  = $this->trn->select_all_by_tb($nfrmno, $vorgno, $cyear, $cyear2, $nrunno, 'GP_TRN_ATT', 'ID', ['TYPE_ATT' => 'REPORT_OTHER']);
         $data['chk_attach_report'] = !empty($data['data_attach_report']) ? 'yes' : 'no';
         $data['ref_formno'] =  $this->toFormNumber( $data['data_head'][0]->REF_NFRMNO, $data['data_head'][0]->REF_VORGNO, $data['data_head'][0]->REF_CYEAR, $data['data_head'][0]->REF_CYEAR2, $data['data_head'][0]->REF_NRUNNO);
         $this->views('gpform/GP-TRNRP/training_report_view', $data);  
@@ -95,8 +97,6 @@ class Trainingreport extends MY_Controller {
 
                 // อัปโหลดทั้งหมด
                 $uploadedList = $this->uploadMultiFile($_FILES,['txt_trn_att'],$dest);
-                //$uploadedList = $this->uploadMultiFile($_FILES['txt_trn_att'], "txt_trn_att", $dest);
-
 
                 // ถ้า upload fail ทั้งหมด
                 if (!$uploadedList['status']) {
@@ -106,11 +106,14 @@ class Trainingreport extends MY_Controller {
                     ]);
                     return;
                 }
-
-                //$this->insert_and_upload("GP_TRN_ATT", $base, $uploadedList, "REPORT", $frmno, $dest);
                 $this->insert_and_upload("GP_TRN_ATT", $base, $uploadedList['files']['txt_trn_att'], "REPORT", $formno, $dest);
-                $result = ['status' => true, 'message' => ' Upload File successfully'];
-                echo json_encode($result);
+
+                if (isset($_FILES['txt_trn_att_other'])) {
+                    $uploadedList = $this->uploadMultiFile($_FILES, ['txt_trn_att_other'], $dest);
+                    $this->insert_and_upload("GP_TRN_ATT", $base, $uploadedList['files']['txt_trn_att_other'], "REPORT_OTHER", $formno, $dest);
+                }
+
+                echo json_encode(['status' => true, 'message' => 'Update successfully']);
                 return;
             }else if ($mode === "update_only") {
             /* ============================================================
@@ -118,42 +121,32 @@ class Trainingreport extends MY_Controller {
             * ============================================================ */
                 $content = $this->input->post('content');
                 $apply   = $this->input->post('apply');
-                $result = $this->trn->update_data_report($frmno, $orgno, $cyear, $cyear2, $nrunno, 'req', $content, $apply);
 
-                // 2️⃣ เช็คว่ามีไฟล์แนบไหม
-                if (isset($_FILES['txt_trn_att']) && !empty(array_filter($_FILES['txt_trn_att']['name']))) {
-                    
+                $result = $this->trn->update_data_report(
+                    $frmno, $orgno, $cyear, $cyear2, $nrunno,
+                    'req', $content, $apply
+                );
+
+                if (!$result['status']) {
+                    echo json_encode($result);
+                    return;
+                }
+
+                // ✅ เช็คว่ามีไฟล์จริงไหมก่อน
+                if ( isset($_FILES['txt_trn_att_other'])) {
                     $dest = rtrim($this->upload_path_report, '/\\') . '/' . $formno . '/';
-                    $dest = rtrim($pathx, '/\\') . DIRECTORY_SEPARATOR . $formno . DIRECTORY_SEPARATOR;
-                    if (!is_dir($dest)) {
-                        if (!mkdir($dest, 0777, true) && !is_dir($dest)) {
-                            echo json_encode([
-                                'status' => false,
-                                'message' => 'ไม่สามารถสร้างโฟลเดอร์ปลายทางได้'
-                            ]);
-                            return;
-                        }
-                    }
-                    //if (!is_dir($dest)) { mkdir($dest, 0777, true);}
+                    if (!is_dir($dest)) { mkdir($dest, 0777, true); }
+                    $uploadedList = $this->uploadMultiFile($_FILES, ['txt_trn_att_other'], $dest);
 
-                    $uploadedList = $this->uploadMultiFile($_FILES, ['txt_trn_att'], $dest);
                     if (!$uploadedList['status']) {
                         echo json_encode($uploadedList);
                         return;
                     }
 
-                    $this->insert_and_upload(
-                        "GP_TRN_ATT",
-                        $base,
-                        $uploadedList['files']['txt_trn_att'],
-                        "REPORT",
-                        $formno,
-                        $dest
-                    );
+                    $this->insert_and_upload("GP_TRN_ATT", $base, $uploadedList['files']['txt_trn_att_other'], "REPORT_OTHER", $formno, $dest);
                 }
 
-
-                echo json_encode($result);
+                echo json_encode(['status' => true, 'message' => 'Update successfully']);
                 return;
             }else if ($mode === "manager_score") {
                 $score = $this->input->post('score');
@@ -294,7 +287,7 @@ class Trainingreport extends MY_Controller {
 
     
     public function preview_file($formno, $filename, $origin_name){
-        $filepath = $this->upload_path."/".$formno;
+        $filepath = $this->upload_path_report."/".$formno;
         $this->downloadFile($origin_name, $filename, $filepath);
     }
 

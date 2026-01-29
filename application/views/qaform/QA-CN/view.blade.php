@@ -193,34 +193,34 @@
                     </td>
                     <td class="py-1 border-r border-white">
                       @if ($d->RESULT == '0')
-                            @if (($mode == $MODE_EDIT)&&($cextData >= 1) && ($cextData <= 3))
-                                <span><input type='radio' name="radDwg{{ $cnt }}" value="0" checked /></span>
+                            @if (($mode == $MODE_EDIT) &&  ((($cextData >= 3) && ($cextData < 6)) || ($cextData == 7) || (($cextData == 2) && ($chkopr)) ) )
+                                <span><input type='radio' name="radDwg{{ $cnt }}" class="h-4 w-4 radDwg" value="0" checked /></span>
                             @else
                               <span class="inline-block bg-green-100 text-green-700 px-2 py-1 text-sm rounded-full font-semibold">✔</span>
                             @endif 
                       @else
-                            @if (($cextData >= 1) && ($cextData <= 3))
-                                <span><input type='radio' name="radDwg{{ $cnt }}" value="0" /></span>
+                             @if (($mode == $MODE_EDIT) &&  ((($cextData >= 3) && ($cextData < 6)) || ($cextData == 7) || (($cextData == 2) && ($chkopr)) ) )
+                                <span><input type='radio' name="radDwg{{ $cnt }}" class="h-4 w-4 radDwg" value="0" /></span>
                             @endif 
                       @endif
                     </td>
                     <td class="py-1 border-r border-white">
                     @if ($d->RESULT == '1')
-                            @if (($mode == $MODE_EDIT)&&($cextData >= 1) && ($cextData <= 3))
-                                <span><input type='radio' name="radDwg{{ $cnt }}" value="1" checked /></span>
+                             @if (($mode == $MODE_EDIT) &&  ((($cextData >= 3) && ($cextData < 6)) || ($cextData == 7) || (($cextData == 2) && ($chkopr)) ) )
+                                <span><input type='radio' name="radDwg{{ $cnt }}" class="h-4 w-4 radDwg" value="1" checked /></span>
                             @else
                               <span class="inline-block bg-red-100 text-red-700 px-2 py-1 text-sm rounded-full font-semibold">✘</span>
                             @endif 
                      @else
-                            @if (($mode == $MODE_EDIT)&&($cextData >= 1) && ($cextData <= 3))
-                                <span><input type='radio' name="radDwg{{ $cnt }}" value="1" /></span>
+                            @if (($mode == $MODE_EDIT) &&  ((($cextData >= 3) && ($cextData < 6)) || ($cextData == 7) || (($cextData == 2) && ($chkopr)) ) )
+                                <span><input type='radio' name="radDwg{{ $cnt }}" class="h-4 w-4 radDwg" value="1" /></span>
                             @endif 
                       @endif
                     </td>
                     <td class="py-1 text-black">
-                        @if (($mode == $MODE_EDIT)&&($cextData >= 1) && ($cextData <= 3))
+                        @if (($mode == $MODE_EDIT) &&  ((($cextData >= 3) && ($cextData < 6)) || ($cextData == 7) || (($cextData == 2) && ($chkopr)) ) )
                             <input type="text" name="txtDwgRem{{ $cnt }}" 
-                            class="w-20 h-8 px-2 border border-gray-300 bg-white focus:outline-none focus:ring-1 focus:ring-sky-400 rounded-sm"
+                            class="w-2/3 h-8 px-2 border border-gray-300 bg-white focus:outline-none focus:ring-1 focus:ring-sky-400 rounded-sm"
                             value="{{ $d->REMARK }}">
                         @else
                             {{ $d->REMARK }}
@@ -832,7 +832,7 @@
     <tr>
         <td class="force-w-350 align-top pt-2">J-Staff In Charge</td>
         <td class="px-3 py-1 bg-gray-100 border-b border-white">
-            <select name="selJInchrg" class="w-full h-8 px-2 border border-gray-300 bg-white focus:outline-none focus:ring-1 focus:ring-sky-400 rounded-sm">
+            <select name="selJInchrg" class="w-1/3 h-8 px-2 border border-gray-300 bg-white focus:outline-none focus:ring-1 focus:ring-sky-400 rounded-sm">
                 @foreach ($jstaff as $s)
                     <option value="{{ $s->SEMPNO }}">
                         {{ $s->SNAME }}
@@ -846,7 +846,7 @@
     <tr>
         <td class="force-w-350 align-top pt-2">Engineer In Charge</td>
         <td class="px-3 py-1 bg-gray-100 border-b border-white">
-            <select name="selEInchrg" class="w-full h-8 px-2 border border-gray-300 bg-white focus:outline-none focus:ring-1 focus:ring-sky-400 rounded-sm">
+            <select name="selEInchrg" class="w-1/3 h-8 px-2 border border-gray-300 bg-white focus:outline-none focus:ring-1 focus:ring-sky-400 rounded-sm">
                 @foreach ($eng as $e)
                     <option value="{{ $e->SEMPNO }}">{{ $e->SNAME }}</option>
                 @endforeach
@@ -859,7 +859,8 @@
     <tr>
         <td class="force-w-350 align-top pt-2 " style="padding:5px;">Change To</td>
         <td class="px-3 py-1 bg-gray-100 border-b border-white">
-             <select name="Foreman" id="Foreman" class="w-full h-8 px-2 border border-gray-300 bg-white focus:outline-none focus:ring-1 focus:ring-sky-400 rounded-sm">
+             <select name="Foreman" id="Foreman" class="w-1/3 h-8 px-2 border border-gray-300 bg-white focus:outline-none focus:ring-1 focus:ring-sky-400 rounded-sm">
+                 <option value="">--------------------Foreman--------------------</option>
                 @foreach ($foreman as $f)
                     <option value="{{ $f->SEMPNO }}">{{ $f->SNAME }}</option>
                 @endforeach
@@ -873,8 +874,7 @@
     <tr>
         <td class="force-w-350 align-top pt-2">Operator</td>
         <td class="px-3 py-1 bg-gray-100 border-b border-white">
-            <select name="Operator" id="Operator" class="w-full h-8 px-2 border border-gray-300 bg-white focus:outline-none focus:ring-1 focus:ring-sky-400 rounded-sm">
-                <option value="">-----Operator-----</option>
+            <select name="Operator" id="Operator" class="w-1/3 h-8 px-2 border border-gray-300 bg-white focus:outline-none focus:ring-1 focus:ring-sky-400 rounded-sm">
                 @foreach ($opr as $o)
                     <option value="{{ $o->SEMPNO }}">{{ $o->SNAME }}</option>
                 @endforeach
@@ -950,7 +950,7 @@
                     @endphp
 
                     {{-- Logic การแสดงผล Radio Button --}}
-                    @if ($isMainInteger && in_array($j->JDGMNTNO, [1, 2, 3]))
+                    @if ($isMainInteger && in_array($j->JDGMNTNO, [1, 2]))
                         <label class="inline-flex items-center mr-3">
                             <input type="radio" name="radJudge" value="{{ $j->JDGMNTNO }}" 
                                    {{ $cnform->JDGMNTNO == $j->JDGMNTNO ? 'checked' : '' }}
@@ -958,10 +958,9 @@
                             <span class="ml-2">{{ $j->JUDGEMENT }}</span>
                         </label>
 
-                        @if ($j->JDGMNTNO == 2) <br><span class="text-blue-700 font-bold">Not Accept</span> @endif
-                        @if ($j->JDGMNTNO == 4) <span class="text-blue-700 font-bold">Cancel</span> @endif
-
+                        @if ($j->JDGMNTNO == 2) <br/><span class="text-blue-700 font-bold">Not Accept</span> @endif
                     @elseif (!$isMainInteger && ($firstChar == 2 || $firstChar == 4))
+                        @if ($j->JDGMNTNO == 4.1) <span class="text-blue-700 font-bold">Cancel</span><br/> @endif
                         <label class="inline-flex items-center mr-3">
                             <input type="radio" name="radJudge" value="{{ $j->JDGMNTNO }}" 
                                    {{ $cnform->JDGMNTNO == $j->JDGMNTNO ? 'checked' : '' }}
@@ -1015,14 +1014,14 @@
                     {{-- Case 2.5: Other Text Input --}}
                     @if ($j->JDGMNTNO == 2.5)
                         <input type="text" name="txtJdgOther1" id="txtJdgOther1"
-                               class="w-full mt-1 h-8 px-2 border border-gray-300 bg-white focus:outline-none focus:ring-1 focus:ring-sky-400 rounded-sm"
+                               class="w-1/3 mt-1 h-8 px-2 border border-gray-300 bg-white focus:outline-none focus:ring-1 focus:ring-sky-400 rounded-sm"
                                value="{{ $cnform->JDGMNTNO == 2.5 ? $cnform->JDGOTHER : '' }}">
                     @endif
 
                     {{-- Case 4.2: Other Text Input --}}
                     @if ($j->JDGMNTNO == 4.2)
                         <input type="text" name="txtJdgOther2"  id="txtJdgOther2"
-                               class="w-full mt-1 h-8 px-2 border border-gray-300 bg-white focus:outline-none focus:ring-1 focus:ring-sky-400 rounded-sm"
+                               class="w-1/3 mt-1 h-8 px-2 border border-gray-300 bg-white focus:outline-none focus:ring-1 focus:ring-sky-400 rounded-sm"
                                value="{{ $cnform->JDGMNTNO == 4.2 ? $cnform->JDGOTHER : '' }}">
                     @endif
                     
@@ -1062,7 +1061,7 @@
         @if ($mode == $MODE_EDIT)
             <div class="inline-block">
                 @if(!in_array($empno, [$form[0]->VREQNO, $form[0]->VINPUTER]))
-                <button type="button" name="btnApprove" 
+                <button type="button" name="btnApprove"  id="btnApprove"
                         data-action="approve"
                         class="btn-submit bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded shadow mx-1">
                     Approve
@@ -1070,13 +1069,13 @@
                 @endif
                 @if(!is_null($cnform->MSTATUS) &&($cextData == 6))
                 <button type="button" name="btnChange" 
-                        data-action="chagne"
+                        data-action="change"
                         class="btn-submit bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded shadow mx-1">
                     Change
                 </button>
                 @endif
                 @if ((($cextData <= 4) || ($cextData == 8)) && !in_array($empno, [$form[0]->VREQNO, $form[0]->VINPUTER]))
-                    <button type="button" name="btnReturn"
+                    <button type="button" name="btnReturn" id="btnReturn"
                              data-action="returnrem"
                             class="btn-submit bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded shadow mx-1">
                         Return
@@ -1084,7 +1083,7 @@
                 @endif
             </div>
             @if(!in_array($empno, [$form[0]->VREQNO, $form[0]->VINPUTER]))
-            <button type="button" name="btnReject" 
+            <button type="button" name="btnReject" id="btnReject"
                     data-action="reject"
                     class="btn-submit bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded shadow mx-1">
                 Reject

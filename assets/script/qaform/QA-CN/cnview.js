@@ -81,9 +81,10 @@ $(document).ready(async function () {
                         CYEAR: cyear,
                         CYEAR2: cyear2,
                         NRUNNO: nrunno
-                    }); 
-                    console.log("flow status = "+formStatus);
-                    if (statusact.status) redirectWebflow();
+                    });
+                     
+                    //console.log("flow status = "+formStatus);
+                    //if (statusact.status) redirectWebflow();
                   }
               
           }else
@@ -191,6 +192,20 @@ $(document).on("change", ".radio-result", function (e) {
   const resdel =  await deletefile(data);
 
 
+});
+
+$(document).on('click', '.radDwg', function () {
+    let val = $(this).val();
+
+    if (val === "0") {
+        $('#btnApprove').show();
+        $('#btnReject').hide();
+         $('#btnReturn').show();
+    } else {
+        $('#btnApprove').hide();
+        $('#btnReject').show();
+        $('#btnReturn').hide();
+    }
 });
 
 function add_more(fl,dv,s) {
