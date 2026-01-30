@@ -177,7 +177,7 @@
               </div>
               <div class="grid grid-cols-[auto_1fr] gap-x-2">
                 <span class="font-semibold text-gray-700">Time:</span>
-                <span class="text-gray-900" data-field="roomtime">{{ !empty($item) ? '12:00-13:00 PM' : '' }}</span>
+                <span class="text-gray-900" data-field="roomtime">{{ !empty($item) ? $head['LUNCHTIME'] : '' }}</span>
               </div>
             </div>
             <div class="space-y-2">
