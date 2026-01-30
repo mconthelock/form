@@ -160,7 +160,7 @@ class form extends MY_Controller{
             {
                 $q = "update FLOW set CSTEPST = '6' , CAPVSTNO = '2' where NFRMNO = '".$_POST["nfrmno"]."' AND VORGNO = '".$_POST["vorgno"]."' and CYEAR = '".$_POST["cyear"]."' and CYEAR2 = '".$_POST["cyear2"]."' and NRUNNO = '".$_POST["nrunno"]."' and VAPVNO = '".$apvno."' and CEXTDATA = '".$cextData."'";
                 $this->qoi->execsql($q);
-                if($cextData == "02")
+                if($cextData == "02" || $cextData == "03")
                 {
                     $status = $this->updateconcern();
                 }else if($cextData == "04")
