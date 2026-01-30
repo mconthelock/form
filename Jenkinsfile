@@ -1,10 +1,6 @@
 pipeline {
     agent any
 
-    parameters {
-        choice(name: 'DEPLOY_ENV', choices: ['development', 'production'], description: 'Select Environment to deploy')
-    }
-
     tools {
         nodejs 'node'
     }
@@ -13,27 +9,27 @@ pipeline {
         stage('Setup Environment') {
             steps {
                 script {
-                    def isManualTrigger = currentBuild.getBuildCauses().toString().contains('UserIdCause')
-                    if (isManualTrigger && params.DEPLOY_ENV == 'production') {
-                        env.TARGET_DIR = '/var/amecweb/wwwroot/production/form'
-                        env.ENV_CRED_ID = 'form-env-prod'
-                        env.NODE_ENV = 'development'
-                        env.DEPLOY_ENV = 'production'
-                        echo ">>> MANUAL BUILD: Deploying to PRODUCTION"
-                    }else {
+                    if (env.BRANCH_NAME == 'develop') {
+
                         env.TARGET_DIR = '/var/amecweb/wwwroot/development/form'
                         env.ENV_CRED_ID = 'form-env-dev'
                         env.NODE_ENV = 'development'
                         env.DEPLOY_ENV = 'development'
 
-                        if (!isManualTrigger) {
-                            echo ">>> WEBHOOK DETECTED: Auto-deploying to DEVELOPMENT"
-                        } else {
-                            echo ">>> MANUAL BUILD: Selected DEVELOPMENT"
-                        }
-                    }
+                        echo ">>> MR merged → develop → DEPLOY DEVELOPMENT"
 
-                    echo "Target Directory: ${env.TARGET_DIR}"
+                    } else if (env.BRANCH_NAME == 'main') {
+
+                        env.TARGET_DIR = '/var/amecweb/wwwroot/production/form'
+                        env.ENV_CRED_ID = 'form-env-prod'
+                        env.NODE_ENV = 'development'
+                        env.DEPLOY_ENV = 'production'
+
+                        echo ">>> MR merged → main → DEPLOY PRODUCTION"
+
+                    } else {
+                        error "❌ Branch ${env.BRANCH_NAME} is not deployable"
+                    }
                 }
             }
         }

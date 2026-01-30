@@ -279,7 +279,7 @@ class form extends MY_Controller{
         {
             mkdir($path, 0777, true);
         }
-        $upfile =  $this->uploadMultiFile($_FILES, ['DWGFILE','SPECFILE'], $path);
+        $upfile =  $this->uploadMultiFile($_FILES, ['DWGFILE','SPECFILE','NGFILE'], $path);
         $fid = $this->qoi->generate_attfile_id($con["NFRMNO"],$con["VORGNO"],$con["CYEAR"],$con["CYEAR2"],$con["NRUNNO"]);
         $datadwgfile = array();
         foreach ($upfile["files"] as $fileType => $fileArray) {
