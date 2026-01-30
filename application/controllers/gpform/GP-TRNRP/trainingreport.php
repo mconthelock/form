@@ -81,7 +81,6 @@ class Trainingreport extends MY_Controller {
                 'CYEAR2' => $cyear2,
                 'NRUNNO' => $nrunno
             ];
-
         try {
             /* ============================================================
             *  MODE 1 : UPLOAD FILE (ตำแหน่ง >= 55 to <= 69)
@@ -355,7 +354,7 @@ class Trainingreport extends MY_Controller {
             $data_add_flow['CSTEPNO'] = '19';
             $data_add_flow['CSTEPNEXTNO'] = '00';
             $data_add_flow['CSTEPST'] = '2';
-            $data_add_flow['VAPVNO'] = '01027'; // 
+            $data_add_flow['VAPVNO'] = '01027'; 
             $data_add_flow['VREPNO'] = '14001';
             $data_add_flow['CEXTDATA'] = '03';
             $result = $this->trn->insert_data('FLOW', $data_add_flow);
