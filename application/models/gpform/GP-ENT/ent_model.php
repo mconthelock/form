@@ -16,7 +16,7 @@ class Ent_model extends CI_Model {
             ->select('*')
             ->from('GPENT_GUEST_TYPE')
             ->where('STATUS', '1')
-            ->order_by('GT_ID', 'asc');
+            ->order_by('SEQ', 'asc');
         return $this->db->get()->result();
     }
 
@@ -77,6 +77,20 @@ class Ent_model extends CI_Model {
             ->where('CYEAR', $cyear)
             ->where('CYEAR2', $cyear2)
             ->where('NRUNNO', $nrunno);
+        return $this->db->get()->result();
+    }
+
+    public function getamecParticipants($nfrmno, $vorgno, $cyear, $cyear2, $nrunno)
+    {
+        $this->db
+            ->select('*')
+            ->from('GPENT_PARTICIPANTS')
+            ->where('NFRMNO', $nfrmno)
+            ->where('VORGNO', $vorgno)
+            ->where('CYEAR', $cyear)
+            ->where('CYEAR2', $cyear2)
+            ->where('NRUNNO', $nrunno)
+            ->where('TYPE', 'amec');
         return $this->db->get()->result();
     }
 
