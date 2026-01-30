@@ -404,14 +404,16 @@ $(document).ready(async function () {
 		}
 
 		const confirm = await doaction(
-			nfrmno,
-			vorgno,
-			cyear,
-			cyear2,
-			nrunno,
-			action,
-			empno,
-			remark_approve
+			{
+				NFRMNO: nfrmno,
+				VORGNO: vorgno,
+				CYEAR: cyear,
+				CYEAR2: cyear2,
+				NRUNNO: nrunno,
+				ACTION: action,
+				EMPNO: empno,
+				REMARK: remark_approve // optional
+			}
 		);
 		if (confirm.status) redirectWebflow();
 	});
@@ -831,14 +833,15 @@ $(document).ready(async function () {
 				const action = "approve";
 
 				const confirm = await doaction(
-					nfrmno,
-					vorgno,
-					cyear,
-					cyear2,
-					nrunno,
-					action,
-					empno,
-					""
+					{
+						NFRMNO: nfrmno,
+						VORGNO: vorgno,
+						CYEAR: cyear,
+						CYEAR2: cyear2,
+						NRUNNO: nrunno,
+						ACTION: action,
+						EMPNO: empno
+					}
 				);
 				if (confirm.status) redirectWebflow();
 			},
