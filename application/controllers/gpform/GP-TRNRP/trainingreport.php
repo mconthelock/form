@@ -122,10 +122,7 @@ class Trainingreport extends MY_Controller {
                 $content = $this->input->post('content');
                 $apply   = $this->input->post('apply');
 
-                $result = $this->trn->update_data_report(
-                    $frmno, $orgno, $cyear, $cyear2, $nrunno,
-                    'req', $content, $apply
-                );
+                $result = $this->trn->update_data_report($frmno, $orgno, $cyear, $cyear2, $nrunno, 'req', $content, $apply);
 
                 if (!$result['status']) {
                     echo json_encode($result);
