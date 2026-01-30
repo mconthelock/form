@@ -182,6 +182,7 @@ class form extends MY_Controller{
     
     public function action()
     {
+        
         $act = $_POST["action"];
         $cextData = intval($_POST["cextData"]);
         $apvno =  $_POST["empno"];
@@ -199,7 +200,11 @@ class form extends MY_Controller{
          ];
          $status = true;
          $message = "";
+         $rep = getRep(array('NFRMNO' =>  $nfrmno , 'VORGNO' => $vorgno , 'CYEAR' => $cyear , 'VEMPNO' => '15111'));
+         exit;
+
         try{
+             
             if (isset($_POST['selJInchrg'])  && $_POST['selJInchrg'] != '') {
                 $rep = $this->getRep(array('NFRMNO' =>  $nfrmno , 'VORGNO' => $vorgno , 'CYEAR' => $cyear , 'VEMPNO' => $_POST['selJInchrg']));
                 $dataapv = [
@@ -209,16 +214,20 @@ class form extends MY_Controller{
                 $form["CEXTDATA"] = '02';
                 $this->cn->update("FLOW",  $dataapv , $form);
             }
+ 
             if (isset($_POST['selEInchrg'])  && $_POST['selEInchrg'] != '') {
+                 echo "if1";
                 $rep = $this->getRep(array('NFRMNO' =>  $nfrmno , 'VORGNO' => $vorgno , 'CYEAR' => $cyear , 'VEMPNO' => $_POST['selEInchrg']));
                 $dataapv = [
                         'VAPVNO' => $_POST['selEInchrg'],
                         'VREPNO' => $rep
                 ];
-                $form["CEXTDATA"] = '02';
+                $form["CEXTDATA"] = '03';
                 $this->cn->update("FLOW",  $dataapv , $form);
             }
+          
             if (isset($_POST['Operator'])  && $_POST['Operator'] != ''){
+                  
                 $rep = $this->getRep(array('NFRMNO' =>  $nfrmno , 'VORGNO' => $vorgno , 'CYEAR' => $cyear , 'VEMPNO' => $_POST['Operator']));
                 $dataapv = [
                         'VAPVNO' => $_POST['Operator'],
@@ -227,6 +236,7 @@ class form extends MY_Controller{
                 $form["CEXTDATA"] = '07';
                 $this->cn->update("FLOW",  $dataapv , $form);
             }
+  
             if(($cextData >= 2) && ($cextData < 8))
             {
                 unset($form["CEXTDATA"]);
@@ -253,6 +263,7 @@ class form extends MY_Controller{
                     }
                 }
             }
+ 
             if($act == "approve")
             {
                     
@@ -347,6 +358,9 @@ class form extends MY_Controller{
                 ];
                 $form["CEXTDATA"] = '06';
                 $this->cn->update("FLOW",  $dataapv , $form);
+                $form["CEXTDATA"] = '03';
+                $this->cn->update("FLOW",  $dataapv , $form);
+                
             }
 
             $path = $this->upload_path . $nfrmno."_".$vorgno."_".$cyear."_".$cyear2."_".$nrunno. "/";
