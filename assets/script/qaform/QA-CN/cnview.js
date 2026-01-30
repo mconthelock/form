@@ -7,7 +7,9 @@ import flatpickr from "flatpickr";
 //import { setDatePicker } from "@public/_flatpickr";
 import "flatpickr/dist/flatpickr.min.css";
 import { ajaxOptions, getAllAttr, getData, showMessage , requiredForm} from "@amec/webasset/utils";
-import { showflow, doaction, getFormStatus } from "@amec/webasset/api/webform";
+import { showflow, doaction, getFormStatus , getFormno } from "@amec/webasset/api/webform";
+import { sendmail } from "@amec/webasset/api/mail";
+
 
 $(document).ready(async function () {
   const formData = $(".form-data").data();
@@ -25,6 +27,7 @@ $(document).ready(async function () {
     CYEAR2: cyear2.toString(), 
     NRUNNO: nrunno
   });
+  
 
   $(".flow").html(flow.html);
 
@@ -82,15 +85,28 @@ $(document).ready(async function () {
                         CYEAR2: cyear2,
                         NRUNNO: nrunno
                     });
-                     
-                    //console.log("flow status = "+formStatus);
-                    //if (statusact.status) redirectWebflow();
+                          let formno = getFormno({
+                             NFRMNO: nfrmno,
+                             VORGNO: vorgno,
+                             CYEAR: cyear,
+                             CYEAR2: cyear2,
+                            NRUNNO: nrunno
+                        });
+                        let subject = formStatus === 2 ? " was approved" : "  was rejected";
+                        objmail = {
+                            from: 'noreplay@MitsubishiElevatorAsia.co.th',
+                            to:'kanittha@MitsubishiElevatorAsia.co.th,kunyanee@MitsubishiElevatorAsia.co.th',
+                            subject: 'E-Form '+formno+' '+subject,
+                            html: '<p>Dear All,<br/>The E-Form '+formno+' '+subject+'.<br/>Please check more details at E-Form System.</p>'
+                        };
+                        sendmail(objmail);
+                    if (statusact.status) redirectWebflow();
                   }
               
           }else
           {
+             console.log(action);
               const statusact = await actionfrm(cnformData);
-              //console.log(statusact);
               if (statusact.status) redirectWebflow();
           }
 
