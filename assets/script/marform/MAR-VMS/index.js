@@ -2553,7 +2553,7 @@ function loaddata(vmscyear2, vmsnrunno) {
 			$('[data-field="roomlunch"]').text(item.ROOMLUNCH);
 			if (item.VISITORS) {
 				$('[data-field="roomdate"]').text(response.head.VISITDATE);
-				$('[data-field="roomtime"]').text("12:00 - 01:00 PM.");
+				$('[data-field="roomtime"]').text(response.head.LUNCHTIME);
 			}
 			$('[data-field="visitlunch"]').text(item.VISITORS);
 			$('[data-field="ameclunch"]').text(item.AMEC);
