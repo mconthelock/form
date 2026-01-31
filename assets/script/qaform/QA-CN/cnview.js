@@ -85,22 +85,46 @@ $(document).ready(async function () {
                         CYEAR2: cyear2,
                         NRUNNO: nrunno
                     });
-                          let formno = getFormno({
-                             NFRMNO: nfrmno,
-                             VORGNO: vorgno,
-                             CYEAR: cyear,
-                             CYEAR2: cyear2,
-                            NRUNNO: nrunno
-                        });
-                        let subject = formStatus === 2 ? " was approved" : "  was rejected";
-                        objmail = {
-                            from: 'noreplay@MitsubishiElevatorAsia.co.th',
-                            to:'kanittha@MitsubishiElevatorAsia.co.th,kunyanee@MitsubishiElevatorAsia.co.th',
-                            subject: 'E-Form '+formno+' '+subject,
-                            html: '<p>Dear All,<br/>The E-Form '+formno+' '+subject+'.<br/>Please check more details at E-Form System.</p>'
-                        };
-                        sendmail(objmail);
-                    if (statusact.status) redirectWebflow();
+                    
+                      let formno = {
+                          ...getFormno({
+                              NFRMNO: nfrmno,
+                              VORGNO: vorgno,
+                              CYEAR: cyear,
+                              CYEAR2: cyear2,
+                              NRUNNO: nrunno
+                          }),
+                          FSTATUS: formStatus,
+                          MTYPE : 'NORMAL'
+                      };
+
+             buildmail(formno)
+    .then(res => {
+        console.log('buildmail response:', res);
+
+        if (typeof res !== 'object') {
+            throw 'Response is not JSON';
+        }
+
+        if (!res.to || !res.subject || !res.html) {
+            throw 'Mail data is incomplete';
+        }
+
+        let objmail = {
+            from: 'noreplay@MitsubishiElevatorAsia.co.th',
+            to: res.to,
+            subject: res.subject,
+            html: res.html
+        };
+
+        sendmail(objmail);
+    })
+    .catch(err => {
+        console.error('buildmail error:', err);
+    });
+
+              
+                    //if (statusact.status) redirectWebflow();
                   }
               
           }else
@@ -282,6 +306,25 @@ function actionfrm(data)
         showLoader(false);
         console.log("complete");
       },
+    });
+  });
+
+}
+
+function buildmail(formno)
+{
+    return new Promise((resolve, reject) => { 
+          $.ajax({
+      url: host + "qaform/QA-CN/form/buildmail",
+      type: "post",
+      dataType: "json",
+      data: formno,
+           success: function (res) {
+                resolve(res);  
+            },
+            error: function (xhr, status, error) {
+                reject(error);
+            }
     });
   });
 

@@ -200,9 +200,6 @@ class form extends MY_Controller{
          ];
          $status = true;
          $message = "";
-         $rep = getRep(array('NFRMNO' =>  $nfrmno , 'VORGNO' => $vorgno , 'CYEAR' => $cyear , 'VEMPNO' => '15111'));
-         exit;
-
         try{
              
             if (isset($_POST['selJInchrg'])  && $_POST['selJInchrg'] != '') {
@@ -216,7 +213,6 @@ class form extends MY_Controller{
             }
  
             if (isset($_POST['selEInchrg'])  && $_POST['selEInchrg'] != '') {
-                 echo "if1";
                 $rep = $this->getRep(array('NFRMNO' =>  $nfrmno , 'VORGNO' => $vorgno , 'CYEAR' => $cyear , 'VEMPNO' => $_POST['selEInchrg']));
                 $dataapv = [
                         'VAPVNO' => $_POST['selEInchrg'],
@@ -759,7 +755,88 @@ class form extends MY_Controller{
         return count($rs) > 0;
     }
 
-    
+//     public function buildmail()
+//     {
+//         $nfrmno = $_POST["NFRMNO"];
+//         $vorgno = $_POST["VORGNO"];
+//         $cyear = $_POST["CYEAR"];
+//         $cyear2 = $_POST["CYEAR2"];
+//         $nrunno = $_POST["NRUNNO"];
+//         $mtype  = $_POST["MTYPE"];
+//         $fstatus = $_POST["FSTATUS"];
+//         $data = array();
+//         if($mtype == "NORMAL")
+//         {
+//             $formno = $this->toFormNumber($nfrmno,  $vorgno, $cyear,  $cyear2,  $nrunno);
+//             $rs =  $this->getApvEmail(array('NFRMNO' =>  $nfrmno , 'VORGNO' => $vorgno , 'CYEAR' => $cyear , 'CYEAR2' => $cyear2 , 'NRUNNO' => $nrunno ));
+//             $emails = array_column($rs , 'EMAIL');
+//             $data["to"] = implode(',', $emails);
+//             $data["subject"] = ($fstatus == "2" ? "E-Form " .$formno.  " was approved" : ($fstatus == "3" ? "E-Form " .$formno.  " was rejected" : ""));
+//             $rs = $this->cn->getcnresult($nfrmno, $vorgno, $cyear, $cyear2, $nrunno);
+// $first = $rs[0] ?? null;
+
+// $data["html"] = <<<HTML
+// <div>Changing notice no.: {$formno}</div>
+// <div>Supplier or Sub-contractor Name: {$first->SVENDNAME}</div>
+// <div>Part Name: {$first->PRTNAME}</div>
+// HTML;
+
+// foreach ($rs as $r) {
+//     $data["html"] .= "<div>Drawing No.: {$r->DWGNO}</div>";
+// }
+
+// $data["html"] .= "<div>Status: {$first->JUDGEMENT}</div>";
+
+//         }
+        
+//        echo json_encode($data);
+//     }
+
+public function buildmail()
+{
+    $nfrmno  = $_POST["NFRMNO"]  ?? null;
+    $vorgno  = $_POST["VORGNO"]  ?? null;
+    $cyear   = $_POST["CYEAR"]   ?? null;
+    $cyear2  = $_POST["CYEAR2"]  ?? null;
+    $nrunno  = $_POST["NRUNNO"]  ?? null;
+    $mtype   = $_POST["MTYPE"]   ?? null;
+    $fstatus = $_POST["FSTATUS"] ?? null;
+    $data = array();
+    $data["to"] = "kanittha@MitsubishiElevatorAsia.co.th";
+    $data["subject"] = "Test E-Form Email";
+    $data["html"] = "<div>This is a test email for E-Form notification.xxxx</div>";
+    if ($mtype === "NORMAL") {
+          $rsEmail = $this->getApvEmail([
+            'NFRMNO' => $nfrmno,
+            'VORGNO' => $vorgno,
+            'CYEAR'  => $cyear,
+            'CYEAR2' => $cyear2,
+            'NRUNNO' => $nrunno
+        ]);
+
+       var_dump($rsEmail);
+       exit;
+    }
+
+    echo json_encode($data);
+}
+
+    private function getApvEmail($data)
+    {
+          $sql = " SELECT DISTINCT e.SRECMAIL AS EMAIL
+        FROM FLOW f
+        JOIN AMEC.AEMPLOYEE e 
+             ON f.VREALAPV = e.SEMPNO
+        WHERE f.NFRMNO  = '".$data['NFRMNO']."'
+          AND f.VORGNO  = '".$data['VORGNO']."'
+          AND f.CYEAR   = '".$data['CYEAR']."'
+          AND f.CYEAR2  = '".$data['CYEAR2']."'
+          AND f.NRUNNO  = '".$data['NRUNNO']."'
+          AND f.CSTEPNO NOT IN ('05','04','11')
+          AND e.CSTATUS = '1'
+       ";
+       return $this->cn->getdatasql($sql);
+    }
 
 
 }
