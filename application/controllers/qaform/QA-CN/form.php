@@ -1024,7 +1024,60 @@ WHERE L.R27M09 = '".trim($firstno[0]->FIRSTNO)."'";
                                          [ 'CSTEPNO' => '13', 'CSTEPNEXTNO' => '00']
                                           );
                          $this->deleteFlowStep($stepDel,$nfrmno, $vorgno, $cyear, $rsf["data"]->cyear2, $rsf["data"]->nrunno);
-                         $sqlOra = "select * from cnform where NFRMNO = '".$nfrmno."' AND VORGNO = '".$vorgno."' and CYEAR = '".$cyear."' and CYEAR2 = '".$cyear2."' and NRUNNO = '".$nrunno."'";
+                         $cnformpre = $this->cn->customSelect("CNFORM",array( 'NFRMNO' => $nfrmno,'VORGNO' => $vorgno,'CYEAR'  => $cyear,'CYEAR2' => $cyear2,'NRUNNO' => $nrunno ),'*');
+                            if(count($cnformpre) > 0)
+                            {
+                                $datacn = array(
+                                    'NFRMNO' => $nfrmno,
+                                    'VORGNO' => $vorgno,
+                                    'CYEAR'  => $cyear,
+                                    'CYEAR2' => $rsf["data"]->cyear2,
+                                    'NRUNNO' => $rsf["data"]->nrunno,
+                                    'TITLE'  => $cnformpre[0]->TITLE,
+                                    'SVENDNAME' =>  $cnformpre[0]->SVENDNAME,
+                                    'CLSNO'  =>   $cnformpre[0]->CLSNO,
+                                    'RSNNO'  => $cnformpre[0]->RSNNO,
+                                    'RSNOTHER' => '1 st No.,'.$newcnng,
+                                    'TRANSNO' =>  $cnformpre[0]->TRANSNO,
+                                    'DETTRANS' =>  $cnformpre[0]->DETTRANS,
+                                    'PRTNAME' => $cnformpre[0]->PRTNAME,
+                                    'PURITEM' => $cnformpre[0]->PURITEM,
+                                    'INVNO' =>  $cnformpre[0]->INVNO,
+                                    'ITEMNO' => $cnformpre[0]->ITEMNO,
+                                    'ORDERNO' => $cnformpre[0]->ORDERNO,
+                                    'ORDQ' => $cnformpre[0]->ORDQ,
+                                    'PRTLOC' => $cnformpre[0]->PRTLOC,
+                                    'PRDCTNAME' =>  $cnformpre[0]->PRDCTNAME,
+                                    'AFTCHANGE' => $cnformpre[0]->AFTCHANGE,
+                                    'MSTATUS' => '1'
+                                );
+                                $this->cn->insert("CNFORM", $datacn);
+                                $sqlOra = "INSERT INTO RESULTCHKDWG (NFRMNO,VORGNO,CYEAR,CYEAR2,NRUNNO,DWGNO,REVNO)
+                                        SELECT
+                                            '".$nfrmno."' AS NFRMNO,
+                                            '".$vorgno."' AS VORGNO,
+                                            '".$cyear."' AS CYEAR,
+                                            '".$rsf["data"]->cyear2."' AS CYEAR2,
+                                            '".$rsf["data"]->nrunno."' AS NRUNNO,
+                                            DWGNO,
+                                            REVNO
+                                        FROM RESULTCHKDWG
+                                        WHERE NFRMNO = '".$nfrmno."'
+                                        AND VORGNO = '".$vorgno."'
+                                        AND CYEAR  = '".$cyear."'
+                                        AND CYEAR2 = '".$cyear2."'
+                                        AND NRUNNO = '".$nrunno."'";
+                                $this->cn->execsql($sqlOra); 
+                                  $cnformpre = $this->cn->customSelect("FLOW",array( 'NFRMNO' => $nfrmno,'VORGNO' => $vorgno,'CYEAR'  => $cyear,'CYEAR2' => $rsf["data"]->cyear2,'NRUNNO' => $rsf["data"]->nrunno ),'*');
+                    
+
+                                $status = true;
+                                $message = "New CN/NG form created successfully.";
+                            } else {
+                                throw new Exception("Failed to retrieve CN/NG form data.");
+                            }
+
+
                     } else {
                         throw new Exception("Failed to create new CN/NG form.");
                     }
