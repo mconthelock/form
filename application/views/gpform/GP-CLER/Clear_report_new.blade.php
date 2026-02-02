@@ -426,163 +426,170 @@
                                 </table>
                             </div>
                         @else
-                            {{-- ตารางแยก Lunch และ Break --}}
+                            {{-- ตารางแยกตามประเภท --}}
                             @php
-                                $memoLunch = array_filter(is_array($file_attach) ? $file_attach : iterator_to_array($file_attach), function ($f) {
-                                    return isset($f->FILE_TYPE) && $f->FILE_TYPE == 'MEMO_LUNCH';
-                                });
-                                $memoBreak = array_filter(is_array($file_attach) ? $file_attach : iterator_to_array($file_attach), function ($f) {
-                                    return isset($f->FILE_TYPE) && $f->FILE_TYPE == 'MEMO_BREAK';
-                                });
+                                $expenseByType = [
+                                    1 => array_filter($expense, function ($ex) {
+                                        return isset($ex->TYPE) && $ex->TYPE == '1';
+                                    }),
+                                    2 => array_filter($expense, function ($ex) {
+                                        return isset($ex->TYPE) && $ex->TYPE == '2';
+                                    }),
+                                    3 => array_filter($expense, function ($ex) {
+                                        return isset($ex->TYPE) && $ex->TYPE == '3';
+                                    }),
+                                    4 => array_filter($expense, function ($ex) {
+                                        return isset($ex->TYPE) && $ex->TYPE == '4';
+                                    }),
+                                    7 => array_filter($expense, function ($ex) {
+                                        return isset($ex->TYPE) && $ex->TYPE == '7';
+                                    }),
+                                ];
+
+                                $memoByType = [
+                                    1 => array_filter(is_array($file_attach) ? $file_attach : iterator_to_array($file_attach), function ($f) {
+                                        return isset($f->FILE_TYPE) && $f->FILE_TYPE == 'MEMO_LUNCH';
+                                    }),
+                                    4 => array_filter(is_array($file_attach) ? $file_attach : iterator_to_array($file_attach), function ($f) {
+                                        return isset($f->FILE_TYPE) && $f->FILE_TYPE == 'MEMO_BREAK';
+                                    }),
+                                ];
+
+                                $typeConfigs = [
+                                    1 => [
+                                        'title' => 'Lunch -> Inside',
+                                        'text' => 'text-blue-700',
+                                        'dot' => 'bg-blue-500',
+                                        'border' => 'border-blue-200',
+                                        'borderLight' => 'border-blue-100',
+                                        'bg' => 'bg-blue-50',
+                                        'headerBg' => 'bg-blue-100',
+                                        'totalText' => 'text-blue-700',
+                                        'memoBg' => 'bg-blue-50',
+                                        'memoBorder' => 'border-blue-200',
+                                        'memoText' => 'text-blue-700',
+                                    ],
+                                    2 => [
+                                        'title' => 'Lunch -> Outside',
+                                        'text' => 'text-indigo-700',
+                                        'dot' => 'bg-indigo-500',
+                                        'border' => 'border-indigo-200',
+                                        'borderLight' => 'border-indigo-100',
+                                        'bg' => 'bg-indigo-50',
+                                        'headerBg' => 'bg-indigo-100',
+                                        'totalText' => 'text-indigo-700',
+                                    ],
+                                    3 => [
+                                        'title' => 'Dinner -> Outside',
+                                        'text' => 'text-slate-700',
+                                        'dot' => 'bg-slate-500',
+                                        'border' => 'border-slate-200',
+                                        'borderLight' => 'border-slate-100',
+                                        'bg' => 'bg-slate-50',
+                                        'headerBg' => 'bg-slate-100',
+                                        'totalText' => 'text-slate-700',
+                                    ],
+                                    4 => [
+                                        'title' => 'Morning Break (Snack Box)',
+                                        'text' => 'text-violet-700',
+                                        'dot' => 'bg-violet-500',
+                                        'border' => 'border-violet-200',
+                                        'borderLight' => 'border-violet-100',
+                                        'bg' => 'bg-violet-50',
+                                        'headerBg' => 'bg-violet-100',
+                                        'totalText' => 'text-violet-700',
+                                        'memoBg' => 'bg-violet-50',
+                                        'memoBorder' => 'border-violet-200',
+                                        'memoText' => 'text-violet-700',
+                                    ],
+                                    7 => [
+                                        'title' => 'Afternoon Break (Snack Box)',
+                                        'text' => 'text-teal-700',
+                                        'dot' => 'bg-teal-500',
+                                        'border' => 'border-teal-200',
+                                        'borderLight' => 'border-teal-100',
+                                        'bg' => 'bg-teal-50',
+                                        'headerBg' => 'bg-teal-100',
+                                        'totalText' => 'text-teal-700',
+                                    ],
+                                ];
                             @endphp
 
-                            @if (count($expenseLunch) > 0)
-                                <div class="mb-6">
-                                    <h3 class="text-lg font-semibold text-cyan-700 mb-2 flex items-center gap-2">
-                                        <span class="inline-block w-3 h-3 bg-cyan-500 rounded-full"></span>
-                                        Lunch Expenses
-                                    </h3>
-                                    <div class="overflow-hidden rounded-xl border-2 border-cyan-200 bg-cyan-50">
-                                        <table class="w-full text-sm border">
-                                            <thead>
-                                                <tr class="bg-cyan-100">
-                                                    <th class="py-2 px-4 border-b border-cyan-200 text-left">#</th>
-                                                    <th class="py-2 px-4 border-b border-cyan-200 text-left">Receipt No.</th>
-                                                    <th class="py-2 px-4 border-b border-cyan-200 text-left">Cost</th>
-                                                    <th class="py-2 px-4 border-b border-cyan-200 text-left">Date Issue</th>
-                                                    <th class="py-2 px-4 border-b border-cyan-200 text-left">Attach Receipt</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                @php $lunchTotal = 0; @endphp
-                                                @foreach ($expenseLunch as $i => $ex)
-                                                    @php $lunchTotal += $ex->COST; @endphp
-                                                    <tr>
-                                                        <td class="py-2 px-4 border-b border-cyan-100">{{ $loop->iteration }}</td>
-                                                        <td class="py-2 px-4 border-b border-cyan-100">{{ $ex->RECEIPT }}</td>
-                                                        <td class="py-2 px-4 border-b border-cyan-100">{{ number_format($ex->COST, 2) }}</td>
-                                                        <td class="py-2 px-4 border-b border-cyan-100">{{ $ex->DATE_ISSUE ?? '-' }}</td>
-                                                        <td class="py-2 px-4 border-b border-cyan-100">
-                                                            @if (!empty($ex->RECEIPT_FILE))
-                                                                <a href="{{ base_url('gpform/GP-CLER/main/preview/') . rawurlencode($ex->RECEIPT_FILE) }}"
-                                                                    class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-blue-50 border border-blue-300 text-blue-700 hover:bg-blue-100 hover:text-blue-900 font-medium shadow-sm transition focus:outline-none focus:ring-2 focus:ring-blue-400"
-                                                                    target="_blank">
-                                                                    <i class="fi fi-sr-paperclip-vertical"></i>
-                                                                    Attach Receipt
-                                                                </a>
-                                                            @else
-                                                                -
-                                                            @endif
-                                                        </td>
+                            @foreach ($typeConfigs as $type => $cfg)
+                                @if (count($expenseByType[$type]) > 0)
+                                    <div class="mb-6">
+                                        <h3 class="text-lg font-semibold {{ $cfg['text'] }} mb-2 flex items-center gap-2">
+                                            <span class="inline-block w-3 h-3 {{ $cfg['dot'] }} rounded-full"></span>
+                                            {{ $cfg['title'] }}
+                                        </h3>
+                                        <div class="overflow-hidden rounded-xl border-2 {{ $cfg['border'] }} {{ $cfg['bg'] }}">
+                                            <table class="w-full text-sm border">
+                                                <thead>
+                                                    <tr class="{{ $cfg['headerBg'] }}">
+                                                        <th class="py-2 px-4 border-b {{ $cfg['border'] }} text-left">#</th>
+                                                        <th class="py-2 px-4 border-b {{ $cfg['border'] }} text-left">Receipt No.</th>
+                                                        <th class="py-2 px-4 border-b {{ $cfg['border'] }} text-left">Cost</th>
+                                                        <th class="py-2 px-4 border-b {{ $cfg['border'] }} text-left">Date Issue</th>
+                                                        <th class="py-2 px-4 border-b {{ $cfg['border'] }} text-left">Attach Receipt</th>
                                                     </tr>
-                                                @endforeach
-                                                <tr class="bg-cyan-100 font-semibold">
-                                                    <td colspan="2" class="py-2 px-4 text-right">Lunch Total:</td>
-                                                    <td class="py-2 px-4 text-cyan-700">{{ number_format($lunchTotal, 2) }}</td>
-                                                    <td colspan="2"></td>
-                                                </tr>
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                    {{-- Memo for Lunch --}}
-                                    @if (count($memoLunch) > 0)
-                                        <div class="bg-cyan-50 border-2 border-cyan-200 rounded-xl p-4 mt-3">
-                                            <h4 class="font-semibold text-cyan-700 mb-2 flex items-center gap-2">
-                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                                </svg>
-                                                Memo for Lunch (Over Budget)
-                                            </h4>
-                                            <div class="flex flex-wrap gap-2">
-                                                @foreach ($memoLunch as $memo)
-                                                    <a href="{{ base_url('gpform/GP-CLER/main/preview/') . rawurlencode($memo->FILE_NAME) }}"
-                                                        class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white border border-cyan-300 text-cyan-700 hover:bg-cyan-100 hover:text-cyan-900 font-medium shadow-sm transition focus:outline-none focus:ring-2 focus:ring-cyan-400"
-                                                        target="_blank">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
-                                                        </svg>
-                                                        {{ $memo->FILE_NAME }}
-                                                    </a>
-                                                @endforeach
-                                            </div>
+                                                </thead>
+                                                <tbody>
+                                                    @php $typeTotal = 0; @endphp
+                                                    @foreach ($expenseByType[$type] as $ex)
+                                                        @php $typeTotal += $ex->COST; @endphp
+                                                        <tr>
+                                                            <td class="py-2 px-4 border-b {{ $cfg['borderLight'] }}">{{ $loop->iteration }}</td>
+                                                            <td class="py-2 px-4 border-b {{ $cfg['borderLight'] }}">{{ $ex->RECEIPT }}</td>
+                                                            <td class="py-2 px-4 border-b {{ $cfg['borderLight'] }}">{{ number_format($ex->COST, 2) }}</td>
+                                                            <td class="py-2 px-4 border-b {{ $cfg['borderLight'] }}">{{ $ex->DATE_ISSUE ?? '-' }}</td>
+                                                            <td class="py-2 px-4 border-b {{ $cfg['borderLight'] }}">
+                                                                @if (!empty($ex->RECEIPT_FILE))
+                                                                    <a href="{{ base_url('gpform/GP-CLER/main/preview/') . rawurlencode($ex->RECEIPT_FILE) }}"
+                                                                        class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-blue-50 border border-blue-300 text-blue-700 hover:bg-blue-100 hover:text-blue-900 font-medium shadow-sm transition focus:outline-none focus:ring-2 focus:ring-blue-400"
+                                                                        target="_blank">
+                                                                        <i class="fi fi-sr-paperclip-vertical"></i>
+                                                                        Attach Receipt
+                                                                    </a>
+                                                                @else
+                                                                    -
+                                                                @endif
+                                                            </td>
+                                                        </tr>
+                                                    @endforeach
+                                                    <tr class="{{ $cfg['headerBg'] }} font-semibold">
+                                                        <td colspan="2" class="py-2 px-4 text-right">{{ $cfg['title'] }} Total:</td>
+                                                        <td class="py-2 px-4 {{ $cfg['totalText'] }}">{{ number_format($typeTotal, 2) }}</td>
+                                                        <td colspan="2"></td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
                                         </div>
-                                    @endif
-                                </div>
-                            @endif
 
-                            @if (count($expenseBreak) > 0)
-                                <div class="mb-6">
-                                    <h3 class="text-lg font-semibold text-purple-700 mb-2 flex items-center gap-2">
-                                        <span class="inline-block w-3 h-3 bg-purple-500 rounded-full"></span>
-                                        Break Expenses
-                                    </h3>
-                                    <div class="overflow-hidden rounded-xl border-2 border-purple-200 bg-purple-50">
-                                        <table class="w-full text-sm border">
-                                            <thead>
-                                                <tr class="bg-purple-100">
-                                                    <th class="py-2 px-4 border-b border-purple-200 text-left">#</th>
-                                                    <th class="py-2 px-4 border-b border-purple-200 text-left">Receipt No.</th>
-                                                    <th class="py-2 px-4 border-b border-purple-200 text-left">Cost</th>
-                                                    <th class="py-2 px-4 border-b border-purple-200 text-left">Date Issue</th>
-                                                    <th class="py-2 px-4 border-b border-purple-200 text-left">Attach Receipt</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                @php $breakTotal = 0; @endphp
-                                                @foreach ($expenseBreak as $i => $ex)
-                                                    @php $breakTotal += $ex->COST; @endphp
-                                                    <tr>
-                                                        <td class="py-2 px-4 border-b border-purple-100">{{ $loop->iteration }}</td>
-                                                        <td class="py-2 px-4 border-b border-purple-100">{{ $ex->RECEIPT }}</td>
-                                                        <td class="py-2 px-4 border-b border-purple-100">{{ number_format($ex->COST, 2) }}</td>
-                                                        <td class="py-2 px-4 border-b border-purple-100">{{ $ex->DATE_ISSUE ?? '-' }}</td>
-                                                        <td class="py-2 px-4 border-b border-purple-100">
-                                                            @if (!empty($ex->RECEIPT_FILE))
-                                                                <a href="{{ base_url('gpform/GP-CLER/main/preview/') . rawurlencode($ex->RECEIPT_FILE) }}"
-                                                                    class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-blue-50 border border-blue-300 text-blue-700 hover:bg-blue-100 hover:text-blue-900 font-medium shadow-sm transition focus:outline-none focus:ring-2 focus:ring-blue-400"
-                                                                    target="_blank">
-                                                                    <i class="fi fi-sr-paperclip-vertical"></i>
-                                                                    Attach Receipt
-                                                                </a>
-                                                            @else
-                                                                -
-                                                            @endif
-                                                        </td>
-                                                    </tr>
-                                                @endforeach
-                                                <tr class="bg-purple-100 font-semibold">
-                                                    <td colspan="2" class="py-2 px-4 text-right">Break Total:</td>
-                                                    <td class="py-2 px-4 text-purple-700">{{ number_format($breakTotal, 2) }}</td>
-                                                    <td colspan="2"></td>
-                                                </tr>
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                    {{-- Memo for Break --}}
-                                    @if (count($memoBreak) > 0)
-                                        <div class="bg-purple-50 border-2 border-purple-200 rounded-xl p-4 mt-3">
-                                            <h4 class="font-semibold text-purple-700 mb-2 flex items-center gap-2">
-                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                                </svg>
-                                                Memo for Break (Over Budget)
-                                            </h4>
-                                            <div class="flex flex-wrap gap-2">
-                                                @foreach ($memoBreak as $memo)
-                                                    <a href="{{ base_url('gpform/GP-CLER/main/preview/') . rawurlencode($memo->FILE_NAME) }}"
-                                                        class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white border border-purple-300 text-purple-700 hover:bg-purple-100 hover:text-purple-900 font-medium shadow-sm transition focus:outline-none focus:ring-2 focus:ring-purple-400"
-                                                        target="_blank">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
-                                                        </svg>
-                                                        {{ $memo->FILE_NAME }}
-                                                    </a>
-                                                @endforeach
+                                        @if (!empty($memoByType[$type]))
+                                            <div class="{{ $cfg['memoBg'] ?? $cfg['bg'] }} border-2 {{ $cfg['memoBorder'] ?? $cfg['border'] }} rounded-xl p-4 mt-3">
+                                                <h4 class="font-semibold {{ $cfg['memoText'] ?? $cfg['text'] }} mb-2 flex items-center gap-2">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                                    </svg>
+                                                    Memo for {{ $cfg['title'] }} (Over Budget)
+                                                </h4>
+                                                <div class="flex flex-wrap gap-2">
+                                                    @foreach ($memoByType[$type] as $memo)
+                                                        <a href="{{ base_url('gpform/GP-CLER/main/preview/') . rawurlencode($memo->FILE_NAME) }}"
+                                                            class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white border {{ $cfg['memoBorder'] ?? $cfg['border'] }} {{ $cfg['memoText'] ?? $cfg['text'] }} hover:bg-gray-50 font-medium shadow-sm transition focus:outline-none focus:ring-2 focus:ring-blue-400"
+                                                            target="_blank">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                                                            </svg>
+                                                            {{ $memo->FILE_NAME }}
+                                                        </a>
+                                                    @endforeach
+                                                </div>
                                             </div>
-                                        </div>
-                                    @endif
-                                </div>
-                            @endif
+                                        @endif
+                                    </div>
+                                @endif
+                            @endforeach
                         @endif
 
                         @if (!empty($formCler->PAYDATE) == '2')

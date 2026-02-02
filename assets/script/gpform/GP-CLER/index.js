@@ -116,7 +116,7 @@ $(document).ready(function () {
 		const p_join = $("input[name='president_join']:checked").val();
 		const actual_cost = $("#actual-cost").val().trim();
 		const remain = $("#remain").val().trim();
-		const remark = $("#remark").val().trim();
+		const remark = $("#remark").length ? $("#remark").val().trim() : "";
 		const formnumber = $("#formnumber").val();
 		// const fileInput = $("#receipt")[0];
 		// const file = fileInput.files[0];
@@ -188,131 +188,69 @@ $(document).ready(function () {
 			});
 		}
 
-		// ตรวจสอบตารางแยก (Lunch)
-		if (
-			$(".expense-table-split[data-type='1']").length > 0 &&
-			!hasEmptyField
-		) {
-			$(".expense-table-split[data-type='1'] tbody tr").each(function (
-				index
-			) {
-				const row = index + 1;
-				const receiptNo = $(this)
-					.find("input[name='receipt_no_1[]']")
-					.val()
-					?.trim();
-				const cost = $(this)
-					.find("input[name='cost_1[]']")
-					.val()
-					?.trim();
-				const dateIssue = $(this)
-					.find("input[name='date_issue_1[]']")
-					.val()
-					?.trim();
-				const receiptFile = $(this).find(
-					"input[name='receipt_file_1[]']"
-				)[0];
+		// ตรวจสอบตารางแยก (ตามประเภท)
+		if ($(".expense-table-split").length > 0 && !hasEmptyField) {
+			$(".expense-table-split").each(function () {
+				if (hasEmptyField) return false;
+				const $table = $(this);
+				const type = $table.data("type");
+				const label = $table.data("label") || `Type ${type}`;
 
-				if (!receiptNo) {
-					hasEmptyField = true;
-					emptyFieldName = `Lunch - Receipt No. (แถวที่ ${row})`;
-					$(this)
-						.find("input[name='receipt_no_1[]']")
-						.addClass("input-error")
-						.focus();
-					return false;
-				}
-				if (!cost) {
-					hasEmptyField = true;
-					emptyFieldName = `Lunch - Cost (แถวที่ ${row})`;
-					$(this)
-						.find("input[name='cost_1[]']")
-						.addClass("input-error")
-						.focus();
-					return false;
-				}
-				if (!dateIssue) {
-					hasEmptyField = true;
-					emptyFieldName = `Lunch - Date issue receipt (แถวที่ ${row})`;
-					$(this)
-						.find("input[name='date_issue_1[]']")
-						.addClass("input-error")
-						.focus();
-					return false;
-				}
-				if (!receiptFile || receiptFile.files.length === 0) {
-					hasEmptyField = true;
-					emptyFieldName = `Lunch - Attach Receipt (แถวที่ ${row})`;
-					$(this)
-						.find("input[name='receipt_file_1[]']")
-						.addClass("input-error")
-						.focus();
-					return false;
-				}
-			});
-		}
+				$table.find("tbody tr").each(function (index) {
+					const row = index + 1;
+					const receiptNo = $(this)
+						.find(`input[name='receipt_no_${type}[]']`)
+						.val()
+						?.trim();
+					const cost = $(this)
+						.find(`input[name='cost_${type}[]']`)
+						.val()
+						?.trim();
+					const dateIssue = $(this)
+						.find(`input[name='date_issue_${type}[]']`)
+						.val()
+						?.trim();
+					const receiptFile = $(this).find(
+						`input[name='receipt_file_${type}[]']`
+					)[0];
 
-		// ตรวจสอบตารางแยก (Break)
-		if (
-			$(".expense-table-split[data-type='4']").length > 0 &&
-			!hasEmptyField
-		) {
-			$(".expense-table-split[data-type='4'] tbody tr").each(function (
-				index
-			) {
-				const row = index + 1;
-				const receiptNo = $(this)
-					.find("input[name='receipt_no_4[]']")
-					.val()
-					?.trim();
-				const cost = $(this)
-					.find("input[name='cost_4[]']")
-					.val()
-					?.trim();
-				const dateIssue = $(this)
-					.find("input[name='date_issue_4[]']")
-					.val()
-					?.trim();
-				const receiptFile = $(this).find(
-					"input[name='receipt_file_4[]']"
-				)[0];
-
-				if (!receiptNo) {
-					hasEmptyField = true;
-					emptyFieldName = `Break - Receipt No. (แถวที่ ${row})`;
-					$(this)
-						.find("input[name='receipt_no_4[]']")
-						.addClass("input-error")
-						.focus();
-					return false;
-				}
-				if (!cost) {
-					hasEmptyField = true;
-					emptyFieldName = `Break - Cost (แถวที่ ${row})`;
-					$(this)
-						.find("input[name='cost_4[]']")
-						.addClass("input-error")
-						.focus();
-					return false;
-				}
-				if (!dateIssue) {
-					hasEmptyField = true;
-					emptyFieldName = `Break - Date issue receipt (แถวที่ ${row})`;
-					$(this)
-						.find("input[name='date_issue_4[]']")
-						.addClass("input-error")
-						.focus();
-					return false;
-				}
-				if (!receiptFile || receiptFile.files.length === 0) {
-					hasEmptyField = true;
-					emptyFieldName = `Break - Attach Receipt (แถวที่ ${row})`;
-					$(this)
-						.find("input[name='receipt_file_4[]']")
-						.addClass("input-error")
-						.focus();
-					return false;
-				}
+					if (!receiptNo) {
+						hasEmptyField = true;
+						emptyFieldName = `${label} - Receipt No. (แถวที่ ${row})`;
+						$(this)
+							.find(`input[name='receipt_no_${type}[]']`)
+							.addClass("input-error")
+							.focus();
+						return false;
+					}
+					if (!cost) {
+						hasEmptyField = true;
+						emptyFieldName = `${label} - Cost (แถวที่ ${row})`;
+						$(this)
+							.find(`input[name='cost_${type}[]']`)
+							.addClass("input-error")
+							.focus();
+						return false;
+					}
+					if (!dateIssue) {
+						hasEmptyField = true;
+						emptyFieldName = `${label} - Date issue receipt (แถวที่ ${row})`;
+						$(this)
+							.find(`input[name='date_issue_${type}[]']`)
+							.addClass("input-error")
+							.focus();
+						return false;
+					}
+					if (!receiptFile || receiptFile.files.length === 0) {
+						hasEmptyField = true;
+						emptyFieldName = `${label} - Attach Receipt (แถวที่ ${row})`;
+						$(this)
+							.find(`input[name='receipt_file_${type}[]']`)
+							.addClass("input-error")
+							.focus();
+						return false;
+					}
+				});
 			});
 		}
 
@@ -375,41 +313,31 @@ $(document).ready(function () {
 
 		// Validate memo files for split expense (if visible)
 		if ($(".expense-table-split").length > 0) {
-			// ตรวจสอบ Lunch
-			if ($("#memo-section-1").is(":visible")) {
-				const memoFile1 = $("input[name='memo_1']")[0];
-				if (!memoFile1 || memoFile1.files.length === 0) {
+			let memoMissing = false;
+			$(".memo-section:visible").each(function () {
+				const type = $(this).data("type");
+				const label = $(
+					`.expense-table-split[data-type='${type}']`
+				).data("label") || `Type ${type}`;
+				const memoFile = $("input[name='memo_" + type + "']")[0];
+				if (!memoFile || memoFile.files.length === 0) {
+					memoMissing = true;
 					Swal.fire({
 						icon: "warning",
-						title: "กรุณาแนบ Memo สำหรับ Lunch เนื่องจากค่าใช้จ่ายเกินงบประมาณ",
+						title: `กรุณาแนบ Memo สำหรับ ${label} เนื่องจากค่าใช้จ่ายเกินงบประมาณ`,
 						toast: true,
 						position: "top-end",
 						timer: 3000,
 						showConfirmButton: false,
 						background: "#FBF6D9",
 					});
-					$("input[name='memo_1']").addClass("input-error").focus();
-					return;
+					$("input[name='memo_" + type + "']")
+						.addClass("input-error")
+						.focus();
+					return false;
 				}
-			}
-
-			// ตรวจสอบ Break
-			if ($("#memo-section-4").is(":visible")) {
-				const memoFile4 = $("input[name='memo_4']")[0];
-				if (!memoFile4 || memoFile4.files.length === 0) {
-					Swal.fire({
-						icon: "warning",
-						title: "กรุณาแนบ Memo สำหรับ Break เนื่องจากค่าใช้จ่ายเกินงบประมาณ",
-						toast: true,
-						position: "top-end",
-						timer: 3000,
-						showConfirmButton: false,
-						background: "#FBF6D9",
-					});
-					$("input[name='memo_4']").addClass("input-error").focus();
-					return;
-				}
-			}
+			});
+			if (memoMissing) return;
 		}
 
 		// If file-group-section is visible, require at least one file in #file_group
@@ -494,8 +422,7 @@ $(document).ready(function () {
 		// รวบรวมข้อมูล expense
 		const expense = [];
 		const expenseSplit = {
-			lunch: [],
-			break: [],
+			types: {},
 		};
 
 		// ตรวจสอบว่าเป็นตารางปกติหรือตารางแยก
@@ -538,95 +465,64 @@ $(document).ready(function () {
 			});
 			formData.append("expense", JSON.stringify(expense));
 		} else {
-			// กรณีตารางแยก (Lunch และ Break)
-			// รวบรวม Lunch (type=1)
-			let lunchIndex = 0;
-			$(".expense-table-split[data-type='1'] tbody tr").each(function () {
-				const receipt_no = $(this)
-					.find("input[name='receipt_no_1[]']")
-					.val()
-					.trim();
-				const cost =
-					parseFloat(
-						$(this).find("input[name='cost_1[]']").val().trim()
-					) || 0;
-				const date_issue = $(this)
-					.find("input[name='date_issue_1[]']")
-					.val()
-					.trim();
-				const receiptFile = $(this).find(
-					"input[name='receipt_file_1[]']"
-				)[0];
+			// กรณีตารางแยก (ตามประเภท)
+			$(".expense-table-split").each(function () {
+				const type = Number($(this).data("type"));
+				const rows = [];
+				let rowIndex = 0;
 
-				if (receipt_no !== "" || cost > 0) {
-					expenseSplit.lunch.push({
-						receipt_no,
-						cost,
-						date_issue,
-						type: 1,
-					});
+				$(this).find("tbody tr").each(function () {
+					const receipt_no = $(this)
+						.find(`input[name='receipt_no_${type}[]']`)
+						.val()
+						.trim();
+					const cost =
+						parseFloat(
+							$(this)
+								.find(`input[name='cost_${type}[]']`)
+								.val()
+								.trim()
+						) || 0;
+					const date_issue = $(this)
+						.find(`input[name='date_issue_${type}[]']`)
+						.val()
+						.trim();
+					const receiptFile = $(this).find(
+						`input[name='receipt_file_${type}[]']`
+					)[0];
 
-					// แนบไฟล์ receipt ถ้ามี
-					if (receiptFile && receiptFile.files.length > 0) {
-						formData.append(
-							`receipt_file_lunch_${lunchIndex}`,
-							receiptFile.files[0]
-						);
+					if (receipt_no !== "" || cost > 0) {
+						rows.push({
+							receipt_no,
+							cost,
+							date_issue,
+							type,
+						});
+
+						// แนบไฟล์ receipt ถ้ามี
+						if (receiptFile && receiptFile.files.length > 0) {
+							formData.append(
+								`receipt_file_type_${type}_${rowIndex}`,
+								receiptFile.files[0]
+							);
+						}
 					}
-				}
-				lunchIndex++;
-			});
+					rowIndex++;
+				});
 
-			// รวบรวม Break (type=4)
-			let breakIndex = 0;
-			$(".expense-table-split[data-type='4'] tbody tr").each(function () {
-				const receipt_no = $(this)
-					.find("input[name='receipt_no_4[]']")
-					.val()
-					.trim();
-				const cost =
-					parseFloat(
-						$(this).find("input[name='cost_4[]']").val().trim()
-					) || 0;
-				const date_issue = $(this)
-					.find("input[name='date_issue_4[]']")
-					.val()
-					.trim();
-				const receiptFile = $(this).find(
-					"input[name='receipt_file_4[]']"
-				)[0];
-
-				if (receipt_no !== "" || cost > 0) {
-					expenseSplit.break.push({
-						receipt_no,
-						cost,
-						date_issue,
-						type: 4,
-					});
-
-					// แนบไฟล์ receipt ถ้ามี
-					if (receiptFile && receiptFile.files.length > 0) {
-						formData.append(
-							`receipt_file_break_${breakIndex}`,
-							receiptFile.files[0]
-						);
-					}
-				}
-				breakIndex++;
+				expenseSplit.types[type] = rows;
 			});
 
 			formData.append("expenseSplit", JSON.stringify(expenseSplit));
 
 			// แนบไฟล์ memo สำหรับแต่ละ type
-			const memoFile1 = $("input[name='memo_1']")[0];
-			if (memoFile1 && memoFile1.files.length > 0) {
-				formData.append("memo_1", memoFile1.files[0]);
-			}
-
-			const memoFile4 = $("input[name='memo_4']")[0];
-			if (memoFile4 && memoFile4.files.length > 0) {
-				formData.append("memo_4", memoFile4.files[0]);
-			}
+			$(".memo-section").each(function () {
+				const type = $(this).data("type");
+				const memoFile = $("input[name='memo_" + type + "']")[0];
+				if (memoFile && memoFile.files.length > 0) {
+					formData.append(`memo_${type}`, memoFile.files[0]);
+				}
+			});
 		}
 
 		// Send AJAX request
@@ -648,7 +544,7 @@ $(document).ready(function () {
 					timer: 2000,
 				});
 				// location.reload();
-				// redirectWebflow();
+				redirectWebflow();
 			},
 			complete: function () {
 				$("#loading-overlay").hide();
@@ -700,14 +596,20 @@ $(document).ready(function () {
 			updateRowNumbers();
 		});
 
-		// เพิ่มแถวสำหรับตารางแยก (Lunch/Break)
+		// เพิ่มแถวสำหรับตารางแยก (เฉพาะประเภทที่อนุญาต)
 		$(".add-row-split").click(function () {
 			const type = $(this).data("type");
 			const table = $(`.expense-table-split[data-type="${type}"] tbody`);
 			const rowCount = table.find("tr").length + 1;
 
-			// กำหนดสีตาม type
-			const colorClass = type == 1 ? "cyan" : "purple";
+			const colorMap = {
+				1: "cyan",
+				2: "blue",
+				3: "orange",
+				4: "purple",
+				7: "pink",
+			};
+			const colorClass = colorMap[type] || "gray";
 
 			const newRow = `<tr>
             <td class="py-2 px-4 text-center">${rowCount}</td>
@@ -788,39 +690,25 @@ $(document).ready(function () {
 
 		function calculateTotalsSplit() {
 			let totalAmount = 0;
-			let lunchTotal = 0;
-			let breakTotal = 0;
 
-			// รวมค่าใช้จ่ายจากตาราง Lunch (type=1)
-			$(".expense-table-split[data-type='1'] tbody tr").each(function () {
-				const cost =
-					parseFloat($(this).find("input[name='cost_1[]']").val()) ||
-					0;
-				lunchTotal += cost;
+			$(".expense-table-split").each(function () {
+				const type = $(this).data("type");
+				let typeTotal = 0;
+				$(this).find("tbody tr").each(function () {
+					const cost =
+						parseFloat(
+							$(this)
+								.find(`input[name='cost_${type}[]']`)
+								.val()
+						) || 0;
+					typeTotal += cost;
+				});
+
+				totalAmount += typeTotal;
+				checkBudgetExceed(type, typeTotal);
 			});
 
-			// รวมค่าใช้จ่ายจากตาราง Break (type=4)
-			$(".expense-table-split[data-type='4'] tbody tr").each(function () {
-				const cost =
-					parseFloat($(this).find("input[name='cost_4[]']").val()) ||
-					0;
-				breakTotal += cost;
-			});
-
-			totalAmount = lunchTotal + breakTotal;
-
-			// ตรวจสอบงบประมาณสำหรับแต่ละประเภท
-			checkBudgetExceed(1, lunchTotal);
-			checkBudgetExceed(4, breakTotal);
-
-			console.log(
-				"Total (split tables):",
-				totalAmount,
-				"Lunch:",
-				lunchTotal,
-				"Break:",
-				breakTotal
-			);
+			console.log("Total (split tables):", totalAmount);
 			$("#actual-cost").val(totalAmount).trigger("input");
 		}
 
