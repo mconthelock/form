@@ -431,19 +431,19 @@ $(document).ready(function () {
 		}
 
 		// ถ้า remain < 0 ต้องมี remark
-		if (parseFloat(remain) < 0 && remark === "") {
-			Swal.fire({
-				icon: "warning",
-				title: "กรุณาระบุเหตุผลใน Remark กรณีค่าใช้จ่ายจริงเกินประมาณการ",
-				toast: true,
-				position: "top-end",
-				timer: 3000,
-				showConfirmButton: false,
-				background: "#FBF6D9",
-			});
-			$("#remark").focus();
-			return;
-		}
+		// if (parseFloat(remain) < 0 && remark === "") {
+		// 	Swal.fire({
+		// 		icon: "warning",
+		// 		title: "กรุณาระบุเหตุผลใน Remark กรณีค่าใช้จ่ายจริงเกินประมาณการ",
+		// 		toast: true,
+		// 		position: "top-end",
+		// 		timer: 3000,
+		// 		showConfirmButton: false,
+		// 		background: "#FBF6D9",
+		// 	});
+		// 	$("#remark").focus();
+		// 	return;
+		// }
 
 		// Prepare FormData for file upload
 		let formData = new FormData();

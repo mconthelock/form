@@ -17,7 +17,7 @@
             </h1>
 
             <div>
-                <label for="" class="text-sm text-gray-500"><i>For Requesting Approval Entertainment (Part1) must get approve from Approver before Entertainment date 1 day. <br>(Refer: RAF Practical Regulation : RAF-PR-G-068)</i></label>
+                <label for="" class="text-sm text-gray-500"><i>For Requesting Approval Entertainment (Part1) must get approve from Approver before Entertainment date 5 day. <br>(Refer: RAF-PR-G-068-N)</i></label>
             </div>
             <!-- Section 1: Basic Info -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -44,19 +44,21 @@
                         </button>
                     </div>
 
-                    <div id="urgent-note" class="hidden mt-2 p-2 bg-red-50 border border-red-200 rounded text-xs text-red-600 font-semibold">
-                        Note: “As the requester did not obtain prior approval for the entertainment at least 5 working days in advance, please download the file for approve URGENT case by P or RAF DIM before submit”
+                    <div id="urgent-note" class="hidden mt-4 p-2 bg-red-50 border border-red-200 rounded text-xs text-red-600 font-semibold">
+                        Note: “According to the regulation, Of the requester is unable to submit the request through the system within the required timeframe, must prepare the memorandum before the entertainment task place.”
                     </div>
 
-                    <div id="urgent-attachment" class="hidden mt-2 p-4 bg-white rounded-lg border-2 border-red-500 shadow-sm">
-                        <label class="block mb-2 font-bold text-red-600 text-sm">*Attach Memo (In case of not submit Request Entertainment form (before 5 day))</label>
+                    <div id="urgent-attachment" class="hidden mt-2">
+                        <label class="block mb-2 font-bold text-red-600 text-sm">The Memorandum Template: </label>
+                        <div class="mt-1 text-sm font-bold text-blue-600">
+                            Download : <a href="{{ base_url('assets/files/Special_Form_for_Request_Entertainment.pdf') }}" download class="underline hover:text-blue-800">Memorandum for Urgent Approval of Entertainment</a>
+                        </div>
+                        <label class="block mb-2 font-bold mt-2 text-red-600 text-sm">Attach file as below: </label>
                         <input type="file" id="urgent-file" name="urgent_file" class="file-input file-input-bordered file-input-sm w-full max-w-xs file-input-error bg-yellow-50" />
-                        <div class="mt-2 text-xs text-gray-500">
+
+                        {{-- <div class="mt-2 text-xs text-gray-500">
                             *Require "Memorandum" get approve by RAF DIM/President, In case of use budget for buying gift to guest (Refer to RAF-PR-G-068-M-Entertainment on topic no.4,no.4.6)
-                        </div>
-                        <div class="mt-2 text-sm font-bold text-blue-600">
-                            Download file: <a href="{{ base_url('assets/files/Special_Form_for_Request_Entertainment.pdf') }}" download class="underline hover:text-blue-800">Special Form for Request Entertainment.pdf</a>
-                        </div>
+                        </div> --}}
                     </div>
                 </div>
                 <div></div>
@@ -297,7 +299,7 @@
                             <label class="block font-semibold text-blue-700 mb-1">Attach Memo:</label>
                             <div class="flex items-center gap-2">
                                 <input type="file" name="file_memo" id="file-memo" class="file-input file-input-bordered rounded-lg file-input-sm" />
-                                <span class="text-xs text-amber-600">Require "Memorandum" get approve by President only,In case of Cost/Person over condition</span>
+                                <span class="text-xs text-amber-600">In case of request entertainment amount exceed and allowable limit, Requester must prepare Memorandum.</span>
                             </div>
                         </div>
                     </div>
@@ -387,8 +389,5 @@
 @endsection
 
 @section('scripts')
-    <!-- Flatpickr -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="{{ $_ENV['APP_JS'] }}/requestEntertain.js?ver={{ $GLOBALS['version'] }}"></script>
 @endsection

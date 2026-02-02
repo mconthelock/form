@@ -248,6 +248,14 @@
                                         </td>
                                     </tr>
                                     <tr>
+                                        <th class="w-1/4 text-left font-semibold py-2 pl-4 border-b-2 border-green-200 bg-green-100">Input by</th>
+                                        <td class="py-2 pl-4 border-b-2 border-green-200">{{ $formCler->INPUT_NAME }}</td>
+                                    </tr>
+                                    <tr>
+                                        <th class="w-1/4 text-left font-semibold py-2 pl-4 border-b-2 border-green-200 bg-green-100">Requested by</th>
+                                        <td class="py-2 pl-4 border-b-2 border-green-200">{{ $formCler->INPUT_NAME }}</td>
+                                    </tr>
+                                    <tr>
                                         <th class="w-1/4 text-left font-semibold py-2 pl-4 border-b-2 border-green-200 bg-green-100">President</th>
                                         <td class="py-2 pl-4 border-b-2 border-green-200">{{ $formCler->PRESIDENT_JOIN == '1' ? '✅ Join' : '❌ Not Join' }}</td>
                                     </tr>
@@ -577,7 +585,7 @@
                             @endif
                         @endif
 
-                        @if ($form[0]->CST == '2')
+                        @if (!empty($formCler->PAYDATE) == '2')
                             <div class="flex justify-center mt-8 no-print">
                                 <button onclick="window.print()" class="btn bg-indigo-600 text-white hover:bg-indigo-700 px-6 py-2 rounded-lg shadow">
                                     🖨️ Print Report
