@@ -267,7 +267,7 @@ $(document).on("click", "button[name='btnAction']", async function () {
 			CYEAR2,
 			NRUNNO,
 			ACTION: action,
-			APV: apv,
+			EMPNO: apv,
 			REMARK: remark,
         });
 
