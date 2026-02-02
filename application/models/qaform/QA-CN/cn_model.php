@@ -51,6 +51,7 @@ class cn_model extends my_model
         ->where('Q.NRUNNO', $nrunno);
     return $this->db->get()->result();
     }
+    
     public function getcnresult($nfrmno, $vorgno, $cyear, $cyear2, $nrunno)
     {
     $sqlOra = "
@@ -84,6 +85,19 @@ class cn_model extends my_model
         $sqlOra,
         [$nfrmno, $vorgno, $cyear, $cyear2, $nrunno]
     )->result();
+    }
+
+    public function getfirstno($nfrmno, $vorgno, $cyear, $cyear2, $nrunno)
+    {
+        $this->db
+        ->select('REGEXP_SUBSTR(RSNOTHER, \'F[0-9]+\') AS FIRSTNO')
+        ->from('CNFORM ')
+                 ->where('NFRMNO', $nfrmno)
+                 ->where('VORGNO', $vorgno)
+                 ->where('CYEAR', $cyear)
+                 ->where('CYEAR2', $cyear2)
+                 ->where('NRUNNO', $nrunno);
+        return $this->db->get()->result();
     }
 
 

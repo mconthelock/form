@@ -89,6 +89,14 @@ class form extends MY_Controller{
             $data['eng'] = array();
             $data['foreman'] = array();
             $data['opr'] = array();
+            $data['stepready'] = $this->frm->getCSETPNO(array(
+                'NFRMNO' => $data['NFRMNO'],
+                'VORGNO' => $data['VORGNO'],
+                'CYEAR'  => $data['CYEAR'],
+                'CYEAR2' => $data['CYEAR2'],
+                'NRUNNO' => $data['NRUNNO'],
+                'CSTEPST'=> '3'
+            ));  
             if(!empty($data['empinf']))
             {
                 
@@ -97,7 +105,8 @@ class form extends MY_Controller{
                 $data['foreman'] = $this->getForeman($data['empno']);
                 $data['opr'] =  $this->getOpr($data['cnform']->MSTATUS, $data['empinf']);
             }
-          
+            //var_dump($data['stepready']);
+            //exit;
             $this->views('qaform/QA-CN/view', $data);
         }
 
@@ -755,42 +764,7 @@ class form extends MY_Controller{
         return count($rs) > 0;
     }
 
-//     public function buildmail()
-//     {
-//         $nfrmno = $_POST["NFRMNO"];
-//         $vorgno = $_POST["VORGNO"];
-//         $cyear = $_POST["CYEAR"];
-//         $cyear2 = $_POST["CYEAR2"];
-//         $nrunno = $_POST["NRUNNO"];
-//         $mtype  = $_POST["MTYPE"];
-//         $fstatus = $_POST["FSTATUS"];
-//         $data = array();
-//         if($mtype == "NORMAL")
-//         {
-//             $formno = $this->toFormNumber($nfrmno,  $vorgno, $cyear,  $cyear2,  $nrunno);
-//             $rs =  $this->getApvEmail(array('NFRMNO' =>  $nfrmno , 'VORGNO' => $vorgno , 'CYEAR' => $cyear , 'CYEAR2' => $cyear2 , 'NRUNNO' => $nrunno ));
-//             $emails = array_column($rs , 'EMAIL');
-//             $data["to"] = implode(',', $emails);
-//             $data["subject"] = ($fstatus == "2" ? "E-Form " .$formno.  " was approved" : ($fstatus == "3" ? "E-Form " .$formno.  " was rejected" : ""));
-//             $rs = $this->cn->getcnresult($nfrmno, $vorgno, $cyear, $cyear2, $nrunno);
-// $first = $rs[0] ?? null;
 
-// $data["html"] = <<<HTML
-// <div>Changing notice no.: {$formno}</div>
-// <div>Supplier or Sub-contractor Name: {$first->SVENDNAME}</div>
-// <div>Part Name: {$first->PRTNAME}</div>
-// HTML;
-
-// foreach ($rs as $r) {
-//     $data["html"] .= "<div>Drawing No.: {$r->DWGNO}</div>";
-// }
-
-// $data["html"] .= "<div>Status: {$first->JUDGEMENT}</div>";
-
-//         }
-        
-//        echo json_encode($data);
-//     }
 
 public function buildmail()
 {
@@ -801,42 +775,248 @@ public function buildmail()
     $nrunno  = $_POST["NRUNNO"]  ?? null;
     $mtype   = $_POST["MTYPE"]   ?? null;
     $fstatus = $_POST["FSTATUS"] ?? null;
+    $formno = $this->toFormNumber($nfrmno,  $vorgno, $cyear,  $cyear2,  $nrunno);
     $data = array();
-    $data["to"] = "kanittha@MitsubishiElevatorAsia.co.th";
-    $data["subject"] = "Test E-Form Email";
-    $data["html"] = "<div>This is a test email for E-Form notification.xxxx</div>";
-    if ($mtype === "NORMAL") {
+        // ---- To ----
           $rsEmail = $this->getApvEmail([
             'NFRMNO' => $nfrmno,
             'VORGNO' => $vorgno,
             'CYEAR'  => $cyear,
             'CYEAR2' => $cyear2,
-            'NRUNNO' => $nrunno
+            'NRUNNO' => $nrunno,
+            'TYPE'  => ($mtype === "FOREMAN") ? "FOREMAN" : ($mtype === "PIC") ? "PIC" : ($mtype === "REQUESTER") ? "REQUESTER" : "ALL"
         ]);
+        $emails = array_column($rsEmail, 'EMAIL');
+        $data["to"] = implode(',', $emails);
+        $rs = $this->cn->getcnresult($nfrmno, $vorgno, $cyear, $cyear2, $nrunno);
+        $first = $rs[0] ?? null;
+    if ($mtype === "ALL") {
+        // ---- SUBJECT ----
+        $data["subject"] =
+            ($fstatus == "2") ? "E-Form {$formno} was approved" :
+            (($fstatus == "3") ? "E-Form {$formno} was rejected" : "");
+        // ---- HTML BODY ----
+                // ---- CONTENT ----
+        if ($first) {
+            $data["html"] = <<<HTML
+<div>Changing notice no.: {$formno}</div>
+<div>Supplier or Sub-contractor Name: {$first->SVENDNAME}</div>
+<div>Part Name: {$first->PRTNAME}</div>
+HTML;
 
-       var_dump($rsEmail);
-       exit;
+            foreach ($rs as $r) {
+                $data["html"] .= "<div>Drawing No.: {$r->DWGNO}</div>";
+            }
+
+            $data["html"] .= "<div>Status: {$first->JUDGEMENT}</div>";
+        } else {
+            $data["html"] = "<div>No data found</div>";
+        }
+
+     //  var_dump($rsEmail);
+      // exit;
+    }else if ($mtype === "FOREMAN") {
+         $data["subject"] = "E-Form ".$formno;
+         $data["html"] = "<div>Changing notice no.: ".$formno."</div>";
+         if ($first) {
+                $data["html"] .= "<div>First no.: ".$first->FIRSTNO."</div>";
+                $data["html"] .= "<div>Part Name: ".$first->PRTNAME."</div>";
+                $i = 1;
+                foreach ($rs as $r) {
+                    if($i == 1)
+                    {
+                        $data["html"] .= "<div>Drawing No.: ".$r->DWGNO."</div>";
+                    }else{ 
+                        $data["html"] .= "<div>&nbsp;&nbsp;&nbsp;&nbsp;".$r->DWGNO."</div>";
+                    }
+                    $i++;
+                }
+         }
+         
+    }else if ($mtype === "PIC") {
+         $data["subject"] = "Result of ".$formno;
+         $data["html"] = "<div>Changing notice no.: ".$formno."</div>";
+         if ($first) {
+                $data["html"] .= "<div>First no.: ".$first->FIRSTNO."</div>";
+                $data["html"] .= "<div>Part Name: ".$first->PRTNAME."</div>";
+                $i = 1;
+                foreach ($rs as $r) {
+                    if($i == 1)
+                    {
+                        $data["html"] .= "<div>Drawing No.: ".$r->DWGNO."</div>";
+                    }else{ 
+                        $data["html"] .= "<div>&nbsp;&nbsp;&nbsp;&nbsp;".$r->DWGNO."</div>";
+                    }
+                    $i++;
+                }
+                $data["html"] .= "<div>Status: ". ($fstatus == "2" ? "Approved" : ($fstatus == "3" ? "Rejected" : "Unknown")) ."</div>";
+         }
+         
+    }else if( $mtype === "REQUESTER"){
+            $data["subject"] = "E-Form ".$formno." has been returned";
+            $data["html"] = "<div>Changing notice no.: ".$formno."</div>";
+            if ($first) {
+                    $data["html"] .= "<div>First no.: ".$first->FIRSTNO."</div>";
+                    $data["html"] .= "<div>Part Name: ".$first->PRTNAME."</div>";
+                    $i = 1;
+                    foreach ($rs as $r) {
+                        if($i == 1)
+                        {
+                            $data["html"] .= "<div>Drawing No.: ".$r->DWGNO."</div>";
+                        }else{ 
+                            $data["html"] .= "<div>&nbsp;&nbsp;&nbsp;&nbsp;".$r->DWGNO."</div>";
+                        }
+                        $i++;
+                    }
+            }
     }
 
     echo json_encode($data);
 }
 
-    private function getApvEmail($data)
+private function getApvEmail($data)
     {
-          $sql = " SELECT DISTINCT e.SRECMAIL AS EMAIL
-        FROM FLOW f
-        JOIN AMEC.AEMPLOYEE e 
-             ON f.VREALAPV = e.SEMPNO
-        WHERE f.NFRMNO  = '".$data['NFRMNO']."'
-          AND f.VORGNO  = '".$data['VORGNO']."'
-          AND f.CYEAR   = '".$data['CYEAR']."'
-          AND f.CYEAR2  = '".$data['CYEAR2']."'
-          AND f.NRUNNO  = '".$data['NRUNNO']."'
-          AND f.CSTEPNO NOT IN ('05','04','11')
-          AND e.CSTATUS = '1'
-       ";
-       return $this->cn->getdatasql($sql);
+        if($data['TYPE'] == "PIC")
+        {
+                 $sql = " SELECT DISTINCT e.SRECMAIL AS EMAIL
+                FROM FLOW f
+                JOIN AMEC.AEMPLOYEE e 
+                    ON f.VREALAPV = e.SEMPNO
+                WHERE f.NFRMNO  = '".$data['NFRMNO']."'
+                AND f.VORGNO  = '".$data['VORGNO']."'
+                AND f.CYEAR   = '".$data['CYEAR']."'
+                AND f.CYEAR2  = '".$data['CYEAR2']."'
+                AND f.NRUNNO  = '".$data['NRUNNO']."'
+                AND e.CSTATUS = '1' AND CSTEPNO in ('--','06') union 
+                SELECT DISTINCT e.SRECMAIL AS EMAIL FROM CNSHOPPIC c JOIN AMEC.AEMPLOYEE e ON c.ENG = e.SEMPNO
+                WHERE c.FM in (select VAPVNO from FLOW where NFRMNO = '".$data['NFRMNO']."' AND VORGNO = '".$data['VORGNO']."' AND CYEAR = '".$data['CYEAR']."' AND CYEAR2 = '".$data['CYEAR2']."' AND NRUNNO = '".$data['NRUNNO']."' and CEXTDATA ='06') ";
+
+        }else if($data['TYPE'] == "REQUESTER")
+        { $sql = " SELECT DISTINCT e.SRECMAIL AS EMAIL
+                FROM FLOW f
+                JOIN AMEC.AEMPLOYEE e 
+                    ON f.VREALAPV = e.SEMPNO
+                WHERE f.NFRMNO  = '".$data['NFRMNO']."'
+                AND f.VORGNO  = '".$data['VORGNO']."'
+                AND f.CYEAR   = '".$data['CYEAR']."'
+                AND f.CYEAR2  = '".$data['CYEAR2']."'
+                AND f.NRUNNO  = '".$data['NRUNNO']."'
+                AND e.CSTATUS = '1' AND CSTEPNO in ('--')";
+        }else{
+            $sql = " SELECT DISTINCT e.SRECMAIL AS EMAIL
+                FROM FLOW f
+                JOIN AMEC.AEMPLOYEE e 
+                    ON f.VREALAPV = e.SEMPNO
+                WHERE f.NFRMNO  = '".$data['NFRMNO']."'
+                AND f.VORGNO  = '".$data['VORGNO']."'
+                AND f.CYEAR   = '".$data['CYEAR']."'
+                AND f.CYEAR2  = '".$data['CYEAR2']."'
+                AND f.NRUNNO  = '".$data['NRUNNO']."'
+                AND e.CSTATUS = '1'";
+            if ($data['TYPE'] == "FOREMAN") {
+                $sql .= " AND f.CEXTDATA = '06' ";
+            }else if ($data['TYPE'] === "ALL") {
+                $sql .= " AND f.CSTEPNO NOT IN ('05','04','11') ";
+            }
+    }    
+        return $this->cn->getdatasql($sql);
     }
+
+public function createcnng()
+{
+    try {
+        $status = false;
+        $message = "";
+        $nfrmno  = $_POST["NFRMNO"]  ?? null;
+        $vorgno  = $_POST["VORGNO"]  ?? null;
+        $cyear   = $_POST["CYEAR"]   ?? null;
+        $cyear2  = $_POST["CYEAR2"]  ?? null;
+        $nrunno  = $_POST["NRUNNO"]  ?? null;
+        $firstno = $this->cn->getfirstno($nfrmno, $vorgno, $cyear, $cyear2, $nrunno);
+        if (count($firstno) > 0) {
+            $sqlas = "SELECT
+            'F'||VARCHAR_FORMAT(CURRENT DATE, 'YY')||
+            RIGHT(
+                DIGITS(
+                COALESCE(
+                    INTEGER(
+                    RIGHT(
+                        (SELECT MAX(R27M09)
+                        FROM DATALIBO.R027MP1 WHERE R27M09 LIKE 'F'||VARCHAR_FORMAT(CURRENT DATE, 'YY')||'%'
+                        
+                        ),
+                        4
+                    )
+                    ),
+                    0
+                ) + 1
+                ),
+                4
+            ) AS R27M09
+            FROM DATALIBO.R027MP1
+            WHERE R27M09 = '".trim($firstno[0]->FIRSTNO)."'";
+            $newcnng = $this->cn->getdataAssql($sqlas);
+            if(count($newcnng) > 0) {
+          $sqlas = "INSERT INTO DATALIBO.R027MP1(R27M01 , R27M02 , R27M03 , R27M04 , R27M05 , R27M06 , R27M07 , R27M08 , R27M09 , R27M10 , R27M11 , R27M12 , R27M13 , R27M14)
+SELECT
+  L.R27M01,
+  L.R27M02,
+  L.R27M03,
+  L.R27M04,
+  L.R27M05,
+  L.R27M06,
+  L.R27M07,
+  L.R27M08,
+
+   '".$newcnng[0]->R27M09."' AS R27M09,
+
+  L.R27M10,
+  L.R27M11,
+  L.R27M12,
+  VARCHAR_FORMAT(CURRENT DATE, 'YYYYMMDD') AS R27M13,
+  L.R27M14
+
+FROM DATALIBO.R027MP1 L
+WHERE L.R27M09 = '".trim($firstno[0]->FIRSTNO)."'";
+
+                $res = $this->cn->execAssql($sqlas);
+                if (!$res) {
+                    throw new Exception("Failed to update first no.");
+                }
+            } else {
+                throw new Exception("Failed to generate new CN/NG number.");
+            }
+            
+            $res = $this->cn->execAssql($sqlas);
+            if ($res) {
+                $status = true;
+                $message = "CN/NG created successfully.";
+            } else {
+                $status = false;
+                $message = "Failed to create CN/NG.";
+            }
+
+
+
+        } else {
+            $status = false;
+            $message = "Failed to retrieve first no.";
+        }
+
+            
+     }catch ( Exception $e) {
+        $status = false;
+        $message = "Failed to save data.";
+    } finally {
+        $res = [
+            'status' => $status,
+            'message' => $message
+        ];
+        echo json_encode($res);
+    }
+}
+
+
 
 
 }
