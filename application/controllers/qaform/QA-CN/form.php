@@ -2,9 +2,21 @@
 use GuzzleHttp\Client;
 defined('BASEPATH') OR exit('No direct script access allowed');
 require_once APPPATH.'controllers/_form.php';
+require_once APPPATH.'controllers/api/webform/form.php';
+require_once APPPATH.'controllers/api/webform/flow.php';
+require_once APPPATH.'controllers/api/webform/formmst.php';
+require_once APPPATH.'controllers/api/webform/isTid.php';
 require_once APPPATH . 'controllers/_file.php';
 class form extends MY_Controller{
-    use _Form, _File;
+    //use _Form, _File;
+    //use  formApi, flow, formmst, _File;
+        use _Form , _File , formApi, flow, formmst, isTid{
+        formApi::getMode insteadOf _Form;
+        formApi::getRequestNo  insteadOf _Form;
+        flow::getExtData insteadOf _Form;
+        flow::doaction insteadOf _Form;
+        _Form::getMode as getModeWebservice;
+    }
     protected $client;
     function __construct(){
 		parent::__construct();
@@ -64,9 +76,17 @@ class form extends MY_Controller{
             $data['return']   = false;
             $data['NRUNNO']   = $_GET["runNo"];
             $data['CYEAR2']   = $_GET["y2"];
+            $form  = [
+                    'NFRMNO' => $data['NFRMNO'],
+                    'VORGNO' => $data['VORGNO'],
+                    'CYEAR'  => $data['CYEAR'],
+                    'CYEAR2' => $data['CYEAR2'],
+                    'NRUNNO' => $data['NRUNNO'],
+                    'EMPNO' =>  $data['empno']
+            ];
             $data['empinf']   = $this->cn->customSelect("AMEC.AEMPLOYEE",array('SEMPNO' =>  $data['empno'] ),'*');
-            $data['cextData'] = intval($this->getExtdata($data['NFRMNO'], $data['VORGNO'], $data['CYEAR'],  $data['CYEAR2'],  $data['NRUNNO'], $data['empno']));
-            $data['mode']     = $this->getMode($data['NFRMNO'],  $data['VORGNO'], $data['CYEAR'],  $data['CYEAR2'],  $data['NRUNNO'], $data['empno']);
+            $data['cextData'] = intval($this->getExtdata($form));
+            $data['mode']     = $this->getMode($form);
             $data['form']     = $this->frm->getForm($data['NFRMNO'],  $data['VORGNO'], $data['CYEAR'],  $data['CYEAR2'],  $data['NRUNNO']);
             $data['formno'] = $this->toFormNumber($data['NFRMNO'],  $data['VORGNO'], $data['CYEAR'],  $data['CYEAR2'],  $data['NRUNNO']);
             $data['cnform'] = $this->cn->getcnform($data['NFRMNO'],  $data['VORGNO'], $data['CYEAR'],  $data['CYEAR2'],  $data['NRUNNO'])[0];
@@ -932,6 +952,11 @@ public function createcnng()
         $cyear   = $_POST["CYEAR"]   ?? null;
         $cyear2  = $_POST["CYEAR2"]  ?? null;
         $nrunno  = $_POST["NRUNNO"]  ?? null;
+        $form = array(
+            'NFRMNO' => $nfrmno,
+            'VORGNO' => $vorgno,
+            'CYEAR'  => $cyear
+        );         
         $firstno = $this->cn->getfirstno($nfrmno, $vorgno, $cyear, $cyear2, $nrunno);
         if (count($firstno) > 0) {
             $sqlas = "SELECT
@@ -982,22 +1007,33 @@ WHERE L.R27M09 = '".trim($firstno[0]->FIRSTNO)."'";
                 $res = $this->cn->execAssql($sqlas);
                 if (!$res) {
                     throw new Exception("Failed to update first no.");
+                }else
+                {
+                    $newcnng="F260239";
+                    $cnform    = $this->frm->getForm($nfrmno,  $vorgno, $cyear,  $cyear2,  $nrunno);
+                    $form["REQBY"] = $cnform->VREQNO;
+                    $form["INPUTBY"] = $cnform->INPUTBY; 
+                    $form["REMARK"] = "";
+                    $form["DRAFT"] = 1;
+                    $rsf = $this->createForm($form);
+                    if ($rsf['status']) {
+                        $stepDel = array([ 'CSTEPNO' => '04', 'CSTEPNEXTNO' => '19'],
+                                         [ 'CSTEPNO' => '19', 'CSTEPNEXTNO' => '26'],
+                                         [ 'CSTEPNO' => '26', 'CSTEPNEXTNO' => '07'],
+                                         [ 'CSTEPNO' => '10', 'CSTEPNEXTNO' => '13'],
+                                         [ 'CSTEPNO' => '13', 'CSTEPNEXTNO' => '00']
+                                          );
+                         $this->deleteFlowStep($stepDel,$nfrmno, $vorgno, $cyear, $rsf["data"]->cyear2, $rsf["data"]->nrunno);
+                         $sqlOra = "select * from cnform where NFRMNO = '".$nfrmno."' AND VORGNO = '".$vorgno."' and CYEAR = '".$cyear."' and CYEAR2 = '".$cyear2."' and NRUNNO = '".$nrunno."'";
+                    } else {
+                        throw new Exception("Failed to create new CN/NG form.");
+                    }
+    
                 }
             } else {
                 throw new Exception("Failed to generate new CN/NG number.");
             }
             
-            $res = $this->cn->execAssql($sqlas);
-            if ($res) {
-                $status = true;
-                $message = "CN/NG created successfully.";
-            } else {
-                $status = false;
-                $message = "Failed to create CN/NG.";
-            }
-
-
-
         } else {
             $status = false;
             $message = "Failed to retrieve first no.";
@@ -1007,6 +1043,7 @@ WHERE L.R27M09 = '".trim($firstno[0]->FIRSTNO)."'";
      }catch ( Exception $e) {
         $status = false;
         $message = "Failed to save data.";
+        var_dump($e->getMessage());
     } finally {
         $res = [
             'status' => $status,

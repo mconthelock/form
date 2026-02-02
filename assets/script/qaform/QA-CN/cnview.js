@@ -89,6 +89,11 @@ $(document).ready(async function () {
                     });
                     
                       if (formStatus == "2" || formStatus == "3") { 
+                           if((formStatus == "3") && (mstatus == "1"))
+                            {
+                                const res = await createcnng(baseForm);
+                                console.log("create cn ng"+res);
+                            }
                                   
                                   let param = {
                                   ...baseForm,                         
@@ -136,7 +141,7 @@ $(document).ready(async function () {
                       }
                       // แล้วค่อย redirect
                       if (statusact.status) {
-                          redirectWebflow();
+                          //redirectWebflow();
                       }
                     }
               
@@ -364,7 +369,7 @@ function buildmail(formno)
 
 function createcnng(formno)
 {
-    return new Promise((resolve) => { 
+    return new Promise((resolve, reject) => { 
           $.ajax({
       url: host + "qaform/QA-CN/form/createcnng",
       type: "post",
