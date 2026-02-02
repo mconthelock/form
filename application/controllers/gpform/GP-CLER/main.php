@@ -17,7 +17,7 @@ class Main extends MY_Controller {
         $this->load->model('gpform/GP-CLER/cler_model', 'clr');
         $this->load->model('gpform/GP-ENT/ent_model', 'ent');
         $this->load->model('form_model', 'form');
-        $this->upload_path = "//amecnas/AMECWEB/File/" . ($this->_servername() == 'amecweb' ? 'production' : 'development') . "/Form/GP/GPCLER/";
+        $this->upload_path = $_ENV['AMEC_FILE_PATH'] . ($this->_servername() == 'amecweb' ? 'production' : 'development') . "/Form/GP/GPCLER/";
         $this->client      = new Client(['verify' => false]);
     }
 
@@ -461,7 +461,7 @@ class Main extends MY_Controller {
                 'error'    => $file['error'],
                 'size'     => $file['size']
             );
-            $result     = $this->uploadFile($uploadFile, "//amecnas/AMECWEB/File/" . ($this->_servername() == 'amecweb' ? 'production' : 'development') . "/Form/GP/GPENT/");
+            $result     = $this->uploadFile($uploadFile, $_ENV['AMEC_FILE_PATH'] . ($this->_servername() == 'amecweb' ? 'production' : 'development') . "/Form/GP/GPENT/");
             if ($result['status'] == '1') {
                 $giftMemoFile = $result['file_name'];
             }
@@ -479,7 +479,7 @@ class Main extends MY_Controller {
                 'error'    => $file['error'],
                 'size'     => $file['size']
             );
-            $result     = $this->uploadFile($uploadFile, "//amecnas/AMECWEB/File/" . ($this->_servername() == 'amecweb' ? 'production' : 'development') . "/Form/GP/GPENT/");
+            $result     = $this->uploadFile($uploadFile, $_ENV['AMEC_FILE_PATH'] . ($this->_servername() == 'amecweb' ? 'production' : 'development') . "/Form/GP/GPENT/");
             if ($result['status'] == '1') {
                 $otherMemoFile = $result['file_name'];
             }
@@ -627,7 +627,7 @@ class Main extends MY_Controller {
                     'error'    => $_FILES[$receiptFileKey]['error'],
                     'size'     => $_FILES[$receiptFileKey]['size']
                 ];
-                $file        = $this->uploadFile($expenseFile, "//amecnas/AMECWEB/File/" . ($this->_servername() == 'amecweb' ? 'production' : 'development') . "/Form/GP/GPCLER/");
+                $file        = $this->uploadFile($expenseFile, $_ENV['AMEC_FILE_PATH'] . ($this->_servername() == 'amecweb' ? 'production' : 'development') . "/Form/GP/GPCLER/");
                 if ($file['status'] == '1') {
                     $data_expense['RECEIPT_FILE'] = $file['file_name'];
                 }
@@ -652,14 +652,14 @@ class Main extends MY_Controller {
         ];
 
         if (isset($_FILES['receipt'])) {
-            $file = $this->uploadFile($_FILES['receipt'], "//amecnas/AMECWEB/File/" . ($this->_servername() == 'amecweb' ? 'production' : 'development') . "/Form/GP/GPCLER/");
+            $file = $this->uploadFile($_FILES['receipt'], $_ENV['AMEC_FILE_PATH'] . ($this->_servername() == 'amecweb' ? 'production' : 'development') . "/Form/GP/GPCLER/");
             if ($file['status'] == '1') {
                 $data_cler['RECEIPT_FILE'] = $file['file_name'];
             }
         }
 
         if (isset($_FILES['file_memo'])) {
-            $file = $this->uploadFile($_FILES['file_memo'], "//amecnas/AMECWEB/File/" . ($this->_servername() == 'amecweb' ? 'production' : 'development') . "/Form/GP/GPCLER/");
+            $file = $this->uploadFile($_FILES['file_memo'], $_ENV['AMEC_FILE_PATH'] . ($this->_servername() == 'amecweb' ? 'production' : 'development') . "/Form/GP/GPCLER/");
             if ($file['status'] == '1') {
                 $data_cler['MEMO_FILE'] = $file['file_name'];
             }
@@ -739,7 +739,7 @@ class Main extends MY_Controller {
         ];
 
         if (isset($_FILES['receipt']) && $_FILES['receipt']['error'] === UPLOAD_ERR_OK) {
-            $file = $this->uploadFile($_FILES['receipt'], "//amecnas/AMECWEB/File/" . ($this->_servername() == 'amecweb' ? 'production' : 'development') . "/Form/GP/GPCLER/");
+            $file = $this->uploadFile($_FILES['receipt'], $_ENV['AMEC_FILE_PATH'] . ($this->_servername() == 'amecweb' ? 'production' : 'development') . "/Form/GP/GPCLER/");
             if ($file['status'] == '1') {
                 $data['RECEIPT_FILE'] = $file['file_name'];
             }
@@ -792,7 +792,7 @@ class Main extends MY_Controller {
                         'error'    => $_FILES[$receiptFileKey]['error'],
                         'size'     => $_FILES[$receiptFileKey]['size']
                     ];
-                    $file        = $this->uploadFile($expenseFile, "//amecnas/AMECWEB/File/" . ($this->_servername() == 'amecweb' ? 'production' : 'development') . "/Form/GP/GPCLER/");
+                    $file        = $this->uploadFile($expenseFile, $_ENV['AMEC_FILE_PATH'] . ($this->_servername() == 'amecweb' ? 'production' : 'development') . "/Form/GP/GPCLER/");
                     if ($file['status'] == '1') {
                         $data_expense['RECEIPT_FILE'] = $file['file_name'];
                     }
@@ -842,7 +842,7 @@ class Main extends MY_Controller {
                             'error'    => $_FILES[$receiptFileKey]['error'],
                             'size'     => $_FILES[$receiptFileKey]['size']
                         ];
-                        $file        = $this->uploadFile($expenseFile, "//amecnas/AMECWEB/File/" . ($this->_servername() == 'amecweb' ? 'production' : 'development') . "/Form/GP/GPCLER/");
+                        $file        = $this->uploadFile($expenseFile, $_ENV['AMEC_FILE_PATH'] . ($this->_servername() == 'amecweb' ? 'production' : 'development') . "/Form/GP/GPCLER/");
                         if ($file['status'] == '1') {
                             $data_expense['RECEIPT_FILE'] = $file['file_name'];
                         }
@@ -889,7 +889,7 @@ class Main extends MY_Controller {
                             'error'    => $_FILES[$receiptFileKey]['error'],
                             'size'     => $_FILES[$receiptFileKey]['size']
                         ];
-                        $file        = $this->uploadFile($expenseFile, "//amecnas/AMECWEB/File/" . ($this->_servername() == 'amecweb' ? 'production' : 'development') . "/Form/GP/GPCLER/");
+                        $file        = $this->uploadFile($expenseFile, $_ENV['AMEC_FILE_PATH'] . ($this->_servername() == 'amecweb' ? 'production' : 'development') . "/Form/GP/GPCLER/");
                         if ($file['status'] == '1') {
                             $data_expense['RECEIPT_FILE'] = $file['file_name'];
                         }
@@ -915,7 +915,7 @@ class Main extends MY_Controller {
                     'error'    => $_FILES['memo_1']['error'],
                     'size'     => $_FILES['memo_1']['size']
                 ];
-                $file      = $this->uploadFile($memoFile, "//amecnas/AMECWEB/File/" . ($this->_servername() == 'amecweb' ? 'production' : 'development') . "/Form/GP/GPCLER/");
+                $file      = $this->uploadFile($memoFile, $_ENV['AMEC_FILE_PATH'] . ($this->_servername() == 'amecweb' ? 'production' : 'development') . "/Form/GP/GPCLER/");
                 if ($file['status'] == '1') {
                     $data_file = [
                         'NFRMNO'    => $post['nfrmno'],
@@ -939,7 +939,7 @@ class Main extends MY_Controller {
                     'error'    => $_FILES['memo_4']['error'],
                     'size'     => $_FILES['memo_4']['size']
                 ];
-                $file      = $this->uploadFile($memoFile, "//amecnas/AMECWEB/File/" . ($this->_servername() == 'amecweb' ? 'production' : 'development') . "/Form/GP/GPCLER/");
+                $file      = $this->uploadFile($memoFile, $_ENV['AMEC_FILE_PATH'] . ($this->_servername() == 'amecweb' ? 'production' : 'development') . "/Form/GP/GPCLER/");
                 if ($file['status'] == '1') {
                     $data_file = [
                         'NFRMNO'    => $post['nfrmno'],
@@ -967,7 +967,7 @@ class Main extends MY_Controller {
                         'error'    => $fileGroup['error'][$i],
                         'size'     => $fileGroup['size'][$i]
                     ];
-                    $file    = $this->uploadFile($oneFile, "//amecnas/AMECWEB/File/" . ($this->_servername() == 'amecweb' ? 'production' : 'development') . "/Form/GP/GPCLER/");
+                    $file    = $this->uploadFile($oneFile, $_ENV['AMEC_FILE_PATH'] . ($this->_servername() == 'amecweb' ? 'production' : 'development') . "/Form/GP/GPCLER/");
                     if ($file['status'] == '1') {
                         $data_file = [
                             'NFRMNO'    => $post['nfrmno'],
@@ -1163,7 +1163,7 @@ class Main extends MY_Controller {
                         'error'    => $_FILES[$receiptFileKey]['error'],
                         'size'     => $_FILES[$receiptFileKey]['size']
                     ];
-                    $file        = $this->uploadFile($expenseFile, "//amecnas/AMECWEB/File/" . ($this->_servername() == 'amecweb' ? 'production' : 'development') . "/Form/GP/GPCLER/");
+                    $file        = $this->uploadFile($expenseFile, $_ENV['AMEC_FILE_PATH'] . ($this->_servername() == 'amecweb' ? 'production' : 'development') . "/Form/GP/GPCLER/");
                     if ($file['status'] == '1') {
                         $data_expense['RECEIPT_FILE'] = $file['file_name'];
                     }
