@@ -485,7 +485,7 @@
                         return $x->SEMPNO;
                     }, $amec);
                 @endphp
-                @if (in_array($flowstep[0]->CSTEPNO, ['19', '34']) && $flowstep[0]->CSTEPNEXTNO == '13' && isset($PRESIDENT->VEMPNO) && isset($RAF->VEMPNO) && in_array($PRESIDENT->VEMPNO, $amecIds))
+                @if (in_array($flowstep[0]->CSTEPNO, ['19', '34', '13']) && isset($PRESIDENT->VEMPNO) && isset($RAF->VEMPNO) && in_array($PRESIDENT->VEMPNO, $amecIds))
                     <div class="flex items-center justify-center mt-4 space-x-3">
                         <label for="emp_select" class="font-medium text-blue-900">Select Approver:</label>
                         <select id="emp_select" name="emp_select" class="select select-bordered w-80 bg-blue-50 focus:bg-white focus:border-blue-500 transition">
@@ -507,11 +507,11 @@
                     {{-- <button type="button" class="btn btn-info w-32 transition btn-submit" data-action="return">
                             Return
                         </button> --}}
-                    {{-- @if ((in_array($flowstep[0]->CSTEPNO, ['19', '34']) && $flowstep[0]->CSTEPNEXTNO == '13') || ($flowstep[0]->CSTEPNO == '13' && $flowstep[0]->CSTEPNEXTNO == '18')) --}}
-                    <button type="button" class="btn btn-info w-32 transition btn-submit" data-action="return">
-                        Return
-                    </button>
-                    {{-- @endif --}}
+                    @if (in_array($flowstep[0]->CSTEPNO, ['19', '34', '13']))
+                        <button type="button" class="btn btn-info w-32 transition btn-submit" data-action="return">
+                            Return
+                        </button>
+                    @endif
                 </div>
 
                 <div class="flex justify-center mt-4 no-print">

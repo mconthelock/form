@@ -45,7 +45,7 @@ class Cler_model extends CI_Model {
     public function get_clearance_form($nfrmno, $vorgno, $cyear, $cyear2, $nrunno)
     {
         $this->db
-            ->select('gf.*,ai.STNAME INPUT_NAME,ar.STNAME REQ_NAME')
+            ->select('gf.*,ai.SNAME INPUT_NAME,ar.SNAME REQ_NAME')
             ->from('GPCLER_FORM gf')
             ->join('AMECUSERALL ai', 'ai.SEMPNO = gf.EMP_INPUT', 'left')
             ->join('AMECUSERALL ar', 'ar.SEMPNO = gf.EMP_REQ', 'left')
