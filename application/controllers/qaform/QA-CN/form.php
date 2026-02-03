@@ -1019,7 +1019,7 @@ WHERE L.R27M09 = '".trim($firstno[0]->FIRSTNO)."'";
                     $form["REQBY"] = $cnform[0]->VREQNO;
                     $form["INPUTBY"] = $cnform[0]->VINPUTER; 
                     $form["REMARK"] = "";
-                    $form["DRAFT"] = 1;
+                    $form["DRAFT"] = "1";
                     $rsf = $this->createForm($form);
                     //var_dump($rsf);
                     if ($rsf['status']) {
@@ -1106,7 +1106,7 @@ WHERE L.R27M09 = '".trim($firstno[0]->FIRSTNO)."'";
                                             'CSTEPNO' => '--'
                                         );
                                         $dataapv = array(
-                                            'VREPNO' => $this->getRep(array('NFRMNO' =>  $nfrmno , 'VORGNO' => $vorgno , 'CYEAR' => $cyear , 'VEMPNO' => $cnflowpre[0]->VAPVNO )),
+                                            'VREPNO' => $cnflowpre[0]->VREPNO,
                                         );
                                          $this->cn->update("FLOW",  $dataapv , $key);
 
