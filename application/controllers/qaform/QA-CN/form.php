@@ -1004,12 +1004,14 @@ SELECT
 
 FROM DATALIBO.R027MP1 L
 WHERE L.R27M09 = '".trim($firstno[0]->FIRSTNO)."'";
-                echo $sqlas;
+                //echo $sqlas;
 
                 $res = $this->cn->execAssql($sqlas);
-                var_dump($res);
+                //var_dump($res);
                 if (!$res) {
-                    throw new Exception("Failed to update first no.");
+                    //throw new Exception("Failed to update first no.");
+                       $status = false;
+                        $message = "Failed to update first no.";
                 }else
                 {
                    // $newcnng="F260239";
@@ -1019,7 +1021,7 @@ WHERE L.R27M09 = '".trim($firstno[0]->FIRSTNO)."'";
                     $form["REMARK"] = "";
                     $form["DRAFT"] = 1;
                     $rsf = $this->createForm($form);
-                    var_dump($rsf);
+                    //var_dump($rsf);
                     if ($rsf['status']) {
                         $stepDel = array([ 'CSTEPNO' => '04', 'CSTEPNEXTNO' => '19'],
                                          [ 'CSTEPNO' => '19', 'CSTEPNEXTNO' => '26'],
@@ -1137,7 +1139,7 @@ WHERE L.R27M09 = '".trim($firstno[0]->FIRSTNO)."'";
      }catch ( Exception $e) {
         $status = false;
         $message = "Failed to save data.";
-        var_dump($e->getMessage());
+        //var_dump($e->getMessage());
         
     } finally {
         $res = [
