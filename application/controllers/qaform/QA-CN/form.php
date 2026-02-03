@@ -1026,7 +1026,7 @@ WHERE L.R27M09 = '".trim($firstno[0]->FIRSTNO)."'";
                                          [ 'CSTEPNO' => '10', 'CSTEPNEXTNO' => '13'],
                                          [ 'CSTEPNO' => '13', 'CSTEPNEXTNO' => '00']
                                           );
-                         $this->deleteFlowStep($stepDel,$nfrmno, $vorgno, $cyear, $rsf["message"]->cyear2, $rsf["message"]->runno);
+                         $this->deleteFlowStep($stepDel,$nfrmno, $vorgno, $cyear, $rsf["data"]->CYEAR2, $rsf["data"]->NRUNNO);
                          $cnformpre = $this->cn->customSelect("CNFORM",array( 'NFRMNO' => $nfrmno,'VORGNO' => $vorgno,'CYEAR'  => $cyear,'CYEAR2' => $cyear2,'NRUNNO' => $nrunno ),'*');
                             if(count($cnformpre) > 0)
                             {
@@ -1034,8 +1034,8 @@ WHERE L.R27M09 = '".trim($firstno[0]->FIRSTNO)."'";
                                     'NFRMNO' => $nfrmno,
                                     'VORGNO' => $vorgno,
                                     'CYEAR'  => $cyear,
-                                    'CYEAR2' => $rsf["data"]->cyear2,
-                                    'NRUNNO' => $rsf["data"]->nrunno,
+                                    'CYEAR2' => $rsf["data"]->CYEAR2,
+                                    'NRUNNO' => $rsf["data"]->NRUNNO,
                                     'TITLE'  => $cnformpre[0]->TITLE,
                                     'SVENDNAME' =>  $cnformpre[0]->SVENDNAME,
                                     'CLSNO'  =>   $cnformpre[0]->CLSNO,
@@ -1060,8 +1060,8 @@ WHERE L.R27M09 = '".trim($firstno[0]->FIRSTNO)."'";
                                             '".$nfrmno."' AS NFRMNO,
                                             '".$vorgno."' AS VORGNO,
                                             '".$cyear."' AS CYEAR,
-                                            '".$rsf["data"]->cyear2."' AS CYEAR2,
-                                            '".$rsf["data"]->nrunno."' AS NRUNNO,
+                                            '".$rsf["data"]->CYEAR2."' AS CYEAR2,
+                                            '".$rsf["data"]->NRUNNO."' AS NRUNNO,
                                             DWGNO,
                                             REVNO
                                         FROM RESULTCHKDWG
@@ -1078,8 +1078,8 @@ WHERE L.R27M09 = '".trim($firstno[0]->FIRSTNO)."'";
                                             'NFRMNO' => $nfrmno,
                                             'VORGNO' => $vorgno,
                                             'CYEAR'  => $cyear,
-                                            'CYEAR2' => $rsf["data"]->cyear2,
-                                            'NRUNNO' => $rsf["data"]->nrunno,
+                                            'CYEAR2' => $rsf["data"]->CYEAR2,
+                                            'NRUNNO' => $rsf["data"]->NRUNNO,
                                             'CEXTDATA' => '06'
                                         );
                                         $dataapv = array(
