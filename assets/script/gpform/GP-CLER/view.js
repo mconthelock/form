@@ -30,7 +30,7 @@ $(document).ready(async function () {
 		ent_empno,
 	} = formEnt;
 
-	const flow = await showflow({ NFRMNO: nfrmno, VORGNO: vorgno, CYEAR: cyear, CYEAR2: cyear2, NRUNNO: nrunno });
+	const flow = await showflow({ NFRMNO: nfrmno, VORGNO: vorgno, CYEAR: cyear, CYEAR2: cyear2, NRUNNO: nrunno, showStep: true });
 	$(".flow").html(flow.html);
 
 	if (
@@ -47,6 +47,7 @@ $(document).ready(async function () {
 			CYEAR: ent_cyear,
 			CYEAR2: ent_cyear2,
 			NRUNNO: ent_nrunno,
+			showStep: true,
 		});
 		$(".flow_ent").html(flow_ent.html);
 	}
@@ -94,19 +95,19 @@ $(document).ready(async function () {
 			// response คือ array โดยตรงจาก controller
 			if (response && Array.isArray(response) && response.length > 0) {
 				const expenses = response;
-				
+
 				// ตรวจสอบว่าเป็นตารางปกติหรือตารางแยก
 				if ($("#expense-table").length > 0) {
 					// กรณีตารางปกติ
 					const $tbody = $("#expense-table tbody");
 					$tbody.empty();
-					
+
 					expenses.forEach((expense, index) => {
 						const receiptNo = expense.RECEIPT || expense.RECEIPT_NO || '';
 						const cost = expense.COST || '';
 						const dateIssue = convertDate(expense.DATE_ISSUE);
 						const receiptFile = expense.RECEIPT_FILE;
-						
+
 						const row = `<tr>
 							<td class="py-2 px-4 text-center">${index + 1}</td>
 							<td class="py-2 px-4">
@@ -119,13 +120,13 @@ $(document).ready(async function () {
 								<input type="date" name="date_issue[]" class="input input-sm border rounded-lg px-3 py-1 w-full focus:ring-2 bg-white focus:ring-green-400 transition" value="${dateIssue}">
 							</td>
 							<td class="py-2 px-4">
-								${receiptFile ? 
-									`<div class="flex items-center gap-2">
+								${receiptFile ?
+								`<div class="flex items-center gap-2">
 										<a href="${host}gpform/GP-CLER/main/preview/${receiptFile}" target="_blank" class="text-blue-600 text-xs underline">View</a>
 										<input type="file" name="receipt_file[]" class="file-input file-input-sm file-input-bordered w-full max-w-xs rounded-lg border-green-400">
 									</div>` :
-									`<input type="file" name="receipt_file[]" class="file-input file-input-sm file-input-bordered w-full max-w-xs rounded-lg border-green-400">`
-								}
+								`<input type="file" name="receipt_file[]" class="file-input file-input-sm file-input-bordered w-full max-w-xs rounded-lg border-green-400">`
+							}
 							</td>
 							<td class="py-2 px-4 text-center">
 								<button type="button" class="remove-row bg-red-500 hover:bg-red-600 text-white rounded-full w-8 h-8 flex items-center cursor-pointer justify-center shadow transition" title="Remove row"> &times; </button>
@@ -133,24 +134,24 @@ $(document).ready(async function () {
 						</tr>`;
 						$tbody.append(row);
 					});
-					
+
 					calculateTotals();
 				} else if ($(".expense-table-split").length > 0) {
 					// กรณีตารางแยก
 					const lunchExpenses = expenses.filter(e => e.TYPE == 1);
 					const breakExpenses = expenses.filter(e => e.TYPE == 4);
-					
+
 					// โหลดข้อมูล Lunch
 					if (lunchExpenses.length > 0) {
 						const $lunchTbody = $(".expense-table-split[data-type='1'] tbody");
 						$lunchTbody.empty();
-						
+
 						lunchExpenses.forEach((expense, index) => {
 							const receiptNo = expense.RECEIPT || expense.RECEIPT_NO || '';
 							const cost = expense.COST || '';
 							const dateIssue = convertDate(expense.DATE_ISSUE);
 							const receiptFile = expense.RECEIPT_FILE;
-							
+
 							const row = `<tr>
 								<td class="py-2 px-4 text-center">${index + 1}</td>
 								<td class="py-2 px-4">
@@ -163,13 +164,13 @@ $(document).ready(async function () {
 									<input type="date" name="date_issue_1[]" class="input input-sm border rounded-lg px-3 py-1 w-full focus:ring-2 bg-white focus:ring-cyan-400 transition" value="${dateIssue}">
 								</td>
 								<td class="py-2 px-4">
-									${receiptFile ? 
-										`<div class="flex items-center gap-2">
+									${receiptFile ?
+									`<div class="flex items-center gap-2">
 											<a href="${host}gpform/GP-CLER/main/preview/${receiptFile}" target="_blank" class="text-blue-600 text-xs underline">View</a>
 											<input type="file" name="receipt_file_1[]" class="file-input file-input-sm file-input-bordered w-full max-w-xs rounded-lg border-cyan-400">
 										</div>` :
-										`<input type="file" name="receipt_file_1[]" class="file-input file-input-sm file-input-bordered w-full max-w-xs rounded-lg border-cyan-400">`
-									}
+									`<input type="file" name="receipt_file_1[]" class="file-input file-input-sm file-input-bordered w-full max-w-xs rounded-lg border-cyan-400">`
+								}
 								</td>
 								<td class="py-2 px-4 text-center">
 									<button type="button" class="remove-row bg-red-500 hover:bg-red-600 text-white rounded-full w-8 h-8 flex items-center cursor-pointer justify-center shadow transition" title="Remove row"> &times; </button>
@@ -178,18 +179,18 @@ $(document).ready(async function () {
 							$lunchTbody.append(row);
 						});
 					}
-					
+
 					// โหลดข้อมูล Break
 					if (breakExpenses.length > 0) {
 						const $breakTbody = $(".expense-table-split[data-type='4'] tbody");
 						$breakTbody.empty();
-						
+
 						breakExpenses.forEach((expense, index) => {
 							const receiptNo = expense.RECEIPT || expense.RECEIPT_NO || '';
 							const cost = expense.COST || '';
 							const dateIssue = convertDate(expense.DATE_ISSUE);
 							const receiptFile = expense.RECEIPT_FILE;
-							
+
 							const row = `<tr>
 								<td class="py-2 px-4 text-center">${index + 1}</td>
 								<td class="py-2 px-4">
@@ -202,13 +203,13 @@ $(document).ready(async function () {
 									<input type="date" name="date_issue_4[]" class="input input-sm border rounded-lg px-3 py-1 w-full focus:ring-2 bg-white focus:ring-purple-400 transition" value="${dateIssue}">
 								</td>
 								<td class="py-2 px-4">
-									${receiptFile ? 
-										`<div class="flex items-center gap-2">
+									${receiptFile ?
+									`<div class="flex items-center gap-2">
 											<a href="${host}gpform/GP-CLER/main/preview/${receiptFile}" target="_blank" class="text-blue-600 text-xs underline">View</a>
 											<input type="file" name="receipt_file_4[]" class="file-input file-input-sm file-input-bordered w-full max-w-xs rounded-lg border-purple-400">
 										</div>` :
-										`<input type="file" name="receipt_file_4[]" class="file-input file-input-sm file-input-bordered w-full max-w-xs rounded-lg border-purple-400">`
-									}
+									`<input type="file" name="receipt_file_4[]" class="file-input file-input-sm file-input-bordered w-full max-w-xs rounded-lg border-purple-400">`
+								}
 								</td>
 								<td class="py-2 px-4 text-center">
 									<button type="button" class="remove-row bg-red-500 hover:bg-red-600 text-white rounded-full w-8 h-8 flex items-center cursor-pointer justify-center shadow transition" title="Remove row"> &times; </button>
@@ -217,7 +218,7 @@ $(document).ready(async function () {
 							$breakTbody.append(row);
 						});
 					}
-					
+
 					calculateTotalsSplit();
 				}
 			}
@@ -326,33 +327,30 @@ $(document).ready(async function () {
 
 		if (action === "approve" && $("#emp_select").length) {
 			const approver = $("#emp_select").val();
-			if (!approver) {
-				alert("กรุณาเลือก Approver");
-				$("#emp_select").focus();
-				return;
+			if (approver) { // ถ้าไม่ได้เลือกก็ไม่ต้อง Update
+				$("#loading-overlay").show(); // Show loading overlay before sending the request
+				await $.ajax({
+					type: "post",
+					url: host + "gpform/GP-ENT/main/NewApproveController",
+					data: {
+						approver,
+						nfrmno,
+						vorgno,
+						cyear,
+						cyear2,
+						nrunno,
+					},
+					success: function (response) {
+						console.log(response);
+					},
+					error: function (xhr) {
+						console.log(xhr);
+					},
+					complete: function () {
+						$("#loading-overlay").hide(); // Hide loading overlay after the request completes
+					},
+				});
 			}
-			$("#loading-overlay").show(); // Show loading overlay before sending the request
-			await $.ajax({
-				type: "post",
-				url: host + "gpform/GP-ENT/main/NewApproveController",
-				data: {
-					approver,
-					nfrmno,
-					vorgno,
-					cyear,
-					cyear2,
-					nrunno,
-				},
-				success: function (response) {
-					console.log(response);
-				},
-				error: function (xhr) {
-					console.log(xhr);
-				},
-				complete: function () {
-					$("#loading-overlay").hide(); // Hide loading overlay after the request completes
-				},
-			});
 		}
 
 		// ทำ action ต่อ

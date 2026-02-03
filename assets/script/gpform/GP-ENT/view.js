@@ -266,6 +266,7 @@ $(document).ready(async function () {
 			CYEAR: cyear,
 			CYEAR2: cyear2,
 			NRUNNO: nrunno,
+			showStep: true
 		}
 	);
 	$(".flow").html(flow.html);
@@ -283,33 +284,30 @@ $(document).ready(async function () {
 		// เงื่อนไขใหม่: ถ้ามี #emp_select และ action = approve
 		if (action === "approve" && $("#emp_select").length) {
 			const approver = $("#emp_select").val();
-			if (!approver) {
-				alert("กรุณาเลือก Approver");
-				$("#emp_select").focus();
-				return;
+			if (approver) { // ถ้าไม่ได้เลือกก็ไม่ต้อง Update
+				$("#loading-overlay").show(); // Show loading overlay before sending the request
+				await $.ajax({
+					type: "post",
+					url: host + "gpform/GP-ENT/main/NewApproveController",
+					data: {
+						approver,
+						nfrmno,
+						vorgno,
+						cyear,
+						cyear2,
+						nrunno,
+					},
+					success: function (response) {
+						console.log(response);
+					},
+					error: function (xhr) {
+						console.log(xhr);
+					},
+					complete: function () {
+						$("#loading-overlay").hide(); // Hide loading overlay after the request completes
+					},
+				});
 			}
-			$("#loading-overlay").show(); // Show loading overlay before sending the request
-			await $.ajax({
-				type: "post",
-				url: host + "gpform/GP-ENT/main/NewApproveController",
-				data: {
-					approver,
-					nfrmno,
-					vorgno,
-					cyear,
-					cyear2,
-					nrunno,
-				},
-				success: function (response) {
-					console.log(response);
-				},
-				error: function (xhr) {
-					console.log(xhr);
-				},
-				complete: function () {
-					$("#loading-overlay").hide(); // Hide loading overlay after the request completes
-				},
-			});
 		}
 
 		if ($("input[name='accept']").length > 0) {
