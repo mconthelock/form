@@ -1009,7 +1009,7 @@ WHERE L.R27M09 = '".trim($firstno[0]->FIRSTNO)."'";
                     throw new Exception("Failed to update first no.");
                 }else
                 {
-                    $newcnng="F260239";
+                   // $newcnng="F260239";
                     $cnform    = $this->frm->getForm($nfrmno,  $vorgno, $cyear,  $cyear2,  $nrunno);
                     $form["REQBY"] = $cnform->VREQNO;
                     $form["INPUTBY"] = $cnform->INPUTBY; 
@@ -1037,7 +1037,7 @@ WHERE L.R27M09 = '".trim($firstno[0]->FIRSTNO)."'";
                                     'SVENDNAME' =>  $cnformpre[0]->SVENDNAME,
                                     'CLSNO'  =>   $cnformpre[0]->CLSNO,
                                     'RSNNO'  => $cnformpre[0]->RSNNO,
-                                    'RSNOTHER' => '1 st No.,'.$newcnng,
+                                    'RSNOTHER' => '1 st No.,'.$$newcnng[0]->R27M09,
                                     'TRANSNO' =>  $cnformpre[0]->TRANSNO,
                                     'DETTRANS' =>  $cnformpre[0]->DETTRANS,
                                     'PRTNAME' => $cnformpre[0]->PRTNAME,
@@ -1068,23 +1068,43 @@ WHERE L.R27M09 = '".trim($firstno[0]->FIRSTNO)."'";
                                         AND CYEAR2 = '".$cyear2."'
                                         AND NRUNNO = '".$nrunno."'";
                                 $this->cn->execsql($sqlOra); 
-                                  $cnformpre = $this->cn->customSelect("FLOW",array( 'NFRMNO' => $nfrmno,'VORGNO' => $vorgno,'CYEAR'  => $cyear,'CYEAR2' => $rsf["data"]->cyear2,'NRUNNO' => $rsf["data"]->nrunno ),'*');
-                    
+                                $cnflowpre = $this->cn->customSelect("FLOW",array( 'NFRMNO' => $nfrmno,'VORGNO' => $vorgno,'CYEAR'  => $cyear,'CYEAR2' => $cyear2,'NRUNNO' => $nrunno ,'CEXTDATA' => '06'),'*');
+                                if(count($cnflowpre) > 0)
+                                {
+                                        $key = array(
+                                            'NFRMNO' => $nfrmno,
+                                            'VORGNO' => $vorgno,
+                                            'CYEAR'  => $cyear,
+                                            'CYEAR2' => $rsf["data"]->cyear2,
+                                            'NRUNNO' => $rsf["data"]->nrunno,
+                                            'CEXTDATA' => '06'
+                                        );
+                                        $dataapv = array(
+                                            'VAPVNO' => $cnflowpre[0]->VAPVNO,
+                                            'VREPNO' => $cnflowpre[0]->VREPNO,
+                                        );
+                                         $this->cn->update("FLOW",  $dataapv , $key);
+                                         $key["CEXTDATA"] = '03';
+                                         $this->cn->update("FLOW",  $dataapv , $key);
+                                }
 
                                 $status = true;
                                 $message = "New CN/NG form created successfully.";
                             } else {
-                                throw new Exception("Failed to retrieve CN/NG form data.");
+                                $status = false;
+                                $message = "Failed to retrieve CN/NG form data.";
                             }
 
 
                     } else {
-                        throw new Exception("Failed to create new CN/NG form.");
+                        $status = false;
+                        $message = "Failed to create new CN/NG form.";
                     }
     
                 }
             } else {
-                throw new Exception("Failed to generate new CN/NG number.");
+                $status = false;
+                $message = "Failed to generate new CN/NG number.";
             }
             
         } else {
@@ -1096,7 +1116,7 @@ WHERE L.R27M09 = '".trim($firstno[0]->FIRSTNO)."'";
      }catch ( Exception $e) {
         $status = false;
         $message = "Failed to save data.";
-        var_dump($e->getMessage());
+        
     } finally {
         $res = [
             'status' => $status,

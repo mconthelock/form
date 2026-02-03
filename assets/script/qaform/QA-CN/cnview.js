@@ -92,7 +92,7 @@ $(document).ready(async function () {
                            if((formStatus == "3") && (mstatus == "1"))
                             {
                                 const res = await createcnng(baseForm);
-                                console.log("create cn ng"+res);
+                                
                             }
                                   
                                   let param = {
