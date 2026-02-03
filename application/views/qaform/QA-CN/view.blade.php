@@ -173,7 +173,7 @@
                             value="{{ $l }}"></span>
                         @else
                          <span>{{ $d->DWGNO }}</span>
-                         @if (($cextData >= 1) && ($cextData <= 3))
+                         @if ((($cextData >= 1) && ($cextData <= 3)) || ($cextData == 7))
                              <a OnClick="opendwg('{{ strtoupper(substr($d->DWGNO, 0, 9)) }}','')" style='cursor: pointer;' >openfile</a>
                          @endif
                         @endif  

@@ -91,11 +91,11 @@ $(document).ready(async function () {
                       if (formStatus == "2" || formStatus == "3") { 
                            if((formStatus == "3") && (mstatus == "1"))
                             {
-                                const res = await createcnng(baseForm);
+                                const resform = await createcnng(baseForm);
                                 
                             }
                                   
-                                  let param = {
+                              let param = {
                                   ...baseForm,                         
                                   FSTATUS: formStatus,
                                   MTYPE : mstatus == "1" ? 'PIC' : 'ALL'
