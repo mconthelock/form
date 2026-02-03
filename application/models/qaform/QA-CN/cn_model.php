@@ -13,12 +13,12 @@ class cn_model extends my_model
 
     public function execsql($q)
 	{
-		$this->db->query($q);
+		return $this->db->query($q);
 	}
     
     public function execAssql($q)
 	{
-		$this->dbas->query($q);
+		return $this->dbas->query($q);
 	}
 
     public function getdatasql($q)
