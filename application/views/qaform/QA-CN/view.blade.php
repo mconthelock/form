@@ -173,10 +173,8 @@
                             value="{{ $l }}"></span>
                         @else
                          <span>{{ $d->DWGNO }}</span>
-                         @if ((($cextData >= 1) && ($cextData <= 3)) || ($cextData == 7))
-                             <a OnClick="opendwg('{{ strtoupper(substr($d->DWGNO, 0, 9)) }}','')" style='cursor: pointer;' >openfile</a>
-                         @endif
                         @endif  
+                        @if (!empty($d->REVNO)) 
                         <span class="px-2">Rev no. :</span>
                         <span>
                             @if ((($form[0]->CST == "0")||($mode == $MODE_EDIT)) && in_array($empno, [$form[0]->VREQNO, $form[0]->VINPUTER]))
@@ -187,6 +185,12 @@
                                 {{ $d->REVNO }}
                             @endif  
                         </span>
+                        @endif  
+                        @if ((($cextData >= 1) && ($cextData <= 3)) || ($cextData == 7))
+                              <span class="px-2 text-red-600 font-semibold">
+                             <a OnClick="opendwg('{{ strtoupper(substr($d->DWGNO, 0, 9)) }}','')" style='cursor: pointer;' >openfile</a>
+                             </span>
+                         @endif
                         @if ((($form[0]->CST == "0")||($mode == $MODE_EDIT)) && in_array($empno, [$form[0]->VREQNO, $form[0]->VINPUTER]))
                         <span class="px-2">
                         <button type="button"  data-table = "dwg-body" class="text-red-500 hover:text-red-700 cursor-pointer del-table-row" >✕</button>  
