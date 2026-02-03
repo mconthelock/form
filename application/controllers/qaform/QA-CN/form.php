@@ -1018,6 +1018,7 @@ WHERE L.R27M09 = '".trim($firstno[0]->FIRSTNO)."'";
                     $form["REMARK"] = "";
                     $form["DRAFT"] = 1;
                     $rsf = $this->createForm($form);
+                    var_dump($rsf);
                     if ($rsf['status']) {
                         $stepDel = array([ 'CSTEPNO' => '04', 'CSTEPNEXTNO' => '19'],
                                          [ 'CSTEPNO' => '19', 'CSTEPNEXTNO' => '26'],
@@ -1025,7 +1026,7 @@ WHERE L.R27M09 = '".trim($firstno[0]->FIRSTNO)."'";
                                          [ 'CSTEPNO' => '10', 'CSTEPNEXTNO' => '13'],
                                          [ 'CSTEPNO' => '13', 'CSTEPNEXTNO' => '00']
                                           );
-                         $this->deleteFlowStep($stepDel,$nfrmno, $vorgno, $cyear, $rsf["data"]->cyear2, $rsf["data"]->nrunno);
+                         $this->deleteFlowStep($stepDel,$nfrmno, $vorgno, $cyear, $rsf["message"]->cyear2, $rsf["message"]->runno);
                          $cnformpre = $this->cn->customSelect("CNFORM",array( 'NFRMNO' => $nfrmno,'VORGNO' => $vorgno,'CYEAR'  => $cyear,'CYEAR2' => $cyear2,'NRUNNO' => $nrunno ),'*');
                             if(count($cnformpre) > 0)
                             {
