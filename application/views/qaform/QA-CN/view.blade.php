@@ -38,6 +38,8 @@
 <input type="hidden" name="chkopr" id="chkopr" value="{{ $chkopr }}" />
 <input type="hidden" name="demapv" id="demapv" value="{{ $demapv }}" />
 <input type="hidden" name="empno" id="empno" value="{{ $empno }}" />
+<input type="hidden" name="stepready" id="stepready" value="{{ !empty($stepready) ? $stepready[0]->CSTEPNO : '' }}" />
+
 
 <div class="w-full border border-gray-300 text-sm font-sans">
     

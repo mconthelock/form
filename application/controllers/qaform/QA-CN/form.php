@@ -2,9 +2,21 @@
 use GuzzleHttp\Client;
 defined('BASEPATH') OR exit('No direct script access allowed');
 require_once APPPATH.'controllers/_form.php';
+require_once APPPATH.'controllers/api/webform/form.php';
+require_once APPPATH.'controllers/api/webform/flow.php';
+require_once APPPATH.'controllers/api/webform/formmst.php';
+require_once APPPATH.'controllers/api/webform/isTid.php';
 require_once APPPATH . 'controllers/_file.php';
 class form extends MY_Controller{
-    use _Form, _File;
+    //use _Form, _File;
+    //use  formApi, flow, formmst, _File;
+        use _Form , _File , formApi, flow, formmst, isTid{
+        formApi::getMode insteadOf _Form;
+        formApi::getRequestNo  insteadOf _Form;
+        flow::getExtData insteadOf _Form;
+        flow::doaction insteadOf _Form;
+        _Form::getMode as getModeWebservice;
+    }
     protected $client;
     function __construct(){
 		parent::__construct();
@@ -64,9 +76,17 @@ class form extends MY_Controller{
             $data['return']   = false;
             $data['NRUNNO']   = $_GET["runNo"];
             $data['CYEAR2']   = $_GET["y2"];
+            $form  = [
+                    'NFRMNO' => $data['NFRMNO'],
+                    'VORGNO' => $data['VORGNO'],
+                    'CYEAR'  => $data['CYEAR'],
+                    'CYEAR2' => $data['CYEAR2'],
+                    'NRUNNO' => $data['NRUNNO'],
+                    'EMPNO' =>  $data['empno']
+            ];
             $data['empinf']   = $this->cn->customSelect("AMEC.AEMPLOYEE",array('SEMPNO' =>  $data['empno'] ),'*');
-            $data['cextData'] = intval($this->getExtdata($data['NFRMNO'], $data['VORGNO'], $data['CYEAR'],  $data['CYEAR2'],  $data['NRUNNO'], $data['empno']));
-            $data['mode']     = $this->getMode($data['NFRMNO'],  $data['VORGNO'], $data['CYEAR'],  $data['CYEAR2'],  $data['NRUNNO'], $data['empno']);
+            $data['cextData'] = intval($this->getExtdata($form));
+            $data['mode']     = $this->getMode($form);
             $data['form']     = $this->frm->getForm($data['NFRMNO'],  $data['VORGNO'], $data['CYEAR'],  $data['CYEAR2'],  $data['NRUNNO']);
             $data['formno'] = $this->toFormNumber($data['NFRMNO'],  $data['VORGNO'], $data['CYEAR'],  $data['CYEAR2'],  $data['NRUNNO']);
             $data['cnform'] = $this->cn->getcnform($data['NFRMNO'],  $data['VORGNO'], $data['CYEAR'],  $data['CYEAR2'],  $data['NRUNNO'])[0];
@@ -89,6 +109,14 @@ class form extends MY_Controller{
             $data['eng'] = array();
             $data['foreman'] = array();
             $data['opr'] = array();
+            $data['stepready'] = $this->frm->getCSETPNO(array(
+                'NFRMNO' => $data['NFRMNO'],
+                'VORGNO' => $data['VORGNO'],
+                'CYEAR'  => $data['CYEAR'],
+                'CYEAR2' => $data['CYEAR2'],
+                'NRUNNO' => $data['NRUNNO'],
+                'CSTEPST'=> '3'
+            ));  
             if(!empty($data['empinf']))
             {
                 
@@ -97,7 +125,8 @@ class form extends MY_Controller{
                 $data['foreman'] = $this->getForeman($data['empno']);
                 $data['opr'] =  $this->getOpr($data['cnform']->MSTATUS, $data['empinf']);
             }
-          
+            //var_dump($data['stepready']);
+            //exit;
             $this->views('qaform/QA-CN/view', $data);
         }
 
@@ -200,9 +229,6 @@ class form extends MY_Controller{
          ];
          $status = true;
          $message = "";
-         $rep = getRep(array('NFRMNO' =>  $nfrmno , 'VORGNO' => $vorgno , 'CYEAR' => $cyear , 'VEMPNO' => '15111'));
-         exit;
-
         try{
              
             if (isset($_POST['selJInchrg'])  && $_POST['selJInchrg'] != '') {
@@ -216,7 +242,6 @@ class form extends MY_Controller{
             }
  
             if (isset($_POST['selEInchrg'])  && $_POST['selEInchrg'] != '') {
-                 echo "if1";
                 $rep = $this->getRep(array('NFRMNO' =>  $nfrmno , 'VORGNO' => $vorgno , 'CYEAR' => $cyear , 'VEMPNO' => $_POST['selEInchrg']));
                 $dataapv = [
                         'VAPVNO' => $_POST['selEInchrg'],
@@ -759,7 +784,373 @@ class form extends MY_Controller{
         return count($rs) > 0;
     }
 
+
+
+public function buildmail()
+{
+    $nfrmno  = $_POST["NFRMNO"]  ?? null;
+    $vorgno  = $_POST["VORGNO"]  ?? null;
+    $cyear   = $_POST["CYEAR"]   ?? null;
+    $cyear2  = $_POST["CYEAR2"]  ?? null;
+    $nrunno  = $_POST["NRUNNO"]  ?? null;
+    $mtype   = $_POST["MTYPE"]   ?? null;
+    $fstatus = $_POST["FSTATUS"] ?? null;
+    $formno = $this->toFormNumber($nfrmno,  $vorgno, $cyear,  $cyear2,  $nrunno);
+    $data = array();
+        // ---- To ----
+          $rsEmail = $this->getApvEmail([
+            'NFRMNO' => $nfrmno,
+            'VORGNO' => $vorgno,
+            'CYEAR'  => $cyear,
+            'CYEAR2' => $cyear2,
+            'NRUNNO' => $nrunno,
+            'TYPE'  => ($mtype === "FOREMAN") ? "FOREMAN" : ($mtype === "PIC") ? "PIC" : ($mtype === "REQUESTER") ? "REQUESTER" : "ALL"
+        ]);
+        $emails = array_column($rsEmail, 'EMAIL');
+        $data["to"] = implode(',', $emails);
+        $rs = $this->cn->getcnresult($nfrmno, $vorgno, $cyear, $cyear2, $nrunno);
+        $first = $rs[0] ?? null;
+    if ($mtype === "ALL") {
+        // ---- SUBJECT ----
+        $data["subject"] =
+            ($fstatus == "2") ? "E-Form {$formno} was approved" :
+            (($fstatus == "3") ? "E-Form {$formno} was rejected" : "");
+        // ---- HTML BODY ----
+                // ---- CONTENT ----
+        if ($first) {
+            $data["html"] = <<<HTML
+<div>Changing notice no.: {$formno}</div>
+<div>Supplier or Sub-contractor Name: {$first->SVENDNAME}</div>
+<div>Part Name: {$first->PRTNAME}</div>
+HTML;
+
+            foreach ($rs as $r) {
+                $data["html"] .= "<div>Drawing No.: {$r->DWGNO}</div>";
+            }
+
+            $data["html"] .= "<div>Status: {$first->JUDGEMENT}</div>";
+        } else {
+            $data["html"] = "<div>No data found</div>";
+        }
+
+     //  var_dump($rsEmail);
+      // exit;
+    }else if ($mtype === "FOREMAN") {
+         $data["subject"] = "E-Form ".$formno;
+         $data["html"] = "<div>Changing notice no.: ".$formno."</div>";
+         if ($first) {
+                $data["html"] .= "<div>First no.: ".$first->FIRSTNO."</div>";
+                $data["html"] .= "<div>Part Name: ".$first->PRTNAME."</div>";
+                $i = 1;
+                foreach ($rs as $r) {
+                    if($i == 1)
+                    {
+                        $data["html"] .= "<div>Drawing No.: ".$r->DWGNO."</div>";
+                    }else{ 
+                        $data["html"] .= "<div>&nbsp;&nbsp;&nbsp;&nbsp;".$r->DWGNO."</div>";
+                    }
+                    $i++;
+                }
+         }
+         
+    }else if ($mtype === "PIC") {
+         $data["subject"] = "Result of ".$formno;
+         $data["html"] = "<div>Changing notice no.: ".$formno."</div>";
+         if ($first) {
+                $data["html"] .= "<div>First no.: ".$first->FIRSTNO."</div>";
+                $data["html"] .= "<div>Part Name: ".$first->PRTNAME."</div>";
+                $i = 1;
+                foreach ($rs as $r) {
+                    if($i == 1)
+                    {
+                        $data["html"] .= "<div>Drawing No.: ".$r->DWGNO."</div>";
+                    }else{ 
+                        $data["html"] .= "<div>&nbsp;&nbsp;&nbsp;&nbsp;".$r->DWGNO."</div>";
+                    }
+                    $i++;
+                }
+                $data["html"] .= "<div>Status: ". ($fstatus == "2" ? "Approved" : ($fstatus == "3" ? "Rejected" : "Unknown")) ."</div>";
+         }
+         
+    }else if( $mtype === "REQUESTER"){
+            $data["subject"] = "E-Form ".$formno." has been returned";
+            $data["html"] = "<div>Changing notice no.: ".$formno."</div>";
+            if ($first) {
+                    $data["html"] .= "<div>First no.: ".$first->FIRSTNO."</div>";
+                    $data["html"] .= "<div>Part Name: ".$first->PRTNAME."</div>";
+                    $i = 1;
+                    foreach ($rs as $r) {
+                        if($i == 1)
+                        {
+                            $data["html"] .= "<div>Drawing No.: ".$r->DWGNO."</div>";
+                        }else{ 
+                            $data["html"] .= "<div>&nbsp;&nbsp;&nbsp;&nbsp;".$r->DWGNO."</div>";
+                        }
+                        $i++;
+                    }
+            }
+    }
+
+    echo json_encode($data);
+}
+
+private function getApvEmail($data)
+    {
+        if($data['TYPE'] == "PIC")
+        {
+                 $sql = " SELECT DISTINCT e.SRECMAIL AS EMAIL
+                FROM FLOW f
+                JOIN AMEC.AEMPLOYEE e 
+                    ON f.VREALAPV = e.SEMPNO
+                WHERE f.NFRMNO  = '".$data['NFRMNO']."'
+                AND f.VORGNO  = '".$data['VORGNO']."'
+                AND f.CYEAR   = '".$data['CYEAR']."'
+                AND f.CYEAR2  = '".$data['CYEAR2']."'
+                AND f.NRUNNO  = '".$data['NRUNNO']."'
+                AND e.CSTATUS = '1' AND CSTEPNO in ('--','06') union 
+                SELECT DISTINCT e.SRECMAIL AS EMAIL FROM CNSHOPPIC c JOIN AMEC.AEMPLOYEE e ON c.ENG = e.SEMPNO
+                WHERE c.FM in (select VAPVNO from FLOW where NFRMNO = '".$data['NFRMNO']."' AND VORGNO = '".$data['VORGNO']."' AND CYEAR = '".$data['CYEAR']."' AND CYEAR2 = '".$data['CYEAR2']."' AND NRUNNO = '".$data['NRUNNO']."' and CEXTDATA ='06') ";
+
+        }else if($data['TYPE'] == "REQUESTER")
+        { $sql = " SELECT DISTINCT e.SRECMAIL AS EMAIL
+                FROM FLOW f
+                JOIN AMEC.AEMPLOYEE e 
+                    ON f.VREALAPV = e.SEMPNO
+                WHERE f.NFRMNO  = '".$data['NFRMNO']."'
+                AND f.VORGNO  = '".$data['VORGNO']."'
+                AND f.CYEAR   = '".$data['CYEAR']."'
+                AND f.CYEAR2  = '".$data['CYEAR2']."'
+                AND f.NRUNNO  = '".$data['NRUNNO']."'
+                AND e.CSTATUS = '1' AND CSTEPNO in ('--')";
+        }else{
+            $sql = " SELECT DISTINCT e.SRECMAIL AS EMAIL
+                FROM FLOW f
+                JOIN AMEC.AEMPLOYEE e 
+                    ON f.VREALAPV = e.SEMPNO
+                WHERE f.NFRMNO  = '".$data['NFRMNO']."'
+                AND f.VORGNO  = '".$data['VORGNO']."'
+                AND f.CYEAR   = '".$data['CYEAR']."'
+                AND f.CYEAR2  = '".$data['CYEAR2']."'
+                AND f.NRUNNO  = '".$data['NRUNNO']."'
+                AND e.CSTATUS = '1'";
+            if ($data['TYPE'] == "FOREMAN") {
+                $sql .= " AND f.CEXTDATA = '06' ";
+            }else if ($data['TYPE'] === "ALL") {
+                $sql .= " AND f.CSTEPNO NOT IN ('05','04','11') ";
+            }
+    }    
+        return $this->cn->getdatasql($sql);
+    }
+
+public function createcnng()
+{
+    try {
+        $status = false;
+        $message = "";
+        $nfrmno  = $_POST["NFRMNO"]  ?? null;
+        $vorgno  = $_POST["VORGNO"]  ?? null;
+        $cyear   = $_POST["CYEAR"]   ?? null;
+        $cyear2  = $_POST["CYEAR2"]  ?? null;
+        $nrunno  = $_POST["NRUNNO"]  ?? null;
+        $form = array(
+            'NFRMNO' => $nfrmno,
+            'VORGNO' => $vorgno,
+            'CYEAR'  => $cyear
+        );         
+        $firstno = $this->cn->getfirstno($nfrmno, $vorgno, $cyear, $cyear2, $nrunno);
+        if (count($firstno) > 0) {
+            $sqlas = "SELECT
+            'F'||VARCHAR_FORMAT(CURRENT DATE, 'YY')||
+            RIGHT(
+                DIGITS(
+                COALESCE(
+                    INTEGER(
+                    RIGHT(
+                        (SELECT MAX(R27M09)
+                        FROM DATALIBO.R027MP1 WHERE R27M09 LIKE 'F'||VARCHAR_FORMAT(CURRENT DATE, 'YY')||'%'
+                        
+                        ),
+                        4
+                    )
+                    ),
+                    0
+                ) + 1
+                ),
+                4
+            ) AS R27M09
+            FROM DATALIBO.R027MP1
+            WHERE R27M09 = '".trim($firstno[0]->FIRSTNO)."'";
+            $newcnng = $this->cn->getdataAssql($sqlas);
+
+            if(count($newcnng) > 0) {
+          $sqlas = "INSERT INTO DATALIBO.R027MP1(R27M01 , R27M02 , R27M03 , R27M04 , R27M05 , R27M06 , R27M07 , R27M08 , R27M09 , R27M10 , R27M11 , R27M12 , R27M13 , R27M14)
+SELECT
+  L.R27M01,
+  L.R27M02,
+  L.R27M03,
+  L.R27M04,
+  L.R27M05,
+  L.R27M06,
+  L.R27M07,
+  L.R27M08,
+
+   '".$newcnng[0]->R27M09."' AS R27M09,
+
+  L.R27M10,
+  L.R27M11,
+  L.R27M12,
+  VARCHAR_FORMAT(CURRENT DATE, 'YYYYMMDD') AS R27M13,
+  L.R27M14
+
+FROM DATALIBO.R027MP1 L
+WHERE L.R27M09 = '".trim($firstno[0]->FIRSTNO)."'";
+                //echo $sqlas;
+
+                $res = $this->cn->execAssql($sqlas);
+                //var_dump($res);
+                if (!$res) {
+                    //throw new Exception("Failed to update first no.");
+                       $status = false;
+                        $message = "Failed to update first no.";
+                }else
+                {
+                   // $newcnng="F260239";
+                    $cnform    = $this->frm->getForm($nfrmno,  $vorgno, $cyear,  $cyear2,  $nrunno);
+                    $form["REQBY"] = $cnform[0]->VREQNO;
+                    $form["INPUTBY"] = $cnform[0]->VINPUTER; 
+                    $form["REMARK"] = "";
+                    $form["DRAFT"] = 1;
+                    $rsf = $this->createForm($form);
+                    //var_dump($rsf);
+                    if ($rsf['status']) {
+                        $stepDel = array([ 'CSTEPNO' => '04', 'CSTEPNEXTNO' => '19'],
+                                         [ 'CSTEPNO' => '19', 'CSTEPNEXTNO' => '26'],
+                                         [ 'CSTEPNO' => '26', 'CSTEPNEXTNO' => '07'],
+                                         [ 'CSTEPNO' => '10', 'CSTEPNEXTNO' => '13'],
+                                         [ 'CSTEPNO' => '13', 'CSTEPNEXTNO' => '00']
+                                          );
+                         $this->deleteFlowStep($stepDel,$nfrmno, $vorgno, $cyear, $rsf["data"]["CYEAR2"], $rsf["data"]["NRUNNO"]);
+                         $cnformpre = $this->cn->customSelect("CNFORM",array( 'NFRMNO' => $nfrmno,'VORGNO' => $vorgno,'CYEAR'  => $cyear,'CYEAR2' => $cyear2,'NRUNNO' => $nrunno ),'*');
+                            if(count($cnformpre) > 0)
+                            {
+                                $datacn = array(
+                                    'NFRMNO' => $nfrmno,
+                                    'VORGNO' => $vorgno,
+                                    'CYEAR'  => $cyear,
+                                    'CYEAR2' => $rsf["data"]["CYEAR2"],
+                                    'NRUNNO' => $rsf["data"]["NRUNNO"],
+                                    'TITLE'  => $cnformpre[0]->TITLE,
+                                    'SVENDNAME' =>  $cnformpre[0]->SVENDNAME,
+                                    'CLSNO'  =>   $cnformpre[0]->CLSNO,
+                                    'RSNNO'  => $cnformpre[0]->RSNNO,
+                                    'RSNOTHER' => '1 st No.,'.$newcnng[0]->R27M09,
+                                    'TRANSNO' =>  $cnformpre[0]->TRANSNO,
+                                    'DETTRANS' =>  $cnformpre[0]->DETTRANS,
+                                    'PRTNAME' => $cnformpre[0]->PRTNAME,
+                                    'PURITEM' => $cnformpre[0]->PURITEM,
+                                    'INVNO' =>  $cnformpre[0]->INVNO,
+                                    'ITEMNO' => $cnformpre[0]->ITEMNO,
+                                    'ORDERNO' => $cnformpre[0]->ORDERNO,
+                                    'ORDQ' => $cnformpre[0]->ORDQ,
+                                    'PRTLOC' => $cnformpre[0]->PRTLOC,
+                                    'PRDCTNAME' =>  $cnformpre[0]->PRDCTNAME,
+                                    'AFTCHANGE' => $cnformpre[0]->AFTCHANGE,
+                                    'MSTATUS' => '1'
+                                );
+                                $this->cn->insert("CNFORM", $datacn);
+                                $sqlOra = "INSERT INTO RESULTCHKDWG (NFRMNO,VORGNO,CYEAR,CYEAR2,NRUNNO,DWGNO,REVNO)
+                                        SELECT
+                                            '".$nfrmno."' AS NFRMNO,
+                                            '".$vorgno."' AS VORGNO,
+                                            '".$cyear."' AS CYEAR,
+                                            '".$rsf["data"]["CYEAR2"]."' AS CYEAR2,
+                                            '".$rsf["data"]["NRUNNO"]."' AS NRUNNO,
+                                            DWGNO,
+                                            REVNO
+                                        FROM RESULTCHKDWG
+                                        WHERE NFRMNO = '".$nfrmno."'
+                                        AND VORGNO = '".$vorgno."'
+                                        AND CYEAR  = '".$cyear."'
+                                        AND CYEAR2 = '".$cyear2."'
+                                        AND NRUNNO = '".$nrunno."'";
+                                $this->cn->execsql($sqlOra); 
+                                $cnflowpre = $this->cn->customSelect("FLOW",array( 'NFRMNO' => $nfrmno,'VORGNO' => $vorgno,'CYEAR'  => $cyear,'CYEAR2' => $cyear2,'NRUNNO' => $nrunno ,'CEXTDATA' => '06'),'*');
+                                if(count($cnflowpre) > 0)
+                                {
+                                        $key = array(
+                                            'NFRMNO' => $nfrmno,
+                                            'VORGNO' => $vorgno,
+                                            'CYEAR'  => $cyear,
+                                            'CYEAR2' => $rsf["data"]["CYEAR2"],
+                                            'NRUNNO' => $rsf["data"]["NRUNNO"],
+                                            'CEXTDATA' => '06'
+                                        );
+                                        $dataapv = array(
+                                            'VAPVNO' => $cnflowpre[0]->VAPVNO,
+                                            'VREPNO' => $cnflowpre[0]->VREPNO,
+                                        );
+                                         $this->cn->update("FLOW",  $dataapv , $key);
+                                         $key["CEXTDATA"] = '03';
+                                         $this->cn->update("FLOW",  $dataapv , $key);
+
+                                }
+                                $cnflowpre = $this->cn->customSelect("FLOW",array( 'NFRMNO' => $nfrmno,'VORGNO' => $vorgno,'CYEAR'  => $cyear,'CYEAR2' => $cyear2,'NRUNNO' => $nrunno ,'CSTEPNO' => '--'),'*');
+                                if(count($cnflowpre) > 0)
+                                {
+                                        $key = array(
+                                            'NFRMNO' => $nfrmno,
+                                            'VORGNO' => $vorgno,
+                                            'CYEAR'  => $cyear,
+                                            'CYEAR2' => $rsf["data"]["CYEAR2"],
+                                            'NRUNNO' => $rsf["data"]["NRUNNO"],
+                                            'CSTEPNO' => '--'
+                                        );
+                                        $dataapv = array(
+                                            'VREPNO' => $this->getRep(array('NFRMNO' =>  $nfrmno , 'VORGNO' => $vorgno , 'CYEAR' => $cyear , 'VEMPNO' => $cnflowpre[0]->VAPVNO )),
+                                        );
+                                         $this->cn->update("FLOW",  $dataapv , $key);
+
+                                }
+                                $status = true;
+                                $message = "New CN/NG form created successfully.";
+                            } else {
+                                $status = false;
+                                $message = "Failed to retrieve CN/NG form data.";
+                            }
+
+
+                    } else {
+                        $status = false;
+                        $message = "Failed to create new CN/NG form.";
+                    }
     
+                }
+            } else {
+                $status = false;
+                $message = "Failed to generate new CN/NG number.";
+            }
+            
+        } else {
+            $status = false;
+            $message = "Failed to retrieve first no.";
+        }
+
+            
+     }catch ( Exception $e) {
+        $status = false;
+        $message = "Failed to save data.";
+        //var_dump($e->getMessage());
+        
+    } finally {
+        $res = [
+            'status' => $status,
+            'message' => $message
+        ];
+        echo json_encode($res);
+    }
+}
+
+
 
 
 }

@@ -33,6 +33,13 @@ $(document).ready(async function () {
 
   $(".btn-submit").click(async function () {
       let action = $(this).data("action");
+      const baseForm = {
+        NFRMNO: nfrmno,
+        VORGNO: vorgno,
+        CYEAR: cyear,
+        CYEAR2: cyear2,
+        NRUNNO: nrunno
+      };
       if(checkData(action))
       {
           action = (action === "returnrem") ? "return" : action;
@@ -45,9 +52,12 @@ $(document).ready(async function () {
           cnformData.append("nrunno", nrunno);
           cnformData.append("action", action);
           cnformData.append("empno", empno);
-          //for (let pair of cnformData.entries()) {
-          //console.log(pair[0] + ' = ' + pair[1]);
-      ///}
+          let mstatus = cnformData.get('mstatus');
+          let cextData = parseInt(cnformData.get('cextData'));
+          let stepready = cnformData.get('stepready');
+      //     for (let pair of cnformData.entries()) {
+      //     console.log(pair[0] + ' = ' + pair[1]);
+      // }
        
          // console.log(empno);
           
@@ -57,21 +67,17 @@ $(document).ready(async function () {
           if(action == "approve" || action == "reject")
           {
                   let act;
-                  let cextData =  parseInt($("#cextData").val());
+                  //let cextData =  parseInt($("#cextData").val());
                   if(cextData >1 && cextData != 5 && action == "reject")
                   {
                       act = "approve";
                   }else{
                       act = action;
                   }
-                  console.log("action ="+act);
+                  //console.log("action ="+act);
                   
                   const confirm = await doaction({
-                      NFRMNO: nfrmno,
-                      VORGNO: vorgno,
-                      CYEAR: cyear,
-                      CYEAR2: cyear2,
-                      NRUNNO: nrunno,
+                       ...baseForm,
                       ACTION: act,
                       EMPNO: empno,
                       REMARK: $("#txtRemark").val()
@@ -79,38 +85,93 @@ $(document).ready(async function () {
                   if (confirm.status) {
                     const statusact = await actionfrm(cnformData);
                     const formStatus = await getFormStatus({
-                        NFRMNO: nfrmno,
-                        VORGNO: vorgno,
-                        CYEAR: cyear,
-                        CYEAR2: cyear2,
-                        NRUNNO: nrunno
+                       ...baseForm
                     });
-                          let formno = getFormno({
-                             NFRMNO: nfrmno,
-                             VORGNO: vorgno,
-                             CYEAR: cyear,
-                             CYEAR2: cyear2,
-                            NRUNNO: nrunno
-                        });
-                        let subject = formStatus === 2 ? " was approved" : "  was rejected";
-                        objmail = {
-                            from: 'noreplay@MitsubishiElevatorAsia.co.th',
-                            to:'kanittha@MitsubishiElevatorAsia.co.th,kunyanee@MitsubishiElevatorAsia.co.th',
-                            subject: 'E-Form '+formno+' '+subject,
-                            html: '<p>Dear All,<br/>The E-Form '+formno+' '+subject+'.<br/>Please check more details at E-Form System.</p>'
-                        };
-                        sendmail(objmail);
-                    if (statusact.status) redirectWebflow();
-                  }
+                    
+                      if (formStatus == "2" || formStatus == "3") { 
+                           if((formStatus == "3") && (mstatus == "1"))
+                            {
+                                const res = await createcnng(baseForm);
+                                
+                            }
+                                  
+                                  let param = {
+                                  ...baseForm,                         
+                                  FSTATUS: formStatus,
+                                  MTYPE : mstatus == "1" ? 'PIC' : 'ALL'
+                              };
+
+                              const res = await buildmail(param);
+
+                              if (!res.to || !res.subject || !res.html) {
+                                  throw 'Mail data is incomplete';
+                              }
+
+                              let objmail = {
+                                  from: 'noreplay@MitsubishiElevatorAsia.co.th',
+                                  to: res.to,
+                                  subject: res.subject,
+                                  html: res.html
+                              };
+
+                              // รอให้ส่งเมลเสร็จก่อน
+                              await sendmail(objmail);
+                      }else if((stepready == "06") && (mstatus == "1"))
+                      {
+                              let param = {
+                                  ...baseForm,                        
+                                  FSTATUS: formStatus,
+                                  MTYPE : 'FOREMAN'
+                              };
+                                    const res = await buildmail(param);
+
+                              if (!res.to || !res.subject || !res.html) {
+                                  throw 'Mail data is incomplete';
+                              }
+
+                              let objmail = {
+                                  from: 'noreplay@MitsubishiElevatorAsia.co.th',
+                                  to: res.to,
+                                  subject: res.subject,
+                                  html: res.html
+                              };
+
+                              // รอให้ส่งเมลเสร็จก่อน
+                              await sendmail(objmail);
+                      }
+                      // แล้วค่อย redirect
+                      if (statusact.status) {
+                          //redirectWebflow();
+                      }
+                    }
               
           }else
           {
-             console.log(action);
+             //console.log(action);
               const statusact = await actionfrm(cnformData);
+              if(action == "return")
+                {
+                           let param = {
+                                  ...baseForm,                         
+                                  FSTATUS: '1',
+                                  MTYPE : 'REQUESTER'
+                              };
+                                    const res = await buildmail(param);
+
+                              if (!res.to || !res.subject || !res.html) {
+                                  throw 'Mail data is incomplete';
+                              }
+                              let objmail = {
+                                  from: 'noreplay@MitsubishiElevatorAsia.co.th',
+                                  to: res.to,
+                                  subject: res.subject,
+                                  html: res.html
+                              };
+                              // รอให้ส่งเมลเสร็จก่อน
+                              await sendmail(objmail);
+                }
               if (statusact.status) redirectWebflow();
           }
-
-
       }
       
       // console.log($("#chkopr").val() );
@@ -282,6 +343,44 @@ function actionfrm(data)
         showLoader(false);
         console.log("complete");
       },
+    });
+  });
+
+}
+
+function buildmail(formno)
+{
+    return new Promise((resolve, reject) => { 
+          $.ajax({
+      url: host + "qaform/QA-CN/form/buildmail",
+      type: "post",
+      dataType: "json",
+      data: formno,
+           success: function (res) {
+                resolve(res);  
+            },
+            error: function (xhr, status, error) {
+                reject(error);
+            }
+    });
+  });
+
+}
+
+function createcnng(formno)
+{
+    return new Promise((resolve, reject) => { 
+          $.ajax({
+      url: host + "qaform/QA-CN/form/createcnng",
+      type: "post",
+      dataType: "json",
+      data: formno,
+           success: function (res) {
+                resolve(res);  
+            },
+            error: function (xhr, status, error) {
+                reject(error);
+            }
     });
   });
 
