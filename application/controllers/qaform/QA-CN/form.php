@@ -1013,8 +1013,8 @@ WHERE L.R27M09 = '".trim($firstno[0]->FIRSTNO)."'";
                 {
                    // $newcnng="F260239";
                     $cnform    = $this->frm->getForm($nfrmno,  $vorgno, $cyear,  $cyear2,  $nrunno);
-                    $form["REQBY"] = $cnform->VREQNO;
-                    $form["INPUTBY"] = $cnform->VINPUTER; 
+                    $form["REQBY"] = $cnform[0]->VREQNO;
+                    $form["INPUTBY"] = $cnform[0]->VINPUTER; 
                     $form["REMARK"] = "";
                     $form["DRAFT"] = 1;
                     $rsf = $this->createForm($form);
