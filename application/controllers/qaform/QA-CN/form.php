@@ -981,6 +981,7 @@ public function createcnng()
             FROM DATALIBO.R027MP1
             WHERE R27M09 = '".trim($firstno[0]->FIRSTNO)."'";
             $newcnng = $this->cn->getdataAssql($sqlas);
+
             if(count($newcnng) > 0) {
           $sqlas = "INSERT INTO DATALIBO.R027MP1(R27M01 , R27M02 , R27M03 , R27M04 , R27M05 , R27M06 , R27M07 , R27M08 , R27M09 , R27M10 , R27M11 , R27M12 , R27M13 , R27M14)
 SELECT
@@ -1040,7 +1041,7 @@ WHERE L.R27M09 = '".trim($firstno[0]->FIRSTNO)."'";
                                     'SVENDNAME' =>  $cnformpre[0]->SVENDNAME,
                                     'CLSNO'  =>   $cnformpre[0]->CLSNO,
                                     'RSNNO'  => $cnformpre[0]->RSNNO,
-                                    'RSNOTHER' => '1 st No.,'.$$newcnng[0]->R27M09,
+                                    'RSNOTHER' => '1 st No.,'.$newcnng[0]->R27M09,
                                     'TRANSNO' =>  $cnformpre[0]->TRANSNO,
                                     'DETTRANS' =>  $cnformpre[0]->DETTRANS,
                                     'PRTNAME' => $cnformpre[0]->PRTNAME,
