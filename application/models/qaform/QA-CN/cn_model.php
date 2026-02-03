@@ -51,6 +51,54 @@ class cn_model extends my_model
         ->where('Q.NRUNNO', $nrunno);
     return $this->db->get()->result();
     }
+    
+    public function getcnresult($nfrmno, $vorgno, $cyear, $cyear2, $nrunno)
+    {
+    $sqlOra = "
+        SELECT
+            cnj.jdgmntno,
+            cnj.judgement,
+            cnf.jdgother,
+            cnf.svendname,
+            cnf.prtname,
+            resultChkDwg.dwgno,
+            resultChkDwg.result,
+            REGEXP_SUBSTR(cnf.RSNOTHER, 'F[0-9]+') AS FIRSTNO,
+            REGEXP_SUBSTR(DETTRANS, 'shop at\\s*(.*)', 1, 1, NULL, 1) AS SHOPNO
+        FROM cnform cnf
+        LEFT JOIN cnjudgement cnj
+               ON cnj.jdgmntno = cnf.jdgmntno
+        INNER JOIN resultChkDwg
+                ON resultChkDwg.nfrmno = cnf.nfrmno
+               AND resultChkDwg.vorgno = cnf.vorgno
+               AND resultChkDwg.cyear  = cnf.cyear
+               AND resultChkDwg.cyear2 = cnf.cyear2
+               AND resultChkDwg.nrunno = cnf.nrunno
+        WHERE cnf.nfrmno = ?
+          AND cnf.vorgno = ?
+          AND cnf.cyear  = ?
+          AND cnf.cyear2 = ?
+          AND cnf.nrunno = ?
+    ";
+
+    return $this->db->query(
+        $sqlOra,
+        [$nfrmno, $vorgno, $cyear, $cyear2, $nrunno]
+    )->result();
+    }
+
+    public function getfirstno($nfrmno, $vorgno, $cyear, $cyear2, $nrunno)
+    {
+        $this->db
+        ->select('REGEXP_SUBSTR(RSNOTHER, \'F[0-9]+\') AS FIRSTNO')
+        ->from('CNFORM ')
+                 ->where('NFRMNO', $nfrmno)
+                 ->where('VORGNO', $vorgno)
+                 ->where('CYEAR', $cyear)
+                 ->where('CYEAR2', $cyear2)
+                 ->where('NRUNNO', $nrunno);
+        return $this->db->get()->result();
+    }
 
 
 }
