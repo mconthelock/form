@@ -795,15 +795,15 @@ $(document).ready(function () {
 		if (remain >= 0) {
 			$remark.prop("required", false);
 			$remain.css("color", "#16a34a");
-			$remainAlert.html(
-				'<span class="text-green-700">ค่าใช้จ่ายจริงไม่เกินยอดประมาณการ</span>'
-			);
+			// $remainAlert.html(
+			// 	'<span class="text-green-700">ค่าใช้จ่ายจริงไม่เกินยอดประมาณการ</span>'
+			// );
 		} else {
 			$remark.prop("required", true);
 			$remain.css("color", "#dc2626");
-			$remainAlert.html(
-				'<span class="text-red-600">ค่าใช้จ่ายจริงเกินประมาณการ กรุณาระบุเหตุผลใน Remark</span>'
-			);
+			// $remainAlert.html(
+			// 	'<span class="text-red-600">ค่าใช้จ่ายจริงเกินประมาณการ กรุณาระบุเหตุผลใน Remark</span>'
+			// );
 		}
 	});
 

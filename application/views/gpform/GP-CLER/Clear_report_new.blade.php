@@ -253,7 +253,7 @@
                                     </tr>
                                     <tr>
                                         <th class="w-1/4 text-left font-semibold py-2 pl-4 border-b-2 border-green-200 bg-green-100">Requested by</th>
-                                        <td class="py-2 pl-4 border-b-2 border-green-200">{{ $formCler->INPUT_NAME }}</td>
+                                        <td class="py-2 pl-4 border-b-2 border-green-200">{{ $formCler->REQ_NAME }}</td>
                                     </tr>
                                     <tr>
                                         <th class="w-1/4 text-left font-semibold py-2 pl-4 border-b-2 border-green-200 bg-green-100">President</th>
@@ -443,7 +443,7 @@
                                     }),
                                     7 => array_filter($expense, function ($ex) {
                                         return isset($ex->TYPE) && $ex->TYPE == '7';
-                                    }),
+                                    })
                                 ];
 
                                 $memoByType = [
@@ -452,7 +452,7 @@
                                     }),
                                     4 => array_filter(is_array($file_attach) ? $file_attach : iterator_to_array($file_attach), function ($f) {
                                         return isset($f->FILE_TYPE) && $f->FILE_TYPE == 'MEMO_BREAK';
-                                    }),
+                                    })
                                 ];
 
                                 $typeConfigs = [
@@ -467,7 +467,7 @@
                                         'totalText' => 'text-blue-700',
                                         'memoBg' => 'bg-blue-50',
                                         'memoBorder' => 'border-blue-200',
-                                        'memoText' => 'text-blue-700',
+                                        'memoText' => 'text-blue-700'
                                     ],
                                     2 => [
                                         'title' => 'Lunch -> Outside',
@@ -477,7 +477,7 @@
                                         'borderLight' => 'border-indigo-100',
                                         'bg' => 'bg-indigo-50',
                                         'headerBg' => 'bg-indigo-100',
-                                        'totalText' => 'text-indigo-700',
+                                        'totalText' => 'text-indigo-700'
                                     ],
                                     3 => [
                                         'title' => 'Dinner -> Outside',
@@ -487,7 +487,7 @@
                                         'borderLight' => 'border-slate-100',
                                         'bg' => 'bg-slate-50',
                                         'headerBg' => 'bg-slate-100',
-                                        'totalText' => 'text-slate-700',
+                                        'totalText' => 'text-slate-700'
                                     ],
                                     4 => [
                                         'title' => 'Morning Break (Snack Box)',
@@ -500,7 +500,7 @@
                                         'totalText' => 'text-violet-700',
                                         'memoBg' => 'bg-violet-50',
                                         'memoBorder' => 'border-violet-200',
-                                        'memoText' => 'text-violet-700',
+                                        'memoText' => 'text-violet-700'
                                     ],
                                     7 => [
                                         'title' => 'Afternoon Break (Snack Box)',
@@ -510,8 +510,8 @@
                                         'borderLight' => 'border-teal-100',
                                         'bg' => 'bg-teal-50',
                                         'headerBg' => 'bg-teal-100',
-                                        'totalText' => 'text-teal-700',
-                                    ],
+                                        'totalText' => 'text-teal-700'
+                                    ]
                                 ];
                             @endphp
 
@@ -656,7 +656,7 @@
                                     return $x->SEMPNO;
                                 }, $amec);
                             @endphp
-                            @if (in_array($flowstep[0]->CSTEPNO, ['19', '34']) && $flowstep[0]->CSTEPNEXTNO == '18' && isset($PRESIDENT->VEMPNO) && isset($RAF->VEMPNO) && in_array($PRESIDENT->VEMPNO, $amecIds))
+                            @if (in_array($flowstep[0]->CSTEPNO, ['19', '34', '13']) && isset($PRESIDENT->VEMPNO) && isset($RAF->VEMPNO) && in_array($PRESIDENT->VEMPNO, $amecIds))
                                 <div class="flex items-center justify-center mt-4 space-x-3">
                                     <label for="emp_select" class="font-medium text-blue-900">Select Approver:</label>
                                     <select id="emp_select" name="emp_select" class="select select-bordered w-80 bg-blue-50 focus:bg-white focus:border-blue-500 transition">
@@ -819,6 +819,9 @@
                                 @php
                                     $guest = array_filter($dataParticipants, function ($item) {
                                         return $item->TYPE === 'guest';
+                                    });
+                                    $amec = array_filter($dataParticipants, function ($item) {
+                                        return $item->TYPE === 'amec';
                                     });
                                 @endphp
                                 <div class="border-r-2 border-gray-300 pr-3">
