@@ -1003,8 +1003,10 @@ SELECT
 
 FROM DATALIBO.R027MP1 L
 WHERE L.R27M09 = '".trim($firstno[0]->FIRSTNO)."'";
+                echo $sqlas;
 
                 $res = $this->cn->execAssql($sqlas);
+                var_dump($res);
                 if (!$res) {
                     throw new Exception("Failed to update first no.");
                 }else
