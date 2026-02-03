@@ -7,7 +7,7 @@ class cn_model extends my_model
     {
         parent::__construct();
         $this->load->database();
-         $this->dbas = $this->load->database('as400', true);
+         $this->dbas = $this->load->database('AS400', true);
         
     }
 
