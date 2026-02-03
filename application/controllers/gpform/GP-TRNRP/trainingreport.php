@@ -47,7 +47,6 @@ class Trainingreport extends MY_Controller {
         $cyear   = $this->input->post('cyear');
         $cyear2  = $this->input->post('cyear2');
         $nrunno  = $this->input->post('nrunno');
-        
         $content = $this->input->post('content');
         $apply   = $this->input->post('apply'); 
 
@@ -58,7 +57,6 @@ class Trainingreport extends MY_Controller {
             }
 
             $result = $this->trn->update_data_report($frmno, $orgno, $cyear, $cyear2, $nrunno, 'req',$content, $apply);
-
         } catch (Exception $e) {
             echo json_encode(['status' => false, 'message' => $e->getMessage()]);
         }
@@ -288,9 +286,9 @@ class Trainingreport extends MY_Controller {
     }
 
     public function update_flow_after_3month(){
-        $nfrmno = 19;
+        $nfrmno = '2';
         $vorgno = '030101';
-        $cyear = '25';
+        $cyear = '26';
         
         $get_form_3month = $this->trn->get_3month_train_report($nfrmno, $vorgno, $cyear);
         //$get_form_3month = $this->trn->get_3month_train_report_for_test($nfrmno, $vorgno, $cyear, $cyear2, '15');
