@@ -72,7 +72,7 @@ export async function getReport(condition) {
     );
     if (!res.ok) {
         await fetchMsgErr(res);
-        throw new Error("Failed to create form");
+        throw new Error("Failed to get report");
     }
     const data = await res.json();
     return data;
