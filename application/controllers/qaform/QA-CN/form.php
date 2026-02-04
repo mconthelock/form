@@ -71,6 +71,10 @@ class form extends MY_Controller{
 
         }
         $data['empno'] = isset($_GET["empno"]) ? $_GET['empno'] : '' ; 
+        if($data['empno'] <> "")
+        {
+            $data['empinf']   = $this->cn->customSelect("AMEC.AEMPLOYEE",array('SEMPNO' =>  $data['empno'] ),'*');
+        }
         if(isset($_GET["runNo"]) && $_GET["runNo"] != "")
         {
             $data['return']   = false;
@@ -84,7 +88,6 @@ class form extends MY_Controller{
                     'NRUNNO' => $data['NRUNNO'],
                     'EMPNO' =>  $data['empno']
             ];
-            $data['empinf']   = $this->cn->customSelect("AMEC.AEMPLOYEE",array('SEMPNO' =>  $data['empno'] ),'*');
             $data['cextData'] = intval($this->getExtdata($form));
             $data['mode']     = $this->getMode($form);
             $data['form']     = $this->frm->getForm($data['NFRMNO'],  $data['VORGNO'], $data['CYEAR'],  $data['CYEAR2'],  $data['NRUNNO']);
@@ -128,6 +131,8 @@ class form extends MY_Controller{
             //var_dump($data['stepready']);
             //exit;
             $this->views('qaform/QA-CN/view', $data);
+        }else{
+             $this->views('qaform/QA-CN/create', $data);
         }
 
 
