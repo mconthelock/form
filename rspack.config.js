@@ -43,7 +43,7 @@ module.exports = {
 		],
 	},
 	optimization: {
-		minimize: process.env.STATE === "production",
+		minimize: false
 	},
 	plugins: [
 		new Dotenv(),
