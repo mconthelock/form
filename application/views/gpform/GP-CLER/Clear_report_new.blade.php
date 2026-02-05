@@ -277,14 +277,16 @@
                                             <td class="py-2 pl-4 border-b-2 border-green-200">{{ $formCler->REASON }}</td>
                                         </tr>
                                     @endif
-                                    <tr>
-                                        <th class="text-left font-semibold py-2 pl-4 border-b-2 border-green-200 bg-green-100">Attach Receipt</th>
-                                        <td class="py-2 pl-4 border-b-2 border-green-200">
-                                            <a href="{{ base_url('gpform/GP-CLER/main/preview/') . rawurlencode($formCler->RECEIPT_FILE) }}" class="link btn btn-sm text-blue-600 hover:text-blue-800 font-medium" target="_blank">
-                                                Open Receipt Attachment
-                                            </a>
-                                        </td>
-                                    </tr>
+                                    @if (!empty($formCler->RECEIPT_FILE))
+                                        <tr>
+                                            <th class="text-left font-semibold py-2 pl-4 border-b-2 border-green-200 bg-green-100">Attach Receipt</th>
+                                            <td class="py-2 pl-4 border-b-2 border-green-200">
+                                                <a href="{{ base_url('gpform/GP-CLER/main/preview/') . rawurlencode($formCler->RECEIPT_FILE) }}" class="link btn btn-sm text-blue-600 hover:text-blue-800 font-medium" target="_blank">
+                                                    Open Receipt Attachment
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    @endif
                                     @if (!empty($file_attach))
                                         <tr>
                                             <th class="text-left font-semibold py-2 pl-4 border-b-2 border-green-200 bg-orange-100">Attach File</th>
