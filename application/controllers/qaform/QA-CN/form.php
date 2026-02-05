@@ -539,6 +539,7 @@ class form extends MY_Controller{
     {
         $status = true;
         $message = "";
+        $act = $_POST["act"];
         $form = array(
             'NFRMNO' => $_POST["nfrmno"],
             'VORGNO' => $_POST["vorgno"],
