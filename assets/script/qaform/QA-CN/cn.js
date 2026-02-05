@@ -13,6 +13,7 @@ import { sendmail } from "@amec/webasset/api/mail";
 
 $(document).ready(async function () {
   const formData = $(".form-data").data();
+  
   flatpickr("#part_date", { dateFormat: "d/m/Y", defaultDate: $("#part_date").val() });
   flatpickr("#submit_date", { dateFormat: "d/m/Y", defaultDate: $("#submit_date").val() });
   flatpickr("#inspec_date", { dateFormat: "d/m/Y", defaultDate: $("#inspec_date").val() });
@@ -27,6 +28,9 @@ $(document).ready(async function () {
         {
             const frm = $("#cn-form");
             var cnformData = new FormData(frm[0]);
+            cnformData.append("nfrmno", nfrmno);
+            cnformData.append("vorgno", vorgno);
+            cnformData.append("cyear", cyear);
             const status = await insertfrm(cnformData);
             console.log(status);
             
