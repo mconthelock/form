@@ -130,7 +130,7 @@
             <td class="px-3 py-1 bg-gray-100 text-gray-800 border-b border-white">
                      <input type="text" name="txtPrtName" 
                        class="w-1/3 h-8 px-2 border border-gray-300 bg-white focus:outline-none focus:ring-1 focus:ring-sky-400 rounded-sm"
-                       value="" maxlength="3">
+                       value="" maxlength="256">
             </td>
         </tr>
         <tr>

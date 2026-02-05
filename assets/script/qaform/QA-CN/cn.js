@@ -23,6 +23,8 @@ $(document).ready(async function () {
   const { nfrmno, vorgno, cyear } = formData;
    $(".btn-submit").click(async function () {
        let action = $(this).data("action");
+       console.log(action);
+       
        if (!await requiredForm("#cn-form")) return;
        if(checkData())
         {
@@ -32,6 +34,7 @@ $(document).ready(async function () {
             cnformData.append("vorgno", vorgno);
             cnformData.append("cyear", cyear);
             cnformData.append("act", action);
+            console.log(cnformData);
             const status = await insertfrm(cnformData);
             console.log(status);
             
