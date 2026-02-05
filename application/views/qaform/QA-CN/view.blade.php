@@ -129,7 +129,7 @@
             )
                 <input type="text" name="txtItemno" 
                        class="w-24 h-8 px-2 border border-gray-300 bg-white focus:outline-none focus:ring-1 focus:ring-sky-400 rounded-sm"
-                       value="{{ $cnform->ITEMNO }}" maxlength="3">
+                       value="{{ $cnform->ITEMNO }}" maxlength="3" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '')>
                        @else
                 {{ $cnform->ITEMNO }}
             @endif    
@@ -173,10 +173,8 @@
                             value="{{ $l }}"></span>
                         @else
                          <span>{{ $d->DWGNO }}</span>
-                         @if ((($cextData >= 1) && ($cextData <= 3)) || ($cextData == 7))
-                             <a OnClick="opendwg('{{ strtoupper(substr($d->DWGNO, 0, 9)) }}','')" style='cursor: pointer;' >openfile</a>
-                         @endif
                         @endif  
+                        @if (!empty($d->REVNO)) 
                         <span class="px-2">Rev no. :</span>
                         <span>
                             @if ((($form[0]->CST == "0")||($mode == $MODE_EDIT)) && in_array($empno, [$form[0]->VREQNO, $form[0]->VINPUTER]))
@@ -187,6 +185,12 @@
                                 {{ $d->REVNO }}
                             @endif  
                         </span>
+                        @endif  
+                        @if ((($cextData >= 1) && ($cextData <= 3)) || ($cextData == 7))
+                              <span class="px-2 text-red-600 font-semibold">
+                             <a OnClick="opendwg('{{ strtoupper(substr($d->DWGNO, 0, 9)) }}','')" style='cursor: pointer;' >openfile</a>
+                             </span>
+                         @endif
                         @if ((($form[0]->CST == "0")||($mode == $MODE_EDIT)) && in_array($empno, [$form[0]->VREQNO, $form[0]->VINPUTER]))
                         <span class="px-2">
                         <button type="button"  data-table = "dwg-body" class="text-red-500 hover:text-red-700 cursor-pointer del-table-row" >✕</button>  
@@ -308,7 +312,7 @@
             )
                 <input type="text" name="txtOrdQ" 
                        class="w-24 h-8 px-2 border border-gray-300 bg-white focus:outline-none focus:ring-1 focus:ring-sky-400 rounded-sm req"
-                       value="{{ $cnform->ORDQ }}" maxlength="15">
+                       value="{{ $cnform->ORDQ }}" maxlength="15" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
             @else
                     {{ $cnform->ORDQ }}    
             @endif  

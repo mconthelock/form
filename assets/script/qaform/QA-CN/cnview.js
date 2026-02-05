@@ -40,6 +40,7 @@ $(document).ready(async function () {
         CYEAR2: cyear2,
         NRUNNO: nrunno
       };
+      if (!(await requiredForm("#cn-form"))) return;
       if(checkData(action))
       {
           action = (action === "returnrem") ? "return" : action;
@@ -301,6 +302,24 @@ function add_more(fl,dv,s) {
   div.innerHTML = str;
   document.getElementById(dv).appendChild(div);
 }
+
+$(document).on('focus click', '#txtOther', function () {
+   $('input[name="radReason"][value="5"]')
+    .prop('checked', true)
+    .trigger('change');
+});
+
+$(document).on('focus click', '#txtReturn', function () {
+   $('input[name="radSample"][value="2"]')
+    .prop('checked', true)
+    .trigger('change');
+});
+
+$(document).on('focus click', '#txtOth', function () {
+   $('input[name="radSample"][value="3"]')
+    .prop('checked', true)
+    .trigger('change');
+});
 
  $(document).on("change", ".file-input", async function () {
     const maxKB = parseInt($(this).attr("data-max-kb"), 10);
