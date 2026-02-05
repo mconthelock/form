@@ -36,7 +36,15 @@ $(document).ready(async function () {
             cnformData.append("act", action);
             console.log(cnformData);
             const status = await insertfrm(cnformData);
-            console.log(status);
+            if(!status.status)
+            {
+              showMessage(status.message, 'warning');
+              return false
+            }
+            
+
+            
+            
             
         }
         

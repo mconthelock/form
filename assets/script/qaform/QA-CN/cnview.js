@@ -142,7 +142,7 @@ $(document).ready(async function () {
                       }
                       // แล้วค่อย redirect
                       if (statusact.status) {
-                          //redirectWebflow();
+                          redirectWebflow();
                       }
                     }
               

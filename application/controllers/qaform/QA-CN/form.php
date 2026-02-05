@@ -579,10 +579,8 @@ class form extends MY_Controller{
 
               if(!in_array(substr($_POST["txtItemno"],0,1),['1','2','3','6','7']))
               {
-                    $res = [
-                    'status' => false,
-                    'message' => "Item No. not found."
-                    ];
+                    $status = false;
+                    $message = "Item No. not found.";
 
               }else
               {
@@ -629,10 +627,8 @@ class form extends MY_Controller{
                             }
 
                 }else{
-                    $res = [
-                    'status' => false,
-                    'message' => "Failed to create flow"
-                    ];
+                    $status = false;
+                    $message = "Failed to create flow";
                 }
 
               }
