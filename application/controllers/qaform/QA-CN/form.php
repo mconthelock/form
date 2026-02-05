@@ -217,7 +217,6 @@ class form extends MY_Controller{
     
     public function action()
     {
-        
         $act = $_POST["action"];
         $cextData = intval($_POST["cextData"]);
         $apvno =  $_POST["empno"];
@@ -538,14 +537,243 @@ class form extends MY_Controller{
 
     public function insertcn()
     {
+        $status = true;
+        $message = "";
+        $form = array(
+            'NFRMNO' => $_POST["nfrmno"],
+            'VORGNO' => $_POST["vorgno"],
+            'CYEAR'  => $_POST["cyear"],
+            'REQBY'  => $_POST["txtReqId"],
+            'INPUTBY' => $_POST["txtInput"],
+            'REMARK'  => $_POST["txtRemark"],
+            'DRAF'    => ($act == "save"? "0" : "1")
+        ); 
+        $datacn = array(
+            'TITLE' => $_POST["txtTitle"],
+            'ITEMNO' => trim($_POST["txtItemno"]),
+            'ORDERNO' => $_POST["orderno"],
+            'SVENDNAME' => $_POST["txtSupName"],
+            'CLSNO' => $_POST["chkClass"],
+            'RSNNO' => $_POST["radReason"],
+            'RSNOTHER' => ($_POST["radReason"]=="5"? $_POST["txtOther"]:''),
+            'PRDCTNAME' => $_POST["part_date"],
+            'BEFCHANGE' => $_POST["txtBefChg"],
+            'AFTCHANGE' => $_POST["txtAftChg"],
+            'PRTNAME' => $_POST["txtPrtName"],
+            'PURITEM' => $_POST["txtPurItem"],
+            'INVNO' => $_POST["txtInvNo"],
+            'ORDQ' => $_POST["txtOrdQ"],
+            'PRTLOC' => ($_POST["radLoc"] == "1"? "WareHouse Receive": $_POST["txtLoc"]) ,
+            'RQCNREF' => $_POST["txtNoRef"],
+            'TRANSNO' => $_POST["radSample"],
+            'DETTRANS' => ($_POST["radSample"] == "1"? "": ($_POST["radSample"] == "2"? $_POST["txtReturn"]: ($_POST["radSample"] == "3"? $_POST["txtOth"]: "" ))) 
+        );
+        $dwg = array();
+        $dwgno = $_POST["txtDwgNo"];
+        $g = $_POST["txtG"];
+        $l = $_POST["txtL"];
+        $revno = $_POST["revNo"];
+        $i = 0;
+        try{
 
+              if(!in_array(substr($_POST["txtItemno"],0,1),['1','2','3','6','7']))
+              {
+                    $res = [
+                    'status' => false,
+                    'message' => "Item No. not found."
+                    ];
 
+              }else
+              {
+                $rsf = $this->createForm($form);
+                if ($rsf['status']) {
+                        $datacn["NFRMNO"]  = $form["NFRMNO"];
+                        $datacn["VORGNO"]  = $form["VORGNO"];  
+                        $datacn["CYEAR"]  =  $form["CYEAR"];
+                        $datacn["CYEAR2"]  = $rsf["data"]["CYEAR2"];
+                        $datacn["NRUNNO"]  = $rsf["data"]["NRUNNO"];
+                        $res = $this->cnflow($datacn);
+
+                                if($_POST["submit_date"] == "")
+                                {
+                                    $datacn["SUBMITDATE"] =  $_POST["submit_date"];
+                                }
+                                if($_POST["inspec_date"] == "")
+                                {
+                                    $datacn["INSPECDATE"] =  $_POST["inspec_date"];
+                                }
+                                if($_POST["expchg_date"] == "")
+                                {
+                                    $datacn["EXPCHGDATE"] =  $_POST["expchg_date"];
+                                }
+                                $this->cn->insert("CNFORM",$datacn);
+                                foreach($dwgno as $d)
+                                {
+                                if (trim($d) != "") {
+                                $dwgnoFull =
+                                $d .
+                                (!empty(trim($g[$i])) ? " " . $g[$i] : "") .
+                                (!empty(trim($l[$i])) ? " " . $l[$i] : "");
+                                    $dwg[] = [
+                                        'NFRMNO' => $form["NFRMNO"],
+                                        'VORGNO' => $form["VORGNO"],
+                                        'CYEAR'  => $form["CYEAR"],
+                                        'CYEAR2' => $rsf["data"]["CYEAR2"],
+                                        'NRUNNO' => $rsf["data"]["NRUNNO"],
+                                        'DWGNO' => $dwgnoFull,
+                                        'REVNO' => $revno[$i] ?? null
+                                    ];
+                                }
+                                $i++;
+                            }
+
+                }else{
+                    $res = [
+                    'status' => false,
+                    'message' => "Failed to create flow"
+                    ];
+                }
+
+              }
+             
+        }catch ( Exception $e) {
+            $status = false;
+            $message = "Failed to save data.".$e->getMessage();
+        } finally {
+            $res = [
+                'status' => $status,
+                'message' => $message
+            ];
+            echo json_encode($res);
+        }
     }
 
-    private function chkdup400()
+    private function chkdup400($invno,$puritem)
     {
+        $sqlas = "select * From RTNLIBF.J736KP where REPLACE(J36K01,' ','') = REPLACE('".$invno."',' ','') and REPLACE(J36K03,' ','') = REPLACE('".$puritem."',' ','')";
+        $rsas = $this->cn->getdataAssql($sqlas);
+        return !empty($rsas);
+    }
 
-    
+    private function cnflow($form)
+    {
+        $radsec = $_POST["radsec"];                       
+        /* เจาะจงแผนก*/
+        if($radsec == "1")
+        {
+            $sec = $_POST["Sec"];
+            if(($sec == "1") || ($sec == "2")){
+                   if($sec == "1")
+                    {
+                        $rsapv =  $this->cn->customSelect("ORGPOS", array('VORGNO' => '000502' , 'VPOSNO' => '30'),"VEMPNO");
+                    }else
+                    {
+                        $rsapv =  $this->cn->customSelect("ORGPOS", array('VORGNO' => '000503' , 'VPOSNO' => '30'),"VEMPNO");
+                    }
+                   $dataapv = array(
+                        'VAPVNO' => (!empty($rsapv[0]->VEMPNO)? $rsapv[0]->VEMPNO : ""),
+                        'VREPNO' => (!empty($rsapv[0]->VEMPNO)? $this->getRep(array('NFRMNO' =>  $form["NFRMNO"] , 'VORGNO' => $form["VORGNO"] , 'CYEAR' => $form["CYEAR"] , 'VEMPNO' => $rsapv[0]->VEMPNO)) : "")
+                    );
+                    $form["CEXTDATA"] = '01';
+                    $this->cn->update("FLOW",  $dataapv , $form);
+                    $key["CEXTDATA"] = '04';
+                    $this->cn->update("FLOW",  $dataapv , $form);
+                    $stepDel = array([ 'CSTEPNO' => '07', 'CSTEPNEXTNO' => '61'],
+                                     [ 'CSTEPNO' => '61', 'CSTEPNEXTNO' => '51']
+                    );
+                    $this->deleteFlowStep($stepDel,$form["NFRMNO"], $form["VORGNO"], $form["CYEAR"], $form["CYEAR2"], $form["NRUNNO"]);
+            }else if($sec == "3"){
+                    $dataapv = array(
+                        'VAPVNO' => '16063',
+                        'VREPNO' => '16063',
+                    );
+                    $form["CEXTDATA"] = '01';
+                    $this->cn->update("FLOW",  $dataapv , $form);
+
+                    $rsapv =  $this->cn->customSelect("ORGPOS", array('VORGNO' => '000404' , 'VPOSNO' => '30'),"VEMPNO");
+                    $dataapv = array(
+                        'VAPVNO' => (!empty($rsapv[0]->VEMPNO)? $rsapv[0]->VEMPNO : ""),
+                        'VREPNO' => (!empty($rsapv[0]->VEMPNO)? $this->getRep(array('NFRMNO' =>  $form["NFRMNO"] , 'VORGNO' => $form["VORGNO"] , 'CYEAR' => $form["CYEAR"] , 'VEMPNO' => $rsapv[0]->VEMPNO)) : "")
+                    );
+                    $form["CEXTDATA"] = '04';
+                    $this->cn->update("FLOW",  $dataapv , $form);
+                    $rsapv =  $this->cn->customSelect("ORGPOS", array('VORGNO' => '000401' , 'VPOSNO' => '20'),"VEMPNO");
+                    $dataapv = array(
+                        'VAPVNO' => (!empty($rsapv[0]->VEMPNO)? $rsapv[0]->VEMPNO : ""),
+                        'VREPNO' => (!empty($rsapv[0]->VEMPNO)? $this->getRep(array('NFRMNO' =>  $form["NFRMNO"] , 'VORGNO' => $form["VORGNO"] , 'CYEAR' => $form["CYEAR"] , 'VEMPNO' => $rsapv[0]->VEMPNO)) : "")
+                    );
+                    $form["CEXTDATA"] = '05';
+                    $this->cn->update("FLOW",  $dataapv , $form);
+
+
+            }
+        }else /* ไม่เจาะจงแผนก*/
+        {
+            $rsitm =  $this->cn->customSelect("CNITMINCHARGE", array('ITEMNO' => substr($_POST["txtItemno"],0,1)),"INCHARGE");
+            if(!empty($rsitm))
+            {
+                $itm = ['630', '631', '632' , '633' , '636' , '640' , '644' , '645' , '649' , '656' , '362' , '364' , '366' , '367' , '368'];
+                $apvno = $rsitm[0]->INCHARGE;
+                if(trim($_POST["txtItemno"]))
+                {
+                       $rsapv =  $this->cn->customSelect("ORGPOS", array('VORGNO' => '000502' , 'VPOSNO' => '30'),"VEMPNO");
+                       $apvno = $rsapv[0]->VEMPNO;
+                }
+                 $dataapv = array(
+                        'VAPVNO' => $apvno,
+                        'VREPNO' =>  $this->getRep(array('NFRMNO' =>  $form["NFRMNO"] , 'VORGNO' => $form["VORGNO"] , 'CYEAR' => $form["CYEAR"] , 'VEMPNO' => $apvno))
+                    );
+                    $form["CEXTDATA"] = '01';
+                    $this->cn->update("FLOW",  $dataapv , $form);
+                    $key["CEXTDATA"] = '04';
+                    $this->cn->update("FLOW",  $dataapv , $form);
+                  $res = array(
+                        'status' => true ,
+                        'message' => "FLOW OK"
+                    );
+
+            }
+            if($_POST["radProcAMEC"] == "2")
+            {
+                if(($_POST["radobj"] == "2")|| ($_POST["radobj"] == "3"))
+                {
+                     $dataapv = array(
+                        'VAPVNO' => '16063',
+                        'VREPNO' => '16063',
+                    );
+                    $form["CEXTDATA"] = '01';
+                    $this->cn->update("FLOW",  $dataapv , $form);
+
+                    $rsapv =  $this->cn->customSelect("ORGPOS", array('VORGNO' => '000404' , 'VPOSNO' => '30'),"VEMPNO");
+                    $dataapv = array(
+                        'VAPVNO' => (!empty($rsapv[0]->VEMPNO)? $rsapv[0]->VEMPNO : ""),
+                        'VREPNO' => (!empty($rsapv[0]->VEMPNO)? $this->getRep(array('NFRMNO' =>  $form["NFRMNO"] , 'VORGNO' => $form["VORGNO"] , 'CYEAR' => $form["CYEAR"] , 'VEMPNO' => $rsapv[0]->VEMPNO)) : "")
+                    );
+                    $form["CEXTDATA"] = '04';
+                    $this->cn->update("FLOW",  $dataapv , $form);
+                    $rsapv =  $this->cn->customSelect("ORGPOS", array('VORGNO' => '000401' , 'VPOSNO' => '20'),"VEMPNO");
+                    $dataapv = array(
+                        'VAPVNO' => (!empty($rsapv[0]->VEMPNO)? $rsapv[0]->VEMPNO : ""),
+                        'VREPNO' => (!empty($rsapv[0]->VEMPNO)? $this->getRep(array('NFRMNO' =>  $form["NFRMNO"] , 'VORGNO' => $form["VORGNO"] , 'CYEAR' => $form["CYEAR"] , 'VEMPNO' => $rsapv[0]->VEMPNO)) : "")
+                    );
+                    $form["CEXTDATA"] = '05';
+                    $this->cn->update("FLOW",  $dataapv , $form);
+
+                }
+            }
+
+            $rsqic = $this->cn->customSelect("FLOW", array('NFRMNO' =>  $form["NFRMNO"] , 'VORGNO' => $form["VORGNO"] , 'CYEAR' => $form["CYEAR"] , 'CYEAR2' => $form["CYEAR2"] , 'NRUNNO' => $form["NRUNNO"] , 'VAPVNO' => '05030'),"VAPVNO");
+            if(empty($rsqic))
+            {
+                    $stepDel = array([ 'CSTEPNO' => '07', 'CSTEPNEXTNO' => '61'],
+                                     [ 'CSTEPNO' => '61', 'CSTEPNEXTNO' => '51']
+                    );
+                    $this->deleteFlowStep($stepDel,$form["NFRMNO"], $form["VORGNO"], $form["CYEAR"], $form["CYEAR2"], $form["NRUNNO"]);
+            }
+        } // end ไม่เจาะจงแผนก
+
+      
+
     }
 
     

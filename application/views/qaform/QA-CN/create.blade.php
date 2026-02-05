@@ -61,7 +61,7 @@
 
         <tr>
             <td class="force-w-350">Input by</td>
-            <td class="px-3 py-1 bg-gray-100 text-gray-800 border-b border-white">
+            <td class="px-3 py-1 bg-gray-100 text-gray-800 border-b border-white"><input type="hidden" name="txtInput" value="{{ $empinf[0]->SEMPNO }}" >
             {{ '(' . $empinf[0]->SEMPNO . ') ' . $empinf[0]->SNAME }}
             </td>
         </tr>
@@ -94,7 +94,7 @@
             <td class="px-3 py-1 bg-gray-100 text-gray-800 border-b border-white">
                      <input type="text" name="txtItemno" 
                        class="w-36 h-8 px-2 border border-gray-300 bg-white focus:outline-none focus:ring-1 focus:ring-sky-400 rounded-sm"
-                       value="" maxlength="3">
+                       value="" maxlength="3" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
             </td>
         </tr>
         <tr>
@@ -154,7 +154,7 @@
             <td class="px-3 py-1 bg-gray-100 text-gray-800 border-b border-white">
                      <input type="text" name="txtOrdQ" 
                        class="w-36 h-8 px-2 border border-gray-300 bg-white focus:outline-none focus:ring-1 focus:ring-sky-400 rounded-sm"
-                       value="" maxlength="15">
+                       value="" maxlength="15" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '')" >
             </td>
         </tr>
         <tr>

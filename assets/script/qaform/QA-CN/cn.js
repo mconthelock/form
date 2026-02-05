@@ -23,7 +23,14 @@ $(document).ready(async function () {
    $(".btn-submit").click(async function () {
        let action = $(this).data("action");
        if (!await requiredForm("#cn-form")) return;
-       if(checkData()) return;
+       if(checkData())
+        {
+            const frm = $("#cn-form");
+            var cnformData = new FormData(frm[0]);
+            const status = await insertfrm(cnformData);
+            console.log(status);
+            
+        }
         
 
     });
@@ -188,4 +195,33 @@ $(document).on('focus click', '#txtLoc', function () {
   });
 
   return hasValue;
+}
+
+function insertfrm(data)
+{
+ 
+  return new Promise((resolve) => {
+    $.ajax({
+      url: host + "qaform/QA-CN/form/insertcn",
+      type: "post",
+      dataType: "json",
+      processData: false,
+      contentType: false,
+      data: data,
+      beforeSend: function () {
+        showLoader(true);
+        console.log("beforeSend");
+        
+      },
+      success: function (res) {
+        resolve(res);
+        console.log("success");
+      },
+      complete: function (xhr, status) {
+        showLoader(false);
+        console.log("complete");
+      },
+    });
+  });
+
 }

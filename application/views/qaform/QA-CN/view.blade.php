@@ -129,7 +129,7 @@
             )
                 <input type="text" name="txtItemno" 
                        class="w-24 h-8 px-2 border border-gray-300 bg-white focus:outline-none focus:ring-1 focus:ring-sky-400 rounded-sm"
-                       value="{{ $cnform->ITEMNO }}" maxlength="3">
+                       value="{{ $cnform->ITEMNO }}" maxlength="3" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '')>
                        @else
                 {{ $cnform->ITEMNO }}
             @endif    
@@ -312,7 +312,7 @@
             )
                 <input type="text" name="txtOrdQ" 
                        class="w-24 h-8 px-2 border border-gray-300 bg-white focus:outline-none focus:ring-1 focus:ring-sky-400 rounded-sm req"
-                       value="{{ $cnform->ORDQ }}" maxlength="15">
+                       value="{{ $cnform->ORDQ }}" maxlength="15" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
             @else
                     {{ $cnform->ORDQ }}    
             @endif  
