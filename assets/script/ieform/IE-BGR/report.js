@@ -276,6 +276,13 @@ const columns = [
         },
     },
     {
+        title: "E/P DDIM_Aprv Date 2",
+        data: "EP_DDIM_APPDATE2",
+        render: function (data, type, row, meta) {
+            return formatDate(data, "DD-MMM-YY HH:mm:ss");
+        },
+    },
+    {
         title: "E/P DIM_Aprv Date",
         data: "EP_DIM_APPDATE",
         render: function (data, type, row, meta) {
