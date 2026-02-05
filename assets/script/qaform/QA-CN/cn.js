@@ -31,6 +31,7 @@ $(document).ready(async function () {
             cnformData.append("nfrmno", nfrmno);
             cnformData.append("vorgno", vorgno);
             cnformData.append("cyear", cyear);
+            cnformData.append("act", action);
             const status = await insertfrm(cnformData);
             console.log(status);
             
