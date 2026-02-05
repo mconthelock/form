@@ -554,7 +554,7 @@
                 <tr>
 			<td class="force-w-350">Remark</td>
             <td class="px-3 py-1 bg-gray-100 text-gray-800 border-b border-white">
-                <textarea name="txtAftChg" id="txtRemark" rows="3" class="w-1/3 bg-white border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-400  resize-none"></textarea>
+                <textarea name="txtRemark" id="txtRemark" rows="3" class="w-1/3 bg-white border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-400  resize-none"></textarea>
             </td>
 		</tr>
         <tr>
