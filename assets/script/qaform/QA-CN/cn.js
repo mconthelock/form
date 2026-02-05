@@ -181,7 +181,7 @@ $(document).on('focus click', '#txtLoc', function () {
         showMessage('Please input Other', 'warning');
         return false;
       }
-
+      return true;
  }
 
  function checkHasDWG() {
