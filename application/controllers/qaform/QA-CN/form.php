@@ -592,7 +592,7 @@ class form extends MY_Controller{
                         $datacn["CYEAR"]  =  $form["CYEAR"];
                         $datacn["CYEAR2"]  = $rsf["data"]["CYEAR2"];
                         $datacn["NRUNNO"]  = $rsf["data"]["NRUNNO"];
-                        $res = $this->cnflow($datacn);
+                        $res = $this->cnflow(array( 'NFRMNO' => $_POST["nfrmno"],'VORGNO' => $_POST["vorgno"],'CYEAR'  => $_POST["cyear"],'CYEAR2'  => $rsf["data"]["CYEAR2"],'NRUNNO'  => $rsf["data"]["NRUNNO"]));
 
                                 if($_POST["submit_date"] == "")
                                 {
