@@ -16,6 +16,8 @@
 - form: cd เข้าไปที่โปรเจคแล้วรัน npm run watch
 - เข้า url http://localhost:8080/form/authen/index/1
   ![alt text](image.png)
+- Test API ใช้โปรแกรม Postman หรือที่ถนัดได้เลย
+  ![alt text](image-2.png)
 
 ---
 
