@@ -227,6 +227,7 @@ module.exports = {
 		// PS-SAR
 		psSar: "./assets/script/psform/PS-SAR/index.js", //Sar page
 
+
 		//GP-TRN
 		alert: "./assets/script/gpform/GP-TRN/alert.js",
 		formUtils: "./assets/script/gpform/GP-TRN/formUtils.js",
