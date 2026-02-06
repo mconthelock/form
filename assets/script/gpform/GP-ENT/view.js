@@ -278,6 +278,12 @@ $(document).ready(async function () {
 		const cstepnextno = $(".cstepnextno").val();
 		const $pay = $("#pay_date");
 
+		if (action === "reject" && !String(remark_approve || "").trim()) {
+			alert("กรุณากรอก Remark");
+			$("#remark_approve").focus();
+			return;
+		}
+
 		let approveRemark = "";
 		let acceptStatus = "";
 

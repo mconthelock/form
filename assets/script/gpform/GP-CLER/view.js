@@ -276,6 +276,12 @@ $(document).ready(async function () {
 		const action = $(this).data("action");
 		const remark_approve = $("#remark_approve").val();
 
+		if (action === "reject" && !String(remark_approve || "").trim()) {
+			alert("กรุณากรอก Remark");
+			$("#remark_approve").focus();
+			return;
+		}
+
 		if (action === "approve" && NEED_PAYDATE) {
 			const $payInput = $("#pay_date");
 			let payDate = ""; // ← ใช้ let
