@@ -21,7 +21,7 @@
 
     <!-- Part 1 -->
     <div class="mb-6" id="out_part1">
-        <h3 class="font-bold text-lg mb-2">ส่วนที่ 1 : หัวข้อ และ กำหนดการศึกษาดูงาน (Training Learning Subject & Schedule)<b style="color:red">*</b></h3>
+        <h3 class="font-bold text-lg mb-2">ส่วนที่ 1 : หัวข้อและกำหนดการศึกษาดูงาน (Outside Learning Subject & Schedule)<b style="color:red">*</b></h3>
         <input type="text" id="outTrainingSubject"
             placeholder="1.1 หัวข้อฝึกอบรม" maxlength="200"
             class="input input-bordered w-full mb-2"
