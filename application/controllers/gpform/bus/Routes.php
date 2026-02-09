@@ -8,7 +8,7 @@ class Routes extends MY_Controller {
     }
 
     public function index(){
-        $data['api_base'] = $_ENV['APP_API'];
+        $data = array();
         $this->views('gpform/BUS/routes/index', $data);
     }
 

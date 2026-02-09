@@ -1,174 +1,123 @@
 import { showLoader } from "@amec/webasset/preloader";
 import { showMessage } from "@amec/webasset/utils";
+import { getLine, getRoute, getStop }  from "./data.js";
+import { createTable } from "@amec/webasset/dataTable";
+import { initApp, tableOption} from "../../utils.js";
 
-/* ================= GLOBAL ================= */
+var tableLine;
+var tableStop;
+$(document).ready(async function () {
+    await initApp({ submenu: ".nav-bus" });
+    //console.log("BUS ROUTES VER.1");
 
-const API_BASE = window.API_BASE || "";
+    const data_line = await getLine();
+    //console.log(data_routes);
+    const tale_line = await lineOptions(data_line);
+    tableLine = await createTable(tale_line, {id: "#line_table"});
+    console.log("TABLE LINE:", tableLine);
+    // showBusline();
 
-/* ================= INIT ================= */
-
-document.addEventListener("DOMContentLoaded", () => {
-    console.log("BUS ROUTES JS LOADED");
-    console.log("API_BASE:", API_BASE);
-
-    if (!API_BASE) {
-        console.error("API_BASE is missing");
-        showMessage("API base URL not configured", "error");
-        return;
-    }
-
-    bindEvents();
-    loadRoutes();
+    const data = tableLine.row($(this)).data();
+    console.log(data);
+        
+    const route = await getRoute({ BUSLINE: 1 });
+    const detail = await showRouteDetail(route);
 });
 
-/* ================= API HELPER ================= */
+async function lineOptions(data) {
+    const opt = {...tableOption};
+    opt.data = data ;
+    opt.columns =  [
+                    { data: "BUSNAME", title: "สายรถ" },
+                    {
+                        data: "BUSTYPE",
+                        title: "ประเภทรถ",
+                        className: "text-center",
+                        render: function (data) {
+                            if (data === "1")
+                                return `<span class="px-2 py-1 text-xs bg-blue-100 text-blue-900 rounded-full">Bus</span>`;
+                            if (data === "2")
+                                return `<span class="px-2 py-1 text-xs bg-orange-100 text-purple-900 rounded-full">Van</span>`;
+                            return "-";
+                        }
+                    },
+                    { data: "BUSSEAT", title: "จำนวนที่นั่ง", className: "text-center" },
+                    {
+                        data: "BUSSTATUS",
+                        title: "สถานะ",
+                        className: "text-center",
+                        render: function (data) {
+                            return data === "1"
+                                ? `<span class="px-2 py-1 text-xs bg-green-100 text-green-700 rounded-full">Active</span>`
+                                : `<span class="px-2 py-1 text-xs bg-red-100 text-red-600 rounded-full">Inactive</span>`;
+                        }
+                    }
+                ];
+            opt.createdRow = function( row, data ) {
+               $(row).addClass('line-row cursor-pointer');
+            }
+    return opt;
+}
 
-async function callAPI(endpoint, payload = {}) {
-    showLoader({ show: true });
-    try {
-        const response = await fetch(`${API_BASE}${endpoint}`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload)
-        });
 
-        const result = await response.json();
-        return result;
 
-    } catch (error) {
+$(document).on("click", ".line-row", async function(e){
+    e.preventDefault();
+    try{
+        const data = tableLine.row($(this)).data();
+        console.log(data);
+        
+        const route = await getRoute({ BUSLINE: data.BUSID });
+        const detail = await showRouteDetail(route);
+    } catch (error){
         console.error(error);
-        return null;
-
-    } finally {
-        setTimeout(() => {
-            showLoader({ show: false });
-        }, 300);
+        showMessage("Failed to load route details", "error");
     }
+});
+
+
+async function showRouteDetail(data) {
+    console.log("DATA ROUTE:", data);
+    const stop = await getStop();
+    const route_data = data.map(r => {
+        const stops = stop.filter(s => s.STOP_ID === r.STOPNO);
+        return { ...r, stops: stops };
+    });
+
+    console.log("ROUTE DATA WITH STOPS:", route_data);
+    const tale_stop = await routeOptions(route_data);
+    tableStop = await createTable(tale_stop, {id: "#route_detail_table"});
+}
+
+async function routeOptions(data) {
+    const opt = {...tableOption};
+    opt.data = data ;
+    opt.columns =  [
+                    { data: "stops", title: "จุดรถ", render: (data)=> data[0]?.STOP_NAME || "-" },
+                    {
+                        data: "stops",
+                        title: "ขารถ",
+                        render: (data) => {
+                            const status = data?.[0]?.STOP_STATUS;
+                            if (status === "1" || status === 1) return "ขาไป";
+                            if (status === "2" || status === 2) return "ขากลับ";
+                            return "-";
+                        }
+                    },
+                    { data: "stops",  title: "กะปกติ",  render: (data) => formatTime4Digit(data?.[0]?.WORKDAY_TIMEIN)},
+                    { data: "stops", title: "กะกลางคืน", render: (data)=> formatTime4Digit(data?.[0]?.NIGHT_TIMEIN)},
+                    { data: "stops", title: "วันหยุด", render: (data)=> formatTime4Digit(data?.[0]?.HOLIDAY_TIMEIN)},
+                ];
+            opt.createdRow = function( row, data ) {
+               $(row).addClass('line-row');
+            }
+    return opt;
 }
 
 
+function formatTime4Digit(value) {
+    if (!value) return "-";
 
-
-/* ================= LOAD ROUTES ================= */
-
-async function loadRoutes() {
-    const table = document.getElementById("routeTable");
-    if (!table) return;
-    table.innerHTML = `
-        <tr>
-            <td colspan="4" class="p-6 text-center text-gray-400">
-                Loading...
-            </td>
-        </tr>
-    `;
-
-    const data = await callAPI("/bus/line/search", {
-       // BUSTYPE: "1"
-    });
-
-    table.innerHTML = "";
-
-    if (!data || !data.length) {
-        table.innerHTML = `
-            <tr>
-                <td colspan="4" class="p-6 text-center text-gray-400">
-                    No routes found
-                </td>
-            </tr>
-        `;
-        return;
-    }
-
-    let rows = "";
-
-    data.forEach(route => {
-
-        const statusBadge =
-            route.BUSSTATUS === "1"
-                ? `<span class="bg-green-100 text-green-700 px-2 py-1 rounded text-sm">Active</span>`
-                : `<span class="bg-gray-200 text-gray-600 px-2 py-1 rounded text-sm">Inactive</span>`;
-
-        rows += `
-            <tr class="border-b hover:bg-gray-50 transition">
-                <td class="p-4 font-medium">${route.BUSNAME}</td>
-                <td class="p-4 text-center">${route.BUSSEAT ?? '-'}</td>
-                <td class="p-4 text-center">${statusBadge}</td>
-                <td class="p-4 text-right space-x-3">
-                    <button 
-                        data-id="${route.BUSID}" 
-                        data-action="detail"
-                        class="text-blue-600 hover:underline">
-                        Detail
-                    </button>
-
-                    <button 
-                        data-id="${route.BUSID}" 
-                        data-action="edit"
-                        class="text-yellow-600 hover:underline">
-                        Edit
-                    </button>
-
-                    <button 
-                        data-id="${route.BUSID}" 
-                        data-action="delete"
-                        class="text-red-600 hover:underline">
-                        Delete
-                    </button>
-                </td>
-            </tr>
-        `;
-    });
-
-    table.innerHTML = rows;
-}
-
-/* ================= EVENTS ================= */
-
-function bindEvents() {
-
-    // Add Route
-    const addBtn = document.getElementById("btnAddRoute");
-    if (addBtn) {
-        addBtn.addEventListener("click", () => {
-            window.location.href = "/gpform/bus/routes/create";
-        });
-    }
-
-    // Event Delegation
-    document.addEventListener("click", async (event) => {
-
-        const button = event.target.closest("[data-action]");
-        if (!button) return;
-
-        const action = button.dataset.action;
-        const id     = button.dataset.id;
-
-        if (!action || !id) return;
-
-        switch (action) {
-
-            case "detail":
-                window.location.href = `/gpform/bus/routes/detail/${id}`;
-                break;
-
-            case "edit":
-                window.location.href = `/gpform/bus/routes/edit/${id}`;
-                break;
-
-            case "delete":
-
-                if (!confirm("ยืนยันการลบสายรถ?")) return;
-
-                const result = await callAPI("/bus/line/delete", {
-                    BUSID: id
-                });
-
-                if (result !== null) {
-                    showMessage("ลบข้อมูลสำเร็จ", "success");
-                    loadRoutes();
-                }
-
-                break;
-        }
-    });
+    const str = value.toString().padStart(4, "0");
+    return str.slice(0, 2) + ":" + str.slice(2, 4);
 }
