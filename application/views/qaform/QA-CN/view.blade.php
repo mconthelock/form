@@ -351,7 +351,7 @@
                 @endforeach
                 </div>
              @else
-                    {{ $cnform->CLSCHANGE }}    
+                    {{ $cnform->CLSCHANGE }}<span> <input type="hidden" name="chkClass" class="h-4 w-4" value="{{ $cnform->CLSNO }}" /></span>    
             @endif  
             </td>
         </tr>
