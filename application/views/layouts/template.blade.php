@@ -14,6 +14,8 @@
     <link rel="apple-touch-icon" href="{{ base_url() }}assets/images/favicon.ico">
     <link rel="apple-touch-startup-image" href="{{ base_url() }}assets/images/icon_512.png">
 
+
+
     <title>AMEC Webflow 🕊️ Document Mananagement System</title>
     <link rel="stylesheet" href="{{ base_url() }}assets/dist/css/tailwind.css?ver={{ $GLOBALS['version'] }}">
     @yield('styles')
