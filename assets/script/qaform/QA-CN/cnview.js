@@ -32,6 +32,8 @@ $(document).ready(async function () {
   $(".flow").html(flow.html);
 
   $(".btn-submit").click(async function () {
+      console.log("xxxxxxxxxx");
+      
       let action = $(this).data("action");
       const baseForm = {
         NFRMNO: nfrmno,
@@ -40,7 +42,11 @@ $(document).ready(async function () {
         CYEAR2: cyear2,
         NRUNNO: nrunno
       };
-      if (!(await requiredForm("#cn-form"))) return;
+      console.log(action);
+      
+      if(action != "deleteApv")
+      {
+        if (!(await requiredForm("#cn-form"))) return;
       if(checkData(action))
       {
           action = (action === "returnrem") ? "return" : action;
@@ -53,6 +59,7 @@ $(document).ready(async function () {
           cnformData.append("nrunno", nrunno);
           cnformData.append("action", action);
           cnformData.append("empno", empno);
+        
           let mstatus = cnformData.get('mstatus');
           let cextData = parseInt(cnformData.get('cextData'));
           let stepready = cnformData.get('stepready');
@@ -146,6 +153,21 @@ $(document).ready(async function () {
                       }
                     }
               
+          }else if(action == "sendApv"){
+
+                  const confirm = await doaction({
+                       ...baseForm,
+                      ACTION: "approve",
+                      EMPNO: empno,
+                      REMARK: $("#txtRemark").val()
+                    });
+                  if (confirm.status) {
+                    const statusact = await actionfrm(cnformData);
+                      if (statusact.status) {
+                          redirectWebflow();
+                      }
+                  }
+                
           }else
           {
              //console.log(action);
@@ -174,6 +196,23 @@ $(document).ready(async function () {
               if (statusact.status) redirectWebflow();
           }
       }
+
+      }else
+      {
+        const frm = $("#cn-form");
+        var cnformData = new FormData(frm[0]);
+          cnformData.append("nfrmno", nfrmno);
+          cnformData.append("vorgno", vorgno);
+          cnformData.append("cyear", cyear);
+          cnformData.append("cyear2", cyear2);
+          cnformData.append("nrunno", nrunno);
+          cnformData.append("action", action);
+          cnformData.append("empno", empno);
+        const statusact = await actionfrm(cnformData);
+        if (statusact.status) redirectWebflow();
+
+      }
+      
       
       // console.log($("#chkopr").val() );
       // console.log(">>>"||$("#demapv").val()||"<<<<");
