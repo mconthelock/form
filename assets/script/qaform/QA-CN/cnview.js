@@ -579,7 +579,8 @@ function checkData(act)
       },
       complete: function (xhr, status) {
           console.log("complete fired");
-        showLoader(false);
+        showLoader({show:false});
+        console.log("after complete fired");
       },
     });
   });
