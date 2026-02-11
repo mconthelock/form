@@ -20,9 +20,11 @@ $(document).ready(async function () {
   flatpickr("#expchg_date", { dateFormat: "d/m/Y", defaultDate: $("#expchg_date").val() });
 
 
-  const { nfrmno, vorgno, cyear } = formData;
+  const { nfrmno, vorgno, cyear , empno } = formData;
    $(".btn-submit").click(async function () {
        let action = $(this).data("action");
+       console.log(action);
+       
        if (!await requiredForm("#cn-form")) return;
        if(checkData())
         {
@@ -32,8 +34,18 @@ $(document).ready(async function () {
             cnformData.append("vorgno", vorgno);
             cnformData.append("cyear", cyear);
             cnformData.append("act", action);
+            cnformData.append("empno", empno);
+            console.log(cnformData);
             const status = await insertfrm(cnformData);
-            console.log(status);
+            if(!status.status)
+            {
+              showMessage(status.message, 'warning');
+              return false
+            }
+            
+
+            
+            
             
         }
         

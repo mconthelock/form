@@ -128,7 +128,7 @@ trait _Form{
      */
     private function deleteFlowStep($stepDel='', $frmNo='', $orgNo='', $y='', $y2='', $runNo='', $step='', $stepNext=''){
         try{
-            $response = $this->client->post('http://localhost/webservice/webflow/flow/deleteFlowStep', [
+            $response = $this->client->post($_ENV['APP_WEBSERVICE'].'/webservice/webflow/flow/deleteFlowStep', [
                 'json' => [
                     'stepDel' => $stepDel,
                     'frmNo' => $frmNo,

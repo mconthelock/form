@@ -127,10 +127,10 @@
                 ($mode == $MODE_EDIT && $cextData >= 2 )
                 || ((($form[0]->CST == "0")||($mode == $MODE_EDIT)) && in_array($empno, [$form[0]->VREQNO, $form[0]->VINPUTER]))
             )
-                <input type="text" name="txtItemno" 
-                       class="w-24 h-8 px-2 border border-gray-300 bg-white focus:outline-none focus:ring-1 focus:ring-sky-400 rounded-sm"
-                       value="{{ $cnform->ITEMNO }}" maxlength="3" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '')>
-                       @else
+      <input type="text" name="txtItemno" 
+                       class="w-36 h-8 px-2 border border-gray-300 bg-white focus:outline-none focus:ring-1 focus:ring-sky-400 rounded-sm"
+                       value="{{ $cnform->ITEMNO }}" maxlength="3" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+             @else
                 {{ $cnform->ITEMNO }}
             @endif    
             </td>
@@ -174,18 +174,18 @@
                         @else
                          <span>{{ $d->DWGNO }}</span>
                         @endif  
-                        @if (!empty($d->REVNO)) 
+                    
                         <span class="px-2">Rev no. :</span>
                         <span>
                             @if ((($form[0]->CST == "0")||($mode == $MODE_EDIT)) && in_array($empno, [$form[0]->VREQNO, $form[0]->VINPUTER]))
                                  <input type="text" name="revNo[]" 
                             class="w-20 h-8 px-2 border border-gray-300 bg-white focus:outline-none focus:ring-1 focus:ring-sky-400 rounded-sm"
-                            value="{{ $d->REVNO }}">
+                            value="{{ (!empty($d->REVNO))? $d->REVNO:'' }}">
                             @else
-                                {{ $d->REVNO }}
+                                {{ (!empty($d->REVNO))? $d->REVNO:"" }}
                             @endif  
                         </span>
-                        @endif  
+                        
                         @if ((($cextData >= 1) && ($cextData <= 3)) || ($cextData == 7))
                               <span class="px-2 text-red-600 font-semibold">
                              <a OnClick="opendwg('{{ strtoupper(substr($d->DWGNO, 0, 9)) }}','')" style='cursor: pointer;' >openfile</a>
@@ -351,7 +351,7 @@
                 @endforeach
                 </div>
              @else
-                    {{ $cnform->CLSCHANGE }}    
+                    {{ $cnform->CLSCHANGE }}<span> <input type="hidden" name="chkClass" class="h-4 w-4" value="{{ $cnform->CLSNO }}" /></span>    
             @endif  
             </td>
         </tr>
@@ -798,10 +798,10 @@
                 ($mode == $MODE_EDIT && $cextData >= 2 && $cextData < 8 )
                 || ((($form[0]->CST == "0")||($mode == $MODE_EDIT)) && in_array($empno, [$form[0]->VREQNO, $form[0]->VINPUTER]))
             )
-            <input type="text" class="w-[120px] bg-white border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-400 req" name="submit_date" id="submit_date" value="{{$cnform->SUBMITDATE}}"  />
+            <input type="text" class="w-[120px] bg-white border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-400 req" name="submit_date" id="submit_date" value="{{$cnform->SSUBMITDATE}}"  />
     
              @else
-                    {{ $cnform->SUBMITDATE }}  
+                    {{ $cnform->SSUBMITDATE }}  
             @endif  
             </td>
         </tr>
@@ -812,10 +812,10 @@
                 ($mode == $MODE_EDIT && $cextData >= 2 && $cextData < 8 )
                 || ((($form[0]->CST == "0")||($mode == $MODE_EDIT)) && in_array($empno, [$form[0]->VREQNO, $form[0]->VINPUTER]))
             )
-            <input type="text" class="w-[120px] bg-white border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-400 req" name="inspec_date" id="inspec_date" value="{{$cnform->INSPECDATE}}"  />
+            <input type="text" class="w-[120px] bg-white border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-400 req" name="inspec_date" id="inspec_date" value="{{$cnform->SINSPECDATE}}"  />
     
              @else
-                    {{ $cnform->INSPECDATE }}  
+                    {{ $cnform->SINSPECDATE }}  
             @endif  
             </td>
         </tr>
@@ -826,10 +826,10 @@
                 ($mode == $MODE_EDIT && $cextData >= 2 && $cextData < 8 )
                 || ((($form[0]->CST == "0")||($mode == $MODE_EDIT)) && in_array($empno, [$form[0]->VREQNO, $form[0]->VINPUTER]))
             )
-            <input type="text" class="w-[120px] bg-white border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-400 req" name="expchg_date" id="expchg_date" value="{{$cnform->EXPCHGDATE}}"  />
+            <input type="text" class="w-[120px] bg-white border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-400 req" name="expchg_date" id="expchg_date" value="{{$cnform->SEXPCHGDATE}}"  />
     
              @else
-                    {{ $cnform->EXPCHGDATE }}  
+                    {{ $cnform->SEXPCHGDATE }}  
             @endif  
             </td>
         </tr>
@@ -1119,7 +1119,7 @@
             @endif
 
             <button type="button" name="btnDelete" 
-                    data-action="delete"
+                    data-action="deleteApv"
                     class="btn-submit bg-red-700 hover:bg-red-800 text-white px-4 py-2 rounded shadow mx-1">
                 Delete Form
             </button>

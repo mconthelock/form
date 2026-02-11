@@ -15,6 +15,7 @@ class form extends MY_Controller{
         formApi::getRequestNo  insteadOf _Form;
         flow::getExtData insteadOf _Form;
         flow::doaction insteadOf _Form;
+        flow::deleteFlowStep insteadOf _Form;
         _Form::getMode as getModeWebservice;
     }
     protected $client;
@@ -358,7 +359,7 @@ class form extends MY_Controller{
                 unset($form["CEXTDATA"]);
                 $this->updaterequest($form);
                 $this->insertdwg($form);
-                $sqlOra = "update form set CST = '3' where NFRMNO = '".$nfrmno."' AND VORGNO = '".$vorgno."' and CYEAR = '".$cyear."' and CYEAR2 = '".$cyear2."' and NRUNNO = '".$nrunno."' ";
+                $sqlOra = "update form set CST = '1' where NFRMNO = '".$nfrmno."' AND VORGNO = '".$vorgno."' and CYEAR = '".$cyear."' and CYEAR2 = '".$cyear2."' and NRUNNO = '".$nrunno."' ";
                 $this->cn->execsql($sqlOra);
 
             }else if($act == "saveData")
@@ -392,45 +393,11 @@ class form extends MY_Controller{
                 $this->cn->update("FLOW",  $dataapv , $form);
                 
             }
-
-            $path = $this->upload_path . $nfrmno."_".$vorgno."_".$cyear."_".$cyear2."_".$nrunno. "/";
-            // if (!is_dir($path))
-            // {
-            //     mkdir($path, 0777, true);
-            // }
-            $upfile =  $this->uploadMultiFile($_FILES, ['DWGFILE','MATFILE','MAKFILE','ROHFILE','PURFILE','SUBFILE','CHKFILE','JUDFILE'], $path);
-            // $upfile = $this->saveFile($_FILES, $path);
+            $path = $this->upload_path.$nfrmno."_".$vorgno."_".$cyear."_".$cyear2."_".$nrunno. "/";
             unset($form["CEXTDATA"]);
-            $fid = $this->cn->generate_id("ATTCNFRM", "ITEMNO", $form);
-            $datadwgfile = array();
-                $typeMap = [
-                    'DWGFILE' => '0',
-                    'MATFILE' => '1',
-                    'MAKFILE' => '2',
-                    'ROHFILE' => '3',
-                    'PURFILE' => '4',
-                    'CHKFILE' => '6',
-                    'JUDFILE' => '7',
-                    'SUBFILE' => '8',
-                ];
-            foreach ($upfile["files"] as $fileType => $fileArray) {
-                foreach ($fileArray as $file) {
-                        $datadwgfile[] = [
-                            'NFRMNO' => $form['NFRMNO'],
-                            'VORGNO' => $form['VORGNO'],
-                            'CYEAR'  => $form['CYEAR'],
-                            'CYEAR2' => $form['CYEAR2'],
-                            'NRUNNO' => $form['NRUNNO'],
-                            'ITEMNO' => $fid,
-                            'TYPENO' => $typeMap[$fileType] ?? null, // หรือ '' ถ้าต้องการ
-                            'SFILE'  => $file['file_name'],
-                            'SEMPNO' => $apvno
-                        ];
-                    $fid++;
-                }
-            }
-            if(!empty($datadwgfile)){
-                $this->cn->insert_batch("ATTCNFRM", $datadwgfile);
+            if($act != "deleteApv")
+            {
+                $this->savefile($form,$path);
             }
             $status = true;
             $message = "Action successfully.";
@@ -539,15 +506,19 @@ class form extends MY_Controller{
     {
         $status = true;
         $message = "";
+        $act = $_POST["act"];
         $form = array(
             'NFRMNO' => $_POST["nfrmno"],
             'VORGNO' => $_POST["vorgno"],
             'CYEAR'  => $_POST["cyear"],
             'REQBY'  => $_POST["txtReqId"],
             'INPUTBY' => $_POST["txtInput"],
-            'REMARK'  => $_POST["txtRemark"],
-            'DRAF'    => ($act == "save"? "0" : "1")
+            'REMARK'  => $_POST["txtRemark"]
         ); 
+        if($act == "save")
+        {
+            $form["DRAFT"] = '0';
+        }
         $datacn = array(
             'TITLE' => $_POST["txtTitle"],
             'ITEMNO' => trim($_POST["txtItemno"]),
@@ -568,20 +539,12 @@ class form extends MY_Controller{
             'TRANSNO' => $_POST["radSample"],
             'DETTRANS' => ($_POST["radSample"] == "1"? "": ($_POST["radSample"] == "2"? $_POST["txtReturn"]: ($_POST["radSample"] == "3"? $_POST["txtOth"]: "" ))) 
         );
-        $dwg = array();
-        $dwgno = $_POST["txtDwgNo"];
-        $g = $_POST["txtG"];
-        $l = $_POST["txtL"];
-        $revno = $_POST["revNo"];
-        $i = 0;
         try{
 
               if(!in_array(substr($_POST["txtItemno"],0,1),['1','2','3','6','7']))
               {
-                    $res = [
-                    'status' => false,
-                    'message' => "Item No. not found."
-                    ];
+                    $status = false;
+                    $message = "Item No. not found.";
 
               }else
               {
@@ -594,44 +557,37 @@ class form extends MY_Controller{
                         $datacn["NRUNNO"]  = $rsf["data"]["NRUNNO"];
                         $res = $this->cnflow(array( 'NFRMNO' => $_POST["nfrmno"],'VORGNO' => $_POST["vorgno"],'CYEAR'  => $_POST["cyear"],'CYEAR2'  => $rsf["data"]["CYEAR2"],'NRUNNO'  => $rsf["data"]["NRUNNO"]));
 
-                                if($_POST["submit_date"] == "")
+                                if($_POST["submit_date"] != "")
                                 {
                                     $datacn["SUBMITDATE"] =  $_POST["submit_date"];
                                 }
-                                if($_POST["inspec_date"] == "")
+                                if($_POST["inspec_date"] != "")
                                 {
                                     $datacn["INSPECDATE"] =  $_POST["inspec_date"];
                                 }
-                                if($_POST["expchg_date"] == "")
+                                if($_POST["expchg_date"] != "")
                                 {
                                     $datacn["EXPCHGDATE"] =  $_POST["expchg_date"];
                                 }
+                             
                                 $this->cn->insert("CNFORM",$datacn);
-                                foreach($dwgno as $d)
-                                {
-                                if (trim($d) != "") {
-                                $dwgnoFull =
-                                $d .
-                                (!empty(trim($g[$i])) ? " " . $g[$i] : "") .
-                                (!empty(trim($l[$i])) ? " " . $l[$i] : "");
-                                    $dwg[] = [
+                                $con = array(
                                         'NFRMNO' => $form["NFRMNO"],
                                         'VORGNO' => $form["VORGNO"],
                                         'CYEAR'  => $form["CYEAR"],
                                         'CYEAR2' => $rsf["data"]["CYEAR2"],
-                                        'NRUNNO' => $rsf["data"]["NRUNNO"],
-                                        'DWGNO' => $dwgnoFull,
-                                        'REVNO' => $revno[$i] ?? null
-                                    ];
-                                }
-                                $i++;
-                            }
+                                        'NRUNNO' => $rsf["data"]["NRUNNO"]
+                                );
+                                $this->insertdwg($con );
+                                $path = $this->upload_path .$con["NFRMNO"]."_".$con["VORGNO"]."_".$con["CYEAR"]."_".$con["CYEAR2"]."_".$con["NRUNNO"]. "/";
+                                $this->savefile( $con,$path);
+                      
+                    $status = true;
+                    $message = "Success to save data";
 
                 }else{
-                    $res = [
-                    'status' => false,
-                    'message' => "Failed to create flow"
-                    ];
+                    $status = false;
+                    $message = "Failed to create flow";
                 }
 
               }
@@ -678,10 +634,20 @@ class form extends MY_Controller{
                     $this->cn->update("FLOW",  $dataapv , $form);
                     $key["CEXTDATA"] = '04';
                     $this->cn->update("FLOW",  $dataapv , $form);
-                    $stepDel = array([ 'CSTEPNO' => '07', 'CSTEPNEXTNO' => '61'],
-                                     [ 'CSTEPNO' => '61', 'CSTEPNEXTNO' => '51']
-                    );
-                    $this->deleteFlowStep($stepDel,$form["NFRMNO"], $form["VORGNO"], $form["CYEAR"], $form["CYEAR2"], $form["NRUNNO"]);
+                    // $stepDel = array([ 'CSTEPNO' => '07', 'CSTEPNEXTNO' => '61'],
+                    //                  [ 'CSTEPNO' => '61', 'CSTEPNEXTNO' => '51']
+                    // );
+                    $condition = [
+                        'NFRMNO' => $form['NFRMNO'],
+                        'VORGNO' => $form['VORGNO'],
+                        'CYEAR'  => $form['CYEAR'],
+                        'CYEAR2' => $form['CYEAR2'],
+                        'NRUNNO' => $form['NRUNNO'],
+                        'CSTEPNO'=> '07'
+                    ];
+                    $this->deleteFlowStep($condition);
+                    $condition['CSTEPNO'] = '61';
+                    $this->deleteFlowStep($condition);
             }else if($sec == "3"){
                     $dataapv = array(
                         'VAPVNO' => '16063',
@@ -765,10 +731,21 @@ class form extends MY_Controller{
             $rsqic = $this->cn->customSelect("FLOW", array('NFRMNO' =>  $form["NFRMNO"] , 'VORGNO' => $form["VORGNO"] , 'CYEAR' => $form["CYEAR"] , 'CYEAR2' => $form["CYEAR2"] , 'NRUNNO' => $form["NRUNNO"] , 'VAPVNO' => '05030'),"VAPVNO");
             if(empty($rsqic))
             {
-                    $stepDel = array([ 'CSTEPNO' => '07', 'CSTEPNEXTNO' => '61'],
-                                     [ 'CSTEPNO' => '61', 'CSTEPNEXTNO' => '51']
-                    );
-                    $this->deleteFlowStep($stepDel,$form["NFRMNO"], $form["VORGNO"], $form["CYEAR"], $form["CYEAR2"], $form["NRUNNO"]);
+                    // $stepDel = array([ 'CSTEPNO' => '07', 'CSTEPNEXTNO' => '61'],
+                    //                  [ 'CSTEPNO' => '61', 'CSTEPNEXTNO' => '51']
+                    // );
+                    $condition = [
+                        'NFRMNO' => $form['NFRMNO'],
+                        'VORGNO' => $form['VORGNO'],
+                        'CYEAR'  => $form['CYEAR'],
+                        'CYEAR2' => $form['CYEAR2'],
+                        'NRUNNO' => $form['NRUNNO'],
+                        'CSTEPNO'=> '07'
+                    ];
+                    $this->deleteFlowStep($condition);
+                    $condition['CSTEPNO'] = '61';
+                    $this->deleteFlowStep($condition);
+                    // $this->deleteFlowStep($stepDel,$form["NFRMNO"], $form["VORGNO"], $form["CYEAR"], $form["CYEAR2"], $form["NRUNNO"]);
             }
         } // end ไม่เจาะจงแผนก
 
@@ -776,6 +753,42 @@ class form extends MY_Controller{
 
     }
 
+    private function savefile($form,$path)
+    {
+            $apvno = $_POST["empno"];
+            $upfile =  $this->uploadMultiFile($_FILES, ['DWGFILE','MATFILE','MAKFILE','ROHFILE','PURFILE','SUBFILE','CHKFILE','JUDFILE'], $path);
+            $fid = $this->cn->generate_id("ATTCNFRM", "ITEMNO", $form);
+            $datadwgfile = array();
+                $typeMap = [
+                    'DWGFILE' => '0',
+                    'MATFILE' => '1',
+                    'MAKFILE' => '2',
+                    'ROHFILE' => '3',
+                    'PURFILE' => '4',
+                    'CHKFILE' => '6',
+                    'JUDFILE' => '7',
+                    'SUBFILE' => '8',
+                ];
+            foreach ($upfile["files"] as $fileType => $fileArray) {
+                foreach ($fileArray as $file) {
+                        $datadwgfile[] = [
+                            'NFRMNO' => $form['NFRMNO'],
+                            'VORGNO' => $form['VORGNO'],
+                            'CYEAR'  => $form['CYEAR'],
+                            'CYEAR2' => $form['CYEAR2'],
+                            'NRUNNO' => $form['NRUNNO'],
+                            'ITEMNO' => $fid,
+                            'TYPENO' => $typeMap[$fileType] ?? null, // หรือ '' ถ้าต้องการ
+                            'SFILE'  => $file['file_name'],
+                            'SEMPNO' => $apvno
+                        ];
+                    $fid++;
+                }
+            }
+            if(!empty($datadwgfile)){
+                $this->cn->insert_batch("ATTCNFRM", $datadwgfile);
+            }
+    }
     
     public function delfile()
     {
@@ -1048,16 +1061,33 @@ WHERE L.R27M09 = '".trim($firstno[0]->FIRSTNO)."'";
                     $form["INPUTBY"] = $cnform[0]->VINPUTER; 
                     $form["REMARK"] = "";
                     $form["DRAFT"] = "1";
-                    $rsf = $this->createForm($form);
+                    $rsf = $this->action($form);
                     //var_dump($rsf);
                     if ($rsf['status']) {
-                        $stepDel = array([ 'CSTEPNO' => '04', 'CSTEPNEXTNO' => '19'],
-                                         [ 'CSTEPNO' => '19', 'CSTEPNEXTNO' => '26'],
-                                         [ 'CSTEPNO' => '26', 'CSTEPNEXTNO' => '07'],
-                                         [ 'CSTEPNO' => '10', 'CSTEPNEXTNO' => '13'],
-                                         [ 'CSTEPNO' => '13', 'CSTEPNEXTNO' => '00']
-                                          );
-                         $this->deleteFlowStep($stepDel,$nfrmno, $vorgno, $cyear, $rsf["data"]["CYEAR2"], $rsf["data"]["NRUNNO"]);
+                        // $stepDel = array([ 'CSTEPNO' => '04', 'CSTEPNEXTNO' => '19'],
+                        //                  [ 'CSTEPNO' => '19', 'CSTEPNEXTNO' => '26'],
+                        //                  [ 'CSTEPNO' => '26', 'CSTEPNEXTNO' => '07'],
+                        //                  [ 'CSTEPNO' => '10', 'CSTEPNEXTNO' => '13'],
+                        //                  [ 'CSTEPNO' => '13', 'CSTEPNEXTNO' => '00']
+                        //                   );
+                        //  $this->deleteFlowStep($stepDel,$nfrmno, $vorgno, $cyear, $rsf["data"]["CYEAR2"], $rsf["data"]["NRUNNO"]);
+                        $condition = [
+                            'NFRMNO' => $form['NFRMNO'],
+                            'VORGNO' => $form['VORGNO'],
+                            'CYEAR'  => $form['CYEAR'],
+                            'CYEAR2' => $form['CYEAR2'],
+                            'NRUNNO' => $form['NRUNNO'],
+                            'CSTEPNO'=> '04'
+                        ];
+                        $this->deleteFlowStep($condition);
+                        $condition['CSTEPNO'] = '19';
+                        $this->deleteFlowStep($condition);
+                        $condition['CSTEPNO'] = '26';
+                        $this->deleteFlowStep($condition);
+                        $condition['CSTEPNO'] = '10';
+                        $this->deleteFlowStep($condition);
+                        $condition['CSTEPNO'] = '13';
+                        $this->deleteFlowStep($condition);
                          $cnformpre = $this->cn->customSelect("CNFORM",array( 'NFRMNO' => $nfrmno,'VORGNO' => $vorgno,'CYEAR'  => $cyear,'CYEAR2' => $cyear2,'NRUNNO' => $nrunno ),'*');
                             if(count($cnformpre) > 0)
                             {

@@ -78,7 +78,7 @@ trait formApi{
      */
     private function deleteFlowandForm($condition = []){
         try{
-            $response = $this->client->post($_ENV['APP_APIPHP'].'/form/deleteForm', [
+            $response = $this->client->delete($_ENV['APP_APIPHP'].'/form/deleteForm', [
                 'json' => $condition
             ]);
             $result = trim($response->getBody());
