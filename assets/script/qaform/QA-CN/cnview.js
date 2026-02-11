@@ -574,9 +574,11 @@ function checkData(act)
         showLoader(true);
       },
       success: function (res) {
+        console.log("success");
         resolve(res);
       },
       complete: function (xhr, status) {
+          console.log("complete fired");
         showLoader(false);
       },
     });
