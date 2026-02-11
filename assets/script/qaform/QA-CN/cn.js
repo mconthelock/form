@@ -23,7 +23,6 @@ $(document).ready(async function () {
   const { nfrmno, vorgno, cyear , empno } = formData;
    $(".btn-submit").click(async function () {
        let action = $(this).data("action");
-       console.log(action);
        
        if (!await requiredForm("#cn-form")) return;
        if(checkData())
@@ -41,11 +40,10 @@ $(document).ready(async function () {
             {
               showMessage(status.message, 'warning');
               return false
+            }else
+            {
+                 redirectWebflow();
             }
-            
-
-            
-            
             
         }
         
@@ -226,19 +224,15 @@ function insertfrm(data)
       contentType: false,
       data: data,
       beforeSend: function () {
-        showLoader(true);
-        console.log("beforeSend");
-        
+        showLoader({show:true});
       },
       success: function (res) {
         resolve(res);
-        console.log("success");
       },
       complete: function (xhr, status) {
-        showLoader(false);
-        console.log("complete");
+        showLoader({show:false});
+        
       },
     });
   });
-
 }

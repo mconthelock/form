@@ -632,7 +632,7 @@ class form extends MY_Controller{
                     );
                     $form["CEXTDATA"] = '01';
                     $this->cn->update("FLOW",  $dataapv , $form);
-                    $key["CEXTDATA"] = '04';
+                    $form["CEXTDATA"] = '04';
                     $this->cn->update("FLOW",  $dataapv , $form);
                     // $stepDel = array([ 'CSTEPNO' => '07', 'CSTEPNEXTNO' => '61'],
                     //                  [ 'CSTEPNO' => '61', 'CSTEPNEXTNO' => '51']
@@ -680,7 +680,7 @@ class form extends MY_Controller{
             {
                 $itm = ['630', '631', '632' , '633' , '636' , '640' , '644' , '645' , '649' , '656' , '362' , '364' , '366' , '367' , '368'];
                 $apvno = $rsitm[0]->INCHARGE;
-                if(trim($_POST["txtItemno"]))
+                if(in_array($_POST["txtItemno"],$itm ))
                 {
                        $rsapv =  $this->cn->customSelect("ORGPOS", array('VORGNO' => '000502' , 'VPOSNO' => '30'),"VEMPNO");
                        $apvno = $rsapv[0]->VEMPNO;
@@ -691,9 +691,9 @@ class form extends MY_Controller{
                     );
                     $form["CEXTDATA"] = '01';
                     $this->cn->update("FLOW",  $dataapv , $form);
-                    $key["CEXTDATA"] = '04';
+                    $form["CEXTDATA"] = '04';
                     $this->cn->update("FLOW",  $dataapv , $form);
-                  $res = array(
+                    $res = array(
                         'status' => true ,
                         'message' => "FLOW OK"
                     );
@@ -726,6 +726,10 @@ class form extends MY_Controller{
                     $this->cn->update("FLOW",  $dataapv , $form);
 
                 }
+                         $res = array(
+                        'status' => true ,
+                        'message' => "FLOW OK"
+                    );
             }
 
             $rsqic = $this->cn->customSelect("FLOW", array('NFRMNO' =>  $form["NFRMNO"] , 'VORGNO' => $form["VORGNO"] , 'CYEAR' => $form["CYEAR"] , 'CYEAR2' => $form["CYEAR2"] , 'NRUNNO' => $form["NRUNNO"] , 'VAPVNO' => '05030'),"VAPVNO");
@@ -745,6 +749,10 @@ class form extends MY_Controller{
                     $this->deleteFlowStep($condition);
                     $condition['CSTEPNO'] = '61';
                     $this->deleteFlowStep($condition);
+                             $res = array(
+                        'status' => true ,
+                        'message' => "FLOW OK"
+                    );
                     // $this->deleteFlowStep($stepDel,$form["NFRMNO"], $form["VORGNO"], $form["CYEAR"], $form["CYEAR2"], $form["NRUNNO"]);
             }
         } // end ไม่เจาะจงแผนก
