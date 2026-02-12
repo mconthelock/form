@@ -1,5 +1,11 @@
 <?php
 use GuzzleHttp\Client;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
+use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use PhpOffice\PhpSpreadsheet\Style\{Border, Fill, Alignment};
+use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 defined('BASEPATH') OR exit('No direct script access allowed');
 require_once APPPATH.'controllers/_form.php';
 require_once APPPATH.'controllers/api/webform/form.php';
@@ -632,7 +638,7 @@ class form extends MY_Controller{
                     );
                     $form["CEXTDATA"] = '01';
                     $this->cn->update("FLOW",  $dataapv , $form);
-                    $key["CEXTDATA"] = '04';
+                    $form["CEXTDATA"] = '04';
                     $this->cn->update("FLOW",  $dataapv , $form);
                     // $stepDel = array([ 'CSTEPNO' => '07', 'CSTEPNEXTNO' => '61'],
                     //                  [ 'CSTEPNO' => '61', 'CSTEPNEXTNO' => '51']
@@ -680,7 +686,7 @@ class form extends MY_Controller{
             {
                 $itm = ['630', '631', '632' , '633' , '636' , '640' , '644' , '645' , '649' , '656' , '362' , '364' , '366' , '367' , '368'];
                 $apvno = $rsitm[0]->INCHARGE;
-                if(trim($_POST["txtItemno"]))
+                if(in_array($_POST["txtItemno"],$itm ))
                 {
                        $rsapv =  $this->cn->customSelect("ORGPOS", array('VORGNO' => '000502' , 'VPOSNO' => '30'),"VEMPNO");
                        $apvno = $rsapv[0]->VEMPNO;
@@ -691,9 +697,9 @@ class form extends MY_Controller{
                     );
                     $form["CEXTDATA"] = '01';
                     $this->cn->update("FLOW",  $dataapv , $form);
-                    $key["CEXTDATA"] = '04';
+                    $form["CEXTDATA"] = '04';
                     $this->cn->update("FLOW",  $dataapv , $form);
-                  $res = array(
+                    $res = array(
                         'status' => true ,
                         'message' => "FLOW OK"
                     );
@@ -726,6 +732,10 @@ class form extends MY_Controller{
                     $this->cn->update("FLOW",  $dataapv , $form);
 
                 }
+                         $res = array(
+                        'status' => true ,
+                        'message' => "FLOW OK"
+                    );
             }
 
             $rsqic = $this->cn->customSelect("FLOW", array('NFRMNO' =>  $form["NFRMNO"] , 'VORGNO' => $form["VORGNO"] , 'CYEAR' => $form["CYEAR"] , 'CYEAR2' => $form["CYEAR2"] , 'NRUNNO' => $form["NRUNNO"] , 'VAPVNO' => '05030'),"VAPVNO");
@@ -745,6 +755,10 @@ class form extends MY_Controller{
                     $this->deleteFlowStep($condition);
                     $condition['CSTEPNO'] = '61';
                     $this->deleteFlowStep($condition);
+                             $res = array(
+                        'status' => true ,
+                        'message' => "FLOW OK"
+                    );
                     // $this->deleteFlowStep($stepDel,$form["NFRMNO"], $form["VORGNO"], $form["CYEAR"], $form["CYEAR2"], $form["NRUNNO"]);
             }
         } // end ไม่เจาะจงแผนก
@@ -789,7 +803,46 @@ class form extends MY_Controller{
                 $this->cn->insert_batch("ATTCNFRM", $datadwgfile);
             }
     }
+
+    public function exportexcel()
+    {
+        $nfrmno = $_POST["nfrmno"];
+        $vorgno = $_POST["vorgno"];
+        $cyear = $_POST["cyear"];
+        $cyear2 = $_POST["cyear2"];
+        $nrunno = $_POST["nrunno"];
+        $data["cn"] = $this->cn->getcnform($nfrmno,$vorgno,$cyear,$cyear2,$nrunno);
+        $data['resultdwg'] = $this->cn->customSelect("RESULTCHKDWG",array( 'NFRMNO' => $nfrmno,'VORGNO' => $vorgno,'CYEAR'  => $cyear,'CYEAR2' => $cyear2,'NRUNNO' => $nrunno),'DWGNO , REVNO , RESULT , REMARK');
+        $f = $this->create_save_cnexcel($data);
+        $dFile = array(
+            'content'  =>  base64_encode($f['content']),
+            'filename' =>  $f['filename'],
+        );
+        echo json_encode($dFile);
+    }
     
+     public function create_save_cnexcel($data)
+    {
+
+        $spreadsheet = IOFactory::load($this->upload_path.'TEMPLATE/cnrpt.xlsx');
+        $sheet = $spreadsheet->getActiveSheet();
+        $formnno = $this->toFormNumber($data["cn"][0]->NFRMNO , $data["cn"][0]->VORGNO , $data["cn"][0]->CYEAR,  $data["cn"][0]->CYEAR2,  $data["cn"][0]->NRUNNO);
+        $sheet->setCellValue('W2',$formno);
+        
+        $writer = new Xlsx($spreadsheet);
+        $filename = 'FORMCN.xlsx';
+        ob_start();
+        $writer->save('php://output');
+        $excelContent = ob_get_contents(); // ได้ binary data
+        ob_end_clean();
+
+        $dFile = array(
+            'content'  => $excelContent,
+            'filename' => $filename, 
+        );
+        return $dFile;
+    }
+
     public function delfile()
     {
         $path = $this->upload_path.$_POST["nfrmno"]."_".$_POST["vorgno"]."_".$_POST["cyear"]."_".$_POST["cyear2"]."_".$_POST["nrunno"]."/";

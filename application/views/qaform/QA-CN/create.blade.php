@@ -195,7 +195,7 @@
                             <span>QEM</span>
                         </label>
                         <label class="flex items-center gap-1">
-                            <input type="radio"  name="Sec" id="Sec"  class="h-4 w-4" value="2">
+                            <input type="radio"  name="Sec" id="Sec"  class="h-4 w-4" value="3">
                             <span>QIC</span>
                         </label>
                         </div>

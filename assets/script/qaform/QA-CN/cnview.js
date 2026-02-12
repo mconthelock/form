@@ -46,7 +46,10 @@ $(document).ready(async function () {
       
       if(action != "deleteApv")
       {
+      if($("#mstatus").val() != "1")
+      {
         if (!(await requiredForm("#cn-form"))) return;
+      }  
       if(checkData(action))
       {
           action = (action === "returnrem") ? "return" : action;
@@ -311,6 +314,34 @@ $(document).on("change", ".radio-result", function (e) {
 
 });
 
+$(document).on("click", ".btn-export", async function () {
+  const nfrmno =  $(".form-data").attr("data-nfrmno");
+  const vorgno =  $(".form-data").attr("data-vorgno");
+  const cyear =  $(".form-data").attr("data-cyear");
+  const cyear2 = $(".form-data").attr("data-cyear2");
+  const nrunno = $(".form-data").attr("data-nrunno");
+  $.ajax({
+    type: "POST",
+    url: host + "qaform/QA-CN/form/exportexcel",
+    data: { nfrmno : nfrmno , vorgno : vorgno , cyear : cyear , cyear2 : cyear2 , nrunno : nrunno },
+    dataType: "json",
+    beforeSend: function () {
+      showLoader({ show: true });
+    },
+    success: function (res) {
+      openExcel(res.filename, res.content);
+    },
+    complete: function (xhr, status) {
+      showLoader({ show: false });
+    },
+    error: function (xhr, status, error) {
+        console.error("Export Error:", xhr.responseText);
+        showMessage("Export Excel Error , please try agian", 'error');
+        
+    },
+  });
+});
+
 $(document).on('click', '.radDwg', function () {
     let val = $(this).val();
 
@@ -389,17 +420,14 @@ function actionfrm(data)
       contentType: false,
       data: data,
       beforeSend: function () {
-        showLoader(true);
-        console.log("beforeSend");
-        
+        showLoader({show:true});
+
       },
       success: function (res) {
         resolve(res);
-        console.log("success");
       },
       complete: function (xhr, status) {
-        showLoader(false);
-        console.log("complete");
+        showLoader({show:false});
       },
     });
   });
@@ -571,16 +599,13 @@ function checkData(act)
       dataType: "json",
       data: data,
       beforeSend: function () {
-        showLoader(true);
+        showLoader({show:true});
       },
       success: function (res) {
-        console.log("success");
         resolve(res);
       },
       complete: function (xhr, status) {
-          console.log("complete fired");
         showLoader({show:false});
-        console.log("after complete fired");
       },
     });
   });
