@@ -314,6 +314,34 @@ $(document).on("change", ".radio-result", function (e) {
 
 });
 
+$(document).on("click", ".btn-export", async function () {
+  const nfrmno =  $(".form-data").attr("data-nfrmno");
+  const vorgno =  $(".form-data").attr("data-vorgno");
+  const cyear =  $(".form-data").attr("data-cyear");
+  const cyear2 = $(".form-data").attr("data-cyear2");
+  const nrunno = $(".form-data").attr("data-nrunno");
+  $.ajax({
+    type: "POST",
+    url: host + "qaform/QA-CN/form/exportexcel",
+    data: { nfrmno : nfrmno , vorgno : vorgno , cyear : cyear , cyear2 : cyear2 , nrunno : nrunno },
+    dataType: "json",
+    beforeSend: function () {
+      showLoader({ show: true });
+    },
+    success: function (res) {
+      openExcel(res.filename, res.content);
+    },
+    complete: function (xhr, status) {
+      showLoader({ show: false });
+    },
+    error: function (xhr, status, error) {
+        console.error("Export Error:", xhr.responseText);
+        showMessage("Export Excel Error , please try agian", 'error');
+        
+    },
+  });
+});
+
 $(document).on('click', '.radDwg', function () {
     let val = $(this).val();
 
