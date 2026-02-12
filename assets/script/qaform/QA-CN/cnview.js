@@ -628,3 +628,15 @@ function opendwg(dwg,rev)
   void(0);
 }
 
+function openExcel(fileName, dataBase64) {
+	var fileType = fileName.split(".").pop();
+	fileType =
+		"data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,";
+	var $a = $("<a>");
+	$a.attr("href", fileType + dataBase64);
+	$("body").append($a);
+	$a.attr("download", fileName);
+	$a[0].click();
+	$a.remove();
+}
+
