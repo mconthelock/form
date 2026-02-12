@@ -850,8 +850,21 @@ class form extends MY_Controller{
         }
         $templateEnd = $currentRow+1;
         $sheet->setCellValue("C{$templateEnd}", $data["cn"][0]->PRTNAME);
-
-
+        $templateEnd = $templateEnd +1;
+        $sheet->setCellValue("D{$templateEnd}", $data["cn"][0]->INVNO);
+        $sheet->setCellValue("K{$templateEnd}", $data["cn"][0]->ORDQ);
+        $templateEnd = $templateEnd +1;
+        $sheet->setCellValue("F{$templateEnd}", $data["cn"][0]->SVENDNAME);
+        $templateEnd = $templateEnd +1;
+        $sheet->setCellValue("E{$templateEnd}", $data["cn"][0]->CLSCHANGE);
+        $templateEnd = $templateEnd +1;
+        $sheet->setCellValue("C{$templateEnd}", ($data["cn"][0]->RSNNO == "5"? $data["cn"][0]->RSNOTHER : $data["cn"][0]->REASON));
+        $templateEnd = $templateEnd +1;
+        $sheet->setCellValue("F{$templateEnd}", $data["cn"][0]->PRDCTNAME);
+        $templateEnd = $templateEnd +1;
+        $sheet->setCellValue("D{$templateEnd}", $data["cn"][0]->BEFCHANGE);
+        $templateEnd = $templateEnd +1;
+        $sheet->setCellValue("D{$templateEnd}", $data["cn"][0]->AFTCHANGE);
 
         $writer = new Xlsx($spreadsheet);
         $filename = 'FORMCN.xlsx';
