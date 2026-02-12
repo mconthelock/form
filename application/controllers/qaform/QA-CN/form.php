@@ -834,7 +834,7 @@ class form extends MY_Controller{
         $sheet->setCellValue('J5',$data["cn"][0]->PURITEM);
 
         $templateStart = 7; // แถวแรกของ template data
-        $templateCount = 2;  // Template มี 3 แถว (12–14)
+        $templateCount = 1;  // Template มี 3 แถว (12–14)
         $templateEnd   = $templateStart + $templateCount - 1;
         $extra = count($data['resultdwg']) - $templateCount;
         if ($extra > 0) {
@@ -848,7 +848,7 @@ class form extends MY_Controller{
             $sheet->setCellValue("I{$currentRow}", ($row->RESULT == "1"? "O":""));
             $sheet->setCellValue("J{$currentRow}", $row->REMARK);
         }
-        $templateEnd = $templateEnd+1;
+        $templateEnd = $currentRow+1;
         $sheet->setCellValue("C{$templateEnd}", $data["cn"][0]->PRTNAME);
 
 
