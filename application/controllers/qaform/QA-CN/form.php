@@ -829,6 +829,30 @@ class form extends MY_Controller{
         $formno = $this->toFormNumber($data["cn"][0]->NFRMNO , $data["cn"][0]->VORGNO , $data["cn"][0]->CYEAR,  $data["cn"][0]->CYEAR2,  $data["cn"][0]->NRUNNO);
         $sheet->setCellValue('C3',$formno);
         $sheet->setCellValue('J3',$data["cn"][0]->REQNAME);
+        $sheet->setCellValue('C4',$data["cn"][0]->TITLE);
+        $sheet->setCellValue('C5',$data["cn"][0]->ITEMNO);
+        $sheet->setCellValue('J5',$data["cn"][0]->PURITEM);
+
+        $templateStart = 7; // แถวแรกของ template data
+        $templateCount = 1;  // Template มี 3 แถว (12–14)
+        $templateEnd   = $templateStart + $templateCount - 1;
+        $extra = count($data['resultdwg']) - $templateCount;
+        if ($extra > 0) {
+            $this->insertEmptyRowsWithTemplate($sheet, $templateStart ,$templateCount ,  $extra );
+        }
+        foreach($data['resultdwg'] as $i => $row)
+        {
+            $currentRow = $templateStart + $i;
+            $sheet->setCellValue("C{$currentRow}", $row->DWGNO);
+            $sheet->setCellValue("H{$currentRow}", ($row->RESULT == "0"? "O":""));
+            $sheet->setCellValue("I{$currentRow}", ($row->RESULT == "1"? "O":""));
+            $sheet->setCellValue("J{$currentRow}", $row->REMARK);
+        }
+        $templateEnd = $templateEnd+1;
+        $sheet->setCellValue("C{$templateEnd}", $data["cn"][0]->PRTNAME);
+
+
+
         $writer = new Xlsx($spreadsheet);
         $filename = 'FORMCN.xlsx';
         ob_start();
