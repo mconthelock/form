@@ -1319,7 +1319,7 @@ function insertEmptyRowsWithTemplate(Worksheet $sheet, int $templateStart, int $
         }
 
         // copy merge cell ของ template row สุดท้าย
-        foreach ($sheet->getMergeCells() as $merge) {
+        /*foreach ($sheet->getMergeCells() as $merge) {
             if (preg_match_all('/\d+/', $merge, $matches)) {
                 $rows = $matches[0];
                 if (in_array($templateEnd, $rows)) {
@@ -1327,7 +1327,7 @@ function insertEmptyRowsWithTemplate(Worksheet $sheet, int $templateStart, int $
                     $sheet->mergeCells($newMerge);
                 }
             }
-        }
+        }*/
     }
 }
 
