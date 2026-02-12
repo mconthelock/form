@@ -1286,6 +1286,50 @@ WHERE L.R27M09 = '".trim($firstno[0]->FIRSTNO)."'";
 }
 
 
+ /**
+ * Insert empty row(s) based on template row style
+ *
+ * @param Worksheet $sheet
+ * @param int       $templateStart  แถวแรกของ template data
+ * @param int       $templateCount  จำนวน template row
+ * @param int       $insertCount    จำนวนแถวที่จะเพิ่ม
+ */
+function insertEmptyRowsWithTemplate(Worksheet $sheet, int $templateStart, int $templateCount, int $insertCount)
+{
+    $templateEnd = $templateStart + $templateCount - 1;
+    $highestCol = Coordinate::columnIndexFromString($sheet->getHighestColumn());
+
+    // insert row
+    $sheet->insertNewRowBefore($templateEnd + 1, $insertCount);
+
+    for ($i = 0; $i < $insertCount; $i++) {
+        $targetRow = $templateEnd + 1 + $i;
+
+        // copy row height
+        $sheet->getRowDimension($targetRow)
+              ->setRowHeight($sheet->getRowDimension($templateEnd)->getRowHeight());
+
+        // copy style ของแต่ละ cell
+        for ($col = 1; $col <= $highestCol; $col++) {
+            $colLetter = Coordinate::stringFromColumnIndex($col);
+            $sheet->duplicateStyle(
+                $sheet->getStyle($colLetter . $templateEnd),
+                $colLetter . $targetRow
+            );
+        }
+
+        // copy merge cell ของ template row สุดท้าย
+        foreach ($sheet->getMergeCells() as $merge) {
+            if (preg_match_all('/\d+/', $merge, $matches)) {
+                $rows = $matches[0];
+                if (in_array($templateEnd, $rows)) {
+                    $newMerge = str_replace($templateEnd, $targetRow, $merge);
+                    $sheet->mergeCells($newMerge);
+                }
+            }
+        }
+    }
+}
 
 
 }
