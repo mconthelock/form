@@ -826,7 +826,7 @@ class form extends MY_Controller{
 
         $spreadsheet = IOFactory::load($this->upload_path.'TEMPLATE/cnrpt.xlsx');
         $sheet = $spreadsheet->getActiveSheet();
-        $formnno = $this->toFormNumber($data["cn"][0]->NFRMNO , $data["cn"][0]->VORGNO , $data["cn"][0]->CYEAR,  $data["cn"][0]->CYEAR2,  $data["cn"][0]->NRUNNO);
+        $formno = $this->toFormNumber($data["cn"][0]->NFRMNO , $data["cn"][0]->VORGNO , $data["cn"][0]->CYEAR,  $data["cn"][0]->CYEAR2,  $data["cn"][0]->NRUNNO);
         $sheet->setCellValue('W2',$formno);
         
         $writer = new Xlsx($spreadsheet);
