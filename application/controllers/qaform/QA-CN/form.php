@@ -834,7 +834,7 @@ class form extends MY_Controller{
         $sheet->setCellValue('J5',$data["cn"][0]->PURITEM);
 
         $templateStart = 7; // แถวแรกของ template data
-        $templateCount = 1;  // Template มี 3 แถว (12–14)
+        $templateCount = 2;  // Template มี 3 แถว (12–14)
         $templateEnd   = $templateStart + $templateCount - 1;
         $extra = count($data['resultdwg']) - $templateCount;
         if ($extra > 0) {
