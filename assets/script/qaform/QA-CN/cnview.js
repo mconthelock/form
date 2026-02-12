@@ -342,6 +342,36 @@ $(document).on("click", ".btn-export", async function () {
   });
 });
 
+$(document).on("click", ".btn-export-frm", async function () {
+    const nfrmno =  $(".form-data").attr("data-nfrmno");
+  const vorgno =  $(".form-data").attr("data-vorgno");
+  const cyear =  $(".form-data").attr("data-cyear");
+  const cyear2 = $(".form-data").attr("data-cyear2");
+  const nrunno = $(".form-data").attr("data-nrunno");
+  $.ajax({
+    type: "POST",
+    url: host + "qaform/QA-CN/form/exportfrm",
+    data: { nfrmno : nfrmno , vorgno : vorgno , cyear : cyear , cyear2 : cyear2 , nrunno : nrunno },
+    dataType: "json",
+    beforeSend: function () {
+      showLoader({ show: true });
+    },
+    success: function (res) {
+      openExcel(res.filename, res.content);
+    },
+    complete: function (xhr, status) {
+      showLoader({ show: false });
+    },
+    error: function (xhr, status, error) {
+        console.error("Export Error:", xhr.responseText);
+        showMessage("Export Form Error , please try agian", 'error');
+        
+    },
+  });
+  
+
+});
+
 $(document).on('click', '.radDwg', function () {
     let val = $(this).val();
 
@@ -406,6 +436,24 @@ $(document).on('focus click', '#txtOth', function () {
             return;
         }
     }
+});
+
+$(document).on("click", ".btn-print", function () {
+
+  const nfrmno = $(".form-data").data("nfrmno");
+  const vorgno = $(".form-data").data("vorgno");
+  const cyear  = $(".form-data").data("cyear");
+  const cyear2 = $(".form-data").data("cyear2");
+  const nrunno = $(".form-data").data("nrunno");
+
+  const url = host + "qaform/QA-CN/form/printcn"
+      + "?no=" + nfrmno
+      + "&orgNo=" + vorgno
+      + "&y=" + cyear
+      + "&y2=" + cyear2
+      + "&runNo=" + nrunno;
+
+  window.open(url, "_blank");
 });
 
 function actionfrm(data)

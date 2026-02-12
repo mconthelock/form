@@ -36,7 +36,7 @@ class cn_model extends my_model
     public function getcnform($nfrmno, $vorgno, $cyear, $cyear2, $nrunno)
     {
         $this->db
-        ->select('Q.* , TO_CHAR(Q.SUBMITDATE,\'DD/MM/YYYY\') as SSUBMITDATE , TO_CHAR(Q.INSPECDATE,\'DD/MM/YYYY\') as SINSPECDATE , TO_CHAR(Q.EXPCHGDATE,\'DD/MM/YYYY\') as SEXPCHGDATE , CLS.CLSCHANGE , RS.REASON , JUD.JUDGEMENT, F.VREQNO , R.SNAME as REQNAME , F.VINPUTER , I.SNAME as INPNAME')
+        ->select('Q.* , TO_CHAR(Q.SUBMITDATE,\'DD/MM/YYYY\') as SSUBMITDATE , TO_CHAR(Q.INSPECDATE,\'DD/MM/YYYY\') as SINSPECDATE , TO_CHAR(Q.EXPCHGDATE,\'DD/MM/YYYY\') as SEXPCHGDATE , TO_CHAR(F.DREQDATE,\'DD/MM/YYYY\') as SREQDATE , CLS.CLSCHANGE , RS.REASON , JUD.JUDGEMENT, F.VREQNO , R.SNAME as REQNAME , F.VINPUTER , I.SNAME as INPNAME')
         ->from('CNFORM Q')
         ->join('CNCLSCHANGE CLS' ,'CLS.CLSNO = Q.CLSNO', 'LEFT')
         ->join('CNREASON RS' ,'RS.RSNNO = Q.RSNNO', 'LEFT')
@@ -97,6 +97,19 @@ class cn_model extends my_model
                  ->where('CYEAR', $cyear)
                  ->where('CYEAR2', $cyear2)
                  ->where('NRUNNO', $nrunno);
+        return $this->db->get()->result();
+    }
+
+    public function getfilename($nfrmno, $vorgno, $cyear, $cyear2, $nrunno , $typeno)
+    {
+        $this->db->select('LISTAGG(REGEXP_REPLACE(SFILE, \'^\d+_\', \'\'),\',\') WITHIN GROUP (ORDER BY SFILE) AS FILE_LIST')
+                 ->from('ATTCNFRM ')
+                 ->where('NFRMNO', $nfrmno)
+                 ->where('VORGNO', $vorgno)
+                 ->where('CYEAR', $cyear)
+                 ->where('CYEAR2', $cyear2)
+                 ->where('NRUNNO', $nrunno)
+                 ->where('TYPENO', $typeno);
         return $this->db->get()->result();
     }
 
