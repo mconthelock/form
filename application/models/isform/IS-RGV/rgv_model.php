@@ -394,10 +394,11 @@ class Rgv_model extends CI_Model {
 
     public function getProcurementUsersForView($cyear2, $nrunno)
     {
-        // 1. Query ISRGV_EMP ดึง EMPNO, RESULT, DETAIL
+        // 1. ดึงพนักงานทั้งหมดจาก ISRGV_EMP
         $empData = $this->db
-            ->select('EMPNO, RESULT, DETAIL')
-            ->from('ISRGV_EMP')
+            ->select('*')
+            ->from('ISRGV_EMP i')
+            ->join('AMECUSERALL a', 'i.EMPNO = a.SEMPNO', 'left')
             ->where('CYEAR2', $cyear2)
             ->where('NRUNNO', $nrunno)
             ->get()
@@ -407,41 +408,67 @@ class Rgv_model extends CI_Model {
             return [];
 
         $empnos = array_column($empData, 'EMPNO');
-        $empMap = [];
-        foreach ($empData as $e) {
-            $empMap[$e->EMPNO] = ['RESULT' => $e->RESULT, 'DETAIL' => $e->DETAIL];
-        }
 
-        // 2. Query AUTHORIZE_INVENTORY จาก DOCINV
+        // 2. ดึงสิทธิ์จาก AUTHORIZE_INVENTORY
         $this->doc->select('*')
             ->from('AUTHORIZE_INVENTORY')
             ->where_in('SEMPNO', $empnos);
-        $users = $this->doc->get()->result();
 
-        // 3. Merge RESULT และ DETAIL และคำนวณ IS_HISTORY
-        foreach ($users as $u) {
-            $empno = $u->SEMPNO;
-            if (isset($empMap[$empno])) {
-                $u->RESULT = $empMap[$empno]['RESULT'];
-                $u->DETAIL = $empMap[$empno]['DETAIL'];
+        $authData = $this->doc->get()->result();
 
-                // ตรวจสอบว่าเป็น history หรือไม่
-                $u->IS_HISTORY = (
-                    $u->RESULT == '0' &&
-                    $u->DATAMANAGER == 'NOT' &&
-                    $u->VENDORMANAGEMENT == 'NOT' &&
-                    $u->PRODUCT == 'NOT' &&
-                    $u->PR == 'NOT' &&
-                    $u->USERMANAGER == 'NOT' &&
-                    $u->PO == 'NOT' &&
-                    $u->REPORT == 'NOT' &&
-                    $u->INVOICE == 'NOT' &&
-                    $u->GROUPMASTER == 'NO'
-                ) ? 1 : 0;
-            }
+        $authMap = [];
+        foreach ($authData as $a) {
+            $authMap[$a->SEMPNO] = $a;
         }
 
-        // 4. Sort: IS_HISTORY อยู่ท้าย
+        $users = [];
+
+        foreach ($empData as $e) {
+
+            $empno = $e->EMPNO;
+
+            if (isset($authMap[$empno])) {
+                $u = $authMap[$empno];
+            } else {
+                // คนที่ลาออกแล้ว → สร้าง object เปล่า
+                $u                   = new stdClass();
+                $u->SNAME            = $e->SNAME;
+                $u->SSEC             = $e->SSEC;
+                $u->SDEPT            = $e->SDEPT;
+                $u->SDIV             = $e->SDIV;
+                $u->SEMPNO           = $empno;
+                $u->DATAMANAGER      = '-';
+                $u->VENDORMANAGEMENT = '-';
+                $u->PRODUCT          = '-';
+                $u->PR               = '-';
+                $u->USERMANAGER      = '-';
+                $u->PO               = '-';
+                $u->REPORT           = '-';
+                $u->INVOICE          = '-';
+                $u->GROUPMASTER      = '-';
+            }
+
+            $u->RESULT = $e->RESULT;
+            $u->DETAIL = $e->DETAIL;
+
+            // IS_HISTORY logic
+            $u->IS_HISTORY = (
+                $u->RESULT == '0' &&
+                ($u->DATAMANAGER ?? '-') != 'YES' &&
+                ($u->VENDORMANAGEMENT ?? '-') != 'YES' &&
+                ($u->PRODUCT ?? '-') != 'YES' &&
+                ($u->PR ?? '-') != 'YES' &&
+                ($u->USERMANAGER ?? '-') != 'YES' &&
+                ($u->PO ?? '-') != 'YES' &&
+                ($u->REPORT ?? '-') != 'YES' &&
+                ($u->INVOICE ?? '-') != 'YES' &&
+                ($u->GROUPMASTER ?? '-') != 'YES'
+            ) ? 1 : 0;
+
+            $users[] = $u;
+        }
+
+        // Sort
         usort($users, function ($a, $b) {
             if ($a->IS_HISTORY != $b->IS_HISTORY) {
                 return $a->IS_HISTORY - $b->IS_HISTORY;
@@ -451,6 +478,7 @@ class Rgv_model extends CI_Model {
 
         return $users;
     }
+
 
     public function getInvoiceUsersForView($cyear2, $nrunno)
     {

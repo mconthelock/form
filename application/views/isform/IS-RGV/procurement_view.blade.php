@@ -96,9 +96,9 @@
                                     <tr class="text-center {{ $rowClass }}">
                                         <td class="border border-gray-300">
                                             {{ $item->SDIV ?? '' }}
-                                            @if ($isHistory)
+                                            {{-- @if ($isHistory)
                                                 <span class="badge badge-warning badge-sm ml-1">History</span>
-                                            @endif
+                                            @endif --}}
                                         </td>
                                         <td class="border border-gray-300">{{ $item->SDEPT ?? '' }}</td>
                                         <td class="border border-gray-300">{{ $item->SSEC ?? '' }}</td>
