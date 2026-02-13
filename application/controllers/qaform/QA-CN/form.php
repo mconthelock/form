@@ -931,32 +931,32 @@ class form extends MY_Controller{
             $this->insertEmptyRowsWithTemplate($sheet, $templateStart ,$templateCount ,  $extra );
         }
         
-        foreach($data["flow"] as $row)
+        foreach($data["flow"] as $i => $row)
         {
             $currentRow = $templateStart + $i;
-            $sheet->setCellValue("B{$currentRow}", ($row["CSTEPST"] == "5"? "Approved" : ($row["CSTEPST"] == "6"? "Rejected" : ($row["CSTEPST"] == "7"? "Approved by other" : ($row["CSTEPST"] == "3"? "Waiting for approval" : ($row["CSTEPST"] == "2"? "Coming soon" : "" ) ) ) )));
-            $sheet->setCellValue("C{$currentRow}", $row["VNAME"]);
-            if($row["CSTEPST"] == "5")
+            $sheet->setCellValue("B{$currentRow}", ($row->CSTEPST == "5"? "Approved" : ($row->CSTEPST  == "6"? "Rejected" : ($row->CSTEPST  == "7"? "Approved by other" : ($row->CSTEPST  == "3"? "Waiting for approval" : ($row->CSTEPST  == "2"? "Coming soon" : "" ) ) ) )));
+            $sheet->setCellValue("C{$currentRow}", $row->VNAME);
+            if($row->CSTEPST == "5")
             {
-                if($row["VAPVNO"] == $row["VREPNO"])
+                if($row->VAPVNO == $row->VREPNO)
                 {
-                    $sheet->setCellValue("D{$currentRow}", $row["VREALAPV"] );
+                    $sheet->setCellValue("D{$currentRow}", $row->VREALAPV );
                 }else{
-                    if($row["VREALAPV"] == $row["VAPVNO"])
+                    if($row->VREALAPV  == $row->VAPVNO)
                     {
-                        $sheet->setCellValue("D{$currentRow}", " 👊".$row["VAPVNO"]."/".$row["VREALAPV"] );
+                        $sheet->setCellValue("D{$currentRow}", " 👊".$row->VAPVNO."/".$row->VREALAPV );
                     }else
                     {
-                        $sheet->setCellValue("D{$currentRow}", $row["VAPVNO"]."/ 👊".$row["VREALAPV"] );
+                        $sheet->setCellValue("D{$currentRow}", $row->VAPVNO."/ 👊".$row->VREALAPV );
                     }
                 }
 
             }else
             {
-                 $sheet->setCellValue("D{$currentRow}", ($row["VAPVNO"] == $row["VREPNO"]? $row["VAPVNO"]:$row["VAPVNO"]."/".$row["VREPNO"] ));
+                 $sheet->setCellValue("D{$currentRow}", ($row->VAPVNO == $row->VREPNO ? $row->VAPVNO:$row->VAPVNO."/".$row->VREPNO ));
             }
-            $sheet->setCellValue("E{$currentRow}", $row["SNAME"] );
-            $sheet->setCellValue("F{$currentRow}", $data["empinf"][$row["VAPVNO"]][0]->SPOSNAME );
+            $sheet->setCellValue("E{$currentRow}", $row->SNAME );
+            $sheet->setCellValue("F{$currentRow}", $data["empinf"][$row->VAPVNO][0]->SPOSNAME );
             
         }
         
