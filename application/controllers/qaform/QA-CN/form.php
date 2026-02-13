@@ -961,10 +961,10 @@ class form extends MY_Controller{
             $sheet->setCellValue("F{$currentRow}", $data["empinf"][$row["VAPVNO"]][0]->SPOSNAME );
             $sheet->setCellValue("G{$currentRow}", $data["empinf"][$row["VAPVNO"]][0]->SSEC."/".$data["empinf"][$row["VAPVNO"]][0]->SDEPT."/".$data["empinf"][$row["VAPVNO"]][0]->SDIV);
             $sheet->setCellValue("H{$currentRow}", (!is_null($row["DAPVDATE"])? date('d/m/Y', strtotime($row["DAPVDATE"])):"") );
-            $sheet->setCellValue("E{$currentRow}", $row["CAPVTIME"] );
+            $sheet->setCellValue("I{$currentRow}", $row["CAPVTIME"] );
             $sheet->setCellValue("J{$currentRow}", $row["VREMARK"] ); 
         }
-        $templateStart = $templateStart+ 1;
+        $templateStart =  $currentRow+ 1;
         $status = "";
         if($data["cn"][0]->CST == "1")
         {
