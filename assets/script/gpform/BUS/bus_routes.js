@@ -3,6 +3,10 @@ import { showMessage, showConfirm } from "@amec/webasset/utils";
 import { getLine, getRoute, getStop, insertLine, updateLine, deleteLine, insertStop, updateStop, deleteStop, insertRoute, updateRoute, deleteRoute  } from "./data.js";
 import { createTable } from "@amec/webasset/dataTable";
 import { initApp, tableOption } from "../../utils.js";
+import { generatePdf } from "@amec/webasset/api/pdf";
+import { buildBusRouteHtml } from "./templete_pdf.js";
+import { downloadOrOpenFile } from "@amec/webasset/api/file";
+
 
 var tableLine;
 var tableStop;
@@ -11,13 +15,13 @@ let selectedBusId = null;
 $(document).ready(async function () {
 	await initApp({ submenu: ".nav-bus" });
 	//console.log("BUS ROUTES VER.1");
+	await showLoader({ show: true });
 
 	const data_line = await getLine();
 	const tale_line = await lineOptions(data_line);
 	tableLine = await createTable(tale_line, { id: "#line_table" });
 	console.log("TABLE LINE:", tableLine);
     if (tableLine.rows().count() > 0) {
-        // ดึง row แรกจาก DataTable จริง
         const firstRow = tableLine.row(0);
         const firstData = firstRow.data();
         selectedBusId = firstData.BUSID;
@@ -25,6 +29,7 @@ $(document).ready(async function () {
         const route = await getRoute({ BUSLINE: selectedBusId });
         await showRouteDetail(route);
     }
+	await showLoader({ show: false });
 });
 
 async function lineOptions(data) {
@@ -155,13 +160,14 @@ async function routeOptions(data) {
 		},
 		{data: "stops",title: "จุดรถ",render: (data) => data[0]?.STOP_NAME || "-",},
 		{
-			data: "stops",title: "ขารถ",
-			render: (data) => {
-				const status = data?.[0]?.STOP_STATUS;
-				if (status === "1" || status === 1) return "ขาไป";
-				if (status === "2" || status === 2) return "ขากลับ";
+			data: "STATENO",
+			title: "ขารถ",
+			className: "text-center",
+			render: function (data) {
+				if (data == 1) return "ขาไป";
+				if (data == 2) return "ขากลับ";
 				return "-";
-			},
+			}
 		},
 		{data: "stops", title: "กะปกติ",render: (data) => formatTime4Digit(data?.[0]?.WORKDAY_TIMEIN),},
 		{data: "stops", title: "กะกลางคืน", render: (data) => formatTime4Digit(data?.[0]?.NIGHT_TIMEIN),},
@@ -228,15 +234,24 @@ $(document).on("click", "#btnSaveLine", async function () {
 
 		const newData = await getLine();
 		const newOption = await lineOptions(newData);
-
 		tableLine.destroy();
 		$("#line_table").empty();
 		tableLine = await createTable(newOption, { id: "#line_table" });
+		resetLineForm();
     }catch (error) {
         console.error(error);
         showMessage("เกิดข้อผิดพลาดในการบันทึกข้อมูล", "error");
     }
 });
+
+function resetLineForm() {
+    $("#hdLineId").val("");
+    $("#txtLineName").val("");
+    $("#ddlSeat").val("");
+    $("input[name='busType'][value='1']").prop("checked", true);
+    $("input[name='isChonburi'][value='1']").prop("checked", true);
+}
+
 
 $(document).on("click", "#btnSaveStop", async function () {
 	const stopNo   = $("#hdStopNo").val();
@@ -356,12 +371,13 @@ $(document).on("click", ".btn-delete-stop", async function (e) {
 		cancelText: "ยกเลิก",
 	});
 
-
 	if (!isConfirm) return;
 	try {
 		const delete_stop = await deleteStop({ STOP_ID: stopNo });
         const delete_route = await deleteRoute({ STOP_ID: stopNo });
 		showMessage("ลบข้อมูลเรียบร้อย", "success");
+		console.log("Deleted stop:", stopNo);
+		console.log("Deleted route:", delete_route);
 		const route = await getRoute({ BUSLINE: busLine });
 		await showRouteDetail(route);
 	} catch (error) {
@@ -369,14 +385,6 @@ $(document).on("click", ".btn-delete-stop", async function (e) {
 		showMessage("เกิดข้อผิดพลาดในการลบข้อมูล", "error");
 	}
 });
-
-
-
-
-
-
-
-
 
 function setTimeToDropdown(value, hourId, minId) {
 	if (!value) {
@@ -388,7 +396,6 @@ function setTimeToDropdown(value, hourId, minId) {
 	const str = value.toString().padStart(4, "0");
 	const hour = str.slice(0, 2);
 	const min = str.slice(2, 4);
-
 	$("#" + hourId).val(hour);
 	$("#" + minId).val(min);
 }
@@ -461,12 +468,106 @@ $(document).on("click", ".btn-delete-line", async function (e) {
     try {
         const delete_line = await deleteLine({ BUSID: busId });
         showMessage("ลบข้อมูลเรียบร้อย", "success");
-        const newData = await getLine();
-        tableLine.clear();
-        tableLine.rows.add(newData);
-        tableLine.draw();
+
+		const data_line = await getLine();
+		const tale_line = await lineOptions(data_line);
+		tableLine.destroy();
+		tableLine = await createTable(tale_line, { id: "#line_table" });
+		if (tableLine.rows().count() > 0) {
+			const firstRow = tableLine.row(0);
+			const firstData = firstRow.data();
+			selectedBusId = firstData.BUSID;
+			$(firstRow.node()).addClass("line-selected");
+			const route = await getRoute({ BUSLINE: selectedBusId });
+			await showRouteDetail(route);
+		}
     } catch (error) {
         console.error(error);
         showMessage("เกิดข้อผิดพลาดในการลบข้อมูล", "error");
     }
 });
+
+
+
+$("#btnExportRoute").on("click", async function () {
+  	const lines = await getLine();
+  	const routes = await getRoute();
+  	const stops = await getStop();
+  	const stopMap = {};
+	stops
+	.filter(s => s.STOP_STATUS === "1")
+	.forEach(s => stopMap[s.STOP_ID] = s);
+
+	const routeMap = {};
+	routes
+	.filter(r => r.STATENO === 1)
+	.forEach(r => {
+		const stop = stopMap[r.STOPNO];
+		if (stop) {
+			if (!routeMap[r.BUSLINE]) {
+				routeMap[r.BUSLINE] = [];
+			}
+			routeMap[r.BUSLINE].push({time: stop.WORKDAY_TIMEIN, name: stop.STOP_NAME});
+		}
+	});
+
+
+	// 🔥 เรียงตามเวลา
+	Object.keys(routeMap).forEach(busId => {
+		routeMap[busId].sort((a, b) => parseInt(a.time || 9999) - parseInt(b.time || 9999));
+		routeMap[busId] = routeMap[busId].map(s =>`${formatTime4Digit(s.time)} ${s.name}`);
+	});
+
+  	const allData = lines
+		.filter(l => l.BUSSTATUS === "1")
+		.sort((a, b) => a.BUSNAME.localeCompare(b.BUSNAME, 'th'))
+		.map(l => ({
+			line: l.BUSNAME,
+			type: l.BUSTYPE,
+			stops: routeMap[l.BUSID] || []
+		}));
+
+
+	const busData = allData.filter(d => d.type === "1");
+	const vanData = allData.filter(d => d.type === "2");
+	const html = buildBusRouteHtml(busData, vanData);
+	const path_file = "//amecnas/AMECWEB/file/development/test/OMG/";
+	const file_name = "BUS.pdf";
+	let pdf;
+	try{
+		pdf = await generatePdf({
+			html: html,
+			options: {
+				path: path_file + file_name,
+				printBackground: true,
+				landscape: true,
+				format: "A3",
+				margin: {
+					top: "15mm",
+					right: "15mm",
+					bottom: "15mm",
+					left: "15mm",
+				},
+			},
+		});
+	}catch(error){
+		console.error("PDF GENERATION ERROR:", error);
+		showMessage("เกิดข้อผิดพลาดในการสร้างรายงาน", "error");
+		return;
+	}
+	
+	await downloadOrOpenFile({
+		baseDir: path_file,
+		storedName: file_name,
+		originalName: file_name, 
+		mode: "open"
+	});
+});
+
+
+function formatTime4Digit(value) {
+  if (!value) return "";
+  const str = value.toString().padStart(4, "0");
+  return str.slice(0, 2) + ":" + str.slice(2, 4);
+}
+

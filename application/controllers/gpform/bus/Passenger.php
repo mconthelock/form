@@ -4,5 +4,8 @@ class Passenger extends MY_Controller {
         parent::__construct();
     }
 
-    public function index(){}
+    public function index(){
+        $data = array();
+        $this->views('gpform/BUS/passenger/index', $data);
+    }
 }

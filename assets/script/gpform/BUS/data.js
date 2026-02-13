@@ -31,22 +31,21 @@ export const insertRoute  = (data) => callAPI("/bus/route/create", "POST", data)
 export const updateRoute  = (data) => callAPI("/bus/route/update", "POST", data);
 export const deleteRoute  = (data) => callAPI("/bus/route/delete", "POST", data);
 
-const callAPI = (endpoint, method = "POST", data = null, isJson = false) => {
-	return new Promise((resolve, reject) => {
-		$.ajax({
+const callAPI = async (endpoint, method = "POST", data = null) => {
+	try {
+		const response = await $.ajax({
 			url: `${process.env.APP_API}${endpoint}`,
 			type: method,
 			dataType: "json",
-			contentType: isJson ? "application/json" : undefined,
-			data: isJson ? JSON.stringify(data) : data,
-			success: function (response) {
-				resolve(response);
-			},
-			error: function (error) {
-				reject(error);
-			},
+			contentType: "application/json",
+			data: data ? JSON.stringify(data) : null,
 		});
-	});
+		return response;
+	} catch (error) {
+		console.error("API ERROR:", error);
+		throw error.responseJSON || error;
+	}
 };
+
 
 

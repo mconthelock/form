@@ -1,21 +1,25 @@
 @extends('layouts/template')
 @section('contents')
 <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
+        
+    <!-- TOP ACTION BAR -->
+    <div class="flex justify-end mb-4">
+        <button id="btnExportRoute" class="bg-rose-500 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-rose-600 transition shadow-sm   flex items-center gap-2 cursor-pointer">
+            <svg xmlns="http://www.w3.org/2000/svg"  fill="currentColor"  viewBox="0 0 24 24"  class="w-5 h-5 text-yellow-400">
+                <path d="M6 2a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 
+                    2 0 0 0 2-2V8l-6-6H6zm7 1.5L18.5 9H13a1 1 0 0 1-1-1V3.5z"/>
+                <text x="6" y="18" font-size="6" fill="red">PDF</text>
+            </svg> Export Transportation Route
+        </button>
+    </div>
     <div class="grid md:grid-cols-2 gap-6">
-
         <!-- LEFT PANEL -->
         <div class="bg-white rounded-xl shadow border">
 
             <!-- HEADER BAR -->
-            <div class="flex justify-between items-center 
-                        px-4 py-3 rounded-t-xl
-                        bg-gradient-to-r from-blue-600 to-indigo-600">
-
-                <h3 class="text-white font-semibold text-lg">
-                    🚍 ข้อมูลสายรถ
-                </h3>
-
-                <button id="btnAddLine" class="bg-white text-blue-600 px-3 py-1.5 rounded-lg text-sm font-semibold hover:bg-gray-100"> + เพิ่มสายรถ </button>
+            <div class="flex justify-between items-center  px-4 py-3 rounded-t-xl bg-gradient-to-r from-blue-600 to-indigo-600">
+                <h3 class="text-white font-semibold text-lg"> 🚍 ข้อมูลสายรถ </h3>
+                <button id="btnAddLine" class="bg-white text-blue-600 px-3 py-1.5 rounded-lg text-sm font-semibold hover:bg-gray-100 cursor-pointer"> + เพิ่มสายรถ </button>
             </div>
 
             <div class="p-4">
@@ -23,18 +27,12 @@
             </div>
         </div>
 
-
         <!-- RIGHT PANEL -->
         <div class="bg-white rounded-xl shadow border">
-            <!-- HEADER BAR -->
-            <div class="flex justify-between items-center 
-                        px-4 py-3 rounded-t-xl
-                        bg-gradient-to-r from-emerald-500 to-teal-600">
-
+            <div class="flex justify-between items-center  px-4 py-3 rounded-t-xl bg-gradient-to-r from-emerald-500 to-teal-600">
                 <h3 class="text-white font-semibold text-lg">📍 รายละเอียดจุดรถ</h3>
-                <button id="btnAddStop" class="bg-white text-blue-600 px-3 py-1.5 rounded-lg text-sm font-semibold hover:bg-gray-100">+ เพิ่มจุดรถ </button>
+                <button id="btnAddStop" class="bg-white text-blue-600 px-3 py-1.5 rounded-lg text-sm font-semibold hover:bg-gray-100 cursor-pointer">+ เพิ่มจุดรถ </button>
             </div>
-
             <div class="p-4">
                 <table id="route_detail_table" class="w-full text-sm"> </table>
             </div>
