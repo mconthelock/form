@@ -957,8 +957,24 @@ class form extends MY_Controller{
             }
             $sheet->setCellValue("E{$currentRow}", $row["SNAME"] );
             $sheet->setCellValue("F{$currentRow}", $data["empinf"][$row["VAPVNO"]][0]->SPOSNAME );
-            
+            $sheet->setCellValue("G{$currentRow}", $data["empinf"][$row["VAPVNO"]][0]->SSEC."/".$data["empinf"][$row["VAPVNO"]][0]->SDEPT."/".$data["empinf"][$row["VAPVNO"]][0]->SDIV);
+            $sheet->setCellValue("H{$currentRow}", (!is_null($row["DAPVDATE"])? date('d/m/Y', strtotime($row["DAPVDATE"])):"") );
+            $sheet->setCellValue("E{$currentRow}", $row["CAPVTIME"] );
+            $sheet->setCellValue("E{$currentRow}", $row["VREMARK"] ); 
         }
+        $templateStart = $templateStart+ $i;
+        $status = "";
+        if($data["cn"][0]->CST == "1")
+        {
+            $status = "Status : Running";
+        }else if($data["cn"][0]->CST == "2")
+        {
+            $status = "Status : Approve";
+        }else if($data["cn"][0]->CST == "3")
+        {
+            $status = "Status : Reject";
+        }
+        $sheet->setCellValue("B{$templateStart}", $status); 
         
 
         $writer = new Xlsx($spreadsheet);
