@@ -113,5 +113,7 @@ class cn_model extends my_model
         return $this->db->get()->result();
     }
 
+    
+
 
 }
