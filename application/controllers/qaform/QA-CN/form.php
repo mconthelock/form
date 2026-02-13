@@ -923,7 +923,7 @@ class form extends MY_Controller{
         $templateEnd += 1;
         $sheet->setCellValue("D{$templateEnd}", $data["cn"][0]->JUDGEMENT." ". $data["cn"][0]->JDGOTHER);
         $templateEnd += 4;
-        foreach($data as $row)
+        foreach($data["flow"] as $row)
         {
             $sheet->setCellValue("B{$templateEnd}", ($row["CSTEPST"] == "5"? "Approved" : ($row["CSTEPST"] == "6"? "Rejected" : ($row["CSTEPST"] == "7"? "Approved by other" : ($row["CSTEPST"] == "3"? "Waiting for approval" : ($row["CSTEPST"] == "2"? "Coming soon" : "" ) ) ) )));
             $sheet->setCellValue("C{$templateEnd}", $row["VNAME"]);
