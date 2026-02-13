@@ -960,7 +960,7 @@ class form extends MY_Controller{
             $sheet->setCellValue("E{$currentRow}", $row["SNAME"] );
             $sheet->setCellValue("F{$currentRow}", $data["empinf"][$row["VAPVNO"]][0]->SPOSNAME );
             $sheet->setCellValue("G{$currentRow}", $data["empinf"][$row["VAPVNO"]][0]->SSEC."/".$data["empinf"][$row["VAPVNO"]][0]->SDEPT."/".$data["empinf"][$row["VAPVNO"]][0]->SDIV);
-            $sheet->setCellValue("H{$currentRow}", (!is_null($row["DAPVDATE"])? date('d/m/Y', strtotime($row["DAPVDATE"])):"") );
+            $sheet->setCellValue("H{$currentRow}", (!is_null($row["DAPVDATE"])? date('d-M-Y', strtotime($row["DAPVDATE"])):"") );
             $sheet->setCellValue("I{$currentRow}", $row["CAPVTIME"] );
             $sheet->setCellValue("J{$currentRow}", $row["VREMARK"] ); 
         }
