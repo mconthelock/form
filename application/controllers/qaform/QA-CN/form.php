@@ -844,6 +844,11 @@ class form extends MY_Controller{
         $data['attpur'] = $this->cn->getfilename($nfrmno, $vorgno, $cyear, $cyear2, $nrunno , '4');
         $data['attchk'] = $this->cn->getfilename($nfrmno, $vorgno, $cyear, $cyear2, $nrunno , '6');
         $data['flow'] = $this->getFlowTree($form);
+        foreach( $data['flow']  as $row)
+        {
+            $empno = $row["VAPVNO"];
+            $data["empinf"][$empno] = $this->cn->customSelect("AMEC.AMECUSERALL",array('SEMPNO' => $empno),"SPOSNAME , SSEC,SDEPT,SDIV");
+        }
         $f = $this->create_save_cnfrmexcel($data);
         $dFile = array(
             'content'  =>  base64_encode($f['content']),
@@ -875,7 +880,7 @@ class form extends MY_Controller{
         {
             $currentRow = $templateStart + $i;
             $sheet->setCellValue("D{$currentRow}", $row->DWGNO);
-            $sheet->setCellValue("E{$currentRow}", ($row->RESULT == "0"? "OK":"NG"));
+            $sheet->setCellValue("E{$currentRow}", ($row->RESULT == "0"? "OK":($row->RESULT == "1"? "NG":"")));
         }
         $templateEnd = $currentRow+1;
         $sheet->setCellValue("D{$templateEnd}", $data["cn"][0]->PRTNAME);
@@ -918,6 +923,33 @@ class form extends MY_Controller{
         $templateEnd += 1;
         $sheet->setCellValue("D{$templateEnd}", $data["cn"][0]->JUDGEMENT." ". $data["cn"][0]->JDGOTHER);
         $templateEnd += 4;
+        foreach($data as $row)
+        {
+            $sheet->setCellValue("B{$templateEnd}", ($row["CSTEPST"] == "5"? "Approved" : ($row["CSTEPST"] == "6"? "Rejected" : ($row["CSTEPST"] == "7"? "Approved by other" : ($row["CSTEPST"] == "3"? "Waiting for approval" : ($row["CSTEPST"] == "2"? "Coming soon" : "" ) ) ) )));
+            $sheet->setCellValue("C{$templateEnd}", $row["VNAME"]);
+            if($row["CSTEPST"] == "5")
+            {
+                if($row["VAPVNO"] == $row["VREPNO"])
+                {
+                    $sheet->setCellValue("D{$templateEnd}", $row["VREALAPV"] );
+                }else{
+                    if($row["VREALAPV"] == $row["VAPVNO"])
+                    {
+                        $sheet->setCellValue("D{$templateEnd}", " 👊".$row["VAPVNO"]."/".$row["VREALAPV"] );
+                    }else
+                    {
+                        $sheet->setCellValue("D{$templateEnd}", $row["VAPVNO"]."/ 👊".$row["VREALAPV"] );
+                    }
+                }
+
+            }else
+            {
+                 $sheet->setCellValue("D{$templateEnd}", ($row["VAPVNO"] == $row["VREPNO"]? $row["VAPVNO"]:$row["VAPVNO"]."/".$row["VREPNO"] ));
+            }
+            $sheet->setCellValue("E{$templateEnd}", $row["SNAME"] );
+            $sheet->setCellValue("F{$templateEnd}", $empinf[$row["VAPVNO"]][0]->SPOSNAME );
+             $templateEnd++;
+        }
         
 
         $writer = new Xlsx($spreadsheet);
