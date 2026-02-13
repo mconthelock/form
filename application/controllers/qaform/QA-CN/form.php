@@ -962,9 +962,9 @@ class form extends MY_Controller{
             $sheet->setCellValue("G{$currentRow}", $data["empinf"][$row["VAPVNO"]][0]->SSEC."/".$data["empinf"][$row["VAPVNO"]][0]->SDEPT."/".$data["empinf"][$row["VAPVNO"]][0]->SDIV);
             $sheet->setCellValue("H{$currentRow}", (!is_null($row["DAPVDATE"])? date('d/m/Y', strtotime($row["DAPVDATE"])):"") );
             $sheet->setCellValue("E{$currentRow}", $row["CAPVTIME"] );
-            $sheet->setCellValue("E{$currentRow}", $row["VREMARK"] ); 
+            $sheet->setCellValue("J{$currentRow}", $row["VREMARK"] ); 
         }
-        $templateStart = $templateStart+ $i;
+        $templateStart = $templateStart+ 1;
         $status = "";
         if($data["cn"][0]->CST == "1")
         {
@@ -991,6 +991,7 @@ class form extends MY_Controller{
             $text = $richText->createTextRun('Reject');
             $text->getFont()->getColor()->setARGB('FFFF0000');
         }
+
         $sheet->setCellValue("B{$templateStart}",  $richText);
         //$sheet->setCellValue("B{$templateStart}", $status); 
         
