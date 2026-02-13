@@ -914,7 +914,7 @@ class form extends MY_Controller{
         $templateEnd += 1;
         $sheet->setCellValue("D{$templateEnd}", $data["cn"][0]->SEXPCHGDATE);
         $templateEnd += 1;
-        $sheet->setCellValue("D{$templateEnd}", $data["attchk"][0]->FILE_LISTE);
+        $sheet->setCellValue("D{$templateEnd}", $data["attchk"][0]->FILE_LIST);
         $templateEnd += 1;
         $sheet->setCellValue("D{$templateEnd}", $data["cn"][0]->JUDGEMENT." ". $data["cn"][0]->JDGOTHER);
         $templateEnd += 4;
