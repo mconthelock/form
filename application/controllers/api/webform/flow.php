@@ -37,6 +37,20 @@ trait flow{
         }
     }
 
+    private function getFlowTree($condition = []){
+        try{
+            $response = $this->client->post($_ENV['APP_APIPHP'].'/flow/getFlowTree', [
+                'json' => $condition
+            ]);
+            $result = json_decode($response->getBody(), true);
+            return $result;
+        }catch(guzzlehttp\Exception\RequestException $e){
+            throw new Exception(json_encode(['status' => "false", 'message' => 'Failed to get getFlowTree', 'e' => $e->getMessage()]), 1);
+        }catch(Exception $e){
+            throw new Exception(json_encode(['status' => "false", 'message' => 'Failed to get getFlowTree', 'e' => $e]), 1);
+        }
+    }
+
     private function getExtData($condition = []){
         try{
             $response = $this->client->post($_ENV['APP_APIPHP'].'/flow/getExtData', [
