@@ -6,6 +6,8 @@ use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\Style\{Border, Fill, Alignment};
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
+use PhpOffice\PhpSpreadsheet\RichText\RichText;
+use PhpOffice\PhpSpreadsheet\Style\Color;
 defined('BASEPATH') OR exit('No direct script access allowed');
 require_once APPPATH.'controllers/_form.php';
 require_once APPPATH.'controllers/api/webform/form.php';
@@ -966,15 +968,31 @@ class form extends MY_Controller{
         $status = "";
         if($data["cn"][0]->CST == "1")
         {
-            $status = "Status : Running";
+            $status = "Running";
         }else if($data["cn"][0]->CST == "2")
         {
-            $status = "Status : Approve";
+            $status = "Approve";
         }else if($data["cn"][0]->CST == "3")
         {
-            $status = "Status : Reject";
+            $status = "Reject";
         }
-        $sheet->setCellValue("B{$templateStart}", $status); 
+        $richText = new RichText();
+
+        $blackText = $richText->createTextRun('Status : ');
+        $blackText->getFont()->getColor()->setARGB('FF000000');
+
+        if ($status == 'Approve') {
+
+            $text = $richText->createTextRun('Approve');
+            $text->getFont()->getColor()->setARGB('FF008000');
+
+        } elseif ($status == 'Reject') {
+
+            $text = $richText->createTextRun('Reject');
+            $text->getFont()->getColor()->setARGB('FFFF0000');
+        }
+        $sheet->setCellValue("B{$templateStart}",  $richText);
+        //$sheet->setCellValue("B{$templateStart}", $status); 
         
 
         $writer = new Xlsx($spreadsheet);
