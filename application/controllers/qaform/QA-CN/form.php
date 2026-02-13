@@ -947,7 +947,7 @@ class form extends MY_Controller{
                  $sheet->setCellValue("D{$templateEnd}", ($row["VAPVNO"] == $row["VREPNO"]? $row["VAPVNO"]:$row["VAPVNO"]."/".$row["VREPNO"] ));
             }
             $sheet->setCellValue("E{$templateEnd}", $row["SNAME"] );
-            $sheet->setCellValue("F{$templateEnd}", $empinf[$row["VAPVNO"]][0]->SPOSNAME );
+            $sheet->setCellValue("F{$templateEnd}", $data["empinf"][$row["VAPVNO"]][0]->SPOSNAME );
              $templateEnd++;
         }
         
