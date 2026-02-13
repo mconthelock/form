@@ -820,6 +820,120 @@ class form extends MY_Controller{
         );
         echo json_encode($dFile);
     }
+
+    public function exportfrm()
+    {
+        $nfrmno = $_POST["nfrmno"];
+        $vorgno = $_POST["vorgno"];
+        $cyear = $_POST["cyear"];
+        $cyear2 = $_POST["cyear2"];
+        $nrunno = $_POST["nrunno"];
+        $form  = [
+                    'NFRMNO' => $nfrmno,
+                    'VORGNO' => $vorgno,
+                    'CYEAR'  => $cyear,
+                    'CYEAR2' => $cyear2,
+                    'NRUNNO' => $nrunno
+        ];
+        $data["cn"] = $this->cn->getcnform($nfrmno,$vorgno,$cyear,$cyear2,$nrunno);
+        $data['resultdwg'] = $this->cn->customSelect("RESULTCHKDWG",array( 'NFRMNO' => $nfrmno,'VORGNO' => $vorgno,'CYEAR'  => $cyear,'CYEAR2' => $cyear2,'NRUNNO' => $nrunno),'DWGNO , REVNO , RESULT , REMARK');
+        $data['attdwg'] = $this->cn->getfilename($nfrmno, $vorgno, $cyear, $cyear2, $nrunno , '0');
+        $data['attmat'] = $this->cn->getfilename($nfrmno, $vorgno, $cyear, $cyear2, $nrunno , '1');
+        $data['attmaker'] = $this->cn->getfilename($nfrmno, $vorgno, $cyear, $cyear2, $nrunno , '2');
+        $data['attrohs'] = $this->cn->getfilename($nfrmno, $vorgno, $cyear, $cyear2, $nrunno , '3');
+        $data['attpur'] = $this->cn->getfilename($nfrmno, $vorgno, $cyear, $cyear2, $nrunno , '4');
+        $data['attchk'] = $this->cn->getfilename($nfrmno, $vorgno, $cyear, $cyear2, $nrunno , '6');
+        $data['flow'] = $this->getFlowTree($form);
+        $f = $this->create_save_cnfrmexcel($data);
+        $dFile = array(
+            'content'  =>  base64_encode($f['content']),
+            'filename' =>  $f['filename'],
+        );
+        echo json_encode($dFile);
+
+    }
+
+    public function create_save_cnfrmexcel($data)
+    {
+        $spreadsheet = IOFactory::load($this->upload_path.'TEMPLATE/cn.xlsx');
+        $sheet = $spreadsheet->getActiveSheet();
+        $cnt = count($data["flow"])-1;
+        $formno = $this->toFormNumber($data["cn"][0]->NFRMNO , $data["cn"][0]->VORGNO , $data["cn"][0]->CYEAR,  $data["cn"][0]->CYEAR2,  $data["cn"][0]->NRUNNO);
+        $sheet->setCellValue('D3',$formno);
+        $sheet->setCellValue('D4',$data["cn"][0]->SREQDATE);
+        $sheet->setCellValue('D5',date('d/m/Y', strtotime($data["flow"][$cnt]->DAPVDATE)));
+        $sheet->setCellValue('D6',$data["cn"][0]->TITLE);
+        $sheet->setCellValue('D7',$data["cn"][0]->ITEMNO);
+        $templateStart = 8; // แถวแรกของ template data
+        $templateCount = 1;  // Template มี 3 แถว (12–14)
+        $templateEnd   = $templateStart + $templateCount - 1;
+        $extra = count($data['resultdwg']) - $templateCount;
+        if ($extra > 0) {
+            $this->insertEmptyRowsWithTemplate($sheet, $templateStart ,$templateCount ,  $extra );
+        }
+        foreach($data['resultdwg'] as $i => $row)
+        {
+            $currentRow = $templateStart + $i;
+            $sheet->setCellValue("D{$currentRow}", $row->DWGNO);
+            $sheet->setCellValue("E{$currentRow}", ($row->RESULT == "0"? "OK":"NG"));
+        }
+        $templateEnd = $currentRow+1;
+        $sheet->setCellValue("D{$templateEnd}", $data["cn"][0]->PRTNAME);
+        $templateEnd += 1;
+        $sheet->setCellValue("D{$templateEnd}", $data["cn"][0]->PURITEM);
+        $templateEnd += 1;
+        $sheet->setCellValue("D{$templateEnd}", $data["cn"][0]->INVNO);
+        $templateEnd += 1;
+        $sheet->setCellValue("D{$templateEnd}", $data["cn"][0]->ORDQ);
+        $templateEnd += 1;
+        $sheet->setCellValue("D{$templateEnd}", $data["cn"][0]->SVENDNAME);
+        $templateEnd += 1;
+        $sheet->setCellValue("D{$templateEnd}", $data["cn"][0]->CLSCHANGE);
+        $templateEnd += 1;
+        $sheet->setCellValue("D{$templateEnd}", ($data["cn"][0]->RSNNO == "5"? $data["cn"][0]->REASON." ".$data["cn"][0]->RSNOTHER : $data["cn"][0]->REASON ));
+        $templateEnd += 2;
+        $sheet->setCellValue("D{$templateEnd}", $data["attdwg"][0]->FILE_LIST);
+        $templateEnd += 1;
+        $sheet->setCellValue("D{$templateEnd}", $data["attmat"][0]->FILE_LIST);
+        $templateEnd += 1;
+        $sheet->setCellValue("D{$templateEnd}", $data["attmaker"][0]->FILE_LIST);
+        $templateEnd += 1;
+        $sheet->setCellValue("D{$templateEnd}", $data["attrohs"][0]->FILE_LIST);
+        $templateEnd += 1;
+        $sheet->setCellValue("D{$templateEnd}", $data["attpur"][0]->FILE_LIST);
+        $templateEnd += 3;
+        $sheet->setCellValue("D{$templateEnd}", $data["cn"][0]->PRDCTNAME);
+        $templateEnd += 1;
+        $sheet->setCellValue("D{$templateEnd}", $data["cn"][0]->BEFCHANGE);
+        $templateEnd += 1;
+        $sheet->setCellValue("D{$templateEnd}", $data["cn"][0]->AFTCHANGE);
+        $templateEnd += 1;
+        $sheet->setCellValue("D{$templateEnd}", $data["cn"][0]->SSUBMITDATE);
+        $templateEnd += 1;
+        $sheet->setCellValue("D{$templateEnd}", $data["cn"][0]->SINSPECDATE);
+        $templateEnd += 1;
+        $sheet->setCellValue("D{$templateEnd}", $data["cn"][0]->SEXPCHGDATE);
+        $templateEnd += 1;
+        $sheet->setCellValue("D{$templateEnd}", $data["attchk"][0]->FILE_LISTE);
+        $templateEnd += 1;
+        $sheet->setCellValue("D{$templateEnd}", $data["cn"][0]->JUDGEMENT." ". $data["cn"][0]->JDGOTHER);
+        $templateEnd += 4;
+        
+
+        $writer = new Xlsx($spreadsheet);
+        $filename = 'CN.xlsx';
+        ob_start();
+        $writer->save('php://output');
+        $excelContent = ob_get_contents(); // ได้ binary data
+        ob_end_clean();
+
+        $dFile = array(
+            'content'  => $excelContent,
+            'filename' => $filename, 
+        );
+        return $dFile;
+
+    }
     
      public function create_save_cnexcel($data)
     {
@@ -858,7 +972,7 @@ class form extends MY_Controller{
         $templateEnd = $templateEnd +1;
         $sheet->setCellValue("E{$templateEnd}", $data["cn"][0]->CLSCHANGE);
         $templateEnd = $templateEnd +1;
-        $sheet->setCellValue("C{$templateEnd}", ($data["cn"][0]->RSNNO == "5"? $data["cn"][0]->RSNOTHER : $data["cn"][0]->REASON));
+        $sheet->setCellValue("C{$templateEnd}", ($data["cn"][0]->RSNNO == "5"? $data["cn"][0]->REASON." ".$data["cn"][0]->RSNOTHER : $data["cn"][0]->REASON));
         $templateEnd = $templateEnd +1;
         $sheet->setCellValue("F{$templateEnd}", $data["cn"][0]->PRDCTNAME);
         $templateEnd = $templateEnd +1;
@@ -1342,6 +1456,23 @@ function insertEmptyRowsWithTemplate(Worksheet $sheet, int $templateStart, int $
             }
         }*/
     }
+}
+
+public function printcn() 
+{
+    $nfrmno = $_GET['no'];
+    $vorgno = $_GET['orgNo'];
+    $cyear =  $_GET['y'];
+    $cyear2 = $_GET['y2'];
+    $nrunno = $_GET['runNo'];
+    $cnData  = $this->cn->getcnform($nfrmno,$vorgno,$cyear,$cyear2,$nrunno);
+    $drawings  = $this->cn->customSelect("RESULTCHKDWG",array( 'NFRMNO' => $nfrmno,'VORGNO' => $vorgno,'CYEAR'  => $cyear,'CYEAR2' => $cyear2,'NRUNNO' => $nrunno),'DWGNO , REVNO , RESULT , REMARK');
+    $this->views('qaform/QA-CN/printcn', [
+        'cnData'   => $cnData,
+        'drawings' => $drawings,
+        'formno'   => $this->toFormNumber($nfrmno,$vorgno,$cyear,$cyear2,$nrunno)
+    ]);
+    
 }
 
 

@@ -1124,13 +1124,13 @@
                 Delete Form
             </button>
         @endif
-        @if (!empty($empinf) && in_array($empinf[0]->SSECCODE, ['000502', '000503']))
+        @if (!empty($empinf) && in_array($empinf[0]->SSECCODE, ['000502', '000503'])) 
             <button type="button" 
                     data-action="printFrm"
-                    class="btn-submit bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded shadow mx-1">
+                    class="btn-print btn-submit bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded shadow mx-1">
                 Print Form
-            </button>
-        @endif
+            </button> 
+        @endif 
         
         @if ($mode == $MODE_VIEW)
              @if (in_array($empno, [$form[0]->VREQNO, $form[0]->VINPUTER]) && $form[0]->CST == "1" && (!$demapv))
@@ -1140,11 +1140,15 @@
                     Return
                 </button>
              @endif
-             <button type="button"    data-action="export"
+        @endif
+        <button type="button"    data-action="export"
                     class="btn-export bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded shadow mx-1">
                 Export Excel
-            </button>
-        @endif
+        </button>
+        <button type="button"    data-action="export"
+                    class="btn-export-frm bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded shadow mx-1">
+                Export Form
+        </button>
     </td>
 </tr>
         
