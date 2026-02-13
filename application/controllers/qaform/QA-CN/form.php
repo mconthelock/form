@@ -861,7 +861,7 @@ class form extends MY_Controller{
         $formno = $this->toFormNumber($data["cn"][0]->NFRMNO , $data["cn"][0]->VORGNO , $data["cn"][0]->CYEAR,  $data["cn"][0]->CYEAR2,  $data["cn"][0]->NRUNNO);
         $sheet->setCellValue('D3',$formno);
         $sheet->setCellValue('D4',$data["cn"][0]->SREQDATE);
-        $sheet->setCellValue('D5',date('d/m/Y', strtotime($data["flow"][$cnt]->DAPVDATE)));
+        $sheet->setCellValue('D5',(!is_null($data["flow"][$cnt]->DAPVDATE)? date('d/m/Y', strtotime($data["flow"][$cnt]->DAPVDATE)):""));
         $sheet->setCellValue('D6',$data["cn"][0]->TITLE);
         $sheet->setCellValue('D7',$data["cn"][0]->ITEMNO);
         $templateStart = 8; // แถวแรกของ template data
