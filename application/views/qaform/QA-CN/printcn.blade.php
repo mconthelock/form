@@ -80,7 +80,7 @@ window.onafterprint = function () {
         <table border="1" cellpadding="1" cellspacing="0" bordercolor="#000000" width='100%'> 
 	        <tr bgcolor='#009999' align=center> <td>DWG No.</td><td>OK</td><td>NG</td><td>Remark</td></tr> 
             @foreach ($drawings as $d)
-             <tr><td width='15%'>{{ $d->DWGNO.(!is_null($d->REVNO)? "(".$d->REVNO.")":"") }}</td><td><input type='radio'></td><td><input type='radio'></td><td>{{ $d->REMARK}}</td></tr>
+             <tr><td width='15%'>{{ $d->DWGNO.(!is_null($d->REVNO)? " (".$d->REVNO.")":"") }}</td><td><input type='radio'></td><td><input type='radio'></td><td>{{ $d->REMARK}}</td></tr>
             @endforeach
         </table>
 	  </td>
