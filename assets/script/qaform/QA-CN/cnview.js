@@ -668,12 +668,13 @@ function opendwg(dwg,rev)
   }
   if(rev != "")
   {
-    window.open("http://amecweb.mitsubishielevatorasia.co.th/pdmopendwg/menu_control/openfile2?dwg="+dwg+"&rev="+rev,"dwg",NOTOP_WIN_CONF);
+     const win =  window.open("http://amecweb.mitsubishielevatorasia.co.th/pdmopendwg/menu_control/openfile2?dwg="+dwg+"&rev="+rev,"dwg",NOTOP_WIN_CONF);
   }else{
-    window.open("http://amecweb.mitsubishielevatorasia.co.th/pdmopendwg/menu_control/openfile2?dwg="+dwg,"dwg",NOTOP_WIN_CONF);
+     const win =  window.open("http://amecweb.mitsubishielevatorasia.co.th/pdmopendwg/menu_control/openfile2?dwg="+dwg,"dwg",NOTOP_WIN_CONF);
   }
-  winAtch.focus(); 
-  void(0);
+   if (win) {
+        win.focus();
+    }
 }
 
 function openExcel(fileName, dataBase64) {
