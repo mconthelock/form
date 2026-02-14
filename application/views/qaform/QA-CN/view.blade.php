@@ -171,11 +171,18 @@
                             <input type="text" name="txtL[]" 
                             class="w-40 h-8 px-2 border border-gray-300 bg-white focus:outline-none focus:ring-1 focus:ring-sky-400 rounded-sm"
                             value="{{ $l }}"></span>
+                            <span class="px-2">Rev no. :</span>
+                            <span>
+                                 <input type="text" name="revNo[]" 
+                            class="w-20 h-8 px-2 border border-gray-300 bg-white focus:outline-none focus:ring-1 focus:ring-sky-400 rounded-sm"
+                            value="{{ (!empty($d->REVNO))? $d->REVNO:'' }}">
+                      
+                            </span>
                         @else
-                         <span>{{ $d->DWGNO }}</span>
+                         <span>{{ $d->DWGNO.(!is_null($d->REVNO)? "(".$d->REVNO.")":"" ) }}</span>
                         @endif  
                     
-                        <span class="px-2">Rev no. :</span>
+                        <!-- <span class="px-2">Rev no. :</span>
                         <span>
                             @if ((($form[0]->CST == "0")||($mode == $MODE_EDIT)) && in_array($empno, [$form[0]->VREQNO, $form[0]->VINPUTER]))
                                  <input type="text" name="revNo[]" 
@@ -184,7 +191,7 @@
                             @else
                                 {{ (!empty($d->REVNO))? $d->REVNO:"" }}
                             @endif  
-                        </span>
+                        </span> -->
                         
                         @if ((($cextData >= 1) && ($cextData <= 3)) || ($cextData == 7))
                               <span class="px-2 text-red-600 font-semibold">
