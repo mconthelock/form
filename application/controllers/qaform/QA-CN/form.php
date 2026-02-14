@@ -881,7 +881,7 @@ class form extends MY_Controller{
         foreach($data['resultdwg'] as $i => $row)
         {
             $currentRow = $templateStart + $i;
-            $sheet->setCellValue("D{$currentRow}", $row->DWGNO);
+            $sheet->setCellValue("D{$currentRow}", $row->DWGNO.(!is_null($row->REVNO)? "(".$row->REVNO.")":"" ));
             $sheet->setCellValue("E{$currentRow}", ($row->RESULT == "0"? "OK":($row->RESULT == "1"? "NG":"")));
         }
         $templateEnd = $currentRow+1;
@@ -1033,7 +1033,7 @@ class form extends MY_Controller{
         foreach($data['resultdwg'] as $i => $row)
         {
             $currentRow = $templateStart + $i;
-            $sheet->setCellValue("C{$currentRow}", $row->DWGNO);
+            $sheet->setCellValue("C{$currentRow}", $row->DWGNO.(!is_null($row->REVNO)? "(".$row->REVNO.")":""));
             $sheet->setCellValue("H{$currentRow}", ($row->RESULT == "0"? "O":""));
             $sheet->setCellValue("I{$currentRow}", ($row->RESULT == "1"? "O":""));
             $sheet->setCellValue("J{$currentRow}", $row->REMARK);
