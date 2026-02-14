@@ -1066,7 +1066,7 @@
     <td colspan="2" class="py-4 text-center">
         @if ($mode == $MODE_EDIT)
             <div class="inline-block">
-                @if(!in_array($empno, [$form[0]->VREQNO, $form[0]->VINPUTER]))
+                @if(!in_array($empno, [$form[0]->VREQNO))
                 <button type="button" name="btnApprove"  id="btnApprove"
                         data-action="approve"
                         class="btn-submit bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded shadow mx-1">
