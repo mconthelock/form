@@ -1140,15 +1140,17 @@
                     Return
                 </button>
              @endif
-        @endif
-        <button type="button"    data-action="export"
+            <button type="button"    data-action="export"
                     class="btn-export bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded shadow mx-1">
                 Export Excel
-        </button>
+            </button>
+        @endif
+        @if ($form[0]->CST == "2")
         <button type="button"    data-action="export"
                     class="btn-export-frm bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded shadow mx-1">
                 Export Form
         </button>
+        @endif
     </td>
 </tr>
         
