@@ -661,20 +661,22 @@ function checkData(act)
 
 function opendwg(dwg,rev)
 {
+  console.log(dwg);
+  
     //alert("xxx"+dwg);
-  if(rev == "*")
-  {
-    rev = "0";
-  }
-  if(rev != "")
-  {
-     const win =  window.open("http://amecweb.mitsubishielevatorasia.co.th/pdmopendwg/menu_control/openfile2?dwg="+dwg+"&rev="+rev,"dwg",NOTOP_WIN_CONF);
-  }else{
-     const win =  window.open("http://amecweb.mitsubishielevatorasia.co.th/pdmopendwg/menu_control/openfile2?dwg="+dwg,"dwg",NOTOP_WIN_CONF);
-  }
-   if (win) {
-        win.focus();
-    }
+  // if(rev == "*")
+  // {
+  //   rev = "0";
+  // }
+  // if(rev != "")
+  // {
+  //    const win =  window.open("http://amecweb.mitsubishielevatorasia.co.th/pdmopendwg/menu_control/openfile2?dwg="+dwg+"&rev="+rev,"dwg",NOTOP_WIN_CONF);
+  // }else{
+  //    const win =  window.open("http://amecweb.mitsubishielevatorasia.co.th/pdmopendwg/menu_control/openfile2?dwg="+dwg,"dwg",NOTOP_WIN_CONF);
+  // }
+  //  if (win) {
+  //       win.focus();
+  //   }
 }
 
 function openExcel(fileName, dataBase64) {
