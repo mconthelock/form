@@ -179,7 +179,7 @@
                       
                             </span>
                         @else
-                         <span>{{ $d->DWGNO.(!is_null($d->REVNO)? "(".$d->REVNO.")":"" ) }}</span>
+                         <span>{{ $d->DWGNO.(!is_null($d->REVNO)? " (".$d->REVNO.")":"" ) }}</span>
                         @endif  
                     
                         <!-- <span class="px-2">Rev no. :</span>
