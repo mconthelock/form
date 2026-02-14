@@ -195,8 +195,9 @@
                         
                         @if ((($cextData >= 1) && ($cextData <= 3)) || ($cextData == 7))
                               <span class="px-2 text-red-600 font-semibold">
-                             <a OnClick="opendwg('{{ strtoupper(substr($d->DWGNO, 0, 9)) }}','')" style='cursor: pointer;' >openfile</a>
+                                <a class="btn-open  cursor-pointer" data-dwg="{{ strtoupper(substr($d->DWGNO, 0, 9)) }}" data-rev="{{ $d->REVNO }}" >openfile</a>
                              </span>
+                             
                          @endif
                         @if ((($form[0]->CST == "0")||($mode == $MODE_EDIT)) && in_array($empno, [$form[0]->VREQNO, $form[0]->VINPUTER]))
                         <span class="px-2">
@@ -1076,21 +1077,21 @@
                 @if(!in_array($empno, [$form[0]->VREQNO]))
                 <button type="button" name="btnApprove"  id="btnApprove"
                         data-action="approve"
-                        class="btn-submit bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded shadow mx-1">
+                        class="btn-submit cursor-pointer bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded shadow mx-1">
                     Approve
                 </button>
                 @endif
                 @if(!is_null($cnform->MSTATUS) &&($cextData == 6))
                 <button type="button" name="btnChange" 
                         data-action="change"
-                        class="btn-submit bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded shadow mx-1">
+                        class="btn-submit cursor-pointer bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded shadow mx-1">
                     Change
                 </button>
                 @endif
                 @if ((($cextData <= 4) || ($cextData == 8)) && !in_array($empno, [$form[0]->VREQNO, $form[0]->VINPUTER]))
                     <button type="button" name="btnReturn" id="btnReturn"
                              data-action="returnrem"
-                            class="btn-submit bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded shadow mx-1">
+                            class="btn-submit cursor-pointer bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded shadow mx-1">
                         Return
                     </button>
                 @endif
@@ -1098,7 +1099,7 @@
             @if(!in_array($empno, [$form[0]->VREQNO, $form[0]->VINPUTER]))
             <button type="button" name="btnReject" id="btnReject"
                     data-action="reject"
-                    class="btn-submit bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded shadow mx-1">
+                    class="btn-submit cursor-pointer bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded shadow mx-1">
                 Reject
             </button>
              @endif    
@@ -1107,34 +1108,34 @@
         @if (($form[0]->CST == "0" || $mode == $MODE_EDIT) && in_array($empno, [$form[0]->VREQNO, $form[0]->VINPUTER]))
             <button type="button" name="btnSave"
                     data-action="saveData"
-                    class="btn-submit bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded shadow mx-1">
+                    class="btn-submit cursor-pointer bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded shadow mx-1">
                 Save Data
             </button>
 
             @if ($form[0]->CST == "0")
                 <button type="button" name="btnSndApv" 
                         data-action="sendApv"
-                        class="btn-submit bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded shadow mx-1">
+                        class="btn-submit cursor-pointer bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded shadow mx-1">
                     Send Approve
                 </button>
             @else
                 <button type="button" name="btnSndApv" 
                         data-action="approve"
-                        class="btn-submit bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded shadow mx-1">
+                        class="btn-submit cursor-pointer bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded shadow mx-1">
                     Submit
                 </button>
             @endif
 
             <button type="button" name="btnDelete" 
                     data-action="deleteApv"
-                    class="btn-submit bg-red-700 hover:bg-red-800 text-white px-4 py-2 rounded shadow mx-1">
+                    class="btn-submit  cursor-pointer bg-red-700 hover:bg-red-800 text-white px-4 py-2 rounded shadow mx-1">
                 Delete Form
             </button>
         @endif
         @if (!empty($empinf) && in_array($empinf[0]->SSECCODE, ['000502', '000503'])) 
             <button type="button" 
                     data-action="printFrm"
-                    class="btn-print btn-submit bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded shadow mx-1">
+                    class="btn-print btn-submit cursor-pointer bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded shadow mx-1">
                 Print Form
             </button> 
         @endif 
@@ -1143,18 +1144,18 @@
              @if (in_array($empno, [$form[0]->VREQNO, $form[0]->VINPUTER]) && $form[0]->CST == "1" && (!$demapv))
                 <button type="button" name="btnReturn" 
                          data-action="return"
-                        class="btn-submit bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded shadow mx-1">
+                        class="btn-submit cursor-pointer bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded shadow mx-1">
                     Return
                 </button>
              @endif
             <button type="button"    data-action="export"
-                    class="btn-export bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded shadow mx-1">
+                    class="btn-export cursor-pointer bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded shadow mx-1">
                 Export Excel
             </button>
         @endif
         @if ($form[0]->CST == "2")
         <button type="button"    data-action="export"
-                    class="btn-export-frm bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded shadow mx-1">
+                    class="btn-export-frm cursor-pointer bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded shadow mx-1">
                 Export Form
         </button>
         @endif

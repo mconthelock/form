@@ -660,11 +660,25 @@ function checkData(act)
 }
 
 
+$(document).on("click", ".btn-open",  function () {
 
+    // var dwg = $(this).attr("data-dwg");
+    // var rev = $(this).attr("data-rev");
+    var dwg = $(this).data("dwg");
+    var rev = $(this).data("rev");
+    if (rev === "*") rev = "0";
 
-function opendwg(dwg , rev) {
-  console.log(dwg);
-  console.log(rev);
+    var url = "http://amecweb.mitsubishielevatorasia.co.th/pdmopendwg/menu_control/openfile2?dwg="
+        + encodeURIComponent(dwg)
+        + "&rev=" + encodeURIComponent(rev);
+
+    window.open(url, "dwg", "width=1000,height=800,scrollbars=yes,resizable=yes");
+
+  });
+
+//function opendwg(dwg , rev) {
+ // console.log(dwg);
+ // console.log(rev);
     //alert("xxx"+dwg);
   // if(rev == "*")
   // {
@@ -679,7 +693,7 @@ function opendwg(dwg , rev) {
   //  if (win) {
   //       win.focus();
   //   }
-}
+//}
 
 function openExcel(fileName, dataBase64) {
 	var fileType = fileName.split(".").pop();

@@ -561,12 +561,12 @@
         <td colspan="2" class="py-4 text-center">
                       <button type="button" name="btnSaveData"  id="btnSaveData"
                         data-action="save"
-                        class="btn-submit bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded shadow mx-1 cursor-pointer">
+                        class="btn-submit cursor-pointer bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded shadow mx-1 cursor-pointer">
                     Save Data
                 </button>
                             <button type="button" name="btnRequest"  id="btnRequest"
                         data-action="request"
-                        class="btn-submit bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded shadow mx-1 cursor-pointer">
+                        class="btn-submit cursor-pointer bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded shadow mx-1 cursor-pointer">
                     Request
                 </button>
                 
