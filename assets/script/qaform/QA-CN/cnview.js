@@ -659,10 +659,12 @@ function checkData(act)
   });
 }
 
-function opendwg(dwg,rev)
-{
+
+
+
+function opendwg(dwg , rev) {
   console.log(dwg);
-  
+  console.log(rev);
     //alert("xxx"+dwg);
   // if(rev == "*")
   // {
