@@ -334,7 +334,7 @@ class form extends MY_Controller{
                 if($cextData == 7)
                 {
                     $sqlOra = "update RTNLIBF.J736KP set J36K05 = 'Y' where J36K04 = '".$this->toFormNumber($nfrmno,  $vorgno, $cyear,  $cyear2,  $nrunno)."'";
-                   // $this->cn->execAssql($sqlOra);
+                    $this->cn->execAssql($sqlOra);
                 }
                 if($cextData >1 && $cextData != 5)
                 {
