@@ -512,6 +512,16 @@ class form extends MY_Controller{
 
     public function insertcn()
     {
+    
+        if (chkdup400($_POST["txtInvNo"], $_POST["txtPurItem"])) {
+
+        echo json_encode([
+            "status" => false,
+            "message" => "CN NO. duplicate, Please check"
+        ]);
+            return;  
+        }
+
         $status = true;
         $message = "";
         $act = $_POST["act"];
