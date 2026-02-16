@@ -513,7 +513,7 @@ class form extends MY_Controller{
     public function insertcn()
     {
     
-        if (chkdup400($_POST["txtInvNo"], $_POST["txtPurItem"])) {
+        if ($this->chkdup400($_POST["txtInvNo"], $_POST["txtPurItem"])) {
 
         echo json_encode([
             "status" => false,
