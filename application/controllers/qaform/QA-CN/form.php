@@ -90,7 +90,7 @@ class form extends MY_Controller{
           
         if(isset($_GET["runNo"]) && $_GET["runNo"] != "")
         {
-            $data['return']   = false;
+           // $data['return']   = false;
             $data['NRUNNO']   = $_GET["runNo"];
             $data['CYEAR2']   = $_GET["y2"];
             $form  = [
