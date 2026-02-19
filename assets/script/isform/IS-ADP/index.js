@@ -221,7 +221,9 @@ $(document).on('input', '.dev-confirm', function(){
         return;
     }
     rowData.DEV_PLAN = value;
-    table.row(rowIndex).data(rowData).draw(false);
+    $(this).on('blur', function(){
+        table.row(rowIndex).data(rowData).draw(false);
+    })
 });
 
 //prettier-ignore
