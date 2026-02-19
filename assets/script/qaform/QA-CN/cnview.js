@@ -566,6 +566,14 @@ function checkData(act)
         return false;
       }
       return true;
+  }else if( act == "returnb")
+  {
+       if($("#txtRemark").val() == "")
+          {
+            showMessage('Please input Remark for reason return', 'warning');
+            return false;
+          }
+
   }else if(act != "")
   {
       if(act =="returnrem")
@@ -628,7 +636,7 @@ function checkData(act)
         }
 
       }
-      if(cextdata == 7 && act != "returnb")
+      if(cextdata == 7)
       {
         let count = 0;
         while ($('#cn-form').find(`[name='radDwg${count}']`).length) {
