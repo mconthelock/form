@@ -193,7 +193,7 @@
                             @endif  
                         </span> -->
                         
-                        @if ((($cextData >= 1) && ($cextData <= 3)) || ($cextData == 7))
+                        @if ((($cextData >= 1) && ($cextData <= 3)) || ($cextData == 6)|| ($cextData == 7))
                               <span class="px-2 text-red-600 font-semibold">
                                 <a class="btn-open  cursor-pointer" data-dwg="{{ strtoupper(substr($d->DWGNO, 0, 9)) }}" data-rev="{{ $d->REVNO }}" >openfile</a>
                              </span>
@@ -1088,6 +1088,14 @@
                     Change
                 </button>
                 @endif
+
+                @if(!is_null($cnform->MSTATUS) &&($cextData == 7))
+                <button type="button" name="btnReturn" 
+                        data-action="returnb"
+                        class="btn-submit cursor-pointer bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded shadow mx-1">
+                    Return
+                </button>
+                @endif
                 @if ((($cextData <= 4) || ($cextData == 8)) && !in_array($empno, [$form[0]->VREQNO, $form[0]->VINPUTER]))
                     <button type="button" name="btnReturn" id="btnReturn"
                              data-action="returnrem"
@@ -1095,6 +1103,7 @@
                         Return
                     </button>
                 @endif
+
             </div>
             @if(!in_array($empno, [$form[0]->VREQNO, $form[0]->VINPUTER]))
             <button type="button" name="btnReject" id="btnReject"

@@ -1198,9 +1198,10 @@ HTML;
                     }else{ 
                         $data["html"] .= "<div>&nbsp;&nbsp;&nbsp;&nbsp;".$r->DWGNO."</div>";
                     }
+                    $data["html"] .= "<div>Status: ". ($r->RESULT == "0" ? "OK" : ($fstatus == "1" ? "NG" : "")) ."</div>";
                     $i++;
                 }
-                $data["html"] .= "<div>Status: ". ($fstatus == "2" ? "Approved" : ($fstatus == "3" ? "Rejected" : "Unknown")) ."</div>";
+                
          }
          
     }else if( $mtype === "REQUESTER"){
@@ -1232,13 +1233,23 @@ private function getApvEmail($data)
                  $sql = " SELECT DISTINCT e.SRECMAIL AS EMAIL
                 FROM FLOW f
                 JOIN AMEC.AEMPLOYEE e 
-                    ON f.VREALAPV = e.SEMPNO
+                    ON f.VAPVNO = e.SEMPNO
                 WHERE f.NFRMNO  = '".$data['NFRMNO']."'
                 AND f.VORGNO  = '".$data['VORGNO']."'
                 AND f.CYEAR   = '".$data['CYEAR']."'
                 AND f.CYEAR2  = '".$data['CYEAR2']."'
                 AND f.NRUNNO  = '".$data['NRUNNO']."'
-                AND e.CSTATUS = '1' AND CSTEPNO in ('--','06') union 
+                AND e.CSTATUS = '1' AND CSTEPNO in ('--') union 
+                SELECT DISTINCT e.SRECMAIL AS EMAIL
+                FROM FLOW f
+                JOIN AMEC.AEMPLOYEE e 
+                    ON f.VREPNO = e.SEMPNO
+                WHERE f.NFRMNO  = '".$data['NFRMNO']."'
+                AND f.VORGNO  = '".$data['VORGNO']."'
+                AND f.CYEAR   = '".$data['CYEAR']."'
+                AND f.CYEAR2  = '".$data['CYEAR2']."'
+                AND f.NRUNNO  = '".$data['NRUNNO']."'
+                AND e.CSTATUS = '1' AND CSTEPNO in ('--') union
                 SELECT DISTINCT e.SRECMAIL AS EMAIL FROM CNSHOPPIC c JOIN AMEC.AEMPLOYEE e ON c.ENG = e.SEMPNO
                 WHERE c.FM in (select VAPVNO from FLOW where NFRMNO = '".$data['NFRMNO']."' AND VORGNO = '".$data['VORGNO']."' AND CYEAR = '".$data['CYEAR']."' AND CYEAR2 = '".$data['CYEAR2']."' AND NRUNNO = '".$data['NRUNNO']."' and CEXTDATA ='06') ";
 
