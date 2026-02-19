@@ -17,7 +17,7 @@ let tableLine;
 let tablePassenger;
 let selectedBusId = null;
 let empMode = "add"; // add | edit
-let editingKey = null; // { STOP_ID, STATENO, SEMPNO }
+let editingKey = null; 
 let login_empno = null;
 
 let BUS_LINES = [];
@@ -114,7 +114,6 @@ async function showPassenger(busId) {
     renderPassengerTable([]);
     return;
   }
-
   try {
     await showLoader({ show: true });
     const data = await getPassengerAllDetail({
@@ -122,7 +121,6 @@ async function showPassenger(busId) {
     });
 
     console.log("Passenger From API:", data);
-
     const result = data
       .filter(row => Number(row.stop?.routed?.BUSLINE) === Number(busId))
       .filter(row => row.stop?.STOP_STATUS === "1")
