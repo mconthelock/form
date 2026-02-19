@@ -171,7 +171,18 @@ $(document).ready(async function () {
                       }
                   }
                 
-          }else
+          }else if("returnb")
+         {
+                  const confirm = await doaction({
+                       ...baseForm,
+                      ACTION: "returnb",
+                      EMPNO: empno,
+                      REMARK: $("#txtRemark").val()
+                    });
+                     if (confirm.status) {
+                      redirectWebflow();
+                     }
+         }else
           {
              //console.log(action);
               const statusact = await actionfrm(cnformData);
