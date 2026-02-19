@@ -1,15 +1,27 @@
 @extends('layouts/template')
 @section('contents')
 <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-10">
+    <!-- TOP ACTION BAR -->
+    <div class="flex justify-end mb-4">
+        <button id="btnExportPassenger"
+            class="bg-yellow-200 text-gray-600 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-gray-200 transition shadow-sm flex items-center gap-2 cursor-pointer">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" class="w-5 h-5">
+                <path fill="#21A366" d="M6 4h23v40H6z"/>
+                <path fill="#107C41" d="M29 4h13v40H29z"/>
+                <path fill="#fff"
+                    d="M14 16l3.2 5.5L14 27h2.6l1.9-3.7L20.4 27H23l-3.2-5.5L23 16h-2.6l-1.9 3.7L16.6 16H14z"/>
+            </svg>
+             Export Excel Data Passenger
+        </button>
+    </div>
+
     <div class="grid md:grid-cols-10 gap-6">
-        
         <div class="md:col-span-4 bg-white rounded-xl shadow border h-fit">
             <div class="flex justify-between items-center 
                         px-4 py-3 rounded-t-xl
                         bg-gradient-to-r from-blue-600 to-indigo-600">
                 <h3 class="text-white font-semibold text-lg"> 🚍 ข้อมูลสายรถ </h3>
             </div>
-
             <div class="p-4 overflow-x-auto">
                 <table id="line_emp_table" class="w-full text-sm"></table>
             </div>
@@ -46,7 +58,7 @@
             <div>
                 <label class="block text-sm font-medium mb-1">รหัสพนักงาน<b style="color:red">*</b></label>
                 <input type="text" id="txtEmpno"
-                       class="input input-bordered w-full"
+                       class="input input-bordered w-full" maxlength="5"
                        placeholder="กรอกรหัสพนักงาน">
             </div>
             <div>

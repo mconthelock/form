@@ -6,12 +6,15 @@ import {
   getStop,
   getRoute,
   getPassengerAllDetail,
+  getAllEmp,
   insertPassenger,
   updatePassenger,
   deletePassenger,
 } from "./data.js";
 import { createTable } from "@amec/webasset/dataTable";
 import { initApp, tableOption } from "../../utils.js";
+import { exportExcel, defaultExcel, mergeCell, applyStyleToRange, alignment, border } from "@amec/webasset/excel";
+
 
 let tableLine;
 let tablePassenger;
@@ -109,6 +112,8 @@ $(document).on("click", ".line-row", function () {
 });
 
 
+
+
 async function showPassenger(busId) {
   if (!busId) {
     renderPassengerTable([]);
@@ -121,22 +126,28 @@ async function showPassenger(busId) {
     });
 
     console.log("Passenger From API:", data);
+
     const result = data
-      .filter(row => Number(row.stop?.routed?.BUSLINE) === Number(busId))
+      .filter(row => row.stop?.routes?.some(r => Number(r.BUSLINE) === Number(busId)))
       .filter(row => row.stop?.STOP_STATUS === "1")
       .filter(row => row.Amecuserall?.CSTATUS === "1")
       .sort((a, b) =>
         parseInt(a.stop?.WORKDAY_TIMEIN || "9999") -
         parseInt(b.stop?.WORKDAY_TIMEIN || "9999")
       )
-      .map(row => ({
-        STOP_ID: row.stop?.STOP_ID,
-        STOP_NAME: row.stop?.STOP_NAME,
-        WORKDAY_TIMEIN: row.stop?.WORKDAY_TIMEIN,
-        SEMPNO: row.Amecuserall?.SEMPNO,
-        STNAME: row.Amecuserall?.STNAME,
-        STATENO: row.STATENO
-      }));
+      .map(row => {
+        const route = row.stop?.routes?.find(r => Number(r.BUSLINE) === Number(busId)) || {};
+        return {
+          STOP_ID: row.stop?.STOP_ID,
+          STOP_NAME: row.stop?.STOP_NAME,
+          WORKDAY_TIMEIN: row.stop?.WORKDAY_TIMEIN,
+          SEMPNO: row.Amecuserall?.SEMPNO,
+          STNAME: row.Amecuserall?.STNAME,
+          STATENO: row.STATENO,
+          BUSLINE: route.BUSLINE
+        };
+    });
+
 
     BUS_STOPS_BY_LINE = getStopsByLine(busId, 1);
     loadStopDropdown();
@@ -354,3 +365,122 @@ $(document).on("click", "#btnSaveEmp", async function () {
       await showLoader({ show: false });
     }
 });
+
+$("#btnExportPassenger").on("click", async function () {
+  try {
+    await showLoader({ show: true });
+
+    const data = await getAllEmp();
+    console.log("Export data:", data);
+
+    const today = new Date().toLocaleDateString("th-TH");
+
+    const workbook = await defaultExcel({
+      data: data.map((row, i) => ({
+        NO: i + 1,
+        SEMPNO: row.u_SEMPNO,
+        STNAME: row.u_STNAME,
+        SSEC: row.u_SSEC,
+        SDEPT: row.u_SDEPT,
+        SDIV: row.u_SDIV,
+        BUSNAME: row.BUSNAME || "รถส่วนตัว",
+        STOP_NAME: row.STOP_NAME || "รถส่วนตัว"
+      })),
+
+      column: [
+        { key: "NO", header: "No" },
+        { key: "SEMPNO", header: "Emp No" },
+        { key: "STNAME", header: "Name" },
+        { key: "SSEC", header: "Section" },
+        { key: "SDEPT", header: "Department" },
+        { key: "SDIV", header: "Division" },
+        { key: "BUSNAME", header: "สายรถ" },
+        { key: "STOP_NAME", header: "จุดลง (ขากลับ)" },
+      ],
+
+      sheetName: "Transport",
+      manual: true,
+      autoWidth: false,
+
+      manualActions: (sheet) => {
+
+        // ⭐ Title
+        sheet.insertRow(1, ["Employee Transportation Data"]);
+        sheet.insertRow(2, [`Update : ${today}`]);
+        sheet.insertRow(3, []);
+
+        mergeCell(sheet, 1, 1, 1, 8);
+        mergeCell(sheet, 2, 1, 2, 8);
+
+        applyStyleToRange(sheet, 1, 8, 1, {
+          font: { bold: true, size: 14 },
+          alignment: alignment("center", "middle")
+        });
+
+        applyStyleToRange(sheet, 1, 8, 2, {
+          font: { bold: true, size: 12 },
+          alignment: alignment("center", "middle")
+        });
+
+        applyStyleToRange(sheet, 1, 8, 4, {
+          font: { bold: true },
+          alignment: alignment("center", "middle"),
+          border: border()
+        });
+
+        // ⭐ fixed width (production layout)
+        sheet.getColumn(1).width = 5;
+        sheet.getColumn(2).width = 10;
+        sheet.getColumn(3).width = 32;
+        sheet.getColumn(4).width = 14;
+        sheet.getColumn(5).width = 16;
+        sheet.getColumn(6).width = 14;
+        sheet.getColumn(7).width = 18;
+        sheet.getColumn(8).width = 20;
+
+        // ⭐ alignment + border
+        sheet.eachRow((row, rowNumber) => {
+          if (rowNumber >= 4) {
+            row.eachCell((cell, colNumber) => {
+
+              // default center
+              cell.alignment = {
+                vertical: "middle",
+                horizontal: "center",
+                wrapText: true
+              };
+
+              // column C (Name) → left (row 5+)
+              if (colNumber === 3 && rowNumber >= 5) {
+                cell.alignment = {
+                  vertical: "middle",
+                  horizontal: "left",
+                  wrapText: true,
+                  indent: 1
+                };
+              }
+
+              // border
+              cell.border = border();
+
+              // ⭐ highlight รถส่วนตัว
+              if (cell.value === "รถส่วนตัว") {
+                cell.font = { color: { argb: "FF888888" } };
+              }
+            });
+          }
+        });
+
+      }
+    });
+
+    exportExcel(workbook, "employee_transport");
+
+  } catch (err) {
+    console.error(err);
+    showMessage("Export ไม่สำเร็จ", "error");
+  } finally {
+    await showLoader({ show: false });
+  }
+});
+
