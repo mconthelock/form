@@ -171,9 +171,9 @@ class Main extends MY_Controller {
         }
 
 
-        // if ($post['cash_adv'] == '0') {
-        //     $this->deleteFlowStep('', $nfrmno, $vorgno, $cyear, $cyear2, $nrunno, '19', '00'); // delete FIN Staff
-        // }
+        if ($post['cash_adv'] == '0') {
+            $this->deleteFlowStep('', $nfrmno, $vorgno, $cyear, $cyear2, $nrunno, '19', '00'); // delete FIN Staff
+        }
 
         // Handle Memo File Upload (file_memo)
         $memoFileName = null;
