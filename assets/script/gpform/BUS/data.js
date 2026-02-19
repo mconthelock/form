@@ -18,6 +18,8 @@ export const somefunction = async (data) => {
 export const getLine   = (data) => callAPI("/bus/line/search", "POST", data);
 export const getRoute  = (data) => callAPI("/bus/route/search", "POST", data);
 export const getStop   = (data) => callAPI("/bus/stop/search", "POST", data);
+export const getPassenger   = (data) => callAPI("/bus/passenger/search", "POST", data);
+export const getPassengerAllDetail   = (data) => callAPI("/bus/passenger/findAllWithRelations", "POST", data);
 
 export const insertLine  = (data) => callAPI("/bus/line/create", "POST", data);
 export const updateLine  = (data) => callAPI("/bus/line/update", "POST", data);
@@ -30,6 +32,10 @@ export const deleteStop  = (data) => callAPI("/bus/stop/delete", "POST", data);
 export const insertRoute  = (data) => callAPI("/bus/route/create", "POST", data);
 export const updateRoute  = (data) => callAPI("/bus/route/update", "POST", data);
 export const deleteRoute  = (data) => callAPI("/bus/route/delete", "POST", data);
+
+export const insertPassenger  = (data) => callAPI("/bus/passenger/create", "POST", data);
+export const updatePassenger  = (data) => callAPI("/bus/passenger/update", "POST", data);
+export const deletePassenger  = (data) => callAPI("/bus/passenger/delete", "POST", data);
 
 const callAPI = async (endpoint, method = "POST", data = null) => {
 	try {
