@@ -179,6 +179,9 @@ $(document).ready(async function () {
                       EMPNO: empno,
                       REMARK: $("#txtRemark").val()
                     });
+                     if (confirm.status) {
+                      redirectWebflow();
+                     }
          }else
           {
              //console.log(action);
