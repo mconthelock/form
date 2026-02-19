@@ -7,10 +7,7 @@ import {
     requiredForm,
 } from "@amec/webasset/utils";
 import { webflowSubmit, getformDetail } from "@amec/webasset/components/form";
-import {
-    dataTableSkeleton,
-    formSubmitSkeleton,
-} from "@amec/webasset/skeleton";
+import { dataTableSkeleton, formSubmitSkeleton } from "@amec/webasset/skeleton";
 import { getData, insertData } from "./data";
 import { redirectWebflow } from "@amec/webasset/form";
 import { showLoader } from "@amec/webasset/preloader";
@@ -19,6 +16,7 @@ import { getIsFile } from "@amec/webasset/api/isform";
 import { downloadOrOpenFile } from "@amec/webasset/api/file";
 import { getAnnualFyear } from "@amec/webasset/api/docinv";
 import { getUser } from "@amec/webasset/api/amec";
+import { classIcofont } from "@amec/webasset/fileExplorer";
 
 var formInfo,
     empno,
@@ -37,13 +35,14 @@ const columns = (fyear) => [
     { 
         data: "USER_REQ", 
         title: "Total User Request", 
-        width: "20%" 
+        width: "20%",
+        className: "text-center!"
     },
     {
         data: "DEV_PLAN",
         title: `FY${fyear} Development Plan`,
         width: "20%",
-        className: "!text-end",
+        className: "text-center!",
         render: function (data, type, row) {
             return mode == 1 ?`<input type="number"  class="input req dev-confirm" value="${data == 0 ? '' : data}" min="0" oninput="this.value = this.value.replace(/[^0-9]/g, '');" />` : data;
         },
@@ -103,7 +102,9 @@ $(async function () {
             if(file.length > 0){
                 let fileLink = "<div class='flex flex-col gap-3 mt-5'>";
                 file.forEach(f => {
-                    fileLink +=  `<a href="${f.FILE_PATH}" storedName="${f.FILE_FNAME}" class="file-link text-primary flex items-center gap-3 w-full border rounded-lg bg-base-100 p-3"><i class="icofont-file-excel text-success text-4xl"></i><span class="link link-primary">${f.FILE_ONAME}</span></a>`;
+                    const fileExt = f.FILE_ONAME.split('.').pop().toLowerCase();
+                    let iconClass = classIcofont(fileExt);
+                    fileLink +=  `<a href="${f.FILE_PATH}" storedName="${f.FILE_FNAME}" class="file-link text-primary flex items-center gap-3 w-full border rounded-lg bg-base-100 p-3"><i class="${iconClass} text-4xl"></i><span class="link link-primary">${f.FILE_ONAME}</span></a>`;
                 });
                 fileLink += "</div>";
                 $("#attachFile").html(fileLink);
@@ -147,18 +148,17 @@ $(async function () {
     } 
 });
 
-$(document).on('input', '#fyear', async function(){
+$(document).on("input", "#fyear", async function () {
     try {
-        if($(this).val().length == 4) {
+        if ($(this).val().length == 4) {
             fyear = $(this).val();
             $(".fyear").text(fyear);
-            const data = await getAnnualFyear(fyear)
-            .then((data) => 
+            const data = await getAnnualFyear(fyear).then((data) =>
                 data.map((item) => ({
                     ...item,
                     DEV_PLAN: 0,
-                })
-            ))
+                })),
+            );
             table = await createDataTable(data);
         }
     } catch (error) {
@@ -167,15 +167,15 @@ $(document).on('input', '#fyear', async function(){
     }
 });
 
-$(document).on('focusout', '#fyear', async function(){
+$(document).on("focusout", "#fyear", async function () {
     try {
-        if($(this).val().length < 4) {
-            $(this).val('');
+        if ($(this).val().length < 4) {
+            $(this).val("");
             $(this).focus();
-            $(".fyear").text('');
+            $(".fyear").text("");
             fyear = null;
             table = await createDataTable();
-            showMessage('Please enter 4 digit Year', 'warning');
+            showMessage("Please enter 4 digit Year", "warning");
         }
     } catch (error) {
         console.error("Error:", error);
@@ -183,34 +183,31 @@ $(document).on('focusout', '#fyear', async function(){
     }
 });
 
-$(document).on('input', '#REQUESTER', async function(){
+$(document).on("input", "#REQUESTER", async function () {
     try {
         const empno = $(this).val();
-        if(empno.length == 5){
+        if (empno.length == 5) {
             const data = await getUser(empno);
         }
-        
     } catch (error) {
-        $(this).val('');
+        $(this).val("");
         console.error("Error:", error);
         showErrorMessage(error.message);
     }
 });
 
-$(document).on('focusout', '#REQUESTER', async function(){
+$(document).on("focusout", "#REQUESTER", async function () {
     try {
         const empno = $(this).val();
-        if(empno.length < 5){
-            $(this).val('');
-            showMessage('Please enter 5 digit Employee Number', 'warning');
+        if (empno.length < 5) {
+            $(this).val("");
+            showMessage("Please enter 5 digit Employee Number", "warning");
         }
-        
     } catch (error) {
         console.error("Error:", error);
         showErrorMessage(error.message);
     }
 });
-
 
 //prettier-ignore
 $(document).on('input', '.dev-confirm', function(){
@@ -338,10 +335,20 @@ async function createDataTable(data = []){
             data: data,
             columns: columns(fyear),
             searching: false,
+            responsive: false,
             lengthChange: false,
             paging: false,
             info: false,
             ordering: false,
+            initComplete: function () {
+                const api = this.api();
+                // ถ้ายังไม่มี tfoot ค่อยสร้าง
+                if ($(api.table().footer()).length === 0) {
+                    $(api.table().node()).append(`<tfoot>${createFooter(api)}</tfoot>`);
+                }else{
+                    $(api.table().footer()).html(createFooter(api));
+                }
+            },
             footerCallback: function (row, data, start, end, display) {
                 let table = this.api();
                 let total = 0, totalDev = 0;
@@ -359,7 +366,6 @@ async function createDataTable(data = []){
                             $('#totalDev').text(totalDev || 0);
                             break;
                     }
-                    $(table.column(colIndex).footer()).html(sum.toLocaleString() );
                 });
                 const sub = total - totalDev;
                 $('#sub').text(sub)
@@ -369,6 +375,25 @@ async function createDataTable(data = []){
             dataTableCss: false,
         }
     );
+}
+
+function createFooter(table){
+    let html = "<tr>";
+    table.columns().every(function (colIndex) {
+        
+        if (colIndex === 0) {
+            html += '<th class="text-end">Total</th>';
+            return;
+        }
+        let sum = this.data().reduce((a, b) => Number(a) + Number(b),0);
+        if(colIndex > 2){
+            html += `<th class="!text-end">${sum.toLocaleString()}</th>`;
+        }else{
+            html += `<th></th>`;
+        }
+    });
+    html += "</tr>";
+    return html;
 }
 
 async function setSkeleton(mode) {

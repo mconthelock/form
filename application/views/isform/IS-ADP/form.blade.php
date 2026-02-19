@@ -72,15 +72,6 @@
                 </div>
                 <div class="detail-table">
                     <table id="table" class="table table-sm">
-                        <tfoot>
-                            <tr>
-                                <th>Grand Total</th>
-                                <th></th>
-                                <th></th>
-                                <th></th>
-                                <th></th>
-                            </tr>
-                        </tfoot>
                     </table>
                 </div>
                 @If($mode == 1)
