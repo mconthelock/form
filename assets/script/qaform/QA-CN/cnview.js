@@ -628,7 +628,7 @@ function checkData(act)
         }
 
       }
-      if(cextdata == 7)
+      if(cextdata == 7 && act != "returnb")
       {
         let count = 0;
         while ($('#cn-form').find(`[name='radDwg${count}']`).length) {
