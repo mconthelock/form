@@ -372,9 +372,7 @@ $("#btnExportPassenger").on("click", async function () {
 
     const data = await getAllEmp();
     console.log("Export data:", data);
-
     const today = new Date().toLocaleDateString("th-TH");
-
     const workbook = await defaultExcel({
       data: data.map((row, i) => ({
         NO: i + 1,
@@ -401,10 +399,7 @@ $("#btnExportPassenger").on("click", async function () {
       sheetName: "Transport",
       manual: true,
       autoWidth: false,
-
       manualActions: (sheet) => {
-
-        // ⭐ Title
         sheet.insertRow(1, ["Employee Transportation Data"]);
         sheet.insertRow(2, [`Update : ${today}`]);
         sheet.insertRow(3, []);
@@ -413,17 +408,17 @@ $("#btnExportPassenger").on("click", async function () {
         mergeCell(sheet, 2, 1, 2, 8);
 
         applyStyleToRange(sheet, 1, 8, 1, {
-          font: { bold: true, size: 14 },
+          font: { bold: true, size: 16 },
           alignment: alignment("center", "middle")
         });
 
         applyStyleToRange(sheet, 1, 8, 2, {
-          font: { bold: true, size: 12 },
+          font: { bold: true, size: 14 },
           alignment: alignment("center", "middle")
         });
 
         applyStyleToRange(sheet, 1, 8, 4, {
-          font: { bold: true },
+          font: { bold: true ,size: 14},
           alignment: alignment("center", "middle"),
           border: border()
         });
@@ -442,7 +437,7 @@ $("#btnExportPassenger").on("click", async function () {
         sheet.eachRow((row, rowNumber) => {
           if (rowNumber >= 4) {
             row.eachCell((cell, colNumber) => {
-
+               cell.font = { ...cell.font, size: 12 };
               // default center
               cell.alignment = {
                 vertical: "middle",
@@ -460,17 +455,11 @@ $("#btnExportPassenger").on("click", async function () {
                 };
               }
 
-              // border
               cell.border = border();
-
-              // ⭐ highlight รถส่วนตัว
-              if (cell.value === "รถส่วนตัว") {
-                cell.font = { color: { argb: "FF888888" } };
-              }
+              if (cell.value === "รถส่วนตัว") { cell.font = { color: { argb: "FF888888" } }; }
             });
           }
         });
-
       }
     });
 
