@@ -573,7 +573,7 @@ function checkData(act)
             showMessage('Please input Remark for reason return', 'warning');
             return false;
           }
-
+          
   }else if(act != "")
   {
       if(act =="returnrem")
