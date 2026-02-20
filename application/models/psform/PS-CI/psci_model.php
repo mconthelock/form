@@ -27,7 +27,7 @@ class psci_model extends CI_Model {
 
     public function getListItem($assignId)
     {
-        $this->sk->select('i.IBUYC, i.IPROD, i.IDESC, i.IDRAW, i.IABBT, icr.CONTROLLER_ID, a.STNAME, icr.ON_HAND, i.IUMS, icr.ACTUAL_QTY, icr.DIFF, icr.REMARK')
+        $this->sk->select('i.IBUYC, i.IPROD, i.IDESC, i.IDRAW, i.IABBT, icr.CONTROLLER_ID, icr.RANDOM_CHECK, a.STNAME, icr.ON_HAND, i.IUMS, icr.ACTUAL_QTY, icr.DIFF, icr.REMARK')
             ->from('INV_CHECK_RESULT icr')
             ->join('IIM i', 'i.IPROD = icr.ITEM_CODE', 'left')
             ->join('AMECUSERALL a', 'a.SEMPNO = icr.CONTROLLER_ID', 'left')

@@ -44,6 +44,8 @@ $(document).ready(async function () {
     $(".diff-item-first-time").text(diffItemFirstTime);
     const diffItemAfterRecheck = data.filter(item => (item.ACTUAL_QTY !== null) && (item.REMARK !== null) && (item.ACTUAL_QTY !== item.ON_HAND)).length;
     $(".diff-item-after-recheck").text(diffItemAfterRecheck);
+    const randomCheckItem = data.filter(item => item.RANDOM_CHECK !== null).length;
+    $(".random-check").text(randomCheckItem);
 
     const columns = [
         {
@@ -90,7 +92,7 @@ $(document).ready(async function () {
                 }
             }
         },
-        { data: null, defaultContent: "", className: "border-r border-slate-200" },
+        { data: "RANDOM_CHECK", className: "border-r border-slate-200" },
         { data: "REMARK", defaultContent: "", className: "text-center" }
     ];
 
