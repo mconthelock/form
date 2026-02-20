@@ -10,6 +10,10 @@ module.exports = {
 	clearanceNoAdv: "./assets/script/gpform/GP-CLER/noAdv.js", //Clearance page
 	clearanceView: "./assets/script/gpform/GP-CLER/view.js", //Clearance page
 
+	//BUS
+	bus_routes: "./assets/script/gpform/BUS/bus_routes.js",
+	bus_passenger: "./assets/script/gpform/BUS/bus_passenger.js",
+
 	//GP-TRN
 	alert: "./assets/script/gpform/GP-TRN/alert.js",
 	formUtils: "./assets/script/gpform/GP-TRN/formUtils.js",
@@ -28,4 +32,7 @@ module.exports = {
 	view_train_report: "./assets/script/gpform/GP-TRN/view_train_report.js",
 	manage_group: "./assets/script/gpform/GP-TRN/manage_group.js",
 	show_sum_report: "./assets/script/gpform/GP-TRN/show_sum_report.js",
+
+	//BUS
+	bus_lines: "./assets/script/gpform/bus/lines.js", //Bus LineS page
 };
