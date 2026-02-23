@@ -7,7 +7,7 @@ class qoi_model extends my_model
     {
         parent::__construct();
         $this->load->database();
-       
+       $this->dbas = $this->load->database('AS400', true);
 
     }
 
@@ -129,5 +129,10 @@ class qoi_model extends my_model
         ->where('Q.NRUNNO', $nrunno);
     return $this->db->get()->result();
     }
+
+        public function getdataAssql($q)
+	{
+		return $this->dbas->query($q)->result();
+	}
 
 }
