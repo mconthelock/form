@@ -279,7 +279,8 @@ class form extends MY_Controller{
             if(($cextData >= 2) && ($cextData < 8))
             {
                 unset($form["CEXTDATA"]);
-                $this->updaterequest($form);
+                //$this->updaterequest($form);
+                $this->updateresult($form);
                 if(isset($_POST["cnt"]) && $act <> "return")
                 {
                     $data = array();
@@ -461,6 +462,13 @@ class form extends MY_Controller{
 
             unset($form["CEXTDATA"]);
             $this->cn->update("CNFORM",  $data , $form);
+  
+  
+
+    }
+
+    private function updateresult($form)
+    {
             $radJudge = isset($_POST["radJudge"]) ? $_POST["radJudge"] : '';
             if( $radJudge == "2.5" || $radJudge == "4.2" )
             {
@@ -477,8 +485,6 @@ class form extends MY_Controller{
                 ];
                  $this->cn->update("CNFORM",  $data , $form);
             }
-  
-
     }
 
     private function insertdwg($form)

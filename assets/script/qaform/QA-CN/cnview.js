@@ -98,7 +98,8 @@ $(document).ready(async function () {
                     const formStatus = await getFormStatus({
                        ...baseForm
                     });
-                    
+                      console.log("formStatus ="+formStatus);
+                      
                       if (formStatus == "2" || formStatus == "3") { 
                            if((formStatus == "3") && (mstatus == "1"))
                             {
