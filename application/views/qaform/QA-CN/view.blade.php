@@ -90,10 +90,10 @@
         <tr>
             <td class="force-w-350">Title</td>
             <td class="px-3 py-1 bg-gray-100 border-b border-white">
-            <!-- @if (
+            {{-- @if (
                 ($mode == $MODE_EDIT && $cextData >= 2 )
                 || ((($form[0]->CST == "0")||($mode == $MODE_EDIT)) && in_array($empno, [$form[0]->VREQNO, $form[0]->VINPUTER]))
-            ) -->
+            ) --}}
             @if (((($form[0]->CST == "0")||($mode == $MODE_EDIT)) && in_array($empno, [$form[0]->VREQNO, $form[0]->VINPUTER])))
                 <input type="text" name="txtTitle" 
                        class="w-1/3 h-8 px-2 border border-gray-300 bg-white focus:outline-none focus:ring-1 focus:ring-sky-400 rounded-sm req"
@@ -107,10 +107,10 @@
         <tr>
             <td class="force-w-350">Order No.</td>
             <td class="px-3 py-1 bg-gray-100 text-gray-800 border-b border-white">
-            <!-- @if (
+            {{-- @if (
                 ($mode == $MODE_EDIT && $cextData >= 2 )
                 || ((($form[0]->CST == "0")||($mode == $MODE_EDIT)) && in_array($empno, [$form[0]->VREQNO, $form[0]->VINPUTER]))
-            ) -->
+            ) --}}
             @if (((($form[0]->CST == "0")||($mode == $MODE_EDIT)) && in_array($empno, [$form[0]->VREQNO, $form[0]->VINPUTER])))
                 <input type="text" name="txtOrder" 
                        class="w-1/3 h-8 px-2 border border-gray-300 bg-white focus:outline-none focus:ring-1 focus:ring-sky-400 rounded-sm req"
@@ -125,10 +125,10 @@
         <tr>
             <td class="force-w-350">Item</td>
             <td class="px-3 py-1 bg-gray-100 border-b border-white">
-            <!-- @if (
+            {{--  @if (
                 ($mode == $MODE_EDIT && $cextData >= 2 )
                 || ((($form[0]->CST == "0")||($mode == $MODE_EDIT)) && in_array($empno, [$form[0]->VREQNO, $form[0]->VINPUTER]))
-            ) -->
+            ) --}}
             @if (((($form[0]->CST == "0")||($mode == $MODE_EDIT)) && in_array($empno, [$form[0]->VREQNO, $form[0]->VINPUTER])))
                 <input type="text" name="txtItemno" 
                        class="w-36 h-8 px-2 border border-gray-300 bg-white focus:outline-none focus:ring-1 focus:ring-sky-400 rounded-sm"
@@ -268,10 +268,10 @@
         <tr>
             <td class="force-w-350">Part Name</td>
             <td class="px-3 py-1 bg-gray-100 border-b border-white">
-            <!-- @if (
+            {{-- @if (
                 ($mode == $MODE_EDIT && $cextData >= 2 && $cextData < 8 )
                 || ((($form[0]->CST == "0")||($mode == $MODE_EDIT)) && in_array($empno, [$form[0]->VREQNO, $form[0]->VINPUTER]))
-            ) -->
+                ) --}}
             @if (((($form[0]->CST == "0")||($mode == $MODE_EDIT)) && in_array($empno, [$form[0]->VREQNO, $form[0]->VINPUTER])))
                 <input type="text" name="txtPrtName" 
                        class="w-1/3 h-8 px-2 border border-gray-300 bg-white focus:outline-none focus:ring-1 focus:ring-sky-400 rounded-sm req"
@@ -285,10 +285,10 @@
         <tr>
             <td class="force-w-350">Pur Item No.</td>
             <td class="px-3 py-1 bg-gray-100 border-b border-white">
-            <!-- @if (
+             {{-- @if (
                 ($mode == $MODE_EDIT && $cextData >= 2 && $cextData < 8 )
                 || ((($form[0]->CST == "0")||($mode == $MODE_EDIT)) && in_array($empno, [$form[0]->VREQNO, $form[0]->VINPUTER]))
-            ) -->
+            ) --}}
             @if (((($form[0]->CST == "0")||($mode == $MODE_EDIT)) && in_array($empno, [$form[0]->VREQNO, $form[0]->VINPUTER])))
                 <input type="text" name="txtPurItem" 
                        class="w-48 h-8 px-2 border border-gray-300 bg-white focus:outline-none focus:ring-1 focus:ring-sky-400 rounded-sm req"
@@ -302,10 +302,10 @@
         <tr>
             <td class="force-w-350">PO. or Invoice no.</td>
             <td class="px-3 py-1 bg-gray-100 border-b border-white">
-            <!-- @if (
+          {{-- @if (
                 ($mode == $MODE_EDIT && $cextData >= 2 && $cextData < 8 )
                 || ((($form[0]->CST == "0")||($mode == $MODE_EDIT)) && in_array($empno, [$form[0]->VREQNO, $form[0]->VINPUTER]))
-            ) -->
+            )  --}}
             @if (((($form[0]->CST == "0")||($mode == $MODE_EDIT)) && in_array($empno, [$form[0]->VREQNO, $form[0]->VINPUTER])))
                 <input type="text" name="txtInvNo" 
                        class="w-1/3 h-8 px-2 border border-gray-300 bg-white focus:outline-none focus:ring-1 focus:ring-sky-400 rounded-sm req"
@@ -320,10 +320,10 @@
         <tr>
             <td class="force-w-350">Order Quantity</td>
             <td class="px-3 py-1 bg-gray-100 border-b border-white">
-            <!-- @if (
+           {{-- @if (
                 ($mode == $MODE_EDIT && $cextData >= 2 && $cextData < 8 )
                 || ((($form[0]->CST == "0")||($mode == $MODE_EDIT)) && in_array($empno, [$form[0]->VREQNO, $form[0]->VINPUTER]))
-            ) -->
+            ) --}}
             @if (((($form[0]->CST == "0")||($mode == $MODE_EDIT)) && in_array($empno, [$form[0]->VREQNO, $form[0]->VINPUTER])))
                 <input type="text" name="txtOrdQ" 
                        class="w-24 h-8 px-2 border border-gray-300 bg-white focus:outline-none focus:ring-1 focus:ring-sky-400 rounded-sm req"
@@ -337,11 +337,11 @@
         <tr>
             <td class="force-w-350">Supplier or subcontractor name</td>
             <td class="px-3 py-1 bg-gray-100 border-b border-white">
-            <!-- @if (
+            {{-- @if (
                 ($mode == $MODE_EDIT && $cextData >= 2 && $cextData < 8 )
                 || ((($form[0]->CST == "0")||($mode == $MODE_EDIT)) && in_array($empno, [$form[0]->VREQNO, $form[0]->VINPUTER]))
-            ) -->
-            @if (((($form[0]->CST == "0")||($mode == $MODE_EDIT)) && in_array($empno, [$form[0]->VREQNO, $form[0]->VINPUTER])))
+            ) --}}
+            @if(((($form[0]->CST == "0")||($mode == $MODE_EDIT)) && in_array($empno, [$form[0]->VREQNO, $form[0]->VINPUTER])))
                 <input type="text" name="txtSupName" 
                        class="w-1/3 h-8 px-2 border border-gray-300 bg-white focus:outline-none focus:ring-1 focus:ring-sky-400 rounded-sm req"
                        value="{{ $cnform->SVENDNAME }}">
@@ -354,10 +354,10 @@
         <tr>
             <td class="force-w-350 align-top pt-2 ">Classification of changing</td>
             <td class="px-3 py-2 bg-gray-100 border-b border-white ">
-            <!-- @if (
+            {{-- @if (
                 ($mode == $MODE_EDIT && $cextData >= 2 && $cextData < 8 )
                 || ((($form[0]->CST == "0")||($mode == $MODE_EDIT)) && in_array($empno, [$form[0]->VREQNO, $form[0]->VINPUTER]))
-            ) -->
+            ) --}}
             @if (((($form[0]->CST == "0")||($mode == $MODE_EDIT)) && in_array($empno, [$form[0]->VREQNO, $form[0]->VINPUTER])))
                 <div class="flex flex-col space-y-1">
                 @foreach ($cncls as $c)
@@ -375,10 +375,10 @@
         <tr>
             <td class="force-w-350 align-top pt-2">Reason</td>
             <td class="px-3 py-2 bg-gray-100 border-b border-white">
-            <!-- @if (
+            {{-- @if (
                 ($mode == $MODE_EDIT && $cextData >= 2 && $cextData < 8 )
                 || ((($form[0]->CST == "0")||($mode == $MODE_EDIT)) && in_array($empno, [$form[0]->VREQNO, $form[0]->VINPUTER]))
-            ) -->
+            ) --}}
             @if (((($form[0]->CST == "0")||($mode == $MODE_EDIT)) && in_array($empno, [$form[0]->VREQNO, $form[0]->VINPUTER])))
                 <div class="flex flex-col space-y-1">
                     @foreach ($cnreason as $r)
@@ -400,10 +400,10 @@
         <tr>
             <td class="force-w-350 align-top pt-2">Sample transaction</td>
             <td class="px-3 py-2 bg-gray-100 border-b border-white">
-            <!-- @if (
+            {{-- @if (
                 ($mode == $MODE_EDIT && $cextData >= 2 && $cextData < 8 )
                 || ((($form[0]->CST == "0")||($mode == $MODE_EDIT)) && in_array($empno, [$form[0]->VREQNO, $form[0]->VINPUTER]))
-            ) -->
+            ) --}}
             @if (((($form[0]->CST == "0")||($mode == $MODE_EDIT)) && in_array($empno, [$form[0]->VREQNO, $form[0]->VINPUTER])))
                 <div class="flex flex-col space-y-1">
                     <label class="flex items-center space-x-2 cursor-pointer">
@@ -429,10 +429,10 @@
         <tr>
             <td class="force-w-350 align-top pt-2 ">RQ or CN No. for reference.</td>
             <td class="px-3 py-2 bg-gray-100 border-b border-white ">
-            <!-- @if (
+            {{-- @if (
                 ($mode == $MODE_EDIT && $cextData >= 2 && $cextData < 8 )
                 || ((($form[0]->CST == "0")||($mode == $MODE_EDIT)) && in_array($empno, [$form[0]->VREQNO, $form[0]->VINPUTER]))
-            ) -->
+            ) --}}
             @if (((($form[0]->CST == "0")||($mode == $MODE_EDIT)) && in_array($empno, [$form[0]->VREQNO, $form[0]->VINPUTER])))
                      <input type="text" name="txtNoRef" 
                        class="w-[250px] h-8 px-2 border border-gray-300 bg-white focus:outline-none focus:ring-1 focus:ring-sky-400 rounded-sm"
@@ -739,10 +739,10 @@
         <tr>
             <td class="force-w-350 align-top pt-2 ">Part Arrive Date / Prod. Month</td>
             <td class="px-3 py-2 bg-gray-100 border-b border-white ">
-            <!-- @if (
+            {{-- @if (
                 ($mode == $MODE_EDIT && $cextData >= 2 && $cextData < 8 )
                 || ((($form[0]->CST == "0")||($mode == $MODE_EDIT)) && in_array($empno, [$form[0]->VREQNO, $form[0]->VINPUTER]))
-            ) -->
+            ) --}}
             @if (((($form[0]->CST == "0")||($mode == $MODE_EDIT)) && in_array($empno, [$form[0]->VREQNO, $form[0]->VINPUTER])))
             <input type="text" class="w-[120px] bg-white border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-400 req" name="part_date" id="part_date" value="{{$cnform->PRDCTNAME}}"  />
     
@@ -757,10 +757,10 @@
         <tr>
             <td class="force-w-350 align-top pt-2 ">Part Arrive Location</td>
             <td class="px-3 py-2 bg-gray-100 border-b border-white ">
-            <!-- @if (
+            {{-- @if (
                 ($mode == $MODE_EDIT && $cextData >= 2 && $cextData < 8 )
                 || ((($form[0]->CST == "0")||($mode == $MODE_EDIT)) && in_array($empno, [$form[0]->VREQNO, $form[0]->VINPUTER]))
-            ) -->
+            ) --}}
             @if (((($form[0]->CST == "0")||($mode == $MODE_EDIT)) && in_array($empno, [$form[0]->VREQNO, $form[0]->VINPUTER])))
             <input type="text" class="w-48 bg-white border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-400 req" name="txtprtLoc"  value="{{$cnform->PRTLOC}}"  />
     
@@ -772,10 +772,10 @@
         <tr>
             <td class="force-w-350 align-top pt-2 ">Before Changing</td>
             <td class="px-3 py-2 bg-gray-100 border-b border-white ">
-            <!-- @if (
+            {{-- @if (
                 ($mode == $MODE_EDIT && $cextData >= 2 && $cextData < 8 )
                 || ((($form[0]->CST == "0")||($mode == $MODE_EDIT)) && in_array($empno, [$form[0]->VREQNO, $form[0]->VINPUTER]))
-            ) -->
+            ) --}}
             @if (((($form[0]->CST == "0")||($mode == $MODE_EDIT)) && in_array($empno, [$form[0]->VREQNO, $form[0]->VINPUTER])))
             <textarea name="txtBefChg" id="txtBefChg" rows="3" class="w-1/3 bg-white border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-400 req resize-none">{{ $cnform->BEFCHANGE }}</textarea>
          
@@ -787,10 +787,10 @@
         <tr>
             <td class="force-w-350 align-top pt-2 ">After Changing</td>
             <td class="px-3 py-2 bg-gray-100 border-b border-white ">
-            <!-- @if (
+            {{-- @if (
                 ($mode == $MODE_EDIT && $cextData >= 2 && $cextData < 8 )
                 || ((($form[0]->CST == "0")||($mode == $MODE_EDIT)) && in_array($empno, [$form[0]->VREQNO, $form[0]->VINPUTER]))
-            ) -->
+            ) --}}
             @if (((($form[0]->CST == "0")||($mode == $MODE_EDIT)) && in_array($empno, [$form[0]->VREQNO, $form[0]->VINPUTER])))
             <textarea name="txtAftChg" id="txtAftChg" rows="3" class="w-1/3 bg-white border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-400 req resize-none">{{ $cnform->AFTCHANGE }}</textarea>
          
@@ -802,10 +802,10 @@
         <tr>
             <td class="force-w-350 align-top pt-2 ">Possible Submitting Date</td>
             <td class="px-3 py-2 bg-gray-100 border-b border-white ">
-            <!-- @if (
+            {{-- @if (
                 ($mode == $MODE_EDIT && $cextData >= 2 && $cextData < 8 )
                 || ((($form[0]->CST == "0")||($mode == $MODE_EDIT)) && in_array($empno, [$form[0]->VREQNO, $form[0]->VINPUTER]))
-            ) -->
+            ) --}}
             @if (((($form[0]->CST == "0")||($mode == $MODE_EDIT)) && in_array($empno, [$form[0]->VREQNO, $form[0]->VINPUTER]))) 
             <input type="text" class="w-[120px] bg-white border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-400 req" name="submit_date" id="submit_date" value="{{$cnform->SSUBMITDATE}}"  />
     
@@ -817,10 +817,10 @@
         <tr>
             <td class="force-w-350 align-top pt-2 ">Required Inspection Date</td>
             <td class="px-3 py-2 bg-gray-100 border-b border-white ">
-            <!-- @if (
+            {{-- @if (
                 ($mode == $MODE_EDIT && $cextData >= 2 && $cextData < 8 )
                 || ((($form[0]->CST == "0")||($mode == $MODE_EDIT)) && in_array($empno, [$form[0]->VREQNO, $form[0]->VINPUTER]))
-            ) -->
+            ) --}}
             @if (((($form[0]->CST == "0")||($mode == $MODE_EDIT)) && in_array($empno, [$form[0]->VREQNO, $form[0]->VINPUTER])))
             <input type="text" class="w-[120px] bg-white border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-400 req" name="inspec_date" id="inspec_date" value="{{$cnform->SINSPECDATE}}"  />
     
@@ -832,10 +832,10 @@
         <tr>
             <td class="force-w-350 align-top pt-2 ">Expected Changing Date</td>
             <td class="px-3 py-2 bg-gray-100 border-b border-white ">
-            <!-- @if (
+            {{-- @if (
                 ($mode == $MODE_EDIT && $cextData >= 2 && $cextData < 8 )
                 || ((($form[0]->CST == "0")||($mode == $MODE_EDIT)) && in_array($empno, [$form[0]->VREQNO, $form[0]->VINPUTER]))
-            ) -->
+            ) --}}
             @if (((($form[0]->CST == "0")||($mode == $MODE_EDIT)) && in_array($empno, [$form[0]->VREQNO, $form[0]->VINPUTER])))
             <input type="text" class="w-[120px] bg-white border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-400 req" name="expchg_date" id="expchg_date" value="{{$cnform->SEXPCHGDATE}}"  />
     
