@@ -437,8 +437,7 @@ $("#btnExportPassenger").on("click", async function () {
         sheet.eachRow((row, rowNumber) => {
           if (rowNumber >= 4) {
             row.eachCell((cell, colNumber) => {
-               cell.font = { ...cell.font, size: 12 };
-              // default center
+              cell.font = { ...cell.font, size: 12 };
               cell.alignment = {
                 vertical: "middle",
                 horizontal: "center",
@@ -462,7 +461,6 @@ $("#btnExportPassenger").on("click", async function () {
         });
       }
     });
-
     exportExcel(workbook, "employee_transport");
 
   } catch (err) {

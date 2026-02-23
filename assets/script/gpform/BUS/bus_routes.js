@@ -11,7 +11,6 @@ import {
   updateStop,
   deleteStop,
   insertRoute,
-  updateRoute,
   deleteRoute,
 } from "./data.js";
 import { createTable } from "@amec/webasset/dataTable";
