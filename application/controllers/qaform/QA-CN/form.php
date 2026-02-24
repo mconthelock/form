@@ -1364,6 +1364,7 @@ WHERE L.R27M09 = '".trim($firstno[0]->FIRSTNO)."'";
                     $form["INPUTBY"] = $cnform[0]->VINPUTER; 
                     $form["REMARK"] = "";
                     $form["DRAFT"] = "0";
+                    
                     $rsf = $this->createForm($form);
                     //var_dump($rsf);
                     if ($rsf['status']) {
@@ -1378,8 +1379,8 @@ WHERE L.R27M09 = '".trim($firstno[0]->FIRSTNO)."'";
                             'NFRMNO' => $form['NFRMNO'],
                             'VORGNO' => $form['VORGNO'],
                             'CYEAR'  => $form['CYEAR'],
-                            'CYEAR2' => $form['CYEAR2'],
-                            'NRUNNO' => $form['NRUNNO'],
+                            'CYEAR2' => $rsf["data"]["CYEAR2"],
+                            'NRUNNO' => $rsf["data"]["NRUNNO"],
                             'CSTEPNO'=> '04'
                         ];
                         $this->deleteFlowStep($condition);
