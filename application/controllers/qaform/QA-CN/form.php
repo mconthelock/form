@@ -427,7 +427,6 @@ class form extends MY_Controller{
     private function updaterequest($form)
     {
              $data = array(
-                'JDGMNTNO' => isset($_POST["radJudge"]) ? $_POST["radJudge"] : '',
                 'CLSNO'    => $_POST["chkClass"],
                 'RSNNO'    => $_POST["radReason"],
                 'TITLE'    => $_POST["txtTitle"],
@@ -477,15 +476,13 @@ class form extends MY_Controller{
     private function updateresult($form)
     {
             $radJudge = isset($_POST["radJudge"]) ? $_POST["radJudge"] : '';
-            if( $radJudge == "2.5" || $radJudge == "4.2" )
-            {
-               $data = [
-                    'JDGOTHER' =>  ($radJudge=="2.5" ? $_POST["txtJdgOther1"] : $_POST["txtJdgOther2"])
-                ];
-                 $this->cn->update("CNFORM",  $data , $form);
-
-            }
-      
+            $data = [
+                    'JDGMNTNO' => isset($_POST["radJudge"]) ? $_POST["radJudge"] : '',
+                    'JDGOTHER' =>  ($radJudge=="2.5" ? $_POST["txtJdgOther1"] : ($radJudge=="4.2" ?  $_POST["txtJdgOther2"] :''))
+            ];
+            var_dump($form);
+            var_dump($data);
+            $this->cn->update("CNFORM",  $data , $form);
     }
 
     private function insertdwg($form)
