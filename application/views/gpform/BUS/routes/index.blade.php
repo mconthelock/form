@@ -135,6 +135,8 @@
                 <label class="block text-sm font-medium mb-1"> เวลากะปกติ<b style="color:red">*</b></label>
                 <input type="text" id="workdayTime" name="workdayTime" class="input input-bordered w-full" placeholder="HH:mm" autocomplete="off">
             </div>
+
+
             <div>
                 <label class="block text-sm font-medium mb-1"> กะกลางคืน</label>
                 <input type="text" id="nightTime" name="nightTime" class="input input-bordered w-full" placeholder="HH:mm" autocomplete="off">

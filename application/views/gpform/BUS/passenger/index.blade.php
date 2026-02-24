@@ -101,11 +101,7 @@
 
 
 @section('scripts')
-
 <script type="module" src="{{ $_ENV['APP_JS'] }}/bus_passenger.js?ver={{ $_ENV['VERSION'] }}"></script>
-<script>
-console.log("{{ $_ENV['APP_JS'] }}/bus_passenger.js?ver={{ $_ENV['VERSION'] }}");
-</script>
 @endsection
 
 @section('styles')
