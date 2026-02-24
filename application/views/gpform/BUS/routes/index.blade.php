@@ -4,7 +4,7 @@
         
     <!-- TOP ACTION BAR -->
     <div class="flex justify-end mb-4">
-        <button id="btnExportRoute" class="bg-rose-500 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-rose-600 transition shadow-sm   flex items-center gap-2 cursor-pointer">
+        <button id="btnExportRoute"  class="bg-yellow-200 text-gray-600 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-gray-200 transition shadow-sm flex items-center gap-2 cursor-pointer">
             <svg xmlns="http://www.w3.org/2000/svg"  fill="currentColor"  viewBox="0 0 24 24"  class="w-5 h-5 text-yellow-400">
                 <path d="M6 2a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 
                     2 0 0 0 2-2V8l-6-6H6zm7 1.5L18.5 9H13a1 1 0 0 1-1-1V3.5z"/>
@@ -12,6 +12,8 @@
             </svg> Export Transportation Route
         </button>
     </div>
+    
+
     <div class="grid md:grid-cols-2 gap-6">
         <!-- LEFT PANEL -->
         <div class="bg-white rounded-xl shadow border">
@@ -30,7 +32,10 @@
         <!-- RIGHT PANEL -->
         <div class="bg-white rounded-xl shadow border">
             <div class="flex justify-between items-center  px-4 py-3 rounded-t-xl bg-gradient-to-r from-emerald-500 to-teal-600">
-                <h3 class="text-white font-semibold text-lg">📍 รายละเอียดจุดรถ</h3>
+                <h3 class="text-white font-semibold text-lg">
+                    📍 รายละเอียดจุดรถ 
+                    <span id="routeLineName"class="bg-yellow-200 text-yellow-800 px-3 py-1 rounded-full text-sm font-bold shadow">-</span>
+                </h3>
                 <button id="btnAddStop" class="bg-white text-blue-600 px-3 py-1.5 rounded-lg text-sm font-semibold hover:bg-gray-100 cursor-pointer">+ เพิ่มจุดรถ </button>
             </div>
             <div class="p-4">
@@ -118,7 +123,7 @@
                        class="input input-bordered w-full"
                        placeholder="กรอกชื่อจุดรถ">
             </div>
-            <div>
+            <div style="display:none">
                 <div class="flex gap-6">
                     <label class="flex items-center gap-2 cursor-pointer">
                         <input type="radio" name="stopType" value="1"
@@ -134,30 +139,28 @@
                 </div>
             </div>
             <div>
-                <label class="block text-sm font-medium mb-1">เวลากะปกติ<b style="color:red">*</b></label>
-                <div class="flex items-center gap-2">
-                    <select id="workdayHour" class="select select-bordered w-24"></select>
-                    <span>:</span>
-                    <select id="workdayMin" class="select select-bordered w-24"></select>
-                </div>
+                <label class="block text-sm font-medium mb-1"> เวลากะปกติ<b style="color:red">*</b></label>
+                <input type="text" id="workdayTime" name="workdayTime" class="input input-bordered w-full" placeholder="HH:mm" autocomplete="off">
+                <input type="text" class="input validator req" name="pStart" id="pStart" placeholder="e.g. 08:00" required autocomplete="off"/>
             </div>
+
+
             <div>
                 <label class="block text-sm font-medium mb-1">เวลากะกลางคืน</label>
                 <div class="flex items-center gap-2">
-                    <select id="nightHour" class="select select-bordered w-24"></select>
+                    <input type="number" id="nightHour" class="input input-bordered w-20 text-center" min="0" max="23" placeholder="HH">
                     <span>:</span>
-                    <select id="nightMin" class="select select-bordered w-24"></select>
+                    <input type="number" id="nightMin" class="input input-bordered w-20 text-center" min="0" max="59" placeholder="MM">
                 </div>
             </div>
             <div>
                 <label class="block text-sm font-medium mb-1">เวลาวันหยุด</label>
                 <div class="flex items-center gap-2">
-                    <select id="holidayHour" class="select select-bordered w-24"></select>
+                    <input type="number" id="holidayHour" class="input input-bordered w-20 text-center" min="0" max="23" placeholder="HH">
                     <span>:</span>
-                    <select id="holidayMin" class="select select-bordered w-24"></select>
+                    <input type="number" id="holidayMin" class="input input-bordered w-20 text-center" min="0" max="59" placeholder="MM">
                 </div>
             </div>
-        </div>
         <div class="modal-action">
             <button class="btn btn-primary" id="btnSaveStop">บันทึก</button>
             <button class="btn" onclick="document.getElementById('stop_modal').close()">ยกเลิก</button>
