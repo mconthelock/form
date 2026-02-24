@@ -14,6 +14,7 @@ import {
 import { createTable } from "@amec/webasset/dataTable";
 import { initApp, tableOption } from "../../utils.js";
 import { exportExcel, defaultExcel, mergeCell, applyStyleToRange, alignment, border } from "@amec/webasset/excel";
+import { setDatePicker } from "@amec/webasset/flatpickr"
 
 
 let tableLine;
@@ -44,7 +45,23 @@ $(document).ready(async function () {
       getStop(),
       getRoute()
     ]);
-  
+
+    setDatePicker({
+      element: 'input[name="workdayTime"]',
+      time: true
+    });
+
+    setDatePicker({
+      element: 'input[name="nightTime"]',
+      time: true
+    });
+
+    setDatePicker({
+      element: 'input[name="holidayTime"]',
+      time: true
+    });
+
+
     BUS_LINES = lines.filter(l => l.BUSSTATUS === "1");
     BUS_STOPS = stops;
     BUS_ROUTES = routes;
@@ -472,4 +489,5 @@ $("#btnExportPassenger").on("click", async function () {
     await showLoader({ show: false });
   }
 });
+
 
