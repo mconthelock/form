@@ -1076,18 +1076,18 @@
 <tr>
     <td colspan="2" class="py-4 text-center">
         @if ($mode == $MODE_EDIT)
-            <div class="inline-block">
+            <div class="inline-flex flex-wrap justify-center gap-2">
                 @if(!in_array($empno, [$form[0]->VREQNO]))
                 <button type="button" name="btnApprove"  id="btnApprove"
                         data-action="approve"
-                        class="{{ ($resultdwg[0]->RESULT == '1'? 'hidden':'') }} btn-submit cursor-pointer bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded shadow mx-1">
+                        class="{{ ($resultdwg[0]->RESULT == '1'? 'hidden':'') }} btn-submit cursor-pointer bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded shadow">
                     Approve
                 </button>
                 @endif
                 @if(!is_null($cnform->MSTATUS) &&($cextData == 6))
                 <button type="button" name="btnChange" 
                         data-action="change"
-                        class="btn-submit cursor-pointer bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded shadow mx-1">
+                        class="btn-submit cursor-pointer bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded shadow">
                     Change
                 </button>
                 @endif
@@ -1095,26 +1095,27 @@
                 @if(!is_null($cnform->MSTATUS) &&($cextData == 7))
                 <button type="button" name="btnReturn" 
                         data-action="returnb"
-                        class="btn-submit cursor-pointer bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded shadow mx-1">
+                        class="btn-submit cursor-pointer bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded shadow">
                     Return
                 </button>
                 @endif
                 @if ((($cextData <= 4) || ($cextData == 8)) && !in_array($empno, [$form[0]->VREQNO, $form[0]->VINPUTER]))
                     <button type="button" name="btnReturn" id="btnReturn"
                              data-action="returnrem"
-                            class="btn-submit cursor-pointer bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded shadow mx-1">
+                            class="btn-submit cursor-pointer bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded shadow">
                         Return
                     </button>
                 @endif
 
-            </div>
+        
             @if(!in_array($empno, [$form[0]->VREQNO, $form[0]->VINPUTER]))
             <button type="button" name="btnReject" id="btnReject"
                     data-action="reject"
-                    class="{{ ($resultdwg[0]->RESULT == '0'? 'hidden':'') }} btn-submit cursor-pointer bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded shadow mx-1">
+                    class="{{ ($resultdwg[0]->RESULT == '0'? 'hidden':'') }} btn-submit cursor-pointer bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded shadow">
                 Reject
             </button>
              @endif    
+            </div>     
         @endif
 
         @if (($form[0]->CST == "0" || $mode == $MODE_EDIT) && in_array($empno, [$form[0]->VREQNO, $form[0]->VINPUTER]))
@@ -1171,6 +1172,7 @@
                 Export Form
         </button>
         @endif
+        
     </td>
 </tr>
         
