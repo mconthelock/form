@@ -480,6 +480,8 @@ class form extends MY_Controller{
                     'JDGMNTNO' => isset($_POST["radJudge"]) ? $_POST["radJudge"] : '',
                     'JDGOTHER' =>  ($radJudge=="2.5" ? $_POST["txtJdgOther1"] : ($radJudge=="4.2" ?  $_POST["txtJdgOther2"] :''))
             ];
+            var_dump($form);
+            var_dump($data);
             $this->cn->update("CNFORM",  $data , $form);
     }
 
