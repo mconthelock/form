@@ -85,7 +85,7 @@ $(document).ready(async function () {
                   }else{
                       act = action;
                   }
-                  //console.log("action ="+act);
+                  
                   
                   const confirm = await doaction({
                        ...baseForm,
@@ -93,6 +93,7 @@ $(document).ready(async function () {
                       EMPNO: empno,
                       REMARK: $("#txtRemark").val()
                     });
+                    console.log("aaaaaaaaa"+confirm.status);
                   if (confirm.status) {
                     const statusact = await actionfrm(cnformData);
                     const formStatus = await getFormStatus({
