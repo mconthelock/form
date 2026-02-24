@@ -1363,8 +1363,8 @@ WHERE L.R27M09 = '".trim($firstno[0]->FIRSTNO)."'";
                     $form["REQBY"] = $cnform[0]->VREQNO;
                     $form["INPUTBY"] = $cnform[0]->VINPUTER; 
                     $form["REMARK"] = "";
-                    $form["DRAFT"] = "1";
-                    $rsf = $this->action($form);
+                    $form["DRAFT"] = "0";
+                    $rsf = $this->createForm($form);
                     //var_dump($rsf);
                     if ($rsf['status']) {
                         // $stepDel = array([ 'CSTEPNO' => '04', 'CSTEPNEXTNO' => '19'],
