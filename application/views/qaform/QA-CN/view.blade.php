@@ -1080,7 +1080,7 @@
                 @if(!in_array($empno, [$form[0]->VREQNO]))
                 <button type="button" name="btnApprove"  id="btnApprove"
                         data-action="approve"
-                        class="btn-submit cursor-pointer bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded shadow mx-1">
+                        class="{{ ($resultdwg[0]->RESULT == '1'?:'hidden') }} btn-submit cursor-pointer bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded shadow mx-1">
                     Approve
                 </button>
                 @endif
@@ -1111,7 +1111,7 @@
             @if(!in_array($empno, [$form[0]->VREQNO, $form[0]->VINPUTER]))
             <button type="button" name="btnReject" id="btnReject"
                     data-action="reject"
-                    class="btn-submit cursor-pointer bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded shadow mx-1">
+                    class="{{ ($resultdwg[0]->RESULT == '0'?:'hidden') }} btn-submit cursor-pointer bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded shadow mx-1">
                 Reject
             </button>
              @endif    
