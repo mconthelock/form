@@ -18,6 +18,7 @@ import { initApp, tableOption } from "../../utils.js";
 import { generatePdf } from "@amec/webasset/api/pdf";
 import { buildBusRouteHtml } from "./templete_pdf.js";
 import { downloadOrOpenFile } from "@amec/webasset/api/file";
+import { setDatePicker } from "@amec/webasset/flatpickr"
 
 var tableLine;
 var tableStop;
@@ -35,11 +36,27 @@ $(document).ready(async function () {
     const firstRow = tableLine.row(0);
     const firstData = firstRow.data();
     selectedBusId = firstData.BUSID;
+    $("#routeLineName").text(firstData.BUSNAME);
     $(firstRow.node()).addClass("line-selected");
     const route = await getRoute({ BUSLINE: selectedBusId });
     await showRouteDetail(route);
   }
   await showLoader({ show: false });
+});
+
+document.getElementById("stop_modal")
+  .addEventListener("show", () => {
+    setDatePicker({ element:"#workdayTime", time:true });
+      setDatePicker({ dayOff: true, defaultDate: new Date() });
+	setDatePicker({
+		element: "#pStart",
+		time: true,
+	});
+	setDatePicker({
+		element: "#workdayTime",
+		time: true,
+	});
+
 });
 
 async function lineOptions(data) {
@@ -108,6 +125,8 @@ $(document).on("click", "#btnAddStop", function () {
     showMessage("กรุณาเลือกสายรถก่อน", "warning");
     return;
   }
+
+
   // ดึงข้อมูลสายที่เลือก
   const rowData = tableLine
     .rows()
@@ -133,6 +152,7 @@ $(document).on("click", ".line-row", async function (e) {
 
     const route = await getRoute({ BUSLINE: data.BUSID });
     const detail = await showRouteDetail(route);
+    $("#routeLineName").text(data.BUSNAME);
   } catch (error) {
     console.error(error);
     showMessage("Failed to load route details", "error");
@@ -297,9 +317,13 @@ $(document).on("click", "#btnSaveStop", async function () {
   const stopName = $("#txtStopName").val().trim();
   const stopType = $("input[name='stopType']:checked").val();
 
-  const workdayTime = buildTime("workdayHour", "workdayMin");
-  let nightTime = buildTime("nightHour", "nightMin");
-  let holidayTime = buildTime("holidayHour", "holidayMin");
+  const workdayTime = buildTime("workdayHour", "workdayMin", true);
+  const nightTime = buildTime("nightHour", "nightMin");
+  const holidayTime = buildTime("holidayHour", "holidayMin");
+
+  //const workdayTime = buildTime("workdayHour", "workdayMin");
+  //let nightTime = buildTime("nightHour", "nightMin");
+  //let holidayTime = buildTime("holidayHour", "holidayMin");
 
   if (!busLine) {
     showMessage("กรุณาเลือกสายรถ", "warning");
@@ -315,16 +339,15 @@ $(document).on("click", "#btnSaveStop", async function () {
     showMessage("กรุณาเลือกเวลากะปกติให้ครบ", "warning");
     return;
   }
-
-  if (!nightTime) nightTime = "";
-  if (!holidayTime) holidayTime = "";
+  if (nightTime === null) return;
+  if (holidayTime === null) return;
 
   const payload_stop = {
     STOP_NAME: stopName,
     STOP_STATUS: "1",
     WORKDAY_TIMEIN: workdayTime,
-    NIGHT_TIMEIN: String(nightTime || ""),
-    HOLIDAY_TIMEIN: String(holidayTime || ""),
+    NIGHT_TIMEIN: nightTime || "",
+    HOLIDAY_TIMEIN: holidayTime || "",
   };
 
   try {

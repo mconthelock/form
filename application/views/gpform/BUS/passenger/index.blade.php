@@ -29,7 +29,10 @@
 
         <div class="md:col-span-6 bg-white rounded-xl shadow border h-fit">
             <div class="flex justify-between items-center px-4 py-3 rounded-t-xl bg-gradient-to-r from-orange-500 to-teal-600">
-                <h3 class="text-white font-semibold text-lg">📍 รายชื่อพนักงานในสายรถ</h3>
+                <h3 class="text-white font-semibold text-lg">
+                    📍 รายชื่อพนักงานในสายรถ 
+                    <span id="passLineName"class="bg-yellow-200 text-yellow-800 px-3 py-1 rounded-full text-sm font-bold shadow">-</span>
+                </h3>
                 <button id="btnAddEmp" class="bg-white text-blue-600 px-3 py-1.5 rounded-lg text-sm font-semibold hover:bg-gray-100 cursor-pointer">+ เพิ่มพนักงาน </button>
             </div>
 
@@ -71,7 +74,7 @@
                     <option value="">-- เลือกจุดจอด --</option>
                 </select>
             </div>
-            <div>
+            <div style="display:none">
                 <div class="flex gap-6">
                     <label class="flex items-center gap-2 cursor-pointer">
                         <input type="radio" name="empType" value="1"
@@ -98,11 +101,7 @@
 
 
 @section('scripts')
-
 <script type="module" src="{{ $_ENV['APP_JS'] }}/bus_passenger.js?ver={{ $_ENV['VERSION'] }}"></script>
-<script>
-console.log("{{ $_ENV['APP_JS'] }}/bus_passenger.js?ver={{ $_ENV['VERSION'] }}");
-</script>
 @endsection
 
 @section('styles')
