@@ -462,6 +462,13 @@ class form extends MY_Controller{
 
             unset($form["CEXTDATA"]);
             $this->cn->update("CNFORM",  $data , $form);
+                  if($_POST["radReason"] == "5")
+            {
+                $data = [
+                    'RSNOTHER' =>  $_POST["txtOther"]
+                ];
+                 $this->cn->update("CNFORM",  $data , $form);
+            }
   
   
 
@@ -478,13 +485,7 @@ class form extends MY_Controller{
                  $this->cn->update("CNFORM",  $data , $form);
 
             }
-            if($_POST["radReason"] == "5")
-            {
-                $data = [
-                    'RSNOTHER' =>  $_POST["txtOther"]
-                ];
-                 $this->cn->update("CNFORM",  $data , $form);
-            }
+      
     }
 
     private function insertdwg($form)
