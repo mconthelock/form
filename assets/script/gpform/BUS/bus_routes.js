@@ -54,20 +54,6 @@ $(document).ready(async function () {
 	await showLoader({ show: false });
 });
 
-document.getElementById("stop_modal")
-  .addEventListener("show", () => {
-    setDatePicker({ element:"#workdayTime", time:true });
-      setDatePicker({ dayOff: true, defaultDate: new Date() });
-	setDatePicker({
-		element: "#pStart",
-		time: true,
-	});
-	setDatePicker({
-		element: "#workdayTime",
-		time: true,
-	});
-
-});
 
 async function lineOptions(data) {
 	const filteredData = data
