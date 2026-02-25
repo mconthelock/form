@@ -1200,7 +1200,7 @@ HTML;
                     }else{ 
                         $data["html"] .= "<div>&nbsp;&nbsp;&nbsp;&nbsp;".$r->DWGNO."</div>";
                     }
-                    $data["html"] .= "<div>Status: ". ($r->RESULT == "0" ? "OK" : ($r->RESULT == "1" ? "NG" : "")) ."</div>";
+                    $data["html"] .= "<div>Status: ". ($r->RESULT == "0" ? "<font color='green'>OK</font>" : ($r->RESULT == "1" ? "<font color='red'>NG</font>" : "")) ."</div>";
                     $i++;
                 }
                 
