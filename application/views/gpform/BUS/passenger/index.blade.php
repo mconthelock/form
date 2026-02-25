@@ -11,7 +11,7 @@
                 <path fill="#fff"
                     d="M14 16l3.2 5.5L14 27h2.6l1.9-3.7L20.4 27H23l-3.2-5.5L23 16h-2.6l-1.9 3.7L16.6 16H14z"/>
             </svg>
-             Export Excel Data Passenger
+             Export Data Passenger
         </button>
     </div>
 

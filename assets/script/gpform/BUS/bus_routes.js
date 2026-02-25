@@ -19,6 +19,7 @@ import { generatePdf } from "@amec/webasset/api/pdf";
 import { buildBusRouteHtml } from "./templete_pdf.js";
 import { downloadOrOpenFile } from "@amec/webasset/api/file";
 import { setDatePicker } from "@amec/webasset/flatpickr"
+import { createBtn, activatedBtn } from "@amec/webasset/components/buttons";
 
 var tableLine;
 var tableStop;
@@ -41,23 +42,18 @@ $(document).ready(async function () {
     const route = await getRoute({ BUSLINE: selectedBusId });
     await showRouteDetail(route);
   }
+
+  const exportBtn = await createBtn({
+    id: "btnExportRoute",
+    title: "Export Transportation Route",
+    icon: "fi fi-tr-file-pdf text-lg",
+    className: "btn-warning text-white"
+  });
+  $("#btn-container").html(`<div class="flex gap-2">${exportBtn}</div>`);
+
   await showLoader({ show: false });
 });
 
-document.getElementById("stop_modal")
-  .addEventListener("show", () => {
-    setDatePicker({ element:"#workdayTime", time:true });
-      setDatePicker({ dayOff: true, defaultDate: new Date() });
-	setDatePicker({
-		element: "#pStart",
-		time: true,
-	});
-	setDatePicker({
-		element: "#workdayTime",
-		time: true,
-	});
-
-});
 
 async function lineOptions(data) {
   const filteredData = data
@@ -111,7 +107,7 @@ async function lineOptions(data) {
   return opt;
 }
 
-$(document).on("click", "#btnAddLine", function () {
+$(document).on("click", "#btnAddLine",async function () {
   $("#lineModalTitle").text("เพิ่มสายรถ");
   $("#hdLineId").val("");
   $("#txtLineName").val("");
@@ -124,23 +120,28 @@ $(document).on("click", "#btnAddStop", function () {
   if (!selectedBusId) {
     showMessage("กรุณาเลือกสายรถก่อน", "warning");
     return;
+  }else{
+    // ⭐ reset ค่า form
+    $("#hdStopNo").val("");
+    $("#txtStopName").val("");
+    $("#workdayTime").val("");
+    $("#nightTime").val("");
+    $("#holidayTime").val("");
   }
 
-
   // ดึงข้อมูลสายที่เลือก
-  const rowData = tableLine
-    .rows()
-    .data()
-    .toArray()
-    .find((r) => r.BUSID == selectedBusId);
+  const rowData = tableLine.rows().data().toArray().find((r) => r.BUSID == selectedBusId);
   $("#hdBusId").val(selectedBusId);
   $("#lblBusName").text(rowData?.BUSNAME || "-");
-  //populateLineDropdown();
-  generateTimeDropdown("workdayHour", "workdayMin");
-  generateTimeDropdown("nightHour", "nightMin");
-  generateTimeDropdown("holidayHour", "holidayMin");
-  document.getElementById("stop_modal").showModal();
+
+  const modal = document.getElementById("stop_modal");
+  modal.showModal();
+  initFlatpickr("#workdayTime", modal);
+  initFlatpickr("#nightTime", modal);
+  initFlatpickr("#holidayTime", modal);
 });
+
+
 
 $(document).on("click", ".line-row", async function (e) {
   e.preventDefault();
@@ -203,16 +204,6 @@ async function routeOptions(data) {
       data: "stops",
       title: "จุดรถ",
       render: (data) => data[0]?.STOP_NAME || "-",
-    },
-    {
-      data: "STATENO",
-      title: "ขารถ",
-      className: "text-center",
-      render: function (data) {
-        if (data == 1) return "ขาไป";
-        if (data == 2) return "ขากลับ";
-        return "-";
-      },
     },
     {
       data: "stops",
@@ -316,14 +307,10 @@ $(document).on("click", "#btnSaveStop", async function () {
   const busLine = $("#hdBusId").val();
   const stopName = $("#txtStopName").val().trim();
   const stopType = $("input[name='stopType']:checked").val();
+  const workdayTime = getTimeHHMM("#workdayTime", true);
+  const nightTime = getTimeHHMM("#nightTime");
+  const holidayTime = getTimeHHMM("#holidayTime");
 
-  const workdayTime = buildTime("workdayHour", "workdayMin", true);
-  const nightTime = buildTime("nightHour", "nightMin");
-  const holidayTime = buildTime("holidayHour", "holidayMin");
-
-  //const workdayTime = buildTime("workdayHour", "workdayMin");
-  //let nightTime = buildTime("nightHour", "nightMin");
-  //let holidayTime = buildTime("holidayHour", "holidayMin");
 
   if (!busLine) {
     showMessage("กรุณาเลือกสายรถ", "warning");
@@ -378,6 +365,7 @@ $(document).on("click", "#btnSaveStop", async function () {
     await showRouteDetail(route);
     document.getElementById("stop_modal").close();
     $("#hdStopNo").val("");
+    
   } catch (error) {
     console.error(error);
     showMessage("เกิดข้อผิดพลาดในการบันทึกข้อมูล", "error");
@@ -387,119 +375,35 @@ $(document).on("click", "#btnSaveStop", async function () {
 $(document).on("click", ".btn-edit-stop", function (e) {
   const stopNo = $(this).data("stop");
   const busLine = $(this).data("route");
-  const rowData = tableStop
-    .rows()
-    .data()
-    .toArray()
-    .find((r) => r.STOPNO == stopNo && r.BUSLINE == busLine);
-
+  const rowData = tableStop.rows().data().toArray().find((r) => r.STOPNO == stopNo && r.BUSLINE == busLine);
   const stop = rowData.stops?.[0];
-  const lineData = tableLine
-    .rows()
-    .data()
-    .toArray()
-    .find((r) => r.BUSID == busLine);
-
-  generateTimeDropdown("workdayHour", "workdayMin");
-  generateTimeDropdown("nightHour", "nightMin");
-  generateTimeDropdown("holidayHour", "holidayMin");
+  const lineData = tableLine.rows().data().toArray().find((r) => r.BUSID == busLine);
 
   $("#hdBusId").val(busLine);
   $("#hdStopNo").val(stopNo);
   $("#lblBusName").text(lineData?.BUSNAME || "-");
   $("#txtStopName").val(stop?.STOP_NAME || "");
 
-  if (stop?.STOP_STATUS) {
-    $("input[name='stopType'][value='" + stop.STOP_STATUS + "']").prop(
-      "checked",
-      true,
-    );
-  }
+  $("#workdayTime").val("");
+  $("#nightTime").val("");
+  $("#holidayTime").val("");
 
-  setTimeToDropdown(stop?.WORKDAY_TIMEIN, "workdayHour", "workdayMin");
-  setTimeToDropdown(stop?.NIGHT_TIMEIN, "nightHour", "nightMin");
-  setTimeToDropdown(stop?.HOLIDAY_TIMEIN, "holidayHour", "holidayMin");
-  document.getElementById("stop_modal").showModal();
+  const modal = document.getElementById("stop_modal");
+  modal.showModal();
+  initFlatpickr("#workdayTime", modal);
+  initFlatpickr("#nightTime", modal);
+  initFlatpickr("#holidayTime", modal);
+
+  setTimeToFlatpickr("#workdayTime", stop?.WORKDAY_TIMEIN);
+  setTimeToFlatpickr("#nightTime", stop?.NIGHT_TIMEIN);
+  setTimeToFlatpickr("#holidayTime", stop?.HOLIDAY_TIMEIN);
 });
 
-$(document).on("click", ".btn-delete-stop", async function (e) {
-  const stopNo = $(this).data("stop");
-  const busLine = $(this).data("route");
-  const isConfirm = await showConfirm({
-    title: "ยืนยันการลบ",
-    message: "ต้องการลบจุดรถนี้หรือไม่?",
-    acceptText: "ยืนยัน",
-    cancelText: "ยกเลิก",
-  });
-
-  if (!isConfirm) return;
-  try {
-    const delete_stop = await deleteStop({ STOP_ID: stopNo });
-    const delete_route = await deleteRoute({ STOP_ID: stopNo });
-    showMessage("ลบข้อมูลเรียบร้อย", "success");
-    console.log("Deleted stop:", stopNo);
-    console.log("Deleted route:", delete_route);
-    const route = await getRoute({ BUSLINE: busLine });
-    await showRouteDetail(route);
-  } catch (error) {
-    console.error(error);
-    showMessage("เกิดข้อผิดพลาดในการลบข้อมูล", "error");
-  }
-});
-
-function setTimeToDropdown(value, hourId, minId) {
-  if (!value) {
-    $("#" + hourId).val("");
-    $("#" + minId).val("");
-    return;
-  }
-
-  const str = value.toString().padStart(4, "0");
-  const hour = str.slice(0, 2);
-  const min = str.slice(2, 4);
-  $("#" + hourId).val(hour);
-  $("#" + minId).val(min);
-}
-
-function formatTime4Digit(value) {
-  if (!value) return "-";
-  const str = value.toString().padStart(4, "0");
-  return str.slice(0, 2) + ":" + str.slice(2, 4);
-}
-
-function buildTime(hourId, minId) {
-  const h = $("#" + hourId).val();
-  const m = $("#" + minId).val();
-  if (!h || !m) return null;
-  return h + m; // เช่น 0730
-}
-
-function generateTimeDropdown(hourId, minId) {
-  const hourSelect = $("#" + hourId);
-  const minSelect = $("#" + minId);
-  hourSelect.empty();
-  minSelect.empty();
-  hourSelect.append(`<option value="">HH</option>`);
-  minSelect.append(`<option value="">MM</option>`);
-  for (let h = 0; h < 24; h++) {
-    const val = h.toString().padStart(2, "0");
-    hourSelect.append(`<option value="${val}">${val}</option>`);
-  }
-
-  for (let m = 0; m < 60; m++) {
-    const val = m.toString().padStart(2, "0");
-    minSelect.append(`<option value="${val}">${val}</option>`);
-  }
-}
 
 $(document).on("click", ".btn-edit-line", function (e) {
   e.stopPropagation(); // กันไม่ให้ trigger click แถว
   const busId = $(this).data("id");
-  const rowData = tableLine
-    .rows()
-    .data()
-    .toArray()
-    .find((r) => r.BUSID == busId);
+  const rowData = tableLine.rows().data().toArray().find((r) => r.BUSID == busId);
 
   console.log("EDIT:", rowData);
   $("#hdLineId").val(rowData.BUSID);
@@ -519,12 +423,7 @@ $(document).on("click", ".btn-edit-line", function (e) {
 $(document).on("click", ".btn-delete-line", async function (e) {
   e.stopPropagation(); // กันไม่ให้ trigger click แถว
   const busId = $(this).data("id");
-  const isConfirm = await showConfirm({
-    title: "ยืนยันการลบ",
-    message: "ต้องการลบสายรถนี้หรือไม่?",
-    acceptText: "ยืนยัน",
-    cancelText: "ยกเลิก",
-  });
+  const isConfirm = await showConfirm({ title: "ยืนยันการลบ", message: "ต้องการลบสายรถนี้หรือไม่?", acceptText: "ยืนยัน",cancelText: "ยกเลิก",});
 
   if (!isConfirm) {
     console.log("user canceled delete", busId);
@@ -534,7 +433,6 @@ $(document).on("click", ".btn-delete-line", async function (e) {
   try {
     const delete_line = await deleteLine({ BUSID: busId });
     showMessage("ลบข้อมูลเรียบร้อย", "success");
-
     const data_line = await getLine();
     const tale_line = await lineOptions(data_line);
     tableLine.destroy();
@@ -553,88 +451,106 @@ $(document).on("click", ".btn-delete-line", async function (e) {
   }
 });
 
-$("#btnExportRoute").on("click", async function () {
-  const lines = await getLine();
-  const routes = await getRoute();
-  const stops = await getStop();
-  const stopMap = {};
-  stops
-    .filter((s) => s.STOP_STATUS === "1")
-    .forEach((s) => (stopMap[s.STOP_ID] = s));
+$(document).on("click", "#btnExportRoute", async function (e) {
+  e.preventDefault();
+  try {
+    await activatedBtn($(this));
+    const lines = await getLine();
+    const routes = await getRoute();
+    const stops = await getStop();
+    const stopMap = {};
+    stops.filter((s) => s.STOP_STATUS === "1").forEach((s) => (stopMap[s.STOP_ID] = s));
 
-  const routeMap = {};
-  routes
-    .filter((r) => r.STATENO === 1)
-    .forEach((r) => {
-      const stop = stopMap[r.STOPNO];
-      if (stop) {
-        if (!routeMap[r.BUSLINE]) {
-          routeMap[r.BUSLINE] = [];
+    const routeMap = {};
+    routes.filter((r) => r.STATENO === 1).forEach((r) => {
+        const stop = stopMap[r.STOPNO];
+        if (stop) {
+          if (!routeMap[r.BUSLINE]) {routeMap[r.BUSLINE] = [];}
+          routeMap[r.BUSLINE].push({time: stop.WORKDAY_TIMEIN,name: stop.STOP_NAME,});
         }
-        routeMap[r.BUSLINE].push({
-          time: stop.WORKDAY_TIMEIN,
-          name: stop.STOP_NAME,
-        });
-      }
+      });
+
+    // 🔥 เรียงตามเวลา
+    Object.keys(routeMap).forEach((busId) => {
+      routeMap[busId].sort((a, b) => parseInt(a.time || 9999) - parseInt(b.time || 9999),);
+      routeMap[busId] = routeMap[busId].map((s) => `${formatTime4Digit(s.time)} ${s.name}`,);
     });
 
-  // 🔥 เรียงตามเวลา
-  Object.keys(routeMap).forEach((busId) => {
-    routeMap[busId].sort(
-      (a, b) => parseInt(a.time || 9999) - parseInt(b.time || 9999),
-    );
-    routeMap[busId] = routeMap[busId].map(
-      (s) => `${formatTime4Digit(s.time)} ${s.name}`,
-    );
-  });
-
-  const allData = lines
-    .filter((l) => l.BUSSTATUS === "1")
-    .sort((a, b) => a.BUSNAME.localeCompare(b.BUSNAME, "th"))
-    .map((l) => ({
-      line: l.BUSNAME,
-      type: l.BUSTYPE,
-      stops: routeMap[l.BUSID] || [],
+    const allData = lines.filter((l) => l.BUSSTATUS === "1").sort((a, b) => a.BUSNAME.localeCompare(b.BUSNAME, "th")).map((l) => ({
+        line: l.BUSNAME, type: l.BUSTYPE,stops: routeMap[l.BUSID] || [],
     }));
 
-  const busData = allData.filter((d) => d.type === "1");
-  const vanData = allData.filter((d) => d.type === "2");
-  const html = buildBusRouteHtml(busData, vanData);
-  const path_file = "//amecnas/AMECWEB/file/development/test/OMG/";
-  const file_name = "BUS.pdf";
-  let pdf;
-  try {
-    pdf = await generatePdf({
-      html: html,
-      options: {
-        path: path_file + file_name,
-        printBackground: true,
-        landscape: true,
-        format: "A3",
-        margin: {
-          top: "15mm",
-          right: "15mm",
-          bottom: "15mm",
-          left: "15mm",
+    const busData = allData.filter((d) => d.type === "1");
+    const vanData = allData.filter((d) => d.type === "2");
+    const html = buildBusRouteHtml(busData, vanData);
+    const path_file = "//amecnas/AMECWEB/file/development/test/OMG/";
+    const file_name = "BUS.pdf";
+    let pdf;
+    try {
+      pdf = await generatePdf({
+        html: html,
+        options: {
+          path: path_file + file_name,
+          printBackground: true,
+          landscape: true,
+          format: "A3",
+          margin: { top: "15mm", right: "15mm", bottom: "15mm", left: "15mm",
+          },
         },
-      },
+      });
+    } catch (error) {
+      console.error("PDF GENERATION ERROR:", error);
+      showMessage("เกิดข้อผิดพลาดในการสร้างรายงาน", "error");
+      return;
+    }
+    await downloadOrOpenFile({
+      baseDir: path_file,
+      storedName: file_name,
+      originalName: file_name,
+      mode: "open",
     });
   } catch (error) {
-    console.error("PDF GENERATION ERROR:", error);
-    showMessage("เกิดข้อผิดพลาดในการสร้างรายงาน", "error");
-    return;
+    console.error(error);
+    await showMessage("Something went wrong.");
+  } finally {
+    await activatedBtn($(this), false);
   }
-
-  await downloadOrOpenFile({
-    baseDir: path_file,
-    storedName: file_name,
-    originalName: file_name,
-    mode: "open",
-  });
 });
 
 function formatTime4Digit(value) {
-  if (!value) return "";
+  if (!value) return "-";
   const str = value.toString().padStart(4, "0");
   return str.slice(0, 2) + ":" + str.slice(2, 4);
 }
+
+function getTimeHHMM(selector, required = false) {
+  const val = $(selector).val();
+  if (!val) {
+    if (required) {
+      showMessage("กรุณาเลือกเวลา", "warning");
+      return null;
+    }
+    return "";
+  }
+
+  const [h, m] = val.split(":");
+  if (!h || !m) return "";
+  return h.padStart(2, "0") + m.padStart(2, "0");
+}
+
+function setTimeToFlatpickr(selector, hhmm) {
+  if (!hhmm) return;
+  const str = hhmm.toString().padStart(4, "0");
+  const time = str.slice(0, 2) + ":" + str.slice(2, 4);
+  const el = document.querySelector(selector);
+  if (el?._flatpickr) el._flatpickr.setDate(time, true);
+}
+
+function initFlatpickr(selector, modal) {
+  const el = document.querySelector(selector);
+  if (!el) return;
+  if (el._flatpickr) {el._flatpickr.destroy();}
+  setDatePicker({element: selector, time: true, appendTo: modal, });
+}
+
+
