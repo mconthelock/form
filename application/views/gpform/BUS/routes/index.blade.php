@@ -4,15 +4,8 @@
         
     <!-- TOP ACTION BAR -->
     <div class="flex justify-end mb-4">
-        <button id="btnExportRoute"  class="bg-yellow-200 text-gray-600 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-gray-200 transition shadow-sm flex items-center gap-2 cursor-pointer">
-            <svg xmlns="http://www.w3.org/2000/svg"  fill="currentColor"  viewBox="0 0 24 24"  class="w-5 h-5 text-yellow-400">
-                <path d="M6 2a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 
-                    2 0 0 0 2-2V8l-6-6H6zm7 1.5L18.5 9H13a1 1 0 0 1-1-1V3.5z"/>
-                <text x="6" y="18" font-size="6" fill="red">PDF</text>
-            </svg> Export Transportation Route
-        </button>
+        <div id="btn-container"></div>
     </div>
-    
 
     <div class="grid md:grid-cols-2 gap-6">
         <!-- LEFT PANEL -->
@@ -141,25 +134,14 @@
             <div>
                 <label class="block text-sm font-medium mb-1"> เวลากะปกติ<b style="color:red">*</b></label>
                 <input type="text" id="workdayTime" name="workdayTime" class="input input-bordered w-full" placeholder="HH:mm" autocomplete="off">
-                <input type="text" class="input validator req" name="pStart" id="pStart" placeholder="e.g. 08:00" required autocomplete="off"/>
-            </div>
-
-
-            <div>
-                <label class="block text-sm font-medium mb-1">เวลากะกลางคืน</label>
-                <div class="flex items-center gap-2">
-                    <input type="number" id="nightHour" class="input input-bordered w-20 text-center" min="0" max="23" placeholder="HH">
-                    <span>:</span>
-                    <input type="number" id="nightMin" class="input input-bordered w-20 text-center" min="0" max="59" placeholder="MM">
-                </div>
             </div>
             <div>
-                <label class="block text-sm font-medium mb-1">เวลาวันหยุด</label>
-                <div class="flex items-center gap-2">
-                    <input type="number" id="holidayHour" class="input input-bordered w-20 text-center" min="0" max="23" placeholder="HH">
-                    <span>:</span>
-                    <input type="number" id="holidayMin" class="input input-bordered w-20 text-center" min="0" max="59" placeholder="MM">
-                </div>
+                <label class="block text-sm font-medium mb-1"> กะกลางคืน</label>
+                <input type="text" id="nightTime" name="nightTime" class="input input-bordered w-full" placeholder="HH:mm" autocomplete="off">
+            </div>
+            <div>
+                <label class="block text-sm font-medium mb-1"> เวลาวันหยุด</label>
+                <input type="text" id="holidayTime" name="holidayTime" class="input input-bordered w-full" placeholder="HH:mm" autocomplete="off">
             </div>
         <div class="modal-action">
             <button class="btn btn-primary" id="btnSaveStop">บันทึก</button>
@@ -188,5 +170,9 @@
     #line_table tbody tr {
         transition: background-color 0.2s ease;
     }
+    #stop_modal .flatpickr-calendar {
+        z-index: 99999 !important;
+    }
 </style>
 @endsection
+
