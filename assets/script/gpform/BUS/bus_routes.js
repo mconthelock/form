@@ -229,12 +229,12 @@ async function routeOptions(data) {
         return `
                     <div class="flex justify-center gap-2">
                         <button 
-                            class="btn-edit-stop px-2 py-1 text-xs bg-yellow-100 text-yellow-700 rounded hover:bg-yellow-200 cursor-pointer"
-                            data-stop="${row.STOPNO}" data-route="${row.BUSLINE}"> ✏️
+                          class="btn-edit-stop px-2 py-1 text-xs bg-yellow-100 text-yellow-700 rounded hover:bg-yellow-200 cursor-pointer" 
+                          data-stop="${row.STOPNO}" data-route="${row.BUSLINE}"> ✏️ 
                         </button>
                         <button 
-                            class="btn-delete-stop px-2 py-1 text-xs bg-red-100 text-red-700 rounded hover:bg-red-200 cursor-pointer"
-                             data-stop="${row.STOPNO}" data-route="${row.BUSLINE}"> 🗑
+                          class="btn-delete-stop px-2 py-1 text-xs bg-red-100 text-red-700 rounded hover:bg-red-200 cursor-pointer" 
+                          data-stop="${row.STOPNO}" data-route="${row.BUSLINE}"> 🗑 
                         </button>
                     </div>
                 `;
