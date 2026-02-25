@@ -25,7 +25,8 @@ $(document).ready(async function () {
     VORGNO: vorgno, 
     CYEAR:  cyear.toString(),
     CYEAR2: cyear2.toString(), 
-    NRUNNO: nrunno
+    NRUNNO: nrunno,
+    showStep: true
   });
   
 
