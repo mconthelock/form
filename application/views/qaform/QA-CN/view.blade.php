@@ -958,7 +958,7 @@
     <tr>
         <td class="force-w-350 align-top pt-2" valign="top">Judgement</td>
         
-        @if ($mode == $MODE_EDIT && $cextData >= 2 && $cextData < 8)
+        @if ($mode == $MODE_EDIT && (($cextData >= 2 && $cextData < 8 && $cnform->MSTATUS <> "1")||(($cextData == 7 || $cextData == 3) && $cnform->MSTATUS == "1")))
             <td class="px-3 py-1 bg-gray-100 border-b border-white">
                 @foreach ($cnjudg as $j)
                     @php
