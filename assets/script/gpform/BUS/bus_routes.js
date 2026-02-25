@@ -6,12 +6,12 @@ import {
   getStop,
   insertLine,
   updateLine,
-  deleteLine,
+  deleteLineCascade,
   insertStop,
   updateStop,
-  deleteStop,
   insertRoute,
   deleteRoute,
+  deleteStopandPassenger,
 } from "./data.js";
 import { createTable } from "@amec/webasset/dataTable";
 import { initApp, tableOption } from "../../utils.js";
@@ -431,7 +431,7 @@ $(document).on("click", ".btn-delete-line", async function (e) {
   }
 
   try {
-    const delete_line = await deleteLine({ BUSID: busId });
+    const delete_line = await deleteLineCascade({ BUSID: busId });
     showMessage("ลบข้อมูลเรียบร้อย", "success");
     const data_line = await getLine();
     const tale_line = await lineOptions(data_line);
@@ -552,5 +552,40 @@ function initFlatpickr(selector, modal) {
   if (el._flatpickr) {el._flatpickr.destroy();}
   setDatePicker({element: selector, time: true, appendTo: modal, });
 }
+
+$(document).on("click", ".btn-delete-stop", async function (e) {
+  e.stopPropagation();
+  const stopId = $(this).data("stop");
+  const busLine = $(this).data("route");
+  const isConfirm = await showConfirm({
+    title: "ยืนยันการลบ",
+    message: "ต้องการลบจุดรถนี้หรือไม่?",
+    acceptText: "ยืนยัน",
+    cancelText: "ยกเลิก",
+  });
+
+  if (!isConfirm) return;
+
+  try {
+    // ⭐ 1. ลบ route ก่อน
+    await deleteRoute({
+      BUSLINE: Number(busLine),
+      STOPNO: Number(stopId),
+    });
+
+    // ⭐ 2. ลบ stop ฿& Passenger
+    await deleteStopandPassenger({ STOP_ID: Number(stopId), });
+
+    showMessage("ลบจุดรถเรียบร้อย", "success");
+
+    // ⭐ reload route
+    const route = await getRoute({ BUSLINE: busLine });
+    await showRouteDetail(route);
+
+  } catch (error) {
+    console.error(error);
+    showMessage("เกิดข้อผิดพลาดในการลบข้อมูล", "error");
+  }
+});
 
 
