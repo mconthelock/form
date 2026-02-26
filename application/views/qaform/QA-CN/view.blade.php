@@ -1098,6 +1098,11 @@
                         class="btn-submit cursor-pointer bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded shadow">
                     Return
                 </button>
+                <button type="button" name="btnSave"
+                    data-action="jobsaveData"
+                    class="btn-submit cursor-pointer bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded shadow mx-1">
+                Save Data
+                </button>
                 @endif
                 @if ((($cextData <= 4) || ($cextData == 8)) && !in_array($empno, [$form[0]->VREQNO, $form[0]->VINPUTER]))
                     <button type="button" name="btnReturn" id="btnReturn"
