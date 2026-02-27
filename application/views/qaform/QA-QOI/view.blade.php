@@ -552,7 +552,7 @@
  </div>
 
 
- @if($NG && $form[0]->DREQDATE >= '2025-11-01')
+ @if($NG)
  <!-- Section 4 -->
  <div class="bg-white rounded-md shadow-md p-6 mb-8 text-sm text-gray-800">
   <h2 class="text-lg font-semibold text-sky-700 mb-4 border-b-2 border-sky-500 pb-2">
