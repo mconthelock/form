@@ -541,7 +541,7 @@ function checkData(act)
   let cextdata =  parseInt($("#cextData").val());
   const chkopr =  $("#chkopr").val();
   const demapv =  $("#demapv").val();
-  if(act == "jobSaveData")
+  if(act == "jobsaveData")
   {
     return true;
   }
