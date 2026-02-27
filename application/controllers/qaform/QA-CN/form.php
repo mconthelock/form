@@ -286,7 +286,7 @@ class form extends MY_Controller{
                     $data = array();
                     for($i = 0; $i < $_POST["cnt"]; $i++)
                     {
-                        if(isset($_POST["txtDwgRem".$i]))
+                        if(isset($_POST["radDwg".$i]))
                         {
                             $data = array(
                                 'RESULT' => $_POST["radDwg".$i]
