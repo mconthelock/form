@@ -78,6 +78,7 @@ $(document).ready(async function () {
          console.log(action);
           if(action == "approve" || action == "reject")
           {
+                 console.log("xxxx");
                   let act;
                   //let cextData =  parseInt($("#cextData").val());
                   if(cextData >1 && cextData != 5 && action == "reject")
@@ -174,7 +175,7 @@ $(document).ready(async function () {
                       }
                   }
                 
-          }else if("returnb")
+          }else if(action == "returnb")
          {
                   const confirm = await doaction({
                        ...baseForm,

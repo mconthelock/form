@@ -227,8 +227,6 @@ class form extends MY_Controller{
     public function action()
     {
         $act = $_POST["action"];
-        echo $act;
-        exit;
         $cextData = intval($_POST["cextData"]);
         $apvno =  $_POST["empno"];
         $nfrmno = $_POST["nfrmno"];
