@@ -75,7 +75,7 @@ $(document).ready(async function () {
           
          // return false;
          
-         
+         console.log(action);
           if(action == "approve" || action == "reject")
           {
                   let act;
@@ -187,7 +187,7 @@ $(document).ready(async function () {
                      }
          }else
           {
-             //console.log(action);
+             console.log("actionfrm");
               const statusact = await actionfrm(cnformData);
               if(action == "return")
                 {
