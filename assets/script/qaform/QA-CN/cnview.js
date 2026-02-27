@@ -541,6 +541,10 @@ function checkData(act)
   let cextdata =  parseInt($("#cextData").val());
   const chkopr =  $("#chkopr").val();
   const demapv =  $("#demapv").val();
+  if(act == "jobSaveData")
+  {
+    return true;
+  }
   if(act == "saveData" || act == "sendApv")
   {
       let reason = $('input[name="radReason"]:checked').val();
