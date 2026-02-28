@@ -10,7 +10,11 @@ import Swal from "sweetalert2";
 
 $(document).ready(async function () {
 	const exdata = $("#txt_exdata").val();
-	const sumCost = parseFloat($("#txt_sumcost").val() || 0);
+	const getCost = parseFloat($("#txt_sumcost").val() || 0);
+
+	const vat = getCost * 0.07;
+	const sumCost = getCost + vat;
+
 	if (exdata === "12" && sumCost > 0) {
 		// เงื่อนไขแรก: exdata=12 และ sum_cost > 0
 		$("#btnApprove_fin").show();

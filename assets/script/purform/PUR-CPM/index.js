@@ -35,8 +35,6 @@ var formInfo,
 //prettier-ignore
 $(async function () {
     try {
-        console.log('test');
-        
         select2();
         let flow = {};
 

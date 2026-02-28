@@ -6,6 +6,7 @@
 }
 
 @import "@amec/webasset/css/font.css"; /* เพิ่ม font จาก @amec/webasset */
+@import "@amec/webasset/css/tooltip.min.css";
 
 /* ใช้สำหรับบอก tailwind ว่าให้ watch class ที่ไหนบ้าง*/
 /* view */

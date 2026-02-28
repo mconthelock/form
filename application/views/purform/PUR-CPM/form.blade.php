@@ -39,7 +39,7 @@
     <div class="card bg-white w-full lg:w-[70rem] place-self-center shadow-sm">
         <div class="card-body p-6 lg:p-10">
             <h2 class="card-title justify-center">
-                <h1 class="text-3xl text-center text-primary font-bold mb-15">Cover Payment For Invoice Receive</h1>
+                <h1 class="text-3xl text-center text-primary font-bold mb-15">Cover Payment For Invoice Receiving</h1>
             </h2>
             <form id="form" class="flex flex-col gap-5">
                 <section id="section-0">
