@@ -6,6 +6,7 @@ module.exports = {
 
 	// QA-CN
 	cnview: "./assets/script/qaform/QA-CN/cnview.js", //CN page
+	cn: "./assets/script/qaform/QA-CN/cn.js", //CN form page
 
 	// QA-INS : E-Self Inspection and Authorize
 	eSelf: "./assets/script/qaform/QA-INS/index.js", //E-Self Inspection page
