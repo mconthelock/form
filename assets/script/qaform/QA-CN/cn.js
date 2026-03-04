@@ -212,6 +212,28 @@ $(document).on('focus click', '#txtLoc', function () {
   return hasValue;
 }
 
+ $(document).on("change", ".file-input", async function () {
+    const type = $(this).attr("data-map");
+    if(type == "MAKFILE")
+    {
+       return;
+    }
+    const maxKB = parseInt($(this).attr("data-max-kb"), 10);
+    const maxSize = maxKB * 1024; // byte
+
+    if (!this.files || this.files.length === 0) return;
+
+    for (let i = 0; i < this.files.length; i++) {
+        const file = this.files[i];
+
+        if (file.size > maxSize) {
+            showMessage(file.name+" "+(file.size / 1024).toFixed(0) +" KB over "+maxKB+" KB", 'warning');
+            $(this).val(''); // ล้างเฉพาะ input นี้
+            return;
+        }
+    }
+});
+
 function insertfrm(data)
 {
  
