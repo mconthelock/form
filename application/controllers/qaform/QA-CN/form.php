@@ -151,6 +151,7 @@ class form extends MY_Controller{
 
     public function getjstaff($head)
     {
+        var_dump($head);
         if(($head[0]->SDEPCODE=="000401") && ($head[0]->SSECCODE=="00"))
         {   echo "if";
             $sql = "select SEMPNO , SNAME from AMEC.AEMPLOYEE where CSTATUS = '1' and SSECCODE = '000404' and ( SPOSCODE in ('41','42','43','40','35') or SEMPNO IN ('09019','13067')) order by sname";
@@ -166,7 +167,7 @@ class form extends MY_Controller{
              echo "else if";
         }else
         {
-            echo "if";
+            echo "if >>>>>>";
             $sql = "select SEMPNO , SNAME from AMEC.AEMPLOYEE where CSTATUS = '1' and SSECCODE = '000303' and SPOSCODE in ('41','42','43') order by sname";
   
         }
