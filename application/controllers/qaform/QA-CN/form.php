@@ -132,7 +132,7 @@ class form extends MY_Controller{
             ));  
             if(!empty($data['empinf']))
             {
-                echo "eeeeeeeeeeeeee";
+                
                 $data['jstaff'] = $this->getjstaff($data['empinf']);
                 $data['eng'] = $this->getjstaff($data['empinf']);
                 $data['foreman'] = $this->getForeman($data['empno']);
@@ -151,9 +151,9 @@ class form extends MY_Controller{
 
     public function getjstaff($head)
     {
-        var_dump($head);
-        if(($head[0]->SDEPCODE=="000401") && ($head[0]->SSECCODE=="00"))
-        {   echo "if";
+    
+        if(($head[0]->SDEPCODE=="000401"))
+        {   
             $sql = "select SEMPNO , SNAME from AMEC.AEMPLOYEE where CSTATUS = '1' and SSECCODE = '000404' and ( SPOSCODE in ('41','42','43','40','35') or SEMPNO IN ('09019','13067')) order by sname";
         }else if(($head[0]->SDEPCODE=="000501"))
         {
@@ -164,14 +164,14 @@ class form extends MY_Controller{
             {
                 $sql = "select SEMPNO , SNAME from AMEC.AEMPLOYEE where CSTATUS = '1' and SSECCODE = '".$head[0]->SSECCODE."' and SPOSCODE in ('40','41','42','43') order by sname";
             }
-             echo "else if";
+           
         }else
         {
-            echo "if >>>>>>";
+           
             $sql = "select SEMPNO , SNAME from AMEC.AEMPLOYEE where CSTATUS = '1' and SSECCODE = '000303' and SPOSCODE in ('41','42','43') order by sname";
   
         }
-        echo $sql;
+        
         $data = $this->cn->getdatasql($sql);
        return   $data;
         // echo json_encode($data);
