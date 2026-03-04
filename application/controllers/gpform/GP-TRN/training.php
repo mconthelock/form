@@ -697,7 +697,7 @@ class Training extends MY_Controller {
             "CPAYBY"   => '3',
             "CATEGORY" => 'T',
             "CURGENT"  => '0',
-            "CRECBY"   => 'T'
+            "CRECBY"   => '2'
         ]);
         $this->trn->insert_data('CASHADVFORM', $insert_head);
 
