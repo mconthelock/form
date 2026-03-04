@@ -363,11 +363,11 @@
             </td>
         </tr>
         <tr>
-            <td class="force-w-350 align-top pt-2 ">Maker Insp. Data <span class="px-2 text-red-600">(Max 1000 KB)</span></td>
+            <td class="force-w-350 align-top pt-2 ">Maker Insp. Data</td>
             <td class="px-3 py-2 bg-gray-100 border-b border-white "> 
                 <div id="dvmakFile" class="pt-1 w-[600px]">
                 <div class="dvSFile flex items-center justify-between gap-2 mb-2">
-                    <input type="file" name="MAKFILE[]" data-map="MAKFILE" data-max-kb="1000" 
+                    <input type="file" name="MAKFILE[]" data-map="MAKFILE"  
                     class="file-input file-input-bordered border-blue-200 w-full" multiple>
 
                     <!-- ปุ่มลบ -->
@@ -386,7 +386,7 @@
                 <div class="flex justify-end mt-2  w-[600px]">
                 <button type="button"
                     class="add-row btn-square bg-green-200 hover:bg-green-300 text-green-800 rounded-md w-8 h-8 flex items-center justify-center shadow transition cursor-pointer"
-                    title="Add row" data-var1="MAKFILE" data-var2="dvmakFile" data-var3="1000">
+                    title="Add row" data-var1="MAKFILE" data-var2="dvmakFile" >
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none"
                     viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />

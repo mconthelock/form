@@ -437,6 +437,11 @@ $(document).on('focus click', '#txtOth', function () {
 });
 
  $(document).on("change", ".file-input", async function () {
+    const type = $(this).attr("data-map");
+    if(type == "MAKFILE")
+    {
+       return;
+    }
     const maxKB = parseInt($(this).attr("data-max-kb"), 10);
     const maxSize = maxKB * 1024; // byte
 

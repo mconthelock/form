@@ -347,29 +347,32 @@ $(document).on("submit", "#form", async function (e) {
 			throw new Error(res.message);
 		}
 	} catch (e) {
-		formCFS.form.create.forEach((el) => {
-			const cond = {
-				NFRMNO: el.message.formtype,
-				VORGNO: el.message.owner,
-				CYEAR: el.message.cyear,
-				CYEAR2: el.message.cyear2,
-				NRUNNO: el.message.runno,
-			};
-			getData({
-				...ajaxOptions,
-				url: `${host}/isform/IS-CFS/form/delete`,
-				data: {
-					form: cond,
-				},
-			});
-			deleteFlowandForm({
-                NFRMNO: el.message.formtype,
-                VORGNO: el.message.owner,
-                CYEAR: el.message.cyear,
-                CYEAR2: el.message.cyear2,
-                NRUNNO: el.message.runno,
+        if(formCFS && formCFS.form && formCFS.form.create){
+            formCFS.form.create.forEach((el) => {
+                const cond = {
+                    NFRMNO: el.message.formtype,
+                    VORGNO: el.message.owner,
+                    CYEAR: el.message.cyear,
+                    CYEAR2: el.message.cyear2,
+                    NRUNNO: el.message.runno,
+                };
+                getData({
+                    ...ajaxOptions,
+                    url: `${host}/isform/IS-CFS/form/delete`,
+                    data: {
+                        form: cond,
+                    },
+                });
+                deleteFlowandForm({
+                    NFRMNO: el.message.formtype,
+                    VORGNO: el.message.owner,
+                    CYEAR: el.message.cyear,
+                    CYEAR2: el.message.cyear2,
+                    NRUNNO: el.message.runno,
+                });
             });
-		});
+        }
+
 		formCreate.forEach((el) => {
 			deleteFlowandForm({
                 NFRMNO:el.formtype, 

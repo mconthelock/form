@@ -12,6 +12,7 @@ class form extends MY_Controller{
         formApi::getRequestNo  insteadOf _Form;
         flow::getExtData insteadOf _Form;
         flow::doaction insteadOf _Form;
+        _Form::deleteFlowStep insteadOf flow;
         _Form::getMode as getModeWebservice;
     }
     protected $title;

@@ -15,6 +15,7 @@ class Main extends MY_Controller {
     use _Form, flow {
         flow::getExtData insteadof _Form;
         flow::doaction insteadof _Form;
+        _Form::deleteFlowStep insteadOf flow;
     }
     protected $client;
     public function __construct()
