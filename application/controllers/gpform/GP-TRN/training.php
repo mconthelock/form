@@ -700,7 +700,6 @@ class Training extends MY_Controller {
             "CRECBY"   => '2'
         ]);
         $this->trn->insert_data('CASHADVFORM', $insert_head);
-
         $insert_list = array_merge($base_cash_adv, [
             "ID"          => 1,
             "DESCRIPTION" => $cashHead["SUBJECT"],
