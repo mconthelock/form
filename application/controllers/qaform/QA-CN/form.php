@@ -133,8 +133,8 @@ class form extends MY_Controller{
             if(!empty($data['empinf']))
             {
                 
-                $data['jstaff'] = $this->getjstaff($data['empinf']);
-                $data['eng'] = $this->getjstaff($data['empinf']);
+                $data['jstaff'] = $this->getjstaff($data['empinf'], 'J');
+                $data['eng'] = $this->getjstaff($data['empinf'], 'E');
                 $data['foreman'] = $this->getForeman($data['empno']);
                 $data['opr'] =  $this->getOpr($data['cnform']->MSTATUS, $data['empinf']);
             }
@@ -149,28 +149,40 @@ class form extends MY_Controller{
 
     }
 
-    public function getjstaff($head)
+    public function getjstaff($head, $type)
     {
-        if(($head[0]->SDEPCODE=="000401") && ($head[0]->SSECCODE=="00"))
-        {
-            $sql = "select SEMPNO , SNAME from AMEC.AEMPLOYEE where CSTATUS = '1' and SSECCODE = '000404' and ( SPOSCODE in ('41','42','43','40','35') or SEMPNO IN ('09019','13067')) order by sname";
-        }else if(($head[0]->SDEPCODE=="000501"))
-        {
-            if(($head[0]->SSECCODE=="00"))
+        if ($head[0]->SDEPCODE == "000401") {
+            
+            // ถ้า type เป็น 'E' ใช้ '35','40' ถ้าไม่ใช่ ให้ใช้ค่าเดิมของเงื่อนไขนี้
+            $posCode = ($type == 'E') ? "'35','40'" : "'41','42','43','40','35'";
+            if($type == 'E')
             {
-                $sql = "select SEMPNO , SNAME from AMEC.AEMPLOYEE where CSTATUS = '1' and SSECCODE = '000502' and SPOSCODE in ('40','41','42','43') order by sname";
+                $sql = "select SEMPNO , SNAME from AMEC.AEMPLOYEE where CSTATUS = '1' and SSECCODE = '000404' and  SPOSCODE in (".$posCode.")  order by sname";
+            
             }else
             {
-                $sql = "select SEMPNO , SNAME from AMEC.AEMPLOYEE where CSTATUS = '1' and SSECCODE = '".$head[0]->SSECCODE."' and SPOSCODE in ('40','41','42','43') order by sname";
+                $sql = "select SEMPNO , SNAME from AMEC.AEMPLOYEE where CSTATUS = '1' and SSECCODE = '000404' and ( SPOSCODE in (".$posCode.") or SEMPNO IN ('09019','13067')) order by sname";
+            
             }
-        }else
-        {
-            $sql = "select SEMPNO , SNAME from AMEC.AEMPLOYEE where CSTATUS = '1' and SSECCODE = '000303' and SPOSCODE in ('41','42','43') order by sname";
-  
+       
+        } else if ($head[0]->SDEPCODE == "000501") {
+            
+            $posCode = ($type == 'E') ? "'35','40'" : "'40','41','42','43'";
+            if ($head[0]->SSECCODE == "00") {
+                $sql = "select SEMPNO , SNAME from AMEC.AEMPLOYEE where CSTATUS = '1' and SSECCODE = '000502' and SPOSCODE in (".$posCode.") order by sname";
+            } else {
+                $sql = "select SEMPNO , SNAME from AMEC.AEMPLOYEE where CSTATUS = '1' and SSECCODE = '".$head[0]->SSECCODE."' and SPOSCODE in (".$posCode.") order by sname";
+            }
+            
+        } else {
+            
+            $posCode = ($type == 'E') ? "'35','40'" : "'41','42','43'";
+            $sql = "select SEMPNO , SNAME from AMEC.AEMPLOYEE where CSTATUS = '1' and SSECCODE = '000303' and SPOSCODE in (".$posCode.") order by sname";
+            
         }
+        
         $data = $this->cn->getdatasql($sql);
-       return   $data;
-        // echo json_encode($data);
+        return $data;
     }
     
     public function geteng($head)
