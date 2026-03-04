@@ -6,8 +6,10 @@ import {
 	setImage,
 	setInfo,
 	getApp,
+	getAppDataById,
 } from "@amec/webasset/indexDB";
-import { getCookie } from "@amec/webasset/jsCookie";
+import { getCookie, deleteCookie } from "@amec/webasset/jsCookie";
+import { decryptText } from "@amec/webasset/crypto";
 import { directlogin, passwordLogin } from "@amec/webasset/api/auth";
 import { createCarousel } from "@amec/webasset/api/gpreport";
 import { redirectProduction } from "@amec/webasset/authen";
@@ -26,7 +28,15 @@ $(document).ready(async function () {
 	if (id == "1") {
 		const cookie = await getCookie(process.env.APP_NAME);
 		if (cookie) {
-			window.location.href = `${process.env.APP_ENV}/home`;
+			const decrypted = await decryptText(cookie, process.env.APP_NAME);
+			const user = await getAppDataById(decrypted);
+			if (!user) {
+				await deleteCookie(process.env.APP_NAME);
+				window.location.href = `${process.env.APP_ENV}`;
+			}
+
+			const group = user.group.data.GROUP_HOME || "home";
+			window.location.href = `${process.env.APP_ENV}/${group}`;
 		}
 	} else {
 		$("#webflow-link").removeClass("hidden");
@@ -164,9 +174,15 @@ $(document).on("click", "#close-camera", function (e) {
 async function successLogin(user) {
 	const emp = await setInfo(user.appuser.SEMPNO, user.appuser);
 	const empprofile = await setImage(user.appuser.SEMPNO, user.appuser.image);
-	if (user.apps.APP_ID == 1) return `${process.env.APP_ENV}/home`;
-	if (user.apps.APP_TYPE == "1")
-		return `${process.env.APP_HOST}/${user.apps.APP_LOCATION}/authen/move`;
+
+	if (user.apps.APP_ID == 1) {
+		const appgroup = user.appgroup.GROUP_HOME || "home";
+		return `${process.env.APP_ENV}/${appgroup}/`;
+	}
+
+	if (user.apps.APP_TYPE == "1") {
+		return `${process.env.APP_HOST}/${user.apps.APP_LOCATION}/authen/move/`;
+	}
 
 	return `${process.env.APP_HOST}/${user.apps.APP_LOCATION}/${
 		user.appgroup.GROUP_HOME == null ? "" : user.appgroup.GROUP_HOME
