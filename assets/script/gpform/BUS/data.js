@@ -1,19 +1,3 @@
-export const somefunction = async (data) => {
-	return new Promise((resolve, reject) => {
-		$.ajax({
-			url: `${process.env.APP_API}/bus/***/`,
-			type: "POST",
-			dataType: "json",
-			data: data,
-			success: function (response) {
-				resolve(response);
-			},
-			error: function (error) {
-				reject(error);
-			},
-		});
-	});
-};
 
 export const getLine   = (data) => callAPI("/bus/line/search", "POST", data);
 export const getRoute  = (data) => callAPI("/bus/route/search", "POST", data);
@@ -39,6 +23,8 @@ export const deleteRoute  = (data) => callAPI("/bus/route/delete", "POST", data)
 export const insertPassenger  = (data) => callAPI("/bus/passenger/create", "POST", data);
 export const updatePassenger  = (data) => callAPI("/bus/passenger/update", "POST", data);
 export const deletePassenger  = (data) => callAPI("/bus/passenger/delete", "POST", data);
+
+
 
 const callAPI = async (endpoint, method = "POST", data = null) => {
 	try {
