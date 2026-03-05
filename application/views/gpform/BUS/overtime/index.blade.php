@@ -57,7 +57,17 @@
     <!-- LEVEL 1 : BUS LINE -->
     <div class="rounded-2xl border p-3">
       <div class="font-semibold mb-2">BUS LINE</div>
-      <table id="tblLine" class="display w-full"></table>
+
+      <table id="tblLine" name="tblLine" class="display w-full">
+      <thead>
+        <tr>
+          <th>สายรถ</th>
+          <th>จำนวนที่นั่ง</th>
+          <th>ประเภท</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
     </div>
 
     <!-- LEVEL 2 : BUS STOP -->
@@ -68,7 +78,7 @@
       </div>
       <table id="tblStop" class="display w-full"></table>
       <div class="mt-2">
-        <button id="btnAddStop" class="px-3 py-2 rounded-lg border text-sm" disabled>
+        <button id="btnAddStop" name="btnAddStop" class="px-3 py-2 rounded-lg border text-sm" disabled>
           + เพิ่มจุดรถ
         </button>
       </div>
@@ -80,7 +90,8 @@
         BUS PASSENGER
         <span class="text-xs text-gray-500 ml-2" id="lblSelectedStop">Selected: -</span>
       </div>
-      <table id="tblPassenger" class="display w-full"></table>
+      <table id="tblPassenger" name="tblPassenger" class="display w-full"></table>
+      
     </div>
   </div>
 </div>

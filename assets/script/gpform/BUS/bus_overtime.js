@@ -2,13 +2,7 @@ import { showLoader } from "@amec/webasset/preloader";
 import { showMessage, showConfirm } from "@amec/webasset/utils";
 import { createTable } from "@amec/webasset/dataTable";
 import { initApp, tableOption } from "../../utils.js";
-
-import {
-  dispatchGetDispatch,
-  dispatchSaveOverwrite,
-  getLine,
-  getStop,
-} from "./data.js";
+import {dispatchGetDispatch, dispatchSaveOverwrite, getLine, getStop,} from "./data.js";
 
 const dom = {
   workdate: "#dd_workdate",
@@ -27,7 +21,7 @@ const dom = {
 };
 
 const state = {
-  snapshot: null,        // response from get-dispatch
+  snapshot: null, 
   head: null,
   lines: [],
   selectedLine: null,
@@ -35,7 +29,6 @@ const state = {
 };
 
 let tableLine, tableStop, tablePassenger;
-
 function todayYMD() {
   const d = new Date();
   const y = d.getFullYear();
@@ -45,10 +38,9 @@ function todayYMD() {
 }
 
 function mapShift(uiType) {
-  // dropdown values: OT | NIGHT | HOLIDAY
-  if (uiType === "OT") return "D";
-  if (uiType === "NIGHT") return "N";
-  if (uiType === "HOLIDAY") return "H";
+  if (uiType === "OT") return "D"; // OT Day (NORMAL)
+  if (uiType === "NIGHT") return "N"; // Night
+  if (uiType === "HOLIDAY") return "H"; // Holiday
   return "D";
 }
 
@@ -61,15 +53,11 @@ function makeDtoGetDispatch() {
 }
 
 function setSelectedLineLabel(line) {
-  $(dom.lblSelectedLine).text(
-    line ? `Selected: ${line.busname || line.busid || "-"}` : "Selected: -"
-  );
+  $(dom.lblSelectedLine).text(  line ? `Selected: ${line.busname || line.busid || "-"}` : "Selected: -" );
 }
 
 function setSelectedStopLabel(stop) {
-  $(dom.lblSelectedStop).text(
-    stop ? `Selected: ${stop.stop_name || stop.stop_id || "-"}` : "Selected: -"
-  );
+  $(dom.lblSelectedStop).text( stop ? `Selected: ${stop.stop_name || stop.stop_id || "-"}` : "Selected: -" );
 }
 
 function updateSummary() {
@@ -87,12 +75,9 @@ function updateSummary() {
 function clearRightTables() {
   state.selectedLine = null;
   state.selectedStop = null;
-
   setSelectedLineLabel(null);
   setSelectedStopLabel(null);
-
   $(dom.btnAddStop).prop("disabled", true);
-
   tableStop.clear().draw();
   tablePassenger.clear().draw();
 }
@@ -100,22 +85,21 @@ function clearRightTables() {
 function initTables() {
   createTable(dom.tblLine, {
     ...tableOption,
-    searching: true,
+    searching: false,
     paging: false,
     info: false,
     columns: [
-      { title: "LINE", data: "line_id", width: "60px" },
       { title: "BUS", data: null, render: (v, t, row) => row.busname || row.busid || "-" },
       { title: "SEAT", data: "busseat", width: "60px", defaultContent: "-" },
       { title: "TYPE", data: "bustype", width: "60px", defaultContent: "-" },
-      { title: "STATUS", data: "line_status", width: "70px", defaultContent: "-" },
     ],
   });
-  tableLine = $(dom.tblLine).DataTable(); // ✅ instance จริง
+  tableLine = $(dom.tblLine).DataTable(); 
+
 
   createTable(dom.tblStop, {
     ...tableOption,
-    searching: true,
+    searching: false,
     paging: false,
     info: false,
     columns: [
@@ -125,16 +109,16 @@ function initTables() {
       { title: "PAX", data: null, width: "60px", render: (v, t, row) => (row.passengers ? row.passengers.length : 0) },
     ],
   });
-  tableStop = $(dom.tblStop).DataTable(); // ✅
+  tableStop = $(dom.tblStop).DataTable(); 
 
   createTable(dom.tblPassenger, {
     ...tableOption,
-    searching: true,
+    searching: false,
     paging: false,
     info: false,
     columns: [{ title: "EMPNO", data: "empno", width: "120px" }],
   });
-  tablePassenger = $(dom.tblPassenger).DataTable(); // ✅
+  tablePassenger = $(dom.tblPassenger).DataTable(); 
 
   // click handlers ใช้เหมือนเดิมได้
 }
