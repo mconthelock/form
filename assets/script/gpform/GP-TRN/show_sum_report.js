@@ -106,6 +106,7 @@ window.initFormReport = async function () {
 			scrollCollapse: true,
 			autoWidth: false,
 			searching: false,
+			responsive: false,
 			dom: "rtip",
 			createdRow: function (row, data) {
 				if (data.STATUS_TEXT === "Approved") {
@@ -160,7 +161,6 @@ function getStatusText(v) {
 
 window.loadReportData = function () {
 	if (!window.table) return;
-
 	$.get(
 		window.baseUrl + "gpform/GP-TRN/training/load_data",
 		{

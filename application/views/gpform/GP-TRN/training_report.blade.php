@@ -136,7 +136,6 @@
     <!-- ⭐ JS -->
     <script>
         initFormReport();
-
         document.getElementById("btnSearchSubmit").addEventListener("click", function () {
             filterModal.close();
             setTimeout(() => {
