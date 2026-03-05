@@ -1617,7 +1617,7 @@ table.dataTable .select2-container--default .select2-selection--multiple {
         class="confirm-btn bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-2 rounded-xl text-sm font-semibold
               shadow-md hover:shadow-lg hover:from-blue-600 hover:to-blue-700 transition-all duration-300
               {{ (!empty($form) && ($mode == '2') && ($form[0]->CST == '0')) ? '' : 'hidden' }}">
-        Submit Form
+        Create Form Entertainment
       </button>
       <button type="button" data-tab="submit" 
         class="export-btn flex items-center gap-2 bg-gradient-to-r from-orange-500 to-orange-600 

@@ -1603,13 +1603,14 @@ $(document).on("click", ".confirm-btn", async function () {
 	if (validate($("#form-submit"))) {
 		$(this).prop("disabled", true);
 		createGPENT();
-		updateform();
+		
 	}
 });
 $(document).on("click", ".send-btn", async function () {
 	// $(this).prop('disabled', true);
 	if (validate($("#form-submit"))) {
 		sendmailpic();
+		updateform();
 	}
 });
 
