@@ -598,9 +598,9 @@ function checkData(act)
 
       
   }
-  else if(act != "")
+  else
   {
-      console.log("xxxxx");
+      console.log("yyyyyyy");
       
       if(($("#mstatus").val() == "1") && (act == "approve"))
       {
