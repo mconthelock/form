@@ -600,6 +600,8 @@ function checkData(act)
   }
   else if(act != "")
   {
+      console.log("xxxxx");
+      
       if(($("#mstatus").val() == "1") && (act == "approve"))
       {
           if((cextdata == 6) && ($("#Operator").val() == ""))
