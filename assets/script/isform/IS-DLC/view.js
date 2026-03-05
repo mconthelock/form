@@ -1,11 +1,9 @@
 import { doaction, showflow } from "@amec/webasset/api/webform";
-import { tableOption } from "@amec/webasset/dataTable";
+import { createTable } from "@amec/webasset/dataTable";
 import { redirectWebflow } from "@amec/webasset/form";
 
 $(document).ready(async function () {
-	$("#logTable").DataTable({
-		...tableOption,
-	});
+	await createTable({}, { id: "#logTable" });
 	const formData = $(".form-data").data();
 	const { nfrmno, vorgno, cyear, cyear2, nrunno, empno } = formData;
 
