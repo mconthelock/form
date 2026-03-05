@@ -246,6 +246,7 @@ class form extends MY_Controller{
         $cyear =  $_POST["cyear"];
         $cyear2 = $_POST["cyear2"];
         $nrunno = $_POST["nrunno"];
+        $stepno = $_POST["stepready"];
      
         $form  = ['NFRMNO' => $nfrmno,
                   'VORGNO' => $vorgno,
@@ -291,7 +292,7 @@ class form extends MY_Controller{
             if(($cextData >= 2) && ($cextData < 8))
             {
                 unset($form["CEXTDATA"]);
-                //$this->updaterequest($form);
+                //
                 $this->updateresult($form);
                 if(isset($_POST["cnt"]) && $act <> "return")
                 {
@@ -315,11 +316,16 @@ class form extends MY_Controller{
                     }
                 }
             }
+            
  
             if($act == "approve")
             {
-                    
-                
+                    if($stepno == "--")
+                    {
+                       unset($form["CEXTDATA"]);
+                       $this->updaterequest($form);
+                    }
+             
                     if($cextData == 8)
                     {
                         if($_POST["chkClass"] == "2")
