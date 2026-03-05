@@ -24,7 +24,11 @@ export const insertPassenger  = (data) => callAPI("/bus/passenger/create", "POST
 export const updatePassenger  = (data) => callAPI("/bus/passenger/update", "POST", data);
 export const deletePassenger  = (data) => callAPI("/bus/passenger/delete", "POST", data);
 
-
+// ===== DISPATCH =====
+export const dispatchGetOrInit = (data) => callAPI("/bus/dispatch/get-or-init", "POST", data);
+export const dispatchGetDispatch = (data) => callAPI("/bus/dispatch/get-dispatch", "POST", data);
+export const dispatchBuildDailyFirst = (data) => callAPI("/bus/dispatch/build-daily-first", "POST", data);
+export const dispatchSaveOverwrite = (data) => callAPI("/bus/dispatch/save-overwrite", "POST", data);
 
 const callAPI = async (endpoint, method = "POST", data = null) => {
 	try {
