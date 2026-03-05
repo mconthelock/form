@@ -399,7 +399,6 @@ function bindHeaderEvents() {
   });
 
   $(dom.btnAddStop).prop("disabled", true);
-
   tableStop.clear().draw();
   tablePassenger.clear().draw();
 }
@@ -407,22 +406,21 @@ function bindHeaderEvents() {
 function initTables() {
   createTable(dom.tblLine, {
     ...tableOption,
-    searching: true,
+    searching: false,
     paging: false,
     info: false,
     columns: [
-      { title: "LINE", data: "line_id", width: "60px" },
       { title: "BUS", data: null, render: (v, t, row) => row.busname || row.busid || "-" },
       { title: "SEAT", data: "busseat", width: "60px", defaultContent: "-" },
       { title: "TYPE", data: "bustype", width: "60px", defaultContent: "-" },
-      { title: "STATUS", data: "line_status", width: "70px", defaultContent: "-" },
     ],
   });
-  tableLine = $(dom.tblLine).DataTable(); // ✅ instance จริง
+  tableLine = $(dom.tblLine).DataTable(); 
+
 
   createTable(dom.tblStop, {
     ...tableOption,
-    searching: true,
+    searching: false,
     paging: false,
     info: false,
     columns: [
@@ -432,16 +430,16 @@ function initTables() {
       { title: "PAX", data: null, width: "60px", render: (v, t, row) => (row.passengers ? row.passengers.length : 0) },
     ],
   });
-  tableStop = $(dom.tblStop).DataTable(); // ✅
+  tableStop = $(dom.tblStop).DataTable(); 
 
   createTable(dom.tblPassenger, {
     ...tableOption,
-    searching: true,
+    searching: false,
     paging: false,
     info: false,
     columns: [{ title: "EMPNO", data: "empno", width: "120px" }],
   });
-  tablePassenger = $(dom.tblPassenger).DataTable(); // ✅
+  tablePassenger = $(dom.tblPassenger).DataTable(); 
 
   // click handlers ใช้เหมือนเดิมได้
 }
