@@ -24,7 +24,7 @@ $(document).ready(async function () {
 	const id = $("#appid").val();
 	await redirectProduction(id);
 	await createCarousel("login");
-
+	console.log(id);
 	if (id == "1") {
 		const cookie = await getCookie(process.env.APP_NAME);
 		if (cookie) {
@@ -35,8 +35,9 @@ $(document).ready(async function () {
 				window.location.href = `${process.env.APP_ENV}`;
 			}
 
-			const group = user.group.data.GROUP_HOME || "home";
-			window.location.href = `${process.env.APP_ENV}/${group}`;
+			// const group = user.group.data.GROUP_HOME || "home";
+			console.log(user.group);
+			//window.location.href = `${process.env.APP_ENV}/${group}`;
 		}
 	} else {
 		$("#webflow-link").removeClass("hidden");
