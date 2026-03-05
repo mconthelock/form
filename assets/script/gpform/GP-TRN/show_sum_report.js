@@ -76,6 +76,16 @@ window.initFormReport = async function () {
 			className: "dt-nowrap text-end",
 			render: $.fn.dataTable.render.number(",", ".", 0),
 		},
+		{
+			title: "Form Cash Adv",
+			data: "CASH_FORMNO",
+			className: "dt-nowrap text-center",
+		},
+		{
+			title: "Form Clear Adv",
+			data: "CLR_FORMNO",
+			className: "dt-nowrap text-center",
+		},
 	];
 
 	//const options = { data: [],  columns: columns,};
