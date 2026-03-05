@@ -33,7 +33,7 @@ $(document).ready(async function () {
   $(".flow").html(flow.html);
 
   $(".btn-submit").click(async function () {
-      console.log("xxxxxxxxxx");
+      //console.log("xxxxxxxxxx");
       
       let action = $(this).data("action");
       const baseForm = {
@@ -43,7 +43,7 @@ $(document).ready(async function () {
         CYEAR2: cyear2,
         NRUNNO: nrunno
       };
-      console.log(action);
+      //console.log(action);
       
       if(action != "deleteApv")
       {
