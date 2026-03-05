@@ -1258,9 +1258,14 @@ $(document).on("click", "#btn-submit-form", function () {
 		loaddata(cyear2, nrunno);
 	}
 	if ($("#mode").val() == "1") {
-		$(".confirm-btn").removeClass("hidden");
+		if ($("#hasLunch").is(":checked") || $("#hasDinner").is(":checked"))
+		{
+			$(".confirm-btn").removeClass("hidden");
+		}
 		$(".export-btn").removeClass("hidden");
 	}
+
+	
 	//loaddata($("#cyear2").val(),$("#nrunno").val());
 });
 
