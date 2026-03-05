@@ -25,9 +25,6 @@
         </select>
       </div>
 
-      <button id="btnRefresh" class="px-4 py-2 rounded-lg border text-sm font-semibold">
-        Refresh
-      </button>
 
       <button id="btnAddPassenger" class="px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-semibold">
         เพิ่ม Passenger
