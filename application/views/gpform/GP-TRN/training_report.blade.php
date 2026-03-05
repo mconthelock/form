@@ -1,7 +1,6 @@
 @extends('layouts/webflowTemplate')
 @section('contents')
     <script>window.baseUrl = "{{ base_url() }}";</script>
-    <link rel="stylesheet" href="{{ base_url() }}assets/tabulator/css/tabulator.min.css">
     <script src="{{ base_url() }}assets/dist/js/show_sum_report.js"></script>
     
     <style>
