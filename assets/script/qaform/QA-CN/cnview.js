@@ -599,7 +599,7 @@ function checkData(act)
       
   }else if(act =="return")
   {
-      return true;
+      
   }
   else
   {
