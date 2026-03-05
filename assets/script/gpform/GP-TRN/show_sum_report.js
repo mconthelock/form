@@ -85,7 +85,7 @@ window.initFormReport = async function () {
 			title: "Form Clear Adv",
 			data: "CLR_FORMNO",
 			className: "dt-nowrap text-center",
-		}
+		},
 	];
 
 	//const options = { data: [],  columns: columns,};
