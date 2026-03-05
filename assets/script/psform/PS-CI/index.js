@@ -79,7 +79,9 @@ $(document).ready(async function () {
             data: null,
             render: (data, type, row) => {
                 const ACTUAL_QTY = row.ACTUAL_QTY ?? row.ON_HAND;
-                return ACTUAL_QTY - row.ON_HAND;
+                const DIFF = ACTUAL_QTY - row.ON_HAND;
+                console.log("DIFF:", DIFF);
+                return DIFF === 0 ? '-' : DIFF;
             },
             createdCell: (td, cellData, rowData, row, col) => {
                 const ACTUAL_QTY = rowData.ACTUAL_QTY ?? rowData.ON_HAND;
@@ -87,7 +89,7 @@ $(document).ready(async function () {
                 $(td).addClass("border-r border-slate-200 text-right font-bold");
                 if (DIFF < 0) {
                     $(td).addClass('text-red-700 bg-red-50');
-                } else {
+                } else if (DIFF > 0) {
                     $(td).addClass('text-green-700 bg-green-50');
                 }
             }
