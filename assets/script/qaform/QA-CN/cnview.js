@@ -188,7 +188,7 @@ $(document).ready(async function () {
                      }
          }else
           {
-             console.log("actionfrm");
+             //console.log("actionfrm");
               const statusact = await actionfrm(cnformData);
               if(action == "return")
                 {
@@ -587,17 +587,19 @@ function checkData(act)
             return false;
           }
           
-  }else if(act != "")
+  }else if(act =="returnrem")
   {
-      if(act =="returnrem")
-      {
+      
           if($("#txtRemark").val() == "")
           {
             showMessage('Please input Remark for reason return', 'warning');
             return false;
           }
 
-      }
+      
+  }
+  else if(act != "")
+  {
       if(($("#mstatus").val() == "1") && (act == "approve"))
       {
           if((cextdata == 6) && ($("#Operator").val() == ""))
