@@ -2833,33 +2833,34 @@ async function exportBusDailyExcel(dispatchId) {
       document.getElementById("move_stop_modal").showModal();
     });
 
-    $(document).on("click", "#btnConfirmMoveStop", async function () {
-      const stopId = $("#moveStopId").val();
-      const targetLineId = $("#moveTargetLine").val();
-      const currentLineId = $("#moveCurrentLineId").val();
+      
+ $(document).on("click", "#btnConfirmMoveStop", async function () {
+    const stopId = $("#moveStopId").val();
+    const targetLineId = $("#moveTargetLine").val();
+    const currentLineId = $("#moveCurrentLineId").val();
 
-      if (!stopId) {
-        showMessage("ไม่พบข้อมูลจุดรถ", "warning");
-        return;
-      }
+    if (!stopId) {
+      showMessage("ไม่พบข้อมูลจุดรถ", "warning");
+      return;
+    }
 
-      if (!targetLineId) {
-        showMessage("กรุณาเลือกสายรถปลายทาง", "warning");
-        return;
-      }
+    if (!targetLineId) {
+      showMessage("กรุณาเลือกสายรถปลายทาง", "warning");
+      return;
+    }
 
-      if (String(targetLineId) === String(currentLineId)) {
-        showMessage("กรุณาเลือกสายรถใหม่ที่ไม่ใช่สายเดิม", "warning");
-        return;
-      }
+    if (String(targetLineId) === String(currentLineId)) {
+      showMessage("กรุณาเลือกสายรถใหม่ที่ไม่ใช่สายเดิม", "warning");
+      return;
+    }
 
-      try {
-        const isConfirm = await showConfirm({
-          title: "ยืนยันการย้ายสายรถ",
-          message: "ต้องการย้ายจุดรถนี้ไปยังสายรถที่เลือกหรือไม่?",
-          acceptText: "ยืนยัน",
-          cancelText: "ยกเลิก",
-        });
+    try {
+      const isConfirm = await showConfirm({
+        title: "ยืนยันการย้ายสายรถ",
+        message: "ต้องการย้ายจุดรถนี้ไปยังสายรถที่เลือกหรือไม่?",
+        acceptText: "ยืนยัน",
+        cancelText: "ยกเลิก",
+      });
 
         if (!isConfirm) return;
 
