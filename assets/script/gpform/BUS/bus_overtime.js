@@ -200,11 +200,15 @@ async function stopOptions(data) {
       defaultContent: "-",
     },
     {
-      data: "plan_time",
-      title: "เวลา",
-      className: "text-center",
-      width: "90px",
+      data: "plan_time", title: "เวลา",
+      className: "text-center", width: "90px",
       defaultContent: "-",
+      render: function (data) {
+        if (!data) return "-";
+        const t = data.toString();
+        if (t.length === 4) { return t.slice(0, 2) + ":" + t.slice(2, 4); }
+        return t;
+      }
     },
     {
       data: null,
@@ -231,14 +235,47 @@ async function passengerOptions(data) {
   opt.columns = [
     {
       data: "empno",
-      title: "รหัสพนักงาน",
-      width: "120px",
+      title: "รหัส",
+      width: "80px",
       defaultContent: "-",
     },
     {
       data: "thainame",
       title: "ชื่อพนักงาน",
       defaultContent: "-",
+    },
+    {
+      data: "ssec", title: "Sec", defaultContent: "-",
+      render: function (data) {
+        if (!data) return "-";
+        let txt = data.toString().toUpperCase();
+        txt = txt.replace("SEC", "").trim();
+        txt = txt.replace(".", "").trim();
+        txt = txt.replace(" ", "").trim();
+        return txt || "-";
+      }
+    },
+    {
+      data: "sdept", title: "Dept", defaultContent: "-",
+      render: function (data) {
+        if (!data) return "-";
+        let txt = data.toString().toUpperCase();
+        txt = txt.replace("DEPT", "").trim();
+        txt = txt.replace(".", "").trim();
+        txt = txt.replace(" ", "").trim();
+        return txt || "-";
+      }
+    },
+    {
+      data: "sdiv", title: "Div", defaultContent: "-",
+      render: function (data) {
+        if (!data) return "-";
+        let txt = data.toString().toUpperCase();
+        txt = txt.replace("DIV", "").trim();
+        txt = txt.replace(".", "").trim();
+        txt = txt.replace(" ", "").trim();
+        return txt || "-";
+      }
     },
   ];
   return opt;
