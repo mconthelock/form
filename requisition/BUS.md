@@ -105,6 +105,53 @@
 
 ---
 
+**Table** : BUS_DISPATCH_HEAD
+**Description** : เก็บข้อมูลหัวเอกสารการจัดรถประจำวัน / OT
+| Column | Description | Type |
+|---|---|---|
+| DISPATCH_ID | รหัสเอกสารการจัดรถ | Number |
+| DISPATCH_DATE | วันที่จัดรถ | Date |
+| DISPATCH_TYPE | ประเภทการจัดรถ (W=workday, O=OT) | Text |
+| STATUS | สถานะเอกสาร (D=Draft, S=Saved, C=Closed) | Text |
+| UPDATE_BY | รหัสพนักงานผู้แก้ไขล่าสุด | Text |
+| UPDATE_DATE | วันที่แก้ไขล่าสุด | Date |
+| SHIFT | กะการเดินรถ (D=Day, N=Night, H=Holiday) | Text |
+
+
+**Table** : BUS_DISPATCH_LINE  
+**Description** : เก็บข้อมูลสายรถที่ถูกนำมาใช้ในเอกสารจัดรถแต่ละใบ
+| Column | Description | Type |
+|---|---|---|
+| DISPATCH_ID | รหัสเอกสารการจัดรถ | Number |
+| LINE_ID | ลำดับสายรถในเอกสาร | Number |
+| BUSID | รหัสสายรถอ้างอิงจาก master | Number |
+| BUSNAME | ชื่อสายรถ | Text |
+| BUSTYPE | ประเภทรถ | Text |
+| BUSSEAT | จำนวนที่นั่งของรถ | Number |
+| LINE_STATUS | สถานะของสายรถในเอกสาร | Text |
+
+
+**Table** : BUS_DISPATCH_STOP  
+**Description** : เก็บข้อมูลจุดจอดของแต่ละสายรถในเอกสารจัดรถ
+| Column | Description | Type |
+|---|---|---|
+| DISPATCH_ID | รหัสเอกสารการจัดรถ | Number |
+| LINE_ID | ลำดับสายรถในเอกสาร | Number |
+| STOP_ID | รหัสจุดจอด | Number |
+| STOP_NAME | ชื่อจุดจอด | Text |
+| PLAN_TIME | เวลาตามแผนของจุดจอด (รูปแบบ HHMM) | Text |
+
+
+**Table** : BUS_DISPATCH_PASSENGER  
+**Description** : เก็บข้อมูลพนักงานที่ขึ้นรถในจุดจอดของเอกสารจัดรถ
+| Column | Description | Type |
+|---|---|---|
+| DISPATCH_ID | รหัสเอกสารการจัดรถ | Number |
+| STOP_ID | รหัสจุดจอด | Number |
+| EMPNO | รหัสพนักงาน | Text |
+
+---
+
 ### API ที่สามารถเรียกใช้งานได้
 
 | ✅  | End point             | Method | Description                        |

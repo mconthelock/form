@@ -52,6 +52,7 @@
     </div>
   </div>
 
+  
   <!-- 3 LEVEL TABLES -->
   <div class="grid grid-cols-3 gap-4">
     <!-- LEVEL 1 : BUS LINE -->
@@ -74,7 +75,7 @@
     <div class="rounded-2xl border p-3">
       <div class="font-semibold mb-2">
         BUS STOP
-        <span class="text-xs text-gray-500 ml-2" id="lblSelectedLine">Selected: -</span>
+        <span class="text-xs text-gray-500 ml-2" id="lblSelectedLine">-</span>
       </div>
       <table id="tblStop" class="display w-full"></table>
       <div class="mt-2">
@@ -88,11 +89,12 @@
     <div class="rounded-2xl border p-3">
       <div class="font-semibold mb-2">
         BUS PASSENGER
-        <span class="text-xs text-gray-500 ml-2" id="lblSelectedStop">Selected: -</span>
+        <span class="text-xs text-gray-500 ml-2" id="lblSelectedStop">-</span>
       </div>
       <table id="tblPassenger" name="tblPassenger" class="display w-full"></table>
-      
     </div>
+
+
   </div>
 </div>
 @endsection
@@ -100,4 +102,233 @@
 
 @section('scripts')
 <script type="module" src="{{ $_ENV['APP_JS'] }}/bus_overtime.js?ver={{ $_ENV['VERSION'] }}"></script>
+@endsection
+
+
+@section('styles')
+<style>
+/* =========================
+   CARD / PANEL
+========================= */
+.bus-panel {
+  background: #ffffff;
+  border: 1px solid #d9dee7;
+  border-radius: 18px;
+  padding: 12px;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.05);
+}
+
+.bus-panel-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+  font-size: 15px;
+  font-weight: 800;
+  color: #111827;
+}
+
+.bus-panel-title small {
+  font-size: 12px;
+  font-weight: 600;
+  color: #64748b;
+}
+
+/* =========================
+   DATATABLE BASE
+========================= */
+.bus-table-wrap .dataTables_wrapper {
+  background: transparent;
+  box-shadow: none;
+  padding: 0;
+}
+
+.bus-table-wrap table.dataTable {
+  width: 100% !important;
+  border-collapse: separate !important;
+  border-spacing: 0;
+  overflow: hidden;
+  border: 1px solid #d7dee7;
+  border-radius: 14px;
+}
+
+.bus-table-wrap table.dataTable thead th {
+  color: #fff !important;
+  font-weight: 700;
+  font-size: 13px;
+  padding: 12px 10px;
+  border-bottom: none !important;
+}
+
+.bus-table-wrap table.dataTable tbody td {
+  padding: 11px 10px;
+  font-size: 14px;
+  color: #0f172a;
+  border-bottom: 1px solid #edf2f7 !important;
+  background: #fff;
+  vertical-align: middle;
+}
+
+.bus-table-wrap table.dataTable tbody tr:last-child td {
+  border-bottom: none !important;
+}
+
+.bus-table-wrap table.dataTable tbody tr {
+  transition: 0.18s ease;
+}
+
+.bus-table-wrap table.dataTable tbody tr:hover td {
+  background: #f8fafc;
+}
+
+.bus-table-wrap td.text-center,
+.bus-table-wrap th.text-center {
+  text-align: center !important;
+}
+
+/* =========================
+   TABLE COLOR THEMES
+========================= */
+
+/* BUS LINE = emerald */
+.bus-table-line table.dataTable thead th {
+  background: linear-gradient(90deg, #10b981, #14b8a6);
+}
+
+/* BUS STOP = sky */
+.bus-table-stop table.dataTable thead th {
+  background: linear-gradient(90deg, #0ea5e9, #2563eb);
+}
+
+/* BUS PASSENGER = violet */
+.bus-table-passenger table.dataTable thead th {
+  background: linear-gradient(90deg, #8b5cf6, #7c3aed);
+}
+
+/* =========================
+   SELECTED ROW
+========================= */
+.line-selected td {
+  background: #ecfdf5 !important;
+}
+
+.line-selected td:first-child {
+  box-shadow: inset 4px 0 0 #10b981;
+}
+
+.stop-selected td {
+  background: #eff6ff !important;
+}
+
+.stop-selected td:first-child {
+  box-shadow: inset 4px 0 0 #2563eb;
+}
+
+.passenger-selected td {
+  background: #f5f3ff !important;
+}
+
+.passenger-selected td:first-child {
+  box-shadow: inset 4px 0 0 #7c3aed;
+}
+
+/* =========================
+   BUS NAME BADGE (แบบรูป 2)
+========================= */
+.bus-line-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 100%;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 13px;
+  line-height: 1;
+  color: #854d0e;
+  background: linear-gradient(180deg, #fde68a, #fcd34d);
+  border: 1px solid #f59e0b;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.55);
+}
+
+.bus-line-name::before {
+  content: "🚌";
+  font-size: 14px;
+  line-height: 1;
+}
+
+/* ถ้าเป็น VAN */
+.bus-line-name.is-van {
+  color: #6b21a8;
+  background: linear-gradient(180deg, #f5d0fe, #e9d5ff);
+  border-color: #d8b4fe;
+}
+
+.bus-line-name.is-van::before {
+  content: "🚐";
+}
+
+/* ถ้าเป็น BUS */
+.bus-line-name.is-bus {
+  color: #92400e;
+  background: linear-gradient(180deg, #fde68a, #fef3c7);
+  border-color: #facc15;
+}
+
+/* =========================
+   SMALL BADGES
+========================= */
+.type-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 52px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.type-badge.bus {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.type-badge.van {
+  background: #fae8ff;
+  color: #a21caf;
+}
+
+.pax-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 24px;
+  padding: 0 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+  color: #075985;
+  background: #e0f2fe;
+  border: 1px solid #bae6fd;
+}
+
+/* =========================
+   LABEL SELECTED TEXT
+========================= */
+.selected-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: 8px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #475569;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+}
+</style>
 @endsection
