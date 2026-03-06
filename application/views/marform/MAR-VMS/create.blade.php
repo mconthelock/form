@@ -51,19 +51,6 @@ table.dataTable .select2-container--default .select2-selection--multiple {
   font-size: 14px;
   color:blue;
 }
-.tooltip {
-    position: absolute;
-    left: 0;
-    top: 100%;
-    margin-top: 0.25rem;
-    width: 16rem;
-    padding: 0.5rem;
-    background-color: #374151;
-    color: white;
-    font-size: 0.875rem;
-    border-radius: 0.25rem;
-    z-index: 10;
-  }
 
   [x-cloak] { display: none !important; }
 </style>
@@ -369,14 +356,10 @@ table.dataTable .select2-container--default .select2-selection--multiple {
       <span>Non-Government</span>
     </label>
 
-    <label class="flex items-center space-x-2 relative">
+    <label class="flex items-center space-x-2 relative tooltip tooltip-bottom" data-tip="Please fill out the government guest form.">
       <input type="radio" name="guestDetail" value="2" id="gov" {{ $mode == 2 && !empty($visit) && $visit[0]->COMTYPE == "2" ?  'checked': '' }}>
       <span>Government</span>
 
-      <!-- Tooltip -->
-      <div id="govTooltip" class="tooltip hidden">
-        Please fill out the government guest form.
-      </div>
     </label>
     </div>
     </div>

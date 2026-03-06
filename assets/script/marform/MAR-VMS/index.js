@@ -2038,7 +2038,7 @@ function deletefile(data) {
 function deleteForm(data) {
 	return new Promise((resolve) => {
 		$.ajax({
-			url: host + "marform/MAR-VMS/form/delform",
+			url: host + "marform/MAR-VMS/form/deleteform",
 			type: "post",
 			dataType: "json",
 			data: data,
