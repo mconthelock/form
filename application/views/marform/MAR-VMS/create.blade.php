@@ -1620,8 +1620,8 @@ table.dataTable .select2-container--default .select2-selection--multiple {
         Sent Mail
       </button>
       <button type="button" data-tab="del" 
-        class="del-btn bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-2 rounded-xl text-sm font-semibold
-              shadow-md hover:shadow-lg hover:from-blue-600 hover:to-blue-700 transition-all duration-300
+        class="del-btn bg-gradient-to-r from-red-500 to-red-600 text-white px-6 py-2 rounded-xl text-sm font-semibold
+              shadow-md hover:shadow-lg hover:from-red-600 hover:to-red-700 transition-all duration-300
               {{ (!empty($form) && ($mode == '2') && ($form[0]->CST == '0')) ? '' : 'hidden' }}">
         Delete
       </button>
