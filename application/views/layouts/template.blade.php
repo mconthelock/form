@@ -17,6 +17,7 @@
 
 
     <title>AMEC Webflow 🕊️ Document Mananagement System</title>
+    <link rel="stylesheet" href="{{ $_ENV['APP_CDN'] }}/icofont/icofont.min.css">
     <link rel="stylesheet" href="{{ base_url() }}assets/dist/css/tailwind.css?ver={{ $GLOBALS['version'] }}">
     @yield('styles')
 </head>
