@@ -135,22 +135,19 @@ async function lineOptions(data) {
   opt.info = false;
   opt.columns = [
     {
-      data: null,
-      title: "สายรถ",
+      data: null,  title: "สายรถ",
       render: function (data, type, row) {
         return row.busname || row.busid || "-";
       },
     },
     {
-      data: "busseat",
-      title: "จำนวนที่นั่ง",
+      data: "busseat",  title: "ที่นั่ง",
       className: "text-center",
       width: "80px",
       defaultContent: "-",
     },
     {
-      data: "bustype",
-      title: "ประเภท",
+      data: "bustype",  title: "ประเภท",
       className: "text-center",
       width: "80px",
       render: function (data) {
@@ -163,16 +160,6 @@ async function lineOptions(data) {
         return data || "-";
       },
     },
-    /*
-    {
-      data: "stops",
-      title: "STOP",
-      className: "text-center",
-      width: "80px",
-      render: function (data) {
-        return data?.length || 0;
-      },
-    },*/
   ];
   opt.createdRow = function (row) {
     $(row).addClass("line-row cursor-pointer hover:bg-gray-100 transition");
@@ -181,48 +168,60 @@ async function lineOptions(data) {
 }
 
 async function stopOptions(data) {
+  const sortedData = [...(data || [])].sort((a, b) => {
+    const t1 = parseInt(a.plan_time || "9999", 10);
+    const t2 = parseInt(b.plan_time || "9999", 10);
+    return t1 - t2;
+  });
   const opt = { ...tableOption };
-  opt.data = data;
+  opt.data = sortedData;
   opt.searching = false;
   opt.paging = false;
   opt.info = false;
+  opt.ordering = false;
   opt.columns = [
-    /*{
-      data: "stop_id",
-      title: "STOP_ID",
-      className: "text-center",
-      width: "90px",
-      defaultContent: "-",
-    },*/
     {
-      data: "stop_name",
-      title: "จุดรถ",
+      data: "stop_name", title: "จุดรถ",
       defaultContent: "-",
     },
     {
       data: "plan_time", title: "เวลา",
-      className: "text-center", width: "90px",
+      className: "text-center",
+      width: "90px",
       defaultContent: "-",
       render: function (data) {
         if (!data) return "-";
         const t = data.toString();
-        if (t.length === 4) { return t.slice(0, 2) + ":" + t.slice(2, 4); }
+        if (t.length === 4) {
+          return t.slice(0, 2) + ":" + t.slice(2, 4);
+        }
         return t;
-      }
+      },
     },
     {
-      data: null,
-      title: "ผู้โดยสาร(คน)",
+      data: null, title: "จัดการ",
       className: "text-center",
+      width: "140px",
+      orderable: false,
       render: function (data, type, row) {
-        const count = row.passengers?.length || 0;
-        return `<span class="pax-badge">${count}</span>`;
-      }
+        return `
+          <button
+            class="btn-move-stop px-3 py-1 text-xs bg-amber-100 text-amber-700 rounded hover:bg-amber-200 cursor-pointer"
+            data-stop-id="${row.stop_id}"
+            data-stop-name="${row.stop_name || ""}"
+            data-plan-time="${row.plan_time || ""}"
+          >
+            ย้ายสายรถ
+          </button>
+        `;
+      },
     },
   ];
+
   opt.createdRow = function (row) {
     $(row).addClass("stop-row cursor-pointer hover:bg-gray-100 transition");
   };
+
   return opt;
 }
 
@@ -232,6 +231,7 @@ async function passengerOptions(data) {
   opt.searching = false;
   opt.paging = false;
   opt.info = false;
+  opt.ordering = false;
   opt.columns = [
     {
       data: "empno",
@@ -400,17 +400,10 @@ async function selectStop(stop, rowIndex = null) {
 }
 
 function bindEvents() {
-  $(dom.workdate).on("change", async function () {
-    await loadDispatch();
-  });
-
-  $(dom.type).on("change", async function () {
-    await loadDispatch();
-  });
-
+  $(dom.workdate).on("change", async function () { await loadDispatch(); });
+  $(dom.type).on("change", async function () { await loadDispatch();});
   $(document).on("click", ".line-row", async function (e) {
     e.preventDefault();
-
     try {
       const rowIndex = tableLine.row(this).index();
       const data = tableLine.row(this).data();
@@ -423,7 +416,6 @@ function bindEvents() {
 
   $(document).on("click", ".stop-row", async function (e) {
     e.preventDefault();
-
     try {
       const rowIndex = tableStop.row(this).index();
       const data = tableStop.row(this).data();
@@ -466,15 +458,6 @@ function bindEvents() {
 
     try {
       await showLoader({ show: true });
-
-      // TODO: เปลี่ยนเป็น payload จริงเมื่อพร้อมใช้งาน
-      // const payload = {
-      //   dispatch_id: state.head.dispatch_id,
-      //   update_by: "15199",
-      //   lines: state.lines,
-      // };
-      // await dispatchSaveOverwrite(payload);
-
       showMessage("SAVE_DISPATCH_TODO", "success");
     } catch (error) {
       console.error(error);
@@ -483,4 +466,79 @@ function bindEvents() {
       await showLoader({ show: false });
     }
   });
+
+  $(document).on("click", ".btn-move-stop", async function (e) {
+      e.stopPropagation();
+      const stopId = $(this).data("stop-id");
+      const stopName = $(this).data("stop-name");
+      const currentLine = state.selectedLine;
+
+      if (!currentLine) {
+        showMessage("กรุณาเลือกสายรถก่อน", "warning");
+        return;
+      }
+
+      $("#moveStopId").val(stopId);
+      $("#moveStopName").val(stopName);
+      $("#moveCurrentLineId").val(currentLine.busid || "");
+      $("#moveCurrentLineName").val(currentLine.busname || currentLine.busid || "");
+
+      const $ddl = $("#moveTargetLine");
+      $ddl.empty();
+      $ddl.append(`<option value="">-- เลือกสายรถ --</option>`);
+
+      (state.lines || []).forEach((line) => {
+        const lineId = line.busid;
+        const lineName = line.busname || line.busid || "-";
+        if (String(lineId) === String(currentLine.busid)) return;
+        $ddl.append(`
+          <option value="${lineId}">
+            ${lineName} ${line.bustype === "2" ? "(Van)" : "(Bus)"}
+          </option>
+        `);
+      });
+
+      document.getElementById("move_stop_modal").showModal();
+    });
+
+    $(document).on("click", "#btnConfirmMoveStop", async function () {
+      const stopId = $("#moveStopId").val();
+      const targetLineId = $("#moveTargetLine").val();
+      const currentLineId = $("#moveCurrentLineId").val();
+
+      if (!stopId) {
+        showMessage("ไม่พบข้อมูลจุดรถ", "warning");
+        return;
+      }
+
+      if (!targetLineId) {
+        showMessage("กรุณาเลือกสายรถปลายทาง", "warning");
+        return;
+      }
+
+      if (String(targetLineId) === String(currentLineId)) {
+        showMessage("กรุณาเลือกสายรถใหม่ที่ไม่ใช่สายเดิม", "warning");
+        return;
+      }
+
+      try {
+        const isConfirm = await showConfirm({
+          title: "ยืนยันการย้ายสายรถ",
+          message: "ต้องการย้ายจุดรถนี้ไปยังสายรถที่เลือกหรือไม่?",
+          acceptText: "ยืนยัน",
+          cancelText: "ยกเลิก",
+        });
+
+        if (!isConfirm) return;
+
+        await showLoader({ show: true });
+        showMessage("MOVE_STOP_TODO", "success");
+        document.getElementById("move_stop_modal").close();
+      } catch (error) {
+        console.error(error);
+        showMessage("เกิดข้อผิดพลาดในการย้ายสายรถ", "error");
+      } finally {
+        await showLoader({ show: false });
+      }
+    });
 }
