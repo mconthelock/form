@@ -276,6 +276,42 @@ async function loadDispatch() {
 	}
 }
 
+async function selectLine(line, rowIndex = null) {
+  state.selectedLine = line;
+  state.selectedStop = null;
+
+  setSelectedLineLabel(line);
+  setSelectedStopLabel(null);
+
+  $(dom.btnAddStop).prop("disabled", false);
+  $(dom.btnAddPassenger).prop("disabled", true);
+
+  await renderStopTable(line.stops || []);
+  await renderPassengerTable([]);
+
+  $(".line-row").removeClass("line-selected");
+  if (rowIndex !== null && tableLine?.row(rowIndex).node()) {
+    $(tableLine.row(rowIndex).node()).addClass("line-selected");
+  }
+
+  if ((line.stops || []).length > 0) {
+    await selectStop(line.stops[0], 0);
+  }
+}
+
+async function selectStop(stop, rowIndex = null) {
+  state.selectedStop = stop;
+  setSelectedStopLabel(stop);
+  $(dom.btnAddPassenger).prop("disabled", false);
+
+  await renderPassengerTable(stop.passengers || []);
+
+  $(".stop-row").removeClass("line-selected");
+  if (rowIndex !== null && tableStop?.row(rowIndex).node()) {
+    $(tableStop.row(rowIndex).node()).addClass("line-selected");
+  }
+}
+
 function bindEvents() {
 	$(dom.workdate).on("change", loadDispatch);
 	$(dom.type).on("change", loadDispatch);
