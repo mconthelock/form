@@ -1270,7 +1270,7 @@ $(document).on("click", "#btn-submit-form", function () {
 	//loaddata($("#cyear2").val(),$("#nrunno").val());
 });
 
-$(document).on("click", "#del-btn", async function () {
+$(document).on("click", ".del-btn", async function () {
 	const isConfirmed = await showConfirm({
         title: "Confirm Deletion?",
         message: "This action cannot be undone. Are you sure you want to proceed?",
