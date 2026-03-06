@@ -33,7 +33,29 @@ const state = {
 	selectedStop: null,
 };
 
-let tableLine, tableStop, tablePassenger;
+let tableLine;
+let tableStop;
+let tablePassenger;
+
+$(document).ready(async function () {
+  await initApp();
+  await showLoader({ show: true });
+
+  try {
+    $(dom.workdate).val(todayYMD());
+    $(dom.type).val("OT");
+
+    await initTables();
+    bindEvents();
+    await loadDispatch();
+  } catch (error) {
+    console.error(error);
+    showMessage("เกิดข้อผิดพลาดในการเริ่มต้นหน้า", "error");
+  } finally {
+    await showLoader({ show: false });
+  }
+});
+
 function todayYMD() {
 	const d = new Date();
 	const y = d.getFullYear();
@@ -399,64 +421,7 @@ function bindHeaderEvents() {
   });
 
   $(dom.btnAddStop).prop("disabled", true);
-  tableStop.clear().draw();
-  tablePassenger.clear().draw();
-}
-
-async function initTables() {
- const BUS_LINES = (res.lines || []).map(l => ({
-    LINE_ID: l.line_id,
-    BUSNAME: l.busname,
-    BUSSEAT: l.busseat,
-    BUSTYPE: l.bustype,
-    LINE_STATUS: l.line_status,
-    BUSID: l.busid,
-    STOPS: l.stops || [],
-}));
-
-  optLine.createdRow = (row) => {
-    $(row).addClass("line-row cursor-pointer hover:bg-gray-100");
-  };
-
-  tableLine = await createTable(BUS_LINES, { id: "#tblLine" });
-  /*createTable(dom.tblLine, {
-    ...tableOption,
-    searching: false,
-    paging: false,
-    info: false,
-    columns: [
-      { title: "BUS", data: null, render: (v, t, row) => row.busname || row.busid || "-" },
-      { title: "SEAT", data: "busseat", width: "60px", defaultContent: "-" },
-      { title: "TYPE", data: "bustype", width: "60px", defaultContent: "-" },
-    ],
-  });
-  tableLine = $(dom.tblLine).DataTable(); */
-
-
-  createTable(dom.tblStop, {
-    ...tableOption,
-    searching: false,
-    paging: false,
-    info: false,
-    columns: [
-      { title: "STOP_ID", data: "stop_id", width: "80px" },
-      { title: "STOP", data: "stop_name", defaultContent: "-" },
-      { title: "PLAN", data: "plan_time", width: "70px", defaultContent: "-" },
-      { title: "PAX", data: null, width: "60px", render: (v, t, row) => (row.passengers ? row.passengers.length : 0) },
-    ],
-  });
-  tableStop = $(dom.tblStop).DataTable(); 
-
-  createTable(dom.tblPassenger, {
-    ...tableOption,
-    searching: false,
-    paging: false,
-    info: false,
-    columns: [{ title: "EMPNO", data: "empno", width: "120px" }],
-  });
-  tablePassenger = $(dom.tblPassenger).DataTable(); 
-
-  // click handlers ใช้เหมือนเดิมได้
+  $(dom.btnAddPassenger).prop("disabled", true);
 }
 
 async function loadDispatch() {
@@ -464,7 +429,11 @@ async function loadDispatch() {
 
   try {
     const dto = makeDtoGetDispatch();
-    if (!dto.workdate) throw new Error("WORKDATE_REQUIRED");
+
+    if (!dto.workdate) {
+      showMessage("กรุณาเลือกวันที่", "warning");
+      return;
+    }
 
     const res = await dispatchGetDispatch(dto);
 
@@ -480,87 +449,142 @@ async function loadDispatch() {
     };
     state.lines = res.lines || [];
 
-    tableLine.clear().rows.add(state.lines).draw();
-    clearRightTables();
     updateSummary();
+    clearRightSelection();
 
-    // auto select first line + first stop (UX)
-    if (state.lines.length) {
-      const firstLine = state.lines[0];
-      state.selectedLine = firstLine;
-      setSelectedLineLabel(firstLine);
-      $(dom.btnAddStop).prop("disabled", false);
+    await renderLineTable(state.lines);
+    await renderStopTable([]);
+    await renderPassengerTable([]);
 
-      tableStop.clear().rows.add(firstLine.stops || []).draw();
-
-      const trLine0 = $(tableLine.row(0).node());
-      $(tableLine.table().body()).find("tr").removeClass("selected");
-      trLine0.addClass("selected");
-
-      if ((firstLine.stops || []).length) {
-        const firstStop = firstLine.stops[0];
-        state.selectedStop = firstStop;
-        setSelectedStopLabel(firstStop);
-
-        tablePassenger.clear().rows.add(firstStop.passengers || []).draw();
-
-        const trStop0 = $(tableStop.row(0).node());
-        $(tableStop.table().body()).find("tr").removeClass("selected");
-        trStop0.addClass("selected");
-      }
+    if (state.lines.length > 0) {
+      await selectLine(state.lines[0], 0);
     }
-  } catch (e) {
-    console.error(e);
-    showMessage("error", e?.message || "LOAD_FAILED");
+  } catch (error) {
+    console.error(error);
+    showMessage(error?.message || "โหลดข้อมูลไม่สำเร็จ", "error");
   } finally {
     await showLoader({ show: false });
   }
 }
 
-function bindEvents() {
-  $(dom.workdate).on("change", loadDispatch);
-  $(dom.type).on("change", loadDispatch);
+async function selectLine(line, rowIndex = null) {
+  state.selectedLine = line;
+  state.selectedStop = null;
 
-  $(dom.btnAddPassenger).on("click", () => {
-    if (!state.selectedStop) return showMessage("warning", "กรุณาเลือก BUS STOP ก่อน");
-    // TODO: open modal add passenger
-    console.log("ADD PASSENGER", state.selectedStop);
+  setSelectedLineLabel(line);
+  setSelectedStopLabel(null);
+
+  $(dom.btnAddStop).prop("disabled", false);
+  $(dom.btnAddPassenger).prop("disabled", true);
+
+  await renderStopTable(line.stops || []);
+  await renderPassengerTable([]);
+
+  $(".line-row").removeClass("line-selected");
+  if (rowIndex !== null && tableLine?.row(rowIndex).node()) {
+    $(tableLine.row(rowIndex).node()).addClass("line-selected");
+  }
+
+  if ((line.stops || []).length > 0) {
+    await selectStop(line.stops[0], 0);
+  }
+}
+
+async function selectStop(stop, rowIndex = null) {
+  state.selectedStop = stop;
+  setSelectedStopLabel(stop);
+  $(dom.btnAddPassenger).prop("disabled", false);
+
+  await renderPassengerTable(stop.passengers || []);
+
+  $(".stop-row").removeClass("line-selected");
+  if (rowIndex !== null && tableStop?.row(rowIndex).node()) {
+    $(tableStop.row(rowIndex).node()).addClass("line-selected");
+  }
+}
+
+function bindEvents() {
+  $(dom.workdate).on("change", async function () {
+    await loadDispatch();
   });
 
-  $(dom.btnAddStop).on("click", () => {
-    if (!state.selectedLine) return showMessage("warning", "กรุณาเลือก BUS LINE ก่อน");
+  $(dom.type).on("change", async function () {
+    await loadDispatch();
+  });
+
+  $(document).on("click", ".line-row", async function (e) {
+    e.preventDefault();
+
+    try {
+      const rowIndex = tableLine.row(this).index();
+      const data = tableLine.row(this).data();
+      await selectLine(data, rowIndex);
+    } catch (error) {
+      console.error(error);
+      showMessage("Failed to load line details", "error");
+    }
+  });
+
+  $(document).on("click", ".stop-row", async function (e) {
+    e.preventDefault();
+
+    try {
+      const rowIndex = tableStop.row(this).index();
+      const data = tableStop.row(this).data();
+      await selectStop(data, rowIndex);
+    } catch (error) {
+      console.error(error);
+      showMessage("Failed to load stop details", "error");
+    }
+  });
+
+  $(dom.btnAddStop).on("click", function () {
+    if (!state.selectedLine) {
+      showMessage("กรุณาเลือก BUS LINE ก่อน", "warning");
+      return;
+    }
+
     // TODO: open modal add stop
     console.log("ADD STOP", state.selectedLine);
   });
 
-  $(dom.btnSaveDispatch).on("click", async () => {
-    // TODO: เตรียม payload overwrite จาก state.lines (หลังแก้ไข)
-    const ok = await showConfirm("ต้องการบันทึก DISPATCH ใช่ไหม?");
-    if (!ok) return;
+  $(dom.btnAddPassenger).on("click", function () {
+    if (!state.selectedStop) {
+      showMessage("กรุณาเลือก BUS STOP ก่อน", "warning");
+      return;
+    }
+
+    // TODO: open modal add passenger
+    console.log("ADD PASSENGER", state.selectedStop);
+  });
+
+  $(dom.btnSaveDispatch).on("click", async function () {
+    const isConfirm = await showConfirm({
+      title: "ยืนยันการบันทึก",
+      message: "ต้องการบันทึก DISPATCH ใช่หรือไม่?",
+      acceptText: "ยืนยัน",
+      cancelText: "ยกเลิก",
+    });
+
+    if (!isConfirm) return;
 
     try {
       await showLoader({ show: true });
 
-      // TODO: เปลี่ยนเป็น payload จริงเมื่อท่านพร้อม
-      // const payload = { dispatch_id: state.head.dispatch_id, update_by: "15199", lines: ... }
+      // TODO: เปลี่ยนเป็น payload จริงเมื่อพร้อมใช้งาน
+      // const payload = {
+      //   dispatch_id: state.head.dispatch_id,
+      //   update_by: "15199",
+      //   lines: state.lines,
+      // };
       // await dispatchSaveOverwrite(payload);
 
-      showMessage("success", "SAVE_DISPATCH_TODO");
-    } catch (e) {
-      console.error(e);
-      showMessage("error", e?.message || "SAVE_FAILED");
+      showMessage("SAVE_DISPATCH_TODO", "success");
+    } catch (error) {
+      console.error(error);
+      showMessage(error?.message || "SAVE_FAILED", "error");
     } finally {
       await showLoader({ show: false });
     }
   });
 }
-
-$(document).ready(async function () {
-  initApp?.(); // ถ้า utils.js ของท่านต้อง init อะไร
-  $(dom.workdate).val(todayYMD());
-  $(dom.type).val("OT");
-
-  initTables();
-  bindEvents();
-  await loadDispatch();
-});
