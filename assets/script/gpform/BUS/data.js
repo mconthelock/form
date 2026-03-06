@@ -29,6 +29,7 @@ export const dispatchGetOrInit = (data) => callAPI("/bus/dispatch/get-or-init", 
 export const dispatchGetDispatch = (data) => callAPI("/bus/dispatch/get-dispatch", "POST", data);
 export const dispatchBuildDailyFirst = (data) => callAPI("/bus/dispatch/build-daily-first", "POST", data);
 export const dispatchSaveOverwrite = (data) => callAPI("/bus/dispatch/save-overwrite", "POST", data);
+export const dispatchMoveStop = (data) => callAPI("/bus/dispatch/move-stop", "POST", data);
 
 const callAPI = async (endpoint, method = "POST", data = null) => {
 	try {

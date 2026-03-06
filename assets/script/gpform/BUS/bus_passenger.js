@@ -2,24 +2,13 @@ import { showLoader } from "@amec/webasset/preloader";
 import { showMessage, showConfirm } from "@amec/webasset/utils";
 import { getAllInfo } from "@amec/webasset/indexDB";
 import {
-	getLine,
-	getStop,
-	getRoute,
-	getPassengerAllDetail,
-	getAllEmp,
-	insertPassenger,
-	updatePassenger,
-	deletePassenger,
+	getLine, getStop, getRoute,
+	getPassengerAllDetail, getAllEmp,
+	insertPassenger, updatePassenger, deletePassenger,
 } from "./data.js";
 import { createTable } from "@amec/webasset/dataTable";
 import { initApp, tableOption } from "../../utils.js";
-import {
-	exportExcel,
-	defaultExcel,
-	mergeCell,
-	applyStyleToRange,
-	alignment,
-	border,
+import { exportExcel, defaultExcel, mergeCell, applyStyleToRange, alignment, border,
 } from "@amec/webasset/excel";
 
 let tableLine;
@@ -131,13 +120,8 @@ async function showPassenger(busId) {
 		});
 
 		console.log("Passenger From API:", data);
-
 		const result = data
-			.filter((row) =>
-				row.stop?.routes?.some(
-					(r) => Number(r.BUSLINE) === Number(busId),
-				),
-			)
+			.filter((row) => row.stop?.routes?.some((r) => Number(r.BUSLINE) === Number(busId),),)
 			.filter((row) => row.stop?.STOP_STATUS === "1")
 			.filter((row) => row.Amecuserall?.CSTATUS === "1")
 			.sort(

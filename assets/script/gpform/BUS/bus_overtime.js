@@ -2,6 +2,7 @@ import { showLoader } from "@amec/webasset/preloader";
 import { showMessage, showConfirm } from "@amec/webasset/utils";
 import { createTable } from "@amec/webasset/dataTable";
 import { initApp, tableOption } from "../../utils.js";
+import { getAllInfo } from "@amec/webasset/indexDB";
 import {
 	dispatchGetDispatch,
 	dispatchSaveOverwrite,
@@ -36,8 +37,12 @@ const state = {
 let tableLine;
 let tableStop;
 let tablePassenger;
+let login_empno = null;
 
 $(document).ready(async function () {
+  const LOGIN_USER = await getAllInfo(); // 👈 ดึงจาก IndexedDB
+  login_empno = LOGIN_USER[0].data.SEMPNO;
+
   await initApp();
   await showLoader({ show: true });
 
@@ -546,20 +551,18 @@ function bindEvents() {
       return;
     }
 
-    // TODO: open modal add passenger
     console.log("ADD PASSENGER", state.selectedStop);
   });
 
   $(dom.btnSaveDispatch).on("click", async function () {
     const isConfirm = await showConfirm({
       title: "ยืนยันการบันทึก",
-      message: "ต้องการบันทึก DISPATCH ใช่หรือไม่?",
+      message: "ต้องการบันทึกการจัดรถ ใช่หรือไม่?",
       acceptText: "ยืนยัน",
       cancelText: "ยกเลิก",
     });
 
     if (!isConfirm) return;
-
     try {
       await showLoader({ show: true });
       showMessage("SAVE_DISPATCH_TODO", "success");
@@ -570,6 +573,8 @@ function bindEvents() {
       await showLoader({ show: false });
     }
   });
+
+
 
   $(document).on("click", ".btn-move-stop", async function (e) {
       e.stopPropagation();
@@ -605,44 +610,60 @@ function bindEvents() {
       document.getElementById("move_stop_modal").showModal();
     });
 
-    $(document).on("click", "#btnConfirmMoveStop", async function () {
-      const stopId = $("#moveStopId").val();
-      const targetLineId = $("#moveTargetLine").val();
-      const currentLineId = $("#moveCurrentLineId").val();
+      
+ $(document).on("click", "#btnConfirmMoveStop", async function () {
+    const stopId = $("#moveStopId").val();
+    const targetLineId = $("#moveTargetLine").val();
+    const currentLineId = $("#moveCurrentLineId").val();
 
-      if (!stopId) {
-        showMessage("ไม่พบข้อมูลจุดรถ", "warning");
-        return;
-      }
+    if (!stopId) {
+      showMessage("ไม่พบข้อมูลจุดรถ", "warning");
+      return;
+    }
 
-      if (!targetLineId) {
-        showMessage("กรุณาเลือกสายรถปลายทาง", "warning");
-        return;
-      }
+    if (!targetLineId) {
+      showMessage("กรุณาเลือกสายรถปลายทาง", "warning");
+      return;
+    }
 
-      if (String(targetLineId) === String(currentLineId)) {
-        showMessage("กรุณาเลือกสายรถใหม่ที่ไม่ใช่สายเดิม", "warning");
-        return;
-      }
+    if (String(targetLineId) === String(currentLineId)) {
+      showMessage("กรุณาเลือกสายรถใหม่ที่ไม่ใช่สายเดิม", "warning");
+      return;
+    }
 
-      try {
-        const isConfirm = await showConfirm({
-          title: "ยืนยันการย้ายสายรถ",
-          message: "ต้องการย้ายจุดรถนี้ไปยังสายรถที่เลือกหรือไม่?",
-          acceptText: "ยืนยัน",
-          cancelText: "ยกเลิก",
-        });
+    try {
+      const isConfirm = await showConfirm({
+        title: "ยืนยันการย้ายสายรถ",
+        message: "ต้องการย้ายจุดรถนี้ไปยังสายรถที่เลือกหรือไม่?",
+        acceptText: "ยืนยัน",
+        cancelText: "ยกเลิก",
+      });
 
-        if (!isConfirm) return;
+      if (!isConfirm) return;
+      await showLoader({ show: true });
+      const dto = {
+        dispatch_id: String(state.head?.dispatch_id || ""),
+        stop_id: String(stopId || ""),
+        target_line_id: String(targetLineId || ""),
+        update_by: String(login_empno || ""),
+      };
 
-        await showLoader({ show: true });
-        showMessage("MOVE_STOP_TODO", "success");
-        document.getElementById("move_stop_modal").close();
-      } catch (error) {
-        console.error(error);
-        showMessage("เกิดข้อผิดพลาดในการย้ายสายรถ", "error");
-      } finally {
-        await showLoader({ show: false });
-      }
-    });
+      console.log("MOVE STOP DTO =", dto);
+      console.log("dispatch_id =", state.head?.dispatch_id);
+      console.log("stop_id =", stopId);
+      console.log("target_line_id =", targetLineId);
+      console.log("update_by =", login_empno);
+
+      await dispatchMoveStop(dto);
+
+      showMessage("ย้ายสายรถสำเร็จ", "success");
+      document.getElementById("move_stop_modal").close();
+      await loadDispatch();
+    } catch (error) {
+      console.error(error);
+      showMessage(error?.message || "เกิดข้อผิดพลาดในการย้ายสายรถ", "error");
+    } finally {
+      await showLoader({ show: false });
+    }
+  });
 }
