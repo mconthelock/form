@@ -2,7 +2,9 @@
 
 > **👋** Purpose
 >
-> การ เพิ่ม/ลบ/แก้ไขชื่อสายรถและจุดรถได้
+> GP Dept เพิ่ม/ลบ/แก้ไขชื่อสายรถและจุดรถได้
+> โปรแกรมสามารถเพิ่มข้อมูลตั้งต้นในการจัดรถในแต่ละวันได้
+> GP Dept สามารถแก้ไขจุดจอดของพนักงานในแต่ละวันได้
 
 ---
 
@@ -15,16 +17,32 @@
 - api: cd เข้าไปที่โปรเจคแล้วรัน npm run start:dev
 - form: cd เข้าไปที่โปรเจคแล้วรัน npm run watch
 - เข้า url http://localhost:8080/form/authen/index/1
-  ![alt text](image.png)
+
+    ![alt text](image.png)
+
 - Test API ใช้โปรแกรม Postman หรือที่ถนัดได้เลย
-  ![alt text](image-2.png)
+
+    ![alt text](image-2.png)
 
 ---
+
+## To do List
+
+**6/3/2026**
+
+- [x] Map Master สายรถและจุดจอดจากระบบเดิม
+- [x] Map รายชื่อพนักงานกับจุดจอด
+- [ ] **Job** สำหรับสร้างขข้อมูลตั้งต้นการจัดรถในแต่ละวัน
+- [ ] วันศุกร์
+- [ ] เปลี่ยนสายรถก่อนแจ้งพนักงาน (GP Workflow)
+
+![alt text](image-3.png)
 
 **5/2/2026**
 
 - ออกแบบหน้าจอสำหรับการจัดการสายรถให้สามารถแก้ไข เพิ่มจุด ลดจุดได้ และเรียกใช้ API **_(ไม่เรียกข้อมูลด้วย PHP นะครับ)_**
-  ![alt text](image-1.png)
+
+![alt text](image-1.png)
 
 ---
 
@@ -32,30 +50,34 @@
 
 ---
 
-**Table** : BUS_LINE\
+**Table** : BUS_LINE
+
 **Description** : Master สายรถรับส่ง
-| Column | Description | Type |
-| --- | --- | --- |
-| BUSID | รหัสสายรถ (Auto Generate) | Number |
-| BUSNAME | ชื่อสายรถ | Text |
-| BUSTYPE | ประเภทรถ(1: รถบัส/ 2: รถตู้) | Text |
-| BUSSTATUS | สถานะสายรถ (1: ใช้งานอยู่/ 0: ไม่ใช้แล้ว) | Text |
-| BUSSEAT | จำนวนที่นั่งสูงสุดของสายนั้น | Number |
-| IS_CHONBURI | เป็นสายรถในจังหวัดชลบุรีหรือไม่ (1: ใช่/ 0: ไม่ใช่) | Text |
+
+| Column      | Description                                         | Type   |
+| ----------- | --------------------------------------------------- | ------ |
+| BUSID       | รหัสสายรถ (Auto Generate)                           | Number |
+| BUSNAME     | ชื่อสายรถ                                           | Text   |
+| BUSTYPE     | ประเภทรถ(1: รถบัส/ 2: รถตู้)                        | Text   |
+| BUSSTATUS   | สถานะสายรถ (1: ใช้งานอยู่/ 0: ไม่ใช้แล้ว)           | Text   |
+| BUSSEAT     | จำนวนที่นั่งสูงสุดของสายนั้น                        | Number |
+| IS_CHONBURI | เป็นสายรถในจังหวัดชลบุรีหรือไม่ (1: ใช่/ 0: ไม่ใช่) | Text   |
 
 ---
 
 \
-**Table** : BUS_STOP\
+**Table** : BUS_STOP
+
 **Description** : Master จุดจอดรถรับส่ง
-| Column | Description | Type |
-| --- | --- | --- |
-| STOP_ID | รหัสจุดจอดรถ (Auto Generate) | Number |
-| STOP_NAME | ชื่อจุดจอดรถ | Text |
-| STOP_STATUS | สถานะจุดจอดรถ (1: ใช้งานอยู่/ 0: ไม่ใช้แล้ว) | Text |
-| WORKDAY_TIMEIN | เวลาเข้าจอดวันทำงานกะเช้า | Text |
-| NIGHT_TIMEIN | เวลาเข้าจอดกะกลางคืน | Text |
-| HOLIDAY_TIMEIN | เวลาเข้าจอดวันหยุด | Text |
+
+| Column         | Description                                  | Type   |
+| -------------- | -------------------------------------------- | ------ |
+| STOP_ID        | รหัสจุดจอดรถ (Auto Generate)                 | Number |
+| STOP_NAME      | ชื่อจุดจอดรถ                                 | Text   |
+| STOP_STATUS    | สถานะจุดจอดรถ (1: ใช้งานอยู่/ 0: ไม่ใช้แล้ว) | Text   |
+| WORKDAY_TIMEIN | เวลาเข้าจอดวันทำงานกะเช้า                    | Text   |
+| NIGHT_TIMEIN   | เวลาเข้าจอดกะกลางคืน                         | Text   |
+| HOLIDAY_TIMEIN | เวลาเข้าจอดวันหยุด                           | Text   |
 
 ---
 
