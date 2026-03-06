@@ -30,14 +30,13 @@ $(document).ready(async function () {
 		if (cookie) {
 			const decrypted = await decryptText(cookie, process.env.APP_NAME);
 			const user = await getAppDataById(decrypted);
-			if (!user) {
+			if (!user || user.group == null) {
 				await deleteCookie(process.env.APP_NAME);
 				window.location.href = `${process.env.APP_ENV}`;
+			} else {
+				const group = user.group.data.GROUP_HOME || "home";
+				window.location.href = `${process.env.APP_ENV}/${group}`;
 			}
-
-			// const group = user.group.data.GROUP_HOME || "home";
-			console.log(user.group);
-			//window.location.href = `${process.env.APP_ENV}/${group}`;
 		}
 	} else {
 		$("#webflow-link").removeClass("hidden");
@@ -175,7 +174,6 @@ $(document).on("click", "#close-camera", function (e) {
 async function successLogin(user) {
 	const emp = await setInfo(user.appuser.SEMPNO, user.appuser);
 	const empprofile = await setImage(user.appuser.SEMPNO, user.appuser.image);
-
 	if (user.apps.APP_ID == 1) {
 		const appgroup = user.appgroup.GROUP_HOME || "home";
 		return `${process.env.APP_ENV}/${appgroup}/`;
