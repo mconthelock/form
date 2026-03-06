@@ -387,8 +387,14 @@ class form extends MY_Controller{
                 unset($form["CEXTDATA"]);
                 $this->updaterequest($form);
                 $this->insertdwg($form);
+                if($stepno != "--")
+                {
+                    $sqlOra = "update flow set DAPVDATE = to_date('" . date('d/m/Y') . "','dd/MM/yyyy') , CAPVTIME = '" . date('H:i:s') . "' where NFRMNO = '".$nfrmno."' AND VORGNO = '".$vorgno."' and CYEAR = '".$cyear."' and CYEAR2 = '".$cyear2."' and NRUNNO = '".$nrunno."' and CSTEPNO = '--'";
+                    $this->cn->execsql($sqlOra);
+                }
                 $sqlOra = "update form set CST = '1' where NFRMNO = '".$nfrmno."' AND VORGNO = '".$vorgno."' and CYEAR = '".$cyear."' and CYEAR2 = '".$cyear2."' and NRUNNO = '".$nrunno."' ";
                 $this->cn->execsql($sqlOra);
+
 
             }else if($act == "saveData")
             {
