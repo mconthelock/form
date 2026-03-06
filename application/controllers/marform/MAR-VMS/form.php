@@ -1204,5 +1204,56 @@ function insertEmptyRowsWithTemplate(Worksheet $sheet, int $templateStart, int $
         }
     }
 
+    public function deleteform()
+{
+    $status = true;
+    $message = 'Delete form successfully';
+
+    try {
+    
+        $vmscyear2 = $_POST["vmscyear2"];
+        $vmsnrunno = $_POST["vmsnrunno"];
+
+        $where_cond = array("CYEAR2" => $vmscyear2 , "NRUNNO" => $vmsnrunno);
+        $this->vms->delete("VMS_VISIT", $where_cond);
+        $this->vms->delete("VMS_VISITINF", $where_cond);
+        $this->vms->delete("VMS_SCHEDULE", $where_cond);
+        $this->vms->delete("VMS_PROJECT", $where_cond);
+        $this->vms->delete("VMS_AMEC_MEAL", $where_cond);
+        $this->vms->delete("VMS_ATTFILE", $where_cond);
+        $this->vms->delete("VMS_GPENT", array("VMSCYEAR2" => $vmscyear2 , "VMSNRUNNO" => $vmsnrunno));
+        $this->vms->delete("VMS_STAKEHOLDERS", $where_cond);
+
+        $path = $this->upload_path.$this->nfrmno."_".$this->vorgno."_".$this->cyear."_".$vmscyear2."_".$vmsnrunno."/";
+        
+        if (is_dir($path)) {
+          
+            $files = glob($path . '*', GLOB_MARK);
+            foreach ($files as $file) {
+                if (is_file($file)) {
+                    @unlink($file); 
+                }
+            }
+          
+            @rmdir($path);
+        }
+
+    } catch (Exception $e) {
+        $status = false;
+        $message = 'Failed to delete form: ' . $e->getMessage(); // เก็บ Error ไว้ดูได้
+    } finally {
+        // 4. ส่งค่ากลับเป็น JSON
+        $result = [
+            'status'  => $status,
+            'message' => $status ? 'Delete form successfully' : $message
+        ];
+        
+        // แนะนำให้ใส่ Header เพื่อบอกฝั่ง Frontend ว่าส่งกลับเป็น JSON ชัวร์ๆ
+        header('Content-Type: application/json');
+        echo json_encode($result);
+        exit; // ใส่ exit ป้องกันไม่ให้มีโค้ดอื่นรันต่อแล้วทำ JSON พัง
+    }
+}
+
 
 }
