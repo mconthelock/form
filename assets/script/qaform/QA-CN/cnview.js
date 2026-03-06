@@ -161,8 +161,16 @@ $(document).ready(async function () {
                     }
               
           }else if(action == "sendApv"){
+                if(stepready != "--")
+                {
+                    const statusact = await actionfrm(cnformData);
+                      if (statusact.status) {
+                          redirectWebflow();
+                      }
 
-                  const confirm = await doaction({
+                }else
+                {
+                    const confirm = await doaction({
                        ...baseForm,
                       ACTION: "approve",
                       EMPNO: empno,
@@ -174,6 +182,8 @@ $(document).ready(async function () {
                           redirectWebflow();
                       }
                   }
+
+                }
                 
           }else if(action == "returnb")
          {

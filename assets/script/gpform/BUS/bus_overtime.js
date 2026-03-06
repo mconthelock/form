@@ -243,7 +243,7 @@ function buildSaveDispatchPayload() {
       })),
     })),
   };
-}
+});
 
 $(document).ready(async function () {
   initApp?.(); // ถ้า utils.js ของท่านต้อง init อะไร
