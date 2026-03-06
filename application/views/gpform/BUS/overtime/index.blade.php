@@ -53,35 +53,21 @@
   </div>
 
   
-  <!-- 3 LEVEL TABLES -->
   <div class="grid grid-cols-3 gap-4">
     <!-- LEVEL 1 : BUS LINE -->
     <div class="rounded-2xl border p-3">
-      <div class="font-semibold mb-2">BUS LINE</div>
-
+      <div class="font-semibold mb-2"> BUS LINE </div>
       <table id="tblLine" name="tblLine" class="display w-full">
-      <thead>
-        <tr>
-          <th>สายรถ</th>
-          <th>จำนวนที่นั่ง</th>
-          <th>ประเภท</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
+      </table>
     </div>
 
     <!-- LEVEL 2 : BUS STOP -->
     <div class="rounded-2xl border p-3">
-      <div class="font-semibold mb-2">
-        BUS STOP
-        <span class="text-xs text-gray-500 ml-2" id="lblSelectedLine">-</span>
+      <div class="font-semibold mb-2"> BUS STOP <span class="text-xs text-gray-500 ml-2" id="lblSelectedLine">-</span>
       </div>
       <table id="tblStop" class="display w-full"></table>
       <div class="mt-2">
-        <button id="btnAddStop" name="btnAddStop" class="px-3 py-2 rounded-lg border text-sm" disabled>
-          + เพิ่มจุดรถ
-        </button>
+        <button id="btnAddStop" name="btnAddStop" class="px-3 py-2 rounded-lg border text-sm" disabled> + เพิ่มจุดรถ </button>
       </div>
     </div>
 
@@ -93,10 +79,42 @@
       </div>
       <table id="tblPassenger" name="tblPassenger" class="display w-full"></table>
     </div>
-
-
   </div>
 </div>
+
+<dialog id="move_stop_modal" class="modal">
+  <div class="modal-box max-w-md">
+    <h3 class="font-bold text-lg mb-4">ย้ายสายรถ</h3>
+
+    <div class="space-y-3">
+      <div>
+        <label class="block text-sm font-semibold mb-1">จุดรถ</label>
+        <input id="moveStopName" type="text" class="input input-bordered w-full" readonly />
+      </div>
+
+      <div>
+        <label class="block text-sm font-semibold mb-1">สายรถปัจจุบัน</label>
+        <input id="moveCurrentLineName" type="text" class="input input-bordered w-full" readonly />
+      </div>
+
+      <div>
+        <label class="block text-sm font-semibold mb-1">ย้ายไปสายรถ</label>
+        <select id="moveTargetLine" class="select select-bordered w-full">
+          <option value="">-- เลือกสายรถ --</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="modal-action">
+      <button id="btnConfirmMoveStop" class="btn btn-warning">ยืนยัน</button>
+      <form method="dialog">
+        <button class="btn">ยกเลิก</button>
+      </form>
+    </div>
+  </div>
+</dialog>
+<input type="hidden" id="moveStopId" />
+<input type="hidden" id="moveCurrentLineId" />
 @endsection
 
 

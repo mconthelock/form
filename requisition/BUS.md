@@ -123,7 +123,6 @@
 | Column | Description | Type |
 |---|---|---|
 | DISPATCH_ID | รหัสเอกสารการจัดรถ | Number |
-| LINE_ID | ลำดับสายรถในเอกสาร | Number |
 | BUSID | รหัสสายรถอ้างอิงจาก master | Number |
 | BUSNAME | ชื่อสายรถ | Text |
 | BUSTYPE | ประเภทรถ | Text |
@@ -136,7 +135,7 @@
 | Column | Description | Type |
 |---|---|---|
 | DISPATCH_ID | รหัสเอกสารการจัดรถ | Number |
-| LINE_ID | ลำดับสายรถในเอกสาร | Number |
+| LINE_ID | รหัสสายรถ (BUS_DISPATCH_LINE.BUSID) | Number |
 | STOP_ID | รหัสจุดจอด | Number |
 | STOP_NAME | ชื่อจุดจอด | Text |
 | PLAN_TIME | เวลาตามแผนของจุดจอด (รูปแบบ HHMM) | Text |

@@ -504,17 +504,10 @@ async function selectStop(stop, rowIndex = null) {
 }
 
 function bindEvents() {
-  $(dom.workdate).on("change", async function () {
-    await loadDispatch();
-  });
-
-  $(dom.type).on("change", async function () {
-    await loadDispatch();
-  });
-
+  $(dom.workdate).on("change", async function () { await loadDispatch(); });
+  $(dom.type).on("change", async function () { await loadDispatch();});
   $(document).on("click", ".line-row", async function (e) {
     e.preventDefault();
-
     try {
       const rowIndex = tableLine.row(this).index();
       const data = tableLine.row(this).data();
@@ -527,7 +520,6 @@ function bindEvents() {
 
   $(document).on("click", ".stop-row", async function (e) {
     e.preventDefault();
-
     try {
       const rowIndex = tableStop.row(this).index();
       const data = tableStop.row(this).data();
@@ -570,15 +562,6 @@ function bindEvents() {
 
     try {
       await showLoader({ show: true });
-
-      // TODO: เปลี่ยนเป็น payload จริงเมื่อพร้อมใช้งาน
-      // const payload = {
-      //   dispatch_id: state.head.dispatch_id,
-      //   update_by: "15199",
-      //   lines: state.lines,
-      // };
-      // await dispatchSaveOverwrite(payload);
-
       showMessage("SAVE_DISPATCH_TODO", "success");
     } catch (error) {
       console.error(error);
@@ -587,4 +570,79 @@ function bindEvents() {
       await showLoader({ show: false });
     }
   });
+
+  $(document).on("click", ".btn-move-stop", async function (e) {
+      e.stopPropagation();
+      const stopId = $(this).data("stop-id");
+      const stopName = $(this).data("stop-name");
+      const currentLine = state.selectedLine;
+
+      if (!currentLine) {
+        showMessage("กรุณาเลือกสายรถก่อน", "warning");
+        return;
+      }
+
+      $("#moveStopId").val(stopId);
+      $("#moveStopName").val(stopName);
+      $("#moveCurrentLineId").val(currentLine.busid || "");
+      $("#moveCurrentLineName").val(currentLine.busname || currentLine.busid || "");
+
+      const $ddl = $("#moveTargetLine");
+      $ddl.empty();
+      $ddl.append(`<option value="">-- เลือกสายรถ --</option>`);
+
+      (state.lines || []).forEach((line) => {
+        const lineId = line.busid;
+        const lineName = line.busname || line.busid || "-";
+        if (String(lineId) === String(currentLine.busid)) return;
+        $ddl.append(`
+          <option value="${lineId}">
+            ${lineName} ${line.bustype === "2" ? "(Van)" : "(Bus)"}
+          </option>
+        `);
+      });
+
+      document.getElementById("move_stop_modal").showModal();
+    });
+
+    $(document).on("click", "#btnConfirmMoveStop", async function () {
+      const stopId = $("#moveStopId").val();
+      const targetLineId = $("#moveTargetLine").val();
+      const currentLineId = $("#moveCurrentLineId").val();
+
+      if (!stopId) {
+        showMessage("ไม่พบข้อมูลจุดรถ", "warning");
+        return;
+      }
+
+      if (!targetLineId) {
+        showMessage("กรุณาเลือกสายรถปลายทาง", "warning");
+        return;
+      }
+
+      if (String(targetLineId) === String(currentLineId)) {
+        showMessage("กรุณาเลือกสายรถใหม่ที่ไม่ใช่สายเดิม", "warning");
+        return;
+      }
+
+      try {
+        const isConfirm = await showConfirm({
+          title: "ยืนยันการย้ายสายรถ",
+          message: "ต้องการย้ายจุดรถนี้ไปยังสายรถที่เลือกหรือไม่?",
+          acceptText: "ยืนยัน",
+          cancelText: "ยกเลิก",
+        });
+
+        if (!isConfirm) return;
+
+        await showLoader({ show: true });
+        showMessage("MOVE_STOP_TODO", "success");
+        document.getElementById("move_stop_modal").close();
+      } catch (error) {
+        console.error(error);
+        showMessage("เกิดข้อผิดพลาดในการย้ายสายรถ", "error");
+      } finally {
+        await showLoader({ show: false });
+      }
+    });
 }
