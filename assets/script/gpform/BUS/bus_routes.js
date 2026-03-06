@@ -54,7 +54,6 @@ $(document).ready(async function () {
 	await showLoader({ show: false });
 });
 
-
 async function lineOptions(data) {
 	const filteredData = data
 		.filter((item) => item.BUSSTATUS === "1")
