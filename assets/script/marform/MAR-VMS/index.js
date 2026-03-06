@@ -12,7 +12,7 @@ import { setSelect2, destroySelect2 } from "@amec/webasset/select2";
 //import "select2";
 //import "select2/dist/css/select2.min.css";
 import { redirectWebflow } from "@amec/webasset/form";
-import { createForm, getFormMaster, getFormMasterByVaname } from "@amec/webasset/api/webform";
+import { createForm, getFormMaster, getFormMasterByVaname , deleteFlowandForm } from "@amec/webasset/api/webform";
 
 import { setDatePicker } from "@amec/webasset/flatpickr";
 //import { createForm, redirectWebflow } from "@amec/webasset/form";
