@@ -403,8 +403,23 @@ function bindHeaderEvents() {
   tablePassenger.clear().draw();
 }
 
-function initTables() {
-  createTable(dom.tblLine, {
+async function initTables() {
+ const BUS_LINES = (res.lines || []).map(l => ({
+    LINE_ID: l.line_id,
+    BUSNAME: l.busname,
+    BUSSEAT: l.busseat,
+    BUSTYPE: l.bustype,
+    LINE_STATUS: l.line_status,
+    BUSID: l.busid,
+    STOPS: l.stops || [],
+}));
+
+  optLine.createdRow = (row) => {
+    $(row).addClass("line-row cursor-pointer hover:bg-gray-100");
+  };
+
+  tableLine = await createTable(BUS_LINES, { id: "#tblLine" });
+  /*createTable(dom.tblLine, {
     ...tableOption,
     searching: false,
     paging: false,
@@ -415,7 +430,7 @@ function initTables() {
       { title: "TYPE", data: "bustype", width: "60px", defaultContent: "-" },
     ],
   });
-  tableLine = $(dom.tblLine).DataTable(); 
+  tableLine = $(dom.tblLine).DataTable(); */
 
 
   createTable(dom.tblStop, {
