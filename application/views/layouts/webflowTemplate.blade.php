@@ -29,7 +29,7 @@
         @yield('contents')
     </div>
 
-    <dialog id="confirm_box" class="modal">
+    <!-- <dialog id="confirm_box" class="modal">
         <div class="modal-box">
             <form method="dialog" class="">
                 <h3 class="text-lg font-bold flex items-center gap-3" id="confirm_title"></h3>
@@ -46,7 +46,7 @@
                 </div>
             </form>
         </div>
-    </dialog>
+    </dialog> -->
     @yield('scripts')
 </body>
 

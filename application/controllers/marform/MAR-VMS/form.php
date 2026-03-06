@@ -1221,7 +1221,7 @@ function insertEmptyRowsWithTemplate(Worksheet $sheet, int $templateStart, int $
         $this->vms->delete("VMS_PROJECT", $where_cond);
         $this->vms->delete("VMS_AMEC_MEAL", $where_cond);
         $this->vms->delete("VMS_ATTFILE", $where_cond);
-        $this->vms->delete("VMS_GPENT", $where_cond);
+        $this->vms->delete("VMS_GPENT", array("VMSCYEAR2" => $vmscyear2 , "VMSNRUNNO" => $vmsnrunno));
         $this->vms->delete("VMS_STAKEHOLDERS", $where_cond);
 
         $path = $this->upload_path.$this->nfrmno."_".$this->vorgno."_".$this->cyear."_".$vmscyear2."_".$vmsnrunno."/";
