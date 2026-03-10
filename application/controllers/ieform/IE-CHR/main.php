@@ -17,11 +17,11 @@ class main extends MY_Controller {
 
     public function index()
     {
-        $data['NFRMNO'] = $nfrmno = $this->input->get('nfrmnno');
-        $data['VORGNO'] = $vorgno = $this->input->get('vorgno');
-        $data['CYEAR']  = $cyear = $this->input->get('cyear');
-        $data['CYEAR2'] = $cyear2 = $this->input->get('cyear2');
-        $data['NRUNNO'] = $nrunno = $this->input->get('nrunno');
+        $data['NFRMNO'] = $nfrmno = $this->input->get('no');
+        $data['VORGNO'] = $vorgno = $this->input->get('orgNo');
+        $data['CYEAR']  = $cyear = $this->input->get('y');
+        $data['CYEAR2'] = $cyear2 = $this->input->get('y2');
+        $data['NRUNNO'] = $nrunno = $this->input->get('runNo');
         $data['EMPNO'] = $empno = $this->input->get('empno');
 
         $data['mode'] = $this->getMode(['NFRMNO' => $nfrmno, 'VORGNO' => $vorgno, 'CYEAR' => $cyear, 'CYEAR2' => $cyear2, 'NRUNNO' => $nrunno, 'EMPNO' => $empno,]);
