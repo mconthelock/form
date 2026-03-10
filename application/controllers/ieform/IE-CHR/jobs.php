@@ -22,7 +22,7 @@ class jobs extends MY_Controller {
         $groupedData = [];
 
         foreach ($data as $item) {
-            $shopName                 = !empty($item->SHOP_NAME) ? $item->SHOP_NAME : 'UNKNOWN';
+            $shopName                 = !empty($item->SHOP) ? $item->SHOP : 'UNKNOWN';
             $groupedData[$shopName][] = $item;
         }
         $formmst = $this->getFormMasterByVaname("IE-CHR")['data'];
