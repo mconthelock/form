@@ -61,7 +61,7 @@
                                 ตารางตรวจสอบมาตรฐาน Crimping Condition สำหรับ Skill "CA"
                             </th>
                             <th rowspan="3" class="border border-slate-200 bg-sky-100 px-3 py-2 font-bold text-primary">CrimpHeight<br> STD</th>
-                            <th rowspan="3" class="border border-slate-200 bg-sky-100 px-3 py-2 font-bold text-primary">Accuracy &plusmn;</th>
+                            <th rowspan="3" class="border border-slate-200 bg-sky-100 px-3 py-2 font-bold text-primary">Accuracy <br> &plusmn;</th>
                             <th class="border border-rose-200 bg-rose-500 px-3 py-2"></th>
                             <th colspan="2" class="border border-slate-200 bg-rose-50 px-3 py-2 font-bold text-rose-700">= ค่าไม่ผ่าน</th>
                             <th rowspan="2" colspan="3" class="rounded-tr-3xl border border-slate-200 bg-indigo-50 px-3 py-2 font-bold text-indigo-700">รูปตัวอย่างชิ้นงาน (3 ชิ้น)</th>
@@ -102,19 +102,19 @@
                                 <td class="border border-slate-200 bg-slate-50 px-3 py-2 font-bold text-slate-900">{{ number_format($row->CRIMPHEIGHT_STD, 2) }}</td>
                                 <td class="border border-slate-200 bg-slate-50 px-3 py-2 font-bold text-slate-900">{{ number_format($row->ACCURACY, 2) }}</td>
                                 <td class="border border-slate-200 bg-emerald-50 px-2 py-2 text-emerald-700">
-                                    <div class="flex min-w-24 flex-col items-center gap-2">
+                                    <div class="flex flex-col items-center gap-2">
                                         <span class="font-black">{{ number_format($row->MEASURE1, 3) }}</span>
                                         {{-- <span class="badge badge-sm badge-success badge-soft">Pass</span> --}}
                                     </div>
                                 </td>
                                 <td class="border border-slate-200 bg-emerald-50 px-2 py-2 text-emerald-700">
-                                    <div class="flex min-w-24 flex-col items-center gap-2">
+                                    <div class="flex flex-col items-center gap-2">
                                         <span class="font-black">{{ number_format($row->MEASURE2, 3) }}</span>
                                         {{-- <span class="badge badge-sm badge-success badge-soft">Pass</span> --}}
                                     </div>
                                 </td>
                                 <td class="border border-slate-200 bg-emerald-50 px-2 py-2 text-emerald-700">
-                                    <div class="flex min-w-24 flex-col items-center gap-2">
+                                    <div class="flex flex-col items-center gap-2">
                                         <span class="font-black">{{ number_format($row->MEASURE3, 3) }}</span>
                                         {{-- <span class="badge badge-sm badge-success badge-soft">Pass</span> --}}
                                     </div>
