@@ -324,6 +324,7 @@ class form extends MY_Controller{
                     {
                        unset($form["CEXTDATA"]);
                        $this->updaterequest($form);
+                       $this->insertdwg($form);
                     }
              
                     if($cextData == 8)
