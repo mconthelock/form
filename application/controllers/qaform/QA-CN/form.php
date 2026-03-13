@@ -1133,6 +1133,7 @@ class form extends MY_Controller{
 
     private function chkopr($nfrmno,$vorgno,$cyear,$cyear2,$nrunno)
     {
+        
         $rs = $this->cn->customSelect("FLOW",array( 'NFRMNO' => $nfrmno,'VORGNO' => $vorgno,'CYEAR'  => $cyear,'CYEAR2' => $cyear2,'NRUNNO' => $nrunno ,'CEXTDATA' => '07' ),'');
         return  count($rs) == 0;
     }
