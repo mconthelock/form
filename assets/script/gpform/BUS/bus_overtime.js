@@ -229,6 +229,7 @@ async function lineOptions(data) {
       {
         data: "stop_name", title: "จุดรถ", defaultContent: "-",
       },
+      /*
       {
         data: "plan_time", title: "เวลา",
         className: "text-center",
@@ -242,7 +243,7 @@ async function lineOptions(data) {
           }
           return t;
         },
-      },
+      },*/
       {
         data: null, title: "จัดการ", className: "text-center", width: "80px", orderable: false,
         render: function (data, type, row) {
@@ -291,9 +292,9 @@ async function lineOptions(data) {
         render: function (data) {
           if (!data) return "-";
           let txt = data.toString().toUpperCase();
-          txt = txt.replace("SEC", "").trim();
-          txt = txt.replace(".", "").trim();
+          txt = txt.replace("SEC.", "").trim();
           txt = txt.replace(" ", "").trim();
+          txt = txt.replace("NOSECTION", "-").trim();
           return txt || "-";
         }
       },
@@ -420,9 +421,8 @@ $(dom.passengerSearch).on("input", async function () {
     setSelectedStopLabel(null);
   }
 
-  async function loadDispatch() {
+  async function loadDispatch(options = {}) {
     await showLoader({ show: true });
-
     try {
       const dto = makeDtoGetDispatch();
 
@@ -431,8 +431,9 @@ $(dom.passengerSearch).on("input", async function () {
         return;
       }
 
+      const preserveBusId = options.preserveBusId ?? state.selectedLine?.busid ?? null;
+      const preserveStopId = options.preserveStopId ?? state.selectedStop?.stop_id ?? null;
       const res = await dispatchGetDispatch(dto);
-
       state.snapshot = res;
       state.head = {
         dispatch_id: res.dispatch_id,
@@ -453,7 +454,11 @@ $(dom.passengerSearch).on("input", async function () {
       await renderPassengerTable([]);
 
       if (state.lines.length > 0) {
-        await selectLine(state.lines[0], 0);
+        let lineIndex = findLineIndexByBusId(preserveBusId);
+        if (lineIndex < 0) lineIndex = 0;
+
+        const targetLine = state.lines[lineIndex];
+        await selectLine(targetLine, lineIndex, preserveStopId);
       }
     } catch (error) {
       console.error(error);
@@ -463,14 +468,27 @@ $(dom.passengerSearch).on("input", async function () {
     }
   }
 
+  function findLineIndexByBusId(busid) {
+    return (state.lines || []).findIndex(
+      (line) => String(line.busid) === String(busid)
+    );
+  }
 
-  async function selectLine(line, rowIndex = null) {
+  function findStopIndexByStopId(stops, stopId) {
+    return (stops || []).findIndex(
+      (stop) => String(stop.stop_id) === String(stopId)
+    );
+  }
+
+  async function selectLine(line, rowIndex = null, preferredStopId = null) {
     state.selectedLine = line;
     state.selectedStop = null;
     setSelectedLineLabel(line);
     setSelectedStopLabel(null);
 
-    await renderStopTable(line.stops || []);
+    const stops = line.stops || [];
+
+    await renderStopTable(stops);
     await renderPassengerTable([]);
 
     $(".line-row").removeClass("line-selected");
@@ -479,8 +497,11 @@ $(dom.passengerSearch).on("input", async function () {
     }
 
     if (tableStop && tableStop.rows().count() > 0) {
-      const firstStop = tableStop.row(0).data();
-      await selectStop(firstStop, 0);
+      let stopIndex = findStopIndexByStopId(stops, preferredStopId);
+      if (stopIndex < 0) stopIndex = 0;
+
+      const targetStop = stops[stopIndex];
+      await selectStop(targetStop, stopIndex);
     }
   }
 
@@ -930,7 +951,11 @@ function bindEvents() {
       showMessage(res.message || "บันทึกข้อมูลสำเร็จ", "success");
       const modal = document.getElementById("add_passenger_modal");
       modal.close();
-      await loadDispatch();
+
+      await loadDispatch({
+        preserveBusId: selectedLine?.busid,
+        preserveStopId: selectedStop?.stop_id,
+      });
     } catch (error) {
       console.error(error);
       showMessage(error?.message || "เกิดข้อผิดพลาดในการบันทึกข้อมูล", "error");
