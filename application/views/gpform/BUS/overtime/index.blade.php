@@ -7,7 +7,7 @@
   <div class="flex flex-wrap items-start justify-between gap-4 mb-4">
     <div>
       <div class="text-2xl font-bold text-gray-800">Daily Transportation Dispatch</div>
-      <div class="text-sm text-gray-500">Manage daily dispatch snapshot (Line → Stop → Passenger)</div>
+      <div class="text-sm text-gray-500">Manage daily dispatch  (Line → Stop → Passenger)</div>
     </div>
 
     <div class="flex flex-wrap items-center gap-2">
@@ -19,20 +19,31 @@
       <div class="flex items-center gap-2">
         <span class="text-sm text-gray-600">Type</span>
         <select id="dd_type" class="border rounded-lg px-3 py-2 text-sm">
-          <option value="OT">OT</option>
-          <option value="NIGHT">NIGHT</option>
-          <option value="HOLIDAY">HOLIDAY</option>
+          <option value="OT">19.30</option>
+          <option value="OT_SPECIAL">21.30</option>
+          <option value="NIGHT">07.30 (Night)</option>
+          <option value="HOLIDAY">17.00 (Holiday)</option>
         </select>
       </div>
 
 
-      <button id="btnAddPassenger" class="px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-semibold">
+      <button id="btnAddPassenger" name="btnAddPassenger"  class="px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-semibold cursor-pointer">
         เพิ่ม Passenger
       </button>
 
-      <button id="btnSaveDispatch" class="px-4 py-2 rounded-lg bg-emerald-600 text-white text-sm font-semibold">
+      <button id="btnSaveDispatch" class="px-4 py-2 rounded-lg bg-emerald-600 text-white text-sm font-semibold cursor-pointer">
         Save DISPATCH
       </button>
+      
+      <button id="btnExportDispatch"
+            class="bg-yellow-200 text-gray-600 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-gray-200 transition shadow-sm flex items-center gap-2 cursor-pointer">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" class="w-5 h-5">
+                <path fill="#21A366" d="M6 4h23v40H6z"/>
+                <path fill="#107C41" d="M29 4h13v40H29z"/>
+                <path fill="#fff" d="M14 16l3.2 5.5L14 27h2.6l1.9-3.7L20.4 27H23l-3.2-5.5L23 16h-2.6l-1.9 3.7L16.6 16H14z"/>
+            </svg>
+             Export Data Passenger
+        </button>
     </div>
   </div>
 
@@ -66,53 +77,111 @@
       <div class="font-semibold mb-2"> BUS STOP <span class="text-xs text-gray-500 ml-2" id="lblSelectedLine">-</span>
       </div>
       <table id="tblStop" class="display w-full"></table>
-      <div class="mt-2">
-        <button id="btnAddStop" name="btnAddStop" class="px-3 py-2 rounded-lg border text-sm" disabled> + เพิ่มจุดรถ </button>
-      </div>
     </div>
 
     <!-- LEVEL 3 : BUS PASSENGER -->
     <div class="rounded-2xl border p-3">
-      <div class="font-semibold mb-2">
-        BUS PASSENGER
-        <span class="text-xs text-gray-500 ml-2" id="lblSelectedStop">-</span>
+      <div class="flex items-center justify-between gap-2 mb-2">
+        <div class="font-semibold">
+          BUS PASSENGER
+          <span class="text-xs text-gray-500 ml-2" id="lblSelectedStop">-</span>
+        </div>
+
+        <input
+          id="txtPassengerSearch"
+          type="text"
+          class="border rounded-lg px-3 py-2 text-sm w-56"
+          placeholder="ค้นหา empno / ชื่อ"
+          autocomplete="off"
+        />
       </div>
       <table id="tblPassenger" name="tblPassenger" class="display w-full"></table>
     </div>
+    
   </div>
 </div>
-
 <dialog id="move_stop_modal" class="modal">
   <div class="modal-box max-w-md">
-    <h3 class="font-bold text-lg mb-4">ย้ายสายรถ</h3>
-
+    <h3 class="font-bold text-lg mb-4">จัดการจุดรถ</h3>
     <div class="space-y-3">
       <div>
-        <label class="block text-sm font-semibold mb-1">จุดรถ</label>
+        <label class="block text-sm font-semibold mb-1">สายรถปัจจุบัน</label>
+        <input id="moveCurrentLineName" type="text"  class="input input-bordered w-full" readonly />
+      </div>
+
+      <div>
+        <label class="block text-sm font-semibold mb-1">ชื่อจุดรถ</label>
         <input id="moveStopName" type="text" class="input input-bordered w-full" readonly />
       </div>
 
       <div>
-        <label class="block text-sm font-semibold mb-1">สายรถปัจจุบัน</label>
-        <input id="moveCurrentLineName" type="text" class="input input-bordered w-full" readonly />
+          <label class="block text-sm font-medium mb-1"> เวลา<b style="color:red">*</b></label>
+          <input type="text" id="movePlanTime" name="movePlanTime" class="input input-bordered w-full" placeholder="HH:mm" autocomplete="off">
       </div>
-
       <div>
         <label class="block text-sm font-semibold mb-1">ย้ายไปสายรถ</label>
         <select id="moveTargetLine" class="select select-bordered w-full">
-          <option value="">-- เลือกสายรถ --</option>
+          <option value="">-- ไม่ย้ายสายรถ --</option>
         </select>
       </div>
+
     </div>
 
     <div class="modal-action">
-      <button id="btnConfirmMoveStop" class="btn btn-warning">ยืนยัน</button>
+      <button id="btnConfirmMoveStop" class="btn btn-warning">
+        บันทึก
+      </button>
+
       <form method="dialog">
         <button class="btn">ยกเลิก</button>
       </form>
     </div>
   </div>
 </dialog>
+
+<dialog id="add_passenger_modal" class="modal">
+  <div class="modal-box max-w-lg">
+    <h3 class="font-bold text-lg mb-4">เพิ่ม Passenger</h3>
+
+    <input type="hidden" id="apDispatchId" />
+    <div class="space-y-3">
+      <div>
+        <label class="block text-sm font-medium mb-1"> รหัสพนักงาน <b style="color:red">*</b> </label>
+        <input type="text" id="apEmpno" maxlength="5" class="input input-bordered w-full" placeholder="กรอกรหัสพนักงาน 5 หลัก" autocomplete="off" />
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium mb-1">ชื่อ</label>
+        <div id="apEmpName" class="text-sm font-medium text-gray-400"></div>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium mb-1">
+          จุดรถ <b style="color:red">*</b>
+        </label>
+        <select id="apStopId" class="select select-bordered w-full">
+          <option value="">-- เลือกจุดรถ --</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium mb-1">สายรถ <b style="color:red">*</b> </label>
+        <select id="apLineId" class="select select-bordered w-full">
+          <option value="">-- เลือกสายรถ --</option>
+        </select>
+      </div>
+
+    </div>
+
+    <div class="modal-action">
+      <button id="btnSaveAddPassenger" class="btn btn-primary">บันทึก</button>
+      <form method="dialog">
+        <button class="btn">ยกเลิก</button>
+      </form>
+    </div>
+  </div>
+</dialog>
+
 <input type="hidden" id="moveStopId" />
 <input type="hidden" id="moveCurrentLineId" />
 @endsection
