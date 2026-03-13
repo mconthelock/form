@@ -1282,15 +1282,15 @@ $(document).on("click", ".del-btn", async function () {
 		const resdel = await deleteForm({vmscyear2: $("#cyear2").val(), vmsnrunno: $("#nrunno").val()});
 		if (resdel.status) {	
 					const con = {
-					condition: {
 						NFRMNO:  $("#nfrmno").val(),
 						VORGNO: $("#vorgno").val(),
 						CYEAR: $("#cyear").val(),
 						CYEAR2: $("#cyear2").val(),
-						NRUNNO: $("#nrunno").val(),
-					},
-				};
-				const delform = await deleteFlowandForm(con);
+						NRUNNO: $("#nrunno").val()
+					};
+				//console.log(con);
+				//return false;
+				 const delform = await deleteFlowandForm(con);
 				if(delform.status)
 				{
 					redirectWebflow();
@@ -1627,13 +1627,13 @@ $(document).on("click", ".save-btn", async function () {
 		}
 	} catch (err) {
 		const con = {
-			condition: {
+			
 				NFRMNO: nfrmno,
 				VORGNO: vorgno,
 				CYEAR: cyear,
 				CYEAR2: cyear2,
 				NRUNNO: nrunno,
-			},
+			
 		};
 		const delform = await deleteFlowandForm(con);
 		Swal.fire({
