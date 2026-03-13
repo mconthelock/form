@@ -447,9 +447,8 @@ function bindHeaderEvents() {
   $(dom.btnAddPassenger).prop("disabled", true);
 }
 
-  async function loadDispatch() {
+  async function loadDispatch(options = {}) {
     await showLoader({ show: true });
-
     try {
       const dto = makeDtoGetDispatch();
 
@@ -458,8 +457,9 @@ function bindHeaderEvents() {
         return;
       }
 
+      const preserveBusId = options.preserveBusId ?? state.selectedLine?.busid ?? null;
+      const preserveStopId = options.preserveStopId ?? state.selectedStop?.stop_id ?? null;
       const res = await dispatchGetDispatch(dto);
-
       state.snapshot = res;
       state.head = {
         dispatch_id: res.dispatch_id,
@@ -480,7 +480,11 @@ function bindHeaderEvents() {
       await renderPassengerTable([]);
 
       if (state.lines.length > 0) {
-        await selectLine(state.lines[0], 0);
+        let lineIndex = findLineIndexByBusId(preserveBusId);
+        if (lineIndex < 0) lineIndex = 0;
+
+        const targetLine = state.lines[lineIndex];
+        await selectLine(targetLine, lineIndex, preserveStopId);
       }
     } catch (error) {
       console.error(error);
@@ -490,14 +494,27 @@ function bindHeaderEvents() {
     }
   }
 
+  function findLineIndexByBusId(busid) {
+    return (state.lines || []).findIndex(
+      (line) => String(line.busid) === String(busid)
+    );
+  }
 
-  async function selectLine(line, rowIndex = null) {
+  function findStopIndexByStopId(stops, stopId) {
+    return (stops || []).findIndex(
+      (stop) => String(stop.stop_id) === String(stopId)
+    );
+  }
+
+  async function selectLine(line, rowIndex = null, preferredStopId = null) {
     state.selectedLine = line;
     state.selectedStop = null;
     setSelectedLineLabel(line);
     setSelectedStopLabel(null);
 
-    await renderStopTable(line.stops || []);
+    const stops = line.stops || [];
+
+    await renderStopTable(stops);
     await renderPassengerTable([]);
 
     $(".line-row").removeClass("line-selected");
@@ -506,8 +523,11 @@ function bindHeaderEvents() {
     }
 
     if (tableStop && tableStop.rows().count() > 0) {
-      const firstStop = tableStop.row(0).data();
-      await selectStop(firstStop, 0);
+      let stopIndex = findStopIndexByStopId(stops, preferredStopId);
+      if (stopIndex < 0) stopIndex = 0;
+
+      const targetStop = stops[stopIndex];
+      await selectStop(targetStop, stopIndex);
     }
   }
 
@@ -957,7 +977,11 @@ function bindEvents() {
       showMessage(res.message || "บันทึกข้อมูลสำเร็จ", "success");
       const modal = document.getElementById("add_passenger_modal");
       modal.close();
-      await loadDispatch();
+
+      await loadDispatch({
+        preserveBusId: selectedLine?.busid,
+        preserveStopId: selectedStop?.stop_id,
+      });
     } catch (error) {
       console.error(error);
       showMessage(error?.message || "เกิดข้อผิดพลาดในการบันทึกข้อมูล", "error");

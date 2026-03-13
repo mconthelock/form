@@ -139,6 +139,9 @@ async function showPassenger(busId) {
 					WORKDAY_TIMEIN: row.stop?.WORKDAY_TIMEIN,
 					SEMPNO: row.Amecuserall?.SEMPNO,
 					STNAME: row.Amecuserall?.STNAME,
+					SSEC: row.Amecuserall?.SSEC,
+					SDEPT: row.Amecuserall?.SDEPT,
+					SDIV: row.Amecuserall?.SDIV,
 					STATENO: row.STATENO,
 					BUSLINE: route.BUSLINE,
 				};
@@ -180,7 +183,30 @@ async function renderPassengerTable(data) {
 		},
 		{ data: "STOP_NAME", title: "จุดจอด" },
 		{ data: "SEMPNO", className: "text-center", title: "รหัสพนักงาน" },
-		{ data: "STNAME", title: "ชื่อ" },
+		{ data: "STNAME", title: "ชื่อ-นามสกุล" },
+		{
+			data: "SSEC", title: "Sec", defaultContent: "-",
+			render: function (data) {
+			if (!data) return "-";
+			let txt = data.toString().toUpperCase();
+			txt = txt.replace("SEC.", "").trim();
+			txt = txt.replace(" ", "").trim();
+			txt = txt.replace("NOSECTION", "-").trim();
+			return txt || "-";
+			}
+		},
+		{
+			data: "SDEPT", title: "Dept", defaultContent: "-",
+			render: function (data) {
+			if (!data) return "-";
+			let txt = data.toString().toUpperCase();
+			txt = txt.replace("DEPT.", "").trim();
+			txt = txt.replace(" ", "").trim();
+			txt = txt.replace("NODEPARTMENT", "-").trim();
+			return txt || "-";
+			}
+		},
+		{ data: "SDIV", title: "Div" },
 		{
 			data: null,
 			title: "จัดการ",
