@@ -3,10 +3,9 @@
 use GuzzleHttp\Client;
 
 defined('BASEPATH') or exit('No direct script access allowed');
-require_once APPPATH . 'controllers/_form.php';
-class Main extends MY_Controller
-{
-    use _Form;
+require_once APPPATH . 'controllers/api/webform/flow.php';
+class Main extends MY_Controller {
+    use flow;
     protected $client;
     public function __construct()
     {
@@ -84,7 +83,20 @@ class Main extends MY_Controller
             $dateFields['REQUEST_DATE'] = "TO_DATE('{$p['requestDate']}', 'YYYY-MM-DD')";
         }
 
-        $this->updateFlowApv("", $p['admin'], $p['NFRMNO'], $p['VORGNO'], $p['CYEAR'], $p['CYEAR2'], $p['NRUNNO'], "08", "00");
+        // [ "NFRMNO"=> $p['NFRMNO'], "VORGNO"=> "$p['VORGNO']", "CYEAR"=> "$p['CYEAR']","CYEAR2"=> "$p['CYEAR2']", "NRUNNO"=> $p['NRUNNO'], "CSTART"=> "1" ]
+        $condition = [
+            "NFRMNO"  => $p['NFRMNO'],
+            "VORGNO"  => $p['VORGNO'],
+            "CYEAR"   => $p['CYEAR'],
+            "CYEAR2"  => $p['CYEAR2'],
+            "NRUNNO"  => $p['NRUNNO'],
+            "CSTEPNO" => "08"
+        ];
+        $this->updateFlow([
+            'condition' => $condition,
+            'VAPVNO'    => $p['admin']
+        ]);
+        // $this->updateFlow("", $p['admin'], $p['NFRMNO'], $p['VORGNO'], $p['CYEAR'], $p['CYEAR2'], $p['NRUNNO'], "08", "00");
         $this->sa->insert('ISSPC_FORM', $data, $dateFields);
     }
 
@@ -164,7 +176,7 @@ class Main extends MY_Controller
                 </html>';
 
 
-        $headers = "MIME-Version: 1.0" . "\r\n";
+        $headers  = "MIME-Version: 1.0" . "\r\n";
         $headers .= "Content-type:text/html; charset=UTF-8" . "\r\n";
         $headers .= "From: System Notification <noreplay@MitsubishiElevatorAsia.co.th>" . "\r\n";
 
