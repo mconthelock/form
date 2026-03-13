@@ -736,7 +736,6 @@ $(dom.passengerSearch).on("input", async function () {
       const preserveBusId = options.preserveBusId ?? state.selectedLine?.busid ?? null;
       const preserveStopId = options.preserveStopId ?? state.selectedStop?.stop_id ?? null;
       const res = await dispatchGetDispatch(dto);
-
       state.snapshot = res;
       state.head = {
         dispatch_id: res.dispatch_id,
