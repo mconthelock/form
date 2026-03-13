@@ -8,8 +8,7 @@ import {
 } from "./data.js";
 import { createTable } from "@amec/webasset/dataTable";
 import { initApp, tableOption } from "../../utils.js";
-import { exportExcel, defaultExcel, mergeCell, applyStyleToRange, alignment, border,
-} from "@amec/webasset/excel";
+import { exportExcel, defaultExcel, mergeCell, applyStyleToRange, alignment, border,} from "@amec/webasset/excel";
 
 let tableLine;
 let tablePassenger;
