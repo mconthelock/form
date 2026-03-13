@@ -1004,7 +1004,6 @@ function bindEvents() {
   });
 
 
-
   $(document).on("click", ".btn-move-stop", async function (e) {
     e.stopPropagation();
     const stopId = $(this).data("stop-id");
@@ -1073,25 +1072,24 @@ function bindEvents() {
         cancelText: "ยกเลิก",
       });
 
-      if (!isConfirm) return;
+      if (!isConfirm) {
+        moveModal.showModal();
+        return;
+      }
+
       await showLoader({ show: true });
       const dto = {
         dispatch_id: String(state.head?.dispatch_id || ""),
         stop_id: String(stopId || ""),
-        target_line_id: String(targetLineId || ""),
-        update_by: String(login_empno || ""),
+        target_line_id: targetLineId ? String(targetLineId) : undefined,
+        stop_name: String($("#moveStopName").val() || "").trim() || undefined,
+        plan_time: normalizePlanTimeSave($("#movePlanTime").val()),
+        update_by: String(login_empno),
       };
 
       console.log("MOVE STOP DTO =", dto);
-      console.log("dispatch_id =", state.head?.dispatch_id);
-      console.log("stop_id =", stopId);
-      console.log("target_line_id =", targetLineId);
-      console.log("update_by =", login_empno);
-
       await dispatchMoveStop(dto);
-
       showMessage("ย้ายสายรถสำเร็จ", "success");
-      document.getElementById("move_stop_modal").close();
       await loadDispatch();
     } catch (error) {
       console.error(error);
