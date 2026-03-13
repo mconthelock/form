@@ -8,15 +8,23 @@ import { createTable } from "@amec/webasset/dataTable";
 import { initApp, tableOption } from "../../utils.js";
 import { getAllInfo } from "@amec/webasset/indexDB";
 import {
+<<<<<<< HEAD
 	dispatchGetDispatch,
 	dispatchSaveOverwrite,
 	getLine,
 	getStop,
+=======
+  dispatchGetDispatch, dispatchMoveStop, disableDispatchPassenger,
+  getUserbyemp, deleteLineDispatch,
+  getLine, getStopRoutes,
+  saveAddPassenger, reportBusDaily, reportDisabledPassengerDaily
+>>>>>>> 001e0a6 (feat: add export functionality for bus daily and disabled passenger reports; update UI and logic for data export)
 } from "./data.js";
 import { initApp, tableOption } from "../../utils.js";
 import { exportExcel, defaultExcel, mergeCell, applyStyleToRange, alignment, border,} from "@amec/webasset/excel";
 
 
+<<<<<<< HEAD
   select2();
 
 const dom = {
@@ -41,6 +49,34 @@ const state = {
 	lines: [],
 	selectedLine: null,
 	selectedStop: null,
+=======
+select2();
+
+const dom = {
+  workdate: "#dd_workdate",
+  type: "#dd_type",
+  sumLines: "#sumLines",
+  sumStops: "#sumStops",
+  sumPassengers: "#sumPassengers",
+  lblSelectedLine: "#lblSelectedLine",
+  lblSelectedStop: "#lblSelectedStop",
+  tblLine: "#tblLine",
+  tblStop: "#tblStop",
+  tblPassenger: "#tblPassenger",
+  btnAddPassenger: "#btnAddPassenger",
+  btnSaveDispatch: "#btnSaveDispatch",
+  passengerSearch: "#txtPassengerSearch",
+};
+
+const state = {
+  snapshot: null,
+  head: null,
+  lines: [],
+  selectedLine: null,
+  selectedStop: null,
+  addPassengerLines: [],
+  addPassengerStops: [],
+>>>>>>> 001e0a6 (feat: add export functionality for bus daily and disabled passenger reports; update UI and logic for data export)
 };
 
   let tableLine;
@@ -79,6 +115,15 @@ const state = {
     setDatePicker({ element: selector, time: true, appendTo: modal });
   }
 
+function initFlatpickr(selector, modal) {
+	const el = document.querySelector(selector);
+	if (!el) return;
+	if (el._flatpickr) {
+		el._flatpickr.destroy();
+	}
+	setDatePicker({ element: selector, time: true, appendTo: modal });
+}
+
 function todayYMD() {
 	const d = new Date();
 	const y = d.getFullYear();
@@ -88,10 +133,18 @@ function todayYMD() {
 }
 
 function mapShift(uiType) {
+<<<<<<< HEAD
 	if (uiType === "OT") return "D"; // OT Day (NORMAL)
 	if (uiType === "NIGHT") return "N"; // Night
 	if (uiType === "HOLIDAY") return "H"; // Holiday
 	return "D";
+=======
+  if (uiType === "OT") return "D";
+  if (uiType === "OT_SPECIAL") return "S";
+  if (uiType === "NIGHT") return "N";
+  if (uiType === "HOLIDAY") return "H";
+  return "D";
+>>>>>>> 001e0a6 (feat: add export functionality for bus daily and disabled passenger reports; update UI and logic for data export)
 }
 
 function makeDtoGetDispatch() {
@@ -137,6 +190,7 @@ function updateSummary() {
 	$(dom.sumPassengers).text(totalPassengers);
 }
 
+<<<<<<< HEAD
 function clearRightTables() {
 	state.selectedLine = null;
 	state.selectedStop = null;
@@ -311,42 +365,366 @@ async function selectStop(stop, rowIndex = null) {
     $(tableStop.row(rowIndex).node()).addClass("line-selected");
   }
 }
+=======
+async function initTables() {
+  const lineOpt = await lineOptions([]);
+  tableLine = await createTable(lineOpt, { id: dom.tblLine });
 
-async function selectLine(line, rowIndex = null) {
-  state.selectedLine = line;
-  state.selectedStop = null;
+  const stopOpt = await stopOptions([]);
+  tableStop = await createTable(stopOpt, { id: dom.tblStop });
 
-  setSelectedLineLabel(line);
+  const passengerOpt = await passengerOptions([]);
+  tablePassenger = await createTable(passengerOpt, { id: dom.tblPassenger });
+
+  setSelectedLineLabel(null);
   setSelectedStopLabel(null);
-
-  $(dom.btnAddStop).prop("disabled", false);
-  $(dom.btnAddPassenger).prop("disabled", true);
-
-  await renderStopTable(line.stops || []);
-  await renderPassengerTable([]);
-
-  $(".line-row").removeClass("line-selected");
-  if (rowIndex !== null && tableLine?.row(rowIndex).node()) {
-    $(tableLine.row(rowIndex).node()).addClass("line-selected");
-  }
-
-  if ((line.stops || []).length > 0) {
-    await selectStop(line.stops[0], 0);
-  }
 }
 
-async function selectStop(stop, rowIndex = null) {
-  state.selectedStop = stop;
-  setSelectedStopLabel(stop);
-  $(dom.btnAddPassenger).prop("disabled", false);
+async function lineOptions(data) {
+  const opt = { ...tableOption };
+  opt.data = data;
+  opt.searching = false;
+  opt.paging = false;
+  opt.info = false;
+  opt.columns = [
+    {
+      data: null,  title: "สายรถ",
+      render: function (data, type, row) {
+        return row.busname || row.busid || "-";
+      },
+    },
+    {
+      data: null, title: "ที่นั่ง",
+      className: "text-center",
+      width: "120px",
+      render: function (data, type, row) {
+        const p = Number(row.passenger_count || 0);
+        const s = Number(row.busseat || 0);
 
-  await renderPassengerTable(stop.passengers || []);
+        let color = "bg-green-100 text-green-700";
+        if (s && p / s > 0.9) {
+          color = "bg-red-100 text-red-700";
+        } else if (s && p / s > 0.7) {
+          color = "bg-yellow-100 text-yellow-700";
+        }
 
-  $(".stop-row").removeClass("line-selected");
-  if (rowIndex !== null && tableStop?.row(rowIndex).node()) {
-    $(tableStop.row(rowIndex).node()).addClass("line-selected");
-  }
+        return `<span class="px-2 py-1 text-xs rounded-full ${color}">${p} / ${s}</span>`;
+      }
+    },
+    {
+      data: "bustype",  title: "ประเภท",
+      className: "text-center",
+      width: "80px",
+      render: function (data) {
+        if (data === "1") {
+          return `<span class="px-2 py-1 text-xs bg-blue-100 text-blue-900 rounded-full">Bus</span>`;
+        }
+        if (data === "2") {
+          return `<span class="px-2 py-1 text-xs bg-orange-100 text-purple-900 rounded-full">Van</span>`;
+        }
+        return data || "-";
+      },
+    },
+    {
+      data: null,
+      title: "จัดการ",
+      className: "text-center",
+      width: "50",
+      orderable: false,
+      render: function (data, type, row) {
+        return `<button class="btn-delete-line px-3 py-1 text-xs bg-red-100 text-red-700 rounded hover:bg-red-200 cursor-pointer" data-busid="${row.busid}">ลบ</button> `;
+      },
+    },
+  ];
+  opt.createdRow = function (row) {
+    $(row).addClass("line-row cursor-pointer hover:bg-gray-100 transition");
+  };
+  return opt;
 }
+
+  async function stopOptions(data) {
+    const sortedData = [...(data || [])].sort((a, b) => {
+      const t1 = parseInt(a.plan_time || "9999", 10);
+      const t2 = parseInt(b.plan_time || "9999", 10);
+      return t1 - t2;
+    });
+    const opt = { ...tableOption };
+    opt.data = sortedData;
+    opt.searching = false;
+    opt.paging = false;
+    opt.info = false;
+    opt.ordering = false;
+    opt.columns = [
+      {
+        data: "stop_name", title: "จุดรถ", defaultContent: "-",
+      },
+      {
+        data: "plan_time", title: "เวลา",
+        className: "text-center",
+        width: "90px",
+        defaultContent: "-",
+        render: function (data) {
+          if (!data) return "-";
+          const t = data.toString();
+          if (t.length === 4) {
+            return t.slice(0, 2) + ":" + t.slice(2, 4);
+          }
+          return t;
+        },
+      },
+      {
+        data: null, title: "จัดการ", className: "text-center", width: "80px", orderable: false,
+        render: function (data, type, row) {
+          return `
+            <button
+              class="btn-move-stop px-3 py-1 text-xs bg-amber-100 text-amber-700 rounded hover:bg-amber-400 cursor-pointer"
+              data-stop-id="${row.stop_id}"
+              data-stop-name="${row.stop_name || ""}"
+              data-plan-time="${row.plan_time || ""}"
+            >
+              แก้ไข
+            </button>
+          `;
+        },
+      },
+    ];
+
+    opt.createdRow = function (row) {
+      $(row).addClass("stop-row cursor-pointer hover:bg-gray-100 transition");
+    };
+
+    return opt;
+  }
+
+  async function passengerOptions(data) {
+    const opt = { ...tableOption };
+    opt.data = data;
+    opt.searching = false;
+    opt.paging = false;
+    opt.info = false;
+    opt.ordering = false;
+    opt.columns = [
+      {
+        data: "empno",
+        title: "รหัส",
+        width: "80px",
+        defaultContent: "-",
+      },
+      {
+        data: "thainame",
+        title: "ชื่อพนักงาน",
+        defaultContent: "-",
+      },
+      {
+        data: "ssec", title: "Sec", defaultContent: "-",
+        render: function (data) {
+          if (!data) return "-";
+          let txt = data.toString().toUpperCase();
+          txt = txt.replace("SEC", "").trim();
+          txt = txt.replace(".", "").trim();
+          txt = txt.replace(" ", "").trim();
+          return txt || "-";
+        }
+      },
+      {
+        data: "sdept", title: "Dept", defaultContent: "-",
+        render: function (data) {
+          if (!data) return "-";
+          let txt = data.toString().toUpperCase();
+          txt = txt.replace("DEPT", "").trim();
+          txt = txt.replace(".", "").trim();
+          txt = txt.replace(" ", "").trim();
+          return txt || "-";
+        }
+      },
+      {
+        data: "sdiv", title: "Div", defaultContent: "-",
+        render: function (data) {
+          if (!data) return "-";
+          let txt = data.toString().toUpperCase();
+          txt = txt.replace("DIV", "").trim();
+          txt = txt.replace(".", "").trim();
+          txt = txt.replace(" ", "").trim();
+          return txt || "-";
+        }
+      },
+      {
+        data: null,
+        title: "จัดการ",
+        className: "text-center",
+        width: "50px",
+        orderable: false,
+        render: function (data, type, row) {
+          return `
+            <button
+              class="btn-delete-passenger px-3 py-1 text-xs bg-red-100 text-red-700 rounded hover:bg-red-200 cursor-pointer"
+              data-empno="${row.empno || ""}"
+              data-name="${row.thainame || ""}"
+            >
+              ลบ
+            </button>
+          `;
+        },
+      },
+    ];
+    return opt;
+  }
+
+  async function renderLineTable(data) {
+    if (tableLine) {
+      tableLine.destroy();
+      $(dom.tblLine).empty();
+    }
+
+    const lineOpt = await lineOptions(data);
+    tableLine = await createTable(lineOpt, { id: dom.tblLine });
+  }
+
+  async function renderStopTable(data) {
+    if (tableStop) {
+      tableStop.destroy();
+      $(dom.tblStop).empty();
+    }
+
+    const stopOpt = await stopOptions(data);
+    tableStop = await createTable(stopOpt, { id: dom.tblStop });
+  }
+
+  async function renderPassengerTable(data) {
+    if (tablePassenger) {
+      tablePassenger.destroy();
+      $(dom.tblPassenger).empty();
+    }
+
+    const passengerOpt = await passengerOptions(data);
+    tablePassenger = await createTable(passengerOpt, { id: dom.tblPassenger });
+  }
+
+  function findPassengerGlobal(keyword) {
+    const q = String(keyword || "").trim().toLowerCase();
+    if (!q) return null;
+    for (const line of state.lines || []) {
+      for (const stop of line.stops || []) {
+        for (const passenger of stop.passengers || []) {
+          const empno = String(passenger.empno || "").toLowerCase();
+          const thainame = String(passenger.thainame || "").toLowerCase();
+          if (empno.includes(q) || thainame.includes(q)) {
+            return { line, stop, passenger,  };
+          }
+        }
+      }
+    }
+    return null;
+  }
+
+  async function jumpToPassengerSearch(keyword) {
+    const found = findPassengerGlobal(keyword);
+    if (!found) {
+      showMessage("ไม่พบข้อมูลผู้โดยสาร", "warning");
+      return;
+    }
+
+    const lineRowIndex = (state.lines || []).findIndex((item) => String(item.busid) === String(found.line.busid));
+    await selectLine(found.line, lineRowIndex >= 0 ? lineRowIndex : null);
+    const stopRows = tableStop?.rows?.().data?.()?.toArray?.() || [];
+    const stopRowIndex = stopRows.findIndex((item) => String(item.stop_id) === String(found.stop.stop_id));
+    await selectStop(found.stop, stopRowIndex >= 0 ? stopRowIndex : null);
+  }
+
+$(dom.passengerSearch).on("input", async function () {
+  const keyword = $(this).val();
+
+  if (!String(keyword || "").trim()) {
+    await loadDispatch();
+    return;
+  }
+
+  await jumpToPassengerSearch(keyword);
+});
+
+  function clearRightSelection() {
+    state.selectedLine = null;
+    state.selectedStop = null;
+    setSelectedLineLabel(null);
+    setSelectedStopLabel(null);
+  }
+
+  async function loadDispatch() {
+    await showLoader({ show: true });
+
+    try {
+      const dto = makeDtoGetDispatch();
+
+      if (!dto.workdate) {
+        showMessage("กรุณาเลือกวันที่", "warning");
+        return;
+      }
+
+      const res = await dispatchGetDispatch(dto);
+
+      state.snapshot = res;
+      state.head = {
+        dispatch_id: res.dispatch_id,
+        workdate: res.workdate,
+        dispatch_type: res.dispatch_type,
+        shift: res.shift,
+        status: res.status,
+        update_by: res.update_by,
+        update_date: res.update_date,
+      };
+      state.lines = res.lines || [];
+
+      updateSummary();
+      clearRightSelection();
+
+      await renderLineTable(state.lines);
+      await renderStopTable([]);
+      await renderPassengerTable([]);
+
+      if (state.lines.length > 0) {
+        await selectLine(state.lines[0], 0);
+      }
+    } catch (error) {
+      console.error(error);
+      showMessage(error?.message || "โหลดข้อมูลไม่สำเร็จ", "error");
+    } finally {
+      await showLoader({ show: false });
+    }
+  }
+
+
+  async function selectLine(line, rowIndex = null) {
+    state.selectedLine = line;
+    state.selectedStop = null;
+    setSelectedLineLabel(line);
+    setSelectedStopLabel(null);
+
+    await renderStopTable(line.stops || []);
+    await renderPassengerTable([]);
+
+    $(".line-row").removeClass("line-selected");
+    if (rowIndex !== null && tableLine?.row(rowIndex).node()) {
+      $(tableLine.row(rowIndex).node()).addClass("line-selected");
+    }
+>>>>>>> 001e0a6 (feat: add export functionality for bus daily and disabled passenger reports; update UI and logic for data export)
+
+    if (tableStop && tableStop.rows().count() > 0) {
+      const firstStop = tableStop.row(0).data();
+      await selectStop(firstStop, 0);
+    }
+  }
+
+  async function selectStop(stop, rowIndex = null) {
+    state.selectedStop = stop;
+    setSelectedStopLabel(stop);
+    $(dom.btnAddPassenger).prop("disabled", false);
+    await renderPassengerTable(stop.passengers || []);
+
+    $(".stop-row").removeClass("stop-selected");
+    if (rowIndex !== null && tableStop?.row(rowIndex).node()) {
+      $(tableStop.row(rowIndex).node()).addClass("stop-selected");
+    }
+  }
 
 function bindEvents() {
 	$(dom.workdate).on("change", loadDispatch);
@@ -1049,11 +1427,15 @@ function bindEvents() {
       showMessage(res.message || "บันทึกข้อมูลสำเร็จ", "success");
       const modal = document.getElementById("add_passenger_modal");
       modal.close();
+<<<<<<< HEAD
 
       await loadDispatch({
         preserveBusId: selectedLine?.busid,
         preserveStopId: selectedStop?.stop_id,
       });
+=======
+      await loadDispatch();
+>>>>>>> 001e0a6 (feat: add export functionality for bus daily and disabled passenger reports; update UI and logic for data export)
     } catch (error) {
       console.error(error);
       showMessage(error?.message || "เกิดข้อผิดพลาดในการบันทึกข้อมูล", "error");
@@ -1074,6 +1456,7 @@ function bindEvents() {
 
   //=============== Report ===============
 
+<<<<<<< HEAD
   function formatPlanTime(time) {
     if (!time) return "-";
     const t = String(time).padStart(4, "0");
@@ -1210,6 +1593,247 @@ function bindEvents() {
 
         sheet.eachRow((row, rowNumber) => {
           if (rowNumber < 4) return;
+=======
+function formatPlanTime(time) {
+  if (!time) return "-";
+  const t = String(time).padStart(4, "0");
+  return t.length === 4 ? `${t.slice(0, 2)}:${t.slice(2, 4)}` : t;
+}
+
+// =========================
+// 1) export คนที่จัดรถ
+// =========================
+async function exportBusDailyExcel(dispatchId) {
+  const res = await reportBusDaily({ dispatch_id: String(dispatchId) });
+  if (!res?.status) {
+    throw new Error(res?.message || "ไม่สามารถดึงข้อมูลรายงานจัดรถได้");
+  }
+
+  const rows = Array.isArray(res.rows) ? res.rows : [];
+  if (!rows.length) {
+    throw new Error("ไม่พบข้อมูลรายชื่อผู้ที่จัดรถ");
+  }
+
+  const excelRows = [];
+  let no = 1;
+
+  // group ตามสายรถ
+  const grouped = rows.reduce((acc, row) => {
+    const busName =
+      row.bus_name ||
+      row.BUSNAME ||
+      row.line_name ||
+      row.busline_name ||
+      "ไม่ระบุสายรถ";
+
+    if (!acc[busName]) acc[busName] = [];
+    acc[busName].push(row);
+    return acc;
+  }, {});
+
+  Object.entries(grouped).forEach(([busName, list]) => {
+    excelRows.push({
+      NO: "",
+      EMPNO: "",
+      FULLNAME: `สายรถ : ${busName}`,
+      DEPT: "",
+      STOP_NAME: "",
+      PLAN_TIME: "",
+      __isGroup: true,
+    });
+
+    list.forEach((row) => {
+      excelRows.push({
+        NO: no++,
+        EMPNO: row.empno || row.EMPNO || "",
+        FULLNAME: row.fullname || row.FULLNAME || row.stname || row.STNAME || "",
+        DEPT: row.dept || row.DEPT || row.sdept || row.SDEPT || "",
+        STOP_NAME: row.stop_name || row.STOP_NAME || "",
+        PLAN_TIME: formatPlanTime(row.plan_time || row.PLAN_TIME),
+        __isGroup: false,
+      });
+    });
+
+    // เว้นบรรทัดแต่ละกลุ่ม
+    excelRows.push({
+      NO: "",
+      EMPNO: "",
+      FULLNAME: "",
+      DEPT: "",
+      STOP_NAME: "",
+      PLAN_TIME: "",
+      __isBlank: true,
+    });
+  });
+
+  // ตัด blank row ท้ายสุดออก
+  while (excelRows.length && excelRows[excelRows.length - 1].__isBlank) { excelRows.pop(); }
+
+  const workbook = await defaultExcel({
+    data: excelRows.map((row) => ({
+      NO: row.NO,
+      EMPNO: row.EMPNO,
+      FULLNAME: row.FULLNAME,
+      DEPT: row.DEPT,
+      STOP_NAME: row.STOP_NAME,
+      PLAN_TIME: row.PLAN_TIME,
+    })),
+
+    column: [
+      { key: "NO", header: "No" },
+      { key: "EMPNO", header: "รหัส" },
+      { key: "FULLNAME", header: "ชื่อ-นามสกุล / สายรถ" },
+      { key: "DEPT", header: "แผนก" },
+      { key: "STOP_NAME", header: "จุดลง" },
+      { key: "PLAN_TIME", header: "เวลา" },
+    ],
+
+    sheetName: "Bus Daily", manual: true, autoWidth: false,
+    manualActions: (sheet) => {
+      sheet.insertRow(1, [res.title || "รายงานผู้ที่จัดรถ"]);
+      sheet.insertRow(2, [`Update : ${today}`]);
+      sheet.insertRow(3, []);
+
+      mergeCell(sheet, 1, 1, 1, 6);
+      mergeCell(sheet, 2, 1, 2, 6);
+
+      applyStyleToRange(sheet, 1, 6, 1, {
+        font: { bold: true, size: 16 },
+        alignment: alignment("center", "middle"),
+      });
+
+      applyStyleToRange(sheet, 1, 6, 2, {
+        font: { bold: true, size: 14 },
+        alignment: alignment("center", "middle"),
+      });
+
+      applyStyleToRange(sheet, 1, 6, 4, {
+        font: { bold: true, size: 13 },
+        alignment: alignment("center", "middle"),
+        border: border(),
+      });
+
+      sheet.getColumn(1).width = 6;
+      sheet.getColumn(2).width = 12;
+      sheet.getColumn(3).width = 32;
+      sheet.getColumn(4).width = 20;
+      sheet.getColumn(5).width = 24;
+      sheet.getColumn(6).width = 12;
+
+      const dataStartRow = 5;
+      sheet.eachRow((row, rowNumber) => {
+        if (rowNumber < 4) return;
+        row.eachCell((cell, colNumber) => {
+          cell.font = { ...cell.font, size: 12 };
+          cell.alignment = {
+            vertical: "middle",
+            horizontal: "center",
+            wrapText: true,
+          };
+          cell.border = border();
+
+          if (colNumber === 3 && rowNumber >= dataStartRow) {
+            cell.alignment = {
+              vertical: "middle",
+              horizontal: "left",
+              wrapText: true,
+              indent: 1,
+            };
+          }
+        });
+      });
+
+      // style group row
+      excelRows.forEach((item, index) => {
+        const rowNo = index + 5; // header table อยู่ row 4, data เริ่ม row 5
+        if (item.__isGroup) {
+          mergeCell(sheet, rowNo, 3, rowNo, 6);
+
+          for (let c = 1; c <= 6; c++) {
+            const cell = sheet.getRow(rowNo).getCell(c);
+            cell.font = { bold: true, size: 12 };
+            cell.border = border();
+            cell.alignment = alignment("left", "middle");
+          }
+        }
+
+        if (item.__isBlank) {
+          for (let c = 1; c <= 6; c++) {
+            const cell = sheet.getRow(rowNo).getCell(c);
+            cell.border = border();
+          }
+        }
+      });
+    },
+  });
+  exportExcel(workbook, `bus_daily_${dispatchId}`);
+}
+
+// =========================
+// 2) export คนที่ไม่ได้จัดรถ
+// =========================
+async function exportDisabledPassengerExcel(dispatchId) {
+  const res = await reportDisabledPassengerDaily({ dispatch_id: String(dispatchId) });
+  if (!res?.status) {throw new Error(res?.message || "ไม่สามารถดึงข้อมูลรายงานผู้ไม่ได้จัดรถได้"); }
+  const rows = Array.isArray(res.rows) ? res.rows : [];
+  const selectedDateText = getSelectedDispatchCondition();
+  const workbook = await defaultExcel({
+    data: rows.map((row, i) => ({
+      NO: row.no ?? i + 1,
+      EMPNO: row.empno || "",
+      FULLNAME: row.fullname || "",
+      SEC: row.sec || "",
+      DEPT: row.dept || "",
+      DIV: row.div || "",
+      STOP_NAME: row.stop_name || "",
+      PLAN_TIME: selectedDateText.time,
+    })),
+
+    column: [
+      { key: "NO", header: "No" },
+      { key: "EMPNO", header: "รหัส" },
+      { key: "FULLNAME", header: "ชื่อ-นามสกุล" },
+      { key: "SEC", header: "SEC" },
+      { key: "DEPT", header: "DEPT" },
+      { key: "DIV", header: "DIV" },
+      { key: "STOP_NAME", header: "จุดรถ" },
+      { key: "PLAN_TIME", header: "เวลากลับ" },
+    ],
+
+    sheetName: "Disabled Passenger", manual: true, autoWidth: false,
+    manualActions: (sheet) => {
+      sheet.insertRow(1, ["รายชื่อผู้ที่ไม่สามารถจัดรถรับส่งได้"]);
+      sheet.insertRow(2, [`ประจำวันที่ : ${selectedDateText.date}`]);
+      sheet.insertRow(3, []);
+      mergeCell(sheet, 1, 1, 1, 8);
+      mergeCell(sheet, 2, 1, 2, 8);
+      applyStyleToRange(sheet, 1, 8, 1, {
+        font: { bold: true, size: 16 },
+        alignment: alignment("center", "middle"),
+      });
+
+      applyStyleToRange(sheet, 1, 8, 2, {
+        font: { bold: true, size: 14 },
+        alignment: alignment("center", "middle"),
+      });
+
+      applyStyleToRange(sheet, 1, 8, 4, {
+        font: { bold: true, size: 13 },
+        alignment: alignment("center", "middle"),
+        border: border(),
+      });
+
+      sheet.getColumn(1).width = 6;   // NO
+      sheet.getColumn(2).width = 12;  // EMPNO
+      sheet.getColumn(3).width = 30;  // FULLNAME
+      sheet.getColumn(4).width = 16;  // SEC
+      sheet.getColumn(5).width = 18;  // DEPT
+      sheet.getColumn(6).width = 18;  // DIV
+      sheet.getColumn(7).width = 24;  // STOP_NAME
+      sheet.getColumn(8).width = 12;  // PLAN_TIME
+      sheet.eachRow((row, rowNumber) => {
+        if (rowNumber >= 4) {
+>>>>>>> 001e0a6 (feat: add export functionality for bus daily and disabled passenger reports; update UI and logic for data export)
           row.eachCell((cell, colNumber) => {
             cell.font = { ...cell.font, size: 12 };
             cell.alignment = {
@@ -1218,8 +1842,11 @@ function bindEvents() {
               wrapText: true,
             };
 
+<<<<<<< HEAD
             cell.border = border();
 
+=======
+>>>>>>> 001e0a6 (feat: add export functionality for bus daily and disabled passenger reports; update UI and logic for data export)
             if (colNumber === 3 && rowNumber >= 5) {
               cell.alignment = {
                 vertical: "middle",
@@ -1228,6 +1855,7 @@ function bindEvents() {
                 indent: 1,
               };
             }
+<<<<<<< HEAD
           });
         });
 
@@ -1638,6 +2266,18 @@ function bindEvents() {
 
 
   // =========================
+=======
+            cell.border = border();
+          });
+        }
+      });
+    },
+  });
+  exportExcel(workbook, `disabled_passenger_${dispatchId}`);
+}
+
+// =========================
+>>>>>>> 001e0a6 (feat: add export functionality for bus daily and disabled passenger reports; update UI and logic for data export)
 // click export 2 files
 // =========================
   $("#btnExportDispatch").on("click", async function () {
@@ -1649,6 +2289,7 @@ function bindEvents() {
         return;
       }
 
+<<<<<<< HEAD
      
       console.log("start export 1");
       await exportBusDailyLayoutExcel(dispatchId);
@@ -1661,6 +2302,10 @@ function bindEvents() {
       console.log("start export 3");
       await exportDisabledPassengerExcel(dispatchId);
       console.log("finish export 3");
+=======
+      await exportBusDailyExcel(dispatchId);
+      //await exportDisabledPassengerExcel(dispatchId);
+>>>>>>> 001e0a6 (feat: add export functionality for bus daily and disabled passenger reports; update UI and logic for data export)
 
       showMessage("Export Excel สำเร็จ", "success");
     } catch (err) {
@@ -1672,4 +2317,21 @@ function bindEvents() {
   });
 
 
+<<<<<<< HEAD
+=======
+  function getSelectedDispatchCondition() {
+    const dateVal = $("#dd_workdate").val();
+    const [y, m, d] = dateVal.split("-");
+    const dateText =  `${d}/${m}/${y}`;
+    const text = $("#dd_type option:selected").text().trim();
+    const match = text.match(/\d{2}\.\d{2}/);
+    const time = match ? match[0] : "";
+    return {
+      date: dateText,
+      time: time,
+    };
+  }
+
+
+>>>>>>> 001e0a6 (feat: add export functionality for bus daily and disabled passenger reports; update UI and logic for data export)
 }
