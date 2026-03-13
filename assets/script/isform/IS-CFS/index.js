@@ -502,25 +502,3 @@ $(document).on("click", "button[name='btnAction']", async function () {
 		sendMail(mail);
 	}
 });
-
-$(document).on("submit", "#form", async function (e) {
-	e.preventDefault();
-	//     if(!await requiredForm('#form')) return;
-	//     const formData = new FormData(this);
-	//     formData.append('empno', empno);
-
-	//     const res = await getData({
-	//         ...ajaxOptions,
-	//         url: `${host}isform/IS-CFS/form/createForm`,
-	//         data: formData,
-	//         processData: false,
-	//         contentType: false,
-	//     });
-
-	//     if(res.status){
-	//         showMessage(res.message, 'success');
-
-	//     }else{
-	//         showMessage(res.message, 'error');
-	//     }
-});
