@@ -3,7 +3,9 @@ import "flatpickr/dist/flatpickr.min.css";
 import { host } from "../../utils.js";
 import { redirectWebflow } from "@amec/webasset/form";
 import { s2disableSearch, s2opt, setSelect2 } from "@amec/webasset/select2";
-
+import select2 from "select2";
+import "select2/dist/css/select2.min.css";
+select2();
 $(document).ready(async function () {
 	flatpickr("#request-date", { dateFormat: "Y-m-d", defaultDate: "today" });
 	// await setSelect2({...s2opt, ...s2disableSearch,}, '#user_del');
