@@ -17,7 +17,7 @@ import { initApp, tableOption } from "../../utils.js";
 import { exportExcel, defaultExcel, mergeCell, applyStyleToRange, alignment, border,} from "@amec/webasset/excel";
 
 
-select2();
+  select2();
 
   const dom = {
     workdate: "#dd_workdate",
@@ -35,15 +35,15 @@ select2();
     passengerSearch: "#txtPassengerSearch",
   };
 
-const state = {
-  snapshot: null,
-  head: null,
-  lines: [],
-  selectedLine: null,
-  selectedStop: null,
-  addPassengerLines: [],
-  addPassengerStops: [],
-};
+  const state = {
+    snapshot: null,
+    head: null,
+    lines: [],
+    selectedLine: null,
+    selectedStop: null,
+    addPassengerLines: [],
+    addPassengerStops: [],
+  };
 
   let tableLine;
   let tableStop;
@@ -98,13 +98,13 @@ function todayYMD() {
 	return `${y}-${m}-${day}`;
 }
 
-function mapShift(uiType) {
-  if (uiType === "OT") return "D";
-  if (uiType === "OT_SPECIAL") return "S";
-  if (uiType === "NIGHT") return "N";
-  if (uiType === "HOLIDAY") return "H";
-  return "D";
-}
+  function mapShift(uiType) {
+    if (uiType === "OT") return "D";
+    if (uiType === "OT_SPECIAL") return "S";
+    if (uiType === "NIGHT") return "N";
+    if (uiType === "HOLIDAY") return "H";
+    return "D";
+  }
 
 function makeDtoGetDispatch() {
 	return {
@@ -434,9 +434,9 @@ async function selectStop(stop, rowIndex = null) {
   }
 }
 
-async function initTables() {
-  const lineOpt = await lineOptions([]);
-  tableLine = await createTable(lineOpt, { id: dom.tblLine });
+  async function initTables() {
+    const lineOpt = await lineOptions([]);
+    tableLine = await createTable(lineOpt, { id: dom.tblLine });
 
     const stopOpt = await stopOptions([]);
     tableStop = await createTable(stopOpt, { id: dom.tblStop });
@@ -1110,530 +1110,142 @@ function bindEvents() {
 
   //=============== Report ===============
 
-function formatPlanTime(time) {
-  if (!time) return "-";
-  const t = String(time).padStart(4, "0");
-  return t.length === 4 ? `${t.slice(0, 2)}:${t.slice(2, 4)}` : t;
-}
-// 1) รายงานจัดรถประจำวัน (Bus Daily Report)
-// =========================
-// 1.1) export คนที่จัดรถ 1
-// =========================
-async function exportBusDailyExcel(dispatchId) {
-  const res = await reportBusDaily({ dispatch_id: String(dispatchId) });
-
-  if (!res?.status) {
-    throw new Error(res?.message || "ไม่สามารถดึงข้อมูลรายงานจัดรถได้");
+  function formatPlanTime(time) {
+    if (!time) return "-";
+    const t = String(time).padStart(4, "0");
+    return t.length === 4 ? `${t.slice(0, 2)}:${t.slice(2, 4)}` : t;
   }
+  // 1) รายงานจัดรถประจำวัน (Bus Daily Report)
+  // =========================
+  // 1.1) export คนที่จัดรถ 1
+  // =========================
+  async function exportBusDailyExcel(dispatchId) {
+    const res = await reportBusDaily({ dispatch_id: String(dispatchId) });
 
-  const lines = Array.isArray(res.lines) ? res.lines : [];
+    if (!res?.status) {
+      throw new Error(res?.message || "ไม่สามารถดึงข้อมูลรายงานจัดรถได้");
+    }
 
-  if (!lines.length) {
-    throw new Error("ไม่พบข้อมูลรายชื่อผู้ที่จัดรถ");
-  }
+    const lines = Array.isArray(res.lines) ? res.lines : [];
 
-  const today = new Date().toLocaleDateString("th-TH");
-  const excelRows = [];
+    if (!lines.length) {
+      throw new Error("ไม่พบข้อมูลรายชื่อผู้ที่จัดรถ");
+    }
 
-  lines.forEach((line) => {
-    const stops = Array.isArray(line.stops) ? line.stops : [];
+    const today = new Date().toLocaleDateString("th-TH");
+    const excelRows = [];
 
-    let hasPassenger = false;
+    lines.forEach((line) => {
+      const stops = Array.isArray(line.stops) ? line.stops : [];
 
-    stops.forEach((stop) => {
-      const passengers = Array.isArray(stop.passengers) ? stop.passengers : [];
-      if (passengers.length > 0) hasPassenger = true;
-    });
+      let hasPassenger = false;
 
-    if (!hasPassenger) return;
-
-    let no = 1;
-
-    excelRows.push({
-      NO: "",
-      EMPNO: "",
-      FULLNAME: `สายรถ : ${line.busname || line.busid || "-"}`,
-      DEPT: "",
-      STOP_NAME: "",
-      PLAN_TIME: "",
-      __isGroup: true,
-    });
-
-    stops.forEach((stop) => {
-      const passengers = Array.isArray(stop.passengers) ? stop.passengers : [];
-
-      passengers.forEach((p) => {
-        excelRows.push({
-          NO: no++,
-          EMPNO: p.empno || "",
-          FULLNAME: p.fullname || "",
-          DEPT: p.dept || "",
-          STOP_NAME: stop.stop_name || "",
-          PLAN_TIME: formatPlanTime(stop.plan_time || ""),
-          __isGroup: false,
-        });
-      });
-    });
-
-    excelRows.push({
-      NO: "",
-      EMPNO: "",
-      FULLNAME: "",
-      DEPT: "",
-      STOP_NAME: "",
-      PLAN_TIME: "",
-      __isBlank: true,
-    });
-  });
-
-  while (excelRows.length && excelRows[excelRows.length - 1].__isBlank) { excelRows.pop();}
-
-  if (!excelRows.length) {
-    throw new Error("ไม่พบข้อมูลรายชื่อผู้ที่จัดรถ");
-  }
-
-  const workbook = await defaultExcel({
-    data: excelRows.map((row) => ({
-      NO: row.NO,
-      EMPNO: row.EMPNO,
-      FULLNAME: row.FULLNAME,
-      DEPT: row.DEPT,
-      STOP_NAME: row.STOP_NAME,
-    })),
-
-    column: [
-      { key: "NO", header: "No" },
-      { key: "EMPNO", header: "รหัส" },
-      { key: "FULLNAME", header: "ชื่อ-นามสกุล" },
-      { key: "DEPT", header: "แผนก" },
-      { key: "STOP_NAME", header: "จุดลง" },
-    ],
-
-    sheetName: "Bus Daily",
-    manual: true,
-    autoWidth: false,
-
-    manualActions: (sheet) => {
-      sheet.insertRow(1, [res.title || "รายงานผู้ที่จัดรถ"]);
-      sheet.insertRow(2, [`Update : ${today}`]);
-      sheet.insertRow(3, []);
-
-      mergeCell(sheet, 1, 1, 1, 5);
-      mergeCell(sheet, 2, 1, 2, 5);
-5
-      applyStyleToRange(sheet, 1, 5, 1, {
-        font: { bold: true, size: 16 },
-        alignment: alignment("center", "middle"),
+      stops.forEach((stop) => {
+        const passengers = Array.isArray(stop.passengers) ? stop.passengers : [];
+        if (passengers.length > 0) hasPassenger = true;
       });
 
-      applyStyleToRange(sheet, 1, 5, 2, {
-        font: { bold: true, size: 14 },
-        alignment: alignment("center", "middle"),
+      if (!hasPassenger) return;
+
+      let no = 1;
+
+      excelRows.push({
+        NO: "",
+        EMPNO: "",
+        FULLNAME: `สายรถ : ${line.busname || line.busid || "-"}`,
+        DEPT: "",
+        STOP_NAME: "",
+        PLAN_TIME: "",
+        __isGroup: true,
       });
 
-      applyStyleToRange(sheet, 1, 5, 4, {
-        font: { bold: true, size: 13 },
-        alignment: alignment("center", "middle"),
-        border: border(),
-      });
+      stops.forEach((stop) => {
+        const passengers = Array.isArray(stop.passengers) ? stop.passengers : [];
 
-      sheet.getColumn(1).width = 6;
-      sheet.getColumn(2).width = 12;
-      sheet.getColumn(3).width = 32;
-      sheet.getColumn(4).width = 20;
-      sheet.getColumn(5).width = 24;
-
-
-      sheet.eachRow((row, rowNumber) => {
-        if (rowNumber < 4) return;
-        row.eachCell((cell, colNumber) => {
-          cell.font = { ...cell.font, size: 12 };
-          cell.alignment = {
-            vertical: "middle",
-            horizontal: "center",
-            wrapText: true,
-          };
-
-          cell.border = border();
-
-          if (colNumber === 3 && rowNumber >= 5) {
-            cell.alignment = {
-              vertical: "middle",
-              horizontal: "left",
-              wrapText: true,
-              indent: 1,
-            };
-          }
+        passengers.forEach((p) => {
+          excelRows.push({
+            NO: no++,
+            EMPNO: p.empno || "",
+            FULLNAME: p.fullname || "",
+            DEPT: p.dept || "",
+            STOP_NAME: stop.stop_name || "",
+            PLAN_TIME: formatPlanTime(stop.plan_time || ""),
+            __isGroup: false,
+          });
         });
       });
 
-      excelRows.forEach((item, index) => {
-        const rowNo = index + 5;
-        if (item.__isGroup) {
-          mergeCell(sheet, rowNo, 3, rowNo, 5);
-
-          for (let c = 1; c <= 5; c++) {
-            const cell = sheet.getRow(rowNo).getCell(c);
-            cell.font = { bold: true, size: 13 };
-            cell.alignment = alignment("left", "middle");
-            cell.border = border();
-            cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFFF2CC" }, };
-          }
-        }
-
-        if (item.__isBlank) {
-          for (let c = 1; c <= 5; c++) {
-            const cell = sheet.getRow(rowNo).getCell(c);
-            cell.border = border();
-          }
-        }
+      excelRows.push({
+        NO: "",
+        EMPNO: "",
+        FULLNAME: "",
+        DEPT: "",
+        STOP_NAME: "",
+        PLAN_TIME: "",
+        __isBlank: true,
       });
-    },
-  });
+    });
 
-  const fname = "bus_daily_" + today + ".xlsx";
-  exportExcel(workbook, fname);
-  //exportExcel(workbook, `bus_daily_${dispatchId}`);
-}
+    while (excelRows.length && excelRows[excelRows.length - 1].__isBlank) { excelRows.pop();}
 
+    if (!excelRows.length) {
+      throw new Error("ไม่พบข้อมูลรายชื่อผู้ที่จัดรถ");
+    }
 
-// =========================
-// 1.2) export คนที่จัดรถ 2
-// =========================
-async function exportBusDailyLayoutExcel(dispatchId) {
-  const res = await reportBusDaily({ dispatch_id: String(dispatchId) });
-  const today = new Date().toLocaleDateString("th-TH");
-  if (!res?.status) {
-    throw new Error(res?.message || "ไม่สามารถดึงข้อมูลรายงานจัดรถได้");
-  }
+    const workbook = await defaultExcel({
+      data: excelRows.map((row) => ({
+        NO: row.NO,
+        EMPNO: row.EMPNO,
+        FULLNAME: row.FULLNAME,
+        DEPT: row.DEPT,
+        STOP_NAME: row.STOP_NAME,
+      })),
 
-  const lines = Array.isArray(res.lines) ? res.lines : [];
-  if (!lines.length) {
-    throw new Error("ไม่พบข้อมูลรายชื่อผู้ที่จัดรถ");
-  }
+      column: [
+        { key: "NO", header: "No" },
+        { key: "EMPNO", header: "รหัส" },
+        { key: "FULLNAME", header: "ชื่อ-นามสกุล" },
+        { key: "DEPT", header: "แผนก" },
+        { key: "STOP_NAME", header: "จุดลง" },
+      ],
 
-  const workbook = await defaultExcel({
-    data: [],
-    column: [{ key: "A", header: "" }],
-    sheetName: "Bus Daily Layout",
-    manual: true,
-    autoWidth: false,
-    manualActions: (sheet) => {
-      const BLOCKS_PER_ROW = 5;
-      const BLOCK_WIDTH = 4;     // จุดลงรถ | No. | รายชื่อ | แผนก
-      const BLOCK_GAP = 0;       // เว้นคอลัมน์ระหว่าง block
-      const TOTAL_BLOCK_WIDTH = BLOCK_WIDTH + BLOCK_GAP;
+      sheetName: "Bus Daily",
+      manual: true,
+      autoWidth: false,
 
-      const validLines = lines.filter((line) => {
-        const stops = Array.isArray(line.stops) ? line.stops : [];
-        return stops.some((stop) => Array.isArray(stop.passengers) && stop.passengers.length > 0);
-      });
+      manualActions: (sheet) => {
+        sheet.insertRow(1, [res.title || "รายงานผู้ที่จัดรถ"]);
+        sheet.insertRow(2, [`Update : ${today}`]);
+        sheet.insertRow(3, []);
 
-      if (!validLines.length) {
-        throw new Error("ไม่พบข้อมูลรายชื่อผู้ที่จัดรถ");
-      }
-
-      function getBlockStartCol(blockIndex) {
-        return 1 + (blockIndex * TOTAL_BLOCK_WIDTH);
-      }
-
-      function setCell(row, col, value) {
-        sheet.getRow(row).getCell(col).value = value;
-      }
-
-      function styleCell(row, col, opts = {}) {
-        const cell = sheet.getRow(row).getCell(col);
-        if (opts.font) cell.font = opts.font;
-        if (opts.alignment) cell.alignment = opts.alignment;
-        if (opts.border) cell.border = opts.border;
-        if (opts.fill) cell.fill = opts.fill;
-      }
-
-      function applyBorderRange(rowStart, rowEnd, colStart, colEnd) {
-        for (let r = rowStart; r <= rowEnd; r++) {
-          for (let c = colStart; c <= colEnd; c++) {
-            styleCell(r, c, { border: border() });
-          }
-        }
-      }
-
-      function mergeAndSet(row, colStart, colEnd, value, style = {}) {
-        mergeCell(sheet, row, colStart, row, colEnd);
-        setCell(row, colStart, value);
-        for (let c = colStart; c <= colEnd; c++) {
-          styleCell(row, c, style);
-        }
-      }
-
-      function getLineBlockRows(line) {
-        const stops = Array.isArray(line.stops) ? line.stops : [];
-        let count = 3; // header block 3 rows: title, route code, table header
-
-        stops.forEach((stop) => {
-          const passengers = Array.isArray(stop.passengers) ? stop.passengers : [];
-          if (!passengers.length) return;
-          count += passengers.length;
+        mergeCell(sheet, 1, 1, 1, 5);
+        mergeCell(sheet, 2, 1, 2, 5);
+  5
+        applyStyleToRange(sheet, 1, 5, 1, {
+          font: { bold: true, size: 16 },
+          alignment: alignment("center", "middle"),
         });
 
-        return count;
-      }
+        applyStyleToRange(sheet, 1, 5, 2, {
+          font: { bold: true, size: 14 },
+          alignment: alignment("center", "middle"),
+        });
 
-      function writeLineBlock(startRow, startCol, line) {
-        const col1 = startCol;
-        const col2 = startCol + 1;
-        const col3 = startCol + 2;
-        const col4 = startCol + 3;
-
-        const stops = Array.isArray(line.stops) ? line.stops : [];
-        let currentRow = startRow;
-        let runningNo = 1;
-
-        // Row 1 : ชื่อสายรถ
-        mergeAndSet(currentRow, col1, col4, `${line.busname || line.busid || "-"}`, {
-          font: { bold: true, size: 11 },
+        applyStyleToRange(sheet, 1, 5, 4, {
+          font: { bold: true, size: 13 },
           alignment: alignment("center", "middle"),
           border: border(),
-          fill: {
-            type: "pattern",
-            pattern: "solid",
-           fgColor: { argb: "FFFFF2CC" },
-          },
-        });
-        sheet.getRow(currentRow).height = 20;
-        currentRow++;
-
-        // Row 2 : header
-        setCell(currentRow, col1, "จุดลงรถ");
-        setCell(currentRow, col2, "No.");
-        setCell(currentRow, col3, "รายชื่อ");
-        setCell(currentRow, col4, "แผนก");
-
-        for (let c = col1; c <= col4; c++) {
-          styleCell(currentRow, c, {
-            font: { bold: true, size: 10 },
-            alignment: alignment("center", "middle"),
-            border: border(),
-            fill: {
-              type: "pattern",
-              pattern: "solid",
-              fgColor: { argb: "FFF8F8F8" },
-            },
-          });
-        }
-        sheet.getRow(currentRow).height = 18;
-        currentRow++;
-
-        // detail
-        stops.forEach((stop) => {
-          const passengers = Array.isArray(stop.passengers) ? stop.passengers : [];
-          if (!passengers.length) return;
-
-          const stopStartRow = currentRow;
-          const stopEndRow = currentRow + passengers.length - 1;
-
-          if (passengers.length > 1) {
-            mergeCell(sheet, stopStartRow, col1, stopEndRow, col1);
-          }
-
-          setCell(stopStartRow, col1, stop.stop_name || "-");
-          styleCell(stopStartRow, col1, {
-            font: { size: 10 },
-            alignment: {
-              vertical: "middle",
-              horizontal: "center",
-              wrapText: true,
-            },
-            border: border(),
-          });
-
-          if (passengers.length > 1) {
-            for (let r = stopStartRow; r <= stopEndRow; r++) {
-              styleCell(r, col1, {
-                border: border(),
-                alignment: {
-                  vertical: "middle",
-                  horizontal: "center",
-                  wrapText: true,
-                },
-              });
-            }
-          }
-
-          passengers.forEach((p, index) => {
-            const rowNo = currentRow + index;
-
-            setCell(rowNo, col2, runningNo++);
-            setCell(rowNo, col3, p.fullname || "-");
-
-            const sec = String(p.sec || "").trim().toUpperCase();
-            const dept = String(p.dept || "").trim();
-            let department = dept;
-            if (sec && sec !== "NO SECTION") { department = sec; }
-
-            setCell(rowNo, col4, department || "-");
-
-            styleCell(rowNo, col2, {
-              font: { size: 10 },
-              alignment: alignment("center", "middle"),
-              border: border(),
-            });
-
-            styleCell(rowNo, col3, {
-              font: { size: 10 },
-              alignment: {
-                vertical: "middle",
-                horizontal: "left",
-                wrapText: true,
-                indent: 1,
-              },
-              border: border(),
-            });
-
-            styleCell(rowNo, col4, {
-              font: { size: 10 },
-              alignment: alignment("center", "middle"),
-              border: border(),
-            });
-
-            sheet.getRow(rowNo).height = 18;
-          });
-
-          currentRow = stopEndRow + 1;
         });
 
-        const endRow = currentRow - 1;
-        applyBorderRange(startRow, endRow, col1, col4);
+        sheet.getColumn(1).width = 6;
+        sheet.getColumn(2).width = 12;
+        sheet.getColumn(3).width = 32;
+        sheet.getColumn(4).width = 20;
+        sheet.getColumn(5).width = 24;
 
-        return endRow;
-      }
 
-      // ===== Report Title =====
-      const totalCols = (BLOCKS_PER_ROW * TOTAL_BLOCK_WIDTH) - BLOCK_GAP;
-      mergeCell(sheet, 1, 1, 1, totalCols);
-      setCell(1, 1, res.title || "ตารางรถรับส่งพนักงาน");
-
-      applyStyleToRange(sheet, 1, totalCols, 1, {
-        font: { bold: true, size: 14 },
-        alignment: alignment("center", "middle"),
-      });
-
-      sheet.getRow(1).height = 24;
-
-      // ===== Layout Blocks =====
-      let rowCursor = 3;
-      for (let i = 0; i < validLines.length; i += BLOCKS_PER_ROW) {
-        const rowLines = validLines.slice(i, i + BLOCKS_PER_ROW);
-        let maxBlockHeight = 0;
-        rowLines.forEach((line) => {
-          const h = getLineBlockRows(line);
-          if (h > maxBlockHeight) maxBlockHeight = h;
-        });
-
-        rowLines.forEach((line, idx) => {
-          const startCol = getBlockStartCol(idx);
-          writeLineBlock(rowCursor, startCol, line);
-        });
-
-        rowCursor += maxBlockHeight + 2;
-      }
-
-      // ===== Column Width =====
-      for (let i = 0; i < BLOCKS_PER_ROW; i++) {
-        const startCol = getBlockStartCol(i);
-        sheet.getColumn(startCol).width = 16;     // จุดลงรถ
-        sheet.getColumn(startCol + 1).width = 6;  // No.
-        sheet.getColumn(startCol + 2).width = 22; // รายชื่อ
-        sheet.getColumn(startCol + 3).width = 12; // แผนก
-      }
-
-      // print setup แบบคร่าวๆ
-      sheet.pageSetup = {
-        paperSize: 9, // A4
-        orientation: "landscape",
-        fitToPage: true,
-        fitToWidth: 1,
-        fitToHeight: 0,
-        margins: {
-          left: 0.2,
-          right: 0.2,
-          top: 0.3,
-          bottom: 0.3,
-          header: 0.1,
-          footer: 0.1,
-        },
-      };
-    },
-  });
-
-  //exportExcel(workbook, `bus_daily_layout_${dispatchId}`);
-  const fname = "Bus_daily_A" + today + ".xlsx";
-  exportExcel(workbook, fname);
-}
-
-// =========================
-// 2) export คนที่ไม่ได้จัดรถ
-// =========================
-async function exportDisabledPassengerExcel(dispatchId) {
-  const res = await reportDisabledPassengerDaily({ dispatch_id: String(dispatchId) });
-  if (!res?.status) {throw new Error(res?.message || "ไม่สามารถดึงข้อมูลรายงานผู้ไม่ได้จัดรถได้"); }
-  const rows = Array.isArray(res.rows) ? res.rows : [];
-  const selectedDateText = getSelectedDispatchCondition();
-  const workbook = await defaultExcel({
-    data: rows.map((row, i) => ({
-      NO: row.no ?? i + 1,
-      EMPNO: row.empno || "",
-      FULLNAME: row.fullname || "",
-      SEC: row.sec || "",
-      DEPT: row.dept || "",
-      DIV: row.div || "",
-      STOP_NAME: row.stop_name || "",
-      PLAN_TIME: selectedDateText.time,
-    })),
-
-    column: [
-      { key: "NO", header: "No" },
-      { key: "EMPNO", header: "รหัส" },
-      { key: "FULLNAME", header: "ชื่อ-นามสกุล" },
-      { key: "SEC", header: "SEC" },
-      { key: "DEPT", header: "DEPT" },
-      { key: "DIV", header: "DIV" },
-      { key: "STOP_NAME", header: "จุดรถ" },
-      { key: "PLAN_TIME", header: "เวลากลับ" },
-    ],
-
-    sheetName: "Disabled Passenger", manual: true, autoWidth: false,
-    manualActions: (sheet) => {
-      sheet.insertRow(1, ["รายชื่อผู้ที่ไม่สามารถจัดรถรับส่งได้"]);
-      sheet.insertRow(2, [`ประจำวันที่ : ${selectedDateText.date}`]);
-      sheet.insertRow(3, []);
-      mergeCell(sheet, 1, 1, 1, 8);
-      mergeCell(sheet, 2, 1, 2, 8);
-      applyStyleToRange(sheet, 1, 8, 1, {
-        font: { bold: true, size: 16 },
-        alignment: alignment("center", "middle"),
-      });
-
-      applyStyleToRange(sheet, 1, 8, 2, {
-        font: { bold: true, size: 14 },
-        alignment: alignment("center", "middle"),
-      });
-
-      applyStyleToRange(sheet, 1, 8, 4, {
-        font: { bold: true, size: 13 },
-        alignment: alignment("center", "middle"),
-        border: border(),
-      });
-
-      sheet.getColumn(1).width = 6;   // NO
-      sheet.getColumn(2).width = 12;  // EMPNO
-      sheet.getColumn(3).width = 30;  // FULLNAME
-      sheet.getColumn(4).width = 16;  // SEC
-      sheet.getColumn(5).width = 18;  // DEPT
-      sheet.getColumn(6).width = 18;  // DIV
-      sheet.getColumn(7).width = 24;  // STOP_NAME
-      sheet.getColumn(8).width = 12;  // PLAN_TIME
-      sheet.eachRow((row, rowNumber) => {
-        if (rowNumber >= 4) {
+        sheet.eachRow((row, rowNumber) => {
+          if (rowNumber < 4) return;
           row.eachCell((cell, colNumber) => {
             cell.font = { ...cell.font, size: 12 };
             cell.alignment = {
@@ -1641,6 +1253,8 @@ async function exportDisabledPassengerExcel(dispatchId) {
               horizontal: "center",
               wrapText: true,
             };
+
+            cell.border = border();
 
             if (colNumber === 3 && rowNumber >= 5) {
               cell.alignment = {
@@ -1650,27 +1264,413 @@ async function exportDisabledPassengerExcel(dispatchId) {
                 indent: 1,
               };
             }
-            cell.border = border();
           });
-        }
-      });
-    },
-  });
-  exportExcel(workbook, `disabled_passenger_${dispatchId}`);
-}
+        });
 
-function getSelectedDispatchCondition() {
-    const dateVal = $("#dd_workdate").val();
-    const [y, m, d] = dateVal.split("-");
-    const dateText =  `${d}/${m}/${y}`;
-    const text = $("#dd_type option:selected").text().trim();
-    const match = text.match(/\d{2}\.\d{2}/);
-    const time = match ? match[0] : "";
-    return {
-      date: dateText,
-      time: time,
-    };
+        excelRows.forEach((item, index) => {
+          const rowNo = index + 5;
+          if (item.__isGroup) {
+            mergeCell(sheet, rowNo, 3, rowNo, 5);
+
+            for (let c = 1; c <= 5; c++) {
+              const cell = sheet.getRow(rowNo).getCell(c);
+              cell.font = { bold: true, size: 13 };
+              cell.alignment = alignment("left", "middle");
+              cell.border = border();
+              cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFFF2CC" }, };
+            }
+          }
+
+          if (item.__isBlank) {
+            for (let c = 1; c <= 5; c++) {
+              const cell = sheet.getRow(rowNo).getCell(c);
+              cell.border = border();
+            }
+          }
+        });
+      },
+    });
+
+    const fname = "bus_daily_" + today + ".xlsx";
+    exportExcel(workbook, fname);
+    //exportExcel(workbook, `bus_daily_${dispatchId}`);
   }
+
+
+  // =========================
+  // 1.2) export คนที่จัดรถ 2
+  // =========================
+  async function exportBusDailyLayoutExcel(dispatchId) {
+    const res = await reportBusDaily({ dispatch_id: String(dispatchId) });
+    const today = new Date().toLocaleDateString("th-TH");
+    if (!res?.status) {
+      throw new Error(res?.message || "ไม่สามารถดึงข้อมูลรายงานจัดรถได้");
+    }
+
+    const lines = Array.isArray(res.lines) ? res.lines : [];
+    if (!lines.length) {
+      throw new Error("ไม่พบข้อมูลรายชื่อผู้ที่จัดรถ");
+    }
+
+    const workbook = await defaultExcel({
+      data: [],
+      column: [{ key: "A", header: "" }],
+      sheetName: "Bus Daily Layout",
+      manual: true,
+      autoWidth: false,
+      manualActions: (sheet) => {
+        const BLOCKS_PER_ROW = 5;
+        const BLOCK_WIDTH = 4;     // จุดลงรถ | No. | รายชื่อ | แผนก
+        const BLOCK_GAP = 0;       // เว้นคอลัมน์ระหว่าง block
+        const TOTAL_BLOCK_WIDTH = BLOCK_WIDTH + BLOCK_GAP;
+
+        const validLines = lines.filter((line) => {
+          const stops = Array.isArray(line.stops) ? line.stops : [];
+          return stops.some((stop) => Array.isArray(stop.passengers) && stop.passengers.length > 0);
+        });
+
+        if (!validLines.length) {
+          throw new Error("ไม่พบข้อมูลรายชื่อผู้ที่จัดรถ");
+        }
+
+        function getBlockStartCol(blockIndex) {
+          return 1 + (blockIndex * TOTAL_BLOCK_WIDTH);
+        }
+
+        function setCell(row, col, value) {
+          sheet.getRow(row).getCell(col).value = value;
+        }
+
+        function styleCell(row, col, opts = {}) {
+          const cell = sheet.getRow(row).getCell(col);
+          if (opts.font) cell.font = opts.font;
+          if (opts.alignment) cell.alignment = opts.alignment;
+          if (opts.border) cell.border = opts.border;
+          if (opts.fill) cell.fill = opts.fill;
+        }
+
+        function applyBorderRange(rowStart, rowEnd, colStart, colEnd) {
+          for (let r = rowStart; r <= rowEnd; r++) {
+            for (let c = colStart; c <= colEnd; c++) {
+              styleCell(r, c, { border: border() });
+            }
+          }
+        }
+
+        function mergeAndSet(row, colStart, colEnd, value, style = {}) {
+          mergeCell(sheet, row, colStart, row, colEnd);
+          setCell(row, colStart, value);
+          for (let c = colStart; c <= colEnd; c++) {
+            styleCell(row, c, style);
+          }
+        }
+
+        function getLineBlockRows(line) {
+          const stops = Array.isArray(line.stops) ? line.stops : [];
+          let count = 3; // header block 3 rows: title, route code, table header
+
+          stops.forEach((stop) => {
+            const passengers = Array.isArray(stop.passengers) ? stop.passengers : [];
+            if (!passengers.length) return;
+            count += passengers.length;
+          });
+
+          return count;
+        }
+
+        function writeLineBlock(startRow, startCol, line) {
+          const col1 = startCol;
+          const col2 = startCol + 1;
+          const col3 = startCol + 2;
+          const col4 = startCol + 3;
+
+          const stops = Array.isArray(line.stops) ? line.stops : [];
+          let currentRow = startRow;
+          let runningNo = 1;
+
+          // Row 1 : ชื่อสายรถ
+          mergeAndSet(currentRow, col1, col4, `${line.busname || line.busid || "-"}`, {
+            font: { bold: true, size: 11 },
+            alignment: alignment("center", "middle"),
+            border: border(),
+            fill: {
+              type: "pattern",
+              pattern: "solid",
+            fgColor: { argb: "FFFFF2CC" },
+            },
+          });
+          sheet.getRow(currentRow).height = 20;
+          currentRow++;
+
+          // Row 2 : header
+          setCell(currentRow, col1, "จุดลงรถ");
+          setCell(currentRow, col2, "No.");
+          setCell(currentRow, col3, "รายชื่อ");
+          setCell(currentRow, col4, "แผนก");
+
+          for (let c = col1; c <= col4; c++) {
+            styleCell(currentRow, c, {
+              font: { bold: true, size: 10 },
+              alignment: alignment("center", "middle"),
+              border: border(),
+              fill: {
+                type: "pattern",
+                pattern: "solid",
+                fgColor: { argb: "FFF8F8F8" },
+              },
+            });
+          }
+          sheet.getRow(currentRow).height = 18;
+          currentRow++;
+
+          // detail
+          stops.forEach((stop) => {
+            const passengers = Array.isArray(stop.passengers) ? stop.passengers : [];
+            if (!passengers.length) return;
+
+            const stopStartRow = currentRow;
+            const stopEndRow = currentRow + passengers.length - 1;
+
+            if (passengers.length > 1) {
+              mergeCell(sheet, stopStartRow, col1, stopEndRow, col1);
+            }
+
+            setCell(stopStartRow, col1, stop.stop_name || "-");
+            styleCell(stopStartRow, col1, {
+              font: { size: 10 },
+              alignment: {
+                vertical: "middle",
+                horizontal: "center",
+                wrapText: true,
+              },
+              border: border(),
+            });
+
+            if (passengers.length > 1) {
+              for (let r = stopStartRow; r <= stopEndRow; r++) {
+                styleCell(r, col1, {
+                  border: border(),
+                  alignment: {
+                    vertical: "middle",
+                    horizontal: "center",
+                    wrapText: true,
+                  },
+                });
+              }
+            }
+
+            passengers.forEach((p, index) => {
+              const rowNo = currentRow + index;
+
+              setCell(rowNo, col2, runningNo++);
+              setCell(rowNo, col3, p.fullname || "-");
+
+              const sec = String(p.sec || "").trim().toUpperCase();
+              const dept = String(p.dept || "").trim();
+              let department = dept;
+              if (sec && sec !== "NO SECTION") { department = sec; }
+
+              setCell(rowNo, col4, department || "-");
+
+              styleCell(rowNo, col2, {
+                font: { size: 10 },
+                alignment: alignment("center", "middle"),
+                border: border(),
+              });
+
+              styleCell(rowNo, col3, {
+                font: { size: 10 },
+                alignment: {
+                  vertical: "middle",
+                  horizontal: "left",
+                  wrapText: true,
+                  indent: 1,
+                },
+                border: border(),
+              });
+
+              styleCell(rowNo, col4, {
+                font: { size: 10 },
+                alignment: alignment("center", "middle"),
+                border: border(),
+              });
+
+              sheet.getRow(rowNo).height = 18;
+            });
+
+            currentRow = stopEndRow + 1;
+          });
+
+          const endRow = currentRow - 1;
+          applyBorderRange(startRow, endRow, col1, col4);
+
+          return endRow;
+        }
+
+        // ===== Report Title =====
+        const totalCols = (BLOCKS_PER_ROW * TOTAL_BLOCK_WIDTH) - BLOCK_GAP;
+        mergeCell(sheet, 1, 1, 1, totalCols);
+        setCell(1, 1, res.title || "ตารางรถรับส่งพนักงาน");
+
+        applyStyleToRange(sheet, 1, totalCols, 1, {
+          font: { bold: true, size: 14 },
+          alignment: alignment("center", "middle"),
+        });
+
+        sheet.getRow(1).height = 24;
+
+        // ===== Layout Blocks =====
+        let rowCursor = 3;
+        for (let i = 0; i < validLines.length; i += BLOCKS_PER_ROW) {
+          const rowLines = validLines.slice(i, i + BLOCKS_PER_ROW);
+          let maxBlockHeight = 0;
+          rowLines.forEach((line) => {
+            const h = getLineBlockRows(line);
+            if (h > maxBlockHeight) maxBlockHeight = h;
+          });
+
+          rowLines.forEach((line, idx) => {
+            const startCol = getBlockStartCol(idx);
+            writeLineBlock(rowCursor, startCol, line);
+          });
+
+          rowCursor += maxBlockHeight + 2;
+        }
+
+        // ===== Column Width =====
+        for (let i = 0; i < BLOCKS_PER_ROW; i++) {
+          const startCol = getBlockStartCol(i);
+          sheet.getColumn(startCol).width = 16;     // จุดลงรถ
+          sheet.getColumn(startCol + 1).width = 6;  // No.
+          sheet.getColumn(startCol + 2).width = 22; // รายชื่อ
+          sheet.getColumn(startCol + 3).width = 12; // แผนก
+        }
+
+        // print setup แบบคร่าวๆ
+        sheet.pageSetup = {
+          paperSize: 9, // A4
+          orientation: "landscape",
+          fitToPage: true,
+          fitToWidth: 1,
+          fitToHeight: 0,
+          margins: {
+            left: 0.2,
+            right: 0.2,
+            top: 0.3,
+            bottom: 0.3,
+            header: 0.1,
+            footer: 0.1,
+          },
+        };
+      },
+    });
+
+    //exportExcel(workbook, `bus_daily_layout_${dispatchId}`);
+    const fname = "Bus_daily_A" + today + ".xlsx";
+    exportExcel(workbook, fname);
+  }
+
+  // =========================
+  // 2) export คนที่ไม่ได้จัดรถ
+  // =========================
+  async function exportDisabledPassengerExcel(dispatchId) {
+    const res = await reportDisabledPassengerDaily({ dispatch_id: String(dispatchId) });
+    if (!res?.status) {throw new Error(res?.message || "ไม่สามารถดึงข้อมูลรายงานผู้ไม่ได้จัดรถได้"); }
+    const rows = Array.isArray(res.rows) ? res.rows : [];
+    const selectedDateText = getSelectedDispatchCondition();
+    const workbook = await defaultExcel({
+      data: rows.map((row, i) => ({
+        NO: row.no ?? i + 1,
+        EMPNO: row.empno || "",
+        FULLNAME: row.fullname || "",
+        SEC: row.sec || "",
+        DEPT: row.dept || "",
+        DIV: row.div || "",
+        STOP_NAME: row.stop_name || "",
+        PLAN_TIME: selectedDateText.time,
+      })),
+
+      column: [
+        { key: "NO", header: "No" },
+        { key: "EMPNO", header: "รหัส" },
+        { key: "FULLNAME", header: "ชื่อ-นามสกุล" },
+        { key: "SEC", header: "SEC" },
+        { key: "DEPT", header: "DEPT" },
+        { key: "DIV", header: "DIV" },
+        { key: "STOP_NAME", header: "จุดรถ" },
+        { key: "PLAN_TIME", header: "เวลากลับ" },
+      ],
+
+      sheetName: "Disabled Passenger", manual: true, autoWidth: false,
+      manualActions: (sheet) => {
+        sheet.insertRow(1, ["รายชื่อผู้ที่ไม่สามารถจัดรถรับส่งได้"]);
+        sheet.insertRow(2, [`ประจำวันที่ : ${selectedDateText.date}`]);
+        sheet.insertRow(3, []);
+        mergeCell(sheet, 1, 1, 1, 8);
+        mergeCell(sheet, 2, 1, 2, 8);
+        applyStyleToRange(sheet, 1, 8, 1, {
+          font: { bold: true, size: 16 },
+          alignment: alignment("center", "middle"),
+        });
+
+        applyStyleToRange(sheet, 1, 8, 2, {
+          font: { bold: true, size: 14 },
+          alignment: alignment("center", "middle"),
+        });
+
+        applyStyleToRange(sheet, 1, 8, 4, {
+          font: { bold: true, size: 13 },
+          alignment: alignment("center", "middle"),
+          border: border(),
+        });
+
+        sheet.getColumn(1).width = 6;   // NO
+        sheet.getColumn(2).width = 12;  // EMPNO
+        sheet.getColumn(3).width = 30;  // FULLNAME
+        sheet.getColumn(4).width = 16;  // SEC
+        sheet.getColumn(5).width = 18;  // DEPT
+        sheet.getColumn(6).width = 18;  // DIV
+        sheet.getColumn(7).width = 24;  // STOP_NAME
+        sheet.getColumn(8).width = 12;  // PLAN_TIME
+        sheet.eachRow((row, rowNumber) => {
+          if (rowNumber >= 4) {
+            row.eachCell((cell, colNumber) => {
+              cell.font = { ...cell.font, size: 12 };
+              cell.alignment = {
+                vertical: "middle",
+                horizontal: "center",
+                wrapText: true,
+              };
+
+              if (colNumber === 3 && rowNumber >= 5) {
+                cell.alignment = {
+                  vertical: "middle",
+                  horizontal: "left",
+                  wrapText: true,
+                  indent: 1,
+                };
+              }
+              cell.border = border();
+            });
+          }
+        });
+      },
+    });
+    exportExcel(workbook, `disabled_passenger_${dispatchId}`);
+  }
+
+  function getSelectedDispatchCondition() {
+      const dateVal = $("#dd_workdate").val();
+      const [y, m, d] = dateVal.split("-");
+      const dateText =  `${d}/${m}/${y}`;
+      const text = $("#dd_type option:selected").text().trim();
+      const match = text.match(/\d{2}\.\d{2}/);
+      const time = match ? match[0] : "";
+      return {
+        date: dateText,
+        time: time,
+      };
+    }
 
 
   // =========================
