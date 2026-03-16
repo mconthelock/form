@@ -15,7 +15,6 @@ module.exports = {
 	bus_passenger: "./assets/script/gpform/BUS/bus_passenger.js",
 	bus_overtime: "./assets/script/gpform/BUS/bus_overtime.js",
 
-
 	//GP-TRN
 	alert: "./assets/script/gpform/GP-TRN/alert.js",
 	formUtils: "./assets/script/gpform/GP-TRN/formUtils.js",

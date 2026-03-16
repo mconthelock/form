@@ -77,12 +77,6 @@
       <div class="font-semibold mb-2"> BUS STOP <span class="text-xs text-gray-500 ml-2" id="lblSelectedLine">-</span>
       </div>
       <table id="tblStop" class="display w-full"></table>
-<<<<<<< HEAD
-=======
-      <div class="mt-2">
-        <button id="btnAddStop" name="btnAddStop" class="px-3 py-2 rounded-lg border text-sm" disabled> + เพิ่มจุดรถ </button>
-      </div>
->>>>>>> 5567cd8 (feat: enhance bus overtime UI with improved table structures and modal functionality)
     </div>
 
     <!-- LEVEL 3 : BUS PASSENGER -->
@@ -103,7 +97,6 @@
       </div>
       <table id="tblPassenger" name="tblPassenger" class="display w-full"></table>
     </div>
-<<<<<<< HEAD
     
   </div>
 </div>
@@ -118,21 +111,10 @@
 
       <div>
         <label class="block text-sm font-semibold mb-1">ชื่อจุดรถ</label>
-=======
-  </div>
-</div>
-<dialog id="move_stop_modal" class="modal">
-  <div class="modal-box max-w-md">
-    <h3 class="font-bold text-lg mb-4">จัดการจุดรถ</h3>
-    <div class="space-y-3">
-      <div>
-        <label class="block text-sm font-semibold mb-1">จุดรถ</label>
->>>>>>> 5567cd8 (feat: enhance bus overtime UI with improved table structures and modal functionality)
         <input id="moveStopName" type="text" class="input input-bordered w-full" readonly />
       </div>
 
       <div>
-<<<<<<< HEAD
           <label class="block text-sm font-medium mb-1"> เวลา<b style="color:red">*</b></label>
           <input type="text" id="movePlanTime" name="movePlanTime" class="input input-bordered w-full" placeholder="HH:mm" autocomplete="off">
       </div>
@@ -193,24 +175,6 @@
 
     <div class="modal-action">
       <button id="btnSaveAddPassenger" class="btn btn-primary">บันทึก</button>
-=======
-        <label class="block text-sm font-semibold mb-1">สายรถปัจจุบัน</label>
-        <input id="moveCurrentLineName" type="text" class="input input-bordered w-full" readonly />
-      </div>
-      <div>
-        <label class="block text-sm font-semibold mb-1">ย้ายไปสายรถ</label>
-        <select id="moveTargetLine" class="select select-bordered w-full">
-          <option value="">-- ไม่ย้ายสายรถ --</option>
-        </select>
-      </div>
-
-    </div>
-
-    <div class="modal-action">
-      <button id="btnConfirmMoveStop" class="btn btn-warning">
-        บันทึก
-      </button>
-
       <form method="dialog">
         <button class="btn">ยกเลิก</button>
       </form>
@@ -218,53 +182,6 @@
   </div>
 </dialog>
 
-<dialog id="add_passenger_modal" class="modal">
-  <div class="modal-box max-w-lg">
-    <h3 class="font-bold text-lg mb-4">เพิ่ม Passenger</h3>
-
-    <input type="hidden" id="apDispatchId" />
-    <div class="space-y-3">
-      <div>
-        <label class="block text-sm font-medium mb-1"> รหัสพนักงาน <b style="color:red">*</b> </label>
-        <input type="text" id="apEmpno" maxlength="5" class="input input-bordered w-full" placeholder="กรอกรหัสพนักงาน 5 หลัก" autocomplete="off" />
-      </div>
-
-      <div>
-        <label class="block text-sm font-medium mb-1">ชื่อ</label>
-        <div id="apEmpName" class="text-sm font-medium text-gray-400"></div>
-      </div>
-
-      <div>
-        <label class="block text-sm font-medium mb-1">
-          จุดรถ <b style="color:red">*</b>
-        </label>
-        <select id="apStopId" class="select select-bordered w-full">
-          <option value="">-- เลือกจุดรถ --</option>
-        </select>
-      </div>
-
-      <div>
-        <label class="block text-sm font-medium mb-1">สายรถ <b style="color:red">*</b> </label>
-        <select id="apLineId" class="select select-bordered w-full">
-          <option value="">-- เลือกสายรถ --</option>
-        </select>
-      </div>
-
-    </div>
-
-    <div class="modal-action">
-      <button id="btnConfirmMoveStop" class="btn btn-warning">ยืนยัน</button>
->>>>>>> 5567cd8 (feat: enhance bus overtime UI with improved table structures and modal functionality)
-      <form method="dialog">
-        <button class="btn">ยกเลิก</button>
-      </form>
-    </div>
-  </div>
-</dialog>
-<<<<<<< HEAD
-
-=======
->>>>>>> 5567cd8 (feat: enhance bus overtime UI with improved table structures and modal functionality)
 <input type="hidden" id="moveStopId" />
 <input type="hidden" id="moveCurrentLineId" />
 @endsection
