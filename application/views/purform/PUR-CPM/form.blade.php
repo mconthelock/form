@@ -162,16 +162,18 @@
                             </fieldset> --}}
                         </div>
                         <div class="flex flex-col gap-2 w-1/2">
-                            <fieldset class="gap-11">
+                            <fieldset class="gap-2">
                                 <span>Date: (version)</span>
                                 <label>
                                     <input type="date" name="QUOTATION_DATE" id="QUOTATION_DATE" class="input input-sm w-full fdate" placeholder="2026-01-19">
                                 </label>
                             </fieldset>
-                            <fieldset class="gap-2">
-                                <span>Total Amount (THB)</span>
-                                <label>
+                            <fieldset class="gap-3">
+                                <span>Total Amount</span>
+                                <label class="flex gap-2">
                                     <input type="number" step="1" min="0" name="TOTAL_AMOUNT" id="TOTAL_AMOUNT" class="input input-sm w-full" placeholder="47,300.00">
+                                    <select id="curr-total" class="select select-sm w-fit min-w-16 select-currency">
+                                    </select>
                                 </label>
                             </fieldset>
                             {{-- <fieldset class="gap-24">
@@ -212,12 +214,14 @@
                         </div>
                         <div class="flex flex-col gap-2 w-1/2">
                             <fieldset class="gap-4">
-                                <span class="required">Amount (THB)</span>
-                                <label>
+                                <span class="required">Amount</span>
+                                <label class="flex gap-2">
                                     <input type="number" step="1" min="0" name="INVOICE_AMOUNT" id="INVOICE_AMOUNT" class="input input-sm w-full req" placeholder="47,300.00">
+                                    <select id="curr-invoice" class="select select-sm w-fit min-w-16 select-currency">
+                                    </select>
                                 </label>
                             </fieldset>
-                            <fieldset class="gap-22">
+                            <fieldset class="gap-11">
                                 <span>DATE : </span>
                                 <label>
                                     <input type="date" name="INVOICE_DATE" id="INVOICE_DATE" class="input input-sm w-full fdate" placeholder="2026-01-19">
@@ -245,8 +249,10 @@
                         </fieldset>
                         <fieldset>
                             <label>
-                                <span class="required">(THB)</span>
+                                <span class="required"></span>
                                 <input type="number" step="1" min="0" name="PAYMENT" id="PAYMENT" class="input input-sm w-48 req" placeholder="47,300.00" disabled>
+                                <select id="curr-payment" class="select select-sm w-fit min-w-16 select-currency">
+                                    </select>
                             </label>
                         </fieldset>
                     </div>
