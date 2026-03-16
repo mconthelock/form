@@ -8,48 +8,15 @@ import { createTable } from "@amec/webasset/dataTable";
 import { initApp, tableOption } from "../../utils.js";
 import { getAllInfo } from "@amec/webasset/indexDB";
 import {
-<<<<<<< HEAD
-	dispatchGetDispatch,
-	dispatchSaveOverwrite,
-	getLine,
-	getStop,
-=======
   dispatchGetDispatch, dispatchMoveStop, disableDispatchPassenger,
   getUserbyemp, deleteLineDispatch,
   getLine, getStopRoutes,
   saveAddPassenger, reportBusDaily, reportDisabledPassengerDaily
->>>>>>> 001e0a6 (feat: add export functionality for bus daily and disabled passenger reports; update UI and logic for data export)
 } from "./data.js";
 import { initApp, tableOption } from "../../utils.js";
 import { exportExcel, defaultExcel, mergeCell, applyStyleToRange, alignment, border,} from "@amec/webasset/excel";
 
 
-<<<<<<< HEAD
-  select2();
-
-const dom = {
-	workdate: "#dd_workdate",
-	type: "#dd_type",
-	sumLines: "#sumLines",
-	sumStops: "#sumStops",
-	sumPassengers: "#sumPassengers",
-	lblSelectedLine: "#lblSelectedLine",
-	lblSelectedStop: "#lblSelectedStop",
-	tblLine: "#tblLine",
-	tblStop: "#tblStop",
-	tblPassenger: "#tblPassenger",
-	btnAddStop: "#btnAddStop",
-	btnAddPassenger: "#btnAddPassenger",
-	btnSaveDispatch: "#btnSaveDispatch",
-};
-
-const state = {
-	snapshot: null,
-	head: null,
-	lines: [],
-	selectedLine: null,
-	selectedStop: null,
-=======
 select2();
 
   const dom = {
@@ -76,7 +43,6 @@ const state = {
   selectedStop: null,
   addPassengerLines: [],
   addPassengerStops: [],
->>>>>>> 001e0a6 (feat: add export functionality for bus daily and disabled passenger reports; update UI and logic for data export)
 };
 
   let tableLine;
@@ -133,18 +99,11 @@ function todayYMD() {
 }
 
 function mapShift(uiType) {
-<<<<<<< HEAD
-	if (uiType === "OT") return "D"; // OT Day (NORMAL)
-	if (uiType === "NIGHT") return "N"; // Night
-	if (uiType === "HOLIDAY") return "H"; // Holiday
-	return "D";
-=======
   if (uiType === "OT") return "D";
   if (uiType === "OT_SPECIAL") return "S";
   if (uiType === "NIGHT") return "N";
   if (uiType === "HOLIDAY") return "H";
   return "D";
->>>>>>> 001e0a6 (feat: add export functionality for bus daily and disabled passenger reports; update UI and logic for data export)
 }
 
 function makeDtoGetDispatch() {
@@ -190,7 +149,7 @@ function updateSummary() {
 	$(dom.sumPassengers).text(totalPassengers);
 }
 
-<<<<<<< HEAD
+
 function clearRightTables() {
 	state.selectedLine = null;
 	state.selectedStop = null;
@@ -201,69 +160,6 @@ function clearRightTables() {
 	tablePassenger.clear().draw();
 }
 
-<<<<<<< HEAD
-function initTables() {
-	createTable(dom.tblLine, {
-		...tableOption,
-		searching: false,
-		paging: false,
-		info: false,
-		columns: [
-			{
-				title: "BUS",
-				data: null,
-				render: (v, t, row) => row.busname || row.busid || "-",
-			},
-			{
-				title: "SEAT",
-				data: "busseat",
-				width: "60px",
-				defaultContent: "-",
-			},
-			{
-				title: "TYPE",
-				data: "bustype",
-				width: "60px",
-				defaultContent: "-",
-			},
-		],
-	});
-	tableLine = $(dom.tblLine).DataTable();
-
-	createTable(dom.tblStop, {
-		...tableOption,
-		searching: false,
-		paging: false,
-		info: false,
-		columns: [
-			{ title: "STOP_ID", data: "stop_id", width: "80px" },
-			{ title: "STOP", data: "stop_name", defaultContent: "-" },
-			{
-				title: "PLAN",
-				data: "plan_time",
-				width: "70px",
-				defaultContent: "-",
-			},
-			{
-				title: "PAX",
-				data: null,
-				width: "60px",
-				render: (v, t, row) =>
-					row.passengers ? row.passengers.length : 0,
-			},
-		],
-	});
-	tableStop = $(dom.tblStop).DataTable();
-
-	createTable(dom.tblPassenger, {
-		...tableOption,
-		searching: false,
-		paging: false,
-		info: false,
-		columns: [{ title: "EMPNO", data: "empno", width: "120px" }],
-	});
-	tablePassenger = $(dom.tblPassenger).DataTable();
-=======
 async function lineOptions(data) {
   const opt = { ...tableOption };
   opt.data = data;
@@ -435,10 +331,8 @@ async function passengerOptions(data) {
   ];
   return opt;
 }
->>>>>>> 5567cd8 (feat: enhance bus overtime UI with improved table structures and modal functionality)
 
-	// click handlers ใช้เหมือนเดิมได้
-}
+
 
 async function loadDispatch() {
 	await showLoader({ show: true });
@@ -539,7 +433,7 @@ async function selectStop(stop, rowIndex = null) {
     $(tableStop.row(rowIndex).node()).addClass("line-selected");
   }
 }
-=======
+
 async function initTables() {
   const lineOpt = await lineOptions([]);
   tableLine = await createTable(lineOpt, { id: dom.tblLine });
@@ -904,7 +798,6 @@ $(dom.passengerSearch).on("input", async function () {
     if (rowIndex !== null && tableLine?.row(rowIndex).node()) {
       $(tableLine.row(rowIndex).node()).addClass("line-selected");
     }
->>>>>>> 001e0a6 (feat: add export functionality for bus daily and disabled passenger reports; update UI and logic for data export)
 
     if (tableStop && tableStop.rows().count() > 0) {
       let stopIndex = findStopIndexByStopId(stops, preferredStopId);
@@ -928,276 +821,6 @@ $(dom.passengerSearch).on("input", async function () {
   }
 
 function bindEvents() {
-<<<<<<< HEAD
-	$(dom.workdate).on("change", loadDispatch);
-	$(dom.type).on("change", loadDispatch);
-
-	$(dom.btnAddPassenger).on("click", () => {
-		if (!state.selectedStop)
-			return showMessage("warning", "กรุณาเลือก BUS STOP ก่อน");
-		// TODO: open modal add passenger
-		console.log("ADD PASSENGER", state.selectedStop);
-	});
-
-	$(dom.btnAddStop).on("click", () => {
-		if (!state.selectedLine)
-			return showMessage("warning", "กรุณาเลือก BUS LINE ก่อน");
-		// TODO: open modal add stop
-		console.log("ADD STOP", state.selectedLine);
-	});
-
-	$(dom.btnSaveDispatch).on("click", async () => {
-		// TODO: เตรียม payload overwrite จาก state.lines (หลังแก้ไข)
-		const ok = await showConfirm("ต้องการบันทึก DISPATCH ใช่ไหม?");
-		if (!ok) return;
-
-		try {
-			await showLoader({ show: true });
-
-			// TODO: เปลี่ยนเป็น payload จริงเมื่อท่านพร้อม
-			// const payload = { dispatch_id: state.head.dispatch_id, update_by: "15199", lines: ... }
-			// await dispatchSaveOverwrite(payload);
-
-			showMessage("success", "บันทึก DISPATCH สำเร็จ");
-			await reloadDispatch(); // reload ใหม่เอา id/seq ล่าสุด
-		} catch (err) {
-			console.error(err);
-			showMessage("error", getErrText(err));
-		} finally {
-			await showLoader({ show: false });
-			await showLoader({ show: false });
-		}
-	});
-}
-
-function buildSaveDispatchPayload() {
-	return {
-		dispatch_date: state.workdate,
-		shift: mapShift($(dom.type).val()),
-		lines: state.lines.map((l) => ({
-			busid: l.busid ?? l.line_id, // แล้วแต่ backend ใช้ field ไหน
-			busname: l.line_name,
-			bustype: denormalizeVehicle(l.vehicle_type), // "1"/"2"
-			busseat: l.vehicle_seat,
-			seq: l.seq ?? 0,
-			line_status: l.line_status ?? "1",
-			stops: (l.stops || []).map((s) => ({
-				stop_id: s.stop_id,
-				stop_name: s.stop_name,
-				seq: s.seq_no,
-				plan_time: HHMMToHHmm(s.time_in), // "1730"
-				passenger_count: (s.passengers || []).length,
-				passengers: (s.passengers || []).map((p) => ({
-					empno: p.empno,
-				})),
-			})),
-		})),
-	};
-}
-
-$(document).ready(async function () {
-	initApp?.(); // ถ้า utils.js ของท่านต้อง init อะไร
-	$(dom.workdate).val(todayYMD());
-	$(dom.type).val("OT");
-
-	initTables();
-	bindEvents();
-	await loadDispatch();
-});
-
-// ⭐ state ใหม่ของหน้า
-let tableNormal;
-let tableOT;
-
-let passengerNormal = [];
-let passengerOT = [];
-
-let lines = [];
-
-/* ================= INIT ================= */
-$(async function () {
-  initApp();
-
-  state.workdate = getTodayISO();
-  $(dom.workdate).val(state.workdate);
-  $(dom.type).val(state.type);
-
-  await initTables();        // ✅ ต้อง await
-  console.log("DT OK?", typeof tableLine.clear, typeof tableStop.clear, typeof tablePassenger.clear);
-  bindHeaderEvents();
-  bindTableEvents();
-
-  await reloadDispatch();
-});
-
-// -------------------------
-// DataTables
-// -------------------------
-async function initTables() {
-  tableLine = await createTable(
-    {
-      ...tableOption,
-      columns: [
-        { title: "สายรถ", data: "line_name" },
-        { title: "ประเภทรถ", data: "vehicle_type" },
-        { title: "จำนวน", data: "total_pax" },
-      ],
-    },
-    {
-      id: "tblLine",
-      // แนะนำปิด selectRows ของ lib นี้ไปก่อน (เรา bind click เอง)
-      selectRows: { status: false },
-    }
-  );
-
-  tableStop = await createTable(
-    {
-      ...tableOption,
-      columns: [
-        { title: "จุดที่", data: "seq_no" },
-        { title: "จุดรถ", data: "stop_name" },
-        { title: "เวลา", data: "time_in" },
-        {
-          title: "",
-          data: null,
-          orderable: false,
-          render: () => `<button class="btnMoveStop btn btn-sm">ย้าย</button>`,
-        },
-      ],
-    },
-    {
-      id: "tblStop",
-      selectRows: { status: false },
-    }
-  );
-
-  tablePassenger = await createTable(
-    {
-      ...tableOption,
-      columns: [
-        { title: "รหัส", data: "empno" },
-        { title: "ชื่อ", data: "name" },
-      ],
-    },
-    {
-      id: "tblPassenger",
-      selectRows: { status: false },
-    }
-  );
-}
-
-// -------------------------
-// Header events
-// -------------------------
-function bindHeaderEvents() {
-  $(dom.workdate).on("change", async function () {
-    state.workdate = $(this).val();
-    await reloadDispatch();
-  });
-
-  $(dom.btnAddStop).prop("disabled", true);
-  $(dom.btnAddPassenger).prop("disabled", true);
-}
-
-  async function loadDispatch(options = {}) {
-    await showLoader({ show: true });
-    try {
-      const dto = makeDtoGetDispatch();
-
-      if (!dto.workdate) {
-        showMessage("กรุณาเลือกวันที่", "warning");
-        return;
-      }
-
-      const preserveBusId = options.preserveBusId ?? state.selectedLine?.busid ?? null;
-      const preserveStopId = options.preserveStopId ?? state.selectedStop?.stop_id ?? null;
-      const res = await dispatchGetDispatch(dto);
-      state.snapshot = res;
-      state.head = {
-        dispatch_id: res.dispatch_id,
-        workdate: res.workdate,
-        dispatch_type: res.dispatch_type,
-        shift: res.shift,
-        status: res.status,
-        update_by: res.update_by,
-        update_date: res.update_date,
-      };
-      state.lines = res.lines || [];
-
-      updateSummary();
-      clearRightSelection();
-
-      await renderLineTable(state.lines);
-      await renderStopTable([]);
-      await renderPassengerTable([]);
-
-      if (state.lines.length > 0) {
-        let lineIndex = findLineIndexByBusId(preserveBusId);
-        if (lineIndex < 0) lineIndex = 0;
-
-        const targetLine = state.lines[lineIndex];
-        await selectLine(targetLine, lineIndex, preserveStopId);
-      }
-    } catch (error) {
-      console.error(error);
-      showMessage(error?.message || "โหลดข้อมูลไม่สำเร็จ", "error");
-    } finally {
-      await showLoader({ show: false });
-    }
-  }
-
-  function findLineIndexByBusId(busid) {
-    return (state.lines || []).findIndex(
-      (line) => String(line.busid) === String(busid)
-    );
-  }
-
-  function findStopIndexByStopId(stops, stopId) {
-    return (stops || []).findIndex(
-      (stop) => String(stop.stop_id) === String(stopId)
-    );
-  }
-
-  async function selectLine(line, rowIndex = null, preferredStopId = null) {
-    state.selectedLine = line;
-    state.selectedStop = null;
-    setSelectedLineLabel(line);
-    setSelectedStopLabel(null);
-
-    const stops = line.stops || [];
-
-    await renderStopTable(stops);
-    await renderPassengerTable([]);
-
-    $(".line-row").removeClass("line-selected");
-    if (rowIndex !== null && tableLine?.row(rowIndex).node()) {
-      $(tableLine.row(rowIndex).node()).addClass("line-selected");
-    }
-
-    if (tableStop && tableStop.rows().count() > 0) {
-      let stopIndex = findStopIndexByStopId(stops, preferredStopId);
-      if (stopIndex < 0) stopIndex = 0;
-
-      const targetStop = stops[stopIndex];
-      await selectStop(targetStop, stopIndex);
-    }
-  }
-
-  async function selectStop(stop, rowIndex = null) {
-    state.selectedStop = stop;
-    setSelectedStopLabel(stop);
-    $(dom.btnAddPassenger).prop("disabled", false);
-    await renderPassengerTable(stop.passengers || []);
-
-    $(".stop-row").removeClass("stop-selected");
-    if (rowIndex !== null && tableStop?.row(rowIndex).node()) {
-      $(tableStop.row(rowIndex).node()).addClass("stop-selected");
-    }
-  }
-
-function bindEvents() {
-=======
->>>>>>> 5567cd8 (feat: enhance bus overtime UI with improved table structures and modal functionality)
   $(dom.workdate).on("change", async function () { await loadDispatch(); });
   $(dom.type).on("change", async function () { await loadDispatch();});
   $(document).on("click", ".line-row", async function (e) {
@@ -1245,7 +868,6 @@ function bindEvents() {
     }
   });
 
-<<<<<<< HEAD
 
   $(document).on("click", ".btn-move-stop", async function (e) {
     e.stopPropagation();
