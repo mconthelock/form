@@ -174,7 +174,7 @@
                                 <div id="QUOTATION_DATE" class="subject-text"></div>
                             </fieldset>
                             <fieldset class="gap-2">
-                                <span>Total Amount (THB)</span>
+                                <span>Total Amount (<span class="currency"></span>)</span>
                                 <div id="TOTAL_AMOUNT" class="subject-text"></div>
                             </fieldset>
                             {{-- <fieldset class="gap-24">
@@ -211,7 +211,7 @@
                         </div>
                         <div class="flex flex-col gap-2 w-1/2">
                             <fieldset class="gap-8">
-                                <span class="required">Amount (THB)</span>
+                                <span class="required">Amount (<span class="currency"></span>)</span>
                                 <div id="INVOICE_AMOUNT" class="subject-text"></div>
                             </fieldset>
                             <fieldset class="gap-22">
@@ -244,7 +244,7 @@
                         <fieldset>
                             <span id="PAYMENT" class="mr-5"></span>
                             <label>
-                                <span class="required">(THB)</span>
+                                <span class="required">(<span class="currency"></span>)</span>
                             </label>
                         </fieldset>
                     </div>

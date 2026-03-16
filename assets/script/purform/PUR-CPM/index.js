@@ -7,6 +7,7 @@ import {
     logFormData,
     ordinalIndicator,
     filterFormData,
+    setRound,
 } from "@amec/webasset/utils";
 import { webflowSubmit } from "@amec/webasset/components/form";
 import { formSubmitSkeleton } from "@amec/webasset/skeleton";
@@ -20,7 +21,7 @@ import { searchUser, getUser } from "@amec/webasset/api/amec";
 import select2 from "select2";
 
 import { setSelect2 } from "@amec/webasset/select2";
-import { create, getData } from "./data";
+import { create, getCurrency, getData } from "./data";
 import { formatDate } from "@amec/webasset/dayjs";
 import { downloadOrOpenFile } from "@amec/webasset/api/file";
 import { classIcofont } from "@amec/webasset/fileExplorer";
@@ -31,17 +32,17 @@ var formInfo,
     form,
     allUser,
     requiredMessage = [];
+const listCurrS2 = ["curr-total", "curr-invoice", "curr-payment"];
 
-//prettier-ignore
 $(async function () {
     try {
         select2();
         let flow = {};
 
-        formInfo = await getAllAttr(".form-info");  // get form info from html attribute
+        formInfo = await getAllAttr(".form-info"); // get form info from html attribute
         mode = Number(formInfo.mode); // get mode
         empno = $(".apv-data").attr("empno"); // get employee number
-        if(mode != 1){
+        if (mode != 1) {
             form = {
                 NFRMNO: formInfo.nfrmno,
                 VORGNO: formInfo.vorgno,
@@ -51,15 +52,32 @@ $(async function () {
             };
             flow = await showflow(form);
             const formDetailHtml = await setformDetail(form);
-            $('#section-0').html(formDetailHtml);
+            $("#section-0").html(formDetailHtml);
             await setView(flow);
-        }else{
+        } else {
             const dragdropField = dragDropInit({
-                class: 'req'
+                class: "req",
             });
             setDatePicker();
-            $('#attachFile').html(dragdropField);
-            $('#INPUTBY').val(empno);
+            const curr = await getCurrency();
+            const currData = curr.map((c) => ({
+                value: c.CCURNAME,
+                text: c.CCURNAME,
+            }));
+            for (const id of listCurrS2) {
+                await setSelect2({
+                    id: id,
+                    data: currData,
+                    size: "sm",
+                    placeholder: "BTH",
+                    search: false,
+                    clear: false,
+                    emptyValue: false,
+                });
+            }
+
+            $("#attachFile").html(dragdropField);
+            $("#INPUTBY").val(empno);
         }
         // set skeleton
         await setSkeleton(mode);
@@ -67,21 +85,41 @@ $(async function () {
         let flowsubmit = "";
         switch (mode) {
             case 1:
-                flowsubmit = webflowSubmit({ request: true })
+                flowsubmit = webflowSubmit({ request: true });
                 break;
             case 2:
-                flowsubmit = webflowSubmit({ flow: true, flowhtml: flow.html, approve: true, reject: true });
+                flowsubmit = webflowSubmit({
+                    flow: true,
+                    flowhtml: flow.html,
+                    approve: true,
+                    reject: true,
+                });
                 break;
             default:
-                flowsubmit = webflowSubmit({ flow: true, flowhtml: flow.html, actionsForm: false});
+                flowsubmit = webflowSubmit({
+                    flow: true,
+                    flowhtml: flow.html,
+                    actionsForm: false,
+                });
                 break;
         }
         $("#btnAction").html(flowsubmit);
-        allUser = await searchUser({CSTATUS: '1'});
+        allUser = await searchUser({ CSTATUS: "1" });
     } catch (error) {
         console.error("Error initializing the form:", error);
         showErrorMessage(error.message);
         showMessage("Cannot load form data", "error");
+    }
+});
+
+$(document).on("select2:select", ".select-currency", function () {
+    const value = $(this).val();
+    for (const id of listCurrS2) {
+        if (!$("#" + id).is(this)) {
+            $("#" + id)
+                .val(value.toUpperCase())
+                .trigger("change");
+        }
     }
 });
 
@@ -280,6 +318,7 @@ $(document).on('click', '#btnRequest', async function () {
         formData.append("VORGNO", formInfo.vorgno);
         formData.append("CYEAR", formInfo.cyear);
         formData.append("REMARK", $('#remark').val());
+        formData.set('CURRENCY', $('#curr-payment').val());
         
         
         // กรองเฉพาะ field ที่มีค่า
@@ -436,6 +475,7 @@ async function setView(flow) {
                 }
             }
         });
+        $('.currency').text(data.CURRENCY);
         $('#SUBJECT').text(data.SUBJECT || '-');
         $('input[name="ACCEPT_PO"][value="' + data.ACCEPT_PO + '"]').prop("checked",true);
         $('#ACCEPT_SUBCON').text(data.ACCEPT_SUBCON || '-');
@@ -444,14 +484,14 @@ async function setView(flow) {
         $('#PONO').text(data.PONO || '-');
         // $('#PO_SIGNBY').text(data.PO_SIGNBY || '-');
         $('#QUOTATION_DATE').text(data.QUOTATION_DATE ? formatDate(data.QUOTATION_DATE) : '-');
-        $('#TOTAL_AMOUNT').text(data.TOTAL_AMOUNT || '0');
+        $('#TOTAL_AMOUNT').text(setRound(data.TOTAL_AMOUNT) || '0');
         // $('#PO_SIGNDATE').text(data.PO_SIGNDATE ? formatDate(data.PO_SIGNDATE) : '-');
         // $('input[name="FORM_TYPE"][value="' + data.FORM_TYPE + '"]').prop("checked",true,);
         $('#INVOICE_NO').text(data.INVOICE_NO || '-');
-        $('#INVOICE_AMOUNT').text(data.INVOICE_AMOUNT || '0');
+        $('#INVOICE_AMOUNT').text(setRound(data.INVOICE_AMOUNT) || '0');
         $('#PERSON_INCHARGE').text(data.PERSON_INCHARGE || '-');
         $('#INVOICE_DATE').text(data.INVOICE_DATE ? formatDate(data.INVOICE_DATE) : '-');
-        $('#PAYMENT').text(data.PAYMENT || '0');
+        $('#PAYMENT').text(setRound(data.PAYMENT) || '0');
         $('#PAYMENT_DETAIL').text(data.PAYMENT_DETAIL || '-');
         $('#attach-other').removeClass('hidden');
         $('input[name="PAYMENT_TYPE"]').each(function(){
