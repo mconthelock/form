@@ -1473,9 +1473,325 @@ function bindEvents() {
       await loadDispatch();
     } catch (error) {
       console.error(error);
-      showMessage(error?.message || "เกิดข้อผิดพลาดในการย้ายสายรถ", "error");
+      showMessage(error?.message || "เกิดข้อผิดพลาดในการบันทึกข้อมูล", "error");
+    }
+  });
+
+  function getSelectedAddPassengerStop() {
+    const selectedId = $("#apStopId").val();
+    return (state.addPassengerStops.find( (item) => String(item.id) === String(selectedId)) || null);
+  }
+
+  $(document).on("change", "#apStopId", function () {
+    const selectedId = $(this).val();
+    const item = state.addPassengerStops.find((x) => String(x.id) === String(selectedId));
+    if (!item) return;
+    $("#apLineId").val(String(item.busid)).trigger("change.select2");
+  });
+
+  //=============== Report ===============
+
+function formatPlanTime(time) {
+  if (!time) return "-";
+  const t = String(time).padStart(4, "0");
+  return t.length === 4 ? `${t.slice(0, 2)}:${t.slice(2, 4)}` : t;
+}
+
+// =========================
+// 1) export คนที่จัดรถ
+// =========================
+async function exportBusDailyExcel(dispatchId) {
+  const res = await reportBusDaily({ dispatch_id: String(dispatchId) });
+  if (!res?.status) {
+    throw new Error(res?.message || "ไม่สามารถดึงข้อมูลรายงานจัดรถได้");
+  }
+
+  const rows = Array.isArray(res.rows) ? res.rows : [];
+  if (!rows.length) {
+    throw new Error("ไม่พบข้อมูลรายชื่อผู้ที่จัดรถ");
+  }
+
+  const excelRows = [];
+  let no = 1;
+
+  // group ตามสายรถ
+  const grouped = rows.reduce((acc, row) => {
+    const busName =
+      row.bus_name ||
+      row.BUSNAME ||
+      row.line_name ||
+      row.busline_name ||
+      "ไม่ระบุสายรถ";
+
+    if (!acc[busName]) acc[busName] = [];
+    acc[busName].push(row);
+    return acc;
+  }, {});
+
+  Object.entries(grouped).forEach(([busName, list]) => {
+    excelRows.push({
+      NO: "",
+      EMPNO: "",
+      FULLNAME: `สายรถ : ${busName}`,
+      DEPT: "",
+      STOP_NAME: "",
+      PLAN_TIME: "",
+      __isGroup: true,
+    });
+
+    list.forEach((row) => {
+      excelRows.push({
+        NO: no++,
+        EMPNO: row.empno || row.EMPNO || "",
+        FULLNAME: row.fullname || row.FULLNAME || row.stname || row.STNAME || "",
+        DEPT: row.dept || row.DEPT || row.sdept || row.SDEPT || "",
+        STOP_NAME: row.stop_name || row.STOP_NAME || "",
+        PLAN_TIME: formatPlanTime(row.plan_time || row.PLAN_TIME),
+        __isGroup: false,
+      });
+    });
+
+    // เว้นบรรทัดแต่ละกลุ่ม
+    excelRows.push({
+      NO: "",
+      EMPNO: "",
+      FULLNAME: "",
+      DEPT: "",
+      STOP_NAME: "",
+      PLAN_TIME: "",
+      __isBlank: true,
+    });
+  });
+
+  // ตัด blank row ท้ายสุดออก
+  while (excelRows.length && excelRows[excelRows.length - 1].__isBlank) { excelRows.pop(); }
+
+  const workbook = await defaultExcel({
+    data: excelRows.map((row) => ({
+      NO: row.NO,
+      EMPNO: row.EMPNO,
+      FULLNAME: row.FULLNAME,
+      DEPT: row.DEPT,
+      STOP_NAME: row.STOP_NAME,
+      PLAN_TIME: row.PLAN_TIME,
+    })),
+
+    column: [
+      { key: "NO", header: "No" },
+      { key: "EMPNO", header: "รหัส" },
+      { key: "FULLNAME", header: "ชื่อ-นามสกุล / สายรถ" },
+      { key: "DEPT", header: "แผนก" },
+      { key: "STOP_NAME", header: "จุดลง" },
+      { key: "PLAN_TIME", header: "เวลา" },
+    ],
+
+    sheetName: "Bus Daily", manual: true, autoWidth: false,
+    manualActions: (sheet) => {
+      sheet.insertRow(1, [res.title || "รายงานผู้ที่จัดรถ"]);
+      sheet.insertRow(2, [`Update : ${today}`]);
+      sheet.insertRow(3, []);
+
+      mergeCell(sheet, 1, 1, 1, 6);
+      mergeCell(sheet, 2, 1, 2, 6);
+
+      applyStyleToRange(sheet, 1, 6, 1, {
+        font: { bold: true, size: 16 },
+        alignment: alignment("center", "middle"),
+      });
+
+      applyStyleToRange(sheet, 1, 6, 2, {
+        font: { bold: true, size: 14 },
+        alignment: alignment("center", "middle"),
+      });
+
+      applyStyleToRange(sheet, 1, 6, 4, {
+        font: { bold: true, size: 13 },
+        alignment: alignment("center", "middle"),
+        border: border(),
+      });
+
+      sheet.getColumn(1).width = 6;
+      sheet.getColumn(2).width = 12;
+      sheet.getColumn(3).width = 32;
+      sheet.getColumn(4).width = 20;
+      sheet.getColumn(5).width = 24;
+      sheet.getColumn(6).width = 12;
+
+      const dataStartRow = 5;
+      sheet.eachRow((row, rowNumber) => {
+        if (rowNumber < 4) return;
+        row.eachCell((cell, colNumber) => {
+          cell.font = { ...cell.font, size: 12 };
+          cell.alignment = {
+            vertical: "middle",
+            horizontal: "center",
+            wrapText: true,
+          };
+          cell.border = border();
+
+          if (colNumber === 3 && rowNumber >= dataStartRow) {
+            cell.alignment = {
+              vertical: "middle",
+              horizontal: "left",
+              wrapText: true,
+              indent: 1,
+            };
+          }
+        });
+      });
+
+      // style group row
+      excelRows.forEach((item, index) => {
+        const rowNo = index + 5; // header table อยู่ row 4, data เริ่ม row 5
+        if (item.__isGroup) {
+          mergeCell(sheet, rowNo, 3, rowNo, 6);
+
+          for (let c = 1; c <= 6; c++) {
+            const cell = sheet.getRow(rowNo).getCell(c);
+            cell.font = { bold: true, size: 12 };
+            cell.border = border();
+            cell.alignment = alignment("left", "middle");
+          }
+        }
+
+        if (item.__isBlank) {
+          for (let c = 1; c <= 6; c++) {
+            const cell = sheet.getRow(rowNo).getCell(c);
+            cell.border = border();
+          }
+        }
+      });
+    },
+  });
+  exportExcel(workbook, `bus_daily_${dispatchId}`);
+}
+
+// =========================
+// 2) export คนที่ไม่ได้จัดรถ
+// =========================
+async function exportDisabledPassengerExcel(dispatchId) {
+  const res = await reportDisabledPassengerDaily({ dispatch_id: String(dispatchId) });
+  if (!res?.status) {throw new Error(res?.message || "ไม่สามารถดึงข้อมูลรายงานผู้ไม่ได้จัดรถได้"); }
+  const rows = Array.isArray(res.rows) ? res.rows : [];
+  const selectedDateText = getSelectedDispatchCondition();
+  const workbook = await defaultExcel({
+    data: rows.map((row, i) => ({
+      NO: row.no ?? i + 1,
+      EMPNO: row.empno || "",
+      FULLNAME: row.fullname || "",
+      SEC: row.sec || "",
+      DEPT: row.dept || "",
+      DIV: row.div || "",
+      STOP_NAME: row.stop_name || "",
+      PLAN_TIME: selectedDateText.time,
+    })),
+
+    column: [
+      { key: "NO", header: "No" },
+      { key: "EMPNO", header: "รหัส" },
+      { key: "FULLNAME", header: "ชื่อ-นามสกุล" },
+      { key: "SEC", header: "SEC" },
+      { key: "DEPT", header: "DEPT" },
+      { key: "DIV", header: "DIV" },
+      { key: "STOP_NAME", header: "จุดรถ" },
+      { key: "PLAN_TIME", header: "เวลากลับ" },
+    ],
+
+    sheetName: "Disabled Passenger", manual: true, autoWidth: false,
+    manualActions: (sheet) => {
+      sheet.insertRow(1, ["รายชื่อผู้ที่ไม่สามารถจัดรถรับส่งได้"]);
+      sheet.insertRow(2, [`ประจำวันที่ : ${selectedDateText.date}`]);
+      sheet.insertRow(3, []);
+      mergeCell(sheet, 1, 1, 1, 8);
+      mergeCell(sheet, 2, 1, 2, 8);
+      applyStyleToRange(sheet, 1, 8, 1, {
+        font: { bold: true, size: 16 },
+        alignment: alignment("center", "middle"),
+      });
+
+      applyStyleToRange(sheet, 1, 8, 2, {
+        font: { bold: true, size: 14 },
+        alignment: alignment("center", "middle"),
+      });
+
+      applyStyleToRange(sheet, 1, 8, 4, {
+        font: { bold: true, size: 13 },
+        alignment: alignment("center", "middle"),
+        border: border(),
+      });
+
+      sheet.getColumn(1).width = 6;   // NO
+      sheet.getColumn(2).width = 12;  // EMPNO
+      sheet.getColumn(3).width = 30;  // FULLNAME
+      sheet.getColumn(4).width = 16;  // SEC
+      sheet.getColumn(5).width = 18;  // DEPT
+      sheet.getColumn(6).width = 18;  // DIV
+      sheet.getColumn(7).width = 24;  // STOP_NAME
+      sheet.getColumn(8).width = 12;  // PLAN_TIME
+      sheet.eachRow((row, rowNumber) => {
+        if (rowNumber >= 4) {
+          row.eachCell((cell, colNumber) => {
+            cell.font = { ...cell.font, size: 12 };
+            cell.alignment = {
+              vertical: "middle",
+              horizontal: "center",
+              wrapText: true,
+            };
+
+            if (colNumber === 3 && rowNumber >= 5) {
+              cell.alignment = {
+                vertical: "middle",
+                horizontal: "left",
+                wrapText: true,
+                indent: 1,
+              };
+            }
+            cell.border = border();
+          });
+        }
+      });
+    },
+  });
+  exportExcel(workbook, `disabled_passenger_${dispatchId}`);
+}
+
+// =========================
+// click export 2 files
+// =========================
+  $("#btnExportDispatch").on("click", async function () {
+    try {
+      await showLoader({ show: true });
+      const dispatchId = state?.head?.dispatch_id || state?.dispatch_id;
+      if (!dispatchId) {
+        showMessage("ไม่พบ แผนการจัดรถที่เลือก", "warning");
+        return;
+      }
+
+      await exportBusDailyExcel(dispatchId);
+      //await exportDisabledPassengerExcel(dispatchId);
+
+      showMessage("Export Excel สำเร็จ", "success");
+    } catch (err) {
+      console.error(err);
+      showMessage(err.message || "Export ไม่สำเร็จ", "error");
     } finally {
       await showLoader({ show: false });
     }
   });
+
+
+  function getSelectedDispatchCondition() {
+    const dateVal = $("#dd_workdate").val();
+    const [y, m, d] = dateVal.split("-");
+    const dateText =  `${d}/${m}/${y}`;
+    const text = $("#dd_type option:selected").text().trim();
+    const match = text.match(/\d{2}\.\d{2}/);
+    const time = match ? match[0] : "";
+    return {
+      date: dateText,
+      time: time,
+    };
+  }
+
+
 }
