@@ -1,4 +1,4 @@
-import { fetchMsgErr, serializeRequestBody } from "@amec/webasset/api/fetch-utils";
+import { fetchMsgErr, fetchUtils, serializeRequestBody } from "@amec/webasset/api/fetch-utils";
 
 /**
  * Create PUR-CPM form
@@ -149,4 +149,11 @@ export async function getData(form) {
     }
     const data = await res.json();
     return data;
+}
+
+export async function getCurrency(){
+    return fetchUtils({
+        url: `${process.env.APP_API}/amec/brcurrency/currency`,
+        method: "GET",
+    });
 }
