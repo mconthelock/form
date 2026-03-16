@@ -470,6 +470,7 @@ $(document).on("click", ".btn-delete-line", async function (e) {
 	}
 });
 
+
 $(document).on("click", "#btnExportRoute", async function (e) {
 	e.preventDefault();
 	try {
