@@ -43,13 +43,27 @@ $(document).ready(async function () {
 		await showRouteDetail(route);
 	}
 
-	const exportBtn = await createBtn({
-		id: "btnExportRoute",
-		title: "Export Transportation Route",
+	const exportBtn_day = await createBtn({
+		id: "btn-export-day",
+		title: "รายงานตารางรถ (วันทำงาน)",
 		icon: "fi fi-tr-file-pdf text-lg",
 		className: "btn-warning text-white",
 	});
-	$("#btn-container").html(`<div class="flex gap-2">${exportBtn}</div>`);
+
+	const exportBtn_Holiday = await createBtn({
+		id: "btn-export-holiday",
+		title: "รายงานตารางรถ (วันหยุด)",
+		icon: "fi fi-tr-file-pdf text-lg",
+		className: "bg-indigo-500 hover:bg-indigo-600 text-white",
+	});
+
+	// 👉 รวม container เดียวแล้วจัด spacing ทีเดียว
+	$("#btn-export-day").parent().html(`
+		<div class="flex gap-4 mt-2">
+			${exportBtn_day}
+			${exportBtn_Holiday}
+		</div>
+	`);
 
 	await showLoader({ show: false });
 });
@@ -470,47 +484,68 @@ $(document).on("click", ".btn-delete-line", async function (e) {
 	}
 });
 
-
-$(document).on("click", "#btnExportRoute", async function (e) {
+$(document).on("click", "#btn-export-day", async function (e) {
 	e.preventDefault();
 	try {
 		await activatedBtn($(this));
+		await exportBusRoutePdf({timeField: "WORKDAY_TIMEIN",fileName: "bus_route_day.pdf",});
+	} finally {
+		await activatedBtn($(this), false);
+	}
+});
+
+$(document).on("click", "#btn-export-holiday", async function (e) {
+	e.preventDefault();
+	try {
+		await activatedBtn($(this));
+		await exportBusRoutePdf({timeField: "HOLIDAY_TIMEIN",fileName: "bus_route_holiday.pdf",});
+	} finally {
+		await activatedBtn($(this), false);
+	}
+});
+
+
+async function exportBusRoutePdf({timeField = "WORKDAY_TIMEIN",fileName = "bus_route_day.pdf",}) {
+	try {
 		const lines = await getLine();
 		const routes = await getRoute();
 		const stops = await getStop();
 		const stopMap = {};
 		stops
-			.filter((s) => s.STOP_STATUS === "1")
-			.forEach((s) => (stopMap[s.STOP_ID] = s));
+			.filter((s) => String(s.STOP_STATUS) === "1")
+			.forEach((s) => {
+				stopMap[s.STOP_ID] = s;
+			});
 
 		const routeMap = {};
 		routes
-			.filter((r) => r.STATENO === 1)
+			.filter((r) => Number(r.STATENO) === 1)
 			.forEach((r) => {
 				const stop = stopMap[r.STOPNO];
-				if (stop) {
-					if (!routeMap[r.BUSLINE]) {
-						routeMap[r.BUSLINE] = [];
-					}
-					routeMap[r.BUSLINE].push({
-						time: stop.WORKDAY_TIMEIN,
-						name: stop.STOP_NAME,
-					});
+				if (!stop) return;
+
+				if (!routeMap[r.BUSLINE]) {
+					routeMap[r.BUSLINE] = [];
 				}
+
+				routeMap[r.BUSLINE].push({
+					time: stop[timeField],
+					name: stop.STOP_NAME,
+				});
 			});
 
-		// 🔥 เรียงตามเวลา
 		Object.keys(routeMap).forEach((busId) => {
 			routeMap[busId].sort(
-				(a, b) => parseInt(a.time || 9999) - parseInt(b.time || 9999),
+				(a, b) => parseInt(a.time || "9999", 10) - parseInt(b.time || "9999", 10),
 			);
+
 			routeMap[busId] = routeMap[busId].map(
 				(s) => `${formatTime4Digit(s.time)} ${s.name}`,
 			);
 		});
 
 		const allData = lines
-			.filter((l) => l.BUSSTATUS === "1")
+			.filter((l) => String(l.BUSSTATUS) === "1")
 			.sort((a, b) => a.BUSNAME.localeCompare(b.BUSNAME, "th"))
 			.map((l) => ({
 				line: l.BUSNAME,
@@ -518,17 +553,15 @@ $(document).on("click", "#btnExportRoute", async function (e) {
 				stops: routeMap[l.BUSID] || [],
 			}));
 
-		const busData = allData.filter((d) => d.type === "1");
-		const vanData = allData.filter((d) => d.type === "2");
+		const busData = allData.filter((d) => String(d.type) === "1");
+		const vanData = allData.filter((d) => String(d.type) === "2");
 		const html = buildBusRouteHtml(busData, vanData);
 		const path_file = "//amecnas/AMECWEB/file/development/test/OMG/";
-		const file_name = "BUS.pdf";
-		let pdf;
 		try {
-			pdf = await generatePdf({
-				html: html,
+			await generatePdf({
+				html,
 				options: {
-					path: path_file + file_name,
+					path: path_file + fileName,
 					printBackground: true,
 					landscape: true,
 					format: "A3",
@@ -545,19 +578,18 @@ $(document).on("click", "#btnExportRoute", async function (e) {
 			showMessage("เกิดข้อผิดพลาดในการสร้างรายงาน", "error");
 			return;
 		}
+
 		await downloadOrOpenFile({
 			baseDir: path_file,
-			storedName: file_name,
-			originalName: file_name,
+			storedName: fileName,
+			originalName: fileName,
 			mode: "open",
 		});
 	} catch (error) {
 		console.error(error);
 		await showMessage("Something went wrong.");
-	} finally {
-		await activatedBtn($(this), false);
 	}
-});
+}
 
 function formatTime4Digit(value) {
 	if (!value) return "-";
