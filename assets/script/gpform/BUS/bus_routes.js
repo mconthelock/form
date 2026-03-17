@@ -546,6 +546,7 @@ async function exportBusRoutePdf({timeField = "WORKDAY_TIMEIN",fileName = "bus_r
 
 		const allData = lines
 			.filter((l) => String(l.BUSSTATUS) === "1")
+			.filter((l) => Number(l.BUSID) !== 999)
 			.sort((a, b) => a.BUSNAME.localeCompare(b.BUSNAME, "th"))
 			.map((l) => ({
 				line: l.BUSNAME,
