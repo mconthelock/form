@@ -35,10 +35,14 @@ export const dispatchMoveStop = (data) => callAPI("/bus/dispatch/move-stop", "PO
 export const disableDispatchPassenger  = (data) => callAPI("/bus/dispatch/disable-passenger", "POST", data);
 export const deleteLineDispatch  = (data) => callAPI("/bus/dispatch/delete-linedispatch", "POST", data);
 export const saveAddPassenger  = (data) => callAPI("/bus/dispatch/save-add-passenger", "POST", data);
+export const updateStatusHead  = (data) => callAPI("/bus/dispatch/update-status", "POST", data);
 
 // ===== REPORT =====
 export const reportBusDaily = (data) => callAPI("/bus/dispatch/report-bus-daily", "POST", data);
 export const reportDisabledPassengerDaily = (data) => callAPI("/bus/dispatch/report-disabled-passenger-daily", "POST", data);
+
+export const updatePassengerStatus = (data) => callAPI("/bus/dispatch/update-passenger-status", "POST", data);
+
 
 // ===== GET ===========
 export const getUserbyemp = (empno) => callAPI(`/users/${encodeURIComponent(empno)}`, "GET");

@@ -11,7 +11,7 @@ import {
   dispatchGetDispatch, dispatchMoveStop, disableDispatchPassenger,
   getUserbyemp, deleteLineDispatch,
   getLine, getStopRoutes,
-  saveAddPassenger, reportBusDaily, reportDisabledPassengerDaily
+  saveAddPassenger, reportBusDaily, reportDisabledPassengerDaily,updatePassengerStatus
 } from "./data.js";
 import { initApp, tableOption } from "../../utils.js";
 import { exportExcel, defaultExcel, mergeCell, applyStyleToRange, alignment, border,} from "@amec/webasset/excel";
@@ -33,6 +33,19 @@ import { exportExcel, defaultExcel, mergeCell, applyStyleToRange, alignment, bor
     btnAddPassenger: "#btnAddPassenger",
     btnSaveDispatch: "#btnSaveDispatch",
     passengerSearch: "#txtPassengerSearch",
+
+    // NEW
+    btnShowDisabledPassenger: "#btnShowDisabledPassenger",
+    disabledPassengerModal: "#disabled_passenger_modal",
+    tblDisabledPassenger: "#tblDisabledPassenger",
+
+    moveDisabledPassengerModal: "#move_disabled_passenger_modal",
+    mdpEmpno: "#mdpEmpno",
+    mdpEmpnoText: "#mdpEmpnoText",
+    mdpFullname: "#mdpFullname",
+    mdpLineId: "#mdpLineId",
+    mdpStopId: "#mdpStopId",
+    btnSaveMoveDisabledPassenger: "#btnSaveMoveDisabledPassenger",
   };
 
   const state = {
@@ -43,11 +56,18 @@ import { exportExcel, defaultExcel, mergeCell, applyStyleToRange, alignment, bor
     selectedStop: null,
     addPassengerLines: [],
     addPassengerStops: [],
+
+    // NEW
+    disabledPassengers: [],
+    disabledPassengerLines: [],
+    disabledPassengerStops: [],
+    selectedDisabledPassenger: null,
   };
 
   let tableLine;
   let tableStop;
   let tablePassenger;
+  let tableDisabledPassenger;
   let login_empno = null;
 
   $(document).ready(async function () {
@@ -103,6 +123,30 @@ import { exportExcel, defaultExcel, mergeCell, applyStyleToRange, alignment, bor
       dispatch_type: "O",
       shift: mapShift($(dom.type).val()),
     };
+  }
+
+  function isDispatchFinalized() {
+    return String(state.head?.status || "").toUpperCase() === "F";
+  }
+
+  function getDisabledButtonClass(disabled) {
+    return disabled ? "bg-gray-300 text-gray-500 cursor-not-allowed opacity-70" : "";
+  }
+
+  function syncActionButtonsState() {
+    const disabled = isDispatchFinalized();
+
+     $(dom.btnAddPassenger)
+    .prop("disabled", disabled)
+    .toggleClass("bg-gray-300 text-gray-500 opacity-70", disabled)
+    .toggleClass("cursor-not-allowed", disabled)
+    .toggleClass("hover:bg-gray-300", disabled)
+    .toggleClass("bg-blue-600 text-white cursor-pointer", !disabled);
+
+      
+    $(".btn-delete-line, .btn-move-stop, .btn-delete-passenger")
+  .prop("disabled", disabled)
+  .toggleClass("bg-gray-300 text-gray-500 cursor-not-allowed opacity-70", disabled);
   }
 
   function setSelectedLineLabel(line) {
@@ -209,7 +253,10 @@ import { exportExcel, defaultExcel, mergeCell, applyStyleToRange, alignment, bor
         width: "50",
         orderable: false,
         render: function (data, type, row) {
-          return `<button class="btn-delete-line px-3 py-1 text-xs bg-red-100 text-red-700 rounded hover:bg-red-200 cursor-pointer" data-busid="${row.busid}">ลบ</button> `;
+          const disabled = isDispatchFinalized();
+          return `<button class="btn-delete-line px-3 py-1 text-xs bg-red-100 text-red-700 rounded hover:bg-red-200 cursor-pointer" 
+          data-busid="${row.busid}" 
+          ${disabled ? 'disabled style="cursor:not-allowed !important;"' : ""}>ลบ</button> `;
         },
       },
     ];
@@ -223,7 +270,7 @@ import { exportExcel, defaultExcel, mergeCell, applyStyleToRange, alignment, bor
     const sortedData = [...(data || [])].sort((a, b) => {
       const t1 = parseInt(a.plan_time || "9999", 10);
       const t2 = parseInt(b.plan_time || "9999", 10);
-      return t1 - t2;
+      return t2 - t1; // เรียงจากมากไปน้อย 
     });
     const opt = { ...tableOption };
     opt.data = sortedData;
@@ -235,30 +282,17 @@ import { exportExcel, defaultExcel, mergeCell, applyStyleToRange, alignment, bor
       {
         data: "stop_name", title: "จุดรถ", defaultContent: "-",
       },
-      /*
-      {
-        data: "plan_time", title: "เวลา",
-        className: "text-center",
-        width: "90px",
-        defaultContent: "-",
-        render: function (data) {
-          if (!data) return "-";
-          const t = data.toString();
-          if (t.length === 4) {
-            return t.slice(0, 2) + ":" + t.slice(2, 4);
-          }
-          return t;
-        },
-      },*/
       {
         data: null, title: "จัดการ", className: "text-center", width: "80px", orderable: false,
         render: function (data, type, row) {
+          const disabled = isDispatchFinalized();
           return `
             <button
               class="btn-move-stop px-3 py-1 text-xs bg-amber-100 text-amber-700 rounded hover:bg-amber-400 cursor-pointer"
               data-stop-id="${row.stop_id}"
               data-stop-name="${row.stop_name || ""}"
               data-plan-time="${row.plan_time || ""}"
+              ${disabled ? 'disabled style="cursor:not-allowed !important;"' : ""}
             >
               แก้ไข
             </button>
@@ -332,11 +366,13 @@ import { exportExcel, defaultExcel, mergeCell, applyStyleToRange, alignment, bor
         width: "50px",
         orderable: false,
         render: function (data, type, row) {
+          const disabled = isDispatchFinalized();
           return `
             <button
               class="btn-delete-passenger px-3 py-1 text-xs bg-red-100 text-red-700 rounded hover:bg-red-200 cursor-pointer"
               data-empno="${row.empno || ""}"
               data-name="${row.thainame || ""}"
+              ${disabled ? 'disabled style="cursor:not-allowed !important;"' : ""}
             >
               ลบ
             </button>
@@ -408,16 +444,16 @@ import { exportExcel, defaultExcel, mergeCell, applyStyleToRange, alignment, bor
     await selectStop(found.stop, stopRowIndex >= 0 ? stopRowIndex : null);
   }
 
-$(dom.passengerSearch).on("input", async function () {
-  const keyword = $(this).val();
+  $(dom.passengerSearch).on("input", async function () {
+    const keyword = $(this).val();
 
-  if (!String(keyword || "").trim()) {
-    await loadDispatch();
-    return;
-  }
+    if (!String(keyword || "").trim()) {
+      await loadDispatch();
+      return;
+    }
 
-  await jumpToPassengerSearch(keyword);
-});
+    await jumpToPassengerSearch(keyword);
+  });
 
   function clearRightSelection() {
     state.selectedLine = null;
@@ -465,6 +501,7 @@ $(dom.passengerSearch).on("input", async function () {
         const targetLine = state.lines[lineIndex];
         await selectLine(targetLine, lineIndex, preserveStopId);
       }
+      syncActionButtonsState();
     } catch (error) {
       console.error(error);
       showMessage(error?.message || "โหลดข้อมูลไม่สำเร็จ", "error");
@@ -513,13 +550,14 @@ $(dom.passengerSearch).on("input", async function () {
   async function selectStop(stop, rowIndex = null) {
     state.selectedStop = stop;
     setSelectedStopLabel(stop);
-    $(dom.btnAddPassenger).prop("disabled", false);
+    $(dom.btnAddPassenger).prop("disabled", isDispatchFinalized());
     await renderPassengerTable(stop.passengers || []);
 
     $(".stop-row").removeClass("stop-selected");
     if (rowIndex !== null && tableStop?.row(rowIndex).node()) {
       $(tableStop.row(rowIndex).node()).addClass("stop-selected");
     }
+    syncActionButtonsState();
   }
 
 function bindEvents() {
@@ -573,6 +611,7 @@ function bindEvents() {
 
   $(document).on("click", ".btn-move-stop", async function (e) {
     e.stopPropagation();
+    if (isDispatchFinalized()) return;
     const stopId = $(this).data("stop-id");
     const stopName = $(this).data("stop-name");
     const planTime = $(this).data("plan-time");
@@ -668,6 +707,7 @@ function bindEvents() {
 
   $(document).on("click", ".btn-delete-passenger", async function (e) {
     e.stopPropagation();
+    if (isDispatchFinalized()) return;
     const empno = String($(this).data("empno") || "").trim();
     const empName = String($(this).data("name") || "").trim();
     if (!state.head?.dispatch_id) {
@@ -720,6 +760,7 @@ function bindEvents() {
 
   $(document).on("click", ".btn-delete-line", async function (e) {
     e.stopPropagation();
+    if (isDispatchFinalized()) return;
     const busid = String($(this).data("busid") || "").trim();
     if (!state.head?.dispatch_id) {
       showMessage("ไม่พบ dispatch id", "warning");
@@ -756,7 +797,7 @@ function bindEvents() {
   
   $(document).on("click", "#btnAddPassenger", async function (e) {
     e.preventDefault();
-
+    if (isDispatchFinalized()) return;
     if (!state.head?.dispatch_id) {
       showMessage("ไม่พบ แผนการจัดรถปัจจุบันของ (วัน/เวลา)ที่เลือก", "warning");
       return;
@@ -1332,23 +1373,19 @@ function bindEvents() {
 
             passengers.forEach((p, index) => {
               const rowNo = currentRow + index;
-
               setCell(rowNo, col2, runningNo++);
               setCell(rowNo, col3, p.fullname || "-");
-
               const sec = String(p.sec || "").trim().toUpperCase();
               const dept = String(p.dept || "").trim();
               let department = dept;
               if (sec && sec !== "NO SECTION") { department = sec; }
 
               setCell(rowNo, col4, department || "-");
-
               styleCell(rowNo, col2, {
                 font: { size: 10 },
                 alignment: alignment("center", "middle"),
                 border: border(),
               });
-
               styleCell(rowNo, col3, {
                 font: { size: 10 },
                 alignment: {
@@ -1359,16 +1396,13 @@ function bindEvents() {
                 },
                 border: border(),
               });
-
               styleCell(rowNo, col4, {
                 font: { size: 10 },
                 alignment: alignment("center", "middle"),
                 border: border(),
               });
-
               sheet.getRow(rowNo).height = 18;
             });
-
             currentRow = stopEndRow + 1;
           });
 
@@ -1555,19 +1589,10 @@ function bindEvents() {
         showMessage("ไม่พบ แผนการจัดรถที่เลือก", "warning");
         return;
       }
-
-     
-      console.log("start export 1");
+  
       await exportBusDailyLayoutExcel(dispatchId);
-      console.log("finish export 1");
-
-      console.log("start export 2");
-      await exportBusDailyExcel(dispatchId);
-      console.log("finish export 2");
-
-      console.log("start export 3");
-      await exportDisabledPassengerExcel(dispatchId);
-      console.log("finish export 3");
+      //await exportBusDailyExcel(dispatchId);  // แนวตั้ง
+      //await exportDisabledPassengerExcel(dispatchId);
 
       showMessage("Export Excel สำเร็จ", "success");
     } catch (err) {
@@ -1576,6 +1601,224 @@ function bindEvents() {
     } finally {
       await showLoader({ show: false });
     }
+  });
+
+
+
+
+
+//======================================================================================================================
+  $(dom.btnShowDisabledPassenger).on("click", async function () {
+    if (!state.head?.dispatch_id) {
+      showMessage("ไม่พบแผนการจัดรถของวันที่/เวลาที่เลือก", "warning");
+      return;
+    }
+    await openDisabledPassengerModal();
+  });
+
+  async function openDisabledPassengerModal() {
+    await showLoader({ show: true });
+    try {
+      await loadDisabledPassengerList();
+      await renderDisabledPassengerTable(state.disabledPassengers);
+
+      const modal = document.querySelector(dom.disabledPassengerModal);
+      modal.showModal();
+    } catch (error) {
+      console.error(error);
+      showMessage(error?.message || "โหลดรายชื่อผู้ไม่ได้จัดรถไม่สำเร็จ", "error");
+    } finally {
+      await showLoader({ show: false });
+    }
+  }
+  
+ 
+  async function loadDisabledPassengerList() {
+    if (!state.head?.dispatch_id) {
+      showMessage("ไม่พบ dispatch id", "warning");
+      return;
+    }
+    const res = await reportDisabledPassengerDaily({
+      dispatch_id: String(state.head.dispatch_id),
+    });
+
+    if (!res?.status) {
+      throw new Error(res?.message || "โหลดข้อมูลผู้ไม่ได้จัดรถไม่สำเร็จ");
+    }
+    state.disabledPassengers = Array.isArray(res.rows) ? res.rows : [];
+  }
+
+  async function disabledPassengerOptions(data) {
+    const opt = { ...tableOption };
+    opt.data = data || [];
+    opt.searching = true;
+    opt.paging = true;
+    opt.info = true;
+    opt.ordering = true;
+    opt.columns = [
+      {
+        data: "empno",
+        title: "รหัส",
+        defaultContent: "-",
+      },
+      {
+        data: "fullname",
+        title: "ชื่อ",
+        defaultContent: "-",
+      },
+      {
+        data: "sec",
+        title: "SEC",
+        defaultContent: "-",
+      },
+      {
+        data: "dept",
+        title: "DEPT",
+        defaultContent: "-",
+      },
+      {
+        data: "div",
+        title: "DIV",
+        defaultContent: "-",
+      },
+      {
+        data: "stop_name",
+        title: "จุดรถ",
+        defaultContent: "-",
+      },
+      {
+        data: null,
+        title: "จัดการ",
+        className: "text-center",
+        orderable: false,
+        width: "180px",
+        render: function (data, type, row) {
+          const disabled = isDispatchFinalized();
+          return `
+            <div class="flex gap-2 justify-center">
+              <button
+                class="btn-enable-disabled-passenger px-3 py-1 text-xs bg-emerald-100 text-emerald-700 rounded hover:bg-emerald-200 cursor-pointer"
+                data-empno="${row.empno || ""}"
+                ${disabled ? 'disabled style="cursor:not-allowed !important;"' : ""}
+              >
+                คืนสถานะ
+              </button>
+
+            </div>
+          `;
+        },
+      },
+    ];
+
+    return opt;
+  }
+  
+  async function renderDisabledPassengerTable(data) {
+    if (tableDisabledPassenger) {
+      tableDisabledPassenger.destroy();
+      $(dom.tblDisabledPassenger).empty();
+    }
+    const opt = await disabledPassengerOptions(data);
+    tableDisabledPassenger = await createTable(opt, { id: dom.tblDisabledPassenger });
+  }
+
+  function findDisabledPassengerByEmpno(empno) {
+    return (state.disabledPassengers || []).find(
+      (item) => String(item.empno) === String(empno)
+    ) || null;
+  }
+
+  async function initDisabledPassengerLineSelect2(modal, selectedLineId = "") {
+    try {
+      const lines = await getLine();
+
+      const data = (lines || []).map((line) => {
+        const busid = line.busid ?? line.BUSID ?? "";
+        const busname = line.busname ?? line.BUSNAME ?? "";
+        const bustype = line.bustype ?? line.BUSTYPE ?? "";
+        const busseat = line.busseat ?? line.BUSSEAT ?? null;
+        const busstatus = line.busstatus ?? line.BUSSTATUS ?? "";
+
+        return {
+          id: String(busid),
+          text: `${busname || busid} (${bustype === "2" ? "Van" : "Bus"})`,
+          busid: String(busid),
+          busname: String(busname || ""),
+          bustype: String(bustype || ""),
+          busseat: busseat,
+          busstatus: String(busstatus || ""),
+        };
+      });
+
+      state.disabledPassengerLines = data;
+
+      await setSelect2({
+        element: dom.mdpLineId,
+        data,
+        dropdownParent: $(modal),
+        placeholder: "เลือกสายรถ",
+        destroy: true,
+      });
+
+      $(dom.mdpLineId).val(selectedLineId ? String(selectedLineId) : "").trigger("change");
+    } catch (error) {
+      console.error(error);
+      showMessage("โหลดข้อมูลสายรถไม่สำเร็จ", "error");
+    }
+  }
+
+  async function reloadDisabledPassengerStopByLine(modal, lineId, selectedValue = "") {
+    const filteredStops = (state.disabledPassengerStops || []).filter(
+      (item) => String(item.busid) === String(lineId)
+    );
+
+    await setSelect2({
+      element: dom.mdpStopId,
+      data: filteredStops,
+      dropdownParent: $(modal),
+      placeholder: "เลือกจุดรถ",
+      destroy: true,
+    });
+
+    $(dom.mdpStopId).val(selectedValue ? String(selectedValue) : "").trigger("change");
+  }
+
+
+  $(document).on("click", ".btn-enable-disabled-passenger", async function (e) {
+    e.preventDefault();
+    e.stopPropagation();
+    if (isDispatchFinalized()) return;
+    const empno = $(this).data("empno");
+    try {
+      const res = await updatePassengerStatus({
+        dispatch_id: String(state.head.dispatch_id),
+        empno: String(empno),
+        status: "E",
+        update_by: String(login_empno),
+      });
+
+      if (!res?.ok) {
+        showMessage(res?.message || "คืนสถานะไม่สำเร็จ", "warning");
+        return;
+      }
+
+      showMessage("คืนสถานะสำเร็จ", "success");
+
+      // reload ทั้งหน้า dispatch + modal
+      await loadDispatch();
+      await loadDisabledPassengerList();
+      await renderDisabledPassengerTable(state.disabledPassengers);
+
+    } catch (error) {
+      console.error(error);
+      showMessage(error?.message || "เกิดข้อผิดพลาด", "error");
+    }
+  });
+
+  $(document).on("change", dom.mdpLineId, async function () {
+    const modal = document.querySelector(dom.moveDisabledPassengerModal);
+    const lineId = $(this).val();
+    await reloadDisabledPassengerStopByLine(modal, lineId);
   });
 
 

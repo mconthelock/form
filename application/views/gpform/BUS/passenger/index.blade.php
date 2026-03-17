@@ -1,18 +1,38 @@
 @extends('layouts/template')
 @section('contents')
 <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-10">
-    <!-- TOP ACTION BAR -->
-    <div class="flex justify-end mb-4">
+    <div class="flex items-center justify-between mb-6">
+        <!-- LEFT: ICON + TITLE -->
+        <div class="flex items-center gap-4">
+            <div class="flex items-center justify-center w-16 h-16 
+                bg-gradient-to-br from-purple-100 to-purple-200 
+                rounded-2xl shadow-sm border border-purple-200">
+                <i class="fa-solid fa-users text-3xl text-purple-700"></i>
+            </div>
+
+            <div>
+                <h1 class="text-3xl font-bold text-gray-800 tracking-tight">
+                    หน้าจอจัดการรายชื่อพนักงานในสายรถ (รับ-ส่ง)
+                </h1>
+                <p class="text-sm text-gray-500 mt-1">
+                    (ข้อมูล Master ของรายชื่อพนักงานในสายรถ)
+                </p>
+            </div>
+        </div>
+
+        <!-- RIGHT: BUTTON -->
         <button id="btnExportPassenger"
-            class="bg-yellow-200 text-gray-600 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-gray-200 transition shadow-sm flex items-center gap-2 cursor-pointer">
+            class="bg-yellow-200 text-gray-700 px-4 py-2 rounded-lg text-sm font-semibold 
+                hover:bg-yellow-300 transition shadow-sm flex items-center gap-2 cursor-pointer">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" class="w-5 h-5">
                 <path fill="#21A366" d="M6 4h23v40H6z"/>
                 <path fill="#107C41" d="M29 4h13v40H29z"/>
                 <path fill="#fff"
                     d="M14 16l3.2 5.5L14 27h2.6l1.9-3.7L20.4 27H23l-3.2-5.5L23 16h-2.6l-1.9 3.7L16.6 16H14z"/>
             </svg>
-             Export Data Passenger
+            Export Data
         </button>
+
     </div>
 
     <div class="grid md:grid-cols-10 gap-6">
@@ -105,6 +125,7 @@
 @endsection
 
 @section('styles')
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
     #line_emp_table tbody tr.line-selected {
         background-color: #dbeafe !important; /* ฟ้าอ่อน */

@@ -42,7 +42,12 @@
                 <path fill="#107C41" d="M29 4h13v40H29z"/>
                 <path fill="#fff" d="M14 16l3.2 5.5L14 27h2.6l1.9-3.7L20.4 27H23l-3.2-5.5L23 16h-2.6l-1.9 3.7L16.6 16H14z"/>
             </svg>
-             Export Data Passenger
+             Export Passenger
+        </button>
+
+        <button id="btnShowDisabledPassenger"
+          class="px-4 py-2 rounded-lg bg-rose-600 text-white text-sm font-semibold cursor-pointer">
+          รายชื่อพนักงานที่ไม่ได้จัดรถ
         </button>
     </div>
   </div>
@@ -100,6 +105,65 @@
     
   </div>
 </div>
+
+
+
+
+<dialog id="disabled_passenger_modal" class="modal">
+  <div class="modal-box max-w-7xl relative">
+    <form method="dialog">
+      <button
+        class="btn btn-sm btn-circle btn-ghost absolute right-3 top-3"
+        aria-label="Close"
+      >
+        ✕
+      </button>
+    </form>
+
+    <h3 class="font-bold text-lg mb-4">รายชื่อพนักงานที่ไม่ได้จัดรถ</h3>
+
+    <table id="tblDisabledPassenger" class="display w-full"></table>
+  </div>
+</dialog>
+
+<dialog id="move_disabled_passenger_modal" class="modal">
+  <div class="modal-box max-w-lg">
+    <h3 class="font-bold text-lg mb-4">ย้ายสายรถผู้โดยสาร</h3>
+
+    <input type="hidden" id="mdpEmpno" />
+
+    <div class="space-y-3">
+      <div>
+        <label class="block text-sm font-medium mb-1">รหัสพนักงาน</label>
+        <input id="mdpEmpnoText" type="text" class="input input-bordered w-full" readonly />
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium mb-1">ชื่อ</label>
+        <input id="mdpFullname" type="text" class="input input-bordered w-full" readonly />
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium mb-1">สายรถ <b style="color:red">*</b></label>
+        <select id="mdpLineId" class="select select-bordered w-full"></select>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium mb-1">จุดรถ <b style="color:red">*</b></label>
+        <select id="mdpStopId" class="select select-bordered w-full"></select>
+      </div>
+    </div>
+
+    <div class="modal-action">
+      <button id="btnSaveMoveDisabledPassenger" class="btn btn-primary">บันทึก</button>
+      <form method="dialog">
+        <button class="btn">ยกเลิก</button>
+      </form>
+    </div>
+  </div>
+</dialog>
+
+
 <dialog id="move_stop_modal" class="modal">
   <div class="modal-box max-w-md">
     <h3 class="font-bold text-lg mb-4">จัดการจุดรถ</h3>
@@ -193,6 +257,7 @@
 
 
 @section('styles')
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
 /* =========================
    CARD / PANEL

@@ -1,10 +1,24 @@
 @extends('layouts/template')
 @section('contents')
 <div class="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
-        
+    <div class="flex items-center gap-4 mb-6">
+        <div class="flex items-center gap-4 mb-8">
+            <div class="flex items-center justify-center w-16 h-16 bg-purple-100 rounded-2xl shadow-sm border border-purple-200">
+                <i class="fa-solid fa-van-shuttle text-3xl text-purple-600"></i>
+            </div>
+            <h1 class="text-3xl font-bold text-gray-800 tracking-tight">
+                หน้าจอจัดการสายรถ (รับ-ส่ง)
+            </h1>
+            <p class="text-xl text-gray-600 font-light mt-1">
+                (ข้อมูล Master ของสายรถและจุดรถ)
+            </p>
+        </div>
+    </div>
+
     <!-- TOP ACTION BAR -->
     <div class="flex justify-end mb-4">
-        <div id="btn-container"></div>
+        <div id="btn-export-day"></div>
+        <div id="btn-export-holiday"></div>
     </div>
 
     <div class="grid md:grid-cols-2 gap-6">
@@ -159,6 +173,7 @@
 @endsection
 
 @section('styles')
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
     #line_table tbody tr.line-selected {
         background-color: #dbeafe !important; /* ฟ้าอ่อน */
