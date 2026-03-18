@@ -78,37 +78,63 @@ $(document).on("click", "#export", async function () {
             showErrorMessage("No data to export");
             return;
         }
-        const excel = await defaultExcel({
-            data: data,
-            column: columns
-                .filter((col) => col.data !== "prpo")
-                .map((col) => {
-                    if (
-                        col.render !== undefined &&
-                        col.render.toString().includes("formatDate")
-                    ) {
-                        if (col.render.toString().includes("HH:mm:ss")) {
-                            return {
-                                header: col.title,
-                                key: col.data,
-                                numFmt: "dd-mmm-yy hh:mm:ss",
-                                type: "date",
-                            };
-                        } else {
-                            return {
-                                header: col.title,
-                                key: col.data,
-                                numFmt: "dd-mmm-yy",
-                                type: "date",
-                            };
-                        }
+        const column = columns
+            // .filter((col) => col.data !== "prpo")
+            .map((col) => {
+                if (
+                    col.render !== undefined &&
+                    col.render.toString().includes("formatDate")
+                ) {
+                    if (col.render.toString().includes("HH:mm:ss")) {
+                        return {
+                            header: col.title,
+                            key: col.data,
+                            numFmt: "dd-mmm-yy hh:mm:ss",
+                            type: "date",
+                        };
+                    } else {
+                        return {
+                            header: col.title,
+                            key: col.data,
+                            numFmt: "dd-mmm-yy",
+                            type: "date",
+                        };
                     }
-
+                }
+                if (col.data == "prpo") {
                     return {
                         header: col.title,
                         key: col.data,
+                        bullet: true,
+                        join: "\n",
                     };
-                }),
+                }
+
+                return {
+                    header: col.title,
+                    key: col.data,
+                };
+            });
+        const mapData = data.map((row) => {
+            if (row.FORM_STATUS == 1) {
+                row.FORM_STATUS = "Running";
+            } else if (row.FORM_STATUS == 2) {
+                row.FORM_STATUS = "Approve";
+            } else if (row.FORM_STATUS == 3) {
+                row.FORM_STATUS = "Reject";
+            }
+
+            if (row.prpo.length > 0) {
+                row.prpo = row.prpo.map((p) => {
+                    return `PR: ${p.SPRNO}, PO: ${p.SPONO}`;
+                });
+            }
+            return row;
+        });
+
+        const excel = await defaultExcel({
+            data: mapData,
+            column: column,
         });
         exportExcel(excel, "Budget Requisition Report");
     } catch (error) {
@@ -121,9 +147,26 @@ $(document).on("click", "#export", async function () {
 
 const columns = [
     {
+        title: "Form status",
+        data: "FORM_STATUS",
+        className: "text-nowrap sticky-column text-center",
+        render: function (data, type, row, meta) {
+            if (data == 1) {
+                return `<span class="badge badge-soft badge-info">Running</span>`;
+            } else if (data == 2) {
+                return `<span class="badge badge-soft badge-success">Approve</span>`;
+            } else if (data == 3) {
+                return `<span class="badge badge-soft badge-error">Reject</span>`;
+            }
+        },
+    },
+    {
         title: "Form no.",
         data: "FORMNO",
         className: "text-nowrap sticky-column",
+        render: function(data, type, row, meta){
+            return `<a href="${row.LINK}" class="link link-primary" target="_blank">${data}</a>`;
+        }
     },
     {
         title: "Issue Date",
