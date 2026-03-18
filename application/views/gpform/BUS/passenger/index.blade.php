@@ -7,7 +7,7 @@
             <div class="flex items-center justify-center w-16 h-16 
                 bg-gradient-to-br from-purple-100 to-purple-200 
                 rounded-2xl shadow-sm border border-purple-200">
-                <i class="fa-duotone fa-solid fa-user text-3xl text-purple-700"></i>
+                <i class="fa-solid fa-users text-3xl text-purple-700"></i>
             </div>
 
             <div>
