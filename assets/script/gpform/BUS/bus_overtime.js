@@ -1280,6 +1280,8 @@ function bindEvents() {
         const TOTAL_BLOCK_WIDTH = BLOCK_WIDTH + BLOCK_GAP;
 
         const validLines = lines.filter((line) => {
+          const busId = String(line.busid || "").trim();
+          if (busId === "30") return false;
           const stops = Array.isArray(line.stops) ? line.stops : [];
           return stops.some((stop) => Array.isArray(stop.passengers) && stop.passengers.length > 0);
         });
