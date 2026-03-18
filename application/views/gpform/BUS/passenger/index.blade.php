@@ -7,7 +7,7 @@
             <div class="flex items-center justify-center w-16 h-16 
                 bg-gradient-to-br from-purple-100 to-purple-200 
                 rounded-2xl shadow-sm border border-purple-200">
-                <i class="fa-solid fa-users text-3xl text-purple-700"></i>
+                <i class="fa-duotone fa-solid fa-user text-3xl text-purple-700"></i>
             </div>
 
             <div>
@@ -125,7 +125,7 @@
 @endsection
 
 @section('styles')
-<link rel="stylesheet" href="{{ $_ENV['APP_ENV'] }}/assets/style/all.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
     #line_emp_table tbody tr.line-selected {
         background-color: #dbeafe !important; /* ฟ้าอ่อน */
