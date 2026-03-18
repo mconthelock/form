@@ -72,9 +72,15 @@
   <div class="grid grid-cols-3 gap-4">
     <!-- LEVEL 1 : BUS LINE -->
     <div class="rounded-2xl border p-3">
-      <div class="font-semibold mb-2"> BUS LINE </div>
-      <table id="tblLine" name="tblLine" class="display w-full">
-      </table>
+      <div class="flex items-center justify-between mb-2">
+        <div class="font-semibold">BUS LINE</div>
+        <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
+          <input type="checkbox" id="chkShowHiddenLine" class="checkbox checkbox-sm" />
+          <span>แสดงสายรถที่ถูกลบ</span>
+        </label>
+      </div>
+
+      <table id="tblLine" name="tblLine" class="display w-full"></table>
     </div>
 
     <!-- LEVEL 2 : BUS STOP -->
@@ -205,7 +211,7 @@
 
 <dialog id="add_passenger_modal" class="modal">
   <div class="modal-box max-w-lg">
-    <h3 class="font-bold text-lg mb-4">เพิ่ม Passenger</h3>
+    <h3 class="font-bold text-lg mb-4">เพิ่มผู้โดยสาร</h3>
 
     <input type="hidden" id="apDispatchId" />
     <div class="space-y-3">
@@ -481,6 +487,31 @@
   color: #475569;
   background: #f8fafc;
   border: 1px solid #e2e8f0;
+}
+.line-hidden td {
+  background: #f9fafb !important;
+  opacity: 0.72;
+}
+
+.line-hidden td:first-child {
+  box-shadow: inset 4px 0 0 #9ca3af;
+}
+
+.line-hidden .line-hidden-text {
+  text-decoration: line-through;
+}
+
+.line-hidden .line-hidden-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 8px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #4b5563;
+  background: #e5e7eb;
 }
 </style>
 @endsection

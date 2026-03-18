@@ -33,9 +33,12 @@ export const dispatchBuildDailyFirst = (data) => callAPI("/bus/dispatch/build-da
 export const dispatchSaveOverwrite = (data) => callAPI("/bus/dispatch/save-overwrite", "POST", data);
 export const dispatchMoveStop = (data) => callAPI("/bus/dispatch/move-stop", "POST", data);
 export const disableDispatchPassenger  = (data) => callAPI("/bus/dispatch/disable-passenger", "POST", data);
-export const deleteLineDispatch  = (data) => callAPI("/bus/dispatch/delete-linedispatch", "POST", data);
 export const saveAddPassenger  = (data) => callAPI("/bus/dispatch/save-add-passenger", "POST", data);
 export const updateStatusHead  = (data) => callAPI("/bus/dispatch/update-status", "POST", data);
+
+export const updateLineDispatchStatus  = (data) => callAPI("/bus/dispatch/update-line-status", "POST", data);
+export const deleteLineDispatch  = (data) => callAPI("/bus/dispatch/delete-linedispatch", "POST", data);
+
 
 // ===== REPORT =====
 export const reportBusDaily = (data) => callAPI("/bus/dispatch/report-bus-daily", "POST", data);

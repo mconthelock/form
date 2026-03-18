@@ -5,20 +5,17 @@ import { setSelect2 } from "@amec/webasset/select2";
 import select2 from "select2";
 import "select2/dist/css/select2.min.css";
 import { createTable } from "@amec/webasset/dataTable";
-import { initApp, tableOption } from "../../utils.js";
 import { getAllInfo } from "@amec/webasset/indexDB";
 import {
   dispatchGetDispatch, dispatchMoveStop, disableDispatchPassenger,
   getUserbyemp, deleteLineDispatch,
   getLine, getStopRoutes,
-  saveAddPassenger, reportBusDaily, reportDisabledPassengerDaily,updatePassengerStatus
+  saveAddPassenger, reportBusDaily, reportDisabledPassengerDaily,updatePassengerStatus,updateLineDispatchStatus
 } from "./data.js";
 import { initApp, tableOption } from "../../utils.js";
 import { exportExcel, defaultExcel, mergeCell, applyStyleToRange, alignment, border,} from "@amec/webasset/excel";
 
-
   select2();
-
   const dom = {
     workdate: "#dd_workdate",
     type: "#dd_type",
@@ -33,7 +30,7 @@ import { exportExcel, defaultExcel, mergeCell, applyStyleToRange, alignment, bor
     btnAddPassenger: "#btnAddPassenger",
     btnSaveDispatch: "#btnSaveDispatch",
     passengerSearch: "#txtPassengerSearch",
-
+    
     // NEW
     btnShowDisabledPassenger: "#btnShowDisabledPassenger",
     disabledPassengerModal: "#disabled_passenger_modal",
@@ -46,6 +43,7 @@ import { exportExcel, defaultExcel, mergeCell, applyStyleToRange, alignment, bor
     mdpLineId: "#mdpLineId",
     mdpStopId: "#mdpStopId",
     btnSaveMoveDisabledPassenger: "#btnSaveMoveDisabledPassenger",
+    chkShowHiddenLine: "#chkShowHiddenLine",
   };
 
   const state = {
@@ -92,6 +90,16 @@ import { exportExcel, defaultExcel, mergeCell, applyStyleToRange, alignment, bor
     }
   });
 
+  function getVisibleLines(lines = []) {
+    const showHidden = $(dom.chkShowHiddenLine).is(":checked");
+    if (showHidden) return lines;
+    return lines.filter((line) => getLineStatus(line) === "1");
+  }
+
+  function getLineStatus(line) {
+    return String(line?.line_status ??line?.LINE_STATUS ??"").trim();
+  }
+
   function initFlatpickr(selector, modal) {
     const el = document.querySelector(selector);
     if (!el) return;
@@ -129,9 +137,7 @@ import { exportExcel, defaultExcel, mergeCell, applyStyleToRange, alignment, bor
     return String(state.head?.status || "").toUpperCase() === "F";
   }
 
-  function getDisabledButtonClass(disabled) {
-    return disabled ? "bg-gray-300 text-gray-500 cursor-not-allowed opacity-70" : "";
-  }
+
 
   function syncActionButtonsState() {
     const disabled = isDispatchFinalized();
@@ -142,11 +148,10 @@ import { exportExcel, defaultExcel, mergeCell, applyStyleToRange, alignment, bor
     .toggleClass("cursor-not-allowed", disabled)
     .toggleClass("hover:bg-gray-300", disabled)
     .toggleClass("bg-blue-600 text-white cursor-pointer", !disabled);
-
-      
-    $(".btn-delete-line, .btn-move-stop, .btn-delete-passenger")
-  .prop("disabled", disabled)
-  .toggleClass("bg-gray-300 text-gray-500 cursor-not-allowed opacity-70", disabled);
+  
+    $(".btn-update-line-status, .btn-move-stop, .btn-delete-passenger")
+    .prop("disabled", disabled)
+    .toggleClass("bg-gray-300 text-gray-500 cursor-not-allowed opacity-70", disabled);
   }
 
   function setSelectedLineLabel(line) {
@@ -162,19 +167,10 @@ import { exportExcel, defaultExcel, mergeCell, applyStyleToRange, alignment, bor
   }
 
   function updateSummary() {
-    const totalLines = state.lines.length;
-    const totalStops = state.lines.reduce(
-      (sum, line) => sum + ((line.stops || []).length),
-      0,
-    );
-    const totalPassengers = state.lines.reduce((sum, line) => {
-      return (
-        sum +
-        (line.stops || []).reduce((stopSum, stop) => {
-          return stopSum + ((stop.passengers || []).length);
-        }, 0)
-      );
-    }, 0);
+    const activeLines = (state.lines || []).filter((line) => String(line.line_status ?? line.LINE_STATUS ?? "") === "1");
+    const totalLines = activeLines.length;
+    const totalStops = activeLines.reduce( (sum, line) => sum + ((line.stops || []).length),0);
+    const totalPassengers = activeLines.reduce((sum, line) => {return sum + (line.stops || []).reduce((stopSum, stop) => { return stopSum + ((stop.passengers || []).length);}, 0);}, 0);
 
     $(dom.sumLines).text(totalLines);
     $(dom.sumStops).text(totalStops);
@@ -201,15 +197,25 @@ import { exportExcel, defaultExcel, mergeCell, applyStyleToRange, alignment, bor
     opt.searching = false;
     opt.paging = false;
     opt.info = false;
+
     opt.columns = [
       {
-        data: null,  title: "สายรถ",
+        data: null, title: "สายรถ",
         render: function (data, type, row) {
-          return row.busname || row.busid || "-";
+          const isHidden = getLineStatus(row) === "0";
+          return `
+            <div class="flex items-center justify-between">
+              <span class="${isHidden ? 'opacity-50 line-through' : ''}">
+                ${row.busname || row.busid || "-"}
+              </span>
+              ${isHidden ? `<span class="ml-2 px-2 py-0.5 text-xs bg-gray-200 text-gray-700 rounded-full">ไม่ใช้งาน</span>` : ""}
+            </div>
+          `;
         },
       },
       {
-        data: null, title: "ที่นั่ง",
+        data: null,
+        title: "ที่นั่ง",
         className: "text-center",
         width: "120px",
         render: function (data, type, row) {
@@ -219,21 +225,20 @@ import { exportExcel, defaultExcel, mergeCell, applyStyleToRange, alignment, bor
 
           let color = "bg-green-100 text-green-700";
 
-          if (s > 0 && p >= s) {// เต็มหรือเกิน
+          if (s > 0 && p >= s) {
             color = "bg-red-300 text-red-900";
-          } 
-          else if (s > 0 && remain < 4) {// เหลือน้อยกว่า 4 ที่
+          } else if (s > 0 && remain < 4) {
             color = "bg-gray-300 text-gray-900";
-          } 
-          else if (s > 0 && p / s > 0.7) {// เกิน 70%
+          } else if (s > 0 && p / s > 0.7) {
             color = "bg-yellow-100 text-yellow-700";
           }
 
           return `<span class="px-2 py-1 text-xs rounded-full ${color}">${p} / ${s}</span>`;
-        }
+        },
       },
       {
-        data: "bustype",  title: "ประเภท",
+        data: "bustype",
+        title: "ประเภท",
         className: "text-center",
         width: "80px",
         render: function (data) {
@@ -250,19 +255,52 @@ import { exportExcel, defaultExcel, mergeCell, applyStyleToRange, alignment, bor
         data: null,
         title: "จัดการ",
         className: "text-center",
-        width: "50",
+        width: "80px",
         orderable: false,
         render: function (data, type, row) {
           const disabled = isDispatchFinalized();
-          return `<button class="btn-delete-line px-3 py-1 text-xs bg-red-100 text-red-700 rounded hover:bg-red-200 cursor-pointer" 
-          data-busid="${row.busid}" 
-          ${disabled ? 'disabled style="cursor:not-allowed !important;"' : ""}>ลบ</button> `;
+          const disabledAttr = disabled ? 'disabled style="cursor:not-allowed !important;"' : "";
+          const isHidden = getLineStatus(data) === "0";
+
+          if (!isHidden) {
+            return `
+              <button
+                class="btn-update-line-status px-3 py-1 text-xs bg-red-100 text-red-700 rounded hover:bg-red-200 cursor-pointer"
+                data-busid="${row.busid}"
+                data-status="0"
+                ${disabledAttr}
+              >
+                ลบ
+              </button>
+            `;
+          }
+
+          return `
+            <button
+              class="btn-update-line-status px-3 py-1 text-xs bg-emerald-100 text-emerald-700 rounded hover:bg-emerald-200 cursor-pointer"
+              data-busid="${row.busid}"
+              data-status="1"
+              ${disabledAttr}
+            >
+              กู้กลับ
+            </button>
+          `;
         },
       },
     ];
-    opt.createdRow = function (row) {
-      $(row).addClass("line-row cursor-pointer hover:bg-gray-100 transition");
+
+    opt.createdRow = function (row, data) {
+      const isHidden = getLineStatus(data) === "0";
+
+      $(row).addClass("line-row cursor-pointer transition");
+
+      if (isHidden) {
+        $(row).addClass("bg-gray-50 opacity-70");
+      } else {
+        $(row).addClass("hover:bg-gray-100");
+      }
     };
+
     return opt;
   }
 
@@ -451,8 +489,14 @@ import { exportExcel, defaultExcel, mergeCell, applyStyleToRange, alignment, bor
       await loadDispatch();
       return;
     }
-
     await jumpToPassengerSearch(keyword);
+  });
+
+  $(dom.chkShowHiddenLine).on("change", async function () {
+    await renderLineTable(getVisibleLines(state.lines));
+    await renderStopTable([]);
+    await renderPassengerTable([]);
+    clearRightSelection();
   });
 
   function clearRightSelection() {
@@ -490,7 +534,7 @@ import { exportExcel, defaultExcel, mergeCell, applyStyleToRange, alignment, bor
       updateSummary();
       clearRightSelection();
 
-      await renderLineTable(state.lines);
+      await renderLineTable(getVisibleLines(state.lines));
       await renderStopTable([]);
       await renderPassengerTable([]);
 
@@ -1129,10 +1173,9 @@ function bindEvents() {
         sheet.insertRow(1, [res.title || "รายงานผู้ที่จัดรถ"]);
         sheet.insertRow(2, [`Update : ${today}`]);
         sheet.insertRow(3, []);
-
         mergeCell(sheet, 1, 1, 1, 5);
         mergeCell(sheet, 2, 1, 2, 5);
-  5
+
         applyStyleToRange(sheet, 1, 5, 1, {
           font: { bold: true, size: 16 },
           alignment: alignment("center", "middle"),
@@ -1592,7 +1635,7 @@ function bindEvents() {
   
       await exportBusDailyLayoutExcel(dispatchId);
       //await exportBusDailyExcel(dispatchId);  // แนวตั้ง
-      //await exportDisabledPassengerExcel(dispatchId);
+      await exportDisabledPassengerExcel(dispatchId);
 
       showMessage("Export Excel สำเร็จ", "success");
     } catch (err) {
@@ -1638,9 +1681,7 @@ function bindEvents() {
       showMessage("ไม่พบ dispatch id", "warning");
       return;
     }
-    const res = await reportDisabledPassengerDaily({
-      dispatch_id: String(state.head.dispatch_id),
-    });
+    const res = await reportDisabledPassengerDaily({dispatch_id: String(state.head.dispatch_id),});
 
     if (!res?.status) {
       throw new Error(res?.message || "โหลดข้อมูลผู้ไม่ได้จัดรถไม่สำเร็จ");
@@ -1722,51 +1763,6 @@ function bindEvents() {
     tableDisabledPassenger = await createTable(opt, { id: dom.tblDisabledPassenger });
   }
 
-  function findDisabledPassengerByEmpno(empno) {
-    return (state.disabledPassengers || []).find(
-      (item) => String(item.empno) === String(empno)
-    ) || null;
-  }
-
-  async function initDisabledPassengerLineSelect2(modal, selectedLineId = "") {
-    try {
-      const lines = await getLine();
-
-      const data = (lines || []).map((line) => {
-        const busid = line.busid ?? line.BUSID ?? "";
-        const busname = line.busname ?? line.BUSNAME ?? "";
-        const bustype = line.bustype ?? line.BUSTYPE ?? "";
-        const busseat = line.busseat ?? line.BUSSEAT ?? null;
-        const busstatus = line.busstatus ?? line.BUSSTATUS ?? "";
-
-        return {
-          id: String(busid),
-          text: `${busname || busid} (${bustype === "2" ? "Van" : "Bus"})`,
-          busid: String(busid),
-          busname: String(busname || ""),
-          bustype: String(bustype || ""),
-          busseat: busseat,
-          busstatus: String(busstatus || ""),
-        };
-      });
-
-      state.disabledPassengerLines = data;
-
-      await setSelect2({
-        element: dom.mdpLineId,
-        data,
-        dropdownParent: $(modal),
-        placeholder: "เลือกสายรถ",
-        destroy: true,
-      });
-
-      $(dom.mdpLineId).val(selectedLineId ? String(selectedLineId) : "").trigger("change");
-    } catch (error) {
-      console.error(error);
-      showMessage("โหลดข้อมูลสายรถไม่สำเร็จ", "error");
-    }
-  }
-
   async function reloadDisabledPassengerStopByLine(modal, lineId, selectedValue = "") {
     const filteredStops = (state.disabledPassengerStops || []).filter(
       (item) => String(item.busid) === String(lineId)
@@ -1782,7 +1778,6 @@ function bindEvents() {
 
     $(dom.mdpStopId).val(selectedValue ? String(selectedValue) : "").trigger("change");
   }
-
 
   $(document).on("click", ".btn-enable-disabled-passenger", async function (e) {
     e.preventDefault();
@@ -1821,5 +1816,64 @@ function bindEvents() {
     await reloadDisabledPassengerStopByLine(modal, lineId);
   });
 
+
+
+  $(document).on("click", ".btn-update-line-status", async function (e) {
+    e.stopPropagation();
+    if (isDispatchFinalized()) return;
+
+    const busid = String($(this).data("busid")).trim();
+    const status = String($(this).data("status")).trim(); // 0=ซ่อน, 1=กู้กลับ
+    console.log("clicked button html =", this.outerHTML);
+    console.log("busid =", busid);
+    console.log("status =", status);
+
+    if (!state.head?.dispatch_id) {
+      showMessage("ไม่พบ dispatch id", "warning");
+      return;
+    }
+
+    if (!["0", "1"].includes(status)) {
+      showMessage("สถานะไม่ถูกต้อง", "warning");
+      return;
+    }
+
+    const isHide = status === "0";
+    const isConfirm = await showConfirm({
+      title: isHide ? "ยืนยันการซ่อนสายรถ" : "ยืนยันการกู้กลับสายรถ",
+      message: isHide
+        ? "ต้องการซ่อนสายรถนี้ออกจากการจัดรถ ใช่หรือไม่ ? <br> (คนที่อยู่ในสายรถนี้ทั้งหมดจะไปอยู่สถานะ => ไม่จัดรถรับส่ง)"
+        : "ต้องการกู้กลับสายรถนี้ ใช่หรือไม่ ? <br> (คนที่อยู่ในสายรถนี้ทั้งหมดจะกลับมาอยู่สถานะ => จัดรถรับส่ง)",
+      acceptText: "ยืนยัน",
+      cancelText: "ยกเลิก",
+    });
+
+    if (!isConfirm) return;
+
+    try {
+      await showLoader({ show: true });
+
+      const dto = {
+        dispatch_id: String(state.head.dispatch_id),
+        busid: busid,
+        status: status,
+        update_by: String(login_empno),
+      };
+
+      console.log("UPDATE LINE STATUS DTO =", dto);
+      await updateLineDispatchStatus(dto);
+      showMessage(isHide ? "ซ่อนสายรถสำเร็จ" : "กู้กลับสายรถสำเร็จ","success");
+
+      await loadDispatch();
+    } catch (error) {
+      console.error(error);
+      showMessage(
+        error?.message || (isHide ? "ซ่อนสายรถไม่สำเร็จ" : "กู้กลับสายรถไม่สำเร็จ"),
+        "error"
+      );
+    } finally {
+      await showLoader({ show: false });
+    }
+  });
 
 }
