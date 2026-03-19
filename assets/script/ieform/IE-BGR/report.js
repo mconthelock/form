@@ -123,9 +123,10 @@ $(document).on("click", "#export", async function () {
             } else if (row.FORM_STATUS == 3) {
                 row.FORM_STATUS = "Reject";
             }
-
+            
             if (row.prpo.length > 0) {
                 row.prpo = row.prpo.map((p) => {
+                    if(!p.SPRNO) return p;
                     return `PR: ${p.SPRNO}, PO: ${p.SPONO}`;
                 });
             }
