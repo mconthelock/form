@@ -1190,7 +1190,7 @@
 </div>
 </div>
 </form>
-        <div class="flow {{ ($form[0]->CST == '0' ? 'hidden' : '' }}">
+        <div class="flow {{ ($form[0]->CST == '0') ? 'hidden' : '' }}">
 
         </div>
     </div>
