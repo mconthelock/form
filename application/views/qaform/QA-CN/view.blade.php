@@ -1190,7 +1190,7 @@
 </div>
 </div>
 </form>
-        <div class="flow {{ ($form[0]->CST == '0' && ($empno == $form[0]->VREQNO || $empno == $form[0]->VINPUTER)) ? 'hidden' : '' }}">
+        <div class="flow {{ ($form[0]->CST == '0' ? 'hidden' : '' }}">
 
         </div>
     </div>
