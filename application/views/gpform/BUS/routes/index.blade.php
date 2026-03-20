@@ -80,7 +80,7 @@
                 <label class="block text-sm font-medium mb-1">จำนวนที่นั่ง<b style="color:red">*</b></label>
                 <select id="ddlSeat" class="select select-bordered w-full">
                     <option value="">-- เลือกจำนวนที่นั่ง --</option>
-                    <option value="8">8 ที่นั่ง</option>
+                    <option value="9">9 ที่นั่ง</option>
                     <option value="12">12 ที่นั่ง</option>
                     <option value="40" checked>40 ที่นั่ง</option>
                 </select>

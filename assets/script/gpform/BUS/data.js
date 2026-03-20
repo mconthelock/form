@@ -38,6 +38,7 @@ export const updateStatusHead  = (data) => callAPI("/bus/dispatch/update-status"
 
 export const updateLineDispatchStatus  = (data) => callAPI("/bus/dispatch/update-line-status", "POST", data);
 export const deleteLineDispatch  = (data) => callAPI("/bus/dispatch/delete-linedispatch", "POST", data);
+export const updateLineTypeDispatch  = (data) => callAPI("/bus/dispatch/update-line-type", "POST", data);
 
 
 // ===== REPORT =====

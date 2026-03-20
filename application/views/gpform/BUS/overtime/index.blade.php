@@ -252,6 +252,66 @@
   </div>
 </dialog>
 
+
+<input type="hidden" id="ltDispatchId">
+<input type="hidden" id="ltBusId">
+
+<dialog id="line_type_modal" class="modal">
+  <div class="modal-box max-w-md rounded-2xl">
+    <h3 class="font-bold text-lg mb-4">แก้ไขประเภทรถ</h3>
+
+    <input type="hidden" id="ltDispatchId">
+    <input type="hidden" id="ltBusId">
+
+    <div class="mb-4">
+      <label class="block text-sm font-medium mb-1">ชื่อสายรถ</label>
+      <input id="ltBusName" type="text" class="input input-bordered w-full" readonly>
+    </div>
+
+    <div class="grid grid-cols-2 gap-3 mb-4">
+      <div>
+        <label class="block text-sm font-medium mb-1">ประเภทเดิม</label>
+        <input id="ltOldBusType" type="text" class="input input-bordered w-full bg-gray-100" readonly>
+      </div>
+      <div>
+        <label class="block text-sm font-medium mb-1">ที่นั่งเดิม</label>
+        <input id="ltOldBusSeat" type="text" class="input input-bordered w-full bg-gray-100" readonly>
+      </div>
+    </div>
+
+    <div class="mb-4">
+      <label class="block text-sm font-medium mb-2">ประเภทรถใหม่</label>
+      <div class="flex gap-6">
+        <label class="flex items-center gap-2 cursor-pointer">
+          <input type="radio" name="ltBusType" value="Bus" class="radio radio-primary">
+          <span>Bus</span>
+        </label>
+        <label class="flex items-center gap-2 cursor-pointer">
+          <input type="radio" name="ltBusType" value="Van" class="radio radio-primary">
+          <span>Van</span>
+        </label>
+      </div>
+    </div>
+
+    <div class="mb-6">
+      <label class="block text-sm font-medium mb-1">จำนวนที่นั่งใหม่</label>
+      <select id="ltBusSeat" class="select select-bordered w-full">
+        <option value="">-- เลือกจำนวนที่นั่ง --</option>
+        <option value="9">9 ที่นั่ง</option>
+        <option value="12">12 ที่นั่ง</option>
+        <option value="40">40 ที่นั่ง</option>
+      </select>
+    </div>
+
+    <div class="modal-action">
+      <button id="btnSaveLineType" class="btn btn-primary">บันทึก</button>
+      <form method="dialog">
+        <button class="btn">ยกเลิก</button>
+      </form>
+    </div>
+  </div>
+</dialog>
+
 <input type="hidden" id="moveStopId" />
 <input type="hidden" id="moveCurrentLineId" />
 @endsection

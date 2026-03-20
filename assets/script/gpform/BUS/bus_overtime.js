@@ -11,7 +11,8 @@ import {
   dispatchGetDispatch, dispatchMoveStop, disableDispatchPassenger,
   getUserbyemp, deleteLineDispatch,
   getLine, getStopRoutes,
-  saveAddPassenger, reportBusDaily, reportDisabledPassengerDaily,updatePassengerStatus,updateLineDispatchStatus
+  saveAddPassenger, reportBusDaily, reportDisabledPassengerDaily,
+  updatePassengerStatus,updateLineDispatchStatus,updateLineTypeDispatch
 } from "./data.js";
 import { initApp, tableOption } from "../../utils.js";
 import { exportExcel, defaultExcel, mergeCell, applyStyleToRange, alignment, border,} from "@amec/webasset/excel";
@@ -45,6 +46,15 @@ import { exportExcel, defaultExcel, mergeCell, applyStyleToRange, alignment, bor
     mdpStopId: "#mdpStopId",
     btnSaveMoveDisabledPassenger: "#btnSaveMoveDisabledPassenger",
     chkShowHiddenLine: "#chkShowHiddenLine",
+
+    lineTypeModal: "#line_type_modal",
+    ltDispatchId: "#ltDispatchId",
+    ltBusId: "#ltBusId",
+    ltBusName: "#ltBusName",
+    ltBusSeat: "#ltBusSeat",
+    btnSaveLineType: "#btnSaveLineType",
+    ltOldBusType: "#ltOldBusType",
+    ltOldBusSeat: "#ltOldBusSeat",
   };
 
   const state = {
@@ -192,6 +202,7 @@ import { exportExcel, defaultExcel, mergeCell, applyStyleToRange, alignment, bor
     setSelectedStopLabel(null);
   }
 
+
   async function lineOptions(data) {
     const opt = { ...tableOption };
     opt.data = data;
@@ -238,18 +249,30 @@ import { exportExcel, defaultExcel, mergeCell, applyStyleToRange, alignment, bor
         },
       },
       {
-        data: "bustype",
-        title: "ประเภท",
+        data: null,
+        title: "ประเภทรถ",
         className: "text-center",
-        width: "80px",
-        render: function (data) {
-          if (data === "1") {
-            return `<span class="px-2 py-1 text-xs bg-blue-100 text-blue-900 rounded-full">Bus</span>`;
-          }
-          if (data === "2") {
-            return `<span class="px-2 py-1 text-xs bg-orange-100 text-purple-900 rounded-full">Van</span>`;
-          }
-          return data || "-";
+        render: function (data, type, row) {
+          const rawBusType = String(row.bustype || "").trim();
+          const busTypeLabel = rawBusType === "2" ? "Van" : "Bus";
+          const badgeClass = rawBusType === "2"
+            ? "bg-amber-100 text-amber-700 hover:bg-amber-200"
+            : "bg-blue-100 text-blue-700 hover:bg-blue-200";
+
+          return `
+            <button
+              type="button"
+              class="btn-edit-line-type inline-flex items-center rounded-full px-3 py-1 text-xs font-medium cursor-pointer transition ${badgeClass}"
+              data-dispatch_id="${row.dispatch_id || ""}"
+              data-busid="${row.busid || ""}"
+              data-busname="${row.busname || ""}"
+              data-bustype="${rawBusType}"
+              data-busseat="${row.busseat || ""}"
+              title="คลิกเพื่อแก้ไขประเภทรถ"
+            >
+              ${busTypeLabel}
+            </button>
+          `;
         },
       },
       {
@@ -1044,8 +1067,8 @@ function bindEvents() {
       modal.close();
 
       await loadDispatch({
-        preserveBusId: selectedLine?.busid,
-        preserveStopId: selectedStop?.stop_id,
+        preserveBusId: busid,
+        preserveStopId: state.selectedStop?.stop_id || null,
       });
     } catch (error) {
       console.error(error);
@@ -1057,7 +1080,6 @@ function bindEvents() {
     const selectedId = $("#apStopId").val();
     return (state.addPassengerStops.find( (item) => String(item.id) === String(selectedId)) || null);
   }
-
 
   //=============== Report ===============
 
@@ -1346,9 +1368,7 @@ function bindEvents() {
             alignment: alignment("center", "middle"),
             border: border(),
             fill: {
-              type: "pattern",
-              pattern: "solid",
-            fgColor: { argb: "FFFFF2CC" },
+              type: "pattern", pattern: "solid", fgColor: { argb: "FFFFF2CC" },
             },
           });
           sheet.getRow(currentRow).height = 20;
@@ -1366,9 +1386,7 @@ function bindEvents() {
               alignment: alignment("center", "middle"),
               border: border(),
               fill: {
-                type: "pattern",
-                pattern: "solid",
-                fgColor: { argb: "FFF8F8F8" },
+                type: "pattern", pattern: "solid",fgColor: { argb: "FFF8F8F8" },
               },
             });
           }
@@ -1818,7 +1836,6 @@ function bindEvents() {
   $(document).on("click", ".btn-update-line-status", async function (e) {
     e.stopPropagation();
     if (isDispatchFinalized()) return;
-
     const busid = String($(this).data("busid")).trim();
     const status = String($(this).data("status")).trim(); // 0=ซ่อน, 1=กู้กลับ
     console.log("clicked button html =", this.outerHTML);
@@ -1871,6 +1888,138 @@ function bindEvents() {
     } finally {
       await showLoader({ show: false });
     }
+  });
+
+
+  function getBusTypeLabel(value) {
+    const txt = String(value || "").trim();
+    if (txt === "2" || txt.toUpperCase() === "VAN") return "Van";
+    return "Bus";
+  }
+
+  function mapBusTypeToApi(value) {
+    return String(value || "").trim() === "Van" ? "2" : "1";
+  }
+
+  function openLineTypeModal(data) {
+    const busTypeLabel = getBusTypeLabel(data.bustype);
+    const busSeat = String(data.busseat || "").trim();
+
+    $(dom.ltDispatchId).val(String(data.dispatch_id || ""));
+    $(dom.ltBusId).val(String(data.busid || ""));
+    $(dom.ltBusName).val(String(data.busname || ""));
+
+    $(dom.ltOldBusType).val(busTypeLabel);
+    $(dom.ltOldBusSeat).val(busSeat ? `${busSeat} ที่นั่ง` : "-");
+
+    $('input[name="ltBusType"]').prop("checked", false);
+    $(`input[name="ltBusType"][value="${busTypeLabel}"]`).prop("checked", true);
+
+    renderSeatOptionsByType(busTypeLabel, busSeat);
+
+    document.querySelector(dom.lineTypeModal).showModal();
+  }
+
+  const seatOptionsByType = {Bus: [{ value: "40", label: "40 ที่นั่ง" },],Van: [{ value: "9", label: "9 ที่นั่ง" },{ value: "12", label: "12 ที่นั่ง" },],};
+  const defaultSeatByType = {Bus: "40", Van: "12",};
+
+  function renderSeatOptionsByType(type, selectedValue = "") {
+    const typeKey = String(type || "").trim();
+    const options = seatOptionsByType[typeKey] || [];
+    const $seat = $(dom.ltBusSeat);
+
+    $seat.empty();
+    $seat.append(`<option value="">-- เลือกจำนวนที่นั่ง --</option>`);
+
+    options.forEach((item) => {
+      $seat.append(`<option value="${item.value}">${item.label}</option>`);
+    });
+
+    const finalValue =
+      selectedValue && options.some((x) => x.value === String(selectedValue))
+        ? String(selectedValue)
+        : (defaultSeatByType[typeKey] || "");
+
+    $seat.val(finalValue);
+  }
+
+  $(document).on("change", 'input[name="ltBusType"]', function () {
+    const selectedType = String($(this).val() || "").trim();
+    renderSeatOptionsByType(selectedType);
+  });
+
+
+  $(document).on("click", ".btn-edit-line-type", function (e) {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (isDispatchFinalized()) return;
+
+    openLineTypeModal({
+      dispatch_id: $(this).data("dispatch_id"),
+      busid: $(this).data("busid"),
+      busname: $(this).data("busname"),
+      bustype: $(this).data("bustype"),
+      busseat: $(this).data("busseat"),
+    });
+  });
+
+
+  async function saveLineTypeDispatch() {
+    const dispatch_id = String($(dom.ltDispatchId).val() || "").trim();
+    const busid = String($(dom.ltBusId).val() || "").trim();
+    const selectedType = String($('input[name="ltBusType"]:checked').val() || "").trim();
+    const busseat = String($(dom.ltBusSeat).val() || "").trim();
+    if (!dispatch_id || !busid) {
+      showMessage("ไม่พบข้อมูลสายรถที่ต้องการแก้ไข", "warning");
+      return;
+    }
+
+    if (!selectedType) {
+      showMessage("กรุณาเลือกประเภทรถ", "warning");
+      return;
+    }
+
+    if (!busseat) {
+      showMessage("กรุณาเลือกจำนวนที่นั่ง", "warning");
+      return;
+    }
+    const payload = {
+      dispatch_id,
+      busid,
+      bustype: mapBusTypeToApi(selectedType), // Bus => 1, Van => 2
+      busseat,
+      update_by: String(login_empno || ""),
+    };
+
+    try {
+      await showLoader({ show: true });
+
+      const res = await updateLineTypeDispatch(payload);
+
+      if (!res?.status) {
+        showMessage(res?.message || "ไม่สามารถแก้ไขประเภทรถได้", "error");
+        return;
+      }
+
+      showMessage("แก้ไขประเภทรถสำเร็จ", "success");
+      document.querySelector(dom.lineTypeModal).close();
+
+      await loadDispatch({
+        preserveBusId: busid,
+        preserveStopId: state.selectedStop?.stop_id || null,
+      });
+    } catch (error) {
+      console.error(error);
+      showMessage(error?.message || "เกิดข้อผิดพลาดในการแก้ไขประเภทรถ", "error");
+    } finally {
+      await showLoader({ show: false });
+    }
+  }
+
+  $(document).on("click", dom.btnSaveLineType, async function (e) {
+    e.preventDefault();
+    await saveLineTypeDispatch();
   });
 
 }
