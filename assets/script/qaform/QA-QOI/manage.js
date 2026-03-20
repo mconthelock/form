@@ -308,6 +308,8 @@ async function createTableDwg() {
 			join: true,
 		},
 	);
+	console.log("xxxxxxxxxxx");
+	
 	$("#table").find("thead").removeClass("bg-white");
 	$("#table").find("thead").addClass("bg-blue-200");
 	$(`#table_wrapper .table-option`).append(`
