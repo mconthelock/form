@@ -443,8 +443,7 @@ $(document).on(
 
 $(document).on("click", "button[name='btnAction']", async function () {
 	try {
-		if (!(await requiredForm("#form"))) return;
-		const frm = $("#form");
+        const frm = $("#form");
 		const action = $(this).val();
 		const remark = $("#remark").val();
 		const formData = new FormData(frm[0]);
@@ -458,6 +457,7 @@ $(document).on("click", "button[name='btnAction']", async function () {
 		formData.append("type", $("#sysCode").find(":selected").data("type"));
 		formData.append("code", $("#sysCode").find(":selected").data("code"));
 		if (firstStep && action == "approve") {
+            if (!(await requiredForm("#form"))) return;
 			const res = await getData({
 				...ajaxOptionsLoad,
 				url: `${host}isform/IS-CFS/form/update`,
@@ -501,26 +501,4 @@ $(document).on("click", "button[name='btnAction']", async function () {
 		];
 		sendMail(mail);
 	}
-});
-
-$(document).on("submit", "#form", async function (e) {
-	e.preventDefault();
-	//     if(!await requiredForm('#form')) return;
-	//     const formData = new FormData(this);
-	//     formData.append('empno', empno);
-
-	//     const res = await getData({
-	//         ...ajaxOptions,
-	//         url: `${host}isform/IS-CFS/form/createForm`,
-	//         data: formData,
-	//         processData: false,
-	//         contentType: false,
-	//     });
-
-	//     if(res.status){
-	//         showMessage(res.message, 'success');
-
-	//     }else{
-	//         showMessage(res.message, 'error');
-	//     }
 });

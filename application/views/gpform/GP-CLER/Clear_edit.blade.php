@@ -3,7 +3,7 @@
 @section('contents')
     <div id="loading-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.85); z-index:9999;">
         <div style="position:absolute; top:50%; left:50%; transform:translate(-50%, -50%);">
-            <img src="{{base_url()}}assets/images/loading_gif.gif" alt="Loading..." width="120">
+            <img src="{{ base_url() }}assets/images/loading_gif.gif" alt="Loading..." width="120">
         </div>
     </div>
     <div class="form-data" data-nfrmno="{{ $NFRMNO }}" data-vorgno="{{ $VORGNO }}" data-cyear="{{ $CYEAR }}" data-cyear2="{{ $CYEAR2 }}" data-nrunno="{{ $NRUNNO }}" data-empno="{{ $EMPNO }}"></div>
@@ -23,7 +23,7 @@
                 <div class="overflow-hidden rounded-xl border-2 border-blue-200 mb-8 bg-blue-50">
                     <table class="w-full text-sm">
                         <tbody>
-                            @if(!empty($formCler->FORM_ENT))
+                            @if (!empty($formCler->FORM_ENT))
                                 <tr>
                                     <th class="w-1/3 text-left text-blue-900 font-semibold py-2 pl-4 border-b-2 border-blue-200 bg-blue-100">Form No.</th>
                                     <td class="py-2 pl-4 border-b-2 border-blue-200">{{ $formCler->FORM_ENT }}</td>
@@ -78,7 +78,7 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach($company as $i => $guest)
+                                @foreach ($company as $i => $guest)
                                     <tr>
                                         <td class="py-2 px-4 border-b border-blue-100">{{ $i + 1 }}</td>
                                         <td class="py-2 px-4 border-b border-blue-100">{{ $guest->COMPANY_NAME }}</td>
@@ -105,7 +105,7 @@
                     <h3 class="font-semibold text-blue-900 mb-2">Quantity of Participant</h3>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 border-2 border-gray-300 rounded-xl p-3 bg-gray-50">
                         @php
-                            $amec  = array_filter($dataParticipants, function ($item) {
+                            $amec = array_filter($dataParticipants, function ($item) {
                                 return $item->TYPE === 'amec';
                             });
                             $guest = array_filter($dataParticipants, function ($item) {
@@ -124,7 +124,7 @@
                             <div class="font-semibold text-blue-700 mb-1">AMEC: {{ count($amec) }} person</div>
                             <ul class="list-disc list-inside text-gray-800 ml-4">
                                 @foreach ($amec as $value)
-                                    <li>{{ $value->SEMPPRE . " " . $value->SNAME }}</li>
+                                    <li>{{ $value->SEMPPRE . ' ' . $value->SNAME }}</li>
                                 @endforeach
                             </ul>
                         </div>
@@ -162,6 +162,57 @@
                     </tbody>
                 </table>
             </div>
+
+            <div class="mt-10">
+                <h3 class="flex items-center gap-2 font-bold text-green-800 mb-3 mt-8 text-xl">
+                    <!-- <svg ... ไอคอน>  --> Expense Cost <label class="text-sm inline-block font-light text-red-500">(*If has “Receipt no.” more than 1, Please click “Add row” button for input the details.)</label>
+                </h3>
+                <div class="border-2 border-green-500 rounded-2xl p-4 bg-green-50 shadow-sm transition">
+                    <table class="min-w-full text-sm border-1 rounded-xl overflow-hidden" id="expense-table">
+                        <thead>
+                            <tr class="bg-green-200 text-green-900">
+                                <th class="py-2 px-4 text-center w-12 rounded-tl-xl">No.</th>
+                                <th class="py-2 px-4 text-center">Receipt No.</th>
+                                <th class="py-2 px-4 text-center">Cost</th>
+                                <th class="py-2 px-4 text-center">Date issue receipt</th>
+                                <th class="py-2 px-4 text-center">Attach Receipt</th>
+                                <th class="py-2 px-4 w-12 rounded-tr-xl"></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="py-2 px-4 text-center">1</td>
+                                <td class="py-2 px-4">
+                                    <input type="text" class="input input-sm border rounded-lg px-3 py-1 w-full focus:ring-2 bg-white focus:ring-green-400 transition" placeholder="Receipt No.">
+                                </td>
+                                <td class="py-2 px-4">
+                                    <input type="number" class="input input-sm border rounded-lg px-3 py-1 w-full focus:ring-2 bg-white focus:ring-green-400 transition cost-input" placeholder="Cost">
+                                </td>
+                                <td class="py-2 px-4">
+                                    <input type="date" class="input input-sm border rounded-lg px-3 py-1 w-full focus:ring-2 bg-white focus:ring-green-400 transition">
+                                </td>
+                                <td class="py-2 px-4">
+                                    <input type="file" class="file-input file-input-sm file-input-bordered w-full max-w-xs rounded-lg border-green-400">
+                                </td>
+                                <td class="py-2 px-4 text-center">
+                                    <button type="button" class="remove-row bg-red-500 hover:bg-red-600 text-white rounded-full w-8 h-8 flex items-center cursor-pointer justify-center shadow transition" title="Remove row">
+                                        &times;
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div class="flex justify-end mt-4">
+                        <button type="button" id="add-row" class="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-6 rounded-xl shadow cursor-pointer transition flex items-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                            </svg>
+                            Add Row
+                        </button>
+                    </div>
+                    <!-- <button class="btn btn-success" id="test-submit">Test</button> -->
+                </div>
+            </div>
             <!-- Section Clearance for Expense -->
             <div class="mt-8">
                 <div class="bg-green-50 rounded-2xl border-2 border-green-500 p-6 shadow space-y-8">
@@ -196,7 +247,7 @@
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <!-- Attach Receipt -->
-                        <div>
+                        {{-- <div>
                             <label class="font-semibold text-green-700 mb-1 block">Attach Receipt:</label>
                             <div class="flex items-center gap-3">
                                 <input type="file" name="receipt" id="receipt" class="file-input file-input-bordered w-full max-w-xs rounded-xl border-green-400" {{ $formCler->RECEIPT_FILE ? '' : 'required' }}>
@@ -210,9 +261,9 @@
                             </div>
 
                             <!-- {{ print_r($file_attach) }} -->
-                        </div>
+                        </div> --}}
 
-                        @if(!empty($file_attach))
+                        @if (!empty($file_attach))
                             <div>
                                 <label class="font-semibold text-green-700 mb-1 block">Attach Memo:</label>
                                 <div class="flex items-center gap-3">
@@ -224,7 +275,7 @@
 
                                 <!-- รายการไฟล์ที่เคยแนบแล้ว -->
                                 <div class="mt-6 space-y-1">
-                                    @foreach($file_attach as $file)
+                                    @foreach ($file_attach as $file)
                                         <div class="flex items-center justify-between gap-3 border rounded-lg p-2">
                                             <span class="truncate flex-1">{{ $file->FILE_NAME }}</span>
                                             <div class="flex gap-2">

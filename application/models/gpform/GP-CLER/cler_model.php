@@ -1,8 +1,7 @@
 <?php
 defined('BASEPATH') or exit('No direct script access allowed');
 
-class Cler_model extends CI_Model
-{
+class Cler_model extends CI_Model {
 
     public function __construct()
     {
@@ -18,10 +17,11 @@ class Cler_model extends CI_Model
             ->where('f.NFRMNO', $nfrmno)
             ->where('f.VORGNO', $vorgno)
             ->where('f.CYEAR', $cyear)
-            ->group_start()
+            // ->group_start()
+            // ->where('f.VREQNO', $empno)
+            // ->or_where('f.VINPUTER', $empno)
+            // ->group_end()
             ->where('f.VREQNO', $empno)
-            ->or_where('f.VINPUTER', $empno)
-            ->group_end()
             ->where('f.CST', 2)
             ->where('gf.STATUS', '1')
             ->order_by('f.NRUNNO', 'ASC');
@@ -46,7 +46,7 @@ class Cler_model extends CI_Model
     public function get_clearance_form($nfrmno, $vorgno, $cyear, $cyear2, $nrunno)
     {
         $this->db
-            ->select('gf.*,ai.STNAME INPUT_NAME,ar.STNAME REQ_NAME')
+            ->select('gf.*,ai.SNAME INPUT_NAME,ar.SNAME REQ_NAME')
             ->from('GPCLER_FORM gf')
             ->join('AMECUSERALL ai', 'ai.SEMPNO = gf.EMP_INPUT', 'left')
             ->join('AMECUSERALL ar', 'ar.SEMPNO = gf.EMP_REQ', 'left')
@@ -80,8 +80,11 @@ class Cler_model extends CI_Model
         return $this->db->get()->result();
     }
 
-    public function insert($table, $data)
+    public function insert($table, $data, $dateFields = [])
     {
+        foreach ($dateFields as $key => $value) {
+            $this->db->set($key, $value, false); // <-- ไม่ escape
+        }
         $this->db->insert($table, $data);
     }
 

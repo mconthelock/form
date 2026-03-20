@@ -2,7 +2,7 @@ import {
 	getAllAttr,
 	logFormData,
 	requiredForm,
-	showMessage,
+	showMessage,showConfirm
 } from "@amec/webasset/utils";
 import { showLoader } from "@amec/webasset/preloader";
 import { host } from "../../utils";
@@ -12,7 +12,8 @@ import { setSelect2, destroySelect2 } from "@amec/webasset/select2";
 //import "select2";
 //import "select2/dist/css/select2.min.css";
 import { redirectWebflow } from "@amec/webasset/form";
-import { createForm, getFormMaster, getFormMasterByVaname } from "@amec/webasset/api/webform";
+import { createForm, getFormMaster, getFormMasterByVaname , deleteFlowandForm } from "@amec/webasset/api/webform";
+
 import { setDatePicker } from "@amec/webasset/flatpickr";
 //import { createForm, redirectWebflow } from "@amec/webasset/form";
 import { readInput } from "@amec/webasset/excel";
@@ -1258,11 +1259,55 @@ $(document).on("click", "#btn-submit-form", function () {
 		loaddata(cyear2, nrunno);
 	}
 	if ($("#mode").val() == "1") {
-		$(".confirm-btn").removeClass("hidden");
+		if ($("#hasLunch").is(":checked") || $("#hasDinner").is(":checked"))
+		{
+			$(".confirm-btn").removeClass("hidden");
+		}
 		$(".export-btn").removeClass("hidden");
 	}
+
+	
 	//loaddata($("#cyear2").val(),$("#nrunno").val());
 });
+
+$(document).on("click", ".del-btn", async function () {
+	const isConfirmed = await showConfirm({
+        title: "Confirm Deletion?",
+        message: "This action cannot be undone. Are you sure you want to proceed?",
+        acceptText: "Yes, delete it",
+        cancelText: "Cancel"
+    });
+
+	if (isConfirmed) {
+		const resdel = await deleteForm({vmscyear2: $("#cyear2").val(), vmsnrunno: $("#nrunno").val()});
+		if (resdel.status) {	
+					const con = {
+						NFRMNO:  $("#nfrmno").val(),
+						VORGNO: $("#vorgno").val(),
+						CYEAR: $("#cyear").val(),
+						CYEAR2: $("#cyear2").val(),
+						NRUNNO: $("#nrunno").val()
+					};
+				//console.log(con);
+				//return false;
+				 const delform = await deleteFlowandForm(con);
+				if(delform.status)
+				{
+					redirectWebflow();
+				}else{
+					Swal.fire({
+						icon: "error",
+						title: "Failed to Delete Form",
+						text: rssave.message || "Please try again",
+					});
+				}
+				 
+				
+		}
+	}
+
+});
+
 
 /*
 
@@ -1582,13 +1627,13 @@ $(document).on("click", ".save-btn", async function () {
 		}
 	} catch (err) {
 		const con = {
-			condition: {
+			
 				NFRMNO: nfrmno,
 				VORGNO: vorgno,
 				CYEAR: cyear,
 				CYEAR2: cyear2,
 				NRUNNO: nrunno,
-			},
+			
 		};
 		const delform = await deleteFlowandForm(con);
 		Swal.fire({
@@ -1603,13 +1648,14 @@ $(document).on("click", ".confirm-btn", async function () {
 	if (validate($("#form-submit"))) {
 		$(this).prop("disabled", true);
 		createGPENT();
-		updateform();
+		
 	}
 });
 $(document).on("click", ".send-btn", async function () {
 	// $(this).prop('disabled', true);
 	if (validate($("#form-submit"))) {
 		sendmailpic();
+		updateform();
 	}
 });
 
@@ -1968,6 +2014,31 @@ function deletefile(data) {
 	return new Promise((resolve) => {
 		$.ajax({
 			url: host + "marform/MAR-VMS/form/delfile",
+			type: "post",
+			dataType: "json",
+			data: data,
+			beforeSend: function () {
+				showLoader({ show: true });
+			},
+			success: function (res) {
+				resolve(res);
+			},
+			complete: function (xhr, status) {
+				showLoader({ show: false });
+			},
+		});
+	});
+}
+
+/**
+ * Delete form
+ * @param {array} data
+ * @returns
+ */
+function deleteForm(data) {
+	return new Promise((resolve) => {
+		$.ajax({
+			url: host + "marform/MAR-VMS/form/deleteform",
 			type: "post",
 			dataType: "json",
 			data: data,
@@ -2553,7 +2624,7 @@ function loaddata(vmscyear2, vmsnrunno) {
 			$('[data-field="roomlunch"]').text(item.ROOMLUNCH);
 			if (item.VISITORS) {
 				$('[data-field="roomdate"]').text(response.head.VISITDATE);
-				$('[data-field="roomtime"]').text("12:00 - 01:00 PM.");
+				$('[data-field="roomtime"]').text(response.head.LUNCHTIME);
 			}
 			$('[data-field="visitlunch"]').text(item.VISITORS);
 			$('[data-field="ameclunch"]').text(item.AMEC);

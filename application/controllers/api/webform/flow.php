@@ -37,6 +37,20 @@ trait flow{
         }
     }
 
+    private function getFlowTree($condition = []){
+        try{
+            $response = $this->client->post($_ENV['APP_APIPHP'].'/flow/getFlowTree', [
+                'json' => $condition
+            ]);
+            $result = json_decode($response->getBody(), true);
+            return $result;
+        }catch(guzzlehttp\Exception\RequestException $e){
+            throw new Exception(json_encode(['status' => "false", 'message' => 'Failed to get getFlowTree', 'e' => $e->getMessage()]), 1);
+        }catch(Exception $e){
+            throw new Exception(json_encode(['status' => "false", 'message' => 'Failed to get getFlowTree', 'e' => $e]), 1);
+        }
+    }
+
     private function getExtData($condition = []){
         try{
             $response = $this->client->post($_ENV['APP_APIPHP'].'/flow/getExtData', [
@@ -162,6 +176,51 @@ trait flow{
             throw new Exception(json_encode(['status' => "false", 'message' => 'Failed to get Extra Data', 'e' => $e->getMessage()]), 1);
         }catch(Exception $e){
             throw new Exception(json_encode(['status' => "false", 'message' => 'Failed to check Return back', 'e' => $e]), 1);
+        }
+    }
+
+
+    /**
+     * Doaction Flow
+     * @param {doaction} formData
+     *
+     * @typedef {object} doaction
+     * @property {number} NFRMNO
+     * @property {string} VORGNO
+     * @property {string} CYEAR
+     * @property {string} CYEAR2
+     * @property {number} NRUNNO
+     * @property {string} CSTEPNO 
+     * 
+     * @typedef {object} deleteFlowStepResponse
+     * @property {boolean} status true = success, false = failed
+     * @property {string} message message response
+     *
+     * @returns {Promise<deleteFlowStepResponse>}
+     * @example
+     * $condition = {
+     *     NFRMNO: 13,
+     *     VORGNO: '030101',
+     *     CYEAR: '25',
+     *     CYEAR2: '2025',
+     *     NRUNNO: 1,
+     *     CSTEPNO: '01',
+     * };
+     * $res = await deleteFlowStep(condition);
+     */
+    private  function deleteFlowStep($condition){
+        try{
+            $response = $this->client->delete($_ENV['APP_APIPHP'].'/flow/deleteFlowStep', [
+                // 'headers' => build_forward_headers(),
+                'json' => $condition
+            ]);
+            $result = trim($response->getBody());
+            $decoded = json_decode($result, true);
+            return $decoded;
+        }catch(guzzlehttp\Exception\RequestException $e){
+            throw new Exception(json_encode(['status' => "false", 'message' => 'Failed to Delete Flow Step', 'e' => $e->getMessage()]), 1);
+        }catch(Exception $e){
+            throw new Exception(json_encode(['status' => "false", 'message' => 'Failed to Delete Flow Step', 'e' => $e]), 1);
         }
     }
 }

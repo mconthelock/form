@@ -2,11 +2,15 @@
 defined('BASEPATH') or exit('No direct script access allowed');
 require_once APPPATH . 'controllers/_form.php';
 require_once APPPATH . 'controllers/_file.php';
+require_once APPPATH . 'controllers/api/webform/flow.php';
 use GuzzleHttp\Client;
 
-class Main extends MY_Controller
-{
-    use _Form, _File;
+class Main extends MY_Controller {
+    use _Form, _File, flow {
+        flow::getExtData insteadof _Form;
+        flow::doaction insteadof _Form;
+        _Form::deleteFlowStep insteadOf flow;
+    }
     protected $client;
     public function __construct()
     {
@@ -34,6 +38,8 @@ class Main extends MY_Controller
         $form_entertain        = $this->clr->get_entertain_formEMP($ent_frmno, $vorgno, $cyear, $empno);
         $data['estimate_type'] = $this->ent->get_estimate_type();
         $data['mode']          = $this->getMode($nfrmno, $vorgno, $cyear, $cyear2, $nrunno, $empno);
+        $data['PRESIDENT']     = $this->ent->get_orgpos("020101", "02")[0]; // PRESIDENT
+        $data['RAF']           = $this->ent->get_orgpos("040101", "10")[0]; // RAF DIM
 
         if (!$cyear2 || !$nrunno) {
             foreach ($form_entertain as &$item) {
@@ -162,18 +168,26 @@ class Main extends MY_Controller
     {
         $post = $this->input->post();
 
-        // print_r($post);
-
-        // print_r($_FILES);
-        // print_r(json_decode($post['expense']));
-
 
         if ($post['p_join'] == "1") {
             $getEmp = $this->ent->get_orgpos("040101", "10")[0]; // RAF DIM
         } else {
             $getEmp = $this->ent->get_orgpos("020101", "02")[0]; // PRESIDENT
         }
-        $this->updateFlowApv("", $getEmp->VEMPNO, $post['nfrmno'], $post['vorgno'], $post['cyear'], $post['cyear2'], $post['nrunno'], "18", "19");
+        // $this->updateFlowApv("", $getEmp->VEMPNO, $post['nfrmno'], $post['vorgno'], $post['cyear'], $post['cyear2'], $post['nrunno'], "18", "19");
+        $condition  = [
+            'NFRMNO'  => $post['nfrmno'],
+            'VORGNO'  => $post['vorgno'],
+            'CYEAR'   => $post['cyear'],
+            'CYEAR2'  => $post['cyear2'],
+            'NRUNNO'  => $post['nrunno'],
+            'CSTEPNO' => "18"
+        ];
+        $approveEmp = $getEmp->VEMPNO;
+        $this->updateFlow([
+            'condition' => $condition,
+            'VAPVNO'    => $approveEmp
+        ]);
         $data = [
             'NFRMNO'         => $post['nfrmno'],
             'VORGNO'         => $post['vorgno'],
@@ -189,27 +203,28 @@ class Main extends MY_Controller
             'FORM_ENT'       => $post['formnumber']
         ];
 
-        if (isset($_FILES['receipt'])) {
-            $file = $this->uploadFile($_FILES['receipt']);
-            if ($file['status'] == '1') {
-                $data['RECEIPT_FILE'] = $file['file_name'];
-            }
-        }
+        // if (isset($_FILES['receipt'])) {
+        //     $file = $this->uploadFile($_FILES['receipt']);
+        //     if ($file['status'] == '1') {
+        //         $data['RECEIPT_FILE'] = $file['file_name'];
+        //     }
+        // }
 
         if (isset($_FILES['file_group'])) {
             $fileGroup = $_FILES['file_group'];
             foreach ($fileGroup['name'] as $i => $name) {
                 if ($fileGroup['error'][$i] === UPLOAD_ERR_OK) {
-                    $oneFile = [
-                        'name'     => $name,
+                    $extension = pathinfo($name, PATHINFO_EXTENSION);
+                    $fileIndex = $i + 1;
+                    $oneFile   = [
+                        'name'     => "Attach_{$post['cyear2']}_{$post['nrunno']}_{$fileIndex}.{$extension}",
                         'type'     => $fileGroup['type'][$i],
                         'tmp_name' => $fileGroup['tmp_name'][$i],
                         'error'    => $fileGroup['error'][$i],
                         'size'     => $fileGroup['size'][$i]
                     ];
-                    $file    = $this->uploadFile($oneFile);
+                    $file      = $this->uploadFile($oneFile);
                     if ($file['status'] == '1') {
-                        print_r($file);
                         $data_file = [
                             'NFRMNO'    => $post['nfrmno'],
                             'VORGNO'    => $post['vorgno'],
@@ -225,18 +240,186 @@ class Main extends MY_Controller
             }
         }
 
+        // ตรวจสอบว่าเป็นแบบตารางปกติหรือแบบแยก (Split)
+        if (!empty($post['expense'])) {
+            // กรณีตารางปกติ
+            $expenses = json_decode($post['expense']);
+            foreach ($expenses as $key => $value) {
+                $data_expense = [
+                    'NFRMNO'  => $post['nfrmno'],
+                    'VORGNO'  => $post['vorgno'],
+                    'CYEAR'   => $post['cyear'],
+                    'CYEAR2'  => $post['cyear2'],
+                    'NRUNNO'  => $post['nrunno'],
+                    'RECEIPT' => $value->receipt_no,
+                    'COST'    => $value->cost
+                ];
 
-        foreach (json_decode($post['expense']) as $key => $value) {
-            $data_expense = [
-                'NFRMNO'  => $post['nfrmno'],
-                'VORGNO'  => $post['vorgno'],
-                'CYEAR'   => $post['cyear'],
-                'CYEAR2'  => $post['cyear2'],
-                'NRUNNO'  => $post['nrunno'],
-                'RECEIPT' => $value->receipt_no,
-                'COST'    => $value->cost
-            ];
-            $this->clr->insert('GPCLER_EXPENSE', $data_expense);
+                // Handle date_issue
+                $dateFields_expense = [];
+                if (!empty($value->date_issue)) {
+                    $dateFields_expense['DATE_ISSUE'] = "TO_DATE('{$value->date_issue}', 'YYYY-MM-DD')";
+                }
+
+                // อัปโหลดไฟล์ receipt สำหรับแต่ละแถว
+                $receiptFileKey = "receipt_file_{$key}";
+                if (isset($_FILES[$receiptFileKey]) && $_FILES[$receiptFileKey]['error'] === UPLOAD_ERR_OK) {
+                    $extension   = pathinfo($_FILES[$receiptFileKey]['name'], PATHINFO_EXTENSION);
+                    $rowIndex    = $key + 1;
+                    $expenseFile = [
+                        'name'     => "ExpenseReceipt_{$post['cyear2']}_{$post['nrunno']}_{$rowIndex}.{$extension}",
+                        'type'     => $_FILES[$receiptFileKey]['type'],
+                        'tmp_name' => $_FILES[$receiptFileKey]['tmp_name'],
+                        'error'    => $_FILES[$receiptFileKey]['error'],
+                        'size'     => $_FILES[$receiptFileKey]['size']
+                    ];
+                    $file        = $this->uploadFile($expenseFile);
+                    if ($file['status'] == '1') {
+                        $data_expense['RECEIPT_FILE'] = $file['file_name'];
+                    }
+                }
+
+                $this->clr->insert('GPCLER_EXPENSE', $data_expense, $dateFields_expense);
+            }
+        } elseif (!empty($post['expenseSplit'])) {
+            // กรณีตารางแยก (Lunch และ Break)
+            $expenseSplit = json_decode($post['expenseSplit']);
+
+            // บันทึก Lunch expenses (type=1)
+            if (!empty($expenseSplit->lunch)) {
+                foreach ($expenseSplit->lunch as $key => $value) {
+                    $data_expense = [
+                        'NFRMNO'  => $post['nfrmno'],
+                        'VORGNO'  => $post['vorgno'],
+                        'CYEAR'   => $post['cyear'],
+                        'CYEAR2'  => $post['cyear2'],
+                        'NRUNNO'  => $post['nrunno'],
+                        'RECEIPT' => $value->receipt_no,
+                        'COST'    => $value->cost,
+                        'TYPE'    => $value->type // 1 = Lunch
+                    ];
+
+                    // Handle date_issue
+                    $dateFields_lunch = [];
+                    if (!empty($value->date_issue)) {
+                        $dateFields_lunch['DATE_ISSUE'] = "TO_DATE('{$value->date_issue}', 'YYYY-MM-DD')";
+                    }
+
+                    // อัปโหลดไฟล์ receipt สำหรับ Lunch
+                    $receiptFileKey = "receipt_file_lunch_{$key}";
+                    if (isset($_FILES[$receiptFileKey]) && $_FILES[$receiptFileKey]['error'] === UPLOAD_ERR_OK) {
+                        $extension = pathinfo($_FILES[$receiptFileKey]['name'], PATHINFO_EXTENSION);
+                        $rowIndex  = $key + 1;
+                        $lunchFile = [
+                            'name'     => "LunchReceipt_{$post['cyear2']}_{$post['nrunno']}_{$rowIndex}.{$extension}",
+                            'type'     => $_FILES[$receiptFileKey]['type'],
+                            'tmp_name' => $_FILES[$receiptFileKey]['tmp_name'],
+                            'error'    => $_FILES[$receiptFileKey]['error'],
+                            'size'     => $_FILES[$receiptFileKey]['size']
+                        ];
+                        $file      = $this->uploadFile($lunchFile);
+                        if ($file['status'] == '1') {
+                            $data_expense['RECEIPT_FILE'] = $file['file_name'];
+                        }
+                    }
+
+                    $this->clr->insert('GPCLER_EXPENSE', $data_expense, $dateFields_lunch);
+                }
+            }
+
+            // บันทึก Break expenses (type=4)
+            if (!empty($expenseSplit->break)) {
+                foreach ($expenseSplit->break as $key => $value) {
+                    $data_expense = [
+                        'NFRMNO'  => $post['nfrmno'],
+                        'VORGNO'  => $post['vorgno'],
+                        'CYEAR'   => $post['cyear'],
+                        'CYEAR2'  => $post['cyear2'],
+                        'NRUNNO'  => $post['nrunno'],
+                        'RECEIPT' => $value->receipt_no,
+                        'COST'    => $value->cost,
+                        'TYPE'    => $value->type // 4 = Break
+                    ];
+
+                    // Handle date_issue
+                    $dateFields_break = [];
+                    if (!empty($value->date_issue)) {
+                        $dateFields_break['DATE_ISSUE'] = "TO_DATE('{$value->date_issue}', 'YYYY-MM-DD')";
+                    }
+
+                    // อัปโหลดไฟล์ receipt สำหรับ Break
+                    $receiptFileKey = "receipt_file_break_{$key}";
+                    if (isset($_FILES[$receiptFileKey]) && $_FILES[$receiptFileKey]['error'] === UPLOAD_ERR_OK) {
+                        $extension = pathinfo($_FILES[$receiptFileKey]['name'], PATHINFO_EXTENSION);
+                        $rowIndex  = $key + 1;
+                        $breakFile = [
+                            'name'     => "BreakReceipt_{$post['cyear2']}_{$post['nrunno']}_{$rowIndex}.{$extension}",
+                            'type'     => $_FILES[$receiptFileKey]['type'],
+                            'tmp_name' => $_FILES[$receiptFileKey]['tmp_name'],
+                            'error'    => $_FILES[$receiptFileKey]['error'],
+                            'size'     => $_FILES[$receiptFileKey]['size']
+                        ];
+                        $file      = $this->uploadFile($breakFile);
+                        if ($file['status'] == '1') {
+                            $data_expense['RECEIPT_FILE'] = $file['file_name'];
+                        }
+                    }
+
+                    $this->clr->insert('GPCLER_EXPENSE', $data_expense, $dateFields_break);
+                }
+            }
+
+            // อัปโหลดไฟล์ Memo สำหรับ Lunch (memo_1)
+            if (isset($_FILES['memo_1']) && $_FILES['memo_1']['error'] === UPLOAD_ERR_OK) {
+                $extension     = pathinfo($_FILES['memo_1']['name'], PATHINFO_EXTENSION);
+                $memoLunchFile = [
+                    'name'     => "MemoLunch_{$post['cyear2']}_{$post['nrunno']}.{$extension}",
+                    'type'     => $_FILES['memo_1']['type'],
+                    'tmp_name' => $_FILES['memo_1']['tmp_name'],
+                    'error'    => $_FILES['memo_1']['error'],
+                    'size'     => $_FILES['memo_1']['size']
+                ];
+                $file          = $this->uploadFile($memoLunchFile);
+                if ($file['status'] == '1') {
+                    $data_memo = [
+                        'NFRMNO'    => $post['nfrmno'],
+                        'VORGNO'    => $post['vorgno'],
+                        'CYEAR'     => $post['cyear'],
+                        'CYEAR2'    => $post['cyear2'],
+                        'NRUNNO'    => $post['nrunno'],
+                        'FILE_NAME' => $file['file_name'],
+                        'FILE_PATH' => $file['file_path'],
+                        'FILE_TYPE' => 'MEMO_LUNCH'
+                    ];
+                    $this->clr->insert('GPCLER_FILE', $data_memo);
+                }
+            }
+
+            // อัปโหลดไฟล์ Memo สำหรับ Break (memo_4)
+            if (isset($_FILES['memo_4']) && $_FILES['memo_4']['error'] === UPLOAD_ERR_OK) {
+                $extension     = pathinfo($_FILES['memo_4']['name'], PATHINFO_EXTENSION);
+                $memoBreakFile = [
+                    'name'     => "MemoBreak_{$post['cyear2']}_{$post['nrunno']}.{$extension}",
+                    'type'     => $_FILES['memo_4']['type'],
+                    'tmp_name' => $_FILES['memo_4']['tmp_name'],
+                    'error'    => $_FILES['memo_4']['error'],
+                    'size'     => $_FILES['memo_4']['size']
+                ];
+                $file          = $this->uploadFile($memoBreakFile);
+                if ($file['status'] == '1') {
+                    $data_memo = [
+                        'NFRMNO'    => $post['nfrmno'],
+                        'VORGNO'    => $post['vorgno'],
+                        'CYEAR'     => $post['cyear'],
+                        'CYEAR2'    => $post['cyear2'],
+                        'NRUNNO'    => $post['nrunno'],
+                        'FILE_NAME' => $file['file_name'],
+                        'FILE_PATH' => $file['file_path'],
+                        'FILE_TYPE' => 'MEMO_BREAK'
+                    ];
+                    $this->clr->insert('GPCLER_FILE', $data_memo);
+                }
+            }
         }
 
         $ent_where = [
@@ -426,7 +609,32 @@ class Main extends MY_Controller
                 'RECEIPT' => $value->receipt_no,
                 'COST'    => $value->cost
             ];
-            $this->clr->insert('GPCLER_EXPENSE', $data_expense);
+
+            // Handle date_issue
+            $dateFields_expense = [];
+            if (!empty($value->date_issue)) {
+                $dateFields_expense['DATE_ISSUE'] = "TO_DATE('{$value->date_issue}', 'YYYY-MM-DD')";
+            }
+
+            // Handle receipt file per row
+            $receiptFileKey = "receipt_file_{$key}";
+            if (isset($_FILES[$receiptFileKey]) && $_FILES[$receiptFileKey]['error'] === UPLOAD_ERR_OK) {
+                $extension   = pathinfo($_FILES[$receiptFileKey]['name'], PATHINFO_EXTENSION);
+                $rowIndex    = $key + 1;
+                $expenseFile = [
+                    'name'     => "ExpenseReceipt_{$cyear2}_{$nrunno}_{$rowIndex}.{$extension}",
+                    'type'     => $_FILES[$receiptFileKey]['type'],
+                    'tmp_name' => $_FILES[$receiptFileKey]['tmp_name'],
+                    'error'    => $_FILES[$receiptFileKey]['error'],
+                    'size'     => $_FILES[$receiptFileKey]['size']
+                ];
+                $file        = $this->uploadFile($expenseFile, $_ENV['AMEC_FILE_PATH'] . ($this->_servername() == 'amecweb' ? 'production' : 'development') . "/Form/GP/GPCLER/");
+                if ($file['status'] == '1') {
+                    $data_expense['RECEIPT_FILE'] = $file['file_name'];
+                }
+            }
+
+            $this->clr->insert('GPCLER_EXPENSE', $data_expense, $dateFields_expense);
         }
 
         $data_cler = [
@@ -438,7 +646,7 @@ class Main extends MY_Controller
             'PRESIDENT_JOIN' => $post['p_join'],
             'ACTUAL_COST'    => $post['actual_cost'],
             // 'REMAIN_BUDGET'  => $post['remain'],
-            'REMARK'         => $post['remark'],
+            'REMARK'         => $post['remark_president'] ?? $post['remark'] ?? '',
             'EMP_INPUT'      => $post['input_by'],
             'EMP_REQ'        => $post['input_by'],
             'REASON'         => $post['Reason'],
@@ -503,9 +711,21 @@ class Main extends MY_Controller
         } else {
             $getEmp = $this->ent->get_orgpos("020101", "02")[0]; // PRESIDENT
         }
-        $this->updateFlowApv("", $getEmp->VEMPNO, $post['nfrmno'], $post['vorgno'], $post['cyear'], $post['cyear2'], $post['nrunno'], "01", "00");
+        $condition  = [
+            'NFRMNO'  => $post['nfrmno'],
+            'VORGNO'  => $post['vorgno'],
+            'CYEAR'   => $post['cyear'],
+            'CYEAR2'  => $post['cyear2'],
+            'NRUNNO'  => $post['nrunno'],
+            'CSTEPNO' => "01"
+        ];
+        $approveEmp = $getEmp->VEMPNO;
+        $this->updateFlow([
+            'condition' => $condition,
+            'VAPVNO'    => $approveEmp
+        ]);
+        // $this->updateFlowApv("", $getEmp->VEMPNO, $post['nfrmno'], $post['vorgno'], $post['cyear'], $post['cyear2'], $post['nrunno'], "01", "00");
         $data  = [
-
             'PRESIDENT_JOIN' => $post['p_join'],
             'ACTUAL_COST'    => $post['actual_cost'],
             'REMAIN_BUDGET'  => $post['remain'],
@@ -519,8 +739,8 @@ class Main extends MY_Controller
             'NRUNNO' => $post['nrunno'],
         ];
 
-        if (isset($_FILES['receipt'])) {
-            $file = $this->uploadFile($_FILES['receipt']);
+        if (isset($_FILES['receipt']) && $_FILES['receipt']['error'] === UPLOAD_ERR_OK) {
+            $file = $this->uploadFile($_FILES['receipt'], $_ENV['AMEC_FILE_PATH'] . ($this->_servername() == 'amecweb' ? 'production' : 'development') . "/Form/GP/GPCLER/");
             if ($file['status'] == '1') {
                 $data['RECEIPT_FILE'] = $file['file_name'];
             }
@@ -528,6 +748,215 @@ class Main extends MY_Controller
 
         $this->clr->update('GPCLER_FORM', $data, $where);
 
+        // เก็บข้อมูลเก่าก่อน delete เพื่อเอาไฟล์เก่ามาใช้ต่อถ้าไม่มีการอัปโหลดใหม่
+        $oldExpenses = $this->clr->get_expense($post['nfrmno'], $post['vorgno'], $post['cyear'], $post['cyear2'], $post['nrunno']);
+
+        // สร้าง mapping ของไฟล์เก่า โดยใช้ receipt_no และ type เป็น key
+        $oldFilesMap = [];
+        foreach ($oldExpenses as $oldExp) {
+            $key               = $oldExp->RECEIPT . '_' . ($oldExp->TYPE ?? '');
+            $oldFilesMap[$key] = $oldExp->RECEIPT_FILE;
+        }
+
+        // Delete existing expenses and re-insert
+        $this->clr->delete('GPCLER_EXPENSE', $where);
+
+        // Handle expense data - ตารางปกติ
+        if (!empty($post['expense'])) {
+            $expenses = json_decode($post['expense'], true);
+            foreach ($expenses as $key => $expense) {
+                $data_expense = [
+                    'NFRMNO'  => $post['nfrmno'],
+                    'VORGNO'  => $post['vorgno'],
+                    'CYEAR'   => $post['cyear'],
+                    'CYEAR2'  => $post['cyear2'],
+                    'NRUNNO'  => $post['nrunno'],
+                    'RECEIPT' => $expense['receipt_no'],
+                    'COST'    => $expense['cost']
+                ];
+
+                // Handle date_issue
+                $dateFields_expense = [];
+                if (!empty($expense['date_issue'])) {
+                    $dateFields_expense['DATE_ISSUE'] = "TO_DATE('{$expense['date_issue']}', 'YYYY-MM-DD')";
+                }
+
+                // Handle receipt file per row
+                $receiptFileKey = "receipt_file_{$key}";
+                if (isset($_FILES[$receiptFileKey]) && $_FILES[$receiptFileKey]['error'] === UPLOAD_ERR_OK) {
+                    $extension   = pathinfo($_FILES[$receiptFileKey]['name'], PATHINFO_EXTENSION);
+                    $rowIndex    = $key + 1;
+                    $expenseFile = [
+                        'name'     => "ExpenseReceipt_{$post['cyear2']}_{$post['nrunno']}_{$rowIndex}.{$extension}",
+                        'type'     => $_FILES[$receiptFileKey]['type'],
+                        'tmp_name' => $_FILES[$receiptFileKey]['tmp_name'],
+                        'error'    => $_FILES[$receiptFileKey]['error'],
+                        'size'     => $_FILES[$receiptFileKey]['size']
+                    ];
+                    $file        = $this->uploadFile($expenseFile, $_ENV['AMEC_FILE_PATH'] . ($this->_servername() == 'amecweb' ? 'production' : 'development') . "/Form/GP/GPCLER/");
+                    if ($file['status'] == '1') {
+                        $data_expense['RECEIPT_FILE'] = $file['file_name'];
+                    }
+                } else {
+                    // ถ้าไม่มีไฟล์ใหม่ ให้ใช้ไฟล์เก่า
+                    $oldKey = $expense['receipt_no'] . '_';
+                    if (isset($oldFilesMap[$oldKey])) {
+                        $data_expense['RECEIPT_FILE'] = $oldFilesMap[$oldKey];
+                    }
+                }
+
+                $this->clr->insert('GPCLER_EXPENSE', $data_expense, $dateFields_expense);
+            }
+        }
+        // Handle expenseSplit data - ตารางแยก (Lunch และ Break)
+        elseif (!empty($post['expenseSplit'])) {
+            $expenseSplit = json_decode($post['expenseSplit']);
+
+            // Process Lunch expenses (type=1)
+            if (!empty($expenseSplit->lunch)) {
+                foreach ($expenseSplit->lunch as $key => $expense) {
+                    $data_expense = [
+                        'NFRMNO'  => $post['nfrmno'],
+                        'VORGNO'  => $post['vorgno'],
+                        'CYEAR'   => $post['cyear'],
+                        'CYEAR2'  => $post['cyear2'],
+                        'NRUNNO'  => $post['nrunno'],
+                        'RECEIPT' => $expense->receipt_no,
+                        'COST'    => $expense->cost,
+                        'TYPE'    => 1
+                    ];
+
+                    $dateFields_expense = [];
+                    if (!empty($expense->date_issue)) {
+                        $dateFields_expense['DATE_ISSUE'] = "TO_DATE('{$expense->date_issue}', 'YYYY-MM-DD')";
+                    }
+
+                    // Handle lunch receipt file
+                    $receiptFileKey = "receipt_file_lunch_{$key}";
+                    if (isset($_FILES[$receiptFileKey]) && $_FILES[$receiptFileKey]['error'] === UPLOAD_ERR_OK) {
+                        $extension   = pathinfo($_FILES[$receiptFileKey]['name'], PATHINFO_EXTENSION);
+                        $rowIndex    = $key + 1;
+                        $expenseFile = [
+                            'name'     => "Lunch_Receipt_{$post['cyear2']}_{$post['nrunno']}_{$rowIndex}.{$extension}",
+                            'type'     => $_FILES[$receiptFileKey]['type'],
+                            'tmp_name' => $_FILES[$receiptFileKey]['tmp_name'],
+                            'error'    => $_FILES[$receiptFileKey]['error'],
+                            'size'     => $_FILES[$receiptFileKey]['size']
+                        ];
+                        $file        = $this->uploadFile($expenseFile, $_ENV['AMEC_FILE_PATH'] . ($this->_servername() == 'amecweb' ? 'production' : 'development') . "/Form/GP/GPCLER/");
+                        if ($file['status'] == '1') {
+                            $data_expense['RECEIPT_FILE'] = $file['file_name'];
+                        }
+                    } else {
+                        // ถ้าไม่มีไฟล์ใหม่ ให้ใช้ไฟล์เก่า
+                        $oldKey = $expense->receipt_no . '_1';
+                        if (isset($oldFilesMap[$oldKey])) {
+                            $data_expense['RECEIPT_FILE'] = $oldFilesMap[$oldKey];
+                        }
+                    }
+
+                    $this->clr->insert('GPCLER_EXPENSE', $data_expense, $dateFields_expense);
+                }
+            }
+
+            // Process Break expenses (type=4)
+            if (!empty($expenseSplit->break)) {
+                foreach ($expenseSplit->break as $key => $expense) {
+                    $data_expense = [
+                        'NFRMNO'  => $post['nfrmno'],
+                        'VORGNO'  => $post['vorgno'],
+                        'CYEAR'   => $post['cyear'],
+                        'CYEAR2'  => $post['cyear2'],
+                        'NRUNNO'  => $post['nrunno'],
+                        'RECEIPT' => $expense->receipt_no,
+                        'COST'    => $expense->cost,
+                        'TYPE'    => 4
+                    ];
+
+                    $dateFields_expense = [];
+                    if (!empty($expense->date_issue)) {
+                        $dateFields_expense['DATE_ISSUE'] = "TO_DATE('{$expense->date_issue}', 'YYYY-MM-DD')";
+                    }
+
+                    // Handle break receipt file
+                    $receiptFileKey = "receipt_file_break_{$key}";
+                    if (isset($_FILES[$receiptFileKey]) && $_FILES[$receiptFileKey]['error'] === UPLOAD_ERR_OK) {
+                        $extension   = pathinfo($_FILES[$receiptFileKey]['name'], PATHINFO_EXTENSION);
+                        $rowIndex    = $key + 1;
+                        $expenseFile = [
+                            'name'     => "Break_Receipt_{$post['cyear2']}_{$post['nrunno']}_{$rowIndex}.{$extension}",
+                            'type'     => $_FILES[$receiptFileKey]['type'],
+                            'tmp_name' => $_FILES[$receiptFileKey]['tmp_name'],
+                            'error'    => $_FILES[$receiptFileKey]['error'],
+                            'size'     => $_FILES[$receiptFileKey]['size']
+                        ];
+                        $file        = $this->uploadFile($expenseFile, $_ENV['AMEC_FILE_PATH'] . ($this->_servername() == 'amecweb' ? 'production' : 'development') . "/Form/GP/GPCLER/");
+                        if ($file['status'] == '1') {
+                            $data_expense['RECEIPT_FILE'] = $file['file_name'];
+                        }
+                    } else {
+                        // ถ้าไม่มีไฟล์ใหม่ ให้ใช้ไฟล์เก่า
+                        $oldKey = $expense->receipt_no . '_4';
+                        if (isset($oldFilesMap[$oldKey])) {
+                            $data_expense['RECEIPT_FILE'] = $oldFilesMap[$oldKey];
+                        }
+                    }
+
+                    $this->clr->insert('GPCLER_EXPENSE', $data_expense, $dateFields_expense);
+                }
+            }
+
+            // Upload Memo files for split expense
+            if (isset($_FILES['memo_1']) && $_FILES['memo_1']['error'] === UPLOAD_ERR_OK) {
+                $extension = pathinfo($_FILES['memo_1']['name'], PATHINFO_EXTENSION);
+                $memoFile  = [
+                    'name'     => "Lunch_Memo_{$post['cyear2']}_{$post['nrunno']}.{$extension}",
+                    'type'     => $_FILES['memo_1']['type'],
+                    'tmp_name' => $_FILES['memo_1']['tmp_name'],
+                    'error'    => $_FILES['memo_1']['error'],
+                    'size'     => $_FILES['memo_1']['size']
+                ];
+                $file      = $this->uploadFile($memoFile, $_ENV['AMEC_FILE_PATH'] . ($this->_servername() == 'amecweb' ? 'production' : 'development') . "/Form/GP/GPCLER/");
+                if ($file['status'] == '1') {
+                    $data_file = [
+                        'NFRMNO'    => $post['nfrmno'],
+                        'VORGNO'    => $post['vorgno'],
+                        'CYEAR'     => $post['cyear'],
+                        'CYEAR2'    => $post['cyear2'],
+                        'NRUNNO'    => $post['nrunno'],
+                        'FILE_NAME' => $file['file_name'],
+                        'FILE_PATH' => $file['file_path'],
+                    ];
+                    $this->clr->insert('GPCLER_FILE', $data_file);
+                }
+            }
+
+            if (isset($_FILES['memo_4']) && $_FILES['memo_4']['error'] === UPLOAD_ERR_OK) {
+                $extension = pathinfo($_FILES['memo_4']['name'], PATHINFO_EXTENSION);
+                $memoFile  = [
+                    'name'     => "Break_Memo_{$post['cyear2']}_{$post['nrunno']}.{$extension}",
+                    'type'     => $_FILES['memo_4']['type'],
+                    'tmp_name' => $_FILES['memo_4']['tmp_name'],
+                    'error'    => $_FILES['memo_4']['error'],
+                    'size'     => $_FILES['memo_4']['size']
+                ];
+                $file      = $this->uploadFile($memoFile, $_ENV['AMEC_FILE_PATH'] . ($this->_servername() == 'amecweb' ? 'production' : 'development') . "/Form/GP/GPCLER/");
+                if ($file['status'] == '1') {
+                    $data_file = [
+                        'NFRMNO'    => $post['nfrmno'],
+                        'VORGNO'    => $post['vorgno'],
+                        'CYEAR'     => $post['cyear'],
+                        'CYEAR2'    => $post['cyear2'],
+                        'NRUNNO'    => $post['nrunno'],
+                        'FILE_NAME' => $file['file_name'],
+                        'FILE_PATH' => $file['file_path'],
+                    ];
+                    $this->clr->insert('GPCLER_FILE', $data_file);
+                }
+            }
+        }
+
+        // Handle memo files (สำหรับตารางปกติ)
         if (isset($_FILES['memo'])) {
             $fileGroup = $_FILES['memo'];
             foreach ($fileGroup['name'] as $i => $name) {
@@ -539,9 +968,8 @@ class Main extends MY_Controller
                         'error'    => $fileGroup['error'][$i],
                         'size'     => $fileGroup['size'][$i]
                     ];
-                    $file    = $this->uploadFile($oneFile);
+                    $file    = $this->uploadFile($oneFile, $_ENV['AMEC_FILE_PATH'] . ($this->_servername() == 'amecweb' ? 'production' : 'development') . "/Form/GP/GPCLER/");
                     if ($file['status'] == '1') {
-                        print_r($file);
                         $data_file = [
                             'NFRMNO'    => $post['nfrmno'],
                             'VORGNO'    => $post['vorgno'],
@@ -556,7 +984,6 @@ class Main extends MY_Controller
                 }
             }
         }
-        // $this->clr->insert('GPCLER_FORM', $data);
     }
 
     public function UpdateNoAdv()
@@ -705,6 +1132,48 @@ class Main extends MY_Controller
             $this->clr->insert('GPENT_COMPANY', $data);
         }
 
+        // Delete and re-insert expenses
+        $this->clr->delete('GPCLER_EXPENSE', $where);
+        if (!empty($post['expense'])) {
+            foreach (json_decode($post['expense']) as $key => $value) {
+                $data_expense = [
+                    'NFRMNO'  => $nfrmno,
+                    'VORGNO'  => $vorgno,
+                    'CYEAR'   => $cyear,
+                    'CYEAR2'  => $cyear2,
+                    'NRUNNO'  => $nrunno,
+                    'RECEIPT' => $value->receipt_no,
+                    'COST'    => $value->cost
+                ];
+
+                // Handle date_issue
+                $dateFields_expense = [];
+                if (!empty($value->date_issue)) {
+                    $dateFields_expense['DATE_ISSUE'] = "TO_DATE('{$value->date_issue}', 'YYYY-MM-DD')";
+                }
+
+                // Handle receipt file per row
+                $receiptFileKey = "receipt_file_{$key}";
+                if (isset($_FILES[$receiptFileKey]) && $_FILES[$receiptFileKey]['error'] === UPLOAD_ERR_OK) {
+                    $extension   = pathinfo($_FILES[$receiptFileKey]['name'], PATHINFO_EXTENSION);
+                    $rowIndex    = $key + 1;
+                    $expenseFile = [
+                        'name'     => "ExpenseReceipt_{$cyear2}_{$nrunno}_{$rowIndex}.{$extension}",
+                        'type'     => $_FILES[$receiptFileKey]['type'],
+                        'tmp_name' => $_FILES[$receiptFileKey]['tmp_name'],
+                        'error'    => $_FILES[$receiptFileKey]['error'],
+                        'size'     => $_FILES[$receiptFileKey]['size']
+                    ];
+                    $file        = $this->uploadFile($expenseFile, $_ENV['AMEC_FILE_PATH'] . ($this->_servername() == 'amecweb' ? 'production' : 'development') . "/Form/GP/GPCLER/");
+                    if ($file['status'] == '1') {
+                        $data_expense['RECEIPT_FILE'] = $file['file_name'];
+                    }
+                }
+
+                $this->clr->insert('GPCLER_EXPENSE', $data_expense, $dateFields_expense);
+            }
+        }
+
         $data_cler = [
             'NFRMNO'         => $post['nfrmno'],
             'VORGNO'         => $post['vorgno'],
@@ -714,7 +1183,7 @@ class Main extends MY_Controller
             'PRESIDENT_JOIN' => $post['p_join'],
             'ACTUAL_COST'    => $post['actual_cost'],
             // 'REMAIN_BUDGET'  => $post['remain'],
-            'REMARK'         => $post['remark'],
+            'REMARK'         => $post['remark_president'] ?? $post['remark'] ?? '',
             'EMP_INPUT'      => $post['input_by'],
             'EMP_REQ'        => $post['input_by'],
             'REASON'         => $post['Reason'],
@@ -808,6 +1277,16 @@ class Main extends MY_Controller
         echo json_encode(['status' => 'success']);
     }
 
-
+    public function getExpenseData()
+    {
+        $nfrmno = $this->input->post('nfrmno');
+        $vorgno = $this->input->post('vorgno');
+        $vorgno = $this->input->post('vorgno');
+        $cyear  = $this->input->post('cyear');
+        $cyear2 = $this->input->post('cyear2');
+        $nrunno = $this->input->post('nrunno');
+        $data   = $this->clr->get_expense($nfrmno, $vorgno, $cyear, $cyear2, $nrunno);
+        echo json_encode($data);
+    }
 
 }

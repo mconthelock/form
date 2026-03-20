@@ -125,18 +125,44 @@
                                 </tr>
                             @endif
                             <tr>
-                                <th class="text-left text-blue-900 font-semibold py-2 pl-4 border-blue-200 bg-blue-100">Location</th>
-                                <td class="py-2 pl-4 border-blue-200">{{ $dataForm->LOCATION_TYPE ?? '-' }}</td>
+                                <th class="text-left text-blue-900 font-semibold py-2 pl-4 border-b-2 border-blue-200 bg-blue-100">Location</th>
+                                <td class="py-2 pl-4 border-b-2 border-blue-200">{{ $dataForm->LOCATION_TYPE ?? '-' }}</td>
                             </tr>
+                            @if ($dataForm->LOCATION)
+                                <tr>
+                                    <th class="text-left text-blue-900 font-semibold py-2 pl-4 border-b-2 border-blue-200 bg-blue-100">Location Detail</th>
+                                    <td class="py-2 pl-4 border-b-2 border-blue-200">{{ $dataForm->LOCATION }}</td>
+                                </tr>
+                            @endif
+                            @if ($dataForm->ENTERTAINMENT_BUDGET)
+                                <tr>
+                                    <th class="text-left text-blue-900 font-semibold py-2 pl-4 border-b-2 border-blue-200 bg-blue-100">Entertainment Budget</th>
+                                    <td class="py-2 pl-4 border-b-2 border-blue-200">{{ $dataForm->ENTERTAINMENT_BUDGET }}</td>
+                                </tr>
+                            @endif
+                            @if ($dataForm->PAYABLE_DATE_GIFT)
+                                <tr class=" border-yellow-400">
+                                    <th class="text-left text-blue-900 bg-yellow-100 font-semibold py-2 pl-4 border-b-2 border-blue-200">
+                                        Payable Date
+                                    </th>
+                                    <td class="py-2 pl-4 border-b-2 border-blue-200 bg-yellow-50  font-bold text-gray-800">
+                                        {{ $dataForm->PAYABLE_DATE_GIFT }}
+                                    </td>
+                                </tr>
+                            @endif
 
-                            {{-- <tr>
-                                <th class="text-left text-blue-900 font-semibold py-2 pl-4 border-blue-200 bg-blue-100">Entertainment Budget</th>
-                                <td class="py-2 pl-4 border-blue-200">{{ $dataForm->ENTERTAINMENT_BUDGET ?? '-' }}</td>
-                            </tr>
-                            <tr>
-                                <th class="text-left text-blue-900 font-semibold py-2 pl-4 border-blue-200 bg-blue-100">Guest Type</th>
-                                <td class="py-2 pl-4 border-blue-200">{{ $dataForm->TYPE_NAME }}</td>
-                            </tr> --}}
+                            @if ($dataForm->FILE_URGENT)
+                                <tr class=" border-red-400">
+                                    <th class="text-left text-blue-900 bg-red-100 font-semibold py-2 pl-4 border-blue-200">
+                                        Urgent Approval File
+                                    </th>
+                                    <td class="py-2 pl-4 border-blue-200 bg-red-50 font-bold">
+                                        <a href="{{ base_url('gpform/GP-ENT/main/preview/' . $dataForm->FILE_URGENT) }}" target="_blank" class="text-red-700 underline font-semibold">
+                                            {{ $dataForm->FILE_URGENT }}
+                                        </a>
+                                    </td>
+                                </tr>
+                            @endif
                         </tbody>
                     </table>
 
@@ -454,6 +480,21 @@
                     </div>
                 @endif
 
+                @php
+                    $amecIds = array_map(function ($x) {
+                        return $x->SEMPNO;
+                    }, $amec);
+                @endphp
+                @if (in_array($flowstep[0]->CSTEPNO, ['34', '13']) && isset($PRESIDENT->VEMPNO) && isset($RAF->VEMPNO) && in_array($PRESIDENT->VEMPNO, $amecIds))
+                    <div class="flex items-center justify-center mt-4 space-x-3">
+                        <label for="emp_select" class="font-medium text-blue-900">Select Approver:</label>
+                        <select id="emp_select" name="emp_select" class="select select-bordered w-80 bg-blue-50 focus:bg-white focus:border-blue-500 transition">
+                            <option value="" disabled selected>Select an option</option>
+                            {{-- รายชื่อ Approver จะถูกเติมโดย JS --}}
+                        </select>
+                    </div>
+                @endif
+
                 <div class="flex justify-center mt-6 space-x-4">
                     <input type="hidden" class="cstepno" value="{{ $flowstep[0]->CSTEPNO }}" />
                     <input type="hidden" class="cstepnextno" value="{{ $flowstep[0]->CSTEPNEXTNO }}" />
@@ -463,10 +504,10 @@
                     <button type="button" class="btn btn-error w-32 transition btn-submit" data-action="reject">
                         Reject
                     </button>
-                    <!-- <button type="button" class="btn btn-info w-32 transition btn-submit" data-action="return">
-                                                    Return
-                                                </button> -->
-                    @if ((in_array($flowstep[0]->CSTEPNO, ['19', '34']) && $flowstep[0]->CSTEPNEXTNO == '13') || ($flowstep[0]->CSTEPNO == '13' && $flowstep[0]->CSTEPNEXTNO == '18'))
+                    {{-- <button type="button" class="btn btn-info w-32 transition btn-submit" data-action="return">
+                            Return
+                        </button> --}}
+                    @if (in_array($flowstep[0]->CSTEPNO, ['34', '13']))
                         <button type="button" class="btn btn-info w-32 transition btn-submit" data-action="return">
                             Return
                         </button>

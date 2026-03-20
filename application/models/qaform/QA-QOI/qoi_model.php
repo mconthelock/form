@@ -7,7 +7,7 @@ class qoi_model extends my_model
     {
         parent::__construct();
         $this->load->database();
-       
+        $this->dbas = $this->load->database('AS400', true);
 
     }
 
@@ -80,7 +80,7 @@ class qoi_model extends my_model
         $this->db->select("SEMPNO , SNAME")
         ->from('AMECUSERALL')
         ->where("CSTATUS = '1'")
-        ->where("SSECCODE in ('000402','000403')")
+        ->where("SSECCODE in ('000402','000403','000404')")
         ->where("SPOSCODE in ('30')")
         ->order_by('SNAME ASC');
         return $this->db->get()->result();
@@ -129,5 +129,10 @@ class qoi_model extends my_model
         ->where('Q.NRUNNO', $nrunno);
     return $this->db->get()->result();
     }
+
+        public function getdataAssql($q)
+	{
+		return $this->dbas->query($q)->result();
+	}
 
 }

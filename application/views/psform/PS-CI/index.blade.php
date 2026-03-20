@@ -1,8 +1,7 @@
 @extends('layouts/webflowTemplate')
 @section('contents')
     <!-- Header Section -->
-    <div class="form-data" data-nfrmno="{{ $_GET['no'] }}" data-vorgno="{{ $_GET['orgNo'] }}" data-cyear="{{ $_GET['y'] }}" data-cyear2="{{ $_GET['y2'] }}" data-nrunno="{{ $_GET['runNo'] }}" data-empno="{{ $_GET['empno'] }}"></div>
-
+    <div class="form-data" data-nfrmno="{{ $_GET['no'] }}" data-vorgno="{{ $_GET['orgNo'] }}" data-cyear="{{ $_GET['y'] }}" data-cyear2="{{ $_GET['y2'] }}" data-nrunno="{{ $_GET['runNo'] }}"></div>
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
         <!-- Header Section -->
         <div class="bg-slate-200/70 rounded-lg p-6 shadow-sm border border-slate-300">
@@ -95,6 +94,19 @@
             </table>
         </div>
     </div>
+    @if ($mode == '2')
+        <div class="mt-5 flex flex-col items-center justify-center gap-4">
+            <div>
+                <label class="text-sm font-semibold text-slate-700 mb-2 block">Remark</label>
+                <textarea class="textarea textarea-bordered w-96" id="remark" placeholder="Enter your remark here..."></textarea>
+            </div>
+            <div class="flex gap-3 items-center justify-center">
+
+                <button class="btn btn-success btn-approve" action="approve">Approve</button>
+                <button class="btn btn-error btn-approve" action="reject">Reject</button>
+            </div>
+        </div>
+    @endif
     <div class="mt-5 flow"></div>
 @endsection
 

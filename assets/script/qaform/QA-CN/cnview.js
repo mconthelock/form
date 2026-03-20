@@ -7,7 +7,9 @@ import flatpickr from "flatpickr";
 //import { setDatePicker } from "@public/_flatpickr";
 import "flatpickr/dist/flatpickr.min.css";
 import { ajaxOptions, getAllAttr, getData, showMessage , requiredForm} from "@amec/webasset/utils";
-import { showflow, doaction, getFormStatus } from "@amec/webasset/api/webform";
+import { showflow, doaction, getFormStatus , getFormno } from "@amec/webasset/api/webform";
+import { sendmail } from "@amec/webasset/api/mail";
+
 
 $(document).ready(async function () {
   const formData = $(".form-data").data();
@@ -23,13 +25,32 @@ $(document).ready(async function () {
     VORGNO: vorgno, 
     CYEAR:  cyear.toString(),
     CYEAR2: cyear2.toString(), 
-    NRUNNO: nrunno
+    NRUNNO: nrunno,
+    showStep: true
   });
+  
 
   $(".flow").html(flow.html);
 
   $(".btn-submit").click(async function () {
+      //console.log("xxxxxxxxxx");
+      
       let action = $(this).data("action");
+      const baseForm = {
+        NFRMNO: nfrmno,
+        VORGNO: vorgno,
+        CYEAR: cyear,
+        CYEAR2: cyear2,
+        NRUNNO: nrunno
+      };
+      //console.log(action);
+      
+      if(action != "deleteApv")
+      {
+      if($("#mstatus").val() != "1")
+      {
+        if (!(await requiredForm("#cn-form"))) return;
+      }  
       if(checkData(action))
       {
           action = (action === "returnrem") ? "return" : action;
@@ -42,60 +63,184 @@ $(document).ready(async function () {
           cnformData.append("nrunno", nrunno);
           cnformData.append("action", action);
           cnformData.append("empno", empno);
-          //for (let pair of cnformData.entries()) {
-          //console.log(pair[0] + ' = ' + pair[1]);
-      ///}
+        
+          let mstatus = cnformData.get('mstatus');
+          let cextData = parseInt(cnformData.get('cextData'));
+          let stepready = cnformData.get('stepready');
+      //     for (let pair of cnformData.entries()) {
+      //     console.log(pair[0] + ' = ' + pair[1]);
+      // }
        
          // console.log(empno);
           
          // return false;
          
-         
+         console.log(action);
           if(action == "approve" || action == "reject")
           {
+                 console.log("xxxx");
                   let act;
-                  let cextData =  parseInt($("#cextData").val());
+                  //let cextData =  parseInt($("#cextData").val());
                   if(cextData >1 && cextData != 5 && action == "reject")
                   {
                       act = "approve";
                   }else{
                       act = action;
                   }
-                  console.log("action ="+act);
+                  
                   
                   const confirm = await doaction({
-                      NFRMNO: nfrmno,
-                      VORGNO: vorgno,
-                      CYEAR: cyear,
-                      CYEAR2: cyear2,
-                      NRUNNO: nrunno,
+                       ...baseForm,
                       ACTION: act,
+                      EMPNO: empno,
+                      REMARK: $("#txtRemark").val()
+                    });
+                    console.log("aaaaaaaaa"+confirm.status);
+                  if (confirm.status) {
+                    const statusact = await actionfrm(cnformData);
+                    const formStatus = await getFormStatus({
+                       ...baseForm
+                    });
+                      console.log("formStatus ="+formStatus);
+                      
+                      if (formStatus == "2" || formStatus == "3") { 
+                           if((formStatus == "3") && (mstatus == "1"))
+                            {
+                                const resform = await createcnng(baseForm);
+                                
+                            }
+                                  
+                              let param = {
+                                  ...baseForm,                         
+                                  FSTATUS: formStatus,
+                                  MTYPE : mstatus == "1" ? 'PIC' : 'ALL'
+                              };
+
+                              const res = await buildmail(param);
+
+                              if (!res.to || !res.subject || !res.html) {
+                                  throw 'Mail data is incomplete';
+                              }
+
+                              let objmail = {
+                                  from: 'noreplay@MitsubishiElevatorAsia.co.th',
+                                  to: res.to,
+                                  subject: res.subject,
+                                  html: res.html
+                              };
+
+                              // รอให้ส่งเมลเสร็จก่อน
+                              await sendmail(objmail);
+                      }else if((stepready == "06") && (mstatus == "1"))
+                      {
+                              let param = {
+                                  ...baseForm,                        
+                                  FSTATUS: formStatus,
+                                  MTYPE : 'FOREMAN'
+                              };
+                                    const res = await buildmail(param);
+
+                              if (!res.to || !res.subject || !res.html) {
+                                  throw 'Mail data is incomplete';
+                              }
+
+                              let objmail = {
+                                  from: 'noreplay@MitsubishiElevatorAsia.co.th',
+                                  to: res.to,
+                                  subject: res.subject,
+                                  html: res.html
+                              };
+
+                              // รอให้ส่งเมลเสร็จก่อน
+                              await sendmail(objmail);
+                      }
+                      // แล้วค่อย redirect
+                      if (statusact.status) {
+                          redirectWebflow();
+                      }
+                    }
+              
+          }else if(action == "sendApv"){
+                if(stepready != "--")
+                {
+                    const statusact = await actionfrm(cnformData);
+                      if (statusact.status) {
+                          redirectWebflow();
+                      }
+
+                }else
+                {
+                    const confirm = await doaction({
+                       ...baseForm,
+                      ACTION: "approve",
                       EMPNO: empno,
                       REMARK: $("#txtRemark").val()
                     });
                   if (confirm.status) {
                     const statusact = await actionfrm(cnformData);
-                    const formStatus = await getFormStatus({
-                        NFRMNO: nfrmno,
-                        VORGNO: vorgno,
-                        CYEAR: cyear,
-                        CYEAR2: cyear2,
-                        NRUNNO: nrunno
-                    });
-                     
-                    //console.log("flow status = "+formStatus);
-                    //if (statusact.status) redirectWebflow();
+                      if (statusact.status) {
+                          redirectWebflow();
+                      }
                   }
-              
-          }else
+
+                }
+                
+          }else if(action == "returnb")
+         {
+                  const confirm = await doaction({
+                       ...baseForm,
+                      ACTION: "returnb",
+                      EMPNO: empno,
+                      REMARK: $("#txtRemark").val()
+                    });
+                     if (confirm.status) {
+                      redirectWebflow();
+                     }
+         }else
           {
+             //console.log("actionfrm");
               const statusact = await actionfrm(cnformData);
-              //console.log(statusact);
+              if(action == "return")
+                {
+                           let param = {
+                                  ...baseForm,                         
+                                  FSTATUS: '1',
+                                  MTYPE : 'REQUESTER'
+                              };
+                                    const res = await buildmail(param);
+
+                              if (!res.to || !res.subject || !res.html) {
+                                  throw 'Mail data is incomplete';
+                              }
+                              let objmail = {
+                                  from: 'noreplay@MitsubishiElevatorAsia.co.th',
+                                  to: res.to,
+                                  subject: res.subject,
+                                  html: res.html
+                              };
+                              // รอให้ส่งเมลเสร็จก่อน
+                              await sendmail(objmail);
+                }
               if (statusact.status) redirectWebflow();
           }
+      }
 
+      }else
+      {
+        const frm = $("#cn-form");
+        var cnformData = new FormData(frm[0]);
+          cnformData.append("nfrmno", nfrmno);
+          cnformData.append("vorgno", vorgno);
+          cnformData.append("cyear", cyear);
+          cnformData.append("cyear2", cyear2);
+          cnformData.append("nrunno", nrunno);
+          cnformData.append("action", action);
+          cnformData.append("empno", empno);
+        const statusact = await actionfrm(cnformData);
+        if (statusact.status) redirectWebflow();
 
       }
+      
       
       // console.log($("#chkopr").val() );
       // console.log(">>>"||$("#demapv").val()||"<<<<");
@@ -194,6 +339,64 @@ $(document).on("change", ".radio-result", function (e) {
 
 });
 
+$(document).on("click", ".btn-export", async function () {
+  const nfrmno =  $(".form-data").attr("data-nfrmno");
+  const vorgno =  $(".form-data").attr("data-vorgno");
+  const cyear =  $(".form-data").attr("data-cyear");
+  const cyear2 = $(".form-data").attr("data-cyear2");
+  const nrunno = $(".form-data").attr("data-nrunno");
+  $.ajax({
+    type: "POST",
+    url: host + "qaform/QA-CN/form/exportexcel",
+    data: { nfrmno : nfrmno , vorgno : vorgno , cyear : cyear , cyear2 : cyear2 , nrunno : nrunno },
+    dataType: "json",
+    beforeSend: function () {
+      showLoader({ show: true });
+    },
+    success: function (res) {
+      openExcel(res.filename, res.content);
+    },
+    complete: function (xhr, status) {
+      showLoader({ show: false });
+    },
+    error: function (xhr, status, error) {
+        console.error("Export Error:", xhr.responseText);
+        showMessage("Export Excel Error , please try agian", 'error');
+        
+    },
+  });
+});
+
+$(document).on("click", ".btn-export-frm", async function () {
+    const nfrmno =  $(".form-data").attr("data-nfrmno");
+  const vorgno =  $(".form-data").attr("data-vorgno");
+  const cyear =  $(".form-data").attr("data-cyear");
+  const cyear2 = $(".form-data").attr("data-cyear2");
+  const nrunno = $(".form-data").attr("data-nrunno");
+  $.ajax({
+    type: "POST",
+    url: host + "qaform/QA-CN/form/exportfrm",
+    data: { nfrmno : nfrmno , vorgno : vorgno , cyear : cyear , cyear2 : cyear2 , nrunno : nrunno },
+    dataType: "json",
+    beforeSend: function () {
+      showLoader({ show: true });
+    },
+    success: function (res) {
+      openExcel(res.filename, res.content);
+    },
+    complete: function (xhr, status) {
+      showLoader({ show: false });
+    },
+    error: function (xhr, status, error) {
+        console.error("Export Error:", xhr.responseText);
+        showMessage("Export Form Error , please try agian", 'error');
+        
+    },
+  });
+  
+
+});
+
 $(document).on('click', '.radDwg', function () {
     let val = $(this).val();
 
@@ -225,7 +428,30 @@ function add_more(fl,dv,s) {
   document.getElementById(dv).appendChild(div);
 }
 
+$(document).on('focus click', '#txtOther', function () {
+   $('input[name="radReason"][value="5"]')
+    .prop('checked', true)
+    .trigger('change');
+});
+
+$(document).on('focus click', '#txtReturn', function () {
+   $('input[name="radSample"][value="2"]')
+    .prop('checked', true)
+    .trigger('change');
+});
+
+$(document).on('focus click', '#txtOth', function () {
+   $('input[name="radSample"][value="3"]')
+    .prop('checked', true)
+    .trigger('change');
+});
+
  $(document).on("change", ".file-input", async function () {
+    const type = $(this).attr("data-map");
+    if(type == "MAKFILE")
+    {
+       return;
+    }
     const maxKB = parseInt($(this).attr("data-max-kb"), 10);
     const maxSize = maxKB * 1024; // byte
 
@@ -242,6 +468,24 @@ function add_more(fl,dv,s) {
     }
 });
 
+$(document).on("click", ".btn-print", function () {
+
+  const nfrmno = $(".form-data").data("nfrmno");
+  const vorgno = $(".form-data").data("vorgno");
+  const cyear  = $(".form-data").data("cyear");
+  const cyear2 = $(".form-data").data("cyear2");
+  const nrunno = $(".form-data").data("nrunno");
+
+  const url = host + "qaform/QA-CN/form/printcn"
+      + "?no=" + nfrmno
+      + "&orgNo=" + vorgno
+      + "&y=" + cyear
+      + "&y2=" + cyear2
+      + "&runNo=" + nrunno;
+
+  window.open(url, "_blank");
+});
+
 function actionfrm(data)
 {
  
@@ -254,18 +498,53 @@ function actionfrm(data)
       contentType: false,
       data: data,
       beforeSend: function () {
-        showLoader(true);
-        console.log("beforeSend");
-        
+        showLoader({show:true});
+
       },
       success: function (res) {
         resolve(res);
-        console.log("success");
       },
       complete: function (xhr, status) {
-        showLoader(false);
-        console.log("complete");
+        showLoader({show:false});
       },
+    });
+  });
+
+}
+
+function buildmail(formno)
+{
+    return new Promise((resolve, reject) => { 
+          $.ajax({
+      url: host + "qaform/QA-CN/form/buildmail",
+      type: "post",
+      dataType: "json",
+      data: formno,
+           success: function (res) {
+                resolve(res);  
+            },
+            error: function (xhr, status, error) {
+                reject(error);
+            }
+    });
+  });
+
+}
+
+function createcnng(formno)
+{
+    return new Promise((resolve, reject) => { 
+          $.ajax({
+      url: host + "qaform/QA-CN/form/createcnng",
+      type: "post",
+      dataType: "json",
+      data: formno,
+           success: function (res) {
+                resolve(res);  
+            },
+            error: function (xhr, status, error) {
+                reject(error);
+            }
     });
   });
 
@@ -278,6 +557,10 @@ function checkData(act)
   let cextdata =  parseInt($("#cextData").val());
   const chkopr =  $("#chkopr").val();
   const demapv =  $("#demapv").val();
+  if(act == "jobsaveData")
+  {
+    return true;
+  }
   if(act == "saveData" || act == "sendApv")
   {
       let reason = $('input[name="radReason"]:checked').val();
@@ -306,17 +589,32 @@ function checkData(act)
         return false;
       }
       return true;
-  }else if(act != "")
+  }else if( act == "returnb")
   {
-      if(act =="returnrem")
-      {
+       if($("#txtRemark").val() == "")
+          {
+            showMessage('Please input Remark for reason return', 'warning');
+            return false;
+          }
+          
+  }else if(act =="returnrem")
+  {
+      
           if($("#txtRemark").val() == "")
           {
             showMessage('Please input Remark for reason return', 'warning');
             return false;
           }
 
-      }
+      
+  }else if(act =="return")
+  {
+      
+  }
+  else
+  {
+      console.log("yyyyyyy");
+      
       if(($("#mstatus").val() == "1") && (act == "approve"))
       {
           if((cextdata == 6) && ($("#Operator").val() == ""))
@@ -398,32 +696,63 @@ function checkData(act)
       dataType: "json",
       data: data,
       beforeSend: function () {
-        showLoader(true);
+        showLoader({show:true});
       },
       success: function (res) {
         resolve(res);
       },
       complete: function (xhr, status) {
-        showLoader(false);
+        showLoader({show:false});
       },
     });
   });
 }
 
-function opendwg(dwg,rev)
-{
+
+$(document).on("click", ".btn-open",  function () {
+
+    // var dwg = $(this).attr("data-dwg");
+    // var rev = $(this).attr("data-rev");
+    var dwg = $(this).data("dwg");
+    var rev = $(this).data("rev");
+    if (rev === "*") rev = "0";
+
+    var url = "http://amecweb.mitsubishielevatorasia.co.th/pdmopendwg/menu_control/openfile2?dwg="
+        + encodeURIComponent(dwg)
+        + "&rev=" + encodeURIComponent(rev);
+
+    window.open(url, "dwg", "width=1000,height=800,scrollbars=yes,resizable=yes");
+
+  });
+
+//function opendwg(dwg , rev) {
+ // console.log(dwg);
+ // console.log(rev);
     //alert("xxx"+dwg);
-  if(rev == "*")
-  {
-    rev = "0";
-  }
-  if(rev != "")
-  {
-    window.open("http://amecweb.mitsubishielevatorasia.co.th/pdmopendwg/menu_control/openfile2?dwg="+dwg+"&rev="+rev,"dwg",NOTOP_WIN_CONF);
-  }else{
-    window.open("http://amecweb.mitsubishielevatorasia.co.th/pdmopendwg/menu_control/openfile2?dwg="+dwg,"dwg",NOTOP_WIN_CONF);
-  }
-  winAtch.focus(); 
-  void(0);
+  // if(rev == "*")
+  // {
+  //   rev = "0";
+  // }
+  // if(rev != "")
+  // {
+  //    const win =  window.open("http://amecweb.mitsubishielevatorasia.co.th/pdmopendwg/menu_control/openfile2?dwg="+dwg+"&rev="+rev,"dwg",NOTOP_WIN_CONF);
+  // }else{
+  //    const win =  window.open("http://amecweb.mitsubishielevatorasia.co.th/pdmopendwg/menu_control/openfile2?dwg="+dwg,"dwg",NOTOP_WIN_CONF);
+  // }
+  //  if (win) {
+  //       win.focus();
+  //   }
+//}
+
+function openExcel(fileName, dataBase64) {
+	var fileType = fileName.split(".").pop();
+	fileType =
+		"data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,";
+	var $a = $("<a>");
+	$a.attr("href", fileType + dataBase64);
+	$("body").append($a);
+	$a.attr("download", fileName);
+	$a[0].click();
+	$a.remove();
 }
 

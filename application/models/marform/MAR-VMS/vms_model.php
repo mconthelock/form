@@ -737,6 +737,12 @@ public function get_gpent_report($date_mode, $start_date, $end_date)
     return $query->result_array();
 }
 
+public function get_time_lunch($cyear2, $nrunno)
+{
+    $sql = "SELECT   TO_CHAR(SCHSTIME, 'HH:MI AM') || ' - ' || TO_CHAR(SCHETIME,   'HH:MI AM') AS LUNCH_TIME FROM VMS_SCHEDULE WHERE UPPER(CONTENT) LIKE '%LUNCH%' AND CYEAR2 = '{$cyear2}' AND NRUNNO = '{$nrunno}'";
+    return $this->db->query($sql)->result();
+
+}
 
     public function execsql($q)
 	{

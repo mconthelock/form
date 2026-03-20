@@ -108,7 +108,7 @@ $(document).ready(async function () {
 						text: "กรุณาเลือกผลการประเมินระดับความเข้าใจก่อนส่งฟอร์ม",
 					});
 
-					// scroll กลับไปยัง section manager evaluation
+					// scroll กลับไปยัง section manager evaluation.
 					$("input[name='rd_manager_score']")
 						.first()
 						.closest(".border")

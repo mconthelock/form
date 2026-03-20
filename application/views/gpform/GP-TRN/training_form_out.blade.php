@@ -1,7 +1,7 @@
 <div class="max-w-5xl mx-auto bg-white p-8 mt-8 rounded-xl shadow-lg">
     <h2 class="text-2xl font-bold mb-6 text-center text-gray-800">
         แบบฟอร์มแจ้งความประสงค์ขอฝึกอบรมภายนอก ในประเทศ <br>
-        สนับสนุน ขอศึกษาดูงานนอกสถานที่ (Support Outside Learning)
+        สนับสนุน การศึกษาดูงานนอกสถานที่ (Support Outside Learning)
     </h2>
 
     <!-- Input / Request By -->
@@ -21,7 +21,7 @@
 
     <!-- Part 1 -->
     <div class="mb-6" id="out_part1">
-        <h3 class="font-bold text-lg mb-2">ส่วนที่ 1 : หัวข้อฝึกอบรม และ กำหนดการฝึกอบรม (Training Subject & Training Schedule)<b style="color:red">*</b></h3>
+        <h3 class="font-bold text-lg mb-2">ส่วนที่ 1 : หัวข้อและกำหนดการศึกษาดูงาน (Outside Learning Subject & Schedule)<b style="color:red">*</b></h3>
         <input type="text" id="outTrainingSubject"
             placeholder="1.1 หัวข้อฝึกอบรม" maxlength="200"
             class="input input-bordered w-full mb-2"
@@ -50,7 +50,7 @@
 
     <!-- Part 2 -->
     <div class="mb-6" id="out_part2">
-        <h3 class="font-bold text-lg mb-2">ส่วนที่ 2 : วัตถุประสงค์ของการฝึกอบรม (Training Objective)<b style="color:red">*</b></h3>
+        <h3 class="font-bold text-lg mb-2">ส่วนที่ 2 : วัตถุประสงค์ของการศึกษาดูงาน (Outside Learning Objective)<b style="color:red">*</b></h3>
         <div id="outObjectiveList" class="space-y-2">
             <div class="flex items-center gap-2 objective-item">
                 <input type="text" name="outObjective[]"

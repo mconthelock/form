@@ -10,13 +10,14 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 //require_once APPPATH.'controllers/_form.php';
 require_once APPPATH.'controllers/_file.php';
 require_once APPPATH.'controllers/api/webform/form.php';
+require_once APPPATH.'controllers/api/webform/formmst.php';
 require_once APPPATH.'controllers/_excel.php';
 class form extends MY_Controller{
-    use formApi, _File, _excel;
+    use formApi, _File, _excel, formmst;
     protected $client;
-    private $nfrmno = "21";
-    private $vorgno = "090301";
-    private $cyear = "25";  
+    private $nfrmno = "";
+    private $vorgno = "";
+    private $cyear = "";  
     function __construct(){
 		parent::__construct();
         $this->load->model('form_model', 'frm');
@@ -26,6 +27,11 @@ class form extends MY_Controller{
         $this->client = new Client(['verify' => false]);
         $this->upload_path = $_ENV['AMEC_FILE_PATH'] .($this->_servername()=='amecweb' ? 'production' : 'development') ."/Form/MAR/VMS/";
         $this->ent_path = $_ENV['AMEC_FILE_PATH'] .($this->_servername()=='amecweb' ? 'production' : 'development') ."/Form/GP/GPENT/";
+        $formmst = $this->getFormMasterByVaname('MAR-VMS');
+        $this->nfrmno = $formmst["data"]['NNO'];
+        $this->vorgno = $formmst["data"]['VORGNO'];
+        $this->cyear = $formmst["data"]['CYEAR'];
+       
     }
 
     public function main(){
@@ -202,6 +208,7 @@ class form extends MY_Controller{
                     $rs = $this->vms->getHeadVisit($this->nfrmno,$this->vorgno,$this->cyear,$data["CYEAR2"],$data["NRUNNO"]);
                     $item = $this->vms->getItemReq($data["CYEAR2"],$data["NRUNNO"]);
                     $dietary = $this->vms->get_dietary_item($data["CYEAR2"],$data["NRUNNO"]);
+                     $timelunch = $this->vms->get_time_lunch($data["CYEAR2"],$data["NRUNNO"]);
                     if(!empty($rs))
                     {
                         $head["FORMVER"] = $rs[0]->FORMVER;
@@ -214,6 +221,9 @@ class form extends MY_Controller{
                         $head["VISITOR_COUNT"] = $rs[0]->VISITOR_COUNT;
                         $head["PURPOSEVISIT"] = $rs[0]->VTYPE;
                         $head["PURPOSEDETAIL"] = $rs[0]->PURPOSEDETAIL;
+                        $head["LUNCHTIME"] = !empty($timelunch)
+                        ? $timelunch[0]->LUNCH_TIME
+                        : "12:00 PM - 01:00 PM";
                     }
                     $data["head"] = $head;
                     $data["visitint"] = $visitint;
@@ -843,6 +853,8 @@ class form extends MY_Controller{
         $rs = $this->vms->getHeadVisit($this->nfrmno,$this->vorgno,$this->cyear,$vmscyear2,$vmsnrunno);
         $item = $this->vms->getItemReq($vmscyear2,$vmsnrunno);
         $dietary = $this->vms->get_dietary_item($vmscyear2,$vmsnrunno);
+        $timelunch = $this->vms->get_time_lunch($vmscyear2,$vmsnrunno);
+
         if(!empty($rs))
         {
             $head["FORMVER"] = $rs[0]->FORMVER;
@@ -855,6 +867,9 @@ class form extends MY_Controller{
             $head["VISITOR_COUNT"] = $rs[0]->VISITOR_COUNT;
             $head["PURPOSEVISIT"] = $rs[0]->VTYPE;
             $head["PURPOSEDETAIL"] = $rs[0]->PURPOSEDETAIL;
+            $head["LUNCHTIME"] = !empty($timelunch)
+            ? $timelunch[0]->LUNCH_TIME
+            : "12:00 PM - 01:00 PM";
         }
         
         $data = array(
@@ -1002,7 +1017,7 @@ class form extends MY_Controller{
         $sheet->setCellValue("V".($templateStart + 4),($data['item'][0]->FORMC1_1 == "Y"? "Yes":"No"));
         $sheet->setCellValue("B".($templateStart + 7),$data['item'][0]->ROOMLUNCH);
         $sheet->setCellValue("D".($templateStart + 8),$data['head']['VISITDATE']);
-        $sheet->setCellValue("E".($templateStart + 9), (isset($data['item'][0]->VISITORS)  ? '12:00 - 13:00 PM': ''));
+        $sheet->setCellValue("E".($templateStart + 9), (isset($data['item'][0]->VISITORS)  ? $data['head']['LUNCHTIME']: ''));
         $sheet->setCellValue("K".($templateStart + 7),$data['item'][0]->VISITORS);
         $sheet->setCellValue("K".($templateStart + 8),$data['item'][0]->AMEC);
         $sheet->setCellValue("K".($templateStart + 9),($data['item'][0]->VISITORS+$data['item'][0]->AMEC));
@@ -1188,6 +1203,57 @@ function insertEmptyRowsWithTemplate(Worksheet $sheet, int $templateStart, int $
             echo json_encode($result);
         }
     }
+
+    public function deleteform()
+{
+    $status = true;
+    $message = 'Delete form successfully';
+
+    try {
+    
+        $vmscyear2 = $_POST["vmscyear2"];
+        $vmsnrunno = $_POST["vmsnrunno"];
+
+        $where_cond = array("CYEAR2" => $vmscyear2 , "NRUNNO" => $vmsnrunno);
+        $this->vms->delete("VMS_VISIT", $where_cond);
+        $this->vms->delete("VMS_VISITINF", $where_cond);
+        $this->vms->delete("VMS_SCHEDULE", $where_cond);
+        $this->vms->delete("VMS_PROJECT", $where_cond);
+        $this->vms->delete("VMS_AMEC_MEAL", $where_cond);
+        $this->vms->delete("VMS_ATTFILE", $where_cond);
+        $this->vms->delete("VMS_GPENT", array("VMSCYEAR2" => $vmscyear2 , "VMSNRUNNO" => $vmsnrunno));
+        $this->vms->delete("VMS_STAKEHOLDERS", $where_cond);
+
+        $path = $this->upload_path.$this->nfrmno."_".$this->vorgno."_".$this->cyear."_".$vmscyear2."_".$vmsnrunno."/";
+        
+        if (is_dir($path)) {
+          
+            $files = glob($path . '*', GLOB_MARK);
+            foreach ($files as $file) {
+                if (is_file($file)) {
+                    @unlink($file); 
+                }
+            }
+          
+            @rmdir($path);
+        }
+
+    } catch (Exception $e) {
+        $status = false;
+        $message = 'Failed to delete form: ' . $e->getMessage(); // เก็บ Error ไว้ดูได้
+    } finally {
+        // 4. ส่งค่ากลับเป็น JSON
+        $result = [
+            'status'  => $status,
+            'message' => $status ? 'Delete form successfully' : $message
+        ];
+        
+        // แนะนำให้ใส่ Header เพื่อบอกฝั่ง Frontend ว่าส่งกลับเป็น JSON ชัวร์ๆ
+        header('Content-Type: application/json');
+        echo json_encode($result);
+        exit; // ใส่ exit ป้องกันไม่ให้มีโค้ดอื่นรันต่อแล้วทำ JSON พัง
+    }
+}
 
 
 }
