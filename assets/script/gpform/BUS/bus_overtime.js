@@ -1,3 +1,4 @@
+
 import { showLoader } from "@amec/webasset/preloader";
 import { showMessage, showConfirm } from "@amec/webasset/utils";
 import { setDatePicker } from "@amec/webasset/flatpickr";
@@ -1057,12 +1058,6 @@ function bindEvents() {
     return (state.addPassengerStops.find( (item) => String(item.id) === String(selectedId)) || null);
   }
 
-  $(document).on("change", "#apStopId", function () {
-    const selectedId = $(this).val();
-    const item = state.addPassengerStops.find((x) => String(x.id) === String(selectedId));
-    if (!item) return;
-    $("#apLineId").val(String(item.busid)).trigger("change.select2");
-  });
 
   //=============== Report ===============
 
