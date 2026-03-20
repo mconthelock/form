@@ -410,22 +410,3 @@ function deletefile(data) {
 	});
 }
 
-$('#table').on('init.dt', function () {
-    $(`#table_wrapper .table-option`).append(`
-        <label for="" class="btn btn-sm flex items-center max-w-xs tooltip tooltip-left
-            bg-transparent text-gray-800 rounded-l-md
-            hover:bg-gray-300 hover:text-black
-            transition-colors duration-200" 
-            data-tip="Export Excel" id="exportExcel" tableID="#table">
-            <i class="icofont-file-excel text-xl"></i>
-        </label>
-        
-        <label for="drawer-master" class="btn btn-sm flex items-center max-w-xs tooltip tooltip-left
-            bg-transparent text-gray-800 rounded-r-md
-            hover:bg-gray-300 hover:text-black
-            transition-colors duration-200" 
-            data-tip="Add" id="add-dwg" tableID="#table">
-            <i class="icofont-plus-circle text-xl"></i>
-        </label>
-    `);
-});
