@@ -12,10 +12,11 @@ import {
   getUserbyemp, deleteLineDispatch,
   getLine, getStopRoutes,
   saveAddPassenger, reportBusDaily, reportDisabledPassengerDaily,
-  updatePassengerStatus,updateLineDispatchStatus,updateLineTypeDispatch
+  updatePassengerStatus,updateLineDispatchStatus,updateLineTypeDispatch, updateStatusHead
 } from "./data.js";
 import { initApp, tableOption } from "../../utils.js";
 import { exportExcel, defaultExcel, mergeCell, applyStyleToRange, alignment, border,} from "@amec/webasset/excel";
+import { sendMail, mailsubject } from "@amec/webasset/sendmail";
 
   select2();
   const dom = {
@@ -33,10 +34,10 @@ import { exportExcel, defaultExcel, mergeCell, applyStyleToRange, alignment, bor
     btnSaveDispatch: "#btnSaveDispatch",
     passengerSearch: "#txtPassengerSearch",
     
-    // NEW
     btnShowDisabledPassenger: "#btnShowDisabledPassenger",
     disabledPassengerModal: "#disabled_passenger_modal",
     tblDisabledPassenger: "#tblDisabledPassenger",
+    btnSaveandSendmail: "#btnSaveandSendmail",
 
     moveDisabledPassengerModal: "#move_disabled_passenger_modal",
     mdpEmpno: "#mdpEmpno",
@@ -152,13 +153,28 @@ import { exportExcel, defaultExcel, mergeCell, applyStyleToRange, alignment, bor
 
   function syncActionButtonsState() {
     const disabled = isDispatchFinalized();
+    const $allButtons = $(
+      `${dom.btnAddPassenger}, ${dom.btnSaveandSendmail}, ${dom.btnShowDisabledPassenger}`
+    );
 
-     $(dom.btnAddPassenger)
-    .prop("disabled", disabled)
-    .toggleClass("bg-gray-300 text-gray-500 opacity-70", disabled)
-    .toggleClass("cursor-not-allowed", disabled)
-    .toggleClass("hover:bg-gray-300", disabled)
-    .toggleClass("bg-blue-600 text-white cursor-pointer", !disabled);
+    $allButtons.prop("disabled", disabled);
+    if (disabled) {
+      $allButtons
+        .removeClass("bg-indigo-600 bg-emerald-600 bg-rose-600 text-white cursor-pointer")
+        .addClass("bg-gray-300 text-gray-500 opacity-70 cursor-not-allowed");
+    } else {
+      $(dom.btnAddPassenger)
+        .removeClass("bg-gray-300 text-gray-500 opacity-70 cursor-not-allowed")
+        .addClass("bg-indigo-600 text-white cursor-pointer");
+
+      $(dom.btnSaveandSendmail)
+        .removeClass("bg-gray-300 text-gray-500 opacity-70 cursor-not-allowed")
+        .addClass("bg-emerald-600 text-white cursor-pointer");
+
+      $(dom.btnShowDisabledPassenger)
+        .removeClass("bg-gray-300 text-gray-500 opacity-70 cursor-not-allowed")
+        .addClass("bg-rose-600 text-white cursor-pointer");
+    }
   
     $(".btn-update-line-status, .btn-move-stop, .btn-delete-passenger")
     .prop("disabled", disabled)
@@ -2021,5 +2037,110 @@ function bindEvents() {
     e.preventDefault();
     await saveLineTypeDispatch();
   });
+
+
+
+  $(document).on("click", "#btnSaveandSendmail", async function (e) {
+    e.preventDefault();
+    if (isDispatchFinalized()) return;
+
+    if (!state.head?.dispatch_id) {
+      showMessage("ไม่พบ แผนการจัดรถปัจจุบันของ (วัน/เวลา)ที่เลือก", "warning");
+      return;
+    }
+
+    const isConfirm = await showConfirm({
+      title: "บันทึกแผนการจัดรถ",
+      message: "ต้องการบันทึกข้อมูลแผนการจัดรถและส่งอีเมลล์ให้พนักงาน ใช่หรือไม่?",
+      acceptText: "ยืนยัน",
+      cancelText: "ยกเลิก",
+    });
+
+    if (!isConfirm) {
+      return;
+    }
+
+    const currentWorkdate = $(dom.workdate).val();
+    const currentType = $(dom.type).val();
+
+    try {
+      const param = {
+        to: "supamid@mitsubishielevatorasia.co.th",
+        date: currentWorkdate,
+        type: currentType,
+      };
+
+      const res = buildmail(param);
+
+      if (!res?.to || !res?.subject || !Array.isArray(res?.body)) {
+        throw new Error("Mail data is incomplete");
+      }
+
+      const objmail = {
+        VIEW: "layouts/mail/mailAlert",
+        FROM: "noreply@MitsubishiElevatorAsia.co.th",
+        TO: res.to,
+        SUBJECT: res.subject,
+        BODY: res.body,
+        ENFILE: [],
+      };
+
+      await sendMail(objmail);
+
+      const dto = {
+        dispatch_id: Number(state.head.dispatch_id),
+        status: "F",
+        update_by: String(login_empno),
+      };
+
+      await updateStatusHead(dto);
+
+      showMessage("บันทึกและส่งอีเมลล์สำเร็จแล้ว", "success");
+      await reload_dispatch();
+    } catch (err) {
+      console.error("sendMail error =", err);
+
+      if (err?.responseText) {
+        console.error("responseText =", err.responseText);
+      }
+
+      showMessage("ส่งอีเมลไม่สำเร็จ", "warning");
+      return;
+    }
+  });
+
+
+  async function reload_dispatch() {
+    const currentWorkdate = $(dom.workdate).val();
+    const currentType = $(dom.type).val();
+    $(dom.workdate).val(currentWorkdate);
+    $(dom.type).val(currentType).trigger("change");
+    await initTables();
+    bindEvents();
+    await loadDispatch();
+  }
+
+
+  function buildmail(param) {
+    const date = param.date || "-";
+    const type = param.time || "-";
+    return {
+      to: param.to,
+      subject: `Transportation Notification (${date})`,
+      body: [
+        "Dear All,",
+        "<br>This email is to inform the transportation arrangement for today.",
+        `<b>Date:</b> ${date}`,
+        `<b>Type:</b> ${type}`,
+        "<br><br>Please check the attached files for:",
+        "• Bus route and passenger list",
+        "• List of employees without transportation",
+        "<br><br>Thank you.",
+        "This is an auto-generated email.",
+      ],
+    };
+  }
+
+
 
 }
