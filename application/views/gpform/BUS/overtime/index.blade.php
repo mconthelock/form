@@ -28,11 +28,11 @@
 
 
       <button id="btnAddPassenger" name="btnAddPassenger"  class="px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-semibold cursor-pointer">
-        เพิ่ม Passenger
+        เพิ่มพนักงาน
       </button>
 
-      <button id="btnSaveDispatch" class="px-4 py-2 rounded-lg bg-emerald-600 text-white text-sm font-semibold cursor-pointer">
-        Save DISPATCH
+      <button id="btnSaveandSendmail" name="btnSaveandSendmail" class="px-4 py-2 rounded-lg bg-emerald-600 text-white text-sm font-semibold cursor-pointer">
+        บันทึกและส่งอีเมลล์
       </button>
       
       <button id="btnExportDispatch"
@@ -45,7 +45,7 @@
              Export Passenger
         </button>
 
-        <button id="btnShowDisabledPassenger"
+        <button id="btnShowDisabledPassenger" name="btnShowDisabledPassenger"
           class="px-4 py-2 rounded-lg bg-rose-600 text-white text-sm font-semibold cursor-pointer">
           รายชื่อพนักงานที่ไม่ได้จัดรถ
         </button>
@@ -572,6 +572,10 @@
   font-weight: 700;
   color: #4b5563;
   background: #e5e7eb;
+}
+
+button:disabled {
+  cursor: not-allowed !important;
 }
 </style>
 @endsection
