@@ -484,14 +484,14 @@ async function setView(flow) {
         $('#PONO').text(data.PONO || '-');
         // $('#PO_SIGNBY').text(data.PO_SIGNBY || '-');
         $('#QUOTATION_DATE').text(data.QUOTATION_DATE ? formatDate(data.QUOTATION_DATE) : '-');
-        $('#TOTAL_AMOUNT').text(setRound(data.TOTAL_AMOUNT) || '0');
+        $('#TOTAL_AMOUNT').text(setRound(data?.TOTAL_AMOUNT) || '0');
         // $('#PO_SIGNDATE').text(data.PO_SIGNDATE ? formatDate(data.PO_SIGNDATE) : '-');
         // $('input[name="FORM_TYPE"][value="' + data.FORM_TYPE + '"]').prop("checked",true,);
         $('#INVOICE_NO').text(data.INVOICE_NO || '-');
-        $('#INVOICE_AMOUNT').text(setRound(data.INVOICE_AMOUNT) || '0');
+        $('#INVOICE_AMOUNT').text(setRound(data?.INVOICE_AMOUNT) || '0');
         $('#PERSON_INCHARGE').text(data.PERSON_INCHARGE || '-');
         $('#INVOICE_DATE').text(data.INVOICE_DATE ? formatDate(data.INVOICE_DATE) : '-');
-        $('#PAYMENT').text(setRound(data.PAYMENT) || '0');
+        $('#PAYMENT').text(setRound(data?.PAYMENT) || '0');
         $('#PAYMENT_DETAIL').text(data.PAYMENT_DETAIL || '-');
         $('#attach-other').removeClass('hidden');
         $('input[name="PAYMENT_TYPE"]').each(function(){
@@ -500,8 +500,8 @@ async function setView(flow) {
             if(data.PAYMENT_TYPE == value){
                 $(this).prop("checked", true);
                 if(type == 'manual'){
-                    $('#PAYMENT_NUM').html(ordinalIndicator(data.PAYMENT_NUM) || '-');
-                    selectAttachType(data.PAYMENT_NUM);
+                    $('#PAYMENT_NUM').html(ordinalIndicator(data?.PAYMENT_NUM) || '-');
+                    selectAttachType(data?.PAYMENT_NUM);
                 }
                 if(type == 'final'){
                     // แสดงตัวเลือกการแนบไฟล์
