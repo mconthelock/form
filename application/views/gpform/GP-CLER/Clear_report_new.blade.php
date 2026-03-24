@@ -292,9 +292,11 @@
                                             <th class="text-left font-semibold py-2 pl-4 border-b-2 border-green-200 bg-orange-100">Attach File</th>
                                             <td class="py-2 pl-4 border-b-2 border-green-200 bg-orange-50">
                                                 @foreach ($file_attach as $file)
-                                                    <a href="{{ base_url('gpform/GP-CLER/main/preview/') . rawurlencode($file->FILE_NAME) }}" class="link btn btn-sm text-blue-600 hover:text-blue-800 font-medium mt-1" target="_blank">
-                                                        {{ $file->FILE_NAME }}
-                                                    </a><br>
+                                                    @if ($file->FILE_TYPE == null)
+                                                        <a href="{{ base_url('gpform/GP-CLER/main/preview/') . rawurlencode($file->FILE_NAME) }}" class="link btn btn-sm text-blue-600 hover:text-blue-800 font-medium mt-1" target="_blank">
+                                                            {{ $file->FILE_NAME }}
+                                                        </a><br>
+                                                    @endif
                                                 @endforeach
                                             </td>
                                         </tr>
@@ -450,10 +452,13 @@
 
                                 $memoByType = [
                                     1 => array_filter(is_array($file_attach) ? $file_attach : iterator_to_array($file_attach), function ($f) {
-                                        return isset($f->FILE_TYPE) && $f->FILE_TYPE == 'MEMO_LUNCH';
+                                        return isset($f->FILE_TYPE) && $f->FILE_TYPE == 'MEMO_TYPE_1';
                                     }),
                                     4 => array_filter(is_array($file_attach) ? $file_attach : iterator_to_array($file_attach), function ($f) {
-                                        return isset($f->FILE_TYPE) && $f->FILE_TYPE == 'MEMO_BREAK';
+                                        return isset($f->FILE_TYPE) && $f->FILE_TYPE == 'MEMO_TYPE_4';
+                                    }),
+                                    7 => array_filter(is_array($file_attach) ? $file_attach : iterator_to_array($file_attach), function ($f) {
+                                        return isset($f->FILE_TYPE) && $f->FILE_TYPE == 'MEMO_TYPE_7';
                                     })
                                 ];
 
