@@ -1386,7 +1386,6 @@ function bindEvents() {
           const lineName = `${line.busname || line.busid || "-"}${busTypeText ? ` (${busTypeText})` : ""}`;
 
           mergeAndSet(currentRow, col1, col4, lineName, {
-          //mergeAndSet(currentRow, col1, col4, `${line.busname || line.busid || "-"}`, {
             font: { bold: true, size: 11 },
             alignment: alignment("center", "middle"),
             border: border(),
