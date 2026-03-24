@@ -2071,21 +2071,17 @@ $(document).on("click", "#btnSaveandSendmail", async function (e) {
 
   try {
     const param = {
-      to: "supamid@mitsubishielevatorasia.co.th",
       date: currentWorkdate,
       type: currentType,
     };
 
     const res = buildmail(param);
-
-    if (!res?.to || !res?.subject || !Array.isArray(res?.body)) {
-      throw new Error("Mail data is incomplete");
-    }
-
     const objmail = {
       VIEW: "layouts/mail/mailAlert",
-      TO: res.to,
       SUBJECT: res.subject,
+      TO: 'supamid@MitsubishiElevatorAsia.co.th',
+      CC: [],
+      BCC: 'supamid@MitsubishiElevatorAsia.co.th',
       BODY: res.body,
       ENFILE: ["Bus_daily_A24_3_2569.xlsx", "disabled_passenger_141.xlsx"],
       PATH: "C:/Users/supamid/Downloads",
@@ -2131,7 +2127,6 @@ $(document).on("click", "#btnSaveandSendmail", async function (e) {
     const date = param.date || "-";
     const type = param.type || "-";
     return {
-      to: param.to,
       subject: `Transportation Notification (${date})`,
       body: [
         "Dear All,",
