@@ -1379,7 +1379,14 @@ function bindEvents() {
           let runningNo = 1;
 
           // Row 1 : ชื่อสายรถ
-          mergeAndSet(currentRow, col1, col4, `${line.busname || line.busid || "-"}`, {
+          const busTypeText =
+          String(line.bustype) === "1" ? "Bus" :
+          String(line.bustype) === "2" ? "Van" : "";
+
+          const lineName = `${line.busname || line.busid || "-"}${busTypeText ? ` (${busTypeText})` : ""}`;
+
+          mergeAndSet(currentRow, col1, col4, lineName, {
+          //mergeAndSet(currentRow, col1, col4, `${line.busname || line.busid || "-"}`, {
             font: { bold: true, size: 11 },
             alignment: alignment("center", "middle"),
             border: border(),
@@ -2040,75 +2047,75 @@ function bindEvents() {
 
 
 
-  $(document).on("click", "#btnSaveandSendmail", async function (e) {
-    e.preventDefault();
-    if (isDispatchFinalized()) return;
+$(document).on("click", "#btnSaveandSendmail", async function (e) {
+  e.preventDefault();
+  if (isDispatchFinalized()) return;
 
-    if (!state.head?.dispatch_id) {
-      showMessage("ไม่พบ แผนการจัดรถปัจจุบันของ (วัน/เวลา)ที่เลือก", "warning");
-      return;
-    }
+  if (!state.head?.dispatch_id) {
+    showMessage("ไม่พบ แผนการจัดรถปัจจุบันของ (วัน/เวลา)ที่เลือก", "warning");
+    return;
+  }
 
-    const isConfirm = await showConfirm({
-      title: "บันทึกแผนการจัดรถ",
-      message: "ต้องการบันทึกข้อมูลแผนการจัดรถและส่งอีเมลล์ให้พนักงาน ใช่หรือไม่?",
-      acceptText: "ยืนยัน",
-      cancelText: "ยกเลิก",
-    });
-
-    if (!isConfirm) {
-      return;
-    }
-
-    const currentWorkdate = $(dom.workdate).val();
-    const currentType = $(dom.type).val();
-
-    try {
-      const param = {
-        to: "supamid@mitsubishielevatorasia.co.th",
-        date: currentWorkdate,
-        type: currentType,
-      };
-
-      const res = buildmail(param);
-
-      if (!res?.to || !res?.subject || !Array.isArray(res?.body)) {
-        throw new Error("Mail data is incomplete");
-      }
-
-      const objmail = {
-        VIEW: "layouts/mail/mailAlert",
-        FROM: "noreply@MitsubishiElevatorAsia.co.th",
-        TO: res.to,
-        SUBJECT: res.subject,
-        BODY: res.body,
-        ENFILE: [],
-      };
-
-      await sendMail(objmail);
-
-      const dto = {
-        dispatch_id: Number(state.head.dispatch_id),
-        status: "F",
-        update_by: String(login_empno),
-      };
-
-      await updateStatusHead(dto);
-
-      showMessage("บันทึกและส่งอีเมลล์สำเร็จแล้ว", "success");
-      await reload_dispatch();
-    } catch (err) {
-      console.error("sendMail error =", err);
-
-      if (err?.responseText) {
-        console.error("responseText =", err.responseText);
-      }
-
-      showMessage("ส่งอีเมลไม่สำเร็จ", "warning");
-      return;
-    }
+  const isConfirm = await showConfirm({
+    title: "บันทึกแผนการจัดรถ",
+    message: "ต้องการบันทึกข้อมูลแผนการจัดรถและส่งอีเมลล์ให้พนักงาน ใช่หรือไม่?",
+    acceptText: "ยืนยัน",
+    cancelText: "ยกเลิก",
   });
 
+  if (!isConfirm) {
+    return;
+  }
+
+  const currentWorkdate = $(dom.workdate).val();
+  const currentType = $(dom.type).val();
+
+  try {
+    const param = {
+      to: "supamid@mitsubishielevatorasia.co.th",
+      date: currentWorkdate,
+      type: currentType,
+    };
+
+    const res = buildmail(param);
+
+    if (!res?.to || !res?.subject || !Array.isArray(res?.body)) {
+      throw new Error("Mail data is incomplete");
+    }
+
+    const objmail = {
+      VIEW: "layouts/mail/mailAlert",
+      TO: res.to,
+      SUBJECT: res.subject,
+      BODY: res.body,
+      ENFILE: ["Bus_daily_A24_3_2569.xlsx", "disabled_passenger_141.xlsx"],
+      PATH: "C:/Users/supamid/Downloads",
+    };
+
+    console.log("objmail =", objmail);
+
+    await sendMail(objmail);
+
+    const dto = {
+      dispatch_id: Number(state.head.dispatch_id),
+      status: "F",
+      update_by: String(login_empno),
+    };
+
+    await updateStatusHead(dto);
+
+    showMessage("บันทึกและส่งอีเมลล์สำเร็จแล้ว", "success");
+    await reload_dispatch();
+  } catch (err) {
+    console.error("sendMail error =", err);
+
+    if (err?.responseText) {
+      console.error("responseText =", err.responseText);
+    }
+
+    showMessage("ส่งอีเมลไม่สำเร็จ", "warning");
+  }
+});
 
   async function reload_dispatch() {
     const currentWorkdate = $(dom.workdate).val();
@@ -2123,7 +2130,7 @@ function bindEvents() {
 
   function buildmail(param) {
     const date = param.date || "-";
-    const type = param.time || "-";
+    const type = param.type || "-";
     return {
       to: param.to,
       subject: `Transportation Notification (${date})`,
