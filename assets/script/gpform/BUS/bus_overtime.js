@@ -2045,7 +2045,6 @@ function bindEvents() {
   });
 
 
-
 $(document).on("click", "#btnSaveandSendmail", async function (e) {
   e.preventDefault();
   if (isDispatchFinalized()) return;
@@ -2069,26 +2068,46 @@ $(document).on("click", "#btnSaveandSendmail", async function (e) {
   const currentWorkdate = $(dom.workdate).val();
   const currentType = $(dom.type).val();
 
+  let showTime = "";
+  if (currentType === "OT") showTime = "19.30 น.";
+  else if (currentType === "OT_SPECIAL") showTime = "21.30 น.";
+  else if (currentType === "NIGHT") showTime = "07.30 น. (Night)";
+  else if (currentType === "HOLIDAY") showTime = "17.00 น. (Holiday)";
+
   try {
     const param = {
       date: currentWorkdate,
-      type: currentType,
+      type: showTime,
     };
 
     const res = buildmail(param);
+
     const objmail = {
       VIEW: "layouts/mail/mailAlert",
       SUBJECT: res.subject,
-      TO: 'supamid@MitsubishiElevatorAsia.co.th',
+      TO: "supamid@MitsubishiElevatorAsia.co.th",
       CC: [],
-      BCC: 'supamid@MitsubishiElevatorAsia.co.th',
-      BODY: res.body,
-      ENFILE: ["Bus_daily_A24_3_2569.xlsx", "disabled_passenger_141.xlsx"],
+      BCC: "supamid@MitsubishiElevatorAsia.co.th",
+      BODY: res.html,
+
+      // ตรงนี้ต้องส่งตาม format ที่ Mail.php ต้องการ
+      ENFILE: [
+        // ตัวอย่าง shape เท่านั้น
+        // ต้องมี content จริง ไม่ใช่แค่ filename
+        // {
+        //   filename: "Bus_daily_A24_3_2569.xlsx",
+        //   content: file1Base64,
+        // },
+        // {
+        //   filename: "disabled_passenger_141.xlsx",
+        //   content: file2Base64,
+        // },
+      ],
+
       PATH: "C:/Users/supamid/Downloads",
     };
 
     console.log("objmail =", objmail);
-
     await sendMail(objmail);
 
     const dto = {
@@ -2112,36 +2131,32 @@ $(document).on("click", "#btnSaveandSendmail", async function (e) {
   }
 });
 
-  async function reload_dispatch() {
-    const currentWorkdate = $(dom.workdate).val();
-    const currentType = $(dom.type).val();
-    $(dom.workdate).val(currentWorkdate);
-    $(dom.type).val(currentType).trigger("change");
-    await initTables();
-    bindEvents();
-    await loadDispatch();
-  }
+async function reload_dispatch() {
+  const currentWorkdate = $(dom.workdate).val();
+  const currentType = $(dom.type).val();
+  $(dom.workdate).val(currentWorkdate);
+  $(dom.type).val(currentType).trigger("change");
+  await initTables();
+  bindEvents();
+  await loadDispatch();
+}
 
-
-  function buildmail(param) {
-    const date = param.date || "-";
-    const type = param.type || "-";
-    return {
-      subject: `Transportation Notification (${date})`,
-      body: [
-        "Dear All,",
-        "<br>This email is to inform the transportation arrangement for today.",
-        `<b>Date:</b> ${date}`,
-        `<b>Type:</b> ${type}`,
-        "<br><br>Please check the attached files for:",
-        "• Bus route and passenger list",
-        "• List of employees without transportation",
-        "<br><br>Thank you.",
-        "This is an auto-generated email.",
-      ],
-    };
-  }
-
-
+function buildmail(param = {}) {
+  const date = param.date || "-";
+  const type = param.type || "-";
+  return {
+    subject: `แจ้งตารางรถรับส่งพนักงาน OT เวลา (${type}) ประจำวันที่ (${date})`,
+    html: `
+      เรียน ผู้จัดการ, ซุปเปอร์ไวเซอร์, โฟร์แมน และ AMEC PC USER<br>
+      ทาง GA ขอแจ้งตารางรถรับส่งพนักงาน OT เวลา (${type}) ประจำวันที่ (${date}) ตามไฟล์แนบดังนี้<br><br>
+      • 1.OT Daily Transportation Route<br>
+      • 2.List of Employee unable arrange transportation<br><br>
+      จึงแจ้งมาเพื่อทราบ<br>
+      🚐 หากมีปัญหาหรือข้อสงสัยเพิ่มเติม ติดต่อคุณณัฐวุฒิ วิจิตร (อาร์ม) Tel:1124 🚐<br>
+      Best regards<br>
+      GA Department
+    `,
+  };
+}
 
 }

@@ -72,7 +72,7 @@
 
     <!-- FOOTER -->
     <div style="background:#f1f2f6; padding:12px; font-size:12px; text-align:center;">
-        This is an auto-generated email. Please do not reply.
+        🚐 หากมีปัญหาหรือข้อสงสัยเพื่มเติม ติดต่อคุณณัฐวุฒิ วิจิตร (อาร์ม) Tel:1124 🚐
     </div>
 
 </div>
