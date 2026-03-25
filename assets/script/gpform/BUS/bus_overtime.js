@@ -12,7 +12,8 @@ import {
   getUserbyemp, deleteLineDispatch,
   getLine, getStopRoutes,
   saveAddPassenger, reportBusDaily, reportDisabledPassengerDaily,
-  updatePassengerStatus,updateLineDispatchStatus,updateLineTypeDispatch, updateStatusHead
+  updatePassengerStatus,updateLineDispatchStatus,updateLineTypeDispatch, 
+  updateStatusHead, createfolder, exportAndsendmail
 } from "./data.js";
 import { initApp, tableOption } from "../../utils.js";
 import { exportExcel, defaultExcel, mergeCell, applyStyleToRange, alignment, border,} from "@amec/webasset/excel";
@@ -1284,7 +1285,6 @@ function bindEvents() {
     //exportExcel(workbook, `bus_daily_${dispatchId}`);
   }
 
-
   // =========================
   // 1.2) export คนที่จัดรถ 2
   // =========================
@@ -2045,118 +2045,122 @@ function bindEvents() {
   });
 
 
-$(document).on("click", "#btnSaveandSendmail", async function (e) {
-  e.preventDefault();
-  if (isDispatchFinalized()) return;
 
-  if (!state.head?.dispatch_id) {
-    showMessage("ไม่พบ แผนการจัดรถปัจจุบันของ (วัน/เวลา)ที่เลือก", "warning");
-    return;
-  }
+  $(document).on("click", "#btnSaveandSendmail", async function (e) {
+    e.preventDefault();
+    if (isDispatchFinalized()) return;
 
-  const isConfirm = await showConfirm({
-    title: "บันทึกแผนการจัดรถ",
-    message: "ต้องการบันทึกข้อมูลแผนการจัดรถและส่งอีเมลล์ให้พนักงาน ใช่หรือไม่?",
-    acceptText: "ยืนยัน",
-    cancelText: "ยกเลิก",
-  });
-
-  if (!isConfirm) {
-    return;
-  }
-
-  const currentWorkdate = $(dom.workdate).val();
-  const currentType = $(dom.type).val();
-
-  let showTime = "";
-  if (currentType === "OT") showTime = "19.30 น.";
-  else if (currentType === "OT_SPECIAL") showTime = "21.30 น.";
-  else if (currentType === "NIGHT") showTime = "07.30 น. (Night)";
-  else if (currentType === "HOLIDAY") showTime = "17.00 น. (Holiday)";
-
-  try {
-    const param = {
-      date: currentWorkdate,
-      type: showTime,
-    };
-
-    const res = buildmail(param);
-
-    const objmail = {
-      VIEW: "layouts/mail/mailAlert",
-      SUBJECT: res.subject,
-      TO: "supamid@MitsubishiElevatorAsia.co.th",
-      CC: [],
-      BCC: "supamid@MitsubishiElevatorAsia.co.th",
-      BODY: res.html,
-
-      // ตรงนี้ต้องส่งตาม format ที่ Mail.php ต้องการ
-      ENFILE: [
-        // ตัวอย่าง shape เท่านั้น
-        // ต้องมี content จริง ไม่ใช่แค่ filename
-        // {
-        //   filename: "Bus_daily_A24_3_2569.xlsx",
-        //   content: file1Base64,
-        // },
-        // {
-        //   filename: "disabled_passenger_141.xlsx",
-        //   content: file2Base64,
-        // },
-      ],
-
-      PATH: "C:/Users/supamid/Downloads",
-    };
-
-    console.log("objmail =", objmail);
-    await sendMail(objmail);
-
-    const dto = {
-      dispatch_id: Number(state.head.dispatch_id),
-      status: "F",
-      update_by: String(login_empno),
-    };
-
-    await updateStatusHead(dto);
-
-    showMessage("บันทึกและส่งอีเมลล์สำเร็จแล้ว", "success");
-    await reload_dispatch();
-  } catch (err) {
-    console.error("sendMail error =", err);
-
-    if (err?.responseText) {
-      console.error("responseText =", err.responseText);
+    if (!state.head?.dispatch_id) {
+      showMessage("ไม่พบ แผนการจัดรถปัจจุบันของ (วัน/เวลา)ที่เลือก", "warning");
+      return;
     }
 
-    showMessage("ส่งอีเมลไม่สำเร็จ", "warning");
+    const isConfirm = await showConfirm({
+      title: "บันทึกแผนการจัดรถ",
+      message: "ต้องการบันทึกข้อมูลแผนการจัดรถและส่งอีเมลล์ให้พนักงาน ใช่หรือไม่?",
+      acceptText: "ยืนยัน",
+      cancelText: "ยกเลิก",
+    });
+
+    if (!isConfirm) {
+      return;
+    }
+
+    const currentWorkdate = $(dom.workdate).val();
+    const currentType = $(dom.type).val();
+
+    try {
+      await showLoader({ show: true });
+
+      // 1) ปิดสถานะงานก่อน
+      const dto = {
+        dispatch_id: Number(state.head.dispatch_id),
+        status: "F",
+        update_by: String(login_empno),
+      };
+
+      const updateRes = await updateStatusHead(dto);
+
+      // 2) เรียก Node API ให้ไปทำต่อทั้งหมด
+      const mailPayload = {
+        dispatch_id: Number(state.head.dispatch_id),
+        workdate: currentWorkdate,
+        dispatch_type: currentType,
+        update_by: String(login_empno),
+        create_folder: true,
+        export_excel: true,
+        send_mail: true,
+      };
+
+     // const result = await runDispatchExportAndSendMail(mailPayload);
+      const result = await exportAndsendmail(mailPayload);
+
+
+      if (!result?.status) {
+        throw new Error(result?.message || "ไม่สามารถสร้างไฟล์ Excel และส่งอีเมลได้");
+      }
+
+      showMessage("บันทึกข้อมูล สร้างไฟล์ และส่งอีเมลสำเร็จ", "success");
+
+      // 3) โหลดข้อมูลเดิมกลับตาม
+      await reload_dispatch();
+
+    } catch (error) {
+      console.error("Save and send mail error:", error);
+      showMessage(error?.message || "เกิดข้อผิดพลาดในการสร้างไฟล์และส่งอีเมล", "error");
+    } finally {
+      await showLoader({ show: false });
+    }
+  });
+
+  
+  async function loadDispatchData({ workdate, type }) {
+    const res = await dispatchGetDispatch({
+      workdate,
+      dispatch_type: type,
+    });
+
+    if (!res?.status) {
+      throw new Error(res?.message || "ไม่สามารถโหลดข้อมูลแผนการจัดรถได้");
+    }
+
+    state.head = res.head || null;
+    state.lines = Array.isArray(res.lines) ? res.lines : [];
+    state.disabledPassengers = Array.isArray(res.disabledPassengers) ? res.disabledPassengers : [];
+
+    renderAll();
+    syncActionButtonsState();
   }
-});
 
-async function reload_dispatch() {
-  const currentWorkdate = $(dom.workdate).val();
-  const currentType = $(dom.type).val();
-  $(dom.workdate).val(currentWorkdate);
-  $(dom.type).val(currentType).trigger("change");
-  await initTables();
-  bindEvents();
-  await loadDispatch();
-}
 
-function buildmail(param = {}) {
-  const date = param.date || "-";
-  const type = param.type || "-";
-  return {
-    subject: `แจ้งตารางรถรับส่งพนักงาน OT เวลา (${type}) ประจำวันที่ (${date})`,
-    html: `
-      เรียน ผู้จัดการ, ซุปเปอร์ไวเซอร์, โฟร์แมน และ AMEC PC USER<br>
-      ทาง GA ขอแจ้งตารางรถรับส่งพนักงาน OT เวลา (${type}) ประจำวันที่ (${date}) ตามไฟล์แนบดังนี้<br><br>
-      • 1.OT Daily Transportation Route<br>
-      • 2.List of Employee unable arrange transportation<br><br>
-      จึงแจ้งมาเพื่อทราบ<br>
-      🚐 หากมีปัญหาหรือข้อสงสัยเพิ่มเติม ติดต่อคุณณัฐวุฒิ วิจิตร (อาร์ม) Tel:1124 🚐<br>
-      Best regards<br>
-      GA Department
-    `,
-  };
-}
+  async function reload_dispatch() {
+    const currentWorkdate = $(dom.workdate).val();
+    const currentType = $(dom.type).val();
+    $(dom.workdate).val(currentWorkdate);
+    $(dom.type).val(currentType).trigger("change");
+    await initTables();
+    bindEvents();
+    await loadDispatch();
+  }
+
+
+
+
+
+  async function testCreateFolder() {
+    try {
+      const res = await createfolder();
+      console.log("create folder =", res);
+      if (res.status) {
+        showMessage("สร้างโฟลเดอร์สำเร็จ: " + res.month_path, "success");
+      } else {
+        showMessage(res.message || "สร้างโฟลเดอร์ไม่สำเร็จ", "warning");
+      }
+
+    } catch (err) {
+      console.error(err);
+      showMessage("เรียก API ไม่สำเร็จ", "warning");
+    }
+  }
 
 }
