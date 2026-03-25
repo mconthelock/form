@@ -4,6 +4,7 @@ import "select2/dist/js/select2.min.js";
 import ExcelJS from "exceljs";
 import { host } from "../../utils.js";
 
+select2();
 const daterangeInput = $("#daterange")[0];
 
 new Litepicker({
