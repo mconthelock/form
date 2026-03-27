@@ -40,6 +40,9 @@ export const updateLineDispatchStatus  = (data) => callAPI("/bus/dispatch/update
 export const deleteLineDispatch  = (data) => callAPI("/bus/dispatch/delete-linedispatch", "POST", data);
 export const updateLineTypeDispatch  = (data) => callAPI("/bus/dispatch/update-line-type", "POST", data);
 
+export const createfolder  = (data) => callAPI("/bus/dispatch/create-share-folder", "POST", data);
+export const exportAndsendmail  = (data) => callAPI("/bus/dispatch/export-and-sendmail", "POST", data);
+
 
 // ===== REPORT =====
 export const reportBusDaily = (data) => callAPI("/bus/dispatch/report-bus-daily", "POST", data);

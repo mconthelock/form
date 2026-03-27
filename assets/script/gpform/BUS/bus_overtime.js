@@ -12,7 +12,8 @@ import {
   getUserbyemp, deleteLineDispatch,
   getLine, getStopRoutes,
   saveAddPassenger, reportBusDaily, reportDisabledPassengerDaily,
-  updatePassengerStatus,updateLineDispatchStatus,updateLineTypeDispatch, updateStatusHead
+  updatePassengerStatus,updateLineDispatchStatus,updateLineTypeDispatch, 
+  updateStatusHead, createfolder, exportAndsendmail
 } from "./data.js";
 import { initApp, tableOption } from "../../utils.js";
 import { exportExcel, defaultExcel, mergeCell, applyStyleToRange, alignment, border,} from "@amec/webasset/excel";
@@ -1104,190 +1105,10 @@ function bindEvents() {
     const t = String(time).padStart(4, "0");
     return t.length === 4 ? `${t.slice(0, 2)}:${t.slice(2, 4)}` : t;
   }
+
+  // =====================================
   // 1) รายงานจัดรถประจำวัน (Bus Daily Report)
-  // =========================
-  // 1.1) export คนที่จัดรถ 1
-  // =========================
-  async function exportBusDailyExcel(dispatchId) {
-    const res = await reportBusDaily({ dispatch_id: String(dispatchId) });
-
-    if (!res?.status) {
-      throw new Error(res?.message || "ไม่สามารถดึงข้อมูลรายงานจัดรถได้");
-    }
-
-    const lines = Array.isArray(res.lines) ? res.lines : [];
-
-    if (!lines.length) {
-      throw new Error("ไม่พบข้อมูลรายชื่อผู้ที่จัดรถ");
-    }
-
-    const today = new Date().toLocaleDateString("th-TH");
-    const excelRows = [];
-
-    lines.forEach((line) => {
-      const stops = Array.isArray(line.stops) ? line.stops : [];
-
-      let hasPassenger = false;
-
-      stops.forEach((stop) => {
-        const passengers = Array.isArray(stop.passengers) ? stop.passengers : [];
-        if (passengers.length > 0) hasPassenger = true;
-      });
-
-      if (!hasPassenger) return;
-
-      let no = 1;
-
-      excelRows.push({
-        NO: "",
-        EMPNO: "",
-        FULLNAME: `สายรถ : ${line.busname || line.busid || "-"}`,
-        DEPT: "",
-        STOP_NAME: "",
-        PLAN_TIME: "",
-        __isGroup: true,
-      });
-
-      stops.forEach((stop) => {
-        const passengers = Array.isArray(stop.passengers) ? stop.passengers : [];
-
-        passengers.forEach((p) => {
-          excelRows.push({
-            NO: no++,
-            EMPNO: p.empno || "",
-            FULLNAME: p.fullname || "",
-            DEPT: p.dept || "",
-            STOP_NAME: stop.stop_name || "",
-            PLAN_TIME: formatPlanTime(stop.plan_time || ""),
-            __isGroup: false,
-          });
-        });
-      });
-
-      excelRows.push({
-        NO: "",
-        EMPNO: "",
-        FULLNAME: "",
-        DEPT: "",
-        STOP_NAME: "",
-        PLAN_TIME: "",
-        __isBlank: true,
-      });
-    });
-
-    while (excelRows.length && excelRows[excelRows.length - 1].__isBlank) { excelRows.pop();}
-
-    if (!excelRows.length) {
-      throw new Error("ไม่พบข้อมูลรายชื่อผู้ที่จัดรถ");
-    }
-
-    const workbook = await defaultExcel({
-      data: excelRows.map((row) => ({
-        NO: row.NO,
-        EMPNO: row.EMPNO,
-        FULLNAME: row.FULLNAME,
-        DEPT: row.DEPT,
-        STOP_NAME: row.STOP_NAME,
-      })),
-
-      column: [
-        { key: "NO", header: "No" },
-        { key: "EMPNO", header: "รหัส" },
-        { key: "FULLNAME", header: "ชื่อ-นามสกุล" },
-        { key: "DEPT", header: "แผนก" },
-        { key: "STOP_NAME", header: "จุดลง" },
-      ],
-
-      sheetName: "Bus Daily",
-      manual: true,
-      autoWidth: false,
-
-      manualActions: (sheet) => {
-        sheet.insertRow(1, [res.title || "รายงานผู้ที่จัดรถ"]);
-        sheet.insertRow(2, [`Update : ${today}`]);
-        sheet.insertRow(3, []);
-        mergeCell(sheet, 1, 1, 1, 5);
-        mergeCell(sheet, 2, 1, 2, 5);
-
-        applyStyleToRange(sheet, 1, 5, 1, {
-          font: { bold: true, size: 16 },
-          alignment: alignment("center", "middle"),
-        });
-
-        applyStyleToRange(sheet, 1, 5, 2, {
-          font: { bold: true, size: 14 },
-          alignment: alignment("center", "middle"),
-        });
-
-        applyStyleToRange(sheet, 1, 5, 4, {
-          font: { bold: true, size: 13 },
-          alignment: alignment("center", "middle"),
-          border: border(),
-        });
-
-        sheet.getColumn(1).width = 6;
-        sheet.getColumn(2).width = 12;
-        sheet.getColumn(3).width = 32;
-        sheet.getColumn(4).width = 20;
-        sheet.getColumn(5).width = 24;
-
-
-        sheet.eachRow((row, rowNumber) => {
-          if (rowNumber < 4) return;
-          row.eachCell((cell, colNumber) => {
-            cell.font = { ...cell.font, size: 12 };
-            cell.alignment = {
-              vertical: "middle",
-              horizontal: "center",
-              wrapText: true,
-            };
-
-            cell.border = border();
-
-            if (colNumber === 3 && rowNumber >= 5) {
-              cell.alignment = {
-                vertical: "middle",
-                horizontal: "left",
-                wrapText: true,
-                indent: 1,
-              };
-            }
-          });
-        });
-
-        excelRows.forEach((item, index) => {
-          const rowNo = index + 5;
-          if (item.__isGroup) {
-            mergeCell(sheet, rowNo, 3, rowNo, 5);
-
-            for (let c = 1; c <= 5; c++) {
-              const cell = sheet.getRow(rowNo).getCell(c);
-              cell.font = { bold: true, size: 13 };
-              cell.alignment = alignment("left", "middle");
-              cell.border = border();
-              cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFFF2CC" }, };
-            }
-          }
-
-          if (item.__isBlank) {
-            for (let c = 1; c <= 5; c++) {
-              const cell = sheet.getRow(rowNo).getCell(c);
-              cell.border = border();
-            }
-          }
-        });
-      },
-    });
-
-    const fname = "bus_daily_" + today + ".xlsx";
-    exportExcel(workbook, fname);
-    //exportExcel(workbook, `bus_daily_${dispatchId}`);
-  }
-
-
-  // =========================
-  // 1.2) export คนที่จัดรถ 2
-  // =========================
+  // =====================================
   async function exportBusDailyLayoutExcel(dispatchId) {
     const res = await reportBusDaily({ dispatch_id: String(dispatchId) });
     const today = new Date().toLocaleDateString("th-TH");
@@ -1555,9 +1376,9 @@ function bindEvents() {
     exportExcel(workbook, fname);
   }
 
-  // =========================
+  // =====================================
   // 2) export คนที่ไม่ได้จัดรถ
-  // =========================
+  // =====================================
   async function exportDisabledPassengerExcel(dispatchId) {
     const res = await reportDisabledPassengerDaily({ dispatch_id: String(dispatchId) });
     if (!res?.status) {throw new Error(res?.message || "ไม่สามารถดึงข้อมูลรายงานผู้ไม่ได้จัดรถได้"); }
@@ -2045,72 +1866,93 @@ function bindEvents() {
   });
 
 
+//----------------------------------------------- S E N D  E M A I L -------------------------------------------
+  $(document).on("click", "#btnSaveandSendmail", async function (e) {
+    e.preventDefault();
+    if (isDispatchFinalized()) return;
 
-$(document).on("click", "#btnSaveandSendmail", async function (e) {
-  e.preventDefault();
-  if (isDispatchFinalized()) return;
-
-  if (!state.head?.dispatch_id) {
-    showMessage("ไม่พบ แผนการจัดรถปัจจุบันของ (วัน/เวลา)ที่เลือก", "warning");
-    return;
-  }
-
-  const isConfirm = await showConfirm({
-    title: "บันทึกแผนการจัดรถ",
-    message: "ต้องการบันทึกข้อมูลแผนการจัดรถและส่งอีเมลล์ให้พนักงาน ใช่หรือไม่?",
-    acceptText: "ยืนยัน",
-    cancelText: "ยกเลิก",
-  });
-
-  if (!isConfirm) {
-    return;
-  }
-
-  const currentWorkdate = $(dom.workdate).val();
-  const currentType = $(dom.type).val();
-
-  try {
-    const param = {
-      date: currentWorkdate,
-      type: currentType,
-    };
-
-    const res = buildmail(param);
-    const objmail = {
-      VIEW: "layouts/mail/mailAlert",
-      SUBJECT: res.subject,
-      TO: 'supamid@MitsubishiElevatorAsia.co.th',
-      CC: [],
-      BCC: 'supamid@MitsubishiElevatorAsia.co.th',
-      BODY: res.body,
-      ENFILE: ["Bus_daily_A24_3_2569.xlsx", "disabled_passenger_141.xlsx"],
-      PATH: "C:/Users/supamid/Downloads",
-    };
-
-    console.log("objmail =", objmail);
-
-    await sendMail(objmail);
-
-    const dto = {
-      dispatch_id: Number(state.head.dispatch_id),
-      status: "F",
-      update_by: String(login_empno),
-    };
-
-    await updateStatusHead(dto);
-
-    showMessage("บันทึกและส่งอีเมลล์สำเร็จแล้ว", "success");
-    await reload_dispatch();
-  } catch (err) {
-    console.error("sendMail error =", err);
-
-    if (err?.responseText) {
-      console.error("responseText =", err.responseText);
+    if (!state.head?.dispatch_id) {
+      showMessage("ไม่พบ แผนการจัดรถปัจจุบันของ (วัน/เวลา)ที่เลือก", "warning");
+      return;
     }
 
-    showMessage("ส่งอีเมลไม่สำเร็จ", "warning");
+    const isConfirm = await showConfirm({
+      title: "บันทึกแผนการจัดรถ",
+      message: "ต้องการบันทึกข้อมูลแผนการจัดรถและส่งอีเมลล์ให้พนักงาน ใช่หรือไม่?",
+      acceptText: "ยืนยัน",
+      cancelText: "ยกเลิก",
+    });
+
+    if (!isConfirm) {
+      return;
+    }
+
+    const currentWorkdate = $(dom.workdate).val();
+    const currentType = $(dom.type).val();
+
+    try {
+      await showLoader({ show: true });
+
+      // 1) ปิดสถานะงานก่อน
+      const dto = {
+        dispatch_id: Number(state.head.dispatch_id),
+        status: "F",
+        update_by: String(login_empno),
+      };
+
+      const updateRes = await updateStatusHead(dto);
+
+      // 2) เรียก Node API ให้ไปทำต่อทั้งหมด
+      const mailPayload = {
+        dispatch_id: Number(state.head.dispatch_id),
+        workdate: currentWorkdate,
+        dispatch_type: currentType,
+        update_by: String(login_empno),
+        create_folder: true,
+        export_excel: true,
+        send_mail: true,
+      };
+
+     // const result = await runDispatchExportAndSendMail(mailPayload);
+      const result = await exportAndsendmail(mailPayload);
+
+
+      if (!result?.status) {
+        throw new Error(result?.message || "ไม่สามารถสร้างไฟล์ Excel และส่งอีเมลได้");
+      }
+
+      showMessage("บันทึกข้อมูล สร้างไฟล์ และส่งอีเมลสำเร็จ", "success");
+
+      // 3) โหลดข้อมูลเดิมกลับตาม
+      await reload_dispatch();
+
+    } catch (error) {
+      console.error("Save and send mail error:", error);
+      showMessage(error?.message || "เกิดข้อผิดพลาดในการสร้างไฟล์และส่งอีเมล", "error");
+    } finally {
+      await showLoader({ show: false });
+    }
+  });
+
+  
+  async function loadDispatchData({ workdate, type }) {
+    const res = await dispatchGetDispatch({
+      workdate,
+      dispatch_type: type,
+    });
+
+    if (!res?.status) {
+      throw new Error(res?.message || "ไม่สามารถโหลดข้อมูลแผนการจัดรถได้");
+    }
+
+    state.head = res.head || null;
+    state.lines = Array.isArray(res.lines) ? res.lines : [];
+    state.disabledPassengers = Array.isArray(res.disabledPassengers) ? res.disabledPassengers : [];
+
+    renderAll();
+    syncActionButtonsState();
   }
-});
+
 
   async function reload_dispatch() {
     const currentWorkdate = $(dom.workdate).val();
@@ -2123,25 +1965,23 @@ $(document).on("click", "#btnSaveandSendmail", async function (e) {
   }
 
 
-  function buildmail(param) {
-    const date = param.date || "-";
-    const type = param.type || "-";
-    return {
-      subject: `Transportation Notification (${date})`,
-      body: [
-        "Dear All,",
-        "<br>This email is to inform the transportation arrangement for today.",
-        `<b>Date:</b> ${date}`,
-        `<b>Type:</b> ${type}`,
-        "<br><br>Please check the attached files for:",
-        "• Bus route and passenger list",
-        "• List of employees without transportation",
-        "<br><br>Thank you.",
-        "This is an auto-generated email.",
-      ],
-    };
+
+
+
+  async function testCreateFolder() {
+    try {
+      const res = await createfolder();
+      console.log("create folder =", res);
+      if (res.status) {
+        showMessage("สร้างโฟลเดอร์สำเร็จ: " + res.month_path, "success");
+      } else {
+        showMessage(res.message || "สร้างโฟลเดอร์ไม่สำเร็จ", "warning");
+      }
+
+    } catch (err) {
+      console.error(err);
+      showMessage("เรียก API ไม่สำเร็จ", "warning");
+    }
   }
-
-
 
 }
