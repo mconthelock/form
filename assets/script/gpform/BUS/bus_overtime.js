@@ -1105,189 +1105,10 @@ function bindEvents() {
     const t = String(time).padStart(4, "0");
     return t.length === 4 ? `${t.slice(0, 2)}:${t.slice(2, 4)}` : t;
   }
+
+  // =====================================
   // 1) รายงานจัดรถประจำวัน (Bus Daily Report)
-  // =========================
-  // 1.1) export คนที่จัดรถ 1
-  // =========================
-  async function exportBusDailyExcel(dispatchId) {
-    const res = await reportBusDaily({ dispatch_id: String(dispatchId) });
-
-    if (!res?.status) {
-      throw new Error(res?.message || "ไม่สามารถดึงข้อมูลรายงานจัดรถได้");
-    }
-
-    const lines = Array.isArray(res.lines) ? res.lines : [];
-
-    if (!lines.length) {
-      throw new Error("ไม่พบข้อมูลรายชื่อผู้ที่จัดรถ");
-    }
-
-    const today = new Date().toLocaleDateString("th-TH");
-    const excelRows = [];
-
-    lines.forEach((line) => {
-      const stops = Array.isArray(line.stops) ? line.stops : [];
-
-      let hasPassenger = false;
-
-      stops.forEach((stop) => {
-        const passengers = Array.isArray(stop.passengers) ? stop.passengers : [];
-        if (passengers.length > 0) hasPassenger = true;
-      });
-
-      if (!hasPassenger) return;
-
-      let no = 1;
-
-      excelRows.push({
-        NO: "",
-        EMPNO: "",
-        FULLNAME: `สายรถ : ${line.busname || line.busid || "-"}`,
-        DEPT: "",
-        STOP_NAME: "",
-        PLAN_TIME: "",
-        __isGroup: true,
-      });
-
-      stops.forEach((stop) => {
-        const passengers = Array.isArray(stop.passengers) ? stop.passengers : [];
-
-        passengers.forEach((p) => {
-          excelRows.push({
-            NO: no++,
-            EMPNO: p.empno || "",
-            FULLNAME: p.fullname || "",
-            DEPT: p.dept || "",
-            STOP_NAME: stop.stop_name || "",
-            PLAN_TIME: formatPlanTime(stop.plan_time || ""),
-            __isGroup: false,
-          });
-        });
-      });
-
-      excelRows.push({
-        NO: "",
-        EMPNO: "",
-        FULLNAME: "",
-        DEPT: "",
-        STOP_NAME: "",
-        PLAN_TIME: "",
-        __isBlank: true,
-      });
-    });
-
-    while (excelRows.length && excelRows[excelRows.length - 1].__isBlank) { excelRows.pop();}
-
-    if (!excelRows.length) {
-      throw new Error("ไม่พบข้อมูลรายชื่อผู้ที่จัดรถ");
-    }
-
-    const workbook = await defaultExcel({
-      data: excelRows.map((row) => ({
-        NO: row.NO,
-        EMPNO: row.EMPNO,
-        FULLNAME: row.FULLNAME,
-        DEPT: row.DEPT,
-        STOP_NAME: row.STOP_NAME,
-      })),
-
-      column: [
-        { key: "NO", header: "No" },
-        { key: "EMPNO", header: "รหัส" },
-        { key: "FULLNAME", header: "ชื่อ-นามสกุล" },
-        { key: "DEPT", header: "แผนก" },
-        { key: "STOP_NAME", header: "จุดลง" },
-      ],
-
-      sheetName: "Bus Daily",
-      manual: true,
-      autoWidth: false,
-
-      manualActions: (sheet) => {
-        sheet.insertRow(1, [res.title || "รายงานผู้ที่จัดรถ"]);
-        sheet.insertRow(2, [`Update : ${today}`]);
-        sheet.insertRow(3, []);
-        mergeCell(sheet, 1, 1, 1, 5);
-        mergeCell(sheet, 2, 1, 2, 5);
-
-        applyStyleToRange(sheet, 1, 5, 1, {
-          font: { bold: true, size: 16 },
-          alignment: alignment("center", "middle"),
-        });
-
-        applyStyleToRange(sheet, 1, 5, 2, {
-          font: { bold: true, size: 14 },
-          alignment: alignment("center", "middle"),
-        });
-
-        applyStyleToRange(sheet, 1, 5, 4, {
-          font: { bold: true, size: 13 },
-          alignment: alignment("center", "middle"),
-          border: border(),
-        });
-
-        sheet.getColumn(1).width = 6;
-        sheet.getColumn(2).width = 12;
-        sheet.getColumn(3).width = 32;
-        sheet.getColumn(4).width = 20;
-        sheet.getColumn(5).width = 24;
-
-
-        sheet.eachRow((row, rowNumber) => {
-          if (rowNumber < 4) return;
-          row.eachCell((cell, colNumber) => {
-            cell.font = { ...cell.font, size: 12 };
-            cell.alignment = {
-              vertical: "middle",
-              horizontal: "center",
-              wrapText: true,
-            };
-
-            cell.border = border();
-
-            if (colNumber === 3 && rowNumber >= 5) {
-              cell.alignment = {
-                vertical: "middle",
-                horizontal: "left",
-                wrapText: true,
-                indent: 1,
-              };
-            }
-          });
-        });
-
-        excelRows.forEach((item, index) => {
-          const rowNo = index + 5;
-          if (item.__isGroup) {
-            mergeCell(sheet, rowNo, 3, rowNo, 5);
-
-            for (let c = 1; c <= 5; c++) {
-              const cell = sheet.getRow(rowNo).getCell(c);
-              cell.font = { bold: true, size: 13 };
-              cell.alignment = alignment("left", "middle");
-              cell.border = border();
-              cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFFF2CC" }, };
-            }
-          }
-
-          if (item.__isBlank) {
-            for (let c = 1; c <= 5; c++) {
-              const cell = sheet.getRow(rowNo).getCell(c);
-              cell.border = border();
-            }
-          }
-        });
-      },
-    });
-
-    const fname = "bus_daily_" + today + ".xlsx";
-    exportExcel(workbook, fname);
-    //exportExcel(workbook, `bus_daily_${dispatchId}`);
-  }
-
-  // =========================
-  // 1.2) export คนที่จัดรถ 2
-  // =========================
+  // =====================================
   async function exportBusDailyLayoutExcel(dispatchId) {
     const res = await reportBusDaily({ dispatch_id: String(dispatchId) });
     const today = new Date().toLocaleDateString("th-TH");
@@ -1555,9 +1376,9 @@ function bindEvents() {
     exportExcel(workbook, fname);
   }
 
-  // =========================
+  // =====================================
   // 2) export คนที่ไม่ได้จัดรถ
-  // =========================
+  // =====================================
   async function exportDisabledPassengerExcel(dispatchId) {
     const res = await reportDisabledPassengerDaily({ dispatch_id: String(dispatchId) });
     if (!res?.status) {throw new Error(res?.message || "ไม่สามารถดึงข้อมูลรายงานผู้ไม่ได้จัดรถได้"); }
@@ -2045,7 +1866,7 @@ function bindEvents() {
   });
 
 
-
+//----------------------------------------------- S E N D  E M A I L -------------------------------------------
   $(document).on("click", "#btnSaveandSendmail", async function (e) {
     e.preventDefault();
     if (isDispatchFinalized()) return;
