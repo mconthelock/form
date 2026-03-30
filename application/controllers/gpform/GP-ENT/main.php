@@ -23,7 +23,7 @@ class Main extends MY_Controller {
         parent::__construct();
         $this->load->model('gpform/GP-ENT/ent_model', 'ent');
         $this->load->model('form_model', 'form');
-        $this->upload_path = $_ENV['AMEC_FILE_PATH'] . ($this->_servername() == 'amecweb' ? 'production' : 'development') . "/Form/GP/GPENT/";
+        $this->upload_path = "//amecnas/AMECWEB/File/" . ($this->_servername() == 'amecweb' ? 'production' : 'development') . "/Form/GP/GPENT/";
         $this->client      = new Client(['verify' => false]);
         $this->load->library('Mail');
         // Load models here if needed
