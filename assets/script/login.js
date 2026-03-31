@@ -6,15 +6,16 @@ import {
 	setImage,
 	setInfo,
 	getApp,
+	getAllApps,
 	getAppDataById,
 } from "@amec/webasset/indexDB";
 import { getCookie, deleteCookie } from "@amec/webasset/jsCookie";
 import { decryptText } from "@amec/webasset/crypto";
 import { directlogin, passwordLogin } from "@amec/webasset/api/auth";
 import { createCarousel } from "@amec/webasset/api/gpreport";
-import { redirectProduction } from "@amec/webasset/authen";
 import { showMessage, showErrorMessage } from "@amec/webasset/utils";
 import { sendSession, host, uri } from "./utils";
+import { getAppsList } from "./service/docinv";
 
 var camera;
 const startTime = Date.now();
@@ -22,9 +23,9 @@ const MIN_DISPLAY_TIME = 2000;
 $(document).ready(async function () {
 	await splashScreen();
 	const id = $("#appid").val();
-	await redirectProduction(id);
+	const appdata = await getAppsDB(id);
+	$("#login-title").text(appdata.APP_NAME);
 	await createCarousel("login");
-	console.log(id);
 	if (id == "1") {
 		const cookie = await getCookie(process.env.APP_NAME);
 		if (cookie) {
@@ -305,31 +306,12 @@ function hideSplashScreen() {
 	document.body.style.overflow = "auto";
 }
 
-//Note for Socket.io
-//   console.log("Frontend application loaded!");
-//   console.log(process.env.APP_API);
-//   const socket = io(`http://localhost:3001`);
-//   socket.on("connect", () => {
-//     console.log("Connected to Socket.io server:", socket.id);
-//   });
-//   socket.on("disconnect", () => {
-//     console.log("Disconnected from Socket.io server.");
-//   });
-//   socket.on("orderViewing", (data) => {
-//     console.log("Order viewing update received:", data);
-// const orderId = data.orderId;
-// const viewerId = data.viewerId; // The socket ID of the user viewing
-// const isViewing = data.isViewing;
-// $(`#order-row-${orderId}`).each(function() {
-//     const $row = $(this);
-//     // Remove any existing indicators
-//     $row.removeClass('viewing-indicator');
-//     if (isViewing) {
-//         // Add indicator if this order is being viewed by someone else
-//         // We compare viewerId to socket.id to prevent showing "viewing" on own screen
-//         if (viewerId !== socket.id) {
-//             $row.addClass('viewing-indicator');
-//         }
-//     }
-// });
-//   });
+async function getAppsDB(id) {
+	const appData = await getApp(id);
+	if (appData) return appData;
+	const apps = await getAppsList();
+	apps.forEach(async (app) => {
+		await setApplication(app);
+	});
+	return apps.find((app) => app.APP_ID == id);
+}

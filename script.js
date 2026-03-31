@@ -56,10 +56,11 @@
 		});
 	}
 
+	//Start hear
 	const host = document.querySelector('meta[name="base_url"]').content;
 	const state = document.querySelector('meta[name="appstatus"]').content;
 	const appid = document.getElementById("appid");
-	//   const domain = amecdomain(host, state);
+	const domain = amecdomain(host, state);
 	const cookie = checkCookie();
 	if (cookie != "" && appid == 1) window.location.replace(`${host}home`);
 })();
