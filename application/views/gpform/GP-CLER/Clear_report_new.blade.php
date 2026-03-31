@@ -369,7 +369,11 @@
                                             The Actual cost over Estimate cost : Company reimbursement to Employee.({{ $ENT_FORM->EMP_REQ }} {{ $form[0]->VREQNAME }})
                                         @endif
                                     @else
-                                        {{ $formCler->REMAIN_BUDGET >= 0 ? 'The actual cost did not exceed the estimated cost. As no advance payment was requested, the employee will be reimbursed by the company.' : 'The Actual cost over Estimate cost : Company reimbursement to Employee.(' . $ENT_FORM->EMP_REQ . ' ' . $form[0]->VREQNAME . ')' }}
+                                        @if ($formCler->ACTUAL_COST == 0)
+                                            No Expense
+                                        @else
+                                            {{ $formCler->REMAIN_BUDGET >= 0 ? 'The actual cost did not exceed the estimated cost. As no advance payment was requested, the employee will be reimbursed by the company.' : 'The Actual cost over Estimate cost : Company reimbursement to Employee.(' . $ENT_FORM->EMP_REQ . ' ' . $form[0]->VREQNAME . ')' }}
+                                        @endif
                                     @endif
                                 @endif
                             </div>
