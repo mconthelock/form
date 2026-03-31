@@ -57,14 +57,14 @@
                 <div class="text-xs text-blue-800 mt-1">
                     *กรุณาแนบใบเสร็จฉบับจริงด้วยทุกครั้ง (Please attach original “Receipt Slip”)
                 </div>
-                <div class="grid grid-cols-2 gap-4 items-center">
-                    <div class="flex items-center space-x-3">
+                {{-- <div class="grid grid-cols-2 gap-4 items-center"> --}}
+                    {{-- <div class="flex items-center space-x-3">
                         <input type="checkbox" class="checkbox checkbox-primary" name="no_entertain" id="no-entertain" />
                         <label for="no-entertain" class="label cursor-pointer inline-block">
                             <span>กรณีไม่ได้ทำ Entertainment Form</span><br>
                             <span class="text-sm text-red-500">(Please click : In case of Requestor not prepare Entertainment form before)</span>
                         </label>
-                    </div>
+                    </div> --}}
                     <div class="text-right">
                         {{-- <input type="hidden" name="NFRMNO" value="{{ $NFRMNO }}">
                         <input type="hidden" name="VORGNO" value="{{ $VORGNO }}">
@@ -74,7 +74,7 @@
                         <input type="hidden" name="EMPNO" value="{{ $EMPNO }}"> --}}
                         <button id="btn-next" class="btn btn-accent btn-md rounded-xl px-6">ถัดไป</button>
                     </div>
-                </div>
+                {{-- </div> --}}
             </div>
         </div>
     </form>
