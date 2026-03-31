@@ -25,7 +25,8 @@
         <div class="relative flex flex-col min-h-screen w-full p-4 overflow-x-hidden">
             {{-- Braner && Background --}}
             <div class="px-8 py-4">
-                @include('svg/brand_text_w')
+                <img src="{{ base_url() }}assets/images/{{ $id == 1 ? 'brand_text_w.png' : 'brand_text_p.png' }}"
+                    alt="AMEC Webflow" class="w-48">
             </div>
             <div class="absolute z-[-1] w-full h-96 md:w-96">
                 <div
@@ -42,8 +43,8 @@
             {{-- Password Login --}}
             <div class="w-full h-[calc(100vh-86px)] flex items-center justify-center lg:justify-end ">
                 <div class="w-96 p-8 rounded-lg shadow-lg bg-white z-0 lg:mr-32 form-cover">
-                    <h1 class="text-2xl font-bold text-center">Login</h1>
-
+                    <h1 class="text-sm font-bold text-center text-slate-400">Welcome</h1>
+                    <h1 class="text-2xl font-black text-center text-slate-600" id="login-title"></h1>
                     {{-- Password login --}}
                     <div class="loginform" id="frm-password">
                         <form action="#" method="POST" class="mt-4" autocomplete="off" id="passwordLogin">
