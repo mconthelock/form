@@ -1,12 +1,11 @@
 import "@flaticon/flaticon-uicons/css/all/all.css";
-
-import { BrowserMultiFormatReader } from "@zxing/browser";
+// import { BrowserMultiFormatReader } from "@zxing/browser";
+import QRScanner from "@amec/webasset/qrScanner";
 import {
 	setApplication,
 	setImage,
 	setInfo,
 	getApp,
-	getAllApps,
 	getAppDataById,
 } from "@amec/webasset/indexDB";
 import { getCookie, deleteCookie } from "@amec/webasset/jsCookie";
@@ -14,6 +13,7 @@ import { decryptText } from "@amec/webasset/crypto";
 import { directlogin, passwordLogin } from "@amec/webasset/api/auth";
 import { createCarousel } from "@amec/webasset/api/gpreport";
 import { showMessage, showErrorMessage } from "@amec/webasset/utils";
+
 import { sendSession, host, uri } from "./utils";
 import { getAppsList } from "./service/docinv";
 
@@ -231,58 +231,63 @@ async function barcodeLogin(empcode) {
 
 async function showCamera(target) {
 	if (target !== "frm-barcode") return false;
-	const videoElement = document.getElementById("video");
-	try {
-		const devices = await navigator.mediaDevices.enumerateDevices();
-		const videoInputDevices = devices.filter(
-			(device) => device.kind === "videoinput",
-		);
+	// const videoElement = document.getElementById("video");
+	// try {
+	// 	const devices = await navigator.mediaDevices.enumerateDevices();
+	// 	const videoInputDevices = devices.filter(
+	// 		(device) => device.kind === "videoinput",
+	// 	);
 
-		if (videoInputDevices.length === 0) {
-			return;
-		}
+	// 	if (videoInputDevices.length === 0) {
+	// 		return;
+	// 	}
 
-		$("#open-camera").show();
-		const codeReader = new BrowserMultiFormatReader();
-		let selectedDeviceId = videoInputDevices[0].deviceId;
-		const preferred = videoInputDevices.find(
-			(device) =>
-				/back|rear/i.test(device.label) &&
-				!/depth|ultrawide/i.test(device.label),
-		);
+	// 	$("#open-camera").show();
+	// 	const codeReader = new BrowserMultiFormatReader();
+	// 	let selectedDeviceId = videoInputDevices[0].deviceId;
+	// 	const preferred = videoInputDevices.find(
+	// 		(device) =>
+	// 			/back|rear/i.test(device.label) &&
+	// 			!/depth|ultrawide/i.test(device.label),
+	// 	);
 
-		if (preferred) {
-			selectedDeviceId = preferred.deviceId;
-		}
+	// 	if (preferred) {
+	// 		selectedDeviceId = preferred.deviceId;
+	// 	}
 
-		return await codeReader.decodeFromVideoDevice(
-			selectedDeviceId,
-			videoElement,
-			async (result, error, controls) => {
-				if (result) {
-					const empno = (
-						"00000" + (result.getText() / 4 - 92).toString()
-					).slice(-5);
-					const user = await directlogin(empno, 1);
-					//await barcodeLogin(result.getText());
-					if (user.status !== undefined) {
-						await showErrorMessage(user.message);
-						return false;
-					}
-					//$("#open-camera").hide();
-					controls.stop();
-					const url = await successLogin(user);
-					window.location.replace(url);
-				}
-				if (error) {
-					console.warn("อ่านผิดพลาด: ", error.message);
-				}
-			},
-		);
-		//return true;
-	} catch (err) {
-		console.error("เกิดข้อผิดพลาด:", err);
-	}
+	// 	return await codeReader.decodeFromVideoDevice(
+	// 		selectedDeviceId,
+	// 		videoElement,
+	// 		async (result, error, controls) => {
+	// 			if (result) {
+	// 				const empno = (
+	// 					"00000" + (result.getText() / 4 - 92).toString()
+	// 				).slice(-5);
+	// 				const user = await directlogin(empno, 1);
+	// 				//await barcodeLogin(result.getText());
+	// 				if (user.status !== undefined) {
+	// 					await showErrorMessage(user.message);
+	// 					return false;
+	// 				}
+	// 				//$("#open-camera").hide();
+	// 				controls.stop();
+	// 				const url = await successLogin(user);
+	// 				window.location.replace(url);
+	// 			}
+	// 			if (error) {
+	// 				console.warn("อ่านผิดพลาด: ", error.message);
+	// 			}
+	// 		},
+	// 	);
+	// 	//return true;
+	// } catch (err) {
+	// 	console.error("เกิดข้อผิดพลาด:", err);
+	// }
+	const scanner = new QRScanner({
+		onScan: ({ text, added, duplicate }) => {
+			console.log(text);
+		},
+	});
 }
 
 function splashScreen() {
