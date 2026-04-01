@@ -736,7 +736,8 @@ class Training extends MY_Controller {
         ]);
         $this->trn->insert_data('CLRFORM', $insert_head_clear);
 
-        $this->trn->delete_flow($data["NFRMNO"], $data["VORGNO"], $data["CYEAR"], $data["CYEAR2"], $data["NRUNNO"], 'CSTEPNO', '61');
+        //$this->trn->delete_flow($data["NFRMNO"], $data["VORGNO"], $data["CYEAR"], $data["CYEAR2"], $data["NRUNNO"], 'CSTEPNO', '61');
+        $this->trn->delete_flow($clearHead["NFRMNO"], $clearHead["VORGNO"], $clearHead["CYEAR"], $clearHead["CYEAR2"], $clearHead["NRUNNO"], 'CSTEPNO', '61');
         $this->trn->update_flow($clearHead["NFRMNO"], $clearHead["VORGNO"], $clearHead["CYEAR"], $clearHead["CYEAR2"], $clearHead["NRUNNO"], 'CSTEPNEXTNO','06', 'CSTEPNO', '--');
         $this->trn->update_flow($clearHead["NFRMNO"], $clearHead["VORGNO"], $clearHead["CYEAR"], $clearHead["CYEAR2"], $clearHead["NRUNNO"], 'CSTEPST','3', 'CSTEPNO', '--');
         $this->trn->update_flow($clearHead["NFRMNO"], $clearHead["VORGNO"], $clearHead["CYEAR"], $clearHead["CYEAR2"], $clearHead["NRUNNO"], 'CAPVSTNO','0', 'CSTEPNO', '--');
