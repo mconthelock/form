@@ -35,7 +35,6 @@ class form extends MY_Controller{
 
         }else{
             $form = $this->getFormMasterByVaname('IS-TID');
-            // $form = $this->frm->getFormMaster('IS-TID');
             if(!empty($form)){
                 $data = [
                     'NFRMNO' => $form[0]->NNO,
@@ -44,10 +43,7 @@ class form extends MY_Controller{
                 ];
             }
         }
-        $data['serverName'] = $this->getServerName();
-        $data['cextData'] = '';
-        $data['mode']     = '';
-        // $data['serverName'] = $this->en->getServerName();
+        $data['mode']     = 1;
 
         $empno = isset($_GET["empno"]) ? $_GET['empno'] : '' ;
         $data['apv'] = $empno;
@@ -62,15 +58,13 @@ class form extends MY_Controller{
                 'NRUNNO' => (int)$data['NRUNNO'],
             ];
             $formData = $this->getFormData($form);
+            $formData = $formData['data'];
             $data['data']     = $formData;
             $form['EMPNO']    = (string)$empno;
             if(!empty($empno)){
                 $data['cextData'] = $this->getExtData($form);
                 $data['mode']     = $this->getMode($form);
             }
-            // $formData         = $this->en->getData($_GET["no"], $_GET["orgNo"], $_GET["y"], $_GET["y2"], $_GET["runNo"])[0];
-            // $data['cextData'] = $this->getExtdata($_GET["no"], $_GET["orgNo"], $_GET["y"], $_GET["y2"], $_GET["runNo"] , $empno);
-            // $data['mode']     = $this->getMode($_GET["no"], $_GET["orgNo"], $_GET["y"], $_GET["y2"], $_GET["runNo"], $empno);
             if(strpos($formData['TID_REQNO'], '|') !== false){
                 $reqNo = explode('|', $formData['TID_REQNO']);
                 foreach($reqNo as $key => $r){

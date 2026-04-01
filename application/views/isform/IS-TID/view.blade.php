@@ -102,13 +102,13 @@
                     <div class="border border-black font-bold bg-gray-300"><p class="ml-2 text-xl font-bold">Work content</p></div>
                     <div class="border border-black h-fit">
                         <div class="m-5">
-                            <textarea class="w-full resize-none overflow-y-auto p-2" id="workcontent" readonly>{!! htmlspecialchars(e($data['TID_WORKCONTENT'] ?? '-')) !!}</textarea>
+                            <textarea class="w-full resize-none overflow-y-auto p-2 autosize" id="workcontent" readonly>{!! htmlspecialchars(e($data['TID_WORKCONTENT'] ?? '-')) !!}</textarea>
                         </div>
                     </div>
                     <div class="border border-black font-bold bg-gray-300"><p class="ml-2 text-xl font-bold">Reason of Necessity</p></div>
                     <div class="border border-black h-fit">
                         <div class="m-5">
-                            <textarea class="w-full resize-none overflow-y-auto p-2" id="reason" readonly>{!! htmlspecialchars(e($data['TID_REASON'] ?? '-')) !!}</textarea>
+                            <textarea class="w-full resize-none overflow-y-auto p-2 autosize" id="reason" readonly>{!! htmlspecialchars(e($data['TID_REASON'] ?? '-')) !!}</textarea>
                         </div>
                     </div>
                 </div>

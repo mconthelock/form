@@ -1,18 +1,22 @@
+import { fetchUtils } from "@amec/webasset/api/fetch-utils";
+
 export async function getUserLogin() {
-    const res = await fetch(`${process.env.APP_API}/itgc/specialuser/getUserLogin`);
-    if (!res.ok) {
-        await fetchMsgErr(res)
-        throw new Error("Failed to fetch user");
-    }
-    return res.json();
+    return await fetchUtils({
+        url: `${process.env.APP_API}/itgc/specialuser/getUserLogin`,
+        method: "GET",
+    });
 }
 
 export async function getController() {
-    const res = await fetch(`${process.env.APP_API}/itgc/specialuser/getController`);
-    if (!res.ok) {
-        await fetchMsgErr(res)
-        throw new Error("Failed to fetch user");
-    }
-    return res.json();
+    return await fetchUtils({
+        url: `${process.env.APP_API}/itgc/specialuser/getController`,
+        method: "GET",
+    });
 }
 
+export async function getServerName() {
+    return await fetchUtils({
+        url: `${process.env.APP_API}/itgc/specialuser/getServerName`,
+        method: "GET",
+    });
+}
