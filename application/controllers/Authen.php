@@ -137,4 +137,47 @@ class Authen extends MY_Controller {
     public function setMD5() {
         echo json_encode(md5(substr('00000'.(($_POST['id']/4)-92), -5)));
     }
+
+    private function directLogonByUid($uid, $program, $auth){
+        try{
+            $response = $this->client->post("{$_ENV['APP_APIPHP']}/api/authentication/directlogin/", [
+                'json' => [
+                    'username' => md5($uid),
+                    'program'  => $program,
+                    'auth'     => $auth,
+                    'client'   => $_SERVER['REMOTE_ADDR']
+                ]
+            ]);
+            $result = json_decode($response->getBody(), true);
+            return $result;
+        }catch(Exception $e){
+            return array('status' => false, 'message' => $e->getMessage());
+        }
+    }
+    
+    public function directbus(){
+        $uid = $this->input->post('uid');
+
+        if (empty($uid)) {
+            show_error('UID is required');
+            return;
+        }
+
+        $logged = $this->directLogonByUid($uid, 677, 1);
+
+        if (empty($logged['status'])) {
+            show_error(is_array($logged['message']) ? json_encode($logged['message']) : $logged['message']);
+            return;
+        }
+
+        $url = $_ENV['APP_HOST'] . "/gpform/bus/authen/directlogin/";
+        $sent = $this->sendSession($logged['message'], $url);
+
+        if (empty($sent['status'])) {
+            show_error('Send session failed');
+            return;
+        }
+
+        redirect($_ENV['APP_HOST'] . "/gpform/bus/overtime");
+    }
 }
