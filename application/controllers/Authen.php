@@ -82,7 +82,7 @@ class Authen extends MY_Controller {
 	}
 
     public function test(){
-        $app = $this->application(12);
+        $app = $this->application(543);
         if($app['status']){
             $data = $app['message'][0];
             $logged = $this->directLogon($data['APP_ID'], $data['APP_LOGIN']);
@@ -163,7 +163,7 @@ class Authen extends MY_Controller {
             return;
         }
 
-        $logged = $this->directLogonByUid($uid, 677, 1);
+        $logged = $this->directLogonByUid($uid, 543, 1);
 
         if (empty($logged['status'])) {
             show_error(is_array($logged['message']) ? json_encode($logged['message']) : $logged['message']);
