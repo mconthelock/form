@@ -140,7 +140,7 @@ class Authen extends MY_Controller {
 
     private function directLogonByUid($uid, $program, $auth){
         try{
-            $response = $this->client->post("{$_ENV['APP_APIPHP']}/api/authentication/directlogin/", [
+            $response = $this->client->post("{$_ENV['APP_APIPHP']}/api/auth/directlogin/", [
                 'json' => [
                     'username' => md5($uid),
                     'program'  => $program,
