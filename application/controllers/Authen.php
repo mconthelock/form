@@ -170,7 +170,7 @@ class Authen extends MY_Controller {
             return;
         }
 
-        $url = $_ENV['APP_HOST'] . "/gpform/bus/authen/directlogin/";
+        $url = $_ENV['APP_HOST'] . "authen/directlogin/";
         $sent = $this->sendSession($logged['message'], $url);
 
         if (empty($sent['status'])) {
