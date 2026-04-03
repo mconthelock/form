@@ -552,10 +552,12 @@ import { sendMail, mailsubject } from "@amec/webasset/sendmail";
     try {
       const dto = makeDtoGetDispatch();
 
-      if (!dto.workdate) {
-        showMessage("กรุณาเลือกวันที่", "warning");
-        return;
-      }
+     if (!dto.workdate) {
+      showMessage("กรุณาเลือกวันที่", "warning");
+      return;
+    } else {
+      dto.workdate = dayjs(dto.workdate).format('YYYY-MM-DD');
+    }
 
       const preserveBusId = options.preserveBusId ?? state.selectedLine?.busid ?? null;
       const preserveStopId = options.preserveStopId ?? state.selectedStop?.stop_id ?? null;
