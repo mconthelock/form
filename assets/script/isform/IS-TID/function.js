@@ -1,8 +1,10 @@
 import { getUser } from "@amec/webasset/api/amec";
 import { getRequestNo } from "@amec/webasset/api/webform";
 import { showLoader } from "@amec/webasset/preloader";
-import { clearSelect2, flagSelect, setSelect2 } from "@amec/webasset/select2";
+import { clearSelect2, setSelect2 } from "@amec/webasset/select2";
 import {
+    addMinutesToTime,
+    filterFormData,
     getAllAttr,
     logFormData,
     removeClassError,
@@ -10,9 +12,11 @@ import {
     showErrorMessage,
     showMessage,
 } from "@amec/webasset/utils";
-import { getController, getServerName, getUserLogin } from "./data";
+import { createTid, getController, getServerName, getUserLogin } from "./data";
 import { setDatePicker } from "@amec/webasset/flatpickr";
 import { webflowSubmit } from "@amec/webasset/components/form";
+import "@amec/webasset/tooltip";
+import { redirectWebflow } from "@amec/webasset/form";
 
 export const state = {
     _formInfo: null,
@@ -195,10 +199,20 @@ export const reqNoManager = {
     },
     async addReqNo(reqNo) {
         try {
-            if (!RegExp(/^[A-Za-z]+-[a-zA-Z0-9]+-[0-9]{6}$/).test(reqNo)) {
+            if (RegExp(/^[0-9]{2}-[0-9]{1,5}$/).test(reqNo)) {
+                reqNo =
+                    "IS-DEV" +
+                    reqNo.split("-")[0] +
+                    "-" +
+                    reqNo.split("-")[1].padStart(6, "0");
+            } else if (RegExp(/^[0-9]{2}-[0-9]{6}$/).test(reqNo)) {
+                reqNo = "IS-DEV" + reqNo;
+            } else if (
+                !RegExp(/^[A-Za-z]+-[a-zA-Z0-9]+-[0-9]{6}$/).test(reqNo)
+            ) {
                 this.value = "";
                 showMessage(
-                    "Please enter a valid request number, e.g., IS-DEV25-000127 (กรุณากรอกเลขที่คำร้องให้ถูกต้อง เช่น IS-DEV25-000127)",
+                    "Please enter a valid request number, e.g., IS-DEV25-000127,  (กรุณากรอกเลขที่คำร้องให้ถูกต้อง เช่น IS-DEV25-000127)",
                     "warning",
                 );
                 return;
@@ -393,6 +407,9 @@ export const userLoginManager = {
     get value() {
         return this.select.val();
     },
+    get text() {
+        return this.select.find("option:selected").text().trim();
+    },
     get data() {
         return this._data;
     },
@@ -443,6 +460,9 @@ export const controllerManager = {
     get value() {
         return this.select.val();
     },
+    get text() {
+        return this.select.find("option:selected").text().trim();
+    },
     get data() {
         return this._data;
     },
@@ -490,6 +510,9 @@ export function filterEmpno(data) {
 }
 
 export const actionForm = {
+    get remark() {
+        return $("#remark");
+    },
     get container() {
         return $(".form-action-container");
     },
@@ -554,10 +577,87 @@ export const actionForm = {
                 { element: controllerManager.select, message: "Please select controller (กรุณาเลือกผู้ควบคุม)" },
                 { element: $('#workCon'), message: "Please enter work content (กรุณากรอกเนื้อหางาน)" },
             ]))) return;
+            const reqDate = $("#reqDate").val();
+            const timeStart = $("#pStart").val();
+            const timeEnd = $("#pEnd").val();
+            const workContent = $("#workCon").val();
+            const reason = $("#reason").val();
+            const preData = {
+                NFRMNO: data.NFRMNO,
+                VORGNO: data.VORGNO,
+                CYEAR: data.CYEAR,
+                REQBY: data.REQBY,
+                INPUTBY: data.INPUTBY,
+                REMARK: this.remark.val(),
+                USERDATA: {
+                    TID_REQUESTER: data.REQBY,
+                    TID_REQNO: data.REQNO,
+                    TID_REQ_DATE: reqDate,
+                    TID_TIMESTART: timeStart,
+                    TID_TIMEEND: timeEnd,
+                    TID_SERVERNAME: serverNameManager.value,
+                    TID_USERLOGIN: userLoginManager.text,
+                    TID_WORKCONTENT: workContent,
+                    TID_CHANGEDATA: data.CHANGE_DATA,
+                    TID_FORMTYPE: data.FORMTYPE,
+                    TID_LATE: data.LATE,
+                },
+            };
+            if (controllerManager.value) {
+                preData.USERDATA.TID_CONTROLLER = controllerManager.text;
+            }
+            if (reason) {
+                preData.USERDATA.TID_REASON = reason;
+            }
+            if (data.FORMTYPE == 2) {
+                preData.CONTROLLERDATA = {
+                    TID_REQUESTER: controllerManager.value,
+                    TID_REQ_DATE: reqDate,
+                    TID_TIMESTART: timeStart,
+                    TID_TIMEEND: addMinutesToTime(timeEnd, 30),
+                    TID_SERVERNAME: serverNameManager.value,
+                    TID_USERLOGIN: controllerManager.text,
+                    TID_WORKCONTENT: `Enable and disable for user : ${userLoginManager.text}`,
+                    TID_CHANGEDATA: data.CHANGE_DATA,
+                    TID_FORMTYPE: data.FORMTYPE,
+                    TID_LATE: data.LATE,
+                };
+            }
+            console.log(preData);
+            const res = await createTid(preData);
 
-            const formData = new FormData(formManager.form[0]);
+            if (res.status) {
+                showMessage(res.message, "success");
+                redirectWebflow();
+            } else {
+                throw new Error(res.message);
+            }
 
-            logFormData(formData);
-        } catch (error) {}
+            // const formData = new FormData();
+            // formData.set("NFRMNO", data.NFRMNO);
+            // formData.set("VORGNO", data.VORGNO);
+            // formData.set("CYEAR", data.CYEAR);
+            // formData.set("REQBY", data.REQBY);
+            // formData.set("INPUTBY", data.INPUTBY);
+            // formData.set("REMARK", this.remark.val());
+            // formData.set("USERDATA.TID_REQUESTER", data.REQBY);
+            // formData.set("USERDATA.TID_REQNO", data.REQNO);
+            // formData.set("USERDATA.TID_REQ_DATE", $("#reqDate").val());
+            // formData.set("USERDATA.TID_TIMESTART", $("#pStart").val());
+            // formData.set("USERDATA.TID_TIMEEND", $("#pEnd").val());
+            // formData.set("USERDATA.TID_SERVERNAME", serverNameManager.select.val());
+            // formData.set("USERDATA.TID_USERLOGIN", userLoginManager.select.val());
+            // formData.set("USERDATA.TID_CONTROLLER", controllerManager.select.val());
+            // formData.set("USERDATA.TID_WORKCONTENT", $('#workCon').val());
+            // formData.set("USERDATA.TID_REASON", $("#reason").val());
+            // formData.set("USERDATA.TID_CHANGEDATA", data.CHANGE_DATA);
+            // formData.set("USERDATA.TID_FORMTYPE", data.FORMTYPE);
+            // formData.set("USERDATA.TID_LATE", data.LATE);
+
+            // logFormData(filterFormData(formData));
+        } catch (error) {
+            console.error(error);
+            showErrorMessage(error);
+        }
     },
 };

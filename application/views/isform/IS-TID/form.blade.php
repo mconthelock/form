@@ -71,7 +71,25 @@
                             aria-label="with controller" />
                     </div>
                     <fieldset class="fieldset w-full">
-                        <label class="fieldset-label">Webflow request No.</label>
+                        <label class="fieldset-label">Webflow request No.<i class="icofont-question-circle tooltip" data-html="
+                            <div class='flex flex-col gap-2 p-2'>
+                                <span class='font-bold'>
+                                    Supported formats (รูปแบบที่รองรับ)
+                                </span>
+                                <ul class='list-disc list-inside'>
+                                    <li>
+                                        25-1 → IS-DEV25-000001
+                                    </li>
+
+                                    <li>
+                                        25-000001 → IS-DEV25-000001
+                                    </li>
+                                    <li>
+                                        IS-DEV25-000127
+                                    </li>
+                                </ul>
+                            </div>
+                            "></i></label>
                         <div class="flex gap-1">
                             <div class="flex flex-col flex-1 inputGroup gap-1 w-full">
                                 <div class="relative w-full">

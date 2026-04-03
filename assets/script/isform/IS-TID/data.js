@@ -20,3 +20,11 @@ export async function getServerName() {
         method: "GET",
     });
 }
+
+export async function createTid(data){
+    return await fetchUtils({
+        url: `${process.env.APP_API}/isform/is-tid`,
+        method: "POST",
+        data,
+    });
+}
