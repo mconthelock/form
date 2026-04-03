@@ -556,7 +556,12 @@ import { sendMail, mailsubject } from "@amec/webasset/sendmail";
       showMessage("กรุณาเลือกวันที่", "warning");
       return;
     } else {
-      dto.workdate = dayjs(dto.workdate).format('YYYY-MM-DD');
+      const d = new Date(dto.workdate);
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const dd = String(d.getDate()).padStart(2, '0');
+
+      dto.workdate = `${yyyy}-${mm}-${dd}`;
     }
 
       const preserveBusId = options.preserveBusId ?? state.selectedLine?.busid ?? null;
