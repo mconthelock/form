@@ -62,7 +62,7 @@ class form extends MY_Controller{
                 'NRUNNO' => (int)$data['NRUNNO'],
             ];
             $formData = $this->getFormData($form);
-            $data['data']     = $formData;
+            $data['data']     = $formData['data'];
             $form['EMPNO']    = (string)$empno;
             if(!empty($empno)){
                 $data['cextData'] = $this->getExtData($form);
