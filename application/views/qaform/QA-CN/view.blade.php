@@ -839,11 +839,21 @@
     <tr>
         <td class="force-w-350 align-top pt-2">Job Type
         <td class="px-3 py-1 bg-gray-100 border-b border-white">
-            <select name="selJobType" class="w-1/3 h-8 px-2 border border-gray-300 bg-white focus:outline-none focus:ring-1 focus:ring-sky-400 rounded-sm">
-                <option value="S" {{ (( $reqinf[0]->SDEPCODE == "050501") || ($reqinf[0]->SDEPCODE == "051401")) ? 'selected' : '' }} >Sub</option>
-                <option value="B" {{ ( $reqinf[0]->SDEPCODE == "090501") ? 'selected' : '' }} >Bulk</option>
-                
-            </select>
+            <div class="flex items-center gap-4 h-8">
+                <label class="flex items-center gap-2 cursor-pointer">
+                    <input type="radio" name="selJobType" value="S" 
+                        class="w-4 h-4 text-sky-500 focus:ring-1 focus:ring-sky-400 border-gray-300"
+                        {{ in_array($reqinf[0]->SDEPCODE ?? '', ['050501', '051401']) ? 'checked' : '' }}>
+                    <span class="text-gray-700">Sub</span>
+                </label>
+
+                <label class="flex items-center gap-2 cursor-pointer">
+                    <input type="radio" name="selJobType" value="B" 
+                        class="w-4 h-4 text-sky-500 focus:ring-1 focus:ring-sky-400 border-gray-300"
+                        {{ ($reqinf[0]->SDEPCODE ?? '') == '090501' ? 'checked' : '' }}>
+                    <span class="text-gray-700">Bulk</span>
+                </label>
+            </div>
         </td>
     </tr>
    @endif
