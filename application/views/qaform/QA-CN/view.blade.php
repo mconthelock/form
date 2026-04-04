@@ -840,8 +840,9 @@
         <td class="force-w-350 align-top pt-2">Job Type
         <td class="px-3 py-1 bg-gray-100 border-b border-white">
             <select name="selJobType" class="w-1/3 h-8 px-2 border border-gray-300 bg-white focus:outline-none focus:ring-1 focus:ring-sky-400 rounded-sm">
-                <option value="S" {{ ($reqinf[0]->SDEPCODE == "050501" || $reqinf[0]->SDEPCODE == "051401") ? 'selected' : '' }}>Sub</option>
-                <option value="B" {{ ($reqinf[0]->SDEPCODE == "090501") ? 'selected' : '' }}>Bulk</option>
+                <option value="S" {{ (( $reqinf[0]->SDEPCODE == "050501") || ($reqinf[0]->SDEPCODE == "051401")) ? 'selected' : '' }} >Sub</option>
+                <option value="B" {{ ( $reqinf[0]->SDEPCODE == "090501") ? 'selected' : '' }} >Bulk</option>
+                
             </select>
         </td>
     </tr>
@@ -1103,6 +1104,15 @@
                     Return
                 </button>
                 @endif
+
+                @if(($cextData == 4) ||($cextData == 5))
+                <button type="button" name="btnReturn" 
+                        data-action="returnqastaff"
+                        class="btn-submit cursor-pointer bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded shadow">
+                    Return
+                </button>
+                @endif
+
                 @if ((($cextData <= 4) || ($cextData == 8)) && !in_array($empno, [$form[0]->VREQNO, $form[0]->VINPUTER]))
                     <button type="button" name="btnReturn" id="btnReturn"
                              data-action="returnrem"
