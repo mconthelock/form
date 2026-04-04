@@ -835,7 +835,7 @@
         </tr>
 {{-- ส่วน J-Staff In Charge --}}
 @if ($mode == $MODE_EDIT && $cextData == 1)
-   @if (!chkopr)
+   @if (!$chkopr)
     <tr>
         <td class="force-w-350 align-top pt-2">Job Type
         <td class="px-3 py-1 bg-gray-100 border-b border-white">
