@@ -196,7 +196,32 @@ $(document).ready(async function () {
                      if (confirm.status) {
                       redirectWebflow();
                      }
-         }else
+         }else if(action == "returnqastaff")
+         {
+              const loopCount = $("#cextData").val() == "5" ? 2 : 1;
+              let isSuccess = true;
+              let rem = $("#txtRemark").val();
+
+              for (let i = 0; i < loopCount; i++) {
+                  if (i > 0) {
+                     rem ="";
+                  }
+                  const confirm = await doaction({
+                      ...baseForm,
+                      ACTION: "returnb",
+                      EMPNO: empno,
+                      REMARK: rem
+                  });
+                  if (!confirm.status) {
+                      isSuccess = false;
+                      console.error("Failed at return step:", i + 1);
+                      break; 
+                  }
+              }
+              if (isSuccess) {
+                  redirectWebflow();
+              }
+          }else
           {
              //console.log("actionfrm");
               const statusact = await actionfrm(cnformData);
@@ -589,7 +614,7 @@ function checkData(act)
         return false;
       }
       return true;
-  }else if( act == "returnb")
+  }else if( act == "returnb" || act =="returnrem" || act == "returnqastaff")
   {
        if($("#txtRemark").val() == "")
           {
@@ -597,16 +622,6 @@ function checkData(act)
             return false;
           }
           
-  }else if(act =="returnrem")
-  {
-      
-          if($("#txtRemark").val() == "")
-          {
-            showMessage('Please input Remark for reason return', 'warning');
-            return false;
-          }
-
-      
   }else if(act =="return")
   {
       
