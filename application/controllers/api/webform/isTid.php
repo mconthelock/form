@@ -30,7 +30,7 @@ trait isTid{
             $result = json_decode($response->getBody(), true);
             return $result;
         }catch(guzzlehttp\Exception\RequestException $e){
-            throw new Exception(json_encode(['status' => "false", 'message' => 'Failed to create form', 'e' => $e->getMessage()]), 1);
+            throw new Exception(json_encode(['status' => "false", 'message' => 'Failed to get form data', 'e' => $e->getMessage()]), 1);
         }catch(Exception $e){
             throw new Exception(json_encode(['status' => "false", 'message' => 'Failed to get form data', 'e' => $e]), 1);
         }
@@ -42,7 +42,7 @@ trait isTid{
             $result = json_decode($response->getBody(), true);
             return $result;
         }catch(guzzlehttp\Exception\RequestException $e){
-            throw new Exception(json_encode(['status' => "false", 'message' => 'Failed to create form', 'e' => $e->getMessage()]), 1);
+            throw new Exception(json_encode(['status' => "false", 'message' => 'Failed to get server name', 'e' => $e->getMessage()]), 1);
         }catch(Exception $e){
             throw new Exception(json_encode(['status' => "false", 'message' => 'Failed to get server name', 'e' => $e]), 1);
         }
@@ -54,7 +54,7 @@ trait isTid{
             $result = json_decode($response->getBody(), true);
             return $result;
         }catch(guzzlehttp\Exception\RequestException $e){
-            throw new Exception(json_encode(['status' => "false", 'message' => 'Failed to create form', 'e' => $e->getMessage()]), 1);
+            throw new Exception(json_encode(['status' => "false", 'message' => 'Failed to get user login', 'e' => $e->getMessage()]), 1);
         }catch(Exception $e){
             throw new Exception(json_encode(['status' => "false", 'message' => 'Failed to get user login', 'e' => $e]), 1);
         }
@@ -66,7 +66,7 @@ trait isTid{
             $result = json_decode($response->getBody(), true);
             return $result;
         }catch(guzzlehttp\Exception\RequestException $e){
-            throw new Exception(json_encode(['status' => "false", 'message' => 'Failed to create form', 'e' => $e->getMessage()]), 1);
+            throw new Exception(json_encode(['status' => "false", 'message' => 'Failed to get controller', 'e' => $e->getMessage()]), 1);
         }catch(Exception $e){
             throw new Exception(json_encode(['status' => "false", 'message' => 'Failed to get controller', 'e' => $e]), 1);
         }
