@@ -104,6 +104,7 @@ class form extends MY_Controller{
             $data['cextData'] = intval($this->getExtdata($form));
             $data['mode']     = $this->getMode($form);
             $data['form']     = $this->frm->getForm($data['NFRMNO'],  $data['VORGNO'], $data['CYEAR'],  $data['CYEAR2'],  $data['NRUNNO']);
+            $data['reqinf']   = $this->cn->customSelect("AMEC.AEMPLOYEE",array('SEMPNO' =>  $data['form'][0]->VREQNO ),'SEMPNO');
             $data['formno'] = $this->toFormNumber($data['NFRMNO'],  $data['VORGNO'], $data['CYEAR'],  $data['CYEAR2'],  $data['NRUNNO']);
             $data['cnform'] = $this->cn->getcnform($data['NFRMNO'],  $data['VORGNO'], $data['CYEAR'],  $data['CYEAR2'],  $data['NRUNNO'])[0];
             $data['resultdwg'] = $this->cn->customSelect("RESULTCHKDWG",array( 'NFRMNO' => $data['NFRMNO'],'VORGNO' => $data['VORGNO'],'CYEAR'  => $data['CYEAR'],'CYEAR2' => $data['CYEAR2'],'NRUNNO' => $data['NRUNNO']),'DWGNO , REVNO , RESULT , REMARK');
@@ -347,6 +348,22 @@ class form extends MY_Controller{
                     {
                         $sqlOra = "update RTNLIBF.J736KP set J36K05 = 'Y' where J36K04 = '".$this->toFormNumber($nfrmno,  $vorgno, $cyear,  $cyear2,  $nrunno)."'";
                         $this->cn->execAssql($sqlOra);
+                    }
+                    // กรณี flow ไป QIC กรณี case subcon จะมีการลบ flow step 07 (foreman) และ 61 (job monitor) ออก 
+                    if(isset($_POST["selJobType"]) && $_POST["selJobType"] == "S")
+                    {
+                            $condition = [
+                                'NFRMNO' => $nfrmno,
+                                'VORGNO' => $vorgno,
+                                'CYEAR'  => $cyear,
+                                'CYEAR2' => $cyear2,
+                                'NRUNNO' => $nrunno,
+                                'CSTEPNO'=> '07'
+                            ];
+                            $this->deleteFlowStep($condition);
+                            $condition['CSTEPNO'] = '61';
+                            $this->deleteFlowStep($condition);
+
                     }
                     
             }else if($act == "reject")
@@ -1130,12 +1147,20 @@ class form extends MY_Controller{
         $this->downloadFile($ofile,$file,$path);
 
     }
-
+    /* function check for flow approve of QIC */
     private function chkopr($nfrmno,$vorgno,$cyear,$cyear2,$nrunno)
     {
         
-        $rs = $this->cn->customSelect("FLOW",array( 'NFRMNO' => $nfrmno,'VORGNO' => $vorgno,'CYEAR'  => $cyear,'CYEAR2' => $cyear2,'NRUNNO' => $nrunno ,'CEXTDATA' => '07' ),'');
+       // $rs = $this->cn->customSelect("FLOW",array( 'NFRMNO' => $nfrmno,'VORGNO' => $vorgno,'CYEAR'  => $cyear,'CYEAR2' => $cyear2,'NRUNNO' => $nrunno ,'CEXTDATA' => '07' ),'');
+       // return  count($rs) == 0;
+        $rsqic = $this->cn->customSelect("ORGPOS", array('VPOSNO' => '30' , 'VORGNO' => '000404'),'');
+        if(count($rsqic) > 0)
+        {
+            $semqic = $rsqic[0]->VEMPNO;
+        }
+        $rs = $this->cn->customSelect("FLOW",array( 'NFRMNO' => $nfrmno,'VORGNO' => $vorgno,'CYEAR'  => $cyear,'CYEAR2' => $cyear2,'NRUNNO' => $nrunno ,'CEXTDATA' => '04' , 'VAPVNO' => $semqic ),'');
         return  count($rs) == 0;
+
     }
 
     private function demapv($nfrmno,$vorgno,$cyear,$cyear2,$nrunno)

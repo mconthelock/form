@@ -835,6 +835,17 @@
         </tr>
 {{-- ส่วน J-Staff In Charge --}}
 @if ($mode == $MODE_EDIT && $cextData == 1)
+   @if (!chkopr)
+    <tr>
+        <td class="force-w-350 align-top pt-2">Job Type
+        <td class="px-3 py-1 bg-gray-100 border-b border-white">
+            <select name="selJobType" class="w-1/3 h-8 px-2 border border-gray-300 bg-white focus:outline-none focus:ring-1 focus:ring-sky-400 rounded-sm">
+                <option value="S" {{ ($reqinf[0]->SDEPCODE == "050501" || $reqinf[0]->SDEPCODE == "051401") ? 'selected' : '' }}>Sub</option>
+                <option value="B" {{ ($reqinf[0]->SDEPCODE == "090501") ? 'selected' : '' }}>Bulk</option>
+            </select>
+        </td>
+    </tr>
+   @endif
     <tr>
         <td class="force-w-350 align-top pt-2">J-Staff In Charge</td>
         <td class="px-3 py-1 bg-gray-100 border-b border-white">
