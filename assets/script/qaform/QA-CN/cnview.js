@@ -196,32 +196,7 @@ $(document).ready(async function () {
                      if (confirm.status) {
                       redirectWebflow();
                      }
-         }else if(action == "returnqastaff")
-         {
-              const loopCount = $("#cextData").val() == "5" ? 2 : 1;
-              let isSuccess = true;
-              let rem = $("#txtRemark").val();
-
-              for (let i = 0; i < loopCount; i++) {
-                  if (i > 0) {
-                     rem ="";
-                  }
-                  const confirm = await doaction({
-                      ...baseForm,
-                      ACTION: "returnb",
-                      EMPNO: empno,
-                      REMARK: rem
-                  });
-                  if (!confirm.status) {
-                      isSuccess = false;
-                      console.error("Failed at return step:", i + 1);
-                      break; 
-                  }
-              }
-              if (isSuccess) {
-                  redirectWebflow();
-              }
-          }else
+         }else
           {
              //console.log("actionfrm");
               const statusact = await actionfrm(cnformData);
