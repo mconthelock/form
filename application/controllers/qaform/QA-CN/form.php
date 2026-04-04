@@ -139,8 +139,8 @@ class form extends MY_Controller{
                 $data['foreman'] = $this->getForeman($data['empno']);
                 $data['opr'] =  $this->getOpr($data['cnform']->MSTATUS, $data['empinf']);
             }
-            //var_dump($data['stepready']);
-            //exit;
+            var_dump($data['reqinf']);
+            exit;
             $this->views('qaform/QA-CN/view', $data);
         }else{
              $this->views('qaform/QA-CN/create', $data);
