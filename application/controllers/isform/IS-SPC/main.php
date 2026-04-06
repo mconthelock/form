@@ -4,8 +4,9 @@ use GuzzleHttp\Client;
 
 defined('BASEPATH') or exit('No direct script access allowed');
 require_once APPPATH . 'controllers/api/webform/flow.php';
+require_once APPPATH . 'controllers/api/webform/form.php';
 class Main extends MY_Controller {
-    use flow;
+    use flow, formApi;
     protected $client;
     public function __construct()
     {
@@ -32,9 +33,16 @@ class Main extends MY_Controller {
             $data['controller'] = $this->ue->getController();
             $this->views('isform/IS-SPC/create', $data);
         } else {
-            $data['formNumber'] = $this->toFormNumber($nfrmno, $vorgno, $cyear, $cyear2, $nrunno);
-            $data['mode']       = $this->getMode($nfrmno, $vorgno, $cyear, $cyear2, $nrunno, $empno);
-            $data['extdata']    = $this->getExtdata($nfrmno, $vorgno, $cyear, $cyear2, $nrunno, $empno);
+            $condition = [
+                    'NFRMNO' => $nfrmno,
+                    'VORGNO' => $vorgno,
+                    'CYEAR'  => $cyear,
+                    'CYEAR2' => $cyear2,
+                    'NRUNNO' => $nrunno
+            ];
+            $data['formNumber'] = $this->getFormNo($condition);
+            $data['mode']       = $this->getMode($condition);
+            $data['extdata']    = $this->getExtdata($condition);
             $data['data']       = $form = $this->sa->getSpecialAuth($nfrmno, $vorgno, $cyear, $cyear2, $nrunno)[0];
             $data['input_name'] = $this->sa->getDataEmp($form['EMP_INPUT'])->SNAME;
             $data['req_name']   = $this->sa->getDataEmp($form['EMP_REQUEST'])->SNAME;
