@@ -21,10 +21,26 @@ export async function getServerName() {
     });
 }
 
-export async function createTid(data){
+export async function createTid(data) {
     return await fetchUtils({
         url: `${process.env.APP_API}/isform/is-tid`,
         method: "POST",
         data,
+    });
+}
+
+export async function actionTid(data) {
+    return await fetchUtils({
+        url: `${process.env.APP_API}/isform/is-tid`,
+        method: "PATCH",
+        data,
+    });
+}
+
+export async function getFormData(form) {
+    return await fetchUtils({
+        url: `${process.env.APP_API}/isform/is-tid/getFormData`,
+        method: "POST",
+        data: form,
     });
 }

@@ -15,7 +15,15 @@
                 <div class="skeleton h-72 w-full md:w-1/2"></div>
             </div>
             <div class="skeleton h-[80%] w-full"></div>
-            <div class="skeleton h-20 w-24"></div>
+            {{-- remark --}}
+            <div class="w-full flex flex-col gap-3 items-center">
+                <div class="skeleton  min-h-24 w-56"></div>
+                {{-- button --}}
+                <div class="flex gap-1">
+                    <div class="skeleton h-10 w-24"></div>
+                    <div class="skeleton h-10 w-24"></div>
+                </div>
+            </div>
 
         </div>
         <form href="#" class="card-body hidden" id="form">
@@ -35,9 +43,8 @@
                         </fieldset>
                         <fieldset class="w-1/2">
                             <label class="fieldset-label whitespace-nowrap">Requester</label>
-                            <input type="text" class="input w-full txt-upper validator req" name="REQBY"
-                                id="REQBY" placeholder="e.g. 12069" required pattern="[A-Z0-9]*"
-                                autocomplete="off" />
+                            <input type="text" class="input w-full txt-upper validator req" name="REQBY" id="REQBY"
+                                placeholder="e.g. 12069" required pattern="[A-Z0-9]*" autocomplete="off" />
                         </fieldset>
                     </div>
                     {{-- <p class="validator-hint">กรอกเฉพาะตัวอักษร A-Z และ 0-9 เท่านั้น </p> --}}
@@ -71,7 +78,8 @@
                             aria-label="with controller" />
                     </div>
                     <fieldset class="fieldset w-full">
-                        <label class="fieldset-label">Webflow request No.<i class="icofont-question-circle tooltip" data-html="
+                        <label class="fieldset-label">Webflow request No.<i class="icofont-question-circle tooltip"
+                                data-html="
                             <div class='flex flex-col gap-2 p-2'>
                                 <span class='font-bold'>
                                     Supported formats (รูปแบบที่รองรับ)
@@ -93,8 +101,8 @@
                         <div class="flex gap-1">
                             <div class="flex flex-col flex-1 inputGroup gap-1 w-full">
                                 <div class="relative w-full">
-                                    <input type="text" class="input txt-upper w-full" name="reqNo"
-                                        id="reqNo" data-check="0" placeholder="e.g. IS-DEV25-000127" required
+                                    <input type="text" class="input txt-upper w-full" name="reqNo" id="reqNo"
+                                        data-check="0" placeholder="e.g. IS-DEV25-000127" required
                                         pattern="[A-Za-z]+-[a-zA-Z0-9]+-\d{6}$" autocomplete="off" />
                                     <span
                                         class="loading loading-spinner text-primary absolute top-1/2 right-16 -translate-y-1/2 hidden"></span>

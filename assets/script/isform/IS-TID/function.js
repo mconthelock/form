@@ -1,22 +1,29 @@
 import { getUser } from "@amec/webasset/api/amec";
-import { getRequestNo } from "@amec/webasset/api/webform";
+import { getRequestNo, showflow } from "@amec/webasset/api/webform";
 import { showLoader } from "@amec/webasset/preloader";
 import { clearSelect2, setSelect2 } from "@amec/webasset/select2";
 import {
     addMinutesToTime,
-    filterFormData,
     getAllAttr,
-    logFormData,
     removeClassError,
     requiredForm,
     showErrorMessage,
     showMessage,
 } from "@amec/webasset/utils";
-import { createTid, getController, getServerName, getUserLogin } from "./data";
+import {
+    actionTid,
+    createTid,
+    getController,
+    getFormData,
+    getServerName,
+    getUserLogin,
+} from "./data";
 import { setDatePicker } from "@amec/webasset/flatpickr";
-import { webflowSubmit } from "@amec/webasset/components/form";
+import { getformDetail, webflowSubmit } from "@amec/webasset/components/form";
 import "@amec/webasset/tooltip";
 import { redirectWebflow } from "@amec/webasset/form";
+import { formatDate } from "@amec/webasset/dayjs";
+import { get } from "jquery";
 
 export const state = {
     _formInfo: null,
@@ -38,6 +45,9 @@ export const state = {
             NRUNNO: this.FormInfo?.NRUNNO,
             INPUTBY: inputByManager.value,
             REQBY: reqByManager.value,
+            EMPNO: this.FormInfo?.EMPNO,
+            CEXTDATA: this.FormInfo?.CEXTDATA,
+            MODE: this.FormInfo?.MODE,
             SERVERNAME: serverNameManager.value,
             USERLOGIN: userLoginManager.value,
             CONTROLLER: controllerManager.value,
@@ -52,6 +62,12 @@ export const state = {
 export const formManager = {
     get form() {
         return $("#form");
+    },
+    get formInfo() {
+        return $("#form-info");
+    },
+    set formInfo(html) {
+        this.formInfo.html(html);
     },
     loading(isLoading) {
         if (isLoading) {
@@ -70,6 +86,7 @@ export const formManager = {
                 NFRMNO: formInfo.nfrmno,
                 VORGNO: formInfo.vorgno,
                 CYEAR: formInfo.cyear,
+                MODE: formInfo.mode,
             };
             const empno = $("#INPUTBY").val().trim();
             inputByManager.value = empno;
@@ -93,13 +110,89 @@ export const formManager = {
             formTypeManager.toggle(1);
             this.loading(false);
             actionForm.init(formInfo.mode);
-            console.log(state.data);
         } catch (e) {
             console.error(e);
             showErrorMessage(e);
         } finally {
             showLoader({ show: false });
         }
+    },
+    async views() {
+        try {
+            showLoader();
+            const formInfo = await getAllAttr(".form-info");
+            const apvData = await getAllAttr(".apv-data");
+            state.FormInfo = {
+                NFRMNO: formInfo.nfrmno,
+                VORGNO: formInfo.vorgno,
+                CYEAR: formInfo.cyear,
+                CYEAR2: formInfo.cyear2,
+                NRUNNO: formInfo.nrunno,
+                EMPNO: apvData.apv,
+                CEXTDATA: apvData.cextdata,
+                MODE: apvData.mode,
+            };
+            const form = {
+                NFRMNO: state.FormInfo.NFRMNO,
+                VORGNO: state.FormInfo.VORGNO,
+                CYEAR: state.FormInfo.CYEAR,
+                CYEAR2: state.FormInfo.CYEAR2,
+                NRUNNO: state.FormInfo.NRUNNO,
+            };
+            this.formInfo = await getformDetail(form, "card-header");
+            const flow = await showflow(form);
+            actionForm.init(apvData.mode, flow.html);
+            this.setData(apvData.mode, form);
+            this.loading(false);
+        } catch (error) {
+            console.error(error);
+            showErrorMessage(error);
+        } finally {
+            showLoader({ show: false });
+        }
+    },
+    async setData(mode, form) {
+        if (mode == 1) {
+            return;
+        }
+        const formData = await getFormData(form);
+        if (!formData.status) {
+            throw new Error(formData.message || "Cannot get form data");
+        }
+        const data = formData.data;
+        reqDateManager.input.text(formatDate(data.TID_REQ_DATE, "DD-MMM-YY"));
+        timeStartManager.input.text(data.TID_TIMESTART);
+        timeEndManager.input.text(data.TID_TIMEEND);
+        data.TID_CHANGEDATA == 1
+            ? changeDataManager.show()
+            : changeDataManager.hide();
+        data.TID_LATE == 1 ? lateManager.show() : lateManager.hide();
+        const reqNoList = data.TID_REQNO.includes("|")
+            ? data.TID_REQNO.split("|")
+            : [data.TID_REQNO];
+        for (const reqNo of reqNoList) {
+            const d = await getRequestNo(reqNo);
+            if (d.status) {
+                d.data.forEach((l) => {
+                    $("#reqNo-list").append(
+                        `<a href="${l.LINK}" class="link link-primary" target="_blank"> ${l.FORMNO}</a><br>`,
+                    );
+                });
+            }
+        }
+        serverNameManager.select.text(data.TID_SERVERNAME);
+        userLoginManager.select.text(data.TID_USERLOGIN);
+        data.TID_CONTROLLER
+            ? controllerManager.show()
+            : controllerManager.hide();
+        controllerManager.select.text(data.TID_CONTROLLER);
+        workContentManager.value = data.TID_WORKCONTENT ?? "-";
+        reasonManager.value = data.TID_REASON ?? "-";
+
+        workCompleteManager.init(state.FormInfo.CEXTDATA, data);
+        disableCompleteManager.init(state.FormInfo.CEXTDATA, data);
+
+        console.log(data);
     },
 };
 
@@ -136,6 +229,42 @@ const reqByManager = {
             return;
         }
         reqByManager.value = empno;
+    },
+};
+
+const reqDateManager = {
+    get input() {
+        return $("#reqDate");
+    },
+    get value() {
+        return this.input.val();
+    },
+    set value(val) {
+        this.input.val(val);
+    },
+};
+
+const timeStartManager = {
+    get input() {
+        return $("#pStart");
+    },
+    get value() {
+        return this.input.val();
+    },
+    set value(val) {
+        this.input.val(val);
+    },
+};
+
+const timeEndManager = {
+    get input() {
+        return $("#pEnd");
+    },
+    get value() {
+        return this.input.val();
+    },
+    set value(val) {
+        this.input.val(val);
     },
 };
 
@@ -509,6 +638,157 @@ export function filterEmpno(data) {
         .map((c) => c.EMPNO.trim());
 }
 
+const workContentManager = {
+    get textarea() {
+        return $("#workCon");
+    },
+    get value() {
+        return this.textarea.val();
+    },
+    set value(val) {
+        this.textarea.val(val);
+    },
+};
+
+const reasonManager = {
+    get textarea() {
+        return $("#reason");
+    },
+    get value() {
+        return this.textarea.val();
+    },
+    set value(val) {
+        this.textarea.val(val);
+    },
+};
+
+const workCompleteManager = {
+    get container() {
+        return $("#complete-container");
+    },
+    get inputDate() {
+        return $("#compDate");
+    },
+    get inputTime() {
+        return $("#compTime");
+    },
+    get valueDate() {
+        return this.inputDate.val();
+    },
+    set valueDate(val) {
+        this.inputDate.val(val);
+    },
+    get valueTime() {
+        return this.inputTime.val();
+    },
+    set valueTime(val) {
+        this.inputTime.val(val);
+    },
+    init(cextdata, data) {
+        if (cextdata == "03" || data.TID_COMP_DATE || data.TID_COMP_TIME) {
+            let html = `<div class="divider"></div>
+            <fieldset class="fieldset w-full md:w-fit bg-base-200 border border-base-300 p-4 rounded-box">
+                <legend class="fieldset-legend text-lg">Production Environment ID work completion report</legend>
+
+                <label class="fieldset-label">Completed date</label>
+                ${
+                    cextdata == "03"
+                        ? `<input type="text" class="input fdate w-full validator req" name="compDate" id="compDate" placeholder="e.g. 03-04-2025" required />`
+                        : data.TID_COMP_DATE
+                          ? formatDate(data.TID_COMP_DATE)
+                          : "-"
+                }
+
+                <fieldset class="fieldset w-full">
+                    <label class="fieldset-label">Completed time</label>
+                    ${
+                        cextdata == "03"
+                            ? `<input type="text" class="input w-full validator req" name="compTime" id="compTime" placeholder="e.g. 08:00" required />`
+                            : (data.TID_COMP_TIME ?? "-")
+                    }
+                </fieldset>
+            </fieldset>`;
+            this.container.html(html);
+            setDatePicker();
+            setDatePicker({ element: "#compTime", time: true });
+        }
+    },
+};
+
+const disableCompleteManager = {
+    get container() {
+        return $("#disable-container");
+    },
+    get inputDate() {
+        return $("#disDate");
+    },
+    get inputTime() {
+        return $("#disTime");
+    },
+    get value() {
+        return this.inputDate.val();
+    },
+    set value(val) {
+        this.inputDate.val(val);
+    },
+    get valueTime() {
+        return this.inputTime.val();
+    },
+    set valueTime(val) {
+        this.inputTime.val(val);
+    },
+    init(cextdata, data) {
+        let html = "";
+        if (
+            cextdata == "05" ||
+            data.TID_DISABLE_DATE ||
+            data.TID_DISABLE_TIME
+        ) {
+            ` <label class="fieldset-label">Disabled date</label>
+                {{ convdate($data['TID_DISABLE_DATE'])}}
+                <fieldset class="fieldset w-full">
+                    <label class="fieldset-label">Disabled time</label>
+                    {{$data['TID_DISABLE_TIME']}}
+                </fieldset>`;
+
+            const html = `<div class="divider"></div>
+                <fieldset class="fieldset w-full md:w-fit bg-base-200 border border-base-300 p-4 rounded-box">
+                    <legend class="fieldset-legend text-lg">Production Environment disable completion report</legend>
+                    ${
+                        cextdata == "05"
+                            ? `
+                        <p class="label">The requested ID has been disabled.</p>
+                        <label class="input">
+                            at
+                            <input type="text" class="grow validator req" name="disTime" id="disTime" placeholder="e.g. 08:00" required />
+                        </label>
+                        <label class="input">
+                            on
+                            <input type="text" class="grow fdate w-full validator req" name="disDate" id="disDate" placeholder="e.g. 03-04-2025" required />
+                        </label>
+                    `
+                            : `
+                        <label class="fieldset-label">Disabled date</label>
+                        <span>${
+                            data.TID_DISABLE_DATE
+                                ? formatDate(data.TID_DISABLE_DATE)
+                                : "-"
+                        }</span>
+                        <fieldset class="fieldset w-full">
+                            <label class="fieldset-label">Disabled time</label>
+                            ${data.TID_DISABLE_TIME ?? "-"}
+                        </fieldset>
+                    `
+                    }
+                    
+                </fieldset>`;
+            this.container.html(html);
+            setDatePicker();
+            setDatePicker({ element: "#disTime", time: true });
+        }
+    },
+};
+
 export const actionForm = {
     get remark() {
         return $("#remark");
@@ -555,9 +835,8 @@ export const actionForm = {
     },
     async requestForm() {
         try {
+            showLoader();
             const data = state.data;
-            console.log(data);
-
             if (data.REQNO.length == 0) {
                 showMessage(
                     "Please add at least 1 request number (กรุณาเพิ่มเลขที่คำร้องอย่างน้อย 1 เลขที่)",
@@ -575,13 +854,8 @@ export const actionForm = {
                 { element: serverNameManager.select, message: "Please select server name (กรุณาเลือกชื่อเซิร์ฟเวอร์)" },
                 { element: userLoginManager.select, message: "Please select user login (กรุณาเลือกผู้ใช้งาน)" },
                 { element: controllerManager.select, message: "Please select controller (กรุณาเลือกผู้ควบคุม)" },
-                { element: $('#workCon'), message: "Please enter work content (กรุณากรอกเนื้อหางาน)" },
+                { element: workContentManager.textarea, message: "Please enter work content (กรุณากรอกเนื้อหางาน)" },
             ]))) return;
-            const reqDate = $("#reqDate").val();
-            const timeStart = $("#pStart").val();
-            const timeEnd = $("#pEnd").val();
-            const workContent = $("#workCon").val();
-            const reason = $("#reason").val();
             const preData = {
                 NFRMNO: data.NFRMNO,
                 VORGNO: data.VORGNO,
@@ -589,15 +863,17 @@ export const actionForm = {
                 REQBY: data.REQBY,
                 INPUTBY: data.INPUTBY,
                 REMARK: this.remark.val(),
+                FORMTYPE: data.FORMTYPE,
+                CHANGEDATA: data.CHANGE_DATA,
                 USERDATA: {
                     TID_REQUESTER: data.REQBY,
                     TID_REQNO: data.REQNO,
-                    TID_REQ_DATE: reqDate,
-                    TID_TIMESTART: timeStart,
-                    TID_TIMEEND: timeEnd,
+                    TID_REQ_DATE: reqDateManager.value,
+                    TID_TIMESTART: timeStartManager.value,
+                    TID_TIMEEND: timeEndManager.value,
                     TID_SERVERNAME: serverNameManager.value,
                     TID_USERLOGIN: userLoginManager.text,
-                    TID_WORKCONTENT: workContent,
+                    TID_WORKCONTENT: workContentManager.value,
                     TID_CHANGEDATA: data.CHANGE_DATA,
                     TID_FORMTYPE: data.FORMTYPE,
                     TID_LATE: data.LATE,
@@ -606,15 +882,15 @@ export const actionForm = {
             if (controllerManager.value) {
                 preData.USERDATA.TID_CONTROLLER = controllerManager.text;
             }
-            if (reason) {
-                preData.USERDATA.TID_REASON = reason;
+            if (reasonManager.value) {
+                preData.USERDATA.TID_REASON = reasonManager.value;
             }
             if (data.FORMTYPE == 2) {
                 preData.CONTROLLERDATA = {
                     TID_REQUESTER: controllerManager.value,
-                    TID_REQ_DATE: reqDate,
-                    TID_TIMESTART: timeStart,
-                    TID_TIMEEND: addMinutesToTime(timeEnd, 30),
+                    TID_REQ_DATE: reqDateManager.value,
+                    TID_TIMESTART: timeStartManager.value,
+                    TID_TIMEEND: addMinutesToTime(timeEndManager.value, 30),
                     TID_SERVERNAME: serverNameManager.value,
                     TID_USERLOGIN: controllerManager.text,
                     TID_WORKCONTENT: `Enable and disable for user : ${userLoginManager.text}`,
@@ -623,7 +899,6 @@ export const actionForm = {
                     TID_LATE: data.LATE,
                 };
             }
-            console.log(preData);
             const res = await createTid(preData);
 
             if (res.status) {
@@ -632,32 +907,57 @@ export const actionForm = {
             } else {
                 throw new Error(res.message);
             }
-
-            // const formData = new FormData();
-            // formData.set("NFRMNO", data.NFRMNO);
-            // formData.set("VORGNO", data.VORGNO);
-            // formData.set("CYEAR", data.CYEAR);
-            // formData.set("REQBY", data.REQBY);
-            // formData.set("INPUTBY", data.INPUTBY);
-            // formData.set("REMARK", this.remark.val());
-            // formData.set("USERDATA.TID_REQUESTER", data.REQBY);
-            // formData.set("USERDATA.TID_REQNO", data.REQNO);
-            // formData.set("USERDATA.TID_REQ_DATE", $("#reqDate").val());
-            // formData.set("USERDATA.TID_TIMESTART", $("#pStart").val());
-            // formData.set("USERDATA.TID_TIMEEND", $("#pEnd").val());
-            // formData.set("USERDATA.TID_SERVERNAME", serverNameManager.select.val());
-            // formData.set("USERDATA.TID_USERLOGIN", userLoginManager.select.val());
-            // formData.set("USERDATA.TID_CONTROLLER", controllerManager.select.val());
-            // formData.set("USERDATA.TID_WORKCONTENT", $('#workCon').val());
-            // formData.set("USERDATA.TID_REASON", $("#reason").val());
-            // formData.set("USERDATA.TID_CHANGEDATA", data.CHANGE_DATA);
-            // formData.set("USERDATA.TID_FORMTYPE", data.FORMTYPE);
-            // formData.set("USERDATA.TID_LATE", data.LATE);
-
-            // logFormData(filterFormData(formData));
         } catch (error) {
             console.error(error);
             showErrorMessage(error);
+        } finally {
+            showLoader({ show: false });
+        }
+    },
+    async approveForm(action) {
+        try {
+            showLoader();
+            const cextData = state.FormInfo.CEXTDATA;
+            const data = state.data;
+            const formData = {
+                NFRMNO: data.NFRMNO,
+                VORGNO: data.VORGNO,
+                CYEAR: data.CYEAR,
+                CYEAR2: data.CYEAR2,
+                NRUNNO: data.NRUNNO,
+                ACTION: action,
+                EMPNO: data.EMPNO,
+                REMARK: this.remark.val(),
+            };
+            if (action == "approve" && (cextData == "03" || cextData == "05")) {
+                if (!(await requiredForm("#form"))) return;
+                switch (cextData) {
+                    case "03":
+                        formData.data = {
+                            TID_COMP_DATE: $("#compDate").val(),
+                            TID_COMP_TIME: $("#compTime").val(),
+                        };
+                        break;
+                    case "05":
+                        formData.data = {
+                            TID_DISABLE_DATE: $("#disDate").val(),
+                            TID_DISABLE_TIME: $("#disTime").val(),
+                        };
+                        break;
+                }
+            }
+            const res = await actionTid(formData);
+            if (res.status == true) {
+                showMessage(`${action}!`, "success");
+                redirectWebflow();
+            } else {
+                throw new Error("ไม่สามารถ Approve ได้");
+            }
+        } catch (e) {
+            console.error(e);
+            showErrorMessage(e);
+        } finally {
+            showLoader({ show: false });
         }
     },
 };
