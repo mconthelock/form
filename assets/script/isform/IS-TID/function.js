@@ -22,11 +22,11 @@ import { setDatePicker } from "@amec/webasset/flatpickr";
 import { getformDetail, webflowSubmit } from "@amec/webasset/components/form";
 import "@amec/webasset/tooltip";
 import { redirectWebflow } from "@amec/webasset/form";
-import { formatDate } from "@amec/webasset/dayjs";
-import { get } from "jquery";
+import { formatDate, isSameDay, parseTimestamp } from "@amec/webasset/dayjs";
 
 export const state = {
     _formInfo: null,
+    _formData: null,
     // Setter
     set FormInfo(data) {
         this._formInfo = data;
@@ -56,6 +56,12 @@ export const state = {
             FORMTYPE: formTypeManager.value,
             REQNO: reqNoManager.list.join("|"),
         };
+    },
+    get formData() {
+        return this._formData;
+    },
+    set formData(data) {
+        this._formData = data;
     },
 };
 
@@ -160,6 +166,7 @@ export const formManager = {
             throw new Error(formData.message || "Cannot get form data");
         }
         const data = formData.data;
+        state.formData = data;
         reqDateManager.input.text(formatDate(data.TID_REQ_DATE, "DD-MMM-YY"));
         timeStartManager.input.text(data.TID_TIMESTART);
         timeEndManager.input.text(data.TID_TIMEEND);
@@ -191,8 +198,6 @@ export const formManager = {
 
         workCompleteManager.init(state.FormInfo.CEXTDATA, data);
         disableCompleteManager.init(state.FormInfo.CEXTDATA, data);
-
-        console.log(data);
     },
 };
 
@@ -662,7 +667,7 @@ const reasonManager = {
     },
 };
 
-const workCompleteManager = {
+export const workCompleteManager = {
     get container() {
         return $("#complete-container");
     },
@@ -685,32 +690,43 @@ const workCompleteManager = {
         this.inputTime.val(val);
     },
     init(cextdata, data) {
+        let compDate = "";
+        let compTime = "";
+        if (cextdata == "03") {
+            compDate = `<input type="text" class="input fdate w-full validator req" name="compDate" id="compDate" placeholder="e.g. 03-04-2025" required />`;
+            compTime = `<input type="text" class="input w-full validator req" name="compTime" id="compTime" placeholder="e.g. 08:00" required />`;
+        }
+        if (data.TID_COMP_DATE) {
+            compDate = formatDate(data.TID_COMP_DATE);
+            compTime = data.TID_COMP_TIME ?? "-";
+        }
+
         if (cextdata == "03" || data.TID_COMP_DATE || data.TID_COMP_TIME) {
             let html = `<div class="divider"></div>
             <fieldset class="fieldset w-full md:w-fit bg-base-200 border border-base-300 p-4 rounded-box">
                 <legend class="fieldset-legend text-lg">Production Environment ID work completion report</legend>
-
                 <label class="fieldset-label">Completed date</label>
-                ${
-                    cextdata == "03"
-                        ? `<input type="text" class="input fdate w-full validator req" name="compDate" id="compDate" placeholder="e.g. 03-04-2025" required />`
-                        : data.TID_COMP_DATE
-                          ? formatDate(data.TID_COMP_DATE)
-                          : "-"
-                }
+                ${compDate}
 
                 <fieldset class="fieldset w-full">
                     <label class="fieldset-label">Completed time</label>
-                    ${
-                        cextdata == "03"
-                            ? `<input type="text" class="input w-full validator req" name="compTime" id="compTime" placeholder="e.g. 08:00" required />`
-                            : (data.TID_COMP_TIME ?? "-")
-                    }
+                    ${compTime}
                 </fieldset>
             </fieldset>`;
             this.container.html(html);
             setDatePicker();
             setDatePicker({ element: "#compTime", time: true });
+        }
+    },
+    change(date, time) {
+        try {
+            const data = state.formData;
+            if (!data) throw new Error("Form data not found");
+            checkDiffDate(data.TID_REQ_DATE, date);
+            checkRangeTime(data.TID_TIMESTART, data.TID_TIMEEND, time);
+        } catch (error) {
+            console.error(error);
+            showErrorMessage(error);
         }
     },
 };
@@ -738,7 +754,6 @@ const disableCompleteManager = {
         this.inputTime.val(val);
     },
     init(cextdata, data) {
-        let html = "";
         if (
             cextdata == "05" ||
             data.TID_DISABLE_DATE ||
@@ -786,8 +801,46 @@ const disableCompleteManager = {
             setDatePicker();
             setDatePicker({ element: "#disTime", time: true });
         }
-    },
+    }
 };
+
+/**
+ * Check if the date is the same as the request date 
+ * @author Sutthipong Tangmonkhoncharoen(24008)
+ * @since 2026-04-08
+ * @param {string} reqDate
+ * @param {string} compDate
+ * @returns {boolean}
+ * @example 
+ * checkDiffDate("2025-04-03", "2025-04-03") // true
+ * checkDiffDate("2025-04-03", "2025-04-04") // false
+ */
+function checkDiffDate(reqDate, compDate) {
+    const date1 = parseTimestamp(Number(formatDate(reqDate, "YYYYMMDD")));
+    const date2 = parseTimestamp(Number(formatDate(compDate, "YYYYMMDD")));
+    // console.log(reqDate, compDate);
+    // console.log('is same day', isSameDay(reqDate, compDate));
+    return isSameDay(date1, date2);
+}
+
+/**
+ * Check if the time is in range of start and end time
+ * @author Sutthipong Tangmonkhoncharoen(24008)
+ * @since 2026-04-08
+ * @param {string} start 
+ * @param {string} end 
+ * @param {string} comp 
+ * @returns {boolean}
+ * @example
+ * checkRangeTime("08:00", "17:00", "12:00") // true
+ * checkRangeTime("08:00", "17:00", "07:00") // false
+ * checkRangeTime("08:00", "17:00", "18:00") // false
+ */
+function checkRangeTime(start, end, comp) {
+    // console.log(start, end, comp);
+    // console.log("check range time", comp >= start && comp <= end);
+    return comp >= start && comp <= end;
+}
 
 export const actionForm = {
     get remark() {
