@@ -1,15 +1,6 @@
 @extends('layouts/webflowTemplate')
 
 @section('contents')
-@php
-function convdate($date){
-if($date != null){
-return date('d-M-y', strtotime($date) + 7*3600);
-}else{
-return '-';
-}
-}
-@endphp
 <div class="hidden form-info" NFRMNO="{{$NFRMNO}}" VORGNO="{{$VORGNO}}" CYEAR="{{$CYEAR}}" CYEAR2="{{$CYEAR2}}"
     NRUNNO="{{$NRUNNO}}"></div>
 <div class="apv-data hidden" apv="{{ $apv }}" mode="{{ $mode }}" cextData="{{ $cextData }}"></div>
