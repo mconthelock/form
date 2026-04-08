@@ -589,7 +589,7 @@ function checkData(act)
         return false;
       }
       return true;
-  }else if( act == "returnb" || act =="returnrem" || act == "returnqastaff")
+  }else if( act == "returnb" || act =="returnrem" || act == "returnqastaff" || act == "returnass")
   {
        if($("#txtRemark").val() == "")
           {
