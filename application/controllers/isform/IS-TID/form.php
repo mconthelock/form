@@ -1,27 +1,15 @@
 <?php
 use GuzzleHttp\Client;
 defined('BASEPATH') OR exit('No direct script access allowed');
-require_once APPPATH.'controllers/_form.php';
 require_once APPPATH.'controllers/api/webform/form.php';
 require_once APPPATH.'controllers/api/webform/flow.php';
 require_once APPPATH.'controllers/api/webform/formmst.php';
-require_once APPPATH.'controllers/api/webform/isTid.php';
 class form extends MY_Controller{
-    use _Form, formApi, flow, formmst, isTid{
-        formApi::getMode insteadOf _Form;
-        formApi::getRequestNo  insteadOf _Form;
-        flow::getExtData insteadOf _Form;
-        flow::doaction insteadOf _Form;
-        _Form::deleteFlowStep insteadOf flow;
-        _Form::getMode as getModeWebservice;
-    }
+    use formApi, flow, formmst;
     protected $title;
     protected $client;
     function __construct(){
 		parent::__construct();
-        // $this->load->model('isform/IS-TID/userEnv_model', 'en');
-        $this->load->model('form_model', 'frm');
-        $this->load->model('user_model', 'usr');
         $this->client = new Client(['verify' => false]);
     }
 
@@ -32,10 +20,8 @@ class form extends MY_Controller{
                 'VORGNO' => $_GET['orgNo'],
                 'CYEAR'  => $_GET['y'],
             ];
-
         }else{
             $form = $this->getFormMasterByVaname('IS-TID');
-            // $form = $this->frm->getFormMaster('IS-TID');
             if(!empty($form)){
                 $data = [
                     'NFRMNO' => $form[0]->NNO,
@@ -44,11 +30,7 @@ class form extends MY_Controller{
                 ];
             }
         }
-        $data['serverName'] = $this->getServerName();
-        $data['cextData'] = '';
-        $data['mode']     = '';
-        // $data['serverName'] = $this->en->getServerName();
-
+        $data['mode']     = 1;
         $empno = isset($_GET["empno"]) ? $_GET['empno'] : '' ;
         $data['apv'] = $empno;
         if(isset($_GET["runNo"]) && $_GET["runNo"] != "") {
@@ -61,253 +43,14 @@ class form extends MY_Controller{
                 'CYEAR2' => (string)$data['CYEAR2'],
                 'NRUNNO' => (int)$data['NRUNNO'],
             ];
-            $formData = $this->getFormData($form);
-            $formData = $formData['data'];
-            $data['data']     = $formData;
             $form['EMPNO']    = (string)$empno;
             if(!empty($empno)){
                 $data['cextData'] = $this->getExtData($form);
                 $data['mode']     = $this->getMode($form);
             }
-            // $formData         = $this->en->getData($_GET["no"], $_GET["orgNo"], $_GET["y"], $_GET["y2"], $_GET["runNo"])[0];
-            // $data['cextData'] = $this->getExtdata($_GET["no"], $_GET["orgNo"], $_GET["y"], $_GET["y2"], $_GET["runNo"] , $empno);
-            // $data['mode']     = $this->getMode($_GET["no"], $_GET["orgNo"], $_GET["y"], $_GET["y2"], $_GET["runNo"], $empno);
-            if(strpos($formData['TID_REQNO'], '|') !== false){
-                $reqNo = explode('|', $formData['TID_REQNO']);
-                foreach($reqNo as $key => $r){
-                    $link[$key]['url'] = $this->getRequestNo(trim($r))['data'][0]['LINK'];
-                    $link[$key]['req'] = trim($r);
-                }
-            }else{
-                $link = $this->getRequestNo($formData['TID_REQNO'])['data'][0]['LINK'];
-            }
-            $data['link'] = $link;
             $this->views('isform/IS-TID/view', $data);
         }else{
             $this->views('isform/IS-TID/form', $data);
         }
     }
-
-    public function createForm(){
-        try {
-            $post = $this->input->post();
-            $status = false;
-            $deleteFlowStep = [];
-            $updateFlowStep = [];
-            $message = '';
-            $stepDelete = [
-                [ 'CSTEPNO' => '19', 'CSTEPNEXTNO' => '28',],
-                [ 'CSTEPNO' => '08', 'CSTEPNEXTNO' => '04',],
-                [ 'CSTEPNO' => '04', 'CSTEPNEXTNO' => '00',],
-            ];
-            $post = array_map(function($item) {
-                return is_array($item) ? $item : trim($item);
-            }, $post);
-            
-            $reqNo = '';
-            foreach($post['reqNo'] as $key => $r){
-                $reqNo .= $r.'|';
-            }
-            $this->frm->trans_start();
-            $form1 = [
-                'NFRMNO' => $post['formtype'],
-                'VORGNO' => $post['owner'],
-                'CYEAR'  => $post['cyear'],
-                'CYEAR2' => $post['cyear2'],
-                'NRUNNO' => $post['runno'],
-                'TID_REQUESTER' => $post['requester'],
-                'TID_REQNO'     => rtrim($reqNo,'|'),
-                // 'TID_REQNO'     => $post['reqNo'],
-                'TID_REQ_DATE'  => $this->conVdateToDB($post['reqDate']),
-                'TID_TIMESTART' => $post['pStart'],
-                'TID_TIMEEND'    => $post['pEnd'],
-                'TID_SERVERNAME' => $post['serverName'],
-                'TID_USERLOGIN'  => $post['userID'],
-                'TID_CONTROLLER' => $post['controller'],
-                'TID_WORKCONTENT' => $post['workCon'],
-                'TID_REASON'      => $post['reason'],
-                'TID_CHANGEDATA'  => $post['changeData'],
-                'TID_FORMTYPE'    => $post['formType'],
-                'TID_LATE'        => $post['late']
-            ];
-            $updateFlowStep[] = $this->setFlow($form1, isset($post['ctrlRequester']) ? $post['ctrlRequester'] : '');
-            if($post['formType'] == '2'){
-                $form2 = [
-                    'NFRMNO' => $post['ctrlformtype'],
-                    'VORGNO' => $post['ctrlowner'],
-                    'CYEAR'  => $post['ctrlcyear'],
-                    'CYEAR2' => $post['ctrlcyear2'],
-                    'NRUNNO' => $post['ctrlrunno'],
-                    'TID_REQUESTER' => $post['ctrlRequester'],
-                    'TID_REQNO'     => $this->toFormNumber($post['formtype'], $post['owner'], $post['cyear'], $post['cyear2'], $post['runno']),
-                    'TID_REQ_DATE'  => $this->conVdateToDB($post['reqDate']),
-                    'TID_TIMESTART' => $post['pStart'],
-                    'TID_TIMEEND'    => $post['ctrlPEnd'],
-                    'TID_SERVERNAME' => $post['serverName'],
-                    'TID_USERLOGIN'  => $post['ctrlUserID'],
-                    'TID_WORKCONTENT' => $post['ctrlWorkCon'],
-                    'TID_CHANGEDATA'  => $post['changeData'],
-                    'TID_FORMTYPE'    => $post['formType'],
-                    'TID_LATE'        => $post['late']
-                ];
-                $updateFlowStep[] = $this->setFlow($form2);
-                $deleteFlowStep[] = $this->deleteFlowStep($stepDelete, $form2['NFRMNO'], $form2['VORGNO'], $form2['CYEAR'], $form2['CYEAR2'], $form2['NRUNNO']);
-            }else{
-                $deleteFlowStep[] = $this->deleteFlowStep($stepDelete, $form1['NFRMNO'], $form1['VORGNO'], $form1['CYEAR'], $form1['CYEAR2'], $form1['NRUNNO']);
-            }
-            $this->frm->trans_complete();
-            $status = $this->frm->trans_status() === FALSE  ? false : true;
-            // $status = false;
-        } catch ( Exception $e) {
-            $status = false;
-            $message = "สร้างฟอร์มไม่สำเร็จ";
-        } finally {
-            // $updateFlowStep[0]['status'] = false;
-            // $updateFlowStep[1]['status'] = false;
-            foreach ($deleteFlowStep as $key => $d) {
-                $d = (object) $d;
-                if(!$d->status){
-                    $status = false;
-                }
-            }
-            foreach ($updateFlowStep as $key => $u) {
-                $u = (object) $u;
-                if(!$u->status){
-                    $status = false;
-                }
-            }
-            if(!$status){
-                foreach ($updateFlowStep as $key => $u) {
-                    $u = (object) $u;
-                    $res = (object)$u->res;
-                    $cond = [
-                        'NFRMNO' => $res->FORM['NFRMNO'],
-                        'VORGNO' => $res->FORM['VORGNO'],
-                        'CYEAR'  => $res->FORM['CYEAR'],
-                        'CYEAR2' => $res->FORM['CYEAR2'],
-                        'NRUNNO' => $res->FORM['NRUNNO'],
-                    ];
-                    $this->frm->delete('ISTID_FORM', $cond);
-                    $message = "สร้างฟอร์มไม่สำเร็จ";
-                }
-            }
-            $res = [
-                'status' => $status,
-                'message' => $message,
-                'deleteFlowStep' => $deleteFlowStep,
-                'updateFlowStep' => $updateFlowStep,
-            ];
-            echo json_encode($res);
-        }
-    }
-
-    private function setflow($form, $controller = ''){
-        $headno = $this->usr->getHeadno($form['TID_REQUESTER']);
-        $sem    = !empty($headno) ? $headno[0]->HEADNO : '' ;
-        $apv = [
-            [ 'CSTEPNO' => '06', 'CSTEPNEXTNO' => '19', 'apv' => $sem],
-            [ 'CSTEPNO' => '19', 'CSTEPNEXTNO' => '28', 'apv' => $controller],
-            [ 'CSTEPNO' => '28', 'CSTEPNEXTNO' => '10', 'apv' => $form['TID_REQUESTER']],
-            [ 'CSTEPNO' => '10', 'CSTEPNEXTNO' => '08', 'apv' => $sem],
-            [ 'CSTEPNO' => '08', 'CSTEPNEXTNO' => '04', 'apv' => $controller],
-        ];
-        $this->frm->insert('ISTID_FORM', $form);
-        
-        $updateflow = $this->updateFlowApv($form, $apv);
-        // 2025-11-28  auto approve step 06 and 19
-        $this->doaction([
-            'NFRMNO' => $form['NFRMNO'],
-            'VORGNO' => $form['VORGNO'],
-            'CYEAR'  => $form['CYEAR'],
-            'CYEAR2' => $form['CYEAR2'],
-            'NRUNNO' => $form['NRUNNO'],
-            'ACTION' => 'approve',
-            'EMPNO'  => $sem,
-        ]);
-        $this->updateFlow([
-            'condition' => [
-                'NFRMNO' => $form['NFRMNO'],
-                'VORGNO' => $form['VORGNO'],
-                'CYEAR'  => $form['CYEAR'],
-                'CYEAR2' => $form['CYEAR2'],
-                'NRUNNO' => $form['NRUNNO'],
-                'CSTEPNO'=> '06'
-            ],
-            'CAPVTIME' => date('H:i:s', strtotime('+4 minutes')),
-        ]);
-        if($controller != ''){
-            $this->doaction([
-                'NFRMNO' => $form['NFRMNO'],
-                'VORGNO' => $form['VORGNO'],
-                'CYEAR'  => $form['CYEAR'],
-                'CYEAR2' => $form['CYEAR2'],
-                'NRUNNO' => $form['NRUNNO'],
-                'ACTION' => 'approve',
-                'EMPNO'  => $controller,
-            ]);
-             $this->updateFlow([
-                'condition' => [
-                    'NFRMNO' => $form['NFRMNO'],
-                    'VORGNO' => $form['VORGNO'],
-                    'CYEAR'  => $form['CYEAR'],
-                    'CYEAR2' => $form['CYEAR2'],
-                    'NRUNNO' => $form['NRUNNO'],
-                    'CSTEPNO'=> '19'
-                ],
-                'CAPVTIME' => date('H:i:s', strtotime('+7 minutes')),
-            ]);
-        }
-        return $updateflow;
-        // return $this->updateFlowApv("", $sem, $form['NFRMNO'], $form['VORGNO'], $form['CYEAR'], $form['CYEAR2'], $form['NRUNNO'], '06', '19');
-    }
-
-    public function updateCompTime(){
-        $post = $this->input->post();
-        $data = [
-            'TID_COMP_DATE'   => $this->conVdateToDB($post['compDate']),
-            'TID_COMP_TIME'   => $post['compTime'],
-        ];
-
-        $cond = [
-            'NFRMNO' => $post['NFRMNO'],
-            'VORGNO' => $post['VORGNO'],
-            'CYEAR'  => $post['CYEAR'],
-            'CYEAR2' => $post['CYEAR2'],
-            'NRUNNO' => $post['NRUNNO'],
-        ];
-        $status = $this->frm->update('ISTID_FORM', $data, $cond);
-        $res = [
-            'status' => $status,
-            'message' => $status ? 'Update Success' : 'Update Failed',
-            'data' => $data,
-            'cond' => $cond,
-        ];
-        echo json_encode($res);
-    }
-
-    public function updateDisTime(){
-        $post = $this->input->post();
-        $data = [
-            'TID_DISABLE_DATE'   => $this->conVdateToDB($post['disDate']),
-            'TID_DISABLE_TIME'   => $post['disTime'],
-        ];
-
-        $cond = [
-            'NFRMNO' => $post['NFRMNO'],
-            'VORGNO' => $post['VORGNO'],
-            'CYEAR'  => $post['CYEAR'],
-            'CYEAR2' => $post['CYEAR2'],
-            'NRUNNO' => $post['NRUNNO'],
-        ];
-        $status = $this->frm->update('ISTID_FORM', $data, $cond);
-        $res = [
-            'status' => $status,
-            'message' => $status ? 'Update Success' : 'Update Failed',
-            'data' => $data,
-            'cond' => $cond,
-        ];
-        echo json_encode($res);
-    }
-
-
 }
