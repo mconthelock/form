@@ -5,7 +5,7 @@
     NRUNNO="{{$NRUNNO}}"></div>
 <div class="apv-data hidden" apv="{{ $apv }}" mode="{{ $mode }}" cextData="{{ $cextData }}"></div>
 <div class="flex flex-col w-full px-4 my-5 font-sans">
-    <div class="card bg-base-100 w-full lg:min-w-[70rem] place-self-center shadow-sm">
+    <div class="card bg-base-100 w-full lg:w-[70rem] place-self-center shadow-sm">
         <div class="load flex flex-col gap-5 h-screen w-full p-6">
             <div class="flex">
                 <div class="skeleton h-16 w-[70%]"></div>
