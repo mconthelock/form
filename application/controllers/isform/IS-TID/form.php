@@ -30,7 +30,8 @@ class form extends MY_Controller{
                 ];
             }
         }
-        $data['mode']     = 1;
+        $data['mode'] = 1;
+
         $empno = isset($_GET["empno"]) ? $_GET['empno'] : '' ;
         $data['apv'] = $empno;
         if(isset($_GET["runNo"]) && $_GET["runNo"] != "") {
@@ -44,10 +45,8 @@ class form extends MY_Controller{
                 'NRUNNO' => (int)$data['NRUNNO'],
             ];
             $form['EMPNO']    = (string)$empno;
-            if(!empty($empno)){
-                $data['cextData'] = $this->getExtData($form);
-                $data['mode']     = $this->getMode($form);
-            }
+            $data['cextData'] = $this->getExtData($form);
+            $data['mode']     = $this->getMode($form);
             $this->views('isform/IS-TID/view', $data);
         }else{
             $this->views('isform/IS-TID/form', $data);
