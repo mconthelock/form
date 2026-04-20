@@ -9,6 +9,7 @@ import {
     paymentTypeManager,
     reqByManager,
     currencyManager,
+    attachFileManager,
 } from "./formManager";
 import { downloadOrOpenFile } from "@amec/webasset/api/file";
 
@@ -64,7 +65,7 @@ $(document).on("click", 'button[name="btnAction"]', async function (e) {
 $(document).on("click", ".file-link", async function (e) {
     e.preventDefault();
     const filePath = $(this).attr("href");
-    const filename = $(this).text();
+    const filename = $(this).attr("originalName");
     const storedName = $(this).attr("storedName");
     const ext = filename.split(".").pop();
 
@@ -74,4 +75,12 @@ $(document).on("click", ".file-link", async function (e) {
         originalName: filename,
         mode: ext == "pdf" ? "open" : "download",
     });
+});
+
+$(document).on("click", ".remove-file", async function (e) {
+    e.preventDefault();
+    e.stopPropagation();
+    const id = $(this).attr("file-id");
+    const tagA = $(this).closest("a");
+    attachFileManager.deleteFile(tagA, id);
 });

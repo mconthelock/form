@@ -42,6 +42,8 @@
                 <h1 class="text-3xl text-center text-primary font-bold mb-15">Cover Payment For Invoice Receiving</h1>
             </h2>
             <form id="form" class="flex flex-col gap-5">
+                <section id="form-detail">
+                </section>
                 <section id="section-0">
                     <fieldset class="flex gap-12">
                         <span>Input by</span>

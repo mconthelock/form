@@ -16,18 +16,20 @@ import {
     showErrorMessage,
     showMessage,
 } from "@amec/webasset/utils";
-import { create, getCurrency, getData } from "./data";
+import { approveReturn, create, getCurrency, getData } from "./data";
 import { dragDropInit } from "@amec/webasset/dragdrop";
 import { setDatefpk, setDatePicker } from "@amec/webasset/flatpickr";
 import { setSelect2 } from "@amec/webasset/select2";
 import { selectAttachType } from "./function";
 import { formatDate } from "@amec/webasset/dayjs";
 import { classIcofont } from "@amec/webasset/fileExplorer";
+import Swal from "sweetalert2";
 select2();
 
 const state = {
     _formInfo: null,
     _users: null,
+    _deleteFiles: [],
     // Setter
     set FormInfo(data) {
         this._formInfo = data;
@@ -35,12 +37,18 @@ const state = {
     set users(data) {
         this._users = data;
     },
+    set deleteFiles(id) {
+        this._deleteFiles.push(id);
+    },
     // Getter
     get FormInfo() {
         return this._formInfo;
     },
     get users() {
         return this._users;
+    },
+    get deleteFiles() {
+        return this._deleteFiles;
     },
     get data() {
         return {
@@ -155,6 +163,7 @@ export const formManager = {
                 actionFormManager.init(mode, flow.html);
                 attachFileManager.init(data.FILES || []);
                 if (state.FormInfo.RETURN) {
+                    $("#section-0").addClass("hidden!");
                     setDatePicker();
                     const curr = await getCurrency();
                     const currData = curr.map((c) => ({
@@ -902,25 +911,32 @@ const attachOtherManager = {
 
 // -------------------------- End of Attach Type Manager --------------------------
 
-const attachFileManager = {
+export const attachFileManager = {
     get input() {
         return $("#files");
     },
     get container() {
         return $("#attachFile");
     },
+    get checkedFilesLength() {
+        return (
+            this.input[0].files.length +
+            this.container.find(".file-link").length
+        );
+    },
     set container(html) {
         this.container.html(html);
     },
     init(files = []) {
-        const html = files.length > 0 ? this.setFiles(files, state.FormInfo.RETURN) : "";
+        const html =
+            files.length > 0 ? this.setFiles(files, state.FormInfo.RETURN) : "";
         this.container =
             html +
             (state.FormInfo.RETURN
-                ? dragDropInit({
+                ? dragDropInit()
+                : state.FormInfo.MODE == 1 ? dragDropInit({
                       class: "req",
-                  })
-                : "");
+                  }) : "");
     },
     setFiles(files, isReturn = false) {
         let html = "<div class='flex flex-col gap-3 mt-5'>";
@@ -929,14 +945,35 @@ const attachFileManager = {
             <a 
                 href="${f.FILE_PATH}" 
                 storedName="${f.FILE_FNAME}" 
+                originalName="${f.FILE_ONAME}"
                 class="file-link text-primary flex items-center gap-3 w-full border rounded-lg bg-base-100 p-3"
             >
                 <i class="${classIcofont(f.FILE_ONAME.split(".").pop())} text-4xl"></i>
                 <span class="link link-primary">${f.FILE_ONAME}</span>
+                <button 
+                    type="button"
+                    file-id="${f.FILE_ID}"
+                    class="flex items-center justify-center ml-auto p-5 w-6 h-6 rounded hover:bg-red-100 text-red-500 hover:text-red-600 transition remove-file 
+                    ${isReturn ? "" : "hidden"}">
+                    <i class="icofont-trash text-xl"></i>
+                </button>
+
             </a>`;
         });
         html += "</div>";
         return html;
+    },
+    deleteFile(tagA, id) {
+        Swal.fire({
+            title: "Are you sure you want to delete this file?",
+            icon: "warning",
+            showCancelButton: true,
+        }).then((result) => {
+            if (result.isConfirmed) {
+                tagA.remove();
+                state.deleteFiles = id;
+            }
+        });
     },
 };
 
@@ -1052,6 +1089,8 @@ export const actionFormManager = {
     async action(action) {
         try {
             showLoader();
+            let res = null;
+            const data = state.data;
             if (action === "return" && this.remark.val().trim() === "") {
                 showMessage(
                     "Please input remark for return action.",
@@ -1059,13 +1098,55 @@ export const actionFormManager = {
                 );
                 return;
             }
-            const data = state.data;
-            const res = await doaction({
-                ...data,
-                ACTION: action,
-                REMARK: this.remark.val(),
-            });
+            if (action === "approve" && state.FormInfo.RETURN) {
+                //prettier-ignore
+                const requiredMessage = [
+                    {element: deliveryManager.radio,  message: "Please select Delivery Location."},
+                    {element: inVoiceTypeManager.checkbox, message: "Please select Invoice Type."},
+                    !thirdPartyManager.fieldset.hasClass('hidden!') ? {element: thirdPartyManager.select, message: "Please select Third Party."} : null,
+                    inVoiceTypeOtherManager.input.hasClass('req') ? {element: inVoiceTypeOtherManager.input, message: "Please input other invoice detail."} : null,
+                    {element: subjectManager.input, message: "Please input subject."},
+                    {element: invoiceNoManager.input, message: "Please input Invoice No."},
+                    {element: invoiceAmountManager.input, message: "Please input Invoice Amount."},
+                    {element: paymentTypeManager.radio, message: "Please select Payment Conditions & Terms."},
+                    {element: paymentManager.input, message: "Please input Payment Amount."},
+                    paymentNumManager.input.hasClass('req') ? {element: paymentNumManager.input, message: "Please input Number of Payment."} : null,
+                    {element: attachTypeManager.checkbox, message: "Please select Attach Type."},
+                ].filter(Boolean);
+                if (!(await requiredForm("#form", requiredMessage))) return;
+                if (attachFileManager.checkedFilesLength === 0) {
+                    showMessage(
+                        "Please upload attached files before approve.",
+                        "warning",
+                    );
+                    return;
+                }
+                const formData = new FormData($("#form")[0]);
+                formData.set("NFRMNO", data.NFRMNO);
+                formData.set("VORGNO", data.VORGNO);
+                formData.set("CYEAR", data.CYEAR);
+                formData.set("CYEAR2", data.CYEAR2);
+                formData.set("NRUNNO", data.NRUNNO);
+                formData.set("EMPNO", data.EMPNO);
+                formData.set("ACTION", action);
+                formData.set("REMARK", this.remark.val());
+                formData.set(
+                    "CURRENCY",
+                    currencyManager.getValue("curr-payment"),
+                );
+                formData.set("DELETE_FILES", state.deleteFiles || "");
 
+                const filteredFormData = filterFormData(formData);
+                logFormData(filteredFormData);
+
+                res = await approveReturn(filteredFormData);
+            } else {
+                res = await doaction({
+                    ...data,
+                    ACTION: action,
+                    REMARK: this.remark.val(),
+                });
+            }
             if (res.status == true) {
                 showMessage(res.message, "success");
                 redirectWebflow();
