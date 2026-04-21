@@ -589,7 +589,7 @@ function checkData(act)
         return false;
       }
       return true;
-  }else if( act == "returnb")
+  }else if( act == "returnb" || act =="returnrem" || act == "returnqastaff" || act == "returnass")
   {
        if($("#txtRemark").val() == "")
           {
@@ -597,16 +597,6 @@ function checkData(act)
             return false;
           }
           
-  }else if(act =="returnrem")
-  {
-      
-          if($("#txtRemark").val() == "")
-          {
-            showMessage('Please input Remark for reason return', 'warning');
-            return false;
-          }
-
-      
   }else if(act =="return")
   {
       
