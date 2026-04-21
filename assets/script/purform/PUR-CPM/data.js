@@ -86,6 +86,14 @@ export async function create(formData) {
     return data;
 }
 
+export async function approveReturn(formData) {
+    return fetchUtils({
+        url: `${process.env.APP_API}/purform/pur-cpm`,
+        method: "PATCH",
+        data: formData,
+    });
+}
+
 /**
  * Get PUR-CPM form data
  * 
