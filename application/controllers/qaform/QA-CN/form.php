@@ -17,7 +17,7 @@ require_once APPPATH . 'controllers/_file.php';
 class form extends MY_Controller{
     //use _Form, _File;
     //use  formApi, flow, formmst, _File;
-        use _Form , _File , formApi, flow, formmst, isTid{
+        use _Form , _File , formApi, flow, formmst {
         formApi::getMode insteadOf _Form;
         formApi::getRequestNo  insteadOf _Form;
         flow::getExtData insteadOf _Form;
