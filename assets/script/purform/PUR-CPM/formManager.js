@@ -934,9 +934,11 @@ export const attachFileManager = {
             html +
             (state.FormInfo.RETURN
                 ? dragDropInit()
-                : state.FormInfo.MODE == 1 ? dragDropInit({
-                      class: "req",
-                  }) : "");
+                : state.FormInfo.MODE == 1
+                  ? dragDropInit({
+                        class: "req",
+                    })
+                  : "");
     },
     setFiles(files, isReturn = false) {
         let html = "<div class='flex flex-col gap-3 mt-5'>";
@@ -1134,7 +1136,10 @@ export const actionFormManager = {
                     "CURRENCY",
                     currencyManager.getValue("curr-payment"),
                 );
-                formData.set("DELETE_FILES", state.deleteFiles || "");
+                // formData.set("DELETE_FILES", state.deleteFiles || "");
+                state.deleteFiles.forEach((fileId) => {
+                    formData.append("DELETE_FILES[]", String(fileId));
+                });
 
                 const filteredFormData = filterFormData(formData);
                 logFormData(filteredFormData);
