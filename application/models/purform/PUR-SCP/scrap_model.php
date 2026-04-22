@@ -86,7 +86,7 @@ class Scrap_model extends CI_Model {
      * TODO: ยืนยัน TABLE และ COLUMN ที่ถูกต้องก่อน Deploy
      * สมมติว่า Table = SCRAP_WINNER, Columns = (SCRAP_ID, NEW_VENDOR, NEW_PRICE, EFFECTIVE_DATE)
      */
-    public function saveWinner($rows, $fyear, $period, $nrunno, $cyear2)
+    public function saveWinner($rows, $fyear, $period, $nfrmno, $vorgno, $cyear, $nrunno, $cyear2)
     {
         foreach ($rows as $row) {
             $scrapId       = $row['SCRAP_ID'] ?? null;
@@ -107,6 +107,9 @@ class Scrap_model extends CI_Model {
                 'QUOTATION' => $quotation,
                 'STATUS'    => '1',
                 'TYPE'      => '1',
+                'NFRMNO'    => $nfrmno,
+                'VORGNO'    => $vorgno,
+                'CYEAR'     => $cyear,
                 'NRUNNO'    => $nrunno,
                 'CYEAR2'    => $cyear2,
             ];
