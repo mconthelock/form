@@ -82,7 +82,7 @@ class Authen extends MY_Controller {
 	}
 
     public function test(){
-        $app = $this->application(543);
+        $app = $this->application(12);
         if($app['status']){
             $data = $app['message'][0];
             $logged = $this->directLogon($data['APP_ID'], $data['APP_LOGIN']);
@@ -137,6 +137,4 @@ class Authen extends MY_Controller {
     public function setMD5() {
         echo json_encode(md5(substr('00000'.(($_POST['id']/4)-92), -5)));
     }
-
-  
 }
