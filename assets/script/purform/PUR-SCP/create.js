@@ -214,7 +214,17 @@ $(async function () {
                 type: "POST",
                 url: `${host}/purform/PUR-SCP/main/saveWinner`,
                 contentType: "application/json",
-                data: JSON.stringify({ fyear: nextYear, period: nextPeriod, rows, nrunno: result.data.NRUNNO, cyear2: result.data.CYEAR2 }),
+                data: JSON.stringify(
+                    {
+                        fyear: nextYear,
+                        period: nextPeriod,
+                        rows,
+                        nfrmno: nfrmno,
+                        vorgno: vorgno,
+                        cyear: cyear,
+                        nrunno: result.data.NRUNNO,
+                        cyear2: result.data.CYEAR2
+                    }),
                 dataType: "json",
             });
             Swal.fire({ icon: 'success', title: 'บันทึกสำเร็จ', timer: 1500 });

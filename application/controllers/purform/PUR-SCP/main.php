@@ -51,6 +51,9 @@ class main extends MY_Controller {
         $rows   = $body['rows'] ?? [];
         $fyear  = $body['fyear'] ?? null;
         $period = $body['period'] ?? null;
+        $nfrmno = $body['nfrmno'] ?? null;
+        $vorgno = $body['vorgno'] ?? null;
+        $cyear  = $body['cyear'] ?? null;
         $nrunno = $body['nrunno'] ?? null;
         $cyear2 = $body['cyear2'] ?? null;
 
@@ -60,7 +63,7 @@ class main extends MY_Controller {
             return;
         }
 
-        $this->sc->saveWinner($rows, $fyear, $period, $nrunno, $cyear2);
+        $this->sc->saveWinner($rows, $fyear, $period, $nfrmno, $vorgno, $cyear, $nrunno, $cyear2);
         echo json_encode(['success' => true]);
     }
 }
