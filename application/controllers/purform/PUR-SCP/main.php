@@ -28,14 +28,18 @@ class main extends MY_Controller {
 
     public function getDataPriceByRunNo()
     {
+        $nfrmno = $this->input->get('nfrmno');
+        $vorgno = $this->input->get('vorgno');
+        $cyear  = $this->input->get('cyear');
+        $cyear2 = $this->input->get('cyear2');
         $runno  = $this->input->get('runNo');
-        $cyear2 = $this->input->get('y2');
+
         if (!$runno || !$cyear2) {
             http_response_code(400);
             echo json_encode(['error' => 'Missing parameters']);
             return;
         }
-        $data = $this->sc->getDataPriceByRunNo($runno, $cyear2);
+        $data = $this->sc->getDataPriceByRunNo($nfrmno, $vorgno, $cyear, $cyear2, $runno);
         echo json_encode($data);
     }
 

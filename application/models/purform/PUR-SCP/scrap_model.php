@@ -28,24 +28,26 @@ class Scrap_model extends CI_Model {
         return $query->result();
     }
 
-    public function getDataPriceByRunNo($runno, $cyear2)
+    public function getDataPriceByRunNo($nfrmno, $vorgno, $cyear, $cyear2, $runno)
     {
         // ดึง FYEAR และ PERIOD ของ run นี้ก่อน เพื่อคำนวณ old period
         $infoQ = $this->sk->query(
-            "SELECT FYEAR, PERIOD FROM SCRAP_PRICE WHERE NRUNNO = ? AND CYEAR2 = ? AND ROWNUM = 1",
-            [$runno, $cyear2]
+            "SELECT FYEAR, PERIOD FROM SCRAP_PRICE WHERE NFRMNO = ? AND VORGNO = ? AND CYEAR = ? AND CYEAR2 = ? AND NRUNNO = ? AND ROWNUM = 1 AND TYPE = '1'",
+            [$nfrmno, $vorgno, $cyear, $cyear2, $runno]
         );
-        $info = $infoQ->row();
+        $info  = $infoQ->row();
 
+        // $sql = "SELECT * FROM SCRAP_PRICE WHERE NFRMNO = $nfrmno AND VORGNO = $vorgno AND CYEAR = $cyear AND CYEAR2 = $cyear2 AND NRUNNO = $runno AND TYPE = '1'";
+        // echo $sql;
         $oldFyear  = null;
         $oldPeriod = null;
         if ($info) {
-            $oldPeriod = ((int)$info->PERIOD === 1) ? 2 : 1;
-            $oldFyear  = ((int)$info->PERIOD === 1) ? ((int)$info->FYEAR - 1) : (int)$info->FYEAR;
+            $oldPeriod = ((int) $info->PERIOD === 1) ? 2 : 1;
+            $oldFyear  = ((int) $info->PERIOD === 1) ? ((int) $info->FYEAR - 1) : (int) $info->FYEAR;
         }
 
         // JOIN SCRAP_PRICE สองครั้ง: sp2 = winner (run นี้), old_p = period ก่อนหน้า
-        $sql = "
+        $sql   = "
             SELECT
                 sp.SCRAP_ID,
                 sp.SCRAP_NAME,
@@ -74,6 +76,7 @@ class Scrap_model extends CI_Model {
                AND old_p.TYPE   = '1'
             WHERE sp.STATUS = '1'
               AND sp.TYPE   = '1'
+            ORDER BY sp2.QUOTATION ASC, sp2.SCRAP_ID ASC
         ";
         $query = $this->sk->query($sql);
         return $query->result();

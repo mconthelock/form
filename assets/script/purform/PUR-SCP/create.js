@@ -7,7 +7,7 @@ import { redirectWebflow } from "@amec/webasset/form";
 import { createForm, getFormMasterByVaname } from "@amec/webasset/api/webform"
 
 $(async function () {
-    const formMst = await getFormMasterByVaname("PUR-SCP");
+    const formMst = await getFormMasterByVaname("PUR-SCB");
     const params = new URLSearchParams(window.location.search);
     const empno = params.get('empno');
     const nfrmno = formMst.NNO;
