@@ -2,6 +2,9 @@ import { host } from "@amec/webasset/utils";
 import { createTable } from "@amec/webasset/dataTable";
 import { exportExcel, defaultExcel, border, fill, alignment } from "@amec/webasset/excel";
 import { showflow } from "@amec/webasset/api/webform";
+import { generatePdf } from "@amec/webasset/api/pdf";
+import { downloadOrOpenFile } from "@amec/webasset/api/file";
+import { buildScrapPdfHtml } from "./template_pdf.js";
 
 $(async function () {
     const params = new URLSearchParams(window.location.search);
@@ -15,7 +18,7 @@ $(async function () {
         $.ajax({
             type: "GET",
             url: `${host}/purform/PUR-SCP/main/getDataPriceByRunNo`,
-            data: { runNo: runno, y2: cyear2 },
+            data: { nfrmno: nfrmno, vorgno: vorgno, cyear: cyear, cyear2: cyear2, runNo: runno },
             dataType: "json",
         }),
         showflow({
@@ -24,23 +27,29 @@ $(async function () {
             CYEAR: cyear,
             CYEAR2: cyear2,
             NRUNNO: runno,
-            showStep: true,
+            showStep: false,
         }),
     ]);
 
     $(".flow").html(flow.html);
 
+    console.log(data);
+
+    let newYear = null, newPeriod = null, dateRange = "", oldPricePeriod = "", newPricePeriod = "";
+
     if (data.length > 0) {
         const { FYEAR, PERIOD, NEW_FYEAR, NEW_PERIOD } = data[0];
-        const newYear = parseInt(NEW_FYEAR);
-        const newPeriod = parseInt(NEW_PERIOD);
-        const dateRange = newPeriod === 1
+        newYear = parseInt(NEW_FYEAR);
+        newPeriod = parseInt(NEW_PERIOD);
+        dateRange = newPeriod === 1
             ? `1 Jan'${newYear} - 30 Jun'${newYear}`
             : `1 Jul'${newYear} - 31 Dec'${newYear}`;
+        oldPricePeriod = FYEAR && PERIOD ? `Y${FYEAR}/${PERIOD}F` : "";
+        newPricePeriod = `Y${newYear}/${newPeriod}F`;
 
-        $(".old-price-period").text(FYEAR && PERIOD ? `Y${FYEAR}/${PERIOD}F` : "");
+        $(".old-price-period").text(oldPricePeriod);
         $(".fyear").text(`AMEC Scrap Master (Y${newYear}/${newPeriod}F) ${dateRange}`);
-        $(".new-price-period").text(`Y${newYear}/${newPeriod}F`);
+        $(".new-price-period").text(newPricePeriod);
         $(".new-period").text(`FY${newYear}/${newPeriod}F`);
         $("#emptyState").addClass("hidden");
     } else {
@@ -83,6 +92,52 @@ $(async function () {
         columns: TABLE_COLUMNS,
         dom: '<"flex mb-3 items-center gap-2"<"flex items-center gap-2"fB><"ml-auto"l>><"bg-white border border-slate-700 rounded-2xl overflow-hidden my-5"t><"flex mt-5"<"flex-1"p><"flex-none"i>>',
         buttons: [
+            {
+                text: '<i class="icofont-eye-alt"></i> Preview PDF',
+                attr: { class: "btn btn-info btn-sm" },
+                action: () => {
+                    if (!data.length) return;
+                    const html = buildScrapPdfHtml({ data, newYear, newPeriod, oldPricePeriod, newPricePeriod, dateRange });
+                    const win = window.open("", "_blank", "width=900,height=700,scrollbars=yes");
+                    win.document.open();
+                    win.document.write(html);
+                    win.document.close();
+                },
+            },
+            {
+                text: '<i class="icofont-file-pdf"></i> Export PDF',
+                attr: { class: "btn btn-error btn-sm" },
+                action: async (e, dt, node) => {
+                    if (!data.length) return;
+                    const btn = node[0];
+                    btn.disabled = true;
+                    btn.innerHTML = '<span class="loading loading-spinner loading-xs"></span> Generating...';
+                    try {
+                        const html = buildScrapPdfHtml({ data, newYear, newPeriod, oldPricePeriod, newPricePeriod, dateRange, flow: flow.html });
+                        const pdfPath = "//amecnas/AMECWEB/File/development/Form/PUR/PUR-SCP/";
+                        const fileName = `ScrapMaster_Y${newYear}_${newPeriod}F_run${runno}.pdf`;
+                        await generatePdf({
+                            html,
+                            options: {
+                                path: pdfPath + fileName,
+                                printBackground: true,
+                                landscape: false,
+                                format: "A4",
+                                margin: { top: "12mm", right: "10mm", bottom: "15mm", left: "10mm" },
+                            },
+                        });
+                        await downloadOrOpenFile({
+                            baseDir: pdfPath,
+                            storedName: fileName,
+                            originalName: fileName,
+                            mode: "download",
+                        });
+                    } finally {
+                        btn.disabled = false;
+                        btn.innerHTML = '<i class="icofont-file-pdf"></i> Export PDF';
+                    }
+                },
+            },
             {
                 text: '<i class="icofont-file-excel"></i> Export Excel',
                 attr: { class: "btn btn-success btn-sm" },
