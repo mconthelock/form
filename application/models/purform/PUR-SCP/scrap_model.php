@@ -30,31 +30,16 @@ class Scrap_model extends CI_Model {
 
     public function getDataPriceByRunNo($nfrmno, $vorgno, $cyear, $cyear2, $runno)
     {
-        // ดึง FYEAR และ PERIOD ของ run นี้ก่อน เพื่อคำนวณ old period
-        $infoQ = $this->sk->query(
-            "SELECT FYEAR, PERIOD FROM SCRAP_PRICE WHERE NFRMNO = ? AND VORGNO = ? AND CYEAR = ? AND CYEAR2 = ? AND NRUNNO = ? AND ROWNUM = 1 AND TYPE = '1'",
-            [$nfrmno, $vorgno, $cyear, $cyear2, $runno]
-        );
-        $info  = $infoQ->row();
-
-        // $sql = "SELECT * FROM SCRAP_PRICE WHERE NFRMNO = $nfrmno AND VORGNO = $vorgno AND CYEAR = $cyear AND CYEAR2 = $cyear2 AND NRUNNO = $runno AND TYPE = '1'";
-        // echo $sql;
-        $oldFyear  = null;
-        $oldPeriod = null;
-        if ($info) {
-            $oldPeriod = ((int) $info->PERIOD === 1) ? 2 : 1;
-            $oldFyear  = ((int) $info->PERIOD === 1) ? ((int) $info->FYEAR - 1) : (int) $info->FYEAR;
-        }
-
-        // JOIN SCRAP_PRICE สองครั้ง: sp2 = winner (run นี้), old_p = period ก่อนหน้า
-        $sql   = "
+        // sp2 = ราคาที่เปลี่ยนใน run นี้ (LEFT JOIN: ถ้าไม่มีก็ยังแสดง product)
+        // old_p = ราคาล่าสุดก่อน run นี้ (ROW_NUMBER รองรับกรณีที่ไม่ได้ update ทุก period)
+        $sql = "
             SELECT
                 sp.SCRAP_ID,
                 sp.SCRAP_NAME,
                 sp.UNIT,
                 sp.BOI,
                 sp.B_GUARANTEE,
-                sp2.QUOTATION,
+                COALESCE(sp2.QUOTATION, old_p.QUOTATION)  AS QUOTATION,
                 old_p.VENDOR          AS VENDOR,
                 old_p.PRICE           AS PRICE,
                 old_p.FYEAR           AS FYEAR,
@@ -65,18 +50,21 @@ class Scrap_model extends CI_Model {
                 sp2.FYEAR             AS NEW_FYEAR,
                 sp2.PERIOD            AS NEW_PERIOD
             FROM SCRAP_PRODUCT sp
-            JOIN SCRAP_PRICE sp2
+            LEFT JOIN SCRAP_PRICE sp2
                 ON sp.SCRAP_ID = sp2.SCRAP_ID
                AND sp2.NRUNNO  = $runno
                AND sp2.CYEAR2  = $cyear2
-            LEFT JOIN SCRAP_PRICE old_p
-                ON sp.SCRAP_ID  = old_p.SCRAP_ID
-               AND old_p.FYEAR  = $oldFyear
-               AND old_p.PERIOD = $oldPeriod
-               AND old_p.TYPE   = '1'
+               AND sp2.TYPE    = '1'
+            LEFT JOIN (
+                SELECT SCRAP_ID, VENDOR, PRICE, QUOTATION, FYEAR, PERIOD,
+                       ROW_NUMBER() OVER (PARTITION BY SCRAP_ID ORDER BY FYEAR DESC, PERIOD DESC) AS RN
+                FROM SCRAP_PRICE
+                WHERE TYPE = '1'
+                  AND NOT (NRUNNO = $runno AND CYEAR2 = $cyear2)
+            ) old_p ON sp.SCRAP_ID = old_p.SCRAP_ID AND old_p.RN = 1
             WHERE sp.STATUS = '1'
               AND sp.TYPE   = '1'
-            ORDER BY sp2.QUOTATION ASC, sp2.SCRAP_ID ASC
+            ORDER BY COALESCE(sp2.QUOTATION, old_p.QUOTATION) ASC NULLS LAST, sp.SCRAP_ID ASC
         ";
         $query = $this->sk->query($sql);
         return $query->result();
@@ -86,8 +74,9 @@ class Scrap_model extends CI_Model {
      * TODO: ยืนยัน TABLE และ COLUMN ที่ถูกต้องก่อน Deploy
      * สมมติว่า Table = SCRAP_WINNER, Columns = (SCRAP_ID, NEW_VENDOR, NEW_PRICE, EFFECTIVE_DATE)
      */
-    public function saveWinner($rows, $fyear, $period, $nfrmno, $vorgno, $cyear, $nrunno, $cyear2)
+    public function saveWinner($rows, $fyear, $period, $nfrmno, $vorgno, $cyear, $nrunno, $cyear2, $selectedQuotations = [])
     {
+        $count = 0;
         foreach ($rows as $row) {
             $scrapId       = $row['SCRAP_ID'] ?? null;
             $newVendor     = $row['_NEW_VENDOR'] ?? null;
@@ -119,25 +108,47 @@ class Scrap_model extends CI_Model {
             }
 
             $this->sk->insert('SCRAP_PRICE', $data);
-            // Check if record exists
-            // $this->sk->where('SCRAP_ID', $scrapId);
-            // $exists = $this->sk->count_all_results('SCRAP_WINNER');
+            $count++;
+        }
 
-            // if ($exists > 0) {
-            //     $this->sk->where('SCRAP_ID', $scrapId);
-            //     $this->sk->update('SCRAP_WINNER', [
-            //         'NEW_VENDOR'     => $newVendor,
-            //         'NEW_PRICE'      => $newPrice,
-            //         'EFFECTIVE_DATE' => $effectiveDate,
-            //     ]);
-            // } else {
-            //     $this->sk->insert('SCRAP_WINNER', [
-            //         'SCRAP_ID'       => $scrapId,
-            //         'NEW_VENDOR'     => $newVendor,
-            //         'NEW_PRICE'      => $newPrice,
-            //         'EFFECTIVE_DATE' => $effectiveDate,
-            //     ]);
-            // }
+        return $count;
+    }
+
+    public function getBankGuarantees($nfrmno, $vorgno, $cyear, $cyear2, $nrunno)
+    {
+        $this->sk->select('VENDOR, AMOUNT')
+            ->from('SCRAP_BGRT')
+            ->where('NFRMNO', $nfrmno)
+            ->where('VORGNO', $vorgno)
+            ->where('CYEAR', $cyear)
+            ->where('CYEAR2', $cyear2)
+            ->where('NRUNNO', $nrunno)
+            ->order_by('VENDOR', 'ASC');
+        $query = $this->sk->get();
+        return $query->result();
+    }
+
+    public function saveBankGuarantees($bankGuarantees, $nfrmno, $vorgno, $cyear, $cyear2, $nrunno, $fyear, $period)
+    {
+        foreach ($bankGuarantees as $bg) {
+            $vendor = $bg['VENDOR'] ?? null;
+            $amount = $bg['AMOUNT'] ?? null;
+
+            if (!$vendor) continue;
+
+            $data = [
+                'NFRMNO' => $nfrmno,
+                'VORGNO' => $vorgno,
+                'CYEAR'  => $cyear,
+                'CYEAR2' => $cyear2,
+                'NRUNNO' => $nrunno,
+                'FYEAR'  => $fyear,
+                'PERIOD' => $period,
+                'VENDOR' => $vendor,
+                'AMOUNT' => $amount,
+            ];
+
+            $this->sk->insert('SCRAP_BGRT', $data);
         }
     }
 

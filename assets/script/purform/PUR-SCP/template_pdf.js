@@ -9,7 +9,7 @@
  * @param {string} opts.dateRange     - e.g. "1 Apr'2024 - 30 Sep'2024"
  * @param {string} opts.flow          - HTML content for the flow section
  */
-export function buildScrapPdfHtml({ data = [], newYear, newPeriod, oldPricePeriod, newPricePeriod, dateRange , flow }) {
+export function buildScrapPdfHtml({ data = [], newYear, newPeriod, oldPricePeriod, newPricePeriod, dateRange, flow, bankGuarantees = [] }) {
     const today = new Date();
     const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
     const todayStr = `${today.getDate()} ${months[today.getMonth()]} '${String(today.getFullYear()).slice(-2)}`;
@@ -33,15 +33,25 @@ export function buildScrapPdfHtml({ data = [], newYear, newPeriod, oldPricePerio
         `;
     }).join("");
 
-    // Bank guarantee summary
-    const vendorMap = {};
-    data.forEach(row => {
-        if (!row.NEW_VENDOR || row.B_GUARANTEE !== "1") return;
-        vendorMap[row.NEW_VENDOR] = (vendorMap[row.NEW_VENDOR] || 0) + 1;
-    });
-    const vendorKeys = Object.keys(vendorMap);
-    const guaranteeHeaderCells = vendorKeys.map(v => `<th>${v}</th>`).join("");
-    const guaranteeValueCells = vendorKeys.map(() => `<td class="center">-</td>`).join("");
+    // Bank guarantee section — use data from DB if available, otherwise derive from price rows
+    let guaranteeHeaderCells, guaranteeValueCells, hasBankGuarantees;
+    if (bankGuarantees.length > 0) {
+        guaranteeHeaderCells = bankGuarantees.map(bg => `<th>${bg.VENDOR}</th>`).join("");
+        guaranteeValueCells  = bankGuarantees.map(bg =>
+            `<td class="center">${bg.AMOUNT != null && bg.AMOUNT !== '' ? Number(bg.AMOUNT).toLocaleString() : '-'}</td>`
+        ).join("");
+        hasBankGuarantees = true;
+    } else {
+        const vendorMap = {};
+        data.forEach(row => {
+            if (!row.NEW_VENDOR || row.B_GUARANTEE !== "1") return;
+            vendorMap[row.NEW_VENDOR] = (vendorMap[row.NEW_VENDOR] || 0) + 1;
+        });
+        const vendorKeys = Object.keys(vendorMap);
+        guaranteeHeaderCells = vendorKeys.map(v => `<th>${v}</th>`).join("");
+        guaranteeValueCells  = vendorKeys.map(() => `<td class="center">-</td>`).join("");
+        hasBankGuarantees = vendorKeys.length > 0;
+    }
 
     return `<!DOCTYPE html>
             <html>
@@ -170,6 +180,8 @@ export function buildScrapPdfHtml({ data = [], newYear, newPeriod, oldPricePerio
                         margin-top: 12px;
                         margin-left: 50px;
                         margin-right: 50px;
+                        break-inside: avoid;
+                        page-break-inside: avoid;
                     }
 
                     .approval-table {
@@ -241,6 +253,11 @@ export function buildScrapPdfHtml({ data = [], newYear, newPeriod, oldPricePerio
                         line-height: 1.3;
                         letter-spacing: 0.5px;
                     }
+
+                    .flow{
+                        break-inside: avoid;
+                        page-break-inside: avoid;
+                    }
                     </style>
                 </head>
             <body>
@@ -278,7 +295,7 @@ export function buildScrapPdfHtml({ data = [], newYear, newPeriod, oldPricePerio
             </tbody>
         </table>
 
-        ${vendorKeys.length > 0 ? `
+        ${hasBankGuarantees ? `
         <div class="guarantee-section">
             <table style="width:auto;margin-top:8px;">
                 <thead>
@@ -300,8 +317,10 @@ export function buildScrapPdfHtml({ data = [], newYear, newPeriod, oldPricePerio
         </div>
         ` : ""}
 
+        <div class="flow">${flow}</div>
+
         <div class="approval-section">
-            <div class="flow">${flow}</div>
+            
             <table class="approval-table">
                 <thead>
                     <tr>
