@@ -8,11 +8,34 @@
  * @param {string} opts.newPricePeriod - e.g. "Y2024/1F"
  * @param {string} opts.dateRange     - e.g. "1 Apr'2024 - 30 Sep'2024"
  * @param {string} opts.flow          - HTML content for the flow section
+ * @param {Array}  opts.approved       - Approved steps [{step, emp}]
  */
-export function buildScrapPdfHtml({ data = [], newYear, newPeriod, oldPricePeriod, newPricePeriod, dateRange, flow, bankGuarantees = [] }) {
+export function buildScrapPdfHtml({ data = [], newYear, newPeriod, oldPricePeriod, newPricePeriod, dateRange, flow, bankGuarantees = [], approved = [] }) {
     const today = new Date();
     const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
     const todayStr = `${today.getDate()} ${months[today.getMonth()]} '${String(today.getFullYear()).slice(-2)}`;
+
+    // step -> approved entry map (02=PUR DIN, 81=FIN DEM, 93=G/S DEM, 84=FE DEM, 59=PS DEM)
+    const stepMap = Object.fromEntries(approved.map(a => [a.step, a]));
+    // Column order matches approval table headers: PS DEM, FE DEM, G/S DEM, FIN DEM, PUR DIN
+    const stepOrder = ['59', '84', '93', '81', '02'];
+    const approvalCells = stepOrder.map(step => {
+        const entry = stepMap[step];
+        if (entry && entry.emp) {
+            const name = (entry.emp.sname || '').split(' ')[0];
+            return `
+                <td class="approval-cell">
+                    <div class="stamp-circle">
+                        <span class="stamp-company">AMEC</span>
+                        <hr class="stamp-divider">
+                        <span class="stamp-date">${entry.dateApv || todayStr}</span>
+                        <hr class="stamp-divider">
+                        <span class="stamp-name">${name}</span>
+                    </div>
+                </td>`;
+        }
+        return `<td class="approval-cell"></td>`;
+    }).join('');
 
     const rows = data.map((row, i) => {
         const boi = row.BOI === "1" ? "BOI" : "Non-BOI";
@@ -333,19 +356,7 @@ export function buildScrapPdfHtml({ data = [], newYear, newPeriod, oldPricePerio
                 </thead>
                 <tbody>
                     <tr>
-                        <td class="approval-cell">
-                        <div class="stamp-circle">
-                            <span class="stamp-company">AMEC</span>
-                            <hr class="stamp-divider">
-                            <span class="stamp-date">21 Apr 2026</span>
-                            <hr class="stamp-divider">
-                            <span class="stamp-name">PREECHA</span>
-                        </div>
-                        </td>
-                        <td class="approval-cell"><div class="stamp-circle"><span class="stamp-company">AMEC</span><hr class="stamp-divider"><span class="stamp-date">&nbsp;</span><hr class="stamp-divider"><span class="stamp-name">&nbsp;</span></div></td>
-                        <td class="approval-cell"><div class="stamp-circle"><span class="stamp-company">AMEC</span><hr class="stamp-divider"><span class="stamp-date">&nbsp;</span><hr class="stamp-divider"><span class="stamp-name">&nbsp;</span></div></td>
-                        <td class="approval-cell"><div class="stamp-circle"><span class="stamp-company">AMEC</span><hr class="stamp-divider"><span class="stamp-date">&nbsp;</span><hr class="stamp-divider"><span class="stamp-name">&nbsp;</span></div></td>
-                        <td class="approval-cell"><div class="stamp-circle"><span class="stamp-company">AMEC</span><hr class="stamp-divider"><span class="stamp-date">&nbsp;</span><hr class="stamp-divider"><span class="stamp-name">&nbsp;</span></div></td>
+                        ${approvalCells}
                     </tr>
                 </tbody>
             </table>
