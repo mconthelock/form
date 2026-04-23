@@ -175,7 +175,7 @@ $(function () {
 	// -------- Urgent Case Attachment Logic --------
 	$("#entertain-date").on("change", function () {
 		const selectedDate = new Date($(this).val());
-		// const today = new Date("2026-04-08"); // [TEST] mock today as April 8
+		const today = new Date();
 		const urgentAttachmentDiv = $("#urgent-attachment");
 		const urgentNoteDiv = $("#urgent-note");
 		const urgentFile = $("#urgent-file");
