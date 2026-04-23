@@ -20,8 +20,25 @@
                     </div>
                 </div>
 
+                {{-- Loading Skeleton --}}
+                <div id="loadingSkeleton" class="p-4 space-y-3">
+                    <div class="animate-pulse h-5 w-56 rounded bg-base-200"></div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div class="animate-pulse h-10 rounded bg-base-200"></div>
+                        <div class="animate-pulse h-10 rounded bg-base-200"></div>
+                    </div>
+                    <div class="space-y-2 pt-1">
+                        <div class="animate-pulse h-9 rounded bg-base-200"></div>
+                        <div class="animate-pulse h-9 rounded bg-base-200"></div>
+                        <div class="animate-pulse h-9 rounded bg-base-200"></div>
+                        <div class="animate-pulse h-9 rounded bg-base-200"></div>
+                        <div class="animate-pulse h-9 rounded bg-base-200"></div>
+                        <div class="animate-pulse h-9 rounded bg-base-200"></div>
+                    </div>
+                </div>
+
                 {{-- Table --}}
-                <div class="overflow-x-auto p-2">
+                <div id="tableWrapper" class="overflow-x-auto p-2 hidden">
                     <table id="price_table"
                         class="table table-zebra table-sm w-full border-collapse
                                [&_th]:border [&_th]:border-slate-700! [&_th]:border-t-0 [&_th]:text-xs [&_th]:uppercase [&_th]:tracking-wide
@@ -55,17 +72,41 @@
                         </thead>
                         <tbody></tbody>
                     </table>
+
+                    <div class="p-4 overflow-x-auto rounded-lg">
+                        <table id="bankGuaranteeTable"
+                            class="table table-sm border-collapse w-80
+                               [&_th]:border [&_th]:border-slate-400 [&_th]:text-xs [&_th]:uppercase [&_th]:tracking-wide
+                               [&_td]:border [&_td]:border-slate-400 [&_td]:py-2">
+                            <thead>
+                                <tr id="bgVendorHeaderRow">
+                                    <th class="bg-base-200 w-48 align-middle">Bank Guarantee Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr id="bgAmountRow">
+                                    <td class="bg-base-200 font-medium text-sm text-base-content/70 whitespace-nowrap">Amount (THB)</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <p id="bgEmptyMsg" class="text-xs text-base-content/40 italic mt-2">No bank guarantee data.</p>
+                    </div>
+
+                    <div id="emptyState" class="hidden flex-col items-center justify-center py-16 text-base-content/30">
+                        <i class="icofont-file-excel text-6xl mb-3"></i>
+                        <p class="text-sm font-medium">No data available</p>
+                    </div>
+
+
+                    <div class="Apv-btn"></div>
+
+                    <div class="flow mt-3 mb-5"></div>
                 </div>
 
                 {{-- Empty State --}}
-                <div id="emptyState" class="flex flex-col items-center justify-center py-16 text-base-content/30">
-                    <i class="icofont-file-excel text-6xl mb-3"></i>
-                    <p class="text-sm font-medium">No data available</p>
-                </div>
-
             </div>
 
-            <div class="flow"></div>
+
         </div>
 
     </div>

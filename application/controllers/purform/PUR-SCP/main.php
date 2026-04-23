@@ -43,6 +43,23 @@ class main extends MY_Controller {
         echo json_encode($data);
     }
 
+    public function getBankGuarantees()
+    {
+        $nfrmno = $this->input->get('nfrmno');
+        $vorgno = $this->input->get('vorgno');
+        $cyear  = $this->input->get('cyear');
+        $cyear2 = $this->input->get('cyear2');
+        $runno  = $this->input->get('runNo');
+
+        if (!$runno || !$cyear2) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Missing parameters']);
+            return;
+        }
+        $data = $this->sc->getBankGuarantees($nfrmno, $vorgno, $cyear, $cyear2, $runno);
+        echo json_encode($data);
+    }
+
     public function saveWinner()
     {
         $json = file_get_contents('php://input');
@@ -54,8 +71,12 @@ class main extends MY_Controller {
         $nfrmno = $body['nfrmno'] ?? null;
         $vorgno = $body['vorgno'] ?? null;
         $cyear  = $body['cyear'] ?? null;
-        $nrunno = $body['nrunno'] ?? null;
-        $cyear2 = $body['cyear2'] ?? null;
+        $nrunno             = $body['nrunno'] ?? null;
+        $cyear2             = $body['cyear2'] ?? null;
+        $selectedQuotations = isset($body['selectedQuotations']) && is_array($body['selectedQuotations'])
+                              ? $body['selectedQuotations'] : [];
+        $bankGuarantees     = isset($body['bankGuarantees']) && is_array($body['bankGuarantees'])
+                              ? $body['bankGuarantees'] : [];
 
         if (!is_array($rows) || empty($rows)) {
             http_response_code(400);
@@ -63,7 +84,12 @@ class main extends MY_Controller {
             return;
         }
 
-        $this->sc->saveWinner($rows, $fyear, $period, $nfrmno, $vorgno, $cyear, $nrunno, $cyear2);
-        echo json_encode(['success' => true]);
+        $count = $this->sc->saveWinner($rows, $fyear, $period, $nfrmno, $vorgno, $cyear, $nrunno, $cyear2, $selectedQuotations);
+
+        if (!empty($bankGuarantees)) {
+            $this->sc->saveBankGuarantees($bankGuarantees, $nfrmno, $vorgno, $cyear, $cyear2, $nrunno, $fyear, $period);
+        }
+
+        echo json_encode(['success' => true, 'count' => $count]);
     }
 }
