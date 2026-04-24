@@ -255,4 +255,37 @@ $(async function () {
     setLoadingState(false);
 
     renderBankGuarantees(bankGuarantees);
+
+    // ---- Attached Files ----
+    try {
+        const scrapFiles = await $.ajax({
+            type: "GET",
+            url: `${host}/purform/PUR-SCP/main/getScrapFiles`,
+            data: { nfrmno, vorgno, cyear, cyear2, runNo: runno },
+            dataType: "json",
+        });
+
+        const $list = $("#attachFileList");
+        $list.empty();
+
+        if (!scrapFiles.length) {
+            $list.append('<li class="text-xs text-base-content/40 italic">ไม่มีไฟล์แนบ</li>');
+        } else {
+            scrapFiles.forEach(file => {
+                const downloadUrl = `${host}/purform/PUR-SCP/main/downloadScrapFile?path=${encodeURIComponent(file.file_path)}`;
+                $list.append(`
+                    <li class="flex items-center gap-2 text-sm">
+                        <i class="icofont-paper-clip text-info"></i>
+                        <span class="flex-1 truncate">${file.orig_name}</span>
+                        <a href="${downloadUrl}" class="btn btn-ghost btn-xs gap-1 text-info" download>
+                            <i class="icofont-download"></i>
+                            ดาวน์โหลด
+                        </a>
+                    </li>
+                `);
+            });
+        }
+    } catch (e) {
+        console.error("Failed to load attached files", e);
+    }
 });

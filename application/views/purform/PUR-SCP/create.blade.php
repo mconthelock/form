@@ -168,6 +168,28 @@
             </div>
         </div>
 
+        {{-- Attach Files Section --}}
+        <div class="card bg-white shadow border border-base-200" id="attachFilesCard">
+            <div class="card-body p-0">
+                <div class="flex items-center justify-between px-4 py-3 border-b border-base-200">
+                    <div class="flex items-center gap-2 text-base-content/70 text-sm">
+                        <i class="icofont-paper-clip text-info text-lg"></i>
+                        <span class="font-medium">แนบไฟล์เพิ่มเติม</span>
+                    </div>
+                    <label for="attachFileInput" class="btn btn-outline btn-info btn-sm gap-1 cursor-pointer">
+                        <i class="icofont-plus"></i>
+                        เลือกไฟล์
+                    </label>
+                    <input type="file" id="attachFileInput" multiple class="hidden">
+                </div>
+                <div class="p-4">
+                    <ul id="attachFileList" class="space-y-2">
+                        <li id="attachEmptyMsg" class="text-xs text-base-content/40 italic">ยังไม่มีไฟล์แนบ</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
         {{-- Sticky Save Footer --}}
         <div id="saveFooter" class="hidden sticky bottom-0 z-20 -mx-4 px-4 py-3 bg-base-100 border-t border-base-300 shadow-[0_-4px_12px_rgba(0,0,0,0.08)]">
             <div class="flex items-center justify-end gap-3">

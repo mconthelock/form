@@ -17,9 +17,9 @@ class Scrap_model extends CI_Model {
         // JOIN V_SCRAP_PRICE sp2 ON sp.SCRAP_ID = sp2.SCRAP_ID 
         // LEFT JOIN AMEC.PVENDER p ON sp2.VENDOR = p.svendcode
         // WHERE sp.STATUS = '1'
-        $this->sk->select('*')
+        $this->sk->select('sp.*,sp2.*,sp.SCRAP_ID AS SCRAP_ID')
             ->from('SCRAP_PRODUCT sp')
-            ->join('V_SCRAP_PRICE sp2', 'sp.SCRAP_ID = sp2.SCRAP_ID')
+            ->join('V_SCRAP_PRICE sp2', 'sp.SCRAP_ID = sp2.SCRAP_ID', 'left')
             // ->join('AMEC.PVENDER p', 'sp2.VENDOR = p.svendcode', 'left')
             ->where('sp.STATUS', '1')
             ->where('sp.TYPE', '1');
@@ -126,6 +126,34 @@ class Scrap_model extends CI_Model {
             ->order_by('VENDOR', 'ASC');
         $query = $this->sk->get();
         return $query->result();
+    }
+
+    public function getScrapFiles($nfrmno, $vorgno, $cyear, $cyear2, $nrunno)
+    {
+        $this->sk->select('FILE_PATH')
+            ->from('SCRAP_FILE')
+            ->where('NFRMNO', $nfrmno)
+            ->where('VORGNO', $vorgno)
+            ->where('CYEAR', $cyear)
+            ->where('CYEAR2', $cyear2)
+            ->where('NRUNNO', $nrunno);
+        $query = $this->sk->get();
+        return $query->result();
+    }
+
+    public function saveScrapFiles($nfrmno, $vorgno, $cyear, $cyear2, $nrunno, $files)
+    {
+        foreach ($files as $file) {
+            $data = [
+                'NFRMNO'    => $nfrmno,
+                'VORGNO'    => $vorgno,
+                'CYEAR'     => $cyear,
+                'CYEAR2'    => $cyear2,
+                'NRUNNO'    => $nrunno,
+                'FILE_PATH' => $file['file_path'],
+            ];
+            $this->sk->insert('SCRAP_FILE', $data);
+        }
     }
 
     public function saveBankGuarantees($bankGuarantees, $nfrmno, $vorgno, $cyear, $cyear2, $nrunno, $fyear, $period)

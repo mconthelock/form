@@ -277,7 +277,70 @@ $(async function () {
 
     renderBankGuaranteeTable();
 
-    // ---- Quotation Filter ----
+    // ---- Attach Files ----
+    let attachedFiles = [];
+
+    function renderAttachFileList() {
+        const $list = $("#attachFileList");
+        $list.empty();
+        if (attachedFiles.length === 0) {
+            $list.append('<li id="attachEmptyMsg" class="text-xs text-base-content/40 italic">ยังไม่มีไฟล์แนบ</li>');
+            return;
+        }
+        attachedFiles.forEach((file, idx) => {
+            const sizeKB = (file.size / 1024).toFixed(1);
+            $list.append(`
+                <li class="flex items-center gap-2 text-sm" data-idx="${idx}">
+                    <i class="icofont-paper-clip text-info"></i>
+                    <span class="flex-1 truncate">${file.name}</span>
+                    <span class="text-xs text-base-content/40">${sizeKB} KB</span>
+                    <button class="btn btn-ghost btn-xs text-error remove-attach-file" data-idx="${idx}">
+                        <i class="icofont-close-circled"></i>
+                    </button>
+                </li>
+            `);
+        });
+    }
+
+    $("#attachFileInput").on("change", function () {
+        const newFiles = Array.from(this.files);
+        newFiles.forEach(f => {
+            if (!attachedFiles.find(ef => ef.name === f.name && ef.size === f.size)) {
+                attachedFiles.push(f);
+            }
+        });
+        // reset input so same file can be re-added after removal
+        this.value = '';
+        renderAttachFileList();
+    });
+
+    $(document).on("click", ".remove-attach-file", function () {
+        const idx = parseInt($(this).data("idx"));
+        attachedFiles.splice(idx, 1);
+        renderAttachFileList();
+    });
+
+    async function uploadAttachFiles(nrunno, cyear2) {
+        if (attachedFiles.length === 0) return;
+        const formData = new FormData();
+        formData.append("nrunno", nrunno);
+        formData.append("cyear2", cyear2);
+        formData.append("nfrmno", nfrmno);
+        formData.append("vorgno", vorgno);
+        formData.append("cyear", cyear);
+        attachedFiles.forEach((file, i) => {
+            formData.append(`attach_file_${i}`, file, file.name);
+        });
+        await $.ajax({
+            type: "POST",
+            url: `${host}/purform/PUR-SCP/main/uploadAttachFiles`,
+            data: formData,
+            processData: false,
+            contentType: false,
+        });
+    }
+
+
     function getSelectedQuotations() {
         return $(".qfilter:checked").map((_, el) => el.value).get();
     }
@@ -296,7 +359,8 @@ $(async function () {
         const selected = new Set(getSelectedQuotations());
         table.rows().every(function () {
             const d = this.data();
-            d._UPDATE_TYPE = (selected.size === 0 || selected.has(d.QUOTATION)) ? 'update' : 'carry-over';
+            // rows with no QUOTATION (new SCRAP_IDs) must always remain 'update'
+            d._UPDATE_TYPE = (selected.size === 0 || !d.QUOTATION || selected.has(d.QUOTATION)) ? 'update' : 'carry-over';
             this.data(d);
         });
         table.draw(false);
@@ -435,6 +499,9 @@ $(async function () {
                     }),
                 dataType: "json",
             });
+
+            await uploadAttachFiles(result.data.NRUNNO, result.data.CYEAR2);
+
             const carryCount = table.rows().data().toArray().filter(r => r._UPDATE_TYPE === 'carry-over').length;
             Swal.fire({
                 icon: 'success',
@@ -442,7 +509,7 @@ $(async function () {
                 text: carryCount > 0 ? `${carryCount} รายการใช้ราคาเดิม (Carry Over)` : '',
                 timer: 2500,
             });
-            redirectWebflow();
+            // redirectWebflow();
             $("#saveFooter").addClass("hidden");
         } catch (err) {
             Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาด', text: err.responseText || 'Save failed' });

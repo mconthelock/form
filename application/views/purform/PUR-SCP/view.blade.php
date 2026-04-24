@@ -97,6 +97,20 @@
                         <p class="text-sm font-medium">No data available</p>
                     </div>
 
+                    {{-- Attached Files Card --}}
+                    <div class="card bg-white shadow border border-base-200" id="attachFilesCard">
+                        <div class="card-body p-0">
+                            <div class="flex items-center bg-blue-100 gap-2 px-4 py-3 border-b border-base-200 text-base-content/70 text-sm">
+                                <i class="icofont-paper-clip text-info text-lg"></i>
+                                <span class="font-medium">ไฟล์แนบเพิ่มเติม</span>
+                            </div>
+                            <div class="p-4">
+                                <ul id="attachFileList" class="space-y-2">
+                                    <li id="attachFilesLoading" class="text-xs text-base-content/40 italic">กำลังโหลด...</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
 
                     <div class="Apv-btn"></div>
 
@@ -108,6 +122,7 @@
 
 
         </div>
+
 
     </div>
 @endsection
