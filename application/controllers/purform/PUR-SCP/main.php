@@ -1,11 +1,17 @@
 <?php
 
+defined('BASEPATH') or exit('No direct script access allowed');
+require_once APPPATH . 'controllers/_file.php';
+
 class main extends MY_Controller {
+
+    use _File;
 
     public function __construct()
     {
         parent::__construct();
         $this->load->model('purform/PUR-SCP/scrap_model', 'sc');
+        $this->upload_path = $_ENV['AMEC_FILE_PATH'] . ($this->_servername() == 'amecweb' ? 'production' : 'development') . "/Form/PUR/PURSCP/";
     }
 
     public function index()
@@ -91,5 +97,90 @@ class main extends MY_Controller {
         }
 
         echo json_encode(['success' => true, 'count' => $count]);
+    }
+
+    public function uploadAttachFiles()
+    {
+        $nrunno = $this->input->post('nrunno');
+        $cyear2 = $this->input->post('cyear2');
+        $nfrmno = $this->input->post('nfrmno');
+        $vorgno = $this->input->post('vorgno');
+        $cyear  = $this->input->post('cyear');
+
+        if (!$nrunno || !$cyear2 || !$nfrmno || !$vorgno || !$cyear) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Missing parameters']);
+            return;
+        }
+
+        $path = $this->upload_path;
+        $uploaded = [];
+
+        foreach ($_FILES as $key => $file) {
+            if (strpos($key, 'attach_file_') === 0 && !empty($file['name'])) {
+                $result = $this->uploadFile($file, $path);
+                if ($result['status']) {
+                    $uploaded[] = [
+                        'original_name' => $result['file_origin_name'],
+                        'file_name'     => $result['file_name'],
+                        'file_path'     => $result['file_path'] . $result['file_name'],
+                    ];
+                }
+            }
+        }
+
+        if (!empty($uploaded)) {
+            $this->sc->saveScrapFiles($nfrmno, $vorgno, $cyear, $cyear2, $nrunno, $uploaded);
+        }
+
+        echo json_encode(['success' => true, 'files' => $uploaded]);
+    }
+
+    public function getScrapFiles()
+    {
+        $nfrmno = $this->input->get('nfrmno');
+        $vorgno = $this->input->get('vorgno');
+        $cyear  = $this->input->get('cyear');
+        $cyear2 = $this->input->get('cyear2');
+        $nrunno = $this->input->get('runNo');
+
+        if (!$nrunno || !$cyear2) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Missing parameters']);
+            return;
+        }
+
+        $files = $this->sc->getScrapFiles($nfrmno, $vorgno, $cyear, $cyear2, $nrunno);
+
+        $result = array_map(function ($row) {
+            $path     = $row->FILE_PATH;
+            $basename = basename($path);
+            // Strip datetime prefix (YmdHi_originalname)
+            $origName = preg_replace('/^\d{12}_/', '', $basename);
+            return [
+                'file_path' => $path,
+                'file_name' => $basename,
+                'orig_name' => $origName,
+            ];
+        }, $files);
+
+        echo json_encode($result);
+    }
+
+    public function downloadScrapFile()
+    {
+        $filePath = $this->input->get('path');
+
+        if (!$filePath || !file_exists($filePath)) {
+            http_response_code(404);
+            echo json_encode(['error' => 'File not found']);
+            return;
+        }
+
+        $basename = basename($filePath);
+        $origName = preg_replace('/^\d{12}_/', '', $basename);
+        $dir      = dirname($filePath);
+
+        $this->downloadFile($origName, $basename, $dir);
     }
 }
