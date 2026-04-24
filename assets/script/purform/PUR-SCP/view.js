@@ -117,10 +117,10 @@ $(async function () {
     const searchFlowResult = await searchFlow({ ...sharedParams, CSTEPST: "5" });
     const approved = await loadApprovedSteps(searchFlowResult);
 
-    let data, flow, bankGuarantees;
+    let data, flow, bankGuarantees, purscpForm;
 
     try {
-        [data, flow, bankGuarantees] = await Promise.all([
+        [data, flow, bankGuarantees, purscpForm] = await Promise.all([
             $.ajax({
                 type: "GET",
                 url: `${host}/purform/PUR-SCP/main/getDataPriceByRunNo`,
@@ -131,6 +131,12 @@ $(async function () {
             $.ajax({
                 type: "GET",
                 url: `${host}/purform/PUR-SCP/main/getBankGuarantees`,
+                data: { nfrmno, vorgno, cyear, cyear2, runNo: runno },
+                dataType: "json",
+            }),
+            $.ajax({
+                type: "GET",
+                url: `${host}/purform/PUR-SCP/main/getPurscpForm`,
                 data: { nfrmno, vorgno, cyear, cyear2, runNo: runno },
                 dataType: "json",
             }),
@@ -189,7 +195,7 @@ $(async function () {
                     btn.disabled = true;
                     btn.innerHTML = '<span class="loading loading-spinner loading-xs"></span> Generating...';
                     try {
-                        const html = buildScrapPdfHtml({ data, newYear, newPeriod, oldPricePeriod, newPricePeriod, dateRange, flow: flow.html, bankGuarantees, approved });
+                        const html = buildScrapPdfHtml({ data, newYear, newPeriod, oldPricePeriod, newPricePeriod, dateRange, flow: flow.html, bankGuarantees, approved, remark: purscpForm?.REMARK ?? "" });
                         const fileName = `ScrapMaster_Y${newYear}_${newPeriod}F_run${runno}.pdf`;
                         await generatePdf({
                             html,
@@ -255,6 +261,16 @@ $(async function () {
     setLoadingState(false);
 
     renderBankGuarantees(bankGuarantees);
+
+    // ---- Remark ----
+    const remark = purscpForm?.REMARK ?? "";
+    if (remark) {
+        $("#remarkText").text(remark);
+        $("#remarkEmpty").addClass("hidden");
+    } else {
+        $("#remarkText").text("");
+        $("#remarkEmpty").removeClass("hidden");
+    }
 
     // ---- Attached Files ----
     try {

@@ -52,18 +52,71 @@ $(async function () {
     let nextYear = null;
     let nextPeriod = null;
 
+    // ---- Period helpers ----
+    function getPeriodDateRange(year, period) {
+        return period === 1
+            ? `1 Jan'${year} - 30 Jun'${year}`
+            : `1 Jul'${year} - 31 Dec'${year}`;
+    }
+
+    function applyPeriodDisplay(year, period) {
+        const dateRange = getPeriodDateRange(year, period);
+        $(".fyear").text(`AMEC Scrap Master (Y${year}/${period}F) ${dateRange}`);
+        $(".new-price-period").text(`Y${year}/${period}F`);
+        $(".new-period").text(`FY${year}/${period}F`);
+        $("#periodPreview").text(`Y${year}/${period}F — ${dateRange}`).css('opacity', 1);
+    }
+
+    function setPeriodBlocked(blocked) {
+        if (blocked) {
+            $("#periodErrorMsg").removeClass("hidden").addClass("flex");
+            $("#periodPreview").css('opacity', 0);
+            $("#saveFile").prop("disabled", true).addClass("btn-disabled");
+            $("#btnSaveToDb").prop("disabled", true).addClass("btn-disabled");
+        } else {
+            $("#periodErrorMsg").addClass("hidden").removeClass("flex");
+            $("#saveFile").prop("disabled", false).removeClass("btn-disabled");
+            $("#btnSaveToDb").prop("disabled", false).removeClass("btn-disabled");
+        }
+    }
+
+    async function checkPeriodExists(year, period) {
+        try {
+            const res = await $.ajax({
+                type: "GET",
+                url: `${host}/purform/PUR-SCP/main/checkPeriodExists`,
+                data: { fyear: year, period },
+                dataType: "json",
+            });
+            setPeriodBlocked(res.exists);
+        } catch (e) {
+            setPeriodBlocked(false);
+        }
+    }
+
+    function onPeriodInputChange() {
+        const year = parseInt($("#selectFYear").val());
+        const period = parseInt($("#selectPeriod").val());
+        if (!year || !period) return;
+        nextYear = year;
+        nextPeriod = period;
+        applyPeriodDisplay(year, period);
+        checkPeriodExists(year, period);
+    }
+
+    $("#selectFYear, #selectPeriod").on("change input", onPeriodInputChange);
+
     if (data.length > 0) {
         const fyear = parseInt(data[0].FYEAR);
         const period = parseInt(data[0].PERIOD);
-        // Next period
+        // Calculate default next period
         nextPeriod = period === 1 ? 2 : 1;
         nextYear = period === 1 ? fyear : fyear + 1;
-        const dateRange = nextPeriod === 1
-            ? `1 Jan'${nextYear} - 30 Jun'${nextYear}`
-            : `1 Jul'${nextYear} - 31 Dec'${nextYear}`;
-        $(".fyear").text(`AMEC Scrap Master (Y${nextYear}/${nextPeriod}F) ${dateRange}`);
-        $(".new-price-period").text(`Y${nextYear}/${nextPeriod}F`);
-        $(".new-period").text(`FY${nextYear}/${nextPeriod}F`);
+        // Pre-fill selectors with auto-calculated values
+        $("#selectFYear").val(nextYear);
+        $("#selectPeriod").val(nextPeriod);
+        applyPeriodDisplay(nextYear, nextPeriod);
+        checkPeriodExists(nextYear, nextPeriod);
     }
 
     if (data.length > 0) {
@@ -446,6 +499,15 @@ $(async function () {
 
     // ---- Save winner data to database ----
     $("#btnSaveToDb").on("click", async function () {
+        const selectedFYear = parseInt($("#selectFYear").val());
+        const selectedPeriod = parseInt($("#selectPeriod").val());
+        if (!selectedFYear || !selectedPeriod) {
+            Swal.fire({ icon: 'warning', title: 'กรุณาระบุ FYEAR และ Period ก่อนบันทึก' });
+            return;
+        }
+        nextYear = selectedFYear;
+        nextPeriod = selectedPeriod;
+
         const selectedQuotations = getSelectedQuotations();
         const rows = table.rows().data().toArray().filter(r => r._UPDATE_TYPE === 'update' && (r._NEW_VENDOR || r._NEW_PRICE));
         if (!rows.length) {
@@ -496,6 +558,7 @@ $(async function () {
                         cyear2: result.data.CYEAR2,
                         selectedQuotations,
                         bankGuarantees,
+                        remark: $("#remarkInput").val().trim(),
                     }),
                 dataType: "json",
             });
@@ -503,10 +566,14 @@ $(async function () {
             await uploadAttachFiles(result.data.NRUNNO, result.data.CYEAR2);
 
             const carryCount = table.rows().data().toArray().filter(r => r._UPDATE_TYPE === 'carry-over').length;
+            const skippedCount = res.skipped ?? 0;
+            const insertedCount = res.inserted ?? rows.length;
+            const skippedNote = skippedCount > 0 ? `\nข้าม ${skippedCount} รายการที่มีอยู่แล้ว` : '';
+            const carryNote = carryCount > 0 ? `\n${carryCount} รายการใช้ราคาเดิม (Carry Over)` : '';
             await Swal.fire({
                 icon: 'success',
-                title: `บันทึกสำเร็จ ${res.count ?? rows.length} รายการ`,
-                text: carryCount > 0 ? `${carryCount} รายการใช้ราคาเดิม (Carry Over)` : '',
+                title: `บันทึกสำเร็จ ${insertedCount} รายการ`,
+                text: (skippedNote + carryNote).trim() || undefined,
                 timer: 2500,
             });
             redirectWebflow();

@@ -70,48 +70,79 @@ class Scrap_model extends CI_Model {
         return $query->result();
     }
 
+    public function checkPeriodExists($fyear, $period)
+    {
+        $this->sk->select('COUNT(*) AS CNT')
+            ->from('SCRAP_PRICE')
+            ->where('FYEAR',  (int) $fyear)
+            ->where('PERIOD', (int) $period)
+            ->where('TYPE',   '1');
+        $row = $this->sk->get()->row();
+        return (int) $row->CNT > 0;
+    }
+
     /**
-     * TODO: ยืนยัน TABLE และ COLUMN ที่ถูกต้องก่อน Deploy
-     * สมมติว่า Table = SCRAP_WINNER, Columns = (SCRAP_ID, NEW_VENDOR, NEW_PRICE, EFFECTIVE_DATE)
+     * INSERT WHERE NOT EXISTS — ป้องกัน duplicate โดยไม่แตะข้อมูลเดิม
+     * row ที่มี (SCRAP_ID, FYEAR, PERIOD, TYPE='1') อยู่แล้วจะถูก skip
+     * คืนค่า ['inserted' => n, 'skipped' => n]
      */
     public function saveWinner($rows, $fyear, $period, $nfrmno, $vorgno, $cyear, $nrunno, $cyear2, $selectedQuotations = [])
     {
-        $count = 0;
+        $inserted = 0;
+        $skipped  = 0;
+        $fyear    = (int) $fyear;
+        $period   = (int) $period;
+        $nrunno   = (int) $nrunno;
+        $cyear2   = (int) $cyear2;
+
         foreach ($rows as $row) {
-            $scrapId       = $row['SCRAP_ID'] ?? null;
-            $newVendor     = $row['_NEW_VENDOR'] ?? null;
-            $newPrice      = $row['_NEW_PRICE'] ?? null;
+            $scrapId       = $row['SCRAP_ID']        ?? null;
+            $newVendor     = $row['_NEW_VENDOR']     ?? null;
+            $newPrice      = $row['_NEW_PRICE']      ?? null;
             $effectiveDate = $row['_EFFECTIVE_DATE'] ?? null;
-            $quotation     = $row['QUOTATION'] ?? null;
+            $quotation     = $row['QUOTATION']       ?? null;
 
-            if (!$scrapId)
-                continue;
+            if (!$scrapId) continue;
 
-            $data = [
-                'FYEAR'     => $fyear,
-                'PERIOD'    => $period,
-                'SCRAP_ID'  => $scrapId,
-                'VENDOR'    => $newVendor,
-                'PRICE'     => $newPrice,
-                'QUOTATION' => $quotation,
-                'STATUS'    => '1',
-                'TYPE'      => '1',
-                'NFRMNO'    => $nfrmno,
-                'VORGNO'    => $vorgno,
-                'CYEAR'     => $cyear,
-                'NRUNNO'    => $nrunno,
-                'CYEAR2'    => $cyear2,
-            ];
+            $scrapIdE   = $this->sk->escape($scrapId);
+            $vendorE    = $newVendor  !== null ? $this->sk->escape($newVendor)  : 'NULL';
+            $quotationE = $quotation  !== null ? $this->sk->escape($quotation)  : 'NULL';
+            $nfrmnoE    = $this->sk->escape($nfrmno);
+            $vorgnoE    = $this->sk->escape($vorgno);
+            $cyearE     = $this->sk->escape($cyear);
+            $priceE     = $newPrice !== null ? (float) $newPrice : 'NULL';
+            $effDateSql = $effectiveDate
+                ? "TO_DATE(" . $this->sk->escape($effectiveDate) . ", 'YYYY-MM-DD')"
+                : 'NULL';
 
-            if ($effectiveDate) {
-                $this->sk->set('EFFECTIVE_DATE', "TO_DATE('{$effectiveDate}', 'YYYY-MM-DD')", false);
+            $sql = "
+                INSERT INTO SCRAP_PRICE (
+                    FYEAR, PERIOD, SCRAP_ID, VENDOR, PRICE, QUOTATION,
+                    STATUS, TYPE, NFRMNO, VORGNO, CYEAR, NRUNNO, CYEAR2, EFFECTIVE_DATE
+                )
+                SELECT
+                    {$fyear}, {$period}, {$scrapIdE}, {$vendorE}, {$priceE}, {$quotationE},
+                    '1', '1', {$nfrmnoE}, {$vorgnoE}, {$cyearE}, {$nrunno}, {$cyear2}, {$effDateSql}
+                FROM DUAL
+                WHERE NOT EXISTS (
+                    SELECT 1 FROM SCRAP_PRICE
+                    WHERE SCRAP_ID = {$scrapIdE}
+                      AND FYEAR    = {$fyear}
+                      AND PERIOD   = {$period}
+                      AND TYPE     = '1'
+                )
+            ";
+
+            $this->sk->query($sql);
+            $affected = $this->sk->affected_rows();
+            if ($affected > 0) {
+                $inserted++;
+            } else {
+                $skipped++;
             }
-
-            $this->sk->insert('SCRAP_PRICE', $data);
-            $count++;
         }
 
-        return $count;
+        return ['inserted' => $inserted, 'skipped' => $skipped];
     }
 
     public function getBankGuarantees($nfrmno, $vorgno, $cyear, $cyear2, $nrunno)
@@ -178,6 +209,33 @@ class Scrap_model extends CI_Model {
 
             $this->sk->insert('SCRAP_BGRT', $data);
         }
+    }
+
+    public function savePurscpForm($nfrmno, $vorgno, $cyear, $cyear2, $nrunno, $fyear, $period, $remark)
+    {
+        $data = [
+            'NFRMNO' => $nfrmno,
+            'VORGNO' => $vorgno,
+            'CYEAR'  => $cyear,
+            'CYEAR2' => (int) $cyear2,
+            'NRUNNO' => (int) $nrunno,
+            'FYEAR'  => (int) $fyear,
+            'PERIOD' => (int) $period,
+            'REMARK' => $remark,
+        ];
+        $this->db->insert('PURSCP_FORM', $data);
+    }
+
+    public function getPurscpForm($nfrmno, $vorgno, $cyear, $cyear2, $nrunno)
+    {
+        $this->db->select('*')
+            ->from('PURSCP_FORM')
+            ->where('NFRMNO', $nfrmno)
+            ->where('VORGNO', $vorgno)
+            ->where('CYEAR',  $cyear)
+            ->where('CYEAR2', (int) $cyear2)
+            ->where('NRUNNO', (int) $nrunno);
+        return $this->db->get()->row();
     }
 
 }
