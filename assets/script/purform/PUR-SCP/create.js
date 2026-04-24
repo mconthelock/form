@@ -503,13 +503,13 @@ $(async function () {
             await uploadAttachFiles(result.data.NRUNNO, result.data.CYEAR2);
 
             const carryCount = table.rows().data().toArray().filter(r => r._UPDATE_TYPE === 'carry-over').length;
-            Swal.fire({
+            await Swal.fire({
                 icon: 'success',
                 title: `บันทึกสำเร็จ ${res.count ?? rows.length} รายการ`,
                 text: carryCount > 0 ? `${carryCount} รายการใช้ราคาเดิม (Carry Over)` : '',
                 timer: 2500,
             });
-            // redirectWebflow();
+            redirectWebflow();
             $("#saveFooter").addClass("hidden");
         } catch (err) {
             Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาด', text: err.responseText || 'Save failed' });
