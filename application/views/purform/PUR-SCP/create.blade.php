@@ -43,6 +43,34 @@
             </div>
         </div>
 
+        {{-- Period Selection Card --}}
+        <div class="card bg-white shadow border border-base-200" id="periodSelectCard">
+            <div class="card-body p-4">
+                <div class="flex flex-wrap items-center gap-4">
+                    <div class="flex items-center gap-2 text-base-content/70 shrink-0">
+                        <i class="icofont-calendar text-primary text-lg"></i>
+                        <span class="font-medium text-sm">New Price Period</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <label class="label-text text-sm font-medium">Year (FYEAR)</label>
+                        <input type="number" id="selectFYear" class="input input-bordered input-sm w-28" placeholder="FYEAR" min="2000" max="2099">
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <label class="label-text text-sm font-medium">Period</label>
+                        <select id="selectPeriod" class="select select-bordered select-sm">
+                            <option value="1">1&nbsp;&nbsp;(Jan – Jun)</option>
+                            <option value="2">2&nbsp;&nbsp;(Jul – Dec)</option>
+                        </select>
+                    </div>
+                    <div id="periodPreview" class="text-sm font-semibold text-primary" style="opacity:0;transition:opacity .2s">—</div>
+                    <div id="periodErrorMsg" class="hidden items-center gap-1.5 text-error text-sm font-medium">
+                        <i class="icofont-close-circled text-base"></i>
+                        <span>Period นี้มีข้อมูลอยู่แล้ว — กรุณาเลือก Period อื่น</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         {{-- Quotation Filter Card --}}
         <div class="card bg-white shadow border border-base-200 hidden" id="quotationFilterCard">
             <div class="card-body p-4">
@@ -186,6 +214,23 @@
                     <ul id="attachFileList" class="space-y-2">
                         <li id="attachEmptyMsg" class="text-xs text-base-content/40 italic">ยังไม่มีไฟล์แนบ</li>
                     </ul>
+                </div>
+            </div>
+        </div>
+
+        {{-- Remark Section --}}
+        <div class="card bg-white shadow border border-base-200" id="remarkCard">
+            <div class="card-body p-0">
+                <div class="flex items-center px-4 py-3 border-b border-base-200">
+                    <div class="flex items-center gap-2 text-base-content/70 text-sm">
+                        <i class="icofont-notepad text-secondary text-lg"></i>
+                        <span class="font-medium">Remark</span>
+                    </div>
+                </div>
+                <div class="p-4">
+                    <textarea id="remarkInput" rows="3"
+                        class="textarea textarea-bordered w-full text-sm"
+                        placeholder="หมายเหตุ / Remark (ถ้ามี)"></textarea>
                 </div>
             </div>
         </div>

@@ -73,23 +73,35 @@
                         <tbody></tbody>
                     </table>
 
-                    <div class="p-4 overflow-x-auto rounded-lg">
-                        <table id="bankGuaranteeTable"
-                            class="table table-sm border-collapse w-80
-                               [&_th]:border [&_th]:border-slate-400 [&_th]:text-xs [&_th]:uppercase [&_th]:tracking-wide
-                               [&_td]:border [&_td]:border-slate-400 [&_td]:py-2">
-                            <thead>
-                                <tr id="bgVendorHeaderRow">
-                                    <th class="bg-base-200 w-48 align-middle">Bank Guarantee Amount</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr id="bgAmountRow">
-                                    <td class="bg-base-200 font-medium text-sm text-base-content/70 whitespace-nowrap">Amount (THB)</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                        <p id="bgEmptyMsg" class="text-xs text-base-content/40 italic mt-2">No bank guarantee data.</p>
+                    <div class="p-4 space-y-3">
+                        <div class="overflow-x-auto">
+                            <table id="bankGuaranteeTable"
+                                class="table table-sm border-collapse w-80
+                                   [&_th]:border [&_th]:border-slate-400 [&_th]:text-xs [&_th]:uppercase [&_th]:tracking-wide
+                                   [&_td]:border [&_td]:border-slate-400 [&_td]:py-2">
+                                <thead>
+                                    <tr id="bgVendorHeaderRow">
+                                        <th class="bg-base-200 w-48 align-middle">Bank Guarantee Amount</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr id="bgAmountRow">
+                                        <td class="bg-base-200 font-medium text-sm text-base-content/70 whitespace-nowrap">Amount (THB)</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <p id="bgEmptyMsg" class="text-xs text-base-content/40 italic mt-2">No bank guarantee data.</p>
+                        </div>
+
+                        {{-- Remark --}}
+                        <div>
+                            <div class="flex items-center gap-1.5 text-xs uppercase tracking-wide text-base-content/50 font-semibold mb-1">
+                                <i class="icofont-notepad text-secondary"></i>
+                                Remark
+                            </div>
+                            <p id="remarkText" class="text-sm text-base-content whitespace-pre-wrap border border-base-200 rounded p-2 min-h-[3rem] bg-base-50"></p>
+                            <p id="remarkEmpty" class="text-xs text-base-content/40 italic hidden">ไม่มี Remark</p>
+                        </div>
                     </div>
 
                     <div id="emptyState" class="hidden flex-col items-center justify-center py-16 text-base-content/30">

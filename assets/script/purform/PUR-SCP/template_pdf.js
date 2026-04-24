@@ -10,7 +10,7 @@
  * @param {string} opts.flow          - HTML content for the flow section
  * @param {Array}  opts.approved       - Approved steps [{step, emp}]
  */
-export function buildScrapPdfHtml({ data = [], newYear, newPeriod, oldPricePeriod, newPricePeriod, dateRange, flow, bankGuarantees = [], approved = [] }) {
+export function buildScrapPdfHtml({ data = [], newYear, newPeriod, oldPricePeriod, newPricePeriod, dateRange, flow, bankGuarantees = [], approved = [], remark = "" }) {
     const today = new Date();
     const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
     const todayStr = `${today.getDate()} ${months[today.getMonth()]} '${String(today.getFullYear()).slice(-2)}`;
@@ -336,7 +336,7 @@ export function buildScrapPdfHtml({ data = [], newYear, newPeriod, oldPricePerio
             </table>
         </div>
         <div class="footer-note">
-            Remark : Incase vendors without Bank Guarantee, request pay by cash (Not need to issue "Bank Guarantee")
+            Remark : ${remark || "-"}
         </div>
         ` : ""}
 

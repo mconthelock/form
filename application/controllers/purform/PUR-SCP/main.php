@@ -32,6 +32,21 @@ class main extends MY_Controller {
         echo json_encode($data);
     }
 
+    public function checkPeriodExists()
+    {
+        $fyear  = (int) $this->input->get('fyear');
+        $period = (int) $this->input->get('period');
+
+        if (!$fyear || !$period) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Missing parameters']);
+            return;
+        }
+
+        $exists = $this->sc->checkPeriodExists($fyear, $period);
+        echo json_encode(['exists' => $exists]);
+    }
+
     public function getDataPriceByRunNo()
     {
         $nfrmno = $this->input->get('nfrmno');
@@ -83,6 +98,7 @@ class main extends MY_Controller {
                               ? $body['selectedQuotations'] : [];
         $bankGuarantees     = isset($body['bankGuarantees']) && is_array($body['bankGuarantees'])
                               ? $body['bankGuarantees'] : [];
+        $remark             = isset($body['remark']) ? trim($body['remark']) : '';
 
         if (!is_array($rows) || empty($rows)) {
             http_response_code(400);
@@ -90,13 +106,15 @@ class main extends MY_Controller {
             return;
         }
 
-        $count = $this->sc->saveWinner($rows, $fyear, $period, $nfrmno, $vorgno, $cyear, $nrunno, $cyear2, $selectedQuotations);
+        $result = $this->sc->saveWinner($rows, $fyear, $period, $nfrmno, $vorgno, $cyear, $nrunno, $cyear2, $selectedQuotations);
 
         if (!empty($bankGuarantees)) {
             $this->sc->saveBankGuarantees($bankGuarantees, $nfrmno, $vorgno, $cyear, $cyear2, $nrunno, $fyear, $period);
         }
 
-        echo json_encode(['success' => true, 'count' => $count]);
+        $this->sc->savePurscpForm($nfrmno, $vorgno, $cyear, $cyear2, $nrunno, $fyear, $period, $remark);
+
+        echo json_encode(['success' => true, 'inserted' => $result['inserted'], 'skipped' => $result['skipped']]);
     }
 
     public function uploadAttachFiles()
@@ -182,5 +200,23 @@ class main extends MY_Controller {
         $dir      = dirname($filePath);
 
         $this->downloadFile($origName, $basename, $dir);
+    }
+
+    public function getPurscpForm()
+    {
+        $nfrmno = $this->input->get('nfrmno');
+        $vorgno = $this->input->get('vorgno');
+        $cyear  = $this->input->get('cyear');
+        $cyear2 = $this->input->get('cyear2');
+        $nrunno = $this->input->get('runNo');
+
+        if (!$nrunno || !$cyear2) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Missing parameters']);
+            return;
+        }
+
+        $row = $this->sc->getPurscpForm($nfrmno, $vorgno, $cyear, $cyear2, $nrunno);
+        echo json_encode($row ?: (object)[]);
     }
 }
