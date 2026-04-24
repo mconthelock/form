@@ -247,6 +247,9 @@ const reqDateManager = {
     set value(val) {
         this.input.val(val);
     },
+    get date(){
+        return new Date(this.value+ "00:00:00");
+    }
 };
 
 const timeStartManager = {
@@ -683,6 +686,9 @@ export const workCompleteManager = {
     set valueDate(val) {
         this.inputDate.val(val);
     },
+    get date(){
+        return new Date(this.valueDate+ "00:00:00");
+    },
     get valueTime() {
         return this.inputTime.val();
     },
@@ -746,6 +752,9 @@ const disableCompleteManager = {
     },
     set value(val) {
         this.inputDate.val(val);
+    },
+    get date() {
+        return new Date(this.valueDate + "00:00:00");
     },
     get valueTime() {
         return this.inputTime.val();
@@ -921,7 +930,7 @@ export const actionForm = {
                 USERDATA: {
                     TID_REQUESTER: data.REQBY,
                     TID_REQNO: data.REQNO,
-                    TID_REQ_DATE: reqDateManager.value,
+                    TID_REQ_DATE: reqDateManager.date,
                     TID_TIMESTART: timeStartManager.value,
                     TID_TIMEEND: timeEndManager.value,
                     TID_SERVERNAME: serverNameManager.value,
@@ -941,7 +950,7 @@ export const actionForm = {
             if (data.FORMTYPE == 2) {
                 preData.CONTROLLERDATA = {
                     TID_REQUESTER: controllerManager.value,
-                    TID_REQ_DATE: reqDateManager.value,
+                    TID_REQ_DATE: reqDateManager.date,
                     TID_TIMESTART: timeStartManager.value,
                     TID_TIMEEND: addMinutesToTime(timeEndManager.value, 30),
                     TID_SERVERNAME: serverNameManager.value,
@@ -987,14 +996,14 @@ export const actionForm = {
                 switch (cextData) {
                     case "03":
                         formData.data = {
-                            TID_COMP_DATE: $("#compDate").val(),
-                            TID_COMP_TIME: $("#compTime").val(),
+                            TID_COMP_DATE: workCompleteManager.date,
+                            TID_COMP_TIME: workCompleteManager.valueTime,
                         };
                         break;
                     case "05":
                         formData.data = {
-                            TID_DISABLE_DATE: $("#disDate").val(),
-                            TID_DISABLE_TIME: $("#disTime").val(),
+                            TID_DISABLE_DATE: disableCompleteManager.date,
+                            TID_DISABLE_TIME: disableCompleteManager.valueTime,
                         };
                         break;
                 }
