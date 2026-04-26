@@ -1,14 +1,14 @@
 <?php
 use GuzzleHttp\Client;
-require_once APPPATH.'controllers/_file.php';
-require_once APPPATH.'controllers/_form.php';
+//require_once APPPATH.'controllers/_file.php';
+//require_once APPPATH.'controllers/_form.php';
 class Authen extends MY_Controller {
-    use _File, _Form;
+    //use _File, _Form;
 
     protected $client;
     public function __construct(){
         parent::__construct();
-        $this->client = new Client(['verify' => false]);
+        //$this->client = new Client(['verify' => false]);
     }
 
     public function index($id = 1){
@@ -137,6 +137,4 @@ class Authen extends MY_Controller {
     public function setMD5() {
         echo json_encode(md5(substr('00000'.(($_POST['id']/4)-92), -5)));
     }
-
-  
 }
