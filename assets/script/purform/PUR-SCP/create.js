@@ -51,33 +51,37 @@ $(async function () {
 
     let nextYear = null;
     let nextPeriod = null;
+    let isFullYear = false; // true = Full Year (Jan–Dec), บันทึก PERIOD=3 ใน DB แต่ date range แสดงทั้งปี
 
     // ---- Period helpers ----
-    function getPeriodDateRange(year, period) {
+    function getPeriodDateRange(year, period, fullYear = false) {
+        if (fullYear) return `1 Jan'${year} - 31 Dec'${year}`;
         return period === 1
             ? `1 Jan'${year} - 30 Jun'${year}`
             : `1 Jul'${year} - 31 Dec'${year}`;
     }
 
-    function applyPeriodDisplay(year, period) {
-        const dateRange = getPeriodDateRange(year, period);
-        $(".fyear").text(`AMEC Scrap Master (Y${year}/${period}F) ${dateRange}`);
-        $(".new-price-period").text(`Y${year}/${period}F`);
-        $(".new-period").text(`FY${year}/${period}F`);
-        $("#periodPreview").text(`Y${year}/${period}F — ${dateRange}`).css('opacity', 1);
+    function applyPeriodDisplay(year, period, fullYear = false) {
+        const dateRange = getPeriodDateRange(year, period, fullYear);
+        const periodLabel = fullYear ? '/1-2F' : '/'+period+'F';
+        $(".fyear").text(`AMEC Scrap Master (Y${year}${periodLabel}) ${dateRange}`);
+        $(".new-price-period").text(`Y${year}${periodLabel}`);
+        $(".new-period").text(`FY${year}${periodLabel}`);
+        $("#periodPreview").text(`Y${year}${periodLabel} — ${dateRange}`).css('opacity', 1);
     }
 
-    function setPeriodBlocked(blocked) {
-        if (blocked) {
+    // setPeriodWarn: แสดงแค่ warning ไม่บล็อก submit
+    // เพราะอาจสร้าง 2 form ในปีเดียวกัน (เช่น A1-A2 กับ Other)
+    // ป้องกัน duplicate ระดับ row ด้วย WHERE NOT EXISTS ใน saveWinner แทน
+    function setPeriodWarn(hasExisting) {
+        if (hasExisting) {
             $("#periodErrorMsg").removeClass("hidden").addClass("flex");
-            $("#periodPreview").css('opacity', 0);
-            $("#saveFile").prop("disabled", true).addClass("btn-disabled");
-            $("#btnSaveToDb").prop("disabled", true).addClass("btn-disabled");
         } else {
             $("#periodErrorMsg").addClass("hidden").removeClass("flex");
-            $("#saveFile").prop("disabled", false).removeClass("btn-disabled");
-            $("#btnSaveToDb").prop("disabled", false).removeClass("btn-disabled");
         }
+        // ไม่ disable ปุ่ม — ยังสามารถ submit ได้เสมอ
+        $("#saveFile").prop("disabled", false).removeClass("btn-disabled");
+        $("#btnSaveToDb").prop("disabled", false).removeClass("btn-disabled");
     }
 
     async function checkPeriodExists(year, period) {
@@ -88,20 +92,21 @@ $(async function () {
                 data: { fyear: year, period },
                 dataType: "json",
             });
-            setPeriodBlocked(res.exists);
+            setPeriodWarn(res.exists);
         } catch (e) {
-            setPeriodBlocked(false);
+            setPeriodWarn(false);
         }
     }
 
     function onPeriodInputChange() {
         const year = parseInt($("#selectFYear").val());
-        const period = parseInt($("#selectPeriod").val());
-        if (!year || !period) return;
+        const periodVal = $("#selectPeriod").val();
+        if (!year || !periodVal) return;
+        isFullYear = periodVal === 'full';
         nextYear = year;
-        nextPeriod = period;
-        applyPeriodDisplay(year, period);
-        checkPeriodExists(year, period);
+        nextPeriod = isFullYear ? 3 : parseInt(periodVal); // Full Year บันทึกเป็น PERIOD=3 ใน DB
+        applyPeriodDisplay(year, nextPeriod, isFullYear);
+        checkPeriodExists(year, nextPeriod);
     }
 
     $("#selectFYear, #selectPeriod").on("change input", onPeriodInputChange);
@@ -109,13 +114,14 @@ $(async function () {
     if (data.length > 0) {
         const fyear = parseInt(data[0].FYEAR);
         const period = parseInt(data[0].PERIOD);
-        // Calculate default next period
+        // Calculate default next period (auto-suggest ครึ่งปีถัดไป, ไม่ auto-suggest Full Year)
         nextPeriod = period === 1 ? 2 : 1;
         nextYear = period === 1 ? fyear : fyear + 1;
+        isFullYear = false;
         // Pre-fill selectors with auto-calculated values
         $("#selectFYear").val(nextYear);
         $("#selectPeriod").val(nextPeriod);
-        applyPeriodDisplay(nextYear, nextPeriod);
+        applyPeriodDisplay(nextYear, nextPeriod, false);
         checkPeriodExists(nextYear, nextPeriod);
     }
 
@@ -130,6 +136,7 @@ $(async function () {
 
     const table = await createTable({
         data: data,
+        order : [[2, 'asc'],[0, 'asc']], // order by QUOTATION then SCRAP_ID
         buttons: [
             {
                 text: '<i class="icofont-file-excel"></i> Export Excel',
@@ -188,7 +195,7 @@ $(async function () {
             { data: "VENDOR" },
             { data: "PRICE" },
             { data: null, className: "bg-amber-100", render: function (data, type, row) { return row._NEW_VENDOR || ''; } },
-            { data: null, className: "bg-amber-100", render: function (data, type, row) { return row._NEW_PRICE != null ? row._NEW_PRICE : ''; } },
+            { data: null, className: "bg-amber-100", render: function (data, type, row) { return row._NEW_PRICE != null && row._NEW_PRICE !== '' ? parseFloat(row._NEW_PRICE).toFixed(2) : ''; } },
             { data: "UNIT" },
             { data: "BOI", render: function (data, type, row) { return data === '1' ? 'BOI' : 'Non-BOI'; } },
             { data: null, className: "bg-amber-100", render: function (data, type, row) { return row._EFFECTIVE_DATE || ''; } },
@@ -500,13 +507,16 @@ $(async function () {
     // ---- Save winner data to database ----
     $("#btnSaveToDb").on("click", async function () {
         const selectedFYear = parseInt($("#selectFYear").val());
-        const selectedPeriod = parseInt($("#selectPeriod").val());
-        if (!selectedFYear || !selectedPeriod) {
+        const periodVal = $("#selectPeriod").val();
+        const selectedIsFullYear = periodVal === 'full';
+        const selectedPeriod = selectedIsFullYear ? 3 : parseInt(periodVal);
+        if (!selectedFYear || !periodVal) {
             Swal.fire({ icon: 'warning', title: 'กรุณาระบุ FYEAR และ Period ก่อนบันทึก' });
             return;
         }
         nextYear = selectedFYear;
         nextPeriod = selectedPeriod;
+        isFullYear = selectedIsFullYear;
 
         const selectedQuotations = getSelectedQuotations();
         const rows = table.rows().data().toArray().filter(r => r._UPDATE_TYPE === 'update' && (r._NEW_VENDOR || r._NEW_PRICE));
@@ -550,12 +560,14 @@ $(async function () {
                     {
                         fyear: nextYear,
                         period: nextPeriod,
+                        isFullYear,
                         rows,
                         nfrmno: nfrmno,
                         vorgno: vorgno,
                         cyear: cyear,
                         nrunno: result.data.NRUNNO,
                         cyear2: result.data.CYEAR2,
+                        empno,
                         selectedQuotations,
                         bankGuarantees,
                         remark: $("#remarkInput").val().trim(),
@@ -568,15 +580,26 @@ $(async function () {
             const carryCount = table.rows().data().toArray().filter(r => r._UPDATE_TYPE === 'carry-over').length;
             const skippedCount = res.skipped ?? 0;
             const insertedCount = res.inserted ?? rows.length;
-            const skippedNote = skippedCount > 0 ? `\nข้าม ${skippedCount} รายการที่มีอยู่แล้ว` : '';
-            const carryNote = carryCount > 0 ? `\n${carryCount} รายการใช้ราคาเดิม (Carry Over)` : '';
-            await Swal.fire({
-                icon: 'success',
-                title: `บันทึกสำเร็จ ${insertedCount} รายการ`,
-                text: (skippedNote + carryNote).trim() || undefined,
-                timer: 2500,
-            });
-            redirectWebflow();
+            const skippedNote = skippedCount > 0 ? `ข้าม ${skippedCount} รายการที่มีอยู่แล้วใน Period นี้` : '';
+            const carryNote = carryCount > 0 ? `${carryCount} รายการใช้ราคาเดิม (Carry Over)` : '';
+            const noteLines = [skippedNote, carryNote].filter(Boolean).join('\n');
+
+            // ถ้า insert ได้ 0 รายการ (ทุก row ถูก skip) แสดง warning แทน success
+            if (insertedCount === 0) {
+                await Swal.fire({
+                    icon: 'warning',
+                    title: 'ไม่มีข้อมูลใหม่ถูกบันทึก',
+                    text: `ทุก row ของ Period นี้มีอยู่แล้ว (${skippedCount} รายการถูกข้าม)\nอาจเป็นเพราะ form อื่นบันทึก Period เดียวกันไปแล้ว`,
+                });
+            } else {
+                await Swal.fire({
+                    icon: 'success',
+                    title: `บันทึกสำเร็จ ${insertedCount} รายการ`,
+                    text: noteLines || undefined,
+                    timer: 2500,
+                });
+                redirectWebflow();
+            }
             $("#saveFooter").addClass("hidden");
         } catch (err) {
             Swal.fire({ icon: 'error', title: 'เกิดข้อผิดพลาด', text: err.responseText || 'Save failed' });
