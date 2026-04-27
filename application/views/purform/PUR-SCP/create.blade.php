@@ -60,12 +60,13 @@
                         <select id="selectPeriod" class="select select-bordered select-sm">
                             <option value="1">1&nbsp;&nbsp;(Jan – Jun)</option>
                             <option value="2">2&nbsp;&nbsp;(Jul – Dec)</option>
+                            <option value="full">Full Year&nbsp;&nbsp;(Jan – Dec)</option>
                         </select>
                     </div>
                     <div id="periodPreview" class="text-sm font-semibold text-primary" style="opacity:0;transition:opacity .2s">—</div>
-                    <div id="periodErrorMsg" class="hidden items-center gap-1.5 text-error text-sm font-medium">
-                        <i class="icofont-close-circled text-base"></i>
-                        <span>Period นี้มีข้อมูลอยู่แล้ว — กรุณาเลือก Period อื่น</span>
+                    <div id="periodErrorMsg" class="hidden items-center gap-1.5 text-warning text-sm font-medium">
+                        <i class="icofont-warning-alt text-base"></i>
+                        <span>Period นี้มีข้อมูลบางส่วนอยู่แล้ว — row ที่ซ้ำจะถูกข้ามอัตโนมัติ</span>
                     </div>
                 </div>
             </div>

@@ -99,6 +99,8 @@ class main extends MY_Controller {
         $bankGuarantees     = isset($body['bankGuarantees']) && is_array($body['bankGuarantees'])
                               ? $body['bankGuarantees'] : [];
         $remark             = isset($body['remark']) ? trim($body['remark']) : '';
+        $empno              = $body['empno'] ?? null;
+        $isFullYear         = !empty($body['isFullYear']);
 
         if (!is_array($rows) || empty($rows)) {
             http_response_code(400);
@@ -106,13 +108,13 @@ class main extends MY_Controller {
             return;
         }
 
-        $result = $this->sc->saveWinner($rows, $fyear, $period, $nfrmno, $vorgno, $cyear, $nrunno, $cyear2, $selectedQuotations);
+        $result = $this->sc->saveWinner($rows, $fyear, $period, $nfrmno, $vorgno, $cyear, $nrunno, $cyear2, $selectedQuotations, $empno);
 
         if (!empty($bankGuarantees)) {
             $this->sc->saveBankGuarantees($bankGuarantees, $nfrmno, $vorgno, $cyear, $cyear2, $nrunno, $fyear, $period);
         }
 
-        $this->sc->savePurscpForm($nfrmno, $vorgno, $cyear, $cyear2, $nrunno, $fyear, $period, $remark);
+        $this->sc->savePurscpForm($nfrmno, $vorgno, $cyear, $cyear2, $nrunno, $fyear, $period, $remark, $isFullYear);
 
         echo json_encode(['success' => true, 'inserted' => $result['inserted'], 'skipped' => $result['skipped']]);
     }

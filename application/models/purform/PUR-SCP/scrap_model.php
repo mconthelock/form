@@ -86,7 +86,7 @@ class Scrap_model extends CI_Model {
      * row ที่มี (SCRAP_ID, FYEAR, PERIOD, TYPE='1') อยู่แล้วจะถูก skip
      * คืนค่า ['inserted' => n, 'skipped' => n]
      */
-    public function saveWinner($rows, $fyear, $period, $nfrmno, $vorgno, $cyear, $nrunno, $cyear2, $selectedQuotations = [])
+    public function saveWinner($rows, $fyear, $period, $nfrmno, $vorgno, $cyear, $nrunno, $cyear2, $selectedQuotations = [], $empno = null)
     {
         $inserted = 0;
         $skipped  = 0;
@@ -111,6 +111,7 @@ class Scrap_model extends CI_Model {
             $vorgnoE    = $this->sk->escape($vorgno);
             $cyearE     = $this->sk->escape($cyear);
             $priceE     = $newPrice !== null ? (float) $newPrice : 'NULL';
+            $empnoE     = $empno    !== null ? $this->sk->escape($empno)        : 'NULL';
             $effDateSql = $effectiveDate
                 ? "TO_DATE(" . $this->sk->escape($effectiveDate) . ", 'YYYY-MM-DD')"
                 : 'NULL';
@@ -118,11 +119,11 @@ class Scrap_model extends CI_Model {
             $sql = "
                 INSERT INTO SCRAP_PRICE (
                     FYEAR, PERIOD, SCRAP_ID, VENDOR, PRICE, QUOTATION,
-                    STATUS, TYPE, NFRMNO, VORGNO, CYEAR, NRUNNO, CYEAR2, EFFECTIVE_DATE
+                    STATUS, TYPE, NFRMNO, VORGNO, CYEAR, NRUNNO, CYEAR2, EFFECTIVE_DATE, EMP_CREATE
                 )
                 SELECT
                     {$fyear}, {$period}, {$scrapIdE}, {$vendorE}, {$priceE}, {$quotationE},
-                    '1', '1', {$nfrmnoE}, {$vorgnoE}, {$cyearE}, {$nrunno}, {$cyear2}, {$effDateSql}
+                    '1', '1', {$nfrmnoE}, {$vorgnoE}, {$cyearE}, {$nrunno}, {$cyear2}, {$effDateSql}, {$empnoE}
                 FROM DUAL
                 WHERE NOT EXISTS (
                     SELECT 1 FROM SCRAP_PRICE
@@ -211,17 +212,18 @@ class Scrap_model extends CI_Model {
         }
     }
 
-    public function savePurscpForm($nfrmno, $vorgno, $cyear, $cyear2, $nrunno, $fyear, $period, $remark)
+    public function savePurscpForm($nfrmno, $vorgno, $cyear, $cyear2, $nrunno, $fyear, $period, $remark, $isFullYear = false)
     {
         $data = [
-            'NFRMNO' => $nfrmno,
-            'VORGNO' => $vorgno,
-            'CYEAR'  => $cyear,
-            'CYEAR2' => (int) $cyear2,
-            'NRUNNO' => (int) $nrunno,
-            'FYEAR'  => (int) $fyear,
-            'PERIOD' => (int) $period,
-            'REMARK' => $remark,
+            'NFRMNO'       => $nfrmno,
+            'VORGNO'       => $vorgno,
+            'CYEAR'        => $cyear,
+            'CYEAR2'       => (int) $cyear2,
+            'NRUNNO'       => (int) $nrunno,
+            'FYEAR'        => (int) $fyear,
+            'PERIOD'       => (int) $period,
+            'REMARK'       => $remark,
+            'IS_FULL_YEAR' => $isFullYear ? 1 : 0,
         ];
         $this->db->insert('PURSCP_FORM', $data);
     }

@@ -156,16 +156,20 @@ $(async function () {
 
     if (data.length) {
         const { FYEAR, PERIOD, NEW_FYEAR, NEW_PERIOD } = data[0];
+        const isFullYear = purscpForm?.IS_FULL_YEAR == 1;
         newYear        = parseInt(NEW_FYEAR);
         newPeriod      = parseInt(NEW_PERIOD);
-        dateRange      = buildDateRange(newYear, newPeriod);
+        dateRange      = isFullYear
+            ? `1 Jan'${newYear} - 31 Dec'${newYear}`
+            : buildDateRange(newYear, newPeriod);
+        const periodLabel  = isFullYear ? '/1-2F' : `/${newPeriod}F`;
         oldPricePeriod = FYEAR && PERIOD ? `Y${FYEAR}/${PERIOD}F` : "";
-        newPricePeriod = `Y${newYear}/${newPeriod}F`;
+        newPricePeriod = `Y${newYear}${periodLabel}`;
 
         $(".old-price-period").text(oldPricePeriod);
-        $(".fyear").text(`AMEC Scrap Master (Y${newYear}/${newPeriod}F) ${dateRange}`);
+        $(".fyear").text(`AMEC Scrap Master (Y${newYear}${periodLabel}) ${dateRange}`);
         $(".new-price-period").text(newPricePeriod);
-        $(".new-period").text(`FY${newYear}/${newPeriod}F`);
+        $(".new-period").text(`FY${newYear}${periodLabel}`);
         $emptyState.addClass("hidden");
     } else {
         $(".old-price-period").text("");
