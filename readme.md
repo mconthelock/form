@@ -1,6 +1,6 @@
 # Get Start
 
-## Update 2026-01-16
+## Update 2026-01-27
 
 - Change Build Tools from <mark>webpack</mark> to be <mark>Rspack</mark>
 
