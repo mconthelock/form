@@ -4,6 +4,6 @@ module.exports = {
     purCpm: "./assets/script/purform/PUR-CPM/index.js",
 
     // Scrap
-    purScp_create: "./assets/script/purform/PUR-SCP/create.js",
-    purScp_view: "./assets/script/purform/PUR-SCP/view.js",
+    purScp_create: "./assets/script/purform/PUR-SCB/create.js",
+    purScp_view: "./assets/script/purform/PUR-SCB/view.js",
 };
