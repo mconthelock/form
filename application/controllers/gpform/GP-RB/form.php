@@ -14,6 +14,7 @@ class form extends MY_Controller{
     }
 
     public function main(){
-
+        //echo "GP-RB Form";
+        $this->views('gpform/GP-RB/create');
     }
 }
