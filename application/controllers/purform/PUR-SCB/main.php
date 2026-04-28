@@ -10,7 +10,7 @@ class main extends MY_Controller {
     public function __construct()
     {
         parent::__construct();
-        $this->load->model('purform/PUR-SCP/scrap_model', 'sc');
+        $this->load->model('purform/PUR-SCB/scrap_model', 'sc');
         $this->upload_path = $_ENV['AMEC_FILE_PATH'] . ($this->_servername() == 'amecweb' ? 'production' : 'development') . "/Form/PUR/PURSCP/";
     }
 
@@ -20,9 +20,9 @@ class main extends MY_Controller {
         $cyear2 = $this->input->get('y2');
         $nrunno = $this->input->get('runNo');
         if (!$cyear2 || !$nrunno) {
-            $this->views('purform/PUR-SCP/create');
+            $this->views('purform/PUR-SCB/create');
         } else {
-            $this->views('purform/PUR-SCP/view');
+            $this->views('purform/PUR-SCB/view');
         }
     }
 

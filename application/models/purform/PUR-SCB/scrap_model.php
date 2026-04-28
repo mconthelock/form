@@ -225,13 +225,13 @@ class Scrap_model extends CI_Model {
             'REMARK'       => $remark,
             'IS_FULL_YEAR' => $isFullYear ? 1 : 0,
         ];
-        $this->db->insert('PURSCP_FORM', $data);
+        $this->db->insert('PURSCB_FORM', $data);
     }
 
     public function getPurscpForm($nfrmno, $vorgno, $cyear, $cyear2, $nrunno)
     {
         $this->db->select('*')
-            ->from('PURSCP_FORM')
+            ->from('PURSCB_FORM')
             ->where('NFRMNO', $nfrmno)
             ->where('VORGNO', $vorgno)
             ->where('CYEAR',  $cyear)
