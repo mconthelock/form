@@ -38,7 +38,8 @@ class Main extends MY_Controller {
                     'VORGNO' => $vorgno,
                     'CYEAR'  => $cyear,
                     'CYEAR2' => $cyear2,
-                    'NRUNNO' => $nrunno
+                    'NRUNNO' => $nrunno,
+                    'EMPNO'  => $empno
             ];
             $data['formNumber'] = $this->getFormNo($condition);
             $data['mode']       = $this->getMode($condition);
