@@ -414,5 +414,75 @@
                 });
             });
         });
+
+        document.addEventListener('DOMContentLoaded', () => {
+        
+        // 1. ตารางจับคู่ Position และ Checkbox ID
+        const positionMapping = {
+            'P': 'chkP', 'PRESIDENT': 'chkP',
+            'GM': 'chkGM', 'GENERAL MANAGER': 'chkGM',
+            'DIM': 'chkDIM', 'DDIM': 'chkDDIM',
+            'DEM': 'chkDEM', 'DDEM': 'chkDDEM',
+            'ADV': 'chkADV', 'ADVISOR': 'chkADV',
+            'SENIOR SPECIALIST': 'chkSSPE', 'SR. SPECIALIST': 'chkSSPE',
+            'SEM': 'chkSEM', 'SPECIALIST': 'chkSPE',
+            'ASM': 'chkASM', 'SUP': 'chkSUP', 'SUPERVISOR': 'chkSUP',
+            'FO': 'chkFO', 'FOREMAN': 'chkFO',
+            'LEADER': 'chkLEA', 'ENG': 'chkENG', 'ENGINEER': 'chkENG',
+            'STAFF': 'chkSTAFF'
+        };
+
+        const empPosInput = document.getElementById('empPos');
+
+        // 2. ฟังก์ชันกลางสำหรับสั่งติ๊ก Checkbox ตามค่าที่อยู่ใน Input
+        function triggerPositionMap() {
+            if (!empPosInput) return;
+            const typedPosition = empPosInput.value.trim().toUpperCase();
+
+            if (positionMapping[typedPosition]) {
+                const targetCheckboxId = positionMapping[typedPosition];
+                const targetCheckbox = document.getElementById(targetCheckboxId);
+
+                if (targetCheckbox && !targetCheckbox.checked) {
+                    // ใช้ .click() เพื่อให้ Logic ปลดติ๊กช่องอื่นและย่อขนาดวงกลมทำงานด้วย
+                    targetCheckbox.click();
+                }
+            }
+        }
+
+        // 3. รองรับการพิมพ์ด้วยตัวเอง (Manual Input)
+        if (empPosInput) {
+            ['input', 'change'].forEach(evt => {
+                empPosInput.addEventListener(evt, triggerPositionMap);
+            });
+        }
+
+        /**
+         * 4. วิธีทำให้ Map อัตโนมัติเมื่อข้อมูลถูก "Get" เข้ามาทาง JavaScript
+         * ให้เรียกฟังก์ชัน triggerPositionMap() ทันทีหลังจากที่คำสั่ง Get ข้อมูลทำงานเสร็จ
+         */
+        
+        // --- ตัวอย่างสมมติเวลาคุณ Get Data มาใส่ ---
+        // function loadEmployeeData() {
+        //    const data = await fetchData();
+        //    document.getElementById('empPos').value = data.position; 
+        //    triggerPositionMap(); // <--- เรียกฟังก์ชันนี้ต่อท้ายเสมอ
+        // }
+
+        // 5. (ทางเลือกเสริม) กรณีที่ไม่สามารถไปแก้โค้ดตอนดึงข้อมูลได้ 
+        // ให้ใช้เครื่องมือดักจับการเปลี่ยนแปลงค่า (Value Setter) แทน
+        if (empPosInput) {
+            const descriptor = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');
+            Object.defineProperty(empPosInput, 'value', {
+                set: function(v) {
+                    descriptor.set.call(this, v); // ตั้งค่า value ปกติ
+                    triggerPositionMap(); // สั่ง Map ทันทีที่มีการเปลี่ยนค่าผ่าน JS
+                },
+                get: function() {
+                    return descriptor.get.call(this);
+                }
+            });
+        }
+    });
     </script>
 @endsection
