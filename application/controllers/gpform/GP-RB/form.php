@@ -14,7 +14,10 @@ class form extends MY_Controller{
     }
 
     public function main(){
-        //echo "GP-RB Form";
+        //echo "GP-RB Form"; 
+        if(isset($_GET["runNo"]) && $_GET["runNo"] != "") {
+                $this->views('gpform/GP-RB/show');
+        }
         $this->views('gpform/GP-RB/create');
     }
 }

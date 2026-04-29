@@ -70,6 +70,7 @@
                 <div class="border border-base-300 p-4 rounded-lg bg-base-200/30">
                     <div id="purposeList" class="flex flex-col gap-3">
                     </div>
+                    <div id="otherPurpose" ></div>
                 </div>
             </div>
 
@@ -419,16 +420,21 @@
         
         // 1. ตารางจับคู่ Position และ Checkbox ID
         const positionMapping = {
-            'P': 'chkP', 'PRESIDENT': 'chkP',
-            'GM': 'chkGM', 'GENERAL MANAGER': 'chkGM',
-            'DIM': 'chkDIM', 'DDIM': 'chkDDIM',
-            'DEM': 'chkDEM', 'DDEM': 'chkDDEM',
-            'ADV': 'chkADV', 'ADVISOR': 'chkADV',
-            'SENIOR SPECIALIST': 'chkSSPE', 'SR. SPECIALIST': 'chkSSPE',
-            'SEM': 'chkSEM', 'SPECIALIST': 'chkSPE',
-            'ASM': 'chkASM', 'SUP': 'chkSUP', 'SUPERVISOR': 'chkSUP',
-            'FO': 'chkFO', 'FOREMAN': 'chkFO',
-            'LEADER': 'chkLEA', 'ENG': 'chkENG', 'ENGINEER': 'chkENG',
+            'PRESIDENT': 'chkP',
+            'GENERAL MANAGER': 'chkGM',
+            'DIVISION MANAGER': 'chkDIM', 
+            'DEPUTY DIVISION MANAGER': 'chkDDIM',
+            'DEPARTMENT MANAGER': 'chkDEM', 
+            'DEPUTY DEPARTMENT MANAGER': 'chkDDEM',
+            'ADVISOR': 'chkADV',
+            'SENIOR SPECIALIST': 'chkSSPE',
+            'SECTION MANAGER': 'chkSEM', 
+            'SPECIALIST': 'chkSPE',
+            'ASSISTANT MANAGER': 'chkASM', 
+            'SUPERVISOR': 'chkSUP',
+            'FOREMAN': 'chkFO',
+            'LEADER': 'chkLEA', 
+            'ENGINEER': 'chkENG',
             'STAFF': 'chkSTAFF'
         };
 

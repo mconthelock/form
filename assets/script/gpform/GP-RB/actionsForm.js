@@ -7,30 +7,52 @@ $(async function ()  {
     const queryString = window.location.search;
     const urlParams = new URLSearchParams(queryString);
     const empno =  urlParams.get("empno");
-    /*$('#inputBy').val(empno);*/
+    $('#inputBy').val(empno);
     
-    const empData = await getEmpData(empno);
+    /*const empData = await getEmpData(empno);
     $('#inputBy').val(empno +'_'+ empData.SNAME);
-    /*$("#empDept").val(empData.SSEC + '/'  + empData.SDEPT + '/' + empData.SDIV);
+    $("#empDept").val(empData.SSEC + '/'  + empData.SDEPT + '/' + empData.SDIV);
     $("#empPos").val(empData.SPOSITION);*/
     
 
     const purpose = await getData();
     console.log(purpose);
     const Purposedata = purpose.map((a) => {
+        const otherSelect = `<input type="text"
+                            class="input input-sm input-ghost w-full rounded-none border-b border-base-300 focus:border-primary focus:bg-base-200/50 px-1"
+                            id="otherSelect" name="otherSelect" placeholder="Please specify other purpose" disabled>`;
+
         return `<label class="flex items-center space-x-2 cursor-pointer">
-                                <input type="radio" name="purpose" value="replace"
-                                    class="radio radio-xs rounded border-base-content [--chkbg:var(--bc)] [--chkfg:var(--b1)] req" value=""${a.PURPOSE_ID}
+                                <input type="radio" name="purpose" 
+                                    class="radio radio-xs rounded border-base-content [--chkbg:var(--bc)] [--chkfg:var(--b1)] req" value="${a.PURPOSE_ID}"
                                     id="purpose_${a.PURPOSE_ID}">
                                 <span>${a.PURPOSE_TH}/${a.PURPOSE_EN}</span>
+                                ${a.PURPOSE_ID == 4 ? otherSelect : "" }
                             </label>`
+        
+        
+        
+        
         }).join("");
-    console.log(Purposedata);
+    
     $('#purposeList').html(Purposedata);
 
     const action = webflowSubmit({request:true});
-    console.log(action);
     $("#sentRequest").html(action);
+});
+
+$(document).on("change", "input[name='purpose']", async function () {
+
+            const purposeSelected = $(`input[name="purpose"]:checked`).val();
+            console.log(purposeSelected);
+            if(purposeSelected  == 4) {
+                console.log("other selected");
+                $('#otherSelect').attr("disabled", false);
+            }  else {
+                console.log("1");
+                $('#otherSelect').attr("disabled", true);
+
+            }
 });
 
 $(document).on("click", "#btnRequest", async function () {
