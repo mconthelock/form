@@ -1,20 +1,15 @@
 @extends('layouts/webflowTemplate')
 
-
-
-
 @section('contents')
     <div
         class="bg-base-200 min-h-screen p-4 md:p-8 flex justify-center text-[13px] leading-relaxed font-sans text-base-content">
-        <div class="max-w-[850px] w-full bg-base-100 p-8 shadow-2xl rounded-2xl border border-base-200">
+        <form class="max-w-[850px] w-full bg-base-100 p-8 shadow-2xl rounded-2xl border border-base-200" id="rbForm">
 
             <div class="text-center mb-8">
                 <h1 class="text-xl font-bold text-primary">แบบฟอร์มขออนุมัติทำตราแสตมป์</h1>
                 <h2 class="text-sm font-semibold uppercase opacity-50 tracking-wider mt-1">Requisition Form for Rubber Stamp
                 </h2>
             </div>
-
-            
 
             <div class="border border-base-300 flex flex-col mb-6 rounded-lg overflow-hidden shadow-sm">
                 <div class="flex border-b border-base-300 bg-base-50/50">
@@ -67,9 +62,8 @@
             </div>
 
             <div class="font-bold text-primary mb-2 mt-8 text-sm flex items-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
-                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                    stroke-linejoin="round">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
                     <polyline points="22 4 12 14.01 9 11.01"></polyline>
                 </svg>
@@ -98,10 +92,14 @@
                             <td class="border-b border-r border-base-300 text-center p-4" rowspan="4">
                                 <div id="stampCircle1"
                                     class="w-[70px] h-[70px] rounded-full border-2 border-primary/50 text-primary flex flex-col justify-center items-center text-[9px] mx-auto overflow-hidden transition-all duration-300 ease-in-out bg-base-100 shadow-inner">
-                                    <div class="w-full border-b border-primary/30 text-center pb-1 font-bold">AMEC</div>
-                                    <div class="w-full border-b border-primary/30 text-center py-1 opacity-70">DDMMYYYY
+                                    <div class="w-full border-b border-primary/30 text-center pb-[2px] font-bold">AMEC</div>
+                                    <div
+                                        class="w-full border-b border-primary/30 text-center py-[2px] opacity-70 text-[8px]">
+                                        DDMMYYYY</div>
+                                    <div class="w-full flex justify-center pt-[2px] font-bold overflow-visible">
+                                        <span id="name"
+                                            class="origin-center whitespace-nowrap inline-block transition-transform duration-300">NAME</span>
                                     </div>
-                                    <div class="w-full text-center pt-1 font-bold" id="name">NAME</div>
                                 </div>
                             </td>
                             <td class="border-b border-base-300 p-3 align-top" rowspan="4">
@@ -111,7 +109,8 @@
                                 <div class="flex items-end gap-2">
                                     <span class="whitespace-nowrap font-semibold">ชื่อ/Name:</span>
                                     <input type="text"
-                                        class="input input-sm input-ghost w-full rounded-none border-b border-base-300 focus:border-primary px-1">
+                                        class="input input-sm input-ghost w-full rounded-none border-b border-base-300 focus:border-primary px-1"
+                                        id="nameInput">
                                 </div>
                             </td>
                         </tr>
@@ -195,10 +194,19 @@
                             <td class="border-r border-base-300 text-center p-4">
                                 <div id="stampCircle2"
                                     class="w-[70px] h-[70px] rounded-full border-2 border-primary/50 text-primary flex flex-col justify-center items-center text-[9px] mx-auto overflow-hidden transition-all duration-300 ease-in-out bg-base-100 shadow-inner">
-                                    <div class="w-full border-b border-primary/30 text-center pb-1 font-bold">___DIV</div>
-                                    <div class="w-full border-b border-primary/30 text-center py-1 opacity-70">DDMMYYYY
+                                    <div
+                                        class="w-full border-b border-primary/30 flex justify-center pb-[2px] font-bold overflow-visible">
+                                        <span id="divText"
+                                            class="origin-center whitespace-nowrap inline-block transition-transform duration-300">___
+                                            DIV</span>
                                     </div>
-                                    <div class="w-full text-center pt-1 font-bold">NAME</div>
+                                    <div
+                                        class="w-full border-b border-primary/30 text-center py-[2px] opacity-70 text-[8px]">
+                                        DDMMYYYY</div>
+                                    <div class="w-full flex justify-center pt-[2px] font-bold overflow-visible">
+                                        <span id="name2"
+                                            class="origin-center whitespace-nowrap inline-block transition-transform duration-300">NAME</span>
+                                    </div>
                                 </div>
                             </td>
                             <td class="p-3 align-top">
@@ -209,12 +217,14 @@
                                     <div class="flex items-end gap-2">
                                         <span class="whitespace-nowrap font-semibold">ชื่อ/Name:</span>
                                         <input type="text"
-                                            class="input input-sm input-ghost w-full rounded-none border-b border-base-300 focus:border-primary px-1">
+                                            class="input input-sm input-ghost w-full rounded-none border-b border-base-300 focus:border-primary px-1"
+                                            id="name2Input">
                                     </div>
                                     <div class="flex items-end gap-2">
                                         <span class="whitespace-nowrap font-semibold">ฝ่าย/Div.:</span>
                                         <input type="text"
-                                            class="input input-sm input-ghost w-full rounded-none border-b border-base-300 focus:border-primary px-1">
+                                            class="input input-sm input-ghost w-full rounded-none border-b border-base-300 focus:border-primary px-1"
+                                            id="divInput">
                                     </div>
                                 </div>
                             </td>
@@ -233,32 +243,40 @@
                     ต้องได้รับการอนุมัติจากต้นสังกัดและผู้จัดการฝ่ายบริหารทรัพยากรและการเงิน</span>
             </div>
 
-            <div class="border border-base-300 p-4 rounded-lg bg-base-200/30 min-h-[140px] relative">
-                <div class="font-bold text-sm mb-4">6. รูปแบบตราแสตมป์อื่นๆ <span
-                        class="opacity-60 font-normal text-xs ml-1">/ For other type please specify:</span></div>
-
-                <div class="absolute right-6 top-4 space-y-3">
-                    <div class="flex items-center justify-end gap-2">
-                        <span class="text-xs font-semibold opacity-70">ขนาด/Size:</span>
-                        <input type="text"
-                            class="input input-sm input-ghost w-32 rounded-none border-b border-base-300 focus:border-primary px-1 text-center">
+            <div class="border border-base-300 p-4 rounded-lg bg-base-200/30">
+                <div class="flex flex-col md:flex-row justify-between md:items-start gap-4">
+                    <div class="font-bold text-sm">
+                        6. รูปแบบตราแสตมป์อื่นๆ
+                        <span class="opacity-60 font-normal text-xs md:ml-1 block md:inline mt-1 md:mt-0">/ For other type
+                            please specify:</span>
                     </div>
-                    <div class="flex items-center justify-end gap-2">
-                        <span class="text-xs font-semibold opacity-70">จำนวน/Qty:</span>
-                        <input type="text"
-                            class="input input-sm input-ghost w-32 rounded-none border-b border-base-300 focus:border-primary px-1 text-center">
+
+                    <div class="flex flex-col sm:flex-row gap-3 sm:gap-6">
+                        <div class="flex items-center justify-start gap-2">
+                            <span class="text-xs font-semibold opacity-70 whitespace-nowrap">ขนาด/Size:</span>
+                            <input type="text"
+                                class="input input-sm input-ghost w-24 rounded-none border-b border-base-300 focus:border-primary px-1 text-center"
+                                id="otherSize">
+                        </div>
+                        <div class="flex items-center justify-start gap-2">
+                            <span class="text-xs font-semibold opacity-70 whitespace-nowrap">จำนวน/Qty:</span>
+                            <input type="text"
+                                class="input input-sm input-ghost w-24 rounded-none border-b border-base-300 focus:border-primary px-1 text-center"
+                                id="otherQty">
+                        </div>
                     </div>
                 </div>
 
-                <div class="absolute bottom-4 left-4 right-4 flex items-end gap-2">
+                <div class="flex items-end gap-2 mt-6">
                     <span class="text-xs font-semibold opacity-70 whitespace-nowrap">หมายเหตุ/Remark:</span>
                     <input type="text"
-                        class="input input-sm input-ghost grow rounded-none border-b border-base-300 focus:border-primary px-1">
+                        class="input input-sm input-ghost grow rounded-none border-b border-base-300 focus:border-primary px-1"
+                        id="otherRemark">
                 </div>
             </div>
 
             <div id="sentRequest"></div>
-        </div>
+        </form>
     </div>
 @endsection
 
@@ -266,108 +284,118 @@
     <script src="{{ $_ENV['APP_JS'] }}/gpRB.js?ver={{ $GLOBALS['version'] }}"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            // การตั้งค่า: จับคู่ ID ของ Checkbox กับขนาด (พิกเซล) และวงกลมเป้าหมาย
-            const stampConfig = {
-                // กลุ่มวงกลมบน (stampCircle1)
-                'chkP': {
-                    size: 88,
-                    target: 'stampCircle1'
-                }, // 22 mm
-                'chkGM': {
-                    size: 84,
-                    target: 'stampCircle1'
-                }, // 21 mm
-                'chkDIM': {
-                    size: 84,
-                    target: 'stampCircle1'
-                }, // 21 mm
-                'chkDDIM': {
-                    size: 84,
-                    target: 'stampCircle1'
-                }, // 21 mm
-                'chkDEM': {
-                    size: 76,
-                    target: 'stampCircle1'
-                }, // 19 mm
-                'chkDDEM': {
-                    size: 76,
-                    target: 'stampCircle1'
-                }, // 19 mm
-                'chkADV': {
-                    size: 76,
-                    target: 'stampCircle1'
-                }, // 19 mm
-                'chkSSPE': {
-                    size: 76,
-                    target: 'stampCircle1'
-                }, // 19 mm
-                'chkSEM': {
-                    size: 68,
-                    target: 'stampCircle1'
-                }, // 17 mm
-                'chkSPE': {
-                    size: 68,
-                    target: 'stampCircle1'
-                }, // 17 mm
+            
+            // ✅ ฟังก์ชันคำนวณ (ใช้ scaleX บีบความกว้างอย่างเดียว ความสูงเท่าเดิม!)
+            function adjustTextScale(displayId, circleId) {
+                const displayEl = document.getElementById(displayId);
+                const circleEl = document.getElementById(circleId);
+                if (!displayEl || !circleEl) return;
 
-                // กลุ่มวงกลมล่าง (stampCircle2)
-                'chkASM': {
-                    size: 60,
-                    target: 'stampCircle2'
-                }, // 15 mm
-                'chkSUP': {
-                    size: 60,
-                    target: 'stampCircle2'
-                }, // 15 mm
-                'chkFO': {
-                    size: 60,
-                    target: 'stampCircle2'
-                }, // 15 mm
-                'chkLEA': {
-                    size: 60,
-                    target: 'stampCircle2'
-                }, // 15 mm
-                'chkENG': {
-                    size: 60,
-                    target: 'stampCircle2'
-                }, // 15 mm
-                'chkSTAFF': {
-                    size: 60,
-                    target: 'stampCircle2'
-                } // 15 mm
+                let circleWidth = 70;
+                if (circleEl.style.width) {
+                    circleWidth = parseInt(circleEl.style.width, 10);
+                }
+
+                // ขยับพื้นที่ปลอดภัยให้กว้างขึ้นได้ (75% ของวงกลม) เพราะเราแค่บีบแกน X แล้ว
+                const maxSafeWidth = circleWidth * 0.75; 
+
+                // เคลียร์ค่าเดิมก่อนวัดขนาดใหม่
+                displayEl.style.transform = 'none';
+                displayEl.style.letterSpacing = 'normal';
+
+                // วัดความกว้างตัวหนังสือจริง
+                const actualWidth = displayEl.scrollWidth;
+                
+                // ถ้ายาวเกินกรอบ ให้ทำการ "บีบผอม" 
+                if (actualWidth > maxSafeWidth && actualWidth > 0) {
+                    const scaleRatio = maxSafeWidth / actualWidth;
+                    
+                    // บีบช่องไฟเล็กน้อยก่อนให้ดูเป็นธรรมชาติ
+                    displayEl.style.letterSpacing = '-0.5px'; 
+                    
+                    // ใช้ scaleX(...) เพื่อบีบเฉพาะความกว้าง! ตัวหนังสือจะไม่เตี้ยลง
+                    displayEl.style.transform = `scaleX(${scaleRatio})`;
+                }
+            }
+
+            function updateStampName(inputId, targetDisplayId, targetCircleId) {
+                const inputElement = document.getElementById(inputId);
+                const displayElement = document.getElementById(targetDisplayId);
+                
+                if (inputElement && displayElement) {
+                    inputElement.addEventListener('input', function() {
+                        let fullName = this.value.trim();
+                        let firstName = fullName.split(/\s+/)[0]; 
+                        displayElement.textContent = firstName ? firstName.toUpperCase() : 'NAME';
+                        adjustTextScale(targetDisplayId, targetCircleId);
+                    });
+                }
+            }
+
+            updateStampName('nameInput', 'name', 'stampCircle1');
+            updateStampName('name2Input', 'name2', 'stampCircle2');
+
+            const divInput = document.getElementById('divInput');
+            const divText = document.getElementById('divText');
+            if (divInput && divText) {
+                divInput.addEventListener('input', function() {
+                    let inputVal = this.value.trim().toUpperCase();
+                    divText.textContent = inputVal ? inputVal + ' DIV' : '___ DIV';
+                    adjustTextScale('divText', 'stampCircle2');
+                });
+            }
+
+            const stampConfig = {
+                'chkP': { size: 88, target: 'stampCircle1' }, 
+                'chkGM': { size: 84, target: 'stampCircle1' }, 
+                'chkDIM': { size: 84, target: 'stampCircle1' }, 
+                'chkDDIM': { size: 84, target: 'stampCircle1' },
+                'chkDEM': { size: 76, target: 'stampCircle1' }, 
+                'chkDDEM': { size: 76, target: 'stampCircle1' },
+                'chkADV': { size: 76, target: 'stampCircle1' }, 
+                'chkSSPE': { size: 76, target: 'stampCircle1' },
+                'chkSEM': { size: 68, target: 'stampCircle1' }, 
+                'chkSPE': { size: 68, target: 'stampCircle1' }, 
+                'chkASM': { size: 60, target: 'stampCircle2' }, 
+                'chkSUP': { size: 60, target: 'stampCircle2' }, 
+                'chkFO': { size: 60, target: 'stampCircle2' }, 
+                'chkLEA': { size: 60, target: 'stampCircle2' }, 
+                'chkENG': { size: 60, target: 'stampCircle2' }, 
+                'chkSTAFF': { size: 60, target: 'stampCircle2' } 
             };
 
-            // ค้นหา Checkbox ทั้งหมดที่มี id ขึ้นต้นด้วย 'chk'
             const formatCheckboxes = document.querySelectorAll('input[type="checkbox"][id^="chk"]');
 
             formatCheckboxes.forEach(cb => {
                 cb.addEventListener('change', function() {
                     if (this.checked) {
-                        // 1. ยกเลิกการติ๊กถูกที่ช่องอื่นๆ (จำลองการทำงานคล้าย Radio button)
                         formatCheckboxes.forEach(otherCb => {
-                            if (otherCb !== this) {
-                                otherCb.checked = false;
-                            }
+                            if (otherCb !== this) otherCb.checked = false;
                         });
 
-                        // 2. ดึงการตั้งค่าของ Checkbox ที่ถูกติ๊ก
                         const settings = stampConfig[this.id];
                         if (settings) {
                             const targetCircle = document.getElementById(settings.target);
                             if (targetCircle) {
-                                // อัปเดตความกว้างและความสูง
                                 targetCircle.style.width = settings.size + 'px';
                                 targetCircle.style.height = settings.size + 'px';
+                                
+                                // ปรับตัวหนังสือทุกจุดเมื่อวงกลมเปลี่ยนขนาด
+                                adjustTextScale('name', 'stampCircle1');
+                                adjustTextScale('name2', 'stampCircle2');
+                                adjustTextScale('divText', 'stampCircle2');
                             }
                         }
                     } else {
-                        // (ตัวเลือกเสริม) หากไม่ได้ติ๊กอะไรเลย ให้กลับไปใช้ขนาดเริ่มต้น (w-17.5 / h-17.5)
                         const settings = stampConfig[this.id];
                         if (settings) {
                             const targetCircle = document.getElementById(settings.target);
                             if (targetCircle) {
                                 targetCircle.style.width = '';
                                 targetCircle.style.height = '';
+                                adjustTextScale('name', 'stampCircle1');
+                                adjustTextScale('name2', 'stampCircle2');
+                                adjustTextScale('divText', 'stampCircle2');
                             }
                         }
                     }

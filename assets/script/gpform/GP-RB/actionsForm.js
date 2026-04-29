@@ -1,6 +1,6 @@
 import { fetchUtils } from "@amec/webasset/api/fetch-utils";
 import { webflowSubmit } from "@amec/webasset/components/form";
-import { requiredForm, showMessage } from "@amec/webasset/utils";
+import { logFormData, requiredForm, showMessage } from "@amec/webasset/utils";
 
 
 $(async function ()  {
@@ -13,18 +13,20 @@ $(async function ()  {
     $("#empName").val(empData.STNAME);
     $("#empDept").val(empData.SSEC + '/'  + empData.SDEPT + '/' + empData.SDIV);
     $("#empPos").val(empData.SPOSITION);
+    
 
     const purpose = await getData();
     console.log(purpose);
-    const data = purpose.map((a) => {
+    const Purposedata = purpose.map((a) => {
         return `<label class="flex items-center space-x-2 cursor-pointer">
                                 <input type="radio" name="purpose" value="replace"
-                                    class="radio radio-xs rounded border-base-content [--chkbg:var(--bc)] [--chkfg:var(--b1)]" value=""${a.PURPOSE_ID}>
+                                    class="radio radio-xs rounded border-base-content [--chkbg:var(--bc)] [--chkfg:var(--b1)] req" value=""${a.PURPOSE_ID}
+                                    id="purpose_${a.PURPOSE_ID}">
                                 <span>${a.PURPOSE_TH}/${a.PURPOSE_EN}</span>
                             </label>`
         }).join("");
-    console.log(data);
-    $('#purposeList').html(data);
+    console.log(Purposedata);
+    $('#purposeList').html(Purposedata);
 
     const action = webflowSubmit({request:true});
     console.log(action);
@@ -33,15 +35,17 @@ $(async function ()  {
 
 $(document).on("click", "#btnRequest", async function () {
     try {
-        const empName = $('#empName').val();
-        const empCode = $('#empCode').val();
-        const empDept = $('#empDept').val();
-        const empPos = $('#empPos').val();
-        const purpose = $("input[name='purpose']:checked").val();
         const requiredMessage = [{element: $('#empName'), message: 'Please fill the Name'}, {element: $('#empCode'), message: 'Please fill the Emp Code'}, 
-            {element: $('#empDept'), message: 'Please fill the SECT/DEPT/DIV'}, {element: $('#empPos'), message: 'Please fill the Position'}];
-        if(!(await requiredForm(`#form`, requiredMessage))) 
+            {element: $('#empDept'), message: 'Please fill the SECT/DEPT/DIV'}, {element: $('#empPos'), message: 'Please fill the Position'},
+            {element: $('#purposeList input[name="purpose"]'), message: 'Please select the Purpose'}];
+        if(!(await requiredForm(`#rbForm`, requiredMessage))) 
             return;
+
+        const formData = new FormData($(`#rbForm`)[0]);
+        logFormData(formData);
+        const res = await createForm(formData);
+        console.log(res);
+
     }catch (error) {
         console.log(error);
         showMessage(error.message);
@@ -63,5 +67,13 @@ async function getEmpData(empno) {
         url: `${process.env.APP_API}/users/${empno}`,
         method: "GET",          
         
+    });
+}
+
+async function createForm(data) {
+    return fetchUtils({
+        url: `${process.env.APP_API}/gpform/ga-rb`,
+        method: "POST",
+        data: data,
     });
 }
