@@ -23,18 +23,19 @@
                 </div>
 
                 <div class="flex border-b border-base-300 bg-base-50/50">
-                    <div class="w-1/2 border-r border-base-300 p-2 flex items-center gap-2">
-                        <span class="whitespace-nowrap font-semibold opacity-80 text-xs">ชื่อ/NAME:</span>
-                        <input type="text"
-                            class="input input-sm input-ghost w-full rounded-none border-b border-base-300 focus:border-primary focus:bg-base-200/50 px-1 req"
-                            id="empName" name="empName">
-                    </div>
                     <div class="w-1/2 p-2 flex items-center gap-2">
                         <span class="whitespace-nowrap font-semibold opacity-80 text-xs">Request by:</span>
                         <input type="text"
                             class="input input-sm input-ghost w-full rounded-none border-b border-base-300 focus:border-primary focus:bg-base-200/50 px-1 req"
                             id="reqCode" name="reqCode">
                     </div>
+                    <div class="w-1/2 border-r border-base-300 p-2 flex items-center gap-2">
+                        <span class="whitespace-nowrap font-semibold opacity-80 text-xs">ชื่อ/NAME:</span>
+                        <input type="text"
+                            class="input input-sm input-ghost w-full rounded-none border-b border-base-300 focus:border-primary focus:bg-base-200/50 px-1 req"
+                            id="empName" name="empName">
+                    </div>
+                    
                 </div>
 
                 <div class="flex bg-base-50/50">
@@ -96,7 +97,7 @@
                             <td class="border-b border-r border-base-300 text-center font-medium">1</td>
                             <td class="border-b border-r border-base-300 p-3">
                                 <label class="flex items-center space-x-2 cursor-pointer w-fit"><input type="checkbox"
-                                        class="checkbox checkbox-primary checkbox-sm rounded-md" id="chkP">
+                                        class="checkbox checkbox-primary checkbox-sm rounded-md" id="chkP" name="chkP">
                                     <span>P</span></label>
                             </td>
                             <td class="border-b border-r border-base-300 text-center text-base-content/70">22 mm.</td>
@@ -130,13 +131,13 @@
                             <td class="border-b border-r border-base-300 p-3">
                                 <div class="flex flex-wrap gap-4">
                                     <label class="flex items-center space-x-2 cursor-pointer"><input type="checkbox"
-                                            class="checkbox checkbox-primary checkbox-sm rounded-md" id="chkGM">
+                                            class="checkbox checkbox-primary checkbox-sm rounded-md" id="chkGM" name="chkGM">
                                         <span>GM</span></label>
                                     <label class="flex items-center space-x-2 cursor-pointer"><input type="checkbox"
-                                            class="checkbox checkbox-primary checkbox-sm rounded-md" id="chkDIM">
+                                            class="checkbox checkbox-primary checkbox-sm rounded-md" id="chkDIM" name="chkDIM">
                                         <span>DIM</span></label>
                                     <label class="flex items-center space-x-2 cursor-pointer"><input type="checkbox"
-                                            class="checkbox checkbox-primary checkbox-sm rounded-md" id="chkDDIM">
+                                            class="checkbox checkbox-primary checkbox-sm rounded-md" id="chkDDIM" name="chkDDIM">
                                         <span>DDIM</span></label>
                                 </div>
                             </td>
@@ -147,17 +148,17 @@
                             <td class="border-b border-r border-base-300 p-3">
                                 <div class="flex flex-wrap gap-4 mb-2">
                                     <label class="flex items-center space-x-2 cursor-pointer"><input type="checkbox"
-                                            class="checkbox checkbox-primary checkbox-sm rounded-md" id="chkDEM">
+                                            class="checkbox checkbox-primary checkbox-sm rounded-md" id="chkDEM" name="chkDEM">
                                         <span>DEM</span></label>
                                     <label class="flex items-center space-x-2 cursor-pointer"><input type="checkbox"
-                                            class="checkbox checkbox-primary checkbox-sm rounded-md" id="chkDDEM">
+                                            class="checkbox checkbox-primary checkbox-sm rounded-md" id="chkDDEM" name="chkDDEM">
                                         <span>DDEM</span></label>
                                     <label class="flex items-center space-x-2 cursor-pointer"><input type="checkbox"
-                                            class="checkbox checkbox-primary checkbox-sm rounded-md" id="chkADV">
+                                            class="checkbox checkbox-primary checkbox-sm rounded-md" id="chkADV" name="chkADV">
                                         <span>ADV</span></label>
                                 </div>
                                 <label class="flex items-center space-x-2 cursor-pointer w-fit"><input type="checkbox"
-                                        class="checkbox checkbox-primary checkbox-sm rounded-md" id="chkSSPE">
+                                        class="checkbox checkbox-primary checkbox-sm rounded-md" id="chkSSPE" name="chkSSPE">
                                     <span>Senior Specialist</span></label>
                             </td>
                             <td class="border-b border-r border-base-300 text-center text-base-content/70">19 mm.</td>
@@ -167,10 +168,10 @@
                             <td class="border-b border-r border-base-300 p-3">
                                 <div class="flex gap-6">
                                     <label class="flex items-center space-x-2 cursor-pointer"><input type="checkbox"
-                                            class="checkbox checkbox-primary checkbox-sm rounded-md" id="chkSEM">
+                                            class="checkbox checkbox-primary checkbox-sm rounded-md" id="chkSEM" name="chkSEM">
                                         <span>SEM</span></label>
                                     <label class="flex items-center space-x-2 cursor-pointer"><input type="checkbox"
-                                            class="checkbox checkbox-primary checkbox-sm rounded-md" id="chkSPE">
+                                            class="checkbox checkbox-primary checkbox-sm rounded-md" id="chkSPE" name="chkSPE">
                                         <span>Specialist</span></label>
                                 </div>
                             </td>
@@ -182,22 +183,22 @@
                             <td class="border-r border-base-300 p-3">
                                 <div class="grid grid-cols-2 gap-3">
                                     <label class="flex items-center space-x-2 cursor-pointer"><input type="checkbox"
-                                            class="checkbox checkbox-primary checkbox-sm rounded-md" id="chkASM">
+                                            class="checkbox checkbox-primary checkbox-sm rounded-md" id="chkASM" name="chkASM">
                                         <span>ASM</span></label>
                                     <label class="flex items-center space-x-2 cursor-pointer"><input type="checkbox"
-                                            class="checkbox checkbox-primary checkbox-sm rounded-md" id="chkSUP">
+                                            class="checkbox checkbox-primary checkbox-sm rounded-md" id="chkSUP" name="chkSUP">
                                         <span>Supervisor</span></label>
                                     <label class="flex items-center space-x-2 cursor-pointer"><input type="checkbox"
-                                            class="checkbox checkbox-primary checkbox-sm rounded-md" id="chkFO">
+                                            class="checkbox checkbox-primary checkbox-sm rounded-md" id="chkFO" name="chkFO">
                                         <span>Foreman</span></label>
                                     <label class="flex items-center space-x-2 cursor-pointer"><input type="checkbox"
-                                            class="checkbox checkbox-primary checkbox-sm rounded-md" id="chkLEA">
+                                            class="checkbox checkbox-primary checkbox-sm rounded-md" id="chkLEA" name="chkLEA">
                                         <span>Leader</span></label>
                                     <label class="flex items-center space-x-2 cursor-pointer"><input type="checkbox"
-                                            class="checkbox checkbox-primary checkbox-sm rounded-md" id="chkENG">
+                                            class="checkbox checkbox-primary checkbox-sm rounded-md" id="chkENG" name="chkENG">
                                         <span>Engineer</span></label>
                                     <label class="flex items-center space-x-2 cursor-pointer"><input type="checkbox"
-                                            class="checkbox checkbox-primary checkbox-sm rounded-md" id="chkSTAFF">
+                                            class="checkbox checkbox-primary checkbox-sm rounded-md" id="chkSTAFF" name="chkSTAFF">
                                         <span>Staff</span></label>
                                 </div>
                             </td>

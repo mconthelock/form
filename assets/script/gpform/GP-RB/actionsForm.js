@@ -7,12 +7,12 @@ $(async function ()  {
     const queryString = window.location.search;
     const urlParams = new URLSearchParams(queryString);
     const empno =  urlParams.get("empno");
-    $('#inputBy').val(empno + '_' + );
+    /*$('#inputBy').val(empno);*/
     
     const empData = await getEmpData(empno);
-    $("#empName").val(empData.STNAME);
-    $("#empDept").val(empData.SSEC + '/'  + empData.SDEPT + '/' + empData.SDIV);
-    $("#empPos").val(empData.SPOSITION);
+    $('#inputBy').val(empno +'_'+ empData.SNAME);
+    /*$("#empDept").val(empData.SSEC + '/'  + empData.SDEPT + '/' + empData.SDIV);
+    $("#empPos").val(empData.SPOSITION);*/
     
 
     const purpose = await getData();
@@ -52,7 +52,63 @@ $(document).on("click", "#btnRequest", async function () {
     }
 });
 
+$(document).on("change", "#reqCode", async function () {
+    const reqCode = $(this).val();  
+    const empData = await getEmpData(reqCode);
+    $("#empName").val(empData.STNAME);
+    $("#empDept").val(empData.SSEC + '/'  + empData.SDEPT + '/' + empData.SDIV);
+    $("#empPos").val(empData.SPOSITION);
 
+});
+
+$(document).on("change", "#empPos", async function () {
+    const empPosInput = document.getElementById("empPos").value;
+    const positionMapping = {
+                'P': 'chkP',
+                'PRESIDENT': 'chkP',
+                'GM': 'chkGM',
+                'GENERAL MANAGER': 'chkGM',
+                'DIM': 'chkDIM',
+                'DDIM': 'chkDDIM',
+                'DEM': 'chkDEM',
+                'DDEM': 'chkDDEM',
+                'ADV': 'chkADV',
+                'ADVISOR': 'chkADV',
+                'SENIOR SPECIALIST': 'chkSSPE',
+                'SR. SPECIALIST': 'chkSSPE',
+                'SEM': 'chkSEM',
+                'SPECIALIST': 'chkSPE',
+                'ASM': 'chkASM',
+                'SUP': 'chkSUP',
+                'SUPERVISOR': 'chkSUP',
+                'FO': 'chkFO',
+                'FOREMAN': 'chkFO',
+                'LEADER': 'chkLEA',
+                'ENG': 'chkENG',
+                'ENGINEER': 'chkENG',
+                'STAFF': 'chkSTAFF'
+            };
+    if (empPosInput) {
+                empPosInput.addEventListener('input', function() {
+                    // ดึงข้อความที่พิมพ์ ตัดช่องว่างหัวท้าย และแปลงเป็นตัวพิมพ์ใหญ่ทั้งหมด
+                    const typedPosition = this.value.trim().toUpperCase();
+
+                    // เช็คว่าคำที่พิมพ์มา มีอยู่ในตารางจับคู่ของเราหรือไม่
+                    if (positionMapping[typedPosition]) {
+                        const targetCheckboxId = positionMapping[typedPosition];
+                        const targetCheckbox = document.getElementById(targetCheckboxId);
+
+                        // ถ้าเจอ Checkbox เป้าหมาย และมันยังไม่ได้ติ๊ก
+                        if (targetCheckbox && !targetCheckbox.checked) {
+                            targetCheckbox.checked = true;
+                            
+                            // 🚀 สำคัญ: สั่ง Trigger Event 'change' เพื่อให้ระบบย่อวงกลมของเราทำงานต่อทันที!
+                            targetCheckbox.dispatchEvent(new Event('change'));
+                        }
+                    }
+                });
+            }
+});
 
 
 async function getData() {
