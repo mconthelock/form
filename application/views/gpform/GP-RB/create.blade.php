@@ -11,33 +11,44 @@
                 </h2>
             </div>
 
+
             <div class="border border-base-300 flex flex-col mb-6 rounded-lg overflow-hidden shadow-sm">
+                <div class="flex border-b border-base-300 bg-base-50/50">
+                    <div class="w-full p-2 flex items-center gap-2">
+                        <span class="whitespace-nowrap font-semibold opacity-80 text-xs">Input by:</span>
+                        <input type="text"
+                            class="input input-sm input-ghost w-full rounded-none border-b border-base-300 focus:border-primary focus:bg-base-200/50 px-1 "
+                            id="inputBy" name="inputBy">
+                    </div>
+                </div>
+
                 <div class="flex border-b border-base-300 bg-base-50/50">
                     <div class="w-1/2 border-r border-base-300 p-2 flex items-center gap-2">
                         <span class="whitespace-nowrap font-semibold opacity-80 text-xs">ชื่อ/NAME:</span>
                         <input type="text"
                             class="input input-sm input-ghost w-full rounded-none border-b border-base-300 focus:border-primary focus:bg-base-200/50 px-1 req"
-                            id="empName">
+                            id="empName" name="empName">
                     </div>
                     <div class="w-1/2 p-2 flex items-center gap-2">
-                        <span class="whitespace-nowrap font-semibold opacity-80 text-xs">รหัสพนักงาน/Emp.Code:</span>
+                        <span class="whitespace-nowrap font-semibold opacity-80 text-xs">Request by:</span>
                         <input type="text"
                             class="input input-sm input-ghost w-full rounded-none border-b border-base-300 focus:border-primary focus:bg-base-200/50 px-1 req"
-                            id="empCode">
+                            id="reqCode" name="reqCode">
                     </div>
                 </div>
+
                 <div class="flex bg-base-50/50">
                     <div class="w-1/2 border-r border-base-300 p-2 flex items-center gap-2">
                         <span class="whitespace-nowrap font-semibold opacity-80 text-xs">Sect./Dept./Div.:</span>
                         <input type="text"
                             class="input input-sm input-ghost w-full rounded-none border-b border-base-300 focus:border-primary focus:bg-base-200/50 px-1 req"
-                            id="empDept">
+                            id="empDept" name="empDept">
                     </div>
                     <div class="w-1/2 p-2 flex items-center gap-2">
                         <span class="whitespace-nowrap font-semibold opacity-80 text-xs">ตำแหน่ง/Position:</span>
                         <input type="text"
                             class="input input-sm input-ghost w-full rounded-none border-b border-base-300 focus:border-primary focus:bg-base-200/50 px-1 req"
-                            id="empPos">
+                            id="empPos" name="empPos">
                     </div>
                 </div>
             </div>
@@ -110,7 +121,7 @@
                                     <span class="whitespace-nowrap font-semibold">ชื่อ/Name:</span>
                                     <input type="text"
                                         class="input input-sm input-ghost w-full rounded-none border-b border-base-300 focus:border-primary px-1"
-                                        id="nameInput">
+                                        id="nameInput" name="nameInput">
                                 </div>
                             </td>
                         </tr>
@@ -218,13 +229,13 @@
                                         <span class="whitespace-nowrap font-semibold">ชื่อ/Name:</span>
                                         <input type="text"
                                             class="input input-sm input-ghost w-full rounded-none border-b border-base-300 focus:border-primary px-1"
-                                            id="name2Input">
+                                            id="name2Input" name="name2Input">
                                     </div>
                                     <div class="flex items-end gap-2">
                                         <span class="whitespace-nowrap font-semibold">ฝ่าย/Div.:</span>
                                         <input type="text"
                                             class="input input-sm input-ghost w-full rounded-none border-b border-base-300 focus:border-primary px-1"
-                                            id="divInput">
+                                            id="divInput" name="divInput">
                                     </div>
                                 </div>
                             </td>
@@ -254,15 +265,15 @@
                     <div class="flex flex-col sm:flex-row gap-3 sm:gap-6">
                         <div class="flex items-center justify-start gap-2">
                             <span class="text-xs font-semibold opacity-70 whitespace-nowrap">ขนาด/Size:</span>
-                            <input type="text"
+                            <input type="number"
                                 class="input input-sm input-ghost w-24 rounded-none border-b border-base-300 focus:border-primary px-1 text-center"
-                                id="otherSize">
+                                id="otherSize" name="otherSize">
                         </div>
                         <div class="flex items-center justify-start gap-2">
                             <span class="text-xs font-semibold opacity-70 whitespace-nowrap">จำนวน/Qty:</span>
-                            <input type="text"
+                            <input type="number" 
                                 class="input input-sm input-ghost w-24 rounded-none border-b border-base-300 focus:border-primary px-1 text-center"
-                                id="otherQty">
+                                id="otherQty" name="otherQty">
                         </div>
                     </div>
                 </div>
@@ -271,7 +282,7 @@
                     <span class="text-xs font-semibold opacity-70 whitespace-nowrap">หมายเหตุ/Remark:</span>
                     <input type="text"
                         class="input input-sm input-ghost grow rounded-none border-b border-base-300 focus:border-primary px-1"
-                        id="otherRemark">
+                        id="otherRemark" name="otherRemark">
                 </div>
             </div>
 

@@ -7,7 +7,7 @@ $(async function ()  {
     const queryString = window.location.search;
     const urlParams = new URLSearchParams(queryString);
     const empno =  urlParams.get("empno");
-    $('#empCode').val(empno);
+    $('#inputBy').val(empno + '_' + );
     
     const empData = await getEmpData(empno);
     $("#empName").val(empData.STNAME);
