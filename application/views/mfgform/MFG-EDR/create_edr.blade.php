@@ -172,5 +172,8 @@
     </div>
 </div>
 
-<script src="{{ asset('assets/js/mfg_edr_create.js') }}"></script>
+@endsection
+
+@section('scripts')
+    <script src="{{ $_ENV['APP_JS'] }}/mfg_edr_main.js?ver={{ $GLOBALS['version'] }}"></script>             
 @endsection

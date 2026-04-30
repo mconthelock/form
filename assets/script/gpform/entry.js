@@ -35,5 +35,5 @@ module.exports = {
 	show_sum_report: "./assets/script/gpform/GP-TRN/show_sum_report.js",
 
 	//MFG-EDR
-	mfg_edr_main: "./assets/script/mfgform/MFG-EDR/index.js", //Create & Approval
+	mfg_edr_main: "./assets/script/mfgform/MFG-EDR/mfg_edr_main.js", //Create & Approval
 };
