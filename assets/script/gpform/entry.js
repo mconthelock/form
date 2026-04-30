@@ -33,4 +33,7 @@ module.exports = {
 	view_train_report: "./assets/script/gpform/GP-TRN/view_train_report.js",
 	manage_group: "./assets/script/gpform/GP-TRN/manage_group.js",
 	show_sum_report: "./assets/script/gpform/GP-TRN/show_sum_report.js",
+
+	//MFG-EDR
+	mfg_edr_main: "./assets/script/mfgform/MFG-EDR/index.js", //Create & Approval
 };
