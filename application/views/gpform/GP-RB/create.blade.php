@@ -197,13 +197,13 @@
                             <span class="text-xs font-semibold opacity-70 whitespace-nowrap">ขนาด/Size:</span>
                             <input type="number"
                                 class="input input-sm input-ghost w-24 rounded-none border-b border-base-300 focus:border-primary px-1 text-center"
-                                id="otherSize" name="otherSize" >
+                                id="otherSize" name="CUST_SIZE" >
                         </div>
                         <div class="flex items-center justify-start gap-2">
                             <span class="text-xs font-semibold opacity-70 whitespace-nowrap">จำนวน/Qty:</span>
                             <input type="number" 
                                 class="input input-sm input-ghost w-24 rounded-none border-b border-base-300 focus:border-primary px-1 text-center"
-                                id="otherQty" name="otherQty" value="1">
+                                id="otherQty" name="QTY" value="1">
                         </div>
                     </div>
                 </div>
