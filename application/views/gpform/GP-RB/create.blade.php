@@ -49,7 +49,7 @@
                         <span class="whitespace-nowrap font-semibold opacity-80 text-xs">ตำแหน่ง/Position:</span>
                         <input type="text"
                             class="input input-sm input-ghost w-full rounded-none border-b border-base-300 focus:border-primary focus:bg-base-200/50 px-1 req"
-                            id="empPos" name="empPos">
+                            id="empPos" name="SPOSCODE">
                     </div>
                 </div>
             </div>
@@ -87,22 +87,22 @@
             </div>
 
             <div class="hidden">
-                <input type="checkbox" id="chkP" name="chkP">
-                <input type="checkbox" id="chkGM" name="chkGM">
-                <input type="checkbox" id="chkDIM" name="chkDIM">
-                <input type="checkbox" id="chkDDIM" name="chkDDIM">
-                <input type="checkbox" id="chkDEM" name="chkDEM">
-                <input type="checkbox" id="chkDDEM" name="chkDDEM">
-                <input type="checkbox" id="chkADV" name="chkADV">
-                <input type="checkbox" id="chkSSPE" name="chkSSPE">
-                <input type="checkbox" id="chkSEM" name="chkSEM">
-                <input type="checkbox" id="chkSPE" name="chkSPE">
-                <input type="checkbox" id="chkASM" name="chkASM">
-                <input type="checkbox" id="chkSUP" name="chkSUP">
-                <input type="checkbox" id="chkFO" name="chkFO">
-                <input type="checkbox" id="chkLEA" name="chkLEA">
-                <input type="checkbox" id="chkENG" name="chkENG">
-                <input type="checkbox" id="chkSTAFF" name="chkSTAFF">
+                <input type="checkbox" id="chkP" name="chkP" value="02">
+                <input type="checkbox" id="chkGM" name="chkGM" value="05">
+                <input type="checkbox" id="chkDIM" name="chkDIM" value="10">
+                <input type="checkbox" id="chkDDIM" name="chkDDIM" value="11">
+                <input type="checkbox" id="chkDEM" name="chkDEM" value="20">
+                <input type="checkbox" id="chkDDEM" name="chkDDEM" value="21">
+                <input type="checkbox" id="chkADV" name="chkADV" value="90">
+                <input type="checkbox" id="chkSSPE" name="chkSSPE" value="22">
+                <input type="checkbox" id="chkSEM" name="chkSEM" value="30">
+                <input type="checkbox" id="chkSPE" name="chkSPE" value="32">
+                <input type="checkbox" id="chkASM" name="chkASM" value="33">
+                <input type="checkbox" id="chkSUP" name="chkSUP" value="49">
+                <input type="checkbox" id="chkFO" name="chkFO" value="50">
+                <input type="checkbox" id="chkLEA" name="chkLEA" value="55">
+                <input type="checkbox" id="chkENG" name="chkENG" value="35">
+                <input type="checkbox" id="chkSTAFF" name="chkSTAFF" value="40">
             </div>
 
             <div id="standardStampSection" class="overflow-x-auto rounded-lg border border-base-300 shadow-sm mb-2 transition-opacity duration-300">
@@ -132,7 +132,7 @@
                                 </div>
                                 <div class="flex items-end gap-2 mt-4">
                                     <span class="whitespace-nowrap font-semibold">ชื่อ/Name:</span>
-                                    <input type="text" class="input input-sm input-ghost w-full rounded-none border-b border-base-300 focus:border-primary px-1" id="nameInput1" name="nameInput">
+                                    <input type="text" class="input input-sm input-ghost w-full rounded-none border-b border-base-300 focus:border-primary px-1" id="nameInput1" name="NAME_STAMP">
                                 </div>
                             </td>
                         </tr>
@@ -158,7 +158,7 @@
                                 <div class="flex flex-col gap-2 mt-3">
                                     <div class="flex items-end gap-2">
                                         <span class="whitespace-nowrap font-semibold">ชื่อ/Name:</span>
-                                        <input type="text" class="input input-sm input-ghost w-full rounded-none border-b border-base-300 focus:border-primary px-1" id="nameInput2" name="nameInput">
+                                        <input type="text" class="input input-sm input-ghost w-full rounded-none border-b border-base-300 focus:border-primary px-1" id="nameInput2" name="NAME_STAMP">
                                     </div>
                                     
                                     
