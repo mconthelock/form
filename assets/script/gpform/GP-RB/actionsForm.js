@@ -7,10 +7,10 @@ $(async function ()  {
     const queryString = window.location.search;
     const urlParams = new URLSearchParams(queryString);
     const empno =  urlParams.get("empno");
-    $('#inputBy').val(empno);
+    $('#INPUTBY').val(empno);
     
     /*const empData = await getEmpData(empno);
-    $('#inputBy').val(empno +'_'+ empData.SNAME);
+    $('#INPUTBY').val(empno +'_'+ empData.SNAME);
     $("#empDept").val(empData.SSEC + '/'  + empData.SDEPT + '/' + empData.SDIV);
     $("#empPos").val(empData.SPOSITION);*/
     
@@ -75,12 +75,13 @@ $(document).on("click", "#btnRequest", async function () {
     }
 });
 
-$(document).on("change", "#reqCode", async function () {
-    const reqCode = $(this).val();  
-    const empData = await getEmpData(reqCode);
+$(document).on("change", "#REQBY", async function () {
+    const REQBY = $(this).val();  
+    const empData = await getEmpData(REQBY);
     $("#empName").val(empData.STNAME);
     $("#empDept").val(empData.SSEC + '/'  + empData.SDEPT + '/' + empData.SDIV);
     $("#empPos").val(empData.SPOSITION);
+    $("#divText").val(empData.SDIV);
 
 });
 

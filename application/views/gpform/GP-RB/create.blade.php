@@ -18,7 +18,7 @@
                         <span class="whitespace-nowrap font-semibold opacity-80 text-xs">Input by:</span>
                         <input type="text"
                             class="input input-sm input-ghost w-full rounded-none border-b border-base-300 focus:border-primary focus:bg-base-200/50 px-1 "
-                            id="inputBy" name="inputBy">
+                            id="" name="INPUTBY">
                     </div>
                 </div>
 
@@ -27,7 +27,7 @@
                         <span class="whitespace-nowrap font-semibold opacity-80 text-xs">Request by:</span>
                         <input type="text"
                             class="input input-sm input-ghost w-full rounded-none border-b border-base-300 focus:border-primary focus:bg-base-200/50 px-1 req"
-                            id="reqCode" name="reqCode">
+                            id="REQBY" name="REQBY">
                     </div>
                     <div class="w-1/2 border-r border-base-300 p-2 flex items-center gap-2">
                         <span class="whitespace-nowrap font-semibold opacity-80 text-xs">ชื่อ/NAME:</span>
@@ -80,165 +80,83 @@
                     <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
                     <polyline points="22 4 12 14.01 9 11.01"></polyline>
                 </svg>
-                โปรดทำเครื่องหมาย &check; เพื่อเลือกรูปแบบของตราแสตมป์ / Choose type of rubber stamp
+                รูปแบบของตราแสตมป์ที่จัดทำ / Rubber stamp format
             </div>
+
+            <div class="hidden">
+                <input type="checkbox" id="chkP" name="chkP">
+                <input type="checkbox" id="chkGM" name="chkGM">
+                <input type="checkbox" id="chkDIM" name="chkDIM">
+                <input type="checkbox" id="chkDDIM" name="chkDDIM">
+                <input type="checkbox" id="chkDEM" name="chkDEM">
+                <input type="checkbox" id="chkDDEM" name="chkDDEM">
+                <input type="checkbox" id="chkADV" name="chkADV">
+                <input type="checkbox" id="chkSSPE" name="chkSSPE">
+                <input type="checkbox" id="chkSEM" name="chkSEM">
+                <input type="checkbox" id="chkSPE" name="chkSPE">
+                <input type="checkbox" id="chkASM" name="chkASM">
+                <input type="checkbox" id="chkSUP" name="chkSUP">
+                <input type="checkbox" id="chkFO" name="chkFO">
+                <input type="checkbox" id="chkLEA" name="chkLEA">
+                <input type="checkbox" id="chkENG" name="chkENG">
+                <input type="checkbox" id="chkSTAFF" name="chkSTAFF">
+            </div>
+
             <div class="overflow-x-auto rounded-lg border border-base-300 shadow-sm mb-2">
                 <table class="w-full border-collapse text-left">
                     <thead class="bg-base-200 text-base-content/80 text-xs">
                         <tr>
-                            <th class="border-b border-r border-base-300 p-3 w-12 text-center">ลำดับ<br>No.</th>
-                            <th class="border-b border-r border-base-300 p-3">ตำแหน่ง / Position</th>
-                            <th class="border-b border-r border-base-300 p-3 w-20 text-center">ขนาด<br>Size</th>
-                            <th class="border-b border-r border-base-300 p-3 w-32 text-center">รูปแบบ<br>Format</th>
-                            <th class="border-b border-base-300 p-3">หมายเหตุ / Remark</th>
+                            <th class="border-b border-r border-base-300 p-3 w-1/3 text-center">รูปแบบ<br>Format</th>
+                            <th class="border-b border-base-300 p-3 w-2/3">หมายเหตุ / Remark</th>
                         </tr>
                     </thead>
                     <tbody class="text-xs">
-                        <tr class="hover:bg-base-200/20 transition-colors">
-                            <td class="border-b border-r border-base-300 text-center font-medium">1</td>
-                            <td class="border-b border-r border-base-300 p-3">
-                                <label class="flex items-center space-x-2 cursor-pointer w-fit"><input type="checkbox"
-                                        class="checkbox checkbox-primary checkbox-sm rounded-md" id="chkP" name="chkP">
-                                    <span>P</span></label>
-                            </td>
-                            <td class="border-b border-r border-base-300 text-center text-base-content/70">22 mm.</td>
-                            <td class="border-b border-r border-base-300 text-center p-4" rowspan="4">
+                        <tr class="transition-opacity duration-300" id="rowStamp1">
+                            <td class="border-b border-r border-base-300 text-center p-4">
                                 <div id="stampCircle1"
                                     class="w-[70px] h-[70px] rounded-full border-2 border-primary/50 text-primary flex flex-col justify-center items-center text-[9px] mx-auto overflow-hidden transition-all duration-300 ease-in-out bg-base-100 shadow-inner">
                                     <div class="w-full border-b border-primary/30 text-center pb-[2px] font-bold">AMEC</div>
-                                    <div
-                                        class="w-full border-b border-primary/30 text-center py-[2px] opacity-70 text-[8px]">
-                                        DDMMYYYY</div>
+                                    <div class="w-full border-b border-primary/30 text-center py-[2px] opacity-70 text-[8px]">DDMMYYYY</div>
                                     <div class="w-full flex justify-center pt-[2px] font-bold overflow-visible">
-                                        <span id="name"
-                                            class="origin-center whitespace-nowrap inline-block transition-transform duration-300">NAME</span>
+                                        <span id="name" class="origin-center whitespace-nowrap inline-block transition-transform duration-300">NAME</span>
                                     </div>
                                 </div>
                             </td>
-                            <td class="border-b border-base-300 p-3 align-top" rowspan="4">
-                                <div class="text-base-content/70 mb-2">โปรดระบุชื่อของผู้ใช้งาน
-                                    (ภาษาอังกฤษ)<br>ที่จะนำใส่ในตรายางให้ชัดเจน:<br><span class="italic">Identify name in
-                                        English:</span></div>
-                                <div class="flex items-end gap-2">
+                            <td class="border-b border-base-300 p-3 align-top">
+                                
+                                <div class="text-error/80 font-medium mb-2">โปรดระบุชื่อของผู้ใช้งาน (ภาษาอังกฤษ)<br>ที่จะนำใส่ในตรายางให้ชัดเจน:<br>
+                                    <span class="text-base-content/70 font-normal italic">Identify name and division in English:</span>
+                                </div>
+                                <div class="flex items-end gap-2 mt-4">
                                     <span class="whitespace-nowrap font-semibold">ชื่อ/Name:</span>
-                                    <input type="text"
-                                        class="input input-sm input-ghost w-full rounded-none border-b border-base-300 focus:border-primary px-1"
-                                        id="nameInput" name="nameInput">
+                                    <input type="text" class="input input-sm input-ghost w-full rounded-none border-b border-base-300 focus:border-primary px-1" id="nameInput" name="nameInput">
                                 </div>
                             </td>
-                        </tr>
-                        <tr class="hover:bg-base-200/20 transition-colors">
-                            <td class="border-b border-r border-base-300 text-center font-medium">2</td>
-                            <td class="border-b border-r border-base-300 p-3">
-                                <div class="flex flex-wrap gap-4">
-                                    <label class="flex items-center space-x-2 cursor-pointer"><input type="checkbox"
-                                            class="checkbox checkbox-primary checkbox-sm rounded-md" id="chkGM" name="chkGM">
-                                        <span>GM</span></label>
-                                    <label class="flex items-center space-x-2 cursor-pointer"><input type="checkbox"
-                                            class="checkbox checkbox-primary checkbox-sm rounded-md" id="chkDIM" name="chkDIM">
-                                        <span>DIM</span></label>
-                                    <label class="flex items-center space-x-2 cursor-pointer"><input type="checkbox"
-                                            class="checkbox checkbox-primary checkbox-sm rounded-md" id="chkDDIM" name="chkDDIM">
-                                        <span>DDIM</span></label>
-                                </div>
-                            </td>
-                            <td class="border-b border-r border-base-300 text-center text-base-content/70">21 mm.</td>
-                        </tr>
-                        <tr class="hover:bg-base-200/20 transition-colors">
-                            <td class="border-b border-r border-base-300 text-center font-medium">3</td>
-                            <td class="border-b border-r border-base-300 p-3">
-                                <div class="flex flex-wrap gap-4 mb-2">
-                                    <label class="flex items-center space-x-2 cursor-pointer"><input type="checkbox"
-                                            class="checkbox checkbox-primary checkbox-sm rounded-md" id="chkDEM" name="chkDEM">
-                                        <span>DEM</span></label>
-                                    <label class="flex items-center space-x-2 cursor-pointer"><input type="checkbox"
-                                            class="checkbox checkbox-primary checkbox-sm rounded-md" id="chkDDEM" name="chkDDEM">
-                                        <span>DDEM</span></label>
-                                    <label class="flex items-center space-x-2 cursor-pointer"><input type="checkbox"
-                                            class="checkbox checkbox-primary checkbox-sm rounded-md" id="chkADV" name="chkADV">
-                                        <span>ADV</span></label>
-                                </div>
-                                <label class="flex items-center space-x-2 cursor-pointer w-fit"><input type="checkbox"
-                                        class="checkbox checkbox-primary checkbox-sm rounded-md" id="chkSSPE" name="chkSSPE">
-                                    <span>Senior Specialist</span></label>
-                            </td>
-                            <td class="border-b border-r border-base-300 text-center text-base-content/70">19 mm.</td>
-                        </tr>
-                        <tr class="hover:bg-base-200/20 transition-colors">
-                            <td class="border-b border-r border-base-300 text-center font-medium">4</td>
-                            <td class="border-b border-r border-base-300 p-3">
-                                <div class="flex gap-6">
-                                    <label class="flex items-center space-x-2 cursor-pointer"><input type="checkbox"
-                                            class="checkbox checkbox-primary checkbox-sm rounded-md" id="chkSEM" name="chkSEM">
-                                        <span>SEM</span></label>
-                                    <label class="flex items-center space-x-2 cursor-pointer"><input type="checkbox"
-                                            class="checkbox checkbox-primary checkbox-sm rounded-md" id="chkSPE" name="chkSPE">
-                                        <span>Specialist</span></label>
-                                </div>
-                            </td>
-                            <td class="border-b border-r border-base-300 text-center text-base-content/70">17 mm.</td>
                         </tr>
 
-                        <tr class="bg-base-50/30 hover:bg-base-200/20 transition-colors">
-                            <td class="border-r border-base-300 text-center font-medium">5</td>
-                            <td class="border-r border-base-300 p-3">
-                                <div class="grid grid-cols-2 gap-3">
-                                    <label class="flex items-center space-x-2 cursor-pointer"><input type="checkbox"
-                                            class="checkbox checkbox-primary checkbox-sm rounded-md" id="chkASM" name="chkASM">
-                                        <span>ASM</span></label>
-                                    <label class="flex items-center space-x-2 cursor-pointer"><input type="checkbox"
-                                            class="checkbox checkbox-primary checkbox-sm rounded-md" id="chkSUP" name="chkSUP">
-                                        <span>Supervisor</span></label>
-                                    <label class="flex items-center space-x-2 cursor-pointer"><input type="checkbox"
-                                            class="checkbox checkbox-primary checkbox-sm rounded-md" id="chkFO" name="chkFO">
-                                        <span>Foreman</span></label>
-                                    <label class="flex items-center space-x-2 cursor-pointer"><input type="checkbox"
-                                            class="checkbox checkbox-primary checkbox-sm rounded-md" id="chkLEA" name="chkLEA">
-                                        <span>Leader</span></label>
-                                    <label class="flex items-center space-x-2 cursor-pointer"><input type="checkbox"
-                                            class="checkbox checkbox-primary checkbox-sm rounded-md" id="chkENG" name="chkENG">
-                                        <span>Engineer</span></label>
-                                    <label class="flex items-center space-x-2 cursor-pointer"><input type="checkbox"
-                                            class="checkbox checkbox-primary checkbox-sm rounded-md" id="chkSTAFF" name="chkSTAFF">
-                                        <span>Staff</span></label>
-                                </div>
-                            </td>
-                            <td class="border-r border-base-300 text-center text-base-content/70">15 mm.</td>
+                        <tr class="bg-base-50/30 transition-opacity duration-300" id="rowStamp2">
                             <td class="border-r border-base-300 text-center p-4">
                                 <div id="stampCircle2"
                                     class="w-[70px] h-[70px] rounded-full border-2 border-primary/50 text-primary flex flex-col justify-center items-center text-[9px] mx-auto overflow-hidden transition-all duration-300 ease-in-out bg-base-100 shadow-inner">
-                                    <div
-                                        class="w-full border-b border-primary/30 flex justify-center pb-[2px] font-bold overflow-visible">
-                                        <span id="divText"
-                                            class="origin-center whitespace-nowrap inline-block transition-transform duration-300">___
-                                            DIV</span>
+                                    <div class="w-full border-b border-primary/30 flex justify-center pb-[2px] font-bold overflow-visible">
+                                        <span id="divText" class="origin-center whitespace-nowrap inline-block transition-transform duration-300"></span>
                                     </div>
-                                    <div
-                                        class="w-full border-b border-primary/30 text-center py-[2px] opacity-70 text-[8px]">
-                                        DDMMYYYY</div>
+                                    <div class="w-full border-b border-primary/30 text-center py-[2px] opacity-70 text-[8px]">DDMMYYYY</div>
                                     <div class="w-full flex justify-center pt-[2px] font-bold overflow-visible">
-                                        <span id="name2"
-                                            class="origin-center whitespace-nowrap inline-block transition-transform duration-300">NAME</span>
+                                        <span id="name2" class="origin-center whitespace-nowrap inline-block transition-transform duration-300">NAME</span>
                                     </div>
                                 </div>
                             </td>
                             <td class="p-3 align-top">
-                                <div class="text-error/80 font-medium mb-2">*โปรดระบุชื่อ และ ฝ่าย ของผู้ใช้งาน<br><span
-                                        class="text-base-content/70 font-normal italic">Identify name and division in
-                                        English:</span></div>
+                                <div class="text-error/80 font-medium mb-2">*โปรดระบุชื่อ และ ฝ่าย ของผู้ใช้งาน<br>
+                                    <span class="text-base-content/70 font-normal italic">Identify name and division in English:</span>
+                                </div>
                                 <div class="flex flex-col gap-2 mt-3">
                                     <div class="flex items-end gap-2">
                                         <span class="whitespace-nowrap font-semibold">ชื่อ/Name:</span>
-                                        <input type="text"
-                                            class="input input-sm input-ghost w-full rounded-none border-b border-base-300 focus:border-primary px-1"
-                                            id="name2Input" name="name2Input">
+                                        <input type="text" class="input input-sm input-ghost w-full rounded-none border-b border-base-300 focus:border-primary px-1" id="name2Input" name="name2Input">
                                     </div>
-                                    <div class="flex items-end gap-2">
-                                        <span class="whitespace-nowrap font-semibold">ฝ่าย/Div.:</span>
-                                        <input type="text"
-                                            class="input input-sm input-ghost w-full rounded-none border-b border-base-300 focus:border-primary px-1"
-                                            id="divInput" name="divInput">
-                                    </div>
+                                    
                                 </div>
                             </td>
                         </tr>
@@ -390,27 +308,48 @@
                         if (settings) {
                             const targetCircle = document.getElementById(settings.target);
                             if (targetCircle) {
+                                // ปรับขนาดวงกลมที่ทำงาน
                                 targetCircle.style.width = settings.size + 'px';
                                 targetCircle.style.height = settings.size + 'px';
                                 
+                                // 🔥 เพิ่มลูกเล่น: ไฮไลท์แถวที่กำลังทำงานอยู่ และทำให้อีกอันจางลง
+                                if (settings.target === 'stampCircle1') {
+                                    document.getElementById('rowStamp1').style.opacity = '1';
+                                    document.getElementById('rowStamp2').style.opacity = '0.3';
+                                    // คืนค่าขนาดวงล่างให้เป็น default
+                                    document.getElementById('stampCircle2').style.width = '70px';
+                                    document.getElementById('stampCircle2').style.height = '70px';
+                                } else {
+                                    document.getElementById('rowStamp1').style.opacity = '0.3';
+                                    document.getElementById('rowStamp2').style.opacity = '1';
+                                    // คืนค่าขนาดวงบนให้เป็น default
+                                    document.getElementById('stampCircle1').style.width = '70px';
+                                    document.getElementById('stampCircle1').style.height = '70px';
+                                }
+                                
                                 // ปรับตัวหนังสือทุกจุดเมื่อวงกลมเปลี่ยนขนาด
-                                adjustTextScale('name', 'stampCircle1');
-                                adjustTextScale('name2', 'stampCircle2');
-                                adjustTextScale('divText', 'stampCircle2');
+                                setTimeout(() => {
+                                    adjustTextScale('name', 'stampCircle1');
+                                    adjustTextScale('name2', 'stampCircle2');
+                                    adjustTextScale('divText', 'stampCircle2');
+                                }, 10);
                             }
                         }
                     } else {
-                        const settings = stampConfig[this.id];
-                        if (settings) {
-                            const targetCircle = document.getElementById(settings.target);
-                            if (targetCircle) {
-                                targetCircle.style.width = '';
-                                targetCircle.style.height = '';
-                                adjustTextScale('name', 'stampCircle1');
-                                adjustTextScale('name2', 'stampCircle2');
-                                adjustTextScale('divText', 'stampCircle2');
-                            }
-                        }
+                        // คืนค่าทุกอย่างเป็นปกติเมื่อไม่มีการเลือก
+                        document.getElementById('rowStamp1').style.opacity = '1';
+                        document.getElementById('rowStamp2').style.opacity = '1';
+                        
+                        document.getElementById('stampCircle1').style.width = '';
+                        document.getElementById('stampCircle1').style.height = '';
+                        document.getElementById('stampCircle2').style.width = '';
+                        document.getElementById('stampCircle2').style.height = '';
+                        
+                        setTimeout(() => {
+                            adjustTextScale('name', 'stampCircle1');
+                            adjustTextScale('name2', 'stampCircle2');
+                            adjustTextScale('divText', 'stampCircle2');
+                        }, 10);
                     }
                 });
             });
