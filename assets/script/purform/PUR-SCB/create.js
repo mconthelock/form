@@ -28,14 +28,14 @@ $(async function () {
 
         data = await $.ajax({
             type: "GET",
-            url: `${host}/purform/PUR-SCP/main/getDataPrice`,
+            url: `${host}/purform/PUR-SCB/main/getDataPrice`,
             dataType: "json",
             success: function (response) {
                 console.log(response);
             }
         });
     } catch (error) {
-        console.error("Failed to load PUR-SCP create data", error);
+        console.error("Failed to load PUR-SCB create data", error);
         $emptyState.removeClass("hidden");
         setLoadingState(false);
         return;
@@ -88,7 +88,7 @@ $(async function () {
         try {
             const res = await $.ajax({
                 type: "GET",
-                url: `${host}/purform/PUR-SCP/main/checkPeriodExists`,
+                url: `${host}/purform/PUR-SCB/main/checkPeriodExists`,
                 data: { fyear: year, period },
                 dataType: "json",
             });
@@ -393,7 +393,7 @@ $(async function () {
         });
         await $.ajax({
             type: "POST",
-            url: `${host}/purform/PUR-SCP/main/uploadAttachFiles`,
+            url: `${host}/purform/PUR-SCB/main/uploadAttachFiles`,
             data: formData,
             processData: false,
             contentType: false,
@@ -554,7 +554,7 @@ $(async function () {
         try {
             const res = await $.ajax({
                 type: "POST",
-                url: `${host}/purform/PUR-SCP/main/saveWinner`,
+                url: `${host}/purform/PUR-SCB/main/saveWinner`,
                 contentType: "application/json",
                 data: JSON.stringify(
                     {
