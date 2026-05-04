@@ -2262,6 +2262,10 @@ async function createGPENT() {
 		});
 		const companiesStr = lunchFormData.get("companies");
 		const companiesArr = JSON.parse(companiesStr);
+		console.log("before create lunch");
+		
+		console.log(lunchFormData);
+		
 		InsertGPENT(lunchFormData);
 		SaveVMSENT(
 			$("#cyear2").val(),
@@ -2300,6 +2304,10 @@ async function createGPENT() {
 		});
 		const companiesStr = dinnerFormData.get("companies");
 		const companiesArr = JSON.parse(companiesStr);
+				
+		console.log("before create dinner");
+		console.log(dinnerFormData);
+		
 		InsertGPENT(dinnerFormData);
 		SaveVMSENT(
 			$("#cyear2").val(),
