@@ -43,13 +43,14 @@
         cursor: not-allowed !important;
     }
 
-    .disabled-textbox,
-    .disabled-textbox:disabled,
-    .disabled-textbox[readonly] {
+    .disabled-textbox {
         background-color: #f0f0f0 !important;
         cursor: not-allowed !important;
-        color: #64748b !important;
-        pointer-events: none;
+        color: #64748b;
+    }
+
+    .disabled-textbox:hover {
+        cursor: not-allowed !important;
     }
 </style>
 

@@ -119,11 +119,11 @@ $(document).ready(function () {
                     </td>
 
                     <td class="border border-slate-300 px-2 py-2">
-                        <input name="project_no[]" class="edr-input disabled-textbox" readonly disabled>
+                        <input name="project_no[]" class="edr-input disabled-textbox" readonly>
                     </td>
 
                     <td class="border border-slate-300 px-2 py-2">
-                        <input name="prod_jun[]" class="edr-input disabled-textbox" readonly disabled>
+                        <input name="prod_jun[]" class="edr-input disabled-textbox" readonly>
                     </td>
 
                     <td class="border border-slate-300 px-2 py-2">
@@ -131,7 +131,7 @@ $(document).ready(function () {
                     </td>
 
                     <td class="border border-slate-300 px-2 py-2">
-                        <input name="model[]" class="edr-input disabled-textbox" readonly disabled>
+                        <input name="model[]" class="edr-input disabled-textbox" readonly>
                     </td>
 
                     <td class="border border-slate-300 px-2 py-2">
