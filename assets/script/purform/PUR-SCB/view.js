@@ -13,7 +13,7 @@ import { getEmployee } from "@amec/webasset/api/amec";
 const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 const TARGET_STEPS = ["02", "81", "93", "84", "59"];
 const WINNER_COLS = [6, 7, 10];
-const PDF_BASE_DIR = "//amecnas/AMECWEB/File/development/Form/PUR/PUR-SCP/";
+const PDF_BASE_DIR = "//amecnas/AMECWEB/File/development/Form/PUR/PUR-SCB/";
 
 const TABLE_COLUMNS = [
     { data: "SCRAP_ID" },
@@ -123,26 +123,26 @@ $(async function () {
         [data, flow, bankGuarantees, purscpForm] = await Promise.all([
             $.ajax({
                 type: "GET",
-                url: `${host}/purform/PUR-SCP/main/getDataPriceByRunNo`,
+                url: `${host}/purform/PUR-SCB/main/getDataPriceByRunNo`,
                 data: { nfrmno, vorgno, cyear, cyear2, runNo: runno },
                 dataType: "json",
             }),
             showflow({ ...sharedParams, showStep: false }),
             $.ajax({
                 type: "GET",
-                url: `${host}/purform/PUR-SCP/main/getBankGuarantees`,
+                url: `${host}/purform/PUR-SCB/main/getBankGuarantees`,
                 data: { nfrmno, vorgno, cyear, cyear2, runNo: runno },
                 dataType: "json",
             }),
             $.ajax({
                 type: "GET",
-                url: `${host}/purform/PUR-SCP/main/getPurscpForm`,
+                url: `${host}/purform/PUR-SCB/main/getPurscpForm`,
                 data: { nfrmno, vorgno, cyear, cyear2, runNo: runno },
                 dataType: "json",
             }),
         ]);
     } catch (error) {
-        console.error("Failed to load PUR-SCP view data", error);
+        console.error("Failed to load PUR-SCB view data", error);
         $emptyState.removeClass("hidden");
         setLoadingState(false);
         return;
@@ -280,7 +280,7 @@ $(async function () {
     try {
         const scrapFiles = await $.ajax({
             type: "GET",
-            url: `${host}/purform/PUR-SCP/main/getScrapFiles`,
+            url: `${host}/purform/PUR-SCB/main/getScrapFiles`,
             data: { nfrmno, vorgno, cyear, cyear2, runNo: runno },
             dataType: "json",
         });
@@ -292,7 +292,7 @@ $(async function () {
             $list.append('<li class="text-xs text-base-content/40 italic">ไม่มีไฟล์แนบ</li>');
         } else {
             scrapFiles.forEach(file => {
-                const downloadUrl = `${host}/purform/PUR-SCP/main/downloadScrapFile?path=${encodeURIComponent(file.file_path)}`;
+                const downloadUrl = `${host}/purform/PUR-SCB/main/downloadScrapFile?path=${encodeURIComponent(file.file_path)}`;
                 $list.append(`
                     <li class="flex items-center gap-2 text-sm">
                         <i class="icofont-paper-clip text-info"></i>
