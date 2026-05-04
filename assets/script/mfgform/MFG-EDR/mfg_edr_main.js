@@ -1,3 +1,7 @@
+import {
+    getcause, getworktype, getUserbyemp
+} from "./data.js";
+
 $(document).ready(function () {
     const EDR = {
         rowIndex: 0,
@@ -20,8 +24,20 @@ $(document).ready(function () {
                 EDR.deleteRow($(this));
             });
 
-            $('#request_by, #repair_by').on('blur change', function () {
-                EDR.checkEmployee($(this));
+            $('#request_by, #repair_by').on('input', function () {
+                const val = $(this).val();
+                if (val.length === 5) {
+                    EDR.checkEmployee($(this));
+                } else {
+                    const target = $(this).attr('id') === 'request_by'
+                        ? '#request_by_name'
+                        : '#repair_by_name';
+                    $(target).text('');
+                }
+            });
+
+            $('#job_type').on('change', function () {
+                EDR.loadCauseByWorkType($(this).val());
             });
 
             $('#btnSaveDraft').on('click', function () {
@@ -33,23 +49,45 @@ $(document).ready(function () {
             });
         },
 
-        loadMaster: function () {
-            // ตัวอย่าง master data ชั่วคราว
-            // ถ้ามี API จริง ค่อยเปลี่ยนตรงนี้จุดเดียว
-            const jobTypes = [
-                { value: 'NEW', text: 'New Drawing' },
-                { value: 'REPAIR', text: 'Repair Drawing' },
-                { value: 'CHANGE', text: 'Change Drawing' }
-            ];
+        loadMaster: async function () {
+            try {
+                const jobTypes = await getworktype();
 
-            const causes = [
-                { value: 'DESIGN', text: 'Design Issue' },
-                { value: 'MFG', text: 'Manufacturing Issue' },
-                { value: 'OTHER', text: 'Other' }
-            ];
+                const worktypeOptions = jobTypes.map(function (item) {
+                    return {
+                        value: item.TID,
+                        text: item.TYPENAME
+                    };
+                });
 
-            this.renderOptions('#job_type', jobTypes);
-            this.renderOptions('#cause', causes);
+                this.renderOptions('#job_type', worktypeOptions);
+                this.renderOptions('#cause', []);
+            } catch (error) {
+                console.error('LOAD MASTER ERROR:', error);
+                alert('โหลดข้อมูล Work Type ไม่สำเร็จ');
+            }
+        },
+
+        loadCauseByWorkType: async function (tid) {
+            const causeGroup = String(tid) === '4' ? 'PCB' : 'ALL';
+
+            try {
+                const causes = await getcause({
+                    CAUSE_GROUP: causeGroup
+                });
+
+                const causeOptions = causes.map(function (item) {
+                    return {
+                        value: item.CID,
+                        text: `(${item.CAUSE}) - ${item.CAUSENAME}`
+                    };
+                });
+
+                this.renderOptions('#cause', causeOptions);
+            } catch (error) {
+                console.error('LOAD CAUSE ERROR:', error);
+                alert('โหลดข้อมูล Cause ไม่สำเร็จ');
+            }
         },
 
         renderOptions: function (selector, data) {
@@ -81,11 +119,11 @@ $(document).ready(function () {
                     </td>
 
                     <td class="border border-slate-300 px-2 py-2">
-                        <input name="project_no[]" class="edr-input">
+                        <input name="project_no[]" class="edr-input disabled-textbox" readonly disabled>
                     </td>
 
                     <td class="border border-slate-300 px-2 py-2">
-                        <input name="prod_jun[]" class="edr-input">
+                        <input name="prod_jun[]" class="edr-input disabled-textbox" readonly disabled>
                     </td>
 
                     <td class="border border-slate-300 px-2 py-2">
@@ -93,7 +131,7 @@ $(document).ready(function () {
                     </td>
 
                     <td class="border border-slate-300 px-2 py-2">
-                        <input name="model[]" class="edr-input">
+                        <input name="model[]" class="edr-input disabled-textbox" readonly disabled>
                     </td>
 
                     <td class="border border-slate-300 px-2 py-2">
@@ -101,7 +139,7 @@ $(document).ready(function () {
                     </td>
 
                     <td class="border border-slate-300 px-2 py-2">
-                        <input name="problem_detail[]" class="edr-input">
+                        <textarea name="problem_detail[]" class="edr-input" rows="3"></textarea>
                     </td>
 
                     <td class="border border-slate-300 px-2 py-2 text-center">
@@ -137,7 +175,7 @@ $(document).ready(function () {
             $('#totalRow').text($('#detailBody tr').length);
         },
 
-        checkEmployee: function ($input) {
+        checkEmployee: async function ($input) {
             const empno = $.trim($input.val());
             const target = $input.attr('id') === 'request_by'
                 ? '#request_by_name'
@@ -154,18 +192,38 @@ $(document).ready(function () {
                 return;
             }
 
-            // TODO: เปลี่ยนเป็น API จริง
-            // $.get(EDR.baseUrl + 'mfgform/mfg_edaily_report/get_emp/' + empno, function (res) {
-            //     $(target)
-            //         .removeClass('text-red-500')
-            //         .addClass('text-emerald-700')
-            //         .text(res.empname || 'ไม่พบข้อมูล');
-            // }, 'json');
+            try {
+                $(target)
+                    .removeClass('text-red-500 text-emerald-700')
+                    .addClass('text-slate-500')
+                    .text('Checking...');
 
-            $(target)
-                .removeClass('text-red-500')
-                .addClass('text-emerald-700')
-                .text('รอต่อ API employee');
+                const user = await getUserbyemp(empno);
+
+                const empName = user?.SNAME
+                    || user?.EMPNAME
+                    || user?.empname
+                    || user?.name
+                    || '';
+
+                if (empName) {
+                    $(target)
+                        .removeClass('text-red-500 text-slate-500')
+                        .addClass('text-emerald-700')
+                        .text(empName);
+                } else {
+                    $(target)
+                        .removeClass('text-emerald-700 text-slate-500')
+                        .addClass('text-red-500')
+                        .text('ไม่พบข้อมูลพนักงาน');
+                }
+            } catch (error) {
+                console.error('CHECK EMPLOYEE ERROR:', error);
+                $(target)
+                    .removeClass('text-emerald-700 text-slate-500')
+                    .addClass('text-red-500')
+                    .text('ไม่พบข้อมูลพนักงาน');
+            }
         },
 
         validateForm: function () {

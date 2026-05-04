@@ -16,13 +16,13 @@
         width: 100%;
         border: 1px solid #cbd5e1;
         border-radius: 0.75rem;
-        padding: 0.5rem 0.7rem;
+        padding: 0.65rem 0.85rem;
         outline: none;
         background: #fff;
     }
 
     .edr-input:focus {
-        border-color: #14b8a6;
+        border-color: #24c2af;
         box-shadow: 0 0 0 3px rgba(20, 184, 166, 0.18);
     }
 
@@ -41,11 +41,19 @@
 
     button:disabled {
         cursor: not-allowed !important;
-        opacity: 0.65;
+    }
+
+    .disabled-textbox,
+    .disabled-textbox:disabled,
+    .disabled-textbox[readonly] {
+        background-color: #f0f0f0 !important;
+        cursor: not-allowed !important;
+        color: #64748b !important;
+        pointer-events: none;
     }
 </style>
 
-<div class="min-h-screen bg-gradient-to-br from-slate-100 via-white to-teal-50 px-5 py-6">
+<div class="min-h-screen bg-gradient-to-br from-slate-100 via-white to-teal-50 px- py-6">
     <div class="edr-card w-full max-w-[1600px] mx-auto overflow-hidden rounded-2xl bg-white">
         <div class="bg-gradient-to-r from-emerald-900 via-teal-700 to-cyan-600 px-6 py-6">
             <h1 class="text-center text-3xl font-extrabold tracking-wide text-white">
@@ -54,12 +62,11 @@
         </div>
 
         <form id="formMfgEdr" enctype="multipart/form-data" class="p-4">
-            <input type="hidden" id="base_url" value="{{ url('/') }}/">
-            <input type="hidden" id="login_empno" value="{{ isset($empno) ? $empno : '' }}">
-
             <div class="overflow-hidden rounded-2xl border border-slate-300 bg-white">
                 <div class="grid grid-cols-12 border-b border-slate-300">
-                    <div class="edr-label col-span-12 md:col-span-2 px-4 py-2">Create By</div>
+                    <div class="edr-label col-span-12 md:col-span-2 px-4 py-2">
+                        Create By
+                    </div>
                     <div class="col-span-12 md:col-span-10 px-4 py-2 font-bold text-slate-800">
                         {{ isset($empno) ? $empno : '' }} {{ isset($empname) ? $empname : '' }}
                     </div>
@@ -106,10 +113,16 @@
                 </div>
 
                 <div class="grid grid-cols-12 border-b border-slate-300">
-                    <div class="edr-label col-span-12 md:col-span-2 px-4 py-2">เอกสาร / รูปภาพ</div>
+                    <div class="edr-label col-span-12 md:col-span-2 px-4 py-2">
+                        เอกสาร / รูปภาพ
+                    </div>
                     <div class="col-span-12 md:col-span-10 px-4 py-2">
                         <input type="file" id="filUpload_ref" name="filUpload_ref[]" multiple
-                            class="block w-full text-sm text-slate-700 file:mr-4 file:rounded-xl file:border-0 file:bg-teal-700 file:px-4 file:py-2 file:font-bold file:text-white hover:file:bg-teal-800">
+                            class="block w-full text-sm text-slate-700
+                            file:mr-4 file:rounded-xl file:border-0
+                            file:bg-teal-700 file:px-4 file:py-2
+                            file:font-bold file:text-white
+                            hover:file:bg-teal-800">
 
                         <p class="mt-2 text-xs font-bold text-red-500">
                             **ชื่อไฟล์ห้ามมีช่องว่างหรืออักษรพิเศษ เช่น [ ' , " * ]
@@ -118,13 +131,16 @@
                 </div>
 
                 <div class="grid grid-cols-12">
-                    <div class="edr-label col-span-12 md:col-span-2 px-4 py-2">Remark</div>
+                    <div class="edr-label col-span-12 md:col-span-2 px-4 py-2">
+                        Remark
+                    </div>
                     <div class="col-span-12 md:col-span-10 px-4 py-2">
                         <textarea id="remark" name="remark" rows="4"
                             placeholder="REMARK !!!" class="edr-input resize-y"></textarea>
                     </div>
                 </div>
             </div>
+
 
             <div class="mt-3 flex flex-wrap items-center justify-between gap-3">
                 <button type="button" id="btnAddRow"
@@ -139,10 +155,22 @@
 
             <div class="mt-3 overflow-x-auto rounded-2xl border border-slate-300">
                 <table id="tblDetail" class="w-full min-w-[1350px] border-collapse text-sm">
+                    <colgroup>
+                        <col style="width:3%">
+                        <col style="width:10%">
+                        <col style="width:15%">
+                        <col style="width:25%">
+                        <col style="width:7%">
+                        <col style="width:5%">
+                        <col style="width:7%">
+                        <col style="width:7%">
+                        <col style="width:17%">
+                        <col style="width:4%">
+                    </colgroup>
                     <thead>
                         <tr class="bg-gradient-to-r from-emerald-900 to-teal-700 text-white">
                             <th class="border border-slate-300 px-3 py-2 text-center w-14">#</th>
-                            <th class="border border-slate-300 px-3 py-2 text-left">Order no <span class="text-red-300">*</span></th>
+                            <th class="border border-slate-300 px-3 py-2 text-left">Order no <span class="text-red-800">*</span></th>
                             <th class="border border-slate-300 px-3 py-2 text-left">Drawing no <span class="text-red-300">*</span></th>
                             <th class="border border-slate-300 px-3 py-2 text-left">Project no</th>
                             <th class="border border-slate-300 px-3 py-2 text-left">Prod Jun</th>
@@ -168,12 +196,12 @@
                     Send Form
                 </button>
             </div>
+
         </form>
     </div>
 </div>
 
 @endsection
-
 @section('scripts')
     <script src="{{ $_ENV['APP_JS'] }}/mfg_edr_main.js?ver={{ $GLOBALS['version'] }}"></script>             
 @endsection
