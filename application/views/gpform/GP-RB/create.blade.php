@@ -237,7 +237,7 @@
                         <span class="text-xs font-semibold opacity-70 whitespace-nowrap">หมายเหตุ/Remark:</span>
                         <textarea type="text"
                             class="input input-sm input-ghost grow rounded-none border-b border-base-300 focus:border-primary px-1"
-                            id="otherRemark" name="otherRemark"></textarea>
+                            id="otherRemark" name="STAMPCUS_REMARK"></textarea>
                     </div>
                 </div>
             </div>

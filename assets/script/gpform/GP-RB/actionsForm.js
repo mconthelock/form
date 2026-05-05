@@ -20,7 +20,7 @@ $(async function ()  {
     const Purposedata = purpose.map((a) => {
         const otherSelect = `<input type="text"
                             class="input input-sm input-ghost w-full rounded-none border-b border-base-300 focus:border-primary focus:bg-base-200/50 px-1"
-                            id="otherSelect" name="PURPOSE_OTHER" placeholder="Please specify other purpose" disabled>`;
+                            id="otherSelect" name="STAMP_REMARK" placeholder="Please specify other purpose" disabled>`;
 
         return `<label class="flex items-center space-x-2 cursor-pointer">
                                 <input type="radio" name="PURPOSE_ID" 
@@ -214,10 +214,7 @@ async function createForm(data) {
 
 
 
-
-
-
-        // ✅ 2. ฟังก์ชันจัดการตรายาง (ย่อขนาด, เปลี่ยนข้อความ, ไฮไลท์และ Disable ช่อง)
+// ✅ 2. ฟังก์ชันจัดการตรายาง (ย่อขนาด, เปลี่ยนข้อความ, ไฮไลท์และ Disable ช่อง)
 document.addEventListener('DOMContentLoaded', () => {
     
     // 1. ฟังก์ชันปรับขนาดตัวอักษรไม่ให้ล้นขอบ (คงไว้เหมือนเดิม)
@@ -274,93 +271,156 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 4. Config ขนาดตรายางตามตำแหน่ง
     const stampConfig = {
-        'chkP': { size: 88, target: 'stampCircle1' }, 
-        'chkGM': { size: 84, target: 'stampCircle1' }, 
-        'chkDIM': { size: 84, target: 'stampCircle1' }, 
-        'chkDDIM': { size: 84, target: 'stampCircle1' },
-        'chkDEM': { size: 76, target: 'stampCircle1' }, 
-        'chkDDEM': { size: 76, target: 'stampCircle1' },
-        'chkADV': { size: 76, target: 'stampCircle1' }, 
-        'chkSSPE': { size: 76, target: 'stampCircle1' },
-        'chkSEM': { size: 68, target: 'stampCircle1' }, 
-        'chkSPE': { size: 68, target: 'stampCircle1' }, 
-        'chkASM': { size: 60, target: 'stampCircle2' }, 
-        'chkSUP': { size: 60, target: 'stampCircle2' }, 
-        'chkFO': { size: 60, target: 'stampCircle2' }, 
-        'chkLEA': { size: 60, target: 'stampCircle2' }, 
-        'chkENG': { size: 60, target: 'stampCircle2' }, 
-        'chkSTAFF': { size: 60, target: 'stampCircle2' } 
-    };
+    'chkP': { size: 88, target: 'stampCircle1' }, 
+    'chkGM': { size: 84, target: 'stampCircle1' }, 
+    'chkDIM': { size: 84, target: 'stampCircle1' }, 
+    'chkDDIM': { size: 84, target: 'stampCircle1' },
+    'chkDEM': { size: 76, target: 'stampCircle1' }, 
+    'chkDDEM': { size: 76, target: 'stampCircle1' },
+    'chkADV': { size: 76, target: 'stampCircle1' }, 
+    'chkSSPE': { size: 76, target: 'stampCircle1' },
+    'chkSEM': { size: 68, target: 'stampCircle1' }, 
+    'chkSPE': { size: 68, target: 'stampCircle1' }, 
+    'chkASM': { size: 60, target: 'stampCircle2' }, 
+    'chkSUP': { size: 60, target: 'stampCircle2' }, 
+    'chkFO': { size: 60, target: 'stampCircle2' }, 
+    'chkLEA': { size: 60, target: 'stampCircle2' }, 
+    'chkENG': { size: 60, target: 'stampCircle2' }, 
+    'chkSTAFF': { size: 60, target: 'stampCircle2' } 
+};
 
-    const formatCheckboxes = document.querySelectorAll('input[type="checkbox"][id^="chk"]');
+// -----------------------------------------------------------------------------
+// 2. ฟังก์ชันศูนย์กลาง ควบคุมการเปิด/ปิดช่อง Disable อย่างเด็ดขาด
+// -----------------------------------------------------------------------------
+function updateFormState() {
+    const isStandard = $('#radioStandard').is(':checked');
+    const input1 = $('#nameInput1');
+    const input2 = $('#nameInput2');
+    
+    // กฎข้อ 1: จัดการ Section หลัก
+    if (isStandard) {
+        $('#standardStampSection').css({'opacity': '1', 'pointer-events': 'auto'});
+        $('#otherStampSection').css({'opacity': '0.4', 'pointer-events': 'none'}).find('input, textarea').prop('disabled', true);
+    } else {
+        $('#standardStampSection').css({'opacity': '0.4', 'pointer-events': 'none'});
+        $('#otherStampSection').css({'opacity': '1', 'pointer-events': 'auto'}).find('input, textarea').prop('disabled', false);
+        
+        // ถ้าอยู่โหมด Other Stamp ช่องกรอกมาตรฐานต้องถูก Disable เสมอแล้วจบฟังก์ชันเลย
+        input1.prop('disabled', true);
+        input2.prop('disabled', true);
+        return; 
+    }
 
-    // 5. จัดการเมื่อ Checkbox เปลี่ยนแปลง
-    formatCheckboxes.forEach(cb => {
-        cb.addEventListener('change', function() {
-            const settings = stampConfig[this.id];
-            const row1 = document.getElementById('rowStamp1');
-            const row2 = document.getElementById('rowStamp2');
-            const circle1 = document.getElementById('stampCircle1');
-            const circle2 = document.getElementById('stampCircle2');
+    // กฎข้อ 2: ถ้าอยู่โหมด Standard ให้เช็ค Checkbox Position ต่อ
+    const checkedCb = $('input[type="checkbox"][id^="chk"]:checked').first();
+    const row1 = $('#rowStamp1');
+    const row2 = $('#rowStamp2');
+    const circle1 = $('#stampCircle1');
+    const circle2 = $('#stampCircle2');
 
-            if (this.checked) {
-                // บังคับให้ติ๊กได้ทีละ 1 อัน (ถ้าต้องการ)
-                formatCheckboxes.forEach(otherCb => {
-                    if (otherCb !== this) otherCb.checked = false;
-                });
+    if (checkedCb.length > 0) {
+        const settings = stampConfig[checkedCb.attr('id')];
+        if (settings) {
+            $('#' + settings.target).css({ width: settings.size + 'px', height: settings.size + 'px' });
 
-                if (settings) {
-                    const targetCircle = document.getElementById(settings.target);
-                    targetCircle.style.width = settings.size + 'px';
-                    targetCircle.style.height = settings.size + 'px';
-
-                    if (settings.target === 'stampCircle1') {
-                        // ไฮไลท์แบบ 1
-                        row1.style.opacity = '1';
-                        row2.style.opacity = '0.3'; 
-                        circle2.style.width = '70px';
-                        circle2.style.height = '70px';
-                        
-                        // เปิดช่องกรอก 1, ปิดช่องกรอก 2 และล้างค่าช่อง 2
-                        if(input1) { input1.disabled = false; }
-                        if(input2) { input2.disabled = true; input2.value = ''; }
-                        
-                        // อัปเดตตรายางให้แสดงผลตามค่าล่าสุด (จะเป็น NAME ถ้าช่องว่าง)
-                        updateStampDisplay('nameInput1', 'name', 'stampCircle1');
-                        updateStampDisplay('nameInput2', 'name2', 'stampCircle2');
-
-                    } else {
-                        // ไฮไลท์แบบ 2
-                        row1.style.opacity = '0.3';
-                        row2.style.opacity = '1';
-                        circle1.style.width = '70px';
-                        circle1.style.height = '70px';
-                        
-                        // ปิดช่องกรอก 1 และล้างค่า, เปิดช่องกรอก 2
-                        if(input1) { input1.disabled = true; input1.value = ''; }
-                        if(input2) { input2.disabled = false; }
-                        
-                        // อัปเดตตรายาง
-                        updateStampDisplay('nameInput1', 'name', 'stampCircle1');
-                        updateStampDisplay('nameInput2', 'name2', 'stampCircle2');
-                    }
-                }
+            if (settings.target === 'stampCircle1') {
+                row1.css('opacity', '1'); row2.css('opacity', '0.3');
+                circle2.css({ width: '70px', height: '70px' });
+                
+                input1.prop('disabled', false); // เปิดช่อง 1
+                input2.prop('disabled', true);  // ปิดช่อง 2 (ชัวร์ๆ ตาม Position)
             } else {
-                // ถ้ายกเลิกการติ๊ก คืนค่าหน้าตากลับเป็นแบบเริ่มต้น
-                row1.style.opacity = '1';
-                row2.style.opacity = '1';
-                circle1.style.width = '70px';
-                circle1.style.height = '70px';
-                circle2.style.width = '70px';
-                circle2.style.height = '70px';
-
-                if(input1) input1.disabled = false;
-                if(input2) input2.disabled = false;
-
-                updateStampDisplay('nameInput1', 'name', 'stampCircle1');
-                updateStampDisplay('nameInput2', 'name2', 'stampCircle2');
+                row1.css('opacity', '0.3'); row2.css('opacity', '1');
+                circle1.css({ width: '70px', height: '70px' });
+                
+                input1.prop('disabled', true);  // ปิดช่อง 1
+                input2.prop('disabled', false); // เปิดช่อง 2
             }
-        });
+        }
+    } else {
+        // กรณีไม่มีการติ๊ก Position ใดๆ ให้เปิดรอไว้ทั้ง 2 ช่อง
+        row1.css('opacity', '1'); row2.css('opacity', '1');
+        circle1.css({ width: '70px', height: '70px' });
+        circle2.css({ width: '70px', height: '70px' });
+        
+        input1.prop('disabled', false);
+        input2.prop('disabled', false);
+    }
+}
+
+// -----------------------------------------------------------------------------
+// 3. จัดการ Event ต่างๆ โดยให้โยนภาระไปให้ updateFormState ตัดสินใจ
+// -----------------------------------------------------------------------------
+
+// เมื่อสลับ Radio (Standard / Other)
+$(document).on("change", "input[name='stampFormatGroup']", function () {
+    $('#nameInput1, #nameInput2').val(''); // สลับโหมดปุ๊บ ล้างค่าเก่าทิ้ง
+    updateFormState();
+    updateStampDisplay('nameInput1', 'name', 'stampCircle1');
+    updateStampDisplay('nameInput2', 'name2', 'stampCircle2');
+});
+
+// เมื่อมีการสลับ Checkbox
+$(document).on('change', 'input[type="checkbox"][id^="chk"]', function() {
+    if (this.checked) {
+        // บังคับให้เลือกได้อันเดียว
+        $('input[type="checkbox"][id^="chk"]').not(this).prop('checked', false);
+    }
+    updateFormState();
+    updateStampDisplay('nameInput1', 'name', 'stampCircle1');
+    updateStampDisplay('nameInput2', 'name2', 'stampCircle2');
+});
+
+// เมื่อมีการดึงข้อมูล REQBY
+    $(document).on("change", "#REQBY", async function () {
+        const REQBY = $(this).val();  
+        const empData = await getEmpData(REQBY);
+        
+        // เติมข้อมูลพื้นฐาน
+        $("#empName").val(empData.STNAME);
+        $("#empDept").val(`${empData.SSEC}/${empData.SDEPT}/${empData.SDIV}`);
+        $("#empPos").val(empData.SPOSITION); 
+
+        // ล้างสถานะ Checkbox ทั้งหมดออกก่อน
+        $('input[type="checkbox"][id^="chk"]').prop('checked', false);
+
+        // จัดการดึง Position Code (แปลงเป็นข้อความและตัดช่องว่าง)
+        const PosiCodeArray = Array.isArray(empData.SPOSCODE) ? empData.SPOSCODE : (empData.SPOSCODE ? [empData.SPOSCODE] : []);
+        let firstPosCode = PosiCodeArray.length > 0 ? String(PosiCodeArray[0]).trim() : null;
+        
+        // ป้องกันระบบส่งเลขหลักเดียวมา (เช่น "2" ให้แปลงเป็น "02")
+        if(firstPosCode) firstPosCode = firstPosCode.padStart(2, '0');
+
+        // เช็คเรื่อง Division
+        const targetPosCodeForCircle2 = ["33", "49", "50", "55", "35", "40"];
+        if(firstPosCode && targetPosCodeForCircle2.includes(firstPosCode)) {
+            $('#divisionDisplay').html(`<span id="divText" class="origin-center whitespace-nowrap inline-block transition-transform duration-300">${empData.SDIV}</span>`);
+        } else {
+            $('#divisionDisplay').html('DIVISION');
+        }
+        
+        // จับคู่ Position Code
+        const positionCodeMapping = {
+            '02': 'chkP',     '05': 'chkGM',    '10': 'chkDIM',   '11': 'chkDDIM',
+            '20': 'chkDEM',   '21': 'chkDDEM',  '90': 'chkADV',   '22': 'chkSSPE',
+            '30': 'chkSEM',   '32': 'chkSPE',   '33': 'chkASM',   '49': 'chkSUP',
+            '50': 'chkFO',    '55': 'chkLEA',   '35': 'chkENG',   '40': 'chkSTAFF'
+        };
+
+        // ล้างค่าช่องกรอกชื่อ
+        $("#nameInput1").val("");
+        $("#nameInput2").val("");
+
+        // สั่งติ๊ก Checkbox ตาม Mapping (ไม่ต้องยิง Event ซ้อนแล้ว ปล่อยให้ updateFormState จัดการทีเดียว)
+        if (firstPosCode && positionCodeMapping[firstPosCode]) {
+            const targetCheckboxId = positionCodeMapping[firstPosCode];
+            $(`#${targetCheckboxId}`).prop('checked', true);
+        } 
+        
+        // จบกระบวนการแล้วสั่งอัปเดตสถานะฟอร์มทั้งหมดรวดเดียว
+        updateFormState();
+        updateStampDisplay('nameInput1', 'name', 'stampCircle1');
+        updateStampDisplay('nameInput2', 'name2', 'stampCircle2');
     });
 });
 
