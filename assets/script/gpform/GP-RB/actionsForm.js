@@ -116,7 +116,7 @@ $(document).on("change", "#REQBY", async function () {
     } else {
         $('#divisionDisplay').html('DIVISION');
     }
-
+    console.log(empData.SPOSCODE);
     // 5. จับคู่ Position Code
     const positionCodeMapping = {
         '02': 'chkP',     '05': 'chkGM',    '10': 'chkDIM',   '11': 'chkDDIM',

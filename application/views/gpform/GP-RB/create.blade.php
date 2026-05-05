@@ -50,7 +50,7 @@
                         <span class="whitespace-nowrap font-semibold opacity-80 text-xs">ตำแหน่ง/Position:</span>
                         <input type="text"
                             class="input input-sm input-ghost w-full rounded-none border-b border-base-300 focus:border-primary focus:bg-base-200/50 px-1 req"
-                            id="empPos" name="SPOSCODE">
+                            id="empPos" name="empPos">
                     </div>
                 </div>
             </div>
