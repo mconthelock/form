@@ -3,7 +3,8 @@
 @section('contents')
     <div
         class="bg-base-200 min-h-screen p-4 md:p-8 flex justify-center text-[13px] leading-relaxed font-sans text-base-content">
-        <form class="max-w-[850px] w-full bg-base-100 p-8 shadow-2xl rounded-2xl border border-base-200" id="rbForm">
+        <form class="max-w-[850px] w-full bg-base-100 p-8 shadow-2xl rounded-2xl border border-base-200" id="rbForm"
+            enctype="multipart/form-data">
 
             <div class="text-center mb-8">
                 <h1 class="text-xl font-bold text-primary">แบบฟอร์มขออนุมัติทำตราแสตมป์</h1>
@@ -35,7 +36,7 @@
                             class="input input-sm input-ghost w-full rounded-none border-b border-base-300 focus:border-primary focus:bg-base-200/50 px-1 req"
                             id="empName" name="empName">
                     </div>
-                    
+
                 </div>
 
                 <div class="flex bg-base-50/50">
@@ -70,12 +71,13 @@
                 <div class="border border-base-300 p-4 rounded-lg bg-base-200/30">
                     <div id="purposeList" class="flex flex-col gap-3">
                     </div>
-                    <div id="otherPurpose" ></div>
+                    <div id="otherPurpose"></div>
                 </div>
             </div>
 
             <div class="font-bold text-primary mb-2 mt-8 text-sm flex items-center gap-2">
-                <input type="radio" id="radioStandard" name="stampFormatGroup" value="standard" class="radio radio-primary radio-sm" checked>
+                <input type="radio" id="radioStandard" name="stampFormatGroup" value="standard"
+                    class="radio radio-primary radio-sm" checked>
                 <label for="radioStandard" class="cursor-pointer flex items-center gap-2">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -105,7 +107,8 @@
                 <input type="checkbox" id="chkSTAFF" name="chkSTAFF" value="40">
             </div>
 
-            <div id="standardStampSection" class="overflow-x-auto rounded-lg border border-base-300 shadow-sm mb-2 transition-opacity duration-300">
+            <div id="standardStampSection"
+                class="overflow-x-auto rounded-lg border border-base-300 shadow-sm mb-2 transition-opacity duration-300">
                 <table class="w-full border-collapse text-left">
                     <thead class="bg-base-200 text-base-content/80 text-xs">
                         <tr>
@@ -118,21 +121,28 @@
                             <td class="border-b border-r border-base-300 text-center p-4">
                                 <div id="stampCircle1"
                                     class="w-[70px] h-[70px] rounded-full border-2 border-primary/50 text-primary flex flex-col justify-center items-center text-[9px] mx-auto overflow-hidden transition-all duration-300 ease-in-out bg-base-100 shadow-inner">
-                                    <div class="w-full border-b border-primary/30 text-center pb-[2px] font-bold">AMEC</div>
-                                    <div class="w-full border-b border-primary/30 text-center py-[2px] opacity-70 text-[8px]">DDMMYYYY</div>
+                                    <div class="w-full border-b border-primary/30 text-center pb-[2px] font-bold">AMEC
+                                    </div>
+                                    <div
+                                        class="w-full border-b border-primary/30 text-center py-[2px] opacity-70 text-[8px]">
+                                        DDMMYYYY</div>
                                     <div class="w-full flex justify-center pt-[2px] font-bold overflow-visible">
-                                        <span id="name" class="origin-center whitespace-nowrap inline-block transition-transform duration-300">NAME</span>
+                                        <span id="name"
+                                            class="origin-center whitespace-nowrap inline-block transition-transform duration-300">NAME</span>
                                     </div>
                                 </div>
                             </td>
                             <td class="border-b border-base-300 p-3 align-top">
-                                
-                                <div class="text-error/80 font-medium mb-2">โปรดระบุชื่อของผู้ใช้งาน (ภาษาอังกฤษ)<br>ที่จะนำใส่ในตรายางให้ชัดเจน:<br>
+
+                                <div class="text-error/80 font-medium mb-2">โปรดระบุชื่อของผู้ใช้งาน
+                                    (ภาษาอังกฤษ)<br>ที่จะนำใส่ในตรายางให้ชัดเจน:<br>
                                     <span class="text-base-content/70 font-normal italic">Identify name in English:</span>
                                 </div>
                                 <div class="flex items-end gap-2 mt-4">
                                     <span class="whitespace-nowrap font-semibold">ชื่อ/Name:</span>
-                                    <input type="text" class="input input-sm input-ghost w-full rounded-none border-b border-base-300 focus:border-primary px-1" id="nameInput1" name="NAME_STAMP">
+                                    <input type="text"
+                                        class="input input-sm input-ghost w-full rounded-none border-b border-base-300 focus:border-primary px-1"
+                                        id="nameInput1" name="NAME_STAMP">
                                 </div>
                             </td>
                         </tr>
@@ -141,27 +151,35 @@
                             <td class="border-r border-base-300 text-center p-4">
                                 <div id="stampCircle2"
                                     class="w-[70px] h-[70px] rounded-full border-2 border-primary/50 text-primary flex flex-col justify-center items-center text-[9px] mx-auto overflow-hidden transition-all duration-300 ease-in-out bg-base-100 shadow-inner">
-                                    <div class="w-full border-b border-primary/30 flex justify-center pb-[2px] font-bold overflow-visible" id="divisionDisplay">
-                                        <span id="division" class="origin-center whitespace-nowrap inline-block transition-transform duration-300">DIVISION</span>
-                                        
+                                    <div class="w-full border-b border-primary/30 flex justify-center pb-[2px] font-bold overflow-visible"
+                                        id="divisionDisplay">
+                                        <span id="division"
+                                            class="origin-center whitespace-nowrap inline-block transition-transform duration-300">DIVISION</span>
+
                                     </div>
-                                    <div class="w-full border-b border-primary/30 text-center py-[2px] opacity-70 text-[8px]">DDMMYYYY</div>
+                                    <div
+                                        class="w-full border-b border-primary/30 text-center py-[2px] opacity-70 text-[8px]">
+                                        DDMMYYYY</div>
                                     <div class="w-full flex justify-center pt-[2px] font-bold overflow-visible">
-                                        <span id="name2" class="origin-center whitespace-nowrap inline-block transition-transform duration-300">NAME</span>
+                                        <span id="name2"
+                                            class="origin-center whitespace-nowrap inline-block transition-transform duration-300">NAME</span>
                                     </div>
                                 </div>
                             </td>
                             <td class="p-3 align-top">
                                 <div class="text-error/80 font-medium mb-2">*โปรดระบุชื่อ และ ฝ่าย ของผู้ใช้งาน<br>
-                                    <span class="text-base-content/70 font-normal italic">Identify name and division in English:</span>
+                                    <span class="text-base-content/70 font-normal italic">Identify name and division in
+                                        English:</span>
                                 </div>
                                 <div class="flex flex-col gap-2 mt-3">
                                     <div class="flex items-end gap-2">
                                         <span class="whitespace-nowrap font-semibold">ชื่อ/Name:</span>
-                                        <input type="text" class="input input-sm input-ghost w-full rounded-none border-b border-base-300 focus:border-primary px-1" id="nameInput2" name="NAME_STAMP">
+                                        <input type="text"
+                                            class="input input-sm input-ghost w-full rounded-none border-b border-base-300 focus:border-primary px-1"
+                                            id="nameInput2" name="NAME_STAMP">
                                     </div>
-                                    
-                                    
+
+
                                 </div>
                             </td>
                         </tr>
@@ -180,39 +198,47 @@
             </div>
 
             <div class="font-bold text-sm flex items-center gap-2 my-2">
-                        <input type="radio" id="radioOther" name="stampFormatGroup" value="other" class="radio radio-primary radio-sm">
-                        <label for="radioOther" class="cursor-pointer">
-                            6. รูปแบบตราแสตมป์อื่นๆ
-                            <span class="opacity-60 font-normal text-xs md:ml-1 block md:inline mt-1 md:mt-0">/ For other type please specify:</span>
-                        </label>
-                    </div>
-            <div class="border border-base-300 p-4 rounded-lg bg-base-200/30 transition-opacity duration-300" id="otherStampSection">
-                
+                <input type="radio" id="radioOther" name="stampFormatGroup" value="other"
+                    class="radio radio-primary radio-sm">
+                <label for="radioOther" class="cursor-pointer">
+                    6. รูปแบบตราแสตมป์อื่นๆ
+                    <span class="opacity-60 font-normal text-xs md:ml-1 block md:inline mt-1 md:mt-0">/ For other type
+                        please specify:</span>
+                </label>
+            </div>
+            <div class="border border-base-300 p-4 rounded-lg bg-base-200/30 transition-opacity duration-300"
+                id="otherStampSection">
+
                 <div class="flex flex-col md:flex-row justify-between md:items-start gap-4">
-                    
-                    
 
                     <div class="flex flex-col sm:flex-row gap-3 sm:gap-6">
                         <div class="flex items-center justify-start gap-2">
                             <span class="text-xs font-semibold opacity-70 whitespace-nowrap">ขนาด/Size:</span>
                             <input type="number"
                                 class="input input-sm input-ghost w-24 rounded-none border-b border-base-300 focus:border-primary px-1 text-center"
-                                id="otherSize" name="CUST_SIZE" >
+                                id="otherSize" name="CUST_SIZE">
                         </div>
                         <div class="flex items-center justify-start gap-2">
                             <span class="text-xs font-semibold opacity-70 whitespace-nowrap">จำนวน/Qty:</span>
-                            <input type="number" 
+                            <input type="number"
                                 class="input input-sm input-ghost w-24 rounded-none border-b border-base-300 focus:border-primary px-1 text-center"
                                 id="otherQty" name="QTY" value="1">
                         </div>
                     </div>
                 </div>
 
-                <div class="flex items-end gap-2 mt-6">
-                    <span class="text-xs font-semibold opacity-70 whitespace-nowrap">หมายเหตุ/Remark:</span>
-                    <input type="text"
-                        class="input input-sm input-ghost grow rounded-none border-b border-base-300 focus:border-primary px-1"
-                        id="otherRemark" name="otherRemark">
+                <div class="flex flex-col gap-4 mt-6">
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs font-semibold opacity-70 whitespace-nowrap">แนบไฟล์/Attach file:</span>
+                        <input type="file" class="file-input file-input-bordered file-input-sm "
+                            id="otherAttachment" name="otherAttachment">
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs font-semibold opacity-70 whitespace-nowrap">หมายเหตุ/Remark:</span>
+                        <textarea type="text"
+                            class="input input-sm input-ghost grow rounded-none border-b border-base-300 focus:border-primary px-1"
+                            id="otherRemark" name="otherRemark"></textarea>
+                    </div>
                 </div>
             </div>
 

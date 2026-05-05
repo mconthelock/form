@@ -67,9 +67,9 @@ $(document).on("change", "input[name='PURPOSE_ID']", async function () {
 // ฟังก์ชันจัดการการคลิกปุ่ม Request เพื่อส่งข้อมูลฟอร์ม
 $(document).on("click", "#btnRequest", async function () {
     try {
-        const requiredMessage = [{element: $('#empName'), message: 'Please fill the Name'}, {element: $('#empCode'), message: 'Please fill the Emp Code'}, 
+        const requiredMessage = [{element: $('#empName'), message: 'Please fill the Name'}, {element: $('#REQBY'), message: 'Please fill the Request Code'}, 
             {element: $('#empDept'), message: 'Please fill the SECT/DEPT/DIV'}, {element: $('#empPos'), message: 'Please fill the Position'},
-            {element: $('#purposeList input[name="PURPOSE_ID]'), message: 'Please select the Purpose'}];
+            {element: $('#purposeList input[name="PURPOSE_ID]'), message: 'Please select the Purpose'},];
         if(!(await requiredForm(`#rbForm`, requiredMessage))) 
             return;
 
@@ -89,85 +89,63 @@ $(document).on("click", "#btnRequest", async function () {
 $(document).on("change", "#REQBY", async function () {
     const REQBY = $(this).val();  
     const empData = await getEmpData(REQBY);
-    $("#empName").val(empData.STNAME);
-    $("#empDept").val(empData.SSEC + '/'  + empData.SDEPT + '/' + empData.SDIV);
-    $("#empPos").val(empData.SPOSITION); 
     
-    if(empData.SPOSITION == "ASSISTANT MANAGER" || empData.SPOSITION == "SUPERVISOR" || empData.SPOSITION == "FOREMAN" || empData.SPOSITION == "LEADER" || empData.SPOSITION == "ENGINEER" || empData.SPOSITION == "STAFF") {
-        const divTxt = `<span id="divText" class="origin-center whitespace-nowrap inline-block transition-transform duration-300">${empData.SDIV}</span>`
-        $('#divisionDisplay').html(divTxt);
-    }else {
+    // 1. เติมข้อมูลพื้นฐาน
+    $("#empName").val(empData.STNAME);
+    $("#empDept").val(`${empData.SSEC}/${empData.SDEPT}/${empData.SDIV}`);
+    $("#empPos").val(empData.SPOSITION); 
+
+    // 2. ล้างสถานะ Checkbox ทั้งหมดออกแบบ Vanilla JS เพื่อความชัวร์
+    document.querySelectorAll('input[type="checkbox"][id^="chk"]').forEach(cb => {
+        cb.checked = false;
+    });
+
+    // ---------------------------------------------------------
+    // 3. จัดการดึง Position Code (SPOSCODE)
+    // ---------------------------------------------------------
+    const PosiCodeArray = Array.isArray(empData.SPOSCODE) ? empData.SPOSCODE : (empData.SPOSCODE ? [empData.SPOSCODE] : []);
+    
+    // 🔥 แปลงเป็น String และตัดช่องว่าง (Trim) ป้องกันปัญหาข้อมูลจากฐานข้อมูล
+    const firstPosCode = PosiCodeArray.length > 0 ? String(PosiCodeArray[0]).trim() : null;
+
+    // 4. เช็คว่าต้องแสดง Division ไหม
+    const targetPosCodeForCircle2 = ["33", "49", "50", "55", "35", "40"];
+    
+    if(firstPosCode && targetPosCodeForCircle2.includes(firstPosCode)) {
+        $('#divisionDisplay').html(`<span id="divText" class="origin-center whitespace-nowrap inline-block transition-transform duration-300">${empData.SDIV}</span>`);
+    } else {
         $('#divisionDisplay').html('DIVISION');
     }
 
-    const PosiCode = Array.isArray(empData.SPOSCODE) ? empData.SPOSCODE : (empData.SPOSCODE ? [empData.SPOSCODE] : []);
-    console.log(PosiCode);
-    PosiCode.forEach(pos => {
-        if(pos == "02") {
-            $('#chkP').prop('checked', true).trigger('change');
-            console.log("PRESIDENT");
+    // 5. จับคู่ Position Code
+    const positionCodeMapping = {
+        '02': 'chkP',     '05': 'chkGM',    '10': 'chkDIM',   '11': 'chkDDIM',
+        '20': 'chkDEM',   '21': 'chkDDEM',  '90': 'chkADV',   '22': 'chkSSPE',
+        '30': 'chkSEM',   '32': 'chkSPE',   '33': 'chkASM',   '49': 'chkSUP',
+        '50': 'chkFO',    '55': 'chkLEA',   '35': 'chkENG',   '40': 'chkSTAFF'
+    };
 
-        } else if(pos == "05") {
-            $('#chkGM').prop('checked', true).trigger('change');
-            console.log("GENERAL MANAGER");
+    // ล้างค่าช่องกรอกชื่อ
+    $("#nameInput1").val("");
+    $("#nameInput2").val("");
 
-        } else if(pos == "10") {
-            $('#chkDIM').prop('checked', true).trigger('change');
-            console.log("DIVISION MANAGER");
+    if (firstPosCode) {
+        const targetCheckboxId = positionCodeMapping[firstPosCode];
 
-        } else if(pos == "11") {
-            $('#chkDDIM').prop('checked', true).trigger('change');
-            console.log("DEPUTY DIVISION MANAGER");
-
-        } else if(pos == "20") {
-            $('#chkDEM').prop('checked', true).trigger('change');
-            console.log("DEPARTMENT MANAGER");
-
-        } else if(pos == "21") {
-            $('#chkDDEM').prop('checked', true).trigger('change');
-            console.log("DEPUTY DEPARTMENT MANAGER");
-
-        } else if(pos == "90") {
-            $('#chkADV').prop('checked', true).trigger('change');
-            console.log("ADVISOR");
-
-        } else if(pos == "22") {
-            $('#chkSSPE').prop('checked', true).trigger('change');
-            console.log("SENIOR SPECIALIST");
-
-        } else if(pos == "30") {
-            $('#chkSEM').prop('checked', true).trigger('change');
-            console.log("SECTION MANAGER");
-
-        } else if(pos == "32") {
-            $('#chkSPE').prop('checked', true).trigger('change');
-            console.log("SPECIALIST");
-
-        } else if(pos == "33") {
-            $('#chkASM').prop('checked', true).trigger('change');
-            console.log("ASSISTANT MANAGER");
-
-        } else if(pos == "49") {
-            $('#chkSUP').prop('checked', true).trigger('change');
-            console.log("SUPERVISOR");
-
-        } else if(pos == "50") {
-            $('#chkFO').prop('checked', true).trigger('change');
-            console.log("FOREMAN");
-
-        } else if(pos == "55") {
-            $('#chkLEA').prop('checked', true).trigger('change');
-            console.log("LEADER");
-
-        } else if(pos == "35") {
-            $('#chkENG').prop('checked', true).trigger('change');
-            console.log("ENGINEER");
-            
-        } else if(pos == "40") {
-            $('#chkSTAFF').prop('checked', true).trigger('change');
-            console.log("STAFF");
-        }    
-    });
+        if (targetCheckboxId) {
+            const targetCheckbox = document.getElementById(targetCheckboxId);
+            if (targetCheckbox) {
+                // 🔥 สั่งติ๊กถูกและยิง Event แบบ Vanilla JS 
+                // วิธีนี้จะรับประกันว่าโค้ด UI ใน DOMContentLoaded จะทำงานและ Disable ช่องให้ 100%
+                targetCheckbox.checked = true;
+                targetCheckbox.dispatchEvent(new Event('change'));
+            }
+        }
+    } else {
+        // กรณีไม่มี Code หรือรหัสไม่ตรง ให้จำลองการเคลียร์ค่าโดยการยิง change ที่ตัวแรกแบบไม่ได้ติ๊ก
+        const anyCb = document.querySelector('input[type="checkbox"][id^="chk"]');
+        if(anyCb) anyCb.dispatchEvent(new Event('change'));
+    }
 });
 
 
@@ -194,6 +172,7 @@ $(document).on("change", "#radioStandard, #radioOther", async function () {
             // ถ้ายังไม่มีการเลือก Position เลย ให้เปิดช่อง nameInput ทั้งคู่ไว้รอ
             $('#nameInput1, #nameInput2').prop('disabled', false);
         }
+        $('#nameInput1, #nameInput2').val('');
 
     } else {
         // กรณีเลือกข้อ 6 (Other Stamp)
@@ -204,6 +183,7 @@ $(document).on("change", "#radioStandard, #radioOther", async function () {
         // เปิด Input ทั้งหมดในข้อ 6
         $('#otherStampSection').css({'opacity': '1', 'pointer-events': 'auto'})
                                .find('input').prop('disabled', false);
+        $('#nameInput1, #nameInput2').val('');
     }
 });
 
@@ -235,146 +215,158 @@ async function createForm(data) {
 
 
 
+
+
         // ✅ 2. ฟังก์ชันจัดการตรายาง (ย่อขนาด, เปลี่ยนข้อความ, ไฮไลท์และ Disable ช่อง)
-        document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', () => {
+    
+    // 1. ฟังก์ชันปรับขนาดตัวอักษรไม่ให้ล้นขอบ (คงไว้เหมือนเดิม)
+    function adjustTextScale(displayId, circleId) {
+        const displayEl = document.getElementById(displayId);
+        const circleEl = document.getElementById(circleId);
+        if (!displayEl || !circleEl) return;
+
+        let circleWidth = 70;
+        if (circleEl.style.width) {
+            circleWidth = parseInt(circleEl.style.width, 10);
+        }
+
+        const maxSafeWidth = circleWidth * 0.75; 
+
+        displayEl.style.transform = 'none';
+        displayEl.style.letterSpacing = 'normal';
+
+        const actualWidth = displayEl.scrollWidth;
+        
+        if (actualWidth > maxSafeWidth && actualWidth > 0) {
+            const scaleRatio = maxSafeWidth / actualWidth;
+            displayEl.style.letterSpacing = '-0.5px'; 
+            displayEl.style.transform = `scaleX(${scaleRatio})`;
+        }
+    }
+
+    // 2. ฟังก์ชันอัปเดตข้อความในตรายาง (ถ้าช่องว่าง ให้แสดงคำว่า NAME)
+    function updateStampDisplay(inputId, targetDisplayId, targetCircleId) {
+        const inputElement = document.getElementById(inputId);
+        const displayElement = document.getElementById(targetDisplayId);
+        
+        if (inputElement && displayElement) {
+            let fullName = inputElement.value.trim();
+            let firstName = fullName.split(/\s+/)[0]; 
             
-            function adjustTextScale(displayId, circleId) {
-                const displayEl = document.getElementById(displayId);
-                const circleEl = document.getElementById(circleId);
-                if (!displayEl || !circleEl) return;
-
-                let circleWidth = 70;
-                if (circleEl.style.width) {
-                    circleWidth = parseInt(circleEl.style.width, 10);
-                }
-
-                const maxSafeWidth = circleWidth * 0.75; 
-
-                displayEl.style.transform = 'none';
-                displayEl.style.letterSpacing = 'normal';
-
-                const actualWidth = displayEl.scrollWidth;
-                
-                if (actualWidth > maxSafeWidth && actualWidth > 0) {
-                    const scaleRatio = maxSafeWidth / actualWidth;
-                    displayEl.style.letterSpacing = '-0.5px'; 
-                    displayEl.style.transform = `scaleX(${scaleRatio})`;
-                }
-            }
-
-            function updateStampName(inputId, targetDisplayId, targetCircleId) {
-                const inputElement = document.getElementById(inputId);
-                const displayElement = document.getElementById(targetDisplayId);
-                
-                if (inputElement && displayElement) {
-                    inputElement.addEventListener('input', function() {
-                        let fullName = this.value.trim();
-                        let firstName = fullName.split(/\s+/)[0]; 
-                        displayElement.textContent = firstName ? firstName.toUpperCase() : 'NAME';
-                        adjustTextScale(targetDisplayId, targetCircleId);
-                    });
-                }
-            }
-
-            updateStampName('nameInput1', 'name', 'stampCircle1');
-            updateStampName('nameInput2', 'name2', 'stampCircle2');
-
+            // ถ้ามีค่าให้พิมพ์ใหญ่ ถ้าไม่มีให้กลับไปเป็น 'NAME'
+            displayElement.textContent = firstName ? firstName.toUpperCase() : 'NAME';
             
+            // รอให้ DOM เรนเดอร์ข้อความเสร็จแล้วค่อยปรับสเกล
+            setTimeout(() => {
+                adjustTextScale(targetDisplayId, targetCircleId);
+            }, 50);
+        }
+    }
 
-            const stampConfig = {
-                'chkP': { size: 88, target: 'stampCircle1' }, 
-                'chkGM': { size: 84, target: 'stampCircle1' }, 
-                'chkDIM': { size: 84, target: 'stampCircle1' }, 
-                'chkDDIM': { size: 84, target: 'stampCircle1' },
-                'chkDEM': { size: 76, target: 'stampCircle1' }, 
-                'chkDDEM': { size: 76, target: 'stampCircle1' },
-                'chkADV': { size: 76, target: 'stampCircle1' }, 
-                'chkSSPE': { size: 76, target: 'stampCircle1' },
-                'chkSEM': { size: 68, target: 'stampCircle1' }, 
-                'chkSPE': { size: 68, target: 'stampCircle1' }, 
-                'chkASM': { size: 60, target: 'stampCircle2' }, 
-                'chkSUP': { size: 60, target: 'stampCircle2' }, 
-                'chkFO': { size: 60, target: 'stampCircle2' }, 
-                'chkLEA': { size: 60, target: 'stampCircle2' }, 
-                'chkENG': { size: 60, target: 'stampCircle2' }, 
-                'chkSTAFF': { size: 60, target: 'stampCircle2' } 
-            };
+    // 3. ผูก Event ให้พิมพ์ปุ๊บ ข้อความเปลี่ยนปั๊บ
+    const input1 = document.getElementById('nameInput1');
+    const input2 = document.getElementById('nameInput2');
+    
+    if(input1) input1.addEventListener('input', () => updateStampDisplay('nameInput1', 'name', 'stampCircle1'));
+    if(input2) input2.addEventListener('input', () => updateStampDisplay('nameInput2', 'name2', 'stampCircle2'));
 
-            const formatCheckboxes = document.querySelectorAll('input[type="checkbox"][id^="chk"]');
-            
-            // ดึง Element ของ Input ทั้งสองแถวมาเตรียมไว้
-            const inputRow1 = document.getElementById('nameInput1');
-            const inputRow2Name = document.getElementById('nameInput2');
 
-            formatCheckboxes.forEach(cb => {
-                cb.addEventListener('change', function() {
-                    if (this.checked) {
-                        formatCheckboxes.forEach(otherCb => {
-                            if (otherCb !== this) otherCb.checked = false;
-                        });
+    // 4. Config ขนาดตรายางตามตำแหน่ง
+    const stampConfig = {
+        'chkP': { size: 88, target: 'stampCircle1' }, 
+        'chkGM': { size: 84, target: 'stampCircle1' }, 
+        'chkDIM': { size: 84, target: 'stampCircle1' }, 
+        'chkDDIM': { size: 84, target: 'stampCircle1' },
+        'chkDEM': { size: 76, target: 'stampCircle1' }, 
+        'chkDDEM': { size: 76, target: 'stampCircle1' },
+        'chkADV': { size: 76, target: 'stampCircle1' }, 
+        'chkSSPE': { size: 76, target: 'stampCircle1' },
+        'chkSEM': { size: 68, target: 'stampCircle1' }, 
+        'chkSPE': { size: 68, target: 'stampCircle1' }, 
+        'chkASM': { size: 60, target: 'stampCircle2' }, 
+        'chkSUP': { size: 60, target: 'stampCircle2' }, 
+        'chkFO': { size: 60, target: 'stampCircle2' }, 
+        'chkLEA': { size: 60, target: 'stampCircle2' }, 
+        'chkENG': { size: 60, target: 'stampCircle2' }, 
+        'chkSTAFF': { size: 60, target: 'stampCircle2' } 
+    };
 
-                        const settings = stampConfig[this.id];
-                        if (settings) {
-                            const targetCircle = document.getElementById(settings.target);
-                            if (targetCircle) {
-                                targetCircle.style.width = settings.size + 'px';
-                                targetCircle.style.height = settings.size + 'px';
+    const formatCheckboxes = document.querySelectorAll('input[type="checkbox"][id^="chk"]');
 
-                                // 🔥 ไฮไลท์ตรายาง พร้อมปิดช่อง Input ที่ไม่ได้ใช้ (Disable)
-                                if (settings.target === 'stampCircle1') {
-                                    document.getElementById('rowStamp1').style.opacity = '1';
-                                    document.getElementById('rowStamp2').style.opacity = '0.3';
-                                    document.getElementById('stampCircle2').style.width = '70px';
-                                    document.getElementById('stampCircle2').style.height = '70px';
-                                    
-                                    // เปิดแถว 1, ปิดแถว 2
-                                    if(inputRow1) inputRow1.disabled = false;
-                                    if(inputRow2Name) inputRow2Name.disabled = true;
+    // 5. จัดการเมื่อ Checkbox เปลี่ยนแปลง
+    formatCheckboxes.forEach(cb => {
+        cb.addEventListener('change', function() {
+            const settings = stampConfig[this.id];
+            const row1 = document.getElementById('rowStamp1');
+            const row2 = document.getElementById('rowStamp2');
+            const circle1 = document.getElementById('stampCircle1');
+            const circle2 = document.getElementById('stampCircle2');
 
-                                } else {
-                                    document.getElementById('rowStamp1').style.opacity = '0.3';
-                                    document.getElementById('rowStamp2').style.opacity = '1';
-                                    document.getElementById('stampCircle1').style.width = '70px';
-                                    document.getElementById('stampCircle1').style.height = '70px';
-                                    
-                                    // ปิดแถว 1, เปิดแถว 2
-                                    if(inputRow1) inputRow1.disabled = true;
-                                    if(inputRow2Name) inputRow2Name.disabled = false;
-                                }
-                                
-                                setTimeout(() => {
-                                    adjustTextScale('name', 'stampCircle1');
-                                    adjustTextScale('name2', 'stampCircle2');
-                                    adjustTextScale('divText', 'stampCircle2');
-                                }, 10);
-                            }
-                        }
-                    } else {
-                        document.getElementById('rowStamp1').style.opacity = '1';
-                        document.getElementById('rowStamp2').style.opacity = '1';
-                        
-                        document.getElementById('stampCircle1').style.width = '';
-                        document.getElementById('stampCircle1').style.height = '';
-                        document.getElementById('stampCircle2').style.width = '';
-                        document.getElementById('stampCircle2').style.height = '';
-
-                        // เมื่อยกเลิกการเลือก ให้เปิดคืนทุกช่อง
-                        if(inputRow1) inputRow1.disabled = false;
-                        if(inputRow2Name) inputRow2Name.disabled = false;
-
-                        setTimeout(() => {
-                            adjustTextScale('name', 'stampCircle1');
-                            adjustTextScale('name2', 'stampCircle2');
-                            adjustTextScale('divText', 'stampCircle2');
-                        }, 10);
-                    }
+            if (this.checked) {
+                // บังคับให้ติ๊กได้ทีละ 1 อัน (ถ้าต้องการ)
+                formatCheckboxes.forEach(otherCb => {
+                    if (otherCb !== this) otherCb.checked = false;
                 });
-            });
+
+                if (settings) {
+                    const targetCircle = document.getElementById(settings.target);
+                    targetCircle.style.width = settings.size + 'px';
+                    targetCircle.style.height = settings.size + 'px';
+
+                    if (settings.target === 'stampCircle1') {
+                        // ไฮไลท์แบบ 1
+                        row1.style.opacity = '1';
+                        row2.style.opacity = '0.3'; 
+                        circle2.style.width = '70px';
+                        circle2.style.height = '70px';
+                        
+                        // เปิดช่องกรอก 1, ปิดช่องกรอก 2 และล้างค่าช่อง 2
+                        if(input1) { input1.disabled = false; }
+                        if(input2) { input2.disabled = true; input2.value = ''; }
+                        
+                        // อัปเดตตรายางให้แสดงผลตามค่าล่าสุด (จะเป็น NAME ถ้าช่องว่าง)
+                        updateStampDisplay('nameInput1', 'name', 'stampCircle1');
+                        updateStampDisplay('nameInput2', 'name2', 'stampCircle2');
+
+                    } else {
+                        // ไฮไลท์แบบ 2
+                        row1.style.opacity = '0.3';
+                        row2.style.opacity = '1';
+                        circle1.style.width = '70px';
+                        circle1.style.height = '70px';
+                        
+                        // ปิดช่องกรอก 1 และล้างค่า, เปิดช่องกรอก 2
+                        if(input1) { input1.disabled = true; input1.value = ''; }
+                        if(input2) { input2.disabled = false; }
+                        
+                        // อัปเดตตรายาง
+                        updateStampDisplay('nameInput1', 'name', 'stampCircle1');
+                        updateStampDisplay('nameInput2', 'name2', 'stampCircle2');
+                    }
+                }
+            } else {
+                // ถ้ายกเลิกการติ๊ก คืนค่าหน้าตากลับเป็นแบบเริ่มต้น
+                row1.style.opacity = '1';
+                row2.style.opacity = '1';
+                circle1.style.width = '70px';
+                circle1.style.height = '70px';
+                circle2.style.width = '70px';
+                circle2.style.height = '70px';
+
+                if(input1) input1.disabled = false;
+                if(input2) input2.disabled = false;
+
+                updateStampDisplay('nameInput1', 'name', 'stampCircle1');
+                updateStampDisplay('nameInput2', 'name2', 'stampCircle2');
+            }
         });
+    });
+});
 
 
         // ✅ 3. ฟังก์ชันจับคู่ Position เข้ากับ Checkbox อัตโนมัติ
-      /*  document.addEventListener('DOMContentLoaded', () => {
+    /*   document.addEventListener('DOMContentLoaded', () => {
             const positionMapping = {
                 'PRESIDENT': 'chkP',
                 'GENERAL MANAGER': 'chkGM',
@@ -428,5 +420,5 @@ async function createForm(data) {
                     }
                 });
             }
-        });*/
+        }); */
   
