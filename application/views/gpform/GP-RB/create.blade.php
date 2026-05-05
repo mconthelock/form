@@ -89,22 +89,22 @@
             </div>
 
             <div class="hidden">
-                <input type="checkbox" id="chkP" name="chkP" value="02">
-                <input type="checkbox" id="chkGM" name="chkGM" value="05">
-                <input type="checkbox" id="chkDIM" name="chkDIM" value="10">
-                <input type="checkbox" id="chkDDIM" name="chkDDIM" value="11">
-                <input type="checkbox" id="chkDEM" name="chkDEM" value="20">
-                <input type="checkbox" id="chkDDEM" name="chkDDEM" value="21">
-                <input type="checkbox" id="chkADV" name="chkADV" value="90">
-                <input type="checkbox" id="chkSSPE" name="chkSSPE" value="22">
-                <input type="checkbox" id="chkSEM" name="chkSEM" value="30">
-                <input type="checkbox" id="chkSPE" name="chkSPE" value="32">
-                <input type="checkbox" id="chkASM" name="chkASM" value="33">
-                <input type="checkbox" id="chkSUP" name="chkSUP" value="49">
-                <input type="checkbox" id="chkFO" name="chkFO" value="50">
-                <input type="checkbox" id="chkLEA" name="chkLEA" value="55">
-                <input type="checkbox" id="chkENG" name="chkENG" value="35">
-                <input type="checkbox" id="chkSTAFF" name="chkSTAFF" value="40">
+                <input type="checkbox" id="chkP" name="SPOSCODE" value="02">
+                <input type="checkbox" id="chkGM" name="SPOSCODE" value="05">
+                <input type="checkbox" id="chkDIM" name="SPOSCODE" value="10">
+                <input type="checkbox" id="chkDDIM" name="SPOSCODE" value="11">
+                <input type="checkbox" id="chkDEM" name="SPOSCODE" value="20">
+                <input type="checkbox" id="chkDDEM" name="SPOSCODE" value="21">
+                <input type="checkbox" id="chkADV" name="SPOSCODE" value="90">
+                <input type="checkbox" id="chkSSPE" name="SPOSCODE" value="22">
+                <input type="checkbox" id="chkSEM" name="SPOSCODE" value="30">
+                <input type="checkbox" id="chkSPE" name="SPOSCODE" value="32">
+                <input type="checkbox" id="chkASM" name="SPOSCODE" value="33">
+                <input type="checkbox" id="chkSUP" name="SPOSCODE" value="49">
+                <input type="checkbox" id="chkFO" name="SPOSCODE" value="50">
+                <input type="checkbox" id="chkLEA" name="SPOSCODE" value="55">
+                <input type="checkbox" id="chkENG" name="SPOSCODE" value="35">
+                <input type="checkbox" id="chkSTAFF" name="SPOSCODE" value="40">
             </div>
 
             <div id="standardStampSection"
