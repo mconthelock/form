@@ -1,6 +1,12 @@
 import {
-    getcause, getworktype, getUserbyemp
+    getcause, getworktype, getUserbyemp, getprocess, getline, getamecorderdetail
 } from "./data.js";
+import { showLoader } from "@amec/webasset/preloader";
+import { showMessage, showConfirm } from "@amec/webasset/utils";
+import { createTable } from "@amec/webasset/dataTable";
+import { downloadOrOpenFile } from "@amec/webasset/api/file";
+import { setDatePicker } from "@amec/webasset/flatpickr";
+import { createBtn, activatedBtn } from "@amec/webasset/components/buttons";
 
 $(document).ready(function () {
     const EDR = {
@@ -9,6 +15,7 @@ $(document).ready(function () {
 
         init: function () {
             this.bindEvents();
+            this.renderTableHeader();
             this.addRow();
             this.loadMaster();
         },
@@ -38,6 +45,8 @@ $(document).ready(function () {
 
             $('#job_type').on('change', function () {
                 EDR.loadCauseByWorkType($(this).val());
+                EDR.renderTableHeader(); 
+                EDR.rebuildDetailRows();
             });
 
             $('#btnSaveDraft').on('click', function () {
@@ -47,11 +56,22 @@ $(document).ready(function () {
             $('#btnSendForm').on('click', function () {
                 EDR.submitForm('send_form');
             });
+
+            $(document).on('input', 'input[name="order_no[]"]', function () {
+                EDR.checkOrderDetail($(this));
+            });
+
+            $(document).on('click', '.btnCopyRow', function (e) {
+                e.preventDefault();
+                EDR.copyRow($(this));
+            });
         },
 
         loadMaster: async function () {
             try {
                 const jobTypes = await getworktype();
+                const lines = await getline();
+                const processes = await getprocess();
 
                 const worktypeOptions = jobTypes.map(function (item) {
                     return {
@@ -60,11 +80,25 @@ $(document).ready(function () {
                     };
                 });
 
+                this.lineOptions = lines.map(function (item) {
+                    return {
+                        value: item.LINE_ID || item.LID || item.LINE || item.LINE_CODE,
+                        text: item.LINE_NAME || item.LINENAME || item.LINE
+                    };
+                });
+
+                this.processOptions = processes.map(function (item) {
+                    return {
+                        value: item.PROCESS_ID || item.PID || item.PROCESS || item.PROCESS_CODE,
+                        text: item.PROCESS_NAME || item.PROCESSNAME || item.PROCESS
+                    };
+                });
+
                 this.renderOptions('#job_type', worktypeOptions);
                 this.renderOptions('#cause', []);
             } catch (error) {
                 console.error('LOAD MASTER ERROR:', error);
-                alert('โหลดข้อมูล Work Type ไม่สำเร็จ');
+                alert('โหลดข้อมูล Master ไม่สำเร็จ');
             }
         },
 
@@ -90,10 +124,54 @@ $(document).ready(function () {
             }
         },
 
+        renderTableHeader: function () {
+            const isPCB = this.isPcbWorkType();
+            const $table = $('#tblDetail');
+            const $thead = $('#tblDetail thead');
+
+            $table.removeClass('tbl-normal tbl-pcb');
+            $thead.removeClass('bg-emerald-700 bg-purple-600 text-white');
+
+            if (isPCB) {
+                $table.addClass('tbl-pcb');
+                $thead.addClass('bg-purple-500 text-white');
+                $thead.html(`
+                    <tr>
+                        <th>#</th>
+                        <th>Drawing no<span class="req-star">*</span></th>
+                        <th>Line<span class="req-star">*</span></th>
+                        <th>Process<span class="req-star">*</span></th>
+                        <th>Lot<span class="req-star">*</span></th>
+                        <th>Serial no<span class="req-star">*</span></th>
+                        <th>Prod Jun<span class="req-star">*</span></th>
+                        <th>Qty<span class="req-star">*</span></th>
+                        <th>Detail of problem</th>
+                        <th>Action</th>
+                    </tr>
+                `);
+            } else {
+                $table.addClass('tbl-normal');
+                $thead.addClass('bg-emerald-700 text-white');
+                $thead.html(`
+                    <tr>
+                        <th>#</th>
+                        <th>Order no<span class="req-star">*</span></th>
+                        <th>Drawing no<span class="req-star">*</span></th>
+                        <th>Project no</th>
+                        <th>Prod Jun</th>
+                        <th>Item<span class="req-star">*</span></th>
+                        <th>Model</th>
+                        <th>Qty<span class="req-star">*</span></th>
+                        <th>Detail of problem</th>
+                        <th>Action</th>
+                    </tr>
+                `);
+            }
+        },
+
         renderOptions: function (selector, data) {
             const $select = $(selector);
             $select.find('option:not(:first)').remove();
-
             data.forEach(function (item) {
                 $select.append(`<option value="${item.value}">${item.text}</option>`);
             });
@@ -105,52 +183,138 @@ $(document).ready(function () {
             this.updateTotalRow();
         },
 
-        buildRow: function (index) {
+        buildRow: function (index, rowData = {}) {
+            if (this.isPcbWorkType()) {
+                return this.buildPcbRow(index, rowData);
+            }
+            return this.buildNormalRow(index, rowData);
+        },
+
+        buildNormalRow: function (index, rowData = {}) {
             return `
                 <tr class="hover:bg-emerald-50">
                     <td class="row-no border border-slate-300 px-2 py-2 text-center font-bold">${index}</td>
 
                     <td class="border border-slate-300 px-2 py-2">
-                        <input name="order_no[]" class="edr-input">
+                        <input name="order_no[]" class="edr-input" maxlength="9" value="${rowData.order_no || ''}">
                     </td>
 
                     <td class="border border-slate-300 px-2 py-2">
-                        <input name="drawing_no[]" class="edr-input">
+                        <input name="drawing_no[]" class="edr-input" value="${rowData.drawing_no || ''}">
                     </td>
 
                     <td class="border border-slate-300 px-2 py-2">
-                        <input name="project_no[]" class="edr-input disabled-textbox" readonly>
+                        <input name="project_no[]" class="edr-input disabled-textbox" readonly value="${rowData.project_no || ''}">
                     </td>
 
                     <td class="border border-slate-300 px-2 py-2">
-                        <input name="prod_jun[]" class="edr-input disabled-textbox" readonly>
+                        <input name="prod_jun[]" class="edr-input disabled-textbox" readonly value="${rowData.prod_jun || ''}">
                     </td>
 
                     <td class="border border-slate-300 px-2 py-2">
-                        <input name="item[]" class="edr-input">
+                        <input name="item[]" class="edr-input" maxlength="4" value="${rowData.item || ''}">
                     </td>
 
                     <td class="border border-slate-300 px-2 py-2">
-                        <input name="model[]" class="edr-input disabled-textbox" readonly>
+                        <input name="model[]" class="edr-input disabled-textbox" readonly value="${rowData.model || ''}">
                     </td>
 
                     <td class="border border-slate-300 px-2 py-2">
-                        <input name="qty[]" type="number" min="1" class="edr-input">
+                        <input name="qty[]" type="number" min="1" class="edr-input" value="${rowData.qty || ''}">
                     </td>
 
                     <td class="border border-slate-300 px-2 py-2">
-                        <textarea name="problem_detail[]" class="edr-input" rows="3"></textarea>
+                        <textarea name="problem_detail[]" class="edr-input" rows="3">${rowData.problem_detail || ''}</textarea>
                     </td>
 
                     <td class="border border-slate-300 px-2 py-2 text-center">
                         <button type="button"
-                            class="btnDeleteRow rounded-full bg-red-500 px-3 py-2 text-xs font-extrabold text-white shadow hover:bg-red-600"
-                            title="Delete">
+                            class="btnDeleteRow rounded-full bg-red-500 px-3 py-2 text-xs font-extrabold text-white shadow hover:bg-red-600">
                             🗑
                         </button>
                     </td>
                 </tr>
             `;
+        },
+
+        buildPcbRow: function (index, rowData = {}) {
+            return `
+                <tr class="hover:bg-emerald-50">
+                    <td class="row-no border border-slate-300 px-2 py-2 text-center font-bold">${index}</td>
+
+                    <td class="border border-slate-300 px-2 py-2">
+                        <input name="drawing_no[]" class="edr-input" value="${rowData.drawing_no || ''}">
+                    </td>
+
+                    <td class="border border-slate-300 px-2 py-2">
+                        <select name="line[]" class="edr-input">
+                            ${this.buildSelectOptionsHtml(this.lineOptions, rowData.line)}
+                        </select>
+                    </td>
+
+                    <td class="border border-slate-300 px-2 py-2">
+                        <select name="process[]" class="edr-input">
+                            ${this.buildSelectOptionsHtml(this.processOptions, rowData.process)}
+                        </select>
+                    </td>
+
+                    <td class="border border-slate-300 px-2 py-2">
+                        <input name="lot[]" class="edr-input" value="${rowData.lot || ''}">
+                    </td>
+
+                    <td class="border border-slate-300 px-2 py-2">
+                        <input name="serial_no[]" class="edr-input" value="${rowData.serial_no || ''}">
+                    </td>
+
+                    <td class="border border-slate-300 px-2 py-2">
+                        <input name="prod_jun[]" class="edr-input" placeholder="Ex.2501X" value="${rowData.prod_jun || ''}">
+                    </td>
+
+                    <td class="border border-slate-300 px-2 py-2">
+                        <input name="qty[]" type="number" min="1" class="edr-input" value="${rowData.qty || ''}">
+                    </td>
+
+                    <td class="border border-slate-300 px-2 py-2">
+                        <textarea name="problem_detail[]" class="edr-input" rows="3">${rowData.problem_detail || ''}</textarea>
+                    </td>
+
+                    <td class="border border-slate-300 px-2 py-2 text-center">
+                        <button type="button"
+                            class="btnCopyRow rounded bg-yellow-300 px-2 py-1 text-xs font-extrabold text-black shadow hover:bg-yellow-400">
+                            Copy Row
+                        </button>
+
+                        <button type="button"
+                            class="btnDeleteRow mt-1 rounded-full bg-red-500 px-3 py-2 text-xs font-extrabold text-white shadow hover:bg-red-600">
+                            🗑
+                        </button>
+                    </td>
+                </tr>
+            `;
+        },
+
+        getRowData: function ($tr) {
+            return {
+                drawing_no: $tr.find('[name="drawing_no[]"]').val() || '',
+                line: $tr.find('[name="line[]"]').val() || '',
+                process: $tr.find('[name="process[]"]').val() || '',
+                lot: $tr.find('[name="lot[]"]').val() || '',
+                serial_no: $tr.find('[name="serial_no[]"]').val() || '',
+                prod_jun: $tr.find('[name="prod_jun[]"]').val() || '',
+                qty: $tr.find('[name="qty[]"]').val() || '',
+                problem_detail: $tr.find('[name="problem_detail[]"]').val() || ''
+            };
+        },
+
+        copyRow: function ($button) {
+            const $tr = $button.closest('tr');
+            const rowData = this.getRowData($tr);
+
+            this.rowIndex++;
+            $tr.after(this.buildRow(this.rowIndex, rowData));
+
+            this.reorderRowNo();
+            this.updateTotalRow();
         },
 
         deleteRow: function ($button) {
@@ -173,6 +337,27 @@ $(document).ready(function () {
 
         updateTotalRow: function () {
             $('#totalRow').text($('#detailBody tr').length);
+        },
+
+        isPcbWorkType: function () {
+            return String($('#job_type').val()) === '4';
+        },
+
+        buildSelectOptionsHtml: function (data, selectedValue = '') {
+            let html = '<option value="">-- Select --</option>';
+
+            data.forEach(function (item) {
+                const selected = String(item.value) === String(selectedValue) ? 'selected' : '';
+                html += `<option value="${item.value}" ${selected}>${item.text}</option>`;
+            });
+
+            return html;
+        },
+
+        rebuildDetailRows: function () {
+            $('#detailBody').empty();
+            this.rowIndex = 0;
+            this.addRow();
         },
 
         checkEmployee: async function ($input) {
@@ -226,42 +411,94 @@ $(document).ready(function () {
             }
         },
 
+        clearOrderDetail: function ($tr) {
+            $tr.find('input[name="project_no[]"]').val('');
+            $tr.find('input[name="prod_jun[]"]').val('');
+            $tr.find('input[name="model[]"]').val('');
+        },
+
+        checkOrderDetail: async function ($input) {
+            const orderNo = $.trim($input.val()).toUpperCase();
+            const $tr = $input.closest('tr');
+
+            $input.val(orderNo);
+            console.log('ORDER INPUT:', orderNo);
+
+            if (!/^[A-Za-z0-9]{9}$/.test(orderNo)) {
+                this.clearOrderDetail($tr);
+                return;
+            }
+
+            console.log('CALL getamecorderdetail:', orderNo);
+
+            try {
+                const data = await getamecorderdetail({
+                    MFGNO: orderNo
+                });
+
+                console.log('ORDER DETAIL RESULT:', data);
+
+                const row = Array.isArray(data) ? data[0] : data;
+
+                if (row) {
+                    $tr.find('input[name="project_no[]"]').val(row.PRJ_NO || '');
+                    $tr.find('input[name="prod_jun[]"]').val(row.PROD || '');
+                    $tr.find('input[name="model[]"]').val(row.MODEL || '');
+                } else {
+                    this.clearOrderDetail($tr);
+                }
+            } catch (error) {
+                console.error('CHECK ORDER DETAIL ERROR:', error);
+                this.clearOrderDetail($tr);
+            }
+        },
+
         validateForm: function () {
-            let errors = [];
+            let isValid = true;
 
-            if (!$.trim($('#request_by').val())) errors.push('กรุณากรอก Request By');
-            if (!$.trim($('#repair_by').val())) errors.push('กรุณากรอก Repair By');
-            if (!$('#job_type').val()) errors.push('กรุณาเลือกประเภทของงาน');
-            if (!$('#cause').val()) errors.push('กรุณาเลือกสาเหตุ');
+            // ===== header =====
+            if (!$.trim($('#request_by').val())) isValid = false;
+            if (!$.trim($('#repair_by').val())) isValid = false;
+            if (!$('#job_type').val()) isValid = false;
+            if (!$('#cause').val()) isValid = false;
 
-            $('#detailBody tr').each(function (index) {
-                const rowNo = index + 1;
+            const isPCB = this.isPcbWorkType();
 
-                if (!$.trim($(this).find('input[name="order_no[]"]').val())) {
-                    errors.push(`Row ${rowNo}: กรุณากรอก Order no`);
-                }
+            // ===== detail =====
+            $('#detailBody tr').each(function () {
+                const $tr = $(this);
 
-                if (!$.trim($(this).find('input[name="drawing_no[]"]').val())) {
-                    errors.push(`Row ${rowNo}: กรุณากรอก Drawing no`);
-                }
+                if (isPCB) {
+                    // ===== PCB =====
+                    if (!$.trim($tr.find('[name="drawing_no[]"]').val())) isValid = false;
+                    if (!$tr.find('[name="line[]"]').val()) isValid = false;
+                    if (!$tr.find('[name="process[]"]').val()) isValid = false;
+                    if (!$.trim($tr.find('[name="lot[]"]').val())) isValid = false;
+                    if (!$.trim($tr.find('[name="serial_no[]"]').val())) isValid = false;
+                    if (!$.trim($tr.find('[name="prod_jun[]"]').val())) isValid = false;
+                    if (!$.trim($tr.find('[name="qty[]"]').val())) isValid = false;
 
-                if (!$.trim($(this).find('input[name="item[]"]').val())) {
-                    errors.push(`Row ${rowNo}: กรุณากรอก Item`);
-                }
-
-                if (!$.trim($(this).find('input[name="qty[]"]').val())) {
-                    errors.push(`Row ${rowNo}: กรุณากรอก Qty`);
+                } else {
+                    // ===== Normal =====
+                    if (!$.trim($tr.find('[name="order_no[]"]').val())) isValid = false;
+                    if (!$.trim($tr.find('[name="drawing_no[]"]').val())) isValid = false;
+                    if (!$.trim($tr.find('[name="item[]"]').val())) isValid = false;
+                    if (!$.trim($tr.find('[name="qty[]"]').val())) isValid = false;
                 }
             });
 
-            return errors;
+            if (!isValid) {
+                showMessage("กรุณากรอกข้อมูลให้ครบถ้วน", "warning");
+                return false;
+            }
+
+            return true;
         },
 
         submitForm: function (actionType) {
             const errors = this.validateForm();
 
-            if (errors.length > 0) {
-                alert(errors.join('\n'));
+            if (!this.validateForm()) {
                 return;
             }
 
@@ -269,7 +506,8 @@ $(document).ready(function () {
             formData.append('form_action', actionType);
 
             this.setLoading(true);
-
+            showMessage("Data Completed !!!", "success");
+            /*
             $.ajax({
                 url: this.baseUrl + 'mfgform/mfg_edaily_report/save_request',
                 type: 'POST',
@@ -291,7 +529,7 @@ $(document).ready(function () {
                 complete: function () {
                     EDR.setLoading(false);
                 }
-            });
+            });*/
         },
 
         setLoading: function (isLoading) {

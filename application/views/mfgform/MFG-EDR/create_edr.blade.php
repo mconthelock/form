@@ -2,6 +2,11 @@
 
 @section('contents')
 <style>
+    #tblDetail thead th {
+        padding: 10px;
+        font-weight: 700;
+        text-align: center;
+    }
     .edr-card {
         box-shadow: 0 5px 15px rgba(15, 23, 42, 0.12);
     }
@@ -51,6 +56,76 @@
 
     .disabled-textbox:hover {
         cursor: not-allowed !important;
+    }
+
+    .req-star {
+        color: #ef4444;
+        margin-left: 2px;
+    }
+
+    #tblDetail.tbl-pcb {
+        table-layout: fixed;
+        width: 100%;
+    }
+
+    /* # */
+    #tblDetail.tbl-pcb th:nth-child(1),
+    #tblDetail.tbl-pcb td:nth-child(1) {
+        width: 3%;
+    }
+
+    /* Drawing */
+    #tblDetail.tbl-pcb th:nth-child(2),
+    #tblDetail.tbl-pcb td:nth-child(2) {
+        width: 17%;
+    }
+
+    /* Line */
+    #tblDetail.tbl-pcb th:nth-child(3),
+    #tblDetail.tbl-pcb td:nth-child(3) {
+        width: 7%;
+    }
+
+    /* Process */
+    #tblDetail.tbl-pcb th:nth-child(4),
+    #tblDetail.tbl-pcb td:nth-child(4) {
+        width: 8%;
+    }
+
+    /* Lot */
+    #tblDetail.tbl-pcb th:nth-child(5),
+    #tblDetail.tbl-pcb td:nth-child(5) {
+        width: 10%;
+    }
+
+    /* Serial */
+    #tblDetail.tbl-pcb th:nth-child(6),
+    #tblDetail.tbl-pcb td:nth-child(6) {
+        width: 14%;
+    }
+
+    /* Prod Jun */
+    #tblDetail.tbl-pcb th:nth-child(7),
+    #tblDetail.tbl-pcb td:nth-child(7) {
+        width: 10%;
+    }
+
+    /* Qty */
+    #tblDetail.tbl-pcb th:nth-child(8),
+    #tblDetail.tbl-pcb td:nth-child(8) {
+        width: 8%;
+    }
+
+    /* Detail */
+    #tblDetail.tbl-pcb th:nth-child(9),
+    #tblDetail.tbl-pcb td:nth-child(9) {
+        width: 20%;
+    }
+
+    /* Action */
+    #tblDetail.tbl-pcb th:nth-child(10),
+    #tblDetail.tbl-pcb td:nth-child(10) {
+        width: 6%;
     }
 </style>
 
@@ -125,7 +200,7 @@
                             file:font-bold file:text-white
                             hover:file:bg-teal-800">
 
-                        <p class="mt-2 text-xs font-bold text-red-500">
+                        <p class="mt-2 text-xs font-bold text-red-700">
                             **ชื่อไฟล์ห้ามมีช่องว่างหรืออักษรพิเศษ เช่น [ ' , " * ]
                         </p>
                     </div>
@@ -172,12 +247,12 @@
                         <tr class="bg-gradient-to-r from-emerald-900 to-teal-700 text-white">
                             <th class="border border-slate-300 px-3 py-2 text-center w-14">#</th>
                             <th class="border border-slate-300 px-3 py-2 text-left">Order no <span class="text-red-800">*</span></th>
-                            <th class="border border-slate-300 px-3 py-2 text-left">Drawing no <span class="text-red-300">*</span></th>
+                            <th class="border border-slate-300 px-3 py-2 text-left">Drawing no <span class="text-red-800">*</span></th>
                             <th class="border border-slate-300 px-3 py-2 text-left">Project no</th>
                             <th class="border border-slate-300 px-3 py-2 text-left">Prod Jun</th>
-                            <th class="border border-slate-300 px-3 py-2 text-left">Item <span class="text-red-300">*</span></th>
+                            <th class="border border-slate-300 px-3 py-2 text-left">Item <span class="text-red-800">*</span></th>
                             <th class="border border-slate-300 px-3 py-2 text-left">Model</th>
-                            <th class="border border-slate-300 px-3 py-2 text-left">Qty <span class="text-red-300">*</span></th>
+                            <th class="border border-slate-300 px-3 py-2 text-left">Qty <span class="text-red-800">*</span></th>
                             <th class="border border-slate-300 px-3 py-2 text-left">Detail of problem</th>
                             <th class="border border-slate-300 px-3 py-2 text-center w-24">Action</th>
                         </tr>
