@@ -2,6 +2,8 @@
 use GuzzleHttp\Client;
 defined('BASEPATH') or exit('No direct script access allowed');
 require_once APPPATH . 'controllers/_form.php';
+require_once APPPATH . 'controllers/api/webform/formmst.php';
+
 function pre_array($array)
 {
     echo '<pre>';
@@ -9,7 +11,7 @@ function pre_array($array)
     echo '</pre>';
 }
 class Main extends MY_Controller {
-    use _Form;
+    use _Form, formmst;
 
     protected $client;
     protected $programMap;
@@ -266,7 +268,8 @@ class Main extends MY_Controller {
 
     public function createform($empno, $program, $owner, $org_code)
     {
-        $form   = $this->create('7', '050601', '25', $empno, $empno, '', 1);
+        $formmst = $this->getFormMasterByVaname('IS-RGV');
+        $form   = $this->create($formmst[0]->NNO, $formmst[0]->VORGNO, $formmst[0]->CYEAR, $empno, $empno, '', 1);
         $NFRMNO = $form['message']['formtype'];
         $VORGNO = $form['message']['owner'];
         $CYEAR  = $form['message']['cyear'];
@@ -274,7 +277,7 @@ class Main extends MY_Controller {
         $NRUNNO = $form['message']['runno'];
 
         $month  = date('n');
-        $month  = 11;
+        // $month  = 11;
         $period = ($month == 5) ? 1 : (($month == 11) ? 2 : 1);
 
         $this->rm->insert('ISRGV_FORM', [

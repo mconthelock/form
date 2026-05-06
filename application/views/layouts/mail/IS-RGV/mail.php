@@ -88,7 +88,7 @@
             <!-- <div><strong>From:</strong> IS Dept</div> -->
             <!-- </div> -->
         </div>
-        <div class="title">Request for "User-ID and Authorization Regular Review of FY2025"</div>
+        <div class="title">Request for "User-ID and Authorization Regular Review of FY<?= date('Y') ?>"</div>
         <div style="margin-bottom: 16px;">
             <p>According to “AMEC RULE-3501 Rule for Information System Security” and “IT General Control (ITGC)” need to review about User-ID and Authorization regularly.<br>
                 Each resource owner need to review users and authorized for ensure that appropriate right have been assigned to the correct person.</p>
@@ -130,7 +130,7 @@
         <div class="section-title">Contact</div>
         <div class="contact">
             Should you have any question, please contact IS Department at<br>
-            <a href="mailto:phannee@MitsubishiElevatorAsia.co.th">phannee@MitsubishiElevatorAsia.co.th(2044)</a> ,
+            <!-- <a href="mailto:phannee@MitsubishiElevatorAsia.co.th">phannee@MitsubishiElevatorAsia.co.th(2044)</a> , -->
             <a href="mailto:Tirarat@MitsubishiElevatorAsia.co.th">Tirarat@MitsubishiElevatorAsia.co.th(2026)</a>
         </div>
         <div style="margin-top:24px; font-size:15px; text-align:left; color:#35608f; font-weight:bold;">Thank you,<br>IS Dept</div>
