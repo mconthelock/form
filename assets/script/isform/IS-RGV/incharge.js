@@ -51,7 +51,7 @@ $(document).ready(async function () {
 		},
 	];
 
-	const table = createTable({
+	const table = await createTable({
 		data: data,
 		columns: columns,
 	}, {
