@@ -178,10 +178,10 @@
                         Approve
                     </button>
                 @endif
-                <button class="bg-red-600 text-white px-6 py-2 btn rounded-lg shadow hover:bg-red-700 transition btn-approve"
+                {{-- <button class="bg-red-600 text-white px-6 py-2 btn rounded-lg shadow hover:bg-red-700 transition btn-approve"
                     data-action="reject">
                     Reject
-                </button>
+                </button> --}}
             </div>
         @endif
 
