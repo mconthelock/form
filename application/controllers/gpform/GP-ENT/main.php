@@ -581,12 +581,12 @@ class Main extends MY_Controller {
                 'CYEAR'      => $cyear,
                 'CYEAR2'     => $cyear2,
                 'NRUNNO'     => $nrunno,
-                'DETAILS'    => $value->details,
-                'ET_ID'      => $value->id,
-                'QTY'        => $value->qty,
-                'UNIT_COST'  => $value->cost,
-                'TOTAL_COST' => $value->total,
-                'REMARK'     => $value->remark
+                'DETAILS'    => $value->details ?? '',
+                'ET_ID'      => $value->id ?? '',
+                'QTY'        => $value->qty ?? 0,
+                'UNIT_COST'  => $value->cost ?? 0,
+                'TOTAL_COST' => $value->total ?? 0,
+                'REMARK'     => $value->remark ?? ''
             ];
 
             $this->ent->insert('GPENT_ESTIMATE', $data_estimate);
