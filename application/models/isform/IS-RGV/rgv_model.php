@@ -193,7 +193,7 @@ class Rgv_model extends CI_Model {
         $sql = "
             SELECT A.*, B.DATAOWNER
             FROM ISRGV_INCHARGE A
-            JOIN PROGRAM_MSTLST@DOCINV B
+            JOIN DOCINV.PROGRAM_MSTLST B
             ON A.PROGRAM_CODE = TO_CHAR(B.DIVCODE) || '/' || TO_CHAR(B.PROTID) || '/' || TO_CHAR(B.PROMID)
             WHERE A.PROGRAM = '$program'
         ";
