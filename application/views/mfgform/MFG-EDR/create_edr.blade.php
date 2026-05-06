@@ -129,6 +129,11 @@
     }
 </style>
 
+<input type="hidden" id="nfrmno" name="nfrmno" value="{{ $NFRMNO }}">
+<input type="hidden" id="vorgno" name="vorgno" value="{{ $VORGNO }}">
+<input type="hidden" id="cyear" name="cyear" value="{{ $CYEAR }}">
+
+
 <div class="min-h-screen bg-gradient-to-br from-slate-100 via-white to-teal-50 px- py-6">
     <div class="edr-card w-full max-w-[1600px] mx-auto overflow-hidden rounded-2xl bg-white">
         <div class="bg-gradient-to-r from-emerald-900 via-teal-700 to-cyan-600 px-6 py-6">
@@ -144,7 +149,8 @@
                         Create By
                     </div>
                     <div class="col-span-12 md:col-span-10 px-4 py-2 font-bold text-slate-800">
-                        {{ isset($empno) ? $empno : '' }} {{ isset($empname) ? $empname : '' }}
+                        <input type="hidden" id="inputBy" name="inputBy" value="{{ $EMPNO }}">
+                        <span id="input_name" class="ml-2 text-sm text-emerald-700"></span>
                     </div>
                 </div>
 
@@ -153,18 +159,16 @@
                         Request By <span class="required">*</span>
                     </div>
                     <div class="col-span-12 md:col-span-4 px-4 py-2">
-                        <input type="text" id="request_by" name="request_by" maxlength="5"
-                            placeholder="Ex.15199" class="edr-input max-w-[180px]">
-                        <div id="request_by_name" class="mt-2 text-sm font-bold text-emerald-700"></div>
+                        <input type="text" id="request_by" name="request_by" maxlength="5" placeholder="Ex.15199" class="edr-input max-w-[120px]">
+                        <span id="request_by_name" class="ml-2 text-sm font-bold text-emerald-700"></span>
                     </div>
 
                     <div class="edr-label col-span-12 md:col-span-2 px-4 py-2">
                         Repair by (ผู้แก้ไข) <span class="required">*</span>
                     </div>
                     <div class="col-span-12 md:col-span-4 px-4 py-2">
-                        <input type="text" id="repair_by" name="repair_by" maxlength="5"
-                            placeholder="Ex.15199" class="edr-input max-w-[180px]">
-                        <div id="repair_by_name" class="mt-2 text-sm font-bold text-emerald-700"></div>
+                        <input type="text" id="repair_by" name="repair_by" maxlength="5" placeholder="Ex.15199" class="edr-input max-w-[120px]">
+                        <span id="repair_by_name" class="ml-2 text-sm font-bold text-emerald-700"></span>
                     </div>
                 </div>
 
@@ -200,9 +204,7 @@
                             file:font-bold file:text-white
                             hover:file:bg-teal-800">
 
-                        <p class="mt-2 text-xs font-bold text-red-700">
-                            **ชื่อไฟล์ห้ามมีช่องว่างหรืออักษรพิเศษ เช่น [ ' , " * ]
-                        </p>
+                        <p class="mt-2 text-xs font-bold text-red-700"> **ชื่อไฟล์ห้ามมีช่องว่างหรืออักษรพิเศษ เช่น [ ' , " * ]</p>
                     </div>
                 </div>
 

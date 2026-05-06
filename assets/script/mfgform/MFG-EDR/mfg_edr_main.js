@@ -7,6 +7,7 @@ import { createTable } from "@amec/webasset/dataTable";
 import { downloadOrOpenFile } from "@amec/webasset/api/file";
 import { setDatePicker } from "@amec/webasset/flatpickr";
 import { createBtn, activatedBtn } from "@amec/webasset/components/buttons";
+import { createForm } from "@amec/webasset/api/webform"
 
 $(document).ready(function () {
     const EDR = {
@@ -18,6 +19,16 @@ $(document).ready(function () {
             this.renderTableHeader();
             this.addRow();
             this.loadMaster();
+            this.initReqno();
+        },
+
+        initReqno: function () {
+            const empno = $.trim($('#inputBy').val());
+            const $target = $('#input_name');
+            getUserbyemp(empno).then(function (user) {
+                const empName = user?.SEMPNO + ' - ' + user?.SNAME;
+                $target.removeClass('text-red-500 text-slate-500').addClass('text-emerald-700').text(empName);
+            });
         },
 
         bindEvents: function () {
@@ -104,7 +115,6 @@ $(document).ready(function () {
 
         loadCauseByWorkType: async function (tid) {
             const causeGroup = String(tid) === '4' ? 'PCB' : 'ALL';
-
             try {
                 const causes = await getcause({
                     CAUSE_GROUP: causeGroup
@@ -130,11 +140,12 @@ $(document).ready(function () {
             const $thead = $('#tblDetail thead');
 
             $table.removeClass('tbl-normal tbl-pcb');
-            $thead.removeClass('bg-emerald-700 bg-purple-600 text-white');
+            $thead.removeClass('bg-purple-500 bg-purple-600 bg-emerald-700 text-white');
 
             if (isPCB) {
                 $table.addClass('tbl-pcb');
                 $thead.addClass('bg-purple-500 text-white');
+
                 $thead.html(`
                     <tr>
                         <th>#</th>
@@ -152,6 +163,7 @@ $(document).ready(function () {
             } else {
                 $table.addClass('tbl-normal');
                 $thead.addClass('bg-emerald-700 text-white');
+
                 $thead.html(`
                     <tr>
                         <th>#</th>
@@ -373,29 +385,20 @@ $(document).ready(function () {
 
             if (!/^[0-9]{5}$/.test(empno)) {
                 $(target).removeClass('text-emerald-700').addClass('text-red-500');
-                $(target).text('กรุณากรอก Emp No 5 หลัก');
+                $(target).text('กรุณากรอกตรวจสอบ Emp No ');
                 return;
             }
 
             try {
-                $(target)
-                    .removeClass('text-red-500 text-emerald-700')
-                    .addClass('text-slate-500')
-                    .text('Checking...');
+                $(target).removeClass('text-red-500 text-emerald-700').addClass('text-slate-500').text('Checking...');
 
                 const user = await getUserbyemp(empno);
-
-                const empName = user?.SNAME
-                    || user?.EMPNAME
-                    || user?.empname
-                    || user?.name
-                    || '';
+                const empName = user?.SNAME || '';
 
                 if (empName) {
                     $(target)
                         .removeClass('text-red-500 text-slate-500')
-                        .addClass('text-emerald-700')
-                        .text(empName);
+                        .addClass('text-emerald-700').text(empName);
                 } else {
                     $(target)
                         .removeClass('text-emerald-700 text-slate-500')
@@ -507,7 +510,7 @@ $(document).ready(function () {
 
             this.setLoading(true);
             showMessage("Data Completed !!!", "success");
-            /*
+            
             $.ajax({
                 url: this.baseUrl + 'mfgform/mfg_edaily_report/save_request',
                 type: 'POST',
@@ -517,19 +520,19 @@ $(document).ready(function () {
                 dataType: 'json',
                 success: function (res) {
                     if (res.status === true || res.status === 'success') {
-                        alert('บันทึกข้อมูลสำเร็จ');
+                        showMessage("บันทึกข้อมูลสำเร็จ !!!", "success");
                     } else {
-                        alert(res.message || 'บันทึกไม่สำเร็จ');
+                        showMessage(res.message, "error");
                     }
                 },
                 error: function (xhr) {
                     console.error(xhr.responseText);
-                    alert('เกิดข้อผิดพลาดระหว่างบันทึกข้อมูล');
+                    showMessage("เกิดข้อผิดพลาดระหว่างบันทึกข้อมูล !!!", "error");
                 },
                 complete: function () {
                     EDR.setLoading(false);
                 }
-            });*/
+            });
         },
 
         setLoading: function (isLoading) {

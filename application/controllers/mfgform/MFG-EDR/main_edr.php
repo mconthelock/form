@@ -33,8 +33,31 @@ class main_edr extends MY_Controller {
         ];
 
         $data['mode']  = $this->getMode($nfrmno, $vorgno, $cyear, $cyear2, $nrunno, $empno);
-        print_r($data);
+        $this->views('mfgform/MFG-EDR/create_edr', $data);
+    }
 
-        //$this->views('mfgform/MFG-EDR/create_edr', $data);
+    public function saveForm(){
+        try {
+            $inputBy     = $this->input->post('inputBy');
+            $requestBy   = $this->input->post('request_by');
+            $repairBy   = $this->input->post('repair_by');
+
+            $nfrmno  = $this->input->post('nfrmno');
+            $vorgno  = $this->input->post('vorgno');
+            $cyear   = $this->input->post('cyear');
+            $flow    = $this->create($nfrmno, $vorgno, $cyear, $inputBy, $requestBy, '');
+            //$form    = $flow['message'];
+            $cyear2  = $form['cyear2'];
+            $nrunno  = $form['runno'];
+
+
+
+
+
+        } catch (Exception $e) {
+            log_message('error', 'Error in saveForm: ' . $e->getMessage());
+            echo json_encode(['status' => false, 'message' => 'An error occurred while saving the form.']);
+            return; 
+        }
     }
 }
