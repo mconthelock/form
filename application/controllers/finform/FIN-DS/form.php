@@ -14,6 +14,9 @@ class form extends MY_Controller{
     }
 
     public function main(){
-
+        $this->views('finform/FIN-DS/show');
+    } 
+    public function submain(){
+        $this->views('finform/FIN-DS/create');
     }
 }
