@@ -201,7 +201,7 @@
                 <input type="radio" id="radioOther" name="stampFormatGroup" value="other"
                     class="radio radio-primary radio-sm">
                 <label for="radioOther" class="cursor-pointer">
-                     รูปแบบตราแสตมป์อื่นๆ
+                    รูปแบบตราแสตมป์อื่นๆ
                     <span class="opacity-60 font-normal text-xs md:ml-1 block md:inline mt-1 md:mt-0">/ For other type
                         please specify:</span>
                 </label>
@@ -230,8 +230,8 @@
                 <div class="flex flex-col gap-4 mt-6">
                     <div class="flex items-center gap-2">
                         <span class="text-xs font-semibold opacity-70 whitespace-nowrap">แนบไฟล์/Attach file:</span>
-                        <input type="file" class="file-input file-input-bordered file-input-sm "
-                            id="otherAttachment" name="otherAttachment">
+                        <input type="file" class="file-input file-input-bordered file-input-sm " id="otherAttachment"
+                            name="otherAttachment">
                     </div>
                     <div class="flex items-center gap-2">
                         <span class="text-xs font-semibold opacity-70 whitespace-nowrap">หมายเหตุ/Remark:</span>
