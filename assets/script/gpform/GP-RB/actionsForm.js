@@ -75,6 +75,7 @@ $(document).on("click", "#btnRequest", async function () {
 
         
         const formData = new FormData($(`#rbForm`)[0]);
+        formData.set("REMARK", $('#remark').val());
         logFormData(formData);
         const res = await createForm(formData);
         console.log(res);
