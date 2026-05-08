@@ -36,4 +36,5 @@ module.exports = {
 
 	//GP-RB
 	gpRB: "./assets/script/gpform/GP-RB/actionsForm.js",
+	gpRBview: "./assets/script/gpform/GP-RB/show.js",
 };

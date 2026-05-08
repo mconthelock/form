@@ -19,10 +19,10 @@ $(async function () {
     .map((a) => {
       const otherSelect = `<input type="text"
                             class="input input-sm input-ghost w-full rounded-none border-b border-base-300 focus:border-primary focus:bg-base-200/50 px-1"
-                            id="otherSelect" name="STAMP_REMARK" placeholder="Please specify other purpose" disabled>`;
+                            id="otherSelect" name="PURPOSE_OTHER" placeholder="Please specify other purpose" disabled>`;
 
       return `<label class="flex items-center space-x-2 cursor-pointer">
-                                <input type="radio" name="PURPOSE_ID" 
+                                <input type="radio" name="PURPOSE_ID" ห
                                     class="radio radio-xs rounded border-base-content [--chkbg:var(--bc)] [--chkfg:var(--b1)] req" value="${a.PURPOSE_ID}"
                                     id="purpose_${a.PURPOSE_ID}">
                                 <span>${a.PURPOSE_TH}/${a.PURPOSE_EN}</span>
