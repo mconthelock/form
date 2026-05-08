@@ -3,6 +3,7 @@ import { tableOption, createTable } from "@amec/webasset/dataTable";
 $(document).ready(async function () {
 
 	const data = await $.get(host + "/isform/IS-RGV/main/getIncharge");
+	console.log(data);
 	const columns = [
 		{
 			data: "PROGRAM",
@@ -32,6 +33,11 @@ $(document).ready(async function () {
 				td.style.width = "10%"; // จำกัดความกว้างของ td
 				td.style.whiteSpace = "nowrap";
 			},
+		},
+		{
+			data: "SNAME",
+			title: "PIC Name",
+			className: "border-2 border-gray-300 text-left",
 		},
 		{
 			data: null,
