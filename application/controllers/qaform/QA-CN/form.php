@@ -316,7 +316,21 @@ class form extends MY_Controller{
                     }
                 }
             }
-            
+            if(isset($_POST["selJobType"]) && $_POST["selJobType"] == "S")
+            {
+                            $condition = [
+                                'NFRMNO' => $nfrmno,
+                                'VORGNO' => $vorgno,
+                                'CYEAR'  => $cyear,
+                                'CYEAR2' => $cyear2,
+                                'NRUNNO' => $nrunno,
+                                'CSTEPNO'=> '07'
+                            ];
+                            $this->deleteFlowStep($condition);
+                            $condition['CSTEPNO'] = '61';
+                            $this->deleteFlowStep($condition);
+
+            }
  
             if($act == "approve")
             {
