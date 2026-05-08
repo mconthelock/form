@@ -44,7 +44,7 @@
         <input type="hidden" name="CYEAR" value="{{ $CYEAR }}">
         <input type="hidden" name="CYEAR2" value="{{ $CYEAR2 }}">
         <input type="hidden" name="NRUNNO" value="{{ $NRUNNO }}">
-        <input type="text" name="txt_exdata" id="txt_exdata" value="{{ $exdata }}">
+        <input type="hidden" name="txt_exdata" id="txt_exdata" value="{{ $exdata }}">
         <input type="hidden" name="txt_fid" value="{{ $data_head[0]->FID }}">
         <h3 class="font-bold text-lg mb-3 text-black-800 border-b pb-1">
             รายละเอียดฟอร์ม
@@ -602,7 +602,7 @@
             <div class="flow mt-6" ></div>
         </div>
 
-        <div >
+        <div style="display:none">
             Cyear2 :
             <input type="text" name="txt_year_text"  id="txt_year_text" class="input input-bordered w-20 mb-2" value="{{ $CYEAR2 }}" maxlength='4'>
             Formno :
