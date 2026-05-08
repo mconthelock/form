@@ -11,6 +11,8 @@ class Training extends MY_Controller {
         $this->load->model('user_model', 'usr');
         $this->load->model('gpform/GP-TRN/training_model', 'trn');
         $this->upload_path = $_ENV['AMEC_FILE_PATH'] . ($this->_servername() == 'amecweb' ? 'production' : 'development') . "/Form/GP/GPTRN/";
+        $this->upload_path_cashadv = $_ENV['AMEC_FILE_PATH'] . ($this->_servername() == 'amecweb' ? 'production' : 'development') . "/webflow/finform/cav/";
+                                                                                                                                      
     }
 
     public function index(){
@@ -330,9 +332,9 @@ class Training extends MY_Controller {
             $this->trn->update_flow($data["NFRMNO"], $data["VORGNO"], $data["CYEAR"], $data["CYEAR2"], $data["NRUNNO"], 'VREPNO', '14001', 'CSTEPNO', '19');
 
             if($prefix == 'meth' || $prefix == 'pos' ){
-                $this->trn->delete_flow($data["NFRMNO"], $data["VORGNO"], $data["CYEAR"], $data["CYEAR2"], $data["NRUNNO"], 'CEXTDATA', ['19']);
-                $this->trn->update_flow($data["NFRMNO"], $data["VORGNO"], $data["CYEAR"], $data["CYEAR2"], $data["NRUNNO"], 'CSTEPNEXTNO', '10', 'CSTEPNEXTNO', '19');
-                $this->trn->update_flow($data["NFRMNO"], $data["VORGNO"], $data["CYEAR"], $data["CYEAR2"], $data["NRUNNO"], 'CEXTDATA', '19', 'CSTEPNO', '--');
+                //$this->trn->delete_flow($data["NFRMNO"], $data["VORGNO"], $data["CYEAR"], $data["CYEAR2"], $data["NRUNNO"], 'CEXTDATA', ['19']);
+                //$this->trn->update_flow($data["NFRMNO"], $data["VORGNO"], $data["CYEAR"], $data["CYEAR2"], $data["NRUNNO"], 'CSTEPNEXTNO', '10', 'CSTEPNEXTNO', '19');
+                //$this->trn->update_flow($data["NFRMNO"], $data["VORGNO"], $data["CYEAR"], $data["CYEAR2"], $data["NRUNNO"], 'CEXTDATA', '19', 'CSTEPNO', '--');
                 $this->trn->update_flow($data["NFRMNO"], $data["VORGNO"], $data["CYEAR"], $data["CYEAR2"], $data["NRUNNO"], 'VAPVNO', $data["INPUTBY"], 'CSTEPNO', '--');
                 $this->trn->update_flow($data["NFRMNO"], $data["VORGNO"], $data["CYEAR"], $data["CYEAR2"], $data["NRUNNO"], 'VREPNO', $data["INPUTBY"], 'CSTEPNO', '--');
             }else if($prefix == 'legal'){
@@ -347,7 +349,7 @@ class Training extends MY_Controller {
                         'CYEAR2'      => $data["CYEAR2"],
                         'NRUNNO'      => $data["NRUNNO"],
                         'CSTEPNO'     => '57',
-                        'CSTEPNEXTNO' => '19',
+                        'CSTEPNEXTNO' => '58',
                         'CSTART'      => '0',
                         'CSTEPST'     => '3',
                         'CTYPE'       => '1',
@@ -369,15 +371,25 @@ class Training extends MY_Controller {
 
                 // เรียกใช้ฟังก์ชัน generic insert_data
                 $result = $this->trn->insert_data('FLOW', $data_legal);
-                $this->trn->update_flow($data["NFRMNO"], $data["VORGNO"], $data["CYEAR"], $data["CYEAR2"], $data["NRUNNO"], 'CSTEPNEXTNO', '57', 'CSTEPNO', '--');
-                $this->trn->update_flow($data["NFRMNO"], $data["VORGNO"], $data["CYEAR"], $data["CYEAR2"], $data["NRUNNO"], 'CSTEPST', '2', 'CSTEPNO', '19');
 
+                $data_legal['CSTEPNO'] = '58';
+                $data_legal['CSTEPNEXTNO'] = '58';
+                $data_legal['CSTEPST'] = '2';
+                $data_legal['VPOSNO'] = null;
+                $data_legal['VAPVNO'] = '01027';
+                $data_legal['VREPNO'] = '14001';
+                $result = $this->trn->insert_data('FLOW', $data_legal);
+
+
+                $this->trn->update_flow($data["NFRMNO"], $data["VORGNO"], $data["CYEAR"], $data["CYEAR2"], $data["NRUNNO"], 'CSTEPNEXTNO', '57', 'CSTEPNO', '--');
+                //$this->trn->update_flow($data["NFRMNO"], $data["VORGNO"], $data["CYEAR"], $data["CYEAR2"], $data["NRUNNO"], 'CSTEPST', '2', 'CSTEPNO', '19');
+            
                 $where = " AND CSTEPNO in ('07','63','06','05','04','03','02')";
                 $get_first_step = $this->trn->get_data_flow($data["NFRMNO"], $data["VORGNO"], $data["CYEAR"], $data["CYEAR2"], $data["NRUNNO"], $where);
                 $steps = array_map(function($r){
                     return strval($r->CSTEPNO);
                 }, $get_first_step);
-
+                
                  // ตรวจสอบเงื่อนไขตามลำดับ
                 if (in_array('07', $steps)) {
                     $nextno = "07";
@@ -397,10 +409,10 @@ class Training extends MY_Controller {
                     $nextno = "10";
                 }
 
-                $this->trn->update_flow($data["NFRMNO"], $data["VORGNO"], $data["CYEAR"], $data["CYEAR2"], $data["NRUNNO"], 'CSTEPNEXTNO', $nextno, 'CSTEPNO', '19');
-                if( $nextno != "10"){
+                $this->trn->update_flow($data["NFRMNO"], $data["VORGNO"], $data["CYEAR"], $data["CYEAR2"], $data["NRUNNO"], 'CSTEPNEXTNO', $nextno, 'CSTEPNO', '58');
+                /*if( $nextno != "10"){
                     $this->trn->update_flow($data["NFRMNO"], $data["VORGNO"], $data["CYEAR"], $data["CYEAR2"], $data["NRUNNO"], 'CSTEPNEXTNO', '10', 'CSTEPNO', '02');
-                }
+                }*/
             }
 
             //ไม่มีค่าใช้จ่าย ลบ Last step
@@ -417,13 +429,6 @@ class Training extends MY_Controller {
                 "received" => $data]
             );
         } catch (Exception $e) {
-            //delete form & flow when error
-            //$this->trn->delete_all_table($data["NFRMNO"], $data["VORGNO"], $data["CYEAR"], $data["CYEAR2"], $data["NRUNNO"], 'FLOW');
-            //$this->trn->delete_all_table($data["NFRMNO"], $data["VORGNO"], $data["CYEAR"], $data["CYEAR2"], $data["NRUNNO"], 'FORM');
-            //$this->trn->delete_all_table($data["NFRMNO"], $data["VORGNO"], $data["CYEAR"], $data["CYEAR2"], $data["NRUNNO"], 'GP_TRN_ATT');
-            //$this->trn->delete_all_table($data["NFRMNO"], $data["VORGNO"], $data["CYEAR"], $data["CYEAR2"], $data["NRUNNO"], 'GP_TRN_TRAINEE');
-            //$this->trn->delete_all_table($data["NFRMNO"], $data["VORGNO"], $data["CYEAR"], $data["CYEAR2"], $data["NRUNNO"], 'GP_TRN_LIST');
-            //$this->trn->delete_all_table($data["NFRMNO"], $data["VORGNO"], $data["CYEAR"], $data["CYEAR2"], $data["NRUNNO"], 'GP_TRN_HEAD');
             echo json_encode([
                 "status" => "error",
                 "message" => $e->getMessage()
@@ -581,7 +586,7 @@ class Training extends MY_Controller {
         ];
 
         // ============================================================
-        // 2) หา DAPVDATE สูงสุดจาก FLOW (CEXTDATA = '10') ของทุกฟอร์มลูก
+        // 2) หา DAPVDATE สูงสุดจาก FLOW (CEXTDATA = '19') ของทุกฟอร์มลูก
         // ============================================================
         $dapvList = [];   // เก็บทุก DAPVDATE พร้อม key ฟอร์มต้นทาง
         foreach ($items as $row) {
@@ -591,7 +596,7 @@ class Training extends MY_Controller {
             $cyear2 = $row["CYEAR2"];
             $nrunno = $row["NRUNNO"];
 
-            $flowRows = $this->trn->get_data_flow($nfrmno, $orgno, $cyear,  $cyear2,$nrunno, " AND CEXTDATA = '10'");
+            $flowRows = $this->trn->get_data_flow($nfrmno, $orgno, $cyear,  $cyear2,$nrunno, " AND CEXTDATA = '19'");
 
             foreach ($flowRows as $f) {
                 if (!empty($f->DAPVDATE)) {
@@ -627,8 +632,9 @@ class Training extends MY_Controller {
         // 3) ใช้ฟอร์มที่มี DAPVDATE มากสุด (maxRow) ไปอัพเดต FLOW + FORM
         // ===================================================================
         // ดึง flow ของฟอร์มนั้น เฉพาะ step 19,10,13,11,14
-        $flow_for_update = $this->trn->get_data_flow($maxRow["NFRMNO"],$maxRow["VORGNO"],$maxRow["CYEAR"], $maxRow["CYEAR2"], $maxRow["NRUNNO"], " AND CSTEPNO IN ('19','10','13','11','14')");
-
+    /*
+        $flow_for_update = $this->trn->get_data_flow($maxRow["NFRMNO"],$maxRow["VORGNO"],$maxRow["CYEAR"], $maxRow["CYEAR2"], $maxRow["NRUNNO"], " AND CEXTDATA IN ('19')");
+        
         // key สำหรับ WHERE ของฟอร์ม Cash Advance (FORM + FLOW)
         $baseWhere = [
             "NFRMNO" => $cashHead["NFRMNO"],
@@ -637,7 +643,7 @@ class Training extends MY_Controller {
             "CYEAR2" => $cashHead["CYEAR2"],
             "NRUNNO" => $cashHead["NRUNNO"]
         ];
-
+    
         foreach ($flow_for_update as $row_flow) {
             switch ($row_flow->CSTEPNO) {
                 case '19':  // JOB CONTROLLER
@@ -683,13 +689,19 @@ class Training extends MY_Controller {
 
             $this->db->set("DAPVDATE", "TO_DATE('{$dateStr}','DD/MM/YYYY')", false);
             $this->trn->update_data("FLOW", $dataUpdateFlow, $whereFlow);
+            
         }
+    
 
         // 3.3 set CSTEPST = 3 ให้ step สุดท้าย (CSTEPNEXTNO = '00') ของ Cash ADV
         $dataUpdateLast = ["CSTEPST" => '3'];
-        $whereLast = array_merge($baseWhere, ["CSTEPNEXTNO" => '00']);
+        $whereLast = array_merge($baseWhere, ["CSTEPNO" => '06']);
         $this->trn->update_data("FLOW", $dataUpdateLast, $whereLast);
 
+        $dataUpdateLast = ["CSTEPST" => '2'];
+        $whereLast = array_merge($baseWhere, ["CSTEPNO" => '05']);
+        $this->trn->update_data("FLOW", $dataUpdateLast, $whereLast);
+    */
         // ====================================================
         // 4) INSERT CASH ADVANCE HEAD + LIST
         // ====================================================
@@ -699,7 +711,14 @@ class Training extends MY_Controller {
             "CURGENT"  => '0',
             "CRECBY"   => '2'
         ]);
-        $this->trn->insert_data('CASHADVFORM', $insert_head);
+
+        //$this->trn->insert_data('CASHADVFORM', $insert_head);
+
+        $effdate = date("d/m/Y", strtotime($cashHead["EFFDATE"]));
+        $this->trn->insert_data("CASHADVFORM", $insert_head, [
+            "EFFDATE" => "TO_DATE('{$effdate}','DD/MM/YYYY')"
+        ]);
+
         $insert_list = array_merge($base_cash_adv, [
             "ID"          => 1,
             "DESCRIPTION" => $cashHead["SUBJECT"],
@@ -893,5 +912,100 @@ class Training extends MY_Controller {
         }
     }
 
+    public function upload_cash_adv_file(){
+        header('Content-Type: application/json; charset=utf-8');
+        $nfrmno = $this->input->post("NFRMNO");
+        $vorgno = $this->input->post("VORGNO");
+        $cyear  = $this->input->post("CYEAR");
+        $cyear2 = $this->input->post("CYEAR2");
+        $nrunno = $this->input->post("NRUNNO");
+
+        $folder_name = $nfrmno . "_" . $vorgno . "_" . $cyear . "_" . $cyear2 . "_" . $nrunno;
+        $dest_path = rtrim($this->upload_path_cashadv, "/\\") . DIRECTORY_SEPARATOR . $folder_name;
+
+        if (!is_dir($dest_path)) {
+            if (!mkdir($dest_path, 0777, true)) {
+                echo json_encode([
+                    "status" => false,
+                    "message" => "Cannot create upload folder",
+                    "path" => $dest_path,
+                    "php_error" => error_get_last()
+                ]);
+                return;
+            }
+        }
+
+        $uploaded_files = [];
+        $no = 1;
+
+        foreach ($_FILES["cashAdvFiles"]["name"] as $i => $name) {
+            $error_code = $_FILES["cashAdvFiles"]["error"][$i];
+
+            if ($error_code !== UPLOAD_ERR_OK) {
+                echo json_encode([
+                    "status" => false,
+                    "message" => "Upload error",
+                    "file" => $name,
+                    "error_code" => $error_code
+                ]);
+                return;
+            }
+
+            $safe_name = preg_replace('/[^A-Za-z0-9._-]/', '_', $name);
+            $ext = pathinfo($safe_name, PATHINFO_EXTENSION);
+
+            $new_name = $cyear2 . "_" . $nrunno . "_CASH_ADV_" . $no . "." . $ext;
+            $real_path = rtrim($dest_path, "/\\") . DIRECTORY_SEPARATOR . $new_name;
+
+            if (!move_uploaded_file($_FILES["cashAdvFiles"]["tmp_name"][$i], $real_path)) {
+                echo json_encode([
+                    "status" => false,
+                    "message" => "move_uploaded_file failed",
+                    "file" => $name,
+                    "tmp_name" => $_FILES["cashAdvFiles"]["tmp_name"][$i],
+                    "real_path" => $real_path,
+                    "php_error" => error_get_last()
+                ]);
+                return;
+            }
+
+            $insert_att = [
+                "NFRMNO" => $nfrmno,
+                "VORGNO" => $vorgno,
+                "CYEAR"  => $cyear,
+                "CYEAR2" => $cyear2,
+                "NRUNNO" => $nrunno,
+                "ID"     => $no,
+                "SFILE"  => $new_name
+            ];
+
+            $result = $this->trn->insert_data("ATTCASHFRM", $insert_att);
+
+            if (!$result) {
+                @unlink($real_path);
+
+                echo json_encode([
+                    "status" => false,
+                    "message" => "Insert ATTCASHFRM failed",
+                    "db_error" => $this->db->error()
+                ]);
+                return;
+            }
+
+            $uploaded_files[] = [
+                "ID"    => $no,
+                "SFILE" => $new_name
+            ];
+
+            $no++;
+        }
+
+        echo json_encode([
+            "status" => true,
+            "message" => "Upload file success",
+            "path" => $dest_path,
+            "files" => $uploaded_files
+        ]);
+    }
 
 }
