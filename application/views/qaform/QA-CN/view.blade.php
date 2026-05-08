@@ -897,6 +897,20 @@
     </tr>     
 @endif
 
+@if (($mode == $MODE_EDIT) && (($cextData == 2)||($cextData == 7)) && !$chkopr)
+    <tr>
+        <td class="force-w-350 align-top pt-2 " style="padding:5px;">Change To</td>
+        <td class="px-3 py-1 bg-gray-100 border-b border-white">
+             <select name="Pic" id="Pic" class="w-1/3 h-8 px-2 border border-gray-300 bg-white focus:outline-none focus:ring-1 focus:ring-sky-400 rounded-sm">
+                 <option value="">----------------------------------------</option>
+                @foreach ($pic as $p)
+                    <option value="{{ $p->SEMPNO }}">{{ $p->SNAME }}</option>
+                @endforeach
+            </select>
+        </td>
+    </tr>     
+@endif
+
 {{-- ส่วน Operator --}}
 @if ($mode == $MODE_EDIT && $cextData == 6)
     <tr>
@@ -1102,6 +1116,13 @@
                 @if(!is_null($cnform->MSTATUS) &&($cextData == 6))
                 <button type="button" name="btnChange" 
                         data-action="change"
+                        class="btn-submit cursor-pointer bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded shadow">
+                    Change
+                </button>
+                @endif
+                @if(($cextData == 2)||($cextData == 7))
+                <button type="button" name="btnChange" 
+                        data-action="changepic"
                         class="btn-submit cursor-pointer bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded shadow">
                     Change
                 </button>

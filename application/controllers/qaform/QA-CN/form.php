@@ -137,6 +137,18 @@ class form extends MY_Controller{
                 $data['eng'] = $this->getjstaff($data['empinf'], 'E');
                 $data['foreman'] = $this->getForeman($data['empno']);
                 $data['opr'] =  $this->getOpr($data['cnform']->MSTATUS, $data['empinf']);
+                //mode edit
+                if($data['mode'] == "2")
+                {
+                    if($data['cextData'] == 2)  
+                    {
+                        $data['pic'] = $this->getjstaff($data['empinf'], 'J', $data['empinf'][0]->SEMPNO);
+                    }else if($data['cextData'] == 7)
+                    {
+                        $data['pic'] =  $this->getOpr($data['cnform']->MSTATUS, $data['empinf'], $data['empinf'][0]->SEMPNO);
+                    }
+                }
+          
             }
             //var_dump($data['stepready']);
             //exit;
@@ -149,19 +161,20 @@ class form extends MY_Controller{
 
     }
 
-    public function getjstaff($head, $type)
+    public function getjstaff($head, $type , $pic = '')
     {
+        $excludePic = ($pic != '') ? " and SEMPNO != '" . $pic . "' " : "";
         if ($head[0]->SDEPCODE == "000401") {
             
             // ถ้า type เป็น 'E' ใช้ '35','40' ถ้าไม่ใช่ ให้ใช้ค่าเดิมของเงื่อนไขนี้
             $posCode = ($type == 'E') ? "'35','40','33'" : "'41','42','43','40','35','33'";
             if($type == 'E')
             {
-                $sql = "select SEMPNO , SNAME from AMEC.AEMPLOYEE where CSTATUS = '1' and SSECCODE = '000404' and  SPOSCODE in (".$posCode.")  order by sname";
+                $sql = "select SEMPNO , SNAME from AMEC.AEMPLOYEE where CSTATUS = '1' and SSECCODE = '000404' and  SPOSCODE in (".$posCode.") " .$excludePic."  order by sname";
             
             }else
             {
-                $sql = "select SEMPNO , SNAME from AMEC.AEMPLOYEE where CSTATUS = '1' and SSECCODE = '000404' and ( SPOSCODE in (".$posCode.") or SEMPNO IN ('09019','13067')) order by sname";
+                $sql = "select SEMPNO , SNAME from AMEC.AEMPLOYEE where CSTATUS = '1' and SSECCODE = '000404' and ( SPOSCODE in (".$posCode.") or SEMPNO IN ('09019','13067')) " . $excludePic . " order by sname";
             
             }
        
@@ -169,15 +182,15 @@ class form extends MY_Controller{
             
             $posCode = ($type == 'E') ? "'35','40','33'" : "'40','41','42','43'";
             if ($head[0]->SSECCODE == "00") {
-                $sql = "select SEMPNO , SNAME from AMEC.AEMPLOYEE where CSTATUS = '1' and SSECCODE = '000502' and SPOSCODE in (".$posCode.") order by sname";
+                $sql = "select SEMPNO , SNAME from AMEC.AEMPLOYEE where CSTATUS = '1' and SSECCODE = '000502' and SPOSCODE in (".$posCode.") " . $excludePic . " order by sname";
             } else {
-                $sql = "select SEMPNO , SNAME from AMEC.AEMPLOYEE where CSTATUS = '1' and SSECCODE = '".$head[0]->SSECCODE."' and SPOSCODE in (".$posCode.") order by sname";
+                $sql = "select SEMPNO , SNAME from AMEC.AEMPLOYEE where CSTATUS = '1' and SSECCODE = '".$head[0]->SSECCODE."' and SPOSCODE in (".$posCode.") " . $excludePic . " order by sname";
             }
             
         } else {
             
             $posCode = ($type == 'E') ? "'35','40','33'" : "'41','42','43'";
-            $sql = "select SEMPNO , SNAME from AMEC.AEMPLOYEE where CSTATUS = '1' and SSECCODE = '000303' and SPOSCODE in (".$posCode.") order by sname";
+            $sql = "select SEMPNO , SNAME from AMEC.AEMPLOYEE where CSTATUS = '1' and SSECCODE = '000303' and SPOSCODE in (".$posCode.") " . $excludePic . " order by sname";
             
         }
         
@@ -216,16 +229,17 @@ class form extends MY_Controller{
        return   $data;
     }
 
-    public function getOpr($mstauts,$head)
+    public function getOpr($mstauts,$head,$pic = '')
     {
+        $excludePic = ($pic != '') ? " and SEMPNO != '" . $pic . "' " : "";
         if(!is_null($mstauts))
         {
             if($head[0]->SSECCODE == "000404")
             {
-                $sql = "select SEMPNO , SNAME from AMEC.AEMPLOYEE A , SEQUENCEORG S where A.SEMPNO = S.EMPNO and S.HEADNO ='".$head[0]->SEMPNO."' and A.CSTATUS = '1' and A.SPOSCODE in ('64','65') order by SNAME ";      
+                $sql = "select SEMPNO , SNAME from AMEC.AEMPLOYEE A , SEQUENCEORG S where A.SEMPNO = S.EMPNO and S.HEADNO ='".$head[0]->SEMPNO."' and A.CSTATUS = '1' and A.SPOSCODE in ('64','65') " . $excludePic . " order by SNAME ";      
             }else
             {
-                $sql = "select SEMPNO , SNAME from AMEC.AEMPLOYEE where  CSTATUS = '1' and SPOSCODE in ('64','65') and SSECCODE = '".$head[0]->SSECCODE."' order by SNAME";    
+                $sql = "select SEMPNO , SNAME from AMEC.AEMPLOYEE where  CSTATUS = '1' and SPOSCODE in ('64','65') and SSECCODE = '".$head[0]->SSECCODE."' " . $excludePic . "   order by SNAME";    
             }
         }else{
             $sql = "select SEMPNO , SNAME from AMEC.AEMPLOYEE where CSTATUS = '1' and SSECCODE = '000404' and SPOSCODE in ('64','65') order by SNAME";
@@ -462,7 +476,17 @@ class form extends MY_Controller{
                 $form["CEXTDATA"] = '03';
                 $this->cn->update("FLOW",  $dataapv , $form);
                 
+            }else if($act == "changepic")
+            {
+                $rep = $this->getRep(array('NFRMNO' =>  $nfrmno , 'VORGNO' => $vorgno , 'CYEAR' => $cyear , 'VEMPNO' => $_POST['Pic']));
+                $dataapv = [
+                        'VAPVNO' => $_POST['Pic'],
+                        'VREPNO' => $rep
+                ];
+                $form["CEXTDATA"] = $_POST['cextData'];
+                $this->cn->update("FLOW",  $dataapv , $form);
             }
+
             $path = $this->upload_path.$nfrmno."_".$vorgno."_".$cyear."_".$cyear2."_".$nrunno. "/";
             unset($form["CEXTDATA"]);
             if($act != "deleteApv")
