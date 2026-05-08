@@ -1107,6 +1107,14 @@
                 </button>
                 @endif
 
+                @if(($cextData == 4) ||($cextData == 5))
+                <button type="button" name="btnReturn" 
+                        data-action="returnqastaff"
+                        class="btn-submit cursor-pointer bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded shadow">
+                    Return TO QA Staff
+                </button>
+                @endif
+
                 @if(!is_null($cnform->MSTATUS) &&($cextData == 7))
                 <button type="button" name="btnReturn" 
                         data-action="returnb"
