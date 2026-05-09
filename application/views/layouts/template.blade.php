@@ -37,7 +37,7 @@
             <!-- Footer -->
             @include('layouts.footer')
         </div>
-        <div class="drawer-side z-51!" style="box-shadow: 8px 0 12px rgba(0,0,0,0.25);">
+        <div class="drawer-side z-51!">
             <div id="sidebar"></div>
         </div>
     </div>

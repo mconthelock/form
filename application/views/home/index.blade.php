@@ -30,7 +30,7 @@
     </div>
 
     {{-- Recent Link --}}
-    <h1 class="text-3xl text-primary font-bold mb-5 recent-apps border-b-primary border-b-4 pb-[10px]">Recent Link</h1>
+    <h1 class="text-3xl text-primary font-bold mb-5 recent-apps border-b-primary border-b-4 pb-2">Recent Link</h1>
     <div class="flex flex-wrap justify-center gap-8 mb-8 lg:justify-start recent-apps" id="recent-apps">
         @for ($i = 0; $i < 3; $i++)
             <a href="#" class="flex flex-col items-center gap-3 w-28">
@@ -41,11 +41,8 @@
     </div>
 
     {{-- AMEC WEB --}}
-    <h1 class="mb-5 flex amecweb_links border-b-primary border-b-4 pb-[10px]">
+    <h1 class="mb-5 flex amecweb_links border-b-primary border-b-4 pb-2">
         <div class="flex-1 text-3xl text-primary font-bold">AMEC WEB</div>
-        <div class="flex-none"><button class="btn btn-circle btn-ghost text-2xl" type="button" id="reload_amecweb"><i
-                    class="icofont-refresh"></i></button>
-        </div>
     </h1>
     <div class="flex flex-col gap-3 mb-8 lg:flex-row lg:flex-wrap amecweb_links" id="amecweb_links">
         @for ($i = 0; $i < 8; $i++)
@@ -61,7 +58,7 @@
         @endfor
     </div>
     {{-- Other Link --}}
-    <h1 class="text-3xl text-primary font-bold mb-5 border-b-primary border-b-4 pb-[10px]">Other Link</h1>
+    <h1 class="text-3xl text-primary font-bold mb-5 border-b-primary border-b-4 pb-2">Other Link</h1>
     {{-- md, lg: 2cols,  xl: 4 --}}
     <div class="flex flex-col gap-8 mb-5 lg:flex-row lg:flex-wrap">
         @include('home/links', ['links' => $links['electronic']])
