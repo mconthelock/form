@@ -8,9 +8,9 @@ import { initApp, stampApp } from '../utils';
 import { createLinks, setRecentApps, setAmecwebLinks } from './data';
 
 $(document).ready(async function (e) {
+    showLoader();
     const app = await initApp({ submenu: '.document' });
     if (!app) return;
-
     try {
         const news = await createCarousel();
         const links = await $.getJSON(

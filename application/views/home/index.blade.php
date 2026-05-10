@@ -1,7 +1,7 @@
 @extends('layouts/template')
 
 @section('contents')
-    <div class="card rounded-lg h-72 w-full bordered mb-3 overflow-hidden relative">
+    <div class="card rounded-lg h-72 w-full bordered mb-8 overflow-hidden relative">
         <div class="f-carousel" id="news-carousel">
             <div class="f-carousel__slide">
                 <img class="w-full h-72 object-cover object-center" src="{{ base_url() }}assets/images/start_images.png"
@@ -21,10 +21,10 @@
     <div class="flex flex-col w-full max-w-[100vw] mb-3">
         <div class="flex overflow-x-scroll hide-scroll-bar">
             <div class="flex gap-5 pb-3 flex-nowrap w-full">
-                @include('home.stats', ['id' => 'wait', 'text' => 'Waiting for Approval'])
-                @include('home.stats', ['id' => 'prepare', 'text' => 'Under preparation'])
-                @include('home.stats', ['id' => 'mine', 'text' => 'Mine'])
-                @include('home.stats', ['id' => 'finish', 'text' => 'Approved/Rejected'])
+                @include('home.stats', ['id' => 'wait', 'text' => 'Waiting for Approval', 'value' => 1])
+                @include('home.stats', ['id' => 'prepare', 'text' => 'Under preparation', 'value' => 0])
+                @include('home.stats', ['id' => 'mine', 'text' => 'Mine', 'value' => 3])
+                @include('home.stats', ['id' => 'finish', 'text' => 'Approved/Rejected', 'value' => 4])
             </div>
         </div>
     </div>

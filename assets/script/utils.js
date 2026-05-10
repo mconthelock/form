@@ -76,6 +76,11 @@ export const tableOption = {
             pagination.removeClass('hidden');
         }
     },
+    initComplete: function (settings, json) {
+        $(this).closest('.tableArea').find('.table-loader').addClass('hidden');
+        const container = $(this.api().table().container());
+        return { container };
+    },
 };
 
 export const showConfirm = (

@@ -125,8 +125,6 @@ export async function setAmecwebLinks() {
     amecweb.map(async (val) => {
         const app = val.application;
         const groups = val.appsgroups;
-        //await setApplication(app);
-        //await setAppGroup(`${app.APP_ID}-${val.USERS_ID}`, groups);
         const url = `${process.env.APP_HOST}/${app.APP_LOCATION}/${
             app.APP_TYPE == '1' ? 'authen/move/' : ''
         }`;
