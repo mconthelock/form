@@ -38,7 +38,7 @@ $(document).on('click', '.links-stamp', async function (e) {
         await showLoader();
         const curent = {
             id: $(this).attr('data-id'),
-            user: $('#login-id').val(),
+            user: $('#user-login').attr('empno'),
             url: $(this).attr('href'),
             target: $(this).attr('target'),
             color: $(this).attr('data-color') || '#000000',
@@ -50,6 +50,8 @@ $(document).on('click', '.links-stamp', async function (e) {
         };
         await stampApp(curent);
         await setRecentApps();
+        console.log(curent);
+
         setCookie(
             curent.location,
             encryptText(`${curent.id}-${curent.user}`, curent.location),
