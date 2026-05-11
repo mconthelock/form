@@ -570,10 +570,10 @@ $(document).ready(function () {
 
             return {
                 NFRMNO: Number(webflowData.NFRMNO || $('#nfrmno').val()),
-                VORGNO: String(webflowData.VORGNO || $('#vorgno').val() || ''),
-                CYEAR: String(webflowData.CYEAR || $('#cyear').val() || ''),
-                CYEAR2: String(webflowData.CYEAR2 || ''),
-                NRUNNO: Number(webflowData.NRUNNO || 0),
+                VORGNO: String(webflowData.VORGNO || $('#vorgno').val()),
+                CYEAR: String(webflowData.CYEAR || $('#cyear').val()),
+                CYEAR2: String(webflowData.CYEAR2),
+                NRUNNO: Number(webflowData.NRUNNO),
 
                 TID: Number($('#job_type').val()) || null,
                 SSECCODE: String($('#sseccode').val() || ''),
@@ -596,7 +596,7 @@ $(document).ready(function () {
             this.setLoading(true);
             try {
                 const webflow = await this.createWebflowForm();
-                const payload = this.getFormPayload(webflow?.data || {});
+                const payload = this.getFormPayload(webflow.data);
                 const res = await createMfgEdr(payload);
 
                 console.log('WEBFLOW RESULT:', webflow);
