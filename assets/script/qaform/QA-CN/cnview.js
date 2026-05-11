@@ -589,6 +589,14 @@ function checkData(act)
         return false;
       }
       return true;
+  }else if(act == "changepic")
+  {
+      if($("#Pic").val() == "")
+      {
+        showMessage('Please select Change To', 'warning');
+        return false;
+      }
+      return true;
   }else if( act == "returnb" || act =="returnrem" || act == "returnqastaff" || act == "returnass")
   {
        if($("#txtRemark").val() == "")
@@ -603,7 +611,6 @@ function checkData(act)
   }
   else
   {
-      console.log("yyyyyyy");
       
       if(($("#mstatus").val() == "1") && (act == "approve"))
       {
