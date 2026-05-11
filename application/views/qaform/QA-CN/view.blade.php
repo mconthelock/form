@@ -1150,6 +1150,21 @@
                     Return
                 </button>
                 @endif
+
+                @if(($cextData == 4) ||($cextData == 5))
+                <button type="button" name="btnReturn" 
+                        data-action="returnqastaff"
+                        class="btn-submit cursor-pointer bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded shadow">
+                    Return TO QA Staff
+                </button>
+                @endif
+                @if(($cextData == 3) && is_null($cnform->MSTATUS))
+                <button type="button" name="btnReturn" 
+                        data-action="returnass"
+                        class="btn-submit cursor-pointer bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded shadow">
+                    Return TO Assigned Person
+                </button>
+                @endif
                 @if ((($cextData <= 4) || ($cextData == 8)) && !in_array($empno, [$form[0]->VREQNO, $form[0]->VINPUTER]))
                     <button type="button" name="btnReturn" id="btnReturn"
                              data-action="returnrem"

@@ -214,14 +214,21 @@ class Rgv_model extends CI_Model {
 
     public function getUserIncharge()
     {
-        $this->db
-            ->select('o.PROGRAM, o.ORG_TYPE, o.ORG_CODE, COALESCE(SDEPT, SDIV) AS ORG_NAME, o.PIC')
-            ->from('ISRGV_INCHARGE o')
-            ->join('AMEC.PDEPARTMENT d', 'o.ORG_CODE = d.SDEPCODE', 'left')
-            ->join('AMEC.PDIVISION v', 'o.ORG_CODE = v.SDIVCODE', 'left')
-            // ->where('o.PROGRAM', 'Invoice')
-            ->order_by('o.ORG_TYPE, o.ORG_CODE, o.PIC');
-        return $this->db->get()->result();
+        // $this->db
+        //     ->select('o.PROGRAM, o.ORG_TYPE, o.ORG_CODE, COALESCE(d.SDEPT, v.SDIV) AS ORG_NAME, o.PIC AS EMPNO, u.SNAME')
+        //     ->from('ISRGV_INCHARGE o')
+        //     ->join('AMEC.PDEPARTMENT d', 'o.ORG_CODE = d.SDEPCODE', 'left')
+        //     ->join('AMEC.PDIVISION v', 'o.ORG_CODE = v.SDIVCODE', 'left')
+        //     ->join('AMECUSERALL u', 'o.PIC = u.SEMPNO', 'left')
+        //     // ->where('o.PROGRAM', 'Invoice')
+        //     ->order_by('o.ORG_TYPE, o.ORG_CODE, o.PIC');
+        // return $this->db->get()->result();
+        $sql = "SELECT o.PROGRAM, o.ORG_TYPE, o.ORG_CODE, COALESCE(d.SDEPT, v.SDIV) AS ORG_NAME, o.PIC, u.SNAME
+                FROM ISRGV_INCHARGE o 
+                LEFT JOIN AMEC.PDEPARTMENT d ON o.ORG_CODE = d.SDEPCODE
+                LEFT JOIN AMEC.PDIVISION v ON o.ORG_CODE = v.SDIVCODE
+                LEFT JOIN AMECUSERALL u ON o.PIC = u.SEMPNO";
+        return $this->db->query($sql)->result();
     }
 
     public function getProgram()
