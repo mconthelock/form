@@ -22,7 +22,7 @@ $(async function () {
                             id="otherSelect" name="PURPOSE_OTHER" placeholder="Please specify other purpose" disabled>`;
 
       return `<label class="flex items-center space-x-2 cursor-pointer">
-                                <input type="radio" name="PURPOSE_ID" ห
+                                <input type="radio" name="PURPOSE_ID" 
                                     class="radio radio-xs rounded border-base-content [--chkbg:var(--bc)] [--chkfg:var(--b1)] req" value="${a.PURPOSE_ID}"
                                     id="purpose_${a.PURPOSE_ID}">
                                 <span>${a.PURPOSE_TH}/${a.PURPOSE_EN}</span>
