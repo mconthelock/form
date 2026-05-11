@@ -168,8 +168,9 @@ $(document).ready(async function () {
 				// $(".container").addClass("cursor-wait");
 			},
 			success: function (res) {
-				// console.log(res);
-				table.ajax.reload(null, false);
+				$.get(host + "/isform/IS-RGV/main/getIncharge", function (newData) {
+					table.clear().rows.add(newData).draw(false);
+				});
 			},
 			complete: function () {
 				// $(".container").removeClass("cursor-wait");

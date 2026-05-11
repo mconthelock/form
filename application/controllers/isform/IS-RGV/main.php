@@ -269,14 +269,14 @@ class Main extends MY_Controller {
     public function createform($empno, $program, $owner, $org_code)
     {
         $formmst = $this->getFormMasterByVaname('IS-RGV');
-        $form   = $this->create($formmst[0]->NNO, $formmst[0]->VORGNO, $formmst[0]->CYEAR, $empno, $empno, '', 1);
-        $NFRMNO = $form['message']['formtype'];
-        $VORGNO = $form['message']['owner'];
-        $CYEAR  = $form['message']['cyear'];
-        $CYEAR2 = $form['message']['cyear2'];
-        $NRUNNO = $form['message']['runno'];
+        $form    = $this->create($formmst['data']['NNO'], $formmst['data']['VORGNO'], $formmst['data']['CYEAR'], $empno, $empno, '', 1);
+        $NFRMNO  = $form['message']['formtype'];
+        $VORGNO  = $form['message']['owner'];
+        $CYEAR   = $form['message']['cyear'];
+        $CYEAR2  = $form['message']['cyear2'];
+        $NRUNNO  = $form['message']['runno'];
 
-        $month  = date('n');
+        $month = date('n');
         // $month  = 11;
         $period = ($month == 5) ? 1 : (($month == 11) ? 2 : 1);
 
