@@ -64,24 +64,19 @@ $(document).ready(function () {
 						console.log(system);
 						return `
                 <tr class="hover ${borderClass} transition-all duration-200">
-                    ${
-						isFirst
-							? `
-                        <th rowspan="${rowspan}" class="bg-base-200/50 text-center text-lg font-black border-r border-base-300 w-12">${
-									sysIdx + 1
-							  }</th>
+                    ${isFirst
+								? `
+                        <th rowspan="${rowspan}" class="bg-base-200/50 text-center text-lg font-black border-r border-base-300 w-12">${sysIdx + 1
+								}</th>
                         <td rowspan="${rowspan}" class="align-top p-4 border-r border-base-300 max-w-xs">
-                            <div class="font-bold text-2xl text-primary mb-1">${
-								system.main_system_name
-							}</div>
-                            <p class="text-xs text-base-content/70 leading-relaxed">Check consistency of user IDs and authorizations of user IDs accessible to ${
-								system.main_system_name
-							}</p>
+                            <div class="font-bold text-2xl text-primary mb-1">${system.main_system_name
+								}</div>
+                            <p class="text-xs text-base-content/70 leading-relaxed">Check consistency of user IDs and authorizations of user IDs accessible to ${system.main_system_name
+								}</p>
                         </td>
                         <td rowspan="${rowspan}" class="align-top text-center p-4 border-r border-base-300">
                             <div class="stat p-0">
-                                <div class="stat-value text-secondary text-2xl">${
-									system.total_users
+                                <div class="stat-value text-secondary text-2xl">${system.total_users
 								}</div>
                                 <div class="stat-desc font-bold text-secondary/60 uppercase">Users</div>
                             </div>
@@ -89,49 +84,52 @@ $(document).ready(function () {
                         <td rowspan="${rowspan}" class="align-top p-4 border-r border-base-300 min-w-[140px]">
 
                             <div class=" p-0 text-center">
-                                <div class="stat-value text-error text-2xl">${
-									system.unmatched
+                                <div class="stat-value text-error text-2xl">${system.unmatched
 								}</div>
                                 <div class="stat-desc font-bold text-error/60 uppercase">Users</div>
                             </div>
                             <div class="flex flex-col mt-2 gap-1 max-h-32 overflow-y-auto pr-1 custom-scrollbar">
-                                ${uniqueForms
-									.map(
-										(form) => `
-                                    <a target="_blank" href="http://amecwebtest.mitsubishielevatorasia.co.th/form/isform/IS-RGV/main/?no=7&orgNo=050601&y=25&y2=2025&runNo=${form.NRUNNO}"
-                                       class="btn btn-xs btn-outline btn-info no-underline normal-case justify-start">
-                                       Form No :  ${form.NRUNNO}
-                                    </a>
-                                `
-									)
-									.join("")}
+							${process.env.STATE === "develop"
+									? uniqueForms
+										.map(
+											(form) => `
+										<a target="_blank" href="http://amecwebtest.mitsubishielevatorasia.co.th/form/isform/IS-RGV/main/?no=7&orgNo=050601&y=25&y2=2025&runNo=${form.NRUNNO}"
+											class="btn btn-xs btn-outline btn-info no-underline normal-case justify-start">
+											Form No :  ${form.NRUNNO}
+										</a> `
+										)
+										.join("")
+									: uniqueForms
+										.map(
+											(form) => `
+										<a target="_blank" href="http://amecweb.mitsubishielevatorasia.co.th/form/isform/IS-RGV/main/?no=22&orgNo=050601&y=25&y2=2025&runNo=${form.NRUNNO}"
+											class="btn btn-xs btn-outline btn-info no-underline normal-case justify-start">
+											Form No :  ${form.NRUNNO}
+										</a>`
+										)
+										.join("")
+								}
                             </div>
                         </td>
                     `
-							: ""
-					}
+								: ""
+							}
 
                     <td class="p-4 border-b border-base-200">
                         <div class="flex flex-col gap-2">
-                            <span class="font-bold text-sm text-base-content/80">${
-								program.name || "-"
+                            <span class="font-bold text-sm text-base-content/80">${program.name || "-"
 							}</span>
                             <div class="flex flex-wrap gap-1">
-                                <div class="badge badge-success badge-outline text-[10px] py-2">Matched: ${
-									matched + unmatched
-								}</div>
+                                <div class="badge badge-success badge-outline text-[10px] py-2">Matched: ${matched + unmatched
+							}</div>
                                 <div class="badge badge-error badge-outline text-[10px] py-2">Unchecked: ${uncheck}</div>
                             </div>
-                            <input type="hidden" name="programs[${
-								program.program_id
+                            <input type="hidden" name="programs[${program.program_id
 							}][${program.name}][matched]" value="${matched}">
-                            <input type="hidden" name="programs[${
-								program.program_id
-							}][${
-							program.name
-						}][unmatched]" value="${unmatched}">
-                            <input type="hidden" name="programs[${
-								program.program_id
+                            <input type="hidden" name="programs[${program.program_id
+							}][${program.name
+							}][unmatched]" value="${unmatched}">
+                            <input type="hidden" name="programs[${program.program_id
 							}][${program.name}][uncheck]" value="${uncheck}">
                         </div>
                     </td>
@@ -139,14 +137,12 @@ $(document).ready(function () {
                     <td class="p-4 border-b border-base-200">
                         <div class="flex flex-col gap-2">
                             <div class="join w-full">
-                                <input type="number" name="programs[${
-									program.program_id
-								}][${program.name}][delete_count]"
+                                <input type="number" name="programs[${program.program_id
+							}][${program.name}][delete_count]"
                                     class="input input-bordered input-sm join-item w-full focus:input-primary text-center"
                                     placeholder="Delete" min="0">
-                                <input type="number" name="programs[${
-									program.program_id
-								}][${program.name}][change_count]"
+                                <input type="number" name="programs[${program.program_id
+							}][${program.name}][change_count]"
                                     class="input input-bordered input-sm join-item w-full focus:input-primary text-center"
                                     placeholder="Change" min="0">
                             </div>
@@ -154,9 +150,8 @@ $(document).ready(function () {
                     </td>
 
                     <td class="p-4 border-b border-base-200">
-                        <textarea name="programs[${program.program_id}][${
-							program.name
-						}][detail_remark]"
+                        <textarea name="programs[${program.program_id}][${program.name
+							}][detail_remark]"
                             class="textarea textarea-bordered textarea-sm w-full h-16 leading-tight focus:textarea-primary"
                             placeholder="ระบุ User IDs / เหตุผล..."></textarea>
                     </td>
@@ -276,13 +271,13 @@ $(document).ready(function () {
 		// console.log(result);
 
 		const form = await createForm({
-            NFRMNO: nfrmno, 
-            VORGNO: vorgno,
-            CYEAR: cyear,
-            REQBY: empno, 
-            INPUTBY: empno, 
-            REMARK:""
-        });
+			NFRMNO: nfrmno,
+			VORGNO: vorgno,
+			CYEAR: cyear,
+			REQBY: empno,
+			INPUTBY: empno,
+			REMARK: ""
+		});
 		const { runno: NRUNNO, cyear2: CYEAR2 } = form.message;
 
 		$.ajax({
