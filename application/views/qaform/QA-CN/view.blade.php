@@ -1131,15 +1131,15 @@
                 @if(($cextData == 4) ||($cextData == 5))
                 <button type="button" name="btnReturn" 
                         data-action="returnqastaff"
-                        class="btn-submit cursor-pointer bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded shadow">
-                    Return TO QA Staff
+                        class="btn-submit cursor-pointer bg-slate-500 hover:bg-gray-600 text-white px-4 py-2 rounded shadow">
+                    Return To QA Staff
                 </button>
                 @endif
                 @if(($cextData == 3) && is_null($cnform->MSTATUS))
                 <button type="button" name="btnReturn" 
                         data-action="returnass"
-                        class="btn-submit cursor-pointer bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded shadow">
-                    Return TO Assigned Person
+                        class="btn-submit cursor-pointer bg-slate-500 hover:bg-gray-600 text-white px-4 py-2 rounded shadow">
+                    Return To Assigned Person
                 </button>
                 @endif
 

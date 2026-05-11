@@ -589,6 +589,14 @@ function checkData(act)
         return false;
       }
       return true;
+  }else if(act == "changepic")
+  {
+      if($("#Pic").val() == "")
+      {
+        showMessage('Please select Change To', 'warning');
+        return false;
+      }
+      return true;
   }else if( act == "returnb")
   {
        if($("#txtRemark").val() == "")
