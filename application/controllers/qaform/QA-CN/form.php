@@ -101,6 +101,7 @@ class form extends MY_Controller{
                     'EMPNO' =>  $data['empno']
             ];
             $data['cextData'] = intval($this->getExtdata($form));
+            $data['strcextData'] = $this->getExtdata($form);
             $data['mode']     = $this->getMode($form);
             $data['form']     = $this->frm->getForm($data['NFRMNO'],  $data['VORGNO'], $data['CYEAR'],  $data['CYEAR2'],  $data['NRUNNO']);
             $data['formno'] = $this->toFormNumber($data['NFRMNO'],  $data['VORGNO'], $data['CYEAR'],  $data['CYEAR2'],  $data['NRUNNO']);
@@ -253,8 +254,6 @@ class form extends MY_Controller{
     public function action()
     {
         $act = $_POST["action"];
-        echo $act;
-        exit;
         $cextData = intval($_POST["cextData"]);
         $apvno =  $_POST["empno"];
         $nfrmno = $_POST["nfrmno"];
