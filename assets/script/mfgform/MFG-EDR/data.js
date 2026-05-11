@@ -4,6 +4,10 @@ export const getprocess   = (data) => callAPI("/mfg-edr/process", "POST", data);
 export const getline   = (data) => callAPI("/mfg-edr/line", "POST", data);
 export const getamecorderdetail   = (data) => callAPI("/mfg-edr/amec-order-detail", "POST", data);
 
+// ===== FORM ===========
+export const createMfgEdr = (data) => callAPI("/mfg-edr", "POST", data);
+export const updateMfgEdrDetail = (data) => callAPI("/mfg-edr/update-detail", "POST", data);
+
 
 // ===== GET ===========
 export const getUserbyemp = (empno) => callAPI(`/users/${encodeURIComponent(empno)}`, "GET");

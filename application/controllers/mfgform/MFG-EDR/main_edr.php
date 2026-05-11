@@ -36,7 +36,7 @@ class main_edr extends MY_Controller {
         $this->views('mfgform/MFG-EDR/create_edr', $data);
     }
 
-    public function saveForm(){
+    public function save_request(){
         try {
             $inputBy     = $this->input->post('inputBy');
             $requestBy   = $this->input->post('request_by');

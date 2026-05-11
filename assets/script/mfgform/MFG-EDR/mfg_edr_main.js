@@ -1,5 +1,12 @@
 import {
-    getcause, getworktype, getUserbyemp, getprocess, getline, getamecorderdetail
+    getcause,
+    getworktype,
+    getUserbyemp,
+    getprocess,
+    getline,
+    getamecorderdetail,
+    createMfgEdr,
+    updateMfgEdrDetail
 } from "./data.js";
 import { showLoader } from "@amec/webasset/preloader";
 import { showMessage, showConfirm } from "@amec/webasset/utils";
@@ -7,15 +14,17 @@ import { createTable } from "@amec/webasset/dataTable";
 import { downloadOrOpenFile } from "@amec/webasset/api/file";
 import { setDatePicker } from "@amec/webasset/flatpickr";
 import { createBtn, activatedBtn } from "@amec/webasset/components/buttons";
-import { createForm } from "@amec/webasset/api/webform"
+import { createForm } from "@amec/webasset/api/webform";
 
 $(document).ready(function () {
     const EDR = {
         rowIndex: 0,
+        currentTableType: null,
         baseUrl: $('#base_url').val() || '',
 
         init: function () {
             this.bindEvents();
+            this.currentTableType = this.getCurrentTableType();
             this.renderTableHeader();
             this.addRow();
             this.loadMaster();
@@ -56,7 +65,14 @@ $(document).ready(function () {
 
             $('#job_type').on('change', function () {
                 EDR.loadCauseByWorkType($(this).val());
-                EDR.renderTableHeader(); 
+                const newTableType = EDR.getCurrentTableType();
+
+                if (EDR.currentTableType === newTableType) {
+                    return;
+                }
+
+                EDR.currentTableType = newTableType;
+                EDR.renderTableHeader();
                 EDR.rebuildDetailRows();
             });
 
@@ -355,6 +371,14 @@ $(document).ready(function () {
             return String($('#job_type').val()) === '4';
         },
 
+        getCurrentTableType: function () {
+            return this.isPcbWorkType() ? 'pcb' : 'normal';
+        },
+
+        isPcbWorkType: function () {
+            return String($('#job_type').val()) === '4';
+        },
+
         buildSelectOptionsHtml: function (data, selectedValue = '') {
             let html = '<option value="">-- Select --</option>';
 
@@ -498,41 +522,97 @@ $(document).ready(function () {
             return true;
         },
 
-        submitForm: function (actionType) {
-            const errors = this.validateForm();
+        getWebflowParams: function () {
+            const inputBy = String($('#inputBy').val() || '');
 
+            return {
+                NFRMNO: String($('#nfrmno').val() || ''),
+                VORGNO: String($('#vorgno').val() || ''),
+                CYEAR: String($('#cyear').val() || ''),
+                REQBY: String($('#request_by').val() || inputBy),
+                INPUTBY: inputBy
+            };
+        },
+
+        createWebflowForm: async function () {
+            const params = this.getWebflowParams();
+
+            if (!params.NFRMNO || !params.VORGNO || !params.CYEAR) {
+                throw new Error('ไม่พบข้อมูล NFRMNO / VORGNO / CYEAR');
+            }
+
+            const result = await createForm(params);
+            if (!result?.status) {
+                throw new Error(result?.message || 'Create form ไม่สำเร็จ');
+            }
+            return result;
+        },
+
+        getFormPayload: function (webflowData = {}) {
+            const isPCB = this.isPcbWorkType();
+            const list = $('#detailBody tr').map(function () {
+                const $tr = $(this);
+                return {
+                    ORDERNO: isPCB ? null : ($.trim($tr.find('[name="order_no[]"]').val()) || null),
+                    DWGNO: $.trim($tr.find('[name="drawing_no[]"]').val()) || null,
+                    ITEM: isPCB ? null : ($.trim($tr.find('[name="item[]"]').val()) || null),
+                    QTY: Number($tr.find('[name="qty[]"]').val()) || null,
+                    DETAIL: $.trim($tr.find('[name="problem_detail[]"]').val()) || null,
+                    LV_EFFECT: null,
+                    EFFECT: null,
+                    LID: isPCB ? Number($tr.find('[name="line[]"]').val()) || null : null,
+                    PID: isPCB ? Number($tr.find('[name="process[]"]').val()) || null : null,
+                    LOT: isPCB ? ($.trim($tr.find('[name="lot[]"]').val()) || null) : null,
+                    SERIAL: isPCB ? ($.trim($tr.find('[name="serial_no[]"]').val()) || null) : null,
+                    PRDN_JUN: $.trim($tr.find('[name="prod_jun[]"]').val()) || null
+                };
+            }).get();
+
+            return {
+                NFRMNO: Number(webflowData.NFRMNO || $('#nfrmno').val()),
+                VORGNO: String(webflowData.VORGNO || $('#vorgno').val() || ''),
+                CYEAR: String(webflowData.CYEAR || $('#cyear').val() || ''),
+                CYEAR2: String(webflowData.CYEAR2 || ''),
+                NRUNNO: Number(webflowData.NRUNNO || 0),
+
+                TID: Number($('#job_type').val()) || null,
+                SSECCODE: String($('#sseccode').val() || ''),
+                CID: Number($('#cause').val()) || null,
+                REPAIR_BY: $.trim($('#repair_by').val()) || null,
+                DAILY_MONTH: String($('#daily_month').val() || ''),
+                DAILY_RUNNO: Number($('#daily_runno').val()) || null,
+                REASON_CAUSE: $.trim($('#reason_cause').val()) || null,
+
+                list,
+                att: []
+            };
+        },
+
+        submitForm: async function (actionType) {
             if (!this.validateForm()) {
                 return;
             }
 
-            const formData = new FormData($('#formMfgEdr')[0]);
-            formData.append('form_action', actionType);
-
             this.setLoading(true);
-            showMessage("Data Completed !!!", "success");
-            
-            $.ajax({
-                url: this.baseUrl + 'mfgform/mfg_edaily_report/save_request',
-                type: 'POST',
-                data: formData,
-                processData: false,
-                contentType: false,
-                dataType: 'json',
-                success: function (res) {
-                    if (res.status === true || res.status === 'success') {
-                        showMessage("บันทึกข้อมูลสำเร็จ !!!", "success");
-                    } else {
-                        showMessage(res.message, "error");
-                    }
-                },
-                error: function (xhr) {
-                    console.error(xhr.responseText);
-                    showMessage("เกิดข้อผิดพลาดระหว่างบันทึกข้อมูล !!!", "error");
-                },
-                complete: function () {
-                    EDR.setLoading(false);
+            try {
+                const webflow = await this.createWebflowForm();
+                const payload = this.getFormPayload(webflow?.data || {});
+                const res = await createMfgEdr(payload);
+
+                console.log('WEBFLOW RESULT:', webflow);
+                console.log('MFG EDR PAYLOAD:', payload);
+
+                if (res.status === true || res.status === 'success') {
+                    showMessage("บันทึกข้อมูลสำเร็จ !!!", "success");
+                } else {
+                    showMessage(res.message || "บันทึกข้อมูลไม่สำเร็จ", "error");
                 }
-            });
+            } catch (error) {
+                console.error('SUBMIT FORM ERROR:', error);
+                showMessage(error?.message || "เกิดข้อผิดพลาดระหว่างบันทึกข้อมูล !!!", "error");
+            } finally {
+                this.setLoading(false);
+            }
         },
 
         setLoading: function (isLoading) {
