@@ -897,7 +897,7 @@
     </tr>     
 @endif
 
-@if (($mode == $MODE_EDIT) && (($cextData == 2)||($cextData == 7)) && !$chkopr)
+@if (($mode == $MODE_EDIT) && (($cextData == 2)||($cextData == 7)))
     <tr>
         <td class="force-w-350 align-top pt-2 " style="padding:5px;">Change To</td>
         <td class="px-3 py-1 bg-gray-100 border-b border-white">
