@@ -46,7 +46,7 @@ class form extends MY_Controller{
             ];
             $form['EMPNO']    = (string)$empno;
             $data['cextData'] = $this->getExtData($form);
-            echo $data['mode']     = $this->getMode($form);   
+            //echo $data['mode']     = $this->getMode($form);   
             $this->views('gpform/GP-RB/show', $data);
         } else {
             $this->views('gpform/GP-RB/create');
