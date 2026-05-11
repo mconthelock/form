@@ -548,6 +548,16 @@ $(document).ready(function () {
             return result;
         },
 
+        getFileUploadAtt: function () {
+            const ref = $.trim($('#filUpload_ref').val());
+            if (!ref) {  return [];}
+            return ref.split(',')
+                .map(file => $.trim(file))
+                .filter(file => file)
+                .map(file => ({
+                    FILENAME: file
+                }));
+        },
         getFormPayload: function (webflowData = {}) {
             const isPCB = this.isPcbWorkType();
             const list = $('#detailBody tr').map(function () {
@@ -564,7 +574,12 @@ $(document).ready(function () {
                     PID: isPCB ? Number($tr.find('[name="process[]"]').val()) || null : null,
                     LOT: isPCB ? ($.trim($tr.find('[name="lot[]"]').val()) || null) : null,
                     SERIAL: isPCB ? ($.trim($tr.find('[name="serial_no[]"]').val()) || null) : null,
-                    PRDN_JUN: $.trim($tr.find('[name="prod_jun[]"]').val()) || null
+                    PRDN_JUN: (() => {
+                        let val = $.trim($tr.find('[name="prod_jun[]"]').val());
+                        if (!val) {  return null; }
+                        if (val.length > 6) {  val = val.substring(2); }
+                        return val;
+                    })()
                 };
             }).get();
 
@@ -584,7 +599,7 @@ $(document).ready(function () {
                 REASON_CAUSE: $.trim($('#reason_cause').val()) || null,
 
                 list,
-                att: []
+                att: this.getFileUploadAtt()
             };
         },
 
@@ -595,13 +610,17 @@ $(document).ready(function () {
 
             this.setLoading(true);
             try {
-                const webflow = await this.createWebflowForm();
-                const payload = this.getFormPayload(webflow.data);
-                const res = await createMfgEdr(payload);
-
+               const webflow = await this.createWebflowForm();
                 console.log('WEBFLOW RESULT:', webflow);
+
+                const payload = this.getFormPayload(webflow?.data || {});
                 console.log('MFG EDR PAYLOAD:', payload);
 
+                if (!payload.NFRMNO || !payload.CYEAR2 || !payload.NRUNNO) {
+                    throw new Error('CreateForm response ไม่ครบ NFRMNO / CYEAR2 / NRUNNO');
+                }
+
+                const res = await createMfgEdr(payload);
                 if (res.status === true || res.status === 'success') {
                     showMessage("บันทึกข้อมูลสำเร็จ !!!", "success");
                 } else {
