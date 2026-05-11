@@ -33,7 +33,7 @@
 <div class="form-data" data-nfrmno="{{ $NFRMNO }}" data-vorgno="{{ $VORGNO }}" data-cyear="{{ $CYEAR }}"
         data-cyear2="{{ $CYEAR2 }}" data-nrunno="{{ $NRUNNO }}" data-empno="{{ $empno }}" ></div>
 <form id="cn-form" method="post" enctype="multipart/form-data"> 
-<input type="hidden" name="cextData" id="cextData" value="{{ $cextData}}" />
+<input type="hidden" name="cextData" id="cextData" value="{{ $strcextData }}" />
 <input type="hidden" name="mstatus" id="mstatus" value="{{ $cnform->MSTATUS }}" />
 <input type="hidden" name="chkopr" id="chkopr" value="{{ $chkopr }}" />
 <input type="hidden" name="demapv" id="demapv" value="{{ $demapv }}" />

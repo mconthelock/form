@@ -101,6 +101,7 @@ class form extends MY_Controller{
                     'EMPNO' =>  $data['empno']
             ];
             $data['cextData'] = intval($this->getExtdata($form));
+            $data['strcextData'] = $this->getExtdata($form);
             $data['mode']     = $this->getMode($form);
             $data['form']     = $this->frm->getForm($data['NFRMNO'],  $data['VORGNO'], $data['CYEAR'],  $data['CYEAR2'],  $data['NRUNNO']);
             $data['reqinf']   = $this->cn->customSelect("AMEC.AEMPLOYEE",array('SEMPNO' =>  $data['form'][0]->VREQNO ),'*');
