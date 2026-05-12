@@ -93,7 +93,7 @@ $(document).ready(function () {
 									? uniqueForms
 										.map(
 											(form) => `
-										<a target="_blank" href="http://amecwebtest.mitsubishielevatorasia.co.th/form/isform/IS-RGV/main/?no=7&orgNo=050601&y=25&y2=2025&runNo=${form.NRUNNO}"
+										<a target="_blank" href="http://amecwebtest.mitsubishielevatorasia.co.th/form/isform/IS-RGV/main/?no=7&orgNo=050601&y=25&y2=${form.CYEAR2}&runNo=${form.NRUNNO}"
 											class="btn btn-xs btn-outline btn-info no-underline normal-case justify-start">
 											Form No :  ${form.NRUNNO}
 										</a> `
@@ -102,7 +102,7 @@ $(document).ready(function () {
 									: uniqueForms
 										.map(
 											(form) => `
-										<a target="_blank" href="http://amecweb.mitsubishielevatorasia.co.th/form/isform/IS-RGV/main/?no=22&orgNo=050601&y=25&y2=2025&runNo=${form.NRUNNO}"
+										<a target="_blank" href="http://amecweb.mitsubishielevatorasia.co.th/form/isform/IS-RGV/main/?no=22&orgNo=050601&y=25&y2=${form.CYEAR2}&runNo=${form.NRUNNO}"
 											class="btn btn-xs btn-outline btn-info no-underline normal-case justify-start">
 											Form No :  ${form.NRUNNO}
 										</a>`
