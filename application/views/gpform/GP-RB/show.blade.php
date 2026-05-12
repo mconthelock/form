@@ -81,7 +81,7 @@
                 <input type="radio" id="radioStandard" name="stampFormatGroup" value="standard"
                     class="radio radio-primary radio-sm"
                     {{ (isset($dataForm->STAMP_FORMAT) ? $dataForm->STAMP_FORMAT == 'standard' : true) ? 'checked' : '' }}
-                    disabled>
+                    disabled reade>
                 <label for="radioStandard" class="cursor-pointer flex items-center gap-2">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -113,7 +113,7 @@
                                         DDMMYYYY</div>
                                     <div class="w-full flex justify-center pt-[2px] font-bold overflow-visible">
                                         <span id="name"
-                                            class="origin-center whitespace-nowrap inline-block transition-transform duration-300">{{ $dataForm->NAME_STAMP ?? '' }}</span>
+                                            class="origin-center whitespace-nowrap inline-block transition-transform duration-300"></span>
                                     </div>
                                 </div>
                             </td>
@@ -138,7 +138,7 @@
                                     <div class="w-full border-b border-primary/30 flex justify-center pb-[2px] font-bold overflow-visible"
                                         id="divisionDisplay">
                                         <span id="division"
-                                            class="origin-center whitespace-nowrap inline-block transition-transform duration-300">{{ $dataForm->DIVISION ?? '' }}</span>
+                                            class="origin-center whitespace-nowrap inline-block transition-transform duration-300"></span>
 
                                     </div>
                                     <div
@@ -146,7 +146,7 @@
                                         DDMMYYYY</div>
                                     <div class="w-full flex justify-center pt-[2px] font-bold overflow-visible">
                                         <span id="name2"
-                                            class="origin-center whitespace-nowrap inline-block transition-transform duration-300">{{ $dataForm->NAME_STAMP ?? '' }}</span>
+                                            class="origin-center whitespace-nowrap inline-block transition-transform duration-300"></span>
                                     </div>
                                 </div>
                             </td>
@@ -184,7 +184,7 @@
             <div class="font-bold text-sm flex items-center gap-2 my-2">
                 <input type="radio" id="radioOther" name="stampFormatGroup" value="other"
                     class="radio radio-primary radio-sm"
-                    {{ isset($dataForm->STAMP_FORMAT) && $dataForm->STAMP_FORMAT == 'other' ? 'checked' : '' }} disabled>
+                    {{ isset($dataForm->STAMP_FORMAT) && $dataForm->STAMP_FORMAT == 'other' ? 'checked' : '' }} disabled readonly>
                 <label for="radioOther" class="cursor-pointer">
                     รูปแบบตราแสตมป์อื่นๆ
                     <span class="opacity-60 font-normal text-xs md:ml-1 block md:inline mt-1 md:mt-0">/ For other type
