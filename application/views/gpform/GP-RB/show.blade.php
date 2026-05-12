@@ -18,18 +18,24 @@
                 <div class="flex border-b border-base-300 bg-base-50/50">
                     <div class="w-full p-2 flex items-center gap-2">
                         <span class="whitespace-nowrap font-semibold opacity-80 text-xs">Input by:</span>
-                        <input type="text" class="input input-sm input-ghost w-full rounded-none border-b border-base-300 px-1" id="INPUTBY" value="{{ $dataForm->VINPUTNAME ?? ($dataForm->INPUTBY ?? '') }}" readonly>
+                        <input type="text"
+                            class="input input-sm input-ghost w-full rounded-none border-b border-base-300 px-1"
+                            id="INPUTBY"readonly>
                     </div>
                 </div>
 
                 <div class="flex border-b border-base-300 bg-base-50/50">
                     <div class="w-1/2 p-2 flex items-center gap-2">
                         <span class="whitespace-nowrap font-semibold opacity-80 text-xs">Request by:</span>
-                        <input type="text" class="input input-sm input-ghost w-full rounded-none border-b border-base-300 px-1" id="REQBY" value="{{ $dataForm->VREQNAME ?? ($dataForm->REQBY ?? '') }}" readonly>
+                        <input type="text"
+                            class="input input-sm input-ghost w-full rounded-none border-b border-base-300 px-1"
+                            id="REQBY" readonly>
                     </div>
                     <div class="w-1/2 border-r border-base-300 p-2 flex items-center gap-2">
                         <span class="whitespace-nowrap font-semibold opacity-80 text-xs">ชื่อ/NAME:</span>
-                        <input type="text" class="input input-sm input-ghost w-full rounded-none border-b border-base-300 px-1" id="empName" value="{{ $dataForm->empName ?? ($dataForm->NAME ?? '') }}" readonly>
+                        <input type="text"
+                            class="input input-sm input-ghost w-full rounded-none border-b border-base-300 px-1"
+                            id="empName" readonly>
                     </div>
 
                 </div>
@@ -37,11 +43,15 @@
                 <div class="flex bg-base-50/50">
                     <div class="w-1/2 border-r border-base-300 p-2 flex items-center gap-2">
                         <span class="whitespace-nowrap font-semibold opacity-80 text-xs">Sect./Dept./Div.:</span>
-                        <input type="text" class="input input-sm input-ghost w-full rounded-none border-b border-base-300 px-1" id="empDept" value="{{ $dataForm->empDept ?? ($dataForm->DEPT ?? '') }}" readonly>
+                        <input type="text"
+                            class="input input-sm input-ghost w-full rounded-none border-b border-base-300 px-1"
+                            id="empDept" readonly>
                     </div>
                     <div class="w-1/2 p-2 flex items-center gap-2">
                         <span class="whitespace-nowrap font-semibold opacity-80 text-xs">ตำแหน่ง/Position:</span>
-                        <input type="text" class="input input-sm input-ghost w-full rounded-none border-b border-base-300 px-1" id="empPos" value="{{ $dataForm->empPos ?? ($dataForm->POSITION ?? '') }}" readonly>
+                        <input type="text"
+                            class="input input-sm input-ghost w-full rounded-none border-b border-base-300 px-1"
+                            id="empPos" readonly>
                     </div>
                 </div>
             </div>
@@ -63,7 +73,7 @@
                     <div id="purposeList" class="flex flex-col gap-3">
                         <span>{{ $dataForm->PURPOSE ?? '' }}</span>
                     </div>
-                    <div id="otherPurpose">{{ $dataForm->PURPOSE_OTHER ?? ($dataForm->OTHER_PURPOSE ?? '') }}</div>
+                    <div id="otherPurpose"></div>
                 </div>
             </div>
 
@@ -71,7 +81,7 @@
                 <input type="radio" id="radioStandard" name="stampFormatGroup" value="standard"
                     class="radio radio-primary radio-sm"
                     {{ (isset($dataForm->STAMP_FORMAT) ? $dataForm->STAMP_FORMAT == 'standard' : true) ? 'checked' : '' }}
-                    disabled>
+                    disabled reade>
                 <label for="radioStandard" class="cursor-pointer flex items-center gap-2">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -103,7 +113,7 @@
                                         DDMMYYYY</div>
                                     <div class="w-full flex justify-center pt-[2px] font-bold overflow-visible">
                                         <span id="name"
-                                            class="origin-center whitespace-nowrap inline-block transition-transform duration-300">{{ $dataForm->NAME_STAMP ?? '' }}</span>
+                                            class="origin-center whitespace-nowrap inline-block transition-transform duration-300"></span>
                                     </div>
                                 </div>
                             </td>
@@ -114,7 +124,9 @@
                                 </div>
                                 <div class="flex items-end gap-2 mt-4">
                                     <span class="whitespace-nowrap font-semibold">ชื่อ/Name:</span>
-                                    <input type="text" class="input input-sm input-ghost w-full rounded-none border-b border-base-300 px-1" id="nameInput1" value="{{ $dataForm->NAME_STAMP ?? '' }}" readonly>
+                                    <input type="text"
+                                        class="input input-sm input-ghost w-full rounded-none border-b border-base-300 px-1"
+                                        id="nameInput1" readonly>
                                 </div>
                             </td>
                         </tr>
@@ -126,7 +138,7 @@
                                     <div class="w-full border-b border-primary/30 flex justify-center pb-[2px] font-bold overflow-visible"
                                         id="divisionDisplay">
                                         <span id="division"
-                                            class="origin-center whitespace-nowrap inline-block transition-transform duration-300">{{ $dataForm->DIVISION ?? '' }}</span>
+                                            class="origin-center whitespace-nowrap inline-block transition-transform duration-300"></span>
 
                                     </div>
                                     <div
@@ -134,7 +146,7 @@
                                         DDMMYYYY</div>
                                     <div class="w-full flex justify-center pt-[2px] font-bold overflow-visible">
                                         <span id="name2"
-                                            class="origin-center whitespace-nowrap inline-block transition-transform duration-300">{{ $dataForm->NAME_STAMP ?? '' }}</span>
+                                            class="origin-center whitespace-nowrap inline-block transition-transform duration-300"></span>
                                     </div>
                                 </div>
                             </td>
@@ -146,7 +158,9 @@
                                 <div class="flex flex-col gap-2 mt-3">
                                     <div class="flex items-end gap-2">
                                         <span class="whitespace-nowrap font-semibold">ชื่อ/Name:</span>
-                                        <input type="text" class="input input-sm input-ghost w-full rounded-none border-b border-base-300 px-1" id="nameInput2" value="{{ $dataForm->NAME_STAMP ?? '' }}" readonly>
+                                        <input type="text"
+                                            class="input input-sm input-ghost w-full rounded-none border-b border-base-300 px-1"
+                                            id="nameInput2"  readonly>
                                     </div>
 
 
@@ -170,7 +184,7 @@
             <div class="font-bold text-sm flex items-center gap-2 my-2">
                 <input type="radio" id="radioOther" name="stampFormatGroup" value="other"
                     class="radio radio-primary radio-sm"
-                    {{ isset($dataForm->STAMP_FORMAT) && $dataForm->STAMP_FORMAT == 'other' ? 'checked' : '' }} disabled>
+                    {{ isset($dataForm->STAMP_FORMAT) && $dataForm->STAMP_FORMAT == 'other' ? 'checked' : '' }} disabled readonly>
                 <label for="radioOther" class="cursor-pointer">
                     รูปแบบตราแสตมป์อื่นๆ
                     <span class="opacity-60 font-normal text-xs md:ml-1 block md:inline mt-1 md:mt-0">/ For other type
@@ -185,11 +199,15 @@
                     <div class="flex flex-col sm:flex-row gap-3 sm:gap-6">
                         <div class="flex items-center justify-start gap-2">
                             <span class="text-xs font-semibold opacity-70 whitespace-nowrap">ขนาด/Size:</span>
-                            <input type="text" class="input input-sm input-ghost w-24 rounded-none border-b border-base-300 px-1 text-center" id="otherSize" value="{{ $dataForm->CUST_SIZE ?? '' }}" readonly>
+                            <input type="text"
+                                class="input input-sm input-ghost w-24 rounded-none border-b border-base-300 px-1 text-center"
+                                id="otherSize" readonly>
                         </div>
                         <div class="flex items-center justify-start gap-2">
                             <span class="text-xs font-semibold opacity-70 whitespace-nowrap">จำนวน/Qty:</span>
-                            <input type="text" class="input input-sm input-ghost w-24 rounded-none border-b border-base-300 px-1 text-center" id="otherQty" value="{{ $dataForm->QTY ?? '' }}" readonly>
+                            <input type="text"
+                                class="input input-sm input-ghost w-24 rounded-none border-b border-base-300 px-1 text-center"
+                                id="otherQty" readonly>
                         </div>
                     </div>
                 </div>
@@ -201,12 +219,16 @@
                             <a href="{{ base_url('gpform/GP-RB/main/preview/' . $dataForm->ATTACH_FILE) }}"
                                 target="_blank" class="text-blue-700 underline">{{ $dataForm->ATTACH_FILE }}</a>
                         @else
-                            <input type="text" class="input input-sm input-ghost rounded-none border-b border-base-300 px-1" value="-" readonly>
+                            <input type="text"
+                                class="input input-sm input-ghost rounded-none border-b border-base-300 px-1"
+                                value="-" readonly>
                         @endif
                     </div>
                     <div class="flex items-center gap-2">
                         <span class="text-xs font-semibold opacity-70 whitespace-nowrap">หมายเหตุ/Remark:</span>
-                        <input type="text" class="input input-sm input-ghost grow rounded-none border-b border-base-300 px-1" id="otherRemark" value="{{ $dataForm->STAMPCUS_REMARK ?? '' }}" readonly>
+                        <input type="text"
+                            class="input input-sm input-ghost grow rounded-none border-b border-base-300 px-1"
+                            id="otherRemark" readonly>
                     </div>
                 </div>
             </div>
