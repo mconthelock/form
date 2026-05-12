@@ -15,6 +15,7 @@ import { downloadOrOpenFile } from "@amec/webasset/api/file";
 import { setDatePicker } from "@amec/webasset/flatpickr";
 import { createBtn, activatedBtn } from "@amec/webasset/components/buttons";
 import { createForm } from "@amec/webasset/api/webform";
+import { host } from "../../utils";
 
 $(document).ready(function () {
     const EDR = {
@@ -34,9 +35,13 @@ $(document).ready(function () {
         initReqno: function () {
             const empno = $.trim($('#inputBy').val());
             const $target = $('#input_name');
+
             getUserbyemp(empno).then(function (user) {
                 const empName = user?.SEMPNO + ' - ' + user?.SNAME;
-                $target.removeClass('text-red-500 text-slate-500').addClass('text-emerald-700').text(empName);
+                $target
+                    .removeClass('text-red-500 text-slate-500')
+                    .addClass('text-emerald-700')
+                    .text(empName);
             });
         },
 
@@ -53,18 +58,21 @@ $(document).ready(function () {
 
             $('#request_by, #repair_by').on('input', function () {
                 const val = $(this).val();
+
                 if (val.length === 5) {
                     EDR.checkEmployee($(this));
                 } else {
                     const target = $(this).attr('id') === 'request_by'
                         ? '#request_by_name'
                         : '#repair_by_name';
+
                     $(target).text('');
                 }
             });
 
             $('#job_type').on('change', function () {
                 EDR.loadCauseByWorkType($(this).val());
+
                 const newTableType = EDR.getCurrentTableType();
 
                 if (EDR.currentTableType === newTableType) {
@@ -131,6 +139,7 @@ $(document).ready(function () {
 
         loadCauseByWorkType: async function (tid) {
             const causeGroup = String(tid) === '4' ? 'PCB' : 'ALL';
+
             try {
                 const causes = await getcause({
                     CAUSE_GROUP: causeGroup
@@ -200,6 +209,7 @@ $(document).ready(function () {
         renderOptions: function (selector, data) {
             const $select = $(selector);
             $select.find('option:not(:first)').remove();
+
             data.forEach(function (item) {
                 $select.append(`<option value="${item.value}">${item.text}</option>`);
             });
@@ -215,6 +225,7 @@ $(document).ready(function () {
             if (this.isPcbWorkType()) {
                 return this.buildPcbRow(index, rowData);
             }
+
             return this.buildNormalRow(index, rowData);
         },
 
@@ -222,42 +233,32 @@ $(document).ready(function () {
             return `
                 <tr class="hover:bg-emerald-50">
                     <td class="row-no border border-slate-300 px-2 py-2 text-center font-bold">${index}</td>
-
                     <td class="border border-slate-300 px-2 py-2">
                         <input name="order_no[]" class="edr-input" maxlength="9" value="${rowData.order_no || ''}">
                     </td>
-
                     <td class="border border-slate-300 px-2 py-2">
                         <input name="drawing_no[]" class="edr-input" value="${rowData.drawing_no || ''}">
                     </td>
-
                     <td class="border border-slate-300 px-2 py-2">
                         <input name="project_no[]" class="edr-input disabled-textbox" readonly value="${rowData.project_no || ''}">
                     </td>
-
                     <td class="border border-slate-300 px-2 py-2">
                         <input name="prod_jun[]" class="edr-input disabled-textbox" readonly value="${rowData.prod_jun || ''}">
                     </td>
-
                     <td class="border border-slate-300 px-2 py-2">
                         <input name="item[]" class="edr-input" maxlength="4" value="${rowData.item || ''}">
                     </td>
-
                     <td class="border border-slate-300 px-2 py-2">
                         <input name="model[]" class="edr-input disabled-textbox" readonly value="${rowData.model || ''}">
                     </td>
-
                     <td class="border border-slate-300 px-2 py-2">
                         <input name="qty[]" type="number" min="1" class="edr-input" value="${rowData.qty || ''}">
                     </td>
-
                     <td class="border border-slate-300 px-2 py-2">
                         <textarea name="problem_detail[]" class="edr-input" rows="3">${rowData.problem_detail || ''}</textarea>
                     </td>
-
                     <td class="border border-slate-300 px-2 py-2 text-center">
-                        <button type="button"
-                            class="btnDeleteRow rounded-full bg-red-500 px-3 py-2 text-xs font-extrabold text-white shadow hover:bg-red-600">
+                        <button type="button" class="btnDeleteRow rounded-full bg-red-500 px-3 py-2 text-xs font-extrabold text-white shadow hover:bg-red-600">
                             🗑
                         </button>
                     </td>
@@ -269,51 +270,39 @@ $(document).ready(function () {
             return `
                 <tr class="hover:bg-emerald-50">
                     <td class="row-no border border-slate-300 px-2 py-2 text-center font-bold">${index}</td>
-
                     <td class="border border-slate-300 px-2 py-2">
                         <input name="drawing_no[]" class="edr-input" value="${rowData.drawing_no || ''}">
                     </td>
-
                     <td class="border border-slate-300 px-2 py-2">
                         <select name="line[]" class="edr-input">
                             ${this.buildSelectOptionsHtml(this.lineOptions, rowData.line)}
                         </select>
                     </td>
-
                     <td class="border border-slate-300 px-2 py-2">
                         <select name="process[]" class="edr-input">
                             ${this.buildSelectOptionsHtml(this.processOptions, rowData.process)}
                         </select>
                     </td>
-
                     <td class="border border-slate-300 px-2 py-2">
                         <input name="lot[]" class="edr-input" value="${rowData.lot || ''}">
                     </td>
-
                     <td class="border border-slate-300 px-2 py-2">
                         <input name="serial_no[]" class="edr-input" value="${rowData.serial_no || ''}">
                     </td>
-
                     <td class="border border-slate-300 px-2 py-2">
                         <input name="prod_jun[]" class="edr-input" placeholder="Ex.2501X" value="${rowData.prod_jun || ''}">
                     </td>
-
                     <td class="border border-slate-300 px-2 py-2">
                         <input name="qty[]" type="number" min="1" class="edr-input" value="${rowData.qty || ''}">
                     </td>
-
                     <td class="border border-slate-300 px-2 py-2">
                         <textarea name="problem_detail[]" class="edr-input" rows="3">${rowData.problem_detail || ''}</textarea>
                     </td>
-
                     <td class="border border-slate-300 px-2 py-2 text-center">
-                        <button type="button"
-                            class="btnCopyRow rounded bg-yellow-300 px-2 py-1 text-xs font-extrabold text-black shadow hover:bg-yellow-400">
+                        <button type="button" class="btnCopyRow rounded bg-yellow-300 px-2 py-1 text-xs font-extrabold text-black shadow hover:bg-yellow-400">
                             Copy Row
                         </button>
-
-                        <button type="button"
-                            class="btnDeleteRow mt-1 rounded-full bg-red-500 px-3 py-2 text-xs font-extrabold text-white shadow hover:bg-red-600">
+                        <button type="button" class="btnDeleteRow mt-1 rounded-full bg-red-500 px-3 py-2 text-xs font-extrabold text-white shadow hover:bg-red-600">
                             🗑
                         </button>
                     </td>
@@ -375,11 +364,7 @@ $(document).ready(function () {
             return this.isPcbWorkType() ? 'pcb' : 'normal';
         },
 
-        isPcbWorkType: function () {
-            return String($('#job_type').val()) === '4';
-        },
-
-        buildSelectOptionsHtml: function (data, selectedValue = '') {
+        buildSelectOptionsHtml: function (data = [], selectedValue = '') {
             let html = '<option value="">-- Select --</option>';
 
             data.forEach(function (item) {
@@ -408,13 +393,19 @@ $(document).ready(function () {
             }
 
             if (!/^[0-9]{5}$/.test(empno)) {
-                $(target).removeClass('text-emerald-700').addClass('text-red-500');
-                $(target).text('กรุณากรอกตรวจสอบ Emp No ');
+                $(target)
+                    .removeClass('text-emerald-700')
+                    .addClass('text-red-500')
+                    .text('กรุณากรอกตรวจสอบ Emp No ');
+
                 return;
             }
 
             try {
-                $(target).removeClass('text-red-500 text-emerald-700').addClass('text-slate-500').text('Checking...');
+                $(target)
+                    .removeClass('text-red-500 text-emerald-700')
+                    .addClass('text-slate-500')
+                    .text('Checking...');
 
                 const user = await getUserbyemp(empno);
                 const empName = user?.SNAME || '';
@@ -422,7 +413,8 @@ $(document).ready(function () {
                 if (empName) {
                     $(target)
                         .removeClass('text-red-500 text-slate-500')
-                        .addClass('text-emerald-700').text(empName);
+                        .addClass('text-emerald-700')
+                        .text(empName);
                 } else {
                     $(target)
                         .removeClass('text-emerald-700 text-slate-500')
@@ -431,6 +423,7 @@ $(document).ready(function () {
                 }
             } catch (error) {
                 console.error('CHECK EMPLOYEE ERROR:', error);
+
                 $(target)
                     .removeClass('text-emerald-700 text-slate-500')
                     .addClass('text-red-500')
@@ -483,7 +476,6 @@ $(document).ready(function () {
         validateForm: function () {
             let isValid = true;
 
-            // ===== header =====
             if (!$.trim($('#request_by').val())) isValid = false;
             if (!$.trim($('#repair_by').val())) isValid = false;
             if (!$('#job_type').val()) isValid = false;
@@ -491,12 +483,10 @@ $(document).ready(function () {
 
             const isPCB = this.isPcbWorkType();
 
-            // ===== detail =====
             $('#detailBody tr').each(function () {
                 const $tr = $(this);
 
                 if (isPCB) {
-                    // ===== PCB =====
                     if (!$.trim($tr.find('[name="drawing_no[]"]').val())) isValid = false;
                     if (!$tr.find('[name="line[]"]').val()) isValid = false;
                     if (!$tr.find('[name="process[]"]').val()) isValid = false;
@@ -504,9 +494,7 @@ $(document).ready(function () {
                     if (!$.trim($tr.find('[name="serial_no[]"]').val())) isValid = false;
                     if (!$.trim($tr.find('[name="prod_jun[]"]').val())) isValid = false;
                     if (!$.trim($tr.find('[name="qty[]"]').val())) isValid = false;
-
                 } else {
-                    // ===== Normal =====
                     if (!$.trim($tr.find('[name="order_no[]"]').val())) isValid = false;
                     if (!$.trim($tr.find('[name="drawing_no[]"]').val())) isValid = false;
                     if (!$.trim($tr.find('[name="item[]"]').val())) isValid = false;
@@ -542,26 +530,36 @@ $(document).ready(function () {
             }
 
             const result = await createForm(params);
+
             if (!result?.status) {
                 throw new Error(result?.message || 'Create form ไม่สำเร็จ');
             }
+
             return result;
         },
 
         getFileUploadAtt: function () {
             const ref = $.trim($('#filUpload_ref').val());
-            if (!ref) {  return [];}
-            return ref.split(',')
+
+            if (!ref) {
+                return [];
+            }
+
+            return ref
+                .split(',')
                 .map(file => $.trim(file))
                 .filter(file => file)
                 .map(file => ({
                     FILENAME: file
                 }));
         },
-        getFormPayload: function (webflowData = {}) {
+
+        getFormPayload: function (webflowData = {}, uploadedFiles = []) {
             const isPCB = this.isPcbWorkType();
+
             const list = $('#detailBody tr').map(function () {
                 const $tr = $(this);
+
                 return {
                     ORDERNO: isPCB ? null : ($.trim($tr.find('[name="order_no[]"]').val()) || null),
                     DWGNO: $.trim($tr.find('[name="drawing_no[]"]').val()) || null,
@@ -576,8 +574,15 @@ $(document).ready(function () {
                     SERIAL: isPCB ? ($.trim($tr.find('[name="serial_no[]"]').val()) || null) : null,
                     PRDN_JUN: (() => {
                         let val = $.trim($tr.find('[name="prod_jun[]"]').val());
-                        if (!val) {  return null; }
-                        if (val.length > 6) {  val = val.substring(2); }
+
+                        if (!val) {
+                            return null;
+                        }
+
+                        if (val.length > 6) {
+                            val = val.substring(2);
+                        }
+
                         return val;
                     })()
                 };
@@ -599,8 +604,54 @@ $(document).ready(function () {
                 REASON_CAUSE: $.trim($('#reason_cause').val()) || null,
 
                 list,
-                att: this.getFileUploadAtt()
+                att: uploadedFiles.map(file => ({
+                    FILENAME: file
+                }))
             };
+        },
+
+        uploadFile: async function (webflowData = {}) {
+            const fileInput = $('#filUpload_ref')[0];
+
+            if (!fileInput) {
+                console.warn('ไม่พบ input file id="filUpload_ref"');
+                return [];
+            }
+
+            const files = fileInput.files || [];
+
+            if (!files.length) {
+                return [];
+            }
+
+            const formData = new FormData();
+
+            formData.append('NFRMNO', webflowData.NFRMNO || $('#nfrmno').val());
+            formData.append('VORGNO', webflowData.VORGNO || $('#vorgno').val());
+            formData.append('CYEAR', webflowData.CYEAR || $('#cyear').val());
+            formData.append('CYEAR2', webflowData.CYEAR2 || '');
+            formData.append('NRUNNO', webflowData.NRUNNO || '');
+
+            Array.from(files).forEach(function (file) {
+                formData.append('filUpload_ref[]', file);
+            });
+
+            const res = await $.ajax({
+                url: host + 'mfgform/MFG-EDR/main_edr/uploadfile',
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                dataType: 'json'
+            });
+
+            console.log('UPLOAD RESULT:', res);
+
+            if (!res.status) {
+                throw new Error(res.message || 'Upload file ไม่สำเร็จ');
+            }
+
+            return res.files || [];
         },
 
         submitForm: async function (actionType) {
@@ -609,18 +660,17 @@ $(document).ready(function () {
             }
 
             this.setLoading(true);
-            try {
-               const webflow = await this.createWebflowForm();
-                console.log('WEBFLOW RESULT:', webflow);
 
-                const payload = this.getFormPayload(webflow?.data || {});
+            try {
+                const webflow = await this.createWebflowForm();
+                const webflowData = webflow?.data || {};
+                const uploadedFiles = await this.uploadFile(webflowData);
+                const payload = this.getFormPayload(webflowData, uploadedFiles);
+
                 console.log('MFG EDR PAYLOAD:', payload);
 
-                if (!payload.NFRMNO || !payload.CYEAR2 || !payload.NRUNNO) {
-                    throw new Error('CreateForm response ไม่ครบ NFRMNO / CYEAR2 / NRUNNO');
-                }
-
                 const res = await createMfgEdr(payload);
+
                 if (res.status === true || res.status === 'success') {
                     showMessage("บันทึกข้อมูลสำเร็จ !!!", "success");
                 } else {
