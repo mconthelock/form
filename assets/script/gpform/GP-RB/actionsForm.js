@@ -1,5 +1,7 @@
 import { fetchUtils } from "@amec/webasset/api/fetch-utils";
+import { getFormDetail } from "@amec/webasset/api/webform";
 import { webflowSubmit } from "@amec/webasset/components/form";
+import { redirectWebflow } from "@amec/webasset/form";
 import { logFormData, requiredForm, showMessage } from "@amec/webasset/utils";
 
 $(async function () {
@@ -75,6 +77,15 @@ $(document).on("click", "#btnRequest", async function () {
     formData.set("REMARK", $("#remark").val());
     logFormData(formData);
     const res = await createForm(formData);
+
+    // แสดงข้อความแจ้งเตือนตามผลลัพธ์
+    if (res.status == true) {
+      showMessage(res.message, "success");
+      redirectWebflow();
+    }else{
+      throw new Error(res.message);
+    }
+
     console.log(res);
   } catch (error) {
     console.log(error);
@@ -485,6 +496,8 @@ document.addEventListener("DOMContentLoaded", () => {
     updateStampDisplay("nameInput2", "name2", "stampCircle2");
   });
 });
+
+
 
 // ✅ 3. ฟังก์ชันจับคู่ Position เข้ากับ Checkbox อัตโนมัติ
 /*   document.addEventListener('DOMContentLoaded', () => {
