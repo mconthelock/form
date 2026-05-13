@@ -1,18 +1,14 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
-
+use GuzzleHttp\Client;
 require_once APPPATH.'controllers/_form.php';
+require_once APPPATH.'controllers/api/webform/form.php';
+require_once APPPATH.'controllers/api/webform/flow.php';
+require_once APPPATH.'controllers/api/webform/formmst.php';
 require_once APPPATH.'controllers/_file.php';
-require_once APPPATH . 'controllers/api/webform/flow.php';
 
 class main_edr extends MY_Controller {
-    use _File;
-    use _Form, flow {
-        flow::getExtData insteadof _Form;
-        flow::doaction insteadof _Form;
-        _Form::deleteFlowStep insteadOf flow;
-    }
-
+    use _Form, _File;
     public function __construct(){
         parent::__construct();
         $this->load->model('form_model', 'form');
@@ -33,8 +29,8 @@ class main_edr extends MY_Controller {
         ];
 
         $data['mode']  = $this->getMode($nfrmno, $vorgno, $cyear, $cyear2, $nrunno, $empno);
-
         if(isset($nrunno) && $nrunno != "") {
+            $data['exdata'] =  $this->getExtData($nfrmno, $vorgno, $cyear, $cyear2, $nrunno, $empno);
             $data['formno'] = $this->toFormNumber($nfrmno, $vorgno, $cyear, $cyear2, $nrunno);
             $this->views('mfgform/MFG-EDR/approve_view', $data);
         } else {

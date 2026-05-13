@@ -16,6 +16,8 @@ import { setDatePicker } from "@amec/webasset/flatpickr";
 import { createBtn, activatedBtn } from "@amec/webasset/components/buttons";
 import { createForm } from "@amec/webasset/api/webform";
 import { host } from "../../utils";
+import { redirectWebflow } from "@amec/webasset/form";
+import Swal from "sweetalert2";
 
 $(document).ready(function () {
     const EDR = {
@@ -42,6 +44,9 @@ $(document).ready(function () {
                     .removeClass('text-red-500 text-slate-500')
                     .addClass('text-emerald-700')
                     .text(empName);
+
+                    $('#sseccode').val(user?.SSECCODE);
+                    $('#ssec').val($.trim(user?.SSEC || '').replace(/\//g, '').substring(0, 3));
             });
         },
 
@@ -673,6 +678,7 @@ $(document).ready(function () {
 
                 if (res.status === true || res.status === 'success') {
                     showMessage("บันทึกข้อมูลสำเร็จ !!!", "success");
+                    redirectWebflow();
                 } else {
                     showMessage(res.message || "บันทึกข้อมูลไม่สำเร็จ", "error");
                 }
@@ -696,6 +702,5 @@ $(document).ready(function () {
             }
         }
     };
-
     EDR.init();
 });

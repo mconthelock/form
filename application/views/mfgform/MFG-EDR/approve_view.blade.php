@@ -136,6 +136,12 @@
     .text-center {
         text-align: center !important;
     }
+    
+    #tblViewDetail {
+        width: 1500px;
+        min-width: 1500px;
+        table-layout: fixed;
+    }
 
 </style>
 
@@ -145,6 +151,8 @@
 <input type="hidden" id="cyear" value="{{ $CYEAR ?? '' }}">
 <input type="hidden" id="cyear2" value="{{ $CYEAR2 ?? '' }}">
 <input type="hidden" id="nrunno" value="{{ $NRUNNO ?? '' }}">
+<input type="hidden" id="empno" value="{{ $EMPNO ?? '' }}">
+<input type="hidden" id="txt_exdata" value="{{ $exdata ?? '' }}">
 
 <div class="min-h-screen bg-gradient-to-br from-slate-100 via-white to-teal-50 py-6 px-3">
     <div class="edr-wrapper">
@@ -227,8 +235,8 @@
                             </div>
 
                             <div class="edr-value col-span-12 md:col-span-10 px-4 py-2">
-                                <div id="v_remark" class="edr-remark">
-                                    -
+                                <div class="w-full">
+                                    <textarea id="remark"  name="remark" rows="3"  placeholder="REMARK !!!" class="edr-input w-full resize-y rounded-lg border border-slate-300 px-3 py-2"> </textarea>
                                 </div>
                             </div>
                         </div>
@@ -243,18 +251,8 @@
                     </div>
 
                     <div class="overflow-x-auto">
-                        <table id="tblViewDetail" class="edr-table min-w-[1500px] table-fixed">
-                            <colgroup>
-                                <col style="width: 60px;">
-                                <col style="width: 180px;">
-                                <col style="width: 240px;">
-                                <col style="width: 360px;">
-                                <col style="width: 130px;">
-                                <col style="width: 90px;">
-                                <col style="width: 130px;">
-                                <col style="width: 90px;">
-                                <col style="width: 320px;">
-                            </colgroup>
+                        <table id="tblViewDetail" class="edr-table table-fixed">
+                            <colgroup id="v_detail_colgroup"></colgroup>
                             <thead id="v_detail_head"></thead>
                             <tbody id="v_detail_body" class="bg-white"></tbody>
                         </table>
@@ -275,6 +273,7 @@
                                 <tr>
                                     <th style="width:80px;">No</th>
                                     <th>Why</th>
+                                    <th style="width:80px;">Action</th>
                                 </tr>
                             </thead>
                             <tbody id="v_root_body"></tbody>
@@ -295,6 +294,7 @@
                                     <th style="width:80px;">No</th>
                                     <th>Corrective Action</th>
                                     <th style="width:220px;">กำหนดเสร็จ</th>
+                                    <th style="width:80px;">Action</th>
                                 </tr>
                             </thead>
                             <tbody id="v_corrective_body"></tbody>
@@ -314,12 +314,40 @@
                                     <th style="width:80px;">No</th>
                                     <th>Preventive Action</th>
                                     <th style="width:220px;">กำหนดเสร็จ</th>
+                                    <th style="width:80px;">Action</th>
                                 </tr>
                             </thead>
                             <tbody id="v_preventive_body"></tbody>
                         </table>
                     </div>
                 </div>
+
+                {{-- ================= APPROVE ACTION ================= --}}
+                @if (($mode ?? '') == 2)
+                    <div class="edr-zone">
+                        <div class="p-6">
+                            <div class="flex flex-wrap justify-center gap-6">
+                                <button type="button"
+                                    id="btn-submit"
+                                    class="btn-submit px-8 py-3 bg-blue-600 text-white rounded-xl shadow hover:bg-blue-700 font-bold"
+                                    data-action="approve">
+                                    ✅ Approve
+                                </button>
+                                <button type="button"
+                                    class="btn-submit px-8 py-3 bg-red-600 text-white rounded-xl shadow hover:bg-red-700 font-bold"
+                                    data-action="reject">
+                                    ❌ Reject
+                                </button>
+                                <button type="button"
+                                    class="btn-submit px-8 py-3 bg-yellow-500 text-white rounded-xl shadow hover:bg-yellow-600 font-bold"
+                                    data-action="returnE">
+                                    ↩ Return
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                @endif
+
             </div>
         </div>
     </div>

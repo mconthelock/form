@@ -150,6 +150,8 @@
                     </div>
                     <div class="col-span-12 md:col-span-10 px-4 py-2 font-bold text-slate-800">
                         <input type="hidden" id="inputBy" name="inputBy" value="{{ $EMPNO }}">
+                        <input type="text" id="sseccode" name="sseccode" >
+                        <input type="text" id="ssec" name="ssec" >
                         <span id="input_name" class="ml-2 text-sm text-emerald-700"></span>
                     </div>
                 </div>
