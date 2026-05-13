@@ -219,12 +219,7 @@ $(document).on("click", "#btnRequest", async function (e) {
 
     const rows = table.rows().data().toArray();
 
-    if (rows.length === 0) {
-      showMessage("Please add at least one item to the table.", "warning");
-      return;
-    }
-
-    const details = [];
+    const dataList = [];
 
     for (let i = 0; i < rows.length; i++) {
       const row = rows[i];
@@ -240,24 +235,32 @@ $(document).on("click", "#btnRequest", async function (e) {
       let hasQty = false;
 
       Object.keys(row).forEach((key) => {
-        if (!key.startsWith("DUTY_QTY")) return;
+  if (!key.startsWith("DUTY_QTY")) return;
 
-        const index = key.replace("DUTY_QTY", "");
-        const qty = Number(row[`DUTY_QTY${index}`] || 0);
+  const index = key.replace("DUTY_QTY", "");
+  const qty = Number(row[`DUTY_QTY${index}`] || 0);
 
-        if (qty > 0) {
-          hasQty = true;
+  if (qty > 0) {
+    hasQty = true;
 
-          const dutyValue = dutyStampList[Number(index) - 1]?.DUTY_VALUE;
+    const dutyValue = dutyStampList[Number(index) - 1]?.DUTY_VALUE;
 
-          details.push({
-            LINEID: row.LINEID,
-            REASON: row.REASON,
-            DUTY_VALUE: dutyValue,
-            QTY: qty,
-          });
-        }
-      });
+    if (
+      dutyValue === undefined ||
+      dutyValue === null ||
+      dutyValue === ""
+    ) {
+      throw new Error(`Duty value not found in row ${i + 1}`);
+    }
+
+    dataList.push({
+      LINE_ID: row.LINEID,
+      REASON: row.REASON,
+      DUTY_VALUE: dutyValue,
+      QTY: qty,
+    });
+  }
+});
 
       if (!hasQty) {
         showMessage(
@@ -268,13 +271,20 @@ $(document).on("click", "#btnRequest", async function (e) {
       }
     }
 
-    const formData = new FormData($("#form")[0]);
+    const payload = {
+      INPUTBY: $("#INPUTBY").val(),
+      REQBY: $("#REQBY").val(),
+      REMARK: $("#REMARK").val(),
+      OPTION_CODE: Number($("#OPTION_CODE").val() || 1),
+      EFFECTIVE_DATE: $("#EffDate").val(),
+      DATE_RECEIVE: $("#RetDate").val(),
+      LOCATION: $("#location").val(),
+      DATA: dataList,
+    };
 
-    formData.append("DETAILS", JSON.stringify(details));
+    console.log(payload);
 
-    logFormData(formData);
-
-    const res = await createForm(formData);
+    const res = await createForm(payload);
     console.log(res);
 
     showMessage("Request submitted successfully", "success");
@@ -291,5 +301,3 @@ export async function createForm(data) {
     data: data,
   });
 }
-
-

@@ -68,7 +68,7 @@
                                         <label class="label pb-1">
                                             <span class="label-text font-bold text-base-content/80 text-sm">Input By</span>
                                         </label>
-                                        <input id="INPUTBY" type="text" name="input_name" value="" readonly
+                                        <input id="INPUTBY" type="text" name="INPUTBY" value="" readonly
                                             class="input input-sm input-bordered border-base-300 bg-base-200/80 text-error cursor-not-allowed font-semibold focus:outline-none" />
                                     </div>
                                     <div class="form-control">
@@ -110,13 +110,13 @@
                                     <div
                                         class="flex items-center gap-6 mt-1 bg-white/50 p-2 rounded-lg border border-secondary/10 w-fit">
                                         <label class="label cursor-pointer gap-3 justify-start px-2 py-0">
-                                            <input id = "withd" type="radio" name="option_type" value="0"
+                                            <input id = "withd" type="radio" name="OPTION_CODE" value="0"
                                                 class="radio radio-secondary radio-sm" checked />
                                             <span class="label-text font-bold text-secondary-focus">Withdrawal</span>
                                         </label>
                                         <label class="label cursor-pointer gap-3 justify-start px-2 py-0 hidden"
                                             id="OPT">
-                                            <input type="radio" name="option_type" value="1"
+                                            <input type="radio" name="OPTION_CODE" value="1"
                                                 class="radio radio-secondary radio-sm" />
                                             <span class="label-text font-bold text-secondary-focus">Add</span>
                                         </label>
@@ -128,7 +128,7 @@
                                             <span class="label-text font-bold text-base-content/80 text-sm">Effective
                                                 Date</span>
                                         </label>
-                                        <input id="EffDate" name="effective_date" type="date"
+                                        <input id="EffDate" name="EFFECTIVE_DATE" type="date"
                                             class="req input input-sm input-bordered border-secondary/30 w-full focus:ring-2 focus:ring-secondary/20 transition-all" />
                                     </div>
                                     <div class="form-control">
@@ -136,7 +136,7 @@
                                             <span class="label-text font-bold text-base-content/80 text-sm">Date
                                                 Receive</span>
                                         </label>
-                                        <input id="RetDate" name="receive_date" type="date"
+                                        <input id="RetDate" name="DATE_RECEIVE" type="date"
                                             class="input input-sm input-bordered border-secondary/30 w-full focus:ring-2 focus:ring-secondary/20 transition-all" />
                                     </div>
                                 </div>
@@ -145,7 +145,7 @@
                                         <span class="label-text font-bold text-base-content/80 text-sm">Stamp Duty
                                             Collection Location</span>
                                     </label>
-                                    <input id = "location"name="collection_location"  type="text"
+                                    <input id = "location"name="LOCATION"  type="text"
                                         class="req input input-sm input-bordered border-secondary/30 w-full text-base-content font-medium focus:ring-2 focus:ring-secondary/20 transition-all"
                                         value="Counter FIN Sect." />
                                 </div>
