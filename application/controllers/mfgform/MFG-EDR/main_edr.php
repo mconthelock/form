@@ -33,8 +33,9 @@ class main_edr extends MY_Controller {
         ];
 
         $data['mode']  = $this->getMode($nfrmno, $vorgno, $cyear, $cyear2, $nrunno, $empno);
-        
-        if(isset($_GET["runNo"]) && $_GET["runNo"] != "") {
+
+        if(isset($nrunno) && $nrunno != "") {
+            $data['formno'] = $this->toFormNumber($nfrmno, $vorgno, $cyear, $cyear2, $nrunno);
             $this->views('mfgform/MFG-EDR/approve_view', $data);
         } else {
             $this->views('mfgform/MFG-EDR/create_edr', $data);

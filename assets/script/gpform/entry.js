@@ -34,4 +34,5 @@ module.exports = {
 	manage_group: "./assets/script/gpform/GP-TRN/manage_group.js",
 	show_sum_report: "./assets/script/gpform/GP-TRN/show_sum_report.js",
 
+
 };
