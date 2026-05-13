@@ -1,5 +1,6 @@
 import { fetchUtils } from "@amec/webasset/api/fetch-utils";
-import { getFormDetail } from "@amec/webasset/api/webform";
+import { getFormDetail, getMode, showflow } from "@amec/webasset/api/webform";
+import { webflowSubmit } from "@amec/webasset/components/form";
 import { getUrlParams } from "@amec/webasset/utils";
 
 $(async function () {
@@ -30,8 +31,11 @@ $(async function () {
   /*เรียกใช้ข้อมูลทีละตัว*/
   /*เอาวัตถุประสงค์ชื่อสแตมป์มาโชว์*/
 
-  const getShowdata = await getShowData(form);
+  const getShowdata = await getShowData(form); //รูปแบบ stamp ปกติ
   console.log(getShowdata);
+
+  const getShowCusdata = await getShowCusData(form);//รูปแบบพิเศษ
+  console.log(getShowCusdata);
 
   const purpose = await getData();
   console.log(purpose);
@@ -54,6 +58,32 @@ $(async function () {
 
   $("#purposeList").html(Purposedata);
 
+  //ปุม approve กับ reject จะโชว์ก็ต่อเมื่อเป็นผู้อนุมัติเท่านั้น
+  const mode = await getMode({ ...form, EMPNO: param.EMPNO });
+  const flow = await showflow(form);
+  console.log(mode);
+  let action = "";
+  switch (mode) {
+    case "2": // edit
+      action = webflowSubmit({
+        flow: true,
+        flowhtml: flow.html,
+        approve: true,
+        reject: true,
+      });
+      break;
+    case "3": // view
+      action = webflowSubmit({
+        flow: true,
+        flowhtml: flow.html,
+        actionsForm: false,
+      });
+      break;
+
+  }
+  $("#sentApprove").html(action);
+
+  ////////////////////////////////////////////////////////
   if (getShowdata.PURPOSE_ID) {
     $(`#purpose_${getShowdata.PURPOSE_ID}`).prop("checked", true);
     if (getShowdata.PURPOSE_ID == 4) {
@@ -123,7 +153,7 @@ $(async function () {
   $("#nameInput2").val("");
   $("#name").text("");
   $("#name2").text("");
-  $("#division").text("");
+  $("#divisionDisplay").text("");
 
   // reset opacity
   $("#rowStamp1").css("opacity", "1");
@@ -140,7 +170,8 @@ $(async function () {
   } else if (input2PosCodes.includes(firstPosCode)) {
     $("#nameInput1").val("");
     $("#nameInput2").val(getShowdata.NAME_STAMP || "");
-    $("#division").text(empData.SDIV || ""); /*แสดงชื่อแผนกใต้สแตมป์ในวงกลมสีน้ำเงิน*/
+    $("#divisionDisplay").text(empData.SDIV || ""); /*แสดงชื่อแผนกใต้สแตมป์ในวงกลมสีน้ำเงิน*/
+    console.log(empData.SDIV);
     $("#name2").text(getShowdata.NAME_STAMP || "");
     // แถวบนจาง / แถวล่าง active
     $("#rowStamp1").css("opacity", "0.3");
@@ -163,6 +194,9 @@ $(async function () {
   $("#radioOther").prop("disabled", hasNameInput1 || hasNameInput2);
 });
 
+// other stamp
+
+
 async function getData() {
   return await fetchUtils({
     url: `${process.env.APP_API}/gpform/gp-rb`,
@@ -177,9 +211,18 @@ async function getShowData(form) {
     method: "GET",
   });
 }
-async function getEmpData(empno) {
+
+async function getShowCusData(form) {
+  const url = `${process.env.APP_API}/gpform/showcusstamp-gp-rb/${form.NFRMNO}/${form.VORGNO}/${form.CYEAR}/${form.CYEAR2}/${form.NRUNNO}`;
   return await fetchUtils({
-    url: `${process.env.APP_API}/users/${empno}`,
+    url: url,
     method: "GET",
   });
 }
+
+  async function getEmpData(empno) {
+    return await fetchUtils({
+      url: `${process.env.APP_API}/users/${empno}`,
+      method: "GET",
+    });
+  }

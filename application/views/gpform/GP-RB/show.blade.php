@@ -137,7 +137,7 @@
                                     class="w-[70px] h-[70px] rounded-full border-2 border-primary/50 text-primary flex flex-col justify-center items-center text-[9px] mx-auto overflow-hidden transition-all duration-300 ease-in-out bg-base-100 shadow-inner">
                                     <div class="w-full border-b border-primary/30 flex justify-center pb-[2px] font-bold overflow-visible"
                                         id="divisionDisplay">
-                                        <span id="division"
+                                        <span id="c"
                                             class="origin-center whitespace-nowrap inline-block transition-transform duration-300"></span>
 
                                     </div>
@@ -233,7 +233,8 @@
                 </div>
             </div>
 
-            <div id="sentRequest"></div>
+            <div id="sentApprove" ></div>
+
         </div>
     </div>
 @endsection
