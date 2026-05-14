@@ -46,24 +46,55 @@
         letter-spacing: .3px;
     }
 
-    .zone-main .edr-zone-title {
+    .zone-why .edr-zone-title {
         background: linear-gradient(90deg, #065f46, #0f766e);
     }
 
-    .zone-detail .edr-zone-title {
-        background: linear-gradient(90deg, #0f172a, #334155);
-    }
-
-    .zone-why .edr-zone-title {
-        background: linear-gradient(90deg, #991b1b, #dc2626);
-    }
-
     .zone-corrective .edr-zone-title {
-        background: linear-gradient(90deg, #9a3412, #ea580c);
+        background: linear-gradient(90deg, #0f766e, #0d9488);
     }
 
     .zone-preventive .edr-zone-title {
-        background: linear-gradient(90deg, #9d174d, #db2777);
+        background: linear-gradient(90deg, #115e59, #14b8a6);
+    }
+
+    /* WHY TABLE */
+    #zone_why .edr-table thead {
+        background: #0f766e;
+        color: #ffffff;
+    }
+
+    #zone_why .edr-table tbody tr:nth-child(even) {
+        background: #f0fdfa;
+    }
+
+    /* CORRECTIVE TABLE */
+    #zone_corrective .edr-table thead {
+        background: #0d9488;
+        color: #ffffff;
+    }
+
+    #zone_corrective .edr-table tbody tr:nth-child(even) {
+        background: #f0fdfa;
+    }
+
+    /* PREVENTIVE TABLE */
+    #zone_preventive .edr-table thead {
+        background: #14b8a6;
+        color: #ffffff;
+    }
+
+    #zone_preventive .edr-table tbody tr:nth-child(even) {
+        background: #ecfeff;
+    }
+
+
+
+    /* soft border accent */
+    #zone_why,
+    #zone_corrective,
+    #zone_preventive {
+        border-left: 5px solid #14b8a6;
     }
 
     .edr-zone-body {
@@ -168,9 +199,6 @@
                 {{-- ================= FORM INFO ================= --}}
                 <div class="edr-zone zone-main">
 
-                    <div class="edr-zone-title">
-                        Form Information
-                    </div>
 
                     <div class="edr-zone-body">
                         <div class="grid grid-cols-12 border-b border-slate-300">
@@ -181,6 +209,11 @@
                         </div>
 
                         <div class="grid grid-cols-12 border-b border-slate-300">
+                            <div class="edr-label col-span-12 md:col-span-2 px-4 py-2">Daily Report No</div>
+                            <div id="v_daily_no" class="edr-value col-span-12 md:col-span-10 px-4 py-2">-</div>
+                        </div>
+
+                        <div class="grid grid-cols-12 border-b border-slate-300">
                             <div class="edr-label col-span-12 md:col-span-2 px-4 py-2">Create By</div>
                             <div id="v_create_by" class="edr-value col-span-12 md:col-span-10 px-4 py-2">-</div>
                         </div>
@@ -188,11 +221,6 @@
                         <div class="grid grid-cols-12 border-b border-slate-300">
                             <div class="edr-label col-span-12 md:col-span-2 px-4 py-2">Request By</div>
                             <div id="v_request_by" class="edr-value col-span-12 md:col-span-10 px-4 py-2">-</div>
-                        </div>
-
-                        <div class="grid grid-cols-12 border-b border-slate-300">
-                            <div class="edr-label col-span-12 md:col-span-2 px-4 py-2">Daily Report No</div>
-                            <div id="v_daily_no" class="edr-value col-span-12 md:col-span-10 px-4 py-2">-</div>
                         </div>
 
                         <div class="grid grid-cols-12 border-b border-slate-300">
