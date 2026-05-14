@@ -421,6 +421,7 @@ class form extends MY_Controller{
                 }
             }else if($act == "return")
             {
+                exit;
                 $sqlOra = "update flow set CSTEPST = '1', , VREMARK = '' where NFRMNO = '".$nfrmno."' AND VORGNO = '".$vorgno."' and CYEAR = '".$cyear."' and CYEAR2 = '".$cyear2."' and NRUNNO = '".$nrunno."' and CSTEPST = '2'";
                 $this->cn->execsql($sqlOra);
                 $remark = $_POST['txtRemark'] ?? '';
