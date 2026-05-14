@@ -176,7 +176,7 @@
 
 </style>
 
-<input type="text" id="base_url" value="<?= base_url(); ?>">
+<input type="hidden" id="base_url" value="<?= base_url(); ?>">
 <input type="hidden" id="nfrmno" value="{{ $NFRMNO ?? '' }}">
 <input type="hidden" id="vorgno" value="{{ $VORGNO ?? '' }}">
 <input type="hidden" id="cyear" value="{{ $CYEAR ?? '' }}">
@@ -204,9 +204,7 @@
                     <div class="edr-zone-body">
                         <div class="grid grid-cols-12 border-b border-slate-300">
                             <div class="edr-label col-span-12 md:col-span-2 px-4 py-2">Form no :</div>
-                            <div id="v_form_no" class="edr-value col-span-12 md:col-span-10 px-4 py-2" data-formno="<?= $formno ?>">
-                                <?= $formno ?>
-                            </div>
+                            <div id="v_form_no" class="edr-value col-span-12 md:col-span-10 px-4 py-2" data-formno="<?= $formno ?>"><?= $formno ?></div>
                         </div>
 
                         <div class="grid grid-cols-12 border-b border-slate-300">

@@ -100,7 +100,7 @@ $(document).ready(function () {
         },
 
         renderFile(att = []) {
-            const formno = $('#form_no').val();
+            const formno = $('#v_form_no').val();
             const baseUrl = $('#base_url').val();
             const $fileList = $('#v_file_list').empty();
 
@@ -115,7 +115,7 @@ $(document).ready(function () {
                 const filename = file.FILENAME || '-';
                 const url =
                     `${baseUrl}mfgform/MFG-EDR/main_edr/preview_file/` +
-                    formno + `/` +
+                   `${encodeURIComponent(formno)}/` +
                     `${encodeURIComponent(filename)}/` +
                     `${encodeURIComponent(filename)}`;
 
