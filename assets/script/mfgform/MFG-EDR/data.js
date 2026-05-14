@@ -10,6 +10,7 @@ export const updateMfgEdrDetail = (data) => callAPI("/mfg-edr/update-detail", "P
 export const getmfgedr   = (data) => callAPI("/mfg-edr/get-mfg-edr", "POST", data);
 export const updateWhyEffect = (data) => callAPI("/mfg-edr/update-why-effect", "POST", data);
 
+
 // ===== GET ===========
 export const getUserbyemp = (empno) => callAPI(`/users/${encodeURIComponent(empno)}`, "GET");
 const callAPI = async (endpoint, method = "POST", data = null) => {

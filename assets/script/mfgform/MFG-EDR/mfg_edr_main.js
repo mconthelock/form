@@ -523,7 +523,8 @@ $(document).ready(function () {
                 VORGNO: String($('#vorgno').val() || ''),
                 CYEAR: String($('#cyear').val() || ''),
                 REQBY: String($('#request_by').val() || inputBy),
-                INPUTBY: inputBy
+                INPUTBY: inputBy,
+                SSECCODE: String($('#sseccode').val() || '')
             };
         },
 

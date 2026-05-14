@@ -150,8 +150,8 @@
                     </div>
                     <div class="col-span-12 md:col-span-10 px-4 py-2 font-bold text-slate-800">
                         <input type="hidden" id="inputBy" name="inputBy" value="{{ $EMPNO }}">
-                        <input type="text" id="sseccode" name="sseccode" >
-                        <input type="text" id="ssec" name="ssec" >
+                        <input type="hidden" id="sseccode" name="sseccode" >
+                        <input type="hidden" id="ssec" name="ssec" >
                         <span id="input_name" class="ml-2 text-sm text-emerald-700"></span>
                     </div>
                 </div>
@@ -266,11 +266,11 @@
             </div>
 
             <div class="mt-5 flex justify-center gap-4">
-                <button type="button" id="btnSaveDraft"
+            <!--<button type="button" id="btnSaveDraft"
                     class="rounded-full bg-yellow-400 px-8 py-2 font-extrabold text-slate-900 shadow-lg hover:bg-yellow-500">
                     Save Draft
                 </button>
-
+            -->
                 <button type="button" id="btnSendForm"
                     class="rounded-full bg-gradient-to-r from-violet-700 to-indigo-500 px-8 py-2 font-extrabold text-white shadow-lg hover:scale-[1.02]">
                     Send Form

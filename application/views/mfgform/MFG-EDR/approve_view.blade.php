@@ -153,6 +153,7 @@
 <input type="hidden" id="nrunno" value="{{ $NRUNNO ?? '' }}">
 <input type="hidden" id="empno" value="{{ $EMPNO ?? '' }}">
 <input type="hidden" id="txt_exdata" value="{{ $exdata ?? '' }}">
+<input type="hidden" id="mode" value="{{ $mode }}">
 
 <div class="min-h-screen bg-gradient-to-br from-slate-100 via-white to-teal-50 py-6 px-3">
     <div class="edr-wrapper">
@@ -174,9 +175,7 @@
                     <div class="edr-zone-body">
                         <div class="grid grid-cols-12 border-b border-slate-300">
                             <div class="edr-label col-span-12 md:col-span-2 px-4 py-2">Form no :</div>
-                            <div id="v_form_no"
-                                class="edr-value col-span-12 md:col-span-10 px-4 py-2"
-                                data-formno="<?= $formno ?>">
+                            <div id="v_form_no" class="edr-value col-span-12 md:col-span-10 px-4 py-2" data-formno="<?= $formno ?>">
                                 <?= $formno ?>
                             </div>
                         </div>
@@ -273,7 +272,7 @@
                                 <tr>
                                     <th style="width:80px;">No</th>
                                     <th>Why</th>
-                                    <th style="width:80px;">Action</th>
+                                    <th style="width:80px;">#</th>
                                 </tr>
                             </thead>
                             <tbody id="v_root_body"></tbody>
@@ -294,7 +293,8 @@
                                     <th style="width:80px;">No</th>
                                     <th>Corrective Action</th>
                                     <th style="width:220px;">กำหนดเสร็จ</th>
-                                    <th style="width:80px;">Action</th>
+                                    <th style="width:220px;">ผู้รับผิดชอบ</th>
+                                    <th style="width:80px;">#</th>
                                 </tr>
                             </thead>
                             <tbody id="v_corrective_body"></tbody>
@@ -314,7 +314,8 @@
                                     <th style="width:80px;">No</th>
                                     <th>Preventive Action</th>
                                     <th style="width:220px;">กำหนดเสร็จ</th>
-                                    <th style="width:80px;">Action</th>
+                                    <th style="width:220px;">ผู้รับผิดชอบ</th>
+                                    <th style="width:80px;">#</th>
                                 </tr>
                             </thead>
                             <tbody id="v_preventive_body"></tbody>
@@ -340,7 +341,7 @@
                                 </button>
                                 <button type="button"
                                     class="btn-submit px-8 py-3 bg-yellow-500 text-white rounded-xl shadow hover:bg-yellow-600 font-bold"
-                                    data-action="returnE">
+                                    data-action="returnb">
                                     ↩ Return
                                 </button>
                             </div>
