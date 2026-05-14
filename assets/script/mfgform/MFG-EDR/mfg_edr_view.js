@@ -113,7 +113,8 @@ $(document).ready(function () {
             att.forEach(file => {
                 const filename = file.FILENAME || '-';
                 const url =
-                    `${baseUrl}main_edr/preview_file/` + formno +
+                    `${baseUrl}mfg-edr/main_edr/preview_file/` + 
+                    `${encodeURIComponent(formno)}/` +
                     `${encodeURIComponent(filename)}/` +
                     `${encodeURIComponent(filename)}`;
 
