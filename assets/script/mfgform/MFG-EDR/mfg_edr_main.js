@@ -667,7 +667,7 @@ $(document).ready(function () {
             }
 
             this.setLoading(true);
-
+            showLoader({ show: true });
             try {
                 const webflow = await this.createWebflowForm();
                 const webflowData = webflow?.data || {};
@@ -688,6 +688,7 @@ $(document).ready(function () {
                 console.error('SUBMIT FORM ERROR:', error);
                 showMessage(error?.message || "เกิดข้อผิดพลาดระหว่างบันทึกข้อมูล !!!", "error");
             } finally {
+                showLoader({ show: false });
                 this.setLoading(false);
             }
         },
