@@ -66,6 +66,7 @@ $(document).ready(function () {
                 const data = res.data || {};
                 this.renderForm(data.form || {});
                 this.renderHeader(data.head || {});
+                this.renderFile(data.att || {});
                 this.applyWhyPermission(data.flow || []);
                 this.renderDetail(data.list || []);
                 this.renderRoot(data.why || []);
@@ -92,15 +93,31 @@ $(document).ready(function () {
             $('#v_worktype').text(head.TYPENAME || '-');
             $('#v_repair_by').text((head.REPAIR_BY || '-') + '_' + (head.REPAIR_BY_NAME || '-'));
             $('#v_cause').text((head.CAUSE || '-') + '_' + (head.CAUSENAME || '-'));
+        },
 
+        renderFile(att = []) {
+            const formno = $('#form_no').val();
             const $fileList = $('#v_file_list').empty();
-            if (head.FILES?.length) {
-                head.FILES.forEach(file => {
-                    $fileList.append(`<a href="${file.FILE_PATH}" target="_blank">${file.FILE_NAME}</a>`);
-                });
-            } else {
+            if (!att.length) {
                 $fileList.html('-');
+                return;
             }
+
+            att.forEach(file => {
+                const safeName = file.FILENAME || '-';
+                const $link = $(`<a href="javascript:void(0)" class="text-primary underline">${safeName}</a>`);
+
+                $link.on('click', () => {
+                    downloadOrOpenFile({
+                        baseDir: "//amecnas/AMECWEB/File/development/Form/MFG/MFG-EDR//" + formno,
+                        mode: "open",
+                        storedName: file.FILENAME,
+                        originalName: file.FILENAME,
+                    });
+                });
+
+                $fileList.append($('<div>').append($link));
+            });
         },
 
         renderDetail(list) {
