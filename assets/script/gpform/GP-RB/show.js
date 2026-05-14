@@ -151,139 +151,141 @@ $(async function () {
     // เอาข้อมูล Purpose จาก getShowdata มาโชว์
     if (getShowdata.PURPOSE_ID) {
       $(`#purpose_${getShowdata.PURPOSE_ID}`).prop("checked", true);
-    // เอาข้อมูล Purpose จาก getShowdata มาโชว์
-    if (getShowdata.PURPOSE_ID) {
-      $(`#purpose_${getShowdata.PURPOSE_ID}`).prop("checked", true);
+      // เอาข้อมูล Purpose จาก getShowdata มาโชว์
+      if (getShowdata.PURPOSE_ID) {
+        $(`#purpose_${getShowdata.PURPOSE_ID}`).prop("checked", true);
 
-      if (String(getShowdata.PURPOSE_ID) === "4") {
-        $("#otherSelect")
-          .prop("disabled", true)
-          .prop("readonly", true)
-          .val(getShowdata.PURPOSE_OTHER || "");
+        if (String(getShowdata.PURPOSE_ID) === "4") {
+          $("#otherSelect")
+            .prop("disabled", true)
+            .prop("readonly", true)
+            .val(getShowdata.PURPOSE_OTHER || "");
+        }
       }
+
+      // เอาข้อมูล Other Stamp จาก getShowCusdata มาโชว์
+      $("#otherQty").val(getShowCusdata.QTY);
+      $("#otherAttachment").val(getShowCusdata.NAME_STAMP); //ยังไม่ได้ชื่อไฟล์
+      $("#otherRemark").val(getShowCusdata.REMARK);
+
+      return;
     }
 
-    // เอาข้อมูล Other Stamp จาก getShowCusdata มาโชว์
-    $("#otherQty").val(getShowCusdata.QTY);
-    $("#otherAttachment").val(getShowCusdata.NAME_STAMP); //ยังไม่ได้ชื่อไฟล์
-    $("#otherRemark").val(getShowCusdata.REMARK);
+    if (hasStandardStamp) {
+      $("#radioStandard").prop({
+        checked: true,
+        disabled: false,
+      });
 
-    return;
-  }
+      $("#radioOther").prop({
+        checked: false,
+        disabled: true,
+      });
 
+      // show Standard
+      $("#radioStandardBox").show();
+      $("#radioOtherBox").hide();
 
-  if (hasStandardStamp) {
-    $("#radioStandard").prop({
-      checked: true,
-      disabled: false,
-    });
+      // เปิด Standard Stamp Section
+      $("#standardStampSection").css({
+        opacity: "1",
+        "pointer-events": "auto",
+      });
 
-    $("#radioOther").prop({
-      checked: false,
-      disabled: true,
-    });
+      // ปิด Other Stamp Section
+      $("#otherStampSection")
+        .css({
+          opacity: "0.4",
+          "pointer-events": "none",
+        })
+        .find("input, textarea")
+        .prop("disabled", true);
+    }
+    // แปลง SPOSCODE ให้เป็น string และเติม 0 ด้านหน้า ถ้าเป็นเลขหลักเดียว เช่น 2 => 02
+    const PosiCodeArray = Array.isArray(empData.SPOSCODE)
+      ? empData.SPOSCODE
+      : empData.SPOSCODE
+        ? [empData.SPOSCODE]
+        : [];
 
-    // show Standard
-    $("#radioStandardBox").show();
-    $("#radioOtherBox").hide();
+    let firstPosCode =
+      PosiCodeArray.length > 0 ? String(PosiCodeArray[0]).trim() : null;
 
-    // เปิด Standard Stamp Section
-    $("#standardStampSection").css({
-      opacity: "1",
-      "pointer-events": "auto",
-    });
+    if (firstPosCode) firstPosCode = firstPosCode.padStart(2, "0");
 
-    // ปิด Other Stamp Section
-    $("#otherStampSection")
-      .css({
-        opacity: "0.4",
-        "pointer-events": "none",
-      })
-      .find("input, textarea")
-      .prop("disabled", true);
-  }
-  // แปลง SPOSCODE ให้เป็น string และเติม 0 ด้านหน้า ถ้าเป็นเลขหลักเดียว เช่น 2 => 02
-  const PosiCodeArray = Array.isArray(empData.SPOSCODE)
-    ? empData.SPOSCODE
-    : empData.SPOSCODE
-      ? [empData.SPOSCODE]
-      : [];
+    // กลุ่มที่ใช้ nameInput1 / stampCircle1
+    const input1PosCodes = [
+      "02", // PRESIDENT
+      "05", // GENERAL MANAGER
+      "10", // DIVISION MANAGER
+      "11", // DEPUTY DIVISION MANAGER
+      "20", // DEPARTMENT MANAGER
+      "21", // DEPUTY DEPARTMENT MANAGER
+      "90", // ADVISOR
+      "22", // SENIOR SPECIALIST
+      "30", // SECTION MANAGER
+      "32", // SPECIALIST
+    ];
 
-  let firstPosCode =
-    PosiCodeArray.length > 0 ? String(PosiCodeArray[0]).trim() : null;
+    // กลุ่มที่ใช้ nameInput2 / stampCircle2
+    const input2PosCodes = [
+      "33", // ASSISTANT MANAGER
+      "49", // SUPERVISOR
+      "50", // FOREMAN
+      "55", // LEADER
+      "35", // ENGINEER
+      "40", // STAFF
+    ];
 
-  if (firstPosCode) firstPosCode = firstPosCode.padStart(2, "0");
-
-  // กลุ่มที่ใช้ nameInput1 / stampCircle1
-  const input1PosCodes = [
-    "02", // PRESIDENT
-    "05", // GENERAL MANAGER
-    "10", // DIVISION MANAGER
-    "11", // DEPUTY DIVISION MANAGER
-    "20", // DEPARTMENT MANAGER
-    "21", // DEPUTY DEPARTMENT MANAGER
-    "90", // ADVISOR
-    "22", // SENIOR SPECIALIST
-    "30", // SECTION MANAGER
-    "32", // SPECIALIST
-  ];
-
-  // กลุ่มที่ใช้ nameInput2 / stampCircle2
-  const input2PosCodes = [
-    "33", // ASSISTANT MANAGER
-    "49", // SUPERVISOR
-    "50", // FOREMAN
-    "55", // LEADER
-    "35", // ENGINEER
-    "40", // STAFF
-  ];
-
-  // เคลียร์ก่อน
-  $("#nameInput1").val("");
-  $("#nameInput2").val("");
-  $("#name").text("");
-  $("#name2").text("");
-  $("#divisionDisplay").text("");
-
-  // reset opacity
-  $("#rowStamp1").css("opacity", "1");
-  $("#rowStamp2").css("opacity", "1");
-
-  if (input1PosCodes.includes(firstPosCode)) {
-    $("#nameInput1").val(getShowdata.NAME_STAMP || "");
-    $("#name").text(
-      getShowdata.NAME_STAMP || "",
-    ); /*แสดงชื่อใต้สแตมป์ในวงกลมสีน้ำเงิน*/
-    $("#nameInput2").val("");
-    // แถวบน active / แถวล่างจาง
-    $("#rowStamp1").css("opacity", "1");
-    $("#rowStamp2").css("opacity", "0.3");
-  } else if (input2PosCodes.includes(firstPosCode)) {
+    // เคลียร์ก่อน
     $("#nameInput1").val("");
-    $("#nameInput2").val(getShowdata.NAME_STAMP || "");
-    $("#divisionDisplay").text(
-      empData.SDIV || "",
-    ); /*แสดงชื่อแผนกใต้สแตมป์ในวงกลมสีน้ำเงิน*/
-    console.log(empData.SDIV);
-    $("#name2").text(getShowdata.NAME_STAMP || "");
-    // แถวบนจาง / แถวล่าง active
-    $("#rowStamp1").css("opacity", "0.3");
-    $("#rowStamp2").css("opacity", "1");
-  } else {
-    // กรณีไม่เจอ position code จะเลือกให้ใส่ช่องแรกไว้ก่อน
-    $("#nameInput1").val(getShowdata.NAME_STAMP || "");
-    $("#name").text(getShowdata.NAME_STAMP || "");
     $("#nameInput2").val("");
-    $("#rowStamp1").css("opacity", "1");
-    $("#rowStamp2").css("opacity", "0.3");
-  }
-  // ต้องเช็คหลังจาก set ค่าเสร็จแล้ว
-  const hasNameInput1 = $("#nameInput1").val().trim() !== "";
-  const hasNameInput2 = $("#nameInput2").val().trim() !== "";
-  $("#nameInput1").prop("disabled", hasNameInput1);
-  $("#nameInput2").prop("disabled", hasNameInput2);
+    $("#name").text("");
+    $("#name2").text("");
+    $("#divisionDisplay").text("");
 
-  $("#radioOther").prop("disabled", hasNameInput1 || hasNameInput2);
+    // reset opacity
+    $("#rowStamp1").css("opacity", "1");
+    $("#rowStamp2").css("opacity", "1");
+
+    if (input1PosCodes.includes(firstPosCode)) {
+      $("#nameInput1").val(getShowdata.NAME_STAMP || "");
+      $("#name").text(
+        getShowdata.NAME_STAMP || "",
+      ); /*แสดงชื่อใต้สแตมป์ในวงกลมสีน้ำเงิน*/
+      $("#nameInput2").val("");
+      // แถวบน active / แถวล่างจาง
+      $("#rowStamp1").css("opacity", "1");
+      $("#rowStamp2").css("opacity", "0.3");
+    } else if (input2PosCodes.includes(firstPosCode)) {
+      $("#nameInput1").val("");
+      $("#nameInput2").val(getShowdata.NAME_STAMP || "");
+      $("#divisionDisplay").text(
+        empData.SDIV || "",
+      ); /*แสดงชื่อแผนกใต้สแตมป์ในวงกลมสีน้ำเงิน*/
+      console.log(empData.SDIV);
+      $("#name2").text(getShowdata.NAME_STAMP || "");
+      // แถวบนจาง / แถวล่าง active
+      $("#rowStamp1").css("opacity", "0.3");
+      $("#rowStamp2").css("opacity", "1");
+    } else {
+      // กรณีไม่เจอ position code จะเลือกให้ใส่ช่องแรกไว้ก่อน
+      $("#nameInput1").val(getShowdata.NAME_STAMP || "");
+      $("#name").text(getShowdata.NAME_STAMP || "");
+      $("#nameInput2").val("");
+      $("#rowStamp1").css("opacity", "1");
+      $("#rowStamp2").css("opacity", "0.3");
+    }
+    // ต้องเช็คหลังจาก set ค่าเสร็จแล้ว
+    const hasNameInput1 = $("#nameInput1").val().trim() !== "";
+    const hasNameInput2 = $("#nameInput2").val().trim() !== "";
+    $("#nameInput1").prop("disabled", hasNameInput1);
+    $("#nameInput2").prop("disabled", hasNameInput2);
+
+    $("#radioOther").prop("disabled", hasNameInput1 || hasNameInput2);
+
+
+  }
 });
 
 // other stamp
