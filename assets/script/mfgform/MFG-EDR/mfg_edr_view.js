@@ -116,7 +116,7 @@ $(document).ready(function () {
 
                 $fileList.append(`
                     <div>
-                        <a href="${url}"
+                        <a href="#"
                         target="_blank"
                         class="text-blue-700 underline btn btn-sm rounded-lg">
                             ${filename}

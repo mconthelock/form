@@ -600,7 +600,8 @@ $(document).ready(function () {
                 CYEAR: String(webflowData.CYEAR || $('#cyear').val()),
                 CYEAR2: String(webflowData.CYEAR2),
                 NRUNNO: Number(webflowData.NRUNNO),
-
+                
+                REQBY: String($('#request_by').val() || ''),
                 TID: Number($('#job_type').val()) || null,
                 SSECCODE: String($('#sseccode').val() || ''),
                 CID: Number($('#cause').val()) || null,
