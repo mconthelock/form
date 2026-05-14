@@ -236,8 +236,7 @@ module.exports = {
 		manage_data: "./assets/script/gpform/GP-TRN/manage_data.js",
 		emp_lookup: "./assets/script/gpform/GP-TRN/emp_lookup.js",
 		training_select: "./assets/script/gpform/GP-TRN/training_select.js",
-		training_functional:
-			"./assets/script/gpform/GP-TRN/training_functional.js",
+		training_functional: "./assets/script/gpform/GP-TRN/training_functional.js",
 		training_legal: "./assets/script/gpform/GP-TRN/training_legal.js",
 		training_meth: "./assets/script/gpform/GP-TRN/training_meth.js",
 		training_pos: "./assets/script/gpform/GP-TRN/training_pos.js",
@@ -247,6 +246,10 @@ module.exports = {
 		view_train_report: "./assets/script/gpform/GP-TRN/view_train_report.js",
 		manage_group: "./assets/script/gpform/GP-TRN/manage_group.js",
 		show_sum_report: "./assets/script/gpform/GP-TRN/show_sum_report.js",
+
+		//MFG-EDR
+		mfg_edr_view: "./assets/script/mfgform/MFG-EDR/mfg_edr_view.js",
+		mfg_edr_main: "./assets/script/mfgform/MFG-EDR/mfg_edr_main.js",
 
 		// IS-ADP: Annual Development Plan
 		isAdp: "./assets/script/isform/IS-ADP/index.js", //IS-ADP page
