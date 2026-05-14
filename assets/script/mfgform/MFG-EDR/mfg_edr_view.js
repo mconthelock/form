@@ -100,7 +100,7 @@ $(document).ready(function () {
         },
 
         renderFile(att = []) {
-            const formno = $('#v_form_no').val();
+            const formno = $('#v_form_no').data('formno');
             const baseUrl = $('#base_url').val();
             const $fileList = $('#v_file_list').empty();
 
@@ -113,12 +113,7 @@ $(document).ready(function () {
 
             att.forEach(file => {
                 const filename = file.FILENAME || '-';
-                const url =
-                    `${baseUrl}mfgform/MFG-EDR/main_edr/preview_file/` +
-                   `${encodeURIComponent(formno)}/` +
-                    `${encodeURIComponent(filename)}/` +
-                    `${encodeURIComponent(filename)}`;
-
+                const url = `${baseUrl}mfgform/MFG-EDR/main_edr/preview_file/` + formno + '/' + encodeURIComponent(filename);
                 console.log('FILE URL =', url);
 
                 $fileList.append(`

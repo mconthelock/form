@@ -152,8 +152,8 @@ class main_edr extends MY_Controller {
         }
     }
 
-    public function preview_file($formno, $filename, $origin_name){
+    public function preview_file($formno, $filename){
         $filepath = $this->upload_path."/".$formno;
-        $this->downloadFile($origin_name, $filename, $filepath);
+        $this->downloadFile($filename, $filepath);
     }
 }
