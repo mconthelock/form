@@ -51,7 +51,7 @@
                 <h1 class="text-3xl text-center text-primary font-bold mb-15">Cover Payment For Invoice Receiving</h1>
             </h2>
             <form id="form" class="flex flex-col gap-5">
-                <section id="section-0">
+                <section id="form-detail">
                 </section>
                 <div class="divider"></div>
                 <section id="section-1">
@@ -113,7 +113,7 @@
                             </div>
                         </div>
                     </fieldset>
-                    <fieldset class="gap-10 hidden!">
+                    <fieldset class="gap-10 hidden!" id="third-party-fieldset">
                         <span class="required">Third Party: </span>
                         <span id="THIRD_PARTY"></span>
                     </fieldset>
@@ -295,7 +295,7 @@
                     <div id="attachFile"></div>
                 </section>
                 <div class="divider"></div>
-                <div id="btnAction"></div>
+                <div id="form-action-container"></div>
             </form>
         </div>
     </div>

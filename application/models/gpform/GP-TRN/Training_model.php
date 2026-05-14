@@ -40,7 +40,7 @@ class Training_model extends CI_Model
         return $query->result();
     }
 
-    public function insert_data($table, $data) {
+    public function insert_data_bk($table, $data) {
         if (empty($table) || empty($data) || !is_array($data)) {
             return false; // ป้องกัน error
         }
@@ -50,6 +50,23 @@ class Training_model extends CI_Model
         } else {
             return false;
         }
+    }
+
+    public function insert_data($table, $data, $setRaw = []) {
+        if (empty($table) || empty($data) || !is_array($data)) {
+            return false;
+        }
+
+        $this->db->reset_query();
+        $this->db->set($data);
+
+        if (!empty($setRaw) && is_array($setRaw)) {
+            foreach ($setRaw as $field => $value) {
+                $this->db->set($field, $value, false);
+            }
+        }
+
+        return $this->db->insert($table);
     }
 
     public function update_data($table, $data, $where) {
@@ -254,7 +271,7 @@ class Training_model extends CI_Model
         $query = "SELECT DISTINCT 'GP-TRN' || SUBSTR(A.CYEAR2,3,2) || '-' || LPAD(A.NRUNNO, 6, '0') AS FORMNO, A.*,  E.SEMPNO, E.SNAME, E.STNAME, A.GROUP_TRAIN, C.CSTEPST , D.COST_PERSON
         FROM GP_TRN_HEAD A
         INNER JOIN FORM B ON A.NFRMNO = B.NFRMNO AND A.VORGNO = B.VORGNO AND A.CYEAR = B.CYEAR AND A.CYEAR2 = B.CYEAR2 AND A.NRUNNO = B.NRUNNO
-        INNER JOIN FLOW C ON A.NFRMNO = C.NFRMNO AND A.VORGNO = C.VORGNO AND A.CYEAR = C.CYEAR AND A.CYEAR2 = C.CYEAR2 AND A.NRUNNO = C.NRUNNO AND CSTEPNEXTNO = '00'
+        INNER JOIN FLOW C ON A.NFRMNO = C.NFRMNO AND A.VORGNO = C.VORGNO AND A.CYEAR = C.CYEAR AND A.CYEAR2 = C.CYEAR2 AND A.NRUNNO = C.NRUNNO AND CEXTDATA = '19'
         INNER JOIN GP_TRN_TRAINEE D ON A.CYEAR2 = D.CYEAR2 AND A.NRUNNO = D.NRUNNO
         INNER JOIN AMECUSERALL E ON E.SEMPNO = D.EMPNO
         WHERE B.CST = '1' ".$where."

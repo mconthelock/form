@@ -33,7 +33,7 @@
 <div class="form-data" data-nfrmno="{{ $NFRMNO }}" data-vorgno="{{ $VORGNO }}" data-cyear="{{ $CYEAR }}"
         data-cyear2="{{ $CYEAR2 }}" data-nrunno="{{ $NRUNNO }}" data-empno="{{ $empno }}" ></div>
 <form id="cn-form" method="post" enctype="multipart/form-data"> 
-<input type="hidden" name="cextData" id="cextData" value="{{ $cextData}}" />
+<input type="hidden" name="cextData" id="cextData" value="{{ $strcextData }}" />
 <input type="hidden" name="mstatus" id="mstatus" value="{{ $cnform->MSTATUS }}" />
 <input type="hidden" name="chkopr" id="chkopr" value="{{ $chkopr }}" />
 <input type="hidden" name="demapv" id="demapv" value="{{ $demapv }}" />
@@ -450,9 +450,9 @@
                 @foreach($attdwg as $d)
                                     <div class="openfl"  data-id="{{ $d->ITEMNO }}" data-filename="{{ $d->SFILE }}">
                                         <a href="{{ base_url('qaform/QA-CN/form/mdownload/') . $NFRMNO . '_'.$VORGNO.'_'.$CYEAR.'_'.$CYEAR2.'_'.$NRUNNO.'/'.$d->SFILE.'/'.substr($d->SFILE, 13) }}" class="link text-sm text-blue-600 font-semibold" target="_blank">{{ substr($d->SFILE, 13) }}</a>
-                                        @if (((($form[0]->CST == "0")||($mode == $MODE_EDIT)) && in_array($empno, [$form[0]->VREQNO, $form[0]->VINPUTER])))
-                                                <button type="button"  data-table = "" class="text-red-500 hover:text-red-700 cursor-pointer del-file" >✕</button>
-                                            @endif
+                                        @if (((($form[0]->CST == "0") || ($mode == $MODE_EDIT)) && in_array($empno, [$form[0]->VREQNO, $form[0]->VINPUTER])) || (($cextData == 3||$cextData == 2) && is_null($cnform->MSTATUS) && $mode == $MODE_EDIT ))
+                                            <button type="button"  data-table = "" class="text-red-500 hover:text-red-700 cursor-pointer del-file" >✕</button>
+                                        @endif
                                     </div>
                 @endforeach
             </div>
@@ -498,10 +498,7 @@
                 @foreach($attmat as $d)
                                     <div class="openfl"  data-id="{{ $d->ITEMNO }}" data-filename="{{ $d->SFILE }}">
                                         <a href="{{ base_url('qaform/QA-CN/form/mdownload/') . $NFRMNO . '_'.$VORGNO.'_'.$CYEAR.'_'.$CYEAR2.'_'.$NRUNNO.'/'.$d->SFILE.'/'.substr($d->SFILE, 13) }}" class="link text-sm text-blue-600 font-semibold" target="_blank">{{ substr($d->SFILE, 13) }}</a>
-                                            @if (
-                                                ($mode == $MODE_EDIT)
-                                                || ((($form[0]->CST == "0")||($mode == $MODE_EDIT)) && in_array($empno, [$form[0]->VREQNO, $form[0]->VINPUTER]))
-                                            )
+                                             @if (((($form[0]->CST == "0") || ($mode == $MODE_EDIT)) && in_array($empno, [$form[0]->VREQNO, $form[0]->VINPUTER])) || (($cextData == 3||$cextData == 2) && is_null($cnform->MSTATUS) && $mode == $MODE_EDIT ))
                                                 <button type="button"  data-table = "" class="text-red-500 hover:text-red-700 cursor-pointer del-file" >✕</button>
                                             @endif
                                     </div>
@@ -549,10 +546,7 @@
                 @foreach($attmaker as $d)
                                     <div class="openfl"  data-id="{{ $d->ITEMNO }}" data-filename="{{ $d->SFILE }}">
                                         <a href="{{ base_url('qaform/QA-CN/form/mdownload/') . $NFRMNO . '_'.$VORGNO.'_'.$CYEAR.'_'.$CYEAR2.'_'.$NRUNNO.'/'.$d->SFILE.'/'.substr($d->SFILE, 13) }}" class="link text-sm text-blue-600 font-semibold" target="_blank">{{ substr($d->SFILE, 13) }}</a>
-                                            @if (
-                                                ($mode == $MODE_EDIT)
-                                                || ((($form[0]->CST == "0")||($mode == $MODE_EDIT)) && in_array($empno, [$form[0]->VREQNO, $form[0]->VINPUTER]))
-                                            )
+                                       @if (((($form[0]->CST == "0") || ($mode == $MODE_EDIT)) && in_array($empno, [$form[0]->VREQNO, $form[0]->VINPUTER])) || (($cextData == 3||$cextData == 2) && is_null($cnform->MSTATUS) && $mode == $MODE_EDIT ))
                                                 <button type="button"  data-table = "" class="text-red-500 hover:text-red-700 cursor-pointer del-file" >✕</button>
                                             @endif
                                     </div>
@@ -597,10 +591,7 @@
                 @foreach($attrohs as $d)
                                     <div class="openfl"  data-id="{{ $d->ITEMNO }}" data-filename="{{ $d->SFILE }}">
                                         <a href="{{ base_url('qaform/QA-CN/form/mdownload/') . $NFRMNO . '_'.$VORGNO.'_'.$CYEAR.'_'.$CYEAR2.'_'.$NRUNNO.'/'.$d->SFILE.'/'.substr($d->SFILE, 13) }}" class="link text-sm text-blue-600 font-semibold" target="_blank">{{ substr($d->SFILE, 13) }}</a>
-                                            @if (
-                                                ($mode == $MODE_EDIT)
-                                                || ((($form[0]->CST == "0")||($mode == $MODE_EDIT)) && in_array($empno, [$form[0]->VREQNO, $form[0]->VINPUTER]))
-                                            )
+                                         @if (((($form[0]->CST == "0") || ($mode == $MODE_EDIT)) && in_array($empno, [$form[0]->VREQNO, $form[0]->VINPUTER])) || (($cextData == 3||$cextData == 2) && is_null($cnform->MSTATUS) && $mode == $MODE_EDIT ))
                                                 <button type="button"  data-table = "" class="text-red-500 hover:text-red-700 cursor-pointer del-file" >✕</button>
                                             @endif
                                     </div>
@@ -645,9 +636,7 @@
                 @foreach($attpur as $d)
                                     <div class="openfl"  data-id="{{ $d->ITEMNO }}" data-filename="{{ $d->SFILE }}">
                                         <a href="{{ base_url('qaform/QA-CN/form/mdownload/') . $NFRMNO . '_'.$VORGNO.'_'.$CYEAR.'_'.$CYEAR2.'_'.$NRUNNO.'/'.$d->SFILE.'/'.substr($d->SFILE, 13) }}" class="link text-sm text-blue-600 font-semibold" target="_blank">{{ substr($d->SFILE, 13) }}</a>
-                                            @if (
-                                                ($mode == $MODE_EDIT)|| ((($form[0]->CST == "0")||($mode == $MODE_EDIT)) && in_array($empno, [$form[0]->VREQNO, $form[0]->VINPUTER]))
-                                            )
+                                             @if (((($form[0]->CST == "0") || ($mode == $MODE_EDIT)) && in_array($empno, [$form[0]->VREQNO, $form[0]->VINPUTER])) || (($cextData == 3||$cextData == 2) && is_null($cnform->MSTATUS) && $mode == $MODE_EDIT ))
                                                 <button type="button"  data-table = "" class="text-red-500 hover:text-red-700 cursor-pointer del-file" >✕</button>
                                             @endif
                                     </div>
@@ -694,7 +683,7 @@
                 @foreach($attsubcon as $d)
                                     <div class="openfl"  data-id="{{ $d->ITEMNO }}" data-filename="{{ $d->SFILE }}">
                                         <a href="{{ base_url('qaform/QA-CN/form/mdownload/') . $NFRMNO . '_'.$VORGNO.'_'.$CYEAR.'_'.$CYEAR2.'_'.$NRUNNO.'/'.$d->SFILE.'/'.substr($d->SFILE, 13) }}" class="link text-sm text-blue-600 font-semibold" target="_blank">{{ substr($d->SFILE, 13) }}</a>
-                                            @if (($mode == $MODE_EDIT)|| ((($form[0]->CST == "0")||($mode == $MODE_EDIT)) && in_array($empno, [$form[0]->VREQNO, $form[0]->VINPUTER])))
+                                            @if (((($form[0]->CST == "0") || ($mode == $MODE_EDIT)) && in_array($empno, [$form[0]->VREQNO, $form[0]->VINPUTER])) || (($cextData == 3||$cextData == 2) && is_null($cnform->MSTATUS) && $mode == $MODE_EDIT ))
                                                 <button type="button"  data-table = "" class="text-red-500 hover:text-red-700 cursor-pointer del-file" >✕</button>
                                             @endif
                                     </div>
@@ -846,6 +835,28 @@
         </tr>
 {{-- ส่วน J-Staff In Charge --}}
 @if ($mode == $MODE_EDIT && $cextData == 1)
+   @if (!$chkopr)
+    <tr>
+        <td class="force-w-350 align-top pt-2">Job Type
+        <td class="px-3 py-1 bg-gray-100 border-b border-white">
+            <div class="flex items-center gap-4 h-8">
+                <label class="flex items-center gap-2 cursor-pointer">
+                    <input type="radio" name="selJobType" value="S" 
+                        class="w-4 h-4 text-sky-500 focus:ring-1 focus:ring-sky-400 border-gray-300"
+                        {{ in_array($reqinf[0]->SDEPCODE ?? '', ['050501', '051401']) ? 'checked' : '' }}>
+                    <span class="text-gray-700">Sub</span>
+                </label>
+
+                <label class="flex items-center gap-2 cursor-pointer">
+                    <input type="radio" name="selJobType" value="B" 
+                        class="w-4 h-4 text-sky-500 focus:ring-1 focus:ring-sky-400 border-gray-300"
+                        {{ ($reqinf[0]->SDEPCODE ?? '') == '090501' ? 'checked' : '' }}>
+                    <span class="text-gray-700">Bulk</span>
+                </label>
+            </div>
+        </td>
+    </tr>
+   @endif
     <tr>
         <td class="force-w-350 align-top pt-2">J-Staff In Charge</td>
         <td class="px-3 py-1 bg-gray-100 border-b border-white">
@@ -886,6 +897,20 @@
     </tr>     
 @endif
 
+@if (($mode == $MODE_EDIT) && (($cextData == 2)||($cextData == 7)))
+    <tr>
+        <td class="force-w-350 align-top pt-2 " style="padding:5px;">Change To</td>
+        <td class="px-3 py-1 bg-gray-100 border-b border-white">
+             <select name="Pic" id="Pic" class="w-1/3 h-8 px-2 border border-gray-300 bg-white focus:outline-none focus:ring-1 focus:ring-sky-400 rounded-sm">
+                 <option value="">----------------------------------------</option>
+                @foreach ($pic as $p)
+                    <option value="{{ $p->SEMPNO }}">{{ $p->SNAME }}</option>
+                @endforeach
+            </select>
+        </td>
+    </tr>     
+@endif
+
 {{-- ส่วน Operator --}}
 @if ($mode == $MODE_EDIT && $cextData == 6)
     <tr>
@@ -911,10 +936,7 @@
                 @foreach($attchk as $d)
                                     <div class="openfl"  data-id="{{ $d->ITEMNO }}" data-filename="{{ $d->SFILE }}">
                                         <a href="{{ base_url('qaform/QA-CN/form/mdownload/') . $NFRMNO . '_'.$VORGNO.'_'.$CYEAR.'_'.$CYEAR2.'_'.$NRUNNO.'/'.$d->SFILE.'/'.substr($d->SFILE, 13) }}" class="link text-sm text-blue-600 font-semibold" target="_blank">{{ substr($d->SFILE, 13) }}</a>
-                                            @if (
-                                                ($mode == $MODE_EDIT)
-                                                || ((($form[0]->CST == "0")||($mode == $MODE_EDIT)) && in_array($empno, [$form[0]->VREQNO, $form[0]->VINPUTER]))
-                                            )
+                                           @if (($mode == $MODE_EDIT) && ($cextData >= 2) && ($cextData < 8))
                                                 <button type="button"  data-table = "" class="text-red-500 hover:text-red-700 cursor-pointer del-file" >✕</button>
                                             @endif
                                     </div>
@@ -1098,6 +1120,28 @@
                     Change
                 </button>
                 @endif
+                @if(($cextData == 2)||($cextData == 7))
+                <button type="button" name="btnChange" 
+                        data-action="changepic"
+                        class="btn-submit cursor-pointer bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded shadow">
+                    Change
+                </button>
+                @endif
+
+                @if(($cextData == 4) ||($cextData == 5))
+                <button type="button" name="btnReturn" 
+                        data-action="returnqastaff"
+                        class="btn-submit cursor-pointer bg-slate-500 hover:bg-gray-600 text-white px-4 py-2 rounded shadow">
+                    Return To QA Staff
+                </button>
+                @endif
+                @if(($cextData == 3) && is_null($cnform->MSTATUS))
+                <button type="button" name="btnReturn" 
+                        data-action="returnass"
+                        class="btn-submit cursor-pointer bg-slate-500 hover:bg-gray-600 text-white px-4 py-2 rounded shadow">
+                    Return To Assigned Person
+                </button>
+                @endif
 
                 @if(!is_null($cnform->MSTATUS) &&($cextData == 7))
                 <button type="button" name="btnReturn" 
@@ -1106,6 +1150,7 @@
                     Return
                 </button>
                 @endif
+
                 @if ((($cextData <= 4) || ($cextData == 8)) && !in_array($empno, [$form[0]->VREQNO, $form[0]->VINPUTER]))
                     <button type="button" name="btnReturn" id="btnReturn"
                              data-action="returnrem"

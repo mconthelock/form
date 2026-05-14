@@ -1,9 +1,11 @@
 import Litepicker from "litepicker";
-import "select2/dist/css/select2.min.css";
-import "select2/dist/js/select2.min.js";
+import select2 from "select2";
+// import "select2/dist/css/select2.min.css";
 import ExcelJS from "exceljs";
 import { host } from "../../utils.js";
+import { s2disableSearch, s2opt, setSelect2 } from "@amec/webasset/select2";
 
+select2();
 const daterangeInput = $("#daterange")[0];
 
 new Litepicker({

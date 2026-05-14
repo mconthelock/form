@@ -15,13 +15,15 @@ $(document).ready(async function () {
 	const vat = getCost * 0.07;
 	const sumCost = getCost + vat;
 
-	if (exdata === "12" && sumCost > 0) {
-		// เงื่อนไขแรก: exdata=12 และ sum_cost > 0
+	if (exdata === "19" && sumCost > 0) {
+		// เงื่อนไขแรก: exdata=19 และ sum_cost > 0
 		$("#btnApprove_fin").show();
+		$("#cashAdvSection").show();
 		$("#btn-submit").hide();
 	} else {
 		// ไม่เข้าเงื่อนไขแรก → ใช้ปุ่มปกติ
 		$("#btnApprove_fin").hide();
+		$("#cashAdvSection").hide();
 		$("#btn-submit").show();
 	}
 
@@ -263,7 +265,7 @@ $(document).ready(async function () {
 	// ------------------------------------------------------------------
 	// 🔹 exdata = 12 logic
 	// ------------------------------------------------------------------
-	if (exdata === "12") {
+	if (exdata === "19") {
 		const $btnFin = $("#btnApprove_fin");
 		const $btnNormal = $("#btn-submit");
 		if (sumCost === 0) {
@@ -375,16 +377,35 @@ $(document).ready(async function () {
 	//                  + STEP 3 (send all rows to create_cash_adv)
 	// ------------------------------------------------------------------
 	$(".btn-last-submit").on("click", async function () {
+		const effectiveDate = $("#effectiveDate").val();
+		if (!effectiveDate) {
+			Swal.fire({
+				icon: "warning",
+				title: "กรุณาเลือก Effective Date",
+			});
+			$("#effectiveDate").focus();
+			return;
+		}
+
+		const cashAdvFiles = $("#cashAdvFiles")[0]?.files || [];
+		if (cashAdvFiles.length === 0) {
+			Swal.fire({
+				icon: "warning",
+				title: "กรุณาแนบไฟล์ Cash Advance",
+			});
+			$("#cashAdvFiles").focus();
+			return;
+		}
+
 		const subject = $("#viewTrainingSubject").val();
 		const confirmResult = await Swal.fire({
 			icon: "question",
 			title: "ยืนยันการทำรายการ",
-			html: "ต้องการ Approve และสร้าง Cash Advance ใช่หรือไม่ ?",
+			html: "ต้องการ Approve และสร้างฟอร์ม Cash Advance ใช่หรือไม่ ?",
 			showCancelButton: true,
 			confirmButtonText: "ยืนยัน",
 			cancelButtonText: "ยกเลิก",
 		});
-
 		if (!confirmResult.isConfirmed) return;
 		// =============================================================
 		// 1) APPROVE ทุกแถวผ่าน doaction
@@ -462,11 +483,11 @@ $(document).ready(async function () {
 		// 3) ส่งข้อมูลทั้งหมดไป controller: create_cash_adv
 		// =============================================================
 
-		await fetch(`${host}gpform/GP-TRN/training/create_cash_adv`, {
+		const createCashRes = await fetch(`${host}gpform/GP-TRN/training/create_cash_adv`, {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify({
-				itemsx: items_for_detail, // list ของ CYEAR2 + NRUNNO
+				itemsx: items_for_detail,
 				cashHead: {
 					NFRMNO: headData_cash.NFRMNO,
 					VORGNO: headData_cash.VORGNO,
@@ -475,6 +496,7 @@ $(document).ready(async function () {
 					NRUNNO: headData_cash.NRUNNO,
 					SUMCOST: sumCost,
 					SUBJECT: subject,
+					EFFDATE: effectiveDate,
 				},
 				clearHead: {
 					NFRMNO: headData_clear.NFRMNO,
@@ -485,6 +507,64 @@ $(document).ready(async function () {
 				},
 			}),
 		});
+
+		const createCashText = await createCashRes.text();
+		let createCashJson = null;
+
+		try {
+			createCashJson = JSON.parse(createCashText);
+		} catch (e) {
+			console.error("create_cash_adv response:", createCashText);
+			Swal.fire({
+				icon: "error",
+				title: "create_cash_adv ไม่ได้คืน JSON",
+				text: "เปิด Console ดู response",
+			});
+			return;
+		}
+
+		if (!createCashRes.ok || !createCashJson?.status) {
+			console.error("create_cash_adv failed:", createCashJson);
+
+			Swal.fire({
+				icon: "error",
+				title: "สร้าง Cash Advance ไม่สำเร็จ",
+				text: createCashJson?.message || "create_cash_adv failed",
+			});
+			return;
+		}
+
+		// =============================================================
+		// 3.1) Upload file Cash Advance
+		// =============================================================
+		const fd = new FormData();
+		fd.append("NFRMNO", headData_cash.NFRMNO);
+		fd.append("VORGNO", headData_cash.VORGNO);
+		fd.append("CYEAR", headData_cash.CYEAR);
+		fd.append("CYEAR2", headData_cash.CYEAR2);
+		fd.append("NRUNNO", headData_cash.NRUNNO);
+
+		for (const file of cashAdvFiles) {
+			fd.append("cashAdvFiles[]", file);
+		}
+
+		const uploadRes = await fetch(`${host}gpform/GP-TRN/training/upload_cash_adv_file`, {
+			method: "POST",
+			body: fd,
+		});
+
+		const uploadJson = await uploadRes.json();
+
+		if (!uploadJson?.status) {
+			Swal.fire({
+				icon: "error",
+				title: "เกิดข้อผิดพลาด",
+				text: uploadJson?.message || "Upload file Cash Advance ไม่สำเร็จ",
+			});
+			return;
+		}
+
+
 
 		// =============================================================
 		// 4) แสดงผลรายการทั้งหมด

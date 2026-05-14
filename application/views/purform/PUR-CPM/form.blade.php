@@ -33,7 +33,7 @@
 
 @section('contents')
 <div class="hidden form-info" nfrmno="{{$NFRMNO}}" vorgno="{{$VORGNO}}" cyear="{{$CYEAR}}" mode="{{$mode}}"
-    cyear2="{{$mode !=1 ? $CYEAR2 : '' }}" nrunno="{{$mode !=1 ? $NRUNNO : '' }}"></div>
+    cyear2="{{$mode !=1 ? $CYEAR2 : '' }}" nrunno="{{$mode !=1 ? $NRUNNO : '' }}" return="{{$return ?? ''}}"></div>
 <div class="hidden apv-data" empno="{{$empno}}"></div>
 <div class="flex flex-col w-full px-4 my-5 font-sans">
     <div class="card bg-white w-full lg:w-[70rem] place-self-center shadow-sm">
@@ -42,11 +42,13 @@
                 <h1 class="text-3xl text-center text-primary font-bold mb-15">Cover Payment For Invoice Receiving</h1>
             </h2>
             <form id="form" class="flex flex-col gap-5">
+                <section id="form-detail">
+                </section>
                 <section id="section-0">
                     <fieldset class="flex gap-12">
                         <span>Input by</span>
                         <label>
-                            <input type="text" name="INPUTBY" id="INPUTBY" class="input input-sm w-40" readonly>
+                            <input type="text" name="INPUTBY" id="INPUTBY" class="input input-sm w-40" value="{{$empno}}" readonly>
                         </label>
                     </fieldset>
                     <fieldset class="flex gap-3">
@@ -103,7 +105,7 @@
                             <input type="text" name="INVOICE_OTHER" id="INVOICE_OTHER" class="input input-sm w-full" disabled>
                         </div>
                     </fieldset>
-                    <fieldset class="gap-10 hidden!">
+                    <fieldset class="gap-10 hidden!" id="third-party-fieldset">
                         <span class="required">Third Party: </span>
                         <label>
                             <select name="THIRD_PARTY" id="THIRD_PARTY" class="select select-sm w-full" placeholder="Select third party"></select>
@@ -172,7 +174,7 @@
                                 <span>Total Amount</span>
                                 <label class="flex gap-2">
                                     <input type="number" step="1" min="0" name="TOTAL_AMOUNT" id="TOTAL_AMOUNT" class="input input-sm w-full" placeholder="47,300.00">
-                                    <select id="curr-total" class="select select-sm w-fit min-w-16 select-currency">
+                                    <select id="curr-total" class="select select-sm w-fit min-w-16 currency">
                                     </select>
                                 </label>
                             </fieldset>
@@ -217,7 +219,7 @@
                                 <span class="required">Amount</span>
                                 <label class="flex gap-2">
                                     <input type="number" step="1" min="0" name="INVOICE_AMOUNT" id="INVOICE_AMOUNT" class="input input-sm w-full req" placeholder="47,300.00">
-                                    <select id="curr-invoice" class="select select-sm w-fit min-w-16 select-currency">
+                                    <select id="curr-invoice" class="select select-sm w-fit min-w-16 currency">
                                     </select>
                                 </label>
                             </fieldset>
@@ -251,7 +253,7 @@
                             <label>
                                 <span class="required"></span>
                                 <input type="number" step="1" min="0" name="PAYMENT" id="PAYMENT" class="input input-sm w-48 req" placeholder="47,300.00" disabled>
-                                <select id="curr-payment" class="select select-sm w-fit min-w-16 select-currency">
+                                <select id="curr-payment" class="select select-sm w-fit min-w-16 currency">
                                     </select>
                             </label>
                         </fieldset>
@@ -295,7 +297,7 @@
                     <div id="attachFile"></div>
                 </section>
                 <div class="divider"></div>
-                <div id="btnAction"></div>
+                <div id="form-action-container"></div>
             </form>
         </div>
     </div>

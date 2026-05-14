@@ -1,18 +1,21 @@
 import "@flaticon/flaticon-uicons/css/all/all.css";
-
-import { BrowserMultiFormatReader } from "@zxing/browser";
+// import { BrowserMultiFormatReader } from "@zxing/browser";
+import QRScanner from "@amec/webasset/qrScanner";
 import {
 	setApplication,
 	setImage,
 	setInfo,
 	getApp,
+	getAppDataById,
 } from "@amec/webasset/indexDB";
-import { getCookie } from "@amec/webasset/jsCookie";
+import { getCookie, deleteCookie } from "@amec/webasset/jsCookie";
+import { decryptText } from "@amec/webasset/crypto";
 import { directlogin, passwordLogin } from "@amec/webasset/api/auth";
 import { createCarousel } from "@amec/webasset/api/gpreport";
-import { redirectProduction } from "@amec/webasset/authen";
 import { showMessage, showErrorMessage } from "@amec/webasset/utils";
+
 import { sendSession, host, uri } from "./utils";
+import { getAppsList } from "./service/docinv";
 
 var camera;
 const startTime = Date.now();
@@ -20,13 +23,21 @@ const MIN_DISPLAY_TIME = 2000;
 $(document).ready(async function () {
 	await splashScreen();
 	const id = $("#appid").val();
-	await redirectProduction(id);
+	const appdata = await getAppsDB(id);
+	$("#login-title").text(appdata.APP_NAME);
 	await createCarousel("login");
-
 	if (id == "1") {
 		const cookie = await getCookie(process.env.APP_NAME);
 		if (cookie) {
-			window.location.href = `${process.env.APP_ENV}/home`;
+			const decrypted = await decryptText(cookie, process.env.APP_NAME);
+			const user = await getAppDataById(decrypted);
+			if (!user || user.group == null) {
+				await deleteCookie(process.env.APP_NAME);
+				window.location.href = `${process.env.APP_ENV}`;
+			} else {
+				const group = user.group.data.GROUP_HOME || "home";
+				window.location.href = `${process.env.APP_ENV}/${group}`;
+			}
 		}
 	} else {
 		$("#webflow-link").removeClass("hidden");
@@ -164,9 +175,14 @@ $(document).on("click", "#close-camera", function (e) {
 async function successLogin(user) {
 	const emp = await setInfo(user.appuser.SEMPNO, user.appuser);
 	const empprofile = await setImage(user.appuser.SEMPNO, user.appuser.image);
-	if (user.apps.APP_ID == 1) return `${process.env.APP_ENV}/home`;
-	if (user.apps.APP_TYPE == "1")
-		return `${process.env.APP_HOST}/${user.apps.APP_LOCATION}/authen/move`;
+	if (user.apps.APP_ID == 1) {
+		const appgroup = user.appgroup.GROUP_HOME || "home";
+		return `${process.env.APP_ENV}/${appgroup}/`;
+	}
+
+	if (user.apps.APP_TYPE == "1") {
+		return `${process.env.APP_HOST}/${user.apps.APP_LOCATION}/authen/move/`;
+	}
 
 	return `${process.env.APP_HOST}/${user.apps.APP_LOCATION}/${
 		user.appgroup.GROUP_HOME == null ? "" : user.appgroup.GROUP_HOME
@@ -215,58 +231,63 @@ async function barcodeLogin(empcode) {
 
 async function showCamera(target) {
 	if (target !== "frm-barcode") return false;
-	const videoElement = document.getElementById("video");
-	try {
-		const devices = await navigator.mediaDevices.enumerateDevices();
-		const videoInputDevices = devices.filter(
-			(device) => device.kind === "videoinput",
-		);
+	// const videoElement = document.getElementById("video");
+	// try {
+	// 	const devices = await navigator.mediaDevices.enumerateDevices();
+	// 	const videoInputDevices = devices.filter(
+	// 		(device) => device.kind === "videoinput",
+	// 	);
 
-		if (videoInputDevices.length === 0) {
-			return;
-		}
+	// 	if (videoInputDevices.length === 0) {
+	// 		return;
+	// 	}
 
-		$("#open-camera").show();
-		const codeReader = new BrowserMultiFormatReader();
-		let selectedDeviceId = videoInputDevices[0].deviceId;
-		const preferred = videoInputDevices.find(
-			(device) =>
-				/back|rear/i.test(device.label) &&
-				!/depth|ultrawide/i.test(device.label),
-		);
+	// 	$("#open-camera").show();
+	// 	const codeReader = new BrowserMultiFormatReader();
+	// 	let selectedDeviceId = videoInputDevices[0].deviceId;
+	// 	const preferred = videoInputDevices.find(
+	// 		(device) =>
+	// 			/back|rear/i.test(device.label) &&
+	// 			!/depth|ultrawide/i.test(device.label),
+	// 	);
 
-		if (preferred) {
-			selectedDeviceId = preferred.deviceId;
-		}
+	// 	if (preferred) {
+	// 		selectedDeviceId = preferred.deviceId;
+	// 	}
 
-		return await codeReader.decodeFromVideoDevice(
-			selectedDeviceId,
-			videoElement,
-			async (result, error, controls) => {
-				if (result) {
-					const empno = (
-						"00000" + (result.getText() / 4 - 92).toString()
-					).slice(-5);
-					const user = await directlogin(empno, 1);
-					//await barcodeLogin(result.getText());
-					if (user.status !== undefined) {
-						await showErrorMessage(user.message);
-						return false;
-					}
-					//$("#open-camera").hide();
-					controls.stop();
-					const url = await successLogin(user);
-					window.location.replace(url);
-				}
-				if (error) {
-					console.warn("อ่านผิดพลาด: ", error.message);
-				}
-			},
-		);
-		//return true;
-	} catch (err) {
-		console.error("เกิดข้อผิดพลาด:", err);
-	}
+	// 	return await codeReader.decodeFromVideoDevice(
+	// 		selectedDeviceId,
+	// 		videoElement,
+	// 		async (result, error, controls) => {
+	// 			if (result) {
+	// 				const empno = (
+	// 					"00000" + (result.getText() / 4 - 92).toString()
+	// 				).slice(-5);
+	// 				const user = await directlogin(empno, 1);
+	// 				//await barcodeLogin(result.getText());
+	// 				if (user.status !== undefined) {
+	// 					await showErrorMessage(user.message);
+	// 					return false;
+	// 				}
+	// 				//$("#open-camera").hide();
+	// 				controls.stop();
+	// 				const url = await successLogin(user);
+	// 				window.location.replace(url);
+	// 			}
+	// 			if (error) {
+	// 				console.warn("อ่านผิดพลาด: ", error.message);
+	// 			}
+	// 		},
+	// 	);
+	// 	//return true;
+	// } catch (err) {
+	// 	console.error("เกิดข้อผิดพลาด:", err);
+	// }
+	const scanner = new QRScanner({
+		onScan: ({ text, added, duplicate }) => {
+			console.log(text);
+		},
+	});
 }
 
 function splashScreen() {
@@ -290,31 +311,12 @@ function hideSplashScreen() {
 	document.body.style.overflow = "auto";
 }
 
-//Note for Socket.io
-//   console.log("Frontend application loaded!");
-//   console.log(process.env.APP_API);
-//   const socket = io(`http://localhost:3001`);
-//   socket.on("connect", () => {
-//     console.log("Connected to Socket.io server:", socket.id);
-//   });
-//   socket.on("disconnect", () => {
-//     console.log("Disconnected from Socket.io server.");
-//   });
-//   socket.on("orderViewing", (data) => {
-//     console.log("Order viewing update received:", data);
-// const orderId = data.orderId;
-// const viewerId = data.viewerId; // The socket ID of the user viewing
-// const isViewing = data.isViewing;
-// $(`#order-row-${orderId}`).each(function() {
-//     const $row = $(this);
-//     // Remove any existing indicators
-//     $row.removeClass('viewing-indicator');
-//     if (isViewing) {
-//         // Add indicator if this order is being viewed by someone else
-//         // We compare viewerId to socket.id to prevent showing "viewing" on own screen
-//         if (viewerId !== socket.id) {
-//             $row.addClass('viewing-indicator');
-//         }
-//     }
-// });
-//   });
+async function getAppsDB(id) {
+	const appData = await getApp(id);
+	if (appData) return appData;
+	const apps = await getAppsList();
+	apps.forEach(async (app) => {
+		await setApplication(app);
+	});
+	return apps.find((app) => app.APP_ID == id);
+}

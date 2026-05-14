@@ -236,7 +236,6 @@ $(document).on('focus click', '#txtLoc', function () {
 
 function insertfrm(data)
 {
- 
   return new Promise((resolve) => {
     $.ajax({
       url: host + "qaform/QA-CN/form/insertcn",

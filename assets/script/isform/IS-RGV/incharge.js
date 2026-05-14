@@ -1,62 +1,125 @@
 import { host } from "../../utils.js";
-import { tableOption } from "@amec/webasset/dataTable";
+import { tableOption, createTable } from "@amec/webasset/dataTable";
 $(document).ready(async function () {
-	const table = $("#inchargeTable").DataTable({
-		...tableOption,
-		ajax: {
-			url: host + "/isform/IS-RGV/main/getIncharge",
-			type: "GET",
-			dataSrc: "",
+
+	const data = await $.get(host + "/isform/IS-RGV/main/getIncharge");
+	console.log(data);
+	const columns = [
+		{
+			data: "PROGRAM",
+			title: "Program",
+			className: "border-2 border-gray-300",
 		},
-		columns: [
-			{
-				data: "PROGRAM",
-				title: "Program",
-				className: "border-2 border-gray-300",
-			},
-			{
-				data: "ORG_CODE",
-				title: "Org Code",
-				className: "border-2 border-gray-300 text-left",
-			},
-			{
-				data: "ORG_NAME",
-				title: "Org Name",
-				className: "border-2 border-gray-300 text-left",
-			},
-			{
-				data: "PIC",
-				title: "PIC",
-				className: "border-2 border-gray-300",
-				render: function (data, type, row) {
-					const value = data ?? "";
-					return `<span class="pic-text">${value}</span>
+		{
+			data: "ORG_CODE",
+			title: "Org Code",
+			className: "border-2 border-gray-300 text-left",
+		},
+		{
+			data: "ORG_NAME",
+			title: "Org Name",
+			className: "border-2 border-gray-300 text-left",
+		},
+		{
+			data: "PIC",
+			title: "PIC",
+			className: "border-2 border-gray-300",
+			render: function (data, type, row) {
+				const value = data ?? "";
+				return `<span class="pic-text">${value}</span>
                       <input class="pic-input input input-sm rounded-xl hidden max-w-25 border border-gray-400 px-1" value="${value}" />`;
-				},
-				createdCell: function (td) {
-					td.style.width = "10%"; // จำกัดความกว้างของ td
-					td.style.whiteSpace = "nowrap";
-				},
 			},
-			{
-				data: null,
-				title: "#",
-				className: "border-2 border-gray-300 text-center",
-				render: function (data, type, row) {
-					return `
+			createdCell: function (td) {
+				td.style.width = "10%"; // จำกัดความกว้างของ td
+				td.style.whiteSpace = "nowrap";
+			},
+		},
+		{
+			data: "SNAME",
+			title: "PIC Name",
+			className: "border-2 border-gray-300 text-left",
+		},
+		{
+			data: null,
+			title: "#",
+			className: "border-2 border-gray-300 text-center",
+			render: function (data, type, row) {
+				return `
             <button class="btn btn-sm rounded-lg btn-edit btn-warning">Edit</button>
             <button class="btn btn-sm rounded-lg btn-success hidden btn-save">Save</button>
             <button class="btn btn-sm rounded-lg btn-error hidden btn-cancel">Cancel</button>
             `;
-				},
-				createdCell: function (td) {
-					td.style.width = "15%"; // จำกัดความกว้างของ td
-					td.style.whiteSpace = "nowrap";
-				},
 			},
-		],
-		responsive: true,
+			createdCell: function (td) {
+				td.style.width = "15%"; // จำกัดความกว้างของ td
+				td.style.whiteSpace = "nowrap";
+			},
+		},
+	];
+
+	const table = await createTable({
+		data: data,
+		columns: columns,
+	}, {
+		id: "inchargeTable",
 	});
+
+	// const table = $("#inchargeTable").DataTable({
+	// 	...tableOption,
+	// 	ajax: {
+	// 		url: host + "/isform/IS-RGV/main/getIncharge",
+	// 		type: "GET",
+	// 		dataSrc: "",
+	// 	},
+	// 	columns: [
+	// 		{
+	// 			data: "PROGRAM",
+	// 			title: "Program",
+	// 			className: "border-2 border-gray-300",
+	// 		},
+	// 		{
+	// 			data: "ORG_CODE",
+	// 			title: "Org Code",
+	// 			className: "border-2 border-gray-300 text-left",
+	// 		},
+	// 		{
+	// 			data: "ORG_NAME",
+	// 			title: "Org Name",
+	// 			className: "border-2 border-gray-300 text-left",
+	// 		},
+	// 		{
+	// 			data: "PIC",
+	// 			title: "PIC",
+	// 			className: "border-2 border-gray-300",
+	// 			render: function (data, type, row) {
+	// 				const value = data ?? "";
+	// 				return `<span class="pic-text">${value}</span>
+    //                   <input class="pic-input input input-sm rounded-xl hidden max-w-25 border border-gray-400 px-1" value="${value}" />`;
+	// 			},
+	// 			createdCell: function (td) {
+	// 				td.style.width = "10%"; // จำกัดความกว้างของ td
+	// 				td.style.whiteSpace = "nowrap";
+	// 			},
+	// 		},
+	// 		{
+	// 			data: null,
+	// 			title: "#",
+	// 			className: "border-2 border-gray-300 text-center",
+	// 			render: function (data, type, row) {
+	// 				return `
+    //         <button class="btn btn-sm rounded-lg btn-edit btn-warning">Edit</button>
+    //         <button class="btn btn-sm rounded-lg btn-success hidden btn-save">Save</button>
+    //         <button class="btn btn-sm rounded-lg btn-error hidden btn-cancel">Cancel</button>
+    //         `;
+	// 			},
+	// 			createdCell: function (td) {
+	// 				td.style.width = "15%"; // จำกัดความกว้างของ td
+	// 				td.style.whiteSpace = "nowrap";
+	// 			},
+	// 		},
+	// 	],
+	// 	responsive: true,
+	// });
 
 	// กด Edit -> ซ่อน span แสดง input + ปุ่ม Save
 	$("#inchargeTable tbody").on("click", ".btn-edit", function () {
@@ -105,8 +168,9 @@ $(document).ready(async function () {
 				// $(".container").addClass("cursor-wait");
 			},
 			success: function (res) {
-				// console.log(res);
-				table.ajax.reload(null, false);
+				$.get(host + "/isform/IS-RGV/main/getIncharge", function (newData) {
+					table.clear().rows.add(newData).draw(false);
+				});
 			},
 			complete: function () {
 				// $(".container").removeClass("cursor-wait");
