@@ -97,26 +97,32 @@ $(document).ready(function () {
 
         renderFile(att = []) {
             const formno = $('#form_no').val();
+            const baseUrl = this.baseUrl || '';
+            console.log('base url =', baseUrl);
             const $fileList = $('#v_file_list').empty();
+
             if (!att.length) {
                 $fileList.html('-');
                 return;
             }
 
             att.forEach(file => {
-                const safeName = file.FILENAME || '-';
-                const $link = $(`<a href="javascript:void(0)" class="text-primary underline">${safeName}</a>`);
+                const filename = file.FILENAME || '-';
+                const url =
+                    `${baseUrl}mfg-edr/maon_edr/preview_file/` +
+                    `${encodeURIComponent(formno)}/` +
+                    `${encodeURIComponent(filename)}/` +
+                    `${encodeURIComponent(filename)}`;
 
-                $link.on('click', () => {
-                    downloadOrOpenFile({
-                        baseDir: "//amecnas/AMECWEB/File/development/Form/MFG/MFG-EDR//" + formno,
-                        mode: "open",
-                        storedName: file.FILENAME,
-                        originalName: file.FILENAME,
-                    });
-                });
-
-                $fileList.append($('<div>').append($link));
+                $fileList.append(`
+                    <div>
+                        <a href="${url}"
+                        target="_blank"
+                        class="text-blue-700 underline btn btn-sm rounded-lg">
+                            ${filename}
+                        </a>
+                    </div>
+                `);
             });
         },
 
