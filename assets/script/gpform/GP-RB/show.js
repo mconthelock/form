@@ -34,7 +34,7 @@ $(async function () {
   const getShowdata = await getShowData(form); //รูปแบบ stamp ปกติ
   console.log(getShowdata);
 
-  const getShowCusdata = await getShowCusData(form);//รูปแบบพิเศษ
+  const getShowCusdata = await getShowCusData(form); //รูปแบบพิเศษ
   console.log(getShowCusdata);
 
   const purpose = await getData();
@@ -79,7 +79,6 @@ $(async function () {
         actionsForm: false,
       });
       break;
-
   }
   $("#sentApprove").html(action);
 
@@ -93,7 +92,7 @@ $(async function () {
     }
   }
 
- $('input[name="PURPOSE_ID"]').prop('disabled', true);
+  $('input[name="PURPOSE_ID"]').prop("disabled", true);
   console.log(getShowdata.NAME_STAMP);
 
   // เช็คว่ามีข้อมูล Other Stamp หรือไม่
@@ -112,6 +111,9 @@ $(async function () {
     String(getShowCusdata?.NRUNNO || "").trim() ===
     String(getShowdata?.NRUNNO || "").trim();
 
+  console.log(hasCustomStamp);
+  console.log(isSameRunNo);
+
   if (hasCustomStamp && isSameRunNo) {
     $("#radioOther").prop({
       checked: true,
@@ -123,8 +125,7 @@ $(async function () {
       disabled: true,
     });
 
-
-    $("#radioOtherBox").hide();
+    $("#radioOtherBox").show();
     $("#radioStandardBox").hide();
 
     // ปิด Standard Stamp Section
@@ -145,26 +146,30 @@ $(async function () {
       .find("input, textarea")
       .prop("disabled", true);
 
-  // เอาข้อมูล Purpose จาก getShowdata มาโชว์
-  if (getShowdata.PURPOSE_ID) {
-    $(`#purpose_${getShowdata.PURPOSE_ID}`).prop("checked", true);
+    // เอาข้อมูล Purpose จาก getShowdata มาโชว์
+    if (getShowdata.PURPOSE_ID) {
+      $(`#purpose_${getShowdata.PURPOSE_ID}`).prop("checked", true);
 
-    if (String(getShowdata.PURPOSE_ID) === "4") {
-      $("#otherSelect")
-        .prop("disabled", true)
-        .prop("readonly", true)
-        .val(getShowdata.PURPOSE_OTHER || "");
+      if (String(getShowdata.PURPOSE_ID) === "4") {
+        $("#otherSelect")
+          .prop("disabled", true)
+          .prop("readonly", true)
+          .val(getShowdata.PURPOSE_OTHER || "");
+      }
     }
+    console.log(getShowCusdata.NRUNNO);
+    console.log(getShowdata.PURPOSE_ID);
+
+    // เอาข้อมูล Other Stamp จาก getShowCusdata มาโชว์
+    $("#otherQty").val(getShowCusdata.QTY);
+    $("#otherAttachment").val(getShowCusdata.NAME_STAMP);
+    $("#otherRemark").val(getShowCusdata.REMARK);
+
+    console.log(getShowCusdata.QTY);
+    console.log(getShowCusdata.REMARK);
+
+    return;
   }
-  console.log(getShowCusdata.NRUNNO);
-
-  // เอาข้อมูล Other Stamp จาก getShowCusdata มาโชว์
-  $("#otherQty").val(getShowCusdata.QTY_STAMP);
-  $("#otherAttachment").val(getShowCusdata.NAME_STAMP);
-  $("#otherRemark").val(getShowCusdata.REMARK);
-
-  return;
-}
 
   if (hasStandardStamp) {
     $("#radioStandard").prop({
@@ -179,16 +184,13 @@ $(async function () {
 
     // show Standard
     $("#radioStandardBox").show();
-
-    // hide Other
     $("#radioOtherBox").hide();
 
     // เปิด Standard Stamp Section
-    $("#standardStampSection")
-      .css({
-        opacity: "1",
-        "pointer-events": "auto",
-      });
+    $("#standardStampSection").css({
+      opacity: "1",
+      "pointer-events": "auto",
+    });
 
     // ปิด Other Stamp Section
     $("#otherStampSection")
@@ -248,22 +250,24 @@ $(async function () {
 
   if (input1PosCodes.includes(firstPosCode)) {
     $("#nameInput1").val(getShowdata.NAME_STAMP || "");
-    $("#name").text(getShowdata.NAME_STAMP || ""); /*แสดงชื่อใต้สแตมป์ในวงกลมสีน้ำเงิน*/
+    $("#name").text(
+      getShowdata.NAME_STAMP || "",
+    ); /*แสดงชื่อใต้สแตมป์ในวงกลมสีน้ำเงิน*/
     $("#nameInput2").val("");
     // แถวบน active / แถวล่างจาง
     $("#rowStamp1").css("opacity", "1");
     $("#rowStamp2").css("opacity", "0.3");
-
   } else if (input2PosCodes.includes(firstPosCode)) {
     $("#nameInput1").val("");
     $("#nameInput2").val(getShowdata.NAME_STAMP || "");
-    $("#divisionDisplay").text(empData.SDIV || ""); /*แสดงชื่อแผนกใต้สแตมป์ในวงกลมสีน้ำเงิน*/
+    $("#divisionDisplay").text(
+      empData.SDIV || "",
+    ); /*แสดงชื่อแผนกใต้สแตมป์ในวงกลมสีน้ำเงิน*/
     console.log(empData.SDIV);
     $("#name2").text(getShowdata.NAME_STAMP || "");
     // แถวบนจาง / แถวล่าง active
     $("#rowStamp1").css("opacity", "0.3");
     $("#rowStamp2").css("opacity", "1");
-
   } else {
     // กรณีไม่เจอ position code จะเลือกให้ใส่ช่องแรกไว้ก่อน
     $("#nameInput1").val(getShowdata.NAME_STAMP || "");
@@ -282,7 +286,6 @@ $(async function () {
 });
 
 // other stamp
-
 
 async function getData() {
   return await fetchUtils({
