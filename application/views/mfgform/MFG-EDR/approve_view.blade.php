@@ -176,7 +176,7 @@
 
 </style>
 
-<input type="hidden" id="base_url" value="<?= base_url(); ?>">
+<input type="text" id="base_url" value="<?= base_url(); ?>">
 <input type="hidden" id="nfrmno" value="{{ $NFRMNO ?? '' }}">
 <input type="hidden" id="vorgno" value="{{ $VORGNO ?? '' }}">
 <input type="hidden" id="cyear" value="{{ $CYEAR ?? '' }}">
