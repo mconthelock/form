@@ -128,7 +128,6 @@ $(async function () {
     });
 
     $("#radioOtherBox").show();
-    $("#radioOtherBox").show();
     $("#radioStandardBox").hide();
     // ปิด Standard Stamp Section
     $("#standardStampSection")
@@ -149,9 +148,6 @@ $(async function () {
       .prop("disabled", false);
 
     // เอาข้อมูล Purpose จาก getShowdata มาโชว์
-    if (getShowdata.PURPOSE_ID) {
-      $(`#purpose_${getShowdata.PURPOSE_ID}`).prop("checked", true);
-      // เอาข้อมูล Purpose จาก getShowdata มาโชว์
       if (getShowdata.PURPOSE_ID) {
         $(`#purpose_${getShowdata.PURPOSE_ID}`).prop("checked", true);
 
@@ -284,8 +280,6 @@ $(async function () {
 
     $("#radioOther").prop("disabled", hasNameInput1 || hasNameInput2);
 
-
-  }
 });
 
 // other stamp
