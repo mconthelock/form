@@ -34,7 +34,7 @@ $(async function () {
   const getShowdata = await getShowData(form); //รูปแบบ stamp ปกติ
   console.log(getShowdata);
 
-  const getShowCusdata = await getShowCusData(form);//รูปแบบพิเศษ
+  const getShowCusdata = await getShowCusData(form); //รูปแบบพิเศษ
   console.log(getShowCusdata);
 
   const purpose = await getData();
@@ -79,7 +79,6 @@ $(async function () {
         actionsForm: false,
       });
       break;
-
   }
   $("#sentApprove").html(action);
 
@@ -129,6 +128,7 @@ $(async function () {
     });
 
     $("#radioOtherBox").show();
+    $("#radioOtherBox").show();
     $("#radioStandardBox").hide();
     // ปิด Standard Stamp Section
     $("#standardStampSection")
@@ -148,6 +148,9 @@ $(async function () {
       .find("input, textarea")
       .prop("disabled", false);
 
+    // เอาข้อมูล Purpose จาก getShowdata มาโชว์
+    if (getShowdata.PURPOSE_ID) {
+      $(`#purpose_${getShowdata.PURPOSE_ID}`).prop("checked", true);
     // เอาข้อมูล Purpose จาก getShowdata มาโชว์
     if (getShowdata.PURPOSE_ID) {
       $(`#purpose_${getShowdata.PURPOSE_ID}`).prop("checked", true);
@@ -185,11 +188,10 @@ $(async function () {
     $("#radioOtherBox").hide();
 
     // เปิด Standard Stamp Section
-    $("#standardStampSection")
-      .css({
-        opacity: "1",
-        "pointer-events": "auto",
-      });
+    $("#standardStampSection").css({
+      opacity: "1",
+      "pointer-events": "auto",
+    });
 
     // ปิด Other Stamp Section
     $("#otherStampSection")
@@ -249,22 +251,24 @@ $(async function () {
 
   if (input1PosCodes.includes(firstPosCode)) {
     $("#nameInput1").val(getShowdata.NAME_STAMP || "");
-    $("#name").text(getShowdata.NAME_STAMP || ""); /*แสดงชื่อใต้สแตมป์ในวงกลมสีน้ำเงิน*/
+    $("#name").text(
+      getShowdata.NAME_STAMP || "",
+    ); /*แสดงชื่อใต้สแตมป์ในวงกลมสีน้ำเงิน*/
     $("#nameInput2").val("");
     // แถวบน active / แถวล่างจาง
     $("#rowStamp1").css("opacity", "1");
     $("#rowStamp2").css("opacity", "0.3");
-
   } else if (input2PosCodes.includes(firstPosCode)) {
     $("#nameInput1").val("");
     $("#nameInput2").val(getShowdata.NAME_STAMP || "");
-    $("#divisionDisplay").text(empData.SDIV || ""); /*แสดงชื่อแผนกใต้สแตมป์ในวงกลมสีน้ำเงิน*/
+    $("#divisionDisplay").text(
+      empData.SDIV || "",
+    ); /*แสดงชื่อแผนกใต้สแตมป์ในวงกลมสีน้ำเงิน*/
     console.log(empData.SDIV);
     $("#name2").text(getShowdata.NAME_STAMP || "");
     // แถวบนจาง / แถวล่าง active
     $("#rowStamp1").css("opacity", "0.3");
     $("#rowStamp2").css("opacity", "1");
-
   } else {
     // กรณีไม่เจอ position code จะเลือกให้ใส่ช่องแรกไว้ก่อน
     $("#nameInput1").val(getShowdata.NAME_STAMP || "");
@@ -283,7 +287,6 @@ $(async function () {
 });
 
 // other stamp
-
 
 async function getData() {
   return await fetchUtils({
