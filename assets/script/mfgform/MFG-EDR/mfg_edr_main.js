@@ -600,7 +600,8 @@ $(document).ready(function () {
                 CYEAR: String(webflowData.CYEAR || $('#cyear').val()),
                 CYEAR2: String(webflowData.CYEAR2),
                 NRUNNO: Number(webflowData.NRUNNO),
-
+                
+                REQBY: String($('#request_by').val() || ''),
                 TID: Number($('#job_type').val()) || null,
                 SSECCODE: String($('#sseccode').val() || ''),
                 CID: Number($('#cause').val()) || null,
@@ -666,7 +667,7 @@ $(document).ready(function () {
             }
 
             this.setLoading(true);
-
+            showLoader({ show: true });
             try {
                 const webflow = await this.createWebflowForm();
                 const webflowData = webflow?.data || {};
@@ -687,6 +688,7 @@ $(document).ready(function () {
                 console.error('SUBMIT FORM ERROR:', error);
                 showMessage(error?.message || "เกิดข้อผิดพลาดระหว่างบันทึกข้อมูล !!!", "error");
             } finally {
+                showLoader({ show: false });
                 this.setLoading(false);
             }
         },

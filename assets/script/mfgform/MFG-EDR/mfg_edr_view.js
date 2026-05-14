@@ -22,6 +22,7 @@ $(document).ready(function () {
         },
 
         async loadData() {
+            showLoader({ show: true });
             try {
                 const urlParams = new URLSearchParams(window.location.search);
                 const getVal = (inputId, paramNames = []) => {
@@ -73,8 +74,11 @@ $(document).ready(function () {
                 this.renderCorrective(data.corrective || []);
                 this.renderPreventive(data.preventive || []);
             } catch (err) {
+                showLoader({ show: false });
                 console.error(err);
                 alert('Load data failed');
+            }finally {
+                showLoader({ show: false });
             }
         },
 
@@ -109,14 +113,14 @@ $(document).ready(function () {
             att.forEach(file => {
                 const filename = file.FILENAME || '-';
                 const url =
-                    `${baseUrl}mfg-edr/maon_edr/preview_file/` +
+                    `${baseUrl}mfg-edr/main_edr/preview_file/` +
                     `${encodeURIComponent(formno)}/` +
                     `${encodeURIComponent(filename)}/` +
                     `${encodeURIComponent(filename)}`;
 
                 $fileList.append(`
                     <div>
-                        <a href="${url}"
+                        <a href="#"
                         target="_blank"
                         class="text-blue-700 underline btn btn-sm rounded-lg">
                             ${filename}
@@ -484,16 +488,7 @@ $(document).ready(function () {
             return payload;
         },
 
-        showLoading() {
-            Swal.fire({
-                title: 'กำลังดำเนินการ...',
-                html: 'กรุณารอสักครู่',
-                allowOutsideClick: false,
-                allowEscapeKey: false,
-                showConfirmButton: false,
-                didOpen: () => Swal.showLoading(),
-            });
-        },
+        
     };
 
     const rowConfig = {
