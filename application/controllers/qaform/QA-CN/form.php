@@ -429,6 +429,7 @@ class form extends MY_Controller{
                 $sqlOra = "update flow set CSTEPST = '3' , CAPVSTNO = '0' , DAPVDATE ='' , CAPVTIME = '' , VREMARK = ''  where NFRMNO = '".$nfrmno."' AND VORGNO = '".$vorgno."' and CYEAR = '".$cyear."' and CYEAR2 = '".$cyear2."' and NRUNNO = '".$nrunno."' and CSTART = '1'";
                 $this->cn->execsql($sqlOra);
 
+
             }else if($act == "returnqastaff")
             {
                 $sqlOra = "update flow set CSTEPST = '1' , VREMARK = '' where NFRMNO = '".$nfrmno."' AND VORGNO = '".$vorgno."' and CYEAR = '".$cyear."' and CYEAR2 = '".$cyear2."' and NRUNNO = '".$nrunno."' and CSTEPST = '2'";
@@ -535,7 +536,7 @@ class form extends MY_Controller{
             $message = "Action successfully.";
          }catch ( Exception $e) {
             $status = false;
-            $message = "Failed to save data.";
+            $message = "Failed to save data.". $e->getMessage();
         } finally {
             $res = [
                 'status' => $status,
