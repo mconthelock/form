@@ -92,26 +92,113 @@ $(async function () {
         .val(getShowdata.PURPOSE_OTHER || "");
     }
   }
-  // Disable all radio buttons to prevent editing
-  $('input[name="PURPOSE_ID"]').prop('disabled', true);
+
+ $('input[name="PURPOSE_ID"]').prop('disabled', true);
   console.log(getShowdata.NAME_STAMP);
-  // บังคับให้เป็น Standard และปิด Other
-  $("#radioStandard").prop({ checked: true, disabled: true });
-  $("#radioOther").prop("disabled", true);
 
-  // ปิดฝั่ง Other stamp ให้ดูจาง
-  $("#standardStampSection").css({
-    opacity: "1",
-    "pointer-events": "auto",
-  });
+  // เช็คว่ามีข้อมูล Other Stamp หรือไม่
+  const hasCustomStamp =
+    getShowCusdata &&
+    Object.keys(getShowCusdata).length > 0 &&
+    getShowCusdata.NRUNNO;
 
-  $("#otherStampSection")
-    .css({
-      opacity: "0.4",
-      "pointer-events": "none",
-    })
-    .find("input, textarea")
-    .prop("disabled", true);
+  // เช็คว่ามีข้อมูล Standard Stamp หรือไม่
+  const hasStandardStamp =
+    getShowdata &&
+    Object.keys(getShowdata).length > 0 &&
+    getShowdata.NAME_STAMP;
+
+  const isSameRunNo =
+    String(getShowCusdata?.NRUNNO || "").trim() ===
+    String(getShowdata?.NRUNNO || "").trim();
+
+  if (hasCustomStamp && isSameRunNo) {
+    $("#radioOther").prop({
+      checked: true,
+      disabled: true,
+    });
+
+    $("#radioStandard").prop({
+      checked: false,
+      disabled: true,
+    });
+
+
+    $("#radioOtherBox").hide();
+    $("#radioStandardBox").hide();
+
+    // ปิด Standard Stamp Section
+    $("#standardStampSection")
+      .css({
+        opacity: "0.4",
+        "pointer-events": "none",
+      })
+      .find("input, textarea")
+      .prop("disabled", true);
+
+    // เปิด Other Stamp Section เพื่อโชว์ข้อมูล แต่ไม่ให้แก้
+    $("#otherStampSection")
+      .css({
+        opacity: "1",
+        "pointer-events": "auto",
+      })
+      .find("input, textarea")
+      .prop("disabled", true);
+
+  // เอาข้อมูล Purpose จาก getShowdata มาโชว์
+  if (getShowdata.PURPOSE_ID) {
+    $(`#purpose_${getShowdata.PURPOSE_ID}`).prop("checked", true);
+
+    if (String(getShowdata.PURPOSE_ID) === "4") {
+      $("#otherSelect")
+        .prop("disabled", true)
+        .prop("readonly", true)
+        .val(getShowdata.PURPOSE_OTHER || "");
+    }
+  }
+  console.log(getShowCusdata.NRUNNO);
+
+  // เอาข้อมูล Other Stamp จาก getShowCusdata มาโชว์
+  $("#otherQty").val(getShowCusdata.QTY_STAMP);
+  $("#otherAttachment").val(getShowCusdata.NAME_STAMP);
+  $("#otherRemark").val(getShowCusdata.REMARK);
+
+  return;
+}
+
+  if (hasStandardStamp) {
+    $("#radioStandard").prop({
+      checked: true,
+      disabled: true,
+    });
+
+    $("#radioOther").prop({
+      checked: false,
+      disabled: true,
+    });
+
+    // show Standard
+    $("#radioStandardBox").show();
+
+    // hide Other
+    $("#radioOtherBox").hide();
+
+    // เปิด Standard Stamp Section
+    $("#standardStampSection")
+      .css({
+        opacity: "1",
+        "pointer-events": "auto",
+      });
+
+    // ปิด Other Stamp Section
+    $("#otherStampSection")
+      .css({
+        opacity: "0.4",
+        "pointer-events": "none",
+      })
+      .find("input, textarea")
+      .prop("disabled", true);
+  }
   // แปลง SPOSCODE ให้เป็น string และเติม 0 ด้านหน้า ถ้าเป็นเลขหลักเดียว เช่น 2 => 02
   const PosiCodeArray = Array.isArray(empData.SPOSCODE)
     ? empData.SPOSCODE
@@ -220,9 +307,9 @@ async function getShowCusData(form) {
   });
 }
 
-  async function getEmpData(empno) {
-    return await fetchUtils({
-      url: `${process.env.APP_API}/users/${empno}`,
-      method: "GET",
-    });
-  }
+async function getEmpData(empno) {
+  return await fetchUtils({
+    url: `${process.env.APP_API}/users/${empno}`,
+    method: "GET",
+  });
+}
