@@ -1,7 +1,7 @@
 @extends('layouts/template')
 
 @section('contents')
-    <input type="text" id="deptid" value="{{ $department['link'] }}" class="hidden" />
+    <input type="text" id="deptid" value="{{ $department['id'] }}" class="hidden" />
     <div class="space-y-3 mb-8">
         <div>
             <h1 class="text-3xl text-primary font-bold line-clamp-1" id="page-title">
@@ -14,10 +14,8 @@
     </div>
 
     <div class="flex gap-5 w-full mb-20">
-        <div class="flex-1" id="formlist">
-
-        </div>
-        <div class="flex-none w-80">
+        <div class="flex-1" id="formlist"></div>
+        <div class="flex-none w-96">
             <div class="bg-primary/10 rounded-lg p-5">
                 <div>
                     <h1>Recent Created Forms</h1>

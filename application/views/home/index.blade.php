@@ -48,7 +48,7 @@
         @for ($i = 0; $i < 8; $i++)
             <div
                 class="card bg-white
-            bordered w-full h-28 shadow-xl flex gap-3 flex-row items-center p-3 lg:w-72">
+            border border-slate-300 w-full h-28 shadow-xl flex gap-3 flex-row items-center p-3 lg:w-72">
                 <div class="flex-none skeleton h-16 w-16 rounded-full"></div>
                 <div class="flex-1 flex flex-col gap-3">
                     <div class="skeleton h-8 w-32"></div>
@@ -59,7 +59,6 @@
     </div>
     {{-- Other Link --}}
     <h1 class="text-3xl text-primary font-bold mb-5 border-b-primary border-b-4 pb-2">Other Link</h1>
-    {{-- md, lg: 2cols,  xl: 4 --}}
     <div class="flex flex-col gap-8 mb-5 lg:flex-row lg:flex-wrap">
         @include('home/links', ['links' => $links['electronic']])
         @include('home/links', ['links' => $links['utility']])

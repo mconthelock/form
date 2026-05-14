@@ -5,6 +5,7 @@ import {
     getAmecweb,
     setAmecweb,
 } from '@amec/webasset/indexDB';
+import { getApplication } from '@amec/webasset/api/docinv';
 import { hexToRgb } from '../utils';
 
 //สร้าง Link ของ Other Links section
@@ -113,7 +114,7 @@ export async function setRecentApps() {
 }
 
 export async function setAmecwebLinks() {
-    const amecweb = await amecwebData($('#user-login').attr('empno'));
+    let amecweb = await amecwebData($('#user-login').attr('empno'));
     if (amecweb.length == 0) {
         $('#amecweb_links').html(
             `<h1 class="text-lg italic text-gray-400">No access right any system</h1>`,
@@ -122,9 +123,14 @@ export async function setAmecwebLinks() {
     }
     const obj = $('#amecweb_links');
     obj.html('');
+    amecweb = amecweb.sort(
+        (a, b) => a.application.APP_LABEL - b.application.APP_LABEL,
+    );
     amecweb.map(async (val) => {
         const app = val.application;
         const groups = val.appsgroups;
+        let appdata =
+            app.APP_ICON == null ? null : await getApplication(app.APP_ID);
         const url = `${process.env.APP_HOST}/${app.APP_LOCATION}/${
             app.APP_TYPE == '1' ? 'authen/move/' : ''
         }`;
@@ -141,10 +147,10 @@ export async function setAmecwebLinks() {
                     ? app.APP_LABEL == null
                         ? ''
                         : `<span class="font-bold text-2xl">${app.APP_LABEL}</span>`
-                    : `<img src="${app.APP_ICON}" class="w-16 h-16" />`
+                    : `<img src="${appdata.APP_ICON}" class="w-16 h-16" />`
             }
         </div>`;
-        const str = `<a class="card bg-white bordered w-full h-auto shadow-xl flex gap-3 flex-row items-center p-3 lg:w-72 lg:max-w-[18rem] links-stamp"
+        const str = `<a class="card bg-white border border-slate-300 w-full h-auto shadow-xl flex gap-3 flex-row items-center p-3 lg:w-72 lg:max-w-[18rem] links-stamp"
         href="${url}"
         data-id="${app.APP_ID}"
         data-color="${app.APP_COLOR}"

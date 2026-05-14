@@ -30,8 +30,6 @@ $(document).ready(async function () {
 });
 
 function getPageTitle(data) {
-    console.log(data);
-
     const title = [
         {
             id: 0,

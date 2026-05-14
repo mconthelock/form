@@ -1,7 +1,7 @@
 import { showLoader } from '@amec/webasset/preloader';
 import { showMessage } from '@amec/webasset/utils';
 import { initApp, tableOption } from '../utils';
-import { getFormMaster } from './data';
+import { getFormMaster } from '../formmst/data';
 
 $(document).ready(async function () {
     showLoader();
@@ -48,16 +48,14 @@ async function createFormList() {
 }
 
 async function setFormList(data, group) {
-    console.log(data);
-
     const filtered =
         group == null
             ? data.filter((item) => item.formmstGroup == null)
             : data.filter((item) => item.formmstGroup?.VGROUP === group);
-    let str = `<ul class="list bg-base-100 rounded-box shadow-md border border-slate-300 mb-8 px-6 pb-5">
+    let str = `<ul class="list bg-base-100 rounded-box shadow-md border border-slate-300 mb-8 p-6 pb-5 gap-2">
         <li class="p-4 pb-2 text-xl text-primary font-black tracking-wide">${filtered[0].formmstGroup?.VGROUPNAME || 'General'}</li>`;
     filtered.forEach((item) => {
-        str += `<li class="list-row hover:bg-base-200 cursor-pointer create-form-detail" data-url="${item.VFORMPAGE}">
+        str += `<li class="list-row border border-white cursor-pointer hover:bg-base-300 hover:border-slate-300 create-form-detail" data-url="${item.VFORMPAGE}">
             <div class="text-4xl font-thin opacity-30 tabular-nums min-w-37">${item.VANAME}</div>
             <div class="list-col-grow">
                 <div>${item.VNAME}</div>
@@ -81,7 +79,6 @@ $(document).on('click', '.create-form-detail', async function (e) {
         //2. URL ที่เรียกจาก project webflow
         //3. URL ที่เรียกจาก ASP
         let url = $(this).attr('data-url');
-        //if url มี index.asp
         if (url.includes('index.asp')) {
             url = `http://webflow/${url}`;
         }

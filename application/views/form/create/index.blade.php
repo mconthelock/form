@@ -12,20 +12,19 @@
         </div>
     </div>
 
-
     <div class="flex flex-col w-full px-4 mt-5 mb-20">
         <div class="flex">
             <div class="flex-1">
                 <div class="flex flex-wrap justify-start gap-5">
                     @foreach ($department as $dept)
-                        <a class="bg-white hover:shadow-lg hover:bg-primary/20 rounded-lg transition-shadow"
-                            href="{{ base_url() . 'webform/form/createdetail/' . $dept['link'] }}">@include('form/create/deptcard', $dept)</a>
+                        <a class="bg-white border border-slate-300 hover:shadow-lg hover:bg-primary/20 rounded-lg transition-shadow"
+                            href="{{ base_url() . 'webform/form/createdetail/' . $dept['id'] }}">@include('form/create/deptcard', $dept)</a>
                     @endforeach
                 </div>
             </div>
-            <div class="flex-none min-w-80 bg-primary/10 rounded-lg p-5">
+            <div class="flex-none w-96 bg-primary/10 rounded-lg p-5">
                 <div>
-                    <h1>Recent Created Forms</h1>
+                    <h1>Recent Created Forms--</h1>
                 </div>
             </div>
         </div>
