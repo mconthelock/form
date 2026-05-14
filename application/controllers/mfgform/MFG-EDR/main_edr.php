@@ -153,7 +153,7 @@ class main_edr extends MY_Controller {
     }
 
     public function preview_file($formno, $filename){
-        $filepath = $this->upload_path."/".$formno;
+        $filepath = rtrim($this->upload_path, "/\\") . DIRECTORY_SEPARATOR . $formno;
         $this->downloadFile($filename, $filepath);
     }
 }

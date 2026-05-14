@@ -112,17 +112,13 @@ $(document).ready(function () {
             }
 
             att.forEach(file => {
-                const filename = file.FILENAME || '-';
+                const filename = file.FILENAME;
                 const url = `${baseUrl}mfgform/MFG-EDR/main_edr/preview_file/` + formno + '/' + encodeURIComponent(filename);
                 console.log('FILE URL =', url);
 
                 $fileList.append(`
                     <div>
-                        <a href="${url}"
-                        target="_blank"
-                        class="text-blue-700 underline btn btn-sm rounded-lg">
-                            ${filename}
-                        </a>
+                        <a href="${url}" target="_blank" class="text-blue-700 underline btn btn-sm rounded-lg"> ${filename} </a>
                     </div>
                 `);
             });
