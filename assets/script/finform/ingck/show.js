@@ -310,21 +310,6 @@ function renderActionStatus(header = {}) {
     header.DOC_STATUS ||
     header.WF_STATUS ||
     "";
-
-  $("#actionform").html(`
-    <div class="alert alert-info shadow-sm">
-      <div>
-        <p class="font-bold">Read-only document</p>
-        <p class="text-sm">
-          ${
-            status
-              ? `Current status: <span class="font-extrabold">${escapeHtml(status)}</span>`
-              : "This page is for viewing submitted information only."
-          }
-        </p>
-      </div>
-    </div>
-  `);
 }
 
 /*--------------------TABLE FUNCTION--------------------*/

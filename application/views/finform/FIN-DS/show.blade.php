@@ -39,11 +39,6 @@
             font-weight: 700;
         }
 
-        .show-mode-banner {
-            border: 1px solid rgba(125, 211, 252, 0.55);
-            background: linear-gradient(90deg, rgba(240, 249, 255, 0.9), rgba(255, 255, 255, 0.95));
-        }
-
         #stampTable thead th {
             background: linear-gradient(180deg, rgba(240, 249, 255, 1), rgba(224, 242, 254, 0.8));
             color: #0f172a;
@@ -82,18 +77,6 @@
             font-weight: 900;
             text-align: right;
         }
-
-        .readonly-watermark {
-            position: absolute;
-            top: 1rem;
-            right: 1rem;
-            opacity: 0.055;
-            font-size: 4rem;
-            font-weight: 900;
-            letter-spacing: 0.15em;
-            pointer-events: none;
-            user-select: none;
-        }
     </style>
 @endsection
 
@@ -103,8 +86,6 @@
 
             {{-- Page Header --}}
             <div class="card show-card-header shadow-md rounded-2xl mb-5 relative overflow-hidden">
-                <div class="readonly-watermark">SHOW</div>
-
                 <div class="card-body px-8 py-5">
                     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                         <div class="flex items-center gap-4">
@@ -125,17 +106,10 @@
                                 <h1 class="text-2xl font-extrabold text-slate-800 tracking-tight">
                                     Requisition Duty Stamp Detail
                                 </h1>
-                                <p class="text-sm text-sky-700 font-bold mt-0.5">
-                                    View-only mode / หน้าแสดงรายละเอียดเอกสาร
-                                </p>
                             </div>
                         </div>
 
                         <div class="flex items-center gap-2">
-                            <span class="badge bg-sky-100 text-sky-800 border-sky-200 badge-lg font-bold px-5 py-4 text-sm shadow-sm">
-                                VIEW ONLY
-                            </span>
-
                             <span class="badge badge-outline badge-lg font-bold px-5 py-4 text-sm shadow-sm border-slate-300 text-slate-600"
                                   id="Pos">
                             </span>
@@ -150,21 +124,6 @@
             {{-- Main Content --}}
             <div class="card bg-white shadow-xl border border-slate-200 rounded-2xl overflow-hidden">
                 <div class="card-body px-6 py-8 md:px-10">
-
-                    <div class="show-mode-banner rounded-2xl px-6 py-4 mb-5 shadow-sm flex items-start gap-3">
-                        <div class="badge bg-sky-100 text-sky-700 border-sky-200 badge-sm mt-0.5">
-                            INFO
-                        </div>
-
-                        <div>
-                            <p class="font-extrabold text-slate-800">
-                                This document is read-only
-                            </p>
-                            <p class="text-sm text-slate-500">
-                                หน้านี้ใช้สำหรับตรวจสอบรายละเอียดเท่านั้น ไม่สามารถเพิ่ม แก้ไข หรือลบข้อมูลได้
-                            </p>
-                        </div>
-                    </div>
 
                     <form action="#" id="form" class="space-y-8">
 
@@ -426,21 +385,8 @@
                             </div>
                         </section>
 
-                        <div class="divider before:bg-slate-200 after:bg-slate-200"></div>
-
-                        {{-- Status Area --}}
-                        <div id="actionform">
-                            <div class="alert bg-sky-50 text-sky-900 border border-sky-200 shadow-sm">
-                                <div>
-                                    <p class="font-bold">
-                                        Read-only document
-                                    </p>
-                                    <p class="text-sm">
-                                        This page is for viewing submitted information only.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
+                        {{-- Action Form Container (Empty but preserved for JS targeting) --}}
+                        <div id="actionform"></div>
 
                     </form>
                 </div>

@@ -235,32 +235,32 @@ $(document).on("click", "#btnRequest", async function (e) {
       let hasQty = false;
 
       Object.keys(row).forEach((key) => {
-  if (!key.startsWith("DUTY_QTY")) return;
+        if (!key.startsWith("DUTY_QTY")) return;
 
-  const index = key.replace("DUTY_QTY", "");
-  const qty = Number(row[`DUTY_QTY${index}`] || 0);
+        const index = key.replace("DUTY_QTY", "");
+        const qty = Number(row[`DUTY_QTY${index}`] || 0);
 
-  if (qty > 0) {
-    hasQty = true;
+        if (qty > 0) {
+          hasQty = true;
 
-    const dutyValue = dutyStampList[Number(index) - 1]?.DUTY_VALUE;
+          const dutyValue = dutyStampList[Number(index) - 1]?.DUTY_VALUE;
 
-    if (
-      dutyValue === undefined ||
-      dutyValue === null ||
-      dutyValue === ""
-    ) {
-      throw new Error(`Duty value not found in row ${i + 1}`);
-    }
+          if (
+            dutyValue === undefined ||
+            dutyValue === null ||
+            dutyValue === ""
+          ) {
+            throw new Error(`Duty value not found in row ${i + 1}`);
+          }
 
-    dataList.push({
-      LINE_ID: row.LINEID,
-      REASON: row.REASON,
-      DUTY_VALUE: dutyValue,
-      QTY: qty,
-    });
-  }
-});
+          dataList.push({
+            LINE_ID: row.LINEID,
+            REASON: row.REASON,
+            DUTY_VALUE: dutyValue,
+            QTY: qty,
+          });
+        }
+      });
 
       if (!hasQty) {
         showMessage(
@@ -275,7 +275,7 @@ $(document).on("click", "#btnRequest", async function (e) {
       INPUTBY: $("#INPUTBY").val(),
       REQBY: $("#REQBY").val(),
       REMARK: $("#REMARK").val(),
-      OPTION_CODE: Number($("#OPTION_CODE").val() || 1),
+      OPTION_CODE: Number($("input[name='OPTION_CODE']:checked").val() || 0),
       EFFECTIVE_DATE: $("#EffDate").val(),
       DATE_RECEIVE: $("#RetDate").val(),
       LOCATION: $("#location").val(),

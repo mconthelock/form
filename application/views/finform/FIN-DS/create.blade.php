@@ -48,7 +48,7 @@
 
             <div class="card bg-base-100 shadow-xl border border-base-200 rounded-2xl overflow-hidden">
                 <div class="card-body px-6 py-8 md:px-10">
-                    <form action="#"  id="form" method="POST" class="space-y-8">
+                    <form action="#" id="form" method="POST" class="space-y-8">
 
                         <div>
                             <div class="flex items-center gap-3 mb-4">
@@ -75,8 +75,8 @@
                                         <label class="label pb-1">
                                             <span class="label-text font-bold text-base-content/80 text-sm">Requester</span>
                                         </label>
-                                        <input id="REQBY" type="text" name="REQBY" value="" 
-                                            class="input input-sm input-bordered border-base-300 bg-base-200/80 text-error cursor-not-allowed font-semibold focus:outline-none req" />
+                                        <input id="REQBY" type="text" name="REQBY" value=""
+                                            class="input input-sm input-bordered border-base-300 bg-base-200/80 text-error font-semibold focus:outline-none req" />
                                     </div>
                                 </div>
                                 <div class="form-control">
@@ -84,7 +84,7 @@
                                         <span class="label-text font-bold text-base-content/80 text-sm">DIV / Dept /
                                             Sect</span>
                                     </label>
-                                    <input id="FULLDP" type="text" name="FULLDP" value="" 
+                                    <input id="FULLDP" type="text" name="FULLDP" value=""
                                         class="input input-sm input-bordered border-base-300 bg-base-200/80 cursor-not-allowed text-base-content font-medium focus:outline-none req" />
                                 </div>
                             </div>
@@ -109,17 +109,24 @@
                                     </label>
                                     <div
                                         class="flex items-center gap-6 mt-1 bg-white/50 p-2 rounded-lg border border-secondary/10 w-fit">
-                                        <label class="label cursor-pointer gap-3 justify-start px-2 py-0">
-                                            <input id = "withd" type="radio" name="OPTION_CODE" value="0"
+
+                                        <!-- ตัวเลือกที่ 1: Withdrawal -->
+                                        <label for="option_withdrawal"
+                                            class="label cursor-pointer gap-3 justify-start px-2 py-0">
+                                            <input id="option_withdrawal" type="radio" name="OPTION_CODE" value="0"
                                                 class="radio radio-secondary radio-sm" checked />
                                             <span class="label-text font-bold text-secondary-focus">Withdrawal</span>
                                         </label>
-                                        <label class="label cursor-pointer gap-3 justify-start px-2 py-0 hidden"
+
+                                        <!-- ตัวเลือกที่ 2: Add (ซ่อนไว้สำหรับ FIN Staff) -->
+                                        <label for="option_add"
+                                            class="label cursor-pointer gap-3 justify-start px-2 py-0 hidden"
                                             id="OPT">
-                                            <input type="radio" name="OPTION_CODE" value="1"
+                                            <input id="option_add" type="radio" name="OPTION_CODE" value="1"
                                                 class="radio radio-secondary radio-sm" />
                                             <span class="label-text font-bold text-secondary-focus">Add</span>
                                         </label>
+
                                     </div>
                                 </div>
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -145,7 +152,7 @@
                                         <span class="label-text font-bold text-base-content/80 text-sm">Stamp Duty
                                             Collection Location</span>
                                     </label>
-                                    <input id = "location"name="LOCATION"  type="text"
+                                    <input id = "location"name="LOCATION" type="text"
                                         class="req input input-sm input-bordered border-secondary/30 w-full text-base-content font-medium focus:ring-2 focus:ring-secondary/20 transition-all"
                                         value="Counter FIN Sect." />
                                 </div>
@@ -172,7 +179,7 @@
                             <div class="bg-base-100 rounded-xl border border-accent/30 shadow-sm overflow-hidden">
                                 <div class="overflow-x-auto">
                                     <table id="stampTable" class="table table-xs w-full text-center">
-                                        
+
                                         <tbody></tbody> {{-- เริ่มว่าง DataTable จัดการ --}}
                                         <tfoot>
                                             <tr class="bg-accent/10 font-bold text-accent-content">
