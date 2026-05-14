@@ -1057,10 +1057,10 @@ $(document).ready(async function () {
 });
 
 // -------- Estimate type and quantity change handler --------
-$(document).on("change input", ".estimate-type, .quantity", function () {
+$(document).on("change input", ".estimate-type-edit, .quantity", function () {
 	const $row = $(this).closest("tr");
 	const etCost = Number(
-		$row.find(".estimate-type option:selected").data("cost")
+		$row.find(".estimate-type-edit option:selected").data("cost")
 	);
 	const quantity = Number($row.find(".quantity").val());
 	const $remark = $row.find(".remark");
@@ -1075,7 +1075,7 @@ $(document).on("change input", ".estimate-type, .quantity", function () {
 	let showMemo = false;
 	$("#table_cost tbody tr").each(function () {
 		const etCostRow = Number(
-			$(this).find(".estimate-type option:selected").data("cost")
+			$(this).find(".estimate-type-edit option:selected").data("cost")
 		);
 		const quantityRow = Number($(this).find(".quantity").val());
 		if (quantityRow > etCostRow) {

@@ -292,9 +292,11 @@
                                             <th class="text-left font-semibold py-2 pl-4 border-b-2 border-green-200 bg-orange-100">Attach File</th>
                                             <td class="py-2 pl-4 border-b-2 border-green-200 bg-orange-50">
                                                 @foreach ($file_attach as $file)
-                                                    <a href="{{ base_url('gpform/GP-CLER/main/preview/') . rawurlencode($file->FILE_NAME) }}" class="link btn btn-sm text-blue-600 hover:text-blue-800 font-medium mt-1" target="_blank">
-                                                        {{ $file->FILE_NAME }}
-                                                    </a><br>
+                                                    @if ($file->FILE_TYPE == null)
+                                                        <a href="{{ base_url('gpform/GP-CLER/main/preview/') . rawurlencode($file->FILE_NAME) }}" class="link btn btn-sm text-blue-600 hover:text-blue-800 font-medium mt-1" target="_blank">
+                                                            {{ $file->FILE_NAME }}
+                                                        </a><br>
+                                                    @endif
                                                 @endforeach
                                             </td>
                                         </tr>
@@ -367,7 +369,11 @@
                                             The Actual cost over Estimate cost : Company reimbursement to Employee.({{ $ENT_FORM->EMP_REQ }} {{ $form[0]->VREQNAME }})
                                         @endif
                                     @else
-                                        {{ $formCler->REMAIN_BUDGET >= 0 ? 'The actual cost did not exceed the estimated cost. As no advance payment was requested, the employee will be reimbursed by the company.' : 'The Actual cost over Estimate cost : Company reimbursement to Employee.(' . $ENT_FORM->EMP_REQ . ' ' . $form[0]->VREQNAME . ')' }}
+                                        @if ($formCler->ACTUAL_COST == 0)
+                                            No Expense
+                                        @else
+                                            {{ $formCler->REMAIN_BUDGET >= 0 ? 'The actual cost did not exceed the estimated cost. As no advance payment was requested, the employee will be reimbursed by the company.' : 'The Actual cost over Estimate cost : Company reimbursement to Employee.(' . $ENT_FORM->EMP_REQ . ' ' . $form[0]->VREQNAME . ')' }}
+                                        @endif
                                     @endif
                                 @endif
                             </div>
@@ -450,10 +456,13 @@
 
                                 $memoByType = [
                                     1 => array_filter(is_array($file_attach) ? $file_attach : iterator_to_array($file_attach), function ($f) {
-                                        return isset($f->FILE_TYPE) && $f->FILE_TYPE == 'MEMO_LUNCH';
+                                        return isset($f->FILE_TYPE) && $f->FILE_TYPE == 'MEMO_TYPE_1';
                                     }),
                                     4 => array_filter(is_array($file_attach) ? $file_attach : iterator_to_array($file_attach), function ($f) {
-                                        return isset($f->FILE_TYPE) && $f->FILE_TYPE == 'MEMO_BREAK';
+                                        return isset($f->FILE_TYPE) && $f->FILE_TYPE == 'MEMO_TYPE_4';
+                                    }),
+                                    7 => array_filter(is_array($file_attach) ? $file_attach : iterator_to_array($file_attach), function ($f) {
+                                        return isset($f->FILE_TYPE) && $f->FILE_TYPE == 'MEMO_TYPE_7';
                                     })
                                 ];
 
@@ -758,6 +767,18 @@
                                         <tr>
                                             <th class="text-left text-blue-900 font-semibold py-2 pl-4 border-b-2 border-blue-200 bg-blue-100">Other Details</th>
                                             <td class="py-2 pl-4 border-b-2 border-blue-200">{{ $ENT_FORM->OTHER_DETAILS }}</td>
+                                        </tr>
+                                    @endif
+                                    @if ($ENT_FORM->FILE_URGENT)
+                                        <tr class=" border-red-400">
+                                            <th class="text-left text-blue-900 bg-red-100 font-semibold py-2 pl-4 border-blue-200">
+                                                Urgent Approval File
+                                            </th>
+                                            <td class="py-2 pl-4 border-blue-200 bg-red-50 font-bold">
+                                                <a href="{{ base_url('gpform/GP-ENT/main/preview/' . $ENT_FORM->FILE_URGENT) }}" target="_blank" class="text-red-700 underline font-semibold">
+                                                    {{ $ENT_FORM->FILE_URGENT }}
+                                                </a>
+                                            </td>
                                         </tr>
                                     @endif
                                     <tr class="bg-blue-50">
