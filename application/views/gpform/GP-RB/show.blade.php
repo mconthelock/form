@@ -172,69 +172,68 @@
                         </tbody>
                     </table>
                 </div>
-
-                <div class="alert alert-warning text-xs py-2 rounded-lg shadow-sm border border-warning/20 mb-6">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-4 w-4" fill="none"
-                        viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                    </svg>
-
-                    <span>หมายเหตุ: พนักงานระดับ Staff, Engineer และ Leader
-                        ต้องได้รับการอนุมัติจากต้นสังกัดและผู้จัดการฝ่ายบริหารทรัพยากรและการเงิน</span>
-                </div>
-
-                <div id="radioOtherBox">
-                    <div class="font-bold text-sm flex items-center gap-2 my-2">
-                        <input type="radio" id="radioOther" name="stampFormatGroup" value="other"
-                            class="radio radio-primary radio-sm"
-                            {{ isset($dataForm->STAMP_FORMAT) && $dataForm->STAMP_FORMAT == 'other' ? 'checked' : '' }}
-                            disabled readonly>
-                        <label for="radioOther" class="cursor-pointer">
-                            รูปแบบตราแสตมป์อื่นๆ
-                            <span class="opacity-60 font-normal text-xs md:ml-1 block md:inline mt-1 md:mt-0">/ For other
-                                type
-                                please specify:</span>
-                        </label>
-                    </div>
-
-
-                    <div class="border border-base-300 p-4 rounded-lg bg-base-200/30 transition-opacity duration-300"
-                        id="otherStampSection">
-
-                        <div class="flex flex-col md:flex-row justify-between md:items-start gap-4">
-
-                            <div class="flex flex-col sm:flex-row gap-3 sm:gap-6">
-
-                                <div class="flex items-center justify-start gap-2">
-                                    <span class="text-xs font-semibold opacity-70 whitespace-nowrap">จำนวน/Qty:</span>
-                                    <input type="text"
-                                        class="input input-sm input-ghost w-24 rounded-none border-b border-base-300 px-1 text-center"
-                                        id="otherQty" readonly>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="flex flex-col gap-4 mt-6">
-                            <div class="flex items-center gap-2">
-                                <span class="text-xs font-semibold opacity-70 whitespace-nowrap">แนบไฟล์/Attach
-                                    file:</span>
-                                <input type="file" class="file-input file-input-bordered file-input-sm "
-                                    id="otherAttachment" name="otherAttachment" redadonly>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <span class="text-xs font-semibold opacity-70 whitespace-nowrap">หมายเหตุ/Remark:</span>
-                                <input type="text"
-                                    class="input input-sm input-ghost grow rounded-none border-b border-base-300 px-1"
-                                    id="otherRemark" readonly>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div id="sentApprove"></div>
-
             </div>
+
+            <div class="alert alert-warning text-xs py-2 rounded-lg shadow-sm border border-warning/20 mb-6">
+                <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-4 w-4" fill="none"
+                    viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+
+                <span>หมายเหตุ: พนักงานระดับ Staff, Engineer และ Leader
+                    ต้องได้รับการอนุมัติจากต้นสังกัดและผู้จัดการฝ่ายบริหารทรัพยากรและการเงิน</span>
+            </div>
+
+            <div id="radioOtherBox">
+                <div class="font-bold text-sm flex items-center gap-2 my-2">
+                    <input type="radio" id="radioOther" name="stampFormatGroup" value="other"
+                        class="radio radio-primary radio-sm"
+                        {{ isset($dataForm->STAMP_FORMAT) && $dataForm->STAMP_FORMAT == 'other' ? 'checked' : '' }} disabled
+                        readonly>
+                    <label for="radioOther" class="cursor-pointer">
+                        รูปแบบตราแสตมป์อื่นๆ
+                        <span class="opacity-60 font-normal text-xs md:ml-1 block md:inline mt-1 md:mt-0">/ For other
+                            type
+                            please specify:</span>
+                    </label>
+                </div>
+
+
+                <div class="border border-base-300 p-4 rounded-lg bg-base-200/30 transition-opacity duration-300"
+                    id="otherStampSection">
+
+                    <div class="flex flex-col md:flex-row justify-between md:items-start gap-4">
+
+                        <div class="flex flex-col sm:flex-row gap-3 sm:gap-6">
+
+                            <div class="flex items-center justify-start gap-2">
+                                <span class="text-xs font-semibold opacity-70 whitespace-nowrap">จำนวน/Qty:</span>
+                                <input type="text"
+                                    class="input input-sm input-ghost w-24 rounded-none border-b border-base-300 px-1 text-center"
+                                    id="otherQty" readonly>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col gap-4 mt-6">
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs font-semibold opacity-70 whitespace-nowrap">แนบไฟล์/Attach
+                                file:</span>
+                            <input type="file" class="file-input file-input-bordered file-input-sm "
+                                id="otherAttachment" name="otherAttachment" redadonly>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="text-xs font-semibold opacity-70 whitespace-nowrap">หมายเหตุ/Remark:</span>
+                            <input type="text"
+                                class="input input-sm input-ghost grow rounded-none border-b border-base-300 px-1"
+                                id="otherRemark" readonly>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="sentApprove"></div>
         </div>
     @endsection
 

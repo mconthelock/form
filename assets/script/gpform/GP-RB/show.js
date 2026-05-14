@@ -93,7 +93,7 @@ $(async function () {
     }
   }
 
- $('input[name="PURPOSE_ID"]').prop('disabled', true);
+  $('input[name="PURPOSE_ID"]').prop('disabled', true);
   console.log(getShowdata.NAME_STAMP);
 
   // เช็คว่ามีข้อมูล Other Stamp หรือไม่
@@ -112,10 +112,15 @@ $(async function () {
     String(getShowCusdata?.NRUNNO || "").trim() ===
     String(getShowdata?.NRUNNO || "").trim();
 
+  console.log("hasCustomStamp:", hasCustomStamp);
+  console.log("isSameRunNo:", isSameRunNo);
+  console.log("radioOtherBox length:", $("#radioOtherBox").length);
+  console.log("radioStandardBox length:", $("#radioStandardBox").length);
+
   if (hasCustomStamp && isSameRunNo) {
     $("#radioOther").prop({
       checked: true,
-      disabled: true,
+      disabled: false,
     });
 
     $("#radioStandard").prop({
@@ -123,10 +128,8 @@ $(async function () {
       disabled: true,
     });
 
-
-    $("#radioOtherBox").hide();
+    $("#radioOtherBox").show();
     $("#radioStandardBox").hide();
-
     // ปิด Standard Stamp Section
     $("#standardStampSection")
       .css({
@@ -134,7 +137,7 @@ $(async function () {
         "pointer-events": "none",
       })
       .find("input, textarea")
-      .prop("disabled", true);
+      .prop("disabled", false);
 
     // เปิด Other Stamp Section เพื่อโชว์ข้อมูล แต่ไม่ให้แก้
     $("#otherStampSection")
@@ -143,33 +146,33 @@ $(async function () {
         "pointer-events": "auto",
       })
       .find("input, textarea")
-      .prop("disabled", true);
+      .prop("disabled", false);
 
-  // เอาข้อมูล Purpose จาก getShowdata มาโชว์
-  if (getShowdata.PURPOSE_ID) {
-    $(`#purpose_${getShowdata.PURPOSE_ID}`).prop("checked", true);
+    // เอาข้อมูล Purpose จาก getShowdata มาโชว์
+    if (getShowdata.PURPOSE_ID) {
+      $(`#purpose_${getShowdata.PURPOSE_ID}`).prop("checked", true);
 
-    if (String(getShowdata.PURPOSE_ID) === "4") {
-      $("#otherSelect")
-        .prop("disabled", true)
-        .prop("readonly", true)
-        .val(getShowdata.PURPOSE_OTHER || "");
+      if (String(getShowdata.PURPOSE_ID) === "4") {
+        $("#otherSelect")
+          .prop("disabled", true)
+          .prop("readonly", true)
+          .val(getShowdata.PURPOSE_OTHER || "");
+      }
     }
+
+    // เอาข้อมูล Other Stamp จาก getShowCusdata มาโชว์
+    $("#otherQty").val(getShowCusdata.QTY);
+    $("#otherAttachment").val(getShowCusdata.NAME_STAMP); //ยังไม่ได้ชื่อไฟล์
+    $("#otherRemark").val(getShowCusdata.REMARK);
+
+    return;
   }
-  console.log(getShowCusdata.NRUNNO);
 
-  // เอาข้อมูล Other Stamp จาก getShowCusdata มาโชว์
-  $("#otherQty").val(getShowCusdata.QTY_STAMP);
-  $("#otherAttachment").val(getShowCusdata.NAME_STAMP);
-  $("#otherRemark").val(getShowCusdata.REMARK);
-
-  return;
-}
 
   if (hasStandardStamp) {
     $("#radioStandard").prop({
       checked: true,
-      disabled: true,
+      disabled: false,
     });
 
     $("#radioOther").prop({
@@ -179,8 +182,6 @@ $(async function () {
 
     // show Standard
     $("#radioStandardBox").show();
-
-    // hide Other
     $("#radioOtherBox").hide();
 
     // เปิด Standard Stamp Section
