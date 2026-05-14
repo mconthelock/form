@@ -101,9 +101,10 @@ $(document).ready(function () {
 
         renderFile(att = []) {
             const formno = $('#form_no').val();
-            const baseUrl = this.baseUrl || '';
-            console.log('base url =', baseUrl);
+            const baseUrl = $('#base_url').val();
             const $fileList = $('#v_file_list').empty();
+
+            console.log('base url =', baseUrl);
 
             if (!att.length) {
                 $fileList.html('-');
@@ -112,15 +113,18 @@ $(document).ready(function () {
 
             att.forEach(file => {
                 const filename = file.FILENAME || '-';
+
                 const url =
-                    `${baseUrl}mfg-edr/main_edr/preview_file/` + 
+                    `${baseUrl}mfgform/MFG-EDR/main_edr/preview_file/` +
                     `${encodeURIComponent(formno)}/` +
                     `${encodeURIComponent(filename)}/` +
                     `${encodeURIComponent(filename)}`;
 
+                console.log('FILE URL =', url);
+
                 $fileList.append(`
                     <div>
-                        <a href="#"
+                        <a href="${url}"
                         target="_blank"
                         class="text-blue-700 underline btn btn-sm rounded-lg">
                             ${filename}

@@ -186,6 +186,7 @@
 <input type="hidden" id="txt_exdata" value="{{ $exdata ?? '' }}">
 <input type="hidden" id="mode" value="{{ $mode }}">
 
+
 <div class="min-h-screen bg-gradient-to-br from-slate-100 via-white to-teal-50 py-6 px-3">
     <div class="edr-wrapper">
         <div class="edr-main-card">
