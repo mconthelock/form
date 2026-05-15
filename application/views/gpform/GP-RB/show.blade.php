@@ -18,24 +18,18 @@
                 <div class="flex border-b border-base-300 bg-base-50/50">
                     <div class="w-full p-2 flex items-center gap-2">
                         <span class="whitespace-nowrap font-semibold opacity-80 text-xs">Input by:</span>
-                        <input type="text"
-                            class="input input-sm input-ghost w-full rounded-none border-b border-base-300 px-1"
-                            id="INPUTBY"readonly>
+                        <div id="INPUTBY" class="w-full min-h-8 rounded-md border border-base-300 bg-base-100 px-3 py-1 flex items-center"></div>
                     </div>
                 </div>
 
                 <div class="flex border-b border-base-300 bg-base-50/50">
                     <div class="w-1/2 p-2 flex items-center gap-2">
                         <span class="whitespace-nowrap font-semibold opacity-80 text-xs">Request by:</span>
-                        <input type="text"
-                            class="input input-sm input-ghost w-full rounded-none border-b border-base-300 px-1"
-                            id="REQBY" readonly>
+                        <div id="REQBY" class="w-full min-h-8 rounded-md border border-base-300 bg-base-100 px-3 py-1 flex items-center"></div>
                     </div>
                     <div class="w-1/2 border-r border-base-300 p-2 flex items-center gap-2">
                         <span class="whitespace-nowrap font-semibold opacity-80 text-xs">ชื่อ/NAME:</span>
-                        <input type="text"
-                            class="input input-sm input-ghost w-full rounded-none border-b border-base-300 px-1"
-                            id="empName" readonly>
+                        <div id="empName" class="w-full min-h-8 rounded-md border border-base-300 bg-base-100 px-3 py-1 flex items-center"></div>
                     </div>
 
                 </div>
@@ -43,15 +37,11 @@
                 <div class="flex bg-base-50/50">
                     <div class="w-1/2 border-r border-base-300 p-2 flex items-center gap-2">
                         <span class="whitespace-nowrap font-semibold opacity-80 text-xs">Sect./Dept./Div.:</span>
-                        <input type="text"
-                            class="input input-sm input-ghost w-full rounded-none border-b border-base-300 px-1"
-                            id="empDept" readonly>
+                        <div id="empDept"class="w-full min-h-[2rem] rounded-md border border-base-300 bg-base-100 px-3 py-1 flex items-center"></div>
                     </div>
                     <div class="w-1/2 p-2 flex items-center gap-2">
                         <span class="whitespace-nowrap font-semibold opacity-80 text-xs">ตำแหน่ง/Position:</span>
-                        <input type="text"
-                            class="input input-sm input-ghost w-full rounded-none border-b border-base-300 px-1"
-                            id="empPos" readonly>
+                        <div id="empPos"class="w-full min-h-[2rem] rounded-md border border-base-300 bg-base-100 px-3 py-1 flex items-center"></div>
                     </div>
                 </div>
             </div>
@@ -209,9 +199,7 @@
 
                             <div class="flex items-center justify-start gap-2">
                                 <span class="text-xs font-semibold opacity-70 whitespace-nowrap">จำนวน/Qty:</span>
-                                <input type="text"
-                                    class="input input-sm input-ghost w-24 rounded-none border-b border-base-300 px-1 text-center"
-                                    id="otherQty" readonly>
+                                <div id="otherQty" class="w-full min-h-[2rem] rounded-md border border-base-300 bg-base-100 px-3 py-1 flex items-center"></div>
                             </div>
                         </div>
                     </div>
@@ -220,14 +208,11 @@
                         <div class="flex items-center gap-2">
                             <span class="text-xs font-semibold opacity-70 whitespace-nowrap">แนบไฟล์/Attach
                                 file:</span>
-                            <input type="file" class="file-input file-input-bordered file-input-sm "
-                                id="otherAttachment" name="otherAttachment" redadonly>
+                            <div class="file-list"></div>
                         </div>
                         <div class="flex items-center gap-2">
                             <span class="text-xs font-semibold opacity-70 whitespace-nowrap">หมายเหตุ/Remark:</span>
-                            <input type="text"
-                                class="input input-sm input-ghost grow rounded-none border-b border-base-300 px-1"
-                                id="otherRemark" readonly>
+                            <div id="otherRemark" class="w-full min-h-[2rem] rounded-md border border-base-300 bg-base-100 px-3 py-1 flex items-center"></div>
                         </div>
                     </div>
                 </div>
