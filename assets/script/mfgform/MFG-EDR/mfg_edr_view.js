@@ -553,11 +553,12 @@ $(document).ready(function () {
             }
 
             $('.btn-submit').prop('disabled', true).addClass('opacity-50 pointer-events-none');
-            VIEW.showLoading();
-
+            //VIEW.showLoading();
+            showLoader({ show: true });
             if (whyPayload) {
                 const saveResult = await updateWhyEffect(whyPayload);
                 if (!saveResult?.status) {
+                    showLoader({ show: false });
                     Swal.close();
                     await Swal.fire({
                         icon: 'error',
@@ -580,6 +581,7 @@ $(document).ready(function () {
             Swal.close();
 
             if (result?.status) {
+                showLoader({ show: false });
                 await Swal.fire({
                     icon: 'success',
                     title: 'ดำเนินการสำเร็จแล้ว',
@@ -604,6 +606,7 @@ $(document).ready(function () {
                 confirmButtonText: 'ตกลง',
             });
         } finally {
+            showLoader({ show: false });
             isSubmitting = false;
             $('.btn-submit').prop('disabled', false).removeClass('opacity-50 pointer-events-none');
         }
