@@ -63,7 +63,7 @@ class main_edr extends MY_Controller {
         }
     }
 
-   public function uploadfile(){
+    public function uploadfile(){
         header('Content-Type: application/json; charset=utf-8');
         try {
             $nfrmno = $this->input->post('NFRMNO');
@@ -153,7 +153,7 @@ class main_edr extends MY_Controller {
     }
 
     public function preview_file($formno, $filename){
-        $filepath = rtrim($this->upload_path, "/\\") . DIRECTORY_SEPARATOR . $formno;
+        $filepath = $this->upload_path."/".$formno;
         $this->downloadFile($filename, $filepath);
     }
 }
