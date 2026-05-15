@@ -203,6 +203,11 @@ $(document).ready(function () {
 
             console.log('WHY OWNER FLOW =', ownerFlow);
             console.log('CAN EDIT WHY =', this.canEditWhy);
+            
+            const method = this.canEditWhy ? 'show' : 'hide';
+            $('.col-action-why')[method]();
+            $('.col-action-corrective')[method]();
+            $('.col-action-preventive')[method]();
         },
 
         renderRoot(list) {
@@ -330,7 +335,12 @@ $(document).ready(function () {
                     <td class="align-top p-2">${detailHtml}</td>
                     ${dateHtml}
                     ${picHtml}
-                    <td class="text-center align-top w-[60px] p-2">${actionHtml}</td>
+                    ${editable
+                        ? `<td class="text-center align-top w-[60px] p-2 col-action-${type}">
+                                ${actionHtml}
+                        </td>`
+                        : ''
+                    }
                 </tr>
             `;
         },

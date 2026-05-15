@@ -299,7 +299,7 @@
                                 <tr>
                                     <th style="width:80px;">No</th>
                                     <th>Why</th>
-                                    <th style="width:80px;">#</th>
+                                    <th style="width:80px;" class="col-action-why">#</th>
                                 </tr>
                             </thead>
                             <tbody id="v_root_body"></tbody>
@@ -321,7 +321,7 @@
                                     <th>Corrective Action</th>
                                     <th style="width:220px;">กำหนดเสร็จ</th>
                                     <th style="width:220px;">ผู้รับผิดชอบ</th>
-                                    <th style="width:80px;">#</th>
+                                    <th style="width:80px;" class="col-action-corrective">#</th>
                                 </tr>
                             </thead>
                             <tbody id="v_corrective_body"></tbody>
@@ -342,7 +342,7 @@
                                     <th>Preventive Action</th>
                                     <th style="width:220px;">กำหนดเสร็จ</th>
                                     <th style="width:220px;">ผู้รับผิดชอบ</th>
-                                    <th style="width:80px;">#</th>
+                                    <th style="width:80px;" class="col-action-preventive">#</th>
                                 </tr>
                             </thead>
                             <tbody id="v_preventive_body"></tbody>
