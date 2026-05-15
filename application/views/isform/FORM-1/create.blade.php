@@ -1,6 +1,6 @@
 @extends('layouts/webflowTemplate')
 @section('contents')
-    <section class="flex flex-col gap-3 mb-4 w-full px-[8rem]">
+    <section class="flex flex-col gap-3 mb-4 w-full px-32">
         <h1 class="text-3xl font-bold text-primary">Annual software development plan</h1>
         <fieldset class="bg-primary/10 border border-primary rounded-xl p-5">
             <legend class="font-semibold text-lg px-1">Requester</legend>
