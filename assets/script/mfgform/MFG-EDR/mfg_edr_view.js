@@ -203,11 +203,13 @@ $(document).ready(function () {
 
             console.log('WHY OWNER FLOW =', ownerFlow);
             console.log('CAN EDIT WHY =', this.canEditWhy);
-            
+
             const method = this.canEditWhy ? 'show' : 'hide';
             $('.col-action-why')[method]();
             $('.col-action-corrective')[method]();
             $('.col-action-preventive')[method]();
+            
+            $('[data-action="returnb"]').toggle(!this.canEditWhy);
         },
 
         renderRoot(list) {
