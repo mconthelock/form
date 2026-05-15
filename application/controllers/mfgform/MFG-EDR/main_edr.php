@@ -38,6 +38,10 @@ class main_edr extends MY_Controller {
         }
     }
 
+    public function show_view_report(){
+        $this->views('mfgform/MFG-EDR/report_edr');
+    }
+
     public function save_request(){
         try {
             $inputBy     = $this->input->post('inputBy');
