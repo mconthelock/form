@@ -553,18 +553,18 @@ $(document).ready(function () {
             }
 
             $('.btn-submit').prop('disabled', true).addClass('opacity-50 pointer-events-none');
-            //VIEW.showLoading();
+
             showLoader({ show: true });
             if (whyPayload) {
                 const saveResult = await updateWhyEffect(whyPayload);
                 if (!saveResult?.status) {
-                    showLoader({ show: false });
                     Swal.close();
                     await Swal.fire({
                         icon: 'error',
                         title: saveResult?.message || 'บันทึก Why / Effect ไม่สำเร็จ',
                         confirmButtonText: 'ตกลง',
                     });
+                    showLoader({ show: false });
                     return;
                 }
             }
@@ -581,14 +581,15 @@ $(document).ready(function () {
             Swal.close();
 
             if (result?.status) {
-                showLoader({ show: false });
                 await Swal.fire({
                     icon: 'success',
                     title: 'ดำเนินการสำเร็จแล้ว',
                     timer: 1500,
                     showConfirmButton: false,
                 });
+                
                 redirectWebflow();
+                showLoader({ show: false });
             } else {
                 await Swal.fire({
                     icon: 'error',
