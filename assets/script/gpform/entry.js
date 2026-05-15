@@ -33,4 +33,9 @@ module.exports = {
 	view_train_report: "./assets/script/gpform/GP-TRN/view_train_report.js",
 	manage_group: "./assets/script/gpform/GP-TRN/manage_group.js",
 	show_sum_report: "./assets/script/gpform/GP-TRN/show_sum_report.js",
+
+	//GP-GAR
+	gar_form: "./assets/script/gpform/GP-GAR/index.js",
+	show_form: "./assets/script/gpform/GP-GAR/show.js"
+
 };
