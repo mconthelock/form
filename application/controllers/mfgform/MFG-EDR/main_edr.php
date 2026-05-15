@@ -152,8 +152,36 @@ class main_edr extends MY_Controller {
         }
     }
 
-    public function preview_file($formno, $filename){
-        $filepath = $this->upload_path."/".$formno;
-        $this->downloadFile($filename, $filepath);
+    public function preview_file($formno, $filename)
+    {
+        $filename = urldecode($filename);
+
+        $filepath = rtrim($this->upload_path, "/\\")
+            . DIRECTORY_SEPARATOR
+            . $formno
+            . DIRECTORY_SEPARATOR
+            . $filename;
+
+        if (!is_file($filepath)) {
+            show_error('File not found: ' . $filepath, 404);
+            return;
+        }
+
+        if (ob_get_length()) {
+            ob_end_clean();
+        }
+
+        $mime = function_exists('mime_content_type')
+            ? mime_content_type($filepath)
+            : 'application/octet-stream';
+
+        header('Content-Type: ' . $mime);
+        header('Content-Length: ' . filesize($filepath));
+        header('Content-Disposition: inline; filename="' . basename($filename) . '"');
+        header('Cache-Control: private, max-age=0, must-revalidate');
+        header('Pragma: public');
+
+        readfile($filepath);
+        exit;
     }
 }
