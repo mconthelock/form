@@ -48,8 +48,7 @@
 
             <div class="card bg-base-100 shadow-xl border border-base-200 rounded-2xl overflow-hidden">
                 <div class="card-body px-6 py-8 md:px-10">
-                    <form action="#" id="form" method="POST" class="space-y-8">
-
+                    <form action="#" id="form" method="POST" enctype="multipart/form-data" class="space-y-8">
                         <div>
                             <div class="flex items-center gap-3 mb-4">
                                 <div class="bg-primary/20 p-1.5 rounded-lg text-primary">
@@ -152,7 +151,7 @@
                                         <span class="label-text font-bold text-base-content/80 text-sm">Stamp Duty
                                             Collection Location</span>
                                     </label>
-                                    <input id = "location"name="LOCATION" type="text"
+                                    <input id="location" name="LOCATION" type="text"
                                         class="req input input-sm input-bordered border-secondary/30 w-full text-base-content font-medium focus:ring-2 focus:ring-secondary/20 transition-all"
                                         value="Counter FIN Sect." />
                                 </div>
@@ -199,6 +198,7 @@
                         </div>
                 </div>
 
+                {{-- Attachment --}}
                 <div>
                     <div class="flex items-center gap-3 mb-4">
                         <div class="bg-info/20 p-1.5 rounded-lg text-info">
@@ -208,8 +208,12 @@
                                     d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
                             </svg>
                         </div>
-                        <h2 class="text-base font-bold text-info uppercase tracking-widest">Attachment</h2>
+
+                        <h2 class="text-base font-bold text-info uppercase tracking-widest">
+                            Attachment
+                        </h2>
                     </div>
+
                     <div
                         class="bg-info/5 rounded-xl border-2 border-info/30 border-dashed p-6 transition-all hover:bg-info/10">
                         <div class="flex flex-col sm:flex-row sm:items-center gap-4">
@@ -220,20 +224,26 @@
                                         d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
                                 </svg>
                             </div>
+
                             <div class="flex-1">
-                                <p class="text-sm font-bold text-info-content mb-2">Upload Required Documents</p>
-                                <input type="file" name = "attachfile"
+                                <p class="text-sm font-bold text-info-content mb-2">
+                                    Upload Required Documents
+                                </p>
+
+                                <input id="attachfile" name="attachfile" type="file" multiple
+                                    accept=".pdf,.jpg,.jpeg,.png"
                                     class="file-input file-input-bordered file-input-info file-input-sm w-full max-w-sm bg-white" />
-                                <p class="text-xs text-base-content/50 mt-2">Accepted formats: PDF, JPG, PNG (Max: 5MB)</p>
+
+                                <p class="text-xs text-base-content/50 mt-2">
+                                    Accepted formats: PDF, JPG, PNG
+                                </p>
                             </div>
                         </div>
                     </div>
                 </div>
-
                 <div class="divider before:bg-base-300 after:bg-base-300"></div>
 
                 <div id="actionform"></div>
-
                 </form>
             </div>
         </div>

@@ -271,20 +271,34 @@ $(document).on("click", "#btnRequest", async function (e) {
       }
     }
 
-    const payload = {
-      INPUTBY: $("#INPUTBY").val(),
-      REQBY: $("#REQBY").val(),
-      REMARK: $("#REMARK").val(),
-      OPTION_CODE: Number($("input[name='OPTION_CODE']:checked").val() || 0),
-      EFFECTIVE_DATE: $("#EffDate").val(),
-      DATE_RECEIVE: $("#RetDate").val(),
-      LOCATION: $("#location").val(),
-      DATA: dataList,
-    };
+    const formData = new FormData();
 
-    console.log(payload);
+    formData.set("INPUTBY", $("#INPUTBY").val() || "");
+    formData.set("REQBY", $("#REQBY").val() || "");
+    formData.set("REMARK", $("#REMARK").val() || "");
+    formData.set(
+      "OPTION_CODE",
+      String($("input[name='OPTION_CODE']:checked").val() || "0"),
+    );
+    formData.set("EFFECTIVE_DATE", $("#EffDate").val() || "");
+    formData.set("DATE_RECEIVE", $("#RetDate").val() || "");
+    formData.set("LOCATION", $("#location").val() || "");
 
-    const res = await createForm(payload);
+    /*
+  DATA เป็น array/object ต้อง stringify ก่อน
+  เพราะ FormData ส่ง object ตรง ๆ ไม่ได้แบบที่มนุษย์อยากให้มันได้
+*/
+    formData.set("DATA", JSON.stringify(dataList));
+
+    const files = $("#attachfile")[0]?.files || [];
+
+    for (const file of files) {
+      formData.append("attachfile", file);
+    }
+
+    logFormData(formData);
+
+    const res = await createForm(formData);
     console.log(res);
 
     showMessage("Request submitted successfully", "success");
@@ -294,10 +308,10 @@ $(document).on("click", "#btnRequest", async function (e) {
   }
 });
 
-export async function createForm(data) {
+export async function createForm(formData) {
   return await fetchUtils({
     url: `${process.env.APP_API}/finform/fin-ds`,
     method: "POST",
-    data: data,
+    data: formData,
   });
 }

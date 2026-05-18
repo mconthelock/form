@@ -391,6 +391,7 @@
                     </form>
                 </div>
             </div>
+            <div id="sentApprove"></div>
         </div>
     </div>
 @endsection

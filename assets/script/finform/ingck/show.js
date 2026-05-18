@@ -1,8 +1,8 @@
 import { fetchUtils } from "@amec/webasset/api/fetch-utils";
-import { getFormDetail } from "@amec/webasset/api/webform";
+import { getFormDetail, getMode, showflow } from "@amec/webasset/api/webform";
 import { showMessage } from "@amec/webasset/utils";
 import { createTable } from "@amec/webasset/dataTable";
-
+import { webflowSubmit } from "@amec/webasset/components/form";
 /*--------------------GLOBAL--------------------*/
 
 let table;
@@ -46,12 +46,12 @@ $(async function () {
     const showData = await getShowData(form);
     console.log("showData:", showData);
 
-    const header = normalizeHeader(showData);
-    const detail = normalizeDetail(showData);
+const header = normalizeHeader(showData);
+const detail = normalizeDetail(showData);
+const files = normalizeFiles(showData);
 
-    renderFinDsHeader(header);
-    renderAttachment(header);
-    renderActionStatus(header);
+renderFinDsHeader(header);
+renderAttachment(files);
 
     const stamp = await getStamp();
     console.log("stamp:", stamp);
@@ -62,6 +62,8 @@ $(async function () {
     console.log("table rows:", rows);
 
     await createTableStamp(rows, dutyStampList);
+
+    await renderWorkflowAction(form);
 
     lockForm();
   } catch (error) {
@@ -80,20 +82,16 @@ function getFormKeyFromUrl() {
   const urlParams = new URLSearchParams(queryString);
 
   const form = {
-    NFRMNO:
-      urlParams.get("no"),
+    NFRMNO: urlParams.get("no"),
 
-    VORGNO:
-      urlParams.get("orgNo"),
+    VORGNO: urlParams.get("orgNo"),
 
-    CYEAR:
-      urlParams.get("y"),
+    CYEAR: urlParams.get("y"),
 
-    CYEAR2:
-      urlParams.get("y2"),
+    CYEAR2: urlParams.get("y2"),
 
-    NRUNNO:
-      urlParams.get("runNo") ,
+    NRUNNO: urlParams.get("runNo"),
+    EMPNO: urlParams.get("empno"),
   };
 
   console.log("queryString:", queryString);
@@ -107,7 +105,8 @@ function hasFormKey(form) {
     form.NFRMNO &&
       form.VORGNO &&
       form.CYEAR &&
-      form.NRUNNO,
+      form.NRUNNO &&
+      form.EMPNO,
   );
 }
 
@@ -147,26 +146,18 @@ function lockForm() {
     .find("input[type='text'], input[type='date'], textarea")
     .prop("readonly", true);
 
-  $("#addStampRow, #btnRequest")
-    .addClass("hidden")
-    .prop("disabled", true);
+  $("#addStampRow, #btnRequest").addClass("hidden").prop("disabled", true);
 }
 
 function renderFormDetail(formDetail = {}) {
   $("#FORMNO").val(formDetail.FORMNO || "");
 
   $("#INPUTBY").val(
-    formatPerson(
-      formDetail.VINPUTNAME || "",
-      formDetail.VINPUTER || "",
-    ),
+    formatPerson(formDetail.VINPUTNAME || "", formDetail.VINPUTER || ""),
   );
 
   $("#REQBY").val(
-    formatPerson(
-      formDetail.VREQNAME || "",
-      formDetail.VREQNO || "",
-    ),
+    formatPerson(formDetail.VREQNAME || "", formDetail.VREQNO || ""),
   );
 }
 
@@ -178,38 +169,101 @@ function renderEmpData(empData = {}) {
   const secCode = String(empData.SSECCODE || "");
 
   $("#Pos")
-    .removeClass("badge-outline badge-info badge-success badge-error badge-warning text-info-content text-success-content")
+    .removeClass(
+      "badge-outline badge-info badge-success badge-error badge-warning text-info-content text-success-content",
+    )
     .addClass("border-none");
 
   if (secCode === "040402") {
     console.log("เป็น FIN staff:", secCode);
 
-    $("#Pos")
-      .text("FIN Staff")
-      .addClass("badge-info text-info-content");
+    $("#Pos").text("FIN Staff").addClass("badge-info text-info-content");
 
     $("#OPT").removeClass("hidden");
   } else {
     console.log("ไม่ใช่ FIN staff:", secCode);
 
-    $("#Pos")
-      .text("Employee")
-      .addClass("badge-success text-success-content");
+    $("#Pos").text("Employee").addClass("badge-success text-success-content");
 
     $("#OPT").addClass("hidden");
   }
 
   $("#FULLDP").val(
-    [
-      empData.SDIV,
-      empData.SDEPT,
-      empData.SSEC,
-    ]
-      .filter(Boolean)
-      .join("/"),
+    [empData.SDIV, empData.SDEPT, empData.SSEC].filter(Boolean).join("/"),
   );
 }
+async function renderWorkflowAction(form) {
+  if (!form?.EMPNO) {
+    $("#sentApprove").html(`
+      <div class="alert alert-warning shadow-sm mt-5">
+        <div>
+          <p class="font-bold">Cannot load workflow action</p>
+          <p class="text-sm">Employee number not found in URL.</p>
+        </div>
+      </div>
+    `);
+    return;
+  }
 
+  try {
+    const mode = String(
+      await getMode({
+        ...form,
+        EMPNO: form.EMPNO,
+      }),
+    );
+
+    const flow = await showflow(form);
+
+    console.log("mode:", mode);
+    console.log("flow:", flow);
+
+    let action = "";
+
+    switch (mode) {
+      case "2":
+        action = webflowSubmit({
+          flow: true,
+          flowhtml: flow?.html || flow?.data?.html || "",
+          approve: true,
+          reject: true,
+        });
+        break;
+
+      case "3":
+        action = webflowSubmit({
+          flow: true,
+          flowhtml: flow?.html || flow?.data?.html || "",
+          actionsForm: false,
+        });
+        break;
+
+      default:
+        action = `
+          <div class="alert alert-warning shadow-sm mt-5">
+            <div>
+              <p class="font-bold">Unknown workflow mode</p>
+              <p class="text-sm">Mode: ${escapeHtml(mode)}</p>
+            </div>
+          </div>
+        `;
+        break;
+    }
+
+    $("#sentApprove").html(action);
+  } catch (error) {
+    console.error("Cannot render workflow action:", error);
+
+    $("#sentApprove").html(`
+      <div class="alert alert-error shadow-sm mt-5">
+        <div>
+          <p class="font-bold">Cannot load workflow action</p>
+          <p class="text-sm">${escapeHtml(error.message || "Unknown error")}</p>
+        </div>
+      </div>
+    `);
+  }
+}
 function renderFinDsHeader(header = {}) {
   $("#EffDate").val(formatDate(header.EFFECTIVE_DATE));
   $("#RetDate").val(formatDate(header.DATE_RECEIVE));
@@ -218,98 +272,82 @@ function renderFinDsHeader(header = {}) {
 
   const optionCode = String(header.OPTION_CODE ?? "0");
 
-  $(`input[name='OPTION_CODE'][value='${escapeSelectorValue(optionCode)}']`)
-    .prop("checked", true);
+  $(
+    `input[name='OPTION_CODE'][value='${escapeSelectorValue(optionCode)}']`,
+  ).prop("checked", true);
 }
 
-function renderAttachment(header = {}) {
+function renderAttachment(files = []) {
   const attachmentList = $("#attachmentList");
 
   if (!attachmentList.length) return;
 
-  const attachments =
-    header.ATTACHMENTS ||
-    header.attachments ||
-    header.FILES ||
-    header.files ||
-    [];
-
-  if (Array.isArray(attachments) && attachments.length > 0) {
+  if (!Array.isArray(files) || files.length === 0) {
     attachmentList.html(`
-      <ul class="space-y-2">
-        ${attachments.map(renderAttachmentItem).join("")}
-      </ul>
+      <div class="alert alert-info shadow-sm">
+        <span>No attachment</span>
+      </div>
     `);
     return;
   }
 
-  const attachment =
-    header.ATTACHMENT ||
-    header.ATTACHFILE ||
-    header.ATTACH_FILE ||
-    header.FILE_URL ||
-    header.FILE_NAME ||
-    "";
-
-  if (!attachment) {
-    attachmentList.text("No attachment");
-    return;
-  }
-
-  if (typeof attachment === "string" && /^https?:\/\//i.test(attachment)) {
-    attachmentList.html(`
-      <a
-        href="${escapeHtml(attachment)}"
-        target="_blank"
-        class="link link-info font-extrabold underline-offset-4"
-      >
-        Open attachment
-      </a>
-    `);
-    return;
-  }
-
-  attachmentList.text(attachment);
+  attachmentList.html(`
+    <ul class="space-y-2">
+      ${files.map(renderAttachmentItem).join("")}
+    </ul>
+  `);
 }
-
 function renderAttachmentItem(file = {}) {
   const fileName =
+    file.FILE_ONAME ||
     file.FILE_NAME ||
     file.filename ||
     file.name ||
     "Attachment";
 
-  const fileUrl =
-    file.FILE_URL ||
-    file.url ||
-    file.path ||
+  const fileId =
+    file.FILE_ID ||
+    file.FILEID ||
+    file.fileId ||
+    file.id ||
     "";
 
-  if (!fileUrl) {
-    return `<li>${escapeHtml(fileName)}</li>`;
+  if (!fileId) {
+    return `
+      <li class="rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700">
+        ${escapeHtml(fileName)}
+      </li>
+    `;
   }
 
+  const downloadUrl =
+    `${process.env.APP_API}/finform/fin-ds/file/${encodeURIComponent(fileId)}`;
+
   return `
-    <li>
+    <li class="rounded-lg border border-cyan-200 bg-cyan-50/70 px-4 py-3 flex items-center justify-between gap-3">
+      <div class="min-w-0">
+        <p class="font-bold text-slate-700 truncate">
+          ${escapeHtml(fileName)}
+        </p>
+        <p class="text-xs text-slate-400">
+          File ID: ${escapeHtml(fileId)}
+        </p>
+      </div>
+
       <a
-        href="${escapeHtml(fileUrl)}"
+        href="${escapeHtml(downloadUrl)}"
         target="_blank"
-        class="link link-info font-extrabold underline-offset-4"
+        class="btn btn-xs btn-info"
       >
-        ${escapeHtml(fileName)}
+        Download
       </a>
     </li>
   `;
 }
-
 function renderActionStatus(header = {}) {
   if (!$("#actionform").length) return;
 
-  const status =
-    header.STATUS ||
-    header.DOC_STATUS ||
-    header.WF_STATUS ||
-    "";
+  const status = header.STATUS || header.DOC_STATUS || header.WF_STATUS || "";
 }
 
 /*--------------------TABLE FUNCTION--------------------*/
@@ -471,33 +509,32 @@ function normalizeDetail(showData) {
   return Array.isArray(detail) ? detail : [];
 }
 
+function normalizeFiles(showData) {
+  const files =
+    showData?.data?.files ||
+    showData?.data?.FILES ||
+    showData?.files ||
+    showData?.FILES ||
+    [];
+
+  return Array.isArray(files) ? files : [];
+}
+
 function mapDetailToRows(detail = [], stamp = []) {
   const rowsByLine = {};
 
   detail.forEach((item, index) => {
     const lineId =
-      item.LINEID ||
-      item.LINE_ID ||
-      item.LINE ||
-      item.SEQ ||
-      index + 1;
+      item.LINEID || item.LINE_ID || item.LINE || item.SEQ || index + 1;
 
     const reason = item.REASON || "";
 
-    const dutyValue = Number(
-      item.DUTY_VALUE ||
-        item.DUTYVALUE ||
-        0,
-    );
+    const dutyValue = Number(item.DUTY_VALUE || item.DUTYVALUE || 0);
 
     const qty = Number(item.QTY || 0);
 
     const amount = Number(
-      item.AMT ||
-        item.AMOUNT ||
-        item.DUTY_AMT ||
-        qty * dutyValue ||
-        0,
+      item.AMT || item.AMOUNT || item.DUTY_AMT || qty * dutyValue || 0,
     );
 
     if (!rowsByLine[lineId]) {

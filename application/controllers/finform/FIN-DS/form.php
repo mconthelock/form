@@ -54,23 +54,13 @@ class form extends MY_Controller
             }
         }
 
-        /*
-         * 3) empno / requester / approver ที่ติดมาจาก URL
-         */
         $empno = isset($_GET['empno']) ? $_GET['empno'] : '';
 
         $data['apv'] = $empno;
 
-        /*
-         * 4) เช็คว่ามี runNo ไหม
-         *
-         * ไม่มี runNo = create mode
-         * มี runNo = show mode
-         */
+
         if (isset($_GET['runNo']) && $_GET['runNo'] !== '') {
-            /*
-             * SHOW MODE
-             */
+       
             $data['mode'] = 3;
 
             $data['CYEAR2'] = isset($_GET['y2']) ? $_GET['y2'] : '';
@@ -86,25 +76,18 @@ class form extends MY_Controller
 
             $formKey['EMPNO'] = (string) $empno;
 
-            /*
-             * ถ้าต้องใช้ ext data / mode จาก workflow ก็เปิดใช้ตรงนี้
-             */
+    
             $data['cextData'] = $this->getExtData($formKey);
-
-            /*
-             * ถ้าระบบคุณมี getMode และอยากใช้ mode จริงจาก workflow
-             * ก็ใช้บรรทัดนี้แทน mode = 3 ได้
-             */
-            // $data['mode'] = $this->getMode($formKey);
 
             $this->views('finform/FIN-DS/show', $data);
         } else {
-            /*
-             * CREATE MODE
-             */
+
             $data['mode'] = 1;
 
             $this->views('finform/FIN-DS/create', $data);
         }
+    }
+    public function report(){
+        $this->views('finform/FIN-DS/report');
     }
 }
