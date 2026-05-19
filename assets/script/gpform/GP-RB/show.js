@@ -392,10 +392,9 @@ $(document).on("click", "button[name='btnAction']", async function () {
     const empno = urlParams.get("empno");
     const state = {
       ...form,
-      user: empno,
+      EMPNO: empno,
       ACTION: action,
       REMARK: remark,
-      NAME: "TEST NEW NAME",
     };
     console.log(state.user),
       console.log(action)
@@ -404,13 +403,14 @@ $(document).on("click", "button[name='btnAction']", async function () {
 
     let res;
     if (cextData == '01') {
+      state.NAME_STAMP = "test new name";
       res = await updateStamp(state)
     } else {
-      res = await updateStamp(state);
+      res = await doaction(state);
 
     }
 
-    if (res.status == true) {
+    if (res.status) {
       showMessage(res.message, "succcess");
       redirectWebflow();
     } else {
@@ -461,10 +461,10 @@ async function getFileForm() {
 }
 
 async function updateStamp(state) {
-   const url = `${process.env.APP_API}/gpform/showstamp-gp-rb/${state.NFRMNO}/${state.VORGNO}/${state.CYEAR}/${state.CYEAR2}/${state.NRUNNO}/${state.user}/${state.ACTION}`;
+   const url = `${process.env.APP_API}/gpform/showstamp-gp-rb`;
   return await fetchUtils({
     url: url,
     method: "PATCH",
-
+    data: state
   })
 }
