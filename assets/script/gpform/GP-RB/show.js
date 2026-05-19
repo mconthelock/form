@@ -1,9 +1,11 @@
 import { fetchUtils } from "@amec/webasset/api/fetch-utils";
-import { getFormDetail, getMode, showflow } from "@amec/webasset/api/webform";
+import { doaction, getExtData, getFormDetail, getMode, showflow } from "@amec/webasset/api/webform";
 import { webflowSubmit } from "@amec/webasset/components/form";
-import { getUrlParams } from "@amec/webasset/utils";
+import { getUrlParams, showErrorMessage, showMessage } from "@amec/webasset/utils";
 import { downloadOrOpenFile, getFileForm } from "@amec/webasset/api/file";
+import { redirectWebflow } from "@amec/webasset/form";
 
+var cextData;
 $(async function () {
   const param = getUrlParams();
   console.log(param);
@@ -15,6 +17,7 @@ $(async function () {
     CYEAR2: param.CYEAR2,
     NRUNNO: param.NRUNNO,
   };
+
 
   const formDetail = await getFormDetail(form);
   console.log(formDetail);
@@ -28,43 +31,16 @@ $(async function () {
   $("#empDept").text(`${empData.SSEC}/${empData.SDEPT}/${empData.SDIV}`);
   $("#empPos").text(empData.SPOSITION);
 
-  /*เอามาจาก bcackend */
-  /*เรียกใช้ข้อมูลทีละตัว*/
-  /*เอาวัตถุประสงค์ชื่อสแตมป์มาโชว์*/
+  // ดึงข้อมูลจาก backend
+  const getShowdata = await getShowData(form); // รูปแบบ stamp ปกติ
+  const getShowCusdata = await getShowCusData(form); // รูปแบบพิเศษ
 
-  const getShowdata = await getShowData(form); //รูปแบบ stamp ปกติ
-  const getShowCusdata = await getShowCusData(form); //รูปแบบพิเศษ
-
-  try {
-    const fileForm = await getFileForm({
-      ...form,
-      FORM_TYPE: "GP",
-    });
-    console.log(fileForm);
-    if (!fileForm.status) {
-      throw new Error(fileForm.message);
-    }
-    // แสดงรายการไฟล์ที่แนบมากับฟอร์ม
-    $(".file-list").html(
-      fileForm.data
-        .map(
-          (f) => `
-                <div class="file-item w-full min-h-[2rem]rounded-md border border-base-300 bg-base-100 px-4 py-2">
-                    <span>${f.FILE_FNAME}</span>
-                    <button class="download-btn btn btn-primary btn-sm ml-auto shrink-0 " data-stored-name="
-                    ${f.FILE_FNAME}" data-original-name="${f.FILE_ONAME}" data-path="${f.FILE_PATH}"
-                    >Download</button>
-                </div>
-            `,
-        )
-        .join(""),
-    );
-  } catch (error) {
-    console.error("Error fetching file form:", error);
-  }
+  // แยกส่วนแสดงไฟล์แนบออกเป็นฟังก์ชัน อ่านง่ายขึ้น
+  await loadAttachedFiles(form);
 
   const purpose = await getData();
   console.log(purpose);
+
   const Purposedata = purpose
     .map((a) => {
       const otherSelect = `<input type="text"
@@ -84,10 +60,12 @@ $(async function () {
 
   $("#purposeList").html(Purposedata);
 
-  //ปุม approve กับ reject จะโชว์ก็ต่อเมื่อเป็นผู้อนุมัติเท่านั้น
+  // ปุ่ม approve กับ reject จะโชว์ก็ต่อเมื่อเป็นผู้อนุมัติเท่านั้น
   const mode = await getMode({ ...form, EMPNO: param.EMPNO });
+  cextData = await getExtData({ ...form, EMPNO: param.EMPNO });
   const flow = await showflow(form);
   console.log(mode);
+
   let action = "";
   switch (mode) {
     case "2": // edit
@@ -98,6 +76,7 @@ $(async function () {
         reject: true,
       });
       break;
+
     case "3": // view
       action = webflowSubmit({
         flow: true,
@@ -108,9 +87,9 @@ $(async function () {
   }
   $("#sentApprove").html(action);
 
-  ////////////////////////////////////////////////////////
   if (getShowdata.PURPOSE_ID) {
     $(`#purpose_${getShowdata.PURPOSE_ID}`).prop("checked", true);
+
     if (getShowdata.PURPOSE_ID == 4) {
       $("#otherSelect")
         .prop("disabled", false)
@@ -138,109 +117,96 @@ $(async function () {
     String(getShowdata?.NRUNNO || "").trim();
 
   if (hasCustomStamp && isSameRunNo) {
-    $("#radioOther").prop({
-      checked: true,
-      disabled: false,
-    });
-
-    $("#radioStandard").prop({
-      checked: false,
-      disabled: true,
-    });
-
-    $("#radioOtherBox").show();
-    $("#radioStandardBox").hide();
-    // ปิด Standard Stamp Section
-    $("#standardStampSection")
-      .css({
-        opacity: "0.4",
-        "pointer-events": "none",
-      })
-      .find("input, textarea")
-      .prop("disabled", false);
-
-    // เปิด Other Stamp Section เพื่อโชว์ข้อมูล แต่ไม่ให้แก้
-    $("#otherStampSection")
-      .css({
-        opacity: "1",
-        "pointer-events": "auto",
-      })
-      .find("input, textarea")
-      .prop("disabled", false);
-
-    // เอาข้อมูล Purpose จาก getShowdata มาโชว์
-    if (getShowdata.PURPOSE_ID) {
-      $(`#purpose_${getShowdata.PURPOSE_ID}`).prop("checked", true);
-
-      if (String(getShowdata.PURPOSE_ID) === "4") {
-        $("#otherSelect")
-          .prop("disabled", true)
-          .prop("readonly", true)
-          .val(getShowdata.PURPOSE_OTHER || "");
-      }
-    }
-
-    // เอาข้อมูล Other Stamp จาก getShowCusdata มาโชว์
-    $("#otherQty").text(getShowCusdata.QTY);
-    $("#otherRemark").text(getShowCusdata.REMARK);
-
-    $(document).on("click", ".download-btn", async function () {
-      try {
-        const file = await downloadOrOpenFile({
-          baseDir: $(this).data("path"),
-          storedName: $(this).data("stored-name"),
-          originalName: $(this).data("original-name"),
-          mode: "download",
-        });
-      } catch (error) {
-        console.error("Error downloading or opening file:", error);
-      }
-    });
-
+    showCustomStampSection(getShowdata, getShowCusdata);
     return;
   }
 
   if (hasStandardStamp) {
-    $("#radioStandard").prop({
-      checked: true,
-      disabled: false,
-    });
+    showStandardStampSection();
+  }
 
-    $("#radioOther").prop({
-      checked: false,
-      disabled: true,
-    });
+  renderStandardStampByPosition(empData, getShowdata);
+});
 
-    // show Standard
-    $("#radioStandardBox").show();
-    $("#radioOtherBox").hide();
+function showCustomStampSection(getShowdata, getShowCusdata) {
+  $("#radioOther").prop({
+    checked: true,
+    disabled: false,
+  });
 
-    // เปิด Standard Stamp Section
-    $("#standardStampSection").css({
+  $("#radioStandard").prop({
+    checked: false,
+    disabled: true,
+  });
+
+  $("#radioOtherBox").show();
+  $("#radioStandardBox").hide();
+
+  // ปิด Standard Stamp Section
+  $("#standardStampSection")
+    .css({
+      opacity: "0.4",
+      "pointer-events": "none",
+    })
+    .find("input, textarea")
+    .prop("disabled", false);
+
+  // เปิด Other Stamp Section เพื่อโชว์ข้อมูล
+  $("#otherStampSection")
+    .css({
       opacity: "1",
       "pointer-events": "auto",
-    });
+    })
+    .find("input, textarea")
+    .prop("disabled", false);
 
-    // ปิด Other Stamp Section
-    $("#otherStampSection")
-      .css({
-        opacity: "0.4",
-        "pointer-events": "none",
-      })
-      .find("input, textarea")
-      .prop("disabled", true);
+  // เอาข้อมูล Purpose จาก getShowdata มาโชว์
+  if (getShowdata.PURPOSE_ID) {
+    $(`#purpose_${getShowdata.PURPOSE_ID}`).prop("checked", true);
+
+    if (String(getShowdata.PURPOSE_ID) === "4") {
+      $("#otherSelect")
+        .prop("disabled", true)
+        .prop("readonly", true)
+        .val(getShowdata.PURPOSE_OTHER || "");
+    }
   }
-  // แปลง SPOSCODE ให้เป็น string และเติม 0 ด้านหน้า ถ้าเป็นเลขหลักเดียว เช่น 2 => 02
-  const PosiCodeArray = Array.isArray(empData.SPOSCODE)
-    ? empData.SPOSCODE
-    : empData.SPOSCODE
-      ? [empData.SPOSCODE]
-      : [];
 
-  let firstPosCode =
-    PosiCodeArray.length > 0 ? String(PosiCodeArray[0]).trim() : null;
+  // เอาข้อมูล Other Stamp จาก getShowCusdata มาโชว์
+  $("#otherQty").text(getShowCusdata.QTY || "");
+  $("#otherRemark").text(getShowCusdata.REMARK || "");
+}
 
-  if (firstPosCode) firstPosCode = firstPosCode.padStart(2, "0");
+function showStandardStampSection() {
+  $("#radioStandard").prop({
+    checked: true,
+    disabled: false,
+  });
+
+  $("#radioOther").prop({
+    checked: false,
+    disabled: true,
+  });
+
+  $("#radioStandardBox").show();
+  $("#radioOtherBox").hide();
+
+  $("#standardStampSection").css({
+    opacity: "1",
+    "pointer-events": "auto",
+  });
+
+  $("#otherStampSection")
+    .css({
+      opacity: "0.4",
+      "pointer-events": "none",
+    })
+    .find("input, textarea")
+    .prop("disabled", true);
+}
+
+function renderStandardStampByPosition(empData, getShowdata) {
+  const firstPosCode = getFirstPositionCode(empData.SPOSCODE);
 
   // กลุ่มที่ใช้ nameInput1 / stampCircle1
   const input1PosCodes = [
@@ -266,56 +232,196 @@ $(async function () {
     "40", // STAFF
   ];
 
-  // เคลียร์ก่อน
+  resetStandardStampDisplay();
+
+  if (input1PosCodes.includes(firstPosCode)) {
+    setStampCircle1(getShowdata.NAME_STAMP || "");
+  } else if (input2PosCodes.includes(firstPosCode)) {
+    setStampCircle2(getShowdata.NAME_STAMP || "", empData.SDIV || "");
+  } else {
+    setStampCircle1(getShowdata.NAME_STAMP || "");
+  }
+
+  lockNameInputsByValue();
+}
+
+function getFirstPositionCode(posCode) {
+  const posCodeArray = Array.isArray(posCode) ? posCode : posCode ? [posCode] : [];
+
+  let firstPosCode =
+    posCodeArray.length > 0 ? String(posCodeArray[0]).trim() : null;
+
+  if (firstPosCode) {
+    firstPosCode = firstPosCode.padStart(2, "0");
+  }
+
+  return firstPosCode;
+}
+
+function resetStandardStampDisplay() {
   $("#nameInput1").val("");
   $("#nameInput2").val("");
   $("#name").text("");
   $("#name2").text("");
   $("#divisionDisplay").text("");
 
-  // reset opacity
   $("#rowStamp1").css("opacity", "1");
   $("#rowStamp2").css("opacity", "1");
+}
 
-  if (input1PosCodes.includes(firstPosCode)) {
-    $("#nameInput1").val(getShowdata.NAME_STAMP || "");
-    $("#name").text(
-      getShowdata.NAME_STAMP || "",
-    ); /*แสดงชื่อใต้สแตมป์ในวงกลมสีน้ำเงิน*/
-    $("#nameInput2").val("");
-    // แถวบน active / แถวล่างจาง
-    $("#rowStamp1").css("opacity", "1");
-    $("#rowStamp2").css("opacity", "0.3");
-  } else if (input2PosCodes.includes(firstPosCode)) {
-    $("#nameInput1").val("");
-    $("#nameInput2").val(getShowdata.NAME_STAMP || "");
-    $("#divisionDisplay").text(
-      empData.SDIV || "",
-    ); /*แสดงชื่อแผนกใต้สแตมป์ในวงกลมสีน้ำเงิน*/
-    console.log(empData.SDIV);
-    $("#name2").text(getShowdata.NAME_STAMP || "");
-    // แถวบนจาง / แถวล่าง active
-    $("#rowStamp1").css("opacity", "0.3");
-    $("#rowStamp2").css("opacity", "1");
-  } else {
-    // กรณีไม่เจอ position code จะเลือกให้ใส่ช่องแรกไว้ก่อน
-    $("#nameInput1").val(getShowdata.NAME_STAMP || "");
-    $("#name").text(getShowdata.NAME_STAMP || "");
-    $("#nameInput2").val("");
-    $("#rowStamp1").css("opacity", "1");
-    $("#rowStamp2").css("opacity", "0.3");
-  }
-  // ต้องเช็คหลังจาก set ค่าเสร็จแล้ว
+function setStampCircle1(nameStamp) {
+  $("#nameInput1").val(nameStamp);
+  $("#name").text(nameStamp);
+  $("#nameInput2").val("");
+
+  // แถวบน active / แถวล่างจาง
+  $("#rowStamp1").css("opacity", "1");
+  $("#rowStamp2").css("opacity", "0.3");
+}
+
+function setStampCircle2(nameStamp, division) {
+  $("#nameInput1").val("");
+  $("#nameInput2").val(nameStamp);
+  $("#divisionDisplay").text(division);
+  $("#name2").text(nameStamp);
+
+  // แถวบนจาง / แถวล่าง active
+  $("#rowStamp1").css("opacity", "0.3");
+  $("#rowStamp2").css("opacity", "1");
+}
+
+function lockNameInputsByValue() {
   const hasNameInput1 = $("#nameInput1").val().trim() !== "";
   const hasNameInput2 = $("#nameInput2").val().trim() !== "";
+
   $("#nameInput1").prop("disabled", hasNameInput1);
   $("#nameInput2").prop("disabled", hasNameInput2);
-
   $("#radioOther").prop("disabled", hasNameInput1 || hasNameInput2);
+}
+
+async function loadAttachedFiles(form) {
+  try {
+    const fileForm = await getFileForm({
+      ...form,
+      FORM_TYPE: "GP",
+    });
+
+    console.log("fileForm:", fileForm);
+
+    if (!fileForm.status) {
+      throw new Error(fileForm.message || "Cannot get attached files");
+    }
+
+    const fileList = Array.isArray(fileForm.data) ? fileForm.data : [];
+    renderAttachedFiles(fileList);
+  } catch (error) {
+    console.error("Error fetching file form:", error);
+    renderAttachedFiles([]);
+  }
+}
+
+function renderAttachedFiles(fileList) {
+  if (!fileList.length) {
+    $(".file-list").html(`
+      <div class="w-full min-h-[2rem] rounded-md border border-base-300 bg-base-100 px-4 py-2 flex items-center">
+        <span class="opacity-60">-</span>
+      </div>
+    `);
+    return;
+  }
+
+  const fileHtml = fileList
+    .map((f) => {
+      const originalName = f.FILE_ONAME || f.FILE_FNAME || "-";
+      const storedName = f.FILE_FNAME || "";
+      const filePath = f.FILE_PATH || "";
+
+      return `
+        <div class="file-item flex items-center gap-2 w-full min-w-0 min-h-[2rem] rounded-md border border-base-300 bg-base-100 px-4 py-2">
+          <span class="flex-1 min-w-0 truncate">
+            ${originalName}
+          </span>
+
+          <button
+            type="button"
+            class="download-btn btn btn-primary btn-sm ml-auto shrink-0"
+            data-stored-name="${storedName}"
+            data-original-name="${originalName}"
+            data-path="${filePath}"
+          >
+            Download
+          </button>
+        </div>
+      `;
+    })
+    .join("");
+
+  $(".file-list").html(fileHtml);
+}
+
+$(document).on("click", ".download-btn", async function () {
+  try {
+    const file = await downloadOrOpenFile({
+      baseDir: $(this).data("path"),
+      storedName: $(this).data("stored-name"),
+      originalName: $(this).data("original-name"),
+      mode: "download",
+    });
+  } catch (error) {
+    console.error("Error downloading or opening file:", error);
+  }
 });
 
-// other stamp
+// action form approve, reject
+$(document).on("click", "button[name='btnAction']", async function () {
+  try {
+    const param = getUrlParams();
+    const form = {
+      NFRMNO: param.NFRMNO,
+      VORGNO: param.VORGNO,
+      CYEAR: param.CYEAR,
+      CYEAR2: param.CYEAR2,
+      NRUNNO: param.NRUNNO,
+    };
+    console.log(form)
+    const action = $(this).val();
+    const remark = $('#remark').val();
+    const cextData = '01';
+    const queryString = window.location.search;
+    const urlParams = new URLSearchParams(queryString);
+    const empno = urlParams.get("empno");
+    const state = {
+      ...form,
+      user: empno,
+      ACTION: action,
+      REMARK: remark,
+      NAME: "TEST NEW NAME",
+    };
+    console.log(state.user),
+      console.log(action)
+    console.log(state.REMARK)
+    console.log(state.NAME)
 
+    let res;
+    if (cextData == '01') {
+      res = await updateStamp(state)
+    } else {
+      res = await updateStamp(state);
+
+    }
+
+    if (res.status == true) {
+      showMessage(res.message, "succcess");
+      redirectWebflow();
+    } else {
+      throw new Error(res.message);
+    }
+  } catch (error) {
+    console.error(error);
+    showErrorMessage(error.message);
+  }
+
+});
 async function getData() {
   return await fetchUtils({
     url: `${process.env.APP_API}/gpform/gp-rb`,
@@ -352,4 +458,13 @@ async function getFileForm() {
     method: "POST",
     data,
   });
+}
+
+async function updateStamp(state) {
+   const url = `${process.env.APP_API}/gpform/showstamp-gp-rb/${state.NFRMNO}/${state.VORGNO}/${state.CYEAR}/${state.CYEAR2}/${state.NRUNNO}/${state.user}/${state.ACTION}`;
+  return await fetchUtils({
+    url: url,
+    method: "PATCH",
+
+  })
 }

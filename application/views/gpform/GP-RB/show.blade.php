@@ -218,7 +218,7 @@
                 </div>
             </div>
 
-            <div id="sentApprove"></div>
+            <div id="sentApprove" class ="mt-5"></div>
         </div>
     @endsection
 
