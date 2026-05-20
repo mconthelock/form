@@ -14,6 +14,11 @@ class Main extends MY_Controller {
 
     public function index()
     {
+        $this->views('isform/IS-SEF/assign');
+    }
+
+    public function form()
+    {
         $nfrmno       = $this->input->get('NFRMNO');
         $vorgno       = $this->input->get('VORGNO');
         $cyear        = $this->input->get('CYEAR');
