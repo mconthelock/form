@@ -14,7 +14,31 @@ class Main extends MY_Controller {
 
     public function index()
     {
-        $this->views('isform/IS-SEF/assign');
+        $nfrmno       = $this->input->get('NFRMNO');
+        $vorgno       = $this->input->get('VORGNO');
+        $cyear        = $this->input->get('CYEAR');
+        $cyear2       = $this->input->get('CYEAR2');
+        $nrunno       = $this->input->get('NRUNNO');
+        $data         = [
+            'NFRMNO' => $nfrmno,
+            'VORGNO' => $vorgno,
+            'CYEAR'  => $cyear,
+            'CYEAR2' => $cyear2,
+            'NRUNNO' => $nrunno
+        ];
+        $data_session = $this->sm->select('ISEVA_SESSIONS');
+        // if ($data_session[0]->EVAPRO_AVG != null) {
+        //     $this->views('isform/IS-SEF/views', $data);
+        // } else {
+        //     $this->views('isform/IS-SEF/index', $data);
+        // }
+        // $this->views('isform/IS-SEF/views', $data);
+        if (!$cyear2 && !$nrunno) {
+            $this->views('isform/IS-SEF/views', $data);
+        } else {
+            $this->views('isform/IS-SEF/assign');
+        }
+        
     }
 
     public function form()
