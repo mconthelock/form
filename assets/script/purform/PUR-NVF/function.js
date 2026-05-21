@@ -1,24 +1,19 @@
 
 import { attachTypeManager } from "./formManager";
 export function selectAttachType(type) {
+    console.log(type);
     switch (type) {
-        case 1:
-            attachTypeManager.show(["po", "other"]);
-            break;
-        case "final":
+        case "oversea":
             attachTypeManager.show([
-                "part",
-                "thirdparty",
-                "delivery",
-                "asset",
+                "cer",
                 "other",
             ]);
             break;
         default:
             attachTypeManager.show([
-                "equipment",
-                "thirdparty",
-                "delivery",
+                "cer",
+                "vat",
+                "book",
                 "other",
             ]);
             break;

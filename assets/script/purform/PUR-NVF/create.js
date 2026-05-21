@@ -10,6 +10,7 @@ import {
     reqByManager,
     currencyManager,
     attachFileManager,
+    vendorTypeManager,
 } from "./formManager";
 import { downloadOrOpenFile } from "@amec/webasset/api/file";
 
@@ -20,6 +21,9 @@ $(async function () {
 $(document).on("change", "#REQBY", function () {
     reqByManager.setEmpRequester(this.value);
 });
+
+
+
 
 // Sync value for currency select2
 $(document).on("select2:select", ".currency", function () {
@@ -39,6 +43,10 @@ $(document).on("change", 'input[name="INVOICE_TYPE"]', async function () {
 // เมื่อเลือก Accept PO เป็น Subcon หรือ Other ให้เปิดช่องกรอกข้อมูล
 $(document).on("change", 'input[name="ACCEPT_PO"]', function () {
     acceptPoManager.change();
+});
+
+$(document).on("change", 'input[name="VENDOR_LOCATION"]', function () {
+    vendorTypeManager.change();
 });
 
 // เมื่อเลือก PAYMENT CONDITIONS & TERMS

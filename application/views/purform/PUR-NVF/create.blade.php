@@ -61,237 +61,146 @@
                 </section>
                 <div class="divider"></div>
                 <section id="section-1">
-                <div class="flex items-start gap-4 mb-4">
-                        <span class="required w-32 shrink-0 pt-2 font-semibold">Type of Job : </span>
+                    <div class="flex items-start gap-4 mb-4">
+                        <span class="required w-32 shrink-0 pt-2 font-semibold">Type of Job</span>
                         
                         <label class="flex-1">
                             <textarea name="TYPEJOB" id="TYPEJOB" maxlength="512" class="textarea w-full req" placeholder="1.IT System Integration(SI) 2. Infastructure & security solutions"></textarea>
                         </label>
                     </div>
-
-                    <div class="flex items-start gap-4">
-                        <span class="required w-32 shrink-0 pt-2 font-semibold">Purpose: </span>
+                    <div class="flex items-start gap-4 mb-4">
+                        <span class="required w-32 shrink-0 pt-2 font-semibold">Service</span>
                         
                         <label class="flex-1">
-                            <textarea name="PURPOSE" id="PURPOSE" maxlength="512" class="textarea w-full req" placeholder="To register the winning bidder for the Network Installation of Wireless Access Points project."></textarea>
+                            <textarea name="SERVICE" id="SERVICE" rows="6" maxlength="512" class="textarea w-full req" placeholder="1) IT System Integration & Network Infrastructure:Providing comprehensive design, installation, and maintenance of IT systems and network structures.&#10;2) Data Center Infrastructure Solutions: Design, installation, and managment of sercer rooms, including racking, cooling&#10;systems, and power backup (UPS).&#10;3) Integrated CCTV & Surveillance Systems: Provision of end-toend security monitoring solutions, encompassing camera&#10;deployment and network recording setup."></textarea>
                         </label>
                     </div>
-                    <fieldset class="gap-8">
-                        <span class="required">Invoice Type: </span>
-                        <div class="flex flex-col gap-2 w-full">
-                            <label>
-                                <input type="checkbox" name="INVOICE_TYPE" value="Trial Parts, Sample Parts (Ship to other)" class="checkbox checkbox-xs req" i-type="trial">
-                                Trial Parts, Sample Parts (Ship to other)
-                            </label>
-                            <label>
-                                <input type="checkbox" name="INVOICE_TYPE" value="Indirec Parts, None Production Parts (Ship direct to requester's area.)" class="checkbox checkbox-xs req" i-type="indirec">
-                                Indirec Parts, None Production Parts (Ship direct to requester's area.)
-                            </label>
-                            <label>
-                                <input type="checkbox" name="INVOICE_TYPE" value="Services / Construction / Building" class="checkbox checkbox-xs req" i-type="service">
-                                Services / Construction / Building
-                            </label>
-                            <label>
-                                <input type="checkbox" name="INVOICE_TYPE" value="Molds, DIE" class="checkbox checkbox-xs req" i-type="molds">
-                                Molds, DIE
-                            </label>
-                            <label>
-                                <input type="checkbox" name="INVOICE_TYPE" value="Machine" class="checkbox checkbox-xs req" i-type="machine">
-                                Machine
-                            </label>
-                            <label>
-                                <input type="checkbox" name="INVOICE_TYPE" value="Maintenance, Rental, Software, etc." class="checkbox checkbox-xs req" i-type='maintenance'>
-                                Maintenance, Rental, Software, etc.
-                            </label>
-                            <label >
-                                <input type="checkbox" name="INVOICE_TYPE" value="Other" class="checkbox checkbox-xs req" i-type='other'>
-                                Other
-                            </label>
-                            <input type="text" name="INVOICE_OTHER" id="INVOICE_OTHER" class="input input-sm w-full" disabled>
-                        </div>
-                    </fieldset>
-                    <fieldset class="gap-10 hidden!" id="third-party-fieldset">
-                        <span class="required">Third Party: </span>
-                        <label>
-                            <select name="THIRD_PARTY" id="THIRD_PARTY" class="select select-sm w-full" placeholder="Select third party"></select>
+                    <div class="flex items-start gap-4">
+                        <span class="required w-32 shrink-0 pt-2 font-semibold">Purpose</span>
+                        
+                        <label class="flex-1">
+                            <textarea name="PURPOSE" id="PURPOSE" rows="5" maxlength="1000" class="textarea w-full req" placeholder="To register the winning bidder for the Network Installation of Wireless Access Points project."></textarea>
                         </label>
-                    </fieldset>
+                    </div>
                 </section>
                 <div class="divider"></div>
                 <section id="section-2">
-                    <fieldset class="gap-8">
-                        <span class="required">Subject: </span>
-                        <label>
-                            <textarea name="SUBJECT" id="SUBJECT" maxlength="512" class="textarea w-full req" placeholder="Device UTP Cat6 for LAN Access point (2 Points) ESA Factory"></textarea>
+                  <h2 class="font-bold text-xl mb-3 required">Vendor Information Detail </h2>
+                    <div class="flex flex-col md:flex-row gap-4 mb-4 items-start">
+                        <!-- ฝั่งซ้าย: กล่องกรอก Company Name (กินพื้นที่ครึ่งหนึ่ง w-full md:w-1/2) -->
+                        <div class="flex items-start gap-4 w-full md:w-1/2">
+                            <span class="required w-32 shrink-0 pt-2 font-semibold">Company name</span>
+                            <label class="flex-1">
+                                <input type="text" name="COMPANY_NAME" id="COMPANY_NAME" class="input input-sm w-full req">
+                            </label>
+                        </div>
+                        
+                        <!-- ฝั่งขวา: ตัวเลือกประเภทพ (Local / Oversea) -->
+                        <div class="flex items-center gap-6 h-8 pl-4 md:pl-0 pt-1 md:pt-2">
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="radio" name="VENDOR_LOCATION" value="Local" v-type="local" class="radio radio-xs req" >
+                                <span class="text-sm font-medium">Local</span>
+                            </label>
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="radio" name="VENDOR_LOCATION" value="Oversea" v-type="oversea"  class="radio radio-xs req">
+                                <span class="text-sm font-medium">Oversea</span>
+                            </label>
+                        </div>
+                    </div>
+                     <div class="flex items-start gap-4 mb-4">
+                        <span class="required w-32 shrink-0 pt-2 font-semibold">Address</span>
+                        
+                        <label class="flex-1">
+                            <textarea name="COMPANY_ADDRESS" id="COMPANY_ADDRESS" rows="3" maxlength="1000" class="textarea w-full req" placeholder="43/86 The Gallery & Natury Trend Village, Moo 16"></textarea>
                         </label>
-                    </fieldset>
+                    </div>
+                    <div class="flex items-start gap-4 mb-4  w-1/2">
+                        <span class="required w-32 shrink-0 pt-2 font-semibold">Contact name</span>
+                        <label>
+                            <input type="text" name="CONTACT_NAME" id="CONTACT_NAME" class="input input-sm w-full req">
+                        </label>
+                    </div>
+                    <div class="flex flex-col md:flex-row gap-4 mb-4">
+                        <!-- Email -->
+                        <div class="flex items-start gap-4 w-full md:w-1/2">
+                            <span class="required w-32 shrink-0 pt-2 font-semibold">Email</span>
+                            <label class="flex-1">
+                                <input type="text" name="EMAIL" id="EMAIL" class="input input-sm w-full req">
+                            </label>
+                        </div>
+                        <!-- Web site -->
+                        <div class="flex items-start gap-4 w-full md:w-1/2">
+                            <span class="required w-32 shrink-0 pt-2 font-semibold">Web site</span>
+                            <label class="flex-1">
+                                <input type="text" name="WEBSITE" id="WEBSITE" class="input input-sm w-full req">
+                            </label>
+                        </div>
+                    </div>
+                    <div class="flex flex-col md:flex-row gap-4 mb-4">
+                        <!-- Tel.no -->
+                        <div class="flex items-start gap-4 w-full md:w-1/2">
+                            <span class="required w-32 shrink-0 pt-2 font-semibold">Tel.no</span>
+                            <label class="flex-1">
+                                <input type="text" name="TELEPHONE" id="TELEPHONE" class="input input-sm w-full req">
+                            </label>
+                        </div>
+                        <!-- Fax.no -->
+                        <div class="flex items-start gap-4 w-full md:w-1/2">
+                            <span class="w-32 shrink-0 pt-2 font-semibold">Fax.no</span>
+                            <label class="flex-1">
+                                <input type="text" name="FAX" id="FAX" class="input input-sm w-full">
+                            </label>
+                        </div>
+                    </div>
+                    <div class="flex flex-col md:flex-row gap-4 mb-4">
+                        <!-- Bank name -->
+                        <div class="flex items-start gap-4 w-full md:w-1/2">
+                            <span class="required w-32 shrink-0 pt-2 font-semibold">Bank name</span>
+                            <label class="flex-1">
+                                <input type="text" name="BANK_NAME" id="BANK_NAME" class="input input-sm w-full req">
+                            </label>
+                        </div>
+                        <!-- Branch name -->
+                        <div class="flex items-start gap-4 w-full md:w-1/2">
+                            <span class="required w-32 shrink-0 pt-2 font-semibold">Branch name</span>
+                            <label class="flex-1">
+                                <input type="text" name="BRANCH_NAME" id="BRANCH_NAME" class="input input-sm w-full req">
+                            </label>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-4 mb-4  w-1/2">
+                        <span class="required w-32 shrink-0 pt-2 font-semibold">Account number</span>
+                        <label>
+                            <input type="text" name="ACCOUNT_NUMBER" id="ACCOUNT_NUMBER" class="input input-sm w-full req">
+                        </label>
+                    </div>
+                    <div class="flex items-start gap-4 mb-4  w-1/2">
+                        <span class="required w-32 shrink-0 pt-2 font-semibold">Payment Term</span>
+                        <label>
+                                 <select id="TERM_PAYMENT" class="select select-sm w-fit min-w-16 term-payment req">
+                                     <option value="" disabled selected>Select Payment Term</option>
+                                     <option value="Cash">Cash</option>
+                                     <option value="Credit">Credit</option>
+                                    </select>
+                        </label>
+                    </div>
                 </section>
                 <div class="divider"></div>
                 <section id="section-3" >
-                    <fieldset class="gap-8">
-                        <span>ACCEPT P/O BY</span>
-                        <div class="flex flex-col gap-2 w-full">
-                            <label class="flex items-center gap-2">
-                                <input type="radio" name="ACCEPT_PO" value="Sub-con / Vendor" class="radio radio-xs" a-type="subcon">
-                                <span class="text-nowrap w-fit">
-                                    Sub-con / Vendor
-                                </span>
-                                <input type="text" name="ACCEPT_SUBCON" id="ACCEPT_SUBCON" class="input input-sm w-full" placeholder="CREATOR DESIGN SYSTEM CO.,LTD." disabled>
-                            </label>
-                            <label class="flex items-center gap-2">
-                                <input type="radio" name="ACCEPT_PO" value="Other" class="radio radio-xs" a-type="other">
-                                <span class="text-nowrap w-fit">
-                                    Other
-                                </span>
-                                <input type="text" name="ACCEPT_OTHER" id="ACCEPT_OTHER" class="input input-sm w-full" disabled>
-                            </label>
-                        </div>
-                    </fieldset>
-                    <div class="flex gap-8">
-                        <div class="flex flex-col gap-2 w-1/2">
-                            <fieldset class="gap-4">
-                                <span>Quotation No.</span>
-                                <label>
-                                    <input type="text" name="QUOTATION" id="QUOTATION" class="input input-sm w-full" placeholder="CDS-2K24-00074">
-                                </label>
-                            </fieldset>
-                            <fieldset class="gap-10">
-                                <span>PR/PO No.</span>
-                                <label>
-                                    <input type="text" name="PONO" id="PONO" class="input input-sm w-full" placeholder="AMEC00440693">
-                                </label>
-                            </fieldset>
-                            {{-- <fieldset class="gap-9">
-                                <span>P/O sign by</span>
-                                <label>
-                                    <input type="text" name="PO_SIGNBY" id="PO_SIGNBY" class="input input-sm w-full">
-                                </label>
-                            </fieldset> --}}
-                        </div>
-                        <div class="flex flex-col gap-2 w-1/2">
-                            <fieldset class="gap-2">
-                                <span>Date: (version)</span>
-                                <label>
-                                    <input type="date" name="QUOTATION_DATE" id="QUOTATION_DATE" class="input input-sm w-full fdate" placeholder="2026-01-19">
-                                </label>
-                            </fieldset>
-                            <fieldset class="gap-3">
-                                <span>Total Amount</span>
-                                <label class="flex gap-2">
-                                    <input type="number" step="1" min="0" name="TOTAL_AMOUNT" id="TOTAL_AMOUNT" class="input input-sm w-full" placeholder="47,300.00">
-                                    <select id="curr-total" class="select select-sm w-fit min-w-16 currency">
-                                    </select>
-                                </label>
-                            </fieldset>
-                            {{-- <fieldset class="gap-24">
-                                <span>DATE : </span>
-                                <label>
-                                    <input type="date" name="PO_SIGNDATE" id="PO_SIGNDATE" class="input input-sm w-full fdate" placeholder="2026-01-19">
-                                </label>
-                            </fieldset> --}}
-                        </div>
-                    </div>
-                    {{-- <fieldset class="gap-4">
-                        <label>
-                            <input type="radio" name="FORM_TYPE" value="Print out Documents or E-mail" class="radio radio-xs">
-                            Print out Documents or E-mail
-                        </label>
-                        <label>
-                            <input type="radio" name="FORM_TYPE" value="Electronic Form (SCM)" class="radio radio-xs">
-                            Electronic Form (SCM)
-                        </label>
-                    </fieldset> --}}
-                </section>
-                <div class="divider"></div>
-                <section id="section-4">
-                    <div class="flex gap-8">
-                        <div class="flex flex-col gap-2 w-1/2">
-                            <fieldset class="gap-4">
-                                <span class="required">INVOICE NO.</span>
-                                <label>
-                                    <input type="text" name="INVOICE_NO" id="INVOICE_NO" class="input input-sm w-full req" placeholder="INV68-00109, 110">
-                                </label>
-                            </fieldset>
-                            <fieldset class="gap-4">
-                                <span>AMEC Person in charge</span>
-                                <label>
-                                    <input type="text" name="PERSON_INCHARGE" id="PERSON_INCHARGE" class="input input-sm w-full">
-                                </label>
-                            </fieldset>
-                        </div>
-                        <div class="flex flex-col gap-2 w-1/2">
-                            <fieldset class="gap-4">
-                                <span class="required">Amount</span>
-                                <label class="flex gap-2">
-                                    <input type="number" step="1" min="0" name="INVOICE_AMOUNT" id="INVOICE_AMOUNT" class="input input-sm w-full req" placeholder="47,300.00">
-                                    <select id="curr-invoice" class="select select-sm w-fit min-w-16 currency">
-                                    </select>
-                                </label>
-                            </fieldset>
-                            <fieldset class="gap-11">
-                                <span>DATE : </span>
-                                <label>
-                                    <input type="date" name="INVOICE_DATE" id="INVOICE_DATE" class="input input-sm w-full fdate" placeholder="2026-01-19">
-                                </label>
-                            </fieldset>
-                        </div>
-                    </div>
-                </section>
-                <div class="divider"></div>
-                <section id="section-5">
-                    <h2 class="font-bold text-xl mb-3 required">PAYMENT CONDITIONS & TERMS</h2>
-                    <div class="flex gap-8 justify-between">
-                        <fieldset class="flex-col gap-4">
-                            <label>
-                                <input type="radio" name="PAYMENT_TYPE" value="payment condition (If any)" p-type="manual" class="radio radio-xs req">
-                                <input type="number" step="1" min="1" name="PAYMENT_NUM" id="PAYMENT_NUM" disabled="disabled" class="input input-sm w-24" placeholder="1">
-                                payment condition (If any)
-                            </label>
-                            <label>
-                                <input type="radio" name="PAYMENT_TYPE" value="Final payment condition (or 100% payment)" p-type="final" class="radio radio-xs req">
-                                Final payment condition (or 100% payment)
-                            </label>
-                            <div>
-                            </div>
-                        </fieldset>
-                        <fieldset>
-                            <label>
-                                <span class="required"></span>
-                                <input type="number" step="1" min="0" name="PAYMENT" id="PAYMENT" class="input input-sm w-48 req" placeholder="47,300.00" disabled>
-                                <select id="curr-payment" class="select select-sm w-fit min-w-16 currency">
-                                    </select>
-                            </label>
-                        </fieldset>
-                    </div>
-                </section>
-                <textarea name="PAYMENT_DETAIL" id="PAYMENT_DETAIL" maxlength="3000" class="textarea w-full" placeholder=""></textarea>
-                <div class="divider"></div>
-                <section>
+                    
                     <h2 class="font-bold text-xl mb-3 required">Attach files</h2>
                     <fieldset class="flex-col gap-2">
-                        <label class="hidden attach-file" id="attach-po">
-                            <input type="checkbox" name="ATTACH_TYPE" value="P/O Confirmation" class="checkbox checkbox-xs" a-type="po">
-                            P/O Confirmation
+                        <label class="hidden attach-file" id="attach-cer">
+                            <input type="checkbox" name="ATTACH_TYPE" value="Company Certification " class="checkbox checkbox-xs" a-type="cer">
+                            Company Certification / Company Profile
                         </label>
-                        <label class="hidden attach-file" id="attach-equipment">
-                            <input type="checkbox" name="ATTACH_TYPE" value="Equipment Evaluation Report" class="checkbox checkbox-xs" a-type="equipment">
-                            Equipment Evaluation Report
+                        <label class="hidden attach-file" id="attach-vat">
+                            <input type="checkbox" name="ATTACH_TYPE" value="Vat Register" class="checkbox checkbox-xs" a-type="vat">
+                            Vat Register
                         </label>
-                        <label class="hidden attach-file" id="attach-thirdparty">
-                            <input type="checkbox" name="ATTACH_TYPE" value="Third Party Confirmation" class="checkbox checkbox-xs" a-type="thirdparty">
-                            Third Party Confirmation
-                        </label>
-                        <label class="hidden attach-file" id="attach-delivery">
-                            <input type="checkbox" name="ATTACH_TYPE" value="Delivery Confirmation" class="checkbox checkbox-xs" a-type="delivery">
-                            Delivery Confirmation
-                        </label>
-                        <label class="hidden attach-file" id="attach-part">
-                            <input type="checkbox" name="ATTACH_TYPE" value="Part Evaluation /Audit Report" class="checkbox checkbox-xs" a-type="part">
-                            Part Evaluation /Audit Report
-                        </label>
-                        <label class="hidden attach-file" id="attach-asset">
-                            <input type="checkbox" name="ATTACH_TYPE" value='"Asset use Agreement" or "Request Equipment to Outside" Sheet.(for Outside Asset)' class="checkbox checkbox-xs" a-type="asset">
-                            "Asset use Agreement" or "Request Equipment to Outside" Sheet.(for Outside Asset)
+                        <label class="hidden attach-file" id="attach-book">
+                            <input type="checkbox" name="ATTACH_TYPE" value="Book bank" class="checkbox checkbox-xs" a-type="book">
+                            Book Bank
                         </label>
                         <label class="hidden attach-file flex items-center gap-2" id="attach-other">
                             <input type="checkbox" name="ATTACH_TYPE" value="Other" class="checkbox checkbox-xs" a-type="other">

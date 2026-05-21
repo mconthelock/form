@@ -731,6 +731,48 @@ const paymentDetailManager = {
         this.input.val(val);
     },
 };
+
+// -------------------------- Vendor Type Manager ------------------------------
+
+export const vendorTypeManager = {
+    get radio() {
+        return $('input[name="VENDOR_LOCATION"]');
+    },
+    get type() {
+        let type = null;
+        this.radio.each(function () {
+            if ($(this).is(":checked")) {
+                type = $(this).attr("v-type");
+            }
+        });
+        return type;
+    },
+    set value(val) {
+        this.radio.each(function () {
+            if ($(this).val() == val) {
+                $(this).prop("checked", true);
+            }
+        });
+        this.change();
+    },
+    change() {
+       // paymentNumManager.value = "";
+       // paymentManager.disabled(false);
+        attachTypeManager.hide("other");
+        attachTypeManager.reset("other");
+        const type = this.type;
+        selectAttachType(type);
+        
+    },
+};
+
+
+
+
+// -------------------------- End Vendor Type Manager -------------------
+
+
+
 // -------------------------- Payment Type Manager --------------------------
 export const paymentTypeManager = {
     get radio() {
@@ -826,12 +868,9 @@ export const attachTypeManager = {
         return $('input[name="ATTACH_TYPE"]');
     },
     _list: [
-        "po",
-        "equipment",
-        "thirdparty",
-        "delivery",
-        "part",
-        "asset",
+        "cer",
+        "vat",
+        "book",
         "other",
     ],
     get types() {
