@@ -411,7 +411,7 @@ $(document).on("click", "button[name='btnAction']", async function () {
     }
 
     if (res.status) {
-      showMessage(res.message, "succcess");
+      showMessage(res.message, "success");
       redirectWebflow();
     } else {
       throw new Error(res.message);
