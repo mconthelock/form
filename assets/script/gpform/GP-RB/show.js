@@ -36,7 +36,7 @@ $(async function () {
   const getShowCusdata = await getShowCusData(form); // รูปแบบพิเศษ
 
   // แยกส่วนแสดงไฟล์แนบออกเป็นฟังก์ชัน อ่านง่ายขึ้น
-  await loadAttachedFiles(form);
+  //await loadAttachedFiles(form);
 
   const purpose = await getData();
   console.log(purpose);
@@ -105,7 +105,12 @@ $(async function () {
     getShowCusdata &&
     Object.keys(getShowCusdata).length > 0 &&
     getShowCusdata.NRUNNO;
-
+  // โหลดไฟล์แนบเฉพาะรูปแบบพิเศษ
+  if (hasCustomStamp) {
+    await loadAttachedFiles(form);
+  } else {
+    renderAttachedFiles([]);
+  }
   // เช็คว่ามีข้อมูล Standard Stamp หรือไม่
   const hasStandardStamp =
     getShowdata &&
@@ -126,6 +131,12 @@ $(async function () {
   }
 
   renderStandardStampByPosition(empData, getShowdata);
+
+  bindNameStampPreview();
+
+  if (cextData == "01") {
+    unlockNameStampInput();
+  }
 });
 
 function showCustomStampSection(getShowdata, getShowCusdata) {
@@ -232,7 +243,7 @@ function renderStandardStampByPosition(empData, getShowdata) {
     "40", // STAFF
   ];
 
-  resetStandardStampDisplay();
+resetStandardStampDisplay();
 
   if (input1PosCodes.includes(firstPosCode)) {
     setStampCircle1(getShowdata.NAME_STAMP || "");
@@ -245,98 +256,98 @@ function renderStandardStampByPosition(empData, getShowdata) {
   lockNameInputsByValue();
 }
 
-function getFirstPositionCode(posCode) {
-  const posCodeArray = Array.isArray(posCode) ? posCode : posCode ? [posCode] : [];
+  function getFirstPositionCode(posCode) {
+    const posCodeArray = Array.isArray(posCode) ? posCode : posCode ? [posCode] : [];
 
-  let firstPosCode =
-    posCodeArray.length > 0 ? String(posCodeArray[0]).trim() : null;
+    let firstPosCode =
+      posCodeArray.length > 0 ? String(posCodeArray[0]).trim() : null;
 
-  if (firstPosCode) {
-    firstPosCode = firstPosCode.padStart(2, "0");
-  }
-
-  return firstPosCode;
-}
-
-function resetStandardStampDisplay() {
-  $("#nameInput1").val("");
-  $("#nameInput2").val("");
-  $("#name").text("");
-  $("#name2").text("");
-  $("#divisionDisplay").text("");
-
-  $("#rowStamp1").css("opacity", "1");
-  $("#rowStamp2").css("opacity", "1");
-}
-
-function setStampCircle1(nameStamp) {
-  $("#nameInput1").val(nameStamp);
-  $("#name").text(nameStamp);
-  $("#nameInput2").val("");
-
-  // แถวบน active / แถวล่างจาง
-  $("#rowStamp1").css("opacity", "1");
-  $("#rowStamp2").css("opacity", "0.3");
-}
-
-function setStampCircle2(nameStamp, division) {
-  $("#nameInput1").val("");
-  $("#nameInput2").val(nameStamp);
-  $("#divisionDisplay").text(division);
-  $("#name2").text(nameStamp);
-
-  // แถวบนจาง / แถวล่าง active
-  $("#rowStamp1").css("opacity", "0.3");
-  $("#rowStamp2").css("opacity", "1");
-}
-
-function lockNameInputsByValue() {
-  const hasNameInput1 = $("#nameInput1").val().trim() !== "";
-  const hasNameInput2 = $("#nameInput2").val().trim() !== "";
-
-  $("#nameInput1").prop("disabled", hasNameInput1);
-  $("#nameInput2").prop("disabled", hasNameInput2);
-  $("#radioOther").prop("disabled", hasNameInput1 || hasNameInput2);
-}
-
-async function loadAttachedFiles(form) {
-  try {
-    const fileForm = await getFileForm({
-      ...form,
-      FORM_TYPE: "GP",
-    });
-
-    console.log("fileForm:", fileForm);
-
-    if (!fileForm.status) {
-      throw new Error(fileForm.message || "Cannot get attached files");
+    if (firstPosCode) {
+      firstPosCode = firstPosCode.padStart(2, "0");
     }
 
-    const fileList = Array.isArray(fileForm.data) ? fileForm.data : [];
-    renderAttachedFiles(fileList);
-  } catch (error) {
-    console.error("Error fetching file form:", error);
-    renderAttachedFiles([]);
+    return firstPosCode;
   }
-}
 
-function renderAttachedFiles(fileList) {
-  if (!fileList.length) {
-    $(".file-list").html(`
+  function resetStandardStampDisplay() {
+    $("#nameInput1").val("");
+    $("#nameInput2").val("");
+    $("#name").text("");
+    $("#name2").text("");
+    $("#divisionDisplay").text("");
+
+    $("#rowStamp1").css("opacity", "1");
+    $("#rowStamp2").css("opacity", "1");
+  }
+
+  function setStampCircle1(nameStamp) {
+    $("#nameInput1").val(nameStamp);
+    $("#name").text(nameStamp);
+    $("#nameInput2").val("");
+
+    // แถวบน active / แถวล่างจาง
+    $("#rowStamp1").css("opacity", "1");
+    $("#rowStamp2").css("opacity", "0.3");
+  }
+
+  function setStampCircle2(nameStamp, division) {
+    $("#nameInput1").val("");
+    $("#nameInput2").val(nameStamp);
+    $("#divisionDisplay").text(division);
+    $("#name2").text(nameStamp);
+
+    // แถวบนจาง / แถวล่าง active
+    $("#rowStamp1").css("opacity", "0.3");
+    $("#rowStamp2").css("opacity", "1");
+  }
+
+  function lockNameInputsByValue() {
+    const hasNameInput1 = $("#nameInput1").val().trim() !== "";
+    const hasNameInput2 = $("#nameInput2").val().trim() !== "";
+
+    $("#nameInput1").prop("disabled", hasNameInput1);
+    $("#nameInput2").prop("disabled", hasNameInput2);
+    $("#radioOther").prop("disabled", hasNameInput1 || hasNameInput2);
+  }
+
+  async function loadAttachedFiles(form) {
+    try {
+      const fileForm = await getFileForm({
+        ...form,
+        FORM_TYPE: "GP",
+      });
+
+      console.log("fileForm:", fileForm);
+
+      if (!fileForm.status) {
+        throw new Error(fileForm.message || "Cannot get attached files");
+      }
+
+      const fileList = Array.isArray(fileForm.data) ? fileForm.data : [];
+      renderAttachedFiles(fileList);
+    } catch (error) {
+      console.error("Error fetching file form:", error);
+      renderAttachedFiles([]);
+    }
+  }
+
+  function renderAttachedFiles(fileList) {
+    if (!fileList.length) {
+      $(".file-list").html(`
       <div class="w-full min-h-[2rem] rounded-md border border-base-300 bg-base-100 px-4 py-2 flex items-center">
         <span class="opacity-60">-</span>
       </div>
     `);
-    return;
-  }
+      return;
+    }
 
-  const fileHtml = fileList
-    .map((f) => {
-      const originalName = f.FILE_ONAME || f.FILE_FNAME || "-";
-      const storedName = f.FILE_FNAME || "";
-      const filePath = f.FILE_PATH || "";
+    const fileHtml = fileList
+      .map((f) => {
+        const originalName = f.FILE_ONAME || f.FILE_FNAME || "-";
+        const storedName = f.FILE_FNAME || "";
+        const filePath = f.FILE_PATH || "";
 
-      return `
+        return `
         <div class="file-item flex items-center gap-2 w-full min-w-0 min-h-[2rem] rounded-md border border-base-300 bg-base-100 px-4 py-2">
           <span class="flex-1 min-w-0 truncate">
             ${originalName}
@@ -353,118 +364,196 @@ function renderAttachedFiles(fileList) {
           </button>
         </div>
       `;
-    })
-    .join("");
+      })
+      .join("");
 
-  $(".file-list").html(fileHtml);
-}
+    $(".file-list").html(fileHtml);
+  }
 
-$(document).on("click", ".download-btn", async function () {
-  try {
-    const file = await downloadOrOpenFile({
-      baseDir: $(this).data("path"),
-      storedName: $(this).data("stored-name"),
-      originalName: $(this).data("original-name"),
-      mode: "download",
+  $(document).on("click", ".download-btn", async function () {
+    try {
+      const file = await downloadOrOpenFile({
+        baseDir: $(this).data("path"),
+        storedName: $(this).data("stored-name"),
+        originalName: $(this).data("original-name"),
+        mode: "download",
+      });
+    } catch (error) {
+      console.error("Error downloading or opening file:", error);
+    }
+  });
+
+  function getNameStampValue() { //ดึงค่าจากช่องหน้าเว็บ
+    const getnameInput1 = $("#nameInput1").val()?.trim();
+    const getnameInput2 = $("#nameInput2").val()?.trim();
+
+    console.log("nameInput1=", getnameInput1);
+    console.log("nameInput2=", getnameInput2);
+
+    if (getnameInput1 && getnameInput2) {
+      throw new Error("ข้อมูลไม่ถูกต้อง");
+    }
+    return getnameInput1 || getnameInput2 || "";
+  }
+
+  function unlockNameStampInput() { //ปลดล็อกให้แก้ชื่อได้เมื่อไปถึง GA-STAFF
+    const nameInput1 = $("#nameInput1").val()?.trim();
+    const nameInput2 = $("#nameInput2").val()?.trim();
+
+    if (nameInput1) {
+      $("#nameInput1").prop("disabled", false).prop("readonly", false);
+      $("#nameInput2").prop("disabled", true).prop("readonly", true);
+
+      $("#name").text(nameInput1);
+      $("#name2").text("");
+
+      $("#rowStamp1").css("opacity", "1");
+      $("#rowStamp2").css("opacity", "0.3");
+
+    } else if (nameInput2) {
+      $("#nameInput1").prop("disabled", true).prop("readonly", true);
+      $("#nameInput2").prop("disabled", false).prop("readonly", false);
+
+      $("#name").text("");
+      $("#name2").text(nameInput2);
+
+      $("#rowStamp1").css("opacity", "0.3");
+      $("#rowStamp2").css("opacity", "1");
+
+    } else {
+      $("#nameInput1").prop("disabled", false).prop("readonly", false);
+      $("#nameInput2").prop("disabled", false).prop("readonly", false);
+
+      $("#rowStamp1").css("opacity", "1");
+      $("#rowStamp2").css("opacity", "1");
+    }
+  }
+
+  function bindNameStampPreview() {
+    $("#nameInput1").on("input", function () {
+      const value = $(this).val()?.trim || "";
+      $("#name").text(value);
+
+      if (value) {
+        $("#nameInput2").val("");
+        $("#name2").text("");
+        $("#rowStamp1").css("opacity", "1");
+        $("#rowStamp2").css("opacity", "0.3");
+      }
     });
-  } catch (error) {
-    console.error("Error downloading or opening file:", error);
+
+    $("#nameInput2").on("input", function () {
+      const value = $(this).val().trim() || "";
+      $("#name2").text(value);
+      if (value) {
+        $("#nameInput1").val("");
+        $("#name").text("");
+        $("#rowStamp1").css("opacity", "0.3");
+        $("#rowStamp2").css("opacity", "1");
+      }
+    });
+
   }
-});
+  // action form approve, reject
+  $(document).on("click", "button[name='btnAction']", async function () {
+    try {
+      const param = getUrlParams();
+      const form = {
+        NFRMNO: param.NFRMNO,
+        VORGNO: param.VORGNO,
+        CYEAR: param.CYEAR,
+        CYEAR2: param.CYEAR2,
+        NRUNNO: param.NRUNNO,
+      };
+      console.log(form)
+      const action = $(this).val();
+      const remark = $('#remark').val();
+      cextData = await getExtData({ ...form, EMPNO: param.EMPNO });
+      const queryString = window.location.search;
+      const urlParams = new URLSearchParams(queryString);
+      const empno = urlParams.get("empno");
+      const state = {
+        ...form,
+        EMPNO: empno,
+        ACTION: action,
+        REMARK: remark,
+      };
+      console.log(state.Name_Stamp)
+      console.log(cextData)
 
-// action form approve, reject
-$(document).on("click", "button[name='btnAction']", async function () {
-  try {
-    const param = getUrlParams();
-    const form = {
-      NFRMNO: param.NFRMNO,
-      VORGNO: param.VORGNO,
-      CYEAR: param.CYEAR,
-      CYEAR2: param.CYEAR2,
-      NRUNNO: param.NRUNNO,
-    };
-    console.log(form)
-    const action = $(this).val();
-    const remark = $('#remark').val();
-    const cextData = '01';
-    const queryString = window.location.search;
-    const urlParams = new URLSearchParams(queryString);
-    const empno = urlParams.get("empno");
-    const state = {
-      ...form,
-      EMPNO: empno,
-      ACTION: action,
-      REMARK: remark,
-    };
-    console.log(state.user),
-      console.log(action)
-    console.log(state.REMARK)
-    console.log(state.NAME)
+      let res;
+      if (cextData == '01') {
+        const nameStamp = getNameStampValue();
 
-    let res;
-    if (cextData == '01') {
-      state.NAME_STAMP = "test new name";
-      res = await updateStamp(state)
-    } else {
-      res = await doaction(state);
+        if (!nameStamp) {
+          throw new Error('ไม่พบชื่อที่ต้องการอัพเดท')
+        }
+        state.NAME_STAMP = nameStamp;
 
+        res = await updateStamp(state);
+      } else {
+        res = await doaction(state);
+      }
+
+      console.log(res);
+
+
+      if (res.status) {
+        showMessage(res.message, "success");
+        redirectWebflow();
+      } else {
+        throw new Error(res.message);
+      }
+    } catch (error) {
+      console.error(error);
+      showMessage(error.message);
     }
 
-    if (res.status) {
-      showMessage(res.message, "success");
-      redirectWebflow();
-    } else {
-      throw new Error(res.message);
-    }
-  } catch (error) {
-    console.error(error);
-    showErrorMessage(error.message);
+  });
+
+  async function getData() {
+    return await fetchUtils({
+      url: `${process.env.APP_API}/gpform/gp-rb`,
+      method: "GET",
+    });
   }
 
-});
-async function getData() {
-  return await fetchUtils({
-    url: `${process.env.APP_API}/gpform/gp-rb`,
-    method: "GET",
-  });
-}
+  async function getShowData(form) {
+    const url = `${process.env.APP_API}/gpform/showstamp-gp-rb/${form.NFRMNO}/${form.VORGNO}/${form.CYEAR}/${form.CYEAR2}/${form.NRUNNO}`;
+    return await fetchUtils({
+      url: url,
+      method: "GET",
+    });
+  }
 
-async function getShowData(form) {
-  const url = `${process.env.APP_API}/gpform/showstamp-gp-rb/${form.NFRMNO}/${form.VORGNO}/${form.CYEAR}/${form.CYEAR2}/${form.NRUNNO}`;
-  return await fetchUtils({
-    url: url,
-    method: "GET",
-  });
-}
+  async function getShowCusData(form) {
+    const url = `${process.env.APP_API}/gpform/showcusstamp-gp-rb/${form.NFRMNO}/${form.VORGNO}/${form.CYEAR}/${form.CYEAR2}/${form.NRUNNO}`;
+    return await fetchUtils({
+      url: url,
+      method: "GET",
+    });
+  }
 
-async function getShowCusData(form) {
-  const url = `${process.env.APP_API}/gpform/showcusstamp-gp-rb/${form.NFRMNO}/${form.VORGNO}/${form.CYEAR}/${form.CYEAR2}/${form.NRUNNO}`;
-  return await fetchUtils({
-    url: url,
-    method: "GET",
-  });
-}
+  async function getEmpData(empno) {
+    return await fetchUtils({
+      url: `${process.env.APP_API}/users/${empno}`,
+      method: "GET",
+    });
+  }
 
-async function getEmpData(empno) {
-  return await fetchUtils({
-    url: `${process.env.APP_API}/users/${empno}`,
-    method: "GET",
-  });
-}
+  async function getFileForm() {
+    return await fetchUtils({
+      url: `${process.env.APP_API}/webform/file/get-file/`,
+      method: "POST",
+      data,
+    });
+  }
 
-async function getFileForm() {
-  return await fetchUtils({
-    url: `${process.env.APP_API}/webform/file/get-file/`,
-    method: "POST",
-    data,
-  });
-}
-
-async function updateStamp(state) {
-   const url = `${process.env.APP_API}/gpform/showstamp-gp-rb`;
-  return await fetchUtils({
-    url: url,
-    method: "PATCH",
-    data: state
-  })
-}
+  async function updateStamp(state) {
+    const url = `${process.env.APP_API}/gpform/showstamp-gp-rb`;
+    return await fetchUtils({
+      url: url,
+      method: "PATCH",
+      data: state
+    });
+  }
