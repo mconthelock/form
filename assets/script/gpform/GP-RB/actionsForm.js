@@ -364,7 +364,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   console.log("Purpose select:", purposeSelected);
 
-  if (purposeSelected == "4") {
+  if (purposeSelected == "5") {
     $("#otherSelect").prop("disabled", false);
   } else {
     $("#otherSelect").prop("disabled", true).val("");
@@ -457,62 +457,3 @@ document.addEventListener("DOMContentLoaded", () => {
   // เรียกครั้งแรกตอนโหลดหน้า เพื่อ set state เริ่มต้น
   updateFormState();
 });
-
-
-
-// ✅ 3. ฟังก์ชันจับคู่ Position เข้ากับ Checkbox อัตโนมัติ
-/*   document.addEventListener('DOMContentLoaded', () => {
-            const positionMapping = {
-                'PRESIDENT': 'chkP',
-                'GENERAL MANAGER': 'chkGM',
-                'DIVISION MANAGER': 'chkDIM', 
-                'DEPUTY DIVISION MANAGER': 'chkDDIM',
-                'DEPARTMENT MANAGER': 'chkDEM', 
-                'DEPUTY DEPARTMENT MANAGER': 'chkDDEM',
-                'ADVISOR': 'chkADV',
-                'SENIOR SPECIALIST': 'chkSSPE',
-                'SECTION MANAGER': 'chkSEM', 
-                'SPECIALIST': 'chkSPE',
-                'ASSISTANT MANAGER': 'chkASM', 
-                'SUPERVISOR': 'chkSUP',
-                'FOREMAN': 'chkFO',
-                'LEADER': 'chkLEA', 
-                'ENGINEER': 'chkENG',
-                'STAFF': 'chkSTAFF'
-            };
-
-            const empPosInput = document.getElementById('empPos');
-
-            function triggerPositionMap() {
-                if (!empPosInput) return;
-                const typedPosition = empPosInput.value.trim().toUpperCase();
-
-                if (positionMapping[typedPosition]) {
-                    const targetCheckboxId = positionMapping[typedPosition];
-                    const targetCheckbox = document.getElementById(targetCheckboxId);
-
-                    if (targetCheckbox && !targetCheckbox.checked) {
-                        targetCheckbox.click();
-                    }
-                }
-            }
-
-            if (empPosInput) {
-                ['input', 'change'].forEach(evt => {
-                    empPosInput.addEventListener(evt, triggerPositionMap);
-                });
-            }
-
-            if (empPosInput) {
-                const descriptor = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');
-                Object.defineProperty(empPosInput, 'value', {
-                    set: function(v) {
-                        descriptor.set.call(this, v); 
-                        triggerPositionMap(); 
-                    },
-                    get: function() {
-                        return descriptor.get.call(this);
-                    }
-                });
-            }
-        }); */

@@ -40,7 +40,7 @@ $(async function () {
 
   const purpose = await getData();
   console.log(purpose);
-  const sortpurpose = purpose.sort((a,b) => a.PURPOSE_ID-b.PURPOSE_ID);
+  const sortpurpose = purpose.sort((a, b) => a.PURPOSE_ID - b.PURPOSE_ID);
 
 
   const Purposedata = sortpurpose
@@ -92,7 +92,7 @@ $(async function () {
   if (getShowdata.PURPOSE_ID) {
     $(`#purpose_${getShowdata.PURPOSE_ID}`).prop("checked", true);
 
-    if (getShowdata.PURPOSE_ID == 4) {
+    if (getShowdata.PURPOSE_ID == 5) {
       $("#otherSelect")
         .prop("disabled", false)
         .val(getShowdata.PURPOSE_OTHER || "");
@@ -114,6 +114,11 @@ $(async function () {
     renderAttachedFiles([]);
   }
   // เช็คว่ามีข้อมูล Standard Stamp หรือไม่
+  if (String(getShowdata.PURPOSE_ID) === "2") {
+    hideStampFormatBoxes();
+    return;
+  }
+
   const hasStandardStamp =
     getShowdata &&
     Object.keys(getShowdata).length > 0 &&
@@ -177,7 +182,7 @@ function showCustomStampSection(getShowdata, getShowCusdata) {
   if (getShowdata.PURPOSE_ID) {
     $(`#purpose_${getShowdata.PURPOSE_ID}`).prop("checked", true);
 
-    if (String(getShowdata.PURPOSE_ID) === "4") {
+    if (String(getShowdata.PURPOSE_ID) === "5") {
       $("#otherSelect")
         .prop("disabled", true)
         .prop("readonly", true)
@@ -221,6 +226,12 @@ function showStandardStampSection() {
 function renderStandardStampByPosition(empData, getShowdata) {
   const firstPosCode = getFirstPositionCode(empData.SPOSCODE);
 
+  if (String(getShowdata.PURPOSE_ID) === "2") {
+    hideStampFormatBoxes();
+    lockNameInputsByValue();
+    return;
+  }
+
   // กลุ่มที่ใช้ nameInput1 / stampCircle1
   const input1PosCodes = [
     "02", // PRESIDENT
@@ -245,7 +256,7 @@ function renderStandardStampByPosition(empData, getShowdata) {
     "40", // STAFF
   ];
 
-resetStandardStampDisplay();
+  resetStandardStampDisplay();
 
   if (input1PosCodes.includes(firstPosCode)) {
     setStampCircle1(getShowdata.NAME_STAMP || "");
@@ -258,41 +269,53 @@ resetStandardStampDisplay();
   lockNameInputsByValue();
 }
 
-  function getFirstPositionCode(posCode) {
-    const posCodeArray = Array.isArray(posCode) ? posCode : posCode ? [posCode] : [];
+function getFirstPositionCode(posCode) {
+  const posCodeArray = Array.isArray(posCode) ? posCode : posCode ? [posCode] : [];
 
-    let firstPosCode =
-      posCodeArray.length > 0 ? String(posCodeArray[0]).trim() : null;
+  let firstPosCode =
+    posCodeArray.length > 0 ? String(posCodeArray[0]).trim() : null;
 
-    if (firstPosCode) {
-      firstPosCode = firstPosCode.padStart(2, "0");
-    }
-
-    return firstPosCode;
+  if (firstPosCode) {
+    firstPosCode = firstPosCode.padStart(2, "0");
   }
 
-  function resetStandardStampDisplay() {
-    $("#nameInput1").val("");
-    $("#nameInput2").val("");
-    $("#name").text("");
-    $("#name2").text("");
-    $("#divisionDisplay").text("");
+  return firstPosCode;
+}
 
-    $("#rowStamp1").css("opacity", "1");
-    $("#rowStamp2").css("opacity", "1");
-  }
 
-  function setStampCircle1(nameStamp) {
-    $("#nameInput1").val(nameStamp);
-    $("#name").text(nameStamp);
-    $("#nameInput2").val("");
 
-    // แถวบน active / แถวล่างจาง
-    $("#rowStamp1").css("opacity", "1");
-    $("#rowStamp2").css("opacity", "0.3");
-  }
+function resetStandardStampDisplay() {
+  $("#nameInput1").val("");
+  $("#nameInput2").val("");
+  $("#name").text("");
+  $("#name2").text("");
+  $("#divisionDisplay").text("");
 
-  function setStampCircle2(nameStamp, division) {
+  $("#rowStamp1").show().css("opacity", "1");
+  $("#rowStamp2").show().css("opacity", "1");
+}
+
+function hideStampFormatBoxes() {
+  $("#nameInput1").val("");
+  $("#nameInput2").val("");
+  $("#name").text("");
+  $("#name2").text("");
+  $("#divisionDisplay").text("");
+  $("#radioStandardBox").hide();
+  $("#radioOtherBox").hide();
+}
+
+function setStampCircle1(nameStamp) {
+  $("#nameInput1").val(nameStamp);
+  $("#name").text(nameStamp);
+  $("#nameInput2").val("");
+
+  // แถวบน active / แถวล่างจาง
+  $("#rowStamp1").css("opacity", "1");
+  $("#rowStamp2").css("opacity", "0.3");
+}
+
+function setStampCircle2(nameStamp, division) {
     $("#nameInput1").val("");
     $("#nameInput2").val(nameStamp);
     $("#divisionDisplay").text(division);
@@ -301,6 +324,7 @@ resetStandardStampDisplay();
     // แถวบนจาง / แถวล่าง active
     $("#rowStamp1").css("opacity", "0.3");
     $("#rowStamp2").css("opacity", "1");
+
   }
 
   function lockNameInputsByValue() {
