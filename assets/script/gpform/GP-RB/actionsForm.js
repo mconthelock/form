@@ -3,6 +3,7 @@ import { getFormDetail } from "@amec/webasset/api/webform";
 import { webflowSubmit } from "@amec/webasset/components/form";
 import { redirectWebflow } from "@amec/webasset/form";
 import { logFormData, requiredForm, showMessage } from "@amec/webasset/utils";
+import { positionCodeMapping, stampConfig, targetPosCodeForCircle2 } from "./stampConfig";
 
 $(async function () {
   const queryString = window.location.search;
@@ -167,7 +168,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  const stampConfig = {
+  const localStampConfig = {
     // กลุ่มบน ถ้ารูปต้นฉบับของคุณมีขนาดของ P / GM ชัดเจน ให้แก้ sizeMm ตรงนี้ตามจริง
     chkP: { sizeMm: 22, sizePx: 88, target: "stampCircle1" },
     chkGM: { sizeMm: 21, sizePx: 84, target: "stampCircle1" },
@@ -195,7 +196,7 @@ document.addEventListener("DOMContentLoaded", () => {
     chkSTAFF: { sizeMm: 15, sizePx: 60, target: "stampCircle2" },
   };
 
-  const positionCodeMapping = {
+  const localPositionCodeMapping = {
     "02": "chkP",
     "05": "chkGM",
     10: "chkDIM",
@@ -214,7 +215,7 @@ document.addEventListener("DOMContentLoaded", () => {
     40: "chkSTAFF",
   };
 
-  const targetPosCodeForCircle2 = ["33", "49", "50", "55", "35", "40"];
+  const localTargetPosCodeForCircle2 = ["33", "49", "50", "55", "35", "40"];
 
   function disableAllStampSections() {
     $("#standardStampSection, #otherStampSection")

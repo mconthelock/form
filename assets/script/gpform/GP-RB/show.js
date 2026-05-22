@@ -4,6 +4,7 @@ import { webflowSubmit } from "@amec/webasset/components/form";
 import { getUrlParams, showErrorMessage, showMessage } from "@amec/webasset/utils";
 import { downloadOrOpenFile, getFileForm } from "@amec/webasset/api/file";
 import { redirectWebflow } from "@amec/webasset/form";
+import { positionCodeMapping, stampConfig, targetPosCodeForCircle2 } from "./stampConfig";
 
 var cextData;
 $(async function () {
@@ -233,7 +234,7 @@ function renderStandardStampByPosition(empData, getShowdata) {
   }
 
   // กลุ่มที่ใช้ nameInput1 / stampCircle1
-  const input1PosCodes = [
+  const unusedInput1PosCodes = [
     "02", // PRESIDENT
     "05", // GENERAL MANAGER
     "10", // DIVISION MANAGER
@@ -247,7 +248,7 @@ function renderStandardStampByPosition(empData, getShowdata) {
   ];
 
   // กลุ่มที่ใช้ nameInput2 / stampCircle2
-  const input2PosCodes = [
+  const unusedInput2PosCodes = [
     "33", // ASSISTANT MANAGER
     "49", // SUPERVISOR
     "50", // FOREMAN
@@ -258,13 +259,13 @@ function renderStandardStampByPosition(empData, getShowdata) {
 
   resetStandardStampDisplay();
 
-  if (input1PosCodes.includes(firstPosCode)) {
-    setStampCircle1(getShowdata.NAME_STAMP || "");
-  } else if (input2PosCodes.includes(firstPosCode)) {
+  if (targetPosCodeForCircle2.includes(firstPosCode)) {
     setStampCircle2(getShowdata.NAME_STAMP || "", empData.SDIV || "");
   } else {
     setStampCircle1(getShowdata.NAME_STAMP || "");
   }
+
+  applyStampSizeByPosition(firstPosCode);
 
   lockNameInputsByValue();
 }
@@ -282,6 +283,26 @@ function getFirstPositionCode(posCode) {
   return firstPosCode;
 }
 
+function applyStampSizeByPosition(posCode) {
+  const checkboxId = positionCodeMapping[posCode];
+  const settings = stampConfig[checkboxId];
+
+  if (!settings) return;
+
+  $(`#${settings.target}`).css({
+    width: `${settings.sizePx}px`,
+    height: `${settings.sizePx}px`,
+  });
+
+  if (settings.target === "stampCircle1") {
+    $("#stampSize1").text(`${settings.sizeMm} mm.`);
+    $("#stampSize2").text("-");
+  } else {
+    $("#stampSize1").text("-");
+    $("#stampSize2").text(`${settings.sizeMm} mm.`);
+  }
+}
+
 
 
 function resetStandardStampDisplay() {
@@ -290,6 +311,8 @@ function resetStandardStampDisplay() {
   $("#name").text("");
   $("#name2").text("");
   $("#divisionDisplay").text("");
+  $("#stampSize1").text("-");
+  $("#stampSize2").text("-");
 
   $("#rowStamp1").show().css("opacity", "1");
   $("#rowStamp2").show().css("opacity", "1");
@@ -301,6 +324,8 @@ function hideStampFormatBoxes() {
   $("#name").text("");
   $("#name2").text("");
   $("#divisionDisplay").text("");
+  $("#stampSize1").text("-");
+  $("#stampSize2").text("-");
   $("#radioStandardBox").hide();
   $("#radioOtherBox").hide();
 }

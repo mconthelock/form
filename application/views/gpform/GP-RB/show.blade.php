@@ -18,18 +18,24 @@
                 <div class="flex border-b border-base-300 bg-base-50/50">
                     <div class="w-full p-2 flex items-center gap-2">
                         <span class="whitespace-nowrap font-semibold opacity-80 text-xs">Input by:</span>
-                        <div id="INPUTBY" class="w-full min-h-8 rounded-md border border-base-300 bg-base-100 px-3 py-1 flex items-center"></div>
+                        <div id="INPUTBY"
+                            class="w-full min-h-8 rounded-md border border-base-300 bg-base-100 px-3 py-1 flex items-center">
+                        </div>
                     </div>
                 </div>
 
                 <div class="flex border-b border-base-300 bg-base-50/50">
                     <div class="w-1/2 p-2 flex items-center gap-2">
                         <span class="whitespace-nowrap font-semibold opacity-80 text-xs">Request by:</span>
-                        <div id="REQBY" class="w-full min-h-8 rounded-md border border-base-300 bg-base-100 px-3 py-1 flex items-center"></div>
+                        <div id="REQBY"
+                            class="w-full min-h-8 rounded-md border border-base-300 bg-base-100 px-3 py-1 flex items-center">
+                        </div>
                     </div>
                     <div class="w-1/2 border-r border-base-300 p-2 flex items-center gap-2">
                         <span class="whitespace-nowrap font-semibold opacity-80 text-xs">ชื่อ/NAME:</span>
-                        <div id="empName" class="w-full min-h-8 rounded-md border border-base-300 bg-base-100 px-3 py-1 flex items-center"></div>
+                        <div id="empName"
+                            class="w-full min-h-8 rounded-md border border-base-300 bg-base-100 px-3 py-1 flex items-center">
+                        </div>
                     </div>
 
                 </div>
@@ -37,11 +43,15 @@
                 <div class="flex bg-base-50/50">
                     <div class="w-1/2 border-r border-base-300 p-2 flex items-center gap-2">
                         <span class="whitespace-nowrap font-semibold opacity-80 text-xs">Sect./Dept./Div.:</span>
-                        <div id="empDept"class="w-full min-h-[2rem] rounded-md border border-base-300 bg-base-100 px-3 py-1 flex items-center"></div>
+                        <div
+                            id="empDept"class="w-full min-h-[2rem] rounded-md border border-base-300 bg-base-100 px-3 py-1 flex items-center">
+                        </div>
                     </div>
                     <div class="w-1/2 p-2 flex items-center gap-2">
                         <span class="whitespace-nowrap font-semibold opacity-80 text-xs">ตำแหน่ง/Position:</span>
-                        <div id="empPos"class="w-full min-h-[2rem] rounded-md border border-base-300 bg-base-100 px-3 py-1 flex items-center"></div>
+                        <div
+                            id="empPos"class="w-full min-h-[2rem] rounded-md border border-base-300 bg-base-100 px-3 py-1 flex items-center">
+                        </div>
                     </div>
                 </div>
             </div>
@@ -89,12 +99,21 @@
                     <table class="w-full border-collapse text-left">
                         <thead class="bg-base-200 text-base-content/80 text-xs">
                             <tr>
+                                <th class="border-b border-r border-base-300 p-3 w-[15%] text-center">ขนาด<br>Size</th>
                                 <th class="border-b border-r border-base-300 p-3 w-1/3 text-center">รูปแบบ<br>Format</th>
                                 <th class="border-b border-base-300 p-3 w-2/3">หมายเหตุ / Remark</th>
                             </tr>
                         </thead>
                         <tbody class="text-xs">
                             <tr class="transition-opacity duration-300" id="rowStamp1">
+                                <td class="border-b border-r border-base-300 text-center p-3 align-middle">
+                                    <div class="font-bold text-primary text-sm" id="stampSize1">
+                                        -
+                                    </div>
+                                </td>
+
+
+
                                 <td class="border-b border-r border-base-300 text-center p-4">
                                     <div id="stampCircle1"
                                         class="w-[70px] h-[70px] rounded-full border-2 border-primary/50 text-primary flex flex-col justify-center items-center text-[9px] mx-auto overflow-hidden transition-all duration-300 ease-in-out bg-base-100 shadow-inner">
@@ -122,8 +141,13 @@
                                     </div>
                                 </td>
                             </tr>
-
                             <tr class="bg-base-50/30 transition-opacity duration-300" id="rowStamp2">
+                                <td class="border-r border-base-300 text-center p-3 align-middle">
+                                    <div class="font-bold text-primary text-sm" id="stampSize2">
+                                        -
+                                    </div>
+                                </td>
+
                                 <td class="border-r border-base-300 text-center p-4">
                                     <div id="stampCircle2"
                                         class="w-[70px] h-[70px] rounded-full border-2 border-primary/50 text-primary flex flex-col justify-center items-center text-[9px] mx-auto overflow-hidden transition-all duration-300 ease-in-out bg-base-100 shadow-inner">
@@ -199,7 +223,9 @@
 
                             <div class="flex items-center justify-start gap-2">
                                 <span class="text-xs font-semibold opacity-70 whitespace-nowrap">จำนวน/Qty:</span>
-                                <div id="otherQty" class="w-full min-h-[2rem] rounded-md border border-base-300 bg-base-100 px-3 py-1 flex items-center"></div>
+                                <div id="otherQty"
+                                    class="w-full min-h-[2rem] rounded-md border border-base-300 bg-base-100 px-3 py-1 flex items-center">
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -212,7 +238,9 @@
                         </div>
                         <div class="flex items-center gap-2">
                             <span class="text-xs font-semibold opacity-70 whitespace-nowrap">หมายเหตุ/Remark:</span>
-                            <div id="otherRemark" class="w-full min-h-[2rem] rounded-md border border-base-300 bg-base-100 px-3 py-1 flex items-center"></div>
+                            <div id="otherRemark"
+                                class="w-full min-h-[2rem] rounded-md border border-base-300 bg-base-100 px-3 py-1 flex items-center">
+                            </div>
                         </div>
                     </div>
                 </div>
