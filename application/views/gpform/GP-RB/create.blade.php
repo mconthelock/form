@@ -112,12 +112,18 @@
                 <table class="w-full border-collapse text-left">
                     <thead class="bg-base-200 text-base-content/80 text-xs">
                         <tr>
+                            <th class="border-b border-r border-base-300 p-3 w-[15%] text-center">ขนาด<br>Size</th>
                             <th class="border-b border-r border-base-300 p-3 w-1/3 text-center">รูปแบบ<br>Format</th>
                             <th class="border-b border-base-300 p-3 w-2/3">หมายเหตุ / Remark</th>
                         </tr>
                     </thead>
                     <tbody class="text-xs">
                         <tr class="transition-opacity duration-300" id="rowStamp1">
+                            <td class="border-b border-r border-base-300 text-center p-3 align-middle">
+                                <div class="font-bold text-primary text-sm" id="stampSize1">
+                                    -
+                                </div>
+                            </td>
                             <td class="border-b border-r border-base-300 text-center p-4">
                                 <div id="stampCircle1"
                                     class="w-[70px] h-[70px] rounded-full border-2 border-primary/50 text-primary flex flex-col justify-center items-center text-[9px] mx-auto overflow-hidden transition-all duration-300 ease-in-out bg-base-100 shadow-inner">
@@ -148,6 +154,11 @@
                         </tr>
 
                         <tr class="bg-base-50/30 transition-opacity duration-300" id="rowStamp2">
+                            <td class="border-r border-base-300 text-center p-3 align-middle">
+                                <div class="font-bold text-primary text-sm" id="stampSize2">
+                                    -
+                                </div>
+                            </td>
                             <td class="border-r border-base-300 text-center p-4">
                                 <div id="stampCircle2"
                                     class="w-[70px] h-[70px] rounded-full border-2 border-primary/50 text-primary flex flex-col justify-center items-center text-[9px] mx-auto overflow-hidden transition-all duration-300 ease-in-out bg-base-100 shadow-inner">
