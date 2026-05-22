@@ -19,7 +19,7 @@ $(async function () {
 
   const purpose = await getData();
   console.log(purpose);
-   const sortpurpose = purpose.sort((a,b) => a.PURPOSE_ID-b.PURPOSE_ID);
+  const sortpurpose = purpose.sort((a, b) => a.PURPOSE_ID - b.PURPOSE_ID);
 
   const Purposedata = sortpurpose
     .map((a) => {
@@ -47,7 +47,6 @@ $(async function () {
   const action = webflowSubmit({ request: true });
   $("#sentRequest").html(action);
 });
-
 
 // ฟังก์ชันจัดการการคลิกปุ่ม Request เพื่อส่งข้อมูลฟอร์ม
 $(document).on("click", "#btnRequest", async function () {
@@ -87,7 +86,6 @@ $(document).on("click", "#btnRequest", async function () {
   }
 });
 
-
 async function getData() {
   return await fetchUtils({
     url: `${process.env.APP_API}/gpform/gp-rb`,
@@ -109,7 +107,6 @@ async function createForm(data) {
     data: data,
   });
 }
-
 
 // ฟังก์ชันจัดการตรายาง, สถานะ section, radio, checkbox, input
 document.addEventListener("DOMContentLoaded", () => {
@@ -171,63 +168,73 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   const stampConfig = {
-    chkP: { size: 88, target: "stampCircle1" },
-    chkGM: { size: 84, target: "stampCircle1" },
-    chkDIM: { size: 84, target: "stampCircle1" },
-    chkDDIM: { size: 84, target: "stampCircle1" },
-    chkDEM: { size: 76, target: "stampCircle1" },
-    chkDDEM: { size: 76, target: "stampCircle1" },
-    chkADV: { size: 76, target: "stampCircle1" },
-    chkSSPE: { size: 76, target: "stampCircle1" },
-    chkSEM: { size: 68, target: "stampCircle1" },
-    chkSPE: { size: 68, target: "stampCircle1" },
+    // กลุ่มบน ถ้ารูปต้นฉบับของคุณมีขนาดของ P / GM ชัดเจน ให้แก้ sizeMm ตรงนี้ตามจริง
+    chkP: { sizeMm: 22, sizePx: 88, target: "stampCircle1" },
+    chkGM: { sizeMm: 21, sizePx: 84, target: "stampCircle1" },
 
-    chkASM: { size: 60, target: "stampCircle2" },
-    chkSUP: { size: 60, target: "stampCircle2" },
-    chkFO: { size: 60, target: "stampCircle2" },
-    chkLEA: { size: 60, target: "stampCircle2" },
-    chkENG: { size: 60, target: "stampCircle2" },
-    chkSTAFF: { size: 60, target: "stampCircle2" },
+    // ตามรูป: DIM / DDIM = 21 mm
+    chkDIM: { sizeMm: 21, sizePx: 84, target: "stampCircle1" },
+    chkDDIM: { sizeMm: 21, sizePx: 84, target: "stampCircle1" },
+
+    // ตามรูป: DEM / DDEM / ADV / Senior Specialist = 19 mm
+    chkDEM: { sizeMm: 19, sizePx: 76, target: "stampCircle1" },
+    chkDDEM: { sizeMm: 19, sizePx: 76, target: "stampCircle1" },
+    chkADV: { sizeMm: 19, sizePx: 76, target: "stampCircle1" },
+    chkSSPE: { sizeMm: 19, sizePx: 76, target: "stampCircle1" },
+
+    // ตามรูป: SEM / Specialist = 17 mm
+    chkSEM: { sizeMm: 17, sizePx: 68, target: "stampCircle1" },
+    chkSPE: { sizeMm: 17, sizePx: 68, target: "stampCircle1" },
+
+    // ตามรูป: ASM / Supervisor / Foreman / Leader / Engineer / Staff = 15 mm
+    chkASM: { sizeMm: 15, sizePx: 60, target: "stampCircle2" },
+    chkSUP: { sizeMm: 15, sizePx: 60, target: "stampCircle2" },
+    chkFO: { sizeMm: 15, sizePx: 60, target: "stampCircle2" },
+    chkLEA: { sizeMm: 15, sizePx: 60, target: "stampCircle2" },
+    chkENG: { sizeMm: 15, sizePx: 60, target: "stampCircle2" },
+    chkSTAFF: { sizeMm: 15, sizePx: 60, target: "stampCircle2" },
   };
 
   const positionCodeMapping = {
     "02": "chkP",
     "05": "chkGM",
-    "10": "chkDIM",
-    "11": "chkDDIM",
-    "20": "chkDEM",
-    "21": "chkDDEM",
-    "90": "chkADV",
-    "22": "chkSSPE",
-    "30": "chkSEM",
-    "32": "chkSPE",
-    "33": "chkASM",
-    "49": "chkSUP",
-    "50": "chkFO",
-    "55": "chkLEA",
-    "35": "chkENG",
-    "40": "chkSTAFF",
+    10: "chkDIM",
+    11: "chkDDIM",
+    20: "chkDEM",
+    21: "chkDDEM",
+    90: "chkADV",
+    22: "chkSSPE",
+    30: "chkSEM",
+    32: "chkSPE",
+    33: "chkASM",
+    49: "chkSUP",
+    50: "chkFO",
+    55: "chkLEA",
+    35: "chkENG",
+    40: "chkSTAFF",
   };
 
   const targetPosCodeForCircle2 = ["33", "49", "50", "55", "35", "40"];
 
   function disableAllStampSections() {
-  $("#standardStampSection, #otherStampSection")
-    .css({ opacity: "0.4", "pointer-events": "none" })
-    .find("input, select, textarea, button")
-    .prop("disabled", true);
+    $("#standardStampSection, #otherStampSection")
+      .css({ opacity: "0.4", "pointer-events": "none" })
+      .find("input, select, textarea, button")
+      .prop("disabled", true);
 
-  // ปิด radio แต่ไม่ต้องล้าง checkbox position
-  $("#radioStandard, #radioOther")
-    .prop("checked", false)
-    .prop("disabled", true);
+    // ปิด radio แต่ไม่ล้าง checkbox position
+    $("#radioStandard, #radioOther")
+      .prop("checked", false)
+      .prop("disabled", true);
 
-  // ❌ ห้ามทำอันนี้ เพราะจะทำให้จำ position ไม่ได้
-  // $('input[type="checkbox"][id^="chk"]').prop("checked", false);
+    // ห้ามล้าง checkbox position เพราะต้องจำตำแหน่งไว้
+    // $('input[type="checkbox"][id^="chk"]').prop("checked", false);
 
-  $("#nameInput1, #nameInput2")
-    .prop("disabled", true);
-}
+    $("#nameInput1, #nameInput2").prop("disabled", true);
+
+    // reset ช่องแสดงขนาด
+    $("#stampSize1, #stampSize2").text("-");
+  }
 
   function updateFormState() {
   const purposeSelected = $('input[name="PURPOSE_ID"]:checked').val();
@@ -240,6 +247,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const circle1 = $("#stampCircle1");
   const circle2 = $("#stampCircle2");
+
+  // ช่องแสดงขนาดจริง mm
+  const size1 = $("#stampSize1");
+  const size2 = $("#stampSize2");
 
   // =====================================================
   // 1. ถ้า PURPOSE_ID = 2 ให้ปิดทั้งหมด แต่ไม่ล้าง position
@@ -278,6 +289,9 @@ document.addEventListener("DOMContentLoaded", () => {
     input1.prop("disabled", true);
     input2.prop("disabled", true);
 
+    size1.text("-");
+    size2.text("-");
+
     return;
   }
 
@@ -301,7 +315,7 @@ document.addEventListener("DOMContentLoaded", () => {
   $("#radioStandard, #radioOther").prop("disabled", false);
 
   // =====================================================
-  // 5. เช็ค position ที่ถูกเลือก แล้วคุม nameInput
+  // 5. เช็ค position ที่ถูกเลือก แล้วคุม nameInput + size
   // =====================================================
   const checkedCb = $('input[type="checkbox"][id^="chk"]:checked').first();
 
@@ -309,19 +323,25 @@ document.addEventListener("DOMContentLoaded", () => {
     const settings = stampConfig[checkedCb.attr("id")];
 
     if (settings) {
+      // ใช้ sizePx สำหรับ preview บนหน้าเว็บ
       $("#" + settings.target).css({
-        width: settings.size + "px",
-        height: settings.size + "px",
+        width: settings.sizePx + "px",
+        height: settings.sizePx + "px",
       });
 
       if (settings.target === "stampCircle1") {
         row1.css("opacity", "1");
         row2.css("opacity", "0.3");
 
+        // reset อีกวงกลับขนาด default
         circle2.css({
-          width: "70px",
-          height: "70px",
+          width: "60px",
+          height: "60px",
         });
+
+        // แสดงขนาดจริง mm
+        size1.text(`${settings.sizeMm} mm.`);
+        size2.text("-");
 
         input1.prop("disabled", false);
         input2.prop("disabled", true);
@@ -329,29 +349,37 @@ document.addEventListener("DOMContentLoaded", () => {
         row1.css("opacity", "0.3");
         row2.css("opacity", "1");
 
+        // reset อีกวงกลับขนาด default
         circle1.css({
-          width: "70px",
-          height: "70px",
+          width: "60px",
+          height: "60px",
         });
+
+        // แสดงขนาดจริง mm
+        size1.text("-");
+        size2.text(`${settings.sizeMm} mm.`);
 
         input1.prop("disabled", true);
         input2.prop("disabled", false);
       }
     }
   } else {
-    // ถ้ายังไม่มี position ถูกเลือก ให้เปิดทั้ง 2 ช่องไว้ก่อน
+    // กรณีไม่มี position checkbox ถูกเลือก
     row1.css("opacity", "1");
     row2.css("opacity", "1");
 
     circle1.css({
-      width: "70px",
-      height: "70px",
+      width: "60px",
+      height: "60px",
     });
 
     circle2.css({
-      width: "70px",
-      height: "70px",
+      width: "60px",
+      height: "60px",
     });
+
+    size1.text("-");
+    size2.text("-");
 
     input1.prop("disabled", false);
     input2.prop("disabled", false);
@@ -360,9 +388,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // เมื่อเปลี่ยน Purpose
   $(document).on("change", "input[name='PURPOSE_ID']", function () {
-  const purposeSelected = $('input[name="PURPOSE_ID"]:checked').val();
+    const purposeSelected = $('input[name="PURPOSE_ID"]:checked').val();
 
-  console.log("Purpose select:", purposeSelected);
+    console.log("Purpose select:", purposeSelected);
 
   if (purposeSelected == "5") {
     $("#otherSelect").prop("disabled", false);
@@ -370,11 +398,11 @@ document.addEventListener("DOMContentLoaded", () => {
     $("#otherSelect").prop("disabled", true).val("");
   }
 
-  updateFormState();
+    updateFormState();
 
-  updateStampDisplay("nameInput1", "name", "stampCircle1");
-  updateStampDisplay("nameInput2", "name2", "stampCircle2");
-});
+    updateStampDisplay("nameInput1", "name", "stampCircle1");
+    updateStampDisplay("nameInput2", "name2", "stampCircle2");
+  });
 
   // เมื่อสลับ Standard Stamp / Other Stamp
   $(document).on("change", "input[name='stampFormatGroup']", function () {
