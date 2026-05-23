@@ -165,3 +165,10 @@ export async function getCurrency(){
         method: "GET",
     });
 }
+
+export async function getTermcode(){
+    return fetchUtils({
+        url: `${process.env.APP_API}/amec/ptermcode/termcode`,
+        method: "GET",
+    });
+}

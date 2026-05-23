@@ -11,6 +11,7 @@ import {
     currencyManager,
     attachFileManager,
     vendorTypeManager,
+    ReqtypeManager,
 } from "./formManager";
 import { downloadOrOpenFile } from "@amec/webasset/api/file";
 
@@ -52,6 +53,10 @@ $(document).on("change", 'input[name="VENDOR_LOCATION"]', function () {
 // เมื่อเลือก PAYMENT CONDITIONS & TERMS
 $(document).on("change", 'input[name="PAYMENT_TYPE"]', function () {
     paymentTypeManager.change();
+});
+
+$(document).on("change", 'input[name="REQTYPE"]', function () {
+    ReqtypeManager.change();
 });
 
 $(document).on("input", "input[name='PAYMENT_NUM']", function () {

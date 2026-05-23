@@ -16,7 +16,7 @@ import {
     showErrorMessage,
     showMessage,
 } from "@amec/webasset/utils";
-import { approveReturn, create, getCurrency, getData } from "./data";
+import { approveReturn, create, getCurrency, getData , getTermcode } from "./data";
 import { dragDropInit } from "@amec/webasset/dragdrop";
 import { setDatefpk, setDatePicker } from "@amec/webasset/flatpickr";
 import { setSelect2 } from "@amec/webasset/select2";
@@ -140,11 +140,17 @@ export const formManager = {
             case 1: // create
                 attachFileManager.init();
                 setDatePicker();
-                const curr = await getCurrency();
+               const curr = await getCurrency();
                 const currData = curr.map((c) => ({
                     value: c.CCURNAME,
                     text: c.CCURNAME,
                 }));
+                const term = await getTermcode();
+                const termdata = term.map((t) => ({
+                    value: t.TERMCODE,
+                    text: t.TERMNAME,
+                }));
+                paymentTermManager.init(termdata);
                 currencyManager.init(currData);
                 actionFormManager.init(mode);
                 break;
@@ -320,6 +326,59 @@ export const formManager = {
         attachOtherManager.value = data.ATTACH_OTHER || "";
     },
 };
+
+
+
+
+export const paymentTermManager = {
+    list: ["TERM_PAYMENT"],
+    get select() {
+        return $(".termcode");
+    },
+    set text(val) {
+        $(".termcode").text(val);
+    },
+    set value(val) {
+        this.list.forEach((id) => {
+            $(`#${id}`).val(val).trigger("change");
+        });
+    },
+    getValue(id) {
+        return $(`#${id}`).val();
+    },
+    /**
+     * Initialize select2 for currency fields
+     * @param {{value: string, text: string}[]} data
+     */
+    async init(data) {
+        for (const id of this.list) {
+            await setSelect2({
+                id: id,
+                data: data,
+                size: "sm",
+                placeholder: "Select Payment Term",
+                search: false,
+                clear: false,
+                emptyValue: false,
+            });
+        }
+    },
+    /**
+     * Sync value to other select2 element
+     * @param {string} value
+     * @param {HTMLElement} element
+     */
+    syncValue(value, element) {
+        for (const id of this.list) {
+            if (!$("#" + id).is(element)) {
+                $("#" + id)
+                    .val(value.toUpperCase())
+                    .trigger("change");
+            }
+        }
+    },
+};
+
 
 export const currencyManager = {
     list: ["curr-total", "curr-invoice", "curr-payment"],
@@ -766,12 +825,40 @@ export const vendorTypeManager = {
     },
 };
 
-
-
-
 // -------------------------- End Vendor Type Manager -------------------
 
+// -------------------------- Req Type Manager ------------------------------
 
+
+export const ReqtypeManager = {
+    get radio() {
+        return $('input[name="REQTYPE"]');
+    },
+    get type() {
+        let type = null;
+        this.radio.each(function () {
+            if ($(this).is(":checked")) {
+                type = $(this).attr("r-type");
+            }
+        });
+        return type;
+    },
+    set value(val) {
+        this.radio.each(function () {
+            if ($(this).val() == val) {
+                $(this).prop("checked", true);
+            }
+        });
+        this.change();
+    },
+    change() {
+        const type = this.type;
+        $("#A-section, #U-section, #D-section").addClass("hidden");
+        $(`#${type}-section`).removeClass("hidden");
+    },
+};
+
+// -------------------------- End Req Type Manager -------------------
 
 // -------------------------- Payment Type Manager --------------------------
 export const paymentTypeManager = {
