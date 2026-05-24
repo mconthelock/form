@@ -8,48 +8,38 @@ class form extends MY_Controller{
     use formApi, flow, formmst;
     protected $title;
     protected $client;
+    protected $formname = 'GP-RB';
+    protected $formno = '4';
+    protected $formorg = '030101';
+    protected $formyear = '26';
+
     function __construct(){
 		parent::__construct();
         $this->client = new Client(['verify' => false]);
     }
 
     public function main(){
-        if(isset($_GET["no"]) && $_GET["no"] != "" && isset($_GET["orgNo"]) && $_GET["orgNo"] != "" && isset($_GET["y"]) && $_GET["y"] != "" ) {
-            $data = [
-                'NFRMNO' => $_GET['no'],
-                'VORGNO' => $_GET['orgNo'],
-                'CYEAR'  => $_GET['y'],
-            ];
-        }else{
-            $form = $this->getFormMasterByVaname('IS-TID');
-            if(!empty($form)){
-                $data = [
-                    'NFRMNO' => $form[0]->NNO,
-                    'VORGNO' => $form[0]->VORGNO,
-                    'CYEAR'  =>$form[0]->CYEAR,
-                ];
-            }
+        if(!isset($_GET["empno"]) || $_GET["empno"] == ""){
+            show_error('Not Found', 404);
+            return;
         }
-        $data['mode'] =1;
 
-        $empno = isset($_GET["empno"]) ? $_GET['empno'] : '' ;
-        $data['apv'] = $empno;
-        if(isset($_GET["runNo"]) && $_GET["runNo"] != "") {     
+        $data = array(
+            'NFRMNO' => $this->formno,
+            'VORGNO' => $this->formorg,
+            'CYEAR' => $this->formyear,
+            'empno' => $_GET["empno"],
+            'mode' => 1
+        );
+        if(isset($_GET["runNo"]) && $_GET["runNo"] != "") {
             $data['CYEAR2'] = $_GET['y2'];
             $data['NRUNNO'] = $_GET['runNo'];
-            $form = [
-                'NFRMNO' => (int)$data['NFRMNO'],
-                'VORGNO' => (string)$data['VORGNO'],
-                'CYEAR'  => (string)$data['CYEAR'],
-                'CYEAR2' => (string)$data['CYEAR2'],
-                'NRUNNO' => (int)$data['NRUNNO'],
-            ];
-            $form['EMPNO']    = (string)$empno;
-            $data['cextData'] = $this->getExtData($form);
-            //echo $data['mode']     = $this->getMode($form);   
+            $data['EMPNO'] = $data['empno'];
+            //$data['cextData'] = $this->getExtData($data);
+            //echo $data['mode']     = $this->getMode($form);
             $this->views('gpform/GP-RB/show', $data);
         } else {
-            $this->views('gpform/GP-RB/create');
+            $this->views('gpform/GP-RB/create', $data);
         }
     }
 }

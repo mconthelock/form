@@ -1,5 +1,16 @@
 {
 	"editor.tabSize": 4,
 	"editor.insertSpaces": true,
-	"ibm-i-acs.host": ""
+	"emmet.includeLanguages": {
+		"javascript": "javascriptreact"
+	},
+	"editor.quickSuggestions": {
+		"other": true,
+		"comments": false,
+		"strings": true
+	},
+	"editor.suggest.showSnippets": true,
+	"editor.suggest.snippetsPreventQuickSuggestions": false,
+	"editor.snippetSuggestions": "top",
+	"emmet.triggerExpansionOnTab": true,
 }

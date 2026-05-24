@@ -19,7 +19,7 @@
             //$this->session_expire();
             $this->blade = new PhpBlade($this->views, $this->cache);
             $GLOBALS['version'] = $_ENV['STATE'] == 'development' ? time() : $_ENV['VERSION'];
-            $this->load->database();
+            // $this->load->database();
             $this->load->library('mail');
         }
 
@@ -49,7 +49,7 @@
         }
 
 
-        /** 
+        /**
          * Send email
          */
         public function sendMail(){
