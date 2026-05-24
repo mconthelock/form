@@ -43,7 +43,7 @@ export const tableOption = {
     pageLength: 20,
     lengthMenu: [10, 20, 30, 50, 100],
     autoWidth: false,
-    responsive: true,
+    responsive: false,
     destroy: true,
     language: {
         info: '_START_ to _END_ of _TOTAL_ row(s)',
@@ -245,3 +245,13 @@ export const digits = function (n, digit) {
     }
     return fstr;
 };
+
+export function tableFillSelect(selector, data, valueKey, labelKey) {
+    const element = $(selector);
+    element.find('option:not(:first)').remove();
+    data.forEach((item) => {
+        element.append(
+            `<option value="${item[valueKey]}">${item[labelKey]}</option>`,
+        );
+    });
+}
