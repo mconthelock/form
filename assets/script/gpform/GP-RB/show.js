@@ -35,31 +35,40 @@ $(async function () {
             param.CYEAR2,
             param.NRUNNO,
         );
-
+        console.log(data);
         //Show requester info
-        const empData = await getEmpData(data.VREQNO);
-        $('#INPUTBY').text(data.VINPUTER);
-        $('#REQBY').text(data.VREQNO);
+        const empData = await getEmpData(data.form.VREQNO);
+        $('#INPUTBY').text(data.form.VINPUTER);
+        $('#REQBY').text(data.form.VREQNO);
         $('#empName').text(empData.STNAME);
         $('#empDept').text(`${empData.SSEC}/${empData.SDEPT}/${empData.SDIV}`);
         $('#empPos').text(empData.SPOSITION);
 
+        const config = await getConfig();
+        const selectedConfig = config.find(
+            (c) => c.SPOSCODE === empData.SPOSCODE,
+        );
+        const nameParts = empData.SNAME.split(' ');
         //Show purpose
-        if (data.REQ_TYPE != '1') {
+        if (data.REQ_TYPE == '1') {
             $('#standardStampSection').removeClass('hidden');
             $('#otherStampSection').addClass('hidden');
             $(`#purpose_${data.PURPOSE_ID}`).prop('checked', true);
             $('#otherSelect').val(data.PURPOSE_OTHER || '');
-            $('#stampSize').text('20 mm.');
-            $('#stampCircle-name').val('');
-            $('#nameInput').val('');
+            $('#stampSize').html(selectedConfig.SIZE_MM + ' mm.');
+            $('#stampCircle-name').html(nameParts[0]);//
+            $('#nameInput').val(nameParts[0]);        // 
 
-            const config = await getConfig();
-            const selectedConfig = config.find(
-                (c) => c.SPOSCODE === empData.SPOSCODE,
-            );
             if (selectedConfig.STAMP_TYPE == '2') {
                 $('#stampCircle-label').html(empData.SDIV);
+                $('#standardStampSection').removeClass('hidden');
+                $('#otherStampSection').addClass('hidden');
+                $(`#purpose_${data.PURPOSE_ID}`).prop('checked', true);
+                $('#otherSelect').val(data.PURPOSE_OTHER || '');
+                $('#stampSize').html(selectedConfig.SIZE_MM + ' mm.');
+                $('#stampCircle-name').html(nameParts[0]);//
+                $('#nameInput').val(nameParts[0]);        // 
+
             }
         } else {
             $('#standardStampSection').addClass('hidden');
@@ -67,6 +76,7 @@ $(async function () {
             $('#otherReason').val(data.PURPOSE_OTHER || '');
             $('#otherQty').val(data.PURPOSE_QTY || '1');
 
+            //await loadAttachedFiles(data);
             const fileForm = await getFileForm({
                 NFRMNO: param.NFRMNO,
                 VORGNO: param.VORGNO,
@@ -75,6 +85,9 @@ $(async function () {
                 NRUNNO: param.NRUNNO,
                 FORM_TYPE: 'GP',
             });
+            
+            
+
             if (fileForm.status) {
                 const fileList = Array.isArray(fileForm.data)
                     ? fileForm.data
@@ -82,6 +95,7 @@ $(async function () {
                 await renderAttachedFiles(fileList);
             }
         }
+        //  console.log(fileForm);
     } catch (error) {
         console.error('Error in show.js:', error);
         showErrorMessage('เกิดข้อผิดพลาดในการโหลดข้อมูลแบบฟอร์ม');
@@ -205,6 +219,7 @@ $(async function () {
     //     String(getShowdata?.NRUNNO || '').trim();
 
     // if (hasCustomStamp && isSameRunNo) {
+
     //     showCustomStampSection(getShowdata, getShowCusdata);
     //     return;
     // }
@@ -417,8 +432,8 @@ function getFirstPositionCode(posCode) {
     const posCodeArray = Array.isArray(posCode)
         ? posCode
         : posCode
-          ? [posCode]
-          : [];
+            ? [posCode]
+            : [];
 
     let firstPosCode =
         posCodeArray.length > 0 ? String(posCodeArray[0]).trim() : null;
@@ -505,10 +520,10 @@ function lockNameInputsByValue() {
     $('#radioOther').prop('disabled', hasNameInput1 || hasNameInput2);
 }
 
-async function loadAttachedFiles(form) {
+async function loadAttachedFiles(data) {
     try {
         const fileForm = await getFileForm({
-            ...form,
+            ...data,
             FORM_TYPE: 'GP',
         });
 

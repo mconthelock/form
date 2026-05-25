@@ -27,7 +27,7 @@ export async function getFormData(nfrno, vorgno, cyear, cyear2, runno) {
     });
 }
 
-export async function getFileForm() {
+export async function getFileForm(data) {
     return await fetchUtils({
         url: `${process.env.APP_API}/webform/file/get-file/`,
         method: 'POST',

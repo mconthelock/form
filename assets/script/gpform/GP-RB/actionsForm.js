@@ -178,7 +178,6 @@ $(document).on('click', '#btnRequest', async function () {
         } else {
             throw new Error(res.message);
         }
-        // console.log(res);
     } catch (error) {
         console.log(error);
         showMessage(error.message);
