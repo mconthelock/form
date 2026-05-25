@@ -8,10 +8,12 @@ import {
     paymentNumManager,
     paymentTypeManager,
     reqByManager,
+    countryManager,
     currencyManager,
     attachFileManager,
     vendorTypeManager,
     ReqtypeManager,
+    vendorCodeManager
 } from "./formManager";
 import { downloadOrOpenFile } from "@amec/webasset/api/file";
 
@@ -46,13 +48,36 @@ $(document).on("change", 'input[name="ACCEPT_PO"]', function () {
     acceptPoManager.change();
 });
 
-$(document).on("change", 'input[name="VENDOR_LOCATION"]', function () {
+$(document).on("change", 'input[name="VENDOR_LOCATION"]', async function () {
     vendorTypeManager.change();
+
+    
 });
 
 // เมื่อเลือก PAYMENT CONDITIONS & TERMS
 $(document).on("change", 'input[name="PAYMENT_TYPE"]', function () {
     paymentTypeManager.change();
+});
+
+
+
+
+$(document).on("select2:select", ".country",async function (e) {
+   // console.log("country");
+    
+    //const value = $(this).val();
+    //currencyManager.syncValue(value, this);
+    countryManager.change(e);
+
+});
+
+$(document).on("select2:select", ".province",async function (e) {
+    console.log("province");
+    
+    //const value = $(this).val();
+    //currencyManager.syncValue(value, this);
+   // countryManager.change(e);
+    
 });
 
 $(document).on("change", 'input[name="REQTYPE"]', function () {

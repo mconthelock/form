@@ -16,7 +16,7 @@ import {
     showErrorMessage,
     showMessage,
 } from "@amec/webasset/utils";
-import { approveReturn, create, getCurrency, getData , getTermcode } from "./data";
+import { approveReturn, create, getCurrency, getData , getTermcode , getCountries, getProvinces ,getDistricts , getSubDistricts } from "./data";
 import { dragDropInit } from "@amec/webasset/dragdrop";
 import { setDatefpk, setDatePicker } from "@amec/webasset/flatpickr";
 import { setSelect2 } from "@amec/webasset/select2";
@@ -24,6 +24,7 @@ import { selectAttachType } from "./function";
 import { formatDate } from "@amec/webasset/dayjs";
 import { classIcofont } from "@amec/webasset/fileExplorer";
 import Swal from "sweetalert2";
+import { get } from "jquery";
 select2();
 
 const state = {
@@ -101,6 +102,20 @@ export const reqByManager = {
     },
 };
 
+export const vendorCodeManager = {
+    get input() {       
+        return $("#VENDORCODE");
+    },
+    get value() {
+        return this.input.val();
+    },
+    set value(val) {
+        this.input.val(val);
+    },
+    
+
+};
+
 export const formManager = {
     get form() {
         return $("#form");
@@ -150,8 +165,40 @@ export const formManager = {
                     value: t.TERMCODE,
                     text: t.TERMNAME,
                 }));
+                const countries = await getCountries();
+                const countriesData = countries.map((c) => ({
+                    id: c.id,
+                    value: c.nameen,
+                    text:  c.nameen,
+                    nameth: c.nameth
+                }));
+                const province = await getProvinces();
+                const provinceData = province.map((p) => ({
+                    id: p.id,
+                    value: p.nameen,
+                    text: p.nameen,
+                    nameth: p.nameth
+                }));
+                const district = await getDistricts();
+                const districtData = district.map((d) => ({
+                    id: d.id,
+                    value: d.nameen,
+                    text: d.nameen,
+                    nameth: d.nameth   
+                }));
+                const subDistrict = await getSubDistricts();
+                const subDistrictData = subDistrict.map((s) => ({
+                    id: s.id,
+                    value: s.nameen,
+                    text: s.nameen,
+                    nameth: s.nameth
+                }));
                 paymentTermManager.init(termdata);
+                countryManager.init(countriesData);
+                provinceManager.init(provinceData);
+                districtManager.init(districtData);
                 currencyManager.init(currData);
+                subDistrictManager.init(subDistrictData);
                 actionFormManager.init(mode);
                 break;
             case 2: // edit
@@ -359,6 +406,7 @@ export const paymentTermManager = {
                 placeholder: "Select Payment Term",
                 search: false,
                 clear: false,
+                width: "60%",
                 emptyValue: false,
             });
         }
@@ -379,6 +427,216 @@ export const paymentTermManager = {
     },
 };
 
+export const countryManager = {
+    list: ["COUNTRY_SELECT"],
+    get select() {
+        return $(".country");
+    },
+    set text(val) {
+        $(".country").text(val);
+    },
+    set value(val) {
+        this.list.forEach((id) => {
+            $(`#${id}`).val(val).trigger("change");
+        });
+    },
+    getValue(id) {
+        return $(`#${id}`).val();
+    },
+    /**
+     * Initialize select2 for currency fields
+     * @param {{value: string, text: string}[]} data
+     */
+    async init(data) {
+        for (const id of this.list) {
+            await setSelect2({
+                id: id,
+                data: data,
+                size: "sm",
+                placeholder: "Select Country",
+                search: true,
+                clear: false,
+                width: "100%",
+                emptyValue: false,
+            });
+        }
+    },
+    /**
+     * Sync value to other select2 element
+     * @param {string} value
+     * @param {HTMLElement} element
+     */
+    syncValue(value, element) {
+        for (const id of this.list) {
+            if (!$("#" + id).is(element)) {
+                $("#" + id)
+                    .val(value.toUpperCase())
+                    .trigger("change");
+            }
+        }
+    },
+async change(e) {
+    // 💡 แก้ไขตรงนี้: ใช้คอมมา (,) ห้ามใช้เครื่องหมายบวก (+) เด็ดขาด
+    console.log("Data ทั้งก้อนจาก Select2:", e.params.data);
+
+    if (e && e.params && e.params.data) {
+        const selectedCountry = e.params.data;
+        $("#COUNTRY_EN").val(selectedCountry.text || "");
+        $("#COUNTRY_TH").val(selectedCountry.nameth || "");
+    }
+}
+};
+
+
+export const provinceManager = {
+    list: ["PROVINCE_SELECT"],
+    get select() {
+        return $(".province");
+    },
+    set text(val) {
+        $(".province").text(val);
+    },
+    set value(val) {
+        this.list.forEach((id) => {
+            $(`#${id}`).val(val).trigger("change");
+        });
+    },
+    getValue(id) {
+        return $(`#${id}`).val();
+    },
+    /**
+     * Initialize select2 for currency fields
+     * @param {{value: string, text: string}[]} data
+     */
+    async init(data) {
+        for (const id of this.list) {
+            await setSelect2({
+                id: id,
+                data: data,
+                size: "sm",
+                placeholder: "Select Province",
+                search: true ,
+                clear: false,
+                width: "60%",
+                emptyValue: false,
+            });
+        }
+    },
+    /**
+     * Sync value to other select2 element
+     * @param {string} value
+     * @param {HTMLElement} element
+     */
+    syncValue(value, element) {
+        for (const id of this.list) {
+            if (!$("#" + id).is(element)) {
+                $("#" + id)
+                    .val(value.toUpperCase())
+                    .trigger("change");
+            }
+        }
+    },
+};
+
+export const districtManager = {
+    list: ["DISTRICT_SELECT"],
+    get select() {
+        return $(".district");
+    },
+    set text(val) {
+        $(".district").text(val);
+    },
+    set value(val) {
+        this.list.forEach((id) => {
+            $(`#${id}`).val(val).trigger("change");
+        });
+    },
+    getValue(id) {
+        return $(`#${id}`).val();
+    },
+    /**
+     * Initialize select2 for currency fields
+     * @param {{value: string, text: string}[]} data
+     */
+    async init(data) {
+        for (const id of this.list) {
+            await setSelect2({
+                id: id,
+                data: data,
+                size: "sm",
+                placeholder: "Select District",
+                search: true ,
+                clear: false,
+                width: "60%",
+                emptyValue: false,
+            });
+        }
+    },
+    /**
+     * Sync value to other select2 element
+     * @param {string} value
+     * @param {HTMLElement} element
+     */
+    syncValue(value, element) {
+        for (const id of this.list) {
+            if (!$("#" + id).is(element)) {
+                $("#" + id)
+                    .val(value.toUpperCase())
+                    .trigger("change");
+            }
+        }
+    },
+};
+
+export const subDistrictManager = {
+    list: ["SUB_DISTRICT_SELECT"],
+    get select() {
+        return $(".sub-district");
+    },
+    set text(val) {
+        $(".district").text(val);
+    },
+    set value(val) {
+        this.list.forEach((id) => {
+            $(`#${id}`).val(val).trigger("change");
+        });
+    },
+    getValue(id) {
+        return $(`#${id}`).val();
+    },
+    /**
+     * Initialize select2 for currency fields
+     * @param {{value: string, text: string}[]} data
+     */
+    async init(data) {
+        for (const id of this.list) {
+            await setSelect2({
+                id: id,
+                data: data,
+                size: "sm",
+                placeholder: "Select Sub-district",
+                search: true ,
+                clear: false,
+                width: "60%",
+                emptyValue: false,
+            });
+        }
+    },
+    /**
+     * Sync value to other select2 element
+     * @param {string} value
+     * @param {HTMLElement} element
+     */
+    syncValue(value, element) {
+        for (const id of this.list) {
+            if (!$("#" + id).is(element)) {
+                $("#" + id)
+                    .val(value.toUpperCase())
+                    .trigger("change");
+            }
+        }
+    },
+};
 
 export const currencyManager = {
     list: ["curr-total", "curr-invoice", "curr-payment"],
@@ -821,6 +1079,21 @@ export const vendorTypeManager = {
         attachTypeManager.reset("other");
         const type = this.type;
         selectAttachType(type);
+        if (type == "local") {
+            $(".field-local").removeClass("hidden").addClass("req");
+            $(".field-oversea").addClass("hidden").removeClass("req");
+            $(".field-oversea").val("");
+            $("#COUNTRY_EN").val("Thailand");
+            $("#COUNTRY_TH").val("ไทย");
+        }else
+        {
+            $(".field-oversea").removeClass("hidden").addClass("req");
+            $(".field-local").addClass("hidden").removeClass("req");
+            $(".field-local").val("");
+             $("#COUNTRY_EN").val("");
+             $("#COUNTRY_TH").val("");
+        }
+        
         
     },
 };
@@ -853,8 +1126,14 @@ export const ReqtypeManager = {
     },
     change() {
         const type = this.type;
-        $("#A-section, #U-section, #D-section").addClass("hidden");
+        $("#A-section, #U-section, #D-section , #V-section ,#F-section").addClass("hidden");
         $(`#${type}-section`).removeClass("hidden");
+        if(type == "A"){
+            console.log("ccccc");
+            
+            $(`#V-section`).removeClass("hidden");
+            $(`#F-section`).removeClass("hidden");
+        }
     },
 };
 

@@ -51,14 +51,14 @@
                     <div class="flex items-center gap-4">
                                     <span class="w-32 shrink-0 font-semibold">Input by</span>
                                     <label>
-                                        <input type="text" name="INPUTBY" id="INPUTBY" class="input input-sm w-48" value="{{$empno}}" readonly>
+                                        <input type="text" name="INPUTBY" id="INPUTBY" class="input input-sm w-40" value="{{$empno}}" readonly>
                                     </label>
                                 </div>
 
                                 <div class="flex items-center gap-4">
                                     <span class="required w-32 shrink-0 font-semibold">Request by</span>
                                     <label>
-                                        <input type="text" name="REQBY" id="REQBY" class="input input-sm w-48 req">
+                                        <input type="text" name="REQBY" id="REQBY" class="input input-sm w-40 req">
                                     </label>
                                 </div>
                         <div class="flex flex-col md:flex-row gap-4 items-start md:items-center  pb-2">
@@ -84,7 +84,7 @@
                         <div class="flex items-center gap-4">
                             <span class="w-32 shrink-0 font-semibold">Vendor Code</span>
                             <label>
-                                <input type="text" name="VENDORCODE" id="VENDORCODE" class="input input-sm w-48" value="" >
+                                <input type="text" name="VENDORCODE" id="VENDORCODE" class="input input-sm w-40" value="" >
                             </label>
                         </div>
                     </section>  
@@ -120,7 +120,7 @@
                 <div class="divider"></div>
                 
                 <section id="section-2">
-                    <h2 class="font-bold text-xl mb-3 required">Vendor Information Detail</h2>
+                    <h2 class="font-bold text-xl mb-3 required">Vendor Information Detailxxxxxxxxxxx</h2>
                     <!-- Company Name & Location Type -->
                     <div class="flex flex-col md:flex-row gap-4 mb-4 items-start">
                         <!-- ฝั่งซ้าย: กล่องกรอก Company Name -->
@@ -132,74 +132,57 @@
                         </div>
                         
                         <!-- ฝั่งขวา: ตัวเลือกประเภท (Local / Oversea) -->
-                   <div class="flex items-center justify-between gap-4 h-8 pl-4 md:pl-0 pt-1 md:pt-2 w-full">
-                    <div class="flex items-center gap-6 shrink-0">
-                        <label class="flex items-center gap-2 cursor-pointer">
-                            <input type="radio" name="VENDOR_LOCATION" value="Local" v-type="local" class="radio radio-xs req" >
-                            <span class="text-sm font-semibold">Local</span>
-                        </label>
-                        <label class="flex items-center gap-2 cursor-pointer">
-                            <input type="radio" name="VENDOR_LOCATION" value="Oversea" v-type="oversea" class="radio radio-xs req">
-                            <span class="text-sm font-semibold">Oversea</span>
-                        </label>
+                        <div class="flex items-center gap-6 h-8 pl-4 md:pl-0 pt-1 md:pt-2">
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="radio" name="VENDOR_LOCATION" value="Local" v-type="local" class="radio radio-xs req" >
+                                <span class="text-sm  font-semibold">Local</span>
+                            </label>
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="radio" name="VENDOR_LOCATION" value="Oversea" v-type="oversea" class="radio radio-xs req">
+                                <span class="text-sm font-semibold">Oversea</span>
+                            </label>
+                        </div>
                     </div>
-                    
-                    <div id="wrapper_country_select" class="flex-1 min-w-[200px] ml-2">
-                        <select name="COUNTRY_SELECT" id="COUNTRY_SELECT" class="select select-bordered select-sm bg-gray-50 border-gray-300 country req w-full" style="width: 100%;">
-                            <option value="">-- Select Country --</option>
-                        </select>
-                    </div>
-
-                </div>
-                    </div>
-                <div id="wrapper_address_en" class="flex flex-col md:flex-row gap-4 mb-6 items-start">
-                    <div class="w-32 shrink-0 pt-2">
-                        <span class="font-semibold text-gray-900 required">Address (EN)</span>
-                    </div>
-                    <div class="flex-1 flex flex-col gap-3 w-full">
-                        <div>
-                            <label class="block mb-1 text-xs font-bold text-gray-600">No., Village, Building, Alley, Road </label>
-                            <input type="text" name="ADDRESS_EN" id="ADDRESS_EN" class="input input-bordered input-sm w-full req bg-gray-50 border-gray-300" placeholder="e.g. 43/86 Moo 16, Bangna Road...">
+                    <div id="wrapper_address_en" class="flex flex-col md:flex-row gap-4 mb-6 items-start">
+                        <div class="w-32 shrink-0 pt-2">
+                            <span class="font-semibold text-gray-900  required">Address (EN)</span>
                         </div>
                         
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div class="flex-1 flex flex-col gap-3 w-full">
                             <div>
-                                <label class="block mb-1 text-xs font-bold text-gray-600">Sub-district</label>
-                                <input type="text" name="SUB_DISTRICT_EN" id="SUB_DISTRICT_EN" class="input input-bordered input-sm w-full req bg-gray-50 border-gray-300 field-oversea" placeholder="Sub-district">
-                                <select id="SUB_DISTRICT_SELECT" class="sub-district field-local hidden">
-                                          <option value="">-- Select Sub-district --</option>
-                                </select>
+                                <label class="block mb-1 text-xs font-bold text-gray-600 ">No., Village, Building, Alley, Road </label>
+                                <input type="text" name="ADDRESS_EN" id="ADDRESS_EN" class="input input-bordered input-sm w-full req bg-gray-50 border-gray-300" placeholder="e.g. 43/86 Moo 16, Bangna Road...">
                             </div>
-                            <div>
-                                <label class="block mb-1 text-xs font-bold text-gray-600">District</label>
-                                <input type="text" name="DISTRICT_EN" id="DISTRICT_EN" class="input input-bordered input-sm w-full req bg-gray-50 border-gray-300 field-oversea" placeholder="District">
-                                <select id="DISTRICT_SELECT" class="district field-local hidden">
-                                        <option value="">-- Select District --</option>
-                                </select>
+                            
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block mb-1 text-xs font-bold text-gray-600">Sub-district</label>
+                                    <input type="text" name="SUB_DISTRICT_EN" id="SUB_DISTRICT_EN" class="input input-bordered input-sm w-full req bg-gray-50 border-gray-300" placeholder="Sub-district">
+                                </div>
+                                <div>
+                                    <label class="block mb-1 text-xs font-bold text-gray-600">District</label>
+                                    <input type="text" name="DISTRICT_EN" id="DISTRICT_EN" class="input input-bordered input-sm w-full req bg-gray-50 border-gray-300" placeholder="District">
+                                </div>
                             </div>
-                        </div>
-                        
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block mb-1 text-xs font-bold text-gray-600">Province</label>
-                                <input type="text" name="PROVINCE_EN" id="PROVINCE_EN" class="input input-bordered input-sm w-full req bg-gray-50 border-gray-300 field-oversea" placeholder="Province">
-                                <select id="PROVINCE_SELECT" class="province field-local hidden">
-                                     <option value="">-- Select Province --</option>
-                                </select>
+                            
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block mb-1 text-xs font-bold text-gray-600">Province</label>
+                                    <input type="text" name="PROVINCE_EN" id="PROVINCE_EN" class="input input-bordered input-sm w-full req bg-gray-50 border-gray-300" placeholder="Province">
+                                </div>
+                                <div>
+                                    <label class="block mb-1 text-xs font-bold text-gray-600">Postcode</label>
+                                    <input type="text" name="POSTCODE_EN" id="POSTCODE_EN" class="input input-bordered input-sm w-full req bg-gray-50 border-gray-300" maxlength="10" placeholder="Postal Code">
+                                </div>
                             </div>
-                            <div>
-                                <label class="block mb-1 text-xs font-bold text-gray-600">Postcode</label>
-                                <input type="text" name="POSTCODE_EN" id="POSTCODE_EN" class="input input-bordered input-sm w-full req bg-gray-50 border-gray-300" maxlength="10" placeholder="Postcode">
-                            </div>
-                        </div>
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block mb-1 text-xs font-bold text-gray-600">Country</label>
-                                <input type="text" name="COUNTRY_EN" id="COUNTRY_EN" class="input input-bordered input-sm w-full req bg-gray-50 border-gray-300" placeholder="Country" readonly>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block mb-1 text-xs font-bold text-gray-600">Country</label>
+                                    <input type="text" name="COUNTRY_EN" id="COUNTRY_EN" class="input input-bordered input-sm w-full req bg-gray-50 border-gray-300" placeholder="Country">
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
                 <div id="wrapper_address_th" class="flex flex-col md:flex-row gap-4 mb-6 items-start">
                         <div class="w-32 shrink-0 pt-2">
                             <span class="font-semibold text-gray-900 ">Address (TH) </span>
@@ -235,7 +218,7 @@
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
                                     <label class="block mb-1 text-xs font-bold text-gray-600">ประเทศ</label>
-                                    <input type="text" name="COUNTRY_TH" id="COUNTRY_TH" class="input input-bordered input-sm w-full bg-gray-50 border-gray-300" placeholder="ประเทศ" readonly>
+                                    <input type="text" name="COUNTRY_TH" id="COUNTRY_TH" class="input input-bordered input-sm w-full bg-gray-50 border-gray-300" placeholder="ประเทศ">
                                 </div>
                             </div>
                         </div>
@@ -351,7 +334,7 @@
                     <div class="flex items-center gap-4">
                         <span class="w-32 shrink-0 font-semibold text-error">Vendor Code</span>
                         <div class="flex items-center gap-2">
-                            <input type="text" name="DVENDORCODE" id="DVENDORCODE" class="input input-bordered input-sm w-48" value="" placeholder="Enter vendor code to delete" >
+                            <input type="text" name="DVENDORCODE" id="DVENDORCODE" class="input input-bordered input-sm w-40" value="" placeholder="Enter vendor code to delete" >
                             <button type="button" id="btn-add-delete-list" class="btn btn-sm btn-error text-white">
                                 <span class="font-bold">+</span> Add
                             </button>
