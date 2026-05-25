@@ -158,7 +158,7 @@
 
                 <div class="grid grid-cols-12 border-b border-slate-300">
                     <div class="edr-label col-span-12 md:col-span-2 px-4 py-2">
-                        Request By <span class="required">*</span>
+                        Input By (ผู้เจอปัญหา) <span class="required">*</span>
                     </div>
                     <div class="col-span-12 md:col-span-4 px-4 py-2">
                         <input type="text" id="request_by" name="request_by" maxlength="5" placeholder="Ex.15199" class="edr-input max-w-[120px]">

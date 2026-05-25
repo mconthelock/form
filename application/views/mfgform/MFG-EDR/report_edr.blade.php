@@ -9,6 +9,7 @@
 
 <body class="bg-gray-100 p-4">
     <!-- HEADER -->
+
     <div class="bg-green-700 rounded-2xl border-2 border-green-800 shadow-lg px-5 py-4 mb-4">
 
         <div class="flex flex-col 2xl:flex-row 2xl:items-center 2xl:justify-between gap-4">
@@ -137,6 +138,7 @@
                 <!-- CHART A -->
                 <div class="h-[350px] bg-white rounded-2xl border-2 border-gray-300 shadow-md">
                     R-1
+                    <div id="troubleTrendChart" class="w-full h-full"></div>
                 </div>
 
                 <!-- CHART B -->
