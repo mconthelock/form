@@ -19,8 +19,7 @@ $(async function () {
     const empno = urlParams.get('empno');
     $('#INPUTBY').val(empno);
     await renderPurpose();
-    const otherId = sortpurpose.find((p) => p.PURPOSE_GROUP == 3)?.PURPOSE_ID;
-    $('#otherPurposeId').val(otherId);
+
     await toggleStandard('1');
     await toggleOther('1');
     const action = webflowSubmit({ request: true });
@@ -32,6 +31,12 @@ $(document).on('change', '#REQBY', async function (e) {
     e.preventDefault();
     try {
         const empData = await getEmpData($(this).val());
+        if (!empData || !empData.SNAME) {
+            showMessage('Employee data not found', 'error');
+            $(this).val('');
+            $(this).focus();
+            return;
+        }
         $('#empName').val(empData.SNAME);
         $('#empDept').val(`${empData.SSEC}/${empData.SDEPT}/${empData.SDIV}`);
         $('#empPos').val(empData.SPOSNAME);
@@ -47,6 +52,8 @@ $(document).on('change', '#REQBY', async function (e) {
 
         if (selectedConfig.STAMP_TYPE == '2') {
             $('#stampCircle-label').html(empData.SDIV);
+        } else {
+            $('#stampCircle-label').html('AMEC');
         }
 
         // ล้าง checkbox position ทั้งหมดก่อน

@@ -88,6 +88,8 @@ export async function renderPurpose(mode = 'create') {
         })
         .join('');
     $('#purposeList').html(Purposedata);
+    const otherId = sortpurpose.find((p) => p.PURPOSE_GROUP == 3)?.PURPOSE_ID;
+    $('#otherPurposeId').val(otherId);
 }
 
 export async function renderAttachedFiles(fileList) {
