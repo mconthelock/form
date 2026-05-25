@@ -38,11 +38,12 @@ $(async function () {
         console.log(data);
         //Show requester info
         const empData = await getEmpData(data.form.VREQNO);
+       
         $('#INPUTBY').text(data.form.VINPUTER);
         $('#REQBY').text(data.form.VREQNO);
         $('#empName').text(empData.STNAME);
         $('#empDept').text(`${empData.SSEC}/${empData.SDEPT}/${empData.SDIV}`);
-        $('#empPos').text(empData.SPOSITION);
+        $('#empPos').text(empData.SPOSNAME);
 
         const config = await getConfig();
         const selectedConfig = config.find(
@@ -56,8 +57,8 @@ $(async function () {
             $(`#purpose_${data.PURPOSE_ID}`).prop('checked', true);
             $('#otherSelect').val(data.PURPOSE_OTHER || '');
             $('#stampSize').html(selectedConfig.SIZE_MM + ' mm.');
-            $('#stampCircle-name').html(nameParts[0]);//
-            $('#nameInput').val(nameParts[0]);        // 
+            $('#stampCircle-name').html(nameParts[0]); //
+            $('#nameInput').val(nameParts[0]); //
 
             if (selectedConfig.STAMP_TYPE == '2') {
                 $('#stampCircle-label').html(empData.SDIV);
@@ -66,9 +67,8 @@ $(async function () {
                 $(`#purpose_${data.PURPOSE_ID}`).prop('checked', true);
                 $('#otherSelect').val(data.PURPOSE_OTHER || '');
                 $('#stampSize').html(selectedConfig.SIZE_MM + ' mm.');
-                $('#stampCircle-name').html(nameParts[0]);//
-                $('#nameInput').val(nameParts[0]);        // 
-
+                $('#stampCircle-name').html(nameParts[0]); //
+                $('#nameInput').val(nameParts[0]); //
             }
         } else {
             $('#standardStampSection').addClass('hidden');
@@ -85,8 +85,6 @@ $(async function () {
                 NRUNNO: param.NRUNNO,
                 FORM_TYPE: 'GP',
             });
-            
-            
 
             if (fileForm.status) {
                 const fileList = Array.isArray(fileForm.data)
@@ -95,7 +93,34 @@ $(async function () {
                 await renderAttachedFiles(fileList);
             }
         }
-        //  console.log(fileForm);
+        
+
+        //ปุ่ม approve กับ reject จะโชว์ก็ต่อเมื่อเป็นผู้อนุมัติเท่านั้น
+        const mode = await getMode({ ...data, EMPNO: param.EMPNO });
+        cextData = await getExtData({ ...data, EMPNO: param.EMPNO });
+        const flow = await showflow(data);
+        console.log(mode);
+
+        let action = '';
+        switch (mode) {
+            case '2': // edit
+                action = webflowSubmit({
+                    flow: true,
+                    flowhtml: flow.html,
+                    approve: true,
+                    reject: true,
+                });
+                break;
+
+            case '3': // view
+                action = webflowSubmit({
+                    flow: true,
+                    flowhtml: flow.html,
+                    actionsForm: false,
+                });
+                break;
+        }
+        $('#sentApprove').html(action);
     } catch (error) {
         console.error('Error in show.js:', error);
         showErrorMessage('เกิดข้อผิดพลาดในการโหลดข้อมูลแบบฟอร์ม');
@@ -432,8 +457,8 @@ function getFirstPositionCode(posCode) {
     const posCodeArray = Array.isArray(posCode)
         ? posCode
         : posCode
-            ? [posCode]
-            : [];
+          ? [posCode]
+          : [];
 
     let firstPosCode =
         posCodeArray.length > 0 ? String(posCodeArray[0]).trim() : null;
