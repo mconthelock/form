@@ -36,9 +36,10 @@ $(async function () {
             param.NRUNNO,
         );
         console.log(data);
+        console.log(`${data.formmaster.VANAME}${data.form.CYEAR2.slice(-2)}-${('000000'+data.form.NRUNNO).slice(-6)}`);
         //Show requester info
         const empData = await getEmpData(data.form.VREQNO);
-
+        $('#formNo').text(`${data.formmaster.VANAME}${data.form.CYEAR2.slice(-2)}-${('000000'+data.form.NRUNNO).slice(-6)}`);
         $('#INPUTBY').text(data.form.VINPUTER);
         $('#REQBY').text(data.form.VREQNO);
         $('#empName').text(empData.STNAME);
@@ -104,7 +105,7 @@ $(async function () {
         let action = '';
         switch (mode) {
             case '2': // edit
-                if(cextData != '01'){
+                if(cextData == '01'){
                     $('#nameInput').removeAttr('readonly');
                 }
                 action = webflowSubmit({
