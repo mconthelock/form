@@ -36,10 +36,11 @@ $(async function () {
             param.NRUNNO,
         );
         console.log(data);
-        console.log(`${data.formmaster.VANAME}${data.form.CYEAR2.slice(-2)}-${('000000'+data.form.NRUNNO).slice(-6)}`);
+        console.log(`${data.formmaster.VANAME}${data.form.CYEAR2.slice(-2)}-${('000000' + data.form.NRUNNO).slice(-6)}`);
         //Show requester info
         const empData = await getEmpData(data.form.VREQNO);
-        $('#formNo').text(`${data.formmaster.VANAME}${data.form.CYEAR2.slice(-2)}-${('000000'+data.form.NRUNNO).slice(-6)}`);
+
+        $('#formNo').text(`${data.formmaster.VANAME}${data.form.CYEAR2.slice(-2)}-${('000000' + data.form.NRUNNO).slice(-6)}`);
         $('#INPUTBY').text(data.form.VINPUTER);
         $('#REQBY').text(data.form.VREQNO);
         $('#empName').text(empData.STNAME);
@@ -50,7 +51,7 @@ $(async function () {
         const selectedConfig = config.find(
             (c) => c.SPOSCODE === empData.SPOSCODE,
         );
-        const nameParts = empData.SNAME.split(' ');
+        var nameStamp = data.NAME_STAMP || '';
         //Show purpose
         if (data.REQ_TYPE == '1') {
             $('#standardStampSection').removeClass('hidden');
@@ -58,8 +59,12 @@ $(async function () {
             $(`#purpose_${data.PURPOSE_ID}`).prop('checked', true);
             $('#otherSelect').val(data.PURPOSE_OTHER || '');
             $('#stampSize').html(selectedConfig.SIZE_MM + ' mm.');
-            $('#stampCircle-name').html(nameParts[0]); //
-            $('#nameInput').val(nameParts[0]); //
+            $('#stampCircle-name').html(nameStamp);
+            $('#nameInput').val(nameStamp);
+
+            $('#nameInput').off('input').on('input', function () {
+                $('#stampCircle-name').text($(this).val());
+            });
 
             if (selectedConfig.STAMP_TYPE == '2') {
                 $('#stampCircle-label').html(empData.SDIV);
@@ -68,8 +73,12 @@ $(async function () {
                 $(`#purpose_${data.PURPOSE_ID}`).prop('checked', true);
                 $('#otherSelect').val(data.PURPOSE_OTHER || '');
                 $('#stampSize').html(selectedConfig.SIZE_MM + ' mm.');
-                $('#stampCircle-name').html(nameParts[0]); //
-                $('#nameInput').val(nameParts[0]); //
+                $('#stampCircle-name').html(nameStamp);
+                $('#nameInput').val(nameStamp);
+
+                $('#nameInput').off('input').on('input', function () {
+                    $('#stampCircle-name').text($(this).val());
+                });
             }
         } else {
             $('#standardStampSection').addClass('hidden');
@@ -105,7 +114,7 @@ $(async function () {
         let action = '';
         switch (mode) {
             case '2': // edit
-                if(cextData == '01'){
+                if (cextData == '01') {
                     $('#nameInput').removeAttr('readonly');
                 }
                 action = webflowSubmit({
@@ -130,7 +139,7 @@ $(async function () {
         showErrorMessage('เกิดข้อผิดพลาดในการโหลดข้อมูลแบบฟอร์ม');
         return;
     }
-    
+
 });
 
 $(document).on('click', '.download-btn', async function () {
@@ -146,6 +155,14 @@ $(document).on('click', '.download-btn', async function () {
     }
 });
 
+async function getNameStampValue() {
+    //ดึงค่าจากช่องหน้าเว็บ
+    const getnameInput = $('#nameInput').val()?.trim();
+    console.log('nameInput=', getnameInput);
+    return getnameInput;
+}
+
+
 // action form approve, reject
 $(document).on('click', "button[name='btnAction']", async function () {
     try {
@@ -157,7 +174,7 @@ $(document).on('click', "button[name='btnAction']", async function () {
             CYEAR2: param.CYEAR2,
             NRUNNO: param.NRUNNO,
         };
-        console.log(form);
+
         const action = $(this).val();
         const remark = $('#remark').val();
         cextData = await getExtData({ ...form, EMPNO: param.EMPNO });
@@ -170,7 +187,6 @@ $(document).on('click', "button[name='btnAction']", async function () {
             ACTION: action,
             REMARK: remark,
         };
-        console.log(state.Name_Stamp);
         console.log(cextData);
 
         let res;
@@ -180,6 +196,7 @@ $(document).on('click', "button[name='btnAction']", async function () {
                 throw new Error('ไม่พบชื่อที่ต้องการอัพเดท');
             }
             state.NAME_STAMP = nameStamp;
+            console.log(state.nameStamp)
             res = await updateStamp(state);
         } else {
             res = await doaction(state);
@@ -189,7 +206,7 @@ $(document).on('click', "button[name='btnAction']", async function () {
 
         if (res.status) {
             showMessage(res.message, 'success');
-            redirectWebflow();
+            //  redirectWebflow();
         } else {
             throw new Error(res.message);
         }
@@ -200,29 +217,20 @@ $(document).on('click', "button[name='btnAction']", async function () {
 });
 
 
-async function getShowData(form) {
-    const url = `${process.env.APP_API}/gpform/showstamp-gp-rb/${form.NFRMNO}/${form.VORGNO}/${form.CYEAR}/${form.CYEAR2}/${form.NRUNNO}`;
-    return await fetchUtils({
-        url: url,
-        method: 'GET',
-    });
-}
-
-async function getShowCusData(form) {
-    const url = `${process.env.APP_API}/gpform/showcusstamp-gp-rb/${form.NFRMNO}/${form.VORGNO}/${form.CYEAR}/${form.CYEAR2}/${form.NRUNNO}`;
-    return await fetchUtils({
-        url: url,
-        method: 'GET',
-    });
-}
-
-
-
 async function updateStamp(state) {
-    const url = `${process.env.APP_API}/gpform/showstamp-gp-rb`;
+    const url = `${process.env.APP_API}/gpform/gp-rb`;
     return await fetchUtils({
         url: url,
         method: 'PATCH',
         data: state,
     });
 }
+
+async function getShowData(form) {
+    const url = `${process.env.APP_API}/gpform/showstamp-gp-rb/${form.NFRMNO}/${form.VORGNO}/${form.CYEAR}/${form.CYEAR2}/${form.NRUNNO}`;
+    return await fetchUtils({
+        url: url,
+        method: "GET",
+    });
+}
+
