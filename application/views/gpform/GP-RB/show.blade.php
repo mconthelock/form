@@ -138,7 +138,7 @@
                                         <span class="whitespace-nowrap font-semibold items-center">ชื่อ/Name:</span>
                                         <input type="text"
                                             class="input input-sm input-ghost w-full rounded-none border-b border-base-300 focus:border-primary px-1"
-                                            id="nameInput" name="NAME_STAMP">
+                                            id="nameInput" name="NAME_STAMP" readonly>
                                         <input type="hidden" name="REQ_QTY" value="1">
                                     </div>
                                 </td>
