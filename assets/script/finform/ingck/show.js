@@ -1,5 +1,5 @@
 import { fetchUtils } from "@amec/webasset/api/fetch-utils";
-import { getFormDetail, getMode, showflow } from "@amec/webasset/api/webform";
+import { getExtData, getFormDetail, getMode, showflow } from "@amec/webasset/api/webform";
 import { showMessage } from "@amec/webasset/utils";
 import { createTable } from "@amec/webasset/dataTable";
 import { webflowSubmit } from "@amec/webasset/components/form";
@@ -8,6 +8,8 @@ import { webflowSubmit } from "@amec/webasset/components/form";
 let table;
 let mapColumns = [];
 let dutyStampList = [];
+let isActionProcessing = false;
+let cextData = "";
 
 const columns = [
   { data: "LINEID", defaultContent: "" },
@@ -46,12 +48,12 @@ $(async function () {
     const showData = await getShowData(form);
     console.log("showData:", showData);
 
-const header = normalizeHeader(showData);
-const detail = normalizeDetail(showData);
-const files = normalizeFiles(showData);
+    const header = normalizeHeader(showData);
+    const detail = normalizeDetail(showData);
+    const files = normalizeFiles(showData);
 
-renderFinDsHeader(header);
-renderAttachment(files);
+    renderFinDsHeader(header);
+    renderAttachment(files);
 
     const stamp = await getStamp();
     console.log("stamp:", stamp);
@@ -72,6 +74,58 @@ renderAttachment(files);
 
     await createTableStamp([]);
     lockForm();
+  }
+});
+
+/*--------------------APPROVE FLOW FUNCTION--------------------*/
+
+$(document).on("click", 'button[name="btnAction"]', async function (e) {
+  e.preventDefault();
+
+  if (isActionProcessing) return;
+
+  const form = getFormKeyFromUrl();
+  const action = $(this).val();
+  const remark = $("#remark").val() || "";
+
+  if (action === "reject" && !String(remark).trim()) {
+    showMessage("Please input remark for reject.", "warning");
+    $("#remark").trigger("focus");
+    return;
+  }
+
+  try {
+    isActionProcessing = true;
+    $('button[name="btnAction"]').prop("disabled", true);
+
+    const actionPayload = {
+      NFRMNO: form.NFRMNO,
+      VORGNO: form.VORGNO,
+      CYEAR: form.CYEAR,
+      CYEAR2: form.CYEAR2,
+      NRUNNO: form.NRUNNO,
+      EMPNO: form.EMPNO,
+      ACTION: action,
+      REMARK: remark,
+      CEXTDATA: getCextDataValue(cextData),
+    };
+
+    console.log("FIN-DS approve payload:", actionPayload);
+
+    const result = await approveFinDs(actionPayload);
+
+    if (!result?.status) {
+      throw new Error(result?.message || "Cannot process workflow action");
+    }
+
+    showMessage(result.message || "Workflow action completed", "success");
+    window.location.reload();
+  } catch (error) {
+    console.error(error);
+    showMessage(error.message || "Cannot process workflow action", "error");
+  } finally {
+    isActionProcessing = false;
+    $('button[name="btnAction"]').prop("disabled", false);
   }
 });
 
@@ -130,6 +184,14 @@ async function getEmpData(empno) {
   return await fetchUtils({
     url: `${process.env.APP_API}/users/${empno}`,
     method: "GET",
+  });
+}
+
+async function approveFinDs(formData) {
+  return await fetchUtils({
+    url: `${process.env.APP_API}/finform/fin-ds/action`,
+    method: "POST",
+    data: formData,
   });
 }
 
@@ -213,9 +275,17 @@ async function renderWorkflowAction(form) {
       }),
     );
 
+    cextData = getCextDataValue(
+      await getExtData({
+        ...form,
+        EMPNO: form.EMPNO,
+      }),
+    );
+
     const flow = await showflow(form);
 
     console.log("mode:", mode);
+    console.log("CEXTDATA:", cextData);
     console.log("flow:", flow);
 
     let action = "";
@@ -596,6 +666,29 @@ function numberValue(value) {
 function formatPerson(name, empno) {
   if (name && empno) return `${name} (${empno})`;
   return name || empno || "";
+}
+
+function getCextDataValue(value) {
+  if (!value) return "";
+
+  if (typeof value === "string") return value.trim();
+
+  if (Array.isArray(value)) {
+    return getCextDataValue(value[0]);
+  }
+
+  if (typeof value === "object") {
+    return getCextDataValue(
+      value.CEXTDATA ??
+        value.cextData ??
+        value.CEXDATA ??
+        value.data ??
+        value.message ??
+        "",
+    );
+  }
+
+  return String(value).trim();
 }
 
 function escapeHtml(value) {

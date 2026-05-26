@@ -143,7 +143,9 @@
                                                 Receive</span>
                                         </label>
                                         <input id="RetDate" name="DATE_RECEIVE" type="date"
-                                            class="input input-sm input-bordered border-secondary/30 w-full focus:ring-2 focus:ring-secondary/20 transition-all" />
+                                            readonly
+                                            disabled
+                                            class="input input-sm input-bordered border-secondary/30 w-full bg-base-200/80 cursor-not-allowed focus:ring-2 focus:ring-secondary/20 transition-all" />
                                     </div>
                                 </div>
                                 <div class="form-control">

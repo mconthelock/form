@@ -27,6 +27,7 @@ $(async function () {
   setDatePicker({
     element: "#RetDate",
   });
+  $("#RetDate").prop("disabled", true);
   const action = webflowSubmit({ request: true });
 
   console.log(action);
@@ -211,7 +212,6 @@ $(document).on("click", "#btnRequest", async function (e) {
       { element: $("#REQBY"), message: "Please enter your Emp code." },
       { element: $("#FULLDP"), message: "Please enter your Emp code" },
       { element: $("#EffDate"), message: "Please Choose Date" },
-      { element: $("#RetDate"), message: "Please Choose Date" },
       { element: $("#location"), message: "Please enter Collection Location" },
     ];
 
@@ -281,7 +281,6 @@ $(document).on("click", "#btnRequest", async function (e) {
       String($("input[name='OPTION_CODE']:checked").val() || "0"),
     );
     formData.set("EFFECTIVE_DATE", $("#EffDate").val() || "");
-    formData.set("DATE_RECEIVE", $("#RetDate").val() || "");
     formData.set("LOCATION", $("#location").val() || "");
 
     /*
