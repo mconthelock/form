@@ -13,7 +13,10 @@ import {
     attachFileManager,
     vendorTypeManager,
     ReqtypeManager,
-    vendorCodeManager
+    vendorCodeManager,
+    provinceManager,
+    districtManager,
+    subDistrictManager, 
 } from "./formManager";
 import { downloadOrOpenFile } from "@amec/webasset/api/file";
 
@@ -63,16 +66,12 @@ $(document).on("change", 'input[name="PAYMENT_TYPE"]', function () {
 
 
 $(document).on("select2:select", ".country",async function (e) {
-   // console.log("country");
-    
-    //const value = $(this).val();
-    //currencyManager.syncValue(value, this);
     countryManager.change(e);
-
 });
 
 $(document).on("select2:select", ".province",async function (e) {
-    console.log("province");
+    const selectedProvinceId = provinceManager.getValue("PROVINCE_SELECT");
+    console.log("provselectedProvinceId:", selectedProvinceId);
     
     //const value = $(this).val();
     //currencyManager.syncValue(value, this);

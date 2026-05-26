@@ -117,6 +117,9 @@ export const vendorCodeManager = {
 };
 
 export const formManager = {
+    provinceData: null,
+    districtData: null,
+    subDistrictData: null,
     get form() {
         return $("#form");
     },
@@ -173,21 +176,21 @@ export const formManager = {
                     nameth: c.nameth
                 }));
                 const province = await getProvinces();
-                const provinceData = province.map((p) => ({
+                this.provinceData = province.map((p) => ({
                     id: p.id,
                     value: p.nameen,
                     text: p.nameen,
                     nameth: p.nameth
                 }));
                 const district = await getDistricts();
-                const districtData = district.map((d) => ({
+                this.districtData = district.map((d) => ({
                     id: d.id,
                     value: d.nameen,
                     text: d.nameen,
                     nameth: d.nameth   
                 }));
                 const subDistrict = await getSubDistricts();
-                const subDistrictData = subDistrict.map((s) => ({
+                this.subDistrictData = subDistrict.map((s) => ({
                     id: s.id,
                     value: s.nameen,
                     text: s.nameen,
@@ -195,10 +198,10 @@ export const formManager = {
                 }));
                 paymentTermManager.init(termdata);
                 countryManager.init(countriesData);
-                provinceManager.init(provinceData);
+                provinceManager.init(this.provinceData);
                 districtManager.init(districtData);
                 currencyManager.init(currData);
-                subDistrictManager.init(subDistrictData);
+                subDistrictManager.init(this.subDistrictData);
                 actionFormManager.init(mode);
                 break;
             case 2: // edit

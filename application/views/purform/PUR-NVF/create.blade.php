@@ -45,8 +45,6 @@
                 <h1 class="text-3xl text-center text-primary font-bold mb-15">New Vendor Form</h1>
             </h2>
             <form id="form" class="flex flex-col gap-5">
-                <section id="form-detail">
-                </section>
                 <section id="section-0" class="flex flex-col gap-4"> 
                     <div class="flex items-center gap-4">
                                     <span class="w-32 shrink-0 font-semibold">Input by</span>
@@ -164,10 +162,10 @@
                         
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
-                                <label class="block mb-1 text-xs font-bold text-gray-600">Sub-district</label>
-                                <input type="text" name="SUB_DISTRICT_EN" id="SUB_DISTRICT_EN" class="input input-bordered input-sm w-full req bg-gray-50 border-gray-300 field-oversea" placeholder="Sub-district">
-                                <select id="SUB_DISTRICT_SELECT" class="sub-district field-local hidden">
-                                          <option value="">-- Select Sub-district --</option>
+                                <label class="block mb-1 text-xs font-bold text-gray-600">Province</label>
+                                <input type="text" name="PROVINCE_EN" id="PROVINCE_EN" class="input input-bordered input-sm w-full req bg-gray-50 border-gray-300 field-oversea" placeholder="Province">
+                                <select id="PROVINCE_SELECT" class="province field-local hidden">
+                                     <option value="">-- Select Province --</option>
                                 </select>
                             </div>
                             <div>
@@ -181,12 +179,13 @@
                         
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
-                                <label class="block mb-1 text-xs font-bold text-gray-600">Province</label>
-                                <input type="text" name="PROVINCE_EN" id="PROVINCE_EN" class="input input-bordered input-sm w-full req bg-gray-50 border-gray-300 field-oversea" placeholder="Province">
-                                <select id="PROVINCE_SELECT" class="province field-local hidden">
-                                     <option value="">-- Select Province --</option>
+                                <label class="block mb-1 text-xs font-bold text-gray-600">Sub-district</label>
+                                <input type="text" name="SUB_DISTRICT_EN" id="SUB_DISTRICT_EN" class="input input-bordered input-sm w-full req bg-gray-50 border-gray-300 field-oversea" placeholder="Sub-district">
+                                <select id="SUB_DISTRICT_SELECT" class="sub-district field-local hidden">
+                                          <option value="">-- Select Sub-district --</option>
                                 </select>
                             </div>
+                      
                             <div>
                                 <label class="block mb-1 text-xs font-bold text-gray-600">Postcode</label>
                                 <input type="text" name="POSTCODE_EN" id="POSTCODE_EN" class="input input-bordered input-sm w-full req bg-gray-50 border-gray-300" maxlength="10" placeholder="Postcode">
@@ -213,9 +212,10 @@
                             
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div>
-                                    <label class="block mb-1 text-xs font-bold text-gray-600">ตำบล / แขวง</label>
-                                    <input type="text" name="SUB_DISTRICT_TH" id="SUB_DISTRICT_TH" class="input input-bordered input-sm w-full  bg-gray-50 border-gray-300" placeholder="ตำบล / แขวง">
+                                    <label class="block mb-1 text-xs font-bold text-gray-600">จังหวัด</label>
+                                    <input type="text" name="PROVINCE_TH" id="PROVINCE_TH" class="input input-bordered input-sm w-full  bg-gray-50 border-gray-300" placeholder="จังหวัด">
                                 </div>
+                         
                                 <div>
                                     <label class="block mb-1 text-xs font-bold text-gray-600">อำเภอ / เขต</label>
                                     <input type="text" name="DISTRICT_TH" id="DISTRICT_TH" class="input input-bordered input-sm w-full  bg-gray-50 border-gray-300" placeholder="อำเภอ / เขต">
@@ -223,9 +223,9 @@
                             </div>
                             
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                <div>
-                                    <label class="block mb-1 text-xs font-bold text-gray-600">จังหวัด</label>
-                                    <input type="text" name="PROVINCE_TH" id="PROVINCE_TH" class="input input-bordered input-sm w-full  bg-gray-50 border-gray-300" placeholder="จังหวัด">
+                                 <div>
+                                    <label class="block mb-1 text-xs font-bold text-gray-600">ตำบล / แขวง</label>
+                                    <input type="text" name="SUB_DISTRICT_TH" id="SUB_DISTRICT_TH" class="input input-bordered input-sm w-full  bg-gray-50 border-gray-300" placeholder="ตำบล / แขวง">
                                 </div>
                                 <div>
                                     <label class="block mb-1 text-xs font-bold text-gray-600">รหัสไปรษณีย์ </label>
