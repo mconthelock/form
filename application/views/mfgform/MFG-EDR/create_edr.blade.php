@@ -146,19 +146,20 @@
             <div class="overflow-hidden rounded-2xl border border-slate-300 bg-white">
                 <div class="grid grid-cols-12 border-b border-slate-300">
                     <div class="edr-label col-span-12 md:col-span-2 px-4 py-2">
-                        Create By
+                        Create By 
                     </div>
                     <div class="col-span-12 md:col-span-10 px-4 py-2 font-bold text-slate-800">
                         <input type="hidden" id="inputBy" name="inputBy" value="{{ $EMPNO }}">
                         <input type="hidden" id="sseccode" name="sseccode" >
                         <input type="hidden" id="ssec" name="ssec" >
+                        <input type="hidden" id="sdepcode" name="sdepcode" >
                         <span id="input_name" class="ml-2 text-sm text-emerald-700"></span>
                     </div>
                 </div>
 
                 <div class="grid grid-cols-12 border-b border-slate-300">
                     <div class="edr-label col-span-12 md:col-span-2 px-4 py-2">
-                        Request By <span class="required">*</span>
+                        Input By (ผู้เจอปัญหา) <span class="required">*</span>
                     </div>
                     <div class="col-span-12 md:col-span-4 px-4 py-2">
                         <input type="text" id="request_by" name="request_by" maxlength="5" placeholder="Ex.15199" class="edr-input max-w-[120px]">

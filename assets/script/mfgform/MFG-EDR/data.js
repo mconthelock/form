@@ -8,7 +8,7 @@ export const getamecorderdetail   = (data) => callAPI("/mfg-edr/amec-order-detai
 export const createMfgEdr = (data) => callAPI("/mfg-edr", "POST", data);
 export const updateMfgEdrDetail = (data) => callAPI("/mfg-edr/update-detail", "POST", data);
 export const getmfgedr   = (data) => callAPI("/mfg-edr/get-mfg-edr", "POST", data);
-export const updateWhyEffect = (data) => callAPI("/mfg-edr/update-why-effect", "POST", data);
+export const updatecause4m = (data) => callAPI("/mfg-edr/update-cause4m", "POST", data);
 
 
 // ===== GET ===========

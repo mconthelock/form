@@ -46,6 +46,7 @@ $(document).ready(function () {
                     .text(empName);
 
                     $('#sseccode').val(user?.SSECCODE);
+                    $('#sdepcode').val(user?.SDEPCODE);
                     $('#ssec').val($.trim(user?.SSEC || '').replace(/\//g, '').substring(0, 3));
             });
         },
@@ -680,7 +681,33 @@ $(document).ready(function () {
 
                 if (res.status === true || res.status === 'success') {
                     showMessage("บันทึกข้อมูลสำเร็จ !!!", "success");
-                    redirectWebflow();
+                    //redirectWebflow();
+                    // reset form
+                    $('#request_by').val('');
+                    $('#repair_by').val('');
+                    $('#job_type').val('');
+                    $('#cause').val('');
+                    $('#daily_month').val('');
+                    $('#daily_runno').val('');
+                    $('#reason_cause').val('');
+
+                    $('#request_by_name').text('');
+                    $('#repair_by_name').text('');
+
+                    // reset upload file
+                    $('#filUpload_ref').val('');
+
+                    // reset detail table
+                    $('#detailBody').empty();
+                    this.rowIndex = 0;
+
+                    this.currentTableType = this.getCurrentTableType();
+                    this.renderTableHeader();
+                    this.addRow();
+                    this.updateTotalRow();
+
+                    // reload cause dropdown
+                    this.renderOptions('#cause', []);
                 } else {
                     showMessage(res.message || "บันทึกข้อมูลไม่สำเร็จ", "error");
                 }

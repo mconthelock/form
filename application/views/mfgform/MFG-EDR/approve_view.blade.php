@@ -3,98 +3,51 @@
 @section('contents')
 
 <style>
-
     .edr-wrapper {
         max-width: 1600px;
         margin: 0 auto;
     }
 
-    .edr-main-card {
-        background: #ffffff;
-        border-radius: 24px;
+    .edr-main-card,
+    .edr-zone {
+        background: #fff;
         overflow: hidden;
-        box-shadow: 0 10px 30px rgba(15, 23, 42, 0.10);
+        box-shadow: 0 4px 14px rgba(15, 23, 42, .05);
+    }
+
+    .edr-main-card {
+        border-radius: 24px;
+        box-shadow: 0 10px 30px rgba(15, 23, 42, .10);
+    }
+
+    .edr-zone {
+        border: 1px solid #dbe4ee;
+        border-radius: 18px;
+        margin-bottom: 24px;
+    }
+
+    .edr-header,
+    .edr-zone-title {
+        background: linear-gradient(90deg, #064e3b, #0f766e, #0891b2);
+        color: #fff;
     }
 
     .edr-header {
-        background: linear-gradient(90deg, #064e3b, #0f766e, #0891b2);
         padding: 24px;
     }
 
     .edr-header-title {
-        color: #ffffff;
         font-size: 2rem;
         font-weight: 900;
         text-align: center;
         letter-spacing: .5px;
     }
 
-    .edr-zone {
-        background: #ffffff;
-        border: 1px solid #dbe4ee;
-        border-radius: 18px;
-        overflow: hidden;
-        box-shadow: 0 4px 14px rgba(15, 23, 42, 0.05);
-        margin-bottom: 24px;
-    }
-
     .edr-zone-title {
         padding: 12px 18px;
-        color: #ffffff;
         font-size: 1rem;
         font-weight: 900;
         letter-spacing: .3px;
-    }
-
-    .zone-why .edr-zone-title {
-        background: linear-gradient(90deg, #065f46, #0f766e);
-    }
-
-    .zone-corrective .edr-zone-title {
-        background: linear-gradient(90deg, #0f766e, #0d9488);
-    }
-
-    .zone-preventive .edr-zone-title {
-        background: linear-gradient(90deg, #115e59, #14b8a6);
-    }
-
-    /* WHY TABLE */
-    #zone_why .edr-table thead {
-        background: #0f766e;
-        color: #ffffff;
-    }
-
-    #zone_why .edr-table tbody tr:nth-child(even) {
-        background: #f0fdfa;
-    }
-
-    /* CORRECTIVE TABLE */
-    #zone_corrective .edr-table thead {
-        background: #0d9488;
-        color: #ffffff;
-    }
-
-    #zone_corrective .edr-table tbody tr:nth-child(even) {
-        background: #f0fdfa;
-    }
-
-    /* PREVENTIVE TABLE */
-    #zone_preventive .edr-table thead {
-        background: #14b8a6;
-        color: #ffffff;
-    }
-
-    #zone_preventive .edr-table tbody tr:nth-child(even) {
-        background: #ecfeff;
-    }
-
-
-
-    /* soft border accent */
-    #zone_why,
-    #zone_corrective,
-    #zone_preventive {
-        border-left: 5px solid #14b8a6;
     }
 
     .edr-zone-body {
@@ -108,7 +61,7 @@
     }
 
     .edr-value {
-        background: #ffffff;
+        background: #fff;
         color: #334155;
         font-weight: 700;
         min-height: 44px;
@@ -129,16 +82,25 @@
         font-weight: 700;
     }
 
-    .edr-remark {
-        white-space: pre-wrap;
-        line-height: 1.7;
+    .edr-table,
+    #tblViewDetail {
+        width: 100%;
+        min-width: 0;
+        border-collapse: collapse;
+        table-layout: fixed;
+        font-size: 14px;
     }
 
-    .edr-table {
-        width: 100%;
-        border-collapse: collapse;
-        font-size: 14px;
-        table-layout: fixed;
+    .edr-table thead {
+        background: #065f46;
+        color: #fff;
+    }
+
+    .edr-table th,
+    .edr-table td {
+        border: 1px solid #dbe4ee;
+        overflow-wrap: break-word;
+        word-break: break-word;
     }
 
     .edr-table th {
@@ -150,14 +112,11 @@
 
     .edr-table td {
         padding: 10px;
-        border: 1px solid #dbe4ee;
         vertical-align: top;
     }
 
-    .edr-table td,
-    .edr-table th {
-        overflow-wrap: break-word;
-        word-break: break-word;
+    .edr-table tbody tr:nth-child(even) {
+        background: #ecfeff;
     }
 
     .text-left {
@@ -167,13 +126,6 @@
     .text-center {
         text-align: center !important;
     }
-    
-    #tblViewDetail {
-        width: 1500px;
-        min-width: 1500px;
-        table-layout: fixed;
-    }
-
 </style>
 
 <input type="hidden" id="base_url" value="<?= base_url(); ?>">
@@ -218,7 +170,7 @@
                         </div>
 
                         <div class="grid grid-cols-12 border-b border-slate-300">
-                            <div class="edr-label col-span-12 md:col-span-2 px-4 py-2">Request By</div>
+                            <div class="edr-label col-span-12 md:col-span-2 px-4 py-2">Input By (ผู้เจอปัญหา)</div>
                             <div id="v_request_by" class="edr-value col-span-12 md:col-span-10 px-4 py-2">-</div>
                         </div>
 
@@ -287,65 +239,25 @@
 
                 </div>
 
-                {{-- ================= WHY ================= --}}
-                <div id="zone_why" class="edr-zone zone-why">
+        
+                {{-- ================= CAUSE 4 M ================= --}}
+                <div id="zone_cause4m" class="edr-zone zone-cause4m">
                     <div class="edr-zone-title">
-                        Root Cause (Why-Why Analysis)
+                        CAUSE 4 M (สาเหตุของปัญหา)
                     </div>
-
-                    <div class="overflow-x-auto">
+                    <div>
                         <table class="edr-table">
-                            <thead class="bg-red-700 text-white">
+                            <thead >
                                 <tr>
-                                    <th style="width:80px;">No</th>
-                                    <th>Why</th>
-                                    <th style="width:80px;" class="col-action-why">#</th>
-                                </tr>
-                            </thead>
-                            <tbody id="v_root_body"></tbody>
-                        </table>
-                    </div>
-                </div>
-
-                {{-- ================= CORRECTIVE ================= --}}
-                <div id="zone_corrective" class="edr-zone zone-corrective">
-                    <div class="edr-zone-title">
-                        Corrective Action (การแก้ไขปัญหา)
-                    </div>
-
-                    <div class="overflow-x-auto">
-                        <table class="edr-table">
-                            <thead class="bg-orange-600 text-white">
-                                <tr>
-                                    <th style="width:80px;">No</th>
-                                    <th>Corrective Action</th>
-                                    <th style="width:220px;">กำหนดเสร็จ</th>
+                                    <th style="width:50px;">No</th>
+                                    <th style="width:140px;">สาเหตุ(4M)</th>
+                                    <th>การแก้ไข</th>
+                                    <th style="width:170px;">กำหนดเสร็จ</th>
                                     <th style="width:220px;">ผู้รับผิดชอบ</th>
-                                    <th style="width:80px;" class="col-action-corrective">#</th>
+                                    <th style="width:80px;" class="col-action-cause4m">#</th>
                                 </tr>
                             </thead>
-                            <tbody id="v_corrective_body"></tbody>
-                        </table>
-                    </div>
-                </div>
-
-                {{-- ================= PREVENTIVE ================= --}}
-                <div id="zone_preventive" class="edr-zone zone-preventive">
-                    <div class="edr-zone-title">
-                        Preventive Action (การป้องกันปัญหา)
-                    </div>
-                    <div class="overflow-x-auto">
-                        <table class="edr-table">
-                            <thead class="bg-pink-700 text-white">
-                                <tr>
-                                    <th style="width:80px;">No</th>
-                                    <th>Preventive Action</th>
-                                    <th style="width:220px;">กำหนดเสร็จ</th>
-                                    <th style="width:220px;">ผู้รับผิดชอบ</th>
-                                    <th style="width:80px;" class="col-action-preventive">#</th>
-                                </tr>
-                            </thead>
-                            <tbody id="v_preventive_body"></tbody>
+                            <tbody id="v_cause4m_body"></tbody>
                         </table>
                     </div>
                 </div>
@@ -366,11 +278,13 @@
                                     data-action="reject">
                                     ❌ Reject
                                 </button>
+                            @if ($exdata != '01')
                                 <button type="button"
                                     class="btn-submit px-8 py-3 bg-yellow-500 text-white rounded-xl shadow hover:bg-yellow-600 font-bold"
                                     data-action="returnb">
                                     ↩ Return
                                 </button>
+                             @endif
                             </div>
                         </div>
                     </div>
