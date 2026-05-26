@@ -680,13 +680,16 @@ $(document).ready(function () {
                 const res = await createMfgEdr(payload);
 
                 if (res.status === true || res.status === 'success') {
-                    const confirmResult = await Swal.fire({
-                        icon: 'question',
+                    showLoader({ show: false });
+                    this.setLoading(false);
+                    await Swal.fire({
+                        icon: 'success',
                         title: 'บันทึกข้อมูลสำเร็จ',
-                        html: `บันทึกข้อมูลสำเร็จ !!`,
-                        showCancelButton: true,
-                        confirmButtonText: 'ยืนยัน',
+                        text: 'ระบบได้ทำการบันทึกข้อมูลเรียบร้อยแล้ว',
+                        confirmButtonText: 'ตกลง',
+                        confirmButtonColor: '#10b981',
                     });
+                    
                     //showMessage("บันทึกข้อมูลสำเร็จ !!!", "success");
                     //redirectWebflow();
                     // reset form
