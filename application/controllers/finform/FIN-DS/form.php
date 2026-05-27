@@ -85,9 +85,39 @@ class form extends MY_Controller
             $data['mode'] = 1;
 
             $this->views('finform/FIN-DS/create', $data);
+
         }
+        if($_GET[empno] == '97037'){
+
+            $this->views('finform/FIN-DS/report', $data);
+
+        }
+
+
+
+
     }
-    public function report(){
+    public function report($year = null){
+        $acceptsJson = stripos($this->input->server('HTTP_ACCEPT'), 'application/json') !== false;
+
+        if ($acceptsJson || $this->input->is_ajax_request() || !is_null($year)) {
+            $year = $year ?? date('Y');
+
+            // TODO: Replace this placeholder with the real stamp report query.
+            $datareport = [];
+
+            $response = [
+                'status' => 'success',
+                'year' => $year,
+                'datareport' => $datareport,
+            ];
+
+            $this->output
+                ->set_content_type('application/json')
+                ->set_output(json_encode($response));
+            return;
+        }
+
         $this->views('finform/FIN-DS/report');
     }
 }
