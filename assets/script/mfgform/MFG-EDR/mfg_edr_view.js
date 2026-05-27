@@ -169,7 +169,7 @@ $(document).ready(function () {
                             <td>${row.PROCESS_NAME || row.PROCESS || '-'}</td>
                             <td>${row.LOT || '-'}</td>
                             <td>${row.SERIAL || '-'}</td>
-                            <td>${row.PROD || '-'}</td>
+                            <td>${row.PRDN_JUN || '-'}</td>
                             <td class="text-center">${row.QTY || '-'}</td>
                             <td class="text-left">${row.DETAIL || '-'}</td>
                         </tr>
@@ -212,7 +212,7 @@ $(document).ready(function () {
                         <td>${row.ORDERNO || '-'}</td>
                         <td>${row.DWGNO || '-'}</td>
                         <td>${row.PRJ_NO || '-'}</td>
-                        <td>${row.PROD || '-'}</td>
+                        <td>${row.PRDN_JUN || '-'}</td>
                         <td>${row.ITEM || '-'}</td>
                         <td>${row.MODEL || '-'}</td>
                         <td class="text-center">${row.QTY || '-'}</td>
@@ -499,7 +499,7 @@ $(document).ready(function () {
             });
 
             console.log('DO ACTION RESULT =', result);
-            Swal.close();
+            showLoader({ show: false });
 
             if (result?.status) {
                 await Swal.fire({
@@ -510,7 +510,7 @@ $(document).ready(function () {
                 });
                 
                 redirectWebflow();
-                showLoader({ show: false });
+                return;
             } else {
                 await Swal.fire({
                     icon: 'error',
