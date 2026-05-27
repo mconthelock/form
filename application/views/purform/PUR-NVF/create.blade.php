@@ -143,7 +143,7 @@
                     </div>
                     
                     <div id="wrapper_country_select" class="flex-1 min-w-[200px] ml-2">
-                        <select name="COUNTRY_SELECT" id="COUNTRY_SELECT" class="select select-bordered select-sm bg-gray-50 border-gray-300 country req w-full" style="width: 100%;">
+                        <select name="COUNTRY_SELECT" id="COUNTRY_SELECT" class="select select-bordered select-sm bg-gray-50 border-gray-300 country req w-full" style="width: 100%;" disabled>
                             <option value="">-- Select Country --</option>
                         </select>
                     </div>
@@ -164,16 +164,20 @@
                             <div>
                                 <label class="block mb-1 text-xs font-bold text-gray-600">Province</label>
                                 <input type="text" name="PROVINCE_EN" id="PROVINCE_EN" class="input input-bordered input-sm w-full req bg-gray-50 border-gray-300 field-oversea" placeholder="Province">
-                                <select id="PROVINCE_SELECT" class="province field-local hidden">
+                               <div id="PROVINCE_LOCAL_WRAPPER" class="field-local hidden">
+                                <select id="PROVINCE_SELECT" class="province">
                                      <option value="">-- Select Province --</option>
                                 </select>
+                                </div>
                             </div>
                             <div>
                                 <label class="block mb-1 text-xs font-bold text-gray-600">District</label>
                                 <input type="text" name="DISTRICT_EN" id="DISTRICT_EN" class="input input-bordered input-sm w-full req bg-gray-50 border-gray-300 field-oversea" placeholder="District">
-                                <select id="DISTRICT_SELECT" class="district field-local hidden">
+                                <div id="DISTRICT_LOCAL_WRAPPER" class="field-local hidden">
+                                <select id="DISTRICT_SELECT" class="district">
                                         <option value="">-- Select District --</option>
                                 </select>
+                            </div>
                             </div>
                         </div>
                         
@@ -181,9 +185,11 @@
                             <div>
                                 <label class="block mb-1 text-xs font-bold text-gray-600">Sub-district</label>
                                 <input type="text" name="SUB_DISTRICT_EN" id="SUB_DISTRICT_EN" class="input input-bordered input-sm w-full req bg-gray-50 border-gray-300 field-oversea" placeholder="Sub-district">
-                                <select id="SUB_DISTRICT_SELECT" class="sub-district field-local hidden">
+                               <div id="SUB_DISTRICT_LOCAL_WRAPPER" class="field-local hidden">
+                                <select id="SUB_DISTRICT_SELECT" class="sub-district">
                                           <option value="">-- Select Sub-district --</option>
                                 </select>
+                            </div>
                             </div>
                       
                             <div>

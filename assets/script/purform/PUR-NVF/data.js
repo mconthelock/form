@@ -201,6 +201,7 @@ export async function getCountries(){
 export async function getProvinces(){
         const data = await fetch("https://raw.githubusercontent.com/kongvut/thai-province-data/refs/heads/master/api/latest/province.json");
        const provinces = await data.json();
+       provinces.sort((a, b) => a.name_en.localeCompare(b.name_en));
         return provinces.map(province => ({
             id: province.id,
             nameen: province.name_en,
@@ -210,6 +211,7 @@ export async function getProvinces(){
 export async function getDistricts(){
     const data = await fetch("https://raw.githubusercontent.com/kongvut/thai-province-data/refs/heads/master/api/latest/district.json");
     const districts = await data.json();
+     districts.sort((a, b) => a.name_en.localeCompare(b.name_en));
     return districts.map(district => ({
         id: district.id,
         nameen: district.name_en,
@@ -221,11 +223,12 @@ export async function getDistricts(){
 export async function getSubDistricts(){
     const data = await fetch("https://raw.githubusercontent.com/kongvut/thai-province-data/refs/heads/master/api/latest/sub_district.json");
     const subDistricts = await data.json();
+   subDistricts.sort((a, b) => a.name_en.localeCompare(b.name_en));
     return subDistricts.map(subDistrict => ({
         id: subDistrict.id,
         nameen: subDistrict.name_en,
         nameth: subDistrict.name_th,
         district_id: subDistrict.district_id,
-        postcode: subDistrict.postcode
+        postcode: subDistrict.zip_code
     }));
 }

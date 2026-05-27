@@ -187,19 +187,22 @@ export const formManager = {
                     id: d.id,
                     value: d.nameen,
                     text: d.nameen,
-                    nameth: d.nameth   
+                    nameth: d.nameth,
+                    province_id: d.province_id   
                 }));
                 const subDistrict = await getSubDistricts();
                 this.subDistrictData = subDistrict.map((s) => ({
                     id: s.id,
                     value: s.nameen,
                     text: s.nameen,
-                    nameth: s.nameth
+                    nameth: s.nameth,
+                    district_id: s.district_id,
+                    postcode: s.postcode
                 }));
                 paymentTermManager.init(termdata);
                 countryManager.init(countriesData);
                 provinceManager.init(this.provinceData);
-                districtManager.init(districtData);
+                districtManager.init(this.districtData);
                 currencyManager.init(currData);
                 subDistrictManager.init(this.subDistrictData);
                 actionFormManager.init(mode);
@@ -487,7 +490,19 @@ async change(e) {
         $("#COUNTRY_EN").val(selectedCountry.text || "");
         $("#COUNTRY_TH").val(selectedCountry.nameth || "");
     }
-}
+},
+disabled(status) {
+        this.list.forEach((id) => {
+            $(`#${id}`).prop("disabled", status).trigger("change");
+           
+        });
+        if (isDisabled) {
+            this.value = "";
+            this.select.removeClass("req");
+        } else {
+            this.select.addClass("req");
+        }
+    }
 };
 
 
@@ -539,6 +554,12 @@ export const provinceManager = {
             }
         }
     },
+    async change(e) {
+    if (e && e.params && e.params.data) {
+        const selectedProvince = e.params.data;
+        $("#PROVINCE_TH").val(selectedProvince.nameth || "");
+    }
+}
 };
 
 export const districtManager = {
@@ -589,6 +610,12 @@ export const districtManager = {
             }
         }
     },
+    async change(e) {
+    if (e && e.params && e.params.data) {
+        const selectedDistrict = e.params.data;
+        $("#DISTRICT_TH").val(selectedDistrict.nameth || "");
+    }
+    }
 };
 
 export const subDistrictManager = {
@@ -639,6 +666,16 @@ export const subDistrictManager = {
             }
         }
     },
+    async change(e) {
+    if (e && e.params && e.params.data) {
+        const selectedSubDistrict = e.params.data;
+        $("#SUB_DISTRICT_TH").val(selectedSubDistrict.nameth || "");
+        console.log(selectedSubDistrict.postcode );
+        
+        $("#POSTCODE_EN").val(selectedSubDistrict.postcode || "");
+        $("#POSTCODE_TH").val(selectedSubDistrict.postcode || "");
+    }
+    }
 };
 
 export const currencyManager = {

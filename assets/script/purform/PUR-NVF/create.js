@@ -52,8 +52,15 @@ $(document).on("change", 'input[name="ACCEPT_PO"]', function () {
 });
 
 $(document).on("change", 'input[name="VENDOR_LOCATION"]', async function () {
+    const vendorType = vendorTypeManager.type;
     vendorTypeManager.change();
-
+    if(vendorType === "oversea")
+    {
+        countryManager.disabled(false);
+    }else{
+        countryManager.disabled(true);
+    }
+    
     
 });
 
@@ -70,14 +77,49 @@ $(document).on("select2:select", ".country",async function (e) {
 });
 
 $(document).on("select2:select", ".province",async function (e) {
+    provinceManager.change(e);
     const selectedProvinceId = provinceManager.getValue("PROVINCE_SELECT");
-    console.log("provselectedProvinceId:", selectedProvinceId);
-    
+    const filteredDistricts = formManager.districtData.filter(
+        (d) => d.province_id == selectedProvinceId
+    );
+    const districtOptions = filteredDistricts.map((d) => ({
+        id: d.id,   
+        value: d.value,
+        text: d.text,
+        nameth: d.nameth  
+    }));
+    districtManager.select.empty().trigger("change");
+    await districtManager.init(districtOptions);
     //const value = $(this).val();
     //currencyManager.syncValue(value, this);
    // countryManager.change(e);
     
 });
+
+$(document).on("select2:select", ".district",async function (e) {
+    districtManager.change(e);
+    const selectedDistrictId = districtManager.getValue("DISTRICT_SELECT");
+    const filteredSubDistricts = formManager.subDistrictData.filter(
+        (s) => s.district_id == selectedDistrictId
+    );
+    const subDistrictOptions = filteredSubDistricts.map((s) => ({
+        id: s.id,
+        value: s.value,
+        text: s.text,
+        nameth: s.nameth,
+        district_id: s.district_id,
+        postcode: s.postcode
+    }));
+    console.log(subDistrictOptions);
+    
+    subDistrictManager.select.empty().trigger("change");
+    await subDistrictManager.init(subDistrictOptions);
+
+ });
+
+$(document).on("select2:select", ".sub-district",async function (e) {
+    subDistrictManager.change(e);
+  });
 
 $(document).on("change", 'input[name="REQTYPE"]', function () {
     ReqtypeManager.change();
