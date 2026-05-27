@@ -87,15 +87,6 @@ class form extends MY_Controller
             $this->views('finform/FIN-DS/create', $data);
 
         }
-        if($_GET[empno] == '97037'){
-
-            $this->views('finform/FIN-DS/report', $data);
-
-        }
-
-
-
-
     }
     public function report($year = null){
         $acceptsJson = stripos($this->input->server('HTTP_ACCEPT'), 'application/json') !== false;
@@ -103,14 +94,32 @@ class form extends MY_Controller
         if ($acceptsJson || $this->input->is_ajax_request() || !is_null($year)) {
             $year = $year ?? date('Y');
 
-            // TODO: Replace this placeholder with the real stamp report query.
-            $datareport = [];
+            try {
+                $apiUrl = rtrim($_ENV['APP_API'], '/') . '/finform/fin-ds/report/' . rawurlencode($year);
+                $apiResponse = $this->client->get($apiUrl, [
+                    'headers' => [
+                        'Accept' => 'application/json',
+                    ],
+                ]);
 
-            $response = [
-                'status' => 'success',
-                'year' => $year,
-                'datareport' => $datareport,
-            ];
+                $response = json_decode($apiResponse->getBody(), true);
+
+                if (!is_array($response)) {
+                    throw new Exception('Invalid FIN-DS report API response');
+                }
+
+                $response['year'] = $year;
+            } catch (Exception $e) {
+                $response = [
+                    'status' => false,
+                    'year' => $year,
+                    'message' => 'Failed to load FIN-DS report',
+                    'error' => $e->getMessage(),
+                    'datareport' => [],
+                ];
+
+                $this->output->set_status_header(500);
+            }
 
             $this->output
                 ->set_content_type('application/json')
