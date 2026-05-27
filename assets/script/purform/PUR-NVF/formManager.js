@@ -102,6 +102,173 @@ export const reqByManager = {
     },
 };
 
+export const typejobManager = {
+    get input() {
+        return $("#TYPEJOB");
+    },
+    get value() {
+        return this.input.val();
+    },
+    set value(val) {
+        this.input.val(val);
+    },
+};
+
+export const serviceManager = {
+    get input() {
+        return $("#SERVICE");
+    },
+    get value() {
+        return this.input.val();
+    },
+    set value(val) {
+        this.input.val(val);
+    },
+};
+
+export const purposeManager = {
+    get input() {
+        return $("#PURPOSE");
+    },
+    get value() {
+        return this.input.val();
+    },
+    set value(val) {
+        this.input.val(val);
+    },
+};
+
+export const comnameManager = {
+    get input() {
+        return $("#COMPANY_NAME");
+    },
+    get value() {
+        return this.input.val();
+    },
+    set value(val) {
+        this.input.val(val);
+    },
+};
+
+// -------------------------- Vendor Type Manager ------------------------------
+
+export const vendorTypeManager = {
+    get radio() {
+        return $('input[name="VENDOR_LOCATION"]');
+    },
+    get type() {
+        let type = null;
+        this.radio.each(function () {
+            if ($(this).is(":checked")) {
+                type = $(this).attr("v-type");
+            }
+        });
+        return type;
+    },
+    set value(val) {
+        this.radio.each(function () {
+            if ($(this).val() == val) {
+                $(this).prop("checked", true);
+            }
+        });
+        this.change();
+    },
+    change() {
+       // paymentNumManager.value = "";
+       // paymentManager.disabled(false);
+        attachTypeManager.hide("other");
+        attachTypeManager.reset("other");
+        const type = this.type;
+        selectAttachType(type);
+        if (type == "local") {
+            $(".field-local").removeClass("hidden").addClass("req");
+            $(".field-oversea").addClass("hidden").removeClass("req");
+            $(".field-oversea").val("");
+            $("#COUNTRY_EN").val("Thailand");
+            $("#COUNTRY_TH").val("ไทย");
+        }else
+        {
+            $(".field-oversea").removeClass("hidden").addClass("req");
+            $(".field-local").addClass("hidden").removeClass("req");
+            $(".field-local").val("");
+             $("#COUNTRY_EN").val("");
+             $("#COUNTRY_TH").val("");
+        }
+        
+        
+    },
+};
+
+// -------------------------- End Vendor Type Manager -------------------
+
+export const addrManager = {
+    get input() {
+        return $("#ADDRESS_EN");
+    },
+    get value() {
+        return this.input.val();
+    },
+    set value(val) {
+        this.input.val(val);
+    },
+};
+
+export const provinceEnManager = {
+    get input() {       
+        return $("#PROVINCE_EN");
+    },
+    get value() {
+        return this.input.val();
+    },
+    set value(val) {
+        this.input.val(val);
+    },
+    
+
+};
+
+export const districtEnManager = {
+    get input() {       
+        return $("#DISTRICT_EN");
+    },
+    get value() {
+        return this.input.val();
+    },
+    set value(val) {
+        this.input.val(val);
+    },
+    
+
+};
+
+export const subDistrictEnManager = {
+    get input() {       
+        return $("#SUB_DISTRICT_EN");
+    },
+    get value() {
+        return this.input.val();
+    },
+    set value(val) {
+        this.input.val(val);
+    },
+    
+
+};
+
+export const postcodeManager = {
+    get input() {       
+        return $("#POSTCODE_EN");
+    },
+    get value() {
+        return this.input.val();
+    },
+    set value(val) {
+        this.input.val(val);
+    },
+    
+
+};
+
 export const vendorCodeManager = {
     get input() {       
         return $("#VENDORCODE");
@@ -558,6 +725,7 @@ export const provinceManager = {
     if (e && e.params && e.params.data) {
         const selectedProvince = e.params.data;
         $("#PROVINCE_TH").val(selectedProvince.nameth || "");
+        $("#PROVINCE_EN").val(selectedProvince.nameen || "");
     }
 }
 };
@@ -614,6 +782,7 @@ export const districtManager = {
     if (e && e.params && e.params.data) {
         const selectedDistrict = e.params.data;
         $("#DISTRICT_TH").val(selectedDistrict.nameth || "");
+        $("#DISTRICT_EN").val(selectedDistrict.nameen || "");
     }
     }
 };
@@ -670,6 +839,7 @@ export const subDistrictManager = {
     if (e && e.params && e.params.data) {
         const selectedSubDistrict = e.params.data;
         $("#SUB_DISTRICT_TH").val(selectedSubDistrict.nameth || "");
+        $("#SUB_DISTRICT_EN").val(selectedSubDistrict.nameen || "");
         console.log(selectedSubDistrict.postcode );
         
         $("#POSTCODE_EN").val(selectedSubDistrict.postcode || "");
@@ -1089,56 +1259,7 @@ const paymentDetailManager = {
     },
 };
 
-// -------------------------- Vendor Type Manager ------------------------------
 
-export const vendorTypeManager = {
-    get radio() {
-        return $('input[name="VENDOR_LOCATION"]');
-    },
-    get type() {
-        let type = null;
-        this.radio.each(function () {
-            if ($(this).is(":checked")) {
-                type = $(this).attr("v-type");
-            }
-        });
-        return type;
-    },
-    set value(val) {
-        this.radio.each(function () {
-            if ($(this).val() == val) {
-                $(this).prop("checked", true);
-            }
-        });
-        this.change();
-    },
-    change() {
-       // paymentNumManager.value = "";
-       // paymentManager.disabled(false);
-        attachTypeManager.hide("other");
-        attachTypeManager.reset("other");
-        const type = this.type;
-        selectAttachType(type);
-        if (type == "local") {
-            $(".field-local").removeClass("hidden").addClass("req");
-            $(".field-oversea").addClass("hidden").removeClass("req");
-            $(".field-oversea").val("");
-            $("#COUNTRY_EN").val("Thailand");
-            $("#COUNTRY_TH").val("ไทย");
-        }else
-        {
-            $(".field-oversea").removeClass("hidden").addClass("req");
-            $(".field-local").addClass("hidden").removeClass("req");
-            $(".field-local").val("");
-             $("#COUNTRY_EN").val("");
-             $("#COUNTRY_TH").val("");
-        }
-        
-        
-    },
-};
-
-// -------------------------- End Vendor Type Manager -------------------
 
 // -------------------------- Req Type Manager ------------------------------
 
@@ -1492,16 +1613,18 @@ export const actionFormManager = {
             //prettier-ignore
             const requiredMessage = [
                 {element: reqByManager.input, message: "Please input requester."},
-                {element: deliveryManager.radio,  message: "Please select Delivery Location."},
-                {element: inVoiceTypeManager.checkbox, message: "Please select Invoice Type."},
-                !thirdPartyManager.fieldset.hasClass('hidden!') ? {element: thirdPartyManager.select, message: "Please select Third Party."} : null,
-                inVoiceTypeOtherManager.input.hasClass('req') ? {element: inVoiceTypeOtherManager.input, message: "Please input other invoice detail."} : null,
-                {element: subjectManager.input, message: "Please input subject."},
-                {element: invoiceNoManager.input, message: "Please input Invoice No."},
-                {element: invoiceAmountManager.input, message: "Please input Invoice Amount."},
-                {element: paymentTypeManager.radio, message: "Please select Payment Conditions & Terms."},
-                {element: paymentManager.input, message: "Please input Payment Amount."},
-                paymentNumManager.input.hasClass('req') ? {element: paymentNumManager.input, message: "Please input Number of Payment."} : null,
+                {element: ReqtypeManager.radio, message: "Please select Request Type."},
+                {element: typejobManager.input, message: "Please input Type of Job."},
+                {element: serviceManager.input, message: "Please input Service."},
+                {element: purposeManager.input, message: "Please input Purpose."},
+                {element: comnameManager.input, message: "Please input Company Name."},
+                {element: ReqtypeManager.radio, message: "Please select Request Type."},
+                {element: vendorTypeManager.radio, message: "Please select Local or Overseas."},
+                 countryManager.select.hasClass('req') ? {element: countryManager.select, message: "Please select Country."} : null,
+                {element: provinceEnManager.input, message: "Please input Province (English)."},
+                {element: districtEnManager.input, message: "Please input District (English)."},
+                {element: subDistrictEnManager.input, message: "Please input Sub-District (English)."},
+                {element: postcodeManager.input, message: "Please input Postcode (English)."},
                 {element: attachTypeManager.checkbox, message: "Please select Attach Type."},
                 {element: attachFileManager.input, message: "Please attach files."},
             ].filter(Boolean);
@@ -1513,7 +1636,7 @@ export const actionFormManager = {
             formData.set("VORGNO", data.VORGNO);
             formData.set("CYEAR", data.CYEAR);
             formData.set("REMARK", this.remark.val());
-            formData.set("CURRENCY", currencyManager.getValue("curr-payment"));
+           
 
             const filteredFormData = filterFormData(formData);
             logFormData(filteredFormData);

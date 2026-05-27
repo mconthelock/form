@@ -74,7 +74,7 @@ import { fetchMsgErr, fetchUtils, serializeRequestBody } from "@amec/webasset/ap
  * });
  */
 export async function create(formData) {
-    const res = await fetch(
+    /*const res = await fetch(
         `${process.env.APP_API}/purform/pur-cpm`,
         serializeRequestBody(formData)
     );
@@ -83,7 +83,12 @@ export async function create(formData) {
         throw new Error("Failed to create form");
     }
     const data = await res.json();
-    return data;
+    return data;*/
+    return fetchUtils({
+        url: `${process.env.APP_API}/purform/pur-nvf`,
+        method: "POST",
+        data: formData,
+    });
 }
 
 export async function approveReturn(formData) {
