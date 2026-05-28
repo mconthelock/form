@@ -663,11 +663,11 @@ disabled(status) {
             $(`#${id}`).prop("disabled", status).trigger("change");
            
         });
-        if (isDisabled) {
+        if (status) {
             this.value = "";
-            this.select.removeClass("req");
+            
         } else {
-            this.select.addClass("req");
+           
         }
     }
 };
@@ -1636,6 +1636,10 @@ export const actionFormManager = {
             formData.set("VORGNO", data.VORGNO);
             formData.set("CYEAR", data.CYEAR);
             formData.set("REMARK", this.remark.val());
+            const LISTS = [
+                {"PURPOSE" : formData.get("PURPOSE") , "TYPE_JOB" : formData.get("TYPE_JOB") , "SERVICE" : formData.get("SERVICE")}
+            ];
+            formData.set("LISTS", JSON.stringify(LISTS));
            
 
             const filteredFormData = filterFormData(formData);

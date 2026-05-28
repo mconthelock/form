@@ -64,15 +64,15 @@
                 <div class="flex flex-row items-center gap-6 h-8 overflow-x-auto whitespace-nowrap">
 
                         <label class="flex items-center gap-2 cursor-pointer">
-                            <input type="radio" name="REQTYPE" value="Add" r-type="A" class="radio radio-xs req" >
+                            <input type="radio" name="REQTYPE" value="A" r-type="A" class="radio radio-xs req" >
                             <span class="text-sm  font-semibold">Add</span>
                         </label>
                         <label class="flex items-center gap-2 cursor-pointer">
-                            <input type="radio" name="REQTYPE" value="Update" r-type="U" class="radio radio-xs req">
+                            <input type="radio" name="REQTYPE" value="U" r-type="U" class="radio radio-xs req">
                             <span class="text-sm font-semibold">Update</span>
                         </label>
                         <label class="flex items-center gap-2 cursor-pointer">
-                            <input type="radio" name="REQTYPE" value="Delete" r-type="D" class="radio radio-xs req">
+                            <input type="radio" name="REQTYPE" value="D" r-type="D" class="radio radio-xs req">
                             <span class="text-sm font-semibold">Delete</span>
                         </label>
                     </div>
@@ -143,7 +143,7 @@
                     </div>
                     
                     <div id="wrapper_country_select" class="flex-1 min-w-[200px] ml-2">
-                        <select name="COUNTRY_SELECT" id="COUNTRY_SELECT" class="select select-bordered select-sm bg-gray-50 border-gray-300 country req w-full" style="width: 100%;" disabled>
+                        <select name="COUNTRY_SELECT" id="COUNTRY_SELECT" class="select select-bordered select-sm bg-gray-50 border-gray-300 country  w-full" style="width: 100%;" disabled>
                             <option value="">-- Select Country --</option>
                         </select>
                     </div>
