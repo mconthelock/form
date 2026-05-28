@@ -19,17 +19,12 @@ class form extends MY_Controller{
     }
 
     public function main(){
-        if(!isset($_GET["empno"]) || $_GET["empno"] == ""){
-            show_error('Not Found', 404);
-            return;
-        }
 
         $data = array(
             'NFRMNO' => $this->formno,
             'VORGNO' => $this->formorg,
             'CYEAR' => $this->formyear,
-            'empno' => $_GET["empno"],
-            'mode' => 1
+            'empno' => isset($_GET["empno"]) ? $_GET['empno'] : '' ,
         );
         if(isset($_GET["runNo"]) && $_GET["runNo"] != "") {
             $data['CYEAR2'] = $_GET['y2'];
