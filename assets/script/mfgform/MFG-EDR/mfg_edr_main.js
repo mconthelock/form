@@ -36,7 +36,7 @@ $(document).ready(function () {
                 title,
                 text,
                 confirmButtonText,
-                confirmButtonColor: '#aaf82b',
+                confirmButtonColor: '#00a87e',
             });
         },
 
