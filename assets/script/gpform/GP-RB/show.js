@@ -22,6 +22,7 @@ import {
     getFileForm,
     renderAttachedFiles,
 } from './data';
+import { showLoader } from '@amec/webasset/preloader';
 
 var cextData;
 $(async function () {
@@ -166,6 +167,7 @@ async function getNameStampValue() {
 // action form approve, reject
 $(document).on('click', "button[name='btnAction']", async function () {
     try {
+        showLoader();
         const param = getUrlParams();
         const form = {
             NFRMNO: param.NFRMNO,
@@ -206,13 +208,15 @@ $(document).on('click', "button[name='btnAction']", async function () {
 
         if (res.status) {
             showMessage(res.message, 'success');
-            //  redirectWebflow();
+            redirectWebflow();
         } else {
             throw new Error(res.message);
         }
     } catch (error) {
         console.error(error);
         showMessage(error.message);
+    } finally {
+        showLoader({ show: false });
     }
 });
 
