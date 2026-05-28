@@ -25,6 +25,21 @@ $(document).ready(function () {
         currentTableType: null,
         baseUrl: $('#base_url').val() || '',
 
+        showAlert: function ({
+            icon = 'info',
+            title = '',
+            text = '',
+            confirmButtonText = 'ตกลง'
+        } = {}) {
+            return Swal.fire({
+                icon,
+                title,
+                text,
+                confirmButtonText,
+                confirmButtonColor: '#aaf82b',
+            });
+        },
+
         init: function () {
             this.bindEvents();
             this.currentTableType = this.getCurrentTableType();
@@ -509,7 +524,11 @@ $(document).ready(function () {
             });
 
             if (!isValid) {
-                showMessage("กรุณากรอกข้อมูลให้ครบถ้วน", "warning");
+                this.showAlert({
+                    icon: 'warning',
+                    title: 'ข้อมูลไม่ครบ',
+                    text: 'กรุณากรอกข้อมูลให้ครบถ้วน'
+                });
                 return false;
             }
 
@@ -682,12 +701,10 @@ $(document).ready(function () {
                 if (res.status === true || res.status === 'success') {
                     showLoader({ show: false });
                     this.setLoading(false);
-                    await Swal.fire({
+                    await this.showAlert({
                         icon: 'success',
                         title: 'บันทึกข้อมูลสำเร็จ',
-                        text: 'ระบบได้ทำการบันทึกข้อมูลเรียบร้อยแล้ว',
-                        confirmButtonText: 'ตกลง',
-                        confirmButtonColor: '#10b981',
+                        text: 'ระบบได้ทำการบันทึกข้อมูลเรียบร้อยแล้ว'
                     });
                     
                     //showMessage("บันทึกข้อมูลสำเร็จ !!!", "success");
@@ -719,11 +736,19 @@ $(document).ready(function () {
                     // reload cause dropdown
                     this.renderOptions('#cause', []);
                 } else {
-                    showMessage(res.message || "บันทึกข้อมูลไม่สำเร็จ", "error");
+                    this.showAlert({
+                        icon: 'error',
+                        title: 'บันทึกข้อมูลไม่สำเร็จ',
+                        text: res.message || ''
+                    });
                 }
             } catch (error) {
                 console.error('SUBMIT FORM ERROR:', error);
-                showMessage(error?.message || "เกิดข้อผิดพลาดระหว่างบันทึกข้อมูล !!!", "error");
+                this.showAlert({
+                    icon: 'error',
+                    title: 'เกิดข้อผิดพลาด',
+                    text: error?.message || 'เกิดข้อผิดพลาดระหว่างบันทึกข้อมูล'
+                });
             } finally {
                 showLoader({ show: false });
                 this.setLoading(false);
