@@ -10,16 +10,26 @@
         GA Requisition Details
       </h2>
       </div>
+        <div class="space-y-1">
+          <label class="label">
+            <span class="label-text font-semibold">Form No:</span>
+          </label>
+          <p class="text-base text-slate-900 font-semibold py-2 px-1 border-b border-gray-100" id="VIEW_FORMNO">
+            {{-- ข้อมูลจะถูกใส่ผ่าน JS หรือ Blade Variable --}}
+            
+          </p>
+        </div>
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-        
+      
+
         <div class="space-y-1">
           <label class="label">
             <span class="label-text font-semibold">Input By:</span>
           </label>
           <p class="text-base text-slate-900 font-semibold py-2 px-1 border-b border-gray-100" id="VIEW_INBY">
             {{-- ข้อมูลจะถูกใส่ผ่าน JS หรือ Blade Variable --}}
-            -
+            
           </p>
         </div>
 
@@ -28,7 +38,7 @@
             <span class="label-text font-semibold">Request By:</span>
           </label>
           <p class="text-base text-slate-900 font-semibold py-2 px-1 border-b border-gray-100" id="VIEW_REQBY">
-            -
+            
           </p>
         </div>
 
@@ -46,7 +56,15 @@
             <span class="label-text font-semibold">Request For:</span>
           </label>
           <p class="text-base text-slate-900 font-semibold py-2 px-1 border-b border-gray-100" id="VIEW_CATEGORY">
-            -
+            
+          </p>
+        </div>
+
+        <div class="space-y-1">
+          <label class="label">
+            <span class="label-text font-semibold">Remark:</span>
+          </label>
+          <p class="text-base text-slate-900 font-semibold py-2 px-1 border-b border-gray-100" id="VIEW_REMARK">
           </p>
         </div>
 
@@ -56,13 +74,19 @@
           </label>
           <div id="file-list" class="flex flex-wrap gap-3 p-4 bg-gray-50 rounded-lg border border-dashed border-gray-300">
              {{-- วนลูปแสดงไฟล์ตรงนี้ --}}
-             <div class="flex items-center gap-2 text-sm text-blue-600 cursor-pointer hover:underline">
+             {{-- <div class="flex items-center gap-2 text-sm text-blue-600 cursor-pointer hover:underline">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" /></svg>
                 document_ref_01.pdf
-             </div>
+             </div> --}}
           </div>
         </div>
       </div>
+
+        {{-- <div class="form-control w-full">
+          <label for="comment" class="block font-semibold text-gray-700 mb-1">Comment:</label>
+          <textarea id="comment" name="comment" class="textarea textarea-bordered w-full" rows="0">
+          </textarea>
+        </div>
 
       <div class="card-actions justify-end mt-10 gap-4 border-t pt-6">
         <button class="btn btn-ghost border-gray-300 px-8" onclick="history.back()">
@@ -74,12 +98,13 @@
         <button class="btn btn-primary px-10 text-white" id="btn-approve">
           Approve Request
         </button>
-      </div>
-
+      </div> --}}
     </div>
+    <div id="sentApprove" class ="mt-5"></div>
   </div>
 </div>
-</form>
+  </form>
+
 @endsection
 
 @section('scripts')

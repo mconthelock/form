@@ -13,8 +13,6 @@ class form extends MY_Controller{
         $this->client = new Client(['verify' => false]);
     }
 
-
-
  public function main()
     {
         $data = [];
@@ -40,7 +38,7 @@ class form extends MY_Controller{
              * 2) ถ้า URL ไม่มี no/orgNo/y ให้ไปหา form master เอง
              * เปลี่ยน FIN-DS ให้ตรงกับ VANAME จริงในระบบ ถ้าชื่อไม่ใช่อันนี้
              */
-            $form = $this->getFormMasterByVaname('FIN-DS');
+            $form = $this->getFormMasterByVaname('GP-GAR');
 
             if (!empty($form)) {
                 $data['NFRMNO'] = $form[0]->NNO;

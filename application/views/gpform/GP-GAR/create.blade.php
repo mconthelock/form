@@ -43,7 +43,7 @@
           <label class="label">
             <span class="label-text font-semibold">Attachment:</span>
           </label>
-          <input type="file" multiple class="file-input  req w-full focus:file-input-primary"  id="FILE" name="FILE"/>
+          <input type="file" multiple class="file-input w-full focus:file-input-primary"  id="FILE" name="FILE"/>
         </div>
     </form>
     
