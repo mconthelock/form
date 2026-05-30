@@ -16,7 +16,7 @@ class form extends MY_Controller {
     public function createdetail($id){
         $dept = $this->setFormDept();
         $selectedDept = array_filter($dept, function($d) use ($id) {
-            return $d['link'] === $id;
+            return $d['id'] == $id;
         });
         $data['department'] = reset($selectedDept);
         $this->views('form/create/createdetail', $data);

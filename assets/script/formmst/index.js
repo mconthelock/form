@@ -107,7 +107,7 @@ async function createTableOption(data) {
         {
             data: 'deptname',
             title: 'DEPT.',
-            className: 'sticky-column',
+            className: 'hidden',
             render: function (data, type, row) {
                 if (data === null) return '-';
                 return data.code.toUpperCase();

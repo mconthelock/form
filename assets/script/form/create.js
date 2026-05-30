@@ -1,7 +1,7 @@
 import { showLoader } from '@amec/webasset/preloader';
 import { showMessage } from '@amec/webasset/utils';
 import { initApp, tableOption } from '../utils';
-import { getFormMaster } from '../formmst/data';
+import { getFormMaster, getFormDept } from '../formmst/data';
 
 $(document).ready(async function () {
     showLoader();
@@ -25,25 +25,36 @@ async function createRecent(id = '') {}
 
 async function createFormList() {
     const formMaster = await getFormMaster();
+    const formdept = await getFormDept();
     const id = $('#deptid').val();
+    const selectdDept = formdept.find((d) => d.id == id);
+    let result = [];
+    //console.log(selectdDept.link);
+    for (const value of selectdDept.link) {
+        const matched = formMaster.filter(
+            (f) => f.VORGNO === value && f.CSTATUS === '1',
+        );
+        result.push(...matched);
+    }
+
     const list = $('#formlist');
     const seenGroups = new Set();
     list.empty();
 
-    const filtered = formMaster.filter(
-        (item) => item.VORGNO === id && item.CSTATUS === '1',
-    );
+    // const filtered = result.filter(
+    //     (item) => item.VORGNO === id && item.CSTATUS === '1',
+    // );
 
     //get distinct group
     const distinctGroups = [
         ...new Set(
-            filtered.map((item) =>
+            result.map((item) =>
                 item.formmstGroup == null ? null : item.formmstGroup.VGROUP,
             ),
         ),
     ].sort((a, b) => (a === null ? -1 : b === null ? 1 : 0));
     distinctGroups.forEach((group) => {
-        setFormList(filtered, group);
+        setFormList(result, group);
     });
 }
 

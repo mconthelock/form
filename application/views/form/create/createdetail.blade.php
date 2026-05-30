@@ -7,9 +7,9 @@
             <h1 class="text-3xl text-primary font-bold line-clamp-1" id="page-title">
                 Create {{ $department['name'] }}
             </h1>
-            {{-- <div class="mt-2 max-w-3xl text-sm text-slate-500" id="page-description">
+            <div class="mt-2 max-w-3xl text-sm text-slate-500" id="page-description">
                 Requuest {{ $department['name'] }}
-            </div> --}}
+            </div>
         </div>
     </div>
 
