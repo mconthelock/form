@@ -36,7 +36,7 @@ module.exports = {
 
 	//GP-GAR
 	gar_form: "./assets/script/gpform/GP-GAR/index.js",
-	show_form: "./assets/script/gpform/GP-GAR/show.js"
+	show_form: "./assets/script/gpform/GP-GAR/show.js",
 
 
 	//GP-RB
