@@ -129,9 +129,9 @@
     }
 </style>
 
-<input type="hidden" id="nfrmno" name="nfrmno" value="{{ $NFRMNO }}">
-<input type="hidden" id="vorgno" name="vorgno" value="{{ $VORGNO }}">
-<input type="hidden" id="cyear" name="cyear" value="{{ $CYEAR }}">
+<input type="text" id="nfrmno" name="nfrmno" value="{{ $NFRMNO }}">
+<input type="text" id="vorgno" name="vorgno" value="{{ $VORGNO }}">
+<input type="text" id="cyear" name="cyear" value="{{ $CYEAR }}">
 
 
 <div class="min-h-screen bg-gradient-to-br from-slate-100 via-white to-teal-50 px- py-6">
