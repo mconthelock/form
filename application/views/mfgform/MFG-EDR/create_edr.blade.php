@@ -132,7 +132,11 @@
 <input type="hidden" id="nfrmno" name="nfrmno" value="{{ $NFRMNO }}">
 <input type="hidden" id="vorgno" name="vorgno" value="{{ $VORGNO }}">
 <input type="hidden" id="cyear" name="cyear" value="{{ $CYEAR }}">
-
+<script>
+    console.log('NFRMNO =', '{{ $NFRMNO }}');
+    console.log('VORGNO =', '{{ $VORGNO }}');
+    console.log('CYEAR =', '{{ $CYEAR }}');
+</script>
 
 <div class="min-h-screen bg-gradient-to-br from-slate-100 via-white to-teal-50 px- py-6">
     <div class="edr-card w-full max-w-[1600px] mx-auto overflow-hidden rounded-2xl bg-white">
