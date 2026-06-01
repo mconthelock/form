@@ -725,7 +725,7 @@ export const provinceManager = {
     if (e && e.params && e.params.data) {
         const selectedProvince = e.params.data;
         $("#PROVINCE_TH").val(selectedProvince.nameth || "");
-        $("#PROVINCE_EN").val(selectedProvince.nameen || "");
+        $("#PROVINCE_EN").val(selectedProvince.text || "");
     }
 }
 };
@@ -782,7 +782,7 @@ export const districtManager = {
     if (e && e.params && e.params.data) {
         const selectedDistrict = e.params.data;
         $("#DISTRICT_TH").val(selectedDistrict.nameth || "");
-        $("#DISTRICT_EN").val(selectedDistrict.nameen || "");
+        $("#DISTRICT_EN").val(selectedDistrict.text || "");
     }
     }
 };
@@ -839,7 +839,7 @@ export const subDistrictManager = {
     if (e && e.params && e.params.data) {
         const selectedSubDistrict = e.params.data;
         $("#SUB_DISTRICT_TH").val(selectedSubDistrict.nameth || "");
-        $("#SUB_DISTRICT_EN").val(selectedSubDistrict.nameen || "");
+        $("#SUB_DISTRICT_EN").val(selectedSubDistrict.text || "");
         console.log(selectedSubDistrict.postcode );
         
         $("#POSTCODE_EN").val(selectedSubDistrict.postcode || "");
