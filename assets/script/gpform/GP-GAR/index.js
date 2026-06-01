@@ -13,8 +13,6 @@ import { logFormData } from "@amec/webasset/utils";
 import { fetchUtils } from "@amec/webasset/api/fetch-utils";
 import { redirectWebflow } from "@amec/webasset/form";
 
-
-
 Select2();
 
 $(async function () {
@@ -48,29 +46,24 @@ $(document).on("click", "#btnRequest", async function () {
       { element: $("#REQBY"), message: "Please fill in required by fields." },
       { element: $("#REQDATE"), message: "Please fill required date fields." },
       { element: $("#CATEGORY_CODE"), message: "Please fill in required for fields."},
-      // { element : $("#FILE"), message:"Please select in attachment fields."},
     ];
      
+
     if (!(await requiredForm("#form", requiredmessage))) return;
-    
+
+    if (!$("#FILE").val() && !$("#remark").val()) {
+      showMessage("Please fill in either remark or file attachment.", "warning");
+      return;
+    }
     const formData = new FormData($("#form")[0]);
     formData.set("REMARK", $("#remark").val());
     logFormData(formData);
-
-    // Check if either remark or file is provided
-    if (!(await($("#remark").val()) && !$("#FILE").val())) {
-      showErrorMessage("Please fill in either remark or file attachment.");
-      return;
-    };
-
     const res = await createform(formData);
     console.log(res);
     if (res.status == true) {
       showMessage(res.message, "success");
       redirectWebflow();
     } else {
-
-      
       throw new Error(res.message);
     }
   } catch (error) {

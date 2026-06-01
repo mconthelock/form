@@ -82,6 +82,14 @@
         </div>
       </div>
 
+      <fieldset class="fieldset w-full hidden" id="controller-section">
+        <legend class="fieldset-legend">Controller:</span>
+        </legend>
+        <select class="select req w-full focus:select-primary max-w-xs" id="CONTROLLER" name="CONTROLLER">
+        </select>
+      </fieldset>
+
+
         {{-- <div class="form-control w-full">
           <label for="comment" class="block font-semibold text-gray-700 mb-1">Comment:</label>
           <textarea id="comment" name="comment" class="textarea textarea-bordered w-full" rows="0">

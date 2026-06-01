@@ -1,14 +1,25 @@
 import { fetchUtils } from "@amec/webasset/api/fetch-utils";
-import { getExtData,
-         getFormDetail,
-         getMode,
-         showflow,
-         doaction,
-       } from "@amec/webasset/api/webform";
-import { getUrlParams, showMessage, showErrorMessage } from "@amec/webasset/utils";
+import {
+  getExtData,
+  getFormDetail,
+  getMode,
+  showflow,
+  doaction,
+} from "@amec/webasset/api/webform";
+import {
+  getUrlParams,
+  showMessage,
+  showErrorMessage,
+  requiredForm,
+} from "@amec/webasset/utils";
 import { getFileForm, downloadOrOpenFile } from "@amec/webasset/api/file";
 import { webflowSubmit } from "@amec/webasset/components/form";
 import { redirectWebflow } from "@amec/webasset/form";
+import { searchUser } from "@amec/webasset/api/amec";
+import Select2 from "select2";
+import { setSelect2 } from "@amec/webasset/select2";
+
+Select2();
 
 $(async function () {
   const params = getUrlParams();
@@ -52,7 +63,20 @@ $(async function () {
     switch (mode) {
       case "2": // edit / approve
         if (cextData === "01") {
-          $("#nameInput").removeAttr("readonly");
+          const users = await searchUser({ SSECCODE: "040203", CSTATUS: "1" });
+          const controller = users
+            .filter((a) => {
+              return a.SPOSCODE < "70" && a.SPOSCODE > "30";
+            })
+            .map((c) => {
+              return { value: c.SEMPNO, text: c.SNAME };
+            });
+          console.log(users, controller);
+          setSelect2({
+            id: "#CONTROLLER",
+            data: controller,
+          });
+          $("#controller-section").removeClass("hidden");
         }
         action = webflowSubmit({
           flow: true,
@@ -131,69 +155,73 @@ $(async function () {
   }
 });
 
-  $(document).on("click", ".download-btn", async function () {
-    try {
-      const file = await downloadOrOpenFile({
-        baseDir: $(this).data("path"),
-        storedName: $(this).data("stored-name"),
-        originalName: $(this).data("original-name"),
-        mode: "download",
-      });
-    } catch (error) {
-      console.error("Error downloading or opening file:", error);
-    }
-  });
-
+$(document).on("click", ".download-btn", async function () {
+  try {
+    const file = await downloadOrOpenFile({
+      baseDir: $(this).data("path"),
+      storedName: $(this).data("stored-name"),
+      originalName: $(this).data("original-name"),
+      mode: "download",
+    });
+  } catch (error) {
+    console.error("Error downloading or opening file:", error);
+  }
+});
 
 // action form approve, reject
-$(document).on('click', "button[name='btnAction']", async function () {
-    try {
-        const param = getUrlParams();
-        const form = {
-            NFRMNO: param.NFRMNO,
-            VORGNO: param.VORGNO,
-            CYEAR: param.CYEAR,
-            CYEAR2: param.CYEAR2,
-            NRUNNO: param.NRUNNO,
-        };
-        // console.log(form);
-        const action = $(this).val();
-        const remark = $('#remark').val();
-        const empno = param.EMPNO || param.empno || new URLSearchParams(window.location.search).get('empno');
-        const cextData = await getExtData({ ...form, EMPNO: empno });
-        const state = {
-            ...form,
-            EMPNO: empno,
-            ACTION: action,
-            REMARK: remark,
-        };
-        // console.log(cextData);
-        let res;
-        if (cextData == '01') {
-            const nameStamp = getNameStampValue();
-            if (!nameStamp) {
-                throw new Error('ไม่พบชื่อที่ต้องการอัพเดท');
-            }
-            state.NAME_STAMP = nameStamp;
-            res = await updateStamp(state);
-        } else {
-            res = await doaction(state);
-        }
-        // console.log(res);
-        if (res.status) {
-            showMessage(res.message, 'success');
-            redirectWebflow();
-        } else {
-            throw new Error(res.message);
-        }
-    } catch (error) {
-        console.error(error);
-        showMessage(error.message);
+$(document).on("click", "button[name='btnAction']", async function () {
+  try {
+    const param = getUrlParams();
+    const form = {
+      NFRMNO: param.NFRMNO,
+      VORGNO: param.VORGNO,
+      CYEAR: param.CYEAR,
+      CYEAR2: param.CYEAR2,
+      NRUNNO: param.NRUNNO,
+    };
+    // console.log(form);
+    const action = $(this).val();
+    const remark = $("#remark").val();
+    const empno =
+      param.EMPNO ||
+      param.empno ||
+      new URLSearchParams(window.location.search).get("empno");
+    const cextData = await getExtData({ ...form, EMPNO: param.EMPNO });
+    console.log(cextData);
+    const state = {
+      ...form,
+      EMPNO: empno,
+      ACTION: action,
+      REMARK: remark,
+    };
+    // console.log(cextData);
+    let res;
+    const requiredmessage = [
+      { element: $("#CONTROLLER"), message: "Please select controller." },
+    ];
+    if (cextData == "01") {
+      if (!(await requiredForm("#CONTROLLER", requiredmessage))) return;
+     const controller = {...state, CONTROLLER: $('#CONTROLLER').val()}
+      res = await updateController(controller);
+    } else {
+      res = await doaction(state);
     }
+    
+    console.log(res);
+    if (res.status) {
+      showMessage(res.message, "success");
+      redirectWebflow();
+    } else {
+      throw new Error(res.message);
+    }
+  } catch (error) {
+    console.error(error);
+    showMessage(error.message);
+  }
 });
 
 // Created url Get form
-async function getShowData(form){
+async function getShowData(form) {
   const url = `${process.env.APP_API}/gpform/gp-gar/${form.NFRMNO}/${form.VORGNO}/${form.CYEAR}/${form.CYEAR2}/${form.NRUNNO}`;
   return await fetchUtils({
     url: url,
@@ -201,10 +229,17 @@ async function getShowData(form){
   });
 }
 async function getCategory() {
-    return await fetchUtils({
-        url: `${process.env.APP_API}/gpform/gp-gar`,
-        method: "GET",
-    });
+  return await fetchUtils({
+    url: `${process.env.APP_API}/gpform/gp-gar`,
+    method: "GET",
+  });
+}
+async function updateController(state) {
+  return await fetchUtils({
+    url: `${process.env.APP_API}/gpform/gp-gar`,
+    method: "PATCH",
+    data: state
+  })
 }
 
 // async function getEmpData(empno) {
