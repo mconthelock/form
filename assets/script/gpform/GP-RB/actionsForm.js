@@ -12,6 +12,11 @@ import {
     createForm,
 } from './data';
 
+function toggleNameStampByPurpose() {
+    const purposeId = $('#purposeList input[name="PURPOSE_ID"]:checked').val();
+    $('#stampCircle-name, #nameInput').toggleClass('hide', purposeId == '2');
+}
+
 // ฟังก์ชันหลักที่ทำงานเมื่อโหลดหน้า
 $(async function () {
     const queryString = window.location.search;
@@ -48,6 +53,7 @@ $(document).on('change', '#REQBY', async function (e) {
         const nameParts = empData.SNAME.split(' ');
         $('#nameInput').val(nameParts[0]);
         $('#stampCircle-name').html(nameParts[0]);
+        toggleNameStampByPurpose();
         $('#stampSize').html(selectedConfig.SIZE_MM + ' mm.');
 
         if (selectedConfig.STAMP_TYPE == '2') {
@@ -64,6 +70,10 @@ $(document).on('change', '#REQBY', async function (e) {
 $(document).on('input', '#nameInput', function () {
     const inputVal = $(this).val();
     $('#stampCircle-name').html(inputVal);
+});
+
+$(document).on('change', '#purposeList input[name="PURPOSE_ID"]', function () {
+    toggleNameStampByPurpose();
 });
 
 $(document).on('change', '.stampFormatGroup', async function () {

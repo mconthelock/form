@@ -53,6 +53,10 @@ $(async function () {
             (c) => c.SPOSCODE === empData.SPOSCODE,
         );
         var nameStamp = data.NAME_STAMP || '';
+        var hiddenid2 =
+        $('#stampCircle-name').closest('td').html(`<div class="text-center text-2xl text-primary"> - </div>`);
+        $('#nameInput').closest('td').html(`<div class="text-center text-2xl text-primary"> - </div>`);
+
         //Show purpose
         if (data.REQ_TYPE == '1') {
             $('#standardStampSection').removeClass('hidden');
@@ -63,9 +67,11 @@ $(async function () {
             $('#stampCircle-name').html(nameStamp);
             $('#nameInput').val(nameStamp);
 
-            $('#nameInput').off('input').on('input', function () {
-                $('#stampCircle-name').text($(this).val());
-            });
+            if (data.PURPOSE_ID == '2') {
+                //$('#stampCircle-name').closest('td').find('div').addClass('hidden');
+                hiddenid2;
+            }
+
 
             if (selectedConfig.STAMP_TYPE == '2') {
                 $('#stampCircle-label').html(empData.SDIV);
@@ -77,9 +83,10 @@ $(async function () {
                 $('#stampCircle-name').html(nameStamp);
                 $('#nameInput').val(nameStamp);
 
-                $('#nameInput').off('input').on('input', function () {
-                    $('#stampCircle-name').text($(this).val());
-                });
+                if (data.PURPOSE_ID == '2') {
+                    hiddenid2;
+                }
+
             }
         } else {
             $('#standardStampSection').addClass('hidden');

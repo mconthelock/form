@@ -97,6 +97,11 @@
                         </div>
                         <div id="purposeList" class="flex flex-col gap-3">
                         </div>
+                        <div class="flex gap-4 mt-6">
+                            <label for="otherQty" class="fieldset-legend whitespace-nowrap w-32">แนบไฟล์/Attach
+                                file:</label>
+                            <div id="otherFile" class="file-list"></div>
+                        </div>
                     </div>
                 </div>
 
