@@ -18,6 +18,7 @@ import { redirectWebflow } from "@amec/webasset/form";
 import { searchUser } from "@amec/webasset/api/amec";
 import Select2 from "select2";
 import { setSelect2 } from "@amec/webasset/select2";
+import {formatDate} from "@amec/webasset/dayjs"
 
 Select2();
 
@@ -47,7 +48,7 @@ $(async function () {
     $("#VIEW_INBY").text(formDetail.VINPUTER || "-");
     $("#VIEW_REQBY").text(formDetail.VREQNO || "-");
     $("#VIEW_FORMNO").text(formDetail.FORMNO || "-");
-    $("#VIEW_REQDATE").text(formDetail.DREQDATE || "-");
+    $("#VIEW_REQDATE").text(formatDate(formDetail.DREQDATE) || "-");
     $("#VIEW_CATEGORY").text(data.CATEGORY_NAME || "-");
     $("#VIEW_REMARK").text(showData.REMARK || "-");
 
