@@ -312,19 +312,6 @@
                                            readonly
                                            class="show-readonly input input-sm input-bordered w-full bg-teal-50 text-teal-800 border-teal-200 focus:outline-none shadow-sm" />
                                 </div>
-
-                                <div class="form-control">
-                                    <label class="label pb-1">
-                                        <span class="label-text font-bold text-base-content/80 text-sm">
-                                            Remark
-                                        </span>
-                                    </label>
-
-                                    <textarea id="REMARK"
-                                              name="REMARK"
-                                              readonly
-                                              class="show-readonly textarea textarea-bordered w-full bg-amber-50 text-amber-900 border-amber-200 focus:outline-none shadow-sm min-h-20"></textarea>
-                                </div>
                             </div>
                         </section>
 

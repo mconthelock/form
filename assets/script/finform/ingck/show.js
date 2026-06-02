@@ -339,7 +339,6 @@ function renderFinDsHeader(header = {}) {
   $("#RetDate").val(formatDate(header.DATE_RECEIVE));
   $("#location").val(header.LOCATION || "");
   $("#REMARK").val(header.REMARK || "");
-
   const optionCode = String(header.OPTION_CODE ?? "0");
 
   $(

@@ -1,5 +1,6 @@
 import { fetchUtils } from "@amec/webasset/api/fetch-utils";
 import { createTable } from "@amec/webasset/dataTable";
+import ExcelJS from "exceljs";
 
 let table;
 let mapColumns = [];
@@ -30,7 +31,24 @@ $(document).on("click", ".nav-btn", async function () {
 $(document).on("change", "#reportMonth", async function () {
   currentMonth = $(this).val();
   updateYearUI();
-  await createReportTable(filterRowsByMonth(reportRows), dutyStampList);
+  await createReportTable(filterReportRows(reportRows), dutyStampList);
+});
+
+$(document).on("change", "#year", async function () {
+  const year = Number($(this).val());
+
+  if (!Number.isInteger(year) || year < 1900 || year > 2100) {
+    updateYearUI();
+    return;
+  }
+
+  currentYear = year;
+  updateYearUI();
+  await loadReport(currentYear);
+});
+
+$(document).on("click", "#addStampRow", async function () {
+  await exportReportToExcel(getCurrentExportRows(), dutyStampList);
 });
 
 async function getStamp() {
@@ -66,7 +84,7 @@ async function loadReport(year) {
     reportRows = mapReportToRows(reportData, dutyStampList);
     await enrichRowsWithEmpData(reportRows);
 
-    await createReportTable(filterRowsByMonth(reportRows), dutyStampList);
+    await createReportTable(filterReportRows(reportRows), dutyStampList);
   } catch (error) {
     console.error(error);
     reportRows = [];
@@ -84,23 +102,23 @@ async function createReportTable(data = [], stamp = dutyStampList) {
   let html = `
     <thead>
       <tr>
-        <th rowspan="${headerRowspan}">D/M/Y</th>
-        <th rowspan="${headerRowspan}">Detail</th>
+        <th rowspan="${headerRowspan}" class="report-sticky-date report-meta-header">D/M/Y</th>
+        <th rowspan="${headerRowspan}" class="report-meta-header">Detail</th>
   `;
 
   if (stampCount > 0) {
     html += `
-        <th colspan="${sectionColspan}">Buy</th>
-        <th colspan="${sectionColspan}">Withdraw</th>
-        <th colspan="${sectionColspan}">Remaining</th>
+        <th colspan="${sectionColspan}" class="report-group-header report-buy-header">Buy</th>
+        <th colspan="${sectionColspan}" class="report-group-header report-withdraw-header">Withdraw</th>
+        <th colspan="${sectionColspan}" class="report-group-header report-remaining-header">Remaining</th>
     `;
   }
 
   html += `
-        <th rowspan="${headerRowspan}">Balance Qty</th>
-        <th rowspan="${headerRowspan}">Balance Amount</th>
-        <th rowspan="${headerRowspan}">User</th>
-        <th rowspan="${headerRowspan}">Section</th>
+        <th rowspan="${headerRowspan}" class="report-balance-header">Balance Qty</th>
+        <th rowspan="${headerRowspan}" class="report-balance-header">Balance Amount</th>
+        <th rowspan="${headerRowspan}" class="report-meta-header">User</th>
+        <th rowspan="${headerRowspan}" class="report-meta-header">Section</th>
       </tr>
   `;
 
@@ -109,9 +127,9 @@ async function createReportTable(data = [], stamp = dutyStampList) {
       <tr>
     `;
 
-    ["BUY", "WD", "RM"].forEach(() => {
+    ["BUY", "WD", "RM"].forEach((section) => {
       stamp.forEach((item) => {
-        html += `<th colspan="2">${escapeHtml(item.DUTY_VALUE)}</th>`;
+        html += `<th colspan="2" class="${getReportColumnGroupClass(section)} report-denom-header">${escapeHtml(item.DUTY_VALUE)}</th>`;
       });
     });
 
@@ -122,18 +140,19 @@ async function createReportTable(data = [], stamp = dutyStampList) {
 
     ["BUY", "WD", "RM"].forEach((section) => {
       stamp.forEach((_, stampIndex) => {
-        html += `<th>QTY</th><th>AMT</th>`;
+        const groupClass = getReportColumnGroupClass(section);
+        html += `<th class="${groupClass} report-metric-header">QTY</th><th class="${groupClass} report-metric-header">AMT</th>`;
 
         mapColumns.push({
           data: `${section}_QTY${stampIndex + 1}`,
           defaultContent: "",
-          className: "report-qty",
+          className: `report-qty ${groupClass}`,
         });
 
         mapColumns.push({
           data: `${section}_AMT${stampIndex + 1}`,
           defaultContent: "",
-          className: "report-amt",
+          className: `report-amt ${groupClass}`,
         });
       });
     });
@@ -146,12 +165,12 @@ async function createReportTable(data = [], stamp = dutyStampList) {
   mapColumns.push({
     data: "BALANCE_QTY",
     defaultContent: "",
-    className: "report-balance",
+    className: "report-balance report-balance-group",
   });
   mapColumns.push({
     data: "BALANCE_AMT",
     defaultContent: "",
-    className: "report-balance",
+    className: "report-balance report-balance-group",
   });
   mapColumns.push({ data: "USER", defaultContent: "", className: "report-user" });
   mapColumns.push({
@@ -182,19 +201,18 @@ async function createReportTable(data = [], stamp = dutyStampList) {
     $("#stampTable").empty().html(html);
   }
 
+  const secIndex = mapColumns.findIndex((col) => col.data === "SECTION");
+
   table = await createTable(
     {
       data,
       columns: mapColumns,
       ordering: false,
-      searching: false,
+      // searching: false,
       paging: false,
       info: false,
       autoWidth: false,
-      scrollX: true,
-      scrollCollapse: true,
       responsive: false,
-      destroy: true,
       columnDefs: [
         {
           targets: "_all",
@@ -204,11 +222,18 @@ async function createReportTable(data = [], stamp = dutyStampList) {
       footerCallback: function () {
         renderReportFooter(this.api());
       },
+      createdRow: function (row, rowData, dataIndex) {
+        applyReportRowClasses(row, rowData, dataIndex, data);
+      },
+      initComplete: function () {
+        $('.dt-search').addClass('hidden')
+      }
     },
     {
       id: "stampTable",
-      inlineEdit: {
-        status: false,
+      buttonFilter: {
+        status: true,
+        column: secIndex
       },
     },
   );
@@ -228,13 +253,36 @@ async function createReportTable(data = [], stamp = dutyStampList) {
   return table;
 }
 
+function getReportColumnGroupClass(section) {
+  return {
+    BUY: "report-buy",
+    WD: "report-withdraw",
+    RM: "report-remaining",
+  }[section] || "";
+}
+
+function applyReportRowClasses(row, rowData, dataIndex, rows = []) {
+  const previousRow = rows[dataIndex - 1];
+
+  if (previousRow && previousRow.DATE_RECEIVE !== rowData.DATE_RECEIVE) {
+    $(row).addClass("report-date-boundary");
+  }
+
+  mapColumns.forEach((column, index) => {
+    if (!/^BALANCE_(QTY|AMT)$/.test(column.data)) return;
+    if (numberValue(rowData[column.data]) < 0) {
+      $("td", row).eq(index).addClass("report-negative");
+    }
+  });
+}
+
 function renderReportFooter(api) {
   const values = mapColumns.map((column, index) => {
     if (index === 1) return "Total:";
-    if (!isNumericReportColumn(column.data)) return "";
+    if (!shouldShowReportTotal(column.data)) return "";
 
     const total = api
-      .column(index)
+      .column(index, { search: "applied" })
       .data()
       .reduce((sum, value) => sum + numberValue(value), 0);
 
@@ -243,12 +291,14 @@ function renderReportFooter(api) {
 
   const $footerCells = $(api.table().footer()).find("th");
   setFooterCellValues($footerCells, values);
+  setFooterCellClasses($footerCells, values);
 
   const $container = $(api.table().container());
   const $scrollFooterCells = $container.find(
     ".dt-scroll-foot tfoot th, .dataTables_scrollFoot tfoot th",
   );
   setFooterCellValues($scrollFooterCells, values);
+  setFooterCellClasses($scrollFooterCells, values);
 }
 
 function setFooterCellValues($cells, values) {
@@ -256,6 +306,21 @@ function setFooterCellValues($cells, values) {
 
   values.forEach((value, index) => {
     $cells.eq(index).html(value);
+  });
+}
+
+function setFooterCellClasses($cells, values) {
+  if (!$cells.length) return;
+
+  values.forEach((value, index) => {
+    const columnName = mapColumns[index]?.data;
+    const $cell = $cells.eq(index);
+
+    $cell.removeClass("report-negative");
+
+    if (/^BALANCE_(QTY|AMT)$/.test(columnName) && numberValue(value) < 0) {
+      $cell.addClass("report-negative");
+    }
   });
 }
 
@@ -294,6 +359,224 @@ function syncColWidths($sourceCols, $targetCols) {
     const width = $(col).css("width");
     $targetCols.eq(index).css({ width, minWidth: width });
   });
+}
+
+async function exportReportToExcel(data = [], stamp = dutyStampList) {
+  const $button = $("#addStampRow");
+
+  try {
+    $button.prop("disabled", true).addClass("loading");
+
+    const workbook = new ExcelJS.Workbook();
+    const sheet = workbook.addWorksheet("Stamp Report");
+    const exportColumns = getExportColumns(stamp);
+    const lastColumn = exportColumns.length;
+
+    workbook.creator = "FIN-DS";
+    workbook.created = new Date();
+
+    sheet.mergeCells(1, 1, 1, lastColumn);
+    sheet.getCell(1, 1).value = `Control Duty Stamp Report - ${formatReportPeriod()}`;
+    sheet.getCell(1, 1).font = { bold: true, size: 14 };
+    sheet.getCell(1, 1).alignment = {
+      horizontal: "center",
+      vertical: "middle",
+    };
+
+    renderExcelHeader(sheet, stamp, lastColumn);
+    renderExcelRows(sheet, data, exportColumns);
+    renderExcelTotal(sheet, data, exportColumns);
+    styleExcelSheet(sheet, exportColumns);
+
+    const buffer = await workbook.xlsx.writeBuffer();
+    const blob = new Blob([buffer], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+
+    link.href = url;
+    link.download = getExportFileName();
+    link.click();
+    URL.revokeObjectURL(url);
+  } catch (error) {
+    console.error("Export report failed", error);
+    alert("Cannot export Excel. Please try again.");
+  } finally {
+    $button.prop("disabled", false).removeClass("loading");
+  }
+}
+
+function getExportColumns(stamp = []) {
+  const columns = [
+    { key: "DATE_RECEIVE", width: 12 },
+    { key: "REASON", width: 32 },
+  ];
+
+  ["BUY", "WD", "RM"].forEach((section) => {
+    stamp.forEach((_, stampIndex) => {
+      columns.push({ key: `${section}_QTY${stampIndex + 1}`, width: 10 });
+      columns.push({ key: `${section}_AMT${stampIndex + 1}`, width: 12 });
+    });
+  });
+
+  columns.push({ key: "BALANCE_QTY", width: 14 });
+  columns.push({ key: "BALANCE_AMT", width: 16 });
+  columns.push({ key: "USER", width: 28 });
+  columns.push({ key: "SECTION", width: 16 });
+
+  return columns;
+}
+
+function renderExcelHeader(sheet, stamp = [], lastColumn) {
+  const stampCount = Array.isArray(stamp) ? stamp.length : 0;
+  const headerRowspanEnd = 4;
+
+  sheet.mergeCells(2, 1, headerRowspanEnd, 1);
+  sheet.getCell(2, 1).value = "D/M/Y";
+  sheet.mergeCells(2, 2, headerRowspanEnd, 2);
+  sheet.getCell(2, 2).value = "Detail";
+
+  let column = 3;
+  if (stampCount > 0) {
+    [
+      { key: "BUY", label: "Buy" },
+      { key: "WD", label: "Withdraw" },
+      { key: "RM", label: "Remaining" },
+    ].forEach((section) => {
+      const startColumn = column;
+      const endColumn = column + stampCount * 2 - 1;
+
+      sheet.mergeCells(2, startColumn, 2, endColumn);
+      sheet.getCell(2, startColumn).value = section.label;
+
+      stamp.forEach((item) => {
+        sheet.mergeCells(3, column, 3, column + 1);
+        sheet.getCell(3, column).value = item.DUTY_VALUE;
+        sheet.getCell(4, column).value = "QTY";
+        sheet.getCell(4, column + 1).value = "AMT";
+        column += 2;
+      });
+    });
+  }
+
+  [
+    "Balance Qty",
+    "Balance Amount",
+    "User",
+    "Section",
+  ].forEach((label, index) => {
+    const headerColumn = lastColumn - 3 + index;
+    sheet.mergeCells(2, headerColumn, headerRowspanEnd, headerColumn);
+    sheet.getCell(2, headerColumn).value = label;
+  });
+}
+
+function renderExcelRows(sheet, data = [], exportColumns = []) {
+  data.forEach((row, rowIndex) => {
+    const excelRow = sheet.getRow(rowIndex + 5);
+
+    exportColumns.forEach((column, columnIndex) => {
+      const value = row[column.key];
+      excelRow.getCell(columnIndex + 1).value =
+        isNumericReportColumn(column.key) ? numberValue(value) : value || "";
+    });
+  });
+}
+
+function renderExcelTotal(sheet, data = [], exportColumns = []) {
+  const totalRowNumber = data.length + 5;
+  const row = sheet.getRow(totalRowNumber);
+
+  row.getCell(2).value = "Total:";
+
+  exportColumns.forEach((column, index) => {
+    if (!isNumericReportColumn(column.key)) return;
+    if (!shouldShowReportTotal(column.key)) return;
+
+    const total = data.reduce((sum, item) => {
+      return sum + numberValue(item[column.key]);
+    }, 0);
+
+    row.getCell(index + 1).value = total;
+  });
+
+  row.font = { bold: true };
+}
+
+function styleExcelSheet(sheet, exportColumns = []) {
+  const columnCount = exportColumns.length;
+
+  sheet.views = [{ state: "frozen", ySplit: 4 }];
+
+  exportColumns.forEach((column, index) => {
+    sheet.getColumn(index + 1).width = column.width || 12;
+  });
+
+  for (let rowNumber = 1; rowNumber <= sheet.rowCount; rowNumber++) {
+    const row = sheet.getRow(rowNumber);
+
+    for (let columnNumber = 1; columnNumber <= columnCount; columnNumber++) {
+      const cell = row.getCell(columnNumber);
+
+      cell.alignment = {
+        horizontal: "center",
+        vertical: "middle",
+        wrapText: columnNumber === 2 || columnNumber >= columnCount - 1,
+      };
+      cell.border = {
+        top: { style: "thin" },
+        left: { style: "thin" },
+        bottom: { style: "thin" },
+        right: { style: "thin" },
+      };
+
+      if (rowNumber >= 2 && rowNumber <= 4) {
+        cell.font = { bold: true };
+        cell.fill = {
+          type: "pattern",
+          pattern: "solid",
+          fgColor: { argb: "FFECFDF5" },
+        };
+      }
+
+      if (rowNumber === sheet.rowCount) {
+        cell.font = { bold: true };
+        cell.fill = {
+          type: "pattern",
+          pattern: "solid",
+          fgColor: { argb: "FFF8FAFC" },
+        };
+      }
+    }
+  }
+
+  sheet.getRow(1).height = 24;
+  sheet.getRows(2, 3)?.forEach((row) => {
+    row.height = 22;
+  });
+}
+
+function getExportFileName() {
+  const period = formatReportPeriod().replace(/\s+/g, "_");
+
+  return `Control_Duty_Stamp_${period}.xlsx`;
+}
+
+function getCurrentExportRows() {
+  const fallbackRows = filterReportRows(reportRows);
+
+  if (!table?.rows) {
+    return fallbackRows;
+  }
+
+  try {
+    const rows = table.rows({ search: "applied" }).data().toArray();
+    return Array.isArray(rows) ? rows : fallbackRows;
+  } catch (error) {
+    console.error("Cannot read filtered report rows from DataTable", error);
+    return fallbackRows;
+  }
 }
 
 function mapReportToRows(reportData = [], stamp = []) {
@@ -561,20 +844,23 @@ function formatPerson(name, empno) {
 }
 
 function updateYearUI() {
-  $("#year").text(currentYear);
+  $("#year").val(currentYear);
   $("#reportPeriodInline").text(formatReportPeriod());
 }
 
-function filterRowsByMonth(rows = []) {
-  if (currentMonth === "all") return rows;
+function filterReportRows(rows = []) {
+  return rows.filter((row) => {
+    return isRowInSelectedMonth(row);
+  });
+}
+
+function isRowInSelectedMonth(row) {
+  if (currentMonth === "all") return true;
 
   const month = Number(currentMonth);
+  const date = parseReportDate(row.DATE_RECEIVE);
 
-  return rows.filter((row) => {
-    const date = parseReportDate(row.DATE_RECEIVE);
-
-    return date && date.getMonth() + 1 === month;
-  });
+  return date && date.getMonth() + 1 === month;
 }
 
 function formatReportPeriod() {
@@ -614,6 +900,10 @@ function isNumericReportColumn(columnName) {
     columnName === "BALANCE_QTY" ||
     columnName === "BALANCE_AMT"
   );
+}
+
+function shouldShowReportTotal(columnName) {
+  return isNumericReportColumn(columnName) && !/^RM_(QTY|AMT)\d+$/.test(columnName);
 }
 
 function getDateTime(item) {
