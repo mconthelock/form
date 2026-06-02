@@ -36,6 +36,25 @@ $(async function () {
             param.CYEAR2,
             param.NRUNNO,
         );
+
+        const fileForm = await getFileForm({
+                NFRMNO: param.NFRMNO,
+                VORGNO: param.VORGNO,
+                CYEAR: param.CYEAR,
+                CYEAR2: param.CYEAR2,
+                NRUNNO: param.NRUNNO,
+                FORM_TYPE: 'GP',
+            });
+
+            let fileList = [];
+            if (fileForm.status) {
+                fileList = Array.isArray(fileForm.data)
+                    ? fileForm.data
+                    : [];
+                // await renderAttachedFiles(fileList, 2);
+            }
+
+            await renderAttachedFiles(fileList, data.REQ_TYPE);
         console.log(data);
         console.log(`${data.formmaster.VANAME}${data.form.CYEAR2.slice(-2)}-${('000000' + data.form.NRUNNO).slice(-6)}`);
         //Show requester info
@@ -56,7 +75,7 @@ $(async function () {
         var hiddenid2 =
         $('#stampCircle-name').closest('td').html(`<div class="text-center text-2xl text-primary"> - </div>`);
         $('#nameInput').closest('td').html(`<div class="text-center text-2xl text-primary"> - </div>`);
-
+// await renderAttachedFiles(fileList, 1);
         //Show purpose
         if (data.REQ_TYPE == '1') {
             $('#standardStampSection').removeClass('hidden');
@@ -93,23 +112,23 @@ $(async function () {
             $('#otherStampSection').removeClass('hidden');
             $('#otherReason').val(data.PURPOSE_OTHER || '');
             $('#otherQty').val(data.PURPOSE_QTY || '1');
-
+            // await renderAttachedFiles(fileList, 2);
             //await loadAttachedFiles(data);
-            const fileForm = await getFileForm({
-                NFRMNO: param.NFRMNO,
-                VORGNO: param.VORGNO,
-                CYEAR: param.CYEAR,
-                CYEAR2: param.CYEAR2,
-                NRUNNO: param.NRUNNO,
-                FORM_TYPE: 'GP',
-            });
+            // const fileForm = await getFileForm({
+            //     NFRMNO: param.NFRMNO,
+            //     VORGNO: param.VORGNO,
+            //     CYEAR: param.CYEAR,
+            //     CYEAR2: param.CYEAR2,
+            //     NRUNNO: param.NRUNNO,
+            //     FORM_TYPE: 'GP',
+            // });
 
-            if (fileForm.status) {
-                const fileList = Array.isArray(fileForm.data)
-                    ? fileForm.data
-                    : [];
-                await renderAttachedFiles(fileList);
-            }
+            // if (fileForm.status) {
+            //     const fileList = Array.isArray(fileForm.data)
+            //         ? fileForm.data
+            //         : [];
+                
+            // }
         }
 
 

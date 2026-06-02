@@ -75,7 +75,10 @@ function toggleHiddenId2(purposeId) {
             `);
         }
 
-        td.children(':not(.purpose-2-placeholder)').toggleClass('hidden', isPurpose2);
+        td.children(':not(.purpose-2-placeholder)').toggleClass(
+            'hidden',
+            isPurpose2,
+        );
         td.find('.purpose-2-placeholder').toggleClass('hidden', !isPurpose2);
     });
 }
@@ -116,9 +119,15 @@ export async function renderPurpose(mode = 'create') {
     $('#otherPurposeId').val(otherId);
 }
 
-export async function renderAttachedFiles(fileList) {
+export async function renderAttachedFiles(fileList, type) {
+    let el;
+    if (type == 1) {
+        el = $('#otherFile-1');
+    } else {
+        el = $('#otherFile-2');
+    }
     if (!fileList.length) {
-        $('.file-list').html(`
+        el.html(`
       <div class="w-full min-h-8 rounded-md border border-base-300 bg-base-100 px-4 py-2 flex items-center">
         <span class="opacity-60">-</span>
       </div>
