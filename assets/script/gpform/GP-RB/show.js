@@ -38,29 +38,31 @@ $(async function () {
         );
 
         const fileForm = await getFileForm({
-                NFRMNO: param.NFRMNO,
-                VORGNO: param.VORGNO,
-                CYEAR: param.CYEAR,
-                CYEAR2: param.CYEAR2,
-                NRUNNO: param.NRUNNO,
-                FORM_TYPE: 'GP',
-            });
+            NFRMNO: param.NFRMNO,
+            VORGNO: param.VORGNO,
+            CYEAR: param.CYEAR,
+            CYEAR2: param.CYEAR2,
+            NRUNNO: param.NRUNNO,
+            FORM_TYPE: 'GP',
+        });
 
-            let fileList = [];
-            if (fileForm.status) {
-                fileList = Array.isArray(fileForm.data)
-                    ? fileForm.data
-                    : [];
-                // await renderAttachedFiles(fileList, 2);
-            }
+        let fileList = [];
+        if (fileForm.status) {
+            fileList = Array.isArray(fileForm.data) ? fileForm.data : [];
+            // await renderAttachedFiles(fileList, 2);
+        }
 
-            await renderAttachedFiles(fileList, data.REQ_TYPE);
+        await renderAttachedFiles(fileList, data.REQ_TYPE);
         console.log(data);
-        console.log(`${data.formmaster.VANAME}${data.form.CYEAR2.slice(-2)}-${('000000' + data.form.NRUNNO).slice(-6)}`);
+        console.log(
+            `${data.formmaster.VANAME}${data.form.CYEAR2.slice(-2)}-${('000000' + data.form.NRUNNO).slice(-6)}`,
+        );
         //Show requester info
         const empData = await getEmpData(data.form.VREQNO);
 
-        $('#formNo').text(`${data.formmaster.VANAME}${data.form.CYEAR2.slice(-2)}-${('000000' + data.form.NRUNNO).slice(-6)}`);
+        $('#formNo').text(
+            `${data.formmaster.VANAME}${data.form.CYEAR2.slice(-2)}-${('000000' + data.form.NRUNNO).slice(-6)}`,
+        );
         $('#INPUTBY').text(data.form.VINPUTER);
         $('#REQBY').text(data.form.VREQNO);
         $('#empName').text(empData.STNAME);
@@ -72,10 +74,13 @@ $(async function () {
             (c) => c.SPOSCODE === empData.SPOSCODE,
         );
         var nameStamp = data.NAME_STAMP || '';
-        var hiddenid2 =
-        $('#stampCircle-name').closest('td').html(`<div class="text-center text-2xl text-primary"> - </div>`);
-        $('#nameInput').closest('td').html(`<div class="text-center text-2xl text-primary"> - </div>`);
-// await renderAttachedFiles(fileList, 1);
+        var hiddenid2 = $('#stampCircle-name')
+            .closest('td')
+            .html(`<div class="text-center text-2xl text-primary"> - </div>`);
+        $('#nameInput')
+            .closest('td')
+            .html(`<div class="text-center text-2xl text-primary"> - </div>`);
+        // await renderAttachedFiles(fileList, 1);
         //Show purpose
         if (data.REQ_TYPE == '1') {
             $('#standardStampSection').removeClass('hidden');
@@ -91,7 +96,6 @@ $(async function () {
                 hiddenid2;
             }
 
-
             if (selectedConfig.STAMP_TYPE == '2') {
                 $('#stampCircle-label').html(empData.SDIV);
                 $('#standardStampSection').removeClass('hidden');
@@ -105,32 +109,13 @@ $(async function () {
                 if (data.PURPOSE_ID == '2') {
                     hiddenid2;
                 }
-
             }
         } else {
             $('#standardStampSection').addClass('hidden');
             $('#otherStampSection').removeClass('hidden');
             $('#otherReason').val(data.PURPOSE_OTHER || '');
             $('#otherQty').val(data.PURPOSE_QTY || '1');
-            // await renderAttachedFiles(fileList, 2);
-            //await loadAttachedFiles(data);
-            // const fileForm = await getFileForm({
-            //     NFRMNO: param.NFRMNO,
-            //     VORGNO: param.VORGNO,
-            //     CYEAR: param.CYEAR,
-            //     CYEAR2: param.CYEAR2,
-            //     NRUNNO: param.NRUNNO,
-            //     FORM_TYPE: 'GP',
-            // });
-
-            // if (fileForm.status) {
-            //     const fileList = Array.isArray(fileForm.data)
-            //         ? fileForm.data
-            //         : [];
-                
-            // }
         }
-
 
         //ปุ่ม approve กับ reject จะโชว์ก็ต่อเมื่อเป็นผู้อนุมัติเท่านั้น
         const mode = await getMode({ ...data, EMPNO: param.EMPNO });
@@ -166,7 +151,6 @@ $(async function () {
         showErrorMessage('เกิดข้อผิดพลาดในการโหลดข้อมูลแบบฟอร์ม');
         return;
     }
-
 });
 
 $(document).on('click', '.download-btn', async function () {
@@ -188,7 +172,6 @@ async function getNameStampValue() {
     console.log('nameInput=', getnameInput);
     return getnameInput;
 }
-
 
 // action form approve, reject
 $(document).on('click', "button[name='btnAction']", async function () {
@@ -224,7 +207,7 @@ $(document).on('click', "button[name='btnAction']", async function () {
                 throw new Error('ไม่พบชื่อที่ต้องการอัพเดท');
             }
             state.NAME_STAMP = nameStamp;
-            console.log(state.nameStamp)
+            console.log(state.nameStamp);
             res = await updateStamp(state);
         } else {
             res = await doaction(state);
@@ -246,7 +229,6 @@ $(document).on('click', "button[name='btnAction']", async function () {
     }
 });
 
-
 async function updateStamp(state) {
     const url = `${process.env.APP_API}/gpform/gp-rb`;
     return await fetchUtils({
@@ -260,7 +242,6 @@ async function getShowData(form) {
     const url = `${process.env.APP_API}/gpform/showstamp-gp-rb/${form.NFRMNO}/${form.VORGNO}/${form.CYEAR}/${form.CYEAR2}/${form.NRUNNO}`;
     return await fetchUtils({
         url: url,
-        method: "GET",
+        method: 'GET',
     });
 }
-
