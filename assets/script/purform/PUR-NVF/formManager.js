@@ -203,6 +203,7 @@ export const vendorTypeManager = {
             $(".field-oversea").val("");
             $("#COUNTRY_EN").val("Thailand");
             $("#COUNTRY_TH").val("ไทย");
+             countryManager.disabled(true);
         }else
         {
             $(".field-oversea").removeClass("hidden").addClass("req");
@@ -210,6 +211,7 @@ export const vendorTypeManager = {
             $(".field-local").val("");
              $("#COUNTRY_EN").val("");
              $("#COUNTRY_TH").val("");
+             countryManager.disabled(false);
         }
         
         
@@ -354,21 +356,21 @@ export const formManager = {
                 }));
                 const countries = await getCountries();
                 const countriesData = countries.map((c) => ({
-                    id: c.id,
+                    id: c.nameen,
                     value: c.nameen,
                     text:  c.nameen,
                     nameth: c.nameth
                 }));
                 const province = await getProvinces();
                 this.provinceData = province.map((p) => ({
-                    id: p.id,
+                    id: p.nameen,
                     value: p.nameen,
                     text: p.nameen,
                     nameth: p.nameth
                 }));
                 const district = await getDistricts();
                 this.districtData = district.map((d) => ({
-                    id: d.id,
+                    id: d.nameen,
                     value: d.nameen,
                     text: d.nameen,
                     nameth: d.nameth,
@@ -376,7 +378,7 @@ export const formManager = {
                 }));
                 const subDistrict = await getSubDistricts();
                 this.subDistrictData = subDistrict.map((s) => ({
-                    id: s.id,
+                    id: s.nameen,
                     value: s.nameen,
                     text: s.nameen,
                     nameth: s.nameth,
@@ -407,14 +409,50 @@ export const formManager = {
                 actionFormManager.init(mode, flow.html);
                 attachFileManager.init(data.FILES || []);
                 if (state.FormInfo.RETURN) {
-                    $("#section-0").addClass("hidden!");
-                    setDatePicker();
-                    const curr = await getCurrency();
-                    const currData = curr.map((c) => ({
-                        value: c.CCURNAME,
-                        text: c.CCURNAME,
-                    }));
-                    await currencyManager.init(currData);
+                    console.log("inter return");
+                    //$("#section-0").addClass("hidden!");
+                        const term = await getTermcode();
+                        const termdata = term.map((t) => ({
+                            value: t.TERMCODE,
+                            text: t.TERMNAME,
+                        }));
+                        const countries = await getCountries();
+                        const countriesData = countries.map((c) => ({
+                            id: c.nameen,
+                            value: c.nameen,
+                            text:  c.nameen,
+                            nameth: c.nameth
+                        }));
+                        const province = await getProvinces();
+                        this.provinceData = province.map((p) => ({
+                            id: p.nameen,
+                            value: p.nameen,
+                            text: p.nameen,
+                            nameth: p.nameth
+                        }));
+                        const district = await getDistricts();
+                        this.districtData = district.map((d) => ({
+                            id: d.nameen,
+                            value: d.nameen,
+                            text: d.nameen,
+                            nameth: d.nameth,
+                            province_id: d.province_id   
+                        }));
+                        const subDistrict = await getSubDistricts();
+                        this.subDistrictData = subDistrict.map((s) => ({
+                            id: s.nameen,
+                            value: s.nameen,
+                            text: s.nameen,
+                            nameth: s.nameth,
+                            district_id: s.district_id,
+                            postcode: s.postcode
+                        }));
+                        paymentTermManager.init(termdata);
+                        countryManager.init(countriesData);
+                        provinceManager.init(this.provinceData);
+                        districtManager.init(this.districtData);
+                        // currencyManager.init(currData);
+                        subDistrictManager.init(this.subDistrictData);
                     this.setReturn(data);
                 } else {
                     console.log(data);
@@ -481,8 +519,28 @@ export const formManager = {
     },
     setReturn(data) {
         // Requester
-        reqByManager.value = state.FormInfo.EMPNO || "-";
+        reqByManager.value = state.FormInfo.EMPNO;
         reqByManager.input.prop("readonly", true);
+        //Request Type
+        ReqtypeManager.value = data.REQTYPE;
+        ReqtypeManager.disabled(true);
+        //Type of Job
+        typejobManager.value = data.LISTS[0].TYPEJOB;
+        //Service 
+        serviceManager.value = data.LISTS[0].SERVICE;
+        //Purpose
+        purposeManager.value = data.LISTS[0].PURPOSE;
+        //Company Name
+        comnameManager.value = data.LISTS[0].COMNAME;
+        //Vendor Type
+        vendorTypeManager.value = "Oversea";
+        //country
+        countryManager.disabled(false);
+        countryManager.value = "Thailand";
+        
+
+        
+
         // Delivery Location
         deliveryManager.checked(true, data.DELIVELY);
         // Invoice Type
@@ -595,7 +653,10 @@ export const countryManager = {
         $(".country").text(val);
     },
     set value(val) {
+       
         this.list.forEach((id) => {
+            console.log("Setting country value:", id);
+            console.log("value:", val);
             $(`#${id}`).val(val).trigger("change");
         });
     },
@@ -607,6 +668,8 @@ export const countryManager = {
      * @param {{value: string, text: string}[]} data
      */
     async init(data) {
+        console.log("===="+data);
+        
         for (const id of this.list) {
             await setSelect2({
                 id: id,
@@ -1271,6 +1334,11 @@ export const ReqtypeManager = {
         });
         this.change();
     },
+    disabled(isDisabled) {
+        console.log(this.radio);
+        
+        this.radio.prop("disabled", isDisabled);
+    },
     change() {
         const type = this.type;
         $("#A-section, #U-section, #D-section , #V-section ,#F-section").addClass("hidden");
@@ -1661,17 +1729,21 @@ export const actionFormManager = {
             if (action === "approve" && state.FormInfo.RETURN) {
                 //prettier-ignore
                 const requiredMessage = [
-                    {element: deliveryManager.radio,  message: "Please select Delivery Location."},
-                    {element: inVoiceTypeManager.checkbox, message: "Please select Invoice Type."},
-                    !thirdPartyManager.fieldset.hasClass('hidden!') ? {element: thirdPartyManager.select, message: "Please select Third Party."} : null,
-                    inVoiceTypeOtherManager.input.hasClass('req') ? {element: inVoiceTypeOtherManager.input, message: "Please input other invoice detail."} : null,
-                    {element: subjectManager.input, message: "Please input subject."},
-                    {element: invoiceNoManager.input, message: "Please input Invoice No."},
-                    {element: invoiceAmountManager.input, message: "Please input Invoice Amount."},
-                    {element: paymentTypeManager.radio, message: "Please select Payment Conditions & Terms."},
-                    {element: paymentManager.input, message: "Please input Payment Amount."},
-                    paymentNumManager.input.hasClass('req') ? {element: paymentNumManager.input, message: "Please input Number of Payment."} : null,
+                    {element: reqByManager.input, message: "Please input requester."},
+                    {element: ReqtypeManager.radio, message: "Please select Request Type."},
+                    {element: typejobManager.input, message: "Please input Type of Job."},
+                    {element: serviceManager.input, message: "Please input Service."},
+                    {element: purposeManager.input, message: "Please input Purpose."},
+                    {element: comnameManager.input, message: "Please input Company Name."},
+                    {element: ReqtypeManager.radio, message: "Please select Request Type."},
+                    {element: vendorTypeManager.radio, message: "Please select Local or Overseas."},
+                    countryManager.select.hasClass('req') ? {element: countryManager.select, message: "Please select Country."} : null,
+                    {element: provinceEnManager.input, message: "Please input Province (English)."},
+                    {element: districtEnManager.input, message: "Please input District (English)."},
+                    {element: subDistrictEnManager.input, message: "Please input Sub-District (English)."},
+                    {element: postcodeManager.input, message: "Please input Postcode (English)."},
                     {element: attachTypeManager.checkbox, message: "Please select Attach Type."},
+                    {element: attachFileManager.input, message: "Please attach files."},
                 ].filter(Boolean);
                 if (!(await requiredForm("#form", requiredMessage))) return;
                 if (attachFileManager.checkedFilesLength === 0) {
@@ -1690,10 +1762,10 @@ export const actionFormManager = {
                 formData.set("EMPNO", data.EMPNO);
                 formData.set("ACTION", action);
                 formData.set("REMARK", this.remark.val());
-                formData.set(
-                    "CURRENCY",
-                    currencyManager.getValue("curr-payment"),
-                );
+                //formData.set(
+                 //   "CURRENCY",
+                  //  currencyManager.getValue("curr-payment"),
+               // );
                 // formData.set("DELETE_FILES", state.deleteFiles || "");
                 state.deleteFiles.forEach((fileId) => {
                     formData.append("DELETE_FILES[]", String(fileId));

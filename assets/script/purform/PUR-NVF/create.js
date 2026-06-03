@@ -52,16 +52,7 @@ $(document).on("change", 'input[name="files"]', async function (e) {
 // });
 
 $(document).on("change", 'input[name="VENDOR_LOCATION"]', async function () {
-    const vendorType = vendorTypeManager.type;
     vendorTypeManager.change();
-    if(vendorType === "oversea")
-    {
-        countryManager.disabled(false);
-    }else{
-        countryManager.disabled(true);
-    }
-    
-    
 });
 
 // เมื่อเลือก PAYMENT CONDITIONS & TERMS
