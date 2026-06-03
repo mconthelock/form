@@ -107,6 +107,9 @@ export const typejobManager = {
     get input() {
         return $("#TYPEJOB");
     },
+    set text(val) {
+        this.input.text(val || "");
+    },
     get value() {
         return this.input.val();
     },
@@ -118,6 +121,9 @@ export const typejobManager = {
 export const serviceManager = {
     get input() {
         return $("#SERVICE");
+    },
+    set text(val) {
+        this.input.text(val || "");
     },
     get value() {
         return this.input.val();
@@ -131,6 +137,9 @@ export const purposeManager = {
     get input() {
         return $("#PURPOSE");
     },
+    set text(val) {
+        this.input.text(val || "");
+    },
     get value() {
         return this.input.val();
     },
@@ -142,6 +151,9 @@ export const purposeManager = {
 export const comnameManager = {
     get input() {
         return $("#COMPANY_NAME");
+    },
+    set text(val) {
+        this.input.text(val || "");
     },
     get value() {
         return this.input.val();
@@ -165,6 +177,9 @@ export const vendorTypeManager = {
             }
         });
         return type;
+    },
+    set text(val) {
+        $("#VENDOR_LOCATION").text(val);
     },
     set value(val) {
         this.radio.each(function () {
@@ -411,82 +426,49 @@ export const formManager = {
         }
     },
     setView(data) {
-        // Delivery Location
-        deliveryManager.checked(true, data.DELIVELY);
-        // Invoice Type
-        inVoiceTypeManager.checkbox.each(function () {
-            const value = $(this).val();
-            const type = $(this).attr("i-type");
-            if (data.INVOICE_TYPE.includes(value)) {
-                $(this).prop("checked", true);
-                if (type == "service") {
-                    const thirdParty =
-                        state.users
-                            .filter((u) => u.SEMPNO == data.THIRD_PARTY)
-                            .map((u) => `${u.SNAME} (${u.SEMPNO})`) || null;
-                    thirdPartyManager.show();
-                    thirdPartyManager.text = thirdParty || "N/A";
-                }
-                if (type == "other") {
-                    inVoiceTypeOtherManager.text = data.INVOICE_OTHER || "-   ";
-                }
-            }
-        });
-        // Subject
-        subjectManager.text = data.SUBJECT || "-";
-        // Accept PO
-        acceptPoManager.checked(true, data.ACCEPT_PO);
-        acceptSubconManager.text = data.ACCEPT_SUBCON || "-";
-        acceptOtherManager.text = data.ACCEPT_OTHER || "-";
-        // Quotation
-        quotationManager.text = data.QUOTATION || "-";
-        quotationDateManager.text = data.QUOTATION_DATE
-            ? formatDate(data.QUOTATION_DATE)
-            : "-";
-        // PR/PO
-        poManager.text = data.PONO || "-";
-        // Total Amount
-        totalAmountManager.text = data.TOTAL_AMOUNT || 0;
-        // Currency
-        currencyManager.text = data.CURRENCY;
-        // Invoice No
-        invoiceNoManager.text = data.INVOICE_NO || "-";
-        // Invoice Amount
-        invoiceAmountManager.text = data.INVOICE_AMOUNT || 0;
-        // Person In Charge
-        personInChargeManager.text = data.PERSON_INCHARGE || "-";
-        // Invoice Date
-        invoiceDateManager.text = data.INVOICE_DATE
-            ? formatDate(data.INVOICE_DATE)
-            : "-";
+        //Request Type
+        ReqtypeManager.value = data.REQTYPE;
+        //Type of Job  
+        typejobManager.text = data.LISTS[0].TYPEJOB || "-";
+        serviceManager.text = data.LISTS[0].SERVICE || "-";
+        purposeManager.text = data.LISTS[0].PURPOSE || "-";
 
-        // Payment Type
-        paymentTypeManager.radio.each(function () {
-            const value = $(this).val();
-            const type = $(this).attr("p-type");
-            if (data.PAYMENT_TYPE == value) {
-                $(this).prop("checked", true);
-                if (type == "manual") {
-                    // Payment Num
-                    paymentNumManager.text =
-                        ordinalIndicator(data?.PAYMENT_NUM) || "-";
-                    selectAttachType(data?.PAYMENT_NUM);
-                }
-                if (type == "final") {
-                    selectAttachType(type);
-                }
+        comnameManager.text = data.LISTS[0].COMNAME || "-";
+        vendorTypeManager.text = data.LISTS[0].VENDTYPE || "-";
+
+        $("#CONTACT").text(data.LISTS[0].CONTACT || "-");
+        $("#EMAIL").text(data.LISTS[0].EMAIL || "-");
+        $("#WEBSITE").text(data.LISTS[0].WEBSITE || "-");
+        $("#PHONE_FAX").text(data.LISTS[0].TELNO ? `${data.LISTS[0].TELNO}${data.LISTS[0].FAXNO ? " / " + data.LISTS[0].FAXNO : ""}` : "-");
+        $("#ADDRESS_EN").parent().addClass("hidden");
+        $("#ADDRESS_TH").parent().addClass("hidden");
+
+        data.ADDRESSES.forEach(function(address) {
+            const fullAddress = `${address.ADDR} ${address.SUBDISTRICT} ${address.DISTRICT} ${address.PROVINCE} ${address.POSTCODE} ${address.COUNTRY}`;
+
+            if (address.ADDRTYPE === "E") {
+                $("#ADDRESS_EN").text(fullAddress);
+                $("#ADDRESS_EN").parent().removeClass("hidden"); // แสดงกล่องอังกฤษเมื่อมีข้อมูล
+            } 
+            else if (address.ADDRTYPE === "T") {
+                $("#ADDRESS_TH").text(fullAddress);
+                $("#ADDRESS_TH").parent().removeClass("hidden"); // แสดงกล่องไทยเมื่อมีข้อมูล
             }
         });
-        // Payment Detail
-        paymentDetailManager.text = data.PAYMENT_DETAIL || "-";
-        // Payment
-        paymentManager.text = data.PAYMENT || 0;
+
+
+        $("#BANKNAME").text(data.LISTS[0].BANKNAME || "-");
+        $("#BRANCH").text(data.LISTS[0].BRANCH || "-");
+        $("#ACCNUMBER").text(data.LISTS[0].ACCNUMBER || "-");
+        $("#PAYMENT_TERM").text(data.LISTS[0].TERM.STERMDESC || "-");
+         selectAttachType(data.LISTS[0].VENDTYPE);
         // Attach Type
         attachTypeManager.show(["other"]);
-        attachTypeManager.checkbox.each(function () {
-            const value = $(this).val();
+        attachTypeManager.checkbox.each(function () {  
+            const value = $(this).val();   
             const type = $(this).attr("a-type");
             if (data.ATTACH_TYPE.includes(value)) {
+                console.log("-------------"+value);
                 $(this).prop("checked", true);
                 if (type == "other") {
                     // Attach Other

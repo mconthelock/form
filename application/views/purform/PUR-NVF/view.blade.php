@@ -55,239 +55,112 @@
                 </section>
                 <div class="divider"></div>
                 <section id="section-1">
-                <div class="flex flex-col md:flex-row gap-4 items-start md:items-center  pb-2">
-                <span class="w-32 shrink-0 font-semibold text-gray-950">Request Type</span>  
-                <div class="flex flex-row items-center gap-6 h-8 overflow-x-auto whitespace-nowrap">
-                    <label class="flex items-center gap-2 cursor-pointer">
+                    <h2 class="font-bold text-xl mb-3 required">Request Details</h2>
+                         <div class="mb-8 bg-gray-50 p-5 rounded-xl border border-gray-100">
+                    <div class="flex flex-col md:flex-row gap-4 items-start md:items-center pb-2 w-full">
+                    <span class="w-32 shrink-0 text-gray-950">Request Type</span>  
+                    <div class="flex items-center gap-6 h-8">
+                        <label class="flex items-center gap-2 cursor-pointer">
                             <input type="radio" name="REQTYPE" value="A" r-type="A" class="radio radio-xs req" disabled>
-                            <span class="text-sm  font-semibold">Add</span>
-                    </label>
-                    <label class="flex items-center gap-2 cursor-pointer">
+                            <span class="text-sm ">Add</span>
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer">
                             <input type="radio" name="REQTYPE" value="U" r-type="U" class="radio radio-xs req" disabled>
-                            <span class="text-sm font-semibold">Update</span>
-                    </label>
-                    <label class="flex items-center gap-2 cursor-pointer">
+                            <span class="text-sm ">Update</span>
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer">
                             <input type="radio" name="REQTYPE" value="D" r-type="D" class="radio radio-xs req" disabled>
-                            <span class="text-sm font-semibold">Delete</span>
-                    </label>
-                </div>
-                </div>
-                <div class="flex items-start gap-4 mb-4">
-                        <span class="required w-32 shrink-0 pt-2 font-semibold">Type of Job</span>
-                        
-                        <label class="flex-1">
-                           <div id="TYPEJOB" class="subject-text"></div>     
+                            <span class="text-sm">Delete</span>
                         </label>
+                    </div>
+                </div> 
+                <div class="flex flex-col md:flex-row gap-4 items-start md:items-center pb-2 w-full">
+                    <span class="w-32 shrink-0 text-gray-950">Type of Job</span>  
+                    <div class="flex items-center gap-6 h-8">
+                        <div id="TYPEJOB" class="w-full"></div>
+                    </div>
+                </div> 
+                <div class="flex flex-col md:flex-row gap-4 items-start md:items-center pb-2 w-full">
+                    <span class="w-32 shrink-0  text-gray-950">Service</span>  
+                    <div class="flex items-center gap-6 h-8">
+                        <div id="SERVICE" class="w-full"></div>
+                    </div>
+                </div> 
+                    <div class="flex flex-col md:flex-row gap-4 items-start md:items-center pb-2 w-full">
+                    <span class="w-32 shrink-0  text-gray-950">Purpose</span>  
+                    <div class="flex items-center gap-6 h-8">
+                        <div id="PURPOSE" class="w-full"></div>
+                    </div>
+                </div> 
                 </div>
-                <div class="flex items-start gap-4 mb-4">
-                        <span class="required w-32 shrink-0 pt-2 font-semibold">Service</span>
-                        
-                        <label class="flex-1">
-                            <textarea name="SERVICE" id="SERVICE" rows="6" maxlength="1000" class="textarea w-full req" placeholder="1) IT System Integration & Network Infrastructure:Providing comprehensive design, installation, and maintenance of IT systems and network structures.&#10;2) Data Center Infrastructure Solutions: Design, installation, and managment of sercer rooms, including racking, cooling&#10;systems, and power backup (UPS).&#10;3) Integrated CCTV & Surveillance Systems: Provision of end-toend security monitoring solutions, encompassing camera&#10;deployment and network recording setup."></textarea>
-                        </label>
-                </div>
-                <div class="flex items-start gap-4">
-                        <span class="required w-32 shrink-0 pt-2 font-semibold">Purpose</span>
-                        
-                        <label class="flex-1">
-                            <textarea name="PURPOSE" id="PURPOSE" rows="5" maxlength="1000" class="textarea w-full req" placeholder="To register the winning bidder for the Network Installation of Wireless Access Points project."></textarea>
-                        </label>
-                </div>
-                    <fieldset class="gap-4">
-                        <span class="required">Delivery locate: </span>
-                        <label>
-                            <input type="radio" name="DELIVELY" value="Internal AMEC" class="radio radio-xs req"
-                                disabled>
-                            Internal AMEC
-                        </label>
-                        <label>
-                            <input type="radio" name="DELIVELY" value="Out Side AMEC" class="radio radio-xs req"
-                                disabled>
-                            Out Side AMEC
-                        </label>
-                    </fieldset>
-                    <fieldset class="gap-8">
-                        <span class="required">Invoice Type: </span>
-                        <div class="flex flex-col gap-2 w-full">
-                            <label>
-                                <input type="checkbox" name="INVOICE_TYPE"
-                                    value="Trial Parts, Sample Parts (Ship to other)" class="checkbox checkbox-xs req"
-                                    i-type="trial" disabled>
-                                Trial Parts, Sample Parts (Ship to other)
-                            </label>
-                            <label>
-                                <input type="checkbox" name="INVOICE_TYPE"
-                                    value="Indirec Parts, None Production Parts (Ship direct to requester's area.)"
-                                    class="checkbox checkbox-xs req" i-type="indirec" disabled>
-                                Indirec Parts, None Production Parts (Ship direct to requester's area.)
-                            </label>
-                            <label>
-                                <input type="checkbox" name="INVOICE_TYPE" value="Services / Construction / Building"
-                                    class="checkbox checkbox-xs req" i-type="service" disabled>
-                                Services / Construction / Building
-                            </label>
-                            <label>
-                                <input type="checkbox" name="INVOICE_TYPE" value="Molds, DIE"
-                                    class="checkbox checkbox-xs req" i-type="molds" disabled>
-                                Molds, DIE
-                            </label>
-                            <label>
-                                <input type="checkbox" name="INVOICE_TYPE" value="Machine"
-                                    class="checkbox checkbox-xs req" i-type="machine" disabled>
-                                Machine
-                            </label>
-                            <label>
-                                <input type="checkbox" name="INVOICE_TYPE" value="Maintenance, Rental, Software, etc."
-                                    class="checkbox checkbox-xs req" i-type='maintenance' disabled>
-                                Maintenance, Rental, Software, etc.
-                            </label>
-                            <div class="w-full flex gap-5">
-                                <label class="w-16!">
-                                    <input type="checkbox" name="INVOICE_TYPE" value="Other"
-                                        class="checkbox checkbox-xs req" i-type='other' disabled>
-                                    Other
-                                </label>
-                                <span class="subject-text" id="INVOICE_OTHER"></span>
-                            </div>
-                        </div>
-                    </fieldset>
-                    <fieldset class="gap-10 hidden!" id="third-party-fieldset">
-                        <span class="required">Third Party: </span>
-                        <span id="THIRD_PARTY"></span>
-                    </fieldset>
                 </section>
                 <div class="divider"></div>
                 <section id="section-2">
-                    <fieldset class="gap-8">
-                        <span class="required leading-[2em]">Subject: </span>
-                        <label>
-                            <div id="SUBJECT" class="subject-text"></div>
-                            {{-- <textarea name="SUBJECT" id="SUBJECT" maxlength="512" class="textarea w-full req"
-                                placeholder="Device UTP Cat6 for LAN Access point (2 Points) ESA Factory"
-                                disabled></textarea> --}}
-                        </label>
-                    </fieldset>
-                </section>
-                <div class="divider"></div>
-                <section id="section-3">
-                    <fieldset class="gap-8">
-                        <span>ACCEPT P/O BY</span>
-                        <div class="flex flex-col gap-2 w-full">
-                            <label class="flex items-center gap-2">
-                                <input type="radio" name="ACCEPT_PO" value="Sub-con / Vendor" class="radio radio-xs"
-                                    a-type="subcon" disabled>
-                                <span class="text-nowrap w-fit">
-                                    Sub-con / Vendor
-                                </span>
-                                <div id="ACCEPT_SUBCON" class="subject-text"></div>
-                            </label>
-                            <label class="flex items-center gap-2">
-                                <input type="radio" name="ACCEPT_PO" value="Other" class="radio radio-xs" a-type="other"
-                                    disabled>
-                                <span class="text-nowrap w-fit">
-                                    Other
-                                </span>
-                                <div id="ACCEPT_OTHER" class="subject-text"></div>
-                            </label>
-                        </div>
-                    </fieldset>
-                    <div class="flex gap-8">
-                        <div class="flex flex-col gap-2 w-1/2">
-                            <fieldset class="gap-4">
-                                <span>Quotation No.</span>
-                                <div id="QUOTATION" class="subject-text"></div>
-                            </fieldset>
-                            <fieldset class="gap-10">
-                                <span>PR/PO No.</span>
-                                <div id="PONO" class="subject-text"></div>
-                            </fieldset>
-                            {{-- <fieldset class="gap-9">
-                                <span>P/O sign by</span>
-                                <div id="PO_SIGNBY" class="subject-text"></div>
-                            </fieldset> --}}
-                        </div>
-                        <div class="flex flex-col gap-2 w-1/2">
-                            <fieldset class="gap-11">
-                                <span>Date: (version)</span>
-                                <div id="QUOTATION_DATE" class="subject-text"></div>
-                            </fieldset>
-                            <fieldset class="gap-2">
-                                <span>Total Amount (<span class="currency"></span>)</span>
-                                <div id="TOTAL_AMOUNT" class="subject-text"></div>
-                            </fieldset>
-                            {{-- <fieldset class="gap-24">
-                                <span>DATE : </span>
-                                <div id="PO_SIGNDATE" class="subject-text"></div>
-                            </fieldset> --}}
-                        </div>
-                    </div>
-                    {{-- <fieldset class="gap-4">
-                        <label>
-                            <input type="radio" name="FORM_TYPE" value="Print out Documents or E-mail"
-                                class="radio radio-xs" disabled>
-                            Print out Documents or E-mail
-                        </label>
-                        <label>
-                            <input type="radio" name="FORM_TYPE" value="Electronic Form (SCM)" class="radio radio-xs"
-                                disabled>
-                            Electronic Form (SCM)
-                        </label>
-                    </fieldset> --}}
-                </section>
-                <div class="divider"></div>
-                <section id="section-4">
-                    <div class="flex gap-8">
-                        <div class="flex flex-col gap-2 w-1/2">
-                            <fieldset class="gap-4">
-                                <span class="required">INVOICE NO.</span>
-                                <div id="INVOICE_NO" class="subject-text"></div>
-                            </fieldset>
-                            <fieldset class="gap-4">
-                                <span>AMEC Person in charge</span>
-                                <div id="PERSON_INCHARGE" class="subject-text"></div>
-                            </fieldset>
-                        </div>
-                        <div class="flex flex-col gap-2 w-1/2">
-                            <fieldset class="gap-8">
-                                <span class="required">Amount (<span class="currency"></span>)</span>
-                                <div id="INVOICE_AMOUNT" class="subject-text"></div>
-                            </fieldset>
-                            <fieldset class="gap-22">
-                                <span>DATE : </span>
-                                <div id="INVOICE_DATE" class="subject-text"></div>
-                            </fieldset>
-                        </div>
-                    </div>
-                </section>
-                <div class="divider"></div>
-                <section id="section-5">
-                    <h2 class="font-bold text-xl mb-3 required">PAYMENT CONDITIONS & TERMS</h2>
-                    <div class="flex gap-8 justify-between">
-                        <fieldset class="flex-col gap-4">
-                            <label>
-                                <input type="radio" name="PAYMENT_TYPE" value="payment condition (If any)"
-                                    p-type="manual" class="radio radio-xs req" disabled>
-                                <span id="PAYMENT_NUM" class="subject-text"></span>
-                                payment condition (If any)
-                            </label>
-                            <label>
-                                <input type="radio" name="PAYMENT_TYPE"
-                                    value="Final payment condition (or 100% payment)" p-type="final"
-                                    class="radio radio-xs req" disabled>
-                                Final payment condition (or 100% payment)
-                            </label>
-                            <div>
-                            </div>
-                        </fieldset>
-                        <fieldset>
-                            <span id="PAYMENT" class="mr-5"></span>
-                            <label>
-                                <span class="required">(<span class="currency"></span>)</span>
-                            </label>
-                        </fieldset>
-                    </div>
-                </section>
-                <div id="PAYMENT_DETAIL" class="subject-text"></div>
+                    <h2 class="font-bold text-xl mb-3 required">Vendor Information Detail</h2>
+                    <div class="mb-8 bg-gray-50 p-5 rounded-xl border border-gray-100">
+        <h3 class="text-primary font-bold   tracking-wider mb-4">Company Profile & Contact</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-8">
+            <div>
+                <span class="block text-xs font-medium text-gray-400 ">Company Name</span>
+                <span id="COMPANY_NAME" class="text-base font-semibold text-gray-900"></span><span id="VENDOR_LOCATION" class="badge badge-sm badge-success ml-2 text-xs"></span>
+            </div>
+            <div>
+                <span class="block text-xs font-medium text-gray-400 ">Contact Name</span>
+                <span id="CONTACT" class="text-base font-semibold text-gray-900"></span>
+            </div>
+            <div>
+                <span class="block text-xs font-medium text-gray-400 ">Email</span>
+                <span id="EMAIL" class="text-base text-gray-900"></span>
+            </div>
+            <div>
+                <span class="block text-xs font-medium text-gray-400 ">Web site</span>
+                <span id="WEBSITE" class="text-base text-gray-900"></span>
+            </div>
+            <div>
+                <span class="block text-xs font-medium text-gray-400 ">Tel.no / Fax.no</span>
+                <span id="PHONE_FAX" class="text-base text-gray-900"></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="mb-8 bg-gray-50 p-5 rounded-xl border border-gray-100">
+        <h3 class="text-primary font-bold   tracking-wider mb-4">Address Details</h3>
+        <div>
+            <span class="block text-xs font-medium text-gray-400  mb-1">Address (EN)</span>
+            <p id="ADDRESS_EN" class="text-base text-gray-900 bg-white p-3 rounded-lg border border-gray-200 leading-relaxed">
+                
+            </p>
+        </div>
+            <div class="mb-4">
+            <span class="block text-xs font-medium text-gray-400  mb-1">Address (TH)</span>
+            <p id="ADDRESS_TH" class="text-base text-gray-900 bg-white p-3 rounded-lg border border-gray-200 leading-relaxed">
+               
+            </p>
+        </div>
+    </div>
+
+    <div class="mb-8 bg-gray-50 p-5 rounded-xl border border-gray-100">
+        <h3 class="text-primary font-bold   tracking-wider mb-4">Payment & Banking Information</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-8">
+            <div>
+                <span class="block text-xs font-medium text-gray-400 ">Bank Name</span>
+                <span id="BANKNAME" class="text-base font-semibold text-gray-900"></span>
+            </div>
+            <div>
+                <span class="block text-xs font-medium text-gray-400 ">Branch Name</span>
+                <span id="BRANCH" class="text-base text-gray-900"></span>
+            </div>
+            <div>
+                <span class="block text-xs font-medium text-gray-400 ">Account Number</span>
+                <span id="ACCNUMBER" class="text-base font-mono font-bold text-gray-900 tracking-wider">739-2-XXXXX-X</span>
+            </div>
+            <div>
+                <span class="block text-xs font-medium text-gray-400 ">Payment Term</span>
+                <span id="PAYMENT_TERM" class="text-base font-semibold text-gray-900"></span>
+            </div>
+        </div>
+    </div>
+</section>
                 <div class="divider"></div>
                 <section>
                     <h2 class="font-bold text-xl mb-3 required">Attach files</h2>
