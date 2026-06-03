@@ -152,24 +152,19 @@ export async function approveReturn(formData) {
  * });
  */
 export async function getData(form) {
-     const res = await fetch(
-        `${process.env.APP_API}/purform/pur-cpm/data`,
-        serializeRequestBody(form)
-    );
-    if (!res.ok) {
-        await fetchMsgErr(res);
-        throw new Error("Failed to create form");
-    }
-    const data = await res.json();
-    return data;
-}
-
-export async function getCurrency(){
     return fetchUtils({
-        url: `${process.env.APP_API}/amec/brcurrency/currency`,
-        method: "GET",
+        url: `${process.env.APP_API}/purform/purnvf-form/data`,
+        method: "POST",
+        data: form
     });
 }
+
+// export async function getCurrency(){
+//     return fetchUtils({
+//         url: `${process.env.APP_API}/amec/brcurrency/currency`,
+//         method: "GET",
+//     });
+// }
 
 export async function getTermcode(){
     return fetchUtils({

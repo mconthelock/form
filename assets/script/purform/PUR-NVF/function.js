@@ -1,4 +1,3 @@
-
 import { attachTypeManager } from "./formManager";
 export function selectAttachType(type) {
     console.log(type);
@@ -18,4 +17,15 @@ export function selectAttachType(type) {
             ]);
             break;
     }
+}
+
+export async function clearaddr(){
+    $("#PROVINCE_TH").val("");
+    $("#PROVINCE_EN").val("");
+    $("#DISTRICT_TH").val("");
+    $("#DISTRICT_EN").val("");
+    $("#SUB_DISTRICT_EN").val("");
+    $("#SUB_DISTRICT_TH").val("");
+    $("#POSTCODE_EN").val("");
+    $("#POSTCODE_TH").val("");
 }

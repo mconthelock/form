@@ -235,7 +235,7 @@
                                 </div>
                                 <div>
                                     <label class="block mb-1 text-xs font-bold text-gray-600">รหัสไปรษณีย์ </label>
-                                    <input type="text" name="POSTCODE_TH" id="POSTCODE_TH" maxlength="50" class="input input-bordered input-sm w-full  bg-gray-50 border-gray-300" placeholder="xxxxx">
+                                    <input type="text" name="POSTCODE_TH" id="POSTCODE_TH" maxlength="50" class="input input-bordered input-sm w-full  bg-gray-50 border-gray-300" placeholder="รหัสไปรษณีย์">
                                 </div>
                             </div>
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">

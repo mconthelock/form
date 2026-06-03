@@ -1,8 +1,9 @@
 import select2 from "select2";
 import { getUser, searchUser } from "@amec/webasset/api/amec";
 import { doaction, showflow } from "@amec/webasset/api/webform";
-import { webflowSubmit } from "@amec/webasset/components/form";
-import { redirectWebflow, setformDetail } from "@amec/webasset/form";
+import { webflowSubmit , getformDetail } from "@amec/webasset/components/form";
+import { redirectWebflow  } from "@amec/webasset/form";
+
 import { showLoader } from "@amec/webasset/preloader";
 import { formSubmitSkeleton } from "@amec/webasset/skeleton";
 import {
@@ -16,11 +17,11 @@ import {
     showErrorMessage,
     showMessage,
 } from "@amec/webasset/utils";
-import { approveReturn, create, getCurrency, getData , getTermcode , getCountries, getProvinces ,getDistricts , getSubDistricts } from "./data";
+import { approveReturn, create, getData , getTermcode , getCountries, getProvinces ,getDistricts , getSubDistricts } from "./data";
 import { dragDropInit } from "@amec/webasset/dragdrop";
 import { setDatefpk, setDatePicker } from "@amec/webasset/flatpickr";
 import { setSelect2 } from "@amec/webasset/select2";
-import { selectAttachType } from "./function";
+import { selectAttachType , clearaddr } from "./function";
 import { formatDate } from "@amec/webasset/dayjs";
 import { classIcofont } from "@amec/webasset/fileExplorer";
 import Swal from "sweetalert2";
@@ -180,6 +181,7 @@ export const vendorTypeManager = {
         attachTypeManager.reset("other");
         const type = this.type;
         selectAttachType(type);
+        clearaddr();
         if (type == "local") {
             $(".field-local").removeClass("hidden").addClass("req");
             $(".field-oversea").addClass("hidden").removeClass("req");
@@ -324,12 +326,12 @@ export const formManager = {
         switch (mode) {
             case 1: // create
                 attachFileManager.init();
-                setDatePicker();
-               const curr = await getCurrency();
-                const currData = curr.map((c) => ({
-                    value: c.CCURNAME,
-                    text: c.CCURNAME,
-                }));
+                // setDatePicker();
+            //    const curr = await getCurrency();
+            //     const currData = curr.map((c) => ({
+            //         value: c.CCURNAME,
+            //         text: c.CCURNAME,
+            //     }));
                 const term = await getTermcode();
                 const termdata = term.map((t) => ({
                     value: t.TERMCODE,
@@ -370,7 +372,7 @@ export const formManager = {
                 countryManager.init(countriesData);
                 provinceManager.init(this.provinceData);
                 districtManager.init(this.districtData);
-                currencyManager.init(currData);
+                // currencyManager.init(currData);
                 subDistrictManager.init(this.subDistrictData);
                 actionFormManager.init(mode);
                 break;
@@ -385,7 +387,8 @@ export const formManager = {
                 };
                 const flow = await showflow(form);
                 const data = await getData(form);
-                this.formDetail = await setformDetail(form);
+               // this.formDetail = await setformDetail(form);
+                this.formDetail = await getformDetail(form);
                 actionFormManager.init(mode, flow.html);
                 attachFileManager.init(data.FILES || []);
                 if (state.FormInfo.RETURN) {
@@ -399,6 +402,7 @@ export const formManager = {
                     await currencyManager.init(currData);
                     this.setReturn(data);
                 } else {
+                    console.log(data);
                     this.setView(data);
                 }
                 break;
@@ -650,7 +654,7 @@ export const countryManager = {
     },
 async change(e) {
     // 💡 แก้ไขตรงนี้: ใช้คอมมา (,) ห้ามใช้เครื่องหมายบวก (+) เด็ดขาด
-    console.log("Data ทั้งก้อนจาก Select2:", e.params.data);
+    //console.log("Data ทั้งก้อนจาก Select2:", e.params.data);
 
     if (e && e.params && e.params.data) {
         const selectedCountry = e.params.data;
