@@ -1,8 +1,8 @@
-import { attachTypeManager } from "./formManager";
+import { attachTypeManager, districtEnManager, districtThManager, postcodeEnManager, postcodeThManager, provinceEnManager, provinceThManager, subDistrictEnManager, subDistrictThManager } from "./formManager";
 export function selectAttachType(type) {
     console.log(type);
     switch (type) {
-        case "oversea":
+        case "Oversea":
             attachTypeManager.show([
                 "cer",
                 "other",
@@ -20,12 +20,12 @@ export function selectAttachType(type) {
 }
 
 export async function clearaddr(){
-    $("#PROVINCE_TH").val("");
-    $("#PROVINCE_EN").val("");
-    $("#DISTRICT_TH").val("");
-    $("#DISTRICT_EN").val("");
-    $("#SUB_DISTRICT_EN").val("");
-    $("#SUB_DISTRICT_TH").val("");
-    $("#POSTCODE_EN").val("");
-    $("#POSTCODE_TH").val("");
+    provinceThManager.value = "";
+    provinceEnManager.value = "";
+    districtThManager.value = "";
+    districtEnManager.value = "";
+    subDistrictThManager.value = "";
+    subDistrictEnManager.value = "";
+    postcodeThManager.value = "";
+    postcodeEnManager.value = "";
 }

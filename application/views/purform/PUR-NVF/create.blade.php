@@ -133,11 +133,11 @@
                    <div class="flex items-center justify-between gap-4 h-8 pl-4 md:pl-0 pt-1 md:pt-2 w-full">
                     <div class="flex items-center gap-6 shrink-0">
                         <label class="flex items-center gap-2 cursor-pointer">
-                            <input type="radio" name="VENDOR_LOCATION" value="Local" v-type="local" class="radio radio-xs req" >
+                            <input type="radio" name="VENDOR_LOCATION" value="Local" v-type="Local" class="radio radio-xs req" >
                             <span class="text-sm font-semibold">Local</span>
                         </label>
                         <label class="flex items-center gap-2 cursor-pointer">
-                            <input type="radio" name="VENDOR_LOCATION" value="Oversea" v-type="oversea" class="radio radio-xs req">
+                            <input type="radio" name="VENDOR_LOCATION" value="Oversea" v-type="Oversea" class="radio radio-xs req">
                             <span class="text-sm font-semibold">Oversea</span>
                         </label>
                     </div>

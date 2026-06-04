@@ -197,21 +197,21 @@ export const vendorTypeManager = {
         const type = this.type;
         selectAttachType(type);
         clearaddr();
-        if (type == "local") {
+        if (type == "Local") {
             $(".field-local").removeClass("hidden").addClass("req");
             $(".field-oversea").addClass("hidden").removeClass("req");
             $(".field-oversea").val("");
-            $("#COUNTRY_EN").val("Thailand");
-            $("#COUNTRY_TH").val("ไทย");
-             countryManager.disabled(true);
+            countryEnManager.value = "Thailand";
+            countryThManager.value = "ไทย";
+            countryManager.disabled(true);
         }else
         {
             $(".field-oversea").removeClass("hidden").addClass("req");
             $(".field-local").addClass("hidden").removeClass("req");
             $(".field-local").val("");
-             $("#COUNTRY_EN").val("");
-             $("#COUNTRY_TH").val("");
-             countryManager.disabled(false);
+            countryEnManager.value = "";
+            countryThManager.value = "";
+            countryManager.disabled(false);
         }
         
         
@@ -220,7 +220,7 @@ export const vendorTypeManager = {
 
 // -------------------------- End Vendor Type Manager -------------------
 
-export const addrManager = {
+export const addrEnManager = {
     get input() {
         return $("#ADDRESS_EN");
     },
@@ -274,7 +274,7 @@ export const subDistrictEnManager = {
 
 };
 
-export const postcodeManager = {
+export const postcodeEnManager = {
     get input() {       
         return $("#POSTCODE_EN");
     },
@@ -286,6 +286,98 @@ export const postcodeManager = {
     },
     
 
+};
+
+export const countryEnManager = {
+    get input() {
+        return $("#COUNTRY_EN");
+    },
+    get value() {
+        return this.input.val();
+    },
+    set value(val) {
+        this.input.val(val);
+    },
+};
+
+export const addrThManager = {
+    get input() {
+        return $("#ADDRESS_TH");
+    },
+    get value() {
+        return this.input.val();
+    },
+    set value(val) {
+        this.input.val(val);
+    },
+};
+
+export const provinceThManager = {
+    get input() {       
+        return $("#PROVINCE_TH");
+    },
+    get value() {
+        return this.input.val();
+    },
+    set value(val) {
+        this.input.val(val);
+    },
+    
+
+};
+
+export const districtThManager = {
+    get input() {       
+        return $("#DISTRICT_TH");
+    },
+    get value() {
+        return this.input.val();
+    },
+    set value(val) {
+        this.input.val(val);
+    },
+    
+
+};
+
+export const subDistrictThManager = {
+    get input() {       
+        return $("#SUB_DISTRICT_TH");
+    },
+    get value() {
+        return this.input.val();
+    },
+    set value(val) {
+        this.input.val(val);
+    },
+    
+
+};
+
+export const postcodeThManager = {
+    get input() {       
+        return $("#POSTCODE_TH");
+    },
+    get value() {
+        return this.input.val();
+    },
+    set value(val) {
+        this.input.val(val);
+    },
+    
+
+};
+
+export const countryThManager = {
+    get input() {
+        return $("#COUNTRY_TH");
+    },
+    get value() {
+        return this.input.val();
+    },
+    set value(val) {
+        this.input.val(val);
+    },
 };
 
 export const vendorCodeManager = {
@@ -519,6 +611,8 @@ export const formManager = {
     },
     setReturn(data) {
         // Requester
+      
+        
         reqByManager.value = state.FormInfo.EMPNO;
         reqByManager.input.prop("readonly", true);
         //Request Type
@@ -533,57 +627,47 @@ export const formManager = {
         //Company Name
         comnameManager.value = data.LISTS[0].COMNAME;
         //Vendor Type
-        vendorTypeManager.value = "Oversea";
-        //country
-        countryManager.disabled(false);
-        countryManager.value = "Thailand";
-        
-
-        
-
-        // Delivery Location
-        deliveryManager.checked(true, data.DELIVELY);
-        // Invoice Type
-        inVoiceTypeManager.checked = data.INVOICE_TYPE.split("|");
-        // Invoice Type Other
-        inVoiceTypeOtherManager.value = data.INVOICE_OTHER || "";
-        // THIRD PARTY
-        if (data.THIRD_PARTY) {
-            thirdPartyManager.value =
-                state.users.find((u) => u.SEMPNO == data.THIRD_PARTY)?.SEMPNO ||
-                "";
+        vendorTypeManager.value = data.LISTS[0].VENDTYPE;
+        if (data.ADDRESSES && data.ADDRESSES.length > 0 && data.LISTS[0].VENDTYPE === "Oversea") {
+            countryManager.value = data.ADDRESSES[0].COUNTRY;
         }
-        // Subject
-        subjectManager.value = data.SUBJECT || "";
-        // Accept PO
-        acceptPoManager.value = data.ACCEPT_PO || "";
-        acceptSubconManager.value = data.ACCEPT_SUBCON || "";
-        acceptOtherManager.value = data.ACCEPT_OTHER || "";
-        // Quotation
-        quotationManager.value = data.QUOTATION || "";
-        quotationDateManager.value = formatDate(data.QUOTATION_DATE);
-        // PR/PO
-        poManager.value = data.PONO || "";
-        // Total Amount
-        totalAmountManager.value = data.TOTAL_AMOUNT || 0;
-        // Currency
-        currencyManager.value = data.CURRENCY || "";
-        // Invoice No
-        invoiceNoManager.value = data.INVOICE_NO || "";
-        // Invoice Amount
-        invoiceAmountManager.value = data.INVOICE_AMOUNT || 0;
-        // Person In Charge
-        personInChargeManager.value = data.PERSON_INCHARGE || "";
-        // Invoice Date
-        invoiceDateManager.value = formatDate(data.INVOICE_DATE);
-        // Payment Type
-        paymentTypeManager.value = data.PAYMENT_TYPE || "";
-        // Payment Num
-        paymentNumManager.value = data.PAYMENT_NUM || "";
-        // Payment Detail
-        paymentDetailManager.value = data.PAYMENT_DETAIL || "";
-        // Payment
-        paymentManager.value = data.PAYMENT || 0;
+        for (const address of data.ADDRESSES) { 
+            if (address.ADDRTYPE === "E") {
+                if(data.LISTS[0].VENDTYPE === "Local")
+                {
+                    addrEnManager.value = address.ADDR || "";
+                    provinceManager.value = address.PROVINCE;
+                    districtManager.value = address.DISTRICT;
+                    subDistrictManager.value = address.SUBDISTRICT;
+                }else
+                {
+                    addrEnManager.value = address.ADDR || "";
+                    provinceEnManager.value = address.PROVINCE;
+                    districtEnManager.value = address.DISTRICT;
+                    subDistrictEnManager.value = address.SUBDISTRICT;
+                }
+                postcodeEnManager.value = address.POSTCODE;
+                countryEnManager.value = address.COUNTRY;
+            }else{
+                addrThManager.value = address.ADDR || "";
+                provinceThManager.value = address.PROVINCE;
+                districtThManager.value = address.DISTRICT;
+                subDistrictThManager.value = address.SUBDISTRICT;
+                postcodeThManager.value = address.POSTCODE;
+                countryThManager.value = address.COUNTRY;
+            }
+        }
+        $("#CONTACT").val(data.LISTS[0].CONTACT || "");
+        $("#EMAIL").val(data.LISTS[0].EMAIL || "");
+        $("#WEBSITE").val(data.LISTS[0].WEBSITE || "");
+        $("#TELNO").val(data.LISTS[0].TELNO || "");
+        $("#FAXNO").val(data.LISTS[0].FAXNO || "");
+        $("#BANKNAME").val(data.LISTS[0].BANKNAME || "");
+        $("#BRANCH").val(data.LISTS[0].BRANCH || "");
+        $("#ACCNUMBER").val(data.LISTS[0].ACCNUMBER || "");
+        console.log(data.LISTS[0].TERMCODE);
+        
+        paymentTermManager.value = data.LISTS[0].TERMCODE;
         // Attach Type
         attachTypeManager.checked = data.ATTACH_TYPE.split("|");
         // Attach Other
@@ -655,8 +739,6 @@ export const countryManager = {
     set value(val) {
        
         this.list.forEach((id) => {
-            console.log("Setting country value:", id);
-            console.log("value:", val);
             $(`#${id}`).val(val).trigger("change");
         });
     },
@@ -668,7 +750,6 @@ export const countryManager = {
      * @param {{value: string, text: string}[]} data
      */
     async init(data) {
-        console.log("===="+data);
         
         for (const id of this.list) {
             await setSelect2({
@@ -703,8 +784,9 @@ async change(e) {
 
     if (e && e.params && e.params.data) {
         const selectedCountry = e.params.data;
-        $("#COUNTRY_EN").val(selectedCountry.text || "");
-        $("#COUNTRY_TH").val(selectedCountry.nameth || "");
+        countryEnManager.value = selectedCountry.text || "";
+        countryThManager.value = selectedCountry.nameth || "";
+        
     }
 },
 disabled(status) {
@@ -773,8 +855,9 @@ export const provinceManager = {
     async change(e) {
     if (e && e.params && e.params.data) {
         const selectedProvince = e.params.data;
-        $("#PROVINCE_TH").val(selectedProvince.nameth || "");
-        $("#PROVINCE_EN").val(selectedProvince.text || "");
+        provinceThManager.value = selectedProvince.nameth || "";
+        provinceEnManager.value = selectedProvince.text || "";
+       
     }
 }
 };
@@ -830,8 +913,8 @@ export const districtManager = {
     async change(e) {
     if (e && e.params && e.params.data) {
         const selectedDistrict = e.params.data;
-        $("#DISTRICT_TH").val(selectedDistrict.nameth || "");
-        $("#DISTRICT_EN").val(selectedDistrict.text || "");
+        districtThManager.value = selectedDistrict.nameth || "";
+        districtEnManager.value = selectedDistrict.text || "";
     }
     }
 };
@@ -887,428 +970,13 @@ export const subDistrictManager = {
     async change(e) {
     if (e && e.params && e.params.data) {
         const selectedSubDistrict = e.params.data;
-        $("#SUB_DISTRICT_TH").val(selectedSubDistrict.nameth || "");
-        $("#SUB_DISTRICT_EN").val(selectedSubDistrict.text || "");
-        console.log(selectedSubDistrict.postcode );
-        
-        $("#POSTCODE_EN").val(selectedSubDistrict.postcode || "");
-        $("#POSTCODE_TH").val(selectedSubDistrict.postcode || "");
+        subDistrictThManager.value = selectedSubDistrict.nameth || "";
+        subDistrictEnManager.value = selectedSubDistrict.text || "";
+        postcodeEnManager.value = selectedSubDistrict.postcode || "";
+        postcodeThManager.value = selectedSubDistrict.postcode || "";
     }
     }
 };
-
-export const currencyManager = {
-    list: ["curr-total", "curr-invoice", "curr-payment"],
-    get select() {
-        return $(".currency");
-    },
-    set text(val) {
-        $(".currency").text(val);
-    },
-    set value(val) {
-        this.list.forEach((id) => {
-            $(`#${id}`).val(val).trigger("change");
-        });
-    },
-    getValue(id) {
-        return $(`#${id}`).val();
-    },
-    /**
-     * Initialize select2 for currency fields
-     * @param {{value: string, text: string}[]} data
-     */
-    async init(data) {
-        for (const id of this.list) {
-            await setSelect2({
-                id: id,
-                data: data,
-                size: "sm",
-                placeholder: "BTH",
-                search: false,
-                clear: false,
-                emptyValue: false,
-            });
-        }
-    },
-    /**
-     * Sync value to other select2 element
-     * @param {string} value
-     * @param {HTMLElement} element
-     */
-    syncValue(value, element) {
-        for (const id of this.list) {
-            if (!$("#" + id).is(element)) {
-                $("#" + id)
-                    .val(value.toUpperCase())
-                    .trigger("change");
-            }
-        }
-    },
-};
-
-const deliveryManager = {
-    get radio() {
-        return $('input[name="DELIVELY"]');
-    },
-    checked(isChecked, value) {
-        this.radio.each(function () {
-            if ($(this).val() == value) {
-                $(this).prop("checked", isChecked);
-            }
-        });
-    },
-};
-
-// -------------------------- Invoice Type Manager --------------------------
-export const inVoiceTypeManager = {
-    get checkbox() {
-        return $('input[name="INVOICE_TYPE"]');
-    },
-    get values() {
-        const values = [];
-        this.checkbox.each(function () {
-            if ($(this).is(":checked")) {
-                values.push($(this).val());
-            }
-        });
-        return values;
-    },
-    get types() {
-        const types = [];
-        this.checkbox.each(function () {
-            if ($(this).is(":checked")) {
-                types.push($(this).attr("i-type"));
-            }
-        });
-        return types;
-    },
-    set checked(vals) {
-        this.checkbox.each(function () {
-            if (vals.includes($(this).val())) {
-                $(this).prop("checked", true);
-            }
-        });
-        this.change();
-    },
-    unchecked(type) {
-        this.checkbox.each(function () {
-            if ($(this).attr("i-type") == type) {
-                $(this).prop("checked", false);
-            }
-        });
-        this.change();
-    },
-    async change() {
-        const types = this.types;
-        types.includes("other")
-            ? inVoiceTypeOtherManager.disabled(false)
-            : inVoiceTypeOtherManager.disabled(true);
-        if (types.includes("service")) {
-            if (reqByManager.value == "") {
-                showMessage("Please input requester", "warning");
-                this.unchecked("service");
-                return;
-            }
-            await thirdPartyManager.init(reqByManager.value);
-        } else {
-            thirdPartyManager.hide();
-        }
-    },
-};
-
-const inVoiceTypeOtherManager = {
-    get input() {
-        return $("#INVOICE_OTHER");
-    },
-    get value() {
-        return this.input.val();
-    },
-    set value(val) {
-        this.input.val(val);
-    },
-    set text(val) {
-        this.input.text(val);
-    },
-    disabled(isDisabled) {
-        this.input.prop("disabled", isDisabled);
-        if (isDisabled) {
-            this.value = "";
-            this.input.removeClass("req");
-        } else {
-            this.input.addClass("req");
-        }
-        removeClassError(this.input);
-    },
-};
-
-const thirdPartyManager = {
-    get select() {
-        return $("#THIRD_PARTY");
-    },
-    get fieldset() {
-        return $("#third-party-fieldset");
-    },
-    set text(val) {
-        this.select.text(val);
-    },
-    set value(val) {
-        this.select.val(val).trigger("change");
-    },
-    async init(requester) {
-        const requesterData = state.users.find((u) => u.SEMPNO == requester);
-        const thirdParty = state.users
-            .filter(
-                (u) =>
-                    u.SPOSCODE == "30" && u.SSECCODE != requesterData.SSECCODE,
-            )
-            .sort((a, b) => {
-                return a.SNAME.localeCompare(b.SNAME);
-            });
-        if (!this.select.hasClass("select2-hidden-accessible")) {
-            await setSelect2({
-                id: "THIRD_PARTY",
-                data: thirdParty.map((u) => ({
-                    value: u.SEMPNO,
-                    text: `${u.SNAME} (${u.SEMPNO})`,
-                })),
-                width: "24rem",
-                size: "sm",
-            });
-        }
-        this.show();
-    },
-    show() {
-        this.fieldset.removeClass("hidden!");
-        this.select.addClass("req");
-    },
-    hide() {
-        this.fieldset.addClass("hidden!");
-        this.select.removeClass("req");
-        this.value = "";
-    },
-};
-// -------------------------- End of Invoice Type Manager --------------------------
-
-const subjectManager = {
-    get input() {
-        return $("#SUBJECT");
-    },
-    set text(val) {
-        this.input.text(val);
-    },
-    set value(val) {
-        this.input.val(val);
-    },
-};
-
-// -------------------------- Accept PO Type Manager --------------------------
-export const acceptPoManager = {
-    get radio() {
-        return $('input[name="ACCEPT_PO"]');
-    },
-    get type() {
-        let type = null;
-        this.radio.each(function () {
-            if ($(this).is(":checked")) {
-                type = $(this).attr("a-type");
-            }
-        });
-        return type;
-    },
-    set value(val) {
-        this.radio.each(function () {
-            if ($(this).val() == val) {
-                $(this).prop("checked", true);
-            }
-        });
-        this.change();
-    },
-    checked(isChecked, value) {
-        this.radio.each(function () {
-            if ($(this).val() == value) {
-                $(this).prop("checked", isChecked);
-            }
-        });
-    },
-    change() {
-        const type = this.type;
-        if (!type) {
-            showMessage("Please select accept type", "warning");
-            return;
-        }
-        switch (type) {
-            case "subcon":
-                acceptSubconManager.disabled(false);
-                acceptOtherManager.disabled(true);
-                break;
-            case "other":
-                acceptOtherManager.disabled(false);
-                acceptSubconManager.disabled(true);
-                break;
-        }
-    },
-};
-
-const acceptSubconManager = {
-    get input() {
-        return $("#ACCEPT_SUBCON");
-    },
-    set value(val) {
-        this.input.val(val);
-    },
-    set text(val) {
-        this.input.text(val);
-    },
-    disabled(isDisabled) {
-        this.input.prop("disabled", isDisabled);
-        if (isDisabled) {
-            this.value = "";
-            this.input.removeClass("req");
-        } else {
-            this.input.addClass("req");
-        }
-        removeClassError(this.input);
-    },
-};
-
-const acceptOtherManager = {
-    get input() {
-        return $("#ACCEPT_OTHER");
-    },
-    set value(val) {
-        this.input.val(val);
-    },
-    set text(val) {
-        this.input.text(val);
-    },
-    disabled(isDisabled) {
-        this.input.prop("disabled", isDisabled);
-        if (isDisabled) {
-            this.value = "";
-            this.input.removeClass("req");
-        } else {
-            this.input.addClass("req");
-        }
-        removeClassError(this.input);
-    },
-};
-// -------------------------- End of Accept PO Type Manager --------------------------
-
-const quotationManager = {
-    get input() {
-        return $("#QUOTATION");
-    },
-    set text(val) {
-        this.input.text(val);
-    },
-    set value(val) {
-        this.input.val(val);
-    },
-};
-
-const quotationDateManager = {
-    get input() {
-        return $("#QUOTATION_DATE");
-    },
-    set text(val) {
-        this.input.text(val);
-    },
-    set value(val) {
-        setDatefpk({
-            name: "QUOTATION_DATE",
-            date: val,
-        });
-    },
-};
-
-const poManager = {
-    get input() {
-        return $("#PONO");
-    },
-    set text(val) {
-        this.input.text(val);
-    },
-    set value(val) {
-        this.input.val(val);
-    },
-};
-
-const totalAmountManager = {
-    get input() {
-        return $("#TOTAL_AMOUNT");
-    },
-    set text(val) {
-        this.input.text(setRound(val) || "0");
-    },
-    set value(val) {
-        this.input.val(val);
-    },
-};
-
-const invoiceNoManager = {
-    get input() {
-        return $("#INVOICE_NO");
-    },
-    set text(val) {
-        this.input.text(val);
-    },
-    set value(val) {
-        this.input.val(val);
-    },
-};
-
-const invoiceAmountManager = {
-    get input() {
-        return $("#INVOICE_AMOUNT");
-    },
-    set text(val) {
-        this.input.text(setRound(val) || "0");
-    },
-    set value(val) {
-        this.input.val(val);
-    },
-};
-
-const personInChargeManager = {
-    get input() {
-        return $("#PERSON_INCHARGE");
-    },
-    set text(val) {
-        this.input.text(val);
-    },
-    set value(val) {
-        this.input.val(val);
-    },
-};
-
-const invoiceDateManager = {
-    get input() {
-        return $("#INVOICE_DATE");
-    },
-    set text(val) {
-        this.input.text(val);
-    },
-    set value(val) {
-        setDatefpk({
-            name: "INVOICE_DATE",
-            date: val,
-        });
-    },
-};
-
-const paymentDetailManager = {
-    get input() {
-        return $("#PAYMENT_DETAIL");
-    },
-    set text(val) {
-        this.input.text(val);
-    },
-    set value(val) {
-        this.input.val(val);
-    },
-};
-
-
 
 // -------------------------- Req Type Manager ------------------------------
 
@@ -1335,8 +1003,6 @@ export const ReqtypeManager = {
         this.change();
     },
     disabled(isDisabled) {
-        console.log(this.radio);
-        
         this.radio.prop("disabled", isDisabled);
     },
     change() {
@@ -1344,8 +1010,6 @@ export const ReqtypeManager = {
         $("#A-section, #U-section, #D-section , #V-section ,#F-section").addClass("hidden");
         $(`#${type}-section`).removeClass("hidden");
         if(type == "A"){
-            console.log("ccccc");
-            
             $(`#V-section`).removeClass("hidden");
             $(`#F-section`).removeClass("hidden");
         }
@@ -1354,90 +1018,7 @@ export const ReqtypeManager = {
 
 // -------------------------- End Req Type Manager -------------------
 
-// -------------------------- Payment Type Manager --------------------------
-export const paymentTypeManager = {
-    get radio() {
-        return $('input[name="PAYMENT_TYPE"]');
-    },
-    get type() {
-        let type = null;
-        this.radio.each(function () {
-            if ($(this).is(":checked")) {
-                type = $(this).attr("p-type");
-            }
-        });
-        return type;
-    },
-    set value(val) {
-        this.radio.each(function () {
-            if ($(this).val() == val) {
-                $(this).prop("checked", true);
-            }
-        });
-        this.change();
-    },
-    change() {
-        paymentNumManager.value = "";
-        paymentManager.disabled(false);
-        attachTypeManager.hide("other");
-        attachTypeManager.reset("other");
-        const type = this.type;
-        if (type == "manual") {
-            paymentNumManager.disabled(false);
-            paymentNumManager.value = 1;
-            paymentNumManager.onInput();
-            removeClassError(paymentNumManager.input);
-        } else if (type == "final") {
-            paymentNumManager.disabled(true);
-            selectAttachType(type);
-        }
-    },
-};
 
-export const paymentNumManager = {
-    get input() {
-        return $("#PAYMENT_NUM");
-    },
-    set value(val) {
-        this.input.val(val);
-    },
-    set text(val) {
-        this.input.text(val);
-    },
-    disabled(isDisabled) {
-        this.input.prop("disabled", isDisabled);
-        if (isDisabled) {
-            this.value = "";
-            this.input.removeClass("req");
-        } else {
-            this.input.addClass("req");
-        }
-    },
-    onInput(value) {
-        const payment = !value ? 1 : Number(value);
-        this.value = payment;
-        attachTypeManager.hide("other");
-        attachTypeManager.reset("other");
-        selectAttachType(payment);
-    },
-};
-
-const paymentManager = {
-    get input() {
-        return $("#PAYMENT");
-    },
-    set text(val) {
-        this.input.text(setRound(val) || "0");
-    },
-    set value(val) {
-        this.input.val(val);
-    },
-    disabled(isDisabled) {
-        this.input.prop("disabled", isDisabled);
-    },
-};
-
-// -------------------------- End of Payment Type Manager --------------------------
 
 // -------------------------- Attach Type Manager --------------------------
 
@@ -1678,7 +1259,7 @@ export const actionFormManager = {
                 {element: provinceEnManager.input, message: "Please input Province (English)."},
                 {element: districtEnManager.input, message: "Please input District (English)."},
                 {element: subDistrictEnManager.input, message: "Please input Sub-District (English)."},
-                {element: postcodeManager.input, message: "Please input Postcode (English)."},
+                {element: postcodeEnManager.input, message: "Please input Postcode (English)."},
                 {element: attachTypeManager.checkbox, message: "Please select Attach Type."},
                 {element: attachFileManager.input, message: "Please attach files."},
             ].filter(Boolean);
@@ -1741,7 +1322,7 @@ export const actionFormManager = {
                     {element: provinceEnManager.input, message: "Please input Province (English)."},
                     {element: districtEnManager.input, message: "Please input District (English)."},
                     {element: subDistrictEnManager.input, message: "Please input Sub-District (English)."},
-                    {element: postcodeManager.input, message: "Please input Postcode (English)."},
+                    {element: postcodeEnManager.input, message: "Please input Postcode (English)."},
                     {element: attachTypeManager.checkbox, message: "Please select Attach Type."},
                     {element: attachFileManager.input, message: "Please attach files."},
                 ].filter(Boolean);

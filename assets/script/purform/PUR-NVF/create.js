@@ -32,10 +32,10 @@ $(document).on("change", "#REQBY", function () {
 
 
 // Sync value for currency select2
-$(document).on("select2:select", ".currency", function () {
-    const value = $(this).val();
-    currencyManager.syncValue(value, this);
-});
+// $(document).on("select2:select", ".currency", function () {
+//     const value = $(this).val();
+//     currencyManager.syncValue(value, this);
+// });
 
 $(document).on("change", 'input[name="files"]', async function (e) {
     handleFiles();
