@@ -68,6 +68,8 @@ $(document).on("select2:select", ".country",async function (e) {
 });
 
 $(document).on("select2:select", ".province",async function (e) {
+    console.log("province change");
+    
     provinceManager.change(e);
     const selectedProvinceId = provinceManager.getValue("PROVINCE_SELECT");
     const filteredDistricts = formManager.districtData.filter(
@@ -167,4 +169,13 @@ $(document).on("click", ".remove-file", async function (e) {
     const id = $(this).attr("file-id");
     const tagA = $(this).closest("a");
     attachFileManager.deleteFile(tagA, id);
+});
+
+
+$(document).on('input', '#VENDORCODE', function() {
+    const keywordValue = $(this).val().trim();
+    if (keywordValue.length === 5) {
+        console.log(keywordValue);
+        
+    }
 });

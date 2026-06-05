@@ -1,6 +1,6 @@
 import select2 from "select2";
 import { getUser, searchUser } from "@amec/webasset/api/amec";
-import { doaction, showflow } from "@amec/webasset/api/webform";
+import { doaction, showflow ,getFormStatus } from "@amec/webasset/api/webform";
 import { webflowSubmit , getformDetail } from "@amec/webasset/components/form";
 import { redirectWebflow  } from "@amec/webasset/form";
 
@@ -455,14 +455,14 @@ export const formManager = {
                 }));
                 const province = await getProvinces();
                 this.provinceData = province.map((p) => ({
-                    id: p.nameen,
+                    id: p.id,
                     value: p.nameen,
                     text: p.nameen,
                     nameth: p.nameth
                 }));
                 const district = await getDistricts();
                 this.districtData = district.map((d) => ({
-                    id: d.nameen,
+                    id: d.id,
                     value: d.nameen,
                     text: d.nameen,
                     nameth: d.nameth,
@@ -470,7 +470,7 @@ export const formManager = {
                 }));
                 const subDistrict = await getSubDistricts();
                 this.subDistrictData = subDistrict.map((s) => ({
-                    id: s.nameen,
+                    id: s.id,
                     value: s.nameen,
                     text: s.nameen,
                     nameth: s.nameth,
@@ -510,21 +510,21 @@ export const formManager = {
                         }));
                         const countries = await getCountries();
                         const countriesData = countries.map((c) => ({
-                            id: c.nameen,
+                            id: c.id,
                             value: c.nameen,
                             text:  c.nameen,
                             nameth: c.nameth
                         }));
                         const province = await getProvinces();
                         this.provinceData = province.map((p) => ({
-                            id: p.nameen,
+                            id: p.id,
                             value: p.nameen,
                             text: p.nameen,
                             nameth: p.nameth
                         }));
                         const district = await getDistricts();
                         this.districtData = district.map((d) => ({
-                            id: d.nameen,
+                            id: d.id,
                             value: d.nameen,
                             text: d.nameen,
                             nameth: d.nameth,
@@ -532,7 +532,7 @@ export const formManager = {
                         }));
                         const subDistrict = await getSubDistricts();
                         this.subDistrictData = subDistrict.map((s) => ({
-                            id: s.nameen,
+                            id: s.id,
                             value: s.nameen,
                             text: s.nameen,
                             nameth: s.nameth,
@@ -547,7 +547,7 @@ export const formManager = {
                         subDistrictManager.init(this.subDistrictData);
                     this.setReturn(data);
                 } else {
-                    console.log(data);
+                    //console.log(data);
                     this.setView(data);
                 }
                 break;
@@ -636,9 +636,10 @@ export const formManager = {
                 if(data.LISTS[0].VENDTYPE === "Local")
                 {
                     addrEnManager.value = address.ADDR || "";
-                    provinceManager.value = address.PROVINCE;
-                    districtManager.value = address.DISTRICT;
-                    subDistrictManager.value = address.SUBDISTRICT;
+                    //provinceManager.value = address.PROVINCE;
+                    provinceManager.textToValue = address.PROVINCE;
+                    districtManager.textToValue = address.DISTRICT;
+                    subDistrictManager.textToValue = address.SUBDISTRICT;
                 }else
                 {
                     addrEnManager.value = address.ADDR || "";
@@ -817,6 +818,42 @@ export const provinceManager = {
             $(`#${id}`).val(val).trigger("change");
         });
     },
+    set textToValue(textName) {
+        if (!textName) return;
+
+        const self = this;
+        const targetText = textName.toString().trim().toLowerCase();
+
+        self.list.forEach((id) => {
+            const $select = $(`#${id}`);
+            if ($select.length === 0) return;
+
+            // 1. ค้นหาหาเลข id จาก option บนหน้าจอ
+            let targetId = null;
+            $select.find('option').each(function() {
+                if ($(this).text().trim().toLowerCase() === targetText) {
+                    targetId = $(this).val();
+                    return false; // เจอแล้วหยุด loop
+                }
+            });
+
+            if (targetId) {
+                $select.val(targetId).trigger('change.select2');
+                const select2Options = $select.data('select2').options.options.data;
+                const matchedSelect2Data = select2Options.find(item => item.id == targetId);
+
+                if (matchedSelect2Data) {
+                    self.change({
+                        params: {
+                            data: matchedSelect2Data
+                        }
+                    });
+                }
+            } else {
+                console.warn(`ไม่พบจังหวัดที่ชื่อ: "${textName}" ในดรอปดาวน์`);
+            }
+        });
+    },
     getValue(id) {
         return $(`#${id}`).val();
     },
@@ -836,6 +873,7 @@ export const provinceManager = {
                 width: "60%",
                 emptyValue: false,
             });
+      
         }
     },
     /**
@@ -854,6 +892,7 @@ export const provinceManager = {
     },
     async change(e) {
     if (e && e.params && e.params.data) {
+    
         const selectedProvince = e.params.data;
         provinceThManager.value = selectedProvince.nameth || "";
         provinceEnManager.value = selectedProvince.text || "";
@@ -873,6 +912,45 @@ export const districtManager = {
     set value(val) {
         this.list.forEach((id) => {
             $(`#${id}`).val(val).trigger("change");
+        });
+    },
+    set textToValue(textName) {
+        if (!textName) return;
+
+        const self = this;
+        const targetText = textName.toString().trim().toLowerCase();
+
+        self.list.forEach((id) => {
+            const $select = $(`#${id}`);
+            if ($select.length === 0) return;
+
+            // 1. ค้นหาหาเลข id จาก option บนหน้าจอ
+            let targetId = null;
+            $select.find('option').each(function() {
+                if ($(this).text().trim().toLowerCase() === targetText) {
+                    targetId = $(this).val();
+                    return false; // เจอแล้วหยุด loop
+                }
+            });
+
+            
+            if (targetId) {
+               
+                $select.val(targetId).trigger('change.select2');
+
+                const select2Options = $select.data('select2').options.options.data;
+                const matchedSelect2Data = select2Options.find(item => item.id == targetId);
+
+                if (matchedSelect2Data) {
+                    self.change({
+                        params: {
+                            data: matchedSelect2Data
+                        }
+                    });
+                }
+            } else {
+                console.warn(`ไม่พบจังหวัดที่ชื่อ: "${textName}" ในดรอปดาวน์`);
+            }
         });
     },
     getValue(id) {
@@ -932,6 +1010,43 @@ export const subDistrictManager = {
             $(`#${id}`).val(val).trigger("change");
         });
     },
+  set textToValue(textName) {
+        if (!textName) return;
+
+        const self = this;
+        const targetText = textName.toString().trim().toLowerCase();
+
+        self.list.forEach((id) => {
+            const $select = $(`#${id}`);
+            if ($select.length === 0) return;
+
+            // 1. ค้นหาหาเลข id จาก option บนหน้าจอ
+            let targetId = null;
+            $select.find('option').each(function() {
+                if ($(this).text().trim().toLowerCase() === targetText) {
+                    targetId = $(this).val();
+                    return false; // เจอแล้วหยุด loop
+                }
+            });
+
+            if (targetId) {
+                $select.val(targetId).trigger('change.select2');
+                const select2Options = $select.data('select2').options.options.data;
+                const matchedSelect2Data = select2Options.find(item => item.id == targetId);
+
+                if (matchedSelect2Data) {
+                    self.change({
+                        params: {
+                            data: matchedSelect2Data
+                        }
+                    });
+                }
+            } else {
+                console.warn(`ไม่พบตำบลที่ชื่อ: "${textName}" ในดรอปดาวน์`);
+            }
+        });
+    }
+    ,
     getValue(id) {
         return $(`#${id}`).val();
     },
@@ -968,6 +1083,8 @@ export const subDistrictManager = {
         }
     },
     async change(e) {
+        console.log("ccccccccccccccccchange");
+        
     if (e && e.params && e.params.data) {
         const selectedSubDistrict = e.params.data;
         subDistrictThManager.value = selectedSubDistrict.nameth || "";
@@ -1198,7 +1315,7 @@ export const actionFormManager = {
                         flow: true,
                         flowhtml: flow,
                         approve: true,
-                        reject: true,
+                        reject: state.FormInfo.RETURN ? false : true,
                         return: state.FormInfo.RETURN ? false : true,
                     }),
                 );
@@ -1364,8 +1481,13 @@ export const actionFormManager = {
                 });
             }
             if (res.status == true) {
+                //chechk status form
+                rescst = await getFormStatus({...data});
+                //console.log(rescst);
                 showMessage(res.message, "success");
+                
                 redirectWebflow();
+                // throw new Error("test");
             } else {
                 throw new Error(res.message);
             }

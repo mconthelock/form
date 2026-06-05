@@ -10,7 +10,7 @@ export async function create(formData) {
 
 export async function approveReturn(formData) {
     return fetchUtils({
-        url: `${process.env.APP_API}/purform/pur-cpm`,
+        url: `${process.env.APP_API}/purform/pur-nvf`,
         method: "PATCH",
         data: formData,
     });
@@ -89,4 +89,13 @@ export async function getSubDistricts(){
         district_id: subDistrict.district_id,
         postcode: subDistrict.zip_code
     }));
+}
+
+export async function getVendor()
+{
+    return fetchUtils({
+        url: `${process.env.APP_API}/pursys/pur_vendors`,
+        method: "GET",
+    });
+
 }
