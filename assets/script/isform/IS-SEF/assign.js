@@ -19,7 +19,7 @@ $(async function () {
 
     console.log(response);
 
-    const workplan = response.filter(item => item.PLANYEAR <= 2026 && [6, 8].includes(item.STATUS_ID));
+    const workplan = response.filter(item => item.PLANYEAR >= 2025 && [6, 8].includes(item.STATUS_ID));
 
     const selectWorkplan = workplan.map(item => ({ value: item.PLANID, text: `${item.REQ_NO} : ${item.TITLE}` }));
 
