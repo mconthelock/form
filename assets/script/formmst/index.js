@@ -5,7 +5,7 @@ import { showErrorMessage } from '@amec/webasset/utils';
 import { setSelect2 } from '@amec/webasset/select2';
 import { createTable } from '@amec/webasset/dataTable';
 import { initApp, tableOption, tableFillSelect } from '../utils';
-import { getFormMaster, getFormDept } from './data';
+import { getAmecUsers, getFormMaster, getFormDept } from '../service';
 
 var table;
 select2();
@@ -164,7 +164,7 @@ async function createTableOption(data) {
             orderable: false,
             className: 'text-center',
             render: function (data, type, row) {
-                return `<a href="${process.env.APP_ENV}/webform/formmaster/detail/${row.VORGNO}" class="btn btn-sm btn-primary">Edit</a>`;
+                return `<a href="${process.env.APP_ENV}/webform/formmaster/detail/${row.NNO}/${row.VORGNO}/${row.CYEAR}/" class="btn btn-sm btn-primary">Edit</a>`;
             },
         },
     ];

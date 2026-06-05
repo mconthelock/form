@@ -15,10 +15,6 @@ $(document).ready(async function () {
         const status = $('#status').val();
         await getPageTitle(status);
         const res = [];
-        //   const res = await getformlist({
-        //     id: $("#loginuser").val(),
-        //     type: $("#status").val(),
-        //   });
         const opt = await tableFormOptions(res);
         table = await createTable(opt);
     } catch (error) {

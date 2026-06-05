@@ -8,7 +8,7 @@ class formmaster extends MY_Controller {
         $this->views('formmst/index');
     }
 
-    public function detail($id){
-        $this->views('formmst/detail', array('id' => $id));
+    public function detail(){
+        $this->views('formmst/detail');
     }
 }

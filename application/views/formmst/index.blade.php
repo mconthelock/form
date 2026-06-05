@@ -31,8 +31,9 @@
         </div>
         <div class="flex items-center gap-3">
             <button id="reset-filter" class="btn btn-ghost" type="button">Reset Filters</button>
-            <button id="addform" class="btn btn-primary" type="button"><i class="fi fi-ss-add text-xl"></i></i>Add
-                Form</button>
+            <a id="#" href="{{ base_url() }}webform/formmaster/detail/" class="btn btn-primary" type="button"><i
+                    class="fi fi-ss-add text-xl"></i></i>Add
+                Form</a>
             <button id="export" class="btn btn-primary text-slate-200" type="button"><i
                     class="fi fi-rr-down-to-line text-xl me-1"></i>Export</button>
         </div>

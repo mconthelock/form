@@ -1,7 +1,7 @@
 import { showLoader } from '@amec/webasset/preloader';
 import { showMessage } from '@amec/webasset/utils';
 import { initApp, tableOption } from '../utils';
-import { getFormMaster, getFormDept } from '../formmst/data';
+import { getAmecUsers, getFormMaster, getFormDept } from '../service';
 
 $(document).ready(async function () {
     showLoader();
@@ -29,7 +29,6 @@ async function createFormList() {
     const id = $('#deptid').val();
     const selectdDept = formdept.find((d) => d.id == id);
     let result = [];
-    //console.log(selectdDept.link);
     for (const value of selectdDept.link) {
         const matched = formMaster.filter(
             (f) => f.VORGNO === value && f.CSTATUS === '1',
@@ -40,11 +39,6 @@ async function createFormList() {
     const list = $('#formlist');
     const seenGroups = new Set();
     list.empty();
-
-    // const filtered = result.filter(
-    //     (item) => item.VORGNO === id && item.CSTATUS === '1',
-    // );
-
     //get distinct group
     const distinctGroups = [
         ...new Set(
