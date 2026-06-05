@@ -169,14 +169,14 @@ class form extends MY_Controller{
         if ($head[0]->SDEPCODE == "000401") {
             
             // ถ้า type เป็น 'E' ใช้ '35','40' ถ้าไม่ใช่ ให้ใช้ค่าเดิมของเงื่อนไขนี้
-            $posCode = ($type == 'E') ? "'35','40','33'" : "'41','42','43','40','35','33'";
+            $posCode = ($type == 'E') ? "'35','40','33'" : "'64','41','42','43','40','35','33'";
             if($type == 'E')
             {
                 $sql = "select SEMPNO , SNAME from AMEC.AEMPLOYEE where CSTATUS = '1' and SSECCODE = '000404' and  SPOSCODE in (".$posCode.") " .$excludePic."  order by sname";
             
             }else
             {
-                $sql = "select SEMPNO , SNAME from AMEC.AEMPLOYEE where CSTATUS = '1' and SSECCODE = '000404' and ( SPOSCODE in (".$posCode.") or SEMPNO IN ('09019','13067')) " . $excludePic . " order by sname";
+                $sql = "select SEMPNO , SNAME from AMEC.AEMPLOYEE where CSTATUS = '1' and SSECCODE = '000404' and ( SPOSCODE in (".$posCode.")" . $excludePic . " order by sname";
             
             }
        
