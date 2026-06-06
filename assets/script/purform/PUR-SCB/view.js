@@ -11,7 +11,7 @@ import { showLoader } from "@amec/webasset/preloader";
 import { getEmployee } from "@amec/webasset/api/amec";
 
 const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-const TARGET_STEPS = ["02", "81", "93", "84", "59"];
+const TARGET_STEPS = ["02", "81", "32", "84", "59"];
 const WINNER_COLS = [6, 7, 10];
 const PDF_BASE_DIR = "//amecnas/AMECWEB/File/development/Form/PUR/PUR-SCB/";
 
