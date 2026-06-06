@@ -17,7 +17,7 @@ import {
     showErrorMessage,
     showMessage,
 } from "@amec/webasset/utils";
-import { approveReturn, create, getData , getTermcode , getCountries, getProvinces ,getDistricts , getSubDistricts } from "./data";
+import { approveReturn, create, getData , getTermcode , getCountries, getProvinces ,getDistricts , getSubDistricts , getVendor } from "./data";
 import { dragDropInit } from "@amec/webasset/dragdrop";
 import { setDatefpk, setDatePicker } from "@amec/webasset/flatpickr";
 import { setSelect2 } from "@amec/webasset/select2";
@@ -116,6 +116,13 @@ export const typejobManager = {
     set value(val) {
         this.input.val(val);
     },
+    addcls(cls) {
+        this.input.addClass(cls);
+    },
+    // เพิ่มฟังก์ชันลบ class 'req'
+    removecls(cls) {
+        this.input.removeClass(cls);
+    }
 };
 
 export const serviceManager = {
@@ -131,6 +138,13 @@ export const serviceManager = {
     set value(val) {
         this.input.val(val);
     },
+    addcls(cls) {
+        this.input.addClass(cls);
+    },
+    // เพิ่มฟังก์ชันลบ class 'req'
+    removecls(cls) {
+        this.input.removeClass(cls);
+    }
 };
 
 export const purposeManager = {
@@ -146,6 +160,13 @@ export const purposeManager = {
     set value(val) {
         this.input.val(val);
     },
+    addcls(cls) {
+        this.input.addClass(cls);
+    },
+    // เพิ่มฟังก์ชันลบ class 'req'
+    removecls(cls) {
+        this.input.removeClass(cls);
+    }
 };
 
 export const comnameManager = {
@@ -195,7 +216,8 @@ export const vendorTypeManager = {
         attachTypeManager.hide("other");
         attachTypeManager.reset("other");
         const type = this.type;
-        selectAttachType(type);
+        const reqtype = ReqtypeManager.type;
+        selectAttachType(reqtype,type);
         clearaddr();
         if (type == "Local") {
             $(".field-local").removeClass("hidden").addClass("req");
@@ -390,6 +412,97 @@ export const vendorCodeManager = {
     set value(val) {
         this.input.val(val);
     },
+    async change() {
+        const keywordValue = this.value.trim();
+        // 1. เช็กความยาวรหัสคู่ค้า (ตามเงื่อนไขเดิมของคุณคือ 5 หลัก)
+        if (keywordValue.length === 5) {
+            try {
+                showLoader(); // เปิด Loader รอระว่างดึงข้อมูล
+                
+                const searchData = { KEYWORD: keywordValue };
+                const vendor = await getVendor(searchData);
+                
+                console.log("Vendor Data:", vendor);
+
+                if (vendor[0]) {
+                    typejobManager.removecls("req");
+                   // สมมติว่าได้ Object ข้อมูลคู่ค้ากลับมา
+                    comnameManager.value = vendor[0].VND_NAME || ""; 
+                    $(`#V-section`).removeClass("hidden");
+                    $(`#F-section`).removeClass("hidden");
+                    $("#CONTACT").val(vendor[0].VND_SALE || "");
+                    $("#EMAIL").val(vendor[0].EMAIL || "");
+                    $("#WEBSITE").val(vendor[0].ADDR_WEB || "");
+                    $("#TELNO").val(vendor[0].ADDR_PHONE || "");
+                    $("#FAXNO").val(vendor[0].FAX || "");
+                    $("#BANKNAME").val(vendor[0].BANKNAME || "");
+                    $("#BRANCH").val(vendor[0].BRANCH || "");
+                    $("#ACCNUMBER").val(vendor[0].ACCNUMBER || "");
+                    paymentTermManager.value = vendor[0].VENDOR_CODES[0].CODE_PAY;
+                    if(vendor[0].VENDOR_ADDRESS)
+                    {
+                        vendor[0].VENDOR_ADDRESS.forEach(function (address) {
+                            // 1. รวมสายอักขระที่อยู่ (Address Line 1 + Line 2) เข้าด้วยกัน
+                            const addrLine = `${address.ADDR_LINE1 || ""} ${address.ADDR_LINE2 || ""}`.trim();
+                            const province = address.ADDR_STATE || "";       // จังหวัด
+                            const district = address.ADDR_CITY || "";      // อำเภอ (เช็กฟิลด์หลังบ้านอีกทีว่าสลับกันไหม)
+                            const subDistrict = address.ADDR_SUB_CITY || "";   // ตำบล
+                            const postcode = address.ADDR_ZIPCODE || "";    // รหัสไปรษณีย์
+                            const country = address.ADDR_COUNTRY || "";     // ประเทศ
+
+                            // 2. แยกจัดการตามประเภทที่อยู่ ADDR_TYPE ('T' = ภาษาไทย, 'E' = ภาษาอังกฤษ)
+                            if (address.ADDR_TYPE === "T") {
+                                addrThManager.value = addrLine;
+                                if(address.ADDR_COUNTRY && address.ADDR_COUNTRY == "ไทย")
+                                {
+                                    vendorTypeManager.value = 'Local';
+
+                                }else{
+                                    vendorTypeManager.value = 'Oversea';
+                                }
+                               
+                                provinceThManager.value = province;
+                                districtThManager.value = district;
+                                subDistrictThManager.value = subDistrict;
+                                postcodeThManager.value = postcode;
+                                countryThManager.value = country;
+                                
+                            } else if (address.ADDR_TYPE === "E") {
+                                // แปะลงฟิลด์ภาษาอังกฤษ
+                                addrEnManager.value = addrLine;
+                                if(address.ADDR_COUNTRY && address.ADDR_COUNTRY.toUpperCase() == "THAILAND")
+                                {
+                                    vendorTypeManager.value = 'Local';
+                                    provinceManager.textToValue = province;
+                                    districtManager.textToValue = district;
+                                    subDistrictManager.textToValue = subDistrict;
+                                }else{
+                                    vendorTypeManager.value = 'Oversea';
+                                    provinceEnManager.value = province;
+                                    districtEnManager.value = district;
+                                    subDistrictEnManager.value = subDistrict;
+                                }
+                                postcodeEnManager.value = postcode;
+                                countryEnManager.value = country;
+                         
+                            }
+                        });
+
+                    }
+
+                } else {
+                    showMessage("Vendor not found.ไม่พบข้อมูลคู่ค้าสำหรับรหัสนี้","warning",);
+                   // this.resetForm(); 
+                }
+
+            } catch (err) {
+                console.error("Error in vendorCodeManager.change:", err);
+                showErrorMessage("เกิดข้อผิดพลาดในการดึงข้อมูลคู่ค้า");
+            } finally {
+                showLoader({ show: false }); // ปิด Loader
+            }
+        }    
+    },
     
 
 };
@@ -563,7 +676,8 @@ export const formManager = {
         serviceManager.text = data.LISTS[0].SERVICE || "-";
         purposeManager.text = data.LISTS[0].PURPOSE || "-";
 
-        comnameManager.text = data.LISTS[0].COMNAME || "-";
+       // comnameManager.text =  data.LISTS[0].COMNAME || "-";
+        comnameManager.text = (data.LISTS[0].VENDCODE ? "("+data.LISTS[0].VENDCODE+")" + " " : "") + (data.LISTS[0].COMNAME || "-");
         vendorTypeManager.text = data.LISTS[0].VENDTYPE || "-";
 
         $("#CONTACT").text(data.LISTS[0].CONTACT || "-");
@@ -591,7 +705,7 @@ export const formManager = {
         $("#BRANCH").text(data.LISTS[0].BRANCH || "-");
         $("#ACCNUMBER").text(data.LISTS[0].ACCNUMBER || "-");
         $("#PAYMENT_TERM").text(data.LISTS[0].TERM.STERMDESC || "-");
-         selectAttachType(data.LISTS[0].VENDTYPE);
+         selectAttachType(data.REQTYPE,data.LISTS[0].VENDTYPE);
         // Attach Type
         attachTypeManager.show(["other"]);
         attachTypeManager.checkbox.each(function () {  
@@ -1129,6 +1243,14 @@ export const ReqtypeManager = {
         if(type == "A"){
             $(`#V-section`).removeClass("hidden");
             $(`#F-section`).removeClass("hidden");
+            typejobManager.addcls("req");
+            serviceManager.addcls("req");
+            purposeManager.addcls("req");
+        }else if(type == "U")
+        {
+            typejobManager.removecls("req");
+            serviceManager.removecls("req");
+            purposeManager.removecls("req");
         }
     },
 };

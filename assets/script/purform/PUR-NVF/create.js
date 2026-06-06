@@ -16,7 +16,7 @@ import {
     vendorCodeManager,
     provinceManager,
     districtManager,
-    subDistrictManager, 
+    subDistrictManager
 } from "./formManager";
 import { downloadOrOpenFile } from "@amec/webasset/api/file";
 
@@ -172,10 +172,6 @@ $(document).on("click", ".remove-file", async function (e) {
 });
 
 
-$(document).on('input', '#VENDORCODE', function() {
-    const keywordValue = $(this).val().trim();
-    if (keywordValue.length === 5) {
-        console.log(keywordValue);
-        
-    }
+$(document).on('input', '#VENDORCODE', async function() {
+    await vendorCodeManager.change();
 });

@@ -1,22 +1,32 @@
 import { attachTypeManager, districtEnManager, districtThManager, postcodeEnManager, postcodeThManager, provinceEnManager, provinceThManager, subDistrictEnManager, subDistrictThManager } from "./formManager";
-export function selectAttachType(type) {
+export function selectAttachType(reqtype,type) {
     console.log(type);
-    switch (type) {
-        case "Oversea":
-            attachTypeManager.show([
-                "cer",
-                "other",
-            ]);
-            break;
-        default:
-            attachTypeManager.show([
-                "cer",
-                "vat",
-                "book",
-                "other",
-            ]);
-            break;
+    if(reqtype == "A")
+    {
+        switch (type) {
+            case "Oversea":
+                attachTypeManager.show([
+                    "cer",
+                    "other",
+                ]);
+                break;
+            default:
+                attachTypeManager.show([
+                    "cer",
+                    "vat",
+                    "book",
+                    "other",
+                ]);
+                break;
+        }
+    }else if(reqtype == "U")
+    {
+          attachTypeManager.show([
+                    "letter",
+                    "other"
+                ]);
     }
+
 }
 
 export async function clearaddr(){

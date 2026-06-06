@@ -338,6 +338,10 @@
                             <input type="checkbox" name="ATTACH_TYPE" value="Vat Register" class="checkbox checkbox-xs" a-type="vat">
                             Vat Register
                         </label>
+                        <label class="hidden attach-file" id="attach-letter">
+                            <input type="checkbox" name="ATTACH_TYPE" value="Letter for Change Address" class="checkbox checkbox-xs" a-type="letter">
+                            Letter for Change Address
+                        </label>
                         <label class="hidden attach-file" id="attach-book">
                             <input type="checkbox" name="ATTACH_TYPE" value="Book bank" class="checkbox checkbox-xs" a-type="book">
                             Book Bank
