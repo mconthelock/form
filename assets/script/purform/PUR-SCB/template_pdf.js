@@ -349,9 +349,9 @@ export function buildScrapPdfHtml({ data = [], newYear, newPeriod, oldPricePerio
                     <tr>
                         <th>PS DEM</th>
                         <th>FE DEM</th>
-                        <th>G/S DEM</th>
+                        <th>GA DEM</th>
                         <th>FIN DEM</th>
-                        <th>PUR DIM</th>
+                        <th>B/P DIM</th>
                     </tr>
                 </thead>
                 <tbody>
