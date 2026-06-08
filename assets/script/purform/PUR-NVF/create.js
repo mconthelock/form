@@ -72,6 +72,7 @@ $(document).on("select2:select", ".province",async function (e) {
     
     provinceManager.change(e);
     const selectedProvinceId = provinceManager.getValue("PROVINCE_SELECT");
+    
     const filteredDistricts = formManager.districtData.filter(
         (d) => d.province_id == selectedProvinceId
     );
@@ -81,12 +82,15 @@ $(document).on("select2:select", ".province",async function (e) {
         text: d.text,
         nameth: d.nameth  
     }));
+   
     districtOptions.unshift({
         id: "",
         value: "",
         text: "-- Select District --", // หรือใส่เป็นค่าว่าง "" ก็ได้
         nameth: ""
     });
+    
+    
     districtManager.select.empty().trigger("change");
     await districtManager.init(districtOptions);
     //const value = $(this).val();
@@ -175,3 +179,24 @@ $(document).on("click", ".remove-file", async function (e) {
 $(document).on('input', '#VENDORCODE', async function() {
     await vendorCodeManager.change();
 });
+
+$(document).on('input', '#TELNO',  function() {
+    let val = this.value.replace(/\D/g, ''); // ลบสิ่งที่ไม่ใช่ตัวเลขออกก่อน
+    if (val.length > 3 && val.length <= 6) {
+        this.value = val.slice(0, 3) + "-" + val.slice(3);
+    } else if (val.length > 6) {
+        this.value = val.slice(0, 3) + "-" + val.slice(3, 6) + "-" + val.slice(6, 10);
+    }
+});
+
+$(document).on('input', '#ACCNUMBER',  function() {
+    let val = this.value.replace(/\D/g, ''); // ลบสิ่งที่ไม่ใช่ตัวเลขออกก่อน
+    if (val.length > 3 && val.length <= 4) {
+        this.value = val.slice(0, 3) + "-" + val.slice(3);
+    } else if (val.length > 4 && val.length <= 9) {
+        this.value = val.slice(0, 3) + "-" + val.slice(3, 4) + "-" + val.slice(4);
+    } else if (val.length > 9) {
+        this.value = val.slice(0, 3) + "-" + val.slice(3, 4) + "-" + val.slice(4, 9) + "-" + val.slice(9, 10);
+    }
+
+    });

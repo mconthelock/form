@@ -430,6 +430,8 @@ export const vendorCodeManager = {
                     comnameManager.value = vendor[0].VND_NAME || ""; 
                     $(`#V-section`).removeClass("hidden");
                     $(`#F-section`).removeClass("hidden");
+                    console.log(">>>>>>>>>>"+vendor[0]);
+                    
                     $("#CONTACT").val(vendor[0].VND_SALE || "");
                     $("#EMAIL").val(vendor[0].EMAIL || "");
                     $("#WEBSITE").val(vendor[0].ADDR_WEB || "");
@@ -566,6 +568,8 @@ export const formManager = {
                     text:  c.nameen,
                     nameth: c.nameth
                 }));
+                //console.log(countriesData);
+                
                 const province = await getProvinces();
                 this.provinceData = province.map((p) => ({
                     id: p.id,
@@ -574,6 +578,7 @@ export const formManager = {
                     nameth: p.nameth
                 }));
                 const district = await getDistricts();
+              
                 this.districtData = district.map((d) => ({
                     id: d.id,
                     value: d.nameen,
@@ -581,6 +586,7 @@ export const formManager = {
                     nameth: d.nameth,
                     province_id: d.province_id   
                 }));
+                  
                 const subDistrict = await getSubDistricts();
                 this.subDistrictData = subDistrict.map((s) => ({
                     id: s.id,
@@ -590,6 +596,8 @@ export const formManager = {
                     district_id: s.district_id,
                     postcode: s.postcode
                 }));
+                console.log( this.subDistrictData );
+                
                 paymentTermManager.init(termdata);
                 countryManager.init(countriesData);
                 provinceManager.init(this.provinceData);
@@ -726,7 +734,11 @@ export const formManager = {
     setReturn(data) {
         // Requester
       
-        
+        if(data.REQTYPE == "U")
+        {
+            vendorCodeManager.value = data.LISTS[0].VENDCODE;       
+            
+        }
         reqByManager.value = state.FormInfo.EMPNO;
         reqByManager.input.prop("readonly", true);
         //Request Type
@@ -780,13 +792,18 @@ export const formManager = {
         $("#BANKNAME").val(data.LISTS[0].BANKNAME || "");
         $("#BRANCH").val(data.LISTS[0].BRANCH || "");
         $("#ACCNUMBER").val(data.LISTS[0].ACCNUMBER || "");
-        console.log(data.LISTS[0].TERMCODE);
         
         paymentTermManager.value = data.LISTS[0].TERMCODE;
         // Attach Type
         attachTypeManager.checked = data.ATTACH_TYPE.split("|");
         // Attach Other
         attachOtherManager.value = data.ATTACH_OTHER || "";
+        if(data.REQTYPE == "U") {
+        // แนะนำให้เปลี่ยนจาก $(`#V-section`) มาใช้คลาสช่วยค้นหาแบบเปิดกว้าง เผื่อไอดีซ้ำในหน้าจอค่ะ
+        $("[id='V-section']").removeClass("hidden");
+        $("[id='F-section']").removeClass("hidden");
+   
+    }
     },
 };
 
@@ -1604,7 +1621,7 @@ export const actionFormManager = {
             }
             if (res.status == true) {
                 //chechk status form
-                rescst = await getFormStatus({...data});
+                const rescst = await getFormStatus({...data});
                 //console.log(rescst);
                 showMessage(res.message, "success");
                 
