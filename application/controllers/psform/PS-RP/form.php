@@ -8,7 +8,7 @@ class form extends MY_Controller{
     use formApi, flow, formmst;
     protected $title;
     protected $client;
-    protected $formname = 'PS-RR';
+    protected $formname = 'PS-RP';
     protected $formno = '4';
     protected $formorg = '050501';
     protected $formyear = '26';
@@ -30,14 +30,14 @@ class form extends MY_Controller{
             $data['CYEAR2'] = $_GET['y2'];
             $data['NRUNNO'] = $_GET['runNo'];
             $data['EMPNO'] = $data['empno'];
-            $this->views('psform/PS-RR/show', $data);
+            $this->views('psform/PS-RP/show', $data);
         }else {
-            $this->views('psform/PS-RR/create', $data);
+            $this->views('psform/PS-RP/create', $data);
         }
     }
 
     public function report(){
         $data = array();
-        $this->views('psform/PS-RR/report', $data);
+        $this->views('psform/PS-RP/report', $data);
     }
 }
