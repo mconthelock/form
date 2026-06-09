@@ -18,7 +18,7 @@ export function buildScrapPdfHtml({ data = [], newYear, newPeriod, oldPricePerio
     // step -> approved entry map (02=PUR DIN, 81=FIN DEM, 93=G/S DEM, 84=FE DEM, 59=PS DEM)
     const stepMap = Object.fromEntries(approved.map(a => [a.step, a]));
     // Column order matches approval table headers: PS DEM, FE DEM, G/S DEM, FIN DEM, PUR DIN
-    const stepOrder = ['59', '84', '93', '81', '02'];
+    const stepOrder = ['59', '84', '32', '81', '02'];
     const approvalCells = stepOrder.map(step => {
         const entry = stepMap[step];
         if (entry && entry.emp) {
@@ -349,9 +349,9 @@ export function buildScrapPdfHtml({ data = [], newYear, newPeriod, oldPricePerio
                     <tr>
                         <th>PS DEM</th>
                         <th>FE DEM</th>
-                        <th>G/S DEM</th>
+                        <th>GA DEM</th>
                         <th>FIN DEM</th>
-                        <th>PUR DIM</th>
+                        <th>B/P DIM</th>
                     </tr>
                 </thead>
                 <tbody>

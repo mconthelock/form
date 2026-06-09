@@ -13,4 +13,8 @@
 	"editor.suggest.snippetsPreventQuickSuggestions": false,
 	"editor.snippetSuggestions": "top",
 	"emmet.triggerExpansionOnTab": true,
+	"[javascript]": {
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.formatOnSave": true
+    },
 }

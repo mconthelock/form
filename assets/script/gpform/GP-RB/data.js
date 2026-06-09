@@ -60,6 +60,29 @@ export async function toggleOther(val) {
     }
 }
 
+function toggleHiddenId2(purposeId) {
+    const isPurpose2 = purposeId == '2';
+
+    const stampTd = $('#stampCircle-name').closest('td');
+    const nameTd = $('#nameInput').closest('td');
+
+    [stampTd, nameTd].forEach((td) => {
+        if (!td.find('.purpose-2-placeholder').length) {
+            td.append(`
+                <div class="purpose-2-placeholder hidden text-center text-2xl text-primary">
+                    -
+                </div>
+            `);
+        }
+
+        td.children(':not(.purpose-2-placeholder)').toggleClass(
+            'hidden',
+            isPurpose2,
+        );
+        td.find('.purpose-2-placeholder').toggleClass('hidden', !isPurpose2);
+    });
+}
+
 export async function renderPurpose(mode = 'create') {
     const purpose = await getPurpose();
     const sortpurpose = purpose.sort((a, b) => a.PURPOSE_ID - b.PURPOSE_ID);
@@ -88,13 +111,23 @@ export async function renderPurpose(mode = 'create') {
         })
         .join('');
     $('#purposeList').html(Purposedata);
+    $(document).off('change', 'input[name="PURPOSE_ID"]');
+    $(document).on('change', 'input[name="PURPOSE_ID"]', function () {
+        toggleHiddenId2($(this).val());
+    });
     const otherId = sortpurpose.find((p) => p.PURPOSE_GROUP == 3)?.PURPOSE_ID;
     $('#otherPurposeId').val(otherId);
 }
 
-export async function renderAttachedFiles(fileList) {
+export async function renderAttachedFiles(fileList, type) {
+    let el;
+    if (type == 1) {
+        el = $('#otherFile-1');
+    } else {
+        el = $('#otherFile-2');
+    }
     if (!fileList.length) {
-        $('.file-list').html(`
+        el.html(`
       <div class="w-full min-h-8 rounded-md border border-base-300 bg-base-100 px-4 py-2 flex items-center">
         <span class="opacity-60">-</span>
       </div>

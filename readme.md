@@ -1,6 +1,6 @@
 # Get Start
 
-## Update 2026-01-16
+## Update 2026-01-27
 
 http://localhost:8080/form/gpform/gp-rb/form/main?no=1&orgNo=030101&y=26
 

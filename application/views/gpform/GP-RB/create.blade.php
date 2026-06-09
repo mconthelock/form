@@ -84,6 +84,12 @@
                         </div>
                         <div id="purposeList" class="flex flex-col gap-3">
                         </div>
+                        <div class="flex gap-4 mt-6">
+                            <label for="otherQty" class="fieldset-legend whitespace-nowrap w-32">แนบไฟล์/Attach
+                                file:</label>
+                            <input type="file" class="file-input file-input-bordered file-input-sm req"
+                                id="otherAttachment" name="otherAttachment" accept=".pdf,.xlsx,.docx,image/*">
+                        </div>
                     </div>
                 </div>
 

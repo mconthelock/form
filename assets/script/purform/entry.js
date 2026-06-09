@@ -6,4 +6,8 @@ module.exports = {
     // Scrap
     purScp_create: "./assets/script/purform/PUR-SCB/create.js",
     purScp_view: "./assets/script/purform/PUR-SCB/view.js",
+
+    // PUR-NVF
+    purNvf: "./assets/script/purform/PUR-NVF/create.js",
+
 };

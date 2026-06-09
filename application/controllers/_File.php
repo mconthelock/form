@@ -107,7 +107,7 @@ trait _File{
 
         $config['upload_path']   = $path;
         $config['allowed_types'] = '*';
-        $config['max_size'] = 1024*8;
+        // $config['max_size'] = 1024*8;
         
         $this->load->library('upload', $config);
         if($this->upload->do_upload('file')){
