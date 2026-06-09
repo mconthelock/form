@@ -61,37 +61,43 @@
                     <span class="w-32 shrink-0 text-gray-950">Request Type</span>  
                     <div class="flex items-center gap-6 h-8">
                         <label class="flex items-center gap-2 cursor-pointer">
-                            <input type="radio" name="REQTYPE" value="A" r-type="A" class="radio radio-xs req" disabled>
+                            <input type="radio" name="REQTYPE_SHOW" value="A" r-type="A" class="radio radio-xs req" disabled>
                             <span class="text-sm ">Add</span>
                         </label>
                         <label class="flex items-center gap-2 cursor-pointer">
-                            <input type="radio" name="REQTYPE" value="U" r-type="U" class="radio radio-xs req" disabled>
+                            <input type="radio" name="REQTYPE_SHOW" value="U" r-type="U" class="radio radio-xs req" disabled>
                             <span class="text-sm ">Update</span>
                         </label>
                         <label class="flex items-center gap-2 cursor-pointer">
-                            <input type="radio" name="REQTYPE" value="D" r-type="D" class="radio radio-xs req" disabled>
+                            <input type="radio" name="REQTYPE_SHOW" value="D" r-type="D" class="radio radio-xs req" disabled>
                             <span class="text-sm">Delete</span>
                         </label>
                     </div>
                 </div> 
-                <div class="flex flex-col md:flex-row gap-4 items-start md:items-center pb-2 w-full">
+                <div id="row-typejob" class="flex flex-col md:flex-row gap-4 items-start md:items-center pb-2 w-full">
                     <span class="w-32 shrink-0 text-gray-950">Type of Job</span>  
                     <div class="flex items-center gap-6 h-8">
                         <div id="TYPEJOB" class="w-full"></div>
                     </div>
                 </div> 
-                <div class="flex flex-col md:flex-row gap-4 items-start md:items-center pb-2 w-full">
+                <div id="row-service" class="flex flex-col md:flex-row gap-4 items-start md:items-center pb-2 w-full">
                     <span class="w-32 shrink-0  text-gray-950">Service</span>  
                     <div class="flex items-center gap-6 h-8">
                         <div id="SERVICE" class="w-full"></div>
                     </div>
                 </div> 
-                    <div class="flex flex-col md:flex-row gap-4 items-start md:items-center pb-2 w-full">
+                <div id="row-purpose" class="flex flex-col md:flex-row gap-4 items-start md:items-center pb-2 w-full">
                     <span class="w-32 shrink-0  text-gray-950">Purpose</span>  
                     <div class="flex items-center gap-6 h-8">
                         <div id="PURPOSE" class="w-full"></div>
                     </div>
                 </div> 
+                <div id="row-reason" class="flex flex-col md:flex-row gap-4 items-start md:items-center pb-2 w-full">
+                    <span class="w-32 shrink-0  text-gray-950">Reason</span>  
+                    <div class="flex items-center gap-6 h-8">
+                        <div id="REASON" class="w-full"></div>
+                    </div>
+                </div>
                 </div>
                 </section>
                 <div class="divider"></div>
@@ -102,7 +108,7 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-8">
             <div>
                 <span class="block text-xs font-medium text-gray-400 ">Company Name</span>
-                <span id="COMPANY_NAME" class="text-base font-semibold text-gray-900"></span><span id="VENDOR_LOCATION" class="badge badge-sm badge-success ml-2 text-xs"></span>
+                <span id="COMPANY_NAME" class="text-base font-semibold text-gray-900"></span><span id="VENDOR_LOCATION_SHOW" class="badge badge-sm badge-success ml-2 text-xs"></span>
             </div>
             <div>
                 <span class="block text-xs font-medium text-gray-400 ">Contact Name</span>

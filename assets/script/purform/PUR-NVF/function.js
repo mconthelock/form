@@ -21,8 +21,13 @@ export function selectAttachType(reqtype,type) {
         }
     }else if(reqtype == "U")
     {
-          attachTypeManager.show([
+        attachTypeManager.show([
                     "letter",
+                    "other"
+                ]);
+    }else if(reqtype == "D")
+    {
+        attachTypeManager.show([
                     "other"
                 ]);
     }

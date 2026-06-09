@@ -51,7 +51,7 @@ $(document).on("change", 'input[name="files"]', async function (e) {
 //     acceptPoManager.change();
 // });
 
-$(document).on("change", 'input[name="VENDOR_LOCATION"]', async function () {
+$(document).on("change", 'input[name="VENDOR_LOCATION_SHOW"]', async function () {
     vendorTypeManager.change();
 });
 
@@ -132,7 +132,7 @@ $(document).on("select2:select", ".sub-district",async function (e) {
     subDistrictManager.change(e);
   });
 
-$(document).on("change", 'input[name="REQTYPE"]', function () {
+$(document).on("change", 'input[name="REQTYPE_SHOW"]', function () {
     ReqtypeManager.change();
 });
 

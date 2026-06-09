@@ -169,6 +169,36 @@ export const purposeManager = {
     }
 };
 
+export const reasonManager = {
+    get input() {
+        return $("#REASON");
+    },
+    set text(val) {
+        this.input.text(val || "");
+    },
+    get value() {
+        return this.input.val();
+    },
+    set value(val) {
+        this.input.val(val);
+    },
+    addcls(cls) {
+        this.input.addClass(cls);
+    },
+    // เพิ่มฟังก์ชันลบ class 'req'
+    removecls(cls) {
+        this.input.removeClass(cls);
+    }
+};
+
+
+
+
+
+
+
+
+
 export const comnameManager = {
     get input() {
         return $("#COMPANY_NAME");
@@ -188,7 +218,7 @@ export const comnameManager = {
 
 export const vendorTypeManager = {
     get radio() {
-        return $('input[name="VENDOR_LOCATION"]');
+        return $('input[name="VENDOR_LOCATION_SHOW"]');
     },
     get type() {
         let type = null;
@@ -200,12 +230,13 @@ export const vendorTypeManager = {
         return type;
     },
     set text(val) {
-        $("#VENDOR_LOCATION").text(val);
+        $("#VENDOR_LOCATION_SHOW").text(val);
     },
     set value(val) {
         this.radio.each(function () {
             if ($(this).val() == val) {
                 $(this).prop("checked", true);
+                $("#VENDOR_LOCATION").val(val);
             }
         });
         this.change();
@@ -680,9 +711,23 @@ export const formManager = {
         //Request Type
         ReqtypeManager.value = data.REQTYPE;
         //Type of Job  
+        if(data.REQTYPE == "A")
+        {
+            $('#row-typejob, #row-service, #row-purpose').removeClass('hidden');
+            $('#row-reason').addClass('hidden'); 
+        }else if(data.REQTYPE == "U")
+        {
+            $('#row-typejob, #row-service, #row-purpose, #row-reason').addClass('hidden');
+        }else if(data.REQTYPE == "D")
+        {
+            $('#row-typejob, #row-service, #row-purpose').addClass('hidden');
+            $('#row-reason').removeClass('hidden');   
+        }
         typejobManager.text = data.LISTS[0].TYPEJOB || "-";
         serviceManager.text = data.LISTS[0].SERVICE || "-";
         purposeManager.text = data.LISTS[0].PURPOSE || "-";
+        reasonManager.text = data.LISTS[0].REASON || "-";
+
 
        // comnameManager.text =  data.LISTS[0].COMNAME || "-";
         comnameManager.text = (data.LISTS[0].VENDCODE ? "("+data.LISTS[0].VENDCODE+")" + " " : "") + (data.LISTS[0].COMNAME || "-");
@@ -713,28 +758,33 @@ export const formManager = {
         $("#BRANCH").text(data.LISTS[0].BRANCH || "-");
         $("#ACCNUMBER").text(data.LISTS[0].ACCNUMBER || "-");
         $("#PAYMENT_TERM").text(data.LISTS[0].TERM.STERMDESC || "-");
-         selectAttachType(data.REQTYPE,data.LISTS[0].VENDTYPE);
-        // Attach Type
-        attachTypeManager.show(["other"]);
-        attachTypeManager.checkbox.each(function () {  
-            const value = $(this).val();   
-            const type = $(this).attr("a-type");
-            if (data.ATTACH_TYPE.includes(value)) {
-                console.log("-------------"+value);
-                $(this).prop("checked", true);
-                if (type == "other") {
-                    // Attach Other
-                    attachOtherManager.text = data.ATTACH_OTHER || "-";
+        if(data.ATTACH_TYPE)
+        {
+            selectAttachType(data.REQTYPE,data.LISTS[0].VENDTYPE);
+            // Attach Type
+            attachTypeManager.show(["other"]);
+            attachTypeManager.checkbox.each(function () {  
+                const value = $(this).val();   
+                const type = $(this).attr("a-type");
+                if (data.ATTACH_TYPE.includes(value)) {
+                    console.log("-------------"+value);
+                    $(this).prop("checked", true);
+                    if (type == "other") {
+                        // Attach Other
+                        attachOtherManager.text = data.ATTACH_OTHER || "-";
+                    }
                 }
-            }
-        });
+            });
+            
+        }
+
         // // Attached Files
         // attachFileManager.showFiles(data.FILES);
     },
     setReturn(data) {
         // Requester
       
-        if(data.REQTYPE == "U")
+        if(data.REQTYPE == "U" || data.REQTYPE == "D")
         {
             vendorCodeManager.value = data.LISTS[0].VENDCODE;       
             
@@ -750,6 +800,9 @@ export const formManager = {
         serviceManager.value = data.LISTS[0].SERVICE;
         //Purpose
         purposeManager.value = data.LISTS[0].PURPOSE;
+        //Reason
+        reasonManager.value = data.LISTS[0].REASON;
+
         //Company Name
         comnameManager.value = data.LISTS[0].COMNAME;
         //Vendor Type
@@ -794,12 +847,14 @@ export const formManager = {
         $("#ACCNUMBER").val(data.LISTS[0].ACCNUMBER || "");
         
         paymentTermManager.value = data.LISTS[0].TERMCODE;
-        // Attach Type
-        attachTypeManager.checked = data.ATTACH_TYPE.split("|");
-        // Attach Other
-        attachOtherManager.value = data.ATTACH_OTHER || "";
-        if(data.REQTYPE == "U") {
-        // แนะนำให้เปลี่ยนจาก $(`#V-section`) มาใช้คลาสช่วยค้นหาแบบเปิดกว้าง เผื่อไอดีซ้ำในหน้าจอค่ะ
+        if(data.ATTACH_TYPE)
+        {
+            // Attach Type
+            attachTypeManager.checked = data.ATTACH_TYPE.split("|");
+            // Attach Other
+            attachOtherManager.value = data.ATTACH_OTHER || "";
+        }
+        if(data.REQTYPE == "U" || data.REQTYPE == "D" ) {
         $("[id='V-section']").removeClass("hidden");
         $("[id='F-section']").removeClass("hidden");
    
@@ -821,6 +876,7 @@ export const paymentTermManager = {
     set value(val) {
         this.list.forEach((id) => {
             $(`#${id}`).val(val).trigger("change");
+            $(`#${id}_HIDDEN`).val(val);
         });
     },
     getValue(id) {
@@ -842,6 +898,9 @@ export const paymentTermManager = {
                 width: "60%",
                 emptyValue: false,
             });
+            $(`#${id}`).on("change", function() {
+                $(`#${id}_HIDDEN`).val($(this).val());
+            });
         }
     },
     /**
@@ -855,6 +914,7 @@ export const paymentTermManager = {
                 $("#" + id)
                     .val(value.toUpperCase())
                     .trigger("change");
+                $(`#${id}_HIDDEN`).val(value.toUpperCase());
             }
         }
     },
@@ -1231,7 +1291,7 @@ export const subDistrictManager = {
 
 export const ReqtypeManager = {
     get radio() {
-        return $('input[name="REQTYPE"]');
+        return $('input[name="REQTYPE_SHOW"]');
     },
     get type() {
         let type = null;
@@ -1255,19 +1315,49 @@ export const ReqtypeManager = {
     },
     change() {
         const type = this.type;
+        $(`#REQTYPE`).val(type);
         $("#A-section, #U-section, #D-section , #V-section ,#F-section").addClass("hidden");
         $(`#${type}-section`).removeClass("hidden");
+        var vSection = $('#V-section');
+        var fSection = $('#F-section');
         if(type == "A"){
             $(`#V-section`).removeClass("hidden");
             $(`#F-section`).removeClass("hidden");
             typejobManager.addcls("req");
             serviceManager.addcls("req");
             purposeManager.addcls("req");
-        }else if(type == "U")
+            
+        }else
         {
             typejobManager.removecls("req");
             serviceManager.removecls("req");
             purposeManager.removecls("req");
+            
+        }
+        if(type=="D")
+        {
+            $(`#U-section`).removeClass("hidden");
+            reasonManager.addcls("req");
+            vSection.find('input, textarea, select').removeClass('req');
+            vSection.find('input, textarea').prop('readonly', true).addClass('bg-gray-100');
+            vSection.find('select, input[type="radio"]').prop('disabled', true);
+            vSection.find('.required').removeClass('required').addClass('was-required');
+            fSection.find('.required').removeClass('required').addClass('was-required');
+            fSection.find('input, textarea, select').removeClass('req');
+       
+          
+            
+        }else{
+          const ignoredFields = '#FAX, #COUNTRY_SELECT, #ATTACH_OTHER, #ADDRESS_TH, #PROVINCE_TH, #DISTRICT_TH, #SUB_DISTRICT_TH, #POSTCODE_TH, #COUNTRY_TH';
+            reasonManager.removecls("req");
+            vSection.find('input, textarea, select').not(ignoredFields).addClass('req');
+            vSection.find('input, textarea').prop('readonly', false).removeClass('bg-gray-100');
+            vSection.find('select, input[type="radio"]').prop('disabled', false);
+            vSection.find('.was-required').addClass('required').removeClass('was-required');
+            fSection.find('.was-required').addClass('required').removeClass('was-required');
+            fSection.find('input, textarea, select').addClass('req');
+        
+           
         }
     },
 };
@@ -1328,11 +1418,16 @@ export const attachTypeManager = {
         });
     },
     show(list) {
+        const isDeleteMode = $('input[name="REQTYPE_SHOW"]:checked').val() === 'D';
         this.checkbox.each(function () {
             const type = $(this).attr("a-type");
             if (list.includes(type)) {
-                $(this).addClass("req");
                 $(`#attach-${type}`).removeClass("hidden");
+                if(!isDeleteMode){
+                    $(this).addClass("req");
+                }else{
+                    $(this).removeClass("req");
+                }
             }
         });
     },
@@ -1355,12 +1450,18 @@ const attachOtherManager = {
         this.input.val(val);
     },
     disabled(isDisabled) {
+        const isDeleteMode = $('input[name="REQTYPE_SHOW"]:checked').val() === 'D';
         this.input.prop("disabled", isDisabled);
         if (isDisabled) {
             this.input.val("");
             this.input.removeClass("req");
         } else {
-            this.input.addClass("req");
+            if (isDeleteMode) {
+                this.input.removeClass("req");
+            }else{
+                this.input.addClass("req");
+            }
+            
         }
         removeClassError(this.input);
     },
@@ -1510,6 +1611,7 @@ export const actionFormManager = {
                 {element: purposeManager.input, message: "Please input Purpose."},
                 {element: comnameManager.input, message: "Please input Company Name."},
                 {element: ReqtypeManager.radio, message: "Please select Request Type."},
+                reasonManager.input.hasClass('req') ? {element: reasonManager.input, message: "Please input Reason."} : null,
                 {element: vendorTypeManager.radio, message: "Please select Local or Overseas."},
                  countryManager.select.hasClass('req') ? {element: countryManager.select, message: "Please select Country."} : null,
                 {element: provinceEnManager.input, message: "Please input Province (English)."},
@@ -1520,7 +1622,7 @@ export const actionFormManager = {
                 {element: attachFileManager.input, message: "Please attach files."},
             ].filter(Boolean);
             if (!(await requiredForm("#form", requiredMessage))) return;
-
+         
             const formData = new FormData($("#form")[0]);
             const data = state.data;
             formData.set("NFRMNO", data.NFRMNO);
@@ -1528,14 +1630,14 @@ export const actionFormManager = {
             formData.set("CYEAR", data.CYEAR);
             formData.set("REMARK", this.remark.val());
             const LISTS = [
-                {"PURPOSE" : formData.get("PURPOSE") , "TYPE_JOB" : formData.get("TYPE_JOB") , "SERVICE" : formData.get("SERVICE")}
+                {"PURPOSE" : formData.get("PURPOSE") , "TYPEJOB" : formData.get("TYPEJOB") , "SERVICE" : formData.get("SERVICE") , "REASON" : formData.get("REASON")}
             ];
             formData.set("LISTS", JSON.stringify(LISTS));
-           
 
             const filteredFormData = filterFormData(formData);
+            
             logFormData(filteredFormData);
-
+           
             const res = await create(filteredFormData);
 
             if (res.status == true) {
@@ -1571,6 +1673,7 @@ export const actionFormManager = {
                     {element: typejobManager.input, message: "Please input Type of Job."},
                     {element: serviceManager.input, message: "Please input Service."},
                     {element: purposeManager.input, message: "Please input Purpose."},
+                    reasonManager.input.hasClass('req') ? {element: reasonManager.input, message: "Please input Reason."} : null,
                     {element: comnameManager.input, message: "Please input Company Name."},
                     {element: ReqtypeManager.radio, message: "Please select Request Type."},
                     {element: vendorTypeManager.radio, message: "Please select Local or Overseas."},
@@ -1582,8 +1685,13 @@ export const actionFormManager = {
                     {element: attachTypeManager.checkbox, message: "Please select Attach Type."},
                     {element: attachFileManager.input, message: "Please attach files."},
                 ].filter(Boolean);
+                if(attachFileManager.checkedFilesLength > 0)
+                {
+                    $(`#F-section`).find('input, textarea, select').removeClass('req');
+                }
                 if (!(await requiredForm("#form", requiredMessage))) return;
-                if (attachFileManager.checkedFilesLength === 0) {
+                console.log(attachFileManager.checkedFilesLength);
+                if (attachFileManager.checkedFilesLength === 0 && $("#REQTYPE").val() != "D") {
                     showMessage(
                         "Please upload attached files before approve.",
                         "warning",
@@ -1609,8 +1717,8 @@ export const actionFormManager = {
                 });
 
                 const filteredFormData = filterFormData(formData);
-                logFormData(filteredFormData);
-
+                //logFormData(filteredFormData);
+               // throw new Error(res.message);
                 res = await approveReturn(filteredFormData);
             } else {
                 res = await doaction({
