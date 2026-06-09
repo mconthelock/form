@@ -54,6 +54,21 @@ $(document).ready(function () {
                     $('#sseccode').val(user?.SSECCODE);
                     $('#sdepcode').val(user?.SDEPCODE);
                     $('#ssec').val($.trim(user?.SSEC || '').replace(/\//g, '').substring(0, 3));
+                    const ssecCode = $.trim(user?.SSECCODE || '');
+                    const ssec = $.trim(user?.SSEC || '');
+
+                    $('#sseccode').val(ssecCode);
+                    $('#sdepcode').val(user?.SDEPCODE);
+                    $('#ssec').val(ssec);
+
+                    $('#approve_by')
+                        .empty()
+                        .append(
+                            $('<option>', {
+                                value: ssecCode,
+                                text: ssec
+                            })
+                        );
             });
         },
 
