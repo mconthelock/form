@@ -34,8 +34,10 @@ $(document).ready(function () {
         },
 
         init: function () {
-            //this.bindEvents();
+            this.bindEvents();
             this.initReqno();
+            this.initApplyForOptions();
+            this.initRadioTextbox();
         },
 
         initReqno: function () {
@@ -55,6 +57,82 @@ $(document).ready(function () {
             });
         },
 
+        bindEvents: function () {
+            $('#request_by').on('input', function () {
+                const val = $(this).val();
+
+                if (val.length === 5) {
+                    OR.checkEmployee($(this));
+                } else {
+                    const target = $('#request_by');
+                    $(target).text('');
+                }
+            });
+        },
+        initApplyForOptions: function () {
+            const applyForList = [
+                'BS,SH,GC',
+                'PR',
+                'PB,PS',
+                'TP,IW',
+                'EW,AG,YS,SY',
+                'RL',
+                'VM',
+                'HB',
+                'HG',
+                'BD,RD,SD',
+                'MC,NL',
+                'AC,WC',
+                'ASSY',
+                'Other',
+            ];
+
+            const $applyFor = $('#apply_for');
+
+            $applyFor.empty().append('<option value="">--- Please select ---</option>');
+
+            applyForList.forEach(function (item) {
+                $applyFor.append(`<option value="${item}">${item}</option>`);
+            });
+        },
+
+        initRadioTextbox: function () {
+            function toggleTextbox(radioName, textboxMap) {
+                const selectedValue = $(`input[name="${radioName}"]:checked`).val();
+
+                Object.keys(textboxMap).forEach(function (value) {
+                    const $textbox = $(textboxMap[value]);
+
+                    if (selectedValue === value) {
+                        $textbox.prop('disabled', false).focus();
+                    } else {
+                        $textbox.prop('disabled', true).val('');
+                    }
+                });
+            }
+
+            $('input[name="type_form"]').on('change', function () {
+                toggleTextbox('type_form', {
+                    REVISE: '#current_no',
+                });
+            });
+
+            $('input[name="item_type"]').on('change', function () {
+                toggleTextbox('item_type', {
+                    ALL: '#overall_item',
+                    OR: '#or_item',
+                });
+            });
+
+            toggleTextbox('type_form', {
+                REVISE: '#current_no',
+            });
+
+            toggleTextbox('item_type', {
+                ALL: '#overall_item',
+                OR: '#or_item',
+            });
+        },
 
         setLoading: function (isLoading) {
             $('#btnSaveDraft, #btnSendForm, #btnAddRow').prop('disabled', isLoading);

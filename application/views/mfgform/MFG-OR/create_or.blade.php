@@ -105,10 +105,7 @@
                     </div>
                     <div class="col-span-12 md:col-span-4 px-4 py-2">
                         <select id="approve_by" name="approve_by" class="or-input max-w-[260px]">
-                            <option value="">--- Please select ---</option>
-                            <option value="WSD">WSD Sec.</option>
-                            <option value="MFG">MFG Sec.</option>
-                            <option value="QA">QA Sec.</option>
+                        
                         </select>
                     </div>
                 </div>
@@ -282,5 +279,5 @@
 @endsection
 
 @section('scripts')
-<!--<script src="{{ $_ENV['APP_JS'] }}/mfg_or_main.js?ver={{ $GLOBALS['version'] }}"></script>-->
+    <script src="{{ $_ENV['APP_JS'] }}/mfg_or_create.js?ver={{ $GLOBALS['version'] }}"></script>
 @endsection
