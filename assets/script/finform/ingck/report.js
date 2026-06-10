@@ -611,17 +611,17 @@ function mapReportToRows(reportData = [], stamp = []) {
       const withdrawAmt = numberValue(
         pickDutyValue(item, ["WD", "WITHDRAW"], dutyValue, dutyKey, "AMT"),
       );
+      const remainingQty = buyQty - withdrawQty;
 
-      runningQty[dutyKey] = (runningQty[dutyKey] || 0) + buyQty - withdrawQty;
+      runningQty[dutyKey] = (runningQty[dutyKey] || 0) + remainingQty;
 
       row[`BUY_QTY${columnIndex}`] = buyQty;
       row[`BUY_AMT${columnIndex}`] = buyAmt || buyQty * numberValue(dutyValue);
       row[`WD_QTY${columnIndex}`] = withdrawQty;
       row[`WD_AMT${columnIndex}`] =
         withdrawAmt || withdrawQty * numberValue(dutyValue);
-      row[`RM_QTY${columnIndex}`] = runningQty[dutyKey];
-      row[`RM_AMT${columnIndex}`] =
-        runningQty[dutyKey] * numberValue(dutyValue);
+      row[`RM_QTY${columnIndex}`] = remainingQty;
+      row[`RM_AMT${columnIndex}`] = remainingQty * numberValue(dutyValue);
     });
 
     row.BALANCE_QTY = stamp.reduce((total, stampItem) => {
@@ -903,7 +903,11 @@ function isNumericReportColumn(columnName) {
 }
 
 function shouldShowReportTotal(columnName) {
-  return isNumericReportColumn(columnName) && !/^RM_(QTY|AMT)\d+$/.test(columnName);
+  return (
+    isNumericReportColumn(columnName) &&
+    !/^RM_(QTY|AMT)\d+$/.test(columnName) &&
+    !/^BALANCE_(QTY|AMT)$/.test(columnName)
+  );
 }
 
 function getDateTime(item) {
@@ -914,11 +918,11 @@ function getDateTime(item) {
 
 function getEffectiveDate(item = {}) {
   return (
+    item.DATE_RECEIVE ||
+    item.DATE_RECIEVE ||
     item.EFFECTIVE_DATE ||
     item.EFF_DATE ||
     item.DATE_EFFECTIVE ||
-    item.DATE_RECEIVE ||
-    item.DATE_RECIEVE ||
     ""
   );
 }

@@ -4,6 +4,7 @@ import { createTable, newRow } from "@amec/webasset/dataTable";
 import { setDatePicker } from "@amec/webasset/flatpickr";
 import { webflowSubmit } from "@amec/webasset/components/form";
 import { fetchUtils } from "@amec/webasset/api/fetch-utils";
+import { redirectWebflow } from "@amec/webasset/form";
 
 /*--------------------READY FUNCTION--------------------*/
 
@@ -73,6 +74,14 @@ async function getStamp() {
 }
 var table, mapColumns;
 var dutyStampList = [];
+
+function numberValue(value) {
+  if (typeof value === "string") {
+    return Number(value.replace(/[\$,]/g, "")) || 0;
+  }
+
+  return Number(value) || 0;
+}
 
 async function createTableStamp(data = []) {
   mapColumns = [...columns];
@@ -166,7 +175,9 @@ async function createTableStamp(data = []) {
               const index = columnName.replace("DUTY_QTY", "");
               const amtColumn = `DUTY_AMT${index}`;
               const dutyValue = stamp[Number(index) - 1].DUTY_VALUE;
-              const calculatedAmt = value * dutyValue;
+              const qty = Number(value);
+              const calculatedAmt = qty * dutyValue;
+              rowData[columnName] = qty;
               rowData[amtColumn] = calculatedAmt;
               table.row(cell.index().row).data(rowData).draw(false);
             },
@@ -234,16 +245,14 @@ $(document).on("click", "#btnRequest", async function (e) {
 
       let hasQty = false;
 
-      Object.keys(row).forEach((key) => {
-        if (!key.startsWith("DUTY_QTY")) return;
-
-        const index = key.replace("DUTY_QTY", "");
-        const qty = Number(row[`DUTY_QTY${index}`] || 0);
+      dutyStampList.forEach((stampItem, stampIndex) => {
+        const index = stampIndex + 1;
+        const qty = numberValue(row[`DUTY_QTY${index}`]);
 
         if (qty > 0) {
           hasQty = true;
 
-          const dutyValue = dutyStampList[Number(index) - 1]?.DUTY_VALUE;
+          const dutyValue = stampItem?.DUTY_VALUE;
 
           if (
             dutyValue === undefined ||
@@ -258,6 +267,9 @@ $(document).on("click", "#btnRequest", async function (e) {
             REASON: row.REASON,
             DUTY_VALUE: dutyValue,
             QTY: qty,
+            AMT:
+              numberValue(row[`DUTY_AMT${index}`]) ||
+              qty * numberValue(dutyValue),
           });
         }
       });
@@ -283,10 +295,6 @@ $(document).on("click", "#btnRequest", async function (e) {
     formData.set("EFFECTIVE_DATE", $("#EffDate").val() || "");
     formData.set("LOCATION", $("#location").val() || "");
 
-    /*
-  DATA เป็น array/object ต้อง stringify ก่อน
-  เพราะ FormData ส่ง object ตรง ๆ ไม่ได้แบบที่มนุษย์อยากให้มันได้
-*/
     formData.set("DATA", JSON.stringify(dataList));
 
     const files = $("#attachfile")[0]?.files || [];
@@ -300,7 +308,12 @@ $(document).on("click", "#btnRequest", async function (e) {
     const res = await createForm(formData);
     console.log(res);
 
-    showMessage("Request submitted successfully", "success");
+    if (res?.status === false) {
+      throw new Error(res?.message || "Cannot submit request");
+    }
+
+    showMessage(res?.message || "Request submitted successfully", "success");
+    redirectWebflow();
   } catch (error) {
     console.error(error);
     showMessage(error.message, "error");

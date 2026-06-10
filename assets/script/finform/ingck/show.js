@@ -3,6 +3,8 @@ import { getExtData, getFormDetail, getMode, showflow } from "@amec/webasset/api
 import { showMessage } from "@amec/webasset/utils";
 import { createTable } from "@amec/webasset/dataTable";
 import { webflowSubmit } from "@amec/webasset/components/form";
+import { redirectWebflow } from "@amec/webasset/form";
+import { setDatePicker } from "@amec/webasset/flatpickr";
 /*--------------------GLOBAL--------------------*/
 
 let table;
@@ -10,6 +12,7 @@ let mapColumns = [];
 let dutyStampList = [];
 let isActionProcessing = false;
 let cextData = "";
+let workflowMode = "";
 
 const columns = [
   { data: "LINEID", defaultContent: "" },
@@ -20,6 +23,11 @@ const columns = [
 
 $(async function () {
   try {
+    setDatePicker({
+      element: "#RetDate",
+    });
+    
+
     lockForm();
 
     const form = getFormKeyFromUrl();
@@ -68,6 +76,7 @@ $(async function () {
     await renderWorkflowAction(form);
 
     lockForm();
+    applyReceiveDateApprovalState();
   } catch (error) {
     console.error(error);
     showMessage(error.message || "Cannot load form data", "error");
@@ -87,10 +96,17 @@ $(document).on("click", 'button[name="btnAction"]', async function (e) {
   const form = getFormKeyFromUrl();
   const action = $(this).val();
   const remark = $("#remark").val() || "";
+  const dateReceive = $("#RetDate").val() || "";
 
   if (action === "reject" && !String(remark).trim()) {
     showMessage("Please input remark for reject.", "warning");
     $("#remark").trigger("focus");
+    return;
+  }
+
+  if (shouldRequireReceiveDateOnApprove(action) && !dateReceive) {
+    showMessage("Please choose Date Receive.", "warning");
+    $("#RetDate").trigger("focus");
     return;
   }
 
@@ -110,6 +126,10 @@ $(document).on("click", 'button[name="btnAction"]', async function (e) {
       CEXTDATA: getCextDataValue(cextData),
     };
 
+    if (shouldRequireReceiveDateOnApprove(action)) {
+      actionPayload.DATE_RECEIVE = dateReceive;
+    }
+
     console.log("FIN-DS approve payload:", actionPayload);
 
     const result = await approveFinDs(actionPayload);
@@ -119,7 +139,7 @@ $(document).on("click", 'button[name="btnAction"]', async function (e) {
     }
 
     showMessage(result.message || "Workflow action completed", "success");
-    window.location.reload();
+    redirectWebflow();
   } catch (error) {
     console.error(error);
     showMessage(error.message || "Cannot process workflow action", "error");
@@ -154,6 +174,20 @@ function getFormKeyFromUrl() {
   return form;
 }
 
+function applyReceiveDateApprovalState() {
+  const canInputReceiveDate =
+    workflowMode === "2" && getCextDataValue(cextData) === "01";
+
+  $("#RetDate")
+    .prop("disabled", !canInputReceiveDate)
+    .prop("readonly", !canInputReceiveDate)
+    .toggleClass("show-readonly", !canInputReceiveDate);
+}
+
+function shouldRequireReceiveDateOnApprove(action) {
+  return action === "approve" && getCextDataValue(cextData) === "01";
+}
+
 function hasFormKey(form) {
   return Boolean(
     form.NFRMNO &&
@@ -175,7 +209,7 @@ async function getStamp() {
 
 async function getShowData(form) {
   return await fetchUtils({
-    url: `${process.env.APP_API}/finform/fin-ds/show/${encodeURIComponent(form.NFRMNO)}/${encodeURIComponent(form.VORGNO)}/${encodeURIComponent(form.CYEAR)}/${encodeURIComponent(form.NRUNNO)}`,
+    url: `${process.env.APP_API}/finform/fin-ds/show/${encodeURIComponent(form.NFRMNO)}/${encodeURIComponent(form.VORGNO)}/${encodeURIComponent(form.CYEAR)}/${encodeURIComponent(form.CYEAR2)}/${encodeURIComponent(form.NRUNNO)}`,
     method: "GET",
   });
 }
@@ -275,6 +309,8 @@ async function renderWorkflowAction(form) {
       }),
     );
 
+    workflowMode = mode;
+
     cextData = getCextDataValue(
       await getExtData({
         ...form,
@@ -335,8 +371,8 @@ async function renderWorkflowAction(form) {
   }
 }
 function renderFinDsHeader(header = {}) {
-  $("#EffDate").val(formatDate(header.EFFECTIVE_DATE));
-  $("#RetDate").val(formatDate(header.DATE_RECEIVE));
+  setDateInputValue("#EffDate", formatDate(header.EFFECTIVE_DATE));
+  setDateInputValue("#RetDate", formatDate(header.DATE_RECEIVE));
   $("#location").val(header.LOCATION || "");
   $("#REMARK").val(header.REMARK || "");
   const optionCode = String(header.OPTION_CODE ?? "0");
@@ -645,6 +681,22 @@ function formatDate(value) {
   }
 
   return text;
+}
+
+function setDateInputValue(selector, value) {
+  const element = $(selector)[0];
+
+  if (element?._flatpickr) {
+    if (value) {
+      element._flatpickr.setDate(value, false);
+    } else {
+      element._flatpickr.clear();
+    }
+
+    return;
+  }
+
+  $(selector).val(value || "");
 }
 
 function formatNumber(value) {
