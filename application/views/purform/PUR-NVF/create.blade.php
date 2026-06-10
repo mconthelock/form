@@ -31,6 +31,9 @@
     
 
 
+
+
+
 </style>
 @endsection
 
@@ -62,7 +65,7 @@
                         <div class="flex flex-col md:flex-row gap-4 items-start md:items-center  pb-2">
                 <span class="w-32 shrink-0 font-semibold text-gray-950">Request Type <span class="text-red-500">**</span></span>  
                 <div class="flex flex-row items-center gap-6 h-8 overflow-x-auto whitespace-nowrap">
-                        <input type="hidden" name="REQTYPE" id="REQTYPE"  >
+                        <input type="hidden" name="REQTYPE" id="REQTYPE"  />
                         <label class="flex items-center gap-2 cursor-pointer">
                             <input type="radio" name="REQTYPE_SHOW" value="A" r-type="A" class="radio radio-xs req" >
                             <span class="text-sm  font-semibold">Add</span>

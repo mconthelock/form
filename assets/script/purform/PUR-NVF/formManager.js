@@ -247,6 +247,7 @@ export const vendorTypeManager = {
         attachTypeManager.hide("other");
         attachTypeManager.reset("other");
         const type = this.type;
+        $("#VENDOR_LOCATION").val(type);
         const reqtype = ReqtypeManager.type;
         selectAttachType(reqtype,type);
         clearaddr();
@@ -1312,6 +1313,7 @@ export const ReqtypeManager = {
     },
     disabled(isDisabled) {
         this.radio.prop("disabled", isDisabled);
+        this.updateStyles(); 
     },
     change() {
         const type = this.type;
@@ -1320,12 +1322,14 @@ export const ReqtypeManager = {
         $(`#${type}-section`).removeClass("hidden");
         var vSection = $('#V-section');
         var fSection = $('#F-section');
+         this.updateStyles(); 
         if(type == "A"){
             $(`#V-section`).removeClass("hidden");
             $(`#F-section`).removeClass("hidden");
             typejobManager.addcls("req");
             serviceManager.addcls("req");
             purposeManager.addcls("req");
+           
             
         }else
         {
@@ -1344,9 +1348,6 @@ export const ReqtypeManager = {
             vSection.find('.required').removeClass('required').addClass('was-required');
             fSection.find('.required').removeClass('required').addClass('was-required');
             fSection.find('input, textarea, select').removeClass('req');
-       
-          
-            
         }else{
           const ignoredFields = '#FAX, #COUNTRY_SELECT, #ATTACH_OTHER, #ADDRESS_TH, #PROVINCE_TH, #DISTRICT_TH, #SUB_DISTRICT_TH, #POSTCODE_TH, #COUNTRY_TH';
             reasonManager.removecls("req");
@@ -1356,10 +1357,106 @@ export const ReqtypeManager = {
             vSection.find('.was-required').addClass('required').removeClass('was-required');
             fSection.find('.was-required').addClass('required').removeClass('was-required');
             fSection.find('input, textarea, select').addClass('req');
-        
-           
         }
     },
+    // updateStyles() {
+    //     console.log("cccccccccccccc");
+        
+    //     this.radio.each(function () {
+    //         const $radio = $(this);
+    //         const $label = $radio.closest('label');
+    //         const $span = $label.find('span');
+    //         const val = $radio.val();
+
+    //         // ล้างคลาสสีและ opacity เดิมออกให้เกลี้ยงก่อนทาสีใหม่
+    //         $radio.removeClass('radio-success radio-info radio-error [opacity:1!important]');
+    //         $span.removeClass('text-green-600 text-blue-600 text-red-600 [opacity:1!important]').addClass('text-slate-400');
+    //         $label.removeClass('opacity-40');
+
+    //         if ($radio.is(':checked')) {
+    //             // ตัวที่ถูกเลือก: เติมคลาสสีของตัวเอง และบังคับให้สว่างชัด 100% ทะลุกระดอง disabled
+    //             $radio.addClass('[opacity:1!important]');
+    //             $span.addClass('[opacity:1!important]').removeClass('text-slate-400');
+
+    //             if (val === 'A') {
+    //                 $radio.addClass('radio-success');
+    //                 $span.addClass('text-green-600');
+    //             } else if (val === 'U') {
+    //                 $radio.addClass('radio-info');
+    //                 $span.addClass('text-blue-600');
+    //             } else if (val === 'D') {
+    //                 $radio.addClass('radio-error');
+    //                 $span.addClass('text-red-600');
+    //             }
+    //         } else {
+    //             // ตัวที่ไม่ถูกเลือก: ทำให้จางลง 40% ทั้งกลุ่ม (ถ้าวิทยุติด disabled อยู่)
+    //             if ($radio.is(':disabled')) {
+    //                 $label.addClass('opacity-40');
+    //             }
+    //         }
+    //     });
+    // }
+updateStyles() {
+    console.log("ท่าไม้ตายสุดท้าย: ซ่อนอินพุตจริงแล้วส่งวงกลมสีแดงจำลองเข้าสู้เพื่อฆ่าจุดดำ");
+    
+    this.radio.each(function () {
+        const $radio = $(this);
+        const $label = $radio.closest('label');
+        const $span = $label.find('span');
+        const val = $radio.val() || $radio.attr('r-type');
+
+        // ล้างก้อนจำลองสีแดงเดิมออกก่อน (ถ้ามี) เพื่อไม่ให้มันสร้างซ้ำซ้อน
+        $label.find('.custom-dot').remove();
+
+        // 1. เคลียร์คลาส สไตล์ดิบ และความจางของทุกปุ่มออกให้หมดก่อน
+        $radio.removeClass('radio-success radio-info radio-error').show();
+        $radio.attr('style', ''); 
+        $span.removeClass('text-green-600 text-blue-600 text-red-600').attr('style', '');
+        $label.attr('style', '');
+
+        // 2. ตรวจสอบลอจิกตัวที่ถูกเลือก (Checked)
+        if ($radio.is(':checked')) {
+            $radio.attr('style', 'opacity: 1 !important;');
+            $span.attr('style', 'opacity: 1 !important;');
+            $label.attr('style', 'opacity: 1 !important;');
+
+            if (val === 'A') {
+                $radio.addClass('radio-success');
+                $span.addClass('text-green-600');
+            } else if (val === 'U') {
+                $radio.addClass('radio-info');
+                $span.addClass('text-blue-600');
+            } else if (val === 'D') {
+                // 🔴 เฉพาะ Delete: สั่งซ่อน (hide) ปุ่มอินพุตจริงที่มีจุดดำทิ้งไปเลย
+                $radio.hide();
+
+                // แล้วสร้างวงกลมสีแดงสไตล์มินิมอลแบบในรูปตัวอย่าง แปะเข้าไปแทนที่ตรงนั้นดื้อๆ
+                const redDotHtml = 
+                    '<div class="custom-dot" style="' +
+                    'width: 16px !important; ' +
+                    'height: 16px !important; ' +
+                    'border: 2px solid #dc2626 !important; ' +
+                    'border-radius: 50% !important; ' +
+                    'background-color: #ffffff !important; ' +
+                    'display: inline-flex !important; ' +
+                    'align-items: center !important; ' +
+                    'justify-content: center !important; ' +
+                    'margin-right: 0.125rem !important;' +
+                    '">' +
+                        '<div style="width: 8px !important; height: 8px !important; background-color: #dc2626 !important; border-radius: 50% !important;"></div>' +
+                    '</div>';
+                
+                // แทรกวงกลมแดงจำลองไว้ข้างหน้าตัวหนังสือคำว่า Delete
+                $radio.after(redDotHtml);
+                $span.attr('style', 'color: #dc2626 !important; opacity: 1 !important;');
+            }
+        } else {
+            // 3. ตัวที่ไม่ถูกเลือก: บังคับให้จางลงเป็นสีเทาทั้งกลุ่มตามภาพตัวอย่าง
+            $radio.attr('style', 'border-color: #cbd5e1 !important; background-color: transparent !important; opacity: 0.4 !important;');
+            $span.attr('style', 'color: #94a3b8 !important; opacity: 0.4 !important;');
+        }
+    });
+}
 };
 
 // -------------------------- End Req Type Manager -------------------
@@ -1621,8 +1718,35 @@ export const actionFormManager = {
                 {element: attachTypeManager.checkbox, message: "Please select Attach Type."},
                 {element: attachFileManager.input, message: "Please attach files."},
             ].filter(Boolean);
+
+                // $(form)
+                //     .find("input, select, textarea")
+                //     .each(function () {
+                //        if($(this).hasClass('req'))
+                //         {
+                //             console.log($(this).attr('name'),$(this).attr('id'),$(this).val());
+                //         }
+
+                //     });
             if (!(await requiredForm("#form", requiredMessage))) return;
-         
+            if ((attachTypeManager.types.length > 0) && (attachFileManager.checkedFilesLength === 0) && (attachFileManager.checkedFilesLength === 0))
+            {
+                showMessage(
+                    "Please attach files.",
+                    "warning",
+                );
+                return;
+
+            }
+            if(attachTypeManager.types.includes("other") && (attachOtherManager.input.val().trim() == ""))
+            {
+                showMessage(
+                    "Please input Other",
+                    "warning",
+                );
+                return;
+            }
+            //throw new Error(res.message);
             const formData = new FormData($("#form")[0]);
             const data = state.data;
             formData.set("NFRMNO", data.NFRMNO);
@@ -1685,7 +1809,8 @@ export const actionFormManager = {
                     {element: attachTypeManager.checkbox, message: "Please select Attach Type."},
                     {element: attachFileManager.input, message: "Please attach files."},
                 ].filter(Boolean);
-                if(attachFileManager.checkedFilesLength > 0)
+                
+                if((attachFileManager.checkedFilesLength > 0) && (attachTypeManager.types.length > 0))
                 {
                     $(`#F-section`).find('input, textarea, select').removeClass('req');
                 }
