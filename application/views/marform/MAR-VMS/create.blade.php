@@ -270,7 +270,7 @@ table.dataTable .select2-container--default .select2-selection--multiple {
     <!-- Sale company -->
     <div>
       <label for="salecom" class="block text-sm text-gray-700 font-medium mb-1">Sale company<span class="text-red-500">*</span></label>
-      <input type="text" name="salecom" id="salecom" value="{{ $visit[0]->SALECOM }}">
+      <input type="text" name="salecom" id="salecom" value="{{ ($mode == '2' && !empty($visit)) ? $visit[0]->SALECOM  : '' }}">
       <!-- <select
         id="salecom"
         name="salecom"
