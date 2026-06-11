@@ -993,11 +993,11 @@ class form extends MY_Controller{
         if ($extra > 0) {
             $this->insertEmptyRowsWithTemplate($sheet, $templateStart ,$templateCount ,  $extra );
         }
-        $currentRow = $templateStart;
         if($templateStart < 17 )
         {
-            $currentRow  = 17;
+            $templateStart  = 17;
         }
+          $currentRow = $templateStart;
         foreach($data['schedule'] as $i => $row)
         {
             $currentRow = $templateStart + $i;
