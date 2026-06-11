@@ -39,4 +39,9 @@ module.exports = {
 
 	//IS-ADP: Annual Development Plan
 	isAdp: "./assets/script/isform/IS-ADP/index.js",
+
+	//IS-SEF: Satisfaction Evaluation Form
+	isSef: "./assets/script/isform/IS-SEF/index.js",
+	isSefView: "./assets/script/isform/IS-SEF/view.js",
+	isSefAssign: "./assets/script/isform/IS-SEF/assign.js",
 };
