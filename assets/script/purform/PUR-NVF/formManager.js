@@ -1815,12 +1815,22 @@ export const actionFormManager = {
                     $(`#F-section`).find('input, textarea, select').removeClass('req');
                 }
                 if (!(await requiredForm("#form", requiredMessage))) return;
-                console.log(attachFileManager.checkedFilesLength);
-                if (attachFileManager.checkedFilesLength === 0 && $("#REQTYPE").val() != "D") {
-                    showMessage(
-                        "Please upload attached files before approve.",
-                        "warning",
-                    );
+                const noFiles = attachFileManager.checkedFilesLength === 0;
+                const hasFiles = attachFileManager.checkedFilesLength > 0;
+                const noType = attachTypeManager.types.length === 0;
+                const hasType = attachTypeManager.types.length > 0;
+                const isNotTypeD = $("#REQTYPE").val() !== "D";
+
+                // 2. ตรวจสอบเงื่อนไขการแจ้งเตือน
+                // เคสที่ 1: ไม่มีไฟล์ (และไม่ใช่ประเภท D) หรือ แอบไปเลือกประเภทไว้แต่ไม่ได้แนบไฟล์
+                if ((noFiles && isNotTypeD) || (hasType && noFiles)) {
+                    showMessage("Please upload attached files before approve.", "warning");
+                    return;
+                }
+
+                // เคสที่ 2: แนบไฟล์มาแล้ว แต่ลืมเลือกประเภทไฟล์
+                if (hasFiles && noType) {
+                    showMessage("Please select Attach Type.", "warning");
                     return;
                 }
                 const formData = new FormData($("#form")[0]);
@@ -1832,6 +1842,10 @@ export const actionFormManager = {
                 formData.set("EMPNO", data.EMPNO);
                 formData.set("ACTION", action);
                 formData.set("REMARK", this.remark.val());
+                //if(noType)
+               // {
+                 //   formData.set("ATTACH_TYPE", "xxx");
+               // }
                 //formData.set(
                  //   "CURRENCY",
                   //  currencyManager.getValue("curr-payment"),
@@ -1842,8 +1856,13 @@ export const actionFormManager = {
                 });
 
                 const filteredFormData = filterFormData(formData);
+                if(noType)
+                {
+                    filteredFormData.append("ATTACH_TYPE","");
+                }
+                //console.log(filteredFormData);
                 //logFormData(filteredFormData);
-               // throw new Error(res.message);
+                //throw new Error("test data");
                 res = await approveReturn(filteredFormData);
             } else {
                 res = await doaction({

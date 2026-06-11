@@ -163,7 +163,7 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-8">
             <div>
                 <span class="block text-xs font-medium text-gray-400 ">Company Name</span>
-                <span id="COMPANY_NAME" class="text-base font-semibold text-gray-900"></span><span id="VENDOR_LOCATION_SHOW" class="badge badge-sm badge-success ml-2 text-xs"></span>
+                <span id="COMPANY_NAME" class="text-base font-semibold text-gray-900"></span><span id="VENDOR_LOCATION_SHOW" class="badge badge-sm bg-blue-900 text-white border-blue-900 ml-2 text-xs"></span>
             </div>
             <div>
                 <span class="block text-xs font-medium text-gray-400 ">Contact Name</span>
