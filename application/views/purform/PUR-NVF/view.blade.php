@@ -58,7 +58,7 @@
                     <h2 class="font-bold text-xl mb-3 required">Request Details</h2>
                          <div class="mb-8 bg-gray-50 p-5 rounded-xl border border-gray-100">
                     <div class="flex flex-col md:flex-row gap-4 items-start md:items-center pb-2 w-full">
-                    <span class="w-32 shrink-0 text-gray-950">Request Type</span> 
+                    <span class="w-32 shrink-0 text-gray-950">Request Type : </span> 
                     <div class="flex items-center gap-6 h-8">
                         <label class="flex items-center gap-2 cursor-pointer">
                             <input type="radio" name="REQTYPE_SHOW" value="A" r-type="A" class="radio radio-xs " disabled>
@@ -98,10 +98,10 @@
                         <div id="REASON" class="w-full"></div>
                     </div>
                 </div> -->
-               <div id="row-typejob" class="flex flex-col md:flex-row gap-2 md:gap-4 items-start pb-2 w-full">
+               <!-- <div id="row-typejob" class="flex flex-col md:flex-row gap-2 md:gap-4 items-start pb-2 w-full">
                 <span class="w-32 shrink-0 text-gray-950">Type of Job</span>  
                 <div class="flex-1 min-w-0 text-gray-800 text-sm leading-relaxed break-words whitespace-pre-line">
-                    <div id="TYPEJOB" class="w-full"></div>
+                    <div id="TYPEJOB" class="w-full "></div>
                 </div>
             </div> 
 
@@ -124,7 +124,34 @@
                 <div class="flex-1 min-w-0 text-gray-800 text-sm leading-relaxed break-words whitespace-pre-line">
                     <div id="REASON" class="w-full"></div>
                 </div>
-            </div>
+            </div> -->
+            <div id="row-typejob" class="flex flex-col md:flex-row gap-2 md:gap-4 items-start pb-2 w-full">
+    <span class="w-32 shrink-0 text-gray-950">Type of Job : </span>  
+    <div class="flex-1 min-w-0 text-gray-800 text-sm leading-relaxed break-words whitespace-pre-line flex items-start">
+        <div id="TYPEJOB" class="w-full"></div>
+    </div>
+</div> 
+
+<div id="row-service" class="flex flex-col md:flex-row gap-2 md:gap-4 items-start pb-2 w-full">
+    <span class="w-32 shrink-0 text-gray-950">Service : </span>  
+    <div class="flex-1 min-w-0 text-gray-800 text-sm leading-relaxed break-words whitespace-pre-line flex items-start">
+        <div id="SERVICE" class="w-full"></div>
+    </div>
+</div> 
+
+<div id="row-purpose" class="flex flex-col md:flex-row gap-2 md:gap-4 items-start pb-2 w-full">
+    <span class="w-32 shrink-0 text-gray-950">Purpose : </span>  
+    <div class="flex-1 min-w-0 text-gray-800 text-sm leading-relaxed break-words whitespace-pre-line flex items-start">
+        <div id="PURPOSE" class="w-full"></div>
+    </div>
+</div> 
+
+<div id="row-reason" class="flex flex-col md:flex-row gap-2 md:gap-4 items-start pb-2 w-full">
+    <span class="w-32 shrink-0 text-gray-950">Reason : </span>  
+    <div class="flex-1 min-w-0 text-gray-800 text-sm leading-relaxed break-words whitespace-pre-line flex items-start">
+        <div id="REASON" class="w-full"></div>
+    </div>
+</div>
 
                 </div>
                 </section>
@@ -206,6 +233,10 @@
                         <label class="hidden attach-file" id="attach-vat">
                             <input type="checkbox" name="ATTACH_TYPE" value="Vat Register" class="checkbox checkbox-xs" a-type="vat" disabled>
                             Vat Register
+                        </label>
+                        <label class="hidden attach-file" id="attach-letter">
+                            <input type="checkbox" name="ATTACH_TYPE" value="Letter for Change Address" class="checkbox checkbox-xs" a-type="letter">
+                            Letter for Change Address
                         </label>
                         <label class="hidden attach-file" id="attach-book">
                             <input type="checkbox" name="ATTACH_TYPE" value="Book bank" class="checkbox checkbox-xs" a-type="book" disabled>

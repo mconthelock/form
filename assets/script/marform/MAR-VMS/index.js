@@ -42,11 +42,11 @@ $(async function () {
 	const $versionInput = $("#formVersion");
 	const $newVersionInput = $("#newVersion");
 	//$("#salecom").select2();
-	await setSelect2({
-		element: "#salecom",
-		selectionCssClass: "w-72",
-		width: "280px",
-	});
+	// await setSelect2({
+	// 	element: "#salecom",
+	// 	selectionCssClass: "w-72",
+	// 	width: "280px",
+	// });
 	await setSelect2({
 		element: "#receptionRoom",
 		selectionCssClass: "w-72",
