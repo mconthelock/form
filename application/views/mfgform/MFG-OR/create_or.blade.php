@@ -73,8 +73,8 @@
                     </div>
                     <div class="col-span-12 md:col-span-10 px-4 py-2">
                         <a href="#" class="or-link">คู่มือการใช้งาน OR</a>
-                        <a href="#" class="or-link">Template OR File Master (แนวตั้ง)</a>
-                        <a href="#" class="or-link">Template OR File Master (แนวนอน)</a>
+                        <a href="<?= base_url('mfgform/MFG-OR/main_or/download_template/vertical') ?>"   class="or-link">Template OR File Master (แนวตั้ง)</a>
+                        <a href="<?= base_url('mfgform/MFG-OR/main_or/download_template/horizontal') ?>" class="or-link">Template OR File Master (แนวนอน)</a>
                     </div>
                 </div>
 
@@ -99,15 +99,6 @@
                         <input type="text" id="request_by" name="request_by" maxlength="5" placeholder="Ex.15199" class="or-input max-w-[130px]">
                         <span id="request_by_name" class="ml-2 text-sm font-bold text-emerald-700"></span>
                     </div>
-
-                    <div class="or-label col-span-12 md:col-span-2 px-4 py-2">
-                        Approve By <span class="required">*</span>
-                    </div>
-                    <div class="col-span-12 md:col-span-4 px-4 py-2">
-                        <select id="approve_by" name="approve_by" class="or-input max-w-[260px]">
-                        
-                        </select>
-                    </div>
                 </div>
 
                 <div class="grid grid-cols-12 border-b border-slate-300">
@@ -118,7 +109,7 @@
                         <label class="or-radio">
                             <input type="radio" name="type_form" value="NEW">
                             New
-                        </label>
+                        </label><br>
 
                         <label class="or-radio">
                             <input type="radio" name="type_form" value="REVISE">
@@ -132,32 +123,22 @@
 
                 <div class="grid grid-cols-12 border-b border-slate-300">
                     <div class="or-label col-span-12 md:col-span-2 px-4 py-2">
-                        Product <span class="required">*</span>
-                    </div>
-                    <div class="col-span-12 md:col-span-10 px-4 py-2">
-                        <label class="or-radio"><input type="radio" name="product" value="ELEVATOR"> Elevator</label>
-                        <label class="or-radio"><input type="radio" name="product" value="ESCALATOR"> Escalator</label>
-                        <label class="or-radio"><input type="radio" name="product" value="ELE_ESC"> ELE & ESC</label>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-12 border-b border-slate-300">
-                    <div class="or-label col-span-12 md:col-span-2 px-4 py-2">
                         Classification <span class="required">*</span>
                     </div>
                     <div class="col-span-12 md:col-span-10 px-4 py-2">
-                        <label class="or-radio"><input type="radio" name="classification" value="BASIC"> Basic Knowledge (ความรู้พื้นฐาน)</label>
-                        <label class="or-radio"><input type="radio" name="classification" value="IMPROVE"> Improvement Case (กรณีปรับปรุงงาน)</label>
-                        <label class="or-radio"><input type="radio" name="classification" value="TROUBLE"> Trouble Case (กรณีเกิดปัญหาซ้ำ)</label>
+                        <label class="or-radio"><input type="radio" name="classification" value="BASIC"> Basic Knowledge (ความรู้พื้นฐาน)</label><br>
+                        <label class="or-radio"><input type="radio" name="classification" value="IMPROVE"> Improvement Case (กรณีปรับปรุงงาน)</label><br>
+                        <label class="or-radio"><input type="radio" name="classification" value="TROUBLE"> Trouble Case (กรณีเกิดปัญหาซ้ำ)</label><br>
+                        <label class="or-radio"><input type="radio" name="classification" value="REGULATION"> Regulation (กฎระเบียบ/ข้อบังคับ)</label>
                     </div>
                 </div>
 
                 <div class="grid grid-cols-12 border-b border-slate-300">
                     <div class="or-label col-span-12 md:col-span-2 px-4 py-2">
-                        Theme <span class="required">*</span>
+                        Topic <span class="required">*</span>
                     </div>
                     <div class="col-span-12 md:col-span-10 px-4 py-2">
-                        <input type="text" id="theme" name="theme" class="or-input">
+                        <input type="text" id="topic" name="topic" class="or-input">
                     </div>
                 </div>
 
@@ -190,7 +171,6 @@
                         </label>
                         <input type="text" id="overall_item" name="overall_item" placeholder="Ex.PACKING"
                             class="or-input inline-block max-w-[260px]" disabled>
-
                         <label class="or-radio ml-4">
                             <input type="radio" name="item_type" value="OR">
                             OR Item
@@ -211,22 +191,6 @@
                             <option value="MASS">Mass Production</option>
                             <option value="ALL">All Product</option>
                         </select>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-12 border-b border-slate-300">
-                    <div class="or-label col-span-12 md:col-span-2 px-4 py-2">
-                        Issue to <span class="required">*</span>
-                    </div>
-                    <div class="col-span-12 md:col-span-10 px-4 py-2">
-                        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-2">
-                            @foreach(['CEC SEC.','ELC SEC.','ESA Sec.','ESP Sec.','EWC SEC.','M/P SEC.','MTF SEC.','PC SEC.','PKC SEC.','STA SEC.','STF SEC.','TMA SEC.','WHI SEC.'] as $sec)
-                                <label class="or-check">
-                                    <input type="checkbox" name="issue_to[]" value="{{ $sec }}">
-                                    {{ $sec }}
-                                </label>
-                            @endforeach
-                        </div>
                     </div>
                 </div>
 

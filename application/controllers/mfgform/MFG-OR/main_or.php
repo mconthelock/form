@@ -158,7 +158,6 @@ class main_or extends MY_Controller {
     public function preview_file($formno, $filename)
     {
         $filename = urldecode($filename);
-
         $filepath = rtrim($this->upload_path, "/\\")
             . DIRECTORY_SEPARATOR
             . $formno
@@ -186,5 +185,36 @@ class main_or extends MY_Controller {
 
         readfile($filepath);
         exit;
+    }
+
+    public function download_template($type = '')
+    {
+        try {
+            switch ($type) {
+                case 'vertical':
+                    $filePath = rtrim($this->upload_path, "/\\"). DIRECTORY_SEPARATOR. 'temp'. DIRECTORY_SEPARATOR. 'Form_Verti.xlsx';
+                    break;
+                case 'horizontal':
+                    $filePath = rtrim($this->upload_path, "/\\"). DIRECTORY_SEPARATOR. 'temp'. DIRECTORY_SEPARATOR. 'Form_Hori.xlsx';
+                    break;
+                default:
+                    show_404();
+                    return;
+            }
+
+            if (!is_file($filePath)) {
+                show_error('File not found', 404);
+                return;
+            }
+
+            header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+            header('Content-Disposition: attachment; filename="' . basename($filePath) . '"');
+            header('Content-Length: ' . filesize($filePath));
+
+            readfile($filePath);
+            exit;
+        } catch (Exception $e) {
+            show_error($e->getMessage(), 500);
+        }
     }
 }
