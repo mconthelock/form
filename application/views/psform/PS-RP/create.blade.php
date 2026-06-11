@@ -30,10 +30,6 @@
                         <input type="text" placeholder="Enter Employee ID"
                             class="input input-bordered w-full transition-all duration-200 focus:input-primary "
                             id="INPUTBY" name="INPUTBY" />
-                        <input type="hidden" name="NFRMNO" value="{{ $NFRMNO }}">
-                        <input type="hidden" name="VORGNO" value="{{ $VORGNO }}">
-                        <input type="hidden" name="CYEAR" value="{{ $CYEAR }}">
-
                     </div>
 
                     <div class="form-control w-full">
@@ -81,7 +77,7 @@
                         </label>
 
                         <textarea class="textarea textarea-bordered h-28 w-full focus:textarea-primary req"
-                            placeholder="Describe the reason for returning or details of the rivision..." id="reason"></textarea>
+                            placeholder="Describe the reason for returning or details of the rivision..." id="reason" name="REASON"></textarea>
                     </div>
                 </div>
 
@@ -98,13 +94,13 @@
                     <div class="flex flex-col sm:flex-row gap-6">
                         <label
                             class="label cursor-pointer justify-start gap-3 bg-base-100 px-4 py-2 rounded-lg border border-base-300 shadow-sm hover:border-primary transition-all">
-                            <input type="radio" id="option1" name="OPTION_CODE" value="0"
+                            <input type="radio" id="option1" name="REQ_TYPE" value="0"
                                 class="radio radio-primary " checked />
                             <span class="label-text font-medium text-base-content">Revise Part to Warehouse</span>
                         </label>
                         <label
                             class="label cursor-pointer justify-start gap-3 bg-base-100 px-4 py-2 rounded-lg border border-base-300 shadow-sm hover:border-primary transition-all">
-                            <input type="radio" id="option2" name="OPTION_CODE" value="1"
+                            <input type="radio" id="option2" name="REQ_TYPE" value="1"
                                 class="radio radio-primary " />
                             <span class="label-text font-medium text-base-content">Return Part to Warehouse</span>
                         </label>
@@ -137,15 +133,18 @@
                 </div>
 
                 <!-- Section 5: Responsive Data Table with Form Elements -->
-                <div class="w-full overflow-hidden rounded-xl border border-base-300 bg-base-100 shadow-sm">
+                {{-- <div class="w-full overflow-hidden rounded-xl border border-base-300 bg-base-100 shadow-sm"> --}}
+                <div class="w-full overflow-hidden ">
                     <div class=" w-full  px-4 py-3">
                         <table class="table table-zebra w-full min-w-[1000px] text-sm" id="Addtable">
                         </table>
                     </div>
                 </div>
 
-                <div id="sentRequest"></div>
-
+                <div
+                    class="mt-4 border-t border-base-300 pt-6">
+                    <div id="sentRequest"></div>
+                </div>
             </form>
         </div>
     </div>
@@ -155,7 +154,7 @@
         <div class="modal-box flex w-[95vw] max-w-7xl max-h-[90vh] flex-col overflow-hidden p-0">
             <!-- Modal Header -->
             <div class="flex items-center justify-between border-b border-base-300 px-6 py-4">
-                <h3 class="text-lg font-bold">SELECT DATA TO REVISE/RETURN</h3>
+                <h3 class="text-lg font-bold" id="modalHeader"></h3>
 
                 <label for="modal-add" class="btn btn-sm btn-circle btn-ghost">
                     ✕
@@ -242,7 +241,7 @@
                     </div>
 
                     <!-- Table Area -->
-                    <div class="w-full overflow-hidden rounded-xl border border-base-300 bg-base-100 shadow-sm">
+                    <div class="w-full overflow-hidden ">
                         <div class="w-full px-4 py-3">
                             <table class="table table-zebra w-full min-w-[1000px] text-sm" id="modalTable">
                             </table>
