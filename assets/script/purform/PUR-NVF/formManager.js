@@ -454,7 +454,7 @@ export const vendorCodeManager = {
                 const searchData = { KEYWORD: keywordValue };
                 const vendor = await getVendor(searchData);
                 
-                console.log("Vendor Data:", vendor);
+                //console.log("Vendor Data:", vendor);
 
                 if (vendor[0]) {
                     typejobManager.removecls("req");
@@ -462,7 +462,7 @@ export const vendorCodeManager = {
                     comnameManager.value = vendor[0].VND_NAME || ""; 
                     $(`#V-section`).removeClass("hidden");
                     $(`#F-section`).removeClass("hidden");
-                    console.log(">>>>>>>>>>"+vendor[0]);
+                   // console.log(">>>>>>>>>>"+vendor[0]);
                     
                     $("#CONTACT").val(vendor[0].VND_SALE || "");
                     $("#EMAIL").val(vendor[0].EMAIL || "");
@@ -628,7 +628,7 @@ export const formManager = {
                     district_id: s.district_id,
                     postcode: s.postcode
                 }));
-                console.log( this.subDistrictData );
+                //console.log( this.subDistrictData );
                 
                 paymentTermManager.init(termdata);
                 countryManager.init(countriesData);
@@ -654,7 +654,7 @@ export const formManager = {
                 actionFormManager.init(mode, flow.html);
                 attachFileManager.init(data.FILES || []);
                 if (state.FormInfo.RETURN) {
-                    console.log("inter return");
+                    //console.log("inter return");
                     //$("#section-0").addClass("hidden!");
                         const term = await getTermcode();
                         const termdata = term.map((t) => ({
@@ -768,7 +768,7 @@ export const formManager = {
                 const value = $(this).val();   
                 const type = $(this).attr("a-type");
                 if (data.ATTACH_TYPE.includes(value)) {
-                    console.log("-------------"+value);
+                   // console.log("-------------"+value);
                     $(this).prop("checked", true);
                     if (type == "other") {
                         // Attach Other
@@ -1275,7 +1275,7 @@ export const subDistrictManager = {
         }
     },
     async change(e) {
-        console.log("ccccccccccccccccchange");
+       // console.log("ccccccccccccccccchange");
         
     if (e && e.params && e.params.data) {
         const selectedSubDistrict = e.params.data;
@@ -1397,8 +1397,6 @@ export const ReqtypeManager = {
     //     });
     // }
 updateStyles() {
-    console.log("ท่าไม้ตายสุดท้าย: ซ่อนอินพุตจริงแล้วส่งวงกลมสีแดงจำลองเข้าสู้เพื่อฆ่าจุดดำ");
-    
     this.radio.each(function () {
         const $radio = $(this);
         const $label = $radio.closest('label');
@@ -1760,7 +1758,7 @@ export const actionFormManager = {
 
             const filteredFormData = filterFormData(formData);
             
-            logFormData(filteredFormData);
+            //logFormData(filteredFormData);
            
             const res = await create(filteredFormData);
 
