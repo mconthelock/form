@@ -31,6 +31,9 @@
     
 
 
+
+
+
 </style>
 @endsection
 
@@ -56,23 +59,23 @@
                                 <div class="flex items-center gap-4">
                                     <span class="required w-32 shrink-0 font-semibold">Request by</span>
                                     <label>
-                                        <input type="text" name="REQBY" id="REQBY" class="input input-sm w-48 req">
+                                        <input type="text" name="REQBY" id="REQBY" class="input input-sm w-48 req" value="{{$empno}}" >
                                     </label>
                                 </div>
                         <div class="flex flex-col md:flex-row gap-4 items-start md:items-center  pb-2">
                 <span class="w-32 shrink-0 font-semibold text-gray-950">Request Type <span class="text-red-500">**</span></span>  
                 <div class="flex flex-row items-center gap-6 h-8 overflow-x-auto whitespace-nowrap">
-
+                        <input type="hidden" name="REQTYPE" id="REQTYPE"  />
                         <label class="flex items-center gap-2 cursor-pointer">
-                            <input type="radio" name="REQTYPE" value="A" r-type="A" class="radio radio-xs req" >
+                            <input type="radio" name="REQTYPE_SHOW" value="A" r-type="A" class="radio radio-xs req" >
                             <span class="text-sm  font-semibold">Add</span>
                         </label>
                         <label class="flex items-center gap-2 cursor-pointer">
-                            <input type="radio" name="REQTYPE" value="U" r-type="U" class="radio radio-xs req">
+                            <input type="radio" name="REQTYPE_SHOW" value="U" r-type="U" class="radio radio-xs req">
                             <span class="text-sm font-semibold">Update</span>
                         </label>
                         <label class="flex items-center gap-2 cursor-pointer">
-                            <input type="radio" name="REQTYPE" value="D" r-type="D" class="radio radio-xs req">
+                            <input type="radio" name="REQTYPE_SHOW" value="D" r-type="D" class="radio radio-xs req">
                             <span class="text-sm font-semibold">Delete</span>
                         </label>
                     </div>
@@ -114,6 +117,18 @@
                     </div>
                 </section>
             </div>
+            <div id="D-section" class="hidden">
+                  <div class="divider"></div>
+                    <section id="section-5">
+                     <div class="flex items-start gap-4 mb-4">
+                        <span class="required w-32 shrink-0 pt-2 font-semibold">Reason</span>
+                        
+                        <label class="flex-1">
+                            <textarea name="REASON" id="REASON" maxlength="1000" class="textarea w-full req" placeholder="Enter Reason of Delete"></textarea>
+                        </label>
+                    </div>
+                    </section>  
+            </div>
             <div id="V-section" class="hidden">
                 <div class="divider"></div>
                 
@@ -132,12 +147,13 @@
                         <!-- ฝั่งขวา: ตัวเลือกประเภท (Local / Oversea) -->
                    <div class="flex items-center justify-between gap-4 h-8 pl-4 md:pl-0 pt-1 md:pt-2 w-full">
                     <div class="flex items-center gap-6 shrink-0">
+                          <input type="hidden" name="VENDOR_LOCATION" id="VENDOR_LOCATION" value="">
                         <label class="flex items-center gap-2 cursor-pointer">
-                            <input type="radio" name="VENDOR_LOCATION" value="Local" v-type="local" class="radio radio-xs req" >
+                            <input type="radio" name="VENDOR_LOCATION_SHOW" value="Local" v-type="Local" class="radio radio-xs req" >
                             <span class="text-sm font-semibold">Local</span>
                         </label>
                         <label class="flex items-center gap-2 cursor-pointer">
-                            <input type="radio" name="VENDOR_LOCATION" value="Oversea" v-type="oversea" class="radio radio-xs req">
+                            <input type="radio" name="VENDOR_LOCATION_SHOW" value="Oversea" v-type="Oversea" class="radio radio-xs req">
                             <span class="text-sm font-semibold">Oversea</span>
                         </label>
                     </div>
@@ -235,7 +251,7 @@
                                 </div>
                                 <div>
                                     <label class="block mb-1 text-xs font-bold text-gray-600">รหัสไปรษณีย์ </label>
-                                    <input type="text" name="POSTCODE_TH" id="POSTCODE_TH" maxlength="50" class="input input-bordered input-sm w-full  bg-gray-50 border-gray-300" placeholder="xxxxx">
+                                    <input type="text" name="POSTCODE_TH" id="POSTCODE_TH" maxlength="50" class="input input-bordered input-sm w-full  bg-gray-50 border-gray-300" placeholder="รหัสไปรษณีย์">
                                 </div>
                             </div>
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -278,7 +294,7 @@
                         <div class="flex items-start gap-4 w-full md:w-1/2">
                             <span class="required w-32 shrink-0 pt-2 font-semibold">Tel.no</span>
                             <label class="flex-1">
-                                <input type="text" name="TELNO" id="TELNO" maxlength="30" class="input input-sm w-full req">
+                                <input type="text" type="tel" name="TELNO" id="TELNO" maxlength="12" class="input input-sm w-full req">
                             </label>
                         </div>
                         <div class="flex items-start gap-4 w-full md:w-1/2">
@@ -309,15 +325,15 @@
                     <div class="flex items-start gap-4 mb-4 w-full md:w-1/2">
                         <span class="required w-32 shrink-0 pt-2 font-semibold">Account number</span>
                         <label class="flex-1">
-                            <input type="text" name="ACCNUMBER" id="ACCNUMBER" maxlength="10" class="input input-sm w-full req">
+                            <input type="text" name="ACCNUMBER" id="ACCNUMBER" maxlength="13" class="input input-sm w-full req">
                         </label>
                     </div>
 
                     <!-- Payment Term -->
                     <div class="flex items-start gap-4 mb-4 w-full md:w-1/2">
                         <span class="required w-32 shrink-0 pt-2 font-semibold">Payment Term</span>
-                        <label class="flex-1">
-                            <select id="TERM_PAYMENT" name ="TERMCODE" class="select select-sm w-full md:w-fit min-w-max termcode req">
+                        <label class="flex-1"><input type="hidden" id="TERM_PAYMENT_HIDDEN" name="TERMCODE" value="">
+                            <select id="TERM_PAYMENT" name ="TERM_PAYMENT" class="select select-sm w-full md:w-fit min-w-max termcode req">
                                 <option value="" disabled selected>...</option>
                             </select>
                         </label>
@@ -338,6 +354,10 @@
                             <input type="checkbox" name="ATTACH_TYPE" value="Vat Register" class="checkbox checkbox-xs" a-type="vat">
                             Vat Register
                         </label>
+                        <label class="hidden attach-file" id="attach-letter">
+                            <input type="checkbox" name="ATTACH_TYPE" value="Letter for Change Address" class="checkbox checkbox-xs" a-type="letter">
+                            Letter for Change Address
+                        </label>
                         <label class="hidden attach-file" id="attach-book">
                             <input type="checkbox" name="ATTACH_TYPE" value="Book bank" class="checkbox checkbox-xs" a-type="book">
                             Book Bank
@@ -350,22 +370,6 @@
                     </fieldset>
                     <div id="attachFile"></div>
                 </section>
-            </div>
-            <div id="D-section" class="hidden">
-                  <div class="divider"></div>
-                    <section id="section-5">
-                    <div class="flex items-center gap-4">
-                        <span class="w-32 shrink-0 font-semibold text-error">Vendor Code</span>
-                        <div class="flex items-center gap-2">
-                            <input type="text" name="DVENDORCODE" id="DVENDORCODE" class="input input-bordered input-sm w-48" value="" placeholder="Enter vendor code to delete" >
-                            <button type="button" id="btn-add-delete-list" class="btn btn-sm btn-error text-white">
-                                <span class="font-bold">+</span> Add
-                            </button>
-                        </div>
-                    </div>
-                    <div id="delete-list-container" class="flex flex-col gap-2 w-full max-w-xl mt-2">
-                    </div>
-                    </section>  
             </div>
                 <div class="divider"></div>
 
