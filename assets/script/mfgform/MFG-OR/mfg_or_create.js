@@ -14,78 +14,95 @@ import Swal from "sweetalert2";
 
 $(document).ready(function () {
     const OR = {
-        rowIndex: 0,
-        currentTableType: null,
         baseUrl: $('#base_url').val() || '',
-
-        showAlert: function ({
-            icon = 'info',
-            title = '',
-            text = '',
-            confirmButtonText = 'ตกลง'
-        } = {}) {
-            return Swal.fire({
-                icon,
-                title,
-                text,
-                confirmButtonText,
-                confirmButtonColor: '#38a4ec',
-            });
-        },
 
         init: function () {
             this.bindEvents();
-            this.initReqno();
+            this.initRequestBy();
             this.initApplyForOptions();
             this.initRadioTextbox();
         },
 
-        initReqno: function () {
-            const empno = $.trim($('#inputBy').val());
-            const $target = $('#input_name');
-
-            getUserbyemp(empno).then(function (user) {
-                const empName = user?.SEMPNO + ' - ' + user?.SNAME;
-                $target
-                    .removeClass('text-red-500 text-slate-500')
-                    .addClass('text-emerald-700')
-                    .text(empName);
-
-                    $('#sseccode').val(user?.SSECCODE);
-                    $('#sdepcode').val(user?.SDEPCODE);
-                    $('#ssec').val($.trim(user?.SSEC || '').replace(/\//g, '').substring(0, 3));
-                    const ssecCode = $.trim(user?.SSECCODE || '');
-                    const ssec = $.trim(user?.SSEC || '');
-
-                    $('#sseccode').val(ssecCode);
-                    $('#sdepcode').val(user?.SDEPCODE);
-                    $('#ssec').val(ssec);
-
-                    $('#approve_by')
-                        .empty()
-                        .append(
-                            $('<option>', {
-                                value: ssecCode,
-                                text: ssec
-                            })
-                        );
-            });
-        },
-
         bindEvents: function () {
-            $('#request_by').on('input', function () {
-                const val = $(this).val();
+            this.bindRequestByEvent();
+            this.bindButtonEvents();
+            this.bindRadioEvents();
+        },
 
-                if (val.length === 5) {
-                    OR.checkEmployee($(this));
-                } else {
-                    const target = $('#request_by');
-                    $(target).text('');
+        bindRequestByEvent: function () {
+            $('#request_by').on('input', async function () {
+                const empno = $.trim(this.value);
+
+                if (empno.length !== 5) {
+                    $('#request_by_name').text('');
+                    return;
                 }
+
+                const user = await getUserbyemp(empno);
+                OR.setRequestByName(user);
             });
         },
+
+        bindButtonEvents: function () {
+            $('#btnSendForm').on('click', function () {
+                OR.submitForm('send_form');
+            });
+
+            $('#btnResetForm').on('click', function () {
+                $('#formMfgOr')[0].reset();
+                OR.initRadioTextbox();
+            });
+        },
+
+        bindRadioEvents: function () {
+            $('input[name="type_form"]').on('change', function () {
+                OR.toggleTypeForm();
+            });
+
+            $('input[name="item_type"]').on('change', function () {
+                OR.toggleItemType();
+            });
+        },
+
+        initRequestBy: async function () {
+            const user = await getUserbyemp($.trim($('#inputBy').val()));
+            this.setInputByInfo(user);
+            this.setSection(user);
+        },
+
+        setInputByInfo: function (user) {
+            this.setUserInfo(user, '#input_name', true);
+        },
+
+        setRequestByName: function (user) {
+            this.setUserInfo(user, '#request_by_name', false);
+        },
+
+        setUserInfo: function (user, target, showEmpno = true) {
+            const $target = $(target);
+
+            if (!user?.SEMPNO) {
+                $target
+                    .removeClass('text-emerald-700 text-slate-500')
+                    .addClass('text-red-500')
+                    .text('ไม่พบข้อมูลพนักงาน');
+                return;
+            }
+
+            $target
+                .removeClass('text-red-500 text-slate-500')
+                .addClass('text-emerald-700')
+                .text(showEmpno ? `${user.SEMPNO} - ${user.SNAME}` : user.SNAME);
+        },
+
+        setSection: function (user) {
+            $('#sseccode').val($.trim(user?.SSECCODE));
+            $('#sdepcode').val($.trim(user?.SDEPCODE));
+            $('#ssec').val($.trim(user?.SSEC));
+        },
+
         initApplyForOptions: function () {
-            const applyForList = [
+            const list = [
                 'BS,SH,GC',
                 'PR',
                 'PB,PS',
@@ -99,65 +116,129 @@ $(document).ready(function () {
                 'MC,NL',
                 'AC,WC',
                 'ASSY',
-                'Other',
+                'Other'
             ];
 
-            const $applyFor = $('#apply_for');
-
-            $applyFor.empty().append('<option value="">--- Please select ---</option>');
-
-            applyForList.forEach(function (item) {
-                $applyFor.append(`<option value="${item}">${item}</option>`);
-            });
+            $('#apply_for')
+                .empty()
+                .append('<option value="">--- Please select ---</option>')
+                .append(list.map(item => `<option value="${item}">${item}</option>`).join(''));
         },
 
         initRadioTextbox: function () {
-            function toggleTextbox(radioName, textboxMap) {
-                const selectedValue = $(`input[name="${radioName}"]:checked`).val();
+            this.toggleTypeForm();
+            this.toggleItemType();
+        },
 
-                Object.keys(textboxMap).forEach(function (value) {
-                    const $textbox = $(textboxMap[value]);
+        toggleTypeForm: function () {
+            const typeForm = $('input[name="type_form"]:checked').val();
+            this.toggleTextbox(typeForm === 'REVISE', '#current_no');
+        },
 
-                    if (selectedValue === value) {
-                        $textbox.prop('disabled', false).focus();
-                    } else {
-                        $textbox.prop('disabled', true).val('');
-                    }
-                });
+        toggleItemType: function () {
+            const itemType = $('input[name="item_type"]:checked').val();
+
+            this.toggleTextbox(itemType === 'ALL', '#overall_item');
+            this.toggleTextbox(itemType === 'OR', '#or_item');
+        },
+
+        toggleTextbox: function (isActive, selector) {
+            $(selector)
+                .prop('disabled', !isActive)
+                .val(isActive ? $(selector).val() : '');
+
+            if (isActive) {
+                $(selector).focus();
+            }
+        },
+
+        validateForm: function () {
+            const errors = [];
+
+            if (!$.trim($('#request_by').val())) errors.push('Request By');
+            if (!$('input[name="type_form"]:checked').val()) errors.push('Type Form');
+            if (!$('input[name="classification"]:checked').val()) errors.push('Classification');
+            if (!$.trim($('#topic').val())) errors.push('Topic');
+            if (!$('input[name="item_type"]:checked').val()) errors.push('Item Type');
+            if (!$('#apply_for').val()) errors.push('Apply For');
+
+            if ($('input[name="type_form"]:checked').val() === 'REVISE'
+                && !$.trim($('#current_no').val())) {
+                errors.push('Current No.');
             }
 
-            $('input[name="type_form"]').on('change', function () {
-                toggleTextbox('type_form', {
-                    REVISE: '#current_no',
+            if ($('input[name="item_type"]:checked').val() === 'ALL'
+                && !$.trim($('#overall_item').val())) {
+                errors.push('Overall Item');
+            }
+
+            if ($('input[name="item_type"]:checked').val() === 'OR'
+                && !$.trim($('#or_item').val())) {
+                errors.push('OR Item');
+            }
+
+            if ($('#or_excel')[0].files.length === 0) errors.push('OR Excel File');
+            if ($('#or_pdf')[0].files.length === 0) errors.push('OR PDF File');
+
+            if (errors.length > 0) {
+                this.showAlert({
+                    icon: 'warning',
+                    title: 'Data Not Complete',
+                    text: 'กรุณากรอกข้อมูลให้ครบถ้วน !!'
                 });
-            });
+                return false;
+            }
 
-            $('input[name="item_type"]').on('change', function () {
-                toggleTextbox('item_type', {
-                    ALL: '#overall_item',
-                    OR: '#or_item',
+            return true;
+        },
+
+        submitForm: async function (actionType) {
+            if (!this.validateForm()) {
+                return;
+            }
+
+            this.setLoading(true);
+            showLoader({ show: true });
+
+            try {
+                console.log('OR ACTION:', actionType);
+
+                // TODO: createForm / upload file / save data ต่อจากตรงนี้
+
+            } catch (error) {
+                console.error('SUBMIT OR FORM ERROR:', error);
+
+                this.showAlert({
+                    icon: 'error',
+                    title: 'เกิดข้อผิดพลาด',
+                    text: error?.message || 'เกิดข้อผิดพลาดระหว่างบันทึกข้อมูล'
                 });
-            });
-
-            toggleTextbox('type_form', {
-                REVISE: '#current_no',
-            });
-
-            toggleTextbox('item_type', {
-                ALL: '#overall_item',
-                OR: '#or_item',
-            });
+            } finally {
+                showLoader({ show: false });
+                this.setLoading(false);
+            }
         },
 
         setLoading: function (isLoading) {
-            $('#btnSaveDraft, #btnSendForm, #btnAddRow').prop('disabled', isLoading);
+            $('#btnSendForm, #btnResetForm').prop('disabled', isLoading);
+            $('#btnSendForm').text(isLoading ? 'Sending...' : 'Send Form');
+        },
 
-            if (isLoading) {
-                $('#btnSendForm').text('Sending...');
-            } else {
-                $('#btnSendForm').text('Send Form');
-            }
+        showAlert: function ({
+            icon = 'info',
+            title = '',
+            text = '',
+            confirmButtonText = 'ตกลง'
+        } = {}) {
+            return Swal.fire({
+                icon,
+                title,
+                text,
+                confirmButtonText,
+                confirmButtonColor: '#38a4ec'
+            });
         }
     };
+
     OR.init();
 });
