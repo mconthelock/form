@@ -1,10 +1,11 @@
-
-
 // ===== FORM ===========
-//export const createMfgEdr = (data) => callAPI("/mfg-edr", "POST", data);
+export const createMfgOr = (data) => callAPI("/mfg-or/create", "POST", data);
+
 
 // ===== GET ===========
 export const getUserbyemp = (empno) => callAPI(`/users/${encodeURIComponent(empno)}`, "GET");
+
+
 const callAPI = async (endpoint, method = "POST", data = null) => {
 	try {
 		const response = await $.ajax({

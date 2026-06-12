@@ -1,5 +1,6 @@
 import {
     getUserbyemp,
+    createMfgOr
 } from "./data.js";
 import { showLoader } from "@amec/webasset/preloader";
 import { showMessage, showConfirm } from "@amec/webasset/utils";
@@ -192,6 +193,112 @@ $(document).ready(function () {
             return true;
         },
 
+        getWebflowParams: function () {
+            const inputBy = String($('#inputBy').val() || '');
+            return {
+                NFRMNO: String($('#nfrmno').val() || ''),
+                VORGNO: String($('#vorgno').val() || ''),
+                CYEAR: String($('#cyear').val() || ''),
+                REQBY: String($('#request_by').val() || inputBy),
+                INPUTBY: inputBy,
+                SSECCODE: String($('#sseccode').val() || '')
+            };
+        },
+
+        createWebflowForm: async function () {
+            const params = this.getWebflowParams();
+
+            if (!params.NFRMNO || !params.VORGNO || !params.CYEAR) {
+                throw new Error('ไม่พบข้อมูล NFRMNO / VORGNO / CYEAR');
+            }
+
+            const result = await createForm(params);
+
+            if (!result?.status) {
+                throw new Error(result?.message || 'Create form ไม่สำเร็จ');
+            }
+
+            return result;
+        },
+
+        uploadFile: async function (webflowData = {}) {
+            const excelInput = $('#or_excel')[0];
+            const pdfInput = $('#or_pdf')[0];
+
+            const formData = new FormData();
+
+            formData.append('NFRMNO', webflowData.NFRMNO || $('#nfrmno').val());
+            formData.append('VORGNO', webflowData.VORGNO || $('#vorgno').val());
+            formData.append('CYEAR', webflowData.CYEAR || $('#cyear').val());
+            formData.append('CYEAR2', webflowData.CYEAR2 || '');
+            formData.append('NRUNNO', webflowData.NRUNNO || '');
+
+            if (excelInput?.files?.length) {
+                Array.from(excelInput.files).forEach(function (file) {
+                    formData.append('filUpload_ref[]', file);
+                });
+            }
+
+            if (pdfInput?.files?.length) {
+                Array.from(pdfInput.files).forEach(function (file) {
+                    formData.append('filUpload_ref[]', file);
+                });
+            }
+
+            const res = await $.ajax({
+                url: host + 'mfgform/MFG-OR/main_or/uploadfile',
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                dataType: 'json'
+            });
+
+            console.log('OR UPLOAD RESULT:', res);
+
+            if (!res.status) {
+                throw new Error(res.message || 'Upload file ไม่สำเร็จ');
+            }
+
+            return res.files || [];
+        },
+
+        getFormPayload: function (webflowData = {}, uploadedFiles = []) {
+            const typeform = String($('input[name="type_form"]:checked').val() || '');
+            const currentNo = $.trim($('#current_no').val()) || null;
+            const itemType = String($('input[name="item_type"]:checked').val() || '');
+
+            return {
+                NFRMNO: Number(webflowData.NFRMNO || $('#nfrmno').val()),
+                VORGNO: String(webflowData.VORGNO || $('#vorgno').val()),
+                CYEAR: String(webflowData.CYEAR || $('#cyear').val()),
+                CYEAR2: String(webflowData.CYEAR2 || ''),
+                NRUNNO: Number(webflowData.NRUNNO || 0),
+
+                TYPEFORM: typeform,
+                ORNO: typeform === 'REVISE' ? currentNo : null,
+
+                CLASS: String($('input[name="classification"]:checked').val() || ''),
+                TOPIC: $.trim($('#topic').val()) || null,
+                DWGNO: $.trim($('#dwg_no').val()) || null,
+                SHOPNO: $.trim($('#shop_no').val()) || null,
+
+                ITEMNO: itemType === 'ALL'
+                    ? $.trim($('#overall_item').val()) || null
+                    : $.trim($('#or_item').val()) || null,
+
+                APPLY_FOR: String($('#apply_for').val() || ''),
+
+                SEQNO: null,
+
+                REV: $.trim($('#rev').val()) || null,
+
+                att: uploadedFiles.map(file => ({
+                    FILENAME: file
+                }))
+            };
+        },
+
         submitForm: async function (actionType) {
             if (!this.validateForm()) {
                 return;
@@ -201,11 +308,38 @@ $(document).ready(function () {
             showLoader({ show: true });
 
             try {
-                console.log('OR ACTION:', actionType);
+                const webflow = await this.createWebflowForm();
+                const webflowData = webflow?.data || {};
 
-                // TODO: createForm / upload file / save data ต่อจากตรงนี้
+                const uploadedFiles = await this.uploadFile(webflowData);
+                const payload = this.getFormPayload(webflowData, uploadedFiles);
+
+                console.log('MFG OR PAYLOAD:', payload);
+
+                const res = await createMfgOr(payload);
+
+                if (res.status === true || res.status === 'success') {
+                    showLoader({ show: false });
+                    this.setLoading(false);
+
+                    await this.showAlert({
+                        icon: 'success',
+                        title: 'บันทึกข้อมูลสำเร็จ',
+                        text: 'ระบบได้ทำการบันทึกข้อมูลเรียบร้อยแล้ว'
+                    });
+
+                    // redirectWebflow(); // เดี๋ยวค่อยเปิดใช้ภายหลัง
+                } else {
+                    this.showAlert({
+                        icon: 'error',
+                        title: 'บันทึกข้อมูลไม่สำเร็จ',
+                        text: res.message || ''
+                    });
+                }
 
             } catch (error) {
+                console.log(error);
+                console.log(JSON.stringify(error));
                 console.error('SUBMIT OR FORM ERROR:', error);
 
                 this.showAlert({

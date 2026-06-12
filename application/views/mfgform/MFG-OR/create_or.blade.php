@@ -56,10 +56,10 @@
 
         <div class="bg-gradient-to-r from-emerald-900 via-teal-700 to-cyan-600 px-6 py-6">
             <h1 class="text-center text-3xl font-extrabold tracking-wide text-white">
-                MFG OR Form
+                Operation Regulation (OR) Form
             </h1>
             <p class="mt-1 text-center text-sm font-bold text-cyan-100">
-                Operation Regulation (OR) - Production Department
+                MANUFACTURING DIVISION
             </p>
         </div>
 
@@ -116,7 +116,7 @@
                             Revise : Current No.
                         </label>
 
-                        <input type="text" id="current_no" name="current_no" placeholder="Ex.OR-MFG-MP-23003"
+                        <input type="text" id="current_no" name="current_no" placeholder="Ex.OR-MFG-26003"
                             class="or-input inline-block max-w-[260px]" disabled>
                     </div>
                 </div>
