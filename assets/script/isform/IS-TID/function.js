@@ -248,7 +248,7 @@ const reqDateManager = {
         this.input.val(val);
     },
     get date(){
-        return new Date(this.value+ "00:00:00");
+        return new Date(this.value+ " 00:00:00");
     }
 };
 
@@ -687,7 +687,7 @@ export const workCompleteManager = {
         this.inputDate.val(val);
     },
     get date(){
-        return new Date(this.valueDate+ "00:00:00");
+        return new Date(this.valueDate+ " 00:00:00");
     },
     get valueTime() {
         return this.inputTime.val();
@@ -754,7 +754,7 @@ const disableCompleteManager = {
         this.inputDate.val(val);
     },
     get date() {
-        return new Date(this.valueDate + "00:00:00");
+        return new Date(this.valueDate + " 00:00:00");
     },
     get valueTime() {
         return this.inputTime.val();

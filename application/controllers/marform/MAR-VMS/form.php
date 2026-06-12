@@ -993,7 +993,11 @@ class form extends MY_Controller{
         if ($extra > 0) {
             $this->insertEmptyRowsWithTemplate($sheet, $templateStart ,$templateCount ,  $extra );
         }
-        $currentRow = $templateStart;
+        if($templateStart < 17 )
+        {
+            $templateStart  = 17;
+        }
+          $currentRow = $templateStart;
         foreach($data['schedule'] as $i => $row)
         {
             $currentRow = $templateStart + $i;
@@ -1011,6 +1015,7 @@ class form extends MY_Controller{
           
         }
         $templateStart = $currentRow + 4;
+    
         $sheet->setCellValue("P{$templateStart}", $data['item'][0]->HOTELNAME);
         $sheet->setCellValue("B".($templateStart + 2),($data['item'][0]->BOARD == "N"? "No":"Yes"));
         $sheet->setCellValue("N".($templateStart + 4),($data['item'][0]->SHOPTOUR == "G"? "General":($data['item'][0]->SHOPTOUR == "S"? "Specific":"Inspection")));
