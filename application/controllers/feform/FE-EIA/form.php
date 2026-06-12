@@ -29,6 +29,7 @@ class form extends MY_Controller{
         $this->load->model('feform/FE-EIA/eia_model', 'MainModel');
         $this->mimsBase = 'MIMS';
     }
+    //https://amecwebtest.mitsubishielevatorasia.co.th/form/feform/FE-EIA/form/main?no=11&orgNo=051001&y=26&y2=2026&runNo=1&m=3&empno=13204&bp=%2Fformtest%2Fworkflow%2FmineList%2Easp&menu=1
     // http://localhost:8080/form/isform/IS-TID/form/main/?no=17&orgNo=050601&y=16&empno=13204&bp=http://webflow.mitsubishielevatorasia.co.th/formtest/is/create.asp
     // http://localhost:8080/form/feform/FE-EIA/form/main?no=11&orgNo=051001&y=26&y2=2026&runNo=1&m=3&empno=13204&bp=%2Fformtest%2Fworkflow%2FmineList%2Easp&menu=1
     public function main(){
@@ -144,8 +145,15 @@ class form extends MY_Controller{
     }
 
 
-    // http://localhost:8080/form/feform/FE-EIA/form/AutoCreateFEMSC/?MIMS_YEAR=2026&MIMS_MONTH=01
-    public function AutoCreateFEMSC()
+    //==============================================================================================================
+    //=== 202605
+    //=== Auto Create form WebFlow  Maintenance Stock Cost Report
+    //=== Case Monthy Report /1/2025/01/
+    //== Case Yearly Report /1/2026/all/
+    // http://localhost:8080/form/feform/FE-EIA/form/AutoCreateFEEIAForm/?MIMS_YEAR=2026&MIMS_MONTH=01
+    // http://localhost:8080/form/feform/FE-EIA/form/AutoCreateFEEIAForm/?MIMS_YEAR=2026&MIMS_MONTH=ALL
+    //==============================================================================================================
+    public function AutoCreateFEEIAForm()
     {
         try {
             // ดึงค่าจาก Query String พร้อมใส่ค่า Default ด้วยเครื่องหมาย ?? 
@@ -161,7 +169,6 @@ class form extends MY_Controller{
                 
                 $formData = $form['data']; 
                 
-                // สกัดรหัสพนักงาน ดักจับสำรองถ้าหาก Query ว่างเปล่า
                 $empNo = (!empty($REQBY) && isset($REQBY[0]->REQBY)) ? $REQBY[0]->REQBY : '13204';
 
                 $data = [
@@ -224,6 +231,9 @@ class form extends MY_Controller{
                                     'message' => 'Failed to create main Webflow form'
                                 )));
                 }
+
+                // == Email Notification (Optional)
+                
             }
 
         } catch (Exception $error) {
