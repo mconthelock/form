@@ -40,14 +40,14 @@ $(document).ready(async function () {
     console.log("mode:", mode);
 
     const data = await fetchUtils({
-        url: process.env.APP_API + "/ps-ci/getDataForm",
+        url: process.env.APP_API + "/ps-cih/getDataForm",
         method: "POST",
         data: {
-            nfrmno: nfrmno,
-            vorgno: vorgno,
-            cyear: cyear,
-            cyear2: cyear2,
-            nrunno: nrunno,
+            NFRMNO: nfrmno,
+            VORGNO: vorgno,
+            CYEAR: cyear,
+            CYEAR2: cyear2,
+            NRUNNO: nrunno,
         },
     });
     const file = await fetchUtils({
@@ -130,7 +130,7 @@ $(document).ready(async function () {
     $(".checking-item").text(checkingItem);
     const diffItemFirstTime = data.filter(item => (item.ACTUAL_QTY !== null) && (item.ACTUAL_QTY !== item.ON_HAND)).length;
     $(".diff-item-first-time").text(diffItemFirstTime);
-    const diffItemAfterRecheck = data.filter(item => (item.RANDOM_CHECK !== null) && (item.REMARK !== null) && Number(item.RANDOM_CHECK) !== Number(item.ON_HAND));
+    const diffItemAfterRecheck = data.filter(item => (item.RANDOM_CHECK !== null) && Number(item.RANDOM_CHECK) !== Number(item.ON_HAND));
     $(".diff-item-after-recheck").text(diffItemAfterRecheck.length);
     const randomCheckItem = data.filter(item => item.RANDOM_CHECK !== null).length;
     $(".random-check").text(randomCheckItem);
@@ -214,7 +214,7 @@ $(document).ready(async function () {
         {
             data: null,
             title: "CONTROLLER",
-            render: (data, type, row) => `${row.STNAME}`,
+            render: (data, type, row) => `${row.CONTROLLER_ID}`,
             className: "border-r border-slate-200"
         },
         { data: "ON_HAND", title: "ON HAND", className: "border-r border-slate-200 text-right font-semibold bg-amber-50" },
