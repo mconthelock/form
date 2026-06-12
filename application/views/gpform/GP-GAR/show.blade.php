@@ -89,24 +89,6 @@
         </select>
       </fieldset>
 
-
-        {{-- <div class="form-control w-full">
-          <label for="comment" class="block font-semibold text-gray-700 mb-1">Comment:</label>
-          <textarea id="comment" name="comment" class="textarea textarea-bordered w-full" rows="0">
-          </textarea>
-        </div>
-
-      <div class="card-actions justify-end mt-10 gap-4 border-t pt-6">
-        <button class="btn btn-ghost border-gray-300 px-8" onclick="history.back()">
-          Back
-        </button>
-        <button class="btn btn-error text-white px-8" id="btn-reject">
-          Reject
-        </button>
-        <button class="btn btn-primary px-10 text-white" id="btn-approve">
-          Approve Request
-        </button>
-      </div> --}}
     </div>
     <div id="sentApprove" class ="mt-5"></div>
   </div>
