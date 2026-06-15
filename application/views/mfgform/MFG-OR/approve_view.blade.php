@@ -169,19 +169,6 @@
 
         <table class="or-table">
             <tr>
-                <th>Download Document</th>
-                <td>
-                    <a href="#" class="or-link">คู่มือการใช้งาน OR</a>
-                    <a href="{{ base_url('mfgform/MFG-OR/main_or/download_template/vertical') }}" class="or-link">
-                        Template OR File Master (แนวตั้ง)
-                    </a>
-                    <a href="{{ base_url('mfgform/MFG-OR/main_or/download_template/horizontal') }}" class="or-link">
-                        Template OR File Master (แนวนอน)
-                    </a>
-                </td>
-            </tr>
-
-            <tr>
                 <th>Form No</th>
                 <td>
                     <div id="v_form_no" data-formno="{{ $formno ?? '' }}" class="or-view-text">
@@ -189,7 +176,6 @@
                     </div>
                 </td>
             </tr>
-
             <tr>
                 <th>Create By</th>
                 <td>
