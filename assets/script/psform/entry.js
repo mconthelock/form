@@ -5,4 +5,6 @@ module.exports = {
 	psCi: "./assets/script/psform/PS-CI/index.js", //CI page
 	// PS-ID
 	psId: "./assets/script/psform/PS-ID/index.js", //ID page
+	// PS-CIH
+	psCih: "./assets/script/psform/PS-CIH/index.js", //CIH page
 };

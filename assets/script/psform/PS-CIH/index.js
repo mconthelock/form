@@ -40,14 +40,14 @@ $(document).ready(async function () {
     console.log("mode:", mode);
 
     const data = await fetchUtils({
-        url: process.env.APP_API + "/ps-ci/getDataForm",
+        url: process.env.APP_API + "/ps-cih/reportData",
         method: "POST",
         data: {
-            nfrmno: nfrmno,
-            vorgno: vorgno,
-            cyear: cyear,
-            cyear2: cyear2,
-            nrunno: nrunno,
+            NFRMNO: nfrmno,
+            VORGNO: vorgno,
+            CYEAR: cyear,
+            CYEAR2: cyear2,
+            NRUNNO: nrunno,
         },
     });
     const file = await fetchUtils({
@@ -122,19 +122,23 @@ $(document).ready(async function () {
     //     }
     // });
 
-    $(".group-name").text(data[0]?.GROUP_CODE ?? '-');
-    $(".data-date").text(data[0]?.CREATED_AT ? new Date(data[0].CREATED_AT).toLocaleDateString() : '-');
-    $(".check-date").text(data[0]?.CHECK_DATE ? new Date(data[0].CHECK_DATE).toLocaleDateString() : '-');
-    $(".total-item").text(data.length);
-    const checkingItem = data.filter(item => item.ACTUAL_QTY !== null).length;
-    $(".checking-item").text(checkingItem);
-    const diffItemFirstTime = data.filter(item => (item.ACTUAL_QTY !== null) && (item.ACTUAL_QTY !== item.ON_HAND)).length;
-    $(".diff-item-first-time").text(diffItemFirstTime);
-    const diffItemAfterRecheck = data.filter(item => (item.RANDOM_CHECK !== null) && (item.REMARK !== null) && Number(item.RANDOM_CHECK) !== Number(item.ON_HAND));
-    $(".diff-item-after-recheck").text(diffItemAfterRecheck.length);
-    const randomCheckItem = data.filter(item => item.RANDOM_CHECK !== null).length;
-    $(".random-check").text(randomCheckItem);
+    const GroupCode = [...new Set(data.flatMap(row => row.RESULT.map(item => item.GROUP_CODE)))].sort().join(', ');
+    // console.log("GroupCode", GroupCode);
+    $(".group-name").text(GroupCode || '-');
 
+    const result = data[0].RESULT;
+    $(".data-date").text(result[0]?.CREATED_AT ? new Date(result[0].CREATED_AT).toLocaleDateString() : '-');
+    $(".check-date").text(result[0]?.CHECK_DATE ? new Date(result[0].CHECK_DATE).toLocaleDateString() : '-');
+    $(".total-item").text(result.length);
+    const checkingItem = result.filter(item => item.ACTUAL_QTY !== null).length;
+    $(".checking-item").text(checkingItem);
+    const diffItemFirstTime = result.filter(item => item.ACTUAL_QTY !== null && Number(item.ACTUAL_QTY) !== Number(item.ON_HAND)).length;
+    $(".diff-item-first-time").text(diffItemFirstTime);
+    const diffItemAfterRecheck = result.filter(item => item.RANDOM_CHECK !== null && Number(item.RANDOM_CHECK) !== Number(item.ON_HAND)).length;
+    $(".diff-item-after-recheck").text(diffItemAfterRecheck);
+    const randomCheckItem = result.filter(item => item.RANDOM_CHECK !== null).length;
+    $(".random-check").text(randomCheckItem);
+    
     const getLogsByType = (row, type) => {
         return row.LOG_EDIT?.filter(log => log.TYPE === type) || [];
     };
@@ -206,19 +210,19 @@ $(document).ready(async function () {
             render: (data, type, row, meta) => meta.row + 1,
             className: "sticky-column border-r border-slate-200 text-center"
         },
-        { data: "IBUYC", title: "BUYER", className: "sticky-column border-r border-slate-200" },
-        { data: "IPROD", title: "ITEM CODE", className: "sticky-column border-r border-slate-200" },
-        { data: "IDESC", title: "DESCRIPTION", className: "border-r border-slate-200 text-nowrap min-w-[200px]" },
-        { data: "IDRAW", title: "DRAWING NO.", className: "border-r border-slate-200 text-center" },
-        { data: "IABBT", title: "ADDRESS", className: "border-r border-slate-200 text-right font-semibold bg-amber-50" },
+        { data: "ITEM_DETAIL.IBUYC", title: "BUYER", className: "sticky-column border-r border-slate-200" },
+        { data: "ITEM_DETAIL.IPROD", title: "ITEM CODE", className: "sticky-column border-r border-slate-200" },
+        { data: "ITEM_DETAIL.IDESC", title: "DESCRIPTION", className: "border-r border-slate-200 text-nowrap min-w-[200px]" },
+        { data: "ITEM_DETAIL.IDRAW", title: "DRAWING NO.", className: "border-r border-slate-200 text-center" },
+        { data: "ITEM_DETAIL.IABBT", title: "ADDRESS", className: "border-r border-slate-200 text-right font-semibold bg-amber-50" },
         {
             data: null,
             title: "CONTROLLER",
-            render: (data, type, row) => `${row.STNAME}`,
+            render: (data, type, row) => `${row.CONTROLLER_ID}`,
             className: "border-r border-slate-200"
         },
         { data: "ON_HAND", title: "ON HAND", className: "border-r border-slate-200 text-right font-semibold bg-amber-50" },
-        { data: "IUMS", title: "UNIT", className: "border-r border-slate-200 text-center" },
+        { data: "ITEM_DETAIL.IUMS", title: "UNIT", className: "border-r border-slate-200 text-center" },
         {
             data: null,
             title: "ACTUAL QTY",
@@ -232,13 +236,12 @@ $(document).ready(async function () {
 
                 return `
                     <div class="relative">
-                        ${
-                            mode === '2'
-                                ? `<input class="input input-sm actual-qty ${borderClass} pr-8"
+                        ${mode === '2'
+                        ? `<input class="input input-sm actual-qty ${borderClass} pr-8"
                                     type="text"
                                     value="${value}" />`
-                                : `<span class="inline-block min-w-20 pr-8">${value}</span>`
-                        }
+                        : `<span class="inline-block min-w-20 pr-8">${value}</span>`
+                    }
 
                         ${renderHistoryDropdown(logs)}
                     </div>
@@ -304,15 +307,14 @@ $(document).ready(async function () {
                         </div>
                     `;
                 } else {
-                   return `
+                    return `
                         <div class="relative">
-                            ${
-                                mode === '2'
-                                    ? `<input class="input input-sm random-check ${borderClass} pr-8"
+                            ${mode === '2'
+                            ? `<input class="input input-sm random-check ${borderClass} pr-8"
                                         type="text"
                                         value="${value}" />`
-                                    : `<span class="inline-block min-w-20 pr-8">${value}</span>`
-                            }
+                            : `<span class="inline-block min-w-20 pr-8">${value}</span>`
+                        }
 
                             ${renderHistoryDropdown(logs)}
                         </div>
@@ -372,7 +374,7 @@ $(document).ready(async function () {
     ];
 
     const table = await createTable({
-        data: data,
+        data: result,
         columns: columns,
         responsive: false,
         // createdRow: function (row, data, dataIndex) {
@@ -518,43 +520,48 @@ $(document).ready(async function () {
 
             try {
 
+                const data = {
+                    editedRows,
+                    empno
+                }
+                console.log("editedRows", data);
                 showLoader();
-                await doaction({
-                    NFRMNO: nfrmno,
-                    VORGNO: vorgno,
-                    CYEAR: cyear,
-                    CYEAR2: cyear2,
-                    NRUNNO: nrunno,
-                    ACTION: 'approve',
-                    EMPNO: empno,
-                    REMARK: $('#remark').val().trim() // optional
-                })
+                // await doaction({
+                //     NFRMNO: nfrmno,
+                //     VORGNO: vorgno,
+                //     CYEAR: cyear,
+                //     CYEAR2: cyear2,
+                //     NRUNNO: nrunno,
+                //     ACTION: 'approve',
+                //     EMPNO: empno,
+                //     REMARK: $('#remark').val().trim() // optional
+                // })
 
-                $(".attach-file").each(async function (index, element) {
-                    const fileInput = $(element)[0];
-                    const file = fileInput.files[0];
-                    if (file) {
-                        const formData = new FormData();
-                        formData.append('NFRMNO', nfrmno);
-                        formData.append('VORGNO', vorgno);
-                        formData.append('CYEAR', cyear);
-                        formData.append('CYEAR2', cyear2);
-                        formData.append('NRUNNO', nrunno);
-                        formData.append('FORM_TYPE', 'PS');
-                        // formData.append('FILE_CODE', '2');
-                        formData.append('CREATEBY', empno);
-                        formData.append('file', file);
-                        await fetchUtils({
-                            url: process.env.APP_API + "/ps-ci/uploadFile",
-                            method: "POST",
-                            data: formData,
-                        });
-                    }
-                });
+                // $(".attach-file").each(async function (index, element) {
+                //     const fileInput = $(element)[0];
+                //     const file = fileInput.files[0];
+                //     if (file) {
+                //         const formData = new FormData();
+                //         formData.append('NFRMNO', nfrmno);
+                //         formData.append('VORGNO', vorgno);
+                //         formData.append('CYEAR', cyear);
+                //         formData.append('CYEAR2', cyear2);
+                //         formData.append('NRUNNO', nrunno);
+                //         formData.append('FORM_TYPE', 'PS');
+                //         // formData.append('FILE_CODE', '2');
+                //         formData.append('CREATEBY', empno);
+                //         formData.append('file', file);
+                //         await fetchUtils({
+                //             url: process.env.APP_API + "/ps-ci/uploadFile",
+                //             method: "POST",
+                //             data: formData,
+                //         });
+                //     }
+                // });
 
                 // console.log("editedRows", editedRows);
                 await fetchUtils({
-                    url: process.env.APP_API + "/ps-ci/insertLog",
+                    url: process.env.APP_API + "/ps-cih/insertLog",
                     method: "POST",
                     data: {
                         editedRows,
