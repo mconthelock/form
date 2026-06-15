@@ -272,8 +272,14 @@ $(document).ready(function () {
                 NFRMNO: Number(webflowData.NFRMNO || $('#nfrmno').val()),
                 VORGNO: String(webflowData.VORGNO || $('#vorgno').val()),
                 CYEAR: String(webflowData.CYEAR || $('#cyear').val()),
-                CYEAR2: String(webflowData.CYEAR2 || ''),
-                NRUNNO: Number(webflowData.NRUNNO || 0),
+                CYEAR2: String(webflowData.CYEAR2),
+                NRUNNO: Number(webflowData.NRUNNO),
+
+                INPUTBY: String($('#inputBy').val() || ''),
+                REQBY: String($('#request_by').val() || ''),
+                SSECCODE: String($('#sseccode').val() || ''),
+                SDEPCODE: String($('#sdepcode').val() || ''),
+                SSEC: String($('#ssec').val() || ''),
 
                 TYPEFORM: typeform,
                 ORNO: typeform === 'REVISE' ? currentNo : null,
@@ -288,10 +294,8 @@ $(document).ready(function () {
                     : $.trim($('#or_item').val()) || null,
 
                 APPLY_FOR: String($('#apply_for').val() || ''),
-
                 SEQNO: null,
-
-                REV: $.trim($('#rev').val()) || null,
+                REV: $.trim($('#rev').val()) || '*',
 
                 att: uploadedFiles.map(file => ({
                     FILENAME: file

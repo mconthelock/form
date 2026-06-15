@@ -581,38 +581,9 @@ $(document).ready(function () {
         },
 
         getFormPayload: function (webflowData = {}, uploadedFiles = []) {
-            const isPCB = this.isPcbWorkType();
-
-            const list = $('#detailBody tr').map(function () {
-                const $tr = $(this);
-
-                return {
-                    ORDERNO: isPCB ? null : ($.trim($tr.find('[name="order_no[]"]').val()) || null),
-                    DWGNO: $.trim($tr.find('[name="drawing_no[]"]').val()) || null,
-                    ITEM: isPCB ? null : ($.trim($tr.find('[name="item[]"]').val()) || null),
-                    QTY: Number($tr.find('[name="qty[]"]').val()) || null,
-                    DETAIL: $.trim($tr.find('[name="problem_detail[]"]').val()) || null,
-                    LV_EFFECT: null,
-                    EFFECT: null,
-                    LID: isPCB ? Number($tr.find('[name="line[]"]').val()) || null : null,
-                    PID: isPCB ? Number($tr.find('[name="process[]"]').val()) || null : null,
-                    LOT: isPCB ? ($.trim($tr.find('[name="lot[]"]').val()) || null) : null,
-                    SERIAL: isPCB ? ($.trim($tr.find('[name="serial_no[]"]').val()) || null) : null,
-                    PRDN_JUN: (() => {
-                        let val = $.trim($tr.find('[name="prod_jun[]"]').val());
-
-                        if (!val) {
-                            return null;
-                        }
-
-                        if (val.length > 6) {
-                            val = val.substring(2);
-                        }
-
-                        return val;
-                    })()
-                };
-            }).get();
+            const typeform = String($('input[name="type_form"]:checked').val() || '');
+            const currentNo = $.trim($('#current_no').val()) || null;
+            const itemType = String($('input[name="item_type"]:checked').val() || '');
 
             return {
                 NFRMNO: Number(webflowData.NFRMNO || $('#nfrmno').val()),
@@ -620,17 +591,29 @@ $(document).ready(function () {
                 CYEAR: String(webflowData.CYEAR || $('#cyear').val()),
                 CYEAR2: String(webflowData.CYEAR2),
                 NRUNNO: Number(webflowData.NRUNNO),
-                
-                REQBY: String($('#request_by').val() || ''),
-                TID: Number($('#job_type').val()) || null,
-                SSECCODE: String($('#sseccode').val() || ''),
-                CID: Number($('#cause').val()) || null,
-                REPAIR_BY: $.trim($('#repair_by').val()) || null,
-                DAILY_MONTH: String($('#daily_month').val() || ''),
-                DAILY_RUNNO: Number($('#daily_runno').val()) || null,
-                REASON_CAUSE: $.trim($('#reason_cause').val()) || null,
 
-                list,
+                INPUTBY: String($('#inputBy').val() || ''),
+                REQBY: String($('#request_by').val() || ''),
+                SSECCODE: String($('#sseccode').val() || ''),
+                SDEPCODE: String($('#sdepcode').val() || ''),
+                SSEC: String($('#ssec').val() || ''),
+
+                TYPEFORM: typeform,
+                ORNO: typeform === 'REVISE' ? currentNo : null,
+
+                CLASS: String($('input[name="classification"]:checked').val() || ''),
+                TOPIC: $.trim($('#topic').val()) || null,
+                DWGNO: $.trim($('#dwg_no').val()) || null,
+                SHOPNO: $.trim($('#shop_no').val()) || null,
+
+                ITEMNO: itemType === 'ALL'
+                    ? $.trim($('#overall_item').val()) || null
+                    : $.trim($('#or_item').val()) || null,
+
+                APPLY_FOR: String($('#apply_for').val() || ''),
+                SEQNO: null,
+                REV: $.trim($('#rev').val()) || null,
+
                 att: uploadedFiles.map(file => ({
                     FILENAME: file
                 }))
@@ -691,6 +674,7 @@ $(document).ready(function () {
             try {
                 const webflow = await this.createWebflowForm();
                 const webflowData = webflow?.data || {};
+
                 const uploadedFiles = await this.uploadFile(webflowData);
                 const payload = this.getFormPayload(webflowData, uploadedFiles);
 
