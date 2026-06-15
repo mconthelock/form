@@ -1,6 +1,6 @@
 // ===== FORM ===========
 export const createMfgOr = (data) => callAPI("/mfg-or/create", "POST", data);
-
+export const getMfgOrDetail = (data) => callAPI("/mfg-or/getdetail-mfg-or", "POST", data);
 
 
 // ===== GET ===========
