@@ -519,38 +519,38 @@ $(document).ready(async function () {
             try {
 
                 showLoader();
-                // await doaction({
-                //     NFRMNO: nfrmno,
-                //     VORGNO: vorgno,
-                //     CYEAR: cyear,
-                //     CYEAR2: cyear2,
-                //     NRUNNO: nrunno,
-                //     ACTION: 'approve',
-                //     EMPNO: empno,
-                //     REMARK: $('#remark').val().trim() // optional
-                // })
+                await doaction({
+                    NFRMNO: nfrmno,
+                    VORGNO: vorgno,
+                    CYEAR: cyear,
+                    CYEAR2: cyear2,
+                    NRUNNO: nrunno,
+                    ACTION: 'approve',
+                    EMPNO: empno,
+                    REMARK: $('#remark').val().trim() // optional
+                })
 
-                // $(".attach-file").each(async function (index, element) {
-                //     const fileInput = $(element)[0];
-                //     const file = fileInput.files[0];
-                //     if (file) {
-                //         const formData = new FormData();
-                //         formData.append('NFRMNO', nfrmno);
-                //         formData.append('VORGNO', vorgno);
-                //         formData.append('CYEAR', cyear);
-                //         formData.append('CYEAR2', cyear2);
-                //         formData.append('NRUNNO', nrunno);
-                //         formData.append('FORM_TYPE', 'PS');
-                //         // formData.append('FILE_CODE', '2');
-                //         formData.append('CREATEBY', empno);
-                //         formData.append('file', file);
-                //         await fetchUtils({
-                //             url: process.env.APP_API + "/ps-ci/uploadFile",
-                //             method: "POST",
-                //             data: formData,
-                //         });
-                //     }
-                // });
+                $(".attach-file").each(async function (index, element) {
+                    const fileInput = $(element)[0];
+                    const file = fileInput.files[0];
+                    if (file) {
+                        const formData = new FormData();
+                        formData.append('NFRMNO', nfrmno);
+                        formData.append('VORGNO', vorgno);
+                        formData.append('CYEAR', cyear);
+                        formData.append('CYEAR2', cyear2);
+                        formData.append('NRUNNO', nrunno);
+                        formData.append('FORM_TYPE', 'PS');
+                        // formData.append('FILE_CODE', '2');
+                        formData.append('CREATEBY', empno);
+                        formData.append('file', file);
+                        await fetchUtils({
+                            url: process.env.APP_API + "/ps-ci/uploadFile",
+                            method: "POST",
+                            data: formData,
+                        });
+                    }
+                });
 
                 // console.log("editedRows", editedRows);
                 await fetchUtils({
