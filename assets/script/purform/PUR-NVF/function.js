@@ -39,7 +39,6 @@ export async function clearaddr() {
 }
 
 export function resetformid(id) {
-    // ป้องกันกรณีส่งมาแค่ชื่อ id โดยไม่มีเครื่องหมาย # นำหน้า
     const selector = id.startsWith('#') ? id : `#${id}`;
     const $container = $(selector);
 
@@ -48,7 +47,6 @@ export function resetformid(id) {
         return;
     }
 
-    // 1. ค้นหาฟิลด์กรอกข้อมูลทั้งหมดภายใน ID นั้น
     const $inputs = $container.find('input, select, textarea');
 
     $inputs.each(function () {
@@ -67,8 +65,6 @@ export function resetformid(id) {
             $(this).val('');
         }
     });
-
-    // 2. ปรับแต่ง UI เฉพาะเจาะจงภายใน Container นั้นๆ (แก้ให้เป็นแบบเจาะจงใน id)
     $container.find('#COUNTRY_SELECT').prop('disabled', true);
     $container.find('.field-local').addClass('hidden');
     $container.find('.field-oversea').removeClass('hidden');
