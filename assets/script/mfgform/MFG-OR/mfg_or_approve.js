@@ -2,21 +2,30 @@ import { getMfgOrDetail } from "./data.js";
 import { showLoader } from "@amec/webasset/preloader";
 import { doaction, showflow } from "@amec/webasset/api/webform";
 import { redirectWebflow } from "@amec/webasset/form";
-import { host } from "../../utils.js";
 import Swal from "sweetalert2";
 
 $(document).ready(function () {
     const VIEW = {
         async init() {
-            await this.loadData();
+            this.applyButtonPermission();
             this.bindEvents();
+            await this.loadData();
         },
 
         bindEvents() {
-            $(".btn-submit").on("click", async function () {
-                const action = $(this).data("action");
-                const remark = $("#remark").val()?.trim() || "";
+            $(document).on("click", "[data-action]", async function () {
+                if (isSubmitting) return;
+
+                const mode = String($("#mode").val() || "").trim();
+                if (mode !== "2") return;
+
+                const $btn = $(this);
+                const action = $btn.data("action");
                 const empno = $("#empno").val() || "";
+                const exdata = $("#txt_exdata").val() || "";
+                const remark = $("#remark").val()?.trim() || "";
+
+                if (!action) return;
 
                 if ((action === "reject" || action === "returnb") && !remark) {
                     await Swal.fire({
@@ -27,19 +36,13 @@ $(document).ready(function () {
                     return;
                 }
 
-                const confirmResult = await Swal.fire({
-                    icon: "question",
-                    title: "ยืนยันการทำรายการ",
-                    html: `ต้องการ ${String(action).toUpperCase()} ใช่หรือไม่ ?`,
-                    showCancelButton: true,
-                    confirmButtonText: "ยืนยัน",
-                    cancelButtonText: "ยกเลิก",
-                });
+                isSubmitting = true;
 
-                if (!confirmResult.isConfirmed) return;
+                try {// Approve
+                    VIEW.getActionButtons()
+                        .prop("disabled", true)
+                        .addClass("opacity-50 pointer-events-none");
 
-                try {
-                    $(".btn-submit").prop("disabled", true).addClass("opacity-50 pointer-events-none");
                     showLoader({ show: true });
 
                     const result = await doaction({
@@ -47,10 +50,11 @@ $(document).ready(function () {
                         ACTION: action,
                         EMPNO: String(empno),
                         REMARK: remark,
-                        CEXTDATA: $("#txt_exdata").val() || "",
+                        CEXTDATA: exdata,
                     });
 
                     console.log("DO ACTION RESULT =", result);
+                    showLoader({ show: false });
 
                     if (result?.status) {
                         await Swal.fire({
@@ -59,6 +63,7 @@ $(document).ready(function () {
                             timer: 1500,
                             showConfirmButton: false,
                         });
+
                         redirectWebflow();
                         return;
                     }
@@ -70,6 +75,8 @@ $(document).ready(function () {
                     });
                 } catch (err) {
                     console.error(err);
+                    Swal.close();
+
                     await Swal.fire({
                         icon: "error",
                         title: "ไม่สามารถเชื่อมต่อระบบได้",
@@ -78,9 +85,17 @@ $(document).ready(function () {
                     });
                 } finally {
                     showLoader({ show: false });
-                    $(".btn-submit").prop("disabled", false).removeClass("opacity-50 pointer-events-none");
+                    isSubmitting = false;
+
+                    VIEW.getActionButtons()
+                        .prop("disabled", false)
+                        .removeClass("opacity-50 pointer-events-none");
                 }
             });
+        },
+
+        getActionButtons() {
+            return $("[data-action]");
         },
 
         getBasePayload() {
@@ -95,32 +110,9 @@ $(document).ready(function () {
 
         async loadData() {
             showLoader({ show: true });
-
             try {
-                const urlParams = new URLSearchParams(window.location.search);
-
-                const getVal = (inputId, paramNames = []) => {
-                    const inputVal = $.trim($(inputId).val());
-                    if (inputVal) return inputVal;
-
-                    for (const name of paramNames) {
-                        const val = $.trim(urlParams.get(name) || "");
-                        if (val) return val;
-                    }
-
-                    return "";
-                };
-
-                const payload = {
-                    NFRMNO: getVal("#nfrmno", ["no", "NFRMNO"]),
-                    VORGNO: getVal("#vorgno", ["orgNo", "orgno", "VORGNO"]),
-                    CYEAR: getVal("#cyear", ["y", "CYEAR"]),
-                    CYEAR2: getVal("#cyear2", ["y2", "CYEAR2"]),
-                    NRUNNO: getVal("#nrunno", ["runNo", "runno", "NRUNNO"]),
-                };
-
+                const payload = this.getBasePayload();
                 console.log("OR VIEW PAYLOAD =", payload);
-
                 if (!payload.NFRMNO || !payload.VORGNO || !payload.CYEAR || !payload.CYEAR2 || !payload.NRUNNO) {
                     throw new Error("ไม่พบข้อมูล key ของฟอร์ม");
                 }
@@ -182,6 +174,7 @@ $(document).ready(function () {
             const renderLink = (file) => {
                 const filename = file.FILENAME || "";
                 const url = `${baseUrl}mfgform/MFG-OR/main_or/preview_file/${formno}/${encodeURIComponent(filename)}`;
+
                 return `<a href="${url}" target="_blank" class="file-link">${filename}</a>`;
             };
 
@@ -191,7 +184,17 @@ $(document).ready(function () {
             $excel.html(excelFiles.length ? excelFiles.map(renderLink).join("") : "-");
             $pdf.html(pdfFiles.length ? pdfFiles.map(renderLink).join("") : "-");
         },
+
+        applyButtonPermission() {
+            const mode = String($("#mode").val() || "").trim();
+            const canAction = mode === "2";
+
+            this.getActionButtons().toggle(canAction);
+            $("#remark").closest("tr").toggle(canAction);
+        },
     };
+
+    let isSubmitting = false;
 
     VIEW.init();
 });
