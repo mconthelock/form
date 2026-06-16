@@ -8,8 +8,8 @@
      data-cyear2="{{$CYEAR2}}" 
      data-nrunno="{{$NRUNNO}}" 
      data-empno="{{$EMPNO ?? ''}}" 
-     data-mims_year="{{$MIMS_YEAR}}" 
-     data-mims_month="{{$MIMS_MONTH}}" 
+     data-cost_year="{{$COST_YEAR}}" 
+     data-cost_month="{{$COST_MONTH}}" 
      data-doc_no="{{$DOC_NO}}"
 
   ></div>
@@ -17,8 +17,8 @@
 <input type="hidden" name="EMPNOHid" id="EMPNOHid" value="{{ $EMPNO }}" />
 <input type="hidden" name="MODEHid" id="MODEHid" value="" />
 <input type="hidden" name="EXTDATAHid" id="EXTDATAHid" value="" />
-<input type="hidden" name="MIMS_YEARHid" id="MIMS_YEARHid" value="{{ $MIMS_YEAR }}" />
-<input type="hidden" name="MIMS_MONTHHid" id="MIMS_MONTHHid" value="{{ $MIMS_MONTH }}" />
+<input type="hidden" name="COST_YEARHid" id="COST_YEARHid" value="{{ $COST_YEAR }}" />
+<input type="hidden" name="COST_MONTHHid" id="COST_MONTHHid" value="{{ $COST_MONTH }}" />
 <input type="hidden" name="DOC_NOHid" id="DOC_NOHid" value="{{ $DOC_NO }}" />
 
 <div class="flex flex-col w-full px-4 my-5 font-sans">
@@ -75,7 +75,7 @@
                                 readonly disabled>
                             <option value="">Choose...</option>
                             @for ($i = date('Y'); $i >= date('Y') - 10; $i--)
-                                <option value="{{ $i }}" {{ isset($MIMS_YEAR) && $MIMS_YEAR == $i ? 'selected' : '' }}>{{ $i }}</option>
+                                <option value="{{ $i }}" {{ isset($COST_YEAR) && $COST_YEAR == $i ? 'selected' : '' }}>{{ $i }}</option>
                             @endfor
                         </select>
                     </div>
@@ -90,7 +90,7 @@
                             <option value="">ALL PERIOD</option>
                             @for ($m = 1; $m <= 12; $m++)
                                 @php $currentMonth = str_pad($m, 2, '0', STR_PAD_LEFT); @endphp
-                                <option value="{{ $currentMonth }}" {{ isset($MIMS_MONTH) && $MIMS_MONTH == $currentMonth ? 'selected' : '' }}>
+                                <option value="{{ $currentMonth }}" {{ isset($COST_MONTH) && $COST_MONTH == $currentMonth ? 'selected' : '' }}>
                                     {{ date('F', mktime(0, 0, 0, $m, 1)) }}
                                 </option>
                             @endfor
@@ -103,6 +103,10 @@
                     <textarea id="txtRemark" name="txtRemark" rows="2" 
                             class="w-full text-sm px-3 py-2 rounded-lg bg-white border border-slate-200 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 transition-all resize-none"
                             placeholder="พิมพ์ข้อความหมายเหตุหรือความเห็นเพิ่มเติมที่นี่...">{{$REMARK}}</textarea>
+                </div>
+
+                <div class="flex flex-col gap-1.5 sm:col-span-2 lg:col-span-3">
+                    <!-- create brow file -->
                 </div>
 
             </div>
@@ -132,7 +136,7 @@
                 <button type="button" name="ReturnBtn" id="ReturnBtn"
                         data-action="return"
                         class="btn-submit cursor-pointer bg-slate-500 bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded shadow hidden">
-                    Return To Assigned Person
+                    Return To Requester
                 </button>
                 
                 <!-- <button type="button" name="RejectBtn" id="RejectBtn"
