@@ -611,9 +611,10 @@ function mapReportToRows(reportData = [], stamp = []) {
       const withdrawAmt = numberValue(
         pickDutyValue(item, ["WD", "WITHDRAW"], dutyValue, dutyKey, "AMT"),
       );
-      const remainingQty = buyQty - withdrawQty;
+      const qtyMovement = buyQty - withdrawQty;
 
-      runningQty[dutyKey] = (runningQty[dutyKey] || 0) + remainingQty;
+      runningQty[dutyKey] = (runningQty[dutyKey] || 0) + qtyMovement;
+      const remainingQty = runningQty[dutyKey];
 
       row[`BUY_QTY${columnIndex}`] = buyQty;
       row[`BUY_AMT${columnIndex}`] = buyAmt || buyQty * numberValue(dutyValue);
