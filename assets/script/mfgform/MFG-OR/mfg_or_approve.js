@@ -6,6 +6,8 @@ import Swal from "sweetalert2";
 
 $(document).ready(function () {
     const VIEW = {
+        headData: {},
+
         async init() {
             this.applyButtonPermission();
             this.bindEvents();
@@ -24,7 +26,7 @@ $(document).ready(function () {
                 const empno = $("#empno").val() || "";
                 const exdata = $("#txt_exdata").val() || "";
                 const remark = $("#remark").val()?.trim() || "";
-
+                
                 if (!action) return;
 
                 if ((action === "reject" || action === "returnb") && !remark) {
@@ -44,11 +46,15 @@ $(document).ready(function () {
                         .addClass("opacity-50 pointer-events-none");
 
                     showLoader({ show: true });
-
-                    if (action === "approve" && exdata === "04" && mode === "2" && String(head.TYPEFORM).toUpperCase() === "NEW") {
-                        orGenerateData = await generateMfgOrNo(VIEW.getBasePayload());
+                    if (action === "approve" && exdata === "05" && mode === "2") { //DIM Approve Last step
+                        const typeform = String(VIEW.headData.TYPEFORM || "").trim();
+                        if (typeform.toUpperCase() === "NEW") {
+                            await generateMfgOrNo(getBasePayload);
+                        }else if (typeform.toUpperCase() === "REVISE") {
+                            await updateReviseCenter(getBasePayload);
+                        }
                     }
-
+                /*
                     const result = await doaction({
                         ...VIEW.getBasePayload(),
                         ACTION: action,
@@ -77,6 +83,7 @@ $(document).ready(function () {
                         title: result?.message || "เกิดข้อผิดพลาด",
                         confirmButtonText: "ตกลง",
                     });
+                */
                 } catch (err) {
                     console.error(err);
                     Swal.close();
@@ -132,6 +139,8 @@ $(document).ready(function () {
                 }
 
                 const data = res.data || {};
+                this.headData = data.head || {};
+
                 this.renderForm(data.form || {}, data.head || {});
                 this.renderFile(data.att || []);
             } catch (err) {
