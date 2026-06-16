@@ -32,7 +32,7 @@ import { sendmail } from '@amec/webasset/api/mail';
 
 $(document).ready(async function () {
     // 1. ดึงข้อมูลจากก้อนข้อมูลหลักของเบลดฟอร์ม
-
+    alert('WW');
     const formData = $('.form-info').data();
     const {
         nfrmno,
@@ -118,10 +118,16 @@ function search() {
 
     // 1. สั่งเปิดสปินเนอร์เพื่อแสดงสถานะการดึงข้อมูล
     $('#loading').show();
-
+    var func = 'GetStockCostReal';
+    if ($('#REQUEST_BYTxt').val().includes(empno)) {
+        func = 'GetStockCostReal';
+    } else {
+        func = 'GetFEEIADetail';
+    }
+    alert(func);
     $.ajax({
         // ตรวจเช็คชื่อ Segment (main หรือ form) ให้ตรงตามโครงสร้าง Routing จริงหลังบ้านของคุณครับ
-        url: host + 'feform/FE-EIA/form/GetStockCost',
+        url: host + 'feform/FE-EIA/form/' + func,
         type: 'POST',
         dataType: 'json',
         data: {
@@ -319,6 +325,29 @@ function buildDataTable(mergedData) {
     });
 }
 
+$(document).on('click', '#PdfBtn', function () {
+    // ดักจับ fallback เผื่อก้อนข้อมูลหลักยังโหลดมาไม่สมบูรณ์
+    const formData = $('.form-info').data() || {};
+    const { nfrmno, vorgno, cyear, cyear2, nrunno } = formData;
+
+    const pdfUrl =
+        host +
+        'feform/FE-EIA/form/exportPdf?no=' +
+        nfrmno +
+        '&orgNo=' +
+        vorgno +
+        '&y=' +
+        cyear +
+        '&y2=' +
+        cyear2 +
+        '&runNo=' +
+        nrunno;
+
+    alert(pdfUrl);
+    // // เปิดลิงก์หลังบ้านในแท็บใหม่เพื่อประมวลผลไฟล์ PDF ทันที
+    //  window.open(pdfUrl, '_blank');
+});
+
 $(document).on('click', '#ApproveBtn', async function () {
     let val = $(this).val();
     // เปิด Loader บังหน้าจอไว้ก่อนถ้าระบบโหลดช้า
@@ -348,14 +377,68 @@ $(document).on('click', '#DeleteBtn', async function () {
         CYEAR2: cyear2 ? cyear2.toString() : '',
         NRUNNO: nrunno ? Number(nrunno) : 0,
     };
-    deleteFlowandForm(payload);
+    const delform = deleteFlowandForm(payload);
+    if (delform.status) {
+        $.ajax({
+            // ตรวจเช็คชื่อ Segment (main หรือ form) ให้ตรงตามโครงสร้าง Routing จริงหลังบ้านของคุณครับ
+            url: host + 'feform/FE-EIA/form/DeleteFEEIAForm',
+            type: 'POST',
+            dataType: 'json',
+            data: {
+                NFRMNO: nfrmno,
+                VORGNO: vorgno,
+                CYEAR: cyear,
+                CYEAR2: cyear2,
+                NRUNNO: nrunno,
+                EMPNO: empno,
+            },
+            success: function (response) {
+                response = response || {};
+                if (
+                    response.status ||
+                    response.status === 'true' ||
+                    response.status === true
+                ) {
+                    alert('ลบข้อมูลในตารางเรียบร้อยแล้ว');
+                    console.log('Delete Response: ', response);
+                    redirectWebflow();
+                } else {
+                    alert(
+                        'ไม่สามารถลบข้อมูลในตารางได้: ' +
+                            (response.message || 'โปรดตรวจสอบข้อผิดพลาดในระบบ'),
+                    );
+                }
+            },
+            error: function (xhr, status, error) {
+                console.error('Ajax Error: ', error);
+                alert('เกิดข้อผิดพลาดในการดึงข้อมูลจากโมเดลฐานข้อมูล');
+                // ถ้าพังหรือหาหน้าไม่เจอก็ต้องดับตัวสปินเนอร์ทิ้งด้วยเช่นกัน
+                $('#loading').hide();
+            },
+        });
+    } else {
+        Swal.fire({
+            icon: 'error',
+            title: 'Failed to Delete Form',
+            text: rssave.message || 'Please try again',
+        });
+    }
 });
 
 async function actionFlow(actionType) {
     const formData = $('.form-info').data();
-
-    const { nfrmno, vorgno, cyear, cyear2, nrunno, empno } = formData;
-
+    const {
+        nfrmno,
+        vorgno,
+        cyear,
+        cyear2,
+        nrunno,
+        empno,
+        mims_year,
+        mims_month,
+        doc_no,
+    } = formData;
+    var result = '0';
     try {
         // 1. ดึงค่าข้อความหมายเหตุจริงจากหน้าจอขึ้นมาคำนวณก่อนสร้าง Object
         // ค้นหาผ่านไอดี #txtRemark (อัปเดตตาม Textarea ตัวใหม่ล่าสุดที่เราเพิ่งจัดหน้าจอกันไปครับ)
@@ -372,16 +455,64 @@ async function actionFlow(actionType) {
             REMARK: remarkTxt.toString(),
         };
 
-        const res = await doaction(payload);
-        // 4. ตรวจสอบสถานะและ Redirect เมื่อสำเร็จ
-        if (res?.status || res?.status === 'true' || res?.status === true) {
-            // alert('ดำเนินการเปลี่ยนสถานะฟอร์มเรียบร้อยแล้ว');
-            redirectWebflow();
+        if ($('#REQUEST_BYTxt').val().includes(empno)) {
+            $.ajax({
+                // ตรวจเช็คชื่อ Segment (main หรือ form) ให้ตรงตามโครงสร้าง Routing จริงหลังบ้านของคุณครับ
+                url: host + 'feform/FE-EIA/form/GetFEEIADetail',
+                type: 'POST',
+                dataType: 'json',
+                data: {
+                    NFRMNO: nfrmno,
+                    VORGNO: vorgno,
+                    CYEAR: cyear,
+                    CYEAR2: cyear2,
+                    NRUNNO: nrunno,
+                    EMPNO: empno,
+                    MIMS_YEAR: mims_year,
+                    MIMS_MONTH: mims_month,
+                    DOC_NO: doc_no,
+                    DATAONHAND: dataOnhand,
+                },
+                success: function (response) {
+                    response = response || {};
+                    if (
+                        response.status ||
+                        response.status === 'true' ||
+                        response.status === true
+                    ) {
+                        result = '1';
+                    } else {
+                        alert(
+                            'ไม่สามารถบันทึกข้อมูลในตารางได้: ' +
+                                (response.message ||
+                                    'โปรดตรวจสอบข้อผิดพลาดในระบบ'),
+                        );
+                        result = '0';
+                    }
+                },
+                error: function (xhr, status, error) {
+                    console.error('Ajax Error: ', error);
+                    alert('เกิดข้อผิดพลาดในการดึงข้อมูลจากโมเดลฐานข้อมูล');
+                    // ถ้าพังหรือหาหน้าไม่เจอก็ต้องดับตัวสปินเนอร์ทิ้งด้วยเช่นกัน
+                    $('#loading').hide();
+                },
+            });
         } else {
-            alert(
-                'ไม่สามารถส่งฟอร์มได้: ' +
-                    (res?.message || 'โปรดตรวจสอบข้อผิดพลาดในระบบ'),
-            );
+            result = '1';
+        }
+
+        if (result === '1') {
+            const res = await doaction(payload);
+            // 4. ตรวจสอบสถานะและ Redirect เมื่อสำเร็จ
+            if (res?.status || res?.status === 'true' || res?.status === true) {
+                // alert('ดำเนินการเปลี่ยนสถานะฟอร์มเรียบร้อยแล้ว');
+                redirectWebflow();
+            } else {
+                alert(
+                    'ไม่สามารถส่งฟอร์มได้: ' +
+                        (res?.message || 'โปรดตรวจสอบข้อผิดพลาดในระบบ'),
+                );
+            }
         }
     } catch (error) {
         console.error('Webflow Action Error:', error);

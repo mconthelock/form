@@ -12,12 +12,11 @@
      data-mims_month="{{$MIMS_MONTH}}" 
      data-doc_no="{{$DOC_NO}}"
 
-     ></div
-     >
-</div>
+  ></div>
 
 <input type="hidden" name="EMPNOHid" id="EMPNOHid" value="{{ $EMPNO }}" />
 <input type="hidden" name="MODEHid" id="MODEHid" value="" />
+<input type="hidden" name="EXTDATAHid" id="EXTDATAHid" value="" />
 <input type="hidden" name="MIMS_YEARHid" id="MIMS_YEARHid" value="{{ $MIMS_YEAR }}" />
 <input type="hidden" name="MIMS_MONTHHid" id="MIMS_MONTHHid" value="{{ $MIMS_MONTH }}" />
 <input type="hidden" name="DOC_NOHid" id="DOC_NOHid" value="{{ $DOC_NO }}" />
@@ -34,9 +33,16 @@
         </div>
 
         <form href="#" class="card-body hidden" id="form">
-            <h2 class="card-title mb-5">
-                <u class="text-3xl text-primary font-bold">Maintenance Stock Cost Report</u>
-            </h2>
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-5 border-b border-slate-100 pb-3">
+                <h2 class="card-title m-0">
+                    <u class="text-3xl text-primary font-bold no-underline decoration-transparent">Maintenance Stock Cost Report</u>
+                </h2>
+                
+                <button type="button" id="PdfBtn" name="PdfBtn" 
+                        class="cursor-pointer bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm px-4 py-2 rounded-lg shadow-sm transition-all flex items-center gap-2">
+                    Export PDF
+                </button>
+            </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 border border-slate-200 p-6 rounded-2xl bg-white shadow-sm mb-6 font-sans">
                 
@@ -119,21 +125,21 @@
                 
                 <button type="button" name="DeleteBtn" id="DeleteBtn"
                         data-action="delete"
-                        class="btn-submit cursor-pointer bg-slate-500 hover:bg-red-600 text-white px-4 py-2 rounded shadow hidden">
+                        class="btn-submit cursor-pointer bg-slate-500 bg-rose-600 hover:bg-rose-700 text-white px-4 py-2 rounded shadow hidden">
                     Delete
                 </button>
                 
                 <button type="button" name="ReturnBtn" id="ReturnBtn"
                         data-action="return"
-                        class="btn-submit cursor-pointer bg-slate-500 hover:bg-gray-600 text-white px-4 py-2 rounded shadow hidden">
+                        class="btn-submit cursor-pointer bg-slate-500 bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded shadow hidden">
                     Return To Assigned Person
                 </button>
                 
-                <button type="button" name="RejectBtn" id="RejectBtn"
+                <!-- <button type="button" name="RejectBtn" id="RejectBtn"
                         data-action="reject"
-                        class="btn-submit cursor-pointer bg-slate-500 hover:bg-gray-600 text-white px-4 py-2 rounded shadow hidden">
+                        class="btn-submit cursor-pointer bg-slate-500 bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded shadow hidden">
                     Reject
-                </button>
+                </button> -->
             </div>
             <div class="form-action-container mt-5"></div>
 
