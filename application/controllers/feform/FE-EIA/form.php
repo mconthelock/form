@@ -87,15 +87,15 @@ class form extends MY_Controller{
 
 
 
-            // == get WPS_MIMS_EIAFORM   find MIMS_YEAR,MIMS_MONTH where form runNo,cyear2 match
+            // == get WPS_MIMS_EIAFORM   find COST_YEAR,COST_MONTH where form runNo,cyear2 match
 
                 $db_mims = $this->load->database('MIMS', TRUE);
                 $query = $db_mims->get_where('WPS_MIMS_EIAFORM', $form );
                 $data['mimsForm'] = $query->row();
 
                 if (!empty($data['mimsForm'])) {
-                    $data['MIMS_MONTH'] = $data['mimsForm']->MIMS_MONTH;
-                    $data['MIMS_YEAR']  = $data['mimsForm']->MIMS_YEAR;
+                    $data['COST_MONTH'] = $data['mimsForm']->COST_MONTH;
+                    $data['COST_YEAR']  = $data['mimsForm']->COST_YEAR;
                     $data['DOC_NO']     = $data['mimsForm']->DOC_NO;
                 }
             
@@ -147,11 +147,24 @@ class form extends MY_Controller{
     public function GetFEEIADetail()
     {
         
+        $NFRMNO = $this->input->post('NFRMNO');
+        $VORGNO = $this->input->post('VORGNO');
+        $CYEAR = $this->input->post('CYEAR');
+        $CYEAR2 = $this->input->post('CYEAR2');
+        $NRUNNO = $this->input->post('NRUNNO');
         $YEAR = $this->input->post('YEAR');
         $MONTH = $this->input->post('MONTH');
         $w="";
 
-        
+        $form = [
+                'NFRMNO' => (int)$this->input->get('NFRMNO'),
+                'VORGNO' => (string)$this->input->get('VORGNO'),
+                'CYEAR'  => (string)$this->input->get('CYEAR'),
+                'CYEAR2' => (string)$this->input->get('CYEAR2'),
+                'NRUNNO' => (int)$this->input->get('NRUNNO'),
+                'YEAR' => (int)$this->input->get('YEAR'),
+                'MONTH' => (int)$this->input->get('MONTH'),
+            ];
         if($MONTH != "")
         {
             $w .= " AND  COST_MONTH = '" . $MONTH . "' ";
@@ -160,22 +173,77 @@ class form extends MY_Controller{
             $w .= " AND  COST_YEAR = '" . $YEAR . "' ";
         }
 
-        $sql="SELECT * FROM WPS_MIMS_REPORT_STOCKCOST WHERE 1=1  " .$w;
-        $dataOnhand = $this->MainModel->QuerySetBase($sql, $this->mimsBase)->result();
+        $sql = "SELECT 
+            NFRMNO, VORGNO, CYEAR, CYEAR2, NRUNNO, COST_MONTH, COST_YEAR,
+            OPENINGBALANCE, RECEIVED_AMOUNT, ISSUE_AMOUNT, TOTAL_COST_ONHAND, DIFF, CREATE_DATE,
+            INITCAP(TO_CHAR(TO_DATE(COST_YEAR || '-' || COST_MONTH, 'YYYY-MM'), 'Mon''YYYY', 'NLS_DATE_LANGUAGE = AMERICAN')) AS COSTMONTH
+        FROM WPS_MIMS_EIAFORMDETAIL 
+        WHERE 1=1 " . $w;
+        $dataOnhand = $this->MainModel->QuerySetBase($sql, $this->mimsBase,$form)->result();
 
-        $sql = "select *  from WPS_MIMS_REPORT_STOCKCOST_RECEIVE where 1=1 " .$w;
-        $dataReceive = $this->MainModel->QuerySetBase($sql, $this->mimsBase)->result();
-
-        $sql = "select *  from WPS_MIMS_REPORT_STOCKCOST_ISSUE where 1=1 " .$w;
-        $dataIssue = $this->MainModel->QuerySetBase($sql, $this->mimsBase)->result();
         
         $output = array(
             "dataOnhand" =>  $dataOnhand,
-            "dataReceive" => $dataReceive,
-            "dataIssue" => $dataIssue,
+            "dataReceive" => [],
+            "dataIssue" => [],
         );
         
         echo json_encode ($output); 
+    }
+
+    public function AddFEEIADetail()
+    {
+        try {
+            $NFRMNO = (int)$this->input->post('NFRMNO');
+            $VORGNO = (string)$this->input->post('VORGNO');
+            $CYEAR  = (string)$this->input->post('CYEAR');
+            $CYEAR2 = (string)$this->input->post('CYEAR2');
+            $NRUNNO = (int)$this->input->post('NRUNNO');
+
+            $formKeys = [
+                'NFRMNO' => $NFRMNO,
+                'VORGNO' => $VORGNO,
+                'CYEAR'  => $CYEAR,
+                'CYEAR2' => $CYEAR2,
+                'NRUNNO' => $NRUNNO
+            ];
+
+            // 1. ดึงฐานข้อมูลกลุ่ม MIMS มาเปิดการใช้งาน
+            $db_mims = $this->load->database('MIMS', TRUE);
+
+            // 2. ล้างข้อมูลรายละเอียดเก่าออกก่อนเพื่อป้องกันการ Insert ซ้ำ (กรณีตรวจสอบซ้ำหรือแก้ไข)
+            $db_mims->delete('WPS_MIMS_EIAFORMDETAIL', $formKeys);
+
+            // 3. รับและถอดรหัสก้อนข้อมูลจากหน้าบ้าน
+            $dataOnhandRaw = $this->input->post('DATAONHAND');
+            $dataOnhandArray = is_string($dataOnhandRaw) ? json_decode($dataOnhandRaw, true) : $dataOnhandRaw;
+
+            if (!empty($dataOnhandArray) && is_array($dataOnhandArray)) {
+                foreach ($dataOnhandArray as $row) {
+                    // 💡 ลอจิกแปลงชื่อคีย์: จับคู่ COST_YEAR และ COST_MONTH จาก JS แตกเข้าคอลัมน์ในตารางใหม่
+                    $detailData = array_merge($formKeys, [
+                        'COST_MONTH'        => (string)($row['COST_MONTH'] ?? ''),
+                        'COST_YEAR'         => (string)($row['COST_YEAR'] ?? ''),
+                        'OPENINGBALANCE'    => (float)($row['OPENINGBALANCE'] ?? 0),
+                        'RECEIVED_AMOUNT'   => (float)($row['RECEIVED_AMOUNT'] ?? 0),
+                        'ISSUE_AMOUNT'      => (float)($row['ISSUE_AMOUNT'] ?? 0),
+                        'TOTAL_COST_ONHAND' => (float)($row['TOTAL_COST_ONHAND'] ?? 0),
+                        'DIFF'              => (float)($row['DIFF'] ?? 0),
+                    ]);
+
+                    $db_mims->insert('WPS_MIMS_EIAFORMDETAIL', $detailData);
+                }
+            }
+
+            return $this->output
+                        ->set_content_type('application/json')
+                        ->set_output(json_encode(['status' => true, 'message' => 'บันทึกข้อมูล EIA Detail สำเร็จ']));
+
+        } catch (\Exception $e) {
+            return $this->output
+                        ->set_content_type('application/json')
+                        ->set_output(json_encode(['status' => false, 'message' => 'Error: ' . $e->getMessage()]));
+        }
     }
     public function DeleteFEEIAForm()
     {
@@ -217,15 +285,15 @@ class form extends MY_Controller{
     //=== Auto Create form WebFlow  Maintenance Stock Cost Report
     //=== Case Monthy Report /1/2025/01/
     //== Case Yearly Report /1/2026/all/
-    // http://localhost:8080/form/feform/FE-EIA/form/AutoCreateFEEIAForm/?MIMS_YEAR=2026&MIMS_MONTH=01
-    // http://localhost:8080/form/feform/FE-EIA/form/AutoCreateFEEIAForm/?MIMS_YEAR=2026&MIMS_MONTH=ALL
+    // http://localhost:8080/form/feform/FE-EIA/form/AutoCreateFEEIAForm/?COST_YEAR=2026&COST_MONTH=01
+    // http://localhost:8080/form/feform/FE-EIA/form/AutoCreateFEEIAForm/?COST_YEAR=2026&COST_MONTH=ALL
     //==============================================================================================================
     public function AutoCreateFEEIAForm()
     {
         try {
             // ดึงค่าจาก Query String พร้อมใส่ค่า Default ด้วยเครื่องหมาย ?? 
-            $MIMS_YEAR  = $this->input->get('MIMS_YEAR') ?? date('Y');
-            $MIMS_MONTH = $this->input->get('MIMS_MONTH') ?? date('m');
+            $COST_YEAR  = $this->input->get('COST_YEAR') ?? date('Y');
+            $COST_MONTH = $this->input->get('COST_MONTH') ?? date('m');
 
             $sql = "SELECT * FROM WPS_MIMS_EIAFORM_USERCREATE WHERE 1=1";
             $REQBY = $this->MainModel->QuerySetBase($sql, $this->mimsBase)->result();
@@ -268,8 +336,8 @@ class form extends MY_Controller{
                         'NRUNNO'      => $data["NRUNNO"],
                         'DOC_NO'      => $docNo,
                         'VIEW_TYPE'   => '1',
-                        'MIMS_YEAR'   => $MIMS_YEAR,  
-                        'MIMS_MONTH'  => $MIMS_MONTH, 
+                        'COST_YEAR'   => $COST_YEAR,  
+                        'COST_MONTH'  => $COST_MONTH, 
                         'WORK_CON'    => 'Auto generated report',
                         'REASON'      => '', 
                         'EMPNO'       => $empNo, 
@@ -335,11 +403,11 @@ class form extends MY_Controller{
 
             // 3. ดึงกลุ่มข้อมูลตัวเลขรายงานจากฐานข้อมูล (ลอจิกคิวรีชุดเดียวกับ GetStockCost)
             $w = "";
-            if (!empty($mimsForm->MIMS_MONTH) && $mimsForm->MIMS_MONTH !== 'all') {
-                $w .= " AND COST_MONTH = '" . $mimsForm->MIMS_MONTH . "' ";
+            if (!empty($mimsForm->COST_MONTH) && $mimsForm->COST_MONTH !== 'all') {
+                $w .= " AND COST_MONTH = '" . $mimsForm->COST_MONTH . "' ";
             }
-            if (!empty($mimsForm->MIMS_YEAR)) {
-                $w .= " AND COST_YEAR = '" . $mimsForm->MIMS_YEAR . "' ";
+            if (!empty($mimsForm->COST_YEAR)) {
+                $w .= " AND COST_YEAR = '" . $mimsForm->COST_YEAR . "' ";
             }
 
             $sqlOnhand = "SELECT * FROM WPS_MIMS_REPORT_STOCKCOST WHERE 1=1 " . $w;
@@ -563,7 +631,7 @@ class form extends MY_Controller{
                 <tr>
                     <td>
                         <div class="label">Year / Month</div>
-                        <div class="value">' . htmlspecialchars($formInfo->MIMS_YEAR) . ' / ' . htmlspecialchars($formInfo->MIMS_MONTH) . '</div>
+                        <div class="value">' . htmlspecialchars($formInfo->COST_YEAR) . ' / ' . htmlspecialchars($formInfo->COST_MONTH) . '</div>
                     </td>
                     <td colspan="2">
                         <div class="label">Remark</div>
@@ -578,8 +646,8 @@ class form extends MY_Controller{
                         <th width="5%">No.</th>
                         <th width="15%">Cost Month</th>
                         <th width="16%">Opening Balance</th>
-                        <th width="16%">Received FY' . htmlspecialchars($formInfo->MIMS_YEAR) . '</th>
-                        <th width="16%">Issued FY' . htmlspecialchars($formInfo->MIMS_YEAR) . '</th>
+                        <th width="16%">Received FY' . htmlspecialchars($formInfo->COST_YEAR) . '</th>
+                        <th width="16%">Issued FY' . htmlspecialchars($formInfo->COST_YEAR) . '</th>
                         <th width="16%">Total Cost</th>
                         <th width="16%">Diff</th>
                     </tr>

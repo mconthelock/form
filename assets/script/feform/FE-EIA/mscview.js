@@ -29,10 +29,11 @@ import {
     deleteFlowandForm,
 } from '@amec/webasset/api/webform';
 import { sendmail } from '@amec/webasset/api/mail';
-
+let empno = '';
+let dataOnhand = [];
 $(document).ready(async function () {
     // 1. ดึงข้อมูลจากก้อนข้อมูลหลักของเบลดฟอร์ม
-    alert('WW');
+
     const formData = $('.form-info').data();
     const {
         nfrmno,
@@ -41,8 +42,8 @@ $(document).ready(async function () {
         cyear2,
         nrunno,
         empno,
-        mims_year,
-        mims_month,
+        cost_year,
+        cost_month,
         doc_no,
     } = formData;
 
@@ -113,82 +114,107 @@ $(document).ready(async function () {
 });
 
 function search() {
+    const formData = $('.form-info').data();
+    const {
+        nfrmno,
+        vorgno,
+        cyear,
+        cyear2,
+        nrunno,
+        empno,
+        cost_year,
+        cost_month,
+        doc_no,
+    } = formData;
     var YEAR = $('#YEARDrp').val();
     var MONTH = $('#MONTHDrp').val();
-
+    // alert('WW');
     // 1. สั่งเปิดสปินเนอร์เพื่อแสดงสถานะการดึงข้อมูล
     $('#loading').show();
     var func = 'GetStockCostReal';
-    if ($('#REQUEST_BYTxt').val().includes(empno)) {
+    if (($('#REQUEST_BYTxt').val() || '').includes(empno)) {
         func = 'GetStockCostReal';
     } else {
         func = 'GetFEEIADetail';
     }
-    alert(func);
+    // alert(func);
     $.ajax({
         // ตรวจเช็คชื่อ Segment (main หรือ form) ให้ตรงตามโครงสร้าง Routing จริงหลังบ้านของคุณครับ
         url: host + 'feform/FE-EIA/form/' + func,
         type: 'POST',
         dataType: 'json',
         data: {
+            NFRMNO: nfrmno,
+            VORGNO: vorgno,
+            CYEAR: cyear,
+            CYEAR2: cyear2,
+            NRUNNO: nrunno,
+            EMPNO: empno,
             YEAR: YEAR,
             MONTH: MONTH,
         },
         success: function (response) {
-            // ดักจับและคัดกรองค่าว่างป้องกันลูปฟังก์ชันพังกลางคัน
-            var dataOnhand = response.dataOnhand || [];
-            var dataReceive = response.dataReceive || [];
-            var dataIssue = response.dataIssue || [];
+            if (func === 'GetStockCostReal') {
+                // ดักจับและคัดกรองค่าว่างป้องกันลูปฟังก์ชันพังกลางคัน
+                dataOnhand = response.dataOnhand || [];
+                var dataReceive = response.dataReceive || [];
+                var dataIssue = response.dataIssue || [];
 
-            var recvMap = {};
-            dataReceive.forEach(function (recv) {
-                if (recv && recv.COSTMONTH) {
-                    recvMap[recv.COSTMONTH] = recv.RECEIVE_AMOUNT
-                        ? recv.RECEIVE_AMOUNT
+                var recvMap = {};
+                dataReceive.forEach(function (recv) {
+                    if (recv && recv.COSTMONTH) {
+                        recvMap[recv.COSTMONTH] = recv.RECEIVE_AMOUNT
+                            ? recv.RECEIVE_AMOUNT
+                            : 0;
+                    }
+                });
+
+                dataIssue.forEach(function (issue) {
+                    if (issue) {
+                        issue.ISSUE_AMOUNT = issue.ISSUE_AMOUNT
+                            ? issue.ISSUE_AMOUNT
+                            : 0;
+                    }
+                });
+
+                dataOnhand.forEach(function (onhand) {
+                    var recvVal = recvMap[onhand.COSTMONTH]
+                        ? parseFloat(recvMap[onhand.COSTMONTH])
                         : 0;
-                }
-            });
+                    onhand.RECEIVED_AMOUNT = recvVal.toFixed(2);
 
-            dataIssue.forEach(function (issue) {
-                if (issue) {
-                    issue.ISSUE_AMOUNT = issue.ISSUE_AMOUNT
-                        ? issue.ISSUE_AMOUNT
+                    var issuedAmount = dataIssue.find(
+                        (issue) => issue.COSTMONTH === onhand.COSTMONTH,
+                    );
+                    var issueVal = issuedAmount
+                        ? parseFloat(issuedAmount.ISSUE_AMOUNT)
                         : 0;
-                }
-            });
+                    onhand.ISSUE_AMOUNT = issueVal.toFixed(2);
 
-            dataOnhand.forEach(function (onhand) {
-                var recvVal = recvMap[onhand.COSTMONTH]
-                    ? parseFloat(recvMap[onhand.COSTMONTH])
-                    : 0;
-                onhand.RECEIVED_AMOUNT = recvVal.toFixed(2);
+                    var openingVal = parseFloat(onhand.OPENINGBALANCE) || 0;
+                    var onhandVal = parseFloat(onhand.TOTAL_COST_ONHAND) || 0;
 
-                var issuedAmount = dataIssue.find(
-                    (issue) => issue.COSTMONTH === onhand.COSTMONTH,
-                );
-                var issueVal = issuedAmount
-                    ? parseFloat(issuedAmount.ISSUE_AMOUNT)
-                    : 0;
-                onhand.ISSUE_AMOUNT = issueVal.toFixed(2);
+                    var calculatedDiff =
+                        openingVal + recvVal - issueVal - onhandVal;
 
-                var openingVal = parseFloat(onhand.OPENINGBALANCE) || 0;
-                var onhandVal = parseFloat(onhand.TOTAL_COST_ONHAND) || 0;
+                    if (calculatedDiff >= -0.02 && calculatedDiff <= 0.02) {
+                        calculatedDiff = 0.0;
+                    }
 
-                var calculatedDiff =
-                    openingVal + recvVal - issueVal - onhandVal;
+                    onhand.DIFF = calculatedDiff.toFixed(2);
+                    if (onhand.DIFF === '-0.00') {
+                        onhand.DIFF = '0.00';
+                    }
+                    onhand.COST_YEAR = $('#YEARDrp').val() || '';
+                    onhand.COST_MONTH = onhand.COST_MONTH || '';
+                });
 
-                if (calculatedDiff >= -0.02 && calculatedDiff <= 0.02) {
-                    calculatedDiff = 0.0;
-                }
-
-                onhand.DIFF = calculatedDiff.toFixed(2);
-                if (onhand.DIFF === '-0.00') {
-                    onhand.DIFF = '0.00';
-                }
-            });
-
-            // 2. สั่งวาดและพ่นตารางลงหน้าเว็บ
-            buildDataTable(dataOnhand);
+                // 2. สั่งวาดและพ่นตารางลงหน้าเว็บ
+                buildDataTable(dataOnhand);
+            } else {
+                dataOnhand = response.dataOnhand || [];
+                buildDataTable(dataOnhand);
+            }
 
             // 3. 🏁 สั่งปิดตัวหมุนทันทีตรงนี้เพื่อความชัวร์ 100% เมื่อคำนวณและพ่นตารางเสร็จ
             $('#loading').hide();
@@ -434,15 +460,14 @@ async function actionFlow(actionType) {
         cyear2,
         nrunno,
         empno,
-        mims_year,
-        mims_month,
+        cost_year,
+        cost_month,
         doc_no,
     } = formData;
+
     var result = '0';
     try {
-        // 1. ดึงค่าข้อความหมายเหตุจริงจากหน้าจอขึ้นมาคำนวณก่อนสร้าง Object
-        // ค้นหาผ่านไอดี #txtRemark (อัปเดตตาม Textarea ตัวใหม่ล่าสุดที่เราเพิ่งจัดหน้าจอกันไปครับ)
-        const remarkTxt = $('#txtRemark').val();
+        const remarkTxt = $('#txtRemark').val() || '';
 
         const payload = {
             NFRMNO: nfrmno ? Number(nfrmno) : 0,
@@ -450,15 +475,17 @@ async function actionFlow(actionType) {
             CYEAR: cyear ? cyear.toString() : '',
             CYEAR2: cyear2 ? cyear2.toString() : '',
             NRUNNO: nrunno ? Number(nrunno) : 0,
-            ACTION: actionType ? actionType.toString() : '', // 'approve', 'returnass', 'reject'
+            ACTION: actionType ? actionType.toString() : '',
             EMPNO: empno ? empno.toString() : '',
             REMARK: remarkTxt.toString(),
         };
 
-        if ($('#REQUEST_BYTxt').val().includes(empno)) {
-            $.ajax({
-                // ตรวจเช็คชื่อ Segment (main หรือ form) ให้ตรงตามโครงสร้าง Routing จริงหลังบ้านของคุณครับ
-                url: host + 'feform/FE-EIA/form/GetFEEIADetail',
+        console.log('dataOnhand:', dataOnhand);
+
+        if (($('#REQUEST_BYTxt').val() || '').includes(empno)) {
+            // 💡 เปลี่ยนตรงนี้: ใช้ await คุม $.ajax เพื่อบังคับให้ระบบรอจนกว่าหลังบ้านจะตอบกลับสำเร็จ
+            const response = await $.ajax({
+                url: host + 'feform/FE-EIA/form/AddFEEIADetail',
                 type: 'POST',
                 dataType: 'json',
                 data: {
@@ -468,44 +495,35 @@ async function actionFlow(actionType) {
                     CYEAR2: cyear2,
                     NRUNNO: nrunno,
                     EMPNO: empno,
-                    MIMS_YEAR: mims_year,
-                    MIMS_MONTH: mims_month,
+                    COST_YEAR: cost_year,
+                    COST_MONTH: cost_month,
                     DOC_NO: doc_no,
-                    DATAONHAND: dataOnhand,
-                },
-                success: function (response) {
-                    response = response || {};
-                    if (
-                        response.status ||
-                        response.status === 'true' ||
-                        response.status === true
-                    ) {
-                        result = '1';
-                    } else {
-                        alert(
-                            'ไม่สามารถบันทึกข้อมูลในตารางได้: ' +
-                                (response.message ||
-                                    'โปรดตรวจสอบข้อผิดพลาดในระบบ'),
-                        );
-                        result = '0';
-                    }
-                },
-                error: function (xhr, status, error) {
-                    console.error('Ajax Error: ', error);
-                    alert('เกิดข้อผิดพลาดในการดึงข้อมูลจากโมเดลฐานข้อมูล');
-                    // ถ้าพังหรือหาหน้าไม่เจอก็ต้องดับตัวสปินเนอร์ทิ้งด้วยเช่นกัน
-                    $('#loading').hide();
+                    DATAONHAND: JSON.stringify(dataOnhand), // สรุปส่งสตริงแบบปลอดภัยสอดคล้องกับตารางย่อยตัวใหม่
                 },
             });
+
+            if (
+                response &&
+                (response.status ||
+                    response.status === 'true' ||
+                    response.status === true)
+            ) {
+                result = '1';
+            } else {
+                alert(
+                    'ไม่สามารถบันทึกข้อมูลในตารางได้: ' +
+                        (response.message || 'โปรดตรวจสอบข้อผิดพลาดในระบบ'),
+                );
+                result = '0';
+            }
         } else {
             result = '1';
         }
 
         if (result === '1') {
             const res = await doaction(payload);
-            // 4. ตรวจสอบสถานะและ Redirect เมื่อสำเร็จ
+
             if (res?.status || res?.status === 'true' || res?.status === true) {
-                // alert('ดำเนินการเปลี่ยนสถานะฟอร์มเรียบร้อยแล้ว');
                 redirectWebflow();
             } else {
                 alert(
@@ -517,6 +535,7 @@ async function actionFlow(actionType) {
     } catch (error) {
         console.error('Webflow Action Error:', error);
         alert('เกิดข้อผิดพลาดในการส่ง Action: ' + error.message);
+        $('#loading').hide();
     }
 }
 
