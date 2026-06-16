@@ -136,7 +136,7 @@ $(document).ready(function () {
                 }
 
                 const data = res.data || {};
-                this.renderForm(data.form || {});
+                this.renderForm(data.form || {}, data.head || {});
                 this.renderFile(data.att || []);
             } catch (err) {
                 console.error("LOAD OR VIEW ERROR:", err);
@@ -151,42 +151,45 @@ $(document).ready(function () {
             }
         },
 
-        renderForm(form) {
-            $("#v_request_by").text(`${form.REQ_EMPNO || "-"}_${form.REQ_NAME || "-"}`);
-            $("#v_create_by").text(`${form.INP_EMPNO || "-"}_${form.INP_NAME || "-"}`);
-            $("#v_type_form").text(form.TYPEFORM || "-");
-            $("#v_class").text(form.CLASS || "-");
-            $("#v_topic").text(form.TOPIC || "-");
-            $("#v_dwg_no").text(form.DWGNO || "-");
-            $("#v_shop_no").text(form.SHOPNO || "-");
-            $("#v_item_no").text(form.ITEMNO || "-");
-            $("#v_apply_for").text(form.APPLY_FOR || "-");
-            $("#v_or_no").text(form.ORNO || "-");
-            $("#v_rev").text(form.REV || "-");
+        renderForm(form, head) {
+            $("#v_request_by").text(`${form.REQ_EMPNO || "-"} - ${form.REQ_NAME || "-"}`);
+            $("#v_create_by").text(`${form.INP_EMPNO || "-"} - ${form.INP_NAME || "-"}`);
+
+            const typeForm = String(head.TYPEFORM || "-");
+            const orNo = String(head.ORNO || "").trim();
+            const rev = String(head.REV || "").trim();
+
+            if (typeForm === "REVISE") {
+                $("#v_type_form").text(`Revise${orNo ? "    Current No : " + orNo : ""}${rev ? "    Rev : " + rev : ""}`);
+            } else {
+                $("#v_type_form").text("New");
+            }
+
+            $("#v_class").text(head.CLASS || "-");
+            $("#v_topic").text(head.TOPIC || "-");
+            $("#v_dwg_no").text(head.DWGNO || "-");
+            $("#v_shop_no").text(head.SHOPNO || "-");
+            $("#v_item_no").text(head.ITEMNO || "-");
+            $("#v_apply_for").text(head.APPLY_FOR || "-");
         },
 
         renderFile(att = []) {
             const formno = $("#v_form_no").data("formno");
             const baseUrl = $("#base_url").val();
-            const $fileList = $("#v_file_list").empty();
+            const $excel = $("#v_file_excel").empty();
+            const $pdf = $("#v_file_pdf").empty();
 
-            if (!att.length) {
-                $fileList.html("-");
-                return;
-            }
-
-            att.forEach(file => {
+            const renderLink = (file) => {
                 const filename = file.FILENAME || "";
                 const url = `${baseUrl}mfgform/MFG-OR/main_or/preview_file/${formno}/${encodeURIComponent(filename)}`;
+                return `<a href="${url}" target="_blank" class="file-link">${filename}</a>`;
+            };
 
-                $fileList.append(`
-                    <div>
-                        <a href="${url}" target="_blank" class="text-blue-700 underline btn btn-sm rounded-lg">
-                            ${filename}
-                        </a>
-                    </div>
-                `);
-            });
+            const excelFiles = att.filter(file => /\.(xlsx|xls|xlsm)$/i.test(file.FILENAME || ""));
+            const pdfFiles = att.filter(file => /\.pdf$/i.test(file.FILENAME || ""));
+
+            $excel.html(excelFiles.length ? excelFiles.map(renderLink).join("") : "-");
+            $pdf.html(pdfFiles.length ? pdfFiles.map(renderLink).join("") : "-");
         },
     };
 
