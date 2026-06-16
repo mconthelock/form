@@ -40,4 +40,6 @@ class form extends MY_Controller{
         $data = array();
         $this->views('psform/PS-RP/report', $data);
     }
+
+    
 }

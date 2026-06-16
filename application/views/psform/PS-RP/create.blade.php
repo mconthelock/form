@@ -6,8 +6,8 @@
         <div class="card bg-base-100 shadow-xl border border-base-300 overflow-hidden">
 
             <!-- Elegant Header Banner -->
-            <div class="bg-gradient-to-r from-primary to-blue-600 p-6 text-primary-content">
-                <h1 class="text-2xl md:text-3xl font-extrabold tracking-tight flex items-center gap-3">
+            <div class="bg-gradient-to-r from-primary to-blue-600 p-6 text-primary-content ">
+                <h1 class="text-2xl md:text-3xl font-extrabold tracking-tight flex items-center justify-center gap-3 ">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24"
                         stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
@@ -15,7 +15,7 @@
                     </svg>
                     Return Part/Material to WHI
                 </h1>
-                <p class="text-sm opacity-80 mt-1">Modern Warehouse Material Return & Revise Request Form</p>
+                <p class="text-sm opacity-80 mt-1 flex items-center justify-center">Modern Warehouse Material Return & Revise Request Form</p>
             </div>
 
             <form class="card-body gap-6 p-6 md:p-8" id="rpForm">
@@ -111,7 +111,7 @@
                 <div
                     class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mt-4 border-t border-base-300 pt-6">
                     <div>
-                        <h2 class="text-xl font-bold text-secondary flex items-center gap-2">
+                        <h2 class="text-xl font-bold text-primary flex items-center gap-2">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
                                 stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -123,7 +123,7 @@
                             below.</p>
                     </div>
                     <label for="modal-add" id="btnaddDatarow"
-                        class="btn btn-secondary btn-sm gap-2 shadow-md hover:scale-105 transition-transform">
+                        class="btn btn-info btn-sm gap-2 shadow-md hover:scale-105 transition-transform">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
                             stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />

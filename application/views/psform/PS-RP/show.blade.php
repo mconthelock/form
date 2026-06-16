@@ -7,7 +7,7 @@
 
             <!-- Elegant Header Banner -->
             <div class="bg-gradient-to-r from-primary to-blue-600 p-6 text-primary-content">
-                <h1 class="text-2xl md:text-3xl font-extrabold tracking-tight flex items-center gap-3">
+                <h1 class="text-2xl md:text-3xl font-extrabold tracking-tight flex items-center justify-center gap-3 ">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24"
                         stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
@@ -15,10 +15,24 @@
                     </svg>
                     Return Part/Material to WHI
                 </h1>
-                <p class="text-sm opacity-80 mt-1">Modern Warehouse Material Return & Revise Request Form</p>
+                <p class="text-sm opacity-80 mt-1 flex items-center justify-center">Modern Warehouse Material Return & Revise Request Form</p>
             </div>
 
             <form class="card-body gap-6 p-6 md:p-8" id="rpForm">
+
+                <div class="grid grid-cols-1  gap-5">
+                    <div class="form-control w-full">
+                        <label class="label">
+                            <span class="label-text font-bold text-base-content/80 flex items-center gap-1.5">
+                                <span class="w-1.5 h-1.5 bg-primary rounded-full"></span> Form No
+                            </span>
+                        </label>
+                        <input type="text" placeholder="Form No"
+                            class="input input-bordered w-full transition-all duration-200 focus:input-primary "
+                            id="FORMNO" name="FORMNO" readonly />
+                    </div>
+                </div>
+
                 <!-- Section 1: User & Request Info -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                     <div class="form-control w-full">
@@ -29,7 +43,7 @@
                         </label>
                         <input type="text" placeholder="Enter Employee ID"
                             class="input input-bordered w-full transition-all duration-200 focus:input-primary "
-                            id="INPUTBY" name="INPUTBY" readonly/>
+                            id="INPUTBY" name="INPUTBY" readonly />
 
                     </div>
 
@@ -51,8 +65,8 @@
                             </span>
                         </label>
                         <input type="text" placeholder="Enter Requester ID"
-                            class="input input-bordered w-full transition-all duration-200 focus:input-primary req"
-                            id="REQBY" name="REQBY" readonly/>
+                            class="input input-bordered w-full transition-all duration-200 focus:input-primary "
+                            id="REQBY" name="REQBY" readonly />
                     </div>
 
                     <div class="form-control w-full">
@@ -77,8 +91,9 @@
                             </span>
                         </label>
 
-                        <textarea class="textarea textarea-bordered h-28 w-full focus:textarea-primary req"
-                            placeholder="Describe the reason for returning or details of the rivision..." id="reason" name="REASON" readonly></textarea>
+                        <textarea class="textarea textarea-bordered h-28 w-full focus:textarea-primary "
+                            placeholder="Describe the reason for returning or details of the rivision..." id="reason" name="REASON"
+                            readonly></textarea>
                     </div>
                 </div>
 
@@ -94,13 +109,15 @@
                     </span>
                     <div class="flex flex-col sm:flex-row gap-6">
                         <label
-                            class="label cursor-pointer justify-start gap-3 bg-base-100 px-4 py-2 rounded-lg border border-base-300 shadow-sm hover:border-primary transition-all">
+                            class="label cursor-pointer justify-start gap-3 bg-base-100 px-4 py-2 rounded-lg border border-base-300 shadow-sm hover:border-primary transition-all"
+                            id="selector1">
                             <input type="radio" id="option1" name="REQ_TYPE" value="0"
-                                class="radio radio-primary " checked />
+                                class="radio radio-primary " />
                             <span class="label-text font-medium text-base-content">Revise Part to Warehouse</span>
                         </label>
                         <label
-                            class="label cursor-pointer justify-start gap-3 bg-base-100 px-4 py-2 rounded-lg border border-base-300 shadow-sm hover:border-primary transition-all">
+                            class="label cursor-pointer justify-start gap-3 bg-base-100 px-4 py-2 rounded-lg border border-base-300 shadow-sm hover:border-primary transition-all"
+                            id="selector2">
                             <input type="radio" id="option2" name="REQ_TYPE" value="1"
                                 class="radio radio-primary " />
                             <span class="label-text font-medium text-base-content">Return Part to Warehouse</span>
@@ -112,7 +129,7 @@
                 <div
                     class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mt-4 border-t border-base-300 pt-6">
                     <div>
-                        <h2 class="text-xl font-bold text-secondary flex items-center gap-2">
+                        <h2 class="text-xl font-bold text-primary flex items-center gap-2">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
                                 stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -128,20 +145,26 @@
                 <!-- Section 5: Responsive Data Table with Form Elements -->
                 <div class="w-full overflow-hidden ">
                     <div class=" w-full  px-4 py-3">
-                        <table class="table table-zebra w-full min-w-[1000px] text-sm" id="Addtable">
+                        <table class="table table-zebra w-full min-w-[1000px] text-sm" id="showTable">
                         </table>
                     </div>
                 </div>
 
-                <div
-                    class="mt-4 border-t border-base-300 pt-6">
-                    <div id="sentRequest"></div>
+                <div class="mt-4 border-t border-base-300 pt-6">
+                    <fieldset class="fieldset w-full hidden" id="controller-section">
+                        <legend class="fieldset-legend font-bold text-base-content/80"><span
+                                class="w-1.5 h-1.5 bg-primary rounded-full"></span>Controller</span>
+                        </legend>
+                        <select class="select req w-full focus:select-primary max-w-xs" id="CONTROLLER"
+                            name="CONTROLLER">
+                        </select>
+                    </fieldset>
+
+                    <div id="sentApprove"></div>
                 </div>
             </form>
         </div>
     </div>
-
-    
 @endsection
 
 @section('scripts')

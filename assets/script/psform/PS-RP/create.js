@@ -1,15 +1,11 @@
-const { fetchUtils } = require("@amec/webasset/api/fetch-utils");
-const { webflowSubmit } = require("@amec/webasset/components/form");
-const {
-  showMessage,
-  requiredForm,
-  logFormData,
-} = require("@amec/webasset/utils");
-const { getEmpData } = require("./data");
-const { createTable, getSelectedData } = require("@amec/webasset/dataTable");
-const { data } = require("jquery");
-const { redirectWebflow } = require("@amec/webasset/form");
+import { logFormData, requiredForm, showMessage } from "@amec/webasset/utils";
+import { getEmpData, searchData } from "./data";
+import { fetchUtils } from "@amec/webasset/api/fetch-utils";
+import { webflowSubmit } from "@amec/webasset/components/form";
+import { redirectWebflow } from "@amec/webasset/form";
+import { createTable } from "@amec/webasset/dataTable";
 
+var mockupTable;
 // main function
 $(async function () {
   const queryString = window.location.search;
@@ -18,6 +14,62 @@ $(async function () {
   const getName = await getEmpData(empno);
   $("#INPUTBY").val(empno);
   $("#inputName").val(getName.SNAME);
+
+  mockupTable = await createTable(
+    {
+      responsive: false,
+      columns: [
+        { title: "NO" },
+        { title: "Item PUR" },
+        { title: "Seq" },
+        { title: "Description" },
+        { title: "Drawing No" },
+        { title: "Order No." },
+        { title: "Item" },
+        { title: "Address" },
+        { title: "Return To" },
+        { title: "Q'ty" },
+        { title: "Issue Card No" },
+        { title: "Shop" },
+        { title: "Production" },
+        { title: "Remark" },
+      ],
+    },
+    {
+      id: "#Addtable",
+      domScroll: {
+        status: true,
+      },
+    },
+  );
+
+  mockupmodalTable = await createTable(
+    {
+      responsive: false,
+      columns: [
+        { title: "Issue No" },
+        { title: "Seq" },
+        { title: "Item" },
+        { title: "Item No" },
+        { title: "Order No" },
+        { title: "Drawing" },
+        { title: "Part Name" },
+        { title: "Location" },
+        { title: "Schedule" },
+        { title: "Qty" },
+        { title: "Complete Issue" },
+        { title: "Remain Issue" },
+        { title: "Shop" },
+      ],
+    },
+    {
+      id: "#modalTable",
+      domScroll: {
+        status: true,
+        maxHeight: "450px",
+      },
+    },
+  );
 
   const action = webflowSubmit({ request: true });
   $("#sentRequest").html(action);
@@ -66,6 +118,7 @@ $(document).on("click", "#btnRequest", async function () {
       RETURNTO: row.WHI || "WHI",
       QTY: row.QTY,
       REMARKTABLE: row.REMARKTABLE || "",
+      ISSUETO: row.J2TO,
     }));
 
     const formData = new FormData($(`#rpForm`)[0]);
@@ -81,7 +134,7 @@ $(document).on("click", "#btnRequest", async function () {
     const res = await createForm(formData);
     if (res.status == true) {
       showMessage(res.message, "success");
-      // redirectWebflow();
+      redirectWebflow();
     } else {
       throw new Error(res.message);
     }
@@ -404,6 +457,7 @@ $(document).on("click", "#addData", async function (e) {
             },
           },
           { data: "J2ODR", title: "Issue Card No" },
+          { data: "J2TO", title: "Shop" },
           { data: "J2MTH", title: "Production" },
           {
             data: null,
@@ -501,13 +555,7 @@ $(document).on("click", "#btnaddDatarow", async function () {
   }
 });
 
-async function searchData(data) {
-  return fetchUtils({
-    url: `${process.env.APP_API}/J002mp`,
-    method: "POST",
-    data,
-  });
-}
+
 
 async function createForm(data) {
   return fetchUtils({
