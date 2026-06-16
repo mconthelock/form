@@ -1,4 +1,4 @@
-import { getMfgOrDetail } from "./data.js";
+import { getMfgOrDetail, generateMfgOrNo } from "./data.js";
 import { showLoader } from "@amec/webasset/preloader";
 import { doaction, showflow } from "@amec/webasset/api/webform";
 import { redirectWebflow } from "@amec/webasset/form";
@@ -44,6 +44,10 @@ $(document).ready(function () {
                         .addClass("opacity-50 pointer-events-none");
 
                     showLoader({ show: true });
+
+                    if (action === "approve" && exdata === "04" && mode === "2" && String(head.TYPEFORM).toUpperCase() === "NEW") {
+                        orGenerateData = await generateMfgOrNo(VIEW.getBasePayload());
+                    }
 
                     const result = await doaction({
                         ...VIEW.getBasePayload(),
@@ -157,7 +161,14 @@ $(document).ready(function () {
                 $("#v_type_form").text("New");
             }
 
-            $("#v_class").text(head.CLASS || "-");
+            const classTextMap = {
+                BASIC: "Basic Knowledge (ความรู้พื้นฐาน)",
+                IMPROVE: "Improvement Case (กรณีปรับปรุงงาน)",
+                TROUBLE: "Trouble Case (กรณีเกิดปัญหาซ้ำ)",
+                REGULATION: "Regulation (กฎระเบียบ/ข้อบังคับ)"
+            };
+
+            $("#v_class").text(classTextMap[head.CLASS] || head.CLASS || "-");
             $("#v_topic").text(head.TOPIC || "-");
             $("#v_dwg_no").text(head.DWGNO || "-");
             $("#v_shop_no").text(head.SHOPNO || "-");
@@ -174,7 +185,6 @@ $(document).ready(function () {
             const renderLink = (file) => {
                 const filename = file.FILENAME || "";
                 const url = `${baseUrl}mfgform/MFG-OR/main_or/preview_file/${formno}/${encodeURIComponent(filename)}`;
-
                 return `<a href="${url}" target="_blank" class="file-link">${filename}</a>`;
             };
 
@@ -195,6 +205,5 @@ $(document).ready(function () {
     };
 
     let isSubmitting = false;
-
     VIEW.init();
 });

@@ -143,7 +143,7 @@
 
                     <tr>
                         <th class="w-[320px] border-r border-[#b7c8dc] bg-indigo-50 px-4 py-3 text-left align-middle font-black leading-[1.4] text-indigo-700">
-                            Remark <span class="font-black text-red-600">*</span>
+                            Remark
                         </th>
                         <td class="px-4 py-3 align-middle font-bold leading-[1.45] text-slate-950">
                             <textarea id="remark" placeholder="Remark..."
