@@ -80,7 +80,7 @@ class Main extends MY_Controller
                         Please fill out the form using the link below.
                     </p>
                     <p>
-                        Form Link: <a href="' . base_url('isform/IS-DLC/main?no=' . $fm->NNO . '&orgNo=' . $fm->VORGNO . '&y=' . $form['cyear'] . '&y2=' . $form['cyear2'] . '&runNo=' . $form['runno'] . '&empno=' . $form['empno']) . '">Click Here to page</a>
+                        Form Link: <a href="' . $_ENV['APP_ENV'] . 'isform/IS-DLC/main?no=' . $fm->NNO . '&orgNo=' . $fm->VORGNO . '&y=' . $form['cyear'] . '&y2=' . $form['cyear2'] . '&runNo=' . $form['runno'] . '&empno=' . $form['empno'] . '">Click Here to page</a>
                     </p>
                     <p>
                         For your consideration and Approval.
