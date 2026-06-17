@@ -11,6 +11,7 @@
 <input type="hidden" id="mode" value="{{ $mode ?? '' }}">
 <input type="hidden" id="txt_exdata" value="{{ $exdata ?? '' }}">
 <input type="hidden" id="base_url" value="{{ base_url() }}">
+<input type="hidden" id="formno" value="{{ $formno ?? '' }}">
 
 <div class="min-h-screen bg-gradient-to-br from-slate-100 via-white to-violet-50 p-[18px]">
     <div class="mx-auto max-w-[1600px] overflow-hidden rounded-[18px] bg-white shadow-[0_18px_45px_rgba(15,23,42,.12)]">

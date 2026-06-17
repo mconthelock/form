@@ -1,4 +1,4 @@
-import { getMfgOrDetail, generateMfgOrNo } from "./data.js";
+import { getMfgOrDetail, generateMfgOrNo, updateReviseCenter } from "./data.js";
 import { showLoader } from "@amec/webasset/preloader";
 import { doaction, showflow } from "@amec/webasset/api/webform";
 import { redirectWebflow } from "@amec/webasset/form";
@@ -26,6 +26,7 @@ $(document).ready(function () {
                 const empno = $("#empno").val() || "";
                 const exdata = $("#txt_exdata").val() || "";
                 const remark = $("#remark").val()?.trim() || "";
+                const formno = $("#formno").val()?.trim() || "";
                 
                 if (!action) return;
 
@@ -49,9 +50,9 @@ $(document).ready(function () {
                     if (action === "approve" && exdata === "05" && mode === "2") { //DIM Approve Last step
                         const typeform = String(VIEW.headData.TYPEFORM || "").trim();
                         if (typeform.toUpperCase() === "NEW") {
-                            await generateMfgOrNo(getBasePayload);
+                            await generateMfgOrNo(VIEW.getBasePayload(), formno);
                         }else if (typeform.toUpperCase() === "REVISE") {
-                            await updateReviseCenter(getBasePayload);
+                            await updateReviseCenter(VIEW.getBasePayload(), formno);
                         }
                     }
                 /*
