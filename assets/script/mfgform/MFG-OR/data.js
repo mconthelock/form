@@ -5,7 +5,6 @@ export const generateMfgOrNo = (data, formno) => callAPI("/mfg-or/generate-or-no
 export const updateReviseCenter = (data, formno) => callAPI("/mfg-or/update-revise-center", "POST", {...data, FORMNO: formno});
 
 
-
 // ===== GET ===========
 export const getUserbyemp = (empno) => callAPI(`/users/${encodeURIComponent(empno)}`, "GET");
 
