@@ -10,7 +10,7 @@
 <input type="hidden" id="empno" value="{{ $EMPNO ?? '' }}">
 <input type="hidden" id="mode" value="{{ $mode ?? '' }}">
 <input type="hidden" id="txt_exdata" value="{{ $exdata ?? '' }}">
-<input type="hidden" id="base_url" value="{{ base_url() }}">
+<input type="text" id="base_url" value="{{ base_url() }}">
 <input type="hidden" id="formno" value="{{ $formno ?? '' }}">
 
 <div class="min-h-screen bg-gradient-to-br from-slate-100 via-white to-violet-50 p-[18px]">
