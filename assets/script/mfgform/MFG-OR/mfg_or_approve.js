@@ -57,14 +57,11 @@ $(document).ready(function () {
                         }
 
                         // Export PDF
-                        const baseUrl = $("#base_url").val();
-                            return $.ajax({
-                                url: `${baseUrl}mfgform/MFG-OR/main_or/export_pdf`,
-                                type: "POST",
-                                dataType: "json",
-                                data: { formno }
-                            });
-
+                        const pdfResult = await exportPdf(formno);
+                        console.log("EXPORT PDF RESULT =", pdfResult);
+                        if (!pdfResult.status) {
+                            throw new Error(pdfResult.message || "Export PDF failed");
+                        }
 
                     }else{
             
