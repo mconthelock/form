@@ -14,16 +14,6 @@ $(document).ready(function () {
             await this.loadData();
         },
 
-        exportPdf(formno) {
-            const baseUrl = $("#base_url").val();
-
-            return $.ajax({
-                url: `${baseUrl}mfgform/MFG-OR/main_or/export_pdf`,
-                type: "POST",
-                dataType: "json",
-                data: { formno }
-            });
-        },
 
         bindEvents() {
             $(document).on("click", "[data-action]", async function () {
@@ -67,11 +57,14 @@ $(document).ready(function () {
                         }
 
                         // Export PDF
-                        
-                        const pdfResult = await exportPdf(formno);
-                        if (!pdfResult.status) {
-                            throw new Error(pdfResult.message || "Export PDF failed");
-                        }
+                        const baseUrl = $("#base_url").val();
+                            return $.ajax({
+                                url: `${baseUrl}mfgform/MFG-OR/main_or/export_pdf`,
+                                type: "POST",
+                                dataType: "json",
+                                data: { formno }
+                            });
+
 
                     }else{
             
