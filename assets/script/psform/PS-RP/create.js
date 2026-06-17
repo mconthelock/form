@@ -5,7 +5,7 @@ import { webflowSubmit } from "@amec/webasset/components/form";
 import { redirectWebflow } from "@amec/webasset/form";
 import { createTable } from "@amec/webasset/dataTable";
 
-var mockupTable;
+var mockupTable, mockupmodalTable;
 // main function
 $(async function () {
   const queryString = window.location.search;
@@ -201,7 +201,7 @@ const syncRemarkToSelectedRows = () => {
 };
 
 const syncQtyToSelectedRows = () => {
-  $('#Addtable input[name="QTY"]').each(function () {
+  $('#Addtable input[name="QTY"]').each(async function () {
     const key = $(this).data("key");
     const row = selectedRows.find((item) => makeRowKey(item) === key);
 

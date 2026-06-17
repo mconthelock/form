@@ -6,7 +6,7 @@
         <div class="card bg-base-100 shadow-xl border border-base-300 overflow-hidden">
 
             <!-- Elegant Header Banner -->
-            <div class="bg-gradient-to-r from-primary to-blue-600 p-6 text-primary-content ">
+            <div class="bg-gradient-to-r from-primary to-blue-600 p-6 text-white ">
                 <h1 class="text-2xl md:text-3xl font-extrabold tracking-tight flex items-center justify-center gap-3 ">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24"
                         stroke="currentColor">
@@ -234,7 +234,7 @@
                                 Search
                             </button>
 
-                            <button type="button" id="btnClear" class="btn btn-error btn-sm">
+                            <button type="button" id="btnClear" class="btn btn-error btn-sm btn-soft shadow-md transition-all">
                                 Clear
                             </button>
                         </div>

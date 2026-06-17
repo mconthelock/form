@@ -22,20 +22,22 @@ $(async function () {
       responsive: false,
       columns: [
         { title: "FORM NO." },
-        { title: "Item PUR" },
-        { title: "Seq" },
-        { title: "Description" },
-        { title: "Drawing No" },
-        { title: "Order No." },
-        { title: "Item" },
-        { title: "Address" },
-        { title: "Return To" },
-        { title: "Q'ty" },
         { title: "Issue Card No" },
+        { title: "Item PUR" },
+        { title: "Item" },
+        { title: "Order No." },
         { title: "Production" },
+        { title: "Q'ty" },
         { title: "Shop" },
         { title: "Remark" },
         { title: "Approve Date" },
+        // { title: "Seq" },
+        // { title: "Description" },
+        // { title: "Drawing No" },
+        
+        // { title: "Address" },
+        // { title: "Return To" },
+        
       ],
     },
     {
@@ -78,25 +80,23 @@ $(document).on("click", "#btnSearch", async function () {
         data: reportWithFormNo,
         columns: [
           { data: "formNo", title: "FORM NO.", className: "text-nowrap" },
-          { data: "list_PURCODE", title: "Item PUR" },
-          { data: "list_ISSUESEQ", title: "Seq" },
-          {
-            data: "list_DESCRIPTION",
-            title: "Description",
-            className: "text-nowrap",
-          },
-          {
-            data: "list_DRAWING",
-            title: "Drawing No",
-            className: "text-nowrap",
-          },
-          { data: "list_ORDERNO", title: "Order No." },
-          { data: "list_ITEMNO", title: "Item" },
-          { data: "list_ADDREESS", title: "Address" },
-          { data: "list_RETURNTO", title: "Return To" },
-          { data: "list_QTY", title: "Q'ty" },
           { data: "list_ISSUECARD", title: "Issue Card No" },
+          { data: "list_PURCODE", title: "Item PUR" },
+          { data: "list_ITEMNO", title: "Item" },
+          // { data: "list_ISSUESEQ", title: "Seq" },
+          // {
+          //   data: "list_DESCRIPTION",
+          //   title: "Description",
+          //   className: "text-nowrap",
+          // },
+          // {
+          //   data: "list_DRAWING",
+          //   title: "Drawing No",
+          //   className: "text-nowrap",
+          // },
+          { data: "list_ORDERNO", title: "Order No." },
           { data: "list_PRODUCTION", title: "Production" },
+          { data: "list_QTY", title: "Q'ty" },
           { data: "list_ISSUETO", title: "Shop" },
           { data: "list_REMARK", title: "Remark", className: "text-nowrap" },
           {
@@ -107,6 +107,8 @@ $(document).on("click", "#btnSearch", async function () {
               return data ? formatDate(data, "DD-MM-YYYY") : "";
             },
           },
+          // { data: "list_ADDREESS", title: "Address" },
+          // { data: "list_RETURNTO", title: "Return To" },
         ],
       },
       {
@@ -139,7 +141,14 @@ $(document).on("click", "#btnReset", async function () {
 
 $(document).on("click", "#btnExport", async function () {
   try {
+    if (!reportTable) {
+      return showMessage("Cannot export data because the data table is empty");
+    }
     const exportData = reportTable.rows({ search: "applied" }).data().toArray();
+
+    if (exportData.length === 0) {
+      return showMessage("Cannot export data because the data table is empty");
+    }
 
     const excel = await defaultExcel({
       data: exportData,
@@ -168,7 +177,7 @@ $(document).on("click", "#btnExport", async function () {
       sheetName: "PS-RP Report",
     });
 
-    exportExcel(excel, "Revise/Return Report");
+    exportExcel(excel, "Revise_Return WHI Report");
   } catch (error) {
     console.log(error);
   }

@@ -6,7 +6,7 @@
         <div class="card bg-base-100 shadow-xl border border-base-300 overflow-hidden">
 
             <!-- Elegant Header Banner -->
-            <div class="bg-gradient-to-r from-primary to-blue-600 p-6 text-primary-content">
+            <div class="bg-gradient-to-r from-primary to-blue-600 p-6 text-white">
                 <h1 class="text-2xl md:text-3xl font-extrabold tracking-tight flex items-center justify-center gap-3 ">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24"
                         stroke="currentColor">
@@ -153,7 +153,7 @@
                 <div class="mt-4 border-t border-base-300 pt-6">
                     <fieldset class="fieldset w-full hidden" id="controller-section">
                         <legend class="fieldset-legend font-bold text-base-content/80"><span
-                                class="w-1.5 h-1.5 bg-primary rounded-full"></span>Controller</span>
+                                class="w-1.5 h-1.5 bg-primary rounded-full"></span>Job Controller</span>
                         </legend>
                         <select class="select req w-full focus:select-primary max-w-xs" id="CONTROLLER"
                             name="CONTROLLER">
