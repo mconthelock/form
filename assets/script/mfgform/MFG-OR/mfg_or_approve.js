@@ -56,7 +56,7 @@ $(document).ready(function () {
                         }
 
                         // Export PDF
-                        const exportPdf = (formno) => {
+                         const exportPdf = (formno) => {
                             const baseUrl = $("#base_url").val();
 
                             return $.ajax({
@@ -66,37 +66,37 @@ $(document).ready(function () {
                                 data: { formno }
                             });
                         };
-                    }
-                /*
-                    const result = await doaction({
-                        ...VIEW.getBasePayload(),
-                        ACTION: action,
-                        EMPNO: String(empno),
-                        REMARK: remark,
-                        CEXTDATA: exdata,
-                    });
-
-                    console.log("DO ACTION RESULT =", result);
-                    showLoader({ show: false });
-
-                    if (result?.status) {
-                        await Swal.fire({
-                            icon: "success",
-                            title: "ดำเนินการสำเร็จแล้ว",
-                            timer: 1500,
-                            showConfirmButton: false,
+                    }else{
+            
+                        const result = await doaction({
+                            ...VIEW.getBasePayload(),
+                            ACTION: action,
+                            EMPNO: String(empno),
+                            REMARK: remark,
+                            CEXTDATA: exdata,
                         });
 
-                        redirectWebflow();
-                        return;
-                    }
+                        console.log("DO ACTION RESULT =", result);
+                        showLoader({ show: false });
 
-                    await Swal.fire({
-                        icon: "error",
-                        title: result?.message || "เกิดข้อผิดพลาด",
-                        confirmButtonText: "ตกลง",
-                    });
-             */   
+                        if (result?.status) {
+                            await Swal.fire({
+                                icon: "success",
+                                title: "ดำเนินการสำเร็จแล้ว",
+                                timer: 1500,
+                                showConfirmButton: false,
+                            });
+
+                            redirectWebflow();
+                            return;
+                        }
+
+                        await Swal.fire({
+                            icon: "error",
+                            title: result?.message || "เกิดข้อผิดพลาด",
+                            confirmButtonText: "ตกลง",
+                        });
+                    }
                 } catch (err) {
                     console.error(err);
                     Swal.close();
