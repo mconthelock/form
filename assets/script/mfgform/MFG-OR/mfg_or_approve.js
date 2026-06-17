@@ -1,4 +1,4 @@
-import { getMfgOrDetail, generateMfgOrNo, updateReviseCenter } from "./data.js";
+import { getMfgOrDetail, generateMfgOrNo, updateReviseCenter, exportPdf } from "./data.js";
 import { showLoader } from "@amec/webasset/preloader";
 import { doaction, showflow } from "@amec/webasset/api/webform";
 import { redirectWebflow } from "@amec/webasset/form";
@@ -54,8 +54,20 @@ $(document).ready(function () {
                         }else if (typeform.toUpperCase() === "REVISE") {
                             await updateReviseCenter(VIEW.getBasePayload(), formno);
                         }
+
+                        // Export PDF
+                        const exportPdf = (formno) => {
+                            const baseUrl = $("#base_url").val();
+
+                            return $.ajax({
+                                url: `${baseUrl}mfgform/MFG-OR/main_or/export_pdf`,
+                                type: "POST",
+                                dataType: "json",
+                                data: { formno }
+                            });
+                        };
                     }
-                
+                /*
                     const result = await doaction({
                         ...VIEW.getBasePayload(),
                         ACTION: action,
@@ -84,7 +96,7 @@ $(document).ready(function () {
                         title: result?.message || "เกิดข้อผิดพลาด",
                         confirmButtonText: "ตกลง",
                     });
-                
+             */   
                 } catch (err) {
                     console.error(err);
                     Swal.close();

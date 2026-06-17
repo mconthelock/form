@@ -8,6 +8,15 @@ export const searchMfgOrCenter = (data) => callAPI("/mfg-or/search-mfg-or-center
 // ===== GET ===========
 export const getUserbyemp = (empno) => callAPI(`/users/${encodeURIComponent(empno)}`, "GET");
 
+export const exportPdf = (formno) =>
+    $.ajax({
+        url: `${process.env.APP_URL}mfgform/MFG-OR/main_or/export_pdf`,
+        type: "POST",
+        dataType: "json",
+        data: {
+            formno: formno
+        }
+ });
 
 const callAPI = async (endpoint, method = "POST", data = null) => {
 	try {

@@ -217,4 +217,86 @@ class main_or extends MY_Controller {
             show_error($e->getMessage(), 500);
         }
     }
+
+
+    public function export_pdf(){
+        header('Content-Type: application/json; charset=utf-8');
+        try {
+            $formno = $this->input->post('formno');
+            if (!$formno) {
+                throw new Exception('formno is required');
+            }
+
+            $folder = rtrim($this->upload_path, "/\\"). DIRECTORY_SEPARATOR. $formno. DIRECTORY_SEPARATOR;
+
+            if (!is_dir($folder)) {
+                throw new Exception('Form folder not found');
+            }
+
+            $excelFiles = glob($folder . '*.{xlsx,xlsm,xls}', GLOB_BRACE);
+
+            if (empty($excelFiles)) {
+                throw new Exception('Excel file not found');
+            }
+
+            $excelPath = $excelFiles[0];
+            $pdfPath = preg_replace('/\.(xlsx|xlsm|xls)$/i', '.pdf', $excelPath);
+            $this->excel_to_pdf_com($excelPath, $pdfPath);
+            echo json_encode([
+                'status' => true,
+                'pdf' => basename($pdfPath)
+            ]);
+
+        } catch (Exception $e) {
+            echo json_encode([
+                'status' => false,
+                'message' => $e->getMessage()
+            ]);
+        }
+    }
+
+    private function excel_to_pdf_com($excelPath, $pdfPath){
+        if (!class_exists('COM')) {
+            throw new Exception('PHP COM extension is not enabled');
+        }
+
+        if (!is_file($excelPath)) {
+            throw new Exception('Excel file not found: ' . $excelPath);
+        }
+
+        $pdfDir = dirname($pdfPath);
+        if (!is_dir($pdfDir)) {  mkdir($pdfDir, 0777, true); }
+
+        $excel = null;
+        $workbook = null;
+
+        try {
+            $excel = new COM("Excel.Application");
+            $excel->Visible = false;
+            $excel->DisplayAlerts = false;
+            $workbook = $excel->Workbooks->Open($excelPath);
+
+            // 0 = PDF
+            $workbook->ExportAsFixedFormat(0, $pdfPath);
+            $workbook->Close(false);
+            $excel->Quit();
+
+            unset($workbook);
+            unset($excel);
+
+            if (!is_file($pdfPath)) { throw new Exception('PDF export failed');}
+            return $pdfPath;
+        } catch (Exception $e) {
+            if ($workbook) { $workbook->Close(false); }
+            if ($excel) { $excel->Quit(); }
+
+            unset($workbook);
+            unset($excel);
+            throw $e;
+        }
+    }
+
+
+
+
 }
