@@ -3,7 +3,7 @@ export const createMfgOr = (data) => callAPI("/mfg-or/create", "POST", data);
 export const getMfgOrDetail = (data) => callAPI("/mfg-or/getdetail-mfg-or", "POST", data);
 export const generateMfgOrNo = (data, formno) => callAPI("/mfg-or/generate-or-no", "POST", {...data, FORMNO: formno});
 export const updateReviseCenter = (data, formno) => callAPI("/mfg-or/update-revise-center", "POST", {...data, FORMNO: formno});
-
+export const searchMfgOrCenter = (data) => callAPI("/mfg-or/search-mfg-or-center", "POST", data);
 
 // ===== GET ===========
 export const getUserbyemp = (empno) => callAPI(`/users/${encodeURIComponent(empno)}`, "GET");

@@ -82,10 +82,18 @@
                                     <input type="radio" name="type_form" value="REVISE" class="{{ $radioClass }}">
                                     Revise : Current No.
                                 </label>
+                                <input type="text" id="current_no" name="current_no" placeholder="Ex.OR-MFG-26003" maxlength="12" class="w-[280px] disabled:bg-slate-100 {{ $inputClass }}" disabled>
+                                <div id="current_info" class="mt-2 hidden rounded-lg bg-indigo-50 px-4 py-3 text-sm">
+                                    <div>
+                                        <span class="font-bold text-indigo-700">Current Rev :</span>
+                                        <span id="current_rev">-</span>
+                                    </div>
 
-                                <input type="text" id="current_no" name="current_no" placeholder="Ex.OR-MFG-26003"
-                                    class="w-[280px] disabled:bg-slate-100 {{ $inputClass }}"
-                                    disabled>
+                                    <div>
+                                        <span class="font-bold text-indigo-700">Next Rev :</span>
+                                        <span id="next_rev">-</span>
+                                    </div>
+                                </div>
                             </td>
                         </tr>
 

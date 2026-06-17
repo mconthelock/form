@@ -1,7 +1,4 @@
-import {
-    getUserbyemp,
-    createMfgOr
-} from "./data.js";
+import { getUserbyemp, createMfgOr, searchMfgOrCenter} from "./data.js";
 import { showLoader } from "@amec/webasset/preloader";
 import { showMessage, showConfirm } from "@amec/webasset/utils";
 import { createTable } from "@amec/webasset/dataTable";
@@ -28,6 +25,7 @@ $(document).ready(function () {
             this.bindRequestByEvent();
             this.bindButtonEvents();
             this.bindRadioEvents();
+            this.bindCurrentNoEvent();
         },
 
         bindRequestByEvent: function () {
@@ -63,6 +61,81 @@ $(document).ready(function () {
             $('input[name="item_type"]').on('change', function () {
                 OR.toggleItemType();
             });
+        },
+
+        bindCurrentNoEvent: function () {
+            $('#current_no').on('input', function () {this.value = $.trim(this.value).toUpperCase();});
+            $('#current_no').on('blur', async function () {
+                const currentNo = $.trim(this.value).toUpperCase();
+                if (!currentNo) {
+                    OR.resetCurrentNoInfo();
+                    return;
+                }
+
+                if (currentNo.length !== 12) {
+                    await OR.showAlert({icon: 'warning', title: 'Current No ไม่ถูกต้อง', text: 'กรุณากรอก Current No ให้ครบ 12 ตัวอักษร'});
+                    OR.resetCurrentNoInfo();
+                    $('#current_no').focus();
+                    return;
+                }
+                await OR.searchCurrentNo(currentNo);
+            });
+        },
+
+        searchCurrentNo: async function (currentNo) {
+            try {
+                showLoader({ show: true });
+                const res = await searchMfgOrCenter({ORNO: currentNo });
+
+                if (!res?.status || !res?.data) {
+                    showLoader({ show: false });
+                    await this.showAlert({icon: 'warning', title: 'ไม่พบ Current No.', text: `ไม่พบข้อมูล ${currentNo} ใน MFGOR_CENTER`});
+                    this.resetCurrentNoInfo();
+                    $('#current_no').focus();
+                    return;
+                }
+
+                const currentRev = String(res.data.REVNO || '*').trim().toUpperCase();
+                const nextRev = this.getNextRev(currentRev);
+                $('#current_no').val(String(res.data.ORNO || currentNo).trim().toUpperCase());
+                $('#current_rev').text(currentRev);
+                $('#next_rev').text(nextRev);
+                $('#current_topic').text(res.data.TOPIC || '-');
+                $('#rev').val(nextRev);
+
+                $('#current_info').removeClass('hidden');
+            } catch (error) {
+                console.error('SEARCH CURRENT NO ERROR:', error);
+                await this.showAlert({
+                    icon: 'error',
+                    title: 'Search Current No failed',
+                    text: error?.message || ''
+                });
+
+                this.resetCurrentNoInfo();
+                $('#current_no').focus();
+            } finally {
+                showLoader({ show: false });
+            }
+        },
+
+        resetCurrentNoInfo: function () {
+            $('#current_no').val('');
+            $('#rev').val('*');
+
+            $('#current_rev').text('-');
+            $('#next_rev').text('-');
+            $('#current_topic').text('-');
+            $('#current_info').addClass('hidden');
+        },
+
+        getNextRev: function (rev) {
+            const value = String(rev || '*').trim().toUpperCase();
+            if (value === '*') { return 'A';}
+
+            const code = value.charCodeAt(0);
+            if (code < 65 || code > 90) { return 'A';}
+            return String.fromCharCode(code + 1);
         },
 
         initRequestBy: async function () {
@@ -133,7 +206,13 @@ $(document).ready(function () {
 
         toggleTypeForm: function () {
             const typeForm = $('input[name="type_form"]:checked').val();
-            this.toggleTextbox(typeForm === 'REVISE', '#current_no');
+            const isRevise = typeForm === 'REVISE';
+
+            this.toggleTextbox(isRevise, '#current_no');
+
+            if (!isRevise) {
+                this.resetCurrentNoInfo();
+            }
         },
 
         toggleItemType: function () {
