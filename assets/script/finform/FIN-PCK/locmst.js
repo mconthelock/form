@@ -2,8 +2,18 @@ import { fetchUtils } from '@amec/webasset/api/fetch-utils';
 import { createTable } from '@amec/webasset/dataTable';
 import { writeExcelTemp, exportExcel } from '@amec/webasset/excel';
 import { getArrayBufferFile } from '@amec/webasset/file';
+import { showLoader } from '@amec/webasset/preloader';
+import {
+    filterFormData,
+    requiredForm,
+    logFormData,
+    showErrorMessage,
+    showMessage,
+} from '@amec/webasset/utils';
+import select2 from 'select2';
+import { setSelect2 } from '@amec/webasset/select2';
 import ExcelJS from 'exceljs';
-
+select2();
 var tableLocMst, locmstdata;
 $(document).ready(async function () {
     locmstdata = await getLocMstData({});
@@ -30,6 +40,24 @@ $(document).ready(async function () {
         },
         { data: 'POS.SPOSNAME', title: 'Position' },
         { data: 'ORG.VNAME', title: 'Organization' },
+        {
+            data: null, // ใส่เป็น null เพราะปุ่มแก้ไขไม่ได้ผูกกับ data ตัวใดตัวหนึ่งโดยตรง
+            title: 'Action',
+            width: '80px',
+            className: 'text-center',
+            orderable: false, // ปิดการกดเรียงลำดับหัวตารางของคอลัมน์นี้
+            render: function (data, type, row) {
+                // ใช้ปุ่มสไตล์ DaisyUI/Tailwind สีเหลือง (warning) ขนาดเล็ก (btn-xs หรือ btn-sm)
+                return `
+                    <button type="button" class="btn btn-neutral btn-xs btn-edit-loc" data-id="${row.LOCCODE}">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-3.5 h-3.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Zm0 0L19.5 7.125" />
+                    </svg>
+                    Edit
+                </button>
+            `;
+            },
+        },
     ];
 
     tableLocMst = await createTable(
@@ -45,9 +73,53 @@ $(document).ready(async function () {
             join: true,
         },
     );
+    const pos = await getPosition();
+    const posdata = pos.map((p) => ({
+        value: p.SPOSCODE,
+        text: p.SPOSNAME,
+    }));
+    const org = await getOrganize();
+    const orgdata = org.map((o) => ({
+        value: o.VORGNO,
+        text: o.VNAME,
+    }));
+    positionManager.init(posdata);
+    organizeManager.init(orgdata);
 
-    $(document).on('click', '.locmstexp', async function () {
+    $(document).on('click', '#btnExp', async function () {
         const res = await writeExcel(locmstdata.data);
+    });
+
+    $(document).on('click', '#btnImport', async function () {
+        $('#modalImport')[0].showModal();
+    });
+
+    $(document).on('click', '#btnAdd', async function () {
+        $('#modalAdd')[0].showModal();
+    });
+
+    $(document).on('click', '#btnSaveLocation', async function () {
+        try {
+            showLoader();
+            if (!(await requiredForm('#formAddLocation'))) return;
+            const formData = new FormData($('#formAddLocation')[0]);
+            const filteredFormData = filterFormData(formData);
+            logFormData(filteredFormData);
+
+            const res = await createloc(filteredFormData);
+            if (res.status == true) {
+                showMessage(res.message, 'success');
+            } else {
+                throw new Error(res.message);
+            }
+
+            // if (!(await requiredForm('#form'))) return;
+        } catch (err) {
+            console.error(err);
+            showErrorMessage(err);
+        } finally {
+            showLoader({ show: false });
+        }
     });
 });
 
@@ -59,10 +131,23 @@ export async function getLocMstData(filters = {}) {
     });
 }
 
+export async function getPosition() {
+    return fetchUtils({
+        url: `${process.env.APP_API}/amec/pposition/filter`,
+        method: 'GET',
+    });
+}
+
+export async function getOrganize() {
+    return fetchUtils({
+        url: `${process.env.APP_API}/webform/vorgmst/findactive`,
+        method: 'GET',
+    });
+}
+
 export async function writeExcel(dataList) {
     var workbook = new ExcelJS.Workbook();
     const templatePath = `${process.env.AMEC_FILE_PATH}${process.env.STATE == 'production' ? 'production' : 'development'}/Form/FIN/FIN-PCK/TEMPLATE`;
-    console.log(templatePath);
     try {
         // const bfile = await getArrayBufferFile(templatePath, 'TEMPLOCMST.xlsx');
         const bfile = await getTemplate('TEMPLOCMST.xlsx');
@@ -75,29 +160,45 @@ export async function writeExcel(dataList) {
                     const currentRow = startRow + index;
                     sheet.getCell(`A${currentRow}`).value = item.LOCCODE;
                     sheet.getCell(`B${currentRow}`).value = item.LOCNAME;
+                    sheet.getCell(`C${currentRow}`).dataValidation = {
+                        type: 'list',
+                        allowBlank: true,
+                        formulae: ['POSITION!$B$2:$B$6'],
+                    };
+                    sheet.getCell(`C${currentRow}`).value = item.POS.SPOSNAME;
+                    sheet.getCell(`E${currentRow}`).dataValidation = {
+                        type: 'list',
+                        allowBlank: true,
+                        formulae: ['ORGANIZE!$B$2:$B$92'],
+                    };
+                    sheet.getCell(`E${currentRow}`).value = item.ORG.VNAME;
                 });
             },
         });
-        exportExcel(workbook, 'LOCMST_${timestamp}');
-        // console.log('อ่านได้ค่ะ');
-
-        // return workbook;
+        const d = new Date();
+        const formatted = d
+            .toLocaleString('en-GB', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false,
+            })
+            .replace(/\D/g, '');
+        exportExcel(workbook, `LOCMST_${formatted}`);
     } catch (error) {
         console.error('Error reading excel template on NAS server:', error);
-        throw new Error(
-            'ไม่สามารถเปิดอ่านไฟล์เทมเพลตจากระบบเซิร์ฟเวอร์ NAS ได้ กรุณาเช็คสิทธิ์การเข้าถึงพิกัดเครือข่ายค่ะ',
-        );
+        throw new Error('can not open file');
     }
 }
 
 export const getTemplate = async (filename) => {
-    // path: `${process.env.AMEC_FILE_PATH}${process.env.STATE == 'production' ? 'production' : 'development'}/Form/FIN/FIN-PCK/TEMPLATE`,
     const data = {
         path: `${process.env.AMEC_FILE_PATH}${process.env.STATE == 'production' ? 'production' : 'development'}/Form/FIN/FIN-PCK/TEMPLATE/${filename}`,
         name: filename,
     };
-    console.log(data.path);
-
     return new Promise((resolve, reject) => {
         $.ajax({
             url: `${process.env.APP_API}/files/template/read/`,
@@ -119,3 +220,130 @@ export const getTemplate = async (filename) => {
         });
     });
 };
+
+export const positionManager = {
+    list: ['POS_SELECT'],
+    get select() {
+        return $('.pos');
+    },
+    set text(val) {
+        $('.pos').text(val);
+    },
+    set value(val) {
+        this.list.forEach((id) => {
+            $(`#${id}`).val(val).trigger('change');
+            $(`#${id}_HIDDEN`).val(val);
+        });
+    },
+    getValue(id) {
+        return $(`#${id}`).val();
+    },
+    /**
+     * Initialize select2 for currency fields
+     * @param {{value: string, text: string}[]} data
+     */
+    async init(data) {
+        for (const id of this.list) {
+            await setSelect2({
+                id: id,
+                data: data,
+                size: 'sm',
+                placeholder: 'Select Position',
+                search: false,
+                clear: false,
+                width: '60%',
+                emptyValue: false,
+                dropdownParent: $('#modalAdd'),
+            });
+            $(`#${id}`).on('change', function () {
+                $(`#${id}_HIDDEN`).val($(this).val());
+            });
+        }
+    },
+    /**
+     * Sync value to other select2 element
+     * @param {string} value
+     * @param {HTMLElement} element
+     */
+    syncValue(value, element) {
+        for (const id of this.list) {
+            if (!$('#' + id).is(element)) {
+                $('#' + id)
+                    .val(value.toUpperCase())
+                    .trigger('change');
+                $(`#${id}_HIDDEN`).val(value.toUpperCase());
+            }
+        }
+    },
+};
+
+export const organizeManager = {
+    list: ['ORG_SELECT'],
+    get select() {
+        return $('.org');
+    },
+    set text(val) {
+        $('.org').text(val);
+    },
+    set value(val) {
+        this.list.forEach((id) => {
+            $(`#${id}`).val(val).trigger('change');
+            $(`#${id}_HIDDEN`).val(val);
+        });
+    },
+    getValue(id) {
+        return $(`#${id}`).val();
+    },
+    /**
+     * Initialize select2 for currency fields
+     * @param {{value: string, text: string}[]} data
+     */
+    async init(data) {
+        for (const id of this.list) {
+            await setSelect2({
+                id: id,
+                data: data,
+                size: 'sm',
+                placeholder: 'Select Organize',
+                search: true,
+                clear: false,
+                width: '60%',
+                emptyValue: false,
+                dropdownParent: $('#modalAdd'),
+            });
+            $(`#${id}`).on('change', function () {
+                $(`#${id}_HIDDEN`).val($(this).val());
+            });
+        }
+    },
+    /**
+     * Sync value to other select2 element
+     * @param {string} value
+     * @param {HTMLElement} element
+     */
+    syncValue(value, element) {
+        for (const id of this.list) {
+            if (!$('#' + id).is(element)) {
+                $('#' + id)
+                    .val(value.toUpperCase())
+                    .trigger('change');
+                $(`#${id}_HIDDEN`).val(value.toUpperCase());
+            }
+        }
+    },
+};
+
+export async function createloc(formData) {
+    console.log(formData);
+
+    return fetchUtils({
+        url: `${process.env.APP_API}/finform/fxa-locmst/create`,
+        method: 'POST',
+        data: {
+            LOCCODE: 999,
+            LOCNAME: 'TEST',
+            SPOSCODE: '30',
+            VORGNO: '050604',
+        },
+    });
+}
