@@ -258,6 +258,47 @@ $(document).ready(async function () {
                 }
             }
         },
+        {
+            data: 'RANDOM_CHECK',
+            title: "L/D RANDOM CHECK",
+            className: "border-r border-slate-200",
+            render: (data, type, row) => {
+                // if (!row.RANDOM_CHECK) return '';
+                if (type === 'sort' || type === 'type') {
+                    return Number(data || 0);
+                }
+                const borderClass = row.IS_RANDOM_EDITED === 'Y'
+                    ? 'border-red-500 border-2'
+                    : '';
+
+                const logs = getLogsByType(row, 2);
+                const value = data ?? '';
+
+                if (row.LOG_EDIT?.filter(log => log.TYPE == '2').length == 0) {
+                    return `
+                        <div class="tooltip cursor-help" data-tip="${row.LEADER_NAME ? `Checked By: ${row.LEADER_NAME}` : ''}">
+                            ${mode == '2'
+                            ? `<input class="input input-sm random-check ${borderClass}" type="text" value="${data ?? ''}" />`
+                            : `<span>${data ?? ''}</span>`
+                        }
+                        </div>
+                    `;
+                } else {
+                    return `
+                        <div class="relative">
+                            ${mode === '2'
+                            ? `<input class="input input-sm random-check ${borderClass} pr-8"
+                                        type="text"
+                                        value="${value}" />`
+                            : `<span class="inline-block min-w-20 pr-8">${value}</span>`
+                        }
+
+                            ${renderHistoryDropdown(logs)}
+                        </div>
+                    `;
+                }
+            }
+        },
         // { data: "RANDOM_CHECK", title: "L/D RANDOM CHECK", className: "border-r border-slate-200" },
         {
             data: null,
@@ -288,7 +329,7 @@ $(document).ready(async function () {
         },
         {
             data: null,
-            title: "RE-CHECK QTY",
+            title: "ACTUAL QTY (RE_CHECK)",
             className: "border-r border-slate-200 text-center",
             render: (data, type, row) => {
                 // if (!row.RANDOM_CHECK) return '';
@@ -326,7 +367,7 @@ $(document).ready(async function () {
         },
         {
             data: null,
-            title: "DIFF (AFTER RE-CHECK)",
+            title: "DIFF (RE-CHECK)",
             className: "border-r border-slate-200 text-center",
             render: (data, type, row) => {
                 const ACTUAL_QTY = row.RANDOM_CHECK ?? row.ON_HAND;
@@ -353,8 +394,24 @@ $(document).ready(async function () {
             }
         },
         {
+            data: null,
+            title: "ACTUAL QTY (FINAL)",
+            className: "border-r border-slate-200 text-center",
+            render: (data, type, row) => {
+                return '';
+            }
+        },
+        {
+            data: null,
+            title: "DIFF (VARIANCE)",
+            className: "border-r border-slate-200 text-center",
+            render: (data, type, row) => {
+                return '';
+            }
+        },
+        {
             data: "REMARK",
-            title: "REMARK",
+            title: "REASON FROM",
             defaultContent: "",
             className: "border-r border-slate-200 text-center min-w-[200px]",
             render: (data, type, row) => {
@@ -535,7 +592,7 @@ $(document).ready(async function () {
                     REMARK: $('#remark').val().trim() // optional
                 })
 
-                if(empno === whiSem.EMPNO) {
+                if (empno === whiSem.EMPNO) {
                     // create form varance
                 }
 

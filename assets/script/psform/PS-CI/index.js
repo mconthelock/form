@@ -609,7 +609,7 @@ $(document).ready(async function () {
                     CYEAR2: cyear2,
                     NRUNNO: nrunno,
                     ACTION: 'approve',
-                    EMPNO: empno,
+                    EMPNO: EMPNO,
                     REMARK: $('#remark').val().trim() // optional
                 })
 
@@ -625,7 +625,7 @@ $(document).ready(async function () {
                         formData.append('NRUNNO', nrunno);
                         formData.append('FORM_TYPE', 'PS');
                         // formData.append('FILE_CODE', '2');
-                        formData.append('CREATEBY', empno);
+                        formData.append('CREATEBY', EMPNO);
                         formData.append('file', file);
                         await fetchUtils({
                             url: process.env.APP_API + "/ps-ci/uploadFile",
@@ -660,7 +660,7 @@ $(document).ready(async function () {
             //     url: process.env.APP_API + "/ps-ci/updateCheckResult",
             //     data: {
             //         data: JSON.stringify(editedRows),
-            //         empno
+            //         EMPNO
             //     },
             //     dataType: "json",
             //     success: function (response) {
