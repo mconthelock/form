@@ -66,6 +66,24 @@
                         </td>
                     </tr>
 
+                    <tr id="row_current_no" class="hidden border-b border-[#b7c8dc]">
+                        <th class="w-[320px] border-r border-[#b7c8dc] bg-indigo-50 px-4 py-3 text-left align-middle font-black leading-[1.4] text-indigo-700">
+                            Current No
+                        </th>
+                        <td class="px-4 py-3 align-middle font-bold leading-[1.45] text-slate-950">
+                            <div id="v_current_no" class="min-h-[28px] whitespace-pre-wrap font-extrabold text-slate-950">-</div>
+                        </td>
+                    </tr>
+
+                    <tr id="row_rev" class="hidden border-b border-[#b7c8dc]">
+                        <th class="w-[320px] border-r border-[#b7c8dc] bg-indigo-50 px-4 py-3 text-left align-middle font-black leading-[1.4] text-indigo-700">
+                            Rev
+                        </th>
+                        <td class="px-4 py-3 align-middle font-bold leading-[1.45] text-slate-950">
+                            <div id="v_rev" class="min-h-[28px] whitespace-pre-wrap font-extrabold text-slate-950">-</div>
+                        </td>
+                    </tr>
+
                     <tr class="border-b border-[#b7c8dc]">
                         <th class="w-[320px] border-r border-[#b7c8dc] bg-indigo-50 px-4 py-3 text-left align-middle font-black leading-[1.4] text-indigo-700">
                             Classification

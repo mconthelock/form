@@ -55,7 +55,7 @@ $(document).ready(function () {
                             await updateReviseCenter(VIEW.getBasePayload(), formno);
                         }
                     }
-                /*
+                
                     const result = await doaction({
                         ...VIEW.getBasePayload(),
                         ACTION: action,
@@ -84,7 +84,7 @@ $(document).ready(function () {
                         title: result?.message || "เกิดข้อผิดพลาด",
                         confirmButtonText: "ตกลง",
                     });
-                */
+                
                 } catch (err) {
                     console.error(err);
                     Swal.close();
@@ -165,10 +165,22 @@ $(document).ready(function () {
             const orNo = String(head.ORNO || "").trim();
             const rev = String(head.REV || "").trim();
 
-            if (typeForm === "REVISE") {
-                $("#v_type_form").text(`Revise${orNo ? "    Current No : " + orNo : ""}${rev ? "    Rev : " + rev : ""}`);
+            if (typeForm.toUpperCase() === "REVISE") {
+                $("#v_type_form").text("Revise");
+
+                $("#v_current_no").text(orNo || "-");
+                $("#v_rev").text(rev || "-");
+
+                $("#row_current_no").removeClass("hidden");
+                $("#row_rev").removeClass("hidden");
             } else {
                 $("#v_type_form").text("New");
+
+                $("#v_current_no").text("");
+                $("#v_rev").text("");
+
+                $("#row_current_no").addClass("hidden");
+                $("#row_rev").addClass("hidden");
             }
 
             const classTextMap = {
