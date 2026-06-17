@@ -292,20 +292,16 @@ $(document).ready(function () {
             }
 
             const result = await createForm(params);
-
             if (!result?.status) {
                 throw new Error(result?.message || 'Create form ไม่สำเร็จ');
             }
-
             return result;
         },
 
         uploadFile: async function (webflowData = {}) {
             const excelInput = $('#or_excel')[0];
             const pdfInput = $('#or_pdf')[0];
-
             const formData = new FormData();
-
             formData.append('NFRMNO', webflowData.NFRMNO || $('#nfrmno').val());
             formData.append('VORGNO', webflowData.VORGNO || $('#vorgno').val());
             formData.append('CYEAR', webflowData.CYEAR || $('#cyear').val());
