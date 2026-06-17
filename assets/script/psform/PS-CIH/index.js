@@ -138,7 +138,7 @@ $(document).ready(async function () {
     $(".diff-item-after-recheck").text(diffItemAfterRecheck);
     const randomCheckItem = result.filter(item => item.RANDOM_CHECK !== null).length;
     $(".random-check").text(randomCheckItem);
-    
+
     const getLogsByType = (row, type) => {
         return row.LOG_EDIT?.filter(log => log.TYPE === type) || [];
     };
@@ -218,7 +218,9 @@ $(document).ready(async function () {
         {
             data: null,
             title: "CONTROLLER",
-            render: (data, type, row) => `${row.CONTROLLER_ID}`,
+            render: (data, type, row) => {
+                return `${row.GROUP_CODE}-${row.ITEM_DETAIL.USER_TNAME.split(' ').slice(0)[0]}`;
+            },
             className: "border-r border-slate-200"
         },
         { data: "ON_HAND", title: "ON HAND", className: "border-r border-slate-200 text-right font-semibold bg-amber-50" },
@@ -413,19 +415,20 @@ $(document).ready(async function () {
 
         const value = Number(input.val());
 
-        const oldValue = Number(rowData.ACTUAL_QTY ?? rowData.ON_HAND);
+        const originalValue = Number(rowData.OLD_ACTUAL_QTY ?? rowData.ON_HAND);
 
-        if (value != oldValue) {
-            console.log(value, oldValue);
+        if (value != originalValue) {
+            console.log(value, originalValue);
             rowData.IS_EDITED = 'Y';
             rowData.IS_ACTUAL_EDITED = 'Y';
 
             if (rowData.OLD_ACTUAL_QTY === undefined) {
-                rowData.OLD_ACTUAL_QTY = oldValue;
+                rowData.OLD_ACTUAL_QTY = Number(rowData.ACTUAL_QTY ?? rowData.ON_HAND);
             }
 
         } else {
             rowData.IS_ACTUAL_EDITED = null;
+            rowData.OLD_ACTUAL_QTY = undefined;
         }
 
         rowData.ACTUAL_QTY = value === '' ? null : value;
@@ -519,45 +522,44 @@ $(document).ready(async function () {
             }
 
             try {
-
-                const data = {
-                    editedRows,
-                    empno
-                }
-                console.log("editedRows", data);
                 showLoader();
-                // await doaction({
-                //     NFRMNO: nfrmno,
-                //     VORGNO: vorgno,
-                //     CYEAR: cyear,
-                //     CYEAR2: cyear2,
-                //     NRUNNO: nrunno,
-                //     ACTION: 'approve',
-                //     EMPNO: empno,
-                //     REMARK: $('#remark').val().trim() // optional
-                // })
+                const whiSem = await getByPosition("050504", "30");
+                await doaction({
+                    NFRMNO: nfrmno,
+                    VORGNO: vorgno,
+                    CYEAR: cyear,
+                    CYEAR2: cyear2,
+                    NRUNNO: nrunno,
+                    ACTION: 'approve',
+                    EMPNO: empno,
+                    REMARK: $('#remark').val().trim() // optional
+                })
 
-                // $(".attach-file").each(async function (index, element) {
-                //     const fileInput = $(element)[0];
-                //     const file = fileInput.files[0];
-                //     if (file) {
-                //         const formData = new FormData();
-                //         formData.append('NFRMNO', nfrmno);
-                //         formData.append('VORGNO', vorgno);
-                //         formData.append('CYEAR', cyear);
-                //         formData.append('CYEAR2', cyear2);
-                //         formData.append('NRUNNO', nrunno);
-                //         formData.append('FORM_TYPE', 'PS');
-                //         // formData.append('FILE_CODE', '2');
-                //         formData.append('CREATEBY', empno);
-                //         formData.append('file', file);
-                //         await fetchUtils({
-                //             url: process.env.APP_API + "/ps-ci/uploadFile",
-                //             method: "POST",
-                //             data: formData,
-                //         });
-                //     }
-                // });
+                if(empno === whiSem.EMPNO) {
+                    // create form varance
+                }
+
+                $(".attach-file").each(async function (index, element) {
+                    const fileInput = $(element)[0];
+                    const file = fileInput.files[0];
+                    if (file) {
+                        const formData = new FormData();
+                        formData.append('NFRMNO', nfrmno);
+                        formData.append('VORGNO', vorgno);
+                        formData.append('CYEAR', cyear);
+                        formData.append('CYEAR2', cyear2);
+                        formData.append('NRUNNO', nrunno);
+                        formData.append('FORM_TYPE', 'PS');
+                        // formData.append('FILE_CODE', '2');
+                        formData.append('CREATEBY', empno);
+                        formData.append('file', file);
+                        await fetchUtils({
+                            url: process.env.APP_API + "/ps-cih/uploadFile",
+                            method: "POST",
+                            data: formData,
+                        });
+                    }
+                });
 
                 // console.log("editedRows", editedRows);
                 await fetchUtils({
