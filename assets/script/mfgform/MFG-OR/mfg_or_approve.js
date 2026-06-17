@@ -1,4 +1,4 @@
-import { getMfgOrDetail, generateMfgOrNo, updateReviseCenter, exportPdf } from "./data.js";
+import { getMfgOrDetail, generateMfgOrNo, updateReviseCenter } from "./data.js";
 import { showLoader } from "@amec/webasset/preloader";
 import { doaction, showflow } from "@amec/webasset/api/webform";
 import { redirectWebflow } from "@amec/webasset/form";
@@ -57,12 +57,13 @@ $(document).ready(function () {
                         }
 
                         // Export PDF
-                        const pdfResult = await exportPdf(formno);
-                        console.log("EXPORT PDF RESULT =", pdfResult);
-                        if (!pdfResult.status) {
-                            throw new Error(pdfResult.message || "Export PDF failed");
-                        }
-
+                        const baseUrl = $("#base_url").val();
+                        return $.ajax({
+                            url: `${baseUrl}mfgform/MFG-OR/main_or/export_pdf`,
+                            type: "POST",
+                            dataType: "json",
+                            data: { formno }
+                        });
                     }else{
             
                         const result = await doaction({
