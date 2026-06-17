@@ -8,93 +8,79 @@ import { showLoader } from "@amec/webasset/preloader";
 import { redirectWebflow } from "@amec/webasset/form";
 import { downloadOrOpenFile } from "@amec/webasset/api/file";
 
+// ─── Constants ───────────────────────────────────────────────────────────────
+
+const LOG_TYPE = { ACTUAL: 1, RANDOM: 2, RECHECK: 3 };
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+const getFormData = () => {
+    const { nfrmno, vorgno, cyear, cyear2, nrunno } = $(".form-data").data();
+    const empno = new URLSearchParams(window.location.search).get("empno");
+    return { NFRMNO: nfrmno, VORGNO: vorgno, CYEAR: cyear, CYEAR2: cyear2, NRUNNO: nrunno, EMPNO: empno };
+};
+
+const renderFileList = files => {
+    if (!files?.length) {
+        return '<li class="text-xs text-base-content/40 italic">ไม่มีไฟล์แนบ</li>';
+    }
+    return files.map(f => `
+        <li class="flex items-center gap-2 text-sm">
+            <i class="icofont-paper-clip text-info"></i>
+            <span class="flex-1 truncate">${f.FILE_ONAME}</span>
+            <button
+                data-url="${f.FILE_PATH}"
+                storedName="${f.FILE_FNAME}"
+                originalName="${f.FILE_ONAME}"
+                class="btn btn-ghost btn-xs gap-1 text-info download-btn">
+                <i class="icofont-download"></i>
+                ดาวน์โหลด
+            </button>
+        </li>
+    `).join('');
+};
+
 $(document).ready(async function () {
     const { nfrmno, vorgno, cyear, cyear2, nrunno } = $(".form-data").data();
-    const params = new URLSearchParams(window.location.search);
-    const empno = params.get("empno");
-    const formData = {
-        NFRMNO: nfrmno,
-        VORGNO: vorgno,
-        CYEAR: cyear,
-        CYEAR2: cyear2,
-        NRUNNO: nrunno,
-        EMPNO: empno
-    }
-    const flow = await showflow(
-        {
-            NFRMNO: nfrmno,
-            VORGNO: vorgno,
-            CYEAR: cyear,
-            CYEAR2: cyear2,
-            NRUNNO: nrunno,
-        }
-    );
+    const { NFRMNO, VORGNO, CYEAR, CYEAR2, NRUNNO, EMPNO } = getFormData();
+    const formData = { NFRMNO, VORGNO, CYEAR, CYEAR2, NRUNNO };
+    const flow = await showflow(formData);
     $(".flow").html(flow.html);
 
-    const mode = await getMode(formData);
-    if (mode == '2') {
-        $(".aprv-section").show();
-    } else {
-        $(".aprv-section").hide();
-    }
+    const mode = await getMode({ ...formData, EMPNO });
+    $(".aprv-section").toggle(mode === '2');
     console.log("mode:", mode);
 
-    const data = await fetchUtils({
-        url: process.env.APP_API + "/ps-ci/getDataForm",
-        method: "POST",
-        data: {
-            nfrmno: nfrmno,
-            vorgno: vorgno,
-            cyear: cyear,
-            cyear2: cyear2,
-            nrunno: nrunno,
-        },
-    });
-    const file = await fetchUtils({
-        url: process.env.APP_API + "/webform/file/get-file",
-        method: "POST",
-        data: {
-            NFRMNO: nfrmno,
-            VORGNO: vorgno,
-            CYEAR: cyear,
-            CYEAR2: cyear2,
-            NRUNNO: nrunno,
-            FORM_TYPE: 'PS',
-        }
-    });
+    // Data
+    const [data, file] = await Promise.all([
+        fetchUtils({ url: process.env.APP_API + "/ps-ci/getDataForm", method: "POST", data: formData }),
+        fetchUtils({ url: process.env.APP_API + "/webform/file/get-file", method: "POST", data: { ...formData, FORM_TYPE: 'PS' } }),
+    ]);
     console.log("file:", file);
-    // const file = { data: [] };
-    if (!file.data || !file.data.length) {
-        $("#attachFileList").empty();
-        $("#attachFileList").append('<li class="text-xs text-base-content/40 italic">ไม่มีไฟล์แนบ</li>');
-    } else {
-        $("#attachFileList").html(file.data.map(f => `
-            <li class="flex items-center gap-2 text-sm">
-                <i class="icofont-paper-clip text-info"></i>
-                <span class="flex-1 truncate">${f.FILE_ONAME}</span>
-                <button data-url="${f.FILE_PATH}" storedName="${f.FILE_FNAME}" originalName="${f.FILE_ONAME}" class="btn btn-ghost btn-xs gap-1 text-info download-btn">
-                    <i class="icofont-download"></i>
-                    ดาวน์โหลด
-                </button>
-            </li>
-        `).join(''));
-    }
 
-    $(".download-btn").on("click", function () {
-        const url = $(this).data("url");
-        const storedName = $(this).attr("storedName");
-        const originalName = $(this).attr("originalName");
-        const test = {
-            baseDir: url,
-            storedName: storedName,
-            originalName: originalName,
-            mode: "download",
-        };
-        console.log(test);
+    $("#attachFileList").html(renderFileList(file.data));
+    // const file = { data: [] };
+    // if (!file.data || !file.data.length) {
+    //     $("#attachFileList").empty();
+    //     $("#attachFileList").append('<li class="text-xs text-base-content/40 italic">ไม่มีไฟล์แนบ</li>');
+    // } else {
+    //     $("#attachFileList").html(file.data.map(f => `
+    //         <li class="flex items-center gap-2 text-sm">
+    //             <i class="icofont-paper-clip text-info"></i>
+    //             <span class="flex-1 truncate">${f.FILE_ONAME}</span>
+    //             <button data-url="${f.FILE_PATH}" storedName="${f.FILE_FNAME}" originalName="${f.FILE_ONAME}" class="btn btn-ghost btn-xs gap-1 text-info download-btn">
+    //                 <i class="icofont-download"></i>
+    //                 ดาวน์โหลด
+    //             </button>
+    //         </li>
+    //     `).join(''));
+    // }
+
+    $(document).on("click", ".download-btn", function () {
         downloadOrOpenFile({
-            baseDir: url,
-            storedName: storedName,
-            originalName: originalName,
+            baseDir: $(this).data("url"),
+            storedName: $(this).attr("storedName"),
+            originalName: $(this).attr("originalName"),
             mode: "download",
         });
     });
@@ -128,9 +114,9 @@ $(document).ready(async function () {
     $(".total-item").text(data.length);
     const checkingItem = data.filter(item => item.ACTUAL_QTY !== null).length;
     $(".checking-item").text(checkingItem);
-    const diffItemFirstTime = data.filter(item => (item.ACTUAL_QTY !== null) && (item.ACTUAL_QTY !== item.ON_HAND)).length;
+    const diffItemFirstTime = data.filter(item => Number(item.RANDOM_CHECK ?? item.ACTUAL_QTY ?? item.ON_HAND) !== item.ON_HAND).length;
     $(".diff-item-first-time").text(diffItemFirstTime);
-    const diffItemAfterRecheck = data.filter(item => (item.RANDOM_CHECK !== null) && (item.REMARK !== null) && Number(item.RANDOM_CHECK) !== Number(item.ON_HAND));
+    const diffItemAfterRecheck = data.filter(item => (item.RECHECK_QTY !== null) && (item.REMARK !== null) && Number(item.RECHECK_QTY) !== Number(item.ON_HAND));
     $(".diff-item-after-recheck").text(diffItemAfterRecheck.length);
     const randomCheckItem = data.filter(item => item.RANDOM_CHECK !== null).length;
     $(".random-check").text(randomCheckItem);
@@ -223,7 +209,12 @@ $(document).ready(async function () {
             data: null,
             title: "ACTUAL QTY",
             render: (data, type, row) => {
-                const borderClass = row.IS_ACTUAL_EDITED === 'Y'
+                if (type === 'sort' || type === 'type') {
+                    return Number(row.ACTUAL_QTY ?? row.ON_HAND ?? 0);
+                    //                           ^^                ^^
+                    // แก้ด้วย: ใช้ ?? แทน || เพื่อให้ fallback ไป ON_HAND ได้ถูกต้อง
+                }
+                const borderClass = row.IS_ACTUAL_EDITED
                     ? 'border-red-500 border-2'
                     : '';
 
@@ -232,13 +223,12 @@ $(document).ready(async function () {
 
                 return `
                     <div class="relative">
-                        ${
-                            mode === '2'
-                                ? `<input class="input input-sm actual-qty ${borderClass} pr-8"
+                        ${mode === '2'
+                        ? `<input class="input input-sm actual-qty ${borderClass} pr-8"
                                     type="text"
                                     value="${value}" />`
-                                : `<span class="inline-block min-w-20 pr-8">${value}</span>`
-                        }
+                        : `<span class="inline-block min-w-20 pr-8">${value}</span>`
+                    }
 
                         ${renderHistoryDropdown(logs)}
                     </div>
@@ -253,13 +243,54 @@ $(document).ready(async function () {
                 }
             }
         },
+        {
+            data: "RANDOM_CHECK",
+            title: "L/D RANDOM CHECK",
+            className: "border-r border-slate-200 text-center",
+            render: (data, type, row) => {
+                if (type === 'sort') {
+                    return Number(row.RANDOM_CHECK || 0);
+                }
+                // if (!row.RANDOM_CHECK) return '';
+                const borderClass = row.IS_RANDOM_EDITED
+                    ? 'border-red-500 border-2'
+                    : '';
+
+                const logs = getLogsByType(row, 2);
+                const value = row.RANDOM_CHECK ?? '';
+
+                if (row.LOG_EDIT?.filter(log => log.TYPE == '2').length == 0) {
+                    return `
+                        <div class="tooltip cursor-help" data-tip="${row.LEADER_NAME ? `Checked By: ${row.LEADER_NAME}` : ''}">
+                            ${mode == '2'
+                            ? `<input class="input input-sm random-check ${borderClass}" type="text" value="${row.RANDOM_CHECK ?? ''}" />`
+                            : `<span>${row.RANDOM_CHECK ?? ''}</span>`
+                        }
+                        </div>
+                    `;
+                } else {
+                    return `
+                        <div class="relative">
+                            ${mode === '2'
+                            ? `<input class="input input-sm random-check ${borderClass} pr-8"
+                                        type="text"
+                                        value="${value}" />`
+                            : `<span class="inline-block min-w-20 pr-8">${value}</span>`
+                        }
+
+                            ${renderHistoryDropdown(logs)}
+                        </div>
+                    `;
+                }
+            }
+        },
         // { data: "RANDOM_CHECK", title: "L/D RANDOM CHECK", className: "border-r border-slate-200" },
         {
             data: null,
             title: "DIFF (FIRST TIME)",
             className: "border-r border-slate-200 text-center",
             render: (data, type, row) => {
-                const diff = (row.ACTUAL_QTY ?? row.ON_HAND) - row.ON_HAND;
+                const diff = (row.RANDOM_CHECK ?? (row.ACTUAL_QTY ?? row.ON_HAND)) - row.ON_HAND;
                 let cls = '';
                 if (diff < 0) {
                     cls = 'text-red-700  font-bold';
@@ -287,32 +318,29 @@ $(document).ready(async function () {
             className: "border-r border-slate-200 text-center",
             render: (data, type, row) => {
                 // if (!row.RANDOM_CHECK) return '';
-                const borderClass = row.IS_RANDOM_EDITED === 'Y'
+                const borderClass = row.IS_RECHECK_EDITED
                     ? 'border-red-500 border-2'
                     : '';
 
-                const logs = getLogsByType(row, 2);
-                const value = row.RANDOM_CHECK ?? '';
+                const logs = getLogsByType(row, 3);
+                const value = row.RECHECK_QTY ?? row.RANDOM_CHECK ?? '';
 
-                if (row.LOG_EDIT?.filter(log => log.TYPE == '2').length == 0) {
+                if (row.LOG_EDIT?.filter(log => log.TYPE == '3').length == 0) {
                     return `
-                        <div class="tooltip cursor-help" data-tip="${row.LEADER_NAME ? `Checked By: ${row.LEADER_NAME}` : ''}">
-                            ${mode == '2'
-                            ? `<input class="input input-sm random-check ${borderClass}" type="text" value="${row.RANDOM_CHECK ?? ''}" />`
-                            : `<span>${row.RANDOM_CHECK ?? ''}</span>`
+                        ${mode == '2'
+                            ? `<input class="input input-sm recheck-qty ${borderClass}" type="text" value="${value}" />`
+                            : `<span>${value}</span>`
                         }
-                        </div>
                     `;
                 } else {
-                   return `
+                    return `
                         <div class="relative">
-                            ${
-                                mode === '2'
-                                    ? `<input class="input input-sm random-check ${borderClass} pr-8"
+                            ${mode === '2'
+                            ? `<input class="input input-sm recheck-qty ${borderClass} pr-8"
                                         type="text"
                                         value="${value}" />`
-                                    : `<span class="inline-block min-w-20 pr-8">${value}</span>`
-                            }
+                            : `<span class="inline-block min-w-20 pr-8">${value}</span>`
+                        }
 
                             ${renderHistoryDropdown(logs)}
                         </div>
@@ -325,19 +353,19 @@ $(document).ready(async function () {
             title: "DIFF (AFTER RE-CHECK)",
             className: "border-r border-slate-200 text-center",
             render: (data, type, row) => {
-                const ACTUAL_QTY = row.RANDOM_CHECK ?? row.ON_HAND;
+                const ACTUAL_QTY = row.RECHECK_QTY ?? row.ON_HAND;
                 const DIFF = ACTUAL_QTY - row.ON_HAND;
-                if (row.RANDOM_CHECK !== null) {
+                if (row.RECHECK_QTY !== null) {
                     return DIFF === 0 ? '0' : DIFF;
                 } else {
                     return '-';
                 }
             },
             createdCell: (td, cellData, rowData, row, col) => {
-                const ACTUAL_QTY = rowData.RANDOM_CHECK ?? rowData.ON_HAND;
+                const ACTUAL_QTY = rowData.RECHECK_QTY ?? rowData.ON_HAND;
                 const DIFF = ACTUAL_QTY - rowData.ON_HAND;
                 $(td).addClass("border-r border-slate-200 text-right font-bold");
-                if (rowData.RANDOM_CHECK !== null) {
+                if (rowData.RECHECK_QTY !== null) {
                     if (DIFF < 0) {
                         $(td).addClass('text-red-700 bg-red-50');
                     } else if (DIFF > 0) {
@@ -355,8 +383,8 @@ $(document).ready(async function () {
             className: "border-r border-slate-200 text-center min-w-[200px]",
             render: (data, type, row) => {
                 return mode == '2'
-                    ? `<input class="input input-sm remark" type="text" value="${row.REMARK ?? ''}" />`
-                    : `<span>${row.REMARK ?? ''}</span>`;
+                    ? `<input class="input input-sm remark" type="text" value="${row.LEADER_REMARK ?? row.REMARK ?? ''}" />`
+                    : `<span>${row.LEADER_REMARK ?? row.REMARK ?? ''}</span>`;
             }
         },
         {
@@ -364,8 +392,8 @@ $(document).ready(async function () {
             title: "CORRECTIVE ACTION",
             render: (data, type, row) => {
                 return mode == '2'
-                    ? `<input class="input input-sm leader-remark" type="text" value="${row.LEADER_REMARK ?? ''}" />`
-                    : `<span>${row.LEADER_REMARK ?? ''}</span>`;
+                    ? `<input class="input input-sm recheck-remark" type="text" value="${row.RECHECK_REMARK ?? ''}" />`
+                    : `<span>${row.RECHECK_REMARK ?? ''}</span>`;
             },
             className: "text-center min-w-[200px]"
         }
@@ -409,26 +437,27 @@ $(document).ready(async function () {
         const row = table.row(td.closest('tr'));
         const rowData = row.data();
 
-        const value = Number(input.val());
+        const rawValue = input.val();
+        const value = rawValue === '' ? null : Number(rawValue);
 
-        const oldValue = Number(rowData.ACTUAL_QTY ?? rowData.ON_HAND);
+        // baseline: ถ้าเคยแก้มาก่อนแล้ว ใช้ OLD_ACTUAL_QTY, ถ้ายังไม่เคย ใช้ ACTUAL_QTY ?? ON_HAND
+        const baseline = rowData.OLD_ACTUAL_QTY !== undefined
+            ? rowData.OLD_ACTUAL_QTY
+            : Number(rowData.ACTUAL_QTY ?? rowData.ON_HAND);
 
-        if (value != oldValue) {
-            console.log(value, oldValue);
-            rowData.IS_EDITED = 'Y';
-            rowData.IS_ACTUAL_EDITED = 'Y';
+        if (value !== baseline) {
+            rowData.IS_EDITED = true;
+            rowData.IS_ACTUAL_EDITED = true;
 
             if (rowData.OLD_ACTUAL_QTY === undefined) {
-                rowData.OLD_ACTUAL_QTY = oldValue;
+                rowData.OLD_ACTUAL_QTY = Number(rowData.ACTUAL_QTY ?? rowData.ON_HAND);
             }
 
         } else {
             rowData.IS_ACTUAL_EDITED = null;
         }
 
-        rowData.ACTUAL_QTY = value === '' ? null : value;
-
-        console.log(rowData);
+        rowData.ACTUAL_QTY = value;
 
         row.data(rowData).invalidate();
         table.draw(false);
@@ -444,12 +473,16 @@ $(document).ready(async function () {
 
         const value = input.val();
 
-        const oldValue = rowData.RANDOM_CHECK ?? '';
+        // baseline: ถ้าเคยแก้มาก่อนแล้ว ใช้ OLD_RANDOM_CHECK, ถ้ายังไม่เคย ใช้ RANDOM_CHECK ปัจจุบัน
+        const baseline = rowData.OLD_RANDOM_CHECK !== undefined
+            ? rowData.OLD_RANDOM_CHECK
+            : rowData.RANDOM_CHECK;
 
-        if (value != oldValue) {
+        const baselineValue = baseline ?? '';
 
-            rowData.IS_EDITED = 'Y';
-            rowData.IS_RANDOM_EDITED = 'Y';
+        if (value != baselineValue) {
+            rowData.IS_EDITED = true;
+            rowData.IS_RANDOM_EDITED = true;
 
             if (rowData.OLD_RANDOM_CHECK === undefined) {
                 rowData.OLD_RANDOM_CHECK = rowData.RANDOM_CHECK;
@@ -465,20 +498,43 @@ $(document).ready(async function () {
         table.draw(false);
     });
 
-    $('#table').on('blur', '.remark', function () {
-
+    $('#table').on('blur', '.recheck-qty', function () {
         const input = $(this);
         const td = input.closest('td');
 
         const row = table.row(td.closest('tr'));
         const rowData = row.data();
 
-        rowData.REMARK = input.val().trim();
+        const value = input.val();
 
-        row.data(rowData);
+        // ใช้ OLD_RECHECK_QTY เป็น baseline ถ้ามีอยู่แล้ว (เคยแก้มาก่อน)
+        // ถ้ายังไม่มี แสดงว่านี่คือการแก้ครั้งแรก ใช้ RECHECK_QTY ปัจจุบันเป็น baseline
+        const baseline = rowData.OLD_RECHECK_QTY !== undefined
+            ? rowData.OLD_RECHECK_QTY
+            : rowData.RECHECK_QTY;
+
+        const baselineValue = baseline ?? '';
+
+        if (value != baselineValue) {
+            rowData.IS_EDITED = true;
+            rowData.IS_RECHECK_EDITED = true;
+
+            if (rowData.OLD_RECHECK_QTY === undefined) {
+                rowData.OLD_RECHECK_QTY = rowData.RECHECK_QTY;
+            }
+        } else {
+            // ค่ากลับมาเท่ากับ original แล้ว ถือว่าไม่ edited
+            rowData.IS_RECHECK_EDITED = null;
+        }
+
+        rowData.RECHECK_QTY = value === '' ? null : value;
+
+        row.data(rowData).invalidate();
+        table.draw(false);
     });
 
-    $('#table').on('blur', '.leader-remark', function () {
+
+    $('#table').on('blur', '.remark', function () {
 
         const input = $(this);
         const td = input.closest('td');
@@ -491,6 +547,19 @@ $(document).ready(async function () {
         row.data(rowData);
     });
 
+    $('#table').on('blur', '.recheck-remark', function () {
+
+        const input = $(this);
+        const td = input.closest('td');
+
+        const row = table.row(td.closest('tr'));
+        const rowData = row.data();
+
+        rowData.RECHECK_REMARK = input.val().trim();
+
+        row.data(rowData);
+    });
+
     $(".btn-approve").on("click", async function () {
         const action = $(this).data("action");
         console.log(action);
@@ -499,10 +568,14 @@ $(document).ready(async function () {
                 .rows()
                 .data()
                 .toArray()
-                .filter(row => row.IS_EDITED === 'Y');
+                .filter(row => row.IS_EDITED);
 
             const invalidRows = editedRows.filter(row =>
-                !row.REMARK || row.REMARK.trim() === ''
+                (row.IS_ACTUAL_EDITED || row.IS_RANDOM_EDITED) && (!row.LEADER_REMARK || row.LEADER_REMARK.trim() === '')
+            );
+
+            const invalidRecheckRows = editedRows.filter(row =>
+                (row.RECHECK_QTY !== null) && (!row.RECHECK_REMARK || row.RECHECK_REMARK.trim() === '')
             );
 
             if (invalidRows.length > 0) {
@@ -516,9 +589,19 @@ $(document).ready(async function () {
                 return;
             }
 
+            if (invalidRecheckRows.length > 0) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'กรุณาระบุ Corrective Action',
+                    text: `${invalidRecheckRows.length} รายการ`
+                });
+                return;
+            }
+
             try {
 
                 showLoader();
+                console.log("editedRows", editedRows);
                 await doaction({
                     NFRMNO: nfrmno,
                     VORGNO: vorgno,
@@ -552,18 +635,18 @@ $(document).ready(async function () {
                     }
                 });
 
-                // console.log("editedRows", editedRows);
+                // // console.log("editedRows", editedRows);
                 await fetchUtils({
                     url: process.env.APP_API + "/ps-ci/insertLog",
                     method: "POST",
                     data: {
                         editedRows,
-                        empno
+                        empno: EMPNO
                     },
                 });
 
                 showLoader({ show: false });
-                // redirectWebflow();
+                redirectWebflow();
             } catch (error) {
                 showLoader({ show: false });
                 Swal.fire({
