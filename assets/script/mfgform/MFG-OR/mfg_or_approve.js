@@ -56,7 +56,7 @@ $(document).ready(function () {
                         }
 
                         // Export PDF
-                        const exportPdf = (formno) => {
+                         const exportPdf = (formno) => {
                             const baseUrl = $("#base_url").val();
 
                             return $.ajax({
