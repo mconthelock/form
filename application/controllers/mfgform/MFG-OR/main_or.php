@@ -219,29 +219,36 @@ class main_or extends MY_Controller {
     }
 
 
+
     public function export_pdf(){
         header('Content-Type: application/json; charset=utf-8');
         try {
             $formno = $this->input->post('formno');
+
             if (!$formno) {
                 throw new Exception('formno is required');
             }
 
-            $folder = rtrim($this->upload_path, "/\\"). DIRECTORY_SEPARATOR. $formno. DIRECTORY_SEPARATOR;
+            $folder = $this->normalize_windows_path(
+                rtrim($this->upload_path, "/\\") . DIRECTORY_SEPARATOR . $formno . DIRECTORY_SEPARATOR
+            );
 
             if (!is_dir($folder)) {
-                throw new Exception('Form folder not found');
+                throw new Exception('Form folder not found: ' . $folder);
             }
 
             $excelFiles = glob($folder . '*.{xlsx,xlsm,xls}', GLOB_BRACE);
 
             if (empty($excelFiles)) {
-                throw new Exception('Excel file not found');
+                throw new Exception('Excel file not found: ' . $folder);
             }
 
-            $excelPath = $excelFiles[0];
+            $excelPath = $this->normalize_windows_path($excelFiles[0]);
             $pdfPath = preg_replace('/\.(xlsx|xlsm|xls)$/i', '.pdf', $excelPath);
+            $pdfPath = $this->normalize_windows_path($pdfPath);
+
             $this->excel_to_pdf_com($excelPath, $pdfPath);
+
             echo json_encode([
                 'status' => true,
                 'pdf' => basename($pdfPath)
@@ -255,17 +262,27 @@ class main_or extends MY_Controller {
         }
     }
 
+    private function normalize_windows_path($path){
+        return str_replace('/', '\\', $path);
+    }
+
     private function excel_to_pdf_com($excelPath, $pdfPath){
         if (!class_exists('COM')) {
             throw new Exception('PHP COM extension is not enabled');
         }
 
+        $excelPath = $this->normalize_windows_path($excelPath);
+        $pdfPath = $this->normalize_windows_path($pdfPath);
+
         if (!is_file($excelPath)) {
-            throw new Exception('Excel file not found: ' . $excelPath);
+            throw new Exception('Excel file not found by PHP: ' . $excelPath);
         }
 
         $pdfDir = dirname($pdfPath);
-        if (!is_dir($pdfDir)) {  mkdir($pdfDir, 0777, true); }
+
+        if (!is_dir($pdfDir)) {
+            mkdir($pdfDir, 0777, true);
+        }
 
         $excel = null;
         $workbook = null;
@@ -274,28 +291,39 @@ class main_or extends MY_Controller {
             $excel = new COM("Excel.Application");
             $excel->Visible = false;
             $excel->DisplayAlerts = false;
+
             $workbook = $excel->Workbooks->Open($excelPath);
 
-            // 0 = PDF
+            // 0 = xlTypePDF
             $workbook->ExportAsFixedFormat(0, $pdfPath);
+
             $workbook->Close(false);
             $excel->Quit();
 
             unset($workbook);
             unset($excel);
 
-            if (!is_file($pdfPath)) { throw new Exception('PDF export failed');}
+            if (!is_file($pdfPath)) {
+                throw new Exception('PDF export failed: ' . $pdfPath);
+            }
+
             return $pdfPath;
+
         } catch (Exception $e) {
-            if ($workbook) { $workbook->Close(false); }
-            if ($excel) { $excel->Quit(); }
+            if ($workbook) {
+                $workbook->Close(false);
+            }
+
+            if ($excel) {
+                $excel->Quit();
+            }
 
             unset($workbook);
             unset($excel);
+
             throw $e;
         }
     }
-
 
 
 
