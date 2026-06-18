@@ -31,5 +31,15 @@ class eia_model extends my_model
         }
     
 
+        public function getFile($NFRMNO, $VORGNO, $CYEAR, $CYEAR2, $NRUNNO, $type){
+            $this->db->from('FE_FILE')
+                    ->where('NFRMNO', $NFRMNO)
+                    ->where('VORGNO', $VORGNO)
+                    ->where('CYEAR', $CYEAR)
+                    ->where('CYEAR2', $CYEAR2)
+                    ->where('NRUNNO', $NRUNNO)
+                    ->where('FILE_TYPE', $type);
+            return $this->db->get()->result();
+        }
 
 }

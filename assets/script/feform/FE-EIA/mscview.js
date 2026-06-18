@@ -1,4 +1,5 @@
 import { redirectWebflow } from '@amec/webasset/form';
+import { createFeEia } from './data';
 import { host } from '../../utils';
 import { showLoader } from '@amec/webasset/preloader';
 import 'select2';
@@ -12,6 +13,7 @@ import 'datatables.net-dt/css/dataTables.dataTables.min.css'; // อิมพอ
 import 'datatables.net-buttons-dt';
 import 'datatables.net-buttons/js/buttons.html5.mjs'; // รองรับปุ่ม Excel Html5
 
+import { downloadOrOpenFile, getFile } from '@amec/webasset/api/file';
 import {
     ajaxOptions,
     getAllAttr,
@@ -31,6 +33,8 @@ import {
 import { sendmail } from '@amec/webasset/api/mail';
 let empno = '';
 let dataOnhand = [];
+let currentMode = '3';
+let selectedFilesArray = [];
 $(document).ready(async function () {
     // 1. ดึงข้อมูลจากก้อนข้อมูลหลักของเบลดฟอร์ม
 
@@ -59,7 +63,7 @@ $(document).ready(async function () {
         EMPNO: empno,
     };
 
-    const currentMode = String(
+    currentMode = String(
         await getMode({
             ...form,
             EMPNO: form.EMPNO,
@@ -79,24 +83,34 @@ $(document).ready(async function () {
         // โหมดสร้างฟอร์ม (Create Mode) -> ล็อกการซ่อนปุ่มไว้เหมือนเดิม
         $('#ApproveBtn').addClass('hidden');
         $('#ReturnBtn').addClass('hidden');
+        $('#DeleteBtn').addClass('hidden'); // โชว์
+        $('#upload-zone').removeClass('hidden');
     } else if (currentMode === '2') {
         const requesterValue = $('#REQUEST_BYTxt').val() || '';
 
         // แนะนำให้ใช้ .includes(empno) ตามเดิมเพื่อความแม่นยำในการตรวจจับข้อความยาว
         if (requesterValue.includes(empno)) {
+            // Requester
             $('#ApproveBtn').removeClass('hidden'); // โชว์
             $('#DeleteBtn').removeClass('hidden'); // โชว์
             $('#ReturnBtn').addClass('hidden'); // ซ่อน
-            $('#RejectBtn').addClass('hidden'); // ซ่อน
+            // $('#RejectBtn').addClass('hidden'); // ซ่อน
+            $('#upload-zone').removeClass('hidden');
         } else {
+            //All Approver
             $('#ApproveBtn').removeClass('hidden'); // โชว์
             $('#ReturnBtn').removeClass('hidden'); // โชว์
-            $('#RejectBtn').removeClass('hidden'); // โชว์
+            // $('#RejectBtn').removeClass('hidden'); // โชว์
+            $('#download-zone').removeClass('hidden'); // ผู้อนุมัติเข้ามาตรวจ ให้โหลดได้อย่างเดียว
+            loadExistingFiles(); // สั่งเรียกฟังก์ชันดึงรายการไฟล์มาแสดง
         }
     } else if (currentMode === '3') {
         // โหมดดูอย่างเดียว (View Mode) -> บังคับซ่อนทุกปุ่ม
         $('#ApproveBtn').addClass('hidden');
         $('#ReturnBtn').addClass('hidden');
+
+        $('#download-zone').removeClass('hidden'); // ผู้อนุมัติเข้ามาตรวจ ให้โหลดได้อย่างเดียว
+        loadExistingFiles(); // สั่งเรียกฟังก์ชันดึงรายการไฟล์มาแสดง
     }
 
     // 2. เรียกใช้พ่นสเต็ป Flow ของฝั่ง Webflow
@@ -111,6 +125,107 @@ $(document).ready(async function () {
         $('.load').addClass('hidden');
         $('#form').removeClass('hidden');
     }, 10);
+
+    // == Action Upload File
+    function loadExistingFiles() {
+        const formData = $('.form-info').data();
+
+        $.ajax({
+            url: host + 'feform/FE-EIA/form/GetUploadedFiles',
+            type: 'POST',
+            dataType: 'json',
+            data: {
+                NFRMNO: formData.nfrmno,
+                VORGNO: formData.vorgno,
+                CYEAR2: formData.cyear2,
+                NRUNNO: formData.nrunno,
+            },
+            success: function (response) {
+                if (
+                    response &&
+                    response.status === true &&
+                    response.files.length > 0
+                ) {
+                    $('#uploaded-files-list').empty();
+                    response.files.forEach(function (file) {
+                        // ประกอบ HTML ลิงก์ดาวน์โหลดโดยวิ่งผ่านคอนโทรลเลอร์ฝั่ง PHP เพื่อความปลอดภัยความปลอดภัยของ Path คลังไฟล์
+                        let downloadUrl =
+                            host +
+                            'feform/FE-EIA/form/DownloadFile?path=' +
+                            encodeURIComponent(file.FILE_PATH) +
+                            '&name=' +
+                            encodeURIComponent(file.FILE_ONAME);
+
+                        let itemHtml = `
+                            <li class="flex items-center justify-between py-2.5 px-3 text-sm hover:bg-slate-50 transition-colors">
+                                <div class="flex items-center gap-2.5 truncate">
+                                    <span class="text-lg">📁</span>
+                                    <span class="font-medium text-slate-700 truncate">${file.FILE_ONAME}</span>
+                                </div>
+                                <a href="${downloadUrl}" target="_blank" class="cursor-pointer inline-flex items-center gap-1 bg-slate-100 hover:bg-primary hover:text-white text-slate-600 font-semibold text-xs px-2.5 py-1.5 rounded-lg transition-all shadow-sm">
+                                    ⬇️ Download
+                                </a>
+                            </li>
+                        `;
+                        $('#uploaded-files-list').append(itemHtml);
+                    });
+                } else {
+                    $('#uploaded-files-list').html(
+                        '<li class="py-4 text-center text-xs font-medium text-slate-400">ℹ️ ไม่มีไฟล์แนบสำหรับเอกสารฉบับนี้</li>',
+                    );
+                }
+            },
+            error: function () {
+                console.error('ไม่สามารถเรียกรายการไฟล์แนบจากเซิร์ฟเวอร์ได้');
+            },
+        });
+    }
+
+    $(document).on('click', '#drop-zone', function (e) {
+        if (!$(e.target).is('input')) {
+            $('#files').trigger('click');
+        }
+    });
+
+    // อีเวนต์เมื่อไฟล์ใน Input มีการเปลี่ยนแปลง (เลือกไฟล์เข้ามา)
+    $(document).on('change', '#filesd', function () {
+        handleFileSelect(this.files);
+    });
+
+    // ลอจิกจัดการลากวางไฟล์ (Drag & Drop)
+    const dropZone = document.getElementById('drop-zone');
+    if (dropZone) {
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach((eventName) => {
+            dropZone.addEventListener(eventName, preventDefaults, false);
+        });
+        ['dragenter', 'dragover'].forEach((eventName) => {
+            dropZone.addEventListener(
+                eventName,
+                () =>
+                    $('#drop-zone').addClass('border-green-500 bg-green-50/20'),
+                false,
+            );
+        });
+        ['dragleave', 'drop'].forEach((eventName) => {
+            dropZone.addEventListener(
+                eventName,
+                () =>
+                    $('#drop-zone').removeClass(
+                        'border-green-500 bg-green-50/20',
+                    ),
+                false,
+            );
+        });
+        dropZone.addEventListener(
+            'drop',
+            (e) => {
+                handleFileSelect(e.dataTransfer.files);
+            },
+            false,
+        );
+    }
+
+    // == Action Upload File
 });
 
 function search() {
@@ -132,7 +247,9 @@ function search() {
     // 1. สั่งเปิดสปินเนอร์เพื่อแสดงสถานะการดึงข้อมูล
     $('#loading').show();
     var func = 'GetStockCostReal';
-    if (($('#REQUEST_BYTxt').val() || '').includes(empno)) {
+    if (currentMode === '3') {
+        func = 'GetFEEIADetail';
+    } else if (($('#REQUEST_BYTxt').val() || '').includes(empno)) {
         func = 'GetStockCostReal';
     } else {
         func = 'GetFEEIADetail';
@@ -465,76 +582,91 @@ async function actionFlow(actionType) {
         doc_no,
     } = formData;
 
-    var result = '0';
+    let result = '0';
+    const remarkTxt = $('#txtRemark').val() || '';
+    const payload = {
+        NFRMNO: nfrmno ? Number(nfrmno) : 0,
+        VORGNO: vorgno ? vorgno.toString() : '',
+        CYEAR: cyear ? cyear.toString() : '',
+        CYEAR2: cyear2 ? cyear2.toString() : '',
+        NRUNNO: nrunno ? Number(nrunno) : 0,
+        ACTION: actionType ? actionType.toString() : '',
+        EMPNO: empno ? empno.toString() : '',
+        REMARK: remarkTxt.toString(),
+    };
+
     try {
-        const remarkTxt = $('#txtRemark').val() || '';
-
-        const payload = {
-            NFRMNO: nfrmno ? Number(nfrmno) : 0,
-            VORGNO: vorgno ? vorgno.toString() : '',
-            CYEAR: cyear ? cyear.toString() : '',
-            CYEAR2: cyear2 ? cyear2.toString() : '',
-            NRUNNO: nrunno ? Number(nrunno) : 0,
-            ACTION: actionType ? actionType.toString() : '',
-            EMPNO: empno ? empno.toString() : '',
-            REMARK: remarkTxt.toString(),
-        };
-
-        console.log('dataOnhand:', dataOnhand);
-
+        // 1. ตรวจสอบว่าผู้ใช้งานคือ Requester หรือไม่
         if (($('#REQUEST_BYTxt').val() || '').includes(empno)) {
-            // 💡 เปลี่ยนตรงนี้: ใช้ await คุม $.ajax เพื่อบังคับให้ระบบรอจนกว่าหลังบ้านจะตอบกลับสำเร็จ
-            const response = await $.ajax({
+            // --- ขั้นตอนที่ 1: จัดการไฟล์ผ่าน NestJS API ---
+            let nestJsData = new FormData();
+            nestJsData.append('NFRMNO', nfrmno);
+            nestJsData.append('VORGNO', vorgno);
+            nestJsData.append('CYEAR', cyear);
+            nestJsData.append('CYEAR2', cyear2);
+            nestJsData.append('NRUNNO', nrunno);
+            nestJsData.append('CREATEBY', empno);
+            nestJsData.append('FORM_TYPE', 'FE');
+
+            if (typeof selectedFilesArray !== 'undefined') {
+                selectedFilesArray.forEach((file) => {
+                    if (file !== null) nestJsData.append('files', file);
+                });
+            }
+
+            // เรียกผ่าน Service ใน data.js ที่เตรียมไว้
+            const responseFile = await createFeEia(nestJsData);
+            if (!responseFile || !responseFile.status) {
+                throw new Error(
+                    responseFile?.message || 'อัปโหลดไฟล์ไป NestJS ไม่สำเร็จ',
+                );
+            }
+
+            // --- ขั้นตอนที่ 2: จัดการบันทึก Detail ผ่าน PHP AddFEEIADetail ---
+            let phpData = new FormData();
+            phpData.append('NFRMNO', nfrmno);
+            phpData.append('VORGNO', vorgno);
+            phpData.append('CYEAR', cyear);
+            phpData.append('CYEAR2', cyear2);
+            phpData.append('NRUNNO', nrunno);
+            phpData.append('DATAONHAND', JSON.stringify(dataOnhand));
+
+            const responsePhp = await $.ajax({
                 url: host + 'feform/FE-EIA/form/AddFEEIADetail',
                 type: 'POST',
+                data: phpData,
+                processData: false,
+                contentType: false,
                 dataType: 'json',
-                data: {
-                    NFRMNO: nfrmno,
-                    VORGNO: vorgno,
-                    CYEAR: cyear,
-                    CYEAR2: cyear2,
-                    NRUNNO: nrunno,
-                    EMPNO: empno,
-                    COST_YEAR: cost_year,
-                    COST_MONTH: cost_month,
-                    DOC_NO: doc_no,
-                    DATAONHAND: JSON.stringify(dataOnhand), // สรุปส่งสตริงแบบปลอดภัยสอดคล้องกับตารางย่อยตัวใหม่
-                },
             });
 
             if (
-                response &&
-                (response.status ||
-                    response.status === 'true' ||
-                    response.status === true)
+                responsePhp &&
+                (responsePhp.status === true || responsePhp.status === 'true')
             ) {
-                result = '1';
+                result = '1'; // ผ่านทั้ง NestJS และ PHP
             } else {
-                alert(
-                    'ไม่สามารถบันทึกข้อมูลในตารางได้: ' +
-                        (response.message || 'โปรดตรวจสอบข้อผิดพลาดในระบบ'),
+                throw new Error(
+                    responsePhp?.message || 'บันทึกข้อมูลตารางไม่สำเร็จ',
                 );
-                result = '0';
             }
         } else {
+            // กรณีผู้อนุมัติ (Approver) ไม่ต้องอัปโหลดไฟล์ใหม่
             result = '1';
         }
 
+        // --- ขั้นตอนที่ 3: ดำเนินการ Flow (Action) ---
         if (result === '1') {
             const res = await doaction(payload);
-
-            if (res?.status || res?.status === 'true' || res?.status === true) {
-                redirectWebflow();
+            if (res?.status || res?.status === true || res?.status === 'true') {
+                redirectWebflow(); // Redirect เมื่อทุกอย่างสำเร็จ
             } else {
-                alert(
-                    'ไม่สามารถส่งฟอร์มได้: ' +
-                        (res?.message || 'โปรดตรวจสอบข้อผิดพลาดในระบบ'),
-                );
+                throw new Error(res?.message || 'ไม่สามารถส่งฟอร์มได้');
             }
         }
     } catch (error) {
-        console.error('Webflow Action Error:', error);
-        alert('เกิดข้อผิดพลาดในการส่ง Action: ' + error.message);
+        console.error('Action Flow Error:', error);
+        alert('เกิดข้อผิดพลาด: ' + error.message);
         $('#loading').hide();
     }
 }
@@ -542,3 +674,49 @@ async function actionFlow(actionType) {
 function submitWebflowAction(actionType) {
     alert('ระบบ Webflow กำลังประมวลผลสถานะ: ' + actionType);
 }
+
+function preventDefaults(e) {
+    e.preventDefault();
+    e.stopPropagation();
+}
+
+// == Action Upload File
+// ฟังก์ชันแรปรายชื่อไฟล์มาพ่นโชว์บน UI และเก็บเข้า Array
+function handleFileSelect(files) {
+    if (files.length === 0) return;
+
+    $('#file-list-container').removeClass('hidden');
+
+    for (let i = 0; i < files.length; i++) {
+        selectedFilesArray.push(files[i]);
+
+        // วาด UI แสดงผลไฟล์แต่ละตัว
+        let fileId = selectedFilesArray.length - 1;
+        let fileSize = (files[i].size / (1024 * 1024)).toFixed(2) + ' MB';
+
+        let itemHtml = `
+                <li class="flex items-center justify-between py-2 px-3 text-sm text-slate-700 font-medium bg-slate-50/50 rounded-lg mb-1" id="file-item-${fileId}">
+                    <div class="flex items-center gap-2 truncate">
+                        <span class="text-slate-400">📄</span>
+                        <span class="truncate">${files[i].name}</span>
+                        <span class="text-xs text-slate-400">(${fileSize})</span>
+                    </div>
+                    <button type="button" class="text-rose-500 hover:text-rose-700 text-xs font-bold px-2 cursor-pointer btn-remove-file" data-id="${fileId}">Remove</button>
+                </li>
+            `;
+        $('#selected-files-list').append(itemHtml);
+    }
+}
+
+// อีเวนต์การกดลบไฟล์ที่ไม่เอาออกจากลิสต์
+$(document).on('click', '.btn-remove-file', function () {
+    let id = $(this).data('id');
+    $(`#file-item-${id}`).remove();
+    // นำออกจากอาเรย์ชั่วคราว
+    selectedFilesArray[id] = null;
+    if ($('#selected-files-list li').length === 0) {
+        $('#file-list-container').addClass('hidden');
+    }
+});
+
+// == Action Upload File

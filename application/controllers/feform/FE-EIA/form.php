@@ -28,6 +28,8 @@ class form extends MY_Controller{
         $this->load->model('user_model', 'usr');
         $this->load->model('feform/FE-EIA/eia_model', 'MainModel');
         $this->mimsBase = 'MIMS';
+        $this->upload_path = $_ENV['AMEC_FILE_PATH'] . ($this->_servername() == 'amecweb' ? 'production' : 'development') . "/Form/FE/FE_EIA/";
+        
     }
     //https://amecwebtest.mitsubishielevatorasia.co.th/form/feform/FE-EIA/form/main?no=11&orgNo=051001&y=26&y2=2026&runNo=1&m=3&empno=13204&bp=%2Fformtest%2Fworkflow%2FmineList%2Easp&menu=1
     // http://localhost:8080/form/isform/IS-TID/form/main/?no=17&orgNo=050601&y=16&empno=13204&bp=http://webflow.mitsubishielevatorasia.co.th/formtest/is/create.asp
@@ -208,19 +210,17 @@ class form extends MY_Controller{
                 'NRUNNO' => $NRUNNO
             ];
 
-            // 1. ดึงฐานข้อมูลกลุ่ม MIMS มาเปิดการใช้งาน
+            // -------------------------------------------------------------------------
+            // ส่วนที่ 1: บันทึกข้อมูลตาราง EIA Detail ลง Oracle MIMS (ตรรกะเดิมที่นิ่งแล้ว)
+            // -------------------------------------------------------------------------
             $db_mims = $this->load->database('MIMS', TRUE);
-
-            // 2. ล้างข้อมูลรายละเอียดเก่าออกก่อนเพื่อป้องกันการ Insert ซ้ำ (กรณีตรวจสอบซ้ำหรือแก้ไข)
             $db_mims->delete('WPS_MIMS_EIAFORMDETAIL', $formKeys);
 
-            // 3. รับและถอดรหัสก้อนข้อมูลจากหน้าบ้าน
             $dataOnhandRaw = $this->input->post('DATAONHAND');
             $dataOnhandArray = is_string($dataOnhandRaw) ? json_decode($dataOnhandRaw, true) : $dataOnhandRaw;
 
             if (!empty($dataOnhandArray) && is_array($dataOnhandArray)) {
                 foreach ($dataOnhandArray as $row) {
-                    // 💡 ลอจิกแปลงชื่อคีย์: จับคู่ COST_YEAR และ COST_MONTH จาก JS แตกเข้าคอลัมน์ในตารางใหม่
                     $detailData = array_merge($formKeys, [
                         'COST_MONTH'        => (string)($row['COST_MONTH'] ?? ''),
                         'COST_YEAR'         => (string)($row['COST_YEAR'] ?? ''),
@@ -228,12 +228,13 @@ class form extends MY_Controller{
                         'RECEIVED_AMOUNT'   => (float)($row['RECEIVED_AMOUNT'] ?? 0),
                         'ISSUE_AMOUNT'      => (float)($row['ISSUE_AMOUNT'] ?? 0),
                         'TOTAL_COST_ONHAND' => (float)($row['TOTAL_COST_ONHAND'] ?? 0),
-                        'DIFF'              => (float)($row['DIFF'] ?? 0),
+                        'DIFF'              => (float)($row['DIFF'] ?? 0)
+                        // 💡 หมายเหตุ: ตัด 'CREATE_DATE' ออกแล้ว เพื่อให้โครงสร้างใช้ DEFAULT SYSDATE ของ Oracle ป้องกัน ORA-01861
                     ]);
-
                     $db_mims->insert('WPS_MIMS_EIAFORMDETAIL', $detailData);
                 }
             }
+
 
             return $this->output
                         ->set_content_type('application/json')
@@ -245,6 +246,9 @@ class form extends MY_Controller{
                         ->set_output(json_encode(['status' => false, 'message' => 'Error: ' . $e->getMessage()]));
         }
     }
+
+   
+
     public function DeleteFEEIAForm()
     {
         try {
@@ -666,6 +670,51 @@ class form extends MY_Controller{
             </table>
         </body>
         </html>';
+    }
+
+    // =========================================================================
+    // 1. ดึงรายการไฟล์แนบจากฐานข้อมูลมาโชว์ในโหมดดูอย่างเดียว (Mode 3)
+    // =========================================================================
+    public function GetUploadedFiles()
+    {
+        $NFRMNO  = (int)$this->input->post('NFRMNO');
+        $VORGNO  = (string)$this->input->post('VORGNO');
+        $CYEAR2  = (string)$this->input->post('CYEAR2');
+        $NRUNNO  = (int)$this->input->post('NRUNNO');
+
+        $db_webflow = $this->load->database('DEFAULT', TRUE); 
+        
+        // คิวรีรายชื่อไฟล์ตรงๆ จากตารางกลุ่มแผนกของคุณตามสเปก NestJS (FORM_TYPEต่อท้ายด้วย_FILE)
+        $sql = "SELECT FILE_ID, NFRMNO, VORGNO, CYEAR2, NRUNNO, FILE_ONAME, FILE_PATH 
+                FROM FE_FILE 
+                WHERE NFRMNO = ? AND VORGNO = ? AND CYEAR2 = ? AND NRUNNO = ?
+                ORDER BY FILE_ID ASC";
+
+        $files = $db_webflow->query($sql, [$NFRMNO, $VORGNO, $CYEAR2, $NRUNNO])->result();
+
+        return $this->output
+                    ->set_content_type('application/json')
+                    ->set_output(json_encode([
+                        'status' => true,
+                        'files'  => $files
+                    ]));
+    }
+
+    // =========================================================================
+    // 2. ฟังก์ชันส่วนกลางสำหรับการกวาดไฟล์จากตำแหน่ง Network Path ดาวน์โหลดลงเครื่องผู้ใช้
+    // =========================================================================
+    public function DownloadFile()
+    {
+        $filePath = $this->input->get('path'); // เช่น \\amecnas\AMECWEB\File\...\xxx.pdf
+        $fileName = $this->input->get('name'); // ชื่อไฟล์ดั้งเดิมภาษาไทยตอนบันทึก
+
+        if (file_exists($filePath)) {
+            $this->load->helper('download');
+            // ทำการสตรีมดึงพัสดุไฟล์ส่งตรงถึงหน้าจอเบราว์เซอร์ทันที
+            force_download($fileName, file_get_contents($filePath));
+        } else {
+            show_error('ขออภัยครับ ไม่พบตัวไฟล์จริงในคลังจัดเก็บไฟล์ของเน็ตเวิร์กเซิร์ฟเวอร์', 404);
+        }
     }
 
 }
