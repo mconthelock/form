@@ -112,6 +112,107 @@ class form extends MY_Controller{
     }
 
 
+    //==============================================================================================================
+    //=== 202605
+    //=== Auto Create form WebFlow  Maintenance Stock Cost Report
+    //=== Case Monthy Report /1/2025/01/
+    //== Case Yearly Report /1/2026/all/
+    // http://localhost:8080/form/feform/FE-EIA/form/AutoCreateFEEIAForm/?COST_YEAR=2026&COST_MONTH=01
+    // http://localhost:8080/form/feform/FE-EIA/form/AutoCreateFEEIAForm/?COST_YEAR=2026&COST_MONTH=ALL
+    //==============================================================================================================
+    public function AutoCreateFEEIAForm()
+    {
+        try {
+            // ดึงค่าจาก Query String พร้อมใส่ค่า Default ด้วยเครื่องหมาย ?? 
+            $COST_YEAR  = $this->input->get('COST_YEAR') ?? date('Y');
+            $COST_MONTH = $this->input->get('COST_MONTH') ?? date('m');
+
+            $sql = "SELECT * FROM WPS_MIMS_EIAFORM_USERCREATE WHERE 1=1";
+            $REQBY = $this->MainModel->QuerySetBase($sql, $this->mimsBase)->result();
+            
+            $form = $this->getFormMasterByVaname('FE-EIA');
+            
+            if (!empty($form) && (isset($form['status']) && $form['status'] === 'true')) {
+                
+                $formData = $form['data']; 
+                
+                $empNo = (!empty($REQBY) && isset($REQBY[0]->REQBY)) ? $REQBY[0]->REQBY : '13204';
+
+                $data = [
+                    'NFRMNO'  => $formData['NNO'],     
+                    'VORGNO'  => $formData['VORGNO'],   
+                    'CYEAR'   => $formData['CYEAR'],    
+                    'REQBY'   => $empNo,                
+                    'INPUTBY' => $empNo,
+                    'REMARK'  => '',
+                    'DRAFT'   => '0', // ส่งค่าสร้างโพลว์ทันที
+                ];
+
+                // 1. เรียกใช้งานฟังก์ชันสร้างฟอร์มหลักของระบบ Webflow
+                $rsf = $this->createForm($data);
+                
+                if ($rsf['status']) {
+                    // ดึงค่า CYEAR2 และ NRUNNO ที่ระบบสร้างให้มาผูกเพิ่มเข้าก้อนข้อมูล $data
+                    $data["CYEAR2"]  = $rsf["data"]["CYEAR2"];
+                    $data["NRUNNO"]  = $rsf["data"]["NRUNNO"];
+
+                    // 2. ประกอบฟอร์แมตเลขเอกสาร (e.g., FE-EIA-26-000004)
+                    $docNo = "FE-EIA-" . $data["CYEAR2"] . "-" . str_pad($data["NRUNNO"], 6, "0", STR_PAD_LEFT);
+
+                    // 3. จัดเตรียมชุดข้อมูลให้ตรงกับโครงสร้างตาราง Oracle (WPS_MIMS_EIAFORM)
+                    $mscFormData = array(
+                        'NFRMNO'      => $data["NFRMNO"],
+                        'VORGNO'      => $data["VORGNO"],
+                        'CYEAR'       => $data["CYEAR"],
+                        'CYEAR2'      => $data["CYEAR2"],
+                        'NRUNNO'      => $data["NRUNNO"],
+                        'DOC_NO'      => $docNo,
+                        'VIEW_TYPE'   => '1',
+                        'COST_YEAR'   => $COST_YEAR,  
+                        'COST_MONTH'  => $COST_MONTH, 
+                        'WORK_CON'    => 'Auto generated report',
+                        'REASON'      => '', 
+                        'EMPNO'       => $empNo, 
+                        'STATUS'      => '1'
+                    );
+
+                    // 4. บันทึกลงฐานข้อมูลย่อยกลุ่ม MIMS
+                    $db_mims = $this->load->database('MIMS', TRUE);
+                    $db_mims->insert('WPS_MIMS_EIAFORM', $mscFormData);
+
+                    // สั่งคืนค่าแจ้งสถานะ JSON ออกบนหน้าเว็บเพื่อความสะดวกในการตรวจสอบ
+                    return $this->output
+                                ->set_content_type('application/json')
+                                ->set_output(json_encode(array(
+                                    'status' => true,
+                                    'message' => 'Created successfully',
+                                    'doc_no' => $docNo,
+                                    'data' => $mscFormData
+                                )));
+
+                } else {
+                    return $this->output
+                                ->set_content_type('application/json')
+                                ->set_output(json_encode(array(
+                                    'status' => false,
+                                    'message' => 'Failed to create main Webflow form'
+                                )));
+                }
+
+                // == Email Notification (Optional)
+                
+            }
+
+        } catch (Exception $error) {
+            return $this->output
+                        ->set_content_type('application/json')
+                        ->set_output(json_encode(array(
+                            'status' => false,
+                            'message' => 'Error: ' . $error->getMessage()
+                        )));
+        }
+    }
+
     public function GetStockCostReal()
     {
         
@@ -284,106 +385,6 @@ class form extends MY_Controller{
     }
 
 
-    //==============================================================================================================
-    //=== 202605
-    //=== Auto Create form WebFlow  Maintenance Stock Cost Report
-    //=== Case Monthy Report /1/2025/01/
-    //== Case Yearly Report /1/2026/all/
-    // http://localhost:8080/form/feform/FE-EIA/form/AutoCreateFEEIAForm/?COST_YEAR=2026&COST_MONTH=01
-    // http://localhost:8080/form/feform/FE-EIA/form/AutoCreateFEEIAForm/?COST_YEAR=2026&COST_MONTH=ALL
-    //==============================================================================================================
-    public function AutoCreateFEEIAForm()
-    {
-        try {
-            // ดึงค่าจาก Query String พร้อมใส่ค่า Default ด้วยเครื่องหมาย ?? 
-            $COST_YEAR  = $this->input->get('COST_YEAR') ?? date('Y');
-            $COST_MONTH = $this->input->get('COST_MONTH') ?? date('m');
-
-            $sql = "SELECT * FROM WPS_MIMS_EIAFORM_USERCREATE WHERE 1=1";
-            $REQBY = $this->MainModel->QuerySetBase($sql, $this->mimsBase)->result();
-            
-            $form = $this->getFormMasterByVaname('FE-EIA');
-            
-            if (!empty($form) && (isset($form['status']) && $form['status'] === 'true')) {
-                
-                $formData = $form['data']; 
-                
-                $empNo = (!empty($REQBY) && isset($REQBY[0]->REQBY)) ? $REQBY[0]->REQBY : '13204';
-
-                $data = [
-                    'NFRMNO'  => $formData['NNO'],     
-                    'VORGNO'  => $formData['VORGNO'],   
-                    'CYEAR'   => $formData['CYEAR'],    
-                    'REQBY'   => $empNo,                
-                    'INPUTBY' => $empNo,
-                    'REMARK'  => '',
-                    'DRAFT'   => '0', // ส่งค่าสร้างโพลว์ทันที
-                ];
-
-                // 1. เรียกใช้งานฟังก์ชันสร้างฟอร์มหลักของระบบ Webflow
-                $rsf = $this->createForm($data);
-                
-                if ($rsf['status']) {
-                    // ดึงค่า CYEAR2 และ NRUNNO ที่ระบบสร้างให้มาผูกเพิ่มเข้าก้อนข้อมูล $data
-                    $data["CYEAR2"]  = $rsf["data"]["CYEAR2"];
-                    $data["NRUNNO"]  = $rsf["data"]["NRUNNO"];
-
-                    // 2. ประกอบฟอร์แมตเลขเอกสาร (e.g., FE-EIA-26-000004)
-                    $docNo = "FE-EIA-" . $data["CYEAR2"] . "-" . str_pad($data["NRUNNO"], 6, "0", STR_PAD_LEFT);
-
-                    // 3. จัดเตรียมชุดข้อมูลให้ตรงกับโครงสร้างตาราง Oracle (WPS_MIMS_EIAFORM)
-                    $mscFormData = array(
-                        'NFRMNO'      => $data["NFRMNO"],
-                        'VORGNO'      => $data["VORGNO"],
-                        'CYEAR'       => $data["CYEAR"],
-                        'CYEAR2'      => $data["CYEAR2"],
-                        'NRUNNO'      => $data["NRUNNO"],
-                        'DOC_NO'      => $docNo,
-                        'VIEW_TYPE'   => '1',
-                        'COST_YEAR'   => $COST_YEAR,  
-                        'COST_MONTH'  => $COST_MONTH, 
-                        'WORK_CON'    => 'Auto generated report',
-                        'REASON'      => '', 
-                        'EMPNO'       => $empNo, 
-                        'STATUS'      => '1'
-                    );
-
-                    // 4. บันทึกลงฐานข้อมูลย่อยกลุ่ม MIMS
-                    $db_mims = $this->load->database('MIMS', TRUE);
-                    $db_mims->insert('WPS_MIMS_EIAFORM', $mscFormData);
-
-                    // สั่งคืนค่าแจ้งสถานะ JSON ออกบนหน้าเว็บเพื่อความสะดวกในการตรวจสอบ
-                    return $this->output
-                                ->set_content_type('application/json')
-                                ->set_output(json_encode(array(
-                                    'status' => true,
-                                    'message' => 'Created successfully',
-                                    'doc_no' => $docNo,
-                                    'data' => $mscFormData
-                                )));
-
-                } else {
-                    return $this->output
-                                ->set_content_type('application/json')
-                                ->set_output(json_encode(array(
-                                    'status' => false,
-                                    'message' => 'Failed to create main Webflow form'
-                                )));
-                }
-
-                // == Email Notification (Optional)
-                
-            }
-
-        } catch (Exception $error) {
-            return $this->output
-                        ->set_content_type('application/json')
-                        ->set_output(json_encode(array(
-                            'status' => false,
-                            'message' => 'Error: ' . $error->getMessage()
-                        )));
-        }
-    }
 
     public function exportPdf()
     {
@@ -685,7 +686,7 @@ class form extends MY_Controller{
         $db_webflow = $this->load->database('DEFAULT', TRUE); 
         
         // คิวรีรายชื่อไฟล์ตรงๆ จากตารางกลุ่มแผนกของคุณตามสเปก NestJS (FORM_TYPEต่อท้ายด้วย_FILE)
-        $sql = "SELECT FILE_ID, NFRMNO, VORGNO, CYEAR2, NRUNNO, FILE_ONAME, FILE_PATH 
+        $sql = "SELECT FILE_ID, NFRMNO, VORGNO, CYEAR2, NRUNNO, FILE_ONAME,FILE_FNAME, FILE_PATH 
                 FROM FE_FILE 
                 WHERE NFRMNO = ? AND VORGNO = ? AND CYEAR2 = ? AND NRUNNO = ?
                 ORDER BY FILE_ID ASC";
@@ -703,17 +704,33 @@ class form extends MY_Controller{
     // =========================================================================
     // 2. ฟังก์ชันส่วนกลางสำหรับการกวาดไฟล์จากตำแหน่ง Network Path ดาวน์โหลดลงเครื่องผู้ใช้
     // =========================================================================
+    // public function DownloadFile()
+    // {
+    //     $filePath = $this->input->get('path'); // เช่น \\amecnas\AMECWEB\File\...\xxx.pdf
+    //     $fileName = $this->input->get('name'); // ชื่อไฟล์ดั้งเดิมภาษาไทยตอนบันทึก
+
+    //     if (file_exists($filePath)) {
+    //         $this->load->helper('download');
+    //         // ทำการสตรีมดึงพัสดุไฟล์ส่งตรงถึงหน้าจอเบราว์เซอร์ทันที
+    //         force_download($fileName, file_get_contents($filePath));
+    //     } else {
+    //         show_error('ขออภัยครับ ไม่พบตัวไฟล์จริงในคลังจัดเก็บไฟล์ของเน็ตเวิร์กเซิร์ฟเวอร์', 404);
+    //     }
+    // }
+
     public function DownloadFile()
     {
-        $filePath = $this->input->get('path'); // เช่น \\amecnas\AMECWEB\File\...\xxx.pdf
-        $fileName = $this->input->get('name'); // ชื่อไฟล์ดั้งเดิมภาษาไทยตอนบันทึก
+        $file_id = $this->input->get('id'); // รับเป็น ID แทน Path
+        
+        // 1. ไปดึง Path จาก Database ตาม ID (ปลอดภัยกว่า)
+        $db_webflow = $this->load->database('DEFAULT', TRUE);
+        $file = $db_webflow->get_where('FE_FILE', ['FILE_ID' => $file_id])->row();
 
-        if (file_exists($filePath)) {
+        if ($file && file_exists($file->FILE_PATH)) {
             $this->load->helper('download');
-            // ทำการสตรีมดึงพัสดุไฟล์ส่งตรงถึงหน้าจอเบราว์เซอร์ทันที
-            force_download($fileName, file_get_contents($filePath));
+            force_download($file->FILE_FNAME, file_get_contents($file->FILE_PATH));
         } else {
-            show_error('ขออภัยครับ ไม่พบตัวไฟล์จริงในคลังจัดเก็บไฟล์ของเน็ตเวิร์กเซิร์ฟเวอร์', 404);
+            show_error('ไม่พบไฟล์หรือไม่มีสิทธิ์เข้าถึง', 404);
         }
     }
 

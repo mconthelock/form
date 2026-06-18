@@ -151,10 +151,8 @@ $(document).ready(async function () {
                         // ประกอบ HTML ลิงก์ดาวน์โหลดโดยวิ่งผ่านคอนโทรลเลอร์ฝั่ง PHP เพื่อความปลอดภัยความปลอดภัยของ Path คลังไฟล์
                         let downloadUrl =
                             host +
-                            'feform/FE-EIA/form/DownloadFile?path=' +
-                            encodeURIComponent(file.FILE_PATH) +
-                            '&name=' +
-                            encodeURIComponent(file.FILE_ONAME);
+                            'feform/FE-EIA/form/DownloadFile?id=' +
+                            encodeURIComponent(file.FILE_ID);
 
                         let itemHtml = `
                             <li class="flex items-center justify-between py-2.5 px-3 text-sm hover:bg-slate-50 transition-colors">
@@ -185,10 +183,13 @@ $(document).ready(async function () {
         if (!$(e.target).is('input')) {
             $('#files').trigger('click');
         }
+        if (!$(e.target).hasClass('btn-remove-file')) {
+            $('#files').trigger('click');
+        }
     });
 
     // อีเวนต์เมื่อไฟล์ใน Input มีการเปลี่ยนแปลง (เลือกไฟล์เข้ามา)
-    $(document).on('change', '#filesd', function () {
+    $(document).on('change', '#files', function () {
         handleFileSelect(this.files);
     });
 
