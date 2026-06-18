@@ -720,17 +720,24 @@ class form extends MY_Controller{
 
     public function DownloadFile()
     {
-        $file_id = $this->input->get('id'); // รับเป็น ID แทน Path
+        $file_id = $this->input->get('id'); 
         
-        // 1. ไปดึง Path จาก Database ตาม ID (ปลอดภัยกว่า)
         $db_webflow = $this->load->database('DEFAULT', TRUE);
         $file = $db_webflow->get_where('FE_FILE', ['FILE_ID' => $file_id])->row();
 
-        if ($file && file_exists($file->FILE_PATH)) {
-            $this->load->helper('download');
-            force_download($file->FILE_FNAME, file_get_contents($file->FILE_PATH));
+        if ($file) {
+            $fullPath = rtrim($file->FILE_PATH, '/\\') . DIRECTORY_SEPARATOR . $file->FILE_FNAME;
+
+            if (file_exists($fullPath)) {
+                $this->load->helper('download');
+                
+                // ใช้ FILE_ONAME เป็นชื่อตอนโหลดลงเครื่อง และอ่านไฟล์จาก $fullPath
+                force_download($file->FILE_ONAME, file_get_contents($fullPath));
+            } else {
+                show_error('ไม่พบไฟล์จริงในระบบ: ' . $fullPath, 404);
+            }
         } else {
-            show_error('ไม่พบไฟล์หรือไม่มีสิทธิ์เข้าถึง', 404);
+            show_error('ไม่พบข้อมูลไฟล์ในฐานข้อมูล', 404);
         }
     }
 
