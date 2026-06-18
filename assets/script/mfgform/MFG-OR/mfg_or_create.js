@@ -17,7 +17,6 @@ $(document).ready(function () {
         init: function () {
             this.bindEvents();
             this.initRequestBy();
-            this.initApplyForOptions();
             this.initRadioTextbox();
         },
 
@@ -56,10 +55,6 @@ $(document).ready(function () {
         bindRadioEvents: function () {
             $('input[name="type_form"]').on('change', function () {
                 OR.toggleTypeForm();
-            });
-
-            $('input[name="item_type"]').on('change', function () {
-                OR.toggleItemType();
             });
         },
 
@@ -102,7 +97,7 @@ $(document).ready(function () {
                 $('#next_rev').text(nextRev);
                 $('#current_topic').text(res.data.TOPIC || '-');
                 $('#rev').val(nextRev);
-
+                $('#topic').val(currentTopic);
                 $('#current_info').removeClass('hidden');
             } catch (error) {
                 console.error('SEARCH CURRENT NO ERROR:', error);
@@ -175,33 +170,8 @@ $(document).ready(function () {
             $('#ssec').val($.trim(user?.SSEC));
         },
 
-        initApplyForOptions: function () {
-            const list = [
-                'BS,SH,GC',
-                'PR',
-                'PB,PS',
-                'TP,IW',
-                'EW,AG,YS,SY',
-                'RL',
-                'VM',
-                'HB',
-                'HG',
-                'BD,RD,SD',
-                'MC,NL',
-                'AC,WC',
-                'ASSY',
-                'Other'
-            ];
-
-            $('#apply_for')
-                .empty()
-                .append('<option value="">--- Please select ---</option>')
-                .append(list.map(item => `<option value="${item}">${item}</option>`).join(''));
-        },
-
         initRadioTextbox: function () {
             this.toggleTypeForm();
-            this.toggleItemType();
         },
 
         toggleTypeForm: function () {
@@ -213,13 +183,6 @@ $(document).ready(function () {
             if (!isRevise) {
                 this.resetCurrentNoInfo();
             }
-        },
-
-        toggleItemType: function () {
-            const itemType = $('input[name="item_type"]:checked').val();
-
-            this.toggleTextbox(itemType === 'ALL', '#overall_item');
-            this.toggleTextbox(itemType === 'OR', '#or_item');
         },
 
         toggleTextbox: function (isActive, selector) {
@@ -239,22 +202,10 @@ $(document).ready(function () {
             if (!$('input[name="type_form"]:checked').val()) errors.push('Type Form');
             if (!$('input[name="classification"]:checked').val()) errors.push('Classification');
             if (!$.trim($('#topic').val())) errors.push('Topic');
-            if (!$('input[name="item_type"]:checked').val()) errors.push('Item Type');
-            if (!$('#apply_for').val()) errors.push('Apply For');
 
             if ($('input[name="type_form"]:checked').val() === 'REVISE'
                 && !$.trim($('#current_no').val())) {
                 errors.push('Current No.');
-            }
-
-            if ($('input[name="item_type"]:checked').val() === 'ALL'
-                && !$.trim($('#overall_item').val())) {
-                errors.push('Overall Item');
-            }
-
-            if ($('input[name="item_type"]:checked').val() === 'OR'
-                && !$.trim($('#or_item').val())) {
-                errors.push('OR Item');
             }
 
             if ($('#or_excel')[0].files.length === 0) errors.push('OR Excel File');
@@ -341,7 +292,6 @@ $(document).ready(function () {
         getFormPayload: function (webflowData = {}, uploadedFiles = []) {
             const typeform = String($('input[name="type_form"]:checked').val() || '');
             const currentNo = $.trim($('#current_no').val()) || null;
-            const itemType = String($('input[name="item_type"]:checked').val() || '');
 
             return {
                 NFRMNO: Number(webflowData.NFRMNO || $('#nfrmno').val()),
@@ -357,20 +307,12 @@ $(document).ready(function () {
                 SSEC: String($('#ssec').val() || ''),
 
                 TYPEFORM: typeform,
-                ORNO: typeform === 'REVISE' ? currentNo : null,
+                ORNO: typeform === 'REVISE'? $.trim($('#current_no').val()) || null: null,
+                REV: typeform === 'REVISE' ? $.trim($('#next_rev').text()) || null : '*',
+                SEQNO: typeform === 'REVISE' ? Number(currentNo.slice(-3)): null,
 
                 CLASS: String($('input[name="classification"]:checked').val() || ''),
                 TOPIC: $.trim($('#topic').val()) || null,
-                DWGNO: $.trim($('#dwg_no').val()) || null,
-                SHOPNO: $.trim($('#shop_no').val()) || null,
-
-                ITEMNO: itemType === 'ALL'
-                    ? $.trim($('#overall_item').val()) || null
-                    : $.trim($('#or_item').val()) || null,
-
-                APPLY_FOR: String($('#apply_for').val() || ''),
-                SEQNO: null,
-                REV: $.trim($('#rev').val()) || '*',
 
                 att: uploadedFiles.map(file => ({
                     FILENAME: file

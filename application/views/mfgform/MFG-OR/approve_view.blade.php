@@ -104,42 +104,6 @@
 
                     <tr class="border-b border-[#b7c8dc]">
                         <th class="w-[320px] border-r border-[#b7c8dc] bg-indigo-50 px-4 py-3 text-left align-middle font-black leading-[1.4] text-indigo-700">
-                            DWG No
-                        </th>
-                        <td class="px-4 py-3 align-middle font-bold leading-[1.45] text-slate-950">
-                            <div id="v_dwg_no" class="min-h-[28px] whitespace-pre-wrap font-extrabold text-slate-950">-</div>
-                        </td>
-                    </tr>
-
-                    <tr class="border-b border-[#b7c8dc]">
-                        <th class="w-[320px] border-r border-[#b7c8dc] bg-indigo-50 px-4 py-3 text-left align-middle font-black leading-[1.4] text-indigo-700">
-                            Shop No
-                        </th>
-                        <td class="px-4 py-3 align-middle font-bold leading-[1.45] text-slate-950">
-                            <div id="v_shop_no" class="min-h-[28px] whitespace-pre-wrap font-extrabold text-slate-950">-</div>
-                        </td>
-                    </tr>
-
-                    <tr class="border-b border-[#b7c8dc]">
-                        <th class="w-[320px] border-r border-[#b7c8dc] bg-indigo-50 px-4 py-3 text-left align-middle font-black leading-[1.4] text-indigo-700">
-                            Item No
-                        </th>
-                        <td class="px-4 py-3 align-middle font-bold leading-[1.45] text-slate-950">
-                            <div id="v_item_no" class="min-h-[28px] whitespace-pre-wrap font-extrabold text-slate-950">-</div>
-                        </td>
-                    </tr>
-
-                    <tr class="border-b border-[#b7c8dc]">
-                        <th class="w-[320px] border-r border-[#b7c8dc] bg-indigo-50 px-4 py-3 text-left align-middle font-black leading-[1.4] text-indigo-700">
-                            Apply For
-                        </th>
-                        <td class="px-4 py-3 align-middle font-bold leading-[1.45] text-slate-950">
-                            <div id="v_apply_for" class="min-h-[28px] whitespace-pre-wrap font-extrabold text-slate-950">-</div>
-                        </td>
-                    </tr>
-
-                    <tr class="border-b border-[#b7c8dc]">
-                        <th class="w-[320px] border-r border-[#b7c8dc] bg-indigo-50 px-4 py-3 text-left align-middle font-black leading-[1.4] text-indigo-700">
                             Attach File (Excel)
                         </th>
                         <td class="px-4 py-3 align-middle font-bold leading-[1.45] text-slate-950">

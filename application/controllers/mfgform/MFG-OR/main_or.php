@@ -210,7 +210,7 @@ class main_or extends MY_Controller {
             echo json_encode([
                 'status' => true,
                 'pdf' => basename($pdfPath)
-]);
+            ]);
         } catch (Exception $e) {
             echo json_encode([
                 'status' => false,
