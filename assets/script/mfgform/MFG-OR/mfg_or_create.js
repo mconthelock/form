@@ -349,7 +349,7 @@ $(document).ready(function () {
                         text: 'ระบบได้ทำการบันทึกข้อมูลเรียบร้อยแล้ว'
                     });
 
-                    // redirectWebflow(); // เดี๋ยวค่อยเปิดใช้ภายหลัง
+                    redirectWebflow(); 
                 } else {
                     this.showAlert({
                         icon: 'error',
@@ -357,7 +357,7 @@ $(document).ready(function () {
                         text: res.message || ''
                     });
                 }
-
+            
             } catch (error) {
                 console.log(error);
                 console.log(JSON.stringify(error));
