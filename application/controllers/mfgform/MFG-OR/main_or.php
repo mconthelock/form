@@ -78,56 +78,39 @@ class main_or extends MY_Controller {
             $formno = $this->toFormNumber($nfrmno, $vorgno, $cyear, $cyear2, $nrunno);
             $targetPath = rtrim($this->upload_path, "/\\") . DIRECTORY_SEPARATOR . $formno . DIRECTORY_SEPARATOR;
 
-            if (!is_dir($targetPath)) {
-                mkdir($targetPath, 0777, true);
-            }
+            if (!is_dir($targetPath)) { mkdir($targetPath, 0777, true); }
 
             if (empty($_FILES['filUpload_ref']['name'])) {
-                echo json_encode([
-                    'status' => true,
-                    'message' => 'No file',
-                    'files' => []
-                ]);
+                echo json_encode(['status' => true, 'message' => 'No file', 'files' => []]);
                 return;
             }
 
             $file = $_FILES['filUpload_ref'];
-            $countfiles = count($file['name']);
             $uploadedFiles = [];
+            $countfiles = count($file['name']);
 
             for ($i = 0; $i < $countfiles; $i++) {
-                if (empty($file['name'][$i])) {
-                    continue;
-                }
+                if (empty($file['name'][$i])) { continue; }
 
-                $originalName = trim($file['name'][$i]);
-                $ext = pathinfo($originalName, PATHINFO_EXTENSION);
-                $nameOnly = pathinfo($originalName, PATHINFO_FILENAME);
+                $ext = strtolower(pathinfo(trim($file['name'][$i]), PATHINFO_EXTENSION));
+                if (!$ext) { throw new Exception('Invalid file extension'); }
 
-                $safeName = preg_replace('/[^A-Za-z0-9ก-๙_\-]/u', '', $nameOnly);
-                $safeName = preg_replace('/\s+/', '', $safeName);
+                $newName = $formno . '.' . $ext;
 
-                if ($safeName === '') {
-                    $safeName = 'file';
-                }
+                $_FILES['file'] = [
+                    'name'     => $newName,
+                    'type'     => $file['type'][$i],
+                    'tmp_name' => $file['tmp_name'][$i],
+                    'error'    => $file['error'][$i],
+                    'size'     => $file['size'][$i],
+                ];
 
-                $newName = $safeName . '_' . date('YmdHis') . '_' . ($i + 1);
-
-                if ($ext) {
-                    $newName .= '.' . strtolower($ext);
-                }
-
-                $_FILES['file']['name']     = $newName;
-                $_FILES['file']['type']     = $file['type'][$i];
-                $_FILES['file']['tmp_name'] = $file['tmp_name'][$i];
-                $_FILES['file']['error']    = $file['error'][$i];
-                $_FILES['file']['size']     = $file['size'][$i];
-
-                $config = [];
-                $config['upload_path']   = $targetPath;
-                $config['allowed_types'] = '*';
-                $config['file_name']     = $newName;
-                $config['overwrite']     = false;
+                $config = [
+                    'upload_path'   => $targetPath,
+                    'allowed_types' => '*',
+                    'file_name'     => $newName,
+                    'overwrite'     => true,
+                ];
 
                 $this->load->library('upload');
                 $this->upload->initialize($config);
@@ -144,25 +127,16 @@ class main_or extends MY_Controller {
                 'message' => 'Upload success',
                 'formno' => $formno,
                 'path' => $targetPath,
-                'files' => $uploadedFiles
+                'files' => array_values(array_unique($uploadedFiles))
             ]);
-
         } catch (Exception $e) {
-            echo json_encode([
-                'status' => false,
-                'message' => $e->getMessage()
-            ]);
+            echo json_encode(['status' => false, 'message' => $e->getMessage()]);
         }
     }
 
-    public function preview_file($formno, $filename)
-    {
+    public function preview_file($formno, $filename){
         $filename = urldecode($filename);
-        $filepath = rtrim($this->upload_path, "/\\")
-            . DIRECTORY_SEPARATOR
-            . $formno
-            . DIRECTORY_SEPARATOR
-            . $filename;
+        $filepath = rtrim($this->upload_path, "/\\").DIRECTORY_SEPARATOR.$formno.DIRECTORY_SEPARATOR.$filename;
 
         if (!is_file($filepath)) {
             show_error('File not found: ' . $filepath, 404);
@@ -173,16 +147,13 @@ class main_or extends MY_Controller {
             ob_end_clean();
         }
 
-        $mime = function_exists('mime_content_type')
-            ? mime_content_type($filepath)
-            : 'application/octet-stream';
+        $mime = function_exists('mime_content_type') ? mime_content_type($filepath) : 'application/octet-stream';
 
         header('Content-Type: ' . $mime);
         header('Content-Length: ' . filesize($filepath));
         header('Content-Disposition: inline; filename="' . basename($filename) . '"');
         header('Cache-Control: private, max-age=0, must-revalidate');
         header('Pragma: public');
-
         readfile($filepath);
         exit;
     }
@@ -219,33 +190,20 @@ class main_or extends MY_Controller {
     }
 
 
-
     public function export_pdf(){
         header('Content-Type: application/json; charset=utf-8');
         try {
             $formno = $this->input->post('formno');
+            if (!$formno) { throw new Exception('formno is required'); }
 
-            if (!$formno) {
-                throw new Exception('formno is required');
-            }
-
-            $folder = $this->normalize_windows_path(
-                rtrim($this->upload_path, "/\\") . DIRECTORY_SEPARATOR . $formno . DIRECTORY_SEPARATOR
-            );
-
-            if (!is_dir($folder)) {
-                throw new Exception('Form folder not found: ' . $folder);
-            }
+            $folder = $this->normalize_windows_path(rtrim($this->upload_path, "/\\") . DIRECTORY_SEPARATOR . $formno . DIRECTORY_SEPARATOR);
+            if (!is_dir($folder)) { throw new Exception('Form folder not found: ' . $folder); }
 
             $excelFiles = glob($folder . '*.{xlsx,xlsm,xls}', GLOB_BRACE);
-
-            if (empty($excelFiles)) {
-                throw new Exception('Excel file not found: ' . $folder);
-            }
+            if (empty($excelFiles)) { throw new Exception('Excel file not found: ' . $folder); }
 
             $excelPath = $this->normalize_windows_path($excelFiles[0]);
-            $pdfPath = preg_replace('/\.(xlsx|xlsm|xls)$/i', '.pdf', $excelPath);
-            $pdfPath = $this->normalize_windows_path($pdfPath);
+            $pdfPath = $this->normalize_windows_path(preg_replace('/\.(xlsx|xlsm|xls)$/i', '.pdf', $excelPath));
 
             $this->excel_to_pdf_com($excelPath, $pdfPath);
 
@@ -253,7 +211,6 @@ class main_or extends MY_Controller {
                 'status' => true,
                 'pdf' => basename($pdfPath)
             ]);
-
         } catch (Exception $e) {
             echo json_encode([
                 'status' => false,
@@ -267,22 +224,15 @@ class main_or extends MY_Controller {
     }
 
     private function excel_to_pdf_com($excelPath, $pdfPath){
-        if (!class_exists('COM')) {
-            throw new Exception('PHP COM extension is not enabled');
-        }
+        if (!class_exists('COM')) { throw new Exception('PHP COM extension is not enabled'); }
 
         $excelPath = $this->normalize_windows_path($excelPath);
         $pdfPath = $this->normalize_windows_path($pdfPath);
 
-        if (!is_file($excelPath)) {
-            throw new Exception('Excel file not found by PHP: ' . $excelPath);
-        }
+        if (!is_file($excelPath)) { throw new Exception('Excel file not found by PHP: ' . $excelPath); }
 
         $pdfDir = dirname($pdfPath);
-
-        if (!is_dir($pdfDir)) {
-            mkdir($pdfDir, 0777, true);
-        }
+        if (!is_dir($pdfDir)) { mkdir($pdfDir, 0777, true); }
 
         $excel = null;
         $workbook = null;
@@ -291,36 +241,17 @@ class main_or extends MY_Controller {
             $excel = new COM("Excel.Application");
             $excel->Visible = false;
             $excel->DisplayAlerts = false;
-
             $workbook = $excel->Workbooks->Open($excelPath);
-
-            // 0 = xlTypePDF
             $workbook->ExportAsFixedFormat(0, $pdfPath);
-
             $workbook->Close(false);
             $excel->Quit();
-
-            unset($workbook);
-            unset($excel);
-
-            if (!is_file($pdfPath)) {
-                throw new Exception('PDF export failed: ' . $pdfPath);
-            }
-
+            unset($workbook, $excel);
+            if (!is_file($pdfPath)) { throw new Exception('PDF export failed: ' . $pdfPath); }
             return $pdfPath;
-
         } catch (Exception $e) {
-            if ($workbook) {
-                $workbook->Close(false);
-            }
-
-            if ($excel) {
-                $excel->Quit();
-            }
-
-            unset($workbook);
-            unset($excel);
-
+            if ($workbook) { $workbook->Close(false); }
+            if ($excel) { $excel->Quit(); }
+            unset($workbook, $excel);
             throw $e;
         }
     }

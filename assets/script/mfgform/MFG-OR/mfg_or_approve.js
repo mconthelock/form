@@ -193,19 +193,8 @@ $(document).ready(function () {
                 $("#row_rev").addClass("hidden");
             }
 
-            const classTextMap = {
-                BASIC: "Basic Knowledge (ความรู้พื้นฐาน)",
-                IMPROVE: "Improvement Case (กรณีปรับปรุงงาน)",
-                TROUBLE: "Trouble Case (กรณีเกิดปัญหาซ้ำ)",
-                REGULATION: "Regulation (กฎระเบียบ/ข้อบังคับ)"
-            };
-
-            $("#v_class").text(classTextMap[head.CLASS] || head.CLASS || "-");
+            $("#v_class").text(head.CLASS || "-");
             $("#v_topic").text(head.TOPIC || "-");
-            $("#v_dwg_no").text(head.DWGNO || "-");
-            $("#v_shop_no").text(head.SHOPNO || "-");
-            $("#v_item_no").text(head.ITEMNO || "-");
-            $("#v_apply_for").text(head.APPLY_FOR || "-");
         },
 
         renderFile(att = []) {
