@@ -193,8 +193,8 @@ function hasFormKey(form) {
     form.NFRMNO &&
       form.VORGNO &&
       form.CYEAR &&
-      form.NRUNNO &&
-      form.EMPNO,
+      form.CYEAR2&&
+      form.NRUNNO,
   );
 }
 
@@ -289,17 +289,17 @@ function renderEmpData(empData = {}) {
   );
 }
 async function renderWorkflowAction(form) {
-  if (!form?.EMPNO) {
-    $("#sentApprove").html(`
-      <div class="alert alert-warning shadow-sm mt-5">
-        <div>
-          <p class="font-bold">Cannot load workflow action</p>
-          <p class="text-sm">Employee number not found in URL.</p>
-        </div>
-      </div>
-    `);
-    return;
-  }
+  // if (!form?.EMPNO) {
+  //   $("#sentApprove").html(`
+  //     <div class="alert alert-warning shadow-sm mt-5">
+  //       <div>
+  //         <p class="font-bold">Cannot load workflow action</p>
+  //         <p class="text-sm">Employee number not found in URL.</p>
+  //       </div>
+  //     </div>
+  //   `);
+  //   return;
+  // }
 
   try {
     const mode = String(
@@ -509,7 +509,7 @@ async function createTableStamp(data = [], stamp = dutyStampList) {
   `;
 
   html += stamp
-    .map((item) => `<th colspan="2">${escapeHtml(item.DUTY_VALUE)}</th>`)
+    .map((item) => `<th colspan="2">${escapeHtml(item.DUTY_VALUE)} Baht</th>`)
     .join("");
 
   html += `

@@ -129,7 +129,7 @@ async function createReportTable(data = [], stamp = dutyStampList) {
 
     ["BUY", "WD", "RM"].forEach((section) => {
       stamp.forEach((item) => {
-        html += `<th colspan="2" class="${getReportColumnGroupClass(section)} report-denom-header">${escapeHtml(item.DUTY_VALUE)}</th>`;
+        html += `<th colspan="2" class="${getReportColumnGroupClass(section)} report-denom-header">${escapeHtml(item.DUTY_VALUE)} Baht</th>`;
       });
     });
 
@@ -452,7 +452,7 @@ function renderExcelHeader(sheet, stamp = [], lastColumn) {
 
       stamp.forEach((item) => {
         sheet.mergeCells(3, column, 3, column + 1);
-        sheet.getCell(3, column).value = item.DUTY_VALUE;
+        sheet.getCell(3, column).value = `${item.DUTY_VALUE} Baht`;
         sheet.getCell(4, column).value = "QTY";
         sheet.getCell(4, column + 1).value = "AMT";
         column += 2;

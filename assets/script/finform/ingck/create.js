@@ -102,7 +102,7 @@ async function createTableStamp(data = []) {
 
   const s = stamp
     .map((a) => {
-      return `<th colspan="2">${a.DUTY_VALUE}</th>`;
+      return `<th colspan="2">${a.DUTY_VALUE} Baht</th>`;
     })
     .join("");
   html += s + "</tr><tr>";
@@ -126,6 +126,7 @@ async function createTableStamp(data = []) {
     {
       data: data,
       columns: mapColumns,
+      searching: false,
       footerCallback: function (row, data, start, end, display) {
         let api = this.api();
 
