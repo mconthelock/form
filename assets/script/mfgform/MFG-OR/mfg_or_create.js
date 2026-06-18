@@ -95,9 +95,9 @@ $(document).ready(function () {
                 $('#current_no').val(String(res.data.ORNO || currentNo).trim().toUpperCase());
                 $('#current_rev').text(currentRev);
                 $('#next_rev').text(nextRev);
-                $('#current_topic').text(res.data.TOPIC || '-');
                 $('#rev').val(nextRev);
-                $('#topic').val(currentTopic);
+
+                $('#topic').val(res.data.TOPIC || '');
                 $('#current_info').removeClass('hidden');
             } catch (error) {
                 console.error('SEARCH CURRENT NO ERROR:', error);

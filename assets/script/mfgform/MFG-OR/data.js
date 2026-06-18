@@ -4,6 +4,7 @@ export const getMfgOrDetail = (data) => callAPI("/mfg-or/getdetail-mfg-or", "POS
 export const generateMfgOrNo = (data, formno) => callAPI("/mfg-or/generate-or-no", "POST", {...data, FORMNO: formno});
 export const updateReviseCenter = (data, formno) => callAPI("/mfg-or/update-revise-center", "POST", {...data, FORMNO: formno});
 export const searchMfgOrCenter = (data) => callAPI("/mfg-or/search-mfg-or-center", "POST", data);
+export const stampPdf = (data) => callAPI("/mfg-or/stamp-pdf", "POST", data);
 
 // ===== GET ===========
 export const getUserbyemp = (empno) => callAPI(`/users/${encodeURIComponent(empno)}`, "GET");

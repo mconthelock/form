@@ -1,4 +1,4 @@
-import { getMfgOrDetail, generateMfgOrNo, updateReviseCenter } from "./data.js";
+import { getMfgOrDetail, generateMfgOrNo, updateReviseCenter, stampPdf } from "./data.js";
 import { showLoader } from "@amec/webasset/preloader";
 import { doaction, showflow } from "@amec/webasset/api/webform";
 import { redirectWebflow } from "@amec/webasset/form";
@@ -64,6 +64,8 @@ $(document).ready(function () {
                             dataType: "json",
                             data: { formno }
                         });
+                        
+                        await stampPdf(VIEW.getBasePayload(), formno);
                     }else{
             
                         const result = await doaction({
