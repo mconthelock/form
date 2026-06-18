@@ -96,13 +96,13 @@ $(document).ready(async function () {
             $('#ReturnBtn').addClass('hidden'); // ซ่อน
             // $('#RejectBtn').addClass('hidden'); // ซ่อน
             $('#upload-zone').removeClass('hidden');
+            $('#download-zone').removeClass('hidden'); // ผู้อนุมัติเข้ามาตรวจ ให้โหลดได้อย่างเดียว
         } else {
             //All Approver
             $('#ApproveBtn').removeClass('hidden'); // โชว์
             $('#ReturnBtn').removeClass('hidden'); // โชว์
             // $('#RejectBtn').removeClass('hidden'); // โชว์
             $('#download-zone').removeClass('hidden'); // ผู้อนุมัติเข้ามาตรวจ ให้โหลดได้อย่างเดียว
-            loadExistingFiles(); // สั่งเรียกฟังก์ชันดึงรายการไฟล์มาแสดง
         }
     } else if (currentMode === '3') {
         // โหมดดูอย่างเดียว (View Mode) -> บังคับซ่อนทุกปุ่ม
@@ -110,8 +110,8 @@ $(document).ready(async function () {
         $('#ReturnBtn').addClass('hidden');
 
         $('#download-zone').removeClass('hidden'); // ผู้อนุมัติเข้ามาตรวจ ให้โหลดได้อย่างเดียว
-        loadExistingFiles(); // สั่งเรียกฟังก์ชันดึงรายการไฟล์มาแสดง
     }
+    loadExistingFiles(); // สั่งเรียกฟังก์ชันดึงรายการไฟล์มาแสดง
 
     // 2. เรียกใช้พ่นสเต็ป Flow ของฝั่ง Webflow
     const flow = await showflow(form);
@@ -128,11 +128,17 @@ $(document).ready(async function () {
 
     // == Action Upload File
     function loadExistingFiles() {
+        console.log('กำลังโหลดรายการไฟล์ใหม่...'); // เพิ่มบรรทัดนี้
         const formData = $('.form-info').data();
-
+        var isRequester = false;
+        if (currentMode === '2') {
+            isRequester = ($('#REQUEST_BYTxt').val() || '').includes(empno); // เช็คสิทธิ์ที่นี่
+        }
+        const $list = $('#uploaded-files-list');
         $.ajax({
-            url: host + 'feform/FE-EIA/form/GetUploadedFiles',
+            url: host + 'feform/FE-EIA/form/GetFilesDisplay',
             type: 'POST',
+            cache: false, // 🟢 ป้องกันการจำค่าเก่า
             dataType: 'json',
             data: {
                 NFRMNO: formData.nfrmno,
@@ -141,43 +147,64 @@ $(document).ready(async function () {
                 NRUNNO: formData.nrunno,
             },
             success: function (response) {
-                if (
-                    response &&
-                    response.status === true &&
-                    response.files.length > 0
-                ) {
-                    $('#uploaded-files-list').empty();
+                $list.html('');
+                if (response?.status === true && response.files.length > 0) {
+                    $list.empty();
+
                     response.files.forEach(function (file) {
-                        // ประกอบ HTML ลิงก์ดาวน์โหลดโดยวิ่งผ่านคอนโทรลเลอร์ฝั่ง PHP เพื่อความปลอดภัยความปลอดภัยของ Path คลังไฟล์
                         let downloadUrl =
                             host +
                             'feform/FE-EIA/form/DownloadFile?id=' +
-                            encodeURIComponent(file.FILE_ID);
+                            file.FILE_ID;
+
+                        // 🟢 ถ้าเป็น Requester ให้โชว์ปุ่มลบ
+                        let deleteBtn = isRequester
+                            ? `
+                        <button type="button" 
+                                class="btn-delete-file text-rose-500 hover:text-rose-700 font-bold text-xs px-2 cursor-pointer" 
+                                data-id="${file.FILE_ID}">
+                            🗑️ Delete
+                        </button>`
+                            : '';
 
                         let itemHtml = `
-                            <li class="flex items-center justify-between py-2.5 px-3 text-sm hover:bg-slate-50 transition-colors">
-                                <div class="flex items-center gap-2.5 truncate">
-                                    <span class="text-lg">📁</span>
-                                    <span class="font-medium text-slate-700 truncate">${file.FILE_ONAME}</span>
-                                </div>
-                                <a href="${downloadUrl}" target="_blank" class="cursor-pointer inline-flex items-center gap-1 bg-slate-100 hover:bg-primary hover:text-white text-slate-600 font-semibold text-xs px-2.5 py-1.5 rounded-lg transition-all shadow-sm">
+                        <li class="flex items-center justify-between py-2.5 px-3 text-sm hover:bg-slate-50 transition-colors">
+                            <div class="flex items-center gap-2.5 truncate">
+                                <span>📁</span>
+                                <span class="font-medium text-slate-700 truncate">${file.FILE_ONAME}</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <a href="${downloadUrl}" target="_blank" class="bg-slate-100 hover:bg-primary hover:text-white text-slate-600 font-semibold text-xs px-2.5 py-1.5 rounded-lg transition-all">
                                     ⬇️ Download
                                 </a>
-                            </li>
-                        `;
-                        $('#uploaded-files-list').append(itemHtml);
+                                ${deleteBtn}
+                            </div>
+                        </li>`;
+                        $list.append(itemHtml);
                     });
-                } else {
-                    $('#uploaded-files-list').html(
-                        '<li class="py-4 text-center text-xs font-medium text-slate-400">ℹ️ ไม่มีไฟล์แนบสำหรับเอกสารฉบับนี้</li>',
-                    );
                 }
-            },
-            error: function () {
-                console.error('ไม่สามารถเรียกรายการไฟล์แนบจากเซิร์ฟเวอร์ได้');
             },
         });
     }
+
+    $(document).on('click', '.btn-delete-file', function () {
+        const fileId = $(this).data('id');
+        if (!confirm('ยืนยันการลบไฟล์นี้ใช่หรือไม่?')) return;
+
+        $.ajax({
+            url: host + 'feform/FE-EIA/form/DeleteFile', // สร้าง Controller มาดักลบไฟล์
+            type: 'POST',
+            data: { id: fileId },
+            success: function (response) {
+                if (response.status) {
+                    alert('ลบไฟล์สำเร็จ');
+                    loadExistingFiles(); // โหลด List ใหม่
+                } else {
+                    alert('ลบไฟล์ไม่สำเร็จ');
+                }
+            },
+        });
+    });
 
     $(document).on('click', '#drop-zone', function (e) {
         if (!$(e.target).is('input')) {
@@ -272,6 +299,8 @@ function search() {
             MONTH: MONTH,
         },
         success: function (response) {
+            console.log('Ajax Response: ', response);
+
             if (func === 'GetStockCostReal') {
                 // ดักจับและคัดกรองค่าว่างป้องกันลูปฟังก์ชันพังกลางคัน
                 dataOnhand = response.dataOnhand || [];
@@ -323,7 +352,8 @@ function search() {
                     if (onhand.DIFF === '-0.00') {
                         onhand.DIFF = '0.00';
                     }
-                    onhand.COST_YEAR = $('#YEARDrp').val() || '';
+                    var parts = onhand.COSTMONTH.split("'");
+                    onhand.COST_YEAR = parts[1] || '';
                     onhand.COST_MONTH = onhand.COST_MONTH || '';
                 });
 
@@ -345,7 +375,26 @@ function search() {
         },
     });
 }
-
+function convertMonthYearToNumber(str) {
+    const months = {
+        Jan: 1,
+        Feb: 2,
+        Mar: 3,
+        Apr: 4,
+        May: 5,
+        Jun: 6,
+        Jul: 7,
+        Aug: 8,
+        Sep: 9,
+        Oct: 10,
+        Nov: 11,
+        Dec: 12,
+    };
+    const parts = str.split("'"); // เช่น ['Feb', '2026']
+    const month = months[parts[0]];
+    const year = parts[1];
+    return parseInt(year + month.toString().padStart(2, '0')); // ได้ 202602
+}
 // โค้ดสร้างตารางแบบปลอดภัยและลบตัวแปรซ้อน
 function buildDataTable(mergedData) {
     if ($.fn.DataTable.isDataTable('#table-view')) {
@@ -365,7 +414,7 @@ function buildDataTable(mergedData) {
         sScrollX: true,
         sScrollXInner: '100%',
         paging: false,
-        order: [[0, 'asc']],
+        order: [[1, 'asc']],
         columns: [
             {
                 data: null,
@@ -377,6 +426,12 @@ function buildDataTable(mergedData) {
                 data: 'COSTMONTH',
                 title: 'Cost Month',
                 className: 'text-center font-weight-bold',
+                render: function (data, type, row) {
+                    if (type === 'sort' || type === 'type') {
+                        return convertMonthYearToNumber(data);
+                    }
+                    return data;
+                },
             },
             {
                 data: 'OPENINGBALANCE',
@@ -469,6 +524,55 @@ function buildDataTable(mergedData) {
     });
 }
 
+$(document).on('click', '#SentEmailBtn', async function () {
+    const formData = $('.form-info').data();
+    const {
+        nfrmno,
+        vorgno,
+        cyear,
+        cyear2,
+        nrunno,
+        empno,
+        cost_year,
+        cost_month,
+        doc_no,
+    } = formData;
+
+    try {
+        let phpData = new FormData();
+        phpData.append('NFRMNO', nfrmno);
+        phpData.append('VORGNO', vorgno);
+        phpData.append('CYEAR', cyear);
+        phpData.append('CYEAR2', cyear2);
+        phpData.append('NRUNNO', nrunno);
+        phpData.append('COST_MONTH', $('#MONTHDrp').val());
+        phpData.append('COST_YEAR', $('#YEARDrp').val());
+        phpData.append('DATAONHAND', JSON.stringify(dataOnhand));
+        const responseEndProcess = await $.ajax({
+            url: host + 'feform/FE-EIA/form/EndpProcess',
+            type: 'POST',
+            data: phpData,
+            processData: false,
+            contentType: false,
+            dataType: 'json',
+        });
+
+        if (
+            responseEndProcess &&
+            (responseEndProcess.status === true ||
+                responseEndProcess.status === 'true')
+        ) {
+        } else {
+            throw new Error(
+                responseEndProcess?.message || 'end process not completed',
+            );
+        }
+    } catch (error) {
+        console.error('Action Flow Error:', error);
+        alert('เกิดข้อผิดพลาด: ' + error.message);
+        $('#loading').hide();
+    }
+});
 $(document).on('click', '#PdfBtn', function () {
     // ดักจับ fallback เผื่อก้อนข้อมูลหลักยังโหลดมาไม่สมบูรณ์
     const formData = $('.form-info').data() || {};
@@ -597,8 +701,25 @@ async function actionFlow(actionType) {
     };
 
     try {
+        let phpData = new FormData();
+        phpData.append('NFRMNO', nfrmno);
+        phpData.append('VORGNO', vorgno);
+        phpData.append('CYEAR', cyear);
+        phpData.append('CYEAR2', cyear2);
+        phpData.append('NRUNNO', nrunno);
+        phpData.append('COST_MONTH', $('#MONTHDrp').val());
+        phpData.append('COST_YEAR', $('#YEARDrp').val());
+        phpData.append('DATAONHAND', JSON.stringify(dataOnhand));
         // 1. ตรวจสอบว่าผู้ใช้งานคือ Requester หรือไม่
         if (($('#REQUEST_BYTxt').val() || '').includes(empno)) {
+            const hasFiles =
+                selectedFilesArray.filter((file) => file !== null).length > 0;
+
+            // สมมติว่าต้องการบังคับเฉพาะโหมด Create (currentMode === '1')
+            if (currentMode === '2' && !hasFiles) {
+                alert('กรุณาเลือกไฟล์แนบรายงานก่อนทำการบันทึกครับ');
+                return; // หยุดทำงานทันทีถ้าไม่มีไฟล์
+            }
             // --- ขั้นตอนที่ 1: จัดการไฟล์ผ่าน NestJS API ---
             let nestJsData = new FormData();
             nestJsData.append('NFRMNO', nfrmno);
@@ -624,13 +745,6 @@ async function actionFlow(actionType) {
             }
 
             // --- ขั้นตอนที่ 2: จัดการบันทึก Detail ผ่าน PHP AddFEEIADetail ---
-            let phpData = new FormData();
-            phpData.append('NFRMNO', nfrmno);
-            phpData.append('VORGNO', vorgno);
-            phpData.append('CYEAR', cyear);
-            phpData.append('CYEAR2', cyear2);
-            phpData.append('NRUNNO', nrunno);
-            phpData.append('DATAONHAND', JSON.stringify(dataOnhand));
 
             const responsePhp = await $.ajax({
                 url: host + 'feform/FE-EIA/form/AddFEEIADetail',
@@ -660,6 +774,29 @@ async function actionFlow(actionType) {
         if (result === '1') {
             const res = await doaction(payload);
             if (res?.status || res?.status === true || res?.status === 'true') {
+                if ($('#EXTDATAHid').val() == '03') {
+                    // sent mail
+                    const responseEndProcess = await $.ajax({
+                        url: host + 'feform/FE-EIA/form/EndpProcess',
+                        type: 'POST',
+                        data: phpData,
+                        processData: false,
+                        contentType: false,
+                        dataType: 'json',
+                    });
+
+                    if (
+                        responseEndProcess &&
+                        (responseEndProcess.status === true ||
+                            responseEndProcess.status === 'true')
+                    ) {
+                    } else {
+                        throw new Error(
+                            responseEndProcess?.message ||
+                                'end process not completed',
+                        );
+                    }
+                }
                 redirectWebflow(); // Redirect เมื่อทุกอย่างสำเร็จ
             } else {
                 throw new Error(res?.message || 'ไม่สามารถส่งฟอร์มได้');

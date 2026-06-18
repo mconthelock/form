@@ -23,12 +23,15 @@ class form extends MY_Controller{
 		parent::__construct();
         $this->client = new Client(['verify' => false]);
         
+        $this->load->library('Mail');
         
         $this->load->model('form_model', 'frm');
-        $this->load->model('user_model', 'usr');
         $this->load->model('feform/FE-EIA/eia_model', 'MainModel');
+        
         $this->mimsBase = 'MIMS';
+        $this->webflowBase = "DEFAULT";
         $this->upload_path = $_ENV['AMEC_FILE_PATH'] . ($this->_servername() == 'amecweb' ? 'production' : 'development') . "/Form/FE/FE_EIA/";
+        $this->host = $_SERVER['HTTP_HOST']; // เช่น localhost, amecwebtest, amecweb
         
     }
     //https://amecwebtest.mitsubishielevatorasia.co.th/form/feform/FE-EIA/form/main?no=11&orgNo=051001&y=26&y2=2026&runNo=1&m=3&empno=13204&bp=%2Fformtest%2Fworkflow%2FmineList%2Easp&menu=1
@@ -72,13 +75,13 @@ class form extends MY_Controller{
             $data['CYEAR2'] = $_GET['y2'];
             $data['NRUNNO'] = $_GET['runNo'];
             $data['EMPNO']    = (string)$empno;
-            $form = [
-                'NFRMNO' => (int)$data['NFRMNO'],
-                'VORGNO' => (string)$data['VORGNO'],
-                'CYEAR'  => (string)$data['CYEAR'],
-                'CYEAR2' => (string)$data['CYEAR2'],
-                'NRUNNO' => (int)$data['NRUNNO'],
-            ];
+            // $form = [
+            //     'NFRMNO' => (int)$data['NFRMNO'],
+            //     'VORGNO' => (string)$data['VORGNO'],
+            //     'CYEAR'  => (string)$data['CYEAR'],
+            //     'CYEAR2' => (string)$data['CYEAR2'],
+            //     'NRUNNO' => (int)$data['NRUNNO'],
+            // ];
 
             // $data['CEXTDATA'] = $this->getExtData($form);
             // $data['MODE']     = $this->getMode($form);
@@ -90,15 +93,21 @@ class form extends MY_Controller{
 
 
             // == get WPS_MIMS_EIAFORM   find COST_YEAR,COST_MONTH where form runNo,cyear2 match
-
-                $db_mims = $this->load->database('MIMS', TRUE);
-                $query = $db_mims->get_where('WPS_MIMS_EIAFORM', $form );
-                $data['mimsForm'] = $query->row();
-
+                $sql = "SELECT * FROM WPS_MIMS_EIAFORM 
+                    WHERE NFRMNO = ? AND VORGNO = ? AND CYEAR = ? AND CYEAR2 = ? AND NRUNNO = ?";
+                    $bindData = [
+                        (int)$data['NFRMNO'],
+                        (string)$data['VORGNO'],
+                        (string)$data['CYEAR'],
+                        (string)$data['CYEAR2'],
+                        (int)$data['NRUNNO']
+                    ];
+                $data['mimsForm'] = $this->MainModel->QuerySetBase($sql, $this->mimsBase, $bindData)->result();
                 if (!empty($data['mimsForm'])) {
-                    $data['COST_MONTH'] = $data['mimsForm']->COST_MONTH;
-                    $data['COST_YEAR']  = $data['mimsForm']->COST_YEAR;
-                    $data['DOC_NO']     = $data['mimsForm']->DOC_NO;
+                    // 🟢 แบบนี้ใช้ -> ได้ตามที่เขียนไว้เดิม
+                    $data['COST_MONTH'] = $data['mimsForm'][0]->COST_MONTH;
+                    $data['COST_YEAR']  = $data['mimsForm'][0]->COST_YEAR;
+                    $data['DOC_NO']     = $data['mimsForm'][0]->DOC_NO;
                 }
             
 
@@ -127,7 +136,7 @@ class form extends MY_Controller{
             $COST_YEAR  = $this->input->get('COST_YEAR') ?? date('Y');
             $COST_MONTH = $this->input->get('COST_MONTH') ?? date('m');
 
-            $sql = "SELECT * FROM WPS_MIMS_EIAFORM_USERCREATE WHERE 1=1";
+            $sql = "SELECT * FROM WPS_MIMS_EIAFORM_USERCREATE WHERE 1=1 and GROUPTYPE = 'REQ' ";
             $REQBY = $this->MainModel->QuerySetBase($sql, $this->mimsBase)->result();
             
             $form = $this->getFormMasterByVaname('FE-EIA');
@@ -259,31 +268,26 @@ class form extends MY_Controller{
         $MONTH = $this->input->post('MONTH');
         $w="";
 
-        $form = [
-                'NFRMNO' => (int)$this->input->get('NFRMNO'),
-                'VORGNO' => (string)$this->input->get('VORGNO'),
-                'CYEAR'  => (string)$this->input->get('CYEAR'),
-                'CYEAR2' => (string)$this->input->get('CYEAR2'),
-                'NRUNNO' => (int)$this->input->get('NRUNNO'),
-                'YEAR' => (int)$this->input->get('YEAR'),
-                'MONTH' => (int)$this->input->get('MONTH'),
-            ];
-        if($MONTH != "")
-        {
-            $w .= " AND  COST_MONTH = '" . $MONTH . "' ";
-        }
-        if ($YEAR != "" ) {
-            $w .= " AND  COST_YEAR = '" . $YEAR . "' ";
-        }
+        $w = " AND NFRMNO = ? AND VORGNO = ? AND CYEAR = ? AND CYEAR2 = ? AND NRUNNO = ? ";
+        $params = [(int)$NFRMNO, (string)$VORGNO, (string)$CYEAR, (string)$CYEAR2, (int)$NRUNNO];
+
+        // if ($MONTH != "") {
+        //     $w .= " AND COST_MONTH = ? ";
+        //     $params[] = (int)$MONTH;
+        // }
+        // if ($YEAR != "") {
+        //     $w .= " AND COST_YEAR = ? ";
+        //     $params[] = (int)$YEAR;
+        // }
 
         $sql = "SELECT 
-            NFRMNO, VORGNO, CYEAR, CYEAR2, NRUNNO, COST_MONTH, COST_YEAR,
-            OPENINGBALANCE, RECEIVED_AMOUNT, ISSUE_AMOUNT, TOTAL_COST_ONHAND, DIFF, CREATE_DATE,
-            INITCAP(TO_CHAR(TO_DATE(COST_YEAR || '-' || COST_MONTH, 'YYYY-MM'), 'Mon''YYYY', 'NLS_DATE_LANGUAGE = AMERICAN')) AS COSTMONTH
-        FROM WPS_MIMS_EIAFORMDETAIL 
-        WHERE 1=1 " . $w;
-        $dataOnhand = $this->MainModel->QuerySetBase($sql, $this->mimsBase,$form)->result();
+                    NFRMNO, VORGNO, CYEAR, CYEAR2, NRUNNO, COST_MONTH, COST_YEAR,
+                    OPENINGBALANCE, RECEIVED_AMOUNT, ISSUE_AMOUNT, TOTAL_COST_ONHAND, DIFF, CREATE_DATE,
+                    INITCAP(TO_CHAR(TO_DATE(COST_YEAR || '-' || COST_MONTH, 'YYYY-MM'), 'Mon''YYYY', 'NLS_DATE_LANGUAGE = AMERICAN')) AS COSTMONTH
+                FROM WPS_MIMS_EIAFORMDETAIL 
+                WHERE 1=1 " . $w;
 
+        $dataOnhand = $this->MainModel->QuerySetBase($sql, $this->mimsBase, $params)->result();
         
         $output = array(
             "dataOnhand" =>  $dataOnhand,
@@ -314,33 +318,46 @@ class form extends MY_Controller{
             // -------------------------------------------------------------------------
             // ส่วนที่ 1: บันทึกข้อมูลตาราง EIA Detail ลง Oracle MIMS (ตรรกะเดิมที่นิ่งแล้ว)
             // -------------------------------------------------------------------------
-            $db_mims = $this->load->database('MIMS', TRUE);
-            $db_mims->delete('WPS_MIMS_EIAFORMDETAIL', $formKeys);
+            // $db_mims->delete('WPS_MIMS_EIAFORMDETAIL', $formKeys);
+            if($NRUNNO != "")
+            {
+                $this->MainModel->deleteData($this->mimsBase,'WPS_MIMS_EIAFORMDETAIL', $formKeys);
 
-            $dataOnhandRaw = $this->input->post('DATAONHAND');
-            $dataOnhandArray = is_string($dataOnhandRaw) ? json_decode($dataOnhandRaw, true) : $dataOnhandRaw;
+                    
+                $dataOnhandRaw = $this->input->post('DATAONHAND');
+                $dataOnhandArray = is_string($dataOnhandRaw) ? json_decode($dataOnhandRaw, true) : $dataOnhandRaw;
 
-            if (!empty($dataOnhandArray) && is_array($dataOnhandArray)) {
-                foreach ($dataOnhandArray as $row) {
-                    $detailData = array_merge($formKeys, [
-                        'COST_MONTH'        => (string)($row['COST_MONTH'] ?? ''),
-                        'COST_YEAR'         => (string)($row['COST_YEAR'] ?? ''),
-                        'OPENINGBALANCE'    => (float)($row['OPENINGBALANCE'] ?? 0),
-                        'RECEIVED_AMOUNT'   => (float)($row['RECEIVED_AMOUNT'] ?? 0),
-                        'ISSUE_AMOUNT'      => (float)($row['ISSUE_AMOUNT'] ?? 0),
-                        'TOTAL_COST_ONHAND' => (float)($row['TOTAL_COST_ONHAND'] ?? 0),
-                        'DIFF'              => (float)($row['DIFF'] ?? 0)
-                        // 💡 หมายเหตุ: ตัด 'CREATE_DATE' ออกแล้ว เพื่อให้โครงสร้างใช้ DEFAULT SYSDATE ของ Oracle ป้องกัน ORA-01861
-                    ]);
-                    $db_mims->insert('WPS_MIMS_EIAFORMDETAIL', $detailData);
+                // var_dump($formKeys );
+                // var_dump($dataOnhandArray );
+                // exit;
+                $db_mims = $this->load->database('MIMS', TRUE);
+                if (!empty($dataOnhandArray) && is_array($dataOnhandArray)) {
+                    foreach ($dataOnhandArray as $row) {
+                        $detailData = array_merge($formKeys, [
+                            'COST_MONTH'        => (string)($row['COST_MONTH'] ?? ''),
+                            'COST_YEAR'         => (string)($row['COST_YEAR'] ?? ''),
+                            'OPENINGBALANCE'    => (float)($row['OPENINGBALANCE'] ?? 0),
+                            'RECEIVED_AMOUNT'   => (float)($row['RECEIVED_AMOUNT'] ?? 0),
+                            'ISSUE_AMOUNT'      => (float)($row['ISSUE_AMOUNT'] ?? 0),
+                            'TOTAL_COST_ONHAND' => (float)($row['TOTAL_COST_ONHAND'] ?? 0),
+                            'DIFF'              => (float)($row['DIFF'] ?? 0)
+                            // 💡 หมายเหตุ: ตัด 'CREATE_DATE' ออกแล้ว เพื่อให้โครงสร้างใช้ DEFAULT SYSDATE ของ Oracle ป้องกัน ORA-01861
+                        ]);
+                        $db_mims->insert('WPS_MIMS_EIAFORMDETAIL', $detailData);
+                    }
                 }
-            }
-
-
-            return $this->output
+                
+                return $this->output
                         ->set_content_type('application/json')
                         ->set_output(json_encode(['status' => true, 'message' => 'บันทึกข้อมูล EIA Detail สำเร็จ']));
-
+            }
+            else {
+                    
+                return $this->output
+                        ->set_content_type('application/json')
+                        ->set_output(json_encode(['status' => true, 'message' => 'NRUNNO is null']));
+            }
+            
         } catch (\Exception $e) {
             return $this->output
                         ->set_content_type('application/json')
@@ -383,8 +400,114 @@ class form extends MY_Controller{
             // Handle the exception
         }
     }
+    public function EndpProcess() 
+    { 
+        try {
+            $NFRMNO    = (int)$this->input->post('NFRMNO');
+            $VORGNO    = (string)$this->input->post('VORGNO');
+            $CYEAR     = (string)$this->input->post('CYEAR');
+            $CYEAR2    = (string)$this->input->post('CYEAR2');
+            $NRUNNO    = (int)$this->input->post('NRUNNO');
+            $COST_YEAR = (int)$this->input->post('COST_YEAR');
+
+            if (empty($NRUNNO) ) {
+                throw new \Exception("ข้อมูลฟอร์มไม่ครบถ้วน");
+            }
+            // 1. แก้ไข Syntax วันที่
+            $SUBJECT = "Maintenance Stock Cost Report (FE-EIA)_" . $COST_YEAR . "/" . date('m');
+            $TO = "";
+            $CC = "";
 
 
+            if (strpos($this->host, 'test') !== false || strpos($this->host, 'localhost') !== false) {
+                // กรณี Test Server
+
+                $TO = "siripapa@mitsubishielevatorasia.co.th";
+                $CC = "siripapa@mitsubishielevatorasia.co.th";
+                // var_dump($this->host . $TO);
+                // exit;
+            } else {
+                
+                // กรณี Production (ตัวจริง)
+                // 2. ดึงข้อมูล FLOW (ต้องใช้ result() เพื่อรองรับหลายแถว)
+                $sql = "SELECT LISTAGG(SRECMAIL, ',') WITHIN GROUP (ORDER BY SEMPNO) AS ALL_EMAILS FROM FLOW 
+                        LEFT JOIN AMECUSERALL ON  VAPVNO = SEMPNO
+                        WHERE NFRMNO = ? AND VORGNO = ? AND CYEAR = ? AND CYEAR2 = ? AND NRUNNO = ?";
+                $bindParams = [ $NFRMNO, $VORGNO, $CYEAR, $CYEAR2, $NRUNNO ];
+                
+                $flowList = $this->MainModel->QuerySetBase($sql, $this->webflowBase, $bindParams)->result();
+
+                // 3. เตรียมส่งเมล์
+                if (!empty($flowList) && isset($flowList[0]->ALL_EMAILS)) {
+                    $TO = $flowList[0]->ALL_EMAILS;
+                    $CC = "siripapa@mitsubishielevatorasia.co.th";
+                } else {
+                    // กรณีไม่พบ Flow อาจจะ log หรือแจ้งเตือน
+                    log_message('error', "EndpProcess: ไม่พบอีเมลในตาราง FLOW");
+                }
+            }
+
+            $BODY = ["
+                <div style='font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden;'>
+                    <div style='background-color: #0056b3; color: white; padding: 20px; text-align: center;'>
+                        <h2 style='margin: 0;'>Maintenance Stock Cost Report</h2>
+                    </div>
+                    <div style='padding: 20px;'>
+                        <p>Dear All,</p>
+                        <p>This is an automated notification regarding the stock cost report for <strong>FE-EIA</strong>.</p>
+                        
+                        <table style='width: 100%; margin: 20px 0; border-collapse: collapse;'>
+                            <tr>
+                                <td style='padding: 8px; border-bottom: 1px solid #eee; color: #777;'><strong>Report Period:</strong></td>
+                                <td style='padding: 8px; border-bottom: 1px solid #eee;'>{$COST_YEAR}/" . date('m') . "</td>
+                            </tr>
+                            <tr>
+                                <td style='padding: 8px; border-bottom: 1px solid #eee; color: #777;'><strong>Run Time:</strong></td>
+                                <td style='padding: 8px; border-bottom: 1px solid #eee;'>" . date('Y-m-d H:i:s') . "</td>
+                            </tr>
+                        </table>
+
+                        <div style='text-align: center; margin: 30px 0;'>
+                            <a href='http://amecwebtest.mitsubishielevatorasia.co.th/form/feform/FE-EIA/form/main?no={$NFRMNO}&orgNo={$VORGNO}&y={$CYEAR}&y2={$CYEAR2}&runNo={$NRUNNO}&m=3' 
+                            style='background-color: #28a745; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold;'>
+                            View Report Detail
+                            </a>
+                        </div>
+                        
+                        <p style='font-size: 12px; color: #999; border-top: 1px solid #eee; padding-top: 10px;'>
+                            * This is an automated email from the Maintenance System. Please do not reply directly to this message.
+                        </p>
+                    </div>
+                    <div style='background-color: #f8f9fa; padding: 10px; text-align: center; font-size: 11px; color: #777;'>
+                        Mitsubishi Elevator Asia Co., Ltd.
+                    </div>
+                </div>"];
+            // $BODY = "test";
+            if($TO != "")
+            {
+
+                $dataM = [
+                    // 'VIEW' =>'layouts/mail/mailAlert',
+                    'SUBJECT' => $SUBJECT,
+                    'TO'      => $TO,
+                    'CC'      => $CC,
+                    'BODY'    => $BODY
+                ];
+                // $dataM['ENFILE']  = array(['filename' => 'file.xlsx', 'content' => ob_get_contents]);
+                // ส่งเมล์ (ถ้าต้องส่งหาผู้อนุมัติหลายคน ให้วน Loop ตรงนี้)
+                $this->mail->sendmail($dataM);
+
+            }
+            return $this->output
+                        ->set_content_type('application/json')
+                        ->set_output(json_encode(['status' => true, 'message' => 'บันทึกข้อมูลและส่งอีเมลเรียบร้อยแล้ว']));
+
+        } catch (\Exception $e) {
+            return $this->output
+                        ->set_content_type('application/json')
+                        ->set_output(json_encode(['status' => false, 'message' => 'Error: ' . $e->getMessage()]));
+        }
+    }
 
     public function exportPdf()
     {
@@ -402,6 +525,8 @@ class form extends MY_Controller{
             $db_mims = $this->load->database('MIMS', TRUE);
             $mimsForm = $db_mims->get_where('WPS_MIMS_EIAFORM', $form)->row();
 
+            // $sql ="select * from WPS_MIMS_EIAFORM where NFRMNO =";
+            // $mimsForm = 
             if (empty($mimsForm)) {
                 show_error('ไม่พบข้อมูลเอกสารที่ต้องการพิมพ์', 404);
             }
@@ -676,22 +801,18 @@ class form extends MY_Controller{
     // =========================================================================
     // 1. ดึงรายการไฟล์แนบจากฐานข้อมูลมาโชว์ในโหมดดูอย่างเดียว (Mode 3)
     // =========================================================================
-    public function GetUploadedFiles()
+    public function GetFilesDisplay()
     {
         $NFRMNO  = (int)$this->input->post('NFRMNO');
         $VORGNO  = (string)$this->input->post('VORGNO');
         $CYEAR2  = (string)$this->input->post('CYEAR2');
         $NRUNNO  = (int)$this->input->post('NRUNNO');
 
-        $db_webflow = $this->load->database('DEFAULT', TRUE); 
-        
-        // คิวรีรายชื่อไฟล์ตรงๆ จากตารางกลุ่มแผนกของคุณตามสเปก NestJS (FORM_TYPEต่อท้ายด้วย_FILE)
-        $sql = "SELECT FILE_ID, NFRMNO, VORGNO, CYEAR2, NRUNNO, FILE_ONAME,FILE_FNAME, FILE_PATH 
-                FROM FE_FILE 
-                WHERE NFRMNO = ? AND VORGNO = ? AND CYEAR2 = ? AND NRUNNO = ?
-                ORDER BY FILE_ID ASC";
-
-        $files = $db_webflow->query($sql, [$NFRMNO, $VORGNO, $CYEAR2, $NRUNNO])->result();
+        $sql = "SELECT FILE_ID, NFRMNO, VORGNO, CYEAR2, NRUNNO, FILE_ONAME, FILE_FNAME, FILE_PATH 
+            FROM FE_FILE 
+            WHERE NFRMNO = ? AND VORGNO = ? AND CYEAR2 = ? AND NRUNNO = ?
+            ORDER BY FILE_ID ASC";
+        $files = $this->MainModel->QuerySetBase($sql, $this->webflowBase, [$NFRMNO, $VORGNO, $CYEAR2, $NRUNNO])->result();
 
         return $this->output
                     ->set_content_type('application/json')
@@ -700,31 +821,14 @@ class form extends MY_Controller{
                         'files'  => $files
                     ]));
     }
-
-    // =========================================================================
-    // 2. ฟังก์ชันส่วนกลางสำหรับการกวาดไฟล์จากตำแหน่ง Network Path ดาวน์โหลดลงเครื่องผู้ใช้
-    // =========================================================================
-    // public function DownloadFile()
-    // {
-    //     $filePath = $this->input->get('path'); // เช่น \\amecnas\AMECWEB\File\...\xxx.pdf
-    //     $fileName = $this->input->get('name'); // ชื่อไฟล์ดั้งเดิมภาษาไทยตอนบันทึก
-
-    //     if (file_exists($filePath)) {
-    //         $this->load->helper('download');
-    //         // ทำการสตรีมดึงพัสดุไฟล์ส่งตรงถึงหน้าจอเบราว์เซอร์ทันที
-    //         force_download($fileName, file_get_contents($filePath));
-    //     } else {
-    //         show_error('ขออภัยครับ ไม่พบตัวไฟล์จริงในคลังจัดเก็บไฟล์ของเน็ตเวิร์กเซิร์ฟเวอร์', 404);
-    //     }
-    // }
+    
 
     public function DownloadFile()
     {
         $file_id = $this->input->get('id'); 
         
-        $db_webflow = $this->load->database('DEFAULT', TRUE);
-        $file = $db_webflow->get_where('FE_FILE', ['FILE_ID' => $file_id])->row();
-
+        $sql = "SELECT * FROM FE_FILE WHERE FILE_ID = ?";
+        $file = $this->MainModel->QuerySetBase($sql, $this->webflowBase, [$file_id])->row();
         if ($file) {
             $fullPath = rtrim($file->FILE_PATH, '/\\') . DIRECTORY_SEPARATOR . $file->FILE_FNAME;
 
@@ -739,6 +843,34 @@ class form extends MY_Controller{
         } else {
             show_error('ไม่พบข้อมูลไฟล์ในฐานข้อมูล', 404);
         }
+    }
+
+    public function DeleteFile() 
+    {
+        $file_id = $this->input->post('id');
+        if (!$file_id) {
+            return $this->output->set_content_type('application/json')->set_output(json_encode(['status' => false, 'message' => 'No ID provided']));
+        }
+
+        $sql = "SELECT * FROM FE_FILE WHERE FILE_ID = ?";
+        $file = $this->MainModel->QuerySetBase($sql, $this->webflowBase, [$file_id])->row();
+        if (!$file) {
+            return $this->output->set_content_type('application/json')->set_output(json_encode(['status' => false, 'message' => 'File not found in DB']));
+        }
+
+        // 2. ปรับปรุงการรวม Path ให้รองรับ Windows/NAS
+        // rtrim เพื่อกำจัด / หรือ \ ที่เกินมา และเติม separator ให้ถูกต้อง
+        $fullPath = rtrim($file->FILE_PATH, '/\\') . DIRECTORY_SEPARATOR . $file->FILE_FNAME;
+
+        if (file_exists($fullPath)) {
+            if (!unlink($fullPath)) {
+                return $this->output->set_content_type('application/json')->set_output(json_encode(['status' => false, 'message' => 'Cannot delete physical file']));
+            }
+        }
+        
+        $this->MainModel->deleteData($this->webflowBase, 'FE_FILE', ['FILE_ID' => $file_id]);
+
+        return $this->output->set_content_type('application/json')->set_output(json_encode(['status' => true]));
     }
 
 }

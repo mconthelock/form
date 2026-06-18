@@ -42,6 +42,11 @@
                         class="cursor-pointer bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm px-4 py-2 rounded-lg shadow-sm transition-all flex items-center gap-2">
                     Export PDF
                 </button>
+                
+                <button type="button" id="SentEmailBtn" name="SentEmailBtn" 
+                        class="cursor-pointer bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm px-4 py-2 rounded-lg shadow-sm transition-all flex items-center gap-2">
+                    Sent Email
+                </button>
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 border border-slate-200 p-6 rounded-2xl bg-white shadow-sm mb-6 font-sans">
@@ -75,7 +80,9 @@
                                 readonly disabled>
                             <option value="">Choose...</option>
                             @for ($i = date('Y'); $i >= date('Y') - 10; $i--)
-                                <option value="{{ $i }}" {{ isset($COST_YEAR) && $COST_YEAR == $i ? 'selected' : '' }}>{{ $i }}</option>
+                                <option value="{{ $i }}" {{ isset($COST_YEAR) && (int)$COST_YEAR === (int)$i ? 'selected' : '' }}>
+                                    {{ $i }}
+                                </option>
                             @endfor
                         </select>
                     </div>
@@ -151,6 +158,12 @@
                     </table> 
             </div>
             <div class="w-full flex justify-end mt-5 gap-2">
+                <!-- <button type="button" name="AddBtn" id="AddBtn"
+                        data-action="Add"
+                        class="AddBtn btn-submit cursor-pointer bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded shadow hidden">
+                    Create Form
+                </button> -->
+                
                 <button type="button" name="ApproveBtn" id="ApproveBtn"
                         data-action="approve"
                         class="ApproveBtn btn-submit cursor-pointer bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded shadow hidden">

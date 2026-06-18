@@ -7,21 +7,30 @@ class eia_model extends my_model
     {
         parent::__construct();
         $this->load->database();
-        $this->defualt = $this->load->database('MIMS', TRUE);
+        $this->MIMS = $this->load->database('MIMS', TRUE);
         
     }
 
-        public function deleteData($tb,$w)
-        {  
-            if( $w != ''){$this->defualt->where($w);}
-            $this->defualt->delete($tb);
+        public function deleteData($base="",$tb,$w)
+       {
+            $db = $this->load->database($base, TRUE);
+            
+            // ตรวจสอบว่ามีเงื่อนไขการลบหรือไม่
+            if (!empty($w)) {
+                $db->where($w);
+                $db->delete($tb);
+            } else {
+                // กรณีไม่มีเงื่อนไข ให้ log error หรือ return false เพื่อป้องกันการลบทั้งตาราง
+                log_message('error', "Attempted to delete from $tb without WHERE clause!");
+                return false;
+            }
         }
 
         public function QuerySetBase($q,$base="", $bindData = "")
         {
             if($base == "")
             {
-                $base = "default";
+                $base = "DEFAULT";
             }
             if ($bindData == "") {
                 $bindData = array();
