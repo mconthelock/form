@@ -82,16 +82,16 @@
             <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
         </form>
         
-        <h3 class="text-xl font-bold mb-4">Add New Location</h3>
+        <h3 id="modalTitle" class="text-xl font-bold mb-4">Add New Location</h3>
         <hr class="border-base-300 mb-4">
         
-        <form id="formAddLocation" onsubmit="saveLocation(event)">
+        <form id="formAddLocation">
             <section>
                 <div class="form-control w-full">
                     <label class="label">
                         <span class="label-text required">Location Code</span>
                     </label>
-                    <input type="text" name="LOCCODE" placeholder="311" required class="input input-bordered w-full req" />
+                    <input type="text" name="LOCCODE"  placeholder="311" required class="input input-bordered w-full req" />
                 </div>
 
                 <div class="form-control w-full">
@@ -123,6 +123,7 @@
             <div class="modal-action mt-6">
                 <button type="button" onclick="document.getElementById('modalAdd').close()" class="btn btn-ghost">Cancel</button>
                 <button type="button"  id="btnSaveLocation" class="btn btn-primary px-6">Save</button>
+          
             </div>
         </form>
     </div>
@@ -137,13 +138,13 @@
         <h3 class="text-xl font-bold mb-4">Import Excel Data</h3>
         <hr class="border-base-300 mb-4">
         
-        <form id="formImportExcel" onsubmit="uploadExcel(event)">
+        <form id="formImportExcel">
             <section>
                 <div class="form-control w-full">
                     <label class="label">
                         <span class="label-text required">เลือกไฟล์ Excel (.xlsx)</span>
                     </label>
-                    <input type="file" id="excelFile" accept=".xlsx" required class="file-input file-input-bordered file-input-success w-full" />
+                    <input type="file" id="excelFile" accept=".xlsx" required class="file-input file-input-bordered file-input-success w-full req" />
                     <label class="label">
                         <span class="label-text-alt text-base-content/60">โปรดตรวจสอบว่าใช้ Template ที่กำหนดเท่านั้น</span>
                     </label>
@@ -152,7 +153,7 @@
 
             <div class="modal-action mt-6">
                 <button type="button" onclick="document.getElementById('modalImport').close()" class="btn btn-ghost">Cancel</button>
-                <button type="submit" class="btn btn-success text-white px-6">Upload</button>
+                <button type="button" id="uploadFile" class="btn btn-success text-white px-6">Upload</button>
             </div>
         </form>
     </div>

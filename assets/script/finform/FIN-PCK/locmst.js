@@ -1,6 +1,6 @@
 import { fetchUtils } from '@amec/webasset/api/fetch-utils';
 import { createTable } from '@amec/webasset/dataTable';
-import { writeExcelTemp, exportExcel } from '@amec/webasset/excel';
+import { writeExcelTemp, exportExcel, readInput } from '@amec/webasset/excel';
 import { getArrayBufferFile } from '@amec/webasset/file';
 import { showLoader } from '@amec/webasset/preloader';
 import {
@@ -15,6 +15,7 @@ import { setSelect2 } from '@amec/webasset/select2';
 import ExcelJS from 'exceljs';
 select2();
 var tableLocMst, locmstdata;
+let posdata, orgdata;
 $(document).ready(async function () {
     locmstdata = await getLocMstData({});
     const columnLocMst = [
@@ -49,7 +50,7 @@ $(document).ready(async function () {
             render: function (data, type, row) {
                 // ใช้ปุ่มสไตล์ DaisyUI/Tailwind สีเหลือง (warning) ขนาดเล็ก (btn-xs หรือ btn-sm)
                 return `
-                    <button type="button" class="btn btn-neutral btn-xs btn-edit-loc" data-id="${row.LOCCODE}">
+                    <button type="button" class="btn btn-neutral btn-xs btn-edit-loc" data-id="${row.LOCCODE}" data-name ="${row.LOCNAME}" data-vorgno ="${row.VORGNO}" data-sposcode ="${row.SPOSCODE}"  >
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-3.5 h-3.5">
                         <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Zm0 0L19.5 7.125" />
                     </svg>
@@ -74,12 +75,12 @@ $(document).ready(async function () {
         },
     );
     const pos = await getPosition();
-    const posdata = pos.map((p) => ({
+    posdata = pos.map((p) => ({
         value: p.SPOSCODE,
         text: p.SPOSNAME,
     }));
     const org = await getOrganize();
-    const orgdata = org.map((o) => ({
+    orgdata = org.map((o) => ({
         value: o.VORGNO,
         text: o.VNAME,
     }));
@@ -95,6 +96,10 @@ $(document).ready(async function () {
     });
 
     $(document).on('click', '#btnAdd', async function () {
+        $('#formAddLocation').trigger('reset');
+        $('#btnSaveLocation').data('action', 'add');
+        $('#modalTitle').text('Add New Location');
+        $('#POS_SELECT, #ORG_SELECT').val('').trigger('change');
         $('#modalAdd')[0].showModal();
     });
 
@@ -104,22 +109,99 @@ $(document).ready(async function () {
             if (!(await requiredForm('#formAddLocation'))) return;
             const formData = new FormData($('#formAddLocation')[0]);
             const filteredFormData = filterFormData(formData);
-            logFormData(filteredFormData);
+            const action = $(this).data('action');
+            let res;
+            if (action == 'add') {
+                res = await createLoc(filteredFormData);
+            } else {
+                res = await updateLoc(filteredFormData);
+            }
 
-            const res = await createloc(filteredFormData);
             if (res.status == true) {
                 showMessage(res.message, 'success');
+            } else if (res.status == false) {
+                showMessage(res.message, 'error');
             } else {
                 throw new Error(res.message);
             }
-
-            // if (!(await requiredForm('#form'))) return;
         } catch (err) {
-            console.error(err);
+            // console.error(err);
             showErrorMessage(err);
         } finally {
             showLoader({ show: false });
         }
+    });
+
+    $(document).on('click', '#uploadFile', async function () {
+        if (!(await requiredForm('#formImportExcel'))) return;
+        const fileInput = $('#excelFile')[0];
+        const file = fileInput.files[0];
+        const arrayBuffer = await file.arrayBuffer();
+        try {
+            showLoader();
+            // โยนเข้าฟังก์ชันอ่านไฟล์ของคุณ
+            const data = await readInput(arrayBuffer, {
+                readDefault: true,
+                startRow: 2,
+            });
+
+            const getOrgCode = (excelName) => {
+                const found = orgdata.find((o) => o.text === excelName);
+                return found ? found.value : '';
+            };
+
+            const getPosCode = (excelName) => {
+                const found = posdata.find((o) => o.text === excelName);
+                return found ? found.value : '';
+            };
+
+            const dataloc = data
+                .map((row) => {
+                    const excelOrgName = String(row[4] || '').trim();
+                    const excelPosName = String(row[2] || '').trim();
+                    return {
+                        LOCCODE: String(row[0] || ''),
+                        LOCNAME: String(row[1] || ''),
+                        VORGNO: getOrgCode(excelOrgName), // ดึงรหัสจาก Global
+                        SPOSCODE: getPosCode(excelPosName),
+                    };
+                })
+                .filter((item) => item.LOCCODE !== '');
+            console.log(dataloc);
+            const res = await importLoc(dataloc);
+
+            if (res.status == true) {
+                showMessage(res.message, 'success');
+                locmstdata = await getLocMstData({});
+                tableLocMst.clear().rows.add(locmstdata.data).draw();
+            } else if (res.status == false) {
+                showMessage(res.message, 'error');
+            } else {
+                throw new Error(res.message);
+            }
+        } catch (err) {
+            showErrorMessage(err);
+        } finally {
+            showLoader({ show: false });
+        }
+    });
+
+    $(document).on('click', '.btn-edit-loc', async function () {
+        $('#btnSaveLocation').data('action', 'edit');
+        $('#modalTitle').text('Edit Location');
+        const locCode = $(this).data('id');
+        const locName = $(this).data('name');
+        const posCode = $(this).data('sposcode');
+        const vorgno = $(this).data('vorgno');
+        $('input[name="LOCCODE"]')
+            .val(locCode)
+            .prop('readonly', true)
+            .addClass('bg-base-200 cursor-not-allowed');
+        $('input[name="LOCNAME"]').val(locName);
+        $('#POS_SELECT').val(posCode).trigger('change');
+        $('#ORG_SELECT').val(vorgno).trigger('change');
+
+        $('#modalAdd')[0].showModal();
     });
 });
 
@@ -333,17 +415,26 @@ export const organizeManager = {
     },
 };
 
-export async function createloc(formData) {
-    console.log(formData);
-
+export async function createLoc(formData) {
     return fetchUtils({
         url: `${process.env.APP_API}/finform/fxa-locmst/create`,
         method: 'POST',
-        data: {
-            LOCCODE: 999,
-            LOCNAME: 'TEST',
-            SPOSCODE: '30',
-            VORGNO: '050604',
-        },
+        data: formData,
+    });
+}
+
+export async function importLoc(formData) {
+    return fetchUtils({
+        url: `${process.env.APP_API}/finform/fxa-locmst/import`,
+        method: 'POST',
+        data: formData,
+    });
+}
+
+export async function updateLoc(formData) {
+    return fetchUtils({
+        url: `${process.env.APP_API}/finform/fxa-locmst/update`,
+        method: 'POST',
+        data: formData,
     });
 }
