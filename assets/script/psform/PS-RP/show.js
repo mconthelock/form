@@ -193,8 +193,7 @@ $(document).on("click", "button[name='btnAction']", async function () {
       }
       await sendmail({
         to: [
-          "punnawichs@mitsubishielevatorasia.co.th",
-          "inthiraj@mitsubishielevatorasia.co.th",
+          "viyada@MitsubishiElevatorAsia.co.th",
         ],
         subject: "Form Revise/Return WHI Complete",
         html: `<p>Dear PP Sect.</p>

@@ -67,7 +67,7 @@ $(document).on("click", "#btnSearch", async function () {
 
     if (!hasSearchReport) {
       return;
-    }
+    } 
 
     const report = await getReport(searchReport);
     const reportWithFormNo = report.map((row) => ({
