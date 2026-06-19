@@ -99,6 +99,10 @@ $(document).ready(async function () {
         $('#formAddLocation').trigger('reset');
         $('#btnSaveLocation').data('action', 'add');
         $('#modalTitle').text('Add New Location');
+        $('input[name="LOCCODE"]')
+            .val('')
+            .prop('readonly', false)
+            .removeClass('bg-base-200 cursor-not-allowed');
         $('#POS_SELECT, #ORG_SELECT').val('').trigger('change');
         $('#modalAdd')[0].showModal();
     });
