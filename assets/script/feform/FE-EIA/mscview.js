@@ -206,15 +206,6 @@ $(document).ready(async function () {
         });
     });
 
-    $(document).on('click', '#drop-zone', function (e) {
-        if (!$(e.target).is('input')) {
-            $('#files').trigger('click');
-        }
-        if (!$(e.target).hasClass('btn-remove-file')) {
-            $('#files').trigger('click');
-        }
-    });
-
     // อีเวนต์เมื่อไฟล์ใน Input มีการเปลี่ยนแปลง (เลือกไฟล์เข้ามา)
     $(document).on('change', '#files', function () {
         handleFileSelect(this.files);
@@ -252,6 +243,14 @@ $(document).ready(async function () {
             false,
         );
     }
+
+    // $(document).on('click', '#drop-zone', function (e) {
+    //     if (!$(e.target).is('input')) {
+    //         $('#files').trigger('click');
+    //     } else if (!$(e.target).hasClass('btn-remove-file')) {
+    //         $('#files').trigger('click');
+    //     }
+    // });
 
     // == Action Upload File
 });
@@ -355,6 +354,7 @@ function search() {
                     var parts = onhand.COSTMONTH.split("'");
                     onhand.COST_YEAR = parts[1] || '';
                     onhand.COST_MONTH = onhand.COST_MONTH || '';
+                    onhand.COSTMONTH = onhand.COSTMONTH || '';
                 });
 
                 // 2. สั่งวาดและพ่นตารางลงหน้าเว็บ
@@ -573,6 +573,7 @@ $(document).on('click', '#SentEmailBtn', async function () {
         $('#loading').hide();
     }
 });
+
 $(document).on('click', '#PdfBtn', function () {
     // ดักจับ fallback เผื่อก้อนข้อมูลหลักยังโหลดมาไม่สมบูรณ์
     const formData = $('.form-info').data() || {};
@@ -591,9 +592,9 @@ $(document).on('click', '#PdfBtn', function () {
         '&runNo=' +
         nrunno;
 
-    alert(pdfUrl);
+    // alert(pdfUrl);
     // // เปิดลิงก์หลังบ้านในแท็บใหม่เพื่อประมวลผลไฟล์ PDF ทันที
-    //  window.open(pdfUrl, '_blank');
+    window.open(pdfUrl, '_blank');
 });
 
 $(document).on('click', '#ApproveBtn', async function () {
@@ -701,15 +702,6 @@ async function actionFlow(actionType) {
     };
 
     try {
-        let phpData = new FormData();
-        phpData.append('NFRMNO', nfrmno);
-        phpData.append('VORGNO', vorgno);
-        phpData.append('CYEAR', cyear);
-        phpData.append('CYEAR2', cyear2);
-        phpData.append('NRUNNO', nrunno);
-        phpData.append('COST_MONTH', $('#MONTHDrp').val());
-        phpData.append('COST_YEAR', $('#YEARDrp').val());
-        phpData.append('DATAONHAND', JSON.stringify(dataOnhand));
         // 1. ตรวจสอบว่าผู้ใช้งานคือ Requester หรือไม่
         if (($('#REQUEST_BYTxt').val() || '').includes(empno)) {
             const hasFiles =
@@ -745,11 +737,19 @@ async function actionFlow(actionType) {
             }
 
             // --- ขั้นตอนที่ 2: จัดการบันทึก Detail ผ่าน PHP AddFEEIADetail ---
-
+            let FEEIADetailData = new FormData();
+            FEEIADetailData.append('NFRMNO', nfrmno);
+            FEEIADetailData.append('VORGNO', vorgno);
+            FEEIADetailData.append('CYEAR', cyear);
+            FEEIADetailData.append('CYEAR2', cyear2);
+            FEEIADetailData.append('NRUNNO', nrunno);
+            FEEIADetailData.append('COST_MONTH', $('#MONTHDrp').val());
+            FEEIADetailData.append('COST_YEAR', $('#YEARDrp').val());
+            FEEIADetailData.append('DATAONHAND', JSON.stringify(dataOnhand));
             const responsePhp = await $.ajax({
                 url: host + 'feform/FE-EIA/form/AddFEEIADetail',
                 type: 'POST',
-                data: phpData,
+                data: FEEIADetailData,
                 processData: false,
                 contentType: false,
                 dataType: 'json',
@@ -776,10 +776,23 @@ async function actionFlow(actionType) {
             if (res?.status || res?.status === true || res?.status === 'true') {
                 if ($('#EXTDATAHid').val() == '03') {
                     // sent mail
+
+                    let EndProcessData = new FormData();
+                    EndProcessData.append('NFRMNO', nfrmno);
+                    EndProcessData.append('VORGNO', vorgno);
+                    EndProcessData.append('CYEAR', cyear);
+                    EndProcessData.append('CYEAR2', cyear2);
+                    EndProcessData.append('NRUNNO', nrunno);
+                    EndProcessData.append('COST_MONTH', $('#MONTHDrp').val());
+                    EndProcessData.append('COST_YEAR', $('#YEARDrp').val());
+                    // EndProcessData.append(
+                    //     'DATAONHAND',
+                    //     JSON.stringify(dataOnhand),
+                    // );
                     const responseEndProcess = await $.ajax({
                         url: host + 'feform/FE-EIA/form/EndpProcess',
                         type: 'POST',
-                        data: phpData,
+                        data: EndProcessData,
                         processData: false,
                         contentType: false,
                         dataType: 'json',
@@ -819,7 +832,6 @@ function preventDefaults(e) {
 }
 
 // == Action Upload File
-// ฟังก์ชันแรปรายชื่อไฟล์มาพ่นโชว์บน UI และเก็บเข้า Array
 function handleFileSelect(files) {
     if (files.length === 0) return;
 
@@ -833,15 +845,15 @@ function handleFileSelect(files) {
         let fileSize = (files[i].size / (1024 * 1024)).toFixed(2) + ' MB';
 
         let itemHtml = `
-                <li class="flex items-center justify-between py-2 px-3 text-sm text-slate-700 font-medium bg-slate-50/50 rounded-lg mb-1" id="file-item-${fileId}">
-                    <div class="flex items-center gap-2 truncate">
-                        <span class="text-slate-400">📄</span>
-                        <span class="truncate">${files[i].name}</span>
-                        <span class="text-xs text-slate-400">(${fileSize})</span>
-                    </div>
-                    <button type="button" class="text-rose-500 hover:text-rose-700 text-xs font-bold px-2 cursor-pointer btn-remove-file" data-id="${fileId}">Remove</button>
-                </li>
-            `;
+                    <li class="flex items-center justify-between py-2 px-3 text-sm text-slate-700 font-medium bg-slate-50/50 rounded-lg mb-1" id="file-item-${fileId}">
+                        <div class="flex items-center gap-2 truncate">
+                            <span class="text-slate-400">📄</span>
+                            <span class="truncate">${files[i].name}</span>
+                            <span class="text-xs text-slate-400">(${fileSize})</span>
+                        </div>
+                        <button type="button" class="text-rose-500 hover:text-rose-700 text-xs font-bold px-2 cursor-pointer btn-remove-file" data-id="${fileId}">Remove</button>
+                    </li>
+                `;
         $('#selected-files-list').append(itemHtml);
     }
 }

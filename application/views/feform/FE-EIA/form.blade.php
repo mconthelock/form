@@ -38,15 +38,17 @@
                     <u class="text-3xl text-primary font-bold no-underline decoration-transparent">Maintenance Stock Cost Report</u>
                 </h2>
                 
-                <button type="button" id="PdfBtn" name="PdfBtn" 
-                        class="cursor-pointer bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm px-4 py-2 rounded-lg shadow-sm transition-all flex items-center gap-2">
-                    Export PDF
-                </button>
-                
-                <button type="button" id="SentEmailBtn" name="SentEmailBtn" 
-                        class="cursor-pointer bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm px-4 py-2 rounded-lg shadow-sm transition-all flex items-center gap-2">
-                    Sent Email
-                </button>
+                <div class="flex items-center gap-3 ml-auto">
+                    <button type="button" id="PdfBtn" name="PdfBtn" 
+                            class="cursor-pointer bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm px-4 py-2 rounded-lg shadow-sm transition-all flex items-center gap-2">
+                        Export PDF
+                    </button>
+                    
+                    <button type="button" id="SentEmailBtn" name="SentEmailBtn" 
+                            class="cursor-pointer bg-gray-600 hover:bg-gray-700 text-white font-medium text-sm px-4 py-2 rounded-lg shadow-sm transition-all flex items-center gap-2">
+                        Sent Email
+                    </button>
+                </div>
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 border border-slate-200 p-6 rounded-2xl bg-white shadow-sm mb-6 font-sans">
