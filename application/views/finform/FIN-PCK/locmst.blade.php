@@ -130,7 +130,7 @@
 </dialog>
 
 <dialog id="modalImport" class="modal">
-    <div class="modal-box max-w-md">
+    <div class="modal-box max-w-lg">
         <form method="dialog">
             <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
         </form>
