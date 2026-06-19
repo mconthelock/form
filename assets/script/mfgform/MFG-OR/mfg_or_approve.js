@@ -55,7 +55,7 @@ $(document).ready(function () {
                         }else if (typeform.toUpperCase() === "REVISE") {
                             await updateReviseCenter(VIEW.getBasePayload(), formno);
                         }
-
+                    /*
                         // Export PDF
                         const baseUrl = $("#base_url").val();
                         return $.ajax({
@@ -64,7 +64,7 @@ $(document).ready(function () {
                             dataType: "json",
                             data: { formno }
                         });
-                        
+                    */
                         await stampPdf(VIEW.getBasePayload(), formno);
                     }else{
             
