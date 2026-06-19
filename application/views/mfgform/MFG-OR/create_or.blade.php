@@ -129,11 +129,10 @@
                                 Topic <span class="text-red-600">*</span>
                             </th>
                             <td class="px-4 py-3 align-middle">
-                                <input type="text" id="topic" name="topic"
-                                    class="w-full {{ $inputClass }}">
+                                <input type="text" id="topic" name="topic" class="w-full {{ $inputClass }}">
                             </td>
                         </tr>
-                        
+
                         <tr class="border-b border-indigo-200">
                             <th class="border-r border-indigo-200 bg-indigo-50 px-4 py-3 text-left align-middle font-extrabold text-indigo-700">
                                 Attach OR File (Excel) <span class="text-red-600">*</span>
