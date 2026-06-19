@@ -119,6 +119,7 @@ $(document).ready(async function () {
 
             if (res.status == true) {
                 showMessage(res.message, 'success');
+                reloadTableData(tableLocMst);
             } else if (res.status == false) {
                 showMessage(res.message, 'error');
             } else {
@@ -172,8 +173,7 @@ $(document).ready(async function () {
 
             if (res.status == true) {
                 showMessage(res.message, 'success');
-                locmstdata = await getLocMstData({});
-                tableLocMst.clear().rows.add(locmstdata.data).draw();
+                reloadTableData(tableLocMst);
             } else if (res.status == false) {
                 showMessage(res.message, 'error');
             } else {
@@ -437,4 +437,9 @@ export async function updateLoc(formData) {
         method: 'POST',
         data: formData,
     });
+}
+
+async function reloadTableData(tab) {
+    locmstdata = await getLocMstData({});
+    tab.clear().rows.add(locmstdata.data).draw(false);
 }
