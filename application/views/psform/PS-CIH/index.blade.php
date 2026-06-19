@@ -17,7 +17,7 @@
                     MITSUBISHI ELEVATOR ASIA CO., LTD. &nbsp;·&nbsp; PS / WHI
                 </p>
                 <h1 class="text-2xl font-bold text-slate-800 leading-tight">
-                    Cycle Count Inventory Sheet
+                    Cycle Count Inventory Sheet (6 Months)
                 </h1>
                 <p class="text-xl text-slate-500 mt-1">
                     Group&nbsp;<span class="group-name font-semibold text-slate-700">—</span>
@@ -135,5 +135,5 @@
 @endsection
 
 @section('scripts')
-    <script src="{{ $_ENV['APP_JS'] }}/psCi.js?ver={{ $GLOBALS['version'] }}"></script>
+    <script src="{{ $_ENV['APP_JS'] }}/psCih.js?ver={{ $GLOBALS['version'] }}"></script>
 @endsection
