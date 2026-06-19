@@ -130,7 +130,7 @@
 </dialog>
 
 <dialog id="modalImport" class="modal">
-    <div class="modal-box max-w-md">
+    <div class="modal-box max-w-lg">
         <form method="dialog">
             <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
         </form>
@@ -142,11 +142,11 @@
             <section>
                 <div class="form-control w-full">
                     <label class="label">
-                        <span class="label-text required">เลือกไฟล์ Excel (.xlsx)</span>
+                        <span class="label-text required">Select Excel file (.xlsx)</span>
                     </label>
                     <input type="file" id="excelFile" accept=".xlsx" required class="file-input file-input-bordered file-input-success w-full req" />
                     <label class="label">
-                        <span class="label-text-alt text-base-content/60">โปรดตรวจสอบว่าใช้ Template ที่กำหนดเท่านั้น</span>
+                        <span class="label-text-alt text-base-content/60">Please ensure you are using the designated template only.</span>
                     </label>
                 </div>
             </section>

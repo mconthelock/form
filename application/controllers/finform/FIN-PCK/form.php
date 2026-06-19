@@ -22,7 +22,7 @@ class form extends MY_Controller{
             ];
 
         }else{
-            $form = $this->getFormMasterByVaname('PUR-CHK');
+            $form = $this->getFormMasterByVaname('FIN-PCK');
             
             if(!empty($form)){
                 $data = [
@@ -49,14 +49,12 @@ class form extends MY_Controller{
             $data['cextData'] = $this->getExtdata($form);
             $data['mode']     = $this->getMode($form);
             $data['return']   = $this->checkReturn($form);
-            if($data['return']){
-                $this->views('purform/PUR-NVF/create', $data);
-            }else{
-                $this->views('purform/PUR-NVF/view', $data);
-            }
-            exit();
+            $this->views('finform/FIN-PCK/view', $data);
+        }else
+        {
+            $this->views('finform/FIN-PCK/create', $data);
         }
-        $this->views('purform/PUR-NVF/create', $data);
+        
     }
 
     public function locmst()
