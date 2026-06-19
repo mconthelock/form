@@ -3,6 +3,7 @@ import { createTable } from '@amec/webasset/dataTable';
 import { writeExcelTemp, exportExcel, readInput } from '@amec/webasset/excel';
 import { getArrayBufferFile } from '@amec/webasset/file';
 import { showLoader } from '@amec/webasset/preloader';
+
 import {
     filterFormData,
     requiredForm,
@@ -13,6 +14,14 @@ import {
 import select2 from 'select2';
 import { setSelect2 } from '@amec/webasset/select2';
 import ExcelJS from 'exceljs';
+import {
+    getLocMstData,
+    getPosition,
+    getOrganize,
+    createLoc,
+    importLoc,
+    updateLoc,
+} from './dataloc';
 select2();
 var tableLocMst, locmstdata;
 let posdata, orgdata;
@@ -209,28 +218,6 @@ $(document).ready(async function () {
     });
 });
 
-export async function getLocMstData(filters = {}) {
-    return await fetchUtils({
-        url: `${process.env.APP_API}/finform/fxa-locmst/search`,
-        method: 'GET',
-        params: filters,
-    });
-}
-
-export async function getPosition() {
-    return fetchUtils({
-        url: `${process.env.APP_API}/amec/pposition/filter`,
-        method: 'GET',
-    });
-}
-
-export async function getOrganize() {
-    return fetchUtils({
-        url: `${process.env.APP_API}/webform/vorgmst/findactive`,
-        method: 'GET',
-    });
-}
-
 export async function writeExcel(dataList) {
     var workbook = new ExcelJS.Workbook();
     const templatePath = `${process.env.AMEC_FILE_PATH}${process.env.STATE == 'production' ? 'production' : 'development'}/Form/FIN/FIN-PCK/TEMPLATE`;
@@ -418,30 +405,6 @@ export const organizeManager = {
         }
     },
 };
-
-export async function createLoc(formData) {
-    return fetchUtils({
-        url: `${process.env.APP_API}/finform/fxa-locmst/create`,
-        method: 'POST',
-        data: formData,
-    });
-}
-
-export async function importLoc(formData) {
-    return fetchUtils({
-        url: `${process.env.APP_API}/finform/fxa-locmst/import`,
-        method: 'POST',
-        data: formData,
-    });
-}
-
-export async function updateLoc(formData) {
-    return fetchUtils({
-        url: `${process.env.APP_API}/finform/fxa-locmst/update`,
-        method: 'POST',
-        data: formData,
-    });
-}
 
 async function reloadTableData(tab) {
     locmstdata = await getLocMstData({});
