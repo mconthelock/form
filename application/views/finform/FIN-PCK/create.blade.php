@@ -37,6 +37,9 @@
 </style>
 @endsection
 @section('contents')
+<div class="hidden form-info" nfrmno="{{$NFRMNO}}" vorgno="{{$VORGNO}}" cyear="{{$CYEAR}}" mode="{{$mode}}"
+    cyear2="{{$mode !=1 ? $CYEAR2 : '' }}" ></div>
+<div class="hidden apv-data" empno="{{$empno}}"></div>
 <div class="p-6 max-w-7xl mx-auto flex flex-col gap-6 min-w-[70vw]">
     
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-base-100 shadow-md rounded-lg p-6">
@@ -49,14 +52,14 @@
     </div>
 
     <div class="bg-base-100 shadow-md rounded-lg p-6">
-        <form id="formDataProcess">
+        <form id="frmmain">
             <div class="max-w-2xl mx-auto py-8">
                 
                 <div class="form-control w-full">
                     <label class="label">
                         <span class="label-text text-base font-medium required">Browse File</span>
                     </label>
-                    <input type="file" id="processFile" accept=".xlsx" required class="file-input file-input-bordered file-input-primary w-full req" />
+                    <input type="file" id="excelFile" accept=".xlsx" required class="file-input file-input-bordered file-input-primary w-full req" />
                     <label class="label">
                         <span class="label-text-alt text-base-content/60">Supports .xlsx files only.</span>
                     </label>
