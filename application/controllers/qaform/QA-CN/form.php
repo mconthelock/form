@@ -176,7 +176,7 @@ class form extends MY_Controller{
             
             }else
             {
-                $sql = "select SEMPNO , SNAME from AMEC.AEMPLOYEE where CSTATUS = '1' and SSECCODE = '000404' and  SPOSCODE in (".$posCode.") " . $excludePic . " order by sname";
+                $sql = "select SEMPNO , SNAME from AMEC.AEMPLOYEE where CSTATUS = '1' and SSECCODE = '000404' and SPOSCODE in (".$posCode.") " . $excludePic . " order by sname";
             
             }
        

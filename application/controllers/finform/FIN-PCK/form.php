@@ -22,13 +22,13 @@ class form extends MY_Controller{
             ];
 
         }else{
-            $form = $this->getFormMasterByVaname('PUR-CPM');
-            var_dump($form);
+            $form = $this->getFormMasterByVaname('FIN-PCK');
+            
             if(!empty($form)){
                 $data = [
-                    'NFRMNO' => $form[0]->NNO,
-                    'VORGNO' => $form[0]->VORGNO,
-                    'CYEAR'  =>$form[0]->CYEAR,
+                    'NFRMNO' => $form["data"]["NNO"],
+                    'VORGNO' => $form["data"]["VORGNO"],
+                    'CYEAR'  => $form["data"]["CYEAR"],
                 ];
             }
         }
@@ -49,13 +49,18 @@ class form extends MY_Controller{
             $data['cextData'] = $this->getExtdata($form);
             $data['mode']     = $this->getMode($form);
             $data['return']   = $this->checkReturn($form);
-            if($data['return']){
-                $this->views('purform/PUR-CPM/form', $data);
-            }else{
-                $this->views('purform/PUR-CPM/view', $data);
-            }
-            exit();
+            $this->views('finform/FIN-PCK/view', $data);
+        }else
+        {
+            $this->views('finform/FIN-PCK/create', $data);
         }
-        $this->views('purform/PUR-CPM/form', $data);
+        
     }
+
+    public function locmst()
+    {
+        $this->views('finform/FIN-PCK/locmst');
+    }
+
+
 }
