@@ -210,6 +210,7 @@ class form extends MY_Controller{
                 }
 
                 // == Email Notification (Optional)
+                exit;
                 
             }
 
