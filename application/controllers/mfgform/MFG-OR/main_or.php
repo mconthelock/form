@@ -259,53 +259,37 @@ class main_or extends MY_Controller {
         }
     }
 
-    public function download_or_file()
-    {
-        try {
-            $formno = trim($this->input->get('FORMNO'));
-            $type   = strtoupper(trim($this->input->get('TYPE')));
+    public function download_or_file(){
+        $formno = trim($this->input->get('FORMNO'));
+        $type   = strtoupper(trim($this->input->get('TYPE')));
+        $folder = rtrim($this->upload_path, "/\\"). DIRECTORY_SEPARATOR. $formno. DIRECTORY_SEPARATOR;
 
-            if (!$formno) {
-                show_error('FORMNO is required', 400);
-                return;
-            }
-
-            $folder = rtrim($this->upload_path, "/\\") . DIRECTORY_SEPARATOR . $formno . DIRECTORY_SEPARATOR;
-
-            if ($type === 'PDF') {
+        switch ($type) {
+            case 'PDF':
                 $filename = $formno . '_stamp.pdf';
-                $mime = 'application/pdf';
-            } elseif ($type === 'EXCEL') {
+                break;
+            case 'EXCEL':
                 $filename = $formno . '.xlsx';
-                $mime = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
-            } else {
+                break;
+            default:
                 show_error('Invalid TYPE', 400);
                 return;
-            }
-
-            $filepath = $folder . $filename;
-
-            if (!is_file($filepath)) {
-                show_error('File not found: ' . $filepath, 404);
-                return;
-            }
-
-            if (ob_get_length()) {
-                ob_end_clean();
-            }
-
-            header('Content-Type: ' . $mime);
-            header('Content-Length: ' . filesize($filepath));
-            header('Content-Disposition: attachment; filename="' . basename($filename) . '"');
-            header('Cache-Control: private, max-age=0, must-revalidate');
-            header('Pragma: public');
-
-            readfile($filepath);
-            exit;
-        } catch (Exception $e) {
-            show_error($e->getMessage(), 500);
         }
-    }
 
+        $filepath = $folder . $filename;
+        if (!is_file($filepath)) {
+            show_error('File not found : ' . $filepath, 404);
+            return;
+        }
+
+        $mime = function_exists('mime_content_type') ? mime_content_type($filepath) : 'application/octet-stream';
+
+        if (ob_get_length()) { ob_end_clean(); }
+        header('Content-Type: ' . $mime);
+        header('Content-Length: ' . filesize($filepath));
+        header('Content-Disposition: attachment; filename="' . basename($filename) . '"');
+        readfile($filepath);
+        exit;
+    }
 
 }
