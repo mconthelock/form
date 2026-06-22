@@ -317,6 +317,11 @@ $(document).ready(async function () {
             title: "RE-CHECK QTY",
             className: "border-r border-slate-200 text-center",
             render: (data, type, row) => {
+                if (type === 'sort' || type === 'type') {
+                    return Number(row.RECHECK_QTY ?? row.RANDOM_CHECK ?? 0);
+                    //                           ^^                ^^
+                    // แก้ด้วย: ใช้ ?? แทน || เพื่อให้ fallback ไป ON_HAND ได้ถูกต้อง
+                }
                 // if (!row.RANDOM_CHECK) return '';
                 const borderClass = row.IS_RECHECK_EDITED
                     ? 'border-red-500 border-2'

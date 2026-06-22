@@ -7,4 +7,6 @@ module.exports = {
 	psId: "./assets/script/psform/PS-ID/index.js", //ID page
 	// PS-CIH
 	psCih: "./assets/script/psform/PS-CIH/index.js", //CIH page
+	// PS-VAR
+	psVar: "./assets/script/psform/PS-VAR/index.js", //VAR page
 };
