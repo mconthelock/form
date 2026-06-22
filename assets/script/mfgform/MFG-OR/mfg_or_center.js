@@ -34,8 +34,6 @@ $(document).ready(function () {
                 const res = await searchMfgOrCenter({});
                 const rows = Array.isArray(res?.data) ? res.data : [];
 
-                console.log("OR CENTER ROWS =", rows);
-                onsole.log("FIRST ROW =", rows[0]);
 
                 this.allData = rows;
                 this.currentData = [...rows];
