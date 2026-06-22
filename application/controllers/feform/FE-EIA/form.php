@@ -129,14 +129,22 @@ class form extends MY_Controller{
     //== Case Yearly Report /1/2026/all/
     // http://localhost:8080/form/feform/FE-EIA/form/AutoCreateFEEIAForm/?COST_YEAR=2026&COST_MONTH=01
     // http://localhost:8080/form/feform/FE-EIA/form/AutoCreateFEEIAForm/?COST_YEAR=2026&COST_MONTH=ALL
+    // https://amecwebtest.mitsubishielevatorasia.co.th/form/feform/FE-EIA/form/AutoCreateFEEIAForm/?COST_YEAR=2026&COST_MONTH=ALL
     //==============================================================================================================
     public function AutoCreateFEEIAForm()
     {
         try {
-            // ดึงค่าจาก Query String พร้อมใส่ค่า Default ด้วยเครื่องหมาย ?? 
-            $COST_YEAR  = $this->input->get('COST_YEAR') ?? date('Y');
-            $COST_MONTH = $this->input->get('COST_MONTH') ?? date('m');
+            $currentYear = (int)date('Y');
+            $currentMonth = (int)date('m');
 
+            // คำนวณปีงบประมาณ: 
+            // ถ้าเดือน >= 4 ให้เป็นปีปัจจุบัน, ถ้า < 4 ให้เป็นปีปัจจุบัน - 1
+            $fiscalYear = ($currentMonth >= 4) ? $currentYear : ($currentYear - 1);
+
+            // รับค่าจาก input หรือใช้ค่าปีงบประมาณที่คำนวณไว้
+            $COST_YEAR = $this->input->get('COST_YEAR') ?? (string)$fiscalYear;
+            $COST_MONTH = $this->input->get('COST_MONTH') ?? "ALL";
+            
             $sql = "SELECT * FROM WPS_MIMS_EIAFORM_USERCREATE WHERE 1=1 and GROUPTYPE = 'REQ' ";
             $REQBY = $this->MainModel->QuerySetBase($sql, $this->mimsBase)->result();
             
@@ -146,7 +154,7 @@ class form extends MY_Controller{
                 
                 $formData = $form['data']; 
                 
-                $empNo = (!empty($REQBY) && isset($REQBY[0]->REQBY)) ? $REQBY[0]->REQBY : '13204';
+                $empNo = (!empty($USERID) && isset($REQBY[0]->USERID)) ? $REQBY[0]->USERID : '13204';
 
                 $data = [
                     'NFRMNO'  => $formData['NNO'],     
@@ -190,15 +198,7 @@ class form extends MY_Controller{
                     $db_mims = $this->load->database('MIMS', TRUE);
                     $db_mims->insert('WPS_MIMS_EIAFORM', $mscFormData);
 
-                    // สั่งคืนค่าแจ้งสถานะ JSON ออกบนหน้าเว็บเพื่อความสะดวกในการตรวจสอบ
-                    return $this->output
-                                ->set_content_type('application/json')
-                                ->set_output(json_encode(array(
-                                    'status' => true,
-                                    'message' => 'Created successfully',
-                                    'doc_no' => $docNo,
-                                    'data' => $mscFormData
-                                )));
+                    
 
                 } else {
                     return $this->output
@@ -210,6 +210,90 @@ class form extends MY_Controller{
                 }
 
                 // == Email Notification (Optional)
+                // 1. แก้ไข Syntax วันที่
+                $SUBJECT = "MIMS : Auto Create (FE-EIA FORM)_" . $COST_YEAR . "/" . $COST_MONTH ;
+                $TO = "";
+                $CC = "";
+
+                $sql = "SELECT  LISTAGG(SRECMAIL, ',') WITHIN GROUP (ORDER BY SEMPNO) AS ALL_EMAILS FROM WPS_MIMS_EIAFORM_USERCREATE_VIEW WHERE  GROUPTYPE = 'REQ' ";
+                $emailResult = $this->MainModel->QuerySetBase($sql, $this->mimsBase)->row();
+                $CC_MAIL= ($emailResult) ? trim($emailResult->ALL_EMAILS) : "";
+
+                if (strpos($this->host, 'test') !== false || strpos($this->host, 'localhost') !== false) {
+                    // กรณี Test Server
+                    $TO = $CC_MAIL;
+                    $TO = str_ireplace("kanittha", "siripapa", $TO);
+                    $CC = "siripapa@mitsubishielevatorasia.co.th,";
+                    // var_dump($this->host . $TO);
+                    // exit;
+                } else {
+                    $TO = $CC_MAIL;
+                    $CC = "siripapa@mitsubishielevatorasia.co.th";
+                }
+                //kanittha@MitsubishiElevatorAsia.co.th
+                
+
+                $BODY = ["
+                    <div style='font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden;'>
+                        <div style='background-color: #0056b3; color: white; padding: 20px; text-align: center;'>
+                            <h2 style='margin: 0;'>MIMS Create FE-EIA FORM</h2>
+                        </div>
+                        <div style='padding: 20px;'>
+                            <p>Dear All,</p>
+                            <p>This is an automated notification: Form for <strong>FE-EIA</strong> has been created.</p>
+                            
+                            <p>You can view the form at: 
+                            <a href='http://webflow/form' target='_blank'>http://webflow/form</a> 
+                            (Menu: <strong>Under Preparation</strong>)
+                            </p>
+                            
+                            <table style='width: 100%; margin: 20px 0; border-collapse: collapse;'>
+                                <tr>
+                                    <td style='padding: 8px; border-bottom: 1px solid #eee; color: #777;'><strong>Report Period:</strong></td>
+                                    <td style='padding: 8px; border-bottom: 1px solid #eee;'>{$COST_YEAR}/" . $COST_MONTH . "</td>
+                                </tr>
+                                <tr>
+                                    <td style='padding: 8px; border-bottom: 1px solid #eee; color: #777;'><strong>Run Time:</strong></td>
+                                    <td style='padding: 8px; border-bottom: 1px solid #eee;'>" . date('Y-m-d H:i:s') . "</td>
+                                </tr>
+                            </table>
+                            
+                            <p style='font-size: 12px; color: #999; border-top: 1px solid #eee; padding-top: 10px;'>
+                                * This is an automated email. Please do not reply directly to this message.
+                            </p>
+                        </div>
+                        <div style='background-color: #f8f9fa; padding: 10px; text-align: center; font-size: 11px; color: #777;'>
+                            Mitsubishi Elevator Asia Co., Ltd.
+                        </div>
+                    </div>"];
+                // $BODY = "test";
+                if($TO != "")
+                {
+
+                    $dataM = [
+                        // 'VIEW' =>'layouts/mail/mailAlert',
+                        'SUBJECT' => $SUBJECT,
+                        'TO'      => $TO,
+                        'CC'      => $CC,
+                        'BODY'    => $BODY
+                    ];
+                    // $dataM['ENFILE']  = array(['filename' => 'file.xlsx', 'content' => ob_get_contents]);
+                    // ส่งเมล์ (ถ้าต้องส่งหาผู้อนุมัติหลายคน ให้วน Loop ตรงนี้)
+                    $this->mail->sendmail($dataM);
+
+                }
+
+                exit;
+                // สั่งคืนค่าแจ้งสถานะ JSON ออกบนหน้าเว็บเพื่อความสะดวกในการตรวจสอบ
+                    return $this->output
+                                ->set_content_type('application/json')
+                                ->set_output(json_encode(array(
+                                    'status' => true,
+                                    'message' => 'Created successfully',
+                                    'doc_no' => $docNo,
+                                    'data' => $mscFormData
+                                )));
+
                 
             }
 
@@ -407,6 +491,8 @@ class form extends MY_Controller{
             // Handle the exception
         }
     }
+
+    //--send mail email
     public function EndpProcess() 
     { 
         try {
@@ -415,22 +501,28 @@ class form extends MY_Controller{
             $CYEAR     = (string)$this->input->post('CYEAR');
             $CYEAR2    = (string)$this->input->post('CYEAR2');
             $NRUNNO    = (int)$this->input->post('NRUNNO');
-            $COST_YEAR = (int)$this->input->post('COST_YEAR');
+            $COST_YEAR = $this->input->post('COST_YEAR');
+            $COST_MONTH = $this->input->post('COST_MONTH');
 
             if (empty($NRUNNO) ) {
                 throw new \Exception("ข้อมูลฟอร์มไม่ครบถ้วน");
             }
+            
             // 1. แก้ไข Syntax วันที่
-            $SUBJECT = "Maintenance Stock Cost Report (FE-EIA)_" . $COST_YEAR . "/" . date('m');
+            $SUBJECT = "MIMS : Maintenance Stock Cost Report (FE-EIA)_" . $COST_YEAR . "/" . $COST_MONTH;
             $TO = "";
             $CC = "";
 
+            $sql = "SELECT  LISTAGG(SRECMAIL, ',') WITHIN GROUP (ORDER BY SEMPNO) AS ALL_EMAILS FROM WPS_MIMS_EIAFORM_USERCREATE_VIEW WHERE  GROUPTYPE = 'EIA_CC' ";
+            $emailResult = $this->MainModel->QuerySetBase($sql, $this->mimsBase)->row();
+            $CC_MAIL= ($emailResult) ? trim($emailResult->ALL_EMAILS) : "";
 
             if (strpos($this->host, 'test') !== false || strpos($this->host, 'localhost') !== false) {
                 // กรณี Test Server
 
                 $TO = "siripapa@mitsubishielevatorasia.co.th";
-                $CC = "siripapa@mitsubishielevatorasia.co.th";
+                $CC = "siripapa@mitsubishielevatorasia.co.th," . $CC_MAIL;
+                $CC = str_ireplace("kanittha", "siripapa", $CC);
                 // var_dump($this->host . $TO);
                 // exit;
             } else {
@@ -444,10 +536,11 @@ class form extends MY_Controller{
                 
                 $flowList = $this->MainModel->QuerySetBase($sql, $this->webflowBase, $bindParams)->result();
 
+
                 // 3. เตรียมส่งเมล์
                 if (!empty($flowList) && isset($flowList[0]->ALL_EMAILS)) {
                     $TO = $flowList[0]->ALL_EMAILS;
-                    $CC = "siripapa@mitsubishielevatorasia.co.th";
+                    $CC = "siripapa@mitsubishielevatorasia.co.th," . $CC_MAIL;
                 } else {
                     // กรณีไม่พบ Flow อาจจะ log หรือแจ้งเตือน
                     log_message('error', "EndpProcess: ไม่พบอีเมลในตาราง FLOW");
@@ -457,7 +550,7 @@ class form extends MY_Controller{
             $BODY = ["
                 <div style='font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden;'>
                     <div style='background-color: #0056b3; color: white; padding: 20px; text-align: center;'>
-                        <h2 style='margin: 0;'>Maintenance Stock Cost Report</h2>
+                        <h2 style='margin: 0;'>MIMS : Maintenance Stock Cost Report</h2>
                     </div>
                     <div style='padding: 20px;'>
                         <p>Dear All,</p>
@@ -466,7 +559,7 @@ class form extends MY_Controller{
                         <table style='width: 100%; margin: 20px 0; border-collapse: collapse;'>
                             <tr>
                                 <td style='padding: 8px; border-bottom: 1px solid #eee; color: #777;'><strong>Report Period:</strong></td>
-                                <td style='padding: 8px; border-bottom: 1px solid #eee;'>{$COST_YEAR}/" . date('m') . "</td>
+                                <td style='padding: 8px; border-bottom: 1px solid #eee;'>{$COST_YEAR}/" . $COST_MONTH . "</td>
                             </tr>
                             <tr>
                                 <td style='padding: 8px; border-bottom: 1px solid #eee; color: #777;'><strong>Run Time:</strong></td>
@@ -777,6 +870,7 @@ class form extends MY_Controller{
             if ($data && !empty($data->APPROVE_DATE) && trim($data->APPROVE_DATE) !== '') {
             // if ($data ) {
                 $circleX = $startX + ($circleSpace * $index) + 5;
+                $dateOnly = explode(' ', trim($data->APPROVE_DATE))[0];
                 
                 $pdf->Circle($circleX, $startY, $radius, 0, 360, 'D');
                 
@@ -786,7 +880,7 @@ class form extends MY_Controller{
                 
                 $pdf->SetFont('helvetica', '', 5); 
                 $pdf->SetXY($circleX - 10, $startY - 1.5); 
-                $pdf->Cell(20, 5, $data->APPROVE_DATE, 0, 1, 'C');
+                $pdf->Cell(20, 5, $dateOnly, 0, 1, 'C');
 
                 $nameOnly = explode(' ', $data->APPROVER_NAME)[0];
                 $pdf->SetFont('helvetica', 'B', 6); 

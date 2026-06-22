@@ -96,7 +96,7 @@
                         <select id="MONTHDrp" name="MONTHDrp" 
                                 class="w-full text-sm px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-slate-500 font-medium appearance-none cursor-not-allowed focus:outline-none" 
                                 readonly disabled>
-                            <option value="">ALL PERIOD</option>
+                            <option value="ALL" selected >ALL PERIOD</option>
                             @for ($m = 1; $m <= 12; $m++)
                                 @php $currentMonth = str_pad($m, 2, '0', STR_PAD_LEFT); @endphp
                                 <option value="{{ $currentMonth }}" {{ isset($COST_MONTH) && $COST_MONTH == $currentMonth ? 'selected' : '' }}>
