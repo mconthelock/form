@@ -34,6 +34,7 @@ $(document).ready(function () {
                 const res = await searchMfgOrCenter({});
                 const rows = Array.isArray(res?.data) ? res.data : [];
 
+
                 this.allData = rows;
                 this.currentData = [...rows];
 
@@ -51,18 +52,18 @@ $(document).ready(function () {
         searchFromLoadedData() {
             const orno = this.getValue("#search_orno").toUpperCase();
             const topic = this.getValue("#search_topic").toUpperCase();
-            const classValue = this.getValue("#search_class");
+            const classValue = this.getValue("#search_class").toUpperCase();
             const year = this.getValue("#search_year");
 
             this.currentData = this.allData.filter((row) => {
                 const rowOrno = String(row.ORNO || "").toUpperCase();
                 const rowTopic = String(row.TOPIC || "").toUpperCase();
-                const rowClass = String(row.CLASS || "");
+                const rowClass = String(row.CLASS || "").toUpperCase();
                 const rowYear = this.getFullYear(row.CYEAR);
 
                 if (orno && !rowOrno.includes(orno)) return false;
                 if (topic && !rowTopic.includes(topic)) return false;
-                if (classValue && rowClass !== classValue) return false;
+                if (classValue && !rowClass.includes(classValue)) return false;
                 if (year && rowYear !== year) return false;
 
                 return true;
@@ -113,7 +114,7 @@ $(document).ready(function () {
                     },
                     {
                         data: "CLASS",
-                        render: (data) => this.escape(this.getClassText(data)),
+                        render: (data) => this.escape(data),
                     },
                     {
                         data: "ISSUE_DATE",
@@ -161,7 +162,7 @@ $(document).ready(function () {
                 "OR No.": row.ORNO || "",
                 "Rev": row.REVNO || "",
                 "Topic": row.TOPIC || "",
-                "Classification": this.getClassText(row.CLASS),
+                "Classification": row.CLASS || "",
                 "Issue Date": this.formatDate(row.ISSUE_DATE),
                 "Revise Date": this.formatDate(row.REVISE_DATE),
                 "Form no": row.FORMNO || "",
@@ -220,17 +221,6 @@ $(document).ready(function () {
                     </a>
                 </div>
             `;
-        },
-
-        getClassText(value) {
-            const map = {
-                BASIC: "Basic Knowledge (ความรู้พื้นฐาน)",
-                IMPROVE: "Improvement Case (กรณีปรับปรุงงาน)",
-                TROUBLE: "Trouble Case (กรณีเกิดปัญหาซ้ำ)",
-                REGULATION: "Regulation (กฎระเบียบ/ข้อบังคับ)",
-            };
-
-            return map[value] || value || "";
         },
 
         getFullYear(cyear) {
