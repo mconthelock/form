@@ -19,30 +19,43 @@ import { createpck } from './data';
 
 $(async function () {
     $(document).on('click', '#btnRequest', async function () {
-        if (!(await requiredForm('#frmmain'))) return;
-        const fileInput = $('#excelFile')[0];
-        const file = fileInput.files[0];
-        const arrayBuffer = await file.arrayBuffer();
-        const exceldata = await readInput(arrayBuffer, {
-            readDefault: true,
-            startRow: 6,
-        });
-        const dataload = await prepareData(exceldata);
-        const formInfo = $('.form-info');
-        const reqby = $('.apv-data');
-        const currentFormData = {
-            NFRMNO: Number(formInfo.attr('nfrmno')) || 0,
-            VORGNO: formInfo.attr('vorgno') || '',
-            CYEAR: formInfo.attr('cyear') || '',
-            REQBY: reqby.attr('empno') || '',
-            INPUTBY: reqby.attr('empno') || '',
-            REMARK: '',
-        };
-        const payload = {
-            formData: currentFormData,
-            groupedData: dataload,
-        };
-        const res = await createpck(payload);
+        showLoader();
+        try {
+            if (!(await requiredForm('#frmmain'))) return;
+            const fileInput = $('#excelFile')[0];
+            const file = fileInput.files[0];
+            const arrayBuffer = await file.arrayBuffer();
+            const exceldata = await readInput(arrayBuffer, {
+                readDefault: true,
+                startRow: 6,
+            });
+            const dataload = await prepareData(exceldata);
+            const formInfo = $('.form-info');
+            const reqby = $('.apv-data');
+            const currentFormData = {
+                NFRMNO: Number(formInfo.attr('nfrmno')) || 0,
+                VORGNO: formInfo.attr('vorgno') || '',
+                CYEAR: formInfo.attr('cyear') || '',
+                REQBY: reqby.attr('empno') || '',
+                INPUTBY: reqby.attr('empno') || '',
+                REMARK: '',
+            };
+            const payload = {
+                formData: currentFormData,
+                groupedData: dataload,
+            };
+            console.log(payload);
+            const res = await createpck(payload);
+            if (res.status) {
+                showLoader({ show: false });
+                showMessage(res.message, 'success');
+            }
+        } catch (err) {
+            // console.error(err);
+            showErrorMessage(err);
+        } finally {
+            showLoader({ show: false });
+        }
     });
 });
 
@@ -129,7 +142,11 @@ async function prepareData(excelData) {
     const empLookup = {};
     locmstdata.data.forEach((loc) => {
         const empNo = loc.INC?.EMPINFO?.SEMPNO || '';
-        empLookup[loc.LOCCODE] = empNo;
+        empLookup[loc.LOCCODE] = {
+            empNo: empNo,
+            sposcode: loc.SPOSCODE,
+            vorgno: loc.VORGNO,
+        };
     });
 
     // 🌟 ฟังก์ชันแปลงวันที่ ท่าไม้ตายดักทุกรูปแบบ
@@ -176,14 +193,17 @@ async function prepareData(excelData) {
         const locCode = row[4];
 
         if (!groupedResult[locCode]) {
-            const INC = empLookup[locCode] || '';
-
+            const INC = empLookup[locCode].empNo || '';
+            const SPOSCODE = empLookup[locCode].sposcode || '';
+            const INCVORGNO = empLookup[locCode].vorgno || '';
             groupedResult[locCode] = {
                 CCCODE: row[2],
                 CCDESC: row[3],
                 LOCCODE: locCode,
                 LOCNAME: row[5],
                 INC: INC,
+                SPOSCODE: SPOSCODE,
+                INCVORGNO: INCVORGNO,
                 ASSETS: [],
             };
         }
