@@ -203,21 +203,17 @@ $(document).ready(function () {
 
         renderFile(row) {
             const formno = String(row.FORMNO || "").trim();
-
-            if (!formno) {
-                return "";
-            }
-
-            const pdfUrl = `${window.location.origin}/mfgform/main_or/download_or_file?FORMNO=${encodeURIComponent(formno)}&TYPE=PDF`;
-            const excelUrl = `${window.location.origin}/mfgform/main_or/download_or_file?FORMNO=${encodeURIComponent(formno)}&TYPE=EXCEL`;
-
             return `
                 <div class="or-file-links">
-                    <a href="${pdfUrl}" target="_blank" class="or-file-icon or-file-pdf" title="Download PDF">
+                    <a href="${window.location.origin}/mfgform/main_or/download_or_file?FORMNO=${encodeURIComponent(formno)}&TYPE=PDF"
+                        target="_blank"
+                        class="or-file-icon or-file-pdf">
                         <i class="fa-solid fa-file-pdf"></i>
                     </a>
 
-                    <a href="${excelUrl}" target="_blank" class="or-file-icon or-file-excel" title="Download Excel">
+                    <a href="${window.location.origin}/mfgform/main_or/download_or_file?FORMNO=${encodeURIComponent(formno)}&TYPE=EXCEL"
+                        target="_blank"
+                        class="or-file-icon or-file-excel">
                         <i class="fa-solid fa-file-excel"></i>
                     </a>
                 </div>
