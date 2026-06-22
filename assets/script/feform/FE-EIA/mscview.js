@@ -355,6 +355,8 @@ function search() {
                     onhand.COST_YEAR = parts[1] || '';
                     onhand.COST_MONTH = onhand.COST_MONTH || '';
                     onhand.COSTMONTH = onhand.COSTMONTH || '';
+                    onhand.TOTAL_PCB_AMOUNT = onhand.TOTAL_PCB_AMOUNT || '';
+                    onhand.TOTAL_PART_AMOUNT = onhand.TOTAL_PART_AMOUNT || '';
                 });
 
                 // 2. สั่งวาดและพ่นตารางลงหน้าเว็บ

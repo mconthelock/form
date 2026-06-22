@@ -129,7 +129,9 @@ class form extends MY_Controller{
     //== Case Yearly Report /1/2026/all/
     // http://localhost:8080/form/feform/FE-EIA/form/AutoCreateFEEIAForm/?COST_YEAR=2026&COST_MONTH=01
     // http://localhost:8080/form/feform/FE-EIA/form/AutoCreateFEEIAForm/?COST_YEAR=2026&COST_MONTH=ALL
+    // http://localhost:8080/form/feform/FE-EIA/form/AutoCreateFEEIAForm/
     // https://amecwebtest.mitsubishielevatorasia.co.th/form/feform/FE-EIA/form/AutoCreateFEEIAForm/?COST_YEAR=2026&COST_MONTH=ALL
+    // https://amecwebtest.mitsubishielevatorasia.co.th/form/feform/FE-EIA/form/AutoCreateFEEIAForm/
     //==============================================================================================================
     public function AutoCreateFEEIAForm()
     {
@@ -315,7 +317,7 @@ class form extends MY_Controller{
         $w="";
 
         
-        if($MONTH != "")
+        if($MONTH != "ALL")
         {
             $w .= " AND  COST_MONTH = '" . $MONTH . "' ";
         }
@@ -366,9 +368,7 @@ class form extends MY_Controller{
         // }
 
         $sql = "SELECT 
-                    NFRMNO, VORGNO, CYEAR, CYEAR2, NRUNNO, COST_MONTH, COST_YEAR,
-                    OPENINGBALANCE, RECEIVED_AMOUNT, ISSUE_AMOUNT, TOTAL_COST_ONHAND, DIFF, CREATE_DATE,
-                    COSTMONTH
+                    *
                 FROM WPS_MIMS_EIAFORMDETAIL 
                 WHERE 1=1 " . $w;
 
@@ -426,7 +426,9 @@ class form extends MY_Controller{
                             'RECEIVED_AMOUNT'   => (float)($row['RECEIVED_AMOUNT'] ?? 0),
                             'ISSUE_AMOUNT'      => (float)($row['ISSUE_AMOUNT'] ?? 0),
                             'TOTAL_COST_ONHAND' => (float)($row['TOTAL_COST_ONHAND'] ?? 0),
-                            'DIFF'              => (float)($row['DIFF'] ?? 0)
+                            'DIFF'              => (float)($row['DIFF'] ?? 0),
+                            'TOTAL_PCB_AMOUNT' => (float)($row['TOTAL_PCB_AMOUNT'] ?? 0),
+                            'TOTAL_PART_AMOUNT' => (float)($row['TOTAL_PART_AMOUNT'] ?? 0),
                             // 💡 หมายเหตุ: ตัด 'CREATE_DATE' ออกแล้ว เพื่อให้โครงสร้างใช้ DEFAULT SYSDATE ของ Oracle ป้องกัน ORA-01861
                         ]);
                         $db_mims->insert('WPS_MIMS_EIAFORMDETAIL', $detailData);
@@ -609,183 +611,393 @@ class form extends MY_Controller{
         }
     }
 
-    public function exportPdf()
-    {
-        $data = [
-            'NFRMNO' => (int)$this->input->get('no'),
-            'VORGNO' => (string)$this->input->get('orgNo'),
-            'CYEAR'  => (string)$this->input->get('y'),
-            'CYEAR2' => (string)$this->input->get('y2'),
-            'NRUNNO' => (int)$this->input->get('runNo'),
-        ];
-        try {
-            // 1. รับค่าพารามิเตอร์คีย์หลักของฟอร์มจากลิงก์ URL
-            $sql = "SELECT * FROM WPS_MIMS_EIAFORM 
-                WHERE NFRMNO = ? AND VORGNO = ? AND CYEAR = ? AND CYEAR2 = ? AND NRUNNO = ?";
-                $bindData = [
-                    (int)$data['NFRMNO'],
-                    (string)$data['VORGNO'],
-                    (string)$data['CYEAR'],
-                    (string)$data['CYEAR2'],
-                    (int)$data['NRUNNO']
-                ];
-            $mimsForm = $this->MainModel->QuerySetBase($sql, $this->mimsBase, $bindData)->row();
+    //========================================================
+    //== Export PDF
+    //========================================================
+        public function exportPdf()
+        {
+            $data = [
+                'NFRMNO' => (int)$this->input->get('no'),
+                'VORGNO' => (string)$this->input->get('orgNo'),
+                'CYEAR'  => (string)$this->input->get('y'),
+                'CYEAR2' => (string)$this->input->get('y2'),
+                'NRUNNO' => (int)$this->input->get('runNo'),
+            ];
+            try {
+                // 1. รับค่าพารามิเตอร์คีย์หลักของฟอร์มจากลิงก์ URL
+                $sql = "SELECT * FROM WPS_MIMS_EIAFORM 
+                    WHERE NFRMNO = ? AND VORGNO = ? AND CYEAR = ? AND CYEAR2 = ? AND NRUNNO = ?";
+                    $bindData = [
+                        (int)$data['NFRMNO'],
+                        (string)$data['VORGNO'],
+                        (string)$data['CYEAR'],
+                        (string)$data['CYEAR2'],
+                        (int)$data['NRUNNO']
+                    ];
+                $mimsForm = $this->MainModel->QuerySetBase($sql, $this->mimsBase, $bindData)->row();
 
-            // $sql ="select * from WPS_MIMS_EIAFORM where NFRMNO =";
-            // $mimsForm = 
-            if (empty($mimsForm)) {
-                show_error('ไม่พบข้อมูลเอกสารที่ต้องการพิมพ์', 404);
-            }
-
-            // Query ข้อมูลผู้อนุมัติ (ส่วนที่จะเอาไปแสดงในกรอบแดง)
-            $sqlApprove = "SELECT APPROVER_NAME, POSITION_NAME, 
-               TO_CHAR(APPROVE_DATE, 'DD/MM/YYYY') || ' ' || APPROVE_TIME AS APPROVE_DATE ,CEXTDATA
-               FROM WPS_MIMS_APPROVAL_LOG_VIEW 
-               WHERE NFRMNO = ? AND VORGNO = ? AND CYEAR = ? AND CYEAR2 = ? AND NRUNNO = ?
-               ORDER BY CEXTDATA ASC";
-            $approvalList = $this->MainModel->QuerySetBase($sqlApprove, $this->mimsBase, $bindData)->result();
-            
-            $sql = "SELECT * FROM WPS_MIMS_EIAFORMDETAIL 
-                WHERE NFRMNO = ? AND VORGNO = ? AND CYEAR = ? AND CYEAR2 = ? AND NRUNNO = ? order by COST_YEAR,COST_MONTH asc";
-                $bindData = [
-                    (int)$data['NFRMNO'],
-                    (string)$data['VORGNO'],
-                    (string)$data['CYEAR'],
-                    (string)$data['CYEAR2'],
-                    (int)$data['NRUNNO']
-                ];
-            $EIAFORMDETAIL = $this->MainModel->QuerySetBase($sql, $this->mimsBase, $bindData)->result();
-
-            $reportRows = [];
-            $totalReceived = 0;
-            $totalIssued = 0;
-            $totalDiff = 0;
-            if (empty($EIAFORMDETAIL)) {
-                // 3. ดึงกลุ่มข้อมูลตัวเลขรายงานจากฐานข้อมูล (ลอจิกคิวรีชุดเดียวกับ GetStockCost)
-                // echo "New";
-                // exit;
-                $w = "";
-                if (!empty($mimsForm->COST_MONTH) && $mimsForm->COST_MONTH !== 'ALL') {
-                    $w .= " AND COST_MONTH = '" . $mimsForm->COST_MONTH . "' ";
-                }
-                if (!empty($mimsForm->COST_YEAR)) {
-                    $w .= " AND COST_YEAR = '" . $mimsForm->COST_YEAR . "' ";
+                // $sql ="select * from WPS_MIMS_EIAFORM where NFRMNO =";
+                // $mimsForm = 
+                if (empty($mimsForm)) {
+                    show_error('ไม่พบข้อมูลเอกสารที่ต้องการพิมพ์', 404);
                 }
 
-                $sqlOnhand = "SELECT * FROM WPS_MIMS_REPORT_STOCKCOST WHERE 1=1 " . $w ;//. " ORDER BY RAW_MONTH ASC"
-                $dataOnhand = $this->MainModel->QuerySetBase($sqlOnhand, $this->mimsBase)->result();
+                // Query ข้อมูลผู้อนุมัติ (ส่วนที่จะเอาไปแสดงในกรอบแดง)
+                $sqlApprove = "SELECT APPROVER_NAME, POSITION_NAME, 
+                TO_CHAR(APPROVE_DATE, 'DD/MM/YYYY') || ' ' || APPROVE_TIME AS APPROVE_DATE ,CEXTDATA
+                FROM WPS_MIMS_APPROVAL_LOG_VIEW 
+                WHERE NFRMNO = ? AND VORGNO = ? AND CYEAR = ? AND CYEAR2 = ? AND NRUNNO = ?
+                ORDER BY CEXTDATA ASC";
+                $approvalList = $this->MainModel->QuerySetBase($sqlApprove, $this->mimsBase, $bindData)->result();
+                
+                $sql = "SELECT * FROM WPS_MIMS_EIAFORMDETAIL 
+                    WHERE NFRMNO = ? AND VORGNO = ? AND CYEAR = ? AND CYEAR2 = ? AND NRUNNO = ? order by COST_YEAR,COST_MONTH asc";
+                    $bindData = [
+                        (int)$data['NFRMNO'],
+                        (string)$data['VORGNO'],
+                        (string)$data['CYEAR'],
+                        (string)$data['CYEAR2'],
+                        (int)$data['NRUNNO']
+                    ];
+                $EIAFORMDETAIL = $this->MainModel->QuerySetBase($sql, $this->mimsBase, $bindData)->result();
 
-                    // var_dump($dataOnhand);
+                $reportRows = [];
+                $totalReceived = 0;
+                $totalIssued = 0;
+                $totalDiff = 0;
+
+                $createform = substr($mimsForm->CREATE_DATE,0,7);
+                if (empty($EIAFORMDETAIL)) {
+                    // 3. ดึงกลุ่มข้อมูลตัวเลขรายงานจากฐานข้อมูล (ลอจิกคิวรีชุดเดียวกับ GetStockCost)
+                    // echo "New";
                     // exit;
-                $sqlReceive = "SELECT * FROM WPS_MIMS_REPORT_STOCKCOST_RECEIVE WHERE 1=1 " . $w;
-                $dataReceive = $this->MainModel->QuerySetBase($sqlReceive, $this->mimsBase)->result();
-
-                $sqlIssue = "SELECT * FROM WPS_MIMS_REPORT_STOCKCOST_ISSUE WHERE 1=1 " . $w;
-                $dataIssue = $this->MainModel->QuerySetBase($sqlIssue, $this->mimsBase)->result();
-
-                // 4. ผสานข้อมูล (Merge) ตัวเลขรายงานฝั่งหลังบ้านก่อนพ่นลงพิมพ์ (ลอจิกเดียวกับ JS)
-                $recvMap = [];
-                foreach ($dataReceive as $recv) {
-                    $recvMap[$recv->COSTMONTH] = (float)($recv->RECEIVE_AMOUNT ?? 0);
-                }
-
-                $issueMap = [];
-                foreach ($dataIssue as $issue) {
-                    $issueMap[$issue->COSTMONTH] = (float)($issue->ISSUE_AMOUNT ?? 0);
-                }
-
-
-                foreach ($dataOnhand as $onhand) {
-                    $monthKey = $onhand->COSTMONTH;
-                    $opening = (float)($onhand->OPENINGBALANCE ?? 0);
-                    $received = $recvMap[$monthKey] ?? 0.0;
-                    $issued = $issueMap[$monthKey] ?? 0.0;
-                    $totalCost = (float)($onhand->TOTAL_COST_ONHAND ?? 0);
-
-                    // คำนวณ Diff หาส่วนต่างสะสม
-                    $diff = $opening + $received - $issued - $totalCost;
-                    if ($diff >= -0.02 && $diff <= 0.02) {
-                        $diff = 0.0;
+                    $w = "";
+                    if (!empty($mimsForm->COST_MONTH) && $mimsForm->COST_MONTH !== 'ALL') {
+                        $w .= " AND COST_MONTH = '" . $mimsForm->COST_MONTH . "' ";
+                    }
+                    if (!empty($mimsForm->COST_YEAR)) {
+                        $w .= " AND COST_YEAR = '" . $mimsForm->COST_YEAR . "' ";
                     }
 
-                    $reportRows[] = [
-                        'COSTMONTH' => $monthKey,
-                        'OPENING' => $opening,
-                        'RECEIVED' => $received,
-                        'ISSUED' => $issued,
-                        'TOTAL_COST' => $totalCost,
-                        'DIFF' => $diff
-                    ];
-                    // รวมยอดสุทธิท้ายใบ
-                    $totalReceived += $received;
-                    $totalIssued += $issued;
-                    $totalDiff += $diff;
+                    $sqlOnhand = "SELECT * FROM WPS_MIMS_REPORT_STOCKCOST WHERE 1=1 " . $w ;//. " ORDER BY RAW_MONTH ASC"
+                    $dataOnhand = $this->MainModel->QuerySetBase($sqlOnhand, $this->mimsBase)->result();
+
+                        // var_dump($dataOnhand);
+                        // exit;
+                    $sqlReceive = "SELECT * FROM WPS_MIMS_REPORT_STOCKCOST_RECEIVE WHERE 1=1 " . $w;
+                    $dataReceive = $this->MainModel->QuerySetBase($sqlReceive, $this->mimsBase)->result();
+
+                    $sqlIssue = "SELECT * FROM WPS_MIMS_REPORT_STOCKCOST_ISSUE WHERE 1=1 " . $w;
+                    $dataIssue = $this->MainModel->QuerySetBase($sqlIssue, $this->mimsBase)->result();
+
+                    // 4. ผสานข้อมูล (Merge) ตัวเลขรายงานฝั่งหลังบ้านก่อนพ่นลงพิมพ์ (ลอจิกเดียวกับ JS)
+                    $recvMap = [];
+                    foreach ($dataReceive as $recv) {
+                        $recvMap[$recv->COSTMONTH] = (float)($recv->RECEIVE_AMOUNT ?? 0);
+                    }
+
+                    $issueMap = [];
+                    foreach ($dataIssue as $issue) {
+                        $issueMap[$issue->COSTMONTH] = (float)($issue->ISSUE_AMOUNT ?? 0);
+                    }
+
+
+                    foreach ($dataOnhand as $onhand) {
+                        $monthKey = $onhand->COSTMONTH;
+                        $opening = (float)($onhand->OPENINGBALANCE ?? 0);
+                        $received = $recvMap[$monthKey] ?? 0.0;
+                        $issued = $issueMap[$monthKey] ?? 0.0;
+                        $totalCost = (float)($onhand->TOTAL_COST_ONHAND ?? 0);
+
+                        // คำนวณ Diff หาส่วนต่างสะสม
+                        $diff = $opening + $received - $issued - $totalCost;
+                        if ($diff >= -0.02 && $diff <= 0.02) {
+                            $diff = 0.0;
+                        }
+
+                        $reportRows[] = [
+                            'COSTMONTH' => $monthKey,
+                            'OPENING' => $opening,
+                            'RECEIVED' => $received,
+                            'ISSUED' => $issued,
+                            'TOTAL_COST' => $totalCost,
+                            'DIFF' => $diff
+                        ];
+                        // รวมยอดสุทธิท้ายใบ
+                        $totalReceived += $received;
+                        $totalIssued += $issued;
+                        $totalDiff += $diff;
+                    }
+                }
+                else {
+                    foreach ($EIAFORMDETAIL as $onhand) {
+                        $reportRows[] = [
+                            'COSTMONTH'  => $onhand->COSTMONTH,
+                            'OPENING'    => (float)$onhand->OPENINGBALANCE,
+                            'RECEIVED'   => (float)$onhand->RECEIVED_AMOUNT, // ปรับให้ตรง Field จริงใน DB
+                            'ISSUED'     => (float)$onhand->ISSUE_AMOUNT,
+                            'TOTAL_COST' => (float)$onhand->TOTAL_COST_ONHAND,
+                            'DIFF'       => (float)$onhand->DIFF
+                        ];
+                        // สะสมยอดรวม
+                        $totalReceived += (float)$onhand->RECEIVED_AMOUNT;
+                        $totalIssued   += (float)$onhand->ISSUE_AMOUNT;
+                        $totalDiff     += (float)$onhand->DIFF;
+                    }
+                }
+
+                //== inventory History Table
+                $sql = "";
+                $dataInventFYHist = $this->MainModel->QuerySetBase($sql, $this->mimsBase,$bindData )->result();
+
+
+                //== Receive History Table
+                $sql = "SELECT 
+                    RECEIVE_ID,
+                    PO_ID AS PO,
+                    INVOICE_ID AS INV,
+                    VENDOR,
+                    SUBSTR(CONFIRMDATE, 1, 7) AS RECEIVE_MONTH,
+                    CONFIRM_AMOUNT AS AMOUNT,
+                    MACHINE_CODES AS REMARK
+                FROM 
+                    WPS_MIMS_REPORT_RECV_VIEW
+                WHERE 
+                    SUBSTR(CONFIRMDATE, 1, 7) = (
+                        SELECT TO_CHAR(CREATE_DATE, 'YYYY-MM') 
+                        FROM WPS_MIMS_EIAFORM 
+                        WHERE NFRMNO = ? 
+                        AND VORGNO = ? 
+                        AND CYEAR = ? 
+                        AND CYEAR2 = ? 
+                        AND NRUNNO = ?
+                    )
+                ORDER BY 
+                    RECEIVE_ID,
+                    RECEIVE_MONTH, 
+                    VENDOR,
+                    PO";
+                $bindData = [
+                    (int)$data['NFRMNO'],
+                    (string)$data['VORGNO'],
+                    (string)$data['CYEAR'],
+                    (string)$data['CYEAR2'],
+                    (int)$data['NRUNNO']
+                ];
+                $dataReceiveHist = $this->MainModel->QuerySetBase($sql, $this->mimsBase,$bindData )->result();
+
+
+
+                // var_dump($reportRows);
+                // exit;
+
+                // สร้าง HTML
+                $this->generateHtmlTemplate($mimsForm, $approvalList,$reportRows,$dataReceiveHist, $totalReceived, $totalIssued, $totalDiff);
+
+
+            } catch (Exception $e) {
+                show_error('เกิดข้อผิดพลาดในการส่งออกไฟล์ PDF: ' . $e->getMessage(), 500);
+            }
+        }
+
+        // 📄 ฟังก์ชันย่อยสำหรับวาดโครงสร้างหน้าตาเอกสาร HTML สำหรับ Print Layout
+        private function generateHtmlTemplate($formInfo, $approvalList, $rows, $dataReceiveHist, $totalReceived, $totalIssued, $totalDiff)
+        {
+            $costyear = $formInfo->COST_YEAR;
+            $DOC_NO = $formInfo->DOC_NO;
+            
+            $stampTable = $this->generateStampTable();
+
+            // 2. ข้อมูลตารางหลัก (เอา padding ออก แล้วใช้ <br> แทน)
+            $rowsHtml = '';
+            foreach ($rows as $r) {
+                $rowsHtml .= '<tr>
+                    <td style="border: 1px solid #000; font-size: 8pt; text-align: center;">' . $r['COSTMONTH'] . '</td>
+                    <td style="border: 1px solid #000; text-align: right; font-size: 8pt;">' . number_format($r['OPENING'], 2) . '&nbsp;&nbsp;&nbsp;</td>
+                    <td style="border: 1px solid #000; text-align: right; font-size: 8pt;">' . number_format($r['RECEIVED'], 2) . '&nbsp;&nbsp;&nbsp;</td>
+                    <td style="border: 1px solid #000; text-align: right; font-size: 8pt;">' . number_format($r['ISSUED'], 2) . '&nbsp;&nbsp;&nbsp;</td>
+                    <td style="border: 1px solid #000; text-align: right; font-size: 8pt;">&nbsp;&nbsp;' . number_format($r['TOTAL_COST'], 2) . '&nbsp;&nbsp;&nbsp;</td>
+                </tr>';
+            }
+            
+            $html = '<html>
+                <head>
+                    <style>
+                        body { font-family: sans-serif; }
+                        .main-table { width: 100%; border: none; }
+                        .main-table th { background: #d1d5db; border-collapse: collapse; border: 1px solid #000; text-align: center; font-size: 8pt; font-weight: bold;line-height: 2.5; }
+                        .main-table td { border-collapse: collapse; border: 1px solid #000; font-size: 8pt; line-height: 2.0;}
+                    </style>
+                </head>
+                <body>
+                    
+                    <table style="width: 100%; border: none; margin-bottom: 20px;">
+                        <tr>
+                            <td style="width: 50%; vertical-align: bottom;">
+                                <div style="font-weight:bold; font-size: 14pt;">MAINTENANCE STOCK COST FY' . $costyear . '</div>
+                                <div style="font-size: 10pt;"></div>
+                            </td>
+                            <td style="width: 50%; text-align: right; vertical-align: top;">
+                                ' . $stampTable . '   
+                            </td>
+                        </tr>
+                    </table>
+                    <br>
+                    <br>
+                    <table class="main-table" cellpadding="0" cellspacing="0">
+                        <thead style="text-align: center;">
+                            <tr style="background-color: #d1d5db;line-height: 2.5;">
+                                <th rowspan="2" style=" border: 1px solid #000; vertical-align: middle;">MONTH</th>
+                                <th rowspan="2" style="border: 1px solid #000; vertical-align: middle;">OPENING BALANCE</th>
+                                <th colspan="2" style=" border: 1px solid #000;">TRANSACTION ON THIS MONTH</th>
+                                <th rowspan="2" style=" border: 1px solid #000; vertical-align: middle;">TOTAL COST</th>
+                            </tr>
+                            <tr style="background-color: #d1d5db;line-height: 2.0;">
+                                <th style=" border: 1px solid #000;">RECEIVED</th>
+                                <th style=" border: 1px solid #000;">ISSUED</th>
+                            </tr>
+                        </thead>
+                        <tbody>' . $rowsHtml . '</tbody>
+                    </table>
+                </body></html>';
+
+            // ---------------------------------------------------------
+            // การสร้าง PDF ด้วย TCPDF
+            // ---------------------------------------------------------
+
+            $pdf = new TCPDF('L', 'mm', 'A4', true, 'UTF-8', false);
+
+            // ปิดการพิมพ์ Header และ Footer ที่มักจะมีเส้นแถมมา
+            $pdf->setPrintHeader(false);
+            $pdf->setPrintFooter(false);
+
+            $pdf->AddPage('L'); 
+            $pdf->SetFont('helvetica', '', 7); 
+            
+            // ตั้งค่า cell padding ของ TCPDF เอง ให้เหลือ 0 
+            // (บางครั้ง TCPDF มี default padding ที่เราไม่ต้องการ)
+            $pdf->setCellPaddings(0, 0, 0, 0);
+
+            $pdf->writeHTML($html, true, false, true, false, '');
+
+            //--ส่วนเสริม: การวาดตราประทับ (Drawing)
+            // ตำแหน่งเริ่มต้น
+            $startX = 164; 
+            $startY = 30;  
+            $circleSpace = 32; 
+            $radius = 9; 
+            $this->drawStamp($pdf, $approvalList, $startX, $startY, $circleSpace, $radius);
+
+
+            //-- Paeg 2
+            // --- เพิ่มหน้าใหม่ ---
+            $pdf->AddPage('L');
+            $pdf->SetFont('helvetica', '', 7);
+
+            // --- สร้าง HTML สำหรับตารางที่ 2 ---
+            $htmlReceive = $this->generateReceiveHistoryHtml($dataReceiveHist,  $costyear,$DOC_NO);
+            $pdf->writeHTML($htmlReceive, true, false, true, false, '');
+
+            // --- วาดตราประทับสำหรับหน้า 2 (ถ้าต้องการให้มีเหมือนกัน) ---
+            $this->drawStamp($pdf, $approvalList, $startX, $startY, $circleSpace, $radius);
+            //-- Paeg 2
+
+            // $pdf->Output('Report.pdf', 'I');
+            $pdf->Output('Report_FEEIA_FY'.$costyear.'.pdf', 'D');
+            exit;
+        }
+
+        private function generateStampTable()
+        {
+            $positions = ['FE DEM', 'MAT SEM', 'EFC SEM', 'REPORTER'];
+            
+            $stampTable = '<table style="width: 380px; border-collapse: collapse; border: 0.5pt solid #000;">
+                <tr style="background-color: #e5e7eb; line-height: 4.0;">';
+            
+            foreach ($positions as $pos) { 
+                $stampTable .= '<th style="border: 0.5pt solid #000; font-size: 7pt; text-align: center;"><br>' . $pos . '</th>'; 
+            }
+            
+            $stampTable .= '</tr><tr style="height: 60px;">';
+            
+            // สร้าง 4 ช่องว่างสำหรับตราประทับ
+            for ($i = 0; $i < 4; $i++) {
+                $stampTable .= '<td style="border: 0.5pt solid #000; text-align: center; vertical-align: middle;">
+                    <br><br><br><br><br><br><br>
+                </td>';
+            }
+            
+            $stampTable .= '</tr></table><br>';
+            return $stampTable;
+        }
+
+        public function drawStamp($pdf, $approvalList, $startX, $startY, $circleSpace, $radius)
+        {
+
+            // ==========================================
+            // ส่วนเสริม: การวาดตราประทับ (Drawing)
+            // ==========================================
+            
+            $pdf->SetAlpha(0.7); 
+            $pdf->SetDrawColor(255, 0, 0); 
+            $pdf->SetTextColor(255, 0, 0); 
+            
+            
+            
+            $cextdata = ['03', '02', '01', '00'];
+            
+            $approvalMap = [];
+            foreach ($approvalList as $app) { $approvalMap[$app->CEXTDATA] = $app; }
+
+            foreach ($cextdata as $index => $cext) {
+                $data = $approvalMap[$cext] ?? null;
+
+                if ($data && !empty($data->APPROVE_DATE) && trim($data->APPROVE_DATE) !== '') {
+                // if ($data ) {
+                    $circleX = $startX + ($circleSpace * $index) + 5;
+                    $dateOnly = explode(' ', trim($data->APPROVE_DATE))[0];
+                    
+                    $pdf->Circle($circleX, $startY, $radius, 0, 360, 'D');
+                    
+                    $pdf->SetFont('helvetica', 'B', 7);
+                    $pdf->SetXY($circleX - 10, $startY - 5.5); 
+                    $pdf->Cell(20, 5, 'AMEC', 0, 1, 'C'); 
+                    
+                    $pdf->SetFont('helvetica', '', 5); 
+                    $pdf->SetXY($circleX - 10, $startY - 1.5); 
+                    $pdf->Cell(20, 5, $dateOnly, 0, 1, 'C');
+
+                    $nameOnly = explode(' ', $data->APPROVER_NAME)[0];
+                    $pdf->SetFont('helvetica', 'B', 6); 
+                    $pdf->SetXY($circleX - 10, $startY + 2); 
+                    $pdf->Cell(20, 5, $nameOnly, 0, 1, 'C');
                 }
             }
-            else {
-                foreach ($EIAFORMDETAIL as $onhand) {
-                    $reportRows[] = [
-                        'COSTMONTH'  => $onhand->COSTMONTH,
-                        'OPENING'    => (float)$onhand->OPENINGBALANCE,
-                        'RECEIVED'   => (float)$onhand->RECEIVED_AMOUNT, // ปรับให้ตรง Field จริงใน DB
-                        'ISSUED'     => (float)$onhand->ISSUE_AMOUNT,
-                        'TOTAL_COST' => (float)$onhand->TOTAL_COST_ONHAND,
-                        'DIFF'       => (float)$onhand->DIFF
-                    ];
-                    // สะสมยอดรวม
-                    $totalReceived += (float)$onhand->RECEIVED_AMOUNT;
-                    $totalIssued   += (float)$onhand->ISSUE_AMOUNT;
-                    $totalDiff     += (float)$onhand->DIFF;
-                }
+            $pdf->SetTextColor(0, 0, 0);
+            $pdf->SetAlpha(1); 
+            // ==========================================
+        }
+
+        private function generateReceiveHistoryHtml($dataReceiveHist,  $costyear,$DOC_NO)
+        {
+            $rowsHtml = '';
+            
+            $stampTable = $this->generateStampTable();
+            $totalReceived = 0;
+            $RECEIVE_MONTH = "";
+            foreach ($dataReceiveHist as $r) {
+                $rowsHtml .= '<tr>
+                    <td style="border: 1px solid #000; font-size: 8pt; text-align: center;">' . $r->PO . '</td>
+                    <td style="border: 1px solid #000; font-size: 8pt; text-align: center;">' . $r->INV . '</td>
+                    <td style="border: 1px solid #000; font-size: 8pt; padding-left: 5px;">' . $r->VENDOR . '</td>
+                    <td style="border: 1px solid #000; font-size: 8pt; text-align: right;">' . number_format($r->AMOUNT, 2) . '&nbsp;&nbsp;</td>
+                    <td style="border: 1px solid #000; font-size: 8pt; padding-left: 5px;">' . $r->REMARK . '</td>
+                </tr>';
+                $totalReceived += (float)$r->AMOUNT;
+                $RECEIVE_MONTH = $r->RECEIVE_MONTH;
             }
-            // var_dump($reportRows);
-            // exit;
 
-            // สร้าง HTML
-            $this->generateHtmlTemplate($mimsForm, $approvalList,$reportRows, $totalReceived, $totalIssued, $totalDiff, $mimsForm->COST_YEAR);
-
-
-        } catch (Exception $e) {
-            show_error('เกิดข้อผิดพลาดในการส่งออกไฟล์ PDF: ' . $e->getMessage(), 500);
-        }
-    }
-
-    // 📄 ฟังก์ชันย่อยสำหรับวาดโครงสร้างหน้าตาเอกสาร HTML สำหรับ Print Layout
-    private function generateHtmlTemplate($formInfo, $approvalList, $rows, $totalReceived, $totalIssued, $totalDiff, $costyear)
-    {
-        $approvalMap = [];
-        foreach ($approvalList as $app) { $approvalMap[$app->CEXTDATA] = $app; }
-        $positions = ['FE DEM', 'MAT SEM', 'EFC SEM', 'REPORTER'];
-        $cextdata = ['03', '02', '01', '00'];
-
-        // 1. ตารางอนุมัติ (เอา padding ออก)
-        $stampTable = '<table style="width: 380px; border-collapse: collapse; border: 0.5pt solid #000;">
-            <tr style="background-color: #e5e7eb;line-height: 4.0;">';
-        foreach ($positions as $pos) { 
-            $stampTable .= '<th style="border: 0.5pt solid #000; font-size: 7pt; text-align: center;"><br>' . $pos . '</th>'; 
-        }
-        $stampTable .= '</tr><tr style="height: 60px;">';
-        foreach ($cextdata as $cext) {
-            $stampTable .= '<td style="border: 0.5pt solid #000; text-align: center; vertical-align: middle;">';
-            // เติม <br> เปล่าๆ ดันให้มีพื้นที่ว่าง สำหรับรอยประทับ
-            $stampTable .= '<br><br><br><br><br><br>';
-            $stampTable .= '</td>';
-        }
-        $stampTable .= '</tr></table><br>';
-
-        // 2. ข้อมูลตารางหลัก (เอา padding ออก แล้วใช้ <br> แทน)
-        $rowsHtml = '';
-        foreach ($rows as $r) {
-            $rowsHtml .= '<tr>
-                <td style="border: 1px solid #000; font-size: 8pt; text-align: center;">' . $r['COSTMONTH'] . '</td>
-                <td style="border: 1px solid #000; text-align: right; font-size: 8pt;">' . number_format($r['OPENING'], 2) . '&nbsp;&nbsp;&nbsp;</td>
-                <td style="border: 1px solid #000; text-align: right; font-size: 8pt;">' . number_format($r['RECEIVED'], 2) . '&nbsp;&nbsp;&nbsp;</td>
-                <td style="border: 1px solid #000; text-align: right; font-size: 8pt;">' . number_format($r['ISSUED'], 2) . '&nbsp;&nbsp;&nbsp;</td>
-                <td style="border: 1px solid #000; text-align: right; font-size: 8pt;">&nbsp;&nbsp;' . number_format($r['TOTAL_COST'], 2) . '&nbsp;&nbsp;&nbsp;</td>
-            </tr>';
-        }
-        
-        $html = '<html>
+            return '<html>
             <head>
                 <style>
                     body { font-family: sans-serif; }
@@ -795,11 +1007,11 @@ class form extends MY_Controller{
                 </style>
             </head>
             <body>
-                
+        
                 <table style="width: 100%; border: none; margin-bottom: 20px;">
                     <tr>
                         <td style="width: 50%; vertical-align: bottom;">
-                            <div style="font-weight:bold; font-size: 14pt;">MAINTENANCE STOCK COST FY' . $costyear . '</div>
+                            <div style="font-weight:bold; font-size: 14pt;">Backup data in Form : ' . $DOC_NO . " (". $RECEIVE_MONTH . ') </div>
                             <div style="font-size: 10pt;"></div>
                         </td>
                         <td style="width: 50%; text-align: right; vertical-align: top;">
@@ -809,91 +1021,26 @@ class form extends MY_Controller{
                 </table>
                 <br>
                 <br>
-                <table class="main-table" cellpadding="0" cellspacing="0">
-                    <thead style="text-align: center;">
-                        <tr style="background-color: #d1d5db;line-height: 2.5;">
-                            <th rowspan="2" style=" border: 1px solid #000; vertical-align: middle;">MONTH</th>
-                            <th rowspan="2" style="border: 1px solid #000; vertical-align: middle;">OPENING BALANCE</th>
-                            <th colspan="2" style=" border: 1px solid #000;">TRANSACTION ON THIS MONTH</th>
-                            <th rowspan="2" style=" border: 1px solid #000; vertical-align: middle;">TOTAL COST</th>
-                        </tr>
-                        <tr style="background-color: #d1d5db;line-height: 2.0;">
-                            <th style=" border: 1px solid #000;">RECEIVED</th>
-                            <th style=" border: 1px solid #000;">ISSUED</th>
+                <table class="main-table" cellpadding="2">
+                    <thead>
+                        <tr style="background-color: #d1d5db;line-height: 2.5; ">
+                            <th>PO</th><th>INV</th><th>VENDOR</th><th>AMOUNT</th><th>REMARK</th>
                         </tr>
                     </thead>
                     <tbody>' . $rowsHtml . '</tbody>
+                    <tfoot>
+                        <tr style="background-color: #f3f4f6; font-weight: bold;">
+                            <td colspan="3" style="text-align: right; border: 1px solid #000;">RECEIVE FY' . $costyear . '&nbsp;&nbsp;</td>
+                            <td style="text-align: right; border: 1px solid #000;">' . number_format($totalReceived, 2) . '&nbsp;&nbsp;</td>
+                            <td style="border: 1px solid #000;"></td>
+                        </tr>
+                    </tfoot>
                 </table>
             </body></html>';
-
-        // ---------------------------------------------------------
-        // การสร้าง PDF ด้วย TCPDF
-        // ---------------------------------------------------------
-
-        $pdf = new TCPDF('L', 'mm', 'A4', true, 'UTF-8', false);
-
-        // ปิดการพิมพ์ Header และ Footer ที่มักจะมีเส้นแถมมา
-        $pdf->setPrintHeader(false);
-        $pdf->setPrintFooter(false);
-
-        $pdf->AddPage('L'); 
-        $pdf->SetFont('helvetica', '', 7); 
-        
-        // ตั้งค่า cell padding ของ TCPDF เอง ให้เหลือ 0 
-        // (บางครั้ง TCPDF มี default padding ที่เราไม่ต้องการ)
-        $pdf->setCellPaddings(0, 0, 0, 0);
-
-        $pdf->writeHTML($html, true, false, true, false, '');
-
-        // ==========================================
-        // ส่วนเสริม: การวาดตราประทับ (Drawing)
-        // ==========================================
-        
-        $pdf->SetAlpha(0.7); 
-        $pdf->SetDrawColor(255, 0, 0); 
-        $pdf->SetTextColor(255, 0, 0); 
-        
-        // ตำแหน่งเริ่มต้น
-        $startX = 164; 
-        $startY = 28.5;  
-        $circleSpace = 32; 
-        $radius = 9; 
-        
-        $cextdata = ['03', '02', '01', '00'];
-        
-        $approvalMap = [];
-        foreach ($approvalList as $app) { $approvalMap[$app->CEXTDATA] = $app; }
-
-        foreach ($cextdata as $index => $cext) {
-            $data = $approvalMap[$cext] ?? null;
-
-            if ($data && !empty($data->APPROVE_DATE) && trim($data->APPROVE_DATE) !== '') {
-            // if ($data ) {
-                $circleX = $startX + ($circleSpace * $index) + 5;
-                $dateOnly = explode(' ', trim($data->APPROVE_DATE))[0];
-                
-                $pdf->Circle($circleX, $startY, $radius, 0, 360, 'D');
-                
-                $pdf->SetFont('helvetica', 'B', 7);
-                $pdf->SetXY($circleX - 10, $startY - 5.5); 
-                $pdf->Cell(20, 5, 'AMEC', 0, 1, 'C'); 
-                
-                $pdf->SetFont('helvetica', '', 5); 
-                $pdf->SetXY($circleX - 10, $startY - 1.5); 
-                $pdf->Cell(20, 5, $dateOnly, 0, 1, 'C');
-
-                $nameOnly = explode(' ', $data->APPROVER_NAME)[0];
-                $pdf->SetFont('helvetica', 'B', 6); 
-                $pdf->SetXY($circleX - 10, $startY + 2); 
-                $pdf->Cell(20, 5, $nameOnly, 0, 1, 'C');
-            }
         }
 
-        $pdf->SetAlpha(1); 
-        // $pdf->Output('Report.pdf', 'I');
-        $pdf->Output('Report_FEEIA_FY'.$costyear.'.pdf', 'D');
-        exit;
-    }
+    //========================================================
+
 
     // =========================================================================
     // 1. ดึงรายการไฟล์แนบจากฐานข้อมูลมาโชว์ในโหมดดูอย่างเดียว (Mode 3)
