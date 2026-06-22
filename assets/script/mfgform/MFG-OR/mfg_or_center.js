@@ -203,17 +203,19 @@ $(document).ready(function () {
 
         renderFile(row) {
             const formno = String(row.FORMNO || "").trim();
+            if (!formno) { return "";}
+            const pdfName = `${formno}_stamp.pdf`;
+            const excelName = `${formno}.xlsx`;
+            const baseUrl = `${window.location.origin}/form/mfgform/MFG-OR/main_or/preview_file`;
+            const pdfUrl = `${baseUrl}/${encodeURIComponent(formno)}/${encodeURIComponent(pdfName)}`;
+            const excelUrl = `${baseUrl}/${encodeURIComponent(formno)}/${encodeURIComponent(excelName)}`;
+
             return `
                 <div class="or-file-links">
-                    <a href="${window.location.origin}/mfgform/main_or/download_or_file?FORMNO=${encodeURIComponent(formno)}&TYPE=PDF"
-                        target="_blank"
-                        class="or-file-icon or-file-pdf">
+                    <a href="${pdfUrl}" target="_blank" class="or-file-icon or-file-pdf" title="Open PDF">
                         <i class="fa-solid fa-file-pdf"></i>
                     </a>
-
-                    <a href="${window.location.origin}/mfgform/main_or/download_or_file?FORMNO=${encodeURIComponent(formno)}&TYPE=EXCEL"
-                        target="_blank"
-                        class="or-file-icon or-file-excel">
+                    <a href="${excelUrl}" target="_blank" class="or-file-icon or-file-excel" title="Open Excel">
                         <i class="fa-solid fa-file-excel"></i>
                     </a>
                 </div>
