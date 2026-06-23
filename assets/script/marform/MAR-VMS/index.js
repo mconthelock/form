@@ -2630,10 +2630,13 @@ function loaddata(vmscyear2, vmsnrunno) {
                 $('[data-field="filename"]').html('');
             }
             $('[data-field="roomlunch"]').text(item.ROOMLUNCH);
-            if (item.VISITORS) {
-                $('[data-field="roomdate"]').text(response.head.VISITDATE);
-                $('[data-field="roomtime"]').text(response.head.LUNCHTIME);
+            if (+item.VISITORS + +item.AMEC > 0) {
+                if (item.VISITORS) {
+                    $('[data-field="roomdate"]').text(response.head.VISITDATE);
+                    $('[data-field="roomtime"]').text(response.head.LUNCHTIME);
+                }
             }
+
             $('[data-field="visitlunch"]').text(item.VISITORS);
             $('[data-field="ameclunch"]').text(item.AMEC);
             $('[data-field="totlunch"]').text(+item.VISITORS + +item.AMEC);
