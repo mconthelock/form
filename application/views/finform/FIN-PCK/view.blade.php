@@ -2,38 +2,25 @@
 
 @section('styles')
 <style>
-    section {
-        display: flex;
-        flex-direction: column;
-        gap: 0.75rem;
-    }
+/* 1. จัดการกล่องครอบด้านนอกให้เป็นจุดอ้างอิง */
+#magic-form-wrapper {
+    position: relative;
+    margin-top: 24px; /* ดันกล่องลงมาเพื่อเว้นพื้นที่ให้ตัวหนังสือลอยขึ้นไปได้ */
+}
 
-    fieldset:not(:has(.fieldset-label)) {
-        display: flex;
-    }
-
-    fieldset span {
-        font-weight: bold;
-        white-space: nowrap;
-        width: fit-content;
-    }
-
-    label:not(:has(input[name="DELIVELY"])):not(:has(input[name="FORM_TYPE"])) {
-        width: 100%;
-    }
-
-    span.required::after, h2.required::after {
-        content: "**";
-        color: red;
-        font-weight: bold;
-        padding-left: 0.25rem;
-    }
+/* 2. พุ่งเป้าไปจับที่ตัวหนังสือ "Form Information" โดยตรงผ่าน Class */
+#magic-form-wrapper .text-xl.font-bold {
+    position: absolute !important; /* บังคับลอย */
+    top: -14px !important; /* ดึงขึ้นไป 14px (ครึ่งนึงของตัวอักษร) เพื่อให้ทับเส้นขอบพอดี */
+    left: 24px !important; /* ขยับจากขอบซ้าย ให้ดูสวยงาม */
+    margin-bottom: 0 !important; /* ลบล้าง mb-5 ที่ฟังก์ชันแถมมาให้ */
+    padding: 0 10px !important; /* เว้นระยะซ้าย-ขวา เพื่อเป็นพื้นที่ไว้บังเส้นขอบ */
     
-
-
-
-
-
+    /* ⚠️ สำคัญมาก: ต้องเปลี่ยนสีตรงนี้ให้ตรงกับสี "พื้นหลังของหน้าจอคุณ" */
+    background-color: #f4f6f8 !important; 
+    
+    z-index: 10 !important; /* บังคับให้อยู่เลเยอร์บนสุด */
+}
 </style>
 @endsection
 @section('contents')
@@ -52,8 +39,10 @@
 
     <div class="bg-base-100 shadow-md rounded-lg p-6">
         <form id="frmmain">
+            <div  class="magic-form-wrapper">
             <section id="form-detail">
             </section>
+            </div>
             <div class="max-w-2xl mx-auto py-8">
                 
                 <div class="form-control w-full">
@@ -77,6 +66,7 @@
                 </div>
 
             </div>
+             <div id="form-action-container"></div>
         </form>
     </div>
 
