@@ -83,7 +83,7 @@
 
                 <!-- Section 3: Request For Option Checklist -->
                 <div class="form-control bg-base-200/60 border border-base-300 p-4 rounded-xl ">
-                    <span class="label-text font-bold text-base-content/80 mb-3 block flex items-center gap-1.5">
+                    <span class="label-text font-bold text-base-content/80 mb-3 flex items-center gap-1.5">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-primary" fill="none"
                             viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -219,6 +219,32 @@
                                 <input type="text" id="ISSUETO" name="ISSUETO"
                                     class="input input-bordered input-sm w-full bg-base-100 focus:input-primary"
                                     placeholder="Issue To" />
+                            </div>
+
+                            <!-- ITEM -->
+                            <div class="form-control w-full" id="hiddenIssueto">
+                                <label class="label py-1">
+                                    <span class="label-text font-bold text-base-content/80">
+                                        ITEM
+                                    </span>
+                                </label>
+
+                                <input type="text" id="ITEM" name="ITEM"
+                                    class="input input-bordered input-sm w-full bg-base-100 focus:input-primary"
+                                    placeholder="Item" />
+                            </div>
+
+                            <!-- ORDER -->
+                            <div class="form-control w-full" id="hiddenIssueto">
+                                <label class="label py-1">
+                                    <span class="label-text font-bold text-base-content/80">
+                                        ORDER
+                                    </span>
+                                </label>
+
+                                <input type="text" id="ORDER" name="ORDER"
+                                    class="input input-bordered input-sm w-full bg-base-100 focus:input-primary"
+                                    placeholder="Order" />
                             </div>
                         </div>
 
