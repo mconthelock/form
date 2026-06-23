@@ -90,7 +90,7 @@ $(document).ready(function () {
                 info: false,
                 ordering: true,
                 autoWidth: false,
-                order: [[1, "desc"]],
+                order: [[1, "asc"]],
                 columns: [
                     {
                         data: null,
@@ -101,7 +101,12 @@ $(document).ready(function () {
                     {
                         data: "ORNO",
                         className: "text-center font-black text-indigo-700",
-                        render: (data) => this.escape(data),
+                        render: (data, type) => {
+                            if (type === "sort") {
+                                return Number(String(data).replace(/\D/g, ""));
+                            }
+                            return this.escape(data);
+                        },
                     },
                     {
                         data: "REVNO",
