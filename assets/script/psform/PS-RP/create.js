@@ -271,6 +271,8 @@ $(document).on("click", "#btnSearch", async function () {
       ISSUENO: $("#ISSUENO").val() || null,
       SCHEDULE: $("#SCHEDULE").val() || null,
       ISSUETO: $("#ISSUETO").val() || null,
+      ITEM: $("#ITEM").val() || null,
+      ORDER: $("#ORDER").val() || null,
     };
 
     console.log(searchValue);
@@ -325,6 +327,8 @@ $(document).on("click", "#btnClear", async function () {
   $("#ISSUENO").val("");
   $("#SCHEDULE").val("");
   $("#ISSUETO").val("");
+  $("#ITEM").val("");
+  $("#ORDER").val("");
 
   if (table) {
     table.clear().draw();
