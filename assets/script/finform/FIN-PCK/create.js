@@ -1,8 +1,5 @@
-import { webflowSubmit, getformDetail } from '@amec/webasset/components/form';
 import { showLoader } from '@amec/webasset/preloader';
-import { formSubmitSkeleton } from '@amec/webasset/skeleton';
 import { readInput } from '@amec/webasset/excel';
-import { getArrayBufferFile } from '@amec/webasset/file';
 import {
     filterFormData,
     getAllAttr,
