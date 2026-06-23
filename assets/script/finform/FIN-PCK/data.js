@@ -11,3 +11,11 @@ export async function createpck(formData) {
         data: formData,
     });
 }
+
+export async function getData(form) {
+    return fetchUtils({
+        url: `${process.env.APP_API}/finform/finpck-form/data`,
+        method: 'POST',
+        data: form,
+    });
+}

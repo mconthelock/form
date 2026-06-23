@@ -2,25 +2,38 @@
 
 @section('styles')
 <style>
-/* 1. จัดการกล่องครอบด้านนอกให้เป็นจุดอ้างอิง */
-#magic-form-wrapper {
-    position: relative;
-    margin-top: 24px; /* ดันกล่องลงมาเพื่อเว้นพื้นที่ให้ตัวหนังสือลอยขึ้นไปได้ */
+/* ================== 1. จัดการตัวหนังสือหัวข้อ (ทั้งซ้ายและขวา) ================== */
+#form-detail > div:first-child,
+.location-overlap-wrapper > div:first-child {
+    font-size: 16px !important; 
+    position: relative !important;
+    z-index: 10 !important; 
+    width: fit-content !important;
+    margin-left: 24px !important; 
+    padding: 0 10px !important; 
+    
+    /* ⚠️ จุดที่ต้องแก้: เปลี่ยนจาก #ffffff เป็นสีเดียวกับพื้นหลัง */
+    /* ถ้าใช้ DaisyUI ลองใช้คำสั่งดึงสีนี้ดูครับ จะดึงสีพื้นหลังมาใช้อัตโนมัติ */
+    background-color: hsl(var(--b1)) !important; 
+    /* หรือถ้าคำสั่งด้านบนไม่ทำงาน ให้ลองใส่รหัสสีเทาอ่อน เช่น #f8f9fa หรือ #f9fafb แทนครับ */
+    
+    border-radius: 4px !important;
+    margin-bottom: 0 !important; 
 }
 
-/* 2. พุ่งเป้าไปจับที่ตัวหนังสือ "Form Information" โดยตรงผ่าน Class */
-#magic-form-wrapper .text-xl.font-bold {
-    position: absolute !important; /* บังคับลอย */
-    top: -14px !important; /* ดึงขึ้นไป 14px (ครึ่งนึงของตัวอักษร) เพื่อให้ทับเส้นขอบพอดี */
-    left: 24px !important; /* ขยับจากขอบซ้าย ให้ดูสวยงาม */
-    margin-bottom: 0 !important; /* ลบล้าง mb-5 ที่ฟังก์ชันแถมมาให้ */
-    padding: 0 10px !important; /* เว้นระยะซ้าย-ขวา เพื่อเป็นพื้นที่ไว้บังเส้นขอบ */
+/* ================== 2. จัดการกล่องตาราง (ทั้งซ้ายและขวา) ================== */
+#form-detail > div:nth-child(2),
+.location-overlap-wrapper > div:nth-child(2) {
+    /* ถ้ารู้สึกว่าเส้นขอบมันตัดต่ำไป (ไม่ตรงกลางตัวหนังสือ) ลองเปลี่ยนเลขนี้ดูครับ เช่น -12px หรือ -16px */
+    margin-top: -14px !important; 
     
-    /* ⚠️ สำคัญมาก: ต้องเปลี่ยนสีตรงนี้ให้ตรงกับสี "พื้นหลังของหน้าจอคุณ" */
-    background-color: #f4f6f8 !important; 
-    
-    z-index: 10 !important; /* บังคับให้อยู่เลเยอร์บนสุด */
+    position: relative !important;
+    z-index: 1 !important; 
+    width: 100% !important; 
+    max-width: 100% !important;
 }
+
+
 </style>
 @endsection
 @section('contents')
@@ -36,36 +49,44 @@
             </h1>
         </div>
     </div>
-
     <div class="bg-base-100 shadow-md rounded-lg p-6">
-        <form id="frmmain">
-            <div  class="magic-form-wrapper">
+           <!-- <div class="form-overlap-wrapper">
             <section id="form-detail">
             </section>
-            </div>
-            <div class="max-w-2xl mx-auto py-8">
+            </div> -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start mt-4">
                 
-                <div class="form-control w-full">
-                    <label class="label">
-                        <span class="label-text text-base font-medium required">Browse File</span>
-                    </label>
-                    <input type="file" id="excelFile" accept=".xlsx" required class="file-input file-input-bordered file-input-primary w-full req" />
-                    <label class="label">
-                        <span class="label-text-alt text-base-content/60">Supports .xlsx files only.</span>
-                    </label>
+                <div class="form-overlap-wrapper w-full">
+                    <section id="form-detail" class="w-full">
+                        </section>
                 </div>
-                <div class="divider mt-8 mb-6"></div>
-                <div class="flex flex-wrap justify-center gap-4">
-                    <button type="button" id="btnCancel" class="btn btn-ghost px-6">
-                        Cancel
-                    </button>
-                    
-                    <button type="button" id="btnRequest" class="btn btn-primary px-6 gap-2">
-                        Request
-                    </button>
+
+                <div class="location-overlap-wrapper w-full">
+                    <div class="font-bold mb-5">Location Information</div>
+                    <div class="h-fit w-full bg-base-200 border border-base-300 p-4 rounded-box relative">
+                        <table class="table">
+                            <tbody>
+                                <tr>
+                                    <td class="text-primary font-bold w-1/3">Location Code:</td>
+                                    <td><span id="loccode"></span></td>
+                                </tr>
+                                <tr>
+                                    <td class="text-primary font-bold">Description:</td>
+                                    <td><span id="locname"></span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
 
             </div>
+        <form id="frmmain">
+            <div class="w-full mx-auto py-8">          
+                    <div class="w-full overflow-x-auto">
+                        <table class="table !table-zebra" id="tablepck" style="width:100%">
+                        </table>
+                    </div>
+                </div>
              <div id="form-action-container"></div>
         </form>
     </div>
