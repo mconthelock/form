@@ -39,10 +39,12 @@
                 </h2>
                 
                 <div class="flex items-center gap-3 ml-auto">
-                    <button type="button" id="PdfBtn" name="PdfBtn" 
-                            class="cursor-pointer bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm px-4 py-2 rounded-lg shadow-sm transition-all flex items-center gap-2">
-                        Export PDF
-                    </button>
+                    @if($CST !== '0')
+                        <button type="button" id="PdfBtn" name="PdfBtn" 
+                                class="cursor-pointer bg-blue-600 hover:bg-blue-700 text-white font-medium text-sm px-4 py-2 rounded-lg shadow-sm transition-all flex items-center gap-2">
+                            Export PDF
+                        </button>
+                    @endif
                     
                     <button type="button" id="SentEmailBtn" name="SentEmailBtn" 
                             class="cursor-pointer bg-gray-600 hover:bg-gray-700 text-white font-medium text-sm px-4 py-2 rounded-lg shadow-sm transition-all flex items-center gap-2">

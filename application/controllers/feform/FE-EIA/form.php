@@ -89,6 +89,7 @@ class form extends MY_Controller{
             $eiaform    = $this->frm->getForm((int)$data['NFRMNO'],  (string)$data['VORGNO'], (string)$data['CYEAR'],  (string)$data['CYEAR2'],  (int)$data['NRUNNO']);
             $data["REQBY"] = $eiaform[0]->VREQNO;
             $data["INPUTBY"] = $eiaform[0]->VINPUTER; 
+            $data['CST']     = $eiaform[0]->CST;
             $data["REMARK"] = "";
 
 
@@ -146,6 +147,13 @@ class form extends MY_Controller{
             // รับค่าจาก input หรือใช้ค่าปีงบประมาณที่คำนวณไว้
             $COST_YEAR = $this->input->get('COST_YEAR') ?? (string)$fiscalYear;
             $COST_MONTH = $this->input->get('COST_MONTH') ?? "ALL";
+            if( $COST_MONTH == "ALL" && (int)$currentYear == (int)$COST_YEAR)
+            {
+                $COST_MONTH = $currentMonth;
+            }
+            else if($COST_MONTH == "ALL"  && (int)$currentYear > (int)$COST_YEAR){
+                $COST_MONTH = '03';
+            }
             
             $sql = "SELECT * FROM WPS_MIMS_EIAFORM_USERCREATE WHERE 1=1 and GROUPTYPE = 'REQ' ";
             $REQBY = $this->MainModel->QuerySetBase($sql, $this->mimsBase)->result();
@@ -285,7 +293,7 @@ class form extends MY_Controller{
 
                 }
 
-                exit;
+                // exit;
                 // สั่งคืนค่าแจ้งสถานะ JSON ออกบนหน้าเว็บเพื่อความสะดวกในการตรวจสอบ
                     return $this->output
                                 ->set_content_type('application/json')
@@ -317,13 +325,25 @@ class form extends MY_Controller{
         $w="";
 
         
-        if($MONTH != "ALL")
-        {
-            $w .= " AND  COST_MONTH = '" . $MONTH . "' ";
-        }
+        // if($MONTH != "ALL")
+        // {
+        //     $w .= " AND  COST_MONTH = '" . $MONTH . "' ";
+        // }
         if ($YEAR != "" ) {
             $w .= " AND  COST_YEAR = '" . $YEAR . "' ";
         }
+
+        if((int)$MONTH <= (int)"03")
+        {
+            $w .= " AND ( COST_MONTH >= '04' and COST_MONTH <= '12') or ( COST_MONTH >= '01' and COST_MONTH <= '".$MONTH."') ";
+        }
+        else if((int)$MONTH > (int)"03")
+        {
+            $w .= " AND ( COST_MONTH >= '04' and COST_MONTH <= '".$MONTH."')  ";
+            
+        }
+
+       
 
         $sql="SELECT * FROM WPS_MIMS_REPORT_STOCKCOST WHERE 1=1  " .$w;
         $dataOnhand = $this->MainModel->QuerySetBase($sql, $this->mimsBase)->result();
@@ -429,7 +449,6 @@ class form extends MY_Controller{
                             'DIFF'              => (float)($row['DIFF'] ?? 0),
                             'TOTAL_PCB_AMOUNT' => (float)($row['TOTAL_PCB_AMOUNT'] ?? 0),
                             'TOTAL_PART_AMOUNT' => (float)($row['TOTAL_PART_AMOUNT'] ?? 0),
-                            // 💡 หมายเหตุ: ตัด 'CREATE_DATE' ออกแล้ว เพื่อให้โครงสร้างใช้ DEFAULT SYSDATE ของ Oracle ป้องกัน ORA-01861
                         ]);
                         $db_mims->insert('WPS_MIMS_EIAFORMDETAIL', $detailData);
                     }
@@ -662,78 +681,117 @@ class form extends MY_Controller{
                 $EIAFORMDETAIL = $this->MainModel->QuerySetBase($sql, $this->mimsBase, $bindData)->result();
 
                 $reportRows = [];
+                $dataReceiveHist = [];
                 $totalReceived = 0;
                 $totalIssued = 0;
                 $totalDiff = 0;
-
+                $costyear =$mimsForm->COST_YEAR;
                 $createform = substr($mimsForm->CREATE_DATE,0,7);
-                if (empty($EIAFORMDETAIL)) {
-                    // 3. ดึงกลุ่มข้อมูลตัวเลขรายงานจากฐานข้อมูล (ลอจิกคิวรีชุดเดียวกับ GetStockCost)
-                    // echo "New";
-                    // exit;
-                    $w = "";
-                    if (!empty($mimsForm->COST_MONTH) && $mimsForm->COST_MONTH !== 'ALL') {
-                        $w .= " AND COST_MONTH = '" . $mimsForm->COST_MONTH . "' ";
-                    }
-                    if (!empty($mimsForm->COST_YEAR)) {
-                        $w .= " AND COST_YEAR = '" . $mimsForm->COST_YEAR . "' ";
-                    }
+                
+                $LAST_MONTH = $mimsForm->COST_YEAR . "-" . $mimsForm->CREATE_DATE;
+                if (empty($EIAFORMDETAIL)) {   //-- real
+                    // // 3. ดึงกลุ่มข้อมูลตัวเลขรายงานจากฐานข้อมูล (ลอจิกคิวรีชุดเดียวกับ GetStockCost)
+                    // // echo "New";
+                    // // exit;
+                    // $w = "";
+                    // if (!empty($mimsForm->COST_MONTH) && $mimsForm->COST_MONTH !== 'ALL') {
+                    //     $w .= " AND COST_MONTH = '" . $mimsForm->COST_MONTH . "' ";
+                    // }
+                    // if (!empty($mimsForm->COST_YEAR)) {
+                    //     $w .= " AND COST_YEAR = '" . $mimsForm->COST_YEAR . "' ";
+                    // }
 
-                    $sqlOnhand = "SELECT * FROM WPS_MIMS_REPORT_STOCKCOST WHERE 1=1 " . $w ;//. " ORDER BY RAW_MONTH ASC"
-                    $dataOnhand = $this->MainModel->QuerySetBase($sqlOnhand, $this->mimsBase)->result();
+                    // $sqlOnhand = "SELECT * FROM WPS_MIMS_REPORT_STOCKCOST WHERE 1=1 " . $w ;//. " ORDER BY RAW_MONTH ASC"
+                    // $dataOnhand = $this->MainModel->QuerySetBase($sqlOnhand, $this->mimsBase)->result();
 
-                        // var_dump($dataOnhand);
-                        // exit;
-                    $sqlReceive = "SELECT * FROM WPS_MIMS_REPORT_STOCKCOST_RECEIVE WHERE 1=1 " . $w;
-                    $dataReceive = $this->MainModel->QuerySetBase($sqlReceive, $this->mimsBase)->result();
+                    //     // var_dump($dataOnhand);
+                    //     // exit;
+                    // $sqlReceive = "SELECT * FROM WPS_MIMS_REPORT_STOCKCOST_RECEIVE WHERE 1=1 " . $w;
+                    // $dataReceive = $this->MainModel->QuerySetBase($sqlReceive, $this->mimsBase)->result();
 
-                    $sqlIssue = "SELECT * FROM WPS_MIMS_REPORT_STOCKCOST_ISSUE WHERE 1=1 " . $w;
-                    $dataIssue = $this->MainModel->QuerySetBase($sqlIssue, $this->mimsBase)->result();
+                    // $sqlIssue = "SELECT * FROM WPS_MIMS_REPORT_STOCKCOST_ISSUE WHERE 1=1 " . $w;
+                    // $dataIssue = $this->MainModel->QuerySetBase($sqlIssue, $this->mimsBase)->result();
 
-                    // 4. ผสานข้อมูล (Merge) ตัวเลขรายงานฝั่งหลังบ้านก่อนพ่นลงพิมพ์ (ลอจิกเดียวกับ JS)
-                    $recvMap = [];
-                    foreach ($dataReceive as $recv) {
-                        $recvMap[$recv->COSTMONTH] = (float)($recv->RECEIVE_AMOUNT ?? 0);
-                    }
+                    // // 4. ผสานข้อมูล (Merge) ตัวเลขรายงานฝั่งหลังบ้านก่อนพ่นลงพิมพ์ (ลอจิกเดียวกับ JS)
+                    // $recvMap = [];
+                    // foreach ($dataReceive as $recv) {
+                    //     $recvMap[$recv->COSTMONTH] = (float)($recv->RECEIVE_AMOUNT ?? 0);
+                    // }
 
-                    $issueMap = [];
-                    foreach ($dataIssue as $issue) {
-                        $issueMap[$issue->COSTMONTH] = (float)($issue->ISSUE_AMOUNT ?? 0);
-                    }
+                    // $issueMap = [];
+                    // foreach ($dataIssue as $issue) {
+                    //     $issueMap[$issue->COSTMONTH] = (float)($issue->ISSUE_AMOUNT ?? 0);
+                    // }
 
 
-                    foreach ($dataOnhand as $onhand) {
-                        $monthKey = $onhand->COSTMONTH;
-                        $opening = (float)($onhand->OPENINGBALANCE ?? 0);
-                        $received = $recvMap[$monthKey] ?? 0.0;
-                        $issued = $issueMap[$monthKey] ?? 0.0;
-                        $totalCost = (float)($onhand->TOTAL_COST_ONHAND ?? 0);
-                        $TOTAL_PCB_AMOUNT = (float)($onhand->TOTAL_PCB_AMOUNT ?? 0);
-                        $TOTAL_PART_AMOUNT = (float)($onhand->TOTAL_PART_AMOUNT ?? 0);
+                    // foreach ($dataOnhand as $onhand) {
+                    //     $monthKey = $onhand->COSTMONTH;
+                    //     $opening = (float)($onhand->OPENINGBALANCE ?? 0);
+                    //     $received = $recvMap[$monthKey] ?? 0.0;
+                    //     $issued = $issueMap[$monthKey] ?? 0.0;
+                    //     $totalCost = (float)($onhand->TOTAL_COST_ONHAND ?? 0);
+                    //     $TOTAL_PCB_AMOUNT = (float)($onhand->TOTAL_PCB_AMOUNT ?? 0);
+                    //     $TOTAL_PART_AMOUNT = (float)($onhand->TOTAL_PART_AMOUNT ?? 0);
 
-                        // คำนวณ Diff หาส่วนต่างสะสม
-                        $diff = $opening + $received - $issued - $totalCost;
-                        if ($diff >= -0.02 && $diff <= 0.02) {
-                            $diff = 0.0;
-                        }
+                    //     // คำนวณ Diff หาส่วนต่างสะสม
+                    //     $diff = $opening + $received - $issued - $totalCost;
+                    //     if ($diff >= -0.02 && $diff <= 0.02) {
+                    //         $diff = 0.0;
+                    //     }
 
-                        $reportRows[] = [
-                            'COSTMONTH' => $monthKey,
-                            'OPENING' => $opening,
-                            'RECEIVED' => $received,
-                            'ISSUED' => $issued,
-                            'TOTAL_COST' => $totalCost,
-                            'TOTAL_PCB_AMOUNT' => $TOTAL_PCB_AMOUNT,
-                            'TOTAL_PART_AMOUNT' => $TOTAL_PART_AMOUNT,
-                            'DIFF' => $diff
-                        ];
-                        // รวมยอดสุทธิท้ายใบ
-                        $totalReceived += $received;
-                        $totalIssued += $issued;
-                        $totalDiff += $diff;
-                    }
+                    //     $reportRows[] = [
+                    //         'COSTMONTH' => $monthKey,
+                    //         'OPENING' => $opening,
+                    //         'RECEIVED' => $received,
+                    //         'ISSUED' => $issued,
+                    //         'TOTAL_COST' => $totalCost,
+                    //         'TOTAL_PCB_AMOUNT' => $TOTAL_PCB_AMOUNT,
+                    //         'TOTAL_PART_AMOUNT' => $TOTAL_PART_AMOUNT,
+                    //         'DIFF' => $diff
+                    //     ];
+                    //     // รวมยอดสุทธิท้ายใบ
+                    //     $totalReceived += $received;
+                    //     $totalIssued += $issued;
+                    //     $totalDiff += $diff;
+                    // }
+
+                            
+                    //     //== Receive History Table
+                    //     $sql = "SELECT 
+                    //         RECEIVE_ID,
+                    //         PO_ID AS PO,
+                    //         INVOICE_ID AS INV,
+                    //         VENDOR,
+                    //         SUBSTR(CONFIRMDATE, 1, 7) AS RECEIVE_MONTH,
+                    //         CONFIRM_AMOUNT AS AMOUNT,
+                    //         MACHINE_CODES AS REMARK
+                    //     FROM 
+                    //         WPS_MIMS_REPORT_RECV_VIEW
+                    //     WHERE 
+                    //         SUBSTR(CONFIRMDATE, 1, 7) = (
+                    //             SELECT TO_CHAR(CREATE_DATE, 'YYYY-MM') 
+                    //             FROM WPS_MIMS_EIAFORM 
+                    //             WHERE NFRMNO = ? 
+                    //             AND VORGNO = ? 
+                    //             AND CYEAR = ? 
+                    //             AND CYEAR2 = ? 
+                    //             AND NRUNNO = ?
+                    //         )
+                    //     ORDER BY 
+                    //         RECEIVE_ID,
+                    //         RECEIVE_MONTH, 
+                    //         VENDOR,
+                    //         PO";
+                    //     $bindData = [
+                    //         (int)$data['NFRMNO'],
+                    //         (string)$data['VORGNO'],
+                    //         (string)$data['CYEAR'],
+                    //         (string)$data['CYEAR2'],
+                    //         (int)$data['NRUNNO']
+                    //     ];
+                    //     $dataReceiveHist = $this->MainModel->QuerySetBase($sql, $this->mimsBase,$bindData )->result();
                 }
-                else {
+                else {    //-- get WPS_MIMS_EIAFORMDETAIL
                     foreach ($EIAFORMDETAIL as $onhand) {
                         $reportRows[] = [
                             'COSTMONTH'  => $onhand->COSTMONTH,
@@ -741,64 +799,72 @@ class form extends MY_Controller{
                             'RECEIVED'   => (float)$onhand->RECEIVED_AMOUNT, // ปรับให้ตรง Field จริงใน DB
                             'ISSUED'     => (float)$onhand->ISSUE_AMOUNT,
                             'TOTAL_COST' => (float)$onhand->TOTAL_COST_ONHAND,
-                            'TOTAL_PCB_AMOUNT' => $TOTAL_PCB_AMOUNT,
-                            'TOTAL_PART_AMOUNT' => $TOTAL_PART_AMOUNT,
+                            'TOTAL_PCB_AMOUNT' => (float)$onhand->TOTAL_PCB_AMOUNT,
+                            'TOTAL_PART_AMOUNT' => (float)$onhand->TOTAL_PART_AMOUNT,
                             'DIFF'       => (float)$onhand->DIFF
                         ];
+                        
+                        $LAST_MONTH = $onhand->COST_YEAR . "-" . $onhand->COST_MONTH;
                         // สะสมยอดรวม
                         $totalReceived += (float)$onhand->RECEIVED_AMOUNT;
                         $totalIssued   += (float)$onhand->ISSUE_AMOUNT;
                         $totalDiff     += (float)$onhand->DIFF;
                     }
+
+                    
+                    //== Receive History Table
+                    $sql = "SELECT 
+                        RECEIVE_ID,
+                        PO_ID AS PO,
+                        INVOICE_ID AS INV,
+                        VENDOR,
+                        SUBSTR(CONFIRMDATE, 1, 7) AS RECEIVE_MONTH,
+                        CONFIRM_AMOUNT AS AMOUNT,
+                        MACHINE_CODES AS REMARK
+                    FROM 
+                        WPS_MIMS_REPORT_RECV_VIEW
+                    WHERE 
+                        SUBSTR(CONFIRMDATE, 1, 7) = '".$LAST_MONTH ."'
+                    ORDER BY 
+                        RECEIVE_ID,
+                        RECEIVE_MONTH, 
+                        VENDOR,
+                        PO";
+                    $bindData = [
+                        (int)$data['NFRMNO'],
+                        (string)$data['VORGNO'],
+                        (string)$data['CYEAR'],
+                        (string)$data['CYEAR2'],
+                        (int)$data['NRUNNO']
+                    ];
+                    $dataReceiveHist = $this->MainModel->QuerySetBase($sql, $this->mimsBase,$bindData )->result();
+                        
+                    //== inventory History Table
+                    //== select Apr before FY Ex FY2026 get Mar'2026 = FY2025
+                    $sql = "select distinct * from WPS_MIMS_REPORT_STOCKCOST where COST_MONTH = '03' and COST_YEAR ='".  (string)((int)$costyear - 1). "'";
+                    $dataInventBFFYHist = $this->MainModel->QuerySetBase($sql, $this->mimsBase,[] )->result();
+                    $dataBFStockList = []; // สร้างตัวแปรใหม่เป็น Array
+                    foreach ($dataInventBFFYHist as $onhand) {
+                        $dataBFStockList[] = [ // เก็บเป็น Object ลงใน Array
+                            'TOTAL_PART_AMOUNT'  => number_format($onhand->TOTAL_PART_AMOUNT, 2),
+                            'TOTAL_PCB_AMOUNT'   => number_format($onhand->TOTAL_PCB_AMOUNT, 2),
+                            'RECEIVED'           => number_format($onhand->RECEIVED_AMOUNT, 2),
+                            'ISSUED'             => number_format($onhand->ISSUED_AMOUNT, 2),
+                            'TOTAL_COST'  => number_format($onhand->TOTAL_COST_ONHAND, 2),
+                            'DIFF'               => null
+                        ];
+                    }
+
+
+
+
+                    // var_dump($reportRows);
+                    // exit;
+
+                    // สร้าง HTML
+                    $this->generateHtmlTemplate($mimsForm, $approvalList,$reportRows,$dataBFStockList,$dataReceiveHist, $totalReceived, $totalIssued, $totalDiff);
+
                 }
-
-                //== inventory History Table
-                $sql = "";
-                $dataInventFYHist = $this->MainModel->QuerySetBase($sql, $this->mimsBase,$bindData )->result();
-
-
-                //== Receive History Table
-                $sql = "SELECT 
-                    RECEIVE_ID,
-                    PO_ID AS PO,
-                    INVOICE_ID AS INV,
-                    VENDOR,
-                    SUBSTR(CONFIRMDATE, 1, 7) AS RECEIVE_MONTH,
-                    CONFIRM_AMOUNT AS AMOUNT,
-                    MACHINE_CODES AS REMARK
-                FROM 
-                    WPS_MIMS_REPORT_RECV_VIEW
-                WHERE 
-                    SUBSTR(CONFIRMDATE, 1, 7) = (
-                        SELECT TO_CHAR(CREATE_DATE, 'YYYY-MM') 
-                        FROM WPS_MIMS_EIAFORM 
-                        WHERE NFRMNO = ? 
-                        AND VORGNO = ? 
-                        AND CYEAR = ? 
-                        AND CYEAR2 = ? 
-                        AND NRUNNO = ?
-                    )
-                ORDER BY 
-                    RECEIVE_ID,
-                    RECEIVE_MONTH, 
-                    VENDOR,
-                    PO";
-                $bindData = [
-                    (int)$data['NFRMNO'],
-                    (string)$data['VORGNO'],
-                    (string)$data['CYEAR'],
-                    (string)$data['CYEAR2'],
-                    (int)$data['NRUNNO']
-                ];
-                $dataReceiveHist = $this->MainModel->QuerySetBase($sql, $this->mimsBase,$bindData )->result();
-
-
-
-                // var_dump($reportRows);
-                // exit;
-
-                // สร้าง HTML
-                $this->generateHtmlTemplate($mimsForm, $approvalList,$reportRows,$dataReceiveHist, $totalReceived, $totalIssued, $totalDiff);
 
 
             } catch (Exception $e) {
@@ -807,7 +873,7 @@ class form extends MY_Controller{
         }
 
         // 📄 ฟังก์ชันย่อยสำหรับวาดโครงสร้างหน้าตาเอกสาร HTML สำหรับ Print Layout
-        private function generateHtmlTemplate($formInfo, $approvalList, $rows, $dataReceiveHist, $totalReceived, $totalIssued, $totalDiff)
+        private function generateHtmlTemplate($formInfo, $approvalList, $rows, $dataBFStockList,$dataReceiveHist, $totalReceived, $totalIssued, $totalDiff)
         {
             $costyear = $formInfo->COST_YEAR;
             $DOC_NO = $formInfo->DOC_NO;
@@ -901,7 +967,7 @@ class form extends MY_Controller{
             $pdf->SetFont('helvetica', '', 7);
 
             // --- สร้าง HTML สำหรับตารางที่ 2 ---
-            $htmlReceive = $this->generateReceiveHistoryHtml($dataReceiveHist,  $costyear,$DOC_NO);
+            $htmlReceive = $this->generateReceiveHistoryHtml($dataBFStockList,$rows,$dataReceiveHist,  $costyear,$DOC_NO);
             $pdf->writeHTML($htmlReceive, true, false, true, false, '');
 
             // --- วาดตราประทับสำหรับหน้า 2 (ถ้าต้องการให้มีเหมือนกัน) ---
@@ -984,8 +1050,82 @@ class form extends MY_Controller{
             // ==========================================
         }
 
-        private function generateReceiveHistoryHtml($dataReceiveHist,  $costyear,$DOC_NO)
+        private function generateReceiveHistoryHtml($dataInventBFFYHist, $datastockCost, $dataReceiveHist,  $costyear,$DOC_NO)
         {
+
+            // $prevYear = substr((int)$costyear - 1, -2);
+            $prevYear = (int)$costyear - 1;
+            $currYear = (int)$costyear;
+            $nextYear = $currYear + 1;
+
+            $months = [
+                ['code' => '04', 'label' => "Apr'".$currYear], ['code' => '05', 'label' => "May'".$currYear],
+                ['code' => '06', 'label' => "Jun'".$currYear], ['code' => '07', 'label' => "Jul'".$currYear],
+                ['code' => '08', 'label' => "Aug'".$currYear], ['code' => '09', 'label' => "Sep'".$currYear],
+                ['code' => '10', 'label' => "Oct'".$currYear], ['code' => '11', 'label' => "Nov'".$currYear],
+                ['code' => '12', 'label' => "Dec'".$currYear], ['code' => '01', 'label' => "Jan'".$nextYear],
+                ['code' => '02', 'label' => "Feb'".$nextYear], ['code' => '03', 'label' => "Mar'".$nextYear]
+            ];
+
+            // $currYear = substr((int)$costyear, -2);
+            $rows = [
+                'Store Part' => 'TOTAL_PART_AMOUNT', 
+                'Store PCB'  => 'TOTAL_PCB_AMOUNT', 
+                'Receive'    => 'RECEIVED', 
+                'Issue'      => 'ISSUED', 
+                'Total'      => 'TOTAL_COST', 
+                'Diff of month' => 'DIFF'
+            ];
+            $headerMonth = '<th></th><th>FY'.  $prevYear . '</th>';
+            foreach ($months as $m) { $headerMonth .= '<th>' . $m['label'] . '</th>'; }
+
+            $costMap = [];
+            foreach ($datastockCost as $r) {
+                $costMap[$r['COSTMONTH']] = $r; 
+            }
+            $rowStock = '';
+            foreach ($rows as $label => $field) {
+                $rowStock .= '<tr><td style="border: 1px solid #000;font-size: 7pt; text-align: center;">' . $label . '</td>';
+                
+                // ข้อมูลปีเก่า (FY)
+                $bfVal = !empty($dataInventBFFYHist) ? $dataInventBFFYHist[0][$field] : '';
+                $rowStock .= '<td style="border: 1px solid #000; font-size: 7pt; text-align: right;">' . $bfVal  . '&nbsp;</td>';
+                // ข้อมูล 12 เดือน
+                $diff = 0;
+                $diffBF = 0;
+                foreach ($months as $m) {
+                    if(isset($costMap[$m['label']]))
+                    {
+                            
+                        if($field == 'DIFF')
+                        {
+                            if($costMap[$m['label']]['TOTAL_COST']  == null )
+                            {
+                                $rawVal = "0.00";
+                                $val = number_format((float)$rawVal, 2, '.', ',');  
+                            }
+                            else {
+                                // $rawVal = isset($costMap[$m['label']]) ? $costMap[$m['label']][$field] : '';
+                                $diff = (float)(isset($costMap[$m['label']]) ? $costMap[$m['label']]['ISSUED'] : 0)-(float)$diffBF;
+                                $val = number_format((float)$diff, 2, '.', ',');
+                            }
+                        }
+                        else {
+                            $rawVal = isset($costMap[$m['label']]) ? $costMap[$m['label']][$field] : '';
+                            $val = number_format((float)$rawVal, 2, '.', ',');                      
+                        }
+                        $diffBF = $costMap[$m['label']]['ISSUED'];
+                    }
+                    else {
+                        $val ="";
+                    }
+                    $rowStock .= '<td style="border: 1px solid #000;font-size: 7pt; text-align: right;">' . $val  . '&nbsp;</td>';
+                    
+                }
+                $rowStock .= '</tr>';
+            }
+
+
             $rowsHtml = '';
             
             $stampTable = $this->generateStampTable();
@@ -1017,13 +1157,24 @@ class form extends MY_Controller{
                 <table style="width: 100%; border: none; margin-bottom: 20px;">
                     <tr>
                         <td style="width: 50%; vertical-align: bottom;">
-                            <div style="font-weight:bold; font-size: 14pt;">Backup data in Form : ' . $DOC_NO . " (". $RECEIVE_MONTH . ') </div>
+                            <div style="font-weight:bold; font-size: 14pt;">Backup data in Form : ' . $DOC_NO . " (REC.". $RECEIVE_MONTH . ') </div>
                             <div style="font-size: 10pt;"></div>
                         </td>
                         <td style="width: 50%; text-align: right; vertical-align: top;">
                             ' . $stampTable . '   
                         </td>
                     </tr>
+                </table>
+                <br>
+                <br>
+                <table class="main-table" cellpadding="2">
+                    <thead>
+                        <tr style="background-color: #d1d5db;line-height: 2.5;font-size: 7pt; ">
+                            '.$headerMonth.'
+                        </tr>
+                    </thead>
+                    <tbody>' . $rowStock . '</tbody>
+                    
                 </table>
                 <br>
                 <br>
@@ -1039,6 +1190,97 @@ class form extends MY_Controller{
                             <td colspan="3" style="text-align: right; border: 1px solid #000;">RECEIVE FY' . $costyear . '&nbsp;&nbsp;</td>
                             <td style="text-align: right; border: 1px solid #000;">' . number_format($totalReceived, 2) . '&nbsp;&nbsp;</td>
                             <td style="border: 1px solid #000;"></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </body></html>';
+        }
+
+        
+        private function generateReceiveHistoryHtml0($dataInventBFFYHist, $datastockCost, $dataReceiveHist, $costyear, $DOC_NO)
+        {
+            // กำหนดปีเพื่อใช้เปรียบเทียบ Format
+            $currYear = substr((int)$costyear, -2);
+            $nextYear = substr((int)$costyear + 1, -2);
+
+            // 1. ตั้งค่า Month Labels ให้ตรงกับรูปแบบใน DB (ตัวอย่าง: May'26)
+            // ตรวจสอบรูปแบบใน DB อีกครั้งว่าเป็น May'26 หรือ May'2026
+            $months = [
+                ['code' => '04', 'label' => "Apr'$currYear"], ['code' => '05', 'label' => "May'$currYear"],
+                ['code' => '06', 'label' => "Jun'$currYear"], ['code' => '07', 'label' => "Jul'$currYear"],
+                ['code' => '08', 'label' => "Aug'$currYear"], ['code' => '09', 'label' => "Sep'$currYear"],
+                ['code' => '10', 'label' => "Oct'$currYear"], ['code' => '11', 'label' => "Nov'$currYear"],
+                ['code' => '12', 'label' => "Dec'$currYear"], ['code' => '01', 'label' => "Jan'$nextYear"],
+                ['code' => '02', 'label' => "Feb'$nextYear"], ['code' => '03', 'label' => "Mar'$nextYear"]
+            ];
+
+            // 2. Map ข้อมูล Stock Cost
+            $costMap = [];
+            foreach ($datastockCost as $r) {
+                $costMap[$r['COSTMONTH']] = $r; 
+            }
+
+            // 3. เตรียม Row ข้อมูล
+            $rows = [
+                'Store Part' => 'TOTAL_PART_AMOUNT', 
+                'Store PCB'  => 'TOTAL_PCB_AMOUNT', 
+                'Receive'    => 'RECEIVED', 
+                'Issue'      => 'ISSUED', 
+                'Total'      => 'TOTAL_COST', 
+                'Diff of month' => 'DIFF'
+            ];
+
+            $rowStock = '';
+            foreach ($rows as $label => $field) {
+                $rowStock .= '<tr><td style="border: 1px solid #000; font-size: 8pt;">' . $label . '</td>';
+                
+                // ข้อมูลปีเก่า (FY)
+                $bfVal = !empty($dataInventBFFYHist) ? (float)$dataInventBFFYHist[0][$field] : 0;
+                $rowStock .= '<td style="border: 1px solid #000; font-size: 8pt; text-align: right;">' . number_format($bfVal, 2) . '&nbsp;</td>';
+                
+                // ข้อมูล 12 เดือน
+                foreach ($months as $m) {
+                    $val = isset($costMap[$m['label']]) ? (float)($costMap[$m['label']][$field] ?? 0) : 0;
+                    $rowStock .= '<td style="border: 1px solid #000; font-size: 8pt; text-align: right;">' . number_format($val, 2) . '&nbsp;</td>';
+                }
+                $rowStock .= '</tr>';
+            }
+
+            // 4. ตาราง Receive History
+            $rowsHtml = '';
+            $totalReceived = 0;
+            foreach ($dataReceiveHist as $r) {
+                $rowsHtml .= '<tr>
+                    <td style="border: 1px solid #000; font-size: 8pt; text-align: center;">' . $r->PO . '</td>
+                    <td style="border: 1px solid #000; font-size: 8pt; text-align: center;">' . $r->INV . '</td>
+                    <td style="border: 1px solid #000; font-size: 8pt;">' . $r->VENDOR . '</td>
+                    <td style="border: 1px solid #000; font-size: 8pt; text-align: right;">' . number_format((float)$r->AMOUNT, 2) . '&nbsp;</td>
+                    <td style="border: 1px solid #000; font-size: 8pt;">' . $r->REMARK . '</td>
+                </tr>';
+                $totalReceived += (float)$r->AMOUNT;
+            }
+
+            // 5. ประกอบ HTML
+            $headerMonth = '';
+            foreach ($months as $m) { $headerMonth .= '<th>' . $m['label'] . '</th>'; }
+
+            return '<html><body>
+                <table class="main-table" cellpadding="2">
+                    <thead>
+                        <tr style="background-color: #d1d5db;"><th>Category</th><th>FY'.($costyear-1).'</th>' . $headerMonth . '</tr>
+                    </thead>
+                    <tbody>' . $rowStock . '</tbody>
+                </table>
+                <br>
+                <table class="main-table" cellpadding="2">
+                    <thead>
+                        <tr style="background-color: #d1d5db;"><th>PO</th><th>INV</th><th>VENDOR</th><th>AMOUNT</th><th>REMARK</th></tr>
+                    </thead>
+                    <tbody>' . $rowsHtml . '</tbody>
+                    <tfoot>
+                        <tr style="font-weight:bold;">
+                            <td colspan="3" style="text-align:right;">RECEIVE FY' . $costyear . '&nbsp;</td>
+                            <td style="text-align:right;">' . number_format($totalReceived, 2) . '&nbsp;</td><td></td>
                         </tr>
                     </tfoot>
                 </table>
