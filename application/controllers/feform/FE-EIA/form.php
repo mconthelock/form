@@ -708,6 +708,8 @@ class form extends MY_Controller{
                         $received = $recvMap[$monthKey] ?? 0.0;
                         $issued = $issueMap[$monthKey] ?? 0.0;
                         $totalCost = (float)($onhand->TOTAL_COST_ONHAND ?? 0);
+                        $TOTAL_PCB_AMOUNT = (float)($onhand->TOTAL_PCB_AMOUNT ?? 0);
+                        $TOTAL_PART_AMOUNT = (float)($onhand->TOTAL_PART_AMOUNT ?? 0);
 
                         // คำนวณ Diff หาส่วนต่างสะสม
                         $diff = $opening + $received - $issued - $totalCost;
@@ -721,6 +723,8 @@ class form extends MY_Controller{
                             'RECEIVED' => $received,
                             'ISSUED' => $issued,
                             'TOTAL_COST' => $totalCost,
+                            'TOTAL_PCB_AMOUNT' => $TOTAL_PCB_AMOUNT,
+                            'TOTAL_PART_AMOUNT' => $TOTAL_PART_AMOUNT,
                             'DIFF' => $diff
                         ];
                         // รวมยอดสุทธิท้ายใบ
@@ -737,6 +741,8 @@ class form extends MY_Controller{
                             'RECEIVED'   => (float)$onhand->RECEIVED_AMOUNT, // ปรับให้ตรง Field จริงใน DB
                             'ISSUED'     => (float)$onhand->ISSUE_AMOUNT,
                             'TOTAL_COST' => (float)$onhand->TOTAL_COST_ONHAND,
+                            'TOTAL_PCB_AMOUNT' => $TOTAL_PCB_AMOUNT,
+                            'TOTAL_PART_AMOUNT' => $TOTAL_PART_AMOUNT,
                             'DIFF'       => (float)$onhand->DIFF
                         ];
                         // สะสมยอดรวม
