@@ -22,6 +22,7 @@ $(async function () {
 
   console.log("Prefix ที่ได้คือ:", prefix);
   $("#INPUTBY").val(empno);
+  setEmpName("#INPUTBY_NAME", getEmpName(getsec));
   setDatePicker({
     element: "#EffDate",
   });
@@ -38,11 +39,18 @@ $(async function () {
 
 /*--------------------Change FUNCTION--------------------*/
 $(document).on("change", "#REQBY", async function () {
-  const empnum = $(this).val();
-  if (!empnum) return;
+  const empnum = $(this).val().trim();
+  setEmpName("#REQBY_NAME", "");
+
+  if (!empnum) {
+    $("#FULLDP").val("");
+    return;
+  }
   try {
     const getsec = await getData(empnum);
     console.log("ข้อมูลที่ได้จาก API:", getsec);
+
+    setEmpName("#REQBY_NAME", getEmpName(getsec));
 
     if (getsec && getsec.SSECCODE === "040402") {
       console.log("เป็น FIN staff:", getsec.SSECCODE);
@@ -56,9 +64,29 @@ $(document).on("change", "#REQBY", async function () {
     $("#FULLDP").val(getsec.SDIV + "/" + getsec.SDEPT + "/" + getsec.SSEC);
   } catch (error) {
     console.error("เกิดข้อผิดพลาดตอนเรียก API:", error);
+    setEmpName("#REQBY_NAME", "");
+    $("#FULLDP").val("");
     $("#Pos").text("Error");
   }
 });
+
+function getEmpName(empData = {}) {
+  return (
+    empData?.SNAME ||
+    empData?.EMP_NAME ||
+    empData?.EMPNAME ||
+    empData?.FULLNAME ||
+    empData?.NAME ||
+    ""
+  );
+}
+
+function setEmpName(element, name) {
+  const nameElement = $(element);
+  nameElement.find(".emp-name").text(name);
+  nameElement.toggleClass("hidden", !name).toggleClass("flex", Boolean(name));
+}
+
 export async function getData(empno) {
   return await fetchUtils({
     url: `${process.env.APP_API}/users/${empno}`,
