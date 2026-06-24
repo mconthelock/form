@@ -628,50 +628,51 @@ $(document).on('click', '#DeleteBtn', async function () {
         CYEAR2: cyear2 ? cyear2.toString() : '',
         NRUNNO: nrunno ? Number(nrunno) : 0,
     };
-    const delform = deleteFlowandForm(payload);
+
+    // 1. รอให้ฟังก์ชันลบทำงานเสร็จก่อน
+    const delform = await deleteFlowandForm(payload);
+
     if (delform.status) {
-        $.ajax({
-            // ตรวจเช็คชื่อ Segment (main หรือ form) ให้ตรงตามโครงสร้าง Routing จริงหลังบ้านของคุณครับ
-            url: host + 'feform/FE-EIA/form/DeleteFEEIAForm',
-            type: 'POST',
-            dataType: 'json',
-            data: {
-                NFRMNO: nfrmno,
-                VORGNO: vorgno,
-                CYEAR: cyear,
-                CYEAR2: cyear2,
-                NRUNNO: nrunno,
-                EMPNO: empno,
-            },
-            success: function (response) {
-                response = response || {};
-                if (
-                    response.status ||
-                    response.status === 'true' ||
-                    response.status === true
-                ) {
-                    alert('ลบข้อมูลในตารางเรียบร้อยแล้ว');
-                    console.log('Delete Response: ', response);
-                    redirectWebflow();
-                } else {
-                    alert(
-                        'ไม่สามารถลบข้อมูลในตารางได้: ' +
-                            (response.message || 'โปรดตรวจสอบข้อผิดพลาดในระบบ'),
-                    );
-                }
-            },
-            error: function (xhr, status, error) {
-                console.error('Ajax Error: ', error);
-                alert('เกิดข้อผิดพลาดในการดึงข้อมูลจากโมเดลฐานข้อมูล');
-                // ถ้าพังหรือหาหน้าไม่เจอก็ต้องดับตัวสปินเนอร์ทิ้งด้วยเช่นกัน
-                $('#loading').hide();
-            },
-        });
+        // alert(delform.status);
+        // ใช้ Promise เพื่อให้สามารถใช้ await กับ $.ajax ได้
+        try {
+            const response = await $.ajax({
+                url: host + 'feform/FE-EIA/form/DeleteFEEIAForm',
+                type: 'POST',
+                dataType: 'json',
+                data: {
+                    NFRMNO: nfrmno,
+                    VORGNO: vorgno,
+                    CYEAR: cyear,
+                    CYEAR2: cyear2,
+                    NRUNNO: nrunno,
+                    EMPNO: empno,
+                },
+            });
+
+            if (
+                response.status === true ||
+                response.status === 'true' ||
+                response.status
+            ) {
+                alert('ลบข้อมูลในตารางเรียบร้อยแล้ว');
+                await redirectWebflow(); // ตอนนี้ใช้ await ได้แล้ว
+            } else {
+                alert(
+                    'ไม่สามารถลบข้อมูลในตารางได้: ' +
+                        (response.message || 'โปรดตรวจสอบข้อผิดพลาดในระบบ'),
+                );
+            }
+        } catch (error) {
+            console.error('Ajax Error: ', error);
+            alert('เกิดข้อผิดพลาดในการเชื่อมต่อฐานข้อมูล');
+            $('#loading').hide();
+        }
     } else {
         Swal.fire({
             icon: 'error',
             title: 'Failed to Delete Form',
-            text: rssave.message || 'Please try again',
+            text: delform.message || 'Please try again',
         });
     }
 });

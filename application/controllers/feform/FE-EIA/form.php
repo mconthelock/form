@@ -149,7 +149,7 @@ class form extends MY_Controller{
             $COST_MONTH = $this->input->get('COST_MONTH') ?? "ALL";
             if( $COST_MONTH == "ALL" && (int)$currentYear == (int)$COST_YEAR)
             {
-                $COST_MONTH = $currentMonth;
+                $COST_MONTH =  str_pad($currentMonth, 2, '0', STR_PAD_LEFT);
             }
             else if($COST_MONTH == "ALL"  && (int)$currentYear > (int)$COST_YEAR){
                 $COST_MONTH = '03';
@@ -478,16 +478,15 @@ class form extends MY_Controller{
     }
 
    
-
     public function DeleteFEEIAForm()
     {
         try {
             $form = [
-                'NFRMNO' => (int)$this->input->get('NFRMNO'),
-                'VORGNO' => (string)$this->input->get('VORGNO'),
-                'CYEAR'  => (string)$this->input->get('CYEAR'),
-                'CYEAR2' => (string)$this->input->get('CYEAR2'),
-                'NRUNNO' => (int)$this->input->get('NRUNNO'),
+                'NFRMNO' => (int)$this->input->post('NFRMNO'),
+                'VORGNO' => (string)$this->input->post('VORGNO'),
+                'CYEAR'  => (string)$this->input->post('CYEAR'),
+                'CYEAR2' => (string)$this->input->post('CYEAR2'),
+                'NRUNNO' => (int)$this->input->post('NRUNNO'),
             ];
             $sql = "DELETE FROM WPS_MIMS_EIAFORM WHERE NFRMNO = ? AND VORGNO = ? AND CYEAR = ? AND CYEAR2 = ? AND NRUNNO = ?";
             $this->MainModel->QuerySetBase($sql, $this->mimsBase, [
@@ -498,8 +497,16 @@ class form extends MY_Controller{
                 $form['NRUNNO']
             ]);
 
-             // 2. ลบฟอร์มหลักในระบบ Webflow ด้วย
-             $this->deleteForm($form);
+            
+            $sql = "DELETE FROM WPS_MIMS_EIAFORMDETAIL WHERE NFRMNO = ? AND VORGNO = ? AND CYEAR = ? AND CYEAR2 = ? AND NRUNNO = ?";
+            $this->MainModel->QuerySetBase($sql, $this->mimsBase, [
+                $form['NFRMNO'],
+                $form['VORGNO'],
+                $form['CYEAR'],
+                $form['CYEAR2'],
+                $form['NRUNNO']
+            ]);
+
 
              // 3. สั่งคืนค่าแจ้งสถานะ JSON ออกบนหน้าเว็บเพื่อความสะดวกในการตรวจสอบ
              return $this->output
