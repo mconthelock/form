@@ -142,7 +142,7 @@ class form extends MY_Controller{
 
             // คำนวณปีงบประมาณ: 
             // ถ้าเดือน >= 4 ให้เป็นปีปัจจุบัน, ถ้า < 4 ให้เป็นปีปัจจุบัน - 1
-            $fiscalYear = ($currentMonth >= 4) ? $currentYear : ($currentYear - 1);
+            $fiscalYear = ((int)$currentMonth >= 4) ? $currentYear : ($currentYear - 1);
 
             // รับค่าจาก input หรือใช้ค่าปีงบประมาณที่คำนวณไว้
             $COST_YEAR = $this->input->get('COST_YEAR') ?? (string)$fiscalYear;
