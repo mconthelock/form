@@ -693,110 +693,119 @@ class form extends MY_Controller{
                 $totalIssued = 0;
                 $totalDiff = 0;
                 $costyear =$mimsForm->COST_YEAR;
-                $createform = substr($mimsForm->CREATE_DATE,0,7);
                 
-                $LAST_MONTH = $mimsForm->COST_YEAR . "-" . $mimsForm->CREATE_DATE;
+                $LAST_MONTH = $mimsForm->COST_YEAR . "-" . $mimsForm->COST_MONTH;
                 if (empty($EIAFORMDETAIL)) {   //-- real
-                    // // 3. ดึงกลุ่มข้อมูลตัวเลขรายงานจากฐานข้อมูล (ลอจิกคิวรีชุดเดียวกับ GetStockCost)
-                    // // echo "New";
-                    // // exit;
-                    // $w = "";
-                    // if (!empty($mimsForm->COST_MONTH) && $mimsForm->COST_MONTH !== 'ALL') {
-                    //     $w .= " AND COST_MONTH = '" . $mimsForm->COST_MONTH . "' ";
-                    // }
-                    // if (!empty($mimsForm->COST_YEAR)) {
-                    //     $w .= " AND COST_YEAR = '" . $mimsForm->COST_YEAR . "' ";
-                    // }
+                    // 3. ดึงกลุ่มข้อมูลตัวเลขรายงานจากฐานข้อมูล (ลอจิกคิวรีชุดเดียวกับ GetStockCost)
+                    // echo "New";
+                    // exit;
+                    $w = "";
+                    
+                    if (!empty($mimsForm->COST_YEAR)) {
+                        $w .= " AND COST_YEAR = '" . $mimsForm->COST_YEAR . "' ";
+                    }
 
-                    // $sqlOnhand = "SELECT * FROM WPS_MIMS_REPORT_STOCKCOST WHERE 1=1 " . $w ;//. " ORDER BY RAW_MONTH ASC"
-                    // $dataOnhand = $this->MainModel->QuerySetBase($sqlOnhand, $this->mimsBase)->result();
+                    if (!empty($mimsForm->COST_MONTH)) {
+                        $COST_MONTH  = $mimsForm->COST_MONTH;
+                        if((int)$COST_MONTH <= (int)"03")
+                        {
+                            $w .= " AND (( COST_MONTH >= '04' and COST_MONTH <= '12') or ( COST_MONTH >= '01' and COST_MONTH <= '".$MONTH."')) ";
+                        }
+                        else if((int)$COST_MONTH > (int)"03")
+                        {
+                            $w .= " AND ( COST_MONTH >= '04' and COST_MONTH <= '".$COST_MONTH."')  ";
+                        }
+                    }
 
-                    //     // var_dump($dataOnhand);
-                    //     // exit;
-                    // $sqlReceive = "SELECT * FROM WPS_MIMS_REPORT_STOCKCOST_RECEIVE WHERE 1=1 " . $w;
-                    // $dataReceive = $this->MainModel->QuerySetBase($sqlReceive, $this->mimsBase)->result();
+                    $sqlOnhand = "SELECT * FROM WPS_MIMS_REPORT_STOCKCOST WHERE 1=1 " . $w ;//. " ORDER BY RAW_MONTH ASC"
+                    $dataOnhand = $this->MainModel->QuerySetBase($sqlOnhand, $this->mimsBase)->result();
 
-                    // $sqlIssue = "SELECT * FROM WPS_MIMS_REPORT_STOCKCOST_ISSUE WHERE 1=1 " . $w;
-                    // $dataIssue = $this->MainModel->QuerySetBase($sqlIssue, $this->mimsBase)->result();
+                        // var_dump($dataOnhand);
+                        // exit;
+                    $sqlReceive = "SELECT * FROM WPS_MIMS_REPORT_STOCKCOST_RECEIVE WHERE 1=1 " . $w;
+                    $dataReceive = $this->MainModel->QuerySetBase($sqlReceive, $this->mimsBase)->result();
 
-                    // // 4. ผสานข้อมูล (Merge) ตัวเลขรายงานฝั่งหลังบ้านก่อนพ่นลงพิมพ์ (ลอจิกเดียวกับ JS)
-                    // $recvMap = [];
-                    // foreach ($dataReceive as $recv) {
-                    //     $recvMap[$recv->COSTMONTH] = (float)($recv->RECEIVE_AMOUNT ?? 0);
-                    // }
+                    $sqlIssue = "SELECT * FROM WPS_MIMS_REPORT_STOCKCOST_ISSUE WHERE 1=1 " . $w;
+                    $dataIssue = $this->MainModel->QuerySetBase($sqlIssue, $this->mimsBase)->result();
 
-                    // $issueMap = [];
-                    // foreach ($dataIssue as $issue) {
-                    //     $issueMap[$issue->COSTMONTH] = (float)($issue->ISSUE_AMOUNT ?? 0);
-                    // }
+                    // 4. ผสานข้อมูล (Merge) ตัวเลขรายงานฝั่งหลังบ้านก่อนพ่นลงพิมพ์ (ลอจิกเดียวกับ JS)
+                    $recvMap = [];
+                    foreach ($dataReceive as $recv) {
+                        $recvMap[$recv->COSTMONTH] = (float)($recv->RECEIVE_AMOUNT ?? 0);
+                    }
+
+                    $issueMap = [];
+                    foreach ($dataIssue as $issue) {
+                        $issueMap[$issue->COSTMONTH] = (float)($issue->ISSUE_AMOUNT ?? 0);
+                    }
 
 
-                    // foreach ($dataOnhand as $onhand) {
-                    //     $monthKey = $onhand->COSTMONTH;
-                    //     $opening = (float)($onhand->OPENINGBALANCE ?? 0);
-                    //     $received = $recvMap[$monthKey] ?? 0.0;
-                    //     $issued = $issueMap[$monthKey] ?? 0.0;
-                    //     $totalCost = (float)($onhand->TOTAL_COST_ONHAND ?? 0);
-                    //     $TOTAL_PCB_AMOUNT = (float)($onhand->TOTAL_PCB_AMOUNT ?? 0);
-                    //     $TOTAL_PART_AMOUNT = (float)($onhand->TOTAL_PART_AMOUNT ?? 0);
+                    foreach ($dataOnhand as $onhand) {
+                        $monthKey = $onhand->COSTMONTH;
+                        $opening = (float)($onhand->OPENINGBALANCE ?? 0);
+                        $received = $recvMap[$monthKey] ?? 0.0;
+                        $issued = $issueMap[$monthKey] ?? 0.0;
+                        $totalCost = (float)($onhand->TOTAL_COST_ONHAND ?? 0);
+                        $TOTAL_PCB_AMOUNT = (float)($onhand->TOTAL_PCB_AMOUNT ?? 0);
+                        $TOTAL_PART_AMOUNT = (float)($onhand->TOTAL_PART_AMOUNT ?? 0);
 
-                    //     // คำนวณ Diff หาส่วนต่างสะสม
-                    //     $diff = $opening + $received - $issued - $totalCost;
-                    //     if ($diff >= -0.02 && $diff <= 0.02) {
-                    //         $diff = 0.0;
-                    //     }
+                        // คำนวณ Diff หาส่วนต่างสะสม
+                        $diff = $opening + $received - $issued - $totalCost;
+                        if ($diff >= -0.02 && $diff <= 0.02) {
+                            $diff = 0.0;
+                        }
 
-                    //     $reportRows[] = [
-                    //         'COSTMONTH' => $monthKey,
-                    //         'OPENING' => $opening,
-                    //         'RECEIVED' => $received,
-                    //         'ISSUED' => $issued,
-                    //         'TOTAL_COST' => $totalCost,
-                    //         'TOTAL_PCB_AMOUNT' => $TOTAL_PCB_AMOUNT,
-                    //         'TOTAL_PART_AMOUNT' => $TOTAL_PART_AMOUNT,
-                    //         'DIFF' => $diff
-                    //     ];
-                    //     // รวมยอดสุทธิท้ายใบ
-                    //     $totalReceived += $received;
-                    //     $totalIssued += $issued;
-                    //     $totalDiff += $diff;
-                    // }
+                        $reportRows[] = [
+                            'COSTMONTH' => $monthKey,
+                            'OPENING' => $opening,
+                            'RECEIVED' => $received,
+                            'ISSUED' => $issued,
+                            'TOTAL_COST' => $totalCost,
+                            'TOTAL_PCB_AMOUNT' => $TOTAL_PCB_AMOUNT,
+                            'TOTAL_PART_AMOUNT' => $TOTAL_PART_AMOUNT,
+                            'DIFF' => $diff
+                        ];
+                        // รวมยอดสุทธิท้ายใบ
+                        $totalReceived += $received;
+                        $totalIssued += $issued;
+                        $totalDiff += $diff;
+                    }
 
                             
-                    //     //== Receive History Table
-                    //     $sql = "SELECT 
-                    //         RECEIVE_ID,
-                    //         PO_ID AS PO,
-                    //         INVOICE_ID AS INV,
-                    //         VENDOR,
-                    //         SUBSTR(CONFIRMDATE, 1, 7) AS RECEIVE_MONTH,
-                    //         CONFIRM_AMOUNT AS AMOUNT,
-                    //         MACHINE_CODES AS REMARK
-                    //     FROM 
-                    //         WPS_MIMS_REPORT_RECV_VIEW
-                    //     WHERE 
-                    //         SUBSTR(CONFIRMDATE, 1, 7) = (
-                    //             SELECT TO_CHAR(CREATE_DATE, 'YYYY-MM') 
-                    //             FROM WPS_MIMS_EIAFORM 
-                    //             WHERE NFRMNO = ? 
-                    //             AND VORGNO = ? 
-                    //             AND CYEAR = ? 
-                    //             AND CYEAR2 = ? 
-                    //             AND NRUNNO = ?
-                    //         )
-                    //     ORDER BY 
-                    //         RECEIVE_ID,
-                    //         RECEIVE_MONTH, 
-                    //         VENDOR,
-                    //         PO";
-                    //     $bindData = [
-                    //         (int)$data['NFRMNO'],
-                    //         (string)$data['VORGNO'],
-                    //         (string)$data['CYEAR'],
-                    //         (string)$data['CYEAR2'],
-                    //         (int)$data['NRUNNO']
-                    //     ];
-                    //     $dataReceiveHist = $this->MainModel->QuerySetBase($sql, $this->mimsBase,$bindData )->result();
+                        // //== Receive History Table
+                        // $sql = "SELECT 
+                        //     RECEIVE_ID,
+                        //     PO_ID AS PO,
+                        //     INVOICE_ID AS INV,
+                        //     VENDOR,
+                        //     SUBSTR(CONFIRMDATE, 1, 7) AS RECEIVE_MONTH,
+                        //     CONFIRM_AMOUNT AS AMOUNT,
+                        //     MACHINE_CODES AS REMARK
+                        // FROM 
+                        //     WPS_MIMS_REPORT_RECV_VIEW
+                        // WHERE 
+                        //     SUBSTR(CONFIRMDATE, 1, 7) = (
+                        //         SELECT TO_CHAR(CREATE_DATE, 'YYYY-MM') 
+                        //         FROM WPS_MIMS_EIAFORM 
+                        //         WHERE NFRMNO = ? 
+                        //         AND VORGNO = ? 
+                        //         AND CYEAR = ? 
+                        //         AND CYEAR2 = ? 
+                        //         AND NRUNNO = ?
+                        //     )
+                        // ORDER BY 
+                        //     RECEIVE_ID,
+                        //     RECEIVE_MONTH, 
+                        //     VENDOR,
+                        //     PO";
+                        // $bindData = [
+                        //     (int)$data['NFRMNO'],
+                        //     (string)$data['VORGNO'],
+                        //     (string)$data['CYEAR'],
+                        //     (string)$data['CYEAR2'],
+                        //     (int)$data['NRUNNO']
+                        // ];
+                        // $dataReceiveHist = $this->MainModel->QuerySetBase($sql, $this->mimsBase,$bindData )->result();
                 }
                 else {    //-- get WPS_MIMS_EIAFORMDETAIL
                     foreach ($EIAFORMDETAIL as $onhand) {
@@ -817,8 +826,26 @@ class form extends MY_Controller{
                         $totalIssued   += (float)$onhand->ISSUE_AMOUNT;
                         $totalDiff     += (float)$onhand->DIFF;
                     }
+   
+                }
+                    //== Page 2
+                    //== inventory History Table
+                    //== select Apr before FY Ex FY2026 get Mar'2026 = FY2025
+                    $sql = "select distinct * from WPS_MIMS_REPORT_STOCKCOST where COST_MONTH = '03' and COST_YEAR ='".  (string)((int)$costyear - 1). "'";
+                    $dataInventBFFYHist = $this->MainModel->QuerySetBase($sql, $this->mimsBase,[] )->result();
+                    $dataBFStockList = []; // สร้างตัวแปรใหม่เป็น Array
+                    foreach ($dataInventBFFYHist as $onhand) {
+                        $dataBFStockList[] = [ // เก็บเป็น Object ลงใน Array
+                            'TOTAL_PART_AMOUNT'  => number_format($onhand->TOTAL_PART_AMOUNT, 2),
+                            'TOTAL_PCB_AMOUNT'   => number_format($onhand->TOTAL_PCB_AMOUNT, 2),
+                            'RECEIVED'           => number_format($onhand->RECEIVED_AMOUNT, 2),
+                            'ISSUED'             => number_format($onhand->ISSUED_AMOUNT, 2),
+                            'TOTAL_COST'  => number_format($onhand->TOTAL_COST_ONHAND, 2),
+                            'DIFF'               => null
+                        ];
+                    }
 
-                    
+
                     //== Receive History Table
                     $sql = "SELECT 
                         RECEIVE_ID,
@@ -845,24 +872,6 @@ class form extends MY_Controller{
                         (int)$data['NRUNNO']
                     ];
                     $dataReceiveHist = $this->MainModel->QuerySetBase($sql, $this->mimsBase,$bindData )->result();
-                        
-                    //== inventory History Table
-                    //== select Apr before FY Ex FY2026 get Mar'2026 = FY2025
-                    $sql = "select distinct * from WPS_MIMS_REPORT_STOCKCOST where COST_MONTH = '03' and COST_YEAR ='".  (string)((int)$costyear - 1). "'";
-                    $dataInventBFFYHist = $this->MainModel->QuerySetBase($sql, $this->mimsBase,[] )->result();
-                    $dataBFStockList = []; // สร้างตัวแปรใหม่เป็น Array
-                    foreach ($dataInventBFFYHist as $onhand) {
-                        $dataBFStockList[] = [ // เก็บเป็น Object ลงใน Array
-                            'TOTAL_PART_AMOUNT'  => number_format($onhand->TOTAL_PART_AMOUNT, 2),
-                            'TOTAL_PCB_AMOUNT'   => number_format($onhand->TOTAL_PCB_AMOUNT, 2),
-                            'RECEIVED'           => number_format($onhand->RECEIVED_AMOUNT, 2),
-                            'ISSUED'             => number_format($onhand->ISSUED_AMOUNT, 2),
-                            'TOTAL_COST'  => number_format($onhand->TOTAL_COST_ONHAND, 2),
-                            'DIFF'               => null
-                        ];
-                    }
-
-
 
 
                     // var_dump($reportRows);
@@ -870,8 +879,6 @@ class form extends MY_Controller{
 
                     // สร้าง HTML
                     $this->generateHtmlTemplate($mimsForm, $approvalList,$reportRows,$dataBFStockList,$dataReceiveHist, $totalReceived, $totalIssued, $totalDiff);
-
-                }
 
 
             } catch (Exception $e) {
