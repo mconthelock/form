@@ -335,7 +335,7 @@ class form extends MY_Controller{
 
         if((int)$MONTH <= (int)"03")
         {
-            $w .= " AND ( COST_MONTH >= '04' and COST_MONTH <= '12') or ( COST_MONTH >= '01' and COST_MONTH <= '".$MONTH."') ";
+            $w .= " AND (( COST_MONTH >= '04' and COST_MONTH <= '12') or ( COST_MONTH >= '01' and COST_MONTH <= '".$MONTH."')) ";
         }
         else if((int)$MONTH > (int)"03")
         {
