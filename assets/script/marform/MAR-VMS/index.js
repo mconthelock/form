@@ -43,44 +43,44 @@ var formInfo,
     tableist;
 
 $(async function () {
-    setDatePicker({ element: '.datesel', dateFormat: 'Y-m-d' });
-    const $modal = $('#modal');
-    const $versionInput = $('#formVersion');
-    const $newVersionInput = $('#newVersion');
-    //$("#salecom").select2();
-    // await setSelect2({
-    // 	element: "#salecom",
-    // 	selectionCssClass: "w-72",
-    // 	width: "280px",
-    // });
-    await setSelect2({
-        element: '#receptionRoom',
-        selectionCssClass: 'w-72',
-        width: '280px',
-    });
-    await setSelect2({
-        element: '#lunchPlaceSelect',
-        selectionCssClass: 'w-72',
-        width: '280px',
-    });
-    await setSelect2({
-        element: '.pst-select',
-        selectionCssClass: 'w-96',
-        width: '384px',
-    });
-    await setSelect2({
-        element: '.ist-select',
-        selectionCssClass: 'w-96',
-        width: '384px',
-    });
-    await setSelect2({
-        element: '.emp-select',
-        selectionCssClass: 'w-96',
-        width: '384px',
-    });
-    // --- Tab control ---
-    const $tabButtons = $('#tabs button');
-    const $tabPanes = $('.tab-pane');
+	setDatePicker({ element: ".datesel", dateFormat: "Y-m-d" });
+	const $modal = $("#modal");
+	const $versionInput = $("#formVersion");
+	const $newVersionInput = $("#newVersion");
+	//$("#salecom").select2();
+	// await setSelect2({
+	// 	element: "#salecom",
+	// 	selectionCssClass: "w-72",
+	// 	width: "280px",
+	// });
+	await setSelect2({
+		element: "#receptionRoom",
+		selectionCssClass: "w-72",
+		width: "280px",
+	});
+	await setSelect2({
+		element: "#lunchPlaceSelect",
+		selectionCssClass: "w-72",
+		width: "280px",
+	});
+	await setSelect2({
+		element: ".pst-select",
+		selectionCssClass: "w-96",
+		width: "384px",
+	});
+	await setSelect2({
+		element: ".ist-select",
+		selectionCssClass: "w-96",
+		width: "384px",
+	});
+	await setSelect2({
+		element: ".emp-select",
+		selectionCssClass: "w-96",
+		width: "384px",
+	});
+	// --- Tab control ---
+	const $tabButtons = $("#tabs button");
+	const $tabPanes = $(".tab-pane");
 
     $tabButtons.on('click', function () {
         $tabButtons.removeClass('active-tab');
