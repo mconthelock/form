@@ -1,5 +1,12 @@
 @extends('layouts/webflowTemplate')
 @section('contents')
+    <div class="form-data"
+        data-nfrmno="{{ $_GET['no'] }}"
+        data-vorgno="{{ $_GET['orgNo'] }}"
+        data-cyear="{{ $_GET['y'] }}"
+        data-cyear2="{{ $_GET['y2'] }}"
+        data-nrunno="{{ $_GET['runNo'] }}">
+    </div>
     <div class="min-h-screen bg-base-200 px-4 py-6 text-base-content md:px-6">
         <h2 class="sr-only">
             Variance Adjustment Report — WHI Inventory Checking
@@ -17,11 +24,8 @@
                             </p>
                             {{-- <div class="badge badge-info badge-lg badge-outline">Jan 2568 - Jun 2568</div> --}}
                             <div class="flex flex-wrap items-center gap-3 pt-2">
-                                <div class="badge badge-info badge-lg badge-outline">Jan 2568 - Jun 2568</div>
-                                <a href="#" target="_blank" class="btn btn-sm btn-outline">
-                                    <i class="ti ti-external-link text-lg" aria-hidden="true"></i>
-                                    Form Cycle Count Inventory Checking (6 Month)
-                                </a>
+                                <div class="badge badge-info badge-lg badge-outline"><span class="preview-date-range"></span></div>
+
                             </div>
                         </div>
 
@@ -114,6 +118,12 @@
                         <div>
                             <h2 class="text-sm font-semibold uppercase tracking-wide text-base-content/60">Result</h2>
                             <p class="text-lg font-semibold">WHI Inventory Checking, All Warehouse</p>
+                            <div class="mt-4">
+                                Refer : <a href="#" target="_blank" class="btn btn-sm btn-outline link-cycle-count">
+                                    <i class="ti ti-external-link text-lg" aria-hidden="true"></i>
+                                    Form Cycle Count Inventory Checking (6 Month)
+                                </a>
+                            </div>
                         </div>
                     </div>
 
@@ -199,7 +209,7 @@
                                     <th class="text-center border-b border-base-300 bg-success/15 text-success date-A2">-</th>
                                     <th class="text-center border-b border-base-300 bg-warning/15 text-warning date-A3">-</th>
                                     <th class="text-center border-b border-base-300 bg-error/15 text-error date-BE">-</th>
-                                    <th class="text-center border-b border-base-300 bg-base-200/15 text-base-content/40">-</th>
+                                    <th class="text-center border-b border-base-300 bg-base-200/15 text-base-content/40">.....\...</th>
                                     <th class="text-center border-b border-base-300 bg-primary/15 text-primary date-CDFGI">-</th>
                                     <th rowspan="2" class="bg-base-300 text-center border-l border-base-300">Grand total</th>
                                 </tr>
@@ -208,7 +218,7 @@
                                     <th class="text-center font-semibold bg-success/10 text-success border-b border-base-300">Group A2</th>
                                     <th class="text-center font-semibold bg-warning/10 text-warning border-b border-base-300">Group A3</th>
                                     <th class="text-center font-semibold bg-error/10 text-error border-b border-base-300">Group B+E</th>
-                                    <th class="text-center font-semibold bg-base-200 border-b border-base-300">-</th>
+                                    <th class="text-center font-semibold bg-base-200 border-b border-base-300"></th>
                                     <th class="text-center font-semibold bg-primary/10 text-primary border-b border-base-300">Group C+D+F+G+I</th>
                                 </tr>
                             </thead>
@@ -219,7 +229,7 @@
                                     <td class="text-center tabular-nums total-A2 bg-success/5">0</td>
                                     <td class="text-center tabular-nums total-A3 bg-warning/5">0</td>
                                     <td class="text-center tabular-nums total-BE bg-error/5">0</td>
-                                    <td class="text-center text-base-content/40">-</td>
+                                    <td class="text-center text-base-content/40"></td>
                                     <td class="text-center tabular-nums total-CDFGI bg-primary/5">0</td>
                                     <td class="text-center tabular-nums font-semibold bg-base-200 border-l border-base-300 grand-total">0</td>
                                 </tr>
@@ -229,7 +239,7 @@
                                     <td class="text-center tabular-nums onhand-A2 bg-success/5">0</td>
                                     <td class="text-center tabular-nums onhand-A3 bg-warning/5">0</td>
                                     <td class="text-center tabular-nums onhand-BE bg-error/5">0</td>
-                                    <td class="text-center text-base-content/40">-</td>
+                                    <td class="text-center text-base-content/40"></td>
                                     <td class="text-center tabular-nums onhand-CDFGI bg-primary/5">0</td>
                                     <td class="text-center tabular-nums font-semibold bg-base-200 border-l border-base-300 grand-onhand">0</td>
                                 </tr>
@@ -239,7 +249,7 @@
                                     <td class="text-center tabular-nums price-unit-A2 bg-success/5">0.00</td>
                                     <td class="text-center tabular-nums price-unit-A3 bg-warning/5">0.00</td>
                                     <td class="text-center tabular-nums price-unit-BE bg-error/5">0.00</td>
-                                    <td class="text-center text-base-content/40">-</td>
+                                    <td class="text-center text-base-content/40"></td>
                                     <td class="text-center tabular-nums price-unit-CDFGI bg-primary/5">0.00</td>
                                     <td class="text-center tabular-nums font-semibold bg-base-200 border-l border-base-300 grand-price-unit">0.00</td>
                                 </tr>
@@ -249,7 +259,7 @@
                                     <td class="text-center tabular-nums amount-A2 bg-success/5">0.00</td>
                                     <td class="text-center tabular-nums amount-A3 bg-warning/5">0.00</td>
                                     <td class="text-center tabular-nums amount-BE bg-error/5">0.00</td>
-                                    <td class="text-center text-base-content/40">-</td>
+                                    <td class="text-center text-base-content/40"></td>
                                     <td class="text-center tabular-nums amount-CDFGI bg-primary/5">0.00</td>
                                     <td class="text-center tabular-nums font-semibold bg-base-200 border-l border-base-300 grand-amount">0.00</td>
                                 </tr>
@@ -259,6 +269,31 @@
                 </div>
             </div>
         </div>
+        <div class="mt-6 aprv-section" style="display: none">
+            <div class="max-w-xl mx-auto">
+                <div class="space-y-2">
+                    <div>
+                        <label class="label">
+                            <span class="label-text font-medium">Attachment</span>
+                        </label>
+                        <input type="file" class="file-input file-input-sm file-input-bordered w-full attach-file" />
+                    </div>
+                    <div>
+                        <label class="label">
+                            <span class="label-text font-medium">Remark</span>
+                        </label>
+                        <textarea class="textarea textarea-sm textarea-bordered w-full min-h-30" id="remark" placeholder="Enter your remark here..."></textarea>
+                    </div>
+                    <div class="flex flex-col sm:flex-row justify-center gap-3 pt-2">
+                        <button class="btn btn-success min-w-35 btn-approve" data-action="approve"> Approve</button>
+                        <button class="btn btn-error min-w-35 btn-approve" data-action="reject"> Reject</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {{-- ─── Approval flow timeline ─────────────────────────────────────────── ─ --}}
+        <div class="mt-5 flow"></div>
     </div>
 @endsection
 

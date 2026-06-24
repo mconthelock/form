@@ -1,4 +1,5 @@
 import { fetchUtils } from "@amec/webasset/api/fetch-utils";
+import { getMode, showflow } from "@amec/webasset/api/webform";
 
 const numberformat = (value) => {
     const amount = Number(value);
@@ -9,13 +10,43 @@ const numberformat = (value) => {
 };
 
 $(async function () {
+    const { nfrmno: NFRMNO, vorgno: VORGNO, cyear: CYEAR, cyear2: CYEAR2, nrunno: NRUNNO } = $(".form-data").data();
+    const params = new URLSearchParams(window.location.search);
+    const EMPNO = params.get("empno");
+    const formData = { NFRMNO, VORGNO, CYEAR, CYEAR2, NRUNNO };
+    const flow = await showflow(formData);
+    $(".flow").html(flow.html);
+    const mode = await getMode({ ...formData, EMPNO });
+    $(".aprv-section").toggle(mode == '2');
     const result = await fetchUtils({
-        url: process.env.APP_API + "/ps-var/getDataResult",
+        url: process.env.APP_API + "/ps-var/getDataResult2",
         method: "POST",
-        data: {
-            reportID: 1
-        }
+        data: formData
     });
+
+    const monthNames = [
+        'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+    ];
+
+    function formatPeriod(period) {
+        const [year, month] = period.split('-');
+
+        return `${monthNames[parseInt(month) - 1]} ${parseInt(year)}`;
+    }
+
+    const periods = result
+        .map(row => row.CHECK_PERIOD)
+        .filter(Boolean)
+        .sort();
+
+    const minPeriod = periods[0];
+    const maxPeriod = periods.at(-1);
+
+    const periodText = `${formatPeriod(minPeriod)} - ${formatPeriod(maxPeriod)}`;
+    $(".preview-date-range").text(periodText);
+    $(".link-cycle-count").attr("href", `${process.env.APP_ENV}/psform/PS-CIH/main?no=${result[0].CIH_NFRMNO}&orgNo=${result[0].CIH_VORGNO}&y=${result[0].CIH_CYEAR}&y2=${result[0].CIH_CYEAR2}&runNo=${result[0].CIH_NRUNNO}`);
+    console.log(periodText);
 
     console.log(result);
     const diff = result.filter(row => {
@@ -95,11 +126,11 @@ $(async function () {
 
     console.log("A3", A3);
 
-    $(".date-A1").text(A1.length > 0 ? A1[0].ASSIGN_DETAIL.CHECK_PERIOD : ".....\\...");
-    $(".date-A2").text(A2.length > 0 ? A2[0].ASSIGN_DETAIL.CHECK_PERIOD : ".....\\...");
-    $(".date-A3").text(A3.length > 0 ? A3[0].ASSIGN_DETAIL.CHECK_PERIOD : ".....\\...");
-    $(".date-BE").text(BE.length > 0 ? BE[0].ASSIGN_DETAIL.CHECK_PERIOD : ".....\\...");
-    $(".date-CDFGI").text(CDFGI.length > 0 ? CDFGI[0].ASSIGN_DETAIL.CHECK_PERIOD : ".....\\...");
+    $(".date-A1").text(A1.length > 0 ? A1[0].CHECK_PERIOD : ".....\\...");
+    $(".date-A2").text(A2.length > 0 ? A2[0].CHECK_PERIOD : ".....\\...");
+    $(".date-A3").text(A3.length > 0 ? A3[0].CHECK_PERIOD : ".....\\...");
+    $(".date-BE").text(BE.length > 0 ? BE[0].CHECK_PERIOD : ".....\\...");
+    $(".date-CDFGI").text(CDFGI.length > 0 ? CDFGI[0].CHECK_PERIOD : ".....\\...");
 
     $(".total-A1").text(numberformat(A1.length));
     $(".total-A2").text(numberformat(A2.length));
@@ -156,4 +187,19 @@ $(async function () {
     $(".variance").text(variance);
     $(".varianceSum").text(varianceSum);
     $(".variance-amount").text(numberformat(varianceSumAmount));
+
+    $(".btn-approve").on("click", async function () {
+        const action = $(this).data("action");
+        console.log(action);
+        await doaction({
+            NFRMNO,
+            VORGNO,
+            CYEAR,
+            CYEAR2,
+            NRUNNO,
+            ACTION: action,
+            EMPNO,
+            REMARK: $('#remark').val().trim() // optional
+        })
+    });
 });

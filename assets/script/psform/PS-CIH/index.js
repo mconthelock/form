@@ -7,6 +7,7 @@ import { fetchUtils } from "@amec/webasset/api/fetch-utils";
 import { showLoader } from "@amec/webasset/preloader";
 import { redirectWebflow } from "@amec/webasset/form";
 import { downloadOrOpenFile } from "@amec/webasset/api/file";
+import { getByPosition } from "@amec/webasset/api/sequence-org";
 
 $(document).ready(async function () {
     const { nfrmno: NFRMNO, vorgno: VORGNO, cyear: CYEAR, cyear2: CYEAR2, nrunno: NRUNNO } = $(".form-data").data();
@@ -23,6 +24,7 @@ $(document).ready(async function () {
         method: "POST",
         data: formData,
     });
+
     const file = await fetchUtils({
         url: process.env.APP_API + "/webform/file/get-file",
         method: "POST",
@@ -72,14 +74,18 @@ $(document).ready(async function () {
     //     }
     // });
 
-    $(".group-name").text([...new Set(data.flatMap(row => row.GROUP_CODE))].sort().join(', ') || '-');
+   $(".group-name").text(data[0]?.GROUP_CODE ?? '-');
     $(".data-date").text(data[0]?.CREATED_AT ? new Date(data[0].CREATED_AT).toLocaleDateString() : '-');
     $(".check-date").text(data[0]?.CHECK_DATE ? new Date(data[0].CHECK_DATE).toLocaleDateString() : '-');
     $(".total-item").text(data.length);
-    $(".checking-item").text(data.filter(i => i.ACTUAL_QTY !== null).length);
-    $(".diff-item-first-time").text(data.filter(i => i.ACTUAL_QTY !== null && Number(i.ACTUAL_QTY) !== Number(i.ON_HAND)).length);
-    $(".random-check").text(data.filter(i => i.RANDOM_CHECK !== null).length);
-    $(".diff-item-after-recheck").text(data.filter(i => i.RANDOM_CHECK !== null && Number(i.RANDOM_CHECK) !== Number(i.ON_HAND)).length);
+    const checkingItem = data.filter(item => item.ACTUAL_QTY !== null).length;
+    $(".checking-item").text(checkingItem);
+    const diffItemFirstTime = data.filter(item => Number(item.RANDOM_CHECK ?? item.ACTUAL_QTY ?? item.ON_HAND) !== item.ON_HAND).length;
+    $(".diff-item-first-time").text(diffItemFirstTime);
+    const diffItemAfterRecheck = data.filter(item => Number(item.RECHECK_QTY ?? item.RANDOM_CHECK ?? item.ACTUAL_QTY ?? item.ON_HAND) !== item.ON_HAND);
+    $(".diff-item-after-recheck").text(diffItemAfterRecheck.length);
+    const randomCheckItem = data.filter(item => item.RANDOM_CHECK !== null).length;
+    $(".random-check").text(randomCheckItem);
 
     const getLogsByType = (row, type) => row.LOG_EDIT?.filter(log => log.TYPE === type) || [];
 
@@ -371,7 +377,7 @@ $(document).ready(async function () {
                 // if (type === 'sort' || type === 'type') {
                 //     return DIFF;
                 // }
-                
+
                 return DIFF === 0 ? '-' : DIFF;
             }
         },
@@ -620,18 +626,28 @@ $(document).ready(async function () {
                 showLoader();
                 const whiSem = await getByPosition("050504", "30");
                 await doaction({
-                    NFRMNO: nfrmno,
-                    VORGNO: vorgno,
-                    CYEAR: cyear,
-                    CYEAR2: cyear2,
-                    NRUNNO: nrunno,
-                    ACTION: 'approve',
+                    NFRMNO,
+                    VORGNO,
+                    CYEAR,
+                    CYEAR2,
+                    NRUNNO,
+                    ACTION: action,
                     EMPNO,
                     REMARK: $('#remark').val().trim() // optional
                 })
 
-                if (EMPNO === whiSem.EMPNO) {
+                if (EMPNO === whiSem.data.EMPNO) {
+                    console.log("create form varance");
                     // create form varance
+                    await fetchUtils({
+                        url: process.env.APP_API + "/ps-var/create",
+                        method: "POST",
+                        data: {
+                            REQBY: EMPNO,
+                            INPUTBY: EMPNO,
+                            REPORT_ID: data[0].REPORT_ID,
+                        }
+                    });
                 }
 
                 $(".attach-file").each(async function (index, element) {
@@ -639,11 +655,11 @@ $(document).ready(async function () {
                     const file = fileInput.files[0];
                     if (file) {
                         const formData = new FormData();
-                        formData.append('NFRMNO', nfrmno);
-                        formData.append('VORGNO', vorgno);
-                        formData.append('CYEAR', cyear);
-                        formData.append('CYEAR2', cyear2);
-                        formData.append('NRUNNO', nrunno);
+                        formData.append('NFRMNO', NFRMNO);
+                        formData.append('VORGNO', VORGNO);
+                        formData.append('CYEAR', CYEAR);
+                        formData.append('CYEAR2', CYEAR2);
+                        formData.append('NRUNNO', NRUNNO);
                         formData.append('FORM_TYPE', 'PS');
                         // formData.append('FILE_CODE', '2');
                         formData.append('CREATEBY', EMPNO);
@@ -662,12 +678,12 @@ $(document).ready(async function () {
                     method: "POST",
                     data: {
                         editedRows,
-                        EMPNO
+                        empno: EMPNO
                     },
                 });
 
                 showLoader({ show: false });
-                // redirectWebflow();
+                redirectWebflow();
             } catch (error) {
                 showLoader({ show: false });
                 Swal.fire({
@@ -690,6 +706,18 @@ $(document).ready(async function () {
             // });
 
             console.log(editedRows);
+        } else {
+            await doaction({
+                NFRMNO,
+                VORGNO,
+                CYEAR,
+                CYEAR2,
+                NRUNNO,
+                ACTION: action,
+                EMPNO,
+                REMARK: $('#remark').val().trim() // optional
+            })
+
         }
     });
 

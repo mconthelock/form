@@ -116,7 +116,7 @@ $(document).ready(async function () {
     $(".checking-item").text(checkingItem);
     const diffItemFirstTime = data.filter(item => Number(item.RANDOM_CHECK ?? item.ACTUAL_QTY ?? item.ON_HAND) !== item.ON_HAND).length;
     $(".diff-item-first-time").text(diffItemFirstTime);
-    const diffItemAfterRecheck = data.filter(item => (item.RECHECK_QTY !== null) && (item.REMARK !== null) && Number(item.RECHECK_QTY) !== Number(item.ON_HAND));
+    const diffItemAfterRecheck = data.filter(item => Number(item.RECHECK_QTY ?? item.RANDOM_CHECK ?? item.ACTUAL_QTY ?? item.ON_HAND) !== item.ON_HAND);
     $(".diff-item-after-recheck").text(diffItemAfterRecheck.length);
     const randomCheckItem = data.filter(item => item.RANDOM_CHECK !== null).length;
     $(".random-check").text(randomCheckItem);
