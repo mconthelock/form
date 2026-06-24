@@ -1,4 +1,9 @@
-import { showflow, getExtData } from '@amec/webasset/api/webform';
+import {
+    showflow,
+    getExtData,
+    updateFlow,
+    doaction,
+} from '@amec/webasset/api/webform';
 import { webflowSubmit, getformDetail } from '@amec/webasset/components/form';
 import { formSubmitSkeleton } from '@amec/webasset/skeleton';
 import { createTable } from '@amec/webasset/dataTable';
@@ -15,10 +20,17 @@ import {
 } from '@amec/webasset/utils';
 import { getData } from './data';
 import { formatDate } from '@amec/webasset/dayjs';
+import select2 from 'select2';
+import { setSelect2 } from '@amec/webasset/select2';
+import { getSubordinates } from '@amec/webasset/api/sequence-org';
+import { showLoader } from '@amec/webasset/preloader';
+import { redirectWebflow } from '@amec/webasset/form';
+select2();
 var tablepck;
+var form = {};
 $(async function () {
     const formInfo = await getAllAttr('.form-info');
-    const form = {
+    form = {
         NFRMNO: formInfo.nfrmno,
         VORGNO: formInfo.vorgno,
         CYEAR: formInfo.cyear,
@@ -99,7 +111,7 @@ $(async function () {
                 // เช็คเผื่อไว้ถ้าโครงสร้างหลุดหรือไม่มีคนรับผิดชอบ ให้แสดงเป็นช่องว่างหรือเครื่องหมาย -
                 if (isEditable) {
                     // ถ้าเป็นโหมดให้กรอกได้ ให้แสดงเป็น Input แล้วเอา empText ไปตั้งเป็นค่าเริ่มต้น
-                    return `<input type="text" class="input input-bordered input-sm w-full input-confirm" value="${row.CONFIRM}" data-asset="${row.ASSETNO}">`;
+                    return `<input type="text" oninput="this.value = this.value.replace(/[^0-9]/g, '')" class="input input-bordered input-sm w-[50px] input-confirm check-qty" value="${row.CONFIRM || ''}" data-asset="${row.ASSETNO}" data-qty="${row.QTY}">`;
                 } else {
                     return row.CONFIRM;
                 }
@@ -113,7 +125,7 @@ $(async function () {
                 // เช็คเผื่อไว้ถ้าโครงสร้างหลุดหรือไม่มีคนรับผิดชอบ ให้แสดงเป็นช่องว่างหรือเครื่องหมาย -
                 if (isEditable) {
                     // ถ้าเป็นโหมดให้กรอกได้ ให้แสดงเป็น Input แล้วเอา empText ไปตั้งเป็นค่าเริ่มต้น
-                    return `<input type="text" class="input input-bordered input-sm w-full input-nosticker" value="${row.NOSTICKER}" data-asset="${row.ASSETNO}">`;
+                    return `<input type="text" oninput="this.value = this.value.replace(/[^0-9]/g, '')" class="input input-bordered input-sm w-[50px] input-nosticker check-qty" value="${row.NOSTICKER || ''}" data-asset="${row.ASSETNO}" data-qty="${row.QTY}">`;
                 } else {
                     return row.NOSTICKER;
                 }
@@ -127,7 +139,7 @@ $(async function () {
                 // เช็คเผื่อไว้ถ้าโครงสร้างหลุดหรือไม่มีคนรับผิดชอบ ให้แสดงเป็นช่องว่างหรือเครื่องหมาย -
                 if (isEditable) {
                     // ถ้าเป็นโหมดให้กรอกได้ ให้แสดงเป็น Input แล้วเอา empText ไปตั้งเป็นค่าเริ่มต้น
-                    return `<input type="text" class="input input-bordered input-sm w-full input-lost" value="${row.LOST}" data-asset="${row.ASSETNO}">`;
+                    return `<input type="text" oninput="this.value = this.value.replace(/[^0-9]/g, '')" class="input input-bordered input-sm w-[50px] input-lost check-qty" value="${row.LOST || ''}" data-asset="${row.ASSETNO}" data-qty="${row.QTY}">`;
                 } else {
                     return row.LOST;
                 }
@@ -141,7 +153,7 @@ $(async function () {
                 // เช็คเผื่อไว้ถ้าโครงสร้างหลุดหรือไม่มีคนรับผิดชอบ ให้แสดงเป็นช่องว่างหรือเครื่องหมาย -
                 if (isEditable) {
                     // ถ้าเป็นโหมดให้กรอกได้ ให้แสดงเป็น Input แล้วเอา empText ไปตั้งเป็นค่าเริ่มต้น
-                    return `<input type="text" class="input input-bordered input-sm w-full input-damage" value="${row.DAMAGE}" data-asset="${row.ASSETNO}">`;
+                    return `<input type="text" oninput="this.value = this.value.replace(/[^0-9]/g, '')" class="input input-bordered input-sm w-[50px] input-damage check-qty" value="${row.DAMAGE || ''}" data-asset="${row.ASSETNO}" data-qty="${row.QTY}">`;
                 } else {
                     return row.DAMAGE;
                 }
@@ -155,7 +167,7 @@ $(async function () {
                 // เช็คเผื่อไว้ถ้าโครงสร้างหลุดหรือไม่มีคนรับผิดชอบ ให้แสดงเป็นช่องว่างหรือเครื่องหมาย -
                 if (isEditable) {
                     // ถ้าเป็นโหมดให้กรอกได้ ให้แสดงเป็น Input แล้วเอา empText ไปตั้งเป็นค่าเริ่มต้น
-                    return `<input type="text" class="input input-bordered input-sm w-full input-movement" value="${row.MOVEMENT}" data-asset="${row.ASSETNO}">`;
+                    return `<input type="text" oninput="this.value = this.value.replace(/[^0-9]/g, '')" class="input input-bordered input-sm w-[50px] input-movement check-qty" value="${row.MOVEMENT || ''}" data-asset="${row.ASSETNO}" data-qty="${row.QTY}">`;
                 } else {
                     return row.MOVEMENT;
                 }
@@ -170,7 +182,7 @@ $(async function () {
                 // เช็คเผื่อไว้ถ้าโครงสร้างหลุดหรือไม่มีคนรับผิดชอบ ให้แสดงเป็นช่องว่างหรือเครื่องหมาย -
                 if (isEditable) {
                     // ถ้าเป็นโหมดให้กรอกได้ ให้แสดงเป็น Input แล้วเอา empText ไปตั้งเป็นค่าเริ่มต้น
-                    return `<input type="text" class="input input-bordered input-sm w-full input-oth" value="${row.OTHCAUSE}" data-asset="${row.ASSETNO}">`;
+                    return `<input type="text" oninput="this.value = this.value.replace(/[^0-9]/g, '')" class="input input-bordered input-sm w-[50px] input-oth check-qty" value="${row.OTHCAUSE || ''}" data-asset="${row.ASSETNO}" data-qty="${row.QTY}">`;
                 } else {
                     return row.OTHCAUSE;
                 }
@@ -185,7 +197,7 @@ $(async function () {
                 // เช็คเผื่อไว้ถ้าโครงสร้างหลุดหรือไม่มีคนรับผิดชอบ ให้แสดงเป็นช่องว่างหรือเครื่องหมาย -
                 if (isEditable) {
                     // ถ้าเป็นโหมดให้กรอกได้ ให้แสดงเป็น Input แล้วเอา empText ไปตั้งเป็นค่าเริ่มต้น
-                    return `<input type="text" class="input input-bordered input-sm w-full input-oth" value="${row.REMOTHCAUSE}" data-asset="${row.ASSETNO}">`;
+                    return `<input type="text" class="input input-bordered input-sm w-[150px] input-oth" value="${row.REMOTHCAUSE || ''}" data-asset="${row.ASSETNO}" >`;
                 } else {
                     return row.REMOTHCAUSE;
                 }
@@ -200,7 +212,7 @@ $(async function () {
                 // เช็คเผื่อไว้ถ้าโครงสร้างหลุดหรือไม่มีคนรับผิดชอบ ให้แสดงเป็นช่องว่างหรือเครื่องหมาย -
                 if (isEditable) {
                     // ถ้าเป็นโหมดให้กรอกได้ ให้แสดงเป็น Input แล้วเอา empText ไปตั้งเป็นค่าเริ่มต้น
-                    return `<input type="text" class="input input-bordered input-sm w-full input-oth" value="${row.PIC}" data-asset="${row.ASSETNO}">`;
+                    return `<input type="text" class="input input-bordered input-sm w-[150px] input-oth" value="${row.PIC || ''}" data-asset="${row.ASSETNO}">`;
                 } else {
                     return row.PIC;
                 }
@@ -215,15 +227,49 @@ $(async function () {
             responsive: false,
             searching: false,
             paging: false,
+            ordering: false,
         },
         {
             id: '#tablepck',
             columnSelect: { status: false },
-            domScroll: { status: true, maxHeight: '21rem', type: 'tailwind4' },
+            domScroll: { status: true, maxHeight: '25rem', type: 'tailwind4' },
             join: true,
             headerSticky: { status: true },
+            language: 'en',
         },
     );
+    $('#assignContainer').hide();
+    $('#assignTo').removeClass('req');
+    if (cextdata == '01') {
+        const subord = getSubordinates(apvno);
+        const arrsubord = await subord;
+
+        arrsubord.sort((a, b) => {
+            const posA = parseInt(a.SPOSCODE, 10);
+            const posB = parseInt(b.SPOSCODE, 10);
+            if (posA !== posB) {
+                return posA - posB;
+            }
+            return a.SNAME.localeCompare(b.SNAME);
+        });
+
+        const suborddata = arrsubord.map((p) => ({
+            value: p.SEMPNO,
+            text: `(${p.SEMPNO}) ${p.SNAME}`,
+        }));
+        await setSelect2({
+            id: 'assignTo',
+            data: suborddata,
+            size: 'sm',
+            placeholder: 'Choose the person inchange',
+            search: true,
+            clear: false,
+            width: '25%',
+            emptyValue: true,
+        });
+        $('#assignContainer').show();
+        $('#assignTo').addClass('req');
+    }
     switch (mode) {
         case 2:
             container.html(
@@ -232,7 +278,7 @@ $(async function () {
                     flowhtml: flow.html,
                     approve: true,
                     reject: false,
-                    return: true,
+                    return: cextdata !== '01' && cextdata !== '02',
                 }),
             );
             break;
@@ -249,5 +295,88 @@ $(async function () {
         default:
             container.html('');
             break;
+    }
+});
+
+$(document).on('click', 'button[name="btnAction"]', async function (e) {
+    const action = this.value;
+    const cextdata = $('.extdata').attr('extdata');
+    const apvno = $('.apv-data').attr('empno');
+    const requiredMessage = [
+        {
+            element: $('#assignTo'),
+            message: 'Please choose the person in charge',
+        },
+    ].filter(Boolean);
+    if (!(await requiredForm('#frmmain', requiredMessage))) return;
+    //console.log($('#assignTo').val());
+    if (action == 'approve') {
+        showLoader();
+        if (cextdata == '01') {
+            const formData = {
+                condition: {
+                    ...form,
+                    CEXTDATA: '02',
+                },
+                VAPVNO: $('#assignTo').val(),
+            };
+            try {
+                const res = await updateFlow(formData);
+                const resdo = await doaction({
+                    ...form,
+                    EMPNO: apvno,
+                    ACTION: 'approve',
+                    REMARK: $('#remark').val(),
+                });
+                redirectWebflow();
+            } catch (err) {
+                showErrorMessage(err);
+            } finally {
+                showLoader({ show: false });
+            }
+        }
+    }
+});
+
+$(document).on('input', '.check-qty', function () {
+    // 1. กรองเอาเฉพาะตัวเลขก่อน (พิมพ์ตัวอักษรไม่ได้)
+    let cleanValue = this.value.replace(/[^0-9]/g, '');
+    let currentVal = parseInt(cleanValue, 10) || 0;
+
+    // 2. หาแถว (tr) ปัจจุบัน และดึงค่า QTY สูงสุดของแถวนี้
+    let $row = $(this).closest('tr');
+    let maxQty = parseInt($(this).data('qty'), 10) || 0;
+
+    // 3. ระบุคลาสของทั้ง 6 ช่องที่ต้องการเอาค่ามารวมกัน
+    let targetClasses = [
+        '.input-confirm',
+        '.input-nosticker',
+        '.input-lost',
+        '.input-damage',
+        '.input-movement',
+        '.input-oth',
+    ];
+
+    // 4. วนลูปหาผลรวมของช่องอื่นๆ ในแถวนี้ (ยกเว้นช่องที่กำลังพิมพ์อยู่)
+    let otherSum = 0;
+    targetClasses.forEach(function (cls) {
+        let $input = $row.find(cls);
+        // ตรวจสอบว่าเจอ Element และไม่ใช่ช่องปัจจุบันที่กำลังพิมพ์
+        if ($input.length && !$input.is(this)) {
+            let val = parseInt($input.val(), 10) || 0;
+            otherSum += val;
+        }
+    }, this); // ใส่ this ตรงนี้เพื่อให้ภายใน foreach รู้จักช่องปัจจุบัน
+
+    // 5. ตรวจสอบเงื่อนไขผลรวม
+    if (otherSum + currentVal > maxQty) {
+        // ถ้าเกิน QTY ให้คำนวณโควตาที่เหลืออยู่
+        let allowedVal = maxQty - otherSum;
+
+        // บังคับใส่ค่าสูงสุดที่ยังเหลืออยู่ (ถ้าไม่เหลือโควตาแล้ว จะกลายเป็น 0 ทันที)
+        this.value = allowedVal > 0 ? allowedVal : 0;
+    } else {
+        // ถ้าผลรวมยังไม่เกิน QTY ให้แสดงค่าตามที่พิมพ์ปกติ
+        this.value = cleanValue === '' ? '' : currentVal;
     }
 });

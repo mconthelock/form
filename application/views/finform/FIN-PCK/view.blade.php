@@ -40,27 +40,19 @@
 <div class="hidden form-info" nfrmno="{{$NFRMNO}}" vorgno="{{$VORGNO}}" cyear="{{$CYEAR}}" mode="{{$mode}}"
     cyear2="{{$mode !=1 ? $CYEAR2 : '' }}" nrunno="{{$mode !=1 ? $NRUNNO : '' }}"></div>
 <div class="hidden apv-data" empno="{{$empno}}"></div>
+<div class="hidden extdata" extdata="{{$cextData}}"></div>
 <div class="p-6 max-w-7xl mx-auto flex flex-col gap-6 min-w-[70vw]">
-    
-    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-base-100 shadow-md rounded-lg p-6">
-        <div>
-            <h1 class="text-2xl font-bold text-base-content flex items-center gap-2">
-               Fixed Asset Physical Checking Form
-            </h1>
-        </div>
-    </div>
     <div class="bg-base-100 shadow-md rounded-lg p-6">
-           <!-- <div class="form-overlap-wrapper">
-            <section id="form-detail">
-            </section>
-            </div> -->
+            <div>
+                <h1 class="text-2xl font-bold text-base-content flex items-center gap-2">
+                Fixed Asset Physical Checking Form
+                </h1>
+            </div>
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start mt-4">
-                
                 <div class="form-overlap-wrapper w-full">
                     <section id="form-detail" class="w-full">
                         </section>
                 </div>
-
                 <div class="location-overlap-wrapper w-full">
                     <div class="font-bold mb-5">Location Information</div>
                     <div class="h-fit w-full bg-base-200 border border-base-300 p-4 rounded-box relative">
@@ -78,7 +70,6 @@
                         </table>
                     </div>
                 </div>
-
             </div>
         <form id="frmmain">
             <div class="w-full mx-auto py-8">          
@@ -86,7 +77,21 @@
                         <table class="table !table-zebra" id="tablepck" style="width:100%">
                         </table>
                     </div>
-                </div>
+                        <!-- Container หลัก: ใช้ flex และ items-center เพื่อให้อยู่บรรทัดเดียวกันและตรงกลางแนวตั้ง -->
+                    <div id="assignContainer" class="mt-8 mb-4 flex flex-wrap items-center gap-4">
+                        
+                        <!-- Label "Assign To" -->
+                        <label for="assignTo" class="font-bold text-gray-800 text-[15px] whitespace-nowrap">
+                            Assign To :
+                        </label>
+                        
+                        <!-- Select Dropdown -->
+                        <select id="assignTo" name="assignTo" class="select select-bordered w-full max-w-sm bg-white border-slate-300 font-normal text-gray-700 focus:outline-none focus:border-blue-500">
+                            <option value="" disabled selected>-- Choose the person in charge--</option>
+                        </select>
+                        
+                    </div>
+            </div>
              <div id="form-action-container"></div>
         </form>
     </div>
