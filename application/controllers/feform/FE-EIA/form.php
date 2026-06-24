@@ -164,7 +164,7 @@ class form extends MY_Controller{
                 
                 $formData = $form['data']; 
                 
-                $empNo = (!empty($REQBY) && isset($REQBY[0]->USERID)) ? $REQBY[0]->USERID : '15111';
+                $empNo = (!empty($REQBY) && isset($REQBY[0]->USERID)) ? $REQBY[0]->USERID : '13204';
 
                 $data = [
                     'NFRMNO'  => $formData['NNO'],     
