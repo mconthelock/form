@@ -32,7 +32,7 @@ class form extends MY_Controller{
         $this->mimsBase = 'MIMS';
         $this->webflowBase = "DEFAULT";
         $this->upload_path = $_ENV['AMEC_FILE_PATH'] . ($this->_servername() == 'amecweb' ? 'production' : 'development') . "/Form/FE/FE_EIA/";
-        $this->host = $_SERVER['HTTP_HOST']; // เช่น localhost, amecwebtest, amecweb
+        $this->host = isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : 'amecweb'; // เช่น localhost, amecwebtest, amecweb , case !isset($_SERVER['HTTP_HOST'])  run job
         
     }
     //https://amecwebtest.mitsubishielevatorasia.co.th/form/feform/FE-EIA/form/main?no=11&orgNo=051001&y=26&y2=2026&runNo=1&m=3&empno=13204&bp=%2Fformtest%2Fworkflow%2FmineList%2Easp&menu=1
