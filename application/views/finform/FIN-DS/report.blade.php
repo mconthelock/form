@@ -104,11 +104,17 @@
             text-align: left !important;
         }
 
-        #stampTable tfoot th:nth-child(n+3),
-        .dt-scroll-foot tfoot th:nth-child(n+3),
-        .dataTables_scrollFoot tfoot th:nth-child(n+3) {
+        #stampTable tfoot th:nth-child(n+4),
+        .dt-scroll-foot tfoot th:nth-child(n+4),
+        .dataTables_scrollFoot tfoot th:nth-child(n+4) {
             text-align: right !important;
             font-variant-numeric: tabular-nums;
+        }
+
+        #stampTable tfoot th:last-child,
+        .dt-scroll-foot tfoot th:last-child,
+        .dataTables_scrollFoot tfoot th:last-child {
+            text-align: left !important;
         }
 
         #stampTable tbody td {
@@ -132,31 +138,33 @@
         }
 
         #stampTable .report-detail {
-            min-width: 220px;
-            max-width: 300px;
-            white-space: normal;
-            text-align: center !important;
+            min-width: 240px;
+            max-width: 340px;
+            white-space: pre-wrap;
+            text-align: left !important;
             color: #374151;
         }
 
-        #stampTable .report-user {
-            min-width: 190px;
-            max-width: 300px;
+        #stampTable .report-remark {
+            min-width: 220px;
+            max-width: 340px;
             white-space: normal;
-            text-align: center !important;
+            text-align: left !important;
             color: #374151;
         }
 
         #stampTable .report-section {
-            min-width: 110px;
+            min-width: 100px;
+            max-width: 150px;
+            white-space: normal;
             text-align: center !important;
             font-weight: 700;
             color: #475569;
         }
 
         #stampTable .report-date {
-            min-width: 96px;
-            width: 96px;
+            min-width: 112px;
+            width: 112px;
             color: #6d28d9;
             font-weight: 800;
             text-align: center !important;

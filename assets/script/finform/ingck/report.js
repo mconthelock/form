@@ -12,7 +12,8 @@ let reportRows = [];
 
 const baseColumns = [
   { data: "DATE_RECEIVE", defaultContent: "", className: "report-date" },
-  { data: "REASON", defaultContent: "", className: "report-detail" },
+  { data: "DETAIL", defaultContent: "", className: "report-detail" },
+  { data: "SECTION", defaultContent: "", className: "report-section" },
 ];
 
 $(async function () {
@@ -110,8 +111,9 @@ async function createReportTable(data = [], stamp = dutyStampList) {
   let html = `
     <thead>
       <tr>
-        <th rowspan="${headerRowspan}" class="report-sticky-date report-meta-header">D/M/Y</th>
+        <th rowspan="${headerRowspan}" class="report-sticky-date report-meta-header">Date</th>
         <th rowspan="${headerRowspan}" class="report-meta-header">Detail</th>
+        <th rowspan="${headerRowspan}" class="report-meta-header">Section</th>
   `;
 
   if (stampCount > 0) {
@@ -125,8 +127,7 @@ async function createReportTable(data = [], stamp = dutyStampList) {
   html += `
         <th rowspan="${headerRowspan}" class="report-balance-header">Balance Qty</th>
         <th rowspan="${headerRowspan}" class="report-balance-header">Balance Amount</th>
-        <th rowspan="${headerRowspan}" class="report-meta-header">User</th>
-        <th rowspan="${headerRowspan}" class="report-meta-header">Section</th>
+        <th rowspan="${headerRowspan}" class="report-meta-header">Remark</th>
       </tr>
   `;
 
@@ -180,12 +181,7 @@ async function createReportTable(data = [], stamp = dutyStampList) {
     defaultContent: "",
     className: "report-balance report-balance-group",
   });
-  mapColumns.push({ data: "USER", defaultContent: "", className: "report-user" });
-  mapColumns.push({
-    data: "SECTION",
-    defaultContent: "",
-    className: "report-section",
-  });
+  mapColumns.push({ data: "REMARK", defaultContent: "", className: "report-remark" });
 
   html += `
     </thead>
@@ -194,7 +190,7 @@ async function createReportTable(data = [], stamp = dutyStampList) {
   `;
 
   mapColumns.forEach((column, index) => {
-    html += index === 1 ? `<th>Total:</th>` : `<th></th>`;
+    html += index === 1 ? `<th>Total</th>` : `<th></th>`;
   });
 
   html += `
@@ -286,15 +282,10 @@ function applyReportRowClasses(row, rowData, dataIndex, rows = []) {
 
 function renderReportFooter(api) {
   const values = mapColumns.map((column, index) => {
-    if (index === 1) return "Total:";
+    if (index === 1) return "Total";
     if (!shouldShowReportTotal(column.data)) return "";
 
-    const total = api
-      .column(index, { search: "applied" })
-      .data()
-      .reduce((sum, value) => sum + numberValue(value), 0);
-
-    return formatNumber(total);
+    return formatNumber(getReportFooterValue(api, index, column.data));
   });
 
   const $footerCells = $(api.table().footer()).find("th");
@@ -307,6 +298,16 @@ function renderReportFooter(api) {
   );
   setFooterCellValues($scrollFooterCells, values);
   setFooterCellClasses($scrollFooterCells, values);
+}
+
+function getReportFooterValue(api, columnIndex, columnName) {
+  const columnData = api.column(columnIndex, { search: "applied" }).data();
+
+  if (/^RM_(QTY|AMT)\d+$/.test(columnName)) {
+    return numberValue(columnData[columnData.length - 1]);
+  }
+
+  return columnData.reduce((sum, value) => sum + numberValue(value), 0);
 }
 
 function setFooterCellValues($cells, values) {
@@ -418,7 +419,8 @@ async function exportReportToExcel(data = [], stamp = dutyStampList) {
 function getExportColumns(stamp = []) {
   const columns = [
     { key: "DATE_RECEIVE", width: 12 },
-    { key: "REASON", width: 32 },
+    { key: "DETAIL", width: 34 },
+    { key: "SECTION", width: 16 },
   ];
 
   ["BUY", "WD", "RM"].forEach((section) => {
@@ -430,8 +432,7 @@ function getExportColumns(stamp = []) {
 
   columns.push({ key: "BALANCE_QTY", width: 14 });
   columns.push({ key: "BALANCE_AMT", width: 16 });
-  columns.push({ key: "USER", width: 28 });
-  columns.push({ key: "SECTION", width: 16 });
+  columns.push({ key: "REMARK", width: 32 });
 
   return columns;
 }
@@ -441,11 +442,13 @@ function renderExcelHeader(sheet, stamp = [], lastColumn) {
   const headerRowspanEnd = 4;
 
   sheet.mergeCells(2, 1, headerRowspanEnd, 1);
-  sheet.getCell(2, 1).value = "D/M/Y";
+  sheet.getCell(2, 1).value = "Date";
   sheet.mergeCells(2, 2, headerRowspanEnd, 2);
   sheet.getCell(2, 2).value = "Detail";
+  sheet.mergeCells(2, 3, headerRowspanEnd, 3);
+  sheet.getCell(2, 3).value = "Section";
 
-  let column = 3;
+  let column = 4;
   if (stampCount > 0) {
     [
       { key: "BUY", label: "Buy" },
@@ -471,13 +474,14 @@ function renderExcelHeader(sheet, stamp = [], lastColumn) {
   [
     "Balance Qty",
     "Balance Amount",
-    "User",
-    "Section",
   ].forEach((label, index) => {
-    const headerColumn = lastColumn - 3 + index;
+    const headerColumn = lastColumn - 2 + index;
     sheet.mergeCells(2, headerColumn, headerRowspanEnd, headerColumn);
     sheet.getCell(2, headerColumn).value = label;
   });
+
+  sheet.mergeCells(2, lastColumn, headerRowspanEnd, lastColumn);
+  sheet.getCell(2, lastColumn).value = "Remark";
 }
 
 function renderExcelRows(sheet, data = [], exportColumns = []) {
@@ -496,20 +500,26 @@ function renderExcelTotal(sheet, data = [], exportColumns = []) {
   const totalRowNumber = data.length + 5;
   const row = sheet.getRow(totalRowNumber);
 
-  row.getCell(2).value = "Total:";
+  row.getCell(2).value = "Total";
 
   exportColumns.forEach((column, index) => {
     if (!isNumericReportColumn(column.key)) return;
     if (!shouldShowReportTotal(column.key)) return;
 
-    const total = data.reduce((sum, item) => {
-      return sum + numberValue(item[column.key]);
-    }, 0);
-
-    row.getCell(index + 1).value = total;
+    row.getCell(index + 1).value = getExcelTotalValue(data, column.key);
   });
 
   row.font = { bold: true };
+}
+
+function getExcelTotalValue(data = [], columnName) {
+  if (/^RM_(QTY|AMT)\d+$/.test(columnName)) {
+    return numberValue(data[data.length - 1]?.[columnName]);
+  }
+
+  return data.reduce((sum, item) => {
+    return sum + numberValue(item[columnName]);
+  }, 0);
 }
 
 function styleExcelSheet(sheet, exportColumns = []) {
@@ -530,7 +540,7 @@ function styleExcelSheet(sheet, exportColumns = []) {
       cell.alignment = {
         horizontal: "center",
         vertical: "middle",
-        wrapText: columnNumber === 2 || columnNumber >= columnCount - 1,
+        wrapText: columnNumber === 2 || columnNumber === columnCount,
       };
       cell.border = {
         top: { style: "thin" },
@@ -594,13 +604,17 @@ function mapReportToRows(reportData = [], stamp = []) {
   });
 
   const rows = sortedReportData.map((item) => {
+    const transactionSection = getReportSection(item);
+    const reason = getReportRemark(item);
     const row = {
       DATE_RECEIVE: formatDate(getEffectiveDate(item)),
       USER_EMPNO: getReportUserEmpno(item),
       USER: getReportUser(item),
       DIVISION: getReportDivisionName(item),
       SECTION: getReportSectionName(item),
-      REASON: item.REASON || item.DETAIL || "-",
+      DETAIL_TYPE: transactionSection,
+      DETAIL: getReportDetail(transactionSection, item),
+      REMARK: reason,
     };
 
     stamp.forEach((stampItem, stampIndex) => {
@@ -694,14 +708,15 @@ function groupDetailRows(data) {
 
   data.forEach((item) => {
     const date = getEffectiveDate(item);
-    const reason = item.REASON || item.DETAIL || "-";
+    const reason = getReportRemark(item);
     const user = getReportUser(item);
     const sectionName = getReportSectionName(item);
+    const transactionSection = getReportSection(item);
     const key =
       item.ROW_KEY ||
       item.LINEID ||
       item.LINE_ID ||
-      `${date}|${user}|${sectionName}|${reason}|${item.OPTION_CODE ?? item.TYPE ?? ""}`;
+      `${date}|${user}|${sectionName}|${reason}|${getReportOptionCode(item) ?? item.TYPE ?? ""}`;
 
     if (!rowsByKey[key]) {
       rowsByKey[key] = {
@@ -710,7 +725,9 @@ function groupDetailRows(data) {
         USER: user,
         DIVISION: getReportDivisionName(item),
         SECTION: sectionName,
-        REASON: reason,
+        DETAIL_TYPE: transactionSection,
+        DETAIL: getReportDetail(transactionSection, item),
+        REMARK: reason,
       };
     }
 
@@ -736,16 +753,54 @@ function groupDetailRows(data) {
 }
 
 function getReportSection(item) {
-  const optionCode = String(item.OPTION_CODE ?? item.OPTION ?? "");
+  const optionCode = getReportOptionCode(item);
   const type = String(item.TYPE ?? item.TRANS_TYPE ?? item.ACTION ?? "")
     .trim()
     .toUpperCase();
 
-  if (optionCode === "1" || ["ADD", "BUY", "PURCHASE", "IN"].includes(type)) {
+  if (optionCode === "1") {
+    return "BUY";
+  }
+
+  if (optionCode === "0") {
+    return "WD";
+  }
+
+  if (["ADD", "BUY", "PURCHASE", "IN"].includes(type)) {
+    return "BUY";
+  }
+
+  if (hasReportMovement(item, ["BUY", "PURCHASE"])) {
     return "BUY";
   }
 
   return "WD";
+}
+
+function getReportOptionCode(item = {}) {
+  const optionCode =
+    item.OPTION_CODE ??
+    item.HEAD_OPTION_CODE ??
+    item.HEADER_OPTION_CODE ??
+    item.H_OPTION_CODE ??
+    item.OPTION ??
+    item.OPT_CODE ??
+    null;
+
+  if (optionCode === null || optionCode === undefined) return null;
+
+  return String(optionCode).trim();
+}
+
+function hasReportMovement(item = {}, sections = []) {
+  return Object.keys(item).some((key) => {
+    const normalizedKey = key.toUpperCase();
+
+    return (
+      sections.some((section) => normalizedKey.startsWith(`${section}_`)) &&
+      numberValue(item[key]) !== 0
+    );
+  });
 }
 
 function getReportUser(item = {}) {
@@ -840,6 +895,11 @@ async function enrichRowsWithEmpData(rows = []) {
       row.USER = row.USER || row.USER_EMPNO;
     }
 
+    row.DETAIL = getReportDetail(row.DETAIL_TYPE, {
+      USER_NAME: empName || row.USER,
+      USER: row.USER_EMPNO,
+    });
+
     row.DIVISION = formatEmpDivision(empData) || row.DIVISION;
     row.SECTION = formatEmpSection(empData) || row.SECTION;
   });
@@ -866,6 +926,11 @@ function formatEmpDivision(empData = {}) {
 
 function formatPerson(name, empno) {
   if (name && empno) return `${name} (${empno})`;
+  return name || empno || "";
+}
+
+function formatPersonCodeFirst(name, empno, separator = " ") {
+  if (name && empno) return `(${empno})${separator}${name}`;
   return name || empno || "";
 }
 
@@ -940,7 +1005,11 @@ function formatDate(value) {
     return text;
   }
 
-  return `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`;
+  return date.toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
 }
 
 function formatNumber(value) {
@@ -961,7 +1030,6 @@ function isNumericReportColumn(columnName) {
 function shouldShowReportTotal(columnName) {
   return (
     isNumericReportColumn(columnName) &&
-    !/^RM_(QTY|AMT)\d+$/.test(columnName) &&
     !/^BALANCE_(QTY|AMT)$/.test(columnName)
   );
 }
@@ -970,6 +1038,27 @@ function getDateTime(item) {
   const date = parseReportDate(getEffectiveDate(item));
 
   return date ? date.getTime() : 0;
+}
+
+function getReportDetail(section, item = {}) {
+  const isAdd = section === "BUY";
+  const label = isAdd ? "Receive By" : "Issue By";
+  const name =
+    item.USER_NAME ||
+    item.VREQNAME ||
+    item.REQ_NAME ||
+    item.REQUESTER_NAME ||
+    item.INPUT_NAME ||
+    item.VINPUTNAME ||
+    "";
+  const empno = getReportUserEmpno(item);
+  const person = formatPersonCodeFirst(name, empno, isAdd ? "  " : " ");
+
+  return `${label} :  ${person || "-"}`;
+}
+
+function getReportRemark(item = {}) {
+  return item.REMARK || item.REASON || item.DETAIL || "-";
 }
 
 function getEffectiveDate(item = {}) {
