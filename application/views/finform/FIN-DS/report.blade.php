@@ -138,11 +138,11 @@
             filter: brightness(0.97);
         }
 
-        #stampTable .report-detail {
+        #stampTable tbody td.report-detail {
             min-width: 240px;
             max-width: 340px;
             white-space: pre-wrap;
-            text-align: center !important;
+            text-align: left !important;
             color: #7f3f00 !important;
         }
 

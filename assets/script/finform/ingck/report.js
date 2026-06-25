@@ -576,7 +576,10 @@ function styleExcelSheet(sheet, exportColumns = []) {
       const cell = row.getCell(columnNumber);
 
       cell.alignment = {
-        horizontal: "center",
+        horizontal:
+          columnNumber === 2 && rowNumber >= 5 && rowNumber < sheet.rowCount
+            ? "left"
+            : "center",
         vertical: "middle",
         wrapText: columnNumber === 2 || columnNumber === columnCount,
       };
