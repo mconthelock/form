@@ -1143,7 +1143,7 @@ function getDateTime(item) {
 
 function getReportDetail(section, item = {}) {
   const isAdd = section === "BUY";
-  const label = isAdd ? "Receive By" : "Issue By";
+  const label = isAdd ? "Receive By" : "Withdrawal By";
   const name =
     item.USER_NAME ||
     item.VREQNAME ||
