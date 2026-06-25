@@ -10,6 +10,19 @@ let currentMonth = new Date().getMonth() + 1;
 let currentDivision = "all";
 let reportRows = [];
 
+const reportColors = {
+  title: "FCD5B4",
+  meta: "DDD9C3",
+  section: "D9D9D9",
+  buy: "DBEEF3",
+  withdraw: "D8E4BC",
+  remaining: "FFFFCC",
+  balance: "CCC6D9",
+  remark: "EAD4D4",
+  text: "7F3F00",
+  total: "F8FAFC",
+};
+
 const baseColumns = [
   { data: "DATE_RECEIVE", defaultContent: "", className: "report-date" },
   { data: "DETAIL", defaultContent: "", className: "report-detail" },
@@ -111,9 +124,12 @@ async function createReportTable(data = [], stamp = dutyStampList) {
   let html = `
     <thead>
       <tr>
+        <th colspan="${getReportColumnCount(stamp)}" class="report-title-header">Control Duty Stamp Report - ${escapeHtml(formatReportPeriod())}</th>
+      </tr>
+      <tr>
         <th rowspan="${headerRowspan}" class="report-sticky-date report-meta-header">Date</th>
         <th rowspan="${headerRowspan}" class="report-meta-header">Detail</th>
-        <th rowspan="${headerRowspan}" class="report-meta-header">Section</th>
+        <th rowspan="${headerRowspan}" class="report-section-header">Section</th>
   `;
 
   if (stampCount > 0) {
@@ -121,13 +137,17 @@ async function createReportTable(data = [], stamp = dutyStampList) {
         <th colspan="${sectionColspan}" class="report-group-header report-buy-header">Buy</th>
         <th colspan="${sectionColspan}" class="report-group-header report-withdraw-header">Withdraw</th>
         <th colspan="${sectionColspan}" class="report-group-header report-remaining-header">Remaining</th>
+        <th colspan="2" rowspan="2" class="report-balance-header">Balance</th>
+    `;
+  } else {
+    html += `
+        <th class="report-balance-header">Balance Qty</th>
+        <th class="report-balance-header">Balance Amount</th>
     `;
   }
 
   html += `
-        <th rowspan="${headerRowspan}" class="report-balance-header">Balance Qty</th>
-        <th rowspan="${headerRowspan}" class="report-balance-header">Balance Amount</th>
-        <th rowspan="${headerRowspan}" class="report-meta-header">Remark</th>
+        <th rowspan="${headerRowspan}" class="report-remark-header">Remark</th>
       </tr>
   `;
 
@@ -165,6 +185,11 @@ async function createReportTable(data = [], stamp = dutyStampList) {
         });
       });
     });
+
+    html += `
+        <th class="report-balance report-metric-header">Quantity</th>
+        <th class="report-balance report-metric-header">Amount</th>
+    `;
 
     html += `
       </tr>
@@ -263,6 +288,12 @@ function getReportColumnGroupClass(section) {
     WD: "report-withdraw",
     RM: "report-remaining",
   }[section] || "";
+}
+
+function getReportColumnCount(stamp = dutyStampList) {
+  const stampCount = Array.isArray(stamp) ? stamp.length : 0;
+
+  return 3 + stampCount * 2 * 3 + 3;
 }
 
 function applyReportRowClasses(row, rowData, dataIndex, rows = []) {
@@ -386,7 +417,12 @@ async function exportReportToExcel(data = [], stamp = dutyStampList) {
 
     sheet.mergeCells(1, 1, 1, lastColumn);
     sheet.getCell(1, 1).value = `Control Duty Stamp Report - ${formatReportPeriod()}`;
-    sheet.getCell(1, 1).font = { bold: true, size: 14 };
+    sheet.getCell(1, 1).font = {
+      bold: true,
+      size: 14,
+      color: { argb: `FF${reportColors.text}` },
+    };
+    sheet.getCell(1, 1).fill = getExcelFill(reportColors.title);
     sheet.getCell(1, 1).alignment = {
       horizontal: "center",
       vertical: "middle",
@@ -396,6 +432,7 @@ async function exportReportToExcel(data = [], stamp = dutyStampList) {
     renderExcelRows(sheet, data, exportColumns);
     renderExcelTotal(sheet, data, exportColumns);
     styleExcelSheet(sheet, exportColumns);
+    styleExcelReportHeader(sheet, stamp, lastColumn);
 
     const buffer = await workbook.xlsx.writeBuffer();
     const blob = new Blob([buffer], {
@@ -472,13 +509,14 @@ function renderExcelHeader(sheet, stamp = [], lastColumn) {
   }
 
   [
-    "Balance Qty",
-    "Balance Amount",
-  ].forEach((label, index) => {
-    const headerColumn = lastColumn - 2 + index;
-    sheet.mergeCells(2, headerColumn, headerRowspanEnd, headerColumn);
-    sheet.getCell(2, headerColumn).value = label;
+    { label: "Balance", start: lastColumn - 2, end: lastColumn - 1 },
+  ].forEach((item) => {
+    sheet.mergeCells(2, item.start, 3, item.end);
+    sheet.getCell(2, item.start).value = item.label;
   });
+
+  sheet.getCell(4, lastColumn - 2).value = "Quantity";
+  sheet.getCell(4, lastColumn - 1).value = "Amount";
 
   sheet.mergeCells(2, lastColumn, headerRowspanEnd, lastColumn);
   sheet.getCell(2, lastColumn).value = "Remark";
@@ -550,21 +588,15 @@ function styleExcelSheet(sheet, exportColumns = []) {
       };
 
       if (rowNumber >= 2 && rowNumber <= 4) {
-        cell.font = { bold: true };
-        cell.fill = {
-          type: "pattern",
-          pattern: "solid",
-          fgColor: { argb: "FFECFDF5" },
-        };
+        cell.font = { bold: true, color: { argb: `FF${reportColors.text}` } };
+        cell.fill = getExcelFill(
+          getExcelHeaderColor(rowNumber, columnNumber, exportColumns),
+        );
       }
 
       if (rowNumber === sheet.rowCount) {
         cell.font = { bold: true };
-        cell.fill = {
-          type: "pattern",
-          pattern: "solid",
-          fgColor: { argb: "FFF8FAFC" },
-        };
+        cell.fill = getExcelFill(reportColors.total);
       }
     }
   }
@@ -801,6 +833,75 @@ function hasReportMovement(item = {}, sections = []) {
       numberValue(item[key]) !== 0
     );
   });
+}
+
+function getExcelFill(color) {
+  return {
+    type: "pattern",
+    pattern: "solid",
+    fgColor: { argb: `FF${color}` },
+  };
+}
+
+function getExcelHeaderColor(rowNumber, columnNumber, exportColumns = []) {
+  const columnKey = exportColumns[columnNumber - 1]?.key || "";
+
+  if (rowNumber === 1) return reportColors.title;
+  if (columnNumber <= 2) return reportColors.meta;
+  if (columnNumber === 3) return reportColors.section;
+  if (columnKey.startsWith("BUY_")) return reportColors.buy;
+  if (columnKey.startsWith("WD_")) return reportColors.withdraw;
+  if (columnKey.startsWith("RM_")) return reportColors.remaining;
+  if (columnKey.startsWith("BALANCE_")) return reportColors.balance;
+  if (columnNumber === exportColumns.length) return reportColors.remark;
+
+  return reportColors.section;
+}
+
+function styleExcelReportHeader(sheet, stamp = [], lastColumn) {
+  const stampCount = Array.isArray(stamp) ? stamp.length : 0;
+  const styleRange = (startRow, endRow, startColumn, endColumn, color) => {
+    for (let rowNumber = startRow; rowNumber <= endRow; rowNumber++) {
+      for (let columnNumber = startColumn; columnNumber <= endColumn; columnNumber++) {
+        const cell = sheet.getCell(rowNumber, columnNumber);
+
+        cell.fill = getExcelFill(color);
+        cell.font = {
+          ...(cell.font || {}),
+          bold: true,
+          color: { argb: `FF${reportColors.text}` },
+        };
+        cell.alignment = {
+          ...(cell.alignment || {}),
+          horizontal: "center",
+          vertical: "middle",
+        };
+      }
+    }
+  };
+
+  styleRange(1, 1, 1, lastColumn, reportColors.title);
+  styleRange(2, 4, 1, 2, reportColors.meta);
+  styleRange(2, 4, 3, 3, reportColors.section);
+
+  let column = 4;
+  [
+    { color: reportColors.buy },
+    { color: reportColors.withdraw },
+    { color: reportColors.remaining },
+  ].forEach((section) => {
+    const startColumn = column;
+    const endColumn = column + stampCount * 2 - 1;
+
+    if (stampCount > 0) {
+      styleRange(2, 4, startColumn, endColumn, section.color);
+    }
+
+    column = endColumn + 1;
+  });
+
+  styleRange(2, 4, lastColumn - 2, lastColumn - 1, reportColors.balance);
+  styleRange(2, 4, lastColumn, lastColumn, reportColors.remark);
 }
 
 function getReportUser(item = {}) {
