@@ -116,6 +116,10 @@ $(async function () {
                 $('#otherSelect').val(data.PURPOSE_OTHER || '');
                 $('#stampSize').html(selectedConfig.SIZE_MM + ' mm.');
                 renderNameStamp(nameStamp);
+
+                if (data.PURPOSE_ID == '2') {
+                    renderNameStamp();
+                }
             }
         } else {
             $('#standardStampSection').addClass('hidden');
