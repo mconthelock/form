@@ -582,10 +582,10 @@ $(document).ready(function () {
 
         getFormPayload: function (webflowData = {}, uploadedFiles = []) {
             const isPCB = this.isPcbWorkType();
-
             const list = $('#detailBody tr').map(function () {
-                const $tr = $(this);
-
+            const $tr = $(this);
+            const tid = $.trim($('#job_type').val());
+            if (!tid) {throw new Error('ไม่พบ TID กรุณาเลือก Job type');}
                 return {
                     ORDERNO: isPCB ? null : ($.trim($tr.find('[name="order_no[]"]').val()) || null),
                     DWGNO: $.trim($tr.find('[name="drawing_no[]"]').val()) || null,
@@ -621,8 +621,8 @@ $(document).ready(function () {
                 CYEAR2: String(webflowData.CYEAR2),
                 NRUNNO: Number(webflowData.NRUNNO),
                 
-                REQBY: String($('#request_by').val() || ''),
-                TID: Number($('#job_type').val()) || null,
+                REQBY: String($('#request_by').val()),
+                TID: Number($('#job_type').val()),
                 SSECCODE: String($('#sseccode').val() || ''),
                 CID: Number($('#cause').val()) || null,
                 REPAIR_BY: $.trim($('#repair_by').val()) || null,
@@ -693,8 +693,12 @@ $(document).ready(function () {
                 const webflowData = webflow?.data || {};
                 const uploadedFiles = await this.uploadFile(webflowData);
                 const payload = this.getFormPayload(webflowData, uploadedFiles);
+                
+                console.log('webflowData =', JSON.stringify(webflowData, null, 2));
+                console.log('payload keys =', Object.keys(payload));
+                console.log('payload.TID =', payload.TID);
+                console.log('payload json =', JSON.stringify(payload, null, 2));
 
-                console.log('MFG EDR PAYLOAD:', payload);
 
                 const res = await createMfgEdr(payload);
 
