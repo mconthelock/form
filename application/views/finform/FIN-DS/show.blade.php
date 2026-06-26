@@ -6,7 +6,23 @@
             height: 48px;
         }
 
+        #stampTable {
+            border-collapse: collapse !important;
+            border: 2px solid #475569 !important;
+        }
+
+        .show-page .dt-container div:has(> #stampTable),
+        .show-page div.overflow-x-auto:has(> #stampTable) {
+            background: transparent !important;
+            border: 0 !important;
+            border-radius: 0 !important;
+            margin-top: 0 !important;
+            margin-bottom: 0 !important;
+        }
+
+        #stampTable th,
         #stampTable tbody td {
+            border: 1px solid #64748b !important;
             padding: 10px 12px !important;
             vertical-align: middle;
         }
@@ -19,15 +35,12 @@
         }
 
         .show-page {
-            background:
-                radial-gradient(circle at top left, rgba(56, 189, 248, 0.16), transparent 32%),
-                radial-gradient(circle at bottom right, rgba(167, 139, 250, 0.12), transparent 30%),
-                linear-gradient(180deg, rgba(248, 250, 252, 0.98), rgba(241, 245, 249, 0.96));
+            background: #ffffff;
         }
 
         .show-card-header {
-            background: linear-gradient(to right, rgba(240, 249, 255, 0.96), rgba(255, 255, 255, 1));
-            border-left: 6px solid rgba(14, 165, 233, 0.75);
+            background: #ffffff;
+            border-left: 6px solid #0369a1;
         }
 
         .show-readonly,
@@ -37,13 +50,23 @@
             opacity: 1;
             border-style: solid !important;
             font-weight: 700;
+            background-color: #ffffff !important;
+            border-color: #64748b !important;
+            border-width: 2px !important;
+            color: #172033 !important;
+        }
+
+      
+
+        .show-page .label-text {
+            color: #1e293b !important;
         }
 
         #stampTable thead th {
-            background: linear-gradient(180deg, rgba(240, 249, 255, 1), rgba(224, 242, 254, 0.8));
+            background: #7dd3fc;
             color: #0f172a;
             font-weight: 800;
-            border-color: rgba(14, 165, 233, 0.24);
+            border: 1px solid #475569 !important;
             text-align: center;
             vertical-align: middle;
         }
@@ -53,6 +76,7 @@
             vertical-align: middle;
             color: #334155;
             font-weight: 650;
+            border: 1px solid #64748b !important;
         }
 
         #stampTable tbody td:nth-child(1) {
@@ -72,10 +96,11 @@
         }
 
         #stampTable tfoot th {
-            background: linear-gradient(180deg, rgba(254, 243, 199, 0.85), rgba(254, 249, 195, 0.7));
-            color: #92400e;
+            background: #fcd34d;
+            color: #78350f;
             font-weight: 900;
             text-align: right;
+            border: 1px solid #475569 !important;
         }
     </style>
 @endsection
@@ -296,7 +321,8 @@
                                                type="text"
                                                readonly
                                                class="show-readonly input input-sm input-bordered w-full bg-fuchsia-50 text-fuchsia-800 border-fuchsia-200 focus:outline-none shadow-sm" />
-                                    </div>
+                                            <span class="text-error text-xs font-bold mt-1.5">*Pickup time : 2:00-4:00 p.m.</span>
+                                            </div>
                                 </div>
 
                                 <div class="form-control">
@@ -336,7 +362,7 @@
                                 </h2>
                             </div>
 
-                            <div class="bg-white rounded-xl border border-emerald-200 shadow-sm overflow-hidden">
+                            <div>
                                 <div class="overflow-x-auto">
                                     <table id="stampTable"
                                            class="table table-xs w-full text-center"></table>
