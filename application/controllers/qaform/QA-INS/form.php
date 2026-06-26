@@ -66,7 +66,7 @@ class form extends MY_Controller{
 
     public function auditMaster($userId, $secId){
         try {
-            $secId = 1; // รอ qc อื่นขอใช้ด้วยค่อยเอาออก
+            // $secId = 1; // รอ qc อื่นขอใช้ด้วยค่อยเอาออก
             $data['userId'] = $userId;
             $data['secId'] = $secId;
             $checkSec = $this->getUserSecByID($secId);
@@ -81,7 +81,7 @@ class form extends MY_Controller{
 
     public function preview($secId, $rev){
         try {
-            $secId = 1; // รอ qc อื่นขอใช้ด้วยค่อยเอาออก
+            // $secId = 1; // รอ qc อื่นขอใช้ด้วยค่อยเอาออก
             $checkSec = $this->getUserSecByID($secId);
             $revision = $this->getAuditReportRevision(['ARR_SECID' => $secId, 'ARR_REV' => $rev]);
             // $this->_print_r($revision);

@@ -630,7 +630,28 @@ $(document).ready(function () {
                 DAILY_RUNNO: Number($('#daily_runno').val()) || null,
                 REASON_CAUSE: $.trim($('#reason_cause').val()) || null,
 
-                list,
+                INPUTBY: String($('#inputBy').val() || ''),
+                REQBY: String($('#request_by').val() || ''),
+                SSECCODE: String($('#sseccode').val() || ''),
+                SDEPCODE: String($('#sdepcode').val() || ''),
+                SSEC: String($('#ssec').val() || ''),
+
+                TYPEFORM: typeform,
+                ORNO: typeform === 'REVISE' ? currentNo : null,
+
+                CLASS: String($('input[name="classification"]:checked').val() || ''),
+                TOPIC: $.trim($('#topic').val()) || null,
+                DWGNO: $.trim($('#dwg_no').val()) || null,
+                SHOPNO: $.trim($('#shop_no').val()) || null,
+
+                ITEMNO: itemType === 'ALL'
+                    ? $.trim($('#overall_item').val()) || null
+                    : $.trim($('#or_item').val()) || null,
+
+                APPLY_FOR: String($('#apply_for').val() || ''),
+                SEQNO: null,
+                REV: $.trim($('#rev').val()) || null,
+
                 att: uploadedFiles.map(file => ({
                     FILENAME: file
                 }))
@@ -691,6 +712,7 @@ $(document).ready(function () {
             try {
                 const webflow = await this.createWebflowForm();
                 const webflowData = webflow?.data || {};
+
                 const uploadedFiles = await this.uploadFile(webflowData);
                 const payload = this.getFormPayload(webflowData, uploadedFiles);
                 

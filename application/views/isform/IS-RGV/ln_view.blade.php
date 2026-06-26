@@ -4,7 +4,7 @@
     <div class="form-data" data-nfrmno="{{ $NFRMNO }}" data-vorgno="{{ $VORGNO }}" data-cyear="{{ $CYEAR }}" data-cyear2="{{ $CYEAR2 }}" data-nrunno="{{ $NRUNNO }}" data-empno="{{ $EMPNO }}"></div>
     <div class="container mx-auto p-4">
         <div class="flex flex-col md:flex-row items-center justify-between mb-6">
-            <h1 class="text-3xl font-bold text-gray-800">User Group in FIN and CAT Department</h1>
+            <h1 class="text-3xl font-bold text-gray-800">User Group in FIN and CAT Department <span class="form-no text-gray-500 text-2xl"></span></h1>
             <div class="flex space-x-2">
                 <!-- <button class="btn btn-sm btn-outline btn-primary">+ เพิ่มเมนูหลัก</button>
                         <button class="btn btn-sm btn-outline btn-secondary">จัดการเมนู</button> -->
@@ -84,6 +84,12 @@
                                 @else
                                     <div class="px-4 py-2 rounded-lg bg-gray-100 border border-gray-300 text-gray-500 font-semibold">
                                         -
+                                    </div>
+                                @endif
+
+                                @if($empform[0]['DETAIL'])
+                                    <div class="px-4 py-2 rounded-lg bg-gray-100 border border-gray-300 text-gray-500 font-semibold">
+                                        {{ $empform[0]['DETAIL'] }}
                                     </div>
                                 @endif
                             </div>

@@ -49,7 +49,7 @@
         }
 
 
-        /** 
+        /**
          * Send email
          */
         public function sendMail(){
