@@ -6,18 +6,18 @@ import {
     getline,
     getamecorderdetail,
     createMfgEdr,
-    updateMfgEdrDetail
-} from "./data.js";
-import { showLoader } from "@amec/webasset/preloader";
-import { showMessage, showConfirm } from "@amec/webasset/utils";
-import { createTable } from "@amec/webasset/dataTable";
-import { downloadOrOpenFile } from "@amec/webasset/api/file";
-import { setDatePicker } from "@amec/webasset/flatpickr";
-import { createBtn, activatedBtn } from "@amec/webasset/components/buttons";
-import { createForm } from "@amec/webasset/api/webform";
-import { host } from "../../utils";
-import { redirectWebflow } from "@amec/webasset/form";
-import Swal from "sweetalert2";
+    updateMfgEdrDetail,
+} from './data.js';
+import { showLoader } from '@amec/webasset/preloader';
+import { showMessage, showConfirm } from '@amec/webasset/utils';
+import { createTable } from '@amec/webasset/dataTable';
+import { downloadOrOpenFile } from '@amec/webasset/api/file';
+import { setDatePicker } from '@amec/webasset/flatpickr';
+import { createBtn, activatedBtn } from '@amec/webasset/components/buttons';
+import { createForm } from '@amec/webasset/api/webform';
+import { host } from '../../utils';
+import { redirectWebflow } from '@amec/webasset/form';
+import Swal from 'sweetalert2';
 
 $(document).ready(function () {
     const EDR = {
@@ -29,7 +29,7 @@ $(document).ready(function () {
             icon = 'info',
             title = '',
             text = '',
-            confirmButtonText = 'ตกลง'
+            confirmButtonText = 'ตกลง',
         } = {}) {
             return Swal.fire({
                 icon,
@@ -60,9 +60,13 @@ $(document).ready(function () {
                     .addClass('text-emerald-700')
                     .text(empName);
 
-                    $('#sseccode').val(user?.SSECCODE);
-                    $('#sdepcode').val(user?.SDEPCODE);
-                    $('#ssec').val($.trim(user?.SSEC || '').replace(/\//g, '').substring(0, 3));
+                $('#sseccode').val(user?.SSECCODE);
+                $('#sdepcode').val(user?.SDEPCODE);
+                $('#ssec').val(
+                    $.trim(user?.SSEC || '')
+                        .replace(/\//g, '')
+                        .substring(0, 3),
+                );
             });
         },
 
@@ -83,9 +87,10 @@ $(document).ready(function () {
                 if (val.length === 5) {
                     EDR.checkEmployee($(this));
                 } else {
-                    const target = $(this).attr('id') === 'request_by'
-                        ? '#request_by_name'
-                        : '#repair_by_name';
+                    const target =
+                        $(this).attr('id') === 'request_by'
+                            ? '#request_by_name'
+                            : '#repair_by_name';
 
                     $(target).text('');
                 }
@@ -132,21 +137,32 @@ $(document).ready(function () {
                 const worktypeOptions = jobTypes.map(function (item) {
                     return {
                         value: item.TID,
-                        text: item.TYPENAME
+                        text: item.TYPENAME,
                     };
                 });
 
                 this.lineOptions = lines.map(function (item) {
                     return {
-                        value: item.LINE_ID || item.LID || item.LINE || item.LINE_CODE,
-                        text: item.LINE_NAME || item.LINENAME || item.LINE
+                        value:
+                            item.LINE_ID ||
+                            item.LID ||
+                            item.LINE ||
+                            item.LINE_CODE,
+                        text: item.LINE_NAME || item.LINENAME || item.LINE,
                     };
                 });
 
                 this.processOptions = processes.map(function (item) {
                     return {
-                        value: item.PROCESS_ID || item.PID || item.PROCESS || item.PROCESS_CODE,
-                        text: item.PROCESS_NAME || item.PROCESSNAME || item.PROCESS
+                        value:
+                            item.PROCESS_ID ||
+                            item.PID ||
+                            item.PROCESS ||
+                            item.PROCESS_CODE,
+                        text:
+                            item.PROCESS_NAME ||
+                            item.PROCESSNAME ||
+                            item.PROCESS,
                     };
                 });
 
@@ -163,13 +179,13 @@ $(document).ready(function () {
 
             try {
                 const causes = await getcause({
-                    CAUSE_GROUP: causeGroup
+                    CAUSE_GROUP: causeGroup,
                 });
 
                 const causeOptions = causes.map(function (item) {
                     return {
                         value: item.CID,
-                        text: `(${item.CAUSE}) - ${item.CAUSENAME}`
+                        text: `(${item.CAUSE}) - ${item.CAUSENAME}`,
                     };
                 });
 
@@ -186,7 +202,9 @@ $(document).ready(function () {
             const $thead = $('#tblDetail thead');
 
             $table.removeClass('tbl-normal tbl-pcb');
-            $thead.removeClass('bg-purple-500 bg-purple-600 bg-emerald-700 text-white');
+            $thead.removeClass(
+                'bg-purple-500 bg-purple-600 bg-emerald-700 text-white',
+            );
 
             if (isPCB) {
                 $table.addClass('tbl-pcb');
@@ -232,7 +250,9 @@ $(document).ready(function () {
             $select.find('option:not(:first)').remove();
 
             data.forEach(function (item) {
-                $select.append(`<option value="${item.value}">${item.text}</option>`);
+                $select.append(
+                    `<option value="${item.value}">${item.text}</option>`,
+                );
             });
         },
 
@@ -340,7 +360,8 @@ $(document).ready(function () {
                 serial_no: $tr.find('[name="serial_no[]"]').val() || '',
                 prod_jun: $tr.find('[name="prod_jun[]"]').val() || '',
                 qty: $tr.find('[name="qty[]"]').val() || '',
-                problem_detail: $tr.find('[name="problem_detail[]"]').val() || ''
+                problem_detail:
+                    $tr.find('[name="problem_detail[]"]').val() || '',
             };
         },
 
@@ -367,7 +388,9 @@ $(document).ready(function () {
 
         reorderRowNo: function () {
             $('#detailBody tr').each(function (index) {
-                $(this).find('.row-no').text(index + 1);
+                $(this)
+                    .find('.row-no')
+                    .text(index + 1);
             });
 
             this.rowIndex = $('#detailBody tr').length;
@@ -389,7 +412,10 @@ $(document).ready(function () {
             let html = '<option value="">-- Select --</option>';
 
             data.forEach(function (item) {
-                const selected = String(item.value) === String(selectedValue) ? 'selected' : '';
+                const selected =
+                    String(item.value) === String(selectedValue)
+                        ? 'selected'
+                        : '';
                 html += `<option value="${item.value}" ${selected}>${item.text}</option>`;
             });
 
@@ -404,9 +430,10 @@ $(document).ready(function () {
 
         checkEmployee: async function ($input) {
             const empno = $.trim($input.val());
-            const target = $input.attr('id') === 'request_by'
-                ? '#request_by_name'
-                : '#repair_by_name';
+            const target =
+                $input.attr('id') === 'request_by'
+                    ? '#request_by_name'
+                    : '#repair_by_name';
 
             if (!empno) {
                 $(target).text('');
@@ -474,7 +501,7 @@ $(document).ready(function () {
 
             try {
                 const data = await getamecorderdetail({
-                    MFGNO: orderNo
+                    MFGNO: orderNo,
                 });
 
                 console.log('ORDER DETAIL RESULT:', data);
@@ -482,7 +509,9 @@ $(document).ready(function () {
                 const row = Array.isArray(data) ? data[0] : data;
 
                 if (row) {
-                    $tr.find('input[name="project_no[]"]').val(row.PRJ_NO || '');
+                    $tr.find('input[name="project_no[]"]').val(
+                        row.PRJ_NO || '',
+                    );
                     $tr.find('input[name="prod_jun[]"]').val(row.PROD || '');
                     $tr.find('input[name="model[]"]').val(row.MODEL || '');
                 } else {
@@ -508,18 +537,27 @@ $(document).ready(function () {
                 const $tr = $(this);
 
                 if (isPCB) {
-                    if (!$.trim($tr.find('[name="drawing_no[]"]').val())) isValid = false;
+                    if (!$.trim($tr.find('[name="drawing_no[]"]').val()))
+                        isValid = false;
                     if (!$tr.find('[name="line[]"]').val()) isValid = false;
                     if (!$tr.find('[name="process[]"]').val()) isValid = false;
-                    if (!$.trim($tr.find('[name="lot[]"]').val())) isValid = false;
-                    if (!$.trim($tr.find('[name="serial_no[]"]').val())) isValid = false;
-                    if (!$.trim($tr.find('[name="prod_jun[]"]').val())) isValid = false;
-                    if (!$.trim($tr.find('[name="qty[]"]').val())) isValid = false;
+                    if (!$.trim($tr.find('[name="lot[]"]').val()))
+                        isValid = false;
+                    if (!$.trim($tr.find('[name="serial_no[]"]').val()))
+                        isValid = false;
+                    if (!$.trim($tr.find('[name="prod_jun[]"]').val()))
+                        isValid = false;
+                    if (!$.trim($tr.find('[name="qty[]"]').val()))
+                        isValid = false;
                 } else {
-                    if (!$.trim($tr.find('[name="order_no[]"]').val())) isValid = false;
-                    if (!$.trim($tr.find('[name="drawing_no[]"]').val())) isValid = false;
-                    if (!$.trim($tr.find('[name="item[]"]').val())) isValid = false;
-                    if (!$.trim($tr.find('[name="qty[]"]').val())) isValid = false;
+                    if (!$.trim($tr.find('[name="order_no[]"]').val()))
+                        isValid = false;
+                    if (!$.trim($tr.find('[name="drawing_no[]"]').val()))
+                        isValid = false;
+                    if (!$.trim($tr.find('[name="item[]"]').val()))
+                        isValid = false;
+                    if (!$.trim($tr.find('[name="qty[]"]').val()))
+                        isValid = false;
                 }
             });
 
@@ -527,7 +565,7 @@ $(document).ready(function () {
                 this.showAlert({
                     icon: 'warning',
                     title: 'ข้อมูลไม่ครบ',
-                    text: 'กรุณากรอกข้อมูลให้ครบถ้วน'
+                    text: 'กรุณากรอกข้อมูลให้ครบถ้วน',
                 });
                 return false;
             }
@@ -544,7 +582,7 @@ $(document).ready(function () {
                 CYEAR: String($('#cyear').val() || ''),
                 REQBY: String($('#request_by').val() || inputBy),
                 INPUTBY: inputBy,
-                SSECCODE: String($('#sseccode').val() || '')
+                SSECCODE: String($('#sseccode').val() || ''),
             };
         },
 
@@ -573,46 +611,72 @@ $(document).ready(function () {
 
             return ref
                 .split(',')
-                .map(file => $.trim(file))
-                .filter(file => file)
-                .map(file => ({
-                    FILENAME: file
+                .map((file) => $.trim(file))
+                .filter((file) => file)
+                .map((file) => ({
+                    FILENAME: file,
                 }));
         },
 
         getFormPayload: function (webflowData = {}, uploadedFiles = []) {
             const isPCB = this.isPcbWorkType();
-            const list = $('#detailBody tr').map(function () {
-            const $tr = $(this);
-            const tid = $.trim($('#job_type').val());
-            if (!tid) {throw new Error('ไม่พบ TID กรุณาเลือก Job type');}
-                return {
-                    ORDERNO: isPCB ? null : ($.trim($tr.find('[name="order_no[]"]').val()) || null),
-                    DWGNO: $.trim($tr.find('[name="drawing_no[]"]').val()) || null,
-                    ITEM: isPCB ? null : ($.trim($tr.find('[name="item[]"]').val()) || null),
-                    QTY: Number($tr.find('[name="qty[]"]').val()) || null,
-                    DETAIL: $.trim($tr.find('[name="problem_detail[]"]').val()) || null,
-                    LV_EFFECT: null,
-                    EFFECT: null,
-                    LID: isPCB ? Number($tr.find('[name="line[]"]').val()) || null : null,
-                    PID: isPCB ? Number($tr.find('[name="process[]"]').val()) || null : null,
-                    LOT: isPCB ? ($.trim($tr.find('[name="lot[]"]').val()) || null) : null,
-                    SERIAL: isPCB ? ($.trim($tr.find('[name="serial_no[]"]').val()) || null) : null,
-                    PRDN_JUN: (() => {
-                        let val = $.trim($tr.find('[name="prod_jun[]"]').val());
+            const list = $('#detailBody tr')
+                .map(function () {
+                    const $tr = $(this);
+                    const tid = $.trim($('#job_type').val());
+                    if (!tid) {
+                        throw new Error('ไม่พบ TID กรุณาเลือก Job type');
+                    }
+                    return {
+                        ORDERNO: isPCB
+                            ? null
+                            : $.trim($tr.find('[name="order_no[]"]').val()) ||
+                              null,
+                        DWGNO:
+                            $.trim($tr.find('[name="drawing_no[]"]').val()) ||
+                            null,
+                        ITEM: isPCB
+                            ? null
+                            : $.trim($tr.find('[name="item[]"]').val()) || null,
+                        QTY: Number($tr.find('[name="qty[]"]').val()) || null,
+                        DETAIL:
+                            $.trim(
+                                $tr.find('[name="problem_detail[]"]').val(),
+                            ) || null,
+                        LV_EFFECT: null,
+                        EFFECT: null,
+                        LID: isPCB
+                            ? Number($tr.find('[name="line[]"]').val()) || null
+                            : null,
+                        PID: isPCB
+                            ? Number($tr.find('[name="process[]"]').val()) ||
+                              null
+                            : null,
+                        LOT: isPCB
+                            ? $.trim($tr.find('[name="lot[]"]').val()) || null
+                            : null,
+                        SERIAL: isPCB
+                            ? $.trim($tr.find('[name="serial_no[]"]').val()) ||
+                              null
+                            : null,
+                        PRDN_JUN: (() => {
+                            let val = $.trim(
+                                $tr.find('[name="prod_jun[]"]').val(),
+                            );
 
-                        if (!val) {
-                            return null;
-                        }
+                            if (!val) {
+                                return null;
+                            }
 
-                        if (val.length > 6) {
-                            val = val.substring(2);
-                        }
+                            if (val.length > 6) {
+                                val = val.substring(2);
+                            }
 
-                        return val;
-                    })()
-                };
-            }).get();
+                            return val;
+                        })(),
+                    };
+                })
+                .get();
 
             return {
                 NFRMNO: Number(webflowData.NFRMNO || $('#nfrmno').val()),
@@ -620,7 +684,7 @@ $(document).ready(function () {
                 CYEAR: String(webflowData.CYEAR || $('#cyear').val()),
                 CYEAR2: String(webflowData.CYEAR2),
                 NRUNNO: Number(webflowData.NRUNNO),
-                
+
                 REQBY: String($('#request_by').val()),
                 TID: Number($('#job_type').val()),
                 SSECCODE: String($('#sseccode').val() || ''),
@@ -630,31 +694,10 @@ $(document).ready(function () {
                 DAILY_RUNNO: Number($('#daily_runno').val()) || null,
                 REASON_CAUSE: $.trim($('#reason_cause').val()) || null,
 
-                INPUTBY: String($('#inputBy').val() || ''),
-                REQBY: String($('#request_by').val() || ''),
-                SSECCODE: String($('#sseccode').val() || ''),
-                SDEPCODE: String($('#sdepcode').val() || ''),
-                SSEC: String($('#ssec').val() || ''),
-
-                TYPEFORM: typeform,
-                ORNO: typeform === 'REVISE' ? currentNo : null,
-
-                CLASS: String($('input[name="classification"]:checked').val() || ''),
-                TOPIC: $.trim($('#topic').val()) || null,
-                DWGNO: $.trim($('#dwg_no').val()) || null,
-                SHOPNO: $.trim($('#shop_no').val()) || null,
-
-                ITEMNO: itemType === 'ALL'
-                    ? $.trim($('#overall_item').val()) || null
-                    : $.trim($('#or_item').val()) || null,
-
-                APPLY_FOR: String($('#apply_for').val() || ''),
-                SEQNO: null,
-                REV: $.trim($('#rev').val()) || null,
-
-                att: uploadedFiles.map(file => ({
-                    FILENAME: file
-                }))
+                list,
+                att: uploadedFiles.map((file) => ({
+                    FILENAME: file,
+                })),
             };
         },
 
@@ -690,7 +733,7 @@ $(document).ready(function () {
                 data: formData,
                 processData: false,
                 contentType: false,
-                dataType: 'json'
+                dataType: 'json',
             });
 
             console.log('UPLOAD RESULT:', res);
@@ -712,15 +755,16 @@ $(document).ready(function () {
             try {
                 const webflow = await this.createWebflowForm();
                 const webflowData = webflow?.data || {};
-
                 const uploadedFiles = await this.uploadFile(webflowData);
                 const payload = this.getFormPayload(webflowData, uploadedFiles);
-                
-                console.log('webflowData =', JSON.stringify(webflowData, null, 2));
+
+                console.log(
+                    'webflowData =',
+                    JSON.stringify(webflowData, null, 2),
+                );
                 console.log('payload keys =', Object.keys(payload));
                 console.log('payload.TID =', payload.TID);
                 console.log('payload json =', JSON.stringify(payload, null, 2));
-
 
                 const res = await createMfgEdr(payload);
 
@@ -730,9 +774,9 @@ $(document).ready(function () {
                     await this.showAlert({
                         icon: 'success',
                         title: 'บันทึกข้อมูลสำเร็จ',
-                        text: 'ระบบได้ทำการบันทึกข้อมูลเรียบร้อยแล้ว'
+                        text: 'ระบบได้ทำการบันทึกข้อมูลเรียบร้อยแล้ว',
                     });
-                    
+
                     //showMessage("บันทึกข้อมูลสำเร็จ !!!", "success");
                     //redirectWebflow();
                     // reset form
@@ -765,7 +809,7 @@ $(document).ready(function () {
                     this.showAlert({
                         icon: 'error',
                         title: 'บันทึกข้อมูลไม่สำเร็จ',
-                        text: res.message || ''
+                        text: res.message || '',
                     });
                 }
             } catch (error) {
@@ -773,7 +817,7 @@ $(document).ready(function () {
                 this.showAlert({
                     icon: 'error',
                     title: 'เกิดข้อผิดพลาด',
-                    text: error?.message || 'เกิดข้อผิดพลาดระหว่างบันทึกข้อมูล'
+                    text: error?.message || 'เกิดข้อผิดพลาดระหว่างบันทึกข้อมูล',
                 });
             } finally {
                 showLoader({ show: false });
@@ -782,7 +826,10 @@ $(document).ready(function () {
         },
 
         setLoading: function (isLoading) {
-            $('#btnSaveDraft, #btnSendForm, #btnAddRow').prop('disabled', isLoading);
+            $('#btnSaveDraft, #btnSendForm, #btnAddRow').prop(
+                'disabled',
+                isLoading,
+            );
 
             if (isLoading) {
                 $('#btnSaveDraft').text('Saving...');
@@ -791,7 +838,7 @@ $(document).ready(function () {
                 $('#btnSaveDraft').text('Save Draft');
                 $('#btnSendForm').text('Send Form');
             }
-        }
+        },
     };
     EDR.init();
 });
