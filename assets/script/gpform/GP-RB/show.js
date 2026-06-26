@@ -73,27 +73,39 @@ $(async function () {
         const selectedConfig = config.find(
             (c) => c.SPOSCODE === empData.SPOSCODE,
         );
-        var nameStamp = data.NAME_STAMP || '';
-        var hiddenid2 = $('#stampCircle-name')
-            .closest('td')
-            .html(`<div class="text-center text-2xl text-primary"> - </div>`);
-        $('#nameInput')
-            .closest('td')
-            .html(`<div class="text-center text-2xl text-primary"> - </div>`);
-        // await renderAttachedFiles(fileList, 1);
-        //Show purpose
+        const nameStamp = data.NAME_STAMP || '';
+        console.log('nameStamp=', nameStamp);
+
+        const renderNameStamp = (value) => {
+            if (value) {
+                $('#stampCircle-name').html(value);
+                $('#nameInput').val(value);
+            } else {
+                $('#stampCircle-name')
+                    .closest('td')
+                    .html(
+                        `<div class="text-center text-2xl text-primary"> - </div>`,
+                    );
+                $('#nameInput')
+                    .closest('td')
+                    .html(
+                        `<div class="text-center text-2xl text-primary"> - </div>`,
+                    );
+            }
+        };
+
+        renderNameStamp(nameStamp);
+
         if (data.REQ_TYPE == '1') {
             $('#standardStampSection').removeClass('hidden');
             $('#otherStampSection').addClass('hidden');
             $(`#purpose_${data.PURPOSE_ID}`).prop('checked', true);
             $('#otherSelect').val(data.PURPOSE_OTHER || '');
             $('#stampSize').html(selectedConfig.SIZE_MM + ' mm.');
-            $('#stampCircle-name').html(nameStamp);
-            $('#nameInput').val(nameStamp);
+            renderNameStamp(nameStamp);
 
             if (data.PURPOSE_ID == '2') {
-                //$('#stampCircle-name').closest('td').find('div').addClass('hidden');
-                hiddenid2;
+                renderNameStamp();
             }
 
             if (selectedConfig.STAMP_TYPE == '2') {
@@ -103,12 +115,7 @@ $(async function () {
                 $(`#purpose_${data.PURPOSE_ID}`).prop('checked', true);
                 $('#otherSelect').val(data.PURPOSE_OTHER || '');
                 $('#stampSize').html(selectedConfig.SIZE_MM + ' mm.');
-                $('#stampCircle-name').html(nameStamp);
-                $('#nameInput').val(nameStamp);
-
-                if (data.PURPOSE_ID == '2') {
-                    hiddenid2;
-                }
+                renderNameStamp(nameStamp);
             }
         } else {
             $('#standardStampSection').addClass('hidden');
