@@ -1,682 +1,302 @@
 @extends('layouts/webflowTemplate')
 @section('contents')
-    <style>
-        .vr-root {
-            font-size: 13px;
-            color: var(--color-text-primary);
-            padding: 1rem 0;
-        }
-
-        .vr-doc-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 1rem;
-            padding: 1rem 1.25rem;
-            background: var(--color-background-primary);
-            border: 0.5px solid var(--color-border-tertiary);
-            border-radius: 0.5rem;
-        }
-
-        .vr-doc-meta {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
-
-        .vr-doc-meta span {
-            font-size: 12px;
-            color: var(--color-text-secondary);
-        }
-
-        .vr-doc-meta strong {
-            font-size: 14px;
-            font-weight: 500;
-        }
-
-        .vr-title-block {
-            text-align: center;
-            margin-bottom: 1rem;
-            padding: 1rem 1.25rem;
-            background: var(--color-background-primary);
-            border: 0.5px solid var(--color-border-tertiary);
-            border-radius: 0.5rem;
-        }
-
-        .vr-title-block h1 {
-            font-size: 15px;
-            font-weight: 500;
-            margin: 0 0 4px;
-        }
-
-        .vr-title-block p {
-            font-size: 12px;
-            color: var(--color-text-secondary);
-            margin: 0;
-        }
-
-        .vr-period-badge {
-            display: inline-block;
-            margin-top: 6px;
-            padding: 3px 10px;
-            border-radius: var(--border-radius-md);
-            background: #e6f1fb;
-            color: #0c447c;
-            font-size: 12px;
-            font-weight: 500;
-        }
-
-        .vr-section {
-            margin-bottom: 0.75rem;
-        }
-
-        .vr-section-label {
-            font-size: 11px;
-            font-weight: 500;
-            text-transform: uppercase;
-            letter-spacing: 0.04em;
-            color: var(--color-text-tertiary);
-            margin-bottom: 6px;
-            padding-left: 2px;
-        }
-
-        .vr-card {
-            background: #ffffff;
-            border: 0.5px solid var(--color-border-tertiary);
-            border-radius: 0.5rem;
-            padding: 1rem 1.25rem;
-        }
-
-        .vr-approval-flow {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .vr-approval-box {
-            flex: 1;
-            border: 0.5px solid var(--color-border-tertiary);
-            border-radius: var(--border-radius-md);
-            padding: 10px;
-            text-align: center;
-        }
-
-        .vr-approval-box .label {
-            font-size: 11px;
-            color: var(--color-text-secondary);
-            margin-bottom: 4px;
-        }
-
-        .vr-approval-box .name {
-            font-size: 12px;
-            font-weight: 500;
-            min-height: 18px;
-        }
-
-        .vr-approval-box .date-line {
-            font-size: 11px;
-            color: var(--color-text-tertiary);
-            margin-top: 6px;
-            border-top: 0.5px solid var(--color-border-tertiary);
-            padding-top: 4px;
-        }
-
-        .vr-approval-box.signed {
-            border-color: #85b7eb;
-            background: #e6f1fb;
-        }
-
-        .vr-approval-box.signed .label {
-            color: #185fa5;
-        }
-
-        .vr-arrow {
-            color: var(--color-text-tertiary);
-            font-size: 16px;
-            flex-shrink: 0;
-        }
-
-        .vr-cc-list {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-        }
-
-        .vr-cc-chip {
-            font-size: 11px;
-            padding: 3px 8px;
-            border-radius: var(--border-radius-md);
-            background: var(--color-background-secondary);
-            color: var(--color-text-secondary);
-            border: 0.5px solid var(--color-border-tertiary);
-        }
-
-        .vr-conditions {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-        }
-
-        .vr-condition-row {
-            display: flex;
-            align-items: flex-start;
-            gap: 8px;
-            font-size: 12px;
-            color: var(--color-text-secondary);
-        }
-
-        .vr-condition-row i {
-            color: #1d9e75;
-            font-size: 14px;
-            flex-shrink: 0;
-            margin-top: 1px;
-        }
-
-        .vr-two-col {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-        }
-
-        .vr-kpi-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 8px;
-            margin-bottom: 10px;
-        }
-
-        .vr-kpi {
-            background: var(--color-background-secondary);
-            border-radius: var(--border-radius-md);
-            padding: 10px 12px;
-        }
-
-        .vr-kpi .k-label {
-            font-size: 11px;
-            color: var(--color-text-secondary);
-            margin-bottom: 2px;
-        }
-
-        .vr-kpi .k-value {
-            font-size: 18px;
-            font-weight: 500;
-        }
-
-        .vr-kpi .k-sub {
-            font-size: 11px;
-            color: var(--color-text-tertiary);
-        }
-
-        .vr-kpi.warn .k-value {
-            color: #854f0b;
-        }
-
-        .vr-kpi.danger .k-value {
-            color: #a32d2d;
-        }
-
-        .vr-kpi.ok .k-value {
-            color: #3b6d11;
-        }
-
-        .vr-result-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 12px;
-        }
-
-        .vr-result-table th {
-            font-size: 11px;
-            font-weight: 500;
-            color: var(--color-text-secondary);
-            padding: 6px 10px;
-            border-bottom: 0.5px solid var(--color-border-tertiary);
-            text-align: right;
-            white-space: nowrap;
-        }
-
-        .vr-result-table th:first-child {
-            text-align: left;
-        }
-
-        .vr-result-table td {
-            padding: 7px 10px;
-            border-bottom: 0.5px solid var(--color-border-tertiary);
-            text-align: right;
-        }
-
-        .vr-result-table td:first-child {
-            text-align: left;
-            color: var(--color-text-secondary);
-        }
-
-        .vr-result-table tr:last-child td {
-            border-bottom: none;
-        }
-
-        .vr-result-table .variance-row td {
-            background: #faeeda;
-            color: #412402;
-            font-weight: 500;
-        }
-
-        .vr-result-table .variance-row td:first-child {
-            color: #633806;
-            border-left: 3px solid #ef9f27;
-            padding-left: 7px;
-            border-radius: 0;
-        }
-
-        .vr-num {
-            font-variant-numeric: tabular-nums;
-        }
-
-        .vr-remarks {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .vr-remark-row {
-            display: flex;
-            gap: 10px;
-            font-size: 12px;
-        }
-
-        .vr-remark-num {
-            flex-shrink: 0;
-            width: 16px;
-            height: 16px;
-            border-radius: 50%;
-            background: var(--color-background-secondary);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 10px;
-            font-weight: 500;
-            color: var(--color-text-secondary);
-            margin-top: 1px;
-        }
-
-        .vr-remark-text {
-            color: var(--color-text-secondary);
-            line-height: 1.6;
-        }
-
-        .vr-highlight-amber {
-            color: #854f0b;
-            font-weight: 500;
-        }
-
-        .vr-summary-wrap {
-            overflow-x: auto;
-        }
-
-        .vr-summary-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 11px;
-            min-width: 520px;
-        }
-
-        .vr-summary-table th {
-            padding: 5px 8px;
-            text-align: center;
-            font-weight: 500;
-            font-size: 11px;
-            border-bottom: 0.5px solid var(--color-border-tertiary);
-            color: var(--color-text-secondary);
-            background: var(--color-background-secondary);
-            white-space: nowrap;
-        }
-
-        .vr-summary-table th.group-header {
-            background: #185fa5;
-            color: #e6f1fb;
-        }
-
-        .vr-summary-table th.grand-header {
-            background: #3b6d11;
-            color: #eaf3de;
-        }
-
-        .vr-summary-table th.sig-header {
-            background: var(--color-background-secondary);
-            color: var(--color-text-secondary);
-        }
-
-        .vr-summary-table td {
-            padding: 5px 8px;
-            text-align: center;
-            border-bottom: 0.5px solid var(--color-border-tertiary);
-            font-size: 11px;
-        }
-
-        .vr-summary-table td:first-child {
-            text-align: left;
-            font-weight: 500;
-            color: var(--color-text-primary);
-        }
-
-        .vr-summary-table tr:last-child td {
-            border-bottom: none;
-        }
-
-        .vr-summary-table .sig-cell {
-            min-width: 70px;
-            border-left: 0.5px solid var(--color-border-tertiary);
-            color: var(--color-text-tertiary);
-            font-style: italic;
-        }
-
-        .vr-grand-val {
-            font-weight: 500;
-            color: #27500a;
-        }
-
-        .vr-sig-section {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 10px;
-            margin-top: 10px;
-        }
-
-        .vr-sig-box {
-            border: 0.5px solid var(--color-border-tertiary);
-            border-radius: var(--border-radius-md);
-            padding: 10px;
-            text-align: center;
-        }
-
-        .vr-sig-box .sig-role {
-            font-size: 11px;
-            font-weight: 500;
-            color: var(--color-text-secondary);
-            margin-bottom: 28px;
-        }
-
-        .vr-sig-box .sig-line {
-            border-top: 0.5px solid var(--color-border-tertiary);
-            padding-top: 4px;
-            font-size: 11px;
-            color: var(--color-text-tertiary);
-        }
-
-        .vr-divider {
-            height: 0.5px;
-            background: var(--color-border-tertiary);
-            margin: 0.5rem 0;
-        }
-    </style>
-
-    <div class="vr-root">
-        <h2 class="sr-only" style="position: absolute; left: -9999px">
+    <div class="form-data"
+        data-nfrmno="{{ $_GET['no'] }}"
+        data-vorgno="{{ $_GET['orgNo'] }}"
+        data-cyear="{{ $_GET['y'] }}"
+        data-cyear2="{{ $_GET['y2'] }}"
+        data-nrunno="{{ $_GET['runNo'] }}">
+    </div>
+    <div class="min-h-screen bg-base-200 px-4 py-6 text-base-content md:px-6">
+        <h2 class="sr-only">
             Variance Adjustment Report — WHI Inventory Checking
         </h2>
 
-        <div class="vr-doc-header">
-            <div>
-                <div
-                    style="
-          font-size: 11px;
-          color: var(--color-text-tertiary);
-          margin-bottom: 2px;
-        ">
-                    From
-                </div>
-                <div style="font-size: 14px; font-weight: 500">WHI S/M</div>
-            </div>
-            <div style="text-align: right">
-                <div
-                    style="
-          font-size: 11px;
-          color: var(--color-text-tertiary);
-          margin-bottom: 2px;
-        ">
-                    Date
-                </div>
-                <div style="font-size: 14px; font-weight: 500">15 / 06 / 2568</div>
-            </div>
-        </div>
+        <div class="mx-auto flex max-w-7xl flex-col gap-4">
+            <div class="card bg-base-100 shadow-sm border border-base-300">
+                <div class="card-body gap-4 p-5 md:p-6">
+                    <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                        <div class="space-y-2">
+                            <div class="badge badge-primary badge-outline">Variance Adjustment Report</div>
+                            <h1 class="text-2xl font-semibold tracking-tight">WHI Situation Report</h1>
+                            <p class="text-sm text-base-content/70">
+                                Inventory checking summary for WHI warehouse operations.
+                            </p>
+                            {{-- <div class="badge badge-info badge-lg badge-outline">Jan 2568 - Jun 2568</div> --}}
+                            <div class="flex flex-wrap items-center gap-3 pt-2">
+                                <div class="badge badge-info badge-lg badge-outline"><span class="preview-date-range"></span></div>
 
-        <div class="vr-title-block">
-            <p
-                style="
-        font-size: 11px;
-        color: var(--color-text-tertiary);
-        margin-bottom: 4px;
-      ">
-                Variance Adjustment Report
-            </p>
-            <h1>WHI Situation Report</h1>
-            <div class="vr-period-badge">Jan 2568 – Jun 2568</div>
-        </div>
-
-        <div class="vr-two-col vr-section">
-            <div>
-                <div class="vr-section-label">Conditions</div>
-                <div class="vr-card">
-                    <div class="vr-conditions">
-                        <div class="vr-condition-row">
-                            <i class="ti ti-circle-check" aria-hidden="true"></i><span>WHI inventory checking — all warehouse</span>
-                        </div>
-                        <div class="vr-condition-row">
-                            <i class="ti ti-circle-check" aria-hidden="true"></i><span>WHI office print parts list, issue to foreman and
-                                controller</span>
-                        </div>
-                        <div class="vr-condition-row">
-                            <i class="ti ti-circle-check" aria-hidden="true"></i><span>WHI operator checking</span>
-                        </div>
-                        <div class="vr-condition-row">
-                            <i class="ti ti-circle-check" aria-hidden="true"></i><span>WHI summary report by foreman, sent to WHI S/M for approval</span>
-                        </div>
-                        <div class="vr-condition-row">
-                            <i class="ti ti-circle-check" aria-hidden="true"></i><span>Report sent to PS DOM / PS DOM, 1st DOM, 1st DM, and President
-                                for approval</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div>
-                <div class="vr-section-label">Remarks</div>
-                <div class="vr-card">
-                    <div class="vr-remarks">
-                        <div class="vr-remark-row">
-                            <div class="vr-remark-num">1</div>
-                            <div class="vr-remark-text">
-                                The result of inventory checking across all warehouses is reported
-                                as
-                                <span class="vr-highlight-amber">Variance Item SUM AMOUNT(฿)</span>.
                             </div>
                         </div>
-                        <div class="vr-remark-row">
-                            <div class="vr-remark-num">2</div>
-                            <div class="vr-remark-text">
-                                During checking, WHI Controller normally works for issue and
-                                receive parts. Differences that can be clearly explained (Refer
-                                Issue card, Receiving slip, or Over usage sheet) will not report
-                                <span class="vr-highlight-amber">Variance Item ITEM</span> or
-                                <span class="vr-highlight-amber">SUM AMOUNT(฿)</span>.
+
+                        <div class="grid gap-3 sm:grid-cols-2 lg:min-w-88 lg:text-right">
+                            <div class="stat rounded-box bg-base-200 p-4">
+                                <div class="stat-title text-xs uppercase tracking-wide">From</div>
+                                <div class="stat-value text-lg">WHI SEM</div>
                             </div>
-                        </div>
-                        <div class="vr-remark-row">
-                            <div class="vr-remark-num">3</div>
-                            <div class="vr-remark-text">
-                                This report references warehouse history from AS/400 transaction
-                                history and MCS card record.
-                            </div>
-                        </div>
-                        <div class="vr-remark-row">
-                            <div class="vr-remark-num">4</div>
-                            <div class="vr-remark-text">
-                                Differences and variances arise only when WHI's operator cannot
-                                explain or exhibit tolerable documents (over usage sheet, issue
-                                card, or receiving slip).
+                            <div class="stat rounded-box bg-base-200 p-4">
+                                <div class="stat-title text-xs uppercase tracking-wide">Date</div>
+                                <div class="stat-value text-lg">15 / 06 / 2568</div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
+
+            <div class="grid gap-4 lg:grid-cols-2">
+                <div class="card bg-base-100 shadow-sm border border-base-300">
+                    <div class="card-body gap-4 p-5 md:p-6">
+                        <div class="flex items-center justify-between">
+                            <h2 class="text-sm font-semibold uppercase tracking-wide text-base-content/60">Conditions</h2>
+                        </div>
+                        <ul class="space-y-3 text-sm leading-6 text-base-content/80">
+                            <li class="flex items-start gap-2">
+                                <i class="ti ti-circle-check mt-0.5 text-success" aria-hidden="true"></i>
+                                <span>WHI inventory checking — all warehouse</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <i class="ti ti-circle-check mt-0.5 text-success" aria-hidden="true"></i>
+                                <span>WHI office print parts list, issue to foreman and controller</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <i class="ti ti-circle-check mt-0.5 text-success" aria-hidden="true"></i>
+                                <span>WHI operator checking</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <i class="ti ti-circle-check mt-0.5 text-success" aria-hidden="true"></i>
+                                <span>WHI summary report by foreman, sent to WHI SEM for approval</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <i class="ti ti-circle-check mt-0.5 text-success" aria-hidden="true"></i>
+                                <span>Report inventory checking by WHI SEM and send to PS DDEM,PS DEM, E/P DDIM, E/P DIM and President for approval</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="card bg-base-100 shadow-sm border border-base-300">
+                    <div class="card-body gap-4 p-5 md:p-6">
+                        <div class="flex items-center justify-between">
+                            <h2 class="text-sm font-semibold uppercase tracking-wide text-base-content/60">Remarks</h2>
+                        </div>
+                        <div class="space-y-3 text-sm leading-6 text-base-content/80">
+                            <div class="flex gap-3">
+                                <div class="badge badge-neutral badge-sm mt-1">1</div>
+                                <p>
+                                    The result of inventory checking group all warehouse = 
+                                    "<span class="font-semibold text-warning variance-amount">0.00</span>".
+                                </p>
+                            </div>
+                            <div class="flex gap-3">
+                                <div class="badge badge-neutral badge-sm mt-1">2</div>
+                                <p>
+                                    During inventory checking, WHI Controller normally work for issue and receive part, If found difference item
+                                    form working and able to Clearly explain by Refer Issue card no. Receiving slip or Overusage sheet will Report
+                                    "<span class="font-semibold text-warning variance">0</span>" and
+                                    "<span class="font-semibold text-warning variance-amount">0.00</span>".
+                                </p>
+                            </div>
+                            <div class="flex gap-3">
+                                <div class="badge badge-neutral badge-sm mt-1">3</div>
+                                <p>This report will reference history of Warehouse for AS-400 transaction history and MCScard record.</p>
+                            </div>
+                            <div class="flex gap-3">
+                                <div class="badge badge-neutral badge-sm mt-1">4</div>
+                                <p>
+                                    The report will difference and Varaince In case of WHI's operator can't explain and exhibit for referable abount
+                                    over usage sheet, Issue card and Receiving slip.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card bg-base-100 shadow-sm border border-base-300">
+                <div class="card-body gap-4 p-5 md:p-6">
+                    <div class="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+                        <div>
+                            <h2 class="text-sm font-semibold uppercase tracking-wide text-base-content/60">Result</h2>
+                            <p class="text-lg font-semibold">WHI Inventory Checking, All Warehouse</p>
+                            <div class="mt-4">
+                                Refer : <a href="#" target="_blank" class="btn btn-sm btn-outline link-cycle-count">
+                                    <i class="ti ti-external-link text-lg" aria-hidden="true"></i>
+                                    Form Cycle Count Inventory Checking (6 Month)
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="stats stats-vertical shadow-sm border border-base-300 lg:stats-horizontal">
+                        <div class="stat">
+                            <div class="stat-title text-xs uppercase tracking-wide">Total items</div>
+                            <div class="stat-value text-primary text-2xl tabular-nums total">0</div>
+                            <div class="stat-desc">parts</div>
+                        </div>
+                        <div class="stat border-t border-base-300 lg:border-t-0 lg:border-l">
+                            <div class="stat-title text-xs uppercase tracking-wide">Diff. (1st time)</div>
+                            <div class="stat-value text-warning text-2xl tabular-nums diff-first">0</div>
+                            <div class="stat-desc">items</div>
+                        </div>
+                        <div class="stat border-t border-base-300 lg:border-t-0 lg:border-l">
+                            <div class="stat-title text-xs uppercase tracking-wide">Variance items</div>
+                            <div class="stat-value text-error text-2xl tabular-nums variance">0</div>
+                            <div class="stat-desc">items remaining</div>
+                        </div>
+                    </div>
+
+                    <div class="overflow-x-auto border border-base-300 rounded-box">
+                        <table class="table table-zebra table-sm">
+                            <thead class="bg-base-200 text-base-content">
+                                <tr>
+                                    <th>Category</th>
+                                    <th class="text-right">ITEM</th>
+                                    <th class="text-right">Sum amount (฿)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Total</td>
+                                    <td class="tabular-nums text-right total">0</td>
+                                    <td class="tabular-nums text-right total-amount">0.00</td>
+                                </tr>
+                                <tr>
+                                    <td>Checking</td>
+                                    <td class="tabular-nums text-right checking">0</td>
+                                    <td class="tabular-nums text-right checking-amount">0.00</td>
+                                </tr>
+                                <tr>
+                                    <td>Diff. item (1st time)</td>
+                                    <td class="tabular-nums text-right diff-first">0</td>
+                                    <td class="tabular-nums text-right diff-first-amount">0.00</td>
+                                </tr>
+                                <tr>
+                                    <td>Diff. item (after re-check)</td>
+                                    <td class="tabular-nums text-right diff-after">0</td>
+                                    <td class="tabular-nums text-right diff-after-amount">0.00</td>
+                                </tr>
+                                <tr class="bg-error/10 font-semibold text-error">
+                                    <td>
+                                        <div class="flex items-center gap-2">
+                                            <i class="ti ti-alert-triangle" aria-hidden="true"></i>
+                                            <span>Variance item</span>
+                                        </div>
+                                    </td>
+                                    <td class="tabular-nums text-right variance">0</td>
+                                    <td class="tabular-nums text-right variance-amount">0.00</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card bg-base-100 shadow-sm border border-base-300">
+                <div class="card-body gap-4 p-5 md:p-6">
+                    <div class="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+                        <div>
+                            <h2 class="text-sm font-semibold uppercase tracking-wide text-base-content/60">Monthly summary</h2>
+                            <p class="text-lg font-semibold">Inventory checking by group</p>
+                        </div>
+                    </div>
+
+                    <div class="overflow-x-auto border border-base-300 rounded-box">
+                        <table class="table table-pin-rows table-pin-cols table-sm">
+                            <thead>
+                                <tr class="bg-base-200">
+                                    <th rowspan="2" class="bg-base-300 border-r border-base-300">Month & Group</th>
+                                    <th class="text-center border-b border-base-300 bg-info/15 text-info date-A1">-</th>
+                                    <th class="text-center border-b border-base-300 bg-success/15 text-success date-A2">-</th>
+                                    <th class="text-center border-b border-base-300 bg-warning/15 text-warning date-A3">-</th>
+                                    <th class="text-center border-b border-base-300 bg-error/15 text-error date-BE">-</th>
+                                    <th class="text-center border-b border-base-300 bg-base-200/15 text-base-content/40">.....\...</th>
+                                    <th class="text-center border-b border-base-300 bg-primary/15 text-primary date-CDFGI">-</th>
+                                    <th rowspan="2" class="bg-base-300 text-center border-l border-base-300">Grand total</th>
+                                </tr>
+                                <tr>
+                                    <th class="text-center font-semibold bg-info/10 text-info border-b border-base-300">Group A1</th>
+                                    <th class="text-center font-semibold bg-success/10 text-success border-b border-base-300">Group A2</th>
+                                    <th class="text-center font-semibold bg-warning/10 text-warning border-b border-base-300">Group A3</th>
+                                    <th class="text-center font-semibold bg-error/10 text-error border-b border-base-300">Group B+E</th>
+                                    <th class="text-center font-semibold bg-base-200 border-b border-base-300"></th>
+                                    <th class="text-center font-semibold bg-primary/10 text-primary border-b border-base-300">Group C+D+F+G+I</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="hover:bg-base-200/50 transition-colors">
+                                    <td class="font-medium bg-base-100 border-r border-base-300">Total Item</td>
+                                    <td class="text-center tabular-nums total-A1 bg-info/5">0</td>
+                                    <td class="text-center tabular-nums total-A2 bg-success/5">0</td>
+                                    <td class="text-center tabular-nums total-A3 bg-warning/5">0</td>
+                                    <td class="text-center tabular-nums total-BE bg-error/5">0</td>
+                                    <td class="text-center text-base-content/40"></td>
+                                    <td class="text-center tabular-nums total-CDFGI bg-primary/5">0</td>
+                                    <td class="text-center tabular-nums font-semibold bg-base-200 border-l border-base-300 grand-total">0</td>
+                                </tr>
+                                <tr class="hover:bg-base-200/50 transition-colors">
+                                    <td class="font-medium bg-base-100 border-r border-base-300">Sum Onhand Qty(Unit)</td>
+                                    <td class="text-center tabular-nums onhand-A1 bg-info/5">0</td>
+                                    <td class="text-center tabular-nums onhand-A2 bg-success/5">0</td>
+                                    <td class="text-center tabular-nums onhand-A3 bg-warning/5">0</td>
+                                    <td class="text-center tabular-nums onhand-BE bg-error/5">0</td>
+                                    <td class="text-center text-base-content/40"></td>
+                                    <td class="text-center tabular-nums onhand-CDFGI bg-primary/5">0</td>
+                                    <td class="text-center tabular-nums font-semibold bg-base-200 border-l border-base-300 grand-onhand">0</td>
+                                </tr>
+                                <tr class="hover:bg-base-200/50 transition-colors">
+                                    <td class="font-medium bg-base-100 border-r border-base-300">SumUnitPrice(฿)</td>
+                                    <td class="text-center tabular-nums price-unit-A1 bg-info/5">0.00</td>
+                                    <td class="text-center tabular-nums price-unit-A2 bg-success/5">0.00</td>
+                                    <td class="text-center tabular-nums price-unit-A3 bg-warning/5">0.00</td>
+                                    <td class="text-center tabular-nums price-unit-BE bg-error/5">0.00</td>
+                                    <td class="text-center text-base-content/40"></td>
+                                    <td class="text-center tabular-nums price-unit-CDFGI bg-primary/5">0.00</td>
+                                    <td class="text-center tabular-nums font-semibold bg-base-200 border-l border-base-300 grand-price-unit">0.00</td>
+                                </tr>
+                                <tr class="hover:bg-base-200/50 transition-colors">
+                                    <td class="font-medium bg-base-100 border-r border-base-300">SumAmount(฿)</td>
+                                    <td class="text-center tabular-nums amount-A1 bg-info/5">0.00</td>
+                                    <td class="text-center tabular-nums amount-A2 bg-success/5">0.00</td>
+                                    <td class="text-center tabular-nums amount-A3 bg-warning/5">0.00</td>
+                                    <td class="text-center tabular-nums amount-BE bg-error/5">0.00</td>
+                                    <td class="text-center text-base-content/40"></td>
+                                    <td class="text-center tabular-nums amount-CDFGI bg-primary/5">0.00</td>
+                                    <td class="text-center tabular-nums font-semibold bg-base-200 border-l border-base-300 grand-amount">0.00</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="mt-6 aprv-section" style="display: none">
+            <div class="max-w-xl mx-auto">
+                <div class="space-y-2">
+                    <div>
+                        <label class="label">
+                            <span class="label-text font-medium">Attachment</span>
+                        </label>
+                        <input type="file" class="file-input file-input-sm file-input-bordered w-full attach-file" />
+                    </div>
+                    <div>
+                        <label class="label">
+                            <span class="label-text font-medium">Remark</span>
+                        </label>
+                        <textarea class="textarea textarea-sm textarea-bordered w-full min-h-30" id="remark" placeholder="Enter your remark here..."></textarea>
+                    </div>
+                    <div class="flex flex-col sm:flex-row justify-center gap-3 pt-2">
+                        <button class="btn btn-success min-w-35 btn-approve" data-action="approve"> Approve</button>
+                        <button class="btn btn-error min-w-35 btn-approve" data-action="reject"> Reject</button>
+                    </div>
+                </div>
+            </div>
         </div>
 
-        <div class="vr-section">
-            <div class="vr-section-label">
-                Result — WHI Inventory Checking, All Warehouse
-            </div>
-            <div class="vr-card" style="padding: 0.75rem 1.25rem">
-                <div class="vr-kpi-grid">
-                    <div class="vr-kpi">
-                        <div class="k-label">Total items</div>
-                        <div class="k-value vr-num">1,248</div>
-                        <div class="k-sub">parts</div>
-                    </div>
-                    <div class="vr-kpi warn">
-                        <div class="k-label">Diff. (1st time)</div>
-                        <div class="k-value vr-num">38</div>
-                        <div class="k-sub">items</div>
-                    </div>
-                    <div class="vr-kpi danger">
-                        <div class="k-label">Variance items</div>
-                        <div class="k-value vr-num">12</div>
-                        <div class="k-sub">items remaining</div>
-                    </div>
-                </div>
-                <div class="vr-divider"></div>
-                <table class="vr-result-table">
-                    <thead>
-                        <tr>
-                            <th>Category</th>
-                            <th>Item (qty)</th>
-                            <th>Sum amount (฿)</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>Total</td>
-                            <td class="vr-num">1,248</td>
-                            <td class="vr-num">4,820,350.00</td>
-                        </tr>
-                        <tr>
-                            <td>Checking</td>
-                            <td class="vr-num">1,248</td>
-                            <td class="vr-num">4,820,350.00</td>
-                        </tr>
-                        <tr>
-                            <td>Diff. item (1st time)</td>
-                            <td class="vr-num">38</td>
-                            <td class="vr-num">182,640.00</td>
-                        </tr>
-                        <tr>
-                            <td>Diff. item (after re-check)</td>
-                            <td class="vr-num">20</td>
-                            <td class="vr-num">94,200.00</td>
-                        </tr>
-                        <tr class="variance-row">
-                            <td>
-                                <i
-                                    class="ti ti-alert-triangle"
-                                    style="font-size: 12px; margin-right: 4px; vertical-align: -1px"
-                                    aria-hidden="true"></i>Variance item
-                            </td>
-                            <td class="vr-num">12</td>
-                            <td class="vr-num">48,750.00</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <div class="vr-section">
-            <div class="vr-section-label">
-                Monthly summary — inventory checking by group
-            </div>
-            <div class="vr-card" style="padding: 0.75rem 1.25rem">
-                <div class="vr-summary-wrap">
-                    <table class="vr-summary-table">
-                        <thead>
-                            <tr>
-                                <th rowspan="2" style="text-align: left">Month & Group</th>
-                                <th colspan="4" class="group-header">Checking groups</th>
-                                <th rowspan="2" class="grand-header">Grand total</th>
-                                <th colspan="3" class="sig-header">Signature</th>
-                            </tr>
-                            <tr>
-                                <th class="group-header">Group A1</th>
-                                <th class="group-header">Group A2</th>
-                                <th class="group-header">Group A3</th>
-                                <th class="group-header">Group A4</th>
-                                <th class="sig-header">PS S/M</th>
-                                <th class="sig-header">PS DOM</th>
-                                <th class="sig-header">WHI S/M</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>Jan 2568</td>
-                                <td>15A</td>
-                                <td>18A</td>
-                                <td>12A</td>
-                                <td>14A</td>
-                                <td class="vr-grand-val vr-num">59A</td>
-                                <td class="sig-cell">0.00</td>
-                                <td class="sig-cell">0.00</td>
-                                <td class="sig-cell">0.00</td>
-                            </tr>
-                            <tr>
-                                <td>Feb 2568</td>
-                                <td>16A</td>
-                                <td>17A</td>
-                                <td>13A</td>
-                                <td>15A</td>
-                                <td class="vr-grand-val vr-num">61A</td>
-                                <td class="sig-cell">0.00</td>
-                                <td class="sig-cell">0.00</td>
-                                <td class="sig-cell">0.00</td>
-                            </tr>
-                            <tr>
-                                <td>Mar 2568</td>
-                                <td>14A</td>
-                                <td>19A</td>
-                                <td>11A</td>
-                                <td>16A</td>
-                                <td class="vr-grand-val vr-num">60A</td>
-                                <td class="sig-cell">0.00</td>
-                                <td class="sig-cell">0.00</td>
-                                <td class="sig-cell">0.00</td>
-                            </tr>
-                            <tr>
-                                <td>Apr 2568</td>
-                                <td>17A</td>
-                                <td>18A</td>
-                                <td>14A</td>
-                                <td>13A</td>
-                                <td class="vr-grand-val vr-num">62A</td>
-                                <td class="sig-cell">0.00</td>
-                                <td class="sig-cell">0.00</td>
-                                <td class="sig-cell">0.00</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-                <div class="vr-sig-section">
-                    <div class="vr-sig-box">
-                        <div class="sig-role">PS S/M</div>
-                        <div class="sig-line">Name / Date</div>
-                    </div>
-                    <div class="vr-sig-box">
-                        <div class="sig-role">PS DOM</div>
-                        <div class="sig-line">Name / Date</div>
-                    </div>
-                    <div class="vr-sig-box">
-                        <div class="sig-role">WHI S/M</div>
-                        <div class="sig-line">Name / Date</div>
-                    </div>
-                </div>
-            </div>
-        </div>
+        {{-- ─── Approval flow timeline ─────────────────────────────────────────── ─ --}}
+        <div class="mt-5 flow"></div>
     </div>
 @endsection
 
 @section('scripts')
+    <script src="{{ $_ENV['APP_JS'] }}/psVar.js?ver={{ $GLOBALS['version'] }}"></script>
 @endsection

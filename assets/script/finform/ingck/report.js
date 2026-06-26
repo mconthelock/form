@@ -7,6 +7,7 @@ let mapColumns = [];
 let dutyStampList = [];
 let currentYear = new Date().getFullYear();
 let currentMonth = new Date().getMonth() + 1;
+let currentDivision = "all";
 let reportRows = [];
 
 const baseColumns = [
@@ -31,6 +32,11 @@ $(document).on("click", ".nav-btn", async function () {
 $(document).on("change", "#reportMonth", async function () {
   currentMonth = $(this).val();
   updateYearUI();
+  await createReportTable(filterReportRows(reportRows), dutyStampList);
+});
+
+$(document).on("change", "#reportDivision", async function () {
+  currentDivision = $(this).val() || "all";
   await createReportTable(filterReportRows(reportRows), dutyStampList);
 });
 
@@ -83,11 +89,13 @@ async function loadReport(year) {
     const reportData = normalizeReportData(response);
     reportRows = mapReportToRows(reportData, dutyStampList);
     await enrichRowsWithEmpData(reportRows);
+    updateDivisionOptions(reportRows);
 
     await createReportTable(filterReportRows(reportRows), dutyStampList);
   } catch (error) {
     console.error(error);
     reportRows = [];
+    updateDivisionOptions([]);
     await createReportTable([], dutyStampList);
   }
 }
@@ -590,6 +598,7 @@ function mapReportToRows(reportData = [], stamp = []) {
       DATE_RECEIVE: formatDate(getEffectiveDate(item)),
       USER_EMPNO: getReportUserEmpno(item),
       USER: getReportUser(item),
+      DIVISION: getReportDivisionName(item),
       SECTION: getReportSectionName(item),
       REASON: item.REASON || item.DETAIL || "-",
     };
@@ -699,6 +708,7 @@ function groupDetailRows(data) {
         DATE_RECEIVE: date,
         USER_EMPNO: getReportUserEmpno(item),
         USER: user,
+        DIVISION: getReportDivisionName(item),
         SECTION: sectionName,
         REASON: reason,
       };
@@ -790,6 +800,16 @@ function getReportSectionName(item = {}) {
   );
 }
 
+function getReportDivisionName(item = {}) {
+  return (
+    item.DIVISION ||
+    item.DIVISION_NAME ||
+    item.SDIV ||
+    item.SDIVCODE ||
+    ""
+  );
+}
+
 async function enrichRowsWithEmpData(rows = []) {
   const empCache = {};
   const empnos = [...new Set(rows.map((row) => row.USER_EMPNO).filter(Boolean))];
@@ -820,6 +840,7 @@ async function enrichRowsWithEmpData(rows = []) {
       row.USER = row.USER || row.USER_EMPNO;
     }
 
+    row.DIVISION = formatEmpDivision(empData) || row.DIVISION;
     row.SECTION = formatEmpSection(empData) || row.SECTION;
   });
 }
@@ -839,6 +860,10 @@ function formatEmpSection(empData = {}) {
   return empData.SSEC || "";
 }
 
+function formatEmpDivision(empData = {}) {
+  return empData.SDIV || empData.SDIVCODE || "";
+}
+
 function formatPerson(name, empno) {
   if (name && empno) return `${name} (${empno})`;
   return name || empno || "";
@@ -851,8 +876,38 @@ function updateYearUI() {
 
 function filterReportRows(rows = []) {
   return rows.filter((row) => {
-    return isRowInSelectedMonth(row);
+    return isRowInSelectedMonth(row) && isRowInSelectedDivision(row);
   });
+}
+
+function updateDivisionOptions(rows = []) {
+  const divisions = [
+    ...new Set(
+      rows
+        .map((row) => String(row.DIVISION || "").trim())
+        .filter(Boolean),
+    ),
+  ].sort((a, b) => a.localeCompare(b, "en", { sensitivity: "base" }));
+
+  if (currentDivision !== "all" && !divisions.includes(currentDivision)) {
+    currentDivision = "all";
+  }
+
+  const options = [
+    '<option value="all">All divisions</option>',
+    ...divisions.map(
+      (division) =>
+        `<option value="${escapeHtml(division)}">${escapeHtml(division)}</option>`,
+    ),
+  ];
+
+  $("#reportDivision").html(options.join("")).val(currentDivision);
+}
+
+function isRowInSelectedDivision(row) {
+  if (currentDivision === "all") return true;
+
+  return String(row.DIVISION || "").trim() === currentDivision;
 }
 
 function isRowInSelectedMonth(row) {

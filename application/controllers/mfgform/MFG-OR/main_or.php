@@ -40,6 +40,9 @@ class main_or extends MY_Controller {
     public function show_view_report(){
         $this->views('mfgform/MFG-OR/report_or');
     }
+    public function show_orcenter(){
+        $this->views('mfgform/MFG-OR/or_center');
+    }
 
     public function save_request(){
         try {
@@ -255,7 +258,5 @@ class main_or extends MY_Controller {
             throw $e;
         }
     }
-
-
 
 }

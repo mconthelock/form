@@ -7,4 +7,6 @@ module.exports = {
 
 	mfg_or_create: "./assets/script/mfgform/MFG-OR/mfg_or_create.js", //Create 
 	mfg_or_approve: "./assets/script/mfgform/MFG-OR/mfg_or_approve.js", //Approval
+	mfg_or_center: "./assets/script/mfgform/MFG-OR/mfg_or_center.js", //or_center
+
 };
