@@ -13,7 +13,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
                             d="M16 15v-1a4 4 0 00-4-4H8m0 0l3 3m-3-3l3-3m9 14V5a2 2 0 00-2-2H6a2 2 0 00-2 2v16l4-2 4 2 4-2 4 2z" />
                     </svg>
-                    Return Part/Material to WHI
+                    Revise and Return Part/Material to WHI
                 </h1>
                 <p class="text-sm opacity-80 mt-1 flex items-center justify-center">Modern Warehouse Material Return & Revise Request Form</p>
             </div>
@@ -83,7 +83,7 @@
 
                 <!-- Section 3: Request For Option Checklist -->
                 <div class="form-control bg-base-200/60 border border-base-300 p-4 rounded-xl ">
-                    <span class="label-text font-bold text-base-content/80 mb-3 block flex items-center gap-1.5">
+                    <span class="label-text font-bold text-base-content/80 mb-3 flex items-center gap-1.5">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-primary" fill="none"
                             viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -219,6 +219,32 @@
                                 <input type="text" id="ISSUETO" name="ISSUETO"
                                     class="input input-bordered input-sm w-full bg-base-100 focus:input-primary"
                                     placeholder="Issue To" />
+                            </div>
+
+                            <!-- ITEM -->
+                            <div class="form-control w-full" id="hiddenIssueto">
+                                <label class="label py-1">
+                                    <span class="label-text font-bold text-base-content/80">
+                                        ITEM
+                                    </span>
+                                </label>
+
+                                <input type="text" id="ITEM" name="ITEM"
+                                    class="input input-bordered input-sm w-full bg-base-100 focus:input-primary"
+                                    placeholder="Item" />
+                            </div>
+
+                            <!-- ORDER -->
+                            <div class="form-control w-full" id="hiddenIssueto">
+                                <label class="label py-1">
+                                    <span class="label-text font-bold text-base-content/80">
+                                        ORDER
+                                    </span>
+                                </label>
+
+                                <input type="text" id="ORDER" name="ORDER"
+                                    class="input input-bordered input-sm w-full bg-base-100 focus:input-primary"
+                                    placeholder="Order" />
                             </div>
                         </div>
 
