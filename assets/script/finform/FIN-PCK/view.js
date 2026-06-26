@@ -3,6 +3,8 @@ import {
     getExtData,
     updateFlow,
     doaction,
+    getFormno,
+    getFormDetail,
 } from '@amec/webasset/api/webform';
 import { webflowSubmit, getformDetail } from '@amec/webasset/components/form';
 import { formSubmitSkeleton } from '@amec/webasset/skeleton';
@@ -25,9 +27,21 @@ import { setSelect2 } from '@amec/webasset/select2';
 import { getSubordinates } from '@amec/webasset/api/sequence-org';
 import { showLoader } from '@amec/webasset/preloader';
 import { redirectWebflow } from '@amec/webasset/form';
+import { getTemplate } from './function';
+import ExcelJS from 'exceljs';
+import { writeExcelTemp, exportExcel } from '@amec/webasset/excel';
 select2();
 var tablepck;
 var form = {};
+var data = {};
+let targetClasses = [
+    '.input-confirm',
+    '.input-nosticker',
+    '.input-lost',
+    '.input-damage',
+    '.input-movement',
+    '.input-oth',
+];
 $(async function () {
     const formInfo = await getAllAttr('.form-info');
     form = {
@@ -38,7 +52,9 @@ $(async function () {
         NRUNNO: formInfo.nrunno,
     };
     const formDetail = await getformDetail(form);
-    const data = await getData(form);
+    console.log('formDetail = ' + formDetail);
+
+    data = await getData(form);
     $('#loccode').text(data.LOCCODE);
     $('#locname').text(data.LOCNAME);
     console.log(data);
@@ -111,7 +127,7 @@ $(async function () {
                 // เช็คเผื่อไว้ถ้าโครงสร้างหลุดหรือไม่มีคนรับผิดชอบ ให้แสดงเป็นช่องว่างหรือเครื่องหมาย -
                 if (isEditable) {
                     // ถ้าเป็นโหมดให้กรอกได้ ให้แสดงเป็น Input แล้วเอา empText ไปตั้งเป็นค่าเริ่มต้น
-                    return `<input type="text" oninput="this.value = this.value.replace(/[^0-9]/g, '')" class="input input-bordered input-sm w-[50px] input-confirm check-qty" value="${row.CONFIRM || ''}" data-asset="${row.ASSETNO}" data-qty="${row.QTY}">`;
+                    return `<input type="hidden" name="assetid" class="input-id" value="${row.ID}"><input type="text" oninput="this.value = this.value.replace(/[^0-9]/g, '')" class="input input-bordered input-sm w-[50px] input-confirm check-qty" value="${row.CONFIRM || ''}" data-asset="${row.ASSETNO}" data-qty="${row.QTY}">`;
                 } else {
                     return row.CONFIRM;
                 }
@@ -197,7 +213,7 @@ $(async function () {
                 // เช็คเผื่อไว้ถ้าโครงสร้างหลุดหรือไม่มีคนรับผิดชอบ ให้แสดงเป็นช่องว่างหรือเครื่องหมาย -
                 if (isEditable) {
                     // ถ้าเป็นโหมดให้กรอกได้ ให้แสดงเป็น Input แล้วเอา empText ไปตั้งเป็นค่าเริ่มต้น
-                    return `<input type="text" class="input input-bordered input-sm w-[150px] input-oth" value="${row.REMOTHCAUSE || ''}" data-asset="${row.ASSETNO}" >`;
+                    return `<input type="text" class="input input-bordered input-sm w-[150px] input-remoth" value="${row.REMOTHCAUSE || ''}" data-asset="${row.ASSETNO}" >`;
                 } else {
                     return row.REMOTHCAUSE;
                 }
@@ -296,6 +312,10 @@ $(async function () {
             container.html('');
             break;
     }
+    var btnExport = $(
+        '<button type="button" class="btn mg-l-12" id="btnExport" name="btnAction" value="export">Export</button>',
+    );
+    $('.actions-Form .flex.gap-3.mt-2').append(btnExport);
 });
 
 $(document).on('click', 'button[name="btnAction"]', async function (e) {
@@ -308,7 +328,9 @@ $(document).on('click', 'button[name="btnAction"]', async function (e) {
             message: 'Please choose the person in charge',
         },
     ].filter(Boolean);
-    if (!(await requiredForm('#frmmain', requiredMessage))) return;
+    if (action != 'export') {
+        if (!(await requiredForm('#frmmain', requiredMessage))) return;
+    }
     //console.log($('#assignTo').val());
     if (action == 'approve') {
         showLoader();
@@ -334,7 +356,15 @@ $(document).on('click', 'button[name="btnAction"]', async function (e) {
             } finally {
                 showLoader({ show: false });
             }
+        } else if (cextdata == '02') {
+            if (chkValid()) {
+            } else {
+                showLoader({ show: false });
+                showMessage('Please enter valid data.', 'warning');
+            }
         }
+    } else if (action == 'export') {
+        const res = await writeExcel(data);
     }
 });
 
@@ -346,16 +376,6 @@ $(document).on('input', '.check-qty', function () {
     // 2. หาแถว (tr) ปัจจุบัน และดึงค่า QTY สูงสุดของแถวนี้
     let $row = $(this).closest('tr');
     let maxQty = parseInt($(this).data('qty'), 10) || 0;
-
-    // 3. ระบุคลาสของทั้ง 6 ช่องที่ต้องการเอาค่ามารวมกัน
-    let targetClasses = [
-        '.input-confirm',
-        '.input-nosticker',
-        '.input-lost',
-        '.input-damage',
-        '.input-movement',
-        '.input-oth',
-    ];
 
     // 4. วนลูปหาผลรวมของช่องอื่นๆ ในแถวนี้ (ยกเว้นช่องที่กำลังพิมพ์อยู่)
     let otherSum = 0;
@@ -380,3 +400,114 @@ $(document).on('input', '.check-qty', function () {
         this.value = cleanValue === '' ? '' : currentVal;
     }
 });
+
+async function writeExcel(dataList) {
+    var formNo = $("td:contains('Form no:')").next('td').text().trim();
+    var inputBy = $("td:contains('Input by:')").next('td').text().trim();
+    var requestedBy = $("td:contains('Requested by:')")
+        .next('td')
+        .text()
+        .trim();
+    var workbook = new ExcelJS.Workbook();
+    //const templatePath = `${process.env.AMEC_FILE_PATH}${process.env.STATE == 'production' ? 'production' : 'development'}/Form/FIN/FIN-PCK/TEMPLATE`;
+    try {
+        // const bfile = await getArrayBufferFile(templatePath, 'TEMPLOCMST.xlsx');
+        const bfile = await getTemplate('TEMPEXP.xlsx');
+        const workbook = await writeExcelTemp(bfile.buffer, {
+            write: (wb) => {
+                const sheet = wb.getWorksheet(1);
+                sheet.getCell(`B1`).value = formNo;
+                sheet.getCell(`B2`).value = inputBy;
+                sheet.getCell(`B3`).value = requestedBy;
+                sheet.getCell(`B4`).value = dataList.LOCCODE;
+                sheet.getCell(`B5`).value = dataList.LOCNAME;
+                const startRow = 8;
+                dataList.ASSETS.forEach((item, index) => {
+                    const currentRow = startRow + index;
+                    sheet.getCell(`A${currentRow}`).value = item.GRP.GRPCODE;
+                    sheet.getCell(`B${currentRow}`).value = item.GRP.GRPDESC;
+                    sheet.getCell(`C${currentRow}`).value = item.ASSETNO;
+                    sheet.getCell(`D${currentRow}`).value = item.ASSETDESC;
+                    sheet.getCell(`E${currentRow}`).value = formatDate(
+                        item.DOCDATE,
+                    );
+                    sheet.getCell(`F${currentRow}`).value = setRound(
+                        item.INITVAL,
+                        2,
+                    );
+                    sheet.getCell(`G${currentRow}`).value = setRound(
+                        item.BOOKVAL,
+                        2,
+                    );
+                    sheet.getCell(`H${currentRow}`).value = item.MODELNO;
+                    sheet.getCell(`I${currentRow}`).value = item.SNNO;
+                    sheet.getCell(`J${currentRow}`).value = item.PONO;
+                    sheet.getCell(`K${currentRow}`).value = item.REFASSET;
+                    sheet.getCell(`L${currentRow}`).value = item.QTY;
+                    sheet.getCell(`M${currentRow}`).value = item.UNIT;
+                    sheet.getCell(`N${currentRow}`).value = item.SUPPLIER;
+                    sheet.getCell(`O${currentRow}`).value = item.PRNO;
+                    sheet.getCell(`P${currentRow}`).value = item.REQBY;
+                    sheet.getCell(`Q${currentRow}`).value = item.CONFIRM;
+                    sheet.getCell(`R${currentRow}`).value = item.NOSTICKER;
+                    sheet.getCell(`S${currentRow}`).value = item.LOST;
+                    sheet.getCell(`T${currentRow}`).value = item.DAMAGE;
+                    sheet.getCell(`U${currentRow}`).value = item.MOVEMENT;
+                    sheet.getCell(`V${currentRow}`).value = item.OTHCAUSE;
+                    sheet.getCell(`W${currentRow}`).value = item.REMOTHCAUSE;
+                    sheet.getCell(`X${currentRow}`).value = item.PIC;
+                });
+            },
+        });
+        const d = new Date();
+        const formatted = d
+            .toLocaleString('en-GB', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false,
+            })
+            .replace(/\D/g, '');
+        exportExcel(workbook, `${formNo}_${formatted}`);
+    } catch (error) {
+        console.error('Error reading excel template on NAS server:', error);
+        throw new Error('can not open file');
+    }
+}
+
+function chkValid() {
+    let isAllValid = true;
+    $('table tbody tr').each(function () {
+        let row = $(this);
+        let firstInput = row.find('.check-qty').first();
+
+        if (firstInput.length === 0) return true;
+
+        let maxQty = parseInt(firstInput.data('qty'), 10) || 0;
+        let rowSum = 0;
+
+        targetClasses.forEach(function (cls) {
+            let val = parseInt(row.find(cls).val(), 10) || 0;
+            rowSum += val;
+        });
+        let oth = parseInt(row.find('input-oth').val(), 10) || 0;
+        if (oth != 0) {
+            let remoth = row.find('input-remoth').val();
+            if (remoth == '') {
+                isAllValid = false;
+                row.css('background-color', '#fee2e2');
+            }
+        }
+        // เช็คว่าผลรวมเท่ากับ QTY ที่ตั้งไว้หรือไม่
+        if (rowSum !== maxQty) {
+            isAllValid = false;
+            row.css('background-color', '#fee2e2');
+        } else {
+            row.css('background-color', '');
+        }
+    });
+    return isAllValid;
+}
