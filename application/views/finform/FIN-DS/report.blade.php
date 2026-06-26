@@ -104,9 +104,9 @@
             text-align: center !important;
         }
 
-        #stampTable tfoot th:nth-child(n+4),
-        .dt-scroll-foot tfoot th:nth-child(n+4),
-        .dataTables_scrollFoot tfoot th:nth-child(n+4) {
+        #stampTable tfoot th:nth-child(n+6),
+        .dt-scroll-foot tfoot th:nth-child(n+6),
+        .dataTables_scrollFoot tfoot th:nth-child(n+6) {
             text-align: right !important;
             font-variant-numeric: tabular-nums;
         }
@@ -156,6 +156,15 @@
 
         #stampTable .report-section {
             min-width: 100px;
+            max-width: 150px;
+            white-space: normal;
+            text-align: center !important;
+            font-weight: 700;
+            color: #7f3f00 !important;
+        }
+
+        #stampTable .report-org {
+            min-width: 92px;
             max-width: 150px;
             white-space: normal;
             text-align: center !important;
@@ -572,6 +581,6 @@
 
 @section('scripts')
 
-<script src="{{ $_ENV['APP_JS'] }}/report.js?ver={{ $GLOBALS['version'] }}-fin-ds-report-colors-20260625"></script>
+<script src="{{ $_ENV['APP_JS'] }}/report.js?ver={{ $GLOBALS['version'] }}"></script>
 
 @endsection
