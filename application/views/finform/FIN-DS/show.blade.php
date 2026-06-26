@@ -321,7 +321,8 @@
                                                type="text"
                                                readonly
                                                class="show-readonly input input-sm input-bordered w-full bg-fuchsia-50 text-fuchsia-800 border-fuchsia-200 focus:outline-none shadow-sm" />
-                                    </div>
+                                            <span class="text-error text-xs font-bold mt-1.5">*Pickup time : 2:00-4:00 p.m.</span>
+                                            </div>
                                 </div>
 
                                 <div class="form-control">

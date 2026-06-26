@@ -256,7 +256,8 @@
                                             readonly
                                             disabled
                                             class="input input-sm input-bordered border-secondary/30 w-full bg-base-200/80 cursor-not-allowed focus:ring-2 focus:ring-secondary/20 transition-all" />
-                                    </div>
+                                        <span class="text-error text-xs font-bold mt-1.5">*Pickup time : 2:00-4:00 p.m.</span>
+                                        </div>
                                 </div>
                                 <div class="form-control">
                                     <label class="label pb-1">
