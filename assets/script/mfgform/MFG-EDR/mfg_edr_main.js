@@ -581,9 +581,38 @@ $(document).ready(function () {
         },
 
         getFormPayload: function (webflowData = {}, uploadedFiles = []) {
-            const typeform = String($('input[name="type_form"]:checked').val() || '');
-            const currentNo = $.trim($('#current_no').val()) || null;
-            const itemType = String($('input[name="item_type"]:checked').val() || '');
+            const isPCB = this.isPcbWorkType();
+            const list = $('#detailBody tr').map(function () {
+            const $tr = $(this);
+            const tid = $.trim($('#job_type').val());
+            if (!tid) {throw new Error('ไม่พบ TID กรุณาเลือก Job type');}
+                return {
+                    ORDERNO: isPCB ? null : ($.trim($tr.find('[name="order_no[]"]').val()) || null),
+                    DWGNO: $.trim($tr.find('[name="drawing_no[]"]').val()) || null,
+                    ITEM: isPCB ? null : ($.trim($tr.find('[name="item[]"]').val()) || null),
+                    QTY: Number($tr.find('[name="qty[]"]').val()) || null,
+                    DETAIL: $.trim($tr.find('[name="problem_detail[]"]').val()) || null,
+                    LV_EFFECT: null,
+                    EFFECT: null,
+                    LID: isPCB ? Number($tr.find('[name="line[]"]').val()) || null : null,
+                    PID: isPCB ? Number($tr.find('[name="process[]"]').val()) || null : null,
+                    LOT: isPCB ? ($.trim($tr.find('[name="lot[]"]').val()) || null) : null,
+                    SERIAL: isPCB ? ($.trim($tr.find('[name="serial_no[]"]').val()) || null) : null,
+                    PRDN_JUN: (() => {
+                        let val = $.trim($tr.find('[name="prod_jun[]"]').val());
+
+                        if (!val) {
+                            return null;
+                        }
+
+                        if (val.length > 6) {
+                            val = val.substring(2);
+                        }
+
+                        return val;
+                    })()
+                };
+            }).get();
 
             return {
                 NFRMNO: Number(webflowData.NFRMNO || $('#nfrmno').val()),
@@ -591,6 +620,15 @@ $(document).ready(function () {
                 CYEAR: String(webflowData.CYEAR || $('#cyear').val()),
                 CYEAR2: String(webflowData.CYEAR2),
                 NRUNNO: Number(webflowData.NRUNNO),
+                
+                REQBY: String($('#request_by').val()),
+                TID: Number($('#job_type').val()),
+                SSECCODE: String($('#sseccode').val() || ''),
+                CID: Number($('#cause').val()) || null,
+                REPAIR_BY: $.trim($('#repair_by').val()) || null,
+                DAILY_MONTH: String($('#daily_month').val() || ''),
+                DAILY_RUNNO: Number($('#daily_runno').val()) || null,
+                REASON_CAUSE: $.trim($('#reason_cause').val()) || null,
 
                 INPUTBY: String($('#inputBy').val() || ''),
                 REQBY: String($('#request_by').val() || ''),
@@ -677,8 +715,12 @@ $(document).ready(function () {
 
                 const uploadedFiles = await this.uploadFile(webflowData);
                 const payload = this.getFormPayload(webflowData, uploadedFiles);
+                
+                console.log('webflowData =', JSON.stringify(webflowData, null, 2));
+                console.log('payload keys =', Object.keys(payload));
+                console.log('payload.TID =', payload.TID);
+                console.log('payload json =', JSON.stringify(payload, null, 2));
 
-                console.log('MFG EDR PAYLOAD:', payload);
 
                 const res = await createMfgEdr(payload);
 
