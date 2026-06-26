@@ -19,3 +19,11 @@ export async function getData(form) {
         data: form,
     });
 }
+
+export async function updatepck(formData) {
+    return fetchUtils({
+        url: `${process.env.APP_API}/finform/finpck-asset/updateasset`,
+        method: 'PATCH',
+        data: formData,
+    });
+}

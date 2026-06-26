@@ -5,6 +5,8 @@ import {
     doaction,
     getFormno,
     getFormDetail,
+    deleteFlowandForm,
+    deleteFlowStep,
 } from '@amec/webasset/api/webform';
 import { webflowSubmit, getformDetail } from '@amec/webasset/components/form';
 import { formSubmitSkeleton } from '@amec/webasset/skeleton';
@@ -20,7 +22,7 @@ import {
     showErrorMessage,
     showMessage,
 } from '@amec/webasset/utils';
-import { getData } from './data';
+import { getData, updatepck } from './data';
 import { formatDate } from '@amec/webasset/dayjs';
 import select2 from 'select2';
 import { setSelect2 } from '@amec/webasset/select2';
@@ -30,6 +32,7 @@ import { redirectWebflow } from '@amec/webasset/form';
 import { getTemplate } from './function';
 import ExcelJS from 'exceljs';
 import { writeExcelTemp, exportExcel } from '@amec/webasset/excel';
+import { checkEmployee } from '@amec/webasset/employee';
 select2();
 var tablepck;
 var form = {};
@@ -228,7 +231,7 @@ $(async function () {
                 // เช็คเผื่อไว้ถ้าโครงสร้างหลุดหรือไม่มีคนรับผิดชอบ ให้แสดงเป็นช่องว่างหรือเครื่องหมาย -
                 if (isEditable) {
                     // ถ้าเป็นโหมดให้กรอกได้ ให้แสดงเป็น Input แล้วเอา empText ไปตั้งเป็นค่าเริ่มต้น
-                    return `<input type="text" class="input input-bordered input-sm w-[150px] input-oth" value="${row.PIC || ''}" data-asset="${row.ASSETNO}">`;
+                    return `<input type="text" class="input input-bordered input-sm w-[150px] input-pic" value="${row.PIC || ''}" data-asset="${row.ASSETNO}">`;
                 } else {
                     return row.PIC;
                 }
@@ -255,6 +258,7 @@ $(async function () {
         },
     );
     $('#assignContainer').hide();
+    $('#controllContainer').hide();
     $('#assignTo').removeClass('req');
     if (cextdata == '01') {
         const subord = getSubordinates(apvno);
@@ -285,6 +289,8 @@ $(async function () {
         });
         $('#assignContainer').show();
         $('#assignTo').addClass('req');
+    } else if (cextdata == '06') {
+        $('#controllContainer').show();
     }
     switch (mode) {
         case 2:
@@ -294,7 +300,10 @@ $(async function () {
                     flowhtml: flow.html,
                     approve: true,
                     reject: false,
-                    return: cextdata !== '01' && cextdata !== '02',
+                    return:
+                        cextdata !== '01' &&
+                        cextdata !== '02' &&
+                        cextdata !== '06',
                 }),
             );
             break;
@@ -334,6 +343,7 @@ $(document).on('click', 'button[name="btnAction"]', async function (e) {
     //console.log($('#assignTo').val());
     if (action == 'approve') {
         showLoader();
+        //Concern Approver1
         if (cextdata == '01') {
             const formData = {
                 condition: {
@@ -344,24 +354,85 @@ $(document).on('click', 'button[name="btnAction"]', async function (e) {
             };
             try {
                 const res = await updateFlow(formData);
-                const resdo = await doaction({
-                    ...form,
-                    EMPNO: apvno,
-                    ACTION: 'approve',
-                    REMARK: $('#remark').val(),
-                });
-                redirectWebflow();
             } catch (err) {
                 showErrorMessage(err);
-            } finally {
-                showLoader({ show: false });
             }
+            //Main Approval
         } else if (cextdata == '02') {
             if (chkValid()) {
+                try {
+                    const assetData = await payloadData();
+                    const res = await updatepck(assetData);
+                } catch (err) {
+                    showErrorMessage(err);
+                }
             } else {
                 showLoader({ show: false });
                 showMessage('Please enter valid data.', 'warning');
             }
+            //Assigned Person
+        } else if (cextdata == '06') {
+            const controller = $('#controller').val().replace(/\s+/g, '');
+            if (controller.length == 0) {
+                const delstep = ['07', '08', '09', '10', '11'];
+                try {
+                    delstep.forEach((step) => {
+                        deleteFlowStep({ ...form, CSTEPNO: step });
+                    });
+                } catch (err) {
+                    showErrorMessage(err);
+                }
+            } else {
+                let a = await checkEmployee(controller);
+                console.log(a);
+
+                return false;
+                if ((await checkEmployee(controller)).status) {
+                    const formData = {
+                        condition: {
+                            ...form,
+                            CEXTDATA: '07',
+                        },
+                        VAPVNO: controller,
+                    };
+                    try {
+                        const res = await updateFlow(formData);
+                    } catch (err) {
+                        showErrorMessage(err);
+                    }
+                } else {
+                    showMessage('Employee not found!', 'warning');
+                    return false;
+                }
+            }
+        }
+        try {
+            const resdo = await doaction({
+                ...form,
+                EMPNO: apvno,
+                ACTION: 'approve',
+                REMARK: $('#remark').val(),
+            });
+            redirectWebflow();
+        } catch (err) {
+            showErrorMessage(err);
+        } finally {
+            showLoader({ show: false });
+        }
+    } else if (action == 'return') {
+        if ($('#remark').val() == '') {
+            showMessage('Please enter Remark', 'warning');
+            return false;
+        }
+        if (['03', '04', '05'].includes(cextdata)) {
+            const resdo = await doaction({
+                ...form,
+                EMPNO: apvno,
+                ACTION: 'returnE',
+                CEXTDATA: '02',
+                REMARK: $('#remark').val(),
+            });
+            redirectWebflow();
         }
     } else if (action == 'export') {
         const res = await writeExcel(data);
@@ -493,9 +564,9 @@ function chkValid() {
             let val = parseInt(row.find(cls).val(), 10) || 0;
             rowSum += val;
         });
-        let oth = parseInt(row.find('input-oth').val(), 10) || 0;
+        let oth = parseInt(row.find('.input-oth').val(), 10) || 0;
         if (oth != 0) {
-            let remoth = row.find('input-remoth').val();
+            let remoth = row.find('.input-remoth').val();
             if (remoth == '') {
                 isAllValid = false;
                 row.css('background-color', '#fee2e2');
@@ -510,4 +581,40 @@ function chkValid() {
         }
     });
     return isAllValid;
+}
+
+async function payloadData() {
+    let assetsPayload = [];
+    $('table tbody tr').each(function () {
+        let row = $(this);
+        let firstInput = row.find('.check-qty').first();
+
+        if (firstInput.length === 0) return true;
+
+        let assetid = parseInt(row.find('.input-id').val());
+        let valConfirm = parseInt(row.find('.input-confirm').val(), 10) || 0;
+        let valNoSticker =
+            parseInt(row.find('.input-nosticker').val(), 10) || 0;
+        let valLost = parseInt(row.find('.input-lost').val(), 10) || 0;
+        let valDamage = parseInt(row.find('.input-damage').val(), 10) || 0;
+        let valMovement = parseInt(row.find('.input-movement').val(), 10) || 0;
+        let valoth = parseInt(row.find('.input-oth').val(), 10) || 0;
+        let remoth = row.find('.input-remoth').val() || '';
+        let pic = row.find('.input-pic').val() || '';
+        let assetData = {
+            ...form, // ระบบจะเอา NFRMNO, VORGNO, CYEAR ฯลฯ มาใส่ให้ตรงนี้อัตโนมัติ
+            ID: assetid,
+            CONFIRM: valConfirm,
+            NOSTICKER: valNoSticker,
+            LOST: valLost,
+            DAMAGE: valDamage,
+            MOVEMENT: valMovement,
+            OTHCAUSE: valoth,
+            REMOTHCAUSE: remoth,
+            PIC: pic,
+        };
+        assetsPayload.push(assetData);
+    });
+    // console.log(assetsPayload);
+    return assetsPayload;
 }

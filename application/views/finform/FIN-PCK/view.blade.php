@@ -91,6 +91,16 @@
                         </select>
                         
                     </div>
+                    <div id="controllContainer" class="mt-8 mb-4 flex items-center gap-4">
+    
+                    <label for="controller" class="font-bold text-gray-800 text-[15px] whitespace-nowrap">
+                        Assign To :
+                    </label>
+
+                    <input type="text" id="controller" name="controller" placeholder="15130" required class="input input-bordered w-[100px]" />
+
+                </div>
+
             </div>
              <div id="form-action-container"></div>
         </form>
