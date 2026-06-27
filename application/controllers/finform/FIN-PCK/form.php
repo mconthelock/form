@@ -56,10 +56,13 @@ class form extends MY_Controller{
         }
         
     }
-
     public function locmst()
     {
         $this->views('finform/FIN-PCK/locmst');
+    }
+    public function report()
+    {
+        $this->views('finform/FIN-PCK/report');
     }
 
 

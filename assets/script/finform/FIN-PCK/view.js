@@ -26,13 +26,20 @@ import { getData, updatepck } from './data';
 import { formatDate } from '@amec/webasset/dayjs';
 import select2 from 'select2';
 import { setSelect2 } from '@amec/webasset/select2';
-import { getSubordinates } from '@amec/webasset/api/sequence-org';
+import {
+    getByPosition,
+    getManager,
+    getSubordinates,
+} from '@amec/webasset/api/sequence-org';
 import { showLoader } from '@amec/webasset/preloader';
 import { redirectWebflow } from '@amec/webasset/form';
 import { getTemplate } from './function';
 import ExcelJS from 'exceljs';
 import { writeExcelTemp, exportExcel } from '@amec/webasset/excel';
 import { checkEmployee } from '@amec/webasset/employee';
+import { getEmployee, searchUser } from '@amec/webasset/api/amec';
+import { getOrganize } from './dataloc';
+import { getRepresent } from '@amec/webasset/api/rep';
 select2();
 var tablepck;
 var form = {};
@@ -374,34 +381,25 @@ $(document).on('click', 'button[name="btnAction"]', async function (e) {
         } else if (cextdata == '06') {
             const controller = $('#controller').val().replace(/\s+/g, '');
             if (controller.length == 0) {
-                const delstep = ['07', '08', '09', '10', '11'];
+                const delstep = ['19', '88', '80', '81', '58'];
                 try {
-                    delstep.forEach((step) => {
-                        deleteFlowStep({ ...form, CSTEPNO: step });
-                    });
+                    for (const step of delstep) {
+                        await deleteFlowStep({ ...form, CSTEPNO: step });
+                    }
                 } catch (err) {
                     showErrorMessage(err);
                 }
             } else {
-                let a = await checkEmployee(controller);
-                console.log(a);
+                const infocon = await searchUser({
+                    SEMPNO: controller,
+                    CSTATUS: '1',
+                });
 
-                return false;
-                if ((await checkEmployee(controller)).status) {
-                    const formData = {
-                        condition: {
-                            ...form,
-                            CEXTDATA: '07',
-                        },
-                        VAPVNO: controller,
-                    };
-                    try {
-                        const res = await updateFlow(formData);
-                    } catch (err) {
-                        showErrorMessage(err);
-                    }
+                if (infocon.length > 0) {
+                    await updateorgcon(infocon[0]);
                 } else {
-                    showMessage('Employee not found!', 'warning');
+                    showLoader({ show: false });
+                    showMessage('Employee  not found!', 'warning');
                     return false;
                 }
             }
@@ -424,16 +422,20 @@ $(document).on('click', 'button[name="btnAction"]', async function (e) {
             showMessage('Please enter Remark', 'warning');
             return false;
         }
-        if (['03', '04', '05'].includes(cextdata)) {
-            const resdo = await doaction({
-                ...form,
-                EMPNO: apvno,
-                ACTION: 'returnE',
-                CEXTDATA: '02',
-                REMARK: $('#remark').val(),
-            });
-            redirectWebflow();
+        let retstep;
+        if (['03', '04', '05', '06', '07', '11'].includes(cextdata)) {
+            retstep = '02';
+        } else if (['08', '09', '10'].includes(cextdata)) {
+            retstep = '07';
         }
+        const resdo = await doaction({
+            ...form,
+            EMPNO: apvno,
+            ACTION: 'returnE',
+            CEXTDATA: retstep,
+            REMARK: $('#remark').val(),
+        });
+        redirectWebflow();
     } else if (action == 'export') {
         const res = await writeExcel(data);
     }
@@ -617,4 +619,101 @@ async function payloadData() {
     });
     // console.log(assetsPayload);
     return assetsPayload;
+}
+
+async function updateorgcon(objcon) {
+    const approvalSteps = [
+        { CSTEPNO: '88', CEXTDATA: '08', SPOSCODE: 30 },
+        { CSTEPNO: '80', CEXTDATA: '09', SPOSCODE: 21 },
+        { CSTEPNO: '81', CEXTDATA: '10', SPOSCODE: 20 },
+    ];
+    let delstep = [];
+    const posCon = parseInt(objcon.SPOSCODE, 10);
+    let rep = await getRepresent({
+        NFRMNO: form.NFRMNO,
+        VORGNO: form.VORGNO,
+        CYEAR: form.CYEAR,
+        VEMPNO: objcon.SEMPNO,
+    });
+    let formData = {
+        condition: {
+            ...form,
+            CEXTDATA: '07',
+        },
+        VAPVNO: objcon.SEMPNO,
+        VREPNO: rep,
+    };
+    let res = await updateFlow(formData);
+    let vorgno;
+    for (const step of approvalSteps) {
+        if (posCon > step.SPOSCODE) {
+            vorgno = step.SPOSCODE == 30 ? objcon.SSECCODE : objcon.SDEPCODE;
+            const sempno = await getByPosition(vorgno, step.SPOSCODE + '');
+            if (sempno.status) {
+                rep = await getRepresent({
+                    NFRMNO: form.NFRMNO,
+                    VORGNO: form.VORGNO,
+                    CYEAR: form.CYEAR,
+                    VEMPNO: sempno.data.EMPNO,
+                });
+                formData.condition.CEXTDATA = step.CEXTDATA;
+                formData.VAPVNO = sempno.data.EMPNO;
+                formData.VREPNO = rep;
+                res = await updateFlow(formData);
+            }
+        } else {
+            delstep.push(step.CSTEPNO);
+        }
+    }
+    for (const step of delstep) {
+        console.log(step);
+
+        // เติม await ด้านหน้า เพื่อสั่งให้โปรแกรมรอจนกว่า API/Function นี้จะทำงานเสร็จ
+        await deleteFlowStep({ ...form, CSTEPNO: step });
+    }
+    // delstep.forEach((step) => {
+    //     console.log(step);
+    //     deleteFlowStep({ ...form, CSTEPNO: step });
+    // });
+
+    // if (posCon > 30) {
+    //     try {
+    //         let formData = {
+    //             condition: {
+    //                 ...form,
+    //                 CEXTDATA: '07',
+    //             },
+    //             VAPVNO: objcon.SEMPNO,
+    //         };
+    //         const res = await updateFlow(formData);
+    //         const sem = await getByPosition(objcon.SSECCODE, '30');
+    //         if (sem.status) {
+    //             formData.condition.CEXTDATA = '08';
+    //             formData.VAPVNO = sem.data.SEMPNO;
+    //         }
+
+    //         console.log(sem);
+    //     } catch (err) {
+    //         showLoader({ show: false });
+    //         showErrorMessage(err);
+    //         return false;
+    //     }
+    // }
+    // const manger = await getManager(empno);
+    // console.log(manger);
+    // return false;
+    // const formData = {
+    //     condition: {
+    //         ...form,
+    //         CEXTDATA: '07',
+    //     },
+    //     VAPVNO: empno,
+    // };
+    // try {
+    //     const res = await updateFlow(formData);
+    // } catch (err) {
+    //     showLoader({ show: false });
+    //     showErrorMessage(err);
+    //     return false;
+    // }
 }
