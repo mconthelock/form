@@ -26,6 +26,8 @@ const reportColors = {
 const baseColumns = [
   { data: "DATE_RECEIVE", defaultContent: "", className: "report-date" },
   { data: "DETAIL", defaultContent: "", className: "report-detail" },
+  { data: "DIVISION", defaultContent: "", className: "report-org" },
+  { data: "DEPARTMENT", defaultContent: "", className: "report-org" },
   { data: "SECTION", defaultContent: "", className: "report-section" },
 ];
 
@@ -129,7 +131,9 @@ async function createReportTable(data = [], stamp = dutyStampList) {
       <tr>
         <th rowspan="${headerRowspan}" class="report-sticky-date report-meta-header">Date</th>
         <th rowspan="${headerRowspan}" class="report-meta-header">Detail</th>
-        <th rowspan="${headerRowspan}" class="report-section-header">Section</th>
+        <th rowspan="${headerRowspan}" class="report-section-header">Div.</th>
+        <th rowspan="${headerRowspan}" class="report-section-header">Dept.</th>
+        <th rowspan="${headerRowspan}" class="report-section-header">Sect.</th>
   `;
 
   if (stampCount > 0) {
@@ -293,7 +297,7 @@ function getReportColumnGroupClass(section) {
 function getReportColumnCount(stamp = dutyStampList) {
   const stampCount = Array.isArray(stamp) ? stamp.length : 0;
 
-  return 3 + stampCount * 2 * 3 + 3;
+  return 5 + stampCount * 2 * 3 + 3;
 }
 
 function applyReportRowClasses(row, rowData, dataIndex, rows = []) {
@@ -457,6 +461,8 @@ function getExportColumns(stamp = []) {
   const columns = [
     { key: "DATE_RECEIVE", width: 12 },
     { key: "DETAIL", width: 34 },
+    { key: "DIVISION", width: 14 },
+    { key: "DEPARTMENT", width: 16 },
     { key: "SECTION", width: 16 },
   ];
 
@@ -483,9 +489,13 @@ function renderExcelHeader(sheet, stamp = [], lastColumn) {
   sheet.mergeCells(2, 2, headerRowspanEnd, 2);
   sheet.getCell(2, 2).value = "Detail";
   sheet.mergeCells(2, 3, headerRowspanEnd, 3);
-  sheet.getCell(2, 3).value = "Section";
+  sheet.getCell(2, 3).value = "Div.";
+  sheet.mergeCells(2, 4, headerRowspanEnd, 4);
+  sheet.getCell(2, 4).value = "Dept.";
+  sheet.mergeCells(2, 5, headerRowspanEnd, 5);
+  sheet.getCell(2, 5).value = "Sect.";
 
-  let column = 4;
+  let column = 6;
   if (stampCount > 0) {
     [
       { key: "BUY", label: "Buy" },
@@ -646,6 +656,7 @@ function mapReportToRows(reportData = [], stamp = []) {
       USER_EMPNO: getReportUserEmpno(item),
       USER: getReportUser(item),
       DIVISION: getReportDivisionName(item),
+      DEPARTMENT: getReportDepartmentName(item),
       SECTION: getReportSectionName(item),
       DETAIL_TYPE: transactionSection,
       DETAIL: getReportDetail(transactionSection, item),
@@ -745,6 +756,8 @@ function groupDetailRows(data) {
     const date = getEffectiveDate(item);
     const reason = getReportRemark(item);
     const user = getReportUser(item);
+    const divisionName = getReportDivisionName(item);
+    const departmentName = getReportDepartmentName(item);
     const sectionName = getReportSectionName(item);
     const transactionSection = getReportSection(item);
     const key =
@@ -758,7 +771,8 @@ function groupDetailRows(data) {
         DATE_RECEIVE: date,
         USER_EMPNO: getReportUserEmpno(item),
         USER: user,
-        DIVISION: getReportDivisionName(item),
+        DIVISION: divisionName,
+        DEPARTMENT: departmentName,
         SECTION: sectionName,
         DETAIL_TYPE: transactionSection,
         DETAIL: getReportDetail(transactionSection, item),
@@ -851,7 +865,7 @@ function getExcelHeaderColor(rowNumber, columnNumber, exportColumns = []) {
 
   if (rowNumber === 1) return reportColors.title;
   if (columnNumber <= 2) return reportColors.meta;
-  if (columnNumber === 3) return reportColors.section;
+  if (columnNumber >= 3 && columnNumber <= 5) return reportColors.section;
   if (columnKey.startsWith("BUY_")) return reportColors.buy;
   if (columnKey.startsWith("WD_")) return reportColors.withdraw;
   if (columnKey.startsWith("RM_")) return reportColors.remaining;
@@ -885,9 +899,9 @@ function styleExcelReportHeader(sheet, stamp = [], lastColumn) {
 
   styleRange(1, 1, 1, lastColumn, reportColors.title);
   styleRange(2, 4, 1, 2, reportColors.meta);
-  styleRange(2, 4, 3, 3, reportColors.section);
+  styleRange(2, 4, 3, 5, reportColors.section);
 
-  let column = 4;
+  let column = 6;
   [
     { color: reportColors.buy },
     { color: reportColors.withdraw },
@@ -950,11 +964,23 @@ function getReportSectionName(item = {}) {
   return (
     item.SECTION ||
     item.SECTION_NAME ||
+    item.SSECTION ||
     item.SSEC ||
     item.SSECCODE ||
-    item.DEPT_SECTION ||
-    item.FULLDP ||
-    [item.SDIV, item.SDEPT, item.SSEC].filter(Boolean).join("/") ||
+    getFullDpPart(item, 2) ||
+    ""
+  );
+}
+
+function getReportDepartmentName(item = {}) {
+  return (
+    item.DEPARTMENT ||
+    item.DEPARTMENT_NAME ||
+    item.DEPT ||
+    item.DEPT_NAME ||
+    item.SDEPT ||
+    item.SDEPCODE ||
+    getFullDpPart(item, 1) ||
     ""
   );
 }
@@ -963,9 +989,29 @@ function getReportDivisionName(item = {}) {
   return (
     item.DIVISION ||
     item.DIVISION_NAME ||
+    item.SDIVISION ||
     item.SDIV ||
     item.SDIVCODE ||
+    getFullDpPart(item, 0) ||
     ""
+  );
+}
+
+function getFullDpPart(item = {}, index) {
+  const fullDp =
+    item.FULLDP ||
+    item.DEPT_SECTION ||
+    item.DIV_DEPT_SECT ||
+    item.DIV_DEPT_SECTION ||
+    "";
+
+  if (!fullDp) return "";
+
+  return (
+    String(fullDp)
+      .split("/")
+      .map((part) => part.trim())
+      .filter(Boolean)[index] || ""
   );
 }
 
@@ -1005,6 +1051,7 @@ async function enrichRowsWithEmpData(rows = []) {
     });
 
     row.DIVISION = formatEmpDivision(empData) || row.DIVISION;
+    row.DEPARTMENT = formatEmpDepartment(empData) || row.DEPARTMENT;
     row.SECTION = formatEmpSection(empData) || row.SECTION;
   });
 }
@@ -1022,6 +1069,10 @@ function getEmpName(empData = {}) {
 
 function formatEmpSection(empData = {}) {
   return empData.SSEC || "";
+}
+
+function formatEmpDepartment(empData = {}) {
+  return empData.SDEPT || empData.SDEPCODE || "";
 }
 
 function formatEmpDivision(empData = {}) {
