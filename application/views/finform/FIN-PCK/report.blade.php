@@ -122,6 +122,5 @@
 @endsection
 
 @section('scripts')
-<!-- สามารถเรียกใช้ไฟล์ JS แยกสำหรับหน้า Report ได้เลยครับ -->
-<!-- <script src="{{ $_ENV['APP_JS'] ?? '' }}/report.js?ver={{ $GLOBALS['version'] ?? '1.0' }}"></script> -->
+<script src="{{ $_ENV['APP_JS'] }}/report.js?ver={{ $GLOBALS['version'] }}"></script>
 @endsection
