@@ -27,3 +27,18 @@ export async function updatepck(formData) {
         data: formData,
     });
 }
+
+export async function getGrpmst() {
+    return fetchUtils({
+        url: `${process.env.APP_API}/finform/fxa-grpmst`,
+        method: 'GET',
+    });
+}
+
+export async function getRptDetail(formData) {
+    return fetchUtils({
+        url: `${process.env.APP_API}/finform/fin-pck/finpck-vwdetail/search`,
+        method: 'POST',
+        data: formData,
+    });
+}

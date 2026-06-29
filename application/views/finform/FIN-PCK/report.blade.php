@@ -31,16 +31,17 @@
 @endsection
 
 @section('contents')
+<form id="frmmain">
 <!-- ================== ส่วนที่ 1: เลือกประเภทรายงาน ================== -->
 <div class="mt-6 mb-4 p-4 bg-base-200/50 rounded-box border border-base-300">
     <label class="font-bold text-gray-800 text-[15px] mb-3 block">Select Report Type :</label>
     <div class="flex flex-col sm:flex-row gap-6">
         <label class="label cursor-pointer justify-start gap-3">
-            <input type="radio" name="reportType" value="detail_listing" class="radio radio-primary" checked />
+            <input type="radio" name="reportType" value="detail" class="radio radio-primary" checked />
             <span class="label-text font-medium text-base">DETAIL PHYSICAL COUNT FIXED ASSETS LISTING</span>
         </label>
         <label class="label cursor-pointer justify-start gap-3">
-            <input type="radio" name="reportType" value="status_checking" class="radio radio-primary" />
+            <input type="radio" name="reportType" value="status" class="radio radio-primary" />
             <span class="label-text font-medium text-base">REPORTS CHECK STATUS COMPLETE AND INCOMPLETE</span>
         </label>
     </div>
@@ -56,26 +57,22 @@
             <!-- 1. Form Year (ปีที่ออก Form) -->
             <div class="flex flex-col gap-1">
                 <label class="font-semibold text-sm text-gray-600">Year of Issue</label>
-                <select id="formYear" name="formYear" class="select select-bordered w-full font-normal">
+                <select id="formYear" name="CYEAR2" class="select select-bordered w-full font-normal">
                     <option value="" selected>-- Select Year --</option>
-                    <option value="2026">2026</option>
-                    <option value="2025">2025</option>
-                    <option value="2024">2024</option>
                 </select>
             </div>
 
             <!-- 2. Location Code -->
             <div class="flex flex-col gap-1">
                 <label class="font-semibold text-sm text-gray-600">Location Code</label>
-                <input type="text" id="locationCode" name="locationCode" placeholder="Ex. 532" class="input input-bordered w-full" />
+                <input type="text" id="locationCode" name="LOCCODE" placeholder="Ex. 532" class="input input-bordered w-full" />
             </div>
 
             <!-- 3. Asset Group -->
             <div class="flex flex-col gap-1">
                 <label class="font-semibold text-sm text-gray-600">Asset Group</label>
-                <select id="assetGroup" name="assetGroup" class="select select-bordered w-full font-normal">
+                <select id="assetGroup" name="GRPCODE" class="select select-bordered w-full font-normal">
                     <option value="" selected>-- Select Asset Group --</option>
-                    <option value="004">004 - MACHINERY</option>
                     <!-- ดึง option กลุ่มอื่นๆ เพิ่มเติมจาก DB -->
                 </select>
             </div>
@@ -83,17 +80,17 @@
             <!-- 4. Status -->
             <div class="flex flex-col gap-1">
                 <label class="font-semibold text-sm text-gray-600">Status</label>
-                <select id="docStatus" name="docStatus" class="select select-bordered w-full font-normal">
+                <select id="docStatus" name="CST" class="select select-bordered w-full font-normal">
                     <option value="" selected>All Status</option>
-                    <option value="complete">Complete</option>
-                    <option value="not_complete">Not Complete</option>
+                    <option value="2">Complete</option>
+                    <option value="1">Not Complete</option>
                 </select>
             </div>
 
             <!-- 5. Asset No. -->
             <div class="flex flex-col gap-1">
                 <label class="font-semibold text-sm text-gray-600">Asset No.</label>
-                <input type="text" id="assetNo" name="assetNo" placeholder="Ex. 049996720" class="input input-bordered w-full" />
+                <input type="text" id="assetNo" name="ASSETNO" placeholder="Ex. 049996720" class="input input-bordered w-full" />
             </div>
 
         </div>
@@ -119,6 +116,7 @@
     </button>
 
 </div>
+</form>
 @endsection
 
 @section('scripts')
