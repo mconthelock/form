@@ -83,5 +83,5 @@
 @endsection
 
 @section('scripts')
-<script src="{{ $_ENV['APP_JS'] }}/create.js?ver={{ $GLOBALS['version'] }}"></script>
+<script src="{{ $_ENV['APP_JS'] }}/createpck.js?ver={{ $GLOBALS['version'] }}"></script>
 @endsection
