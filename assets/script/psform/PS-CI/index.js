@@ -358,27 +358,34 @@ $(document).ready(async function () {
             title: "DIFF (AFTER RE-CHECK)",
             className: "border-r border-slate-200 text-center",
             render: (data, type, row) => {
-                const ACTUAL_QTY = row.RECHECK_QTY ?? row.ON_HAND;
+                const ACTUAL_QTY = Number(
+                    row.RECHECK_QTY || row.RANDOM_CHECK || row.ON_HAND
+                );
                 const DIFF = ACTUAL_QTY - row.ON_HAND;
-                if (row.RECHECK_QTY !== null) {
-                    return DIFF === 0 ? '0' : DIFF;
-                } else {
-                    return '-';
-                }
+                return DIFF === 0 ? '-' : DIFF;
+                // if (row.RECHECK_QTY !== null) {
+                //     return DIFF === 0 ? '0' : DIFF;
+                // } else {
+                //     return '-';
+                // }
             },
             createdCell: (td, cellData, rowData, row, col) => {
-                const ACTUAL_QTY = rowData.RECHECK_QTY ?? rowData.ON_HAND;
+                const ACTUAL_QTY = Number(
+                    rowData.RECHECK_QTY || rowData.RANDOM_CHECK || rowData.ON_HAND
+                );
                 const DIFF = ACTUAL_QTY - rowData.ON_HAND;
+                console.log("DIFF (AFTER RE-CHECK):", DIFF, "rowData:", rowData);
                 $(td).addClass("border-r border-slate-200 text-right font-bold");
-                if (rowData.RECHECK_QTY !== null) {
-                    if (DIFF < 0) {
-                        $(td).addClass('text-red-700 bg-red-50');
-                    } else if (DIFF > 0) {
-                        $(td).addClass('text-green-700 bg-green-50');
-                    }
-                } else {
-                    $(td).addClass('text-slate-400');
-                }
+                return DIFF === 0 ? $(td).addClass('text-slate-400') : DIFF < 0 ? $(td).addClass('text-red-700 bg-red-50') : $(td).addClass('text-green-700 bg-green-50');
+                // if (rowData.RECHECK_QTY !== null) {
+                //     if (DIFF < 0) {
+                //         $(td).addClass('text-red-700 bg-red-50');
+                //     } else if (DIFF > 0) {
+                //         $(td).addClass('text-green-700 bg-green-50');
+                //     }
+                // } else {
+                //     $(td).addClass('text-slate-400');
+                // }
             }
         },
         {
