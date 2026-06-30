@@ -20,14 +20,14 @@ import Select2 from "select2";
 import { fetchUtils } from "@amec/webasset/api/fetch-utils";
 import { sendmail } from "@amec/webasset/api/mail";
 
-var cextData;
+var cextData, data;
 Select2();
 
 // main function
 $(async function () {
   try {
     const param = getUrlParams();
-    const data = await getFormData(
+    data = await getFormData(
       param.NFRMNO,
       param.VORGNO,
       param.CYEAR,
@@ -191,16 +191,38 @@ $(document).on("click", "button[name='btnAction']", async function () {
       if (!res.status) {
         throw new Error(res.message);
       }
-      await sendmail({
-        to: [
-          "viyada@MitsubishiElevatorAsia.co.th",
-        ],
-        subject: "Form Revise/Return WHI Complete",
-        html: `<p>Dear PP Sect.</p>
-              <p style="text-indent: 2em;">WHI Sect. Revise data issue card & Return data issue card finished.</p>
-              <p>Please Re-check data again.</p>
-              <p>Best Regards,</p>`,
-      });
+      data = await getFormData(
+        param.NFRMNO,
+        param.VORGNO,
+        param.CYEAR,
+        param.CYEAR2,
+        param.NRUNNO,
+      );
+      const Userreq = await getUserData(data.form.VREQNO);
+      const formNo = `${data.formmaster.VANAME}${data.form.CYEAR2.slice(-2)}-${("000000" + data.form.NRUNNO).slice(-6)}`;
+      if (action === "approve") {
+        await sendmail({
+          to: Userreq.VEMAIL,
+          cc: "viyada@MitsubishiElevatorAsia.co.th",
+          subject: "Form Revise/Return WHI Complete",
+          html: `<p>Dear PP Sect.</p>
+                <p style="text-indent: 2em;">WHI Sect. Revise data issue card & Return data issue card finished.</p>
+                <p style="text-indent: 2em;">Form No: ${formNo} </p>
+                <p>Please Re-check data again.</p>
+                <p>Best Regards,</p>`,
+        });
+      }else if (action === "reject") {
+        await sendmail({
+          to: Userreq.VEMAIL,
+          cc: "viyada@MitsubishiElevatorAsia.co.th",
+          subject: "Form Revise/Return WHI Reject",
+          html: `<p>Dear PP Sect.</p>
+                <p style="text-indent: 2em;">WHI Sect. Reject data issue card.</p>
+                <p style="text-indent: 2em;">Form No: ${formNo} </p>
+                <p>Please Re-check data again.</p>
+                <p>Best Regards,</p>`,
+        });
+      }
     } else {
       res = await doaction(state);
     }
