@@ -68,16 +68,7 @@
                 <input type="text" id="locationCode" name="LOCCODE" placeholder="Ex. 532" class="input input-bordered w-full" />
             </div>
 
-            <!-- 3. Asset Group -->
-            <div class="flex flex-col gap-1">
-                <label class="font-semibold text-sm text-gray-600">Asset Group</label>
-                <select id="assetGroup" name="GRPCODE" class="select select-bordered w-full font-normal">
-                    <option value="" selected>-- Select Asset Group --</option>
-                    <!-- ดึง option กลุ่มอื่นๆ เพิ่มเติมจาก DB -->
-                </select>
-            </div>
-
-            <!-- 4. Status -->
+             <!-- 3. Status -->
             <div class="flex flex-col gap-1">
                 <label class="font-semibold text-sm text-gray-600">Status</label>
                 <select id="docStatus" name="CST" class="select select-bordered w-full font-normal">
@@ -86,6 +77,17 @@
                     <option value="1">Not Complete</option>
                 </select>
             </div>
+
+            <!-- 4. Asset Group -->
+            <div class="flex flex-col gap-1">
+                <label class="font-semibold text-sm text-gray-600">Asset Group</label>
+                <select id="assetGroup" name="GRPCODE" class="select select-bordered w-full font-normal">
+                    <option value="" selected>-- Select Asset Group --</option>
+                    <!-- ดึง option กลุ่มอื่นๆ เพิ่มเติมจาก DB -->
+                </select>
+            </div>
+
+     
 
             <!-- 5. Asset No. -->
             <div class="flex flex-col gap-1">

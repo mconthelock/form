@@ -42,3 +42,11 @@ export async function getRptDetail(formData) {
         data: formData,
     });
 }
+
+export async function getRptStatus(formData) {
+    return fetchUtils({
+        url: `${process.env.APP_API}/finform/fin-pck/finpck-vwstatus/search`,
+        method: 'POST',
+        data: formData,
+    });
+}
