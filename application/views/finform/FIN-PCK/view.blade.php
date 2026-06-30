@@ -110,5 +110,5 @@
 @endsection
 
 @section('scripts')
-<script src="{{ $_ENV['APP_JS'] }}/view.js?ver={{ $GLOBALS['version'] }}"></script>
+<script src="{{ $_ENV['APP_JS'] }}/viewpck.js?ver={{ $GLOBALS['version'] }}"></script>
 @endsection

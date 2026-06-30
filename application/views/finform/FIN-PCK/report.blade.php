@@ -122,5 +122,5 @@
 @endsection
 
 @section('scripts')
-<script src="{{ $_ENV['APP_JS'] }}/report.js?ver={{ $GLOBALS['version'] }}"></script>
+<script src="{{ $_ENV['APP_JS'] }}/reportpck.js?ver={{ $GLOBALS['version'] }}"></script>
 @endsection
