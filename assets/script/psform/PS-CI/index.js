@@ -116,7 +116,7 @@ $(document).ready(async function () {
     $(".checking-item").text(checkingItem);
     const diffItemFirstTime = data.filter(item => Number(item.RANDOM_CHECK ?? item.ACTUAL_QTY ?? item.ON_HAND) !== item.ON_HAND).length;
     $(".diff-item-first-time").text(diffItemFirstTime);
-    const diffItemAfterRecheck = data.filter(item => (item.RECHECK_QTY !== null) && (item.REMARK !== null) && Number(item.RECHECK_QTY) !== Number(item.ON_HAND));
+    const diffItemAfterRecheck = data.filter(item => Number(item.RECHECK_QTY ?? item.RANDOM_CHECK ?? item.ACTUAL_QTY ?? item.ON_HAND) !== item.ON_HAND);
     $(".diff-item-after-recheck").text(diffItemAfterRecheck.length);
     const randomCheckItem = data.filter(item => item.RANDOM_CHECK !== null).length;
     $(".random-check").text(randomCheckItem);
@@ -317,6 +317,11 @@ $(document).ready(async function () {
             title: "RE-CHECK QTY",
             className: "border-r border-slate-200 text-center",
             render: (data, type, row) => {
+                if (type === 'sort' || type === 'type') {
+                    return Number(row.RECHECK_QTY ?? row.RANDOM_CHECK ?? 0);
+                    //                           ^^                ^^
+                    // แก้ด้วย: ใช้ ?? แทน || เพื่อให้ fallback ไป ON_HAND ได้ถูกต้อง
+                }
                 // if (!row.RANDOM_CHECK) return '';
                 const borderClass = row.IS_RECHECK_EDITED
                     ? 'border-red-500 border-2'

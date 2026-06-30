@@ -6,6 +6,38 @@
             height: 48px;
         }
 
+        .fin-ds-report-accessible {
+            background: #ffffff !important;
+            color: #172033;
+        }
+
+        .fin-ds-report-accessible .card {
+            background-color: #ffffff !important;
+            border-color: #64748b !important;
+        }
+
+        .fin-ds-report-accessible [class*="bg-base-200"] {
+            background-color: #ffffff !important;
+        }
+
+        .fin-ds-report-accessible .label-text,
+        .fin-ds-report-accessible p {
+            color: #334155 !important;
+        }
+
+        .fin-ds-report-accessible .input,
+        .fin-ds-report-accessible .select {
+            background: #ffffff !important;
+            border: 2px solid #64748b !important;
+            color: #0f172a !important;
+        }
+
+        .fin-ds-report-accessible .input:focus,
+        .fin-ds-report-accessible .select:focus {
+            border-color: #1d4ed8 !important;
+            outline: 3px solid rgba(29, 78, 216, 0.28) !important;
+        }
+
         #stampTable {
             width: max-content !important;
             min-width: max-content;
@@ -13,6 +45,7 @@
             font-size: 13px;
             border-collapse: collapse;
             border-spacing: 0;
+            border: 2px solid #475569 !important;
             color: #1f2937;
         }
 
@@ -36,24 +69,22 @@
             line-height: 1.25;
             font-weight: 800;
             justify-content: center;
-            border-color: #cbd5e1 !important;
-            border-right: 1px solid #cbd5e1 !important;
-            border-bottom: 1px solid #cbd5e1 !important;
+            border: 1px solid #475569 !important;
         }
 
         #stampTable thead th {
-            background: #f8fafc;
-            color: #0f172a;
+            background: #d9d9d9;
+            color: #7f3f00;
         }
 
         .dt-scroll-head th,
         .dataTables_scrollHead th {
-            background: #f8fafc !important;
-            color: #0f172a !important;
+            background: #d9d9d9 !important;
+            color: #7f3f00 !important;
         }
 
         #stampTable tfoot th {
-            background: #f1f5f9;
+            background: #ffffff;
             color: #0f172a;
             font-weight: 700;
             border-top: 3px solid #64748b !important;
@@ -61,7 +92,7 @@
 
         .dt-scroll-foot th,
         .dataTables_scrollFoot th {
-            background: #f1f5f9 !important;
+            background: #ffffff !important;
             color: #0f172a !important;
             font-weight: 700;
             border-top: 3px solid #64748b !important;
@@ -70,14 +101,20 @@
         #stampTable tfoot th:nth-child(2),
         .dt-scroll-foot tfoot th:nth-child(2),
         .dataTables_scrollFoot tfoot th:nth-child(2) {
-            text-align: left !important;
+            text-align: center !important;
         }
 
-        #stampTable tfoot th:nth-child(n+3),
-        .dt-scroll-foot tfoot th:nth-child(n+3),
-        .dataTables_scrollFoot tfoot th:nth-child(n+3) {
+        #stampTable tfoot th:nth-child(n+6),
+        .dt-scroll-foot tfoot th:nth-child(n+6),
+        .dataTables_scrollFoot tfoot th:nth-child(n+6) {
             text-align: right !important;
             font-variant-numeric: tabular-nums;
+        }
+
+        #stampTable tfoot th:last-child,
+        .dt-scroll-foot tfoot th:last-child,
+        .dataTables_scrollFoot tfoot th:last-child {
+            text-align: left !important;
         }
 
         #stampTable tbody td {
@@ -85,49 +122,60 @@
             vertical-align: middle;
             white-space: nowrap;
             text-align: center;
-            border-right: 1px solid #e2e8f0 !important;
-            border-bottom: 1px solid #e2e8f0 !important;
+            border: 1px solid #64748b !important;
+            color: #7f3f00 !important;
         }
 
         #stampTable tbody tr:nth-child(odd) td {
-            background: #ffffff;
+            background: #f2f2f2 !important;
         }
 
         #stampTable tbody tr:nth-child(even) td {
-            background: #f9fafb;
+            background: #d9d9d9 !important;
         }
 
         #stampTable tbody tr:hover td {
             filter: brightness(0.97);
         }
 
-        #stampTable .report-detail {
-            min-width: 220px;
-            max-width: 300px;
-            white-space: normal;
-            text-align: center !important;
-            color: #374151;
+        #stampTable tbody td.report-detail {
+            min-width: 240px;
+            max-width: 340px;
+            white-space: pre-wrap;
+            text-align: left !important;
+            color: #7f3f00 !important;
         }
 
-        #stampTable .report-user {
-            min-width: 190px;
-            max-width: 300px;
+        #stampTable .report-remark {
+            min-width: 220px;
+            max-width: 340px;
             white-space: normal;
-            text-align: center !important;
-            color: #374151;
+            text-align: left !important;
+            color: #7f3f00 !important;
         }
 
         #stampTable .report-section {
-            min-width: 110px;
+            min-width: 100px;
+            max-width: 150px;
+            white-space: normal;
             text-align: center !important;
             font-weight: 700;
-            color: #475569;
+            color: #7f3f00 !important;
+        }
+
+        #stampTable .report-org {
+            min-width: 92px;
+            max-width: 150px;
+            white-space: normal;
+            text-align: center !important;
+            font-weight: 700;
+            color: #7f3f00 !important;
         }
 
         #stampTable .report-date {
-            min-width: 96px;
-            width: 96px;
-            color: #6d28d9;
+            min-width: 112px;
+            width: 112px;
+            color: #7f3f00 !important;
             font-weight: 800;
             text-align: center !important;
         }
@@ -148,117 +196,146 @@
             min-width: 96px;
             text-align: right !important;
             font-weight: 800;
-            color: #6d28d9;
+            color: #7f3f00 !important;
             font-variant-numeric: tabular-nums;
         }
 
         #stampTable .report-buy-header,
         .dt-scroll-head .report-buy-header,
         .dataTables_scrollHead .report-buy-header {
-            background: #ccfbf1 !important;
-            color: #115e59 !important;
+            background: #dbeef3 !important;
+            color: #7f3f00 !important;
         }
 
         #stampTable .report-withdraw-header,
         .dt-scroll-head .report-withdraw-header,
         .dataTables_scrollHead .report-withdraw-header {
-            background: #fef3c7 !important;
-            color: #92400e !important;
+            background: #d8e4bc !important;
+            color: #7f3f00 !important;
         }
 
         #stampTable .report-remaining-header,
         .dt-scroll-head .report-remaining-header,
         .dataTables_scrollHead .report-remaining-header {
-            background: #dbeafe !important;
-            color: #1e40af !important;
+            background: #ffffcc !important;
+            color: #7f3f00 !important;
         }
 
         #stampTable .report-balance-header,
         .dt-scroll-head .report-balance-header,
         .dataTables_scrollHead .report-balance-header {
-            background: #ede9fe !important;
-            color: #5b21b6 !important;
+            background: #ccc6d9 !important;
+            color: #7f3f00 !important;
         }
 
         #stampTable .report-meta-header,
         .dt-scroll-head .report-meta-header,
         .dataTables_scrollHead .report-meta-header {
-            background: #f5f3ff !important;
-            color: #5b21b6 !important;
+            background: #ddd9c3 !important;
+            color: #7f3f00 !important;
+        }
+
+        #stampTable .report-section-header,
+        .dt-scroll-head .report-section-header,
+        .dataTables_scrollHead .report-section-header {
+            background: #d9d9d9 !important;
+            color: #7f3f00 !important;
+        }
+
+        #stampTable .report-remark-header,
+        .dt-scroll-head .report-remark-header,
+        .dataTables_scrollHead .report-remark-header {
+            background: #ead4d4 !important;
+            color: #7f3f00 !important;
+        }
+
+        #stampTable .report-title-header,
+        .dt-scroll-head .report-title-header,
+        .dataTables_scrollHead .report-title-header {
+            background: #fcd5b4 !important;
+            color: #7f3f00 !important;
+            font-size: 15px;
         }
 
         #stampTable .report-buy.report-denom-header,
         .dt-scroll-head .report-buy.report-denom-header,
         .dataTables_scrollHead .report-buy.report-denom-header {
-            background: #99f6e4 !important;
-            color: #134e4a !important;
+            background: #dbeef3 !important;
+            color: #7f3f00 !important;
         }
 
         #stampTable .report-withdraw.report-denom-header,
         .dt-scroll-head .report-withdraw.report-denom-header,
         .dataTables_scrollHead .report-withdraw.report-denom-header {
-            background: #fde68a !important;
-            color: #78350f !important;
+            background: #d8e4bc !important;
+            color: #7f3f00 !important;
         }
 
         #stampTable .report-remaining.report-denom-header,
         .dt-scroll-head .report-remaining.report-denom-header,
         .dataTables_scrollHead .report-remaining.report-denom-header {
-            background: #bfdbfe !important;
-            color: #1e3a8a !important;
+            background: #ffffcc !important;
+            color: #7f3f00 !important;
         }
 
         #stampTable .report-buy.report-metric-header,
         .dt-scroll-head .report-buy.report-metric-header,
         .dataTables_scrollHead .report-buy.report-metric-header {
-            background: #f0fdfa !important;
-            color: #115e59 !important;
+            background: #dbeef3 !important;
+            color: #7f3f00 !important;
         }
 
         #stampTable .report-withdraw.report-metric-header,
         .dt-scroll-head .report-withdraw.report-metric-header,
         .dataTables_scrollHead .report-withdraw.report-metric-header {
-            background: #fffbeb !important;
-            color: #92400e !important;
+            background: #d8e4bc !important;
+            color: #7f3f00 !important;
         }
 
         #stampTable .report-remaining.report-metric-header,
         .dt-scroll-head .report-remaining.report-metric-header,
         .dataTables_scrollHead .report-remaining.report-metric-header {
-            background: #eff6ff !important;
-            color: #1e40af !important;
+            background: #ffffcc !important;
+            color: #7f3f00 !important;
+        }
+
+        #stampTable .report-balance.report-metric-header,
+        .dt-scroll-head .report-balance.report-metric-header,
+        .dataTables_scrollHead .report-balance.report-metric-header {
+            background: #ccc6d9 !important;
+            color: #7f3f00 !important;
         }
 
         #stampTable tbody tr:nth-child(odd) td.report-buy {
-            background: #f0fdfa;
+            background: #f2f2f2 !important;
         }
 
         #stampTable tbody tr:nth-child(even) td.report-buy {
-            background: #e6fffb;
+            background: #d9d9d9 !important;
         }
 
         #stampTable tbody tr:nth-child(odd) td.report-withdraw {
-            background: #fffbeb;
+            background: #f2f2f2 !important;
         }
 
         #stampTable tbody tr:nth-child(even) td.report-withdraw {
-            background: #fef7d7;
+            background: #d9d9d9 !important;
         }
 
         #stampTable tbody tr:nth-child(odd) td.report-remaining {
-            background: #eff6ff;
+            background: #f2f2f2 !important;
         }
 
         #stampTable tbody tr:nth-child(even) td.report-remaining {
-            background: #e0efff;
+            background: #d9d9d9 !important;
         }
 
         #stampTable tbody tr:nth-child(odd) td.report-balance-group {
-            background: #faf5ff !important;
+            background: #f2f2f2 !important;
         }
 
         #stampTable tbody tr:nth-child(even) td.report-balance-group {
-            background: #f3e8ff !important;
+            background: #d9d9d9 !important;
         }
 
         #stampTable .report-negative {
@@ -285,11 +362,11 @@
         }
 
         #stampTable tbody tr:nth-child(odd) td.report-date {
-            background: #ffffff;
+            background: #f2f2f2 !important;
         }
 
         #stampTable tbody tr:nth-child(even) td.report-date {
-            background: #f9fafb;
+            background: #d9d9d9 !important;
         }
 
         .report-table-wrap {
@@ -356,7 +433,7 @@
     </style>
 @endsection
 @section('contents')
-    <div class="min-h-screen bg-base-200/40 px-4 py-6 text-base-content">
+    <div class="fin-ds-report-accessible min-h-screen bg-base-200/40 px-4 py-6 text-base-content">
         <div class="mx-auto flex w-full max-w-7xl flex-col gap-4">
             <div class="card border border-base-300 bg-base-100 shadow-sm">
                 <div class="card-body gap-0 p-5 md:p-6">
@@ -404,7 +481,7 @@
                     </div>
 
                     <div class="rounded-box border border-base-300 bg-base-200/40 p-4">
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-5 items-end">
+                        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5 items-end">
                             <div class="form-control">
                                 <label class="label pb-1">
                                     <span class="label-text text-xs font-bold uppercase tracking-wide text-base-content/60">YEAR</span>
@@ -440,6 +517,15 @@
                                     <option value="10">October</option>
                                     <option value="11">November</option>
                                     <option value="12">December</option>
+                                </select>
+                            </div>
+
+                            <div class="form-control">
+                                <label class="label pb-1">
+                                    <span class="label-text text-xs font-bold uppercase tracking-wide text-base-content/60">Division</span>
+                                </label>
+                                <select id="reportDivision" class="select select-bordered select-sm w-full">
+                                    <option value="all">All divisions</option>
                                 </select>
                             </div>
 

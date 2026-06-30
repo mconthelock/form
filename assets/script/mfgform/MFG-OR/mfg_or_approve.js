@@ -1,4 +1,4 @@
-import { getMfgOrDetail, generateMfgOrNo, updateReviseCenter } from "./data.js";
+import { getMfgOrDetail, generateMfgOrNo, updateReviseCenter, stampPdf } from "./data.js";
 import { showLoader } from "@amec/webasset/preloader";
 import { doaction, showflow } from "@amec/webasset/api/webform";
 import { redirectWebflow } from "@amec/webasset/form";
@@ -48,6 +48,16 @@ $(document).ready(function () {
                         .addClass("opacity-50 pointer-events-none");
 
                     showLoader({ show: true });
+                    const result = await doaction({
+                        ...VIEW.getBasePayload(),
+                        ACTION: action,
+                        EMPNO: String(empno),
+                        REMARK: remark,
+                        CEXTDATA: exdata,
+                    });
+
+                    console.log("DO ACTION RESULT =", result);
+
                     if (action === "approve" && exdata === "05" && mode === "2") { //DIM Approve Last step
                         const typeform = String(VIEW.headData.TYPEFORM || "").trim();
                         if (typeform.toUpperCase() === "NEW") {
@@ -55,46 +65,28 @@ $(document).ready(function () {
                         }else if (typeform.toUpperCase() === "REVISE") {
                             await updateReviseCenter(VIEW.getBasePayload(), formno);
                         }
-
-                        // Export PDF
-                        const baseUrl = $("#base_url").val();
-                        return $.ajax({
-                            url: `${baseUrl}mfgform/MFG-OR/main_or/export_pdf`,
-                            type: "POST",
-                            dataType: "json",
-                            data: { formno }
-                        });
-                    }else{
-            
-                        const result = await doaction({
-                            ...VIEW.getBasePayload(),
-                            ACTION: action,
-                            EMPNO: String(empno),
-                            REMARK: remark,
-                            CEXTDATA: exdata,
-                        });
-
-                        console.log("DO ACTION RESULT =", result);
-                        showLoader({ show: false });
-
-                        if (result?.status) {
-                            await Swal.fire({
-                                icon: "success",
-                                title: "ดำเนินการสำเร็จแล้ว",
-                                timer: 1500,
-                                showConfirmButton: false,
-                            });
-
-                            redirectWebflow();
-                            return;
-                        }
-
-                        await Swal.fire({
-                            icon: "error",
-                            title: result?.message || "เกิดข้อผิดพลาด",
-                            confirmButtonText: "ตกลง",
-                        });
+                        
+                        await stampPdf(VIEW.getBasePayload(), formno);
                     }
+                    showLoader({ show: false });
+
+                    if (result?.status) {
+                        await Swal.fire({
+                            icon: "success",
+                            title: "ดำเนินการสำเร็จแล้ว",
+                            timer: 1500,
+                            showConfirmButton: false,
+                        });
+
+                        redirectWebflow();
+                        return;
+                    }
+
+                    await Swal.fire({
+                        icon: "error",
+                        title: result?.message || "เกิดข้อผิดพลาด",
+                        confirmButtonText: "ตกลง",
+                    });              
                 } catch (err) {
                     console.error(err);
                     Swal.close();
