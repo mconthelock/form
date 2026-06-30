@@ -681,6 +681,17 @@ $(document).ready(async function () {
             // });
 
             console.log(editedRows);
+        } else {
+            await doaction({
+                NFRMNO: nfrmno,
+                VORGNO: vorgno,
+                CYEAR: cyear,
+                CYEAR2: cyear2,
+                NRUNNO: nrunno,
+                ACTION: action,
+                EMPNO: EMPNO,
+                REMARK: $('#remark').val().trim() // optional
+            })
         }
     });
 
