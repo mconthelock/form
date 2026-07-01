@@ -132,7 +132,7 @@ class form extends MY_Controller{
     // http://localhost:8080/form/feform/FE-EIA/form/AutoCreateFEEIAForm/?COST_YEAR=2026&COST_MONTH=ALL
     // http://localhost:8080/form/feform/FE-EIA/form/AutoCreateFEEIAForm/
     // https://amecwebtest.mitsubishielevatorasia.co.th/form/feform/FE-EIA/form/AutoCreateFEEIAForm/?COST_YEAR=2026&COST_MONTH=ALL
-    // https://amecwebtest.mitsubishielevatorasia.co.th/form/feform/FE-EIA/form/AutoCreateFEEIAForm/
+    // https://amecwebtest.mitsubishielevatorasia.co.th/form/feform/FE-EIA/form/AutoCreateFEEIAForm/?no=13&orgNo=051001&y=26&y2=2026&runNo=2
     //==============================================================================================================
     public function AutoCreateFEEIAForm()
     {
@@ -639,6 +639,8 @@ class form extends MY_Controller{
 
     //========================================================
     //== Export PDF
+    //== https://amecwebtest.mitsubishielevatorasia.co.th/form/feform/FE-EIA/form/exportPdf/?no=11&orgNo=051001&y=26&y2=2026&runNo=2
+    //== https://amecweb.mitsubishielevatorasia.co.th/form/feform/FE-EIA/form/exportPdf/?no=13&orgNo=051001&y=26&y2=2026&runNo=2
     //========================================================
         public function exportPdf()
         {
