@@ -37,7 +37,7 @@
                                 Download Document
                             </th>
                             <td class="px-4 py-3 align-middle">
-                                <a href="#" class="{{ $linkClass }}">คู่มือการใช้งาน OR</a>
+                                <a href="<?= base_url('mfgform/MFG-OR/main_or/download_template/user_manual') ?>" class="{{ $linkClass }}">คู่มือการใช้งาน OR</a>
                                 <a href="<?= base_url('mfgform/MFG-OR/main_or/download_template/vertical') ?>" class="{{ $linkClass }}">Template OR File Master (แนวตั้ง)</a>
                                 <a href="<?= base_url('mfgform/MFG-OR/main_or/download_template/horizontal') ?>" class="{{ $linkClass }}">Template OR File Master (แนวนอน)</a>
                             </td>

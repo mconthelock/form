@@ -80,27 +80,37 @@ $(document).ready(function () {
         searchCurrentNo: async function (currentNo) {
             try {
                 showLoader({ show: true });
-                const res = await searchMfgOrCenter({ORNO: currentNo });
+                const res = await searchMfgOrCenter({ ORNO: currentNo });
+                const row = Array.isArray(res?.data) ? res.data[0] : res?.data;
+                const foundOrno = String(row?.ORNO || '').trim().toUpperCase();
 
-                if (!res?.status || !res?.data) {
+                if (!res?.status || !row || foundOrno !== currentNo) {
                     showLoader({ show: false });
-                    await this.showAlert({icon: 'warning', title: 'ไม่พบ Current No.', text: `ไม่พบข้อมูล ${currentNo} ใน MFGOR_CENTER`});
+                    await this.showAlert({
+                        icon: 'warning',
+                        title: 'ไม่พบ Current No.',
+                        text: `ไม่พบข้อมูล ${currentNo} ใน MFGOR_CENTER`
+                    });
                     this.resetCurrentNoInfo();
                     $('#current_no').focus();
                     return;
                 }
 
-                const currentRev = String(res.data.REVNO || '*').trim().toUpperCase();
+                const currentRev = String(row.REVNO || '*').trim().toUpperCase();
                 const nextRev = this.getNextRev(currentRev);
-                $('#current_no').val(String(res.data.ORNO || currentNo).trim().toUpperCase());
+
+                $('#current_no').val(foundOrno);
                 $('#current_rev').text(currentRev);
                 $('#next_rev').text(nextRev);
                 $('#rev').val(nextRev);
 
-                $('#topic').val(res.data.TOPIC || '');
+                $('#topic').val(row.TOPIC || '');
+                $('#current_topic').text(row.TOPIC || '-');
                 $('#current_info').removeClass('hidden');
+
             } catch (error) {
                 console.error('SEARCH CURRENT NO ERROR:', error);
+
                 await this.showAlert({
                     icon: 'error',
                     title: 'Search Current No failed',
@@ -109,6 +119,7 @@ $(document).ready(function () {
 
                 this.resetCurrentNoInfo();
                 $('#current_no').focus();
+
             } finally {
                 showLoader({ show: false });
             }
@@ -118,6 +129,7 @@ $(document).ready(function () {
             $('#current_no').val('');
             $('#rev').val('*');
 
+            $('#topic').val('');
             $('#current_rev').text('-');
             $('#next_rev').text('-');
             $('#current_topic').text('-');
@@ -186,9 +198,7 @@ $(document).ready(function () {
         },
 
         toggleTextbox: function (isActive, selector) {
-            $(selector)
-                .prop('disabled', !isActive)
-                .val(isActive ? $(selector).val() : '');
+            $(selector).prop('disabled', !isActive).val(isActive ? $(selector).val() : '');
 
             if (isActive) {
                 $(selector).focus();
