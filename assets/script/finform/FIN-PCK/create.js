@@ -34,7 +34,7 @@ $(async function () {
                 VORGNO: formInfo.attr('vorgno') || '',
                 CYEAR: formInfo.attr('cyear') || '',
                 REQBY: reqby.attr('empno') || '',
-                INPUTBY: reqby.attr('empno') || '',
+                INPUTBY: '21001',
                 REMARK: '',
             };
             const payload = {
