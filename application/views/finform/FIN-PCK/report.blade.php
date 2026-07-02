@@ -56,8 +56,8 @@
             
             <!-- 1. Form Year (ปีที่ออก Form) -->
             <div class="flex flex-col gap-1">
-                <label class="font-semibold text-sm text-gray-600">Year of Issue</label>
-                <select id="formYear" name="CYEAR2" class="select select-bordered w-full font-normal">
+                <label class="font-semibold text-sm text-gray-600 required">Year of Issue</label>
+                <select id="formYear" name="CYEAR2" class="select select-bordered w-full font-normal req">
                     <option value="" selected>-- Select Year --</option>
                 </select>
             </div>
