@@ -272,12 +272,12 @@
         <div class="mt-6 aprv-section" style="display: none">
             <div class="max-w-xl mx-auto">
                 <div class="space-y-2">
-                    <div>
+                    {{-- <div>
                         <label class="label">
                             <span class="label-text font-medium">Attachment</span>
                         </label>
                         <input type="file" class="file-input file-input-sm file-input-bordered w-full attach-file" />
-                    </div>
+                    </div> --}}
                     <div>
                         <label class="label">
                             <span class="label-text font-medium">Remark</span>
