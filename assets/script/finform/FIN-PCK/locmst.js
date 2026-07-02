@@ -182,7 +182,7 @@ $(document).ready(async function () {
                     };
                 })
                 .filter((item) => item.LOCCODE !== '');
-            console.log(dataloc);
+            //console.log(dataloc);
             const res = await importLoc(dataloc);
 
             if (res.status == true) {
