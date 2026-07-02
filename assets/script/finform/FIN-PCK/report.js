@@ -20,6 +20,7 @@ $(document).ready(async function () {
     for (let year = startYear; year <= curYear; year++) {
         $('#formYear').append($('<option></option>').val(year).html(year));
     }
+    $('#formYear').val(curYear);
     const grpmst = await getGrpmst();
     $.each(grpmst, function (index, item) {
         let optionText = item.GRPCODE + ' - ' + item.GRPDESC;
@@ -30,6 +31,13 @@ $(document).ready(async function () {
 
     $(document).on('click', '#btnExport', async function (e) {
         try {
+            const requiredMessage = [
+                {
+                    element: $('#formYear'),
+                    message: 'Please select the year of issue',
+                },
+            ].filter(Boolean);
+            if (!(await requiredForm('#frmmain', requiredMessage))) return;
             let reportType = $('input[name="reportType"]:checked').val();
             const formData = new FormData($('#frmmain')[0]);
             const filteredFormData = filterFormData(formData);
