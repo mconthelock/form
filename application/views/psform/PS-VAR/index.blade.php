@@ -84,7 +84,7 @@
                                 <div class="badge badge-neutral badge-sm mt-1">1</div>
                                 <p>
                                     The result of inventory checking group all warehouse = 
-                                    "<span class="font-semibold text-warning variance-amount">0.00</span>".
+                                    "<span class="font-semibold text-warning variance-amount">0.00</span> <span class="text-warning">Bath</span>".
                                 </p>
                             </div>
                             <div class="flex gap-3">
@@ -92,8 +92,8 @@
                                 <p>
                                     During inventory checking, WHI Controller normally work for issue and receive part, If found difference item
                                     form working and able to Clearly explain by Refer Issue card no. Receiving slip or Overusage sheet will Report
-                                    "<span class="font-semibold text-warning variance">0</span>" and
-                                    "<span class="font-semibold text-warning variance-amount">0.00</span>".
+                                    "<span class="font-semibold text-warning variance">0</span> <span class="text-warning">Item</span>" and
+                                    "<span class="font-semibold text-warning variance-amount">0.00</span> <span class="text-warning">Bath</span>".
                                 </p>
                             </div>
                             <div class="flex gap-3">
