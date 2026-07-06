@@ -1,0 +1,590 @@
+@extends('layouts/webflowTemplate')
+
+@section('styles')
+<style>
+    section {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
+    fieldset:not(:has(.fieldset-label)) {
+        display: flex;
+    }
+
+    fieldset span {
+        font-weight: bold;
+        white-space: nowrap;
+        width: fit-content;
+    }
+
+
+    span.required::after, h2.required::after {
+        content: "**";
+        color: red;
+        font-weight: bold;
+        padding-left: 0.25rem;
+    }
+/* การทำเงาและขอบที่นุ่มนวล */
+#searchModal {
+    border: none;
+    border-radius: 20px; /* มุมมนรับกับ UI สมัยใหม่ */
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); /* เงาเข้มเพื่อดึงให้ลอย */
+    padding: 0;
+    overflow: hidden;
+    background: white;
+}
+
+/* ใส่ Gradient ให้หัวข้อ เพื่อให้ดูมี Layer */
+.modal-header-gradient {
+    background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+    color: white;
+    padding: 20px 24px;
+}
+
+/* เพิ่ม Effect ให้รายการตอน Hover */
+.select-item {
+    transition: all 0.3s ease;
+    border-left: 4px solid transparent;
+}
+.select-item:hover {
+    background-color: #f1f5f9;
+    border-left: 4px solid #3b82f6; /* มีเส้นแถบสีน้ำเงินขึ้นที่ขอบซ้าย */
+}
+    
+</style>
+@endsection
+@section('contents')
+<div class="hidden form-info" nfrmno="{{$NFRMNO}}" vorgno="{{$VORGNO}}" cyear="{{$CYEAR}}" mode="{{$mode}}"
+    cyear2="{{$mode !=1 ? $CYEAR2 : '' }}" nrunno="{{$mode !=1 ? $NRUNNO : '' }}" return="{{$return ?? ''}}"></div>
+<div class="hidden apv-data" empno="{{$empno}}"></div>
+<div class="space-y-6">
+    <!-- Top Section -->
+    <div class="border border-gray-300 p-6 rounded-lg bg-white space-y-4">
+        <div class="grid grid-cols-[120px_1fr] items-center gap-2">
+            <label class="font-semibold text-sm">Input By:</label>
+            <input type="text" maxlength="5" class="input input-sm border border-gray-400 h-8 rounded w-48 px-2">
+        </div>
+        <div class="grid grid-cols-[120px_1fr] items-center gap-2">
+            <label class="font-semibold text-sm">Request By:</label>
+            <input type="text" maxlength="5" class="input input-sm border border-gray-400 h-8 rounded w-48 px-2">
+        </div>
+    </div>
+
+    <!-- Operation Section -->
+    <div class="border border-gray-300 p-6 rounded-lg bg-white">
+        <!-- ใช้ grid เหมือนกับด้านบน เพื่อให้ระยะขอบซ้ายตรงกันเป๊ะ -->
+        <div class="grid grid-cols-[120px_1fr] items-center gap-2">
+            <span class="font-semibold text-sm">Operation:</span>
+            
+            <div class="flex items-center gap-6">
+                <label class="flex items-center gap-2 cursor-pointer text-gray-700 text-sm">
+                    <input type="checkbox" class="w-4 h-4 accent-blue-600"> New vendor
+                </label>
+                
+                <label class="flex items-center gap-2 cursor-pointer text-gray-700 text-sm">
+                    <input type="checkbox" class="w-4 h-4 accent-blue-600"> Annual evaluation for
+                </label>
+                
+                <input type="text" maxlength="5" placeholder="Vendor Code" class="input input-sm border border-gray-400 h-8 rounded w-48 px-2">
+            </div>
+        </div>
+    </div>
+<div class="border border-gray-300 p-6 rounded-lg bg-white">
+        
+        <!-- Header Section -->
+        <div class="flex justify-between items-center mb-6">
+            <h3 class="font-bold text-lg">General Information</h3>
+            <button id="btnOpenModal" class="border border-gray-400 px-4 py-1 text-sm flex items-center gap-2 hover:bg-gray-50 rounded">
+                Add from PUR-NVF Form <span>🔍</span>
+            </button>
+        </div>
+
+        <!-- เนื้อหาภายใน -->
+        <div class="space-y-6">
+        <div class="grid grid-cols-[120px_1fr] gap-4 items-start">
+            <span class="font-semibold text-sm pt-1">Vendor Type</span>
+            
+            <!-- ปรับเป็น grid-cols-3 เพื่อแบ่งเป็น 3 คอลัมน์ -->
+            <div class="grid grid-cols-3 gap-y-2 gap-x-4 text-sm">
+                <label class="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" class="w-4 h-4"> Oversea (Relate MELCO Group)
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" class="w-4 h-4"> Oversea (Not relate MELCO Group)
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" class="w-4 h-4"> Domestic (Use BOI)
+                </label>
+                
+                <label class="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" class="w-4 h-4"> Domestic (Use IPO)
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" class="w-4 h-4"> Domestic (Use FTA)
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" class="w-4 h-4"> Domestic Vendor
+                </label>
+                
+                <label class="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" class="w-4 h-4"> Sub-Contractor
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" class="w-4 h-4"> Non-Production
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" class="w-4 h-4"> FIN Operation control
+                </label>
+            </div>
+        </div>
+            
+            <div class="grid grid-cols-[120px_1fr] items-center gap-4">
+                <span class="font-semibold text-sm">Vendor Name</span>
+                <div class="flex items-center gap-4">
+                    <input type="text" class="input input-sm border border-gray-400 h-8 rounded w-1/3 px-2">
+                    <label class="flex items-center gap-2 text-sm"><input type="checkbox"> Local</label>
+                    <label class="flex items-center gap-2 text-sm"><input type="checkbox"> Oversea</label>
+                    <select class="border border-gray-400 h-8 p-1 rounded text-sm">
+                        <option>Select Country</option>
+                    </select>
+                </div>
+            </div>
+
+           <!-- Address (EN) Section -->
+<div class="grid grid-cols-[120px_1fr] gap-4 pt-4 border-t border-gray-200">
+    <label class="font-semibold text-sm pt-2">Address (EN) <span class="text-red-500">**</span></label>
+    <div class="space-y-4">
+        <!-- Address Line 1 -->
+        <div>
+            <label class="block text-xs font-semibold text-gray-600 mb-1">No., Village, Building, Alley, Road</label>
+            <input type="text" placeholder="e.g. 43/86 Moo 16, Bangna Road..." class="input input-sm border border-gray-400 h-8 rounded  px-2 w-full">
+        </div>
+        <!-- Grid for Province/District -->
+        <div class="grid grid-cols-2 gap-4">
+            <div>
+                <label class="block text-xs font-semibold text-gray-600 mb-1">Province</label>
+                <input type="text" placeholder="Province" class="input input-sm border border-gray-400 h-8 rounded  px-2 w-full">
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-gray-600 mb-1">District</label>
+                <input type="text" placeholder="District" class="input input-sm border border-gray-400 h-8 rounded px-2 w-full">
+            </div>
+        </div>
+        <!-- Grid for Sub-district/Postcode -->
+        <div class="grid grid-cols-2 gap-4">
+            <div>
+                <label class="block text-xs font-semibold text-gray-600 mb-1">Sub-district</label>
+                <input type="text" placeholder="Sub-district" class="input input-sm border border-gray-400 h-8 rounded  px-2 w-full">
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-gray-600 mb-1">Postcode</label>
+                <input type="text" placeholder="Postcode" class="input input-sm border border-gray-400 h-8 rounded  px-2 w-full">
+            </div>
+        </div>
+        <!-- Country -->
+        <div>
+            <label class="block text-xs font-semibold text-gray-600 mb-1">Country</label>
+            <input type="text" placeholder="Country" class="input input-sm border border-gray-400 h-8 rounded  px-2 w-full">
+        </div>
+    </div>
+</div>
+
+<!-- Address (TH) Section -->
+<div class="grid grid-cols-[120px_1fr] gap-4 pt-4 border-t border-gray-200">
+    <label class="font-semibold text-sm pt-2">Address (TH)</label>
+    <div class="space-y-4">
+        <div>
+            <label class="block text-xs font-semibold text-gray-600 mb-1">บ้านเลขที่, หมู่บ้าน, อาคาร, ซอย, ถนน</label>
+            <input type="text" placeholder="เช่น 43/86 หมู่ 16 ซอยบางนา..." class="input input-sm border border-gray-400 h-8 rounded  px-2 w-full">
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+            <div>
+                <label class="block text-xs font-semibold text-gray-600 mb-1">จังหวัด</label>
+                <input type="text" placeholder="จังหวัด" class="input input-sm border border-gray-400 h-8 rounded  px-2 w-full">
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-gray-600 mb-1">อำเภอ / เขต</label>
+                <input type="text" placeholder="อำเภอ / เขต" class="input input-sm border border-gray-400 h-8 rounded  px-2 w-full">
+            </div>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+            <div>
+                <label class="block text-xs font-semibold text-gray-600 mb-1">ตำบล / แขวง</label>
+                <input type="text" placeholder="ตำบล / แขวง" class="input input-sm border border-gray-400 h-8 rounded  px-2 w-full">
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-gray-600 mb-1">รหัสไปรษณีย์</label>
+                <input type="text" placeholder="รหัสไปรษณีย์" class="input input-sm border border-gray-400 h-8 rounded  px-2 w-full">
+            </div>
+        </div>
+        <div>
+            <label class="block text-xs font-semibold text-gray-600 mb-1">ประเทศ</label>
+            <input type="text" placeholder="ประเทศ" class="input input-sm border border-gray-400 h-8 rounded w-full px-2">
+        </div>
+    </div>
+</div>
+            <!-- Contact Information -->
+            <div class="pt-4 border-t border-gray-200 space-y-4">
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="grid grid-cols-[120px_1fr] items-center gap-4">
+                        <label class="font-semibold text-sm">Contact name</label>
+                       <input type="text" class="input input-sm border border-gray-400 h-8 rounded  px-2 w-full">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="grid grid-cols-[120px_1fr] items-center gap-4">
+                        <label class="font-semibold text-sm">Email</label>
+                        <input type="text" class="input input-sm border border-gray-400 h-8 rounded  px-2 w-full">
+                    </div>
+                    <div class="grid grid-cols-[120px_1fr] items-center gap-4">
+                        <label class="font-semibold text-sm">Web site</label>
+                        <input type="text" class="input input-sm border border-gray-400 h-8 rounded  px-2 w-full">
+                    </div>
+                    <div class="grid grid-cols-[120px_1fr] items-center gap-4">
+                        <label class="font-semibold text-sm">Tel.no</label>
+                        <input type="text" class="input input-sm border border-gray-400 h-8 rounded  px-2 w-full">
+                    </div>
+                    <div class="grid grid-cols-[120px_1fr] items-center gap-4">
+                        <label class="font-semibold text-sm">Fax.no</label>
+                        <input type="text" class="input input-sm border border-gray-400 h-8 rounded  px-2 w-full">
+                    </div>
+                </div>
+            </div>
+            <!-- ส่วนคั่นจาก Contact name -->
+<div class="border-t border-gray-300 pt-6 mt-6">
+    <!-- Bank & Branch -->
+    <div class="grid grid-cols-2 gap-4 mb-4">
+        <div class="grid grid-cols-[120px_1fr] items-center gap-4">
+            <label class="font-semibold text-sm">Bank name</label>
+            <input type="text" class="input input-sm border border-gray-400 h-8 rounded px-2 w-full">
+        </div>
+        <div class="grid grid-cols-[120px_1fr] items-center gap-4">
+            <label class="font-semibold text-sm">Branch name</label>
+            <input type="text" class="input input-sm border border-gray-400 h-8 rounded px-2 w-full">
+        </div>
+    </div>
+
+    <!-- Additional Banking & Payment Fields -->
+    <div class="space-y-4">
+        <div class="grid grid-cols-[120px_1fr] items-center gap-4">
+            <label class="font-semibold text-sm">Account number</label>
+            <input type="text" class="input input-sm border border-gray-400 h-8 rounded px-2 w-full">
+        </div>
+
+        <div class="grid grid-cols-[120px_1fr] items-start gap-4">
+            <label class="font-semibold text-sm pt-1">Bank Address</label>
+            <textarea class="border border-gray-400 rounded px-2 w-full text-sm py-1" rows="2"></textarea>
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+            <div class="grid grid-cols-[120px_1fr] items-center gap-4">
+                <label class="font-semibold text-sm">Payment Term</label>
+                <select class="input input-sm border border-gray-400 h-8 rounded px-2 w-full">
+                    <option>Select Term</option>
+                </select>
+            </div>
+            <div class="grid grid-cols-[120px_1fr] items-center gap-4">
+                <label class="font-semibold text-sm">Std Current</label>
+                 <select class="input input-sm border border-gray-400 h-8 rounded px-2 w-full">
+                    <option>Select Current</option>
+                </select>
+            </div>
+        </div>
+
+<!-- คอลัมน์หลักสำหรับ Label และ Checkbox -->
+<div class="grid grid-cols-[120px_1fr] items-start gap-4">
+    <span class="font-semibold text-sm required pt-2">Attach files</span>
+    
+    <fieldset class="flex flex-col gap-2">
+        <label class="attach-file text-sm flex items-center gap-2" id="attach-po">
+            <input type="checkbox" name="ATTACH_TYPE" value="P/O Confirmation" class="checkbox checkbox-xs" a-type="po">
+            Company Certificate / Company Profile
+        </label>
+        <label class="attach-file text-sm flex items-center gap-2" id="attach-other">
+            <input type="checkbox" name="ATTACH_TYPE" value="Other" class="checkbox checkbox-xs" a-type="other">
+            Other
+            <input type="text" name="ATTACH_OTHER" id="ATTACH_OTHER" class="input input-sm w-full border border-gray-400 rounded px-2" disabled>
+        </label>
+    </fieldset>
+</div>
+
+<!-- ย้าย Dropzone ออกมาข้างนอก เพื่อให้ใช้ความกว้างได้เต็ม 100% ของ Container หลัก -->
+<div id="attachFile" class="mt-4">
+    <div class="p-3 w-full">
+        <label for="files" class="dropZone border border-primary border-dashed rounded-lg w-full block min-h-[200px] text-primary cursor-pointer hover:bg-gray-50 transition-colors">
+            <!-- จัดให้อยู่ตรงกลางกล่อง -->
+            <div class="drop-message flex flex-col justify-center items-center h-[200px] text-center p-4">
+                <span class="font-semibold">Drag & Drop files here or click to select</span>
+            </div>
+            <ul class="drop-list w-full flex-col items-start text-gray-500 hidden p-1 gap-1"></ul>
+        </label>
+        <input type="file" class="inputDrop hidden" name="files" id="files" multiple>
+    </div>
+</div>
+    </div>
+</div>
+        </div>
+    </div>
+<!-- Vendor Evaluation Section -->
+<div class="border border-gray-300 p-6 rounded-lg bg-white mt-6">
+    <h2 class="font-bold text-lg mb-4 text-gray-800 border-b pb-2">Vendor Evaluation</h2>
+
+    <!-- ตารางการประเมิน -->
+    <div class="border border-red-500 p-4 rounded-lg bg-red-50/50 mb-6">
+        <table class="w-full text-center border-collapse">
+            <thead>
+                <tr class="bg-gray-100">
+                    <th class="border border-gray-400 p-2 w-1/4 text-sm">Criterion</th>
+                    <th class="border border-gray-400 p-2 text-sm">This year<br>2025</th>
+                    <th class="border border-gray-400 p-2 text-sm">Last year<br>2024</th>
+                    <th class="border border-gray-400 p-2 text-sm">2 Years ago<br>2023</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="border border-gray-400 p-2 text-sm text-left">กำไรขาดทุนสุทธิ<br><span class="text-xs text-gray-500">Net Profit/Loss</span></td>
+                    <td class="border border-gray-400 p-2"><input type="text" class="w-full border-none bg-transparent text-center"></td>
+                    <td class="border border-gray-400 p-2"><input type="text" class="w-full border-none bg-transparent text-center"></td>
+                    <td class="border border-gray-400 p-2"><input type="text" class="w-full border-none bg-transparent text-center"></td>
+                </tr>
+            </tbody>
+        </table>
+        <p class="text-red-600 text-xs mt-2 italic">* อันเดียวกัน Turn over ของ SPR มั้ยครับ (ข้อมูลจาก DBD ค่ะ)</p>
+    </div>
+
+    <!-- ส่วน Compliance (ตัวแดง) -->
+    <div class="border border-red-500 p-4  rounded-lg mb-6">
+        <h3 class="font-bold mb-3">Compliance</h3>
+        <div class="grid grid-cols-1 gap-2 text-black text-sm">
+            <label class="flex items-center gap-2"><input type="checkbox"> ไม่ได้อยู่ในกลุ่มควบคุม ข้อกำหนด AMEC-5070: Rule for Export Control</label>
+            <label class="flex items-center gap-2"><input type="checkbox"> ไม่อยู่ในรายชื่อที่ถูกลงโทษจาก UNSC</label>
+            <label class="flex items-center gap-2"><input type="checkbox"> ไม่อยู่ในประเทศ ประเทศไทยคว่ำบาตร ตามมาตรการคว่ำบาตร โดยสหประชาชาติ WWW.dff-go.th</label>
+            <label class="flex items-center gap-2"><input type="checkbox"> AMEC's standard Terms of "CIF"</label>
+            <div class="flex items-center gap-2">
+                <label class="flex-shrink-0"><input type="checkbox"> อื่นๆ ระบุ</label>
+                <input type="text" class="input input-sm border border-gray-400 h-8 rounded w-1/2 px-2">
+                <span class="text-red-600 text-sm font-semibold whitespace-nowrap">ข้อกำหนด AMEC-6000: Rule for Purchase</span>
+            </div>
+            <label class="flex items-center gap-2"><input type="checkbox"> ได้รับ Financial Record</label>
+        </div>
+    </div>
+
+    <!-- องค์ประกอบอื่นๆ (Business Type, Financial Statement, etc.) -->
+    <div class="space-y-6">
+        <!-- Business Type -->
+        <div class="grid grid-cols-1 gap-4">
+            <div>
+                <label class="font-bold text-sm block mb-1">ประเภทธุรกิจตอนจดทะเบียน (Business type at registration)</label>
+                <input type="text" class="input input-sm border border-gray-400 h-8 rounded w-full px-2">
+            </div>
+            <div>
+                <label class="font-bold text-sm block mb-1">ประเภทธุรกิจที่ส่งงบการเงินล่าสุด (Business type that submitted the latest financial statements)</label>
+                <input type="text" class="input input-sm border border-gray-400 h-8 rounded w-full px-2">
+            </div>
+        </div>
+
+        <!-- 1. รายการสินค้าและบริการ -->
+    <div>
+<label class="font-bold text-sm block mb-2">รายการสินค้าและบริการที่ยื่นจดทะเบียนเครื่องหมายการค้าในประเทศไทย</label>
+<!-- ปรับตรงนี้เป็น grid-cols-3 -->
+<div class="grid grid-cols-3 gap-x-4 gap-y-1 text-sm">
+    <label class="flex items-center gap-2"><input type="checkbox" class="checkbox checkbox-xs"> เครื่องสำอาง ยา ผลิตภัณฑ์เคมี</label>
+    <label class="flex items-center gap-2"><input type="checkbox" class="checkbox checkbox-xs"> โลหะ เครื่องมืออุปกรณ์ วัสดุก่อสร้าง</label>
+    <label class="flex items-center gap-2"><input type="checkbox" class="checkbox checkbox-xs"> เครื่องจักรกล เครื่องมือ เครื่องใช้ไฟฟ้า</label>
+    
+    <label class="flex items-center gap-2"><input type="checkbox" class="checkbox checkbox-xs"> โลหะมีค่า นาฬิกา เครื่องหนัง</label>
+    <label class="flex items-center gap-2"><input type="checkbox" class="checkbox checkbox-xs"> เครื่องดนตรี ของเล่น อุปกรณ์กีฬา</label>
+    <label class="flex items-center gap-2"><input type="checkbox" class="checkbox checkbox-xs"> กระดาษ เครื่องเขียน เครื่องพิมพ์</label>
+    
+    <label class="flex items-center gap-2"><input type="checkbox" class="checkbox checkbox-xs"> ยาง พลาสติก</label>
+    <label class="flex items-center gap-2"><input type="checkbox" class="checkbox checkbox-xs"> เฟอร์นิเจอร์ เครื่องใช้ในครัวเรือน</label>
+    <label class="flex items-center gap-2"><input type="checkbox" class="checkbox checkbox-xs"> เส้นใย เส้นด้าย สิ่งทอ เครื่องนุ่งห่ม</label>
+    
+    <label class="flex items-center gap-2"><input type="checkbox" class="checkbox checkbox-xs"> อาหาร เครื่องดื่ม ของหวาน</label>
+    <label class="flex items-center gap-2"><input type="checkbox" class="checkbox checkbox-xs"> เครื่องหมายบริการ</label>
+    <label class="flex items-center gap-2"><input type="checkbox" class="checkbox checkbox-xs"> เครื่องหมายรับรอง</label>
+    
+    <label class="flex items-center gap-2"><input type="checkbox" class="checkbox checkbox-xs"> เครื่องหมายร่วม</label>
+</div>
+    </div>
+
+    <!-- 2. ข้อมูลการจดทะเบียนนิติบุคคลและภาษี -->
+    <div class="border-t pt-4">
+        <div class="flex items-center gap-6 mb-3">
+            <label class="font-bold text-sm">ข้อมูลการจดทะเบียนนิติบุคคลและภาษี</label>
+            <label class="flex items-center gap-2 text-sm"><input type="checkbox" class="checkbox checkbox-xs"> นิติบุคคล</label>
+            <label class="flex items-center gap-2 text-sm"><input type="checkbox" class="checkbox checkbox-xs"> บุคคลธรรมดา</label>
+        </div>
+        <div class="grid grid-cols-1 gap-3">
+            <div>
+                <label class="block text-xs font-semibold text-gray-600">เลขทะเบียนนิติบุคคล</label>
+                <input type="text" class="input input-sm border border-gray-400 h-8 rounded w-full px-2">
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-gray-600">เลขประจำตัวผู้เสียภาษี ภ.พ. 20 (Tax ID)</label>
+                <input type="text" class="input input-sm border border-gray-400 h-8 rounded w-full px-2">
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. รายละเอียดค่าใช้จ่ายและการประเมิน -->
+    <div class="border-t pt-4">
+        <label class="font-bold text-sm block mb-2">รายละเอียดค่าใช้จ่ายและการประเมิน</label>
+        <div class="grid grid-cols-2 gap-4">
+            <div>
+                <label class="block text-xs font-semibold text-gray-600">Expense Type</label>
+                <select class="w-full border border-gray-400 h-8 p-1 rounded text-sm"></select>
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-gray-600">Concerned Division</label>
+                <select class="w-full border border-gray-400 h-8 p-1 rounded text-sm"></select>
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. Purchase Amount last year -->
+    <div class="border-t pt-4">
+        <h3 class="font-bold text-sm mb-3">Purchase Amount last year</h3>
+        <div class="grid grid-cols-2 gap-8 items-start">
+            <div class="space-y-3">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600">Fiscal Year <span class="text-red-500">(Auto select)</span></label>
+                    <input type="text" class="w-full border border-gray-400 h-8 p-2 rounded text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600">Total Amount [Bht]</label>
+                    <input type="text" class="w-full border border-gray-400 h-8 p-2 rounded text-sm">
+                </div>
+                <label class="flex items-center gap-2 text-sm"><input type="checkbox" class="checkbox"> Not purchase more than 5 years "DO NOT USE"</label>
+            </div>
+            <div class="space-y-1 text-sm bg-gray-50 p-3 rounded-lg border border-gray-200">
+                <label class="flex items-center gap-2"><input type="checkbox" class="checkbox"> Level A: ≥ 1,000,000 Baht</label>
+                <label class="flex items-center gap-2"><input type="checkbox" class="checkbox"> Level B: < 1,000,000 and ≥ 100,000 Baht</label>
+                <label class="flex items-center gap-2"><input type="checkbox" class="checkbox"> Level C: < 100,000 and ≥ 10,000 Baht</label>
+                <label class="flex items-center gap-2"><input type="checkbox" class="checkbox"> Level D: < 10,000 Baht</label>
+            </div>
+        </div>
+    </div>
+
+        <!-- รายละเอียดประเมิน (Financial, Quality, Enviro) จัดเป็น Grid -->
+        <div class="grid grid-cols-2 gap-8 border-t pt-6">
+            <!-- คอลัมน์ซ้าย -->
+            <div class="space-y-6">
+                <div>
+                    <h3 class="font-bold underline text-sm mb-2">Financial Statement:</h3>
+                    <div class="space-y-1 text-sm">
+                        <label class="flex items-center gap-2"><input type="checkbox"> Level A: Bar C and Related with Melco's Group Company</label>
+                        <label class="flex items-center gap-2"><input type="checkbox"> Level B: Has Company certificated, Tax payment, Profit ratio</label>
+                        <label class="flex items-center gap-2"><input type="checkbox"> Level C: Has Company certificated, Tax payment</label>
+                        <label class="flex items-center gap-2"><input type="checkbox"> Level D: Has Company certificated, Not found data of Tax payment and/or "DO NOT USE" / </label>
+                    </div>
+                </div>
+                <div>
+                    <h3 class="font-bold underline text-sm mb-2">Quality Classification by warranty:</h3>
+                    <div class="space-y-1 text-sm">
+                        <label class="flex items-center gap-2"><input type="checkbox"> Level A: No Claim</label>
+                        <label class="flex items-center gap-2"><input type="checkbox"> Level: B: Clearly Claim on time/ 1 week</label>
+                        <label class="flex items-center gap-2"><input type="checkbox"> Level: C (Clearly Claim 1-2 month)</label>
+                        <label class="flex items-center gap-2"><input type="checkbox"> Level: D [not warranty] "DO NOT USE"</label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- คอลัมน์ขวา -->
+            <div class="space-y-6">
+                <div>
+                    <h3 class="font-bold underline text-sm mb-2">Advance verifying invoice's price by:</h3>
+                    <div class="space-y-1 text-sm">
+                        <label class="flex items-center gap-2"><input type="checkbox"> XML file</label>
+                        <label class="flex items-center gap-2"><input type="checkbox"> PDF file (convert/not scan)</label>
+                        <label class="flex items-center gap-2"><input type="checkbox"> Excel file</label>
+                        <label class="flex items-center gap-2"><input type="checkbox"> Text file (own pattern/form)</label>
+                        <label class="flex items-center gap-2"><input type="checkbox"> Not able advance any file before deliver to AMEC</label>
+                    </div>
+                </div>
+                <div>
+                <h3 class="font-bold text-sm underline mb-3">Environmental: ex.ISO14001 (ref.: PUR-QP-E003)</h3>
+                <div class="space-y-2 text-sm">
+                    <label class="flex items-center gap-2">
+                        <input type="checkbox" > Level A: Has Environmental certificate
+                    </label>
+                    <label class="flex items-center gap-2">
+                        <input type="checkbox" > Level B: Has own Environmental policy
+                    </label>
+                    <label class="flex items-center gap-2">
+                        <input type="checkbox" > Level C: Has response & related material, refer to PUR-QP-E003
+                    </label>
+                    <label class="flex items-center gap-2">
+                        <input type="checkbox" > Level D: Has not related material / Related & Not response
+                    </label>
+                </div>
+            </div>
+            </div>
+        </div>
+        <div class="mt-6">
+    <h3 class="font-bold text-sm underline mb-3">E-SCM : (Enable) contact person and e-mail address</h3>
+    
+    <div id="contact-list" class="space-y-2">
+        <!-- แถวข้อมูลเริ่มต้น -->
+        <div class="flex gap-4 contact-row">
+            <input type="text" placeholder="Name" class="input input-sm border border-gray-400 h-8 rounded w-[450px] px-2">
+            <input type="email" placeholder="E-mail" class="input input-sm border border-gray-400 h-8 rounded w-[450px]  px-2">
+        </div>
+    </div>
+
+    <!-- ปุ่มเพิ่มแถว -->
+    <button type="button" id="add-contact" class="mt-3 text-sm text-blue-600 hover:text-blue-800 font-semibold flex items-center gap-1">
+        + Add Contact Person
+    </button>
+</div>
+<div class="border-t pt-4 mt-6">
+            <label class="block font-bold text-sm mb-2 text-gray-800">Other comments</label>
+            <textarea 
+                class="w-full border border-gray-400 p-2 rounded text-sm focus:outline-none " 
+                rows="4" 
+                placeholder="Additional comments (if any)..."
+            ></textarea>
+</div>
+</div>
+</div>
+</div>
+<dialog id="searchModal" class="w-full max-w-xl">
+    <!-- Header -->
+    <div class="modal-header-gradient flex justify-between items-center">
+        <h3 class="font-semibold text-lg tracking-wide">Select Form</h3>
+        <button id="btnCloseModal" class="text-slate-300 hover:text-white transition-colors text-2xl font-light">✕</button>
+    </div>
+    
+    <!-- Body -->
+    <div class="p-8 space-y-6">
+        <!-- ช่องค้นหาที่ดูสะอาดตา -->
+        <div class="relative">
+            <span class="absolute left-3 top-2.5 text-gray-400">🔍</span>
+            <input type="text" id="modalSearch" 
+                   class="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-50/50 focus:border-blue-500 outline-none transition-all text-gray-700" 
+                   placeholder="Enter Form Number or Vendor Name...">
+        </div>
+        
+        <!-- รายการข้อมูลที่ดูเหมือน Card -->
+        <div class="space-y-2">
+            <p class="text-xs text-gray-400 font-bold uppercase tracking-wider pl-1">Available Records</p>
+            <div class="border border-gray-100 rounded-2xl overflow-hidden shadow-sm">
+                <div class="p-4 cursor-pointer select-item flex justify-between items-center" data-value="PUR-NVF26-000001">
+                    <span class="font-bold text-slate-700">PUR-NVF26-000001</span>
+                    <span class="text-sm text-gray-500">Vendor A</span>
+                </div>
+                <div class="p-4 cursor-pointer select-item flex justify-between items-center" data-value="PUR-NVF26-000002">
+                    <span class="font-bold text-slate-700">PUR-NVF26-000002</span>
+                    <span class="text-sm text-gray-500">Vendor B</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</dialog>
+
+@endsection
+
+@section('scripts')
+<script src="{{ $_ENV['APP_JS'] }}/purEva.js?ver={{ $GLOBALS['version'] }}"></script>
+@endsection
