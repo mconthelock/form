@@ -1,8 +1,10 @@
 import { webflowSubmit } from "@amec/webasset/components/form";
 import { createTable } from "@amec/webasset/dataTable";
-import { getEmpData } from "./data";
+import { getEmpData, getSchedule } from "./data";
 import { requiredForm, showMessage } from "@amec/webasset/utils";
 import ExcelJS from "exceljs";
+import { setDatePicker } from "@amec/webasset/flatpickr";
+import dayjs from 'dayjs';
 
 var table;
 // main function
@@ -14,6 +16,18 @@ $(async function () {
   $("#INPUTBY").val(empno);
   $("#inputName").val(getName.SNAME);
 
+  // ----------JUNG BM-------------------------
+        await setDatePicker({
+            element: '#selectedDate',
+            dateFormat: 'Y-m-d',
+            // maxDate: 'today',
+            // dayOff: true,
+            onChange: async (selectedDates, dateStr) => {
+                await setSchedule(dateStr);
+            },
+        });
+// -------------------------------------------------
+
   table = await createTable(
     {
       responsive: false,
@@ -21,14 +35,14 @@ $(async function () {
         { title: "No" },
         { title: "Drawing No.", className: "text-nowrap" },
         { title: "Item" },
-        { title: "Code" },
+        { title: "Code", className: "text-nowrap" },
         { title: "New Flag" },
         { title: "Code", className: "text-nowrap" },
         { title: "Flag" },
         { title: "Status", className: "text-nowrap" },
         { title: "Spec Material", className: "text-nowrap" },
         { title: "Reference", className: "text-nowrap" },
-        { title: "Remark", className: "text-nowrap" },
+        { title: "Remark", className: "min-w-[300px]", width: "300px" },
       ],
       columnDefs: [
         {
@@ -49,7 +63,8 @@ $(async function () {
                     <th colspan="2">Change To</th>
                     <th colspan="4">Before Change</th>
                     <th rowspan="2">Reference</th>
-                    <th rowspan="2">Remark</th>
+                    <!-- เพิ่ม style เพื่อกำหนดความกว้างขั้นต่ำที่นี่ -->
+                    <th rowspan="2" style="min-width: 300px;">Remark</th>
                 </tr>
                 <tr>
                     <th>Code</th>
@@ -72,6 +87,48 @@ $(async function () {
   $("#sentRequest").html(action);
 });
 
+//BM date
+$(document).on('click', '#openDatePicker', function (e) {
+    e.preventDefault();
+    const datePicker = document.querySelector('#selectedDate')?._flatpickr;
+    if (datePicker) datePicker.open();
+});
+
+async function setSchedule(dateStr) {
+    let currentDate = dayjs(dateStr);
+    if (!currentDate.isValid()) {
+        currentDate = dayjs(String(dateStr), 'YYYYMMDD');
+    }
+
+    let res = [];
+    const maxLookbackDays = 365;
+    for (let i = 0; i < maxLookbackDays; i++) {
+        const queryDate = currentDate.format('YYYYMMDD');
+        res = await getSchedule({ sdate: queryDate, edate: queryDate });
+        if (Array.isArray(res) && res.length > 0 && res[0].SCHDNUMBER != null) {
+            break;
+        }
+        currentDate = currentDate.subtract(1, 'day');
+    }
+
+    if (!Array.isArray(res) || res.length === 0) {
+        $('#schd_txt').val('');
+        $('#schd_number').val('');
+        $('#schd_p').val('');
+        showMessage('No schedule found.');
+        return;
+    }
+
+    $('#schd_txt').val(res[0].SCHDMFG);
+    $('#schd_number').val(res[0].SCHDNUMBER);
+    $('#schd_p').val(res[0].PRIORITY);
+    const workId = String(res?.[0]?.WORKID ?? '');
+    const formattedWorkId = /^\d{8}$/.test(workId)
+        ? `${workId.slice(0, 4)}-${workId.slice(4, 6)}-${workId.slice(6, 8)}`
+        : workId;
+    $('#selectedDate').val(formattedWorkId);
+}
+
 // get name Requester
 $(document).on("change", "#REQBY", async function (e) {
   e.preventDefault();
@@ -92,8 +149,12 @@ $(document).on("click", "#btnRequest", async function () {
         message: "Please fill in the Request By",
       },
       {
-        element: $("#chgSch"),
-        message: "Please fill in the Changed Schedule",
+        element: $("#schd_txt"),
+        message: "Please select Schedule",
+      },
+      {
+        element: $("#schd_p"),
+        message: "Please select Schedule",
       },
       {
         element: $("#fileUpload"),
@@ -128,7 +189,7 @@ const dlcColumns = [
   { key: "ITEM", aliases: ["item"] },
   {
     key: "CHANGE_TO_CODE",
-    aliases: ["change to code", "new code", "change to"],
+    aliases: ["change to code", "new code", "code"],
   },
   { key: "NEW_FLAG", aliases: ["change to new flag", "new flag"] },
   {

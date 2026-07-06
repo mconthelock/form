@@ -7,3 +7,11 @@ export async function getEmpData(empno) {
         method: 'GET',
     });
 }
+
+export async function getSchedule(q = {}) {
+    return await fetchUtils({
+        url: `${process.env.APP_API}/calendar/range/`,
+        method: 'POST',
+        data: q
+    });
+}
