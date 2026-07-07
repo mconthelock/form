@@ -1,6 +1,150 @@
 @extends('layouts/webflowTemplate')
 
+@section('styles')
+    <style>
+        .dlc-table-wrap table.dataTable,
+        .dlc-table-wrap #Table {
+            border-collapse: separate !important;
+            border-spacing: 0 !important;
+        }
+
+        .dlc-table-wrap table.dataTable th,
+        .dlc-table-wrap table.dataTable td,
+        .dlc-table-wrap #Table th,
+        .dlc-table-wrap #Table td {
+            border: 0.5px solid color-mix(in oklch, var(--color-primary) 22%, white) !important;
+            padding: 0.75rem 0.875rem !important;
+            color: var(--color-base-content);
+        }
+
+        .dlc-table-wrap table.dataTable thead th,
+        .dlc-table-wrap #Table thead th {
+            background: color-mix(in oklch, var(--color-white) 12%, white);
+            color: var(--color-primary);
+            font-weight: 700;
+            text-align: center;
+            vertical-align: middle;
+            white-space: nowrap;
+        }
+
+        .dlc-table-wrap table.dataTable thead tr:first-child th,
+        .dlc-table-wrap #Table thead tr:first-child th {
+            border-color: color-mix(in oklch, var(--color-primary) 72%, black) !important;
+            background-color: var(--color-primary);
+            color: var(--color-white);
+        }
+
+        .dlc-table-wrap table.dataTable thead tr:first-child th:first-child {
+            border-top-left-radius: 0.625rem;
+        }
+
+        .dlc-table-wrap table.dataTable thead tr:first-child th:last-child {
+            border-top-right-radius: 0.625rem;
+        }
+
+        .dlc-table-wrap .dataTables_scrollBody table.dataTable {
+            border-top: 0 !important;
+        }
+    </style>
+@endsection
+
 @section('contents')
+    <div class="w-full max-w-7xl mx-auto bg-base-100 rounded-2xl shadow-xl overflow-hidden">
+
+        <div class="bg-primary text-primary-content p-6">
+            <h1
+                class="text-xl md:text-3xl font-bold text-center text-white flex flex-wrap items-center justify-center gap-2">
+                <svg class="h-9 w-9 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
+                    width="24" height="24" fill="none" viewBox="0 0 24 24">
+                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M15 4h3a1 1 0 0 1 1 1v15a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h3m0 3h6m-3 5h3m-6 0h.01M12 16h3m-6 0h.01M10 3v4h4V3h-4Z" />
+                </svg>
+                Drawing List for change PN Master | REPORT
+            </h1>
+        </div>
+
+        <form class="p-6 md:p-8 space-y-8" id="dlcForm">
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                <fieldset class="fieldset w-full">
+                    <legend class="fieldset-legend text-primary text-lg">DRAWING NO</legend>
+                    <input type="text" placeholder="Enter drawing..."
+                        class="input input-bordered transition-all duration-200 focus:input-primary w-full"
+                        id="drawing" />
+                </fieldset>
+
+                <fieldset class="fieldset w-full">
+                    <legend class="fieldset-legend text-primary text-lg">NEW CODE</legend>
+                    <input type="text" placeholder="Enter code..."
+                        class="input input-bordered transition-all duration-200 focus:input-primary w-full"
+                        id="newcode" />
+                </fieldset>
+
+                <fieldset class="fieldset w-full">
+                    <legend class="fieldset-legend text-primary text-lg">OLD CODE</legend>
+                    <input type="text" placeholder="Enter code..."
+                        class="input input-bordered w-full transition-all duration-200 focus:input-primary req"
+                        id="REQBY" name="REQBY" />
+                </fieldset>
+
+                <!-- Example (Schedule) -->
+                <fieldset class="fieldset w-full">
+                    <legend class="fieldset-legend text-primary text-lg">Production</legend>
+                    <div class="flex gap-2">
+                        <input type="text"
+                            class="input input-bordered transition-all duration-200 focus:input-primary w-full req"
+                            id="schd_txt" name="CHANGE_SCHD" readonly />
+                        <button class="btn btn-neutral" type="button" id="openDatePicker">
+                            <i class="fi fi-rr-calendar"><svg class="w-6 h-6 text-gray-800 dark:text-white"
+                                    aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24"
+                                    fill="none" viewBox="0 0 24 24">
+                                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
+                                        stroke-width="2"
+                                        d="M4 10h16m-8-3V4M7 7V4m10 3V4M5 20h14a1 1 0 0 0 1-1V7a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1Zm3-7h.01v.01H8V13Zm4 0h.01v.01H12V13Zm4 0h.01v.01H16V13Zm-8 4h.01v.01H8V17Zm4 0h.01v.01H12V17Zm4 0h.01v.01H16V17Z" />
+                                </svg>
+                            </i>
+                        </button>
+                        <input type="hidden" id="selectedDate" name="CHANGE_DATE" value="" class="fdate w-0" />
+                    </div>
+                </fieldset>
+                <!-- End -->
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="w-full">
+                <h3 class="text-lg font-bold mb-4 flex">
+                    <svg class="w-[28px] h-[28px] text-gray-800 dark:text-black" aria-hidden="true"
+                        xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor"
+                        viewBox="0 0 24 24">
+                        <path fill-rule="evenodd"
+                            d="M2 6a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6Zm2 8v-2h7v2H4Zm0 2v2h7v-2H4Zm9 2h7v-2h-7v2Zm7-4v-2h-7v2h7Z"
+                            clip-rule="evenodd" />
+                    </svg>
+                    Data Table
+                </h3>
+
+                <div class="overflow-x-auto dlc-table-wrap w-full px-2 md:px-4 py-3">
+                    <table class="table table-zebra w-full whitespace-nowrap" id="Table">
+                    </table>
+                </div>
+            </div>
+
+            <div class="mt-8 pt-6 border-t border-base-300 ">
+                <fieldset class="fieldset w-full hidden" id="controller-section">
+                    <legend class="fieldset-legend font-bold text-base-content/80"><span
+                            class="w-1.5 h-1.5 bg-primary rounded-full"></span>Job Controller</span>
+                    </legend>
+                    <select class="select req w-full focus:select-primary max-w-xs" id="CONTROLLER" name="CONTROLLER">
+                    </select>
+                </fieldset>
+
+                <div id="sentApprove"></div>
+            </div>
+
+        </form>
+    </div>
 @endsection
 
 @section('scripts')

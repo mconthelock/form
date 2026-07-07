@@ -69,7 +69,8 @@
                 <fieldset class="fieldset w-full">
                     <legend class="fieldset-legend text-primary text-lg">Input By</legend>
                     <input type="text" placeholder="Enter input by..."
-                        class="input input-bordered transition-all duration-200 focus:input-primary w-full" id="INPUTBY"
+                        class="input input-bordered transition-all duration-200 focus:input-primary w-full" 
+                        id="INPUTBY" name="INPUTBY"
                         readonly />
                 </fieldset>
 
@@ -84,7 +85,7 @@
                     <legend class="fieldset-legend text-primary text-lg">Request By</legend>
                     <input type="text" placeholder="Enter request by..."
                         class="input input-bordered w-full transition-all duration-200 focus:input-primary req"
-                        id="REQBY" />
+                        id="REQBY" name="REQBY" />
                 </fieldset>
 
                 <fieldset class="fieldset w-full">
@@ -103,12 +104,12 @@
 
                 <!-- Example (Schedule) -->
                 <fieldset class="fieldset w-full">
-                    <legend class="fieldset-legend text-primary text-lg">Schedule</legend>
+                    <legend class="fieldset-legend text-primary text-lg">Changed Schedule</legend>
                     <div class="flex gap-2">
-                        <input type="text" class="input input-bordered transition-all duration-200 focus:input-primary w-full req" id="schd_txt" name="schd_txt"
-                            readonly />
-                        <input type="text" class="input hidden" id="schd_number" name="schd_number" readonly />
-                        <input type="text" class="input input-bordered transition-all duration-200 focus:input-primary w-full req" id="schd_p" name="schd_p"
+                        <input type="text" class="input input-bordered transition-all duration-200 focus:input-primary w-full req" 
+                        id="schd_txt" name="CHANGE_SCHD" readonly />
+                        <input type="text" class="input hidden" id="schd_number"  readonly />
+                        <input type="text" class="input hidden input-bordered transition-all duration-200 focus:input-primary w-full req" id="schd_p"
                             readonly />
                         <button class="btn btn-neutral" type="button" id="openDatePicker">
                             <i class="fi fi-rr-calendar"><svg class="w-6 h-6 text-gray-800 dark:text-white"
@@ -120,7 +121,7 @@
                                 </svg>
                             </i>
                         </button>
-                        <input type="hidden" id="selectedDate" name="bmdate" value="" class="fdate w-0" />
+                        <input type="hidden" id="selectedDate" name="CHANGE_DATE" value="" class="fdate w-0" />
                     </div>
                 </fieldset>
                 <!-- End -->
