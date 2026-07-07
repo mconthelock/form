@@ -1524,7 +1524,7 @@ WHERE L.R27M09 = '".trim($firstno[0]->FIRSTNO)."'";
                         $this->deleteFlowStep($condition);
                         $condition['CSTEPNO'] = '10';
                         $this->deleteFlowStep($condition);
-                        $condition['CSTEPNO'] = '13';
+                        $condition['CSTEPNO'] = '11';
                         $this->deleteFlowStep($condition);
                          $cnformpre = $this->cn->customSelect("CNFORM",array( 'NFRMNO' => $nfrmno,'VORGNO' => $vorgno,'CYEAR'  => $cyear,'CYEAR2' => $cyear2,'NRUNNO' => $nrunno ),'*');
                             if(count($cnformpre) > 0)
