@@ -76,14 +76,13 @@
         <!-- ใช้ grid เหมือนกับด้านบน เพื่อให้ระยะขอบซ้ายตรงกันเป๊ะ -->
         <div class="grid grid-cols-[120px_1fr] items-center gap-2">
             <span class="font-semibold text-sm">Operation:</span>
-            
-            <div class="flex items-center gap-6">
+                <div class="flex items-center gap-6">
                 <label class="flex items-center gap-2 cursor-pointer text-gray-700 text-sm">
-                    <input type="checkbox" class="w-4 h-4 accent-blue-600"> New vendor
+                    <input type="radio" name="vendor_type" value="new" class="w-4 h-4 accent-blue-600"> New vendor
                 </label>
                 
                 <label class="flex items-center gap-2 cursor-pointer text-gray-700 text-sm">
-                    <input type="checkbox" class="w-4 h-4 accent-blue-600"> Annual evaluation for
+                    <input type="radio" name="vendor_type" value="annual" class="w-4 h-4 accent-blue-600"> Annual evaluation for
                 </label>
                 
                 <input type="text" maxlength="5" placeholder="Vendor Code" class="input input-sm border border-gray-400 h-8 rounded w-48 px-2">
@@ -105,36 +104,35 @@
         <div class="grid grid-cols-[120px_1fr] gap-4 items-start">
             <span class="font-semibold text-sm pt-1">Vendor Type</span>
             
-            <!-- ปรับเป็น grid-cols-3 เพื่อแบ่งเป็น 3 คอลัมน์ -->
             <div class="grid grid-cols-3 gap-y-2 gap-x-4 text-sm">
                 <label class="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" class="w-4 h-4"> Oversea (Relate MELCO Group)
+                    <input type="radio" name="vendor_category" value="oversea_melco" class="w-4 h-4 accent-blue-600"> Oversea (Relate MELCO Group)
                 </label>
                 <label class="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" class="w-4 h-4"> Oversea (Not relate MELCO Group)
+                    <input type="radio" name="vendor_category" value="oversea_not_melco" class="w-4 h-4 accent-blue-600"> Oversea (Not relate MELCO Group)
                 </label>
                 <label class="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" class="w-4 h-4"> Domestic (Use BOI)
-                </label>
-                
-                <label class="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" class="w-4 h-4"> Domestic (Use IPO)
-                </label>
-                <label class="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" class="w-4 h-4"> Domestic (Use FTA)
-                </label>
-                <label class="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" class="w-4 h-4"> Domestic Vendor
+                    <input type="radio" name="vendor_category" value="domestic_boi" class="w-4 h-4 accent-blue-600"> Domestic (Use BOI)
                 </label>
                 
                 <label class="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" class="w-4 h-4"> Sub-Contractor
+                    <input type="radio" name="vendor_category" value="domestic_ipo" class="w-4 h-4 accent-blue-600"> Domestic (Use IPO)
                 </label>
                 <label class="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" class="w-4 h-4"> Non-Production
+                    <input type="radio" name="vendor_category" value="domestic_fta" class="w-4 h-4 accent-blue-600"> Domestic (Use FTA)
                 </label>
                 <label class="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" class="w-4 h-4"> FIN Operation control
+                    <input type="radio" name="vendor_category" value="domestic_vendor" class="w-4 h-4 accent-blue-600"> Domestic Vendor
+                </label>
+                
+                <label class="flex items-center gap-2 cursor-pointer">
+                    <input type="radio" name="vendor_category" value="sub_contractor" class="w-4 h-4 accent-blue-600"> Sub-Contractor
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer">
+                    <input type="radio" name="vendor_category" value="non_production" class="w-4 h-4 accent-blue-600"> Non-Production
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer">
+                    <input type="radio" name="vendor_category" value="fin_operation" class="w-4 h-4 accent-blue-600"> FIN Operation control
                 </label>
             </div>
         </div>
@@ -143,8 +141,8 @@
                 <span class="font-semibold text-sm">Vendor Name</span>
                 <div class="flex items-center gap-4">
                     <input type="text" class="input input-sm border border-gray-400 h-8 rounded w-1/3 px-2">
-                    <label class="flex items-center gap-2 text-sm"><input type="checkbox"> Local</label>
-                    <label class="flex items-center gap-2 text-sm"><input type="checkbox"> Oversea</label>
+                    <label class="flex items-center gap-2 text-sm"><input type="radio" name="vendor_type" value="local" class="w-4 h-4 accent-blue-600"> Local</label>
+                    <label class="flex items-center gap-2 text-sm"><input type="radio" name="vendor_type" value="oversea" class="w-4 h-4 accent-blue-600"> Oversea</label>
                     <select class="border border-gray-400 h-8 p-1 rounded text-sm">
                         <option>Select Country</option>
                     </select>
@@ -183,9 +181,11 @@
             </div>
         </div>
         <!-- Country -->
-        <div>
-            <label class="block text-xs font-semibold text-gray-600 mb-1">Country</label>
-            <input type="text" placeholder="Country" class="input input-sm border border-gray-400 h-8 rounded  px-2 w-full">
+        <div class="grid grid-cols-2 gap-4">
+                <div>
+                <label class="block text-xs font-semibold text-gray-600 mb-1">Country</label>
+                <input type="text" placeholder="Country" class="input input-sm border border-gray-400 h-8 rounded  px-2 w-full">
+            </div>
         </div>
     </div>
 </div>
@@ -218,9 +218,11 @@
                 <input type="text" placeholder="รหัสไปรษณีย์" class="input input-sm border border-gray-400 h-8 rounded  px-2 w-full">
             </div>
         </div>
-        <div>
-            <label class="block text-xs font-semibold text-gray-600 mb-1">ประเทศ</label>
-            <input type="text" placeholder="ประเทศ" class="input input-sm border border-gray-400 h-8 rounded w-full px-2">
+        <div class="grid grid-cols-2 gap-4">
+            <div>
+                <label class="block text-xs font-semibold text-gray-600 mb-1">ประเทศ</label>
+                <input type="text" placeholder="ประเทศ" class="input input-sm border border-gray-400 h-8 rounded  px-2 w-full">
+            </div>
         </div>
     </div>
 </div>
@@ -267,14 +269,15 @@
 
     <!-- Additional Banking & Payment Fields -->
     <div class="space-y-4">
+          <div class="grid grid-cols-2 gap-4">
         <div class="grid grid-cols-[120px_1fr] items-center gap-4">
             <label class="font-semibold text-sm">Account number</label>
             <input type="text" class="input input-sm border border-gray-400 h-8 rounded px-2 w-full">
         </div>
-
+        </div>
         <div class="grid grid-cols-[120px_1fr] items-start gap-4">
             <label class="font-semibold text-sm pt-1">Bank Address</label>
-            <textarea class="border border-gray-400 rounded px-2 w-full text-sm py-1" rows="2"></textarea>
+            <textarea class="textarea textarea-sm border border-gray-400 rounded px-2 w-full text-sm py-1" rows="2"></textarea>
         </div>
 
         <div class="grid grid-cols-2 gap-4">
@@ -328,10 +331,10 @@
     </div>
 <!-- Vendor Evaluation Section -->
 <div class="border border-gray-300 p-6 rounded-lg bg-white mt-6">
-    <h2 class="font-bold text-lg mb-4 text-gray-800 border-b pb-2">Vendor Evaluation</h2>
+    <h2 class="font-bold text-lg ">Vendor Evaluation</h2>
 
     <!-- ตารางการประเมิน -->
-    <div class="border border-red-500 p-4 rounded-lg bg-red-50/50 mb-6">
+    <div class="p-4 rounded-lg  mb-6">
         <table class="w-full text-center border-collapse">
             <thead>
                 <tr class="bg-gray-100">
@@ -350,11 +353,10 @@
                 </tr>
             </tbody>
         </table>
-        <p class="text-red-600 text-xs mt-2 italic">* อันเดียวกัน Turn over ของ SPR มั้ยครับ (ข้อมูลจาก DBD ค่ะ)</p>
     </div>
 
     <!-- ส่วน Compliance (ตัวแดง) -->
-    <div class="border border-red-500 p-4  rounded-lg mb-6">
+    <div class="border-2 border-dashed border-gray-400 p-4 rounded-lg mb-6 bg-gray-50">
         <h3 class="font-bold mb-3">Compliance</h3>
         <div class="grid grid-cols-1 gap-2 text-black text-sm">
             <label class="flex items-center gap-2"><input type="checkbox"> ไม่ได้อยู่ในกลุ่มควบคุม ข้อกำหนด AMEC-5070: Rule for Export Control</label>
@@ -389,23 +391,23 @@
 <label class="font-bold text-sm block mb-2">รายการสินค้าและบริการที่ยื่นจดทะเบียนเครื่องหมายการค้าในประเทศไทย</label>
 <!-- ปรับตรงนี้เป็น grid-cols-3 -->
 <div class="grid grid-cols-3 gap-x-4 gap-y-1 text-sm">
-    <label class="flex items-center gap-2"><input type="checkbox" class="checkbox checkbox-xs"> เครื่องสำอาง ยา ผลิตภัณฑ์เคมี</label>
-    <label class="flex items-center gap-2"><input type="checkbox" class="checkbox checkbox-xs"> โลหะ เครื่องมืออุปกรณ์ วัสดุก่อสร้าง</label>
-    <label class="flex items-center gap-2"><input type="checkbox" class="checkbox checkbox-xs"> เครื่องจักรกล เครื่องมือ เครื่องใช้ไฟฟ้า</label>
+    <label class="flex items-center gap-2"><input type="radio" name="product_category" class="w-4 h-4 accent-blue-600"> เครื่องสำอาง ยา ผลิตภัณฑ์เคมี</label>
+    <label class="flex items-center gap-2"><input type="radio" name="product_category" class="w-4 h-4 accent-blue-600"> โลหะ เครื่องมืออุปกรณ์ วัสดุก่อสร้าง</label>
+    <label class="flex items-center gap-2"><input type="radio" name="product_category" class="w-4 h-4 accent-blue-600"> เครื่องจักรกล เครื่องมือ เครื่องใช้ไฟฟ้า</label>
     
-    <label class="flex items-center gap-2"><input type="checkbox" class="checkbox checkbox-xs"> โลหะมีค่า นาฬิกา เครื่องหนัง</label>
-    <label class="flex items-center gap-2"><input type="checkbox" class="checkbox checkbox-xs"> เครื่องดนตรี ของเล่น อุปกรณ์กีฬา</label>
-    <label class="flex items-center gap-2"><input type="checkbox" class="checkbox checkbox-xs"> กระดาษ เครื่องเขียน เครื่องพิมพ์</label>
+    <label class="flex items-center gap-2"><input type="radio" name="product_category" class="w-4 h-4 accent-blue-600"> โลหะมีค่า นาฬิกา เครื่องหนัง</label>
+    <label class="flex items-center gap-2"><input type="radio" name="product_category" class="w-4 h-4 accent-blue-600"> เครื่องดนตรี ของเล่น อุปกรณ์กีฬา</label>
+    <label class="flex items-center gap-2"><input type="radio" name="product_category" class="w-4 h-4 accent-blue-600"> กระดาษ เครื่องเขียน เครื่องพิมพ์</label>
     
-    <label class="flex items-center gap-2"><input type="checkbox" class="checkbox checkbox-xs"> ยาง พลาสติก</label>
-    <label class="flex items-center gap-2"><input type="checkbox" class="checkbox checkbox-xs"> เฟอร์นิเจอร์ เครื่องใช้ในครัวเรือน</label>
-    <label class="flex items-center gap-2"><input type="checkbox" class="checkbox checkbox-xs"> เส้นใย เส้นด้าย สิ่งทอ เครื่องนุ่งห่ม</label>
+    <label class="flex items-center gap-2"><input type="radio" name="product_category" class="w-4 h-4 accent-blue-600"> ยาง พลาสติก</label>
+    <label class="flex items-center gap-2"><input type="radio" name="product_category" class="w-4 h-4 accent-blue-600"> เฟอร์นิเจอร์ เครื่องใช้ในครัวเรือน</label>
+    <label class="flex items-center gap-2"><input type="radio" name="product_category" class="w-4 h-4 accent-blue-600"> เส้นใย เส้นด้าย สิ่งทอ เครื่องนุ่งห่ม</label>
     
-    <label class="flex items-center gap-2"><input type="checkbox" class="checkbox checkbox-xs"> อาหาร เครื่องดื่ม ของหวาน</label>
-    <label class="flex items-center gap-2"><input type="checkbox" class="checkbox checkbox-xs"> เครื่องหมายบริการ</label>
-    <label class="flex items-center gap-2"><input type="checkbox" class="checkbox checkbox-xs"> เครื่องหมายรับรอง</label>
+    <label class="flex items-center gap-2"><input type="radio" name="product_category" class="w-4 h-4 accent-blue-600"> อาหาร เครื่องดื่ม ของหวาน</label>
+    <label class="flex items-center gap-2"><input type="radio" name="product_category" class="w-4 h-4 accent-blue-600"> เครื่องหมายบริการ</label>
+    <label class="flex items-center gap-2"><input type="radio" name="product_category" class="w-4 h-4 accent-blue-600"> เครื่องหมายรับรอง</label>
     
-    <label class="flex items-center gap-2"><input type="checkbox" class="checkbox checkbox-xs"> เครื่องหมายร่วม</label>
+    <label class="flex items-center gap-2"><input type="radio" name="product_category" class="w-4 h-4 accent-blue-600"> เครื่องหมายร่วม</label>
 </div>
     </div>
 
@@ -449,7 +451,7 @@
         <div class="grid grid-cols-2 gap-8 items-start">
             <div class="space-y-3">
                 <div>
-                    <label class="block text-xs font-semibold text-gray-600">Fiscal Year <span class="text-red-500">(Auto select)</span></label>
+                    <label class="block text-xs font-semibold text-gray-600">Fiscal Year</label>
                     <input type="text" class="w-full border border-gray-400 h-8 p-2 rounded text-sm">
                 </div>
                 <div>
@@ -459,10 +461,10 @@
                 <label class="flex items-center gap-2 text-sm"><input type="checkbox" class="checkbox"> Not purchase more than 5 years "DO NOT USE"</label>
             </div>
             <div class="space-y-1 text-sm bg-gray-50 p-3 rounded-lg border border-gray-200">
-                <label class="flex items-center gap-2"><input type="checkbox" class="checkbox"> Level A: ≥ 1,000,000 Baht</label>
-                <label class="flex items-center gap-2"><input type="checkbox" class="checkbox"> Level B: < 1,000,000 and ≥ 100,000 Baht</label>
-                <label class="flex items-center gap-2"><input type="checkbox" class="checkbox"> Level C: < 100,000 and ≥ 10,000 Baht</label>
-                <label class="flex items-center gap-2"><input type="checkbox" class="checkbox"> Level D: < 10,000 Baht</label>
+                <label class="flex items-center gap-2"><input type="radio" name="purchase_level" class="w-4 h-4 accent-blue-600"> Level A: ≥ 1,000,000 Baht</label>
+                <label class="flex items-center gap-2"><input type="radio" name="purchase_level" class="w-4 h-4 accent-blue-600"> Level B: < 1,000,000 and ≥ 100,000 Baht</label>
+                <label class="flex items-center gap-2"><input type="radio" name="purchase_level" class="w-4 h-4 accent-blue-600"> Level C: < 100,000 and ≥ 10,000 Baht</label>
+                <label class="flex items-center gap-2"><input type="radio" name="purchase_level" class="w-4 h-4 accent-blue-600"> Level D: < 10,000 Baht</label>
             </div>
         </div>
     </div>
@@ -474,19 +476,19 @@
                 <div>
                     <h3 class="font-bold underline text-sm mb-2">Financial Statement:</h3>
                     <div class="space-y-1 text-sm">
-                        <label class="flex items-center gap-2"><input type="checkbox"> Level A: Bar C and Related with Melco's Group Company</label>
-                        <label class="flex items-center gap-2"><input type="checkbox"> Level B: Has Company certificated, Tax payment, Profit ratio</label>
-                        <label class="flex items-center gap-2"><input type="checkbox"> Level C: Has Company certificated, Tax payment</label>
-                        <label class="flex items-center gap-2"><input type="checkbox"> Level D: Has Company certificated, Not found data of Tax payment and/or "DO NOT USE" / </label>
+                        <label class="flex items-center gap-2"><input type="radio" name="financial_level" class="w-4 h-4 accent-blue-600"> Level A: Bar C and Related with Melco's Group Company</label>
+                        <label class="flex items-center gap-2"><input type="radio" name="financial_level" class="w-4 h-4 accent-blue-600"> Level B: Has Company certificated, Tax payment, Profit ratio</label>
+                        <label class="flex items-center gap-2"><input type="radio" name="financial_level" class="w-4 h-4 accent-blue-600"> Level C: Has Company certificated, Tax payment</label>
+                        <label class="flex items-center gap-2"><input type="radio" name="financial_level" class="w-4 h-4 accent-blue-600"> Level D: Has Company certificated, Not found data of Tax payment and/or "DO NOT USE" / </label>
                     </div>
                 </div>
                 <div>
                     <h3 class="font-bold underline text-sm mb-2">Quality Classification by warranty:</h3>
                     <div class="space-y-1 text-sm">
-                        <label class="flex items-center gap-2"><input type="checkbox"> Level A: No Claim</label>
-                        <label class="flex items-center gap-2"><input type="checkbox"> Level: B: Clearly Claim on time/ 1 week</label>
-                        <label class="flex items-center gap-2"><input type="checkbox"> Level: C (Clearly Claim 1-2 month)</label>
-                        <label class="flex items-center gap-2"><input type="checkbox"> Level: D [not warranty] "DO NOT USE"</label>
+                        <label class="flex items-center gap-2"><input type="radio" name="quality_level" class="w-4 h-4 accent-blue-600"> Level A: No Claim</label>
+                        <label class="flex items-center gap-2"><input type="radio" name="quality_level" class="w-4 h-4 accent-blue-600"> Level: B: Clearly Claim on time/ 1 week</label>
+                        <label class="flex items-center gap-2"><input type="radio" name="quality_level" class="w-4 h-4 accent-blue-600"> Level: C (Clearly Claim 1-2 month)</label>
+                        <label class="flex items-center gap-2"><input type="radio" name="quality_level" class="w-4 h-4 accent-blue-600"> Level: D [not warranty] "DO NOT USE"</label>
                     </div>
                 </div>
             </div>
@@ -507,16 +509,16 @@
                 <h3 class="font-bold text-sm underline mb-3">Environmental: ex.ISO14001 (ref.: PUR-QP-E003)</h3>
                 <div class="space-y-2 text-sm">
                     <label class="flex items-center gap-2">
-                        <input type="checkbox" > Level A: Has Environmental certificate
+                        <input type="radio" name="environmental_level" class="w-4 h-4 accent-blue-600"> Level A: Has Environmental certificate
                     </label>
                     <label class="flex items-center gap-2">
-                        <input type="checkbox" > Level B: Has own Environmental policy
+                        <input type="radio" name="environmental_level" class="w-4 h-4 accent-blue-600"> Level B: Has own Environmental policy
                     </label>
                     <label class="flex items-center gap-2">
-                        <input type="checkbox" > Level C: Has response & related material, refer to PUR-QP-E003
+                        <input type="radio" name="environmental_level" class="w-4 h-4 accent-blue-600"> Level C: Has response & related material, refer to PUR-QP-E003
                     </label>
                     <label class="flex items-center gap-2">
-                        <input type="checkbox" > Level D: Has not related material / Related & Not response
+                        <input type="radio" name="environmental_level" class="w-4 h-4 accent-blue-600"> Level D: Has not related material / Related & Not response
                     </label>
                 </div>
             </div>
