@@ -596,7 +596,7 @@ class form extends MY_Controller{
                         </table>
 
                         <div style='text-align: center; margin: 30px 0;'>
-                            <a href='http://amecwebtest.mitsubishielevatorasia.co.th/form/feform/FE-EIA/form/main?no={$NFRMNO}&orgNo={$VORGNO}&y={$CYEAR}&y2={$CYEAR2}&runNo={$NRUNNO}&m=3' 
+                            <a href='http://amecweb.mitsubishielevatorasia.co.th/form/feform/FE-EIA/form/main?no={$NFRMNO}&orgNo={$VORGNO}&y={$CYEAR}&y2={$CYEAR2}&runNo={$NRUNNO}&m=3' 
                             style='background-color: #28a745; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold;'>
                             View Report Detail
                             </a>
