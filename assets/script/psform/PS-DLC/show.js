@@ -1,11 +1,26 @@
-import { getUrlParams, showErrorMessage } from "@amec/webasset/utils";
-import { getEmpData, getFormData } from "./data";
+import {
+  getUrlParams,
+  requiredForm,
+  showErrorMessage,
+  showMessage,
+} from "@amec/webasset/utils";
+import { getEmpData, getFormData, updateController, updateDLCform } from "./data";
 import { webflowSubmit } from "@amec/webasset/components/form";
-import { getExtData, getMode, showflow } from "@amec/webasset/api/webform";
+import {
+  doaction,
+  getExtData,
+  getMode,
+  showflow,
+} from "@amec/webasset/api/webform";
 import { setSelect2 } from "@amec/webasset/select2";
 import { createTable } from "@amec/webasset/dataTable";
+import { redirectWebflow } from "@amec/webasset/form";
+import { searchUser } from "@amec/webasset/api/amec";
+import Select2 from "select2";
+import dayjs from "dayjs";
 
 var cextData, data;
+Select2();
 
 $(async function () {
   try {
@@ -104,7 +119,7 @@ $(async function () {
           const users = await searchUser({ SSECCODE: "050502", CSTATUS: "1" });
           const controller = users
             .filter((a) => {
-              return a.SPOSCODE < "55" && a.SPOSCODE > "30";
+              return a.SPOSCODE < "50" && a.SPOSCODE > "30";
             })
             .map((c) => {
               return {
@@ -140,5 +155,68 @@ $(async function () {
     console.error("Error in show.js:", error);
     showErrorMessage("เกิดข้อผิดพลาดในการโหลดข้อมูลแบบฟอร์ม");
     return;
+  }
+});
+
+$(document).on("click", "button[name='btnAction']", async function () {
+  try {
+    const param = getUrlParams();
+    const form = {
+      NFRMNO: param.NFRMNO,
+      VORGNO: param.VORGNO,
+      CYEAR: param.CYEAR,
+      CYEAR2: param.CYEAR2,
+      NRUNNO: param.NRUNNO,
+    };
+    const action = $(this).val();
+    const remark = $("#remark").val();
+    const empno =
+      param.EMPNO ||
+      param.empno ||
+      new URLSearchParams(window.location.search).get("empno");
+    const cextData = await getExtData({ ...form, EMPNO: param.EMPNO });
+    console.log(cextData);
+    const state = {
+      ...form,
+      EMPNO: empno,
+      ACTION: action,
+      REMARK: remark,
+    };
+    let res;
+    const requiredmessage = [
+      { element: $("#CONTROLLER"), message: "Please select controller." },
+    ];
+    if (cextData == "01") {
+      if (!(await requiredForm("#CONTROLLER", requiredmessage))) return;
+      const controller = { ...state, CONTROLLER: $("#CONTROLLER").val() };
+      res = await updateController(controller);
+      
+    } else if (cextData == "02") {
+      const queryString = window.location.search;
+      const urlParams = new URLSearchParams(queryString);
+      const empno = urlParams.get("empno");
+      const actualDate = dayjs().format("YYYY-MM-DD HH:mm:ss");
+      const updateformData = {
+        ...state,
+        CHANGE_STATUS: "1",
+        ACTUAL_DATE: actualDate,
+        ACTUAL_UPDATEBY: empno,
+      };
+      res = await updateDLCform(updateformData);
+      
+    } else {
+      res = await doaction(state);
+    }
+
+    console.log(res);
+    if (res.status) {
+      showMessage(res.message, "success");
+      redirectWebflow();
+    } else {
+      throw new Error(res.message);
+    }
+  } catch (error) {
+    console.error(error);
+    showMessage(error.message);
   }
 });

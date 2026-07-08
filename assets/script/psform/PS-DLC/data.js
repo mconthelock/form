@@ -1,35 +1,61 @@
 import { fetchUtils } from "@amec/webasset/api/fetch-utils";
 import { data } from "jquery";
 
-
 export async function getEmpData(empno) {
-    return await fetchUtils({
-        url: `${process.env.APP_API}/users/${empno}`,
-        method: 'GET',
-    });
+  return await fetchUtils({
+    url: `${process.env.APP_API}/users/${empno}`,
+    method: "GET",
+  });
 }
 
 export async function getSchedule(q = {}) {
-    return await fetchUtils({
-        url: `${process.env.APP_API}/calendar/range/`,
-        method: 'POST',
-        data: q
-    });
+  return await fetchUtils({
+    url: `${process.env.APP_API}/calendar/range/`,
+    method: "POST",
+    data: q,
+  });
 }
 
 // create form
 export async function createdlcForm(data) {
-    return await fetchUtils({
-        url: `${process.env.APP_API}/psform/ps-dlc`,
-        method: "POST",
-        data: data,
-    });
+  return await fetchUtils({
+    url: `${process.env.APP_API}/psform/ps-dlc`,
+    method: "POST",
+    data: data,
+  });
 }
 
+// get form data
 export async function getFormData(nfrno, vorgno, cyear, cyear2, runno) {
-    return await fetchUtils({
-        url: `${process.env.APP_API}/psform/ps-dlc/${nfrno}/${vorgno}/${cyear}/${cyear2}/${runno}`,
-        method: 'GET',
-    });
+  return await fetchUtils({
+    url: `${process.env.APP_API}/psform/ps-dlc/${nfrno}/${vorgno}/${cyear}/${cyear2}/${runno}`,
+    method: "GET",
+  });
+}
 
+// get report data
+export async function getReport(data) {
+  return await fetchUtils({
+    url: `${process.env.APP_API}/psform/ps-dlc/getReport`,
+    method: "POST",
+    data,
+  });
+}
+
+// update flow approve
+export async function updateController(state) {
+  return await fetchUtils({
+    url: `${process.env.APP_API}/psform/ps-dlc`,
+    method: "PATCH",
+    data: state,
+  });
+}
+
+// update PSDLC_FORM
+export async function updateDLCform(state) {
+  return await fetchUtils({
+    url: `${process.env.APP_API}/psform/ps-dlc/updateForm`,
+    method: "PATCH",
+    data: state,
+  });
 }

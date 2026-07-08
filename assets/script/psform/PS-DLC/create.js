@@ -9,29 +9,33 @@ import { redirectWebflow } from "@amec/webasset/form";
 
 // main function
 $(async function () {
-  const queryString = window.location.search;
-  const urlParams = new URLSearchParams(queryString);
-  const empno = urlParams.get("empno");
-  const getName = await getEmpData(empno);
-  $("#INPUTBY").val(empno);
-  $("#inputName").val(getName.SNAME);
+  try {
+    const queryString = window.location.search;
+    const urlParams = new URLSearchParams(queryString);
+    const empno = urlParams.get("empno");
+    const getName = await getEmpData(empno);
+    $("#INPUTBY").val(empno);
+    $("#inputName").val(getName.SNAME);
 
-  // ----------JUNG BM-------------------------
-  await setDatePicker({
-    element: "#selectedDate",
-    dateFormat: "Y-m-d",
-    // maxDate: 'today',
-    dayOff: false,
-    onChange: async (selectedDates, dateStr) => {
-      await setSchedule(dateStr);
-    },
-  });
-  // -------------------------------------------------
-  // ---------- สร้างและเริ่มการทำงานของตาราง ----------
-  await TableManager.init();
+    // ----------JUNG BM-------------------------
+    await setDatePicker({
+      element: "#selectedDate",
+      dateFormat: "Y-m-d",
+      // maxDate: 'today',
+      dayOff: false,
+      onChange: async (selectedDates, dateStr) => {
+        await setSchedule(dateStr);
+      },
+    });
+    // -------------------------------------------------
+    // ---------- สร้างและเริ่มการทำงานของตาราง ----------
+    await TableManager.init();
 
-  const action = webflowSubmit({ request: true });
-  $("#sentRequest").html(action);
+    const action = webflowSubmit({ request: true });
+    $("#sentRequest").html(action);
+  } catch (error) {
+    console.log(error);
+  }
 });
 
 //BM date
@@ -67,7 +71,7 @@ async function setSchedule(dateStr) {
     return;
   }
 
-  $("#schd_txt").val(res[0].SCHDMFG + '-' + res[0].PRIORITY);
+  $("#schd_txt").val(res[0].SCHDMFG + "-" + res[0].PRIORITY);
   $("#schd_number").val(res[0].SCHDNUMBER);
   $("#schd_p").val(res[0].PRIORITY);
   const workId = String(res?.[0]?.WORKID ?? "");

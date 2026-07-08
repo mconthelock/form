@@ -68,8 +68,7 @@
             <fieldset class="fieldset w-full ">
                 <legend class="fieldset-legend text-primary text-lg">Form No</legend>
                 <input type="text" placeholder="Form no"
-                    class="input input-bordered transition-all duration-200 focus:input-primary "
-                    id="FORMNO" readonly/>
+                    class="input input-bordered transition-all duration-200 focus:input-primary " id="FORMNO" readonly />
             </fieldset>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -77,9 +76,8 @@
                 <fieldset class="fieldset w-full">
                     <legend class="fieldset-legend text-primary text-lg">Input By</legend>
                     <input type="text" placeholder="Enter input by..."
-                        class="input input-bordered transition-all duration-200 focus:input-primary w-full" 
-                        id="INPUTBY" name="INPUTBY"
-                        readonly />
+                        class="input input-bordered transition-all duration-200 focus:input-primary w-full" id="INPUTBY"
+                        name="INPUTBY" readonly />
                 </fieldset>
 
                 <fieldset class="fieldset w-full">
@@ -99,16 +97,17 @@
                 <fieldset class="fieldset w-full">
                     <legend class="fieldset-legend text-primary text-lg">Name</legend>
                     <input type="text" placeholder="Enter name..."
-                        class="input input-bordered transition-all duration-200 focus:input-primary w-full"
-                        id="reqName" readonly/>
+                        class="input input-bordered transition-all duration-200 focus:input-primary w-full" id="reqName"
+                        readonly />
                 </fieldset>
 
                 <!-- Example (Schedule) -->
                 <fieldset class="fieldset w-full">
                     <legend class="fieldset-legend text-primary text-lg">Changed Schedule</legend>
                     <div class="flex gap-2">
-                        <input type="text" class="input input-bordered transition-all duration-200 focus:input-primary w-full req" 
-                        id="schd_txt" name="CHANGE_SCHD" readonly />
+                        <input type="text"
+                            class="input input-bordered transition-all duration-200 focus:input-primary w-full req"
+                            id="schd_txt" name="CHANGE_SCHD" readonly />
                     </div>
                 </fieldset>
                 <!-- End -->
@@ -134,19 +133,17 @@
                 </div>
             </div>
 
-            <div class="mt-8 pt-6 border-t border-base-300 ">
+            <div class="mt-4 border-t border-base-300 pt-6">
                 <fieldset class="fieldset w-full hidden" id="controller-section">
-                        <legend class="fieldset-legend font-bold text-base-content/80"><span
-                                class="w-1.5 h-1.5 bg-primary rounded-full"></span>Job Controller</span>
-                        </legend>
-                        <select class="select req w-full focus:select-primary max-w-xs" id="CONTROLLER"
-                            name="CONTROLLER">
-                        </select>
-                    </fieldset>
+                    <legend class="fieldset-legend font-bold text-base-content/80"><span
+                            class="w-1.5 h-1.5 bg-primary rounded-full"></span>Job Controller</span>
+                    </legend>
+                    <select class="select req w-full focus:select-primary max-w-xs" id="CONTROLLER" name="CONTROLLER">
+                    </select>
+                </fieldset>
 
                 <div id="sentApprove"></div>
             </div>
-
         </form>
     </div>
 @endsection
