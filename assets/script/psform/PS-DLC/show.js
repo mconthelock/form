@@ -4,7 +4,14 @@ import {
   showErrorMessage,
   showMessage,
 } from "@amec/webasset/utils";
-import { getEmpData, getFormData, updateController, updateDLCform } from "./data";
+import {
+  getDrawingGroups,
+  getEmpData,
+  getFormData,
+  updateController,
+  updateDLCform,
+  validateDrawingNo,
+} from "./data";
 import { webflowSubmit } from "@amec/webasset/components/form";
 import {
   doaction,
@@ -20,6 +27,7 @@ import Select2 from "select2";
 import dayjs from "dayjs";
 
 var cextData, data;
+var showTable = null;
 Select2();
 
 $(async function () {
@@ -48,7 +56,7 @@ $(async function () {
       ? data.DETAILS
       : JSON.parse(data.DETAILS || "[]");
 
-    const showTable = await createTable(
+    showTable = await createTable(
       {
         responsive: false,
         data: tableData,
@@ -196,14 +204,44 @@ $(document).on("click", "button[name='btnAction']", async function () {
       const urlParams = new URLSearchParams(queryString);
       const empno = urlParams.get("empno");
       const actualDate = dayjs().format("YYYY-MM-DD HH:mm:ss");
+
+      const details = showTable
+        .rows()
+        .data()
+        .toArray()
+        .map((row) => {
+          const drawing = row.DRAWING ? String(row.DRAWING).trim() : "";
+          if (!drawing) return null;
+
+          const validatedDrawing = validateDrawingNo(drawing) || drawing;
+          const groups = getDrawingGroups(validatedDrawing);
+          console.log(validatedDrawing);
+          console.log(groups.pnzuba);
+          console.log(groups.pnhing);
+
+          return {
+            NEWCODE: row.NEWCODE || null,
+            NEWFLAG: row.NEWFLAG || null,
+            REFERENCE: row.REFERENCE || null,
+            PNZUBA: groups?.pnzuba || null,
+            PNHING: groups?.pnhing || null,
+          };
+        })
+        .filter(
+          (item) =>
+            item &&
+            (item.NEWCODE || item.NEWFLAG || item.REFERENCE),
+        );
+
       const updateformData = {
         ...state,
         CHANGE_STATUS: "1",
         ACTUAL_DATE: actualDate,
         ACTUAL_UPDATEBY: empno,
+        DETAILS: details,
       };
       res = await updateDLCform(updateformData);
-      
+
     } else {
       res = await doaction(state);
     }

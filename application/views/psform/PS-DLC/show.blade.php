@@ -90,7 +90,7 @@
                 <fieldset class="fieldset w-full">
                     <legend class="fieldset-legend text-primary text-lg">Request By</legend>
                     <input type="text" placeholder="Enter request by..."
-                        class="input input-bordered w-full transition-all duration-200 focus:input-primary req"
+                        class="input input-bordered w-full transition-all duration-200 focus:input-primary "
                         id="REQBY" name="REQBY" readonly />
                 </fieldset>
 
@@ -106,7 +106,7 @@
                     <legend class="fieldset-legend text-primary text-lg">Changed Schedule</legend>
                     <div class="flex gap-2">
                         <input type="text"
-                            class="input input-bordered transition-all duration-200 focus:input-primary w-full req"
+                            class="input input-bordered transition-all duration-200 focus:input-primary w-full "
                             id="schd_txt" name="CHANGE_SCHD" readonly />
                     </div>
                 </fieldset>

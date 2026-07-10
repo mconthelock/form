@@ -1,6 +1,11 @@
 import { webflowSubmit } from "@amec/webasset/components/form";
 import { createTable } from "@amec/webasset/dataTable";
-import { createdlcForm, getEmpData, getSchedule } from "./data";
+import {
+  createdlcForm,
+  getEmpData,
+  getSchedule,
+  validateDrawingNo,
+} from "./data";
 import { logFormData, requiredForm, showMessage } from "@amec/webasset/utils";
 import ExcelJS from "exceljs";
 import { setDatePicker } from "@amec/webasset/flatpickr";
@@ -17,7 +22,7 @@ $(async function () {
     $("#INPUTBY").val(empno);
     $("#inputName").val(getName.SNAME);
 
-    // ----------JUNG BM-------------------------
+    // ----------JUNG BM- ------------------------
     await setDatePicker({
       element: "#selectedDate",
       dateFormat: "Y-m-d",
@@ -122,6 +127,13 @@ $(document).on("click", "#btnRequest", async function () {
     if (typeof TableManager !== "undefined") {
       // 1. สั่ง sync ข้อมูลล่าสุดจากตาราง (เผื่อกรณี User พิมพ์แก้แล้วยังไม่ได้คลิกออกนอกช่อง)
       TableManager.syncData();
+      const invalidDrawing = TableManager.excelData.find(
+        (row) => !validateDrawingNo(row.DRAWING),
+      );
+      if (invalidDrawing) {
+        showMessage("พบ Drawing No. ไม่ถูกต้อง");
+        return;
+      }
 
       // 3. แปลง Array เป็น JSON String แล้วแนบเข้า FormData
       // หมายเหตุ: ฝั่ง Backend (เช่น PHP/Node.js) ต้องรับค่า "TABLE_DATA" แล้วนำไป parse เป็น JSON กลับอีกที
@@ -343,7 +355,19 @@ const TableManager = {
   bindEvents() {
     $(document).on("blur", "#Table tbody td.dlc-editable-cell", (e) => {
       const cell = e.currentTarget;
-      const value = $(cell).text().trim();
+      const name = $(cell).attr("name");
+      let value = $(cell).text().trim();
+
+      if (name === "DRAWING") {
+        const validated = validateDrawingNo(value);
+        if (!validated) {
+          showMessage("Drawing No. ไม่ถูกต้อง");
+          return;
+        }
+        value = validated;
+        $(cell).text(value);
+      }
+
       this.instance.cell(cell).data(value);
       this.syncData();
     });
@@ -352,7 +376,13 @@ const TableManager = {
       try {
         const file = e.target.files[0];
         if (!file) return;
-        this.excelData = await readExcelToJson(file); // มองเห็นฟังก์ชันนี้แน่นอน
+        this.excelData = await readExcelToJson(file);
+
+        this.excelData = this.excelData.map((row) => ({
+          ...row,
+          DRAWING: validateDrawingNo(row.DRAWING) ?? row.DRAWING,
+        }));
+
         this.renderData(this.excelData);
       } catch (error) {
         console.log(error);

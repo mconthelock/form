@@ -3,7 +3,15 @@ import dayjs from "dayjs";
 import { getEmpData, getReport, getSchedule } from "./data";
 import { createTable } from "@amec/webasset/dataTable";
 import { showMessage } from "@amec/webasset/utils";
-import { defaultExcel, exportExcel } from "@amec/webasset/excel";
+import {
+  alignment,
+  applyStyleToRange,
+  border,
+  defaultExcel,
+  exportExcel,
+  fill,
+  mergeCell,
+} from "@amec/webasset/excel";
 
 var reportTable;
 $(async function () {
@@ -134,6 +142,13 @@ $(document).on("click", "#btnSearch", async function () {
       OLDCODE: $("#oldcode").val() || null,
       CHANGE_SCHD: $("#schd_txt").val() || null,
     };
+    const isAllNull = Object.values(searchReport).every(
+      (value) => value === null,
+    );
+
+    if (isAllNull) {
+      return showMessage("Cannot search data because there is no data");
+    }
 
     const reportData = await getReport(searchReport);
     const dataArray = Array.isArray(reportData)
@@ -201,41 +216,131 @@ $(document).on("click", "#btnReset", async function () {
 
 $(document).on("click", "#btnExport", async function () {
   try {
+    // ตรวจสอบว่ามีข้อมูลตารางหรือไม่
     if (!reportTable) {
       return showMessage("Cannot export data because the data table is empty");
     }
+
+    // ดึงข้อมูลที่ผ่านการค้นหา/กรอง (จะได้ข้อมูลเป็น Array of Arrays)
     const exportData = reportTable.rows({ search: "applied" }).data().toArray();
 
     if (exportData.length === 0) {
       return showMessage("Cannot export data because the data table is empty");
     }
 
+    // 3. แมปข้อมูลจริงต่อท้ายหัวตาราง
+    const mappedExcelData = [
+      ...exportData.map((row) => ({
+        formNo: row[0],
+        reqBy: row[1],
+        no: row[2],
+        drawingNo: row[3],
+        item: row[4],
+        newCode: row[5],
+        newFlag: row[6],
+        oldCode: row[7],
+        oldFlag: row[8],
+        oldStatus: row[9],
+        oldSpec: row[10],
+        reference: row[11],
+        remark: row[12],
+      })),
+    ];
 
+    // สร้าง Excel โดยใช้ key ที่แมปไว้ด้านบน และจัดกลุ่ม Header ให้สอดคล้องกับตารางหน้าเว็บ
     const excel = await defaultExcel({
-      data: exportData,
+      data: mappedExcelData,
       column: [
-        { key: "formNo", header: "FORM NO." },
-        { key: "reqBy", header: "Request By" },
-        { key: "list_PURCODE", header: "Item PUR" },
-        { key: "list_ISSUESEQ", header: "Seq" },
-        { key: "list_DESCRIPTION", header: "Description" },
-        { key: "list_DRAWING", header: "Drawing No" },
-        { key: "list_ORDERNO", header: "Order No." },
-        { key: "list_ITEMNO", header: "Item" },
-        { key: "list_ADDREESS", header: "Address" },
-        { key: "list_RETURNTO", header: "Return To" },
-        { key: "list_QTY", header: "Q'ty" },
-        { key: "list_ISSUECARD", header: "Issue Card No" },
-        { key: "list_PRODUCTION", header: "Production" },
-        { key: "list_ISSUETO", header: "Shop" },
-        { key: "list_REMARK", header: "Remark" },
+        { key: "formNo", header: "" },
+        { key: "reqBy", header: "" },
+        { key: "no", header: "" },
+        { key: "drawingNo", header: "" },
+        { key: "item", header: "" },
+        { key: "newCode", header: "" },
+        { key: "newFlag", header: "", header: "" },
+        { key: "oldCode", header: "" },
+        { key: "oldFlag", header: "" },
+        { key: "oldStatus", header: "" },
+        { key: "oldSpec", header: "" },
+        { key: "reference", header: "" },
+        { key: "remark", header: "" },
       ],
       sheetName: "PS-DLC Report",
+      manual: true,
+      manualActions: (sheet) => {
+        sheet.spliceRows(
+          1,
+          1,
+          [
+            "Form No",
+            "Request By",
+            "No",
+            "Drawing No.",
+            "Item",
+            "Change To",
+            "",
+            "Before Change",
+            "",
+            "",
+            "",
+            "Reference",
+            "Remark",
+          ],
+          [
+            "",
+            "",
+            "",
+            "",
+            "",
+            "Code",
+            "New Flag",
+            "Code",
+            "Flag",
+            "Status",
+            "Spec Material",
+            "",
+            "",
+          ],
+        );
+
+        mergeCell(sheet, 1, 1, 2, 1);
+        mergeCell(sheet, 1, 2, 2, 2);
+        mergeCell(sheet, 1, 3, 2, 3);
+        mergeCell(sheet, 1, 4, 2, 4);
+        mergeCell(sheet, 1, 5, 2, 5);
+        mergeCell(sheet, 1, 6, 1, 7);
+        mergeCell(sheet, 1, 8, 1, 11);
+        mergeCell(sheet, 1, 12, 2, 12);
+        mergeCell(sheet, 1, 13, 2, 13);
+
+        sheet.eachRow((row) => {
+          row.eachCell({ includeEmpty: true }, (cell) => {
+            cell.border = border("thin");
+            cell.alignment = {
+              vertical: "middle",
+              horizontal: "center",
+              wrapText: true,
+            };
+          });
+        });
+
+        [1, 2].forEach((rowNumber) => {
+          sheet.getRow(rowNumber).font = { bold: true };
+          sheet.getRow(rowNumber).alignment = {
+            vertical: "middle",
+            horizontal: "center",
+            wrapText: true,
+          };
+        });
+
+        sheet.getRow(1).height = 24;
+        sheet.getRow(2).height = 24;
+      },
     });
 
-    exportExcel(excel, "Drawing list for change PN Production Report");
+    // สั่งดาวน์โหลดไฟล์ Excel
+    exportExcel(excel, "Change PN Production Report");
   } catch (error) {
     console.log(error);
   }
 });
-

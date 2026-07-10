@@ -84,7 +84,7 @@
                 <fieldset class="fieldset w-full">
                     <legend class="fieldset-legend text-primary text-lg">OLD CODE</legend>
                     <input type="text" placeholder="Enter code..."
-                        class="input input-bordered w-full transition-all duration-200 focus:input-primary req"
+                        class="input input-bordered w-full transition-all duration-200 focus:input-primary "
                         id="oldcode" />
                 </fieldset>
 
@@ -93,7 +93,7 @@
                     <legend class="fieldset-legend text-primary text-lg">Production</legend>
                     <div class="flex gap-2">
                         <input type="text"
-                            class="input input-bordered transition-all duration-200 focus:input-primary w-full req"
+                            class="input input-bordered transition-all duration-200 focus:input-primary w-full "
                             id="schd_txt" name="CHANGE_SCHD" readonly />
                         <button class="btn btn-neutral" type="button" id="openDatePicker">
                             <i class="fi fi-rr-calendar"><svg class="w-6 h-6 text-gray-800 dark:text-white"
