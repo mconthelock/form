@@ -51,6 +51,10 @@
     background-color: #f1f5f9;
     border-left: 4px solid #3b82f6; /* มีเส้นแถบสีน้ำเงินขึ้นที่ขอบซ้าย */
 }
+#tableSearch tbody tr:hover {
+        background-color: #eff6ff !important; /* คือสี blue-50 */
+        cursor: pointer !important;
+    }
     
 </style>
 @endsection
@@ -58,7 +62,9 @@
 <div class="hidden form-info" nfrmno="{{$NFRMNO}}" vorgno="{{$VORGNO}}" cyear="{{$CYEAR}}" mode="{{$mode}}"
     cyear2="{{$mode !=1 ? $CYEAR2 : '' }}" nrunno="{{$mode !=1 ? $NRUNNO : '' }}" return="{{$return ?? ''}}"></div>
 <div class="hidden apv-data" empno="{{$empno}}"></div>
+
 <div class="space-y-6">
+    <form id="frmmain">
     <!-- Top Section -->
     <div class="border border-gray-300 p-6 rounded-lg bg-white space-y-4">
         <div class="grid grid-cols-[120px_1fr] items-center gap-2">
@@ -94,9 +100,28 @@
         <!-- Header Section -->
         <div class="flex justify-between items-center mb-6">
             <h3 class="font-bold text-lg">General Information</h3>
-            <button id="btnOpenModal" class="border border-gray-400 px-4 py-1 text-sm flex items-center gap-2 hover:bg-gray-50 rounded">
-                Add from PUR-NVF Form <span>🔍</span>
-            </button>
+            <div class="flex items-center gap-4">
+                
+                <div class="relative flex items-center">
+                    <svg class="absolute left-3 w-4 h-4 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                    </svg>
+                    
+                    <input type="text" id="directSearchInput" 
+                        class="block w-64 pl-10 pr-3 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500" 
+                        placeholder="Add from PUR-NVF Form">
+                </div>
+
+                <span class="text-xs font-semibold text-gray-400">OR</span>
+
+                <button id="btnOpenModal" type="button" class="inline-flex items-center gap-2 px-4 py-1.5 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors">
+                    <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path>
+                    </svg>
+                    Browse List
+                </button>
+
+            </div>
         </div>
 
         <!-- เนื้อหาภายใน -->
@@ -106,43 +131,41 @@
             
             <div class="grid grid-cols-3 gap-y-2 gap-x-4 text-sm">
                 <label class="flex items-center gap-2 cursor-pointer">
-                    <input type="radio" name="vendor_category" value="oversea_melco" class="w-4 h-4 accent-blue-600"> Oversea (Relate MELCO Group)
+                    <input type="radio" name="vendor_typec" value="1:Oversea (Relate MELCO Group)" class="w-4 h-4 accent-blue-600 radio-typec"> Oversea (Relate MELCO Group)
                 </label>
                 <label class="flex items-center gap-2 cursor-pointer">
-                    <input type="radio" name="vendor_category" value="oversea_not_melco" class="w-4 h-4 accent-blue-600"> Oversea (Not relate MELCO Group)
+                    <input type="radio" name="vendor_typec" value="2:Oversea (Not relate MELCO Group)" class="w-4 h-4 accent-blue-600 radio-typec"> Oversea (Not relate MELCO Group)
                 </label>
                 <label class="flex items-center gap-2 cursor-pointer">
-                    <input type="radio" name="vendor_category" value="domestic_boi" class="w-4 h-4 accent-blue-600"> Domestic (Use BOI)
+                    <input type="radio" name="vendor_typec" value="3:Domestic (Use BOI)" class="w-4 h-4 accent-blue-600 radio-typec"> Domestic (Use BOI)
                 </label>
                 
                 <label class="flex items-center gap-2 cursor-pointer">
-                    <input type="radio" name="vendor_category" value="domestic_ipo" class="w-4 h-4 accent-blue-600"> Domestic (Use IPO)
+                    <input type="radio" name="vendor_typec" value="4:Domestic (Use IPO)" class="w-4 h-4 accent-blue-600 radio-typec"> Domestic (Use IPO)
                 </label>
                 <label class="flex items-center gap-2 cursor-pointer">
-                    <input type="radio" name="vendor_category" value="domestic_fta" class="w-4 h-4 accent-blue-600"> Domestic (Use FTA)
+                    <input type="radio" name="vendor_typec" value="7:Domestic (Use FTA)" class="w-4 h-4 accent-blue-600 radio-typec"> Domestic (Use FTA)
                 </label>
                 <label class="flex items-center gap-2 cursor-pointer">
-                    <input type="radio" name="vendor_category" value="domestic_vendor" class="w-4 h-4 accent-blue-600"> Domestic Vendor
+                    <input type="radio" name="vendor_typec" value="5:Domestic Vendor" class="w-4 h-4 accent-blue-600 radio-typec"> Domestic Vendor
                 </label>
                 
                 <label class="flex items-center gap-2 cursor-pointer">
-                    <input type="radio" name="vendor_category" value="sub_contractor" class="w-4 h-4 accent-blue-600"> Sub-Contractor
+                    <input type="radio" name="vendor_typec" value="8:Sub-Contractor" class="w-4 h-4 accent-blue-600 radio-typec"> Sub-Contractor
                 </label>
                 <label class="flex items-center gap-2 cursor-pointer">
-                    <input type="radio" name="vendor_category" value="non_production" class="w-4 h-4 accent-blue-600"> Non-Production
+                    <input type="radio" name="vendor_typec" value="6:Non-Production" class="w-4 h-4 accent-blue-600 radio-typec"> Non-Production
                 </label>
-                <label class="flex items-center gap-2 cursor-pointer">
-                    <input type="radio" name="vendor_category" value="fin_operation" class="w-4 h-4 accent-blue-600"> FIN Operation control
-                </label>
+             
             </div>
         </div>
             
             <div class="grid grid-cols-[120px_1fr] items-center gap-4">
                 <span class="font-semibold text-sm">Vendor Name</span>
                 <div class="flex items-center gap-4">
-                    <input type="text" class="input input-sm border border-gray-400 h-8 rounded w-1/3 px-2">
-                    <label class="flex items-center gap-2 text-sm"><input type="radio" name="vendor_type" value="local" class="w-4 h-4 accent-blue-600"> Local</label>
-                    <label class="flex items-center gap-2 text-sm"><input type="radio" name="vendor_type" value="oversea" class="w-4 h-4 accent-blue-600"> Oversea</label>
+                    <input type="text" name="COMNAME" class="input input-sm border border-gray-400 h-8 rounded w-1/3 px-2">
+                    <label class="flex items-center gap-2 text-sm"><input type="radio" name="vendor_type" value="Local" class="w-4 h-4 accent-blue-600  radio-type"> Local</label>
+                    <label class="flex items-center gap-2 text-sm"><input type="radio" name="vendor_type" value="Oversea" class="w-4 h-4 accent-blue-600  radio-type"> Oversea</label>
                     <select class="border border-gray-400 h-8 p-1 rounded text-sm">
                         <option>Select Country</option>
                     </select>
@@ -330,41 +353,18 @@
         </div>
     </div>
 <!-- Vendor Evaluation Section -->
-<div class="border border-gray-300 p-6 rounded-lg bg-white mt-6">
+<div id="nonpro" class="border border-gray-300 p-6 rounded-lg bg-white mt-6 hidden">
     <h2 class="font-bold text-lg ">Vendor Evaluation</h2>
-
-    <!-- ตารางการประเมิน -->
-    <div class="p-4 rounded-lg  mb-6">
-        <table class="w-full text-center border-collapse">
-            <thead>
-                <tr class="bg-gray-100">
-                    <th class="border border-gray-400 p-2 w-1/4 text-sm">Criterion</th>
-                    <th class="border border-gray-400 p-2 text-sm">This year<br>2025</th>
-                    <th class="border border-gray-400 p-2 text-sm">Last year<br>2024</th>
-                    <th class="border border-gray-400 p-2 text-sm">2 Years ago<br>2023</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td class="border border-gray-400 p-2 text-sm text-left">กำไรขาดทุนสุทธิ<br><span class="text-xs text-gray-500">Net Profit/Loss</span></td>
-                    <td class="border border-gray-400 p-2"><input type="text" class="w-full border-none bg-transparent text-center"></td>
-                    <td class="border border-gray-400 p-2"><input type="text" class="w-full border-none bg-transparent text-center"></td>
-                    <td class="border border-gray-400 p-2"><input type="text" class="w-full border-none bg-transparent text-center"></td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
-
     <!-- ส่วน Compliance (ตัวแดง) -->
-    <div class="border-2 border-dashed border-gray-400 p-4 rounded-lg mb-6 bg-gray-50">
+    <div class="border-2 border-dashed border-gray-400 p-4 rounded-lg mb-6 bg-gray-50 field-oversea">
         <h3 class="font-bold mb-3">Compliance</h3>
         <div class="grid grid-cols-1 gap-2 text-black text-sm">
-            <label class="flex items-center gap-2"><input type="checkbox"> ไม่ได้อยู่ในกลุ่มควบคุม ข้อกำหนด AMEC-5070: Rule for Export Control</label>
-            <label class="flex items-center gap-2"><input type="checkbox"> ไม่อยู่ในรายชื่อที่ถูกลงโทษจาก UNSC</label>
-            <label class="flex items-center gap-2"><input type="checkbox"> ไม่อยู่ในประเทศ ประเทศไทยคว่ำบาตร ตามมาตรการคว่ำบาตร โดยสหประชาชาติ WWW.dff-go.th</label>
-            <label class="flex items-center gap-2"><input type="checkbox"> AMEC's standard Terms of "CIF"</label>
+            <label class="flex items-center gap-2"><input type="checkbox" value="ไม่ได้อยู่ในกลุ่มควบคุม ข้อกำหนด AMEC-5070: Rule for Export Control"> ไม่ได้อยู่ในกลุ่มควบคุม ข้อกำหนด AMEC-5070: Rule for Export Control</label>
+            <label class="flex items-center gap-2"><input type="checkbox" value="ไม่อยู่ในรายชื่อที่ถูกลงโทษจาก UNSC"> ไม่อยู่ในรายชื่อที่ถูกลงโทษจาก UNSC</label>
+            <label class="flex items-center gap-2"><input type="checkbox" value="ไม่อยู่ในประเทศ ประเทศไทยคว่ำบาตร ตามมาตรการคว่ำบาตร โดยสหประชาชาติ WWW.dff-go.th"> ไม่อยู่ในประเทศ ประเทศไทยคว่ำบาตร ตามมาตรการคว่ำบาตร โดยสหประชาชาติ WWW.dff-go.th</label>
+            <label class="flex items-center gap-2"><input type="checkbox" value="AMEC's standard Terms of 'CIF'"> AMEC's standard Terms of "CIF"</label>
             <div class="flex items-center gap-2">
-                <label class="flex-shrink-0"><input type="checkbox"> อื่นๆ ระบุ</label>
+                <label class="flex items-center gap-2 flex-shrink-0"><input type="checkbox" value="อื่นๆ ระบุ"> อื่นๆ ระบุ</label>
                 <input type="text" class="input input-sm border border-gray-400 h-8 rounded w-1/2 px-2">
                 <span class="text-red-600 text-sm font-semibold whitespace-nowrap">ข้อกำหนด AMEC-6000: Rule for Purchase</span>
             </div>
@@ -372,25 +372,11 @@
         </div>
     </div>
 
-    <!-- องค์ประกอบอื่นๆ (Business Type, Financial Statement, etc.) -->
-    <div class="space-y-6">
-        <!-- Business Type -->
-        <div class="grid grid-cols-1 gap-4">
-            <div>
-                <label class="font-bold text-sm block mb-1">ประเภทธุรกิจตอนจดทะเบียน (Business type at registration)</label>
-                <input type="text" class="input input-sm border border-gray-400 h-8 rounded w-full px-2">
-            </div>
-            <div>
-                <label class="font-bold text-sm block mb-1">ประเภทธุรกิจที่ส่งงบการเงินล่าสุด (Business type that submitted the latest financial statements)</label>
-                <input type="text" class="input input-sm border border-gray-400 h-8 rounded w-full px-2">
-            </div>
-        </div>
-
-        <!-- 1. รายการสินค้าและบริการ -->
+            <!-- 1. รายการสินค้าและบริการ -->
     <div>
-<label class="font-bold text-sm block mb-2">รายการสินค้าและบริการที่ยื่นจดทะเบียนเครื่องหมายการค้าในประเทศไทย</label>
+<label class="font-bold text-sm block mb-2 field-local">รายการสินค้าและบริการที่ยื่นจดทะเบียนเครื่องหมายการค้าในประเทศไทย</label>
 <!-- ปรับตรงนี้เป็น grid-cols-3 -->
-<div class="grid grid-cols-3 gap-x-4 gap-y-1 text-sm">
+<div class="grid grid-cols-3 gap-x-4 gap-y-1 text-sm field-local">
     <label class="flex items-center gap-2"><input type="radio" name="product_category" class="w-4 h-4 accent-blue-600"> เครื่องสำอาง ยา ผลิตภัณฑ์เคมี</label>
     <label class="flex items-center gap-2"><input type="radio" name="product_category" class="w-4 h-4 accent-blue-600"> โลหะ เครื่องมืออุปกรณ์ วัสดุก่อสร้าง</label>
     <label class="flex items-center gap-2"><input type="radio" name="product_category" class="w-4 h-4 accent-blue-600"> เครื่องจักรกล เครื่องมือ เครื่องใช้ไฟฟ้า</label>
@@ -410,13 +396,69 @@
     <label class="flex items-center gap-2"><input type="radio" name="product_category" class="w-4 h-4 accent-blue-600"> เครื่องหมายร่วม</label>
 </div>
     </div>
+    <!-- องค์ประกอบอื่นๆ (Business Type, Financial Statement, etc.) -->
+    <div class="space-y-6">
+        <!-- Business Type -->
+        <div class="grid grid-cols-1 gap-4 pt-4 ">
+<div>
+    <label class="font-bold text-sm block mb-1">ประเภทธุรกิจตอนจดทะเบียน (Business type at registration)</label>
+    <input type="text" class="input input-sm border border-gray-400 h-8 rounded w-full px-2">
+</div>
+
+<div>
+    <label class="font-bold text-sm block mb-1">ประเภทธุรกิจที่ส่งงบการเงินล่าสุด (Business type that submitted the latest financial statements)</label>
+    <input type="text" class="input input-sm border border-gray-400 h-8 rounded w-full px-2">
+</div>
+
+<div class="rounded-lg mb-6 mt-4"> 
+    <label class="font-bold text-sm block mb-1">กำไรขาดทุนสุทธิ 3 ปีล่าสุด</label>
+    <table class="w-full text-center border-collapse">
+        <thead>
+            <tr class="bg-gray-100">
+                <th class="border border-gray-400 p-2 w-1/3 text-sm">
+                    ปี<br><span class="text-xs text-gray-500">Year</span>
+                </th>
+                <th class="border border-gray-400 p-2 w-2/3 text-sm">
+                    กำไรขาดทุนสุทธิ<br><span class="text-xs text-gray-500">Net Profit/Loss</span>
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td class="border border-gray-400 p-2">
+                    <input type="text" class="w-full border-none bg-transparent text-center focus:outline-none" placeholder="ระบุปี (เช่น 2026)">
+                </td>
+                <td class="border border-gray-400 p-2">
+                    <input type="text" class="w-full border-none bg-transparent text-center focus:outline-none" placeholder="ระบุจำนวนเงิน...">
+                </td>
+            </tr>
+            <tr>
+                <td class="border border-gray-400 p-2">
+                    <input type="text" class="w-full border-none bg-transparent text-center focus:outline-none" placeholder="ระบุปี...">
+                </td>
+                <td class="border border-gray-400 p-2">
+                    <input type="text" class="w-full border-none bg-transparent text-center focus:outline-none" placeholder="ระบุจำนวนเงิน...">
+                </td>
+            </tr>
+            <tr>
+                <td class="border border-gray-400 p-2">
+                    <input type="text" class="w-full border-none bg-transparent text-center focus:outline-none" placeholder="ระบุปี...">
+                </td>
+                <td class="border border-gray-400 p-2">
+                    <input type="text" class="w-full border-none bg-transparent text-center focus:outline-none" placeholder="ระบุจำนวนเงิน...">
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+        </div>
 
     <!-- 2. ข้อมูลการจดทะเบียนนิติบุคคลและภาษี -->
     <div class="border-t pt-4">
         <div class="flex items-center gap-6 mb-3">
             <label class="font-bold text-sm">ข้อมูลการจดทะเบียนนิติบุคคลและภาษี</label>
-            <label class="flex items-center gap-2 text-sm"><input type="checkbox" class="checkbox checkbox-xs"> นิติบุคคล</label>
-            <label class="flex items-center gap-2 text-sm"><input type="checkbox" class="checkbox checkbox-xs"> บุคคลธรรมดา</label>
+            <label class="flex items-center gap-2 text-sm"><input type="radio" name="legal_status" value="นิติบุคคล" class="w-4 h-4 accent-blue-600"> นิติบุคคล</label>
+            <label class="flex items-center gap-2 text-sm"><input type="radio" name="legal_status" value="บุคคลธรรมดา" class="w-4 h-4 accent-blue-600"> บุคคลธรรมดา</label>
         </div>
         <div class="grid grid-cols-1 gap-3">
             <div>
@@ -429,6 +471,7 @@
             </div>
         </div>
     </div>
+
 
     <!-- 3. รายละเอียดค่าใช้จ่ายและการประเมิน -->
     <div class="border-t pt-4">
@@ -456,15 +499,15 @@
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-gray-600">Total Amount [Bht]</label>
-                    <input type="text" class="w-full border border-gray-400 h-8 p-2 rounded text-sm">
+                    <input type="text" id="total_amount" class="w-full border border-gray-400 h-8 p-2 rounded text-sm">
                 </div>
                 <label class="flex items-center gap-2 text-sm"><input type="checkbox" class="checkbox"> Not purchase more than 5 years "DO NOT USE"</label>
             </div>
             <div class="space-y-1 text-sm bg-gray-50 p-3 rounded-lg border border-gray-200">
-                <label class="flex items-center gap-2"><input type="radio" name="purchase_level" class="w-4 h-4 accent-blue-600"> Level A: ≥ 1,000,000 Baht</label>
-                <label class="flex items-center gap-2"><input type="radio" name="purchase_level" class="w-4 h-4 accent-blue-600"> Level B: < 1,000,000 and ≥ 100,000 Baht</label>
-                <label class="flex items-center gap-2"><input type="radio" name="purchase_level" class="w-4 h-4 accent-blue-600"> Level C: < 100,000 and ≥ 10,000 Baht</label>
-                <label class="flex items-center gap-2"><input type="radio" name="purchase_level" class="w-4 h-4 accent-blue-600"> Level D: < 10,000 Baht</label>
+                <label class="flex items-center gap-2"><input type="radio" name="purchase_level" value="A" class="w-4 h-4 accent-blue-600"> Level A: ≥ 1,000,000 Baht</label>
+                <label class="flex items-center gap-2"><input type="radio" name="purchase_level" value="B" class="w-4 h-4 accent-blue-600"> Level B: < 1,000,000 and ≥ 100,000 Baht</label>
+                <label class="flex items-center gap-2"><input type="radio" name="purchase_level" value="C" class="w-4 h-4 accent-blue-600"> Level C: < 100,000 and ≥ 10,000 Baht</label>
+                <label class="flex items-center gap-2"><input type="radio" name="purchase_level" value="D" class="w-4 h-4 accent-blue-600"> Level D: < 10,000 Baht</label>
             </div>
         </div>
     </div>
@@ -498,11 +541,11 @@
                 <div>
                     <h3 class="font-bold underline text-sm mb-2">Advance verifying invoice's price by:</h3>
                     <div class="space-y-1 text-sm">
-                        <label class="flex items-center gap-2"><input type="checkbox"> XML file</label>
-                        <label class="flex items-center gap-2"><input type="checkbox"> PDF file (convert/not scan)</label>
-                        <label class="flex items-center gap-2"><input type="checkbox"> Excel file</label>
-                        <label class="flex items-center gap-2"><input type="checkbox"> Text file (own pattern/form)</label>
-                        <label class="flex items-center gap-2"><input type="checkbox"> Not able advance any file before deliver to AMEC</label>
+                        <label class="flex items-center gap-2"><input type="radio" name="verification_method" class="w-4 h-4 accent-blue-600" value="XML file"> XML file</label>
+                        <label class="flex items-center gap-2"><input type="radio" name="verification_method" class="w-4 h-4 accent-blue-600" value="PDF file (convert/not scan)<"> PDF file (convert/not scan)</label>
+                        <label class="flex items-center gap-2"><input type="radio" name="verification_method" class="w-4 h-4 accent-blue-600" value="Excel file">Excel file</label>
+                        <label class="flex items-center gap-2"><input type="radio" name="verification_method" class="w-4 h-4 accent-blue-600" value="Text file (own pattern/form)"> Text file (own pattern/form)</label>
+                        <label class="flex items-center gap-2"><input type="radio" name="verification_method" class="w-4 h-4 accent-blue-600" value="Not able advance any file before deliver to AMEC"> Not able advance any file before deliver to AMEC</label>
                     </div>
                 </div>
                 <div>
@@ -518,8 +561,12 @@
                         <input type="radio" name="environmental_level" class="w-4 h-4 accent-blue-600"> Level C: Has response & related material, refer to PUR-QP-E003
                     </label>
                     <label class="flex items-center gap-2">
-                        <input type="radio" name="environmental_level" class="w-4 h-4 accent-blue-600"> Level D: Has not related material / Related & Not response
+                        <input type="radio" name="environmental_level" class="w-4 h-4 accent-blue-600"> Level D: Has not related material
                     </label>
+                    <label class="flex items-center gap-2">
+                        <input type="radio" name="environmental_level" class="w-4 h-4 accent-blue-600"> Level D: Related & Not response
+                    </label>
+                    
                 </div>
             </div>
             </div>
@@ -532,6 +579,7 @@
         <div class="flex gap-4 contact-row">
             <input type="text" placeholder="Name" class="input input-sm border border-gray-400 h-8 rounded w-[450px] px-2">
             <input type="email" placeholder="E-mail" class="input input-sm border border-gray-400 h-8 rounded w-[450px]  px-2">
+            <input type="text" placeholder="Username" class="input input-sm border border-gray-400 h-8 rounded w-[200px]  px-2">
         </div>
     </div>
 
@@ -550,11 +598,15 @@
 </div>
 </div>
 </div>
+</form>
 </div>
-<dialog id="searchModal" class="w-full max-w-xl">
+
+<dialog id="searchModal" 
+        class="fixed inset-y-0 right-0 w-full max-w-xl h-full max-h-screen rounded-none rounded-l-2xl shadow-2xl p-0 "
+        style="margin: 0 0 0 auto;">
     <!-- Header -->
     <div class="modal-header-gradient flex justify-between items-center">
-        <h3 class="font-semibold text-lg tracking-wide">Select Form</h3>
+        <h3 class="font-semibold text-lg tracking-wide">Search PUR-NVF Form</h3>
         <button id="btnCloseModal" class="text-slate-300 hover:text-white transition-colors text-2xl font-light">✕</button>
     </div>
     
@@ -567,20 +619,7 @@
                    class="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-50/50 focus:border-blue-500 outline-none transition-all text-gray-700" 
                    placeholder="Enter Form Number or Vendor Name...">
         </div>
-        
-        <!-- รายการข้อมูลที่ดูเหมือน Card -->
-        <div class="space-y-2">
-            <p class="text-xs text-gray-400 font-bold uppercase tracking-wider pl-1">Available Records</p>
-            <div class="border border-gray-100 rounded-2xl overflow-hidden shadow-sm">
-                <div class="p-4 cursor-pointer select-item flex justify-between items-center" data-value="PUR-NVF26-000001">
-                    <span class="font-bold text-slate-700">PUR-NVF26-000001</span>
-                    <span class="text-sm text-gray-500">Vendor A</span>
-                </div>
-                <div class="p-4 cursor-pointer select-item flex justify-between items-center" data-value="PUR-NVF26-000002">
-                    <span class="font-bold text-slate-700">PUR-NVF26-000002</span>
-                    <span class="text-sm text-gray-500">Vendor B</span>
-                </div>
-            </div>
+     <div id="tableContainer">
         </div>
     </div>
 </dialog>
