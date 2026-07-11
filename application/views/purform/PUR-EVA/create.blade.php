@@ -62,9 +62,9 @@
 <div class="hidden form-info" nfrmno="{{$NFRMNO}}" vorgno="{{$VORGNO}}" cyear="{{$CYEAR}}" mode="{{$mode}}"
     cyear2="{{$mode !=1 ? $CYEAR2 : '' }}" nrunno="{{$mode !=1 ? $NRUNNO : '' }}" return="{{$return ?? ''}}"></div>
 <div class="hidden apv-data" empno="{{$empno}}"></div>
-
+<form id="frmmain">
 <div class="space-y-6">
-    <form id="frmmain">
+ 
     <!-- Top Section -->
     <div class="border border-gray-300 p-6 rounded-lg bg-white space-y-4">
         <div class="grid grid-cols-[120px_1fr] items-center gap-2">
@@ -166,8 +166,8 @@
                     <input type="text" name="COMNAME" class="input input-sm border border-gray-400 h-8 rounded w-1/3 px-2">
                     <label class="flex items-center gap-2 text-sm"><input type="radio" name="vendor_type" value="Local" class="w-4 h-4 accent-blue-600  radio-type"> Local</label>
                     <label class="flex items-center gap-2 text-sm"><input type="radio" name="vendor_type" value="Oversea" class="w-4 h-4 accent-blue-600  radio-type"> Oversea</label>
-                    <select class="border border-gray-400 h-8 p-1 rounded text-sm">
-                        <option>Select Country</option>
+                    <select name="COUNTRY_SELECT" id="COUNTRY_SELECT" class="select select-bordered select-sm bg-gray-50 border-gray-300 country  w-[200px]" disabled>
+                            <option value="">-- Select Country --</option>
                     </select>
                 </div>
             </div>
@@ -179,35 +179,51 @@
         <!-- Address Line 1 -->
         <div>
             <label class="block text-xs font-semibold text-gray-600 mb-1">No., Village, Building, Alley, Road</label>
-            <input type="text" placeholder="e.g. 43/86 Moo 16, Bangna Road..." class="input input-sm border border-gray-400 h-8 rounded  px-2 w-full">
+            <input type="text" name="ADDRESS_EN"   id="ADDRESS_EN"  placeholder="e.g. 43/86 Moo 16, Bangna Road..." class="input input-sm border border-gray-400 h-8 rounded  px-2 w-full">
         </div>
         <!-- Grid for Province/District -->
         <div class="grid grid-cols-2 gap-4">
             <div>
                 <label class="block text-xs font-semibold text-gray-600 mb-1">Province</label>
-                <input type="text" placeholder="Province" class="input input-sm border border-gray-400 h-8 rounded  px-2 w-full">
+                <input type="text" name="PROVINCE_EN" id="PROVINCE_EN" maxlength="100" class="input input-bordered input-sm w-full req bg-gray-50 border-gray-300 field-oversea" placeholder="Province">
+                <div id="PROVINCE_LOCAL_WRAPPER" class="field-local hidden">
+                    <select id="PROVINCE_SELECT" class="province">
+                        <option value="">-- Select Province --</option>
+                    </select>
+                </div>
+
             </div>
             <div>
                 <label class="block text-xs font-semibold text-gray-600 mb-1">District</label>
-                <input type="text" placeholder="District" class="input input-sm border border-gray-400 h-8 rounded px-2 w-full">
+                <input type="text" name="DISTRICT_EN" id="DISTRICT_EN" maxlength="100" class="input input-bordered input-sm w-full req bg-gray-50 border-gray-300 field-oversea" placeholder="District">
+                <div id="DISTRICT_LOCAL_WRAPPER" class="field-local hidden">
+                    <select id="DISTRICT_SELECT" class="district">
+                        <option value="">-- Select District --</option>
+                    </select>
+                </div>
             </div>
         </div>
         <!-- Grid for Sub-district/Postcode -->
         <div class="grid grid-cols-2 gap-4">
             <div>
                 <label class="block text-xs font-semibold text-gray-600 mb-1">Sub-district</label>
-                <input type="text" placeholder="Sub-district" class="input input-sm border border-gray-400 h-8 rounded  px-2 w-full">
+                <input type="text" name="SUB_DISTRICT_EN" id="SUB_DISTRICT_EN" maxlength="100" class="input input-bordered input-sm w-full req bg-gray-50 border-gray-300 field-oversea" placeholder="Sub-district">
+                <div id="SUB_DISTRICT_LOCAL_WRAPPER" class="field-local hidden">
+                    <select id="SUB_DISTRICT_SELECT" class="sub-district">
+                        <option value="">-- Select Sub-district --</option>
+                    </select>
+                </div>
             </div>
             <div>
                 <label class="block text-xs font-semibold text-gray-600 mb-1">Postcode</label>
-                <input type="text" placeholder="Postcode" class="input input-sm border border-gray-400 h-8 rounded  px-2 w-full">
+                <input type="text" name="POSTCODE_EN" id="POSTCODE_EN"  placeholder="Postcode" class="input input-sm border border-gray-400 h-8 rounded  px-2 w-full">
             </div>
         </div>
         <!-- Country -->
         <div class="grid grid-cols-2 gap-4">
                 <div>
                 <label class="block text-xs font-semibold text-gray-600 mb-1">Country</label>
-                <input type="text" placeholder="Country" class="input input-sm border border-gray-400 h-8 rounded  px-2 w-full">
+                <input type="text" name="COUNTRY_EN" id="COUNTRY_EN" placeholder="Country" class="input input-sm border border-gray-400 h-8 rounded  px-2 w-full">
             </div>
         </div>
     </div>
@@ -219,32 +235,33 @@
     <div class="space-y-4">
         <div>
             <label class="block text-xs font-semibold text-gray-600 mb-1">บ้านเลขที่, หมู่บ้าน, อาคาร, ซอย, ถนน</label>
-            <input type="text" placeholder="เช่น 43/86 หมู่ 16 ซอยบางนา..." class="input input-sm border border-gray-400 h-8 rounded  px-2 w-full">
+            <input type="text" name="ADDRESS_TH" id="ADDRESS_TH" placeholder="เช่น 43/86 หมู่ 16 ซอยบางนา" maxlength="200" class="input input-bordered input-sm w-full  bg-gray-50 border-gray-300" placeholder="เช่น 43/86 หมู่ 16 ซอยบางนา...">
         </div>
         <div class="grid grid-cols-2 gap-4">
             <div>
                 <label class="block text-xs font-semibold text-gray-600 mb-1">จังหวัด</label>
-                <input type="text" placeholder="จังหวัด" class="input input-sm border border-gray-400 h-8 rounded  px-2 w-full">
+                <input type="text" name="PROVINCE_TH" id="PROVINCE_TH" maxlength="100" class="input input-bordered input-sm w-full  bg-gray-50 border-gray-300" placeholder="จังหวัด">
+
             </div>
             <div>
                 <label class="block text-xs font-semibold text-gray-600 mb-1">อำเภอ / เขต</label>
-                <input type="text" placeholder="อำเภอ / เขต" class="input input-sm border border-gray-400 h-8 rounded  px-2 w-full">
+                 <input type="text" name="DISTRICT_TH" id="DISTRICT_TH" maxlength="100" class="input input-bordered input-sm w-full  bg-gray-50 border-gray-300" placeholder="อำเภอ / เขต">
             </div>
         </div>
         <div class="grid grid-cols-2 gap-4">
             <div>
                 <label class="block text-xs font-semibold text-gray-600 mb-1">ตำบล / แขวง</label>
-                <input type="text" placeholder="ตำบล / แขวง" class="input input-sm border border-gray-400 h-8 rounded  px-2 w-full">
+                <input type="text" name="SUB_DISTRICT_TH" id="SUB_DISTRICT_TH" maxlength="100" class="input input-bordered input-sm w-full  bg-gray-50 border-gray-300" placeholder="ตำบล / แขวง">
             </div>
             <div>
                 <label class="block text-xs font-semibold text-gray-600 mb-1">รหัสไปรษณีย์</label>
-                <input type="text" placeholder="รหัสไปรษณีย์" class="input input-sm border border-gray-400 h-8 rounded  px-2 w-full">
+                <input type="text" name="POSTCODE_TH" id="POSTCODE_TH" maxlength="50" class="input input-bordered input-sm w-full  bg-gray-50 border-gray-300" placeholder="รหัสไปรษณีย์">
             </div>
         </div>
         <div class="grid grid-cols-2 gap-4">
             <div>
                 <label class="block text-xs font-semibold text-gray-600 mb-1">ประเทศ</label>
-                <input type="text" placeholder="ประเทศ" class="input input-sm border border-gray-400 h-8 rounded  px-2 w-full">
+                <input type="text" name="COUNTRY_TH" id="COUNTRY_TH" maxlength="200" class="input input-bordered input-sm w-full bg-gray-50 border-gray-300" placeholder="ประเทศ" readonly>
             </div>
         </div>
     </div>
@@ -254,25 +271,25 @@
                 <div class="grid grid-cols-2 gap-4">
                     <div class="grid grid-cols-[120px_1fr] items-center gap-4">
                         <label class="font-semibold text-sm">Contact name</label>
-                       <input type="text" class="input input-sm border border-gray-400 h-8 rounded  px-2 w-full">
+                       <input type="text" name="CONTACT" id="CONTACT" maxlength="90" class="input input-sm border border-gray-400 h-8 rounded  px-2 w-full">
                     </div>
                 </div>
                 <div class="grid grid-cols-2 gap-4">
                     <div class="grid grid-cols-[120px_1fr] items-center gap-4">
                         <label class="font-semibold text-sm">Email</label>
-                        <input type="text" class="input input-sm border border-gray-400 h-8 rounded  px-2 w-full">
+                        <input type="text" name="EMAIL" id="EMAIL" maxlength="90" class="input input-sm border border-gray-400 h-8 rounded  px-2 w-full">
                     </div>
                     <div class="grid grid-cols-[120px_1fr] items-center gap-4">
                         <label class="font-semibold text-sm">Web site</label>
-                        <input type="text" class="input input-sm border border-gray-400 h-8 rounded  px-2 w-full">
+                        <input type="text" name="WEBSITE" id="WEBSITE" maxlength="200" class="input input-sm border border-gray-400 h-8 rounded  px-2 w-full">
                     </div>
                     <div class="grid grid-cols-[120px_1fr] items-center gap-4">
                         <label class="font-semibold text-sm">Tel.no</label>
-                        <input type="text" class="input input-sm border border-gray-400 h-8 rounded  px-2 w-full">
+                        <input type="text"  name="TELNO" id="TELNO" maxlength="12" class="input input-sm border border-gray-400 h-8 rounded  px-2 w-full">
                     </div>
                     <div class="grid grid-cols-[120px_1fr] items-center gap-4">
                         <label class="font-semibold text-sm">Fax.no</label>
-                        <input type="text" class="input input-sm border border-gray-400 h-8 rounded  px-2 w-full">
+                        <input type="text" name="FAX" id="FAX" maxlength="30" class="input input-sm border border-gray-400 h-8 rounded  px-2 w-full">
                     </div>
                 </div>
             </div>
@@ -282,11 +299,11 @@
     <div class="grid grid-cols-2 gap-4 mb-4">
         <div class="grid grid-cols-[120px_1fr] items-center gap-4">
             <label class="font-semibold text-sm">Bank name</label>
-            <input type="text" class="input input-sm border border-gray-400 h-8 rounded px-2 w-full">
+            <input type="text"  name="BANKNAME" id="BANKNAME" maxlength="50"  class="input input-sm border border-gray-400 h-8 rounded px-2 w-full">
         </div>
         <div class="grid grid-cols-[120px_1fr] items-center gap-4">
             <label class="font-semibold text-sm">Branch name</label>
-            <input type="text" class="input input-sm border border-gray-400 h-8 rounded px-2 w-full">
+            <input type="text" name="BRANCH" id="BRANCH" maxlength="50"  class="input input-sm border border-gray-400 h-8 rounded px-2 w-full">
         </div>
     </div>
 
@@ -295,20 +312,21 @@
           <div class="grid grid-cols-2 gap-4">
         <div class="grid grid-cols-[120px_1fr] items-center gap-4">
             <label class="font-semibold text-sm">Account number</label>
-            <input type="text" class="input input-sm border border-gray-400 h-8 rounded px-2 w-full">
+            <input type="text" name="ACCNUMBER" id="ACCNUMBER" maxlength="13" class="input input-sm border border-gray-400 h-8 rounded px-2 w-full">
         </div>
         </div>
         <div class="grid grid-cols-[120px_1fr] items-start gap-4">
             <label class="font-semibold text-sm pt-1">Bank Address</label>
-            <textarea class="textarea textarea-sm border border-gray-400 rounded px-2 w-full text-sm py-1" rows="2"></textarea>
+            <textarea  name="ACCNUMBER" id="ACCNUMBER" class="textarea textarea-sm border border-gray-400 rounded px-2 w-full text-sm py-1" rows="2"></textarea>
         </div>
 
         <div class="grid grid-cols-2 gap-4">
             <div class="grid grid-cols-[120px_1fr] items-center gap-4">
                 <label class="font-semibold text-sm">Payment Term</label>
-                <select class="input input-sm border border-gray-400 h-8 rounded px-2 w-full">
-                    <option>Select Term</option>
-                </select>
+                	<input type="hidden" id="TERM_PAYMENT_HIDDEN" name="TERMCODE" value="">
+                            <select id="TERM_PAYMENT" name ="TERM_PAYMENT" class="select select-sm w-full md:w-fit min-w-max termcode req">
+                                <option value="" disabled selected>...</option>
+                            </select>
             </div>
             <div class="grid grid-cols-[120px_1fr] items-center gap-4">
                 <label class="font-semibold text-sm">Std Current</label>
@@ -324,8 +342,16 @@
     
     <fieldset class="flex flex-col gap-2">
         <label class="attach-file text-sm flex items-center gap-2" id="attach-po">
-            <input type="checkbox" name="ATTACH_TYPE" value="P/O Confirmation" class="checkbox checkbox-xs" a-type="po">
+        <input type="checkbox" name="ATTACH_TYPE" value="Company Certification" class="checkbox checkbox-xs" a-type="cer">
             Company Certificate / Company Profile
+        </label>
+        <label class="attach-file text-sm flex items-center gap-2" id="attach-ie">
+            <input type="checkbox" name="ATTACH_TYPE" value="IE evaluation" class="checkbox checkbox-xs" a-type="ie">
+            IE's evaluation Document
+        </label>
+        <label class="attach-file text-sm flex items-center gap-2" id="attach-qa">
+            <input type="checkbox" name="ATTACH_TYPE" value="QA evaluation" class="checkbox checkbox-xs" a-type="qa">
+            QA's evaluation Document
         </label>
         <label class="attach-file text-sm flex items-center gap-2" id="attach-other">
             <input type="checkbox" name="ATTACH_TYPE" value="Other" class="checkbox checkbox-xs" a-type="other">
@@ -598,8 +624,8 @@
 </div>
 </div>
 </div>
-</form>
 </div>
+</form>
 
 <dialog id="searchModal" 
         class="fixed inset-y-0 right-0 w-full max-w-xl h-full max-h-screen rounded-none rounded-l-2xl shadow-2xl p-0 "
