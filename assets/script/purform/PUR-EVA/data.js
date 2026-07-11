@@ -10,3 +10,10 @@ export async function searchNVFForm(keyword) {
         method: 'GET',
     });
 }
+
+export async function getCurrency() {
+    return fetchUtils({
+        url: `${process.env.APP_API}/amec/pcurrency/currency`,
+        method: 'GET',
+    });
+}

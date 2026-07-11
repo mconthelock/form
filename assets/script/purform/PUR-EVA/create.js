@@ -1,8 +1,8 @@
-import select2 from 'select2';
+// import select2 from 'select2';
 import { dragDropInit } from '@amec/webasset/dragdrop';
-import { searchNVFForm } from './data';
+import { searchNVFForm, getCurrency } from './data';
 import { createTable } from '@amec/webasset/dataTable';
-import { setSelect2 } from '@amec/webasset/select2';
+// import { setSelect2 } from '@amec/webasset/select2';
 import { downloadOrOpenFile } from '@amec/webasset/api/file';
 import {
     getCountries,
@@ -33,7 +33,9 @@ import {
     attachTypeManager,
     attachOtherManager,
 } from '../PUR-NVF/formManager';
-select2();
+import { currencyManager } from './formManager';
+import { showMessage } from '@amec/webasset/utils';
+// select2();
 var tableSearch, purformdata, columnPurNVF;
 var provinceData, districtData, subDistrictData;
 
@@ -78,11 +80,19 @@ $(document).ready(async function () {
         value: t.TERMCODE,
         text: t.TERMNAME,
     }));
+
+    const currency = await getCurrency();
+    const currencyData = currency.map((c) => ({
+        value: c.CURCODE,
+        text: c.CURRENCY,
+    }));
+
     countryManager.init(countriesData);
     provinceManager.init(provinceData);
     districtManager.init(districtData);
     subDistrictManager.init(subDistrictData);
     paymentTermManager.init(termdata);
+    currencyManager.init(currencyData);
 
     dragDropInit();
     columnPurNVF = [
@@ -261,6 +271,86 @@ $(document).ready(async function () {
         setVendorInfo(rowData); // เรียกใช้ฟังก์ชัน setVendorInfo เพื่อใส่ข้อมูลลงในฟอร์ม
         $('#searchModal')[0].close();
     });
+
+    $(document).on('select2:select', '.country', async function (e) {
+        countryManager.change(e);
+    });
+
+    $(document).on('select2:select', '.province', async function (e) {
+        provinceManager.change(e);
+        const selectedProvinceId = provinceManager.getValue('PROVINCE_SELECT');
+        const filteredDistricts = districtData.filter(
+            (d) => d.province_id == selectedProvinceId,
+        );
+
+        const districtOptions = filteredDistricts.map((d) => ({
+            id: d.id,
+            value: d.value,
+            text: d.text,
+            nameth: d.nameth,
+        }));
+
+        districtOptions.unshift({
+            id: '',
+            value: '',
+            text: '-- Select District --', // หรือใส่เป็นค่าว่าง "" ก็ได้
+            nameth: '',
+        });
+
+        districtManager.select.empty().trigger('change');
+        await districtManager.init(districtOptions);
+    });
+
+    $(document).on('select2:select', '.district', async function (e) {
+        districtManager.change(e);
+        const selectedDistrictId = districtManager.getValue('DISTRICT_SELECT');
+        const filteredSubDistricts = subDistrictData.filter(
+            (s) => s.district_id == selectedDistrictId,
+        );
+        const subDistrictOptions = filteredSubDistricts.map((s) => ({
+            id: s.id,
+            value: s.value,
+            text: s.text,
+            nameth: s.nameth,
+            district_id: s.district_id,
+            postcode: s.postcode,
+        }));
+        // console.log(subDistrictOptions);
+        subDistrictOptions.unshift({
+            id: '',
+            value: '',
+            text: '-- Select Sub-district --', // หรือใส่เป็นค่าว่าง "" ก็ได้
+            nameth: '',
+            district_id: '',
+            postcode: '',
+        });
+
+        subDistrictManager.select.empty().trigger('change');
+        await subDistrictManager.init(subDistrictOptions);
+    });
+
+    $(document).on('select2:select', '.sub-district', async function (e) {
+        subDistrictManager.change(e);
+    });
+
+    $(document).on('input', '#directSearchInput', async function () {
+        const keyword = $(this).val();
+        if (keyword.length == '16') {
+            const results = await searchNVFForm(keyword);
+            if (results && Array.isArray(results) && results.length > 0) {
+                const data = results[0];
+                if (data.LISTS && data.LISTS.length > 0) {
+                    setVendorInfo(data);
+                } else {
+                    clearVendorInfo();
+                    showMessage('This form no. not found', 'warning');
+                }
+            } else {
+                clearVendorInfo();
+                showMessage('This form no. not found', 'warning');
+            }
+        }
+    });
 });
 
 function setVendorInfo(vendorData) {
@@ -312,88 +402,77 @@ function setVendorInfo(vendorData) {
     paymentTermManager.value = vendorData.LISTS[0].TERMCODE;
     const divfile = attachFileManager.setFiles(vendorData.FILES || [], true);
     attachFileManager.container = divfile + dragDropInit();
+    attachTypeManager.reset();
     if (vendorData.ATTACH_TYPE) {
         // Attach Type
         attachTypeManager.checked = vendorData.ATTACH_TYPE.split('|');
-
-        // Attach Other
-        //attachTypeManager.show(['other']);
-        attachOtherManager.text = vendorData.ATTACH_OTHER || '';
-
-        //attachOtherManager.value = vendorData.ATTACH_OTHER || '';
-
-        // attachTypeManager.checkbox.each(function () {
-        //     const value = $(this).val();
-        //     const type = $(this).attr('a-type');
-        //     if (vendorData.ATTACH_TYPE.includes(value)) {
-        //         // console.log("-------------"+value);
-        //         $(this).prop('checked', true);
-        //         if (type == 'other') {
-        //             // Attach Other
-        //             attachOtherManager.text = vendorData.ATTACH_OTHER || '-';
-        //         }
-        //     }
-        // });
+        if (vendorData.ATTACH_OTHER) {
+            attachTypeManager.checked = 'Other';
+            $('#ATTACH_OTHER').val(vendorData.ATTACH_OTHER || '');
+        }
     }
 }
 
-$(document).on('select2:select', '.country', async function (e) {
-    countryManager.change(e);
-});
+function clearVendorInfo() {
+    // 1. Reset input ธรรมดา
+    $('input[name="COMNAME"]').val('');
+    $('input[name="CONTACT"]').val('');
+    $('input[name="EMAIL"]').val('');
+    $('input[name="WEBSITE"]').val('');
+    $('input[name="TELNO"]').val('');
+    $('input[name="FAX"]').val('');
+    $('input[name="BANKNAME"]').val('');
+    $('input[name="BRANCH"]').val('');
+    $('input[name="ACCNUMBER"]').val('');
+    $('#ATTACH_OTHER').val('');
 
-$(document).on('select2:select', '.province', async function (e) {
-    provinceManager.change(e);
-    const selectedProvinceId = provinceManager.getValue('PROVINCE_SELECT');
-    const filteredDistricts = districtData.filter(
-        (d) => d.province_id == selectedProvinceId,
-    );
+    // 2. Reset Radio/Checkbox
+    $('input[name="vendor_type"]').prop('checked', false);
 
-    const districtOptions = filteredDistricts.map((d) => ({
-        id: d.id,
-        value: d.value,
-        text: d.text,
-        nameth: d.nameth,
-    }));
+    // 3. Reset Managers (อ้างอิงจากโค้ดของคุณ)
+    addrEnManager.value = '';
+    addrThManager.value = '';
 
-    districtOptions.unshift({
-        id: '',
-        value: '',
-        text: '-- Select District --', // หรือใส่เป็นค่าว่าง "" ก็ได้
-        nameth: '',
+    // ฟังก์ชันย่อยสำหรับรีเซ็ต Manager ที่ใช้ Select2
+    const resetManager = (manager) => {
+        if (manager && manager.list) {
+            manager.list.forEach((id) => {
+                $(`#${id}`).val(null).trigger('change.select2');
+            });
+        }
+    };
+
+    // 1. เรียกใช้กับ Manager ที่เป็น Select2
+    resetManager(provinceManager);
+    resetManager(districtManager);
+    resetManager(subDistrictManager);
+
+    // รีเซ็ตค่า Manager ต่างๆ ให้เป็นค่าว่างหรือค่าเริ่มต้น
+    [
+        provinceManager,
+        districtManager,
+        subDistrictManager,
+        countryManager,
+    ].forEach((m) => {
+        if (typeof m.value !== 'undefined') m.value = '';
+        if (typeof m.textToValue !== 'undefined') m.textToValue = '';
     });
 
-    districtManager.select.empty().trigger('change');
-    await districtManager.init(districtOptions);
-});
+    provinceEnManager.value = '';
+    districtEnManager.value = '';
+    subDistrictEnManager.value = '';
+    postcodeEnManager.value = '';
+    countryEnManager.value = '';
 
-$(document).on('select2:select', '.district', async function (e) {
-    districtManager.change(e);
-    const selectedDistrictId = districtManager.getValue('DISTRICT_SELECT');
-    const filteredSubDistricts = subDistrictData.filter(
-        (s) => s.district_id == selectedDistrictId,
-    );
-    const subDistrictOptions = filteredSubDistricts.map((s) => ({
-        id: s.id,
-        value: s.value,
-        text: s.text,
-        nameth: s.nameth,
-        district_id: s.district_id,
-        postcode: s.postcode,
-    }));
-    // console.log(subDistrictOptions);
-    subDistrictOptions.unshift({
-        id: '',
-        value: '',
-        text: '-- Select Sub-district --', // หรือใส่เป็นค่าว่าง "" ก็ได้
-        nameth: '',
-        district_id: '',
-        postcode: '',
-    });
+    provinceThManager.value = '';
+    districtThManager.value = '';
+    subDistrictThManager.value = '';
+    postcodeThManager.value = '';
+    countryThManager.value = '';
 
-    subDistrictManager.select.empty().trigger('change');
-    await subDistrictManager.init(subDistrictOptions);
-});
+    paymentTermManager.value = '';
 
-$(document).on('select2:select', '.sub-district', async function (e) {
-    subDistrictManager.change(e);
-});
+    // 4. Reset ไฟล์และ Attach Type
+    attachFileManager.setFiles([], true); // ล้างรายการไฟล์
+    attachTypeManager.reset();
+}
