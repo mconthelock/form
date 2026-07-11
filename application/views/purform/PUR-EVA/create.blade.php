@@ -159,6 +159,25 @@
              
             </div>
         </div>
+        <div class="grid grid-cols-[140px_1fr] gap-4 items-start mt-4">
+            <span class="font-semibold text-sm pt-1">Vendor Purpose</span>
+            
+            <div class="grid grid-cols-3 gap-y-2 gap-x-4 text-sm">
+                <label class="flex items-center gap-2 cursor-pointer">
+                    <input type="radio" name="PURPOSE" value="PCB in house" class="w-4 h-4 accent-blue-600"> PCB in house
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer">
+                    <input type="radio" name="PURPOSE" value="FTA privilege by AMEC" class="w-4 h-4 accent-blue-600"> FTA privilege by AMEC
+                </label>
+                <div></div> <label class="flex items-center gap-2 cursor-pointer">
+                    <input type="radio" name="PURPOSE" value="Maintenance" class="w-4 h-4 accent-blue-600"> Maintenance
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer">
+                    <input type="radio" name="PURPOSE" value="General" class="w-4 h-4 accent-blue-600"> General ...
+                </label>
+                <div></div> </div>
+        </div>
+
             
             <div class="grid grid-cols-[140px_1fr] items-center gap-4">
                 <span class="font-semibold text-sm required">Vendor Name</span>
