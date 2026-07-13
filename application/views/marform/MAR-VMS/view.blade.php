@@ -173,11 +173,11 @@
             <div class="space-y-2">
               <div class="grid grid-cols-[auto_1fr] gap-x-2">
                 <span class="font-semibold text-gray-700">Date:</span>
-                <span class="text-gray-900" data-field="roomdate">{{ !empty($item) ? $head['VISITDATE'] : '' }}</span>
+                <span class="text-gray-900" data-field="roomdate">{{ (!empty($item) && ($item[0]->AMEC+$item[0]->VISITORS > 0)) ? $head['VISITDATE'] : '' }}</span>
               </div>
               <div class="grid grid-cols-[auto_1fr] gap-x-2">
                 <span class="font-semibold text-gray-700">Time:</span>
-                <span class="text-gray-900" data-field="roomtime">{{ !empty($item) ? $head['LUNCHTIME'] : '' }}</span>
+                <span class="text-gray-900" data-field="roomtime">{{ (!empty($item) && ($item[0]->AMEC+$item[0]->VISITORS > 0)) ? $head['LUNCHTIME'] : '' }}</span>
               </div>
             </div>
             <div class="space-y-2">

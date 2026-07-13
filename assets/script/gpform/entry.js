@@ -1,19 +1,19 @@
-const path = require("path");
+const path = require('path');
 module.exports = {
-	// Requesting Approval Entertainment
-	requestEntertain: "./assets/script/gpform/GP-ENT/index.js", //Requesting Approval Entertainment page
-	requestEntertainView: "./assets/script/gpform/GP-ENT/view.js", //Requesting Approval Entertainment view page
-	entertainReport: "./assets/script/gpform/GP-ENT/report.js", //Requesting Approval Entertainment report page",
+    // Requesting Approval Entertainment
+    requestEntertain: './assets/script/gpform/GP-ENT/index.js', //Requesting Approval Entertainment page
+    requestEntertainView: './assets/script/gpform/GP-ENT/view.js', //Requesting Approval Entertainment view page
+    entertainReport: './assets/script/gpform/GP-ENT/report.js', //Requesting Approval Entertainment report page",
 
-	// clearance Entertainment
-	clearance: "./assets/script/gpform/GP-CLER/index.js", //Clearance page
-	clearanceNoAdv: "./assets/script/gpform/GP-CLER/noAdv.js", //Clearance page
-	clearanceView: "./assets/script/gpform/GP-CLER/view.js", //Clearance page
+    // clearance Entertainment
+    clearance: './assets/script/gpform/GP-CLER/index.js', //Clearance page
+    clearanceNoAdv: './assets/script/gpform/GP-CLER/noAdv.js', //Clearance page
+    clearanceView: './assets/script/gpform/GP-CLER/view.js', //Clearance page
 
-	//BUS
-	bus_routes: "./assets/script/gpform/BUS/bus_routes.js",
-	bus_passenger: "./assets/script/gpform/BUS/bus_passenger.js",
-	bus_overtime: "./assets/script/gpform/BUS/bus_overtime.js",
+    //BUS
+    bus_routes: './assets/script/gpform/BUS/bus_routes.js',
+    bus_passenger: './assets/script/gpform/BUS/bus_passenger.js',
+    bus_overtime: './assets/script/gpform/BUS/bus_overtime.js',
 
 	//GP-TRN
 	alert: "./assets/script/gpform/GP-TRN/alert.js",
@@ -33,4 +33,16 @@ module.exports = {
 	view_train_report: "./assets/script/gpform/GP-TRN/view_train_report.js",
 	manage_group: "./assets/script/gpform/GP-TRN/manage_group.js",
 	show_sum_report: "./assets/script/gpform/GP-TRN/show_sum_report.js",
+
+	//GP-GAR
+	gar_form: "./assets/script/gpform/GP-GAR/index.js",
+	show_form: "./assets/script/gpform/GP-GAR/show.js",
+
+    //GP-GAR
+    gar_form: './assets/script/gpform/GP-GAR/index.js',
+    show_form: './assets/script/gpform/GP-GAR/show.js',
+
+    //GP-RB
+    gpRB: './assets/script/gpform/GP-RB/actionsForm.js',
+    gpRBview: './assets/script/gpform/GP-RB/show.js'
 };

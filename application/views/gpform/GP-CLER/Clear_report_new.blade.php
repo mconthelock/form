@@ -769,6 +769,18 @@
                                             <td class="py-2 pl-4 border-b-2 border-blue-200">{{ $ENT_FORM->OTHER_DETAILS }}</td>
                                         </tr>
                                     @endif
+                                    @if ($ENT_FORM->FILE_URGENT)
+                                        <tr class=" border-red-400">
+                                            <th class="text-left text-blue-900 bg-red-100 font-semibold py-2 pl-4 border-blue-200">
+                                                Urgent Approval File
+                                            </th>
+                                            <td class="py-2 pl-4 border-blue-200 bg-red-50 font-bold">
+                                                <a href="{{ base_url('gpform/GP-ENT/main/preview/' . $ENT_FORM->FILE_URGENT) }}" target="_blank" class="text-red-700 underline font-semibold">
+                                                    {{ $ENT_FORM->FILE_URGENT }}
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    @endif
                                     <tr class="bg-blue-50">
                                         <th class="text-left text-blue-900 font-semibold py-2 pl-4 border-b-2 border-blue-200 bg-blue-100">Location</th>
                                         <td class="py-2 pl-4 border-b-2 border-blue-200">{{ $ENT_FORM->LOCATION_TYPE ?? '-' }}</td>
