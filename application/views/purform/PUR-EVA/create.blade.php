@@ -159,7 +159,7 @@
              
             </div>
         </div>
-        <div class="grid grid-cols-[140px_1fr] gap-4 items-start mt-4">
+        <div class="grid grid-cols-[140px_1fr] gap-4 items-start mt-4 pro">
             <span class="font-semibold text-sm pt-1">Vendor Purpose</span>
             
             <div class="grid grid-cols-3 gap-y-2 gap-x-4 text-sm">
@@ -348,7 +348,7 @@
                             </select>
             </div>
             <div class="grid grid-cols-[140px_1fr] items-center gap-4">
-                <span class="font-semibold text-sm required">Std Current</span>
+                <span class="font-semibold text-sm required">Currency Code</span>
                  <select id="stdcur" name="STDCUR" class="input input-sm border border-gray-400 h-8 rounded px-2 w-48 currency req">
                     <option value="" disabled selected>...</option>
                     </select>
@@ -642,6 +642,10 @@
             ></textarea>
 </div>
 </div>
+</div>
+<div id="pro">
+
+
 </div>
 </div>
 </form>
