@@ -62,7 +62,8 @@
 
             <fieldset class="fieldset">
                 <legend class="fieldset-legend">Detail</legend>
-                <textarea class="textarea w-full" placeholder="Bio"></textarea>
+                <textarea class="textarea w-full"
+                    placeholder="เขียนอธิบายภาพรวมของ Requirement นี้ หรือบอกถึงวัตถุประสงค์ของการ Project นี้"></textarea>
             </fieldset>
             <fieldset class="fieldset">
                 <legend class="fieldset-legend">Additional Information</legend>
@@ -75,31 +76,52 @@
 
         <fieldset class="bg-primary/10 border border-primary rounded-xl p-5 form-roi hiddenx">
             <legend class="font-semibold text-lg px-1">Expected Outcome</legend>
-
             <div class="flex gap-3">
                 <div class="flex-1">
                     <fieldset class="fieldset">
-                        <legend class="fieldset-legend">Current Workflow</legend>
-                        <textarea class="textarea w-full" placeholder="Bio"></textarea>
+                        <legend class="fieldset-legend">Objective</legend>
+                        <div class="flex items-center gap-3">
+                            <select class="select">
+                                <option disabled selected>Pick a color</option>
+                                <option>Crimson</option>
+                                <option>Amber</option>
+                                <option>Velvet</option>
+                            </select>
+                            <input type="text" placeholder="Other Objective" class="input" />
+                        </div>
                     </fieldset>
                 </div>
                 <div class="flex-1">
                     <fieldset class="fieldset">
-                        <legend class="fieldset-legend">Current Workflow</legend>
-                        <textarea class="textarea w-full" placeholder="Bio"></textarea>
+                        <legend class="fieldset-legend">ROI Payback Period</legend>
+                        <div class="flex items-center gap-3">
+                            <input type="text" placeholder="จำนวนปีที่คาดว่าจะคืนทุน" class="input" />
+                            <span class="text-gray-500 text-xs"> Year(s)</span>
+                        </div>
                     </fieldset>
                 </div>
             </div>
 
+            <fieldset class="fieldset">
+                <legend class="fieldset-legend">Preferred Requirement Gathering Period</legend>
+                <label class="input">
+                    <input type="text" class="grow" placeholder="{{ Date('Y-M') }}" />
+                    <i class="icofont-calendar"></i>
+                </label>
+                <p class="label italic">กำหนดการที่พร้อมสำหรับการเก็บรวบรวมข้อกำหนดและ Developer เริ่มงานได้</p>
+            </fieldset>
+
 
             <fieldset class="fieldset">
                 <legend class="fieldset-legend">Current Workflow</legend>
-                <textarea class="textarea w-full" placeholder="Bio"></textarea>
+                <textarea class="textarea w-full"
+                    placeholder="อธิบายวิธีการทำงานในปัจจุบัน เช่น พนักงานต้องกรอกแบบฟอร์มกระดาษแล้วจึงส่ง Approve เป็นต้น"></textarea>
             </fieldset>
 
             <fieldset class="fieldset">
                 <legend class="fieldset-legend">Expected Workflow</legend>
-                <textarea class="textarea w-full" placeholder="Bio"></textarea>
+                <textarea class="textarea w-full"
+                    placeholder="อธิบายวิธีการทำงานที่คาดหวังหลังจากโครงการนี้สำเร็จ เช่น พนักงานกรอกแบบฟอร์มออนไลน์แล้วระบบส่ง Approve บนระบบ Webflow เป็นต้น"></textarea>
             </fieldset>
 
 
