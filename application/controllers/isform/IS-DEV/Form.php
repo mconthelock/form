@@ -42,8 +42,7 @@ class Form extends MY_Controller
             $data['mode']     = $this->getMode($form);
             $data['return']   = $this->checkReturn($form);
             $this->views('isform/is-dev/view', $data);
-        }else
-        {
+        }else{
             $this->views('isform/is-dev/create', $data);
         }
 

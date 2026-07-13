@@ -18,7 +18,7 @@
             //$this->callback = 'https://' . $_SERVER['HTTP_HOST'].'/itadmin';
             //$this->session_expire();
             $this->blade = new PhpBlade($this->views, $this->cache);
-            $GLOBALS['version'] = $_ENV['STATE'] == 'development' ? time() : $_ENV['VERSION'];
+            $GLOBALS['version'] = $_ENV['STATE'] == 'production' ? $_ENV['VERSION'] : time();
             $this->load->database();
             $this->load->library('mail');
         }
