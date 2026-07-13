@@ -643,10 +643,307 @@
 </div>
 </div>
 </div>
-<div id="pro">
+<div id="pro" class="border border-gray-300 p-6 rounded-lg bg-white mt-6">
+    <h2 class="font-bold text-lg mb-6  pb-2">Vendor Evaluation</h2>
 
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+        <div>
+            <label class="block font-bold text-sm text-gray-700 mb-2">Capital [THB]</label>
+            <input type="text" class="w-full border border-gray-400 h-10 rounded-md px-3 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="0.00">
+        </div>
+        <div>
+            <label class="block font-bold text-sm text-gray-700 mb-3">Type of Company</label>
+            <div class="grid grid-cols-2 gap-3 text-sm">
+                <label class="flex items-center gap-2">
+                    <input type="radio" name="comtype" class="w-4 h-4 accent-blue-600"> Corporation
+                </label>
+                <label class="flex items-center gap-2">
+                    <input type="radio" name="comtype" class="w-4 h-4 accent-blue-600"> Inc. OR Co.,Ltd.
+                </label>
+                <label class="flex items-center gap-2">
+                    <input type="radio" name="comtype" class="w-4 h-4 accent-blue-600"> Limited Partnership
+                </label>
+                <label class="flex items-center gap-2">
+                    <input type="radio" name="comtype" class="w-4 h-4 accent-blue-600"> Family Partnership
+                </label>
+            </div>
+            <div class="flex items-center gap-2 mt-2 text-sm">
+                <label class="flex items-center gap-2">
+                    <input type="radio" name="comtype" class="w-4 h-4 accent-blue-600"> Other:
+                </label>
+                <input type="text" placeholder="ระบุประเภท..." class="flex-1 input input-sm border border-gray-400 h-8 rounded px-2">
+            </div>
+        </div>
+    </div>
+
+    <div class="mb-6">
+        <div class="flex justify-between items-end mb-2">
+            <label class="font-bold text-sm">Shareholder</label>
+            <button type="button" data-table="shareholder-table"
+                class="add-row-btn w-7 h-7 rounded border border-blue-500 text-blue-500 hover:bg-blue-50 flex items-center justify-center font-bold text-lg">
+                +
+            </button>
+        </div>
+        <table id="shareholder-table" class="w-full text-sm border-collapse border border-gray-400">
+            <thead>
+                <tr class="bg-gray-100">
+                    <th class="border border-gray-400 p-2 text-left">Nationality</th>
+                    <th class="border border-gray-400 p-2 w-1/4">%</th>
+                    <th class="border border-gray-400 p-2 w-10 text-center">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="row-template">
+                    <td class="border border-gray-400 p-1"><input type="text"  name="sharename[]"  class="w-full px-1"></td>
+                    <td class="border border-gray-400 p-1"><input type="text"  name="shareper[]" class="w-full px-1 text-center"></td>
+                    <td class="border border-gray-400 p-1 text-center"></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="grid grid-cols-2 gap-6 mb-6">
+        <div class="space-y-2">
+            <label class="font-bold text-sm">Employee</label>
+            <div class="grid grid-cols-2 gap-2 text-xs">
+                <span>Direct:</span> <input type="text" class="border border-gray-400 h-8 w-full px-1">
+                <span>Indirect:</span> <input type="text" class="border border-gray-400 h-8 w-full px-1">
+                <span>Total:</span> <input type="text" class="border border-gray-400 h-8 w-full px-1">
+                <span>Average Age:</span> <input type="text" class="border border-gray-400 h-8 w-full px-1">
+            </div>
+        </div>
+        <div class="space-y-2">
+            <label class="font-bold text-sm">Area of Factory/Building</label>
+            <div class="grid grid-cols-2 gap-2 text-xs">
+                <span>Land (M2):</span> <input type="text" class="border border-gray-400 h-8 w-full px-1">
+                <span>Factory (M2):</span> <input type="text" class="border border-gray-400 h-8 w-full px-1">
+            </div>
+        </div>
+    </div>
+
+    <div class="mb-6">
+        <label class="font-bold text-sm block mb-2">Turn Over [THB]</label>
+        <div class="grid grid-cols-3 gap-4">
+            <div><label class="text-xs">2 Years ago:</label><input type="text" class="border border-gray-400 h-8 w-full px-1"></div>
+            <div><label class="text-xs">Last year:</label><input type="text" class="border border-gray-400 h-8 w-full px-1"></div>
+            <div><label class="text-xs">This year:</label><input type="text" class="border border-gray-400 h-8 w-full px-1"></div>
+        </div>
+    </div>
+
+    <div class="mb-6">
+        <label class="font-bold text-sm block mb-2">Management</label>
+        <div class="space-y-3 text-sm">
+            <div class="flex flex-col gap-1">
+                <div class="flex justify-between items-center">
+                    <span>Quality Management (ISO9001):</span>
+                    <div class="flex gap-3"><label><input type="radio" name="qm" value="Y"> Yes</label><label><input type="radio" name="qm" value="N"> No</label></div>
+                </div>
+                <input type="text" placeholder="ระบุรายละเอียด/เลขที่ใบรับรอง..." class="border border-gray-400 h-8 w-full px-2 rounded">
+            </div>
+            <div class="flex flex-col gap-1">
+                <div class="flex justify-between items-center">
+                    <span>CSR Management:</span>
+                    <div class="flex gap-3"><label><input type="radio" name="csr" value="Y"> Yes</label><label><input type="radio" name="csr" value="N"> No</label></div>
+                </div>
+                <input type="text" placeholder="ระบุชื่อโครงการหรือรายละเอียด..." class="border border-gray-400 h-8 w-full px-2 rounded">
+            </div>
+            <div class="flex flex-col gap-1">
+                <div class="flex justify-between items-center">
+                    <span>Environmental (ISO14001):</span>
+                    <div class="flex gap-3"><label><input type="radio" name="env" value="Y"> Yes</label><label><input type="radio" name="env" value="N"> No</label></div>
+                </div>
+                <input type="text" placeholder="ระบุรายละเอียด/เลขที่ใบรับรอง..." class="border border-gray-400 h-8 w-full px-2 rounded">
+            </div>
+        </div>
+    </div>
+
+<div class="pt-4">
+    <label class="font-bold text-sm block mb-2">Labour Union:</label>
+    <div class="flex flex-wrap items-center gap-6 text-sm">
+        <div class="flex items-center gap-2">
+            <label class="flex items-center gap-2 cursor-pointer">
+                <input type="radio" name="union" value="Y" class="w-4 h-4 accent-blue-600"> Have established
+            </label>
+            <input type="text" placeholder="ระบุวันที่จัดตั้ง..." 
+                   class="border border-gray-400 h-8 px-2 rounded w-40 text-sm focus:border-blue-500 outline-none">
+        </div>
+        
+        <label class="flex items-center gap-2 cursor-pointer">
+            <input type="radio" name="union" value="N" class="w-4 h-4 accent-blue-600"> No have
+        </label>
+    </div>
+</div>
+    <div class="space-y-6 pt-6">
+    <div>
+        <div class="flex justify-between items-end mb-2">
+            <label class="font-bold text-sm">Main Customer</label>
+            <button type="button" data-table="customer-table"  class="add-row-btn w-7 h-7 rounded border border-blue-500 text-blue-500 hover:bg-blue-50 flex items-center justify-center font-bold text-lg">+</button>
+        </div>
+        <table id="customer-table" class="w-full text-sm border-collapse border border-gray-400">
+            <tr class="bg-gray-100"><th class="border border-gray-400 p-2 text-left">Name</th><th class="border border-gray-400 p-2 w-1/4">%</th><th class="border border-gray-400 p-2 w-10"></th></tr>
+            <tr class="row-template"><td class="border border-gray-400 p-1"><input name="cusname[]" type="text" class="w-full px-1"></td><td class="border border-gray-400 p-1"><input type="text" name="cusper[]" class="w-full px-1 text-center"></td><td class="border border-gray-400 p-1"></td></tr>
+        </table>
+    </div>
+
+    <div>
+        <div class="flex justify-between items-end mb-2">
+            <label class="font-bold text-sm">Supplier of Main Material</label>
+            <button type="button" data-table="supplier-table"   class="add-row-btn w-7 h-7 rounded border border-blue-500 text-blue-500 hover:bg-blue-50 flex items-center justify-center font-bold text-lg">+</button>
+        </div>
+        <table id="supplier-table" class="w-full text-sm border-collapse border border-gray-400">
+            <tr class="bg-gray-100"><th class="border border-gray-400 p-2 text-left">Name</th><th class="border border-gray-400 p-2 w-1/4">%</th><th class="border border-gray-400 p-2 w-10"></th></tr>
+            <tr class="row-template"><td class="border border-gray-400 p-1"><input name = "supname[]" type="text" class="w-full px-1"></td><td class="border border-gray-400 p-1"><input type="text" name="supper[]" class="w-full px-1 text-center"></td><td class="border border-gray-400 p-1"></td></tr>
+        </table>
+    </div>
+
+    <div>
+        <div class="flex justify-between items-end mb-2">
+            <label class="font-bold text-sm">Main Product</label>
+            <button type="button"  data-table="product-table"  class="add-row-btn w-7 h-7 rounded border border-blue-500 text-blue-500 hover:bg-blue-50 flex items-center justify-center font-bold text-lg">+</button>
+        </div>
+        <table id="product-table" class="w-full text-sm border-collapse border border-gray-400">
+            <tr class="bg-gray-100"><th class="border border-gray-400 p-2 text-left">Name</th><th class="border border-gray-400 p-2 w-1/4">%</th><th class="border border-gray-400 p-2 w-10"></th></tr>
+            <tr class="row-template"><td class="border border-gray-400 p-1"><input type="text" name="proname[]" class="w-full px-1"></td><td class="border border-gray-400 p-1"><input name="proper[]" type="text" class="w-full px-1 text-center"></td><td class="border border-gray-400 p-1"></td></tr>
+        </table>
+    </div>
+<!-- <div class="mb-8 mt-6">
+    <h2 class="font-bold text-lg mb-4 text-gray-800  pb-2">Evaluation (Purchasing Matters)</h2>
+    <div class="overflow-x-auto">
+        <table id="eval-table" class="w-full text-sm border-collapse border border-gray-400">
+            <thead>
+                <tr class="bg-gray-100">
+                    <th class="border border-gray-400 p-2 text-left" rowspan="2">Evaluation Item</th>
+                    <th class="border border-gray-400 p-2 text-left" rowspan="2">Check Point</th>
+                    <th class="border border-gray-400 p-2 text-center" colspan="5">Score</th>
+                </tr>
+                <tr class="bg-gray-50 text-xs text-center">
+                    <th class="border border-gray-400 p-1">25</th>
+                    <th class="border border-gray-400 p-1">20</th>
+                    <th class="border border-gray-400 p-1">15</th>
+                    <th class="border border-gray-400 p-1">10</th>
+                    <th class="border border-gray-400 p-1">5</th>
+                </tr>
+            </thead>
+            <tbody>
+            
+                <tr>
+                    <td class="border border-gray-400 p-2 font-semibold">PRICE LEVEL</td>
+                    <td class="border border-gray-400 p-2">Comparison with market price or competitor</td>
+                    <td class="border border-gray-400 p-2 text-center"><label><input type="radio" name="price" value="25" class="block mx-auto mb-1"><span class="text-[10px]">VERY COMPETITIVE</span></label></td>
+                    <td class="border border-gray-400 p-2 text-center"><label><input type="radio" name="price" value="20" class="block mx-auto mb-1"><span class="text-[10px]">COMPETITIVE</span></label></td>
+                    <td class="border border-gray-400 p-2 text-center"><label><input type="radio" name="price" value="15" class="block mx-auto mb-1"><span class="text-[10px]">SAME LEVEL</span></label></td>
+                    <td class="border border-gray-400 p-2 text-center"><label><input type="radio" name="price" value="10" class="block mx-auto mb-1"><span class="text-[10px]">SLITELY EXPENSIVE</span></label></td>
+                    <td class="border border-gray-400 p-2 text-center"><label><input type="radio" name="price" value="5" class="block mx-auto mb-1"><span class="text-[10px]">EXPENSIVE</span></label></td>
+                </tr>
+             
+                <tr>
+                    <td class="border border-gray-400 p-2 font-semibold">ORDER MANAGEMENT</td>
+                    <td class="border border-gray-400 p-2">Control system from P/O to delivery</td>
+                    <td class="border border-gray-400 p-2 text-center"><label><input type="radio" name="order" value="25" class="block mx-auto mb-1"><span class="text-[10px]">SYSTEMATIC CONTROL</span></label></td>
+                    <td class="border border-gray-400 p-2 text-center"><label><input type="radio" name="order" value="20" class="block mx-auto mb-1"><span class="text-[10px]">SEMI SYSTEMATIC</span></label></td>
+                    <td class="border border-gray-400 p-2 text-center"><label><input type="radio" name="order" value="15" class="block mx-auto mb-1"><span class="text-[10px]">EXCEL CONTROL</span></label></td>
+                    <td class="border border-gray-400 p-2 text-center"><label><input type="radio" name="order" value="10" class="block mx-auto mb-1"><span class="text-[10px]">MANUAL BOOK</span></label></td>
+                    <td class="border border-gray-400 p-2 text-center"><label><input type="radio" name="order" value="5" class="block mx-auto mb-1"><span class="text-[10px]">NOT CONTROL</span></label></td>
+                </tr>
+ 
+                <tr>
+                    <td class="border border-gray-400 p-2 font-semibold">CUSTOMER SERVICE</td>
+                    <td class="border border-gray-400 p-2">Responsiveness for delivery/price</td>
+                    <td class="border border-gray-400 p-2 text-center"><label><input type="radio" name="service" value="25" class="block mx-auto mb-1"><span class="text-[10px]">VERY GOOD<br>(1 day)</span></label></td>
+                    <td class="border border-gray-400 p-2 text-center"><label><input type="radio" name="service" value="20" class="block mx-auto mb-1"><span class="text-[10px]">GOOD<br>(3 days)</span></label></td>
+                    <td class="border border-gray-400 p-2 text-center"><label><input type="radio" name="service" value="15" class="block mx-auto mb-1"><span class="text-[10px]">FAIR<br>(1 week)</span></label></td>
+                    <td class="border border-gray-400 p-2 text-center"><label><input type="radio" name="service" value="10" class="block mx-auto mb-1"><span class="text-[10px]">BAD<br>(2 weeks)</span></label></td>
+                    <td class="border border-gray-400 p-2 text-center"><label><input type="radio" name="service" value="5" class="block mx-auto mb-1"><span class="text-[10px]">VERY BAD<br>(>2 weeks)</span></label></td>
+                </tr>
+        
+                <tr>
+                    <td class="border border-gray-400 p-2 font-semibold">STANDARD DELIVERY</td>
+                    <td class="border border-gray-400 p-2">Delivery term vs Competitor</td>
+                    <td class="border border-gray-400 p-2 text-center"><label><input type="radio" name="delivery" value="25" class="block mx-auto mb-1"><span class="text-[10px]">VERY SHORT</span></label></td>
+                    <td class="border border-gray-400 p-2 text-center"><label><input type="radio" name="delivery" value="20" class="block mx-auto mb-1"><span class="text-[10px]">SHORT</span></label></td>
+                    <td class="border border-gray-400 p-2 text-center"><label><input type="radio" name="delivery" value="15" class="block mx-auto mb-1"><span class="text-[10px]">SAME</span></label></td>
+                    <td class="border border-gray-400 p-2 text-center"><label><input type="radio" name="delivery" value="10" class="block mx-auto mb-1"><span class="text-[10px]">LONGER</span></label></td>
+                    <td class="border border-gray-400 p-2 text-center"><label><input type="radio" name="delivery" value="5" class="block mx-auto mb-1"><span class="text-[10px]">VERY LONGER</span></label></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="mt-4 p-4 bg-gray-50 border rounded-lg flex items-center gap-6">
+        <label class="font-bold text-sm">TOTAL SCORE: <span id="total-score" class="text-blue-600 text-lg">0</span></label>
+        <label class="font-bold text-sm">JUDGEMENT: <span id="judgement-result" class="text-red-600 uppercase italic">-</span></label>
+    </div>
+</div> -->
+<div class="mb-8 mt-6 border-2 border-dashed border-gray-400 rounded-lg p-6 bg-white">
+    <h2 class="font-bold text-lg mb-4 text-gray-800 pb-2 border-b">Evaluation (Purchasing Matters)</h2>
+    <div class="overflow-x-auto">
+        <table id="eval-table" class="w-full text-sm border-collapse border border-gray-400">
+            <thead>
+                <tr class="bg-gray-100">
+                    <th class="border border-gray-400 p-2 text-left" rowspan="2">Evaluation Item</th>
+                    <th class="border border-gray-400 p-2 text-left" rowspan="2">Check Point</th>
+                    <th class="border border-gray-400 p-2 text-center" colspan="5">Score</th>
+                </tr>
+                <tr class="bg-gray-50 text-xs text-center">
+                    <th class="border border-gray-400 p-1">25</th>
+                    <th class="border border-gray-400 p-1">20</th>
+                    <th class="border border-gray-400 p-1">15</th>
+                    <th class="border border-gray-400 p-1">10</th>
+                    <th class="border border-gray-400 p-1">5</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="border border-gray-400 p-2 font-semibold">PRICE LEVEL</td>
+                    <td class="border border-gray-400 p-2">Comparison with market price or competitor</td>
+                    <td class="border border-gray-400 p-2 text-center"><label class="cursor-pointer block"><input type="radio" name="price" value="25" class="block mx-auto mb-1"><span class="text-[10px]">VERY COMPETITIVE</span></label></td>
+                    <td class="border border-gray-400 p-2 text-center"><label class="cursor-pointer block"><input type="radio" name="price" value="20" class="block mx-auto mb-1"><span class="text-[10px]">COMPETITIVE</span></label></td>
+                    <td class="border border-gray-400 p-2 text-center"><label class="cursor-pointer block"><input type="radio" name="price" value="15" class="block mx-auto mb-1"><span class="text-[10px]">SAME LEVEL</span></label></td>
+                    <td class="border border-gray-400 p-2 text-center"><label class="cursor-pointer block"><input type="radio" name="price" value="10" class="block mx-auto mb-1"><span class="text-[10px]">SLITELY EXPENSIVE</span></label></td>
+                    <td class="border border-gray-400 p-2 text-center"><label class="cursor-pointer block"><input type="radio" name="price" value="5" class="block mx-auto mb-1"><span class="text-[10px]">EXPENSIVE</span></label></td>
+                </tr>
+                <tr>
+                    <td class="border border-gray-400 p-2 font-semibold">ORDER MANAGEMENT</td>
+                    <td class="border border-gray-400 p-2">Control system from P/O to delivery</td>
+                    <td class="border border-gray-400 p-2 text-center"><label class="cursor-pointer block"><input type="radio" name="order" value="25" class="block mx-auto mb-1"><span class="text-[10px]">SYSTEMATIC CONTROL</span></label></td>
+                    <td class="border border-gray-400 p-2 text-center"><label class="cursor-pointer block"><input type="radio" name="order" value="20" class="block mx-auto mb-1"><span class="text-[10px]">SEMI SYSTEMATIC</span></label></td>
+                    <td class="border border-gray-400 p-2 text-center"><label class="cursor-pointer block"><input type="radio" name="order" value="15" class="block mx-auto mb-1"><span class="text-[10px]">EXCEL CONTROL</span></label></td>
+                    <td class="border border-gray-400 p-2 text-center"><label class="cursor-pointer block"><input type="radio" name="order" value="10" class="block mx-auto mb-1"><span class="text-[10px]">MANUAL BOOK</span></label></td>
+                    <td class="border border-gray-400 p-2 text-center"><label class="cursor-pointer block"><input type="radio" name="order" value="5" class="block mx-auto mb-1"><span class="text-[10px]">NOT CONTROL</span></label></td>
+                </tr>
+                <tr>
+                    <td class="border border-gray-400 p-2 font-semibold">CUSTOMER SERVICE</td>
+                    <td class="border border-gray-400 p-2">Responsiveness for delivery/price</td>
+                    <td class="border border-gray-400 p-2 text-center"><label class="cursor-pointer block"><input type="radio" name="service" value="25" class="block mx-auto mb-1"><span class="text-[10px]">VERY GOOD<br>(1 day)</span></label></td>
+                    <td class="border border-gray-400 p-2 text-center"><label class="cursor-pointer block"><input type="radio" name="service" value="20" class="block mx-auto mb-1"><span class="text-[10px]">GOOD<br>(3 days)</span></label></td>
+                    <td class="border border-gray-400 p-2 text-center"><label class="cursor-pointer block"><input type="radio" name="service" value="15" class="block mx-auto mb-1"><span class="text-[10px]">FAIR<br>(1 week)</span></label></td>
+                    <td class="border border-gray-400 p-2 text-center"><label class="cursor-pointer block"><input type="radio" name="service" value="10" class="block mx-auto mb-1"><span class="text-[10px]">BAD<br>(2 weeks)</span></label></td>
+                    <td class="border border-gray-400 p-2 text-center"><label class="cursor-pointer block"><input type="radio" name="service" value="5" class="block mx-auto mb-1"><span class="text-[10px]">VERY BAD<br>(>2 weeks)</span></label></td>
+                </tr>
+                <tr>
+                    <td class="border border-gray-400 p-2 font-semibold">STANDARD DELIVERY</td>
+                    <td class="border border-gray-400 p-2">Delivery term vs Competitor</td>
+                    <td class="border border-gray-400 p-2 text-center"><label class="cursor-pointer block"><input type="radio" name="delivery" value="25" class="block mx-auto mb-1"><span class="text-[10px]">VERY SHORT</span></label></td>
+                    <td class="border border-gray-400 p-2 text-center"><label class="cursor-pointer block"><input type="radio" name="delivery" value="20" class="block mx-auto mb-1"><span class="text-[10px]">SHORT</span></label></td>
+                    <td class="border border-gray-400 p-2 text-center"><label class="cursor-pointer block"><input type="radio" name="delivery" value="15" class="block mx-auto mb-1"><span class="text-[10px]">SAME</span></label></td>
+                    <td class="border border-gray-400 p-2 text-center"><label class="cursor-pointer block"><input type="radio" name="delivery" value="10" class="block mx-auto mb-1"><span class="text-[10px]">LONGER</span></label></td>
+                    <td class="border border-gray-400 p-2 text-center"><label class="cursor-pointer block"><input type="radio" name="delivery" value="5" class="block mx-auto mb-1"><span class="text-[10px]">VERY LONGER</span></label></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="mt-6 p-4 bg-gray-100 border border-gray-300 rounded-lg flex flex-col sm:flex-row items-center gap-6">
+        <label class="font-bold text-sm">TOTAL SCORE: <span id="total-score" class="text-blue-600 text-xl ml-2">0</span></label>
+        <div class="h-6 w-px bg-gray-400 hidden sm:block"></div>
+        <label class="font-bold text-sm">JUDGEMENT: <span id="judgement-result" class="text-red-600 uppercase italic ml-2">-</span></label>
+    </div>
+</div>
 
 </div>
+</div>
+
+
 </div>
 </form>
 
