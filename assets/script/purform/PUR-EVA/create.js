@@ -141,7 +141,7 @@ $(document).ready(async function () {
         const newRow = `
                 <div class="flex gap-4 contact-row mt-2">
                     <input type="text" placeholder="Name" class="input input-sm border border-gray-400 h-8 rounded w-[450px] px-2">
-                    <input type="email" placeholder="E-mail" class="input input-sm border border-gray-400 h-8 rounded w-[450px] px-2">'
+                    <input type="email" placeholder="E-mail" class="input input-sm border border-gray-400 h-8 rounded w-[450px] px-2">
                     <input type="text" placeholder="Username" class="input input-sm border border-gray-400 h-8 rounded w-[200px]  px-2">
                     <button type="button" class="btn-remove text-red-500 hover:text-red-700 font-bold px-2 flex items-center">
                         ✕
@@ -160,26 +160,49 @@ $(document).ready(async function () {
         let val = $(this).val().split(':')[0];
         if (val === '6') {
             $('#nonpro').removeClass('hidden');
+            $('#pro').addClass('hidden');
             $('#attach-ie').addClass('hidden');
             $('#attach-qa').addClass('hidden');
+            $('.pro').addClass('hidden');
         } else {
             $('#nonpro').addClass('hidden');
+            $('#pro').removeClass('hidden');
             $('#attach-ie').removeClass('hidden');
             $('#attach-qa').removeClass('hidden');
+            $('.pro').removeClass('hidden');
         }
     });
 
     $(document).on('change', '.radio-type', async function () {
+        console.log($('.radio-typec:checked').val());
+
+        let typec = $('.radio-typec:checked').val().split(':')[0];
+        console.log(typec);
+
         let val = $(this).val();
         if (val === 'Local') {
             $('.field-local').removeClass('hidden');
             $('.field-oversea').addClass('hidden');
+            if (typec === '6') {
+                $('.field-local-nonpro').removeClass('hidden');
+                $('.field-oversea-nonpro').addClass('hidden');
+            } else {
+                $('.field-local-nonpro').addClass('hidden');
+                $('.field-oversea-nonpro').addClass('hidden');
+            }
             countryManager.disabled(true);
             countryEnManager.value = 'Thailand';
             countryThManager.value = 'ไทย';
         } else {
             $('.field-local').addClass('hidden');
             $('.field-oversea').removeClass('hidden');
+            if (typec === '6') {
+                $('.field-oversea-nonpro').removeClass('hidden');
+                $('.field-local-nonpro').addClass('hidden');
+            } else {
+                $('.field-local-nonpro').addClass('hidden');
+                $('.field-oversea-nonpro').addClass('hidden');
+            }
             countryManager.disabled(false);
             countryEnManager.value = '';
             countryThManager.value = '';
@@ -370,6 +393,57 @@ $(document).ready(async function () {
     $(document).on('click', '.remove-row', function () {
         $(this).closest('tr').remove();
     });
+
+    $(document).on('change', '.score-radio', async function () {
+        let totalScore = 0;
+
+        const totalItems = $('#eval-table tbody tr').length;
+        const answeredItems = $('.score-radio:checked').length;
+        console.log(totalItems);
+        console.log(answeredItems);
+
+        $('.score-radio:checked').each(function () {
+            totalScore += parseInt($(this).val(), 10);
+        });
+
+        if (answeredItems === totalItems) {
+            $('#total-score').text(totalScore);
+            let judgementText = '-';
+            let colorClass = 'text-gray-500';
+
+            if (totalScore >= 80) {
+                judgementText = 'A: EXCELLENT';
+                colorClass = 'text-green-600';
+            } else if (totalScore >= 70) {
+                judgementText = 'B: GOOD';
+                colorClass = 'text-blue-600';
+            } else if (totalScore >= 60) {
+                judgementText = 'C: FAIR';
+                colorClass = 'text-orange-500';
+            } else if (totalScore >= 40) {
+                judgementText = 'D: POOR';
+                colorClass = 'text-orange-500';
+            } else {
+                judgementText = 'E: NOT APPRICABLE(LESSTHAN 40)';
+                colorClass = 'text-red-600';
+            }
+
+            $('#judgement-result')
+                .text(judgementText)
+                .removeClass()
+                .addClass(`uppercase italic ml-2 font-bold ${colorClass}`);
+
+            // (ตัวเลือกเสริม) สามารถยิง API บันทึกข้อมูลอัตโนมัติเมื่อทำครบได้ที่นี่
+            // await $.post('/api/save-score', { score: totalScore, result: judgementText });
+        } else {
+            $('#total-score').text('');
+            // --- กรณีที่ยังกรอกไม่ครบ ---
+            $('#judgement-result')
+                .text('INCOMPLETE') // เปลี่ยนข้อความเตือนว่ายังไม่ครบ
+                .removeClass()
+                .addClass(`uppercase italic ml-2 font-bold text-gray-400`);
+        }
+    });
 });
 
 function setVendorInfo(vendorData) {
@@ -377,9 +451,7 @@ function setVendorInfo(vendorData) {
 
     $('input[name="COMNAME"]').val(vendorData.LISTS[0].COMNAME);
     $(
-        'input[name="vendor_type"][value="' +
-            vendorData.LISTS[0].VENDTYPE +
-            '"]',
+        'input[name="VENDTYPE"][value="' + vendorData.LISTS[0].VENDTYPE + '"]',
     ).prop('checked', true);
 
     for (const address of vendorData.ADDRESSES) {
@@ -446,7 +518,7 @@ function clearVendorInfo() {
     $('#ATTACH_OTHER').val('');
 
     // 2. Reset Radio/Checkbox
-    $('input[name="vendor_type"]').prop('checked', false);
+    $('input[name="VENDTYPE"]').prop('checked', false);
 
     // 3. Reset Managers (อ้างอิงจากโค้ดของคุณ)
     addrEnManager.value = '';
