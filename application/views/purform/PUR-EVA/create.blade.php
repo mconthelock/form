@@ -158,10 +158,10 @@
                 </label>
                 
                 <label class="flex items-center gap-2 cursor-pointer">
-                    <input type="radio" name="VENDGROUP" value="8:Sub-Contractor" class="w-4 h-4 accent-blue-600 req radio-typec"> Sub-Contractor
+                    <input type="radio" name="VENDGROUP" value="8:Sub-Contractor (8)" class="w-4 h-4 accent-blue-600 req radio-typec"> Sub-Contractor (8)
                 </label>
                 <label class="flex items-center gap-2 cursor-pointer">
-                    <input type="radio" name="VENDGROUP" value="6:Non-Production" class="w-4 h-4 accent-blue-600 req radio-typec"> Non-Production
+                    <input type="radio" name="VENDGROUP" value="6:Non-Production (6)" class="w-4 h-4 accent-blue-600 req radio-typec"> Non-Production (6)
                 </label>
              
             </div>
@@ -468,36 +468,36 @@
         <thead>
             <tr class="bg-gray-100">
                 <th class="border border-gray-400 p-2 w-1/3 text-sm">
-                    ปี<br><span class="text-xs text-gray-500">Year</span>
+                    <span class="text-xs text-gray-500">Year</span>
                 </th>
                 <th class="border border-gray-400 p-2 w-2/3 text-sm">
-                    กำไรขาดทุนสุทธิ<br><span class="text-xs text-gray-500">Net Profit/Loss</span>
+                   <span class="text-xs text-gray-500">Net Profit/Loss</span>
                 </th>
             </tr>
         </thead>
         <tbody>
             <tr>
                 <td class="border border-gray-400 p-2">
-                    <input type="text" class="w-full border-none bg-transparent text-center focus:outline-none" placeholder="ระบุปี (เช่น 2026)">
+                    <input type="text" class="w-full border-none bg-transparent text-center focus:outline-none" placeholder="Year (e.g., 2026)">
                 </td>
                 <td class="border border-gray-400 p-2">
-                    <input type="text" class="w-full border-none bg-transparent text-center focus:outline-none" placeholder="ระบุจำนวนเงิน...">
-                </td>
-            </tr>
-            <tr>
-                <td class="border border-gray-400 p-2">
-                    <input type="text" class="w-full border-none bg-transparent text-center focus:outline-none" placeholder="ระบุปี...">
-                </td>
-                <td class="border border-gray-400 p-2">
-                    <input type="text" class="w-full border-none bg-transparent text-center focus:outline-none" placeholder="ระบุจำนวนเงิน...">
+                    <input type="text" class="w-full border-none bg-transparent text-center focus:outline-none" placeholder="0.00">
                 </td>
             </tr>
             <tr>
                 <td class="border border-gray-400 p-2">
-                    <input type="text" class="w-full border-none bg-transparent text-center focus:outline-none" placeholder="ระบุปี...">
+                    <input type="text" class="w-full border-none bg-transparent text-center focus:outline-none" placeholder="Year">
                 </td>
                 <td class="border border-gray-400 p-2">
-                    <input type="text" class="w-full border-none bg-transparent text-center focus:outline-none" placeholder="ระบุจำนวนเงิน...">
+                    <input type="text" class="w-full border-none bg-transparent text-center focus:outline-none" placeholder="0.00">
+                </td>
+            </tr>
+            <tr>
+                <td class="border border-gray-400 p-2">
+                    <input type="text" class="w-full border-none bg-transparent text-center focus:outline-none" placeholder="Year">
+                </td>
+                <td class="border border-gray-400 p-2">
+                    <input type="text" class="w-full border-none bg-transparent text-center focus:outline-none" placeholder="0.00">
                 </td>
             </tr>
         </tbody>
@@ -645,27 +645,17 @@
                 <td class="border border-gray-400 p-2 text-center align-top">
                     <label class="cursor-pointer block">
                         <input type="radio" name="VERIFYING" value="XML file" class="block mx-auto mb-1 w-4 h-4 accent-blue-600">
-                        <span class="text-[10px] leading-tight block mt-1">XML file</span>
+                        <span class="text-[10px] leading-tight block mt-1">Very Good Support (XML file / PDF file (convert/not scan) / Excel file)</span>
                     </label>
                 </td>
                 <td class="border border-gray-400 p-2 text-center align-top">
                     <label class="cursor-pointer block">
                         <input type="radio" name="VERIFYING" value="PDF file" class="block mx-auto mb-1 w-4 h-4 accent-blue-600">
-                        <span class="text-[10px] leading-tight block mt-1">PDF file (convert/not scan)</span>
+                        <span class="text-[10px] leading-tight block mt-1">Good Support (Text file (own pattern/form))</span>
                     </label>
                 </td>
-                <td class="border border-gray-400 p-2 text-center align-top">
-                    <label class="cursor-pointer block">
-                        <input type="radio" name="VERIFYING" value="Excel file" class="block mx-auto mb-1 w-4 h-4 accent-blue-600">
-                        <span class="text-[10px] leading-tight block mt-1">Excel file</span>
-                    </label>
-                </td>
-                <td class="border border-gray-400 p-2 text-center align-top">
-                    <label class="cursor-pointer block">
-                        <input type="radio" name="VERIFYING" value="Text file" class="block mx-auto mb-1 w-4 h-4 accent-blue-600">
-                        <span class="text-[10px] leading-tight block mt-1">Text file (own pattern/form)</span>
-                    </label>
-                </td>
+            <td class="border border-gray-400 p-2 bg-gray-50"></td>
+             <td class="border border-gray-400 p-2 bg-gray-50"></td>
                 <td class="border border-gray-400 p-2 text-center align-top">
                     <label class="cursor-pointer block">
                         <input type="radio" name="VERIFYING" value="Not able" class="block mx-auto mb-1 w-4 h-4 accent-blue-600">
@@ -710,7 +700,13 @@
             </tr>
         </tbody>
     </table>
+    <div class="mt-6 p-4 bg-gray-100 border border-gray-300 rounded-lg flex flex-col sm:flex-row items-center gap-6">
+        <label class="font-bold text-sm">TOTAL SCORE: <span id="total-score-non" class="text-blue-600 text-xl ml-2">0</span></label>
+        <div class="h-6 w-px bg-gray-400 hidden sm:block"></div>
+        <label class="font-bold text-sm">JUDGEMENT: <span id="judgement-result-non" class="text-red-600 uppercase italic ml-2">-</span></label>
+    </div>
 </div>
+
    
         <!-- <div class="grid grid-cols-2 gap-8 border-t pt-6">
     
@@ -800,10 +796,19 @@
     <h2 class="font-bold text-lg mb-6  pb-2">Vendor Evaluation</h2>
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-        <div>
-            <label class="block font-bold text-sm text-gray-700 mb-2">Capital [THB]</label>
-            <input type="text" class="w-full border border-gray-400 h-10 rounded-md px-3 focus:ring-2 focus:ring-blue-500 outline-none" placeholder="0.00">
-        </div>
+<div>
+    <label class="block font-bold text-sm text-gray-700 mb-2">Capital</label>
+    <div class="flex gap-2">
+        <input type="text" class="flex-1 input input-bordered input-sm w-full bg-gray-50 border-gray-300" placeholder="0.00">
+        
+        <select class="select select-bordered select-sm w-24 border-gray-400 focus:ring-2 focus:ring-blue-500 outline-none bg-white text-gray-700 text-sm">
+            <option value="THB">THB</option>
+            <option value="USD">USD</option>
+            <option value="EUR">EUR</option>
+            <option value="JPY">JPY</option>
+        </select>
+    </div>
+</div>
         <div>
             <label class="block font-bold text-sm text-gray-700 mb-3">Type of Company</label>
             <div class="grid grid-cols-2 gap-3 text-sm">
@@ -824,7 +829,7 @@
                 <label class="flex items-center gap-2">
                     <input type="radio" name="comtype" class="w-4 h-4 accent-blue-600"> Other:
                 </label>
-                <input type="text" placeholder="ระบุประเภท..." class="flex-1 input input-sm border border-gray-400 h-8 rounded px-2">
+                <input type="text" placeholder="Please specify..." class="flex-1 input input-sm border border-gray-400 h-8 rounded px-2">
             </div>
         </div>
     </div>
@@ -854,34 +859,165 @@
             </tbody>
         </table>
     </div>
+    <div class="flex flex-col gap-6 mb-6">
+    
+    <div>
+        <label class="block font-bold text-sm text-gray-700 mb-3">Employee</label>
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 text-xs">
+            
+            <div class="flex items-center gap-2">
+                <span class="flex-shrink-0 whitespace-nowrap">Direct:</span>
+                <input type="text" class="flex-1 input input-bordered input-sm bg-gray-50 border-gray-300">
+            </div>
+            
+            <div class="flex items-center gap-2">
+                <span class="flex-shrink-0 whitespace-nowrap">Indirect:</span>
+                <input type="text" class="flex-1 input input-bordered input-sm bg-gray-50 border-gray-300">
+            </div>
+            
+            <div class="flex items-center gap-2">
+                <span class="flex-shrink-0 whitespace-nowrap">Total:</span>
+                <input type="text" class="flex-1 input input-bordered input-sm bg-gray-50 border-gray-300">
+            </div>
+            
+            <div class="flex items-center gap-2">
+                <span class="flex-shrink-0 whitespace-nowrap">Average Age:</span>
+                <input type="text" class="flex-1 input input-bordered input-sm bg-gray-50 border-gray-300">
+            </div>
+            
+        </div>
+    </div>
 
-    <div class="grid grid-cols-2 gap-6 mb-6">
+    <div>
+        <label class="block font-bold text-sm text-gray-700 mb-3">Area of Factory/Building</label>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 text-xs">
+            
+            <div class="flex items-center gap-2">
+                <span class="flex-shrink-0 whitespace-nowrap">Land (M2):</span>
+                <input type="text" class="flex-1 input input-bordered input-sm bg-gray-50 border-gray-300">
+            </div>
+            
+            <div class="flex items-center gap-2">
+                <span class="flex-shrink-0 whitespace-nowrap">Factory (M2):</span>
+                <input type="text" class="flex-1 input input-bordered input-sm bg-gray-50 border-gray-300">
+            </div>
+            
+        </div>
+    </div>
+    
+</div>
+    
+<!-- <div class="grid grid-cols-2 gap-8 mb-6">
+    <div class="flex flex-col gap-3">
+        <label class="font-bold text-sm text-gray-700">Employee</label>
+        
+        <div class="flex items-center gap-2 text-xs">
+            <span class="w-24 flex-shrink-0">Direct:</span>
+            <input type="text" class="w-40 input input-bordered input-sm bg-gray-50 border-gray-300">
+        </div>
+        
+        <div class="flex items-center gap-2 text-xs">
+            <span class="w-24 flex-shrink-0">Indirect:</span>
+            <input type="text" class="w-40 input input-bordered input-sm bg-gray-50 border-gray-300">
+        </div>
+        
+        <div class="flex items-center gap-2 text-xs">
+            <span class="w-24 flex-shrink-0">Total:</span>
+            <input type="text" class="w-40 input input-bordered input-sm bg-gray-50 border-gray-300">
+        </div>
+        
+        <div class="flex items-center gap-2 text-xs">
+            <span class="w-24 flex-shrink-0">Average Age:</span>
+            <input type="text" class="w-40 input input-bordered input-sm bg-gray-50 border-gray-300">
+        </div>
+    </div>
+
+    <div class="flex flex-col gap-3">
+        <label class="font-bold text-sm text-gray-700">Area of Factory/Building</label>
+        
+        <div class="flex items-center gap-2 text-xs">
+            <span class="w-24 flex-shrink-0">Land (M2):</span>
+            <input type="text" class="w-40 input input-bordered input-sm bg-gray-50 border-gray-300">
+        </div>
+        
+        <div class="flex items-center gap-2 text-xs">
+            <span class="w-24 flex-shrink-0">Factory (M2):</span>
+            <input type="text" class="w-40 input input-bordered input-sm bg-gray-50 border-gray-300">
+        </div>
+    </div>
+</div> -->
+    <!-- <div class="grid grid-cols-2 gap-6 mb-6">
         <div class="space-y-2">
             <label class="font-bold text-sm">Employee</label>
             <div class="grid grid-cols-2 gap-2 text-xs">
-                <span>Direct:</span> <input type="text" class="border border-gray-400 h-8 w-full px-1">
-                <span>Indirect:</span> <input type="text" class="border border-gray-400 h-8 w-full px-1">
-                <span>Total:</span> <input type="text" class="border border-gray-400 h-8 w-full px-1">
-                <span>Average Age:</span> <input type="text" class="border border-gray-400 h-8 w-full px-1">
+                <span>Direct:</span> <input type="text" class="input input-bordered input-sm w-full bg-gray-50 border-gray-300">
+                <span>Indirect:</span> <input type="text" class="input input-bordered input-sm w-full bg-gray-50 border-gray-300">
+                <span>Total:</span> <input type="text" class="input input-bordered input-sm w-full bg-gray-50 border-gray-300">
+                <span>Average Age:</span> <input type="text" class="input input-bordered input-sm w-full bg-gray-50 border-gray-300">
             </div>
         </div>
         <div class="space-y-2">
             <label class="font-bold text-sm">Area of Factory/Building</label>
             <div class="grid grid-cols-2 gap-2 text-xs">
-                <span>Land (M2):</span> <input type="text" class="border border-gray-400 h-8 w-full px-1">
-                <span>Factory (M2):</span> <input type="text" class="border border-gray-400 h-8 w-full px-1">
+                <span>Land (M2):</span> <input type="text" class="input input-bordered input-sm w-full bg-gray-50 border-gray-300">
+                <span>Factory (M2):</span> <input type="text" class="input input-bordered input-sm w-full bg-gray-50 border-gray-300">
             </div>
         </div>
-    </div>
+    </div> -->
 
-    <div class="mb-6">
+    <!-- <div class="mb-6">
         <label class="font-bold text-sm block mb-2">Turn Over [THB]</label>
         <div class="grid grid-cols-3 gap-4">
             <div><label class="text-xs">2 Years ago:</label><input type="text" class="border border-gray-400 h-8 w-full px-1"></div>
             <div><label class="text-xs">Last year:</label><input type="text" class="border border-gray-400 h-8 w-full px-1"></div>
             <div><label class="text-xs">This year:</label><input type="text" class="border border-gray-400 h-8 w-full px-1"></div>
         </div>
-    </div>
+    </div> -->
+
+    <div class="rounded-lg mb-6 mt-4"> 
+    <label class="font-bold text-sm block mb-1">Last 3 Years Turnover</label>
+    <table class="w-full text-center border-collapse">
+        <thead>
+            <tr class="bg-gray-100">
+                <th class="border border-gray-400 p-2 w-1/3 text-sm">
+                    <span class="text-xs text-gray-500">Year</span>
+                </th>
+                <th class="border border-gray-400 p-2 w-2/3 text-sm">
+                   <span class="text-xs text-gray-500">Turn Over</span>
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td class="border border-gray-400 p-2">
+                    <input type="text" class="w-full border-none bg-transparent text-center focus:outline-none" placeholder="Year (e.g., 2026)">
+                </td>
+                <td class="border border-gray-400 p-2">
+                    <input type="text" class="w-full border-none bg-transparent text-center focus:outline-none" placeholder="0.00">
+                </td>
+            </tr>
+            <tr>
+                <td class="border border-gray-400 p-2">
+                    <input type="text" class="w-full border-none bg-transparent text-center focus:outline-none" placeholder="Year">
+                </td>
+                <td class="border border-gray-400 p-2">
+                    <input type="text" class="w-full border-none bg-transparent text-center focus:outline-none" placeholder="0.00">
+                </td>
+            </tr>
+            <tr>
+                <td class="border border-gray-400 p-2">
+                    <input type="text" class="w-full border-none bg-transparent text-center focus:outline-none" placeholder="ํํYear">
+                </td>
+                <td class="border border-gray-400 p-2">
+                    <input type="text" class="w-full border-none bg-transparent text-center focus:outline-none" placeholder="0.00">
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+
+
 
     <div class="mb-6">
         <label class="font-bold text-sm block mb-2">Management</label>
@@ -891,21 +1027,21 @@
                     <span>Quality Management (ISO9001):</span>
                     <div class="flex gap-3"><label><input type="radio" name="qm" value="Y"> Yes</label><label><input type="radio" name="qm" value="N"> No</label></div>
                 </div>
-                <input type="text" placeholder="ระบุรายละเอียด/เลขที่ใบรับรอง..." class="border border-gray-400 h-8 w-full px-2 rounded">
+                <input type="text" placeholder="Certificate No. / Details" class="input input-bordered input-sm w-full bg-gray-50 border-gray-300">
             </div>
             <div class="flex flex-col gap-1">
                 <div class="flex justify-between items-center">
                     <span>CSR Management:</span>
                     <div class="flex gap-3"><label><input type="radio" name="csr" value="Y"> Yes</label><label><input type="radio" name="csr" value="N"> No</label></div>
                 </div>
-                <input type="text" placeholder="ระบุชื่อโครงการหรือรายละเอียด..." class="border border-gray-400 h-8 w-full px-2 rounded">
+                <input type="text" placeholder="Specify project name or details..." class="input input-bordered input-sm w-full bg-gray-50 border-gray-300">
             </div>
             <div class="flex flex-col gap-1">
                 <div class="flex justify-between items-center">
                     <span>Environmental (ISO14001):</span>
                     <div class="flex gap-3"><label><input type="radio" name="env" value="Y"> Yes</label><label><input type="radio" name="env" value="N"> No</label></div>
                 </div>
-                <input type="text" placeholder="ระบุรายละเอียด/เลขที่ใบรับรอง..." class="border border-gray-400 h-8 w-full px-2 rounded">
+                <input type="text" placeholder="Certificate No. / Details" class="input input-bordered input-sm w-full bg-gray-50 border-gray-300">
             </div>
         </div>
     </div>
@@ -913,17 +1049,20 @@
 <div class="pt-4">
     <label class="font-bold text-sm block mb-2">Labour Union:</label>
     <div class="flex flex-wrap items-center gap-6 text-sm">
+        
         <div class="flex items-center gap-2">
-            <label class="flex items-center gap-2 cursor-pointer">
+            <label class="flex items-center gap-2 cursor-pointer whitespace-nowrap">
                 <input type="radio" name="union" value="Y" class="w-4 h-4 accent-blue-600"> Have established
             </label>
-            <input type="text" placeholder="ระบุวันที่จัดตั้ง..." 
-                   class="border border-gray-400 h-8 px-2 rounded w-40 text-sm focus:border-blue-500 outline-none">
+            
+            <input type="text" placeholder="Specify established date..." 
+                   class="input input-bordered input-sm w-48 bg-gray-50 border-gray-300">
         </div>
         
-        <label class="flex items-center gap-2 cursor-pointer">
-            <input type="radio" name="union" value="N" class="w-4 h-4 accent-blue-600"> No have
+        <label class="flex items-center gap-2 cursor-pointer whitespace-nowrap">
+            <input type="radio" name="union" value="N" class="w-4 h-4 accent-blue-600"> Do not have
         </label>
+        
     </div>
 </div>
     <div class="space-y-6 pt-6">
