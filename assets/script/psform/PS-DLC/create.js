@@ -127,11 +127,26 @@ $(document).on("click", "#btnRequest", async function () {
     if (typeof TableManager !== "undefined") {
       // 1. สั่ง sync ข้อมูลล่าสุดจากตาราง (เผื่อกรณี User พิมพ์แก้แล้วยังไม่ได้คลิกออกนอกช่อง)
       TableManager.syncData();
-      const invalidDrawing = TableManager.excelData.find(
+      // const invalidDrawing = TableManager.excelData.find(
+      //   (row) => !validateDrawingNo(row.DRAWING),
+      // );
+      // if (invalidDrawing) {
+      //   showMessage("พบ Drawing No. ไม่ถูกต้อง");
+      //   return;
+      // }
+      // --- โค้ดใหม่ที่แนะนำ ---
+      const invalidRows = TableManager.excelData.filter(
         (row) => !validateDrawingNo(row.DRAWING),
       );
-      if (invalidDrawing) {
-        showMessage("พบ Drawing No. ไม่ถูกต้อง");
+
+      if (invalidRows.length > 0) {
+        // ดึงเอา Drawing No ที่ผิดมาต่อกันด้วยลูกน้ำ (,) เพื่อแสดงในข้อความ
+        // ถ้าค่านั้นว่างเปล่า (Empty) ให้แสดงคำว่า "[ค่าว่าง]" แทน
+        const badDrawings = invalidRows
+          .map((row) => (row.DRAWING ? row.DRAWING : "[ค่าว่าง]"))
+          .join(", ");
+
+        showMessage(`พบ Drawing No. ไม่ถูกต้อง: ${badDrawings}`);
         return;
       }
 

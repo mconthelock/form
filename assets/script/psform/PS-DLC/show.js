@@ -25,6 +25,8 @@ import { redirectWebflow } from "@amec/webasset/form";
 import { searchUser } from "@amec/webasset/api/amec";
 import Select2 from "select2";
 import dayjs from "dayjs";
+import { showLoader } from "@amec/webasset/preloader";
+import { sendmail } from "@amec/webasset/api/mail";
 
 var cextData, data;
 var showTable = null;
@@ -168,6 +170,7 @@ $(async function () {
 
 $(document).on("click", "button[name='btnAction']", async function () {
   try {
+    
     const param = getUrlParams();
     const form = {
       NFRMNO: param.NFRMNO,
@@ -198,11 +201,11 @@ $(document).on("click", "button[name='btnAction']", async function () {
       if (!(await requiredForm("#CONTROLLER", requiredmessage))) return;
       const controller = { ...state, CONTROLLER: $("#CONTROLLER").val() };
       res = await updateController(controller);
-      
     } else if (cextData == "02") {
+      showLoader();
       const queryString = window.location.search;
       const urlParams = new URLSearchParams(queryString);
-      const empno = urlParams.get("empno");
+      const empnum = urlParams.get("empno");
       const actualDate = dayjs().format("YYYY-MM-DD HH:mm:ss");
 
       const details = showTable
@@ -228,26 +231,48 @@ $(document).on("click", "button[name='btnAction']", async function () {
           };
         })
         .filter(
-          (item) =>
-            item &&
-            (item.NEWCODE || item.NEWFLAG || item.REFERENCE),
+          (item) => item && (item.NEWCODE || item.NEWFLAG || item.REFERENCE),
         );
 
       const updateformData = {
         ...state,
         CHANGE_STATUS: "1",
         ACTUAL_DATE: actualDate,
-        ACTUAL_UPDATEBY: empno,
+        ACTUAL_UPDATEBY: empnum,
         DETAILS: details,
       };
-      res = await updateDLCform(updateformData);
 
+      res = await updateDLCform(updateformData);
     } else {
       res = await doaction(state);
     }
-
+    data = await getFormData(
+      param.NFRMNO,
+      param.VORGNO,
+      param.CYEAR,
+      param.CYEAR2,
+      param.NRUNNO,
+    );
+    const formNo = `${data.formmaster.VANAME}${data.form.CYEAR2.slice(-2)}-${("000000" + data.form.NRUNNO).slice(-6)}`;
     console.log(res);
     if (res.status) {
+      if (cextData == "02") {
+        await sendmail({
+          to: [
+            "viyada@MitsubishiElevatorAsia.co.th",
+            "anucha@MitsubishiElevatorAsia.co.th",
+            "chatchawarnk@MitsubishiElevatorAsia.co.th",
+            "chakkritv@MitsubishiElevatorAsia.co.th",
+            "punnawichs@mitsubishielevatorasia.co.th",
+          ],
+          subject: "Form Drawing list for change PN Production update Complete",
+          html: `<p>Dear PP Sect.</p>
+                        <p style="text-indent: 2em;">Form No: ${formNo} </p>
+                        <p style="text-indent: 2em;">Drawing List for change PN production (Complete)</p>
+                        <p>Please Re-check data again.</p>
+                        <p>Best Regards,</p>`,
+        });
+      }
       showMessage(res.message, "success");
       redirectWebflow();
     } else {
@@ -256,5 +281,7 @@ $(document).on("click", "button[name='btnAction']", async function () {
   } catch (error) {
     console.error(error);
     showMessage(error.message);
+  } finally {
+    showLoader({ show: false });
   }
 });

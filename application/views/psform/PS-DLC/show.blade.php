@@ -116,8 +116,8 @@
             <div class="divider"></div>
 
             <div class="w-full">
-                <h3 class="text-lg font-bold mb-4 flex">
-                    <svg class="w-[28px] h-[28px] text-gray-800 dark:text-black" aria-hidden="true"
+                <h3 class="text-lg text-primary font-bold mb-4 flex">
+                    <svg class="w-[28px] h-[28px]  text-primary" aria-hidden="true"
                         xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor"
                         viewBox="0 0 24 24">
                         <path fill-rule="evenodd"
