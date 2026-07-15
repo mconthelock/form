@@ -78,23 +78,30 @@
     </div>
 
     <!-- Operation Section -->
-    <div class="border border-gray-300 p-6 rounded-lg bg-white">
-        <!-- ใช้ grid เหมือนกับด้านบน เพื่อให้ระยะขอบซ้ายตรงกันเป๊ะ -->
-        <div class="grid grid-cols-[140px_1fr] items-center gap-2">
-            <span class="font-semibold text-sm required">Operation:</span>
-                <div class="flex items-center gap-6">
-                <label class="flex items-center gap-2 cursor-pointer text-gray-700 text-sm">
-                    <input type="radio" name="OPERATION" value="new" class="w-4 h-4 accent-blue-600"> New vendor
-                </label>
-                
-                <label class="flex items-center gap-2 cursor-pointer text-gray-700 text-sm">
-                    <input type="radio" name="OPERATION" value="annual" class="w-4 h-4 accent-blue-600"> Annual evaluation for
-                </label>
-                
+<div class="border border-gray-300 p-6 rounded-lg bg-white">
+    <div class="grid grid-cols-[140px_1fr] items-center gap-2">
+        <span class="font-semibold text-sm required">Operation:</span>
+        
+        <div class="flex items-center gap-6">
+            <label class="flex items-center gap-2 cursor-pointer text-gray-700 text-sm">
+                <input type="radio" name="OPERATION" value="N" class="w-4 h-4 accent-blue-600"> New vendor
+            </label>
+            
+            <label class="flex items-center gap-2 cursor-pointer text-gray-700 text-sm">
+                <input type="radio" name="OPERATION" value="A" class="w-4 h-4 accent-blue-600"> Annual evaluation for
+            </label>
+            
+            <div class="flex items-center gap-4">
                 <input type="text" maxlength="5" placeholder="Vendor Code" class="input input-sm border border-gray-400 h-8 rounded w-48 px-2">
+                
+                <label class="flex items-center gap-2 cursor-pointer text-gray-700 text-sm">
+                    <input type="checkbox" name="UPSTATUS" class="w-4 h-4 accent-blue-600 rounded"> 
+                    Update Vendor Master
+                </label>
             </div>
         </div>
     </div>
+</div>
 <div class="border border-gray-300 p-6 rounded-lg bg-white">
         
         <!-- Header Section -->
@@ -131,30 +138,30 @@
             
             <div class="grid grid-cols-3 gap-y-2 gap-x-4 text-sm">
                 <label class="flex items-center gap-2 cursor-pointer">
-                    <input type="radio" name="VENDGROUP" value="1:Oversea (Relate MELCO Group)" class="w-4 h-4 accent-blue-600 radio-typec"> Oversea (Relate MELCO Group)
+                    <input type="radio" name="VENDGROUP" value="1:Oversea (Relate MELCO Group) (1)" class="w-4 h-4 accent-blue-600 req radio-typec"> Oversea (Relate MELCO Group) (1)
                 </label>
                 <label class="flex items-center gap-2 cursor-pointer">
-                    <input type="radio" name="VENDGROUP" value="2:Oversea (Not relate MELCO Group)" class="w-4 h-4 accent-blue-600 radio-typec"> Oversea (Not relate MELCO Group)
+                    <input type="radio" name="VENDGROUP" value="2:Oversea (Not relate MELCO Group) (2)" class="w-4 h-4 accent-blue-600 req radio-typec"> Oversea (Not relate MELCO Group) (2)
                 </label>
                 <label class="flex items-center gap-2 cursor-pointer">
-                    <input type="radio" name="VENDGROUP" value="3:Domestic (Use BOI)" class="w-4 h-4 accent-blue-600 radio-typec"> Domestic (Use BOI)
-                </label>
-                
-                <label class="flex items-center gap-2 cursor-pointer">
-                    <input type="radio" name="VENDGROUP" value="4:Domestic (Use IPO)" class="w-4 h-4 accent-blue-600 radio-typec"> Domestic (Use IPO)
-                </label>
-                <label class="flex items-center gap-2 cursor-pointer">
-                    <input type="radio" name="VENDGROUP" value="7:Domestic (Use FTA)" class="w-4 h-4 accent-blue-600 radio-typec"> Domestic (Use FTA)
-                </label>
-                <label class="flex items-center gap-2 cursor-pointer">
-                    <input type="radio" name="VENDGROUP" value="5:Domestic Vendor" class="w-4 h-4 accent-blue-600 radio-typec"> Domestic Vendor
+                    <input type="radio" name="VENDGROUP" value="3:Domestic (Use BOI) (3)" class="w-4 h-4 accent-blue-600 req radio-typec"> Domestic (Use BOI) (3)
                 </label>
                 
                 <label class="flex items-center gap-2 cursor-pointer">
-                    <input type="radio" name="VENDGROUP" value="8:Sub-Contractor" class="w-4 h-4 accent-blue-600 radio-typec"> Sub-Contractor
+                    <input type="radio" name="VENDGROUP" value="4:Domestic (Use IPO) (4)" class="w-4 h-4 accent-blue-600 req radio-typec"> Domestic (Use IPO) (4)
                 </label>
                 <label class="flex items-center gap-2 cursor-pointer">
-                    <input type="radio" name="VENDGROUP" value="6:Non-Production" class="w-4 h-4 accent-blue-600 radio-typec"> Non-Production
+                    <input type="radio" name="VENDGROUP" value="7:Domestic (Use FTA) (7)" class="w-4 h-4 accent-blue-600 req radio-typec"> Domestic (Use FTA) (7)
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer">
+                    <input type="radio" name="VENDGROUP" value="5:Domestic Vendor (5)" class="w-4 h-4 accent-blue-600 req radio-typec"> Domestic Vendor (5)
+                </label>
+                
+                <label class="flex items-center gap-2 cursor-pointer">
+                    <input type="radio" name="VENDGROUP" value="8:Sub-Contractor" class="w-4 h-4 accent-blue-600 req radio-typec"> Sub-Contractor
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer">
+                    <input type="radio" name="VENDGROUP" value="6:Non-Production" class="w-4 h-4 accent-blue-600 req radio-typec"> Non-Production
                 </label>
              
             </div>
@@ -164,16 +171,16 @@
             
             <div class="grid grid-cols-3 gap-y-2 gap-x-4 text-sm">
                 <label class="flex items-center gap-2 cursor-pointer">
-                    <input type="radio" name="VENDPURPOSE" value="PCB in house" class="w-4 h-4 accent-blue-600"> PCB in house
+                    <input type="radio" name="VENDPURPOSE" value="9:PCB in house (9)" class="w-4 h-4 accent-blue-600"> PCB in house (9)
                 </label>
                 <label class="flex items-center gap-2 cursor-pointer">
-                    <input type="radio" name="VENDPURPOSE" value="FTA privilege by AMEC" class="w-4 h-4 accent-blue-600"> FTA privilege by AMEC
+                    <input type="radio" name="VENDPURPOSE" value="5:FTA privilege by AMEC (5)" class="w-4 h-4 accent-blue-600"> FTA privilege by AMEC (5)
                 </label>
                 <div></div> <label class="flex items-center gap-2 cursor-pointer">
-                    <input type="radio" name="VENDPURPOSE" value="Maintenance" class="w-4 h-4 accent-blue-600"> Maintenance
+                    <input type="radio" name="VENDPURPOSE" value="8:Maintenance (8)" class="w-4 h-4 accent-blue-600"> Maintenance (8)
                 </label>
                 <label class="flex items-center gap-2 cursor-pointer">
-                    <input type="radio" name="VENDPURPOSE" value="General" class="w-4 h-4 accent-blue-600"> General ...
+                    <input type="radio" name="VENDPURPOSE" value="0:General...(0)" class="w-4 h-4 accent-blue-600"> General ... (0)
                 </label>
                 <div></div> </div>
         </div>
@@ -408,13 +415,13 @@
             <label class="flex items-center gap-2"><input type="checkbox" name = "COMPLIANCE" value="ไม่อยู่ในรายชื่อที่ถูกลงโทษจาก UNSC"> ไม่อยู่ในรายชื่อที่ถูกลงโทษจาก UNSC</label>
             <label class="flex items-center gap-2"><input type="checkbox" name = "COMPLIANCE" value="ไม่อยู่ในประเทศ ประเทศไทยคว่ำบาตร ตามมาตรการคว่ำบาตร โดยสหประชาชาติ WWW.dff-go.th"> ไม่อยู่ในประเทศ ประเทศไทยคว่ำบาตร ตามมาตรการคว่ำบาตร โดยสหประชาชาติ WWW.dff-go.th</label>
             <label class="flex items-center gap-2"><input type="checkbox" name = "COMPLIANCE" value="AMEC's standard Terms of 'CIF'"> AMEC's standard Terms of "CIF"</label>
+            <label class="flex items-center gap-2"><input type="checkbox" name = "COMPLIANCE" value="ได้รับ Financial Record"> ได้รับ Financial Record</label>
             <div class="flex items-center gap-2">
                 <label class="flex items-center gap-2 flex-shrink-0"><input type="checkbox" name = "COMPLIANCE" value="อื่นๆ ระบุ"> อื่นๆ ระบุ</label>
                 <input type="text"  name = "COMPLIANCE_OTHER" class="input input-sm border border-gray-400 h-8 rounded w-1/2 px-2">
                 <span class="text-red-600 text-sm font-semibold whitespace-nowrap">ข้อกำหนด AMEC-6000: Rule for Purchase</span>
             </div>
-            <label class="flex items-center gap-2"><input type="checkbox" name = "COMPLIANCE" value="ได้รับ Financial Record"> ได้รับ Financial Record</label>
-        </div>
+              </div>
     </div>
 
             <!-- 1. รายการสินค้าและบริการ -->
@@ -557,7 +564,7 @@
         </div>
     </div>
 
-    <div class="overflow-x-auto mt-6">
+    <div class="mb-8 mt-6 border-2 border-dashed border-gray-400 rounded-lg p-6 bg-blue-50">
     <table class="w-full text-sm border-collapse border border-gray-400 bg-white">
         <thead>
             <tr class="bg-gray-100">
