@@ -9,6 +9,7 @@ import { redirectWebflow } from "@amec/webasset/form";
 /*--------------------READY FUNCTION--------------------*/
 
 $(async function () {
+  setupFieldGuide();
   const queryString = window.location.search;
   const urlParams = new URLSearchParams(queryString);
   const empno = urlParams.get("empno");
@@ -36,6 +37,163 @@ $(async function () {
   $("#actionform").html(action);
   createTableStamp();
 });
+
+const fieldGuides = [
+  ["#INPUTBY", "Requester Information", "Input By", "ผู้สร้างเอกสาร ระบบกรอกให้อัตโนมัติ ไม่ต้องแก้ไข"],
+  ["#REQBY", "Requester Information", "Requester By", "กรอกรหัสพนักงานของผู้ขอเบิก แล้วระบบจะแสดงชื่อและหน่วยงานให้ตรวจสอบ"],
+  ["#FULLDP", "Requester Information", "DIV / Dept / Sect", "หน่วยงานของผู้ขอเบิก ระบบดึงจากรหัสพนักงานให้อัตโนมัติ"],
+  ["input[name='OPTION_CODE']", "Request Details", "Option", "เลือก Withdrawal เมื่อต้องการเบิกอากรแสตมป์ หรือ Add สำหรับเจ้าหน้าที่ FIN ที่ต้องการเพิ่มรายการ"],
+  ["#EffDate", "Request Details", "Effective Date", "เลือกวันที่ต้องการนำอากรแสตมป์ไปใช้งาน"],
+  ["#RetDate", "Request Details", "Date Receive", "วันที่รับอากรแสตมป์ เจ้าหน้าที่ FIN เป็นผู้กำหนด โดยรับของได้เวลา 14:00–16:00 น."],
+  ["#location", "Request Details", "Collection Location", "ระบุสถานที่รับอากรแสตมป์ หากไม่เปลี่ยนให้ใช้ Counter FIN Sect."],
+  ["#addStampRow", "Purpose & Duty Stamp Detail", "Add Row", "เพิ่มหนึ่งแถวต่อหนึ่งเหตุผลในการขอเบิก"],
+  ["#stampTable", "Purpose & Duty Stamp Detail", "รายการอากรแสตมป์", "กรอกเหตุผลใน Reason และจำนวนใน QTY ระบบคำนวณ AMT ให้อัตโนมัติ หรือกดลบเพื่อนำแถวที่ไม่ต้องการออก"],
+  ["#attachfile", "Attachment", "Attachment", "แนบหลักฐาน PDF, JPG หรือ PNG ได้หลายไฟล์ หากไม่มีเอกสารประกอบสามารถเว้นว่างได้"],
+];
+
+function setupFieldGuide() {
+  $("head").append(`<style>
+    #fieldGuide {
+      position: fixed;
+      top: 50%;
+      left: 1.5rem;
+      transform: translateY(-50%);
+      width: 18rem;
+      z-index: 100;
+      border-color: var(--guide-color);
+      border-left-width: 5px;
+      background: var(--guide-bg);
+      color: #172033;
+    }
+    #fieldGuideGroup, #fieldGuideTitle { color: var(--guide-color); }
+    .guide-progress-dot {
+      width: .8rem;
+      height: .8rem;
+      border: 2px solid #111827;
+      border-radius: 9999px;
+      background: white;
+      cursor: pointer;
+    }
+    .guide-progress-dot.guide-done { background: #111827; }
+    .guide-progress-dot.guide-active {
+      border-color: var(--guide-color);
+      background: var(--guide-color);
+      box-shadow: 0 0 0 3px white, 0 0 0 5px var(--guide-color);
+    }
+    .guide-target-highlight {
+      outline: 3px solid var(--guide-highlight-color) !important;
+      outline-offset: 3px;
+      animation: guideHighlight 1.1s ease-in-out infinite;
+    }
+    @keyframes guideHighlight {
+      0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--guide-highlight-color) 45%, transparent); }
+      50% { box-shadow: 0 0 0 8px transparent; }
+    }
+    @media (min-width: 1400px) {
+      .fin-ds-accessible > .max-w-5xl { transform: translateX(10.5rem); }
+    }
+    @media (max-width: 1399px) {
+      #fieldGuide {
+        top: auto;
+        right: 1rem;
+        bottom: 1rem;
+        left: 1rem;
+        width: auto;
+        transform: none;
+      }
+    }
+  </style>`);
+
+  const themes = {
+    "Requester Information": ["#1d4ed8", "#eff6ff"],
+    "Request Details": ["#6d28d9", "#f5f3ff"],
+    "Purpose & Duty Stamp Detail": ["#047857", "#ecfdf5"],
+    Attachment: ["#0891b2", "#ecfeff"],
+  };
+  const guide = $(`<aside id="fieldGuide" class="border-2 rounded-xl p-4 shadow-xl" aria-live="polite">
+    <div class="flex items-center justify-between gap-2 mb-2">
+      <div id="fieldGuideGroup" class="text-xs font-extrabold uppercase tracking-wide"></div>
+      <div id="fieldGuideCount" class="text-xs font-bold text-slate-500"></div>
+    </div>
+    <div id="fieldGuideProgress" class="flex flex-wrap gap-2 mb-4"></div>
+    <div id="fieldGuideTitle" class="font-extrabold mb-1"></div>
+    <div id="fieldGuideText" class="text-sm text-slate-700 min-h-10"></div>
+    <div class="flex justify-between gap-2 mt-4">
+      <button id="guidePrevious" type="button" class="btn btn-sm btn-ghost">ก่อนหน้า</button>
+      <button id="guideNext" type="button" class="btn btn-sm btn-neutral">ถัดไป</button>
+    </div>
+  </aside>`).appendTo("body");
+  let activeIndex = 1;
+
+  fieldGuides.forEach((item, index) => {
+    guide.find("#fieldGuideProgress").append(
+      $(`<button type="button" class="guide-progress-dot" data-guide-index="${index}"></button>`)
+        .attr("aria-label", `ขั้น ${index + 1}: ${item[2]}`),
+    );
+  });
+
+  const getGuideTarget = (index) => {
+    const targets = $(fieldGuides[index][0]).filter(":visible");
+    const checked = targets.filter(":checked").first();
+    return checked.length ? checked : targets.first();
+  };
+
+  const highlightTarget = () => {
+    $(".guide-target-highlight")
+      .removeClass("guide-target-highlight")
+      .css("--guide-highlight-color", "");
+    const target = getGuideTarget(activeIndex);
+    if (!target.length) return;
+    target
+      .addClass("guide-target-highlight")
+      .css("--guide-highlight-color", themes[fieldGuides[activeIndex][1]][0]);
+  };
+
+  const activateGuideStep = (index, moveToTarget = false) => {
+    activeIndex = Math.max(0, Math.min(index, fieldGuides.length - 1));
+    const item = fieldGuides[activeIndex];
+    const theme = themes[item[1]];
+    guide.css({ "--guide-color": theme[0], "--guide-bg": theme[1] });
+    guide.find("#fieldGuideGroup").text(item[1]);
+    guide.find("#fieldGuideCount").text(`ขั้น ${activeIndex + 1}/${fieldGuides.length}`);
+    guide.find("#fieldGuideTitle").text(item[2]);
+    guide.find("#fieldGuideText").text(item[3]);
+    guide.find(".guide-progress-dot").each(function (dotIndex) {
+      $(this)
+        .toggleClass("guide-done", dotIndex < activeIndex)
+        .toggleClass("guide-active", dotIndex === activeIndex)
+        .attr("aria-current", dotIndex === activeIndex ? "step" : null);
+    });
+    guide.find("#guidePrevious").prop("disabled", activeIndex === 0);
+    guide.find("#guideNext").prop("disabled", activeIndex === fieldGuides.length - 1);
+
+    const target = getGuideTarget(activeIndex);
+    if (moveToTarget && target.length) {
+      target[0].scrollIntoView({ behavior: "smooth", block: "center" });
+      if (!target.prop("disabled") && !target.prop("readonly")) target.trigger("focus");
+    }
+    requestAnimationFrame(highlightTarget);
+  };
+  activateGuideStep(activeIndex);
+
+  guide.on("click", "[data-guide-index]", function () {
+    activateGuideStep(Number($(this).data("guide-index")), true);
+  });
+  guide.find("#guidePrevious").on("click", () => activateGuideStep(activeIndex - 1, true));
+  guide.find("#guideNext").on("click", () => activateGuideStep(activeIndex + 1, true));
+
+  $("#form").on(
+    "focusin mouseover",
+    fieldGuides.map(([selector]) => selector).join(","),
+    function (event) {
+      const index = fieldGuides.findIndex(([selector]) =>
+        $(event.target).closest(selector).length,
+      );
+      if (index < 0) return;
+      activateGuideStep(index);
+    },
+  );
+}
 
 /*--------------------Change FUNCTION--------------------*/
 $(document).on("change", "#REQBY", async function () {
@@ -126,6 +284,7 @@ async function createTableStamp(data = []) {
         <th rowspan="3">No.</th>
         <th rowspan="3">Reason for requisition</th>
         <th colspan="${length}">Duty stamp</th>
+        <th rowspan="3">Action</th>
     </tr><tr>`;
 
   const s = stamp
@@ -140,6 +299,13 @@ async function createTableStamp(data = []) {
     mapColumns.push({ data: `DUTY_QTY${i + 1}` });
     mapColumns.push({ data: `DUTY_AMT${i + 1}` });
   }
+  mapColumns.push({
+    data: null,
+    orderable: false,
+    searchable: false,
+    className: "text-center",
+    defaultContent: '<button type="button" class="delete-stamp-row btn btn-xs btn-error" aria-label="ลบรายการ">ลบ</button>',
+  });
 
   html += "</tr></thead>";
   html += `<tfoot><tr>`;
@@ -147,7 +313,7 @@ async function createTableStamp(data = []) {
   for (let i = 0; i < length; i++) {
     html += `<th>0</th>`; // สร้าง <th> เปล่าๆ รอรับค่า Total ตามจำนวนคอลัมน์ QTY และ AMT
   }
-  html += `</tr></tfoot>`;
+  html += `<th></th></tr></tfoot>`;
   $("#stampTable").html(html);
 
   table = await createTable(
@@ -168,7 +334,7 @@ async function createTableStamp(data = []) {
         };
 
         // ลูปหาผลรวมของแต่ละคอลัมน์ เริ่มจาก index 2 (คอลัมน์ QTY แรก) ข้าม 0 (No) และ 1 (Reason)
-        for (let i = 2; i < mapColumns.length; i++) {
+        for (let i = 2; i < mapColumns.length - 1; i++) {
           let total = api
             .column(i)
             .data()
@@ -185,7 +351,7 @@ async function createTableStamp(data = []) {
       id: "stampTable",
       inlineEdit: {
         status: true,
-        disabledColumns: [0],
+        disabledColumns: [0, mapColumns.length - 1],
         matchers: [
           {
             match: { startsWith: "DUTY_QTY" },
@@ -234,6 +400,7 @@ $(document).on("click", "#addStampRow", async function () {
   const newLineId = data.length + 1;
   let emptyData = {};
   mapColumns.forEach((col) => {
+    if (!col.data) return;
     if (col.data === "LINEID") {
       emptyData[col.data] = newLineId;
     } else {
@@ -241,6 +408,17 @@ $(document).on("click", "#addStampRow", async function () {
     }
   });
   newRow(table, emptyData);
+});
+
+$(document).on("click", "#stampTable .delete-stamp-row", function () {
+  table.row($(this).closest("tr")).remove();
+  let lineId = 1;
+  table.rows().every(function () {
+    const row = this.data();
+    row.LINEID = lineId++;
+    this.data(row);
+  });
+  table.draw(false);
 });
 /*--------------------Check Before Submit--------------------*/
 
