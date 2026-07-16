@@ -33,8 +33,10 @@ import {
     attachTypeManager,
     attachOtherManager,
 } from '../PUR-NVF/formManager';
-import { currencyManager } from './formManager';
+import { concernManager, currencyManager } from './formManager';
 import { showMessage } from '@amec/webasset/utils';
+import { getOrganize } from '../../finform/FIN-PCK/locmst';
+
 // select2();
 var tableSearch, purformdata, columnPurNVF;
 var provinceData, districtData, subDistrictData;
@@ -87,12 +89,20 @@ $(document).ready(async function () {
         text: c.CURRENCY,
     }));
 
+    const org = await getOrganize();
+    const orgdata = org.map((o) => ({
+        value: o.VORGNO,
+        text: o.VNAME,
+    }));
+    console.log(orgdata);
+
     countryManager.init(countriesData);
     provinceManager.init(provinceData);
     districtManager.init(districtData);
     subDistrictManager.init(subDistrictData);
     paymentTermManager.init(termdata);
     currencyManager.init(currencyData);
+    concernManager.init(orgdata);
 
     dragDropInit();
     columnPurNVF = [
@@ -394,56 +404,17 @@ $(document).ready(async function () {
         $(this).closest('tr').remove();
     });
 
-    $(document).on('change', '.score-radio', async function () {
-        let totalScore = 0;
+    $(document).on(
+        'change',
+        '#section-eva-non input[type="radio"], #section-eva-pro input[type="radio"]',
+        function (e) {
+            const containerId =
+                '#' + $(this).closest('div[id^="section-eva"]').attr('id');
+            console.log(containerId);
 
-        const totalItems = $('#eval-table tbody tr').length;
-        const answeredItems = $('.score-radio:checked').length;
-        console.log(totalItems);
-        console.log(answeredItems);
-
-        $('.score-radio:checked').each(function () {
-            totalScore += parseInt($(this).val(), 10);
-        });
-
-        if (answeredItems === totalItems) {
-            $('#total-score').text(totalScore);
-            let judgementText = '-';
-            let colorClass = 'text-gray-500';
-
-            if (totalScore >= 80) {
-                judgementText = 'A: EXCELLENT';
-                colorClass = 'text-green-600';
-            } else if (totalScore >= 70) {
-                judgementText = 'B: GOOD';
-                colorClass = 'text-blue-600';
-            } else if (totalScore >= 60) {
-                judgementText = 'C: FAIR';
-                colorClass = 'text-orange-500';
-            } else if (totalScore >= 40) {
-                judgementText = 'D: POOR';
-                colorClass = 'text-orange-500';
-            } else {
-                judgementText = 'E: NOT APPRICABLE(LESSTHAN 40)';
-                colorClass = 'text-red-600';
-            }
-
-            $('#judgement-result')
-                .text(judgementText)
-                .removeClass()
-                .addClass(`uppercase italic ml-2 font-bold ${colorClass}`);
-
-            // (ตัวเลือกเสริม) สามารถยิง API บันทึกข้อมูลอัตโนมัติเมื่อทำครบได้ที่นี่
-            // await $.post('/api/save-score', { score: totalScore, result: judgementText });
-        } else {
-            $('#total-score').text('');
-            // --- กรณีที่ยังกรอกไม่ครบ ---
-            $('#judgement-result')
-                .text('INCOMPLETE') // เปลี่ยนข้อความเตือนว่ายังไม่ครบ
-                .removeClass()
-                .addClass(`uppercase italic ml-2 font-bold text-gray-400`);
-        }
-    });
+            calculateScore(containerId);
+        },
+    );
 });
 
 function setVendorInfo(vendorData) {
@@ -566,4 +537,58 @@ function clearVendorInfo() {
     // 4. Reset ไฟล์และ Attach Type
     attachFileManager.setFiles([], true); // ล้างรายการไฟล์
     attachTypeManager.reset();
+}
+
+function calculateScore(containerSelector) {
+    let totalScore = 0;
+    let isAnyChecked = false;
+    const container = $(containerSelector);
+    let colorClass = 'text-gray-500';
+
+    // หา radio ทั้งหมดที่ถูกเลือก ในกล่องที่เราระบุ
+    container.find('input[type="radio"]:checked').each(function () {
+        isAnyChecked = true;
+
+        // ดึงค่าจาก value แล้วแปลงเป็นตัวเลขได้เลย!
+        let score = parseInt($(this).val(), 10);
+
+        if (!isNaN(score)) {
+            totalScore += score;
+        }
+    });
+
+    // แสดงผลรวมคะแนน โดยหาจาก class .total-score
+    container.find('.total-score').text(totalScore);
+
+    // คำนวณเกณฑ์ประเมิน
+    let judgement = '-';
+    if (isAnyChecked) {
+        console.log(totalScore);
+
+        if (totalScore >= 80) {
+            judgement = 'EXCELLENT (80 UP)';
+            colorClass = 'text-green-600';
+        } else if (totalScore >= 70) {
+            judgement = 'GOOD (70 UP)';
+            colorClass = 'text-blue-600';
+        } else if (totalScore >= 60) {
+            judgement = 'FAIR (60 UP)';
+            colorClass = 'text-orange-500';
+        } else if (totalScore >= 40) {
+            judgement = 'POOR (40 UP)';
+            colorClass = 'text-orange-500';
+        } else {
+            judgement = 'NOT APPRICABLE (LESSTHAN 40)';
+            colorClass = 'text-red-600';
+        }
+    }
+
+    // แสดงผลข้อความประเมิน โดยหาจาก class .judgement-result
+    container
+        .find('.judgement-result')
+        .text(judgement)
+        .removeClass()
+        .addClass(
+            `judgement-result uppercase italic ml-2 font-bold ${colorClass}`,
+        );
 }

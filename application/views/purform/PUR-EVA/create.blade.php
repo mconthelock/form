@@ -527,18 +527,16 @@
 
     <!-- 3. รายละเอียดค่าใช้จ่ายและการประเมิน -->
     <div class="border-t pt-4">
-        <label class="font-bold text-sm block mb-2">รายละเอียดค่าใช้จ่ายและการประเมิน</label>
-        <div class="grid grid-cols-2 gap-4">
-            <div>
-                <label class="block text-xs font-semibold text-gray-600">Expense Type</label>
-                <select class="w-full border border-gray-400 h-8 p-1 rounded text-sm"></select>
-            </div>
-            <div>
+    
+        
                 <label class="block text-xs font-semibold text-gray-600">Concerned Division</label>
-                <select class="w-full border border-gray-400 h-8 p-1 rounded text-sm"></select>
-            </div>
-        </div>
+                   <select  name="CONCERNEDORG" id="CONCERNEDORG" class="input input-sm border border-gray-400 h-8 rounded px-2 w-58 org req">
+                    <option value="" disabled selected>...</option>
+                    </select>
+            
     </div>
+
+
 
     <!-- 4. Purchase Amount last year -->
     <div class="border-t pt-4">
@@ -564,13 +562,13 @@
         </div>
     </div>
 
-    <div class="mb-8 mt-6 border-2 border-dashed border-gray-400 rounded-lg p-6 bg-blue-50">
+    <div id="section-eva-non" class="mb-8 mt-6 border-2 border-dashed border-gray-400 rounded-lg p-6 bg-blue-50">
     <table class="w-full text-sm border-collapse border border-gray-400 bg-white">
         <thead>
             <tr class="bg-gray-100">
                 <th class="border border-gray-400 p-2 text-left" rowspan="2">Evaluation Item</th>
                 <th class="border border-gray-400 p-2 text-left" rowspan="2">Check Point</th>
-                <th class="border border-gray-400 p-2 text-center" colspan="5">Scroe</th>
+                <th class="border border-gray-400 p-2 text-center" colspan="5">Score</th>
             </tr>
             <tr class="bg-gray-50 text-xs text-center">
                 <th class="border border-gray-400 p-1 w-[13%]">25</th>
@@ -586,25 +584,25 @@
                 <td class="border border-gray-400 p-2 text-xs">Financial status evaluation</td>
                 <td class="border border-gray-400 p-2 text-center align-top">
                     <label class="cursor-pointer block">
-                        <input type="radio" name="FIN_LEVEL" value="A" class="block mx-auto mb-1 w-4 h-4 accent-blue-600">
+                        <input type="radio" name="FIN_LEVEL" value="25" data-topic="FINANCIAL STATEMENT" data-topicdesc="Financial status evaluation" class="block mx-auto mb-1 w-4 h-4 accent-blue-600">
                         <span class="text-[10px] leading-tight block mt-1">Bar C and Related with Melco's Group</span>
                     </label>
                 </td>
                 <td class="border border-gray-400 p-2 text-center align-top">
                     <label class="cursor-pointer block">
-                        <input type="radio" name="FIN_LEVEL" value="B" class="block mx-auto mb-1 w-4 h-4 accent-blue-600">
+                        <input type="radio" name="FIN_LEVEL" value="20" data-topic="FINANCIAL STATEMENT" data-topicdesc="Financial status evaluation"  class="block mx-auto mb-1 w-4 h-4 accent-blue-600">
                         <span class="text-[10px] leading-tight block mt-1">Has Company certificated, Tax payment, Profit ratio</span>
                     </label>
                 </td>
                 <td class="border border-gray-400 p-2 text-center align-top">
                     <label class="cursor-pointer block">
-                        <input type="radio" name="FIN_LEVEL" value="C" class="block mx-auto mb-1 w-4 h-4 accent-blue-600">
+                        <input type="radio" name="FIN_LEVEL" value="15" data-topic="FINANCIAL STATEMENT" data-topicdesc="Financial status evaluation"  class="block mx-auto mb-1 w-4 h-4 accent-blue-600">
                         <span class="text-[10px] leading-tight block mt-1">Has Company certificated, Tax payment</span>
                     </label>
                 </td>
                 <td class="border border-gray-400 p-2 text-center align-top">
                     <label class="cursor-pointer block">
-                        <input type="radio" name="FIN_LEVEL" value="D" class="block mx-auto mb-1 w-4 h-4 accent-blue-600">
+                        <input type="radio" name="FIN_LEVEL" value="10" data-topic="FINANCIAL STATEMENT" data-topicdesc="Financial status evaluation"  class="block mx-auto mb-1 w-4 h-4 accent-blue-600">
                         <span class="text-[10px] leading-tight block mt-1">Not found data of Tax payment and/or "DO NOT USE"</span>
                     </label>
                 </td>
@@ -615,25 +613,25 @@
                 <td class="border border-gray-400 p-2 text-xs">Classification by warranty</td>
                 <td class="border border-gray-400 p-2 text-center align-top">
                     <label class="cursor-pointer block">
-                        <input type="radio" name="QA_LEVEL" value="A" class="block mx-auto mb-1 w-4 h-4 accent-blue-600">
+                        <input type="radio" name="QA_LEVEL" value="25" data-topic="QUALITY CLASSIFICATION" data-topicdesc="Classification by warranty"  class="block mx-auto mb-1 w-4 h-4 accent-blue-600">
                         <span class="text-[10px] leading-tight block mt-1">No Claim</span>
                     </label>
                 </td>
                 <td class="border border-gray-400 p-2 text-center align-top">
                     <label class="cursor-pointer block">
-                        <input type="radio" name="QA_LEVEL" value="B" class="block mx-auto mb-1 w-4 h-4 accent-blue-600">
+                        <input type="radio" name="QA_LEVEL" value="20" data-topic="QUALITY CLASSIFICATION" data-topicdesc="Classification by warranty"  class="block mx-auto mb-1 w-4 h-4 accent-blue-600">
                         <span class="text-[10px] leading-tight block mt-1">Clearly Claim on time/ 1 week</span>
                     </label>
                 </td>
                 <td class="border border-gray-400 p-2 text-center align-top">
                     <label class="cursor-pointer block">
-                        <input type="radio" name="QA_LEVEL" value="C" class="block mx-auto mb-1 w-4 h-4 accent-blue-600">
+                        <input type="radio" name="QA_LEVEL" value="15" data-topic="QUALITY CLASSIFICATION" data-topicdesc="Classification by warranty"  class="block mx-auto mb-1 w-4 h-4 accent-blue-600">
                         <span class="text-[10px] leading-tight block mt-1">Clearly Claim 1-2 month</span>
                     </label>
                 </td>
                 <td class="border border-gray-400 p-2 text-center align-top">
                     <label class="cursor-pointer block">
-                        <input type="radio" name="QA_LEVEL" value="D" class="block mx-auto mb-1 w-4 h-4 accent-blue-600">
+                        <input type="radio" name="QA_LEVEL" value="10" data-topic="QUALITY CLASSIFICATION" data-topicdesc="Classification by warranty"  class="block mx-auto mb-1 w-4 h-4 accent-blue-600">
                         <span class="text-[10px] leading-tight block mt-1">[Not warranty] "DO NOT USE"</span>
                     </label>
                 </td>
@@ -644,13 +642,13 @@
                 <td class="border border-gray-400 p-2 text-xs">Invoice's price by</td>
                 <td class="border border-gray-400 p-2 text-center align-top">
                     <label class="cursor-pointer block">
-                        <input type="radio" name="VERIFYING" value="XML file" class="block mx-auto mb-1 w-4 h-4 accent-blue-600">
+                        <input type="radio" name="VERIFYING" value="25" data-topic="ADVANCE VERIFYING" data-topicdesc="Invoice's price by"  data-score="25" class="block mx-auto mb-1 w-4 h-4 accent-blue-600">
                         <span class="text-[10px] leading-tight block mt-1">Very Good Support (XML file / PDF file (convert/not scan) / Excel file)</span>
                     </label>
                 </td>
                 <td class="border border-gray-400 p-2 text-center align-top">
                     <label class="cursor-pointer block">
-                        <input type="radio" name="VERIFYING" value="PDF file" class="block mx-auto mb-1 w-4 h-4 accent-blue-600">
+                        <input type="radio" name="VERIFYING" value="20" data-topic="ADVANCE VERIFYING" data-topicdesc="Invoice's price by"  class="block mx-auto mb-1 w-4 h-4 accent-blue-600">
                         <span class="text-[10px] leading-tight block mt-1">Good Support (Text file (own pattern/form))</span>
                     </label>
                 </td>
@@ -658,7 +656,7 @@
              <td class="border border-gray-400 p-2 bg-gray-50"></td>
                 <td class="border border-gray-400 p-2 text-center align-top">
                     <label class="cursor-pointer block">
-                        <input type="radio" name="VERIFYING" value="Not able" class="block mx-auto mb-1 w-4 h-4 accent-blue-600">
+                        <input type="radio" name="VERIFYING" value="5" data-topic="ADVANCE VERIFYING" data-topicdesc="Invoice's price by"  class="block mx-auto mb-1 w-4 h-4 accent-blue-600">
                         <span class="text-[10px] leading-tight block mt-1">Not able advance any file before deliver to AMEC</span>
                     </label>
                 </td>
@@ -669,31 +667,31 @@
                 <td class="border border-gray-400 p-2 text-xs">ex.ISO14001 (ref.: PUR-QP-E003)</td>
                 <td class="border border-gray-400 p-2 text-center align-top">
                     <label class="cursor-pointer block">
-                        <input type="radio" name="ENV_LEVEL" value="A" class="block mx-auto mb-1 w-4 h-4 accent-blue-600">
+                        <input type="radio" name="ENV_LEVEL" value="25" data-topic="ENVIRONMENTAL" data-topicdesc="ex.ISO14001 (ref.: PUR-QP-E003)"   class="block mx-auto mb-1 w-4 h-4 accent-blue-600">
                         <span class="text-[10px] leading-tight block mt-1">Has Environmental certificate</span>
                     </label>
                 </td>
                 <td class="border border-gray-400 p-2 text-center align-top">
                     <label class="cursor-pointer block">
-                        <input type="radio" name="ENV_LEVEL" value="B" class="block mx-auto mb-1 w-4 h-4 accent-blue-600">
+                        <input type="radio" name="ENV_LEVEL" value="20" data-topic="ENVIRONMENTAL" data-topicdesc="ex.ISO14001 (ref.: PUR-QP-E003)"  class="block mx-auto mb-1 w-4 h-4 accent-blue-600">
                         <span class="text-[10px] leading-tight block mt-1">Has own Environmental policy</span>
                     </label>
                 </td>
                 <td class="border border-gray-400 p-2 text-center align-top">
                     <label class="cursor-pointer block">
-                        <input type="radio" name="ENV_LEVEL" value="C" class="block mx-auto mb-1 w-4 h-4 accent-blue-600">
+                        <input type="radio" name="ENV_LEVEL" value="15" data-topic="ENVIRONMENTAL" data-topicdesc="ex.ISO14001 (ref.: PUR-QP-E003)"  class="block mx-auto mb-1 w-4 h-4 accent-blue-600">
                         <span class="text-[10px] leading-tight block mt-1">Has response & related material</span>
                     </label>
                 </td>
                 <td class="border border-gray-400 p-2 text-center align-top">
                     <label class="cursor-pointer block">
-                        <input type="radio" name="ENV_LEVEL" value="D1" class="block mx-auto mb-1 w-4 h-4 accent-blue-600">
+                        <input type="radio" name="ENV_LEVEL" value="10" data-topic="ENVIRONMENTAL" data-topicdesc="ex.ISO14001 (ref.: PUR-QP-E003)"  class="block mx-auto mb-1 w-4 h-4 accent-blue-600">
                         <span class="text-[10px] leading-tight block mt-1">Has not related material</span>
                     </label>
                 </td>
                 <td class="border border-gray-400 p-2 text-center align-top">
                     <label class="cursor-pointer block">
-                        <input type="radio" name="ENV_LEVEL" value="D2" class="block mx-auto mb-1 w-4 h-4 accent-blue-600">
+                        <input type="radio" name="ENV_LEVEL" value="5" data-topic="ENVIRONMENTAL" data-topicdesc="ex.ISO14001 (ref.: PUR-QP-E003)"  class="block mx-auto mb-1 w-4 h-4 accent-blue-600">
                         <span class="text-[10px] leading-tight block mt-1">Related & Not response</span>
                     </label>
                 </td>
@@ -701,9 +699,9 @@
         </tbody>
     </table>
     <div class="mt-6 p-4 bg-gray-100 border border-gray-300 rounded-lg flex flex-col sm:flex-row items-center gap-6">
-        <label class="font-bold text-sm">TOTAL SCORE: <span id="total-score-non" class="text-blue-600 text-xl ml-2">0</span></label>
+        <label class="font-bold text-sm">TOTAL SCORE: <span  class="text-blue-600 text-xl ml-2 total-score">0</span></label>
         <div class="h-6 w-px bg-gray-400 hidden sm:block"></div>
-        <label class="font-bold text-sm">JUDGEMENT: <span id="judgement-result-non" class="text-red-600 uppercase italic ml-2">-</span></label>
+        <label class="font-bold text-sm">JUDGEMENT: <span  class="text-red-600 uppercase italic ml-2 judgement-result">-</span></label>
     </div>
 </div>
 
@@ -794,6 +792,19 @@
 </div>
 <div id="pro" class="border border-gray-300 p-6 rounded-lg bg-white mt-6 hidden">
     <h2 class="font-bold text-lg mb-6  pb-2">Vendor Evaluation</h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+    
+    <div class="flex items-center gap-3">
+        <label class="font-bold text-sm text-gray-700 whitespace-nowrap">Vendor Category</label>
+        <input type="text" name="VENDCAT" class="flex-1 input input-bordered input-sm bg-gray-50 border-gray-300" placeholder="Ex. Shoe,Spring wire, Adhesive tape">
+    </div>
+
+    <div class="flex items-center gap-3">
+        <label class="font-bold text-sm text-gray-700 whitespace-nowrap">TAX.ID/Swift Code</label>
+        <input type="text" name="TAX_ID" class="flex-1 input input-bordered input-sm bg-gray-50 border-gray-300" placeholder="TAX.ID" maxlength="13">
+    </div>
+
+</div>
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
 <div>
@@ -1166,7 +1177,7 @@
         <label class="font-bold text-sm">JUDGEMENT: <span id="judgement-result" class="text-red-600 uppercase italic">-</span></label>
     </div>
 </div> -->
-<div class="mb-8 mt-6 border-2 border-dashed border-gray-400 rounded-lg p-6 bg-blue-50">
+<div  id="section-eva-pro" class="mb-8 mt-6 border-2 border-dashed border-gray-400 rounded-lg p-6 bg-blue-50">
     <h2 class="font-bold text-lg mb-4 text-gray-800 pb-2">Evaluation (Purchasing Matters)</h2>
     <div class="overflow-x-auto">
         <table id="eval-table" class="w-full text-sm border-collapse border border-gray-400 bg-white">
@@ -1188,47 +1199,47 @@
                 <tr>
                     <td class="border border-gray-400 p-2 font-semibold">PRICE LEVEL</td>
                     <td class="border border-gray-400 p-2">Comparison with market price or competitor</td>
-                    <td class="border border-gray-400 p-2 text-center"><label class="cursor-pointer block"><input type="radio" name="price" value="25" class="block mx-auto mb-1 score-radio"><span class="text-[10px]">VERY COMPETITIVE</span></label></td>
-                    <td class="border border-gray-400 p-2 text-center"><label class="cursor-pointer block"><input type="radio" name="price" value="20" class="block mx-auto mb-1 score-radio"><span class="text-[10px]">COMPETITIVE</span></label></td>
-                    <td class="border border-gray-400 p-2 text-center"><label class="cursor-pointer block"><input type="radio" name="price" value="15" class="block mx-auto mb-1 score-radio"><span class="text-[10px]">SAME LEVEL</span></label></td>
-                    <td class="border border-gray-400 p-2 text-center"><label class="cursor-pointer block"><input type="radio" name="price" value="10" class="block mx-auto mb-1 score-radio"><span class="text-[10px]">SLITELY EXPENSIVE</span></label></td>
-                    <td class="border border-gray-400 p-2 text-center"><label class="cursor-pointer block"><input type="radio" name="price" value="5" class="block mx-auto mb-1 score-radio"><span class="text-[10px]">EXPENSIVE</span></label></td>
+                    <td class="border border-gray-400 p-2 text-center"><label class="cursor-pointer block"><input type="radio" name="price" value="25" data-topic="PRICE LEVEL" data-topicdesc="Comparison with market price or competitor" class="block mx-auto mb-1 score-radio"><span class="text-[10px]">VERY COMPETITIVE</span></label></td>
+                    <td class="border border-gray-400 p-2 text-center"><label class="cursor-pointer block"><input type="radio" name="price" value="20" data-topic="PRICE LEVEL" data-topicdesc="Comparison with market price or competitor" class="block mx-auto mb-1 score-radio"><span class="text-[10px]">COMPETITIVE</span></label></td>
+                    <td class="border border-gray-400 p-2 text-center"><label class="cursor-pointer block"><input type="radio" name="price" value="15" data-topic="PRICE LEVEL" data-topicdesc="Comparison with market price or competitor"  class="block mx-auto mb-1 score-radio"><span class="text-[10px]">SAME LEVEL</span></label></td>
+                    <td class="border border-gray-400 p-2 text-center"><label class="cursor-pointer block"><input type="radio" name="price" value="10" data-topic="PRICE LEVEL" data-topicdesc="Comparison with market price or competitor" class="block mx-auto mb-1 score-radio"><span class="text-[10px]">SLITELY EXPENSIVE</span></label></td>
+                    <td class="border border-gray-400 p-2 text-center"><label class="cursor-pointer block"><input type="radio" name="price" value="5"  data-topic="PRICE LEVEL" data-topicdesc="Comparison with market price or competitor" class="block mx-auto mb-1 score-radio"><span class="text-[10px]">EXPENSIVE</span></label></td>
                 </tr>
                 <tr>
                     <td class="border border-gray-400 p-2 font-semibold">ORDER MANAGEMENT</td>
                     <td class="border border-gray-400 p-2">Control system from P/O to delivery</td>
-                    <td class="border border-gray-400 p-2 text-center"><label class="cursor-pointer block"><input type="radio" name="order" value="25" class="block mx-auto mb-1 score-radio"><span class="text-[10px]">SYSTEMATIC CONTROL</span></label></td>
-                    <td class="border border-gray-400 p-2 text-center"><label class="cursor-pointer block"><input type="radio" name="order" value="20" class="block mx-auto mb-1 score-radio"><span class="text-[10px]">SEMI SYSTEMATIC</span></label></td>
-                    <td class="border border-gray-400 p-2 text-center"><label class="cursor-pointer block"><input type="radio" name="order" value="15" class="block mx-auto mb-1 score-radio"><span class="text-[10px]">EXCEL CONTROL</span></label></td>
-                    <td class="border border-gray-400 p-2 text-center"><label class="cursor-pointer block"><input type="radio" name="order" value="10" class="block mx-auto mb-1 score-radio"><span class="text-[10px]">MANUAL BOOK</span></label></td>
-                    <td class="border border-gray-400 p-2 text-center"><label class="cursor-pointer block"><input type="radio" name="order" value="5" class="block mx-auto mb-1 score-radio"><span class="text-[10px]">NOT CONTROL</span></label></td>
+                    <td class="border border-gray-400 p-2 text-center"><label class="cursor-pointer block"><input type="radio" name="order" value="25" data-topic="ORDER MANAGEMENT" data-topicdesc="Control system from P/O to delivery"   class="block mx-auto mb-1 score-radio"><span class="text-[10px]">SYSTEMATIC CONTROL</span></label></td>
+                    <td class="border border-gray-400 p-2 text-center"><label class="cursor-pointer block"><input type="radio" name="order" value="20" data-topic="ORDER MANAGEMENT" data-topicdesc="Control system from P/O to delivery"  class="block mx-auto mb-1 score-radio"><span class="text-[10px]">SEMI SYSTEMATIC</span></label></td>
+                    <td class="border border-gray-400 p-2 text-center"><label class="cursor-pointer block"><input type="radio" name="order" value="15" data-topic="ORDER MANAGEMENT" data-topicdesc="Control system from P/O to delivery"  class="block mx-auto mb-1 score-radio"><span class="text-[10px]">EXCEL CONTROL</span></label></td>
+                    <td class="border border-gray-400 p-2 text-center"><label class="cursor-pointer block"><input type="radio" name="order" value="10" data-topic="ORDER MANAGEMENT" data-topicdesc="Control system from P/O to delivery"  class="block mx-auto mb-1 score-radio"><span class="text-[10px]">MANUAL BOOK</span></label></td>
+                    <td class="border border-gray-400 p-2 text-center"><label class="cursor-pointer block"><input type="radio" name="order" value="5"  data-topic="ORDER MANAGEMENT" data-topicdesc="Control system from P/O to delivery"  class="block mx-auto mb-1 score-radio"><span class="text-[10px]">NOT CONTROL</span></label></td>
                 </tr>
                 <tr>
                     <td class="border border-gray-400 p-2 font-semibold">CUSTOMER SERVICE</td>
                     <td class="border border-gray-400 p-2">Responsiveness for delivery/price</td>
-                    <td class="border border-gray-400 p-2 text-center"><label class="cursor-pointer block"><input type="radio" name="service" value="25" class="block mx-auto mb-1 score-radio"><span class="text-[10px]">VERY GOOD<br>(1 day)</span></label></td>
-                    <td class="border border-gray-400 p-2 text-center"><label class="cursor-pointer block"><input type="radio" name="service" value="20" class="block mx-auto mb-1 score-radio"><span class="text-[10px]">GOOD<br>(3 days)</span></label></td>
-                    <td class="border border-gray-400 p-2 text-center"><label class="cursor-pointer block"><input type="radio" name="service" value="15" class="block mx-auto mb-1 score-radio"><span class="text-[10px]">FAIR<br>(1 week)</span></label></td>
-                    <td class="border border-gray-400 p-2 text-center"><label class="cursor-pointer block"><input type="radio" name="service" value="10" class="block mx-auto mb-1 score-radio"><span class="text-[10px]">BAD<br>(2 weeks)</span></label></td>
-                    <td class="border border-gray-400 p-2 text-center"><label class="cursor-pointer block"><input type="radio" name="service" value="5" class="block mx-auto mb-1 score-radio"><span class="text-[10px]">VERY BAD<br>(>2 weeks)</span></label></td>
+                    <td class="border border-gray-400 p-2 text-center"><label class="cursor-pointer block"><input type="radio" name="service" value="25" data-topic="CUSTOMER SERVICE" data-topicdesc="Responsiveness for delivery/price" class="block mx-auto mb-1 score-radio"><span class="text-[10px]">VERY GOOD<br>(1 day)</span></label></td>
+                    <td class="border border-gray-400 p-2 text-center"><label class="cursor-pointer block"><input type="radio" name="service" value="20" data-topic="CUSTOMER SERVICE" data-topicdesc="Responsiveness for delivery/price" class="block mx-auto mb-1 score-radio"><span class="text-[10px]">GOOD<br>(3 days)</span></label></td>
+                    <td class="border border-gray-400 p-2 text-center"><label class="cursor-pointer block"><input type="radio" name="service" value="15" data-topic="CUSTOMER SERVICE" data-topicdesc="Responsiveness for delivery/price" class="block mx-auto mb-1 score-radio"><span class="text-[10px]">FAIR<br>(1 week)</span></label></td>
+                    <td class="border border-gray-400 p-2 text-center"><label class="cursor-pointer block"><input type="radio" name="service" value="10" data-topic="CUSTOMER SERVICE" data-topicdesc="Responsiveness for delivery/price" class="block mx-auto mb-1 score-radio"><span class="text-[10px]">BAD<br>(2 weeks)</span></label></td>
+                    <td class="border border-gray-400 p-2 text-center"><label class="cursor-pointer block"><input type="radio" name="service" value="5"  data-topic="CUSTOMER SERVICE" data-topicdesc="Responsiveness for delivery/price" class="block mx-auto mb-1 score-radio"><span class="text-[10px]">VERY BAD<br>(>2 weeks)</span></label></td>
                 </tr>
                 <tr>
                     <td class="border border-gray-400 p-2 font-semibold">STANDARD DELIVERY</td>
                     <td class="border border-gray-400 p-2">Delivery term vs Competitor</td>
-                    <td class="border border-gray-400 p-2 text-center"><label class="cursor-pointer block"><input type="radio" name="delivery" value="25" class="block mx-auto mb-1 score-radio"><span class="text-[10px]">VERY SHORT</span></label></td>
-                    <td class="border border-gray-400 p-2 text-center"><label class="cursor-pointer block"><input type="radio" name="delivery" value="20" class="block mx-auto mb-1 score-radio"><span class="text-[10px]">SHORT</span></label></td>
-                    <td class="border border-gray-400 p-2 text-center"><label class="cursor-pointer block"><input type="radio" name="delivery" value="15" class="block mx-auto mb-1 score-radio"><span class="text-[10px]">SAME</span></label></td>
-                    <td class="border border-gray-400 p-2 text-center"><label class="cursor-pointer block"><input type="radio" name="delivery" value="10" class="block mx-auto mb-1 score-radio"><span class="text-[10px]">LONGER</span></label></td>
-                    <td class="border border-gray-400 p-2 text-center"><label class="cursor-pointer block"><input type="radio" name="delivery" value="5" class="block mx-auto mb-1 score-radio"><span class="text-[10px]">VERY LONGER</span></label></td>
+                    <td class="border border-gray-400 p-2 text-center"><label class="cursor-pointer block"><input type="radio" name="delivery" value="25" data-topic="STANDARD DELIVERY" data-topicdesc="Delivery term vs Competitor"  class="block mx-auto mb-1 score-radio"><span class="text-[10px]">VERY SHORT</span></label></td>
+                    <td class="border border-gray-400 p-2 text-center"><label class="cursor-pointer block"><input type="radio" name="delivery" value="20" data-topic="STANDARD DELIVERY" data-topicdesc="Delivery term vs Competitor"  class="block mx-auto mb-1 score-radio"><span class="text-[10px]">SHORT</span></label></td>
+                    <td class="border border-gray-400 p-2 text-center"><label class="cursor-pointer block"><input type="radio" name="delivery" value="15" data-topic="STANDARD DELIVERY" data-topicdesc="Delivery term vs Competitor"  class="block mx-auto mb-1 score-radio"><span class="text-[10px]">SAME</span></label></td>
+                    <td class="border border-gray-400 p-2 text-center"><label class="cursor-pointer block"><input type="radio" name="delivery" value="10" data-topic="STANDARD DELIVERY" data-topicdesc="Delivery term vs Competitor"  class="block mx-auto mb-1 score-radio"><span class="text-[10px]">LONGER</span></label></td>
+                    <td class="border border-gray-400 p-2 text-center"><label class="cursor-pointer block"><input type="radio" name="delivery" value="5" data-topic="STANDARD DELIVERY" data-topicdesc="Delivery term vs Competitor"  class="block mx-auto mb-1 score-radio"><span class="text-[10px]">VERY LONGER</span></label></td>
                 </tr>
             </tbody>
         </table>
     </div>
 
     <div class="mt-6 p-4 bg-gray-100 border border-gray-300 rounded-lg flex flex-col sm:flex-row items-center gap-6">
-        <label class="font-bold text-sm">TOTAL SCORE: <span id="total-score" class="text-blue-600 text-xl ml-2">0</span></label>
+        <label class="font-bold text-sm">TOTAL SCORE: <span class="total-score text-blue-600 text-xl ml-2">0</span></label>
         <div class="h-6 w-px bg-gray-400 hidden sm:block"></div>
-        <label class="font-bold text-sm">JUDGEMENT: <span id="judgement-result" class="text-red-600 uppercase italic ml-2">-</span></label>
+        <label class="font-bold text-sm">JUDGEMENT: <span  class="judgement-result text-red-600 uppercase italic ml-2">-</span></label>
     </div>
 </div>
 

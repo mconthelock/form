@@ -49,3 +49,52 @@ export const currencyManager = {
         }
     },
 };
+
+export const concernManager = {
+    list: ['CONCERNEDORG'],
+    get select() {
+        return $('.org');
+    },
+    set text(val) {
+        $('.org').text(val);
+    },
+    set value(val) {
+        this.list.forEach((id) => {
+            $(`#${id}`).val(val).trigger('change');
+        });
+    },
+    getValue(id) {
+        return $(`#${id}`).val();
+    },
+    /**
+     * Initialize select2 for currency fields
+     * @param {{value: string, text: string}[]} data
+     */
+    async init(data) {
+        for (const id of this.list) {
+            await setSelect2({
+                id: id,
+                data: data,
+                size: 'sm',
+                placeholder: 'Select concerned division',
+                search: true,
+                clear: false,
+                emptyValue: false,
+            });
+        }
+    },
+    /**
+     * Sync value to other select2 element
+     * @param {string} value
+     * @param {HTMLElement} element
+     */
+    syncValue(value, element) {
+        for (const id of this.list) {
+            if (!$('#' + id).is(element)) {
+                $('#' + id)
+                    .val(value.toUpperCase())
+                    .trigger('change');
+            }
+        }
+    },
+};
