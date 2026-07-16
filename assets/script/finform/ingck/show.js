@@ -182,6 +182,71 @@ function applyReceiveDateApprovalState() {
     .prop("disabled", !canInputReceiveDate)
     .prop("readonly", !canInputReceiveDate)
     .toggleClass("show-readonly", !canInputReceiveDate);
+
+  toggleReceiveDateGuide(canInputReceiveDate);
+}
+
+function toggleReceiveDateGuide(canInputReceiveDate) {
+  const input = $("#RetDate");
+
+  if (!canInputReceiveDate) {
+    $("#receiveDateGuide").remove();
+    input.removeClass("receive-date-guide-highlight");
+    $(".show-page").removeClass("receive-guide-active");
+    return;
+  }
+
+  if (!$("#receiveDateGuideStyle").length) {
+    $("head").append(`<style id="receiveDateGuideStyle">
+      #receiveDateGuide {
+        position: fixed;
+        top: 50%;
+        left: 1.5rem;
+        transform: translateY(-50%);
+        width: 18rem;
+        z-index: 100;
+      }
+      .receive-date-guide-highlight {
+        outline: 3px solid #c026d3 !important;
+        outline-offset: 3px;
+        animation: receiveDateHighlight 1.1s ease-in-out infinite;
+      }
+      @keyframes receiveDateHighlight {
+        0%, 100% { box-shadow: 0 0 0 0 rgba(192, 38, 211, .35); }
+        50% { box-shadow: 0 0 0 8px transparent; }
+      }
+      @media (min-width: 1400px) {
+        .show-page.receive-guide-active > .max-w-5xl { transform: translateX(10.5rem); }
+      }
+      @media (max-width: 1399px) {
+        #receiveDateGuide {
+          top: auto;
+          right: 1rem;
+          bottom: 1rem;
+          left: 1rem;
+          width: auto;
+          transform: none;
+        }
+      }
+    </style>`);
+  }
+
+  if (!$("#receiveDateGuide").length) {
+    $(`<aside id="receiveDateGuide" class="rounded-xl border-2 border-fuchsia-600 border-l-4 bg-fuchsia-50 p-4 text-slate-800 shadow-xl" aria-live="polite">
+      <div class="text-xs font-extrabold uppercase tracking-wide text-fuchsia-700">ขั้นตอนสำหรับผู้อนุมัติ</div>
+      <div class="mt-1 font-extrabold text-fuchsia-700">Date Receive</div>
+      <p class="mt-1 text-sm">เลือกวันที่รับอากรแสตมป์ก่อนกด Approve โดยรับของได้เวลา 14:00–16:00 น.</p>
+      <button id="goToReceiveDate" type="button" class="btn btn-sm btn-secondary mt-3">ไปกรอกวันที่</button>
+    </aside>`).appendTo("body");
+
+    $("#goToReceiveDate").on("click", function () {
+      input[0].scrollIntoView({ behavior: "smooth", block: "center" });
+      input.trigger("focus");
+    });
+  }
+
+  input.addClass("receive-date-guide-highlight");
+  $(".show-page").addClass("receive-guide-active");
 }
 
 function shouldRequireReceiveDateOnApprove(action) {

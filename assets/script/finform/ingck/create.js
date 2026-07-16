@@ -44,7 +44,6 @@ const fieldGuides = [
   ["#FULLDP", "Requester Information", "DIV / Dept / Sect", "หน่วยงานของผู้ขอเบิก ระบบดึงจากรหัสพนักงานให้อัตโนมัติ"],
   ["input[name='OPTION_CODE']", "Request Details", "Option", "เลือก Withdrawal เมื่อต้องการเบิกอากรแสตมป์ หรือ Add สำหรับเจ้าหน้าที่ FIN ที่ต้องการเพิ่มรายการ"],
   ["#EffDate", "Request Details", "Effective Date", "เลือกวันที่ต้องการนำอากรแสตมป์ไปใช้งาน"],
-  ["#RetDate", "Request Details", "Date Receive", "วันที่รับอากรแสตมป์ เจ้าหน้าที่ FIN เป็นผู้กำหนด โดยรับของได้เวลา 14:00–16:00 น."],
   ["#location", "Request Details", "Collection Location", "ระบุสถานที่รับอากรแสตมป์ หากไม่เปลี่ยนให้ใช้ Counter FIN Sect."],
   ["#addStampRow", "Purpose & Duty Stamp Detail", "Add Row", "เพิ่มหนึ่งแถวต่อหนึ่งเหตุผลในการขอเบิก"],
   ["#stampTable", "Purpose & Duty Stamp Detail", "รายการอากรแสตมป์", "กรอกเหตุผลใน Reason และจำนวนใน QTY ระบบคำนวณ AMT ให้อัตโนมัติ หรือกดลบเพื่อนำแถวที่ไม่ต้องการออก"],
