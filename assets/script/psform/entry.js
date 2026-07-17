@@ -18,4 +18,10 @@ module.exports = {
     // PS-YIC
 	psYic: "./assets/script/psform/PS-YIC/index.js", //YIC page
 	psYicDetail: "./assets/script/psform/PS-YIC/detail.js", //YIC detail page
+
+    // PS-DLC
+	psDLC: "./assets/script/psform/PS-DLC/create.js",
+	psDLCShow: "./assets/script/psform/PS-DLC/show.js",
+	prDLCreport: "./assets/script/psform/PS-DLC/report.js",
+
 };
