@@ -311,10 +311,21 @@ async function getStamp() {
 }
 
 async function getBalance() {
-  return await fetchUtils({
-    url: `${process.env.APP_API}/finform/fin-ds/balance/${new Date().getFullYear()}`,
+  const response = await fetchUtils({
+    url: `${process.env.APP_API}/finform/fin-ds/report/${new Date().getFullYear()}`,
     method: "GET",
   });
+  const rows = response?.datareport ?? response?.data?.datareport ?? response?.data ?? response;
+
+  if (!Array.isArray(rows)) throw new Error("Cannot load duty stamp report");
+
+  return dutyStampList.map(({ DUTY_VALUE }) => ({
+    DUTY_VALUE: numberValue(DUTY_VALUE),
+    BAL_QTY: rows.reduce(
+      (total, row) => total + numberValue(row[`BUY_${DUTY_VALUE}_QTY`]) - numberValue(row[`WD_${DUTY_VALUE}_QTY`]),
+      0,
+    ),
+  }));
 }
 var table, mapColumns;
 var dutyStampList = [];
@@ -382,6 +393,7 @@ async function createTableStamp(data = []) {
   mapColumns = [...columns];
 
   const stamp = await getStamp();
+  dutyStampList = stamp;
   try {
     await refreshRemainingBalance();
   } catch (error) {
@@ -389,7 +401,6 @@ async function createTableStamp(data = []) {
     console.error("Cannot load remaining duty stamp quantity:", error);
   }
   console.log(stamp);
-  dutyStampList = stamp;
   console.log(dutyStampList);
   const length = stamp.length * 2;
   console.log(length);
