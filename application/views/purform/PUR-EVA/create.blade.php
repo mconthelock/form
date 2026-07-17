@@ -78,24 +78,24 @@
     </div>
 
     <!-- Operation Section -->
-<div class="border border-gray-300 p-6 rounded-lg bg-white">
+<div class="vendor-form-container border border-gray-300 p-6 rounded-lg bg-white">
     <div class="grid grid-cols-[140px_1fr] items-center gap-2">
         <span class="font-semibold text-sm required">Operation:</span>
         
         <div class="flex items-center gap-6">
             <label class="flex items-center gap-2 cursor-pointer text-gray-700 text-sm">
-                <input type="radio" name="OPERATION" value="N" class="w-4 h-4 accent-blue-600"> New vendor
+                <input type="radio" name="OPERATION" value="N" class="w-4 h-4 accent-blue-600 radio-opr"> New vendor
             </label>
             
             <label class="flex items-center gap-2 cursor-pointer text-gray-700 text-sm">
-                <input type="radio" name="OPERATION" value="A" class="w-4 h-4 accent-blue-600"> Annual evaluation for
+                <input type="radio" name="OPERATION" value="A" class="w-4 h-4 accent-blue-600 radio-opr"> Annual evaluation for
             </label>
             
             <div class="flex items-center gap-4">
-                <input type="text" maxlength="5" placeholder="Vendor Code" class="input input-sm border border-gray-400 h-8 rounded w-48 px-2">
+                <input type="text" name="VENDORCODE" id="VENDORCODE" maxlength="5" placeholder="Vendor Code" class="vendor-code-input input input-sm border border-gray-400 h-8 rounded w-48 px-2" disabled >
                 
                 <label class="flex items-center gap-2 cursor-pointer text-gray-700 text-sm">
-                    <input type="checkbox" name="UPSTATUS" class="w-4 h-4 accent-blue-600 rounded"> 
+                    <input type="checkbox" name="UPSTATUS" class="update-status-check w-4 h-4 accent-blue-600 rounded" disabled> 
                     Update Vendor Master
                 </label>
             </div>

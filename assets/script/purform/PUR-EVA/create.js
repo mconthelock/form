@@ -10,6 +10,7 @@ import {
     getDistricts,
     getSubDistricts,
     getTermcode,
+    getVendor,
 } from '../PUR-NVF/data';
 import {
     countryManager,
@@ -36,6 +37,7 @@ import {
 import { concernManager, currencyManager } from './formManager';
 import { showMessage } from '@amec/webasset/utils';
 import { getOrganize } from '../../finform/FIN-PCK/dataloc';
+import { showLoader } from '@amec/webasset/preloader';
 
 // select2();
 
@@ -165,6 +167,37 @@ $(document).ready(async function () {
     // จัดการปุ่มลบแถว (ใช้ .on() เพื่อรองรับ HTML ที่เพิ่งถูกสร้างใหม่)
     $('#contact-list').on('click', '.btn-remove', function () {
         $(this).closest('.contact-row').remove();
+    });
+
+    $(document).on('input', '#VENDORCODE', async function () {
+        const keywordValue = this.value.trim();
+        if (keywordValue.length === 5) {
+            try {
+                showLoader(); // เปิด Loader รอระว่างดึงข้อมูล
+                const searchData = { KEYWORD: keywordValue };
+                const vendor = await getVendor(searchData);
+                console.log(vendor[0]);
+            } catch (err) {
+                console.error('Error get Vendor:', err);
+                showErrorMessage('เกิดข้อผิดพลาดในการดึงข้อมูลคู่ค้า');
+            } finally {
+                showLoader({ show: false }); // ปิด Loader
+            }
+        }
+    });
+
+    $(document).on('change', '.radio-opr', async function () {
+        const isAnnual = $(this).val() === 'A';
+        const container = $(this).closest('.vendor-form-container');
+        const vendorInput = container.find('.vendor-code-input');
+        const updateCheck = container.find('.update-status-check');
+        if (isAnnual) {
+            vendorInput.prop('disabled', false);
+            updateCheck.prop('disabled', false);
+        } else {
+            vendorInput.prop('disabled', true).val('');
+            updateCheck.prop('disabled', true).prop('checked', false);
+        }
     });
 
     $(document).on('change', '.radio-typec', async function () {
