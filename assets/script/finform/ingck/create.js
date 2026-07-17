@@ -354,7 +354,7 @@ async function refreshRemainingBalance() {
   balanceLoadError = null;
 }
 
-function getRemainingStockErrors(rows, editedCell = null) {
+function getRemainingStockErrors(rows) {
   if (String($("input[name='OPTION_CODE']:checked").val() || "0") === "1") {
     return [];
   }
@@ -367,14 +367,7 @@ function getRemainingStockErrors(rows, editedCell = null) {
   for (let stampIndex = 0; stampIndex < dutyStampList.length; stampIndex++) {
     const columnName = `DUTY_QTY${stampIndex + 1}`;
     const dutyValue = numberValue(dutyStampList[stampIndex].DUTY_VALUE);
-    const requested = rows.reduce((total, row, rowIndex) => {
-      const value =
-        editedCell?.rowIndex === rowIndex && editedCell.columnName === columnName
-          ? editedCell.value
-          : row[columnName];
-
-      return total + numberValue(value);
-    }, 0);
+    const requested = rows.reduce((total, row) => total + numberValue(row[columnName]), 0);
     const available = Math.max(0, remainingByDutyValue.get(dutyValue) || 0);
 
     if (requested > available) {
@@ -483,25 +476,12 @@ async function createTableStamp(data = []) {
         matchers: [
           {
             match: { startsWith: "DUTY_QTY" },
-            validate: ({ value, table, cell }) => {
+            validate: ({ value }) => {
               console.log(typeof +value, Number.isNaN(+value));
 
               if (isNaN(value) || value < 0 || Number.isNaN(+value)) {
                 return "Please enter a valid non-negative number";
               }
-
-              const cellIndex = cell.index();
-              const columnName = table.column(cellIndex.column).dataSrc();
-              const [stockError] = getRemainingStockErrors(
-                table.rows().data().toArray(),
-                {
-                  rowIndex: cellIndex.row,
-                  columnName,
-                  value,
-                },
-              );
-
-              if (stockError) return stockError.message;
 
               return true;
             },
