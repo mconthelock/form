@@ -35,9 +35,10 @@ import {
 } from '../PUR-NVF/formManager';
 import { concernManager, currencyManager } from './formManager';
 import { showMessage } from '@amec/webasset/utils';
-import { getOrganize } from '../../finform/FIN-PCK/locmst';
+import { getOrganize } from '../../finform/FIN-PCK/dataloc';
 
 // select2();
+
 var tableSearch, purformdata, columnPurNVF;
 var provinceData, districtData, subDistrictData;
 
