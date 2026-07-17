@@ -205,47 +205,50 @@ $(document).on("click", "button[name='btnAction']", async function () {
         res = await doaction(state);
       }
     } else if (cextData == "02") {
-      showLoader();
-      const queryString = window.location.search;
-      const urlParams = new URLSearchParams(queryString);
-      const empnum = urlParams.get("empno");
-      const actualDate = dayjs().format("YYYY-MM-DD HH:mm:ss");
-
-      const details = showTable
-        .rows()
-        .data()
-        .toArray()
-        .map((row) => {
-          const drawing = row.DRAWING ? String(row.DRAWING).trim() : "";
-          if (!drawing) return null;
-
-          const validatedDrawing = validateDrawingNo(drawing) || drawing;
-          const groups = getDrawingGroups(validatedDrawing);
-          console.log(validatedDrawing);
-          console.log(groups.pnzuba);
-          console.log(groups.pnhing);
-
-          return {
-            NEWCODE: row.NEWCODE || null,
-            NEWFLAG: row.NEWFLAG || null,
-            REFERENCE: row.REFERENCE || null,
-            PNZUBA: groups?.pnzuba || null,
-            PNHING: groups?.pnhing || null,
-          };
-        })
-        .filter(
-          (item) => item && (item.NEWCODE || item.NEWFLAG || item.REFERENCE),
-        );
-
-      const updateformData = {
-        ...state,
-        CHANGE_STATUS: "1",
-        ACTUAL_DATE: actualDate,
-        ACTUAL_UPDATEBY: empnum,
-        DETAILS: details,
-      };
-
-      res = await updateDLCform(updateformData);
+      if (action === "approve") {
+        showLoader();
+        const queryString = window.location.search;
+        const urlParams = new URLSearchParams(queryString);
+        const empnum = urlParams.get("empno");
+        const actualDate = dayjs().format("YYYY-MM-DD HH:mm:ss");
+  
+        const details = showTable
+          .rows()
+          .data()
+          .toArray()
+          .map((row) => {
+            const drawing = row.DRAWING ? String(row.DRAWING).trim() : "";
+            if (!drawing) return null;
+  
+            const validatedDrawing = validateDrawingNo(drawing) || drawing;
+            const groups = getDrawingGroups(validatedDrawing);
+            console.log(validatedDrawing);
+            console.log(groups.pnzuba);
+            console.log(groups.pnhing);
+  
+            return {
+              NEWCODE: row.NEWCODE || null,
+              NEWFLAG: row.NEWFLAG || null,
+              REFERENCE: row.REFERENCE || null,
+              PNZUBA: groups?.pnzuba || null,
+              PNHING: groups?.pnhing || null,
+            };
+          })
+          .filter(
+            (item) => item && (item.NEWCODE || item.NEWFLAG || item.REFERENCE),
+          );
+  
+        const updateformData = {
+          ...state,
+          CHANGE_STATUS: "1",
+          ACTUAL_DATE: actualDate,
+          ACTUAL_UPDATEBY: empnum,
+          DETAILS: details,
+        };
+        res = await updateDLCform(updateformData);
+      }else {
+        res = await doaction(state);
+      }
     } else {
       res = await doaction(state);
     }
