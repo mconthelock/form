@@ -51,7 +51,7 @@ $(document).ready(async function () {
                 await writeExcelStatus(data);
             }
         } catch (err) {
-            showErrorMessage(err);
+            throw new Error(err);
         } finally {
             showLoader({ show: false });
         }

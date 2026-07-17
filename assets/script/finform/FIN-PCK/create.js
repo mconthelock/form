@@ -49,7 +49,8 @@ $(async function () {
             }
         } catch (err) {
             // console.error(err);
-            showErrorMessage(err);
+            // showErrorMessage(err);
+            throw new Error('can not request');
         } finally {
             showLoader({ show: false });
         }
@@ -99,7 +100,9 @@ async function prepareData(excelData) {
                 const day = String(d.getDate()).padStart(2, '0');
                 return `${year}-${month}-${day}`;
             }
-        } catch (error) {}
+        } catch (error) {
+            throw new Error(error);
+        }
 
         // ถ้าแปลงไม่ได้จริงๆ ให้แปลงเป็น String ก่อน แล้วเช็คว่าหั่น 'T' ได้ไหม
         const fallbackStr = String(dateValue);

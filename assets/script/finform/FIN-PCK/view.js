@@ -460,7 +460,8 @@ $(document).on('click', 'button[name="btnAction"]', async function (e) {
             try {
                 const res = await updateFlow(formData);
             } catch (err) {
-                showErrorMessage(err);
+                //showErrorMessage(err);
+                throw new Error('can not updaet flow');
             }
             //Main Approval
         } else if (cextdata == '02') {
@@ -469,7 +470,8 @@ $(document).on('click', 'button[name="btnAction"]', async function (e) {
                     const assetData = await payloadData();
                     const res = await updatepck(assetData);
                 } catch (err) {
-                    showErrorMessage(err);
+                    //showErrorMessage(err);
+                    throw new Error('can not update data');
                 }
             } else {
                 showLoader({ show: false });
@@ -486,7 +488,8 @@ $(document).on('click', 'button[name="btnAction"]', async function (e) {
                         await deleteFlowStep({ ...form, CSTEPNO: step });
                     }
                 } catch (err) {
-                    showErrorMessage(err);
+                    //showErrorMessage(err);
+                    throw new Error('can not delete flow');
                 }
             } else {
                 const infocon = await searchUser({
@@ -512,7 +515,8 @@ $(document).on('click', 'button[name="btnAction"]', async function (e) {
             });
             redirectWebflow();
         } catch (err) {
-            showErrorMessage(err);
+            //showErrorMessage(err);
+            throw new Error('cannot approve');
         } finally {
             showLoader({ show: false });
         }
