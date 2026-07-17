@@ -354,15 +354,16 @@ async function refreshRemainingBalance() {
   balanceLoadError = null;
 }
 
-function getRemainingStockError(rows, editedCell = null) {
+function getRemainingStockErrors(rows, editedCell = null) {
   if (String($("input[name='OPTION_CODE']:checked").val() || "0") === "1") {
-    return null;
+    return [];
   }
 
   if (balanceLoadError) {
-    return { message: "ไม่สามารถตรวจสอบยอดคงเหลือได้ กรุณาลองใหม่อีกครั้ง" };
+    return [{ message: "ไม่สามารถตรวจสอบยอดคงเหลือได้ กรุณาลองใหม่อีกครั้ง" }];
   }
 
+  const errors = [];
   for (let stampIndex = 0; stampIndex < dutyStampList.length; stampIndex++) {
     const columnName = `DUTY_QTY${stampIndex + 1}`;
     const dutyValue = numberValue(dutyStampList[stampIndex].DUTY_VALUE);
@@ -377,16 +378,17 @@ function getRemainingStockError(rows, editedCell = null) {
     const available = Math.max(0, remainingByDutyValue.get(dutyValue) || 0);
 
     if (requested > available) {
-      return {
+      errors.push({
         dutyValue,
         available,
         requested,
-        message: `อากรแสตมป์ ${dutyValue} บาท คงเหลือ ${available} ดวง แต่ขอรวม ${requested} ดวง`,
-      };
+        shortage: requested - available,
+        message: `อากรแสตมป์ ${dutyValue} บาท: คงเหลือ ${available} ดวง, ขอ ${requested} ดวง, ขาด ${requested - available} ดวง`,
+      });
     }
   }
 
-  return null;
+  return errors;
 }
 
 async function createTableStamp(data = []) {
@@ -490,7 +492,7 @@ async function createTableStamp(data = []) {
 
               const cellIndex = cell.index();
               const columnName = table.column(cellIndex.column).dataSrc();
-              const stockError = getRemainingStockError(
+              const [stockError] = getRemainingStockErrors(
                 table.rows().data().toArray(),
                 {
                   rowIndex: cellIndex.row,
@@ -578,10 +580,14 @@ $(document).on("click", "#btnRequest", async function (e) {
     const rows = table.rows().data().toArray();
 
     await refreshRemainingBalance();
-    const stockError = getRemainingStockError(rows);
+    const stockErrors = getRemainingStockErrors(rows);
 
-    if (stockError) {
-      showMessage(stockError.message, "warning");
+    if (stockErrors.length) {
+      showMessage(
+        `ไม่สามารถ Request ได้ เนื่องจากยอดคงเหลือไม่เพียงพอ<br><br>${stockErrors.map(({ message }) => message).join("<br>")}`,
+        "warning",
+        "toast-center",
+      );
       return;
     }
 
