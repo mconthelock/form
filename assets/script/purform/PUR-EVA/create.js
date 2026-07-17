@@ -451,6 +451,55 @@ $(document).ready(async function () {
     );
 });
 
+function setVendorMstInfo(vendorMstData) {
+    $('input[name="COMNAME"]').val(vendorMstData.VND_NAME);
+    for (const address of vendorMstData.VENDOR_ADDRESS) {
+        if (address.ADDR_TYPE == 'E') {
+            addrEnManager.value = address.ADDR_LINE1;
+            postcodeEnManager.value = address.ADDR_ZIPCODE;
+            countryEnManager.value = address.ADDR_COUNTRY;
+            if (address.ADDR_COUNTRY == 'THAILAND') {
+                $('input[name="VENDTYPE"][value="Local"]').prop(
+                    'checked',
+                    true,
+                );
+                provinceManager.textToValue = address.ADDR_STATE;
+                districtManager.textToValue = address.ADDR_CITY;
+                subDistrictManager.textToValue = address.ADDR_SUB_CITY;
+                countryManager.disabled(true);
+            } else {
+                $('input[name="VENDTYPE"][value="Oversea"]').prop(
+                    'checked',
+                    true,
+                );
+                provinceEnManager.value = address.ADDR_STATE;
+                districtEnManager.value = address.ADDR_CITY;
+                subDistrictEnManager.value = address.ADDR_SUB_CITY;
+                countryManager.value = address.ADDR_COUNTRY;
+                countryManager.disabled(false);
+            }
+        } else {
+            addrThManager.value = address.ADDR_LINE1 || '';
+            provinceThManager.value = address.ADDR_STATE;
+            districtThManager.value = address.ADDR_CITY;
+            subDistrictThManager.value = address.ADDR_SUB_CITY;
+            postcodeThManager.value = address.ADDR_ZIPCODE;
+            countryThManager.value = address.ADDR_COUNTRY;
+        }
+    }
+    $('input[name="CONTACT"]').val(vendorMstData.VND_SALE);
+    $('input[name="EMAIL"]').val(vendorMstData.EMAIL);
+    $('input[name="WEBSITE"]').val(vendorMstData.ADDR_WEB);
+    $('input[name="TELNO"]').val(vendorMstData.ADDR_PHONE);
+    $('input[name="FAX"]').val(vendorMstData.FAX);
+    $('input[name="BANKNAME"]').val(vendorMstData.BANKNAME);
+    $('input[name="BRANCH"]').val(vendorMstData.BRANCH);
+    $('input[name="ACCNUMBER"]').val(vendorMstData.ACCNUMBER);
+    for (const address of vendorMstData.VENDOR_ADDRESS) {
+    }
+    paymentTermManager.value = vendorData.LISTS[0].TERMCODE;
+}
+
 function setVendorInfo(vendorData) {
     console.log(vendorData);
 
