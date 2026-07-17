@@ -38,6 +38,7 @@ import { showMessage } from '@amec/webasset/utils';
 import { getOrganize } from '../../finform/FIN-PCK/dataloc';
 
 // select2();
+
 var tableSearch, purformdata, columnPurNVF;
 var provinceData, districtData, subDistrictData;
 
