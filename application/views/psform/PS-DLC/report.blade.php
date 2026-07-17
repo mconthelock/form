@@ -54,7 +54,7 @@
         <div class="bg-primary text-primary-content p-6">
             <h1
                 class="text-xl md:text-3xl font-bold text-center text-white flex flex-wrap items-center justify-center gap-2">
-                <svg class="h-9 w-9 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
+                <svg class="h-9 w-9 text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
                     width="24" height="24" fill="none" viewBox="0 0 24 24">
                     <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M15 4h3a1 1 0 0 1 1 1v15a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h3m0 3h6m-3 5h3m-6 0h.01M12 16h3m-6 0h.01M10 3v4h4V3h-4Z" />
@@ -96,13 +96,7 @@
                             class="input input-bordered transition-all duration-200 focus:input-primary w-full "
                             id="schd_txt" name="CHANGE_SCHD" readonly />
                         <button class="btn btn-neutral" type="button" id="openDatePicker">
-                            <i class="fi fi-rr-calendar"><svg class="w-6 h-6 text-gray-800 dark:text-white"
-                                    aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24"
-                                    fill="none" viewBox="0 0 24 24">
-                                    <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
-                                        stroke-width="2"
-                                        d="M4 10h16m-8-3V4M7 7V4m10 3V4M5 20h14a1 1 0 0 0 1-1V7a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1Zm3-7h.01v.01H8V13Zm4 0h.01v.01H12V13Zm4 0h.01v.01H16V13Zm-8 4h.01v.01H8V17Zm4 0h.01v.01H12V17Zm4 0h.01v.01H16V17Z" />
-                                </svg>
+                            <i class="fi fi-rr-calendar">
                             </i>
                         </button>
                         <input type="hidden" id="selectedDate" name="CHANGE_DATE" value="" class="fdate w-0" />
@@ -112,7 +106,7 @@
             </div>
 
             <button type="button" id="btnSearch" class="btn btn-info  border-none min-w-[140px] shadow-md transition-all">
-                <svg class="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
+                <svg class="w-6 h-6 text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
                     width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M10 2a8 8 0 1 0 0 16 8 8 0 0 0 0-16Z" />
                     <path fill-rule="evenodd"
@@ -124,7 +118,7 @@
 
             <button type="reset" id="btnReset"
                 class="btn btn-warning btn-soft  border-none min-w-[140px] shadow-md transition-all">
-                <svg class="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
+                <svg class="w-6 h-6 text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
                     width="24" height="24" fill="none" viewBox="0 0 24 24">
                     <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M17.651 7.65a7.131 7.131 0 0 0-12.68 3.15M18.001 4v4h-4m-7.652 8.35a7.13 7.13 0 0 0 12.68-3.15M6 20v-4h4" />
@@ -135,7 +129,7 @@
 
             <button type="button" id="btnExport"
                 class="btn btn-success btn-soft  border-none min-w-[140px] shadow-md transition-all">
-                <svg class="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
+                <svg class="w-6 h-6 text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
                     width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
                     <path fill-rule="evenodd"
                         d="M9 7V2.221a2 2 0 0 0-.5.365L4.586 6.5a2 2 0 0 0-.365.5H9Zm2 0V2h7a2 2 0 0 1 2 2v9.293l-2-2a1 1 0 0 0-1.414 1.414l.293.293h-6.586a1 1 0 1 0 0 2h6.586l-.293.293A1 1 0 0 0 18 16.707l2-2V20a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V9h5a2 2 0 0 0 2-2Z"
@@ -148,10 +142,9 @@
             <div class="divider"></div>
 
             <div class="w-full">
-                <h3 class="text-lg font-bold mb-4 flex">
-                    <svg class="w-[28px] h-[28px] text-gray-800 dark:text-black" aria-hidden="true"
-                        xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor"
-                        viewBox="0 0 24 24">
+                <h3 class="text-lg text-primary font-bold mb-4 flex">
+                    <svg class="w-[28px] h-[28px]  text-primary" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
+                        width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
                         <path fill-rule="evenodd"
                             d="M2 6a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6Zm2 8v-2h7v2H4Zm0 2v2h7v-2H4Zm9 2h7v-2h-7v2Zm7-4v-2h-7v2h7Z"
                             clip-rule="evenodd" />
