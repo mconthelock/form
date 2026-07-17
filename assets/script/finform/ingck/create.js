@@ -13,12 +13,13 @@ $(async function () {
   const queryString = window.location.search;
   const urlParams = new URLSearchParams(queryString);
   const empno = urlParams.get("empno");
-  const getsec = await getData(empno);
+  let getsec;
   let prefix = "";
   try {
-    prefix = getsec.SSECCODE;
+    if (empno) getsec = await getData(empno);
+    prefix = getsec?.SSECCODE || "";
   } catch (error) {
-    console.log("Error extracting SSECCODE:", error);
+    console.error("Cannot load employee data:", error);
   }
 
   console.log("Prefix ที่ได้คือ:", prefix);
@@ -318,6 +319,7 @@ async function getBalance() {
 var table, mapColumns;
 var dutyStampList = [];
 var remainingByDutyValue = new Map();
+var balanceLoadError = null;
 
 function numberValue(value) {
   if (typeof value === "string") {
@@ -338,11 +340,16 @@ async function refreshRemainingBalance() {
   remainingByDutyValue = new Map(
     balance.map((item) => [numberValue(item.DUTY_VALUE), numberValue(item.BAL_QTY)]),
   );
+  balanceLoadError = null;
 }
 
 function getRemainingStockError(rows, editedCell = null) {
   if (String($("input[name='OPTION_CODE']:checked").val() || "0") === "1") {
     return null;
+  }
+
+  if (balanceLoadError) {
+    return { message: "ไม่สามารถตรวจสอบยอดคงเหลือได้ กรุณาลองใหม่อีกครั้ง" };
   }
 
   for (let stampIndex = 0; stampIndex < dutyStampList.length; stampIndex++) {
@@ -375,7 +382,12 @@ async function createTableStamp(data = []) {
   mapColumns = [...columns];
 
   const stamp = await getStamp();
-  await refreshRemainingBalance();
+  try {
+    await refreshRemainingBalance();
+  } catch (error) {
+    balanceLoadError = error;
+    console.error("Cannot load remaining duty stamp quantity:", error);
+  }
   console.log(stamp);
   dutyStampList = stamp;
   console.log(dutyStampList);
