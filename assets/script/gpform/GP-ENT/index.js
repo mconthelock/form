@@ -874,11 +874,11 @@ function calculateTotals() {
 	$("#table_cost tbody tr").each(function () {
 		const qty = parseFloat($(this).find("td:eq(1) input").val()) || 0;
 		const cost = parseFloat($(this).find("td:eq(2) input").val()) || 0;
-		const rowTotal = qty * cost;
+		const rowTotal = (qty * cost).toFixed(2);
 		$(this).find("td:eq(3) input").val(rowTotal);
-		totalAmount += rowTotal;
+		totalAmount += parseFloat(rowTotal);
 	});
-	$("#total-amount").text(totalAmount);
+	$("#total-amount").text(totalAmount.toFixed(2));
 }
 
 $(document).on("change", ".time", function () {

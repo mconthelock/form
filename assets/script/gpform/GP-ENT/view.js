@@ -797,13 +797,14 @@ $(document).ready(async function () {
 		let estimate_items = [];
 		$("#table_cost tbody tr").each(function () {
 			let details = $(this).find("td:eq(0) select option:selected").val();
+			let id = $(this).find("td:eq(0) select option:selected").attr("id");
 			let qty = $(this).find("td:eq(1) input").val();
 			let cost = $(this).find("td:eq(2) input").val();
 			let total = $(this).find("td:eq(3) input").val();
 			let remark = $(this).find("td:eq(4) input").val();
 			console.log(details);
 			if (details && qty && cost && total)
-				estimate_items.push({ details, qty, cost, total, remark });
+				estimate_items.push({ details, id, qty, cost, total, remark });
 		});
 		formData.append("estimate_items", JSON.stringify(estimate_items));
 
