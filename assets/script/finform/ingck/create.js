@@ -35,15 +35,25 @@ $(async function () {
 
   console.log(action);
   $("#actionform").html(action);
-  createTableStamp();
+  syncStampTablePalette();
+  await createTableStamp();
 });
+
+$(document).on("change", "input[name='OPTION_CODE']", syncStampTablePalette);
+
+function syncStampTablePalette() {
+  const isBuy = String($("input[name='OPTION_CODE']:checked").val() || "0") === "1";
+  $("#stampTable")
+    .toggleClass("stamp-table-buy", isBuy)
+    .toggleClass("stamp-table-withdraw", !isBuy);
+}
 
 const fieldGuides = [
   ["#INPUTBY", "Requester Information", "Input By", "ผู้สร้างเอกสาร ระบบกรอกให้อัตโนมัติ ไม่ต้องแก้ไข"],
-  ["#REQBY", "Requester Information", "Requester By", "กรอกรหัสพนักงานของผู้ขอเบิก แล้วระบบจะแสดงชื่อและหน่วยงานให้ตรวจสอบ"],
-  ["#FULLDP", "Requester Information", "DIV / Dept / Sect", "หน่วยงานของผู้ขอเบิก ระบบดึงจากรหัสพนักงานให้อัตโนมัติ"],
+  ["#REQBY", "Requester Information", "Requester By", "กรอกรหัสพนักงานของผู้ขอสร้างรายการ แล้วระบบจะแสดงชื่อและหน่วยงานให้ตรวจสอบ"],
+  ["#FULLDP", "Requester Information", "DIV / Dept / Sect", "หน่วยงานของผู้ขอสร้างรายการ ระบบดึงจากรหัสพนักงานให้อัตโนมัติ"],
   ["input[name='OPTION_CODE']", "Request Details", "Option", "เลือก Withdrawal เมื่อต้องการเบิกอากรแสตมป์ หรือ Add สำหรับเจ้าหน้าที่ FIN ที่ต้องการเพิ่มรายการ"],
-  ["#EffDate", "Request Details", "Effective Date", "เลือกวันที่ต้องการนำอากรแสตมป์ไปใช้งาน"],
+  ["#EffDate", "Request Details", "Requisition Date", "เลือกวันที่ทำรายการขอเบิกอากรแสตมป์ วันที่ทำการขอเบิกไม่ใช่วันที่ระบุว่าจะได้รับ"],
   ["#location", "Request Details", "Collection Location", "ระบุสถานที่รับอากรแสตมป์ หากไม่เปลี่ยนให้ใช้ Counter FIN Sect."],
   ["#addStampRow", "Purpose & Duty Stamp Detail", "Add Row", "เพิ่มหนึ่งแถวต่อหนึ่งเหตุผลในการขอเบิก"],
   ["#stampTable", "Purpose & Duty Stamp Detail", "รายการอากรแสตมป์", "กรอกเหตุผลใน Reason และจำนวนใน QTY ระบบคำนวณ AMT ให้อัตโนมัติ หรือกดลบเพื่อนำแถวที่ไม่ต้องการออก"],
@@ -65,6 +75,7 @@ function setupFieldGuide() {
       color: #172033;
     }
     #fieldGuideGroup, #fieldGuideTitle { color: var(--guide-color); }
+    #fieldGuideToggle { display: none; }
     .guide-progress-dot {
       width: .8rem;
       height: .8rem;
@@ -88,17 +99,50 @@ function setupFieldGuide() {
       0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--guide-highlight-color) 45%, transparent); }
       50% { box-shadow: 0 0 0 8px transparent; }
     }
-    @media (min-width: 1400px) {
-      .fin-ds-accessible > .max-w-5xl { transform: translateX(10.5rem); }
-    }
     @media (max-width: 1399px) {
       #fieldGuide {
         top: auto;
         right: 1rem;
         bottom: 1rem;
-        left: 1rem;
-        width: auto;
+        left: auto;
+        width: 3.5rem;
+        height: 3.5rem;
+        padding: 0;
+        border-radius: 9999px;
+        overflow: hidden;
         transform: none;
+      }
+      #fieldGuideToggle {
+        display: flex;
+        width: 100%;
+        height: 100%;
+        align-items: center;
+        justify-content: center;
+        border: 0;
+        background: var(--guide-color);
+        color: white;
+        font-size: 1.5rem;
+        font-weight: 900;
+      }
+      #fieldGuide .field-guide-content { display: none; }
+      #fieldGuide.guide-expanded {
+        width: min(18rem, calc(100vw - 2rem));
+        height: auto;
+        padding: 1rem;
+        border-radius: .75rem;
+        overflow: visible;
+      }
+      #fieldGuide.guide-expanded #fieldGuideToggle {
+        position: absolute;
+        top: .5rem;
+        right: .5rem;
+        width: 2rem;
+        height: 2rem;
+        border-radius: 9999px;
+      }
+      #fieldGuide.guide-expanded .field-guide-content {
+        display: block;
+        padding-right: 1.5rem;
       }
     }
   </style>`);
@@ -110,6 +154,8 @@ function setupFieldGuide() {
     Attachment: ["#0891b2", "#ecfeff"],
   };
   const guide = $(`<aside id="fieldGuide" class="border-2 rounded-xl p-4 shadow-xl" aria-live="polite">
+    <button id="fieldGuideToggle" type="button" aria-label="เปิดคู่มือ" aria-expanded="false">?</button>
+    <div class="field-guide-content">
     <div class="flex items-center justify-between gap-2 mb-2">
       <div id="fieldGuideGroup" class="text-xs font-extrabold uppercase tracking-wide"></div>
       <div id="fieldGuideCount" class="text-xs font-bold text-slate-500"></div>
@@ -120,6 +166,7 @@ function setupFieldGuide() {
     <div class="flex justify-between gap-2 mt-4">
       <button id="guidePrevious" type="button" class="btn btn-sm btn-ghost">ก่อนหน้า</button>
       <button id="guideNext" type="button" class="btn btn-sm btn-neutral">ถัดไป</button>
+    </div>
     </div>
   </aside>`).appendTo("body");
   let activeIndex = 1;
@@ -180,6 +227,10 @@ function setupFieldGuide() {
   });
   guide.find("#guidePrevious").on("click", () => activateGuideStep(activeIndex - 1, true));
   guide.find("#guideNext").on("click", () => activateGuideStep(activeIndex + 1, true));
+  guide.find("#fieldGuideToggle").on("click", function () {
+    const expanded = guide.toggleClass("guide-expanded").hasClass("guide-expanded");
+    $(this).attr({ "aria-expanded": expanded, "aria-label": expanded ? "ย่อคู่มือ" : "เปิดคู่มือ" }).text(expanded ? "×" : "?");
+  });
 
   $("#form").on(
     "focusin mouseover",
@@ -257,8 +308,16 @@ async function getStamp() {
     method: "GET",
   });
 }
+
+async function getBalance() {
+  return await fetchUtils({
+    url: `${process.env.APP_API}/finform/fin-ds/balance/${new Date().getFullYear()}`,
+    method: "GET",
+  });
+}
 var table, mapColumns;
 var dutyStampList = [];
+var remainingByDutyValue = new Map();
 
 function numberValue(value) {
   if (typeof value === "string") {
@@ -268,10 +327,55 @@ function numberValue(value) {
   return Number(value) || 0;
 }
 
+async function refreshRemainingBalance() {
+  const response = await getBalance();
+  const balance = response?.data?.data ?? response?.data ?? response;
+
+  if (!Array.isArray(balance)) {
+    throw new Error("Cannot load remaining duty stamp quantity");
+  }
+
+  remainingByDutyValue = new Map(
+    balance.map((item) => [numberValue(item.DUTY_VALUE), numberValue(item.BAL_QTY)]),
+  );
+}
+
+function getRemainingStockError(rows, editedCell = null) {
+  if (String($("input[name='OPTION_CODE']:checked").val() || "0") === "1") {
+    return null;
+  }
+
+  for (let stampIndex = 0; stampIndex < dutyStampList.length; stampIndex++) {
+    const columnName = `DUTY_QTY${stampIndex + 1}`;
+    const dutyValue = numberValue(dutyStampList[stampIndex].DUTY_VALUE);
+    const requested = rows.reduce((total, row, rowIndex) => {
+      const value =
+        editedCell?.rowIndex === rowIndex && editedCell.columnName === columnName
+          ? editedCell.value
+          : row[columnName];
+
+      return total + numberValue(value);
+    }, 0);
+    const available = Math.max(0, remainingByDutyValue.get(dutyValue) || 0);
+
+    if (requested > available) {
+      return {
+        dutyValue,
+        available,
+        requested,
+        message: `อากรแสตมป์ ${dutyValue} บาท คงเหลือ ${available} ดวง แต่ขอรวม ${requested} ดวง`,
+      };
+    }
+  }
+
+  return null;
+}
+
 async function createTableStamp(data = []) {
   mapColumns = [...columns];
 
   const stamp = await getStamp();
+  await refreshRemainingBalance();
   console.log(stamp);
   dutyStampList = stamp;
   console.log(dutyStampList);
@@ -308,7 +412,7 @@ async function createTableStamp(data = []) {
 
   html += "</tr></thead>";
   html += `<tfoot><tr>`;
-  html += `<th colspan="2" style="text-align:right;">Total:</th>`; // ควบ No. และ Reason เป็นช่องเดียว
+  html += `<th colspan="2">Total</th>`; // ควบ No. และ Reason เป็นช่องเดียว
   for (let i = 0; i < length; i++) {
     html += `<th>0</th>`; // สร้าง <th> เปล่าๆ รอรับค่า Total ตามจำนวนคอลัมน์ QTY และ AMT
   }
@@ -354,12 +458,26 @@ async function createTableStamp(data = []) {
         matchers: [
           {
             match: { startsWith: "DUTY_QTY" },
-            validate: ({ value }) => {
+            validate: ({ value, table, cell }) => {
               console.log(typeof +value, Number.isNaN(+value));
 
               if (isNaN(value) || value < 0 || Number.isNaN(+value)) {
                 return "Please enter a valid non-negative number";
               }
+
+              const cellIndex = cell.index();
+              const columnName = table.column(cellIndex.column).dataSrc();
+              const stockError = getRemainingStockError(
+                table.rows().data().toArray(),
+                {
+                  rowIndex: cellIndex.row,
+                  columnName,
+                  value,
+                },
+              );
+
+              if (stockError) return stockError.message;
+
               return true;
             },
             async onSuccess({ value, table, cell, rowData }) {
@@ -428,13 +546,21 @@ $(document).on("click", "#btnRequest", async function (e) {
     const requiredMessage = [
       { element: $("#REQBY"), message: "Please enter your Emp code." },
       { element: $("#FULLDP"), message: "Please enter your Emp code" },
-      { element: $("#EffDate"), message: "Please Choose Date" },
+      { element: $("#EffDate"), message: "Please choose Requisition Date" },
       { element: $("#location"), message: "Please enter Collection Location" },
     ];
 
     if (!(await requiredForm("#form", requiredMessage))) return;
 
     const rows = table.rows().data().toArray();
+
+    await refreshRemainingBalance();
+    const stockError = getRemainingStockError(rows);
+
+    if (stockError) {
+      showMessage(stockError.message, "warning");
+      return;
+    }
 
     const dataList = [];
 

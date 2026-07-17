@@ -206,6 +206,7 @@ function toggleReceiveDateGuide(canInputReceiveDate) {
         width: 18rem;
         z-index: 100;
       }
+      #receiveDateGuideToggle { display: none; }
       .receive-date-guide-highlight {
         outline: 3px solid #c026d3 !important;
         outline-offset: 3px;
@@ -223,9 +224,45 @@ function toggleReceiveDateGuide(canInputReceiveDate) {
           top: auto;
           right: 1rem;
           bottom: 1rem;
-          left: 1rem;
-          width: auto;
+          left: auto;
+          width: 3.5rem;
+          height: 3.5rem;
+          padding: 0;
+          border-radius: 9999px;
+          overflow: hidden;
           transform: none;
+        }
+        #receiveDateGuideToggle {
+          display: flex;
+          width: 100%;
+          height: 100%;
+          align-items: center;
+          justify-content: center;
+          border: 0;
+          border-radius: 9999px;
+          background: #c026d3;
+          color: white;
+          font-size: 1.5rem;
+          font-weight: 900;
+        }
+        #receiveDateGuide .receive-guide-content { display: none; }
+        #receiveDateGuide.guide-expanded {
+          width: min(18rem, calc(100vw - 2rem));
+          height: auto;
+          padding: 1rem;
+          border-radius: .75rem;
+          overflow: visible;
+        }
+        #receiveDateGuide.guide-expanded #receiveDateGuideToggle {
+          position: absolute;
+          top: .5rem;
+          right: .5rem;
+          width: 2rem;
+          height: 2rem;
+        }
+        #receiveDateGuide.guide-expanded .receive-guide-content {
+          display: block;
+          padding-right: 1.5rem;
         }
       }
     </style>`);
@@ -233,11 +270,20 @@ function toggleReceiveDateGuide(canInputReceiveDate) {
 
   if (!$("#receiveDateGuide").length) {
     $(`<aside id="receiveDateGuide" class="rounded-xl border-2 border-fuchsia-600 border-l-4 bg-fuchsia-50 p-4 text-slate-800 shadow-xl" aria-live="polite">
+      <button id="receiveDateGuideToggle" type="button" aria-label="เปิดคู่มือ" aria-expanded="false">?</button>
+      <div class="receive-guide-content">
       <div class="text-xs font-extrabold uppercase tracking-wide text-fuchsia-700">ขั้นตอนสำหรับผู้อนุมัติ</div>
       <div class="mt-1 font-extrabold text-fuchsia-700">Date Receive</div>
       <p class="mt-1 text-sm">เลือกวันที่รับอากรแสตมป์ก่อนกด Approve โดยรับของได้เวลา 14:00–16:00 น.</p>
       <button id="goToReceiveDate" type="button" class="btn btn-sm btn-secondary mt-3">ไปกรอกวันที่</button>
+      </div>
     </aside>`).appendTo("body");
+
+    $("#receiveDateGuideToggle").on("click", function () {
+      const guide = $("#receiveDateGuide");
+      const expanded = guide.toggleClass("guide-expanded").hasClass("guide-expanded");
+      $(this).attr({ "aria-expanded": expanded, "aria-label": expanded ? "ย่อคู่มือ" : "เปิดคู่มือ" }).text(expanded ? "×" : "?");
+    });
 
     $("#goToReceiveDate").on("click", function () {
       input[0].scrollIntoView({ behavior: "smooth", block: "center" });
@@ -445,6 +491,14 @@ function renderFinDsHeader(header = {}) {
   $(
     `input[name='OPTION_CODE'][value='${escapeSelectorValue(optionCode)}']`,
   ).prop("checked", true);
+  syncStampTablePalette(optionCode);
+}
+
+function syncStampTablePalette(optionCode) {
+  const isBuy = String(optionCode) === "1";
+  $("#stampTable")
+    .toggleClass("stamp-table-buy", isBuy)
+    .toggleClass("stamp-table-withdraw", !isBuy);
 }
 
 function renderAttachment(files = []) {
@@ -535,7 +589,7 @@ async function createTableStamp(data = [], stamp = dutyStampList) {
       </thead>
       <tfoot>
         <tr>
-          <th colspan="2" style="text-align:right;">Total:</th>
+          <th colspan="2">Total</th>
         </tr>
       </tfoot>
     `);
@@ -601,7 +655,7 @@ async function createTableStamp(data = [], stamp = dutyStampList) {
     </thead>
     <tfoot>
       <tr>
-        <th colspan="2" style="text-align:right;">Total:</th>
+        <th colspan="2">Total</th>
   `;
 
   for (let i = 0; i < length; i++) {
