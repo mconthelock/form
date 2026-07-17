@@ -212,7 +212,7 @@
                         'focusRing' => 'focus:ring-blue-400',
                         'fileBorder' => 'border-blue-400',
                         'button' => 'bg-blue-600 hover:bg-blue-700',
-                        'allowMulti' => true,
+                        'allowMulti' => true
                     ],
                     2 => [
                         'label' => 'Lunch -> Outside',
@@ -226,7 +226,7 @@
                         'focusRing' => 'focus:ring-indigo-400',
                         'fileBorder' => 'border-indigo-400',
                         'button' => 'bg-indigo-600 hover:bg-indigo-700',
-                        'allowMulti' => true,
+                        'allowMulti' => true
                     ],
                     3 => [
                         'label' => 'Dinner -> Outside',
@@ -240,7 +240,7 @@
                         'focusRing' => 'focus:ring-slate-400',
                         'fileBorder' => 'border-slate-400',
                         'button' => 'bg-slate-600 hover:bg-slate-700',
-                        'allowMulti' => true,
+                        'allowMulti' => true
                     ],
                     4 => [
                         'label' => 'Morning Break (Snack Box)',
@@ -254,7 +254,7 @@
                         'focusRing' => 'focus:ring-violet-400',
                         'fileBorder' => 'border-violet-400',
                         'button' => 'bg-violet-600 hover:bg-violet-700',
-                        'allowMulti' => true,
+                        'allowMulti' => true
                     ],
                     7 => [
                         'label' => 'Afternoon Break (Snack Box)',
@@ -268,8 +268,8 @@
                         'focusRing' => 'focus:ring-teal-400',
                         'fileBorder' => 'border-teal-400',
                         'button' => 'bg-teal-600 hover:bg-teal-700',
-                        'allowMulti' => true,
-                    ],
+                        'allowMulti' => true
+                    ]
                 ];
             @endphp
 
@@ -328,7 +328,8 @@
                                     </div>
                                 @endif
 
-                                <div class="grid grid-cols-1 gap-6 mt-6 border-t {{ $cfg['borderLight'] }} pt-4 memo-section" id="memo-section-{{ $typeId }}" data-type="{{ $typeId }}" data-has-existing-memo="{{ !empty($expenseMemoFiles[$typeId]) ? '1' : '0' }}" style="display:none;">
+                                <div class="grid grid-cols-1 gap-6 mt-6 border-t {{ $cfg['borderLight'] }} pt-4 memo-section" id="memo-section-{{ $typeId }}" data-type="{{ $typeId }}" data-has-existing-memo="{{ !empty($expenseMemoFiles[$typeId]) ? '1' : '0' }}"
+                                    style="display:none;">
                                     <div>
                                         <label class="font-semibold {{ $cfg['labelText'] }} mb-1 block">Attach Memo:</label>
                                         <div class="flex items-center gap-3">
@@ -435,6 +436,11 @@
                             <label class="font-semibold text-green-700 mb-1 block">Remain:</label>
                             <input type="text" name="remain" id="remain" class="input input-bordered w-full rounded-xl text-lg font-bold border-green-400 bg-green-50" value="{{ $formCler->REMAIN_BUDGET }}" readonly style="color: #16a34a;">
                             <span id="remain-alert" class="text-xs mt-1 text-red-500"></span>
+                        </div>
+
+                        <div>
+                            <label class="font-semibold text-green-700 mb-1 block">Remark:</label>
+                            <textarea name="remark" id="remark" class="textarea textarea-bordered w-full min-h-11 rounded-xl border-green-400 focus:ring-2 focus:ring-green-500">{{ $formCler->REMARK }}</textarea>
                         </div>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">

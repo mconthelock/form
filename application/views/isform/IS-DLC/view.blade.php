@@ -37,9 +37,9 @@
                 </thead>
                 <tbody class="text-sm text-gray-700">
                     @foreach ($logdata as $i => $log)
-                        <!-- <pre>
+                        {{-- <pre>
                                     {{ print_r($log) }}
-                                </pre> -->
+                                </pre> --}}
                         @php
                             $reqDate     = $log->TID_DATA[0]->TID_REQ_DATE ?? null;
                             $logDateTime = strtotime("{$log->LOG_DATE} {$log->LOG_TIME}");
