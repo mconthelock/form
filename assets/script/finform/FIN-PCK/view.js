@@ -474,6 +474,7 @@ $(document).on('click', 'button[name="btnAction"]', async function (e) {
             } else {
                 showLoader({ show: false });
                 showMessage('Please enter valid data.', 'warning');
+                return false;
             }
             //Assigned Person
         } else if (cextdata == '06') {
