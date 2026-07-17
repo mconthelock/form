@@ -266,7 +266,7 @@ $(document).on("click", "button[name='btnAction']", async function () {
             "anucha@MitsubishiElevatorAsia.co.th",
             "chatchawarnk@MitsubishiElevatorAsia.co.th",
             "chakkritv@MitsubishiElevatorAsia.co.th",
-            "punnawichs@mitsubishielevatorasia.co.th",
+            // "punnawichs@mitsubishielevatorasia.co.th",
           ],
           subject: "Form Drawing list for change PN Production update Complete",
           html: `<p>Dear PP Sect.</p>
