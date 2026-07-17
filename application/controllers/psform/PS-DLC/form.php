@@ -37,8 +37,7 @@ class form extends MY_Controller{
     }
 
     public function report(){
-        $data = array();
-        $this->views('psform/PS-DLC/report', $data);
+        $this->views('psform/PS-DLC/report');
     }
 
     

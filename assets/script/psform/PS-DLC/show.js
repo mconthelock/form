@@ -170,7 +170,6 @@ $(async function () {
 
 $(document).on("click", "button[name='btnAction']", async function () {
   try {
-    
     const param = getUrlParams();
     const form = {
       NFRMNO: param.NFRMNO,
@@ -198,9 +197,13 @@ $(document).on("click", "button[name='btnAction']", async function () {
       { element: $("#CONTROLLER"), message: "Please select controller." },
     ];
     if (cextData == "01") {
-      if (!(await requiredForm("#CONTROLLER", requiredmessage))) return;
-      const controller = { ...state, CONTROLLER: $("#CONTROLLER").val() };
-      res = await updateController(controller);
+      if (action === "approve") {
+        if (!(await requiredForm("#CONTROLLER", requiredmessage))) return;
+        const controller = { ...state, CONTROLLER: $("#CONTROLLER").val() };
+        res = await updateController(controller);
+      } else {
+        res = await doaction(state);
+      }
     } else if (cextData == "02") {
       showLoader();
       const queryString = window.location.search;
