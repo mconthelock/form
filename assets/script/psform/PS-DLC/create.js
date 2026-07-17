@@ -98,6 +98,17 @@ $(document).on("change", "#REQBY", async function (e) {
   }
 });
 
+$(document).on("click", "#linkdownload", function (e) {
+  e.preventDefault();
+  const fileUrl = `${process.env.APP_ENV}/assets/files/PN_template/Template CHG PN.xlsx`;
+  const link = document.createElement("a");
+  link.href = fileUrl;
+  link.download = "Template CHG PN.xlsx";
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+});
+
 // Request form
 $(document).on("click", "#btnRequest", async function () {
   try {
