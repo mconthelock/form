@@ -478,26 +478,26 @@
         <tbody>
             <tr>
                 <td class="border border-gray-400 p-2">
-                    <input type="text" class="w-full border-none bg-transparent text-center focus:outline-none" placeholder="Year (e.g., 2026)">
+                    <input type="text" class="input-integer w-full border-none bg-transparent text-center focus:outline-none thisy" maxlength="4"  placeholder="Year (e.g., 2026)">
                 </td>
                 <td class="border border-gray-400 p-2">
-                    <input type="text" class="w-full border-none bg-transparent text-center focus:outline-none" placeholder="0.00">
-                </td>
-            </tr>
-            <tr>
-                <td class="border border-gray-400 p-2">
-                    <input type="text" class="w-full border-none bg-transparent text-center focus:outline-none" placeholder="Year">
-                </td>
-                <td class="border border-gray-400 p-2">
-                    <input type="text" class="w-full border-none bg-transparent text-center focus:outline-none" placeholder="0.00">
+                    <input type="text" class="input-decimal w-full border-none bg-transparent text-center focus:outline-none" placeholder="0.00">
                 </td>
             </tr>
             <tr>
                 <td class="border border-gray-400 p-2">
-                    <input type="text" class="w-full border-none bg-transparent text-center focus:outline-none" placeholder="Year">
+                    <input type="text" class="input-integer w-full border-none bg-transparent text-center focus:outline-none lasty" maxlength="4"  placeholder="Year">
                 </td>
                 <td class="border border-gray-400 p-2">
-                    <input type="text" class="w-full border-none bg-transparent text-center focus:outline-none" placeholder="0.00">
+                    <input type="text" class="input-decimal w-full border-none bg-transparent text-center focus:outline-none" placeholder="0.00">
+                </td>
+            </tr>
+            <tr>
+                <td class="border border-gray-400 p-2">
+                    <input type="text" class="input-integer w-full border-none bg-transparent text-center focus:outline-none last2y"  maxlength="4"  placeholder="Year">
+                </td>
+                <td class="border border-gray-400 p-2">
+                    <input type="text" class="input-decimal w-full border-none bg-transparent text-center focus:outline-none" placeholder="0.00">
                 </td>
             </tr>
         </tbody>
@@ -545,11 +545,11 @@
             <div class="space-y-3">
                 <div>
                     <label class="block text-xs font-semibold text-gray-600">Fiscal Year</label>
-                    <input type="text" name="FY_AMOUNT" class="w-full border border-gray-400 h-8 p-2 rounded text-sm">
+                    <input type="text" name="FY_AMOUNT" class="input-integer w-full border border-gray-400 h-8 p-2 rounded text-sm">
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-gray-600">Total Amount [Bht]</label>
-                    <input type="text" id="AMOUNT" class="w-full border border-gray-400 h-8 p-2 rounded text-sm">
+                    <input type="text" id="AMOUNT" class="input-decimal w-full border border-gray-400 h-8 p-2 rounded text-sm">
                 </div>
                 <label class="flex items-center gap-2 text-sm"><input type="checkbox" class="checkbox"> Not purchase more than 5 years "DO NOT USE"</label>
             </div>
@@ -568,7 +568,7 @@
             <tr class="bg-gray-100">
                 <th class="border border-gray-400 p-2 text-left" rowspan="2">Evaluation Item</th>
                 <th class="border border-gray-400 p-2 text-left" rowspan="2">Check Point</th>
-                <th class="border border-gray-400 p-2 text-center" colspan="5">Score</th>
+                <th class="border border-gray-400 p-2 text-center" colspan="6">Score</th>
             </tr>
             <tr class="bg-gray-50 text-xs text-center">
                 <th class="border border-gray-400 p-1 w-[13%]">25</th>
@@ -576,11 +576,12 @@
                 <th class="border border-gray-400 p-1 w-[13%]">15</th>
                 <th class="border border-gray-400 p-1 w-[13%]">10</th>
                 <th class="border border-gray-400 p-1 w-[13%]">5</th>
+                <th class="border border-gray-400 p-1 w-[13%]">0</th>
             </tr>
         </thead>
         <tbody>
             <tr>
-                <td class="border border-gray-400 p-2 font-semibold">FINANCIAL STATEMENT</td>
+                <td class="border border-gray-400 p-2 text-xs font-semibold">FINANCIAL STATEMENT</td>
                 <td class="border border-gray-400 p-2 text-xs">Financial status evaluation</td>
                 <td class="border border-gray-400 p-2 text-center align-top">
                     <label class="cursor-pointer block">
@@ -606,10 +607,13 @@
                         <span class="text-[10px] leading-tight block mt-1">Not found data of Tax payment and/or "DO NOT USE"</span>
                     </label>
                 </td>
-                <td class="border border-gray-400 p-2 bg-gray-50"></td> </tr>
+                <td class="border border-gray-400 p-2 bg-gray-50"></td> 
+                <td class="border border-gray-400 p-2 bg-gray-50">
+                </td>
+            </tr>
 
             <tr>
-                <td class="border border-gray-400 p-2 font-semibold">QUALITY CLASSIFICATION</td>
+                <td class="border border-gray-400 p-2  text-xs font-semibold">QUALITY CLASSIFICATION</td>
                 <td class="border border-gray-400 p-2 text-xs">Classification by warranty</td>
                 <td class="border border-gray-400 p-2 text-center align-top">
                     <label class="cursor-pointer block">
@@ -635,10 +639,13 @@
                         <span class="text-[10px] leading-tight block mt-1">[Not warranty] "DO NOT USE"</span>
                     </label>
                 </td>
-                <td class="border border-gray-400 p-2 bg-gray-50"></td> </tr>
+                <td class="border border-gray-400 p-2 bg-gray-50"></td> 
+                <td class="border border-gray-400 p-2 bg-gray-50"></td>
+            
+            </tr>
 
             <tr>
-                <td class="border border-gray-400 p-2 font-semibold">ADVANCE VERIFYING</td>
+                <td class="border border-gray-400 p-2 text-xs  font-semibold">ADVANCE VERIFYING</td>
                 <td class="border border-gray-400 p-2 text-xs">Invoice's price by</td>
                 <td class="border border-gray-400 p-2 text-center align-top">
                     <label class="cursor-pointer block">
@@ -660,10 +667,12 @@
                         <span class="text-[10px] leading-tight block mt-1">Not able advance any file before deliver to AMEC</span>
                     </label>
                 </td>
+                     <td class="border border-gray-400 p-2 bg-gray-50">
+                </td>
             </tr>
 
             <tr>
-                <td class="border border-gray-400 p-2 font-semibold">ENVIRONMENTAL</td>
+                <td class="border border-gray-400 p-2 text-xs  font-semibold">ENVIRONMENTAL</td>
                 <td class="border border-gray-400 p-2 text-xs">ex.ISO14001 (ref.: PUR-QP-E003)</td>
                 <td class="border border-gray-400 p-2 text-center align-top">
                     <label class="cursor-pointer block">
@@ -689,10 +698,12 @@
                         <span class="text-[10px] leading-tight block mt-1">Has not related material</span>
                     </label>
                 </td>
+                <td class="border border-gray-400 p-2 bg-gray-50">
+                </td>
                 <td class="border border-gray-400 p-2 text-center align-top">
                     <label class="cursor-pointer block">
-                        <input type="radio" name="ENV_LEVEL" value="5" data-topic="ENVIRONMENTAL" data-topicdesc="ex.ISO14001 (ref.: PUR-QP-E003)"  class="block mx-auto mb-1 w-4 h-4 accent-blue-600">
-                        <span class="text-[10px] leading-tight block mt-1">Related & Not response</span>
+                        <input type="radio" name="ENV_LEVEL" value="0" data-topic="ENVIRONMENTAL" data-topicdesc="ex.ISO14001 (ref.: PUR-QP-E003)"  class="block mx-auto mb-1 w-4 h-4 accent-blue-600">
+                        <span class="text-[10px] leading-tight block mt-1">Environmental or Legal Violations : "Do Not Use"</span>
                     </label>
                 </td>
             </tr>
@@ -810,7 +821,7 @@
 <div>
     <label class="block font-bold text-sm text-gray-700 mb-2">Capital</label>
     <div class="flex gap-2">
-        <input type="text" class="flex-1 input input-bordered input-sm w-full bg-gray-50 border-gray-300" placeholder="0.00">
+        <input type="text" class="input-decimal flex-1 input input-bordered input-sm w-full bg-gray-50 border-gray-300" placeholder="0.00">
         
         <select class="select select-bordered select-sm w-24 border-gray-400 focus:ring-2 focus:ring-blue-500 outline-none bg-white text-gray-700 text-sm">
             <option value="THB">THB</option>
@@ -864,7 +875,7 @@
             <tbody>
                 <tr class="row-template">
                     <td class="border border-gray-400 p-1"><input type="text"  name="sharename[]"  class="w-full px-1"></td>
-                    <td class="border border-gray-400 p-1"><input type="text"  name="shareper[]" class="w-full px-1 text-center"></td>
+                    <td class="border border-gray-400 p-1"><input type="text"  name="shareper[]" class="input-decimal w-full px-1 text-center"></td>
                     <td class="border border-gray-400 p-1 text-center"></td>
                 </tr>
             </tbody>
@@ -878,17 +889,17 @@
             
             <div class="flex items-center gap-2">
                 <span class="flex-shrink-0 whitespace-nowrap">Direct:</span>
-                <input type="text" class="flex-1 input input-bordered input-sm bg-gray-50 border-gray-300">
+                <input type="text" class="empnum input-interger flex-1 input input-bordered input-sm bg-gray-50 border-gray-300">
             </div>
             
             <div class="flex items-center gap-2">
                 <span class="flex-shrink-0 whitespace-nowrap">Indirect:</span>
-                <input type="text" class="flex-1 input input-bordered input-sm bg-gray-50 border-gray-300">
+                <input type="text" class="empnum input-interger flex-1 input input-bordered input-sm bg-gray-50 border-gray-300">
             </div>
             
             <div class="flex items-center gap-2">
                 <span class="flex-shrink-0 whitespace-nowrap">Total:</span>
-                <input type="text" class="flex-1 input input-bordered input-sm bg-gray-50 border-gray-300">
+                <input type="text" class="totemp flex-1 input input-bordered input-sm bg-gray-50 border-gray-300 readonly">
             </div>
             
             <div class="flex items-center gap-2">
@@ -905,12 +916,12 @@
             
             <div class="flex items-center gap-2">
                 <span class="flex-shrink-0 whitespace-nowrap">Land (M2):</span>
-                <input type="text" class="flex-1 input input-bordered input-sm bg-gray-50 border-gray-300">
+                <input type="text" class="input-decimal flex-1 input input-bordered input-sm bg-gray-50 border-gray-300">
             </div>
             
             <div class="flex items-center gap-2">
                 <span class="flex-shrink-0 whitespace-nowrap">Factory (M2):</span>
-                <input type="text" class="flex-1 input input-bordered input-sm bg-gray-50 border-gray-300">
+                <input type="text" class="input-decimal flex-1 input input-bordered input-sm bg-gray-50 border-gray-300">
             </div>
             
         </div>
@@ -1001,26 +1012,26 @@
         <tbody>
             <tr>
                 <td class="border border-gray-400 p-2">
-                    <input type="text" class="w-full border-none bg-transparent text-center focus:outline-none" placeholder="Year (e.g., 2026)">
+                    <input type="text" class="input-integer w-full border-none bg-transparent text-center focus:outline-none" maxlength="4" placeholder="Year (e.g., 2026)">
                 </td>
                 <td class="border border-gray-400 p-2">
-                    <input type="text" class="w-full border-none bg-transparent text-center focus:outline-none" placeholder="0.00">
-                </td>
-            </tr>
-            <tr>
-                <td class="border border-gray-400 p-2">
-                    <input type="text" class="w-full border-none bg-transparent text-center focus:outline-none" placeholder="Year">
-                </td>
-                <td class="border border-gray-400 p-2">
-                    <input type="text" class="w-full border-none bg-transparent text-center focus:outline-none" placeholder="0.00">
+                    <input type="text" class="input-decimal w-full border-none bg-transparent text-center focus:outline-none" placeholder="0.00">
                 </td>
             </tr>
             <tr>
                 <td class="border border-gray-400 p-2">
-                    <input type="text" class="w-full border-none bg-transparent text-center focus:outline-none" placeholder="ํํYear">
+                    <input type="text" class="input-integer w-full border-none bg-transparent text-center focus:outline-none" maxlength="4" placeholder="Year">
                 </td>
                 <td class="border border-gray-400 p-2">
-                    <input type="text" class="w-full border-none bg-transparent text-center focus:outline-none" placeholder="0.00">
+                    <input type="text" class="input-decimal w-full border-none bg-transparent text-center focus:outline-none" placeholder="0.00">
+                </td>
+            </tr>
+            <tr>
+                <td class="border border-gray-400 p-2">
+                    <input type="text" class="input-integer w-full border-none bg-transparent text-center focus:outline-none" maxlength="4" placeholder="ํํYear">
+                </td>
+                <td class="border border-gray-400 p-2">
+                    <input type="text" class="input-decimal w-full border-none bg-transparent text-center focus:outline-none" placeholder="0.00">
                 </td>
             </tr>
         </tbody>
@@ -1084,7 +1095,7 @@
         </div>
         <table id="customer-table" class="w-full text-sm border-collapse border border-gray-400">
             <tr class="bg-gray-100"><th class="border border-gray-400 p-2 text-left">Name</th><th class="border border-gray-400 p-2 w-1/4">%</th><th class="border border-gray-400 p-2 w-10"></th></tr>
-            <tr class="row-template"><td class="border border-gray-400 p-1"><input name="cusname[]" type="text" class="w-full px-1"></td><td class="border border-gray-400 p-1"><input type="text" name="cusper[]" class="w-full px-1 text-center"></td><td class="border border-gray-400 p-1"></td></tr>
+            <tr class="row-template"><td class="border border-gray-400 p-1"><input name="cusname[]" type="text" class="w-full px-1"></td><td class="border border-gray-400 p-1"><input type="text" name="cusper[]" class="input-decimal w-full px-1 text-center"></td><td class="border border-gray-400 p-1"></td></tr>
         </table>
     </div>
 
@@ -1095,7 +1106,7 @@
         </div>
         <table id="supplier-table" class="w-full text-sm border-collapse border border-gray-400">
             <tr class="bg-gray-100"><th class="border border-gray-400 p-2 text-left">Name</th><th class="border border-gray-400 p-2 w-1/4">%</th><th class="border border-gray-400 p-2 w-10"></th></tr>
-            <tr class="row-template"><td class="border border-gray-400 p-1"><input name = "supname[]" type="text" class="w-full px-1"></td><td class="border border-gray-400 p-1"><input type="text" name="supper[]" class="w-full px-1 text-center"></td><td class="border border-gray-400 p-1"></td></tr>
+            <tr class="row-template"><td class="border border-gray-400 p-1"><input name = "supname[]" type="text" class="w-full px-1"></td><td class="border border-gray-400 p-1"><input type="text" name="supper[]" class="input-decimal w-full px-1 text-center"></td><td class="border border-gray-400 p-1"></td></tr>
         </table>
     </div>
 
@@ -1106,7 +1117,7 @@
         </div>
         <table id="product-table" class="w-full text-sm border-collapse border border-gray-400">
             <tr class="bg-gray-100"><th class="border border-gray-400 p-2 text-left">Name</th><th class="border border-gray-400 p-2 w-1/4">%</th><th class="border border-gray-400 p-2 w-10"></th></tr>
-            <tr class="row-template"><td class="border border-gray-400 p-1"><input type="text" name="proname[]" class="w-full px-1"></td><td class="border border-gray-400 p-1"><input name="proper[]" type="text" class="w-full px-1 text-center"></td><td class="border border-gray-400 p-1"></td></tr>
+            <tr class="row-template"><td class="border border-gray-400 p-1"><input type="text" name="proname[]" class="w-full px-1"></td><td class="border border-gray-400 p-1"><input name="proper[]" type="text" class="input-decimal w-full px-1 text-center"></td><td class="border border-gray-400 p-1"></td></tr>
         </table>
     </div>
 <!-- <div class="mb-8 mt-6">
@@ -1197,7 +1208,7 @@
             </thead>
             <tbody>
                 <tr>
-                    <td class="border border-gray-400 p-2 font-semibold">PRICE LEVEL</td>
+                    <td class="border border-gray-400 p-2 text-xs font-semibold">PRICE LEVEL</td>
                     <td class="border border-gray-400 p-2">Comparison with market price or competitor</td>
                     <td class="border border-gray-400 p-2 text-center"><label class="cursor-pointer block"><input type="radio" name="price" value="25" data-topic="PRICE LEVEL" data-topicdesc="Comparison with market price or competitor" class="block mx-auto mb-1 score-radio"><span class="text-[10px]">VERY COMPETITIVE</span></label></td>
                     <td class="border border-gray-400 p-2 text-center"><label class="cursor-pointer block"><input type="radio" name="price" value="20" data-topic="PRICE LEVEL" data-topicdesc="Comparison with market price or competitor" class="block mx-auto mb-1 score-radio"><span class="text-[10px]">COMPETITIVE</span></label></td>
@@ -1206,7 +1217,7 @@
                     <td class="border border-gray-400 p-2 text-center"><label class="cursor-pointer block"><input type="radio" name="price" value="5"  data-topic="PRICE LEVEL" data-topicdesc="Comparison with market price or competitor" class="block mx-auto mb-1 score-radio"><span class="text-[10px]">EXPENSIVE</span></label></td>
                 </tr>
                 <tr>
-                    <td class="border border-gray-400 p-2 font-semibold">ORDER MANAGEMENT</td>
+                    <td class="border border-gray-400 p-2 text-xs font-semibold">ORDER MANAGEMENT</td>
                     <td class="border border-gray-400 p-2">Control system from P/O to delivery</td>
                     <td class="border border-gray-400 p-2 text-center"><label class="cursor-pointer block"><input type="radio" name="order" value="25" data-topic="ORDER MANAGEMENT" data-topicdesc="Control system from P/O to delivery"   class="block mx-auto mb-1 score-radio"><span class="text-[10px]">SYSTEMATIC CONTROL</span></label></td>
                     <td class="border border-gray-400 p-2 text-center"><label class="cursor-pointer block"><input type="radio" name="order" value="20" data-topic="ORDER MANAGEMENT" data-topicdesc="Control system from P/O to delivery"  class="block mx-auto mb-1 score-radio"><span class="text-[10px]">SEMI SYSTEMATIC</span></label></td>
@@ -1215,7 +1226,7 @@
                     <td class="border border-gray-400 p-2 text-center"><label class="cursor-pointer block"><input type="radio" name="order" value="5"  data-topic="ORDER MANAGEMENT" data-topicdesc="Control system from P/O to delivery"  class="block mx-auto mb-1 score-radio"><span class="text-[10px]">NOT CONTROL</span></label></td>
                 </tr>
                 <tr>
-                    <td class="border border-gray-400 p-2 font-semibold">CUSTOMER SERVICE</td>
+                    <td class="border border-gray-400 p-2 text-xs font-semibold">CUSTOMER SERVICE</td>
                     <td class="border border-gray-400 p-2">Responsiveness for delivery/price</td>
                     <td class="border border-gray-400 p-2 text-center"><label class="cursor-pointer block"><input type="radio" name="service" value="25" data-topic="CUSTOMER SERVICE" data-topicdesc="Responsiveness for delivery/price" class="block mx-auto mb-1 score-radio"><span class="text-[10px]">VERY GOOD<br>(1 day)</span></label></td>
                     <td class="border border-gray-400 p-2 text-center"><label class="cursor-pointer block"><input type="radio" name="service" value="20" data-topic="CUSTOMER SERVICE" data-topicdesc="Responsiveness for delivery/price" class="block mx-auto mb-1 score-radio"><span class="text-[10px]">GOOD<br>(3 days)</span></label></td>
@@ -1224,7 +1235,7 @@
                     <td class="border border-gray-400 p-2 text-center"><label class="cursor-pointer block"><input type="radio" name="service" value="5"  data-topic="CUSTOMER SERVICE" data-topicdesc="Responsiveness for delivery/price" class="block mx-auto mb-1 score-radio"><span class="text-[10px]">VERY BAD<br>(>2 weeks)</span></label></td>
                 </tr>
                 <tr>
-                    <td class="border border-gray-400 p-2 font-semibold">STANDARD DELIVERY</td>
+                    <td class="border border-gray-400 p-2 text-xs font-semibold">STANDARD DELIVERY</td>
                     <td class="border border-gray-400 p-2">Delivery term vs Competitor</td>
                     <td class="border border-gray-400 p-2 text-center"><label class="cursor-pointer block"><input type="radio" name="delivery" value="25" data-topic="STANDARD DELIVERY" data-topicdesc="Delivery term vs Competitor"  class="block mx-auto mb-1 score-radio"><span class="text-[10px]">VERY SHORT</span></label></td>
                     <td class="border border-gray-400 p-2 text-center"><label class="cursor-pointer block"><input type="radio" name="delivery" value="20" data-topic="STANDARD DELIVERY" data-topicdesc="Delivery term vs Competitor"  class="block mx-auto mb-1 score-radio"><span class="text-[10px]">SHORT</span></label></td>

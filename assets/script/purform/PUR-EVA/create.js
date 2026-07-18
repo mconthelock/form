@@ -176,7 +176,8 @@ $(document).ready(async function () {
                 showLoader(); // เปิด Loader รอระว่างดึงข้อมูล
                 const searchData = { KEYWORD: keywordValue };
                 const vendor = await getVendor(searchData);
-                console.log(vendor[0]);
+                setVendorMstInfo(vendor[0]);
+                //console.log(vendor[0]);
             } catch (err) {
                 console.error('Error get Vendor:', err);
                 showErrorMessage('เกิดข้อผิดพลาดในการดึงข้อมูลคู่ค้า');
@@ -272,6 +273,20 @@ $(document).ready(async function () {
             // ถ้าน้อยกว่า 1 หมื่น
             $('input[name="purchase_level"][value="D"]').prop('checked', true);
         }
+    });
+
+    $(document).on('input', '.input-decimal', async function () {
+        let value = $(this).val();
+        value = value.replace(/[^0-9.]/g, '');
+        value = value.replace(/(\..*)\./g, '$1');
+        value = value.replace(/(\.\d{2})\d+/g, '$1');
+        $(this).val(value);
+    });
+
+    $(document).on('input', '.input-integer', function () {
+        let value = $(this).val();
+        value = value.replace(/[^0-9]/g, ''); // ลบทุกอย่างทิ้งยกเว้นตัวเลข 0-9
+        $(this).val(value);
     });
 
     $(document).on('keydown', '#modalSearch', async function (e) {
@@ -495,9 +510,11 @@ function setVendorMstInfo(vendorMstData) {
     $('input[name="BANKNAME"]').val(vendorMstData.BANKNAME);
     $('input[name="BRANCH"]').val(vendorMstData.BRANCH);
     $('input[name="ACCNUMBER"]').val(vendorMstData.ACCNUMBER);
-    for (const address of vendorMstData.VENDOR_ADDRESS) {
+    for (const VENDOR of vendorMstData.VENDOR_CODES) {
+        if (VENDOR.CODE_NUM == $('#VENDORCODE').val()) {
+            paymentTermManager.value = VENDOR.TERM.STERMCODE;
+        }
     }
-    paymentTermManager.value = vendorData.LISTS[0].TERMCODE;
 }
 
 function setVendorInfo(vendorData) {
