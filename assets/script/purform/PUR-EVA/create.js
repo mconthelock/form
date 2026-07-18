@@ -10,6 +10,7 @@ import {
     getDistricts,
     getSubDistricts,
     getTermcode,
+    getVendor,
 } from '../PUR-NVF/data';
 import {
     countryManager,
@@ -36,6 +37,7 @@ import {
 import { concernManager, currencyManager } from './formManager';
 import { showMessage } from '@amec/webasset/utils';
 import { getOrganize } from '../../finform/FIN-PCK/dataloc';
+import { showLoader } from '@amec/webasset/preloader';
 
 // select2();
 
@@ -167,6 +169,38 @@ $(document).ready(async function () {
         $(this).closest('.contact-row').remove();
     });
 
+    $(document).on('input', '#VENDORCODE', async function () {
+        const keywordValue = this.value.trim();
+        if (keywordValue.length === 5) {
+            try {
+                showLoader(); // เปิด Loader รอระว่างดึงข้อมูล
+                const searchData = { KEYWORD: keywordValue };
+                const vendor = await getVendor(searchData);
+                setVendorMstInfo(vendor[0]);
+                //console.log(vendor[0]);
+            } catch (err) {
+                console.error('Error get Vendor:', err);
+                showErrorMessage('เกิดข้อผิดพลาดในการดึงข้อมูลคู่ค้า');
+            } finally {
+                showLoader({ show: false }); // ปิด Loader
+            }
+        }
+    });
+
+    $(document).on('change', '.radio-opr', async function () {
+        const isAnnual = $(this).val() === 'A';
+        const container = $(this).closest('.vendor-form-container');
+        const vendorInput = container.find('.vendor-code-input');
+        const updateCheck = container.find('.update-status-check');
+        if (isAnnual) {
+            vendorInput.prop('disabled', false);
+            updateCheck.prop('disabled', false);
+        } else {
+            vendorInput.prop('disabled', true).val('');
+            updateCheck.prop('disabled', true).prop('checked', false);
+        }
+    });
+
     $(document).on('change', '.radio-typec', async function () {
         let val = $(this).val().split(':')[0];
         if (val === '6') {
@@ -239,6 +273,20 @@ $(document).ready(async function () {
             // ถ้าน้อยกว่า 1 หมื่น
             $('input[name="purchase_level"][value="D"]').prop('checked', true);
         }
+    });
+
+    $(document).on('input', '.input-decimal', async function () {
+        let value = $(this).val();
+        value = value.replace(/[^0-9.]/g, '');
+        value = value.replace(/(\..*)\./g, '$1');
+        value = value.replace(/(\.\d{2})\d+/g, '$1');
+        $(this).val(value);
+    });
+
+    $(document).on('input', '.input-integer', function () {
+        let value = $(this).val();
+        value = value.replace(/[^0-9]/g, ''); // ลบทุกอย่างทิ้งยกเว้นตัวเลข 0-9
+        $(this).val(value);
     });
 
     $(document).on('keydown', '#modalSearch', async function (e) {
@@ -417,6 +465,57 @@ $(document).ready(async function () {
         },
     );
 });
+
+function setVendorMstInfo(vendorMstData) {
+    $('input[name="COMNAME"]').val(vendorMstData.VND_NAME);
+    for (const address of vendorMstData.VENDOR_ADDRESS) {
+        if (address.ADDR_TYPE == 'E') {
+            addrEnManager.value = address.ADDR_LINE1;
+            postcodeEnManager.value = address.ADDR_ZIPCODE;
+            countryEnManager.value = address.ADDR_COUNTRY;
+            if (address.ADDR_COUNTRY == 'THAILAND') {
+                $('input[name="VENDTYPE"][value="Local"]').prop(
+                    'checked',
+                    true,
+                );
+                provinceManager.textToValue = address.ADDR_STATE;
+                districtManager.textToValue = address.ADDR_CITY;
+                subDistrictManager.textToValue = address.ADDR_SUB_CITY;
+                countryManager.disabled(true);
+            } else {
+                $('input[name="VENDTYPE"][value="Oversea"]').prop(
+                    'checked',
+                    true,
+                );
+                provinceEnManager.value = address.ADDR_STATE;
+                districtEnManager.value = address.ADDR_CITY;
+                subDistrictEnManager.value = address.ADDR_SUB_CITY;
+                countryManager.value = address.ADDR_COUNTRY;
+                countryManager.disabled(false);
+            }
+        } else {
+            addrThManager.value = address.ADDR_LINE1 || '';
+            provinceThManager.value = address.ADDR_STATE;
+            districtThManager.value = address.ADDR_CITY;
+            subDistrictThManager.value = address.ADDR_SUB_CITY;
+            postcodeThManager.value = address.ADDR_ZIPCODE;
+            countryThManager.value = address.ADDR_COUNTRY;
+        }
+    }
+    $('input[name="CONTACT"]').val(vendorMstData.VND_SALE);
+    $('input[name="EMAIL"]').val(vendorMstData.EMAIL);
+    $('input[name="WEBSITE"]').val(vendorMstData.ADDR_WEB);
+    $('input[name="TELNO"]').val(vendorMstData.ADDR_PHONE);
+    $('input[name="FAX"]').val(vendorMstData.FAX);
+    $('input[name="BANKNAME"]').val(vendorMstData.BANKNAME);
+    $('input[name="BRANCH"]').val(vendorMstData.BRANCH);
+    $('input[name="ACCNUMBER"]').val(vendorMstData.ACCNUMBER);
+    for (const VENDOR of vendorMstData.VENDOR_CODES) {
+        if (VENDOR.CODE_NUM == $('#VENDORCODE').val()) {
+            paymentTermManager.value = VENDOR.TERM.STERMCODE;
+        }
+    }
+}
 
 function setVendorInfo(vendorData) {
     console.log(vendorData);
