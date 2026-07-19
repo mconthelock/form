@@ -12,5 +12,11 @@
 	"editor.suggest.showSnippets": true,
 	"editor.suggest.snippetsPreventQuickSuggestions": false,
 	"editor.snippetSuggestions": "top",
-	"emmet.triggerExpansionOnTab": true,
+    "emmet.triggerExpansionOnTab": true,
+    "favorites.resources": [
+        {
+            "filePath": "application/views/home",
+            "group": "Default"
+        }
+    ],
 }

@@ -4,6 +4,7 @@ import { encryptText } from '@amec/webasset/crypto';
 import { showLoader } from '@amec/webasset/preloader';
 import { showErrorMessage } from '@amec/webasset/utils';
 import { createCarousel } from '@amec/webasset/api/gpreport';
+import { directlogin } from '@amec/webasset/api/auth';
 import { initApp, stampApp } from '../utils';
 import { createLinks, setRecentApps, setAmecwebLinks } from './data';
 
@@ -45,21 +46,24 @@ $(document).on('click', '.links-stamp', async function (e) {
             label: $(this).attr('data-label') || '',
             name: $(this).attr('data-name') || '👍',
             type: $(this).attr('data-type') || '2',
-            location: $(this).attr('data-location'),
+            location: $(this).attr('href'),
             updateDate: new Date().toISOString(),
         };
         await stampApp(curent);
         await setRecentApps();
-        console.log(curent);
-
-        setCookie(
+        await setCookie(
             curent.location,
             encryptText(`${curent.id}-${curent.user}`, curent.location),
         );
-        window.location.href = curent.url;
+        await directlogin(curent.user, curent.id);
+        if (curent.target === '_blank') {
+            window.open(curent.url);
+        } else {
+            window.location.href = curent.url;
+        }
     } catch (error) {
         console.log(error);
-        showErrorMessage();
+        showErrorMessage(error);
         return;
     } finally {
         await showLoader({ show: false });

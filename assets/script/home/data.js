@@ -89,7 +89,7 @@ export async function setRecentApps() {
                 content += `<a class="flex flex-col items-center gap-3 w-28 links-stamp"
         href="${el.url}"
         data-id="${el.id}"
-        target="${el.type == 1 ? '_self' : '_blank'}"
+        target="${el.type == 1 ? '_self' : '_self'}"
         >
             <div
                 class="flex items-center justify-center text-xl font-bold rounded-full w-12 h-12"
@@ -158,7 +158,7 @@ export async function setAmecwebLinks() {
         data-name="${app.APP_NAME}"
         data-type="${app.APP_TYPE}"
         data-location="${app.APP_LOCATION}"
-        target="${app.APP_TYPE == '1' ? '_self' : '_blank'}">
+        target="${app.APP_TYPE == '1' ? '_self' : '_self'}">
             ${label}
             <div class="flex-1 flex flex-col gap-0">
                 <div class="font-bold">${app.APP_NAME}</div>
