@@ -48,3 +48,20 @@ export async function getFormDept(id) {
         });
     });
 }
+
+export async function getFormMasterGroup() {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `${process.env.APP_API}/formmst/group/master`,
+            type: 'get',
+            dataType: 'json',
+            success: function (res) {
+                resolve(res);
+            },
+            error: function (xhr, err) {
+                console.log(xhr, err);
+                reject(err);
+            },
+        });
+    });
+}

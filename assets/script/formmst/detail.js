@@ -6,7 +6,12 @@ import { setSelect2 } from '@amec/webasset/select2';
 import { createTable } from '@amec/webasset/dataTable';
 import { createBtn } from '@amec/webasset/components/buttons';
 import { initApp, tableOption, tableFillSelect } from '../utils';
-import { getAmecUsers, getFormMaster, getFormDept } from '../service';
+import {
+    getAmecUsers,
+    getFormMaster,
+    getFormDept,
+    getFormMasterGroup,
+} from '../service';
 
 select2();
 var cyear, orgno, nno;
@@ -14,14 +19,9 @@ $(document).ready(async function (e) {
     try {
         const master = await getFormMaster();
         const fornno = await setFormNo();
-        await setFormInit();
-        if (fornno == null) {
-            //create new form
-            $('#nno').addClass('hidden');
-            $('#cyear').addClass('hidden');
-            await setFormAction(1);
-        } else {
-            const data = master.find(
+        var data = [];
+        if (fornno !== null) {
+            data = master.find(
                 (item) =>
                     item.NNO == nno &&
                     item.VORGNO == orgno &&
@@ -31,12 +31,11 @@ $(document).ready(async function (e) {
                 showErrorMessage('Form not found');
                 return;
             }
-            await setFormValue(data);
-            await setFormAction(2);
         }
+        await setFormInit(data);
     } catch (error) {
         console.log(error);
-        showErrorMessage();
+        showErrorMessage(error);
         return;
     } finally {
         await showLoader({ show: false });
@@ -53,7 +52,7 @@ async function setFormNo() {
     return `${nno}/${orgno}/${cyear}`;
 }
 
-async function setFormInit() {
+async function setFormInit(data) {
     //populate vorgno select
     const dept = [];
     const deptData = await getFormDept();
@@ -73,6 +72,20 @@ async function setFormInit() {
     await setSelect2({
         element: '#vorgno',
         placeholder: 'Select Owner',
+    });
+
+    const groupData = await getFormMasterGroup();
+    const groupfilter = groupData.filter(
+        (item) => item.VGROUPORG == data.VORGNO,
+    );
+    const group = groupfilter.map((item) => ({
+        value: item.VGROUP,
+        text: item.VGROUPNAME,
+    }));
+    const formgroup = $('#formgroup');
+    formgroup.find('option:not(:first)').remove();
+    group.forEach((item) => {
+        formgroup.append(`<option value="${item.value}">${item.text}</option>`);
     });
     await setSelect2({
         element: '#formgroup',
@@ -95,9 +108,18 @@ async function setFormInit() {
         element: '#developer',
         placeholder: 'Select Developer',
     });
+
+    await setFormValue(data);
+    console.log(data, data.length);
+    await setFormAction(data.length == 0 ? 1 : 2);
 }
 
 async function setFormValue(data) {
+    if (data.length == 0) {
+        $('#nno').addClass('hidden');
+        $('#cyear').addClass('hidden');
+        return;
+    }
     $('#form-info')
         .find('input, textarea')
         .each(function () {
@@ -124,8 +146,8 @@ async function setFormValue(data) {
         });
 
     $('#vorgno').prop('disabled', true);
-    $('#nno').prop('readonly', true);
-    $('#cyear').prop('readonly', true);
+    //$('#nno').prop('readonly', true);
+    //$('#cyear').prop('readonly', true);
 }
 
 async function setFormAction(mode) {
