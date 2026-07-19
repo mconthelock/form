@@ -7,10 +7,6 @@ import { initApp, tableOption } from '../utils';
 
 var table;
 $(document).ready(async function () {
-    showLoader();
-    const app = await initApp({ submenu: '.document' });
-    if (!app) return;
-
     try {
         const status = $('#status').val();
         await getPageTitle(status);

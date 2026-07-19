@@ -4,10 +4,6 @@ import { initApp, tableOption } from '../utils';
 import { getAmecUsers, getFormMaster, getFormDept } from '../service';
 
 $(document).ready(async function () {
-    showLoader();
-    const app = await initApp({ submenu: '.document' });
-    if (!app) return;
-
     try {
         if ($('#deptid').length > 0) {
             await createFormList();

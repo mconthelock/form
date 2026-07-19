@@ -5,11 +5,11 @@ class form extends MY_Controller {
     }
 
     public function index($id = 1){
-        $this->views('form/index', array('id' => $id));
+        $this->views('form/index', array('id' => $id, 'title' => 'nav-approval'));
     }
 
     public function create(){
-        $data = array('department' => $this->setFormDept());
+        $data = array('department' => $this->setFormDept(), 'title' => 'form-create');
         $this->views('form/create/index', $data);
     }
 
@@ -19,6 +19,7 @@ class form extends MY_Controller {
             return $d['id'] == $id;
         });
         $data['department'] = reset($selectedDept);
+        $data['title'] = 'form-create';
         $this->views('form/create/createdetail', $data);
     }
 

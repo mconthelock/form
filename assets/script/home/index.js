@@ -10,8 +10,8 @@ import { createLinks, setRecentApps, setAmecwebLinks } from './data';
 
 $(document).ready(async function (e) {
     showLoader();
-    const app = await initApp({ submenu: '.document' });
-    if (!app) return;
+    // const app = await initApp({ submenu: '.document' });
+    //if (!app) return;
     try {
         const news = await createCarousel();
         const links = await $.getJSON(
@@ -55,7 +55,7 @@ $(document).on('click', '.links-stamp', async function (e) {
             curent.location,
             encryptText(`${curent.id}-${curent.user}`, curent.location),
         );
-        await directlogin(curent.user, curent.id);
+        if (curent.type != '2') await directlogin(curent.user, curent.id);
         if (curent.target === '_blank') {
             window.open(curent.url);
         } else {
