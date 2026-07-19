@@ -10,9 +10,6 @@ import { getAmecUsers, getFormMaster, getFormDept } from '../service';
 var table;
 select2();
 $(document).ready(async function (e) {
-    showLoader();
-    const app = await initApp({ submenu: '.admin' });
-    if (!app) return;
     try {
         const data = await getFormMaster();
         const dept = await getFormDept();

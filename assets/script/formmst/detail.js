@@ -11,10 +11,6 @@ import { getAmecUsers, getFormMaster, getFormDept } from '../service';
 select2();
 var cyear, orgno, nno;
 $(document).ready(async function (e) {
-    showLoader();
-    const app = await initApp({ submenu: '.admin' });
-    if (!app) return;
-
     try {
         const master = await getFormMaster();
         const fornno = await setFormNo();

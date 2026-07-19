@@ -5,10 +5,14 @@ class formmaster extends MY_Controller {
     }
 
     public function index(){
-        $this->views('formmst/index');
+        $this->views('formmst/index', array('title' => 'nav-master-form'));
     }
 
     public function detail(){
-        $this->views('formmst/detail');
+        $this->views('formmst/detail', array('title' => 'nav-master-form'));
+    }
+
+    public function group(){
+        $this->views('formmst/group', array('title' => 'nav-master-group'));
     }
 }
