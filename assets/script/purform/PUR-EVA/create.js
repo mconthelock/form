@@ -208,12 +208,14 @@ $(document).ready(async function () {
             $('#pro').addClass('hidden');
             $('#attach-ie').addClass('hidden');
             $('#attach-qa').addClass('hidden');
+            $('#attach-vat').removeClass('hidden');
             $('.pro').addClass('hidden');
         } else {
             $('#nonpro').addClass('hidden');
             $('#pro').removeClass('hidden');
             $('#attach-ie').removeClass('hidden');
             $('#attach-qa').removeClass('hidden');
+            $('#attach-vat').addClass('hidden');
             $('.pro').removeClass('hidden');
         }
     });

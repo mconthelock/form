@@ -371,7 +371,7 @@
         <input type="checkbox" name="ATTACH_TYPE" value="Company Certification" class="checkbox checkbox-xs" a-type="cer">
             Company Certificate / Company Profile
         </label>
-         <label class="attach-file text-sm flex items-center gap-2" id="attach-ie">
+         <label class="attach-file text-sm flex items-center gap-2" id="attach-vat">
             <input type="checkbox" name="ATTACH_TYPE" value="Vat Register" class="checkbox checkbox-xs" a-type="vat">
             Vat Register
         </label>
