@@ -315,7 +315,7 @@
                                     <div class="form-control">
                                         <label class="label pb-1">
                                             <span class="label-text font-bold text-base-content/80 text-sm">
-                                                Requisition Date
+                                                Effective Date
                                             </span>
                                         </label>
 
@@ -324,12 +324,13 @@
                                                type="text"
                                                readonly
                                                class="show-readonly input input-sm input-bordered w-full bg-violet-50 text-violet-800 border-violet-200 focus:outline-none shadow-sm" />
+                                        <span class="text-error text-xs font-bold mt-1.5">*วันที่ผู้ขอต้องการมารับอากรแสตมป์ (วันนี้ไม่ใช่วันที่ได้รับจริง โดยวันที่มีการได้รับสแตมป์จริงคือวันที่ปรากฏใน Receive Date ซึ่งจะถูกระบุในขั้นตอนสุดท้ายของการ Approve)</span>
                                     </div>
 
                                     <div class="form-control">
                                         <label class="label pb-1">
                                             <span class="label-text font-bold text-base-content/80 text-sm">
-                                                Date Receive
+                                                Receive Date
                                             </span>
                                         </label>
 
@@ -415,13 +416,22 @@
                             </div>
                         </section>
 
-                        {{-- Action Form Container (Empty but preserved for JS targeting) --}}
-                        <div id="actionform"></div>
+                        <div class="divider before:bg-base-300 after:bg-base-300"></div>
+
+                        <div id="sentApprove"></div>
+
+                        <div role="note" aria-label="Remark"
+                            class="rounded-xl border-2 border-warning bg-warning/10 p-5 shadow-sm">
+                            <h2 class="mb-3 text-lg font-extrabold italic uppercase tracking-wide text-error">Remark</h2>
+                            <ol class="ml-5 list-decimal space-y-2 font-bold text-base-content">
+                                <li>Refer FIN-QP-R5543 : Cash Management</li>
+                                <li>Stamp duty can only be issued after all required approvals have been obtained from the authorized level.</li>
+                            </ol>
+                        </div>
 
                     </form>
                 </div>
             </div>
-            <div id="sentApprove"></div>
         </div>
     </div>
 @endsection

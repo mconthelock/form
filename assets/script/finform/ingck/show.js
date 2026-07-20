@@ -105,7 +105,7 @@ $(document).on("click", 'button[name="btnAction"]', async function (e) {
   }
 
   if (shouldRequireReceiveDateOnApprove(action) && !dateReceive) {
-    showMessage("Please choose Date Receive.", "warning");
+    showMessage("Please choose Receive Date.", "warning");
     $("#RetDate").trigger("focus");
     return;
   }
@@ -273,7 +273,7 @@ function toggleReceiveDateGuide(canInputReceiveDate) {
       <button id="receiveDateGuideToggle" type="button" aria-label="เปิดคู่มือ" aria-expanded="false">?</button>
       <div class="receive-guide-content">
       <div class="text-xs font-extrabold uppercase tracking-wide text-fuchsia-700">ขั้นตอนสำหรับผู้อนุมัติ</div>
-      <div class="mt-1 font-extrabold text-fuchsia-700">Date Receive</div>
+      <div class="mt-1 font-extrabold text-fuchsia-700">Receive Date</div>
       <p class="mt-1 text-sm">เลือกวันที่รับอากรแสตมป์ก่อนกด Approve โดยรับของได้เวลา 14:00–16:00 น.</p>
       <button id="goToReceiveDate" type="button" class="btn btn-sm btn-secondary mt-3">ไปกรอกวันที่</button>
       </div>
@@ -467,7 +467,7 @@ async function renderWorkflowAction(form) {
         break;
     }
 
-    $("#sentApprove").html(action);
+    $("#sentApprove").html(action).find(".fieldset-label").addClass("text-error italic font-bold");
   } catch (error) {
     console.error("Cannot render workflow action:", error);
 

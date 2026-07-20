@@ -5,6 +5,9 @@ import { setDatePicker } from "@amec/webasset/flatpickr";
 import { webflowSubmit } from "@amec/webasset/components/form";
 import { fetchUtils } from "@amec/webasset/api/fetch-utils";
 import { redirectWebflow } from "@amec/webasset/form";
+import Swal from "sweetalert2";
+
+const effectiveDateNotice = "วันที่ผู้ขอต้องการมารับอากรแสตมป์ (วันนี้ไม่ใช่วันที่ได้รับจริง โดยวันที่มีการได้รับสแตมป์จริงคือวันที่ปรากฏใน Receive Date ซึ่งจะถูกระบุในขั้นตอนสุดท้ายของการ Approve)";
 
 /*--------------------READY FUNCTION--------------------*/
 
@@ -27,6 +30,7 @@ $(async function () {
   setEmpName("#INPUTBY_NAME", getEmpName(getsec));
   setDatePicker({
     element: "#EffDate",
+    clickOpens: false,
   });
   setDatePicker({
     element: "#RetDate",
@@ -35,7 +39,7 @@ $(async function () {
   const action = webflowSubmit({ request: true });
 
   console.log(action);
-  $("#actionform").html(action);
+  $("#actionform").html(action).find(".fieldset-label").addClass("text-error italic font-bold");
   syncStampTablePalette();
   await createTableStamp();
 });
@@ -54,7 +58,7 @@ const fieldGuides = [
   ["#REQBY", "Requester Information", "Requester By", "กรอกรหัสพนักงานของผู้ขอสร้างรายการ แล้วระบบจะแสดงชื่อและหน่วยงานให้ตรวจสอบ"],
   ["#FULLDP", "Requester Information", "DIV / Dept / Sect", "หน่วยงานของผู้ขอสร้างรายการ ระบบดึงจากรหัสพนักงานให้อัตโนมัติ"],
   ["input[name='OPTION_CODE']", "Request Details", "Option", "เลือก Withdrawal เมื่อต้องการเบิกอากรแสตมป์ หรือ Add สำหรับเจ้าหน้าที่ FIN ที่ต้องการเพิ่มรายการ"],
-  ["#EffDate", "Request Details", "Requisition Date", "เลือกวันที่ทำรายการขอเบิกอากรแสตมป์ วันที่ทำการขอเบิกไม่ใช่วันที่ระบุว่าจะได้รับ"],
+  ["#EffDate", "Request Details", "Effective Date", effectiveDateNotice],
   ["#location", "Request Details", "Collection Location", "ระบุสถานที่รับอากรแสตมป์ หากไม่เปลี่ยนให้ใช้ Counter FIN Sect."],
   ["#addStampRow", "Purpose & Duty Stamp Detail", "Add Row", "เพิ่มหนึ่งแถวต่อหนึ่งเหตุผลในการขอเบิก"],
   ["#stampTable", "Purpose & Duty Stamp Detail", "รายการอากรแสตมป์", "กรอกเหตุผลใน Reason และจำนวนใน QTY ระบบคำนวณ AMT ให้อัตโนมัติ หรือกดลบเพื่อนำแถวที่ไม่ต้องการออก"],
@@ -247,6 +251,20 @@ function setupFieldGuide() {
 }
 
 /*--------------------Change FUNCTION--------------------*/
+$(document).on("click", "#EffDate", async function () {
+  await Swal.fire({
+    icon: "warning",
+    title: "Effective Date",
+    text: effectiveDateNotice,
+    footer: '<strong style="color: #dc2626;">เมื่อเข้าใจแล้ว กดกากบาทเพื่อกรอกวัน Effective Date ต่อ</strong>',
+    showConfirmButton: false,
+    showCloseButton: true,
+    allowOutsideClick: false,
+    allowEscapeKey: false,
+  });
+  this._flatpickr.open();
+});
+
 $(document).on("change", "#REQBY", async function () {
   const empnum = $(this).val().trim();
   setEmpName("#REQBY_NAME", "");
@@ -551,7 +569,7 @@ $(document).on("click", "#btnRequest", async function (e) {
     const requiredMessage = [
       { element: $("#REQBY"), message: "Please enter your Emp code." },
       { element: $("#FULLDP"), message: "Please enter your Emp code" },
-      { element: $("#EffDate"), message: "Please choose Requisition Date" },
+      { element: $("#EffDate"), message: "Please choose Effective Date" },
       { element: $("#location"), message: "Please enter Collection Location" },
     ];
 

@@ -24,6 +24,7 @@ const reportColors = {
 };
 
 const baseColumns = [
+  { data: "EFFECTIVE_DATE", defaultContent: "", className: "report-request-date report-date" },
   { data: "DATE_RECEIVE", defaultContent: "", className: "report-date" },
   { data: "DETAIL", defaultContent: "", className: "report-detail" },
   { data: "DIVISION", defaultContent: "", className: "report-org" },
@@ -129,7 +130,8 @@ async function createReportTable(data = [], stamp = dutyStampList) {
         <th colspan="${getReportColumnCount(stamp)}" class="report-title-header">Control Duty Stamp Report - ${escapeHtml(formatReportPeriod())}</th>
       </tr>
       <tr>
-        <th rowspan="${headerRowspan}" class="report-sticky-date report-meta-header">Date</th>
+        <th rowspan="${headerRowspan}" class="report-sticky-date report-meta-header">Request Date</th>
+        <th rowspan="${headerRowspan}" class="report-meta-header">Receive Date</th>
         <th rowspan="${headerRowspan}" class="report-meta-header">Detail</th>
         <th rowspan="${headerRowspan}" class="report-section-header">Div.</th>
         <th rowspan="${headerRowspan}" class="report-section-header">Dept.</th>
@@ -219,7 +221,7 @@ async function createReportTable(data = [], stamp = dutyStampList) {
   `;
 
   mapColumns.forEach((column, index) => {
-    html += index === 1 ? `<th>Total</th>` : `<th></th>`;
+    html += index === 2 ? `<th>Total</th>` : `<th></th>`;
   });
 
   html += `
@@ -297,7 +299,7 @@ function getReportColumnGroupClass(section) {
 function getReportColumnCount(stamp = dutyStampList) {
   const stampCount = Array.isArray(stamp) ? stamp.length : 0;
 
-  return 5 + stampCount * 2 * 3 + 3;
+  return 6 + stampCount * 2 * 3 + 3;
 }
 
 function applyReportRowClasses(row, rowData, dataIndex, rows = []) {
@@ -317,7 +319,7 @@ function applyReportRowClasses(row, rowData, dataIndex, rows = []) {
 
 function renderReportFooter(api) {
   const values = mapColumns.map((column, index) => {
-    if (index === 1) return "Total";
+    if (index === 2) return "Total";
     if (!shouldShowReportTotal(column.data)) return "";
 
     return formatNumber(getReportFooterValue(api, index, column.data));
@@ -459,6 +461,7 @@ async function exportReportToExcel(data = [], stamp = dutyStampList) {
 
 function getExportColumns(stamp = []) {
   const columns = [
+    { key: "EFFECTIVE_DATE", width: 12 },
     { key: "DATE_RECEIVE", width: 12 },
     { key: "DETAIL", width: 34 },
     { key: "DIVISION", width: 14 },
@@ -485,17 +488,19 @@ function renderExcelHeader(sheet, stamp = [], lastColumn) {
   const headerRowspanEnd = 4;
 
   sheet.mergeCells(2, 1, headerRowspanEnd, 1);
-  sheet.getCell(2, 1).value = "Date";
+  sheet.getCell(2, 1).value = "Request Date";
   sheet.mergeCells(2, 2, headerRowspanEnd, 2);
-  sheet.getCell(2, 2).value = "Detail";
+  sheet.getCell(2, 2).value = "Receive Date";
   sheet.mergeCells(2, 3, headerRowspanEnd, 3);
-  sheet.getCell(2, 3).value = "Div.";
+  sheet.getCell(2, 3).value = "Detail";
   sheet.mergeCells(2, 4, headerRowspanEnd, 4);
-  sheet.getCell(2, 4).value = "Dept.";
+  sheet.getCell(2, 4).value = "Div.";
   sheet.mergeCells(2, 5, headerRowspanEnd, 5);
-  sheet.getCell(2, 5).value = "Sect.";
+  sheet.getCell(2, 5).value = "Dept.";
+  sheet.mergeCells(2, 6, headerRowspanEnd, 6);
+  sheet.getCell(2, 6).value = "Sect.";
 
-  let column = 6;
+  let column = 7;
   if (stampCount > 0) {
     [
       { key: "BUY", label: "Buy" },
@@ -548,7 +553,7 @@ function renderExcelTotal(sheet, data = [], exportColumns = []) {
   const totalRowNumber = data.length + 5;
   const row = sheet.getRow(totalRowNumber);
 
-  row.getCell(2).value = "Total";
+  row.getCell(3).value = "Total";
 
   exportColumns.forEach((column, index) => {
     if (!isNumericReportColumn(column.key)) return;
@@ -587,11 +592,11 @@ function styleExcelSheet(sheet, exportColumns = []) {
 
       cell.alignment = {
         horizontal:
-          columnNumber === 2 && rowNumber >= 5 && rowNumber < sheet.rowCount
+          columnNumber === 3 && rowNumber >= 5 && rowNumber < sheet.rowCount
             ? "left"
             : "center",
         vertical: "middle",
-        wrapText: columnNumber === 2 || columnNumber === columnCount,
+        wrapText: columnNumber === 3 || columnNumber === columnCount,
       };
       cell.border = {
         top: { style: "thin" },
@@ -652,7 +657,8 @@ function mapReportToRows(reportData = [], stamp = []) {
     const transactionSection = getReportSection(item);
     const reason = getReportRemark(item);
     const row = {
-      DATE_RECEIVE: formatDate(getEffectiveDate(item)),
+      EFFECTIVE_DATE: formatDate(getRequestDate(item)),
+      DATE_RECEIVE: formatDate(getReceiveDate(item)),
       USER_EMPNO: getReportUserEmpno(item),
       USER: getReportUser(item),
       DIVISION: getReportDivisionName(item),
@@ -753,7 +759,8 @@ function groupDetailRows(data) {
   const rowsByKey = {};
 
   data.forEach((item) => {
-    const date = getEffectiveDate(item);
+    const requestDate = getRequestDate(item);
+    const receiveDate = getReceiveDate(item);
     const reason = getReportRemark(item);
     const user = getReportUser(item);
     const divisionName = getReportDivisionName(item);
@@ -764,11 +771,12 @@ function groupDetailRows(data) {
       item.ROW_KEY ||
       item.LINEID ||
       item.LINE_ID ||
-      `${date}|${user}|${sectionName}|${reason}|${getReportOptionCode(item) ?? item.TYPE ?? ""}`;
+      `${receiveDate || requestDate}|${user}|${sectionName}|${reason}|${getReportOptionCode(item) ?? item.TYPE ?? ""}`;
 
     if (!rowsByKey[key]) {
       rowsByKey[key] = {
-        DATE_RECEIVE: date,
+        EFFECTIVE_DATE: requestDate,
+        DATE_RECEIVE: receiveDate,
         USER_EMPNO: getReportUserEmpno(item),
         USER: user,
         DIVISION: divisionName,
@@ -864,8 +872,8 @@ function getExcelHeaderColor(rowNumber, columnNumber, exportColumns = []) {
   const columnKey = exportColumns[columnNumber - 1]?.key || "";
 
   if (rowNumber === 1) return reportColors.title;
-  if (columnNumber <= 2) return reportColors.meta;
-  if (columnNumber >= 3 && columnNumber <= 5) return reportColors.section;
+  if (columnNumber <= 3) return reportColors.meta;
+  if (columnNumber >= 4 && columnNumber <= 6) return reportColors.section;
   if (columnKey.startsWith("BUY_")) return reportColors.buy;
   if (columnKey.startsWith("WD_")) return reportColors.withdraw;
   if (columnKey.startsWith("RM_")) return reportColors.remaining;
@@ -898,10 +906,10 @@ function styleExcelReportHeader(sheet, stamp = [], lastColumn) {
   };
 
   styleRange(1, 1, 1, lastColumn, reportColors.title);
-  styleRange(2, 4, 1, 2, reportColors.meta);
-  styleRange(2, 4, 3, 5, reportColors.section);
+  styleRange(2, 4, 1, 3, reportColors.meta);
+  styleRange(2, 4, 4, 6, reportColors.section);
 
-  let column = 6;
+  let column = 7;
   [
     { color: reportColors.buy },
     { color: reportColors.withdraw },
@@ -1134,7 +1142,7 @@ function isRowInSelectedMonth(row) {
   if (currentMonth === "all") return true;
 
   const month = Number(currentMonth);
-  const date = parseReportDate(row.DATE_RECEIVE);
+  const date = parseReportDate(row.DATE_RECEIVE || row.EFFECTIVE_DATE);
 
   return date && date.getMonth() + 1 === month;
 }
@@ -1190,7 +1198,7 @@ function shouldShowReportTotal(columnName) {
 }
 
 function getDateTime(item) {
-  const date = parseReportDate(getEffectiveDate(item));
+  const date = parseReportDate(getReceiveDate(item) || getRequestDate(item));
 
   return date ? date.getTime() : 0;
 }
@@ -1216,15 +1224,17 @@ function getReportRemark(item = {}) {
   return item.REMARK || item.REASON || item.DETAIL || "-";
 }
 
-function getEffectiveDate(item = {}) {
+function getRequestDate(item = {}) {
   return (
-    item.DATE_RECEIVE ||
-    item.DATE_RECIEVE ||
     item.EFFECTIVE_DATE ||
     item.EFF_DATE ||
     item.DATE_EFFECTIVE ||
     ""
   );
+}
+
+function getReceiveDate(item = {}) {
+  return item.DATE_RECEIVE || item.DATE_RECIEVE || "";
 }
 
 function parseReportDate(value) {
