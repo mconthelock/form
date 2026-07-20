@@ -254,24 +254,24 @@ $(document).ready(async function () {
         }
     });
 
-    $(document).on('input', '#total_amount', async function () {
+    $(document).on('input', '#AMOUNT', async function () {
         let rawValue = $(this).val().replace(/,/g, '');
         let amount = parseFloat(rawValue);
         if (isNaN(amount)) {
-            $('input[name="purchase_level"]').prop('checked', false);
+            $('input[name="PUR_LEVEL"]').prop('checked', false);
             return;
         }
         if (amount >= 1000000) {
-            $('input[name="purchase_level"][value="A"]').prop('checked', true);
+            $('input[name="PUR_LEVEL"][value="A"]').prop('checked', true);
         } else if (amount >= 100000) {
             // ถ้าน้อยกว่า 1 ล้าน และมากกว่าเท่ากับ 1 แสน
-            $('input[name="purchase_level"][value="B"]').prop('checked', true);
+            $('input[name="PUR_LEVEL"][value="B"]').prop('checked', true);
         } else if (amount >= 10000) {
             // ถ้าน้อยกว่า 1 แสน และมากกว่าเท่ากับ 1 หมื่น
-            $('input[name="purchase_level"][value="C"]').prop('checked', true);
+            $('input[name="PUR_LEVEL"][value="C"]').prop('checked', true);
         } else {
             // ถ้าน้อยกว่า 1 หมื่น
-            $('input[name="purchase_level"][value="D"]').prop('checked', true);
+            $('input[name="PUR_LEVEL"][value="D"]').prop('checked', true);
         }
     });
 
