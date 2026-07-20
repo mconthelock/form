@@ -250,7 +250,7 @@
                      @endforeach
                       <input type="hidden" name="cnt" value="{{ $cnt }}" />
                     </tbody>
-                    @if ((($form[0]->CST == "0")) && in_array($empno, [$form[0]->VREQNO, $form[0]->VINPUTER]))
+                    @if ((($form[0]->CST == "0") ||  ($mode == $MODE_EDIT)) && in_array($empno, [$form[0]->VREQNO, $form[0]->VINPUTER]))
                     <tfoot>
 							<tr>
 								<td colspan="4" style="text-align:right" >
