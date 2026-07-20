@@ -306,8 +306,8 @@
                         <input type="text" name="EMAIL" id="EMAIL" maxlength="90" class="input input-sm border border-gray-400 h-8 rounded  px-2 w-full req">
                     </div>
                     <div class="grid grid-cols-[140px_1fr] items-center gap-4">
-                        <span class="font-semibold text-sm required">Web site</span>
-                        <input type="text" name="WEBSITE" id="WEBSITE" maxlength="200" class="input input-sm border border-gray-400 h-8 rounded  px-2 w-full req">
+                        <span class="font-semibold text-sm ">Web site</span>
+                        <input type="text" name="WEBSITE" id="WEBSITE" maxlength="200" class="input input-sm border border-gray-400 h-8 rounded  px-2 w-full">
                     </div>
                     <div class="grid grid-cols-[140px_1fr] items-center gap-4">
                         <span class="font-semibold text-sm required">Tel.no</span>
@@ -324,12 +324,12 @@
     <!-- Bank & Branch -->
     <div class="grid grid-cols-2 gap-4 mb-4">
         <div class="grid grid-cols-[140px_1fr] items-center gap-4">
-            <span class="font-semibold text-sm required">Bank name</span>
-            <input type="text"  name="BANKNAME" id="BANKNAME" maxlength="50"  class="input input-sm border border-gray-400 h-8 rounded px-2 w-full req">
+            <span class="font-semibold text-sm">Bank name</span>
+            <input type="text"  name="BANKNAME" id="BANKNAME" maxlength="50"  class="input input-sm border border-gray-400 h-8 rounded px-2 w-full">
         </div>
         <div class="grid grid-cols-[140px_1fr] items-center gap-4">
-            <span class="font-semibold text-sm required">Branch name</span>
-            <input type="text" name="BRANCH" id="BRANCH" maxlength="50"  class="input input-sm border border-gray-400 h-8 rounded px-2 w-full req">
+            <span class="font-semibold text-sm ">Branch name</span>
+            <input type="text" name="BRANCH" id="BRANCH" maxlength="50"  class="input input-sm border border-gray-400 h-8 rounded px-2 w-full ">
         </div>
     </div>
 
@@ -337,8 +337,8 @@
     <div class="space-y-4">
           <div class="grid grid-cols-2 gap-4">
         <div class="grid grid-cols-[140px_1fr] items-center gap-4">
-            <span class="font-semibold text-sm required">Account number</span>
-            <input type="text" name="ACCNUMBER" id="ACCNUMBER" maxlength="13" class="input input-sm border border-gray-400 h-8 rounded px-2 w-full req">
+            <span class="font-semibold text-sm">Account number</span>
+            <input type="text" name="ACCNUMBER" id="ACCNUMBER" maxlength="13" class="input input-sm border border-gray-400 h-8 rounded px-2 w-full">
         </div>
         </div>
         <div class="grid grid-cols-[140px_1fr] items-start gap-4">
@@ -370,6 +370,10 @@
         <label class="attach-file text-sm flex items-center gap-2" id="attach-po">
         <input type="checkbox" name="ATTACH_TYPE" value="Company Certification" class="checkbox checkbox-xs" a-type="cer">
             Company Certificate / Company Profile
+        </label>
+         <label class="attach-file text-sm flex items-center gap-2" id="attach-ie">
+            <input type="checkbox" name="ATTACH_TYPE" value="Vat Register" class="checkbox checkbox-xs" a-type="vat">
+            Vat Register
         </label>
         <label class="attach-file text-sm flex items-center gap-2" id="attach-ie">
             <input type="checkbox" name="ATTACH_TYPE" value="IE evaluation" class="checkbox checkbox-xs" a-type="ie">
@@ -549,7 +553,7 @@
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-gray-600">Total Amount [Bht]</label>
-                    <input type="text" id="AMOUNT" class="input-decimal w-full border border-gray-400 h-8 p-2 rounded text-sm">
+                    <input type="text" name="AMOUNT" id="AMOUNT" class="input-decimal w-full border border-gray-400 h-8 p-2 rounded text-sm">
                 </div>
                 <label class="flex items-center gap-2 text-sm"><input type="checkbox" class="checkbox"> Not purchase more than 5 years "DO NOT USE"</label>
             </div>
@@ -586,7 +590,7 @@
                 <td class="border border-gray-400 p-2 text-center align-top">
                     <label class="cursor-pointer block">
                         <input type="radio" name="FIN_LEVEL" value="25" data-topic="FINANCIAL STATEMENT" data-topicdesc="Financial status evaluation" class="block mx-auto mb-1 w-4 h-4 accent-blue-600">
-                        <span class="text-[10px] leading-tight block mt-1">Bar C and Related with Melco's Group</span>
+                        <span class="text-[10px] leading-tight block mt-1">B or C and Related with Melco's Group</span>
                     </label>
                 </td>
                 <td class="border border-gray-400 p-2 text-center align-top">
@@ -643,37 +647,9 @@
                 <td class="border border-gray-400 p-2 bg-gray-50"></td>
             
             </tr>
-
-            <tr>
-                <td class="border border-gray-400 p-2 text-xs  font-semibold">ADVANCE VERIFYING</td>
-                <td class="border border-gray-400 p-2 text-xs">Invoice's price by</td>
-                <td class="border border-gray-400 p-2 text-center align-top">
-                    <label class="cursor-pointer block">
-                        <input type="radio" name="VERIFYING" value="25" data-topic="ADVANCE VERIFYING" data-topicdesc="Invoice's price by"  data-score="25" class="block mx-auto mb-1 w-4 h-4 accent-blue-600">
-                        <span class="text-[10px] leading-tight block mt-1">Very Good Support (XML file / PDF file (convert/not scan) / Excel file)</span>
-                    </label>
-                </td>
-                <td class="border border-gray-400 p-2 text-center align-top">
-                    <label class="cursor-pointer block">
-                        <input type="radio" name="VERIFYING" value="20" data-topic="ADVANCE VERIFYING" data-topicdesc="Invoice's price by"  class="block mx-auto mb-1 w-4 h-4 accent-blue-600">
-                        <span class="text-[10px] leading-tight block mt-1">Good Support (Text file (own pattern/form))</span>
-                    </label>
-                </td>
-            <td class="border border-gray-400 p-2 bg-gray-50"></td>
-             <td class="border border-gray-400 p-2 bg-gray-50"></td>
-                <td class="border border-gray-400 p-2 text-center align-top">
-                    <label class="cursor-pointer block">
-                        <input type="radio" name="VERIFYING" value="5" data-topic="ADVANCE VERIFYING" data-topicdesc="Invoice's price by"  class="block mx-auto mb-1 w-4 h-4 accent-blue-600">
-                        <span class="text-[10px] leading-tight block mt-1">Not able advance any file before deliver to AMEC</span>
-                    </label>
-                </td>
-                     <td class="border border-gray-400 p-2 bg-gray-50">
-                </td>
-            </tr>
-
-            <tr>
+                     <tr>
                 <td class="border border-gray-400 p-2 text-xs  font-semibold">ENVIRONMENTAL</td>
-                <td class="border border-gray-400 p-2 text-xs">ex.ISO14001 (ref.: PUR-QP-E003)</td>
+                <td class="border border-gray-400 p-2 text-xs">ex.ISO14001 (ref.: PRO-QP-E003)</td>
                 <td class="border border-gray-400 p-2 text-center align-top">
                     <label class="cursor-pointer block">
                         <input type="radio" name="ENV_LEVEL" value="25" data-topic="ENVIRONMENTAL" data-topicdesc="ex.ISO14001 (ref.: PUR-QP-E003)"   class="block mx-auto mb-1 w-4 h-4 accent-blue-600">
@@ -705,6 +681,33 @@
                         <input type="radio" name="ENV_LEVEL" value="0" data-topic="ENVIRONMENTAL" data-topicdesc="ex.ISO14001 (ref.: PUR-QP-E003)"  class="block mx-auto mb-1 w-4 h-4 accent-blue-600">
                         <span class="text-[10px] leading-tight block mt-1">Environmental or Legal Violations : "Do Not Use"</span>
                     </label>
+                </td>
+            </tr>
+
+            <tr>
+                <td class="border border-gray-400 p-2 text-xs  font-semibold">ADVANCE VERIFYING</td>
+                <td class="border border-gray-400 p-2 text-xs">Invoice's price by</td>
+                <td class="border border-gray-400 p-2 text-center align-top">
+                    <label class="cursor-pointer block">
+                        <input type="radio" name="VERIFYING" value="25" data-topic="ADVANCE VERIFYING" data-topicdesc="Invoice's price by"  data-score="25" class="block mx-auto mb-1 w-4 h-4 accent-blue-600">
+                        <span class="text-[10px] leading-tight block mt-1">Very Good Support (XML file / PDF file (convert/not scan) / Excel file)</span>
+                    </label>
+                </td>
+                <td class="border border-gray-400 p-2 text-center align-top">
+                    <label class="cursor-pointer block">
+                        <input type="radio" name="VERIFYING" value="20" data-topic="ADVANCE VERIFYING" data-topicdesc="Invoice's price by"  class="block mx-auto mb-1 w-4 h-4 accent-blue-600">
+                        <span class="text-[10px] leading-tight block mt-1">Good Support (Text file (own pattern/form))</span>
+                    </label>
+                </td>
+            <td class="border border-gray-400 p-2 bg-gray-50"></td>
+             <td class="border border-gray-400 p-2 bg-gray-50"></td>
+                <td class="border border-gray-400 p-2 text-center align-top">
+                    <label class="cursor-pointer block">
+                        <input type="radio" name="VERIFYING" value="5" data-topic="ADVANCE VERIFYING" data-topicdesc="Invoice's price by"  class="block mx-auto mb-1 w-4 h-4 accent-blue-600">
+                        <span class="text-[10px] leading-tight block mt-1">Not able advance any file before deliver to AMEC</span>
+                    </label>
+                </td>
+                     <td class="border border-gray-400 p-2 bg-gray-50">
                 </td>
             </tr>
         </tbody>
