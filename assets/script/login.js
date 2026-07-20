@@ -317,20 +317,10 @@ async function showCamera(target) {
     // 	console.error("เกิดข้อผิดพลาด:", err);
     // }
     const scanner = new QRScanner({
-        onScan: async ({ text, added, duplicate }) => {
-            if (!added || duplicate) return; // กันสแกนซ้ำ/สแกนค้าง
-
-            scanner.stop(); // หยุดกล้องทันทีที่ได้ค่า ก่อนยิง login
-            $('#open-camera').hide();
-            $('#frm-barcode').removeClass('hidden');
-
-            const empcode = ('00000' + (text / 4 - 92).toString()).slice(-5);
-            await barcodeLogin(empcode);
+        onScan: ({ text, added, duplicate }) => {
+            console.log(text);
         },
     });
-
-    $('#open-camera').removeClass('hidden');
-    return scanner;
 }
 
 function splashScreen() {
