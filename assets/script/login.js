@@ -1,5 +1,5 @@
 import '@flaticon/flaticon-uicons/css/all/all.css';
-// import { BrowserMultiFormatReader } from "@zxing/browser";
+import { BrowserMultiFormatReader } from '@zxing/browser';
 import QRScanner from '@amec/webasset/qrScanner';
 import {
     setApplication,
@@ -275,7 +275,10 @@ async function showCamera(target) {
         },
     });
 
-    console.log(scanner.devices);
+    console.log(
+        scanner.devices,
+        await BrowserMultiFormatReader.listVideoInputDevices(),
+    );
     return scanner;
 }
 
