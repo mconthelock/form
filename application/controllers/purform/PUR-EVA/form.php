@@ -10,6 +10,7 @@ class form extends MY_Controller{
     function __construct(){
 		parent::__construct();
         $this->client = new Client(['verify' => false]);
+        // $this->doc = $this->load->database('AS400',true);
     }
 
     public function main(){
@@ -21,7 +22,7 @@ class form extends MY_Controller{
             ];
 
         }else{
-            $form = $this->getFormMasterByVaname('FIN-PCK');
+            $form = $this->getFormMasterByVaname('PUR-NVF');
             
             if(!empty($form)){
                 $data = [
@@ -35,7 +36,6 @@ class form extends MY_Controller{
         $data['mode']        = 1; // create mode
 
         if(isset($_GET["runNo"]) && $_GET["runNo"] != "") {
-            
             $form = array(
                 'NFRMNO' => $_GET['no'],
                 'VORGNO' => $_GET['orgNo'],
@@ -49,21 +49,13 @@ class form extends MY_Controller{
             $data['cextData'] = $this->getExtdata($form);
             $data['mode']     = $this->getMode($form);
             $data['return']   = $this->checkReturn($form);
-            $this->views('finform/FIN-PCK/view', $data);
-        }else
-        {
-            $this->views('finform/FIN-PCK/create', $data);
+            if($data['return']){
+                $this->views('purform/PUR-EVA/create', $data);
+            }else{
+                $this->views('purform/PUR-EVA/view', $data);
+            }
+            exit();
         }
-        
+        $this->views('purform/PUR-EVA/create', $data);
     }
-    public function locmst()
-    {
-        $this->views('finform/FIN-PCK/locmst');
-    }
-    public function report()
-    {
-        $this->views('finform/FIN-PCK/report');
-    }
-
-
 }

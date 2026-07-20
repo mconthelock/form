@@ -7,15 +7,17 @@
 
         #stampTable {
             border-collapse: collapse !important;
-            border: 2px solid #0a6619 !important;
+            border: 2px solid #475569 !important;
+            font-size: 15px;
         }
 
         #stampTable th,
         #stampTable tbody td {
-            border: 1px solid #09643a !important;
+            border: 1px solid #64748b !important;
             padding: 10px 12px !important;
             vertical-align: middle;
             text-align: center;
+            font-size: 15px !important;
         }
 
         #stampTable tbody input,
@@ -23,6 +25,8 @@
         #stampTable tbody textarea {
             min-height: 38px;
             padding: 6px 10px;
+            font-size: 15px;
+            text-align: center !important;
         }
 
         .fin-ds-accessible {
@@ -99,14 +103,33 @@
             outline-offset: 1px;
         }
 
-        .fin-ds-accessible #stampTable thead tr {
-            background: #239400 !important;
-            color: #ffffff !important;
+        .fin-ds-accessible #stampTable thead th {
+            background: #d8e4bc !important;
+            color: #7f3f00 !important;
+            font-weight: 800;
         }
 
-        .fin-ds-accessible #stampTable th,
-        .fin-ds-accessible #stampTable td {
-            border: 1px solid #022502 !important;
+        .fin-ds-accessible #stampTable.stamp-table-buy thead th {
+            background: #dbeef3 !important;
+        }
+
+        .fin-ds-accessible #stampTable tbody td {
+            color: #7f3f00 !important;
+        }
+
+        .fin-ds-accessible #stampTable tbody tr:nth-child(odd) td {
+            background: #f2f2f2 !important;
+        }
+
+        .fin-ds-accessible #stampTable tbody tr:nth-child(even) td {
+            background: #d9d9d9 !important;
+        }
+
+        .fin-ds-accessible #stampTable tfoot th {
+            background: #f8fafc !important;
+            color: #0f172a !important;
+            border-top: 3px solid #64748b !important;
+            text-align: center !important;
         }
     </style>
 @endsection
@@ -241,7 +264,7 @@
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                                     <div class="form-control">
                                         <label class="label pb-1">
-                                            <span class="label-text font-bold text-base-content/80 text-sm">Effective
+                                            <span class="label-text font-bold text-base-content/80 text-sm">Requisition
                                                 Date</span>
                                         </label>
                                         <input id="EffDate" name="EFFECTIVE_DATE" type="date"
@@ -297,7 +320,7 @@
                                             <tr class="bg-accent/10 font-bold text-accent-content">
                                                 <td colspan="9"
                                                     class="pr-4 border-r border-accent/20 text-sm py-3 uppercase tracking-wide">
-                                                    Grand Total
+                                                    Total
                                                 </td>
                                                 <td id="gt-total"
                                                     class="border-r border-accent/20 bg-base-200/30 text-error font-extrabold text-center text-base">
@@ -309,7 +332,6 @@
                                 </div>
                             </div>
                         </div>
-                </div>
 
                 {{-- Attachment --}}
                 <div>

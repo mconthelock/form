@@ -157,10 +157,20 @@ $(document).on('submit', '#rfidLogin', async function (e) {
 });
 
 //Barcode Login Button
-$(document).on('keyup', '#barcode-input', async function (e) {
-    if ($(this).val().length === 5) {
-        $('#barcodeLogin').submit();
-    }
+$(document).on("keyup", "#barcode-input", async function (e) {
+	if ($(this).val().length === 5) {
+		$("#barcodeLogin").submit();
+	}
+});
+
+$(document).on("submit", "#barcodeLogin", async function (e) {
+	e.preventDefault();
+
+	const barcode = $("#barcode-input").val();
+	const empcode = (
+		"00000" + (barcode / 4 - 92).toString()
+	).slice(-5);
+	await barcodeLogin(empcode);
 });
 
 $(document).on('submit', '#barcodeLogin', async function (e) {
@@ -222,34 +232,34 @@ export async function getAuth(appid) {
 }
 
 function cardLogin(data) {
-    return new Promise((resolve) => {});
+	return new Promise((resolve) => { });
 }
 
 async function barcodeLogin(empcode) {
-    const appid = $('#appid').val();
-    const frm = $('.form-cover');
-    frm.find('.loading').removeClass('hidden');
-    frm.find('input').attr('readonly', true);
-    frm.find('.btn').attr('disabled', true);
-    const user = await directlogin(empcode, appid);
-    if (user.status !== undefined) {
-        await showErrorMessage(user.message);
-        frm.find('.loading').addClass('hidden');
-        frm.find('input').attr('readonly', false);
-        frm.find('.btn').attr('disabled', false);
-        return;
-    }
-    const url = await successLogin(user);
-    window.location.replace(url);
-    // if (user.status !== undefined) {
-    // 	await showErrorMessage(user.message);
-    // 	// frm.find(".loading").addClass("hidden");
-    // 	// frm.find("input").attr("readonly", false);
-    // 	// frm.find(".btn").attr("disabled", false);
-    // 	return;
-    // }
-    // const url = await successLogin(user);
-    // window.location.href = url;
+	const appid = $("#appid").val();
+	const frm = $(".form-cover");
+	frm.find(".loading").removeClass("hidden");
+	frm.find("input").attr("readonly", true);
+	frm.find(".btn").attr("disabled", true);
+	const user = await directlogin(empcode, appid);
+	if (user.status !== undefined) {
+		await showErrorMessage(user.message);
+		frm.find(".loading").addClass("hidden");
+		frm.find("input").attr("readonly", false);
+		frm.find(".btn").attr("disabled", false);
+		return;
+	}
+	const url = await successLogin(user);
+	window.location.replace(url);
+	// if (user.status !== undefined) {
+	// 	await showErrorMessage(user.message);
+	// 	// frm.find(".loading").addClass("hidden");
+	// 	// frm.find("input").attr("readonly", false);
+	// 	// frm.find(".btn").attr("disabled", false);
+	// 	return;
+	// }
+	// const url = await successLogin(user);
+	// window.location.href = url;
 }
 
 async function showCamera(target) {

@@ -9,6 +9,7 @@
         #stampTable {
             border-collapse: collapse !important;
             border: 2px solid #475569 !important;
+            font-size: 15px;
         }
 
         .show-page .dt-container div:has(> #stampTable),
@@ -25,6 +26,7 @@
             border: 1px solid #64748b !important;
             padding: 10px 12px !important;
             vertical-align: middle;
+            font-size: 15px !important;
         }
 
         #stampTable tbody input,
@@ -32,6 +34,8 @@
         #stampTable tbody textarea {
             min-height: 38px;
             padding: 6px 10px;
+            font-size: 15px;
+            text-align: center !important;
         }
 
         .show-page {
@@ -63,44 +67,57 @@
         }
 
         #stampTable thead th {
-            background: #7dd3fc;
-            color: #0f172a;
+            background: #d8e4bc;
+            color: #7f3f00;
             font-weight: 800;
             border: 1px solid #475569 !important;
             text-align: center;
             vertical-align: middle;
+        }
+
+        #stampTable.stamp-table-buy thead th {
+            background: #dbeef3;
         }
 
         #stampTable tbody td {
             text-align: center;
             vertical-align: middle;
-            color: #334155;
+            color: #7f3f00;
             font-weight: 650;
             border: 1px solid #64748b !important;
         }
 
+        #stampTable tbody tr:nth-child(odd) td {
+            background: #f2f2f2 !important;
+        }
+
+        #stampTable tbody tr:nth-child(even) td {
+            background: #d9d9d9 !important;
+        }
+
         #stampTable tbody td:nth-child(1) {
-            color: #0369a1;
+            color: #7f3f00;
             font-weight: 900;
         }
 
         #stampTable tbody td:nth-child(2) {
-            color: #334155;
+            color: #7f3f00;
             font-weight: 800;
-            text-align: left !important;
+            text-align: center !important;
         }
 
         #stampTable tbody td:nth-child(n+3) {
-            color: #047857;
+            color: #7f3f00;
             font-weight: 900;
         }
 
         #stampTable tfoot th {
-            background: #fcd34d;
-            color: #78350f;
+            background: #f8fafc;
+            color: #0f172a;
             font-weight: 900;
-            text-align: right;
-            border: 1px solid #475569 !important;
+            text-align: center !important;
+            border: 1px solid #64748b !important;
+            border-top: 3px solid #64748b !important;
         }
     </style>
 @endsection
@@ -298,7 +315,7 @@
                                     <div class="form-control">
                                         <label class="label pb-1">
                                             <span class="label-text font-bold text-base-content/80 text-sm">
-                                                Effective Date
+                                                Requisition Date
                                             </span>
                                         </label>
 
