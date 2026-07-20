@@ -29,4 +29,8 @@ class Form extends MY_Controller{
             $this->views("gpform/{$this->formname}/create", $data);
         }
     }
+
+    public function report(){
+
+    }
 }
