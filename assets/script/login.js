@@ -157,20 +157,10 @@ $(document).on('submit', '#rfidLogin', async function (e) {
 });
 
 //Barcode Login Button
-$(document).on("keyup", "#barcode-input", async function (e) {
-	if ($(this).val().length === 5) {
-		$("#barcodeLogin").submit();
-	}
-});
-
-$(document).on("submit", "#barcodeLogin", async function (e) {
-	e.preventDefault();
-
-	const barcode = $("#barcode-input").val();
-	const empcode = (
-		"00000" + (barcode / 4 - 92).toString()
-	).slice(-5);
-	await barcodeLogin(empcode);
+$(document).on('keyup', '#barcode-input', async function (e) {
+    if ($(this).val().length === 5) {
+        $('#barcodeLogin').submit();
+    }
 });
 
 $(document).on('submit', '#barcodeLogin', async function (e) {
@@ -179,6 +169,14 @@ $(document).on('submit', '#barcodeLogin', async function (e) {
     const barcode = $('#barcode-input').val();
     const empcode = ('00000' + (barcode / 4 - 92).toString()).slice(-5);
     await barcodeLogin(empcode);
+});
+
+$(document).on('click', '#open-camera-btn', async function (e) {
+    e.preventDefault();
+    camera = await showCamera('frm-barcode');
+    if (!camera) {
+        showMessage('ไม่พบกล้องบนอุปกรณ์นี้');
+    }
 });
 
 $(document).on('click', '#close-camera', function (e) {
@@ -232,95 +230,78 @@ export async function getAuth(appid) {
 }
 
 function cardLogin(data) {
-	return new Promise((resolve) => { });
+    return new Promise((resolve) => {});
 }
 
 async function barcodeLogin(empcode) {
-	const appid = $("#appid").val();
-	const frm = $(".form-cover");
-	frm.find(".loading").removeClass("hidden");
-	frm.find("input").attr("readonly", true);
-	frm.find(".btn").attr("disabled", true);
-	const user = await directlogin(empcode, appid);
-	if (user.status !== undefined) {
-		await showErrorMessage(user.message);
-		frm.find(".loading").addClass("hidden");
-		frm.find("input").attr("readonly", false);
-		frm.find(".btn").attr("disabled", false);
-		return;
-	}
-	const url = await successLogin(user);
-	window.location.replace(url);
-	// if (user.status !== undefined) {
-	// 	await showErrorMessage(user.message);
-	// 	// frm.find(".loading").addClass("hidden");
-	// 	// frm.find("input").attr("readonly", false);
-	// 	// frm.find(".btn").attr("disabled", false);
-	// 	return;
-	// }
-	// const url = await successLogin(user);
-	// window.location.href = url;
+    const appid = $('#appid').val();
+    const frm = $('.form-cover');
+    frm.find('.loading').removeClass('hidden');
+    frm.find('input').attr('readonly', true);
+    frm.find('.btn').attr('disabled', true);
+    const user = await directlogin(empcode, appid);
+    if (user.status !== undefined) {
+        await showErrorMessage(user.message);
+        frm.find('.loading').addClass('hidden');
+        frm.find('input').attr('readonly', false);
+        frm.find('.btn').attr('disabled', false);
+        return;
+    }
+    const url = await successLogin(user);
+    window.location.replace(url);
+    // if (user.status !== undefined) {
+    // 	await showErrorMessage(user.message);
+    // 	// frm.find(".loading").addClass("hidden");
+    // 	// frm.find("input").attr("readonly", false);
+    // 	// frm.find(".btn").attr("disabled", false);
+    // 	return;
+    // }
+    // const url = await successLogin(user);
+    // window.location.href = url;
 }
 
 async function showCamera(target) {
+    console.log('showCamera called with target:', target);
+    console.log('showcamera');
     if (target !== 'frm-barcode') return false;
-    // const videoElement = document.getElementById("video");
-    // try {
-    // 	const devices = await navigator.mediaDevices.enumerateDevices();
-    // 	const videoInputDevices = devices.filter(
-    // 		(device) => device.kind === "videoinput",
-    // 	);
+    console.log('target element:', target);
+    // เช็คก่อนว่าเครื่องมีกล้องจริงไหม ก่อนพยายามเปิด QRScanner
+    // ถ้าไม่มี/เข้าถึงไม่ได้ ให้ return false เพื่อให้ caller fallback ไปโชว์ฟอร์มกรอกมือแทน
+    try {
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const videoInputDevices = devices.filter(
+            (device) => device.kind === 'videoinput',
+        );
+        if (videoInputDevices.length === 0) {
+            return false;
+        }
+    } catch (err) {
+        console.error('ไม่สามารถเช็คกล้องได้:', err);
+        return false;
+    }
 
-    // 	if (videoInputDevices.length === 0) {
-    // 		return;
-    // 	}
+    $('#open-camera').removeClass('hidden');
 
-    // 	$("#open-camera").show();
-    // 	const codeReader = new BrowserMultiFormatReader();
-    // 	let selectedDeviceId = videoInputDevices[0].deviceId;
-    // 	const preferred = videoInputDevices.find(
-    // 		(device) =>
-    // 			/back|rear/i.test(device.label) &&
-    // 			!/depth|ultrawide/i.test(device.label),
-    // 	);
-
-    // 	if (preferred) {
-    // 		selectedDeviceId = preferred.deviceId;
-    // 	}
-
-    // 	return await codeReader.decodeFromVideoDevice(
-    // 		selectedDeviceId,
-    // 		videoElement,
-    // 		async (result, error, controls) => {
-    // 			if (result) {
-    // 				const empno = (
-    // 					"00000" + (result.getText() / 4 - 92).toString()
-    // 				).slice(-5);
-    // 				const user = await directlogin(empno, 1);
-    // 				//await barcodeLogin(result.getText());
-    // 				if (user.status !== undefined) {
-    // 					await showErrorMessage(user.message);
-    // 					return false;
-    // 				}
-    // 				//$("#open-camera").hide();
-    // 				controls.stop();
-    // 				const url = await successLogin(user);
-    // 				window.location.replace(url);
-    // 			}
-    // 			if (error) {
-    // 				console.warn("อ่านผิดพลาด: ", error.message);
-    // 			}
-    // 		},
-    // 	);
-    // 	//return true;
-    // } catch (err) {
-    // 	console.error("เกิดข้อผิดพลาด:", err);
-    // }
+    // NOTE: สมมุติว่า QRScanner รองรับ option ระบุ target element สำหรับ preview
+    // (ในที่นี้ใช้ #video ตาม element ที่มีอยู่ในหน้า login.blade.php)
+    // ต้อง confirm signature จริงของ @amec/webasset/qrScanner อีกที ว่า option นี้ชื่ออะไร
+    let scanning = false;
     const scanner = new QRScanner({
-        onScan: ({ text, added, duplicate }) => {
-            console.log(text);
+        target: '#video',
+        onScan: async ({ text, added, duplicate }) => {
+            if (scanning || !added || duplicate) return;
+            scanning = true;
+
+            scanner.stop();
+            $('#open-camera').addClass('hidden');
+            $('#frm-barcode').removeClass('hidden');
+
+            const empcode = ('00000' + (text / 4 - 92).toString()).slice(-5);
+            await barcodeLogin(empcode);
         },
     });
+
+    return scanner;
 }
 
 function splashScreen() {

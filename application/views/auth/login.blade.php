@@ -110,7 +110,7 @@
                                     <span class="loading loading-spinner hidden"></span>
                                     <span>Login</span>
                                 </button>
-                                <button type="button" class="btn btn-neutral w-full text-white">Open Camera</button>
+                                <button type="button" class="btn btn-neutral w-full text-white" id="open-camera-btn">Open Camera</button>
                             </div>
                         </form>
                     </div>
@@ -148,7 +148,7 @@
             </div>
 
             {{-- Open Camera for Scan QR Code --}}
-            <div class="shadow-xl fixed top-0 left-0 w-full h-full z-1 hidden" id="open-camera">
+            <div class="shadow-xl fixed top-0 left-0 w-full h-full z-50 hidden" id="open-camera">
                 <div id="video-wrapper" class="w-full h-full relative flex">
                     <video id="video" class="w-full aspect-video bg-white border-2 "></video>
                 </div>
