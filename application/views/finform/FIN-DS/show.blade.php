@@ -152,7 +152,7 @@
                         </div>
 
                         <div class="flex items-center gap-2">
-                            <span class="badge badge-outline badge-lg font-bold px-5 py-4 text-sm shadow-sm border-slate-300 text-slate-600"
+                            <span class="badge badge-lg font-bold px-5 py-4 text-sm text-white shadow-sm"
                                   id="Pos">
                             </span>
                         </div>

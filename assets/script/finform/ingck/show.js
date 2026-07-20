@@ -375,22 +375,16 @@ function renderEmpData(empData = {}) {
 
   const secCode = String(empData.SSECCODE || "");
 
-  $("#Pos")
-    .removeClass(
-      "badge-outline badge-info badge-success badge-error badge-warning text-info-content text-success-content",
-    )
-    .addClass("border-none");
-
   if (secCode === "040402") {
     console.log("เป็น FIN staff:", secCode);
 
-    $("#Pos").text("FIN Staff").addClass("badge-info text-info-content");
+    $("#Pos").removeClass("badge-success").addClass("badge-info").text("FIN Staff");
 
     $("#OPT").removeClass("hidden");
   } else {
     console.log("ไม่ใช่ FIN staff:", secCode);
 
-    $("#Pos").text("Employee").addClass("badge-success text-success-content");
+    $("#Pos").removeClass("badge-info").addClass("badge-success").text("Employee");
 
     $("#OPT").addClass("hidden");
   }
