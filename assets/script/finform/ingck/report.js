@@ -340,7 +340,7 @@ function renderReportFooter(api) {
 function getReportFooterValue(api, columnIndex, columnName) {
   const columnData = api.column(columnIndex, { search: "applied" }).data();
 
-  if (/^RM_(QTY|AMT)\d+$/.test(columnName)) {
+  if (/^(RM_(QTY|AMT)\d+|BALANCE_(QTY|AMT))$/.test(columnName)) {
     return numberValue(columnData[columnData.length - 1]);
   }
 
@@ -566,7 +566,7 @@ function renderExcelTotal(sheet, data = [], exportColumns = []) {
 }
 
 function getExcelTotalValue(data = [], columnName) {
-  if (/^RM_(QTY|AMT)\d+$/.test(columnName)) {
+  if (/^(RM_(QTY|AMT)\d+|BALANCE_(QTY|AMT))$/.test(columnName)) {
     return numberValue(data[data.length - 1]?.[columnName]);
   }
 
@@ -1191,10 +1191,7 @@ function isNumericReportColumn(columnName) {
 }
 
 function shouldShowReportTotal(columnName) {
-  return (
-    isNumericReportColumn(columnName) &&
-    !/^BALANCE_(QTY|AMT)$/.test(columnName)
-  );
+  return isNumericReportColumn(columnName);
 }
 
 function getDateTime(item) {
