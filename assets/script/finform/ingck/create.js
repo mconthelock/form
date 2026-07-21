@@ -402,6 +402,18 @@ function getRemainingStockErrors(rows) {
   return errors;
 }
 
+function showRemainingStockWarning(rows) {
+  const errors = getRemainingStockErrors(rows);
+  if (!errors.length) return false;
+
+  showMessage(
+    `ไม่สามารถ Request ได้ เนื่องจากยอดคงเหลือไม่เพียงพอ<br><br>${errors.map(({ message }) => message).join("<br>")}`,
+    "warning",
+    "toast-center",
+  );
+  return true;
+}
+
 async function createTableStamp(data = []) {
   mapColumns = [...columns];
 
@@ -515,6 +527,7 @@ async function createTableStamp(data = []) {
               rowData[columnName] = qty;
               rowData[amtColumn] = calculatedAmt;
               table.row(cell.index().row).data(rowData).draw(false);
+              showRemainingStockWarning(table.rows().data().toArray());
             },
           },
           {
@@ -578,16 +591,7 @@ $(document).on("click", "#btnRequest", async function (e) {
     const rows = table.rows().data().toArray();
 
     await refreshRemainingBalance();
-    const stockErrors = getRemainingStockErrors(rows);
-
-    if (stockErrors.length) {
-      showMessage(
-        `ไม่สามารถ Request ได้ เนื่องจากยอดคงเหลือไม่เพียงพอ<br><br>${stockErrors.map(({ message }) => message).join("<br>")}`,
-        "warning",
-        "toast-center",
-      );
-      return;
-    }
+    if (showRemainingStockWarning(rows)) return;
 
     const dataList = [];
 
