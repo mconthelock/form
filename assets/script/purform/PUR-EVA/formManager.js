@@ -2,7 +2,7 @@ import select2 from 'select2';
 import { setSelect2 } from '@amec/webasset/select2';
 select2();
 export const currencyManager = {
-    list: ['stdcur'],
+    list: ['stdcur', 'cur'],
     get select() {
         return $('.currency');
     },
