@@ -5,6 +5,9 @@ import { setDatePicker } from "@amec/webasset/flatpickr";
 import { webflowSubmit } from "@amec/webasset/components/form";
 import { fetchUtils } from "@amec/webasset/api/fetch-utils";
 import { redirectWebflow } from "@amec/webasset/form";
+import Swal from "sweetalert2";
+
+const effectiveDateNotice = "วันที่ผู้ขอต้องการมารับอากรแสตมป์ (วันนี้ไม่ใช่วันที่ได้รับจริง โดยวันที่มีการได้รับสแตมป์จริงคือวันที่ปรากฏใน Receive Date ซึ่งจะถูกระบุในขั้นตอนสุดท้ายของการ Approve)";
 
 /*--------------------READY FUNCTION--------------------*/
 
@@ -27,6 +30,7 @@ $(async function () {
   setEmpName("#INPUTBY_NAME", getEmpName(getsec));
   setDatePicker({
     element: "#EffDate",
+    clickOpens: false,
   });
   setDatePicker({
     element: "#RetDate",
@@ -35,7 +39,7 @@ $(async function () {
   const action = webflowSubmit({ request: true });
 
   console.log(action);
-  $("#actionform").html(action);
+  $("#actionform").html(action).find(".fieldset-label").addClass("text-error italic font-bold");
   syncStampTablePalette();
   await createTableStamp();
 });
@@ -54,7 +58,7 @@ const fieldGuides = [
   ["#REQBY", "Requester Information", "Requester By", "กรอกรหัสพนักงานของผู้ขอสร้างรายการ แล้วระบบจะแสดงชื่อและหน่วยงานให้ตรวจสอบ"],
   ["#FULLDP", "Requester Information", "DIV / Dept / Sect", "หน่วยงานของผู้ขอสร้างรายการ ระบบดึงจากรหัสพนักงานให้อัตโนมัติ"],
   ["input[name='OPTION_CODE']", "Request Details", "Option", "เลือก Withdrawal เมื่อต้องการเบิกอากรแสตมป์ หรือ Add สำหรับเจ้าหน้าที่ FIN ที่ต้องการเพิ่มรายการ"],
-  ["#EffDate", "Request Details", "Requisition Date", "เลือกวันที่ทำรายการขอเบิกอากรแสตมป์ วันที่ทำการขอเบิกไม่ใช่วันที่ระบุว่าจะได้รับ"],
+  ["#EffDate", "Request Details", "Effective Date", effectiveDateNotice],
   ["#location", "Request Details", "Collection Location", "ระบุสถานที่รับอากรแสตมป์ หากไม่เปลี่ยนให้ใช้ Counter FIN Sect."],
   ["#addStampRow", "Purpose & Duty Stamp Detail", "Add Row", "เพิ่มหนึ่งแถวต่อหนึ่งเหตุผลในการขอเบิก"],
   ["#stampTable", "Purpose & Duty Stamp Detail", "รายการอากรแสตมป์", "กรอกเหตุผลใน Reason และจำนวนใน QTY ระบบคำนวณ AMT ให้อัตโนมัติ หรือกดลบเพื่อนำแถวที่ไม่ต้องการออก"],
@@ -247,6 +251,20 @@ function setupFieldGuide() {
 }
 
 /*--------------------Change FUNCTION--------------------*/
+$(document).on("click", "#EffDate", async function () {
+  await Swal.fire({
+    icon: "warning",
+    title: "Effective Date",
+    text: effectiveDateNotice,
+    footer: '<strong style="color: #dc2626;">เมื่อเข้าใจแล้ว กดกากบาทเพื่อกรอกวัน Effective Date ต่อ</strong>',
+    showConfirmButton: false,
+    showCloseButton: true,
+    allowOutsideClick: false,
+    allowEscapeKey: false,
+  });
+  this._flatpickr.open();
+});
+
 $(document).on("change", "#REQBY", async function () {
   const empnum = $(this).val().trim();
   setEmpName("#REQBY_NAME", "");
@@ -354,39 +372,34 @@ async function refreshRemainingBalance() {
   balanceLoadError = null;
 }
 
-function getRemainingStockError(rows, editedCell = null) {
+function getRemainingStockErrors(rows) {
   if (String($("input[name='OPTION_CODE']:checked").val() || "0") === "1") {
-    return null;
+    return [];
   }
 
   if (balanceLoadError) {
-    return { message: "ไม่สามารถตรวจสอบยอดคงเหลือได้ กรุณาลองใหม่อีกครั้ง" };
+    return [{ message: "ไม่สามารถตรวจสอบยอดคงเหลือได้ กรุณาลองใหม่อีกครั้ง" }];
   }
 
+  const errors = [];
   for (let stampIndex = 0; stampIndex < dutyStampList.length; stampIndex++) {
     const columnName = `DUTY_QTY${stampIndex + 1}`;
     const dutyValue = numberValue(dutyStampList[stampIndex].DUTY_VALUE);
-    const requested = rows.reduce((total, row, rowIndex) => {
-      const value =
-        editedCell?.rowIndex === rowIndex && editedCell.columnName === columnName
-          ? editedCell.value
-          : row[columnName];
-
-      return total + numberValue(value);
-    }, 0);
+    const requested = rows.reduce((total, row) => total + numberValue(row[columnName]), 0);
     const available = Math.max(0, remainingByDutyValue.get(dutyValue) || 0);
 
     if (requested > available) {
-      return {
+      errors.push({
         dutyValue,
         available,
         requested,
-        message: `อากรแสตมป์ ${dutyValue} บาท คงเหลือ ${available} ดวง แต่ขอรวม ${requested} ดวง`,
-      };
+        shortage: requested - available,
+        message: `อากรแสตมป์ ${dutyValue} บาท: คงเหลือ ${available} ดวง, ขอ ${requested} ดวง, ขาด ${requested - available} ดวง`,
+      });
     }
   }
 
-  return null;
+  return errors;
 }
 
 async function createTableStamp(data = []) {
@@ -481,25 +494,12 @@ async function createTableStamp(data = []) {
         matchers: [
           {
             match: { startsWith: "DUTY_QTY" },
-            validate: ({ value, table, cell }) => {
+            validate: ({ value }) => {
               console.log(typeof +value, Number.isNaN(+value));
 
               if (isNaN(value) || value < 0 || Number.isNaN(+value)) {
                 return "Please enter a valid non-negative number";
               }
-
-              const cellIndex = cell.index();
-              const columnName = table.column(cellIndex.column).dataSrc();
-              const stockError = getRemainingStockError(
-                table.rows().data().toArray(),
-                {
-                  rowIndex: cellIndex.row,
-                  columnName,
-                  value,
-                },
-              );
-
-              if (stockError) return stockError.message;
 
               return true;
             },
@@ -569,7 +569,7 @@ $(document).on("click", "#btnRequest", async function (e) {
     const requiredMessage = [
       { element: $("#REQBY"), message: "Please enter your Emp code." },
       { element: $("#FULLDP"), message: "Please enter your Emp code" },
-      { element: $("#EffDate"), message: "Please choose Requisition Date" },
+      { element: $("#EffDate"), message: "Please choose Effective Date" },
       { element: $("#location"), message: "Please enter Collection Location" },
     ];
 
@@ -578,10 +578,14 @@ $(document).on("click", "#btnRequest", async function (e) {
     const rows = table.rows().data().toArray();
 
     await refreshRemainingBalance();
-    const stockError = getRemainingStockError(rows);
+    const stockErrors = getRemainingStockErrors(rows);
 
-    if (stockError) {
-      showMessage(stockError.message, "warning");
+    if (stockErrors.length) {
+      showMessage(
+        `ไม่สามารถ Request ได้ เนื่องจากยอดคงเหลือไม่เพียงพอ<br><br>${stockErrors.map(({ message }) => message).join("<br>")}`,
+        "warning",
+        "toast-center",
+      );
       return;
     }
 
