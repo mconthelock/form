@@ -78,7 +78,8 @@ $(document).on('click', '.toggle-login', function (e) {
         } else {
             //if target is "Barcode Login", check camera on device and turn it on.
             camera = await showCamera(target);
-            if (camera) return;
+            console.log('camera', camera.devices);
+            if (camera.devices) return;
             $(this).removeClass('hidden');
             $(this).find('input').val('');
             $(this).find('input').first().focus();
@@ -265,6 +266,10 @@ async function showCamera(target) {
         },
         onError: (err) => {
             console.error('เกิดข้อผิดพลาดในการเปิดกล้อง:', err);
+            $('#frm-barcode').removeClass('hidden');
+            $('#open-camera-btn').addClass('hidden');
+            $('#frm-barcode').find('input').val('');
+            $('#frm-barcode').find('input').first().focus();
         },
         onClose: () => {
             // ปิดกล้อง (ไม่ว่าจะเพราะ user กดปิด, ไม่พบกล้อง, หรือสแกนครบแล้ว autoClose)
@@ -272,6 +277,7 @@ async function showCamera(target) {
             $('#frm-barcode').removeClass('hidden');
             $('#frm-barcode').find('input').val('');
             $('#frm-barcode').find('input').first().focus();
+            $('#open-camera-btn').removeClass('hidden');
         },
     });
 
