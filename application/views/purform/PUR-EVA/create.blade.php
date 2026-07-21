@@ -64,14 +64,14 @@
 <div class="hidden apv-data" empno="{{$empno}}"></div>
 <form id="frmmain">
 <div class="space-y-6">
- 
+     <h1 class="text-3xl text-center text-primary font-bold mb-10">Vendor/Sub-contractor Evaluation Form</h1>
     <!-- Top Section -->
     <div class="border border-gray-300 p-6 rounded-lg bg-white space-y-4">
-        <div class="grid grid-cols-[140px_1fr] items-center gap-2">
+        <div class="grid grid-cols-[160px_1fr] items-center gap-2">
             <span class="font-semibold text-sm">Input By:</span>
             <input type="text" maxlength="5" class="input input-sm border border-gray-400 h-8 rounded w-48 px-2" value="{{$empno}}" readonly>
         </div>
-        <div class="grid grid-cols-[140px_1fr] items-center gap-2 required">
+        <div class="grid grid-cols-[160px_1fr] items-center gap-2 required">
             <span class="font-semibold text-sm required ">Request By:</span>
             <input type="text" maxlength="5" class="input input-sm border border-gray-400 h-8 rounded w-48 px-2  req" value="{{$empno}}">
         </div>
@@ -79,7 +79,7 @@
 
     <!-- Operation Section -->
 <div class="vendor-form-container border border-gray-300 p-6 rounded-lg bg-white">
-    <div class="grid grid-cols-[140px_1fr] items-center gap-2">
+    <div class="grid grid-cols-[160px_1fr] items-center gap-2">
         <span class="font-semibold text-sm required">Operation:</span>
         
         <div class="flex items-center gap-6">
@@ -133,7 +133,7 @@
 
         <!-- เนื้อหาภายใน -->
         <div class="space-y-6">
-        <div class="grid grid-cols-[140px_1fr] gap-4 items-start">
+        <div class="grid grid-cols-[160px_1fr] gap-4 items-start">
             <span class="font-semibold text-sm pt-1 required">Vendor Type</span>
             
             <div class="grid grid-cols-3 gap-y-2 gap-x-4 text-sm">
@@ -166,8 +166,8 @@
              
             </div>
         </div>
-        <div class="grid grid-cols-[140px_1fr] gap-4 items-start mt-4 pro">
-            <span class="font-semibold text-sm pt-1">Vendor Purpose</span>
+        <div class="grid grid-cols-[160px_1fr] gap-4 items-start mt-4 pro">
+            <span class="font-semibold text-sm pt-1">2nd digit code Purpose</span>
             
             <div class="grid grid-cols-3 gap-y-2 gap-x-4 text-sm">
                 <label class="flex items-center gap-2 cursor-pointer">
@@ -184,22 +184,46 @@
                 </label>
                 <div></div> </div>
         </div>
-
+<div class="grid grid-cols-[160px_1fr] items-center gap-4 mt-4">
+    <span class="font-semibold text-sm required">Vendor Name</span>
+    
+    <div class="grid grid-cols-12 gap-x-4 items-center w-full">
+        
+        <input type="text" name="COMNAME" class="col-span-6 input input-sm border border-gray-400 h-8 rounded w-full px-2 req">
+        
+        <div class="col-span-6 flex items-center gap-4 w-full">
+            <label class="flex items-center gap-2 text-sm whitespace-nowrap">
+                <input type="radio" name="VENDTYPE" value="Local" class="w-4 h-4 accent-blue-600 radio-type"> Local
+            </label>
+            <label class="flex items-center gap-2 text-sm whitespace-nowrap">
+                <input type="radio" name="VENDTYPE" value="Oversea" class="w-4 h-4 accent-blue-600 radio-type"> Oversea
+            </label>
             
-            <div class="grid grid-cols-[140px_1fr] items-center gap-4">
+            <!-- ใช้ div ตัวนี้เป็นคอกกั้นขนาด บังคับความกว้างไว้ที่ w-40 (หรือปรับขนาดได้ตามต้องการ) -->
+            <div class="w-56 shrink-0">
+                <!-- ใส่ w-full ที่ select เพื่อให้มันขยายเต็มคอกที่เราสร้างไว้แทน -->
+                <select name="COUNTRY_SELECT" id="COUNTRY_SELECT" class="w-full border border-gray-400 h-8 rounded px-2 text-sm bg-gray-100" disabled>
+                    <option value="">Select Country</option>
+                </select>
+            </div>
+            
+        </div>
+    </div>
+</div>
+            <!-- <div class="grid grid-cols-[140px_1fr] items-center gap-4">
                 <span class="font-semibold text-sm required">Vendor Name</span>
                 <div class="flex items-center gap-4">
                     <input type="text" name="COMNAME" class="input input-sm border border-gray-400 h-8 rounded w-1/3 px-2 req">
                     <label class="flex items-center gap-2 text-sm"><input type="radio" name="VENDTYPE" value="Local" class="w-4 h-4 accent-blue-600  radio-type"> Local</label>
                     <label class="flex items-center gap-2 text-sm"><input type="radio" name="VENDTYPE" value="Oversea" class="w-4 h-4 accent-blue-600  radio-type"> Oversea</label>
-                    <select name="COUNTRY_SELECT" id="COUNTRY_SELECT" class="select select-bordered select-sm bg-gray-50 border-gray-300 country  w-[200px]" disabled>
+                    <select name="COUNTRY_SELECT" id="COUNTRY_SELECT" class="" disabled>
                             <option value="">-- Select Country --</option>
                     </select>
                 </div>
-            </div>
+            </div> -->
 
            <!-- Address (EN) Section -->
-<div class="grid grid-cols-[140px_1fr] gap-4 pt-4 border-t border-gray-200">
+<div class="grid grid-cols-[160px_1fr] gap-4 pt-4 border-t border-gray-200">
     <span class="font-semibold text-sm pt-2 required">Address (EN) </span>
     <div class="space-y-4">
         <!-- Address Line 1 -->
@@ -256,7 +280,7 @@
 </div>
 
 <!-- Address (TH) Section -->
-<div class="grid grid-cols-[140px_1fr] gap-4 pt-4 border-t border-gray-200">
+<div class="grid grid-cols-[160px_1fr] gap-4 pt-4 border-t border-gray-200">
     <label class="font-semibold text-sm pt-2">Address (TH)</label>
     <div class="space-y-4">
         <div>
@@ -295,25 +319,25 @@
             <!-- Contact Information -->
             <div class="pt-4 border-t border-gray-200 space-y-4">
                 <div class="grid grid-cols-2 gap-4">
-                    <div class="grid grid-cols-[140px_1fr] items-center gap-4">
+                    <div class="grid grid-cols-[160px_1fr] items-center gap-4">
                         <span class="font-semibold text-sm required">Contact name</span>
                        <input type="text" name="CONTACT" id="CONTACT" maxlength="90" class="input input-sm border border-gray-400 h-8 rounded  px-2 w-full req">
                     </div>
                 </div>
                 <div class="grid grid-cols-2 gap-4">
-                    <div class="grid grid-cols-[140px_1fr] items-center gap-4">
+                    <div class="grid grid-cols-[160px_1fr] items-center gap-4">
                         <span class="font-semibold text-sm required">Email</span>
                         <input type="text" name="EMAIL" id="EMAIL" maxlength="90" class="input input-sm border border-gray-400 h-8 rounded  px-2 w-full req">
                     </div>
-                    <div class="grid grid-cols-[140px_1fr] items-center gap-4">
+                    <div class="grid grid-cols-[160px_1fr] items-center gap-4">
                         <span class="font-semibold text-sm ">Web site</span>
                         <input type="text" name="WEBSITE" id="WEBSITE" maxlength="200" class="input input-sm border border-gray-400 h-8 rounded  px-2 w-full">
                     </div>
-                    <div class="grid grid-cols-[140px_1fr] items-center gap-4">
+                    <div class="grid grid-cols-[160px_1fr] items-center gap-4">
                         <span class="font-semibold text-sm required">Tel.no</span>
                         <input type="text"  name="TELNO" id="TELNO" maxlength="12" class="input input-sm border border-gray-400 h-8 rounded  px-2 w-full req">
                     </div>
-                    <div class="grid grid-cols-[140px_1fr] items-center gap-4">
+                    <div class="grid grid-cols-[160px_1fr] items-center gap-4">
                         <span class="font-semibold text-sm">Fax.no</span>
                         <input type="text" name="FAX" id="FAX" maxlength="30" class="input input-sm border border-gray-400 h-8 rounded  px-2 w-full">
                     </div>
@@ -323,11 +347,11 @@
 <div class="border-t border-gray-300 pt-6 mt-6">
     <!-- Bank & Branch -->
     <div class="grid grid-cols-2 gap-4 mb-4">
-        <div class="grid grid-cols-[140px_1fr] items-center gap-4">
+        <div class="grid grid-cols-[160px_1fr] items-center gap-4">
             <span class="font-semibold text-sm">Bank name</span>
             <input type="text"  name="BANKNAME" id="BANKNAME" maxlength="50"  class="input input-sm border border-gray-400 h-8 rounded px-2 w-full">
         </div>
-        <div class="grid grid-cols-[140px_1fr] items-center gap-4">
+        <div class="grid grid-cols-[160px_1fr] items-center gap-4">
             <span class="font-semibold text-sm ">Branch name</span>
             <input type="text" name="BRANCH" id="BRANCH" maxlength="50"  class="input input-sm border border-gray-400 h-8 rounded px-2 w-full ">
         </div>
@@ -336,25 +360,25 @@
     <!-- Additional Banking & Payment Fields -->
     <div class="space-y-4">
           <div class="grid grid-cols-2 gap-4">
-        <div class="grid grid-cols-[140px_1fr] items-center gap-4">
+        <div class="grid grid-cols-[160px_1fr] items-center gap-4">
             <span class="font-semibold text-sm">Account number</span>
             <input type="text" name="ACCNUMBER" id="ACCNUMBER" maxlength="13" class="input input-sm border border-gray-400 h-8 rounded px-2 w-full">
         </div>
         </div>
-        <div class="grid grid-cols-[140px_1fr] items-start gap-4">
+        <div class="grid grid-cols-[160px_1fr] items-start gap-4">
             <label class="font-semibold text-sm pt-1">Bank Address</label>
             <textarea  name="BANKADDR" id="BANKADDR" class="textarea textarea-sm border border-gray-400 rounded px-2 w-full text-sm py-1" rows="2"></textarea>
         </div>
 
         <div class="grid grid-cols-2 gap-4">
-            <div class="grid grid-cols-[140px_1fr] items-center gap-4">
+            <div class="grid grid-cols-[160px_1fr] items-center gap-4">
                 <span class="font-semibold text-sm required">Payment Term</span>
                 	<input type="hidden" id="TERM_PAYMENT_HIDDEN" name="TERMCODE" value="">
                             <select id="TERM_PAYMENT" name ="TERM_PAYMENT" class="select select-sm w-48 min-w-max termcode req">
                                 <option value="" disabled selected>...</option>
                             </select>
             </div>
-            <div class="grid grid-cols-[140px_1fr] items-center gap-4">
+            <div class="grid grid-cols-[160px_1fr] items-center gap-4">
                 <span class="font-semibold text-sm required">Currency Code</span>
                  <select id="stdcur" name="STDCUR" class="input input-sm border border-gray-400 h-8 rounded px-2 w-48 currency req">
                     <option value="" disabled selected>...</option>
@@ -363,7 +387,7 @@
         </div>
 
 <!-- คอลัมน์หลักสำหรับ Label และ Checkbox -->
-<div class="grid grid-cols-[140px_1fr] items-start gap-4">
+<div class="grid grid-cols-[160px_1fr] items-start gap-4">
     <span class="font-semibold text-sm required pt-2">Attach files</span>
     
     <fieldset class="flex flex-col gap-2">
@@ -393,16 +417,7 @@
 
 <!-- ย้าย Dropzone ออกมาข้างนอก เพื่อให้ใช้ความกว้างได้เต็ม 100% ของ Container หลัก -->
 <div id="attachFile" class="mt-4">
-    <div class="p-3 w-full">
-        <label for="files" class="dropZone border border-primary border-dashed rounded-lg w-full block min-h-[200px] text-primary cursor-pointer hover:bg-gray-50 transition-colors">
-            <!-- จัดให้อยู่ตรงกลางกล่อง -->
-            <div class="drop-message flex flex-col justify-center items-center h-[200px] text-center p-4">
-                <span class="font-semibold">Drag & Drop files here or click to select</span>
-            </div>
-            <ul class="drop-list w-full flex-col items-start text-gray-500 hidden p-1 gap-1"></ul>
-        </label>
-        <input type="file" class="inputDrop hidden" name="files" id="files" multiple>
-    </div>
+
 </div>
     </div>
 </div>
@@ -820,17 +835,62 @@
 
 </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-<div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+    
+    <!-- ฝั่งซ้าย: Capital และ Establishment Date -->
+    <div>
+        <!-- ส่วนของ Capital (เดิม) -->
+        <div>
+            <label class="block font-bold text-sm text-gray-700 mb-2">Capital</label>
+            <div class="flex gap-2">
+                <input type="text" class="input-decimal flex-1 input input-bordered input-sm w-full bg-gray-50 border-gray-300" placeholder="0.00">
+                <select id="cur" name="CAPITAL_CUR" class="input input-sm border border-gray-400 h-8 rounded px-2 w-48 currency req">
+                    <option value="" disabled selected>...</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- ส่วนที่เพิ่มใหม่: วันที่ก่อตั้ง (Establishment Date) -->
+        <div class="mt-4">
+            <label class="block font-bold text-sm text-gray-700 mb-2">Established</label>
+            <input type="text" name="ESTABLISHED" class="input input-sm border border-gray-400 h-8 rounded px-2 w-full">
+        </div>
+    </div>
+
+    <!-- ฝั่งขวา: Type of Company (เดิม) -->
+    <div>
+        <label class="block font-bold text-sm text-gray-700 mb-3">Type of Company</label>
+        <div class="grid grid-cols-2 gap-3 text-sm">
+            <label class="flex items-center gap-2">
+                <input type="radio" name="comtype" class="w-4 h-4 accent-blue-600"> Corporation
+            </label>
+            <label class="flex items-center gap-2">
+                <input type="radio" name="comtype" class="w-4 h-4 accent-blue-600"> Inc. OR Co.,Ltd.
+            </label>
+            <label class="flex items-center gap-2">
+                <input type="radio" name="comtype" class="w-4 h-4 accent-blue-600"> Limited Partnership
+            </label>
+            <label class="flex items-center gap-2">
+                <input type="radio" name="comtype" class="w-4 h-4 accent-blue-600"> Family Partnership
+            </label>
+        </div>
+        <div class="flex items-center gap-2 mt-2 text-sm">
+            <label class="flex items-center gap-2">
+                <input type="radio" name="comtype" class="w-4 h-4 accent-blue-600"> Other:
+            </label>
+            <input type="text" placeholder="Please specify..." class="flex-1 input input-sm border border-gray-400 h-8 rounded px-2">
+        </div>
+    </div>
+    
+</div>
+    <!-- <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+    <div>
     <label class="block font-bold text-sm text-gray-700 mb-2">Capital</label>
     <div class="flex gap-2">
         <input type="text" class="input-decimal flex-1 input input-bordered input-sm w-full bg-gray-50 border-gray-300" placeholder="0.00">
         
-        <select class="select select-bordered select-sm w-24 border-gray-400 focus:ring-2 focus:ring-blue-500 outline-none bg-white text-gray-700 text-sm">
-            <option value="THB">THB</option>
-            <option value="USD">USD</option>
-            <option value="EUR">EUR</option>
-            <option value="JPY">JPY</option>
+       <select id="cur" name="CAPITAL_CUR" class="input input-sm border border-gray-400 h-8 rounded px-2 w-48 currency req">
+                    <option value="" disabled selected>...</option>
         </select>
     </div>
 </div>
@@ -857,7 +917,7 @@
                 <input type="text" placeholder="Please specify..." class="flex-1 input input-sm border border-gray-400 h-8 rounded px-2">
             </div>
         </div>
-    </div>
+    </div> -->
 
     <div class="mb-6">
         <div class="flex justify-between items-end mb-2">
@@ -1072,16 +1132,13 @@
     </div>
 
 <div class="pt-4">
-    <label class="font-bold text-sm block mb-2">Labour Union:</label>
+    <label class="font-bold text-sm block mb-2">Labor Union:</label>
     <div class="flex flex-wrap items-center gap-6 text-sm">
         
         <div class="flex items-center gap-2">
             <label class="flex items-center gap-2 cursor-pointer whitespace-nowrap">
                 <input type="radio" name="union" value="Y" class="w-4 h-4 accent-blue-600"> Have established
             </label>
-            
-            <input type="text" placeholder="Specify established date..." 
-                   class="input input-bordered input-sm w-48 bg-gray-50 border-gray-300">
         </div>
         
         <label class="flex items-center gap-2 cursor-pointer whitespace-nowrap">

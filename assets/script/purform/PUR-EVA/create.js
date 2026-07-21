@@ -1,5 +1,6 @@
 // import select2 from 'select2';
 import { dragDropInit } from '@amec/webasset/dragdrop';
+import { handleFiles } from '@amec/webasset/dragdrop';
 import { searchNVFForm, getCurrency } from './data';
 import { createTable } from '@amec/webasset/dataTable';
 // import { setSelect2 } from '@amec/webasset/select2';
@@ -97,7 +98,7 @@ $(document).ready(async function () {
         value: o.VORGNO,
         text: o.VNAME,
     }));
-    console.log(orgdata);
+    //console.log(orgdata);
 
     countryManager.init(countriesData);
     provinceManager.init(provinceData);
@@ -106,8 +107,8 @@ $(document).ready(async function () {
     paymentTermManager.init(termdata);
     currencyManager.init(currencyData);
     concernManager.init(orgdata);
-
-    dragDropInit();
+    const divattfile = await dragDropInit();
+    $('#attachFile').html(divattfile);
     columnPurNVF = [
         {
             data: 'NRUNNO',
@@ -466,6 +467,9 @@ $(document).ready(async function () {
             calculateScore(containerId);
         },
     );
+    $(document).on('change', 'input[name="files"]', async function (e) {
+        handleFiles();
+    });
 });
 
 function setVendorMstInfo(vendorMstData) {
