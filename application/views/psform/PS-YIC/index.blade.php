@@ -4,7 +4,7 @@
 
         <!-- Title -->
         <h1 class="text-center font-bold underline text-blue-800 mb-6">
-            THE RESULT OF INVENTORY YEARLY CHECKING FY<span class="period">2025 2nd</span> &nbsp;&nbsp;(BULK PART &amp; STOCK PART)
+            THE RESULT OF INVENTORY YEARLY CHECKING FY<span class="period"></span> &nbsp;&nbsp;(BULK PART &amp; STOCK PART)
         </h1>
 
         <hr>
@@ -30,7 +30,7 @@
                     <table class="report-table w-full text-sm border-collapse">
                         <thead>
                             <tr class="bg-blue-800 text-white">
-                                <th colspan="3" class="py-2 text-center tracking-wide">Inventory Yearly Checking &nbsp;2nd FY-2025 (Bulk Part )</th>
+                                <th colspan="3" class="py-2 text-center tracking-wide">Inventory Yearly Checking &nbsp;<span class="period"></span> (Bulk Part )</th>
                             </tr>
                             <tr class="bg-blue-50 border-b border-gray-300">
                                 <th class="py-1.5 px-2 text-left text-blue-900">Description</th>
@@ -68,7 +68,7 @@
                     <table class="report-table w-full text-sm border-collapse">
                         <thead>
                             <tr class="bg-blue-800 text-white">
-                                <th colspan="3" class="py-2 text-center tracking-wide">Inventory Yearly Checking &nbsp;2nd &nbsp;FY-2025 (Stock Part)</th>
+                                <th colspan="3" class="py-2 text-center tracking-wide">Inventory Yearly Checking &nbsp;<span class="period"></span> (Stock Part)</th>
                             </tr>
                             <tr class="bg-blue-50 border-b border-gray-300">
                                 <th class="py-1.5 px-2 text-left text-blue-900">Description</th>
@@ -113,6 +113,82 @@
                 class="btn btn-sm btn-outline btn-primary" target="_blank">
                 View Report 3: FIN Div. Sampling Detail &raquo;
             </a> --}}
+        </div>
+
+        <div class="mb-6">
+            <h2 class="font-bold underline text-blue-800 mb-3">VARIANCE ERROR CALCULATION:</h2>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <!-- Bulk Part Table -->
+                <div class="overflow-x-auto rounded-md border border-gray-300 shadow-sm">
+                    <table class="report-table w-full text-sm border-collapse">
+                        <thead>
+                            <tr class="bg-blue-800 text-white">
+                                <th colspan="3" class="py-2 text-center tracking-wide">Inventory Yearly Checking &nbsp;<span class="period"></span> (Bulk Part )</th>
+                            </tr>
+                            <tr class="bg-blue-50 border-b border-gray-300">
+                                <th class="py-1.5 px-2 text-left text-blue-900">Description</th>
+                                <th class="py-1.5 px-2 text-center text-blue-900">Items</th>
+                                <th class="py-1.5 px-2 text-right text-blue-900">Amount (Baht)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="py-1.5 px-2 font-medium">Error calculation (items)</td>
+                                <td class="py-1.5 px-2 text-center variance-bulk-items"></td>
+                                <td class="py-1.5 px-2 text-right variance-bulk-amount"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Stock Part Table -->
+                <div class="overflow-x-auto rounded-md border border-gray-300 shadow-sm">
+                    <table class="report-table w-full text-sm border-collapse">
+                        <thead>
+                            <tr class="bg-blue-800 text-white">
+                                <th colspan="3" class="py-2 text-center tracking-wide">Inventory Yearly Checking &nbsp;<span class="period"></span> (Stock Part)</th>
+                            </tr>
+                            <tr class="bg-blue-50 border-b border-gray-300">
+                                <th class="py-1.5 px-2 text-left text-blue-900">Description</th>
+                                <th class="py-1.5 px-2 text-center text-blue-900">Items</th>
+                                <th class="py-1.5 px-2 text-right text-blue-900">Amount (Baht)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="py-1.5 px-2 font-medium">Error calculation (items)</td>
+                                <td class="py-1.5 px-2 text-center variance-stock-items"></td>
+                                <td class="py-1.5 px-2 text-right variance-stock-amount"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Variance Error File Input -->
+            <div class="mt-4 variance-error-upload-section">
+                <label class="label">
+                    <span class="label-text font-medium">Upload Variance Error File</span>
+                </label>
+
+                <input type="file" id="varianceErrorFileInput" class="file-input file-input-sm file-input-bordered w-full hidden" />
+
+                <div class="alert variance-error-alert hidden">
+                    <div class="flex-1">
+                        <div class="font-semibold">
+                            Please see details in the uploaded file.
+                        </div>
+                        {{-- <a href="{{ $varianceErrorFileUrl ?? '' }}" target="_blank" class="link link-primary font-medium badge badge-accent p-2 mt-2 variance-error-file-link">
+                            📄 {{ $varianceErrorFileName ?? 'Variance_Error_20260721.xlsx' }}
+                        </a> --}}
+                        <div class="flex flex-wrap gap-2 mt-2 variance-error-file-list">
+                            <!-- ไฟล์แต่ละอันจะถูก inject เข้ามาตรงนี้ -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </div>
 
         <!-- Comment -->
