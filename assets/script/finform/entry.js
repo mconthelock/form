@@ -7,4 +7,5 @@ module.exports = {
     create: './assets/script/finform/ingck/create.js',
     finNpoCreate: './assets/script/finform/FIN-NPO/create.js',
     finNpoShow: './assets/script/finform/FIN-NPO/show.js',
+    finNpoReport: './assets/script/finform/FIN-NPO/report.js',
 };

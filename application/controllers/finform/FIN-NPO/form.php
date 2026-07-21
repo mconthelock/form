@@ -88,5 +88,10 @@ class form extends MY_Controller
 
         }
     }
+
+    public function report()
+    {
+        $this->views('finform/FIN-NPO/report');
+    }
 }
 
