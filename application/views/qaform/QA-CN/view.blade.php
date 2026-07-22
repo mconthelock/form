@@ -295,6 +295,8 @@
                        value="{{ $cnform->PURITEM }}" maxlength="10" >
             </td>
             @else
+             <input type="hidden" name="txtPurItem" 
+                       value="{{ $cnform->PURITEM }}" >
                     {{ $cnform->PURITEM }}    
             @endif  
         </tr>
