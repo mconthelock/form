@@ -358,10 +358,6 @@ class form extends MY_Controller{
                        $this->updaterequest($form);
                        $this->insertdwg($form);
                     }
-                    echo $cextData;
-                    echo $_POST["chkClass"];
-                    echo $_POST['txtInvNo'];
-                    exit;
                     if($cextData == 8)
                     {
                         if($_POST["chkClass"] == "2")
@@ -373,7 +369,7 @@ class form extends MY_Controller{
                                         $pord  = substr($pono, 0, 2) . substr($pono, 4, 4);
                                         $pprod = $_POST['txtPurItem'];
                                         $sqlOra = "update BPCSFVNEW.HPO SET PCMT = '".$this->toFormNumber($nfrmno,  $vorgno, $cyear,  $cyear2,  $nrunno)." WHERE PORD = ".$pord." AND PPROD = '".$pprod."'";
-                                        var_dump($sqlOra);
+                                        echo $sqlOra;
                                         $this->cn->execAssql($sqlOra);
                                         exit;
                                 }
