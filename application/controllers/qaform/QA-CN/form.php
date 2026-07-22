@@ -356,7 +356,10 @@ class form extends MY_Controller{
                        $this->updaterequest($form);
                        $this->insertdwg($form);
                     }
-             
+                    echo $cextData;
+                    echo $_POST["chkClass"];
+                    echo $_POST['txtInvNo'];
+                    exit;
                     if($cextData == 8)
                     {
                         if($_POST["chkClass"] == "2")
