@@ -254,6 +254,8 @@ class form extends MY_Controller{
     
     public function action()
     {
+        echo $act;
+        exit;
         $act = $_POST["action"];
         $cextData = intval($_POST["cextData"]);
         $apvno =  $_POST["empno"];
