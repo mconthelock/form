@@ -3,7 +3,7 @@ use GuzzleHttp\Client;
 defined('BASEPATH') OR exit('No direct script access allowed');
 require_once APPPATH.'controllers/api/webform/formmst.php';
 
-class Form extends MY_Controller{
+class form extends MY_Controller{
     use formmst;
     protected $formkey;
     protected $client;
@@ -28,9 +28,14 @@ class Form extends MY_Controller{
             //Create mode
             $this->views("gpform/{$this->formname}/create", $data);
         }
+
+
     }
 
     public function report(){
 
+    }
+    public function area(){
+        $this->views("gpform/{$this->formname}/area");
     }
 }
