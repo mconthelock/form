@@ -368,7 +368,7 @@ class form extends MY_Controller{
                                 {
                                         $pord  = substr($pono, 0, 2) . substr($pono, 4, 4);
                                         $pprod = $_POST['txtPurItem'];
-                                        $sqlOra = "update BPCSFVNEW.HPO SET PCMT = '".$this->toFormNumber($nfrmno,  $vorgno, $cyear,  $cyear2,  $nrunno)." WHERE PORD = '".$pord."' AND PPROD = '".$pprod."'";
+                                        $sqlOra = "update BPCSFVNEW.HPO SET PCMT = '".$this->toFormNumber($nfrmno,  $vorgno, $cyear,  $cyear2,  $nrunno)."' WHERE PORD = '".$pord."' AND PPROD = '".$pprod."'";
                                         echo $sqlOra;
                                         $this->cn->execAssql($sqlOra);
                                         exit;
