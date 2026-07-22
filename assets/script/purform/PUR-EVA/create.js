@@ -1,6 +1,6 @@
 // import select2 from 'select2';
-import { dragDropInit } from '@amec/webasset/dragdrop';
-import { handleFiles } from '@amec/webasset/dragdrop';
+// import { dragDropInit } from '@amec/webasset/dragdrop';
+// import { handleFiles } from '@amec/webasset/dragdrop';
 import { searchNVFForm, getCurrency } from './data';
 import { createTable } from '@amec/webasset/dataTable';
 // import { setSelect2 } from '@amec/webasset/select2';
@@ -107,8 +107,8 @@ $(document).ready(async function () {
     paymentTermManager.init(termdata);
     currencyManager.init(currencyData);
     concernManager.init(orgdata);
-    const divattfile = await dragDropInit();
-    $('#attachFile').html(divattfile);
+    //const divattfile = await dragDropInit();
+    //$('#attachFile').html(divattfile);
     columnPurNVF = [
         {
             data: 'NRUNNO',
@@ -467,8 +467,59 @@ $(document).ready(async function () {
             calculateScore(containerId);
         },
     );
-    $(document).on('change', 'input[name="files"]', async function (e) {
-        handleFiles();
+    $(document).on('change', 'input[name="files"]', async function (e) {});
+
+    const selectedFilesCache = {};
+
+    // 1. เมื่อมีการเลือกไฟล์
+    $(document).on('change', 'input[type="file"]', async function () {
+        let inputId = $(this).attr('id');
+        let wrapper = $(this).closest('.flex-col');
+        let showFileContainer = wrapper.find('.show-file');
+
+        // ถ้า input นี้ยังไม่เคยมี Cache ให้สร้าง DataTransfer ขึ้นมาใหม่
+        if (!selectedFilesCache[inputId]) {
+            selectedFilesCache[inputId] = new DataTransfer();
+        }
+
+        let dataTransfer = selectedFilesCache[inputId];
+
+        // นำไฟล์ใหม่ที่เพิ่งเลือก โยนเพิ่มเข้าไปใน DataTransfer (สะสมไฟล์)
+        if (this.files && this.files.length > 0) {
+            $.each(this.files, function (index, file) {
+                // เช็คกันเหนียว ไม่ให้เพิ่มไฟล์ชื่อซ้ำกัน
+                let isDuplicate = false;
+                for (let i = 0; i < dataTransfer.files.length; i++) {
+                    if (dataTransfer.files[i].name === file.name) {
+                        isDuplicate = true;
+                        break;
+                    }
+                }
+                if (!isDuplicate) {
+                    dataTransfer.items.add(file);
+                }
+            });
+        }
+
+        // อัปเดตค่ากลับเข้าไปที่ input ให้ตรงกับไฟล์ที่สะสมไว้ทั้งหมด (สำหรับการ Submit Form)
+        this.files = dataTransfer.files;
+
+        // วาดรายการไฟล์ใหม่ลงบนหน้าเว็บ
+        renderNewFilesUI(inputId, dataTransfer, showFileContainer);
+    });
+
+    $(document).on('click', '.remove-new-file', function () {
+        let inputId = $(this).data('id');
+        let indexToRemove = $(this).data('index');
+        let dataTransfer = selectedFilesCache[inputId];
+        let inputElement = $('#' + inputId)[0];
+        let showFileContainer = $(this).closest('.show-file');
+
+        if (dataTransfer) {
+            dataTransfer.items.remove(indexToRemove);
+            inputElement.files = dataTransfer.files;
+            renderNewFilesUI(inputId, dataTransfer, showFileContainer);
+        }
     });
 });
 
@@ -569,16 +620,16 @@ function setVendorInfo(vendorData) {
     $('input[name="ACCNUMBER"]').val(vendorData.LISTS[0].ACCNUMBER);
     paymentTermManager.value = vendorData.LISTS[0].TERMCODE;
     const divfile = attachFileManager.setFiles(vendorData.FILES || [], true);
-    attachFileManager.container = divfile + dragDropInit();
-    attachTypeManager.reset();
-    if (vendorData.ATTACH_TYPE) {
-        // Attach Type
-        attachTypeManager.checked = vendorData.ATTACH_TYPE.split('|');
-        if (vendorData.ATTACH_OTHER) {
-            attachTypeManager.checked = 'Other';
-            $('#ATTACH_OTHER').val(vendorData.ATTACH_OTHER || '');
-        }
-    }
+    //attachFileManager.container = divfile + dragDropInit();
+    //attachTypeManager.reset();
+    //if (vendorData.ATTACH_TYPE) {
+    // Attach Type
+    //  attachTypeManager.checked = vendorData.ATTACH_TYPE.split('|');
+    // if (vendorData.ATTACH_OTHER) {
+    //    attachTypeManager.checked = 'Other';
+    //   $('#ATTACH_OTHER').val(vendorData.ATTACH_OTHER || '');
+    //}
+    //}
 }
 
 function clearVendorInfo() {
@@ -697,4 +748,32 @@ function calculateScore(containerSelector) {
         .addClass(
             `judgement-result uppercase italic ml-2 font-bold ${colorClass}`,
         );
+}
+
+function renderNewFilesUI(inputId, dataTransfer, container) {
+    // หากล่องสำหรับแสดงไฟล์ใหม่
+    let newFilesDiv = container.find('.new-selected-files');
+    if (newFilesDiv.length === 0) {
+        container.append('<div class="new-selected-files mt-1"></div>');
+        newFilesDiv = container.find('.new-selected-files');
+    }
+
+    // เคลียร์รายการเก่าเพื่อวาดใหม่ให้ตรงกับ DataTransfer ปัจจุบัน
+    newFilesDiv.empty();
+
+    // สร้างรายการตามไฟล์ที่มีในระบบ
+    $.each(dataTransfer.files, function (index, file) {
+        let fileItemHtml = `
+                <div class="flex items-center gap-2 mt-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" 
+                         class="cursor-pointer remove-new-file shrink-0" 
+                         data-id="${inputId}" data-index="${index}" title="Remove file">
+                        <circle cx="12" cy="12" r="10" fill="#dc2626"></circle>
+                        <line x1="7" y1="12" x2="17" y2="12" stroke="white" stroke-width="3" stroke-linecap="round"></line>
+                    </svg>
+                    <span class="text-sm text-gray-700">${file.name}</span>
+                </div>
+            `;
+        newFilesDiv.append(fileItemHtml);
+    });
 }
