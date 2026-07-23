@@ -1382,9 +1382,8 @@
 
 </div>
 </div>
-
-
 </div>
+<div id="form-action-container"></div>
 </form>
 
 <dialog id="searchModal" 
