@@ -20,15 +20,23 @@
         .table-header th {
             border-color: rgba(255, 255, 255, 0.15);
         }
+
+        #area-picker {
+            display: none;
+        }
+
+        #area-picker.is-visible {
+            display: block;
+        }
     </style>
 @endsection
-s
+
 @section('contents')
     <div  class="bg-base-200 min-h-screen p-4 md:p-8 flex justify-center text-[13px] leading-relaxed font-sans text-base-content">
         <form id="photo-permission-form" action="#" method="post" class="max-w-6xl mx-auto bg-white rounded-3xl shadow-xl border border-slate-200 p-6 space-y-6">
             <div class="text-center">
                 <H1 class="text-3xl font-bold text-primary">แบบฟอร์มขออนุญาตถ่ายภาพ</H1>
-                <H2 lass="text-xl font-semibold uppercase opacity-50 tracking-wider mt-1">Photo Permission Request Form</H2>
+                <H2 lass="text-xl font-semibold uppercase opacity-50 tracking-wider mt-1">(Photo Permission Request Form)</H2>
       
             </div>
 
@@ -187,27 +195,29 @@ s
                     <table class="table w-full border border-slate-200">
                         <thead class="table-header">
                             <tr>
-                                <th class="p-3 text-left">No</th>
-                                <th class="p-3 text-left">Location</th>
-                                <th class="p-3 text-left">Area</th>
-                                <th class="p-3 text-left">Level</th>
-                                <th class="p-3 text-left">Area Owner</th>
-                                <th class="p-3 text-center">Action</th>
+                                <th class="border p-2 text-left">No</th>
+                                <th class="border p-2 text-left">Location</th>
+                                <th class="border p-2 text-left">Area</th>
+                                <th class="border p-2 text-left">Level</th>
+                                <th class="border p-2 text-left">Area Owner</th>
+                                <th class="border p-2 text-center">Action</th>
                             </tr>
                         </thead>
                         <tbody id="area-table-body">
-                            <tr>
-                                <td class="border p-2 text-center">1</td>
-                                <td class="border p-2"><input type="text" name="area_location[]" class="input input-sm input-bordered w-full"></td>
-                                <td class="border p-2"><input type="text" name="area_name[]" class="input input-sm input-bordered w-full"></td>
-                                <td class="border p-2"><input type="text" name="area_level[]" class="input input-sm input-bordered w-full"></td>
-                                <td class="border p-2"><input type="text" name="area_owner[]" class="input input-sm input-bordered w-full"></td>
-                                <td class="border p-2 text-center">
-                                    <button type="button" class="btn btn-sm btn-error remove-area-row">×</button>
+                            <tr id="area-empty-row">
+                                <td colspan="6" class="border p-4 text-center text-slate-500">
+                                    กรุณากดปุ่ม + เพื่อเลือกพื้นที่
                                 </td>
                             </tr>
                         </tbody>
                     </table>
+                </div>
+
+                <div id="area-picker" class="mt-4 border border-slate-200 p-4">
+                    <div class="mb-3 font-semibold text-slate-700">Select photo permission area</div>
+                    <div id="area-picker-list" class="space-y-2"></div>
+                    <div id="area-picker-empty" class="hidden text-slate-500">ไม่พบข้อมูลพื้นที่ กรุณาเพิ่มข้อมูลที่หน้า Area ก่อน</div>
+                    <button type="button" id="confirm-area-selection" class="btn btn-sm btn-primary mt-4">Add selected area</button>
                 </div>
             </div>
 
@@ -249,16 +259,44 @@ s
             const areaBody = document.getElementById('area-table-body');
             const addAreaBtn = document.getElementById('add-area-row');
             const areaTemplate = document.getElementById('area-row-template');
+            const areaPicker = document.getElementById('area-picker');
+            const areaPickerList = document.getElementById('area-picker-list');
+            const areaPickerEmpty = document.getElementById('area-picker-empty');
+            const confirmAreaSelection = document.getElementById('confirm-area-selection');
             const hostExternalSection = document.getElementById('host-external-section');
             const applicantVisitorSection = document.getElementById('applicant-visitor-section');
             const hostExternalCheckboxes = document.querySelectorAll('input[name="request_type[]"][value="host_external"]');
 
             function updateAreaIndexes() {
-                Array.from(areaBody.querySelectorAll('tr')).forEach((row, index) => {
+                Array.from(areaBody.querySelectorAll('tr:not(#area-empty-row)')).forEach((row, index) => {
                     const cell = row.querySelector('td:first-child');
                     if (cell) {
                         cell.textContent = index + 1;
                     }
+                });
+            }
+
+            function getStoredAreas() {
+                try {
+                    return JSON.parse(localStorage.getItem('gp-tph-photo-permission-areas')) || [];
+                } catch (error) {
+                    return [];
+                }
+            }
+
+            function renderAreaPicker() {
+                const areas = getStoredAreas();
+                areaPickerList.innerHTML = '';
+                areaPickerEmpty.classList.toggle('hidden', areas.length > 0);
+
+                areas.forEach(function (area, index) {
+                    const label = document.createElement('label');
+                    label.className = 'flex items-center gap-2';
+                    label.innerHTML = `
+                        <input type="checkbox" class="area-choice checkbox checkbox-primary" data-area-index="${index}">
+                        <span>${area.location} / ${area.area} / ${area.level} / ${area.area_owner}</span>
+                    `;
+                    areaPickerList.appendChild(label);
                 });
             }
 
@@ -279,9 +317,35 @@ s
             });
 
             addAreaBtn.addEventListener('click', function () {
-                const clone = areaTemplate.content.cloneNode(true);
-                areaBody.appendChild(clone);
+                renderAreaPicker();
+                areaPicker.classList.toggle('is-visible');
+            });
+
+            confirmAreaSelection.addEventListener('click', function () {
+                const areas = getStoredAreas();
+                const selectedAreas = areaPickerList.querySelectorAll('.area-choice:checked');
+
+                if (selectedAreas.length > 0) {
+                    const emptyRow = document.getElementById('area-empty-row');
+                    if (emptyRow) {
+                        emptyRow.remove();
+                    }
+                }
+
+                selectedAreas.forEach(function (checkbox) {
+                    const area = areas[checkbox.dataset.areaIndex];
+                    const clone = areaTemplate.content.cloneNode(true);
+                    const row = clone.querySelector('tr');
+
+                    row.querySelector('input[name="area_location[]"]').value = area.location || '';
+                    row.querySelector('input[name="area_name[]"]').value = area.area || '';
+                    row.querySelector('input[name="area_level[]"]').value = area.level || '';
+                    row.querySelector('input[name="area_owner[]"]').value = area.area_owner || '';
+                    areaBody.appendChild(clone);
+                });
+
                 updateAreaIndexes();
+                areaPicker.classList.remove('is-visible');
             });
 
             hostExternalCheckboxes.forEach(function (checkbox) {
@@ -301,9 +365,17 @@ s
                 if (event.target.closest('.remove-area-row')) {
                     const row = event.target.closest('tr');
                     if (row && areaBody.contains(row)) {
-                        if (areaBody.rows.length > 1) {
-                            row.remove();
-                            updateAreaIndexes();
+                        row.remove();
+                        updateAreaIndexes();
+
+                        if (areaBody.querySelectorAll('tr').length === 0) {
+                            areaBody.innerHTML = `
+                                <tr id="area-empty-row">
+                                    <td colspan="6" class="border p-4 text-center text-slate-500">
+                                        กรุณากดปุ่ม + เพื่อเลือกพื้นที่
+                                    </td>
+                                </tr>
+                            `;
                         }
                     }
                 }
