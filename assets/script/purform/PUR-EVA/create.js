@@ -1,7 +1,7 @@
 // import select2 from 'select2';
 // import { dragDropInit } from '@amec/webasset/dragdrop';
 // import { handleFiles } from '@amec/webasset/dragdrop';
-import { searchNVFForm, getCurrency } from './data';
+import { searchNVFForm, getCurrency, create } from './data';
 import { createTable } from '@amec/webasset/dataTable';
 // import { setSelect2 } from '@amec/webasset/select2';
 import { downloadOrOpenFile } from '@amec/webasset/api/file';
@@ -36,7 +36,12 @@ import {
     attachOtherManager,
 } from '../PUR-NVF/formManager';
 import { concernManager, currencyManager } from './formManager';
-import { showMessage } from '@amec/webasset/utils';
+import {
+    filterFormData,
+    getAllAttr,
+    logFormData,
+    showMessage,
+} from '@amec/webasset/utils';
 import { getOrganize } from '../../finform/FIN-PCK/dataloc';
 import { showLoader } from '@amec/webasset/preloader';
 import { webflowSubmit } from '@amec/webasset/components/form';
@@ -525,6 +530,73 @@ $(document).ready(async function () {
             renderNewFilesUI(inputId, dataTransfer, showFileContainer);
         }
     });
+
+    $(document).on('click', '#btnDraft', async function () {
+        const formElement = $('#frmmain')[0];
+        const formData = new FormData(formElement);
+        const payload = packPurevaFormData(formElement);
+        const formInfo = await getAllAttr('.form-info');
+
+        formData.append('NFRMNO', formInfo.nfrmno);
+        formData.append('VORGNO', formInfo.vorgno);
+        formData.append('CYEAR', formInfo.cyear);
+        const rawFieldsToDelete = [
+            'COMPLIANCE',
+            'FY[]',
+            'FY_PROFIT[]',
+            'FIN_LEVEL',
+            'QA_LEVEL',
+            'ENV_LEVEL',
+            'VERIFYING',
+            'cusname[]',
+            'cusper[]',
+            'supname[]',
+            'supper[]',
+            'proname[]',
+            'proper[]', // เพิ่มการลบฟิลด์ดิบของ relations
+        ];
+        rawFieldsToDelete.forEach((field) => formData.delete(field));
+        if (payload.COMPLIANCE) {
+            formData.append('COMPLIANCE', payload.COMPLIANCE);
+        }
+        payload.SCORES.forEach((score, index) => {
+            if (score.TOPIC)
+                formData.append(`SCORES[${index}][TOPIC]`, score.TOPIC);
+            if (score.TOPIC_DESC)
+                formData.append(
+                    `SCORES[${index}][TOPIC_DESC]`,
+                    score.TOPIC_DESC,
+                );
+            if (score.SCORE !== undefined)
+                formData.append(`SCORES[${index}][SCORE]`, score.SCORE);
+            if (score.SLEVEL)
+                formData.append(`SCORES[${index}][SLEVEL]`, score.SLEVEL);
+        });
+        payload.PROFIT_TURNOVERS.forEach((pt, index) => {
+            formData.append(`PROFIT_TURNOVERS[${index}][MYEAR]`, pt.MYEAR);
+            formData.append(`PROFIT_TURNOVERS[${index}][AMOUNT]`, pt.AMOUNT);
+            if (pt.RECORD_TYPE)
+                formData.append(
+                    `PROFIT_TURNOVERS[${index}][RECORD_TYPE]`,
+                    pt.RECORD_TYPE,
+                );
+        });
+        payload.RELATIONS.forEach((relation, index) => {
+            formData.append(
+                `RELATIONS[${index}][RELATION_TYPE]`,
+                relation.RELATION_TYPE,
+            );
+            formData.append(`RELATIONS[${index}][NAME]`, relation.NAME);
+            formData.append(
+                `RELATIONS[${index}][PERCENTAGE]`,
+                relation.PERCENTAGE,
+            );
+        });
+        //logFormData(formData);
+        const filteredFormData = filterFormData(formData);
+        logFormData(filteredFormData);
+        const res = await create(filteredFormData);
+    });
 });
 
 function setVendorMstInfo(vendorMstData) {
@@ -780,4 +852,135 @@ function renderNewFilesUI(inputId, dataTransfer, container) {
             `;
         newFilesDiv.append(fileItemHtml);
     });
+}
+
+function packPurevaFormData(formElement) {
+    const formData = new FormData(formElement);
+    const compliances = [];
+    const fyList = [];
+    const fyProfitList = [];
+    const cusname = [];
+    const cusper = [];
+    const supname = [];
+    const supper = [];
+    const proname = [];
+    const proper = [];
+    const sharename = [];
+    const shareper = [];
+
+    const payload = {
+        SCORES: [],
+        PROFIT_TURNOVERS: [],
+        RELATIONS: [],
+    };
+    formData.forEach((value, key) => {
+        if (key === 'COMPLIANCE') {
+            compliances.push(value);
+        } else if (key === 'FY[]') {
+            fyList.push(value);
+        } else if (key === 'FY_PROFIT[]') {
+            fyProfitList.push(value);
+        } else if (key === 'cusname[]') {
+            cusname.push(value);
+        } else if (key === 'cusper[]') {
+            cusper.push(value);
+        } else if (key === 'supname[]') {
+            supname.push(value);
+        } else if (key === 'supper[]') {
+            supper.push(value);
+        } else if (key === 'proname[]') {
+            proname.push(value);
+        } else if (key === 'proper[]') {
+            proper.push(value);
+        } else if (key === 'sharename[]') {
+            sharename.push(value);
+        } else if (key === 'shareper[]') {
+            shareper.push(value);
+        } else if (!key.includes('[]')) {
+            // แปลงฟิลด์ที่ DTO ระบุเป็น @IsNumber() ให้เป็น Number
+            const numberFields = [
+                'AMOUNT',
+                'CAPITAL',
+                'EMPDIRECT',
+                'EMPINDIRECT',
+                'LAND',
+                'FACTORY',
+            ];
+            if (numberFields.includes(key)) {
+                payload[key] = value ? Number(value) : null;
+            } else {
+                payload[key] = value;
+            }
+        }
+    });
+
+    $(formElement)
+        .find('input[data-topic]:checked')
+        .each(function () {
+            payload.SCORES.push({
+                TOPIC: $(this).data('topic'),
+                TOPIC_DESC: $(this).data('topicdesc'),
+                SCORE: Number($(this).val()),
+                SLEVEL: $(this).data('level'),
+            });
+        });
+    if (compliances.length > 0) {
+        payload.COMPLIANCE = compliances.join(', ');
+    }
+    const vendGroupValue = formData.get('VENDGROUP') || '';
+    let record_type = '';
+    if (vendGroupValue.includes('6:Non-Production')) {
+        record_type = 'P';
+    }
+
+    for (let i = 0; i < fyList.length; i++) {
+        if (fyList[i]) {
+            payload.PROFIT_TURNOVERS.push({
+                RECORD_TYPE: record_type,
+                MYEAR: Number(fyList[i]),
+                AMOUNT: fyProfitList[i] ? Number(fyProfitList[i]) : 0,
+            });
+        }
+    }
+
+    for (let i = 0; i < sharename.length; i++) {
+        if (sharename[i]) {
+            payload.RELATIONS.push({
+                ENTITY_TYPE: S,
+                ENTITY_NAME: sharename[i],
+                PERCENT: shareper[i] ? Number(shareper[i]) : 0,
+            });
+        }
+    }
+
+    for (let i = 0; i < cusname.length; i++) {
+        if (cusname[i]) {
+            payload.RELATIONS.push({
+                ENTITY_TYPE: C,
+                ENTITY_NAME: cusname[i],
+                PERCENT: cusper[i] ? Number(cusper[i]) : 0,
+            });
+        }
+    }
+
+    for (let i = 0; i < supname.length; i++) {
+        if (supname[i]) {
+            payload.RELATIONS.push({
+                ENTITY_TYPE: C,
+                ENTITY_NAME: supname[i],
+                PERCENT: supper[i] ? Number(supper[i]) : 0,
+            });
+        }
+    }
+    for (let i = 0; i < proname.length; i++) {
+        if (proname[i]) {
+            payload.RELATIONS.push({
+                ENTITY_TYPE: C,
+                ENTITY_NAME: proname[i],
+                PERCENT: proper[i] ? Number(proper[i]) : 0,
+            });
+        }
+    }
+
+    return payload;
 }
