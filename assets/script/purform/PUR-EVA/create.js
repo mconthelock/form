@@ -39,6 +39,7 @@ import { concernManager, currencyManager } from './formManager';
 import { showMessage } from '@amec/webasset/utils';
 import { getOrganize } from '../../finform/FIN-PCK/dataloc';
 import { showLoader } from '@amec/webasset/preloader';
+import { webflowSubmit } from '@amec/webasset/components/form';
 
 // select2();
 
@@ -107,6 +108,9 @@ $(document).ready(async function () {
     paymentTermManager.init(termdata);
     currencyManager.init(currencyData);
     concernManager.init(orgdata);
+    const submitbtn = webflowSubmit({ request: true, draft: true });
+    $('#form-action-container').html(submitbtn);
+
     //const divattfile = await dragDropInit();
     //$('#attachFile').html(divattfile);
     columnPurNVF = [
