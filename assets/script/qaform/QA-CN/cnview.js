@@ -112,7 +112,6 @@ $(document).ready(async function () {
                     console.log('aaaaaaaaa' + confirm.status);
                     if (confirm.status) {
                         const statusact = await actionfrm(cnformData);
-                        return false;
 
                         const formStatus = await getFormStatus({
                             ...baseForm,
