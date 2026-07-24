@@ -45,6 +45,7 @@ import {
 import { getOrganize } from '../../finform/FIN-PCK/dataloc';
 import { showLoader } from '@amec/webasset/preloader';
 import { webflowSubmit } from '@amec/webasset/components/form';
+import { setDatePicker } from '@amec/webasset/flatpickr';
 
 // select2();
 
@@ -115,6 +116,7 @@ $(document).ready(async function () {
     concernManager.init(orgdata);
     const submitbtn = webflowSubmit({ request: true, draft: true });
     $('#form-action-container').html(submitbtn);
+    setDatePicker();
 
     //const divattfile = await dragDropInit();
     //$('#attachFile').html(divattfile);
@@ -859,6 +861,8 @@ function packPurevaFormData(formElement) {
     const compliances = [];
     const fyList = [];
     const fyProfitList = [];
+    const fytList = [];
+    const fytProfitList = [];
     const cusname = [];
     const cusper = [];
     const supname = [];
@@ -880,6 +884,10 @@ function packPurevaFormData(formElement) {
             fyList.push(value);
         } else if (key === 'FY_PROFIT[]') {
             fyProfitList.push(value);
+        } else if (key === 'FYT[]') {
+            fytList.push(value);
+        } else if (key === 'FYT_PROFIT[]') {
+            fytProfitList.push(value);
         } else if (key === 'cusname[]') {
             cusname.push(value);
         } else if (key === 'cusper[]') {
@@ -932,21 +940,31 @@ function packPurevaFormData(formElement) {
     if (vendGroupValue.includes('6:Non-Production')) {
         record_type = 'P';
     }
-
-    for (let i = 0; i < fyList.length; i++) {
-        if (fyList[i]) {
-            payload.PROFIT_TURNOVERS.push({
-                RECORD_TYPE: record_type,
-                MYEAR: Number(fyList[i]),
-                AMOUNT: fyProfitList[i] ? Number(fyProfitList[i]) : 0,
-            });
+    if (record_type == 'P') {
+        for (let i = 0; i < fyList.length; i++) {
+            if (fyList[i]) {
+                payload.PROFIT_TURNOVERS.push({
+                    RECORD_TYPE: record_type,
+                    MYEAR: Number(fyList[i]),
+                    AMOUNT: fyProfitList[i] ? Number(fyProfitList[i]) : 0,
+                });
+            }
+        }
+    } else {
+        for (let i = 0; i < fytList.length; i++) {
+            if (fytList[i]) {
+                payload.PROFIT_TURNOVERS.push({
+                    RECORD_TYPE: record_type,
+                    MYEAR: Number(fytList[i]),
+                    AMOUNT: fytProfitList[i] ? Number(fytProfitList[i]) : 0,
+                });
+            }
         }
     }
-
     for (let i = 0; i < sharename.length; i++) {
         if (sharename[i]) {
             payload.RELATIONS.push({
-                ENTITY_TYPE: S,
+                ENTITY_TYPE: 'N',
                 ENTITY_NAME: sharename[i],
                 PERCENT: shareper[i] ? Number(shareper[i]) : 0,
             });
@@ -956,7 +974,7 @@ function packPurevaFormData(formElement) {
     for (let i = 0; i < cusname.length; i++) {
         if (cusname[i]) {
             payload.RELATIONS.push({
-                ENTITY_TYPE: C,
+                ENTITY_TYPE: 'C',
                 ENTITY_NAME: cusname[i],
                 PERCENT: cusper[i] ? Number(cusper[i]) : 0,
             });
@@ -966,7 +984,7 @@ function packPurevaFormData(formElement) {
     for (let i = 0; i < supname.length; i++) {
         if (supname[i]) {
             payload.RELATIONS.push({
-                ENTITY_TYPE: C,
+                ENTITY_TYPE: 'S',
                 ENTITY_NAME: supname[i],
                 PERCENT: supper[i] ? Number(supper[i]) : 0,
             });
@@ -975,7 +993,7 @@ function packPurevaFormData(formElement) {
     for (let i = 0; i < proname.length; i++) {
         if (proname[i]) {
             payload.RELATIONS.push({
-                ENTITY_TYPE: C,
+                ENTITY_TYPE: 'P',
                 ENTITY_NAME: proname[i],
                 PERCENT: proper[i] ? Number(proper[i]) : 0,
             });

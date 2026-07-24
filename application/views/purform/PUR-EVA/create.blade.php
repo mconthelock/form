@@ -1141,26 +1141,26 @@
         <tbody>
             <tr>
                 <td class="border border-gray-400 p-2">
-                    <input type="text" class="input-integer w-full border-none bg-transparent text-center focus:outline-none" maxlength="4" placeholder="Year (e.g., 2026)">
+                    <input type="text" name="FYT[]" class="input-integer w-full border-none bg-transparent text-center focus:outline-none" maxlength="4" placeholder="Year (e.g., 2026)">
                 </td>
                 <td class="border border-gray-400 p-2">
-                    <input type="text" class="input-decimal w-full border-none bg-transparent text-center focus:outline-none" placeholder="0.00">
-                </td>
-            </tr>
-            <tr>
-                <td class="border border-gray-400 p-2">
-                    <input type="text" class="input-integer w-full border-none bg-transparent text-center focus:outline-none" maxlength="4" placeholder="Year">
-                </td>
-                <td class="border border-gray-400 p-2">
-                    <input type="text" class="input-decimal w-full border-none bg-transparent text-center focus:outline-none" placeholder="0.00">
+                    <input type="text" name="FYT_PROFIT[]" class="input-decimal w-full border-none bg-transparent text-center focus:outline-none" placeholder="0.00">
                 </td>
             </tr>
             <tr>
                 <td class="border border-gray-400 p-2">
-                    <input type="text" class="input-integer w-full border-none bg-transparent text-center focus:outline-none" maxlength="4" placeholder="ํํYear">
+                    <input type="text" name="FYT[]" class="input-integer w-full border-none bg-transparent text-center focus:outline-none" maxlength="4" placeholder="Year">
                 </td>
                 <td class="border border-gray-400 p-2">
-                    <input type="text" class="input-decimal w-full border-none bg-transparent text-center focus:outline-none" placeholder="0.00">
+                    <input type="text" name="FYT_PROFIT[]" class="input-decimal w-full border-none bg-transparent text-center focus:outline-none" placeholder="0.00">
+                </td>
+            </tr>
+            <tr>
+                <td class="border border-gray-400 p-2">
+                    <input type="text" name="FYT[]" class="input-integer w-full border-none bg-transparent text-center focus:outline-none" maxlength="4" placeholder="ํํYear">
+                </td>
+                <td class="border border-gray-400 p-2">
+                    <input type="text"  name="FYT_PROFIT[]" class="input-decimal w-full border-none bg-transparent text-center focus:outline-none" placeholder="0.00">
                 </td>
             </tr>
         </tbody>
@@ -1176,21 +1176,21 @@
             <div class="flex flex-col gap-1">
                 <div class="flex justify-between items-center">
                     <span>Quality Management (ISO9001):</span>
-                    <div class="flex gap-3"><label><input type="radio" name="QM_STATUS" value="Y"> Yes</label><label><input type="radio" name="qm" value="N"> No</label></div>
+                    <div class="flex gap-3"><label><input type="radio" name="QM_STATUS" value="Y"> Yes</label><label><input type="radio" name="QM_STATUS" value="N"> No</label></div>
                 </div>
                 <input type="text" name="QM_REASON" placeholder="Certificate No. / Details" class="input input-bordered input-sm w-full bg-gray-50 border-gray-300">
             </div>
             <div class="flex flex-col gap-1">
                 <div class="flex justify-between items-center">
                     <span>CSR Management:</span>
-                    <div class="flex gap-3"><label><input type="radio" name="CSR_STATUS" value="Y"> Yes</label><label><input type="radio" name="csr" value="N"> No</label></div>
+                    <div class="flex gap-3"><label><input type="radio" name="CSR_STATUS" value="Y"> Yes</label><label><input type="radio" name="CSR_STATUS" value="N"> No</label></div>
                 </div>
                 <input type="text" name="CSR_REASON" placeholder="Specify project name or details..." class="input input-bordered input-sm w-full bg-gray-50 border-gray-300">
             </div>
             <div class="flex flex-col gap-1">
                 <div class="flex justify-between items-center">
                     <span>Environmental (ISO14001):</span>
-                    <div class="flex gap-3"><label><input type="radio" name="ENV_STATUS" value="Y"> Yes</label><label><input type="radio" name="env" value="N"> No</label></div>
+                    <div class="flex gap-3"><label><input type="radio" name="ENV_STATUS" value="Y"> Yes</label><label><input type="radio" name="ENV_STATUS" value="N"> No</label></div>
                 </div>
                 <input type="text" name = "ENV_REASON" placeholder="Certificate No. / Details" class="input input-bordered input-sm w-full bg-gray-50 border-gray-300">
             </div>
@@ -1205,6 +1205,11 @@
             <label class="flex items-center gap-2 cursor-pointer whitespace-nowrap">
                 <input type="radio" name="LABOR_STATUS" value="Y" class="w-4 h-4 accent-blue-600"> Have established
             </label>
+            <div class="flex items-center gap-2">
+                <span class="text-gray-600 whitespace-nowrap">Established Date </span>
+                <input type="date" name="LABOR_ESTABLISH_DATE" id="labor_date" 
+                       class="border border-gray-300 rounded px-2 py-1 text-sm outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 fdate">
+            </div>
         </div>
         
         <label class="flex items-center gap-2 cursor-pointer whitespace-nowrap">
