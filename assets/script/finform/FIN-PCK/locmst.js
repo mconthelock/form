@@ -141,7 +141,8 @@ $(document).ready(async function () {
             }
         } catch (err) {
             // console.error(err);
-            showErrorMessage(err);
+            //showErrorMessage(err);
+            throw new Error(err);
         } finally {
             showLoader({ show: false });
         }
@@ -182,7 +183,7 @@ $(document).ready(async function () {
                     };
                 })
                 .filter((item) => item.LOCCODE !== '');
-            console.log(dataloc);
+            //console.log(dataloc);
             const res = await importLoc(dataloc);
 
             if (res.status == true) {
@@ -194,7 +195,8 @@ $(document).ready(async function () {
                 throw new Error(res.message);
             }
         } catch (err) {
-            showErrorMessage(err);
+            //showErrorMessage(err);
+            throw new Error(err);
         } finally {
             showLoader({ show: false });
         }

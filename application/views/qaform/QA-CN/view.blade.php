@@ -250,7 +250,7 @@
                      @endforeach
                       <input type="hidden" name="cnt" value="{{ $cnt }}" />
                     </tbody>
-                    @if ((($form[0]->CST == "0")) && in_array($empno, [$form[0]->VREQNO, $form[0]->VINPUTER]))
+                    @if ((($form[0]->CST == "0") ||  ($mode == $MODE_EDIT)) && in_array($empno, [$form[0]->VREQNO, $form[0]->VINPUTER]))
                     <tfoot>
 							<tr>
 								<td colspan="4" style="text-align:right" >
@@ -295,6 +295,8 @@
                        value="{{ $cnform->PURITEM }}" maxlength="10" >
             </td>
             @else
+             <input type="hidden" name="txtPurItem" 
+                       value="{{ $cnform->PURITEM }}" >
                     {{ $cnform->PURITEM }}    
             @endif  
         </tr>
@@ -311,6 +313,9 @@
                        class="w-1/3 h-8 px-2 border border-gray-300 bg-white focus:outline-none focus:ring-1 focus:ring-sky-400 rounded-sm req"
                        value="{{ $cnform->INVNO }}" maxlength="90" >
             @else
+              <input type="hidden" name="txtInvNo" 
+                       
+                       value="{{ $cnform->INVNO }}" >
                     {{ $cnform->INVNO }}    
             @endif  
 

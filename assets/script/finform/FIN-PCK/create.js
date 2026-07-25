@@ -41,7 +41,7 @@ $(async function () {
                 formData: currentFormData,
                 groupedData: dataload,
             };
-            console.log(payload);
+            // console.log(payload);
             const res = await createpck(payload);
             if (res.status) {
                 showLoader({ show: false });
@@ -49,89 +49,14 @@ $(async function () {
             }
         } catch (err) {
             // console.error(err);
-            showErrorMessage(err);
+            // showErrorMessage(err);
+            throw new Error('can not request');
         } finally {
             showLoader({ show: false });
         }
     });
 });
 
-// async function prepareData(excelData) {
-//     const locmstdata = await getLocMstData({});
-//     const empLoopup = {};
-//     locmstdata.forEach((loc) => {
-//         const empNo = loc.INC?.EMPINFO?.SEMPNO || '';
-//         empLookup[loc.LOCCODE] = empNo;
-//     });
-//     const formatDate = (dateValue) => {
-//         if (!dateValue) return '';
-//         try {
-//             const d = new Date(dateValue);
-//             if (!isNaN(d.getTime())) {
-//                 const year = d.getFullYear();
-//                 const month = String(d.getMonth() + 1).padStart(2, '0');
-//                 const day = String(d.getDate()).padStart(2, '0');
-//                 return `${year}-${month}-${day}`;
-//             }
-//         } catch (error) {}
-//         return String(dateValue);
-//     };
-//     const groupedResult = {};
-//     excelData.forEach((row) => {
-//         // สมมติว่า keys จาก Excel ถูกแปลงมาเป็นชื่อเหล่านี้แล้ว
-//         // (อาจจะต้องเช็คชื่อ Field ของ row อีกทีให้ตรงกับ Library ที่ใช้อ่าน Excel นะคะ)
-//         const locCode = row[4];
-
-//         // ถ้ายังไม่มีการสร้างกลุ่มของสถานที่นี้ ให้สร้างโครงสร้างเริ่มต้นไว้ก่อน
-//         if (!groupedResult[locCode]) {
-//             // ดึงข้อมูล Master Data ที่เราเตรียมไว้ในขั้นตอนที่ 1 มาใช้
-//             const INC = empLookup[locCode] || '';
-
-//             groupedResult[locCode] = {
-//                 CCCODE: row[2],
-//                 CCDESC: row[3],
-//                 LOCCODE: locCode,
-//                 LOCNAME: row[5],
-//                 INC: INC,
-//                 assets: [], // สร้าง Array ว่างรอรับสินทรัพย์
-//             };
-//         }
-
-//         // 3. ยัดข้อมูล Asset จาก Excel แถวนี้ เข้าไปใน Array assets ของกลุ่มนั้นๆ
-//         groupedResult[locCode].assets.push({
-//             GRPCODE: row[0],
-//             ASSETNO: row[6],
-//             ASSETDESC: row[7],
-//             DOCDATE: formatDate(row[8]),
-//             INITVAL: row[9],
-//             STARTDP: formatDate(row[10]),
-//             MONTHDP: row[11],
-//             YTDDP: row[12],
-//             ACCUMDP: row[13],
-//             BOOKVAL: row[14],
-//             INVNO: row[15],
-//             MODELNO: row[16],
-//             SNNO: row[17],
-//             PONO: row[18],
-//             REFASSET: row[19],
-//             VOUCHER: row[20],
-//             QTY: row[21],
-//             STATUS: row[22],
-//             SUPPLIER: row[23],
-//             PRNO: row[24],
-//             BUDGETNO: row[25],
-//             REQBY: row[26],
-//             USINGLIFE: row[27],
-//         });
-//     });
-
-//     // ผลลัพธ์ใน groupedResult ตอนนี้จะเป็น Object ที่มี Key เป็น LOCCODE
-//     // ถ้าคุณต้องการให้ข้อมูลส่งออกไปเป็น Array แบบ [ { LOCCODE: "1003", ... }, { LOCCODE: "1004", ... } ]
-//     // ให้ใช้ Object.values() แบบนี้ค่ะ:
-//     const finalArrayResult = Object.values(groupedResult);
-
-//     return finalArrayResult;
-// }
 async function prepareData(excelData) {
     const locmstdata = await getLocMstData({});
 
@@ -175,7 +100,9 @@ async function prepareData(excelData) {
                 const day = String(d.getDate()).padStart(2, '0');
                 return `${year}-${month}-${day}`;
             }
-        } catch (error) {}
+        } catch (error) {
+            throw new Error(error);
+        }
 
         // ถ้าแปลงไม่ได้จริงๆ ให้แปลงเป็น String ก่อน แล้วเช็คว่าหั่น 'T' ได้ไหม
         const fallbackStr = String(dateValue);

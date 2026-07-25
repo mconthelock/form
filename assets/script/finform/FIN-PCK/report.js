@@ -51,7 +51,7 @@ $(document).ready(async function () {
                 await writeExcelStatus(data);
             }
         } catch (err) {
-            showErrorMessage(err);
+            throw new Error(err);
         } finally {
             showLoader({ show: false });
         }
@@ -164,8 +164,6 @@ async function writeExcelDetail(dataList) {
 async function writeExcelStatus(dataList) {
     try {
         const bfile = await getTemplate('TEMPRPTSTATUS.xlsx');
-
-        // 1. ดึงข้อมูล formno ทั้งหมดเตรียมไว้ก่อน (ทำนอก writeExcelTemp)
         const dataWithFormno = [];
         for (const item of dataList) {
             const formno = await getFormno({
@@ -175,7 +173,6 @@ async function writeExcelStatus(dataList) {
                 CYEAR2: item.CYEAR2,
                 NRUNNO: item.NRUNNO,
             });
-            // เก็บ item เดิมรวมกับ formno ที่ได้
             dataWithFormno.push({ ...item, formno });
         }
 
@@ -223,64 +220,3 @@ async function writeExcelStatus(dataList) {
         throw new Error('can not open file');
     }
 }
-
-// async function writeExcelStatus(dataList) {
-//     var workbook = new ExcelJS.Workbook();
-//     //const templatePath = `${process.env.AMEC_FILE_PATH}${process.env.STATE == 'production' ? 'production' : 'development'}/Form/FIN/FIN-PCK/TEMPLATE`;
-//     try {
-//         // const bfile = await getArrayBufferFile(templatePath, 'TEMPLOCMST.xlsx');
-//         const bfile = await getTemplate('TEMPRPTSTATUS.xlsx');
-//         const workbook = await writeExcelTemp(bfile.buffer, {
-//             write: (wb) => {
-//                 const now = new Date();
-//                 const sheet = wb.getWorksheet(1);
-//                 sheet.getCell(`B2`).value = formatDate(now);
-//                 const startRow = 6;
-
-//                 let index = 0;
-//                 for (const item of dataList) {
-//                     const currentRow = startRow + index;
-
-//                     // ตอนนี้คุณสามารถ await ได้แล้ว
-//                     const formno = await getFormno({
-//                         NFRMNO: item.NFRMNO,
-//                         VORGNO: item.VORGNO,
-//                         CYEAR: item.CYEAR,
-//                         CYEAR2: item.CYEAR2,
-//                         NRUNNO: item.NRUNNO,
-//                     });
-
-//                     console.log(formno);
-
-//                     // นำค่า formno ที่ได้มาใส่ในเซลล์
-//                     sheet.getCell(`A${currentRow}`).value = formno;
-//                     sheet.getCell(`B${currentRow}`).value = item.LOCCODE;
-//                     sheet.getCell(`C${currentRow}`).value = item.LOCNAME;
-//                     sheet.getCell(`D${currentRow}`).value = item.PICNOLOC;
-//                     sheet.getCell(`E${currentRow}`).value = item.PICNAMELOC;
-//                     sheet.getCell(`F${currentRow}`).value = item.CST === 2 ? 'COMPLETE' : 'NOT COMPLETE';
-//                     sheet.getCell(`G${currentRow}`).value = item.PICNOWAIT;
-//                     sheet.getCell(`H${currentRow}`).value = item.PICNAMEWAIT;
-
-//                     index++;
-//                 }
-//             },
-//         });
-//         const d = new Date();
-//         const formatted = d
-//             .toLocaleString('en-GB', {
-//                 year: 'numeric',
-//                 month: '2-digit',
-//                 day: '2-digit',
-//                 hour: '2-digit',
-//                 minute: '2-digit',
-//                 second: '2-digit',
-//                 hour12: false,
-//             })
-//             .replace(/\D/g, '');
-//         exportExcel(workbook, `PCKSTATUS_${formatted}`);
-//     } catch (error) {
-//         console.error('Error reading excel template on NAS server:', error);
-//         throw new Error('can not open file');
-//     }
-// }

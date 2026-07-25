@@ -131,7 +131,12 @@ $(async function () {
         { data: 'REQBY', title: 'Req. By', className: 'text-nowrap' },
         {
             data: 'CONFIRM',
-            title: 'Confirm',
+            title: isEditable
+                ? `<div class="flex items-center gap-2 justify-center">
+             Confirm 
+             <input type="checkbox" id="checkAllConfirm" class="auto-fill-cb checkbox checkbox-sm checkbox-primary" data-target=".input-confirm" >
+           </div>`
+                : 'Confirm',
             defaultContent: '',
             render: function (data, type, row) {
                 // เช็คเผื่อไว้ถ้าโครงสร้างหลุดหรือไม่มีคนรับผิดชอบ ให้แสดงเป็นช่องว่างหรือเครื่องหมาย -
@@ -145,7 +150,12 @@ $(async function () {
         },
         {
             data: 'NOSTICKER',
-            title: 'No Sticker',
+            title: isEditable
+                ? `<div class="flex items-center gap-2 justify-center">
+             No Sticker 
+             <input type="checkbox" id="checkAllSticker" class="auto-fill-cb checkbox checkbox-sm checkbox-primary" data-target=".input-nosticker">
+           </div>`
+                : 'No Sticker',
             defaultContent: '',
             render: function (data, type, row) {
                 // เช็คเผื่อไว้ถ้าโครงสร้างหลุดหรือไม่มีคนรับผิดชอบ ให้แสดงเป็นช่องว่างหรือเครื่องหมาย -
@@ -159,7 +169,12 @@ $(async function () {
         },
         {
             data: 'LOST',
-            title: 'Lost',
+            title: isEditable
+                ? `<div class="flex items-center gap-2 justify-center">
+             Lost 
+             <input type="checkbox" id="checkAllLost" class="auto-fill-cb checkbox checkbox-sm checkbox-primary" data-target=".input-lost">
+           </div>`
+                : 'Lost',
             defaultContent: '',
             render: function (data, type, row) {
                 // เช็คเผื่อไว้ถ้าโครงสร้างหลุดหรือไม่มีคนรับผิดชอบ ให้แสดงเป็นช่องว่างหรือเครื่องหมาย -
@@ -173,7 +188,12 @@ $(async function () {
         },
         {
             data: 'DAMAGE',
-            title: 'Damage',
+            title: isEditable
+                ? `<div class="flex items-center gap-2 justify-center">
+             Damage 
+             <input type="checkbox" id="checkAllDamage" class="auto-fill-cb checkbox checkbox-sm checkbox-primary" data-target=".input-damage">
+           </div>`
+                : 'Damage',
             defaultContent: '',
             render: function (data, type, row) {
                 // เช็คเผื่อไว้ถ้าโครงสร้างหลุดหรือไม่มีคนรับผิดชอบ ให้แสดงเป็นช่องว่างหรือเครื่องหมาย -
@@ -187,7 +207,12 @@ $(async function () {
         },
         {
             data: 'MOVEMENT',
-            title: 'Movement',
+            title: isEditable
+                ? `<div class="flex items-center gap-2 justify-center">
+             Movement 
+             <input type="checkbox" id="checkAllMovement" class="auto-fill-cb checkbox checkbox-sm checkbox-primary" data-target=".input-movement">
+           </div>`
+                : 'Movement',
             defaultContent: '',
             render: function (data, type, row) {
                 // เช็คเผื่อไว้ถ้าโครงสร้างหลุดหรือไม่มีคนรับผิดชอบ ให้แสดงเป็นช่องว่างหรือเครื่องหมาย -
@@ -201,7 +226,12 @@ $(async function () {
         },
         {
             data: 'OTHCAUSE',
-            title: 'Other Cause',
+            title: isEditable
+                ? `<div class="flex items-center gap-2 justify-center">
+             Other Cause 
+             <input type="checkbox" id="checkAllOther" class="auto-fill-cb checkbox checkbox-sm checkbox-primary" data-target=".input-oth">
+           </div>`
+                : 'Other Cause',
             className: 'text-nowrap',
             defaultContent: '',
             render: function (data, type, row) {
@@ -334,6 +364,74 @@ $(async function () {
     $('.actions-Form .flex.gap-3.mt-2').append(btnExport);
 });
 
+$(document).on('change', '.auto-fill-cb', function () {
+    const isChecked = $(this).prop('checked');
+    const targetInputClass = $(this).attr('data-target');
+
+    if (isChecked) {
+        // 1. สั่งให้ Checkbox ตัวโคลนของคอลัมน์เดียวกัน (ถ้ามี) โดนติ๊กไปด้วย
+        $(`.auto-fill-cb[data-target="${targetInputClass}"]`).prop(
+            'checked',
+            true,
+        );
+
+        // 2. วิ่งไปหา Checkbox คอลัมน์ "อื่นๆ" (ที่ไม่ใช่คอลัมน์นี้)
+        $('.auto-fill-cb')
+            .not(`[data-target="${targetInputClass}"]`)
+            .each(function () {
+                // เอาเครื่องหมายติ๊กออก
+                $(this).prop('checked', false);
+
+                // เคลียร์ค่าคอลัมน์นั้นทิ้ง
+                const otherTargetClass = $(this).attr('data-target');
+                if (otherTargetClass) {
+                    $(`#tablepck ${otherTargetClass}`).val('');
+                }
+            });
+
+        // 3. เติมค่าให้คอลัมน์ที่เพิ่งเลือก
+        $(`#tablepck ${targetInputClass}`).each(function () {
+            const qty = $(this).attr('data-qty');
+            if (qty) {
+                $(this).val(qty);
+            }
+        });
+    } else {
+        // กรณีเอาเครื่องหมายติ๊กออกเอง
+        $(`.auto-fill-cb[data-target="${targetInputClass}"]`).prop(
+            'checked',
+            false,
+        );
+        $(`#tablepck ${targetInputClass}`).val('');
+    }
+});
+
+// $(document).on('change', '.auto-fill-cb', function () {
+//     const isChecked = $(this).prop('checked');
+//     const targetInputClass = $(this).attr('data-target');
+//     $(`#tablepck ${targetInputClass}`).each(function () {
+//         if (isChecked) {
+//             $('.auto-fill-cb')
+//                 .not(this)
+//                 .each(function () {
+//                     // เอาเครื่องหมายติ๊กออก
+//                     $(this).prop('checked', false);
+
+//                     // เคลียร์ค่าในช่อง Input ของคอลัมน์นั้นๆ ให้เป็นช่องว่าง
+//                     const otherTargetClass = $(this).attr('data-target');
+//                     $(`#tablepck ${otherTargetClass}`).val('');
+//                 });
+
+//             // 2. เติมค่า QTY ให้กับคอลัมน์ที่เพิ่งถูกติ๊ก
+//             $(`#tablepck ${targetInputClass}`).each(function () {
+//                 $(this).val($(this).attr('data-qty'));
+//             });
+//         } else {
+//             $(`#tablepck ${targetInputClass}`).val('');
+//         }
+//     });
+// });
+
 $(document).on('click', 'button[name="btnAction"]', async function (e) {
     const action = this.value;
     const cextdata = $('.extdata').attr('extdata');
@@ -362,7 +460,8 @@ $(document).on('click', 'button[name="btnAction"]', async function (e) {
             try {
                 const res = await updateFlow(formData);
             } catch (err) {
-                showErrorMessage(err);
+                //showErrorMessage(err);
+                throw new Error('can not updaet flow');
             }
             //Main Approval
         } else if (cextdata == '02') {
@@ -371,11 +470,13 @@ $(document).on('click', 'button[name="btnAction"]', async function (e) {
                     const assetData = await payloadData();
                     const res = await updatepck(assetData);
                 } catch (err) {
-                    showErrorMessage(err);
+                    //showErrorMessage(err);
+                    throw new Error('can not update data');
                 }
             } else {
                 showLoader({ show: false });
                 showMessage('Please enter valid data.', 'warning');
+                return false;
             }
             //Assigned Person
         } else if (cextdata == '06') {
@@ -387,7 +488,8 @@ $(document).on('click', 'button[name="btnAction"]', async function (e) {
                         await deleteFlowStep({ ...form, CSTEPNO: step });
                     }
                 } catch (err) {
-                    showErrorMessage(err);
+                    //showErrorMessage(err);
+                    throw new Error('can not delete flow');
                 }
             } else {
                 const infocon = await searchUser({
@@ -413,7 +515,8 @@ $(document).on('click', 'button[name="btnAction"]', async function (e) {
             });
             redirectWebflow();
         } catch (err) {
-            showErrorMessage(err);
+            //showErrorMessage(err);
+            throw new Error('cannot approve');
         } finally {
             showLoader({ show: false });
         }
@@ -660,6 +763,8 @@ async function updateorgcon(objcon) {
                 formData.VAPVNO = sempno.data.EMPNO;
                 formData.VREPNO = rep;
                 res = await updateFlow(formData);
+            } else {
+                delstep.push(step.CSTEPNO);
             }
         } else {
             delstep.push(step.CSTEPNO);
