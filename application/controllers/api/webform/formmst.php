@@ -49,8 +49,9 @@ trait formmst{
                 'NFRMNO' => (int)$_GET['no'],
                 'VORGNO' => $_GET['orgNo'],
                 'CYEAR'  => $_GET['y'],
-                'CYEAR2' => isset($_GET['y2']) ? $_GET['y2'] : '',
+                'CYEAR2' => isset($_GET['y2']) ? $_GET['y2'] : date('Y'),
                 'NRUNNO' => isset($_GET['runNo']) ? (int)$_GET['runNo'] : 0,
+                'EMPNO' => isset($_GET['empno']) ? $_GET['empno'] : '',
             ];
         }else{
             $form = $this->getFormMasterByVaname($name);
@@ -59,6 +60,7 @@ trait formmst{
                     'NFRMNO' => (int)$form[0]->NNO,
                     'VORGNO' => $form[0]->VORGNO,
                     'CYEAR'  => $form[0]->CYEAR,
+                    'CYEAR2' => isset($_GET['y2']) ? $_GET['y2'] : date('Y'),
                 ];
             }
         }

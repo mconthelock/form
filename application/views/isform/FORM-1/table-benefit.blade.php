@@ -16,67 +16,81 @@
                 <th colspan="2">
                     <div>Running Cost</div>
                     <div class="text-gray-500 font-normal mt-1">Reduce the use of disposable materials.
-                        (Paperless/Electricity Bill) </div>
+                        (Paperless/Electricity Bill) / ลดการใช้ทรัพยากรสิ้นเปลือง เช่น กระดาษ/ค่าไฟฟ้า </div>
                 </th>
-                <td><input type="text" /></td>
-                <td><input type="text" /></td>
+                <td class="bg-primary-content"><input type="text" /></td>
+                <td class="bg-primary-content"><input type="text" /></td>
                 <td><input type="text" readonly /></td>
             </tr>
             <tr>
                 <th colspan="2">
                     <div>Production Volumn/Output</div>
-                    <div class="text-gray-500 font-normal mt-1">Increase production efficiency.</div>
+                    <div class="text-gray-500 font-normal mt-1">Increase production efficiency. /
+                        เพิ่มประสิทธิภาพการผลิต
+                    </div>
                 </th>
-                <td><input type="text" /></td>
-                <td><input type="text" /></td>
+                <td class="bg-primary-content"><input type="text" /></td>
+                <td class="bg-primary-content"><input type="text" /></td>
                 <td><input type="text" readonly /></td>
             </tr>
             <tr>
                 <th colspan="2">
                     <div>Lost (Material/Order)</div>
-                    <div class="text-gray-500 font-normal mt-1">Reduce errors that lead to additional costs.</div>
+                    <div class="text-gray-500 font-normal mt-1">Reduce errors that lead to additional
+                        costs. / ลดการสูญเสียหรือข้อผิดพลาดที่นำไปสู่ค่าใช้จ่ายเพิ่มเติม</div>
                 </th>
-                <td><input type="text" /></td>
-                <td><input type="text" /></td>
+                <td class="bg-primary-content"><input type="text" /></td>
+                <td class="bg-primary-content"><input type="text" /></td>
                 <td><input type="text" readonly /></td>
             </tr>
             <tr>
                 <th rowspan="2">
                     <div>Manpower</div>
-                    <div class="text-gray-500 font-normal mt-1">Improve employee performance.</div>
+                    <div class="text-gray-500 font-normal mt-1">Improve employee performance. /
+                        เพิ่มประสิทธิภาพการทำงานของพนักงาน</div>
                 </th>
-                <th>Labor Cost</th>
+                <th>
+                    <div>Labor Cost</div>
+                    <div class="text-gray-500 font-normal mt-1">*คำนวณจาก Efficiency Gains</div>
+                </th>
                 <td><input type="text" readonly /></td>
                 <td><input type="text" readonly /></td>
                 <td><input type="text" readonly /></td>
             </tr>
             <tr>
                 <th class="text-nowrap">Subcon/Outsource Cost</th>
-                <td><input type="text" readonly /></td>
-                <td><input type="text" readonly /></td>
+                <td class="bg-primary-content"><input type="text" /></td>
+                <td class="bg-primary-content"><input type="text" /></td>
                 <td><input type="text" readonly /></td>
             </tr>
             <tr>
-                <th rowspan="3">
+                <th rowspan="4">
                     <div>Other</div>
-                    <div class="text-gray-500 font-normal mt-1">Support miscellaneous tasks / Compliance / Audit etc.
+                    <div class="text-gray-500 font-normal mt-1">Support miscellaneous tasks / Compliance / Audit etc. /
+                        สนับสนุนงานอื่น ๆ ที่เกี่ยวข้อง เช่น งาน Compliance / Audit เป็นต้น
                     </div>
                 </th>
                 <th>Preparing Cost</th>
-                <td><input type="text" /></td>
-                <td><input type="text" /></td>
+                <td class="bg-primary-content"><input type="text" /></td>
+                <td class="bg-primary-content"><input type="text" /></td>
                 <td><input type="text" readonly /></td>
             </tr>
             <tr>
                 <th>Equipment Cost</th>
-                <td><input type="text" /></td>
-                <td><input type="text" /></td>
+                <td class="bg-primary-content"><input type="text" /></td>
+                <td class="bg-primary-content"><input type="text" /></td>
                 <td><input type="text" readonly /></td>
             </tr>
             <tr>
                 <th>Area Cost</th>
-                <td><input type="text" /></td>
-                <td><input type="text" /></td>
+                <td class="bg-primary-content"><input type="text" /></td>
+                <td class="bg-primary-content"><input type="text" /></td>
+                <td><input type="text" readonly /></td>
+            </tr>
+            <tr>
+                <th>Other</th>
+                <td class="bg-primary-content"><input type="text" /></td>
+                <td class="bg-primary-content"><input type="text" /></td>
                 <td><input type="text" readonly /></td>
             </tr>
         </tbody>

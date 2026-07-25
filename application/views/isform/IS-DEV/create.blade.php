@@ -3,70 +3,99 @@
 @section('contents')
     <section class="flex flex-col gap-3 mb-4 px-32 w-full xl:px-70">
         <h1 class="text-3xl font-bold text-primary"> Computer program Requisition Form </h1>
+        {{-- Request User --}}
         <fieldset class="bg-primary/10 border border-primary rounded-xl p-5">
             <legend class="font-semibold text-lg px-1">Requester</legend>
-            <div class="flex">
+            <div class="flex gap-8">
                 <fieldset class="fieldset flex-1">
                     <legend class="fieldset-legend">Requrst By</legend>
-                    <input type="text" class="input" placeholder="Employee No." />
+                    <input type="text" class="input" placeholder="Employee No." id="req-employee-input" />
+                    <div class="flex items-center gap-3">
+                        <div class="avatar flex-none">
+                            <div class="w-16 rounded-full">
+                                <div class="skeleton h-16 w-16"></div>
+                            </div>
+                        </div>
+                        <div class="flex-1 flex flex-col gap-2">
+                            <h1 class="font-bold text-md" id="req-by-name">
+                                <div class="skeleton h-6 w-48"></div>
+                            </h1>
+                            <h2>
+                                <div class="skeleton h-6 w-32" id="req-by-id"></div>
+                            </h2>
+                            <div class="text-xs text-gray-500" id="req-by-organization">
+                                <div class="skeleton h-6 w-96"></div>
+                            </div>
+                        </div>
+                        <a href="#" class="btn btn-ghost btn-circle" id="req-employee-btn"><i
+                                class="fi fi-rs-cross text-xl text-red-500"></i></a>
+                    </div>
                 </fieldset>
                 <fieldset class="fieldset flex-1">
                     <legend class="fieldset-legend">Input By</legend>
                     <div class="flex items-center gap-3">
                         <div class="avatar flex-none">
                             <div class="w-16 rounded-full">
-                                <img src="https://img.daisyui.com/images/profile/demo/yellingcat@192.webp" />
+                                <div class="skeleton h-16 w-16"></div>
                             </div>
                         </div>
-                        <div class="flex-1">
-                            <h1 class="font-bold text-md">Chalormsak Sewanam</h1>
-                            <h2>12069</h2>
-                            <p class="text-xs text-gray-500">chalormsak@example.com</p>
+                        <div class="flex-1 flex flex-col gap-2">
+                            <h1 class="font-bold text-md" id="input-by-name">
+                                <div class="skeleton h-6 w-48"></div>
+                            </h1>
+                            <h2>
+                                <div class="skeleton h-6 w-32" id="input-by-id"></div>
+                            </h2>
+                            <div class="text-xs text-gray-500" id="input-by-organization">
+                                <div class="skeleton h-6 w-96"></div>
+                            </div>
                         </div>
+                    </div>
                 </fieldset>
             </div>
         </fieldset>
 
         <fieldset class="bg-primary/10 border border-primary rounded-xl p-5">
             <legend class="font-semibold text-lg px-1">Request Detail</legend>
-
             <fieldset class="fieldset">
                 <legend class="fieldset-legend">System Name</legend>
                 <ul class="flex gap-5">
-                    <li class="flex items-center gap-3"><input type="radio" name="radio-2"
+                    <li class="flex items-center gap-3"><input type="radio" name="system-name"
                             class="radio radio-primary" />AS400 Application</li>
-                    <li class="flex items-center gap-3"><input type="radio" name="radio-2"
+                    <li class="flex items-center gap-3"><input type="radio" name="system-name"
                             class="radio radio-primary" />Windows Application</li>
                 </ul>
             </fieldset>
+
             <fieldset class="fieldset">
                 <legend class="fieldset-legend">Request Type</legend>
                 <ul class="flex gap-5">
-                    <li class="flex items-center gap-3"><input type="radio" name="radio-2"
+                    <li class="flex items-center gap-3"><input type="radio" name="request-type"
                             class="radio radio-primary request-type" value="1" />Additional Request</li>
-                    <li class="flex items-center gap-3"><input type="radio" name="radio-2"
+                    <li class="flex items-center gap-3"><input type="radio" name="request-type"
                             class="radio radio-primary request-type" value="2" />Modify Program</li>
-                    <li class="flex items-center gap-3"><input type="radio" name="radio-2"
+                    <li class="flex items-center gap-3"><input type="radio" name="request-type"
                             class="radio radio-primary request-type" value="3" />Fixed Error Program</li>
-                    <li class="flex items-center gap-3"><input type="radio" name="radio-2"
+                    <li class="flex items-center gap-3"><input type="radio" name="request-type"
                             class="radio radio-primary request-type" value="4" />Data Change</li>
-                    <li class="flex items-center gap-3"><input type="radio" name="radio-2"
+                    <li class="flex items-center gap-3"><input type="radio" name="request-type"
                             class="radio radio-primary request-type" value="5" />Search Data</li>
                 </ul>
 
             </fieldset>
             <fieldset class="fieldset">
                 <legend class="fieldset-legend">Title</legend>
-                <input type="text" class="input w-full" placeholder="Type here" />
+                <input type="text" class="input w-full" placeholder="ตั้งชื่อ Request" />
             </fieldset>
 
             <fieldset class="fieldset">
                 <legend class="fieldset-legend">Detail</legend>
-                <textarea class="textarea w-full"
+                <textarea class="textarea w-full h-56"
                     placeholder="เขียนอธิบายภาพรวมของ Requirement นี้ หรือบอกถึงวัตถุประสงค์ของการ Project นี้"></textarea>
             </fieldset>
             <fieldset class="fieldset">
                 <legend class="fieldset-legend">Additional Information</legend>
+                <p class="label">แนบเอกสารที่เกี่ยวข้อง เช่น Flow การทำงาน, Screenshot เป็นต้น</p>
                 <div class="flex gap-2 items-center ">
                     <input type="file" class="file-input file-input-sm flex-1" />
                     <button class="btn btn-primary btn-sm">+</button>
@@ -104,23 +133,23 @@
 
             <fieldset class="fieldset">
                 <legend class="fieldset-legend">Preferred Requirement Gathering Period</legend>
+                <p class="label italic">กำหนดการที่พร้อมสำหรับการเก็บรวบรวมข้อกำหนดและ Developer เริ่มงานได้</p>
                 <label class="input">
                     <input type="text" class="grow" placeholder="{{ Date('Y-M') }}" />
                     <i class="icofont-calendar"></i>
                 </label>
-                <p class="label italic">กำหนดการที่พร้อมสำหรับการเก็บรวบรวมข้อกำหนดและ Developer เริ่มงานได้</p>
             </fieldset>
 
 
             <fieldset class="fieldset">
                 <legend class="fieldset-legend">Current Workflow</legend>
-                <textarea class="textarea w-full"
+                <textarea class="textarea w-full h-56"
                     placeholder="อธิบายวิธีการทำงานในปัจจุบัน เช่น พนักงานต้องกรอกแบบฟอร์มกระดาษแล้วจึงส่ง Approve เป็นต้น"></textarea>
             </fieldset>
 
             <fieldset class="fieldset">
                 <legend class="fieldset-legend">Expected Workflow</legend>
-                <textarea class="textarea w-full"
+                <textarea class="textarea w-full h-56"
                     placeholder="อธิบายวิธีการทำงานที่คาดหวังหลังจากโครงการนี้สำเร็จ เช่น พนักงานกรอกแบบฟอร์มออนไลน์แล้วระบบส่ง Approve บนระบบ Webflow เป็นต้น"></textarea>
             </fieldset>
 
@@ -170,6 +199,12 @@
         .table-edit tbody tr td:not(:last-child),
         .table-edit tbody tr th {
             border-right: 1px solid var(--color-gray-300);
+
+        }
+
+        .table-edit tbody tr td,
+        .table-edit tbody tr th {
+            border-bottom: 1px solid var(--color-gray-300);
         }
 
         .table-edit tbody tr td input {
@@ -178,8 +213,12 @@
             min-height: 40px;
             padding: 10px;
             border: none;
-            background-color: var(--color-primary-content);
             text-align: right;
+            font-size: 1.25em
+        }
+
+        .table-edit tbody tr td input:hover:not(:read-only) {
+            cursor: pointer;
         }
 
         .table-edit tbody tr td input:focus {
@@ -187,8 +226,9 @@
             box-shadow: none;
         }
 
-        .table-edit tbody tr td input:read-only {
-            background-color: var(--color-gray-100);
+        .table-edit tbody tr td input:focus:not(:read-only) {
+            background: var(--color-primary);
+            color: var(--color-white);
         }
     </style>
 @endsection
