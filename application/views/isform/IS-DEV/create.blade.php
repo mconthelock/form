@@ -1,12 +1,12 @@
 @extends('layouts/webflowTemplate')
 
 @section('contents')
-    <input type="text" class="hiddenx" id="NFRMNO" value="{{ $NFRMNO }}" />
-    <input type="text" class="hiddenx" id="VORGNO" value="{{ $VORGNO }}" />
-    <input type="text" class="hiddenx" id="CYEAR" value="{{ $CYEAR }}" />
-    <input type="text" class="hiddenx" id="CYEAR2" value="{{ $CYEAR }}" />
-    <input type="text" class="hiddenx" id="NRUNNO" value="{{ $NRUNNO }}" />
-    <input type="text" class="hiddenx" id="EMPNO" value="{{ $EMPNO }}" />
+    <input type="text" class="hidden" id="NFRMNO" value="{{ $NFRMNO }}" />
+    <input type="text" class="hidden" id="VORGNO" value="{{ $VORGNO }}" />
+    <input type="text" class="hidden" id="CYEAR" value="{{ $CYEAR }}" />
+    <input type="text" class="hidden" id="CYEAR2" value="{{ $CYEAR }}" />
+    <input type="text" class="hidden" id="NRUNNO" value="{{ $NRUNNO }}" />
+    <input type="text" class="hidden" id="EMPNO" value="{{ $EMPNO }}" />
     <section class="flex flex-col gap-3 mb-4 px-32 w-full xl:px-70">
         <h1 class="text-3xl font-bold text-primary"> Computer program Requisition Form </h1>
         {{-- Request User --}}
