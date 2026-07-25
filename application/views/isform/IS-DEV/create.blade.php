@@ -1,6 +1,12 @@
 @extends('layouts/webflowTemplate')
 
 @section('contents')
+    <input type="text" class="hiddenx" id="NFRMNO" value="{{ $NFRMNO }}" />
+    <input type="text" class="hiddenx" id="VORGNO" value="{{ $VORGNO }}" />
+    <input type="text" class="hiddenx" id="CYEAR" value="{{ $CYEAR }}" />
+    <input type="text" class="hiddenx" id="CYEAR2" value="{{ $CYEAR }}" />
+    <input type="text" class="hiddenx" id="NRUNNO" value="{{ $NRUNNO }}" />
+    <input type="text" class="hiddenx" id="EMPNO" value="{{ $EMPNO }}" />
     <section class="flex flex-col gap-3 mb-4 px-32 w-full xl:px-70">
         <h1 class="text-3xl font-bold text-primary"> Computer program Requisition Form </h1>
         {{-- Request User --}}
@@ -9,42 +15,47 @@
             <div class="flex gap-8">
                 <fieldset class="fieldset flex-1">
                     <legend class="fieldset-legend">Requrst By</legend>
-                    <input type="text" class="input" placeholder="Employee No." id="req-employee-input" />
-                    <div class="flex items-center gap-3">
+                    <input type="text" class="input hidden" placeholder="Employee No." id="req-by-input" />
+                    <div class="flex items-center gap-3" id="req-by-info">
                         <div class="avatar flex-none">
-                            <div class="w-16 rounded-full">
+                            <div class="w-16 rounded-full" id="req-by-img">
                                 <div class="skeleton h-16 w-16"></div>
+                                <img src="#" class="hidden" />
                             </div>
                         </div>
-                        <div class="flex-1 flex flex-col gap-2">
+                        <div class="flex-none min-w-56 flex flex-col gap-2">
                             <h1 class="font-bold text-md" id="req-by-name">
                                 <div class="skeleton h-6 w-48"></div>
                             </h1>
-                            <h2>
-                                <div class="skeleton h-6 w-32" id="req-by-id"></div>
+                            <h2 id="req-by-id">
+                                <div class="skeleton h-6 w-32"></div>
                             </h2>
                             <div class="text-xs text-gray-500" id="req-by-organization">
-                                <div class="skeleton h-6 w-96"></div>
+                                <div class="skeleton h-6 w-56"></div>
                             </div>
                         </div>
-                        <a href="#" class="btn btn-ghost btn-circle" id="req-employee-btn"><i
-                                class="fi fi-rs-cross text-xl text-red-500"></i></a>
+                        <div class="tooltip" data-tip="เปลี่ยนผู้ขอ Request">
+                            <a href="#" class="btn btn-ghost btn-circle" id="change-req-employee"><i
+                                    class="fi fi-rs-cross text-xl text-red-500"></i></a>
+                        </div>
+
                     </div>
                 </fieldset>
                 <fieldset class="fieldset flex-1">
                     <legend class="fieldset-legend">Input By</legend>
-                    <div class="flex items-center gap-3">
+                    <div class="flex items-center gap-3" id="input-by-info">
                         <div class="avatar flex-none">
-                            <div class="w-16 rounded-full">
+                            <div class="w-16 rounded-full" id="input-by-img">
                                 <div class="skeleton h-16 w-16"></div>
+                                <img src="#" class="hidden" />
                             </div>
                         </div>
                         <div class="flex-1 flex flex-col gap-2">
                             <h1 class="font-bold text-md" id="input-by-name">
                                 <div class="skeleton h-6 w-48"></div>
                             </h1>
-                            <h2>
-                                <div class="skeleton h-6 w-32" id="input-by-id"></div>
+                            <h2 id="input-by-id">
+                                <div class="skeleton h-6 w-32"></div>
                             </h2>
                             <div class="text-xs text-gray-500" id="input-by-organization">
                                 <div class="skeleton h-6 w-96"></div>
@@ -83,6 +94,7 @@
                 </ul>
 
             </fieldset>
+
             <fieldset class="fieldset">
                 <legend class="fieldset-legend">Title</legend>
                 <input type="text" class="input w-full" placeholder="ตั้งชื่อ Request" />
@@ -90,9 +102,12 @@
 
             <fieldset class="fieldset">
                 <legend class="fieldset-legend">Detail</legend>
-                <textarea class="textarea w-full h-56"
+                <textarea class="textarea w-full h-56 text-comment" maxlength="500"
                     placeholder="เขียนอธิบายภาพรวมของ Requirement นี้ หรือบอกถึงวัตถุประสงค์ของการ Project นี้"></textarea>
+                <div class="label text-xs justify-start text-red-500 text-comment-err"></div>
+                <div class="label text-xs justify-end text-count"><span class="text-count-no">0</span>/1000</div>
             </fieldset>
+
             <fieldset class="fieldset">
                 <legend class="fieldset-legend">Additional Information</legend>
                 <p class="label">แนบเอกสารที่เกี่ยวข้อง เช่น Flow การทำงาน, Screenshot เป็นต้น</p>
@@ -103,19 +118,14 @@
             </fieldset>
         </fieldset>
 
-        <fieldset class="bg-primary/10 border border-primary rounded-xl p-5 form-roi hiddenx">
+        <fieldset class="bg-primary/10 border border-primary rounded-xl p-5 form-roi">
             <legend class="font-semibold text-lg px-1">Expected Outcome</legend>
             <div class="flex gap-3">
                 <div class="flex-1">
                     <fieldset class="fieldset">
                         <legend class="fieldset-legend">Objective</legend>
                         <div class="flex items-center gap-3">
-                            <select class="select">
-                                <option disabled selected>Pick a color</option>
-                                <option>Crimson</option>
-                                <option>Amber</option>
-                                <option>Velvet</option>
-                            </select>
+                            <select class="select s2" id="req-objective"></select>
                             <input type="text" placeholder="Other Objective" class="input" />
                         </div>
                     </fieldset>
@@ -143,14 +153,18 @@
 
             <fieldset class="fieldset">
                 <legend class="fieldset-legend">Current Workflow</legend>
-                <textarea class="textarea w-full h-56"
+                <textarea class="textarea w-full h-56 text-comment"
                     placeholder="อธิบายวิธีการทำงานในปัจจุบัน เช่น พนักงานต้องกรอกแบบฟอร์มกระดาษแล้วจึงส่ง Approve เป็นต้น"></textarea>
+                <div class="label text-xs justify-start text-red-500 text-comment-err"></div>
+                <div class="label text-xs justify-end text-count"><span class="text-count-no">0</span>/1000</div>
             </fieldset>
 
             <fieldset class="fieldset">
                 <legend class="fieldset-legend">Expected Workflow</legend>
-                <textarea class="textarea w-full h-56"
+                <textarea class="textarea w-full h-56 text-comment"
                     placeholder="อธิบายวิธีการทำงานที่คาดหวังหลังจากโครงการนี้สำเร็จ เช่น พนักงานกรอกแบบฟอร์มออนไลน์แล้วระบบส่ง Approve บนระบบ Webflow เป็นต้น"></textarea>
+                <div class="label text-xs justify-start text-red-500 text-comment-err"></div>
+                <div class="label text-xs justify-end text-count"><span class="text-count-no">0</span>/1000</div>
             </fieldset>
 
 
@@ -160,7 +174,7 @@
             <p class="label mt-1 text-xs"></p>
         </fieldset>
 
-        <fieldset class="bg-primary/10 border border-primary rounded-xl p-5 form-roi hiddenx">
+        <fieldset class="bg-primary/10 border border-primary rounded-xl p-5 form-roi">
             <legend class="font-semibold text-lg px-1">Efficiency Gains</legend>
             <div class="table-wrap overflow-x-auto">
                 @include('isform.FORM-1.table-labor')
@@ -170,7 +184,7 @@
             </div>
         </fieldset>
 
-        <fieldset class="bg-primary/10 border border-primary rounded-xl p-5 form-roi hiddenx">
+        <fieldset class="bg-primary/10 border border-primary rounded-xl p-5 form-roi">
             <legend class="font-semibold text-lg px-1">Investment in equipment.</legend>
             <div class="table-wrap overflow-x-auto">
                 @include('isform.FORM-1.table-investment')
