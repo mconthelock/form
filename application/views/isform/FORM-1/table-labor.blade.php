@@ -1,5 +1,5 @@
 <div class="overflow-x-auto rounded-box border border-base-content/5 bg-base-100">
-    <table class="table table-edit text-xs">
+    <table class="table table-edit text-xs" id="table-labor">
         <thead class="bg-primary text-sm text-white">
             <tr class="text-center">
                 <th rowspan="2">Postion</th>
@@ -15,7 +15,7 @@
             </tr>
         </thead>
         <tbody>
-            <tr>
+            {{-- <tr>
                 <th>
                     <select class="select w-full" id="select-position">
                         <option disabled selected>Select a position</option>
@@ -26,8 +26,9 @@
                 <td><input type="text" class="input-number input-labor"></td>
                 <td><input type="text" class="input-number input-labor" readonly></td>
                 <td><input type="text" class="input-number input-labor" readonly></td>
-                <td class="text-center"><button type="button" class="btn btn-sm btn-error remove-row">X</button></td>
-            </tr>
+                <td class="text-center"><button type="button"
+                        class="btn btn-sm btn-error remove-row btn-disabled">X</button></td>
+            </tr> --}}
         </tbody>
         <tfoot class="bg-primary/20">
             <tr>
@@ -41,4 +42,7 @@
             </tr>
         </tfoot>
     </table>
+</div>
+<div class="flex mt-3 ">
+    <button class="btn btn-outline btn-primary" id="add-row-labor">+ More Row</button>
 </div>

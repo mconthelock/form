@@ -1,5 +1,5 @@
 <div class="overflow-x-auto rounded-box border border-base-content/5 bg-base-100">
-    <table class="table table-edit text-xs">
+    <table class="table table-edit text-xs" id="table-investment">
         <thead class="bg-primary text-sm text-white">
             <tr class="text-center">
                 <th>Item</th>
@@ -10,7 +10,7 @@
             </tr>
         </thead>
         <tbody>
-            <tr>
+            {{-- <tr>
                 <th>
                     <select class="select w-full" id="select-device">
                         <option></option>
@@ -20,7 +20,7 @@
                 <td><input type="text"></td>
                 <td><input type="text"></td>
                 <td class="text-center"><button type="button" class="btn btn-sm btn-error remove-row">X</button></td>
-            </tr>
+            </tr> --}}
         </tbody>
         <tfoot class="bg-primary/20">
             <tr>
@@ -32,4 +32,8 @@
             </tr>
         </tfoot>
     </table>
+</div>
+<div class="flex mt-3 ">
+    <button class="btn btn-outline btn-primary" id="add-row-investment"><i class="fi fi-tr-multiple"></i>+ More
+        Item</button>
 </div>

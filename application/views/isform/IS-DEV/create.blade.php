@@ -7,7 +7,7 @@
     <input type="text" class="hidden" id="CYEAR2" value="{{ $CYEAR }}" />
     <input type="text" class="hidden" id="NRUNNO" value="{{ $NRUNNO }}" />
     <input type="text" class="hidden" id="EMPNO" value="{{ $EMPNO }}" />
-    <section class="flex flex-col gap-3 mb-4 px-32 w-full xl:px-70">
+    <section class="flex flex-col gap-3 mb-4">
         <h1 class="text-3xl font-bold text-primary"> Computer program Requisition Form </h1>
         {{-- Request User --}}
         <fieldset class="bg-primary/10 border border-primary rounded-xl p-5">
@@ -109,11 +109,13 @@
             </fieldset>
 
             <fieldset class="fieldset">
-                <legend class="fieldset-legend">Additional Information</legend>
+                <div class="flex">
+                    <legend class="flex-1 fieldset-legend">Additional Information</legend>
+                    <button class="btn btn-primary btn-sm" id="add-file" type="button">+</button>
+                </div>
                 <p class="label">แนบเอกสารที่เกี่ยวข้อง เช่น Flow การทำงาน, Screenshot เป็นต้น</p>
-                <div class="flex gap-2 items-center ">
-                    <input type="file" class="file-input file-input-sm flex-1" />
-                    <button class="btn btn-primary btn-sm">+</button>
+                <div class="flex flex-col gap-2 items-center file-input-wrap">
+                    <input type="file" class="file-input file-input-sm w-full" />
                 </div>
             </fieldset>
         </fieldset>
@@ -179,18 +181,12 @@
             <div class="table-wrap overflow-x-auto">
                 @include('isform.FORM-1.table-labor')
             </div>
-            <div class="flex mt-3 ">
-                <button class="btn btn-outline btn-primary">+ More Row</button>
-            </div>
         </fieldset>
 
         <fieldset class="bg-primary/10 border border-primary rounded-xl p-5 form-roi">
             <legend class="font-semibold text-lg px-1">Investment in equipment.</legend>
             <div class="table-wrap overflow-x-auto">
                 @include('isform.FORM-1.table-investment')
-            </div>
-            <div class="flex mt-3 ">
-                <button class="btn btn-outline btn-primary"><i class="fi fi-tr-multiple"></i>+ More Item</button>
             </div>
         </fieldset>
 

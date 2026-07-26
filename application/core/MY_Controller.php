@@ -19,7 +19,7 @@
             //$this->session_expire();
             $this->blade = new PhpBlade($this->views, $this->cache);
             $GLOBALS['version'] = $_ENV['STATE'] == 'production' ? $_ENV['VERSION'] : time();
-            $this->load->database();
+            // $this->load->database();
             $this->load->library('mail');
         }
 
