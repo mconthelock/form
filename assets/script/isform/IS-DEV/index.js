@@ -45,6 +45,15 @@ $(document).on('click', '#change-req-employee', async function (e) {
     $('#req-by-input').focus();
 });
 
+$(document).on('keyup', '.input-number', function (e) {
+    let value = $(this).val();
+    value = value.replace(/[^\d.-]/g, '');
+    value = value.replace(/(?!^)-/g, '');
+    const parts = value.split('.');
+    if (parts.length > 2) value = parts[0] + '.' + parts.slice(1).join('');
+    $(this).val(value);
+});
+
 $(document).on('change', '#req-by-input', async function (e) {
     e.preventDefault();
     const inputuser = $(this).val();
@@ -113,7 +122,7 @@ $(document).on('change', '.input-benefit', async function (e) {
     const presentCost = intVal(row.find('.present-cost').val()) || 0;
     const futureCost = intVal(row.find('.future-cost').val()) || 0;
     const totalCost = presentCost - futureCost;
-    row.find('.subtotal-cost').val(totalCost);
+    row.find('.subtotal-cost').val(showDigits(totalCost, 2));
     await totalBenefit();
 });
 
@@ -282,10 +291,98 @@ $(document).on('click', '.remove-row-investment', async function (e) {
 //Save Form
 $(document).on('click', '#confirm-form', async function (e) {
     e.preventDefault();
-    const formData = new FormData();
-    //Verify form
-
-    //Verify form with ROI
     const form = $('#form-is-dev')[0];
-    const files = $('#form-is-dev input[type="file"]');
+
+    //Verify form
+    let check = true;
+    $(form)
+        .find('.req-1')
+        .map(function () {
+            $(this).removeClass('border-red-500');
+            if (!$(this).val()) {
+                $(this).addClass('border-red-500');
+                check = false;
+            }
+        });
+    if (!check) {
+        await showMessage(
+            'กรุณากรอกรายละเอียดให้ครบถ้วน /Please fill all required fields.',
+        );
+        return;
+    }
+
+    //Check detail must have at least 100 characters
+    if ($('#detail-count').html() < 1) {
+        $('#detail-count')
+            .closest('.fieldset')
+            .find('textarea')
+            .addClass('text-red-500');
+        await showMessage(
+            'กรุณาอธิบายรายละเอียดงานให้ชัดเจนมากขึ้น /Please provide more details about the requirement.',
+        );
+        return;
+    }
+
+    if ($('.request-type:checked').val() < 3) {
+        //Verify form with ROI
+        let check2 = true;
+        if ($('#req-objective').val() == 8) {
+            $('#req-objective-other').addClass('req-2');
+        } else {
+            $('#req-objective-other').removeClass('req-2');
+            $('#req-objective-other').removeClass('border-red-500');
+        }
+        $(form)
+            .find('.req-2')
+            .map(function () {
+                $(this).removeClass('border-red-500');
+                $(this).closest('label.input').removeClass('border-red-500');
+                if (!$(this).val()) {
+                    $(this).addClass('border-red-500');
+                    $(this).closest('label.input').addClass('border-red-500');
+                    check2 = false;
+                }
+            });
+
+        if (!check2) {
+            await showMessage(
+                'กรุณากรอกรายละเอียดให้ครบถ้วน /Please fill all required fields.',
+            );
+            return;
+        }
+
+        //Check detail must have at least 100 characters
+        if ($('#current-workflow-count').html() < 1) {
+            $('#current-workflow-count')
+                .closest('.fieldset')
+                .find('textarea')
+                .addClass('text-red-500');
+            await showMessage(
+                'กรุณาอธิบายรายละเอียดงานให้ชัดเจนมากขึ้น /Please provide more details about the requirement.',
+            );
+            return;
+        }
+
+        //Check detail must have at least 100 characters
+        if ($('#expected-workflow-count').html() < 1) {
+            $('#expected-workflow-count')
+                .closest('.fieldset')
+                .find('textarea')
+                .addClass('text-red-500');
+            await showMessage(
+                'กรุณาอธิบายรายละเอียดงานให้ชัดเจนมากขึ้น /Please provide more details about the requirement.',
+            );
+            return;
+        }
+
+        if ($('#roi-total-full').html() == 0) {
+            await showMessage(
+                'กรุณากรอกระบุข้อมูล Benefit/ROI ให้ครบถ้วน / Please fill all required fields for Benefit/ROI.',
+            );
+            return;
+        }
+    }
+
+    //const formData = new FormData();
+    //const files = $('#form-is-dev input[type="file"]');
 });
