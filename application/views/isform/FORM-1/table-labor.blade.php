@@ -1,4 +1,9 @@
+<label class="label mb-5">
+    <input type="checkbox" class="checkbox checkbox-primary" id="not-improve-manpower" />
+    <span class="label-text">This project is not improve manpower / โครงการนี้ไม่ได้ปรับปรุงด้านกำลังคน</span>
+</label>
 <div class="overflow-x-auto rounded-box border border-base-content/5 bg-base-100">
+
     <table class="table table-edit text-xs" id="table-labor">
         <thead class="bg-primary text-sm text-white">
             <tr class="text-center">
@@ -15,29 +20,15 @@
             </tr>
         </thead>
         <tbody>
-            {{-- <tr>
-                <th>
-                    <select class="select w-full" id="select-position">
-                        <option disabled selected>Select a position</option>
-                    </select>
-                </th>
-                <td><input type="text" class="input-number input-labor"></td>
-                <td><input type="text" class="input-number input-labor"></td>
-                <td><input type="text" class="input-number input-labor"></td>
-                <td><input type="text" class="input-number input-labor" readonly></td>
-                <td><input type="text" class="input-number input-labor" readonly></td>
-                <td class="text-center"><button type="button"
-                        class="btn btn-sm btn-error remove-row btn-disabled">X</button></td>
-            </tr> --}}
         </tbody>
         <tfoot class="bg-primary/20">
             <tr>
                 <th>Total</th>
                 <td></td>
-                <td><input type="text" class="text-end outline-0 w-full" readonly></td>
-                <td><input type="text" class="text-end outline-0 w-full" readonly></td>
-                <td><input type="text" class="text-end outline-0 w-full" readonly></td>
-                <td><input type="text" class="text-end outline-0 w-full" readonly></td>
+                <td><input type="text" class="text-end outline-0 w-full total-present" readonly></td>
+                <td><input type="text" class="text-end outline-0 w-full total-future" readonly></td>
+                <td><input type="text" class="text-end outline-0 w-full total-time" readonly></td>
+                <td><input type="text" class="text-end outline-0 w-full total-labor" readonly></td>
                 <td></td>
             </tr>
         </tfoot>

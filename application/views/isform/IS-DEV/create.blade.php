@@ -71,8 +71,8 @@
             <fieldset class="fieldset">
                 <legend class="fieldset-legend">System Name</legend>
                 <ul class="flex gap-5">
-                    <li class="flex items-center gap-3"><input type="radio" name="system-name"
-                            class="radio radio-primary" />AS400 Application</li>
+                    <li class="flex items-center gap-3"><input type="radio" name="system-name" class="radio radio-primary"
+                            checked />AS400 Application</li>
                     <li class="flex items-center gap-3"><input type="radio" name="system-name"
                             class="radio radio-primary" />Windows Application</li>
                 </ul>
@@ -82,7 +82,8 @@
                 <legend class="fieldset-legend">Request Type</legend>
                 <ul class="flex gap-5">
                     <li class="flex items-center gap-3"><input type="radio" name="request-type"
-                            class="radio radio-primary request-type" value="1" />Additional Request</li>
+                            class="radio radio-primary request-type" value="1" checked />New Program/Additional Request
+                    </li>
                     <li class="flex items-center gap-3"><input type="radio" name="request-type"
                             class="radio radio-primary request-type" value="2" />Modify Program</li>
                     <li class="flex items-center gap-3"><input type="radio" name="request-type"
@@ -92,12 +93,17 @@
                     <li class="flex items-center gap-3"><input type="radio" name="request-type"
                             class="radio radio-primary request-type" value="5" />Search Data</li>
                 </ul>
+            </fieldset>
 
+            <fieldset class="fieldset">
+                <legend class="fieldset-legend">Program Name</legend>
+                <input type="text" class="input w-full"
+                    placeholder="ชื่อโปรแกรม เช่น Webflow, SCM, Cost Reduction หรือ Procurement เป็นต้น" />
             </fieldset>
 
             <fieldset class="fieldset">
                 <legend class="fieldset-legend">Title</legend>
-                <input type="text" class="input w-full" placeholder="ตั้งชื่อ Request" />
+                <input type="text" class="input w-full" placeholder="ตั้งชื่อ Request / ชื่อโปรเจค" />
             </fieldset>
 
             <fieldset class="fieldset">
@@ -190,8 +196,15 @@
             </div>
         </fieldset>
 
+        <div class="form-roi bg-accent/10 border border-accent rounded-xl p-5 mt-3">
+            This project will return on investment (ROI) <span class="font-bold text-lg text-primary"
+                id="roi-total-kb">0</span>KB (<span class="font-bold text-lg text-primary" id="roi-total-full">0</span>
+            Baht)
+        </div>
+
+
         <div class="flex gap-3 mt-3 ">
-            <button class="btn btn-primary"><i class="fi fi-tr-multiple"></i>Confirm</button>
+            <button class="btn btn-primary" id="confirm-form"><i class="fi fi-tr-multiple"></i>Confirm</button>
         </div>
     </section>
 @endsection
