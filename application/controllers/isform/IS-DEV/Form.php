@@ -21,8 +21,8 @@ class Form extends MY_Controller{
 
         $data['mode'] = 1;
         if(isset($data["NRUNNO"]) && $data["NRUNNO"] != 0) {
-            print_r($data);
-            exit;
+            //print_r($data);
+            //exit;
             $this->views("isform/{$this->formname}/show", $data);
         }else{
             //Create mode

@@ -3,6 +3,7 @@ import dayjs from 'dayjs';
 import select2 from 'select2';
 import { displayEmpInfo, fillImages } from '@amec/webasset/indexDB';
 import { setSelect2 } from '@amec/webasset/select2';
+import { setDatePicker } from '@amec/webasset/flatpickr';
 import { showMessage, intVal, showDigits } from '@amec/webasset/utils';
 import {
     setRequester,
@@ -30,6 +31,11 @@ $(document).ready(async function () {
     // $('#add-row-investment').trigger('click');
     $('#not-improve-investment').trigger('click');
     await setSelect2();
+    await setDatePicker({
+        mode: 'month',
+        dateFormat: 'Y-M',
+        minDate: dayjs().format('YYYY-MM'),
+    });
 });
 
 $(document).on('click', '#change-req-employee', async function (e) {

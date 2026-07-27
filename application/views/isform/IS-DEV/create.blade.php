@@ -153,7 +153,7 @@
                 <legend class="fieldset-legend">Preferred Requirement Gathering Period</legend>
                 <p class="label italic">กำหนดการที่พร้อมสำหรับการเก็บรวบรวมข้อกำหนดและ Developer เริ่มงานได้</p>
                 <label class="input">
-                    <input type="text" class="grow" placeholder="{{ Date('Y-M') }}" />
+                    <input type="text" class="grow fdate" placeholder="{{ Date('Y-M') }}" />
                     <i class="icofont-calendar"></i>
                 </label>
             </fieldset>
