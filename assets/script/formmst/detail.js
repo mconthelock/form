@@ -15,6 +15,7 @@ import {
 
 select2();
 var cyear, orgno, nno;
+
 $(document).ready(async function (e) {
     try {
         const master = await getFormMaster();
@@ -176,3 +177,11 @@ async function setFormAction(mode) {
     if (mode == 1) $('.btn-container').append(addFormBtn, backBtn);
     else $('.btn-container').append(editFormBtn, backBtn);
 }
+
+//Flow Master
+$(document).on('click', '.add-flow', async function (e) {
+    e.preventDefault();
+    $('#flow-form')[0].reset();
+    $('#add-flow-form').toggleClass('hidden');
+    $('#flow-list').toggleClass('hidden');
+});

@@ -71,8 +71,8 @@ $(document).on('click', '#save-group-btn', function (e) {
         };
         table.row
             .add({
-                VGROUPORG: '',
-                VGROUPNAME: '',
+                VGROUPORG: 'VGROUPORG',
+                VGROUPNAME: 'VGROUPNAME',
                 deptname: { name: '' },
             })
             .draw();
