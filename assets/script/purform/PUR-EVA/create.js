@@ -114,7 +114,11 @@ $(document).ready(async function () {
     paymentTermManager.init(termdata);
     currencyManager.init(currencyData);
     concernManager.init(orgdata);
-    const submitbtn = webflowSubmit({ request: true, draft: true });
+    const submitbtn = webflowSubmit({
+        request: true,
+        draft: true,
+        remark: false,
+    });
     $('#form-action-container').html(submitbtn);
     setDatePicker();
 
@@ -229,6 +233,9 @@ $(document).ready(async function () {
             $('#attach-qa').removeClass('hidden');
             $('#attach-vat').addClass('hidden');
             $('.pro').removeClass('hidden');
+        }
+        if ($('.radio-type:checked').length > 0) {
+            $('.radio-type:checked').trigger('change');
         }
     });
 
@@ -534,70 +541,51 @@ $(document).ready(async function () {
     });
 
     $(document).on('click', '#btnDraft', async function () {
-        const formElement = $('#frmmain')[0];
-        const formData = new FormData(formElement);
-        const payload = packPurevaFormData(formElement);
-        const formInfo = await getAllAttr('.form-info');
-
-        formData.append('NFRMNO', formInfo.nfrmno);
-        formData.append('VORGNO', formInfo.vorgno);
-        formData.append('CYEAR', formInfo.cyear);
-        const rawFieldsToDelete = [
-            'COMPLIANCE',
-            'FY[]',
-            'FY_PROFIT[]',
-            'FIN_LEVEL',
-            'QA_LEVEL',
-            'ENV_LEVEL',
-            'VERIFYING',
-            'cusname[]',
-            'cusper[]',
-            'supname[]',
-            'supper[]',
-            'proname[]',
-            'proper[]', // เพิ่มการลบฟิลด์ดิบของ relations
-        ];
-        rawFieldsToDelete.forEach((field) => formData.delete(field));
-        if (payload.COMPLIANCE) {
-            formData.append('COMPLIANCE', payload.COMPLIANCE);
+        if (!checkAttFile()) {
+            return false;
         }
-        payload.SCORES.forEach((score, index) => {
-            if (score.TOPIC)
-                formData.append(`SCORES[${index}][TOPIC]`, score.TOPIC);
-            if (score.TOPIC_DESC)
-                formData.append(
-                    `SCORES[${index}][TOPIC_DESC]`,
-                    score.TOPIC_DESC,
-                );
-            if (score.SCORE !== undefined)
-                formData.append(`SCORES[${index}][SCORE]`, score.SCORE);
-            if (score.SLEVEL)
-                formData.append(`SCORES[${index}][SLEVEL]`, score.SLEVEL);
-        });
-        payload.PROFIT_TURNOVERS.forEach((pt, index) => {
-            formData.append(`PROFIT_TURNOVERS[${index}][MYEAR]`, pt.MYEAR);
-            formData.append(`PROFIT_TURNOVERS[${index}][AMOUNT]`, pt.AMOUNT);
-            if (pt.RECORD_TYPE)
-                formData.append(
-                    `PROFIT_TURNOVERS[${index}][RECORD_TYPE]`,
-                    pt.RECORD_TYPE,
-                );
-        });
-        payload.RELATIONS.forEach((relation, index) => {
-            formData.append(
-                `RELATIONS[${index}][RELATION_TYPE]`,
-                relation.RELATION_TYPE,
-            );
-            formData.append(`RELATIONS[${index}][NAME]`, relation.NAME);
-            formData.append(
-                `RELATIONS[${index}][PERCENTAGE]`,
-                relation.PERCENTAGE,
-            );
-        });
-        //logFormData(formData);
-        const filteredFormData = filterFormData(formData);
+        $('#draft').val('0');
+        const formElement = $('#frmmain')[0];
+        // const formData = new FormData(formElement);
+        const filteredFormData = await packPurevaFormData(formElement);
         logFormData(filteredFormData);
         const res = await create(filteredFormData);
+    });
+
+    $('.empnum').on('input', function () {
+        const directValue = Number($('input[name="EMPDIRECT"]').val()) || 0;
+        const indirectValue = Number($('input[name="EMPINDIRECT"]').val()) || 0;
+        const total = directValue + indirectValue;
+        $('.totemp').val(total);
+    });
+    $('input[name="VENDGROUP"]').on('change', function () {
+        const selectedValue = $(this).val();
+        const blockCer = $('#file-cer').closest('.flex-col.gap-2.border');
+        const blockIe = $('#file-ie').closest('.flex-col.gap-2.border');
+        const blockQa = $('#file-qa').closest('.flex-col.gap-2.border');
+        if (selectedValue) {
+            if (selectedValue.includes('6:Non-Production')) {
+                blockIe.hide();
+                blockQa.hide();
+                blockCer.show();
+                $('#file-ie, #file-qa').val('');
+                $('#file-ie, #file-qa')
+                    .closest('.flex-col')
+                    .find('.show-file')
+                    .empty();
+            } else {
+                // แสดงแบบทื่อๆ ทันที
+                blockIe.show();
+                blockQa.show();
+                blockCer.hide();
+                $('#file-cer').val('');
+                $('#file-cer').closest('.flex-col').find('.show-file').empty();
+            }
+        } else {
+            blockIe.hide();
+            blockQa.hide();
+            blockCer.hide();
+        }
     });
 });
 
@@ -856,149 +844,145 @@ function renderNewFilesUI(inputId, dataTransfer, container) {
     });
 }
 
-function packPurevaFormData(formElement) {
-    const formData = new FormData(formElement);
-    const compliances = [];
-    const fyList = [];
-    const fyProfitList = [];
-    const fytList = [];
-    const fytProfitList = [];
-    const cusname = [];
-    const cusper = [];
-    const supname = [];
-    const supper = [];
-    const proname = [];
-    const proper = [];
-    const sharename = [];
-    const shareper = [];
+async function packPurevaFormData(formElement) {
+    const fd = new FormData(formElement);
+    const getAll = (key) => fd.getAll(key); // Helper สำหรับดึงค่า Array
+    const getStr = (key) => fd.get(key) || '';
 
-    const payload = {
-        SCORES: [],
-        PROFIT_TURNOVERS: [],
-        RELATIONS: [],
-    };
-    formData.forEach((value, key) => {
-        if (key === 'COMPLIANCE') {
-            compliances.push(value);
-        } else if (key === 'FY[]') {
-            fyList.push(value);
-        } else if (key === 'FY_PROFIT[]') {
-            fyProfitList.push(value);
-        } else if (key === 'FYT[]') {
-            fytList.push(value);
-        } else if (key === 'FYT_PROFIT[]') {
-            fytProfitList.push(value);
-        } else if (key === 'cusname[]') {
-            cusname.push(value);
-        } else if (key === 'cusper[]') {
-            cusper.push(value);
-        } else if (key === 'supname[]') {
-            supname.push(value);
-        } else if (key === 'supper[]') {
-            supper.push(value);
-        } else if (key === 'proname[]') {
-            proname.push(value);
-        } else if (key === 'proper[]') {
-            proper.push(value);
-        } else if (key === 'sharename[]') {
-            sharename.push(value);
-        } else if (key === 'shareper[]') {
-            shareper.push(value);
-        } else if (!key.includes('[]')) {
-            // แปลงฟิลด์ที่ DTO ระบุเป็น @IsNumber() ให้เป็น Number
-            const numberFields = [
-                'AMOUNT',
-                'CAPITAL',
-                'EMPDIRECT',
-                'EMPINDIRECT',
-                'LAND',
-                'FACTORY',
-            ];
-            if (numberFields.includes(key)) {
-                payload[key] = value ? Number(value) : null;
-            } else {
-                payload[key] = value;
-            }
-        }
+    // 1. แปลงฟิลด์ตัวเลขเดี่ยว (แทนที่ if-else chain เดิม)
+    const numberFields = [
+        'AMOUNT',
+        'CAPITAL',
+        'EMPDIRECT',
+        'EMPINDIRECT',
+        'LAND',
+        'FACTORY',
+    ];
+    numberFields.forEach((key) => {
+        if (fd.has(key) && fd.get(key)) fd.set(key, Number(fd.get(key)));
     });
 
-    $(formElement)
+    // 2. จัดการ Record Type & Remark
+    const isNonProd = getStr('VENDGROUP').includes('6:Non-Production');
+    const recordType = isNonProd ? 'P' : 'T';
+    const remark = getStr(isNonProd ? 'nonremark' : 'proremark');
+
+    // 3. จัดการ PROFIT_TURNOVERS (ยุบลูป for 2 ชุดเหลือชุดเดียว)
+    const years = getAll(isNonProd ? 'FY[]' : 'FYT[]');
+    const profits = getAll(isNonProd ? 'FY_PROFIT[]' : 'FYT_PROFIT[]');
+
+    const PROFIT_TURNOVERS = years
+        .map((year, i) =>
+            year
+                ? {
+                      RECORD_TYPE: recordType,
+                      MYEAR: Number(year),
+                      AMOUNT: Number(profits[i]) || 0,
+                  }
+                : null,
+        )
+        .filter(Boolean); // ลบค่าที่เป็น null ทิ้ง
+
+    // 4. จัดการ RELATIONS (ใช้ Helper function ยุบลูป for 4 ชุด)
+    const buildRels = (nameKey, perKey, type) =>
+        getAll(nameKey)
+            .map((name, i) =>
+                name
+                    ? {
+                          ENTITY_TYPE: type,
+                          ENTITY_NAME: name,
+                          PERCENT: Number(getAll(perKey)[i]) || 0,
+                      }
+                    : null,
+            )
+            .filter(Boolean);
+
+    const RELATIONS = [
+        ...buildRels('SHARENAME[]', 'SHAREPER[]', 'N'),
+        ...buildRels('CUSNAME[]', 'CUSPER[]', 'C'),
+        ...buildRels('SUPNAME[]', 'SUPPER[]', 'S'),
+        ...buildRels('PRONAME[]', 'PROPER[]', 'P'),
+    ];
+
+    // 5. จัดการ SCORES (ใช้ jQuery .map() ดึงรวดเดียว)
+    const SCORES = $(formElement)
         .find('input[data-topic]:checked')
-        .each(function () {
-            payload.SCORES.push({
-                TOPIC: $(this).data('topic'),
-                TOPIC_DESC: $(this).data('topicdesc'),
-                SCORE: Number($(this).val()),
-                SLEVEL: $(this).data('level'),
-            });
-        });
-    if (compliances.length > 0) {
-        payload.COMPLIANCE = compliances.join(', ');
-    }
-    const vendGroupValue = formData.get('VENDGROUP') || '';
-    let record_type = '';
-    if (vendGroupValue.includes('6:Non-Production')) {
-        record_type = 'P';
-    }
-    if (record_type == 'P') {
-        for (let i = 0; i < fyList.length; i++) {
-            if (fyList[i]) {
-                payload.PROFIT_TURNOVERS.push({
-                    RECORD_TYPE: record_type,
-                    MYEAR: Number(fyList[i]),
-                    AMOUNT: fyProfitList[i] ? Number(fyProfitList[i]) : 0,
-                });
-            }
+        .map((_, el) => ({
+            TOPIC: $(el).data('topic'),
+            TOPIC_DESC: $(el).data('topicdesc'),
+            SCORE: Number($(el).val()),
+            SLEVEL: $(el).data('level'),
+        }))
+        .get();
+
+    // 6. ลบฟิลด์ดิบที่ไม่ได้ใช้แล้ว
+    const rawFieldsToDelete = [
+        'COMPLIANCE',
+        'FY[]',
+        'FY_PROFIT[]',
+        'FYT[]',
+        'FYT_PROFIT[]',
+        'FIN_LEVEL',
+        'QA_LEVEL',
+        'ENV_LEVEL',
+        'VERIFYING',
+        'SHARENAME[]',
+        'SHAREPER[]',
+        'CUSNAME[]',
+        'CUSPER[]',
+        'SUPNAME[]',
+        'SUPPER[]',
+        'PRONAME[]',
+        'PROPER[]',
+    ];
+    rawFieldsToDelete.forEach((field) => fd.delete(field));
+
+    // 7. ประกอบร่าง FormData กลับเข้าไป
+    const compliances = getAll('COMPLIANCE');
+    if (compliances.length) fd.append('COMPLIANCE', compliances.join(', '));
+    fd.append('REMARK', remark);
+
+    const formInfo = await getAllAttr('.form-info');
+    fd.append('NFRMNO', formInfo.nfrmno);
+    fd.append('VORGNO', formInfo.vorgno);
+    fd.append('CYEAR', formInfo.cyear);
+
+    // Helper สำหรับ Append Array ของ Object เข้า FormData (ยุบโค้ดบรรทัดยาวๆ)
+    const appendObjArray = (key, arr) =>
+        arr.forEach((obj, i) =>
+            Object.entries(obj).forEach(([prop, val]) => {
+                if (val !== undefined) fd.append(`${key}[${i}][${prop}]`, val);
+            }),
+        );
+
+    appendObjArray('SCORES', SCORES);
+    appendObjArray('PROFIT_TURNOVERS', PROFIT_TURNOVERS);
+    appendObjArray('RELATIONS', RELATIONS);
+
+    return filterFormData(fd);
+}
+
+function checkAttFile() {
+    const selectedGroup = $('input[name="VENDGROUP"]:checked').val();
+    const hasCer = $('#file-cer')[0].files.length > 0; // Company Certificate
+    const hasIe = $('#file-ie')[0].files.length > 0; // IE's evaluation
+    const hasQa = $('#file-qa')[0].files.length > 0; // QA's evaluation
+    if (selectedGroup.includes('6:Non-Production')) {
+        if (!hasCer) {
+            showMessage(
+                'Please Attached Company Certificate / Vat Register / Company Profile',
+                'warning',
+            );
+            return false;
         }
     } else {
-        for (let i = 0; i < fytList.length; i++) {
-            if (fytList[i]) {
-                payload.PROFIT_TURNOVERS.push({
-                    RECORD_TYPE: record_type,
-                    MYEAR: Number(fytList[i]),
-                    AMOUNT: fytProfitList[i] ? Number(fytProfitList[i]) : 0,
-                });
-            }
+        if (!hasIe || !hasQa) {
+            showMessage(
+                "Please Attached IE's evaluation Document and QA's evaluation Document",
+                'warning',
+            );
+            return false;
         }
     }
-    for (let i = 0; i < sharename.length; i++) {
-        if (sharename[i]) {
-            payload.RELATIONS.push({
-                ENTITY_TYPE: 'N',
-                ENTITY_NAME: sharename[i],
-                PERCENT: shareper[i] ? Number(shareper[i]) : 0,
-            });
-        }
-    }
-
-    for (let i = 0; i < cusname.length; i++) {
-        if (cusname[i]) {
-            payload.RELATIONS.push({
-                ENTITY_TYPE: 'C',
-                ENTITY_NAME: cusname[i],
-                PERCENT: cusper[i] ? Number(cusper[i]) : 0,
-            });
-        }
-    }
-
-    for (let i = 0; i < supname.length; i++) {
-        if (supname[i]) {
-            payload.RELATIONS.push({
-                ENTITY_TYPE: 'S',
-                ENTITY_NAME: supname[i],
-                PERCENT: supper[i] ? Number(supper[i]) : 0,
-            });
-        }
-    }
-    for (let i = 0; i < proname.length; i++) {
-        if (proname[i]) {
-            payload.RELATIONS.push({
-                ENTITY_TYPE: 'P',
-                ENTITY_NAME: proname[i],
-                PERCENT: proper[i] ? Number(proper[i]) : 0,
-            });
-        }
-    }
-
-    return payload;
+    return true;
 }
