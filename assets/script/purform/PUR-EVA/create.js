@@ -540,14 +540,22 @@ $(document).ready(async function () {
         }
     });
 
-    $(document).on('click', '#btnDraft', async function () {
+    $(document).on('click', '#btnDraft, #btnRequest', async function () {
+        // 1. เช็คไฟล์แนบเหมือนเดิม
         if (!checkAttFile()) {
             return false;
         }
-        $('#draft').val('0');
+
+        // 2. ดึงข้อมูลฟอร์ม
         const formElement = $('#frmmain')[0];
-        // const formData = new FormData(formElement);
         const filteredFormData = await packPurevaFormData(formElement);
+
+        // 3. เช็คว่าถ้าปุ่มที่กดคือ btnDraft ค่อยเติมค่า DRAFT ลงไป
+        if (this.id === 'btnDraft') {
+            filteredFormData.append('DRAFT', '0');
+        }
+
+        // 4. บันทึก log และส่งข้อมูล
         logFormData(filteredFormData);
         const res = await create(filteredFormData);
     });

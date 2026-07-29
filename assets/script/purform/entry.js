@@ -12,4 +12,5 @@ module.exports = {
 
     // PUR-EVA
     purEva: './assets/script/purform/PUR-EVA/create.js',
+    purEvaView: './assets/script/purform/PUR-EVA/view.js',
 };

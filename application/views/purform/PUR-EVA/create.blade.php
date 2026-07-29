@@ -64,7 +64,7 @@
 <div class="hidden apv-data" empno="{{$empno}}"></div>
 
 <form id="frmmain">
-    <input type="hidden" name="DRAFT" id="draft" >
+    <!-- <input type="hidden" name="DRAFT" id="draft" > -->
 <div class="space-y-6">
      <h1 class="text-3xl text-center text-primary font-bold mb-10">Vendor/Sub-contractor Evaluation Form</h1>
     <!-- Top Section -->
@@ -97,7 +97,7 @@
                 <input type="text" name="VENDORCODE" id="VENDORCODE" maxlength="5" placeholder="Vendor Code" class="vendor-code-input input input-sm border border-gray-400 h-8 rounded w-48 px-2" disabled >
                 
                 <label class="flex items-center gap-2 cursor-pointer text-gray-700 text-sm">
-                    <input type="checkbox" name="UPSTATUS" class="update-status-check w-4 h-4 accent-blue-600 rounded" disabled> 
+                    <input type="checkbox" name="UPSTATUS"  value="Y" class="update-status-check w-4 h-4 accent-blue-600 rounded" disabled> 
                     Update Vendor Master
                 </label>
             </div>
