@@ -1,231 +1,237 @@
 @extends('layouts/webflowTemplate')
-@section('content')
-<div id="edr-export-app" class="min-h-screen bg-slate-100 p-4">
-    <div class="mx-auto w-full rounded-xl border border-slate-200 bg-white p-4 shadow-md">
 
-        {{-- Header --}}
-        <div class="mb-2 flex min-h-[68px] items-center justify-center bg-blue-200 px-4">
-            <h1 class="text-2xl font-bold text-slate-950">
-                E-Daily Report
-            </h1>
+@section('contents')
+<style>
+    #edr-export-app .edr-filter-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        border: 1px solid #cbd5e1;
+    }
+
+    #edr-export-app .edr-field {
+        display: grid;
+        grid-template-columns: 200px minmax(0, 1fr);
+        min-width: 0;
+        border-right: 1px solid #cbd5e1;
+        border-bottom: 1px solid #cbd5e1;
+        background: #fff;
+    }
+
+    #edr-export-app .edr-field:nth-child(3n) {
+        border-right: 0;
+    }
+
+    #edr-export-app .edr-label {
+        display: flex;
+        align-items: center;
+        min-height: 44px;
+        padding: 8px 12px;
+        background: #bfdbfe;
+        font-weight: 600;
+        color: #0f172a;
+        white-space: nowrap;
+    }
+
+    #edr-export-app .edr-control {
+        min-width: 0;
+        padding: 4px;
+    }
+
+    #edr-export-app input,
+    #edr-export-app select {
+        display: block;
+        width: 100% !important;
+        min-width: 0 !important;
+        height: 36px;
+        padding: 6px 10px;
+        border: 1px solid #cbd5e1;
+        border-radius: 4px;
+        background: #fff;
+        font-size: 14px;
+        outline: none;
+        box-sizing: border-box;
+    }
+
+    #edr-export-app select {
+        background: #fefce8;
+    }
+
+    #edr-export-app input:focus,
+    #edr-export-app select:focus {
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15);
+    }
+
+    #edr-export-app .edr-date-field {
+        grid-column: span 2;
+        grid-template-columns: 200px minmax(0, 1fr);
+    }
+
+    #edr-export-app .edr-date-controls {
+        display: grid;
+        grid-template-columns: 60px minmax(0, 1fr) 40px minmax(0, 1fr);
+        align-items: center;
+        gap: 8px;
+        min-width: 0;
+        padding: 4px;
+    }
+
+    #edr-export-app .edr-date-text {
+        text-align: center;
+        font-weight: 600;
+        color: #1e293b;
+    }
+
+    @media (max-width: 1200px) {
+        #edr-export-app .edr-filter-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        #edr-export-app .edr-field:nth-child(3n) {
+            border-right: 1px solid #cbd5e1;
+        }
+
+        #edr-export-app .edr-field:nth-child(2n) {
+            border-right: 0;
+        }
+
+        #edr-export-app .edr-date-field {
+            grid-column: span 2;
+        }
+    }
+
+    @media (max-width: 768px) {
+        #edr-export-app .edr-filter-grid {
+            grid-template-columns: 1fr;
+        }
+
+        #edr-export-app .edr-field,
+        #edr-export-app .edr-date-field {
+            grid-column: span 1;
+            grid-template-columns: 140px minmax(0, 1fr);
+            border-right: 0;
+        }
+
+        #edr-export-app .edr-date-controls {
+            grid-template-columns: 50px minmax(0, 1fr);
+        }
+    }
+</style>
+
+<div id="edr-export-app" class="min-h-screen bg-slate-100 p-3">
+    <div class="w-full rounded-lg border border-slate-200 bg-white p-3 shadow-md">
+
+        <div class="mb-2 flex h-16 items-center justify-center bg-blue-200">
+            <h1 class="text-2xl font-bold text-slate-900">MFG E-Daily Report</h1>
         </div>
 
-        {{-- Filter Form --}}
         <form id="form-edr-export" autocomplete="off">
-            <div class="overflow-hidden border border-slate-200">
-                <div class="grid grid-cols-1 xl:grid-cols-3">
+            <div class="edr-filter-grid">
 
-                    {{-- Column 1 --}}
-                    <div class="xl:border-r xl:border-slate-200">
-                        <div class="grid grid-cols-[150px_1fr] border-b border-slate-200">
-                            <label for="txt-request-by" class="flex items-center bg-blue-200 px-2 py-2 font-semibold text-slate-950">
-                                Request By
-                            </label>
-
-                            <div class="p-1">
-                                <input
-                                    type="text"
-                                    id="txt-request-by"
-                                    name="request_by"
-                                    placeholder="Ex.15199"
-                                    maxlength="5"
-                                    class="w-full rounded border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200">
-                            </div>
-                        </div>
-
-                        <div class="grid grid-cols-[150px_1fr] border-b border-slate-200">
-                            <label for="ddl-work-type" class="flex items-center bg-blue-200 px-2 py-2 font-semibold text-slate-950">
-                                ประเภทของงาน
-                            </label>
-
-                            <div class="p-1">
-                                <select
-                                    id="ddl-work-type"
-                                    name="work_type"
-                                    class="w-full rounded border border-slate-300 bg-yellow-50 px-3 py-2 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200">
-                                    <option value="">--- Please select ---</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div class="grid grid-cols-[150px_1fr] border-b border-slate-200">
-                            <label for="txt-order-no" class="flex items-center bg-blue-200 px-2 py-2 font-semibold text-slate-950">
-                                Order no
-                            </label>
-
-                            <div class="p-1">
-                                <input
-                                    type="text"
-                                    id="txt-order-no"
-                                    name="order_no"
-                                    placeholder="Ex.EYEQ74052"
-                                    class="w-full rounded border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200">
-                            </div>
-                        </div>
-                    </div>
-
-                    {{-- Column 2 --}}
-                    <div class="xl:border-r xl:border-slate-200">
-                        <div class="grid grid-cols-[150px_1fr] border-b border-slate-200">
-                            <label for="txt-repair-by" class="flex items-center bg-blue-200 px-2 py-2 font-semibold text-slate-950">
-                                Repair By
-                            </label>
-
-                            <div class="p-1">
-                                <input
-                                    type="text"
-                                    id="txt-repair-by"
-                                    name="repair_by"
-                                    placeholder="Ex.15199"
-                                    maxlength="5"
-                                    class="w-full rounded border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200">
-                            </div>
-                        </div>
-
-                        <div class="grid grid-cols-[150px_1fr] border-b border-slate-200">
-                            <label for="ddl-initial-cause" class="flex items-center bg-blue-200 px-2 py-2 font-semibold text-slate-950">
-                                สาเหตุ(เบื้องต้น)
-                            </label>
-
-                            <div class="p-1">
-                                <select
-                                    id="ddl-initial-cause"
-                                    name="initial_cause"
-                                    class="w-full rounded border border-slate-300 bg-yellow-50 px-3 py-2 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200">
-                                    <option value="">--- Please select ---</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div class="grid grid-cols-[150px_1fr] border-b border-slate-200">
-                            <label for="txt-drawing-no" class="flex items-center bg-blue-200 px-2 py-2 font-semibold text-slate-950">
-                                Drawing no
-                            </label>
-
-                            <div class="p-1">
-                                <input
-                                    type="text"
-                                    id="txt-drawing-no"
-                                    name="drawing_no"
-                                    placeholder="Ex.YA252C596-01"
-                                    class="w-full rounded border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200">
-                            </div>
-                        </div>
-                    </div>
-
-                    {{-- Column 3 --}}
-                    <div>
-                        <div class="grid grid-cols-[150px_1fr] border-b border-slate-200">
-                            <label for="txt-daily-report-no" class="flex items-center bg-blue-200 px-2 py-2 font-semibold text-slate-950">
-                                Daily Report no
-                            </label>
-
-                            <div class="p-1">
-                                <input
-                                    type="text"
-                                    id="txt-daily-report-no"
-                                    name="daily_report_no"
-                                    placeholder="Ex.EAS-AUG-24003"
-                                    class="w-full rounded border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200">
-                            </div>
-                        </div>
-
-                        <div class="grid grid-cols-[150px_1fr] border-b border-slate-200">
-                            <label for="ddl-responsible-section" class="flex items-center bg-blue-200 px-2 py-2 font-semibold text-slate-950">
-                                แผนกที่รับผิดชอบ
-                            </label>
-
-                            <div class="p-1">
-                                <select
-                                    id="ddl-responsible-section"
-                                    name="responsible_section"
-                                    class="w-full rounded border border-slate-300 bg-yellow-50 px-3 py-2 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200">
-                                    <option value="">--- Please select ---</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div class="grid grid-cols-[150px_1fr] border-b border-slate-200">
-                            <label for="txt-item-no" class="flex items-center bg-blue-200 px-2 py-2 font-semibold text-slate-950">
-                                Item no
-                            </label>
-
-                            <div class="p-1">
-                                <input
-                                    type="text"
-                                    id="txt-item-no"
-                                    name="item_no"
-                                    placeholder="Ex.375"
-                                    class="w-full rounded border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200">
-                            </div>
-                        </div>
+                <div class="edr-field">
+                    <label for="txt-request-by" class="edr-label">Request By</label>
+                    <div class="edr-control">
+                        <input type="text" id="txt-request-by" name="request_by" maxlength="5" placeholder="Ex.15199">
                     </div>
                 </div>
 
-                {{-- Bottom Filter Row --}}
-                <div class="grid grid-cols-1 xl:grid-cols-[2fr_1fr]">
-                    <div class="grid grid-cols-1 border-b border-slate-200 xl:grid-cols-[150px_1fr] xl:border-b-0 xl:border-r">
-                        <label class="flex items-center bg-blue-200 px-2 py-2 font-semibold text-slate-950">
-                            Request Date
-                        </label>
-
-                        <div class="grid grid-cols-1 gap-2 p-1 sm:grid-cols-[60px_1fr_40px_1fr] sm:items-center">
-                            <label for="txt-request-date-from" class="px-2 font-semibold text-slate-900">
-                                From
-                            </label>
-
-                            <input
-                                type="date"
-                                id="txt-request-date-from"
-                                name="request_date_from"
-                                class="w-full rounded border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200">
-
-                            <label for="txt-request-date-to" class="px-2 font-semibold text-slate-900">
-                                To
-                            </label>
-
-                            <input
-                                type="date"
-                                id="txt-request-date-to"
-                                name="request_date_to"
-                                class="w-full rounded border border-slate-300 px-3 py-2 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200">
-                        </div>
+                <div class="edr-field">
+                    <label for="txt-repair-by" class="edr-label">Repair By</label>
+                    <div class="edr-control">
+                        <input type="text" id="txt-repair-by" name="repair_by" maxlength="5" placeholder="Ex.15199">
                     </div>
+                </div>
 
-                    <div class="grid grid-cols-[150px_1fr]">
-                        <label for="ddl-form-status" class="flex items-center bg-blue-200 px-2 py-2 font-semibold text-slate-950">
-                            Form Status
-                        </label>
+                <div class="edr-field">
+                    <label for="txt-daily-report-no" class="edr-label">Daily Report no</label>
+                    <div class="edr-control">
+                        <input type="text" id="txt-daily-report-no" name="daily_report_no" placeholder="Ex.EAS-AUG-24003">
+                    </div>
+                </div>
 
-                        <div class="p-1">
-                            <select
-                                id="ddl-form-status"
-                                name="form_status"
-                                class="w-full rounded border border-slate-300 bg-yellow-50 px-3 py-2 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-200">
-                                <option value="ALL">All</option>
-                                <option value="WAITING">Waiting</option>
-                                <option value="PROCESSING">Processing</option>
-                                <option value="COMPLETE">Complete</option>
-                                <option value="CANCEL">Cancel</option>
-                            </select>
-                        </div>
+                <div class="edr-field">
+                    <label for="ddl-work-type" class="edr-label">ประเภทของงาน</label>
+                    <div class="edr-control">
+                        <select id="ddl-work-type" name="work_type">
+                            <option value="">--- Please select ---</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="edr-field">
+                    <label for="ddl-initial-cause" class="edr-label">สาเหตุ (เบื้องต้น)</label>
+                    <div class="edr-control">
+                        <select id="ddl-initial-cause" name="initial_cause">
+                            <option value="">--- Please select ---</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="edr-field">
+                    <label for="ddl-responsible-section" class="edr-label">แผนกที่รับผิดชอบ</label>
+                    <div class="edr-control">
+                        <select id="ddl-responsible-section" name="responsible_section">
+                            <option value="">--- Please select ---</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="edr-field">
+                    <label for="txt-order-no" class="edr-label">Order no</label>
+                    <div class="edr-control">
+                        <input type="text" id="txt-order-no" name="order_no" placeholder="Ex.EYEQ74052">
+                    </div>
+                </div>
+
+                <div class="edr-field">
+                    <label for="txt-drawing-no" class="edr-label">Drawing no</label>
+                    <div class="edr-control">
+                        <input type="text" id="txt-drawing-no" name="drawing_no" placeholder="Ex.YA252C596-01">
+                    </div>
+                </div>
+
+                <div class="edr-field">
+                    <label for="txt-item-no" class="edr-label">Item no</label>
+                    <div class="edr-control">
+                        <input type="text" id="txt-item-no" name="item_no" placeholder="Ex.375">
+                    </div>
+                </div>
+
+                <div class="edr-field edr-date-field">
+                    <label class="edr-label">Request Date</label>
+
+                    <div class="edr-date-controls">
+                        <label for="txt-request-date-from" class="edr-date-text">From</label>
+                        <input type="date" id="txt-request-date-from" name="request_date_from">
+
+                        <label for="txt-request-date-to" class="edr-date-text">To</label>
+                        <input type="date" id="txt-request-date-to" name="request_date_to">
+                    </div>
+                </div>
+
+                <div class="edr-field">
+                    <label for="ddl-form-status" class="edr-label">Form Status</label>
+                    <div class="edr-control">
+                        <select id="ddl-form-status" name="form_status">
+                            <option value="">All</option>
+                            <option value="1">Running</option>
+                            <option value="2">Approved</option>
+                            <option value="3">Rejected</option>
+                        </select>
                     </div>
                 </div>
             </div>
 
-            {{-- Action Buttons --}}
-            <div class="flex flex-col items-center justify-center gap-3 py-6 sm:flex-row sm:gap-10">
-                <button
-                    type="submit"
+            <div class="flex items-center justify-center gap-10 py-6">
+                <button type="submit"
                     id="btn-export-excel"
-                    class="min-w-[140px] rounded-full bg-emerald-600 px-6 py-3 font-semibold text-white shadow-sm transition hover:bg-emerald-700 focus:outline-none focus:ring-4 focus:ring-emerald-200 disabled:cursor-not-allowed disabled:opacity-60">
+                    class="min-w-[140px] rounded-full bg-emerald-600 px-6 py-3 font-semibold text-white transition hover:bg-emerald-700">
                     Export Excel
                 </button>
 
-                <button
-                    type="button"
+                <button type="button"
                     id="btn-clear-filter"
-                    class="min-w-[140px] rounded-full bg-amber-400 px-6 py-3 font-semibold text-slate-950 shadow-sm transition hover:bg-amber-500 focus:outline-none focus:ring-4 focus:ring-amber-200">
+                    class="min-w-[140px] rounded-full bg-amber-400 px-6 py-3 font-semibold text-slate-900 transition hover:bg-amber-500">
                     Clear data
                 </button>
             </div>
@@ -234,3 +240,6 @@
 </div>
 @endsection
 
+@section('scripts')
+    <script src="{{ $_ENV['APP_JS'] }}/mfg_edr_report.js?ver={{ $GLOBALS['version'] }}"></script>             
+@endsection
