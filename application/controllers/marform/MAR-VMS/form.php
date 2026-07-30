@@ -1096,7 +1096,7 @@ class form extends MY_Controller{
         {
             $totalRow = $currentRow + 2;
         }else{
-            $totalRow = $currentRow + 4;
+            $totalRow = $currentRow + 3;
         }
         $sheet->setCellValue("S{$totalRow}",   $total);   
         $writer = new Xlsx($spreadsheet);
