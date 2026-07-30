@@ -93,10 +93,9 @@
                         
                         </section>
                 </div>
-            <div class="display-section">
+  <div class="display-section">
   <div class="font-bold text-lg">General Information</div>
-  
-<div class="">
+  <div class="">
     <!-- แสดงผล Operation -->
     <div class="info-row">
       <div class="font-semibold text-sm">Operation:</div>
@@ -115,9 +114,6 @@
       <div id="VENDPURPOSE" class="text-gray-700 text-sm"></div>
     </div>
 
-    <!-- ========================================== -->
-    <!-- แสดงผล Vendor Name & Vendor Code (2 คอลัมน์) -->
-    <!-- ========================================== -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
       
       <!-- คอลัมน์ซ้าย: Vendor Name -->
@@ -133,8 +129,6 @@
       </div>
 
     </div>
-    <!-- ========================================== -->
-
     <!-- Address (EN) -->
     <div class="info-row">
       <div class="font-semibold text-sm">Address (EN):</div>
@@ -146,11 +140,181 @@
       <div class="font-semibold text-sm">Address (TH):</div>
       <div id="ADDRTH" class="text-gray-700 text-sm">-</div>
     </div>
-  </div>
-</div>
+    <div class="info-row">
+      <div class="font-semibold text-sm">Contact name:</div>
+      <div id="CONTACT" class="text-gray-700 text-sm">-</div>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      
+      <!-- คอลัมน์ซ้าย: Email -->
+      <div class="info-row">
+        <div class="font-semibold text-sm">Email:</div>
+        <div id="EMAIL" class="text-gray-700 text-sm"></div>
+      </div>
 
+      <!-- คอลัมน์ขวา: Website -->
+      <div class="info-row">
+        <div class="font-semibold text-sm">Web Site:</div>
+        <div id="WEBSITE" class="text-gray-700 text-sm"></div>
+      </div>
 
     </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">  
+      <!-- คอลัมน์ซ้าย: Tel.no -->
+      <div class="info-row">
+        <div class="font-semibold text-sm">Tel.no:</div>
+        <div id="TELNO" class="text-gray-700 text-sm"></div>
+      </div>
+      <!-- คอลัมน์ขวา: Fax.no -->
+      <div class="info-row">
+        <div class="font-semibold text-sm">Fax no:</div>
+        <div id="FAX" class="text-gray-700 text-sm"></div>
+      </div>
+    </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">  
+      <!-- คอลัมน์ซ้าย: Tel.no -->
+      <div class="info-row">
+        <div class="font-semibold text-sm">Bank name:</div>
+        <div id="BANKNAME" class="text-gray-700 text-sm"></div>
+      </div>
+      <!-- คอลัมน์ขวา: Fax.no -->
+      <div class="info-row">
+        <div class="font-semibold text-sm">Branch name:</div>
+        <div id="BRANCH" class="text-gray-700 text-sm"></div>
+      </div>
+    </div>
+    <div class="info-row">
+      <div class="font-semibold text-sm">Account number:</div>
+      <div id="ACCNUMBER" class="text-gray-700 text-sm">-</div>
+    </div>
+    <div class="info-row">
+      <div class="font-semibold text-sm">Bank Address:</div>
+      <div id="BANKADDR" class="text-gray-700 text-sm">-</div>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">  
+      <!-- คอลัมน์ซ้าย: Payment Term -->
+      <div class="info-row">
+        <div class="font-semibold text-sm">Payment Term:</div>
+        <div id="TERMCODE" class="text-gray-700 text-sm"></div>
+      </div>
+      <!-- คอลัมน์ขวา: Currency Code -->
+      <div class="info-row">
+        <div class="font-semibold text-sm">Currency Code:</div>
+        <div id="CURCODE" class="text-gray-700 text-sm"></div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="display-section">
+  <div class="font-bold text-lg">Vendor Evaluation</div>
+  <div class="">
+    
+    <!-- ปรับแก้ไขโครงสร้างส่วนนี้ -->
+    <div class="flex flex-col w-full mb-4 mt-2">
+      <div class="font-semibold text-sm mb-1">รายการสินค้าและบริการที่ยื่นจดทะเบียนเครื่องหมายการค้าในประเทศไทย:</div>
+      <div id="PRODCAT" class="text-gray-700 text-sm w-full break-words whitespace-pre-wrap"></div>
+    </div>
+    <!-- สิ้นสุดส่วนที่แก้ไข -->
+
+    <div class="info-row mt-4">
+      <div class="font-semibold text-sm mb-2 text-gray-900">Compliance</div>
+      
+      <div class="text-gray-700 text-sm space-y-2" id="COMPLIANCE_READONLY_CONTAINER">
+        
+        <label class="flex items-center gap-2">
+          <input type="checkbox" disabled class="chk-compliance rounded text-blue-600 disabled:opacity-60" value="ไม่ได้อยู่ในกลุ่มควบคุม ข้อกำหนด AMEC-5070: Rule for Export Control"> 
+          <span class="chk-label text-gray-500">ไม่ได้อยู่ในกลุ่มควบคุม ข้อกำหนด AMEC-5070: Rule for Export Control</span>
+        </label>
+        
+        <label class="flex items-center gap-2">
+          <input type="checkbox" disabled class="chk-compliance rounded text-blue-600 disabled:opacity-60" value="ไม่อยู่ในรายชื่อที่ถูกลงโทษจาก UNSC"> 
+          <span class="chk-label text-gray-500">ไม่อยู่ในรายชื่อที่ถูกลงโทษจาก UNSC</span>
+        </label>
+        
+        <label class="flex items-center gap-2">
+          <input type="checkbox" disabled class="chk-compliance rounded text-blue-600 disabled:opacity-60" value="ไม่อยู่ในประเทศ ประเทศไทยคว่ำบาตร ตามมาตรการคว่ำบาตร โดยสหประชาชาติ WWW.dff-go.th"> 
+          <span class="chk-label text-gray-500">ไม่อยู่ในประเทศ ประเทศไทยคว่ำบาตร ตามมาตรการคว่ำบาตร โดยสหประชาชาติ WWW.dff-go.th</span>
+        </label>
+        
+        <label class="flex items-center gap-2">
+          <input type="checkbox" disabled class="chk-compliance rounded text-blue-600 disabled:opacity-60" value="AMEC's standard Terms of 'CIF'"> 
+          <span class="chk-label text-gray-500">AMEC's standard Terms of "CIF"</span>
+        </label>
+        
+        <label class="flex items-center gap-2">
+          <input type="checkbox" disabled class="chk-compliance rounded text-blue-600 disabled:opacity-60" value="ได้รับ Financial Record"> 
+          <span class="chk-label text-gray-500">ได้รับ Financial Record</span>
+        </label>
+        
+        <div class="flex items-center gap-2">
+          <label class="flex items-center gap-2 flex-shrink-0">
+            <input type="checkbox" disabled class="chk-compliance rounded text-blue-600 disabled:opacity-60" value="อื่นๆ ระบุ"> 
+            <span class="chk-label text-gray-500">อื่นๆ ระบุ</span>
+          </label>
+          <input type="text" id="COMPLIANCE_OTHER_READONLY" disabled class="input input-sm border border-gray-300 bg-gray-100 text-gray-800 h-8 rounded w-1/2 px-2 disabled:opacity-70">
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+<!-- <div class="display-section">
+  <div class="font-bold text-lg">Vendor Evaluation</div>
+  <div class="">
+    <div class="info-row">
+      <div class="font-semibold text-sm">รายการสินค้าและบริการที่ยื่นจดทะเบียนเครื่องหมายการค้าในประเทศไทย:</div>
+      <div id="PRODCAT" class="text-gray-700 text-sm"></div>
+    </div>
+<div class="info-row mt-4">
+  <div class="font-semibold text-sm mb-2 text-gray-900">Compliance </div>
+  
+  <div class="text-gray-700 text-sm space-y-2" id="COMPLIANCE_READONLY_CONTAINER">
+    
+    <label class="flex items-center gap-2">
+      <input type="checkbox" disabled class="chk-compliance rounded text-blue-600 disabled:opacity-60" value="ไม่ได้อยู่ในกลุ่มควบคุม ข้อกำหนด AMEC-5070: Rule for Export Control"> 
+      <span class="chk-label text-gray-500">ไม่ได้อยู่ในกลุ่มควบคุม ข้อกำหนด AMEC-5070: Rule for Export Control</span>
+    </label>
+    
+    <label class="flex items-center gap-2">
+      <input type="checkbox" disabled class="chk-compliance rounded text-blue-600 disabled:opacity-60" value="ไม่อยู่ในรายชื่อที่ถูกลงโทษจาก UNSC"> 
+      <span class="chk-label text-gray-500">ไม่อยู่ในรายชื่อที่ถูกลงโทษจาก UNSC</span>
+    </label>
+    
+    <label class="flex items-center gap-2">
+      <input type="checkbox" disabled class="chk-compliance rounded text-blue-600 disabled:opacity-60" value="ไม่อยู่ในประเทศ ประเทศไทยคว่ำบาตร ตามมาตรการคว่ำบาตร โดยสหประชาชาติ WWW.dff-go.th"> 
+      <span class="chk-label text-gray-500">ไม่อยู่ในประเทศ ประเทศไทยคว่ำบาตร ตามมาตรการคว่ำบาตร โดยสหประชาชาติ WWW.dff-go.th</span>
+    </label>
+    
+    <label class="flex items-center gap-2">
+      <input type="checkbox" disabled class="chk-compliance rounded text-blue-600 disabled:opacity-60" value="AMEC's standard Terms of 'CIF'"> 
+      <span class="chk-label text-gray-500">AMEC's standard Terms of "CIF"</span>
+    </label>
+    
+    <label class="flex items-center gap-2">
+      <input type="checkbox" disabled class="chk-compliance rounded text-blue-600 disabled:opacity-60" value="ได้รับ Financial Record"> 
+      <span class="chk-label text-gray-500">ได้รับ Financial Record</span>
+    </label>
+    
+    <div class="flex items-center gap-2">
+      <label class="flex items-center gap-2 flex-shrink-0">
+        <input type="checkbox" disabled class="chk-compliance rounded text-blue-600 disabled:opacity-60" value="อื่นๆ ระบุ"> 
+        <span class="chk-label text-gray-500">อื่นๆ ระบุ</span>
+      </label>
+      <input type="text" id="COMPLIANCE_OTHER_READONLY" disabled class="input input-sm border border-gray-300 bg-gray-100 text-gray-800 h-8 rounded w-1/2 px-2 disabled:opacity-70">
+    
+    </div>
+
+  </div>
+</div>
+  </div>
+</div>  -->
+
+<div class="display-section">
+  <div class="font-bold text-lg">Attach files</div>
+  <div class=""></div>
+</div> 
+
+</div>
 <div id="form-action-container"></div>
 </form>
 @section('scripts')

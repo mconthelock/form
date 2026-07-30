@@ -66,6 +66,17 @@ $(async function () {
     $('#ADDREN').text(formatAddress(enAddressObj));
     $('#ADDRTH').text(formatAddress(thAddressObj));
     $('#VENDCODE').text(formeva.VENDCODE || '-');
+    $('#CONTACT').text(formeva.CONTACT || '-');
+    $('#EMAIL').text(formeva.EMAIL || '-');
+    $('#WEBSITE').text(formeva.WEBSITE || '-');
+    $('#TELNO').text(formeva.TELNO || '-');
+    $('#FAX').text(formeva.FAX || '-');
+    $('#BANKNAME').text(formeva.BANKNAME || '-');
+    $('#BRANCH').text(formeva.BRANCH || '-');
+    $('#BANKADDR').text(formeva.BANKADDR || '-');
+    $('#ACCNUMBER').text(formeva.ACCNUMBER || '-');
+    $('#TERMCODE').text(formeva.TERM.STERMDESC || '-');
+    $('#CURCODE').text(formeva.STDCUR.SCURRENCY || '-');
     container.html(
         webflowSubmit({
             flow: true,
