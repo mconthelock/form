@@ -236,7 +236,6 @@ class MfgEdrReport {
             }
 
             const today = new Date().toLocaleDateString('th-TH');
-
             const data = rows.map((row) => ({
                 ISSUE_DATE: row.ISSUE_DATE ?? '',
                 SEC: row.SEC ?? '',
@@ -369,6 +368,8 @@ class MfgEdrReport {
                 String(now.getMinutes()).padStart(2, '0'),
                 String(now.getSeconds()).padStart(2, '0'),
             ].join('');
+
+            console.log('Search Filters =>', filters);
 
             exportExcel(workbook, `MFG_E_Daily_Report_${fileDate}_${fileTime}`);
             showMessage(`Export สำเร็จ จำนวน ${data.length} รายการ`, 'success');
