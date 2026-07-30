@@ -96,14 +96,14 @@
             <div class="display-section">
   <div class="font-bold text-lg">General Information</div>
   
-  <div class="">
+<div class="">
     <!-- แสดงผล Operation -->
     <div class="info-row">
       <div class="font-semibold text-sm">Operation:</div>
       <div id="OPERATION" class="text-gray-700 text-sm"></div>
     </div>
 
-    <!-- แสดงผล Vendor Type (ดึงมาเฉพาะตัวที่เลือก) -->
+    <!-- แสดงผล Vendor Type -->
     <div class="info-row">
       <div class="font-semibold text-sm">Vendor Type:</div>
       <div id="VENDGROUP" class="text-gray-700 text-sm"></div>
@@ -115,19 +115,36 @@
       <div id="VENDPURPOSE" class="text-gray-700 text-sm"></div>
     </div>
 
-    <!-- แสดงผล Vendor Name -->
-    <div class="info-row">
-      <div class="font-semibold text-sm">Vendor Name:</div>
-      <div id="COMNAME" class="text-gray-700 text-sm"></div>
-    </div>
+    <!-- ========================================== -->
+    <!-- แสดงผล Vendor Name & Vendor Code (2 คอลัมน์) -->
+    <!-- ========================================== -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      
+      <!-- คอลัมน์ซ้าย: Vendor Name -->
+      <div class="info-row">
+        <div class="font-semibold text-sm">Vendor Name:</div>
+        <div id="COMNAME" class="text-gray-700 text-sm"></div>
+      </div>
 
-    <!-- แสดงผล Address (นำข้อมูลมาต่อกันให้เป็นรูปแบบที่อ่านง่าย) -->
+      <!-- คอลัมน์ขวา: Vendor Code -->
+      <div class="info-row">
+        <div class="font-semibold text-sm">Vendor Code:</div>
+        <div id="VENDCODE" class="text-gray-700 text-sm"></div>
+      </div>
+
+    </div>
+    <!-- ========================================== -->
+
+    <!-- Address (EN) -->
     <div class="info-row">
       <div class="font-semibold text-sm">Address (EN):</div>
-      <div class="info-value">
-        43/86 Moo 16, Bangna Road, 
-        บางแก้ว, บางพลี, สมุทรปราการ 10540, Thailand
-      </div>
+      <div id="ADDREN" class="text-gray-700 text-sm">-</div>
+    </div>
+
+    <!-- Address (TH) -->
+    <div class="info-row">
+      <div class="font-semibold text-sm">Address (TH):</div>
+      <div id="ADDRTH" class="text-gray-700 text-sm">-</div>
     </div>
   </div>
 </div>

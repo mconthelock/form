@@ -51,8 +51,21 @@ $(async function () {
     $('#OPERATION').text(displayText);
     $('#VENDGROUP').text(vendGroupText);
     console.log('xxxxxxxxx' + formeva.VENDTYPE);
-    $('#COMNAME').text(formeva.COMNAME + ' (' + formeva.VENDTYPE + ')');
-
+    $('#COMNAME').html(
+        formeva.COMNAME +
+            ' <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 ml-2">' +
+            formeva.VENDTYPE +
+            '</span>',
+    );
+    const enAddressObj = formeva.ADDRESSES.find(
+        (item) => item.ADDRTYPE === 'E',
+    );
+    const thAddressObj = formeva.ADDRESSES.find(
+        (item) => item.ADDRTYPE === 'T',
+    );
+    $('#ADDREN').text(formatAddress(enAddressObj));
+    $('#ADDRTH').text(formatAddress(thAddressObj));
+    $('#VENDCODE').text(formeva.VENDCODE || '-');
     container.html(
         webflowSubmit({
             flow: true,
@@ -64,3 +77,17 @@ $(async function () {
         }),
     );
 });
+
+function formatAddress(addrObj) {
+    if (!addrObj) return '-';
+    const parts = [
+        addrObj.ADDR,
+        addrObj.SUBDISTRICT,
+        addrObj.DISTRICT,
+        // เอาจังหวัดกับรหัสไปรษณีย์ติดกันแบบที่นิยมใช้
+        `${addrObj.PROVINCE || ''} ${addrObj.POSTCODE || ''}`.trim(),
+        addrObj.COUNTRY,
+    ].filter(Boolean);
+
+    return parts.length > 0 ? parts.join(', ') : '-';
+}
