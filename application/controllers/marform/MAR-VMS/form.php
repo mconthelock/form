@@ -1066,7 +1066,7 @@ class form extends MY_Controller{
         {
             $totalRow = $currentRow + 2;
         }else{
-            $totalRow = $currentRow + 3;
+            $totalRow = $currentRow + 4;
         }
         
         $sheet->setCellValue("S{$totalRow}",   $total);   
