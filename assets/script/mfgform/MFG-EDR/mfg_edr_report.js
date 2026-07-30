@@ -12,8 +12,6 @@ import {
 import { showLoader } from '@amec/webasset/preloader';
 import { showMessage, showConfirm } from '@amec/webasset/utils';
 import { setDatePicker } from '@amec/webasset/flatpickr';
-import { host } from '../../utils';
-import Swal from 'sweetalert2';
 import {
     exportExcel,
     defaultExcel,
@@ -22,6 +20,8 @@ import {
     alignment,
     border,
 } from '@amec/webasset/excel';
+import { host } from '../../utils';
+import Swal from 'sweetalert2';
 
 class MfgEdrReport {
     constructor() {
@@ -37,14 +37,8 @@ class MfgEdrReport {
     }
 
     bindEvents() {
-        $('#ddl-work-type').on('change', async () => {
-            await this.loadCauses();
-        });
-
-        $('#btn-clear-filter').on('click', () => {
-            this.clearFilter();
-        });
-
+        $('#ddl-work-type').on('change', async () => await this.loadCauses());
+        $('#btn-clear-filter').on('click', () => this.clearFilter());
         $('#form-edr-export').on('submit', async (event) => {
             event.preventDefault();
             await this.exportExcel();
@@ -57,18 +51,13 @@ class MfgEdrReport {
                 getworktype(),
                 getSection(),
             ]);
-
             this.workTypes = this.normalizeData(workTypeResponse);
-
             this.sections = this.normalizeData(sectionResponse);
-
             this.renderWorkTypes();
             this.renderSections();
-
             await this.loadCauses();
         } catch (error) {
             console.error('Load master data error:', error);
-
             Swal.fire({
                 icon: 'error',
                 title: 'Load data failed',
@@ -81,55 +70,39 @@ class MfgEdrReport {
         const requestId = ++this.causeRequestId;
         const workType = String($('#ddl-work-type').val() ?? '');
         const causeGroup = workType === '4' ? 'PCB' : 'ALL';
-        this.setSelectLoading('ddl-initial-cause', true);
-        try {
-            const response = await getcause({
-                CAUSE_GROUP: causeGroup,
-            });
 
-            /*
-             * ป้องกัน response เก่าทับ response ใหม่
-             * กรณีผู้ใช้เปลี่ยน Work Type เร็ว
-             */
-            if (requestId !== this.causeRequestId) {
-                return;
-            }
+        this.setSelectLoading('ddl-initial-cause', true);
+
+        try {
+            const response = await getcause({ CAUSE_GROUP: causeGroup });
+            if (requestId !== this.causeRequestId) return;
 
             this.causes = this.normalizeData(response);
-
             this.renderCauses();
         } catch (error) {
-            if (requestId !== this.causeRequestId) {
-                return;
-            }
+            if (requestId !== this.causeRequestId) return;
 
             console.error('Load cause error:', error);
-
             this.setSelectOptions(
                 'ddl-initial-cause',
                 [],
                 '--- Please select ---',
             );
-
             Swal.fire({
                 icon: 'error',
                 title: 'Load Cause Failed',
                 text: 'ไม่สามารถโหลดข้อมูลสาเหตุได้',
             });
         } finally {
-            if (requestId === this.causeRequestId) {
+            if (requestId === this.causeRequestId)
                 this.setSelectLoading('ddl-initial-cause', false);
-            }
         }
     }
 
     renderWorkTypes() {
         const options = this.workTypes
             .filter((item) => item.TID !== null && item.TID !== undefined)
-            .map((item) => ({
-                value: item.TID,
-                text: item.TYPENAME ?? '',
-            }));
+            .map((item) => ({ value: item.TID, text: item.TYPENAME ?? '' }));
 
         this.setSelectOptions(
             'ddl-work-type',
@@ -143,7 +116,7 @@ class MfgEdrReport {
             .filter((item) => item.CID !== null && item.CID !== undefined)
             .map((item) => ({
                 value: item.CID,
-                text: item.CAUSE + '_' + item.CAUSENAME,
+                text: `${item.CAUSE ?? ''}_${item.CAUSENAME ?? ''}`,
             }));
 
         this.setSelectOptions(
@@ -165,10 +138,7 @@ class MfgEdrReport {
                     !sectionName.includes('CANCEL')
                 );
             })
-            .map((item) => ({
-                value: item.SSECCODE,
-                text: item.SSEC ?? '',
-            }));
+            .map((item) => ({ value: item.SSECCODE, text: item.SSEC ?? '' }));
 
         this.setSelectOptions(
             'ddl-responsible-section',
@@ -180,6 +150,7 @@ class MfgEdrReport {
     setSelectOptions(selectId, items, placeholder) {
         const select = document.getElementById(selectId);
         if (!select) return;
+
         const options = items.map(
             (item) =>
                 `<option value="${this.escapeHtml(item.value)}">${this.escapeHtml(item.text)}</option>`,
@@ -190,46 +161,36 @@ class MfgEdrReport {
     setSelectLoading(selectId, isLoading) {
         const select = document.getElementById(selectId);
         if (!select) return;
+
         select.disabled = isLoading;
-        if (isLoading) {
-            select.innerHTML = `
-                <option value="">
-                    Loading...
-                </option>
-            `;
-        }
+        if (isLoading)
+            select.innerHTML = '<option value="">Loading...</option>';
     }
 
     normalizeData(response) {
-        if (Array.isArray(response)) {
-            return response;
-        }
-
-        if (Array.isArray(response?.data)) {
-            return response.data;
-        }
-
-        if (Array.isArray(response?.result)) {
-            return response.result;
-        }
-
-        if (Array.isArray(response?.data?.data)) {
-            return response.data.data;
-        }
-
+        if (Array.isArray(response)) return response;
+        if (Array.isArray(response?.data)) return response.data;
+        if (Array.isArray(response?.result)) return response.result;
+        if (Array.isArray(response?.data?.data)) return response.data.data;
         return [];
+    }
+
+    escapeHtml(value) {
+        return String(value ?? '')
+            .replaceAll('&', '&amp;')
+            .replaceAll('<', '&lt;')
+            .replaceAll('>', '&gt;')
+            .replaceAll('"', '&quot;')
+            .replaceAll("'", '&#039;');
     }
 
     clearFilter() {
         const form = document.getElementById('form-edr-export');
-        if (form) {
-            form.reset();
-        }
+        if (form) form.reset();
 
         $('#ddl-work-type').val('');
         $('#ddl-responsible-section').val('');
         $('#ddl-form-status').val('ALL');
-
         this.loadCauses();
     }
 
@@ -256,29 +217,28 @@ class MfgEdrReport {
                     $('#ddl-form-status').val() === 'ALL'
                         ? ''
                         : $('#ddl-form-status').val(),
-            }).filter(([, value]) => {
-                return value !== '' && value !== null && value !== undefined;
-            }),
+            }).filter(
+                ([, value]) =>
+                    value !== '' && value !== null && value !== undefined,
+            ),
         );
 
         try {
-            if (button) {
-                button.disabled = true;
-            }
-
+            if (button) button.disabled = true;
             await showLoader({ show: true });
+
             const response = await searchMfgEdrReport(filters);
             const rows = this.normalizeData(response);
+
             if (rows.length === 0) {
                 showMessage('ไม่พบข้อมูลตามเงื่อนไขที่เลือก', 'warning');
                 return;
             }
 
             const today = new Date().toLocaleDateString('th-TH');
-            const data = rows.map((row, index) => ({
-                NO: index + 1,
+
+            const data = rows.map((row) => ({
                 ISSUE_DATE: row.ISSUE_DATE ?? '',
-                SSECCODE: row.SSECCODE ?? '',
                 SEC: row.SEC ?? '',
                 DEPT: row.DEPT ?? '',
                 REQUEST_NO: row.REQUEST_NO ?? '',
@@ -293,20 +253,14 @@ class MfgEdrReport {
                 LINE: row.LINE ?? '',
                 QTY: row.QTY ?? '',
                 DETAIL: row.DETAIL ?? '',
-                REPAIR_BY: row.REPAIR_BY ?? '',
                 REPAIR_BY_NAME: row.REPAIR_BY_NAME ?? '',
                 TYPENAME: row.TYPENAME ?? '',
-                CST: row.CST ?? '',
+                CST: this.getStatusText(row.CST),
                 APPROVE_DATE: row.APPROVE_DATE ?? '',
-                DAILY_MONTH: row.DAILY_MONTH ?? '',
-                DAILY_RUNNO: row.DAILY_RUNNO ?? '',
-                VREQNO: row.VREQNO ?? '',
             }));
 
             const columns = [
-                { key: 'NO', header: 'No' },
                 { key: 'ISSUE_DATE', header: 'Issue Date' },
-                { key: 'SSECCODE', header: 'Section Code' },
                 { key: 'SEC', header: 'Section' },
                 { key: 'DEPT', header: 'Department' },
                 { key: 'REQUEST_NO', header: 'Request No' },
@@ -321,14 +275,10 @@ class MfgEdrReport {
                 { key: 'LINE', header: 'Line' },
                 { key: 'QTY', header: 'Qty' },
                 { key: 'DETAIL', header: 'Detail' },
-                { key: 'REPAIR_BY', header: 'Repair By' },
                 { key: 'REPAIR_BY_NAME', header: 'Repair By Name' },
                 { key: 'TYPENAME', header: 'Work Type' },
                 { key: 'CST', header: 'Status' },
                 { key: 'APPROVE_DATE', header: 'Approve Date' },
-                { key: 'DAILY_MONTH', header: 'Daily Month' },
-                { key: 'DAILY_RUNNO', header: 'Daily Run No' },
-                { key: 'VREQNO', header: 'Request Reference' },
             ];
 
             const totalColumns = columns.length;
@@ -338,128 +288,80 @@ class MfgEdrReport {
                 sheetName: 'MFG E-Daily Report',
                 manual: true,
                 autoWidth: false,
-
                 manualActions: (sheet) => {
                     sheet.insertRow(1, ['MFG E-Daily Report']);
-                    sheet.insertRow(2, [`Export Date : ${today}`]);
-                    sheet.insertRow(3, [`Total Records : ${data.length}`]);
-                    sheet.insertRow(4, []);
-                    mergeCell(sheet, 1, 1, 1, totalColumns);
-                    mergeCell(sheet, 2, 1, 2, totalColumns);
-                    mergeCell(sheet, 3, 1, 3, totalColumns);
+                    sheet.insertRow(2, []);
 
+                    mergeCell(sheet, 1, 1, 1, totalColumns);
                     applyStyleToRange(sheet, 1, totalColumns, 1, {
                         font: { bold: true, size: 18 },
                         alignment: alignment('center', 'middle'),
                     });
 
-                    applyStyleToRange(sheet, 1, totalColumns, 2, {
-                        font: { bold: true, size: 12 },
-                        alignment: alignment('left', 'middle'),
-                    });
-
                     applyStyleToRange(sheet, 1, totalColumns, 3, {
-                        font: { bold: true, size: 12 },
-                        alignment: alignment('left', 'middle'),
-                    });
-
-                    /*
-                     * Header อยู่แถว 5
-                     */
-                    applyStyleToRange(sheet, 1, totalColumns, 5, {
                         font: { bold: true, size: 12 },
                         alignment: alignment('center', 'middle'),
                         border: border(),
                         fill: {
                             type: 'pattern',
                             pattern: 'solid',
-                            fgColor: {
-                                argb: 'FFBFDBFE',
-                            },
+                            fgColor: { argb: 'FFBFDBFE' },
                         },
                     });
 
                     const widths = [
-                        6, 14, 14, 20, 20, 18, 22, 18, 12, 18, 24, 10, 30, 22,
-                        20, 10, 50, 14, 30, 24, 12, 16, 14, 14, 22,
+                        14, 20, 20, 18, 22, 18, 12, 18, 24, 10, 30, 22, 20, 10,
+                        50, 30, 24, 14, 16,
                     ];
-
                     widths.forEach((width, index) => {
                         sheet.getColumn(index + 1).width = width;
                     });
 
                     sheet.eachRow((row, rowNumber) => {
-                        if (rowNumber >= 5) {
-                            row.height = 22;
-                            row.eachCell((cell, columnNumber) => {
-                                cell.font = {
-                                    ...cell.font,
-                                    size: 11,
-                                };
+                        if (rowNumber < 3) return;
 
+                        row.height = 22;
+                        row.eachCell((cell, columnNumber) => {
+                            cell.font = { ...cell.font, size: 11 };
+                            cell.alignment = {
+                                vertical: 'middle',
+                                horizontal: 'center',
+                                wrapText: true,
+                            };
+
+                            if (
+                                rowNumber >= 4 &&
+                                [
+                                    2, 3, 5, 6, 8, 9, 11, 12, 13, 15, 16, 17,
+                                ].includes(columnNumber)
+                            ) {
                                 cell.alignment = {
                                     vertical: 'middle',
-                                    horizontal: 'center',
+                                    horizontal: 'left',
                                     wrapText: true,
+                                    indent: 1,
                                 };
+                            }
 
-                                /*
-                                 * Column ที่เป็นข้อความยาว ให้ชิดซ้าย
-                                 */
-                                if (
-                                    rowNumber >= 6 &&
-                                    [
-                                        4, 5, 7, 8, 10, 11, 13, 14, 15, 17, 19,
-                                        20, 25,
-                                    ].includes(columnNumber)
-                                ) {
-                                    cell.alignment = {
-                                        vertical: 'middle',
-                                        horizontal: 'left',
-                                        wrapText: true,
-                                        indent: 1,
-                                    };
-                                }
-
-                                cell.border = border();
-                            });
-                        }
+                            cell.border = border();
+                        });
                     });
 
-                    /*
-                     * Freeze Header
-                     */
-                    sheet.views = [
-                        {
-                            state: 'frozen',
-                            ySplit: 5,
-                        },
-                    ];
+                    sheet.views = [{ state: 'frozen', ySplit: 3 }];
 
-                    /*
-                     * Auto Filter ที่ Header
-                     */
                     sheet.autoFilter = {
-                        from: {
-                            row: 5,
-                            column: 1,
-                        },
-                        to: {
-                            row: 5,
-                            column: totalColumns,
-                        },
+                        from: { row: 3, column: 1 },
+                        to: { row: 3, column: totalColumns },
                     };
                 },
             });
 
             const now = new Date();
-
             const fileDate = [
                 now.getFullYear(),
                 String(now.getMonth() + 1).padStart(2, '0'),
                 String(now.getDate()).padStart(2, '0'),
             ].join('');
-
             const fileTime = [
                 String(now.getHours()).padStart(2, '0'),
                 String(now.getMinutes()).padStart(2, '0'),
@@ -467,11 +369,9 @@ class MfgEdrReport {
             ].join('');
 
             exportExcel(workbook, `MFG_E_Daily_Report_${fileDate}_${fileTime}`);
-
             showMessage(`Export สำเร็จ จำนวน ${data.length} รายการ`, 'success');
         } catch (error) {
             console.error('Export MFG E-Daily Report error:', error);
-
             showMessage(
                 error?.message ||
                     error?.responseJSON?.message ||
@@ -479,12 +379,18 @@ class MfgEdrReport {
                 'error',
             );
         } finally {
-            if (button) {
-                button.disabled = false;
-            }
-
+            if (button) button.disabled = false;
             await showLoader({ show: false });
         }
+    }
+
+    getStatusText(status) {
+        const statusMap = {
+            1: 'Running',
+            2: 'Approved',
+            3: 'Rejected',
+        };
+        return statusMap[String(status ?? '')] ?? status ?? '';
     }
 }
 
