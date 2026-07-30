@@ -14,20 +14,25 @@ import { showMessage, showConfirm } from '@amec/webasset/utils';
 import { setDatePicker } from '@amec/webasset/flatpickr';
 import { host } from '../../utils';
 import Swal from 'sweetalert2';
-import * as XLSX from 'xlsx';
+import {
+    exportExcel,
+    defaultExcel,
+    mergeCell,
+    applyStyleToRange,
+    alignment,
+    border,
+} from '@amec/webasset/excel';
 
 class MfgEdrReport {
     constructor() {
         this.workTypes = [];
         this.causes = [];
         this.sections = [];
-
         this.causeRequestId = 0;
     }
 
     async init() {
         this.bindEvents();
-
         await this.loadMasterData();
     }
 
@@ -40,7 +45,7 @@ class MfgEdrReport {
             this.clearFilter();
         });
 
-        $('#form-edr-export').on('submit', (event) => {
+        $('#form-edr-export').on('submit', async (event) => {
             event.preventDefault();
             await this.exportExcel();
         });
@@ -229,168 +234,257 @@ class MfgEdrReport {
     }
 
     async exportExcel() {
-        const $button = $('#btn-export-excel');
-        const originalText = $button.text();
-        const rawFilters = {
-            REQUEST_BY: $('#txt-request-by').val()?.trim(),
-            REPAIR_BY: $('#txt-repair-by').val()?.trim(),
-            DAILY_REPORT_NO: $('#txt-daily-report-no').val()?.trim(),
-            TID: $('#ddl-work-type').val()? Number($('#ddl-work-type').val()) : '',
-            CID: $('#ddl-initial-cause').val()? Number($('#ddl-initial-cause').val()) : '',
-            SSECCODE: $('#ddl-responsible-section').val(),
-            ORDERNO: $('#txt-order-no').val()?.trim(),
-            DWGNO: $('#txt-drawing-no').val()?.trim(),
-            ITEM: $('#txt-item-no').val()?.trim(),
-            ISSUE_DATE_FROM: $('#txt-request-date-from').val(),
-            ISSUE_DATE_TO: $('#txt-request-date-to').val(),
-            CST: $('#ddl-form-status').val(),
-        };
-
-        console.log(rawFilters);
-        /*
-        * ไม่ส่งช่องว่าง และไม่ส่ง CST เมื่อเลือก ALL
-        */
+        const button = document.getElementById('btn-export-excel');
         const filters = Object.fromEntries(
-            Object.entries(rawFilters).filter(([key, value]) => {
-                if (value === '' || value === null || value === undefined) {
-                    return false;
-                }
-
-                if (key === 'CST' && value === 'ALL') {
-                    return false;
-                }
-                return true;
+            Object.entries({
+                REQUEST_BY: $('#txt-request-by').val()?.trim(),
+                REPAIR_BY: $('#txt-repair-by').val()?.trim(),
+                DAILY_REPORT_NO: $('#txt-daily-report-no').val()?.trim(),
+                TID: $('#ddl-work-type').val()
+                    ? Number($('#ddl-work-type').val())
+                    : '',
+                CID: $('#ddl-initial-cause').val()
+                    ? Number($('#ddl-initial-cause').val())
+                    : '',
+                SSECCODE: $('#ddl-responsible-section').val(),
+                ORDERNO: $('#txt-order-no').val()?.trim(),
+                DWGNO: $('#txt-drawing-no').val()?.trim(),
+                ITEM: $('#txt-item-no').val()?.trim(),
+                ISSUE_DATE_FROM: $('#txt-request-date-from').val(),
+                ISSUE_DATE_TO: $('#txt-request-date-to').val(),
+                CST:
+                    $('#ddl-form-status').val() === 'ALL'
+                        ? ''
+                        : $('#ddl-form-status').val(),
+            }).filter(([, value]) => {
+                return value !== '' && value !== null && value !== undefined;
             }),
         );
-        try {
-            $button.prop('disabled', true).text('Exporting...');
-            Swal.fire({
-                title: 'กำลังค้นหาข้อมูล',
-                text: 'กรุณารอสักครู่',
-                allowOutsideClick: false,
-                allowEscapeKey: false,
-                didOpen: () => {Swal.showLoading();},
-            });
 
+        try {
+            if (button) {
+                button.disabled = true;
+            }
+
+            await showLoader({ show: true });
             const response = await searchMfgEdrReport(filters);
             const rows = this.normalizeData(response);
-
             if (rows.length === 0) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'ไม่พบข้อมูล',
-                    text: 'ไม่พบข้อมูลตามเงื่อนไขที่เลือก',
-                });
+                showMessage('ไม่พบข้อมูลตามเงื่อนไขที่เลือก', 'warning');
                 return;
             }
 
-            const excelRows = rows.map((item, index) => ({
-                No: index + 1,
-                'Issue Date': item.ISSUE_DATE ?? '',
-                'Section Code': item.SSECCODE ?? '',
-                Section: item.SEC ?? '',
-                Department: item.DEPT ?? '',
-                'Request No': item.REQUEST_NO ?? '',
-                'Daily Report No': item.DAILY_REPORT_NO ?? '',
-                'Order No': item.ORDERNO ?? '',
-                'Production Jun': item.PRDN_JUN ?? '',
-                Model: item.MODEL ?? '',
-                'Drawing No': item.DWGNO ?? '',
-                Item: item.ITEM ?? '',
-                Cause: item.CAUSE ?? '',
-                Process: item.PROCESS ?? '',
-                Line: item.LINE ?? '',
-                Qty: item.QTY ?? '',
-                Detail: item.DETAIL ?? '',
-                'Repair By': item.REPAIR_BY ?? '',
-                'Repair By Name': item.REPAIR_BY_NAME ?? '',
-                'Work Type': item.TYPENAME ?? '',
-                Status: item.CST ?? '',
-                'Approve Date': item.APPROVE_DATE ?? '',
-                Year: item.CYEAR2 ?? '',
-                'Run No': item.NRUNNO ?? '',
-                Month: item.DAILY_MONTH ?? '',
-                'Daily Run No': item.DAILY_RUNNO ?? '',
-                VREQNO: item.VREQNO ?? '',
-                TID: item.TID ?? '',
-                CID: item.CID ?? '',
-                LID: item.LID ?? '',
-                PID: item.PID ?? '',
+            const today = new Date().toLocaleDateString('th-TH');
+            const data = rows.map((row, index) => ({
+                NO: index + 1,
+                ISSUE_DATE: row.ISSUE_DATE ?? '',
+                SSECCODE: row.SSECCODE ?? '',
+                SEC: row.SEC ?? '',
+                DEPT: row.DEPT ?? '',
+                REQUEST_NO: row.REQUEST_NO ?? '',
+                DAILY_REPORT_NO: row.DAILY_REPORT_NO ?? '',
+                ORDERNO: row.ORDERNO ?? '',
+                PRDN_JUN: row.PRDN_JUN ?? '',
+                MODEL: row.MODEL ?? '',
+                DWGNO: row.DWGNO ?? '',
+                ITEM: row.ITEM ?? '',
+                CAUSE: row.CAUSE ?? '',
+                PROCESS: row.PROCESS ?? '',
+                LINE: row.LINE ?? '',
+                QTY: row.QTY ?? '',
+                DETAIL: row.DETAIL ?? '',
+                REPAIR_BY: row.REPAIR_BY ?? '',
+                REPAIR_BY_NAME: row.REPAIR_BY_NAME ?? '',
+                TYPENAME: row.TYPENAME ?? '',
+                CST: row.CST ?? '',
+                APPROVE_DATE: row.APPROVE_DATE ?? '',
+                DAILY_MONTH: row.DAILY_MONTH ?? '',
+                DAILY_RUNNO: row.DAILY_RUNNO ?? '',
+                VREQNO: row.VREQNO ?? '',
             }));
 
-            const worksheet = XLSX.utils.json_to_sheet(excelRows);
-            worksheet['!autofilter'] = {ref: worksheet['!ref'],};
-            worksheet['!cols'] = [
-                { wch: 6 },
-                { wch: 14 },
-                { wch: 14 },
-                { wch: 18 },
-                { wch: 18 },
-                { wch: 18 },
-                { wch: 22 },
-                { wch: 18 },
-                { wch: 16 },
-                { wch: 18 },
-                { wch: 22 },
-                { wch: 10 },
-                { wch: 28 },
-                { wch: 22 },
-                { wch: 20 },
-                { wch: 10 },
-                { wch: 50 },
-                { wch: 14 },
-                { wch: 28 },
-                { wch: 24 },
-                { wch: 12 },
-                { wch: 16 },
+            const columns = [
+                { key: 'NO', header: 'No' },
+                { key: 'ISSUE_DATE', header: 'Issue Date' },
+                { key: 'SSECCODE', header: 'Section Code' },
+                { key: 'SEC', header: 'Section' },
+                { key: 'DEPT', header: 'Department' },
+                { key: 'REQUEST_NO', header: 'Request No' },
+                { key: 'DAILY_REPORT_NO', header: 'Daily Report No' },
+                { key: 'ORDERNO', header: 'Order No' },
+                { key: 'PRDN_JUN', header: 'Prod/Jun' },
+                { key: 'MODEL', header: 'Model' },
+                { key: 'DWGNO', header: 'Drawing No' },
+                { key: 'ITEM', header: 'Item' },
+                { key: 'CAUSE', header: 'Cause' },
+                { key: 'PROCESS', header: 'Process' },
+                { key: 'LINE', header: 'Line' },
+                { key: 'QTY', header: 'Qty' },
+                { key: 'DETAIL', header: 'Detail' },
+                { key: 'REPAIR_BY', header: 'Repair By' },
+                { key: 'REPAIR_BY_NAME', header: 'Repair By Name' },
+                { key: 'TYPENAME', header: 'Work Type' },
+                { key: 'CST', header: 'Status' },
+                { key: 'APPROVE_DATE', header: 'Approve Date' },
+                { key: 'DAILY_MONTH', header: 'Daily Month' },
+                { key: 'DAILY_RUNNO', header: 'Daily Run No' },
+                { key: 'VREQNO', header: 'Request Reference' },
             ];
 
-            const workbook = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(
-                workbook,
-                worksheet,
-                'MFG E-Daily Report',
-            );
+            const totalColumns = columns.length;
+            const workbook = await defaultExcel({
+                data,
+                column: columns,
+                sheetName: 'MFG E-Daily Report',
+                manual: true,
+                autoWidth: false,
+
+                manualActions: (sheet) => {
+                    sheet.insertRow(1, ['MFG E-Daily Report']);
+                    sheet.insertRow(2, [`Export Date : ${today}`]);
+                    sheet.insertRow(3, [`Total Records : ${data.length}`]);
+                    sheet.insertRow(4, []);
+                    mergeCell(sheet, 1, 1, 1, totalColumns);
+                    mergeCell(sheet, 2, 1, 2, totalColumns);
+                    mergeCell(sheet, 3, 1, 3, totalColumns);
+
+                    applyStyleToRange(sheet, 1, totalColumns, 1, {
+                        font: { bold: true, size: 18 },
+                        alignment: alignment('center', 'middle'),
+                    });
+
+                    applyStyleToRange(sheet, 1, totalColumns, 2, {
+                        font: { bold: true, size: 12 },
+                        alignment: alignment('left', 'middle'),
+                    });
+
+                    applyStyleToRange(sheet, 1, totalColumns, 3, {
+                        font: { bold: true, size: 12 },
+                        alignment: alignment('left', 'middle'),
+                    });
+
+                    /*
+                     * Header อยู่แถว 5
+                     */
+                    applyStyleToRange(sheet, 1, totalColumns, 5, {
+                        font: { bold: true, size: 12 },
+                        alignment: alignment('center', 'middle'),
+                        border: border(),
+                        fill: {
+                            type: 'pattern',
+                            pattern: 'solid',
+                            fgColor: {
+                                argb: 'FFBFDBFE',
+                            },
+                        },
+                    });
+
+                    const widths = [
+                        6, 14, 14, 20, 20, 18, 22, 18, 12, 18, 24, 10, 30, 22,
+                        20, 10, 50, 14, 30, 24, 12, 16, 14, 14, 22,
+                    ];
+
+                    widths.forEach((width, index) => {
+                        sheet.getColumn(index + 1).width = width;
+                    });
+
+                    sheet.eachRow((row, rowNumber) => {
+                        if (rowNumber >= 5) {
+                            row.height = 22;
+                            row.eachCell((cell, columnNumber) => {
+                                cell.font = {
+                                    ...cell.font,
+                                    size: 11,
+                                };
+
+                                cell.alignment = {
+                                    vertical: 'middle',
+                                    horizontal: 'center',
+                                    wrapText: true,
+                                };
+
+                                /*
+                                 * Column ที่เป็นข้อความยาว ให้ชิดซ้าย
+                                 */
+                                if (
+                                    rowNumber >= 6 &&
+                                    [
+                                        4, 5, 7, 8, 10, 11, 13, 14, 15, 17, 19,
+                                        20, 25,
+                                    ].includes(columnNumber)
+                                ) {
+                                    cell.alignment = {
+                                        vertical: 'middle',
+                                        horizontal: 'left',
+                                        wrapText: true,
+                                        indent: 1,
+                                    };
+                                }
+
+                                cell.border = border();
+                            });
+                        }
+                    });
+
+                    /*
+                     * Freeze Header
+                     */
+                    sheet.views = [
+                        {
+                            state: 'frozen',
+                            ySplit: 5,
+                        },
+                    ];
+
+                    /*
+                     * Auto Filter ที่ Header
+                     */
+                    sheet.autoFilter = {
+                        from: {
+                            row: 5,
+                            column: 1,
+                        },
+                        to: {
+                            row: 5,
+                            column: totalColumns,
+                        },
+                    };
+                },
+            });
 
             const now = new Date();
-            const dateText = [
+
+            const fileDate = [
                 now.getFullYear(),
                 String(now.getMonth() + 1).padStart(2, '0'),
                 String(now.getDate()).padStart(2, '0'),
             ].join('');
 
-            const timeText = [
+            const fileTime = [
                 String(now.getHours()).padStart(2, '0'),
                 String(now.getMinutes()).padStart(2, '0'),
                 String(now.getSeconds()).padStart(2, '0'),
             ].join('');
 
-            XLSX.writeFile(workbook,`MFG_E_Daily_Report_${dateText}_${timeText}.xlsx`,);
-            Swal.fire({
-                icon: 'success',
-                title: 'Export สำเร็จ',
-                text: `Export ข้อมูลทั้งหมด ${rows.length} รายการ`,
-                timer: 1800,
-                showConfirmButton: false,
-            });
-        } catch (error) {
-            console.error('Export Excel error:', error);
-            Swal.fire({
-                icon: 'error',
-                title: 'Export ไม่สำเร็จ',
-                text: error?.message ?? error?.responseJSON?.message ??'เกิดข้อผิดพลาดระหว่างค้นหาและ Export ข้อมูล',});
-        } finally {
-            $button.prop('disabled', false).text(originalText);
-        }
-    }
+            exportExcel(workbook, `MFG_E_Daily_Report_${fileDate}_${fileTime}`);
 
-    escapeHtml(value) {
-        return String(value ?? '')
-            .replaceAll('&', '&amp;')
-            .replaceAll('<', '&lt;')
-            .replaceAll('>', '&gt;')
-            .replaceAll('"', '&quot;')
-            .replaceAll("'", '&#039;');
+            showMessage(`Export สำเร็จ จำนวน ${data.length} รายการ`, 'success');
+        } catch (error) {
+            console.error('Export MFG E-Daily Report error:', error);
+
+            showMessage(
+                error?.message ||
+                    error?.responseJSON?.message ||
+                    'Export ไม่สำเร็จ',
+                'error',
+            );
+        } finally {
+            if (button) {
+                button.disabled = false;
+            }
+
+            await showLoader({ show: false });
+        }
     }
 }
 
