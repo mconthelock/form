@@ -198,7 +198,7 @@ class MfgEdrReport {
         const button = document.getElementById('btn-export-excel');
         const filters = Object.fromEntries(
             Object.entries({
-                REQUEST_BY: $('#txt-request-by').val()?.trim(),
+                VREQNO: $('#txt-request-by').val()?.trim(),
                 REPAIR_BY: $('#txt-repair-by').val()?.trim(),
                 DAILY_REPORT_NO: $('#txt-daily-report-no').val()?.trim(),
                 TID: $('#ddl-work-type').val()
