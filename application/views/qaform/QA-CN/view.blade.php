@@ -1133,6 +1133,14 @@
                 </button>
                 @endif
 
+                @if(!in_array($empno, [$form[0]->VREQNO, $form[0]->VINPUTER]))
+                <button type="button" name="btnReject" id="btnReject"
+                        data-action="reject"
+                        class="{{ ($resultdwg[0]->RESULT == '0'? 'hidden':'') }} btn-submit cursor-pointer bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded shadow">
+                    Reject
+                </button>
+                @endif 
+
                 @if(($cextData == 4) ||($cextData == 5))
                 <button type="button" name="btnReturn" 
                         data-action="returnqastaff"
@@ -1165,13 +1173,7 @@
                 @endif
 
         
-            @if(!in_array($empno, [$form[0]->VREQNO, $form[0]->VINPUTER]))
-            <button type="button" name="btnReject" id="btnReject"
-                    data-action="reject"
-                    class="{{ ($resultdwg[0]->RESULT == '0'? 'hidden':'') }} btn-submit cursor-pointer bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded shadow">
-                Reject
-            </button>
-             @endif    
+        
             </div>     
         @endif
 
