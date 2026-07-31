@@ -204,7 +204,7 @@
             <!-- ใช้ div ตัวนี้เป็นคอกกั้นขนาด บังคับความกว้างไว้ที่ w-40 (หรือปรับขนาดได้ตามต้องการ) -->
             <div class="w-56 shrink-0">
                 <!-- ใส่ w-full ที่ select เพื่อให้มันขยายเต็มคอกที่เราสร้างไว้แทน -->
-                <select name="COUNTRY_SELECT" id="COUNTRY_SELECT" class="w-full border border-gray-400 h-8 rounded px-2 text-sm bg-gray-100" disabled>
+                <select name="COUNTRY_SELECT" id="COUNTRY_SELECT" class="w-full border border-gray-400 h-8 rounded px-2 text-sm bg-gray-100 country" disabled>
                     <option value="">Select Country</option>
                 </select>
             </div>
@@ -498,13 +498,13 @@
     <div class="border-2 border-dashed border-gray-400 p-4 rounded-lg mb-6 bg-gray-50 field-oversea-nonpro">
         <span class="required font-bold mb-3">Compliance</span>
         <div class="grid grid-cols-1 gap-2 text-black text-sm">
-            <label class="flex items-center gap-2"><input type="checkbox" name = "COMPLIANCE" value="ไม่ได้อยู่ในกลุ่มควบคุม ข้อกำหนด AMEC-5070: Rule for Export Control"> ไม่ได้อยู่ในกลุ่มควบคุม ข้อกำหนด AMEC-5070: Rule for Export Control</label>
-            <label class="flex items-center gap-2"><input type="checkbox" name = "COMPLIANCE" value="ไม่อยู่ในรายชื่อที่ถูกลงโทษจาก UNSC"> ไม่อยู่ในรายชื่อที่ถูกลงโทษจาก UNSC</label>
-            <label class="flex items-center gap-2"><input type="checkbox" name = "COMPLIANCE" value="ไม่อยู่ในประเทศ ประเทศไทยคว่ำบาตร ตามมาตรการคว่ำบาตร โดยสหประชาชาติ WWW.dff-go.th"> ไม่อยู่ในประเทศ ประเทศไทยคว่ำบาตร ตามมาตรการคว่ำบาตร โดยสหประชาชาติ WWW.dff-go.th</label>
-            <label class="flex items-center gap-2"><input type="checkbox" name = "COMPLIANCE" value="AMEC's standard Terms of 'CIF'"> AMEC's standard Terms of "CIF"</label>
-            <label class="flex items-center gap-2"><input type="checkbox" name = "COMPLIANCE" value="ได้รับ Financial Record"> ได้รับ Financial Record</label>
+            <label class="flex items-center gap-2"><input type="checkbox" name = "CHKCOMPLIANCE" value="ไม่ได้อยู่ในกลุ่มควบคุม ข้อกำหนด AMEC-5070: Rule for Export Control"> ไม่ได้อยู่ในกลุ่มควบคุม ข้อกำหนด AMEC-5070: Rule for Export Control</label>
+            <label class="flex items-center gap-2"><input type="checkbox" name = "CHKCOMPLIANCE" value="ไม่อยู่ในรายชื่อที่ถูกลงโทษจาก UNSC"> ไม่อยู่ในรายชื่อที่ถูกลงโทษจาก UNSC</label>
+            <label class="flex items-center gap-2"><input type="checkbox" name = "CHKCOMPLIANCE" value="ไม่อยู่ในประเทศ ประเทศไทยคว่ำบาตร ตามมาตรการคว่ำบาตร โดยสหประชาชาติ WWW.dff-go.th"> ไม่อยู่ในประเทศ ประเทศไทยคว่ำบาตร ตามมาตรการคว่ำบาตร โดยสหประชาชาติ WWW.dff-go.th</label>
+            <label class="flex items-center gap-2"><input type="checkbox" name = "CHKCOMPLIANCE" value="AMEC's standard Terms of 'CIF'"> AMEC's standard Terms of "CIF"</label>
+            <label class="flex items-center gap-2"><input type="checkbox" name = "CHKCOMPLIANCE" value="ได้รับ Financial Record"> ได้รับ Financial Record</label>
             <div class="flex items-center gap-2">
-                <label class="flex items-center gap-2 flex-shrink-0"><input type="checkbox" name = "COMPLIANCE" value="อื่นๆ ระบุ"> อื่นๆ ระบุ</label>
+                <label class="flex items-center gap-2 flex-shrink-0"><input type="checkbox" name = "CHKCOMPLIANCE" value="อื่นๆ ระบุ"> อื่นๆ ระบุ</label>
                 <input type="text"  name = "COMPLIANCE_OTHER" class="input input-sm border border-gray-400 h-8 rounded w-1/2 px-2">
                 <span class="text-red-600 text-sm font-semibold whitespace-nowrap">ข้อกำหนด AMEC-6000: Rule for Purchase</span>
             </div>
@@ -838,7 +838,7 @@
         <div>
             <label class="block font-bold text-sm text-gray-700 mb-2">Capital</label>
             <div class="flex gap-2">
-                <input type="text" class="input-decimal flex-1 input input-bordered input-sm w-full bg-gray-50 border-gray-300" placeholder="0.00">
+                <input type="text" name="CAPITAL" class="input-decimal flex-1 input input-bordered input-sm w-full bg-gray-50 border-gray-300" placeholder="0.00">
                 <select id="cur" name="CAPITAL_CUR" class="input input-sm border border-gray-400 h-8 rounded px-2 w-48 currency req">
                     <option value="" disabled selected>...</option>
                 </select>
@@ -857,16 +857,16 @@
         <label class="block font-bold text-sm text-gray-700 mb-3">Type of Company</label>
         <div class="grid grid-cols-2 gap-3 text-sm">
             <label class="flex items-center gap-2">
-                <input type="radio" name="COM_TYPE" class="w-4 h-4 accent-blue-600"> Corporation
+                <input type="radio" name="COM_TYPE" value="Corporation" class="w-4 h-4 accent-blue-600"> Corporation
             </label>
             <label class="flex items-center gap-2">
-                <input type="radio" name="COM_TYPE" class="w-4 h-4 accent-blue-600"> Inc. OR Co.,Ltd.
+                <input type="radio" name="COM_TYPE" value="Inc. OR Co.,Ltd." class="w-4 h-4 accent-blue-600"> Inc. OR Co.,Ltd.
             </label>
             <label class="flex items-center gap-2">
-                <input type="radio" name="COM_TYPE" class="w-4 h-4 accent-blue-600"> Limited Partnership
+                <input type="radio" name="COM_TYPE" value="Limited Partnership" class="w-4 h-4 accent-blue-600"> Limited Partnership
             </label>
             <label class="flex items-center gap-2">
-                <input type="radio" name="COM_TYPE" class="w-4 h-4 accent-blue-600"> Family Partnership
+                <input type="radio" name="COM_TYPE" value="Family Partnership" class="w-4 h-4 accent-blue-600"> Family Partnership
             </label>
         </div>
         <div class="flex items-center gap-2 mt-2 text-sm">

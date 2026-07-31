@@ -1,6 +1,6 @@
 import { getExtData, showflow } from '@amec/webasset/api/webform';
 import { getformDetail, webflowSubmit } from '@amec/webasset/components/form';
-import { getAllAttr } from '@amec/webasset/utils';
+import { getAllAttr, setRound } from '@amec/webasset/utils';
 import { getData } from './data';
 var form = {};
 $(async function () {
@@ -39,18 +39,43 @@ $(async function () {
     if (formeva.VENDGROUP === '6:Non-Production (6)') {
         // ถ้าเป็น 6:Non-Production (6) ให้ซ่อนทั้งแถว
         $('#VENDPURPOSE').closest('.info-row').hide();
+        if (formeva.VENDTYPE == 'Local') {
+            $('#PRODCAT').text(formeva.PRODCAT || '-');
+            $('#PRODCAT').closest('.prodcat-container').show();
+            $('#COMPLIANCE_READONLY_CONTAINER').closest('.info-row').hide();
+        } else {
+            bindComplianceData(formeva.COMPLIANCE, formeva.COMPLIANCE_OTHER);
+            $('#PRODCAT').closest('.prodcat-container').hide();
+            $('#COMPLIANCE_READONLY_CONTAINER').closest('.info-row').show();
+        }
+
+        $('#BUSTYPE_REG').text(formeva.BUSTYPE_REG || '-');
+        $('#BUSTYPE_SUB').text(formeva.BUSTYPE_SUB || '-');
+        $('.nonpro').show();
+        $('.pro').hide();
     } else {
         // ถ้าเป็นอันอื่น ให้แสดงแถวตามปกติ
+        $('#PRODCAT').closest('.prodcat-container').hide();
+        $('#COMPLIANCE_READONLY_CONTAINER').closest('.info-row').hide();
         $('#VENDPURPOSE').closest('.info-row').show();
         let vendPurposeText = formeva.VENDPURPOSE;
         if (vendPurposeText && vendPurposeText.includes(':')) {
             vendPurposeText = vendPurposeText.split(':')[1];
         }
+        $('#VENDCAT').text(formeva.VENDCAT || '-');
+        $('#TAX_ID_PRO').text(formeva.TAX_ID || '-');
+
+        $('#CAPITAL').text(
+            setRound(Number(formeva.CAPITAL), 2) + ' ' + formeva.CAPITAL_CUR ||
+                '-',
+        );
+        $('#COM_TYPE').text(formeva.COM_TYPE || '-');
+        $('.nonpro').hide();
+        $('.pro').show();
     }
     // 3. นำข้อความไปแสดงผล
     $('#OPERATION').text(displayText);
     $('#VENDGROUP').text(vendGroupText);
-    console.log('xxxxxxxxx' + formeva.VENDTYPE);
     $('#COMNAME').html(
         formeva.COMNAME +
             ' <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 ml-2">' +
@@ -101,4 +126,49 @@ function formatAddress(addrObj) {
     ].filter(Boolean);
 
     return parts.length > 0 ? parts.join(', ') : '-';
+}
+
+function bindComplianceData(complianceString, complianceOther) {
+    // 1. จัดการ Checkbox หลักจากตัวแปร COMPLIANCE
+    if (complianceString) {
+        const selectedValues = complianceString
+            .split(',')
+            .map((item) => item.trim());
+
+        $('#COMPLIANCE_READONLY_CONTAINER .chk-compliance').each(function () {
+            const cbValue = $(this).val();
+
+            if (selectedValues.includes(cbValue)) {
+                // ติ๊กถูกที่ Checkbox
+                $(this).prop('checked', true);
+
+                // ค้นหา Label ที่อยู่ถัดไป (next element) เพื่อเปลี่ยนคลาสสี
+                $(this)
+                    .next('.chk-label')
+                    .removeClass('text-gray-500')
+                    .addClass('text-gray-900 font-medium');
+            }
+        });
+    }
+
+    // 2. จัดการ Checkbox "อื่นๆ ระบุ" และ Input Text จากตัวแปร COMPLIANCE_OTHER
+    if (complianceOther && complianceOther.trim() !== '') {
+        // ค้นหา Checkbox ที่มี value เป็น "อื่นๆ ระบุ"
+        const $otherCheckbox = $(
+            '#COMPLIANCE_READONLY_CONTAINER .chk-compliance',
+        ).filter(function () {
+            return $(this).val() === 'อื่นๆ ระบุ';
+        });
+
+        if ($otherCheckbox.length > 0) {
+            $otherCheckbox.prop('checked', true);
+            $otherCheckbox
+                .next('.chk-label')
+                .removeClass('text-gray-500')
+                .addClass('text-gray-900 font-medium');
+        }
+
+        // นำข้อความไปใส่ในช่อง Input Text
+        $('#COMPLIANCE_OTHER_READONLY').val(complianceOther);
+    }
 }

@@ -925,7 +925,6 @@ async function packPurevaFormData(formElement) {
 
     // 6. ลบฟิลด์ดิบที่ไม่ได้ใช้แล้ว
     const rawFieldsToDelete = [
-        'COMPLIANCE',
         'FY[]',
         'FY_PROFIT[]',
         'FYT[]',
@@ -946,8 +945,9 @@ async function packPurevaFormData(formElement) {
     rawFieldsToDelete.forEach((field) => fd.delete(field));
 
     // 7. ประกอบร่าง FormData กลับเข้าไป
-    const compliances = getAll('COMPLIANCE');
+    const compliances = getAll('CHKCOMPLIANCE');
     if (compliances.length) fd.append('COMPLIANCE', compliances.join(', '));
+    fd.delete('CHKCOMPLIANCE');
     fd.append('REMARK', remark);
 
     const formInfo = await getAllAttr('.form-info');
