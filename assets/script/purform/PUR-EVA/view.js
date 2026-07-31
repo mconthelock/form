@@ -51,6 +51,8 @@ $(async function () {
 
         $('#BUSTYPE_REG').text(formeva.BUSTYPE_REG || '-');
         $('#BUSTYPE_SUB').text(formeva.BUSTYPE_SUB || '-');
+        $('#titleprofit').text('กำไรขาดทุนสุทธิ 3 ปีล่าสุด');
+        $('#thprofit').text('Net Profit/Loss');
         $('.nonpro').show();
         $('.pro').hide();
     } else {
@@ -69,9 +71,76 @@ $(async function () {
             setRound(Number(formeva.CAPITAL), 2) + ' ' + formeva.CAPITAL_CUR ||
                 '-',
         );
-        $('#COM_TYPE').text(formeva.COM_TYPE || '-');
+        $('#COM_TYPE').text(
+            formeva.COM_TYPE === 'อื่นๆ ระบุ'
+                ? 'อื่นๆ ระบุ : ' + (formeva.COM_OTHER || '-')
+                : formeva.COM_TYPE || '-',
+        );
+        let tbodyHtml = '';
+        const nationalityData = formeva.RELATIONS.filter(
+            (item) => item.ENTITY_TYPE === 'N',
+        );
+        if (nationalityData.length > 0) {
+            // ถ้ามี วนลูปเฉพาะข้อมูลที่กรองมาแล้ว
+            nationalityData.forEach((item) => {
+                tbodyHtml += `
+            <tr>
+                <td class="border border-gray-300 px-4 py-2">${item.ENTITY_NAME || '-'}</td>
+                <td class="border border-gray-300 px-4 py-2 text-center w-32">${item.PERCENT || '0'}</td>
+            </tr>
+            `;
+            });
+        } else {
+            // ถ้าไม่มีข้อมูล ให้แสดงข้อความแจ้งเตือนสวยๆ
+            tbodyHtml = `
+            <tr>
+            <td colspan="2" class="border border-gray-300 px-4 py-4 text-center text-gray-500">
+                ไม่มีข้อมูลสัญชาติ
+            </td>
+            </tr>
+        `;
+        }
+
+        // 4. เอา HTML ไปแสดงผลในตาราง
+        $('#shareholder-tbody').html(tbodyHtml);
+        $('#EMPDIRECT').text(setRound(Number(formeva.EMPDIRECT), 2) || '-');
+        $('#EMPINDIRECT').text(setRound(Number(formeva.EMPINDIRECT), 2) || '-');
+        $('#EMPTOTAL').text(
+            setRound(
+                Number(formeva.EMPINDIRECT) + Number(formeva.EMPDIRECT),
+                2,
+            ) || '-',
+        );
+        $('#AVGAGE').text(formeva.AVGAGE || '-');
+        $('#LAND').text(setRound(Number(formeva.LAND), 2) || '-');
+        $('#FACTORY').text(setRound(Number(formeva.FACTORY), 2) || '-');
+        $('#titleprofit').text('Last 3 Years Turnover');
+        $('#thprofit').text('Turnover');
         $('.nonpro').hide();
         $('.pro').show();
+    }
+
+    let tbodyprofitHtml = '';
+
+    if (formeva.PROFIT_TURNOVERS.length > 0) {
+        // ถ้ามี วนลูปเฉพาะข้อมูลที่กรองมาแล้ว
+        formeva.PROFIT_TURNOVERS.forEach((item) => {
+            tbodyprofitHtml += `
+            <tr>
+                <td class="border border-gray-300 px-4 py-2">${item.MYEAR || '-'}</td>
+                <td class="border border-gray-300 px-4 py-2 text-center w-32">${item.AMOUNT || '0'}</td>
+            </tr>
+            `;
+        });
+    } else {
+        // ถ้าไม่มีข้อมูล ให้แสดงข้อความแจ้งเตือนสวยๆ
+        tbodyprofitHtml = `
+            <tr>
+            <td colspan="2" class="border border-gray-300 px-4 py-4 text-center text-gray-500">
+                ไม่มีข้อมูล
+            </td>
+            </tr>
+        `;
     }
     // 3. นำข้อความไปแสดงผล
     $('#OPERATION').text(displayText);

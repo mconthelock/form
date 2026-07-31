@@ -962,7 +962,7 @@
                     <span class="text-xs text-gray-500">Year</span>
                 </th>
                 <th class="border border-gray-400 p-2 w-2/3 text-sm">
-                   <span class="text-xs text-gray-500">Turn Over</span>
+                   <span class="text-xs text-gray-500">Turnover</span>
                 </th>
             </tr>
         </thead>
