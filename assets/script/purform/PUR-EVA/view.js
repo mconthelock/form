@@ -9,6 +9,7 @@ import {
 import { getData } from './data';
 import { formatDate } from '@amec/webasset/dayjs';
 import { downloadOrOpenFile } from '@amec/webasset/api/file';
+import { classIcofont } from '@amec/webasset/fileExplorer';
 
 var form = {};
 
@@ -279,15 +280,17 @@ $(async function () {
 
         let html = "<div class='flex flex-col gap-3 mt-2'>";
         filteredFiles.forEach((f) => {
-            const fileName = f.FILE_ONAME || 'Unknown file';
+            const ext = f.FILE_ONAME ? f.FILE_ONAME.split('.').pop() : '';
             html += `
             <a 
-                href="${f.FILE_PATH}/${f.FILE_FNAME}" 
+                href="${f.FILE_PATH}" 
+                storedName="${f.FILE_FNAME}" 
+                originalName="${f.FILE_ONAME}"
                 target="_blank"
                 class="file-link text-primary flex items-center gap-3 w-full border rounded-lg bg-base-100 p-3 hover:bg-gray-50 transition"
             >
-                <i class="icofont-file-pdf text-4xl text-red-500"></i>
-                <span class="link link-primary">${fileName}</span>
+                <i class="${classIcofont(ext)} text-4xl"></i>
+                <span class="link link-primary">${f.FILE_ONAME}</span>
                 <button 
                     type="button" 
                     file-id="${f.FILE_ID}"
@@ -301,6 +304,7 @@ $(async function () {
 
         $container.html(html);
     };
+
     const attachedFiles = formeva.FILES || [];
 
     renderFilesByType(attachedFiles, 11, 'file-type-11');
