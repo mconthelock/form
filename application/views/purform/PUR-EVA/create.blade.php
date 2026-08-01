@@ -638,7 +638,7 @@
                     <label class="block text-xs font-semibold text-gray-600">Total Amount [Bht]</label>
                     <input type="text" name="AMOUNT" id="AMOUNT" class="input-decimal w-full border border-gray-400 h-8 p-2 rounded text-sm">
                 </div>
-                <label class="flex items-center gap-2 text-sm"><input type="checkbox" class="checkbox"> Not purchase more than 5 years "DO NOT USE"</label>
+                <label class="flex items-center gap-2 text-sm"><input type="checkbox" class="checkbox" name="PUR_STATUS" value="DO NOT USE"> Not purchase more than 5 years "DO NOT USE"</label>
             </div>
             <div class="space-y-1 text-sm bg-gray-50 p-3 rounded-lg border border-gray-200">
                 <label class="flex items-center gap-2"><input type="radio" name="PUR_LEVEL" value="A" class="w-4 h-4 accent-blue-600"> Level A: ≥ 1,000,000 Baht</label>
