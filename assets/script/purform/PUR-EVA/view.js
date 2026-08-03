@@ -311,6 +311,8 @@ $(async function () {
     renderFilesByType(attachedFiles, 12, 'file-type-12');
     renderFilesByType(attachedFiles, 13, 'file-type-13');
     renderFilesByType(attachedFiles, 2, 'file-type-2');
+    console.log('bbbbbbbbbb');
+
     $('#form-action-container').html(
         webflowSubmit({
             flow: true,
