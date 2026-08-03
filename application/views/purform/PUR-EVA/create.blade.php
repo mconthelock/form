@@ -410,25 +410,8 @@
             </div>
             <!-- พื้นที่แสดงไฟล์ -->
             <div class="show-file pl-2 text-sm"></div>
+            <div id="file-type-11" class="file-container"></div>
         </div>
-
-        <!-- 2. Vat Register -->
-        <!-- <div class="flex flex-col gap-2 border border-gray-200 rounded-md p-3 bg-gray-50">
-            <div class="flex items-center gap-2">
-                <span class="text-sm font-medium">Vat Register :</span>
-                
-                <label for="file-vat" class="cursor-pointer border border-gray-300 rounded px-2 py-1 shadow-sm bg-white hover:bg-gray-100 flex items-center justify-center transition-colors">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-600">
-                        <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path>
-                    </svg>
-                </label>
-                <input class="hidden" type="file" name="fileVat[]" id="file-vat" multiple />
-                <input type="checkbox" name="ATTACH_TYPE" value="Vat Register" class="hidden">
-            </div>
-            <div class="show-file pl-2 text-sm"></div>
-        </div> -->
-
-        <!-- 3. IE's evaluation Document -->
         <div class="flex flex-col gap-2 border border-gray-200 rounded-md p-3 bg-gray-50">
             <div class="flex items-center gap-2">
                 <span class="text-sm font-medium">IE's evaluation Document :</span>
@@ -442,6 +425,7 @@
                 <input type="checkbox" name="ATTACH_TYPE" value="IE evaluation" class="hidden">
             </div>
             <div class="show-file pl-2 text-sm"></div>
+            <div id="file-type-12" class="file-container"></div>
         </div>
 
         <!-- 4. QA's evaluation Document -->
@@ -458,6 +442,7 @@
                 <input type="checkbox" name="ATTACH_TYPE" value="QA evaluation" class="hidden">
             </div>
             <div class="show-file pl-2 text-sm"></div>
+            <div id="file-type-13" class="file-container"></div>
         </div>
 
         <!-- 5. Other -->
@@ -476,6 +461,7 @@
                 <input type="checkbox" name="ATTACH_TYPE" value="Other" class="hidden">
             </div>
             <div class="show-file pl-2 text-sm"></div>
+            <div id="file-type-2" class="file-container"></div>
         </div>
 
     </fieldset>
@@ -484,9 +470,9 @@
    
 
 <!-- ย้าย Dropzone ออกมาข้างนอก เพื่อให้ใช้ความกว้างได้เต็ม 100% ของ Container หลัก -->
-<div id="attachFile" class="mt-4">
+<!-- <div id="attachFile" class="mt-4">
 
-</div>
+</div> -->
     </div>
 </div>
         </div>
@@ -498,13 +484,13 @@
     <div class="border-2 border-dashed border-gray-400 p-4 rounded-lg mb-6 bg-gray-50 field-oversea-nonpro">
         <span class="required font-bold mb-3">Compliance</span>
         <div class="grid grid-cols-1 gap-2 text-black text-sm">
-            <label class="flex items-center gap-2"><input type="checkbox" name = "CHKCOMPLIANCE" value="ไม่ได้อยู่ในกลุ่มควบคุม ข้อกำหนด AMEC-5070: Rule for Export Control"> ไม่ได้อยู่ในกลุ่มควบคุม ข้อกำหนด AMEC-5070: Rule for Export Control</label>
-            <label class="flex items-center gap-2"><input type="checkbox" name = "CHKCOMPLIANCE" value="ไม่อยู่ในรายชื่อที่ถูกลงโทษจาก UNSC"> ไม่อยู่ในรายชื่อที่ถูกลงโทษจาก UNSC</label>
-            <label class="flex items-center gap-2"><input type="checkbox" name = "CHKCOMPLIANCE" value="ไม่อยู่ในประเทศ ประเทศไทยคว่ำบาตร ตามมาตรการคว่ำบาตร โดยสหประชาชาติ WWW.dff-go.th"> ไม่อยู่ในประเทศ ประเทศไทยคว่ำบาตร ตามมาตรการคว่ำบาตร โดยสหประชาชาติ WWW.dff-go.th</label>
-            <label class="flex items-center gap-2"><input type="checkbox" name = "CHKCOMPLIANCE" value="AMEC's standard Terms of 'CIF'"> AMEC's standard Terms of "CIF"</label>
-            <label class="flex items-center gap-2"><input type="checkbox" name = "CHKCOMPLIANCE" value="ได้รับ Financial Record"> ได้รับ Financial Record</label>
+            <label class="flex items-center gap-2"><input type="checkbox" name = "CHKCOMPLIANCE" class="chk-compliance" value="ไม่ได้อยู่ในกลุ่มควบคุม ข้อกำหนด AMEC-5070: Rule for Export Control"> ไม่ได้อยู่ในกลุ่มควบคุม ข้อกำหนด AMEC-5070: Rule for Export Control</label>
+            <label class="flex items-center gap-2"><input type="checkbox" name = "CHKCOMPLIANCE" class="chk-compliance" value="ไม่อยู่ในรายชื่อที่ถูกลงโทษจาก UNSC"> ไม่อยู่ในรายชื่อที่ถูกลงโทษจาก UNSC</label>
+            <label class="flex items-center gap-2"><input type="checkbox" name = "CHKCOMPLIANCE" class="chk-compliance" value="ไม่อยู่ในประเทศ ประเทศไทยคว่ำบาตร ตามมาตรการคว่ำบาตร โดยสหประชาชาติ WWW.dff-go.th"> ไม่อยู่ในประเทศ ประเทศไทยคว่ำบาตร ตามมาตรการคว่ำบาตร โดยสหประชาชาติ WWW.dff-go.th</label>
+            <label class="flex items-center gap-2"><input type="checkbox" name = "CHKCOMPLIANCE" class="chk-compliance" value="AMEC's standard Terms of 'CIF'"> AMEC's standard Terms of "CIF"</label>
+            <label class="flex items-center gap-2"><input type="checkbox" name = "CHKCOMPLIANCE" class="chk-compliance" value="ได้รับ Financial Record"> ได้รับ Financial Record</label>
             <div class="flex items-center gap-2">
-                <label class="flex items-center gap-2 flex-shrink-0"><input type="checkbox" name = "CHKCOMPLIANCE" value="อื่นๆ ระบุ"> อื่นๆ ระบุ</label>
+                <label class="flex items-center gap-2 flex-shrink-0"><input type="checkbox" name = "CHKCOMPLIANCE" class="chk-compliance" value="อื่นๆ ระบุ"> อื่นๆ ระบุ</label>
                 <input type="text"  name = "COMPLIANCE_OTHER" class="input input-sm border border-gray-400 h-8 rounded w-1/2 px-2">
                 <span class="text-red-600 text-sm font-semibold whitespace-nowrap">ข้อกำหนด AMEC-6000: Rule for Purchase</span>
             </div>

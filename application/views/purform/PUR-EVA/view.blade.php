@@ -6,7 +6,7 @@
 <div class="hidden apv-data" empno="{{$empno}}"></div>
 @endsection
 
-<form id="frmmain">
+<form id="frmmain" style="visibility: hidden;">
      
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-10">
     <h1 class="text-3xl text-center text-primary font-bold mb-10 mt-6">Vendor/Sub-contractor Evaluation Form</h1>

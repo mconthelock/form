@@ -1,9 +1,5 @@
-// import select2 from 'select2';
-// import { dragDropInit } from '@amec/webasset/dragdrop';
-// import { handleFiles } from '@amec/webasset/dragdrop';
-import { searchNVFForm, getCurrency, create } from './data';
+import { searchNVFForm, getCurrency, create, getData } from './data';
 import { createTable } from '@amec/webasset/dataTable';
-// import { setSelect2 } from '@amec/webasset/select2';
 import { downloadOrOpenFile } from '@amec/webasset/api/file';
 import {
     getCountries,
@@ -35,7 +31,12 @@ import {
     attachTypeManager,
     attachOtherManager,
 } from '../PUR-NVF/formManager';
-import { concernManager, currencyManager } from './formManager';
+import {
+    bindComplianceData,
+    concernManager,
+    currencyManager,
+    renderFilesByType,
+} from './formManager';
 import {
     filterFormData,
     getAllAttr,
@@ -46,11 +47,411 @@ import { getOrganize } from '../../finform/FIN-PCK/dataloc';
 import { showLoader } from '@amec/webasset/preloader';
 import { webflowSubmit } from '@amec/webasset/components/form';
 import { setDatePicker } from '@amec/webasset/flatpickr';
+import { formSubmitSkeleton } from '@amec/webasset/skeleton';
+import { showflow } from '@amec/webasset/api/webform';
 
-// select2();
-
+var form = {};
 var tableSearch, purformdata, columnPurNVF;
 var provinceData, districtData, subDistrictData;
+
+// ==========================================
+// ส่วนของ Event ต่าง ๆ (ย้ายมาอยู่นอก document.ready ได้ทั้งหมดด้วย $(document).on)
+// ==========================================
+
+$(document).on('click', '#btnOpenModal', function () {
+    $('#searchModal')[0].showModal();
+});
+
+$(document).on('click', '#btnCloseModal', function () {
+    $('#searchModal')[0].close();
+});
+
+$(document).on('click', '#add-contact', async function () {
+    const newRow = `
+        <div class="flex gap-4 contact-row mt-2">
+            <input type="text" placeholder="Name" class="input input-sm border border-gray-400 h-8 rounded w-[450px] px-2">
+            <input type="email" placeholder="E-mail" class="input input-sm border border-gray-400 h-8 rounded w-[450px] px-2">
+            <input type="text" placeholder="Username" class="input input-sm border border-gray-400 h-8 rounded w-[200px] px-2">
+            <button type="button" class="btn-remove text-red-500 hover:text-red-700 font-bold px-2 flex items-center">✕</button>
+        </div>
+    `;
+    $('#contact-list').append(newRow);
+});
+
+$(document).on('click', '#contact-list .btn-remove', function () {
+    $(this).closest('.contact-row').remove();
+});
+
+$(document).on('input', '#VENDORCODE', async function () {
+    const keywordValue = this.value.trim();
+    if (keywordValue.length === 5) {
+        try {
+            showLoader();
+            const searchData = { KEYWORD: keywordValue };
+            const vendor = await getVendor(searchData);
+            setVendorMstInfo(vendor[0]);
+        } catch (err) {
+            console.error('Error get Vendor:', err);
+            showErrorMessage('เกิดข้อผิดพลาดในการดึงข้อมูลคู่ค้า');
+        } finally {
+            showLoader({ show: false });
+        }
+    }
+});
+
+$(document).on('change', '.radio-opr', async function () {
+    const isAnnual = $(this).val() === 'A';
+    const container = $(this).closest('.vendor-form-container');
+    const vendorInput = container.find('.vendor-code-input');
+    const updateCheck = container.find('.update-status-check');
+    if (isAnnual) {
+        vendorInput.prop('disabled', false);
+        updateCheck.prop('disabled', false);
+    } else {
+        vendorInput.prop('disabled', true).val('');
+        updateCheck.prop('disabled', true).prop('checked', false);
+    }
+});
+
+$(document).on('change', '.radio-typec', async function () {
+    console.log('event change');
+    let val = $(this).val().split(':')[0];
+    if (val === '6') {
+        $('#nonpro').removeClass('hidden');
+        $('#pro').addClass('hidden');
+        $('#attach-ie').addClass('hidden');
+        $('#attach-qa').addClass('hidden');
+        $('#attach-vat').removeClass('hidden');
+        $('.pro').addClass('hidden');
+    } else {
+        $('#nonpro').addClass('hidden');
+        $('#pro').removeClass('hidden');
+        $('#attach-ie').removeClass('hidden');
+        $('#attach-qa').removeClass('hidden');
+        $('#attach-vat').addClass('hidden');
+        $('.pro').removeClass('hidden');
+    }
+    if ($('.radio-type:checked').length > 0) {
+        $('.radio-type:checked').trigger('change');
+    }
+});
+
+$(document).on('change', '.radio-type', async function () {
+    let typec = $('.radio-typec:checked').val()?.split(':')[0];
+    let val = $(this).val();
+    if (val === 'Local') {
+        $('.field-local').removeClass('hidden');
+        $('.field-oversea').addClass('hidden');
+        if (typec === '6') {
+            $('.field-local-nonpro').removeClass('hidden');
+            $('.field-oversea-nonpro').addClass('hidden');
+        } else {
+            $('.field-local-nonpro').addClass('hidden');
+            $('.field-oversea-nonpro').addClass('hidden');
+        }
+        countryManager.disabled(true);
+        countryEnManager.value = 'Thailand';
+        countryThManager.value = 'ไทย';
+    } else {
+        $('.field-local').addClass('hidden');
+        $('.field-oversea').removeClass('hidden');
+        if (typec === '6') {
+            $('.field-oversea-nonpro').removeClass('hidden');
+            $('.field-local-nonpro').addClass('hidden');
+        } else {
+            $('.field-local-nonpro').addClass('hidden');
+            $('.field-oversea-nonpro').addClass('hidden');
+        }
+        countryManager.disabled(false);
+        countryEnManager.value = '';
+        countryThManager.value = '';
+    }
+});
+
+$(document).on('input', '#AMOUNT', async function () {
+    let rawValue = $(this).val().replace(/,/g, '');
+    let amount = parseFloat(rawValue);
+    if (isNaN(amount)) {
+        $('input[name="PUR_LEVEL"]').prop('checked', false);
+        return;
+    }
+    if (amount >= 1000000) {
+        $('input[name="PUR_LEVEL"][value="A"]').prop('checked', true);
+    } else if (amount >= 100000) {
+        $('input[name="PUR_LEVEL"][value="B"]').prop('checked', true);
+    } else if (amount >= 10000) {
+        $('input[name="PUR_LEVEL"][value="C"]').prop('checked', true);
+    } else {
+        $('input[name="PUR_LEVEL"][value="D"]').prop('checked', true);
+    }
+});
+
+$(document).on('input', '.input-decimal', async function () {
+    let value = $(this).val();
+    value = value.replace(/[^0-9.]/g, '');
+    value = value.replace(/(\..*)\./g, '$1');
+    value = value.replace(/(\.\d{2})\d+/g, '$1');
+    $(this).val(value);
+});
+
+$(document).on('input', '.input-integer', function () {
+    let value = $(this).val();
+    value = value.replace(/[^0-9]/g, '');
+    $(this).val(value);
+});
+
+$(document).on('keydown', '#modalSearch', async function (e) {
+    if (e.which === 13 || e.key === 'Enter') {
+        e.preventDefault();
+        let keyword = $(this).val().trim();
+        if (keyword === '') return;
+
+        try {
+            const results = await searchNVFForm(keyword);
+            const data = Array.isArray(results) ? results : results.data || [];
+            $('#tableContainer')
+                .empty()
+                .html(
+                    '<table id="tableSearch" class="w-full text-sm text-gray-600"></table>',
+                );
+            tableSearch = await createTable(
+                {
+                    data: data,
+                    columns: columnPurNVF,
+                    searching: false,
+                    lengthChange: false,
+                    info: false,
+                    createdRow: function (row, data, dataIndex) {
+                        $(row).addClass(
+                            'hover:bg-blue-50 cursor-pointer transition-colors',
+                        );
+                    },
+                },
+                {
+                    id: '#tableSearch',
+                    columnSelect: { status: false },
+                    domScroll: {
+                        status: true,
+                        maxHeight: '21rem',
+                        type: 'tailwind4',
+                    },
+                    join: true,
+                },
+            );
+        } catch (error) {
+            console.error('Error searching NVF form:', error);
+            $('#tableContainer').html(
+                '<p class="text-red-500 text-center py-4">เกิดข้อผิดพลาดในการค้นหา</p>',
+            );
+        }
+    }
+});
+
+$(document).on('click', '#tableContainer #tableSearch tbody tr', function () {
+    const table = $('#tableSearch').DataTable();
+    const rowData = table.row(this).data();
+    setVendorInfo(rowData);
+    $('#searchModal')[0].close();
+});
+
+$(document).on('select2:select', '.country', async function (e) {
+    countryManager.change(e);
+});
+
+$(document).on('select2:select', '.province', async function (e) {
+    provinceManager.change(e);
+    const selectedProvinceId = provinceManager.getValue('PROVINCE_SELECT');
+    const filteredDistricts = districtData.filter(
+        (d) => d.province_id == selectedProvinceId,
+    );
+    const districtOptions = filteredDistricts.map((d) => ({
+        id: d.id,
+        value: d.value,
+        text: d.text,
+        nameth: d.nameth,
+    }));
+    districtOptions.unshift({
+        id: '',
+        value: '',
+        text: '-- Select District --',
+        nameth: '',
+    });
+    districtManager.select.empty().trigger('change');
+    await districtManager.init(districtOptions);
+});
+
+$(document).on('select2:select', '.district', async function (e) {
+    districtManager.change(e);
+    const selectedDistrictId = districtManager.getValue('DISTRICT_SELECT');
+    const filteredSubDistricts = subDistrictData.filter(
+        (s) => s.district_id == selectedDistrictId,
+    );
+    const subDistrictOptions = filteredSubDistricts.map((s) => ({
+        id: s.id,
+        value: s.value,
+        text: s.text,
+        nameth: s.nameth,
+        district_id: s.district_id,
+        postcode: s.postcode,
+    }));
+    subDistrictOptions.unshift({
+        id: '',
+        value: '',
+        text: '-- Select Sub-district --',
+        nameth: '',
+        district_id: '',
+        postcode: '',
+    });
+    subDistrictManager.select.empty().trigger('change');
+    await subDistrictManager.init(subDistrictOptions);
+});
+
+$(document).on('select2:select', '.sub-district', async function (e) {
+    subDistrictManager.change(e);
+});
+
+$(document).on('input', '#directSearchInput', async function () {
+    const keyword = $(this).val();
+    if (keyword.length == '16') {
+        const results = await searchNVFForm(keyword);
+        if (results && Array.isArray(results) && results.length > 0) {
+            const data = results[0];
+            if (data.LISTS && data.LISTS.length > 0) {
+                setVendorInfo(data);
+            } else {
+                clearVendorInfo();
+                showMessage('This form no. not found', 'warning');
+            }
+        } else {
+            clearVendorInfo();
+            showMessage('This form no. not found', 'warning');
+        }
+    }
+});
+
+$(document).on('click', '.add-row-btn', function () {
+    const tableId = $(this).data('table');
+    const tbody = $('#' + tableId + ' tbody');
+    const newRow = tbody.find('.row-template').first().clone();
+    newRow.removeClass('row-template');
+    newRow.find('input').val('');
+    newRow
+        .find('td:last-child')
+        .html(
+            '<button type="button" class="remove-row w-7 h-7 rounded border border-red-500 text-red-500 hover:bg-red-50 flex items-center justify-center font-bold text-lg mx-auto transition-colors">×</button>',
+        );
+    tbody.append(newRow);
+});
+
+$(document).on('click', '.remove-row', function () {
+    $(this).closest('tr').remove();
+});
+
+$(document).on(
+    'change',
+    '#section-eva-non input[type="radio"], #section-eva-pro input[type="radio"]',
+    function (e) {
+        const containerId =
+            '#' + $(this).closest('div[id^="section-eva"]').attr('id');
+        calculateScore(containerId);
+    },
+);
+
+const selectedFilesCache = {};
+$(document).on('change', 'input[type="file"]', async function () {
+    let inputId = $(this).attr('id');
+    let wrapper = $(this).closest('.flex-col');
+    let showFileContainer = wrapper.find('.show-file');
+
+    if (!selectedFilesCache[inputId]) {
+        selectedFilesCache[inputId] = new DataTransfer();
+    }
+    let dataTransfer = selectedFilesCache[inputId];
+
+    if (this.files && this.files.length > 0) {
+        $.each(this.files, function (index, file) {
+            let isDuplicate = false;
+            for (let i = 0; i < dataTransfer.files.length; i++) {
+                if (dataTransfer.files[i].name === file.name) {
+                    isDuplicate = true;
+                    break;
+                }
+            }
+            if (!isDuplicate) {
+                dataTransfer.items.add(file);
+            }
+        });
+    }
+    this.files = dataTransfer.files;
+    renderNewFilesUI(inputId, dataTransfer, showFileContainer);
+});
+
+$(document).on('click', '.remove-new-file', function () {
+    let inputId = $(this).data('id');
+    let indexToRemove = $(this).data('index');
+    let dataTransfer = selectedFilesCache[inputId];
+    let inputElement = $('#' + inputId)[0];
+    let showFileContainer = $(this).closest('.show-file');
+
+    if (dataTransfer) {
+        dataTransfer.items.remove(indexToRemove);
+        inputElement.files = dataTransfer.files;
+        renderNewFilesUI(inputId, dataTransfer, showFileContainer);
+    }
+});
+
+$(document).on('click', '#btnDraft, #btnRequest', async function () {
+    if (!checkAttFile()) {
+        return false;
+    }
+    const formElement = $('#frmmain')[0];
+    const filteredFormData = await packPurevaFormData(formElement);
+    if (this.id === 'btnDraft') {
+        filteredFormData.append('DRAFT', '0');
+    }
+    logFormData(filteredFormData);
+    const res = await create(filteredFormData);
+});
+
+$(document).on('input', '.empnum', function () {
+    const directValue = Number($('input[name="EMPDIRECT"]').val()) || 0;
+    const indirectValue = Number($('input[name="EMPINDIRECT"]').val()) || 0;
+    const total = directValue + indirectValue;
+    $('.totemp').val(total);
+});
+
+$(document).on('change', 'input[name="VENDGROUP"]', function () {
+    const selectedValue = $(this).val();
+    const blockCer = $('#file-cer').closest('.flex-col.gap-2.border');
+    const blockIe = $('#file-ie').closest('.flex-col.gap-2.border');
+    const blockQa = $('#file-qa').closest('.flex-col.gap-2.border');
+    if (selectedValue) {
+        if (selectedValue.includes('6:Non-Production')) {
+            blockIe.hide();
+            blockQa.hide();
+            blockCer.show();
+            $('#file-ie, #file-qa').val('');
+            $('#file-ie, #file-qa')
+                .closest('.flex-col')
+                .find('.show-file')
+                .empty();
+        } else {
+            blockIe.show();
+            blockQa.show();
+            blockCer.hide();
+            $('#file-cer').val('');
+            $('#file-cer').closest('.flex-col').find('.show-file').empty();
+        }
+    } else {
+        blockIe.hide();
+        blockQa.hide();
+        blockCer.hide();
+    }
+});
+
+// ==========================================
+// ส่วนเริ่มต้นการทำงานหลัก (document.ready)
+// ==========================================
 
 $(document).ready(async function () {
     const countries = await getCountries();
@@ -105,7 +506,6 @@ $(document).ready(async function () {
         value: o.VORGNO,
         text: o.VNAME,
     }));
-    //console.log(orgdata);
 
     countryManager.init(countriesData);
     provinceManager.init(provinceData);
@@ -114,6 +514,19 @@ $(document).ready(async function () {
     paymentTermManager.init(termdata);
     currencyManager.init(currencyData);
     concernManager.init(orgdata);
+
+    const formInfo = await getAllAttr('.form-info');
+    form = {
+        NFRMNO: formInfo.nfrmno,
+        VORGNO: formInfo.vorgno,
+        CYEAR: formInfo.cyear,
+        CYEAR2: formInfo.cyear2,
+        NRUNNO: formInfo.nrunno,
+        MODE: Number(formInfo.mode) ?? null,
+        EMPNO: $('.apv-data').attr('empno'),
+        RETURN: formInfo.return ?? null,
+    };
+
     const submitbtn = webflowSubmit({
         request: true,
         draft: true,
@@ -122,8 +535,6 @@ $(document).ready(async function () {
     $('#form-action-container').html(submitbtn);
     setDatePicker();
 
-    //const divattfile = await dragDropInit();
-    //$('#attachFile').html(divattfile);
     columnPurNVF = [
         {
             data: 'NRUNNO',
@@ -131,10 +542,7 @@ $(document).ready(async function () {
             width: '200px',
             className: 'text-center',
             render: function (data, type, row) {
-                // 1. ดึงปี 2 ตัวหลัง (เช็คเผื่อกรณีไม่มีค่าด้วย)
                 let year2 = row.CYEAR2 ? String(row.CYEAR2).slice(-2) : '';
-
-                // 2. เติม 0 ด้านหน้า NRUNNO ให้ครบ 6 หลัก
                 let runNo = row.NRUNNO
                     ? String(row.NRUNNO).padStart(6, '0')
                     : '000000';
@@ -142,461 +550,32 @@ $(document).ready(async function () {
             },
         },
         {
-            data: 'LISTS', // อ้างอิง property LISTS จาก JSON
+            data: 'LISTS',
             title: 'Vendor Name',
             className: 'text-left',
             render: function (data, type, row) {
-                // เช็คว่ามีข้อมูล LISTS และ COMNAME หรือไม่
                 if (row.LISTS && row.LISTS.length > 0 && row.LISTS[0].COMNAME) {
                     return row.LISTS[0].COMNAME;
                 }
-                return '-'; // ถ้าไม่มีให้แสดงขีด
+                return '-';
             },
         },
     ];
     $('.field-local').removeClass('hidden');
     $('.field-oversea').addClass('hidden');
-    // 1. เปิด Modal
-    $('#btnOpenModal').on('click', function () {
-        $('#searchModal')[0].showModal(); // เรียกใช้คำสั่งของ HTML dialog
-    });
 
-    // 2. ปิด Modal (เมื่อกดปุ่มปิด)
-    $('#btnCloseModal').on('click', function () {
-        $('#searchModal')[0].close();
-    });
-
-    $(document).on('click', '#add-contact', async function () {
-        const newRow = `
-                <div class="flex gap-4 contact-row mt-2">
-                    <input type="text" placeholder="Name" class="input input-sm border border-gray-400 h-8 rounded w-[450px] px-2">
-                    <input type="email" placeholder="E-mail" class="input input-sm border border-gray-400 h-8 rounded w-[450px] px-2">
-                    <input type="text" placeholder="Username" class="input input-sm border border-gray-400 h-8 rounded w-[200px]  px-2">
-                    <button type="button" class="btn-remove text-red-500 hover:text-red-700 font-bold px-2 flex items-center">
-                        ✕
-                    </button>
-                </div>
-            `;
-        $('#contact-list').append(newRow);
-    });
-
-    // จัดการปุ่มลบแถว (ใช้ .on() เพื่อรองรับ HTML ที่เพิ่งถูกสร้างใหม่)
-    $('#contact-list').on('click', '.btn-remove', function () {
-        $(this).closest('.contact-row').remove();
-    });
-
-    $(document).on('input', '#VENDORCODE', async function () {
-        const keywordValue = this.value.trim();
-        if (keywordValue.length === 5) {
-            try {
-                showLoader(); // เปิด Loader รอระว่างดึงข้อมูล
-                const searchData = { KEYWORD: keywordValue };
-                const vendor = await getVendor(searchData);
-                setVendorMstInfo(vendor[0]);
-                //console.log(vendor[0]);
-            } catch (err) {
-                console.error('Error get Vendor:', err);
-                showErrorMessage('เกิดข้อผิดพลาดในการดึงข้อมูลคู่ค้า');
-            } finally {
-                showLoader({ show: false }); // ปิด Loader
-            }
-        }
-    });
-
-    $(document).on('change', '.radio-opr', async function () {
-        const isAnnual = $(this).val() === 'A';
-        const container = $(this).closest('.vendor-form-container');
-        const vendorInput = container.find('.vendor-code-input');
-        const updateCheck = container.find('.update-status-check');
-        if (isAnnual) {
-            vendorInput.prop('disabled', false);
-            updateCheck.prop('disabled', false);
-        } else {
-            vendorInput.prop('disabled', true).val('');
-            updateCheck.prop('disabled', true).prop('checked', false);
-        }
-    });
-
-    $(document).on('change', '.radio-typec', async function () {
-        let val = $(this).val().split(':')[0];
-        if (val === '6') {
-            $('#nonpro').removeClass('hidden');
-            $('#pro').addClass('hidden');
-            $('#attach-ie').addClass('hidden');
-            $('#attach-qa').addClass('hidden');
-            $('#attach-vat').removeClass('hidden');
-            $('.pro').addClass('hidden');
-        } else {
-            $('#nonpro').addClass('hidden');
-            $('#pro').removeClass('hidden');
-            $('#attach-ie').removeClass('hidden');
-            $('#attach-qa').removeClass('hidden');
-            $('#attach-vat').addClass('hidden');
-            $('.pro').removeClass('hidden');
-        }
-        if ($('.radio-type:checked').length > 0) {
-            $('.radio-type:checked').trigger('change');
-        }
-    });
-
-    $(document).on('change', '.radio-type', async function () {
-        console.log($('.radio-typec:checked').val());
-
-        let typec = $('.radio-typec:checked').val().split(':')[0];
-        console.log(typec);
-
-        let val = $(this).val();
-        if (val === 'Local') {
-            $('.field-local').removeClass('hidden');
-            $('.field-oversea').addClass('hidden');
-            if (typec === '6') {
-                $('.field-local-nonpro').removeClass('hidden');
-                $('.field-oversea-nonpro').addClass('hidden');
-            } else {
-                $('.field-local-nonpro').addClass('hidden');
-                $('.field-oversea-nonpro').addClass('hidden');
-            }
-            countryManager.disabled(true);
-            countryEnManager.value = 'Thailand';
-            countryThManager.value = 'ไทย';
-        } else {
-            $('.field-local').addClass('hidden');
-            $('.field-oversea').removeClass('hidden');
-            if (typec === '6') {
-                $('.field-oversea-nonpro').removeClass('hidden');
-                $('.field-local-nonpro').addClass('hidden');
-            } else {
-                $('.field-local-nonpro').addClass('hidden');
-                $('.field-oversea-nonpro').addClass('hidden');
-            }
-            countryManager.disabled(false);
-            countryEnManager.value = '';
-            countryThManager.value = '';
-        }
-    });
-
-    $(document).on('input', '#AMOUNT', async function () {
-        let rawValue = $(this).val().replace(/,/g, '');
-        let amount = parseFloat(rawValue);
-        if (isNaN(amount)) {
-            $('input[name="PUR_LEVEL"]').prop('checked', false);
-            return;
-        }
-        if (amount >= 1000000) {
-            $('input[name="PUR_LEVEL"][value="A"]').prop('checked', true);
-        } else if (amount >= 100000) {
-            // ถ้าน้อยกว่า 1 ล้าน และมากกว่าเท่ากับ 1 แสน
-            $('input[name="PUR_LEVEL"][value="B"]').prop('checked', true);
-        } else if (amount >= 10000) {
-            // ถ้าน้อยกว่า 1 แสน และมากกว่าเท่ากับ 1 หมื่น
-            $('input[name="PUR_LEVEL"][value="C"]').prop('checked', true);
-        } else {
-            // ถ้าน้อยกว่า 1 หมื่น
-            $('input[name="PUR_LEVEL"][value="D"]').prop('checked', true);
-        }
-    });
-
-    $(document).on('input', '.input-decimal', async function () {
-        let value = $(this).val();
-        value = value.replace(/[^0-9.]/g, '');
-        value = value.replace(/(\..*)\./g, '$1');
-        value = value.replace(/(\.\d{2})\d+/g, '$1');
-        $(this).val(value);
-    });
-
-    $(document).on('input', '.input-integer', function () {
-        let value = $(this).val();
-        value = value.replace(/[^0-9]/g, ''); // ลบทุกอย่างทิ้งยกเว้นตัวเลข 0-9
-        $(this).val(value);
-    });
-
-    $(document).on('keydown', '#modalSearch', async function (e) {
-        if (e.which === 13 || e.key === 'Enter') {
-            e.preventDefault();
-            let keyword = $(this).val().trim();
-            if (keyword === '') return;
-
-            try {
-                // 1. เรียก API
-                const results = await searchNVFForm(keyword);
-
-                // ตรวจสอบว่าได้ข้อมูลมาเป็น Array หรือไม่ (ปรับให้เข้ากับโครงสร้างของคุณ)
-                const data = Array.isArray(results)
-                    ? results
-                    : results.data || [];
-
-                // 2. ทุบตารางเก่าทิ้ง แล้วใส่ <table> ใหม่เข้าไปใน #tableContainer
-                $('#tableContainer')
-                    .empty()
-                    .html(
-                        '<table id="tableSearch" class="w-full text-sm text-gray-600"></table>',
-                    );
-
-                // 3. สร้างตารางใหม่ด้วย DataTables
-                tableSearch = await createTable(
-                    {
-                        data: data,
-                        columns: columnPurNVF,
-                        searching: false,
-                        lengthChange: false,
-                        info: false,
-                        createdRow: function (row, data, dataIndex) {
-                            $(row).addClass(
-                                'hover:bg-blue-50 cursor-pointer transition-colors',
-                            );
-                        },
-                    },
-                    {
-                        id: '#tableSearch',
-                        columnSelect: { status: false },
-                        domScroll: {
-                            status: true,
-                            maxHeight: '21rem',
-                            type: 'tailwind4',
-                        },
-                        join: true,
-                    },
-                );
-            } catch (error) {
-                console.error('Error searching NVF form:', error);
-                $('#tableContainer').html(
-                    '<p class="text-red-500 text-center py-4">เกิดข้อผิดพลาดในการค้นหา</p>',
-                );
-            }
-        }
-    });
-
-    // ดักจับการคลิกที่แถวในตาราง #tableSearch
-    $('#tableContainer').on('click', '#tableSearch tbody tr', function () {
-        // 1. ดึงข้อมูล DataTables ของแถวนี้
-        const table = $('#tableSearch').DataTable();
-        const rowData = table.row(this).data();
-        setVendorInfo(rowData); // เรียกใช้ฟังก์ชัน setVendorInfo เพื่อใส่ข้อมูลลงในฟอร์ม
-        $('#searchModal')[0].close();
-    });
-
-    $(document).on('select2:select', '.country', async function (e) {
-        countryManager.change(e);
-    });
-
-    $(document).on('select2:select', '.province', async function (e) {
-        provinceManager.change(e);
-        const selectedProvinceId = provinceManager.getValue('PROVINCE_SELECT');
-        const filteredDistricts = districtData.filter(
-            (d) => d.province_id == selectedProvinceId,
-        );
-
-        const districtOptions = filteredDistricts.map((d) => ({
-            id: d.id,
-            value: d.value,
-            text: d.text,
-            nameth: d.nameth,
-        }));
-
-        districtOptions.unshift({
-            id: '',
-            value: '',
-            text: '-- Select District --', // หรือใส่เป็นค่าว่าง "" ก็ได้
-            nameth: '',
-        });
-
-        districtManager.select.empty().trigger('change');
-        await districtManager.init(districtOptions);
-    });
-
-    $(document).on('select2:select', '.district', async function (e) {
-        districtManager.change(e);
-        const selectedDistrictId = districtManager.getValue('DISTRICT_SELECT');
-        const filteredSubDistricts = subDistrictData.filter(
-            (s) => s.district_id == selectedDistrictId,
-        );
-        const subDistrictOptions = filteredSubDistricts.map((s) => ({
-            id: s.id,
-            value: s.value,
-            text: s.text,
-            nameth: s.nameth,
-            district_id: s.district_id,
-            postcode: s.postcode,
-        }));
-        // console.log(subDistrictOptions);
-        subDistrictOptions.unshift({
-            id: '',
-            value: '',
-            text: '-- Select Sub-district --', // หรือใส่เป็นค่าว่าง "" ก็ได้
-            nameth: '',
-            district_id: '',
-            postcode: '',
-        });
-
-        subDistrictManager.select.empty().trigger('change');
-        await subDistrictManager.init(subDistrictOptions);
-    });
-
-    $(document).on('select2:select', '.sub-district', async function (e) {
-        subDistrictManager.change(e);
-    });
-
-    $(document).on('input', '#directSearchInput', async function () {
-        const keyword = $(this).val();
-        if (keyword.length == '16') {
-            const results = await searchNVFForm(keyword);
-            if (results && Array.isArray(results) && results.length > 0) {
-                const data = results[0];
-                if (data.LISTS && data.LISTS.length > 0) {
-                    setVendorInfo(data);
-                } else {
-                    clearVendorInfo();
-                    showMessage('This form no. not found', 'warning');
-                }
-            } else {
-                clearVendorInfo();
-                showMessage('This form no. not found', 'warning');
-            }
-        }
-    });
-    $(document).on('click', '.add-row-btn', function () {
-        const tableId = $(this).data('table');
-        console.log(tableId);
-
-        const tbody = $('#' + tableId + ' tbody');
-        const newRow = tbody.find('.row-template').first().clone();
-        newRow.removeClass('row-template');
-        newRow.find('input').val('');
-        newRow
-            .find('td:last-child')
-            .html(
-                '<button type="button" class="remove-row w-7 h-7 rounded border border-red-500 text-red-500 hover:bg-red-50 flex items-center justify-center font-bold text-lg mx-auto transition-colors">×</button>',
-            );
-        tbody.append(newRow);
-    });
-    // ฟังก์ชันสำหรับกดลบแถว (ใช้ .on เพราะเป็น element ที่สร้างขึ้นใหม่)
-    $(document).on('click', '.remove-row', function () {
-        $(this).closest('tr').remove();
-    });
-
-    $(document).on(
-        'change',
-        '#section-eva-non input[type="radio"], #section-eva-pro input[type="radio"]',
-        function (e) {
-            const containerId =
-                '#' + $(this).closest('div[id^="section-eva"]').attr('id');
-            console.log(containerId);
-
-            calculateScore(containerId);
-        },
-    );
-    $(document).on('change', 'input[name="files"]', async function (e) {});
-
-    const selectedFilesCache = {};
-
-    // 1. เมื่อมีการเลือกไฟล์
-    $(document).on('change', 'input[type="file"]', async function () {
-        let inputId = $(this).attr('id');
-        let wrapper = $(this).closest('.flex-col');
-        let showFileContainer = wrapper.find('.show-file');
-
-        // ถ้า input นี้ยังไม่เคยมี Cache ให้สร้าง DataTransfer ขึ้นมาใหม่
-        if (!selectedFilesCache[inputId]) {
-            selectedFilesCache[inputId] = new DataTransfer();
-        }
-
-        let dataTransfer = selectedFilesCache[inputId];
-
-        // นำไฟล์ใหม่ที่เพิ่งเลือก โยนเพิ่มเข้าไปใน DataTransfer (สะสมไฟล์)
-        if (this.files && this.files.length > 0) {
-            $.each(this.files, function (index, file) {
-                // เช็คกันเหนียว ไม่ให้เพิ่มไฟล์ชื่อซ้ำกัน
-                let isDuplicate = false;
-                for (let i = 0; i < dataTransfer.files.length; i++) {
-                    if (dataTransfer.files[i].name === file.name) {
-                        isDuplicate = true;
-                        break;
-                    }
-                }
-                if (!isDuplicate) {
-                    dataTransfer.items.add(file);
-                }
-            });
-        }
-
-        // อัปเดตค่ากลับเข้าไปที่ input ให้ตรงกับไฟล์ที่สะสมไว้ทั้งหมด (สำหรับการ Submit Form)
-        this.files = dataTransfer.files;
-
-        // วาดรายการไฟล์ใหม่ลงบนหน้าเว็บ
-        renderNewFilesUI(inputId, dataTransfer, showFileContainer);
-    });
-
-    $(document).on('click', '.remove-new-file', function () {
-        let inputId = $(this).data('id');
-        let indexToRemove = $(this).data('index');
-        let dataTransfer = selectedFilesCache[inputId];
-        let inputElement = $('#' + inputId)[0];
-        let showFileContainer = $(this).closest('.show-file');
-
-        if (dataTransfer) {
-            dataTransfer.items.remove(indexToRemove);
-            inputElement.files = dataTransfer.files;
-            renderNewFilesUI(inputId, dataTransfer, showFileContainer);
-        }
-    });
-
-    $(document).on('click', '#btnDraft, #btnRequest', async function () {
-        // 1. เช็คไฟล์แนบเหมือนเดิม
-        if (!checkAttFile()) {
-            return false;
-        }
-
-        // 2. ดึงข้อมูลฟอร์ม
-        const formElement = $('#frmmain')[0];
-        const filteredFormData = await packPurevaFormData(formElement);
-
-        // 3. เช็คว่าถ้าปุ่มที่กดคือ btnDraft ค่อยเติมค่า DRAFT ลงไป
-        if (this.id === 'btnDraft') {
-            filteredFormData.append('DRAFT', '0');
-        }
-
-        // 4. บันทึก log และส่งข้อมูล
-        logFormData(filteredFormData);
-        const res = await create(filteredFormData);
-    });
-
-    $('.empnum').on('input', function () {
-        const directValue = Number($('input[name="EMPDIRECT"]').val()) || 0;
-        const indirectValue = Number($('input[name="EMPINDIRECT"]').val()) || 0;
-        const total = directValue + indirectValue;
-        $('.totemp').val(total);
-    });
-    $('input[name="VENDGROUP"]').on('change', function () {
-        const selectedValue = $(this).val();
-        const blockCer = $('#file-cer').closest('.flex-col.gap-2.border');
-        const blockIe = $('#file-ie').closest('.flex-col.gap-2.border');
-        const blockQa = $('#file-qa').closest('.flex-col.gap-2.border');
-        if (selectedValue) {
-            if (selectedValue.includes('6:Non-Production')) {
-                blockIe.hide();
-                blockQa.hide();
-                blockCer.show();
-                $('#file-ie, #file-qa').val('');
-                $('#file-ie, #file-qa')
-                    .closest('.flex-col')
-                    .find('.show-file')
-                    .empty();
-            } else {
-                // แสดงแบบทื่อๆ ทันที
-                blockIe.show();
-                blockQa.show();
-                blockCer.hide();
-                $('#file-cer').val('');
-                $('#file-cer').closest('.flex-col').find('.show-file').empty();
-            }
-        } else {
-            blockIe.hide();
-            blockQa.hide();
-            blockCer.hide();
-        }
-    });
+    if (form.RETURN) {
+        const [flow, formeva] = await Promise.all([
+            showflow({ ...form, showStep: true }),
+            getData(form),
+        ]);
+        console.log(formeva);
+        $('#directSearchInput').closest('.flex.items-center.gap-4').hide();
+        setVendorEvaInfo(formeva);
+    }
 });
 
+// ฟังก์ชันช่วยเหลือต่าง ๆ
 function setVendorMstInfo(vendorMstData) {
     $('input[name="COMNAME"]').val(vendorMstData.VND_NAME);
     for (const address of vendorMstData.VENDOR_ADDRESS) {
@@ -652,15 +631,14 @@ function setVendorInfo(vendorData) {
     console.log(vendorData);
 
     $('input[name="COMNAME"]').val(vendorData.LISTS[0].COMNAME);
-    $(
-        'input[name="VENDTYPE"][value="' + vendorData.LISTS[0].VENDTYPE + '"]',
-    ).prop('checked', true);
+    $('input[name="VENDTYPE"][value="' + vendorData.LISTS[0].VENDTYPE + '"]')
+        .prop('checked', true)
+        .trigger('change');
 
     for (const address of vendorData.ADDRESSES) {
         if (address.ADDRTYPE === 'E') {
             if (vendorData.LISTS[0].VENDTYPE === 'Local') {
                 addrEnManager.value = address.ADDR || '';
-                //provinceManager.value = address.PROVINCE;
                 provinceManager.textToValue = address.PROVINCE;
                 districtManager.textToValue = address.DISTRICT;
                 subDistrictManager.textToValue = address.SUBDISTRICT;
@@ -693,21 +671,63 @@ function setVendorInfo(vendorData) {
     $('input[name="BRANCH"]').val(vendorData.LISTS[0].BRANCH);
     $('input[name="ACCNUMBER"]').val(vendorData.LISTS[0].ACCNUMBER);
     paymentTermManager.value = vendorData.LISTS[0].TERMCODE;
-    const divfile = attachFileManager.setFiles(vendorData.FILES || [], true);
-    //attachFileManager.container = divfile + dragDropInit();
-    //attachTypeManager.reset();
-    //if (vendorData.ATTACH_TYPE) {
-    // Attach Type
-    //  attachTypeManager.checked = vendorData.ATTACH_TYPE.split('|');
-    // if (vendorData.ATTACH_OTHER) {
-    //    attachTypeManager.checked = 'Other';
-    //   $('#ATTACH_OTHER').val(vendorData.ATTACH_OTHER || '');
-    //}
-    //}
+    attachFileManager.setFiles(vendorData.FILES || [], true);
+}
+
+function setVendorEvaInfo(formeva) {
+    const adaptedData = {
+        ...formeva,
+        LISTS: [
+            {
+                COMNAME: formeva.COMNAME,
+                VENDTYPE: formeva.VENDTYPE,
+                CONTACT: formeva.CONTACT,
+                EMAIL: formeva.EMAIL,
+                WEBSITE: formeva.WEBSITE,
+                TELNO: formeva.TELNO,
+                FAX: formeva.FAX,
+                BANKNAME: formeva.BANKNAME,
+                BRANCH: formeva.BRANCH,
+                ACCNUMBER: formeva.ACCNUMBER,
+                TERMCODE: formeva.TERMCODE,
+            },
+        ],
+    };
+    $(`input[name="OPERATION"][value="${formeva.OPERATION}"]`)
+        .prop('checked', true)
+        .trigger('change');
+
+    $(`input.radio-typec[value="${formeva.VENDGROUP}"]`)
+        .prop('checked', true)
+        .trigger('change');
+
+    if (formeva.OPERATION == 'A') {
+        $('input[name="VENDORCODE"], #VENDORCODE')
+            .val(formeva.VENDORCODE)
+            .trigger('change');
+        $('input[name="UPSTATUS"]')
+            .prop('checked', formeva.UPSTATUS === 'Y')
+            .trigger('change');
+    }
+    $('#BANKADDR').val(formeva.BANKADDR || '');
+    $('#stdcur')
+        .val(formeva.CURCODE || '')
+        .trigger('change');
+    $('input[name="PRODCAT"]').val(formeva.PRODCAT).trigger('change');
+    setVendorInfo(adaptedData);
+    formeva.ATTACH_OTHER && $('#ATTACH_OTHER').val(formeva.ATTACH_OTHER);
+    const attachedFiles = formeva.FILES || [];
+    renderFilesByType(attachedFiles, 11, 'file-type-11', true);
+    renderFilesByType(attachedFiles, 12, 'file-type-12', true);
+    renderFilesByType(attachedFiles, 13, 'file-type-13', true);
+    renderFilesByType(attachedFiles, 2, 'file-type-2', true);
+    bindComplianceData(formeva.COMPLIANCE, formeva.COMPLIANCE_OTHER);
+    $('input[name="PRODCAT"][value="' + formeva.PRODCAT + '"]')
+        .prop('checked', true)
+        .trigger('change');
 }
 
 function clearVendorInfo() {
-    // 1. Reset input ธรรมดา
     $('input[name="COMNAME"]').val('');
     $('input[name="CONTACT"]').val('');
     $('input[name="EMAIL"]').val('');
@@ -719,14 +739,11 @@ function clearVendorInfo() {
     $('input[name="ACCNUMBER"]').val('');
     $('#ATTACH_OTHER').val('');
 
-    // 2. Reset Radio/Checkbox
     $('input[name="VENDTYPE"]').prop('checked', false);
 
-    // 3. Reset Managers (อ้างอิงจากโค้ดของคุณ)
     addrEnManager.value = '';
     addrThManager.value = '';
 
-    // ฟังก์ชันย่อยสำหรับรีเซ็ต Manager ที่ใช้ Select2
     const resetManager = (manager) => {
         if (manager && manager.list) {
             manager.list.forEach((id) => {
@@ -735,12 +752,10 @@ function clearVendorInfo() {
         }
     };
 
-    // 1. เรียกใช้กับ Manager ที่เป็น Select2
     resetManager(provinceManager);
     resetManager(districtManager);
     resetManager(subDistrictManager);
 
-    // รีเซ็ตค่า Manager ต่างๆ ให้เป็นค่าว่างหรือค่าเริ่มต้น
     [
         provinceManager,
         districtManager,
@@ -765,8 +780,7 @@ function clearVendorInfo() {
 
     paymentTermManager.value = '';
 
-    // 4. Reset ไฟล์และ Attach Type
-    attachFileManager.setFiles([], true); // ล้างรายการไฟล์
+    attachFileManager.setFiles([], true);
     attachTypeManager.reset();
 }
 
@@ -776,26 +790,18 @@ function calculateScore(containerSelector) {
     const container = $(containerSelector);
     let colorClass = 'text-gray-500';
 
-    // หา radio ทั้งหมดที่ถูกเลือก ในกล่องที่เราระบุ
     container.find('input[type="radio"]:checked').each(function () {
         isAnyChecked = true;
-
-        // ดึงค่าจาก value แล้วแปลงเป็นตัวเลขได้เลย!
         let score = parseInt($(this).val(), 10);
-
         if (!isNaN(score)) {
             totalScore += score;
         }
     });
 
-    // แสดงผลรวมคะแนน โดยหาจาก class .total-score
     container.find('.total-score').text(totalScore);
 
-    // คำนวณเกณฑ์ประเมิน
     let judgement = '-';
     if (isAnyChecked) {
-        console.log(totalScore);
-
         if (totalScore >= 80) {
             judgement = 'EXCELLENT (80 UP)';
             colorClass = 'text-green-600';
@@ -814,7 +820,6 @@ function calculateScore(containerSelector) {
         }
     }
 
-    // แสดงผลข้อความประเมิน โดยหาจาก class .judgement-result
     container
         .find('.judgement-result')
         .text(judgement)
@@ -825,39 +830,35 @@ function calculateScore(containerSelector) {
 }
 
 function renderNewFilesUI(inputId, dataTransfer, container) {
-    // หากล่องสำหรับแสดงไฟล์ใหม่
     let newFilesDiv = container.find('.new-selected-files');
     if (newFilesDiv.length === 0) {
         container.append('<div class="new-selected-files mt-1"></div>');
         newFilesDiv = container.find('.new-selected-files');
     }
 
-    // เคลียร์รายการเก่าเพื่อวาดใหม่ให้ตรงกับ DataTransfer ปัจจุบัน
     newFilesDiv.empty();
 
-    // สร้างรายการตามไฟล์ที่มีในระบบ
     $.each(dataTransfer.files, function (index, file) {
         let fileItemHtml = `
-                <div class="flex items-center gap-2 mt-1">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" 
-                         class="cursor-pointer remove-new-file shrink-0" 
-                         data-id="${inputId}" data-index="${index}" title="Remove file">
-                        <circle cx="12" cy="12" r="10" fill="#dc2626"></circle>
-                        <line x1="7" y1="12" x2="17" y2="12" stroke="white" stroke-width="3" stroke-linecap="round"></line>
-                    </svg>
-                    <span class="text-sm text-gray-700">${file.name}</span>
-                </div>
-            `;
+            <div class="flex items-center gap-2 mt-1">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" 
+                     class="cursor-pointer remove-new-file shrink-0" 
+                     data-id="${inputId}" data-index="${index}" title="Remove file">
+                    <circle cx="12" cy="12" r="10" fill="#dc2626"></circle>
+                    <line x1="7" y1="12" x2="17" y2="12" stroke="white" stroke-width="3" stroke-linecap="round"></line>
+                </svg>
+                <span class="text-sm text-gray-700">${file.name}</span>
+            </div>
+        `;
         newFilesDiv.append(fileItemHtml);
     });
 }
 
 async function packPurevaFormData(formElement) {
     const fd = new FormData(formElement);
-    const getAll = (key) => fd.getAll(key); // Helper สำหรับดึงค่า Array
+    const getAll = (key) => fd.getAll(key);
     const getStr = (key) => fd.get(key) || '';
 
-    // 1. แปลงฟิลด์ตัวเลขเดี่ยว (แทนที่ if-else chain เดิม)
     const numberFields = [
         'AMOUNT',
         'CAPITAL',
@@ -870,12 +871,10 @@ async function packPurevaFormData(formElement) {
         if (fd.has(key) && fd.get(key)) fd.set(key, Number(fd.get(key)));
     });
 
-    // 2. จัดการ Record Type & Remark
     const isNonProd = getStr('VENDGROUP').includes('6:Non-Production');
     const recordType = isNonProd ? 'P' : 'T';
     const remark = getStr(isNonProd ? 'nonremark' : 'proremark');
 
-    // 3. จัดการ PROFIT_TURNOVERS (ยุบลูป for 2 ชุดเหลือชุดเดียว)
     const years = getAll(isNonProd ? 'FY[]' : 'FYT[]');
     const profits = getAll(isNonProd ? 'FY_PROFIT[]' : 'FYT_PROFIT[]');
 
@@ -889,9 +888,8 @@ async function packPurevaFormData(formElement) {
                   }
                 : null,
         )
-        .filter(Boolean); // ลบค่าที่เป็น null ทิ้ง
+        .filter(Boolean);
 
-    // 4. จัดการ RELATIONS (ใช้ Helper function ยุบลูป for 4 ชุด)
     const buildRels = (nameKey, perKey, type) =>
         getAll(nameKey)
             .map((name, i) =>
@@ -912,7 +910,6 @@ async function packPurevaFormData(formElement) {
         ...buildRels('PRONAME[]', 'PROPER[]', 'P'),
     ];
 
-    // 5. จัดการ SCORES (ใช้ jQuery .map() ดึงรวดเดียว)
     const SCORES = $(formElement)
         .find('input[data-topic]:checked')
         .map((_, el) => ({
@@ -923,7 +920,6 @@ async function packPurevaFormData(formElement) {
         }))
         .get();
 
-    // 6. ลบฟิลด์ดิบที่ไม่ได้ใช้แล้ว
     const rawFieldsToDelete = [
         'FY[]',
         'FY_PROFIT[]',
@@ -944,7 +940,6 @@ async function packPurevaFormData(formElement) {
     ];
     rawFieldsToDelete.forEach((field) => fd.delete(field));
 
-    // 7. ประกอบร่าง FormData กลับเข้าไป
     const compliances = getAll('CHKCOMPLIANCE');
     if (compliances.length) fd.append('COMPLIANCE', compliances.join(', '));
     fd.delete('CHKCOMPLIANCE');
@@ -955,7 +950,6 @@ async function packPurevaFormData(formElement) {
     fd.append('VORGNO', formInfo.vorgno);
     fd.append('CYEAR', formInfo.cyear);
 
-    // Helper สำหรับ Append Array ของ Object เข้า FormData (ยุบโค้ดบรรทัดยาวๆ)
     const appendObjArray = (key, arr) =>
         arr.forEach((obj, i) =>
             Object.entries(obj).forEach(([prop, val]) => {
@@ -972,10 +966,10 @@ async function packPurevaFormData(formElement) {
 
 function checkAttFile() {
     const selectedGroup = $('input[name="VENDGROUP"]:checked').val();
-    const hasCer = $('#file-cer')[0].files.length > 0; // Company Certificate
-    const hasIe = $('#file-ie')[0].files.length > 0; // IE's evaluation
-    const hasQa = $('#file-qa')[0].files.length > 0; // QA's evaluation
-    if (selectedGroup.includes('6:Non-Production')) {
+    const hasCer = $('#file-cer')[0].files.length > 0;
+    const hasIe = $('#file-ie')[0].files.length > 0;
+    const hasQa = $('#file-qa')[0].files.length > 0;
+    if (selectedGroup && selectedGroup.includes('6:Non-Production')) {
         if (!hasCer) {
             showMessage(
                 'Please Attached Company Certificate / Vat Register / Company Profile',
