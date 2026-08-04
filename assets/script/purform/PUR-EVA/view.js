@@ -11,7 +11,11 @@ import { formatDate } from '@amec/webasset/dayjs';
 import { downloadOrOpenFile } from '@amec/webasset/api/file';
 import { formSubmitSkeleton } from '@amec/webasset/skeleton';
 import { showLoader } from '@amec/webasset/preloader';
-import { bindComplianceData, renderFilesByType } from './formManager';
+import {
+    bindComplianceData,
+    bindScoreData,
+    renderFilesByType,
+} from './formManager';
 
 var form = {};
 
@@ -72,48 +76,49 @@ $(async function () {
                 status === 'Y' ? 'Yes' : status === 'N' ? 'No' : status;
             return reason ? `${text} - ${reason}` : text;
         };
+        bindScoreData(formeva.SCORES);
 
-        const topicMap = {
-            'FINANCIAL STATEMENT': 'FIN_LEVEL',
-            'QUALITY CLASSIFICATION': 'QA_LEVEL',
-            ENVIRONMENTAL: 'ENV_LEVEL',
-            'ADVANCE VERIFYING': 'VERIFYING',
-            'PRICE LEVEL': 'PRICE_LEVEL',
-            'ORDER MANAGEMENT': 'ORDER_LEVEL',
-            'CUSTOMER SERVICE': 'CUSTOMER_LEVEL',
-            'STANDARD DELIVERY': 'DELIVERY_LEVEL',
-        };
+        // const topicMap = {
+        //     'FINANCIAL STATEMENT': 'FIN_LEVEL',
+        //     'QUALITY CLASSIFICATION': 'QA_LEVEL',
+        //     ENVIRONMENTAL: 'ENV_LEVEL',
+        //     'ADVANCE VERIFYING': 'VERIFYING',
+        //     'PRICE LEVEL': 'PRICE_LEVEL',
+        //     'ORDER MANAGEMENT': 'ORDER_LEVEL',
+        //     'CUSTOMER SERVICE': 'CUSTOMER_LEVEL',
+        //     'STANDARD DELIVERY': 'DELIVERY_LEVEL',
+        // };
 
-        let totalScore = 0;
-        formeva.SCORES?.forEach((item) => {
-            const group = topicMap[item.TOPIC];
-            if (group)
-                $(`input[name="${group}"][value="${item.SCORE}"]`).prop(
-                    'checked',
-                    true,
-                );
-            totalScore += Number(item.SCORE || 0);
-        });
+        // let totalScore = 0;
+        // formeva.SCORES?.forEach((item) => {
+        //     const group = topicMap[item.TOPIC];
+        //     if (group)
+        //         $(`input[name="${group}"][value="${item.SCORE}"]`).prop(
+        //             'checked',
+        //             true,
+        //         );
+        //     totalScore += Number(item.SCORE || 0);
+        // });
 
-        const grades = [
-            { min: 80, text: 'EXCELLENT (80 UP)', class: 'text-green-600' },
-            { min: 70, text: 'GOOD (70 UP)', class: 'text-blue-600' },
-            { min: 60, text: 'FAIR (60 UP)', class: 'text-orange-500' },
-            { min: 40, text: 'POOR (40 UP)', class: 'text-orange-500' },
-            {
-                min: 0,
-                text: 'NOT APPRICABLE (LESSTHAN 40)',
-                class: 'text-red-600',
-            },
-        ].find((g) => totalScore >= g.min);
+        // const grades = [
+        //     { min: 80, text: 'EXCELLENT (80 UP)', class: 'text-green-600' },
+        //     { min: 70, text: 'GOOD (70 UP)', class: 'text-blue-600' },
+        //     { min: 60, text: 'FAIR (60 UP)', class: 'text-orange-500' },
+        //     { min: 40, text: 'POOR (40 UP)', class: 'text-orange-500' },
+        //     {
+        //         min: 0,
+        //         text: 'NOT APPRICABLE (LESSTHAN 40)',
+        //         class: 'text-red-600',
+        //     },
+        // ].find((g) => totalScore >= g.min);
 
-        $('.total-score').text(totalScore);
-        $('.judgement-result')
-            .text(grades.text)
-            .attr(
-                'class',
-                `uppercase italic ml-2 judgement-result ${grades.class}`,
-            );
+        // $('.total-score').text(totalScore);
+        // $('.judgement-result')
+        //     .text(grades.text)
+        //     .attr(
+        //         'class',
+        //         `uppercase italic ml-2 judgement-result ${grades.class}`,
+        //     );
 
         const isNonPro = formeva.VENDGROUP === '6:Non-Production (6)';
         $('.nonpro').toggle(isNonPro);

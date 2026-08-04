@@ -173,3 +173,62 @@ export function bindComplianceData(complianceString, complianceOther) {
         $('#COMPLIANCE_OTHER_READONLY').val(complianceOther);
     }
 }
+
+/**
+ * ฟังก์ชันรับค่าคะแนน Array มาผูกกับ UI และคำนวณเกรดรวม
+ * @param {Array} scores - ข้อมูลอาเรย์ของคะแนน เช่น [{ TOPIC: '...', SCORE: 20 }, ...]
+ */
+export function bindScoreData(scores) {
+    const topicMap = {
+        'FINANCIAL STATEMENT': 'FIN_LEVEL',
+        'QUALITY CLASSIFICATION': 'QA_LEVEL',
+        ENVIRONMENTAL: 'ENV_LEVEL',
+        'ADVANCE VERIFYING': 'VERIFYING',
+        'PRICE LEVEL': 'PRICE_LEVEL',
+        'ORDER MANAGEMENT': 'ORDER_LEVEL',
+        'CUSTOMER SERVICE': 'CUSTOMER_LEVEL',
+        'STANDARD DELIVERY': 'DELIVERY_LEVEL',
+    };
+
+    let totalScore = 0;
+
+    // ตรวจสอบความปลอดภัยว่า scores เป็น Array หรือไม่
+    if (Array.isArray(scores)) {
+        scores.forEach((item) => {
+            const group = topicMap[item.TOPIC];
+            if (group) {
+                // ติ๊กเลือก Radio / Checkbox ตามคะแนน
+                $(`input[name="${group}"][value="${item.SCORE}"]`).prop(
+                    'checked',
+                    true,
+                );
+            }
+            totalScore += Number(item.SCORE || 0);
+        });
+    }
+
+    // กำหนดเกณฑ์คะแนน
+    const grades = [
+        { min: 80, text: 'EXCELLENT (80 UP)', class: 'text-green-600' },
+        { min: 70, text: 'GOOD (70 UP)', class: 'text-blue-600' },
+        { min: 60, text: 'FAIR (60 UP)', class: 'text-orange-500' },
+        { min: 40, text: 'POOR (40 UP)', class: 'text-amber-600' },
+        {
+            min: 0,
+            text: 'NOT APPRICABLE (LESSTHAN 40)',
+            class: 'text-red-600',
+        },
+    ].find((g) => totalScore >= g.min);
+
+    // แสดงผลคะแนนรวมและเกรดลงบนหน้าเว็บ
+    $('.total-score').text(totalScore);
+
+    if (grades) {
+        $('.judgement-result')
+            .text(grades.text)
+            .attr(
+                'class',
+                `uppercase italic ml-2 judgement-result ${grades.class}`,
+            );
+    }
+}

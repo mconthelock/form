@@ -33,6 +33,7 @@ import {
 } from '../PUR-NVF/formManager';
 import {
     bindComplianceData,
+    bindScoreData,
     concernManager,
     currencyManager,
     renderFilesByType,
@@ -48,7 +49,12 @@ import { showLoader } from '@amec/webasset/preloader';
 import { webflowSubmit } from '@amec/webasset/components/form';
 import { setDatePicker } from '@amec/webasset/flatpickr';
 import { formSubmitSkeleton } from '@amec/webasset/skeleton';
-import { showflow } from '@amec/webasset/api/webform';
+import {
+    getFormStatus,
+    searchFlow,
+    showflow,
+} from '@amec/webasset/api/webform';
+import { formatDate } from '@amec/webasset/dayjs';
 
 var form = {};
 var tableSearch, purformdata, columnPurNVF;
@@ -527,12 +533,6 @@ $(document).ready(async function () {
         RETURN: formInfo.return ?? null,
     };
 
-    const submitbtn = webflowSubmit({
-        request: true,
-        draft: true,
-        remark: false,
-    });
-    $('#form-action-container').html(submitbtn);
     setDatePicker();
 
     columnPurNVF = [
@@ -569,9 +569,37 @@ $(document).ready(async function () {
             showflow({ ...form, showStep: true }),
             getData(form),
         ]);
-        console.log(formeva);
+        //console.log(formeva);
         $('#directSearchInput').closest('.flex.items-center.gap-4').hide();
-        setVendorEvaInfo(formeva);
+        await setVendorEvaInfo(formeva);
+        const cst = await getFormStatus(form);
+        if (cst == '1') {
+            $('#form-action-container').html(
+                webflowSubmit({
+                    flow: true,
+                    flowhtml: flow.html,
+                    approve: true,
+                    save: true,
+                    remark: false,
+                }),
+            );
+        } else {
+            $('#form-action-container').html(
+                webflowSubmit({
+                    request: true,
+                    save: true,
+                    remark: false,
+                }),
+            );
+        }
+    } else {
+        $('#form-action-container').html(
+            webflowSubmit({
+                request: true,
+                draft: true,
+                remark: false,
+            }),
+        );
     }
 });
 
@@ -674,7 +702,16 @@ function setVendorInfo(vendorData) {
     attachFileManager.setFiles(vendorData.FILES || [], true);
 }
 
-function setVendorEvaInfo(formeva) {
+async function setVendorEvaInfo(formeva) {
+    var flow = await searchFlow({
+        NFRMNO: formeva.NFRMNO,
+        VORGNO: formeva.VORGNO,
+        CYEAR: formeva.CYEAR,
+        CYEAR2: formeva.CYEAR2,
+        NRUNNO: formeva.NRUNNO,
+        CSTEPST: '3',
+    });
+    $('.txtRemark').val(flow[0].VREMARK || '');
     const adaptedData = {
         ...formeva,
         LISTS: [
@@ -713,7 +750,7 @@ function setVendorEvaInfo(formeva) {
     $('#stdcur')
         .val(formeva.CURCODE || '')
         .trigger('change');
-    $('input[name="PRODCAT"]').val(formeva.PRODCAT).trigger('change');
+
     setVendorInfo(adaptedData);
     formeva.ATTACH_OTHER && $('#ATTACH_OTHER').val(formeva.ATTACH_OTHER);
     const attachedFiles = formeva.FILES || [];
@@ -725,6 +762,53 @@ function setVendorEvaInfo(formeva) {
     $('input[name="PRODCAT"][value="' + formeva.PRODCAT + '"]')
         .prop('checked', true)
         .trigger('change');
+    $('input[name="BUSTYPE_REG"]').val(formeva.BUSTYPE_REG);
+    $('input[name="BUSTYPE_SUB"]').val(formeva.BUSTYPE_SUB);
+
+    bindProfitTurnoverTables(formeva.PROFIT_TURNOVERS);
+
+    $(`input[name="LEGAL_STATUS"][value="${formeva.LEGAL_STATUS}"]`)
+        .prop('checked', true)
+        .trigger('change');
+    $('input[name="CORPORATE_ID"]').val(formeva.CORPORATE_ID);
+    $('input[name="TAX_ID"]').val(formeva.TAX_ID);
+    $('#CONCERNEDORG').val(formeva.CONCERNEDORG).trigger('change');
+    $('input[name="FY_AMOUNT"]').val(formeva.FY_AMOUNT);
+    $('input[name="AMOUNT"]').val(formeva.AMOUNT).trigger('input');
+    $(`input[name="PUR_STATUS"][value="${formeva.PUR_STATUS}"]`)
+        .prop('checked', true)
+        .trigger('change');
+
+    $('input[name="VENDCAT"]').val(formeva.VENDCAT);
+    $('input[name="CAPITAL"]').val(formeva.CAPITAL);
+    $('#cur').val(formeva.CAPITAL_CUR).trigger('change');
+    bindScoreData(formeva.SCORES);
+    $('input[name="ESTABLISHED"]').val(formeva.ESTABLISHED);
+    $(`input[name="COM_TYPE"][value="${formeva.COM_TYPE}"]`)
+        .prop('checked', true)
+        .trigger('change');
+    $('input[name="COM_OTHER"]').val(formeva.COM_OTHER);
+    $(`input[name="QM_STATUS"][value="${formeva.QM_STATUS}"]`)
+        .prop('checked', true)
+        .trigger('change');
+    $('input[name="QM_REASON"]').val(formeva.QM_REASON);
+    $(`input[name="CSR_STATUS"][value="${formeva.CSR_STATUS}"]`)
+        .prop('checked', true)
+        .trigger('change');
+    $('input[name="CSR_REASON"]').val(formeva.CSR_REASON);
+    $(`input[name="ENV_STATUS"][value="${formeva.ENV_STATUS}"]`)
+        .prop('checked', true)
+        .trigger('change');
+    $('input[name="ENV_REASON"]').val(formeva.ENV_REASON);
+    $(`input[name="LABOR_STATUS"][value="${formeva.LABOR_STATUS}"]`)
+        .prop('checked', true)
+        .trigger('change');
+
+    $('input[name="LABOR_ESTABLISH_DATE"]').val(
+        formatDate(formeva.LABOR_ESTABLISH_DATE, 'DD/MM/YYYY'),
+    );
+
+    bindEntityTables(formeva.RELATIONS);
 }
 
 function clearVendorInfo() {
@@ -987,4 +1071,125 @@ function checkAttFile() {
         }
     }
     return true;
+}
+
+function bindEntityTables(data) {
+    const tableConfig = {
+        N: {
+            tableId: '#shareholder-table',
+            nameInput: 'SHARENAME[]',
+            perInput: 'SHAREPER[]',
+        },
+        C: {
+            tableId: '#customer-table',
+            nameInput: 'CUSNAME[]',
+            perInput: 'CUSPER[]',
+        },
+        S: {
+            tableId: '#supplier-table',
+            nameInput: 'SUPNAME[]',
+            perInput: 'SUPPER[]',
+        },
+        P: {
+            tableId: '#product-table',
+            nameInput: 'PRONAME[]',
+            perInput: 'PROPER[]',
+        },
+    };
+
+    if (!Array.isArray(data)) return;
+
+    $.each(tableConfig, function (type, config) {
+        var $table = $(config.tableId);
+        var $tbody = $table.find('tbody');
+        if ($tbody.length === 0) {
+            $tbody = $table;
+        }
+
+        var $template = $tbody.find('.row-template').first();
+
+        // กรองและเรียงลำดับ ID จากน้อย -> มาก
+        var filteredData = data
+            .filter((item) => item.ENTITY_TYPE === type)
+            .sort((a, b) => a.ID - b.ID);
+
+        // 1. เคลียร์แถวทั้งหมดในตารางทิ้งก่อน
+        $tbody.empty();
+
+        if (filteredData.length === 0) {
+            // ถ้าไม่มีข้อมูล ให้คง row-template เปล่าๆ ไว้ 1 แถว (และช่อง Action จะว่างไม่มีปุ่ม)
+            $template.find('td').last().empty();
+            $tbody.append($template);
+            return;
+        }
+
+        filteredData.forEach((item, index) => {
+            var $newRow = $template.clone();
+
+            // จัดการเรื่องคลาส row-template
+            if (index === 0) {
+                // ถ้าเป็นแถวแรก ให้คงคลาส row-template ไว้ตามเดิม
+                $newRow.addClass('row-template');
+                // แถวแรกไม่มีปุ่มลบ ปล่อยช่อง Action ให้ว่าง
+                $newRow.find('td').last().empty();
+            } else {
+                // ถ้าเป็นแถวที่ 2 เป็นต้นไป ให้เอาคลาส row-template ออก
+                $newRow.removeClass('row-template');
+                // ใส่ปุ่มลบ (×)
+                $newRow.find('td').last().html(`
+                    <button type="button" class="remove-row w-7 h-7 rounded border border-red-500 text-red-500 hover:bg-red-50 flex items-center justify-center font-bold text-lg mx-auto transition-colors">×</button>
+                `);
+            }
+
+            // ใส่ค่า Name และ Percent ปกติ
+            $newRow
+                .find(`input[name="${config.nameInput}"]`)
+                .val(item.ENTITY_NAME ? item.ENTITY_NAME.trim() : '');
+            $newRow.find(`input[name="${config.perInput}"]`).val(item.PERCENT);
+
+            $tbody.append($newRow);
+        });
+    });
+}
+
+/**
+ * ฟังก์ชันกระจายข้อมูล Profit / Turnover ลงตารางอัตโนมัติ
+ * @param {Array} turnovers - ข้อมูลอาเรย์ทั้งหมดของ PROFIT_TURNOVERS
+ */
+function bindProfitTurnoverTables(turnovers) {
+    if (!Array.isArray(turnovers)) return;
+
+    // 1. กำหนดค่าคอนฟิกของแต่ละประเภท (RECORD_TYPE)
+    const config = {
+        P: {
+            tableId: '#profit-table',
+            yearInput: 'FY[]',
+            profitInput: 'FY_PROFIT[]',
+        },
+        T: {
+            tableId: '#turnover-table',
+            yearInput: 'FYT[]',
+            profitInput: 'FYT_PROFIT[]',
+        },
+    };
+
+    // 2. เรียงลำดับข้อมูลทั้งหมดตาม ID จากน้อยไปมาก
+    var sortedData = [...turnovers].sort((a, b) => a.ID - b.ID);
+
+    // 3. วนลูปตามประเภทใน config อัตโนมัติ
+    $.each(config, function (type, cfg) {
+        // กรองข้อมูลเฉพาะประเภทนั้น (เช่น 'P' หรือ 'T')
+        var filteredData = sortedData.filter(
+            (item) => item.RECORD_TYPE === type,
+        );
+
+        // นำข้อมูลไปหยอดลง input ของตารางนั้นๆ ตามลำดับแถว
+        $.each(filteredData, function (index, item) {
+            var $row = $(cfg.tableId + ' tbody tr').eq(index);
+            if ($row.length > 0) {
+                $row.find(`input[name="${cfg.yearInput}"]`).val(item.MYEAR);
+                $row.find(`input[name="${cfg.profitInput}"]`).val(item.AMOUNT);
+            }
+        });
+    });
 }
