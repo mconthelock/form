@@ -18,7 +18,7 @@ $(async function () {
   try {
     // ----------JUNG BM-------------------------
     await setDatePicker({
-      element: "#selectedDate",
+      element: "#openDatePicker",
       dateFormat: "Y-m-d",
       // maxDate: 'today',
       dayOff: false,
