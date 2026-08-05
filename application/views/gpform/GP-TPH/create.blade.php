@@ -43,20 +43,20 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div class="space-y-2">
                     <label class="text-sm font-semibold text-slate-700">Input By:</label>
-                    <input type="text" name="input_by_code" class="input input-bordered w-full" placeholder="">
+                    <input type="text" name="INPUTBY" id="INPUTBY" class="input input-bordered w-full" placeholder="" readonly disabled>
                 </div>                
                 <div class="space-y-2">
                     <label class="text-sm font-semibold text-slate-700">Request By:</label>
-                    <input type="text" name="request_by_code" class="input input-bordered w-full" placeholder="">
+                    <input type="text" name="REQBY" id="REQBY" class="input input-bordered w-full" placeholder="">
                 </div>
                 <div class="space-y-2">
                     <label class="text-sm font-semibold text-slate-700">Name:</label>
-                    <input type="text" name="input_by_name" class="input input-bordered w-full" placeholder="Name">
+                    <input type="text" name="empName" id="empName" class="input input-bordered w-full" placeholder="Name">
                 </div>
 
                 <div class="space-y-2">
                     <label class="text-sm font-semibold text-slate-700">Sect./Dept./Div.:</label>
-                    <input type="text" name="request_by_name" class="input input-bordered w-full" placeholder="">
+                    <input type="text" name="empDiv" id = "empDiv" class="input input-bordered w-full" placeholder="">
                 </div>
             </div>
 
@@ -66,23 +66,23 @@
                 </div>
                 <div class="space-y-3">
                     <div>
-                        <label class="inline-flex items-center gap-3">
-                            <input type="checkbox" name="request_type[]" value="employee" class="checkbox checkbox-primary">
+                        <label class="employee-request-group inline-flex items-center gap-3">
+                            <input type="radio" name="request_type[]" value="employee" class="radio radio-primary">
                             <span>Employee Request</span>
                         </label>
                         <div class="ml-8 mt-2 space-y-2">
-                            <label class="flex flex-row items-center gap-2">
-                                <input type="checkbox" name="request_type[]" value="individual" class="checkbox checkbox-primary">
+                            <label class="employee-request-group flex flex-row items-center gap-2">
+                                <input type="radio" name="request_sub_type" value="individual" class="radio radio-primary">
                                 <span>Individual Request</span>
                             </label>
-                            <label class="flex flex-row items-center gap-2">
-                                <input type="checkbox" name="request_type[]" value="group" class="checkbox checkbox-primary">
+                            <label class="employee-request-group flex flex-row items-center gap-2">
+                                <input type="radio" name="request_sub_type" value="group" class="radio radio-primary">
                                 <span>Group Request</span>
                             </label>
                         </div>
                     </div>
-                    <label class="inline-flex items-center gap-3">
-                        <input type="checkbox" name="request_type[]" value="host_external" class="checkbox checkbox-primary">
+                    <label class="host-request-group inline-flex items-center gap-3">
+                        <input type="radio" name="request_type[]" value="host_external" class="radio radio-primary">
                         <span>Host Request for External Personnel (พนักงานขอแทนบุคคลภายนอก)</span>
                     </label>
                 </div>
@@ -149,14 +149,14 @@
                 <div class="section-box p-5">
                     <div class="section-title text-base font-bold mb-3">Permit Date (วันที่ขออนุญาต)</div>
                     <label class="flex items-center gap-2">
-                        <input type="checkbox" name="permit_long_term" class="checkbox checkbox-primary">
+                        <input type="radio" name="permit_option" class="radio radio-primary" value="long_term">
                         <span>Long-Term Use (ใช้ระยะยาว)</span>
                     </label>
                     <div class="mt-3">
-                        <input type="text" name="permit_long_term_years" class="input input-bordered w-full" placeholder="Year(s)">
+                        <input type="number" name="permit_long_term_years" class="input input-bordered w-full" placeholder="Year(s)" inputmode="numeric" pattern="[0-9]*" min="0" step="1">
                     </div>
                     <label class="inline-flex items-center gap-2 mt-4">
-                        <input type="checkbox" name="permit_period" class="checkbox checkbox-primary">
+                        <input type="radio" name="permit_option" class="radio radio-primary" value="period">
                         <span>Use within period Date & Time (ใช้ในระยะเวลาที่กำหนด)</span>
                     </label>
                     <div class="mt-3 grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -251,138 +251,5 @@
 @endsection
 
 @section('scripts')
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const visitorBody = document.getElementById('visitor-table-body');
-            const addVisitorBtn = document.getElementById('add-visitor-row');
-            const visitorTemplate = document.getElementById('visitor-row-template');
-            const areaBody = document.getElementById('area-table-body');
-            const addAreaBtn = document.getElementById('add-area-row');
-            const areaTemplate = document.getElementById('area-row-template');
-            const areaPicker = document.getElementById('area-picker');
-            const areaPickerList = document.getElementById('area-picker-list');
-            const areaPickerEmpty = document.getElementById('area-picker-empty');
-            const confirmAreaSelection = document.getElementById('confirm-area-selection');
-            const hostExternalSection = document.getElementById('host-external-section');
-            const applicantVisitorSection = document.getElementById('applicant-visitor-section');
-            const hostExternalCheckboxes = document.querySelectorAll('input[name="request_type[]"][value="host_external"]');
-
-            function updateAreaIndexes() {
-                Array.from(areaBody.querySelectorAll('tr:not(#area-empty-row)')).forEach((row, index) => {
-                    const cell = row.querySelector('td:first-child');
-                    if (cell) {
-                        cell.textContent = index + 1;
-                    }
-                });
-            }
-
-            function getStoredAreas() {
-                try {
-                    return JSON.parse(localStorage.getItem('gp-tph-photo-permission-areas')) || [];
-                } catch (error) {
-                    return [];
-                }
-            }
-
-            function renderAreaPicker() {
-                const areas = getStoredAreas();
-                areaPickerList.innerHTML = '';
-                areaPickerEmpty.classList.toggle('hidden', areas.length > 0);
-
-                areas.forEach(function (area, index) {
-                    const label = document.createElement('label');
-                    label.className = 'flex items-center gap-2';
-                    label.innerHTML = `
-                        <input type="checkbox" class="area-choice checkbox checkbox-primary" data-area-index="${index}">
-                        <span>${area.location} / ${area.area} / ${area.level} / ${area.area_owner}</span>
-                    `;
-                    areaPickerList.appendChild(label);
-                });
-            }
-
-            function toggleHostExternalSection() {
-                const checked = Array.from(hostExternalCheckboxes).some(checkbox => checkbox.checked);
-                if (checked) {
-                    applicantVisitorSection.classList.add('hidden');
-                    hostExternalSection.classList.remove('hidden');
-                } else {
-                    applicantVisitorSection.classList.remove('hidden');
-                    hostExternalSection.classList.add('hidden');
-                }
-            }
-
-            addVisitorBtn.addEventListener('click', function () {
-                const clone = visitorTemplate.content.cloneNode(true);
-                visitorBody.appendChild(clone);
-            });
-
-            addAreaBtn.addEventListener('click', function () {
-                renderAreaPicker();
-                areaPicker.classList.toggle('is-visible');
-            });
-
-            confirmAreaSelection.addEventListener('click', function () {
-                const areas = getStoredAreas();
-                const selectedAreas = areaPickerList.querySelectorAll('.area-choice:checked');
-
-                if (selectedAreas.length > 0) {
-                    const emptyRow = document.getElementById('area-empty-row');
-                    if (emptyRow) {
-                        emptyRow.remove();
-                    }
-                }
-
-                selectedAreas.forEach(function (checkbox) {
-                    const area = areas[checkbox.dataset.areaIndex];
-                    const clone = areaTemplate.content.cloneNode(true);
-                    const row = clone.querySelector('tr');
-
-                    row.querySelector('input[name="area_location[]"]').value = area.location || '';
-                    row.querySelector('input[name="area_name[]"]').value = area.area || '';
-                    row.querySelector('input[name="area_level[]"]').value = area.level || '';
-                    row.querySelector('input[name="area_owner[]"]').value = area.area_owner || '';
-                    areaBody.appendChild(clone);
-                });
-
-                updateAreaIndexes();
-                areaPicker.classList.remove('is-visible');
-            });
-
-            hostExternalCheckboxes.forEach(function (checkbox) {
-                checkbox.addEventListener('change', toggleHostExternalSection);
-            });
-
-            document.addEventListener('click', function (event) {
-                if (event.target.closest('.remove-row')) {
-                    const row = event.target.closest('tr');
-                    if (row && visitorBody.contains(row)) {
-                        if (visitorBody.rows.length > 1) {
-                            row.remove();
-                        }
-                    }
-                }
-
-                if (event.target.closest('.remove-area-row')) {
-                    const row = event.target.closest('tr');
-                    if (row && areaBody.contains(row)) {
-                        row.remove();
-                        updateAreaIndexes();
-
-                        if (areaBody.querySelectorAll('tr').length === 0) {
-                            areaBody.innerHTML = `
-                                <tr id="area-empty-row">
-                                    <td colspan="6" class="border p-4 text-center text-slate-500">
-                                        กรุณากดปุ่ม + เพื่อเลือกพื้นที่
-                                    </td>
-                                </tr>
-                            `;
-                        }
-                    }
-                }
-            });
-
-            updateAreaIndexes();
-            toggleHostExternalSection();
-        });
-    </script>
+    <script src="{{ $_ENV['APP_JS'] }}/gpTPH.js?ver={{ $GLOBALS['version'] }}"></script>
 @endsection
