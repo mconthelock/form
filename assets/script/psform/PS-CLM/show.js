@@ -243,7 +243,7 @@ function showAs400Preview(data = {}) {
                 </div>
                 <p class="ps-clm-as400-notice">SIMULATION ONLY - NOTHING WAS INSERTED - BLANK FIELDS ARE HIDDEN</p>
                 ${renderFile("M001KP", data.m001)}
-                ${renderFile("M002KP", data.m002)}
+                ${renderFile("RTNLIBF.M002KPBM / DBGDEV14.M002KP", data.m002)}
                 ${renderFile("M008KP", data.m008)}
                 ${renderFile("M012KP", data.m012)}
                 <div class="modal-action"><form method="dialog"><button class="btn ps-clm-as400-close">F3 = EXIT</button></form></div>

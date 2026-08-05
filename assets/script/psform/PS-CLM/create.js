@@ -324,6 +324,7 @@ async function fillOriginalOrder(row, drawing) {
             const match = {
                 ORDERNO: String(item.ORDERNO || "").trim(),
                 ITEMNO: String(item.ITEMNO || "").trim(),
+                PARTNAME: String(item.PARTNAME || "").trim(),
             };
             return [`${match.ORDERNO}|${match.ITEMNO}`, match];
         }).filter(([, match]) => match.ORDERNO && match.ITEMNO)).values()];
@@ -342,12 +343,13 @@ function openOriginalOrderSelect(row, matches) {
         $("#psClmFieldEditor").html(`
             <div class="overflow-x-auto">
                 <table class="table table-xs">
-                    <thead><tr><th>Select</th><th>Original Order</th><th>Item</th></tr></thead>
+                    <thead><tr><th>Select</th><th>Original Order</th><th>Item</th><th>Part Name</th></tr></thead>
                     <tbody>${matches.map((match, index) => `
                         <tr>
                             <td><input type="radio" name="psClmOriginalOrder" value="${index}" ${index ? "" : "checked"} aria-label="Select ${escapeHtml(match.ORDERNO)} item ${escapeHtml(match.ITEMNO)}"></td>
                             <td>${escapeHtml(match.ORDERNO)}</td>
                             <td>${escapeHtml(match.ITEMNO)}</td>
+                            <td>${escapeHtml(match.PARTNAME)}</td>
                         </tr>
                     `).join("")}</tbody>
                 </table>
@@ -371,6 +373,7 @@ async function setOriginalOrder(row, match) {
     const detail = row.data();
     detail.ORDERNO = match.ORDERNO;
     detail.ITEMNO = match.ITEMNO;
+    detail.DESCRIPTION = match.PARTNAME;
     row.data(detail).invalidate().draw(false);
     resetDataConfirm();
     await updateNewOrderNo();
