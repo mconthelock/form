@@ -1,4 +1,8 @@
-import { getExtData, showflow } from '@amec/webasset/api/webform';
+import {
+    getExtData,
+    getFormStatus,
+    showflow,
+} from '@amec/webasset/api/webform';
 import { getformDetail, webflowSubmit } from '@amec/webasset/components/form';
 import {
     filterFormData,
@@ -34,6 +38,8 @@ $(async function () {
             RETURN: formInfo.return ?? null,
         };
 
+        const cst = await getFormStatus(form);
+
         const [formDetail, apvno, flow, formeva] = await Promise.all([
             getformDetail(form),
             $('.apv-data').attr('empno'),
@@ -41,11 +47,13 @@ $(async function () {
             getData(form),
         ]);
         console.log(formeva);
-        formSubmitSkeleton({
-            count: form.RETURN ? 3 : 4,
-            element: '#form-action-container',
-            mode: form.MODE === 2 ? 'edit' : 'view',
-        });
+        if (cst != '0') {
+            formSubmitSkeleton({
+                count: form.RETURN ? 3 : 4,
+                element: '#form-action-container',
+                mode: form.MODE === 2 ? 'edit' : 'view',
+            });
+        }
 
         //filterFormData(formeva);
         //logFormData(formeva);
@@ -305,17 +313,24 @@ $(async function () {
         renderFilesByType(attachedFiles, 12, 'file-type-12');
         renderFilesByType(attachedFiles, 13, 'file-type-13');
         renderFilesByType(attachedFiles, 2, 'file-type-2');
-
-        $('#form-action-container').html(
-            webflowSubmit({
-                flow: true,
-                flowhtml: flow.html,
-                approve: true,
-                reject: false,
-                remark: false,
-                return: !['01', '02', '06'].includes(cextdata),
-            }),
-        );
+        console.log(form.MODE);
+        if (cst != '0') {
+            $('#form-action-container').html(
+                webflowSubmit({
+                    flow: true,
+                    flowhtml: flow.html,
+                    approve: form.MODE == 2 ? true : false,
+                    reject: false,
+                    remark: false,
+                    back: form.MODE == 2 ? true : false,
+                    return:
+                        form.MODE == 2 && ['01', '02'].includes(cextdata)
+                            ? true
+                            : false,
+                    returnb: form.MODE == 2 && cextdata == '03' ? true : false,
+                }),
+            );
+        }
     } catch (err) {
         console.error(err);
         showErrorMessage(err);

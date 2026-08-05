@@ -26,6 +26,14 @@ export async function create(formData) {
     });
 }
 
+export async function update(formData) {
+    return fetchUtils({
+        url: `${process.env.APP_API}/purform/pur-eva`,
+        method: 'PATCH',
+        data: formData,
+    });
+}
+
 export async function getData(form) {
     return fetchUtils({
         url: `${process.env.APP_API}/purform/pureva-form/data`,

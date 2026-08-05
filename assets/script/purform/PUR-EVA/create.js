@@ -1,4 +1,4 @@
-import { searchNVFForm, getCurrency, create, getData } from './data';
+import { searchNVFForm, getCurrency, create, getData, update } from './data';
 import { createTable } from '@amec/webasset/dataTable';
 import { downloadOrOpenFile } from '@amec/webasset/api/file';
 import {
@@ -419,6 +419,16 @@ $(document).on('click', '#btnDraft, #btnRequest', async function () {
     const res = await create(filteredFormData);
 });
 
+$(document).on('click', 'button[name="btnAction"]', async function () {
+    // const act = $(this).val();
+    const formElement = $('#frmmain')[0];
+    const filteredFormData = await packPurevaFormData(formElement);
+    // const apvno = $('.apv-data').attr('empno');
+    // filteredFormData.append('ACTION', act);
+    // filteredFormData.append('EMPNO', apvno);
+    logFormData(filteredFormData);
+    const res = await update(filteredFormData);
+});
 $(document).on('input', '.empnum', function () {
     const directValue = Number($('input[name="EMPDIRECT"]').val()) || 0;
     const indirectValue = Number($('input[name="EMPINDIRECT"]').val()) || 0;
@@ -586,7 +596,7 @@ $(document).ready(async function () {
         } else {
             $('#form-action-container').html(
                 webflowSubmit({
-                    request: true,
+                    approve: true,
                     save: true,
                     remark: false,
                 }),
@@ -1033,6 +1043,11 @@ async function packPurevaFormData(formElement) {
     fd.append('NFRMNO', formInfo.nfrmno);
     fd.append('VORGNO', formInfo.vorgno);
     fd.append('CYEAR', formInfo.cyear);
+    fd.append('CYEAR2', formInfo.cyear2);
+    fd.append('NRUNNO', formInfo.nrunno);
+    const apvno = $('.apv-data').attr('empno');
+    fd.append('ACTION', 'save');
+    fd.append('EMPNO', apvno);
 
     const appendObjArray = (key, arr) =>
         arr.forEach((obj, i) =>
