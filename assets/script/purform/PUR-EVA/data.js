@@ -17,3 +17,19 @@ export async function getCurrency() {
         method: 'GET',
     });
 }
+
+export async function create(formData) {
+    return fetchUtils({
+        url: `${process.env.APP_API}/purform/pur-eva`,
+        method: 'POST',
+        data: formData,
+    });
+}
+
+export async function getData(form) {
+    return fetchUtils({
+        url: `${process.env.APP_API}/purform/pureva-form/data`,
+        method: 'POST',
+        data: form,
+    });
+}

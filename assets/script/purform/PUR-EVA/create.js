@@ -1,7 +1,7 @@
 // import select2 from 'select2';
 // import { dragDropInit } from '@amec/webasset/dragdrop';
 // import { handleFiles } from '@amec/webasset/dragdrop';
-import { searchNVFForm, getCurrency } from './data';
+import { searchNVFForm, getCurrency, create } from './data';
 import { createTable } from '@amec/webasset/dataTable';
 // import { setSelect2 } from '@amec/webasset/select2';
 import { downloadOrOpenFile } from '@amec/webasset/api/file';
@@ -36,10 +36,16 @@ import {
     attachOtherManager,
 } from '../PUR-NVF/formManager';
 import { concernManager, currencyManager } from './formManager';
-import { showMessage } from '@amec/webasset/utils';
+import {
+    filterFormData,
+    getAllAttr,
+    logFormData,
+    showMessage,
+} from '@amec/webasset/utils';
 import { getOrganize } from '../../finform/FIN-PCK/dataloc';
 import { showLoader } from '@amec/webasset/preloader';
 import { webflowSubmit } from '@amec/webasset/components/form';
+import { setDatePicker } from '@amec/webasset/flatpickr';
 
 // select2();
 
@@ -108,8 +114,13 @@ $(document).ready(async function () {
     paymentTermManager.init(termdata);
     currencyManager.init(currencyData);
     concernManager.init(orgdata);
-    const submitbtn = webflowSubmit({ request: true, draft: true });
+    const submitbtn = webflowSubmit({
+        request: true,
+        draft: true,
+        remark: false,
+    });
     $('#form-action-container').html(submitbtn);
+    setDatePicker();
 
     //const divattfile = await dragDropInit();
     //$('#attachFile').html(divattfile);
@@ -222,6 +233,9 @@ $(document).ready(async function () {
             $('#attach-qa').removeClass('hidden');
             $('#attach-vat').addClass('hidden');
             $('.pro').removeClass('hidden');
+        }
+        if ($('.radio-type:checked').length > 0) {
+            $('.radio-type:checked').trigger('change');
         }
     });
 
@@ -525,6 +539,62 @@ $(document).ready(async function () {
             renderNewFilesUI(inputId, dataTransfer, showFileContainer);
         }
     });
+
+    $(document).on('click', '#btnDraft, #btnRequest', async function () {
+        // 1. เช็คไฟล์แนบเหมือนเดิม
+        if (!checkAttFile()) {
+            return false;
+        }
+
+        // 2. ดึงข้อมูลฟอร์ม
+        const formElement = $('#frmmain')[0];
+        const filteredFormData = await packPurevaFormData(formElement);
+
+        // 3. เช็คว่าถ้าปุ่มที่กดคือ btnDraft ค่อยเติมค่า DRAFT ลงไป
+        if (this.id === 'btnDraft') {
+            filteredFormData.append('DRAFT', '0');
+        }
+
+        // 4. บันทึก log และส่งข้อมูล
+        logFormData(filteredFormData);
+        const res = await create(filteredFormData);
+    });
+
+    $('.empnum').on('input', function () {
+        const directValue = Number($('input[name="EMPDIRECT"]').val()) || 0;
+        const indirectValue = Number($('input[name="EMPINDIRECT"]').val()) || 0;
+        const total = directValue + indirectValue;
+        $('.totemp').val(total);
+    });
+    $('input[name="VENDGROUP"]').on('change', function () {
+        const selectedValue = $(this).val();
+        const blockCer = $('#file-cer').closest('.flex-col.gap-2.border');
+        const blockIe = $('#file-ie').closest('.flex-col.gap-2.border');
+        const blockQa = $('#file-qa').closest('.flex-col.gap-2.border');
+        if (selectedValue) {
+            if (selectedValue.includes('6:Non-Production')) {
+                blockIe.hide();
+                blockQa.hide();
+                blockCer.show();
+                $('#file-ie, #file-qa').val('');
+                $('#file-ie, #file-qa')
+                    .closest('.flex-col')
+                    .find('.show-file')
+                    .empty();
+            } else {
+                // แสดงแบบทื่อๆ ทันที
+                blockIe.show();
+                blockQa.show();
+                blockCer.hide();
+                $('#file-cer').val('');
+                $('#file-cer').closest('.flex-col').find('.show-file').empty();
+            }
+        } else {
+            blockIe.hide();
+            blockQa.hide();
+            blockCer.hide();
+        }
+    });
 });
 
 function setVendorMstInfo(vendorMstData) {
@@ -780,4 +850,147 @@ function renderNewFilesUI(inputId, dataTransfer, container) {
             `;
         newFilesDiv.append(fileItemHtml);
     });
+}
+
+async function packPurevaFormData(formElement) {
+    const fd = new FormData(formElement);
+    const getAll = (key) => fd.getAll(key); // Helper สำหรับดึงค่า Array
+    const getStr = (key) => fd.get(key) || '';
+
+    // 1. แปลงฟิลด์ตัวเลขเดี่ยว (แทนที่ if-else chain เดิม)
+    const numberFields = [
+        'AMOUNT',
+        'CAPITAL',
+        'EMPDIRECT',
+        'EMPINDIRECT',
+        'LAND',
+        'FACTORY',
+    ];
+    numberFields.forEach((key) => {
+        if (fd.has(key) && fd.get(key)) fd.set(key, Number(fd.get(key)));
+    });
+
+    // 2. จัดการ Record Type & Remark
+    const isNonProd = getStr('VENDGROUP').includes('6:Non-Production');
+    const recordType = isNonProd ? 'P' : 'T';
+    const remark = getStr(isNonProd ? 'nonremark' : 'proremark');
+
+    // 3. จัดการ PROFIT_TURNOVERS (ยุบลูป for 2 ชุดเหลือชุดเดียว)
+    const years = getAll(isNonProd ? 'FY[]' : 'FYT[]');
+    const profits = getAll(isNonProd ? 'FY_PROFIT[]' : 'FYT_PROFIT[]');
+
+    const PROFIT_TURNOVERS = years
+        .map((year, i) =>
+            year
+                ? {
+                      RECORD_TYPE: recordType,
+                      MYEAR: Number(year),
+                      AMOUNT: Number(profits[i]) || 0,
+                  }
+                : null,
+        )
+        .filter(Boolean); // ลบค่าที่เป็น null ทิ้ง
+
+    // 4. จัดการ RELATIONS (ใช้ Helper function ยุบลูป for 4 ชุด)
+    const buildRels = (nameKey, perKey, type) =>
+        getAll(nameKey)
+            .map((name, i) =>
+                name
+                    ? {
+                          ENTITY_TYPE: type,
+                          ENTITY_NAME: name,
+                          PERCENT: Number(getAll(perKey)[i]) || 0,
+                      }
+                    : null,
+            )
+            .filter(Boolean);
+
+    const RELATIONS = [
+        ...buildRels('SHARENAME[]', 'SHAREPER[]', 'N'),
+        ...buildRels('CUSNAME[]', 'CUSPER[]', 'C'),
+        ...buildRels('SUPNAME[]', 'SUPPER[]', 'S'),
+        ...buildRels('PRONAME[]', 'PROPER[]', 'P'),
+    ];
+
+    // 5. จัดการ SCORES (ใช้ jQuery .map() ดึงรวดเดียว)
+    const SCORES = $(formElement)
+        .find('input[data-topic]:checked')
+        .map((_, el) => ({
+            TOPIC: $(el).data('topic'),
+            TOPIC_DESC: $(el).data('topicdesc'),
+            SCORE: Number($(el).val()),
+            SLEVEL: $(el).data('level'),
+        }))
+        .get();
+
+    // 6. ลบฟิลด์ดิบที่ไม่ได้ใช้แล้ว
+    const rawFieldsToDelete = [
+        'FY[]',
+        'FY_PROFIT[]',
+        'FYT[]',
+        'FYT_PROFIT[]',
+        'FIN_LEVEL',
+        'QA_LEVEL',
+        'ENV_LEVEL',
+        'VERIFYING',
+        'SHARENAME[]',
+        'SHAREPER[]',
+        'CUSNAME[]',
+        'CUSPER[]',
+        'SUPNAME[]',
+        'SUPPER[]',
+        'PRONAME[]',
+        'PROPER[]',
+    ];
+    rawFieldsToDelete.forEach((field) => fd.delete(field));
+
+    // 7. ประกอบร่าง FormData กลับเข้าไป
+    const compliances = getAll('CHKCOMPLIANCE');
+    if (compliances.length) fd.append('COMPLIANCE', compliances.join(', '));
+    fd.delete('CHKCOMPLIANCE');
+    fd.append('REMARK', remark);
+
+    const formInfo = await getAllAttr('.form-info');
+    fd.append('NFRMNO', formInfo.nfrmno);
+    fd.append('VORGNO', formInfo.vorgno);
+    fd.append('CYEAR', formInfo.cyear);
+
+    // Helper สำหรับ Append Array ของ Object เข้า FormData (ยุบโค้ดบรรทัดยาวๆ)
+    const appendObjArray = (key, arr) =>
+        arr.forEach((obj, i) =>
+            Object.entries(obj).forEach(([prop, val]) => {
+                if (val !== undefined) fd.append(`${key}[${i}][${prop}]`, val);
+            }),
+        );
+
+    appendObjArray('SCORES', SCORES);
+    appendObjArray('PROFIT_TURNOVERS', PROFIT_TURNOVERS);
+    appendObjArray('RELATIONS', RELATIONS);
+
+    return filterFormData(fd);
+}
+
+function checkAttFile() {
+    const selectedGroup = $('input[name="VENDGROUP"]:checked').val();
+    const hasCer = $('#file-cer')[0].files.length > 0; // Company Certificate
+    const hasIe = $('#file-ie')[0].files.length > 0; // IE's evaluation
+    const hasQa = $('#file-qa')[0].files.length > 0; // QA's evaluation
+    if (selectedGroup.includes('6:Non-Production')) {
+        if (!hasCer) {
+            showMessage(
+                'Please Attached Company Certificate / Vat Register / Company Profile',
+                'warning',
+            );
+            return false;
+        }
+    } else {
+        if (!hasIe || !hasQa) {
+            showMessage(
+                "Please Attached IE's evaluation Document and QA's evaluation Document",
+                'warning',
+            );
+            return false;
+        }
+    }
+    return true;
 }
