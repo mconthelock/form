@@ -146,33 +146,78 @@ export const renderFilesByType = (
 };
 
 export function bindComplianceData(complianceString, complianceOther) {
+    // 1. จัดการเช็คบ็อกซ์ (รองรับทั้ง 2 Div โดยใช้ .field-oversea-nonpro และ #COMPLIANCE_READONLY_CONTAINER)
     if (complianceString) {
         const selected = complianceString.split(',').map((i) => i.trim());
-        $('#COMPLIANCE_READONLY_CONTAINER .chk-compliance').each(function () {
+
+        // วนลูปเช็คบ็อกซ์ของทั้งสองส่วนพร้อมกัน
+        $(
+            '.field-oversea-nonpro .chk-compliance, #COMPLIANCE_READONLY_CONTAINER .chk-compliance',
+        ).each(function () {
             if (selected.includes($(this).val())) {
+                $(this).prop('checked', true);
+
+                // สไตล์สำหรับฝั่ง Readonly ที่มี span .chk-label
                 $(this)
-                    .prop('checked', true)
                     .next('.chk-label')
                     .removeClass('text-gray-500')
                     .addClass('text-gray-900 font-medium');
             }
         });
     }
+
+    // 2. จัดการช่อง "อื่นๆ ระบุ" (รองรับทั้ง 2 ส่วน)
     if (complianceOther?.trim()) {
-        const $other = $(
-            '#COMPLIANCE_READONLY_CONTAINER .chk-compliance',
+        // ติ๊กเลือก "อื่นๆ ระบุ" ของทั้งสองส่วน
+        const $others = $(
+            '.field-oversea-nonpro .chk-compliance, #COMPLIANCE_READONLY_CONTAINER .chk-compliance',
         ).filter(function () {
             return $(this).val() === 'อื่นๆ ระบุ';
         });
-        if ($other.length)
-            $other
-                .prop('checked', true)
+
+        $others.each(function () {
+            $(this).prop('checked', true);
+            $(this)
                 .next('.chk-label')
                 .removeClass('text-gray-500')
                 .addClass('text-gray-900 font-medium');
-        $('#COMPLIANCE_OTHER_READONLY').val(complianceOther);
+        });
+
+        // ใส่ข้อความลงในช่อง input "อื่นๆ ระบุ" ของทั้งสองส่วน
+        $('input[name="COMPLIANCE_OTHER"], #COMPLIANCE_OTHER_READONLY').val(
+            complianceOther,
+        );
     }
 }
+
+// export function bindComplianceData(complianceString, complianceOther) {
+//     if (complianceString) {
+//         const selected = complianceString.split(',').map((i) => i.trim());
+//         $('#COMPLIANCE_READONLY_CONTAINER .chk-compliance').each(function () {
+//             if (selected.includes($(this).val())) {
+//                 $(this)
+//                     .prop('checked', true)
+//                     .next('.chk-label')
+//                     .removeClass('text-gray-500')
+//                     .addClass('text-gray-900 font-medium');
+//             }
+//         });
+//     }
+//     if (complianceOther?.trim()) {
+//         const $other = $(
+//             '#COMPLIANCE_READONLY_CONTAINER .chk-compliance',
+//         ).filter(function () {
+//             return $(this).val() === 'อื่นๆ ระบุ';
+//         });
+//         if ($other.length)
+//             $other
+//                 .prop('checked', true)
+//                 .next('.chk-label')
+//                 .removeClass('text-gray-500')
+//                 .addClass('text-gray-900 font-medium');
+//         $('#COMPLIANCE_OTHER_READONLY').val(complianceOther);
+//     }
+// }
 
 /**
  * ฟังก์ชันรับค่าคะแนน Array มาผูกกับ UI และคำนวณเกรดรวม

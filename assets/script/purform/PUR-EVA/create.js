@@ -55,10 +55,12 @@ import {
     showflow,
 } from '@amec/webasset/api/webform';
 import { formatDate } from '@amec/webasset/dayjs';
+import Swal from 'sweetalert2';
 
 var form = {};
 var tableSearch, purformdata, columnPurNVF;
 var provinceData, districtData, subDistrictData;
+var deletefile = [];
 
 // ==========================================
 // ส่วนของ Event ต่าง ๆ (ย้ายมาอยู่นอก document.ready ได้ทั้งหมดด้วย $(document).on)
@@ -129,6 +131,8 @@ $(document).on('change', '.radio-typec', async function () {
         $('#attach-qa').addClass('hidden');
         $('#attach-vat').removeClass('hidden');
         $('.pro').addClass('hidden');
+        $('#nonpro').find('input, select, textarea').prop('disabled', false);
+        $('#pro').find('input, select, textarea').prop('disabled', true);
     } else {
         $('#nonpro').addClass('hidden');
         $('#pro').removeClass('hidden');
@@ -136,6 +140,8 @@ $(document).on('change', '.radio-typec', async function () {
         $('#attach-qa').removeClass('hidden');
         $('#attach-vat').addClass('hidden');
         $('.pro').removeClass('hidden');
+        $('#nonpro').find('input, select, textarea').prop('disabled', true);
+        $('#pro').find('input, select, textarea').prop('disabled', false);
     }
     if ($('.radio-type:checked').length > 0) {
         $('.radio-type:checked').trigger('change');
@@ -406,6 +412,23 @@ $(document).on('click', '.remove-new-file', function () {
     }
 });
 
+$(document).on('click', '.remove-file', async function (e) {
+    e.preventDefault();
+    e.stopPropagation();
+    const id = $(this).attr('file-id');
+    const tagA = $(this).closest('a');
+    Swal.fire({
+        title: 'Are you sure you want to delete this file?',
+        icon: 'warning',
+        showCancelButton: true,
+    }).then((result) => {
+        if (result.isConfirmed) {
+            tagA.remove();
+            deletefile.push(id);
+        }
+    });
+});
+
 $(document).on('click', '#btnDraft, #btnRequest', async function () {
     if (!checkAttFile()) {
         return false;
@@ -423,6 +446,7 @@ $(document).on('click', 'button[name="btnAction"]', async function () {
     // const act = $(this).val();
     const formElement = $('#frmmain')[0];
     const filteredFormData = await packPurevaFormData(formElement);
+
     // const apvno = $('.apv-data').attr('empno');
     // filteredFormData.append('ACTION', act);
     // filteredFormData.append('EMPNO', apvno);
@@ -817,6 +841,7 @@ async function setVendorEvaInfo(formeva) {
     $('input[name="LABOR_ESTABLISH_DATE"]').val(
         formatDate(formeva.LABOR_ESTABLISH_DATE, 'DD/MM/YYYY'),
     );
+    $('input[name="JUDGEMENT"]').val(formeva.JUDGEMENT);
 
     bindEntityTables(formeva.RELATIONS);
 }
@@ -895,25 +920,31 @@ function calculateScore(containerSelector) {
     container.find('.total-score').text(totalScore);
 
     let judgement = '-';
+    let judlevel = '';
     if (isAnyChecked) {
         if (totalScore >= 80) {
-            judgement = 'EXCELLENT (80 UP)';
+            judgement = 'A: EXCELLENT (80 UP)';
             colorClass = 'text-green-600';
+            judlevel = 'A';
         } else if (totalScore >= 70) {
-            judgement = 'GOOD (70 UP)';
+            judgement = 'B: GOOD (70 UP)';
             colorClass = 'text-blue-600';
+            judlevel = 'B';
         } else if (totalScore >= 60) {
-            judgement = 'FAIR (60 UP)';
+            judgement = 'C: FAIR (60 UP)';
             colorClass = 'text-orange-500';
+            judlevel = 'C';
         } else if (totalScore >= 40) {
-            judgement = 'POOR (40 UP)';
+            judgement = 'D: POOR (40 UP)';
             colorClass = 'text-orange-500';
+            judlevel = 'D';
         } else {
-            judgement = 'NOT APPRICABLE (LESSTHAN 40)';
+            judgement = 'E: NOT APPRICABLE (LESSTHAN 40)';
             colorClass = 'text-red-600';
+            judlevel = 'E';
         }
     }
-
+    $('[name="JUDGEMENT"]').val(judlevel);
     container
         .find('.judgement-result')
         .text(judgement)
@@ -1048,7 +1079,9 @@ async function packPurevaFormData(formElement) {
     const apvno = $('.apv-data').attr('empno');
     fd.append('ACTION', 'save');
     fd.append('EMPNO', apvno);
-
+    deletefile.forEach((fileId) => {
+        fd.append('DELETE_FILES[]', String(fileId));
+    });
     const appendObjArray = (key, arr) =>
         arr.forEach((obj, i) =>
             Object.entries(obj).forEach(([prop, val]) => {

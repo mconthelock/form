@@ -683,8 +683,9 @@
     </div> 
 
 <div class="border border-gray-300 shadow-sm rounded-lg pt-5 px-5 pb-5 mt-8 mb-5 bg-white relative">
+  <div id="MJUDGEMENT"></div>
   <div>
-    <label class="block font-bold text-sm mb-2 text-gray-800">Other comments</label>
+    <label class="block font-bold text-sm mb-2 text-gray-800">Comment/Conclusion</label>
     <textarea name="txtRemark"
       class="w-full border border-gray-400 p-2 rounded text-sm focus:outline-none" 
       rows="4" 

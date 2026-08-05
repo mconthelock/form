@@ -1154,7 +1154,7 @@
 
     <div class="mt-6 p-4 bg-gray-100 border border-gray-300 rounded-lg flex flex-col sm:flex-row items-center gap-6">
         <label class="font-bold text-sm">TOTAL SCORE: <span class="total-score text-blue-600 text-xl ml-2">0</span></label>
-        <div class="h-6 w-px bg-gray-400 hidden sm:block"></div>
+        <div class="h-6 w-px bg-gray-400 hidden sm:block"></div><input type="hidden" name="JUDGEMENT">
         <label class="font-bold text-sm">JUDGEMENT: <span  class="judgement-result text-red-600 uppercase italic ml-2">-</span></label>
     </div>
 </div>

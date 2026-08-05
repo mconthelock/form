@@ -1,4 +1,5 @@
 import {
+    doaction,
     getExtData,
     getFormStatus,
     showflow,
@@ -9,6 +10,8 @@ import {
     getAllAttr,
     logFormData,
     setRound,
+    showErrorMessage,
+    showMessage,
 } from '@amec/webasset/utils';
 import { getData } from './data';
 import { formatDate } from '@amec/webasset/dayjs';
@@ -20,6 +23,7 @@ import {
     bindScoreData,
     renderFilesByType,
 } from './formManager';
+import { redirectWebflow } from '@amec/webasset/form';
 
 var form = {};
 
@@ -313,6 +317,7 @@ $(async function () {
         renderFilesByType(attachedFiles, 12, 'file-type-12');
         renderFilesByType(attachedFiles, 13, 'file-type-13');
         renderFilesByType(attachedFiles, 2, 'file-type-2');
+        $('input[name="JUDGEMENT"]').val(formeva.JUDGEMENT);
         console.log(form.MODE);
         if (cst != '0') {
             $('#form-action-container').html(
@@ -320,7 +325,10 @@ $(async function () {
                     flow: true,
                     flowhtml: flow.html,
                     approve: form.MODE == 2 ? true : false,
-                    reject: false,
+                    reject:
+                        form.MODE == 2 && ['01', '02', '03'].includes(cextdata)
+                            ? true
+                            : false,
                     remark: false,
                     back: form.MODE == 2 ? true : false,
                     return:
@@ -370,4 +378,28 @@ $(document).on('click', '.file-link', async function (e) {
         originalName: filename,
         mode: ext == 'pdf' ? 'open' : 'download',
     });
+});
+
+$(document).on('click', 'button[name="btnAction"]', async function () {
+    const act = $(this).val();
+    const remark = $('textarea[name="txtRemark"]').val();
+    if (act != 'approve' && remark == '') {
+        showMessage(
+            'Please fill in the reason field for the return or rejection request.',
+            'warning',
+        );
+        return false;
+    }
+    try {
+        showLoader();
+        const res = await doaction({ ...form, ACTION: act, REMARK: remark });
+        if (res.status == true) {
+            redirectWebflow();
+        }
+    } catch (error) {
+        console.error(error);
+        showErrorMessage(error);
+    } finally {
+        showLoader({ show: false });
+    }
 });
