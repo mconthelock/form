@@ -227,11 +227,11 @@ $(document).on("click", "button[name='btnAction']", async function () {
             console.log(groups.pnhing);
   
             return {
-              NEWCODE: row.NEWCODE || null,
-              NEWFLAG: row.NEWFLAG || null,
-              REFERENCE: row.REFERENCE || null,
-              PNZUBA: groups?.pnzuba || null,
-              PNHING: groups?.pnhing || null,
+              NEWCODE: row.NEWCODE ?? null,
+              NEWFLAG: row.NEWFLAG ?? null,
+              REFERENCE: row.REFERENCE ?? null,
+              PNZUBA: groups?.pnzuba ?? null,
+              PNHING: groups?.pnhing ?? "",
             };
           })
           .filter(
