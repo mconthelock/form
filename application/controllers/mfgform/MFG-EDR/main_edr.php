@@ -170,10 +170,6 @@ class main_edr extends MY_Controller {
         exit;
     }
 
-    public function show_dashboard(){
-        $this->views('mfgform/MFG-EDR/dashboard_edr');
-    }
-
     public function show_report_for_export($empno){
         $this->views('mfgform/MFG-EDR/report_edr_export');
     }
