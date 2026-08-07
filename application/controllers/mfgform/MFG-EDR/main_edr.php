@@ -38,10 +38,6 @@ class main_edr extends MY_Controller {
         }
     }
 
-    public function show_view_report(){
-        $this->views('mfgform/MFG-EDR/report_edr');
-    }
-
     public function save_request(){
         try {
             $inputBy     = $this->input->post('inputBy');
@@ -55,10 +51,6 @@ class main_edr extends MY_Controller {
             //$form    = $flow['message'];
             $cyear2  = $form['cyear2'];
             $nrunno  = $form['runno'];
-
-
-
-
 
         } catch (Exception $e) {
             log_message('error', 'Error in saveForm: ' . $e->getMessage());
@@ -147,7 +139,6 @@ class main_edr extends MY_Controller {
                 'path' => $targetPath,
                 'files' => $uploadedFiles
             ]);
-
         } catch (Exception $e) {
             echo json_encode([
                 'status' => false,
@@ -159,26 +150,16 @@ class main_edr extends MY_Controller {
     public function preview_file($formno, $filename)
     {
         $filename = urldecode($filename);
-
-        $filepath = rtrim($this->upload_path, "/\\")
-            . DIRECTORY_SEPARATOR
-            . $formno
-            . DIRECTORY_SEPARATOR
-            . $filename;
+        $filepath = rtrim($this->upload_path, "/\\").DIRECTORY_SEPARATOR.$formno.DIRECTORY_SEPARATOR.$filename;
 
         if (!is_file($filepath)) {
             show_error('File not found: ' . $filepath, 404);
             return;
         }
 
-        if (ob_get_length()) {
-            ob_end_clean();
-        }
+        if (ob_get_length()) { ob_end_clean(); }
 
-        $mime = function_exists('mime_content_type')
-            ? mime_content_type($filepath)
-            : 'application/octet-stream';
-
+        $mime = function_exists('mime_content_type') ? mime_content_type($filepath) : 'application/octet-stream';
         header('Content-Type: ' . $mime);
         header('Content-Length: ' . filesize($filepath));
         header('Content-Disposition: inline; filename="' . basename($filename) . '"');
@@ -187,5 +168,9 @@ class main_edr extends MY_Controller {
 
         readfile($filepath);
         exit;
+    }
+
+    public function show_report_for_export($empno){
+        $this->views('mfgform/MFG-EDR/report_edr_export');
     }
 }
