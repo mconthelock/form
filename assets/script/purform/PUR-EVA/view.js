@@ -13,7 +13,7 @@ import {
     showErrorMessage,
     showMessage,
 } from '@amec/webasset/utils';
-import { getData } from './data';
+import { getData, updatePurEvaForm } from './data';
 import { formatDate } from '@amec/webasset/dayjs';
 import { downloadOrOpenFile } from '@amec/webasset/api/file';
 import { formSubmitSkeleton } from '@amec/webasset/skeleton';
@@ -26,6 +26,7 @@ import {
 import { redirectWebflow } from '@amec/webasset/form';
 
 var form = {};
+const cextdata = '';
 
 $(async function () {
     showLoader({ show: true });
@@ -62,7 +63,7 @@ $(async function () {
         //filterFormData(formeva);
         //logFormData(formeva);
 
-        const cextdata = await getExtData({ ...form, EMPNO: apvno });
+        cextdata = await getExtData({ ...form, EMPNO: apvno });
         $('#form-detail').html(formDetail);
 
         const renderTable = (type, tableId, msg) => {
@@ -131,7 +132,6 @@ $(async function () {
         //         'class',
         //         `uppercase italic ml-2 judgement-result ${grades.class}`,
         //     );
-
         const isNonPro = formeva.VENDGROUP === '6:Non-Production (6)';
         $('.nonpro').toggle(isNonPro);
         $('.pro').toggle(!isNonPro);
@@ -141,6 +141,38 @@ $(async function () {
         );
         $('#thprofit').text(isNonPro ? 'Net Profit/Loss' : 'Turnover');
         $('#VENDPURPOSE').closest('.info-row').toggle(!isNonPro);
+        if (!isNonPro && cextdata == '02') {
+            const htmlContent = `
+                <div class="flex flex-col gap-2 border border-gray-200 rounded-md p-3 bg-gray-50">
+                    <span class="text-sm font-semibold underline">TOTAL EVALUATION</span>
+                    
+                    <div class="flex flex-col gap-2 text-sm">
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="radio" name="MJUDGEMEN" value="A" class="w-4 h-4 accent-blue-600"> 
+                            A: EXCELLENT (80 UP)
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="radio" name="MJUDGEMEN" value="B" class="w-4 h-4 accent-blue-600"> 
+                            B: GOOD (70 UP)
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="radio" name="MJUDGEMEN" value="C" class="w-4 h-4 accent-blue-600"> 
+                            C: FAIR (60 UP)
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="radio" name="MJUDGEMEN" value="D" class="w-4 h-4 accent-blue-600"> 
+                            D: POOR (40 UP)
+                        </label>
+                        <label class="flex items-center gap-2 cursor-pointer">
+                            <input type="radio" name="MJUDGEMEN" value="E" class="w-4 h-4 accent-blue-600"> 
+                            E: NOT APPLICABLE (LESS THAN 40)
+                        </label>
+                    </div>
+                </div>
+            `;
+            // นำไปใส่ใน div ที่กำหนด
+            $('#MJUDGEMENT').html(htmlContent);
+        }
 
         if (isNonPro) {
             const isLocal = formeva.VENDTYPE === 'Local';
@@ -383,6 +415,21 @@ $(document).on('click', '.file-link', async function (e) {
 $(document).on('click', 'button[name="btnAction"]', async function () {
     const act = $(this).val();
     const remark = $('textarea[name="txtRemark"]').val();
+    if (cextdata == '02') {
+        const formElement = $('#frmmain')[0];
+        const fd = new FormData(formElement);
+        const formInfo = await getAllAttr('.form-info');
+        fd.append('NFRMNO', formInfo.nfrmno);
+        fd.append('VORGNO', formInfo.vorgno);
+        fd.append('CYEAR', formInfo.cyear);
+        fd.append('CYEAR2', formInfo.cyear2);
+        fd.append('NRUNNO', formInfo.nrunno);
+        const apvno = $('.apv-data').attr('empno');
+        fd.append('ACTION', act);
+        fd.append('EMPNO', apvno);
+        const data = filterFormData(fd);
+        const resform = await updatePurEvaForm(data);
+    }
     if (act != 'approve' && remark == '') {
         showMessage(
             'Please fill in the reason field for the return or rejection request.',

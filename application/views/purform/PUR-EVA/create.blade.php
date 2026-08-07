@@ -65,6 +65,7 @@
 
 <form id="frmmain">
     <!-- <input type="hidden" name="DRAFT" id="draft" > -->
+     <input type="hidden" name="JUDGEMENT">
 <div class="space-y-6">
      <h1 class="text-3xl text-center text-primary font-bold mb-10">Vendor/Sub-contractor Evaluation Form</h1>
     <!-- Top Section -->
@@ -75,7 +76,7 @@
         </div>
         <div class="grid grid-cols-[160px_1fr] items-center gap-2 required">
             <span class="font-semibold text-sm required ">Request By:</span>
-            <input type="text" name = "REQBY" maxlength="5" class="input input-sm border border-gray-400 h-8 rounded w-48 px-2  req" value="{{$empno}}">
+            <input type="text" name = "REQBY"  maxlength="5" class="input input-sm border border-gray-400 h-8 rounded w-48 px-2  req" value="{{$empno}}">
         </div>
     </div>
 
@@ -86,11 +87,11 @@
         
         <div class="flex items-center gap-6">
             <label class="flex items-center gap-2 cursor-pointer text-gray-700 text-sm">
-                <input type="radio" name="OPERATION" value="N" class="w-4 h-4 accent-blue-600 radio-opr"> New vendor
+                <input type="radio" name="OPERATION" value="N" class="w-4 h-4 accent-blue-600 radio-opr req"> New vendor
             </label>
             
             <label class="flex items-center gap-2 cursor-pointer text-gray-700 text-sm">
-                <input type="radio" name="OPERATION" value="A" class="w-4 h-4 accent-blue-600 radio-opr"> Annual evaluation for
+                <input type="radio" name="OPERATION" value="A" class="w-4 h-4 accent-blue-600 radio-opr req"> Annual evaluation for
             </label>
             
             <div class="flex items-center gap-4">
@@ -140,30 +141,30 @@
             
             <div class="grid grid-cols-3 gap-y-2 gap-x-4 text-sm">
                 <label class="flex items-center gap-2 cursor-pointer">
-                    <input type="radio" name="VENDGROUP" value="1:Oversea (Relate MELCO Group) (1)" class="w-4 h-4 accent-blue-600 req radio-typec"> Oversea (Relate MELCO Group) (1)
+                    <input type="radio" name="VENDGROUP" value="1:Oversea (Relate MELCO Group) (1)" class="w-4 h-4 accent-blue-600 req radio-typec req"> Oversea (Relate MELCO Group) (1)
                 </label>
                 <label class="flex items-center gap-2 cursor-pointer">
-                    <input type="radio" name="VENDGROUP" value="2:Oversea (Not relate MELCO Group) (2)" class="w-4 h-4 accent-blue-600 req radio-typec"> Oversea (Not relate MELCO Group) (2)
+                    <input type="radio" name="VENDGROUP" value="2:Oversea (Not relate MELCO Group) (2)" class="w-4 h-4 accent-blue-600 req radio-typec req"> Oversea (Not relate MELCO Group) (2)
                 </label>
                 <label class="flex items-center gap-2 cursor-pointer">
-                    <input type="radio" name="VENDGROUP" value="3:Domestic (Use BOI) (3)" class="w-4 h-4 accent-blue-600 req radio-typec"> Domestic (Use BOI) (3)
-                </label>
-                
-                <label class="flex items-center gap-2 cursor-pointer">
-                    <input type="radio" name="VENDGROUP" value="4:Domestic (Use IPO) (4)" class="w-4 h-4 accent-blue-600 req radio-typec"> Domestic (Use IPO) (4)
-                </label>
-                <label class="flex items-center gap-2 cursor-pointer">
-                    <input type="radio" name="VENDGROUP" value="7:Domestic (Use FTA) (7)" class="w-4 h-4 accent-blue-600 req radio-typec"> Domestic (Use FTA) (7)
-                </label>
-                <label class="flex items-center gap-2 cursor-pointer">
-                    <input type="radio" name="VENDGROUP" value="5:Domestic Vendor (5)" class="w-4 h-4 accent-blue-600 req radio-typec"> Domestic Vendor (5)
+                    <input type="radio" name="VENDGROUP" value="3:Domestic (Use BOI) (3)" class="w-4 h-4 accent-blue-600 req radio-typec req"> Domestic (Use BOI) (3)
                 </label>
                 
                 <label class="flex items-center gap-2 cursor-pointer">
-                    <input type="radio" name="VENDGROUP" value="8:Sub-Contractor (8)" class="w-4 h-4 accent-blue-600 req radio-typec"> Sub-Contractor (8)
+                    <input type="radio" name="VENDGROUP" value="4:Domestic (Use IPO) (4)" class="w-4 h-4 accent-blue-600 req radio-typec req"> Domestic (Use IPO) (4)
                 </label>
                 <label class="flex items-center gap-2 cursor-pointer">
-                    <input type="radio" name="VENDGROUP" value="6:Non-Production (6)" class="w-4 h-4 accent-blue-600 req radio-typec"> Non-Production (6)
+                    <input type="radio" name="VENDGROUP" value="7:Domestic (Use FTA) (7)" class="w-4 h-4 accent-blue-600 req radio-typec req"> Domestic (Use FTA) (7)
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer">
+                    <input type="radio" name="VENDGROUP" value="5:Domestic Vendor (5)" class="w-4 h-4 accent-blue-600 req radio-typec req"> Domestic Vendor (5)
+                </label>
+                
+                <label class="flex items-center gap-2 cursor-pointer">
+                    <input type="radio" name="VENDGROUP" value="8:Sub-Contractor (8)" class="w-4 h-4 accent-blue-600 req radio-typec req"> Sub-Contractor (8)
+                </label>
+                <label class="flex items-center gap-2 cursor-pointer">
+                    <input type="radio" name="VENDGROUP" value="6:Non-Production (6)" class="w-4 h-4 accent-blue-600 req radio-typec req"> Non-Production (6)
                 </label>
              
             </div>
@@ -195,10 +196,10 @@
         
         <div class="col-span-6 flex items-center gap-4 w-full">
             <label class="flex items-center gap-2 text-sm whitespace-nowrap">
-                <input type="radio" name="VENDTYPE" value="Local" class="w-4 h-4 accent-blue-600 radio-type"> Local
+                <input type="radio" name="VENDTYPE" value="Local" class="w-4 h-4 accent-blue-600 radio-type req"> Local
             </label>
             <label class="flex items-center gap-2 text-sm whitespace-nowrap">
-                <input type="radio" name="VENDTYPE" value="Oversea" class="w-4 h-4 accent-blue-600 radio-type"> Oversea
+                <input type="radio" name="VENDTYPE" value="Oversea" class="w-4 h-4 accent-blue-600 radio-type req"> Oversea
             </label>
             
             <!-- ใช้ div ตัวนี้เป็นคอกกั้นขนาด บังคับความกว้างไว้ที่ w-40 (หรือปรับขนาดได้ตามต้องการ) -->
@@ -484,13 +485,13 @@
     <div class="border-2 border-dashed border-gray-400 p-4 rounded-lg mb-6 bg-gray-50 field-oversea-nonpro">
         <span class="required font-bold mb-3">Compliance</span>
         <div class="grid grid-cols-1 gap-2 text-black text-sm">
-            <label class="flex items-center gap-2"><input type="checkbox" name = "CHKCOMPLIANCE" class="chk-compliance" value="ไม่ได้อยู่ในกลุ่มควบคุม ข้อกำหนด AMEC-5070: Rule for Export Control"> ไม่ได้อยู่ในกลุ่มควบคุม ข้อกำหนด AMEC-5070: Rule for Export Control</label>
-            <label class="flex items-center gap-2"><input type="checkbox" name = "CHKCOMPLIANCE" class="chk-compliance" value="ไม่อยู่ในรายชื่อที่ถูกลงโทษจาก UNSC"> ไม่อยู่ในรายชื่อที่ถูกลงโทษจาก UNSC</label>
-            <label class="flex items-center gap-2"><input type="checkbox" name = "CHKCOMPLIANCE" class="chk-compliance" value="ไม่อยู่ในประเทศ ประเทศไทยคว่ำบาตร ตามมาตรการคว่ำบาตร โดยสหประชาชาติ WWW.dff-go.th"> ไม่อยู่ในประเทศ ประเทศไทยคว่ำบาตร ตามมาตรการคว่ำบาตร โดยสหประชาชาติ WWW.dff-go.th</label>
-            <label class="flex items-center gap-2"><input type="checkbox" name = "CHKCOMPLIANCE" class="chk-compliance" value="AMEC's standard Terms of 'CIF'"> AMEC's standard Terms of "CIF"</label>
-            <label class="flex items-center gap-2"><input type="checkbox" name = "CHKCOMPLIANCE" class="chk-compliance" value="ได้รับ Financial Record"> ได้รับ Financial Record</label>
+            <label class="flex items-center gap-2"><input type="checkbox" name = "CHKCOMPLIANCE" class="chk-compliance req" value="ไม่ได้อยู่ในกลุ่มควบคุม ข้อกำหนด AMEC-5070: Rule for Export Control"> ไม่ได้อยู่ในกลุ่มควบคุม ข้อกำหนด AMEC-5070: Rule for Export Control</label>
+            <label class="flex items-center gap-2"><input type="checkbox" name = "CHKCOMPLIANCE" class="chk-compliance req" value="ไม่อยู่ในรายชื่อที่ถูกลงโทษจาก UNSC"> ไม่อยู่ในรายชื่อที่ถูกลงโทษจาก UNSC</label>
+            <label class="flex items-center gap-2"><input type="checkbox" name = "CHKCOMPLIANCE" class="chk-compliance req" value="ไม่อยู่ในประเทศ ประเทศไทยคว่ำบาตร ตามมาตรการคว่ำบาตร โดยสหประชาชาติ WWW.dff-go.th"> ไม่อยู่ในประเทศ ประเทศไทยคว่ำบาตร ตามมาตรการคว่ำบาตร โดยสหประชาชาติ WWW.dff-go.th</label>
+            <label class="flex items-center gap-2"><input type="checkbox" name = "CHKCOMPLIANCE" class="chk-compliance req" value="AMEC's standard Terms of 'CIF'"> AMEC's standard Terms of "CIF"</label>
+            <label class="flex items-center gap-2"><input type="checkbox" name = "CHKCOMPLIANCE" class="chk-compliance req" value="ได้รับ Financial Record"> ได้รับ Financial Record</label>
             <div class="flex items-center gap-2">
-                <label class="flex items-center gap-2 flex-shrink-0"><input type="checkbox" name = "CHKCOMPLIANCE" class="chk-compliance" value="อื่นๆ ระบุ"> อื่นๆ ระบุ</label>
+                <label class="flex items-center gap-2 flex-shrink-0"><input type="checkbox" name = "CHKCOMPLIANCE" class="chk-compliance req" value="อื่นๆ ระบุ"> อื่นๆ ระบุ</label>
                 <input type="text"  name = "COMPLIANCE_OTHER" class="input input-sm border border-gray-400 h-8 rounded w-1/2 px-2">
                 <span class="text-red-600 text-sm font-semibold whitespace-nowrap">ข้อกำหนด AMEC-6000: Rule for Purchase</span>
             </div>
@@ -1154,7 +1155,7 @@
 
     <div class="mt-6 p-4 bg-gray-100 border border-gray-300 rounded-lg flex flex-col sm:flex-row items-center gap-6">
         <label class="font-bold text-sm">TOTAL SCORE: <span class="total-score text-blue-600 text-xl ml-2">0</span></label>
-        <div class="h-6 w-px bg-gray-400 hidden sm:block"></div><input type="hidden" name="JUDGEMENT">
+        <div class="h-6 w-px bg-gray-400 hidden sm:block"></div>
         <label class="font-bold text-sm">JUDGEMENT: <span  class="judgement-result text-red-600 uppercase italic ml-2">-</span></label>
     </div>
 </div>

@@ -42,6 +42,7 @@ import {
     filterFormData,
     getAllAttr,
     logFormData,
+    requiredForm,
     showMessage,
 } from '@amec/webasset/utils';
 import { getOrganize } from '../../finform/FIN-PCK/dataloc';
@@ -61,6 +62,77 @@ var form = {};
 var tableSearch, purformdata, columnPurNVF;
 var provinceData, districtData, subDistrictData;
 var deletefile = [];
+const requiredMessage = [
+    { element: $('input[name="REQBY"]'), message: 'Please input requester.' },
+    {
+        element: $('input[name="OPERATION"]'),
+        message: 'Please input Operation.',
+    },
+    {
+        element: $('input[name="VENDGROUP"]'),
+        message: 'Please input Vendor Type.',
+    },
+    {
+        element: $('input[name="VENDPURPOSE"]'),
+        message: 'Please input 2nd digit code Purpose.',
+    },
+    {
+        element: $('input[name="COMNAME"]'),
+        message: 'Please input Vendor Name.',
+    },
+    {
+        element: $('input[name="VENDTYPE"]'),
+        message: 'Please select Local or Overseas.',
+    },
+    {
+        element: $('input[name="ADDRESS_EN"]'),
+        message: 'Please input Address (EN).',
+    },
+    {
+        element: $('input[name="PROVINCE_EN"]'),
+        message: 'Please input Province (English).',
+    },
+    {
+        element: $('input[name="DISTRICT_EN"]'),
+        message: 'Please input District (English).',
+    },
+    {
+        element: $('input[name="SUB_DISTRICT_EN"]'),
+        message: 'Please input Sub-District (English).',
+    },
+    {
+        element: $('input[name="POSTCODE_EN"]'),
+        message: 'Please input Postcode (English).',
+    },
+    {
+        element: $('input[name="COUNTRY_EN"]'),
+        message: 'Please input Country (English).',
+    },
+    {
+        element: $('input[name="CONTACT"]'),
+        message: 'Please input Contact name.',
+    },
+    {
+        element: $('input[name="EMAIL"]'),
+        message: 'Please input Contact Email.',
+    },
+    {
+        element: $('input[name="TELNO"]'),
+        message: 'Please input Tel.no',
+    },
+    {
+        element: $('.termcode'),
+        message: 'Please input Payment Term',
+    },
+    {
+        element: $('.currency'),
+        message: 'Please input Currency Code',
+    },
+    {
+        element: $('.chk-compliance'),
+        message: 'Please input Compliance',
+    },
+].filter(Boolean);
 
 // ==========================================
 // ส่วนของ Event ต่าง ๆ (ย้ายมาอยู่นอก document.ready ได้ทั้งหมดด้วย $(document).on)
@@ -133,6 +205,7 @@ $(document).on('change', '.radio-typec', async function () {
         $('.pro').addClass('hidden');
         $('#nonpro').find('input, select, textarea').prop('disabled', false);
         $('#pro').find('input, select, textarea').prop('disabled', true);
+        $('input[name="VENDPURPOSE"]').removeClass('req');
     } else {
         $('#nonpro').addClass('hidden');
         $('#pro').removeClass('hidden');
@@ -142,6 +215,7 @@ $(document).on('change', '.radio-typec', async function () {
         $('.pro').removeClass('hidden');
         $('#nonpro').find('input, select, textarea').prop('disabled', true);
         $('#pro').find('input, select, textarea').prop('disabled', false);
+        $('input[name="VENDPURPOSE"]').addClass('req');
     }
     if ($('.radio-type:checked').length > 0) {
         $('.radio-type:checked').trigger('change');
@@ -164,6 +238,7 @@ $(document).on('change', '.radio-type', async function () {
         countryManager.disabled(true);
         countryEnManager.value = 'Thailand';
         countryThManager.value = 'ไทย';
+        $('input[name="CHKCOMPLIANCE"]').removeClass('req');
     } else {
         $('.field-local').addClass('hidden');
         $('.field-oversea').removeClass('hidden');
@@ -177,6 +252,7 @@ $(document).on('change', '.radio-type', async function () {
         countryManager.disabled(false);
         countryEnManager.value = '';
         countryThManager.value = '';
+        $('input[name="CHKCOMPLIANCE"]').addClass('req');
     }
 });
 
@@ -430,28 +506,44 @@ $(document).on('click', '.remove-file', async function (e) {
 });
 
 $(document).on('click', '#btnDraft, #btnRequest', async function () {
-    if (!checkAttFile()) {
-        return false;
+    if (this.id === 'btnRequest') {
+        if (!(await requiredForm('#frmmain', requiredMessage))) return;
+        if (!checkAttFile()) {
+            return false;
+        }
     }
+
     const formElement = $('#frmmain')[0];
     const filteredFormData = await packPurevaFormData(formElement);
     if (this.id === 'btnDraft') {
         filteredFormData.append('DRAFT', '0');
     }
-    logFormData(filteredFormData);
     const res = await create(filteredFormData);
 });
 
 $(document).on('click', 'button[name="btnAction"]', async function () {
-    // const act = $(this).val();
+    const act = $(this).val();
+    if (act == 'approve') {
+        if (!(await requiredForm('#frmmain', requiredMessage))) return;
+        if (!checkAttFile()) {
+            return false;
+        }
+    }
     const formElement = $('#frmmain')[0];
     const filteredFormData = await packPurevaFormData(formElement);
-
     // const apvno = $('.apv-data').attr('empno');
     // filteredFormData.append('ACTION', act);
     // filteredFormData.append('EMPNO', apvno);
     logFormData(filteredFormData);
     const res = await update(filteredFormData);
+    if (act == 'approve') {
+        const remark = $('textarea[name="txtRemark"]').val();
+        const res = await doaction({ ...form, ACTION: act, REMARK: remark });
+        if (res.status == true) {
+            showMessage(res.message, 'success');
+            redirectWebflow();
+        }
+    }
 });
 $(document).on('input', '.empnum', function () {
     const directValue = Number($('input[name="EMPDIRECT"]').val()) || 0;
@@ -1098,9 +1190,15 @@ async function packPurevaFormData(formElement) {
 
 function checkAttFile() {
     const selectedGroup = $('input[name="VENDGROUP"]:checked').val();
-    const hasCer = $('#file-cer')[0].files.length > 0;
-    const hasIe = $('#file-ie')[0].files.length > 0;
-    const hasQa = $('#file-qa')[0].files.length > 0;
+    const hasCer =
+        $('#file-cer')[0].files.length > 0 ||
+        $('#file-type-11').children().length > 0;
+    const hasIe =
+        $('#file-ie')[0].files.length > 0 ||
+        $('#file-type-12').children().length > 0;
+    const hasQa =
+        $('#file-qa')[0].files.length > 0 ||
+        $('#file-type-13').children().length > 0;
     if (selectedGroup && selectedGroup.includes('6:Non-Production')) {
         if (!hasCer) {
             showMessage(
