@@ -66,6 +66,7 @@
 <form id="frmmain">
     <!-- <input type="hidden" name="DRAFT" id="draft" > -->
      <input type="hidden" name="JUDGEMENT">
+      <input type="hidden" name="ACTION" >
 <div class="space-y-6">
      <h1 class="text-3xl text-center text-primary font-bold mb-10">Vendor/Sub-contractor Evaluation Form</h1>
     <!-- Top Section -->
@@ -95,7 +96,7 @@
             </label>
             
             <div class="flex items-center gap-4">
-                <input type="text" name="VENDORCODE" id="VENDORCODE" maxlength="5" placeholder="Vendor Code" class="vendor-code-input input input-sm border border-gray-400 h-8 rounded w-48 px-2" disabled >
+                <input type="text" name="VENDCODE" id="VENDCODE" maxlength="5" placeholder="Vendor Code" class="vendor-code-input input input-sm border border-gray-400 h-8 rounded w-48 px-2" disabled >
                 
                 <label class="flex items-center gap-2 cursor-pointer text-gray-700 text-sm">
                     <input type="checkbox" name="UPSTATUS"  value="Y" class="update-status-check w-4 h-4 accent-blue-600 rounded" disabled> 
@@ -485,13 +486,13 @@
     <div class="border-2 border-dashed border-gray-400 p-4 rounded-lg mb-6 bg-gray-50 field-oversea-nonpro">
         <span class="required font-bold mb-3">Compliance</span>
         <div class="grid grid-cols-1 gap-2 text-black text-sm">
-            <label class="flex items-center gap-2"><input type="checkbox" name = "CHKCOMPLIANCE" class="chk-compliance req" value="ไม่ได้อยู่ในกลุ่มควบคุม ข้อกำหนด AMEC-5070: Rule for Export Control"> ไม่ได้อยู่ในกลุ่มควบคุม ข้อกำหนด AMEC-5070: Rule for Export Control</label>
-            <label class="flex items-center gap-2"><input type="checkbox" name = "CHKCOMPLIANCE" class="chk-compliance req" value="ไม่อยู่ในรายชื่อที่ถูกลงโทษจาก UNSC"> ไม่อยู่ในรายชื่อที่ถูกลงโทษจาก UNSC</label>
-            <label class="flex items-center gap-2"><input type="checkbox" name = "CHKCOMPLIANCE" class="chk-compliance req" value="ไม่อยู่ในประเทศ ประเทศไทยคว่ำบาตร ตามมาตรการคว่ำบาตร โดยสหประชาชาติ WWW.dff-go.th"> ไม่อยู่ในประเทศ ประเทศไทยคว่ำบาตร ตามมาตรการคว่ำบาตร โดยสหประชาชาติ WWW.dff-go.th</label>
-            <label class="flex items-center gap-2"><input type="checkbox" name = "CHKCOMPLIANCE" class="chk-compliance req" value="AMEC's standard Terms of 'CIF'"> AMEC's standard Terms of "CIF"</label>
-            <label class="flex items-center gap-2"><input type="checkbox" name = "CHKCOMPLIANCE" class="chk-compliance req" value="ได้รับ Financial Record"> ได้รับ Financial Record</label>
+            <label class="flex items-center gap-2"><input type="checkbox" name = "CHKCOMPLIANCE" class="chk-compliance" value="ไม่ได้อยู่ในกลุ่มควบคุม ข้อกำหนด AMEC-5070: Rule for Export Control"> ไม่ได้อยู่ในกลุ่มควบคุม ข้อกำหนด AMEC-5070: Rule for Export Control</label>
+            <label class="flex items-center gap-2"><input type="checkbox" name = "CHKCOMPLIANCE" class="chk-compliance" value="ไม่อยู่ในรายชื่อที่ถูกลงโทษจาก UNSC"> ไม่อยู่ในรายชื่อที่ถูกลงโทษจาก UNSC</label>
+            <label class="flex items-center gap-2"><input type="checkbox" name = "CHKCOMPLIANCE" class="chk-compliance" value="ไม่อยู่ในประเทศ ประเทศไทยคว่ำบาตร ตามมาตรการคว่ำบาตร โดยสหประชาชาติ WWW.dff-go.th"> ไม่อยู่ในประเทศ ประเทศไทยคว่ำบาตร ตามมาตรการคว่ำบาตร โดยสหประชาชาติ WWW.dff-go.th</label>
+            <label class="flex items-center gap-2"><input type="checkbox" name = "CHKCOMPLIANCE" class="chk-compliance" value="AMEC's standard Terms of 'CIF'"> AMEC's standard Terms of "CIF"</label>
+            <label class="flex items-center gap-2"><input type="checkbox" name = "CHKCOMPLIANCE" class="chk-compliance" value="ได้รับ Financial Record"> ได้รับ Financial Record</label>
             <div class="flex items-center gap-2">
-                <label class="flex items-center gap-2 flex-shrink-0"><input type="checkbox" name = "CHKCOMPLIANCE" class="chk-compliance req" value="อื่นๆ ระบุ"> อื่นๆ ระบุ</label>
+                <label class="flex items-center gap-2 flex-shrink-0"><input type="checkbox" name = "CHKCOMPLIANCE" class="chk-compliance" value="อื่นๆ ระบุ"> อื่นๆ ระบุ</label>
                 <input type="text"  name = "COMPLIANCE_OTHER" class="input input-sm border border-gray-400 h-8 rounded w-1/2 px-2">
                 <span class="text-red-600 text-sm font-semibold whitespace-nowrap">ข้อกำหนด AMEC-6000: Rule for Purchase</span>
             </div>
@@ -503,23 +504,23 @@
 <span class="required font-bold text-sm block mb-2 field-local-nonpro">รายการสินค้าและบริการที่ยื่นจดทะเบียนเครื่องหมายการค้าในประเทศไทย</span>
 <!-- ปรับตรงนี้เป็น grid-cols-3 -->
 <div class="grid grid-cols-3 gap-x-4 gap-y-1 text-sm field-local-nonpro">
-    <label class="flex items-center gap-2"><input type="radio" name="PRODCAT" value="เครื่องสำอาง ยา ผลิตภัณฑ์เคมี" class="w-4 h-4 accent-blue-600"> เครื่องสำอาง ยา ผลิตภัณฑ์เคมี</label>
-    <label class="flex items-center gap-2"><input type="radio" name="PRODCAT" value="โลหะ เครื่องมืออุปกรณ์ วัสดุก่อสร้าง" class="w-4 h-4 accent-blue-600"> โลหะ เครื่องมืออุปกรณ์ วัสดุก่อสร้าง</label>
-    <label class="flex items-center gap-2"><input type="radio" name="PRODCAT" value="เครื่องจักรกล เครื่องมือ เครื่องใช้ไฟฟ้า" class="w-4 h-4 accent-blue-600"> เครื่องจักรกล เครื่องมือ เครื่องใช้ไฟฟ้า</label>
+    <label class="flex items-center gap-2"><input type="radio" name="PRODCAT" value="เครื่องสำอาง ยา ผลิตภัณฑ์เคมี" class="procat w-4 h-4 accent-blue-600"> เครื่องสำอาง ยา ผลิตภัณฑ์เคมี</label>
+    <label class="flex items-center gap-2"><input type="radio" name="PRODCAT" value="โลหะ เครื่องมืออุปกรณ์ วัสดุก่อสร้าง" class="procat w-4 h-4 accent-blue-600"> โลหะ เครื่องมืออุปกรณ์ วัสดุก่อสร้าง</label>
+    <label class="flex items-center gap-2"><input type="radio" name="PRODCAT" value="เครื่องจักรกล เครื่องมือ เครื่องใช้ไฟฟ้า" class="procat w-4 h-4 accent-blue-600"> เครื่องจักรกล เครื่องมือ เครื่องใช้ไฟฟ้า</label>
     
-    <label class="flex items-center gap-2"><input type="radio" name="PRODCAT" value="โลหะมีค่า นาฬิกา เครื่องหนัง" class="w-4 h-4 accent-blue-600"> โลหะมีค่า นาฬิกา เครื่องหนัง</label>
-    <label class="flex items-center gap-2"><input type="radio" name="PRODCAT" value="เครื่องดนตรี ของเล่น อุปกรณ์กีฬา" class="w-4 h-4 accent-blue-600"> เครื่องดนตรี ของเล่น อุปกรณ์กีฬา</label>
-    <label class="flex items-center gap-2"><input type="radio" name="PRODCAT" value="กระดาษ เครื่องเขียน เครื่องพิมพ์" class="w-4 h-4 accent-blue-600"> กระดาษ เครื่องเขียน เครื่องพิมพ์</label>
+    <label class="flex items-center gap-2"><input type="radio" name="PRODCAT" value="โลหะมีค่า นาฬิกา เครื่องหนัง" class="procat w-4 h-4 accent-blue-600"> โลหะมีค่า นาฬิกา เครื่องหนัง</label>
+    <label class="flex items-center gap-2"><input type="radio" name="PRODCAT" value="เครื่องดนตรี ของเล่น อุปกรณ์กีฬา" class="procat w-4 h-4 accent-blue-600"> เครื่องดนตรี ของเล่น อุปกรณ์กีฬา</label>
+    <label class="flex items-center gap-2"><input type="radio" name="PRODCAT" value="กระดาษ เครื่องเขียน เครื่องพิมพ์" class="procat w-4 h-4 accent-blue-600"> กระดาษ เครื่องเขียน เครื่องพิมพ์</label>
     
-    <label class="flex items-center gap-2"><input type="radio" name="PRODCAT" value="ยาง พลาสติก" class="w-4 h-4 accent-blue-600"> ยาง พลาสติก</label>
-    <label class="flex items-center gap-2"><input type="radio" name="PRODCAT" value="เฟอร์นิเจอร์ เครื่องใช้ในครัวเรือน" class="w-4 h-4 accent-blue-600"> เฟอร์นิเจอร์ เครื่องใช้ในครัวเรือน</label>
-    <label class="flex items-center gap-2"><input type="radio" name="PRODCAT" value="เส้นใย เส้นด้าย สิ่งทอ เครื่องนุ่งห่ม" class="w-4 h-4 accent-blue-600"> เส้นใย เส้นด้าย สิ่งทอ เครื่องนุ่งห่ม</label>
+    <label class="flex items-center gap-2"><input type="radio" name="PRODCAT" value="ยาง พลาสติก" class="procat w-4 h-4 accent-blue-600"> ยาง พลาสติก</label>
+    <label class="flex items-center gap-2"><input type="radio" name="PRODCAT" value="เฟอร์นิเจอร์ เครื่องใช้ในครัวเรือน" class="procat w-4 h-4 accent-blue-600"> เฟอร์นิเจอร์ เครื่องใช้ในครัวเรือน</label>
+    <label class="flex items-center gap-2"><input type="radio" name="PRODCAT" value="เส้นใย เส้นด้าย สิ่งทอ เครื่องนุ่งห่ม" class="procat w-4 h-4 accent-blue-600"> เส้นใย เส้นด้าย สิ่งทอ เครื่องนุ่งห่ม</label>
     
-    <label class="flex items-center gap-2"><input type="radio" name="PRODCAT" value="อาหาร เครื่องดื่ม ของหวาน" class="w-4 h-4 accent-blue-600"> อาหาร เครื่องดื่ม ของหวาน</label>
-    <label class="flex items-center gap-2"><input type="radio" name="PRODCAT" value="เครื่องหมายบริการ" class="w-4 h-4 accent-blue-600"> เครื่องหมายบริการ</label>
-    <label class="flex items-center gap-2"><input type="radio" name="PRODCAT" value="เครื่องหมายรับรอง" class="w-4 h-4 accent-blue-600"> เครื่องหมายรับรอง</label>
+    <label class="flex items-center gap-2"><input type="radio" name="PRODCAT" value="อาหาร เครื่องดื่ม ของหวาน" class="procat w-4 h-4 accent-blue-600"> อาหาร เครื่องดื่ม ของหวาน</label>
+    <label class="flex items-center gap-2"><input type="radio" name="PRODCAT" value="เครื่องหมายบริการ" class="procat w-4 h-4 accent-blue-600"> เครื่องหมายบริการ</label>
+    <label class="flex items-center gap-2"><input type="radio" name="PRODCAT" value="เครื่องหมายรับรอง" class="procat w-4 h-4 accent-blue-600"> เครื่องหมายรับรอง</label>
     
-    <label class="flex items-center gap-2"><input type="radio" name="PRODCAT" value="เครื่องหมายร่วม" class="w-4 h-4 accent-blue-600"> เครื่องหมายร่วม</label>
+    <label class="flex items-center gap-2"><input type="radio" name="PRODCAT" value="เครื่องหมายร่วม" class="procat w-4 h-4 accent-blue-600"> เครื่องหมายร่วม</label>
 </div>
     </div>
     <!-- องค์ประกอบอื่นๆ (Business Type, Financial Statement, etc.) -->
@@ -583,8 +584,8 @@
     <div class="border-t pt-4">
         <div class="flex items-center gap-6 mb-3">
             <label class="font-bold text-sm">ข้อมูลการจดทะเบียนนิติบุคคลและภาษี</label>
-            <label class="flex items-center gap-2 text-sm"><input type="radio" name="LEGAL_STATUS" value="นิติบุคคล" class="w-4 h-4 accent-blue-600"> นิติบุคคล</label>
-            <label class="flex items-center gap-2 text-sm"><input type="radio" name="LEGAL_STATUS" value="บุคคลธรรมดา" class="w-4 h-4 accent-blue-600"> บุคคลธรรมดา</label>
+            <label class="flex items-center gap-2 text-sm"><input type="radio" name="LEGAL_STATUS"  value="นิติบุคคล" class="legal_status w-4 h-4 accent-blue-600"> นิติบุคคล</label>
+            <label class="flex items-center gap-2 text-sm"><input type="radio" name="LEGAL_STATUS" value="บุคคลธรรมดา" class="legal_status w-4 h-4 accent-blue-600"> บุคคลธรรมดา</label>
         </div>
         <div class="grid grid-cols-1 gap-3">
             <div>
@@ -604,7 +605,7 @@
     
         
                 <label class="block text-xs font-semibold text-gray-600">Concerned Division</label>
-                   <select  name="CONCERNEDORG" id="CONCERNEDORG" class="input input-sm border border-gray-400 h-8 rounded px-2 w-58 org req">
+                   <select  name="CONCERNEDORG" id="CONCERNEDORG" class="input input-sm border border-gray-400 h-8 rounded px-2 w-58 org">
                     <option value="" disabled selected>...</option>
                     </select>
             
@@ -826,7 +827,7 @@
             <label class="block font-bold text-sm text-gray-700 mb-2">Capital</label>
             <div class="flex gap-2">
                 <input type="text" name="CAPITAL"  class="input-decimal flex-1 input input-bordered input-sm w-full bg-gray-50 border-gray-300" placeholder="0.00">
-                <select id="cur" name="CAPITAL_CUR" class="input input-sm border border-gray-400 h-8 rounded px-2 w-48 currency req">
+                <select id="cur" name="CAPITAL_CUR" class="input input-sm border border-gray-400 h-8 rounded px-2 w-48 currency">
                     <option value="" disabled selected>...</option>
                 </select>
             </div>

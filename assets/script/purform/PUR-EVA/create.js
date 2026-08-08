@@ -114,7 +114,7 @@ const requiredMessage = [
     },
     {
         element: $('input[name="EMAIL"]'),
-        message: 'Please input Contact Email.',
+        message: 'Please input Email.',
     },
     {
         element: $('input[name="TELNO"]'),
@@ -131,6 +131,19 @@ const requiredMessage = [
     {
         element: $('.chk-compliance'),
         message: 'Please input Compliance',
+    },
+    {
+        element: $('input[name="PRODCAT"]'),
+        message:
+            'Please input List of Goods and Services for Trademark Registration in Thailand',
+    },
+    {
+        element: $('input[name="CORPORATE_ID"]'),
+        message: 'Please input Corporate Registration Number',
+    },
+    {
+        element: $('input[name="TAX_ID"]'),
+        message: 'Please input Tax ID',
     },
 ].filter(Boolean);
 
@@ -162,7 +175,7 @@ $(document).on('click', '#contact-list .btn-remove', function () {
     $(this).closest('.contact-row').remove();
 });
 
-$(document).on('input', '#VENDORCODE', async function () {
+$(document).on('input', '#VENDCODE', async function () {
     const keywordValue = this.value.trim();
     if (keywordValue.length === 5) {
         try {
@@ -231,9 +244,11 @@ $(document).on('change', '.radio-type', async function () {
         if (typec === '6') {
             $('.field-local-nonpro').removeClass('hidden');
             $('.field-oversea-nonpro').addClass('hidden');
+            $('input[name="PRODCAT"]').addClass('req');
         } else {
             $('.field-local-nonpro').addClass('hidden');
             $('.field-oversea-nonpro').addClass('hidden');
+            $('input[name="PRODCAT"]').removeClass('req');
         }
         countryManager.disabled(true);
         countryEnManager.value = 'Thailand';
@@ -245,14 +260,16 @@ $(document).on('change', '.radio-type', async function () {
         if (typec === '6') {
             $('.field-oversea-nonpro').removeClass('hidden');
             $('.field-local-nonpro').addClass('hidden');
+            $('input[name="CHKCOMPLIANCE"]').addClass('req');
         } else {
             $('.field-local-nonpro').addClass('hidden');
             $('.field-oversea-nonpro').addClass('hidden');
+            $('input[name="CHKCOMPLIANCE"]').removeClass('req');
         }
+        $('input[name="PRODCAT"]').removeClass('req');
         countryManager.disabled(false);
         countryEnManager.value = '';
         countryThManager.value = '';
-        $('input[name="CHKCOMPLIANCE"]').addClass('req');
     }
 });
 
@@ -417,6 +434,17 @@ $(document).on('input', '#directSearchInput', async function () {
     }
 });
 
+$(document).on('change', '.legal_status', async function () {
+    console.log('click legal status');
+    const legal = $(this).val();
+    if (legal == 'นิติบุคคล') {
+        $('input[name="CORPORATE_ID"]').addClass('req');
+        $('input[name="TAX_ID"]').addClass('req');
+    } else {
+        $('input[name="CORPORATE_ID"]').removeClass('req');
+    }
+});
+
 $(document).on('click', '.add-row-btn', function () {
     const tableId = $(this).data('table');
     const tbody = $('#' + tableId + ' tbody');
@@ -511,8 +539,12 @@ $(document).on('click', '#btnDraft, #btnRequest', async function () {
         if (!checkAttFile()) {
             return false;
         }
+        if (checkEvaluationCompleted()) {
+            return false;
+        }
     }
 
+    $('input[name="ACTION"]').val('save');
     const formElement = $('#frmmain')[0];
     const filteredFormData = await packPurevaFormData(formElement);
     if (this.id === 'btnDraft') {
@@ -523,27 +555,52 @@ $(document).on('click', '#btnDraft, #btnRequest', async function () {
 
 $(document).on('click', 'button[name="btnAction"]', async function () {
     const act = $(this).val();
+    $('input[name="ACTION"]').val(act);
     if (act == 'approve') {
+        console.log('before require');
+        // เลือก input, select ทั้งหมดที่มี class .req รวมถึง radio และ checkbox ด้วย
+        let requiredFields = $('form input.req, form select.req');
+
+        requiredFields.each(function () {
+            let $field = $(this);
+            let type = $field.attr('type');
+
+            if (type === 'radio' || type === 'checkbox') {
+                // สำหรับ Radio หรือ Checkbox: เช็คว่าในกลุ่มชื่อเดียวกันนี้ มีตัวไหนถูกเลือกหรือยัง
+                let groupName = $field.attr('name');
+                let isChecked =
+                    $(`form input[name="${groupName}"]:checked`).length > 0;
+
+                console.log(
+                    `Radio/Checkbox [${groupName}] Checked:`,
+                    isChecked,
+                );
+            } else {
+                // สำหรับ Input ทั่วไป (text, number ฯลฯ) และ Select: เช็คค่าว่าง
+                let value = $field.val();
+                let isFilled = value && value.trim() !== '';
+
+                console.log(
+                    `Field [${$field.attr('name') || $field.attr('id')}] Value:`,
+                    value,
+                    'Filled:',
+                    isFilled,
+                );
+            }
+        });
         if (!(await requiredForm('#frmmain', requiredMessage))) return;
+        console.log('after require');
         if (!checkAttFile()) {
+            return false;
+        }
+        if (!checkEvaluationCompleted()) {
             return false;
         }
     }
     const formElement = $('#frmmain')[0];
     const filteredFormData = await packPurevaFormData(formElement);
-    // const apvno = $('.apv-data').attr('empno');
-    // filteredFormData.append('ACTION', act);
-    // filteredFormData.append('EMPNO', apvno);
     logFormData(filteredFormData);
     const res = await update(filteredFormData);
-    if (act == 'approve') {
-        const remark = $('textarea[name="txtRemark"]').val();
-        const res = await doaction({ ...form, ACTION: act, REMARK: remark });
-        if (res.status == true) {
-            showMessage(res.message, 'success');
-            redirectWebflow();
-        }
-    }
 });
 $(document).on('input', '.empnum', function () {
     const directValue = Number($('input[name="EMPDIRECT"]').val()) || 0;
@@ -597,16 +654,16 @@ $(document).ready(async function () {
     const province = await getProvinces();
     provinceData = province.map((p) => ({
         id: p.id,
-        value: p.nameen,
-        text: p.nameen,
+        value: formatText(p.nameen),
+        text: formatText(p.nameen),
         nameth: p.nameth,
     }));
     const district = await getDistricts();
 
     districtData = district.map((d) => ({
         id: d.id,
-        value: d.nameen,
-        text: d.nameen,
+        value: formatText(d.nameen),
+        text: formatText(d.nameen),
         nameth: d.nameth,
         province_id: d.province_id,
     }));
@@ -614,8 +671,8 @@ $(document).ready(async function () {
     const subDistrict = await getSubDistricts();
     subDistrictData = subDistrict.map((s) => ({
         id: s.id,
-        value: s.nameen,
-        text: s.nameen,
+        value: formatText(s.nameen),
+        text: formatText(s.nameen),
         nameth: s.nameth,
         district_id: s.district_id,
         postcode: s.postcode,
@@ -864,9 +921,13 @@ async function setVendorEvaInfo(formeva) {
         .prop('checked', true)
         .trigger('change');
 
+    $(`input[name="VENDPURPOSE"][value="${formeva.VENDPURPOSE}"]`)
+        .prop('checked', true)
+        .trigger('change');
+
     if (formeva.OPERATION == 'A') {
-        $('input[name="VENDORCODE"], #VENDORCODE')
-            .val(formeva.VENDORCODE)
+        $('input[name="VENDCODE"], #VENDCODE')
+            .val(formeva.VENDCODE)
             .trigger('change');
         $('input[name="UPSTATUS"]')
             .prop('checked', formeva.UPSTATUS === 'Y')
@@ -914,6 +975,10 @@ async function setVendorEvaInfo(formeva) {
         .prop('checked', true)
         .trigger('change');
     $('input[name="COM_OTHER"]').val(formeva.COM_OTHER);
+    $('input[name="EMPDIRECT"]').val(formeva.EMPDIRECT);
+    $('input[name="EMPINDIRECT"]').val(formeva.EMPINDIRECT);
+    $('.totemp').val(Number(formeva.EMPDIRECT) + Number(formeva.EMPINDIRECT));
+
     $(`input[name="QM_STATUS"][value="${formeva.QM_STATUS}"]`)
         .prop('checked', true)
         .trigger('change');
@@ -1169,7 +1234,7 @@ async function packPurevaFormData(formElement) {
     fd.append('CYEAR2', formInfo.cyear2);
     fd.append('NRUNNO', formInfo.nrunno);
     const apvno = $('.apv-data').attr('empno');
-    fd.append('ACTION', 'save');
+    // fd.append('ACTION', 'save');
     fd.append('EMPNO', apvno);
     deletefile.forEach((fileId) => {
         fd.append('DELETE_FILES[]', String(fileId));
@@ -1217,6 +1282,42 @@ function checkAttFile() {
         }
     }
     return true;
+}
+
+function checkEvaluationCompleted() {
+    const selectedGroup = $('input[name="VENDGROUP"]:checked').val();
+    let containerId = '';
+    if (selectedGroup && selectedGroup.includes('6:Non-Production')) {
+        containerId = 'section-eva-non';
+    } else {
+        containerId = 'section-eva-pro';
+    }
+    let radioGroups = {};
+    $(`#${containerId} input[type="radio"]`).each(function () {
+        let groupName = $(this.getAttribute('name'));
+        radioGroups[$(this).attr('name')] = true;
+    });
+
+    let allSelected = true;
+    let unselectedTopics = [];
+
+    for (let groupName in radioGroups) {
+        let isChecked =
+            $(`#${containerId} input[name="${groupName}"]:checked`).length > 0;
+
+        if (!isChecked) {
+            allSelected = false;
+            let firstRadioInGroup = $(
+                `#${containerId} input[name="${groupName}"]`,
+            ).first();
+            let topicName = firstRadioInGroup.data('topic') || groupName;
+            unselectedTopics.push(topicName);
+        }
+    }
+    if (!allSelected) {
+        showMessage('Please select a rating for all topics', 'warning');
+    }
+    return allSelected;
 }
 
 function bindEntityTables(data) {
@@ -1338,4 +1439,16 @@ function bindProfitTurnoverTables(turnovers) {
             }
         });
     });
+}
+
+function formatText(inputString) {
+    if (!inputString) return '';
+
+    // ตัดช่องว่างทั้งหมดออก
+    let noSpace = inputString.replace(/\s+/g, '');
+
+    if (noSpace.length === 0) return '';
+
+    // ตัวแรกตัวใหญ่ นอกนั้นตัวเล็กทั้งหมด
+    return noSpace.charAt(0).toUpperCase() + noSpace.slice(1).toLowerCase();
 }

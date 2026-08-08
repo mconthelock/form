@@ -1,5 +1,6 @@
 @extends('layouts/webflowTemplate')
 
+
 @section('contents')
 <div class="hidden form-info" nfrmno="{{$NFRMNO}}" vorgno="{{$VORGNO}}" cyear="{{$CYEAR}}" mode="{{$mode}}"
     cyear2="{{$mode !=1 ? $CYEAR2 : '' }}" nrunno="{{$mode !=1 ? $NRUNNO : '' }}"></div>
@@ -683,7 +684,7 @@
     </div> 
 
 <div class="border border-gray-300 shadow-sm rounded-lg pt-5 px-5 pb-5 mt-8 mb-5 bg-white relative">
-  <div id="MJUDGEMENT"></div>
+  <div id="CONJUDGEMENT"></div>
   <div>
     <label class="block font-bold text-sm mb-2 text-gray-800">Comment/Conclusion</label>
     <textarea name="txtRemark"

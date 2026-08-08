@@ -26,7 +26,7 @@ import {
 import { redirectWebflow } from '@amec/webasset/form';
 
 var form = {};
-const cextdata = '';
+let cextdata;
 
 $(async function () {
     showLoader({ show: true });
@@ -141,6 +141,9 @@ $(async function () {
         );
         $('#thprofit').text(isNonPro ? 'Net Profit/Loss' : 'Turnover');
         $('#VENDPURPOSE').closest('.info-row').toggle(!isNonPro);
+
+        console.log(isNonPro);
+        console.log(cextdata);
         if (!isNonPro && cextdata == '02') {
             const htmlContent = `
                 <div class="flex flex-col gap-2 border border-gray-200 rounded-md p-3 bg-gray-50">
@@ -148,30 +151,30 @@ $(async function () {
                     
                     <div class="flex flex-col gap-2 text-sm">
                         <label class="flex items-center gap-2 cursor-pointer">
-                            <input type="radio" name="MJUDGEMEN" value="A" class="w-4 h-4 accent-blue-600"> 
+                            <input type="radio" name="MJUDGEMENT" value="A" class="w-4 h-4 accent-blue-600"> 
                             A: EXCELLENT (80 UP)
                         </label>
                         <label class="flex items-center gap-2 cursor-pointer">
-                            <input type="radio" name="MJUDGEMEN" value="B" class="w-4 h-4 accent-blue-600"> 
+                            <input type="radio" name="MJUDGEMENT" value="B" class="w-4 h-4 accent-blue-600"> 
                             B: GOOD (70 UP)
                         </label>
                         <label class="flex items-center gap-2 cursor-pointer">
-                            <input type="radio" name="MJUDGEMEN" value="C" class="w-4 h-4 accent-blue-600"> 
+                            <input type="radio" name="MJUDGEMENT" value="C" class="w-4 h-4 accent-blue-600"> 
                             C: FAIR (60 UP)
                         </label>
                         <label class="flex items-center gap-2 cursor-pointer">
-                            <input type="radio" name="MJUDGEMEN" value="D" class="w-4 h-4 accent-blue-600"> 
+                            <input type="radio" name="MJUDGEMENT" value="D" class="w-4 h-4 accent-blue-600"> 
                             D: POOR (40 UP)
                         </label>
                         <label class="flex items-center gap-2 cursor-pointer">
-                            <input type="radio" name="MJUDGEMEN" value="E" class="w-4 h-4 accent-blue-600"> 
+                            <input type="radio" name="MJUDGEMENT" value="E" class="w-4 h-4 accent-blue-600"> 
                             E: NOT APPLICABLE (LESS THAN 40)
                         </label>
                     </div>
                 </div>
             `;
             // นำไปใส่ใน div ที่กำหนด
-            $('#MJUDGEMENT').html(htmlContent);
+            $('#CONJUDGEMENT').html(htmlContent);
         }
 
         if (isNonPro) {
@@ -416,6 +419,18 @@ $(document).on('click', 'button[name="btnAction"]', async function () {
     const act = $(this).val();
     const remark = $('textarea[name="txtRemark"]').val();
     if (cextdata == '02') {
+        if (act == 'approve') {
+            let textValue = $('#VENDGROUP').text();
+            console.log('ahdjfasfk' + textValue);
+
+            if (textValue != '6:Non-Production (6)') {
+                const MJUD = $('input[name="MJUDGEMENT"]:checked').val();
+                if (!MJUD) {
+                    showMessage('Please select Judgement', 'warning');
+                    return false;
+                }
+            }
+        }
         const formElement = $('#frmmain')[0];
         const fd = new FormData(formElement);
         const formInfo = await getAllAttr('.form-info');
@@ -440,6 +455,8 @@ $(document).on('click', 'button[name="btnAction"]', async function () {
     try {
         showLoader();
         const res = await doaction({ ...form, ACTION: act, REMARK: remark });
+        console.log(res);
+
         if (res.status == true) {
             redirectWebflow();
         }
