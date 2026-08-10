@@ -3,6 +3,7 @@ import {
     fetchUtils,
     serializeRequestBody,
 } from '@amec/webasset/api/fetch-utils';
+import { logFormData } from '@amec/webasset/utils';
 
 export async function searchNVFForm(keyword) {
     return fetchUtils({

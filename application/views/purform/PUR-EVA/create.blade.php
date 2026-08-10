@@ -19,7 +19,7 @@
     }
 
 
-    span.required::after, h2.required::after {
+    span.required::after, h2.required::after , label.required::after {
         content: "**";
         color: red;
         font-weight: bold;
@@ -807,13 +807,13 @@
 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
     
     <div class="flex items-center gap-3">
-        <label class="font-bold text-sm text-gray-700 whitespace-nowrap">Vendor Category</label>
-        <input type="text" name="VENDCAT" class="flex-1 input input-bordered input-sm bg-gray-50 border-gray-300" placeholder="Ex. Shoe,Spring wire, Adhesive tape">
+        <label class="font-bold text-sm text-gray-700 whitespace-nowrap required">Vendor Category</label>
+        <input type="text" name="VENDCAT" class="flex-1 input input-bordered input-sm bg-gray-50 border-gray-300 req" placeholder="Ex. Shoe,Spring wire, Adhesive tape">
     </div>
 
     <div class="flex items-center gap-3">
-        <label class="font-bold text-sm text-gray-700 whitespace-nowrap">TAX.ID/Swift Code</label>
-        <input type="text" name="TAX_ID" class="flex-1 input input-bordered input-sm bg-gray-50 border-gray-300" placeholder="TAX.ID" maxlength="13">
+        <label class="font-bold text-sm text-gray-700 whitespace-nowrap required">TAX.ID/Swift Code</label>
+        <input type="text" name="TAX_ID" class="flex-1 input input-bordered input-sm bg-gray-50 border-gray-300 " placeholder="TAX.ID" maxlength="13">
     </div>
 
 </div>
@@ -824,10 +824,10 @@
     <div>
         <!-- ส่วนของ Capital (เดิม) -->
         <div>
-            <label class="block font-bold text-sm text-gray-700 mb-2">Capital</label>
+            <label class="block font-bold text-sm text-gray-700 mb-2 required">Capital</label>
             <div class="flex gap-2">
-                <input type="text" name="CAPITAL"  class="input-decimal flex-1 input input-bordered input-sm w-full bg-gray-50 border-gray-300" placeholder="0.00">
-                <select id="cur" name="CAPITAL_CUR" class="input input-sm border border-gray-400 h-8 rounded px-2 w-48 currency">
+                <input type="text" name="CAPITAL"  class="input-decimal flex-1 input input-bordered input-sm w-full bg-gray-50 border-gray-300 req" placeholder="0.00">
+                <select id="cur" name="CAPITAL_CUR" class="input input-sm border border-gray-400 h-8 rounded px-2 w-48 currency req">
                     <option value="" disabled selected>...</option>
                 </select>
             </div>
@@ -835,31 +835,31 @@
 
         <!-- ส่วนที่เพิ่มใหม่: วันที่ก่อตั้ง (Establishment Date) -->
         <div class="mt-4">
-            <label class="block font-bold text-sm text-gray-700 mb-2">Established</label>
-            <input type="text" name="ESTABLISHED" class="input input-sm border border-gray-400 h-8 rounded px-2 w-full">
+            <label class="block font-bold text-sm text-gray-700 mb-2 required">Established</label>
+            <input type="text" name="ESTABLISHED" class="input input-sm border border-gray-400 h-8 rounded px-2 w-full req">
         </div>
     </div>
 
     <!-- ฝั่งขวา: Type of Company (เดิม) -->
     <div>
-        <label class="block font-bold text-sm text-gray-700 mb-3">Type of Company</label>
+        <label class="block font-bold text-sm text-gray-700 mb-3 required">Type of Company</label>
         <div class="grid grid-cols-2 gap-3 text-sm">
             <label class="flex items-center gap-2">
-                <input type="radio" name="COM_TYPE" value="Corporation" class="w-4 h-4 accent-blue-600"> Corporation
+                <input type="radio" name="COM_TYPE" value="Corporation" class="w-4 h-4 accent-blue-600 req"> Corporation
             </label>
             <label class="flex items-center gap-2">
-                <input type="radio" name="COM_TYPE" value="Inc. OR Co.,Ltd." class="w-4 h-4 accent-blue-600"> Inc. OR Co.,Ltd.
+                <input type="radio" name="COM_TYPE" value="Inc. OR Co.,Ltd." class="w-4 h-4 accent-blue-600 req"> Inc. OR Co.,Ltd.
             </label>
             <label class="flex items-center gap-2">
-                <input type="radio" name="COM_TYPE" value="Limited Partnership" class="w-4 h-4 accent-blue-600"> Limited Partnership
+                <input type="radio" name="COM_TYPE" value="Limited Partnership" class="w-4 h-4 accent-blue-600 req"> Limited Partnership
             </label>
             <label class="flex items-center gap-2">
-                <input type="radio" name="COM_TYPE" value="Family Partnership" class="w-4 h-4 accent-blue-600"> Family Partnership
+                <input type="radio" name="COM_TYPE" value="Family Partnership" class="w-4 h-4 accent-blue-600 req"> Family Partnership
             </label>
         </div>
         <div class="flex items-center gap-2 mt-2 text-sm">
             <label class="flex items-center gap-2">
-                <input type="radio" name="COM_TYPE" value="Other" class="w-4 h-4 accent-blue-600"> Other:
+                <input type="radio" name="COM_TYPE" value="Other" class="w-4 h-4 accent-blue-600 req"> Other:
             </label>
             <input type="text" name="COM_OTHER" placeholder="Please specify..." class="flex-1 input input-sm border border-gray-400 h-8 rounded px-2">
         </div>
@@ -869,7 +869,7 @@
 
     <div class="mb-6">
         <div class="flex justify-between items-end mb-2">
-            <label class="font-bold text-sm">Shareholder</label>
+            <label class="font-bold text-sm required">Shareholder</label>
             <button type="button" data-table="shareholder-table"
                 class="add-row-btn w-7 h-7 rounded border border-blue-500 text-blue-500 hover:bg-blue-50 flex items-center justify-center font-bold text-lg">
                 +
@@ -885,8 +885,8 @@
             </thead>
             <tbody>
                 <tr class="row-template">
-                    <td class="border border-gray-400 p-1"><input type="text"  name="SHARENAME[]"  class="w-full px-1"></td>
-                    <td class="border border-gray-400 p-1"><input type="text"  name="SHAREPER[]" class="input-decimal w-full px-1 text-center"></td>
+                    <td class="border border-gray-400 p-1"><input type="text"  name="SHARENAME[]"  class="w-full px-1 req"></td>
+                    <td class="border border-gray-400 p-1"><input type="text"  name="SHAREPER[]" class="input-decimal w-full px-1 text-center req"></td>
                     <td class="border border-gray-400 p-1 text-center"></td>
                 </tr>
             </tbody>
@@ -895,17 +895,17 @@
     <div class="flex flex-col gap-6 mb-6">
     
     <div>
-        <label class="block font-bold text-sm text-gray-700 mb-3">Employee</label>
+        <label class="block font-bold text-sm text-gray-700 mb-3 required">Employee</label>
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4 text-xs">
             
             <div class="flex items-center gap-2">
                 <span class="flex-shrink-0 whitespace-nowrap">Direct:</span>
-                <input type="text" name="EMPDIRECT" class="empnum input-interger flex-1 input input-bordered input-sm bg-gray-50 border-gray-300">
+                <input type="text" name="EMPDIRECT" class="empnum input-interger flex-1 input input-bordered input-sm bg-gray-50 border-gray-300 req">
             </div>
             
             <div class="flex items-center gap-2">
                 <span class="flex-shrink-0 whitespace-nowrap">Indirect:</span>
-                <input type="text" name = "EMPINDIRECT" class="empnum input-interger flex-1 input input-bordered input-sm bg-gray-50 border-gray-300">
+                <input type="text" name = "EMPINDIRECT" class="empnum input-interger flex-1 input input-bordered input-sm bg-gray-50 border-gray-300 req">
             </div>
             
             <div class="flex items-center gap-2">
@@ -915,7 +915,7 @@
             
             <div class="flex items-center gap-2">
                 <span class="flex-shrink-0 whitespace-nowrap">Average Age:</span>
-                <input type="text" name = "AVGAGE" class="flex-1 input input-bordered input-sm bg-gray-50 border-gray-300">
+                <input type="text" name = "AVGAGE" class="flex-1 input input-bordered input-sm bg-gray-50 border-gray-300 req">
             </div>
             
         </div>
@@ -1038,7 +1038,7 @@
     <div class="space-y-6 pt-6">
     <div>
         <div class="flex justify-between items-end mb-2">
-            <label class="font-bold text-sm">Main Customer</label>
+            <label class="font-bold text-sm required">Main Customer</label>
             <button type="button" data-table="customer-table"  class="add-row-btn w-7 h-7 rounded border border-blue-500 text-blue-500 hover:bg-blue-50 flex items-center justify-center font-bold text-lg">+</button>
         </div>
         <table id="customer-table" class="w-full text-sm border-collapse border border-gray-400">
@@ -1051,14 +1051,14 @@
                 </tr>
             </thead>
             <tbody>
-              <tr class="row-template"><td class="border border-gray-400 p-1"><input name="CUSNAME[]" type="text" class="w-full px-1"></td><td class="border border-gray-400 p-1"><input type="text" name="CUSPER[]" class="input-decimal w-full px-1 text-center"></td><td class="border border-gray-400 p-1"></td></tr>
+              <tr class="row-template"><td class="border border-gray-400 p-1"><input name="CUSNAME[]" type="text" class="w-full px-1 req"></td><td class="border border-gray-400 p-1"><input type="text" name="CUSPER[]" class="input-decimal w-full px-1 text-center req"></td><td class="border border-gray-400 p-1"></td></tr>
             </tbody>
             </table>
     </div>
 
     <div>
         <div class="flex justify-between items-end mb-2">
-            <label class="font-bold text-sm">Supplier of Main Material</label>
+            <label class="font-bold text-sm required">Supplier of Main Material</label>
             <button type="button" data-table="supplier-table"   class="add-row-btn w-7 h-7 rounded border border-blue-500 text-blue-500 hover:bg-blue-50 flex items-center justify-center font-bold text-lg">+</button>
         </div>
         <table id="supplier-table" class="w-full text-sm border-collapse border border-gray-400">
@@ -1077,7 +1077,7 @@
 
     <div>
         <div class="flex justify-between items-end mb-2">
-            <label class="font-bold text-sm">Main Product</label>
+            <label class="font-bold text-sm required">Main Product</label>
             <button type="button"  data-table="product-table"  class="add-row-btn w-7 h-7 rounded border border-blue-500 text-blue-500 hover:bg-blue-50 flex items-center justify-center font-bold text-lg">+</button>
         </div>
         <table id="product-table" class="w-full text-sm border-collapse border border-gray-400">
@@ -1096,7 +1096,7 @@
     </div>
 
 <div  id="section-eva-pro" class="mb-8 mt-6 border-2 border-dashed border-gray-400 rounded-lg p-6 bg-blue-50">
-    <h2 class="font-bold text-lg mb-4 text-gray-800 pb-2">Evaluation (Purchasing Matters)</h2>
+    <h2 class="font-bold text-lg mb-4 text-gray-800 pb-2 required">Evaluation (Purchasing Matters)</h2>
     <div class="overflow-x-auto">
         <table id="eval-table" class="w-full text-sm border-collapse border border-gray-400 bg-white">
             <thead>

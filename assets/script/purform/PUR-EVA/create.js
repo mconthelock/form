@@ -145,6 +145,74 @@ const requiredMessage = [
         element: $('input[name="TAX_ID"]'),
         message: 'Please input Tax ID',
     },
+    {
+        element: $('input[name="VENDCAT"]'),
+        message: 'Please input Vendor Category',
+    },
+    {
+        element: $('input[name="CAPITAL"]'),
+        message: 'Please input Capital.',
+    },
+    {
+        element: $('input[name="ESTABLISHED"]'),
+        message: 'Please input Established',
+    },
+    {
+        element: $('input[name="COM_TYPE"]'),
+        message: 'Please input Type of Company',
+    },
+    {
+        element: $('input[name="COM_TYPE"]'),
+        message: 'Please input Type of Company',
+    },
+    {
+        element: $('input[name="EMPDIRECT"]'),
+        message: 'Please input Employee Direct',
+    },
+    {
+        element: $('input[name="EMPINDIRECT"]'),
+        message: 'Please input Employee Indirect',
+    },
+    {
+        element: $('input[name="AVGAGE"]'),
+        message: 'Please input Average Age',
+    },
+    {
+        element: $('input[name="SHARENAME[]"]'),
+        message: 'Please input Shareholder',
+    },
+    {
+        element: $('input[name="SHAREPER[]"]'),
+        message: 'Please input Shareholder',
+    },
+    {
+        element: $('input[name="CUSNAME[]"]'),
+        message: 'Please input Main Customer',
+    },
+    {
+        element: $('input[name="CUSPER[]"]'),
+        message: 'Please input Main Customer',
+    },
+    {
+        element: $('input[name="SUPNAME[]"]'),
+        message: 'Please input supplier of Main Material',
+    },
+    {
+        element: $('input[name="SUPPER[]"]'),
+        message: 'Please input supplier of Main Material',
+    },
+    {
+        element: $('input[name="SUPPER[]"]'),
+        message: 'Please input supplier of Main Material',
+    },
+    {
+        element: $('input[name="PRONAME[]"]'),
+        message: 'Please input supplier of Main Product',
+    },
+    {
+        element: $('input[name="PROPER[]"]'),
+        message: 'Please input supplier of Main Product',
+    },
 ].filter(Boolean);
 
 // ==========================================
@@ -209,27 +277,46 @@ $(document).on('change', '.radio-opr', async function () {
 $(document).on('change', '.radio-typec', async function () {
     console.log('event change');
     let val = $(this).val().split(':')[0];
+
     if (val === '6') {
-        $('#nonpro').removeClass('hidden');
+        // --- กรณีเลือก Non-Production (แสดง #nonpro / ซ่อน #pro) ---
+
+        // 1. ซ่อนและสั่ง disable ก้อน #pro ก่อนทันที
         $('#pro').addClass('hidden');
+        // $('#pro').find('input, select, textarea').attr('disabled', true);
+        $('#pro').find('input, select, textarea').attr('disabled', 'disabled');
+
+        // 2. ปลดล็อกและแสดงก้อน #nonpro
+        $('#nonpro').removeClass('hidden');
+        $('#nonpro').find('input, select, textarea').removeAttr('disabled');
+
+        // จัดการส่วนอื่นๆ
+        $('#attach-vat').removeClass('hidden');
         $('#attach-ie').addClass('hidden');
         $('#attach-qa').addClass('hidden');
-        $('#attach-vat').removeClass('hidden');
         $('.pro').addClass('hidden');
-        $('#nonpro').find('input, select, textarea').prop('disabled', false);
-        $('#pro').find('input, select, textarea').prop('disabled', true);
         $('input[name="VENDPURPOSE"]').removeClass('req');
     } else {
+        // --- กรณีเลือก Production (แสดง #pro / ซ่อน #nonpro) ---
+
+        // 1. ซ่อนและสั่ง disable ก้อน #nonpro ก่อนทันที
         $('#nonpro').addClass('hidden');
+        $('#nonpro')
+            .find('input, select, textarea')
+            .attr('disabled', 'disabled');
+
+        // 2. ปลดล็อกและแสดงก้อน #pro
         $('#pro').removeClass('hidden');
+        $('#pro').find('input, select, textarea').removeAttr('disabled');
+
+        // จัดการส่วนอื่นๆ
+        $('.pro').removeClass('hidden');
         $('#attach-ie').removeClass('hidden');
         $('#attach-qa').removeClass('hidden');
         $('#attach-vat').addClass('hidden');
-        $('.pro').removeClass('hidden');
-        $('#nonpro').find('input, select, textarea').prop('disabled', true);
-        $('#pro').find('input, select, textarea').prop('disabled', false);
         $('input[name="VENDPURPOSE"]').addClass('req');
     }
+
     if ($('.radio-type:checked').length > 0) {
         $('.radio-type:checked').trigger('change');
     }
@@ -542,6 +629,20 @@ $(document).on('click', '#btnDraft, #btnRequest', async function () {
         if (checkEvaluationCompleted()) {
             return false;
         }
+    } else {
+        console.log($('input[name="OPERATION"]:checked').val());
+        if (!$('input[name="OPERATION"]:checked').val()) {
+            showMessage('Please Input Operation', 'warning');
+            return false;
+        }
+        if (!$('input[name="VENDGROUP"]:checked').val()) {
+            showMessage('Please Input Vendor Type', 'warning');
+            return false;
+        }
+        if ($('input[name="COMNAME"]').val() == '') {
+            showMessage('Please Input Vendor Name', 'warning');
+            return false;
+        }
     }
 
     $('input[name="ACTION"]').val('save');
@@ -624,12 +725,14 @@ $(document).on('change', 'input[name="VENDGROUP"]', function () {
                 .closest('.flex-col')
                 .find('.show-file')
                 .empty();
+            $('input[name="TAX_ID"]').removeClass('req');
         } else {
             blockIe.show();
             blockQa.show();
             blockCer.hide();
             $('#file-cer').val('');
             $('#file-cer').closest('.flex-col').find('.show-file').empty();
+            $('input[name="TAX_ID"]').addClass('req');
         }
     } else {
         blockIe.hide();
@@ -654,16 +757,16 @@ $(document).ready(async function () {
     const province = await getProvinces();
     provinceData = province.map((p) => ({
         id: p.id,
-        value: formatText(p.nameen),
-        text: formatText(p.nameen),
+        value: p.nameen,
+        text: p.nameen,
         nameth: p.nameth,
     }));
     const district = await getDistricts();
 
     districtData = district.map((d) => ({
         id: d.id,
-        value: formatText(d.nameen),
-        text: formatText(d.nameen),
+        value: d.nameen,
+        text: d.nameen,
         nameth: d.nameth,
         province_id: d.province_id,
     }));
@@ -671,8 +774,8 @@ $(document).ready(async function () {
     const subDistrict = await getSubDistricts();
     subDistrictData = subDistrict.map((s) => ({
         id: s.id,
-        value: formatText(s.nameen),
-        text: formatText(s.nameen),
+        value: s.nameen,
+        text: s.nameen,
         nameth: s.nameth,
         district_id: s.district_id,
         postcode: s.postcode,
