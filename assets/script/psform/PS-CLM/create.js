@@ -38,6 +38,7 @@ let itemTable;
 let dataConfirmed = false;
 let newOrderRequest = 0;
 let fieldEdit = null;
+const manualOriginalOrderFields = new WeakMap();
 
 $(document).ready(async function () {
     $("#actionform").html(`
@@ -166,8 +167,8 @@ async function createItemTable() {
                         return '<button type="button" class="btn btn-error btn-outline btn-xs ps-clm-delete" aria-label="Delete item"><i class="icofont-trash"></i></button>';
                     },
                 },
-                { data: "ORDERNO", name: "ORDERNO", render: requiredCell("ORDERNO") },
-                { data: "ITEMNO", name: "ITEMNO", render: requiredCell("ITEMNO") },
+                { data: "ORDERNO", name: "ORDERNO", className: "ps-clm-manual-cell", render: requiredCell("ORDERNO") },
+                { data: "ITEMNO", name: "ITEMNO", className: "ps-clm-manual-cell", render: requiredCell("ITEMNO") },
                 { data: "DESCRIPTION", name: "DESCRIPTION", defaultContent: "" },
                 { data: "DRAWING", name: "DRAWING", className: "ps-clm-drawing-cell", render: requiredCell("DRAWING") },
                 { data: "PURCODE", name: "PURCODE", className: "ps-clm-variable-cell", render: requiredCell("PURCODE") },
@@ -212,8 +213,20 @@ async function createItemTable() {
                 status: true,
                 disabledColumns: [0, 4, 5, 8, 9, 10],
                 columns: {
-                    ORDERNO: requiredInline("Original Order"),
-                    ITEMNO: requiredInline("Item"),
+                    ORDERNO: {
+                        ...requiredInline("Original Order"),
+                        upperCase: true,
+                        skipIfUnchanged: true,
+                        onSuccess: ({ rowData }) => {
+                            markOriginalOrderManual(rowData, "ORDERNO");
+                            updateNewOrderNo();
+                        },
+                    },
+                    ITEMNO: {
+                        ...requiredInline("Item"),
+                        skipIfUnchanged: true,
+                        onSuccess: ({ rowData }) => markOriginalOrderManual(rowData, "ITEMNO"),
+                    },
                     ISSUECARD: requiredInline("SCL-No."),
                     QTY: {
                         ...requiredInline("Qty"),
@@ -312,8 +325,10 @@ async function finishDrawingEdit() {
 
 async function fillOriginalOrder(row, drawing) {
     try {
-        const qty = Number(row.data().QTY);
-        const variable = String(row.data().PURCODE || "").trim();
+        const detail = row.data();
+        const qty = Number(detail.QTY);
+        const variable = String(detail.PURCODE || "").trim();
+        if (isOriginalOrderManual(detail, "ORDERNO") && isOriginalOrderManual(detail, "ITEMNO")) return;
         if (!drawing || !Number.isInteger(qty) || qty <= 0) return;
         const params = new URLSearchParams({ qty });
         if (variable) params.set("variable", variable);
@@ -328,7 +343,7 @@ async function fillOriginalOrder(row, drawing) {
             };
             return [`${match.ORDERNO}|${match.ITEMNO}`, match];
         }).filter(([, match]) => match.ORDERNO && match.ITEMNO)).values()];
-        if (!matches.length) throw new Error(`Drawing and QTY${variable ? " with Variable" : ""} not found in M001`);
+        if (!matches.length) throw new Error(`Drawing and QTY${variable ? " with Variable" : ""} not found in M001. Enter Original Order and Item manually.`);
         if (matches.length > 1) return openOriginalOrderSelect(row, matches);
         await setOriginalOrder(row, matches[0]);
     } catch (error) {
@@ -364,15 +379,16 @@ async function finishOriginalOrderSelect() {
     const match = fieldEdit.matches[index];
     if (!match) return;
     const resolve = fieldEdit.resolve;
-    await setOriginalOrder(fieldEdit.row, match);
+    await setOriginalOrder(fieldEdit.row, match, true);
     resolve?.();
     closeFieldEdit();
 }
 
-async function setOriginalOrder(row, match) {
+async function setOriginalOrder(row, match, force = false) {
     const detail = row.data();
-    detail.ORDERNO = match.ORDERNO;
-    detail.ITEMNO = match.ITEMNO;
+    if (force) manualOriginalOrderFields.delete(detail);
+    if (force || !isOriginalOrderManual(detail, "ORDERNO")) detail.ORDERNO = match.ORDERNO;
+    if (force || !isOriginalOrderManual(detail, "ITEMNO")) detail.ITEMNO = match.ITEMNO;
     detail.DESCRIPTION = match.PARTNAME;
     row.data(detail).invalidate().draw(false);
     resetDataConfirm();
@@ -436,7 +452,18 @@ function requiredInline(label) {
     };
 }
 
+function markOriginalOrderManual(row, key) {
+    const fields = manualOriginalOrderFields.get(row) || new Set();
+    fields.add(key);
+    manualOriginalOrderFields.set(row, fields);
+}
+
+function isOriginalOrderManual(row, key) {
+    return manualOriginalOrderFields.get(row)?.has(key) === true;
+}
+
 const excelHeaders = {
+    ORDERNO: ["original order", "original order no", "original order number"],
     DESCRIPTION: ["part name", "partname"],
     DRAWING: ["drawing no", "drawing number", "drawing"],
     QTY: ["quantity", "qty"],
@@ -448,6 +475,7 @@ const excelHeaders = {
 
 const excelTargets = {
     "": "Ignore",
+    ORDERNO: "Original Order",
     DESCRIPTION: "Part Name",
     DRAWING: "Drawing",
     QTY: "Qty",
@@ -602,7 +630,11 @@ async function finishExcelImport() {
     const imported = data.rows.map((values) => {
         const row = createEmptyRow();
         mapping.forEach((target, index) => {
-            if (target) row[target] = String(values[index] ?? "").trim();
+            if (!target) return;
+            row[target] = String(values[index] ?? "").trim();
+            if (["ORDERNO", "ITEMNO"].includes(target) && row[target]) {
+                markOriginalOrderManual(row, target);
+            }
         });
         row.DRAWING = validateDrawingNo(row.DRAWING) || String(row.DRAWING || "").toUpperCase();
         row.PURCODE = buildVariable(splitVariable(row.PURCODE));
@@ -826,7 +858,9 @@ async function applyConfirmInputs() {
 
         const row = itemTable.row(Number($(this).data("row")));
         const data = row.data();
+        const changed = value !== String(data[key] ?? "").trim();
         data[key] = key === "QTY" && validateItemValue(key, value) ? Number(value) : value;
+        if (changed && ["ORDERNO", "ITEMNO"].includes(key)) markOriginalOrderManual(data, key);
         row.data(data);
     });
 
