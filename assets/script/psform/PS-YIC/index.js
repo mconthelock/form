@@ -103,7 +103,9 @@ $(document).ready(async function () {
     console.log(data);
     if (data.VARIANCE_BULK_ITEM != null) {
         $('.variance-bulk-items').text(formatNumber(data.VARIANCE_BULK_ITEM));
-        $('.variance-bulk-amount').text(formatNumber(data.VARIANCE_BULK_AMOUNT, 2));
+        $('.variance-bulk-amount').text(
+            formatNumber(data.VARIANCE_BULK_AMOUNT, 2),
+        );
     } else {
         $('.variance-bulk-items').html(
             `<input class="variance-bulk-items-input w-20 text-center border border-gray-300 rounded px-1 py-0.5" type="number" value="0">`,
@@ -115,7 +117,9 @@ $(document).ready(async function () {
 
     if (data.VARIANCE_STOCK_ITEM != null) {
         $('.variance-stock-items').text(formatNumber(data.VARIANCE_STOCK_ITEM));
-        $('.variance-stock-amount').text(formatNumber(data.VARIANCE_STOCK_AMOUNT, 2));
+        $('.variance-stock-amount').text(
+            formatNumber(data.VARIANCE_STOCK_AMOUNT, 2),
+        );
     } else {
         $('.variance-stock-items').html(
             `<input class="variance-stock-items-input w-20 text-center border border-gray-300 rounded px-1 py-0.5" type="number" value="0">`,
@@ -125,7 +129,12 @@ $(document).ready(async function () {
         );
     }
 
-    const periodText = data.ASSIGN.PERIOD === '1' ? '1st' : data.ASSIGN.PERIOD === '2' ? '2nd' : '';
+    const periodText =
+        data.ASSIGN.PERIOD === '1'
+            ? '1st'
+            : data.ASSIGN.PERIOD === '2'
+              ? '2nd'
+              : '';
 
     $('.cutoff-date').text(
         `${dayjs(data.CUTOFF_DATE).format('DD MMMM YYYY')} (Time. ${dayjs(data.CUTOFF_DATE).format('HH:mm A')})`,
@@ -141,7 +150,8 @@ $(document).ready(async function () {
 
                 const price = parseFloat(item.PRICE) || 0;
                 const onHand = Number(item.ON_HAND) || 0;
-                const actual = item.ACTUAL_QTY != null ? Number(item.ACTUAL_QTY) : null;
+                const actual =
+                    item.ACTUAL_QTY != null ? Number(item.ACTUAL_QTY) : null;
 
                 acc.totalItems += 1;
                 acc.totalAmount += price * onHand;
@@ -184,7 +194,9 @@ $(document).ready(async function () {
     $('.fin-bulk-items').text(formatNumber(finBulkItems));
     $('.fin-bulk-amount').text(formatNumber(finBulkAmount, 2));
     $('.diff-bulk-items').text(formatNumber(bulkStats.diffItems));
-    $('.diff-bulk-amount').text(formatNumber(Math.abs(bulkStats.diffAmount), 2));
+    $('.diff-bulk-amount').text(
+        formatNumber(Math.abs(bulkStats.diffAmount), 2),
+    );
 
     $('.total-stock-items').text(formatNumber(stockStats.totalItems));
     $('.total-stock-amount').text(formatNumber(stockStats.totalAmount, 2));
@@ -193,7 +205,9 @@ $(document).ready(async function () {
     $('.fin-stock-items').text(formatNumber(finStockItems));
     $('.fin-stock-amount').text(formatNumber(finStockAmount, 2));
     $('.diff-stock-items').text(formatNumber(stockStats.diffItems));
-    $('.diff-stock-amount').text(formatNumber(Math.abs(stockStats.diffAmount), 2));
+    $('.diff-stock-amount').text(
+        formatNumber(Math.abs(stockStats.diffAmount), 2),
+    );
 
     const totalSummaryItems = bulkStats.totalItems + stockStats.totalItems;
     const totalSummaryAmount = bulkStats.whiAmount + stockStats.whiAmount;
@@ -219,15 +233,19 @@ $(document).ready(async function () {
             const bulkItemsInput = $('.variance-bulk-items-input');
             const bulkAmountInput = $('.variance-bulk-amount-input');
             if (bulkItemsInput.length) {
-                varianceData.VARIANCE_BULK_ITEM = Number(bulkItemsInput.val()) || 0;
-                varianceData.VARIANCE_BULK_AMOUNT = Number(bulkAmountInput.val()) || 0;
+                varianceData.VARIANCE_BULK_ITEM =
+                    Number(bulkItemsInput.val()) || 0;
+                varianceData.VARIANCE_BULK_AMOUNT =
+                    Number(bulkAmountInput.val()) || 0;
             }
 
             const stockItemsInput = $('.variance-stock-items-input');
             const stockAmountInput = $('.variance-stock-amount-input');
             if (stockItemsInput.length) {
-                varianceData.VARIANCE_STOCK_ITEM = Number(stockItemsInput.val()) || 0;
-                varianceData.VARIANCE_STOCK_AMOUNT = Number(stockAmountInput.val()) || 0;
+                varianceData.VARIANCE_STOCK_ITEM =
+                    Number(stockItemsInput.val()) || 0;
+                varianceData.VARIANCE_STOCK_AMOUNT =
+                    Number(stockAmountInput.val()) || 0;
             }
             console.log(varianceData);
             // return;
@@ -266,7 +284,6 @@ $(document).ready(async function () {
                 });
             }
 
-            return;
             $('.attach-file').each(async function (index, element) {
                 const fileInput = $(element)[0];
                 const file = fileInput.files[0];
