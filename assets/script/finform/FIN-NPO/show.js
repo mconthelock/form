@@ -5,7 +5,6 @@ import {
     getMode,
     showflow,
 } from '@amec/webasset/api/webform';
-import { createTable } from '@amec/webasset/dataTable';
 import { webflowSubmit } from '@amec/webasset/components/form';
 import { redirectWebflow } from '@amec/webasset/form';
 import { showMessage } from '@amec/webasset/utils';
@@ -48,7 +47,7 @@ $(async function () {
 
         const data = normalizeShowData(showData);
         renderHeader(data.head, data.expense, data.vendor);
-        renderTravelers(data.travelers);
+        await renderTravelers(form, data.head, data.expense);
         renderAttachments(data.files);
         await renderInvoiceTable(data.invoices);
         await renderWorkflowAction(form);
@@ -143,6 +142,13 @@ async function getEmployee(empno) {
     });
 }
 
+async function getCostCenters() {
+    return await fetchUtils({
+        url: `${process.env.APP_API}/finform/fin-npo/costcenter`,
+        method: 'GET',
+    });
+}
+
 async function actionFinNpo(payload) {
     return await fetchUtils({
         url: `${process.env.APP_API}/finform/fin-npo/action`,
@@ -194,9 +200,6 @@ function normalizeShowData(response) {
             data.invoices || data.invoice || data.detail || data.DETAIL,
         ),
         files: toArray(data.files || data.FILES),
-        travelers: toArray(
-            data.travelers || data.airSalesBy || data.AIR_SALES_BY,
-        ),
         expense: data.expense || data.EXPENSE || {},
         vendor: data.vendor || data.VENDOR || {},
     };
@@ -204,6 +207,7 @@ function normalizeShowData(response) {
 
 function renderHeader(head = {}, expense = {}, vendor = {}) {
     $('#SUBJECT').val(head.SUBJECT || '');
+    $('#REMARK').val(head.REMARK || '');
     $('#EXPENSE_CODE').val(head.EXPENSE_CODE || expense.EXPENSE_CODE || '');
     $('#EXPENSE_NAME').val(
         [expense.EXPENSE_TNAME, expense.EXPENSE_ENAME]
@@ -221,65 +225,156 @@ function renderHeader(head = {}, expense = {}, vendor = {}) {
     );
 }
 
-function renderTravelers(travelers = []) {
+async function renderTravelers(form = {}, head = {}, expense = {}) {
     const section = $('#airSalesEmployeeSection');
+    const expenseName = String(
+        expense.EXPENSE_ENAME || head.EXPENSE_ENAME || head.EXPENSE_NAME || '',
+    ).trim();
 
-    if (!travelers.length) {
+    if (expenseName.toUpperCase() !== 'TRAVELLING ABOARD') {
         section.addClass('hidden');
         return;
     }
 
     section.removeClass('hidden');
+    let costCenters = [];
+
+    try {
+        const response = await getCostCenters();
+
+        if (response?.status === false) {
+            throw new Error(response.message || 'Cannot load cost center data');
+        }
+
+        costCenters = normalizeCostCenters(response).filter(
+            (item) =>
+                normalizeYear(item?.CYEAR2) === normalizeYear(form.CYEAR2) &&
+                normalizeRunNo(item?.NRUNNO) === normalizeRunNo(form.NRUNNO),
+        );
+    } catch (error) {
+        console.error('Cannot load cost center data:', error);
+        $('#airSalesEmployeeList').html('Cannot load employee information');
+        return;
+    }
+
+    const employees = await Promise.all(
+        costCenters.map(async (item) => {
+            const code = getEmployeeCode(item);
+            let name = getEmployeeName(item);
+
+            if (code && !name) {
+                try {
+                    name = getEmployeeName(await getEmployee(code));
+                } catch (error) {
+                    console.error(`Cannot load employee ${code}:`, error);
+                }
+            }
+
+            return { code, name };
+        }),
+    );
+    const validEmployees = employees.filter(({ code, name }) => code || name);
+
+    if (!validEmployees.length) {
+        $('#airSalesEmployeeList').html('No employee information');
+        return;
+    }
+
     $('#airSalesEmployeeList').html(
-        `<ul class="space-y-2">${travelers
-            .map((item) => {
-                const code =
-                    typeof item === 'string'
-                        ? item
-                        : item.EMPNO ||
-                          item.EMP_CODE ||
-                          item.AIR_SALES_BY ||
-                          '';
-                const name =
-                    typeof item === 'object'
-                        ? item.EMPNAME || item.NAME || ''
-                        : '';
-                return `<li class="rounded border border-violet-100 px-3 py-2">${escapeHtml(formatPerson(name, code))}</li>`;
+        `<div class="grid grid-cols-[minmax(8rem,0.35fr)_1fr] gap-3 border-b border-violet-100 px-3 pb-2 font-bold">
+            <span>Employee Code</span>
+            <span>Employee Name</span>
+        </div>
+        <ul class="mt-2 space-y-2">${validEmployees
+            .map(({ code, name }) => {
+                return `<li class="grid grid-cols-[minmax(8rem,0.35fr)_1fr] gap-3 rounded border border-violet-100 px-3 py-2">
+                    <span class="font-semibold">${escapeHtml(code || '-')}</span>
+                    <span>${escapeHtml(name || '-')}</span>
+                </li>`;
             })
             .join('')}</ul>`,
     );
 }
 
+function normalizeCostCenters(response) {
+    const data = response?.data ?? response;
+
+    if (Array.isArray(data)) return data;
+
+    return toArray(
+        data?.costCenters ||
+            data?.costcenters ||
+            data?.costcenter ||
+            data?.COST_CENTERS ||
+            data?.COSTCENTER ||
+            data?.COST_CENTER,
+    );
+}
+
+function normalizeYear(value) {
+    const year = String(value ?? '').trim();
+
+    return year ? year.slice(-2).padStart(2, '0') : '';
+}
+
+function normalizeRunNo(value) {
+    const runNo = Number(value);
+
+    return Number.isFinite(runNo) ? runNo : null;
+}
+
+function getEmployeeCode(item) {
+    if (typeof item === 'string' || typeof item === 'number') {
+        return String(item).trim();
+    }
+
+    return String(
+        item?.SEMPNO ||
+            item?.REQNO ||
+            item?.EMPNO ||
+            item?.EMP_CODE ||
+            item?.EMPLOYEE_CODE ||
+            item?.AIR_SALES_BY ||
+            '',
+    ).trim();
+}
+
+function getEmployeeName(item) {
+    if (!item || typeof item !== 'object') return '';
+
+    return String(
+        item.SNAME ||
+            item.STNAME ||
+            item.EMPNAME ||
+            item.EMP_NAME ||
+            item.EMPLOYEE_NAME ||
+            item.FULLNAME ||
+            item.NAME ||
+            '',
+    ).trim();
+}
+
 async function renderInvoiceTable(invoices = []) {
+    const rows = invoices.length
+        ? invoices
+              .map(
+                  (invoice, index) => `<tr>
+                    <td>${escapeHtml(invoice.ID || index + 1)}</td>
+                    <td>${escapeHtml(formatDate(invoice.INVOICE_DATE))}</td>
+                    <td>${escapeHtml(invoice.INVOICE_NO || '')}</td>
+                    <td>${escapeHtml(formatNumber(invoice.NET_PRICE))}</td>
+                    <td>${escapeHtml(formatVat(invoice.VAT_RATE_ID))}</td>
+                    <td>${escapeHtml(formatNumber(invoice.TOTAL_AMT))}</td>
+                    <td>${escapeHtml(invoice.SCURCODE || '')}</td>
+                </tr>`,
+              )
+              .join('')
+        : '<tr><td colspan="7" class="text-center">No invoice information</td></tr>';
+
     $('#stampTable').html(`<thead><tr>
         <th>No.</th><th>Invoice Date</th><th>Invoice No.</th>
         <th>Net Price</th><th>VAT Rate</th><th>Total Amount</th><th>Currency</th>
-    </tr></thead>`);
-
-    return await createTable(
-        {
-            data: invoices,
-            columns: [
-                { data: 'ID', defaultContent: '' },
-                {
-                    data: 'INVOICE_DATE',
-                    defaultContent: '',
-                    render: formatDate,
-                },
-                { data: 'INVOICE_NO', defaultContent: '' },
-                { data: 'NET_PRICE', defaultContent: 0, render: formatNumber },
-                { data: 'VAT_RATE_ID', defaultContent: 0, render: formatVat },
-                { data: 'TOTAL_AMT', defaultContent: 0, render: formatNumber },
-                { data: 'SCURCODE', defaultContent: '' },
-            ],
-            ordering: false,
-            searching: false,
-            paging: false,
-            info: false,
-            destroy: true,
-        },
-        { id: 'stampTable', inlineEdit: { status: false } },
-    );
+    </tr></thead><tbody>${rows}</tbody>`);
 }
 
 function renderAttachments(files = []) {

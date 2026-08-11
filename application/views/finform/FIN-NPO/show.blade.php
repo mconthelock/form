@@ -107,13 +107,14 @@
                             </div>
 
                             <div class="space-y-4 rounded-xl border border-sky-200 border-l-4 border-l-sky-500 bg-sky-50/60 p-5 shadow-sm">
-                                <div class="form-control">
+
+                                {{-- <div class="form-control">
                                     <label class="label pb-1" for="FORMNO">
                                         <span class="label-text text-sm font-bold">Form No.</span>
                                     </label>
                                     <input id="FORMNO" name="FORMNO" type="text" readonly
                                         class="show-readonly input input-sm input-bordered w-full" />
-                                </div>
+                                </div> --}}
 
                                 <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
                                     <div class="form-control">
@@ -183,7 +184,11 @@
                                     </label>
                                     <div id="airSalesEmployeeList"
                                         class="rounded-lg border border-violet-200 bg-white p-4 text-sm text-slate-700">
-                                        No employee information
+                                        <div class="grid grid-cols-[minmax(8rem,0.35fr)_1fr] gap-3 border-b border-violet-100 px-3 pb-2 font-bold">
+                                            <span>Employee Code</span>
+                                            <span>Employee Name</span>
+                                        </div>
+                                        <div class="px-3 pt-3">No employee information</div>
                                     </div>
                                 </div>
                             </div>
@@ -197,6 +202,18 @@
                             </div>
                             <div class="overflow-x-auto rounded-xl">
                                 <table id="stampTable" class="table table-xs w-full"></table>
+                            </div>
+                        </section>
+
+                        {{-- Remark --}}
+                        <section>
+                            <div class="mb-4 flex items-center gap-3">
+                                <span class="h-6 w-1.5 rounded-full bg-amber-500"></span>
+                                <h2 class="text-base font-bold uppercase tracking-widest text-amber-700">Remark</h2>
+                            </div>
+                            <div class="rounded-xl border border-amber-200 border-l-4 border-l-amber-500 bg-amber-50/60 p-5 shadow-sm">
+                                <textarea id="REMARK" name="REMARK" rows="4" readonly
+                                    class="show-readonly textarea textarea-bordered w-full resize-none"></textarea>
                             </div>
                         </section>
 

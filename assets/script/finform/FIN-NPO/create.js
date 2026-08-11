@@ -55,7 +55,7 @@ $(document).on('keydown', '#REQBY', function (event) {
     }
 });
 
-$(document).on('change', '#purposeList input[name="EXPENSE_ID"]', function () {
+$(document).on('change', '#EXPENSE_ID', function () {
     toggleAirFreightSalesEmployee();
 });
 
@@ -132,17 +132,23 @@ function escapeHtml(value) {
 }
 
 async function renderPurpose() {
+    const purposeSelect = $('#EXPENSE_ID');
+
+    purposeSelect
+        .prop('disabled', true)
+        .html('<option value="">Loading expense type...</option>');
+
     try {
         const purpose = normalizeList(await getPurpose());
 
         if (!purpose.length) {
-            $('#purposeList').html(
-                '<div class="text-sm font-semibold text-error">Expense type data not found.</div>',
+            purposeSelect.html(
+                '<option value="">Expense type data not found.</option>',
             );
             return;
         }
 
-        const purposeHtml = purpose
+        const purposeOptions = purpose
             .map((item, index) => {
                 const id = getFirstValue(
                     item,
@@ -193,27 +199,24 @@ async function renderPurpose() {
                     fallbackText ||
                     id;
 
-                return `<label class="flex items-center gap-2 cursor-pointer">
-                    <input type="radio"
-                        name="EXPENSE_ID"
-                        class="radio radio-xs rounded border-base-content [--chkbg:var(--bc)] [--chkfg:var(--b1)] req"
-                        value="${escapeHtml(id)}"
-                        id="expense_${escapeHtml(id)}"
+                return `<option value="${escapeHtml(id)}"
                         data-expense-tname="${escapeHtml(textTh)}"
                         data-expense-ename="${escapeHtml(textEn)}"
-                        data-expense-label="${escapeHtml(label)}">
-                    <span>${escapeHtml(label)}</span>
-                </label>`;
+                        data-expense-label="${escapeHtml(label)}">${escapeHtml(label)}</option>`;
             })
             .join('');
 
-        $('#purposeList').html(purposeHtml);
+        purposeSelect.html(
+            `<option value="">Select expense type...</option>${purposeOptions}`,
+        );
         toggleAirFreightSalesEmployee();
     } catch (error) {
         console.error('Failed to load expense type:', error);
-        $('#purposeList').html(
-            '<div class="text-sm font-semibold text-error">Cannot load expense type.</div>',
+        purposeSelect.html(
+            '<option value="">Cannot load expense type.</option>',
         );
+    } finally {
+        purposeSelect.prop('disabled', false);
     }
 }
 
@@ -287,6 +290,7 @@ async function setInitialEmployee(empno) {
         setEmpName('.inputby-feedback', empName);
         $('#REQBY_NAME').val(empName);
         setEmpName('.reqby-feedback', empName);
+        setRequesterSection(getsec);
     } catch (error) {
         console.error('Failed to load initial employee:', error);
     }
@@ -297,6 +301,7 @@ async function setRequesterEmployee(empno) {
 
     reqbyName.val('');
     setEmpName('.reqby-feedback', '');
+    setRequesterSection();
 
     if (!empno) return;
 
@@ -310,12 +315,24 @@ async function setRequesterEmployee(empno) {
 
         reqbyName.val(empName);
         setEmpName('.reqby-feedback', empName);
+        setRequesterSection(empData);
     } catch (error) {
         console.error('Failed to load requester employee:', error);
         reqbyName.val('');
         setEmpName('.reqby-feedback', '');
+        setRequesterSection();
         showMessage(error.message || 'Employee data not found', 'error');
     }
+}
+
+function setRequesterSection(empData = {}) {
+    const section = [empData?.SDIV, empData?.SDEPT, empData?.SSEC]
+        .filter(
+            (value) => value !== undefined && value !== null && value !== '',
+        )
+        .join('/');
+
+    $('#FULLDP').val(section);
 }
 
 function isTravelingAbroadPurpose(input) {
@@ -345,10 +362,10 @@ function resetAirFreightSalesEmployeeRows() {
 }
 
 function toggleAirFreightSalesEmployee() {
-    const selectedPurpose = $('#purposeList input[name="EXPENSE_ID"]:checked');
-    const shouldShow = selectedPurpose
-        .toArray()
-        .some((input) => isTravelingAbroadPurpose(input));
+    const selectedPurpose = $('#EXPENSE_ID option:selected');
+    const shouldShow =
+        Boolean(selectedPurpose.val()) &&
+        isTravelingAbroadPurpose(selectedPurpose[0]);
     const section = $('#airFreightSalesEmployeeSection');
 
     section.toggleClass('hidden', !shouldShow);
@@ -431,10 +448,16 @@ var invoiceLineId = 0;
 
 function numberValue(value) {
     if (typeof value === 'string') {
-        return Number(value.replace(/[\$,]/g, '')) || 0;
+        return Number(value.replace(/[\$,%]/g, '')) || 0;
     }
 
     return Number(value) || 0;
+}
+
+function formatVatPercent(value) {
+    if (value === '' || value === null || value === undefined) return '';
+
+    return `${Math.round(numberValue(value))}%`;
 }
 
 function currencyOptions(selectedValue = '') {
@@ -455,7 +478,7 @@ function currencyOptions(selectedValue = '') {
         .filter(Boolean)
         .join('');
 
-    return `<option value=""> Select </option>${options}`;
+    return `<option value=""></option>${options}`;
 }
 
 function emptyInvoiceRow() {
@@ -474,19 +497,19 @@ function emptyInvoiceRow() {
 function invoiceRowHtml(row = {}) {
     return `<tr data-lineid="${escapeHtml(row.LINEID || ++invoiceLineId)}">
         <td><input type="text" name="INVOICE_DATE[]" value="${escapeHtml(row.INVOICE_DATE)}"
-            class="invoice-date input input-sm input-bordered w-full bg-white"></td>
+            class="invoice-date input input-sm input-bordered w-full bg-white" required></td>
         <td><input type="text" name="INVOICE_NO[]" value="${escapeHtml(row.INVOICE_NO)}"
-            class="invoice-no input input-sm input-bordered w-full bg-white"></td>
+            class="invoice-no input input-sm input-bordered w-full bg-white" required></td>
         <td><input type="number" step="0.01" min="0" name="TOTAL_AMOUNT[]" value="${escapeHtml(row.TOTAL_AMOUNT)}"
-            class="total-amount input input-sm input-bordered w-full bg-white text-right"></td>
+            class="total-amount input input-sm input-bordered w-full bg-white text-right" required></td>
         <td><input type="number" step="0.01" min="0" name="VAT[]" value="${escapeHtml(row.VAT)}"
             class="vat input input-sm input-bordered w-full bg-white text-right"></td>
         <td><input type="number" step="0.01" name="NET_PRICE[]" value="${escapeHtml(row.NET_PRICE)}"
             class="net-price input input-sm input-bordered w-full bg-base-200/80 text-right" readonly></td>
-        <td><select name="CURRENCY[]" class="currency select select-sm select-bordered w-full bg-white">
+        <td><select name="CURRENCY[]" class="currency select select-sm select-bordered w-full bg-white" required>
             ${currencyOptions(row.CURRENCY)}
         </select></td>
-        <td><input type="number" step="0.01" name="VAT_PERCENT[]" value="${escapeHtml(row.VAT_PERCENT)}"
+        <td><input type="text" name="VAT_PERCENT[]" value="${escapeHtml(formatVatPercent(row.VAT_PERCENT))}"
             class="vat-percent input input-sm input-bordered w-full bg-base-200/80 text-right" readonly></td>
     </tr>`;
 }
@@ -511,7 +534,7 @@ function calculateInvoiceRow(row) {
         .val(totalAmount || vat ? netPrice.toFixed(2) : '');
     rowElement
         .find('.vat-percent')
-        .val(vatPercent === null ? '' : vatPercent.toFixed(2));
+        .val(vatPercent === null ? '' : formatVatPercent(vatPercent));
 }
 
 function createTableStamp(data = []) {
@@ -524,9 +547,9 @@ function createTableStamp(data = []) {
             <th>Invoice No.</th>
             <th>Total Amount </th>
             <th>VAT</th>
-            <th>Net Price</th>
-            <th>Currency</th>
-            <th> % VAT </th>
+            <th class="invoice-header-blue">Net Price</th>
+            <th class="invoice-header-orange">Currency</th>
+            <th class="invoice-header-blue"> % VAT </th>
         </tr>
     </thead>
     <tbody>${tableData.map(invoiceRowHtml).join('')}</tbody>`);
@@ -573,9 +596,13 @@ $(document).on('click', '#btnRequest', async function (e) {
                 element: $('#REQBY'),
                 message: 'Please enter requester employee code.',
             },
-            { element: $('#SUBJECT'), message: 'Please enter subject.' },
             {
-                element: $('#purposeList input[name="EXPENSE_ID"]'),
+                element: $('#FULLDP'),
+                message:
+                    'Requester section was not found. Please check the employee code.',
+            },
+            {
+                element: $('#EXPENSE_ID'),
                 message: 'Please select expense type.',
             },
             { element: $('#VENDOR_CODE'), message: 'Please select vendor.' },
@@ -583,11 +610,9 @@ $(document).on('click', '#btnRequest', async function (e) {
 
         if (!(await requiredForm('#form', requiredMessage))) return;
 
-        const selectedExpense = $(
-            '#purposeList input[name="EXPENSE_ID"]:checked',
-        );
+        const selectedExpense = $('#EXPENSE_ID');
 
-        if (!selectedExpense.length) {
+        if (!selectedExpense.val()) {
             showMessage('Please select expense type.', 'warning');
             return;
         }
@@ -626,15 +651,23 @@ $(document).on('click', '#btnRequest', async function (e) {
             return;
         }
 
+        const attachmentInput = document.getElementById('attachfile');
+
+        if (!attachmentInput?.files?.length) {
+            showMessage('Please attach at least one file.', 'warning');
+            attachmentInput?.focus();
+            return;
+        }
+
         const airSalesBy = $('.air-sales-by')
             .map((_, input) => $(input).val().trim())
             .get()
             .filter(Boolean);
+        const isTravelingAbroad = isTravelingAbroadPurpose(
+            selectedExpense.find('option:selected')[0],
+        );
 
-        if (
-            isTravelingAbroadPurpose(selectedExpense[0]) &&
-            airSalesBy.length === 0
-        ) {
+        if (isTravelingAbroad && airSalesBy.length === 0) {
             showMessage(
                 'Please enter at least one employee who is traveling abroad.',
                 'warning',
@@ -642,13 +675,22 @@ $(document).on('click', '#btnRequest', async function (e) {
             return;
         }
 
+        const requesterCode = String($('#REQBY').val() || '').trim();
+        const costCenterEmployees = isTravelingAbroad
+            ? airSalesBy
+            : [requesterCode];
+
         const payload = {
             INPUTBY: String($('#INPUTBY').val() || '').trim(),
-            REQBY: String($('#REQBY').val() || '').trim(),
-            SUBJECT: String($('#SUBJECT').val() || '').trim(),
+            REQBY: requesterCode,
+            // FIN-NPO API currently stores this value in the SUBJECT field.
+            SUBJECT: String($('#FULLDP').val() || '').trim(),
             EXPENSE_CODE: Number(selectedExpense.val()),
             VENDOR_CODE: $('#VENDOR_CODE').val() || '',
-            AIR_SALES_BY: airSalesBy,
+            REMARK: String($('#REMARK').val() || '').trim(),
+            // The API uses AIR_SALES_BY to create rows in the cost center table.
+            // Non-travel expenses use the requester as their cost center owner.
+            AIR_SALES_BY: costCenterEmployees,
             DATA: invoiceList.map((invoice) => ({
                 LINE_ID: invoice.LINE_ID,
                 INVOICE_DATE: invoice.INVOICE_DATE,

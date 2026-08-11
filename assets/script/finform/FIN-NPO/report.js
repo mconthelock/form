@@ -7,34 +7,41 @@ import { showMessage } from '@amec/webasset/utils';
 let reportTable = null;
 
 const columns = [
-    { data: 'FORM_NO', title: 'Form No.', className: 'text-nowrap' },
-    { data: 'FORM_DATE', title: 'Form Date', className: 'text-nowrap' },
-    { data: 'REQUEST_BY', title: 'Request By', className: 'text-nowrap' },
-    { data: 'SUBJECT', title: 'Subject' },
-    { data: 'EXPENSE_TYPE', title: 'Expense Type', className: 'text-nowrap' },
-    { data: 'VENDOR', title: 'Vendor', className: 'text-nowrap' },
-    { data: 'COST_CENTER', title: 'Cost Center', className: 'text-nowrap' },
+    {
+        data: 'VENDOR_CODE',
+        title: 'Invoice-from Business Partner',
+        className: 'text-nowrap',
+    },
+    {
+        data: 'INVOICE_NO',
+        title: 'Supplier Invoice Number',
+        className: 'text-nowrap',
+    },
     { data: 'INVOICE_DATE', title: 'Invoice Date', className: 'text-nowrap' },
-    { data: 'INVOICE_NO', title: 'Invoice No.', className: 'text-nowrap' },
     {
         data: 'NET_PRICE',
-        title: 'Net Price',
+        title: 'Amount in Invoice Currency',
         className: 'text-right',
         render: renderAmount,
     },
     {
-        data: 'TOTAL_AMOUNT',
-        title: 'Total Amount',
-        className: 'text-right',
-        render: renderAmount,
+        data: 'VAT_RATE',
+        title: 'Tax Code',
+        className: 'text-center text-nowrap',
+        render: renderVatRate,
     },
-    { data: 'CURRENCY', title: 'Currency', className: 'text-nowrap' },
     {
-        data: 'STATUS',
-        title: 'Status',
-        className: 'text-nowrap text-center',
-        render: renderStatus,
+        data: 'EXPENSE_CODE',
+        title: 'Account (Dr)',
+        className: 'text-nowrap',
     },
+    {
+        data: 'COST_CENTER',
+        title: 'Dimension 1',
+        className: 'text-nowrap',
+        render: renderCostCenters,
+    },
+    { data: 'REMARK', title: 'Remark' },
 ];
 
 $(async function () {
@@ -62,7 +69,7 @@ async function test() {
             method: 'POST',
             data: getCriteria(),
         });
-        await renderTable(normalizeList(response).map(normalizeRow));
+        await renderTable(normalizeReportRows(response));
     } catch (error) {
         console.error('Cannot load FIN-NPO report', error);
         await renderTable([]);
@@ -85,7 +92,7 @@ $(document).on('submit', '#reportSearchForm', async function (event) {
             method: 'POST',
             data: getCriteria(),
         });
-        await renderTable(normalizeList(response).map(normalizeRow));
+        await renderTable(normalizeReportRows(response));
     } catch (error) {
         console.error('Cannot load FIN-NPO report', error);
         await renderTable([]);
@@ -113,7 +120,8 @@ $(document).on('click', '#btnExport', async function () {
 
     const exportRows = rows.map((row) => ({
         ...row,
-        STATUS: getStatusLabel(row.STATUS),
+        VAT_RATE: formatVatRate(row.VAT_RATE),
+        COST_CENTER: splitCostCenters(row.COST_CENTER).join('\n'),
     }));
 
     const workbook = await defaultExcel({
@@ -134,7 +142,7 @@ async function renderTable(data) {
     if (reportTable?.destroy) reportTable.destroy();
     $('#reportTable').empty();
     reportTable = await createTable(
-        { data, columns, responsive: false, order: [[1, 'desc']] },
+        { data, columns, responsive: false, order: [[2, 'desc']] },
         { id: '#reportTable', domScroll: { status: true } },
     );
 }
@@ -226,6 +234,28 @@ function normalizeList(response) {
     return [];
 }
 
+function normalizeReportRows(response) {
+    return normalizeList(response)
+        .filter(
+            (row) =>
+                Number(first(row, ['STATUS', 'FORM_STATUS', 'CSTATUS'])) === 2,
+        )
+        .flatMap((row) => {
+            const normalizedRow = normalizeRow(row);
+            const costCenters = String(normalizedRow.COST_CENTER || '')
+                .split(',')
+                .map((costCenter) => costCenter.trim())
+                .filter(Boolean);
+
+            if (!costCenters.length) return [normalizedRow];
+
+            return costCenters.map((costCenter) => ({
+                ...normalizedRow,
+                COST_CENTER: costCenter,
+            }));
+        });
+}
+
 function normalizeRow(row) {
     const year = String(first(row, ['CYEAR2', 'list_CYEAR2']));
     const runNo = first(row, ['NRUNNO', 'list_NRUNNO']);
@@ -248,19 +278,35 @@ function normalizeRow(row) {
             'EXPENSE_ENAME',
             'EXPENSE_TNAME',
         ]),
+        EXPENSE_CODE: first(row, ['EXPENSE_CODE', 'EXPENSE_ID']),
+        VENDOR_CODE: first(row, ['VENDOR_CODE', 'VENDOR_ID']),
         VENDOR: first(row, ['VENDOR', 'VENDOR_NAME', 'VENDOR_CODE']),
         COST_CENTER: first(row, [
             'COST_CENTER',
             'COSTCENTER',
             'COST_CENTER_CODE',
         ]),
+        REMARK: first(row, ['REMARK', 'VREMARK']),
         INVOICE_DATE: formatDate(first(row, ['INVOICE_DATE', 'DINVOICE_DATE'])),
         INVOICE_NO: first(row, ['INVOICE_NO', 'VINVOICE_NO']),
         NET_PRICE: first(row, ['NET_PRICE', 'NET_AMT']),
         TOTAL_AMOUNT: first(row, ['TOTAL_AMOUNT', 'TOTAL_AMT']),
+        VAT_RATE: getVatRate(row),
         CURRENCY: first(row, ['CURRENCY', 'SCURCODE']),
         STATUS: first(row, ['STATUS', 'FORM_STATUS', 'CSTATUS']),
     };
+}
+
+function getVatRate(row) {
+    const vatRate = first(row, ['VAT_RATE', 'VAT_RATE_ID', 'VAT_PERCENT']);
+    if (vatRate !== '') return Number(vatRate) || 0;
+
+    const netPrice = Number(first(row, ['NET_PRICE', 'NET_AMT']));
+    const totalAmount = Number(first(row, ['TOTAL_AMOUNT', 'TOTAL_AMT']));
+
+    if (!netPrice || !Number.isFinite(totalAmount)) return 0;
+
+    return Math.round(((totalAmount - netPrice) / netPrice) * 100);
 }
 
 function first(object, keys) {
@@ -290,6 +336,40 @@ function renderAmount(value, type) {
               minimumFractionDigits: 2,
               maximumFractionDigits: 2,
           });
+}
+
+function formatVatRate(value) {
+    if (value === '' || value === null || value === undefined) return '';
+
+    return `${Number(value) || 0}%`;
+}
+
+function renderVatRate(value, type) {
+    return type === 'display' ? formatVatRate(value) : Number(value) || 0;
+}
+
+function splitCostCenters(value) {
+    return String(value ?? '')
+        .split(',')
+        .map((costCenter) => costCenter.trim())
+        .filter(Boolean);
+}
+
+function renderCostCenters(value, type) {
+    const costCenters = splitCostCenters(value);
+
+    if (type !== 'display') return costCenters.join(', ');
+
+    return costCenters.map(escapeHtml).join('<br>');
+}
+
+function escapeHtml(value) {
+    return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
 }
 
 function renderStatus(value, type) {

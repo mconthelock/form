@@ -14,6 +14,19 @@
     #reportTable .fin-npo-status-approved {
         color: #111827;
     }
+
+    #reportTable thead th {
+        background: #fde9a9;
+        color: #9a4b00;
+        font-weight: 800;
+        text-align: center;
+        white-space: nowrap;
+    }
+
+    #reportTable th,
+    #reportTable td {
+        border: 1px solid #cbd5e1;
+    }
 </style>
 @endsection
 
@@ -77,7 +90,8 @@
                 </form>
 
                 <div class="overflow-x-auto">
-                    <table id="reportTable" class="table table-zebra w-full min-w-[1500px] text-sm"></table>
+                    {{-- min-w-[1500px] --}}
+                    <table id="reportTable" class="table table-zebra w-full min-w-[1350px] text-sm"></table>
                 </div>
             </div>
         </div>

@@ -25,6 +25,11 @@
             padding: 6px 10px;
         }
 
+        #stampTable th:nth-child(4),
+        #stampTable td:nth-child(4) {
+            min-width: 130px;
+        }
+
         .fin-ds-accessible {
             background: #ffffff !important;
             color: #172033;
@@ -101,6 +106,16 @@
 
         .fin-ds-accessible #stampTable thead tr {
             background: #239400 !important;
+            color: #ffffff !important;
+        }
+
+        .fin-ds-accessible #stampTable thead .invoice-header-blue {
+            background: #2563eb !important;
+            color: #ffffff !important;
+        }
+
+        .fin-ds-accessible #stampTable thead .invoice-header-orange {
+            background: #f97316 !important;
             color: #ffffff !important;
         }
 
@@ -214,14 +229,11 @@
 
 
                                 <div class="form-control">
-                                    <div class="grid grid-cols-[7rem_minmax(0,1fr)] items-center gap-x-2 gap-y-2">
-                                        <label class="label pb-1">
-                                        <span class=" w-2.5 label-text font-bold text-base-content/80 text-sm ">Subject  </span>
-                                        </label>
-                                    </div>
-                                    
-                                    <input id="SUBJECT" type="text" name="SUBJECT" value=""
-                                        class="input input-sm input-bordered w-full border-base-300 bg-base-200/80  text-base-content font-medium focus:outline-none req" />
+                                    <label class="label pb-1" for="FULLDP">
+                                        <span class="label-text font-bold text-base-content/80 text-sm">DIV / Dept / Sect</span>
+                                    </label>
+                                    <input id="FULLDP" type="text" name="FULLDP" value="" readonly
+                                        class="input input-sm input-bordered w-full border-base-300 bg-base-200/80 cursor-not-allowed text-base-content font-medium focus:outline-none req" />
                                 </div>
                             </div>
                         </div>
@@ -258,8 +270,10 @@
                             </svg>
                             ประเภทค่าใช้จ่าย / Expense type
                         </div>
-                        <div id="purposeList" class="flex flex-col gap-3">
-                        </div>
+                        <select id="EXPENSE_ID" name="EXPENSE_ID"
+                            class="select select-sm select-bordered w-full bg-white border-base-300 req">
+                            <option value="">Loading expense type...</option>
+                        </select>
                     </div>
                 </div>
             </div>
@@ -322,7 +336,7 @@
                                         </span>
                                     </label>
                                     <select id="VENDOR_CODE" name="VENDOR_CODE"
-                                        class="select select-sm select-bordered w-full bg-white border-base-300 req">
+                                        class="select select-sm select-bordered w-full bg-white border-base-300 req" required>
                                         <option value="">Loading vendor...</option>
                                     </select>
                                 </div>
@@ -367,6 +381,34 @@
 
 
 
+                {{-- Remark --}}
+                <div>
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="bg-warning/20 p-1.5 rounded-lg text-warning-content">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none"
+                                viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 7.125L16.862 4.487" />
+                            </svg>
+                        </div>
+                        <h2 class="text-base font-bold text-warning-content uppercase tracking-widest">
+                            Remark
+                        </h2>
+                    </div>
+
+                    <div class="rounded-xl border border-warning/30 bg-warning/5 p-5 shadow-sm">
+                        <label class="form-control w-full" for="REMARK">
+                            <span class="label-text mb-2 text-sm font-bold">Remark</span>
+                            <textarea id="REMARK" name="REMARK" rows="4" maxlength="1000"
+                                class="textarea textarea-bordered w-full resize-y bg-white"
+                                placeholder="Please enter remark"></textarea>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="divider before:bg-base-300 after:bg-base-300"></div>
+
                 {{-- Attachment --}}
                 <div>
                     <div class="flex items-center gap-3 mb-4">
@@ -395,7 +437,7 @@
                             </div>
 
                             <div class="flex-1">
-                          <input id="attachfile" name="attachfile" type="file" multiple
+                          <input id="attachfile" name="attachfile" type="file" multiple required
                                     accept=".pdf,.jpg,.jpeg,.png"
                                     class="file-input file-input-bordered file-input-info file-input-sm w-full max-w-sm bg-white" />
 
