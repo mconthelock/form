@@ -43,6 +43,7 @@ import {
     getAllAttr,
     logFormData,
     requiredForm,
+    showErrorMessage,
     showMessage,
 } from '@amec/webasset/utils';
 import { getOrganize } from '../../finform/FIN-PCK/dataloc';
@@ -57,6 +58,7 @@ import {
 } from '@amec/webasset/api/webform';
 import { formatDate } from '@amec/webasset/dayjs';
 import Swal from 'sweetalert2';
+import { redirectWebflow } from '@amec/webasset/form';
 
 var form = {};
 var tableSearch, purformdata, columnPurNVF;
@@ -125,8 +127,12 @@ const requiredMessage = [
         message: 'Please input Payment Term',
     },
     {
-        element: $('.currency'),
+        element: $('#stdcur'),
         message: 'Please input Currency Code',
+    },
+    {
+        element: $('#cur'),
+        message: 'Please input Currency of Capital',
     },
     {
         element: $('.chk-compliance'),
@@ -142,7 +148,11 @@ const requiredMessage = [
         message: 'Please input Corporate Registration Number',
     },
     {
-        element: $('input[name="TAX_ID"]'),
+        element: $('#TAX_ID_NON'),
+        message: 'Please input Tax ID',
+    },
+    {
+        element: $('#TAX_ID_PRO'),
         message: 'Please input Tax ID',
     },
     {
@@ -195,23 +205,19 @@ const requiredMessage = [
     },
     {
         element: $('input[name="SUPNAME[]"]'),
-        message: 'Please input supplier of Main Material',
+        message: 'Please input Supplier of Main Material',
     },
     {
         element: $('input[name="SUPPER[]"]'),
-        message: 'Please input supplier of Main Material',
-    },
-    {
-        element: $('input[name="SUPPER[]"]'),
-        message: 'Please input supplier of Main Material',
+        message: 'Please input Supplier of Main Material',
     },
     {
         element: $('input[name="PRONAME[]"]'),
-        message: 'Please input supplier of Main Product',
+        message: 'Please input Main Product',
     },
     {
         element: $('input[name="PROPER[]"]'),
-        message: 'Please input supplier of Main Product',
+        message: 'Please input Main Product',
     },
 ].filter(Boolean);
 
@@ -250,6 +256,8 @@ $(document).on('input', '#VENDCODE', async function () {
             showLoader();
             const searchData = { KEYWORD: keywordValue };
             const vendor = await getVendor(searchData);
+            console.log(vendor);
+
             setVendorMstInfo(vendor[0]);
         } catch (err) {
             console.error('Error get Vendor:', err);
@@ -268,9 +276,15 @@ $(document).on('change', '.radio-opr', async function () {
     if (isAnnual) {
         vendorInput.prop('disabled', false);
         updateCheck.prop('disabled', false);
+        $('#stdcur').prop('disabled', true);
+        $('#select-wrapper').hide();
+        $('#constdcur').show();
     } else {
         vendorInput.prop('disabled', true).val('');
         updateCheck.prop('disabled', true).prop('checked', false);
+        $('#stdcur').prop('disabled', false);
+        $('#select-wrapper').show();
+        $('#constdcur').hide();
     }
 });
 
@@ -622,11 +636,38 @@ $(document).on('click', '.remove-file', async function (e) {
 
 $(document).on('click', '#btnDraft, #btnRequest', async function () {
     if (this.id === 'btnRequest') {
-        if (!(await requiredForm('#frmmain', requiredMessage))) return;
+        let activeFields = requiredMessage.filter(
+            (f) => !f.element.prop('disabled'),
+        );
+        console.log(activeFields);
+        // วนลูปเช็คทุก element ที่มีคลาส .req
+        $('.req').each(function () {
+            const $el = $(this);
+            const type = $el.attr('type');
+            let hasValue = false;
+
+            // เช็คตามประเภทของ input
+            if (type === 'radio' || type === 'checkbox') {
+                // สำหรับ radio/checkbox ให้ดูว่ามีตัวไหนในกลุ่มถูกเลือกไหม
+                const name = $el.attr('name');
+                hasValue = $(`input[name="${name}"]:checked`).length > 0;
+            } else {
+                // สำหรับ text, select, textarea ทั่วไป เช็คว่ามีค่าว่างหรือไม่
+                hasValue = $el.val() && $el.val().trim() !== '';
+            }
+
+            // แสดงผลลัพธ์ใน Console เพื่อดูสถานะ
+            console.log(
+                `Element Name/ID: ${$el.attr('name') || $el.attr('id')} | มีการกรอกข้อมูลไหม:`,
+                hasValue,
+            );
+        });
+
+        if (!(await requiredForm('#frmmain', activeFields))) return;
         if (!checkAttFile()) {
             return false;
         }
-        if (checkEvaluationCompleted()) {
+        if (!checkEvaluationCompleted()) {
             return false;
         }
     } else {
@@ -651,45 +692,31 @@ $(document).on('click', '#btnDraft, #btnRequest', async function () {
     if (this.id === 'btnDraft') {
         filteredFormData.append('DRAFT', '0');
     }
-    const res = await create(filteredFormData);
+    try {
+        showLoader();
+        const res = await create(filteredFormData);
+        if (res.status == true) {
+            showMessage(res.message, 'success');
+            redirectWebflow();
+        } else {
+            throw new Error(res.message);
+        }
+    } catch (err) {
+        console.error(err);
+        showErrorMessage(err);
+    } finally {
+        showLoader({ show: false });
+    }
 });
 
 $(document).on('click', 'button[name="btnAction"]', async function () {
     const act = $(this).val();
     $('input[name="ACTION"]').val(act);
     if (act == 'approve') {
-        console.log('before require');
-        // เลือก input, select ทั้งหมดที่มี class .req รวมถึง radio และ checkbox ด้วย
-        let requiredFields = $('form input.req, form select.req');
-
-        requiredFields.each(function () {
-            let $field = $(this);
-            let type = $field.attr('type');
-
-            if (type === 'radio' || type === 'checkbox') {
-                // สำหรับ Radio หรือ Checkbox: เช็คว่าในกลุ่มชื่อเดียวกันนี้ มีตัวไหนถูกเลือกหรือยัง
-                let groupName = $field.attr('name');
-                let isChecked =
-                    $(`form input[name="${groupName}"]:checked`).length > 0;
-
-                console.log(
-                    `Radio/Checkbox [${groupName}] Checked:`,
-                    isChecked,
-                );
-            } else {
-                // สำหรับ Input ทั่วไป (text, number ฯลฯ) และ Select: เช็คค่าว่าง
-                let value = $field.val();
-                let isFilled = value && value.trim() !== '';
-
-                console.log(
-                    `Field [${$field.attr('name') || $field.attr('id')}] Value:`,
-                    value,
-                    'Filled:',
-                    isFilled,
-                );
-            }
-        });
-        if (!(await requiredForm('#frmmain', requiredMessage))) return;
+        let activeFields = requiredMessage.filter(
+            (f) => !f.element.prop('disabled'),
+        );
+        if (!(await requiredForm('#frmmain', activeFields))) return;
         console.log('after require');
         if (!checkAttFile()) {
             return false;
@@ -698,10 +725,24 @@ $(document).on('click', 'button[name="btnAction"]', async function () {
             return false;
         }
     }
-    const formElement = $('#frmmain')[0];
-    const filteredFormData = await packPurevaFormData(formElement);
-    logFormData(filteredFormData);
-    const res = await update(filteredFormData);
+    try {
+        showLoader();
+        const formElement = $('#frmmain')[0];
+        const filteredFormData = await packPurevaFormData(formElement);
+        logFormData(filteredFormData);
+        const res = await update(filteredFormData);
+        if (res.status == true) {
+            showMessage(res.message, 'success');
+            redirectWebflow();
+        } else {
+            throw new Error(res.message);
+        }
+    } catch (err) {
+        console.error(err);
+        showErrorMessage(err);
+    } finally {
+        showLoader({ show: false });
+    }
 });
 $(document).on('input', '.empnum', function () {
     const directValue = Number($('input[name="EMPDIRECT"]').val()) || 0;
