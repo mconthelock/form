@@ -254,7 +254,9 @@ class form extends MY_Controller{
     
     public function action()
     {
+   
         $act = $_POST["action"];
+        
         $cextData = intval($_POST["cextData"]);
         $apvno =  $_POST["empno"];
         $nfrmno = $_POST["nfrmno"];
@@ -356,7 +358,6 @@ class form extends MY_Controller{
                        $this->updaterequest($form);
                        $this->insertdwg($form);
                     }
-             
                     if($cextData == 8)
                     {
                         if($_POST["chkClass"] == "2")
@@ -367,8 +368,9 @@ class form extends MY_Controller{
                                 {
                                         $pord  = substr($pono, 0, 2) . substr($pono, 4, 4);
                                         $pprod = $_POST['txtPurItem'];
-                                        $sqlOra = "update BPCSFVNEW.HPO SET PCMT = '".$this->toFormNumber($nfrmno,  $vorgno, $cyear,  $cyear2,  $nrunno)." WHERE PORD = ".$pord." AND PPROD = '".$pprod."'";
+                                        $sqlOra = "update BPCSFVNEW.HPO SET PCMT = '".$this->toFormNumber($nfrmno,  $vorgno, $cyear,  $cyear2,  $nrunno)."' WHERE PORD = '".$pord."' AND PPROD = '".$pprod."'";
                                         $this->cn->execAssql($sqlOra);
+                                        
                                 }
 
                             }

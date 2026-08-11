@@ -98,15 +98,15 @@
             border-top: 3px solid #64748b !important;
         }
 
-        #stampTable tfoot th:nth-child(2),
-        .dt-scroll-foot tfoot th:nth-child(2),
-        .dataTables_scrollFoot tfoot th:nth-child(2) {
+        #stampTable tfoot th:nth-child(3),
+        .dt-scroll-foot tfoot th:nth-child(3),
+        .dataTables_scrollFoot tfoot th:nth-child(3) {
             text-align: center !important;
         }
 
-        #stampTable tfoot th:nth-child(n+6),
-        .dt-scroll-foot tfoot th:nth-child(n+6),
-        .dataTables_scrollFoot tfoot th:nth-child(n+6) {
+        #stampTable tfoot th:nth-child(n+7),
+        .dt-scroll-foot tfoot th:nth-child(n+7),
+        .dataTables_scrollFoot tfoot th:nth-child(n+7) {
             text-align: right !important;
             font-variant-numeric: tabular-nums;
         }
@@ -349,7 +349,7 @@
         }
 
         #stampTable th.report-sticky-date,
-        #stampTable td.report-date,
+        #stampTable td.report-request-date,
         .dt-scroll-head th.report-sticky-date,
         .dataTables_scrollHead th.report-sticky-date {
             position: sticky;
@@ -357,15 +357,15 @@
             z-index: 6;
         }
 
-        #stampTable td.report-date {
+        #stampTable td.report-request-date {
             z-index: 5;
         }
 
-        #stampTable tbody tr:nth-child(odd) td.report-date {
+        #stampTable tbody tr:nth-child(odd) td.report-request-date {
             background: #f2f2f2 !important;
         }
 
-        #stampTable tbody tr:nth-child(even) td.report-date {
+        #stampTable tbody tr:nth-child(even) td.report-request-date {
             background: #d9d9d9 !important;
         }
 

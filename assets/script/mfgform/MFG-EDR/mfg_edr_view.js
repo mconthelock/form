@@ -1,15 +1,14 @@
 import { getmfgedr, updatecause4m } from './data.js';
-import { showLoader } from "@amec/webasset/preloader";
-import { showMessage, showConfirm } from "@amec/webasset/utils";
-import { createTable } from "@amec/webasset/dataTable";
-import { downloadOrOpenFile } from "@amec/webasset/api/file";
-import { setDatePicker } from "@amec/webasset/flatpickr";
-import { createBtn, activatedBtn } from "@amec/webasset/components/buttons";
-import { host } from "../../utils";
-import { redirectWebflow } from "@amec/webasset/form";
-import { doaction, createForm, showflow } from "@amec/webasset/api/webform";
-import Swal from "sweetalert2";
-
+import { showLoader } from '@amec/webasset/preloader';
+import { showMessage, showConfirm } from '@amec/webasset/utils';
+import { createTable } from '@amec/webasset/dataTable';
+import { downloadOrOpenFile } from '@amec/webasset/api/file';
+import { setDatePicker } from '@amec/webasset/flatpickr';
+import { createBtn, activatedBtn } from '@amec/webasset/components/buttons';
+import { host } from '../../utils';
+import { redirectWebflow } from '@amec/webasset/form';
+import { doaction, createForm, showflow } from '@amec/webasset/api/webform';
+import Swal from 'sweetalert2';
 
 $(document).ready(function () {
     const VIEW = {
@@ -29,7 +28,6 @@ $(document).ready(function () {
                 const getVal = (inputId, paramNames = []) => {
                     const inputVal = $.trim($(inputId).val());
                     if (inputVal) return inputVal;
-
                     for (const name of paramNames) {
                         const val = $.trim(urlParams.get(name) || '');
                         if (val) return val;
@@ -46,14 +44,22 @@ $(document).ready(function () {
                 };
 
                 const flow = await showflow(payload);
-                $(".flow").html(flow.html);
+                $('.flow').html(flow.html);
 
                 console.log('VIEW URL =', window.location.href);
                 console.log('PAYLOAD =', payload);
 
-                if (!payload.NFRMNO || !payload.VORGNO || !payload.CYEAR || !payload.CYEAR2 || !payload.NRUNNO) {
+                if (
+                    !payload.NFRMNO ||
+                    !payload.VORGNO ||
+                    !payload.CYEAR ||
+                    !payload.CYEAR2 ||
+                    !payload.NRUNNO
+                ) {
                     console.error('MISSING VIEW PARAMS:', payload);
-                    alert('ไม่พบข้อมูล key ของฟอร์ม กรุณาตรวจสอบ URL: no, orgNo, y, y2, runNo');
+                    alert(
+                        'ไม่พบข้อมูล key ของฟอร์ม กรุณาตรวจสอบ URL: no, orgNo, y, y2, runNo',
+                    );
                     return;
                 }
 
@@ -83,20 +89,31 @@ $(document).ready(function () {
         },
 
         renderForm(form) {
-            $('#v_request_by').text((form.REQ_EMPNO || '-') + '_' + (form.REQ_NAME || '-'));
-            $('#v_create_by').text((form.INP_EMPNO || '-') + '_' + (form.INP_NAME || '-'));
-            this.ssec = String(form.REQ_SEC || '').trim().substring(0, 3);
+            $('#v_request_by').text(
+                (form.REQ_EMPNO || '-') + '_' + (form.REQ_NAME || '-'),
+            );
+            $('#v_create_by').text(
+                (form.INP_EMPNO || '-') + '_' + (form.INP_NAME || '-'),
+            );
+            this.ssec = String(form.REQ_SEC || '')
+                .trim()
+                .substring(0, 3);
             this.cyear2 = String(form.CYEAR2 || '').slice(-2);
         },
 
         renderHeader(head) {
             const runno = String(head.DAILY_RUNNO || 0).padStart(3, '0');
-            const dailyno = this.ssec + '-' + head.DAILY_MONTH + '-' + this.cyear2 + runno;
+            const dailyno =
+                this.ssec + '-' + head.DAILY_MONTH + '-' + this.cyear2 + runno;
             this.tid = Number(head.TID || 0);
             $('#v_daily_no').text(dailyno || '-');
             $('#v_worktype').text(head.TYPENAME || '-');
-            $('#v_repair_by').text((head.REPAIR_BY || '-') + '_' + (head.REPAIR_BY_NAME || '-'));
-            $('#v_cause').text((head.CAUSE || '-') + '_' + (head.CAUSENAME || '-'));
+            $('#v_repair_by').text(
+                (head.REPAIR_BY || '-') + '_' + (head.REPAIR_BY_NAME || '-'),
+            );
+            $('#v_cause').text(
+                (head.CAUSE || '-') + '_' + (head.CAUSENAME || '-'),
+            );
         },
 
         renderFile(att = []) {
@@ -111,20 +128,21 @@ $(document).ready(function () {
                 return;
             }
 
-            att.forEach(file => {
+            att.forEach((file) => {
                 const filename = file.FILENAME;
-                const url = `${baseUrl}mfgform/MFG-EDR/main_edr/preview_file/` + formno + '/' + encodeURIComponent(filename);
+                const url =
+                    `${baseUrl}mfgform/MFG-EDR/main_edr/preview_file/` +
+                    formno +
+                    '/' +
+                    encodeURIComponent(filename);
                 console.log('FILE URL =', url);
-
-                $fileList.append(`
-                    <div>
-                        <a href="${url}" target="_blank" class="text-blue-700 underline btn btn-sm rounded-lg"> ${filename} </a>
-                    </div>
-                `);
+                $fileList.append(
+                    `<div><a href="${url}" target="_blank" class="text-blue-700 underline btn btn-sm rounded-lg"> ${filename} </a></div>`,
+                );
             });
         },
 
-       renderDetail(list) {
+        renderDetail(list) {
             const $colgroup = $('#v_detail_colgroup').empty();
             const $thead = $('#v_detail_head').empty();
             const $tbody = $('#v_detail_body').empty();
@@ -247,24 +265,28 @@ $(document).ready(function () {
             $zone.show();
 
             list.forEach((row, index) => {
-                $tbody.append(this.cause4MRow({
-                    id: row.ID || row.CAUSE4M_ID || '',
-                    no: index + 1,
-                    cause: row.CAUSE,
-                    detail: row.DETAIL,
-                    dueDate: row.DUE_DATE || '',
-                    pic: row.PIC || row.RESPONSIBLE || '',
-                    editable: this.canEditCause4M,
-                }));
+                $tbody.append(
+                    this.cause4MRow({
+                        id: row.ID || row.CAUSE4M_ID || '',
+                        no: index + 1,
+                        cause: row.CAUSE,
+                        detail: row.DETAIL,
+                        dueDate: row.DUE_DATE || '',
+                        pic: row.PIC || row.RESPONSIBLE || '',
+                        editable: this.canEditCause4M,
+                    }),
+                );
             });
 
             if (this.canEditCause4M) {
                 if (!list.length) {
-                    $tbody.append(this.cause4MRow({
-                        id: '',
-                        no: 1,
-                        editable: true,
-                    }));
+                    $tbody.append(
+                        this.cause4MRow({
+                            id: '',
+                            no: 1,
+                            editable: true,
+                        }),
+                    );
                 }
 
                 $tbody.append(this.addCause4MRow());
@@ -354,9 +376,11 @@ $(document).ready(function () {
             const [d, m, y] = text.split('/').map(Number);
             const date = new Date(y, m - 1, d);
 
-            return date.getFullYear() === y &&
+            return (
+                date.getFullYear() === y &&
                 date.getMonth() === m - 1 &&
-                date.getDate() === d;
+                date.getDate() === d
+            );
         },
 
         getBasePayload() {
@@ -373,16 +397,32 @@ $(document).ready(function () {
             return {
                 ...this.getBasePayload(),
                 UPDATE_BY: $('#empno').val(),
-                CAUSE4M_LIST: $('#v_cause4m_body tr.cause4m-row').map(function () {
-                    const $row = $(this);
-                    return {
-                        ID: $row.data('id') || null,
-                        CAUSE: $row.find('[name="CAUSE4M_TYPE[]"]').val() || null,
-                        DETAIL: $row.find('[name="CAUSE4M_DETAIL[]"]').val()?.trim() || null,
-                        DUE_DATE: $row.find('[name="CAUSE4M_DUE_DATE[]"]').val()?.trim() || null,
-                        PIC: $row.find('[name="CAUSE4M_PIC[]"]').val()?.trim() || null,
-                    };
-                }).get(),
+                CAUSE4M_LIST: $('#v_cause4m_body tr.cause4m-row')
+                    .map(function () {
+                        const $row = $(this);
+                        return {
+                            ID: $row.data('id') || null,
+                            CAUSE:
+                                $row.find('[name="CAUSE4M_TYPE[]"]').val() ||
+                                null,
+                            DETAIL:
+                                $row
+                                    .find('[name="CAUSE4M_DETAIL[]"]')
+                                    .val()
+                                    ?.trim() || null,
+                            DUE_DATE:
+                                $row
+                                    .find('[name="CAUSE4M_DUE_DATE[]"]')
+                                    .val()
+                                    ?.trim() || null,
+                            PIC:
+                                $row
+                                    .find('[name="CAUSE4M_PIC[]"]')
+                                    .val()
+                                    ?.trim() || null,
+                        };
+                    })
+                    .get(),
             };
         },
 
@@ -398,11 +438,13 @@ $(document).ready(function () {
                 return false;
             }
 
-            const invalidRequired = payload.CAUSE4M_LIST.some(row => {
-                return !String(row.CAUSE || '').trim()
-                    || !String(row.DETAIL || '').trim()
-                    || !String(row.DUE_DATE || '').trim()
-                    || !String(row.PIC || '').trim();
+            const invalidRequired = payload.CAUSE4M_LIST.some((row) => {
+                return (
+                    !String(row.CAUSE || '').trim() ||
+                    !String(row.DETAIL || '').trim() ||
+                    !String(row.DUE_DATE || '').trim() ||
+                    !String(row.PIC || '').trim()
+                );
             });
 
             if (invalidRequired) {
@@ -414,7 +456,9 @@ $(document).ready(function () {
                 return false;
             }
 
-            const invalidDate = payload.CAUSE4M_LIST.some(row => !this.isValidDateDMY(row.DUE_DATE));
+            const invalidDate = payload.CAUSE4M_LIST.some(
+                (row) => !this.isValidDateDMY(row.DUE_DATE),
+            );
 
             if (invalidDate) {
                 await Swal.fire({
@@ -435,11 +479,11 @@ $(document).ready(function () {
         initCause4MDatePicker();
     });
 
-    $(".btn-submit").on("click", async function () {
+    $('.btn-submit').on('click', async function () {
         if (isSubmitting) return;
 
         const $btn = $(this);
-        const action = $btn.data("action");
+        const action = $btn.data('action');
         const empno = $('#empno').val() || '';
         const exdata = $('#txt_exdata').val() || '';
         const remark = $('#remark').val()?.trim() || '';
@@ -473,7 +517,9 @@ $(document).ready(function () {
                 if (!cause4MPayload) return;
             }
 
-            $('.btn-submit').prop('disabled', true).addClass('opacity-50 pointer-events-none');
+            $('.btn-submit')
+                .prop('disabled', true)
+                .addClass('opacity-50 pointer-events-none');
 
             showLoader({ show: true });
             if (cause4MPayload) {
@@ -482,7 +528,8 @@ $(document).ready(function () {
                     Swal.close();
                     await Swal.fire({
                         icon: 'error',
-                        title: saveResult?.message || 'บันทึก Cause 4M ไม่สำเร็จ',
+                        title:
+                            saveResult?.message || 'บันทึก Cause 4M ไม่สำเร็จ',
                         confirmButtonText: 'ตกลง',
                     });
                     showLoader({ show: false });
@@ -508,7 +555,7 @@ $(document).ready(function () {
                     timer: 1500,
                     showConfirmButton: false,
                 });
-                
+
                 redirectWebflow();
                 return;
             } else {
@@ -530,7 +577,9 @@ $(document).ready(function () {
         } finally {
             showLoader({ show: false });
             isSubmitting = false;
-            $('.btn-submit').prop('disabled', false).removeClass('opacity-50 pointer-events-none');
+            $('.btn-submit')
+                .prop('disabled', false)
+                .removeClass('opacity-50 pointer-events-none');
         }
     });
 
@@ -538,17 +587,23 @@ $(document).ready(function () {
         const $tbody = $('#v_cause4m_body');
         const index = $tbody.find('tr.cause4m-row').length + 1;
 
-        $tbody.find('tr.cause4m-add-row').before(VIEW.cause4MRow({
-            no: index,
-            editable: true,
-        }));
+        $tbody.find('tr.cause4m-add-row').before(
+            VIEW.cause4MRow({
+                no: index,
+                editable: true,
+            }),
+        );
         initCause4MDatePicker();
     }
 
     function reIndexCause4MRows() {
-        $('#v_cause4m_body').find('tr.cause4m-row').each(function (index) {
-            $(this).find('td:first').text(index + 1);
-        });
+        $('#v_cause4m_body')
+            .find('tr.cause4m-row')
+            .each(function (index) {
+                $(this)
+                    .find('td:first')
+                    .text(index + 1);
+            });
     }
 
     $(document).on('click', '.btn-add-cause4m', () => addCause4MInputRow());

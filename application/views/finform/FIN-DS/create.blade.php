@@ -7,15 +7,17 @@
 
         #stampTable {
             border-collapse: collapse !important;
-            border: 2px solid #0a6619 !important;
+            border: 2px solid #475569 !important;
+            font-size: 15px;
         }
 
         #stampTable th,
         #stampTable tbody td {
-            border: 1px solid #09643a !important;
+            border: 1px solid #64748b !important;
             padding: 10px 12px !important;
             vertical-align: middle;
             text-align: center;
+            font-size: 15px !important;
         }
 
         #stampTable tbody input,
@@ -23,6 +25,8 @@
         #stampTable tbody textarea {
             min-height: 38px;
             padding: 6px 10px;
+            font-size: 15px;
+            text-align: center !important;
         }
 
         .fin-ds-accessible {
@@ -99,14 +103,33 @@
             outline-offset: 1px;
         }
 
-        .fin-ds-accessible #stampTable thead tr {
-            background: #239400 !important;
-            color: #ffffff !important;
+        .fin-ds-accessible #stampTable thead th {
+            background: #d8e4bc !important;
+            color: #7f3f00 !important;
+            font-weight: 800;
         }
 
-        .fin-ds-accessible #stampTable th,
-        .fin-ds-accessible #stampTable td {
-            border: 1px solid #022502 !important;
+        .fin-ds-accessible #stampTable.stamp-table-buy thead th {
+            background: #dbeef3 !important;
+        }
+
+        .fin-ds-accessible #stampTable tbody td {
+            color: #7f3f00 !important;
+        }
+
+        .fin-ds-accessible #stampTable tbody tr:nth-child(odd) td {
+            background: #f2f2f2 !important;
+        }
+
+        .fin-ds-accessible #stampTable tbody tr:nth-child(even) td {
+            background: #d9d9d9 !important;
+        }
+
+        .fin-ds-accessible #stampTable tfoot th {
+            background: #f8fafc !important;
+            color: #0f172a !important;
+            border-top: 3px solid #64748b !important;
+            text-align: center !important;
         }
     </style>
 @endsection
@@ -246,11 +269,12 @@
                                         </label>
                                         <input id="EffDate" name="EFFECTIVE_DATE" type="date"
                                             class="req input input-sm input-bordered border-secondary/30 w-full focus:ring-2 focus:ring-secondary/20 transition-all" />
+                                        <span class="text-error text-xs font-bold mt-1.5">*วันที่ผู้ขอต้องการมารับอากรแสตมป์ (วันนี้ไม่ใช่วันที่ได้รับจริง โดยวันที่มีการได้รับสแตมป์จริงคือวันที่ปรากฏใน Receive Date ซึ่งจะถูกระบุในขั้นตอนสุดท้ายของการ Approve)</span>
                                     </div>
                                     <div class="form-control">
                                         <label class="label pb-1">
-                                            <span class="label-text font-bold text-base-content/80 text-sm">Date
-                                                Receive</span>
+                                            <span class="label-text font-bold text-base-content/80 text-sm">Receive
+                                                Date</span>
                                         </label>
                                         <input id="RetDate" name="DATE_RECEIVE" type="date"
                                             readonly
@@ -297,7 +321,7 @@
                                             <tr class="bg-accent/10 font-bold text-accent-content">
                                                 <td colspan="9"
                                                     class="pr-4 border-r border-accent/20 text-sm py-3 uppercase tracking-wide">
-                                                    Grand Total
+                                                    Total
                                                 </td>
                                                 <td id="gt-total"
                                                     class="border-r border-accent/20 bg-base-200/30 text-error font-extrabold text-center text-base">
@@ -309,7 +333,6 @@
                                 </div>
                             </div>
                         </div>
-                </div>
 
                 {{-- Attachment --}}
                 <div>
@@ -350,9 +373,19 @@
                         </div>
                     </div>
                 </div>
+
                 <div class="divider before:bg-base-300 after:bg-base-300"></div>
 
                 <div id="actionform"></div>
+
+                <div role="note" aria-label="Remark"
+                    class="rounded-xl border-2 border-warning bg-warning/10 p-5 shadow-sm">
+                    <h2 class="mb-3 text-lg font-extrabold italic uppercase tracking-wide text-error">Remark</h2>
+                    <ol class="ml-5 list-decimal space-y-2 font-bold text-base-content">
+                        <li>Refer FIN-QP-R5543 : Cash Management</li>
+                        <li>Stamp duty can only be issued after all required approvals have been obtained from the authorized level.</li>
+                    </ol>
+                </div>
                 </form>
             </div>
         </div>
