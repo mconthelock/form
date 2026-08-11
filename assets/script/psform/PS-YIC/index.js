@@ -65,13 +65,17 @@ $(document).ready(async function () {
         $('.variance-error-alert').removeClass('hidden');
         $('#varianceErrorFileInput').addClass('hidden');
 
-        varianceFile.data.forEach((f, index) => {
+        varianceFile.data.forEach((f) => {
             const $link = $('<a></a>', {
-                href: f.FILE_PATH,
-                target: '_blank',
-                class: 'link link-primary font-medium badge badge-accent p-2 variance-error-file-link',
+                href: 'javascript:void(0);',
+                class: 'link link-primary font-medium badge badge-accent p-2 variance-error-file-link download-file',
                 text: '📄 ' + f.FILE_ONAME,
             });
+
+            $link.attr('data-url', f.FILE_PATH);
+            $link.attr('storedName', f.FILE_FNAME);
+            $link.attr('originalName', f.FILE_ONAME);
+
             $('.variance-error-file-list').append($link);
         });
     } else {
