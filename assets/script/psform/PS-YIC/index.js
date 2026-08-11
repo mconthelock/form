@@ -249,7 +249,7 @@ $(document).ready(async function () {
             }
             console.log(varianceData);
             // return;
-            const varianceErrorFile = $('.variance-error-file');
+            const varianceErrorFile = $('#varianceErrorFileInput');
             varianceErrorFile.each(async function (index, element) {
                 const fileInput = $(element)[0];
                 const file = fileInput.files[0];
@@ -284,6 +284,7 @@ $(document).ready(async function () {
                 });
             }
 
+            return;
             $('.attach-file').each(async function (index, element) {
                 const fileInput = $(element)[0];
                 const file = fileInput.files[0];
