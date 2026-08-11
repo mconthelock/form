@@ -284,7 +284,7 @@ $(document).ready(async function () {
                 });
             }
 
-            return;
+            // return;
             $('.attach-file').each(async function (index, element) {
                 const fileInput = $(element)[0];
                 const file = fileInput.files[0];
