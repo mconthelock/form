@@ -6,3 +6,10 @@ export async function getEmpData(empno) {
         method: 'GET',
     });
 }
+
+export async function getAreas() {
+    return await fetchUtils({
+        url: `${process.env.APP_API}/gpform/gp-tph/areas`,
+        method: 'GET',
+    });
+}

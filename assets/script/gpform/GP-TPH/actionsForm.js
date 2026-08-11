@@ -20,14 +20,6 @@ import { getEmpData } from './data';
         const addVisitorBtn = document.getElementById('add-visitor-row');
         const visitorTemplate = document.getElementById('visitor-row-template');
         const areaBody = document.getElementById('area-table-body');
-        const addAreaBtn = document.getElementById('add-area-row');
-        const areaTemplate = document.getElementById('area-row-template');
-        const areaPicker = document.getElementById('area-picker');
-        const areaPickerList = document.getElementById('area-picker-list');
-        const areaPickerEmpty = document.getElementById('area-picker-empty');
-        const confirmAreaSelection = document.getElementById(
-            'confirm-area-selection',
-        );
         const hostExternalSection = document.getElementById(
             'host-external-section',
         );
@@ -35,19 +27,19 @@ import { getEmpData } from './data';
             'applicant-visitor-section',
         );
         const requestTypeRadios = document.querySelectorAll(
-            'input[name="request_type[]"]',
+            'input[name="reqtype"]',
         );
         const requestSubTypeRadios = document.querySelectorAll(
-            'input[name="request_sub_type"]',
+            'input[name="req_subtype"]',
         );
         const permitOptionRadios = document.querySelectorAll(
             'input[name="permit_option"]',
         );
         const hostExternalRadio = document.querySelector(
-            'input[name="request_type[]"][value="host_external"]',
+            'input[name="reqtype"][value="host_external"]',
         );
         const employeeRadio = document.querySelector(
-            'input[name="request_type[]"][value="employee"]',
+            'input[name="reqtype"][value="employee"]',
         );
 
         if (
@@ -55,12 +47,6 @@ import { getEmpData } from './data';
             !addVisitorBtn ||
             !visitorTemplate ||
             !areaBody ||
-            !addAreaBtn ||
-            !areaTemplate ||
-            !areaPicker ||
-            !areaPickerList ||
-            !areaPickerEmpty ||
-            !confirmAreaSelection ||
             !hostExternalSection ||
             !applicantVisitorSection
         ) {
@@ -84,16 +70,42 @@ import { getEmpData } from './data';
                     showMessage('Employee data not found', 'error');
                     $(this).val('');
                     $(this).focus();
+                    s;
                     return;
                 }
                 $('#empName').val(empData.SNAME);
                 $('#empDiv').val(
                     `${empData.SSEC}/${empData.SDEPT}/${empData.SDIV}`,
                 );
+                $('#host_name').val(empData.SNAME);
             } catch (error) {
                 console.log(error);
             }
         });
+
+        $(document).on(
+            'change',
+            '#visitor_empcode',
+            '#REQBY',
+            async function (e) {
+                e.preventDefault();
+                try {
+                    const empData = await getEmpData($(this).val());
+                    if (!empData || !empData.SNAME) {
+                        showMessage('Employee data not found', 'error');
+                        $(this).val('');
+                        $(this).focus();
+                        return;
+                    }
+                    $('#visitor_name').val(empData.SNAME);
+                    $('#visitor_div').val(empData.SDIV);
+                    $('#visitor_dept').val(empData.SDEPT);
+                    $('#visitor_sec').val(empData.SSEC);
+                } catch (error) {
+                    console.log(error);
+                }
+            },
+        );
 
         function updateAreaIndexes() {
             Array.from(
@@ -106,19 +118,26 @@ import { getEmpData } from './data';
             });
         }
 
-        function renderAreaPicker() {
-            const areas = getStoredAreas();
-            areaPickerList.innerHTML = '';
-            areaPickerEmpty.classList.toggle('hidden', areas.length > 0);
+        function makeRadioGroupToggleable(selector, callback) {
+            const radios = document.querySelectorAll(selector);
 
-            areas.forEach(function (area, index) {
-                const label = document.createElement('label');
-                label.className = 'flex items-center gap-2';
-                label.innerHTML = `
-                    <input type="checkbox" class="area-choice checkbox checkbox-primary" data-area-index="${index}">
-                    <span>${area.location} / ${area.area} / ${area.level} / ${area.area_owner}</span>
-                `;
-                areaPickerList.appendChild(label);
+            radios.forEach(function (radio) {
+                radio.addEventListener('mousedown', function () {
+                    this.dataset.wasChecked = this.checked ? 'true' : 'false';
+                });
+
+                radio.addEventListener('click', function (event) {
+                    if (this.dataset.wasChecked === 'true' && this.checked) {
+                        event.preventDefault();
+                        radios.forEach(function (item) {
+                            item.checked = false;
+                        });
+
+                        if (callback) {
+                            callback();
+                        }
+                    }
+                });
             });
         }
 
@@ -128,13 +147,15 @@ import { getEmpData } from './data';
                 : false;
 
             document
-                .querySelectorAll('input[name="request_sub_type"]')
+                .querySelectorAll('input[name="req_subtype"]')
                 .forEach(function (radio) {
                     if (isHostExternal) {
                         radio.checked = false;
                     }
                 });
 
+            // Don't clear values from the hidden section when switching request type.
+            // Keep the user's input so it remains visible when they switch back.
             if (!isHostExternal) {
                 document
                     .querySelectorAll('#host-external-section input')
@@ -143,9 +164,18 @@ import { getEmpData } from './data';
                             field.type === 'checkbox' ||
                             field.type === 'radio'
                         ) {
-                            field.checked = false;
-                        } else {
-                            field.value = '';
+                            field.disabled = true;
+                        }
+                    });
+            } else {
+                document
+                    .querySelectorAll('#host-external-section input')
+                    .forEach(function (field) {
+                        if (
+                            field.type === 'checkbox' ||
+                            field.type === 'radio'
+                        ) {
+                            field.disabled = false;
                         }
                     });
             }
@@ -199,6 +229,7 @@ import { getEmpData } from './data';
             }
 
             clearRequestTypeRelatedFields();
+            updatePermitTypeRestrictions();
         }
 
         function togglePermitOptionFields() {
@@ -227,47 +258,85 @@ import { getEmpData } from './data';
             validUntilInput.disabled = !isPeriod;
         }
 
+        function updatePermitTypeRestrictions() {
+            const isHostExternal = hostExternalRadio
+                ? hostExternalRadio.checked
+                : false;
+            const longTermRadio = document.querySelector(
+                'input[name="permit_option"][value="long_term"]',
+            );
+            const periodRadio = document.querySelector(
+                'input[name="permit_option"][value="period"]',
+            );
+            const permitTypeInputs = document.querySelectorAll(
+                'input[name="permit_type[]"], input[name="permit_halmet"], input[name="permit_photo"]',
+            );
+            const photoPermitBadgeInput = document.querySelector(
+                'input[value="photo_permit_badge"], input[name="permit_photo"]',
+            );
+
+            if (isHostExternal) {
+                if (periodRadio) {
+                    periodRadio.checked = true;
+                }
+                if (longTermRadio) {
+                    longTermRadio.disabled = true;
+                }
+                if (periodRadio) {
+                    periodRadio.disabled = false;
+                }
+
+                permitTypeInputs.forEach(function (field) {
+                    const isPhotoPermit =
+                        field.value === 'photo_permit_badge' ||
+                        field.name === 'permit_photo';
+
+                    if (isPhotoPermit) {
+                        field.disabled = false;
+                        if (!field.checked) {
+                            field.checked = true;
+                        }
+                    } else {
+                        field.disabled = true;
+                        field.checked = false;
+                    }
+                });
+            } else {
+                if (longTermRadio) {
+                    longTermRadio.disabled = false;
+                }
+                if (periodRadio) {
+                    periodRadio.disabled = false;
+                }
+
+                permitTypeInputs.forEach(function (field) {
+                    field.disabled = false;
+                });
+            }
+
+            if (photoPermitBadgeInput) {
+                photoPermitBadgeInput.checked = isHostExternal;
+            }
+
+            togglePermitOptionFields();
+        }
+
         addVisitorBtn.addEventListener('click', function () {
             const clone = visitorTemplate.content.cloneNode(true);
             visitorBody.appendChild(clone);
         });
 
-        addAreaBtn.addEventListener('click', function () {
-            renderAreaPicker();
-            areaPicker.classList.toggle('is-visible');
-        });
-
-        confirmAreaSelection.addEventListener('click', function () {
-            const areas = getStoredAreas();
-            const selectedAreas = areaPickerList.querySelectorAll(
-                '.area-choice:checked',
-            );
-
-            if (selectedAreas.length > 0) {
-                const emptyRow = document.getElementById('area-empty-row');
-                if (emptyRow) {
-                    emptyRow.remove();
-                }
-            }
-
-            selectedAreas.forEach(function (checkbox) {
-                const area = areas[checkbox.dataset.areaIndex];
-                const clone = areaTemplate.content.cloneNode(true);
-                const row = clone.querySelector('tr');
-
-                row.querySelector('input[name="area_location[]"]').value =
-                    area.location || '';
-                row.querySelector('input[name="area_name[]"]').value =
-                    area.area || '';
-                row.querySelector('input[name="area_level[]"]').value =
-                    area.level || '';
-                row.querySelector('input[name="area_owner[]"]').value =
-                    area.area_owner || '';
-                areaBody.appendChild(clone);
-            });
-
-            updateAreaIndexes();
-            areaPicker.classList.remove('is-visible');
+        makeRadioGroupToggleable(
+            'input[name="reqtype"]',
+            toggleHostExternalSection,
+        );
+        makeRadioGroupToggleable(
+            'input[name="req_subtype"]',
+            toggleHostExternalSection,
+        );
+        makeRadioGroupToggleable('input[name="permit_option"]', function () {
+            togglePermitOptionFields();
+            updatePermitTypeRestrictions();
         });
 
         requestTypeRadios.forEach(function (radio) {
@@ -279,11 +348,15 @@ import { getEmpData } from './data';
         });
 
         permitOptionRadios.forEach(function (radio) {
-            radio.addEventListener('change', togglePermitOptionFields);
+            radio.addEventListener('change', function () {
+                togglePermitOptionFields();
+                updatePermitTypeRestrictions();
+            });
         });
 
         toggleHostExternalSection();
         togglePermitOptionFields();
+        updatePermitTypeRestrictions();
 
         document.addEventListener('click', function (event) {
             if (event.target.closest('.remove-row')) {
