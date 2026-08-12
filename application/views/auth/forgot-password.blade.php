@@ -35,7 +35,7 @@
                 {{-- Password login --}}
                 {{-- @include('auth/password') --}}
                 <div class="loginform" id="frm-password">
-                    <form action="#" method="POST" class="mt-4" autocomplete="off" id="passwordLogin">
+                    <form action="#" method="POST" class="mt-4" autocomplete="off" id="passwordForgot">
                         <div class="form-control">
                             <label class="label">
                                 <span class="label-text font-bold mb-3">Username</span>

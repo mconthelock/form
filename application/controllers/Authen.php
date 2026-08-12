@@ -134,8 +134,14 @@ class Authen extends MY_Controller {
         echo json_encode(md5(substr('00000'.(($_POST['id']/4)-92), -5)));
     }
 
-    public function forgotpassword($id = 1) {
-        $data =  array('pageid' => 'login', 'id' => $id);
-        $this->views('auth/forgot-password',$data );
+    public function forgotpassword() {
+        $this->views('auth/forgot-password' );
+    }
+
+    public function resetpassword($value = '') {
+        if(!isset($value) || empty($value)) {
+            redirect('/');
+        }
+        $this->views('auth/reset-password', array('value' => $value) );
     }
 }

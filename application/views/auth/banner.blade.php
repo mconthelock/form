@@ -1,5 +1,5 @@
 <div class="px-8 py-4">
-    <img src="{{ base_url() }}assets/images/{{ $id == 1 ? 'brand_text_w.png' : 'brand_text_p.png' }}"
+    <img src="{{ base_url() }}assets/images/{{ !isset($id) || $id == 1 ? 'brand_text_w.png' : 'brand_text_p.png' }}"
         alt="AMEC Webflow" class="w-48">
 </div>
 <div class="absolute z-[-1] w-full h-96 md:w-96">

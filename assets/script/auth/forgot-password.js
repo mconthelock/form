@@ -5,3 +5,7 @@ $(document).ready(async function () {
     // await splashScreen();
     await createCarousel('login');
 });
+
+$(document).on('submit', '#passwordForgot', function (e) {
+    e.preventDefault();
+});
