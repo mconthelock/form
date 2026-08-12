@@ -130,11 +130,12 @@ class Authen extends MY_Controller {
         return json_decode($response->getBody(), true);
     }
 
-    public function test2(){
-        $this->views('auth/test');
-    }
-
     public function setMD5() {
         echo json_encode(md5(substr('00000'.(($_POST['id']/4)-92), -5)));
+    }
+
+    public function forgotpassword($id = 1) {
+        $data =  array('pageid' => 'login', 'id' => $id);
+        $this->views('auth/forgot-password',$data );
     }
 }
