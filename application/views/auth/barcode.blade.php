@@ -17,21 +17,20 @@
 
 
 {{-- Open Camera for Scan QR Code --}}
-<div class="shadow-xl fixed top-0 left-0 w-full h-full z-1 hidden" id="open-camera">
-    <div id="video-wrapper" class="w-full h-full relative flex">
-        <video id="video" class="w-full aspect-video bg-white border-2 "></video>
-    </div>
-    <div class="line "></div>
-    <h1 class="absolute text-xl text-center text-white w-full top-0 pt-3">
+<div class="shadow-xl fixed inset-0 z-0 hidden bg-black/80" id="open-camera">
+    <h1 class="text-xl text-center text-white w-full pt-4 relative z-10">
         ให้ Barcode/QR Code อยู่ตรงกลางภาพ
     </h1>
-
-    <div class="absolute w-full text-center bottom-0 pb-5 flex justify-center items-center gap-8">
-        <button class="btn btn-circle btn-ghost btn-lg text-white">
+    <div id="video-wrapper" class="absolute inset-0 flex items-center justify-center z-0">
+        <video id="video" class="w-full h-full object-cover bg-black border-0"></video>
+    </div>
+    <div class="absolute inset-x-0 bottom-0 z-10 w-full text-center pb-5 flex justify-center items-center gap-8">
+        {{-- <button class="btn btn-circle btn-error btn-lg text-white" aria-label="Camera options">
             <i class="icofont-image text-4xl"></i>
-        </button>
-        <button class="btn btn-circle btn-ghost btn-lg text-white" type="button" id="close-camera">
-            <i class="icofont-close-circled text-4xl"></i>
+        </button> --}}
+        <button class="btn btn-circle btn-error btn-lg text-white" type="button" id="close-camera"
+            aria-label="Close camera">
+            <i class="fi fi-sr-stop"></i>
         </button>
     </div>
 </div>

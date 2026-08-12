@@ -20,7 +20,7 @@
 
 <body class="flex flex-col min-h-screen">
     <input type="hidden" id="appid" value="1">
-    @include('layouts/splash')
+    {{-- @include('layouts/splash') --}}
     {{-- Carousel --}}
     @include('auth/carousel')
 
@@ -33,7 +33,29 @@
                 <h1 class="text-2xl font-black text-center text-slate-600" id="login-title">Forgot Password</h1>
                 <h1 class="text-sm font-bold text-center text-slate-400 mt-3">Reset your password</h1>
                 {{-- Password login --}}
-                @include('auth/password')
+                {{-- @include('auth/password') --}}
+                <div class="loginform" id="frm-password">
+                    <form action="#" method="POST" class="mt-4" autocomplete="off" id="passwordLogin">
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text font-bold mb-3">Username</span>
+                            </label>
+                            <input type="text" name="username" placeholder="Username"
+                                class="input input-bordered username text-sm" autocomplete="new-password" required>
+                        </div>
+                        <div class="mt-4 flex flex-col gap-2">
+                            <button type="submit" class="btn btn-primary w-full">
+                                <span class="loading loading-spinner hidden"></span>
+                                <span>Reset Password</span>
+                            </button>
+
+                            <a href="{{ base_url() }}" class="btn btn-neutral btn-outline w-full">
+                                <span class="loading loading-spinner hidden"></span>
+                                <span>Back</span>
+                            </a>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     </div>

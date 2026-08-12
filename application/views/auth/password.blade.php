@@ -15,8 +15,14 @@
                 <input type="password" class="grow password" autocomplete="new-password" required
                     placeholder="Password" />
                 <a href="#" id="show-password" class="text-primary h-6 w-6 flex items-center show-password">
-                    <i class="fi fi-rs-crossed-eye eye-close flex text-2xl text-gray-600"></i>
-                    <i class="fi fi-sr-eye eye-open text-2xl text-gray-600 hidden"></i>
+                    <span class="eye-close">
+                        <i class="fi fi-rs-crossed-eye text-2xl text-gray-600"></i>
+                    </span>
+                    <span class="eye-open hidden">
+                        <i class="fi fi-sr-eye text-2xl text-gray-600"></i>
+                    </span>
+
+                    <i class="fi fi-sr-eye eye-open text-2xl text-gray-600 hidden!"></i>
                 </a>
             </label>
         </div>

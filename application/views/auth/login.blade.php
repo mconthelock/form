@@ -24,7 +24,7 @@
     {{-- Carousel --}}
     @include('auth/carousel')
 
-    <div class="flex-1 flex flex-col w-full">
+    <div class="flex flex-col w-full">
         <div class="relative flex flex-col min-h-screen w-full p-4 overflow-x-hidden">
             {{-- Braner && Background --}}
             @include('auth/banner')
