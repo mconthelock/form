@@ -19,12 +19,12 @@
 </head>
 
 <body class="flex flex-col min-h-screen">
+    <input type="hidden" id="appid" value="{{ $id }}">
     @include('layouts/splash')
     {{-- Carousel --}}
     @include('auth/carousel')
 
     <div class="flex-1 flex flex-col w-full">
-        <input type="hidden" id="appid" value="{{ $id }}">
         <div class="relative flex flex-col min-h-screen w-full p-4 overflow-x-hidden">
             {{-- Braner && Background --}}
             @include('auth/banner')

@@ -11,7 +11,6 @@ require('dotenv').config({
 const getEntries = () => {
     const baseEntries = {
         apps: './assets/script/apps.js',
-        login: './assets/script/login.js',
     };
     const configFiles = sync('./assets/script/*/entry.js');
     const moduleEntries = configFiles.reduce((acc, file) => {

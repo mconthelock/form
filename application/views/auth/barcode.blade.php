@@ -2,14 +2,15 @@
     <form action="#" method="POST" class="mt-4" autocomplete="off" id="barcodeLogin">
         <div class="form-control mt-4">
             <label class="label">
-                <span class="label-text font-bold">Employee No</span>
+                <span class="label-text font-bold mb-3">Employee No</span>
             </label>
             <input type="password" name="password" placeholder="Scan Barcode/QR Code your card"
                 class="input input-bordered" autocomplete="new-password" id="barcode-input" required>
         </div>
         <div class="mt-4 flex flex-col gap-3">
             <button type="submit" class="btn btn-primary w-full text-white">Login</button>
-            <button type="button" class="btn btn-neutral w-full text-white">Open Camera</button>
+            <button type="button" class="btn btn-outline btn-primary w-full" id="opencamera">Open
+                Camera</button>
         </div>
     </form>
 </div>

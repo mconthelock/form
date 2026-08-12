@@ -10,7 +10,7 @@
         </p>
     </aside>
     <div class="flex-1 flex flex-col w-full">
-        <h1 class="text-md uppercase opacity-60 font-bold z-0">our service</h1>
+        <h1 class="text-md uppercase opacity-60 font-bold">our service</h1>
         <div class="flex w-full max-sm:flex-col">
             <div class="flex flex-1 flex-col gap-2">
                 <a class="link link-hover" href="{{ base_url() }}phone">AMEC Directory</a>
