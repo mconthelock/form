@@ -1,4 +1,6 @@
-import { getEmpData } from './data';
+import { createTable } from '@amec/webasset/dataTable';
+import { getEmpData, getAreas } from './data';
+import { data } from 'jquery';
 
 (function () {
     const areaStorageKey = 'gp-tph-photo-permission-areas';
@@ -57,6 +59,28 @@ import { getEmpData } from './data';
             const queryString = window.location.search;
             const urlParams = new URLSearchParams(queryString);
             const empno = urlParams.get('empno');
+            const getareas = await getAreas();
+
+            var mockupTable = await createTable(
+                {
+                    data: getareas,
+                    responsive: false,
+                    columns: [
+                        { title: 'sel', data: null },
+                        { title: 'Location', data: 'LOCATION_ID' },
+                        { title: 'Area', data: 'AREA_NAME' },
+                        { title: 'Level', data: 'AREA_ID' },
+                        { title: 'Area Owner', data: 'AREA_OWNER' },
+                    ],
+                },
+                {
+                    id: '#modalTable',
+                    domScroll: {
+                        status: true,
+                    },
+                },
+            );
+
             const getName = await getEmpData(empno);
             $('#INPUTBY').val(empno);
         });
@@ -106,6 +130,17 @@ import { getEmpData } from './data';
                 }
             },
         );
+
+        $(document).on('click', '#btnaddDatarow', function (e) {
+            e.preventDefault();
+
+            const location = $('#LOCATION').val();
+            const area = $('#AREANAME').val();
+            const level = $('#AREALEVEL').val();
+            const areaOwner = $('#AREAOWNER').val();
+
+            $('#modal-add').prop('checked', true);
+        });
 
         function updateAreaIndexes() {
             Array.from(

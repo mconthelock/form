@@ -303,7 +303,7 @@
                                     </span>
                                 </label>
 
-                                <input type="text" id="PURITEM" name="PURITEM"
+                                <input type="text" id="AREANAME" name="AREANAME"
                                     class="input input-bordered input-sm w-full min-w-0 bg-base-100 focus:input-primary" />
                             </div>
 
@@ -313,7 +313,7 @@
                                         AREA LEVEL
                                     </span>
                                 </label>
-                                <input type="text" id="PURITEM" name="PURITEM"
+                                <input type="text" id="AREALEVEL" name="AREALEVEL"
                                     class="input input-bordered input-sm w-full min-w-0 bg-base-100 focus:input-primary" />
                             </div>
 
@@ -323,7 +323,7 @@
                                         LOCATION
                                     </span>
                                 </label>
-                                <input type="text" id="PURITEM" name="PURITEM"
+                                <input type="text" id="LOCATION" name="LOCATION"
                                     class="input input-bordered input-sm w-full min-w-0 bg-base-100 focus:input-primary" />
                             </div>
                         </div>
