@@ -1293,6 +1293,8 @@ export const ReqtypeManager = {
     },
     change() {
         const type = this.type;
+        console.log('type =' + type);
+
         $(`#REQTYPE`).val(type);
         $(
             '#A-section, #U-section, #D-section , #V-section ,#F-section',
