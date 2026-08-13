@@ -575,8 +575,8 @@ export const formManager = {
                 //     }));
                 const term = await getTermcode();
                 const termdata = term.map((t) => ({
-                    value: t.TERMCODE,
-                    text: t.TERMNAME,
+                    value: t.STERMCODE,
+                    text: t.STERMDESC,
                 }));
                 const countries = await getCountries();
                 const countriesData = countries.map((c) => ({
