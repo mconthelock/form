@@ -38,6 +38,7 @@ let itemTable;
 let dataConfirmed = false;
 let newOrderRequest = 0;
 let fieldEdit = null;
+const manualOriginalOrderFields = new WeakMap();
 
 $(document).ready(async function () {
     $("#actionform").html(`
@@ -166,8 +167,8 @@ async function createItemTable() {
                         return '<button type="button" class="btn btn-error btn-outline btn-xs ps-clm-delete" aria-label="Delete item"><i class="icofont-trash"></i></button>';
                     },
                 },
-                { data: "ORDERNO", name: "ORDERNO", render: requiredCell("ORDERNO") },
-                { data: "ITEMNO", name: "ITEMNO", render: requiredCell("ITEMNO") },
+                { data: "ORDERNO", name: "ORDERNO", className: "ps-clm-manual-cell", render: requiredCell("ORDERNO") },
+                { data: "ITEMNO", name: "ITEMNO", className: "ps-clm-manual-cell", render: requiredCell("ITEMNO") },
                 { data: "DESCRIPTION", name: "DESCRIPTION", defaultContent: "" },
                 { data: "DRAWING", name: "DRAWING", className: "ps-clm-drawing-cell", render: requiredCell("DRAWING") },
                 { data: "PURCODE", name: "PURCODE", className: "ps-clm-variable-cell", render: requiredCell("PURCODE") },
@@ -212,8 +213,20 @@ async function createItemTable() {
                 status: true,
                 disabledColumns: [0, 4, 5, 8, 9, 10],
                 columns: {
-                    ORDERNO: requiredInline("Original Order"),
-                    ITEMNO: requiredInline("Item"),
+                    ORDERNO: {
+                        ...requiredInline("Original Order"),
+                        upperCase: true,
+                        skipIfUnchanged: true,
+                        onSuccess: ({ rowData }) => {
+                            markOriginalOrderManual(rowData, "ORDERNO");
+                            updateNewOrderNo();
+                        },
+                    },
+                    ITEMNO: {
+                        ...requiredInline("Item"),
+                        skipIfUnchanged: true,
+                        onSuccess: ({ rowData }) => markOriginalOrderManual(rowData, "ITEMNO"),
+                    },
                     ISSUECARD: requiredInline("SCL-No."),
                     QTY: {
                         ...requiredInline("Qty"),
@@ -312,8 +325,10 @@ async function finishDrawingEdit() {
 
 async function fillOriginalOrder(row, drawing) {
     try {
-        const qty = Number(row.data().QTY);
-        const variable = String(row.data().PURCODE || "").trim();
+        const detail = row.data();
+        const qty = Number(detail.QTY);
+        const variable = String(detail.PURCODE || "").trim();
+        if (isOriginalOrderManual(detail, "ORDERNO") && isOriginalOrderManual(detail, "ITEMNO")) return;
         if (!drawing || !Number.isInteger(qty) || qty <= 0) return;
         const params = new URLSearchParams({ qty });
         if (variable) params.set("variable", variable);
@@ -328,7 +343,7 @@ async function fillOriginalOrder(row, drawing) {
             };
             return [`${match.ORDERNO}|${match.ITEMNO}`, match];
         }).filter(([, match]) => match.ORDERNO && match.ITEMNO)).values()];
-        if (!matches.length) throw new Error(`Drawing and QTY${variable ? " with Variable" : ""} not found in M001`);
+        if (!matches.length) throw new Error(`Drawing and QTY${variable ? " with Variable" : ""} not found in M001. Enter Original Order and Item manually.`);
         if (matches.length > 1) return openOriginalOrderSelect(row, matches);
         await setOriginalOrder(row, matches[0]);
     } catch (error) {
@@ -364,15 +379,16 @@ async function finishOriginalOrderSelect() {
     const match = fieldEdit.matches[index];
     if (!match) return;
     const resolve = fieldEdit.resolve;
-    await setOriginalOrder(fieldEdit.row, match);
+    await setOriginalOrder(fieldEdit.row, match, true);
     resolve?.();
     closeFieldEdit();
 }
 
-async function setOriginalOrder(row, match) {
+async function setOriginalOrder(row, match, force = false) {
     const detail = row.data();
-    detail.ORDERNO = match.ORDERNO;
-    detail.ITEMNO = match.ITEMNO;
+    if (force) manualOriginalOrderFields.delete(detail);
+    if (force || !isOriginalOrderManual(detail, "ORDERNO")) detail.ORDERNO = match.ORDERNO;
+    if (force || !isOriginalOrderManual(detail, "ITEMNO")) detail.ITEMNO = match.ITEMNO;
     detail.DESCRIPTION = match.PARTNAME;
     row.data(detail).invalidate().draw(false);
     resetDataConfirm();
@@ -436,7 +452,18 @@ function requiredInline(label) {
     };
 }
 
+function markOriginalOrderManual(row, key) {
+    const fields = manualOriginalOrderFields.get(row) || new Set();
+    fields.add(key);
+    manualOriginalOrderFields.set(row, fields);
+}
+
+function isOriginalOrderManual(row, key) {
+    return manualOriginalOrderFields.get(row)?.has(key) === true;
+}
+
 const excelHeaders = {
+    ORDERNO: ["original order", "original order no", "original order number"],
     DESCRIPTION: ["part name", "partname"],
     DRAWING: ["drawing no", "drawing number", "drawing"],
     QTY: ["quantity", "qty"],
@@ -448,6 +475,7 @@ const excelHeaders = {
 
 const excelTargets = {
     "": "Ignore",
+    ORDERNO: "Original Order",
     DESCRIPTION: "Part Name",
     DRAWING: "Drawing",
     QTY: "Qty",
@@ -602,7 +630,11 @@ async function finishExcelImport() {
     const imported = data.rows.map((values) => {
         const row = createEmptyRow();
         mapping.forEach((target, index) => {
-            if (target) row[target] = String(values[index] ?? "").trim();
+            if (!target) return;
+            row[target] = String(values[index] ?? "").trim();
+            if (["ORDERNO", "ITEMNO"].includes(target) && row[target]) {
+                markOriginalOrderManual(row, target);
+            }
         });
         row.DRAWING = validateDrawingNo(row.DRAWING) || String(row.DRAWING || "").toUpperCase();
         row.PURCODE = buildVariable(splitVariable(row.PURCODE));
@@ -700,6 +732,11 @@ function showConfirmData(openModal = true) {
     const failed = checks.filter((item) => !item.valid);
     dataConfirmed = failed.length === 0;
     setRequestEnabled(dataConfirmed);
+    if (dataConfirmed && openModal) {
+        closeConfirmModal();
+        showMessage("Data is complete and ready to request.", "success");
+        return true;
+    }
     if (openModal || failed.length) {
         renderConfirmChecks(checks, failed.length);
         openConfirmModal();
@@ -710,6 +747,9 @@ function showConfirmData(openModal = true) {
 function getConfirmChecks() {
     const inputBy = String($("#INPUTBY").val() || "").trim();
     const requestBy = String($("#REQBY").val() || "").trim();
+    const claimSlipNo = itemTable.rows().data().toArray()
+        .map((item) => String(item.ISSUECARD || "").trim())
+        .find(Boolean) || "";
     const checks = [
         formCheck("INPUTBY", inputBy, /^\d{5}$/.test(inputBy) && Boolean($("#inputName").val()), "Please input a valid 5 digit employee number."),
         formCheck("REQBY", requestBy, /^\d{5}$/.test(requestBy) && Boolean($("#requestName").val()), "Please input a valid 5 digit requester number."),
@@ -718,7 +758,7 @@ function getConfirmChecks() {
     itemTable.rows().every(function (rowIndex) {
         const data = this.data();
         requiredKeys.forEach((key) => {
-            checks.push(itemCheck(rowIndex, key, data[key]));
+            checks.push(itemCheck(rowIndex, key, data[key], claimSlipNo));
         });
         ["TYPE"].forEach((key) => {
             checks.push(itemDisplay(rowIndex, key, data[key]));
@@ -738,8 +778,12 @@ function formCheck(key, value, valid, message) {
     };
 }
 
-function itemCheck(rowIndex, key, value) {
-    const valid = validateItemValue(key, value);
+function itemCheck(rowIndex, key, value, claimSlipNo) {
+    const normalizedValue = String(value || "").trim();
+    const claimSlipMismatch = key === "ISSUECARD"
+        && Boolean(normalizedValue)
+        && normalizedValue !== claimSlipNo;
+    const valid = validateItemValue(key, value) && !claimSlipMismatch;
     const columnIndex = itemTable.column(`${key}:name`).index();
     const cellNode = itemTable.cell(rowIndex, columnIndex).node();
     $(cellNode).toggleClass("ps-clm-invalid", !valid);
@@ -751,7 +795,9 @@ function itemCheck(rowIndex, key, value) {
         label: `Line ${rowIndex + 1} - ${fieldLabels[key] || key}`,
         value,
         valid,
-        message: getItemMessage(key),
+        message: claimSlipMismatch
+            ? "Claim Slip No. must be the same for every item."
+            : getItemMessage(key),
     };
 }
 
@@ -768,7 +814,7 @@ function itemDisplay(rowIndex, key, value) {
 }
 
 function getItemMessage(key) {
-    if (key === "ORDERNO") return "Original Order must start with E or S.";
+    if (key === "ORDERNO") return "Original Order must start with E or S. If unavailable, enter E or S to identify the order type.";
     if (key === "DRAWING") return "Please enter a valid Drawing.";
     if (key === "PURCODE") return "Please enter a valid Variable.";
     if (key === "QTY") return "Please enter a valid Qty.";
@@ -826,7 +872,9 @@ async function applyConfirmInputs() {
 
         const row = itemTable.row(Number($(this).data("row")));
         const data = row.data();
+        const changed = value !== String(data[key] ?? "").trim();
         data[key] = key === "QTY" && validateItemValue(key, value) ? Number(value) : value;
+        if (changed && ["ORDERNO", "ITEMNO"].includes(key)) markOriginalOrderManual(data, key);
         row.data(data);
     });
 
