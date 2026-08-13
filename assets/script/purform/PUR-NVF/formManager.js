@@ -1271,7 +1271,14 @@ export const ReqtypeManager = {
         return $('input[name="REQTYPE_SHOW"]');
     },
     get type() {
-        return this.radio.filter(':checked').attr('r-type');
+        const checked = this.radio.filter(':checked');
+
+        // เช็คเผื่อกรณีที่ยังไม่มีการเลือก radio ตัวใดเลย
+        if (checked.length === 0) {
+            return undefined;
+        }
+
+        return checked.attr('r-type');
     },
     set value(val) {
         this.radio.each(function () {
