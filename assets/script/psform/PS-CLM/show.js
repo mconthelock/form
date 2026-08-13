@@ -242,7 +242,7 @@ function showAs400Preview(data = {}) {
                     <span>READ ONLY</span>
                 </div>
                 <p class="ps-clm-as400-notice">SIMULATION ONLY - NOTHING WAS INSERTED - BLANK FIELDS ARE HIDDEN</p>
-                ${renderFile("M001KP", data.m001)}
+                ${renderFile("RTNLIBF.M001KPBM / DBGDEV14.M001KP", data.m001)}
                 ${renderFile("RTNLIBF.M002KPBM / DBGDEV14.M002KP", data.m002)}
                 ${renderFile("M008KP", data.m008)}
                 ${renderFile("M012KP", data.m012)}

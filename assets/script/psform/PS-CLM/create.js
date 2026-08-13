@@ -732,6 +732,11 @@ function showConfirmData(openModal = true) {
     const failed = checks.filter((item) => !item.valid);
     dataConfirmed = failed.length === 0;
     setRequestEnabled(dataConfirmed);
+    if (dataConfirmed && openModal) {
+        closeConfirmModal();
+        showMessage("Data is complete and ready to request.", "success");
+        return true;
+    }
     if (openModal || failed.length) {
         renderConfirmChecks(checks, failed.length);
         openConfirmModal();
@@ -742,6 +747,9 @@ function showConfirmData(openModal = true) {
 function getConfirmChecks() {
     const inputBy = String($("#INPUTBY").val() || "").trim();
     const requestBy = String($("#REQBY").val() || "").trim();
+    const claimSlipNo = itemTable.rows().data().toArray()
+        .map((item) => String(item.ISSUECARD || "").trim())
+        .find(Boolean) || "";
     const checks = [
         formCheck("INPUTBY", inputBy, /^\d{5}$/.test(inputBy) && Boolean($("#inputName").val()), "Please input a valid 5 digit employee number."),
         formCheck("REQBY", requestBy, /^\d{5}$/.test(requestBy) && Boolean($("#requestName").val()), "Please input a valid 5 digit requester number."),
@@ -750,7 +758,7 @@ function getConfirmChecks() {
     itemTable.rows().every(function (rowIndex) {
         const data = this.data();
         requiredKeys.forEach((key) => {
-            checks.push(itemCheck(rowIndex, key, data[key]));
+            checks.push(itemCheck(rowIndex, key, data[key], claimSlipNo));
         });
         ["TYPE"].forEach((key) => {
             checks.push(itemDisplay(rowIndex, key, data[key]));
@@ -770,8 +778,12 @@ function formCheck(key, value, valid, message) {
     };
 }
 
-function itemCheck(rowIndex, key, value) {
-    const valid = validateItemValue(key, value);
+function itemCheck(rowIndex, key, value, claimSlipNo) {
+    const normalizedValue = String(value || "").trim();
+    const claimSlipMismatch = key === "ISSUECARD"
+        && Boolean(normalizedValue)
+        && normalizedValue !== claimSlipNo;
+    const valid = validateItemValue(key, value) && !claimSlipMismatch;
     const columnIndex = itemTable.column(`${key}:name`).index();
     const cellNode = itemTable.cell(rowIndex, columnIndex).node();
     $(cellNode).toggleClass("ps-clm-invalid", !valid);
@@ -783,7 +795,9 @@ function itemCheck(rowIndex, key, value) {
         label: `Line ${rowIndex + 1} - ${fieldLabels[key] || key}`,
         value,
         valid,
-        message: getItemMessage(key),
+        message: claimSlipMismatch
+            ? "Claim Slip No. must be the same for every item."
+            : getItemMessage(key),
     };
 }
 
@@ -800,7 +814,7 @@ function itemDisplay(rowIndex, key, value) {
 }
 
 function getItemMessage(key) {
-    if (key === "ORDERNO") return "Original Order must start with E or S.";
+    if (key === "ORDERNO") return "Original Order must start with E or S. If unavailable, enter E or S to identify the order type.";
     if (key === "DRAWING") return "Please enter a valid Drawing.";
     if (key === "PURCODE") return "Please enter a valid Variable.";
     if (key === "QTY") return "Please enter a valid Qty.";

@@ -401,7 +401,7 @@
                     <tbody id="itemRows"></tbody>
                 </table>
             </div>
-            <p class="mt-2 text-xs text-base-content/70">Original Order and Item are filled from the Drawing when matched. Click either cell to enter or override the value manually.</p>
+            <p class="mt-2 text-xs text-base-content/70">Claim Slip No. must be the same for every item. Original Order and Item are filled from the Drawing when matched; if there is no Original Order, please enter E or S to identify the order type.</p>
             <div id="actionform"></div>
         </section>
     </form>
