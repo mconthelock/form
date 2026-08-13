@@ -1271,13 +1271,7 @@ export const ReqtypeManager = {
         return $('input[name="REQTYPE_SHOW"]');
     },
     get type() {
-        let type = null;
-        this.radio.each(function () {
-            if ($(this).is(':checked')) {
-                type = $(this).attr('r-type');
-            }
-        });
-        return type;
+        return this.radio.filter(':checked').attr('r-type');
     },
     set value(val) {
         this.radio.each(function () {
