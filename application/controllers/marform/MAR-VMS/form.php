@@ -1069,8 +1069,10 @@ class form extends MY_Controller{
             $totalRow = $currentRow + 3;
         }
         
+        
         $sheet->setCellValue("S{$totalRow}",   $total);   
-        $templateStart = $currentRow + 5;
+       // $templateStart = $currentRow + 5;
+        $templateStart = $totalRow + 3;
         $templateCount = 2;  // Template มี 3 แถว (12–14)
         $templateEnd   = $templateStart + $templateCount - 1;
         $extra = count($data['pproj']) - $templateCount;
@@ -1094,7 +1096,7 @@ class form extends MY_Controller{
         {
             $totalRow = $currentRow + 2;
         }else{
-            $totalRow = $currentRow + 4;
+            $totalRow = $currentRow + 3;
         }
         $sheet->setCellValue("S{$totalRow}",   $total);   
         $writer = new Xlsx($spreadsheet);
