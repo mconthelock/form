@@ -387,8 +387,9 @@
                 <div id="select-wrapper" class="inline-block">
                  <select id="stdcur" name="CURCODE" class="input input-sm border border-gray-400 h-8 rounded px-2 w-48 currency req">
                     <option value="" disabled selected>...</option>
+                    </select>
                 </div>
-                    </select><span id="constdcur" class="hidden">xxxxxxxxxx</span>
+                    <span id="constdcur" class="text-gray-700 text-sm hidden"></span>
             </div>
         </div>
     <div class="grid grid-cols-[170px_1fr] items-start gap-4">

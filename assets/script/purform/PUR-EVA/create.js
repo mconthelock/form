@@ -278,13 +278,14 @@ $(document).on('change', '.radio-opr', async function () {
         updateCheck.prop('disabled', false);
         $('#stdcur').prop('disabled', true);
         $('#select-wrapper').hide();
-        $('#constdcur').show();
+        $('#constdcur').removeClass('hidden');
     } else {
         vendorInput.prop('disabled', true).val('');
         updateCheck.prop('disabled', true).prop('checked', false);
         $('#stdcur').prop('disabled', false);
+        // $('#select-wrapper').removeClass('hidden');
         $('#select-wrapper').show();
-        $('#constdcur').hide();
+        $('#constdcur').addClass('hidden');
     }
 });
 
@@ -977,9 +978,20 @@ function setVendorMstInfo(vendorMstData) {
     $('input[name="BANKNAME"]').val(vendorMstData.BANKNAME);
     $('input[name="BRANCH"]').val(vendorMstData.BRANCH);
     $('input[name="ACCNUMBER"]').val(vendorMstData.ACCNUMBER);
+    console.log(vendorMstData.VENDOR_CODES);
+
     for (const VENDOR of vendorMstData.VENDOR_CODES) {
-        if (VENDOR.CODE_NUM == $('#VENDORCODE').val()) {
+        console.log(VENDOR.CODE_NUM);
+        console.log($('#VENDCODE').val());
+
+        if (VENDOR.CODE_NUM == $('#VENDCODE').val()) {
             paymentTermManager.value = VENDOR.TERM.STERMCODE;
+            currencyManager.value = VENDOR.STDCUR.CURR_CODE;
+            console.log(VENDOR.STDCUR.CURR_NAME);
+
+            $('#constdcur').text(VENDOR.STDCUR.CURR_NAME);
+        } else {
+            console.log('else');
         }
     }
 }
