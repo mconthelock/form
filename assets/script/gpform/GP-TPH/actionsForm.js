@@ -4,6 +4,7 @@ import { data } from 'jquery';
 
 (function () {
     const areaStorageKey = 'gp-tph-photo-permission-areas';
+    let mockupTable = null;
 
     function getStoredAreas() {
         try {
@@ -62,7 +63,7 @@ import { data } from 'jquery';
             const getareas = await getAreas();
             const getlocations = await getLocations();
 
-            var mockupTable = await createTable(
+            mockupTable = await createTable(
                 {
                     data: getareas,
                     getLocations,
@@ -77,7 +78,8 @@ import { data } from 'jquery';
                                 return `
                         <input
                             type="checkbox"
-                            class="row-select-area"
+                            class="row-select-area "
+                            style="width: 18px; height: 18px; accent-color: #1e40af;"
                             value="${row.AREA_ID || row.id || row.LOCATION_NAME || ''}"
                         />
                     `;
@@ -156,6 +158,63 @@ import { data } from 'jquery';
             const areaOwner = $('#AREAOWNER').val();
 
             $('#modal-add').prop('checked', true);
+        });
+
+        $(document).on('click', '#addData', function (e) {
+            e.preventDefault();
+
+            if (!mockupTable) {
+                return;
+            }
+
+            const rows = mockupTable.rows({ page: 'all' }).data().toArray();
+            const checkboxes = document.querySelectorAll(
+                '#modalTable tbody input.row-select-area',
+            );
+            const selectedRows = [];
+
+            checkboxes.forEach(function (checkbox, index) {
+                if (checkbox.checked) {
+                    selectedRows.push(rows[index]);
+                }
+            });
+
+            if (!selectedRows.length) {
+                alert('กรุณาเลือกข้อมูลก่อน');
+                return;
+            }
+
+            const areaTemplate = document.getElementById('area-row-template');
+            const emptyRow = document.getElementById('area-empty-row');
+
+            if (emptyRow) {
+                emptyRow.remove();
+            }
+
+            selectedRows.forEach(function (row) {
+                if (!areaTemplate) {
+                    return;
+                }
+
+                const clone = areaTemplate.content.cloneNode(true);
+                const rowIndex =
+                    areaBody.querySelectorAll('tr:not(#area-empty-row)')
+                        .length + 1;
+
+                clone.querySelector('td:first-child').textContent = rowIndex;
+                clone.querySelector('input[name="area_location[]"]').value =
+                    row.LOCATION?.LOCATION_NAME || '';
+                clone.querySelector('input[name="area_name[]"]').value =
+                    row.AREA_NAME || '';
+                clone.querySelector('input[name="area_level[]"]').value =
+                    row.AREA_LEVEL || '';
+                clone.querySelector('input[name="area_owner[]"]').value =
+                    row.AREA_OWNER || '';
+
+                areaBody.appendChild(clone);
+            });
+
+            $('#modal-add').prop('checked', false);
         });
 
         function updateAreaIndexes() {

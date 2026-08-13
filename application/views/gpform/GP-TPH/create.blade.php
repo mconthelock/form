@@ -92,7 +92,7 @@
                 <!สำหรับพนักงาน>
                     <div class="flex items-center justify-between mb-4">
                         <div class="section-title text-base font-bold">Applicant / Visitor Information (ข้อมูลผู้ขอ)</div>
-                        <button type="button" id="add-visitor-row" class="btn btn-sm btn-success">+</button>
+                            <button type="button" id="add-visitor-row" class="btn btn-sm btn-primary">+</button>           
                     </div>
                     <div class="overflow-x-auto">
                         <table class="table w-full border border-slate-200">
