@@ -296,7 +296,7 @@
                     <!-- Search Area -->
                     <div class="w-full rounded-xl border border-base-300 bg-base-200/60 p-4 shadow-sm">
                         <div class="grid w-full grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                            <div class="form-control w-full min-w-0" id="hiddenPuritem">
+                            <div class="form-control w-full min-w-0" id="hiddenAREANAME">
                                 <label class="label py-1">
                                     <span class="label-text font-bold text-base-content/80">
                                         AREA NAME
@@ -307,7 +307,7 @@
                                     class="input input-bordered input-sm w-full min-w-0 bg-base-100 focus:input-primary" />
                             </div>
 
-                            <div class="form-control w-full min-w-0">
+                            <div class="form-control w-full min-w-0" id ="hiddenAREALEVEL">
                                 <label class="label py-1">
                                     <span class="label-text font-bold text-base-content/80">
                                         AREA LEVEL
@@ -317,7 +317,7 @@
                                     class="input input-bordered input-sm w-full min-w-0 bg-base-100 focus:input-primary" />
                             </div>
 
-                            <div class="form-control w-full min-w-0" id="hiddenSch">
+                            <div class="form-control w-full min-w-0" id="hiddenLOCATION">
                                 <label class="label py-1">
                                     <span class="label-text font-bold text-base-content/80">
                                         LOCATION

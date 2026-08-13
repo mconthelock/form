@@ -1,5 +1,5 @@
 import { createTable } from '@amec/webasset/dataTable';
-import { getEmpData, getAreas } from './data';
+import { getEmpData, getAreas, getLocations } from './data';
 import { data } from 'jquery';
 
 (function () {
@@ -60,16 +60,32 @@ import { data } from 'jquery';
             const urlParams = new URLSearchParams(queryString);
             const empno = urlParams.get('empno');
             const getareas = await getAreas();
+            const getlocations = await getLocations();
 
             var mockupTable = await createTable(
                 {
                     data: getareas,
+                    getLocations,
                     responsive: false,
                     columns: [
-                        { title: 'sel', data: null },
-                        { title: 'Location', data: 'LOCATION_ID' },
+                        {
+                            title: 'Sel',
+                            data: null,
+                            orderable: false,
+                            searchable: false,
+                            render: function (data, type, row) {
+                                return `
+                        <input
+                            type="checkbox"
+                            class="row-select-area"
+                            value="${row.AREA_ID || row.id || row.LOCATION_NAME || ''}"
+                        />
+                    `;
+                            },
+                        },
+                        { title: 'Location', data: 'LOCATION.LOCATION_NAME' },
                         { title: 'Area', data: 'AREA_NAME' },
-                        { title: 'Level', data: 'AREA_ID' },
+                        { title: 'Level', data: 'AREA_LEVEL' },
                         { title: 'Area Owner', data: 'AREA_OWNER' },
                     ],
                 },

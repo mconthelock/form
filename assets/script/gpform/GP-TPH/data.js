@@ -13,3 +13,10 @@ export async function getAreas() {
         method: 'GET',
     });
 }
+
+export async function getLocations() {
+    return await fetchUtils({
+        url: `${process.env.APP_API}/gpform/gp-tph/locations`,
+        method: 'GET',
+    });
+}
