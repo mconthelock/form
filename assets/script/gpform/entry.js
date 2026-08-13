@@ -15,24 +15,28 @@ module.exports = {
     bus_passenger: './assets/script/gpform/BUS/bus_passenger.js',
     bus_overtime: './assets/script/gpform/BUS/bus_overtime.js',
 
-    //GP-TRN
-    alert: './assets/script/gpform/GP-TRN/alert.js',
-    formUtils: './assets/script/gpform/GP-TRN/formUtils.js',
-    validators: './assets/script/gpform/GP-TRN/validators.js',
-    view_train: './assets/script/gpform/GP-TRN/view_train.js',
-    manage_data: './assets/script/gpform/GP-TRN/manage_data.js',
-    emp_lookup: './assets/script/gpform/GP-TRN/emp_lookup.js',
-    training_select: './assets/script/gpform/GP-TRN/training_select.js',
-    training_functional: './assets/script/gpform/GP-TRN/training_functional.js',
-    training_legal: './assets/script/gpform/GP-TRN/training_legal.js',
-    training_meth: './assets/script/gpform/GP-TRN/training_meth.js',
-    training_pos: './assets/script/gpform/GP-TRN/training_pos.js',
-    training_out: './assets/script/gpform/GP-TRN/training_out.js',
-    form_client: './assets/script/gpform/GP-TRN/form_client.js',
-    training_main: './assets/script/gpform/GP-TRN/training_main.js',
-    view_train_report: './assets/script/gpform/GP-TRN/view_train_report.js',
-    manage_group: './assets/script/gpform/GP-TRN/manage_group.js',
-    show_sum_report: './assets/script/gpform/GP-TRN/show_sum_report.js',
+	//GP-TRN
+	alert: "./assets/script/gpform/GP-TRN/alert.js",
+	formUtils: "./assets/script/gpform/GP-TRN/formUtils.js",
+	validators: "./assets/script/gpform/GP-TRN/validators.js",
+	view_train: "./assets/script/gpform/GP-TRN/view_train.js",
+	manage_data: "./assets/script/gpform/GP-TRN/manage_data.js",
+	emp_lookup: "./assets/script/gpform/GP-TRN/emp_lookup.js",
+	training_select: "./assets/script/gpform/GP-TRN/training_select.js",
+	training_functional: "./assets/script/gpform/GP-TRN/training_functional.js",
+	training_legal: "./assets/script/gpform/GP-TRN/training_legal.js",
+	training_meth: "./assets/script/gpform/GP-TRN/training_meth.js",
+	training_pos: "./assets/script/gpform/GP-TRN/training_pos.js",
+	training_out: "./assets/script/gpform/GP-TRN/training_out.js",
+	form_client: "./assets/script/gpform/GP-TRN/form_client.js",
+	training_main: "./assets/script/gpform/GP-TRN/training_main.js",
+	view_train_report: "./assets/script/gpform/GP-TRN/view_train_report.js",
+	manage_group: "./assets/script/gpform/GP-TRN/manage_group.js",
+	show_sum_report: "./assets/script/gpform/GP-TRN/show_sum_report.js",
+
+	//GP-GAR
+	gar_form: "./assets/script/gpform/GP-GAR/index.js",
+	show_form: "./assets/script/gpform/GP-GAR/show.js",
 
     //GP-GAR
     gar_form: './assets/script/gpform/GP-GAR/index.js',
@@ -40,5 +44,5 @@ module.exports = {
 
     //GP-RB
     gpRB: './assets/script/gpform/GP-RB/actionsForm.js',
-    gpRBview: './assets/script/gpform/GP-RB/show.js',
+    gpRBview: './assets/script/gpform/GP-RB/show.js'
 };

@@ -1,6 +1,4 @@
-import {
-    getUserbyemp,
-} from "./data.js";
+import { getUserbyemp, createMfgOr, searchMfgOrCenter} from "./data.js";
 import { showLoader } from "@amec/webasset/preloader";
 import { showMessage, showConfirm } from "@amec/webasset/utils";
 import { createTable } from "@amec/webasset/dataTable";
@@ -19,7 +17,6 @@ $(document).ready(function () {
         init: function () {
             this.bindEvents();
             this.initRequestBy();
-            this.initApplyForOptions();
             this.initRadioTextbox();
         },
 
@@ -27,6 +24,7 @@ $(document).ready(function () {
             this.bindRequestByEvent();
             this.bindButtonEvents();
             this.bindRadioEvents();
+            this.bindCurrentNoEvent();
         },
 
         bindRequestByEvent: function () {
@@ -58,10 +56,93 @@ $(document).ready(function () {
             $('input[name="type_form"]').on('change', function () {
                 OR.toggleTypeForm();
             });
+        },
 
-            $('input[name="item_type"]').on('change', function () {
-                OR.toggleItemType();
+        bindCurrentNoEvent: function () {
+            $('#current_no').on('input', function () {this.value = $.trim(this.value).toUpperCase();});
+            $('#current_no').on('blur', async function () {
+                const currentNo = $.trim(this.value).toUpperCase();
+                if (!currentNo) {
+                    OR.resetCurrentNoInfo();
+                    return;
+                }
+
+                if (currentNo.length !== 12) {
+                    await OR.showAlert({icon: 'warning', title: 'Current No ไม่ถูกต้อง', text: 'กรุณากรอก Current No ให้ครบ 12 ตัวอักษร'});
+                    OR.resetCurrentNoInfo();
+                    $('#current_no').focus();
+                    return;
+                }
+                await OR.searchCurrentNo(currentNo);
             });
+        },
+
+        searchCurrentNo: async function (currentNo) {
+            try {
+                showLoader({ show: true });
+                const res = await searchMfgOrCenter({ ORNO: currentNo });
+                const row = Array.isArray(res?.data) ? res.data[0] : res?.data;
+                const foundOrno = String(row?.ORNO || '').trim().toUpperCase();
+
+                if (!res?.status || !row || foundOrno !== currentNo) {
+                    showLoader({ show: false });
+                    await this.showAlert({
+                        icon: 'warning',
+                        title: 'ไม่พบ Current No.',
+                        text: `ไม่พบข้อมูล ${currentNo} ใน MFGOR_CENTER`
+                    });
+                    this.resetCurrentNoInfo();
+                    $('#current_no').focus();
+                    return;
+                }
+
+                const currentRev = String(row.REVNO || '*').trim().toUpperCase();
+                const nextRev = this.getNextRev(currentRev);
+
+                $('#current_no').val(foundOrno);
+                $('#current_rev').text(currentRev);
+                $('#next_rev').text(nextRev);
+                $('#rev').val(nextRev);
+
+                $('#topic').val(row.TOPIC || '');
+                $('#current_topic').text(row.TOPIC || '-');
+                $('#current_info').removeClass('hidden');
+
+            } catch (error) {
+                console.error('SEARCH CURRENT NO ERROR:', error);
+
+                await this.showAlert({
+                    icon: 'error',
+                    title: 'Search Current No failed',
+                    text: error?.message || ''
+                });
+
+                this.resetCurrentNoInfo();
+                $('#current_no').focus();
+
+            } finally {
+                showLoader({ show: false });
+            }
+        },
+
+        resetCurrentNoInfo: function () {
+            $('#current_no').val('');
+            $('#rev').val('*');
+
+            $('#topic').val('');
+            $('#current_rev').text('-');
+            $('#next_rev').text('-');
+            $('#current_topic').text('-');
+            $('#current_info').addClass('hidden');
+        },
+
+        getNextRev: function (rev) {
+            const value = String(rev || '*').trim().toUpperCase();
+            if (value === '*') { return 'A';}
+
+            const code = value.charCodeAt(0);
+            if (code < 65 || code > 90) { return 'A';}
+            return String.fromCharCode(code + 1);
         },
 
         initRequestBy: async function () {
@@ -101,51 +182,23 @@ $(document).ready(function () {
             $('#ssec').val($.trim(user?.SSEC));
         },
 
-        initApplyForOptions: function () {
-            const list = [
-                'BS,SH,GC',
-                'PR',
-                'PB,PS',
-                'TP,IW',
-                'EW,AG,YS,SY',
-                'RL',
-                'VM',
-                'HB',
-                'HG',
-                'BD,RD,SD',
-                'MC,NL',
-                'AC,WC',
-                'ASSY',
-                'Other'
-            ];
-
-            $('#apply_for')
-                .empty()
-                .append('<option value="">--- Please select ---</option>')
-                .append(list.map(item => `<option value="${item}">${item}</option>`).join(''));
-        },
-
         initRadioTextbox: function () {
             this.toggleTypeForm();
-            this.toggleItemType();
         },
 
         toggleTypeForm: function () {
             const typeForm = $('input[name="type_form"]:checked').val();
-            this.toggleTextbox(typeForm === 'REVISE', '#current_no');
-        },
+            const isRevise = typeForm === 'REVISE';
 
-        toggleItemType: function () {
-            const itemType = $('input[name="item_type"]:checked').val();
+            this.toggleTextbox(isRevise, '#current_no');
 
-            this.toggleTextbox(itemType === 'ALL', '#overall_item');
-            this.toggleTextbox(itemType === 'OR', '#or_item');
+            if (!isRevise) {
+                this.resetCurrentNoInfo();
+            }
         },
 
         toggleTextbox: function (isActive, selector) {
-            $(selector)
-                .prop('disabled', !isActive)
-                .val(isActive ? $(selector).val() : '');
+            $(selector).prop('disabled', !isActive).val(isActive ? $(selector).val() : '');
 
             if (isActive) {
                 $(selector).focus();
@@ -159,22 +212,10 @@ $(document).ready(function () {
             if (!$('input[name="type_form"]:checked').val()) errors.push('Type Form');
             if (!$('input[name="classification"]:checked').val()) errors.push('Classification');
             if (!$.trim($('#topic').val())) errors.push('Topic');
-            if (!$('input[name="item_type"]:checked').val()) errors.push('Item Type');
-            if (!$('#apply_for').val()) errors.push('Apply For');
 
             if ($('input[name="type_form"]:checked').val() === 'REVISE'
                 && !$.trim($('#current_no').val())) {
                 errors.push('Current No.');
-            }
-
-            if ($('input[name="item_type"]:checked').val() === 'ALL'
-                && !$.trim($('#overall_item').val())) {
-                errors.push('Overall Item');
-            }
-
-            if ($('input[name="item_type"]:checked').val() === 'OR'
-                && !$.trim($('#or_item').val())) {
-                errors.push('OR Item');
             }
 
             if ($('#or_excel')[0].files.length === 0) errors.push('OR Excel File');
@@ -192,6 +233,103 @@ $(document).ready(function () {
             return true;
         },
 
+        getWebflowParams: function () {
+            const inputBy = String($('#inputBy').val() || '');
+            return {
+                NFRMNO: String($('#nfrmno').val() || ''),
+                VORGNO: String($('#vorgno').val() || ''),
+                CYEAR: String($('#cyear').val() || ''),
+                REQBY: String($('#request_by').val() || inputBy),
+                INPUTBY: inputBy,
+                SSECCODE: String($('#sseccode').val() || '')
+            };
+        },
+
+        createWebflowForm: async function () {
+            const params = this.getWebflowParams();
+
+            if (!params.NFRMNO || !params.VORGNO || !params.CYEAR) {
+                throw new Error('ไม่พบข้อมูล NFRMNO / VORGNO / CYEAR');
+            }
+
+            const result = await createForm(params);
+            if (!result?.status) {
+                throw new Error(result?.message || 'Create form ไม่สำเร็จ');
+            }
+            return result;
+        },
+
+        uploadFile: async function (webflowData = {}) {
+            const excelInput = $('#or_excel')[0];
+            const pdfInput = $('#or_pdf')[0];
+            const formData = new FormData();
+            formData.append('NFRMNO', webflowData.NFRMNO || $('#nfrmno').val());
+            formData.append('VORGNO', webflowData.VORGNO || $('#vorgno').val());
+            formData.append('CYEAR', webflowData.CYEAR || $('#cyear').val());
+            formData.append('CYEAR2', webflowData.CYEAR2 || '');
+            formData.append('NRUNNO', webflowData.NRUNNO || '');
+
+            if (excelInput?.files?.length) {
+                Array.from(excelInput.files).forEach(function (file) {
+                    formData.append('filUpload_ref[]', file);
+                });
+            }
+
+            if (pdfInput?.files?.length) {
+                Array.from(pdfInput.files).forEach(function (file) {
+                    formData.append('filUpload_ref[]', file);
+                });
+            }
+
+            const res = await $.ajax({
+                url: host + 'mfgform/MFG-OR/main_or/uploadfile',
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                dataType: 'json'
+            });
+
+            console.log('OR UPLOAD RESULT:', res);
+
+            if (!res.status) {
+                throw new Error(res.message || 'Upload file ไม่สำเร็จ');
+            }
+
+            return res.files || [];
+        },
+
+        getFormPayload: function (webflowData = {}, uploadedFiles = []) {
+            const typeform = String($('input[name="type_form"]:checked').val() || '');
+            const currentNo = $.trim($('#current_no').val()) || null;
+
+            return {
+                NFRMNO: Number(webflowData.NFRMNO || $('#nfrmno').val()),
+                VORGNO: String(webflowData.VORGNO || $('#vorgno').val()),
+                CYEAR: String(webflowData.CYEAR || $('#cyear').val()),
+                CYEAR2: String(webflowData.CYEAR2),
+                NRUNNO: Number(webflowData.NRUNNO),
+
+                INPUTBY: String($('#inputBy').val() || ''),
+                REQBY: String($('#request_by').val() || ''),
+                SSECCODE: String($('#sseccode').val() || ''),
+                SDEPCODE: String($('#sdepcode').val() || ''),
+                SSEC: String($('#ssec').val() || ''),
+
+                TYPEFORM: typeform,
+                ORNO: typeform === 'REVISE'? $.trim($('#current_no').val()) || null: null,
+                REV: typeform === 'REVISE' ? $.trim($('#next_rev').text()) || null : '*',
+                SEQNO: typeform === 'REVISE' ? Number(currentNo.slice(-3)): null,
+
+                CLASS: String($('input[name="classification"]:checked').val() || ''),
+                TOPIC: $.trim($('#topic').val()) || null,
+
+                att: uploadedFiles.map(file => ({
+                    FILENAME: file
+                }))
+            };
+        },
+
         submitForm: async function (actionType) {
             if (!this.validateForm()) {
                 return;
@@ -201,11 +339,38 @@ $(document).ready(function () {
             showLoader({ show: true });
 
             try {
-                console.log('OR ACTION:', actionType);
+                const webflow = await this.createWebflowForm();
+                const webflowData = webflow?.data || {};
 
-                // TODO: createForm / upload file / save data ต่อจากตรงนี้
+                const uploadedFiles = await this.uploadFile(webflowData);
+                const payload = this.getFormPayload(webflowData, uploadedFiles);
 
+                console.log('MFG OR PAYLOAD:', payload);
+
+                const res = await createMfgOr(payload);
+
+                if (res.status === true || res.status === 'success') {
+                    showLoader({ show: false });
+                    this.setLoading(false);
+
+                    await this.showAlert({
+                        icon: 'success',
+                        title: 'บันทึกข้อมูลสำเร็จ',
+                        text: 'ระบบได้ทำการบันทึกข้อมูลเรียบร้อยแล้ว'
+                    });
+
+                    redirectWebflow(); 
+                } else {
+                    this.showAlert({
+                        icon: 'error',
+                        title: 'บันทึกข้อมูลไม่สำเร็จ',
+                        text: res.message || ''
+                    });
+                }
+            
             } catch (error) {
+                console.log(error);
+                console.log(JSON.stringify(error));
                 console.error('SUBMIT OR FORM ERROR:', error);
 
                 this.showAlert({

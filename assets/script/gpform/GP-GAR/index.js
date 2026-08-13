@@ -8,7 +8,6 @@ import { setDatePicker } from "@amec/webasset/flatpickr";
 import { webflowSubmit } from "@amec/webasset/components/form";
 import { setSelect2 } from "@amec/webasset/select2";
 import Select2 from "select2";
-import { data } from "jquery";
 import { logFormData } from "@amec/webasset/utils";
 import { fetchUtils } from "@amec/webasset/api/fetch-utils";
 import { redirectWebflow } from "@amec/webasset/form";

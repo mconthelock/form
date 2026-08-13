@@ -6,9 +6,27 @@
             height: 48px;
         }
 
+        #stampTable {
+            border-collapse: collapse !important;
+            border: 2px solid #475569 !important;
+            font-size: 15px;
+        }
+
+        .show-page .dt-container div:has(> #stampTable),
+        .show-page div.overflow-x-auto:has(> #stampTable) {
+            background: transparent !important;
+            border: 0 !important;
+            border-radius: 0 !important;
+            margin-top: 0 !important;
+            margin-bottom: 0 !important;
+        }
+
+        #stampTable th,
         #stampTable tbody td {
+            border: 1px solid #64748b !important;
             padding: 10px 12px !important;
             vertical-align: middle;
+            font-size: 15px !important;
         }
 
         #stampTable tbody input,
@@ -16,18 +34,17 @@
         #stampTable tbody textarea {
             min-height: 38px;
             padding: 6px 10px;
+            font-size: 15px;
+            text-align: center !important;
         }
 
         .show-page {
-            background:
-                radial-gradient(circle at top left, rgba(56, 189, 248, 0.16), transparent 32%),
-                radial-gradient(circle at bottom right, rgba(167, 139, 250, 0.12), transparent 30%),
-                linear-gradient(180deg, rgba(248, 250, 252, 0.98), rgba(241, 245, 249, 0.96));
+            background: #ffffff;
         }
 
         .show-card-header {
-            background: linear-gradient(to right, rgba(240, 249, 255, 0.96), rgba(255, 255, 255, 1));
-            border-left: 6px solid rgba(14, 165, 233, 0.75);
+            background: #ffffff;
+            border-left: 6px solid #0369a1;
         }
 
         .show-readonly,
@@ -37,45 +54,70 @@
             opacity: 1;
             border-style: solid !important;
             font-weight: 700;
+            background-color: #ffffff !important;
+            border-color: #64748b !important;
+            border-width: 2px !important;
+            color: #172033 !important;
+        }
+
+      
+
+        .show-page .label-text {
+            color: #1e293b !important;
         }
 
         #stampTable thead th {
-            background: linear-gradient(180deg, rgba(240, 249, 255, 1), rgba(224, 242, 254, 0.8));
-            color: #0f172a;
+            background: #d8e4bc;
+            color: #7f3f00;
             font-weight: 800;
-            border-color: rgba(14, 165, 233, 0.24);
+            border: 1px solid #475569 !important;
             text-align: center;
             vertical-align: middle;
+        }
+
+        #stampTable.stamp-table-buy thead th {
+            background: #dbeef3;
         }
 
         #stampTable tbody td {
             text-align: center;
             vertical-align: middle;
-            color: #334155;
+            color: #7f3f00;
             font-weight: 650;
+            border: 1px solid #64748b !important;
+        }
+
+        #stampTable tbody tr:nth-child(odd) td {
+            background: #f2f2f2 !important;
+        }
+
+        #stampTable tbody tr:nth-child(even) td {
+            background: #d9d9d9 !important;
         }
 
         #stampTable tbody td:nth-child(1) {
-            color: #0369a1;
+            color: #7f3f00;
             font-weight: 900;
         }
 
         #stampTable tbody td:nth-child(2) {
-            color: #334155;
+            color: #7f3f00;
             font-weight: 800;
-            text-align: left !important;
+            text-align: center !important;
         }
 
         #stampTable tbody td:nth-child(n+3) {
-            color: #047857;
+            color: #7f3f00;
             font-weight: 900;
         }
 
         #stampTable tfoot th {
-            background: linear-gradient(180deg, rgba(254, 243, 199, 0.85), rgba(254, 249, 195, 0.7));
-            color: #92400e;
+            background: #f8fafc;
+            color: #0f172a;
             font-weight: 900;
-            text-align: right;
+            text-align: center !important;
+            border: 1px solid #64748b !important;
+            border-top: 3px solid #64748b !important;
         }
     </style>
 @endsection
@@ -110,7 +152,7 @@
                         </div>
 
                         <div class="flex items-center gap-2">
-                            <span class="badge badge-outline badge-lg font-bold px-5 py-4 text-sm shadow-sm border-slate-300 text-slate-600"
+                            <span class="badge badge-lg font-bold px-5 py-4 text-sm text-white shadow-sm"
                                   id="Pos">
                             </span>
                         </div>
@@ -282,12 +324,13 @@
                                                type="text"
                                                readonly
                                                class="show-readonly input input-sm input-bordered w-full bg-violet-50 text-violet-800 border-violet-200 focus:outline-none shadow-sm" />
+                                        <span class="text-error text-xs font-bold mt-1.5">*วันที่ผู้ขอต้องการมารับอากรแสตมป์ (วันนี้ไม่ใช่วันที่ได้รับจริง โดยวันที่มีการได้รับสแตมป์จริงคือวันที่ปรากฏใน Receive Date ซึ่งจะถูกระบุในขั้นตอนสุดท้ายของการ Approve)</span>
                                     </div>
 
                                     <div class="form-control">
                                         <label class="label pb-1">
                                             <span class="label-text font-bold text-base-content/80 text-sm">
-                                                Date Receive
+                                                Receive Date
                                             </span>
                                         </label>
 
@@ -296,7 +339,8 @@
                                                type="text"
                                                readonly
                                                class="show-readonly input input-sm input-bordered w-full bg-fuchsia-50 text-fuchsia-800 border-fuchsia-200 focus:outline-none shadow-sm" />
-                                    </div>
+                                            <span class="text-error text-xs font-bold mt-1.5">*Pickup time : 2:00-4:00 p.m.</span>
+                                            </div>
                                 </div>
 
                                 <div class="form-control">
@@ -336,7 +380,7 @@
                                 </h2>
                             </div>
 
-                            <div class="bg-white rounded-xl border border-emerald-200 shadow-sm overflow-hidden">
+                            <div>
                                 <div class="overflow-x-auto">
                                     <table id="stampTable"
                                            class="table table-xs w-full text-center"></table>
@@ -372,13 +416,22 @@
                             </div>
                         </section>
 
-                        {{-- Action Form Container (Empty but preserved for JS targeting) --}}
-                        <div id="actionform"></div>
+                        <div class="divider before:bg-base-300 after:bg-base-300"></div>
+
+                        <div id="sentApprove"></div>
+
+                        <div role="note" aria-label="Remark"
+                            class="rounded-xl border-2 border-warning bg-warning/10 p-5 shadow-sm">
+                            <h2 class="mb-3 text-lg font-extrabold italic uppercase tracking-wide text-error">Remark</h2>
+                            <ol class="ml-5 list-decimal space-y-2 font-bold text-base-content">
+                                <li>Refer FIN-QP-R5543 : Cash Management</li>
+                                <li>Stamp duty can only be issued after all required approvals have been obtained from the authorized level.</li>
+                            </ol>
+                        </div>
 
                     </form>
                 </div>
             </div>
-            <div id="sentApprove"></div>
         </div>
     </div>
 @endsection

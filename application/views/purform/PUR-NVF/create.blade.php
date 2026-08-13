@@ -36,12 +36,12 @@
 <div class="hidden form-info" nfrmno="{{$NFRMNO}}" vorgno="{{$VORGNO}}" cyear="{{$CYEAR}}" mode="{{$mode}}"
     cyear2="{{$mode !=1 ? $CYEAR2 : '' }}" nrunno="{{$mode !=1 ? $NRUNNO : '' }}" return="{{$return ?? ''}}"></div>
 <div class="hidden apv-data" empno="{{$empno}}"></div>
+<!-- Form Container -->
 <div class="flex flex-col w-full px-4 my-5 font-sans">
     <div class="card bg-white w-full lg:w-[70rem] place-self-center shadow-sm">
         <div class="card-body p-6 lg:p-10">
-            <h2 class="card-title justify-center">
-                <h1 class="text-3xl text-center text-primary font-bold mb-15">New Vendor Requisition</h1>
-            </h2>
+            <h1 class="text-3xl text-center text-primary font-bold mb-10">New Vendor Requisition</h1>
+            
             <form id="form" class="flex flex-col gap-5">
                 <section id="section-0" class="flex flex-col gap-4">
                     <div class="flex items-center gap-4">

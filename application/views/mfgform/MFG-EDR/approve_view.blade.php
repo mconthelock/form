@@ -267,21 +267,14 @@
                     <div class="edr-zone">
                         <div class="p-6">
                             <div class="flex flex-wrap justify-center gap-6">
-                                <button type="button"
-                                    id="btn-submit"
-                                    class="btn-submit px-8 py-3 bg-blue-600 text-white rounded-xl shadow hover:bg-blue-700 font-bold"
-                                    data-action="approve">
+                                <button type="button" id="btn-submit" class="btn-submit px-8 py-3 bg-blue-600 text-white rounded-xl shadow hover:bg-blue-700 font-bold" data-action="approve">
                                     ✅ Approve
                                 </button>
-                                <button type="button"
-                                    class="btn-submit px-8 py-3 bg-red-600 text-white rounded-xl shadow hover:bg-red-700 font-bold"
-                                    data-action="reject">
+                                <button type="button" class="btn-submit px-8 py-3 bg-red-600 text-white rounded-xl shadow hover:bg-red-700 font-bold" data-action="reject">
                                     ❌ Reject
                                 </button>
                             @if ($exdata != '01')
-                                <button type="button"
-                                    class="btn-submit px-8 py-3 bg-yellow-500 text-white rounded-xl shadow hover:bg-yellow-600 font-bold"
-                                    data-action="returnb">
+                                <button type="button" class="btn-submit px-8 py-3 bg-yellow-500 text-white rounded-xl shadow hover:bg-yellow-600 font-bold" data-action="returnb">
                                     ↩ Return
                                 </button>
                              @endif

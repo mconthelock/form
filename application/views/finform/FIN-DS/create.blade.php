@@ -5,9 +5,19 @@
             height: 48px;
         }
 
+        #stampTable {
+            border-collapse: collapse !important;
+            border: 2px solid #475569 !important;
+            font-size: 15px;
+        }
+
+        #stampTable th,
         #stampTable tbody td {
+            border: 1px solid #64748b !important;
             padding: 10px 12px !important;
             vertical-align: middle;
+            text-align: center;
+            font-size: 15px !important;
         }
 
         #stampTable tbody input,
@@ -15,15 +25,120 @@
         #stampTable tbody textarea {
             min-height: 38px;
             padding: 6px 10px;
+            font-size: 15px;
+            text-align: center !important;
+        }
+
+        .fin-ds-accessible {
+            background: #ffffff !important;
+            color: #172033;
+        }
+
+        .fin-ds-accessible > div > .card:first-child {
+            background: linear-gradient(90deg, #dbeafe 0%, #ffffff 72%) !important;
+            border-left-color: #1d4ed8 !important;
+        }
+
+        .fin-ds-accessible .card {
+            background-color: #ffffff !important;
+            border-color: #94a3b8 !important;
+        }
+
+        .fin-ds-accessible [class*="bg-base-200"] {
+            background-color: #ffffff !important;
+        }
+
+        .fin-ds-accessible h1 {
+            color: #0f172a !important;
+        }
+
+        .fin-ds-accessible h2,
+        .fin-ds-accessible .label-text {
+            color: #1e293b !important;
+        }
+
+        .fin-ds-accessible [class*="bg-primary/5"] {
+            background: #dbeafe !important;
+            border-color: #3b82f6 !important;
+            border-left: 5px solid #1d4ed8 !important;
+        }
+
+        .fin-ds-accessible [class*="bg-secondary/5"] {
+            background: #ede9fe !important;
+            border-color: #8b5cf6 !important;
+            border-left: 5px solid #6d28d9 !important;
+        }
+
+        .fin-ds-accessible [class*="border-accent/30"] {
+            border-color: #059669 !important;
+            border-left: 5px solid #047857 !important;
+        }
+
+        .fin-ds-accessible [class*="bg-info/5"] {
+            background: #cffafe !important;
+            border-color: #0891b2 !important;
+        }
+
+        .fin-ds-accessible input:not([type="radio"]),
+        .fin-ds-accessible select,
+        .fin-ds-accessible textarea,
+        .fin-ds-accessible .file-input {
+            background-color: #ffffff !important;
+            border-color: #64748b !important;
+            color: #0f172a !important;
+            border-width: 2px !important;
+        }
+
+        .fin-ds-accessible input[readonly],
+        .fin-ds-accessible input:disabled {
+            background-color: #ffffff !important;
+            color: #334155 !important;
+        }
+
+        .fin-ds-accessible input:focus,
+        .fin-ds-accessible select:focus,
+        .fin-ds-accessible textarea:focus {
+            border-color: #1d4ed8 !important;
+            outline: 3px solid rgba(29, 78, 216, 0.28) !important;
+            outline-offset: 1px;
+        }
+
+        .fin-ds-accessible #stampTable thead th {
+            background: #d8e4bc !important;
+            color: #7f3f00 !important;
+            font-weight: 800;
+        }
+
+        .fin-ds-accessible #stampTable.stamp-table-buy thead th {
+            background: #dbeef3 !important;
+        }
+
+        .fin-ds-accessible #stampTable tbody td {
+            color: #7f3f00 !important;
+        }
+
+        .fin-ds-accessible #stampTable tbody tr:nth-child(odd) td {
+            background: #f2f2f2 !important;
+        }
+
+        .fin-ds-accessible #stampTable tbody tr:nth-child(even) td {
+            background: #d9d9d9 !important;
+        }
+
+        .fin-ds-accessible #stampTable tfoot th {
+            background: #f8fafc !important;
+            color: #0f172a !important;
+            border-top: 3px solid #64748b !important;
+            text-align: center !important;
         }
     </style>
 @endsection
 @section('contents')
-    <div class="min-h-screen bg-base-200/80 py-8 px-4 font-sans flex flex-col items-center">
+    <div class="fin-ds-accessible min-h-screen bg-base-200/80 py-8 px-4 font-sans flex flex-col items-center">
         <div class="max-w-5xl w-full mx-auto">
 
             <div
-                class="card bg-gradient-to-r from-primary/10 via-base-100 to-base-100 shadow-md border-l-4 border-primary rounded-2xl mb-5">
+                class="card bg-linear-to-r from-primary/10 via-base-100 to-base-100 shadow-md border-l-4 border-primary rounded-2xl mb-5">
                 <div class="card-body px-8 py-5">
                     <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                         <div class="flex items-center gap-4">
@@ -63,19 +178,37 @@
                             </div>
                             <div class="bg-primary/5 rounded-xl border border-primary/20 p-5 shadow-sm space-y-4">
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                                    <div class="form-control">
-                                        <label class="label pb-1">
+                                    <div class="grid grid-cols-[7rem_minmax(0,1fr)] items-center gap-x-2 gap-y-2">
+                                        <label class="label p-0">
                                             <span class="label-text font-bold text-base-content/80 text-sm">Input By</span>
                                         </label>
                                         <input id="INPUTBY" type="text" name="INPUTBY" value="" readonly
-                                            class="input input-sm input-bordered border-base-300 bg-base-200/80 text-error cursor-not-allowed font-semibold focus:outline-none" />
+                                            class="input input-sm input-bordered w-full border-base-300 bg-base-200/80 text-error cursor-not-allowed font-semibold focus:outline-none" />
+                                        <p id="INPUTBY_NAME"
+                                            class="hidden col-start-2 items-center gap-2 border-l-2 border-error/40 pl-2 text-sm font-bold text-error">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 shrink-0 opacity-70"
+                                                viewBox="0 0 20 20" fill="currentColor">
+                                                <path
+                                                    d="M10 8a3 3 0 100-6 3 3 0 000 6zM3.465 14.493A7 7 0 0110 10a7 7 0 016.535 4.493A1.5 1.5 0 0115.13 16.5H4.87a1.5 1.5 0 01-1.405-2.007z" />
+                                            </svg>
+                                            <span class="emp-name"></span>
+                                        </p>
                                     </div>
-                                    <div class="form-control">
-                                        <label class="label pb-1">
-                                            <span class="label-text font-bold text-base-content/80 text-sm">Requester</span>
+                                    <div class="grid grid-cols-[7rem_minmax(0,1fr)] items-center gap-x-2 gap-y-2">
+                                        <label class="label p-0">
+                                            <span class="label-text font-bold text-base-content/80 text-sm">Requester By</span>
                                         </label>
                                         <input id="REQBY" type="text" name="REQBY" value=""
-                                            class="input input-sm input-bordered border-base-300 bg-base-200/80 text-error font-semibold focus:outline-none req" />
+                                            class="input input-sm input-bordered w-full border-base-300 bg-base-200/80 text-error font-semibold focus:outline-none req" />
+                                        <p id="REQBY_NAME"
+                                            class="hidden col-start-2 items-center gap-2 border-l-2 border-error/40 pl-2 text-sm font-bold text-error">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 shrink-0 opacity-70"
+                                                viewBox="0 0 20 20" fill="currentColor">
+                                                <path
+                                                    d="M10 8a3 3 0 100-6 3 3 0 000 6zM3.465 14.493A7 7 0 0110 10a7 7 0 016.535 4.493A1.5 1.5 0 0115.13 16.5H4.87a1.5 1.5 0 01-1.405-2.007z" />
+                                            </svg>
+                                            <span class="emp-name"></span>
+                                        </p>
                                     </div>
                                 </div>
                                 <div class="form-control">
@@ -136,17 +269,19 @@
                                         </label>
                                         <input id="EffDate" name="EFFECTIVE_DATE" type="date"
                                             class="req input input-sm input-bordered border-secondary/30 w-full focus:ring-2 focus:ring-secondary/20 transition-all" />
+                                        <span class="text-error text-xs font-bold mt-1.5">*วันที่ผู้ขอต้องการมารับอากรแสตมป์ (วันนี้ไม่ใช่วันที่ได้รับจริง โดยวันที่มีการได้รับสแตมป์จริงคือวันที่ปรากฏใน Receive Date ซึ่งจะถูกระบุในขั้นตอนสุดท้ายของการ Approve)</span>
                                     </div>
                                     <div class="form-control">
                                         <label class="label pb-1">
-                                            <span class="label-text font-bold text-base-content/80 text-sm">Date
-                                                Receive</span>
+                                            <span class="label-text font-bold text-base-content/80 text-sm">Receive
+                                                Date</span>
                                         </label>
                                         <input id="RetDate" name="DATE_RECEIVE" type="date"
                                             readonly
                                             disabled
                                             class="input input-sm input-bordered border-secondary/30 w-full bg-base-200/80 cursor-not-allowed focus:ring-2 focus:ring-secondary/20 transition-all" />
-                                    </div>
+                                        <span class="text-error text-xs font-bold mt-1.5">*Pickup time : 2:00-4:00 p.m.</span>
+                                        </div>
                                 </div>
                                 <div class="form-control">
                                     <label class="label pb-1">
@@ -177,7 +312,7 @@
                                 </button>
                             </div>
 
-                            <div class="bg-base-100 rounded-xl border border-accent/30 shadow-sm overflow-hidden">
+                            <div>
                                 <div class="overflow-x-auto">
                                     <table id="stampTable" class="table table-xs w-full text-center">
 
@@ -186,7 +321,7 @@
                                             <tr class="bg-accent/10 font-bold text-accent-content">
                                                 <td colspan="9"
                                                     class="pr-4 border-r border-accent/20 text-sm py-3 uppercase tracking-wide">
-                                                    Grand Total
+                                                    Total
                                                 </td>
                                                 <td id="gt-total"
                                                     class="border-r border-accent/20 bg-base-200/30 text-error font-extrabold text-center text-base">
@@ -198,7 +333,6 @@
                                 </div>
                             </div>
                         </div>
-                </div>
 
                 {{-- Attachment --}}
                 <div>
@@ -228,11 +362,7 @@
                             </div>
 
                             <div class="flex-1">
-                                <p class="text-sm font-bold text-info-content mb-2">
-                                    Upload Required Documents
-                                </p>
-
-                                <input id="attachfile" name="attachfile" type="file" multiple
+                          <input id="attachfile" name="attachfile" type="file" multiple
                                     accept=".pdf,.jpg,.jpeg,.png"
                                     class="file-input file-input-bordered file-input-info file-input-sm w-full max-w-sm bg-white" />
 
@@ -243,9 +373,19 @@
                         </div>
                     </div>
                 </div>
+
                 <div class="divider before:bg-base-300 after:bg-base-300"></div>
 
                 <div id="actionform"></div>
+
+                <div role="note" aria-label="Remark"
+                    class="rounded-xl border-2 border-warning bg-warning/10 p-5 shadow-sm">
+                    <h2 class="mb-3 text-lg font-extrabold italic uppercase tracking-wide text-error">Remark</h2>
+                    <ol class="ml-5 list-decimal space-y-2 font-bold text-base-content">
+                        <li>Refer FIN-QP-R5543 : Cash Management</li>
+                        <li>Stamp duty can only be issued after all required approvals have been obtained from the authorized level.</li>
+                    </ol>
+                </div>
                 </form>
             </div>
         </div>
