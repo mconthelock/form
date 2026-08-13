@@ -127,10 +127,10 @@ $(document).on('select2:select', '.sub-district', async function (e) {
     subDistrictManager.change(e);
 });
 
-$(document).on('change', 'input[name="REQTYPE_SHOW"]', function () {
+$(document).on('change', 'input[name="REQTYPE_SHOW"]', function (e) {
     console.log('xxxxxxxxxx');
 
-    ReqtypeManager.change();
+    ReqtypeManager.change(e);
 });
 
 // $(document).on("input", "input[name='PAYMENT_NUM']", function () {
