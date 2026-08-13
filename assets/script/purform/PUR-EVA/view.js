@@ -247,7 +247,7 @@ $(async function () {
             $('#VENDCAT').text(formeva.VENDCAT || '-');
             $('#TAX_ID_PRO').text(formeva.TAX_ID || '-');
             $('#CAPITAL').text(
-                `${setRound(Number(formeva.CAPITAL), 2)} ${formeva.CAPITAL_CUR || '-'}`,
+                `${setRound(Number(formeva.CAPITAL), 2)} ${formeva.CAPCUR.CURR_NAME || '-'}`,
             );
             $('#COM_TYPE').text(
                 formeva.COM_TYPE === 'อื่นๆ ระบุ'
@@ -351,7 +351,7 @@ $(async function () {
         fields.forEach((f) => $(`#${f}`).text(formeva[f] || '-'));
 
         $('#TERMCODE').text(formeva.TERM?.STERMDESC || '-');
-        $('#CURCODE').text(formeva.STDCUR?.SCURRENCY || '-');
+        $('#CURCODE').text(formeva.STDCUR?.CURR_NAME || '-');
 
         formeva.ATTACH_OTHER &&
             $('#ATTACH_OTHER_TEXT').text(formeva.ATTACH_OTHER);

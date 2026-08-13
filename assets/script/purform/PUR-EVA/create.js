@@ -823,15 +823,17 @@ $(document).ready(async function () {
     }));
 
     const term = await getTermcode();
+    console.log(term);
+
     const termdata = term.map((t) => ({
-        value: t.TERMCODE,
-        text: t.TERMNAME,
+        value: t.STERMCODE,
+        text: t.STERMDESC,
     }));
 
     const currency = await getCurrency();
     const currencyData = currency.map((c) => ({
-        value: c.CURCODE,
-        text: c.CURRENCY,
+        value: c.CURR_CODE,
+        text: c.CURR_NAME,
     }));
 
     const org = await getOrganize();

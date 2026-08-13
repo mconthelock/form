@@ -14,7 +14,7 @@ export async function searchNVFForm(keyword) {
 
 export async function getCurrency() {
     return fetchUtils({
-        url: `${process.env.APP_API}/amec/pcurrency/currency`,
+        url: `${process.env.APP_API}/pursys/currency/master`,
         method: 'GET',
     });
 }
