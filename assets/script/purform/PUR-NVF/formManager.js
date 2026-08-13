@@ -1286,6 +1286,9 @@ export const ReqtypeManager = {
         this.updateStyles();
     },
     change() {
+        console.log('--- Debugging ---');
+        console.log('All Radios:', this.radio.length);
+        console.log('Checked Radio:', this.radio.filter(':checked').length);
         const type = this.type;
         console.log('type =' + type);
 
