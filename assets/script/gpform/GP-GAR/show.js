@@ -48,7 +48,8 @@ $(async function () {
     $("#VIEW_INBY").text(formDetail.VINPUTER || "-");
     $("#VIEW_REQBY").text(formDetail.VREQNO || "-");
     $("#VIEW_FORMNO").text(formDetail.FORMNO || "-");
-    $("#VIEW_REQDATE").text(formatDate(formDetail.DREQDATE) || "-");
+    // $("#VIEW_REQDATE").text(formatDate(formDetail.DREQDATE) || "-");
+    $("#VIEW_REQDATE").text(formatDate(showData.REQDATE) || "-");
     $("#VIEW_CATEGORY").text(data.CATEGORY_NAME || "-");
     $("#VIEW_REMARK").text(showData.REMARK || "-");
 
