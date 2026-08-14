@@ -128,7 +128,7 @@
                         <input type="text"
                             class="input hidden input-bordered transition-all duration-200 focus:input-primary w-full req"
                             id="schd_p" readonly />
-                        <button class="btn btn-neutral" type="button" id="openDatePicker">
+                        <button class="btn btn-neutral bg bg-neutral" type="button" id="openDatePicker">
                             <i class="fi fi-rr-calendar">
                             </i>
                         </button>

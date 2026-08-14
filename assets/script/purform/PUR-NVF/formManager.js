@@ -599,8 +599,8 @@ export const formManager = {
                 //     }));
                 const term = await getTermcode();
                 const termdata = term.map((t) => ({
-                    value: t.TERMCODE,
-                    text: t.TERMNAME,
+                    value: t.STERMCODE,
+                    text: t.STERMDESC,
                 }));
                 const countries = await getCountries();
                 const countriesData = countries.map((c) => ({
@@ -1296,13 +1296,7 @@ export const ReqtypeManager = {
         return $('input[name="REQTYPE_SHOW"]');
     },
     get type() {
-        let type = null;
-        this.radio.each(function () {
-            if ($(this).is(':checked')) {
-                type = $(this).attr('r-type');
-            }
-        });
-        return type;
+        return this.radio.filter(':checked').val();
     },
     set value(val) {
         this.radio.each(function () {
@@ -1317,7 +1311,12 @@ export const ReqtypeManager = {
         this.updateStyles();
     },
     change() {
+        console.log('--- Debugging ---');
+        console.log('All Radios:', this.radio.length);
+        console.log('Checked Radio:', this.radio.filter(':checked').length);
         const type = this.type;
+        console.log('type =' + type);
+
         $(`#REQTYPE`).val(type);
         $(
             '#A-section, #U-section, #D-section , #V-section ,#F-section',

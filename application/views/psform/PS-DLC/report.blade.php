@@ -95,7 +95,7 @@
                         <input type="text"
                             class="input input-bordered transition-all duration-200 focus:input-primary w-full "
                             id="schd_txt" name="CHANGE_SCHD" readonly />
-                        <button class="btn btn-neutral" type="button" id="openDatePicker">
+                        <button class="btn btn-neutral bg bg-neutral" type="button" id="openDatePicker">
                             <i class="fi fi-rr-calendar">
                             </i>
                         </button>
