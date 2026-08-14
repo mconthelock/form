@@ -3,20 +3,7 @@ import { getEmpData, getAreas, getLocations } from './data';
 import { data } from 'jquery';
 
 (function () {
-    const areaStorageKey = 'gp-tph-photo-permission-areas';
     let mockupTable = null;
-
-    function getStoredAreas() {
-        try {
-            return JSON.parse(localStorage.getItem(areaStorageKey)) || [];
-        } catch (error) {
-            return [];
-        }
-    }
-
-    function saveStoredAreas(areas) {
-        localStorage.setItem(areaStorageKey, JSON.stringify(areas));
-    }
 
     function initCreatePage() {
         const visitorBody = document.getElementById('visitor-table-body');
@@ -501,7 +488,12 @@ import { data } from 'jquery';
         toggleHostExternalSection();
     }
 
-    function initAreaPage() {
+    /*
+     * Area master data will be supplied by a server-side API.  The former
+     * browser-only CRUD implementation is retained here temporarily as a
+     * reference, but is deliberately excluded from the production bundle.
+     */
+    /* function initAreaPage() {
         const searchArea = document.getElementById('searchArea');
         const newAreaButton = document.getElementById('newAreaButton');
         const cancelAreaButton = document.getElementById('cancelAreaButton');
@@ -689,10 +681,9 @@ import { data } from 'jquery';
                 updateRowNumbers();
             }
         });
-    }
+    } */
 
     document.addEventListener('DOMContentLoaded', function () {
         initCreatePage();
-        initAreaPage();
     });
 })();
