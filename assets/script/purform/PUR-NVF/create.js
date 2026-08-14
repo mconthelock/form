@@ -14,9 +14,9 @@ import {
     vendorTypeManager,
     ReqtypeManager,
     vendorCodeManager,
-    provinceManager,
-    districtManager,
-    subDistrictManager,
+    cityEnManager,
+    stateEnManager,
+    postcodeEnManager,
 } from './formManager';
 import { downloadOrOpenFile } from '@amec/webasset/api/file';
 
@@ -65,71 +65,7 @@ $(document).on('select2:select', '.country', async function (e) {
     countryManager.change(e);
 });
 
-$(document).on('select2:select', '.province', async function (e) {
-    console.log('province change');
-
-    provinceManager.change(e);
-    const selectedProvinceId = provinceManager.getValue('PROVINCE_SELECT');
-
-    const filteredDistricts = formManager.districtData.filter(
-        (d) => d.province_id == selectedProvinceId,
-    );
-    const districtOptions = filteredDistricts.map((d) => ({
-        id: d.id,
-        value: d.value,
-        text: d.text,
-        nameth: d.nameth,
-    }));
-
-    districtOptions.unshift({
-        id: '',
-        value: '',
-        text: '-- Select District --', // หรือใส่เป็นค่าว่าง "" ก็ได้
-        nameth: '',
-    });
-
-    districtManager.select.empty().trigger('change');
-    await districtManager.init(districtOptions);
-    //const value = $(this).val();
-    //currencyManager.syncValue(value, this);
-    // countryManager.change(e);
-});
-
-$(document).on('select2:select', '.district', async function (e) {
-    districtManager.change(e);
-    const selectedDistrictId = districtManager.getValue('DISTRICT_SELECT');
-    const filteredSubDistricts = formManager.subDistrictData.filter(
-        (s) => s.district_id == selectedDistrictId,
-    );
-    const subDistrictOptions = filteredSubDistricts.map((s) => ({
-        id: s.id,
-        value: s.value,
-        text: s.text,
-        nameth: s.nameth,
-        district_id: s.district_id,
-        postcode: s.postcode,
-    }));
-    // console.log(subDistrictOptions);
-    subDistrictOptions.unshift({
-        id: '',
-        value: '',
-        text: '-- Select Sub-district --', // หรือใส่เป็นค่าว่าง "" ก็ได้
-        nameth: '',
-        district_id: '',
-        postcode: '',
-    });
-
-    subDistrictManager.select.empty().trigger('change');
-    await subDistrictManager.init(subDistrictOptions);
-});
-
-$(document).on('select2:select', '.sub-district', async function (e) {
-    subDistrictManager.change(e);
-});
-
 $(document).on('change', 'input[name="REQTYPE_SHOW"]', function (e) {
-    console.log('xxxxxxxxxx');
-
     ReqtypeManager.change(e);
 });
 

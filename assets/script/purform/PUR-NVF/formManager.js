@@ -486,29 +486,15 @@ export const vendorCodeManager = {
                             // 1. รวมสายอักขระที่อยู่ (Address Line 1 + Line 2) เข้าด้วยกัน
                             const addrLine =
                                 `${address.ADDR_LINE1 || ''} ${address.ADDR_LINE2 || ''}`.trim();
-                            const province = address.ADDR_STATE || ''; // จังหวัด
-                            const district = address.ADDR_CITY || ''; // อำเภอ (เช็กฟิลด์หลังบ้านอีกทีว่าสลับกันไหม)
-                            const subDistrict = address.ADDR_SUB_CITY || ''; // ตำบล
+                            const state = address.ADDR_STATE || ''; // จังหวัด
+                            const city = address.ADDR_CITY || ''; // อำเภอ (เช็กฟิลด์หลังบ้านอีกทีว่าสลับกันไหม)
+                            // const subDistrict = address.ADDR_SUB_CITY || ''; // ตำบล
                             const postcode = address.ADDR_ZIPCODE || ''; // รหัสไปรษณีย์
                             const country = address.ADDR_COUNTRY || ''; // ประเทศ
 
                             // 2. แยกจัดการตามประเภทที่อยู่ ADDR_TYPE ('T' = ภาษาไทย, 'E' = ภาษาอังกฤษ)
                             if (address.ADDR_TYPE === 'T') {
                                 addrThManager.value = addrLine;
-                                if (
-                                    address.ADDR_COUNTRY &&
-                                    address.ADDR_COUNTRY == 'ไทย'
-                                ) {
-                                    vendorTypeManager.value = 'Local';
-                                } else {
-                                    vendorTypeManager.value = 'Oversea';
-                                }
-
-                                provinceThManager.value = province;
-                                districtThManager.value = district;
-                                subDistrictThManager.value = subDistrict;
-                                postcodeThManager.value = postcode;
-                                countryThManager.value = country;
                             } else if (address.ADDR_TYPE === 'E') {
                                 // แปะลงฟิลด์ภาษาอังกฤษ
                                 addrEnManager.value = addrLine;
@@ -518,17 +504,12 @@ export const vendorCodeManager = {
                                         'THAILAND'
                                 ) {
                                     vendorTypeManager.value = 'Local';
-                                    provinceManager.textToValue = province;
-                                    districtManager.textToValue = district;
-                                    subDistrictManager.textToValue =
-                                        subDistrict;
                                 } else {
                                     vendorTypeManager.value = 'Oversea';
-                                    provinceEnManager.value = province;
-                                    districtEnManager.value = district;
-                                    subDistrictEnManager.value = subDistrict;
                                 }
-                                postcodeEnManager.value = postcode;
+                                cityEnManager.value = city;
+                                stateEnManager.value = district;
+                                postcodeEnManager.value = state;
                                 countryEnManager.value = country;
                             }
                         });
@@ -611,40 +592,40 @@ export const formManager = {
                 }));
                 //console.log(countriesData);
 
-                const province = await getProvinces();
-                this.provinceData = province.map((p) => ({
-                    id: p.id,
-                    value: p.nameen,
-                    text: p.nameen,
-                    nameth: p.nameth,
-                }));
-                const district = await getDistricts();
+                // const province = await getProvinces();
+                // this.provinceData = province.map((p) => ({
+                //     id: p.id,
+                //     value: p.nameen,
+                //     text: p.nameen,
+                //     nameth: p.nameth,
+                // }));
+                // const district = await getDistricts();
 
-                this.districtData = district.map((d) => ({
-                    id: d.id,
-                    value: d.nameen,
-                    text: d.nameen,
-                    nameth: d.nameth,
-                    province_id: d.province_id,
-                }));
+                // this.districtData = district.map((d) => ({
+                //     id: d.id,
+                //     value: d.nameen,
+                //     text: d.nameen,
+                //     nameth: d.nameth,
+                //     province_id: d.province_id,
+                // }));
 
-                const subDistrict = await getSubDistricts();
-                this.subDistrictData = subDistrict.map((s) => ({
-                    id: s.id,
-                    value: s.nameen,
-                    text: s.nameen,
-                    nameth: s.nameth,
-                    district_id: s.district_id,
-                    postcode: s.postcode,
-                }));
+                // const subDistrict = await getSubDistricts();
+                // this.subDistrictData = subDistrict.map((s) => ({
+                //     id: s.id,
+                //     value: s.nameen,
+                //     text: s.nameen,
+                //     nameth: s.nameth,
+                //     district_id: s.district_id,
+                //     postcode: s.postcode,
+                // }));
                 //console.log( this.subDistrictData );
 
                 paymentTermManager.init(termdata);
                 countryManager.init(countriesData);
-                provinceManager.init(this.provinceData);
-                districtManager.init(this.districtData);
+                // provinceManager.init(this.provinceData);
+                // districtManager.init(this.districtData);
                 // currencyManager.init(currData);
-                subDistrictManager.init(this.subDistrictData);
+                // subDistrictManager.init(this.subDistrictData);
                 actionFormManager.init(mode);
                 break;
             case 2: // edit
@@ -677,36 +658,36 @@ export const formManager = {
                         text: c.nameen,
                         nameth: c.nameth,
                     }));
-                    const province = await getProvinces();
-                    this.provinceData = province.map((p) => ({
-                        id: p.id,
-                        value: p.nameen,
-                        text: p.nameen,
-                        nameth: p.nameth,
-                    }));
-                    const district = await getDistricts();
-                    this.districtData = district.map((d) => ({
-                        id: d.id,
-                        value: d.nameen,
-                        text: d.nameen,
-                        nameth: d.nameth,
-                        province_id: d.province_id,
-                    }));
-                    const subDistrict = await getSubDistricts();
-                    this.subDistrictData = subDistrict.map((s) => ({
-                        id: s.id,
-                        value: s.nameen,
-                        text: s.nameen,
-                        nameth: s.nameth,
-                        district_id: s.district_id,
-                        postcode: s.postcode,
-                    }));
+                    // const province = await getProvinces();
+                    // this.provinceData = province.map((p) => ({
+                    //     id: p.id,
+                    //     value: p.nameen,
+                    //     text: p.nameen,
+                    //     nameth: p.nameth,
+                    // }));
+                    // const district = await getDistricts();
+                    // this.districtData = district.map((d) => ({
+                    //     id: d.id,
+                    //     value: d.nameen,
+                    //     text: d.nameen,
+                    //     nameth: d.nameth,
+                    //     province_id: d.province_id,
+                    // }));
+                    // const subDistrict = await getSubDistricts();
+                    // this.subDistrictData = subDistrict.map((s) => ({
+                    //     id: s.id,
+                    //     value: s.nameen,
+                    //     text: s.nameen,
+                    //     nameth: s.nameth,
+                    //     district_id: s.district_id,
+                    //     postcode: s.postcode,
+                    // }));
                     paymentTermManager.init(termdata);
                     countryManager.init(countriesData);
-                    provinceManager.init(this.provinceData);
-                    districtManager.init(this.districtData);
+                    // provinceManager.init(this.provinceData);
+                    // districtManager.init(this.districtData);
                     // currencyManager.init(currData);
-                    subDistrictManager.init(this.subDistrictData);
+                    // subDistrictManager.init(this.subDistrictData);
                     this.setReturn(data);
                 } else {
                     //console.log(data);
@@ -756,7 +737,7 @@ export const formManager = {
         $('#ADDRESS_TH').parent().addClass('hidden');
 
         data.ADDRESSES.forEach(function (address) {
-            const fullAddress = `${address.ADDR} ${address.SUBDISTRICT} ${address.DISTRICT} ${address.PROVINCE} ${address.POSTCODE} ${address.COUNTRY}`;
+            const fullAddress = `${address.ADDR} ${address.CITY} ${address.STATE} ${address.POSTCODE} ${address.COUNTRY}`;
 
             if (address.ADDRTYPE === 'E') {
                 $('#ADDRESS_EN').text(fullAddress);
@@ -827,25 +808,13 @@ export const formManager = {
             if (address.ADDRTYPE === 'E') {
                 if (data.LISTS[0].VENDTYPE === 'Local') {
                     addrEnManager.value = address.ADDR || '';
-                    //provinceManager.value = address.PROVINCE;
-                    provinceManager.textToValue = address.PROVINCE;
-                    districtManager.textToValue = address.DISTRICT;
-                    subDistrictManager.textToValue = address.SUBDISTRICT;
-                } else {
-                    addrEnManager.value = address.ADDR || '';
-                    provinceEnManager.value = address.PROVINCE;
-                    districtEnManager.value = address.DISTRICT;
-                    subDistrictEnManager.value = address.SUBDISTRICT;
+                    cityEnManager.value = address.CITY;
+                    stateEnManager.value = address.STATE;
                 }
                 postcodeEnManager.value = address.POSTCODE;
                 countryEnManager.value = address.COUNTRY;
             } else {
                 addrThManager.value = address.ADDR || '';
-                provinceThManager.value = address.PROVINCE;
-                districtThManager.value = address.DISTRICT;
-                subDistrictThManager.value = address.SUBDISTRICT;
-                postcodeThManager.value = address.POSTCODE;
-                countryThManager.value = address.COUNTRY;
             }
         }
         $('#CONTACT').val(data.LISTS[0].CONTACT || '');
@@ -1735,10 +1704,7 @@ export const actionFormManager = {
                 reasonManager.input.hasClass('req') ? {element: reasonManager.input, message: "Please input Reason."} : null,
                 {element: vendorTypeManager.radio, message: "Please select Local or Overseas."},
                  countryManager.select.hasClass('req') ? {element: countryManager.select, message: "Please select Country."} : null,
-                {element: provinceEnManager.input, message: "Please input Province (English)."},
-                {element: districtEnManager.input, message: "Please input District (English)."},
-                {element: subDistrictEnManager.input, message: "Please input Sub-District (English)."},
-                {element: postcodeEnManager.input, message: "Please input Postcode (English)."},
+                {element: addrEnManager.input, message: "Please input Address (EN)."},
                 {element: attachTypeManager.checkbox, message: "Please select Attach Type."},
                 {element: attachFileManager.input, message: "Please attach files."},
             ].filter(Boolean);
