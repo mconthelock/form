@@ -737,7 +737,16 @@ export const formManager = {
         $('#ADDRESS_TH').parent().addClass('hidden');
 
         data.ADDRESSES.forEach(function (address) {
-            const fullAddress = `${address.ADDR} ${address.CITY} ${address.STATE} ${address.POSTCODE} ${address.COUNTRY}`;
+            // const fullAddress = `${address.ADDR} ${address.CITY} ${address.STATE} ${address.POSTCODE} ${address.COUNTRY}`;
+            const fullAddress = [
+                address.ADDR,
+                address.CITY,
+                address.STATE,
+                address.POSTCODE,
+                address.COUNTRY,
+            ]
+                .filter(Boolean) // กรองค่า null, undefined, ค่าว่าง ออก
+                .join(',');
 
             if (address.ADDRTYPE === 'E') {
                 $('#ADDRESS_EN').text(fullAddress);
@@ -1325,7 +1334,7 @@ export const ReqtypeManager = {
             fSection.find('input, textarea, select').removeClass('req');
         } else {
             const ignoredFields =
-                '#FAX, #COUNTRY_SELECT, #ATTACH_OTHER, #ADDRESS_TH, #PROVINCE_TH, #DISTRICT_TH, #SUB_DISTRICT_TH, #POSTCODE_TH, #COUNTRY_TH';
+                '#FAX, #COUNTRY_SELECT, #ATTACH_OTHER, #ADDRESS_TH';
             reasonManager.removecls('req');
             vSection
                 .find('input, textarea, select')
