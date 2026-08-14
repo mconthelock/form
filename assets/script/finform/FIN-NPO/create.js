@@ -4,6 +4,13 @@ import { requiredForm, showMessage } from '@amec/webasset/utils';
 import { setDatePicker } from '@amec/webasset/flatpickr';
 import { webflowSubmit } from '@amec/webasset/components/form';
 import { fetchUtils } from '@amec/webasset/api/fetch-utils';
+import { getFormDetail } from '@amec/webasset/api/webform';
+import select2 from 'select2';
+import 'select2/dist/css/select2.min.css';
+
+select2();
+
+const isReturnMode = window.FIN_NPO_RETURN_MODE === true;
 
 $(async function () {
     const queryString = window.location.search;
@@ -28,7 +35,11 @@ $(async function () {
     $('#REQBY').val(empno);
     $('#REQBY_NAME').val(empName);
     setEmpName('.reqby-feedback', empName);
-    const action = webflowSubmit({ request: true });
+    const action = webflowSubmit(
+        isReturnMode
+            ? { request: false, save: true }
+            : { request: true, save: false },
+    );
 
     console.log(action);
     $('#actionform').html(action);
@@ -38,10 +49,143 @@ $(async function () {
         renderCurrency(),
         setInitialEmployee(empno),
     ]);
-    if (typeof createTableStamp === 'function') {
+    if (isReturnMode) {
+        await loadReturnData();
+    } else if (typeof createTableStamp === 'function') {
         createTableStamp();
     }
 });
+
+async function loadReturnData() {
+    const form = getReturnFormKey();
+    const parts = [form.NFRMNO, form.VORGNO, form.CYEAR, form.CYEAR2, form.NRUNNO]
+        .map(encodeURIComponent);
+    const [formDetail, response, costCenterResponse] = await Promise.all([
+        getFormDetail(form),
+        fetchUtils({
+            url: `${process.env.APP_API}/finform/fin-npo/show/${parts.join('/')}`,
+            method: 'GET',
+        }),
+        fetchUtils({
+            url: `${process.env.APP_API}/finform/fin-npo/costcenter`,
+            method: 'GET',
+        }),
+    ]);
+    const data = response?.data || response || {};
+    const head = data.head || data.HEAD || {};
+    const invoices = data.invoices || data.invoice || [];
+    const inputBy = formDetail?.VINPUTER || formDetail?.INPUTBY || form.EMPNO;
+    const requestBy = formDetail?.VREQNO || formDetail?.REQBY || form.EMPNO;
+
+    $('#FORMNO').val(formDetail?.FORMNO || formDetail?.VFORMNO || '');
+    $('#INPUTBY').val(inputBy);
+    $('#REQBY').val(requestBy);
+    await Promise.all([setInitialEmployee(inputBy), setRequesterEmployee(requestBy)]);
+    $('#EXPENSE_ID').val(head.EXPENSE_CODE || '').trigger('change');
+    $('#VENDOR_CODE').val(String(head.VENDOR_CODE || '')).trigger('change');
+    const employeeCodes = normalizeList(costCenterResponse)
+        .filter(
+            (item) =>
+                String(item.CYEAR2 ?? '').slice(-2) ===
+                    String(form.CYEAR2 ?? '').slice(-2) &&
+                Number(item.NRUNNO) === Number(form.NRUNNO),
+        )
+        .map((item) => String(item.REQNO || '').trim())
+        .filter(Boolean);
+    await populateAirSalesEmployees(employeeCodes);
+    createTableStamp(
+        invoices.map((invoice) => ({
+            LINEID: invoice.ID,
+            INVOICE_DATE: String(invoice.INVOICE_DATE || '').substring(0, 10),
+            INVOICE_NO: invoice.INVOICE_NO || '',
+            TOTAL_AMOUNT: invoice.TOTAL_AMT,
+            VAT: Number(invoice.TOTAL_AMT || 0) - Number(invoice.NET_PRICE || 0),
+            NET_PRICE: invoice.NET_PRICE,
+            CURRENCY: invoice.SCURCODE,
+            VAT_PERCENT: invoice.VAT_RATE_ID,
+        })),
+    );
+    renderExistingAttachments(data.files || data.FILES || []);
+    $('#attachfile').prop('required', false);
+}
+
+function renderExistingAttachments(files = []) {
+    const container = $('#existingAttachmentList');
+    if (!container.length) return;
+
+    const attachmentFiles = Array.isArray(files) ? files : Object.values(files || {});
+    container.removeClass('hidden');
+
+    if (!attachmentFiles.length) {
+        container.html('<p class="text-xs text-base-content/50">No existing attachment</p>');
+        return;
+    }
+
+    container.html(
+        `<p class="mb-2 text-xs font-semibold text-base-content/60">Existing attachment</p>
+        <ul class="space-y-2">${attachmentFiles
+            .map((file) => {
+                const id = file.FILE_ID || file.id;
+                const name =
+                    file.FILE_ONAME ||
+                    file.FILE_NAME ||
+                    file.name ||
+                    'Attachment';
+                const url = id
+                    ? `${process.env.APP_API}/finform/fin-npo/file/${encodeURIComponent(id)}`
+                    : '';
+
+                return `<li class="flex items-center justify-between gap-3 rounded-lg border border-info/20 bg-white px-3 py-2">
+                    <span class="min-w-0 truncate text-sm font-semibold" title="${escapeHtml(name)}">${escapeHtml(name)}</span>
+                    ${url ? `<a class="btn btn-xs btn-info shrink-0" target="_blank" rel="noopener" href="${escapeHtml(url)}">Download</a>` : ''}
+                </li>`;
+            })
+            .join('')}</ul>`,
+    );
+}
+
+$(document).on('change', '#attachfile', function () {
+    if (!isReturnMode) return;
+
+    const selectedFiles = Array.from(this.files || []);
+    const container = $('#existingAttachmentList');
+
+    if (!selectedFiles.length) return;
+
+    container.removeClass('hidden').html(
+        `<p class="mb-2 text-xs font-semibold text-warning">The existing attachment will be replaced with:</p>
+        <ul class="space-y-1">${selectedFiles
+            .map(
+                (file) =>
+                    `<li class="truncate text-sm font-semibold" title="${escapeHtml(file.name)}">${escapeHtml(file.name)}</li>`,
+            )
+            .join('')}</ul>`,
+    );
+});
+
+async function populateAirSalesEmployees(employeeCodes = []) {
+    resetAirFreightSalesEmployeeRows();
+
+    for (const [index, employeeCode] of employeeCodes.entries()) {
+        if (index > 0) addAirFreightSalesEmployeeRow();
+
+        const input = $('#airSalesEmployeeRows .air-sales-by').eq(index);
+        input.val(employeeCode);
+        await setAirFreightSalesEmployee(input[0]);
+    }
+}
+
+function getReturnFormKey() {
+    const params = new URLSearchParams(window.location.search);
+    return {
+        NFRMNO: params.get('no'),
+        VORGNO: params.get('orgNo'),
+        CYEAR: params.get('y'),
+        CYEAR2: params.get('y2') || params.get('y'),
+        NRUNNO: params.get('runNo'),
+        EMPNO: params.get('empno'),
+    };
+}
 
 /*--------------------Change FUNCTION--------------------*/
 $(document).on('change', '#REQBY', async function () {
@@ -131,6 +275,18 @@ function escapeHtml(value) {
         .replace(/'/g, '&#39;');
 }
 
+function initializeSearchableSelect(select, placeholder) {
+    if (select.hasClass('select2-hidden-accessible')) {
+        select.select2('destroy');
+    }
+
+    select.select2({
+        width: '100%',
+        placeholder,
+        minimumResultsForSearch: 0,
+    });
+}
+
 async function renderPurpose() {
     const purposeSelect = $('#EXPENSE_ID');
 
@@ -217,6 +373,7 @@ async function renderPurpose() {
         );
     } finally {
         purposeSelect.prop('disabled', false);
+        initializeSearchableSelect(purposeSelect, 'Select expense type...');
     }
 }
 
@@ -263,6 +420,7 @@ async function renderVendor() {
         vendorSelect.html('<option value="">Cannot load vendor</option>');
     } finally {
         vendorSelect.prop('disabled', false);
+        initializeSearchableSelect(vendorSelect, 'Please select vendor');
     }
 }
 
@@ -432,10 +590,12 @@ function setEmpName(element, name) {
 }
 
 export async function getData(empno) {
-    return await fetchUtils({
+    const response = await fetchUtils({
         url: `${process.env.APP_API}/users/${empno}`,
         method: 'GET',
     });
+
+    return response?.data?.data || response?.data || response;
 }
 
 async function getStamp() {
@@ -578,7 +738,9 @@ $(document).on(
 
 let isSubmitting = false;
 
-$(document).on('click', '#btnRequest', async function (e) {
+$(document).on(
+    'click', '#btnRequest, button[name="btnAction"][value="save"]',
+    async function (e) {
     e.preventDefault();
 
     if (isSubmitting) return;
@@ -653,7 +815,7 @@ $(document).on('click', '#btnRequest', async function (e) {
 
         const attachmentInput = document.getElementById('attachfile');
 
-        if (!attachmentInput?.files?.length) {
+        if (!isReturnMode && !attachmentInput?.files?.length) {
             showMessage('Please attach at least one file.', 'warning');
             attachmentInput?.focus();
             return;
@@ -687,7 +849,6 @@ $(document).on('click', '#btnRequest', async function (e) {
             SUBJECT: String($('#FULLDP').val() || '').trim(),
             EXPENSE_CODE: Number(selectedExpense.val()),
             VENDOR_CODE: $('#VENDOR_CODE').val() || '',
-            REMARK: String($('#REMARK').val() || '').trim(),
             // The API uses AIR_SALES_BY to create rows in the cost center table.
             // Non-travel expenses use the requester as their cost center owner.
             AIR_SALES_BY: costCenterEmployees,
@@ -707,7 +868,14 @@ $(document).on('click', '#btnRequest', async function (e) {
         isSubmitting = true;
         requestButton.prop('disabled', true);
 
-        const res = await createForm(payload);
+        const res = isReturnMode
+            ? await actionReturnForm({
+                  ...getReturnFormKey(),
+                  ACTION: 'save',
+                  REMARK: '',
+                  ...payload,
+              })
+            : await createForm(payload);
 
         if (res?.status === false) {
             throw new Error(res?.message || 'Cannot submit request');
@@ -724,10 +892,48 @@ $(document).on('click', '#btnRequest', async function (e) {
 });
 
 export async function createForm(payload) {
+    const formData = new FormData();
+
+    Object.entries(payload).forEach(([key, value]) => {
+        formData.append(
+            key,
+            Array.isArray(value) || (value && typeof value === 'object')
+                ? JSON.stringify(value)
+                : String(value ?? ''),
+        );
+    });
+
+    Array.from(document.getElementById('attachfile')?.files || []).forEach(
+        (file) => formData.append('attachfile', file),
+    );
+
     return await fetchUtils({
         url: `${process.env.APP_API}/finform/fin-npo`,
         method: 'POST',
-        data: payload,
+        data: formData,
+    });
+}
+
+async function actionReturnForm(payload) {
+    const formData = new FormData();
+
+    Object.entries(payload).forEach(([key, value]) => {
+        formData.append(
+            key,
+            Array.isArray(value) || (value && typeof value === 'object')
+                ? JSON.stringify(value)
+                : String(value ?? ''),
+        );
+    });
+
+    Array.from(document.getElementById('attachfile')?.files || []).forEach(
+        (file) => formData.append('attachfile', file),
+    );
+
+    return await fetchUtils({
+        url: `${process.env.APP_API}/finform/fin-npo/update`,
+        method: 'POST',
+        data: formData,
     });
 }
 

@@ -30,6 +30,52 @@
             min-width: 130px;
         }
 
+        .required-field::after,
+        #stampTable th:nth-child(1)::after,
+        #stampTable th:nth-child(2)::after,
+        #stampTable th:nth-child(3)::after,
+        #stampTable th:nth-child(4)::after,
+        #stampTable th:nth-child(6)::after {
+            content: " *";
+            color: #dc2626;
+            font-weight: 700;
+        }
+
+        .fin-ds-accessible .select2-container {
+            width: 100% !important;
+        }
+
+        .fin-ds-accessible .select2-container--default .select2-selection--single {
+            height: 32px;
+            min-height: 32px;
+            background-color: #ffffff;
+            border: 2px solid #64748b;
+            border-radius: 0.5rem;
+        }
+
+        .fin-ds-accessible .select2-container--default .select2-selection--single .select2-selection__rendered {
+            line-height: 28px;
+            padding-left: 0.75rem;
+            padding-right: 2rem;
+            color: #0f172a;
+            font-size: 0.875rem;
+        }
+
+        .fin-ds-accessible .select2-container--default .select2-selection--single .select2-selection__arrow {
+            height: 28px;
+            right: 0.375rem;
+        }
+
+        .select2-container--default .select2-search--dropdown .select2-search__field {
+            border: 2px solid #64748b;
+            border-radius: 0.375rem;
+            outline: none;
+        }
+
+        .select2-container--default .select2-search--dropdown .select2-search__field:focus {
+            border-color: #1d4ed8;
+        }
+
         .fin-ds-accessible {
             background: #ffffff !important;
             color: #172033;
@@ -170,11 +216,13 @@
                             </div>
                             <div class="bg-primary/5 rounded-xl border border-primary/20 p-5 shadow-sm space-y-4">
 
+                                @yield('return-form-number')
+
 
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                                     <div class="grid grid-cols-[7rem_minmax(0,1fr)] items-center gap-x-2 gap-y-2">
                                         <label class="label p-0">
-                                            <span class="label-text font-bold text-base-content/80 text-sm">Input By</span>
+                                            <span class="label-text font-bold text-base-content/80 text-sm required-field">Input By</span>
                                         </label>
                                         {{-- <input id="INPUTBY" type="text" name="INPUTBY" value="" readonly --}}
                                         <input id="INPUTBY" type="text" name="INPUTBY" value="" 
@@ -203,7 +251,7 @@
                                  <div class="grid grid-cols-1 md:grid-cols-2 gap-5">   
                                     <div class="grid grid-cols-[7rem_minmax(0,1fr)] items-center gap-x-2 gap-y-2">
                                         <label class="label p-0">
-                                            <span class="label-text font-bold text-base-content/80 text-sm">Requester By</span>
+                                            <span class="label-text font-bold text-base-content/80 text-sm required-field">Requester By</span>
                                         </label>
                                         <input id="REQBY" type="text" name="REQBY" value=""
                                             class="input input-sm input-bordered w-full min-w-0 border-base-300 bg-base-200/80 text-error font-semibold focus:outline-none req" />
@@ -230,7 +278,7 @@
 
                                 <div class="form-control">
                                     <label class="label pb-1" for="FULLDP">
-                                        <span class="label-text font-bold text-base-content/80 text-sm">DIV / Dept / Sect</span>
+                                        <span class="label-text font-bold text-base-content/80 text-sm required-field">DIV / Dept / Sect</span>
                                     </label>
                                     <input id="FULLDP" type="text" name="FULLDP" value="" readonly
                                         class="input input-sm input-bordered w-full border-base-300 bg-base-200/80 cursor-not-allowed text-base-content font-medium focus:outline-none req" />
@@ -258,7 +306,7 @@
 
                 <div class="mb-6">
                     <div class="border border-base-300 p-4 rounded-lg bg-base-200/30 space-y-4" >
-                        <div class="font-bold text-primary mb-6 text-sm flex items-center gap-2">
+                        <div class="font-bold text-primary mb-6 text-sm flex items-center gap-2 required-field">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
                                 fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
                                 stroke-linejoin="round">
@@ -299,7 +347,7 @@
                                    <div class="air-sales-employee-row grid grid-cols-1 md:grid-cols-2 gap-5">
                                     <div class="grid grid-cols-[7rem_minmax(0,1fr)] items-center gap-x-2 gap-y-2">
                                         <label class="label p-0">
-                                            <span class="label-text font-bold text-base-content/80 text-sm">Empolyee Code</span>
+                                            <span class="label-text font-bold text-base-content/80 text-sm required-field">Empolyee Code</span>
                                         </label>
 <input type="text" name="AIR_SALES_BY[]" value=""
                                             class="air-sales-by input input-sm input-bordered w-full min-w-0 border-base-300 bg-base-200/80 text-error font-semibold focus:outline-none" />
@@ -331,7 +379,7 @@
                             <div class="bg-accent/5 rounded-xl border border-accent/30 p-5 shadow-sm space-y-3 mb-4">
                                 <div class="grid grid-cols-1 md:grid-cols-[12rem_minmax(0,1fr)] items-center gap-3">
                                     <label class="label p-0" for="VENDOR_CODE">
-                                        <span class="label-text font-bold text-base-content/80 text-sm">
+                                        <span class="label-text font-bold text-base-content/80 text-sm required-field">
                                             Vendor / Supplier
                                         </span>
                                     </label>
@@ -379,36 +427,6 @@
                         </div>
                 </div>
 
-
-
-                {{-- Remark --}}
-                <div>
-                    <div class="flex items-center gap-3 mb-4">
-                        <div class="bg-warning/20 p-1.5 rounded-lg text-warning-content">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none"
-                                viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round"
-                                    d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931z" />
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 7.125L16.862 4.487" />
-                            </svg>
-                        </div>
-                        <h2 class="text-base font-bold text-warning-content uppercase tracking-widest">
-                            Remark
-                        </h2>
-                    </div>
-
-                    <div class="rounded-xl border border-warning/30 bg-warning/5 p-5 shadow-sm">
-                        <label class="form-control w-full" for="REMARK">
-                            <span class="label-text mb-2 text-sm font-bold">Remark</span>
-                            <textarea id="REMARK" name="REMARK" rows="4" maxlength="1000"
-                                class="textarea textarea-bordered w-full resize-y bg-white"
-                                placeholder="Please enter remark"></textarea>
-                        </label>
-                    </div>
-                </div>
-
-                <div class="divider before:bg-base-300 after:bg-base-300"></div>
-
                 {{-- Attachment --}}
                 <div>
                     <div class="flex items-center gap-3 mb-4">
@@ -420,7 +438,7 @@
                             </svg>
                         </div>
 
-                        <h2 class="text-base font-bold text-info uppercase tracking-widest">
+                        <h2 class="text-base font-bold text-info uppercase tracking-widest required-field">
                             Attachment
                         </h2>
                     </div>
@@ -444,6 +462,8 @@
                                 <p class="text-xs text-base-content/50 mt-2">
                                     Accepted formats: PDF, JPG, PNG
                                 </p>
+
+                                <div id="existingAttachmentList" class="mt-3 hidden" aria-live="polite"></div>
                             </div>
                         </div>
                     </div>
