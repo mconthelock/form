@@ -1,12 +1,13 @@
 @extends('layouts/webflowTemplate')
 
+
 @section('contents')
 <div class="hidden form-info" nfrmno="{{$NFRMNO}}" vorgno="{{$VORGNO}}" cyear="{{$CYEAR}}" mode="{{$mode}}"
     cyear2="{{$mode !=1 ? $CYEAR2 : '' }}" nrunno="{{$mode !=1 ? $NRUNNO : '' }}"></div>
 <div class="hidden apv-data" empno="{{$empno}}"></div>
 @endsection
 
-<form id="frmmain">
+<form id="frmmain" style="visibility: hidden;">
      
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-10">
     <h1 class="text-3xl text-center text-primary font-bold mb-10 mt-6">Vendor/Sub-contractor Evaluation Form</h1>
@@ -39,16 +40,14 @@
         <div class="font-semibold text-sm">2nd digit code Purpose : </div>
         <div id="VENDPURPOSE" class="text-gray-700 text-sm"></div>
       </div>
+        <div class="grid grid-cols-[220px_1fr] gap-3 mb-3 items-baseline">
+        <div class="font-semibold text-sm">Vendor Code :</div>
+        <div id="VENDCODE" class="text-gray-700 text-sm"></div>
+      </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div class="grid grid-cols-[220px_1fr] gap-3 mb-3 items-baseline">
-          <div class="font-semibold text-sm">Vendor Name :</div>
-          <div id="COMNAME" class="text-gray-700 text-sm"></div>
-        </div>
-        <div class="grid grid-cols-[220px_1fr] gap-3 mb-3 items-baseline">
-          <div class="font-semibold text-sm">Vendor Code :</div>
-          <div id="VENDCODE" class="text-gray-700 text-sm"></div>
-        </div>
+      <div class="grid grid-cols-[220px_1fr] gap-3 mb-3 items-baseline">
+        <div class="font-semibold text-sm">Vendor Name :</div>
+        <div id="COMNAME" class="text-gray-700 text-sm w-full flex items-center  gap-2"></div>
       </div>
       
       <div class="grid grid-cols-[220px_1fr] gap-3 mb-3 items-baseline">
@@ -683,8 +682,9 @@
     </div> 
 
 <div class="border border-gray-300 shadow-sm rounded-lg pt-5 px-5 pb-5 mt-8 mb-5 bg-white relative">
+  <div id="CONJUDGEMENT"></div>
   <div>
-    <label class="block font-bold text-sm mb-2 text-gray-800">Other comments</label>
+    <label class="block font-bold text-sm mb-2 text-gray-800">Comment/Conclusion</label>
     <textarea name="txtRemark"
       class="w-full border border-gray-400 p-2 rounded text-sm focus:outline-none" 
       rows="4" 

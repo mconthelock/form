@@ -285,6 +285,30 @@ export const addrEnManager = {
     },
 };
 
+export const cityEnManager = {
+    get input() {
+        return $('#CITY_EN');
+    },
+    get value() {
+        return this.input.val();
+    },
+    set value(val) {
+        this.input.val(val);
+    },
+};
+
+export const stateEnManager = {
+    get input() {
+        return $('#STATE_EN');
+    },
+    get value() {
+        return this.input.val();
+    },
+    set value(val) {
+        this.input.val(val);
+    },
+};
+
 export const provinceEnManager = {
     get input() {
         return $('#PROVINCE_EN');
@@ -953,6 +977,7 @@ export const countryManager = {
     async change(e) {
         // 💡 แก้ไขตรงนี้: ใช้คอมมา (,) ห้ามใช้เครื่องหมายบวก (+) เด็ดขาด
         //console.log("Data ทั้งก้อนจาก Select2:", e.params.data);
+        console.log('xxxxxxxxxxxx');
 
         if (e && e.params && e.params.data) {
             const selectedCountry = e.params.data;
