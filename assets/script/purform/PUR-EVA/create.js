@@ -1,32 +1,24 @@
 import { searchNVFForm, getCurrency, create, getData, update } from './data';
 import { createTable } from '@amec/webasset/dataTable';
 import { downloadOrOpenFile } from '@amec/webasset/api/file';
-import {
-    getCountries,
-    getProvinces,
-    getDistricts,
-    getSubDistricts,
-    getTermcode,
-    getVendor,
-} from '../PUR-NVF/data';
+// import {
+//     getCountries,
+//     getProvinces,
+//     getDistricts,
+//     getSubDistricts,
+//     getTermcode,
+//     getVendor,
+// } from '../PUR-NVF/data';
+import { getCountries, getTermcode, getVendor } from '../PUR-NVF/data';
 import {
     countryManager,
-    provinceManager,
-    districtManager,
-    subDistrictManager,
     paymentTermManager,
     addrEnManager,
     addrThManager,
-    provinceEnManager,
-    provinceThManager,
-    districtEnManager,
-    districtThManager,
-    subDistrictEnManager,
-    subDistrictThManager,
+    cityEnManager,
+    stateEnManager,
     countryEnManager,
-    countryThManager,
     postcodeEnManager,
-    postcodeThManager,
     attachFileManager,
     attachTypeManager,
     attachOtherManager,
@@ -89,26 +81,6 @@ const requiredMessage = [
     {
         element: $('input[name="ADDRESS_EN"]'),
         message: 'Please input Address (EN).',
-    },
-    {
-        element: $('input[name="PROVINCE_EN"]'),
-        message: 'Please input Province (English).',
-    },
-    {
-        element: $('input[name="DISTRICT_EN"]'),
-        message: 'Please input District (English).',
-    },
-    {
-        element: $('input[name="SUB_DISTRICT_EN"]'),
-        message: 'Please input Sub-District (English).',
-    },
-    {
-        element: $('input[name="POSTCODE_EN"]'),
-        message: 'Please input Postcode (English).',
-    },
-    {
-        element: $('input[name="COUNTRY_EN"]'),
-        message: 'Please input Country (English).',
     },
     {
         element: $('input[name="CONTACT"]'),
@@ -354,7 +326,6 @@ $(document).on('change', '.radio-type', async function () {
         }
         countryManager.disabled(true);
         countryEnManager.value = 'Thailand';
-        countryThManager.value = 'ไทย';
         $('input[name="CHKCOMPLIANCE"]').removeClass('req');
     } else {
         $('.field-local').addClass('hidden');
@@ -371,7 +342,6 @@ $(document).on('change', '.radio-type', async function () {
         $('input[name="PRODCAT"]').removeClass('req');
         countryManager.disabled(false);
         countryEnManager.value = '';
-        countryThManager.value = '';
     }
 });
 
@@ -465,57 +435,57 @@ $(document).on('select2:select', '.country', async function (e) {
     countryManager.change(e);
 });
 
-$(document).on('select2:select', '.province', async function (e) {
-    provinceManager.change(e);
-    const selectedProvinceId = provinceManager.getValue('PROVINCE_SELECT');
-    const filteredDistricts = districtData.filter(
-        (d) => d.province_id == selectedProvinceId,
-    );
-    const districtOptions = filteredDistricts.map((d) => ({
-        id: d.id,
-        value: d.value,
-        text: d.text,
-        nameth: d.nameth,
-    }));
-    districtOptions.unshift({
-        id: '',
-        value: '',
-        text: '-- Select District --',
-        nameth: '',
-    });
-    districtManager.select.empty().trigger('change');
-    await districtManager.init(districtOptions);
-});
+// $(document).on('select2:select', '.province', async function (e) {
+//     provinceManager.change(e);
+//     const selectedProvinceId = provinceManager.getValue('PROVINCE_SELECT');
+//     const filteredDistricts = districtData.filter(
+//         (d) => d.province_id == selectedProvinceId,
+//     );
+//     const districtOptions = filteredDistricts.map((d) => ({
+//         id: d.id,
+//         value: d.value,
+//         text: d.text,
+//         nameth: d.nameth,
+//     }));
+//     districtOptions.unshift({
+//         id: '',
+//         value: '',
+//         text: '-- Select District --',
+//         nameth: '',
+//     });
+//     districtManager.select.empty().trigger('change');
+//     await districtManager.init(districtOptions);
+// });
 
-$(document).on('select2:select', '.district', async function (e) {
-    districtManager.change(e);
-    const selectedDistrictId = districtManager.getValue('DISTRICT_SELECT');
-    const filteredSubDistricts = subDistrictData.filter(
-        (s) => s.district_id == selectedDistrictId,
-    );
-    const subDistrictOptions = filteredSubDistricts.map((s) => ({
-        id: s.id,
-        value: s.value,
-        text: s.text,
-        nameth: s.nameth,
-        district_id: s.district_id,
-        postcode: s.postcode,
-    }));
-    subDistrictOptions.unshift({
-        id: '',
-        value: '',
-        text: '-- Select Sub-district --',
-        nameth: '',
-        district_id: '',
-        postcode: '',
-    });
-    subDistrictManager.select.empty().trigger('change');
-    await subDistrictManager.init(subDistrictOptions);
-});
+// $(document).on('select2:select', '.district', async function (e) {
+//     districtManager.change(e);
+//     const selectedDistrictId = districtManager.getValue('DISTRICT_SELECT');
+//     const filteredSubDistricts = subDistrictData.filter(
+//         (s) => s.district_id == selectedDistrictId,
+//     );
+//     const subDistrictOptions = filteredSubDistricts.map((s) => ({
+//         id: s.id,
+//         value: s.value,
+//         text: s.text,
+//         nameth: s.nameth,
+//         district_id: s.district_id,
+//         postcode: s.postcode,
+//     }));
+//     subDistrictOptions.unshift({
+//         id: '',
+//         value: '',
+//         text: '-- Select Sub-district --',
+//         nameth: '',
+//         district_id: '',
+//         postcode: '',
+//     });
+//     subDistrictManager.select.empty().trigger('change');
+//     await subDistrictManager.init(subDistrictOptions);
+// });
 
-$(document).on('select2:select', '.sub-district', async function (e) {
-    subDistrictManager.change(e);
-});
+// $(document).on('select2:select', '.sub-district', async function (e) {
+//     subDistrictManager.change(e);
+// });
 
 $(document).on('input', '#directSearchInput', async function () {
     const keyword = $(this).val();
@@ -796,32 +766,32 @@ $(document).ready(async function () {
         nameth: c.nameth,
     }));
 
-    const province = await getProvinces();
-    provinceData = province.map((p) => ({
-        id: p.id,
-        value: p.nameen,
-        text: p.nameen,
-        nameth: p.nameth,
-    }));
-    const district = await getDistricts();
+    // const province = await getProvinces();
+    // provinceData = province.map((p) => ({
+    //     id: p.id,
+    //     value: p.nameen,
+    //     text: p.nameen,
+    //     nameth: p.nameth,
+    // }));
+    // const district = await getDistricts();
 
-    districtData = district.map((d) => ({
-        id: d.id,
-        value: d.nameen,
-        text: d.nameen,
-        nameth: d.nameth,
-        province_id: d.province_id,
-    }));
+    // districtData = district.map((d) => ({
+    //     id: d.id,
+    //     value: d.nameen,
+    //     text: d.nameen,
+    //     nameth: d.nameth,
+    //     province_id: d.province_id,
+    // }));
 
-    const subDistrict = await getSubDistricts();
-    subDistrictData = subDistrict.map((s) => ({
-        id: s.id,
-        value: s.nameen,
-        text: s.nameen,
-        nameth: s.nameth,
-        district_id: s.district_id,
-        postcode: s.postcode,
-    }));
+    // const subDistrict = await getSubDistricts();
+    // subDistrictData = subDistrict.map((s) => ({
+    //     id: s.id,
+    //     value: s.nameen,
+    //     text: s.nameen,
+    //     nameth: s.nameth,
+    //     district_id: s.district_id,
+    //     postcode: s.postcode,
+    // }));
 
     const term = await getTermcode();
     console.log(term);
@@ -844,9 +814,9 @@ $(document).ready(async function () {
     }));
 
     countryManager.init(countriesData);
-    provinceManager.init(provinceData);
-    districtManager.init(districtData);
-    subDistrictManager.init(subDistrictData);
+    // provinceManager.init(provinceData);
+    // districtManager.init(districtData);
+    // subDistrictManager.init(subDistrictData);
     paymentTermManager.init(termdata);
     currencyManager.init(currencyData);
     concernManager.init(orgdata);
@@ -955,19 +925,13 @@ function setVendorMstInfo(vendorMstData) {
                     'checked',
                     true,
                 );
-                provinceEnManager.value = address.ADDR_STATE;
-                districtEnManager.value = address.ADDR_CITY;
-                subDistrictEnManager.value = address.ADDR_SUB_CITY;
+                stateEnManager.value = address.ADDR_STATE;
+                cityEnManager.value = address.ADDR_CITY;
                 countryManager.value = address.ADDR_COUNTRY;
                 countryManager.disabled(false);
             }
         } else {
             addrThManager.value = address.ADDR_LINE1 || '';
-            provinceThManager.value = address.ADDR_STATE;
-            districtThManager.value = address.ADDR_CITY;
-            subDistrictThManager.value = address.ADDR_SUB_CITY;
-            postcodeThManager.value = address.ADDR_ZIPCODE;
-            countryThManager.value = address.ADDR_COUNTRY;
         }
     }
     $('input[name="CONTACT"]').val(vendorMstData.VND_SALE);
@@ -1006,29 +970,20 @@ function setVendorInfo(vendorData) {
 
     for (const address of vendorData.ADDRESSES) {
         if (address.ADDRTYPE === 'E') {
-            if (vendorData.LISTS[0].VENDTYPE === 'Local') {
-                addrEnManager.value = address.ADDR || '';
-                provinceManager.textToValue = address.PROVINCE;
-                districtManager.textToValue = address.DISTRICT;
-                subDistrictManager.textToValue = address.SUBDISTRICT;
-                countryManager.disabled(true);
-            } else {
-                addrEnManager.value = address.ADDR || '';
-                provinceEnManager.value = address.PROVINCE;
-                districtEnManager.value = address.DISTRICT;
-                subDistrictEnManager.value = address.SUBDISTRICT;
-                countryManager.value = address.COUNTRY;
-                countryManager.disabled(false);
-            }
+            addrEnManager.value = address.ADDR || '';
+            cityEnManager.value = address.CITY;
+            stateEnManager.value = address.STATE;
+            countryManager.value = address.COUNTRY;
+            countryManager.disabled(false);
             postcodeEnManager.value = address.POSTCODE;
             countryEnManager.value = address.COUNTRY;
         } else {
             addrThManager.value = address.ADDR || '';
-            provinceThManager.value = address.PROVINCE;
-            districtThManager.value = address.DISTRICT;
-            subDistrictThManager.value = address.SUBDISTRICT;
-            postcodeThManager.value = address.POSTCODE;
-            countryThManager.value = address.COUNTRY;
+            // provinceThManager.value = address.PROVINCE;
+            // districtThManager.value = address.DISTRICT;
+            // subDistrictThManager.value = address.SUBDISTRICT;
+            // postcodeThManager.value = address.POSTCODE;
+            // countryThManager.value = address.COUNTRY;
         }
     }
     $('input[name="CONTACT"]').val(vendorData.LISTS[0].CONTACT);
@@ -1210,7 +1165,6 @@ function clearVendorInfo() {
     districtThManager.value = '';
     subDistrictThManager.value = '';
     postcodeThManager.value = '';
-    countryThManager.value = '';
 
     paymentTermManager.value = '';
 

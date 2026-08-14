@@ -232,54 +232,30 @@
     <div class="space-y-4">
         <!-- Address Line 1 -->
         <div>
-            <label class="block text-xs font-semibold text-gray-600 mb-1">No., Village, Building, Alley, Road</label>
+            <label class="block text-xs font-semibold text-gray-600 mb-1">Address (ที่อยู่)</label>
             <input type="text" name="ADDRESS_EN"   id="ADDRESS_EN"  placeholder="e.g. 43/86 Moo 16, Bangna Road..." class="input input-sm border border-gray-400 h-8 rounded  px-2 w-full req">
         </div>
-        <!-- Grid for Province/District -->
         <div class="grid grid-cols-2 gap-4">
             <div>
-                <label class="block text-xs font-semibold text-gray-600 mb-1">Province</label>
-                <input type="text" name="PROVINCE_EN" id="PROVINCE_EN" maxlength="100" class="input input-bordered input-sm w-full req bg-gray-50 border-gray-300 field-oversea" placeholder="Province">
-                <div id="PROVINCE_LOCAL_WRAPPER" class="field-local hidden">
-                    <select id="PROVINCE_SELECT" class="province">
-                        <option value="">-- Select Province --</option>
-                    </select>
-                </div>
+                <label class="block text-xs font-semibold text-gray-600 mb-1">City (เขต/อำเภอ)</label>
+                <input type="text" name="CITY_EN" id="CITY_EN" maxlength="100" class="input input-sm border border-gray-400 h-8 rounded  px-2 w-full" placeholder="City">
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-gray-600 mb-1">State (รัฐ/จังหวัด)</label>
+                <input type="text" name="STATE_EN" id="STATE_EN"  placeholder="State" class="input input-sm border border-gray-400 h-8 rounded  px-2 w-full ">
+            </div>
+        </div>
+        <div class="grid grid-cols-2 gap-4">
+            <div>
+                <label class="block text-xs font-semibold text-gray-600 mb-1">Postcode (รหัสไปรษณีย์)</label>
+                <input type="text" name="POSTCODE_EN" id="POSTCODE_EN"  placeholder="Postcode" class="input input-sm border border-gray-400 h-8 rounded  px-2 w-full ">
+            </div>
+            <div>
+                <label class="block text-xs font-semibold text-gray-600 mb-1">Country (ประเทศ)</label>
+                <input type="text" name="COUNTRY_EN" id="COUNTRY_EN"  placeholder="Country" class="input input-sm border border-gray-400 h-8 rounded  px-2 w-full ">
+            </div>
+        </div>
 
-            </div>
-            <div>
-                <label class="block text-xs font-semibold text-gray-600 mb-1">District</label>
-                <input type="text" name="DISTRICT_EN" id="DISTRICT_EN" maxlength="100" class="input input-bordered input-sm w-full req bg-gray-50 border-gray-300 field-oversea" placeholder="District">
-                <div id="DISTRICT_LOCAL_WRAPPER" class="field-local hidden">
-                    <select id="DISTRICT_SELECT" class="district">
-                        <option value="">-- Select District --</option>
-                    </select>
-                </div>
-            </div>
-        </div>
-        <!-- Grid for Sub-district/Postcode -->
-        <div class="grid grid-cols-2 gap-4">
-            <div>
-                <label class="block text-xs font-semibold text-gray-600 mb-1">Sub-district</label>
-                <input type="text" name="SUB_DISTRICT_EN" id="SUB_DISTRICT_EN" maxlength="100" class="input input-bordered input-sm w-full req bg-gray-50 border-gray-300 field-oversea" placeholder="Sub-district">
-                <div id="SUB_DISTRICT_LOCAL_WRAPPER" class="field-local hidden">
-                    <select id="SUB_DISTRICT_SELECT" class="sub-district">
-                        <option value="">-- Select Sub-district --</option>
-                    </select>
-                </div>
-            </div>
-            <div>
-                <label class="block text-xs font-semibold text-gray-600 mb-1">Postcode</label>
-                <input type="text" name="POSTCODE_EN" id="POSTCODE_EN"  placeholder="Postcode" class="input input-sm border border-gray-400 h-8 rounded  px-2 w-full req">
-            </div>
-        </div>
-        <!-- Country -->
-        <div class="grid grid-cols-2 gap-4">
-                <div>
-                <label class="block text-xs font-semibold text-gray-600 mb-1">Country</label>
-                <input type="text" name="COUNTRY_EN" id="COUNTRY_EN" placeholder="Country" class="input input-sm border border-gray-400 h-8 rounded  px-2 w-full req">
-            </div>
-        </div>
     </div>
 </div>
 
@@ -288,36 +264,10 @@
     <label class="font-semibold text-sm pt-2">Address (TH)</label>
     <div class="space-y-4">
         <div>
-            <label class="block text-xs font-semibold text-gray-600 mb-1">บ้านเลขที่, หมู่บ้าน, อาคาร, ซอย, ถนน</label>
+            <label class="block text-xs font-semibold text-gray-600 mb-1">บ้านเลขที่, หมู่บ้าน, อาคาร, ซอย, ถนน, ตำบล, อำเภอ, จังหวัด, รหัสไปรษณีย์</label>
             <input type="text" name="ADDRESS_TH" id="ADDRESS_TH" placeholder="เช่น 43/86 หมู่ 16 ซอยบางนา" maxlength="200" class="input input-bordered input-sm w-full  bg-gray-50 border-gray-300" placeholder="เช่น 43/86 หมู่ 16 ซอยบางนา...">
         </div>
-        <div class="grid grid-cols-2 gap-4">
-            <div>
-                <label class="block text-xs font-semibold text-gray-600 mb-1">จังหวัด</label>
-                <input type="text" name="PROVINCE_TH" id="PROVINCE_TH" maxlength="100" class="input input-bordered input-sm w-full  bg-gray-50 border-gray-300" placeholder="จังหวัด">
 
-            </div>
-            <div>
-                <label class="block text-xs font-semibold text-gray-600 mb-1">อำเภอ / เขต</label>
-                 <input type="text" name="DISTRICT_TH" id="DISTRICT_TH" maxlength="100" class="input input-bordered input-sm w-full  bg-gray-50 border-gray-300" placeholder="อำเภอ / เขต">
-            </div>
-        </div>
-        <div class="grid grid-cols-2 gap-4">
-            <div>
-                <label class="block text-xs font-semibold text-gray-600 mb-1">ตำบล / แขวง</label>
-                <input type="text" name="SUB_DISTRICT_TH" id="SUB_DISTRICT_TH" maxlength="100" class="input input-bordered input-sm w-full  bg-gray-50 border-gray-300" placeholder="ตำบล / แขวง">
-            </div>
-            <div>
-                <label class="block text-xs font-semibold text-gray-600 mb-1">รหัสไปรษณีย์</label>
-                <input type="text" name="POSTCODE_TH" id="POSTCODE_TH" maxlength="50" class="input input-bordered input-sm w-full  bg-gray-50 border-gray-300" placeholder="รหัสไปรษณีย์">
-            </div>
-        </div>
-        <div class="grid grid-cols-2 gap-4">
-            <div>
-                <label class="block text-xs font-semibold text-gray-600 mb-1">ประเทศ</label>
-                <input type="text" name="COUNTRY_TH" id="COUNTRY_TH" maxlength="200" class="input input-bordered input-sm w-full bg-gray-50 border-gray-300" placeholder="ประเทศ" readonly>
-            </div>
-        </div>
     </div>
 </div>
             <!-- Contact Information -->

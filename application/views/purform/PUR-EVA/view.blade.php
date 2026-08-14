@@ -40,16 +40,14 @@
         <div class="font-semibold text-sm">2nd digit code Purpose : </div>
         <div id="VENDPURPOSE" class="text-gray-700 text-sm"></div>
       </div>
+        <div class="grid grid-cols-[220px_1fr] gap-3 mb-3 items-baseline">
+        <div class="font-semibold text-sm">Vendor Code :</div>
+        <div id="VENDCODE" class="text-gray-700 text-sm"></div>
+      </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div class="grid grid-cols-[220px_1fr] gap-3 mb-3 items-baseline">
-          <div class="font-semibold text-sm">Vendor Name :</div>
-          <div id="COMNAME" class="text-gray-700 text-sm"></div>
-        </div>
-        <div class="grid grid-cols-[220px_1fr] gap-3 mb-3 items-baseline">
-          <div class="font-semibold text-sm">Vendor Code :</div>
-          <div id="VENDCODE" class="text-gray-700 text-sm"></div>
-        </div>
+      <div class="grid grid-cols-[220px_1fr] gap-3 mb-3 items-baseline">
+        <div class="font-semibold text-sm">Vendor Name :</div>
+        <div id="COMNAME" class="text-gray-700 text-sm w-full flex items-center  gap-2"></div>
       </div>
       
       <div class="grid grid-cols-[220px_1fr] gap-3 mb-3 items-baseline">
