@@ -31,11 +31,19 @@ import {
 import { dragDropInit } from '@amec/webasset/dragdrop';
 import { setDatefpk, setDatePicker } from '@amec/webasset/flatpickr';
 import { setSelect2 } from '@amec/webasset/select2';
-import { selectAttachType, clearaddr, resetformid } from './function';
+import {
+    selectAttachType,
+    clearaddr,
+    resetformid,
+    toggleAttachSection,
+    checkAttFile,
+} from './function';
 import { formatDate } from '@amec/webasset/dayjs';
 import { classIcofont } from '@amec/webasset/fileExplorer';
 import Swal from 'sweetalert2';
 import { get } from 'jquery';
+import { renderFilesByType } from '../PUR-EVA/formManager';
+
 select2();
 
 const state = {
@@ -251,7 +259,7 @@ export const vendorTypeManager = {
         const type = this.type;
         $('#VENDOR_LOCATION').val(type);
         const reqtype = ReqtypeManager.type;
-        selectAttachType(reqtype, type);
+        // selectAttachType(reqtype, type);
         clearaddr();
         if (type == 'Local') {
             $('.field-local').removeClass('hidden').addClass('req');
@@ -494,7 +502,16 @@ export const vendorCodeManager = {
 
                             // 2. แยกจัดการตามประเภทที่อยู่ ADDR_TYPE ('T' = ภาษาไทย, 'E' = ภาษาอังกฤษ)
                             if (address.ADDR_TYPE === 'T') {
-                                addrThManager.value = addrLine;
+                                const fullAddress = [
+                                    addrLine,
+                                    city,
+                                    state,
+                                    postcode,
+                                    country,
+                                ]
+                                    .filter(Boolean) // กรองค่า null, undefined, ค่าว่าง ออก
+                                    .join(',');
+                                addrThManager.value = fullAddress;
                             } else if (address.ADDR_TYPE === 'E') {
                                 // แปะลงฟิลด์ภาษาอังกฤษ
                                 addrEnManager.value = addrLine;
@@ -532,9 +549,9 @@ export const vendorCodeManager = {
 };
 
 export const formManager = {
-    provinceData: null,
-    districtData: null,
-    subDistrictData: null,
+    // provinceData: null,
+    // districtData: null,
+    // subDistrictData: null,
     get form() {
         return $('#form');
     },
@@ -571,7 +588,7 @@ export const formManager = {
         actionFormManager.loading(mode);
         switch (mode) {
             case 1: // create
-                attachFileManager.init();
+                //attachFileManager.init();
                 // setDatePicker();
                 //    const curr = await getCurrency();
                 //     const currData = curr.map((c) => ({
@@ -642,7 +659,7 @@ export const formManager = {
                 // this.formDetail = await setformDetail(form);
                 this.formDetail = await getformDetail(form);
                 actionFormManager.init(mode, flow.html);
-                attachFileManager.init(data.FILES || []);
+                //  attachFileManager.init(data.FILES || []);
                 if (state.FormInfo.RETURN) {
                     //console.log("inter return");
                     //$("#section-0").addClass("hidden!");
@@ -761,23 +778,29 @@ export const formManager = {
         $('#BRANCH').text(data.LISTS[0].BRANCH || '-');
         $('#ACCNUMBER').text(data.LISTS[0].ACCNUMBER || '-');
         $('#PAYMENT_TERM').text(data.LISTS[0].TERM.STERMDESC || '-');
-        if (data.ATTACH_TYPE) {
-            selectAttachType(data.REQTYPE, data.LISTS[0].VENDTYPE);
-            // Attach Type
-            attachTypeManager.show(['other']);
-            attachTypeManager.checkbox.each(function () {
-                const value = $(this).val();
-                const type = $(this).attr('a-type');
-                if (data.ATTACH_TYPE.includes(value)) {
-                    // console.log("-------------"+value);
-                    $(this).prop('checked', true);
-                    if (type == 'other') {
-                        // Attach Other
-                        attachOtherManager.text = data.ATTACH_OTHER || '-';
-                    }
-                }
-            });
-        }
+        data.ATTACH_OTHER && $('#ATTACH_OTHER_TEXT').text(data.ATTACH_OTHER);
+        const attachedFiles = data.FILES || [];
+        renderFilesByType(attachedFiles, 11, 'file-type-11');
+        renderFilesByType(attachedFiles, 14, 'file-type-14');
+        renderFilesByType(attachedFiles, 15, 'file-type-15');
+        renderFilesByType(attachedFiles, 2, 'file-type-2');
+        // if (data.ATTACH_TYPE) {
+        //     selectAttachType(data.REQTYPE, data.LISTS[0].VENDTYPE);
+        //     // Attach Type
+        //     attachTypeManager.show(['other']);
+        //     attachTypeManager.checkbox.each(function () {
+        //         const value = $(this).val();
+        //         const type = $(this).attr('a-type');
+        //         if (data.ATTACH_TYPE.includes(value)) {
+        //             // console.log("-------------"+value);
+        //             $(this).prop('checked', true);
+        //             if (type == 'other') {
+        //                 // Attach Other
+        //                 attachOtherManager.text = data.ATTACH_OTHER || '-';
+        //             }
+        //         }
+        //     });
+        // }
 
         // // Attached Files
         // attachFileManager.showFiles(data.FILES);
@@ -1309,10 +1332,16 @@ export const ReqtypeManager = {
             typejobManager.addcls('req');
             serviceManager.addcls('req');
             purposeManager.addcls('req');
+            toggleAttachSection('cer', true);
+            toggleAttachSection('bank', true);
+            toggleAttachSection('changeaddr', false);
         } else {
             typejobManager.removecls('req');
             serviceManager.removecls('req');
             purposeManager.removecls('req');
+            toggleAttachSection('cer', false);
+            toggleAttachSection('bank', false);
+            toggleAttachSection('changeaddr', true);
         }
         if (type == 'D') {
             $(`#U-section`).removeClass('hidden');
@@ -1327,11 +1356,14 @@ export const ReqtypeManager = {
                 .find('.required')
                 .removeClass('required')
                 .addClass('was-required');
-            fSection
-                .find('.required')
-                .removeClass('required')
-                .addClass('was-required');
-            fSection.find('input, textarea, select').removeClass('req');
+            // fSection
+            //     .find('.required')
+            //     .removeClass('required')
+            //     .addClass('was-required');
+            // fSection.find('input, textarea, select').removeClass('req');
+            toggleAttachSection('cer', false);
+            toggleAttachSection('bank', false);
+            toggleAttachSection('changeaddr', false);
         } else {
             const ignoredFields =
                 '#FAX, #COUNTRY_SELECT, #ATTACH_OTHER, #ADDRESS_TH';
@@ -1351,11 +1383,11 @@ export const ReqtypeManager = {
                 .find('.was-required')
                 .addClass('required')
                 .removeClass('was-required');
-            fSection
-                .find('.was-required')
-                .addClass('required')
-                .removeClass('was-required');
-            fSection.find('input, textarea, select').addClass('req');
+            // fSection
+            //     .find('.was-required')
+            //     .addClass('required')
+            //     .removeClass('was-required');
+            // fSection.find('input, textarea, select').addClass('req');
         }
     },
     // updateStyles() {
@@ -1601,18 +1633,18 @@ export const attachFileManager = {
         let html = "<div class='flex flex-col gap-3 mt-5'>";
         files.forEach((f) => {
             html += `
-            <a 
-                href="${f.FILE_PATH}" 
-                storedName="${f.FILE_FNAME}" 
+            <a
+                href="${f.FILE_PATH}"
+                storedName="${f.FILE_FNAME}"
                 originalName="${f.FILE_ONAME}"
                 class="file-link text-primary flex items-center gap-3 w-full border rounded-lg bg-base-100 p-3"
             >
                 <i class="${classIcofont(f.FILE_ONAME.split('.').pop())} text-4xl"></i>
                 <span class="link link-primary">${f.FILE_ONAME}</span>
-                <button 
+                <button
                     type="button"
                     file-id="${f.FILE_ID}"
-                    class="flex items-center justify-center ml-auto p-5 w-6 h-6 rounded hover:bg-red-100 text-red-500 hover:text-red-600 transition remove-file 
+                    class="flex items-center justify-center ml-auto p-5 w-6 h-6 rounded hover:bg-red-100 text-red-500 hover:text-red-600 transition remove-file
                     ${isReturn ? '' : 'hidden'}">
                     <i class="icofont-trash text-xl"></i>
                 </button>
@@ -1646,13 +1678,16 @@ export const actionFormManager = {
     init(mode, flow) {
         switch (mode) {
             case 1:
-                this.container.html(webflowSubmit({ request: true }));
+                this.container.html(
+                    webflowSubmit({ request: true, remark: false }),
+                );
                 break;
             case 2:
                 this.container.html(
                     webflowSubmit({
                         flow: true,
                         flowhtml: flow,
+                        remark: false,
                         approve: true,
                         reject: state.FormInfo.RETURN ? false : true,
                         return: state.FormInfo.RETURN ? false : true,
@@ -1714,26 +1749,24 @@ export const actionFormManager = {
                 {element: vendorTypeManager.radio, message: "Please select Local or Overseas."},
                  countryManager.select.hasClass('req') ? {element: countryManager.select, message: "Please select Country."} : null,
                 {element: addrEnManager.input, message: "Please input Address (EN)."},
-                {element: attachTypeManager.checkbox, message: "Please select Attach Type."},
-                {element: attachFileManager.input, message: "Please attach files."},
+                // {element: attachTypeManager.checkbox, message: "Please select Attach Type."},
+                // {element: attachFileManager.input, message: "Please attach files."},
             ].filter(Boolean);
 
-            // $(form)
-            //     .find("input, select, textarea")
-            //     .each(function () {
-            //        if($(this).hasClass('req'))
-            //         {
-            //             console.log($(this).attr('name'),$(this).attr('id'),$(this).val());
-            //         }
-
-            //     });
+            $(form)
+                .find('input, select, textarea')
+                .each(function () {
+                    if ($(this).hasClass('req')) {
+                        console.log(
+                            $(this).attr('name'),
+                            $(this).attr('id'),
+                            $(this).val(),
+                        );
+                    }
+                });
             if (!(await requiredForm('#form', requiredMessage))) return;
-            if (
-                attachTypeManager.types.length > 0 &&
-                attachFileManager.checkedFilesLength === 0 &&
-                attachFileManager.checkedFilesLength === 0
-            ) {
-                showMessage('Please attach files.', 'warning');
+            if (!checkAttFile()) {
+                // showMessage('Please attach files.', 'warning');
                 return;
             }
             if (

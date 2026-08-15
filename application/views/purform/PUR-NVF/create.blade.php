@@ -33,22 +33,25 @@
 @endsection
 
 @section('contents')
-<div class="hidden form-info" nfrmno="{{$NFRMNO}}" vorgno="{{$VORGNO}}" cyear="{{$CYEAR}}" mode="{{$mode}}"
-    cyear2="{{$mode !=1 ? $CYEAR2 : '' }}" nrunno="{{$mode !=1 ? $NRUNNO : '' }}" return="{{$return ?? ''}}"></div>
-<div class="hidden apv-data" empno="{{$empno}}"></div>
+<div class="hidden form-info" nfrmno="{{ $NFRMNO }}" vorgno="{{ $VORGNO }}" cyear="{{ $CYEAR }}" mode="{{ $mode }}"
+    cyear2="{{ $mode !=1 ? $CYEAR2 : '' }}"
+    nrunno="{{ $mode !=1 ? $NRUNNO : '' }}"
+    return="{{ $return ?? '' }}"></div>
+<div class="hidden apv-data" empno="{{ $empno }}"></div>
+
 <!-- Form Container -->
 <div class="flex flex-col w-full px-4 my-5 font-sans">
     <div class="card bg-white w-full lg:w-[70rem] place-self-center shadow-sm">
         <div class="card-body p-6 lg:p-10">
             <h1 class="text-3xl text-center text-primary font-bold mb-10">New Vendor Requisition</h1>
-            
+
             <form id="form" class="flex flex-col gap-5">
                 <section id="section-0" class="flex flex-col gap-4">
                     <div class="flex items-center gap-4">
                         <span class="w-32 shrink-0 font-semibold">Input by</span>
                         <label>
                             <input type="text" name="INPUTBY" id="INPUTBY" class="input input-sm w-48"
-                                value="{{$empno}}" readonly>
+                                value="{{ $empno }}" readonly>
                         </label>
                     </div>
 
@@ -56,7 +59,7 @@
                         <span class="required w-32 shrink-0 font-semibold">Request by</span>
                         <label>
                             <input type="text" name="REQBY" id="REQBY" class="input input-sm w-48 req"
-                                value="{{$empno}}">
+                                value="{{ $empno }}">
                         </label>
                     </div>
                     <div class="flex flex-col md:flex-row gap-4 items-start md:items-center  pb-2">
@@ -190,13 +193,15 @@
 
                                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div>
-                                        <label class="block mb-1 text-xs font-bold text-gray-600">City (เขต/อำเภอ)</label>
+                                        <label class="block mb-1 text-xs font-bold text-gray-600">City
+                                            (เขต/อำเภอ)</label>
                                         <input type="text" name="CITY_EN" id="CITY_EN" maxlength="100"
                                             class="input input-bordered input-sm w-full req bg-gray-50 border-gray-300 "
                                             placeholder="City">
                                     </div>
                                     <div>
-                                        <label class="block mb-1 text-xs font-bold text-gray-600">State (รัฐ/จังหวัด)</label>
+                                        <label class="block mb-1 text-xs font-bold text-gray-600">State
+                                            (รัฐ/จังหวัด)</label>
                                         <input type="text" name="STATE_EN" id="STATE_EN" maxlength="100"
                                             class="input input-bordered input-sm w-full req bg-gray-50 border-gray-300 "
                                             placeholder="State">
@@ -226,7 +231,8 @@
 
                             <div class="flex-1 flex flex-col gap-3 w-full">
                                 <div>
-                                    <label class="block mb-1 text-xs font-bold text-gray-600">บ้านเลขที่, หมู่บ้าน, อาคาร, ซอย, ถนน, ตำบล, อำเภอ, จังหวัด, รหัสไปรษณีย์</label>
+                                    <label class="block mb-1 text-xs font-bold text-gray-600">บ้านเลขที่, หมู่บ้าน,
+                                        อาคาร, ซอย, ถนน, ตำบล, อำเภอ, จังหวัด, รหัสไปรษณีย์</label>
                                     <input type="text" name="ADDRESS_TH" id="ADDRESS_TH" maxlength="200"
                                         class="input input-bordered input-sm w-full  bg-gray-50 border-gray-300"
                                         placeholder="เช่น 43/86 หมู่ 16 ซอยบางนา...">
@@ -323,41 +329,122 @@
                 <div id="F-section" class="hidden">
                     <div class="divider"></div>
                     <section id="section-3">
-
                         <h2 class="font-bold text-xl mb-3 required">Attach files</h2>
-                        <fieldset class="flex-col gap-2">
-                            <label class="hidden attach-file" id="attach-cer">
-                                <input type="checkbox" name="ATTACH_TYPE" value="Company Certification "
-                                    class="checkbox checkbox-xs" a-type="cer">
-                                Company Certification / Company Profile
-                            </label>
-                            <label class="hidden attach-file" id="attach-vat">
-                                <input type="checkbox" name="ATTACH_TYPE" value="Vat Register"
-                                    class="checkbox checkbox-xs" a-type="vat">
-                                Vat Register
-                            </label>
-                            <label class="hidden attach-file" id="attach-letter">
-                                <input type="checkbox" name="ATTACH_TYPE" value="Letter for Change Address"
-                                    class="checkbox checkbox-xs" a-type="letter">
-                                Letter for Change Address
-                            </label>
-                            <label class="hidden attach-file" id="attach-book">
-                                <input type="checkbox" name="ATTACH_TYPE" value="Book bank" class="checkbox checkbox-xs"
-                                    a-type="book">
-                                Book Bank
-                            </label>
-                            <label class="hidden attach-file flex items-center gap-2" id="attach-other">
-                                <input type="checkbox" name="ATTACH_TYPE" value="Other" class="checkbox checkbox-xs"
-                                    a-type="other">
-                                Other
-                                <input type="text" name="ATTACH_OTHER" id="ATTACH_OTHER" class="input input-sm w-full"
-                                    disabled>
-                            </label>
+                        <fieldset class="flex flex-col gap-3">
+                            <div class="flex flex-col gap-2 border border-gray-200 rounded-md p-3 bg-gray-50">
+
+                                <div class="flex items-center gap-3">
+                                    <span class="text-sm font-medium">Company Certificate / Vat Register / Company
+                                        Profile :</span>
+
+                                    <!-- ปรับขนาดให้เล็กลง (30px) -->
+                                    <label for="file-cer" style="width: 30px; height: 30px; min-width: 30px;"
+                                        class="cursor-pointer border border-gray-300 rounded bg-white hover:bg-gray-100 flex items-center justify-center transition-colors shadow-sm">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14"
+                                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                            stroke-linecap="round" stroke-linejoin="round" class="text-gray-600">
+                                            <path
+                                                d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48">
+                                            </path>
+                                        </svg>
+                                    </label>
+
+                                    <input class="hidden" type="file" name="fileCer[]" id="file-cer" multiple />
+                                    <input type="checkbox" name="ATTACH_TYPE" value="Company Certification"
+                                        class="hidden">
+                                </div>
+
+                                <div class="show-file pl-2 text-sm"></div>
+                                <div id="file-type-11" class="file-container"></div>
+                            </div>
+
+                            <div class="flex flex-col gap-2 border border-gray-200 rounded-md p-3 bg-gray-50 ">
+
+                                <div class="flex items-center gap-3">
+                                    <span class="text-sm font-medium">Book Bank :</span>
+
+                                    <!-- ปรับขนาดให้เล็กลง (30px) -->
+                                    <label for="file-bank" style="width: 30px; height: 30px; min-width: 30px;"
+                                        class="cursor-pointer border border-gray-300 rounded bg-white hover:bg-gray-100 flex items-center justify-center transition-colors shadow-sm">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14"
+                                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                            stroke-linecap="round" stroke-linejoin="round" class="text-gray-600">
+                                            <path
+                                                d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48">
+                                            </path>
+                                        </svg>
+                                    </label>
+
+                                    <input class="hidden" type="file" name="fileBank[]" id="file-bank" multiple />
+                                    <input type="checkbox" name="ATTACH_TYPE" value="Book Bank" class="hidden">
+                                </div>
+
+                                <div class="show-file pl-2 text-sm"></div>
+                                <div id="file-type-14" class="file-container"></div>
+                            </div>
+
+                            <div class="flex flex-col gap-2 border border-gray-200 rounded-md p-3 bg-gray-50">
+
+                                <div class="flex items-center gap-3">
+                                    <span class="text-sm font-medium">Letter for Change Address:</span>
+
+                                    <!-- ปรับขนาดให้เล็กลง (30px) -->
+                                    <label for="file-changeaddr" style="width: 30px; height: 30px; min-width: 30px;"
+                                        class="cursor-pointer border border-gray-300 rounded bg-white hover:bg-gray-100 flex items-center justify-center transition-colors shadow-sm">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14"
+                                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                            stroke-linecap="round" stroke-linejoin="round" class="text-gray-600">
+                                            <path
+                                                d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48">
+                                            </path>
+                                        </svg>
+                                    </label>
+
+                                    <input class="hidden" type="file" name="fileChangeaddr[]" id="file-changeaddr"
+                                        multiple />
+                                    <input type="checkbox" name="ATTACH_TYPE" value="Letter for Change Address"
+                                        class="hidden">
+                                </div>
+
+                                <div class="show-file pl-2 text-sm"></div>
+                                <div id="file-type-15" class="file-container"></div>
+                            </div>
+
+                            <div class="flex flex-col gap-2 border border-gray-200 rounded-md p-3 bg-gray-50">
+                                <div class="flex items-center gap-3">
+                                    <span class="text-sm font-medium">Other </span>
+                                    <input type="text" name="ATTACH_OTHER" id="ATTACH_OTHER"
+                                        class="input input-sm w-full max-w-[350px] border border-gray-400 rounded px-2 h-7">
+                                    <span class="text-sm font-medium">:</span>
+                                    <!-- ปรับขนาดให้เล็กลง (30px) -->
+                                    <label for="file-other" style="width: 30px; height: 30px; min-width: 30px;"
+                                        class="cursor-pointer border border-gray-300 rounded bg-white hover:bg-gray-100 flex items-center justify-center transition-colors shadow-sm">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14"
+                                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                            stroke-linecap="round" stroke-linejoin="round" class="text-gray-600">
+                                            <path
+                                                d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48">
+                                            </path>
+                                        </svg>
+                                    </label>
+
+                                    <input class="hidden" type="file" name="fileOther[]" id="file-other" multiple />
+                                    <input type="checkbox" name="ATTACH_TYPE" value="Other" class="hidden">
+                                </div>
+
+                                <div class="show-file pl-2 text-sm"></div>
+                                <div id="file-type-2" class="file-container"></div>
+                            </div>
                         </fieldset>
-                        <div id="attachFile"></div>
                     </section>
                 </div>
                 <div class="divider"></div>
+                <div>
+                    <label class="block font-bold text-sm mb-2 text-gray-800">Remark</label>
+                    <textarea id="remark" name="remark"
+                        class="w-full border border-gray-400 p-2 rounded text-sm focus:outline-none txtRemark"
+                        rows="4"></textarea>
+                </div>
 
                 <div id="form-action-container"></div>
             </form>
@@ -367,5 +454,7 @@
 @endsection
 
 @section('scripts')
-<script src="{{ $_ENV['APP_JS'] }}/purNvf.js?ver={{ $GLOBALS['version'] }}"></script>
+<script
+    src="{{ $_ENV['APP_JS'] }}/purNvf.js?ver={{ $GLOBALS['version'] }}">
+</script>
 @endsection
