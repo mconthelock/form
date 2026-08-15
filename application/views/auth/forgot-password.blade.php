@@ -29,9 +29,10 @@
         @include('auth/banner')
         {{-- Login form --}}
         <div class="w-full h-[calc(100vh-86px)] flex items-center justify-center lg:justify-center ">
-            <div class="w-96 p-8 rounded-lg shadow-lg bg-white z-0 form-cover">
+            <div
+                class="w-96 min-h-120! flex flex-col justify-center items-center p-8 rounded-lg shadow-lg bg-white border border-base-300 z-0 form-cover">
                 <h1 class="text-2xl font-black text-center text-slate-600" id="login-title">Forgot Password</h1>
-                <h1 class="text-sm font-bold text-center text-slate-400 mt-3">Reset your password</h1>
+                <h1 class="text-sm font-bold text-center text-slate-400 mt-3 mb-8">Reset your password</h1>
                 {{-- Password login --}}
                 {{-- @include('auth/password') --}}
                 <div class="loginform" id="frm-password">
