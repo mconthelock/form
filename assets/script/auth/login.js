@@ -14,33 +14,29 @@ import { directlogin, passwordLogin } from '@amec/webasset/api/auth';
 import { createCarousel } from '@amec/webasset/api/gpreport';
 import { showMessage, showErrorMessage } from '@amec/webasset/utils';
 
-import { sendSession, host, uri } from './utils';
-import { getAppsList } from './service/docinv';
+import { sendSession, host, uri } from '../utils';
+import { getAppsList } from '../service/docinv';
+import { splashScreen } from './login-utils';
 
 var camera;
-const startTime = Date.now();
-const MIN_DISPLAY_TIME = 2000;
+
 $(document).ready(async function () {
     await splashScreen();
+    await createCarousel('login');
     const id = $('#appid').val();
     const appdata = await getAppsDB(id);
     $('#login-title').text(appdata.APP_NAME);
-    await createCarousel('login');
-    if (id == '1') {
-        const cookie = await getCookie(process.env.APP_NAME);
-        if (cookie) {
-            const decrypted = await decryptText(cookie, process.env.APP_NAME);
-            const user = await getAppDataById(decrypted);
-            if (!user || user.group == null) {
-                await deleteCookie(process.env.APP_NAME);
-                window.location.href = `${process.env.APP_ENV}`;
-            } else {
-                const group = user.group.data.GROUP_HOME || 'home';
-                window.location.href = `${process.env.APP_ENV}/${group}`;
-            }
+    const cookie = await getCookie(process.env.APP_NAME);
+    if (cookie) {
+        const decrypted = await decryptText(cookie, process.env.APP_NAME);
+        const user = await getAppDataById(decrypted);
+        if (!user || user.group == null) {
+            await deleteCookie(process.env.APP_NAME);
+            window.location.href = `${process.env.APP_ENV}`;
+        } else {
+            const group = user.group.data.GROUP_HOME || 'home';
+            window.location.href = `${process.env.APP_ENV}/${group}`;
         }
-    } else {
-        $('#webflow-link').removeClass('hidden');
     }
     $('.loginform:visible').find('input').first().focus();
 });
@@ -76,10 +72,6 @@ $(document).on('click', '.toggle-login', function (e) {
         if ($(this).attr('id') !== target) {
             $(this).addClass('hidden');
         } else {
-            //if target is "Barcode Login", check camera on device and turn it on.
-            camera = await showCamera(target);
-            console.log('camera', camera.devices);
-            if (camera.devices) return;
             $(this).removeClass('hidden');
             $(this).find('input').val('');
             $(this).find('input').first().focus();
@@ -158,23 +150,22 @@ $(document).on('submit', '#rfidLogin', async function (e) {
 });
 
 //Barcode Login Button
-$(document).on('keyup', '#barcode-input', async function (e) {
-    if ($(this).val().length === 5) {
-        $('#barcodeLogin').submit();
-    }
-});
+$(document).on('keyup', '#barcode-input', async function (e) {});
 
-$(document).on('submit', '#barcodeLogin', async function (e) {
+$(document).on('click', '#opencamera', async function (e) {
     e.preventDefault();
-
-    const barcode = $('#barcode-input').val();
-    const empcode = ('00000' + (barcode / 4 - 92).toString()).slice(-5);
-    await barcodeLogin(empcode);
-});
-
-$(document).on('click', '#open-camera-btn', async function (e) {
-    e.preventDefault();
+    //if target is "Barcode Login", check camera on device and turn it on.
     camera = await showCamera('frm-barcode');
+    if (camera) return;
+});
+
+$(document).on('click', '#close-camera', function (e) {
+    e.preventDefault();
+    $('#frm-barcode').removeClass('hidden');
+    $('#frm-barcode').find('input').val('');
+    $('#frm-barcode').find('input').first().focus();
+    $('#open-camera').hide();
+    camera.stop();
 });
 
 async function successLogin(user) {
@@ -223,90 +214,76 @@ function cardLogin(data) {
 }
 
 async function barcodeLogin(empcode) {
-    const appid = $('#appid').val();
-    const frm = $('.form-cover');
-    frm.find('.loading').removeClass('hidden');
-    frm.find('input').attr('readonly', true);
-    frm.find('.btn').attr('disabled', true);
-    const user = await directlogin(empcode, appid);
     if (user.status !== undefined) {
         await showErrorMessage(user.message);
-        frm.find('.loading').addClass('hidden');
-        frm.find('input').attr('readonly', false);
-        frm.find('.btn').attr('disabled', false);
+        // frm.find(".loading").addClass("hidden");
+        // frm.find("input").attr("readonly", false);
+        // frm.find(".btn").attr("disabled", false);
         return;
     }
     const url = await successLogin(user);
-    window.location.replace(url);
-    // if (user.status !== undefined) {
-    // 	await showErrorMessage(user.message);
-    // 	// frm.find(".loading").addClass("hidden");
-    // 	// frm.find("input").attr("readonly", false);
-    // 	// frm.find(".btn").attr("disabled", false);
-    // 	return;
-    // }
-    // const url = await successLogin(user);
-    // window.location.href = url;
+    window.location.href = url;
 }
 
 async function showCamera(target) {
     if (target !== 'frm-barcode') return false;
+    try {
+        const videoElement = document.getElementById('video');
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const videoInputDevices = devices.filter(
+            (device) => device.kind === 'videoinput',
+        );
 
-    // QRScanner จัดการ overlay/กล้อง/ปุ่มปิดของตัวเองทั้งหมด (append เข้า document.body)
-    // ไม่ต้องพึ่ง #open-camera / #video ที่มีอยู่ใน blade อีกต่อไป
+        if (videoInputDevices.length === 0) {
+            return;
+        }
+
+        $('#open-camera').removeClass('hidden');
+        const codeReader = new BrowserMultiFormatReader();
+        let selectedDeviceId = videoInputDevices[0].deviceId;
+        const preferred = videoInputDevices.find(
+            (device) =>
+                /back|rear/i.test(device.label) &&
+                !/depth|ultrawide/i.test(device.label),
+        );
+
+        if (preferred) {
+            selectedDeviceId = preferred.deviceId;
+        }
+
+        return await codeReader.decodeFromVideoDevice(
+            selectedDeviceId,
+            videoElement,
+            async (result, error, controls) => {
+                if (result) {
+                    const empno = (
+                        '00000' + (result.getText() / 4 - 92).toString()
+                    ).slice(-5);
+                    const user = await directlogin(empno, 1);
+                    //await barcodeLogin(result.getText());
+                    if (user.status !== undefined) {
+                        await showErrorMessage(user.message);
+                        return false;
+                    }
+                    //$("#open-camera").hide();
+                    controls.stop();
+                    const url = await successLogin(user);
+                    window.location.replace(url);
+                }
+                if (error) {
+                    console.warn('อ่านผิดพลาด: ', error.message);
+                }
+            },
+        );
+        //return true;
+    } catch (err) {
+        console.error('เกิดข้อผิดพลาด:', err);
+    }
     const scanner = new QRScanner({
-        info: 'ให้ Barcode/QR Code อยู่ตรงกลางภาพ',
-        onScan: async ({ text }) => {
-            const empcode = ('00000' + (text / 4 - 92).toString()).slice(-5);
-            await barcodeLogin(empcode);
-        },
-        onWarning: (msg) => {
-            // เช่นกรณีไม่พบกล้องบนอุปกรณ์นี้
-            showMessage(msg);
-        },
-        onError: (err) => {
-            console.error('เกิดข้อผิดพลาดในการเปิดกล้อง:', err);
-            $('#frm-barcode').removeClass('hidden');
-            $('#open-camera-btn').addClass('hidden');
-            $('#frm-barcode').find('input').val('');
-            $('#frm-barcode').find('input').first().focus();
-        },
-        onClose: () => {
-            // ปิดกล้อง (ไม่ว่าจะเพราะ user กดปิด, ไม่พบกล้อง, หรือสแกนครบแล้ว autoClose)
-            // -> กลับไปโชว์ฟอร์มกรอกมือเป็น fallback เสมอ
-            $('#frm-barcode').removeClass('hidden');
-            $('#frm-barcode').find('input').val('');
-            $('#frm-barcode').find('input').first().focus();
-            $('#open-camera-btn').removeClass('hidden');
+        onScan: ({ text, added, duplicate }) => {
+            console.log(text);
         },
     });
-
-    console.log(
-        scanner.devices,
-        await BrowserMultiFormatReader.listVideoInputDevices(),
-    );
-    return scanner;
-}
-
-function splashScreen() {
-    //   console.log("Page content is fully loaded.");
-    const timeElapsed = Date.now() - startTime;
-    if (timeElapsed >= MIN_DISPLAY_TIME) {
-        hideSplashScreen();
-    } else {
-        const timeToWait = MIN_DISPLAY_TIME - timeElapsed;
-        // console.log(`Content loaded fast. Waiting ${timeToWait}ms more.`);
-        setTimeout(hideSplashScreen, timeToWait);
-    }
-}
-
-function hideSplashScreen() {
-    //   console.log("Hiding splash screen.");
-    const splashScreen = document.querySelector('.splash-screen');
-    if (splashScreen) {
-        splashScreen.classList.add('hidden');
-    }
-    document.body.style.overflow = 'auto';
 }
 
 async function getAppsDB(id) {
