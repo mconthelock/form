@@ -2,11 +2,11 @@ import { host } from "../../utils.js";
 import Swal from "sweetalert2";
 import { redirectWebflow } from "@amec/webasset/form";
 import { createForm } from "@amec/webasset/api/webform"
-import { dayOff } from "@amec/webasset/flatpickr";
+import { dayOff, initLocalCache } from "@amec/webasset/flatpickr";
 import { checkEmployee } from "@amec/webasset/employee";
 
 $(function () {
-	console.log(dayOff);
+	initLocalCache();
 	const formData = $(".form-data").data();
 	const { nfrmno, vorgno, cyear } = formData;
 	const GUEST_MAX = 100,
@@ -201,13 +201,16 @@ $(function () {
 				}-${date.getDate()}`;
 		};
 
+		// Read dayOff fresh from localStorage (initLocalCache may have populated it after module load)
+		const currentDayOff = JSON.parse(localStorage.getItem("dayoff")) || null;
+
 		// If selected date is in the past, workingDays remains 0
 		while (currentDate <= selectedDate) {
 			const dateString = formatDate(currentDate);
-			// Check if it is a day off (weekend or holiday included in dayOff.value)
-			if (dayOff && dayOff.value && !dayOff.value.includes(dateString)) {
+			// Check if it is a day off (weekend or holiday included in currentDayOff.value)
+			if (currentDayOff && currentDayOff.value && !currentDayOff.value.includes(dateString)) {
 				workingDays++;
-			} else if (!dayOff || !dayOff.value) {
+			} else if (!currentDayOff || !currentDayOff.value) {
 				// Fallback if dayOff is not available: exclude weekends
 				const dayOfWeek = currentDate.getDay();
 				if (dayOfWeek !== 0 && dayOfWeek !== 6) {
@@ -871,11 +874,11 @@ function calculateTotals() {
 	$("#table_cost tbody tr").each(function () {
 		const qty = parseFloat($(this).find("td:eq(1) input").val()) || 0;
 		const cost = parseFloat($(this).find("td:eq(2) input").val()) || 0;
-		const rowTotal = qty * cost;
+		const rowTotal = (qty * cost).toFixed(2);
 		$(this).find("td:eq(3) input").val(rowTotal);
-		totalAmount += rowTotal;
+		totalAmount += parseFloat(rowTotal);
 	});
-	$("#total-amount").text(totalAmount);
+	$("#total-amount").text(totalAmount.toFixed(2));
 }
 
 $(document).on("change", ".time", function () {

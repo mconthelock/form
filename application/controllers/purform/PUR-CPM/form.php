@@ -23,6 +23,7 @@ class form extends MY_Controller{
 
         }else{
             $form = $this->getFormMasterByVaname('PUR-CPM');
+            var_dump($form);
             if(!empty($form)){
                 $data = [
                     'NFRMNO' => $form[0]->NNO,
@@ -47,7 +48,12 @@ class form extends MY_Controller{
             $data['CYEAR2']   = $_GET["y2"];
             $data['cextData'] = $this->getExtdata($form);
             $data['mode']     = $this->getMode($form);
-            $this->views('purform/PUR-CPM/view', $data);
+            $data['return']   = $this->checkReturn($form);
+            if($data['return']){
+                $this->views('purform/PUR-CPM/form', $data);
+            }else{
+                $this->views('purform/PUR-CPM/view', $data);
+            }
             exit();
         }
         $this->views('purform/PUR-CPM/form', $data);

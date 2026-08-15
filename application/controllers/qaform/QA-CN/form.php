@@ -13,12 +13,11 @@ require_once APPPATH.'controllers/_form.php';
 require_once APPPATH.'controllers/api/webform/form.php';
 require_once APPPATH.'controllers/api/webform/flow.php';
 require_once APPPATH.'controllers/api/webform/formmst.php';
-require_once APPPATH.'controllers/api/webform/isTid.php';
 require_once APPPATH . 'controllers/_file.php';
 class form extends MY_Controller{
     //use _Form, _File;
     //use  formApi, flow, formmst, _File;
-        use _Form , _File , formApi, flow, formmst, isTid{
+        use _Form , _File , formApi, flow, formmst {
         formApi::getMode insteadOf _Form;
         formApi::getRequestNo  insteadOf _Form;
         flow::getExtData insteadOf _Form;
@@ -102,9 +101,12 @@ class form extends MY_Controller{
                     'EMPNO' =>  $data['empno']
             ];
             $data['cextData'] = intval($this->getExtdata($form));
+            $data['strcextData'] = $this->getExtdata($form);
             $data['mode']     = $this->getMode($form);
             $data['form']     = $this->frm->getForm($data['NFRMNO'],  $data['VORGNO'], $data['CYEAR'],  $data['CYEAR2'],  $data['NRUNNO']);
+            $data['reqinf']   = $this->cn->customSelect("AMEC.AEMPLOYEE",array('SEMPNO' =>  $data['form'][0]->VREQNO ),'*');
             $data['formno'] = $this->toFormNumber($data['NFRMNO'],  $data['VORGNO'], $data['CYEAR'],  $data['CYEAR2'],  $data['NRUNNO']);
+            $data['reqinf']   = $this->cn->customSelect("AMEC.AEMPLOYEE",array('SEMPNO' =>  $data['form'][0]->VREQNO ),'*');
             $data['cnform'] = $this->cn->getcnform($data['NFRMNO'],  $data['VORGNO'], $data['CYEAR'],  $data['CYEAR2'],  $data['NRUNNO'])[0];
             $data['resultdwg'] = $this->cn->customSelect("RESULTCHKDWG",array( 'NFRMNO' => $data['NFRMNO'],'VORGNO' => $data['VORGNO'],'CYEAR'  => $data['CYEAR'],'CYEAR2' => $data['CYEAR2'],'NRUNNO' => $data['NRUNNO']),'DWGNO , REVNO , RESULT , REMARK');
             $data['cnjudg'] = $this->cn->customSelect("CNJUDGEMENT",array(),'JDGMNTNO , JUDGEMENT');
@@ -137,9 +139,21 @@ class form extends MY_Controller{
                 $data['eng'] = $this->getjstaff($data['empinf'], 'E');
                 $data['foreman'] = $this->getForeman($data['empno']);
                 $data['opr'] =  $this->getOpr($data['cnform']->MSTATUS, $data['empinf']);
+                //mode edit
+                if($data['mode'] == "2")
+                {
+                    if($data['cextData'] == 2)  
+                    {
+                        $data['pic'] = $this->getjstaff($data['empinf'], 'J', $data['empinf'][0]->SEMPNO);
+                    }else if($data['cextData'] == 7)
+                    {
+                        $data['pic'] =  $this->getOpr($data['cnform']->MSTATUS, $data['empinf'], $data['empinf'][0]->SEMPNO);
+                    }
+                }
+          
             }
-            //var_dump($data['stepready']);
-            //exit;
+           // var_dump($data['reqinf']);
+           // exit;
             $this->views('qaform/QA-CN/view', $data);
         }else{
              $this->views('qaform/QA-CN/create', $data);
@@ -149,19 +163,20 @@ class form extends MY_Controller{
 
     }
 
-    public function getjstaff($head, $type)
+    public function getjstaff($head, $type , $pic = '')
     {
+        $excludePic = ($pic != '') ? " and SEMPNO != '" . $pic . "' " : "";
         if ($head[0]->SDEPCODE == "000401") {
             
             // ถ้า type เป็น 'E' ใช้ '35','40' ถ้าไม่ใช่ ให้ใช้ค่าเดิมของเงื่อนไขนี้
-            $posCode = ($type == 'E') ? "'35','40','33'" : "'41','42','43','40','35'";
+            $posCode = ($type == 'E') ? "'35','40','33'" : "'64','41','42','43','40','35','33'";
             if($type == 'E')
             {
-                $sql = "select SEMPNO , SNAME from AMEC.AEMPLOYEE where CSTATUS = '1' and SSECCODE = '000404' and  SPOSCODE in (".$posCode.")  order by sname";
+                $sql = "select SEMPNO , SNAME from AMEC.AEMPLOYEE where CSTATUS = '1' and SSECCODE = '000404' and  SPOSCODE in (".$posCode.") " .$excludePic."  order by sname";
             
             }else
             {
-                $sql = "select SEMPNO , SNAME from AMEC.AEMPLOYEE where CSTATUS = '1' and SSECCODE = '000404' and ( SPOSCODE in (".$posCode.") or SEMPNO IN ('09019','13067')) order by sname";
+                $sql = "select SEMPNO , SNAME from AMEC.AEMPLOYEE where CSTATUS = '1' and SSECCODE = '000404' and SPOSCODE in (".$posCode.") " . $excludePic . " order by sname";
             
             }
        
@@ -169,15 +184,15 @@ class form extends MY_Controller{
             
             $posCode = ($type == 'E') ? "'35','40','33'" : "'40','41','42','43'";
             if ($head[0]->SSECCODE == "00") {
-                $sql = "select SEMPNO , SNAME from AMEC.AEMPLOYEE where CSTATUS = '1' and SSECCODE = '000502' and SPOSCODE in (".$posCode.") order by sname";
+                $sql = "select SEMPNO , SNAME from AMEC.AEMPLOYEE where CSTATUS = '1' and SSECCODE = '000502' and SPOSCODE in (".$posCode.") " . $excludePic . " order by sname";
             } else {
-                $sql = "select SEMPNO , SNAME from AMEC.AEMPLOYEE where CSTATUS = '1' and SSECCODE = '".$head[0]->SSECCODE."' and SPOSCODE in (".$posCode.") order by sname";
+                $sql = "select SEMPNO , SNAME from AMEC.AEMPLOYEE where CSTATUS = '1' and SSECCODE = '".$head[0]->SSECCODE."' and SPOSCODE in (".$posCode.") " . $excludePic . " order by sname";
             }
             
         } else {
             
             $posCode = ($type == 'E') ? "'35','40','33'" : "'41','42','43'";
-            $sql = "select SEMPNO , SNAME from AMEC.AEMPLOYEE where CSTATUS = '1' and SSECCODE = '000303' and SPOSCODE in (".$posCode.") order by sname";
+            $sql = "select SEMPNO , SNAME from AMEC.AEMPLOYEE where CSTATUS = '1' and SSECCODE = '000303' and SPOSCODE in (".$posCode.") " . $excludePic . " order by sname";
             
         }
         
@@ -216,16 +231,17 @@ class form extends MY_Controller{
        return   $data;
     }
 
-    public function getOpr($mstauts,$head)
+    public function getOpr($mstauts,$head,$pic = '')
     {
+        $excludePic = ($pic != '') ? " and SEMPNO != '" . $pic . "' " : "";
         if(!is_null($mstauts))
         {
             if($head[0]->SSECCODE == "000404")
             {
-                $sql = "select SEMPNO , SNAME from AMEC.AEMPLOYEE A , SEQUENCEORG S where A.SEMPNO = S.EMPNO and S.HEADNO ='".$head[0]->SEMPNO."' and A.CSTATUS = '1' and A.SPOSCODE in ('64','65') order by SNAME ";      
+                $sql = "select SEMPNO , SNAME from AMEC.AEMPLOYEE A , SEQUENCEORG S where A.SEMPNO = S.EMPNO and S.HEADNO ='".$head[0]->SEMPNO."' and A.CSTATUS = '1' and A.SPOSCODE in ('64','65') " . $excludePic . " order by SNAME ";      
             }else
             {
-                $sql = "select SEMPNO , SNAME from AMEC.AEMPLOYEE where  CSTATUS = '1' and SPOSCODE in ('64','65') and SSECCODE = '".$head[0]->SSECCODE."' order by SNAME";    
+                $sql = "select SEMPNO , SNAME from AMEC.AEMPLOYEE where  CSTATUS = '1' and SPOSCODE in ('64','65') and SSECCODE = '".$head[0]->SSECCODE."' " . $excludePic . "   order by SNAME";    
             }
         }else{
             $sql = "select SEMPNO , SNAME from AMEC.AEMPLOYEE where CSTATUS = '1' and SSECCODE = '000404' and SPOSCODE in ('64','65') order by SNAME";
@@ -238,7 +254,9 @@ class form extends MY_Controller{
     
     public function action()
     {
+   
         $act = $_POST["action"];
+        
         $cextData = intval($_POST["cextData"]);
         $apvno =  $_POST["empno"];
         $nfrmno = $_POST["nfrmno"];
@@ -316,7 +334,21 @@ class form extends MY_Controller{
                     }
                 }
             }
-            
+            if(isset($_POST["selJobType"]) && $_POST["selJobType"] == "S")
+            {
+                            $condition = [
+                                'NFRMNO' => $nfrmno,
+                                'VORGNO' => $vorgno,
+                                'CYEAR'  => $cyear,
+                                'CYEAR2' => $cyear2,
+                                'NRUNNO' => $nrunno,
+                                'CSTEPNO'=> '07'
+                            ];
+                            $this->deleteFlowStep($condition);
+                            $condition['CSTEPNO'] = '61';
+                            $this->deleteFlowStep($condition);
+
+            }
  
             if($act == "approve")
             {
@@ -326,7 +358,6 @@ class form extends MY_Controller{
                        $this->updaterequest($form);
                        $this->insertdwg($form);
                     }
-             
                     if($cextData == 8)
                     {
                         if($_POST["chkClass"] == "2")
@@ -337,8 +368,9 @@ class form extends MY_Controller{
                                 {
                                         $pord  = substr($pono, 0, 2) . substr($pono, 4, 4);
                                         $pprod = $_POST['txtPurItem'];
-                                        $sqlOra = "update BPCSFVNEW.HPO SET PCMT = '".$this->toFormNumber($nfrmno,  $vorgno, $cyear,  $cyear2,  $nrunno)." WHERE PORD = ".$pord." AND PPROD = '".$pprod."'";
+                                        $sqlOra = "update BPCSFVNEW.HPO SET PCMT = '".$this->toFormNumber($nfrmno,  $vorgno, $cyear,  $cyear2,  $nrunno)."' WHERE PORD = '".$pord."' AND PPROD = '".$pprod."'";
                                         $this->cn->execAssql($sqlOra);
+                                        
                                 }
 
                             }
@@ -347,6 +379,22 @@ class form extends MY_Controller{
                     {
                         $sqlOra = "update RTNLIBF.J736KP set J36K05 = 'Y' where J36K04 = '".$this->toFormNumber($nfrmno,  $vorgno, $cyear,  $cyear2,  $nrunno)."'";
                         $this->cn->execAssql($sqlOra);
+                    }
+                    // กรณี flow ไป QIC กรณี case subcon จะมีการลบ flow step 07 (foreman) และ 61 (job monitor) ออก 
+                    if(isset($_POST["selJobType"]) && $_POST["selJobType"] == "S")
+                    {
+                            $condition = [
+                                'NFRMNO' => $nfrmno,
+                                'VORGNO' => $vorgno,
+                                'CYEAR'  => $cyear,
+                                'CYEAR2' => $cyear2,
+                                'NRUNNO' => $nrunno,
+                                'CSTEPNO'=> '07'
+                            ];
+                            $this->deleteFlowStep($condition);
+                            $condition['CSTEPNO'] = '61';
+                            $this->deleteFlowStep($condition);
+
                     }
                     
             }else if($act == "reject")
@@ -375,15 +423,58 @@ class form extends MY_Controller{
                 }
             }else if($act == "return")
             {
-                $sqlOra = "update flow set CSTEPST = '1' where NFRMNO = '".$nfrmno."' AND VORGNO = '".$vorgno."' and CYEAR = '".$cyear."' and CYEAR2 = '".$cyear2."' and NRUNNO = '".$nrunno."' and CSTEPST = '2'";
+                
+                $sqlOra = "update flow set CSTEPST = '1',  VREMARK = '' where NFRMNO = '".$nfrmno."' AND VORGNO = '".$vorgno."' and CYEAR = '".$cyear."' and CYEAR2 = '".$cyear2."' and NRUNNO = '".$nrunno."' and CSTEPST = '2'";
                 $this->cn->execsql($sqlOra);
                 $remark = $_POST['txtRemark'] ?? '';
                 $sqlOra = "update flow set CSTEPST = '2' , VREMARK = '".$remark."' where NFRMNO = '".$nfrmno."' AND VORGNO = '".$vorgno."' and CYEAR = '".$cyear."' and CYEAR2 = '".$cyear2."' and NRUNNO = '".$nrunno."' and CSTEPST = '3'";
                 $this->cn->execsql($sqlOra);
-                $sqlOra = "update flow set CSTEPST = '3' , CAPVSTNO = '0' , DAPVDATE ='' , CAPVTIME = ''  where NFRMNO = '".$nfrmno."' AND VORGNO = '".$vorgno."' and CYEAR = '".$cyear."' and CYEAR2 = '".$cyear2."' and NRUNNO = '".$nrunno."' and CSTART = '1'";
+                $sqlOra = "update flow set CSTEPST = '3' , CAPVSTNO = '0' , DAPVDATE ='' , CAPVTIME = '' , VREMARK = ''  where NFRMNO = '".$nfrmno."' AND VORGNO = '".$vorgno."' and CYEAR = '".$cyear."' and CYEAR2 = '".$cyear2."' and NRUNNO = '".$nrunno."' and CSTART = '1'";
                 $this->cn->execsql($sqlOra);
 
-            }else if($act == "sendApv")
+
+            }else if($act == "returnqastaff")
+            {
+                $sqlOra = "update flow set CSTEPST = '1' , VREMARK = '' where NFRMNO = '".$nfrmno."' AND VORGNO = '".$vorgno."' and CYEAR = '".$cyear."' and CYEAR2 = '".$cyear2."' and NRUNNO = '".$nrunno."' and CSTEPST = '2'";
+                $this->cn->execsql($sqlOra);
+                $remark = $_POST['txtRemark'] ?? '';
+                $sqlOra = "update flow set CSTEPST = '2' , VREMARK = '".$remark."' where NFRMNO = '".$nfrmno."' AND VORGNO = '".$vorgno."' and CYEAR = '".$cyear."' and CYEAR2 = '".$cyear2."' and NRUNNO = '".$nrunno."' and CSTEPST = '3'";
+                $this->cn->execsql($sqlOra);
+                $sqlOra = "update flow set CSTEPST = '3' , CAPVSTNO = '0' , DAPVDATE ='' , CAPVTIME = '' , VREMARK = '' where NFRMNO = '".$nfrmno."' AND VORGNO = '".$vorgno."' and CYEAR = '".$cyear."' and CYEAR2 = '".$cyear2."' and NRUNNO = '".$nrunno."' and  CEXTDATA = '03'";
+                $this->cn->execsql($sqlOra);
+
+            }else if($act == "returnass")
+            {
+                $sqlOra = "update flow set CSTEPST = '1' , VREMARK = '' where NFRMNO = '".$nfrmno."' AND VORGNO = '".$vorgno."' and CYEAR = '".$cyear."' and CYEAR2 = '".$cyear2."' and NRUNNO = '".$nrunno."' and CSTEPST = '2'";
+                $this->cn->execsql($sqlOra);
+                $remark = $_POST['txtRemark'] ?? '';
+                $sqlOra = "update flow set CSTEPST = '2' , VREMARK = '".$remark."' where NFRMNO = '".$nfrmno."' AND VORGNO = '".$vorgno."' and CYEAR = '".$cyear."' and CYEAR2 = '".$cyear2."' and NRUNNO = '".$nrunno."' and CSTEPST = '3'";
+                $this->cn->execsql($sqlOra);
+                $sqlOra = "update flow set CSTEPST = '3' , CAPVSTNO = '0' , DAPVDATE ='' , CAPVTIME = '' , VREMARK = ''  where NFRMNO = '".$nfrmno."' AND VORGNO = '".$vorgno."' and CYEAR = '".$cyear."' and CYEAR2 = '".$cyear2."' and NRUNNO = '".$nrunno."' and  CEXTDATA = '02'";
+                $this->cn->execsql($sqlOra);
+
+            }else if($act == "returnqastaff")
+            {
+                $sqlOra = "update flow set CSTEPST = '1' , VREMARK = '' where NFRMNO = '".$nfrmno."' AND VORGNO = '".$vorgno."' and CYEAR = '".$cyear."' and CYEAR2 = '".$cyear2."' and NRUNNO = '".$nrunno."' and CSTEPST = '2'";
+                $this->cn->execsql($sqlOra);
+                $remark = $_POST['txtRemark'] ?? '';
+                $sqlOra = "update flow set CSTEPST = '2' , VREMARK = '".$remark."' where NFRMNO = '".$nfrmno."' AND VORGNO = '".$vorgno."' and CYEAR = '".$cyear."' and CYEAR2 = '".$cyear2."' and NRUNNO = '".$nrunno."' and CSTEPST = '3'";
+                $this->cn->execsql($sqlOra);
+                $sqlOra = "update flow set CSTEPST = '3' , CAPVSTNO = '0' , DAPVDATE ='' , CAPVTIME = '' , VREMARK = '' where NFRMNO = '".$nfrmno."' AND VORGNO = '".$vorgno."' and CYEAR = '".$cyear."' and CYEAR2 = '".$cyear2."' and NRUNNO = '".$nrunno."' and  CEXTDATA = '03'";
+                $this->cn->execsql($sqlOra);
+
+            }else if($act == "returnass")
+            {
+                $sqlOra = "update flow set CSTEPST = '1' , VREMARK = '' where NFRMNO = '".$nfrmno."' AND VORGNO = '".$vorgno."' and CYEAR = '".$cyear."' and CYEAR2 = '".$cyear2."' and NRUNNO = '".$nrunno."' and CSTEPST = '2'";
+                $this->cn->execsql($sqlOra);
+                $remark = $_POST['txtRemark'] ?? '';
+                $sqlOra = "update flow set CSTEPST = '2' , VREMARK = '".$remark."' where NFRMNO = '".$nfrmno."' AND VORGNO = '".$vorgno."' and CYEAR = '".$cyear."' and CYEAR2 = '".$cyear2."' and NRUNNO = '".$nrunno."' and CSTEPST = '3'";
+                $this->cn->execsql($sqlOra);
+                $sqlOra = "update flow set CSTEPST = '3' , CAPVSTNO = '0' , DAPVDATE ='' , CAPVTIME = '' , VREMARK = ''  where NFRMNO = '".$nfrmno."' AND VORGNO = '".$vorgno."' and CYEAR = '".$cyear."' and CYEAR2 = '".$cyear2."' and NRUNNO = '".$nrunno."' and  CEXTDATA = '02'";
+                $this->cn->execsql($sqlOra);
+
+            }
+            else if($act == "sendApv")
             {
                 unset($form["CEXTDATA"]);
                 $this->updaterequest($form);
@@ -427,7 +518,17 @@ class form extends MY_Controller{
                 $form["CEXTDATA"] = '03';
                 $this->cn->update("FLOW",  $dataapv , $form);
                 
+            }else if($act == "changepic")
+            {
+                $rep = $this->getRep(array('NFRMNO' =>  $nfrmno , 'VORGNO' => $vorgno , 'CYEAR' => $cyear , 'VEMPNO' => $_POST['Pic']));
+                $dataapv = [
+                        'VAPVNO' => $_POST['Pic'],
+                        'VREPNO' => $rep
+                ];
+                $form["CEXTDATA"] = $_POST['cextData'];
+                $this->cn->update("FLOW",  $dataapv , $form);
             }
+
             $path = $this->upload_path.$nfrmno."_".$vorgno."_".$cyear."_".$cyear2."_".$nrunno. "/";
             unset($form["CEXTDATA"]);
             if($act != "deleteApv")
@@ -438,7 +539,7 @@ class form extends MY_Controller{
             $message = "Action successfully.";
          }catch ( Exception $e) {
             $status = false;
-            $message = "Failed to save data.";
+            $message = "Failed to save data.". $e->getMessage();
         } finally {
             $res = [
                 'status' => $status,
@@ -1130,12 +1231,20 @@ class form extends MY_Controller{
         $this->downloadFile($ofile,$file,$path);
 
     }
-
+    /* function check for flow approve of QIC */
     private function chkopr($nfrmno,$vorgno,$cyear,$cyear2,$nrunno)
     {
         
-        $rs = $this->cn->customSelect("FLOW",array( 'NFRMNO' => $nfrmno,'VORGNO' => $vorgno,'CYEAR'  => $cyear,'CYEAR2' => $cyear2,'NRUNNO' => $nrunno ,'CEXTDATA' => '07' ),'');
+       // $rs = $this->cn->customSelect("FLOW",array( 'NFRMNO' => $nfrmno,'VORGNO' => $vorgno,'CYEAR'  => $cyear,'CYEAR2' => $cyear2,'NRUNNO' => $nrunno ,'CEXTDATA' => '07' ),'');
+       // return  count($rs) == 0;
+        $rsqic = $this->cn->customSelect("ORGPOS", array('VPOSNO' => '30' , 'VORGNO' => '000404'),'');
+        if(count($rsqic) > 0)
+        {
+            $semqic = $rsqic[0]->VEMPNO;
+        }
+        $rs = $this->cn->customSelect("FLOW",array( 'NFRMNO' => $nfrmno,'VORGNO' => $vorgno,'CYEAR'  => $cyear,'CYEAR2' => $cyear2,'NRUNNO' => $nrunno ,'CEXTDATA' => '04' , 'VAPVNO' => $semqic ),'');
         return  count($rs) == 0;
+
     }
 
     private function demapv($nfrmno,$vorgno,$cyear,$cyear2,$nrunno)
@@ -1417,7 +1526,7 @@ WHERE L.R27M09 = '".trim($firstno[0]->FIRSTNO)."'";
                         $this->deleteFlowStep($condition);
                         $condition['CSTEPNO'] = '10';
                         $this->deleteFlowStep($condition);
-                        $condition['CSTEPNO'] = '13';
+                        $condition['CSTEPNO'] = '11';
                         $this->deleteFlowStep($condition);
                          $cnformpre = $this->cn->customSelect("CNFORM",array( 'NFRMNO' => $nfrmno,'VORGNO' => $vorgno,'CYEAR'  => $cyear,'CYEAR2' => $cyear2,'NRUNNO' => $nrunno ),'*');
                             if(count($cnformpre) > 0)

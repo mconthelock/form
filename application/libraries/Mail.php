@@ -13,7 +13,7 @@ class Mail {
 	public function __construct(){
         $this->ci =& get_instance();
 		$this->admin = isset($_ENV['MAIL_ADMIN']) ? $this->convert_type($_ENV['MAIL_ADMIN']) : 'wsd@MitsubishiElevatorAsia.co.th';
-		$this->from  = isset($_ENV['MAIL_FROM']) ? $_ENV['MAIL_FROM'] : 'noreplay@MitsubishiElevatorAsia.co.th';
+		$this->from  = isset($_ENV['MAIL_FROM']) ? $_ENV['MAIL_FROM'] : 'noreply@MitsubishiElevatorAsia.co.th';
 		$this->from_name = isset($_ENV['MAIL_NAME']) ? $_ENV['MAIL_NAME'] : 'Webflow System';
     }
 

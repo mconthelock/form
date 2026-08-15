@@ -457,9 +457,9 @@
                 </div>
 
                 {{-- ================================================================= --}}
-                {{--  ตารางเลือกฟอร์มเพื่อทำ Cash Advance (เฉพาะ exdata = 12)        --}}
+                {{--  ตารางเลือกฟอร์มเพื่อทำ Cash Advance (เฉพาะ exdata = 19)        --}}
                 {{-- ================================================================= --}}
-                @if ($exdata == '12')
+                @if ($exdata == '19')
                     @php  
                         $sum_cost = 0; 
                     @endphp
@@ -515,8 +515,53 @@
                         </table>
                     </div>
                     <input type="hidden" name="txt_sumcost"  id="txt_sumcost" class="input input-bordered w-20 mb-2" value=' {{ $sum_cost }}' >
-                @endif
+                
 
+                <div id="cashAdvSection" class="mb-5 rounded-xl border border-emerald-300 p-4 shadow-sm"  style="background: linear-gradient(135deg, #d1fae5 0%, #ecfdf5 45%, #bbf7d0 100%) !important;">
+                    <div class="mb-4 flex items-center gap-3">
+                        <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-600 text-2xl text-white shadow">💰</div>
+                        <div>
+                            <div class="text-2xl font-extrabold text-emerald-800">
+                                ข้อมูลสำหรับ Form Cash Advance
+                            </div>
+                            <div class="text-xs text-emerald-700 opacity-80">
+                                กรุณากรอกข้อมูลและแนบเอกสารประกอบ
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Effective Date -->
+                    <div class="mb-3 flex items-center gap-3">
+                        <div class="flex min-w-[190px] items-center gap-2 rounded-xl bg-emerald-200 px-3 py-2 shadow-sm">
+                            <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-white text-base shadow">
+                                📅
+                            </div>
+                            <label for="effectiveDate"
+                                class="whitespace-nowrap text-base font-bold text-emerald-900">
+                                Effective Date :
+                            </label>
+                        </div>
+
+                        <input type="date" id="effectiveDate"
+                            class="input input-bordered h-[46px] w-[320px] rounded-xl border-emerald-300 bg-white text-sm shadow-sm focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-300"
+                            data-alert="กรุณาเลือก Effective Date สำหรับ Form Cash Advance !!" maxlength="8">
+                    </div>
+
+                    <!-- Attachment -->
+                    <div class="flex items-center gap-3">
+                        <div class="flex min-w-[190px] items-center gap-2 rounded-xl bg-emerald-200 px-3 py-2 shadow-sm">
+                            <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-white text-base shadow"> 📎</div>
+                            <label for="cashAdvFiles" class="whitespace-nowrap text-base font-bold text-emerald-900"> Attachment :</label>
+                        </div>
+
+                        <input type="file" id="cashAdvFiles" name="cashAdvFiles[]"
+                            class="file-input file-input-bordered h-[46px] flex-1 rounded-xl border-emerald-300 bg-white text-sm shadow-sm"
+                            multiple  data-alert="กรุณาแนบไฟล์สำหรับ Form Cash Advance !!">
+                    </div>
+                </div>
+            @endif
+
+            
                 <div class="flex justify-center gap-12">
                     {{-- ปุ่มสำหรับ Cash Advance --}}
                     <button type="button" id="btnApprove_fin"
@@ -554,10 +599,10 @@
                 data-nrunno="{{ $NRUNNO }}" 
                 data-empno="{{ $EMPNO }}">
             </div>
-            <div class="flow mt-6" style="overflow: hidden"></div>
+            <div class="flow mt-6" ></div>
         </div>
 
-        <div style="display:none;">
+        <div style="display:none">
             Cyear2 :
             <input type="text" name="txt_year_text"  id="txt_year_text" class="input input-bordered w-20 mb-2" value="{{ $CYEAR2 }}" maxlength='4'>
             Formno :

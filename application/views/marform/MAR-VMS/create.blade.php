@@ -268,9 +268,10 @@ table.dataTable .select2-container--default .select2-selection--multiple {
     </div>
 
     <!-- Sale company -->
-    <div>
+   <div>
       <label for="salecom" class="block text-sm text-gray-700 font-medium mb-1">Sale company<span class="text-red-500">*</span></label>
-      <select
+      <input type="text" name="salecom" id="salecom" value="{{ ($mode == '2' && !empty($visit)) ? $visit[0]->SALECOM  : '' }}" class="input input-bordered rounded-xl  w-72  shadow-sm border-blue-200 text-gray-900">
+      <!-- <select
         id="salecom"
         name="salecom"
         class="input input-bordered rounded-xl w-[40px]  shadow-sm border-blue-200 text-gray-900"
@@ -282,8 +283,9 @@ table.dataTable .select2-container--default .select2-selection--multiple {
             {{ $sc->ABBREVIATION }}
           </option>
         @endforeach
-      </select>
+      </select> -->
     </div>
+
 
     @if ($mode <> 1)
     <div>

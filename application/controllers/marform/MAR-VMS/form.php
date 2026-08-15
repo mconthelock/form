@@ -993,7 +993,11 @@ class form extends MY_Controller{
         if ($extra > 0) {
             $this->insertEmptyRowsWithTemplate($sheet, $templateStart ,$templateCount ,  $extra );
         }
-        $currentRow = $templateStart;
+        if($templateStart < 17 )
+        {
+            $templateStart  = 17;
+        }
+          $currentRow = $templateStart;
         foreach($data['schedule'] as $i => $row)
         {
             $currentRow = $templateStart + $i;
@@ -1011,13 +1015,16 @@ class form extends MY_Controller{
           
         }
         $templateStart = $currentRow + 4;
+    
         $sheet->setCellValue("P{$templateStart}", $data['item'][0]->HOTELNAME);
         $sheet->setCellValue("B".($templateStart + 2),($data['item'][0]->BOARD == "N"? "No":"Yes"));
         $sheet->setCellValue("N".($templateStart + 4),($data['item'][0]->SHOPTOUR == "G"? "General":($data['item'][0]->SHOPTOUR == "S"? "Specific":"Inspection")));
         $sheet->setCellValue("V".($templateStart + 4),($data['item'][0]->FORMC1_1 == "Y"? "Yes":"No"));
         $sheet->setCellValue("B".($templateStart + 7),$data['item'][0]->ROOMLUNCH);
-        $sheet->setCellValue("D".($templateStart + 8),$data['head']['VISITDATE']);
-        $sheet->setCellValue("E".($templateStart + 9), (isset($data['item'][0]->VISITORS)  ? $data['head']['LUNCHTIME']: ''));
+        if($data['item'][0]->VISITORS+$data['item'][0]->AMEC > 0){
+            $sheet->setCellValue("D".($templateStart + 8),$data['head']['VISITDATE']);
+             $sheet->setCellValue("E".($templateStart + 9), (isset($data['item'][0]->VISITORS)  ? $data['head']['LUNCHTIME']: ''));
+        }
         $sheet->setCellValue("K".($templateStart + 7),$data['item'][0]->VISITORS);
         $sheet->setCellValue("K".($templateStart + 8),$data['item'][0]->AMEC);
         $sheet->setCellValue("K".($templateStart + 9),($data['item'][0]->VISITORS+$data['item'][0]->AMEC));
@@ -1062,8 +1069,10 @@ class form extends MY_Controller{
             $totalRow = $currentRow + 3;
         }
         
+        
         $sheet->setCellValue("S{$totalRow}",   $total);   
-        $templateStart = $currentRow + 5;
+       // $templateStart = $currentRow + 5;
+        $templateStart = $totalRow + 3;
         $templateCount = 2;  // Template มี 3 แถว (12–14)
         $templateEnd   = $templateStart + $templateCount - 1;
         $extra = count($data['pproj']) - $templateCount;
@@ -1087,7 +1096,7 @@ class form extends MY_Controller{
         {
             $totalRow = $currentRow + 2;
         }else{
-            $totalRow = $currentRow + 4;
+            $totalRow = $currentRow + 3;
         }
         $sheet->setCellValue("S{$totalRow}",   $total);   
         $writer = new Xlsx($spreadsheet);

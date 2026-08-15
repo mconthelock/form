@@ -1,113 +1,137 @@
 @extends('layouts/webflowTemplate')
+
 @section('contents')
-    <!-- Header Section -->
-    <div class="form-data" data-nfrmno="{{ $_GET['no'] }}" data-vorgno="{{ $_GET['orgNo'] }}" data-cyear="{{ $_GET['y'] }}" data-cyear2="{{ $_GET['y2'] }}" data-nrunno="{{ $_GET['runNo'] }}"></div>
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
-        <!-- Header Section -->
-        <div class="bg-slate-200/70 rounded-lg p-6 shadow-sm border border-slate-300">
-            <h2 class="text-2xl font-bold text-slate-800 mb-1">Cycle Count Inventory Sheet</h2>
-            <p class="text-sm text-slate-600 mb-4">MITSUBISHI ELEVATOR ASIA CO., LTD.</p>
-
-            <div class="grid grid-cols-2 gap-4 bg-white/50 p-4 rounded border border-slate-300">
-                <div>
-                    <label class="text-xs font-semibold text-slate-600 uppercase tracking-wide">Data Date</label>
-                    <div class="text-sm font-medium text-slate-800 mt-1">01/01/2026</div>
-                </div>
-                <div>
-                    <label class="text-xs font-semibold text-slate-600 uppercase tracking-wide">Check Date</label>
-                    <div class="text-sm font-medium text-slate-800 mt-1">02/01/2026</div>
-                </div>
-                <div>
-                    <label class="text-xs font-semibold text-slate-600 uppercase tracking-wide">Department / Section</label>
-                    <div class="text-sm font-medium text-slate-800 mt-1">PS / WHI</div>
-                </div>
-                <div>
-                    <label class="text-xs font-semibold text-slate-600 uppercase tracking-wide">Check By</label>
-                    <div class="text-sm font-medium text-slate-800 mt-1">WHI</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Summary Section -->
-        <div class="bg-slate-200/70 rounded-lg p-6 shadow-sm border border-slate-300">
-            <h3 class="text-lg font-bold text-slate-800 mb-4">The Result of Monthly Inventory (Group B-E)</h3>
-
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <!-- Total Item -->
-                <div class="bg-blue-50 border-2 border-blue-200 rounded-lg p-4">
-                    <div class="text-xs font-semibold text-blue-700 uppercase tracking-wide mb-2">Total Item</div>
-                    <div class="text-3xl font-bold text-blue-900 total-item skeleton h-8 w-20"></div>
-                </div>
-
-                <!-- Checking Item -->
-                <div class="bg-slate-50 border-2 border-slate-300 rounded-lg p-4">
-                    <div class="text-xs font-semibold text-slate-700 uppercase tracking-wide mb-2">Checking Item</div>
-                    <div class="text-3xl font-bold text-slate-900 checking-item skeleton h-8 w-20"></div>
-                </div>
-
-                <div class="bg-slate-50 border-2 border-slate-300 rounded-lg p-4">
-                    <div class="text-xs font-semibold text-slate-700 uppercase tracking-wide mb-2">L/D Random Check</div>
-                    <div class="text-3xl font-bold text-slate-900 random-check skeleton h-8 w-20"></div>
-                </div>
-
-                <!-- Diff Item (First Time) -->
-                <div class="bg-red-50 border-2 border-red-200 rounded-lg p-4">
-                    <div class="text-xs font-semibold text-red-700 uppercase tracking-wide mb-2">Diff. Item (First Time)</div>
-                    <div class="text-3xl font-bold text-red-900 diff-item-first-time skeleton h-8 w-20"></div>
-                </div>
-
-                <!-- Diff Item (After Re-check) -->
-                <div class="bg-amber-50 border-2 border-amber-200 rounded-lg p-4">
-                    <div class="text-xs font-semibold text-amber-700 uppercase tracking-wide mb-2">Diff. Item (After Re-check)</div>
-                    <div class="text-3xl font-bold text-amber-900 diff-item-after-recheck skeleton h-8 w-20"></div>
-                </div>
-            </div>
-        </div>
+    <div class="form-data"
+        data-nfrmno="{{ $_GET['no'] }}"
+        data-vorgno="{{ $_GET['orgNo'] }}"
+        data-cyear="{{ $_GET['y'] }}"
+        data-cyear2="{{ $_GET['y2'] }}"
+        data-nrunno="{{ $_GET['runNo'] }}">
     </div>
 
-    <!-- Table Section -->
-    <div class="bg-slate-200/70 rounded-lg p-6 shadow-sm border border-slate-300">
-        <div class="overflow-x-auto bg-white rounded border border-slate-300 p-4">
-            <table class="table table-sm w-full" id="table">
-                <thead class="bg-slate-300 text-slate-800">
-                    <tr>
-                        <th class="border-r border-slate-400 bg-slate-300">No.</th>
-                        <th class="border-r border-slate-400 bg-slate-300">Buyer</th>
-                        <th class="border-r border-slate-400 bg-slate-300">Item Code</th>
-                        <th class="border-r border-slate-400 bg-slate-300">Description</th>
-                        <th class="border-r border-slate-400 bg-slate-300">Drawing No.</th>
-                        <th class="border-r border-slate-400 bg-slate-300">Location</th>
-                        <th class="border-r border-slate-400 bg-slate-300">Controller</th>
-                        <th class="border-r border-slate-400 bg-amber-100">On Hand</th>
-                        <th class="border-r border-slate-400 bg-slate-300">WH/U.M.</th>
-                        {{-- <th class="border-r border-slate-400">Unit Price</th>
-                        <th class="border-r border-slate-400">Amount</th> --}}
-                        <th class="border-r border-slate-400 bg-slate-300">Actual QTY</th>
-                        <th class="border-r border-slate-400 bg-slate-200">Diff</th>
-                        <th class="border-r border-slate-400 bg-slate-300">L/D Random Check</th>
-                        <th class="bg-slate-300">Reason From</th>
-                    </tr>
-                </thead>
-                <tbody class="text-sm table-detail">
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
 
-                </tbody>
-            </table>
-        </div>
-    </div>
-    @if ($mode == '2')
-        <div class="mt-5 flex flex-col items-center justify-center gap-4">
+        <div class="flex items-start justify-between mb-6 gap-4">
             <div>
-                <label class="text-sm font-semibold text-slate-700 mb-2 block">Remark</label>
-                <textarea class="textarea textarea-bordered w-96" id="remark" placeholder="Enter your remark here..."></textarea>
+                <p class="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-1">
+                    MITSUBISHI ELEVATOR ASIA CO., LTD. &nbsp;·&nbsp; PS / WHI
+                </p>
+                <h1 class="text-2xl font-bold text-slate-800 leading-tight">
+                    Cycle Count Inventory Sheet
+                </h1>
+                <p class="text-xl text-slate-500 mt-1">
+                    Group&nbsp;<span class="group-name font-semibold text-slate-700">—</span>
+                </p>
             </div>
-            <div class="flex gap-3 items-center justify-center">
 
-                <button class="btn btn-success btn-approve" action="approve">Approve</button>
-                <button class="btn btn-error btn-approve" action="reject">Reject</button>
+            <div class="flex flex-wrap gap-2 text-xs shrink-0">
+                <div class="flex items-center gap-1.5 bg-slate-100 border border-slate-200 rounded-full px-3 py-1.5">
+                    <span class="w-1.5 h-1.5 rounded-full bg-slate-400 inline-block"></span>
+                    <span class="text-slate-500 font-medium">Data Date</span>
+                    <span class="text-slate-800 font-semibold data-date">—</span>
+                </div>
+                <div class="flex items-center gap-1.5 bg-slate-100 border border-slate-200 rounded-full px-3 py-1.5">
+                    <span class="w-1.5 h-1.5 rounded-full bg-blue-400 inline-block"></span>
+                    <span class="text-slate-500 font-medium">Check Date</span>
+                    <span class="text-slate-800 font-semibold check-date">—</span>
+                </div>
+                <div class="flex items-center gap-1.5 bg-slate-100 border border-slate-200 rounded-full px-3 py-1.5">
+                    <span class="w-1.5 h-1.5 rounded-full bg-green-400 inline-block"></span>
+                    <span class="text-slate-500 font-medium">Check By</span>
+                    <span class="text-slate-800 font-semibold">WHI</span>
+                </div>
             </div>
         </div>
-    @endif
-    <div class="mt-5 flow"></div>
+
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-6">
+
+            {{-- Total Item --}}
+            <div class="bg-slate-50 border border-slate-200 rounded-xl p-4">
+                <p class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-2">Total Item</p>
+                <p class="text-3xl font-bold text-slate-800 total-item skeleton h-8 w-16"></p>
+            </div>
+
+            {{-- Checking Item --}}
+            <div class="bg-slate-50 border border-slate-200 rounded-xl p-4">
+                <p class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-2">Checking Item</p>
+                <p class="text-3xl font-bold text-slate-800 checking-item skeleton h-8 w-16"></p>
+            </div>
+
+            {{-- L/D Random Check --}}
+            <div class="bg-slate-50 border border-slate-200 rounded-xl p-4">
+                <p class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-2">L/D Random Check</p>
+                <p class="text-3xl font-bold text-slate-800 random-check skeleton h-8 w-16"></p>
+            </div>
+
+            {{-- Diff First Time --}}
+            <div class="bg-red-50 border border-red-200 rounded-xl p-4">
+                <p class="text-[11px] font-semibold text-red-400 uppercase tracking-wider mb-2">Diff. (First Time)</p>
+                <p class="text-3xl font-bold text-red-700 diff-item-first-time skeleton h-8 w-16"></p>
+            </div>
+
+            {{-- Diff After Re-check --}}
+            <div class="bg-amber-50 border border-amber-200 rounded-xl p-4">
+                <p class="text-[11px] font-semibold text-amber-500 uppercase tracking-wider mb-2">Diff. (After Re-check)</p>
+                <p class="text-3xl font-bold text-amber-700 diff-item-after-recheck skeleton h-8 w-16"></p>
+            </div>
+
+        </div>
+
+        <div class="bg-slate-50 rounded-xl border border-slate-200 mb-6 overflow-hidden">
+            <div class="px-5 py-3.5 border-b border-slate-100 flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+                <h2 class="text-sm font-semibold text-slate-700">Inventory Detail</h2>
+            </div>
+            <div class="overflow-x-auto p-4">
+                <table class="table table-sm w-full" id="table"></table>
+            </div>
+        </div>
+
+        <div class="card bg-white shadow border border-base-200 overflow-hidden">
+            <div class="card-body p-0">
+                <div class="bg-info text-white px-4 py-3 border-b">
+                    <div class="card-title text-sm">
+                        <i class="icofont-paper-clip"></i>
+                        <span>ไฟล์แนบเพิ่มเติม</span>
+                    </div>
+                </div>
+
+                <div class="p-4 file-contents">
+                    <ul id="attachFileList" class="space-y-2">
+                        <li id="attachFilesLoading" class="text-xs text-base-content/40 italic">กำลังโหลด...</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="mt-6 aprv-section" style="display: none">
+            <div class="max-w-xl mx-auto">
+                <div class="space-y-2">
+                    <div>
+                        <label class="label">
+                            <span class="label-text font-medium">Attachment</span>
+                        </label>
+                        <input type="file" class="file-input file-input-sm file-input-bordered w-full attach-file" />
+                    </div>
+                    <div>
+                        <label class="label">
+                            <span class="label-text font-medium">Remark</span>
+                        </label>
+                        <textarea class="textarea textarea-sm textarea-bordered w-full min-h-30" id="remark" placeholder="Enter your remark here..."></textarea>
+                    </div>
+                    <div class="flex flex-col sm:flex-row justify-center gap-3 pt-2">
+                        <button class="btn btn-success min-w-35 btn-approve" data-action="approve"> Approve</button>
+                        <button class="btn btn-error min-w-35 btn-approve" data-action="reject"> Reject</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {{-- ─── Approval flow timeline ─────────────────────────────────────────── ─ --}}
+        <div class="mt-5 flow"></div>
+
+    </div>{{-- /outer card --}}
 @endsection
 
 @section('scripts')

@@ -307,10 +307,10 @@
                                 @endphp
                                 <tr>
                                     <td class="border-l border-gray-200">
-                                        <select name="estimate_type[{{ $i }}]" class="select select-sm rounded-lg estimate-type w-full" data-index="{{ $i }}">
+                                        <select name="estimate_type[{{ $i }}]" class="select select-sm rounded-lg estimate-type-edit w-full" data-index="{{ $i }}">
                                             <option value="">--Select Detail--</option>
                                             @foreach ($estimate_type as $value)
-                                                <option value="{{ $value->ET_NAME }}" data-cost="{{ $value->ET_COST }}" {{ $row && $row->DETAILS == $value->ET_NAME ? 'selected' : '' }}>
+                                                <option value="{{ $value->ET_NAME }}" id="{{ $value->ET_ID }}" data-cost="{{ $value->ET_COST }}" {{ $row && $row->DETAILS == $value->ET_NAME ? 'selected' : '' }}>
                                                     {{ $value->ET_NAME }}
                                                 </option>
                                             @endforeach
