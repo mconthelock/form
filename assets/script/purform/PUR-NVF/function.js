@@ -102,8 +102,17 @@ export function checkAttFile() {
     const REQTYPE = $('input[name="REQTYPE_SHOW"]:checked').val();
     const hasCer =
         $('#file-cer')[0].files.length > 0 ||
-        $('#file-type-11').children().length > 0;
-
+        $('#file-type-11').find('a').length > 0;
+    const hasAddr =
+        $('#file-changeaddr')[0].files.length > 0 ||
+        $('#file-type-15').find('a').length > 0;
+    const hasOther =
+        $('#file-other')[0].files.length > 0 ||
+        $('#file-type-2').find('a').length > 0;
+    console.log(REQTYPE);
+    console.log(hasCer);
+    console.log($('#file-cer')[0].files.length);
+    console.log($('#file-type-11').find('a').length);
     if (REQTYPE && REQTYPE == 'A') {
         if (!hasCer) {
             showMessage(
@@ -112,6 +121,20 @@ export function checkAttFile() {
             );
             return false;
         }
+    } else if (REQTYPE && REQTYPE == 'U') {
+        if (!hasAddr && !hasOther) {
+            showMessage('Please Attached file', 'warning');
+            return false;
+        }
+    } else {
+        if (!hasOther) {
+            showMessage('Please Attached file', 'warning');
+            return false;
+        }
+    }
+    if (hasOther && !$('#ATTACH_OTHER').val()) {
+        showMessage('Please input Other', 'warning');
+        return false;
     }
     return true;
 }

@@ -911,7 +911,7 @@ function setVendorMstInfo(vendorMstData) {
             addrEnManager.value = address.ADDR_LINE1;
             postcodeEnManager.value = address.ADDR_ZIPCODE;
             countryEnManager.value = address.ADDR_COUNTRY;
-            if (address.ADDR_COUNTRY == 'THAILAND') {
+            if (address.ADDR_COUNTRY.toUpperCase() == 'THAILAND') {
                 $('input[name="VENDTYPE"][value="Local"]').prop(
                     'checked',
                     true,
@@ -1235,8 +1235,8 @@ function renderNewFilesUI(inputId, dataTransfer, container) {
     $.each(dataTransfer.files, function (index, file) {
         let fileItemHtml = `
             <div class="flex items-center gap-2 mt-1">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" 
-                     class="cursor-pointer remove-new-file shrink-0" 
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                     class="cursor-pointer remove-new-file shrink-0"
                      data-id="${inputId}" data-index="${index}" title="Remove file">
                     <circle cx="12" cy="12" r="10" fill="#dc2626"></circle>
                     <line x1="7" y1="12" x2="17" y2="12" stroke="white" stroke-width="3" stroke-linecap="round"></line>
@@ -1369,13 +1369,13 @@ function checkAttFile() {
     const selectedGroup = $('input[name="VENDGROUP"]:checked').val();
     const hasCer =
         $('#file-cer')[0].files.length > 0 ||
-        $('#file-type-11').children().length > 0;
+        $('#file-type-11').find('a').length > 0;
     const hasIe =
         $('#file-ie')[0].files.length > 0 ||
-        $('#file-type-12').children().length > 0;
+        $('#file-type-12').find('a').length > 0;
     const hasQa =
         $('#file-qa')[0].files.length > 0 ||
-        $('#file-type-13').children().length > 0;
+        $('#file-type-13').find('a').length > 0;
     if (selectedGroup && selectedGroup.includes('6:Non-Production')) {
         if (!hasCer) {
             showMessage(

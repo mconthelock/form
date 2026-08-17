@@ -78,56 +78,56 @@
                                 </div>
                             </div>
                             <!-- <div id="row-typejob" class="flex flex-col md:flex-row gap-4 items-start md:items-center pb-2 w-full">
-                                                                                            <span class="w-32 shrink-0 text-gray-950">Type of Job</span>
-                                                                                            <div class="flex items-center gap-6 h-8">
-                                                                                                <div id="TYPEJOB" class="w-full"></div>
-                                                                                            </div>
-                                                                                        </div>
-                                                                                        <div id="row-service" class="flex flex-col md:flex-row gap-4 items-start md:items-center pb-2 w-full">
-                                                                                            <span class="w-32 shrink-0  text-gray-950">Service</span>
-                                                                                            <div class="flex items-center gap-6 h-8">
-                                                                                                <div id="SERVICE" class="w-full"></div>
-                                                                                            </div>
-                                                                                        </div>
-                                                                                        <div id="row-purpose" class="flex flex-col md:flex-row gap-4 items-start md:items-center pb-2 w-full">
-                                                                                            <span class="w-32 shrink-0  text-gray-950">Purpose</span>
-                                                                                            <div class="flex items-center gap-6 h-8">
-                                                                                                <div id="PURPOSE" class="w-full"></div>
-                                                                                            </div>
-                                                                                        </div>
-                                                                                        <div id="row-reason" class="flex flex-col md:flex-row gap-4 items-start md:items-center pb-2 w-full">
-                                                                                            <span class="w-32 shrink-0  text-gray-950">Reason</span>
-                                                                                            <div class="flex items-center gap-6 h-8">
-                                                                                                <div id="REASON" class="w-full"></div>
-                                                                                            </div>
-                                                                                        </div> -->
+                                                                                                                                                                                                                                    <span class="w-32 shrink-0 text-gray-950">Type of Job</span>
+                                                                                                                                                                                                                                    <div class="flex items-center gap-6 h-8">
+                                                                                                                                                                                                                                        <div id="TYPEJOB" class="w-full"></div>
+                                                                                                                                                                                                                                    </div>
+                                                                                                                                                                                                                                </div>
+                                                                                                                                                                                                                                <div id="row-service" class="flex flex-col md:flex-row gap-4 items-start md:items-center pb-2 w-full">
+                                                                                                                                                                                                                                    <span class="w-32 shrink-0  text-gray-950">Service</span>
+                                                                                                                                                                                                                                    <div class="flex items-center gap-6 h-8">
+                                                                                                                                                                                                                                        <div id="SERVICE" class="w-full"></div>
+                                                                                                                                                                                                                                    </div>
+                                                                                                                                                                                                                                </div>
+                                                                                                                                                                                                                                <div id="row-purpose" class="flex flex-col md:flex-row gap-4 items-start md:items-center pb-2 w-full">
+                                                                                                                                                                                                                                    <span class="w-32 shrink-0  text-gray-950">Purpose</span>
+                                                                                                                                                                                                                                    <div class="flex items-center gap-6 h-8">
+                                                                                                                                                                                                                                        <div id="PURPOSE" class="w-full"></div>
+                                                                                                                                                                                                                                    </div>
+                                                                                                                                                                                                                                </div>
+                                                                                                                                                                                                                                <div id="row-reason" class="flex flex-col md:flex-row gap-4 items-start md:items-center pb-2 w-full">
+                                                                                                                                                                                                                                    <span class="w-32 shrink-0  text-gray-950">Reason</span>
+                                                                                                                                                                                                                                    <div class="flex items-center gap-6 h-8">
+                                                                                                                                                                                                                                        <div id="REASON" class="w-full"></div>
+                                                                                                                                                                                                                                    </div>
+                                                                                                                                                                                                                                </div> -->
                             <!-- <div id="row-typejob" class="flex flex-col md:flex-row gap-2 md:gap-4 items-start pb-2 w-full">
-                                                                                        <span class="w-32 shrink-0 text-gray-950">Type of Job</span>
-                                                                                        <div class="flex-1 min-w-0 text-gray-800 text-sm leading-relaxed break-words whitespace-pre-line">
-                                                                                            <div id="TYPEJOB" class="w-full "></div>
-                                                                                        </div>
-                                                                                    </div>
+                                                                                                                                                                                                                                <span class="w-32 shrink-0 text-gray-950">Type of Job</span>
+                                                                                                                                                                                                                                <div class="flex-1 min-w-0 text-gray-800 text-sm leading-relaxed break-words whitespace-pre-line">
+                                                                                                                                                                                                                                    <div id="TYPEJOB" class="w-full "></div>
+                                                                                                                                                                                                                                </div>
+                                                                                                                                                                                                                            </div>
 
-                                                                                    <div id="row-service" class="flex flex-col md:flex-row gap-2 md:gap-4 items-start pb-2 w-full">
-                                                                                        <span class="w-32 shrink-0 text-gray-950">Service</span>
-                                                                                        <div class="flex-1 min-w-0 text-gray-800 text-sm leading-relaxed break-words whitespace-pre-line">
-                                                                                            <div id="SERVICE" class="w-full"></div>
-                                                                                        </div>
-                                                                                    </div>
+                                                                                                                                                                                                                            <div id="row-service" class="flex flex-col md:flex-row gap-2 md:gap-4 items-start pb-2 w-full">
+                                                                                                                                                                                                                                <span class="w-32 shrink-0 text-gray-950">Service</span>
+                                                                                                                                                                                                                                <div class="flex-1 min-w-0 text-gray-800 text-sm leading-relaxed break-words whitespace-pre-line">
+                                                                                                                                                                                                                                    <div id="SERVICE" class="w-full"></div>
+                                                                                                                                                                                                                                </div>
+                                                                                                                                                                                                                            </div>
 
-                                                                                    <div id="row-purpose" class="flex flex-col md:flex-row gap-2 md:gap-4 items-start pb-2 w-full">
-                                                                                        <span class="w-32 shrink-0 text-gray-950">Purpose</span>
-                                                                                        <div class="flex-1 min-w-0 text-gray-800 text-sm leading-relaxed break-words whitespace-pre-line">
-                                                                                            <div id="PURPOSE" class="w-full"></div>
-                                                                                        </div>
-                                                                                    </div>
+                                                                                                                                                                                                                            <div id="row-purpose" class="flex flex-col md:flex-row gap-2 md:gap-4 items-start pb-2 w-full">
+                                                                                                                                                                                                                                <span class="w-32 shrink-0 text-gray-950">Purpose</span>
+                                                                                                                                                                                                                                <div class="flex-1 min-w-0 text-gray-800 text-sm leading-relaxed break-words whitespace-pre-line">
+                                                                                                                                                                                                                                    <div id="PURPOSE" class="w-full"></div>
+                                                                                                                                                                                                                                </div>
+                                                                                                                                                                                                                            </div>
 
-                                                                                    <div id="row-reason" class="flex flex-col md:flex-row gap-2 md:gap-4 items-start pb-2 w-full">
-                                                                                        <span class="w-32 shrink-0 text-gray-950">Reason</span>
-                                                                                        <div class="flex-1 min-w-0 text-gray-800 text-sm leading-relaxed break-words whitespace-pre-line">
-                                                                                            <div id="REASON" class="w-full"></div>
-                                                                                        </div>
-                                                                                    </div> -->
+                                                                                                                                                                                                                            <div id="row-reason" class="flex flex-col md:flex-row gap-2 md:gap-4 items-start pb-2 w-full">
+                                                                                                                                                                                                                                <span class="w-32 shrink-0 text-gray-950">Reason</span>
+                                                                                                                                                                                                                                <div class="flex-1 min-w-0 text-gray-800 text-sm leading-relaxed break-words whitespace-pre-line">
+                                                                                                                                                                                                                                    <div id="REASON" class="w-full"></div>
+                                                                                                                                                                                                                                </div>
+                                                                                                                                                                                                                            </div> -->
                             <div id="row-typejob" class="flex flex-col md:flex-row gap-2 md:gap-4 items-start pb-2 w-full">
                                 <span class="w-32 shrink-0 text-gray-950">Type of Job : </span>
                                 <div
@@ -257,9 +257,8 @@
                                 <div id="file-type-15" class="file-container"></div>
                             </div>
                             <div class="mt-4">
-                                <span class="text-sm font-medium block mb-2">Other <span id="ATTACH_OTHER_TEXT"
-                                        class="text-gray-600 font-normal"></span>
-                                    :</span>
+                                <span class="text-sm font-medium block mb-2">Other
+                                    :<span id="ATTACH_OTHER_TEXT" class="text-gray-600 font-normal pl-4"></span></span>
                                 <div id="file-type-2" class="file-container"></div>
                             </div>
                             {{-- <label class="hidden attach-file" id="attach-cer">
@@ -287,6 +286,11 @@
                         <div id="attachFile"></div>
                     </section>
                     <div class="divider"></div>
+                    <div>
+                        <label class="block font-bold text-sm mb-2 text-gray-800">Remark</label>
+                        <textarea id="remark" name="remark"
+                            class="w-full border border-gray-400 p-2 rounded text-sm focus:outline-none txtRemark" rows="4"></textarea>
+                    </div>
                     <div id="form-action-container"></div>
                 </form>
             </div>

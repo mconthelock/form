@@ -20,6 +20,7 @@ import {
 } from './formManager';
 import { downloadOrOpenFile } from '@amec/webasset/api/file';
 import { checkAttFile } from './function';
+import Swal from 'sweetalert2';
 
 $(async function () {
     formManager.init();
@@ -149,16 +150,7 @@ $(document).on('click', '.remove-file', async function (e) {
     e.stopPropagation();
     const id = $(this).attr('file-id');
     const tagA = $(this).closest('a');
-    Swal.fire({
-        title: 'Are you sure you want to delete this file?',
-        icon: 'warning',
-        showCancelButton: true,
-    }).then((result) => {
-        if (result.isConfirmed) {
-            tagA.remove();
-            deletefile.push(id);
-        }
-    });
+    attachFileManager.deleteFile(tagA, id);
 });
 
 $(document).on('input', '#VENDORCODE', async function () {

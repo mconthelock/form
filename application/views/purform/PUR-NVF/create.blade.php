@@ -413,9 +413,9 @@
                             <div class="flex flex-col gap-2 border border-gray-200 rounded-md p-3 bg-gray-50">
                                 <div class="flex items-center gap-3">
                                     <span class="text-sm font-medium">Other </span>
+                                    <span class="text-sm font-medium">:</span>
                                     <input type="text" name="ATTACH_OTHER" id="ATTACH_OTHER"
                                         class="input input-sm w-full max-w-[350px] border border-gray-400 rounded px-2 h-7">
-                                    <span class="text-sm font-medium">:</span>
                                     <!-- ปรับขนาดให้เล็กลง (30px) -->
                                     <label for="file-other" style="width: 30px; height: 30px; min-width: 30px;"
                                         class="cursor-pointer border border-gray-300 rounded bg-white hover:bg-gray-100 flex items-center justify-center transition-colors shadow-sm">

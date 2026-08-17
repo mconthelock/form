@@ -1,6 +1,11 @@
 import select2 from 'select2';
 import { getUser, searchUser } from '@amec/webasset/api/amec';
-import { doaction, showflow, getFormStatus } from '@amec/webasset/api/webform';
+import {
+    doaction,
+    showflow,
+    getFormStatus,
+    searchFlow,
+} from '@amec/webasset/api/webform';
 import { webflowSubmit, getformDetail } from '@amec/webasset/components/form';
 import { redirectWebflow } from '@amec/webasset/form';
 
@@ -254,8 +259,8 @@ export const vendorTypeManager = {
     change() {
         // paymentNumManager.value = "";
         // paymentManager.disabled(false);
-        attachTypeManager.hide('other');
-        attachTypeManager.reset('other');
+        // attachTypeManager.hide('other');
+        // attachTypeManager.reset('other');
         const type = this.type;
         $('#VENDOR_LOCATION').val(type);
         const reqtype = ReqtypeManager.type;
@@ -588,13 +593,6 @@ export const formManager = {
         actionFormManager.loading(mode);
         switch (mode) {
             case 1: // create
-                //attachFileManager.init();
-                // setDatePicker();
-                //    const curr = await getCurrency();
-                //     const currData = curr.map((c) => ({
-                //         value: c.CCURNAME,
-                //         text: c.CCURNAME,
-                //     }));
                 const term = await getTermcode();
                 const termdata = term.map((t) => ({
                     value: t.STERMCODE,
@@ -607,45 +605,12 @@ export const formManager = {
                     text: c.nameen,
                     nameth: c.nameth,
                 }));
-                //console.log(countriesData);
-
-                // const province = await getProvinces();
-                // this.provinceData = province.map((p) => ({
-                //     id: p.id,
-                //     value: p.nameen,
-                //     text: p.nameen,
-                //     nameth: p.nameth,
-                // }));
-                // const district = await getDistricts();
-
-                // this.districtData = district.map((d) => ({
-                //     id: d.id,
-                //     value: d.nameen,
-                //     text: d.nameen,
-                //     nameth: d.nameth,
-                //     province_id: d.province_id,
-                // }));
-
-                // const subDistrict = await getSubDistricts();
-                // this.subDistrictData = subDistrict.map((s) => ({
-                //     id: s.id,
-                //     value: s.nameen,
-                //     text: s.nameen,
-                //     nameth: s.nameth,
-                //     district_id: s.district_id,
-                //     postcode: s.postcode,
-                // }));
-                //console.log( this.subDistrictData );
-
                 paymentTermManager.init(termdata);
                 countryManager.init(countriesData);
-                // provinceManager.init(this.provinceData);
-                // districtManager.init(this.districtData);
-                // currencyManager.init(currData);
-                // subDistrictManager.init(this.subDistrictData);
                 actionFormManager.init(mode);
                 break;
             case 2: // edit
+
             case 3: // view
                 const form = {
                     NFRMNO: state.FormInfo.NFRMNO,
@@ -656,55 +621,32 @@ export const formManager = {
                 };
                 const flow = await showflow(form);
                 const data = await getData(form);
-                // this.formDetail = await setformDetail(form);
                 this.formDetail = await getformDetail(form);
                 actionFormManager.init(mode, flow.html);
-                //  attachFileManager.init(data.FILES || []);
+
                 if (state.FormInfo.RETURN) {
-                    //console.log("inter return");
-                    //$("#section-0").addClass("hidden!");
+                    console.log('yyyyyyyyy');
                     const term = await getTermcode();
                     const termdata = term.map((t) => ({
-                        value: t.TERMCODE,
-                        text: t.TERMNAME,
+                        value: t.STERMCODE,
+                        text: t.STERMDESC,
                     }));
                     const countries = await getCountries();
                     const countriesData = countries.map((c) => ({
-                        id: c.id,
+                        id: c.nameen,
                         value: c.nameen,
                         text: c.nameen,
                         nameth: c.nameth,
                     }));
-                    // const province = await getProvinces();
-                    // this.provinceData = province.map((p) => ({
-                    //     id: p.id,
-                    //     value: p.nameen,
-                    //     text: p.nameen,
-                    //     nameth: p.nameth,
-                    // }));
-                    // const district = await getDistricts();
-                    // this.districtData = district.map((d) => ({
-                    //     id: d.id,
-                    //     value: d.nameen,
-                    //     text: d.nameen,
-                    //     nameth: d.nameth,
-                    //     province_id: d.province_id,
-                    // }));
-                    // const subDistrict = await getSubDistricts();
-                    // this.subDistrictData = subDistrict.map((s) => ({
-                    //     id: s.id,
-                    //     value: s.nameen,
-                    //     text: s.nameen,
-                    //     nameth: s.nameth,
-                    //     district_id: s.district_id,
-                    //     postcode: s.postcode,
-                    // }));
+
                     paymentTermManager.init(termdata);
                     countryManager.init(countriesData);
-                    // provinceManager.init(this.provinceData);
-                    // districtManager.init(this.districtData);
-                    // currencyManager.init(currData);
-                    // subDistrictManager.init(this.subDistrictData);
+
+                    var readyflow = await searchFlow({
+                        ...form,
+                        CSTEPST: '3',
+                    });
+                    $('.txtRemark').val(readyflow[0].VREMARK || '');
                     this.setReturn(data);
                 } else {
                     //console.log(data);
@@ -722,13 +664,19 @@ export const formManager = {
         if (data.REQTYPE == 'A') {
             $('#row-typejob, #row-service, #row-purpose').removeClass('hidden');
             $('#row-reason').addClass('hidden');
+            $('#file-type-15').closest('.mt-4').hide();
         } else if (data.REQTYPE == 'U') {
             $('#row-typejob, #row-service, #row-purpose, #row-reason').addClass(
                 'hidden',
             );
+            $('#file-type-11').closest('.mt-4').hide();
+            $('#file-type-14').closest('.mt-4').hide();
         } else if (data.REQTYPE == 'D') {
             $('#row-typejob, #row-service, #row-purpose').addClass('hidden');
             $('#row-reason').removeClass('hidden');
+            $('#file-type-11').closest('.mt-4').hide();
+            $('#file-type-14').closest('.mt-4').hide();
+            $('#file-type-15').closest('.mt-4').hide();
         }
         typejobManager.text = data.LISTS[0].TYPEJOB || '-';
         serviceManager.text = data.LISTS[0].SERVICE || '-';
@@ -827,8 +775,10 @@ export const formManager = {
 
         //Company Name
         comnameManager.value = data.LISTS[0].COMNAME;
+
         //Vendor Type
         vendorTypeManager.value = data.LISTS[0].VENDTYPE;
+
         if (
             data.ADDRESSES &&
             data.ADDRESSES.length > 0 &&
@@ -838,17 +788,17 @@ export const formManager = {
         }
         for (const address of data.ADDRESSES) {
             if (address.ADDRTYPE === 'E') {
-                if (data.LISTS[0].VENDTYPE === 'Local') {
-                    addrEnManager.value = address.ADDR || '';
-                    cityEnManager.value = address.CITY;
-                    stateEnManager.value = address.STATE;
-                }
+                addrEnManager.value = address.ADDR || '';
+                cityEnManager.value = address.CITY;
+                stateEnManager.value = address.STATE;
+
                 postcodeEnManager.value = address.POSTCODE;
                 countryEnManager.value = address.COUNTRY;
             } else {
                 addrThManager.value = address.ADDR || '';
             }
         }
+
         $('#CONTACT').val(data.LISTS[0].CONTACT || '');
         $('#EMAIL').val(data.LISTS[0].EMAIL || '');
         $('#WEBSITE').val(data.LISTS[0].WEBSITE || '');
@@ -859,12 +809,19 @@ export const formManager = {
         $('#ACCNUMBER').val(data.LISTS[0].ACCNUMBER || '');
 
         paymentTermManager.value = data.LISTS[0].TERMCODE;
-        if (data.ATTACH_TYPE) {
-            // Attach Type
-            attachTypeManager.checked = data.ATTACH_TYPE.split('|');
-            // Attach Other
-            attachOtherManager.value = data.ATTACH_OTHER || '';
-        }
+        const attachedFiles = data.FILES || [];
+        renderFilesByType(attachedFiles, 11, 'file-type-11', true);
+        renderFilesByType(attachedFiles, 14, 'file-type-14', true);
+        renderFilesByType(attachedFiles, 15, 'file-type-15', true);
+        renderFilesByType(attachedFiles, 2, 'file-type-2', true);
+        data.ATTACH_OTHER &&
+            $('#ATTACH_OTHER').val(data.ATTACH_OTHER || 'xxxx');
+        // if (data.ATTACH_TYPE) {
+        // Attach Type
+        // attachTypeManager.checked = data.ATTACH_TYPE.split('|');
+        // Attach Other
+        // attachOtherManager.value = data.ATTACH_OTHER || '';
+        // }
         if (data.REQTYPE == 'U' || data.REQTYPE == 'D') {
             $("[id='V-section']").removeClass('hidden');
             $("[id='F-section']").removeClass('hidden');
@@ -1795,7 +1752,7 @@ export const actionFormManager = {
 
             const filteredFormData = filterFormData(formData);
 
-            //logFormData(filteredFormData);
+            logFormData(filteredFormData);
 
             const res = await create(filteredFormData);
 
@@ -1845,36 +1802,40 @@ export const actionFormManager = {
                     {element: attachFileManager.input, message: "Please attach files."},
                 ].filter(Boolean);
 
-                if (
-                    attachFileManager.checkedFilesLength > 0 &&
-                    attachTypeManager.types.length > 0
-                ) {
-                    $(`#F-section`)
-                        .find('input, textarea, select')
-                        .removeClass('req');
-                }
+                // if (
+                //     attachFileManager.checkedFilesLength > 0 &&
+                //     attachTypeManager.types.length > 0
+                // ) {
+                //     $(`#F-section`)
+                //         .find('input, textarea, select')
+                //         .removeClass('req');
+                // }
                 if (!(await requiredForm('#form', requiredMessage))) return;
-                const noFiles = attachFileManager.checkedFilesLength === 0;
-                const hasFiles = attachFileManager.checkedFilesLength > 0;
+                if (!checkAttFile()) {
+                    // showMessage('Please attach files.', 'warning');
+                    return;
+                }
+                // const noFiles = attachFileManager.checkedFilesLength === 0;
+                // const hasFiles = attachFileManager.checkedFilesLength > 0;
                 const noType = attachTypeManager.types.length === 0;
                 const hasType = attachTypeManager.types.length > 0;
                 const isNotTypeD = $('#REQTYPE').val() !== 'D';
 
                 // 2. ตรวจสอบเงื่อนไขการแจ้งเตือน
                 // เคสที่ 1: ไม่มีไฟล์ (และไม่ใช่ประเภท D) หรือ แอบไปเลือกประเภทไว้แต่ไม่ได้แนบไฟล์
-                if ((noFiles && isNotTypeD) || (hasType && noFiles)) {
-                    showMessage(
-                        'Please upload attached files before approve.',
-                        'warning',
-                    );
-                    return;
-                }
+                // if ((noFiles && isNotTypeD) || (hasType && noFiles)) {
+                //     showMessage(
+                //         'Please upload attached files before approve.',
+                //         'warning',
+                //     );
+                //     return;
+                // }
 
                 // เคสที่ 2: แนบไฟล์มาแล้ว แต่ลืมเลือกประเภทไฟล์
-                if (hasFiles && noType) {
-                    showMessage('Please select Attach Type.', 'warning');
-                    return;
-                }
+                // if (hasFiles && noType) {
+                //     showMessage('Please select Attach Type.', 'warning');
+                //     return;
+                // }
                 const formData = new FormData($('#form')[0]);
                 formData.set('NFRMNO', data.NFRMNO);
                 formData.set('VORGNO', data.VORGNO);
@@ -1893,6 +1854,7 @@ export const actionFormManager = {
                 //  currencyManager.getValue("curr-payment"),
                 // );
                 // formData.set("DELETE_FILES", state.deleteFiles || "");
+
                 state.deleteFiles.forEach((fileId) => {
                     formData.append('DELETE_FILES[]', String(fileId));
                 });
