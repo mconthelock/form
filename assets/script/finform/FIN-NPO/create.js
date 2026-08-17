@@ -4,7 +4,7 @@ import { requiredForm, showMessage } from '@amec/webasset/utils';
 import { setDatePicker } from '@amec/webasset/flatpickr';
 import { webflowSubmit } from '@amec/webasset/components/form';
 import { fetchUtils } from '@amec/webasset/api/fetch-utils';
-import { getFormDetail } from '@amec/webasset/api/webform';
+import { getExtData, getFormDetail } from '@amec/webasset/api/webform';
 import select2 from 'select2';
 import 'select2/dist/css/select2.min.css';
 
@@ -881,7 +881,7 @@ $(document).on(
             throw new Error(res?.message || 'Cannot submit request');
         }
 
-        redirectAfterSubmit();
+        redirectBackToWebflow();
     } catch (error) {
         console.error(error);
         showMessage(error.message || 'Cannot submit request', 'error');
@@ -930,19 +930,39 @@ async function actionReturnForm(payload) {
         (file) => formData.append('attachfile', file),
     );
 
-    return await fetchUtils({
+    const updateResult = await fetchUtils({
         url: `${process.env.APP_API}/finform/fin-npo/update`,
         method: 'POST',
         data: formData,
     });
+
+    if (updateResult?.status === false) return updateResult;
+
+    const form = getReturnFormKey();
+    const actionResult = await fetchUtils({
+        url: `${process.env.APP_API}/finform/fin-npo/action`,
+        method: 'POST',
+        data: {
+            ...form,
+            ACTION: 'approve',
+            REMARK: payload.REMARK || '',
+            CEXTDATA: getCextDataValue(await getExtData(form)),
+            DATA: [],
+        },
+    });
+
+    return actionResult?.status === false ? actionResult : updateResult;
 }
 
-function redirectAfterSubmit() {
+function redirectBackToWebflow() {
     const params = new URLSearchParams(window.location.search);
     const backPath = params.get('bp');
+    const webflowBase = new URL(
+        process.env.APP_WEBFLOW || window.location.origin,
+    );
 
     if (backPath) {
-        window.location.assign(backPath);
+        window.location.assign(new URL(backPath, webflowBase).toString());
         return;
     }
 
@@ -950,6 +970,18 @@ function redirectAfterSubmit() {
         ? 'formtest'
         : 'form';
     window.location.assign(
-        `http://webflow.mitsubishielevatorasia.co.th/${webflowPath}/workflow/WaitApv.asp`,
+        new URL(`/${webflowPath}/workflow/WaitApv.asp`, webflowBase).toString(),
     );
+}
+
+function getCextDataValue(value) {
+    if (!value) return '';
+    if (typeof value === 'string') return value.trim();
+    if (Array.isArray(value)) return getCextDataValue(value[0]);
+    if (typeof value === 'object') {
+        return getCextDataValue(
+            value.CEXTDATA ?? value.cextData ?? value.data ?? value.message,
+        );
+    }
+    return String(value).trim();
 }
