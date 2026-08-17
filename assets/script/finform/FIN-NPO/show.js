@@ -102,11 +102,7 @@ $(document).on('click', 'button[name="btnAction"]', async function (event) {
         }
 
         showMessage(result?.message || 'Workflow action completed', 'success');
-        if (action === 'return') {
-            redirectToReturnForm();
-        } else {
-            redirectBackToWebflow();
-        }
+        redirectBackToWebflow();
     } catch (error) {
         console.error(error);
         showMessage(error.message || 'Cannot process workflow action', 'error');
@@ -124,11 +120,12 @@ $(document).on('click', '.fin-npo-back', function (event) {
 function redirectBackToWebflow() {
     const params = new URLSearchParams(window.location.search);
     const backPath = params.get('bp');
+    const webflowBase = new URL(
+        process.env.APP_WEBFLOW || window.location.origin,
+    );
 
     if (backPath) {
-        // Resolve a relative bp on the current origin so the existing login
-        // session cookie is retained.
-        window.location.assign(new URL(backPath, window.location.origin).toString());
+        window.location.assign(new URL(backPath, webflowBase).toString());
         return;
     }
 
@@ -136,17 +133,8 @@ function redirectBackToWebflow() {
         ? 'formtest'
         : 'form';
     window.location.assign(
-        new URL(`/${webflowPath}/workflow/WaitApv.asp`, window.location.origin),
+        new URL(`/${webflowPath}/workflow/WaitApv.asp`, webflowBase).toString(),
     );
-}
-
-function redirectToReturnForm() {
-    const url = new URL(window.location.href);
-    const pathParts = url.pathname.replace(/\/$/, '').split('/');
-
-    pathParts[pathParts.length - 1] = 'returnForm';
-    url.pathname = pathParts.join('/');
-    window.location.assign(url.toString());
 }
 
 function getFormKeyFromUrl() {
