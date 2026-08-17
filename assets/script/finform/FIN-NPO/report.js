@@ -3,6 +3,8 @@ import { createTable } from '@amec/webasset/dataTable';
 import { setDatePicker } from '@amec/webasset/flatpickr';
 import { defaultExcel, exportExcel } from '@amec/webasset/excel';
 import { showMessage } from '@amec/webasset/utils';
+import 'datatables.net-dt/css/dataTables.dataTables.min.css';
+import '@amec/webasset/css/dataTable.css';
 
 let reportTable = null;
 
@@ -41,7 +43,13 @@ const columns = [
         className: 'text-nowrap',
         render: renderCostCenters,
     },
-    { data: 'REMARK', title: 'Remark' },
+    { data: 'REMARK', title: 'Reference' },
+    {
+        data: 'WHT',
+        title: 'WHT',
+        className: 'text-right',
+        render: renderAmount,
+    },
 ];
 
 $(async function () {
@@ -143,7 +151,12 @@ async function renderTable(data) {
     $('#reportTable').empty();
     reportTable = await createTable(
         { data, columns, responsive: false, order: [[2, 'desc']] },
-        { id: '#reportTable', domScroll: { status: true } },
+        {
+            id: '#reportTable',
+            dataTableCss: false,
+            cssCustom: false,
+            domScroll: { status: true },
+        },
     );
 }
 
@@ -249,11 +262,34 @@ function normalizeReportRows(response) {
 
             if (!costCenters.length) return [normalizedRow];
 
+            const travelerCount = costCenters.length;
+            const amountPerTraveler = isTravelingExportExpense(
+                normalizedRow.EXPENSE_TYPE,
+            )
+                ? (Number(normalizedRow.NET_PRICE) || 0) / travelerCount
+                : normalizedRow.NET_PRICE;
+
             return costCenters.map((costCenter) => ({
                 ...normalizedRow,
                 COST_CENTER: costCenter,
+                NET_PRICE: amountPerTraveler,
             }));
         });
+}
+
+function isTravelingExportExpense(expenseType) {
+    const normalizedType = String(expenseType || '')
+        .trim()
+        .toUpperCase();
+
+    return [
+        'TRAVELING EXPORT',
+        'TRAVELLING EXPORT',
+        'TRAVELING ABROAD',
+        'TRAVELLING ABROAD',
+        // Keep compatibility with the existing expense master spelling.
+        'TRAVELLING ABOARD',
+    ].some((name) => normalizedType.includes(name));
 }
 
 function normalizeRow(row) {
@@ -287,6 +323,7 @@ function normalizeRow(row) {
             'COST_CENTER_CODE',
         ]),
         REMARK: first(row, ['REMARK', 'VREMARK']),
+        WHT: first(row, ['WHT', 'WITHHOLDING_TAX']),
         INVOICE_DATE: formatDate(first(row, ['INVOICE_DATE', 'DINVOICE_DATE'])),
         INVOICE_NO: first(row, ['INVOICE_NO', 'VINVOICE_NO']),
         NET_PRICE: first(row, ['NET_PRICE', 'NET_AMT']),

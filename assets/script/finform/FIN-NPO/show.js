@@ -6,7 +6,6 @@ import {
     showflow,
 } from '@amec/webasset/api/webform';
 import { webflowSubmit } from '@amec/webasset/components/form';
-import { redirectWebflow } from '@amec/webasset/form';
 import { showMessage } from '@amec/webasset/utils';
 
 let isActionProcessing = false;
@@ -67,6 +66,17 @@ $(document).on('click', 'button[name="btnAction"]', async function (event) {
 
     const action = $(this).val();
     const remark = String($('#remark').val() || '').trim();
+    const invalidWht = $('.wht-input').filter(
+        (_, input) => !input.checkValidity(),
+    )[0];
+
+    if (invalidWht) {
+        showMessage('WHT must be zero or a positive number.', 'warning');
+        invalidWht.focus();
+        return;
+    }
+
+    const invoiceData = collectInvoiceWht();
 
     if (action === 'reject' && !remark) {
         showMessage('Please input remark for reject.', 'warning');
@@ -84,6 +94,7 @@ $(document).on('click', 'button[name="btnAction"]', async function (event) {
             ACTION: action,
             REMARK: remark,
             CEXTDATA: getCextDataValue(cextData),
+            DATA: invoiceData,
         });
 
         if (result?.status === false) {
@@ -91,7 +102,11 @@ $(document).on('click', 'button[name="btnAction"]', async function (event) {
         }
 
         showMessage(result?.message || 'Workflow action completed', 'success');
-        redirectWebflow();
+        if (action === 'return') {
+            redirectToReturnForm();
+        } else {
+            redirectBackToWebflow();
+        }
     } catch (error) {
         console.error(error);
         showMessage(error.message || 'Cannot process workflow action', 'error');
@@ -100,6 +115,39 @@ $(document).on('click', 'button[name="btnAction"]', async function (event) {
         $('button[name="btnAction"]').prop('disabled', false);
     }
 });
+
+$(document).on('click', '.fin-npo-back', function (event) {
+    event.preventDefault();
+    redirectBackToWebflow();
+});
+
+function redirectBackToWebflow() {
+    const params = new URLSearchParams(window.location.search);
+    const backPath = params.get('bp');
+
+    if (backPath) {
+        // Resolve a relative bp on the current origin so the existing login
+        // session cookie is retained.
+        window.location.assign(new URL(backPath, window.location.origin).toString());
+        return;
+    }
+
+    const webflowPath = window.location.host.includes('amecwebtest')
+        ? 'formtest'
+        : 'form';
+    window.location.assign(
+        new URL(`/${webflowPath}/workflow/WaitApv.asp`, window.location.origin),
+    );
+}
+
+function redirectToReturnForm() {
+    const url = new URL(window.location.href);
+    const pathParts = url.pathname.replace(/\/$/, '').split('/');
+
+    pathParts[pathParts.length - 1] = 'returnForm';
+    url.pathname = pathParts.join('/');
+    window.location.assign(url.toString());
+}
 
 function getFormKeyFromUrl() {
     const params = new URLSearchParams(window.location.search);
@@ -188,7 +236,6 @@ function renderEmployee(employee = {}) {
             .filter(Boolean)
             .join(' / '),
     );
-    $('#Pos').text(employee.SPOSNAME || employee.POSITION || 'Employee');
 }
 
 function normalizeShowData(response) {
@@ -207,7 +254,6 @@ function normalizeShowData(response) {
 
 function renderHeader(head = {}, expense = {}, vendor = {}) {
     $('#SUBJECT').val(head.SUBJECT || '');
-    $('#REMARK').val(head.REMARK || '');
     $('#EXPENSE_CODE').val(head.EXPENSE_CODE || expense.EXPENSE_CODE || '');
     $('#EXPENSE_NAME').val(
         [expense.EXPENSE_TNAME, expense.EXPENSE_ENAME]
@@ -366,15 +412,36 @@ async function renderInvoiceTable(invoices = []) {
                     <td>${escapeHtml(formatVat(invoice.VAT_RATE_ID))}</td>
                     <td>${escapeHtml(formatNumber(invoice.TOTAL_AMT))}</td>
                     <td>${escapeHtml(invoice.SCURCODE || '')}</td>
+                    <td>
+                        <input type="number" min="0" step="0.01"
+                            class="wht-input input input-sm input-bordered w-full"
+                            data-invoice-id="${escapeHtml(invoice.ID || invoice.LINE_ID || index + 1)}"
+                            value="${escapeHtml(invoice.WHT ?? '')}"
+                            placeholder="Optional" />
+                    </td>
                 </tr>`,
               )
               .join('')
-        : '<tr><td colspan="7" class="text-center">No invoice information</td></tr>';
+        : '<tr><td colspan="8" class="text-center">No invoice information</td></tr>';
 
     $('#stampTable').html(`<thead><tr>
         <th>No.</th><th>Invoice Date</th><th>Invoice No.</th>
-        <th>Net Price</th><th>VAT Rate</th><th>Total Amount</th><th>Currency</th>
+        <th>Net Price</th><th>VAT Rate</th><th>Total Amount</th><th>Currency</th><th>WHT</th>
     </tr></thead><tbody>${rows}</tbody>`);
+}
+
+function collectInvoiceWht() {
+    return $('.wht-input')
+        .map((_, input) => {
+            const value = String($(input).val() || '').trim();
+
+            return {
+                ID: $(input).data('invoice-id'),
+                LINE_ID: $(input).data('invoice-id'),
+                WHT: value === '' ? null : Number(value),
+            };
+        })
+        .get();
 }
 
 function renderAttachments(files = []) {
@@ -404,7 +471,15 @@ function renderAttachments(files = []) {
 
 async function renderWorkflowAction(form) {
     try {
-        const mode = String(await getMode(form));
+        const modeResponse = await getMode(form);
+        const mode = String(
+            modeResponse?.data?.mode ??
+                modeResponse?.data?.MODE ??
+                modeResponse?.data ??
+                modeResponse?.mode ??
+                modeResponse?.MODE ??
+                modeResponse,
+        ).trim();
         cextData = getCextDataValue(await getExtData(form));
         const flow = await showflow(form);
         const action =
@@ -414,6 +489,7 @@ async function renderWorkflowAction(form) {
                       flowhtml: flow?.html || flow?.data?.html || '',
                       approve: true,
                       reject: true,
+                      return: true,
                   })
                 : webflowSubmit({
                       flow: true,
@@ -422,6 +498,10 @@ async function renderWorkflowAction(form) {
                   });
 
         $('#sentApprove').html(action);
+        $('#sentApprove button')
+            .filter((_, button) => $(button).text().trim() === 'Back')
+            .removeAttr('onclick')
+            .addClass('fin-npo-back');
     } catch (error) {
         console.error('Cannot load workflow action:', error);
         $('#sentApprove').html(

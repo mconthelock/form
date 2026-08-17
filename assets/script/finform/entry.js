@@ -10,5 +10,6 @@ module.exports = {
 
     finNpoCreate: './assets/script/finform/FIN-NPO/create.js',
     finNpoShow: './assets/script/finform/FIN-NPO/show.js',
+    finNpoReturn: './assets/script/finform/FIN-NPO/return.js',
     finNpoReport: './assets/script/finform/FIN-NPO/report.js',
 };
