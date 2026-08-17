@@ -23,13 +23,19 @@ $(async function () {
     }
 
     try {
-        const [formDetail, showData] = await Promise.all([
+        const [formDetail, showData, modeResponse] = await Promise.all([
             getFormDetail(form),
             getShowData(form),
+            getMode(form),
         ]);
 
         if (showData?.status === false) {
             throw new Error(showData.message || 'FIN-NPO data not found');
+        }
+
+        if (shouldOpenReturnForm(form, formDetail, modeResponse)) {
+            redirectToReturnForm();
+            return;
         }
 
         renderFormDetail(formDetail || {});
@@ -49,7 +55,7 @@ $(async function () {
         await renderTravelers(form, data.head, data.expense);
         renderAttachments(data.files);
         await renderInvoiceTable(data.invoices);
-        await renderWorkflowAction(form);
+        await renderWorkflowAction(form, modeResponse);
     } catch (error) {
         console.error(error);
         showMessage(error.message || 'Cannot load FIN-NPO data', 'error');
@@ -155,6 +161,44 @@ function hasFormKey(form) {
     return Boolean(
         form.NFRMNO && form.VORGNO && form.CYEAR && form.CYEAR2 && form.NRUNNO,
     );
+}
+
+function shouldOpenReturnForm(form, formDetail = {}, modeResponse) {
+    if (normalizeWorkflowMode(modeResponse) !== '2') return false;
+
+    const currentEmployee = String(form.EMPNO || '').trim();
+    const firstEmployees = [
+        formDetail.VINPUTER,
+        formDetail.INPUTBY,
+        formDetail.VREQNO,
+        formDetail.REQBY,
+    ]
+        .map((employee) => String(employee || '').trim())
+        .filter(Boolean);
+
+    return Boolean(
+        currentEmployee && firstEmployees.includes(currentEmployee),
+    );
+}
+
+function normalizeWorkflowMode(response) {
+    return String(
+        response?.data?.mode ??
+            response?.data?.MODE ??
+            response?.data ??
+            response?.mode ??
+            response?.MODE ??
+            response ??
+            '',
+    )
+        .replace(/^['"]|['"]$/g, '')
+        .trim();
+}
+
+function redirectToReturnForm() {
+    const returnUrl = new URL('returnForm', window.location.href);
+    returnUrl.search = window.location.search;
+    window.location.replace(returnUrl.toString());
 }
 
 async function getShowData(form) {
@@ -458,17 +502,9 @@ function renderAttachments(files = []) {
     );
 }
 
-async function renderWorkflowAction(form) {
+async function renderWorkflowAction(form, modeResponse) {
     try {
-        const modeResponse = await getMode(form);
-        const mode = String(
-            modeResponse?.data?.mode ??
-                modeResponse?.data?.MODE ??
-                modeResponse?.data ??
-                modeResponse?.mode ??
-                modeResponse?.MODE ??
-                modeResponse,
-        ).trim();
+        const mode = normalizeWorkflowMode(modeResponse);
         cextData = getCextDataValue(await getExtData(form));
         const flow = await showflow(form);
         const action =
