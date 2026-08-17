@@ -20,3 +20,26 @@ export async function getLocations() {
         method: 'GET',
     });
 }
+
+export async function createArea(data) {
+    return fetchUtils({
+        url: `${process.env.APP_API}/gpform/gp-tph/areas`,
+        method: 'POST',
+        data,
+    });
+}
+
+export async function updateArea(areaId, data) {
+    return fetchUtils({
+        url: `${process.env.APP_API}/gpform/gp-tph/areas/${encodeURIComponent(areaId)}`,
+        method: 'PATCH',
+        data,
+    });
+}
+
+export async function deleteArea(areaId) {
+    return fetchUtils({
+        url: `${process.env.APP_API}/gpform/gp-tph/areas/${encodeURIComponent(areaId)}`,
+        method: 'DELETE',
+    });
+}

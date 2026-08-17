@@ -44,6 +44,7 @@ module.exports = {
 
     //GP-TPH
     gpTPH: './assets/script/gpform/GP-TPH/actionsForm.js',
+    gpTPHArea: './assets/script/gpform/GP-TPH/areaData.js',
 
     //GP-RB
     gpRB: './assets/script/gpform/GP-RB/actionsForm.js',
