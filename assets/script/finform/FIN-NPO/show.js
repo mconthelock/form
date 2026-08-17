@@ -64,7 +64,8 @@ $(document).on('click', 'button[name="btnAction"]', async function (event) {
 
     if (isActionProcessing) return;
 
-    const action = $(this).val();
+    const buttonAction = String($(this).val() || '').toLowerCase();
+    const action = buttonAction === 'save' ? 'approve' : buttonAction;
     const remark = String($('#remark').val() || '').trim();
     const invalidWht = $('.wht-input').filter(
         (_, input) => !input.checkValidity(),
