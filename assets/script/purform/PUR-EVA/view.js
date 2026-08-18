@@ -162,7 +162,7 @@ $(async function () {
                     .map(
                         ([val, label]) => `
         <label class="flex items-center gap-2 cursor-pointer">
-            <input type="radio" name="MJUDGEMENT" value="${val}" class="w-4 h-4 accent-blue-600"> 
+            <input type="radio" name="MJUDGEMENT" value="${val}" class="w-4 h-4 accent-blue-600">
             ${label}
         </label>
     `,
@@ -190,7 +190,11 @@ $(async function () {
         if (isNonPro) {
             const isLocal = formeva.VENDTYPE === 'Local';
             $('#PRODCAT')
-                .text(formeva.PRODCAT || '-')
+                .text(
+                    formeva.PRODCAT === 'อื่นๆ' && formeva.PRODCAT_OTHER
+                        ? `${formeva.PRODCAT}: ${formeva.PRODCAT_OTHER}`
+                        : formeva.PRODCAT || formeva.PRODCAT_OTHER || '-',
+                )
                 .closest('.prodcat-container')
                 .toggle(isLocal);
             $('#COMPLIANCE_READONLY_CONTAINER')

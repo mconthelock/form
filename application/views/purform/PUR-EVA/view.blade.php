@@ -5,10 +5,6 @@
     <div class="hidden form-info" nfrmno="{{ $NFRMNO }}" vorgno="{{ $VORGNO }}" cyear="{{ $CYEAR }}"
         mode="{{ $mode }}" cyear2="{{ $mode != 1 ? $CYEAR2 : '' }}" nrunno="{{ $mode != 1 ? $NRUNNO : '' }}"></div>
     <div class="hidden apv-data" empno="{{ $empno }}"></div>
-    <div>
-        <div class="div">sdsds</div>
-    </div>
-    <a>sdsds</a>
 @endsection
 <div>
     <h1></h1>
