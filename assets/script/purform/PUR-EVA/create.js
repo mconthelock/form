@@ -517,6 +517,15 @@ $(document).on('change', '.legal_status', async function () {
     }
 });
 
+$(document).on('click', '.procat', async function () {
+    const procat = $(this).val();
+    if (procat == 'อื่นๆ') {
+        $('input[name="PRODCAT_OTHER"]').addClass('req');
+    } else {
+        $('input[name="PRODCAT_OTHER"]').removeClass('req');
+    }
+});
+
 $(document).on('click', '.add-row-btn', function () {
     const tableId = $(this).data('table');
     const tbody = $('#' + tableId + ' tbody');
@@ -1062,6 +1071,8 @@ async function setVendorEvaInfo(formeva) {
     $('input[name="PRODCAT"][value="' + formeva.PRODCAT + '"]')
         .prop('checked', true)
         .trigger('change');
+
+    $('input[name="PRODCAT_OTHER"]').val(formeva.PRODCAT_OTHER);
     $('input[name="BUSTYPE_REG"]').val(formeva.BUSTYPE_REG);
     $('input[name="BUSTYPE_SUB"]').val(formeva.BUSTYPE_SUB);
 
