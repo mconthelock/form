@@ -498,7 +498,10 @@ $(document).on('click', 'button[name="btnAction"]', async function () {
         console.log(res);
 
         if (res.status == true) {
-            redirectWebflow();
+            const cst = await getFormStatus(...form);
+            console.log(cst);
+
+            // redirectWebflow();
         }
     } catch (error) {
         console.error(error);
