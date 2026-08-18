@@ -59,7 +59,7 @@ function addActionCell(row, areaId) {
 
     editButton.type = 'button';
     editButton.className =
-        'action-link table-action-button edit-area h-9 w-9';
+        'action-link table-action-button edit-area h-9 w-9 rounded border border-black';
     editButton.title = 'Edit area';
     editButton.dataset.areaId = areaId;
     editButton.setAttribute('aria-label', 'Edit area');
@@ -68,7 +68,7 @@ function addActionCell(row, areaId) {
 
     deleteButton.type = 'button';
     deleteButton.className =
-        'action-link table-action-button delete-area h-9 w-9';
+        'action-link table-action-button delete-area h-9 w-9 rounded border border-black';
     deleteButton.title = 'Delete area';
     deleteButton.dataset.areaId = areaId;
     deleteButton.setAttribute('aria-label', 'Delete area');
@@ -151,7 +151,8 @@ function openForm(area = null) {
         form.elements.location_id.value = getLocationId(area) || '';
         form.elements.area.value = area.AREA_NAME || area.area || '';
         form.elements.level.value = area.AREA_LEVEL || area.level || '';
-        form.elements.area_owner.value = area.AREA_OWNER || area.area_owner || '';
+        form.elements.area_owner.value =
+            area.AREA_OWNER || area.area_owner || '';
     }
 
     form.classList.add('is-visible');
@@ -202,7 +203,9 @@ function bindEvents() {
     document.getElementById('newAreaButton')?.addEventListener('click', () => {
         openForm();
     });
-    document.getElementById('cancelAreaButton')?.addEventListener('click', closeForm);
+    document
+        .getElementById('cancelAreaButton')
+        ?.addEventListener('click', closeForm);
 
     searchInput?.addEventListener('input', (event) => {
         const keyword = event.target.value.trim().toLowerCase();

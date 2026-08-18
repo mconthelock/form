@@ -177,6 +177,11 @@
             white-space: nowrap;
         }
 
+        .area-table th:not(:last-child),
+        .area-table td:not(:last-child) {
+            border-right: 1px solid #c6d2e1;
+        }
+
         .area-table tbody tr:last-child td {
             border-bottom: 0;
         }
@@ -232,22 +237,28 @@
             margin: 0 3px;
             text-decoration: none;
             cursor: pointer;
+
         }
 
         .table-action-button {
-            border: 0;
-            background: transparent;
+            width: 36px;
+            height: 36px;
+            border: 2px solid #e5e5e5;
+            border-radius: 4px;
+            background: #fff;
             font: inherit;
         }
 
         .edit-icon {
             color: #facc15;
             font-size: 21px;
+            border-block: black;
         }
 
         .delete-icon {
             color: #d30b17;
             font-size: 21px;
+            border-block: black;
         }
 
         .empty-row {
