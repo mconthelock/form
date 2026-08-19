@@ -444,7 +444,7 @@ class form extends MY_Controller{
             $data  = array();
             foreach($starttime as $s)
             {
-                if($s != "")
+                if(($s != "")&&($content[$i] !=""))
                 {
                     $id++;
                     $data[] = array(
