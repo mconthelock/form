@@ -155,7 +155,7 @@
                             </div>
 
                             <div class="space-y-4 rounded-xl border border-violet-200 border-l-4 border-l-violet-500 bg-violet-50/60 p-5 shadow-sm">
-                                <div class="form-control">
+                                <div class="form-control hidden">
                                     <label class="label pb-1" for="SUBJECT">
                                         <span class="label-text text-sm font-bold">Subject</span>
                                     </label>
