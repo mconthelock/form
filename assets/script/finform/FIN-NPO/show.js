@@ -54,7 +54,19 @@ $(async function () {
         renderHeader(data.head, data.expense, data.vendor);
         await renderTravelers(form, data.head, data.expense);
         renderAttachments(data.files);
-        await renderInvoiceTable(data.invoices);
+        let canEditWht = false;
+
+        if (form.EMPNO) {
+            try {
+                const currentEmployee = await getEmployee(form.EMPNO);
+                canEditWht =
+                    String(currentEmployee?.SSECCODE || '').trim() === '040403';
+            } catch (error) {
+                console.error('Cannot verify WHT permission:', error);
+            }
+        }
+
+        await renderInvoiceTable(data.invoices, canEditWht);
         await renderWorkflowAction(form, modeResponse);
     } catch (error) {
         console.error(error);
@@ -85,8 +97,8 @@ $(document).on('click', 'button[name="btnAction"]', async function (event) {
 
     const invoiceData = collectInvoiceWht();
 
-    if (action === 'reject' && !remark) {
-        showMessage('Please input remark for reject.', 'warning');
+    if (['return', 'reject'].includes(action) && !remark) {
+        showMessage('Please input remark for return or reject.', 'warning');
         $('#remark').trigger('focus');
         return;
     }
@@ -433,7 +445,7 @@ function getEmployeeName(item) {
     ).trim();
 }
 
-async function renderInvoiceTable(invoices = []) {
+async function renderInvoiceTable(invoices = [], canEditWht = false) {
     const rows = invoices.length
         ? invoices
               .map(
@@ -450,6 +462,7 @@ async function renderInvoiceTable(invoices = []) {
                             class="wht-input input input-sm input-bordered w-full"
                             data-invoice-id="${escapeHtml(invoice.ID || invoice.LINE_ID || index + 1)}"
                             value="${escapeHtml(invoice.WHT ?? '')}"
+                            ${canEditWht ? '' : 'readonly'}
                             placeholder="Optional" />
                     </td>
                 </tr>`,

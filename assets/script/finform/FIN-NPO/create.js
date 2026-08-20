@@ -881,7 +881,11 @@ $(document).on(
             throw new Error(res?.message || 'Cannot submit request');
         }
 
-        redirectBackToWebflow();
+        if (isReturnMode) {
+            redirectBackToWebflow();
+        } else {
+            redirectToWaitApproval();
+        }
     } catch (error) {
         console.error(error);
         showMessage(error.message || 'Cannot submit request', 'error');
@@ -966,12 +970,37 @@ function redirectBackToWebflow() {
         return;
     }
 
-    const webflowPath = window.location.host.includes('amecwebtest')
-        ? 'formtest'
-        : 'form';
+    redirectToWaitApproval();
+}
+
+function redirectToWaitApproval() {
+    const webflowBase = new URL(
+        process.env.APP_WEBFLOW || window.location.origin,
+    );
+    const webflowPath = getWebflowPath();
+
     window.location.assign(
         new URL(`/${webflowPath}/workflow/WaitApv.asp`, webflowBase).toString(),
     );
+}
+
+function getWebflowPath() {
+    const params = new URLSearchParams(window.location.search);
+    const environmentSources = [
+        window.location.host,
+        params.get('bp'),
+        process.env.APP_ENV,
+        process.env.APP_API,
+        process.env.APP_CDN,
+    ]
+        .filter(Boolean)
+        .join(' ')
+        .toLowerCase();
+
+    return environmentSources.includes('amecwebtest') ||
+        /(^|\/)formtest(\/|$)/.test(environmentSources)
+        ? 'formtest'
+        : 'form';
 }
 
 function getCextDataValue(value) {
