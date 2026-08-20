@@ -61,7 +61,7 @@ $(async function () {
     ].forEach((element) => setDatePicker({ element }));
 
     await Promise.all([loadSelect('expense'), loadSelect('vendor')]);
-    await renderTable([]);
+    $('#reportSearchForm').trigger('submit');
 });
 //--------------------------------------------  for test
 
