@@ -388,7 +388,30 @@ import { data } from 'jquery';
             }
 
             clearRequestTypeRelatedFields();
+            updateAddVisitorButton();
             updatePermitTypeRestrictions();
+        }
+
+        function updateAddVisitorButton() {
+            const isIndividualRequest =
+                employeeRadio?.checked &&
+                document.querySelector(
+                    'input[name="req_subtype"][value="individual"]',
+                )?.checked;
+
+            addVisitorBtn.disabled = Boolean(isIndividualRequest);
+            addVisitorBtn.classList.toggle(
+                'opacity-50',
+                Boolean(isIndividualRequest),
+            );
+            addVisitorBtn.classList.toggle(
+                'cursor-not-allowed',
+                Boolean(isIndividualRequest),
+            );
+            addVisitorBtn.setAttribute(
+                'aria-disabled',
+                String(Boolean(isIndividualRequest)),
+            );
         }
 
         function togglePermitOptionFields() {
@@ -481,6 +504,10 @@ import { data } from 'jquery';
         }
 
         addVisitorBtn.addEventListener('click', function () {
+            if (addVisitorBtn.disabled) {
+                return;
+            }
+
             const clone = visitorTemplate.content.cloneNode(true);
             visitorBody.appendChild(clone);
         });
@@ -565,8 +592,6 @@ import { data } from 'jquery';
             )?.value;
 
             if (!valueOf('#REQBY')) errors.push('Request By');
-            if (!valueOf('#empName')) errors.push('Name');
-            if (!valueOf('#empDiv')) errors.push('Sect./Dept./Div.');
             if (!requestType) errors.push('Request Type');
 
             if (requestType === 'employee') {

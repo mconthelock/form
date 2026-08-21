@@ -70,12 +70,12 @@
                         </label>
                         <div class="ml-8 mt-2 space-y-2">
                             <label class="employee-request-group flex flex-row items-center gap-2">
-                                <input type="radio" name="req_subtype" id="req_subtype" value="individual"
+                                <input type="radio" name="req_subtype" id="req_subtype_individual" value="individual"
                                     class="radio radio-primary">
                                 <span>Individual Request</span>
                             </label>
                             <label class="employee-request-group flex flex-row items-center gap-2">
-                                <input type="radio" name="req_subtype" id="req_subtype" value="group"
+                                <input type="radio" name="req_subtype" id="req_subtype_group" value="group"
                                     class="radio radio-primary">
                                 <span>Group Request</span>
                             </label>
