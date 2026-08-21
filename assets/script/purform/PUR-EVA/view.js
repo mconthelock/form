@@ -14,7 +14,7 @@ import {
     showErrorMessage,
     showMessage,
 } from '@amec/webasset/utils';
-import { getData, updatePurEvaForm } from './data';
+import { createPurVmmAuto, getData, updatePurEvaForm } from './data';
 import { formatDate } from '@amec/webasset/dayjs';
 import { downloadOrOpenFile } from '@amec/webasset/api/file';
 import { formSubmitSkeleton } from '@amec/webasset/skeleton';
@@ -499,8 +499,9 @@ $(document).on('click', 'button[name="btnAction"]', async function () {
 
         if (res.status == true) {
             const cst = await getFormStatus({ ...form });
-            //console.log(cst);
-
+            const res = await createPurVmmAuto(form);
+            console.log(res);
+            return false;
             redirectWebflow();
         }
     } catch (error) {
