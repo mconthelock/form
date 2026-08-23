@@ -4,8 +4,8 @@ import { showLoader } from '@amec/webasset/preloader';
 import { showErrorMessage } from '@amec/webasset/utils';
 import { setSelect2 } from '@amec/webasset/select2';
 import { createTable } from '@amec/webasset/dataTable';
-import { initApp, tableOption, tableFillSelect } from '../utils';
-import { getAmecUsers, getFormMaster, getFormDept } from '../service';
+import { tableOption, tableFillSelect } from '../../utils';
+import { getFormMaster, getFormDept } from '../../service';
 
 var table;
 select2();
@@ -23,8 +23,6 @@ $(document).ready(async function (e) {
 
         await reloadTable();
         await bindEvents();
-        // const tableOption = await createTableOption(mergedData);
-        // table = await createTable(tableOption);
     } catch (error) {
         console.log(error);
         showErrorMessage();
@@ -78,6 +76,8 @@ async function reloadTable() {
             deptname: deptInfo ? deptInfo : null,
         };
     });
+
+    console.log(dept);
 
     await populateFilters(mergedData, dept);
     if (!table) {
@@ -161,7 +161,7 @@ async function createTableOption(data) {
             orderable: false,
             className: 'text-center',
             render: function (data, type, row) {
-                return `<a href="${process.env.APP_ENV}/webform/formmaster/detail/${row.NNO}/${row.VORGNO}/${row.CYEAR}/" class="btn btn-sm btn-primary">Edit</a>`;
+                return `<a href="${process.env.APP_ENV}/admin/formmaster/detail/${row.NNO}/${row.VORGNO}/${row.CYEAR}/" class="btn btn-sm btn-primary">Edit</a>`;
             },
         },
     ];

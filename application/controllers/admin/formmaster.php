@@ -5,18 +5,18 @@ class formmaster extends MY_Controller {
     }
 
     public function index(){
-        $this->views('formmst/index', array('title' => 'nav-master-form'));
+        $this->views('admin/formmst/index', array('title' => 'nav-master-form'));
     }
 
     public function detail(){
-        $this->views('formmst/detail', array('title' => 'nav-master-form'));
+        $this->views('admin/formmst/detail', array('title' => 'nav-master-form'));
     }
 
     public function group(){
-        $this->views('formmst/group', array('title' => 'nav-master-group'));
+        $this->views('admin/formmst/group', array('title' => 'nav-master-group'));
     }
 
     public function authen(){
-        $this->views('formmst/authen', array('title' => 'nav-master-authen'));
+        $this->views('admin/formmst/authen', array('title' => 'nav-master-authen'));
     }
 }

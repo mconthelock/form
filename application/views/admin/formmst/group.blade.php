@@ -11,7 +11,7 @@
             </div>
         </div>
         <div>
-            <button class="btn btn-primary min-w-30" id="add-group-btn">Add Group</button>
+            {{-- <button class="btn btn-primary min-w-30" id="add-group-btn">Add Group</button> --}}
         </div>
     </div>
 
@@ -22,11 +22,12 @@
                 <table id="table" class="table table-zebra display text-sm"></table>
             </div>
         </section>
-        <section class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm flex-none hidden" id="add-group-form">
+
+        <section class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm flex-none" id="add-group-form">
             <form action="#" class="w-80">
                 <fieldset class="fieldset">
                     <legend class="fieldset-legend">Form Organize</legend>
-                    <select class="select" id="vorgno" name="vorgno">
+                    <select class="select" id="vgrouporg" name="vgrouporg">
                         <option disabled selected>Select Owner</option>
                     </select>
                 </fieldset>
@@ -34,10 +35,11 @@
                 <fieldset class="fieldset">
                     <legend class="fieldset-legend">Group Name</legend>
                     <input type="text" class="input" placeholder="Type here" id="vgroupname" />
-                    <input type="text" id="vgroupid">
                 </fieldset>
 
-                <button class="btn btn-primary w-full mt-3" type="button" id="save-group-btn">Save Data</button>
+                <button class="btn btn-primary w-full mt-2" type="button" id="save-group-btn">Save Data</button>
+                <button class="btn btn-error w-full mt-2" disabled type="button" id="reset-group-btn">Cancel</button>
+                <input type="text" class="input hiddenx" id="vgroup" name="vgroup" value="" />
             </form>
         </section>
     </div>

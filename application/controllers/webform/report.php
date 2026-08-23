@@ -6,7 +6,6 @@ class report extends MY_Controller {
     }
 
     public function index($status = 1){
-
         $this->views('report/index',);
     }
 }

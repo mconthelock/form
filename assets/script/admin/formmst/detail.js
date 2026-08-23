@@ -3,15 +3,13 @@ import select2 from 'select2';
 import { showLoader } from '@amec/webasset/preloader';
 import { showErrorMessage } from '@amec/webasset/utils';
 import { setSelect2 } from '@amec/webasset/select2';
-import { createTable } from '@amec/webasset/dataTable';
 import { createBtn } from '@amec/webasset/components/buttons';
-import { initApp, tableOption, tableFillSelect } from '../utils';
 import {
     getAmecUsers,
     getFormMaster,
     getFormDept,
     getFormMasterGroup,
-} from '../service';
+} from '../../service';
 
 select2();
 var cyear, orgno, nno;
@@ -54,10 +52,10 @@ async function setFormNo() {
 }
 
 async function setFormInit(data) {
-    //populate vorgno select
+    //VORGNO select
     const dept = [];
     const deptData = await getFormDept();
-    const department = deptData.map((owner) => {
+    deptData.map((owner) => {
         const links = owner.link.map((link) => {
             dept.push({
                 value: link,
@@ -75,10 +73,15 @@ async function setFormInit(data) {
         placeholder: 'Select Owner',
     });
 
+    //Form Group select
     const groupData = await getFormMasterGroup();
-    const groupfilter = groupData.filter(
-        (item) => item.VGROUPORG == data.VORGNO,
-    );
+    const groupfilter = groupData.filter((item) => {
+        return deptData.find(
+            (d) =>
+                d.link.includes(item.VGROUPORG) && d.link.includes(data.VORGNO),
+        );
+    });
+
     const group = groupfilter.map((item) => ({
         value: item.VGROUP,
         text: item.VGROUPNAME,
@@ -93,6 +96,7 @@ async function setFormInit(data) {
         placeholder: 'Select Group',
     });
 
+    //Developer select
     const amecuser = await getAmecUsers();
     const users = amecuser.filter(
         (user) => user.CSTATUS == '1' && user.SDEPCODE == '050601',
@@ -111,7 +115,6 @@ async function setFormInit(data) {
     });
 
     await setFormValue(data);
-    console.log(data, data.length);
     await setFormAction(data.length == 0 ? 1 : 2);
 }
 
@@ -141,7 +144,6 @@ async function setFormValue(data) {
         .each(function () {
             const mapping = $(this).attr('data-mapping');
             if (mapping && data[mapping] !== undefined) {
-                console.log(mapping, data[mapping]);
                 $(this).val(data[mapping]).trigger('change');
             }
         });
@@ -170,9 +172,9 @@ async function setFormAction(mode) {
         id: 'back-btn',
         title: 'Back to List',
         icon: 'fi fi-rr-angle-left text-xl',
-        className: 'btn-ghost',
+        className: 'btn btn-outline border-base-300',
         type: 'link',
-        href: `${process.env.APP_ENV}/webform/formmaster/`,
+        href: `${process.env.APP_ENV}/admin/formmaster/`,
     });
     if (mode == 1) $('.btn-container').append(addFormBtn, backBtn);
     else $('.btn-container').append(editFormBtn, backBtn);
@@ -184,4 +186,8 @@ $(document).on('click', '.add-flow', async function (e) {
     $('#flow-form')[0].reset();
     $('#add-flow-form').toggleClass('hidden');
     $('#flow-list').toggleClass('hidden');
+});
+
+$(document).on('click', '.edit-form-btn', async function (e) {
+    e.preventDefault();
 });

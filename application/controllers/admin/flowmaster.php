@@ -5,6 +5,6 @@ class flowmaster extends MY_Controller {
     }
 
     public function index(){
-        $this->views('flowmaster/index', array('title' => 'nav-master-flow'));
+        $this->views('admin/flowmaster/index', array('title' => 'nav-master-flow'));
     }
 }
