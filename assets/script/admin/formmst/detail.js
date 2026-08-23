@@ -1,15 +1,17 @@
 import 'select2/dist/css/select2.min.css';
+import dayjs from 'dayjs';
 import select2 from 'select2';
 import { showLoader } from '@amec/webasset/preloader';
-import { showErrorMessage } from '@amec/webasset/utils';
+import { showErrorMessage, showMessage } from '@amec/webasset/utils';
 import { setSelect2 } from '@amec/webasset/select2';
-import { createBtn } from '@amec/webasset/components/buttons';
+import { createBtn, activatedBtnRow } from '@amec/webasset/components/buttons';
 import {
     getAmecUsers,
     getFormMaster,
     getFormDept,
     getFormMasterGroup,
 } from '../../service';
+import { createFormMaster, updateFormMaster } from './data';
 
 select2();
 var cyear, orgno, nno;
@@ -124,6 +126,7 @@ async function setFormValue(data) {
         $('#cyear').addClass('hidden');
         return;
     }
+    data = { ...data, DCREDATE: dayjs(data.DCREDATE).format('YYYY-MM-DD') };
     $('#form-info')
         .find('input, textarea')
         .each(function () {
@@ -188,6 +191,53 @@ $(document).on('click', '.add-flow', async function (e) {
     $('#flow-list').toggleClass('hidden');
 });
 
-$(document).on('click', '.edit-form-btn', async function (e) {
+$(document).on('click', '#edit-form-btn', async function (e) {
     e.preventDefault();
+    try {
+        $('#form-info')
+            .find('.req-1')
+            .each(function () {
+                if ($(this).val().trim() === '') {
+                    showErrorMessage('Please fill in all required fields');
+                    $(this).focus();
+                    throw new Error('Required field is empty');
+                }
+            });
+
+        await activatedBtnRow($(this), true);
+        const data = await formValue();
+        const result = await updateFormMaster(data);
+        if (result) {
+            showMessage('Form updated successfully', 'success');
+        } else {
+            showErrorMessage(result.message || 'Error updating form');
+        }
+    } catch (error) {
+        console.error(error);
+        showErrorMessage(error.responseJSON?.message || 'Error updating form');
+    } finally {
+        await activatedBtnRow($(this), false);
+    }
 });
+
+async function formValue() {
+    const formData = {};
+    $('#form-info')
+        .find('input, textarea')
+        .each(function () {
+            const mapping = $(this).attr('data-mapping');
+            if (mapping) {
+                formData[mapping] = $(this).val();
+            }
+        });
+
+    $('#form-info')
+        .find('select')
+        .each(function () {
+            const mapping = $(this).attr('data-mapping');
+            if (mapping) {
+                formData[mapping] = $(this).val();
+            }
+        });
+    return formData;
+}
