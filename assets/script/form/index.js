@@ -3,16 +3,18 @@ import { showLoader } from '@amec/webasset/preloader';
 import { showMessage } from '@amec/webasset/utils';
 import { createTable } from '@amec/webasset/dataTable';
 import { displayEmpImage, displayEmpInfo } from '@amec/webasset/indexDB';
-import { initApp, tableOption } from '../utils';
+import { tableOption } from '../utils';
 
 var table;
 $(document).ready(async function () {
     try {
         const status = $('#status').val();
         await getPageTitle(status);
-        const res = [];
-        const opt = await tableFormOptions(res);
-        table = await createTable(opt);
+        // const res = [];
+        // const opt = await tableFormOptions(res);
+        // table = await createTable(opt);
+        await reloadTable();
+        await bindEvents();
     } catch (error) {
         console.log(error);
         await showMessage(error.responseJSON?.message || 'Error fetching data');
@@ -52,11 +54,78 @@ function getPageTitle(data) {
     $('#page-description').text(item ? item.desc : '...');
 }
 
-async function tableFormOptions(data) {
+async function populateFilters(data) {
+    // const owners = [...new Set(data.map((item) => item.APP_DIV))].filter(
+    //     (item) => item,
+    // );
+    // const ownerOptions = owners.map((owner) => ({
+    //     value: owner,
+    //     text: owner,
+    // }));
+    // await tableFillSelect('#table-owner-filter', ownerOptions, 'value', 'text');
+    // await setSelect2({
+    //     element: $('#table-owner-filter'),
+    //     placeholder: 'Filter by Owner',
+    // });
+    // const developer = await getUsers({ CSTATUS: '1', SDEPCODE: '050601' });
+    // const devOptions = developer
+    //     .filter((dev) => dev.SPOSCODE >= '33' && dev.SPOSCODE <= '50')
+    //     .map((dev) => ({
+    //         value: dev.SEMPNO,
+    //         text: `${dev.SNAME} (${dev.SEMPNO})`,
+    //     }));
+    // const avatarData = developer.map((dev) => dev.SEMPNO);
+    // await setSelect2({
+    //     element: $('#table-dev-filter'),
+    //     avatar: true,
+    //     placeholder: 'Filter by Developer',
+    //     data: devOptions,
+    //     avatarData: avatarData,
+    // });
+}
+
+function bindEvents() {
+    $('#table-search').on('input', function () {
+        table.search($(this).val()).draw();
+    });
+
+    $('#table-owner-filter').on('change', function () {
+        table.column(5).search($(this).val()).draw();
+    });
+
+    $('#table-dev-filter').on('change', function () {
+        table.column(6).search($(this).val()).draw();
+    });
+
+    $('#reset-filter').on('click', function () {
+        $('#table-search').val('');
+        $('#table-owner-filter').val('').trigger('change.select2');
+        $('#table-dev-filter').val('').trigger('change.select2');
+
+        table.search('');
+        table.columns().search('');
+        table.page('first').draw('full-reset');
+    });
+}
+
+async function reloadTable() {
+    //const data = await getAllApplication();
+    const data = [];
+    await populateFilters(data);
+    if (!table) {
+        await createFormTable(data);
+    } else {
+        table.clear();
+        table.rows.add(data);
+        table.draw();
+    }
+}
+
+async function createFormTable(data) {
     const opt = { ...tableOption };
     opt.data = data;
-    opt.pageLength = 20;
-    opt.responsive = true;
+    opt.searching = true;
+    opt.pageLength = 10;
     opt.order = [[0, 'asc']];
     opt.columns = [
         {
@@ -216,7 +285,16 @@ async function tableFormOptions(data) {
         await fillOrg(row, data);
         await fillImgs(row, data);
     };
-    return opt;
+    opt.initComplete = function (settings, json) {
+        const { container } = tableOption.initComplete.call(
+            this,
+            settings,
+            json,
+        );
+        $('.dt-search').addClass('hidden');
+        $('.dt-length').addClass('hidden');
+    };
+    table = await createTable(opt);
 }
 
 // Responsive table

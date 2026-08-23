@@ -24,7 +24,7 @@
                 @include('home.stats', ['id' => 'wait', 'text' => 'Waiting for Approval', 'value' => 1])
                 @include('home.stats', ['id' => 'prepare', 'text' => 'Under preparation', 'value' => 0])
                 @include('home.stats', ['id' => 'mine', 'text' => 'Mine', 'value' => 3])
-                @include('home.stats', ['id' => 'finish', 'text' => 'Approved/Rejected', 'value' => 4])
+                @include('home.stats', ['id' => 'comming', 'text' => 'Comming Soon', 'value' => 2])
             </div>
         </div>
     </div>

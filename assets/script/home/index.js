@@ -1,17 +1,20 @@
-import { setAmecweb } from '@amec/webasset/indexDB';
+import * as dayjs from 'dayjs';
 import { setCookie } from '@amec/webasset/jsCookie';
 import { encryptText } from '@amec/webasset/crypto';
 import { showLoader } from '@amec/webasset/preloader';
 import { showErrorMessage } from '@amec/webasset/utils';
 import { createCarousel } from '@amec/webasset/api/gpreport';
 import { directlogin } from '@amec/webasset/api/auth';
-import { initApp, stampApp } from '../utils';
-import { createLinks, setRecentApps, setAmecwebLinks } from './data';
+import { stampApp } from '../utils';
+import {
+    createLinks,
+    setRecentApps,
+    setAmecwebLinks,
+    formCounter,
+} from './data';
 
 $(document).ready(async function (e) {
     showLoader();
-    // const app = await initApp({ submenu: '.document' });
-    //if (!app) return;
     try {
         const news = await createCarousel();
         const links = await $.getJSON(
@@ -23,7 +26,7 @@ $(document).ready(async function (e) {
         await createLinks(4, links, $('#other_system'));
         await setRecentApps();
         await setAmecwebLinks();
-        // await waitforapprove({ empno: "02035" });
+        await rendorFormCount();
     } catch (error) {
         console.log(error);
         showErrorMessage();
@@ -69,3 +72,33 @@ $(document).on('click', '.links-stamp', async function (e) {
         await showLoader({ show: false });
     }
 });
+
+async function rendorFormCount() {
+    const data = await formCounter($('#user-login').attr('empno'));
+    $('#stat-wait').text(data.WAITFORAPPROVE || 0);
+    $('#stat-prepare').text(data.DRAFT || 0);
+    $('#stat-mine').text(data.MINE || 0);
+    $('#stat-comming').text(data.COMMING || 0);
+
+    const today = dayjs().format('MMM D, YYYY');
+    $('#statdate-wait').text(
+        data.WAITFORAPPROVE_DATE
+            ? `${dayjs(data.WAITFORAPPROVE_DATE).format('MMM D, YYYY')} - ${today}`
+            : ``,
+    );
+    $('#statdate-prepare').text(
+        data.DRAFT_DATE
+            ? `${dayjs(data.DRAFT_DATE).format('MMM D, YYYY')} - ${today}`
+            : ``,
+    );
+    $('#statdate-mine').text(
+        data.MINE_DATE
+            ? `${dayjs(data.MINE_DATE).format('MMM D, YYYY')} - ${today}`
+            : ``,
+    );
+    $('#statdate-comming').text(
+        data.COMMING_DATE
+            ? `${dayjs(data.COMMING_DATE).format('MMM D, YYYY')} - ${today}`
+            : ``,
+    );
+}
