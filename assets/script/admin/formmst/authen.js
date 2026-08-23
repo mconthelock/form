@@ -1,0 +1,223 @@
+import 'select2/dist/css/select2.min.css';
+import select2 from 'select2';
+import { showLoader } from '@amec/webasset/preloader';
+import { showErrorMessage, showConfirm } from '@amec/webasset/utils';
+import { setSelect2 } from '@amec/webasset/select2';
+import { createTable } from '@amec/webasset/dataTable';
+import { tableOption, tableFillSelect } from '../../utils';
+import {
+    getFormMaster,
+    getFormDept,
+    getOrganizations,
+    getAmecUsers,
+} from '../../service';
+import { updateFormMaster } from './data';
+
+var table;
+select2();
+$(document).ready(async function (e) {
+    try {
+        await reloadTable();
+        await bindEvents();
+    } catch (error) {
+        console.error(error);
+        showErrorMessage();
+        return;
+    } finally {
+        await showLoader({ show: false });
+    }
+});
+
+async function populateFilters() {
+    const organizations = await getOrganizations();
+    var orgData = organizations.data
+        .filter((item) => !item.SDIV.includes('Cancel'))
+        .filter((item) => !item.SDEPT.includes('Cancel'))
+        .filter((item) => !item.SSEC.includes('Cancel'));
+
+    //Division Filter
+    const divisions = [...new Set(orgData.map((item) => item.SDIVCODE))].filter(
+        (item) => item,
+    );
+    const divOptions = divisions.map((divCode) => {
+        const divData = orgData.find((item) => item.SDIVCODE === divCode);
+        return {
+            value: divCode,
+            text: divData?.SDIV || divCode,
+        };
+    });
+    await tableFillSelect(
+        '#table-division-filter',
+        divOptions,
+        'value',
+        'text',
+    );
+    await setSelect2({
+        element: $('#table-division-filter'),
+        placeholder: 'Filter by Division',
+    });
+
+    // Department Filter
+    const department = [
+        ...new Set(orgData.map((item) => item.SDEPCODE)),
+    ].filter((item) => item);
+    const depOptions = department.map((depCode) => {
+        const depData = orgData.find((item) => item.SDEPCODE === depCode);
+        return {
+            value: depCode,
+            text: depData?.SDEPT || depCode,
+        };
+    });
+    await tableFillSelect(
+        '#table-department-filter',
+        depOptions,
+        'value',
+        'text',
+    );
+    await setSelect2({
+        element: $('#table-department-filter'),
+        placeholder: 'Filter by Department',
+    });
+
+    //Section Filter
+    const section = [...new Set(orgData.map((item) => item.SSECCODE))].filter(
+        (item) => item,
+    );
+    const secOptions = section.map((secCode) => {
+        const secData = orgData.find((item) => item.SSECCODE === secCode);
+        return {
+            value: secCode,
+            text: secData?.SSEC || secCode,
+        };
+    });
+    await tableFillSelect('#table-section-filter', secOptions, 'value', 'text');
+    await setSelect2({
+        element: $('#table-section-filter'),
+        placeholder: 'Filter by Section',
+    });
+}
+
+function bindEvents() {
+    $('#table-search').on('input', function () {
+        table.search($(this).val()).draw();
+    });
+
+    $('#table-owner-filter').on('change', function () {
+        table
+            .column(0)
+            .search('^' + $(this).val() + '$', true, false)
+            .draw();
+    });
+
+    $('#reset-filter').on('click', function () {
+        $('#table-search').val('');
+        $('#table-owner-filter').val('').trigger('change.select2');
+
+        table.search('');
+        table.columns().search('');
+        table.page('first').draw('full-reset');
+    });
+}
+
+async function reloadTable() {
+    await populateFilters();
+    const data = await getAmecUsers();
+    if (!table) {
+        await createTableOption(data);
+    } else {
+        table.clear();
+        table.rows.add(data);
+        table.draw();
+    }
+}
+
+async function createTableOption(data) {
+    const opt = { ...tableOption };
+    opt.dom = `dom: '<"flex mb-3 items-center"<"flex-1"><"flex-none flex flex-row gap-2 table-option">><"bg-white border border-slate-300 rounded-lg overflow-x-auto my-5"t><"flex flex-col items-center gap-3 mt-5 lg:flex-row"<"flex-1"p><"flex-none flex gap-3 items-center table-foot-option"i>>`;
+    opt.data = data;
+    opt.pageLength = 10;
+    opt.order = [
+        [0, 'asc'],
+        [1, 'asc'],
+        [2, 'asc'],
+        [3, 'asc'],
+    ];
+    opt.columns = [
+        { data: 'SDIVCODE', className: 'hidden' },
+        { data: 'SDEPCODE', className: 'hidden' },
+        { data: 'SSECCODE', className: 'hidden' },
+        { data: 'STARTDATE', className: 'hidden' },
+        {
+            data: 'SEMPNO',
+            title: 'Employee No.',
+            className: 'sticky-column',
+        },
+        {
+            data: 'SNAME',
+            title: 'Name',
+            className: 'sticky-column',
+        },
+        {
+            data: 'SDIV',
+            title: 'Division',
+            className: 'sticky-column',
+        },
+        { data: 'SDEPT', title: 'Department' },
+        {
+            data: 'SSEC',
+            title: 'Section',
+        },
+        {
+            data: 'SPOSNAME',
+            title: 'Position',
+        },
+        {
+            data: 'SEMPNO',
+            title: `<input type="checkbox" class="checkbox check-all" data-id="1" /> AMD`,
+            className: 'text-center',
+            sortable: false,
+            render: function (data) {
+                return `<input type="radio" name="auth-${data}" class="radio" value="ADM"/>`;
+            },
+        },
+        {
+            data: 'SEMPNO',
+            title: `<input type="checkbox" class="checkbox check-all" data-id="2"  /> USR`,
+            className: 'text-center',
+            sortable: false,
+            render: function (data) {
+                return `<input type="radio" name="auth-${data}" class="radio" value="USR"/>`;
+            },
+        },
+        {
+            data: 'SEMPNO',
+            title: `<input type="checkbox" class="checkbox check-all" data-id="3"  /> OPR`,
+            className: 'text-center',
+            sortable: false,
+            render: function (data) {
+                return `<input type="radio" name="auth-${data}" class="radio" value="OPR"/>`;
+            },
+        },
+    ];
+    table = await createTable(opt);
+}
+
+$(document).on('click', '.check-all', function () {
+    const id = Number($(this).data('id'));
+    const isChecked = $(this).is(':checked');
+    const role = id === 1 ? 'ADM' : id === 2 ? 'USR' : 'OPR';
+
+    table.rows({ page: 'all' }).every(function () {
+        const rowData = this.data();
+        const empNo = rowData?.SEMPNO;
+        console.log(empNo);
+        // if (!empNo) {
+        //     return;
+        // }
+
+        // $(`input[name="auth-${empNo}"][value="${role}"]`).prop(
+        //     'checked',
+        //     isChecked,
+        // );
+    });
+});

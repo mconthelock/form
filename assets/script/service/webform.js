@@ -65,3 +65,20 @@ export async function getFormMasterGroup() {
         });
     });
 }
+
+export async function getOrganizations(q) {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `${process.env.APP_API}/webform/organizations/search`,
+            type: 'POST',
+            dataType: 'json',
+            data: q,
+            success: function (response) {
+                resolve(response);
+            },
+            error: function (error) {
+                reject(error);
+            },
+        });
+    });
+}

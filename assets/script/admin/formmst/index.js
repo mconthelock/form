@@ -25,7 +25,7 @@ $(document).ready(async function (e) {
         await reloadTable();
         await bindEvents();
     } catch (error) {
-        console.log(error);
+        console.error(error);
         showErrorMessage();
         return;
     } finally {
@@ -77,9 +77,6 @@ async function reloadTable() {
             deptname: deptInfo ? deptInfo : null,
         };
     });
-
-    console.log(dept);
-
     await populateFilters(mergedData, dept);
     if (!table) {
         await createTableOption(mergedData);
@@ -160,13 +157,15 @@ async function createTableOption(data) {
             data: null,
             title: 'Action',
             orderable: false,
-            className: 'text-center',
+            className: 'text-center text-nowrap!',
             render: function (data, type, row) {
                 return `<a href="${process.env.APP_ENV}/admin/formmaster/detail/${row.NNO}/${row.VORGNO}/${row.CYEAR}/" class="btn btn-sm btn-circle btn-ghost"><i class="fi fi-rr-play text-xl text-primary"></i></a>
 
                 <a href="#" class="btn btn-sm btn-circle btn-ghost disable-form ${row.CSTATUS === '1' ? '' : 'hidden'}"><i class="fi fi-rr-ban text-xl text-red-500"></i></a>
 
-                <a href="#" class="btn btn-sm btn-circle btn-ghost enable-form ${row.CSTATUS === '1' ? 'hidden' : ''}"><i class="fi fi-rr-rotate-right text-xl text-slate-600"></i></a>
+                <a href="#" class="btn btn-sm btn-circle btn-ghost enable-form ${row.CSTATUS === '1' ? 'hidden' : ''}"><i class="fi fi-rr-rotate-right text-xl text-slate-500"></i></a>
+
+                <a href="${process.env.APP_ENV}/admin/formmaster/authen/${row.NNO}/${row.VORGNO}/${row.CYEAR}/" class="btn btn-sm btn-circle btn-ghost"><i class="fi fi-rr-user text-xl text-slate-500"></i></a>
                 `;
             },
         },
