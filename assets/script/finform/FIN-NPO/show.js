@@ -121,7 +121,7 @@ $(document).on('click', 'button[name="btnAction"]', async function (event) {
         }
 
         showMessage(result?.message || 'Workflow action completed', 'success');
-        redirectBackToWebflow();
+        redirectToWaitApproval();
     } catch (error) {
         console.error(error);
         showMessage(error.message || 'Cannot process workflow action', 'error');
@@ -148,11 +148,15 @@ function redirectBackToWebflow() {
         return;
     }
 
-    const webflowPath = window.location.host.includes('amecwebtest')
-        ? 'formtest'
-        : 'form';
+    redirectToWaitApproval();
+}
+
+function redirectToWaitApproval() {
+    const webflowBase = new URL(
+        process.env.APP_WEBFLOW || window.location.origin,
+    );
     window.location.assign(
-        new URL(`/${webflowPath}/workflow/WaitApv.asp`, webflowBase).toString(),
+        new URL('/form/workflow/WaitApv.asp', webflowBase).toString(),
     );
 }
 

@@ -537,5 +537,5 @@
 @endsection
 
 @section('scripts')
-    <script src="{{ $_ENV['APP_JS'] }}/finNpoCreate.js?ver={{ $GLOBALS['version'] }}"></script>
+    <script src="{{ $_ENV['APP_JS'] }}/finNpoCreate.js?ver={{ $GLOBALS['version'] }}&rev=1"></script>
 @endsection

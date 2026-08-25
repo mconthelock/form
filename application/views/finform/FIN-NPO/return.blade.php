@@ -11,5 +11,5 @@
 @endsection
 
 @section('scripts')
-    <script src="{{ $_ENV['APP_JS'] }}/finNpoReturn.js?ver={{ $GLOBALS['version'] }}"></script>
+    <script src="{{ $_ENV['APP_JS'] }}/finNpoReturn.js?ver={{ $GLOBALS['version'] }}&rev=1"></script>
 @endsection

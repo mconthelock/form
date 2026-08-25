@@ -854,11 +854,7 @@ $(document).on(
                 throw new Error(res?.message || 'Cannot submit request');
             }
 
-            if (isReturnMode) {
-                redirectBackToWebflow();
-            } else {
-                redirectToWaitApproval();
-            }
+            redirectToWaitApproval();
         } catch (error) {
             console.error(error);
             showMessage(error.message || 'Cannot submit request', 'error');
@@ -932,49 +928,14 @@ async function actionReturnForm(payload) {
     return actionResult?.status === false ? actionResult : updateResult;
 }
 
-function redirectBackToWebflow() {
-    const params = new URLSearchParams(window.location.search);
-    const backPath = params.get('bp');
-    const webflowBase = new URL(
-        process.env.APP_WEBFLOW || window.location.origin,
-    );
-
-    if (backPath) {
-        window.location.assign(new URL(backPath, webflowBase).toString());
-        return;
-    }
-
-    redirectToWaitApproval();
-}
-
 function redirectToWaitApproval() {
     const webflowBase = new URL(
         process.env.APP_WEBFLOW || window.location.origin,
     );
-    const webflowPath = getWebflowPath();
 
     window.location.assign(
-        new URL(`/${webflowPath}/workflow/WaitApv.asp`, webflowBase).toString(),
+        new URL('/form/workflow/WaitApv.asp', webflowBase).toString(),
     );
-}
-
-function getWebflowPath() {
-    const params = new URLSearchParams(window.location.search);
-    const environmentSources = [
-        window.location.host,
-        params.get('bp'),
-        process.env.APP_ENV,
-        process.env.APP_API,
-        process.env.APP_CDN,
-    ]
-        .filter(Boolean)
-        .join(' ')
-        .toLowerCase();
-
-    return environmentSources.includes('amecwebtest') ||
-        /(^|\/)formtest(\/|$)/.test(environmentSources)
-        ? 'formtest'
-        : 'form';
 }
 
 function getCextDataValue(value) {
