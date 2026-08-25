@@ -10,6 +10,7 @@ import {
     getFormDept,
     getOrganizations,
     getAmecUsers,
+    getFormAuthen,
 } from '../../service';
 import { updateFormMaster } from './data';
 
@@ -121,12 +122,16 @@ function bindEvents() {
 
 async function reloadTable() {
     await populateFilters();
-    const data = await getAmecUsers();
+    const no = $('#form-authen-data').data('no');
+    const org = $('#form-authen-data').data('org');
+    const cyear = $('#form-authen-data').data('cyear');
+    const data = await getFormAuthen(no, org, cyear);
+    const dataFiltered = data.filter((item) => item.SPOSCODE != '80');
     if (!table) {
-        await createTableOption(data);
+        await createTableOption(dataFiltered);
     } else {
         table.clear();
-        table.rows.add(data);
+        table.rows.add(dataFiltered);
         table.draw();
     }
 }
@@ -172,30 +177,30 @@ async function createTableOption(data) {
             title: 'Position',
         },
         {
-            data: 'SEMPNO',
-            title: `<input type="checkbox" class="checkbox check-all" data-id="1" /> AMD`,
+            data: 'auth',
+            title: `<input type="checkbox" class="checkbox check-all" data-id="2" /> ADM`,
             className: 'text-center',
             sortable: false,
-            render: function (data) {
-                return `<input type="radio" name="auth-${data}" class="radio" value="ADM"/>`;
+            render: function (data, type, row) {
+                return `<input type="radio" name="auth-${row.SEMPNO}" class="radio" value="002" ${data[0]?.CAUTHNO == '002' ? 'checked' : ''} />`;
             },
         },
         {
-            data: 'SEMPNO',
-            title: `<input type="checkbox" class="checkbox check-all" data-id="2"  /> USR`,
+            data: 'auth',
+            title: `<input type="checkbox" class="checkbox check-all" data-id="1"  /> OPR`,
             className: 'text-center',
             sortable: false,
-            render: function (data) {
-                return `<input type="radio" name="auth-${data}" class="radio" value="USR"/>`;
+            render: function (data, type, row) {
+                return `<input type="radio" name="auth-${row.SEMPNO}" class="radio" value="001" ${data[0]?.CAUTHNO == '001' ? 'checked' : ''} />`;
             },
         },
         {
-            data: 'SEMPNO',
-            title: `<input type="checkbox" class="checkbox check-all" data-id="3"  /> OPR`,
+            data: 'auth',
+            title: `<input type="checkbox" class="checkbox check-all" data-id="3"  /> USR`,
             className: 'text-center',
             sortable: false,
-            render: function (data) {
-                return `<input type="radio" name="auth-${data}" class="radio" value="OPR"/>`;
+            render: function (data, type, row) {
+                return `<input type="radio" name="auth-${row.SEMPNO}" class="radio" value="003" ${data[0]?.CAUTHNO == '003' || data.length == 0 ? 'checked' : ''} />`;
             },
         },
     ];

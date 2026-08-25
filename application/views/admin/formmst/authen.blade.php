@@ -1,6 +1,8 @@
 @extends('layouts/template')
 
 @section('contents')
+    <div class="hidden" id="form-authen-data" data-no="{{ $no }}" data-org="{{ $org }}"
+        data-cyear="{{ $cyear }}"></div>
     <div class="space-y-3 mb-8">
         <div>
             <h1 class="text-3xl text-primary font-bold line-clamp-1" id="page-title">
