@@ -46,7 +46,6 @@ $(async function () {
     await Promise.allSettled([
         renderPurpose(),
         renderVendor(),
-        renderCurrency(),
         setInitialEmployee(empno),
     ]);
     if (isReturnMode) {
@@ -58,8 +57,13 @@ $(async function () {
 
 async function loadReturnData() {
     const form = getReturnFormKey();
-    const parts = [form.NFRMNO, form.VORGNO, form.CYEAR, form.CYEAR2, form.NRUNNO]
-        .map(encodeURIComponent);
+    const parts = [
+        form.NFRMNO,
+        form.VORGNO,
+        form.CYEAR,
+        form.CYEAR2,
+        form.NRUNNO,
+    ].map(encodeURIComponent);
     const [formDetail, response, costCenterResponse] = await Promise.all([
         getFormDetail(form),
         fetchUtils({
@@ -80,9 +84,16 @@ async function loadReturnData() {
     $('#FORMNO').val(formDetail?.FORMNO || formDetail?.VFORMNO || '');
     $('#INPUTBY').val(inputBy);
     $('#REQBY').val(requestBy);
-    await Promise.all([setInitialEmployee(inputBy), setRequesterEmployee(requestBy)]);
-    $('#EXPENSE_ID').val(head.EXPENSE_CODE || '').trigger('change');
-    $('#VENDOR_CODE').val(String(head.VENDOR_CODE || '')).trigger('change');
+    await Promise.all([
+        setInitialEmployee(inputBy),
+        setRequesterEmployee(requestBy),
+    ]);
+    $('#EXPENSE_ID')
+        .val(head.EXPENSE_CODE || '')
+        .trigger('change');
+    $('#VENDOR_CODE')
+        .val(String(head.VENDOR_CODE || ''))
+        .trigger('change');
     const employeeCodes = normalizeList(costCenterResponse)
         .filter(
             (item) =>
@@ -99,10 +110,10 @@ async function loadReturnData() {
             INVOICE_DATE: String(invoice.INVOICE_DATE || '').substring(0, 10),
             INVOICE_NO: invoice.INVOICE_NO || '',
             TOTAL_AMOUNT: invoice.TOTAL_AMT,
-            VAT: Number(invoice.TOTAL_AMT || 0) - Number(invoice.NET_PRICE || 0),
+            VAT:
+                Number(invoice.TOTAL_AMT || 0) - Number(invoice.NET_PRICE || 0),
             NET_PRICE: invoice.NET_PRICE,
-            CURRENCY: invoice.SCURCODE,
-            VAT_PERCENT: invoice.VAT_RATE_ID,
+            REFERENCE: invoice.REFERENCE ?? invoice.REMARK ?? '',
         })),
     );
     renderExistingAttachments(data.files || data.FILES || []);
@@ -113,11 +124,15 @@ function renderExistingAttachments(files = []) {
     const container = $('#existingAttachmentList');
     if (!container.length) return;
 
-    const attachmentFiles = Array.isArray(files) ? files : Object.values(files || {});
+    const attachmentFiles = Array.isArray(files)
+        ? files
+        : Object.values(files || {});
     container.removeClass('hidden');
 
     if (!attachmentFiles.length) {
-        container.html('<p class="text-xs text-base-content/50">No existing attachment</p>');
+        container.html(
+            '<p class="text-xs text-base-content/50">No existing attachment</p>',
+        );
         return;
     }
 
@@ -230,13 +245,6 @@ export async function getPurpose() {
 export async function getVendor() {
     return await fetchUtils({
         url: `${process.env.APP_API}/finform/fin-npo/vendor`,
-        method: 'GET',
-    });
-}
-
-export async function getCurrency() {
-    return await fetchUtils({
-        url: `${process.env.APP_API}/finform/fin-npo/currency`,
         method: 'GET',
     });
 }
@@ -424,17 +432,6 @@ async function renderVendor() {
     }
 }
 
-let currencyList = [];
-
-async function renderCurrency() {
-    try {
-        currencyList = normalizeList(await getCurrency());
-    } catch (error) {
-        console.error('Failed to load currency:', error);
-        currencyList = [];
-    }
-}
-
 /*--------------------READY FUNCTION--------------------*/
 
 async function setInitialEmployee(empno) {
@@ -614,33 +611,6 @@ function numberValue(value) {
     return Number(value) || 0;
 }
 
-function formatVatPercent(value) {
-    if (value === '' || value === null || value === undefined) return '';
-
-    return `${Math.round(numberValue(value))}%`;
-}
-
-function currencyOptions(selectedValue = '') {
-    const options = currencyList
-        .map((item) => {
-            const currency = getFirstValue(item, [
-                'CURRENCY',
-                'SCURCODE',
-                'CODE',
-            ]);
-            const selected =
-                String(currency) === String(selectedValue) ? 'selected' : '';
-
-            if (!currency) return '';
-
-            return `<option value="${escapeHtml(currency)}" ${selected}>${escapeHtml(currency)}</option>`;
-        })
-        .filter(Boolean)
-        .join('');
-
-    return `<option value=""></option>${options}`;
-}
-
 function emptyInvoiceRow() {
     return {
         LINEID: ++invoiceLineId,
@@ -649,12 +619,11 @@ function emptyInvoiceRow() {
         TOTAL_AMOUNT: '',
         VAT: '',
         NET_PRICE: '',
-        CURRENCY: '',
-        VAT_PERCENT: '',
+        REFERENCE: '',
     };
 }
 
-function invoiceRowHtml(row = {}) {
+function invoiceRowHtml(row = {}, removable = false) {
     return `<tr data-lineid="${escapeHtml(row.LINEID || ++invoiceLineId)}">
         <td><input type="text" name="INVOICE_DATE[]" value="${escapeHtml(row.INVOICE_DATE)}"
             class="invoice-date input input-sm input-bordered w-full bg-white" required></td>
@@ -666,11 +635,9 @@ function invoiceRowHtml(row = {}) {
             class="vat input input-sm input-bordered w-full bg-white text-right"></td>
         <td><input type="number" step="0.01" name="NET_PRICE[]" value="${escapeHtml(row.NET_PRICE)}"
             class="net-price input input-sm input-bordered w-full bg-base-200/80 text-right" readonly></td>
-        <td><select name="CURRENCY[]" class="currency select select-sm select-bordered w-full bg-white" required>
-            ${currencyOptions(row.CURRENCY)}
-        </select></td>
-        <td><input type="text" name="VAT_PERCENT[]" value="${escapeHtml(formatVatPercent(row.VAT_PERCENT))}"
-            class="vat-percent input input-sm input-bordered w-full bg-base-200/80 text-right" readonly></td>
+        <td><input type="text" name="REFERENCE[]" value="${escapeHtml(row.REFERENCE)}" maxlength="255"
+            class="reference input input-sm input-bordered w-full bg-white"></td>
+        <td>${removable ? `<button type="button" class="remove-invoice-row btn btn-square btn-sm" aria-label="Remove invoice row" title="Remove invoice row">&times;</button>` : ''}</td>
     </tr>`;
 }
 
@@ -685,16 +652,10 @@ function calculateInvoiceRow(row) {
     const totalAmount = numberValue(rowElement.find('.total-amount').val());
     const vat = numberValue(rowElement.find('.vat').val());
     const netPrice = totalAmount - vat;
-    const vatPercent = netPrice
-        ? ((totalAmount - netPrice) / netPrice) * 100
-        : null;
 
     rowElement
         .find('.net-price')
         .val(totalAmount || vat ? netPrice.toFixed(2) : '');
-    rowElement
-        .find('.vat-percent')
-        .val(vatPercent === null ? '' : formatVatPercent(vatPercent));
 }
 
 function createTableStamp(data = []) {
@@ -708,11 +669,11 @@ function createTableStamp(data = []) {
             <th>Total Amount </th>
             <th>VAT</th>
             <th class="invoice-header-blue">Net Price</th>
-            <th class="invoice-header-orange">Currency</th>
-            <th class="invoice-header-blue"> % VAT </th>
+            <th>Reference</th>
+            <th>Action</th>
         </tr>
     </thead>
-    <tbody>${tableData.map(invoiceRowHtml).join('')}</tbody>`);
+    <tbody>${tableData.map((row) => invoiceRowHtml(row)).join('')}</tbody>`);
 
     $('#stampTable tbody tr').each(function () {
         calculateInvoiceRow(this);
@@ -721,8 +682,12 @@ function createTableStamp(data = []) {
 }
 
 $(document).on('click', '#addStampRow', function () {
-    $('#stampTable tbody').append(invoiceRowHtml(emptyInvoiceRow()));
+    $('#stampTable tbody').append(invoiceRowHtml(emptyInvoiceRow(), true));
     setInvoiceDatePicker();
+});
+
+$(document).on('click', '.remove-invoice-row', function () {
+    $(this).closest('tr').remove();
 });
 
 $(document).on(
@@ -739,161 +704,166 @@ $(document).on(
 let isSubmitting = false;
 
 $(document).on(
-    'click', '#btnRequest, button[name="btnAction"][value="save"]',
+    'click',
+    '#btnRequest, button[name="btnAction"][value="save"]',
     async function (e) {
-    e.preventDefault();
+        e.preventDefault();
 
-    if (isSubmitting) return;
+        if (isSubmitting) return;
 
-    const requestButton = $(this);
+        const requestButton = $(this);
 
-    try {
-        const requiredMessage = [
-            {
-                element: $('#INPUTBY'),
-                message:
-                    'Input employee code is missing. Please open the form again from Webflow.',
-            },
-            {
-                element: $('#REQBY'),
-                message: 'Please enter requester employee code.',
-            },
-            {
-                element: $('#FULLDP'),
-                message:
-                    'Requester section was not found. Please check the employee code.',
-            },
-            {
-                element: $('#EXPENSE_ID'),
-                message: 'Please select expense type.',
-            },
-            { element: $('#VENDOR_CODE'), message: 'Please select vendor.' },
-        ];
+        try {
+            const requiredMessage = [
+                {
+                    element: $('#INPUTBY'),
+                    message:
+                        'Input employee code is missing. Please open the form again from Webflow.',
+                },
+                {
+                    element: $('#REQBY'),
+                    message: 'Please enter requester employee code.',
+                },
+                {
+                    element: $('#FULLDP'),
+                    message:
+                        'Requester section was not found. Please check the employee code.',
+                },
+                {
+                    element: $('#EXPENSE_ID'),
+                    message: 'Please select expense type.',
+                },
+                {
+                    element: $('#VENDOR_CODE'),
+                    message: 'Please select vendor.',
+                },
+            ];
 
-        if (!(await requiredForm('#form', requiredMessage))) return;
+            if (!(await requiredForm('#form', requiredMessage))) return;
 
-        const selectedExpense = $('#EXPENSE_ID');
+            const selectedExpense = $('#EXPENSE_ID');
 
-        if (!selectedExpense.val()) {
-            showMessage('Please select expense type.', 'warning');
-            return;
-        }
+            if (!selectedExpense.val()) {
+                showMessage('Please select expense type.', 'warning');
+                return;
+            }
 
-        const invoiceList = [];
+            const invoiceList = [];
 
-        $('#stampTable tbody tr').each(function (index) {
-            const row = $(this);
-            const invoice = {
-                LINE_ID: index + 1,
-                INVOICE_DATE: row.find('.invoice-date').val() || '',
-                INVOICE_NO: row.find('.invoice-no').val()?.trim() || '',
-                TOTAL_AMOUNT: numberValue(row.find('.total-amount').val()),
-                VAT: numberValue(row.find('.vat').val()),
-                NET_PRICE: numberValue(row.find('.net-price').val()),
-                CURRENCY: row.find('.currency').val() || '',
-                VAT_PERCENT: numberValue(row.find('.vat-percent').val()),
+            $('#stampTable tbody tr').each(function (index) {
+                const row = $(this);
+                const invoice = {
+                    LINE_ID: index + 1,
+                    INVOICE_DATE: row.find('.invoice-date').val() || '',
+                    INVOICE_NO: row.find('.invoice-no').val()?.trim() || '',
+                    TOTAL_AMOUNT: numberValue(row.find('.total-amount').val()),
+                    VAT: numberValue(row.find('.vat').val()),
+                    NET_PRICE: numberValue(row.find('.net-price').val()),
+                    REFERENCE: row.find('.reference').val()?.trim() || '',
+                };
+
+                invoiceList.push(invoice);
+            });
+
+            const invalidInvoiceIndex = invoiceList.findIndex(
+                (invoice) =>
+                    !invoice.INVOICE_DATE ||
+                    !invoice.INVOICE_NO ||
+                    invoice.TOTAL_AMOUNT <= 0,
+            );
+
+            if (invalidInvoiceIndex >= 0) {
+                showMessage(
+                    `Please complete Invoice Date, Invoice No. and Total Amount in row ${invalidInvoiceIndex + 1}.`,
+                    'warning',
+                );
+                return;
+            }
+
+            const attachmentInput = document.getElementById('attachfile');
+
+            if (!isReturnMode && !attachmentInput?.files?.length) {
+                showMessage('Please attach at least one file.', 'warning');
+                attachmentInput?.focus();
+                return;
+            }
+
+            const airSalesBy = $('.air-sales-by')
+                .map((_, input) => $(input).val().trim())
+                .get()
+                .filter(Boolean);
+            const isTravelingAbroad = isTravelingAbroadPurpose(
+                selectedExpense.find('option:selected')[0],
+            );
+
+            if (isTravelingAbroad && airSalesBy.length === 0) {
+                showMessage(
+                    'Please enter at least one employee who is traveling abroad.',
+                    'warning',
+                );
+                return;
+            }
+
+            const requesterCode = String($('#REQBY').val() || '').trim();
+            const costCenterEmployees = isTravelingAbroad
+                ? airSalesBy
+                : [requesterCode];
+
+            const payload = {
+                INPUTBY: String($('#INPUTBY').val() || '').trim(),
+                REQBY: requesterCode,
+                // FIN-NPO API currently stores this value in the SUBJECT field.
+                SUBJECT: String($('#FULLDP').val() || '').trim(),
+                EXPENSE_CODE: Number(selectedExpense.val()),
+                VENDOR_CODE: $('#VENDOR_CODE').val() || '',
+                // The API uses AIR_SALES_BY to create rows in the cost center table.
+                // Non-travel expenses use the requester as their cost center owner.
+                AIR_SALES_BY: costCenterEmployees,
+                DATA: invoiceList.map((invoice) => ({
+                    LINE_ID: invoice.LINE_ID,
+                    INVOICE_DATE: invoice.INVOICE_DATE,
+                    INVOICE_NO: invoice.INVOICE_NO,
+                    NET_PRICE: invoice.NET_PRICE,
+                    REFERENCE: invoice.REFERENCE,
+                    VAT_RATE_ID: invoice.NET_PRICE
+                        ? Math.round((invoice.VAT / invoice.NET_PRICE) * 100)
+                        : 0,
+                    TOTAL_AMT: invoice.TOTAL_AMOUNT,
+                    SCURCODE: 'THB',
+                })),
             };
 
-            invoiceList.push(invoice);
-        });
-
-        const invalidInvoiceIndex = invoiceList.findIndex(
-            (invoice) =>
-                !invoice.INVOICE_DATE ||
-                !invoice.INVOICE_NO ||
-                invoice.TOTAL_AMOUNT <= 0 ||
-                !invoice.CURRENCY,
-        );
-
-        if (invalidInvoiceIndex >= 0) {
-            showMessage(
-                `Please complete Invoice Date, Invoice No., Total Amount and Currency in row ${invalidInvoiceIndex + 1}.`,
-                'warning',
+            console.log(
+                'Submitting FIN-NPO payload JSON:\n',
+                JSON.stringify(payload, null, 2),
             );
-            return;
-        }
 
-        const attachmentInput = document.getElementById('attachfile');
+            isSubmitting = true;
+            requestButton.prop('disabled', true);
 
-        if (!isReturnMode && !attachmentInput?.files?.length) {
-            showMessage('Please attach at least one file.', 'warning');
-            attachmentInput?.focus();
-            return;
-        }
+            const res = isReturnMode
+                ? await actionReturnForm({
+                      ...getReturnFormKey(),
+                      ACTION: 'save',
+                      REMARK: '',
+                      ...payload,
+                  })
+                : await createForm(payload);
 
-        const airSalesBy = $('.air-sales-by')
-            .map((_, input) => $(input).val().trim())
-            .get()
-            .filter(Boolean);
-        const isTravelingAbroad = isTravelingAbroadPurpose(
-            selectedExpense.find('option:selected')[0],
-        );
+            if (res?.status === false) {
+                throw new Error(res?.message || 'Cannot submit request');
+            }
 
-        if (isTravelingAbroad && airSalesBy.length === 0) {
-            showMessage(
-                'Please enter at least one employee who is traveling abroad.',
-                'warning',
-            );
-            return;
-        }
-
-        const requesterCode = String($('#REQBY').val() || '').trim();
-        const costCenterEmployees = isTravelingAbroad
-            ? airSalesBy
-            : [requesterCode];
-
-        const payload = {
-            INPUTBY: String($('#INPUTBY').val() || '').trim(),
-            REQBY: requesterCode,
-            // FIN-NPO API currently stores this value in the SUBJECT field.
-            SUBJECT: String($('#FULLDP').val() || '').trim(),
-            EXPENSE_CODE: Number(selectedExpense.val()),
-            VENDOR_CODE: $('#VENDOR_CODE').val() || '',
-            // The API uses AIR_SALES_BY to create rows in the cost center table.
-            // Non-travel expenses use the requester as their cost center owner.
-            AIR_SALES_BY: costCenterEmployees,
-            DATA: invoiceList.map((invoice) => ({
-                LINE_ID: invoice.LINE_ID,
-                INVOICE_DATE: invoice.INVOICE_DATE,
-                INVOICE_NO: invoice.INVOICE_NO,
-                NET_PRICE: invoice.NET_PRICE,
-                VAT_RATE_ID: invoice.VAT_PERCENT,
-                TOTAL_AMT: invoice.TOTAL_AMOUNT,
-                SCURCODE: invoice.CURRENCY,
-            })),
-        };
-
-        console.log('Submitting FIN-NPO payload:', payload);
-
-        isSubmitting = true;
-        requestButton.prop('disabled', true);
-
-        const res = isReturnMode
-            ? await actionReturnForm({
-                  ...getReturnFormKey(),
-                  ACTION: 'save',
-                  REMARK: '',
-                  ...payload,
-              })
-            : await createForm(payload);
-
-        if (res?.status === false) {
-            throw new Error(res?.message || 'Cannot submit request');
-        }
-
-        if (isReturnMode) {
-            redirectBackToWebflow();
-        } else {
             redirectToWaitApproval();
+        } catch (error) {
+            console.error(error);
+            showMessage(error.message || 'Cannot submit request', 'error');
+        } finally {
+            isSubmitting = false;
+            requestButton.prop('disabled', false);
         }
-    } catch (error) {
-        console.error(error);
-        showMessage(error.message || 'Cannot submit request', 'error');
-    } finally {
-        isSubmitting = false;
-        requestButton.prop('disabled', false);
-    }
-});
+    },
+);
 
 export async function createForm(payload) {
     const formData = new FormData();
@@ -958,49 +928,14 @@ async function actionReturnForm(payload) {
     return actionResult?.status === false ? actionResult : updateResult;
 }
 
-function redirectBackToWebflow() {
-    const params = new URLSearchParams(window.location.search);
-    const backPath = params.get('bp');
-    const webflowBase = new URL(
-        process.env.APP_WEBFLOW || window.location.origin,
-    );
-
-    if (backPath) {
-        window.location.assign(new URL(backPath, webflowBase).toString());
-        return;
-    }
-
-    redirectToWaitApproval();
-}
-
 function redirectToWaitApproval() {
     const webflowBase = new URL(
         process.env.APP_WEBFLOW || window.location.origin,
     );
-    const webflowPath = getWebflowPath();
 
     window.location.assign(
-        new URL(`/${webflowPath}/workflow/WaitApv.asp`, webflowBase).toString(),
+        new URL('/form/workflow/WaitApv.asp', webflowBase).toString(),
     );
-}
-
-function getWebflowPath() {
-    const params = new URLSearchParams(window.location.search);
-    const environmentSources = [
-        window.location.host,
-        params.get('bp'),
-        process.env.APP_ENV,
-        process.env.APP_API,
-        process.env.APP_CDN,
-    ]
-        .filter(Boolean)
-        .join(' ')
-        .toLowerCase();
-
-    return environmentSources.includes('amecwebtest') ||
-        /(^|\/)formtest(\/|$)/.test(environmentSources)
-        ? 'formtest'
-        : 'form';
 }
 
 function getCextDataValue(value) {

@@ -6,16 +6,33 @@
         }
 
         #stampTable {
-            border-collapse: collapse !important;
-            border: 2px solid #0a6619 !important;
+            border-collapse: separate !important;
+            border-spacing: 0;
+            border: 1px solid #cbd5e1 !important;
+            border-radius: 0.75rem;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(15, 23, 42, 0.08);
         }
 
         #stampTable th,
         #stampTable tbody td {
-            border: 1px solid #09643a !important;
+            border: 1px solid #d7e2dc !important;
             padding: 10px 12px !important;
             vertical-align: middle;
             text-align: center;
+        }
+
+        #stampTable tbody tr {
+            background-color: #ffffff;
+            transition: background-color 0.15s ease;
+        }
+
+        #stampTable tbody tr:nth-child(even) {
+            background-color: #f8fafc;
+        }
+
+        #stampTable tbody tr:hover {
+            background-color: #ecfdf5;
         }
 
         #stampTable tbody input,
@@ -23,6 +40,20 @@
         #stampTable tbody textarea {
             min-height: 38px;
             padding: 6px 10px;
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
+        }
+
+        #stampTable .remove-invoice-row {
+            border: 1px solid #fecdd3;
+            background-color: #fff1f2;
+            color: #be123c;
+            font-size: 1.25rem;
+        }
+
+        #stampTable .remove-invoice-row:hover {
+            border-color: #fda4af;
+            background-color: #ffe4e6;
         }
 
         #stampTable th:nth-child(4),
@@ -30,12 +61,22 @@
             min-width: 130px;
         }
 
+        #stampTable th:nth-child(6),
+        #stampTable td:nth-child(6) {
+            min-width: 160px;
+        }
+
+        #stampTable th:nth-child(7),
+        #stampTable td:nth-child(7) {
+            width: 56px;
+            min-width: 56px;
+        }
+
         .required-field::after,
         #stampTable th:nth-child(1)::after,
         #stampTable th:nth-child(2)::after,
         #stampTable th:nth-child(3)::after,
-        #stampTable th:nth-child(4)::after,
-        #stampTable th:nth-child(6)::after {
+        #stampTable th:nth-child(4)::after {
             content: " *";
             color: #dc2626;
             font-weight: 700;
@@ -151,23 +192,40 @@
         }
 
         .fin-ds-accessible #stampTable thead tr {
-            background: #239400 !important;
+            background: #15803d !important;
             color: #ffffff !important;
         }
 
-        .fin-ds-accessible #stampTable thead .invoice-header-blue {
+        .fin-ds-accessible #stampTable thead th {
+            border-color: #166534 !important;
+            font-weight: 700;
+            letter-spacing: 0.01em;
+        }
+
+        .fin-ds-accessible #stampTable thead .invoice-header-blue,
+        .fin-ds-accessible #stampTable thead th:nth-child(5) {
             background: #2563eb !important;
-            color: #ffffff !important;
-        }
-
-        .fin-ds-accessible #stampTable thead .invoice-header-orange {
-            background: #f97316 !important;
+            border-color: #1d4ed8 !important;
             color: #ffffff !important;
         }
 
         .fin-ds-accessible #stampTable th,
         .fin-ds-accessible #stampTable td {
-            border: 1px solid #022502 !important;
+            border-color: #d7e2dc !important;
+        }
+
+        .fin-ds-accessible #stampTable tbody input {
+            border-color: #cbd5e1 !important;
+            border-width: 1px !important;
+        }
+
+        .fin-ds-accessible #stampTable tbody input[readonly] {
+            background-color: #f1f5f9 !important;
+        }
+
+        .fin-ds-accessible #stampTable tbody input:focus {
+            border-color: #16a34a !important;
+            outline: 3px solid rgba(34, 197, 94, 0.16) !important;
         }
     </style>
 @endsection
@@ -479,5 +537,5 @@
 @endsection
 
 @section('scripts')
-    <script src="{{ $_ENV['APP_JS'] }}/finNpoCreate.js?ver={{ $GLOBALS['version'] }}"></script>
+    <script src="{{ $_ENV['APP_JS'] }}/finNpoCreate.js?ver={{ $GLOBALS['version'] }}&rev=1"></script>
 @endsection

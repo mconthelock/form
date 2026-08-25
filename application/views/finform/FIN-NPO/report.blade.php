@@ -100,5 +100,5 @@
 @endsection
 
 @section('scripts')
-<script src="{{ $_ENV['APP_JS'] }}/finNpoReport.js?ver={{ $GLOBALS['version'] }}&rev=6"></script>
+<script src="{{ $_ENV['APP_JS'] }}/finNpoReport.js?ver={{ $GLOBALS['version'] }}&rev=9"></script>
 @endsection
