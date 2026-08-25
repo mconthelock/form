@@ -85,13 +85,13 @@ $(document).on('click', 'button[name="btnAction"]', async function (event) {
     const buttonAction = String($(this).val() || '').toLowerCase();
     const action = buttonAction === 'save' ? 'approve' : buttonAction;
     const remark = String($('#remark').val() || '').trim();
-    const invalidWht = $('.wht-input').filter(
+    const invalidTaxCode = $('.wht-input').filter(
         (_, input) => !input.checkValidity(),
     )[0];
 
-    if (invalidWht) {
-        showMessage('WHT must be zero or a positive number.', 'warning');
-        invalidWht.focus();
+    if (invalidTaxCode) {
+        showMessage('Tax code must contain exactly 7 digits.', 'warning');
+        invalidTaxCode.focus();
         return;
     }
 
@@ -454,25 +454,24 @@ async function renderInvoiceTable(invoices = [], canEditWht = false) {
                     <td>${escapeHtml(formatDate(invoice.INVOICE_DATE))}</td>
                     <td>${escapeHtml(invoice.INVOICE_NO || '')}</td>
                     <td>${escapeHtml(formatNumber(invoice.NET_PRICE))}</td>
-                    <td>${escapeHtml(formatVat(invoice.VAT_RATE_ID))}</td>
+                    <td>${escapeHtml(formatNumber(Number(invoice.TOTAL_AMT) - Number(invoice.NET_PRICE)))}</td>
                     <td>${escapeHtml(formatNumber(invoice.TOTAL_AMT))}</td>
-                    <td>${escapeHtml(invoice.SCURCODE || '')}</td>
                     <td>
-                        <input type="number" min="0" step="0.01"
+                        <input type="text" inputmode="numeric" pattern="[0-9]{7}" maxlength="7"
                             class="wht-input input input-sm input-bordered w-full"
                             data-invoice-id="${escapeHtml(invoice.ID || invoice.LINE_ID || index + 1)}"
-                            value="${escapeHtml(invoice.WHT ?? '')}"
+                            value="${escapeHtml(formatTaxCode(invoice.WHT))}"
                             ${canEditWht ? '' : 'readonly'}
-                            placeholder="Optional" />
+                            placeholder="7 digits" />
                     </td>
                 </tr>`,
               )
               .join('')
-        : '<tr><td colspan="8" class="text-center">No invoice information</td></tr>';
+        : '<tr><td colspan="7" class="text-center">No invoice information</td></tr>';
 
     $('#stampTable').html(`<thead><tr>
         <th>No.</th><th>Invoice Date</th><th>Invoice No.</th>
-        <th>Net Price</th><th>VAT Rate</th><th>Total Amount</th><th>Currency</th><th>WHT</th>
+        <th>Net Price</th><th>VAT</th><th>Total Amount</th><th>Tax code</th>
     </tr></thead><tbody>${rows}</tbody>`);
 }
 
@@ -591,9 +590,9 @@ function formatNumber(value) {
     });
 }
 
-function formatVat(value) {
-    const text = formatNumber(value);
-    return `${text}%`;
+function formatTaxCode(value) {
+    const code = String(value ?? '').trim();
+    return code ? code.padStart(7, '0') : '';
 }
 
 function getCextDataValue(value) {
