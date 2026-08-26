@@ -302,7 +302,6 @@ function normalizeShowData(response) {
 }
 
 function renderHeader(head = {}, expense = {}, vendor = {}) {
-    $('#SUBJECT').val(head.SUBJECT || '');
     $('#EXPENSE_CODE').val(head.EXPENSE_CODE || expense.EXPENSE_CODE || '');
     $('#EXPENSE_NAME').val(
         [expense.EXPENSE_TNAME, expense.EXPENSE_ENAME]
