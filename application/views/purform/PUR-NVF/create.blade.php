@@ -186,8 +186,14 @@
                             <div class="flex-1 flex flex-col gap-3 w-full">
                                 <div>
                                     <label class="block mb-1 text-xs font-bold text-gray-600">Address (ที่อยู่)</label>
-                                    <input type="text" name="ADDRESS_EN" id="ADDRESS_EN" maxlength="200"
+                                    <input type="text" name="ADDRESS1_EN" id="ADDRESS1_EN" maxlength="30"
                                         class="input input-bordered input-sm w-full req bg-gray-50 border-gray-300"
+                                        placeholder="e.g. 43/86 Moo 16, Bangna Road...">
+                                </div>
+                                <div>
+                                    <label class="block mb-1 text-xs font-bold text-gray-600">Address (ที่อยู่)</label>
+                                    <input type="text" name="ADDRESS2_EN" id="ADDRESS2_EN" maxlength="200"
+                                        class="input input-bordered input-sm w-full  bg-gray-50 border-gray-300"
                                         placeholder="e.g. 43/86 Moo 16, Bangna Road...">
                                 </div>
 
@@ -261,10 +267,10 @@
                                 </label>
                             </div>
                             <div class="flex items-start gap-4 w-full md:w-1/2">
-                                <span class="required w-32 shrink-0 pt-2 font-semibold">Web site</span>
+                                <span class="w-32 shrink-0 pt-2 font-semibold">Web site</span>
                                 <label class="flex-1">
                                     <input type="text" name="WEBSITE" id="WEBSITE" maxlength="200"
-                                        class="input input-sm w-full req">
+                                        class="input input-sm w-full">
                                 </label>
                             </div>
                         </div>
@@ -289,27 +295,27 @@
                         <!-- Bank Name & Branch Name -->
                         <div class="flex flex-col md:flex-row gap-4 mb-4">
                             <div class="flex items-start gap-4 w-full md:w-1/2">
-                                <span class="required w-32 shrink-0 pt-2 font-semibold">Bank name</span>
+                                <span class=" w-32 shrink-0 pt-2 font-semibold">Bank name</span>
                                 <label class="flex-1">
                                     <input type="text" name="BANKNAME" id="BANKNAME" maxlength="50"
-                                        class="input input-sm w-full req">
+                                        class="input input-sm w-full ">
                                 </label>
                             </div>
                             <div class="flex items-start gap-4 w-full md:w-1/2">
-                                <span class="required w-32 shrink-0 pt-2 font-semibold">Branch name</span>
+                                <span class=" w-32 shrink-0 pt-2 font-semibold">Branch name</span>
                                 <label class="flex-1">
                                     <input type="text" name="BRANCH" id="BRANCH" maxlength="50"
-                                        class="input input-sm w-full req">
+                                        class="input input-sm w-full ">
                                 </label>
                             </div>
                         </div>
 
                         <!-- Account Number -->
                         <div class="flex items-start gap-4 mb-4 w-full md:w-1/2">
-                            <span class="required w-32 shrink-0 pt-2 font-semibold">Account number</span>
+                            <span class=" w-32 shrink-0 pt-2 font-semibold">Account number</span>
                             <label class="flex-1">
                                 <input type="text" name="ACCNUMBER" id="ACCNUMBER" maxlength="13"
-                                    class="input input-sm w-full req">
+                                    class="input input-sm w-full ">
                             </label>
                         </div>
 

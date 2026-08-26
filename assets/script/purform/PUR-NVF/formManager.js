@@ -286,9 +286,21 @@ export const vendorTypeManager = {
 
 // -------------------------- End Vendor Type Manager -------------------
 
-export const addrEnManager = {
+export const addr1EnManager = {
     get input() {
-        return $('#ADDRESS_EN');
+        return $('#ADDRESS1_EN');
+    },
+    get value() {
+        return this.input.val();
+    },
+    set value(val) {
+        this.input.val(val);
+    },
+};
+
+export const addr2EnManager = {
+    get input() {
+        return $('#ADDRESS2_EN');
     },
     get value() {
         return this.input.val();
@@ -471,10 +483,11 @@ export const vendorCodeManager = {
             try {
                 showLoader(); // เปิด Loader รอระว่างดึงข้อมูล
 
-                const searchData = { KEYWORD: keywordValue };
+                const searchData = { VND_CODE: keywordValue };
                 const vendor = await getVendor(searchData);
 
-                //console.log("Vendor Data:", vendor);
+                console.log('Vendor Data:', vendor);
+                return false;
 
                 if (vendor[0]) {
                     typejobManager.removecls('req');
@@ -484,17 +497,17 @@ export const vendorCodeManager = {
                     $(`#F-section`).removeClass('hidden');
                     // console.log(">>>>>>>>>>"+vendor[0]);
 
-                    $('#CONTACT').val(vendor[0].VND_SALE || '');
-                    $('#EMAIL').val(vendor[0].EMAIL || '');
-                    $('#WEBSITE').val(vendor[0].ADDR_WEB || '');
-                    $('#TELNO').val(vendor[0].ADDR_PHONE || '');
-                    $('#FAXNO').val(vendor[0].FAX || '');
+                    $('#CONTACT').val(vendor[0].VND_CONTACTNAME || '');
+                    $('#EMAIL').val(vendor[0].VND_EMAIL || '');
+                    $('#WEBSITE').val(vendor[0].VND_WEBSITE || '');
+                    $('#TELNO').val(vendor[0].VND_PHONE || '');
+                    $('#FAXNO').val(vendor[0].VND_FAX || '');
                     $('#BANKNAME').val(vendor[0].BANKNAME || '');
                     $('#BRANCH').val(vendor[0].BRANCH || '');
                     $('#ACCNUMBER').val(vendor[0].ACCNUMBER || '');
                     paymentTermManager.value =
-                        vendor[0].VENDOR_CODES[0].CODE_PAY;
-                    if (vendor[0].VENDOR_ADDRESS) {
+                        vendor[0].VND_TERM;
+                    if (vendor[0].VND_ADDRESS1) {
                         vendor[0].VENDOR_ADDRESS.forEach(function (address) {
                             // 1. รวมสายอักขระที่อยู่ (Address Line 1 + Line 2) เข้าด้วยกัน
                             const addrLine =
@@ -519,7 +532,8 @@ export const vendorCodeManager = {
                                 addrThManager.value = fullAddress;
                             } else if (address.ADDR_TYPE === 'E') {
                                 // แปะลงฟิลด์ภาษาอังกฤษ
-                                addrEnManager.value = addrLine;
+                                addr1EnManager.value = address.ADDR_LINE1;
+                                addr2EnManager.value = address.ADDR_LINE2;
                                 if (
                                     address.ADDR_COUNTRY &&
                                     address.ADDR_COUNTRY.toUpperCase() ==
@@ -704,7 +718,7 @@ export const formManager = {
         data.ADDRESSES.forEach(function (address) {
             // const fullAddress = `${address.ADDR} ${address.CITY} ${address.STATE} ${address.POSTCODE} ${address.COUNTRY}`;
             const fullAddress = [
-                address.ADDR,
+                address.ADDR1 || ' ' || ADDR2,
                 address.CITY,
                 address.STATE,
                 address.POSTCODE,
@@ -788,14 +802,15 @@ export const formManager = {
         }
         for (const address of data.ADDRESSES) {
             if (address.ADDRTYPE === 'E') {
-                addrEnManager.value = address.ADDR || '';
+                addr1EnManager.value = address.ADDR1 || '';
+                addr2EnManager.value = address.ADDR2 || '';
                 cityEnManager.value = address.CITY;
                 stateEnManager.value = address.STATE;
 
                 postcodeEnManager.value = address.POSTCODE;
                 countryEnManager.value = address.COUNTRY;
             } else {
-                addrThManager.value = address.ADDR || '';
+                addrThManager.value = address.ADDR1 || '';
             }
         }
 
@@ -1705,7 +1720,7 @@ export const actionFormManager = {
                 reasonManager.input.hasClass('req') ? {element: reasonManager.input, message: "Please input Reason."} : null,
                 {element: vendorTypeManager.radio, message: "Please select Local or Overseas."},
                  countryManager.select.hasClass('req') ? {element: countryManager.select, message: "Please select Country."} : null,
-                {element: addrEnManager.input, message: "Please input Address (EN)."},
+                {element: addr1EnManager.input, message: "Please input Address (EN)."},
                 // {element: attachTypeManager.checkbox, message: "Please select Attach Type."},
                 // {element: attachFileManager.input, message: "Please attach files."},
             ].filter(Boolean);

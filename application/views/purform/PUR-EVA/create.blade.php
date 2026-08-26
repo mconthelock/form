@@ -256,16 +256,16 @@
                         </div>
                     </div>
                     <!-- <div class="grid grid-cols-[140px_1fr] items-center gap-4">
-                                                        <span class="font-semibold text-sm required">Vendor Name</span>
-                                                        <div class="flex items-center gap-4">
-                                                            <input type="text" name="COMNAME" class="input input-sm border border-gray-400 h-8 rounded w-1/3 px-2 req">
-                                                            <label class="flex items-center gap-2 text-sm"><input type="radio" name="VENDTYPE" value="Local" class="w-4 h-4 accent-blue-600  radio-type"> Local</label>
-                                                            <label class="flex items-center gap-2 text-sm"><input type="radio" name="VENDTYPE" value="Oversea" class="w-4 h-4 accent-blue-600  radio-type"> Oversea</label>
-                                                            <select name="COUNTRY_SELECT" id="COUNTRY_SELECT" class="" disabled>
-                                                                    <option value="">-- Select Country --</option>
-                                                            </select>
-                                                        </div>
-                                                    </div> -->
+                                                                                <span class="font-semibold text-sm required">Vendor Name</span>
+                                                                                <div class="flex items-center gap-4">
+                                                                                    <input type="text" name="COMNAME" class="input input-sm border border-gray-400 h-8 rounded w-1/3 px-2 req">
+                                                                                    <label class="flex items-center gap-2 text-sm"><input type="radio" name="VENDTYPE" value="Local" class="w-4 h-4 accent-blue-600  radio-type"> Local</label>
+                                                                                    <label class="flex items-center gap-2 text-sm"><input type="radio" name="VENDTYPE" value="Oversea" class="w-4 h-4 accent-blue-600  radio-type"> Oversea</label>
+                                                                                    <select name="COUNTRY_SELECT" id="COUNTRY_SELECT" class="" disabled>
+                                                                                            <option value="">-- Select Country --</option>
+                                                                                    </select>
+                                                                                </div>
+                                                                            </div> -->
 
                     <!-- Address (EN) Section -->
                     <div class="grid grid-cols-[170px_1fr] gap-4 pt-4 border-t border-gray-200">
@@ -274,8 +274,14 @@
                             <!-- Address Line 1 -->
                             <div>
                                 <label class="block text-xs font-semibold text-gray-600 mb-1">Address (ที่อยู่)</label>
-                                <input type="text" name="ADDRESS_EN" id="ADDRESS_EN"
+                                <input type="text" name="ADDRESS1_EN" id="ADDRESS1_EN" maxlength="30"
                                     placeholder="e.g. 43/86 Moo 16, Bangna Road..."
+                                    class="input input-sm border border-gray-400 h-8 rounded  px-2 w-full req">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-600 mb-1">Address (ที่อยู่)</label>
+                                <input type="text" name="ADDRESS2_EN" id="ADDRESS2_EN"
+                                    placeholder="e.g. 43/86 Moo 16, Bangna Road..." maxlength="200"
                                     class="input input-sm border border-gray-400 h-8 rounded  px-2 w-full req">
                             </div>
                             <div class="grid grid-cols-2 gap-4">
@@ -525,7 +531,7 @@
                             <!-- ย้าย Dropzone ออกมาข้างนอก เพื่อให้ใช้ความกว้างได้เต็ม 100% ของ Container หลัก -->
                             <!-- <div id="attachFile" class="mt-4">
 
-                                        </div> -->
+                                                                </div> -->
                         </div>
                     </div>
                 </div>
@@ -1128,7 +1134,7 @@
 
                         <div class="flex items-center gap-2">
                             <span class="flex-shrink-0 whitespace-nowrap">Average Age:</span>
-                            <input type="text" name = "AVGAGE"
+                            <input type="text" name = "AVGAGE" maxlength="20"
                                 class="flex-1 input input-bordered input-sm bg-gray-50 border-gray-300 req">
                         </div>
 

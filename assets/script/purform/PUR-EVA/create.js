@@ -13,7 +13,8 @@ import { getCountries, getTermcode, getVendor } from '../PUR-NVF/data';
 import {
     countryManager,
     paymentTermManager,
-    addrEnManager,
+    addr1EnManager,
+    addr2EnManager,
     addrThManager,
     cityEnManager,
     stateEnManager,
@@ -750,9 +751,9 @@ $(document).on('change', 'input[name="VENDGROUP"]', function () {
         } else {
             blockIe.show();
             blockQa.show();
-            blockCer.hide();
-            $('#file-cer').val('');
-            $('#file-cer').closest('.flex-col').find('.show-file').empty();
+            blockCer.show();
+            // $('#file-cer').val('');
+            // $('#file-cer').closest('.flex-col').find('.show-file').empty();
             $('input[name="TAX_ID"]').addClass('req');
         }
     } else {
@@ -917,7 +918,8 @@ function setVendorMstInfo(vendorMstData) {
     $('input[name="COMNAME"]').val(vendorMstData.VND_NAME);
     for (const address of vendorMstData.VENDOR_ADDRESS) {
         if (address.ADDR_TYPE == 'E') {
-            addrEnManager.value = address.ADDR_LINE1;
+            addr1EnManager.value = address.ADDR_LINE1;
+            addr2EnManager.value = address.ADDR_LINE2;
             postcodeEnManager.value = address.ADDR_ZIPCODE;
             countryEnManager.value = address.ADDR_COUNTRY;
             if (address.ADDR_COUNTRY.toUpperCase() == 'THAILAND') {
@@ -979,7 +981,8 @@ function setVendorInfo(vendorData) {
 
     for (const address of vendorData.ADDRESSES) {
         if (address.ADDRTYPE === 'E') {
-            addrEnManager.value = address.ADDR || '';
+            addr1EnManager.value = address.ADDR1 || '';
+            addr2EnManager.value = address.ADDR2 || '';
             cityEnManager.value = address.CITY;
             stateEnManager.value = address.STATE;
             countryManager.value = address.COUNTRY;
@@ -1141,7 +1144,8 @@ function clearVendorInfo() {
 
     $('input[name="VENDTYPE"]').prop('checked', false);
 
-    addrEnManager.value = '';
+    addr1EnManager.value = '';
+    addr2EnManager.value = '';
     addrThManager.value = '';
 
     const resetManager = (manager) => {
@@ -1387,6 +1391,9 @@ function checkAttFile() {
     const hasQa =
         $('#file-qa')[0].files.length > 0 ||
         $('#file-type-13').find('a').length > 0;
+    const hasQth =
+        $('#file-other')[0].files.length > 0 ||
+        $('#file-type-2').find('a').length > 0;
     if (selectedGroup && selectedGroup.includes('6:Non-Production')) {
         if (!hasCer) {
             showMessage(
@@ -1396,11 +1403,8 @@ function checkAttFile() {
             return false;
         }
     } else {
-        if (!hasIe || !hasQa) {
-            showMessage(
-                "Please Attached IE's evaluation Document and QA's evaluation Document",
-                'warning',
-            );
+        if (!hasIe && !hasQa && !hasCer && !hasQth) {
+            showMessage('Please Attached file', 'warning');
             return false;
         }
     }
