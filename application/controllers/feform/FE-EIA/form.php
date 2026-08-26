@@ -982,11 +982,15 @@ class form extends MY_Controller{
             $pdf->AddPage('L');
             $pdf->SetFont('helvetica', '', 7);
 
+            // 1. จำเลขหน้าที่เปิดใหม่ไว้ (คือ หน้า 2 ที่มีหัวตาราง Stamp)
+            $stampPage = $pdf->getPage();
+
             // --- สร้าง HTML สำหรับตารางที่ 2 ---
             $htmlReceive = $this->generateReceiveHistoryHtml($dataBFStockList,$rows,$dataReceiveHist,  $costyear,$DOC_NO);
             $pdf->writeHTML($htmlReceive, true, false, true, false, '');
 
             // --- วาดตราประทับสำหรับหน้า 2 (ถ้าต้องการให้มีเหมือนกัน) ---
+            $pdf->setPage($stampPage);
             $this->drawStamp($pdf, $approvalList, $startX, $startY, $circleSpace, $radius);
             //-- Paeg 2
 
