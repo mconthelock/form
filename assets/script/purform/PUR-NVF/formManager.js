@@ -828,8 +828,7 @@ export const formManager = {
         renderFilesByType(attachedFiles, 14, 'file-type-14', true);
         renderFilesByType(attachedFiles, 15, 'file-type-15', true);
         renderFilesByType(attachedFiles, 2, 'file-type-2', true);
-        data.ATTACH_OTHER &&
-            $('#ATTACH_OTHER').val(data.ATTACH_OTHER || 'xxxx');
+        data.ATTACH_OTHER && $('#ATTACH_OTHER').val(data.ATTACH_OTHER || '');
         // if (data.ATTACH_TYPE) {
         // Attach Type
         // attachTypeManager.checked = data.ATTACH_TYPE.split('|');
@@ -1336,12 +1335,29 @@ export const ReqtypeManager = {
             toggleAttachSection('bank', false);
             toggleAttachSection('changeaddr', false);
         } else {
-            const ignoredFields =
-                '#FAX, #WEBSITE, #BANKNAME , #BRANCH , #ACCNUMBER , #COUNTRY_SELECT, #ATTACH_OTHER , #ADDRESS2_EN , #ADDRESS_TH';
+            console.log('xxxxxxxxxxxx');
+
+            const ignoredFields = [
+                'FAX',
+                'WEBSITE',
+                'BANKNAME',
+                'BRANCH',
+                'ACCNUMBER',
+                'COUNTRY_SELECT',
+                'ATTACH_OTHER',
+                'ADDRESS2_EN',
+                'ADDRESS_TH',
+            ];
             reasonManager.removecls('req');
             vSection
                 .find('input, textarea, select')
-                .not(ignoredFields)
+                .filter(function () {
+                    // ถ้า id หรือ name ตรงกับรายการที่ต้องยกเว้น จะไม่ถูกเลือก
+                    return (
+                        !ignoredFields.includes(this.id) &&
+                        !ignoredFields.includes(this.name)
+                    );
+                })
                 .addClass('req');
             vSection
                 .find('input, textarea')
