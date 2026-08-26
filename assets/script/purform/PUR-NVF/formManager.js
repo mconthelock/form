@@ -505,8 +505,7 @@ export const vendorCodeManager = {
                     $('#BANKNAME').val(vendor[0].BANKNAME || '');
                     $('#BRANCH').val(vendor[0].BRANCH || '');
                     $('#ACCNUMBER').val(vendor[0].ACCNUMBER || '');
-                    paymentTermManager.value =
-                        vendor[0].VND_TERM;
+                    paymentTermManager.value = vendor[0].VND_TERM;
                     if (vendor[0].VND_ADDRESS1) {
                         vendor[0].VENDOR_ADDRESS.forEach(function (address) {
                             // 1. รวมสายอักขระที่อยู่ (Address Line 1 + Line 2) เข้าด้วยกัน
@@ -1338,7 +1337,7 @@ export const ReqtypeManager = {
             toggleAttachSection('changeaddr', false);
         } else {
             const ignoredFields =
-                '#FAX, #COUNTRY_SELECT, #ATTACH_OTHER, #ADDRESS_TH';
+                '#FAX, #WEBSITE, #BANKNAME , #BRANCH , #ACCNUMBER , #COUNTRY_SELECT, #ATTACH_OTHER , #ADDRESS2_EN , #ADDRESS_TH';
             reasonManager.removecls('req');
             vSection
                 .find('input, textarea, select')
