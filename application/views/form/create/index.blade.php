@@ -22,9 +22,11 @@
                     @endforeach
                 </div>
             </div>
-            <div class="flex-none w-96 bg-primary/10 rounded-lg p-5">
-                <div>
-                    <h1>Recent Created Forms--</h1>
+            <div class="flex-none w-96">
+                <div class="bg-primary/10 rounded-lg p-5" id="recent-created-forms">
+                    <div>
+                        <h1>Recent Created Forms</h1>
+                    </div>
                 </div>
             </div>
         </div>

@@ -186,3 +186,20 @@ export async function amecwebData(id) {
         });
     });
 }
+
+export async function formCounter(data) {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `${process.env.APP_API}/form/counter/${data}`,
+            type: 'get',
+            dataType: 'json',
+            success: function (res) {
+                resolve(res);
+            },
+            error: function (xhr, err) {
+                console.log(xhr, err);
+                reject(err);
+            },
+        });
+    });
+}

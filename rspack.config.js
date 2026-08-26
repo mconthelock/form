@@ -12,7 +12,7 @@ const getEntries = () => {
     const baseEntries = {
         apps: './assets/script/apps.js',
     };
-    const configFiles = sync('./assets/script/*/entry.js');
+    const configFiles = sync('./assets/script/**/entry.js');
     const moduleEntries = configFiles.reduce((acc, file) => {
         const moduleConfig = require(path.resolve(__dirname, file));
         return { ...acc, ...moduleConfig };

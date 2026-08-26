@@ -255,3 +255,25 @@ export function tableFillSelect(selector, data, valueKey, labelKey) {
         );
     });
 }
+
+export function getTagColor(tagName) {
+    const colors = [
+        'border-red-500 text-red-500',
+        'border-green-500 text-green-500',
+        'border-blue-500 text-blue-500',
+        'border-purple-500 text-purple-500',
+        'border-pink-500 text-pink-500',
+        'border-orange-500 text-orange-500',
+    ];
+
+    let hash = 0;
+    // เอาตัวอักษรแต่ละตัวมาแปลงเป็นรหัสตัวเลขแล้วบวกทบกันไปเรื่อยๆ
+    for (let i = 0; i < tagName.length; i++) {
+        hash = tagName.charCodeAt(i) + ((hash << 5) - hash);
+    }
+
+    // เอาผลลัพธ์มาหารเอาเศษ เพื่อให้ไม่เกินจำนวนสีที่มีใน Array
+    const index = Math.abs(hash) % colors.length;
+
+    return colors[index];
+}

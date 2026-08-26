@@ -138,10 +138,8 @@ class Authen extends MY_Controller {
         $this->views('auth/forgot-password' );
     }
 
-    public function resetpassword($value = '') {
-        if(!isset($value) || empty($value)) {
-            redirect('/');
-        }
+    public function resetpassword() {
+        $value = $_GET['token'] ?? '';
         $this->views('auth/reset-password', array('value' => $value) );
     }
 }
