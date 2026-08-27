@@ -812,8 +812,6 @@ $(document).on(
             const payload = {
                 INPUTBY: String($('#INPUTBY').val() || '').trim(),
                 REQBY: requesterCode,
-                // FIN-NPO API currently stores this value in the SUBJECT field.
-                SUBJECT: String($('#FULLDP').val() || '').trim(),
                 EXPENSE_CODE: Number(selectedExpense.val()),
                 VENDOR_CODE: $('#VENDOR_CODE').val() || '',
                 // The API uses AIR_SALES_BY to create rows in the cost center table.
