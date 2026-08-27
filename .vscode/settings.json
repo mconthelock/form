@@ -16,5 +16,6 @@
 	"[javascript]": {
         "editor.defaultFormatter": "esbenp.prettier-vscode",
         "editor.formatOnSave": true
-    },
+	},
+	"ibm-i-acs.host": "",
 }

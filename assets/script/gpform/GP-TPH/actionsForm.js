@@ -1,7 +1,7 @@
 import { createTable } from '@amec/webasset/dataTable';
-import { showMessage } from '@amec/webasset/utils';
-import { getEmpData, getAreas, getLocations } from './data';
-import { data } from 'jquery';
+import { logFormData, showMessage } from '@amec/webasset/utils';
+import { getEmpData, getAreas, getLocations, createForm } from './data';
+import { webflowSubmit } from '@amec/webasset/components/form';
 
 (function () {
     let mockupTable = null;
@@ -18,19 +18,19 @@ import { data } from 'jquery';
             'applicant-visitor-section',
         );
         const requestTypeRadios = document.querySelectorAll(
-            'input[name="reqtype"]',
+            'input[name="REQUEST_TYPE"]',
         );
         const requestSubTypeRadios = document.querySelectorAll(
-            'input[name="req_subtype"]',
+            'input[name="REQUEST_SUB_TYPE"]',
         );
         const permitOptionRadios = document.querySelectorAll(
             'input[name="permit_option"]',
         );
         const hostExternalRadio = document.querySelector(
-            'input[name="reqtype"][value="host_external"]',
+            'input[name="REQUEST_TYPE"][value="H"]',
         );
         const employeeRadio = document.querySelector(
-            'input[name="reqtype"][value="employee"]',
+            'input[name="REQUEST_TYPE"][value="E"]',
         );
 
         if (
@@ -43,6 +43,7 @@ import { data } from 'jquery';
         ) {
             return;
         }
+
         // ฟังก์ชันหลักที่ทำงานเมื่อโหลดหน้า
         $(async function () {
             const queryString = window.location.search;
@@ -50,16 +51,15 @@ import { data } from 'jquery';
             const empno = urlParams.get('empno');
             const getareas = await getAreas();
             const getlocations = await getLocations();
-
+            const action = webflowSubmit({ request: true });
+            $('#sentRequest').html(action);
             mockupTable = await createTable(
                 {
                     data: getareas,
-                    getLocations,
                     responsive: false,
                     columns: [
                         {
                             title: '<input type="checkbox" id="select-all-areas" aria-label="Select all areas" />',
-                            data: null,
                             orderable: false,
                             searchable: false,
                             render: function (data, type, row) {
@@ -291,10 +291,10 @@ import { data } from 'jquery';
                         radios.forEach(function (item) {
                             item.checked = false;
                         });
+                    }
 
-                        if (callback) {
-                            callback();
-                        }
+                    if (callback) {
+                        callback();
                     }
                 });
             });
@@ -306,15 +306,13 @@ import { data } from 'jquery';
                 : false;
 
             document
-                .querySelectorAll('input[name="req_subtype"]')
+                .querySelectorAll('input[name="REQUEST_SUB_TYPE"]')
                 .forEach(function (radio) {
                     if (isHostExternal) {
                         radio.checked = false;
                     }
                 });
 
-            // Don't clear values from the hidden section when switching request type.
-            // Keep the user's input so it remains visible when they switch back.
             if (!isHostExternal) {
                 document
                     .querySelectorAll('#host-external-section input')
@@ -341,10 +339,8 @@ import { data } from 'jquery';
         }
 
         function toggleHostExternalSection() {
-            const isHostExternal = hostExternalRadio
-                ? hostExternalRadio.checked
-                : false;
-            const isEmployee = employeeRadio ? employeeRadio.checked : false;
+            const isHostExternal = hostExternalRadio?.checked;
+            const isEmployee = employeeRadio?.checked;
             const employeeRequestLabels = document.querySelectorAll(
                 '.employee-request-group',
             );
@@ -352,39 +348,15 @@ import { data } from 'jquery';
                 '.host-request-group',
             );
 
-            if (isHostExternal) {
-                applicantVisitorSection.classList.add('hidden');
-                hostExternalSection.classList.remove('hidden');
-                employeeRequestLabels.forEach(function (label) {
-                    label.classList.add('opacity-50');
-                    label.setAttribute('aria-disabled', 'true');
-                });
-                if (hostRequestLabel) {
-                    hostRequestLabel.classList.remove('opacity-50');
-                    hostRequestLabel.removeAttribute('aria-disabled');
-                }
-            } else if (isEmployee) {
-                applicantVisitorSection.classList.remove('hidden');
-                hostExternalSection.classList.add('hidden');
-                employeeRequestLabels.forEach(function (label) {
-                    label.classList.remove('opacity-50');
-                    label.removeAttribute('aria-disabled');
-                });
-                if (hostRequestLabel) {
-                    hostRequestLabel.classList.add('opacity-50');
-                    hostRequestLabel.setAttribute('aria-disabled', 'true');
-                }
-            } else {
-                applicantVisitorSection.classList.remove('hidden');
-                hostExternalSection.classList.add('hidden');
-                employeeRequestLabels.forEach(function (label) {
-                    label.classList.remove('opacity-50');
-                    label.removeAttribute('aria-disabled');
-                });
-                if (hostRequestLabel) {
-                    hostRequestLabel.classList.remove('opacity-50');
-                    hostRequestLabel.removeAttribute('aria-disabled');
-                }
+            applicantVisitorSection.classList.toggle('hidden', isHostExternal);
+            hostExternalSection.classList.toggle('hidden', !isHostExternal);
+            employeeRequestLabels.forEach(function (label) {
+                label.classList.toggle('opacity-50', isHostExternal);
+                label.toggleAttribute('aria-disabled', isHostExternal);
+            });
+            if (hostRequestLabel) {
+                hostRequestLabel.classList.toggle('opacity-50', isEmployee);
+                hostRequestLabel.toggleAttribute('aria-disabled', isEmployee);
             }
 
             clearRequestTypeRelatedFields();
@@ -396,7 +368,7 @@ import { data } from 'jquery';
             const isIndividualRequest =
                 employeeRadio?.checked &&
                 document.querySelector(
-                    'input[name="req_subtype"][value="individual"]',
+                    'input[name="REQUEST_SUB_TYPE"][value="I"]',
                 )?.checked;
 
             addVisitorBtn.disabled = Boolean(isIndividualRequest);
@@ -419,85 +391,46 @@ import { data } from 'jquery';
                 'input[name="permit_option"]:checked',
             );
             const longTermYearsInput = document.querySelector(
-                'input[name="permit_long_term_years"]',
+                'input[name="LONGTERM_YEARS"]',
             );
             const startDateInput = document.querySelector(
-                'input[name="permit_start_date"]',
+                'input[name="PERMIT_START_DATE"]',
             );
             const validUntilInput = document.querySelector(
-                'input[name="permit_valid_until"]',
+                'input[name="PERMIT_END_DATE"]',
             );
 
-            if (!longTermYearsInput || !startDateInput || !validUntilInput) {
-                return;
-            }
-
-            const isLongTerm = selectedPermitOption?.value === 'long_term';
-            const isPeriod = selectedPermitOption?.value === 'period';
-
-            longTermYearsInput.disabled = !isLongTerm;
-            startDateInput.disabled = !isPeriod;
-            validUntilInput.disabled = !isPeriod;
+            longTermYearsInput.disabled =
+                selectedPermitOption?.value !== 'long_term';
+            startDateInput.disabled = selectedPermitOption?.value !== 'period';
+            validUntilInput.disabled = selectedPermitOption?.value !== 'period';
         }
 
         function updatePermitTypeRestrictions() {
-            const isHostExternal = hostExternalRadio
-                ? hostExternalRadio.checked
-                : false;
+            const isHostExternal = hostExternalRadio?.checked;
             const longTermRadio = document.querySelector(
                 'input[name="permit_option"][value="long_term"]',
             );
             const periodRadio = document.querySelector(
                 'input[name="permit_option"][value="period"]',
             );
-            const permitTypeInputs = document.querySelectorAll(
-                'input[name="permit_type[]"], input[name="permit_halmet"], input[name="permit_photo"]',
+            const helmetStickerInput = document.querySelector(
+                'input[name="HELMET_STICKER"]',
             );
             const photoPermitBadgeInput = document.querySelector(
-                'input[value="photo_permit_badge"], input[name="permit_photo"]',
+                'input[name="PHOTO_PERMIT_BADGE"]',
             );
 
+            longTermRadio.disabled = isHostExternal;
             if (isHostExternal) {
-                if (periodRadio) {
-                    periodRadio.checked = true;
-                }
-                if (longTermRadio) {
-                    longTermRadio.disabled = true;
-                }
-                if (periodRadio) {
-                    periodRadio.disabled = false;
-                }
-
-                permitTypeInputs.forEach(function (field) {
-                    const isPhotoPermit =
-                        field.value === 'photo_permit_badge' ||
-                        field.name === 'permit_photo';
-
-                    if (isPhotoPermit) {
-                        field.disabled = false;
-                        if (!field.checked) {
-                            field.checked = true;
-                        }
-                    } else {
-                        field.disabled = true;
-                        field.checked = false;
-                    }
-                });
+                periodRadio.checked = true;
+                helmetStickerInput.disabled = true;
+                helmetStickerInput.checked = false;
+                photoPermitBadgeInput.disabled = false;
+                photoPermitBadgeInput.checked = true;
             } else {
-                if (longTermRadio) {
-                    longTermRadio.disabled = false;
-                }
-                if (periodRadio) {
-                    periodRadio.disabled = false;
-                }
-
-                permitTypeInputs.forEach(function (field) {
-                    field.disabled = false;
-                });
-            }
-
-            if (photoPermitBadgeInput) {
-                photoPermitBadgeInput.checked = isHostExternal;
+                helmetStickerInput.disabled = false;
+                photoPermitBadgeInput.disabled = false;
             }
 
             togglePermitOptionFields();
@@ -524,6 +457,7 @@ import { data } from 'jquery';
             togglePermitOptionFields();
             updatePermitTypeRestrictions();
         });
+        makeRadioGroupToggleable('#HELMET_STICKER, #PHOTO_PERMIT_BADGE');
 
         requestTypeRadios.forEach(function (radio) {
             radio.addEventListener('change', toggleHostExternalSection);
@@ -575,91 +509,130 @@ import { data } from 'jquery';
 
         updateAreaIndexes();
         toggleHostExternalSection();
+    }
 
-        const photoPermissionForm = document.getElementById(
-            'photo-permission-form',
-        );
+    $(document).on('click', '#btnRequest', async function (event) {
+        try {
+            event.preventDefault();
+            const requestType = $('input[name="REQUEST_TYPE"]:checked').val();
+            const permitOption = $('input[name="permit_option"]:checked').val();
+            const requiredMessage = [
+                {
+                    element: $('#REQBY'),
+                    message: 'Please fill RequestBy',
+                },
+                {
+                    element: $('input[name="REQUEST_TYPE"]'),
+                    message: 'Please select RequestType',
+                },
+                {
+                    element: $('#PURPOSE'),
+                    message: 'Please fill Purpose',
+                },
+                {
+                    element: $('input[name="permit_option"]'),
+                    message: 'Please select Permit Date',
+                },
+                {
+                    element: $('#HELMET_STICKER, #PHOTO_PERMIT_BADGE').not(
+                        ':disabled',
+                    ),
+                    message: 'Please select Permit Type',
+                },
+            ];
 
-        photoPermissionForm?.addEventListener('submit', function (event) {
-            const errors = [];
-            const valueOf = (selector) =>
-                document.querySelector(selector)?.value.trim() || '';
-            const requestType = document.querySelector(
-                'input[name="reqtype"]:checked',
-            )?.value;
-            const permitOption = document.querySelector(
-                'input[name="permit_option"]:checked',
-            )?.value;
+            if (requestType === 'E') {
+                requiredMessage.push({
+                    element: $('input[name="REQUEST_SUB_TYPE"]'),
+                    message: 'Please select the Request Subtype',
+                });
 
-            if (!valueOf('#REQBY')) errors.push('Request By');
-            if (!requestType) errors.push('Request Type');
+                $('#visitor-table-body tr').each(function (index) {
+                    $(this)
+                        .find('input')
+                        .each(function () {
+                            requiredMessage.push({
+                                element: $(this),
+                                message: `Please fill Visitor row ${index + 1}`,
+                            });
+                        });
+                });
+            }
 
-            if (requestType === 'employee') {
-                if (
-                    !document.querySelector('input[name="req_subtype"]:checked')
-                ) {
-                    errors.push('Request Subtype');
-                }
-
-                const visitorRows = Array.from(
-                    visitorBody.querySelectorAll('tr'),
+            if (requestType === 'H') {
+                requiredMessage.push(
+                    {
+                        element: $('#host_visitor_name'),
+                        message: 'Please fill the Visitor Name',
+                    },
+                    {
+                        element: $('#host_name'),
+                        message: 'Please fill the Host Name',
+                    },
+                    {
+                        element: $('#host_company_name'),
+                        message: 'Please fill the Company Name',
+                    },
                 );
-                if (!visitorRows.length) {
-                    errors.push('Applicant / Visitor Information');
-                } else {
-                    visitorRows.forEach((row, index) => {
-                        const fields = row.querySelectorAll('input');
-                        if (
-                            Array.from(fields).some(
-                                (field) => !field.value.trim(),
-                            )
-                        ) {
-                            errors.push(`Visitor row ${index + 1}`);
-                        }
-                    });
-                }
             }
 
-            if (requestType === 'host_external') {
-                if (!valueOf('#host_visitor_name')) {
-                    errors.push('Visitor Name');
-                }
-                if (!valueOf('#host_name')) errors.push('Host Name');
-                if (!valueOf('#host_company_name')) {
-                    errors.push('Company Name');
-                }
-            }
-
-            if (!valueOf('[name="recording_purpose"]')) {
-                errors.push('Purpose of Recording');
-            }
-            if (!permitOption) errors.push('Permit Date');
             if (permitOption === 'long_term') {
-                if (!valueOf('[name="permit_long_term_years"]')) {
-                    errors.push('Year(s)');
-                }
+                requiredMessage.push({
+                    element: $('#LONGTERM_YEARS'),
+                    message: 'Please fill the Year(s)',
+                });
             }
+
             if (permitOption === 'period') {
-                if (!valueOf('[name="permit_start_date"]')) {
-                    errors.push('Start Date');
-                }
-                if (!valueOf('[name="permit_valid_until"]')) {
-                    errors.push('Valid Until');
-                }
+                requiredMessage.push(
+                    {
+                        element: $('#PERMIT_START_DATE'),
+                        message: 'Please fill the Start Date',
+                    },
+                    {
+                        element: $('#PERMIT_END_DATE'),
+                        message: 'Please fill the Valid Until',
+                    },
+                );
             }
-            if (
-                !document.querySelector(
-                    'input[name="permit_halmet"]:checked, input[name="permit_photo"]:checked',
-                )
-            ) {
-                errors.push('Permit Type');
+
+            const areaRows = $('#area-table-body tr:not(#area-empty-row)');
+            if (!areaRows.length) {
+                requiredMessage.push({
+                    element: $('#area-table-body'),
+                    message: 'Please fill Area to Recorded',
+                });
             }
-            if (!areaBody.querySelector('tr:not(#area-empty-row)')) {
-                errors.push('Area to Recorded');
-            }
+
+            areaRows.each(function (index) {
+                $(this)
+                    .find('input')
+                    .each(function () {
+                        requiredMessage.push({
+                            element: $(this),
+                            message: `Please fill Area to Recorded row ${index + 1}`,
+                        });
+                    });
+            });
+
+            const errors = requiredMessage
+                .filter(({ element }) => {
+                    if (!element.length) return true;
+                    if (element.is(':radio, :checkbox')) {
+                        return !element.is(':checked');
+                    }
+                    if (element.is('#area-table-body')) {
+                        return !areaRows.length;
+                    }
+                    return !element
+                        .toArray()
+                        .some((field) => field.value.trim());
+                })
+                .map(({ message }) =>
+                    message.replace(/^Please (fill|select) /, ''),
+                );
 
             if (errors.length) {
-                event.preventDefault();
                 showMessage(
                     `<div>กรุณากรอกข้อมูลให้ครบ:</div>
                      <ul class="list-disc pl-5 mt-1 space-y-1">
@@ -667,204 +640,31 @@ import { data } from 'jquery';
                      </ul>`,
                     'warning',
                 );
-            }
-        });
-    }
-
-    /*
-     * Area master data will be supplied by a server-side API.  The former
-     * browser-only CRUD implementation is retained here temporarily as a
-     * reference, but is deliberately excluded from the production bundle.
-     */
-    /* function initAreaPage() {
-        const searchArea = document.getElementById('searchArea');
-        const newAreaButton = document.getElementById('newAreaButton');
-        const cancelAreaButton = document.getElementById('cancelAreaButton');
-        const areaForm = document.getElementById('areaForm');
-        const areaTableBody = document.getElementById('areaTableBody');
-
-        if (
-            !searchArea ||
-            !newAreaButton ||
-            !cancelAreaButton ||
-            !areaForm ||
-            !areaTableBody
-        ) {
-            return;
-        }
-
-        const serverAreas = Array.isArray(window.gpTPHServerAreas)
-            ? window.gpTPHServerAreas
-            : [];
-        let editingRow = null;
-
-        function syncServerAreas() {
-            const storedAreas = getStoredAreas();
-            const storedIds = new Set(
-                storedAreas.map((area) => String(area.id)),
-            );
-            const mergedAreas = storedAreas.slice();
-
-            serverAreas.forEach(function (area) {
-                if (!storedIds.has(String(area.id))) {
-                    mergedAreas.push({
-                        id: String(area.id),
-                        location: area.location || '',
-                        area: area.area || '',
-                        level: area.level || '',
-                        area_owner: area.area_owner || '',
-                    });
-                }
-            });
-
-            saveStoredAreas(mergedAreas);
-        }
-
-        function addStoredAreaRow(area) {
-            const row = document.createElement('tr');
-            row.dataset.localId = area.id;
-            row.innerHTML = `
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td>
-                    <button type="button" class="action-link table-action-button edit-row" title="แก้ไขข้อมูล">
-                        <span class="edit-icon">✎</span>
-                    </button>
-                    <button type="button" class="action-link table-action-button delete-row" title="ลบข้อมูล">
-                        <span class="delete-icon">🗑</span>
-                    </button>
-                </td>
-            `;
-
-            row.cells[1].textContent = area.location;
-            row.cells[2].textContent = area.area;
-            row.cells[3].textContent = area.level;
-            row.cells[4].textContent = area.area_owner;
-            areaTableBody.appendChild(row);
-        }
-
-        function renderStoredAreas() {
-            const areas = getStoredAreas();
-
-            if (areas.length > 0) {
-                const emptyRow = areaTableBody.querySelector('.empty-row');
-                if (emptyRow) {
-                    emptyRow.closest('tr').remove();
-                }
+                return;
             }
 
-            areas.forEach(function (area) {
-                addStoredAreaRow(area);
-            });
-            updateRowNumbers();
-        }
+            const formData = new FormData($('#tphForm')[0]);
+            formData.set('REMARK', $('#remark').val());
 
-        function updateRowNumbers() {
-            areaTableBody
-                .querySelectorAll('tr:not(.empty-row)')
-                .forEach(function (row, index) {
-                    row.cells[0].textContent = index + 1;
-                });
-        }
-
-        function closeAreaForm() {
-            areaForm.reset();
-            editingRow = null;
-            areaForm.classList.remove('is-visible');
-        }
-
-        syncServerAreas();
-        renderStoredAreas();
-
-        searchArea.addEventListener('input', function () {
-            const keyword = this.value.toLowerCase();
-            const rows = areaTableBody.querySelectorAll('tr');
-
-            rows.forEach(function (row) {
-                const text = row.textContent.toLowerCase();
-                row.style.display = text.includes(keyword) ? '' : 'none';
-            });
-        });
-
-        newAreaButton.addEventListener('click', function () {
-            areaForm.classList.add('is-visible');
-            areaForm.querySelector('input').focus();
-        });
-
-        cancelAreaButton.addEventListener('click', function () {
-            closeAreaForm();
-        });
-
-        areaForm.addEventListener('submit', function (event) {
-            event.preventDefault();
-
-            const formData = new FormData(areaForm);
-            const emptyRow = areaTableBody.querySelector('.empty-row');
-
-            if (emptyRow) {
-                emptyRow.closest('tr').remove();
-            }
-
-            const areas = getStoredAreas();
-            const area = {
-                id: editingRow?.dataset.localId || Date.now().toString(),
-                location: formData.get('location'),
-                area: formData.get('area'),
-                level: formData.get('level'),
-                area_owner: formData.get('area_owner'),
-            };
-
-            if (editingRow?.dataset.localId) {
-                const index = areas.findIndex((item) => item.id === area.id);
-                if (index !== -1) {
-                    areas[index] = area;
-                }
-                editingRow.remove();
+            logFormData(formData);
+            const res = await createForm(formData);
+            if (res.status == true) {
+                showMessage(res.message, 'success');
+                redirectWebflow();
             } else {
-                areas.push(area);
+                throw new Error(res.message);
             }
-
-            saveStoredAreas(areas);
-            addStoredAreaRow(area);
-
-            updateRowNumbers();
-            closeAreaForm();
-        });
-
-        areaTableBody.addEventListener('click', function (event) {
-            const editButton = event.target.closest('.edit-row');
-            const deleteButton = event.target.closest('.delete-row');
-
-            if (editButton) {
-                editingRow = editButton.closest('tr');
-                areaForm.elements.location.value =
-                    editingRow.cells[1].textContent;
-                areaForm.elements.area.value = editingRow.cells[2].textContent;
-                areaForm.elements.level.value = editingRow.cells[3].textContent;
-                areaForm.elements.area_owner.value =
-                    editingRow.cells[4].textContent;
-                areaForm.classList.add('is-visible');
-                areaForm.elements.location.focus();
-            }
-
-            if (deleteButton && confirm('ยืนยันการลบข้อมูลนี้หรือไม่?')) {
-                const row = deleteButton.closest('tr');
-                const localId = row.dataset.localId;
-
-                if (localId) {
-                    saveStoredAreas(
-                        getStoredAreas().filter((area) => area.id !== localId),
-                    );
-                }
-
-                row.remove();
-                updateRowNumbers();
-            }
-        });
-    } */
+        } catch (error) {
+            console.error('GP-TPH form submission failed', {
+                name: error?.name,
+                message: error?.message,
+                response: error?.response,
+                data: error?.response?.data,
+                error,
+            });
+            showMessage(error?.message || 'Unable to submit the form');
+        }
+    });
 
     document.addEventListener('DOMContentLoaded', function () {
         initCreatePage();
