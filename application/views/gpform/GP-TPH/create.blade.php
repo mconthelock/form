@@ -137,7 +137,7 @@
                             <input type="text" name="VISITOR_NAME" id="VISITOR_NAME"
                                 class="input input-bordered w-full" placeholder="Visitor Name">
                             <label class="text-sm font-semibold text-slate-700">Host Name (ชื่อผู้รับผิดชอบ)</label>
-                            <input type="tel" name="host_name" id="host_name" class="input input-bordered w-full"
+                            <input type="tel" name="EMP_CODE" id="EMP_CODE" class="input input-bordered w-full"
                                 placeholder="Host Name">
                         </div>
                         <div class="space-y-2">

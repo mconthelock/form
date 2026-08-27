@@ -2,6 +2,7 @@ import { createTable } from '@amec/webasset/dataTable';
 import { logFormData, showMessage } from '@amec/webasset/utils';
 import { getEmpData, getAreas, getLocations, createForm } from './data';
 import { webflowSubmit } from '@amec/webasset/components/form';
+import { redirectWebflow } from '@amec/webasset/form';
 
 (function () {
     let mockupTable = null;
@@ -137,7 +138,7 @@ import { webflowSubmit } from '@amec/webasset/components/form';
                 $('#empDiv').val(
                     `${empData.SSEC}/${empData.SDEPT}/${empData.SDIV}`,
                 );
-                $('#host_name').val(empData.SNAME);
+                $('#EMP_CODE').val(empData.SNAME);
             } catch (error) {
                 console.log(error);
             }
@@ -562,15 +563,15 @@ import { webflowSubmit } from '@amec/webasset/components/form';
             if (requestType === 'H') {
                 requiredMessage.push(
                     {
-                        element: $('#host_visitor_name'),
+                        element: $('#VISITOR_NAME'),
                         message: 'Please fill the Visitor Name',
                     },
                     {
-                        element: $('#host_name'),
+                        element: $('#EMP_CODE'),
                         message: 'Please fill the Host Name',
                     },
                     {
-                        element: $('#host_company_name'),
+                        element: $('#COMPANY_NAME'),
                         message: 'Please fill the Company Name',
                     },
                 );
@@ -645,6 +646,14 @@ import { webflowSubmit } from '@amec/webasset/components/form';
 
             const formData = new FormData($('#tphForm')[0]);
             formData.set('REMARK', $('#remark').val());
+            formData.set(
+                'HELMET_STICKER',
+                $('#HELMET_STICKER').is(':checked') ? 'Y' : 'N',
+            );
+            formData.set(
+                'PHOTO_PERMIT_BADGE',
+                $('#PHOTO_PERMIT_BADGE').is(':checked') ? 'Y' : 'N',
+            );
 
             logFormData(formData);
             const res = await createForm(formData);
