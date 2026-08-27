@@ -930,9 +930,20 @@ function redirectToWaitApproval() {
     const webflowBase = new URL(
         process.env.APP_WEBFLOW || window.location.origin,
     );
+    const backPath = new URLSearchParams(window.location.search).get('bp');
+    const appRoot =
+        new URL(backPath || '/', webflowBase).pathname.match(
+            /^\/(formtest|form)(?:\/|$)/,
+        )?.[1] ||
+        webflowBase.pathname.match(/^\/(formtest|form)(?:\/|$)/)?.[1] ||
+        (`${window.location.hostname}${webflowBase.hostname}`.includes('test')
+            ? 'formtest'
+            : '') ||
+        window.location.pathname.match(/^\/(formtest|form)(?:\/|$)/)?.[1] ||
+        'form';
 
     window.location.assign(
-        new URL('/form/workflow/WaitApv.asp', webflowBase).toString(),
+        new URL(`/${appRoot}/workflow/WaitApv.asp`, webflowBase).toString(),
     );
 }
 

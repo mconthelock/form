@@ -155,8 +155,20 @@ function redirectToWaitApproval() {
     const webflowBase = new URL(
         process.env.APP_WEBFLOW || window.location.origin,
     );
+    const backPath = new URLSearchParams(window.location.search).get('bp');
+    const appRoot =
+        new URL(backPath || '/', webflowBase).pathname.match(
+            /^\/(formtest|form)(?:\/|$)/,
+        )?.[1] ||
+        webflowBase.pathname.match(/^\/(formtest|form)(?:\/|$)/)?.[1] ||
+        (`${window.location.hostname}${webflowBase.hostname}`.includes('test')
+            ? 'formtest'
+            : '') ||
+        window.location.pathname.match(/^\/(formtest|form)(?:\/|$)/)?.[1] ||
+        'form';
+
     window.location.assign(
-        new URL('/form/workflow/WaitApv.asp', webflowBase).toString(),
+        new URL(`/${appRoot}/workflow/WaitApv.asp`, webflowBase).toString(),
     );
 }
 
@@ -467,14 +479,15 @@ async function renderInvoiceTable(invoices = [], canEditWht = false) {
                             ${canEditWht ? '' : 'readonly'}
                             placeholder="7 digits" />
                     </td>
+                    <td>${escapeHtml(invoice.REFERENCE ?? invoice.REMARK ?? '')}</td>
                 </tr>`,
               )
               .join('')
-        : '<tr><td colspan="7" class="text-center">No invoice information</td></tr>';
+        : '<tr><td colspan="8" class="text-center">No invoice information</td></tr>';
 
     $('#stampTable').html(`<thead><tr>
         <th>No.</th><th>Invoice Date</th><th>Invoice No.</th>
-        <th>Net Price</th><th>VAT</th><th>Total Amount</th><th>Tax code</th>
+        <th>Net Price</th><th>VAT</th><th>Total Amount</th><th>Tax code</th><th>Reference</th>
     </tr></thead><tbody>${rows}</tbody>`);
 }
 
