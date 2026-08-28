@@ -138,7 +138,7 @@
                                     d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                             </svg>
 
-                            <input type="text" id="directSearchInput"
+                            <input type="text" name="NVFNO" id="directSearchInput"
                                 class="block w-64 pl-10 pr-3 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                                 placeholder="Add from PUR-NVF Form">
                         </div>
@@ -256,16 +256,16 @@
                         </div>
                     </div>
                     <!-- <div class="grid grid-cols-[140px_1fr] items-center gap-4">
-                                                                                                                <span class="font-semibold text-sm required">Vendor Name</span>
-                                                                                                                <div class="flex items-center gap-4">
-                                                                                                                    <input type="text" name="COMNAME" class="input input-sm border border-gray-400 h-8 rounded w-1/3 px-2 req">
-                                                                                                                    <label class="flex items-center gap-2 text-sm"><input type="radio" name="VENDTYPE" value="Local" class="w-4 h-4 accent-blue-600  radio-type"> Local</label>
-                                                                                                                    <label class="flex items-center gap-2 text-sm"><input type="radio" name="VENDTYPE" value="Oversea" class="w-4 h-4 accent-blue-600  radio-type"> Oversea</label>
-                                                                                                                    <select name="COUNTRY_SELECT" id="COUNTRY_SELECT" class="" disabled>
-                                                                                                                            <option value="">-- Select Country --</option>
-                                                                                                                    </select>
-                                                                                                                </div>
-                                                                                                            </div> -->
+                                                                                                                    <span class="font-semibold text-sm required">Vendor Name</span>
+                                                                                                                    <div class="flex items-center gap-4">
+                                                                                                                        <input type="text" name="COMNAME" class="input input-sm border border-gray-400 h-8 rounded w-1/3 px-2 req">
+                                                                                                                        <label class="flex items-center gap-2 text-sm"><input type="radio" name="VENDTYPE" value="Local" class="w-4 h-4 accent-blue-600  radio-type"> Local</label>
+                                                                                                                        <label class="flex items-center gap-2 text-sm"><input type="radio" name="VENDTYPE" value="Oversea" class="w-4 h-4 accent-blue-600  radio-type"> Oversea</label>
+                                                                                                                        <select name="COUNTRY_SELECT" id="COUNTRY_SELECT" class="" disabled>
+                                                                                                                                <option value="">-- Select Country --</option>
+                                                                                                                        </select>
+                                                                                                                    </div>
+                                                                                                                </div> -->
 
                     <!-- Address (EN) Section -->
                     <div class="grid grid-cols-[170px_1fr] gap-4 pt-4 border-t border-gray-200">
@@ -531,7 +531,7 @@
                             <!-- ย้าย Dropzone ออกมาข้างนอก เพื่อให้ใช้ความกว้างได้เต็ม 100% ของ Container หลัก -->
                             <!-- <div id="attachFile" class="mt-4">
 
-                                                                                                </div> -->
+                                                                                                    </div> -->
                         </div>
                     </div>
                 </div>

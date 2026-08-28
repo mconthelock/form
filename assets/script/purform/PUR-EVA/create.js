@@ -195,7 +195,7 @@ $(document).on('input', '#VENDCODE', async function () {
     if (keywordValue.length === 5) {
         try {
             showLoader();
-            const searchData = { VND_CODE: keywordValue };
+            const searchData = { VND_CODE: keywordValue, IS_DETAIL: '1' };
             const vendor = await getVendor(searchData);
             console.log(vendor);
 
@@ -396,6 +396,12 @@ $(document).on('keydown', '#modalSearch', async function (e) {
 $(document).on('click', '#tableContainer #tableSearch tbody tr', function () {
     const table = $('#tableSearch').DataTable();
     const rowData = table.row(this).data();
+    const nvfno =
+        'PUR-NVF' +
+        rowData.CYEAR2.slice(-2) +
+        '-' +
+        String(rowData.NRUNNO).padStart(6, '0');
+    $('#directSearchInput').val(nvfno);
     setVendorInfo(rowData);
     $('#searchModal')[0].close();
 });
@@ -684,6 +690,11 @@ $(document).on('click', '#btnDraft, #btnRequest', async function () {
     $('input[name="ACTION"]').val('save');
     const formElement = $('#frmmain')[0];
     const filteredFormData = await packPurevaFormData(formElement);
+    //console.log('ddddddddddddddddd');
+    //logFormData(filteredFormData);
+    //console.log(filteredFormData);
+    //console.log('ddddddddddddddddd');
+
     if (this.id === 'btnDraft') {
         filteredFormData.append('DRAFT', '0');
     }
@@ -990,46 +1001,139 @@ $(document).ready(async function () {
 
 // ฟังก์ชันช่วยเหลือต่าง ๆ
 function setVendorMstInfo(vendorMstData) {
+    console.log(vendorMstData);
+    // return false;
     $('input[name="COMNAME"]').val(vendorMstData.VND_NAME);
-    for (const address of vendorMstData.VENDOR_ADDRESS) {
-        if (address.ADDR_TYPE == 'E') {
-            addr1EnManager.value = address.ADDR_LINE1;
-            addr2EnManager.value = address.ADDR_LINE2;
-            postcodeEnManager.value = address.ADDR_ZIPCODE;
-            countryEnManager.value = address.ADDR_COUNTRY;
-            if (address.ADDR_COUNTRY.toUpperCase() == 'THAILAND') {
-                $('input[name="VENDTYPE"][value="Local"]').prop(
-                    'checked',
-                    true,
-                );
-                provinceManager.textToValue = address.ADDR_STATE;
-                districtManager.textToValue = address.ADDR_CITY;
-                subDistrictManager.textToValue = address.ADDR_SUB_CITY;
-                countryManager.disabled(true);
-            } else {
-                $('input[name="VENDTYPE"][value="Oversea"]').prop(
-                    'checked',
-                    true,
-                );
-                stateEnManager.value = address.ADDR_STATE;
-                cityEnManager.value = address.ADDR_CITY;
-                countryManager.value = address.ADDR_COUNTRY;
-                countryManager.disabled(false);
-            }
-        } else {
-            addrThManager.value = address.ADDR_LINE1 || '';
-        }
-    }
     $('input[name="CONTACT"]').val(vendorMstData.VND_CONTACTNAME);
-    $('input[name="EMAIL"]').val(vendorMstData.VND_EMAIL);
-    $('input[name="WEBSITE"]').val(vendorMstData.VND_WEBSITE);
     $('input[name="TELNO"]').val(vendorMstData.VND_PHONE);
     $('input[name="FAX"]').val(vendorMstData.VND_FAX);
-    $('input[name="BANKNAME"]').val(vendorMstData.BANKNAME);
-    $('input[name="BRANCH"]').val(vendorMstData.BRANCH);
-    $('input[name="ACCNUMBER"]').val(vendorMstData.ACCNUMBER);
     paymentTermManager.value = vendorMstData.VND_TERM;
     currencyManager.value = vendorMstData.CURRENCY;
+    $('#constdcur').text(vendorMstData.STDCUR.CURR_NAME);
+    const vendorfilter = vendorMstData.PURVMM.filter(
+        (item) => item.FORM.CST == '2',
+    );
+    // console.log(vendorfilter);
+    const latestVendor = vendorfilter.sort((a, b) => {
+        // เรียง CYEAR2 จากมากไปน้อย (ปีใหม่กว่าขึ้นก่อน)
+        if (b.CYEAR2 !== a.CYEAR2) {
+            return b.CYEAR2.localeCompare(a.CYEAR2);
+        }
+        // ถ้าปีเท่ากัน เรียง NRUNNO จากมากไปน้อย
+        return b.NRUNNO - a.NRUNNO;
+    })[0];
+    if (latestVendor) {
+        $('input[name="EMAIL"]').val(latestVendor.EMAIL);
+        $('input[name="WEBSITE"]').val(latestVendor.WEBSITE);
+        $('input[name="BANKNAME"]').val(latestVendor.BANKNAME);
+        $('input[name="BRANCH"]').val(latestVendor.BRANCH);
+        $('input[name="ACCNUMBER"]').val(latestVendor.ACCNUMBER);
+        for (const address of latestVendor.ADDRESSES) {
+            if (address.ADDRTYPE == 'E') {
+                addr1EnManager.value = address.ADDR1;
+                addr2EnManager.value = address.ADDR2;
+                stateEnManager.value = address.STATE;
+                cityEnManager.value = address.CITY;
+                countryManager.value = address.COUNTRY;
+                postcodeEnManager.value = address.POSTCODE;
+                countryEnManager.value = address.COUNTRY;
+                if (address.COUNTRY.toUpperCase() == 'THAILAND') {
+                    $('input[name="VENDTYPE"][value="Local"]').prop(
+                        'checked',
+                        true,
+                    );
+                    countryManager.disabled(true);
+                } else {
+                    $('input[name="VENDTYPE"][value="Oversea"]').prop(
+                        'checked',
+                        true,
+                    );
+                    countryManager.disabled(false);
+                }
+            } else {
+                const addrLine =
+                    `${address.ADDR1 || ''} ${address.ADDR2 || ''}`.trim();
+                const fullAddress = [
+                    addrLine,
+                    address.CITY,
+                    address.STATE,
+                    address.POSTCODE,
+                    address.COUNTRY,
+                ]
+                    .filter(Boolean) // กรองค่า null, undefined, ค่าว่าง ออก
+                    .join(',');
+                addrThManager.value = fullAddress;
+            }
+        }
+    }
+    if (vendorMstData.PUREVA) {
+        const evafilter = vendorMstData.PUREVA.filter(
+            (item) => item.FORM.CST == '2',
+        );
+        // console.log(vendorfilter);
+        const latesteva = evafilter.sort((a, b) => {
+            // เรียง CYEAR2 จากมากไปน้อย (ปีใหม่กว่าขึ้นก่อน)
+            if (b.CYEAR2 !== a.CYEAR2) {
+                return b.CYEAR2.localeCompare(a.CYEAR2);
+            }
+            // ถ้าปีเท่ากัน เรียง NRUNNO จากมากไปน้อย
+            return b.NRUNNO - a.NRUNNO;
+        })[0];
+
+        if (latesteva) {
+            if (latesteva.VENDGROUP) {
+                $(`input.radio-typec[value="${latesteva.VENDGROUP}"]`)
+                    .prop('checked', true)
+                    .trigger('change');
+            }
+            if (latesteva.VENDPURPOSE) {
+                $(`input[name="VENDPURPOSE"][value="${latesteva.VENDPURPOSE}"]`)
+                    .prop('checked', true)
+                    .trigger('change');
+            }
+
+            $('input[name="CORPORATE_ID"]').val(latesteva.CORPORATE_ID || '');
+            $('input[name="TAX_ID"]').val(latesteva.TAX_ID || '');
+            if (latesteva.LEGAL_STATUS) {
+                $(
+                    `input[name="LEGAL_STATUS"][value="${latesteva.LEGAL_STATUS}"]`,
+                )
+                    .prop('checked', true)
+                    .trigger('change');
+            }
+        }
+    }
+
+    // for (const address of vendorMstData.VENDOR_ADDRESS) {
+    //     if (address.ADDR_TYPE == 'E') {
+    //         addr1EnManager.value = address.ADDR_LINE1;
+    //         addr2EnManager.value = address.ADDR_LINE2;
+    //         postcodeEnManager.value = address.ADDR_ZIPCODE;
+    //         countryEnManager.value = address.ADDR_COUNTRY;
+    //         if (address.ADDR_COUNTRY.toUpperCase() == 'THAILAND') {
+    //             $('input[name="VENDTYPE"][value="Local"]').prop(
+    //                 'checked',
+    //                 true,
+    //             );
+    //             provinceManager.textToValue = address.ADDR_STATE;
+    //             districtManager.textToValue = address.ADDR_CITY;
+    //             subDistrictManager.textToValue = address.ADDR_SUB_CITY;
+    //             countryManager.disabled(true);
+    //         } else {
+    //             $('input[name="VENDTYPE"][value="Oversea"]').prop(
+    //                 'checked',
+    //                 true,
+    //             );
+    //             stateEnManager.value = address.ADDR_STATE;
+    //             cityEnManager.value = address.ADDR_CITY;
+    //             countryManager.value = address.ADDR_COUNTRY;
+    //             countryManager.disabled(false);
+    //         }
+    //     } else {
+    //         addrThManager.value = address.ADDR_LINE1 || '';
+    //     }
+    // }
+
     // console.log(vendorMstData.VND_CODE);
 
     // for (const VENDOR of vendorMstData.VND_CODE) {
