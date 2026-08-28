@@ -138,7 +138,7 @@
                                     d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                             </svg>
 
-                            <input type="text" id="directSearchInput"
+                            <input type="text" name="NVFNO" id="directSearchInput"
                                 class="block w-64 pl-10 pr-3 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                                 placeholder="Add from PUR-NVF Form">
                         </div>
@@ -256,16 +256,16 @@
                         </div>
                     </div>
                     <!-- <div class="grid grid-cols-[140px_1fr] items-center gap-4">
-                                                        <span class="font-semibold text-sm required">Vendor Name</span>
-                                                        <div class="flex items-center gap-4">
-                                                            <input type="text" name="COMNAME" class="input input-sm border border-gray-400 h-8 rounded w-1/3 px-2 req">
-                                                            <label class="flex items-center gap-2 text-sm"><input type="radio" name="VENDTYPE" value="Local" class="w-4 h-4 accent-blue-600  radio-type"> Local</label>
-                                                            <label class="flex items-center gap-2 text-sm"><input type="radio" name="VENDTYPE" value="Oversea" class="w-4 h-4 accent-blue-600  radio-type"> Oversea</label>
-                                                            <select name="COUNTRY_SELECT" id="COUNTRY_SELECT" class="" disabled>
-                                                                    <option value="">-- Select Country --</option>
-                                                            </select>
-                                                        </div>
-                                                    </div> -->
+                                                                                                                    <span class="font-semibold text-sm required">Vendor Name</span>
+                                                                                                                    <div class="flex items-center gap-4">
+                                                                                                                        <input type="text" name="COMNAME" class="input input-sm border border-gray-400 h-8 rounded w-1/3 px-2 req">
+                                                                                                                        <label class="flex items-center gap-2 text-sm"><input type="radio" name="VENDTYPE" value="Local" class="w-4 h-4 accent-blue-600  radio-type"> Local</label>
+                                                                                                                        <label class="flex items-center gap-2 text-sm"><input type="radio" name="VENDTYPE" value="Oversea" class="w-4 h-4 accent-blue-600  radio-type"> Oversea</label>
+                                                                                                                        <select name="COUNTRY_SELECT" id="COUNTRY_SELECT" class="" disabled>
+                                                                                                                                <option value="">-- Select Country --</option>
+                                                                                                                        </select>
+                                                                                                                    </div>
+                                                                                                                </div> -->
 
                     <!-- Address (EN) Section -->
                     <div class="grid grid-cols-[170px_1fr] gap-4 pt-4 border-t border-gray-200">
@@ -274,8 +274,14 @@
                             <!-- Address Line 1 -->
                             <div>
                                 <label class="block text-xs font-semibold text-gray-600 mb-1">Address (ที่อยู่)</label>
-                                <input type="text" name="ADDRESS_EN" id="ADDRESS_EN"
+                                <input type="text" name="ADDRESS1_EN" id="ADDRESS1_EN" maxlength="30"
                                     placeholder="e.g. 43/86 Moo 16, Bangna Road..."
+                                    class="input input-sm border border-gray-400 h-8 rounded  px-2 w-full req">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-600 mb-1">Address (ที่อยู่)</label>
+                                <input type="text" name="ADDRESS2_EN" id="ADDRESS2_EN"
+                                    placeholder="e.g. 43/86 Moo 16, Bangna Road..." maxlength="200"
                                     class="input input-sm border border-gray-400 h-8 rounded  px-2 w-full req">
                             </div>
                             <div class="grid grid-cols-2 gap-4">
@@ -525,7 +531,7 @@
                             <!-- ย้าย Dropzone ออกมาข้างนอก เพื่อให้ใช้ความกว้างได้เต็ม 100% ของ Container หลัก -->
                             <!-- <div id="attachFile" class="mt-4">
 
-                                        </div> -->
+                                                                                                    </div> -->
                         </div>
                     </div>
                 </div>
@@ -1094,9 +1100,9 @@
                     <tbody>
                         <tr class="row-template">
                             <td class="border border-gray-400 p-1"><input type="text" name="SHARENAME[]"
-                                    class="w-full px-1 req"></td>
+                                    class="w-full px-1 share-name "></td>
                             <td class="border border-gray-400 p-1"><input type="text" name="SHAREPER[]"
-                                    class="input-decimal w-full px-1 text-center req"></td>
+                                    class="input-decimal w-full px-1 text-center share-per "></td>
                             <td class="border border-gray-400 p-1 text-center"></td>
                         </tr>
                     </tbody>
@@ -1128,7 +1134,7 @@
 
                         <div class="flex items-center gap-2">
                             <span class="flex-shrink-0 whitespace-nowrap">Average Age:</span>
-                            <input type="text" name = "AVGAGE"
+                            <input type="text" name = "AVGAGE" maxlength="20"
                                 class="flex-1 input input-bordered input-sm bg-gray-50 border-gray-300 req">
                         </div>
 
@@ -1293,9 +1299,9 @@
                         <tbody>
                             <tr class="row-template">
                                 <td class="border border-gray-400 p-1"><input name="CUSNAME[]" type="text"
-                                        class="w-full px-1 req"></td>
+                                        class="w-full px-1 cus-name "></td>
                                 <td class="border border-gray-400 p-1"><input type="text" name="CUSPER[]"
-                                        class="input-decimal w-full px-1 text-center req"></td>
+                                        class="input-decimal w-full px-1 text-center cus-per"></td>
                                 <td class="border border-gray-400 p-1"></td>
                             </tr>
                         </tbody>
@@ -1320,9 +1326,9 @@
                         <tbody>
                             <tr class="row-template">
                                 <td class="border border-gray-400 p-1"><input name = "SUPNAME[]" type="text"
-                                        class="w-full px-1 req"></td>
+                                        class="w-full px-1 sup-name"></td>
                                 <td class="border border-gray-400 p-1"><input type="text" name="SUPPER[]"
-                                        class="input-decimal w-full px-1 text-center req"></td>
+                                        class="input-decimal w-full px-1 text-center sup-per "></td>
                                 <td class="border border-gray-400 p-1"></td>
                             </tr>
                         </tbody>
@@ -1347,9 +1353,9 @@
                         <tbody>
                             <tr class="row-template">
                                 <td class="border border-gray-400 p-1"><input type="text" name="PRONAME[]"
-                                        class="w-full px-1 req"></td>
+                                        class="w-full px-1 pro-name"></td>
                                 <td class="border border-gray-400 p-1"><input name="PROPER[]" type="text"
-                                        class="input-decimal w-full px-1 text-center req"></td>
+                                        class="input-decimal w-full px-1 text-center pro-per"></td>
                                 <td class="border border-gray-400 p-1"></td>
                             </tr>
                         </tbody>

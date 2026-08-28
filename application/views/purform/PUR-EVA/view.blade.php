@@ -834,7 +834,7 @@
                 Attach files</div>
             <div class="">
                 <!-- หัวข้อที่ 1: Company Certificate / Vat Register / Company Profile (FILE_TYPE = 11) -->
-                <div class="nonpro mt-4">
+                <div class="mt-4">
                     <span class="text-sm font-medium block mb-2">Company Certificate / Vat Register / Company Profile
                         :</span>
                     <div id="file-type-11" class="file-container"></div>

@@ -50,3 +50,19 @@ export async function getData(form) {
         data: form,
     });
 }
+
+export async function createPurVmmAuto(form) {
+    return fetchUtils({
+        url: `${process.env.APP_API}/purform/pur-vmm/createauto`,
+        method: 'POST',
+        data: form,
+    });
+}
+
+export async function genVndCode() {
+    return fetchUtils({
+        url: `${process.env.APP_API}/pursys/vendors/create`,
+        method: 'POST',
+        data: form,
+    });
+}

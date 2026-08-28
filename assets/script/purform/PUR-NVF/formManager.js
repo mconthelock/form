@@ -286,9 +286,21 @@ export const vendorTypeManager = {
 
 // -------------------------- End Vendor Type Manager -------------------
 
-export const addrEnManager = {
+export const addr1EnManager = {
     get input() {
-        return $('#ADDRESS_EN');
+        return $('#ADDRESS1_EN');
+    },
+    get value() {
+        return this.input.val();
+    },
+    set value(val) {
+        this.input.val(val);
+    },
+};
+
+export const addr2EnManager = {
+    get input() {
+        return $('#ADDRESS2_EN');
     },
     get value() {
         return this.input.val();
@@ -471,10 +483,10 @@ export const vendorCodeManager = {
             try {
                 showLoader(); // เปิด Loader รอระว่างดึงข้อมูล
 
-                const searchData = { KEYWORD: keywordValue };
+                const searchData = { VND_CODE: keywordValue, IS_DETAIL: '1' };
                 const vendor = await getVendor(searchData);
 
-                //console.log("Vendor Data:", vendor);
+                console.log('Vendor Data:', vendor);
 
                 if (vendor[0]) {
                     typejobManager.removecls('req');
@@ -482,59 +494,82 @@ export const vendorCodeManager = {
                     comnameManager.value = vendor[0].VND_NAME || '';
                     $(`#V-section`).removeClass('hidden');
                     $(`#F-section`).removeClass('hidden');
+                    $('#CONTACT').val(vendor[0].VND_CONTACTNAME || '');
+                    $('#TELNO').val(vendor[0].VND_PHONE || '');
+                    $('#FAXNO').val(vendor[0].VND_FAX || '');
                     // console.log(">>>>>>>>>>"+vendor[0]);
+                    paymentTermManager.value = vendor[0].VND_TERM;
+                    const vendorfilter = vendor[0].PURVMM.filter(
+                        (item) => item.FORM.CST == '2',
+                    );
+                    // console.log(vendorfilter);
+                    const latestVendor = vendorfilter.sort((a, b) => {
+                        // เรียง CYEAR2 จากมากไปน้อย (ปีใหม่กว่าขึ้นก่อน)
+                        if (b.CYEAR2 !== a.CYEAR2) {
+                            return b.CYEAR2.localeCompare(a.CYEAR2);
+                        }
+                        // ถ้าปีเท่ากัน เรียง NRUNNO จากมากไปน้อย
+                        return b.NRUNNO - a.NRUNNO;
+                    })[0];
+                    console.log(latestVendor);
+                    //return false;
+                    if (latestVendor) {
+                        $('#EMAIL').val(latestVendor.EMAIL || '');
+                        $('#WEBSITE').val(latestVendor.WEBSITE || '');
+                        $('#BANKNAME').val(latestVendor.BANKNAME || '');
+                        $('#BRANCH').val(latestVendor.BRANCH || '');
+                        $('#ACCNUMBER').val(latestVendor.ACCNUMBER || '');
+                        if (latestVendor.ADDRESSES) {
+                            //console.log('ifff');
 
-                    $('#CONTACT').val(vendor[0].VND_SALE || '');
-                    $('#EMAIL').val(vendor[0].EMAIL || '');
-                    $('#WEBSITE').val(vendor[0].ADDR_WEB || '');
-                    $('#TELNO').val(vendor[0].ADDR_PHONE || '');
-                    $('#FAXNO').val(vendor[0].FAX || '');
-                    $('#BANKNAME').val(vendor[0].BANKNAME || '');
-                    $('#BRANCH').val(vendor[0].BRANCH || '');
-                    $('#ACCNUMBER').val(vendor[0].ACCNUMBER || '');
-                    paymentTermManager.value =
-                        vendor[0].VENDOR_CODES[0].CODE_PAY;
-                    if (vendor[0].VENDOR_ADDRESS) {
-                        vendor[0].VENDOR_ADDRESS.forEach(function (address) {
-                            // 1. รวมสายอักขระที่อยู่ (Address Line 1 + Line 2) เข้าด้วยกัน
-                            const addrLine =
-                                `${address.ADDR_LINE1 || ''} ${address.ADDR_LINE2 || ''}`.trim();
-                            const state = address.ADDR_STATE || ''; // จังหวัด
-                            const city = address.ADDR_CITY || ''; // อำเภอ (เช็กฟิลด์หลังบ้านอีกทีว่าสลับกันไหม)
-                            // const subDistrict = address.ADDR_SUB_CITY || ''; // ตำบล
-                            const postcode = address.ADDR_ZIPCODE || ''; // รหัสไปรษณีย์
-                            const country = address.ADDR_COUNTRY || ''; // ประเทศ
+                            latestVendor.ADDRESSES.forEach(function (address) {
+                                // 1. รวมสายอักขระที่อยู่ (Address Line 1 + Line 2) เข้าด้วยกัน
+                                const addrLine =
+                                    `${address.ADDR1 || ''} ${address.ADDR2 || ''}`.trim();
+                                const state = address.STATE || ''; // จังหวัด
+                                const city = address.CITY || ''; // อำเภอ (เช็กฟิลด์หลังบ้านอีกทีว่าสลับกันไหม)
+                                // const subDistrict = address.ADDR_SUB_CITY || ''; // ตำบล
+                                const postcode = address.POSTCODE || ''; // รหัสไปรษณีย์
+                                const country = address.COUNTRY || ''; // ประเทศ
 
-                            // 2. แยกจัดการตามประเภทที่อยู่ ADDR_TYPE ('T' = ภาษาไทย, 'E' = ภาษาอังกฤษ)
-                            if (address.ADDR_TYPE === 'T') {
-                                const fullAddress = [
-                                    addrLine,
-                                    city,
-                                    state,
-                                    postcode,
-                                    country,
-                                ]
-                                    .filter(Boolean) // กรองค่า null, undefined, ค่าว่าง ออก
-                                    .join(',');
-                                addrThManager.value = fullAddress;
-                            } else if (address.ADDR_TYPE === 'E') {
-                                // แปะลงฟิลด์ภาษาอังกฤษ
-                                addrEnManager.value = addrLine;
-                                if (
-                                    address.ADDR_COUNTRY &&
-                                    address.ADDR_COUNTRY.toUpperCase() ==
-                                        'THAILAND'
-                                ) {
-                                    vendorTypeManager.value = 'Local';
-                                } else {
-                                    vendorTypeManager.value = 'Oversea';
+                                // 2. แยกจัดการตามประเภทที่อยู่ ADDR_TYPE ('T' = ภาษาไทย, 'E' = ภาษาอังกฤษ)
+                                if (address.ADDRTYPE === 'T') {
+                                    const fullAddress = [
+                                        addrLine,
+                                        city,
+                                        state,
+                                        postcode,
+                                        country,
+                                    ]
+                                        .filter(Boolean) // กรองค่า null, undefined, ค่าว่าง ออก
+                                        .join(',');
+                                    addrThManager.value = fullAddress;
+                                } else if (address.ADDRTYPE === 'E') {
+                                    // แปะลงฟิลด์ภาษาอังกฤษ
+                                    addr1EnManager.value = address.ADDR1;
+                                    addr2EnManager.value = address.ADDR2;
+                                    if (
+                                        address.COUNTRY &&
+                                        address.COUNTRY.toUpperCase() ==
+                                            'THAILAND'
+                                    ) {
+                                        vendorTypeManager.value = 'Local';
+                                    } else {
+                                        vendorTypeManager.value = 'Oversea';
+                                    }
+                                    cityEnManager.value = city;
+                                    stateEnManager.value = state;
+                                    postcodeEnManager.value = postcode;
+                                    countryEnManager.value = country;
                                 }
-                                cityEnManager.value = city;
-                                stateEnManager.value = district;
-                                postcodeEnManager.value = state;
-                                countryEnManager.value = country;
-                            }
-                        });
+                            });
+                        }
+                    } else {
+                        showMessage(
+                            'PUR-VMM not found.ไม่พบข้อมูล PUR-VMM สำหรับรหัสนี้',
+                            'warning',
+                        );
+                        resetformid('V-section');
                     }
                 } else {
                     showMessage(
@@ -704,7 +739,7 @@ export const formManager = {
         data.ADDRESSES.forEach(function (address) {
             // const fullAddress = `${address.ADDR} ${address.CITY} ${address.STATE} ${address.POSTCODE} ${address.COUNTRY}`;
             const fullAddress = [
-                address.ADDR,
+                address.ADDR1 || ' ' || ADDR2,
                 address.CITY,
                 address.STATE,
                 address.POSTCODE,
@@ -788,14 +823,15 @@ export const formManager = {
         }
         for (const address of data.ADDRESSES) {
             if (address.ADDRTYPE === 'E') {
-                addrEnManager.value = address.ADDR || '';
+                addr1EnManager.value = address.ADDR1 || '';
+                addr2EnManager.value = address.ADDR2 || '';
                 cityEnManager.value = address.CITY;
                 stateEnManager.value = address.STATE;
 
                 postcodeEnManager.value = address.POSTCODE;
                 countryEnManager.value = address.COUNTRY;
             } else {
-                addrThManager.value = address.ADDR || '';
+                addrThManager.value = address.ADDR1 || '';
             }
         }
 
@@ -814,8 +850,7 @@ export const formManager = {
         renderFilesByType(attachedFiles, 14, 'file-type-14', true);
         renderFilesByType(attachedFiles, 15, 'file-type-15', true);
         renderFilesByType(attachedFiles, 2, 'file-type-2', true);
-        data.ATTACH_OTHER &&
-            $('#ATTACH_OTHER').val(data.ATTACH_OTHER || 'xxxx');
+        data.ATTACH_OTHER && $('#ATTACH_OTHER').val(data.ATTACH_OTHER || '');
         // if (data.ATTACH_TYPE) {
         // Attach Type
         // attachTypeManager.checked = data.ATTACH_TYPE.split('|');
@@ -1322,12 +1357,29 @@ export const ReqtypeManager = {
             toggleAttachSection('bank', false);
             toggleAttachSection('changeaddr', false);
         } else {
-            const ignoredFields =
-                '#FAX, #COUNTRY_SELECT, #ATTACH_OTHER, #ADDRESS_TH';
+            console.log('xxxxxxxxxxxx');
+
+            const ignoredFields = [
+                'FAX',
+                'WEBSITE',
+                'BANKNAME',
+                'BRANCH',
+                'ACCNUMBER',
+                'COUNTRY_SELECT',
+                'ATTACH_OTHER',
+                'ADDRESS2_EN',
+                'ADDRESS_TH',
+            ];
             reasonManager.removecls('req');
             vSection
                 .find('input, textarea, select')
-                .not(ignoredFields)
+                .filter(function () {
+                    // ถ้า id หรือ name ตรงกับรายการที่ต้องยกเว้น จะไม่ถูกเลือก
+                    return (
+                        !ignoredFields.includes(this.id) &&
+                        !ignoredFields.includes(this.name)
+                    );
+                })
                 .addClass('req');
             vSection
                 .find('input, textarea')
@@ -1705,7 +1757,7 @@ export const actionFormManager = {
                 reasonManager.input.hasClass('req') ? {element: reasonManager.input, message: "Please input Reason."} : null,
                 {element: vendorTypeManager.radio, message: "Please select Local or Overseas."},
                  countryManager.select.hasClass('req') ? {element: countryManager.select, message: "Please select Country."} : null,
-                {element: addrEnManager.input, message: "Please input Address (EN)."},
+                {element: addr1EnManager.input, message: "Please input Address (EN)."},
                 // {element: attachTypeManager.checkbox, message: "Please select Attach Type."},
                 // {element: attachFileManager.input, message: "Please attach files."},
             ].filter(Boolean);
