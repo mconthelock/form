@@ -483,11 +483,10 @@ export const vendorCodeManager = {
             try {
                 showLoader(); // เปิด Loader รอระว่างดึงข้อมูล
 
-                const searchData = { VND_CODE: keywordValue };
+                const searchData = { VND_CODE: keywordValue, IS_DETAIL: '1' };
                 const vendor = await getVendor(searchData);
 
                 console.log('Vendor Data:', vendor);
-                return false;
 
                 if (vendor[0]) {
                     typejobManager.removecls('req');
@@ -506,6 +505,11 @@ export const vendorCodeManager = {
                     $('#BRANCH').val(vendor[0].BRANCH || '');
                     $('#ACCNUMBER').val(vendor[0].ACCNUMBER || '');
                     paymentTermManager.value = vendor[0].VND_TERM;
+                    const vendorfilter = vendor[0].PURVMM.filter(
+                        (item) => item.FORM.CST == '2',
+                    );
+                    console.log(vendorfilter);
+                    return false;
                     if (vendor[0].VND_ADDRESS1) {
                         vendor[0].VENDOR_ADDRESS.forEach(function (address) {
                             // 1. รวมสายอักขระที่อยู่ (Address Line 1 + Line 2) เข้าด้วยกัน

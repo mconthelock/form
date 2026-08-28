@@ -256,16 +256,16 @@
                         </div>
                     </div>
                     <!-- <div class="grid grid-cols-[140px_1fr] items-center gap-4">
-                                                                                <span class="font-semibold text-sm required">Vendor Name</span>
-                                                                                <div class="flex items-center gap-4">
-                                                                                    <input type="text" name="COMNAME" class="input input-sm border border-gray-400 h-8 rounded w-1/3 px-2 req">
-                                                                                    <label class="flex items-center gap-2 text-sm"><input type="radio" name="VENDTYPE" value="Local" class="w-4 h-4 accent-blue-600  radio-type"> Local</label>
-                                                                                    <label class="flex items-center gap-2 text-sm"><input type="radio" name="VENDTYPE" value="Oversea" class="w-4 h-4 accent-blue-600  radio-type"> Oversea</label>
-                                                                                    <select name="COUNTRY_SELECT" id="COUNTRY_SELECT" class="" disabled>
-                                                                                            <option value="">-- Select Country --</option>
-                                                                                    </select>
-                                                                                </div>
-                                                                            </div> -->
+                                                                                                                <span class="font-semibold text-sm required">Vendor Name</span>
+                                                                                                                <div class="flex items-center gap-4">
+                                                                                                                    <input type="text" name="COMNAME" class="input input-sm border border-gray-400 h-8 rounded w-1/3 px-2 req">
+                                                                                                                    <label class="flex items-center gap-2 text-sm"><input type="radio" name="VENDTYPE" value="Local" class="w-4 h-4 accent-blue-600  radio-type"> Local</label>
+                                                                                                                    <label class="flex items-center gap-2 text-sm"><input type="radio" name="VENDTYPE" value="Oversea" class="w-4 h-4 accent-blue-600  radio-type"> Oversea</label>
+                                                                                                                    <select name="COUNTRY_SELECT" id="COUNTRY_SELECT" class="" disabled>
+                                                                                                                            <option value="">-- Select Country --</option>
+                                                                                                                    </select>
+                                                                                                                </div>
+                                                                                                            </div> -->
 
                     <!-- Address (EN) Section -->
                     <div class="grid grid-cols-[170px_1fr] gap-4 pt-4 border-t border-gray-200">
@@ -531,7 +531,7 @@
                             <!-- ย้าย Dropzone ออกมาข้างนอก เพื่อให้ใช้ความกว้างได้เต็ม 100% ของ Container หลัก -->
                             <!-- <div id="attachFile" class="mt-4">
 
-                                                                </div> -->
+                                                                                                </div> -->
                         </div>
                     </div>
                 </div>
@@ -1100,9 +1100,9 @@
                     <tbody>
                         <tr class="row-template">
                             <td class="border border-gray-400 p-1"><input type="text" name="SHARENAME[]"
-                                    class="w-full px-1 req"></td>
+                                    class="w-full px-1 share-name "></td>
                             <td class="border border-gray-400 p-1"><input type="text" name="SHAREPER[]"
-                                    class="input-decimal w-full px-1 text-center req"></td>
+                                    class="input-decimal w-full px-1 text-center share-per "></td>
                             <td class="border border-gray-400 p-1 text-center"></td>
                         </tr>
                     </tbody>
@@ -1299,9 +1299,9 @@
                         <tbody>
                             <tr class="row-template">
                                 <td class="border border-gray-400 p-1"><input name="CUSNAME[]" type="text"
-                                        class="w-full px-1 req"></td>
+                                        class="w-full px-1 cus-name "></td>
                                 <td class="border border-gray-400 p-1"><input type="text" name="CUSPER[]"
-                                        class="input-decimal w-full px-1 text-center req"></td>
+                                        class="input-decimal w-full px-1 text-center cus-per"></td>
                                 <td class="border border-gray-400 p-1"></td>
                             </tr>
                         </tbody>
@@ -1326,9 +1326,9 @@
                         <tbody>
                             <tr class="row-template">
                                 <td class="border border-gray-400 p-1"><input name = "SUPNAME[]" type="text"
-                                        class="w-full px-1 req"></td>
+                                        class="w-full px-1 sup-name"></td>
                                 <td class="border border-gray-400 p-1"><input type="text" name="SUPPER[]"
-                                        class="input-decimal w-full px-1 text-center req"></td>
+                                        class="input-decimal w-full px-1 text-center sup-per "></td>
                                 <td class="border border-gray-400 p-1"></td>
                             </tr>
                         </tbody>
@@ -1353,9 +1353,9 @@
                         <tbody>
                             <tr class="row-template">
                                 <td class="border border-gray-400 p-1"><input type="text" name="PRONAME[]"
-                                        class="w-full px-1 req"></td>
+                                        class="w-full px-1 pro-name"></td>
                                 <td class="border border-gray-400 p-1"><input name="PROPER[]" type="text"
-                                        class="input-decimal w-full px-1 text-center req"></td>
+                                        class="input-decimal w-full px-1 text-center pro-per"></td>
                                 <td class="border border-gray-400 p-1"></td>
                             </tr>
                         </tbody>

@@ -160,38 +160,6 @@ const requiredMessage = [
         element: $('input[name="AVGAGE"]'),
         message: 'Please input Average Age',
     },
-    {
-        element: $('input[name="SHARENAME[]"]'),
-        message: 'Please input Shareholder',
-    },
-    {
-        element: $('input[name="SHAREPER[]"]'),
-        message: 'Please input Shareholder',
-    },
-    {
-        element: $('input[name="CUSNAME[]"]'),
-        message: 'Please input Main Customer',
-    },
-    {
-        element: $('input[name="CUSPER[]"]'),
-        message: 'Please input Main Customer',
-    },
-    {
-        element: $('input[name="SUPNAME[]"]'),
-        message: 'Please input Supplier of Main Material',
-    },
-    {
-        element: $('input[name="SUPPER[]"]'),
-        message: 'Please input Supplier of Main Material',
-    },
-    {
-        element: $('input[name="PRONAME[]"]'),
-        message: 'Please input Main Product',
-    },
-    {
-        element: $('input[name="PROPER[]"]'),
-        message: 'Please input Main Product',
-    },
 ].filter(Boolean);
 
 // ==========================================
@@ -227,7 +195,7 @@ $(document).on('input', '#VENDCODE', async function () {
     if (keywordValue.length === 5) {
         try {
             showLoader();
-            const searchData = { KEYWORD: keywordValue };
+            const searchData = { VND_CODE: keywordValue };
             const vendor = await getVendor(searchData);
             console.log(vendor);
 
@@ -643,6 +611,52 @@ $(document).on('click', '#btnDraft, #btnRequest', async function () {
                 hasValue,
             );
         });
+        const selectedVendGroup =
+            $('input[name="VENDGROUP"]:checked').val() || '';
+        const isNonProd = selectedVendGroup.includes('6:Non-Production');
+
+        if (!isNonProd) {
+            if (
+                !validateTablePair(
+                    'share-name',
+                    'share-per',
+                    'Please fill in complete Shareholder information',
+                )
+            ) {
+                return false;
+            }
+
+            // 2. เช็คตารางที่ 2 (เช่น Customer) ถ้าไม่กรอก ให้ alert และหยุดทันที
+            if (
+                !validateTablePair(
+                    'cus-name',
+                    'cus-per',
+                    'Please fill in complete Main Customer information',
+                )
+            ) {
+                return false;
+            }
+
+            // 3. เช็คตารางที่ 3 (เช่น Supplier) ถ้าไม่กรอก ให้ alert และหยุดทันที
+            if (
+                !validateTablePair(
+                    'sup-name',
+                    'sup-per',
+                    'Please fill in complete Supplier of Main Material information',
+                )
+            ) {
+                return false;
+            }
+            if (
+                !validateTablePair(
+                    'pro-name',
+                    'pro-per',
+                    'Please fill in complete Main Product information',
+                )
+            ) {
+                return false;
+            }
+        }
 
         if (!(await requiredForm('#frmmain', activeFields))) return;
         if (!checkAttFile()) {
@@ -692,11 +706,72 @@ $(document).on('click', '#btnDraft, #btnRequest', async function () {
 
 $(document).on('click', 'button[name="btnAction"]', async function () {
     const act = $(this).val();
+    const selectedVendGroup = $('input[name="VENDGROUP"]:checked').val() || '';
+    const isNonProd = selectedVendGroup.includes('6:Non-Production');
     $('input[name="ACTION"]').val(act);
     if (act == 'approve') {
+        if (!isNonProd) {
+            if (
+                !validateTablePair(
+                    'share-name',
+                    'share-per',
+                    'Please fill in complete Shareholder information',
+                )
+            ) {
+                return false;
+            }
+
+            // 2. เช็คตารางที่ 2 (เช่น Customer) ถ้าไม่กรอก ให้ alert และหยุดทันที
+            if (
+                !validateTablePair(
+                    'cus-name',
+                    'cus-per',
+                    'Please fill in complete Main Customer information',
+                )
+            ) {
+                return false;
+            }
+
+            // 3. เช็คตารางที่ 3 (เช่น Supplier) ถ้าไม่กรอก ให้ alert และหยุดทันที
+            if (
+                !validateTablePair(
+                    'sup-name',
+                    'sup-per',
+                    'Please fill in complete Supplier of Main Material information',
+                )
+            ) {
+                return false;
+            }
+            if (
+                !validateTablePair(
+                    'pro-name',
+                    'pro-per',
+                    'Please fill in complete Main Product information',
+                )
+            ) {
+                return false;
+            }
+        }
+
         let activeFields = requiredMessage.filter(
             (f) => !f.element.prop('disabled'),
         );
+
+        console.log('============');
+        console.log(activeFields);
+        console.log('============');
+        $('#frmmain')
+            .find('input, select, textarea')
+            .each(function () {
+                if ($(this).hasClass('req')) {
+                    console.log(
+                        $(this).attr('name'),
+                        $(this).attr('id'),
+                        $(this).val(),
+                    );
+                }
+            });
+        console.log('before require');
         if (!(await requiredForm('#frmmain', activeFields))) return;
         console.log('after require');
         if (!checkAttFile()) {
@@ -945,30 +1020,32 @@ function setVendorMstInfo(vendorMstData) {
             addrThManager.value = address.ADDR_LINE1 || '';
         }
     }
-    $('input[name="CONTACT"]').val(vendorMstData.VND_SALE);
-    $('input[name="EMAIL"]').val(vendorMstData.EMAIL);
-    $('input[name="WEBSITE"]').val(vendorMstData.ADDR_WEB);
-    $('input[name="TELNO"]').val(vendorMstData.ADDR_PHONE);
-    $('input[name="FAX"]').val(vendorMstData.FAX);
+    $('input[name="CONTACT"]').val(vendorMstData.VND_CONTACTNAME);
+    $('input[name="EMAIL"]').val(vendorMstData.VND_EMAIL);
+    $('input[name="WEBSITE"]').val(vendorMstData.VND_WEBSITE);
+    $('input[name="TELNO"]').val(vendorMstData.VND_PHONE);
+    $('input[name="FAX"]').val(vendorMstData.VND_FAX);
     $('input[name="BANKNAME"]').val(vendorMstData.BANKNAME);
     $('input[name="BRANCH"]').val(vendorMstData.BRANCH);
     $('input[name="ACCNUMBER"]').val(vendorMstData.ACCNUMBER);
-    console.log(vendorMstData.VENDOR_CODES);
+    paymentTermManager.value = vendorMstData.VND_TERM;
+    currencyManager.value = vendorMstData.CURRENCY;
+    // console.log(vendorMstData.VND_CODE);
 
-    for (const VENDOR of vendorMstData.VENDOR_CODES) {
-        console.log(VENDOR.CODE_NUM);
-        console.log($('#VENDCODE').val());
+    // for (const VENDOR of vendorMstData.VND_CODE) {
+    //     console.log(VENDOR.CODE_NUM);
+    //     console.log($('#VENDCODE').val());
 
-        if (VENDOR.CODE_NUM == $('#VENDCODE').val()) {
-            paymentTermManager.value = VENDOR.TERM.STERMCODE;
-            currencyManager.value = VENDOR.STDCUR.CURR_CODE;
-            console.log(VENDOR.STDCUR.CURR_NAME);
+    //     if (VENDOR.CODE_NUM == $('#VENDCODE').val()) {
+    //         paymentTermManager.value = VENDOR.TERM.STERMCODE;
+    //         currencyManager.value = VENDOR.STDCUR.CURR_CODE;
+    //         console.log(VENDOR.STDCUR.CURR_NAME);
 
-            $('#constdcur').text(VENDOR.STDCUR.CURR_NAME);
-        } else {
-            console.log('else');
-        }
-    }
+    //         $('#constdcur').text(VENDOR.STDCUR.CURR_NAME);
+    //     } else {
+    //         console.log('else');
+    //     }
+    // }
 }
 
 function setVendorInfo(vendorData) {
@@ -990,7 +1067,7 @@ function setVendorInfo(vendorData) {
             postcodeEnManager.value = address.POSTCODE;
             countryEnManager.value = address.COUNTRY;
         } else {
-            addrThManager.value = address.ADDR || '';
+            addrThManager.value = address.ADDR1 || '';
             // provinceThManager.value = address.PROVINCE;
             // districtThManager.value = address.DISTRICT;
             // subDistrictThManager.value = address.SUBDISTRICT;
@@ -1105,6 +1182,9 @@ async function setVendorEvaInfo(formeva) {
     $('input[name="EMPDIRECT"]').val(formeva.EMPDIRECT);
     $('input[name="EMPINDIRECT"]').val(formeva.EMPINDIRECT);
     $('.totemp').val(Number(formeva.EMPDIRECT) + Number(formeva.EMPINDIRECT));
+    $('input[name="AVGAGE"]').val(formeva.AVGAGE);
+    $('input[name="LAND"]').val(formeva.LAND);
+    $('input[name="FACTORY"]').val(formeva.FACTORY);
 
     $(`input[name="QM_STATUS"][value="${formeva.QM_STATUS}"]`)
         .prop('checked', true)
@@ -1578,4 +1658,31 @@ function formatText(inputString) {
 
     // ตัวแรกตัวใหญ่ นอกนั้นตัวเล็กทั้งหมด
     return noSpace.charAt(0).toUpperCase() + noSpace.slice(1).toLowerCase();
+}
+
+function validateTablePair(nameClass, perClass, message) {
+    let hasValidRow = false;
+
+    const names = document.querySelectorAll(`.${nameClass}`);
+    const pers = document.querySelectorAll(`.${perClass}`);
+
+    for (let i = 0; i < names.length; i++) {
+        let nameVal = names[i].value.trim();
+        let perVal = pers[i].value.trim();
+
+        // เช็คว่าช่องคู่ไหนกรอกครบถ้วนบ้าง
+        if (nameVal !== '' && perVal !== '') {
+            hasValidRow = true;
+            break;
+        }
+    }
+
+    // ถ้าตรวจสอบแล้ว "ไม่มี" แถวไหนกรอกครบเลยแม้แต่แถวเดียว
+    if (!hasValidRow) {
+        // แจ้งเตือนด้วยฟังก์ชันกลาง (หรือ alert ตามระบบของคุณ)
+        showMessage(message, 'warning');
+        return false; // สั่งหยุดการทำงานทันที ไม่ไปต่อ
+    }
+
+    return true; // ผ่าน ไปทำงานต่อได้
 }

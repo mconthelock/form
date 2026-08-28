@@ -58,3 +58,11 @@ export async function createPurVmmAuto(form) {
         data: form,
     });
 }
+
+export async function genVndCode() {
+    return fetchUtils({
+        url: `${process.env.APP_API}/pursys/vendors/create`,
+        method: 'POST',
+        data: form,
+    });
+}

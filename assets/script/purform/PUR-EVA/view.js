@@ -27,6 +27,7 @@ import {
 import { redirectWebflow } from '@amec/webasset/form';
 
 var form = {};
+var formeva = {};
 let cextdata;
 
 $(async function () {
@@ -46,13 +47,12 @@ $(async function () {
 
         const cst = await getFormStatus(form);
 
-        const [formDetail, apvno, flow, formeva] = await Promise.all([
+        const [formDetail, apvno, flow] = await Promise.all([
             getformDetail(form),
             $('.apv-data').attr('empno'),
             showflow({ ...form, showStep: true }),
-            getData(form),
         ]);
-        console.log(formeva);
+        ((formeva = await getData(form)), console.log(formeva));
         if (cst != '0') {
             formSubmitSkeleton({
                 count: form.RETURN ? 3 : 4,
@@ -495,13 +495,41 @@ $(document).on('click', 'button[name="btnAction"]', async function () {
             ACTION: act,
             REMARK: remark,
         });
-        console.log(res);
-
+        //console.log(res);
         if (res.status == true) {
             const cst = await getFormStatus({ ...form });
-            const res = await createPurVmmAuto(form);
-            console.log(res);
-            return false;
+            if (cst == 2) {
+                if (formeva.OPERATION == 'N') {
+                    const today = new Date();
+                    const formattedDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+                    let gp = formeva.VENDGROUP.match(/^\d+/)?.[0];
+                    let p = '';
+                    if (gp != 6) {
+                        p = formeva.VENDPURPOSE.match(/^\d+/)?.[0];
+                    }
+                    const vnd = await genVndCode({
+                        VND_NAME: formeva.COMNAME,
+                        VND_REGISTED: formattedDate,
+                        VND_STATUS: '0',
+                        VENDGROUP: gp,
+                        VENDPURPOSE: p,
+                    });
+                    const datavndcode = {
+                        ...form,
+                        VENDCODE: vnd.VND_CODE,
+                    };
+                    const resupd = await updatePurEvaForm(datavndcode);
+                }
+                if (
+                    formeva.OPERATION == 'N' ||
+                    (formeva.OPERATION == 'A' && formeva.UPSTATUS == 'Y')
+                ) {
+                    const res = await createPurVmmAuto(form);
+                }
+            }
+            //
+            //console.log(res);
+            //return false;
             redirectWebflow();
         }
     } catch (error) {
