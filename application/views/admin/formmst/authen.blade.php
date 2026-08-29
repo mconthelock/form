@@ -57,6 +57,7 @@
         </div>
         <div class="flex items-center gap-3">
             <button id="reset-filter" class="btn" type="button">Reset Filters</button>
+            <a href="{{ base_url('admin/formmaster') }}" class="btn btn-neutral btn-outline" type="button">Back</a>
         </div>
     </section>
 

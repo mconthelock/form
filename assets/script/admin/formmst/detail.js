@@ -11,30 +11,30 @@ import {
     getFormDept,
     getFormMasterGroup,
     getFlowMaster,
+    populateOrganizations,
+    getPositions,
 } from '../../service';
 import { setFormNo, createFormMaster, updateFormMaster } from './data';
 
 select2();
-var cyear, orgno, nno;
 $(document).ready(async function (e) {
     try {
         const master = await getFormMaster();
-        const fornno = await setFormNo();
-        var data = [];
-        if (fornno !== null) {
-            data = master.find(
-                (item) =>
-                    item.NNO == fornno.nno &&
-                    item.VORGNO == fornno.orgno &&
-                    item.CYEAR == fornno.cyear,
-            );
-            if (!data) {
-                showErrorMessage('Form not found');
-                return;
-            }
+        const formno = await setFormNo();
+        if (formno === null) {
+            showErrorMessage('Form Master not found');
+            return;
         }
+
+        const data = master.find(
+            (item) =>
+                item.NNO == formno.nno &&
+                item.VORGNO == formno.orgno &&
+                item.CYEAR == formno.cyear,
+        );
+
         await setFormInit(data);
-        await setFlowMaster();
+        await setFlowMaster(formno);
     } catch (error) {
         console.log(error);
         showErrorMessage(error);
@@ -175,7 +175,162 @@ async function setFormAction(mode) {
 }
 
 //Flow Master
-async function setFlowMaster(params) {}
+async function setFlowMaster(formno) {
+    const positions = await getPositions();
+    const posList = positions.sort((a, b) =>
+        a.SPOSCODE.localeCompare(b.SPOSCODE),
+    );
+
+    const orgs = await populateOrganizations();
+    const orgList = [];
+    const dim = positions
+        .filter((p) => p.SPOSCODE == '10' || p.SPOSCODE == '11')
+        .map((p) => {
+            for (const div of orgs.division) {
+                orgList.push({
+                    pos: p.SPOSCODE,
+                    posname: p.SPOSNAME,
+                    orgs: div.data.SDIVCODE,
+                    orgname: div.data.SDIV,
+                });
+            }
+        });
+    const dem = positions
+        .filter((p) => p.SPOSCODE == '20' || p.SPOSCODE == '21')
+        .map((p) => {
+            for (const dept of orgs.department) {
+                if (dept.data.SDEPCODE == '00') continue;
+                orgList.push({
+                    pos: p.SPOSCODE,
+                    posname: p.SPOSNAME,
+                    orgs: dept.data.SDEPCODE,
+                    orgname: dept.data.SDEPT,
+                });
+            }
+        });
+    const sem = positions
+        .filter((p) => p.SPOSCODE == '30')
+        .map((p) => {
+            for (const sec of orgs.section) {
+                if (sec.data.SSECCODE == '00') continue;
+                orgList.push({
+                    pos: p.SPOSCODE,
+                    posname: p.SPOSNAME,
+                    orgs: sec.data.SSECCODE,
+                    orgname: sec.data.SSEC,
+                });
+            }
+        });
+
+    const flow = await getFlowMaster(formno.nno, formno.orgno, formno.cyear);
+    let sortFlow = [];
+    const firstFlow = flow.find((f) => f.CSTART == '1');
+    sortFlow.push(firstFlow);
+    let currentFlow = firstFlow;
+    while (currentFlow) {
+        const nextFlow = flow.find((f) => f.CSTEPNO == currentFlow.CSTEPNEXTNO);
+        if (nextFlow) {
+            sortFlow.push(nextFlow);
+            currentFlow = nextFlow;
+        } else {
+            break;
+        }
+    }
+
+    const el = $('#flow-list-row');
+    for (const fs of sortFlow) {
+        el.append(`<details class="collapse bg-base-100 border border-base-300" name="flow-accordion">
+            <summary class="collapse-title font-semibold flex justify-between p-4!">
+                <div class="flex gap-2 items-center">
+                    <span class="flex w-10 h-10 items-center justify-center bg-amber-300 rounded-full">${fs.STEPMST.CNO}</span>
+                    <div class="flex-1 flex flex-col gap-1">
+                        <span class="text-gray-500 text-sm">${fs.STEPMST.VNAME}</span>
+                        <span class="text-gray-500 text-xs">${fs.VAPVNO}</span>
+                    </div>
+                </div>
+                <div>
+                    <button class="btn btn-sm btn-circle"><i class="fi fi-rr-arrow-small-up"></i></button>
+                    <button class="btn btn-sm btn-circle"><i class="fi fi-rr-arrow-small-down"></i></button>
+                </div>
+            </summary>
+            <div class="collapse-content text-sm">
+                <fieldset class="fieldset w-full">
+                    <legend class="fieldset-legend">Page Location</legend>
+                    <label class="input validator w-full">
+                        <i class="fi fi-br-link-alt text-gray-400"></i>
+                        <input type="url" placeholder="https://"
+                            value="${fs.VURL == null ? 'https://' : fs.VURL}"/>
+                    </label>
+                </fieldset>
+
+                <fieldset class="fieldset">
+                    <legend class="fieldset-legend">Approver</legend>
+                    <div class="flex flex-col gap-1">
+                        <div class="flex gap-2 items-center">
+                            <input type="radio" name="approver-${fs.STEPMST.CNO}" class="radio radio-primary radio-sm" ${fs.CTYPE == 1 ? 'checked' : ''}/>
+                            <select class="select w-full s2">
+                                <option value=""></option>
+                                ${posList.map((pos) => `<option value="${pos.SPOSCODE}" ${fs.CTYPE == '1' && fs.VPOSNO == pos.SPOSCODE ? 'selected' : ''}>${pos.SPOSCODE} : ${pos.SPOSITION}</option>`).join('')}
+                            </select>
+                        </div>
+                        <p class="label ml-10 mb-1">Refer requester</p>
+
+                        <div class="flex gap-2 items-center">
+                            <input type="radio" name="approver-${fs.STEPMST.CNO}" class="radio radio-primary radio-sm" ${fs.CTYPE == 2 ? 'checked' : ''}/>
+                            <select class="select w-full s2">
+                                <option value=""></option>
+                                ${orgList.map((og) => `<option value="${og.pos}-${og.org}" ${fs.CTYPE == '2' && fs.VPOSNO == og.pos && fs.VAPVORGNO == og.orgs ? 'selected' : ''}>${og.pos} : ${og.orgname} ${og.posname}</option>`).join('')}
+                            </select>
+                        </div>
+                        <p class="label ml-10 mb-1">Refer to Form Owner</p>
+
+                        <div class="flex gap-2 items-center">
+                            <input type="radio" name="approver-${fs.STEPMST.CNO}" class="radio radio-primary radio-sm" ${fs.CTYPE == 3 ? 'checked' : ''}/>
+                            <div class="w-full">
+                                <input type="text" class="input input-sm w-full" placeholder="Specific approver" value="${fs.CTYPE != 3 && fs.VAPVNO == 'SYSTEM' ? '' : fs.VAPVNO}" />
+                            </div>
+                        </div>
+                    </div>
+                </fieldset>
+                <fieldset class="fieldset">
+                    <legend class="fieldset-legend">Approve Type</legend>
+                    <div class="flex flex-col gap-2">
+                        <div class="flex gap-2 items-center">
+                            <input type="radio" name="approve-type-${fs.STEPMST.CNO}" class="radio radio-primary radio-sm" ${fs.CAPVTYPE == '1' ? 'checked' : ''} />
+                            <p>Single Approver</p>
+                        </div>
+                        <div class="flex gap-2 items-center">
+                            <input type="radio" name="approve-type-${fs.STEPMST.CNO}" class="radio radio-primary radio-sm" ${fs.CAPVTYPE == '3' ? 'checked' : ''} />
+                            <p>Multiple Approver</p>
+                        </div>
+                        <div class="divider m-0!"></div>
+                        <div class="flex gap-2 items-center">
+                            <input type="checkbox" name="" class="checkbox checkbox-primary checkbox-sm" ${fs.CAPPLYALL == '2' ? 'checked' : ''} value="2"/>
+                            <p>Single Approver</p>
+                        </div>
+                    </div>
+                </fieldset>
+
+                <fieldset class="fieldset">
+                    <legend class="fieldset-legend">Extra Data</legend>
+                    <input type="text" class="input input-sm w-full" placeholder="Extra Data"  value="${fs.CEXTDATA || ''}"/>
+                </fieldset>
+
+                <div class="flex gap-1 mt-2">
+                    <button class="btn btn-sm btn-primary">Updete</button>
+                    <button class="btn btn-sm btn-error">Delete</button>
+                </div>
+            </div>
+        </details>`);
+    }
+    setSelect2({
+        selector: '.s2',
+        placeholder: 'Select an approver',
+        size: 'sm',
+        containerCssClass: 'w-full',
+        clear: false,
+    });
+}
 
 $(document).on('click', '.add-flow', async function (e) {
     e.preventDefault();
