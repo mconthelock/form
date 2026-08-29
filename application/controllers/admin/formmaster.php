@@ -16,12 +16,7 @@ class formmaster extends MY_Controller {
         $this->views('admin/formmst/group', array('title' => 'nav-master-group'));
     }
 
-    public function authen($no, $org, $cyear){
-        $this->views('admin/formmst/authen', array(
-            'title' => 'nav-master-authen',
-            'no' => $no,
-            'org' => $org,
-            'cyear' => $cyear,
-        ));
+    public function authen(){
+        $this->views('admin/formmst/authen', array('title' => 'nav-master-form'));
     }
 }

@@ -10,12 +10,12 @@ import {
     getFormMaster,
     getFormDept,
     getFormMasterGroup,
+    getFlowMaster,
 } from '../../service';
-import { createFormMaster, updateFormMaster } from './data';
+import { setFormNo, createFormMaster, updateFormMaster } from './data';
 
 select2();
 var cyear, orgno, nno;
-
 $(document).ready(async function (e) {
     try {
         const master = await getFormMaster();
@@ -24,9 +24,9 @@ $(document).ready(async function (e) {
         if (fornno !== null) {
             data = master.find(
                 (item) =>
-                    item.NNO == nno &&
-                    item.VORGNO == orgno &&
-                    item.CYEAR == cyear,
+                    item.NNO == fornno.nno &&
+                    item.VORGNO == fornno.orgno &&
+                    item.CYEAR == fornno.cyear,
             );
             if (!data) {
                 showErrorMessage('Form not found');
@@ -34,6 +34,7 @@ $(document).ready(async function (e) {
             }
         }
         await setFormInit(data);
+        await setFlowMaster();
     } catch (error) {
         console.log(error);
         showErrorMessage(error);
@@ -42,16 +43,6 @@ $(document).ready(async function (e) {
         await showLoader({ show: false });
     }
 });
-
-async function setFormNo() {
-    const path = window.location.pathname;
-    const pathSegments = path.split('/').filter((segment) => segment !== '');
-    cyear = pathSegments[pathSegments.length - 1];
-    orgno = pathSegments[pathSegments.length - 2];
-    nno = pathSegments[pathSegments.length - 3];
-    if (cyear == 'detail') return null;
-    return `${nno}/${orgno}/${cyear}`;
-}
 
 async function setFormInit(data) {
     //VORGNO select
@@ -184,6 +175,8 @@ async function setFormAction(mode) {
 }
 
 //Flow Master
+async function setFlowMaster(params) {}
+
 $(document).on('click', '.add-flow', async function (e) {
     e.preventDefault();
     $('#flow-form')[0].reset();

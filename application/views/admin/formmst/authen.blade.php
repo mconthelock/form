@@ -1,8 +1,8 @@
 @extends('layouts/template')
 
 @section('contents')
-    <div class="hidden" id="form-authen-data" data-no="{{ $no }}" data-org="{{ $org }}"
-        data-cyear="{{ $cyear }}"></div>
+    {{-- <div class="hidden" id="form-authen-data" data-no="{{ $no }}" data-org="{{ $org }}"
+        data-cyear="{{ $cyear }}"></div> --}}
     <div class="space-y-3 mb-8">
         <div>
             <h1 class="text-3xl text-primary font-bold line-clamp-1" id="page-title">
@@ -64,7 +64,7 @@
         <section class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
             <div class="overflow-hidden tableArea">
                 @include('layouts/datatable_load')
-                <table id="table" class="table table-zebra display text-sm"></table>
+                <table id="table" class="table table-zebra display text-xs"></table>
             </div>
         </section>
     </div>
