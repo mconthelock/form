@@ -175,53 +175,11 @@ async function setFormAction(mode) {
 }
 
 //Flow Master
+const FLOW_PAGE_SIZE = 5;
+let flowState = { sortFlow: [], orgList: [], posList: [], currentPage: 1 };
+
 async function setFlowMaster(formno) {
-    const positions = await getPositions();
-    const posList = positions.sort((a, b) =>
-        a.SPOSCODE.localeCompare(b.SPOSCODE),
-    );
-
-    const orgs = await populateOrganizations();
-    const orgList = [];
-    const dim = positions
-        .filter((p) => p.SPOSCODE == '10' || p.SPOSCODE == '11')
-        .map((p) => {
-            for (const div of orgs.division) {
-                orgList.push({
-                    pos: p.SPOSCODE,
-                    posname: p.SPOSNAME,
-                    orgs: div.data.SDIVCODE,
-                    orgname: div.data.SDIV,
-                });
-            }
-        });
-    const dem = positions
-        .filter((p) => p.SPOSCODE == '20' || p.SPOSCODE == '21')
-        .map((p) => {
-            for (const dept of orgs.department) {
-                if (dept.data.SDEPCODE == '00') continue;
-                orgList.push({
-                    pos: p.SPOSCODE,
-                    posname: p.SPOSNAME,
-                    orgs: dept.data.SDEPCODE,
-                    orgname: dept.data.SDEPT,
-                });
-            }
-        });
-    const sem = positions
-        .filter((p) => p.SPOSCODE == '30')
-        .map((p) => {
-            for (const sec of orgs.section) {
-                if (sec.data.SSECCODE == '00') continue;
-                orgList.push({
-                    pos: p.SPOSCODE,
-                    posname: p.SPOSNAME,
-                    orgs: sec.data.SSECCODE,
-                    orgname: sec.data.SSEC,
-                });
-            }
-        });
-
+    const { orgList, posList } = await setApproverType();
     const flow = await getFlowMaster(formno.nno, formno.orgno, formno.cyear);
     let sortFlow = [];
     const firstFlow = flow.find((f) => f.CSTART == '1');
@@ -237,8 +195,21 @@ async function setFlowMaster(formno) {
         }
     }
 
+    flowState = { sortFlow, orgList, posList, currentPage: 1 };
+    renderFlowPage();
+}
+
+function renderFlowPage() {
+    const { sortFlow, orgList, posList } = flowState;
+    const totalPages = Math.max(1, Math.ceil(sortFlow.length / FLOW_PAGE_SIZE));
+    const page = Math.min(Math.max(1, flowState.currentPage), totalPages);
+    flowState.currentPage = page;
+    const start = (page - 1) * FLOW_PAGE_SIZE;
+    const pageItems = sortFlow.slice(start, start + FLOW_PAGE_SIZE);
+
     const el = $('#flow-list-row');
-    for (const fs of sortFlow) {
+    el.empty();
+    for (const fs of pageItems) {
         el.append(`<details class="collapse bg-base-100 border border-base-300" name="flow-accordion">
             <summary class="collapse-title font-semibold flex justify-between p-4!">
                 <div class="flex gap-2 items-center">
@@ -292,6 +263,7 @@ async function setFlowMaster(formno) {
                         </div>
                     </div>
                 </fieldset>
+
                 <fieldset class="fieldset">
                     <legend class="fieldset-legend">Approve Type</legend>
                     <div class="flex flex-col gap-2">
@@ -317,8 +289,8 @@ async function setFlowMaster(formno) {
                 </fieldset>
 
                 <div class="flex gap-1 mt-2">
-                    <button class="btn btn-sm btn-primary">Updete</button>
-                    <button class="btn btn-sm btn-error">Delete</button>
+                    <button class="btn btn-sm btn-primary update-flow" type="button">Update</button>
+                    <button class="btn btn-sm btn-error delete-flow" type="button">Delete</button>
                 </div>
             </div>
         </details>`);
@@ -330,14 +302,32 @@ async function setFlowMaster(formno) {
         containerCssClass: 'w-full',
         clear: false,
     });
+    renderFlowPagination(totalPages, page);
 }
 
-$(document).on('click', '.add-flow', async function (e) {
-    e.preventDefault();
-    $('#flow-form')[0].reset();
-    $('#add-flow-form').toggleClass('hidden');
-    $('#flow-list').toggleClass('hidden');
-});
+function renderFlowPagination(totalPages, currentPage) {
+    let pagination = $('#flow-pagination');
+    if (pagination.length === 0) {
+        $('#flow-list-row').after(
+            '<div id="flow-pagination" class="flex justify-center gap-1 mt-4"></div>',
+        );
+        pagination = $('#flow-pagination');
+    }
+    pagination.empty();
+    if (totalPages <= 1) return;
+
+    pagination.append(
+        `<button class="btn btn-sm flow-page-prev" ${currentPage === 1 ? 'disabled' : ''}><i class="fi fi-rr-angle-left"></i></button>`,
+    );
+    for (let i = 1; i <= totalPages; i++) {
+        pagination.append(
+            `<button class="btn btn-sm flow-page-item ${i === currentPage ? 'btn-primary' : 'btn-outline'}" data-page="${i}">${i}</button>`,
+        );
+    }
+    pagination.append(
+        `<button class="btn btn-sm flow-page-next" ${currentPage === totalPages ? 'disabled' : ''}><i class="fi fi-rr-angle-right"></i></button>`,
+    );
+}
 
 $(document).on('click', '#edit-form-btn', async function (e) {
     e.preventDefault();
@@ -368,6 +358,49 @@ $(document).on('click', '#edit-form-btn', async function (e) {
     }
 });
 
+$(document).on('click', '.add-flow', async function (e) {
+    e.preventDefault();
+    $('#flow-list-row').addClass('hidden');
+    $('#add-flow-form').removeClass('hidden');
+    $('#flow-form')[0].reset();
+});
+
+$(document).on('click', '#add-new-flow', async function (e) {
+    e.preventDefault();
+});
+
+$(document).on('click', '#cancel-new-flow', async function (e) {
+    e.preventDefault();
+    $('#flow-list-row').removeClass('hidden');
+    $('#add-flow-form').addClass('hidden');
+    $('#flow-form')[0].reset();
+});
+
+$(document).on('click', '.update-flow', async function (e) {
+    e.preventDefault();
+    // Add your update flow logic here
+});
+
+$(document).on('click', '.delete-flow', async function (e) {
+    e.preventDefault();
+    // Add your delete flow logic here
+});
+
+$(document).on('click', '.flow-page-item', function () {
+    flowState.currentPage = Number($(this).data('page'));
+    renderFlowPage();
+});
+
+$(document).on('click', '.flow-page-prev', function () {
+    flowState.currentPage -= 1;
+    renderFlowPage();
+});
+
+$(document).on('click', '.flow-page-next', function () {
+    flowState.currentPage += 1;
+    renderFlowPage();
+});
+
 async function formValue() {
     const formData = {};
     $('#form-info')
@@ -389,3 +422,55 @@ async function formValue() {
         });
     return formData;
 }
+
+async function setApproverType() {
+    const positions = await getPositions();
+    const posList = positions.sort((a, b) =>
+        a.SPOSCODE.localeCompare(b.SPOSCODE),
+    );
+
+    const orgs = await populateOrganizations();
+    const orgList = [];
+    const dim = positions
+        .filter((p) => p.SPOSCODE == '10' || p.SPOSCODE == '11')
+        .map((p) => {
+            for (const div of orgs.division) {
+                orgList.push({
+                    pos: p.SPOSCODE,
+                    posname: p.SPOSNAME,
+                    orgs: div.data.SDIVCODE,
+                    orgname: div.data.SDIV,
+                });
+            }
+        });
+    const dem = positions
+        .filter((p) => p.SPOSCODE == '20' || p.SPOSCODE == '21')
+        .map((p) => {
+            for (const dept of orgs.department) {
+                if (dept.data.SDEPCODE == '00') continue;
+                orgList.push({
+                    pos: p.SPOSCODE,
+                    posname: p.SPOSNAME,
+                    orgs: dept.data.SDEPCODE,
+                    orgname: dept.data.SDEPT,
+                });
+            }
+        });
+    const sem = positions
+        .filter((p) => p.SPOSCODE == '30')
+        .map((p) => {
+            for (const sec of orgs.section) {
+                if (sec.data.SSECCODE == '00') continue;
+                orgList.push({
+                    pos: p.SPOSCODE,
+                    posname: p.SPOSNAME,
+                    orgs: sec.data.SSECCODE,
+                    orgname: sec.data.SSEC,
+                });
+            }
+        });
+
+    return { orgList, posList };
+}
+
+async function setApproverType2() {}

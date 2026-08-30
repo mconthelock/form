@@ -101,3 +101,57 @@ export async function updateFormAuthen(data) {
         });
     });
 }
+
+export async function addFlowMaster(data) {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `${process.env.APP_API}/formmst/flow/add`,
+            type: 'post',
+            dataType: 'json',
+            data: data,
+            success: function (res) {
+                resolve(res);
+            },
+            error: function (xhr, err) {
+                console.log(err);
+                reject(err);
+            },
+        });
+    });
+}
+
+export async function updateFlowMaster(data) {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `${process.env.APP_API}/formmst/flow/update`,
+            type: 'post',
+            dataType: 'json',
+            data: data,
+            success: function (res) {
+                resolve(res);
+            },
+            error: function (xhr, err) {
+                console.log(err);
+                reject(err);
+            },
+        });
+    });
+}
+
+export async function deleteFlowMaster(data) {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `${process.env.APP_API}/formmst/flow/delete`,
+            type: 'post',
+            dataType: 'json',
+            data: data,
+            success: function (res) {
+                resolve(res);
+            },
+            error: function (xhr, err) {
+                console.log(err);
+                reject(err);
+            },
+        });
+    });
+}
