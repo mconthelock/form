@@ -184,6 +184,8 @@ async function setFlowMaster(formno) {
     let sortFlow = [];
     const firstFlow = flow.find((f) => f.CSTART == '1');
     sortFlow.push(firstFlow);
+    console.log(sortFlow);
+
     let currentFlow = firstFlow;
     while (currentFlow) {
         const nextFlow = flow.find((f) => f.CSTEPNO == currentFlow.CSTEPNEXTNO);
@@ -210,7 +212,7 @@ function renderFlowPage() {
     const el = $('#flow-list-row');
     el.empty();
     for (const fs of pageItems) {
-        el.append(`<details class="collapse bg-base-100 border border-base-300" name="flow-accordion">
+        el.append(`<details class="collapse bg-base-100 border border-base-300 flow-accordion" name="flow-accordion" data-flow-id="${fs.STEPMST.CNO}" data-flow-next-id="${fs.CSTEPNEXTNO}" data-start="${fs.CSTART}">
             <summary class="collapse-title font-semibold flex justify-between p-4!">
                 <div class="flex gap-2 items-center">
                     <span class="flex w-10 h-10 items-center justify-center bg-amber-300 rounded-full">${fs.STEPMST.CNO}</span>
@@ -248,7 +250,7 @@ function renderFlowPage() {
 
                         <div class="flex gap-2 items-center">
                             <input type="radio" name="approver-${fs.STEPMST.CNO}" class="radio radio-primary radio-sm" ${fs.CTYPE == 2 ? 'checked' : ''}/>
-                            <select class="select w-full s2">
+                            <select class="select w-full s2 approver-2">
                                 <option value=""></option>
                                 ${orgList.map((og) => `<option value="${og.pos}-${og.org}" ${fs.CTYPE == '2' && fs.VPOSNO == og.pos && fs.VAPVORGNO == og.orgs ? 'selected' : ''}>${og.pos} : ${og.orgname} ${og.posname}</option>`).join('')}
                             </select>
@@ -258,7 +260,7 @@ function renderFlowPage() {
                         <div class="flex gap-2 items-center">
                             <input type="radio" name="approver-${fs.STEPMST.CNO}" class="radio radio-primary radio-sm" ${fs.CTYPE == 3 ? 'checked' : ''}/>
                             <div class="w-full">
-                                <input type="text" class="input input-sm w-full" placeholder="Specific approver" value="${fs.CTYPE != 3 && fs.VAPVNO == 'SYSTEM' ? '' : fs.VAPVNO}" />
+                                <input type="text" class="input input-sm w-full" placeholder="Specific approver" value="${fs.CTYPE != 3 && fs.VAPVNO == 'SYSTEM' ? '' : fs.VAPVNO}" data-VAPVNO="${fs.VAPVNO}" />
                             </div>
                         </div>
                     </div>
@@ -379,6 +381,31 @@ $(document).on('click', '#cancel-new-flow', async function (e) {
 $(document).on('click', '.update-flow', async function (e) {
     e.preventDefault();
     // Add your update flow logic here
+    const el = $(this).closest('.flow-accordion');
+    const flow = {
+        NFRMNO: $('#nno').val(),
+        VORGNO: $('#vorgno').val(),
+        CYEAR: $('#cyear').val(),
+        CSTEPNO: el.data('flow-id'),
+        CSTEPNEXTNO: el.data('flow-next-id'),
+        VPOSNO: el.data('start'),
+        VAPVNO:
+            el.find('input[data-VAPVNO]').val() == ''
+                ? 'SYSTEM'
+                : el.find('input[data-VAPVNO]').val(),
+        VAPVORGNO:
+            el.find('.select.approver-2').val() == ''
+                ? null
+                : el.find('.select.approver-2').val(),
+        VURL: '',
+        CSTART: '',
+        CTYPE: '',
+        CEXTDATA: '',
+        CAPVTYPE: '',
+        CREJTYPE: '',
+        CAPPLYALL: '',
+    };
+    console.log(flow);
 });
 
 $(document).on('click', '.delete-flow', async function (e) {
