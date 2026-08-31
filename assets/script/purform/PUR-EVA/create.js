@@ -918,6 +918,7 @@ $(document).ready(async function () {
     concernManager.init(orgdata);
 
     const formInfo = await getAllAttr('.form-info');
+
     form = {
         NFRMNO: formInfo.nfrmno,
         VORGNO: formInfo.vorgno,

@@ -111,6 +111,11 @@
                         </label>
                     </div>
                 </div>
+                <div class="grid grid-cols-[170px_1fr] items-center gap-2 required">
+                    <span class="font-semibold text-sm required ">Vendor Code:</span>
+                    <input type="text" name = "VENDCODE" maxlength="5"
+                        class="input input-sm border border-gray-400 h-8 rounded w-48 px-2 req" value="">
+                </div>
             </div>
 
 
@@ -119,38 +124,12 @@
                 <!-- Header Section -->
                 <div class="flex justify-between items-center mb-6">
                     <h3 class="font-bold text-lg">General Information</h3>
-                    <div class="flex items-center gap-4">
-
-                        <div class="relative flex items-center">
-                            <svg class="absolute left-3 w-4 h-4 text-gray-400 pointer-events-none" fill="none"
-                                stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                            </svg>
-
-                            <input type="text" id="directSearchInput"
-                                class="block w-64 pl-10 pr-3 py-1.5 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                                placeholder="Add from PUR-EVA Form">
-                        </div>
-
-                        <span class="text-xs font-semibold text-gray-400">OR</span>
-
-                        <button id="btnOpenModal" type="button"
-                            class="inline-flex items-center gap-2 px-4 py-1.5 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors">
-                            <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M4 6h16M4 10h16M4 14h16M4 18h16"></path>
-                            </svg>
-                            Browse List
-                        </button>
-
-                    </div>
                 </div>
 
                 <!-- เนื้อหาภายใน -->
                 <div class="space-y-6">
                     <div class="grid grid-cols-[170px_1fr] gap-4 items-start">
-                        <span class="font-semibold text-sm pt-1 required">Vendor Type</span>
+                        <span class="font-semibold text-sm pt-1 required">Vendor Group Type</span>
 
                         <!-- ปรับให้แสดงผลแบบ Flex เรียงชิดกัน พร้อมเว้นระยะห่างพอดีๆ -->
                         <div class="flex items-center gap-6 text-sm">
@@ -162,14 +141,6 @@
                                 <input type="radio" name="VENDGROUP" value="Indirect"
                                     class="w-4 h-4 accent-blue-600 req radio-typec"> Indirect
                             </label>
-                        </div>
-                    </div>
-                    <div class="grid grid-cols-[170px_1fr] gap-4 items-start">
-                        <span class="font-semibold text-sm pt-1 required">Vendor Code</span>
-                        <div class="flex items-center gap-6 text-sm">
-                            <!-- ปรับความยาวด้วย w-48 และแก้คำว่า readonly ให้ทำงานได้จริง -->
-                            <input type="text" name="VENDCODE" readonly
-                                class="w-48 input input-sm border border-gray-400 h-8 rounded px-2 bg-gray-100 cursor-not-allowed">
                         </div>
                     </div>
                     <div class="grid grid-cols-[170px_1fr] items-center gap-4 mt-4">
@@ -262,7 +233,7 @@
                                 <input type="text" name="BANO" id="BANO" maxlength="20"
                                     class="input input-sm border border-gray-400 h-8 rounded  px-2 w-full">
                             </div>
-                            <div class="grid grid-cols-[170px_1fr] items-center gap-4">
+                            {{-- <div class="grid grid-cols-[170px_1fr] items-center gap-4">
                                 <span class="font-semibold text-sm">Company</span>
                                 <input type="text" name="COMPANY" id="COMPANY" maxlength=""
                                     class="input input-sm border border-gray-400 h-8 rounded  px-2 w-full">
@@ -271,7 +242,7 @@
                                 <span class="font-semibold text-sm">Corporate Vendor</span>
                                 <input type="text" name="CORPORATE" id="CORPORATE" maxlength=""
                                     class="input input-sm border border-gray-400 h-8 rounded  px-2 w-full">
-                            </div>
+                            </div> --}}
                             <div class="grid grid-cols-[170px_1fr] items-center gap-4">
                                 <span class="font-semibold text-sm">Currency Code</span>
                                 <div id="select-wrapper" class="inline-block">
@@ -287,35 +258,32 @@
                                     class="input input-sm border border-gray-400 h-8 rounded  px-2 w-full">
                             </div>
                             <div class="grid grid-cols-[170px_1fr] items-center gap-4">
-                                <span class="font-semibold text-sm">Payment Type</span>
-                                <input type="text" name="PAYTYPE" id="PAYTYPE" maxlength=""
-                                    class="input input-sm border border-gray-400 h-8 rounded  px-2 w-full">
+                                <span class="font-semibold text-sm">Vendor Type</span>
+                                <div id="select-wrapper" class="inline-block">
+                                    <select id="VTYPE" name="VTYPE"
+                                        class="input input-sm border border-gray-400 h-8 rounded px-2 w-48 vtype req">
+                                        <option value="" disabled selected>...</option>
+                                        <option value="SB11">SB11</option>
+                                    </select>
+                                </div>
+
                             </div>
                             <div class="grid grid-cols-[170px_1fr] items-center gap-4">
-                                <span class="font-semibold text-sm">Hold Vendor</span>
-                                <input type="text" name="VENDHOLD" id="VENDHOLD"
-                                    class="input input-sm border border-gray-400 h-8 rounded  px-2 w-full">
+                                <span class="font-semibold text-sm">Payment Type</span>
+                                <div id="select-wrapper" class="inline-block">
+                                    <select id="VPAYTY" name="VPAYTY"
+                                        class="input input-sm border border-gray-400 h-8 rounded px-2 w-48 vtype req">
+                                        <option value="" disabled selected>...</option>
+                                        <option value="C">Cash</option>
+                                    </select>
+                                </div>
                             </div>
+                            {{--
                             <div class="grid grid-cols-[170px_1fr] items-center gap-4">
                                 <span class="font-semibold text-sm">Days to Clear</span>
                                 <input type="text" name="DAYSCLEAR" id="DAYSCLEAR" maxlength=""
                                     class="input input-sm border border-gray-400 h-8 rounded  px-2 w-full">
-                            </div>
-                            <div class="grid grid-cols-[170px_1fr] items-center gap-4">
-                                <span class="font-semibold text-sm">One time vendor</span>
-                                <input type="text" name="ONETIME" id="ONETIME"
-                                    class="input input-sm border border-gray-400 h-8 rounded  px-2 w-full">
-                            </div>
-                            <div class="grid grid-cols-[170px_1fr] items-center gap-4">
-                                <span class="font-semibold text-sm">G/L Account</span>
-                                <input type="text" name="GLACC" id="GLACC" maxlength=""
-                                    class="input input-sm border border-gray-400 h-8 rounded  px-2 w-full">
-                            </div>
-                            <div class="grid grid-cols-[170px_1fr] items-center gap-4">
-                                <span class="font-semibold text-sm">Terms Code</span>
-                                <input type="text" name="VEND1099" id="VEND1099"
-                                    class="input input-sm border border-gray-400 h-8 rounded  px-2 w-full">
-                            </div>
+                            </div> --}}
                             <div class="grid grid-cols-[170px_1fr] items-center gap-4">
                                 <span class="font-semibold text-sm">Terms Code</span>
                                 <input type="hidden" id="TERM_PAYMENT_HIDDEN" name="TERMCODE" value="">
@@ -325,10 +293,29 @@
                                 </select>
                             </div>
                             <div class="grid grid-cols-[170px_1fr] items-center gap-4">
+                                <span class="font-semibold text-sm">One time vendor</span>
+                                <input type="text" name="V1TIME" id="V1TIME"
+                                    class="input input-sm border border-gray-400 h-8 rounded  px-2 w-full">
+                            </div>
+                            <div class="grid grid-cols-[170px_1fr] items-center gap-4">
+                                <span class="font-semibold text-sm">Alpha search key</span>
+                                <input type="text" name="VNALPH" id="VNALPH"
+                                    class="input input-sm border border-gray-400 h-8 rounded  px-2 w-full">
+                            </div>
+
+
+                            {{-- <div class="grid grid-cols-[170px_1fr] items-center gap-4">
+                                <span class="font-semibold text-sm">G/L Account</span>
+                                <input type="text" name="GLACC" id="GLACC" maxlength=""
+                                    class="input input-sm border border-gray-400 h-8 rounded  px-2 w-full">
+                            </div> --}}
+
+
+                            {{-- <div class="grid grid-cols-[170px_1fr] items-center gap-4">
                                 <span class="font-semibold text-sm">Price include Tax</span>
                                 <input type="text" name="PRICETAX" id="PRICETAX"
                                     class="input input-sm border border-gray-400 h-8 rounded  px-2 w-full">
-                            </div>
+                            </div> --}}
                         </div>
                     </div>
                     <!-- Contact Information -->
@@ -394,7 +381,7 @@
                                     class="textarea textarea-sm border border-gray-400 rounded px-2 w-full text-sm py-1" rows="2"></textarea>
                             </div>
 
-                            <div class="grid grid-cols-2 gap-4">
+                            {{-- <div class="grid grid-cols-2 gap-4">
                                 <div class="grid grid-cols-[170px_1fr] items-center gap-4">
                                     <span class="font-semibold text-sm required">Payment Term</span>
                                     <input type="hidden" id="TERM_PAYMENT_HIDDEN" name="TERMCODE" value="">
@@ -413,7 +400,7 @@
                                     </div>
                                     <span id="constdcur" class="text-gray-700 text-sm hidden"></span>
                                 </div>
-                            </div>
+                            </div> --}}
                             <div class="grid grid-cols-[170px_1fr] items-start gap-4">
                                 <span class="font-semibold text-sm required pt-2">Attach files</span>
 
@@ -448,55 +435,6 @@
                                         <div class="show-file pl-2 text-sm"></div>
                                         <div id="file-type-11" class="file-container"></div>
                                     </div>
-                                    <div class="flex flex-col gap-2 border border-gray-200 rounded-md p-3 bg-gray-50">
-                                        <div class="flex items-center gap-2">
-                                            <span class="text-sm font-medium">IE's evaluation Document :</span>
-
-                                            <label for="file-ie"
-                                                class="cursor-pointer border border-gray-300 rounded px-2 py-1 shadow-sm bg-white hover:bg-gray-100 flex items-center justify-center transition-colors">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14"
-                                                    viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                                                    class="text-gray-600">
-                                                    <path
-                                                        d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48">
-                                                    </path>
-                                                </svg>
-                                            </label>
-                                            <input class="hidden" type="file" name="fileIe[]" id="file-ie"
-                                                multiple />
-                                            <input type="checkbox" name="ATTACH_TYPE" value="IE evaluation"
-                                                class="hidden">
-                                        </div>
-                                        <div class="show-file pl-2 text-sm"></div>
-                                        <div id="file-type-12" class="file-container"></div>
-                                    </div>
-
-                                    <!-- 4. QA's evaluation Document -->
-                                    <div class="flex flex-col gap-2 border border-gray-200 rounded-md p-3 bg-gray-50">
-                                        <div class="flex items-center gap-2">
-                                            <span class="text-sm font-medium">QA's evaluation Document :</span>
-
-                                            <label for="file-qa"
-                                                class="cursor-pointer border border-gray-300 rounded px-2 py-1 shadow-sm bg-white hover:bg-gray-100 flex items-center justify-center transition-colors">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14"
-                                                    viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                                                    class="text-gray-600">
-                                                    <path
-                                                        d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48">
-                                                    </path>
-                                                </svg>
-                                            </label>
-                                            <input class="hidden" type="file" name="fileQa[]" id="file-qa"
-                                                multiple />
-                                            <input type="checkbox" name="ATTACH_TYPE" value="QA evaluation"
-                                                class="hidden">
-                                        </div>
-                                        <div class="show-file pl-2 text-sm"></div>
-                                        <div id="file-type-13" class="file-container"></div>
-                                    </div>
-
                                     <!-- 5. Other -->
                                     <div class="flex flex-col gap-2 border border-gray-200 rounded-md p-3 bg-gray-50">
                                         <div class="flex items-center gap-2">
@@ -532,10 +470,41 @@
                             <!-- ย้าย Dropzone ออกมาข้างนอก เพื่อให้ใช้ความกว้างได้เต็ม 100% ของ Container หลัก -->
                             <!-- <div id="attachFile" class="mt-4">
 
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                </div> -->
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    </div> -->
                         </div>
                     </div>
                 </div>
+            </div>
+            <div class="border border-gray-300 p-6 rounded-lg bg-white space-y-4">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="font-bold text-lg">E-SCM : (Enable) contact person and email address</h3>
+                </div>
+                <div class="flex justify-between items-end mb-2">
+                    <button type="button" data-table="scm-table"
+                        class="add-row-btn w-7 h-7 rounded border border-blue-500 text-blue-500 hover:bg-blue-50 flex items-center justify-center font-bold text-lg">+</button>
+                </div>
+                <table id="scm-table" class="w-full text-sm border-collapse border border-gray-400">
+
+                    <thead>
+                        <tr class="bg-gray-100">
+                            <th class="border border-gray-400 p-2 text-left">Name</th>
+                            <th class="border border-gray-400 p-2 w-1/4">Email</th>
+                            <th class="border border-gray-400 p-2 w-1/4">Username</th>
+                            <th class="border border-gray-400 p-2 w-10 text-center">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="row-template">
+                            <td class="border border-gray-400 p-1"><input name="NAME[]" type="text"
+                                    class="w-full px-1 scm-name "></td>
+                            <td class="border border-gray-400 p-1"><input type="text" name="EMAIL[]"
+                                    class="input-decimal w-full px-1 text-left scm-mail"></td>
+                            <td class="border border-gray-400 p-1"><input type="text" name="USERNAME[]"
+                                    class="input-decimal w-full px-1 text-left scm-usrname"></td>
+                            <td class="border border-gray-400 p-1"></td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
 
         </div>
@@ -546,5 +515,5 @@
 @endsection
 
 @section('scripts')
-    {{-- <script src="{{ $_ENV['APP_JS'] }}/purEva.js?ver={{ $GLOBALS['version'] }}"></script> --}}
+    <script src="{{ $_ENV['APP_JS'] }}/purVmm.js?ver={{ $GLOBALS['version'] }}"></script>
 @endsection
