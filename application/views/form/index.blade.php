@@ -44,11 +44,16 @@
             </div>
         </section>
     </div>
-    <div class="space-y-6">
+    <div class="space-y-6 mb-6">
         <section class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
             <div class="overflow-hidden tableArea">
                 @include('layouts/datatable_load')
-                <table id="table" class="table table-zebra display text-sm"></table>
+                <table id="table" class="table table-zebra display text-xs"></table>
+                <p class="text-xs text-gray-600 mt-3">* Running days are the number of days counted from the date the
+                    previous
+                    person approved
+                    the
+                    form.</p>
             </div>
         </section>
     </div>

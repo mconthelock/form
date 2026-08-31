@@ -10,18 +10,11 @@ export const initApp = async (opt = {}) => {
             programName: 'WEBFLOW',
             sidebarClass: `size-xl text-gray-50 bg-primary!`,
         });
-
-        $('.mainmenu').find('details').attr('open', false);
-        if (opt.submenu !== undefined) {
-            $(`.mainmenu${opt.submenu}`).find('details').attr('open', true);
-        }
         return app;
     } catch (error) {
         console.log(error);
         return false;
     }
-    await new Promise((r) => setTimeout(r, 1000));
-    return;
 };
 
 export const deviceType = () => {

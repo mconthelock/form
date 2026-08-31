@@ -1,13 +1,16 @@
 import '@amec/webasset/css/dataTable.min.css';
+import dayjs from 'dayjs';
 import { showLoader } from '@amec/webasset/preloader';
 import { showMessage } from '@amec/webasset/utils';
 import { createTable } from '@amec/webasset/dataTable';
 import { displayEmpImage, displayEmpInfo } from '@amec/webasset/indexDB';
-import { tableOption } from '../utils';
+import { initApp, tableOption } from '../utils';
+import { getFormList } from './data';
 
 var table;
 $(document).ready(async function () {
     try {
+        await initApp();
         const status = $('#status').val();
         await getPageTitle(status);
         // const res = [];
@@ -109,8 +112,11 @@ function bindEvents() {
 }
 
 async function reloadTable() {
-    //const data = await getAllApplication();
-    const data = [];
+    //const user = $('#user-login').attr('empno');
+    // const user = '07086';
+    const user = '96189';
+    const status = $('#status').val();
+    const data = await getFormList({ user, status });
     await populateFilters(data);
     if (!table) {
         await createFormTable(data);
@@ -122,168 +128,185 @@ async function reloadTable() {
 }
 
 async function createFormTable(data) {
+    const pagestatus = $('#status').val();
+    const status = [
+        { id: 0, name: 'Draft', badge: 'badge badge-outline badge-neutral' },
+        { id: 1, name: 'Running', badge: 'badge badge-outline badge-info' },
+        { id: 2, name: 'Approved', badge: 'badge badge-success' },
+        { id: 3, name: 'Rejected', badge: 'badge badge-outline badge-error' },
+    ];
+
+    const lastApproved = (flow) => {
+        const flowFilter = flow.filter((f) => f.DAPVDATE != null);
+        const flowSorted = flowFilter.sort((a, b) => {
+            const dateA = new Date(
+                `${dayjs(a.DAPVDATE).format('MM/DD/YYYY')} ${(a.CAPVTIME.trim() || '00:00' + ':00').substring(0, 8)}`,
+            );
+            const dateB = new Date(
+                `${dayjs(b.DAPVDATE).format('MM/DD/YYYY')} ${(b.CAPVTIME.trim() || '00:00' + ':00').substring(0, 8)}`,
+            );
+            return dateB - dateA;
+        });
+        return flowSorted[0] || null;
+    };
     const opt = { ...tableOption };
     opt.data = data;
     opt.searching = true;
     opt.pageLength = 10;
-    opt.order = [[0, 'asc']];
+    opt.order = [[0, 'desc']];
     opt.columns = [
+        { data: 'form.DREQDATE', className: 'hidden' },
         {
-            title: 'No.',
-            className: 'text-center',
-            data: null,
-            render: (data, type, row, meta) => {
-                if (type === 'display') {
-                    return `<div class="text-center">${meta.row + 1}</div>`;
-                }
-                return meta.row + 1;
-            },
-        },
-        {
-            data: 'CST',
-            title: 'Status',
-            className: 'text-center',
-            render: (data, type, row) => {
-                if (type === 'display') {
-                    const img = [
-                        `${process.env.APP_IMG}/form/waiting.gif`,
-                        `${process.env.APP_IMG}/form/waiting.gif`,
-                        `${process.env.APP_IMG}/form/approve.gif`,
-                        `${process.env.APP_IMG}/form/reject.gif`,
-                    ];
-                    /*  const status = data.split(" ");
-            const statusText = status[0];
-            const statusColor = status[1];
-            return `<span class="badge ${statusColor}">${statusText}</span>`;*/
-                    return `<img src="${img[data]}" class="w-8 h-8" />`;
-                }
-                return data;
-            },
-        },
-        {
-            data: 'VANAME',
+            data: 'form',
             title: 'Form No.',
             render: (data, type, row) => {
-                const formno = `${data}${row.CYEAR2.slice(-2)}-${(
+                const formno = `${data.formmst.VANAME}${row.CYEAR2.slice(-2)}-${(
                     '000000' + row.NRUNNO
                 ).slice(-6)}`;
                 if (type === 'display') {
-                    //   return `<a class="link text-primary" href="#">${formno}</a>`;
-                    const serve = row.VFORMPAGE.startsWith('http')
-                        ? row.VFORMPAGE.replace('http', 'https')
-                        : `http://webflow.mitsubishielevatorasia.co.th/${row.VFORMPAGE}`;
+                    const serve = data.VFORMPAGE.startsWith('http')
+                        ? data.VFORMPAGE.replace('http', 'https')
+                        : `http://webflow.mitsubishielevatorasia.co.th/${data.VFORMPAGE}`;
                     const conjunction = serve.includes('?') ? '&' : '?';
-                    const url = `${serve}${conjunction}no=${row.NFRMNO}&orgNo=${row.VORGNO}&y=${row.CYEAR}&y2=${row.CYEAR2}&runNo=${row.NRUNNO}&empno=${row.VREQNO}`;
-                    if (row.VFORMPAGE.startsWith('http')) {
-                        //amecweb
-                        return `<a class="link link-self text-primary" href="#" data-url="${url}">${formno}</a>`;
+                    const url = `${serve}${conjunction}no=${data.NFRMNO}&orgNo=${data.VORGNO}&y=${data.CYEAR}&y2=${data.CYEAR2}&runNo=${data.NRUNNO}&empno=${data.VREQNO}`;
+                    if (data.VFORMPAGE.startsWith('http')) {
+                        return `<a class="text-primary" href="#" data-url="${url}">${formno}</a>`;
                     } else {
-                        //Webflow
-                        return `<a class="link text-primary" href="${url}" target="_blank">${formno}</a>`;
+                        return `<a class="text-primary" href="${url}" target="_blank">${formno}</a>`;
                     }
                 }
-                return data;
+                return formno;
             },
         },
-        { data: 'VNAME', title: 'Detail' },
+        { data: 'form.formmst.VNAME', title: 'Detail' },
         {
-            data: 'VREQNO',
+            data: 'form',
             title: 'Request By',
             className: 'text-start',
             render: (data, type, row) => {
                 if (type === 'display') {
-                    const value = row.VREQNAME.replace('  ', ' ');
-                    const name = value.split(' ')[0];
-                    const fname =
-                        name.charAt(0).toUpperCase() +
-                        name.slice(1).toLowerCase();
-                    const lname = value.split(' ')[1].substring(0, 1);
                     return `<div class="flex items-center">
                         <div class="avatar border-0">
                             <div class="w-10 rounded-full border border-slate-300 shadow-md">
-                                <img src="" id="req-${row.NFRMNO}-${row.VORGNO}-${row.CYEAR}-${row.CYEAR2}-${row.NRUNNO}" class="hidden" />
+                                <img src="" id="req-${data.NFRMNO}-${data.VORGNO}-${data.CYEAR}-${data.CYEAR2}-${data.NRUNNO}" class="hidden" />
                                 <div class="skeleton h-32 w-32"></div>
                             </div>
                         </div>
                         <div class="ml-2">
-                            <div>${fname} ${lname}. (${row.VREQNO})</div>
-                            <div class="text-xs text-gray-500" id="reqorg-${row.NFRMNO}-${row.VORGNO}-${row.CYEAR}-${row.CYEAR2}-${row.NRUNNO}"></div>
+                            <div>${data.VREQNO}</div>
+                            <div class="text-xs text-gray-500" id="reqorg-${data.NFRMNO}-${data.VORGNO}-${data.CYEAR}-${data.CYEAR2}-${data.NRUNNO}"></div>
                         </div>
-                </div>`;
-                }
-                return `${data}-${row.VREQNAME}`;
-            },
-        },
-        {
-            data: 'VINPUTNAME',
-            title: 'Input By',
-            className: 'text-start',
-            render: (data, type, row) => {
-                if (type === 'display') {
-                    const value = data.replace('  ', ' ');
-                    const name = value.split(' ')[0];
-                    const fname =
-                        name.charAt(0).toUpperCase() +
-                        name.slice(1).toLowerCase();
-                    const lname = value.split(' ')[1].substring(0, 1);
-                    return `<div class="flex items-center">
-                        <div class="avatar border-0">
-                            <div class="w-10 rounded-full border border-slate-300 shadow-md">
-                                <img src="" id="input-${row.NFRMNO}-${row.VORGNO}-${row.CYEAR}-${row.CYEAR2}-${row.NRUNNO}" class="hidden" />
-                                <div class="skeleton h-32 w-32"></div>
-                            </div>
-                        </div>
-                        <div class="ml-2">
-                            <div>${fname} ${lname}. (${row.VINPUTER})</div>
-                            <div class="text-xs text-gray-500" id="inputorg-${row.NFRMNO}-${row.VORGNO}-${row.CYEAR}-${row.CYEAR2}-${row.NRUNNO}"></div>
-                        </div>
-                </div>`;
+                    </div>`;
                 }
                 return data;
             },
         },
         {
-            data: 'DREQDATE',
+            data: 'form',
             title: 'Request Date',
             className: 'text-start',
-            render: (data, type, row) => {
+            render: (data, type) => {
                 if (type === 'display') {
-                    if (data == null || data == undefined) {
+                    if (data.DREQDATE == null || data.DREQDATE == undefined)
                         return '';
-                    }
-                    return `<div class="text-center text-nowrap">${data} ${row.CREQTIME.substring(
-                        0,
-                        5,
-                    )}</div>`;
+                    return `${dayjs(data.DREQDATE).format('DD/MM/YYYY')} ${(data.CREQTIME.trim() || '00:00' + ':00').substring(0, 8)}`;
                 }
-                return data == null
-                    ? ''
-                    : `${data} ${row.CREQTIME.substring(0, 5)}`;
+                return data;
             },
         },
         {
-            data: 'PREV_APVDATE',
+            data: 'form',
+            title: 'Latest Approver',
+            className: 'text-start',
+            render: (data, type) => {
+                const latest = lastApproved(data.flow);
+                if (type === 'display') {
+                    if (!latest) return '';
+                    return `<div class="flex items-center">
+                        <div class="avatar border-0">
+                            <div class="w-10 rounded-full border border-slate-300 shadow-md">
+                                <img src="" id="req-${data.NFRMNO}-${data.VORGNO}-${data.CYEAR}-${data.CYEAR2}-${data.NRUNNO}" class="hidden" />
+                                <div class="skeleton h-32 w-32"></div>
+                            </div>
+                        </div>
+                        <div class="ml-2">
+                            <div>${data.VREQNO}</div>
+                            <div class="text-xs text-gray-500" id="reqorg-${data.NFRMNO}-${data.VORGNO}-${data.CYEAR}-${data.CYEAR2}-${data.NRUNNO}"></div>
+                        </div>
+                    </div>`;
+                }
+                return '';
+            },
+        },
+        {
+            data: 'form',
             title: 'Latest Approved',
             className: 'text-start',
             render: (data, type, row) => {
+                const latest = lastApproved(data.flow);
+
                 if (type === 'display') {
-                    if (data == null || data == undefined) {
-                        return '';
-                    }
-                    return `<div class="text-center text-nowrap">${data} ${row.PREV_APVTIME.substring(
-                        0,
-                        5,
-                    )}</div>`;
+                    if (!latest) return '';
+                    return `${dayjs(latest.DAPVDATE).format('DD/MM/YYYY')} ${(latest.CAPVTIME.trim() || '00:00' + ':00').substring(0, 8)}`;
                 }
-                return data == null
-                    ? ''
-                    : `${data} ${row.PREV_APVTIME.substring(0, 5)}`;
+                return '';
+            },
+        },
+        {
+            data: 'form',
+            title: 'Status',
+            className: 'text-center',
+            render: (data, type, row) => {
+                if (type === 'display') {
+                    const stat = status.find((s) => s.id == data.CST);
+                    return `<div class="badge ${stat.badge || 'badge badge-outline border-base-300'}">${stat.name || 'Unknow'}</div>`;
+                }
+                return data;
+            },
+        },
+        {
+            data: 'form',
+            title: 'Running Days',
+            className: `${pagestatus == 6 ? 'hidden' : ''}`,
+            render: (data, type, row) => {
+                if (type === 'display') {
+                    let sdate = '';
+                    const latest = lastApproved(data.flow);
+                    if (!latest) {
+                        sdate = new Date(
+                            `${dayjs(data.DREQDATE).format('MM/DD/YYYY')} ${(data.CREQTIME.trim() || '00:00' + ':0000').substring(0, 8)}`,
+                        );
+                    } else {
+                        sdate = new Date(
+                            `${dayjs(latest.DAPVDATE).format('MM/DD/YYYY')} ${(latest.CAPVTIME.trim() || '00:00' + ':00').substring(0, 8)}`,
+                        );
+                    }
+
+                    const now = new Date();
+                    const diffTime = Math.abs(now - sdate);
+                    const diffDays = Math.ceil(
+                        diffTime / (1000 * 60 * 60 * 24),
+                    );
+
+                    let badge = '';
+                    if (diffDays >= 30)
+                        badge = `<div class="badge badge-error">${diffDays} days</div>`;
+                    else if (diffDays >= 15)
+                        badge = `<div class="badge badge-warning">${diffDays} days</div>`;
+                    else if (diffDays >= 7)
+                        badge = `<div class="badge badge-info">${diffDays} days</div>`;
+                    else
+                        badge = `<div class="badge badge-outline badge-primary">${diffDays} days</div>`;
+                    return `<div class="text-center">${badge}</div>`;
+                }
+
+                return null;
             },
         },
     ];
     opt.createdRow = async function (row, data) {
-        await fillOrg(row, data);
-        await fillImgs(row, data);
+        // await fillOrg(row, data);
+        // await fillImgs(row, data);
     };
     opt.initComplete = function (settings, json) {
         const { container } = tableOption.initComplete.call(

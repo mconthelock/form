@@ -5,11 +5,20 @@ class form extends MY_Controller {
     }
 
     public function index($id = 1){
-        $this->views('form/index', array('id' => $id, 'title' => 'nav-approval'));
+        $status = array(
+            0 => 'nav-form-draft',
+            1 => 'nav-form-waitapprove',
+            2 => 'nav-form-comming',
+            3 => 'nav-form-mine',
+            4 => 'nav-form-approved',
+            5 => 'nav-form-represent',
+            6 => 'nav-form-finish'
+        );
+        $this->views('form/index', array('id' => $id, 'title' => $status[$id]));
     }
 
     public function create(){
-        $data = array('department' => $this->setFormDept(), 'title' => 'form-create');
+        $data = array('department' => $this->setFormDept(), 'title' => 'nav-form-create');
         $this->views('form/create/index', $data);
     }
 
