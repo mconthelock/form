@@ -1,4 +1,4 @@
-import { createTable } from '@amec/webasset/dataTable';
+import { createTable, getSelectedData } from '@amec/webasset/dataTable';
 import { logFormData, showMessage } from '@amec/webasset/utils';
 import { getEmpData, getAreas, getLocations, createForm } from './data';
 import { webflowSubmit } from '@amec/webasset/components/form';
@@ -59,21 +59,6 @@ import { redirectWebflow } from '@amec/webasset/form';
                     data: getareas,
                     responsive: false,
                     columns: [
-                        {
-                            title: '<input type="checkbox" id="select-all-areas" aria-label="Select all areas" />',
-                            orderable: false,
-                            searchable: false,
-                            render: function (data, type, row) {
-                                return `
-                        <input
-                            type="checkbox"
-                            class="row-select-area "
-                            style="width: 18px; height: 18px; accent-color: #1e40af;"
-                            value="${row.AREA_ID || row.id || row.LOCATION_NAME || ''}"
-                        />
-                    `;
-                            },
-                        },
                         { title: 'Location', data: 'LOCATION.LOCATION_NAME' },
                         { title: 'Area', data: 'AREA_NAME' },
                         { title: 'Level', data: 'AREA_LEVEL' },
@@ -83,6 +68,9 @@ import { redirectWebflow } from '@amec/webasset/form';
                 {
                     id: '#modalTable',
                     domScroll: {
+                        status: true,
+                    },
+                    columnSelect: {
                         status: true,
                     },
                 },
@@ -210,59 +198,30 @@ import { redirectWebflow } from '@amec/webasset/form';
             $('#modal-add').prop('checked', true);
         });
 
-        $(document).on('click', '#addData', function (e) {
+        $(document).on('click', '#addData', async function (e) {
             e.preventDefault();
 
-            if (!mockupTable) {
-                return;
-            }
-
-            const rows = mockupTable.rows({ page: 'all' }).data().toArray();
-            const checkboxes = document.querySelectorAll(
-                '#modalTable tbody input.row-select-area',
+            mockupTable = await createAreaTable(
+                {
+                    data: getareasID,
+                    responsive: false,
+                    columns: [
+                        { title: 'Location', data: 'LOCATION.LOCATION_NAME' },
+                        { title: 'Area', data: 'AREA_NAME' },
+                        { title: 'Level', data: 'AREA_LEVEL' },
+                        { title: 'Area Owner', data: 'AREA_OWNER' },
+                    ],
+                },
+                {
+                    id: '#modalTable',
+                    domScroll: {
+                        status: true,
+                    },
+                    columnSelect: {
+                        status: true,
+                    },
+                },
             );
-            const selectedRows = [];
-
-            checkboxes.forEach(function (checkbox, index) {
-                if (checkbox.checked) {
-                    selectedRows.push(rows[index]);
-                }
-            });
-
-            if (!selectedRows.length) {
-                alert('กรุณาเลือกข้อมูลก่อน');
-                return;
-            }
-
-            const areaTemplate = document.getElementById('area-row-template');
-            const emptyRow = document.getElementById('area-empty-row');
-
-            if (emptyRow) {
-                emptyRow.remove();
-            }
-
-            selectedRows.forEach(function (row) {
-                if (!areaTemplate) {
-                    return;
-                }
-
-                const clone = areaTemplate.content.cloneNode(true);
-                const rowIndex =
-                    areaBody.querySelectorAll('tr:not(#area-empty-row)')
-                        .length + 1;
-
-                clone.querySelector('td:first-child').textContent = rowIndex;
-                clone.querySelector('input[name="area_location[]"]').value =
-                    row.LOCATION?.LOCATION_NAME || '';
-                clone.querySelector('input[name="area_name[]"]').value =
-                    row.AREA_NAME || '';
-                clone.querySelector('input[name="area_level[]"]').value =
-                    row.AREA_LEVEL || '';
-                clone.querySelector('input[name="area_owner[]"]').value =
-                    row.AREA_OWNER || '';
-
-                areaBody.appendChild(clone);
-            });
 
             $('#modal-add').prop('checked', false);
         });
@@ -275,6 +234,13 @@ import { redirectWebflow } from '@amec/webasset/form';
                 if (cell) {
                     cell.textContent = index + 1;
                 }
+            });
+        }
+
+        function updateVisitorIndexes() {
+            Array.from(visitorBody.rows).forEach((row, index) => {
+                row.querySelector('.visitor-row-number').textContent =
+                    index + 1;
             });
         }
 
@@ -444,6 +410,7 @@ import { redirectWebflow } from '@amec/webasset/form';
 
             const clone = visitorTemplate.content.cloneNode(true);
             visitorBody.appendChild(clone);
+            updateVisitorIndexes();
         });
 
         makeRadioGroupToggleable(
@@ -485,6 +452,7 @@ import { redirectWebflow } from '@amec/webasset/form';
                 if (row && visitorBody.contains(row)) {
                     if (visitorBody.rows.length > 1) {
                         row.remove();
+                        updateVisitorIndexes();
                     }
                 }
             }
@@ -509,6 +477,7 @@ import { redirectWebflow } from '@amec/webasset/form';
         });
 
         updateAreaIndexes();
+        updateVisitorIndexes();
         toggleHostExternalSection();
     }
 
@@ -563,7 +532,7 @@ import { redirectWebflow } from '@amec/webasset/form';
             if (requestType === 'H') {
                 requiredMessage.push(
                     {
-                        element: $('#VISITOR_NAME'),
+                        element: $('#APPLICANT_NAME'),
                         message: 'Please fill the Visitor Name',
                     },
                     {
@@ -644,6 +613,41 @@ import { redirectWebflow } from '@amec/webasset/form';
                 return;
             }
 
+            const details = Array.from($('#visitor-table-body tr')).map(
+                (row, index) => ({
+                    seqNo: index + 1,
+                    empCode: $(row).find('input').eq(0).val(),
+                    name: $(row).find('input').eq(1).val(),
+                    division: $(row).find('input').eq(2).val(),
+                    department: $(row).find('input').eq(3).val(),
+                    section: $(row).find('input').eq(4).val(),
+                }),
+            );
+
+            if (!details.length) {
+                showMessage('Please Add Visitor');
+                return;
+            }
+
+            const submitDetails =
+                requestType === 'H'
+                    ? [
+                          {
+                              SEQ_NO: 1,
+                              APPLICANT_TYPE: 'H',
+                              EMP_CODE: $('#REQBY').val(),
+                              APPLICANT_NAME: $('#APPLICANT_NAME').val(),
+                              COMPANY_NAME: $('#COMPANY_NAME').val(),
+                          },
+                      ]
+                    : details.map((detail) => ({
+                          SEQ_NO: detail.seqNo,
+                          APPLICANT_TYPE: 'E',
+                          EMP_CODE: detail.empCode,
+                          APPLICANT_NAME: '',
+                          COMPANY_NAME: '',
+                      }));
+
             const formData = new FormData($('#tphForm')[0]);
             formData.set('REMARK', $('#remark').val());
             formData.set(
@@ -654,6 +658,14 @@ import { redirectWebflow } from '@amec/webasset/form';
                 'PHOTO_PERMIT_BADGE',
                 $('#PHOTO_PERMIT_BADGE').is(':checked') ? 'Y' : 'N',
             );
+
+            submitDetails.forEach((detail, index) => {
+                Object.entries(detail).forEach(([key, value]) => {
+                    formData.append(`DETAILS[${index}][${key}]`, value);
+                });
+            });
+
+            console.table(submitDetails);
 
             logFormData(formData);
             const res = await createForm(formData);

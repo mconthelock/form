@@ -98,6 +98,7 @@
                         <table class="table w-full border border-slate-200">
                             <thead class="table-header">
                                 <tr>
+                                    <th class="p-3 text-center">No.</th>
                                     <th class="p-3 text-left">EMP Code</th>
                                     <th class="p-3 text-left">Name</th>
                                     <th class="p-3 text-left">Division</th>
@@ -108,6 +109,7 @@
                             </thead>
                             <tbody id="visitor-table-body">
                                 <tr>
+                                    <td class="border p-2 text-center visitor-row-number">1</td>
                                     <td class="border p-2"><input type="text" name="visitor_Empcode" id="visitor_empcode"
                                             class="input input-sm input-bordered w-full"></td>
                                     <td class="border p-2"><input type="text" name="visitor_name" id= "visitor_name"
@@ -134,7 +136,7 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div class="space-y-2">
                             <label class="text-sm font-semibold text-slate-700">Visitor Name (ชื่อบุคคลภายนอก)</label>
-                            <input type="text" name="VISITOR_NAME" id="VISITOR_NAME"
+                            <input type="text" name="APPLICANT_NAME" id="APPLICANT_NAME"
                                 class="input input-bordered w-full" placeholder="Visitor Name">
                             <label class="text-sm font-semibold text-slate-700">Host Name (ชื่อผู้รับผิดชอบ)</label>
                             <input type="tel" name="EMP_CODE" id="EMP_CODE" class="input input-bordered w-full"
@@ -244,6 +246,7 @@
 
                 <template id="visitor-row-template">
                     <tr>
+                        <td class="border p-2 text-center visitor-row-number" name="SEQ_NO"></td>
                         <td class="border p-2"><input type="text" name="visitor_emp_code[]"
                                 class="input input-sm input-bordered w-full"></td>
                         <td class="border p-2"><input type="text" name="visitor_name[]"
