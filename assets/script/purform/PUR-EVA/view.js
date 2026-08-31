@@ -14,7 +14,12 @@ import {
     showErrorMessage,
     showMessage,
 } from '@amec/webasset/utils';
-import { createPurVmmAuto, getData, updatePurEvaForm } from './data';
+import {
+    createPurVmmAuto,
+    genVndCode,
+    getData,
+    updatePurEvaForm,
+} from './data';
 import { formatDate } from '@amec/webasset/dayjs';
 import { downloadOrOpenFile } from '@amec/webasset/api/file';
 import { formSubmitSkeleton } from '@amec/webasset/skeleton';
@@ -514,6 +519,8 @@ $(document).on('click', 'button[name="btnAction"]', async function () {
                         VENDGROUP: gp,
                         VENDPURPOSE: p,
                     });
+                    console.log('VENDCODE =' + vnd.VND_CODE);
+
                     const datavndcode = {
                         ...form,
                         VENDCODE: vnd.VND_CODE,
