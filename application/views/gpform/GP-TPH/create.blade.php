@@ -112,7 +112,7 @@
                                     <td class="border p-2 text-center visitor-row-number">1</td>
                                     <td class="border p-2"><input type="text" name="visitor_Empcode" id="visitor_empcode"
                                             class="input input-sm input-bordered w-full"></td>
-                                    <td class="border p-2"><input type="text" name="visitor_name" id= "visitor_name"
+                                    <td class="border p-2"><input type="text" name="APPLICANT_NAME" id= "APPLICANT_NAME"
                                             class="input input-sm input-bordered w-full"></td>
                                     <td class="border p-2"><input type="text" name="visitor_div" id="visitor_div"
                                             class="input input-sm input-bordered w-full"></td>
@@ -128,6 +128,24 @@
                         </table>
                     </div>
             </div>
+            
+            <template id="visitor-row-template">
+                <tr>
+                    <td class="border p-2 text-center visitor-row-number" name="SEQ_NO"></td>
+                    <td class="border p-2"><input type="text" name="visitor_emp_code[]"
+                            class="input input-sm input-bordered w-full"></td>
+                    <td class="border p-2"><input type="text" name="APPLICANT_NAME"
+                            class="input input-sm input-bordered w-full"></td>
+                    <td class="border p-2"><input type="text" name="visitor_division[]"
+                            class="input input-sm input-bordered w-full"></td>
+                    <td class="border p-2"><input type="text" name="visitor_department[]"
+                            class="input input-sm input-bordered w-full"></td>
+                    <td class="border p-2"><input type="text" name="visitor_section[]"
+                            class="input input-sm input-bordered w-full"></td>
+                    <td class="border p-2 text-center"><button type="button"
+                            class="btn btn-sm btn-error remove-row">×</button></td>
+                </tr>
+            </template>
 
             <div id="host-external-section" class="section-box p-5 hidden">
                 <!สำหรับบุคคลภายนอก>
@@ -218,7 +236,7 @@
                     </label>
                 </div>
                 <div class="overflow-x-auto">
-                    <table class="table w-full border border-slate-200">
+                    <table class="table w-full border border-slate-200" id='table-area'>
                         <thead class="table-header">
                             <tr>
                                 <th class="border p-2 text-left">No</th>
@@ -239,30 +257,7 @@
                     </table>
                 </div>
 
-
-                <div class="flex justify-start">
-                    <button type="submit" class="btn btn-primary px-12">Save</button>
-                </div>
-
-                <template id="visitor-row-template">
-                    <tr>
-                        <td class="border p-2 text-center visitor-row-number" name="SEQ_NO"></td>
-                        <td class="border p-2"><input type="text" name="visitor_emp_code[]"
-                                class="input input-sm input-bordered w-full"></td>
-                        <td class="border p-2"><input type="text" name="visitor_name[]"
-                                class="input input-sm input-bordered w-full"></td>
-                        <td class="border p-2"><input type="text" name="visitor_division[]"
-                                class="input input-sm input-bordered w-full"></td>
-                        <td class="border p-2"><input type="text" name="visitor_department[]"
-                                class="input input-sm input-bordered w-full"></td>
-                        <td class="border p-2"><input type="text" name="visitor_section[]"
-                                class="input input-sm input-bordered w-full"></td>
-                        <td class="border p-2 text-center"><button type="button"
-                                class="btn btn-sm btn-error remove-row">×</button></td>
-                    </tr>
-                </template>
-
-                <template id="area-row-template">
+                {{-- <template id="area-row-template">
                     <tr>
                         <td class="border p-2 text-center"></td>
                         <td class="border p-2"><input type="text" name="area_location[]"
@@ -276,7 +271,7 @@
                         <td class="border p-2 text-center"><button type="button"
                                 class="btn btn-sm btn-error remove-area-row">×</button></td>
                     </tr>
-                </template>
+                </template> --}}
                 <div id="sentRequest"></div>
         </form>
     </div>

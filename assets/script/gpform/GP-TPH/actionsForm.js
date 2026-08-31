@@ -6,6 +6,7 @@ import { redirectWebflow } from '@amec/webasset/form';
 
 (function () {
     let mockupTable = null;
+    let tableArea = null;
 
     function initCreatePage() {
         const visitorBody = document.getElementById('visitor-table-body');
@@ -54,28 +55,7 @@ import { redirectWebflow } from '@amec/webasset/form';
             const getlocations = await getLocations();
             const action = webflowSubmit({ request: true });
             $('#sentRequest').html(action);
-            mockupTable = await createTable(
-                {
-                    data: getareas,
-                    responsive: false,
-                    columns: [
-                        { title: 'Location', data: 'LOCATION.LOCATION_NAME' },
-                        { title: 'Area', data: 'AREA_NAME' },
-                        { title: 'Level', data: 'AREA_LEVEL' },
-                        { title: 'Area Owner', data: 'AREA_OWNER' },
-                    ],
-                },
-                {
-                    id: '#modalTable',
-                    domScroll: {
-                        status: true,
-                    },
-                    columnSelect: {
-                        status: true,
-                    },
-                },
-            );
-
+            mockupTable = await modalTable(getareas);
             const getName = await getEmpData(empno);
             $('#INPUTBY').val(empno);
         });
@@ -187,41 +167,117 @@ import { redirectWebflow } from '@amec/webasset/form';
             },
         );
 
-        $(document).on('click', '#btnaddDatarow', function (e) {
+        $(document).on('click', '#btnaddDatarow', async function (e) {
             e.preventDefault();
-
-            const location = $('#LOCATION').val();
-            const area = $('#AREANAME').val();
-            const level = $('#AREALEVEL').val();
-            const areaOwner = $('#AREAOWNER').val();
-
+            const selectData = tableArea?.rows().data().toArray() ?? [];
+            const mockData = mockupTable.rows().data().toArray();
+            const data = mockData.map((row) => {
+                const isDuplicate = selectData.some(
+                    (selectedRow) => selectedRow.AREA_ID === row.AREA_ID,
+                );
+                if (!isDuplicate) {
+                    delete row.selected;
+                }
+                return row;
+            });
+            console.log('Mock Data:', mockData);
+            console.log('Selected Data:', selectData);
+            console.log('data:', data);
+            mockupTable = await modalTable(data);
             $('#modal-add').prop('checked', true);
         });
 
         $(document).on('click', '#addData', async function (e) {
             e.preventDefault();
 
-            mockupTable = await createAreaTable(
+            // if (!mockupTable) {
+            //     return;
+            // }
+
+            // const rows = mockupTable.rows({ page: 'all' }).data().toArray();
+            // const checkboxes = document.querySelectorAll(
+            //     '#modalTable tbody input.row-select-area',
+            // );
+            // const selectedRows = [];
+
+            // checkboxes.forEach(function (checkbox, index) {
+            //     if (checkbox.checked) {
+            //         selectedRows.push(rows[index]);
+            //     }
+            // });
+
+            const selectedRows = getSelectedData(mockupTable);
+            console.log('Selected Rows:', selectedRows);
+
+            if (!selectedRows.length) {
+                alert('กรุณาเลือกข้อมูลก่อน');
+                return;
+            }
+
+            tableArea = await createTable(
                 {
-                    data: getareasID,
+                    data: selectedRows,
                     responsive: false,
                     columns: [
+                        {
+                            title: 'No.',
+                            data: null,
+                            render: (data, type, row, meta) => meta.row + 1,
+                        },
                         { title: 'Location', data: 'LOCATION.LOCATION_NAME' },
                         { title: 'Area', data: 'AREA_NAME' },
                         { title: 'Level', data: 'AREA_LEVEL' },
                         { title: 'Area Owner', data: 'AREA_OWNER' },
+                        {
+                            title: 'Action',
+                            data: null,
+                            render: (data, type, row, meta) =>
+                                '<button type="button" class="btn btn-sm btn-error dt-remove-row">×</button>',
+                        },
                     ],
                 },
                 {
-                    id: '#modalTable',
+                    id: '#table-area',
                     domScroll: {
-                        status: true,
-                    },
-                    columnSelect: {
                         status: true,
                     },
                 },
             );
+
+            tableArea.on('click', '.dt-remove-row', function () {
+                const row = tableArea.row($(this).closest('tr'));
+                row.remove().draw();
+            });
+
+            // const areaTemplate = document.getElementById('area-row-template');
+            // const emptyRow = document.getElementById('area-empty-row');
+
+            // if (emptyRow) {
+            //     emptyRow.remove();
+            // }
+
+            // selectedRows.forEach(function (row) {
+            //     if (!areaTemplate) {
+            //         return;
+            //     }
+
+            //     const clone = areaTemplate.content.cloneNode(true);
+            //     const rowIndex =
+            //         areaBody.querySelectorAll('tr:not(#area-empty-row)')
+            //             .length + 1;
+
+            //     clone.querySelector('td:first-child').textContent = rowIndex;
+            //     clone.querySelector('input[name="area_location[]"]').value =
+            //         row.LOCATION?.LOCATION_NAME || '';
+            //     clone.querySelector('input[name="area_name[]"]').value =
+            //         row.AREA_NAME || '';
+            //     clone.querySelector('input[name="area_level[]"]').value =
+            //         row.AREA_LEVEL || '';
+            //     clone.querySelector('input[name="area_owner[]"]').value =
+            //         row.AREA_OWNER || '';
+
+            //     areaBody.appendChild(clone);
+            // });
 
             $('#modal-add').prop('checked', false);
         });
@@ -314,6 +370,9 @@ import { redirectWebflow } from '@amec/webasset/form';
             const hostRequestLabel = document.querySelector(
                 '.host-request-group',
             );
+            const requestSubTypeInputs = document.querySelectorAll(
+                'input[name="REQUEST_SUB_TYPE"]',
+            );
 
             applicantVisitorSection.classList.toggle('hidden', isHostExternal);
             hostExternalSection.classList.toggle('hidden', !isHostExternal);
@@ -325,6 +384,13 @@ import { redirectWebflow } from '@amec/webasset/form';
                 hostRequestLabel.classList.toggle('opacity-50', isEmployee);
                 hostRequestLabel.toggleAttribute('aria-disabled', isEmployee);
             }
+
+            requestSubTypeInputs.forEach(function (radio) {
+                radio.disabled = !isEmployee;
+                if (!isEmployee) {
+                    radio.checked = false;
+                }
+            });
 
             clearRequestTypeRelatedFields();
             updateAddVisitorButton();
@@ -566,8 +632,14 @@ import { redirectWebflow } from '@amec/webasset/form';
                 );
             }
 
+            const areaRecords = (tableArea?.rows().data().toArray() ?? []).map(
+                (row) => row.AREA_ID,
+            );
+
+            console.log('Area Records:', areaRecords);
+
             const areaRows = $('#area-table-body tr:not(#area-empty-row)');
-            if (!areaRows.length) {
+            if (!areaRecords.length) {
                 requiredMessage.push({
                     element: $('#area-table-body'),
                     message: 'Please fill Area to Recorded',
@@ -644,7 +716,7 @@ import { redirectWebflow } from '@amec/webasset/form';
                           SEQ_NO: detail.seqNo,
                           APPLICANT_TYPE: 'E',
                           EMP_CODE: detail.empCode,
-                          APPLICANT_NAME: '',
+                          APPLICANT_NAME: detail.name,
                           COMPANY_NAME: '',
                       }));
 
@@ -665,7 +737,12 @@ import { redirectWebflow } from '@amec/webasset/form';
                 });
             });
 
+            areaRecords.forEach((record, index) => {
+                formData.append(`AREA_ID[${index}]`, record ?? '');
+            });
+
             console.table(submitDetails);
+            console.table(areaRecords);
 
             logFormData(formData);
             const res = await createForm(formData);
@@ -688,6 +765,35 @@ import { redirectWebflow } from '@amec/webasset/form';
     });
 
     document.addEventListener('DOMContentLoaded', function () {
-        initCreatePage();
+        try {
+            initCreatePage();
+        } catch (error) {
+            console.error('Error initializing the create page:', error);
+        }
     });
 })();
+
+async function modalTable(data) {
+    const table = await createTable(
+        {
+            data: data,
+            responsive: false,
+            columns: [
+                { title: 'Location', data: 'LOCATION.LOCATION_NAME' },
+                { title: 'Area', data: 'AREA_NAME' },
+                { title: 'Level', data: 'AREA_LEVEL' },
+                { title: 'Area Owner', data: 'AREA_OWNER' },
+            ],
+        },
+        {
+            id: '#modalTable',
+            domScroll: {
+                status: true,
+            },
+            columnSelect: {
+                status: true,
+            },
+        },
+    );
+    return table;
+}
