@@ -1,0 +1,1094 @@
+import { redirectWebflow } from '@amec/webasset/form';
+import {
+    getDesTypeMaster,
+    processPlanCalculation,
+    savePlanMaster,
+    getOrInitDraftPlan,
+    deleteDraftPlan,
+    updateInlineDetail,
+} from './data';
+import { host } from '../../utils';
+import { showLoader } from '@amec/webasset/preloader';
+import flatpickr from 'flatpickr';
+import 'flatpickr/dist/flatpickr.min.css';
+
+import $ from 'jquery';
+
+import select2 from 'select2';
+import { setSelect2 } from '@amec/webasset/select2';
+import 'datatables.net-dt';
+import 'datatables.net-dt/css/dataTables.dataTables.min.css'; // อิมพอร์ต CSS ของมันด้วย
+import 'datatables.net-buttons-dt';
+import 'datatables.net-buttons/js/buttons.html5.mjs'; // รองรับปุ่ม Excel Html5
+
+import { downloadOrOpenFile, getFile } from '@amec/webasset/api/file';
+import {
+    ajaxOptions,
+    getAllAttr,
+    getData,
+    showMessage,
+    requiredForm,
+} from '@amec/webasset/utils';
+import {
+    showflow,
+    doaction,
+    getFormStatus,
+    getFormno,
+    getMode,
+    getExtData,
+    deleteFlowandForm,
+} from '@amec/webasset/api/webform';
+import { sendmail } from '@amec/webasset/api/mail';
+
+let empno = '';
+let dataOnhand = [];
+let currentMode = '3';
+let selectedFilesArray = [];
+
+let currentPlanHeaderID = null;
+$(document).ready(async function () {
+    // 1. ดึงข้อมูลจากก้อนข้อมูลหลักของเบลดฟอร์ม
+    const formData = $('.form-info').data();
+    // กำหนดค่าตัวแปรระดับโมดูล
+    empno = formData.empno ? formData.empno.toString() : '';
+    const form = {
+        NFRMNO: formData.nfrmno,
+        VORGNO: formData.vorgno,
+        CYEAR: formData.cyear ? formData.cyear.toString() : '',
+        CYEAR2: formData.cyear2 ? formData.cyear2.toString() : '',
+        NRUNNO: formData.nrunno,
+        EMPNO: empno,
+        DOC_NO: formData.doc_no,
+        PLAN_YEAR: formData.planyear,
+        PERIOD: formData.period,
+        REVISION: formData.revision,
+        REMARK: formData.remark,
+        STATUS: formData.status,
+    };
+
+    $('#REQUEST_BYTxt').val(form.EMPNO);
+    $('#INPUT_BYTxt').val(form.EMPNO);
+    if (form.PLAN_YEAR) {
+        $('#YearDrp').val(form.PLAN_YEAR);
+    }
+    if (form.NRUNNO == '') // create
+    {
+        currentMode = '1';
+        $('#EXTDATAHid').val('00');
+        await ProcessCreate();
+    } else {
+        currentMode = String(
+            await getMode({
+                ...form,
+                EMPNO: form.EMPNO,
+            }),
+        );
+        const currentExtData = await getExtData({ ...form, EMPNO: form.EMPNO });
+        $('#EXTDATAHid').val(currentExtData);
+        alert(currentMode);
+
+        if (currentMode === '1') {
+            // โหมดสร้างฟอร์ม (Create Mode) -> ล็อกการซ่อนปุ่มไว้เหมือนเดิม
+            await ProcessCreate();
+        } else if (currentMode === '2') {
+            // next step
+            await ProcessEdit(currentMode);
+        } else if (currentMode === '3') {
+            // โหมดดูอย่างเดียว (View Mode) -> บังคับซ่อนทุกปุ่ม
+            await ProcessView();
+        } else {
+            await ProcessView();
+        }
+
+        loadExistingFiles(); // สั่งเรียกฟังก์ชันดึงรายการไฟล์มาแสดง
+
+        // 2. เรียกใช้พ่นสเต็ป Flow ของฝั่ง Webflow
+        const flow = await showflow(form);
+        $('.flow').html(flow.html);
+
+        // 3. ยิงคำสั่งประมวลผลดึงรายงานมาพ่นลง DataTable โดยตรงบนหน้าจอ
+        await loadDraftPlan();
+    }
+
+    $('#MODEHid').val(currentMode);
+
+    // 4. สั่งสลับปิด Skeleton Loading ทันทีเมื่อเตรียมโครงตารางหลักเรียบร้อย
+    setTimeout(function () {
+        $('.load').addClass('hidden');
+        $('#form').removeClass('hidden');
+    }, 10);
+    // Event: เปลี่ยนปีหรือรอบ Period ให้ดึง Draft ของรอบนั้นมาแสดง
+    $(document).on('change', '#YearDrp, #PeriodDrp', async function () {
+        const selectedYear = $('#YearDrp').val();
+        const selectedPeriod = $('#PeriodDrp').val();
+
+        if (selectedYear && selectedPeriod) {
+            await loadDraftPlan();
+        }
+    });
+
+    // Event: กดปุ่ม Search เพื่อดึง Plan / Draft ที่มีอยู่แล้ว
+    $(document).on('click', '#SearchBtn', async function () {
+        const year = $('#YearDrp').val();
+        const period = $('#PeriodDrp').val();
+
+        if (!year || !period) {
+            alert('กรุณาเลือก Year และ Period ก่อนทำการค้นหา');
+            return;
+        }
+
+        await loadDraftPlan();
+    });
+    // Event: กดปุ่มคำนวณใหม่ (Process Calculation)
+    $('#ProcessBtn').on('click', async function () {
+        const selectedDesTypes = getSelectedDesTypes();
+        const year = $('#YearDrp').val();
+        const period = $('#PeriodDrp').val();
+
+        if (!year || !period) {
+            alert('กรุณาเลือก Year และ Period');
+            return;
+        }
+
+        if (selectedDesTypes.length === 0) {
+            alert('กรุณาเลือก DesType Target อย่างน้อย 1 รายการ');
+            return;
+        }
+        $('#loading').removeClass('hidden');
+        $('#SavePlanBtn').addClass('hidden');
+        $('#DeleteDraftBtn').addClass('hidden');
+        const payload = {
+            YEAR: $('#YearDrp').val(),
+            PERIOD: $('#PeriodDrp').val(),
+            DESTYPES: getSelectedDesTypes(),
+            REVISION: $('#RevisionHid').val(),
+            EMPNO: empno,
+        };
+
+        try {
+            const res = await processPlanCalculation(payload);
+            if (res.status) {
+                currentPlanHeaderID = res.planHeaderID;
+                $('#RevBadge').text('Revision: ' + res.revision);
+                renderDataTable(res.data);
+                $('#SavePlanBtn').removeClass('hidden');
+                $('#DeleteDraftBtn').removeClass('hidden');
+            } else {
+                alert('เกิดข้อผิดพลาด: ' + res.message);
+            }
+        } catch (err) {
+            console.error(err);
+            alert('ไม่สามารถประมวลผลได้');
+        } finally {
+            $('#loading').addClass('hidden');
+        }
+    });
+
+    // Event: ยืนยันบันทึก Master Plan (Confirm & Save)
+    $('#SavePlanBtn').on('click', async function () {
+        if (
+            !confirm(
+                'ยืนยันการบันทึก Plan Master และอนุมัติเป็น Revision จริงใช่หรือไม่?',
+            )
+        )
+            return;
+
+        const payload = {
+            YEAR: $('#YearDrp').val(),
+            PERIOD: $('#PeriodDrp').val(),
+            DESTYPES: getSelectedDesTypes(),
+            REVISION: $('#RevisionHid').val(),
+            EMPNO: empno,
+        };
+
+        try {
+            const res = await savePlanMaster(payload);
+            if (res.status) {
+                alert(res.message);
+                $('#RevBadge').text('Revision: ' + res.revision);
+                $('#SavePlanBtn').addClass('hidden');
+            } else {
+                alert('เกิดข้อผิดพลาด: ' + res.message);
+            }
+        } catch (err) {
+            alert('ไม่สามารถบันทึกข้อมูลได้');
+        }
+    });
+
+    // Event: กดปุ่ม Delete Draft
+    $(document).on('click', '#DeleteDraftBtn', async function () {
+        if (!currentPlanHeaderID) {
+            alert('ไม่พบฉบับร่างที่ต้องการลบ');
+            return;
+        }
+
+        if (!confirm('คุณต้องการลบข้อมูลฉบับร่าง (Draft) นี้ใช่หรือไม่?'))
+            return;
+
+        $('#loading').removeClass('hidden');
+
+        try {
+            const payload = {
+                PLAN_HEADER_ID: currentPlanHeaderID,
+                YEAR: $('#YearDrp').val(),
+                PERIOD: $('#PeriodDrp').val(),
+            };
+
+            const res = await deleteDraftPlan(payload);
+            if (res.status) {
+                alert(res.message);
+                currentPlanHeaderID = null;
+
+                // เคลียร์ตารางให้เป็นตารางว่าง
+                renderDataTable([]);
+
+                // ซ่อนปุ่ม Action ทั้งสอง
+                $('#DeleteDraftBtn').addClass('hidden');
+                $('#SavePlanBtn').addClass('hidden');
+
+                // โหลดสถานะ Revision ถัดไปรอไว้
+                await loadDraftPlan();
+            } else {
+                alert('เกิดข้อผิดพลาด: ' + res.message);
+            }
+        } catch (err) {
+            console.error(err);
+            alert('ไม่สามารถลบฉบับร่างได้');
+        } finally {
+            $('#loading').addClass('hidden');
+        }
+    });
+
+    // Event เมื่อแก้ค่าในตารางแล้วยิง AJAX อัปเดตลงตาราง Tb_Master_DESBM_Detail ทันที
+    $(document).on('change', '.inline-edit-date', async function () {
+        const $input = $(this);
+        const field = $input.data('field');
+        const newVal = $input.val();
+        const rowIndex = $input.data('row-index');
+
+        const table = $('#table-plan').DataTable();
+        const rowData = table.row(rowIndex).data();
+
+        if (!rowData || !rowData.PlanHeaderID) {
+            alert('ไม่พบข้อมูล PlanHeaderID ของแถวนี้');
+            return;
+        }
+
+        $input.addClass('opacity-50 cursor-wait');
+
+        const payload = {
+            PlanHeaderID: rowData.PlanHeaderID,
+            SeqNo: rowData.SeqNo,
+            PROD: rowData.PROD,
+            Field: field,
+            Value: newVal ? newVal : '',
+            EMPNO: empno,
+        };
+
+        try {
+            const res = await updateInlineDetail(payload);
+            if (res.status && res.row) {
+                // นำแถวที่ผ่านการคำนวณสูตรใหม่จาก Backend มาแทนที่ Data Model
+                table.row(rowIndex).data(res.row).draw(false);
+
+                // แจ้งเตือนสถานะสำเร็จ
+                const $updatedInput = $(table.row(rowIndex).node()).find(
+                    `input[data-field="${field}"]`,
+                );
+                $updatedInput.addClass('border-success bg-green-50');
+                setTimeout(
+                    () =>
+                        $updatedInput.removeClass('border-success bg-green-50'),
+                    1500,
+                );
+            } else {
+                alert('บันทึกไม่สำเร็จ: ' + res.message);
+                $input
+                    .removeClass('opacity-50 cursor-wait')
+                    .addClass('border-error');
+            }
+        } catch (err) {
+            console.error('Update inline error details:', err);
+            const errorMsg = err.responseJSON
+                ? err.responseJSON.message
+                : err.responseText || 'เกิดข้อผิดพลาดในการเชื่อมต่อ';
+            alert('เกิดข้อผิดพลาด: ' + errorMsg);
+            $input
+                .removeClass('opacity-50 cursor-wait')
+                .addClass('border-error');
+        }
+    });
+
+    // ===================================================================
+    // == Action Upload File
+    // ===================================================================
+    function loadExistingFiles() {
+        console.log('กำลังโหลดรายการไฟล์ใหม่...'); // เพิ่มบรรทัดนี้
+        const formData = $('.form-info').data();
+        var isRequester = false;
+        if (currentMode === '2') {
+            isRequester = ($('#REQUEST_BYTxt').val() || '').includes(empno); // เช็คสิทธิ์ที่นี่
+        }
+        const $list = $('#uploaded-files-list');
+        $.ajax({
+            url: host + 'feform/FE-EIA/form/GetFilesDisplay',
+            type: 'POST',
+            cache: false, // 🟢 ป้องกันการจำค่าเก่า
+            dataType: 'json',
+            data: {
+                NFRMNO: formData.nfrmno,
+                VORGNO: formData.vorgno,
+                CYEAR2: formData.cyear2,
+                NRUNNO: formData.nrunno,
+            },
+            success: function (response) {
+                $list.html('');
+                if (response?.status === true && response.files.length > 0) {
+                    $list.empty();
+
+                    response.files.forEach(function (file) {
+                        let downloadUrl =
+                            host +
+                            'feform/FE-EIA/form/DownloadFile?id=' +
+                            file.FILE_ID;
+
+                        // 🟢 ถ้าเป็น Requester ให้โชว์ปุ่มลบ
+                        let deleteBtn = isRequester
+                            ? `
+                            <button type="button" 
+                                    class="btn-delete-file text-rose-500 hover:text-rose-700 font-bold text-xs px-2 cursor-pointer" 
+                                    data-id="${file.FILE_ID}">
+                                🗑️ Delete
+                            </button>`
+                            : '';
+
+                        let itemHtml = `
+                            <li class="flex items-center justify-between py-2.5 px-3 text-sm hover:bg-slate-50 transition-colors">
+                                <div class="flex items-center gap-2.5 truncate">
+                                    <span>📁</span>
+                                    <span class="font-medium text-slate-700 truncate">${file.FILE_ONAME}</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <a href="${downloadUrl}" target="_blank" class="bg-slate-100 hover:bg-primary hover:text-white text-slate-600 font-semibold text-xs px-2.5 py-1.5 rounded-lg transition-all">
+                                        ⬇️ Download
+                                    </a>
+                                    ${deleteBtn}
+                                </div>
+                            </li>`;
+                        $list.append(itemHtml);
+                    });
+                }
+            },
+        });
+    }
+
+    $(document).on('click', '.btn-delete-file', function () {
+        const fileId = $(this).data('id');
+        if (!confirm('ยืนยันการลบไฟล์นี้ใช่หรือไม่?')) return;
+
+        $.ajax({
+            url: host + 'feform/FE-EIA/form/DeleteFile', // สร้าง Controller มาดักลบไฟล์
+            type: 'POST',
+            data: { id: fileId },
+            success: function (response) {
+                if (response.status) {
+                    alert('ลบไฟล์สำเร็จ');
+                    loadExistingFiles(); // โหลด List ใหม่
+                } else {
+                    alert('ลบไฟล์ไม่สำเร็จ');
+                }
+            },
+        });
+    });
+
+    // อีเวนต์เมื่อไฟล์ใน Input มีการเปลี่ยนแปลง (เลือกไฟล์เข้ามา)
+    $(document).on('change', '#files', function () {
+        handleFileSelect(this.files);
+    });
+
+    // ลอจิกจัดการลากวางไฟล์ (Drag & Drop)
+    const dropZone = document.getElementById('drop-zone');
+    if (dropZone) {
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach((eventName) => {
+            dropZone.addEventListener(eventName, preventDefaults, false);
+        });
+        ['dragenter', 'dragover'].forEach((eventName) => {
+            dropZone.addEventListener(
+                eventName,
+                () =>
+                    $('#drop-zone').addClass('border-green-500 bg-green-50/20'),
+                false,
+            );
+        });
+        ['dragleave', 'drop'].forEach((eventName) => {
+            dropZone.addEventListener(
+                eventName,
+                () =>
+                    $('#drop-zone').removeClass(
+                        'border-green-500 bg-green-50/20',
+                    ),
+                false,
+            );
+        });
+        dropZone.addEventListener(
+            'drop',
+            (e) => {
+                handleFileSelect(e.dataTransfer.files);
+            },
+            false,
+        );
+    }
+
+    // == Action Upload File
+    // ===================================================================
+});
+
+async function loadDraftPlan() {
+    const year = $('#YearDrp').val();
+    const period = $('#PeriodDrp').val();
+
+    if (!year || !period) return;
+
+    $('#loading').removeClass('hidden');
+    const payload = {
+        YEAR: $('#YearDrp').val(),
+        PERIOD: $('#PeriodDrp').val(),
+        DESTYPES: getSelectedDesTypes(),
+        REVISION: $('#RevisionHid').val(),
+        EMPNO: empno,
+    };
+
+    try {
+        const res = await getOrInitDraftPlan(payload);
+        if (res.statusTb) {
+            currentPlanHeaderID = res.planHeaderID;
+            $('#RevBadge').text('Revision: ' + (res.revision || '*'));
+            $('#RevisionHid').val(res.revision);
+            $('#STATUSHid').val(res.status);
+
+            // จัดการ Checkbox: ถ้าเจอ Draft ให้ใช้ค่าของ Draft / ถ้าไม่เจอ ให้ Reset กลับเป็นค่า Default
+            if (res.hasDraft && res.desType) {
+                setSelectedDesTypes(res.desType);
+            } else {
+                resetToDefaultDesTypes();
+            }
+
+            renderDataTable(res.data || []);
+
+            // ถ้ามี Draft อยู่จริง ให้แสดงทั้งปุ่ม Delete Draft และ Save Plan
+            if (res.hasDraft && res.data && res.data.length > 0) {
+                $('#DeleteDraftBtn').removeClass('hidden');
+                $('#SavePlanBtn').removeClass('hidden');
+            } else {
+                $('#DeleteDraftBtn').addClass('hidden');
+                $('#SavePlanBtn').addClass('hidden');
+            }
+        }
+    } catch (e) {
+        console.error('Error loading draft plan', e);
+    } finally {
+        $('#loading').addClass('hidden');
+    }
+}
+
+function renderDataTable(data) {
+    if ($.fn.DataTable.isDataTable('#table-plan')) {
+        $('#table-plan').DataTable().destroy();
+        $('#table-plan').empty();
+    }
+
+    $('#table-plan').DataTable({
+        data: data || [],
+        paging: false,
+        ordering: false,
+        scrollX: true,
+        bAutoWidth: false,
+        language: {
+            emptyTable:
+                '<div class="py-6 text-slate-400 font-semibold text-center text-sm">🔍 ไม่พบข้อมูล Plan หรือ Draft</div>',
+            zeroRecords:
+                '<div class="py-6 text-slate-400 font-semibold text-center text-sm">🔍 ไม่พบข้อมูล</div>',
+        },
+        columns: [
+            {
+                data: 'SeqNo',
+                title: 'No.',
+                className: 'text-center align-middle',
+            },
+            {
+                data: 'PROD',
+                title: 'PROD',
+                className: 'text-center font-semibold align-middle',
+            },
+            {
+                data: 'MFG_BM',
+                title: 'MFG BM',
+                className: 'text-center align-middle',
+                render: (d) => (d ? d.substring(0, 10) : '-'),
+            },
+            {
+                data: 'P_Type',
+                title: 'P',
+                className: 'text-center align-middle',
+            },
+            {
+                data: 'DES_BM',
+                title: 'DES BM ✏️',
+                className: 'text-center align-middle',
+                render: function (d, type, row, meta) {
+                    const dateVal = d ? d.substring(0, 10) : '';
+                    return `
+                        <input type="date" 
+                               class="input input-bordered input-xs w-36 text-center font-bold text-primary inline-edit-date" 
+                               data-field="DES_BM" 
+                               data-row-index="${meta.row}" 
+                               value="${dateVal}">
+                    `;
+                },
+            },
+            {
+                data: 'Time_DESBM_to_MFGBM',
+                title: 'TIME (DES-MFG)',
+                className: 'text-center align-middle',
+            },
+            {
+                data: 'Go_DES',
+                title: 'Go-DES ✏️',
+                className: 'text-center align-middle',
+                render: function (d, type, row, meta) {
+                    const dateVal = d ? d.substring(0, 10) : '';
+                    return `
+                        <input type="date" 
+                               class="input input-bordered input-xs w-36 text-center font-bold text-primary inline-edit-date" 
+                               data-field="Go_DES" 
+                               data-row-index="${meta.row}" 
+                               value="${dateVal}">
+                    `;
+                },
+            },
+            {
+                data: 'Time_GoDES_to_DESBM',
+                title: 'TIME (Go-DES)',
+                className: 'text-center align-middle',
+            },
+            {
+                data: 'Confirm_MELINA_Portion',
+                title: 'Confirm MELINA',
+                className: 'text-center align-middle',
+                render: (d) => (d ? d.substring(0, 10) : '-'),
+            },
+            {
+                data: 'Time_Confirm_Melina',
+                title: 'TIME (Confirm_MELINA)',
+                className: 'text-center align-middle',
+            },
+            {
+                data: 'MSE_to_MELINA',
+                title: 'MSE to MELINA',
+                className: 'text-center align-middle',
+                render: (d) => (d ? d.substring(0, 10) : '-'),
+            },
+            {
+                data: 'Time_MSE_to_MELINA',
+                title: 'TIME (MSE_to_MELINA)',
+                className: 'text-center align-middle',
+            },
+            {
+                data: 'SW_Assembly',
+                title: 'SW.Assembly',
+                className: 'text-center align-middle',
+                render: (d) => (d ? d.substring(0, 10) : '-'),
+            },
+            {
+                data: 'Time_SW_Assembly',
+                title: 'TIME (SW_Assembly)',
+                className: 'text-center align-middle',
+            },
+            {
+                data: 'Zero_Level_Check_Temp_DWG',
+                title: '0-Level DWG',
+                className: 'text-center align-middle',
+                render: (d) => (d ? d.substring(0, 10) : '-'),
+            },
+            {
+                data: 'Time_Zero_Level',
+                title: 'TIME (Zero_Level)',
+                className: 'text-center align-middle',
+            },
+            {
+                data: 'Design_working_day',
+                title: 'TIME (Design working day)',
+                className: 'text-center align-middle',
+            },
+            {
+                data: 'LeadTime',
+                title: 'TIME (Design working day)',
+                className: 'text-center align-middle',
+            },
+            {
+                data: 'Time_DESBM_to_MFGBM_2',
+                title: 'TIME (DESBM_to_MFGBM)',
+                className: 'text-center align-middle',
+            },
+
+            {
+                data: 'TypeJun',
+                title: 'TypeJun',
+                className: 'text-center align-middle',
+            },
+            {
+                data: 'ChangeJunTodate',
+                title: 'ChangeJunTodate',
+                className: 'text-center align-middle',
+            },
+        ],
+    });
+}
+
+async function ProcessCreate() {
+    // โหมดสร้างฟอร์ม (Create Mode) -> ล็อกการซ่อนปุ่มไว้เหมือนเดิม
+
+    $('#SavePlanBtn').addClass('hidden');
+    $('#ApproveBtn').addClass('hidden');
+    $('#ReturnBtn').addClass('hidden');
+    $('#DeleteBtn').addClass('hidden'); // โชว์
+    $('#upload-zone').removeClass('hidden');
+}
+async function ProcessEdit(currentMode) {
+    // PLAN_YEAR: planyear,
+    // PERIOD: period,
+    // REVISION: revision,
+    // REMARK: remark,
+
+    const requesterValue = $('#REQUEST_BYTxt').val() || '';
+    // แนะนำให้ใช้ .includes(empno) ตามเดิมเพื่อความแม่นยำในการตรวจจับข้อความยาว
+    if (requesterValue.includes(empno)) {
+        // Requester
+        $('#SavePlanBtn').removeClass('hidden');
+        $('#ApproveBtn').removeClass('hidden'); // โชว์
+        $('#DeleteBtn').removeClass('hidden'); // โชว์
+        $('#ReturnBtn').addClass('hidden'); // ซ่อน
+        // $('#RejectBtn').addClass('hidden'); // ซ่อน
+        $('#upload-zone').removeClass('hidden');
+        $('#download-zone').removeClass('hidden'); // ผู้อนุมัติเข้ามาตรวจ ให้โหลดได้อย่างเดียว
+    } else {
+        //All Approver
+        $('#ApproveBtn').removeClass('hidden'); // โชว์
+        $('#ReturnBtn').removeClass('hidden'); // โชว์
+        // $('#RejectBtn').removeClass('hidden'); // โชว์
+        $('#download-zone').removeClass('hidden'); // ผู้อนุมัติเข้ามาตรวจ ให้โหลดได้อย่างเดียว
+    }
+}
+async function ProcessView() {
+    // โหมดดูอย่างเดียว (View Mode) -> บังคับซ่อนทุกปุ่ม
+
+    $('#SavePlanBtn').addClass('hidden');
+    $('#ApproveBtn').addClass('hidden');
+    $('#ReturnBtn').addClass('hidden');
+    $('#DeleteBtn').addClass('hidden'); // โชว์
+    $('#upload-zone').removeClass('hidden');
+
+    $('#download-zone').removeClass('hidden'); // ผู้อนุมัติเข้ามาตรวจ ให้โหลดได้อย่างเดียว
+}
+
+// ฟังก์ชันอ่านค่า DesType ที่ User ติ๊กเลือกทั้งหมด
+function getSelectedDesTypes() {
+    let selected = [];
+    $('.des-type-checkbox:checked').each(function () {
+        selected.push($(this).val());
+    });
+    return selected;
+}
+
+// ฟังก์ชันเซ็ตสถานะ Checkbox ตามค่าที่ได้จาก DB (เช่น "N|T" หรือ ["N", "T"])
+function setSelectedDesTypes(desTypeData) {
+    if (!desTypeData) return;
+
+    let selectedList = Array.isArray(desTypeData)
+        ? desTypeData
+        : desTypeData.split('|');
+
+    $('.des-type-checkbox').each(function () {
+        let val = $(this).val();
+        $(this).prop('checked', selectedList.includes(val));
+    });
+}
+// ฟังก์ชันดึงค่าเริ่มต้นจาก Form Data Attribute
+function resetToDefaultDesTypes() {
+    const defaultData = $('.form-info').data('default-destypes');
+    if (defaultData) {
+        setSelectedDesTypes(defaultData);
+    } else {
+        // Fallback หากไม่มีค่า
+        setSelectedDesTypes(['N', 'T']);
+    }
+}
+
+function convertMonthYearToNumber(str) {
+    const months = {
+        Jan: 1,
+        Feb: 2,
+        Mar: 3,
+        Apr: 4,
+        May: 5,
+        Jun: 6,
+        Jul: 7,
+        Aug: 8,
+        Sep: 9,
+        Oct: 10,
+        Nov: 11,
+        Dec: 12,
+    };
+    const parts = str.split("'"); // เช่น ['Feb', '2026']
+    const month = months[parts[0]];
+    const year = parts[1];
+    return parseInt(year + month.toString().padStart(2, '0')); // ได้ 202602
+}
+
+$(document).on('click', '#SentEmailBtn', async function () {
+    const formData = $('.form-info').data();
+    const {
+        nfrmno,
+        vorgno,
+        cyear,
+        cyear2,
+        nrunno,
+        empno,
+        cost_year,
+        cost_month,
+        doc_no,
+    } = formData;
+
+    try {
+        let phpData = new FormData();
+        phpData.append('NFRMNO', nfrmno);
+        phpData.append('VORGNO', vorgno);
+        phpData.append('CYEAR', cyear);
+        phpData.append('CYEAR2', cyear2);
+        phpData.append('NRUNNO', nrunno);
+        phpData.append('COST_MONTH', $('#MONTHDrp').val());
+        phpData.append('COST_YEAR', $('#YEARDrp').val());
+        phpData.append('DATAONHAND', JSON.stringify(dataOnhand));
+        const responseEndProcess = await $.ajax({
+            url: host + 'feform/FE-EIA/form/EndpProcess',
+            type: 'POST',
+            data: phpData,
+            processData: false,
+            contentType: false,
+            dataType: 'json',
+        });
+
+        if (
+            responseEndProcess &&
+            (responseEndProcess.status === true ||
+                responseEndProcess.status === 'true')
+        ) {
+        } else {
+            throw new Error(
+                responseEndProcess?.message || 'end process not completed',
+            );
+        }
+    } catch (error) {
+        console.error('Action Flow Error:', error);
+        alert('เกิดข้อผิดพลาด: ' + error.message);
+        $('#loading').hide();
+    }
+});
+
+$(document).on('click', '#PdfBtn', function () {
+    // ดักจับ fallback เผื่อก้อนข้อมูลหลักยังโหลดมาไม่สมบูรณ์
+    const formData = $('.form-info').data() || {};
+    const { nfrmno, vorgno, cyear, cyear2, nrunno } = formData;
+
+    const pdfUrl =
+        host +
+        'feform/FE-EIA/form/exportPdf?no=' +
+        nfrmno +
+        '&orgNo=' +
+        vorgno +
+        '&y=' +
+        cyear +
+        '&y2=' +
+        cyear2 +
+        '&runNo=' +
+        nrunno;
+
+    // alert(pdfUrl);
+    // // เปิดลิงก์หลังบ้านในแท็บใหม่เพื่อประมวลผลไฟล์ PDF ทันที
+    window.open(pdfUrl, '_blank');
+});
+
+$(document).on('click', '#ApproveBtn', async function () {
+    let val = $(this).val();
+    // เปิด Loader บังหน้าจอไว้ก่อนถ้าระบบโหลดช้า
+    await actionFlow('approve');
+});
+
+// 2. อีเวนต์คลิกปุ่ม Return
+$(document).on('click', '#ReturnBtn', async function () {
+    let val = $(this).val();
+    await actionFlow('return');
+});
+// reject
+$(document).on('click', '#RejectBtn', async function () {
+    let val = $(this).val();
+    await actionFlow('reject');
+});
+
+$(document).on('click', '#DeleteBtn', async function () {
+    let val = $(this).val();
+    const formData = $('.form-info').data();
+    const { nfrmno, vorgno, cyear, cyear2, nrunno, empno } = formData;
+
+    const payload = {
+        NFRMNO: nfrmno ? Number(nfrmno) : 0,
+        VORGNO: vorgno ? vorgno.toString() : '',
+        CYEAR: cyear ? cyear.toString() : '',
+        CYEAR2: cyear2 ? cyear2.toString() : '',
+        NRUNNO: nrunno ? Number(nrunno) : 0,
+    };
+
+    // 1. รอให้ฟังก์ชันลบทำงานเสร็จก่อน
+    const delform = await deleteFlowandForm(payload);
+
+    if (delform.status) {
+        // alert(delform.status);
+        // ใช้ Promise เพื่อให้สามารถใช้ await กับ $.ajax ได้
+        try {
+            const response = await $.ajax({
+                url: host + 'feform/FE-EIA/form/DeleteFEEIAForm',
+                type: 'POST',
+                dataType: 'json',
+                data: {
+                    NFRMNO: nfrmno,
+                    VORGNO: vorgno,
+                    CYEAR: cyear,
+                    CYEAR2: cyear2,
+                    NRUNNO: nrunno,
+                    EMPNO: empno,
+                },
+            });
+
+            if (
+                response.status === true ||
+                response.status === 'true' ||
+                response.status
+            ) {
+                alert('ลบข้อมูลในตารางเรียบร้อยแล้ว');
+                await redirectWebflow(); // ตอนนี้ใช้ await ได้แล้ว
+            } else {
+                alert(
+                    'ไม่สามารถลบข้อมูลในตารางได้: ' +
+                        (response.message || 'โปรดตรวจสอบข้อผิดพลาดในระบบ'),
+                );
+            }
+        } catch (error) {
+            console.error('Ajax Error: ', error);
+            alert('เกิดข้อผิดพลาดในการเชื่อมต่อฐานข้อมูล');
+            $('#loading').hide();
+        }
+    } else {
+        Swal.fire({
+            icon: 'error',
+            title: 'Failed to Delete Form',
+            text: delform.message || 'Please try again',
+        });
+    }
+});
+
+async function actionFlow(actionType) {
+    const formData = $('.form-info').data();
+    const {
+        nfrmno,
+        vorgno,
+        cyear,
+        cyear2,
+        nrunno,
+        empno,
+        cost_year,
+        cost_month,
+        doc_no,
+    } = formData;
+
+    let result = '0';
+    const remarkTxt = $('#txtRemark').val() || '';
+    const payload = {
+        NFRMNO: nfrmno ? Number(nfrmno) : 0,
+        VORGNO: vorgno ? vorgno.toString() : '',
+        CYEAR: cyear ? cyear.toString() : '',
+        CYEAR2: cyear2 ? cyear2.toString() : '',
+        NRUNNO: nrunno ? Number(nrunno) : 0,
+        ACTION: actionType ? actionType.toString() : '',
+        EMPNO: empno ? empno.toString() : '',
+        REMARK: remarkTxt.toString(),
+    };
+
+    try {
+        // 1. ตรวจสอบว่าผู้ใช้งานคือ Requester หรือไม่
+        if (($('#REQUEST_BYTxt').val() || '').includes(empno)) {
+            const hasFiles =
+                selectedFilesArray.filter((file) => file !== null).length > 0;
+
+            // สมมติว่าต้องการบังคับเฉพาะโหมด Create (currentMode === '1')
+            if (currentMode === '2' && !hasFiles) {
+                alert('กรุณาเลือกไฟล์แนบรายงานก่อนทำการบันทึกครับ');
+                return; // หยุดทำงานทันทีถ้าไม่มีไฟล์
+            }
+            // --- ขั้นตอนที่ 1: จัดการไฟล์ผ่าน NestJS API ---
+            let nestJsData = new FormData();
+            nestJsData.append('NFRMNO', nfrmno);
+            nestJsData.append('VORGNO', vorgno);
+            nestJsData.append('CYEAR', cyear);
+            nestJsData.append('CYEAR2', cyear2);
+            nestJsData.append('NRUNNO', nrunno);
+            nestJsData.append('CREATEBY', empno);
+            nestJsData.append('FORM_TYPE', 'FE');
+
+            if (typeof selectedFilesArray !== 'undefined') {
+                selectedFilesArray.forEach((file) => {
+                    if (file !== null) nestJsData.append('files', file);
+                });
+            }
+
+            // เรียกผ่าน Service ใน data.js ที่เตรียมไว้
+            const responseFile = await createFeEia(nestJsData);
+            if (!responseFile || !responseFile.status) {
+                throw new Error(
+                    responseFile?.message || 'อัปโหลดไฟล์ไป NestJS ไม่สำเร็จ',
+                );
+            }
+
+            // --- ขั้นตอนที่ 2: จัดการบันทึก Detail ผ่าน PHP AddFEEIADetail ---
+            let FEEIADetailData = new FormData();
+            FEEIADetailData.append('NFRMNO', nfrmno);
+            FEEIADetailData.append('VORGNO', vorgno);
+            FEEIADetailData.append('CYEAR', cyear);
+            FEEIADetailData.append('CYEAR2', cyear2);
+            FEEIADetailData.append('NRUNNO', nrunno);
+            FEEIADetailData.append('COST_MONTH', $('#MONTHDrp').val());
+            FEEIADetailData.append('COST_YEAR', $('#YEARDrp').val());
+            FEEIADetailData.append('DATAONHAND', JSON.stringify(dataOnhand));
+            const responsePhp = await $.ajax({
+                url: host + 'feform/FE-EIA/form/AddFEEIADetail',
+                type: 'POST',
+                data: FEEIADetailData,
+                processData: false,
+                contentType: false,
+                dataType: 'json',
+            });
+
+            if (
+                responsePhp &&
+                (responsePhp.status === true || responsePhp.status === 'true')
+            ) {
+                result = '1'; // ผ่านทั้ง NestJS และ PHP
+            } else {
+                throw new Error(
+                    responsePhp?.message || 'บันทึกข้อมูลตารางไม่สำเร็จ',
+                );
+            }
+        } else {
+            // กรณีผู้อนุมัติ (Approver) ไม่ต้องอัปโหลดไฟล์ใหม่
+            result = '1';
+        }
+
+        // --- ขั้นตอนที่ 3: ดำเนินการ Flow (Action) ---
+        if (result === '1') {
+            const res = await doaction(payload);
+            if (res?.status || res?.status === true || res?.status === 'true') {
+                if ($('#EXTDATAHid').val() == '03') {
+                    // sent mail
+
+                    let EndProcessData = new FormData();
+                    EndProcessData.append('NFRMNO', nfrmno);
+                    EndProcessData.append('VORGNO', vorgno);
+                    EndProcessData.append('CYEAR', cyear);
+                    EndProcessData.append('CYEAR2', cyear2);
+                    EndProcessData.append('NRUNNO', nrunno);
+                    EndProcessData.append('COST_MONTH', $('#MONTHDrp').val());
+                    EndProcessData.append('COST_YEAR', $('#YEARDrp').val());
+                    // EndProcessData.append(
+                    //     'DATAONHAND',
+                    //     JSON.stringify(dataOnhand),
+                    // );
+                    const responseEndProcess = await $.ajax({
+                        url: host + 'feform/FE-EIA/form/EndpProcess',
+                        type: 'POST',
+                        data: EndProcessData,
+                        processData: false,
+                        contentType: false,
+                        dataType: 'json',
+                    });
+
+                    if (
+                        responseEndProcess &&
+                        (responseEndProcess.status === true ||
+                            responseEndProcess.status === 'true')
+                    ) {
+                    } else {
+                        throw new Error(
+                            responseEndProcess?.message ||
+                                'end process not completed',
+                        );
+                    }
+                }
+                redirectWebflow(); // Redirect เมื่อทุกอย่างสำเร็จ
+            } else {
+                throw new Error(res?.message || 'ไม่สามารถส่งฟอร์มได้');
+            }
+        }
+    } catch (error) {
+        console.error('Action Flow Error:', error);
+        alert('เกิดข้อผิดพลาด: ' + error.message);
+        $('#loading').hide();
+    }
+}
+
+function submitWebflowAction(actionType) {
+    alert('ระบบ Webflow กำลังประมวลผลสถานะ: ' + actionType);
+}
+
+function preventDefaults(e) {
+    e.preventDefault();
+    e.stopPropagation();
+}
+
+// == Action Upload File
+function handleFileSelect(files) {
+    if (files.length === 0) return;
+
+    $('#file-list-container').removeClass('hidden');
+
+    for (let i = 0; i < files.length; i++) {
+        selectedFilesArray.push(files[i]);
+
+        // วาด UI แสดงผลไฟล์แต่ละตัว
+        let fileId = selectedFilesArray.length - 1;
+        let fileSize = (files[i].size / (1024 * 1024)).toFixed(2) + ' MB';
+
+        let itemHtml = `
+                    <li class="flex items-center justify-between py-2 px-3 text-sm text-slate-700 font-medium bg-slate-50/50 rounded-lg mb-1" id="file-item-${fileId}">
+                        <div class="flex items-center gap-2 truncate">
+                            <span class="text-slate-400">📄</span>
+                            <span class="truncate">${files[i].name}</span>
+                            <span class="text-xs text-slate-400">(${fileSize})</span>
+                        </div>
+                        <button type="button" class="text-rose-500 hover:text-rose-700 text-xs font-bold px-2 cursor-pointer btn-remove-file" data-id="${fileId}">Remove</button>
+                    </li>
+                `;
+        $('#selected-files-list').append(itemHtml);
+    }
+}
+
+// อีเวนต์การกดลบไฟล์ที่ไม่เอาออกจากลิสต์
+$(document).on('click', '.btn-remove-file', function () {
+    let id = $(this).data('id');
+    $(`#file-item-${id}`).remove();
+    // นำออกจากอาเรย์ชั่วคราว
+    selectedFilesArray[id] = null;
+    if ($('#selected-files-list li').length === 0) {
+        $('#file-list-container').addClass('hidden');
+    }
+});
+
+// == Action Upload File
