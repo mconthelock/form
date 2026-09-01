@@ -34,3 +34,21 @@ export async function savePlanMaster(payload) {
         dataType: 'json',
     });
 }
+
+export async function deleteDraftPlan(payload) {
+    return $.ajax({
+        url: host + 'dedform/DED-MDS/form/DeleteDraftPlan',
+        type: 'POST',
+        data: payload,
+        dataType: 'json',
+    });
+}
+
+export async function updateInlineDetail(data) {
+    return $.ajax({
+        url: host + 'dedform/DED-MDS/form/UpdateInlineDetail',
+        type: 'POST',
+        data: data,
+        dataType: 'json',
+    });
+}
