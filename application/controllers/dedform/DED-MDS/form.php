@@ -26,11 +26,11 @@ class form extends MY_Controller {
         $this->client = new Client(['verify' => false]);
         
         $this->load->library('Mail');
-        // ปิด Deprecation error ชั่วคราวก่อนโหลด TCPDF wrapper
-        $old_level = error_reporting(error_reporting() & ~E_USER_DEPRECATED & ~E_DEPRECATED);
+        // // ปิด Deprecation error ชั่วคราวก่อนโหลด TCPDF wrapper
+        // $old_level = error_reporting(error_reporting() & ~E_USER_DEPRECATED & ~E_DEPRECATED);
 
-        $this->load->library('pdf');
-        error_reporting($old_level); // คืนค่าเดิม
+        // $this->load->library('pdf');
+        // error_reporting($old_level); // คืนค่าเดิม
         $this->load->model('form_model', 'frm');
         $this->load->model('dedform/DED-MDS/DED_MDS_model', 'MDSModel');
         $this->host = isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : 'amecweb';
