@@ -1928,7 +1928,7 @@ export const actionFormManager = {
             }
             if (res.status == true) {
                 //chechk status form
-                const rescst = await getFormStatus({ ...data });
+                // const rescst = await getFormStatus({ ...data });
                 //console.log(rescst);
                 showMessage(res.message, 'success');
 

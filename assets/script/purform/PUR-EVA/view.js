@@ -15,6 +15,7 @@ import {
     showMessage,
 } from '@amec/webasset/utils';
 import {
+    approvePurEvaForm,
     createPurVmmAuto,
     genVndCode,
     getData,
@@ -437,54 +438,8 @@ $(document).on('click', '.file-link', async function (e) {
 $(document).on('click', 'button[name="btnAction"]', async function () {
     const act = $(this).val();
     const remark = $('textarea[name="txtRemark"]').val();
-    // 1. ดึงข้อมูล Metadata จากหน้าเว็บ
-    const formInfo = await getAllAttr('.form-info');
     const apvno = $('.apv-data').attr('empno');
-    const form = {
-        NFRMNO: formInfo?.nfrmno || null,
-        VORGNO: formInfo?.vorgno || null,
-        CYEAR: formInfo?.cyear || null,
-        CYEAR2: formInfo?.cyear2 || null,
-        NRUNNO: formInfo?.nrunno || null,
-    };
 
-    if (cextdata == '02') {
-        if (act == 'approve') {
-            let textValue = $('#VENDGROUP').text();
-            console.log(textValue);
-
-            if (textValue != 'Non-Production (6)') {
-                console.log('if');
-
-                const MJUD = $('input[name="MJUDGEMENT"]:checked').val();
-                if (!MJUD) {
-                    showMessage('Please select Judgement', 'warning');
-                    return false;
-                }
-                // 2. สร้าง Object ข้อมูลที่จะส่งไปตรงๆ (มั่นใจได้ 100% ว่าไม่มีตัวไหนหลุดเป็น undefined แน่นอน)
-                const data = {
-                    ...form,
-                    ACTION: act,
-                    EMPNO: apvno,
-                    REMARK: remark,
-                    // คะแนน Judgement รวม (รองรับทั้งที่สร้างด้วย JS และที่มีอยู่เดิม)
-                    MJUDGEMENT:
-                        $('input[name="MJUDGEMENT"]:checked').val() ||
-                        $('.judgement-result').text().trim() ||
-                        null,
-                };
-
-                // เช็คดูค่าที่ประกอบร่างเสร็จใน Console
-                console.log('--- ข้อมูลที่จะส่งไป Backend ---', data);
-
-                // 3. ส่งข้อมูลเข้าฟังก์ชัน update ทันที
-                const resform = await updatePurEvaForm(data);
-            } else {
-                const deletedim = {};
-                await deleteFlowStep({ ...form, CSTEPNO: '02' });
-            }
-        }
-    }
     if (act != 'approve' && remark == '') {
         showMessage(
             'Please fill in the reason field for the return or rejection request.',
@@ -492,53 +447,41 @@ $(document).on('click', 'button[name="btnAction"]', async function () {
         );
         return false;
     }
-    try {
-        showLoader();
-        const res = await doaction({
-            ...form,
-            EMPNO: apvno,
-            ACTION: act,
-            REMARK: remark,
-        });
-        //console.log(res);
-        if (res.status == true) {
-            const cst = await getFormStatus({ ...form });
-            if (cst == 2) {
-                if (formeva.OPERATION == 'N') {
-                    const today = new Date();
-                    const formattedDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-                    let gp = formeva.VENDGROUP.match(/^\d+/)?.[0];
-                    let p = '';
-                    if (gp != 6) {
-                        p = formeva.VENDPURPOSE.match(/^\d+/)?.[0];
-                    }
-                    const vnd = await genVndCode({
-                        VND_NAME: formeva.COMNAME,
-                        VND_REGISTED: formattedDate,
-                        VND_STATUS: '0',
-                        VENDGROUP: gp,
-                        VENDPURPOSE: p,
-                    });
-                    console.log('VENDCODE =' + vnd.VND_CODE);
 
-                    const datavndcode = {
-                        ...form,
-                        VENDCODE: vnd.VND_CODE,
-                    };
-                    const resupd = await updatePurEvaForm(datavndcode);
-                }
-                if (
-                    formeva.OPERATION == 'N' ||
-                    (formeva.OPERATION == 'A' && formeva.UPSTATUS == 'Y')
-                ) {
-                    const res = await createPurVmmAuto(form);
+    if (cextdata == '02') {
+        if (act == 'approve') {
+            let textValue = $('#VENDGROUP').text();
+            if (textValue != 'Non-Production (6)') {
+                const MJUD = $('input[name="MJUDGEMENT"]:checked').val();
+                if (!MJUD) {
+                    showMessage('Please select Judgement', 'warning');
+                    return false;
                 }
             }
-            //
-            //console.log(res);
-            //return false;
-            redirectWebflow();
         }
+    }
+
+    try {
+        showLoader({ show: true });
+        const mJudgement =
+            $('input[name="MJUDGEMENT"]:checked').length > 0
+                ? $('input[name="MJUDGEMENT"]:checked').val()
+                : $('.judgement-result').text().trim() || '';
+        const formData = {
+            NFRMNO: form.NFRMNO,
+            VORGNO: form.VORGNO,
+            CYEAR: form.CYEAR,
+            CYEAR2: form.CYEAR2,
+            NRUNNO: form.NRUNNO,
+            EMPNO: form.EMPNO,
+            ACTION: act,
+            EXTDATA: cextdata,
+            REMARK: remark,
+            MJUDGEMENT: mJudgement,
+        };
+
+        const resapv = await approvePurEvaForm(formData);
+        redirectWebflow();
     } catch (error) {
         console.error(error);
         showErrorMessage(error);
