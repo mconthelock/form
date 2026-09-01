@@ -122,7 +122,7 @@ $(document).on('click', 'button[name="btnAction"]', async function (event) {
         }
 
         showMessage(result?.message || 'Workflow action completed', 'success');
-        redirectWebflow();
+        returnToWebflow();
     } catch (error) {
         console.error(error);
         showMessage(error.message || 'Cannot process workflow action', 'error');
@@ -146,6 +146,16 @@ function redirectBackToWebflow() {
 
     if (backPath) {
         window.location.assign(new URL(backPath, webflowBase).toString());
+        return;
+    }
+
+    returnToWebflow();
+}
+
+function returnToWebflow() {
+    if (window.opener && !window.opener.closed) {
+        window.opener.focus();
+        window.close();
         return;
     }
 

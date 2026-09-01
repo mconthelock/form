@@ -853,7 +853,7 @@ $(document).on(
                 throw new Error(res?.message || 'Cannot submit request');
             }
 
-            redirectWebflow();
+            returnToWebflow();
         } catch (error) {
             console.error(error);
             showMessage(error.message || 'Cannot submit request', 'error');
@@ -925,6 +925,16 @@ async function actionReturnForm(payload) {
     });
 
     return actionResult?.status === false ? actionResult : updateResult;
+}
+
+function returnToWebflow() {
+    if (window.opener && !window.opener.closed) {
+        window.opener.focus();
+        window.close();
+        return;
+    }
+
+    redirectWebflow();
 }
 
 function getCextDataValue(value) {
