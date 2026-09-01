@@ -7,6 +7,7 @@ import {
 } from '@amec/webasset/api/webform';
 import { webflowSubmit } from '@amec/webasset/components/form';
 import { showMessage } from '@amec/webasset/utils';
+import { redirectWebflow } from '@amec/webasset/form';
 
 let isActionProcessing = false;
 let cextData = '';
@@ -121,7 +122,7 @@ $(document).on('click', 'button[name="btnAction"]', async function (event) {
         }
 
         showMessage(result?.message || 'Workflow action completed', 'success');
-        redirectToWaitApproval();
+        redirectWebflow();
     } catch (error) {
         console.error(error);
         showMessage(error.message || 'Cannot process workflow action', 'error');
@@ -148,28 +149,7 @@ function redirectBackToWebflow() {
         return;
     }
 
-    redirectToWaitApproval();
-}
-
-function redirectToWaitApproval() {
-    const webflowBase = new URL(
-        process.env.APP_WEBFLOW || window.location.origin,
-    );
-    const backPath = new URLSearchParams(window.location.search).get('bp');
-    const appRoot =
-        new URL(backPath || '/', webflowBase).pathname.match(
-            /^\/(formtest|form)(?:\/|$)/,
-        )?.[1] ||
-        webflowBase.pathname.match(/^\/(formtest|form)(?:\/|$)/)?.[1] ||
-        (`${window.location.hostname}${webflowBase.hostname}`.includes('test')
-            ? 'formtest'
-            : '') ||
-        window.location.pathname.match(/^\/(formtest|form)(?:\/|$)/)?.[1] ||
-        'form';
-
-    window.location.assign(
-        new URL(`/${appRoot}/workflow/WaitApv.asp`, webflowBase).toString(),
-    );
+    redirectWebflow();
 }
 
 function getFormKeyFromUrl() {

@@ -5,6 +5,7 @@ import { setDatePicker } from '@amec/webasset/flatpickr';
 import { webflowSubmit } from '@amec/webasset/components/form';
 import { fetchUtils } from '@amec/webasset/api/fetch-utils';
 import { getExtData, getFormDetail } from '@amec/webasset/api/webform';
+import { redirectWebflow } from '@amec/webasset/form';
 import select2 from 'select2';
 import 'select2/dist/css/select2.min.css';
 
@@ -852,7 +853,7 @@ $(document).on(
                 throw new Error(res?.message || 'Cannot submit request');
             }
 
-            redirectToWaitApproval();
+            redirectWebflow();
         } catch (error) {
             console.error(error);
             showMessage(error.message || 'Cannot submit request', 'error');
@@ -924,27 +925,6 @@ async function actionReturnForm(payload) {
     });
 
     return actionResult?.status === false ? actionResult : updateResult;
-}
-
-function redirectToWaitApproval() {
-    const webflowBase = new URL(
-        process.env.APP_WEBFLOW || window.location.origin,
-    );
-    const backPath = new URLSearchParams(window.location.search).get('bp');
-    const appRoot =
-        new URL(backPath || '/', webflowBase).pathname.match(
-            /^\/(formtest|form)(?:\/|$)/,
-        )?.[1] ||
-        webflowBase.pathname.match(/^\/(formtest|form)(?:\/|$)/)?.[1] ||
-        (`${window.location.hostname}${webflowBase.hostname}`.includes('test')
-            ? 'formtest'
-            : '') ||
-        window.location.pathname.match(/^\/(formtest|form)(?:\/|$)/)?.[1] ||
-        'form';
-
-    window.location.assign(
-        new URL(`/${appRoot}/workflow/WaitApv.asp`, webflowBase).toString(),
-    );
 }
 
 function getCextDataValue(value) {
