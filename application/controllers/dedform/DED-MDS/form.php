@@ -268,7 +268,7 @@ class form extends MY_Controller {
                 'Status'         => 'DRAFT',
                 'DesType'        => $desTypeStr,
                 'Remark'         => 'Process calculated draft plan',
-                'UserAction'     => $empno,
+                'UserAction'     => 'SYSTEM',
                 'ComputerAction' => gethostbyaddr($_SERVER['REMOTE_ADDR']),
                 'DateAction'     => date('Y-m-d H:i:s')
             ];
@@ -324,7 +324,7 @@ class form extends MY_Controller {
 
             $db = $this->load->database($this->DDS, TRUE);
 
-            // 1. ดึงแถวปัจจุบัน
+            // 1. ดึงแถวปัจจุบันที่กำลังแก้ไข
             $currentRow = $db->where('PlanHeaderID', (int)$planHeaderID)
                             ->where('SeqNo', (int)$seqNo)
                             ->get('Tb_Master_DESBM_Detail')
@@ -334,13 +334,31 @@ class form extends MY_Controller {
                 throw new Exception("ไม่พบข้อมูลแถวที่ต้องการแก้ไข");
             }
 
-            // 2. ดึง Config
-            $calConfigs = $db->where('IsActive', 1)->get('Tb_MS_Master_DESBM_Cal')->result();
-            $configMap = [];
-            foreach ($calConfigs as $cfg) {
-                $configMap[$cfg->TargetField . '_' . $cfg->P_Type] = (int)$cfg->OffsetDays;
-            }
+            $pType    = $currentRow->P_Type;
+            $desType  = $currentRow->DesType;
+            $prod     = $currentRow->PROD;
+            $mfgDate  = $currentRow->MFG_BM;
 
+            // 2. ดึง Config ทั้งหมดที่ Active จาก Tb_MS_Master_DESBM_Cal
+            $calConfigs = $db->where('IsActive', 1)->get('Tb_MS_Master_DESBM_Cal')->result();
+
+            // ฟังก์ชันช่วยค้นหา Config ตาม TargetField และ P_Type (Fallback ไปหา 'ALL')
+            $getConfig = function($targetField, $currentPType) use ($calConfigs) {
+                foreach ($calConfigs as $cfg) {
+                    if ($cfg->TargetField === $targetField && $cfg->P_Type === $currentPType) {
+                        return $cfg;
+                    }
+                }
+                // ถ้าไม่เจอตาม P_Type ให้หาแบบ 'ALL'
+                foreach ($calConfigs as $cfg) {
+                    if ($cfg->TargetField === $targetField && $cfg->P_Type === 'ALL') {
+                        return $cfg;
+                    }
+                }
+                return null;
+            };
+
+            // Helper แปลง CalDate <-> WorkSeq
             $getWorkSeq = function($date) use ($db) {
                 if (empty($date)) return null;
                 $row = $db->select('WorkSeq')
@@ -361,125 +379,189 @@ class form extends MY_Controller {
                 return $row ? $row->CalDate : null;
             };
 
-            // 3. เตรียมคำนวณ WorkSeq
-            $mfgDate  = $currentRow->MFG_BM;
-            $mfgSeq   = $getWorkSeq($mfgDate);
-            $pType    = $currentRow->P_Type;
-
+            // 3. กำหนดค่าเริ่มต้นของแถวปัจจุบันหลังแก้ไข
             $newDesBM = ($field === 'DES_BM') ? $formattedDate : $currentRow->DES_BM;
             $newGoDES = ($field === 'Go_DES') ? $formattedDate : $currentRow->Go_DES;
 
-            $desSeq   = $getWorkSeq($newDesBM);
+            $mfgSeq = $getWorkSeq($mfgDate);
+            $desSeq = $getWorkSeq($newDesBM);
 
-            if ($field === 'DES_BM' && $pType === 'P1' && $desSeq !== null) {
-                $goOffset = $configMap['Go_DES_P1'] ?? -12;
-                $goSeq    = $desSeq + $goOffset;
-                $newGoDES = $getCalDate($goSeq);
+            // ดึงข้อมูลแถว P1_ROW ของ Jun/งวดเดียวกันมาเผื่อใช้ (สำหรับ BaseRowType = 'P1_ROW')
+            $p1Row = null;
+            $a2m01Prefix = substr($currentRow->PROD, 0, 7); // สกัดรหัส Jun จาก PROD
+            $p1Row = $db->where('PlanHeaderID', (int)$planHeaderID)
+                        ->where('P_Type', 'P1')
+                        ->like('PROD', $a2m01Prefix, 'after')
+                        ->get('Tb_Master_DESBM_Detail')
+                        ->row();
+
+            // 4. คำนวณ Go_DES แบบ Dynamic ตามตาราง CalConfig
+            $cfgGoDes = $getConfig('Go_DES', $pType);
+            if ($cfgGoDes && $field === 'DES_BM') {
+                if ($cfgGoDes->BaseRowType === 'CURRENT' && $cfgGoDes->BaseField === 'DES_BM' && $desSeq !== null) {
+                    $goSeq = $desSeq + (int)$cfgGoDes->OffsetDays;
+                    $newGoDES = $getCalDate($goSeq);
+                } elseif ($cfgGoDes->BaseRowType === 'P1_ROW' && $p1Row) {
+                    $newGoDES = $p1Row->Go_DES;
+                    $goSeq = $getWorkSeq($newGoDES);
+                } else {
+                    $goSeq = $getWorkSeq($newGoDES);
+                }
             } else {
-                $goSeq    = $getWorkSeq($newGoDES);
+                $goSeq = $getWorkSeq($newGoDES);
             }
 
+            // 5. คำนวณ Field วันที่อื่นๆ แบบ Dynamic (Confirm_MELINA, MSE_to_MELINA, SW_Assembly, Zero_Level_Check)
             $newConfirmMelina = null;
             $newMSE           = null;
-            $newZeroLevel     = null;
             $newSWAssembly    = null;
+            $newZeroLevel     = null;
 
-            if ($desSeq !== null) {
-                $zeroOffset = ($pType === 'P1') ? ($configMap['Zero_Level_Check_P1'] ?? -2) : ($configMap['Zero_Level_Check_last P'] ?? -2);
-                $newZeroLevel = $getCalDate($desSeq + $zeroOffset);
+            // (1) Confirm_MELINA
+            $cfgConfirm = $getConfig('Confirm_MELINA', $pType);
+            if ($cfgConfirm && $goSeq !== null) {
+                $newConfirmMelina = $getCalDate($goSeq + (int)$cfgConfirm->OffsetDays);
+            }
 
-                if ($pType === 'P1') {
-                    $mseOffset = $configMap['MSE_to_MELINA_P1'] ?? 5;
-                    $newMSE = $getCalDate($desSeq + $mseOffset);
+            // (2) MSE_to_MELINA
+            $cfgMse = $getConfig('MSE_to_MELINA', $pType);
+            if ($cfgMse && $desSeq !== null) {
+                $newMSE = $getCalDate($desSeq + (int)$cfgMse->OffsetDays);
+            }
+
+            // (3) SW_Assembly
+            $cfgSw = $getConfig('SW_Assembly', $pType);
+            if ($cfgSw) {
+                if ($cfgSw->BaseRowType === 'CURRENT' && $mfgSeq !== null) {
+                    $newSWAssembly = $getCalDate($mfgSeq + (int)$cfgSw->OffsetDays);
+                } elseif ($cfgSw->BaseRowType === 'P1_ROW' && $p1Row) {
+                    $newSWAssembly = $p1Row->SW_Assembly;
                 }
             }
 
-            if ($pType === 'P1' && $goSeq !== null) {
-                $melOffset = $configMap['Confirm_MELINA_P1'] ?? 4;
-                $newConfirmMelina = $getCalDate($goSeq + $melOffset);
+            // (4) Zero_Level_Check
+            $cfgZero = $getConfig('Zero_Level_Check', $pType);
+            if ($cfgZero && $desSeq !== null) {
+                $newZeroLevel = $getCalDate($desSeq + (int)$cfgZero->OffsetDays);
             }
 
-            if ($mfgSeq !== null) {
-                $swOffset = $configMap['SW_Assembly_P1'] ?? 5;
-                $newSWAssembly = $getCalDate($mfgSeq + $swOffset);
-            }
-
-            // คำนวณช่วงเวลา Networkdays
-            $confirmSeq     = $getWorkSeq($newConfirmMelina);
-            $mseSeq         = $getWorkSeq($newMSE);
-            $zeroSeq        = $getWorkSeq($newZeroLevel);
-            $swSeq          = $getWorkSeq($newSWAssembly);
+            // 6. คำนวณช่วงเวลา Networkdays (ช่อง TIME ต่างๆ)
+            $confirmSeq = $getWorkSeq($newConfirmMelina);
+            $mseSeq     = $getWorkSeq($newMSE);
+            $swSeq      = $getWorkSeq($newSWAssembly);
+            $zeroSeq    = $getWorkSeq($newZeroLevel);
 
             $timeDesToMfg   = ($desSeq && $mfgSeq) ? abs($mfgSeq - $desSeq) : null;
             $timeGoToDes    = ($goSeq && $desSeq) ? abs($desSeq - $goSeq) : null;
-            $timeConfirmMel = ($pType === 'P1' && $goSeq && $confirmSeq) ? abs($confirmSeq - $goSeq) : null;
-            $timeMse        = ($pType === 'P1' && $desSeq && $mseSeq) ? abs($mseSeq - $desSeq) : null;
-            $timeZeroLvl    = ($desSeq && $zeroSeq) ? abs($desSeq - $zeroSeq) : null;
+            $timeConfirmMel = ($goSeq && $confirmSeq) ? abs($confirmSeq - $goSeq) : null;
+            $timeMse        = ($desSeq && $mseSeq) ? abs($mseSeq - $desSeq) : null;
             $timeSw         = ($mfgSeq && $swSeq) ? abs($mfgSeq - $swSeq) : null;
+            $timeZeroLvl    = ($desSeq && $zeroSeq) ? abs($desSeq - $zeroSeq) : null;
 
-            // 🟢 4. คำนวณ 3 ฟิลด์ใหม่เพิ่มเติม
+            // 7. คำนวณ 3 ฟิลด์เสริม (Design_working_day, LeadTime, Time_DESBM_to_MFGBM_2)
             
-            // (1) Design_working_day = NETWORKDAYS(F4, F6) - 1
+            // (1) Design_working_day (หาแถวก่อนหน้าเฉพาะ DesType เดียวกัน)
+            $cfgDwd = $getConfig('Design_working_day', $pType);
+            $dwdOffset = $cfgDwd ? (int)$cfgDwd->OffsetDays : 0;
+            
             $prevRow = $db->select('DES_BM')
                         ->where('PlanHeaderID', (int)$planHeaderID)
+                        ->where('DesType', $desType)
                         ->where('SeqNo <', (int)$seqNo)
                         ->order_by('SeqNo', 'DESC')
                         ->limit(1)
                         ->get('Tb_Master_DESBM_Detail')
                         ->row();
-            
-            $prevDesSeq = $prevRow ? $getWorkSeq($prevRow->DES_BM) : null;
-            $designWorkingDay = ($desSeq !== null && $prevDesSeq !== null) ? (abs($desSeq - $prevDesSeq) - 1) : 0;
 
-            // (2) LeadTime = 50 + (MFG_BM - Go_DES)
+            $prevDesSeq = $prevRow ? $getWorkSeq($prevRow->DES_BM) : null;
+            $designWorkingDay = ($desSeq !== null && $prevDesSeq !== null) ? (abs($desSeq - $prevDesSeq) + $dwdOffset) : null;
+
+            // (2) LeadTime
+            $cfgLt = $getConfig('LeadTime', $pType);
+            $ltOffset = $cfgLt ? (int)$cfgLt->OffsetDays : 0;
             $leadTime = null;
             if (!empty($mfgDate) && !empty($newGoDES)) {
                 $diffDays = (strtotime($mfgDate) - strtotime($newGoDES)) / 86400;
-                $leadTime = 50 + (int)round($diffDays);
+                $leadTime = $ltOffset + (int)round($diffDays);
             }
 
-            // (3) Time_DESBM_to_MFGBM_2 = (MFG_BM - DES_BM) + 1
+            // (3) Time_DESBM_to_MFGBM_2
+            $cfgDes2 = $getConfig('Time_DESBM_to_MFGBM_2', $pType);
+            $des2Offset = $cfgDes2 ? (int)$cfgDes2->OffsetDays : 0;
             $timeDesToMfg2 = null;
             if (!empty($mfgDate) && !empty($newDesBM)) {
                 $diffDays = (strtotime($mfgDate) - strtotime($newDesBM)) / 86400;
-                $timeDesToMfg2 = (int)round($diffDays) + 1;
+                $timeDesToMfg2 = (int)round($diffDays) + $des2Offset;
             }
 
-            // 5. บันทึกลงตาราง
+            // 8. บันทึกข้อมูลแถวปัจจุบัน
             $updateData = [
-                'DES_BM'                     => $newDesBM,
-                'Time_DESBM_to_MFGBM'        => $timeDesToMfg,
-                'Go_DES'                     => $newGoDES,
-                'Time_GoDES_to_DESBM'        => $timeGoToDes,
-                'Confirm_MELINA_Portion'     => $newConfirmMelina,
-                'Time_Confirm_Melina'        => $timeConfirmMel,
-                'MSE_to_MELINA'              => $newMSE,
-                'Time_MSE_to_MELINA'         => $timeMse,
-                'SW_Assembly'                => $newSWAssembly,
-                'Time_SW_Assembly'           => $timeSw,
-                'Zero_Level_Check_Temp_DWG'  => $newZeroLevel,
-                'Time_Zero_Level'            => $timeZeroLvl,
-                'Design_working_day'         => $designWorkingDay,
-                'LeadTime'                   => $leadTime,
-                'Time_DESBM_to_MFGBM_2'       => $timeDesToMfg2,
-                'UserAction'                 => (string)$empno,
-                'DateAction'                 => date('Y-m-d H:i:s')
+                'DES_BM'                    => $newDesBM,
+                'Time_DESBM_to_MFGBM'       => $timeDesToMfg,
+                'Go_DES'                    => $newGoDES,
+                'Time_GoDES_to_DESBM'       => $timeGoToDes,
+                'Confirm_MELINA_Portion'    => $newConfirmMelina,
+                'Time_Confirm_Melina'       => $timeConfirmMel,
+                'MSE_to_MELINA'             => $newMSE,
+                'Time_MSE_to_MELINA'        => $timeMse,
+                'SW_Assembly'               => $newSWAssembly,
+                'Time_SW_Assembly'          => $timeSw,
+                'Zero_Level_Check_Temp_DWG' => $newZeroLevel,
+                'Time_Zero_Level'           => $timeZeroLvl,
+                'Design_working_day'        => $designWorkingDay,
+                'LeadTime'                  => $leadTime,
+                'Time_DESBM_to_MFGBM_2'     => $timeDesToMfg2,
+                'UserAction'                => (string)$empno,
+                'DateAction'                => date('Y-m-d H:i:s')
             ];
 
             $db->where('PlanHeaderID', (int)$planHeaderID)
             ->where('SeqNo', (int)$seqNo)
             ->update('Tb_Master_DESBM_Detail', $updateData);
 
-            // ดึงแถวที่อัปเดตแล้วส่งกลับให้ View
-            $updatedRow = $db->where('PlanHeaderID', (int)$planHeaderID)
-                            ->where('SeqNo', (int)$seqNo)
+            // 9. อัปเดต Design_working_day ของแถวถัดไป (Next Row) ที่เป็น DesType เดียวกัน
+            $updatedNextRow = null;
+            if ($field === 'DES_BM') {
+                $nextRow = $db->where('PlanHeaderID', (int)$planHeaderID)
+                            ->where('DesType', $desType)
+                            ->where('SeqNo >', (int)$seqNo)
+                            ->order_by('SeqNo', 'ASC')
+                            ->limit(1)
                             ->get('Tb_Master_DESBM_Detail')
                             ->row();
+
+                if ($nextRow && !empty($nextRow->DES_BM) && $desSeq !== null) {
+                    $nextDesSeq = $getWorkSeq($nextRow->DES_BM);
+                    if ($nextDesSeq !== null) {
+                        $nextDwd = abs($nextDesSeq - $desSeq) + $dwdOffset;
+
+                        $db->where('PlanHeaderID', (int)$planHeaderID)
+                        ->where('SeqNo', (int)$nextRow->SeqNo)
+                        ->update('Tb_Master_DESBM_Detail', [
+                            'Design_working_day' => (int)$nextDwd,
+                            'DateAction'         => date('Y-m-d H:i:s')
+                        ]);
+
+                        // ดึงข้อมูลแถวถัดไปที่เพิ่งอัปเดตส่งกลับไป
+                        $updatedNextRow = $db->where('PlanHeaderID', (int)$planHeaderID)
+                                            ->where('SeqNo', (int)$nextRow->SeqNo)
+                                            ->get('Tb_Master_DESBM_Detail')
+                                            ->row();
+                    }
+                }
+            }
+
+            // 3. ดึงแถวปัจจุบันที่อัปเดตแล้ว
+            $updatedCurrentRow = $db->where('PlanHeaderID', (int)$planHeaderID)
+                                    ->where('SeqNo', (int)$seqNo)
+                                    ->get('Tb_Master_DESBM_Detail')
+                                    ->row();
 
             return $this->output->set_output(json_encode([
                 'status'  => true,
                 'message' => 'Updated successfully',
-                'row'     => $updatedRow
+                'row'     => $updatedCurrentRow,
+                'nextRow' => $updatedNextRow // ส่งแถวถัดไปกลับไปด้วย
             ]));
 
         } catch (\Throwable $e) {

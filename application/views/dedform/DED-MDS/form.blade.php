@@ -37,7 +37,7 @@
         <form class="card-body hidden" id="form">
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-5 border-b border-slate-100 pb-3">
                 <h2 class="card-title m-0">
-                    <u class="text-3xl text-primary font-bold no-underline decoration-transparent">Master Plan DesBm Management</u>
+                    <u class="text-3xl text-primary font-bold no-underline decoration-transparent">Master Plan DES BM Management</u>
                 </h2>
                 <div class="flex items-center gap-2">
                     <span class="badge badge-primary badge-outline font-bold" id="RevBadge">Revision: {{$REVISION??'*'}}</span>

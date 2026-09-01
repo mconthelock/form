@@ -261,6 +261,7 @@ $(document).ready(async function () {
 
     // Event เมื่อแก้ค่าในตารางแล้วยิง AJAX อัปเดตลงตาราง Tb_Master_DESBM_Detail ทันที
     $(document).on('change', '.inline-edit-date', async function () {
+        alert('Updating...');
         const $input = $(this);
         const field = $input.data('field');
         const newVal = $input.val();
@@ -287,20 +288,42 @@ $(document).ready(async function () {
 
         try {
             const res = await updateInlineDetail(payload);
-            if (res.status && res.row) {
-                // นำแถวที่ผ่านการคำนวณสูตรใหม่จาก Backend มาแทนที่ Data Model
-                table.row(rowIndex).data(res.row).draw(false);
 
-                // แจ้งเตือนสถานะสำเร็จ
-                const $updatedInput = $(table.row(rowIndex).node()).find(
+            if (res.status) {
+                // 1. นำข้อมูลแถวปัจจุบันใส่เข้าไป (ยังไม่สั่ง .draw())
+                if (res.row) {
+                    table.row(rowIndex).data(res.row);
+                }
+
+                // 2. ค้นหาแถวถัดไป (nextRow) และใส่ข้อมูลใหม่เข้าไป
+                if (res.nextRow && res.nextRow.SeqNo) {
+                    const targetSeqNo = parseInt(res.nextRow.SeqNo, 10);
+
+                    table.rows().every(function () {
+                        const d = this.data();
+                        if (d && parseInt(d.SeqNo, 10) === targetSeqNo) {
+                            this.data(res.nextRow); // อัปเดตข้อมูลของแถวถัดไป
+                        }
+                    });
+                }
+
+                // 3. วาดตารางใหม่เพียง "ครั้งเดียว" หลังจากอัปเดต Data ครบทั้งสองแถว
+                table.draw(false);
+
+                // Effect แจ้งเตือนสำเร็จ
+                const $updatedNode = $(table.row(rowIndex).node());
+                const $currentInput = $updatedNode.find(
                     `input[data-field="${field}"]`,
                 );
-                $updatedInput.addClass('border-success bg-green-50');
-                setTimeout(
-                    () =>
-                        $updatedInput.removeClass('border-success bg-green-50'),
-                    1500,
-                );
+                $currentInput
+                    .removeClass(
+                        'border-warning bg-amber-50 opacity-50 cursor-wait',
+                    )
+                    .addClass('border-success bg-green-50');
+
+                setTimeout(() => {
+                    $currentInput.removeClass('border-success bg-green-50');
+                }, 1500);
             } else {
                 alert('บันทึกไม่สำเร็จ: ' + res.message);
                 $input
@@ -617,18 +640,21 @@ function renderDataTable(data) {
             },
             {
                 data: 'Design_working_day',
-                title: 'TIME (Design working day)',
-                className: 'text-center align-middle',
+                title: 'Design Working Day',
+                className: 'text-center font-bold text-amber-600 align-middle',
+                render: (d) => (d !== null && d !== undefined ? d : '-'),
             },
             {
                 data: 'LeadTime',
-                title: 'TIME (Design working day)',
+                title: 'LeadTime',
                 className: 'text-center align-middle',
+                render: (d) => (d !== null && d !== undefined ? d : '-'),
             },
             {
                 data: 'Time_DESBM_to_MFGBM_2',
-                title: 'TIME (DESBM_to_MFGBM)',
+                title: 'TIME (DES-MFG 2)',
                 className: 'text-center align-middle',
+                render: (d) => (d !== null && d !== undefined ? d : '-'),
             },
 
             {
@@ -636,11 +662,11 @@ function renderDataTable(data) {
                 title: 'TypeJun',
                 className: 'text-center align-middle',
             },
-            {
-                data: 'ChangeJunTodate',
-                title: 'ChangeJunTodate',
-                className: 'text-center align-middle',
-            },
+            // {
+            //     data: 'ChangeJunTodate',
+            //     title: 'ChangeJunTodate',
+            //     className: 'text-center align-middle',
+            // },
         ],
     });
 }
