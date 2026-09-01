@@ -22,10 +22,15 @@ class form extends MY_Controller {
 
     public function __construct() {
         parent::__construct();
+        
         $this->client = new Client(['verify' => false]);
         
         $this->load->library('Mail');
+        // ปิด Deprecation error ชั่วคราวก่อนโหลด TCPDF wrapper
+        $old_level = error_reporting(error_reporting() & ~E_USER_DEPRECATED & ~E_DEPRECATED);
+
         $this->load->library('pdf');
+        error_reporting($old_level); // คืนค่าเดิม
         $this->load->model('form_model', 'frm');
         $this->load->model('dedform/DED-MDS/DED_MDS_model', 'MDSModel');
         $this->host = isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : 'amecweb';
@@ -33,6 +38,7 @@ class form extends MY_Controller {
         $this->DDS = 'DDS';
     }
 
+    // === https://amecwebtest.mitsubishielevatorasia.co.th/form/dedform/DED-MDS/form/main/?no=29&orgNo=070101&y=26&empno=13204&bp=http://webflow.mitsubishielevatorasia.co.th/formtest/is/create.asp
     // === http://localhost:8080/form/dedform/DED-MDS/form/main
     // === http://localhost:8080/form/dedform/DED-MDS/form/main/?no=29&orgNo=070101&y=26&empno=13204&bp=http://webflow.mitsubishielevatorasia.co.th/formtest/is/create.asp
     // === http://localhost:8080/form/dedform/DED-MDS/form/main?no=29&orgNo=070101&y=26&y2=2026&runNo=1&m=3&empno=13204&bp=%2Fformtest%2Fworkflow%2FmineList%2Easp&menu=1
