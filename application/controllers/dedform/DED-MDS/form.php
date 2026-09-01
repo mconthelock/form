@@ -200,17 +200,9 @@ class form extends MY_Controller {
                     'data'         => $dataDetail
                 ]));
             } else {
-                // --- CASE B: ไม่พบ Draft -> หา Revision ถัดไปรอไว้ และส่งตารางว่างกลับไป ---
-                $sqlLastApproved = "SELECT TOP 1 Revision 
-                                    FROM Tb_Master_DESBM_Header 
-                                    WHERE PlanYear = ? AND PeriodCode = ? AND UPPER(Status) = 'APPROVED'
-                                    ORDER BY PlanHeaderID DESC";
-                $lastApproved = $this->MDSModel->QuerySetBase($sqlLastApproved, $this->DDS, [$year, $period])->row();
 
-                $nextRevision = "*";
-                if ($lastApproved && !empty($lastApproved->Revision)) {
-                    $nextRevision = $this->getNextAlphaRevision($lastApproved->Revision);
-                }
+                // --- CASE B: ไม่พบ Draft -> หา Revision ถัดไปรอไว้ และส่งตารางว่างกลับไป ---                
+                $nextRevision = $this->getNextApprovedRevision($year, $period);
 
                 return $this->output->set_content_type('application/json')->set_output(json_encode([
                     'statusTb'       => true,
@@ -252,32 +244,12 @@ class form extends MY_Controller {
                 $desTypeStr = (string)$desTypes;
             }
 
-            $db = $this->load->database($this->DDS, TRUE);
 
             // 1. ถ้ามี DRAFT เก่าค้างอยู่ ให้ลบทั้ง Detail และ Header ทิ้งทันที
-            $sqlCheckDraft = "SELECT PlanHeaderID FROM Tb_Master_DESBM_Header 
-                            WHERE PlanYear = ? AND PeriodCode = ? AND UPPER(Status) = 'DRAFT'";
-            $oldDrafts = $this->MDSModel->QuerySetBase($sqlCheckDraft, $this->DDS, [$year, $period])->result();
-
-            if (!empty($oldDrafts)) {
-                foreach ($oldDrafts as $draft) {
-                    $db->where('PlanHeaderID', $draft->PlanHeaderID)->delete('Tb_Master_DESBM_Detail');
-                    $db->where('PlanHeaderID', $draft->PlanHeaderID)->delete('Tb_Master_DESBM_Header');
-                }
-            }
+            $this->MDSModel->DeleteDraftDesBM($year, $period);
 
             // 2. คำนวณ Revision ใหม่ตาม Max Approved Plan
-            $sqlLastApproved = "SELECT TOP 1 Revision 
-                                FROM Tb_Master_DESBM_Header 
-                                WHERE PlanYear = ? AND PeriodCode = ? AND UPPER(Status) = 'APPROVED'
-                                ORDER BY PlanHeaderID DESC";
-            $lastApproved = $this->MDSModel->QuerySetBase($sqlLastApproved, $this->DDS, [$year, $period])->row();
-
-            if (!$lastApproved || empty($lastApproved->Revision)) {
-                $nextRevision = "*"; // ครั้งแรกสุดที่ยังไม่เคย Approve
-            } else {
-                $nextRevision = $this->getNextAlphaRevision($lastApproved->Revision);
-            }
+            $nextRevision = $this->getNextApprovedRevision($year, $period);
 
             // 3. ประมวลผลสูตรคำนวณวันทำงานลง Temp Table
             $this->MDSModel->processPlanMaster($year, $period, $desTypes, $userSession);
@@ -294,36 +266,10 @@ class form extends MY_Controller {
                 'ComputerAction' => gethostbyaddr($_SERVER['REMOTE_ADDR']),
                 'DateAction'     => date('Y-m-d H:i:s')
             ];
-            $db->insert('Tb_Master_DESBM_Header', $headerData);
-            $newPlanHeaderID = $db->insert_id();
-
-            // 5. โอนย้ายข้อมูลจากตาราง Temp เข้าสู่ Tb_Master_DESBM_Detail จริง
-            $sqlTransfer = "
-                INSERT INTO Tb_Master_DESBM_Detail (
-                    PlanHeaderID, SeqNo, Rev, PROD, MFG_BM, P_Type,
-                    DES_BM, Time_DESBM_to_MFGBM, Go_DES, Time_GoDES_to_DESBM,
-                    Confirm_MELINA_Portion, Time_Confirm_Melina, MSE_to_MELINA, Time_MSE_to_MELINA,
-                    SW_Assembly, Time_SW_Assembly, Zero_Level_Check_Temp_DWG, Time_Zero_Level,
-                    TypeJun, ChangeJunTodate, DesType, FormatAs400, BeforeEditDesBMDate, MARIssueDES,
-                    UserAction, ComputerAction, DateAction
-                )
-                SELECT 
-                    ?, SeqNo, ?, PROD, MFG_BM, P_Type,
-                    DES_BM, Time_DESBM_to_MFGBM, Go_DES, Time_GoDES_to_DESBM,
-                    Confirm_MELINA_Portion, Time_Confirm_Melina, MSE_to_MELINA, Time_MSE_to_MELINA,
-                    SW_Assembly, Time_SW_Assembly, Zero_Level_Check_Temp_DWG, Time_Zero_Level,
-                    TypeJun, ChangeJunTodate, DesType, FormatAs400, BeforeEditDesBMDate, MARIssueDES,
-                    ?, ?, GETDATE()
-                FROM Tb_Master_DESBM_Detail_temp
-                WHERE UserSessionID = ?;
-            ";
-            $this->MDSModel->QuerySetBase($sqlTransfer, $this->DDS, [
-                $newPlanHeaderID, 
-                $nextRevision,
-                'SYSTEM', 
-                gethostbyaddr($_SERVER['REMOTE_ADDR']), 
-                $userSession
-            ]);
+            $newPlanHeaderID = $this->MDSModel->InsertDraftDesBM($headerData, $nextRevision, $userSession);
+            if (empty($newPlanHeaderID)) {
+                throw new Exception("ไม่สามารถสร้าง Plan Draft ได้");
+            }
 
             // 6. ดึงข้อมูล Detail ออกมาแสดงบนหน้าเว็บ
             $sqlDetail = "SELECT * FROM Tb_Master_DESBM_Detail WHERE PlanHeaderID = ? ORDER BY SeqNo ASC";
@@ -608,57 +554,76 @@ class form extends MY_Controller {
     }
 
     // ==============================================================================
-    // ลบ Plan สถานะ Draft ออกจากฐานข้อมูล
+    // ลบ Plan สถานะ Draft ออกจากฐานข้อมูล (เรียกใช้ผ่าน Model)
     // ==============================================================================
     public function DeleteDraftPlan() {
+        $this->output->set_content_type('application/json');
+
         try {
             $headerID = $this->input->post('PLAN_HEADER_ID');
             $year     = $this->input->post('YEAR');
             $period   = $this->input->post('PERIOD');
 
-            $db = $this->load->database($this->DDS, TRUE);
-
-            if (!empty($headerID)) {
-                // ลบตาม PlanHeaderID ที่ส่งมา
-                $db->where('PlanHeaderID', $headerID)->delete('Tb_Master_DESBM_Detail');
-                $db->where('PlanHeaderID', $headerID)->where('UPPER(Status)', 'DRAFT')->delete('Tb_Master_DESBM_Header');
-            } else {
-                // ลบ Draft ทั้งหมดตาม Year + Period
-                $sqlDrafts = "SELECT PlanHeaderID FROM Tb_Master_DESBM_Header 
-                            WHERE PlanYear = ? AND PeriodCode = ? AND UPPER(Status) = 'DRAFT'";
-                $drafts = $this->MDSModel->QuerySetBase($sqlDrafts, $this->DDS, [$year, $period])->result();
-
-                foreach ($drafts as $d) {
-                    $db->where('PlanHeaderID', $d->PlanHeaderID)->delete('Tb_Master_DESBM_Detail');
-                    $db->where('PlanHeaderID', $d->PlanHeaderID)->delete('Tb_Master_DESBM_Header');
-                }
+            if (empty($headerID) && (empty($year) || empty($period))) {
+                throw new Exception("ข้อมูลไม่ครบถ้วน ไม่สามารถลบฉบับร่างได้");
             }
 
-            return $this->output->set_content_type('application/json')->set_output(json_encode([
+            // เรียกใช้งาน Model
+            $isDeleted = $this->MDSModel->DeleteDraftDesBM($year, $period, $headerID);
+
+            if (!$isDeleted) {
+                throw new Exception("เกิดข้อผิดพลาดระหว่างการลบข้อมูล");
+            }
+
+            return $this->output->set_output(json_encode([
                 'status'  => true,
                 'message' => 'ลบฉบับร่าง (Draft) เรียบร้อยแล้ว'
             ]));
-        } catch (\Exception $e) {
-            return $this->output->set_content_type('application/json')->set_output(json_encode([
+
+        } catch (\Throwable $e) {
+            return $this->output->set_output(json_encode([
                 'status'  => false,
                 'message' => $e->getMessage()
             ]));
         }
     }
 
-    private function getNextAlphaRevision($currentRev = null) {
-        if (empty($currentRev) || $currentRev === '*') {
+    /**
+     * ดึง Revision ถัดไปของ Plan ตาม Year และ Period (รวม Logic ตรวจสอบและขยับตัวอักษร)
+     * @param string $year
+     * @param string $period
+     * @return string
+     */
+    private function getNextApprovedRevision($year, $period) {
+        $sqlLastApproved = "SELECT TOP 1 Revision 
+                            FROM Tb_Master_DESBM_Header 
+                            WHERE PlanYear = ? AND PeriodCode = ? AND UPPER(Status) = 'APPROVED'
+                            ORDER BY PlanHeaderID DESC";
+
+        $query = $this->MDSModel->QuerySetBase($sqlLastApproved, $this->DDS, [$year, $period]);
+        $lastApproved = $query ? $query->row() : null;
+
+        // 1. ถ้าไม่เคยมี Approved มาก่อน หรือไม่มี Revision ให้เริ่มที่ '*'
+        if (!$lastApproved || empty($lastApproved->Revision)) {
+            return '*';
+        }
+
+        $currentRev = trim($lastApproved->Revision);
+
+        // 2. ถ้าฉบับล่าสุดเป็น '*' ให้ Revision ถัดไปเป็น 'A'
+        if ($currentRev === '*') {
             return 'A';
         }
-        
-        // ตัดคำว่า 'Rev' หรือช่องว่างออก เหลือเฉพาะตัวอักษร
+
+        // 3. ตัดช่องว่าง, 'Rev', หรือ '*' ออกให้เหลือเฉพาะตัวอักษร
         $char = strtoupper(trim(str_ireplace(['Rev', ' ', '*'], '', $currentRev)));
-        
+
         if (empty($char) || !ctype_alpha($char)) {
             return 'A';
         }
-        
-        // ขยับตัวอักษรถัดไป เช่น 'A' -> 'B', 'B' -> 'C', 'Z' -> 'AA'
+
+        // 4. ขยับตัวอักษรถัดไป: 'A' -> 'B', 'B' -> 'C', ..., 'Z' -> 'AA'
         return ++$char;
     }
+
 }
