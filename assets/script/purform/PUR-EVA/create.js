@@ -235,6 +235,8 @@ $(document).on('change', '.radio-typec', async function () {
     let val = $(this).val().split(':')[0];
 
     if (val === '6') {
+        console.log('disable pro');
+
         // --- กรณีเลือก Non-Production (แสดง #nonpro / ซ่อน #pro) ---
 
         // 1. ซ่อนและสั่ง disable ก้อน #pro ก่อนทันที
@@ -594,7 +596,11 @@ $(document).on('click', '#btnDraft, #btnRequest', async function () {
         let activeFields = requiredMessage.filter(
             (f) => !f.element.prop('disabled'),
         );
+        console.log('active');
+
         console.log(activeFields);
+        console.log('end active');
+
         // วนลูปเช็คทุก element ที่มีคลาส .req
         $('.req').each(function () {
             const $el = $(this);
@@ -768,9 +774,9 @@ $(document).on('click', 'button[name="btnAction"]', async function () {
             (f) => !f.element.prop('disabled'),
         );
 
-        console.log('============');
-        console.log(activeFields);
-        console.log('============');
+        // console.log('============');
+        // console.log(activeFields);
+        // console.log('============');
         $('#frmmain')
             .find('input, select, textarea')
             .each(function () {
@@ -782,9 +788,9 @@ $(document).on('click', 'button[name="btnAction"]', async function () {
                     );
                 }
             });
-        console.log('before require');
+        // console.log('before require');
         if (!(await requiredForm('#frmmain', activeFields))) return;
-        console.log('after require');
+        // console.log('after require');
         if (!checkAttFile()) {
             return false;
         }

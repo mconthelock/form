@@ -51,18 +51,26 @@ export async function getData(form) {
     });
 }
 
-export async function createPurVmmAuto(form) {
+export async function approvePurEvaForm(form) {
     return fetchUtils({
-        url: `${process.env.APP_API}/purform/pur-vmm/createauto`,
-        method: 'POST',
+        url: `${process.env.APP_API}/purform/pur-eva/approve`,
+        method: 'PATCH',
         data: form,
     });
 }
 
-export async function genVndCode(data) {
-    return fetchUtils({
-        url: `${process.env.APP_API}/pursys/vendors/create`,
-        method: 'POST',
-        data: data,
-    });
-}
+// export async function createPurVmmAuto(form) {
+//     return fetchUtils({
+//         url: `${process.env.APP_API}/purform/pur-vmm/createauto`,
+//         method: 'POST',
+//         data: form,
+//     });
+// }
+
+// export async function genVndCode(data) {
+//     return fetchUtils({
+//         url: `${process.env.APP_API}/pursys/vendors/create`,
+//         method: 'POST',
+//         data: data,
+//     });
+// }
