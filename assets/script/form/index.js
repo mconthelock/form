@@ -3,7 +3,11 @@ import dayjs from 'dayjs';
 import { showLoader } from '@amec/webasset/preloader';
 import { showMessage } from '@amec/webasset/utils';
 import { createTable } from '@amec/webasset/dataTable';
-import { displayEmpImage, displayEmpInfo } from '@amec/webasset/indexDB';
+import {
+    displayEmpInfo,
+    displayEmpImage,
+    fillImages,
+} from '@amec/webasset/indexDB';
 import { initApp, tableOption } from '../utils';
 import { getFormList } from './data';
 
@@ -111,8 +115,34 @@ function bindEvents() {
     });
 }
 
+function nextApprover(flow = []) {
+    const list = Array.isArray(flow) ? flow : [];
+
+    const flowFilter = list
+        .sort((a, b) => {
+            const stepA = Number(a?.CSTEPST ?? 0);
+            const stepB = Number(b?.CSTEPST ?? 0);
+            return stepB - stepA;
+        })
+        .filter((f) => Number(f?.CSTEPST ?? 0) <= 3)
+        .filter((item) => item && (item.VAPVNO || item.VREPNO))
+        .reduce((acc, item) => {
+            const empNo = item.VAPVNO || item.VREPNO;
+            if (
+                !acc.some(
+                    (candidate) =>
+                        (candidate.VAPVNO || candidate.VREPNO) === empNo,
+                )
+            ) {
+                acc.push(item);
+            }
+            return acc;
+        }, []);
+    return flowFilter;
+}
+
 async function reloadTable() {
-    //const user = $('#user-login').attr('empno');
+    // const user = $('#user-login').attr('empno');
     // const user = '07086';
     const user = '96189';
     const status = $('#status').val();
@@ -149,6 +179,7 @@ async function createFormTable(data) {
         });
         return flowSorted[0] || null;
     };
+
     const opt = { ...tableOption };
     opt.data = data;
     opt.searching = true;
@@ -159,8 +190,9 @@ async function createFormTable(data) {
         {
             data: 'form',
             title: 'Form No.',
+            className: 'text-nowrap',
             render: (data, type, row) => {
-                const formno = `${data.formmst.VANAME}${row.CYEAR2.slice(-2)}-${(
+                const formno = `${data.formmst.VANAME || ''}${row.CYEAR2.slice(-2)}-${(
                     '000000' + row.NRUNNO
                 ).slice(-6)}`;
                 if (type === 'display') {
@@ -185,16 +217,16 @@ async function createFormTable(data) {
             className: 'text-start',
             render: (data, type, row) => {
                 if (type === 'display') {
-                    return `<div class="flex items-center">
+                    return `<div class="flex items-center" id="req-${data.NFRMNO}-${data.VORGNO}-${data.CYEAR}-${data.CYEAR2}-${data.NRUNNO}">
                         <div class="avatar border-0">
-                            <div class="w-10 rounded-full border border-slate-300 shadow-md">
-                                <img src="" id="req-${data.NFRMNO}-${data.VORGNO}-${data.CYEAR}-${data.CYEAR2}-${data.NRUNNO}" class="hidden" />
+                            <div class="w-12 rounded-full border border-slate-300 shadow-md">
+                                <img src=""  class="hidden" />
                                 <div class="skeleton h-32 w-32"></div>
                             </div>
                         </div>
-                        <div class="ml-2">
-                            <div>${data.VREQNO}</div>
-                            <div class="text-xs text-gray-500" id="reqorg-${data.NFRMNO}-${data.VORGNO}-${data.CYEAR}-${data.CYEAR2}-${data.NRUNNO}"></div>
+                        <div class="ml-2 flex flex-col gap-1">
+                            <div class="name"><div class="skeleton h-6 w-32"></div></div>
+                            <div class="detail text-xs text-gray-500"><div class="skeleton h-4 w-32"></div></div>
                         </div>
                     </div>`;
                 }
@@ -209,7 +241,7 @@ async function createFormTable(data) {
                 if (type === 'display') {
                     if (data.DREQDATE == null || data.DREQDATE == undefined)
                         return '';
-                    return `${dayjs(data.DREQDATE).format('DD/MM/YYYY')} ${(data.CREQTIME.trim() || '00:00' + ':00').substring(0, 8)}`;
+                    return `${dayjs(data.DREQDATE).format('DD/MM/YYYY')} ${(data.CREQTIME.trim() + ':00').substring(0, 8)}`;
                 }
                 return data;
             },
@@ -222,16 +254,17 @@ async function createFormTable(data) {
                 const latest = lastApproved(data.flow);
                 if (type === 'display') {
                     if (!latest) return '';
-                    return `<div class="flex items-center">
+                    const apvDate = `${dayjs(latest.DAPVDATE).format('DD/MM/YYYY')} ${(latest.CAPVTIME.trim() || '00:00' + ':00').substring(0, 8)}`;
+                    return `<div class="flex items-center" id="apv-${data.NFRMNO}-${data.VORGNO}-${data.CYEAR}-${data.CYEAR2}-${data.NRUNNO}">
                         <div class="avatar border-0">
-                            <div class="w-10 rounded-full border border-slate-300 shadow-md">
-                                <img src="" id="req-${data.NFRMNO}-${data.VORGNO}-${data.CYEAR}-${data.CYEAR2}-${data.NRUNNO}" class="hidden" />
+                            <div class="w-12 rounded-full border border-slate-300 shadow-md">
+                                <img src=""  class="hidden" />
                                 <div class="skeleton h-32 w-32"></div>
                             </div>
                         </div>
-                        <div class="ml-2">
-                            <div>${data.VREQNO}</div>
-                            <div class="text-xs text-gray-500" id="reqorg-${data.NFRMNO}-${data.VORGNO}-${data.CYEAR}-${data.CYEAR2}-${data.NRUNNO}"></div>
+                        <div class="ml-2 flex flex-col gap-1">
+                            <div class="name"><div class="skeleton h-6 w-32"></div></div>
+                            <div class="text-xs text-gray-500"><span class="font-semibold text-primary me-2">Approve At:</span>${apvDate}</div>
                         </div>
                     </div>`;
                 }
@@ -240,14 +273,42 @@ async function createFormTable(data) {
         },
         {
             data: 'form',
-            title: 'Latest Approved',
-            className: 'text-start',
+            title: 'Next Approver',
+            className: `${pagestatus == '0' || pagestatus == '1' || pagestatus == '6' ? 'hidden' : ''}`,
             render: (data, type, row) => {
-                const latest = lastApproved(data.flow);
-
                 if (type === 'display') {
-                    if (!latest) return '';
-                    return `${dayjs(latest.DAPVDATE).format('DD/MM/YYYY')} ${(latest.CAPVTIME.trim() || '00:00' + ':00').substring(0, 8)}`;
+                    const next = nextApprover(data.flow);
+                    console.log(data.flow);
+
+                    const visibleNext = next.slice(0, 2);
+                    const remaining = Math.max(
+                        next.length - visibleNext.length,
+                        0,
+                    );
+
+                    return `<div class="flex items-center" id="next-${data.NFRMNO}-${data.VORGNO}-${data.CYEAR}-${data.CYEAR2}-${data.NRUNNO}">
+                        <div class="avatar-group -space-x-6">
+                        ${visibleNext
+                            .map(
+                                (n) => `<div class="avatar">
+                                <div class="w-12">
+                                    <img src=""  class="hidden" />
+                                    <div class="skeleton h-32 w-32"></div>
+                                </div>
+                            </div>`,
+                            )
+                            .join('')}
+                            ${
+                                remaining > 0
+                                    ? `<div class="avatar avatar-placeholder">
+                                <div class="bg-neutral text-neutral-content w-12">
+                                    <span>+${remaining}</span>
+                                </div>
+                            </div>`
+                                    : ''
+                            }
+                        </div>
+                    </div>`;
                 }
                 return '';
             },
@@ -305,9 +366,18 @@ async function createFormTable(data) {
         },
     ];
     opt.createdRow = async function (row, data) {
-        // await fillOrg(row, data);
-        // await fillImgs(row, data);
+        const latest = lastApproved(data.form.flow);
+        const reqId = `#req-${data.form.NFRMNO}-${data.form.VORGNO}-${data.form.CYEAR}-${data.form.CYEAR2}-${data.form.NRUNNO}`;
+        const apvId = `#apv-${data.form.NFRMNO}-${data.form.VORGNO}-${data.form.CYEAR}-${data.form.CYEAR2}-${data.form.NRUNNO}`;
+        const nextId = `#next-${data.form.NFRMNO}-${data.form.VORGNO}-${data.form.CYEAR}-${data.form.CYEAR2}-${data.form.NRUNNO}`;
+
+        await fillUserinfo(row, data.form.VREQNO, reqId);
+        if (latest.VAPVNO != undefined && latest.VAPVNO != null)
+            await fillUserinfo(row, latest.VAPVNO, apvId);
+
+        await fillNextApproverInfo(row, data.form.flow, nextId);
     };
+
     opt.initComplete = function (settings, json) {
         const { container } = tableOption.initComplete.call(
             this,
@@ -334,36 +404,44 @@ $(document).on(
     },
 );
 
-async function fillImgs(row, data) {
-    const obj1 = $(row).find(
-        `#input-${data.NFRMNO}-${data.VORGNO}-${data.CYEAR}-${data.CYEAR2}-${data.NRUNNO}`,
-    );
-    //const element = $(row).find(obj1);
-    const img = await displayEmpImage(data.VINPUTER);
-    obj1.attr('src', img);
-    obj1.removeClass('hidden');
-
-    const obj2 = $(row).find(
-        `#req-${data.NFRMNO}-${data.VORGNO}-${data.CYEAR}-${data.CYEAR2}-${data.NRUNNO}`,
-    );
-    //const element2 = $(row).find(obj2);
-    const img2 = await displayEmpImage(data.VREQNO);
-    obj2.attr('src', img2);
-    obj2.removeClass('hidden');
+async function fillUserinfo(row, data, id) {
+    const wrap = $(row).find(id);
+    const info = await displayEmpInfo(data);
+    $(wrap).find('img').attr('src', info.image);
+    $(wrap).find('img').removeClass('hidden');
+    $(wrap).find('.name').html(`${info.SNAME} (${info.SEMPNO})`);
+    $(wrap).find('.detail').html(`${info.SDIV} - ${info.SDEPT} - ${info.SSEC}`);
 }
 
-async function fillOrg(row, data) {
-    const obj1 = $(row).find(
-        `#inputorg-${data.NFRMNO}-${data.VORGNO}-${data.CYEAR}-${data.CYEAR2}-${data.NRUNNO}`,
-    );
-    const info = await displayEmpInfo(data.VINPUTER);
-    obj1.html(`${info.SDIV}-${info.SDEPT}-${info.SSEC}`);
+async function fillNextApproverInfo(row, flow, id) {
+    const wrap = $(row).find(id);
+    if (!wrap.length) return;
 
-    const obj2 = $(row).find(
-        `#reqorg-${data.NFRMNO}-${data.VORGNO}-${data.CYEAR}-${data.CYEAR2}-${data.NRUNNO}`,
-    );
-    const info2 = await displayEmpInfo(data.VREQNO);
-    obj2.html(`${info2.SDIV}-${info2.SDEPT}-${info2.SSEC}`);
+    const next = nextApprover(flow);
+    const visibleNext = next.slice(0, 2);
+    const remaining = Math.max(next.length - visibleNext.length, 0);
+
+    if (remaining > 0) {
+        const placeholder = $(wrap).find('.avatar-placeholder span');
+        if (placeholder.length) {
+            placeholder.text(`+${remaining}`);
+        }
+    }
+
+    const avatars = $(wrap).find('.avatar:not(.avatar-placeholder)');
+
+    for (let index = 0; index < avatars.length; index++) {
+        const item = visibleNext[index];
+        if (!item) continue;
+
+        const empNo = item.VAPVNO || item.VREPNO;
+        if (!empNo) continue;
+
+        const info = await displayEmpInfo(empNo);
+        const avatar = $(avatars[index]);
+        avatar.find('img').attr('src', info.image).removeClass('hidden');
+        avatar.find('.skeleton').addClass('hidden');
+    }
 }
 
 $(document).on('click', '#table a.link-self', async function (e) {
