@@ -139,6 +139,7 @@ $(document).ready(async function () {
 
         await loadDraftPlan();
     });
+
     // Event: กดปุ่มคำนวณใหม่ (Process Calculation)
     $('#ProcessBtn').on('click', async function () {
         const selectedDesTypes = getSelectedDesTypes();
@@ -342,6 +343,55 @@ $(document).ready(async function () {
         }
     });
 
+    function updateStatusUI(status, revision, docNo = '') {
+        const rawStatus = (status || 'DRAFT').toUpperCase();
+        const $statusBadge = $('#StatusBadge');
+        const $pendingAlert = $('#PendingAlert');
+        const $processBtn = $('#ProcessPlanBtn'); // ปุ่มสร้าง/ประมวลผล Plan
+        const $saveBtn = $('#SavePlanBtn'); // ปุ่มบันทึกส่ง Webflow
+
+        // 1. อัปเดต Revision Badge
+        $('#RevBadge').text('Revision: ' + (revision || '*'));
+
+        // 2. จัดรูปแบบสีของ Badge ตาม Status
+        $statusBadge.text(rawStatus);
+        $statusBadge.removeClass(
+            'badge-warning badge-success badge-error badge-ghost badge-info',
+        );
+
+        const isPending = [
+            'CHECK',
+            'WAIT APPROVE',
+            'WAITING APPROVE',
+            'PENDING',
+        ].includes(rawStatus);
+
+        if (isPending) {
+            $statusBadge.addClass('badge-warning text-slate-800');
+            $('#StatusText').text(rawStatus + (docNo ? ` [${docNo}]` : ''));
+
+            // 🟢 แสดงข้อความแจ้งเตือนรอ Approve และปิดการใช้งานปุ่มสร้าง/บันทึก
+            $pendingAlert.removeClass('hidden');
+            $processBtn.prop('disabled', true).addClass('btn-disabled');
+            $saveBtn.addClass('hidden');
+
+            // ปิดการแก้ไข Inline (disable ทุก input date ในตาราง)
+            $('.inline-edit-date')
+                .prop('disabled', true)
+                .addClass('opacity-50 cursor-not-allowed');
+        } else if (rawStatus === 'APPROVED') {
+            $statusBadge.addClass('badge-success text-white');
+            $pendingAlert.addClass('hidden');
+            $processBtn.prop('disabled', false).removeClass('btn-disabled'); // ให้สร้าง Revision ถัดไปได้
+            $saveBtn.addClass('hidden');
+        } else {
+            // กรณี DRAFT
+            $statusBadge.addClass('badge-ghost text-slate-600');
+            $pendingAlert.addClass('hidden');
+            $processBtn.prop('disabled', false).removeClass('btn-disabled');
+            $saveBtn.removeClass('hidden');
+        }
+    }
     // ===================================================================
     // == Action Upload File
     // ===================================================================
@@ -474,43 +524,113 @@ async function loadDraftPlan() {
 
     $('#loading').removeClass('hidden');
     const payload = {
-        YEAR: $('#YearDrp').val(),
-        PERIOD: $('#PeriodDrp').val(),
+        YEAR: year,
+        PERIOD: period,
         DESTYPES: getSelectedDesTypes(),
         REVISION: $('#RevisionHid').val(),
-        EMPNO: empno,
+        EMPNO: typeof empno !== 'undefined' ? empno : 'SYSTEM',
     };
 
     try {
         const res = await getOrInitDraftPlan(payload);
         if (res.statusTb) {
             currentPlanHeaderID = res.planHeaderID;
-            $('#RevBadge').text('Revision: ' + (res.revision || '*'));
             $('#RevisionHid').val(res.revision);
             $('#STATUSHid').val(res.status);
 
-            // จัดการ Checkbox: ถ้าเจอ Draft ให้ใช้ค่าของ Draft / ถ้าไม่เจอ ให้ Reset กลับเป็นค่า Default
-            if (res.hasDraft && res.desType) {
+            // 1. จัดการ Checkbox
+            if (res.desType) {
                 setSelectedDesTypes(res.desType);
             } else {
                 resetToDefaultDesTypes();
             }
 
+            // 2. วาดตาราง
             renderDataTable(res.data || []);
 
-            // ถ้ามี Draft อยู่จริง ให้แสดงทั้งปุ่ม Delete Draft และ Save Plan
-            if (res.hasDraft && res.data && res.data.length > 0) {
-                $('#DeleteDraftBtn').removeClass('hidden');
-                $('#SavePlanBtn').removeClass('hidden');
-            } else {
-                $('#DeleteDraftBtn').addClass('hidden');
-                $('#SavePlanBtn').addClass('hidden');
-            }
+            // 3. ควบคุมการแสดงปุ่มและ Alert ตามสถานะจริง
+            updateStatusUI(res.status, res.revision, res.docNo);
+        } else {
+            alert(
+                'เกิดข้อผิดพลาด: ' + (res.message || 'ไม่สามารถโหลดข้อมูลได้'),
+            );
         }
     } catch (e) {
         console.error('Error loading draft plan', e);
     } finally {
         $('#loading').addClass('hidden');
+    }
+}
+
+// 🟢 ฟังก์ชันควบคุมสถานะ UI และการล็อกปุ่ม
+function updateStatusUI(status, revision, docNo = '') {
+    const rawStatus = (status || 'NONE').toUpperCase();
+    const $statusBadge = $('#StatusBadge');
+    const $pendingAlert = $('#PendingAlert');
+    const $processBtn = $('#ProcessBtn'); // ปุ่ม Process Plan
+    const $saveBtn = $('#SavePlanBtn'); // ปุ่ม Save Plan
+    const $deleteBtn = $('#DeleteDraftBtn'); // ปุ่ม Delete Draft
+
+    // 1. อัปเดตข้อความ Revision
+    $('#RevBadge').text('Revision: ' + (revision || '*'));
+
+    // 2. เคลียร์คลาสสีเดิมของ Badge
+    $statusBadge.removeClass(
+        'badge-warning badge-success badge-error badge-ghost hidden text-slate-800 text-white',
+    );
+
+    // ตรวจสอบกลุ่มสถานะที่อยู่ระหว่างรออนุมัติ
+    const isPending = [
+        'CHECK',
+        'WAIT APPROVE',
+        'WAITING APPROVE',
+        'PENDING',
+    ].includes(rawStatus);
+
+    if (isPending) {
+        // 🔴 กรณีรออนุมัติ: ซ่อนปุ่ม Process, แสดง Alert, แสดงปุ่ม Delete และ Save
+        $statusBadge.addClass('badge-warning text-slate-800').text(rawStatus);
+        $('#StatusText').text(rawStatus + (docNo ? ` (Doc No: ${docNo})` : ''));
+
+        $pendingAlert.removeClass('hidden');
+        $processBtn.addClass('hidden'); // ซ่อนปุ่ม Process
+        $saveBtn.removeClass('hidden'); // 🟢 แสดงปุ่ม Save
+        $deleteBtn.removeClass('hidden'); // 🟢 แสดงปุ่ม Delete Draft
+
+        // ปิดการแก้ไข Inline date ชั่วคราว
+        $('.inline-edit-date')
+            .prop('disabled', true)
+            .addClass('opacity-50 cursor-not-allowed');
+    } else if (rawStatus === 'DRAFT') {
+        // 🟡 กรณี DRAFT: แสดงทุกปุ่ม (Process, Save, Delete)
+        $statusBadge.addClass('badge-ghost text-slate-600').text(rawStatus);
+        $pendingAlert.addClass('hidden');
+        $processBtn.removeClass('hidden');
+        $saveBtn.removeClass('hidden'); // 🟢 แสดงปุ่ม Save
+        $deleteBtn.removeClass('hidden'); // 🟢 แสดงปุ่ม Delete Draft
+
+        // เปิดให้แก้ไข Inline date ได้ตามปกติ
+        $('.inline-edit-date')
+            .prop('disabled', false)
+            .removeClass('opacity-50 cursor-not-allowed');
+    } else if (rawStatus === 'APPROVED') {
+        // 🟢 กรณี APPROVED: แสดงเฉพาะปุ่ม Process สำหรับขึ้น Revision ใหม่
+        $statusBadge.addClass('badge-success text-white').text(rawStatus);
+        $pendingAlert.addClass('hidden');
+        $processBtn.removeClass('hidden');
+        $saveBtn.addClass('hidden');
+        $deleteBtn.addClass('hidden');
+
+        $('.inline-edit-date')
+            .prop('disabled', true)
+            .addClass('opacity-50 cursor-not-allowed');
+    } else {
+        // ⚪ กรณีไม่มีข้อมูล / ยังไม่ได้สร้าง: แสดงเฉพาะปุ่ม Process
+        $statusBadge.addClass('hidden');
+        $pendingAlert.addClass('hidden');
+        $processBtn.removeClass('hidden');
+        $saveBtn.addClass('hidden');
+        $deleteBtn.addClass('hidden');
     }
 }
 

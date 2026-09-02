@@ -164,67 +164,77 @@ class form extends MY_Controller {
     // ==============================================================================
     public function GetOrInitDraftPlan() {
         try {
-            $year     = $this->input->post('YEAR') ?? '';
-            $period   = $this->input->post('PERIOD') ?? '';
-            $empno    = $this->input->post('EMPNO') ?? 'SYSTEM';
-            $revision = $this->input->post('REVISION');
+            $year   = trim((string)$this->input->post('YEAR'));
+            $period = trim((string)$this->input->post('PERIOD'));
+            $empno  = $this->input->post('EMPNO') ?? 'SYSTEM';
 
-            // หากยังไม่ได้เลือก Year หรือ Period ให้คืนค่าว่างกลับทันที
             if (empty($year) || empty($period)) {
                 return $this->output->set_content_type('application/json')->set_output(json_encode([
-                    'statusTb'       => true,
+                    'statusTb'     => true,
                     'hasDraft'     => false,
                     'revision'     => '*',
                     'desType'      => null,
                     'planHeaderID' => null,
                     'status'       => '',
+                    'docNo'        => '',
                     'data'         => []
                 ]));
             }
 
-            // 1. ตรวจสอบว่ามี Header สถานะ DRAFT ค้างอยู่หรือไม่ (เพิ่ม DesType ใน SELECT)
-            $sqlCheckDraft = "SELECT TOP 1 PlanHeaderID, PlanYear, PeriodCode, Revision, DesType, Status, Remark 
-                            FROM Tb_Master_DESBM_Header 
-                            WHERE PlanYear = ? AND PeriodCode = ? AND UPPER(Status) = 'DRAFT'
-                            ORDER BY PlanHeaderID DESC";
-            $draftHeader = $this->MDSModel->QuerySetBase($sqlCheckDraft, $this->DDS, [$year, $period])->row();
+            // 1. ดึง Header ล่าสุดของ Year + Period นี้ (ทุกสถานะ DRAFT, CHECK, APPROVED)
+            $sqlCheckLatest = "SELECT TOP 1 PlanHeaderID, PlanYear, PeriodCode, Revision, DesType, Status, Remark,
+                                            VORGNO, CYEAR2, NRUNNO
+                                FROM Tb_Master_DESBM_Header 
+                                WHERE PlanYear = ? AND PeriodCode = ?
+                                ORDER BY PlanHeaderID DESC";
+            $latestHeader = $this->MDSModel->QuerySetBase($sqlCheckLatest, $this->DDS, [$year, $period])->row();
 
-            if ($draftHeader) {
-                // --- CASE A: มี Draft เดิมค้างอยู่ -> ดึง Detail เดิมขึ้นมาแสดง ---
+            if ($latestHeader) {
+                $rawStatus = strtoupper(trim($latestHeader->Status));
+                $docNo = (!empty($latestHeader->VORGNO) && !empty($latestHeader->CYEAR2) && !empty($latestHeader->NRUNNO))
+                        ? "{$latestHeader->VORGNO}-{$latestHeader->CYEAR2}-{$latestHeader->NRUNNO}"
+                        : '';
+
+                // ดึง Detail ของ Header ล่าสุดนี้ขึ้นมาแสดง
                 $sqlDetail = "SELECT * FROM Tb_Master_DESBM_Detail 
                             WHERE PlanHeaderID = ? 
                             ORDER BY SeqNo ASC";
-                $dataDetail = $this->MDSModel->QuerySetBase($sqlDetail, $this->DDS, [$draftHeader->PlanHeaderID])->result();
+                $dataDetail = $this->MDSModel->QuerySetBase($sqlDetail, $this->DDS, [$latestHeader->PlanHeaderID])->result();
+
+                // กำหนดว่ามี Draft หรือไม่ (เฉพาะ Status = DRAFT เท่านั้นที่ถือว่าเป็น Draft แก้ไขได้)
+                $isDraft = ($rawStatus === 'DRAFT');
 
                 return $this->output->set_content_type('application/json')->set_output(json_encode([
-                    'statusTb'       => true,
-                    'hasDraft'     => true,
-                    'revision'     => $draftHeader->Revision,
-                    'desType'      => $draftHeader->DesType ?? '', // ส่งค่า "N|T|S"
-                    'planHeaderID' => $draftHeader->PlanHeaderID,
-                    'status'       => $draftHeader->Status,
+                    'statusTb'     => true,
+                    'hasDraft'     => $isDraft,
+                    'revision'     => $latestHeader->Revision,
+                    'desType'      => $latestHeader->DesType ?? '',
+                    'planHeaderID' => $latestHeader->PlanHeaderID,
+                    'status'       => $latestHeader->Status,
+                    'docNo'        => $docNo,
                     'data'         => $dataDetail
                 ]));
-            } else {
 
-                // --- CASE B: ไม่พบ Draft -> หา Revision ถัดไปรอไว้ และส่งตารางว่างกลับไป ---                
+            } else {
+                // กรณีไม่เคยมี Plan หรือ Revision ใดๆ มาก่อนเลย
                 $nextRevision = $this->getNextApprovedRevision($year, $period);
 
                 return $this->output->set_content_type('application/json')->set_output(json_encode([
-                    'statusTb'       => true,
+                    'statusTb'     => true,
                     'hasDraft'     => false,
                     'revision'     => $nextRevision,
                     'desType'      => null,
                     'planHeaderID' => null,
                     'status'       => '',
-                    'data'         => [] // ส่งตารางว่าง
+                    'docNo'        => '',
+                    'data'         => []
                 ]));
             }
 
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             return $this->output->set_content_type('application/json')->set_output(json_encode([
-                'status'  => false,
-                'message' => $e->getMessage()
+                'statusTb' => false,
+                'message'  => $e->getMessage()
             ]));
         }
     }
@@ -572,9 +582,119 @@ class form extends MY_Controller {
         }
     }
     // ==============================================================================
-    // 3. Controller Method: อนุมัติ/ยืนยัน DRAFT เปลี่ยนสถานะเป็น Approved และรันเลข Rev
+    // 3. Controller Method: อนุมัติ/ยืนยัน DRAFT เปลี่ยนสถานะเป็น Approved และรันเลข Rev savePlanMaster
     // ==============================================================================
     public function SavePlanMaster() {
+        $this->output->set_content_type('application/json');
+
+        try {
+            $year     = $this->input->post('YEAR');
+            $period   = $this->input->post('PERIOD');
+            $desTypes = $this->input->post('DESTYPES');
+            $revision = $this->input->post('REVISION');
+            $empNo    = $this->input->post('EMPNO') ?? 'SYSTEM';
+            $remark   = $this->input->post('REMARK') ?? '';
+
+            if (empty($year) || empty($period)) {
+                throw new Exception("ข้อมูลไม่ครบถ้วน (Year / Period)");
+            }
+
+            // เรียกใช้งานฟังก์ชันสร้าง Webflow Ticket
+            $result = $this->createFormDesBM($year, $period, $empNo, $remark);
+
+            return $this->output->set_output(json_encode([
+                'status'   => true,
+                'message'  => $result['message'],
+                'revision' => $result['revision'],
+                'docNo'    => $result['docNo']
+            ]));
+
+        } catch (\Throwable $e) {
+            return $this->output->set_output(json_encode([
+                'status'  => false,
+                'message' => $e->getMessage()
+            ]));
+        }
+    }
+        
+
+    // ==============================================================================
+    // 2. ฟังก์ชันประสานงาน Webflow ใน Controller
+    // ==============================================================================
+    public function createFormDesBM($year, $period, $empNo = 'SYSTEM', $remark = '')
+    {
+        $db = $this->load->database($this->DDS, TRUE);
+
+        // 1. ตรวจสอบหา Draft ล่าสุดในระบบ
+        $draftHeader = $db->where('PlanYear', (string)$year)
+                        ->where('PeriodCode', (string)$period)
+                        ->where('UPPER(Status)', 'DRAFT')
+                        ->order_by('PlanHeaderID', 'DESC')
+                        ->get('Tb_Master_DESBM_Header')
+                        ->row();
+
+        if (!$draftHeader) {
+            throw new Exception("ไม่พบข้อมูล Draft Plan ที่พร้อมส่งบันทึก");
+        }
+
+        $planHeaderID = (int)$draftHeader->PlanHeaderID;
+        $currentRevision = $draftHeader->Revision;
+
+        // 2. ดึง Form Master ของ Webflow (DED-MDS)
+        $form = $this->getFormMasterByVaname('DED-MDS');
+        if (empty($form) || !isset($form['status']) || $form['status'] !== 'true') {
+            throw new Exception("ไม่สามารถดึงข้อมูลฟอร์ม Webflow (DED-MDS) ได้");
+        }
+
+        $formData = $form['data'];
+
+        // 3. เตรียมข้อมูลและสร้าง Webflow Ticket
+        $flowData = [
+            'NFRMNO'  => $formData['NNO'],
+            'VORGNO'  => $formData['VORGNO'],
+            'CYEAR'   => $formData['CYEAR'],
+            'REQBY'   => $empNo,
+            'INPUTBY' => $empNo,
+            'REMARK'  => !empty($remark) ? $remark : "Plan Master {$year} ({$period}) Rev.{$currentRevision}",
+            'DRAFT'   => '0', // ส่งสร้างโฟลว์อนุมัติทันที
+        ];
+
+        $rsf = $this->createForm($flowData);
+        if (!$rsf || empty($rsf['status'])) {
+            throw new Exception("สร้างเอกสาร Webflow ไม่สำเร็จ: " . ($rsf['message'] ?? ''));
+        }
+
+        $cyear2 = $rsf['data']['CYEAR2'];
+        $nrunno = $rsf['data']['NRUNNO'];
+        $docNo  = "{$formData['VORGNO']}-{$cyear2}-{$nrunno}";
+
+        // 4. จัดเตรียมข้อมูลสำหรับ Update Header
+        $headerUpdate = [
+            'NFRMNO'         => $formData['NNO'],
+            'VORGNO'         => $formData['VORGNO'],
+            'CYEAR'          => $formData['CYEAR'],
+            'CYEAR2'         => $cyear2,
+            'NRUNNO'         => $nrunno,
+            'Status'         => 'CHECK',
+            'Remark'         => $flowData['REMARK'],
+            'UserAction'     => (string)$empNo,
+            'ComputerAction' => (string)gethostbyaddr($_SERVER['REMOTE_ADDR'] ?? '127.0.0.1'),
+            'DateAction'     => date('Y-m-d H:i:s')
+        ];
+
+        // 5. เรียก Model ให้ทำการ Update Database
+        $this->MDSModel->SavePlanTicket($planHeaderID, $headerUpdate);
+
+        // ส่งค่าผลลัพธ์กลับ
+        return [
+            'status'   => true,
+            'revision' => $currentRevision,
+            'docNo'    => $docNo,
+            'message'  => "บันทึกและส่งเอกสารอนุมัติเรียบร้อยแล้ว (Doc No: {$docNo})"
+        ];
+    }
+
+    public function SavePlanMaster0() {
         try {
             $year     = $this->input->post('YEAR');
             $period   = $this->input->post('PERIOD');
@@ -582,21 +702,13 @@ class form extends MY_Controller {
             $headerID = $this->input->post('PLAN_HEADER_ID');
 
             // 1. หาเลข Revision ถัดไปจาก Header ที่เคย Approved แล้ว
-            $sqlLastApproved = "SELECT TOP 1 Revision FROM Tb_Master_DESBM_Header 
-                                WHERE PlanYear = ? AND PeriodCode = ? AND Status = 'Approved' 
-                                ORDER BY PlanHeaderID DESC";
-            $lastAppr = $this->MDSModel->QuerySetBase($sqlLastApproved, $this->DDS, [$year, $period])->row();
-
-            $nextRev = "Rev 0";
-            if ($lastAppr && !empty($lastAppr->Revision)) {
-                $num = (int)str_ireplace("Rev ", "", $lastAppr->Revision);
-                $nextRev = "Rev " . ($num + 1);
-            }
+            
+            $nextRevision = $this->getNextApprovedRevision($year, $period);
 
             // 2. อัปเดตสถานะ Header จาก DRAFT เป็น Approved พร้อมกำหนดเลข Rev จริง
             $db = $this->load->database($this->DDS, TRUE);
             $db->where('PlanHeaderID', $headerID)->update('Tb_Master_DESBM_Header', [
-                'Revision'       => $nextRev,
+                'Revision'       => $nextRevision,
                 'Status'         => 'Approved',
                 'UserAction'     => $empno,
                 'ComputerAction' => gethostbyaddr($_SERVER['REMOTE_ADDR']),
@@ -605,7 +717,7 @@ class form extends MY_Controller {
 
             // 3. อัปเดต Rev ในตาราง Detail
             $db->where('PlanHeaderID', $headerID)->update('Tb_Master_DESBM_Detail', [
-                'Rev' => $nextRev
+                'Rev' => $nextRevision
             ]);
 
             // 4. Merge Sync เข้าตาราง Master หลัก (Tb_Master_DESBM)

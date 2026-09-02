@@ -40,8 +40,23 @@
                     <u class="text-3xl text-primary font-bold no-underline decoration-transparent">Master Plan DES BM Management</u>
                 </h2>
                 <div class="flex items-center gap-2">
-                    <span class="badge badge-primary badge-outline font-bold" id="RevBadge">Revision: {{$REVISION??'*'}}</span>
+                    <!-- Badge Revision -->
+                    <span class="badge badge-primary badge-outline font-bold" id="RevBadge">Revision: <?= $REVISION ?? '*' ?></span>
                     
+                    <!-- 🟢 Badge Status -->
+                    <span class="badge badge-warning font-bold text-xs" id="StatusBadge">DRAFT</span>
+                </div>
+            </div>
+
+            <!-- 🟢 Alert แจ้งเตือนเมื่ออยู่ในสถานะรออนุมัติ (ซ่อนไว้ก่อนด้วย class hidden) -->
+            <div id="PendingAlert" class="alert alert-warning shadow-sm mb-4 py-2 hidden">
+                <div class="flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-5 w-5" fill="none" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                    <span class="text-sm font-semibold">
+                        เอกสารรอบนี้อยู่ในสถานะ <span id="StatusText" class="font-bold underline">CHECK</span> (รอ Approve เอกสาร Webflow) ไม่สามารถประมวลผลหรือสร้าง Revision ใหม่ได้
+                    </span>
                 </div>
             </div>
 

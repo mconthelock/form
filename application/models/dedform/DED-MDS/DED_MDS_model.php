@@ -161,6 +161,38 @@ class DED_MDS_model extends my_model
         }
     }
 
+    /**
+     * อัปเดตข้อมูล Ticket Webflow ลงตาราง Header และ Detail
+     * @param int $planHeaderID
+     * @param array $headerUpdate
+     * @return bool
+     * @throws Exception
+     */
+    public function SavePlanTicket($planHeaderID, $headerUpdate)
+    {
+        $db = $this->load->database($this->DDS, TRUE);
+        $db->trans_begin();
+
+        try {
+            // 1. อัปเดต Tb_Master_DESBM_Header
+            $db->where('PlanHeaderID', (int)$planHeaderID)
+            ->update('Tb_Master_DESBM_Header', $headerUpdate);
+
+
+            if ($db->trans_status() === FALSE) {
+                $db->trans_rollback();
+                throw new Exception("เกิดข้อผิดพลาดในการบันทึกฐานข้อมูล Plan Master");
+            }
+
+            $db->trans_commit();
+            return true;
+
+        } catch (\Throwable $e) {
+            $db->trans_rollback();
+            throw $e;
+        }
+    }
+
     // ประมวลผล Plan ผ่าน Caching Working Days & Temp Table
     public function processPlanMaster($year, $period, $desTypes, $userSession)
     {
