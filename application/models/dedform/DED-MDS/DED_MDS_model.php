@@ -192,7 +192,357 @@ class DED_MDS_model extends my_model
             throw $e;
         }
     }
+    /**
+     * อัปเดตข้อมูลสถานะ Header ตามเงื่อนไข Form ID ของ Webflow
+     * @param array $formID
+     * @param array $data
+     * @return bool
+     */
+    public function UpdateHeader($formID, $data)
+    {
+        $db = $this->load->database($this->DDS, TRUE);
 
+        $db->where('NFRMNO', (int)$formID['NFRMNO'])
+        ->where('VORGNO', (string)$formID['VORGNO'])
+        ->where('CYEAR2', (string)$formID['CYEAR2'])
+        ->where('NRUNNO', (int)$formID['NRUNNO'])
+        ->update('Tb_Master_DESBM_Header', $data);
+
+        return true;
+    }
+
+    /**
+     * ดึง PIC จาก Tb_MS_Master_DESBM_PIC และอัปเดตผู้อนุมัติลงตาราง FLOW
+     * @param array $flowID [NFRMNO, VORGNO, CYEAR, CYEAR2, NRUNNO]
+     * @return bool
+     * @throws Exception
+     */
+    public function updateWebflowApprover($flowID)
+    {
+        $db = $this->load->database($this->DDS, TRUE);
+        $requiredKeys = ['NFRMNO', 'VORGNO', 'CYEAR', 'CYEAR2', 'NRUNNO'];
+        foreach ($requiredKeys as $key) {
+            if (!isset($flowID[$key]) || $flowID[$key] === null || trim((string)$flowID[$key]) === '') {
+                throw new Exception("ข้อมูลสำหรับอ้างอิง Flow ไม่ถูกต้อง: คีย์ {$key} ห้ามเป็นค่าว่าง");
+            }
+        }
+        // 1. ดึง USERID ผู้อนุมัติจาก Tb_MS_Master_DESBM_PIC
+        $picRow = $db->select('USERID')
+                     ->where('STATUS', 'DED-MDS_PIC')
+                     ->limit(1)
+                     ->get('Tb_MS_Master_DESBM_PIC')
+                     ->row();
+
+        if (!$picRow || empty($picRow->USERID)) {
+            throw new Exception("ไม่พบรายชื่อผู้อนุมัติ (DED-MDS_PIC) ในระบบ");
+        }
+
+        $approverUserId = $picRow->USERID?trim($picRow->USERID):'13204';
+
+        $db = $this->load->database('DEFAULT', TRUE);
+        // 2. อัปเดตผู้อนุมัติลงตาราง FLOW ของ Webflow
+        // หมายเหตุ: หากตาราง FLOW อยู่ใน Database อื่น ให้เปลี่ยน $db เป็น connection ของ Webflow
+        $db->where('NFRMNO', $flowID['NFRMNO'])
+           ->where('VORGNO', $flowID['VORGNO'])
+           ->where('CYEAR',  $flowID['CYEAR'])
+           ->where('CYEAR2', $flowID['CYEAR2'])
+           ->where('NRUNNO', $flowID['NRUNNO'])
+           ->where('CEXTDATA', $flowID['CEXTDATA'])
+           ->update('FLOW', [
+               'VAPVNO' => $approverUserId,
+               'VREPNO' => $approverUserId
+           ]);
+
+        return true;
+    }
+
+    public function processPlanMasterDirect($planHeaderID, $year, $period, $desTypes, $revision, $empno)
+    {
+        $db = $this->load->database($this->DDS, TRUE);
+
+        $year = trim((string)$year);
+        $period = trim((string)$period);
+        $nextYear = (string)((int)$year + 1);
+
+        if (empty($desTypes) || !is_array($desTypes)) {
+            $desTypes = ['N', 'T'];
+        }
+        $escapedDesTypes = array_map(function($item) use ($db) {
+            return $db->escape(trim($item));
+        }, $desTypes);
+        $desTypeInClause = implode(',', $escapedDesTypes);
+
+        if ($period === '04X-09C') {
+            $startA2M01 = $year . '041';
+            $endA2M01   = $year . '096';
+        } else {
+            $startA2M01 = $year . '101';
+            $endA2M01   = $nextYear . '036';
+        }
+
+        $sql = " 
+            SET NOCOUNT ON;
+
+            IF OBJECT_ID('tempdb..#WorkingDays') IS NOT NULL DROP TABLE #WorkingDays;
+
+            SELECT CalDate, DateStr, WorkSeq
+            INTO #WorkingDays
+            FROM V_WorkingDays;
+
+            CREATE CLUSTERED INDEX IX_WorkSeq ON #WorkingDays(WorkSeq);
+            CREATE NONCLUSTERED INDEX IX_CalDate ON #WorkingDays(CalDate);
+
+            IF OBJECT_ID('tempdb..#CalConfig') IS NOT NULL DROP TABLE #CalConfig;
+
+            SELECT 
+                TargetField COLLATE DATABASE_DEFAULT AS TargetField, 
+                P_Type      COLLATE DATABASE_DEFAULT AS P_Type, 
+                BaseField, 
+                BaseRowType, 
+                OffsetDays
+            INTO #CalConfig
+            FROM [dbo].[Tb_MS_Master_DESBM_Cal]
+            WHERE IsActive = 1;
+
+            DECLARE @PeriodMode    VARCHAR(10)  = ?;
+            DECLARE @StartA2M01    VARCHAR(7)   = ?;
+            DECLARE @EndA2M01      VARCHAR(7)   = ?;
+            DECLARE @CurYear       VARCHAR(4)   = ?;
+            DECLARE @NxtYear       VARCHAR(4)   = ?;
+            DECLARE @PlanHeaderID  INT          = ?;
+            DECLARE @Revision      VARCHAR(10)  = ?;
+            DECLARE @UserAction    VARCHAR(50)  = ?;
+
+            ;WITH RawPeriodSource AS (
+                SELECT 
+                    CAST(CAST(A.A2M01 AS BIGINT) AS VARCHAR(7)) COLLATE DATABASE_DEFAULT AS A2M01,
+                    CAST(A.A2M02 AS VARCHAR(10)) COLLATE DATABASE_DEFAULT AS A2M02,
+                    CAST(CAST(A.A2M03 AS BIGINT) AS VARCHAR(8)) COLLATE DATABASE_DEFAULT AS A2M03,
+
+                    CASE 
+                        WHEN A.A2M03 IS NULL OR CAST(A.A2M03 AS BIGINT) = 0 THEN NULL
+                        ELSE CONVERT(SMALLDATETIME, CAST(CAST(A.A2M03 AS BIGINT) AS VARCHAR(8)), 112)
+                    END AS MFG_BM_Date,
+
+                    SUBSTRING(CAST(CAST(A.A2M01 AS BIGINT) AS VARCHAR(7)), 5, 2) AS MonthPart,
+
+                    CASE SUBSTRING(CAST(CAST(A.A2M01 AS BIGINT) AS VARCHAR(7)), 7, 1)
+                        WHEN '1' THEN 'X' WHEN '2' THEN 'A' WHEN '3' THEN 'Y'
+                        WHEN '4' THEN 'B' WHEN '5' THEN 'Z' WHEN '6' THEN 'C'
+                    END AS JunCode,
+
+                    CASE 
+                        WHEN SUBSTRING(CAST(CAST(A.A2M01 AS BIGINT) AS VARCHAR(7)), 5, 2) = '02' 
+                            AND SUBSTRING(CAST(CAST(A.A2M01 AS BIGINT) AS VARCHAR(7)), 7, 1) = '6' THEN
+                            CONVERT(SMALLDATETIME, 
+                                SUBSTRING(CAST(CAST(A.A2M01 AS BIGINT) AS VARCHAR(7)), 1, 4) + '-02-' + 
+                                CASE 
+                                    WHEN CAST(SUBSTRING(CAST(CAST(A.A2M01 AS BIGINT) AS VARCHAR(7)), 1, 4) AS INT) % 4 = 0 
+                                        AND (CAST(SUBSTRING(CAST(CAST(A.A2M01 AS BIGINT) AS VARCHAR(7)), 1, 4) AS INT) % 100 <> 0 
+                                            OR CAST(SUBSTRING(CAST(CAST(A.A2M01 AS BIGINT) AS VARCHAR(7)), 1, 4) AS INT) % 400 = 0) 
+                                    THEN '29' 
+                                    ELSE '28' 
+                                END, 120)
+                        ELSE
+                            CONVERT(SMALLDATETIME, 
+                                SUBSTRING(CAST(CAST(A.A2M01 AS BIGINT) AS VARCHAR(7)), 1, 4) + '-' + 
+                                SUBSTRING(CAST(CAST(A.A2M01 AS BIGINT) AS VARCHAR(7)), 5, 2) + '-' + 
+                                CASE SUBSTRING(CAST(CAST(A.A2M01 AS BIGINT) AS VARCHAR(7)), 7, 1)
+                                    WHEN '1' THEN '05'
+                                    WHEN '2' THEN '10'
+                                    WHEN '3' THEN '15'
+                                    WHEN '4' THEN '20'
+                                    WHEN '5' THEN '25'
+                                    WHEN '6' THEN '30'
+                                END, 120)
+                    END AS ChangeJunTodate,
+
+                    MAX(CAST(A.A2M02 AS VARCHAR(10))) OVER (
+                        PARTITION BY CAST(CAST(A.A2M01 AS BIGINT) AS VARCHAR(7))
+                    ) COLLATE DATABASE_DEFAULT AS Max_A2M02
+
+                FROM GG..AMECMFG.A002MP A
+                WHERE 
+                    (@PeriodMode = '04X-09C' AND CAST(CAST(A.A2M01 AS BIGINT) AS VARCHAR(7)) BETWEEN @StartA2M01 AND @EndA2M01)
+                    OR
+                    (@PeriodMode = '10X-03C' AND (
+                        CAST(CAST(A.A2M01 AS BIGINT) AS VARCHAR(7)) BETWEEN @CurYear + '101' AND @CurYear + '126'
+                        OR CAST(CAST(A.A2M01 AS BIGINT) AS VARCHAR(7)) BETWEEN @NxtYear + '011' AND @EndA2M01
+                    ))
+            ),
+            FilteredByMasterDesType AS (
+                SELECT 
+                    R.A2M01, 
+                    R.A2M02 AS P_Display, 
+                    R.A2M03, 
+                    R.MFG_BM_Date,
+                    R.MonthPart, 
+                    R.JunCode, 
+                    R.ChangeJunTodate,
+                    M.DesType COLLATE DATABASE_DEFAULT AS DesType, 
+                    M.P_Type  COLLATE DATABASE_DEFAULT AS P_Type, 
+                    M.Seq AS DesTypeSeq
+                FROM RawPeriodSource R
+                INNER JOIN [dbo].[Tb_MS_Master_DESBM_DesType] M 
+                    ON M.IsActive = 1
+                    AND M.DesType COLLATE DATABASE_DEFAULT IN ({$desTypeInClause})
+                    AND (
+                        (M.P_Type COLLATE DATABASE_DEFAULT = 'last P' AND R.A2M02 = R.Max_A2M02 AND R.A2M02 <> 'P1')
+                        OR
+                        (M.P_Type COLLATE DATABASE_DEFAULT <> 'last P' AND R.A2M02 = M.P_Type COLLATE DATABASE_DEFAULT)
+                    )
+            ),
+            BaseSequence AS (
+                SELECT 
+                    F.*,
+                    W.WorkSeq AS MFG_WorkSeq,
+                    F.MonthPart + F.JunCode + F.DesType + SUBSTRING(F.A2M01, 1, 4) AS TypeJun,
+                    SUBSTRING(F.A2M01, 1, 4) + F.MonthPart + F.JunCode + F.DesType AS PROD,
+                    SUBSTRING(F.A2M01, 3, 2) + F.MonthPart + F.JunCode + F.DesType AS FormatAs400
+                FROM FilteredByMasterDesType F
+                OUTER APPLY (
+                    SELECT TOP 1 WorkSeq FROM #WorkingDays WHERE CalDate <= F.MFG_BM_Date ORDER BY CalDate DESC
+                ) W
+            ),
+            CalculatedStep1 AS (
+                SELECT 
+                    B.*,
+                    B.MFG_WorkSeq + ISNULL(CFG_DES.OffsetDays, 0) AS DES_WorkSeq
+                FROM BaseSequence B
+                OUTER APPLY (
+                    SELECT TOP 1 OffsetDays 
+                    FROM #CalConfig 
+                    WHERE TargetField = 'DES_BM' 
+                    AND P_Type = B.P_Type COLLATE DATABASE_DEFAULT
+                ) CFG_DES
+            ),
+            CalculatedStep2 AS (
+                SELECT 
+                    C1.*,
+                    P1_Ref.DES_WorkSeq AS P1_DES_WorkSeq,
+                    P1_Ref.MFG_WorkSeq AS P1_MFG_WorkSeq
+                FROM CalculatedStep1 C1
+                OUTER APPLY (
+                    SELECT TOP 1 DES_WorkSeq, MFG_WorkSeq 
+                    FROM CalculatedStep1 
+                    WHERE A2M01 = C1.A2M01 AND DesType = 'N'
+                ) P1_Ref
+            ),
+            CalculatedFinalWorkSeq AS (
+                SELECT 
+                    C.*,
+                    CASE 
+                        WHEN C.P_Type = 'P1' THEN C.DES_WorkSeq + ISNULL(CFG_GO_P1.OffsetDays, -12)
+                        ELSE C.P1_DES_WorkSeq + ISNULL(CFG_GO_P1.OffsetDays, -12)
+                    END AS GODES_WorkSeq,
+
+                    CASE 
+                        WHEN C.P_Type = 'P1' THEN (C.DES_WorkSeq + ISNULL(CFG_GO_P1.OffsetDays, -12)) + ISNULL(CFG_MEL.OffsetDays, 4)
+                        ELSE NULL 
+                    END AS CONFIRM_WorkSeq,
+
+                    CASE 
+                        WHEN C.P_Type = 'P1' THEN C.DES_WorkSeq + ISNULL(CFG_MSE.OffsetDays, 5)
+                        ELSE NULL 
+                    END AS MSE_WorkSeq,
+
+                    CASE 
+                        WHEN C.P_Type = 'P1' THEN C.MFG_WorkSeq + ISNULL(CFG_SW.OffsetDays, 5)
+                        ELSE C.P1_MFG_WorkSeq + ISNULL(CFG_SW.OffsetDays, 5)
+                    END AS SW_WorkSeq,
+
+                    C.DES_WorkSeq + ISNULL(CFG_0LV.OffsetDays, -2) AS ZEROLVL_WorkSeq,
+
+                    LAG(C.DES_WorkSeq) OVER (
+                        PARTITION BY C.DesType 
+                        ORDER BY C.A2M01, C.DesTypeSeq
+                    ) AS Prev_DES_WorkSeq
+
+                FROM CalculatedStep2 C
+                OUTER APPLY (SELECT TOP 1 OffsetDays FROM #CalConfig WHERE TargetField = 'Go_DES' AND P_Type = 'P1') CFG_GO_P1
+                OUTER APPLY (SELECT TOP 1 OffsetDays FROM #CalConfig WHERE TargetField = 'Confirm_MELINA' AND P_Type = 'P1') CFG_MEL
+                OUTER APPLY (SELECT TOP 1 OffsetDays FROM #CalConfig WHERE TargetField = 'MSE_to_MELINA' AND P_Type = 'P1') CFG_MSE
+                OUTER APPLY (SELECT TOP 1 OffsetDays FROM #CalConfig WHERE TargetField = 'SW_Assembly' AND P_Type = 'P1') CFG_SW
+                OUTER APPLY (SELECT TOP 1 OffsetDays FROM #CalConfig WHERE TargetField = 'Zero_Level_Check' AND P_Type = C.P_Type COLLATE DATABASE_DEFAULT) CFG_0LV
+            )
+            -- 🟢 บันทึกตรงเข้า Tb_Master_DESBM_Detail ไม่ต้องผ่าน Temp Table
+            INSERT INTO [dbo].[Tb_Master_DESBM_Detail] (
+                PlanHeaderID, Rev, SeqNo, PROD, MFG_BM, P_Type,
+                DES_BM, Time_DESBM_to_MFGBM, Go_DES, Time_GoDES_to_DESBM,
+                Confirm_MELINA_Portion, Time_Confirm_Melina, MSE_to_MELINA, Time_MSE_to_MELINA,
+                SW_Assembly, Time_SW_Assembly, Zero_Level_Check_Temp_DWG, Time_Zero_Level,
+                Design_working_day, LeadTime, Time_DESBM_to_MFGBM_2,
+                TypeJun, ChangeJunTodate, DesType, FormatAs400, BeforeEditDesBMDate, MARIssueDES, 
+                UserAction, DateAction
+            )
+            SELECT 
+                @PlanHeaderID, @Revision,
+                ROW_NUMBER() OVER (ORDER BY F.A2M01, F.DesTypeSeq) AS SeqNo,
+                F.PROD, F.MFG_BM_Date, F.P_Display,
+                
+                W_DES.CalDate, 
+                ABS(F.MFG_WorkSeq - F.DES_WorkSeq),
+                
+                W_GODES.CalDate, 
+                ABS(F.DES_WorkSeq - F.GODES_WorkSeq),
+                
+                W_CONFIRM.CalDate, 
+                CASE WHEN F.P_Type = 'P1' THEN ABS(F.CONFIRM_WorkSeq - F.GODES_WorkSeq) ELSE NULL END,
+                
+                W_MSE.CalDate, 
+                CASE WHEN F.P_Type = 'P1' THEN ABS(F.MSE_WorkSeq - F.DES_WorkSeq) ELSE NULL END,
+                
+                W_SW.CalDate, 
+                ABS(F.MFG_WorkSeq - F.SW_WorkSeq),
+                
+                W_0LVL.CalDate, 
+                ABS(F.DES_WorkSeq - F.ZEROLVL_WorkSeq),
+
+                CASE 
+                    WHEN F.Prev_DES_WorkSeq IS NOT NULL THEN ABS(F.DES_WorkSeq - F.Prev_DES_WorkSeq) + ISNULL(CFG_DWD.OffsetDays, -1)
+                    ELSE NULL 
+                END AS Design_working_day,
+
+                CASE 
+                    WHEN F.MFG_BM_Date IS NOT NULL AND W_GODES.CalDate IS NOT NULL 
+                    THEN ISNULL(CFG_LT.OffsetDays, 50) + DATEDIFF(day, W_GODES.CalDate, F.MFG_BM_Date)
+                    ELSE NULL 
+                END AS LeadTime,
+
+                CASE 
+                    WHEN F.MFG_BM_Date IS NOT NULL AND W_DES.CalDate IS NOT NULL 
+                    THEN DATEDIFF(day, W_DES.CalDate, F.MFG_BM_Date) + ISNULL(CFG_DES2.OffsetDays, 1)
+                    ELSE NULL 
+                END AS Time_DESBM_to_MFGBM_2,
+                
+                F.TypeJun, F.ChangeJunTodate, F.DesType, F.FormatAs400,
+                '2030-04-15 00:00:00', NULL,
+                'SYSTEM', GETDATE()
+            FROM CalculatedFinalWorkSeq F
+            OUTER APPLY (SELECT TOP 1 OffsetDays FROM #CalConfig WHERE TargetField = 'Design_working_day') CFG_DWD
+            OUTER APPLY (SELECT TOP 1 OffsetDays FROM #CalConfig WHERE TargetField = 'LeadTime') CFG_LT
+            OUTER APPLY (SELECT TOP 1 OffsetDays FROM #CalConfig WHERE TargetField = 'Time_DESBM_to_MFGBM_2') CFG_DES2
+            LEFT JOIN #WorkingDays W_DES     ON W_DES.WorkSeq     = F.DES_WorkSeq
+            LEFT JOIN #WorkingDays W_GODES   ON W_GODES.WorkSeq   = F.GODES_WorkSeq
+            LEFT JOIN #WorkingDays W_CONFIRM ON W_CONFIRM.WorkSeq = F.CONFIRM_WorkSeq
+            LEFT JOIN #WorkingDays W_MSE     ON W_MSE.WorkSeq     = F.MSE_WorkSeq
+            LEFT JOIN #WorkingDays W_SW      ON W_SW.WorkSeq      = F.SW_WorkSeq
+            LEFT JOIN #WorkingDays W_0LVL    ON W_0LVL.WorkSeq    = F.ZEROLVL_WorkSeq;
+        ";
+
+        $binds = [
+            $period,
+            $startA2M01,
+            $endA2M01,
+            $year,
+            $nextYear,
+            $planHeaderID,
+            $revision,
+            $empno
+        ];
+
+        return $this->QuerySetBase($sql, $this->DDS, $binds);
+    }
     // ประมวลผล Plan ผ่าน Caching Working Days & Temp Table
     public function processPlanMaster($year, $period, $desTypes, $userSession)
     {

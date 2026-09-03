@@ -23,6 +23,7 @@
      data-remark="{{$REMARK ?? ''}}"
      data-status="{{$STATUS ?? ''}}"
      data-default-destypes="{{ implode('|', $selectedDesTypes ?? []) }}"
+     data-doc_no="{{$DOC_NO ?? ''}}"
      >
 </div>
 
@@ -43,7 +44,7 @@
                     <!-- Badge Revision -->
                     <span class="badge badge-primary badge-outline font-bold" id="RevBadge">Revision: <?= $REVISION ?? '*' ?></span>
                     
-                    <!-- 🟢 Badge Status -->
+                    <!-- Badge Status -->
                     <span class="badge badge-warning font-bold text-xs" id="StatusBadge">DRAFT</span>
                 </div>
             </div>
@@ -51,9 +52,9 @@
             <!-- 🟢 Alert แจ้งเตือนเมื่ออยู่ในสถานะรออนุมัติ (ซ่อนไว้ก่อนด้วย class hidden) -->
             <div id="PendingAlert" class="alert alert-warning shadow-sm mb-4 py-2 hidden">
                 <div class="flex items-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-5 w-5" fill="none" viewBox="0 0 24 24">
+                    <!-- <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-5 w-5" fill="none" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                    </svg>
+                    </svg> -->
                     <span class="text-sm font-semibold">
                         เอกสารรอบนี้อยู่ในสถานะ <span id="StatusText" class="font-bold underline">CHECK</span> (รอ Approve เอกสาร Webflow) ไม่สามารถประมวลผลหรือสร้าง Revision ใหม่ได้
                     </span>
@@ -62,17 +63,22 @@
 
             <!-- Panel Form Selection -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 border border-slate-200 p-5 rounded-2xl bg-white shadow-sm mb-6">
-            
+                
+                <div class="flex flex-col gap-1.5">
+                    <label class="block text-xs font-semibold text-slate-500 mb-1">FORM ID :</label>
+                    <input type="text" id="DOC_IDTxt" class="input input-bordered input-sm w-full bg-slate-100 font-bold text-primary" readonly placeholder="Auto Generated" value="{{$DOC_NO ?? ''}}">
+                    <input type="hidden" name="RevisionHid" id="RevisionHid" value="{{$REVISION??'*'}}" />
+                    <input type="hidden" name="STATUSHid" id="STATUSHid" value="{{$STATUS??''}}" />
+                    <input type="hidden" name="EMPNOHid" id="EMPNOHid" value="{{$EMPNO??''}}" />
+                    <input type="hidden" name="EXTDATAHid" id="EXTDATAHid" value="{{$EMPNO??''}}" />
+                    <input type="hidden" name="MODEHid" id="MODEHid" value="{{$EMPNO??''}}" />
+                    
+                </div>
                 <div class="flex flex-col gap-1.5">
                     <label class="font-bold text-xs text-slate-500 uppercase tracking-wider">Input By :</label>
                     <input type="text" id="INPUT_BYTxt" name="INPUT_BYTxt" 
                         class="w-full text-sm px-3 py-2 rounded-lg bg-slate-50 border border-slate-200 text-slate-500 font-medium cursor-not-allowed focus:outline-none" 
                         value="{{$EMPNO}}" readonly disabled>
-                    <input type="hidden" name="RevisionHid" id="RevisionHid" value="{{$REVISION??'*'}}" />
-                    <input type="hidden" name="STATUSHid" id="STATUSHid" value="{{$STATUS??''}}" />
-                    <input type="hidden" name="EMPNOHid" id="EMPNOHid" value="{{$EMPNO??''}}" />
-                    <input type="hidden" name="EXTDATAHid" id="EXTDATAHid" value="{{$EMPNO??''}}" />
-                    
                 </div>
 
                 <div class="flex flex-col gap-1.5">
@@ -134,7 +140,10 @@
                         @endif
                     </div>
                 </div>
-
+                <div class="flex flex-col gap-1.5">
+                    <label class="block text-xs font-semibold text-slate-500 mb-1">REMARK :</label>
+                    <textarea id="RemarkTxt" rows="2" class="textarea textarea-bordered w-full text-xs" placeholder="ระบุเหตุผลหรือหมายเหตุประกอบการจัดทำแผน (ถ้ามี)"></textarea>
+                </div>
                 <!-- 4. Action Buttons (Search & Process) -->
                 <div class="flex items-end gap-2">
                     <button type="button" id="SearchBtn" class="btn btn-neutral btn-sm flex-1 flex items-center justify-center gap-1.5 text-white">
@@ -150,8 +159,8 @@
             <!-- Action Controls ด้านล่างตาราง -->
             <div class="w-full flex justify-end mt-5 gap-2">
                 <!-- ปุ่ม Delete Draft (เริ่มต้นซ่อนไว้) -->
-                <button type="button" id="DeleteDraftBtn" class="btn btn-error btn-sm text-white hidden flex items-center gap-1">
-                    🗑️ Delete Draft
+                <button type="button" id="DeleteBtn" class="btn btn-error btn-sm text-white hidden flex items-center gap-1">
+                    🗑️ Delete 
                 </button>
                 
                 <!-- ปุ่ม Save Plan -->
@@ -165,17 +174,19 @@
                     Approve
                 </button>
                 
-                <button type="button" name="DeleteBtn" id="DeleteBtn"
-                        data-action="delete"
-                        class="btn-submit cursor-pointer bg-slate-500 bg-rose-600 hover:bg-rose-700 text-white px-4 py-2 rounded shadow hidden">
-                    Delete
-                </button>
                 
                 <button type="button" name="ReturnBtn" id="ReturnBtn"
                         data-action="return"
                         class="btn-submit cursor-pointer bg-slate-500 bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded shadow hidden">
                     Return To Requester
                 </button>
+                
+                
+                <!-- <button type="button" name="RejectBtn" id="RejectBtn"
+                        data-action="reject"
+                        class="btn-submit cursor-pointer bg-slate-500 bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded shadow hidden">
+                    Reject
+                </button> -->
             </div>
             <!-- Data Table Section -->
             <div class="w-full overflow-x-auto mt-2">
@@ -189,12 +200,6 @@
                 </table>
             </div>
 
-            <!-- Action Controls -->
-            <!-- <div class="w-full flex justify-end mt-5 gap-2">
-                <button type="button" id="SavePlanBtn" class="btn btn-success text-white btn-sm hidden">
-                    💾 Confirm & Save Plan
-                </button>
-            </div> -->
 
             
             <div class="w-full flex justify-end mt-5 gap-2">
@@ -204,12 +209,6 @@
                     Create Form
                 </button> -->
                 
-                
-                <!-- <button type="button" name="RejectBtn" id="RejectBtn"
-                        data-action="reject"
-                        class="btn-submit cursor-pointer bg-slate-500 bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded shadow hidden">
-                    Reject
-                </button> -->
             </div>
         </form>
     </div>

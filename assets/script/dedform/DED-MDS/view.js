@@ -42,10 +42,11 @@ import { sendmail } from '@amec/webasset/api/mail';
 
 let empno = '';
 let dataOnhand = [];
-let currentMode = '3';
+let currentMode = '1'; // ปรับค่าเริ่มต้นให้เป็น '1' (Create)
+let currentExtData = ''; // 🟢 ประกาศตัวแปรระดับโมดูล
 let selectedFilesArray = [];
-
 let currentPlanHeaderID = null;
+
 $(document).ready(async function () {
     // 1. ดึงข้อมูลจากก้อนข้อมูลหลักของเบลดฟอร์ม
     const formData = $('.form-info').data();
@@ -66,51 +67,50 @@ $(document).ready(async function () {
         STATUS: formData.status,
     };
 
+    $('#DOC_IDTxt').val(form.DOC_NO);
     $('#REQUEST_BYTxt').val(form.EMPNO);
     $('#INPUT_BYTxt').val(form.EMPNO);
     if (form.PLAN_YEAR) {
         $('#YearDrp').val(form.PLAN_YEAR);
     }
+    if (form.PERIOD) {
+        $('#PeriodDrp').val(form.PERIOD);
+    }
+
     if (form.NRUNNO == '') // create
     {
-        currentMode = '1';
-        $('#EXTDATAHid').val('00');
-        await ProcessCreate();
+        // โหมดสร้างใหม่ (Create Mode)
+        $('#EXTDATAHid').val('');
+        $('#MODEHid').val('1');
+        await applyButtonPermissions('1', '', '');
     } else {
-        currentMode = String(
-            await getMode({
-                ...form,
-                EMPNO: form.EMPNO,
-            }),
+        currentMode = String(await getMode({ ...form, EMPNO: form.EMPNO }));
+        currentExtData = String(
+            await getExtData({ ...form, EMPNO: form.EMPNO }),
         );
-        const currentExtData = await getExtData({ ...form, EMPNO: form.EMPNO });
         $('#EXTDATAHid').val(currentExtData);
-        alert(currentMode);
+        $('#MODEHid').val(currentMode);
 
-        if (currentMode === '1') {
-            // โหมดสร้างฟอร์ม (Create Mode) -> ล็อกการซ่อนปุ่มไว้เหมือนเดิม
-            await ProcessCreate();
-        } else if (currentMode === '2') {
-            // next step
-            await ProcessEdit(currentMode);
-        } else if (currentMode === '3') {
-            // โหมดดูอย่างเดียว (View Mode) -> บังคับซ่อนทุกปุ่ม
-            await ProcessView();
-        } else {
-            await ProcessView();
-        }
+        // จัดการสิทธิ์การแสดงปุ่มตาม Mode และ ExtData
+        await applyButtonPermissions(currentMode, currentExtData, '');
 
-        loadExistingFiles(); // สั่งเรียกฟังก์ชันดึงรายการไฟล์มาแสดง
-
-        // 2. เรียกใช้พ่นสเต็ป Flow ของฝั่ง Webflow
-        const flow = await showflow(form);
-        $('.flow').html(flow.html);
+        // loadExistingFiles(); // สั่งเรียกฟังก์ชันดึงรายการไฟล์มาแสดง
 
         // 3. ยิงคำสั่งประมวลผลดึงรายงานมาพ่นลง DataTable โดยตรงบนหน้าจอ
         await loadDraftPlan();
+        // 2. เรียกใช้พ่นสเต็ป Flow ของฝั่ง Webflow
+        const flow = await showflow(form);
+        $('.flow').html(flow.html);
     }
 
     $('#MODEHid').val(currentMode);
+    alert(
+        'MOD:' +
+            $('#MODEHid').val() +
+            '|' +
+            'EXTDATA:' +
+            $('#EXTDATAHid').val(),
+    );
 
     // 4. สั่งสลับปิด Skeleton Loading ทันทีเมื่อเตรียมโครงตารางหลักเรียบร้อย
     setTimeout(function () {
@@ -157,7 +157,7 @@ $(document).ready(async function () {
         }
         $('#loading').removeClass('hidden');
         $('#SavePlanBtn').addClass('hidden');
-        $('#DeleteDraftBtn').addClass('hidden');
+        $('#DeleteBtn').addClass('hidden');
         const payload = {
             YEAR: $('#YearDrp').val(),
             PERIOD: $('#PeriodDrp').val(),
@@ -173,7 +173,7 @@ $(document).ready(async function () {
                 $('#RevBadge').text('Revision: ' + res.revision);
                 renderDataTable(res.data);
                 $('#SavePlanBtn').removeClass('hidden');
-                $('#DeleteDraftBtn').removeClass('hidden');
+                $('#DeleteBtn').removeClass('hidden');
             } else {
                 alert('เกิดข้อผิดพลาด: ' + res.message);
             }
@@ -194,30 +194,36 @@ $(document).ready(async function () {
         )
             return;
 
-        const payload = {
-            YEAR: $('#YearDrp').val(),
-            PERIOD: $('#PeriodDrp').val(),
-            DESTYPES: getSelectedDesTypes(),
-            REVISION: $('#RevisionHid').val(),
-            EMPNO: empno,
-        };
+        if ($('#DOC_IDTxt').val() != '') {
+            await actionFlow('approve');
+        } else {
+            const payload = {
+                YEAR: $('#YearDrp').val(),
+                PERIOD: $('#PeriodDrp').val(),
+                DESTYPES: getSelectedDesTypes(),
+                REVISION: $('#RevisionHid').val(),
+                EMPNO: empno,
+                REMARK: $('#RemarkTxt').val(),
+                DOC_ID: $('#DOC_IDTxt').val(),
+            };
 
-        try {
-            const res = await savePlanMaster(payload);
-            if (res.status) {
-                alert(res.message);
-                $('#RevBadge').text('Revision: ' + res.revision);
-                $('#SavePlanBtn').addClass('hidden');
-            } else {
-                alert('เกิดข้อผิดพลาด: ' + res.message);
+            try {
+                const res = await savePlanMaster(payload);
+                if (res.status) {
+                    alert(res.message);
+                    $('#RevBadge').text('Revision: ' + res.revision);
+                    $('#SavePlanBtn').addClass('hidden');
+                } else {
+                    alert('เกิดข้อผิดพลาด: ' + res.message);
+                }
+            } catch (err) {
+                alert('ไม่สามารถบันทึกข้อมูลได้');
             }
-        } catch (err) {
-            alert('ไม่สามารถบันทึกข้อมูลได้');
         }
     });
 
     // Event: กดปุ่ม Delete Draft
-    $(document).on('click', '#DeleteDraftBtn', async function () {
+    $(document).on('click', '#DeleteBtn', async function () {
         if (!currentPlanHeaderID) {
             alert('ไม่พบฉบับร่างที่ต้องการลบ');
             return;
@@ -225,44 +231,70 @@ $(document).ready(async function () {
 
         if (!confirm('คุณต้องการลบข้อมูลฉบับร่าง (Draft) นี้ใช่หรือไม่?'))
             return;
-
+        var chk = 1;
         $('#loading').removeClass('hidden');
+        if ($('#DOC_IDTxt').val() != '') {
+            let val = $(this).val();
+            const formData = $('.form-info').data();
+            const { nfrmno, vorgno, cyear, cyear2, nrunno, empno } = formData;
 
-        try {
             const payload = {
-                PLAN_HEADER_ID: currentPlanHeaderID,
-                YEAR: $('#YearDrp').val(),
-                PERIOD: $('#PeriodDrp').val(),
+                NFRMNO: nfrmno ? Number(nfrmno) : 0,
+                VORGNO: vorgno ? vorgno.toString() : '',
+                CYEAR: cyear ? cyear.toString() : '',
+                CYEAR2: cyear2 ? cyear2.toString() : '',
+                NRUNNO: nrunno ? Number(nrunno) : 0,
             };
 
-            const res = await deleteDraftPlan(payload);
-            if (res.status) {
-                alert(res.message);
-                currentPlanHeaderID = null;
+            // 1. รอให้ฟังก์ชันลบทำงานเสร็จก่อน
+            const delform = await deleteFlowandForm(payload);
 
-                // เคลียร์ตารางให้เป็นตารางว่าง
-                renderDataTable([]);
-
-                // ซ่อนปุ่ม Action ทั้งสอง
-                $('#DeleteDraftBtn').addClass('hidden');
-                $('#SavePlanBtn').addClass('hidden');
-
-                // โหลดสถานะ Revision ถัดไปรอไว้
-                await loadDraftPlan();
+            if (delform.status) {
             } else {
-                alert('เกิดข้อผิดพลาด: ' + res.message);
+                chk = 0;
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Failed to Delete Form',
+                    text: delform.message || 'Please try again',
+                });
             }
-        } catch (err) {
-            console.error(err);
-            alert('ไม่สามารถลบฉบับร่างได้');
-        } finally {
-            $('#loading').addClass('hidden');
+        }
+        if (chk == 1) {
+            try {
+                const payload = {
+                    PLAN_HEADER_ID: currentPlanHeaderID,
+                    YEAR: $('#YearDrp').val(),
+                    PERIOD: $('#PeriodDrp').val(),
+                };
+
+                const res = await deleteDraftPlan(payload);
+                if (res.status) {
+                    alert(res.message);
+                    currentPlanHeaderID = null;
+
+                    // เคลียร์ตารางให้เป็นตารางว่าง
+                    renderDataTable([]);
+
+                    // ซ่อนปุ่ม Action ทั้งสอง
+                    $('#DeleteBtn').addClass('hidden');
+                    $('#SavePlanBtn').addClass('hidden');
+
+                    // โหลดสถานะ Revision ถัดไปรอไว้
+                    await loadDraftPlan();
+                } else {
+                    alert('เกิดข้อผิดพลาด: ' + res.message);
+                }
+            } catch (err) {
+                console.error(err);
+                alert('ไม่สามารถลบฉบับร่างได้');
+            } finally {
+                $('#loading').addClass('hidden');
+            }
         }
     });
 
     // Event เมื่อแก้ค่าในตารางแล้วยิง AJAX อัปเดตลงตาราง Tb_Master_DESBM_Detail ทันที
     $(document).on('change', '.inline-edit-date', async function () {
-        alert('Updating...');
         const $input = $(this);
         const field = $input.data('field');
         const newVal = $input.val();
@@ -343,55 +375,20 @@ $(document).ready(async function () {
         }
     });
 
-    function updateStatusUI(status, revision, docNo = '') {
-        const rawStatus = (status || 'DRAFT').toUpperCase();
-        const $statusBadge = $('#StatusBadge');
-        const $pendingAlert = $('#PendingAlert');
-        const $processBtn = $('#ProcessPlanBtn'); // ปุ่มสร้าง/ประมวลผล Plan
-        const $saveBtn = $('#SavePlanBtn'); // ปุ่มบันทึกส่ง Webflow
+    // Event: ยืนยันบันทึก Master Plan (Confirm & Save)
+    $('#ReturnBtn').on('click', async function () {
+        if (!confirm('ยืนยันการ Return Master DESBM Master ใช่หรือไม่?'))
+            return;
+        let val = $(this).val();
+        await actionFlow('returnp');
+    });
 
-        // 1. อัปเดต Revision Badge
-        $('#RevBadge').text('Revision: ' + (revision || '*'));
+    $(document).on('click', '#ApproveBtn', async function () {
+        let val = $(this).val();
+        // เปิด Loader บังหน้าจอไว้ก่อนถ้าระบบโหลดช้า
+        await actionFlow('approve');
+    });
 
-        // 2. จัดรูปแบบสีของ Badge ตาม Status
-        $statusBadge.text(rawStatus);
-        $statusBadge.removeClass(
-            'badge-warning badge-success badge-error badge-ghost badge-info',
-        );
-
-        const isPending = [
-            'CHECK',
-            'WAIT APPROVE',
-            'WAITING APPROVE',
-            'PENDING',
-        ].includes(rawStatus);
-
-        if (isPending) {
-            $statusBadge.addClass('badge-warning text-slate-800');
-            $('#StatusText').text(rawStatus + (docNo ? ` [${docNo}]` : ''));
-
-            // 🟢 แสดงข้อความแจ้งเตือนรอ Approve และปิดการใช้งานปุ่มสร้าง/บันทึก
-            $pendingAlert.removeClass('hidden');
-            $processBtn.prop('disabled', true).addClass('btn-disabled');
-            $saveBtn.addClass('hidden');
-
-            // ปิดการแก้ไข Inline (disable ทุก input date ในตาราง)
-            $('.inline-edit-date')
-                .prop('disabled', true)
-                .addClass('opacity-50 cursor-not-allowed');
-        } else if (rawStatus === 'APPROVED') {
-            $statusBadge.addClass('badge-success text-white');
-            $pendingAlert.addClass('hidden');
-            $processBtn.prop('disabled', false).removeClass('btn-disabled'); // ให้สร้าง Revision ถัดไปได้
-            $saveBtn.addClass('hidden');
-        } else {
-            // กรณี DRAFT
-            $statusBadge.addClass('badge-ghost text-slate-600');
-            $pendingAlert.addClass('hidden');
-            $processBtn.prop('disabled', false).removeClass('btn-disabled');
-            $saveBtn.removeClass('hidden');
-        }
-    }
     // ===================================================================
     // == Action Upload File
     // ===================================================================
@@ -538,6 +535,13 @@ async function loadDraftPlan() {
             $('#RevisionHid').val(res.revision);
             $('#STATUSHid').val(res.status);
 
+            if (res.docNo) {
+                $('#DOC_IDTxt').val(res.docNo);
+            }
+            // if (res.remark) {
+            //     $('#RemarkTxt').val(res.remark);
+            // }
+
             // 1. จัดการ Checkbox
             if (res.desType) {
                 setSelectedDesTypes(res.desType);
@@ -548,8 +552,11 @@ async function loadDraftPlan() {
             // 2. วาดตาราง
             renderDataTable(res.data || []);
 
-            // 3. ควบคุมการแสดงปุ่มและ Alert ตามสถานะจริง
+            // 1. จัดการข้อความ Revision, Alert และ Badge
             updateStatusUI(res.status, res.revision, res.docNo);
+
+            // 2. จัดการสิทธิ์ปุ่ม Action หลักตาม Mode + สถานะจริงของข้อมูล
+            applyButtonPermissions(currentMode, currentExtData, res.status);
         } else {
             alert(
                 'เกิดข้อผิดพลาด: ' + (res.message || 'ไม่สามารถโหลดข้อมูลได้'),
@@ -562,75 +569,150 @@ async function loadDraftPlan() {
     }
 }
 
-// 🟢 ฟังก์ชันควบคุมสถานะ UI และการล็อกปุ่ม
+/**
+ * ฟังก์ชันจัดการสิทธิ์การแสดงปุ่มตามเงื่อนไข Mode & ExtData
+ */
+async function applyButtonPermissions(mode, extData, status = '') {
+    const rawStatus = (status || '').toUpperCase();
+    const isPending = ['CHECK', 'APPROVE'].includes(rawStatus);
+
+    // $('#RemarkTxt').prop('disabled', isPending);
+    // 1. ซ่อนปุ่ม Action ทั้งหมดก่อนเพื่อ Reset State
+    const allButtons = [
+        '#SearchBtn',
+        '#ProcessBtn',
+        '#SavePlanBtn',
+        '#DeleteBtn',
+        '#ApproveBtn',
+        '#ReturnBtn',
+    ];
+    $(allButtons.join(', ')).addClass('hidden');
+
+    if (mode === '1') {
+        // 🟡 Mode 1: ผู้จัดทำ (Requester / Creator)
+        $('#SearchBtn').removeClass('hidden');
+
+        // ถ้าเอกสารรอบนี้อยู่ในสถานะรออนุมัติไปแล้ว ไม่ให้กด Process ซ้ำ
+        if (isPending) {
+            $('#ProcessBtn').addClass('hidden');
+            $('#SavePlanBtn').addClass('hidden');
+            $('#DeleteBtn').addClass('hidden');
+        } else {
+            $('#ProcessBtn').removeClass('hidden');
+            // ปุ่ม Save และ Delete Draft จะแสดงเมื่อมีข้อมูล Draft ให้บันทึก
+            if (rawStatus === 'DRAFT') {
+                $('#SavePlanBtn').removeClass('hidden');
+                $('#DeleteBtn').removeClass('hidden');
+            }
+        }
+
+        $('#YearDrp, #PeriodDrp').prop('disabled', isPending);
+        $('input[name="destype"]').prop('disabled', isPending);
+    } else if (mode === '2') {
+        // 🟠 Mode 2: ขั้นตอนการอนุมัติ (Flow Step)
+        // $('#SearchBtn').removeClass('hidden');
+
+        // ล็อก Header ทั้งหมด
+        // $('#RemarkTxt').prop('disabled', true);
+        $('#YearDrp, #PeriodDrp').prop('disabled', true);
+        $('input[name="destype"]').prop('disabled', true);
+        if (extData === '') {
+            // เหมือน DRAFT
+            if (status === 'CHECK') {
+                $('#ProcessBtn').removeClass('hidden');
+                $('#SavePlanBtn').removeClass('hidden');
+                $('#DeleteBtn').removeClass('hidden');
+            }
+        } else if (extData === '01') {
+            // CHECKER: ตรวจสอบและอนุมัติ หรือ ลบทิ้ง
+            $('#ApproveBtn').removeClass('hidden');
+            $('#ReturnBtn').removeClass('hidden');
+        } else if (extData === '02' || extData === '03') {
+            // ACCEPTOR / APPROVER: อนุมัติ หรือ ตีกลับ
+            $('#ApproveBtn').removeClass('hidden');
+            $('#ReturnBtn').removeClass('hidden');
+        }
+
+        if ($('#EMPNOHid').val() == '13204') {
+            $('#DeleteBtn').removeClass('hidden');
+            $('#ReturnBtn').removeClass('hidden');
+        }
+    } else if (mode === '3') {
+        // Mode 3: ดูอย่างเดียว (View Only)
+        // $('#SearchBtn').removeClass('hidden');
+
+        $('#RemarkTxt').prop('disabled', true);
+        $('#YearDrp, #PeriodDrp').prop('disabled', true);
+        $('input[name="destype"]').prop('disabled', true);
+    }
+}
+
 function updateStatusUI(status, revision, docNo = '') {
     const rawStatus = (status || 'NONE').toUpperCase();
     const $statusBadge = $('#StatusBadge');
     const $pendingAlert = $('#PendingAlert');
-    const $processBtn = $('#ProcessBtn'); // ปุ่ม Process Plan
-    const $saveBtn = $('#SavePlanBtn'); // ปุ่ม Save Plan
-    const $deleteBtn = $('#DeleteDraftBtn'); // ปุ่ม Delete Draft
 
-    // 1. อัปเดตข้อความ Revision
+    // 1. อัปเดต Revision Badge
     $('#RevBadge').text('Revision: ' + (revision || '*'));
 
-    // 2. เคลียร์คลาสสีเดิมของ Badge
+    // 2. เคลียร์สีเดิมของ Badge
     $statusBadge.removeClass(
         'badge-warning badge-success badge-error badge-ghost hidden text-slate-800 text-white',
     );
 
-    // ตรวจสอบกลุ่มสถานะที่อยู่ระหว่างรออนุมัติ
-    const isPending = [
-        'CHECK',
-        'WAIT APPROVE',
-        'WAITING APPROVE',
-        'PENDING',
-    ].includes(rawStatus);
+    const isPending = ['CHECK', 'PROOF'].includes(rawStatus);
 
+    var mode = $('#MODEHid').val();
+    var extData = $('#EXTDATAHid').val();
     if (isPending) {
-        // 🔴 กรณีรออนุมัติ: ซ่อนปุ่ม Process, แสดง Alert, แสดงปุ่ม Delete และ Save
+        alert(
+            'MOD:' +
+                $('#MODEHid').val() +
+                '|' +
+                'EXTDATA:' +
+                $('#EXTDATAHid').val(),
+        );
         $statusBadge.addClass('badge-warning text-slate-800').text(rawStatus);
         $('#StatusText').text(rawStatus + (docNo ? ` (Doc No: ${docNo})` : ''));
-
         $pendingAlert.removeClass('hidden');
-        $processBtn.addClass('hidden'); // ซ่อนปุ่ม Process
-        $saveBtn.removeClass('hidden'); // 🟢 แสดงปุ่ม Save
-        $deleteBtn.removeClass('hidden'); // 🟢 แสดงปุ่ม Delete Draft
 
-        // ปิดการแก้ไข Inline date ชั่วคราว
-        $('.inline-edit-date')
-            .prop('disabled', true)
-            .addClass('opacity-50 cursor-not-allowed');
+        // สถานะส่งตรวจแล้ว ล็อกไม่ให้แก้ช่องวันที่ในตาราง
+        if (mode === '2' && (extData === '01' || extData === '')) {
+            // เป็น Draft และถ้าอยู่ใน Mode 1 ถึงจะให้แก้ได้
+            const isEditable =
+                typeof $('#MODEHid').val() !== 'undefined' &&
+                $('#MODEHid').val() === '2';
+            $('.inline-edit-date')
+                .prop('disabled', !isEditable)
+                .toggleClass('opacity-50 cursor-not-allowed', !isEditable);
+        } else {
+            $('.inline-edit-date')
+                .prop('disabled', true)
+                .addClass('opacity-50 cursor-not-allowed');
+        }
     } else if (rawStatus === 'DRAFT') {
-        // 🟡 กรณี DRAFT: แสดงทุกปุ่ม (Process, Save, Delete)
         $statusBadge.addClass('badge-ghost text-slate-600').text(rawStatus);
         $pendingAlert.addClass('hidden');
-        $processBtn.removeClass('hidden');
-        $saveBtn.removeClass('hidden'); // 🟢 แสดงปุ่ม Save
-        $deleteBtn.removeClass('hidden'); // 🟢 แสดงปุ่ม Delete Draft
 
-        // เปิดให้แก้ไข Inline date ได้ตามปกติ
+        // เป็น Draft และถ้าอยู่ใน Mode 1 ถึงจะให้แก้ได้
+        const isEditable =
+            typeof $('#MODEHid').val() !== 'undefined' &&
+            $('#MODEHid').val() === '1';
         $('.inline-edit-date')
-            .prop('disabled', false)
-            .removeClass('opacity-50 cursor-not-allowed');
-    } else if (rawStatus === 'APPROVED') {
-        // 🟢 กรณี APPROVED: แสดงเฉพาะปุ่ม Process สำหรับขึ้น Revision ใหม่
+            .prop('disabled', !isEditable)
+            .toggleClass('opacity-50 cursor-not-allowed', !isEditable);
+    } else if (rawStatus === 'APPROVE') {
         $statusBadge.addClass('badge-success text-white').text(rawStatus);
         $pendingAlert.addClass('hidden');
-        $processBtn.removeClass('hidden');
-        $saveBtn.addClass('hidden');
-        $deleteBtn.addClass('hidden');
-
         $('.inline-edit-date')
             .prop('disabled', true)
             .addClass('opacity-50 cursor-not-allowed');
     } else {
-        // ⚪ กรณีไม่มีข้อมูล / ยังไม่ได้สร้าง: แสดงเฉพาะปุ่ม Process
         $statusBadge.addClass('hidden');
         $pendingAlert.addClass('hidden');
-        $processBtn.removeClass('hidden');
-        $saveBtn.addClass('hidden');
-        $deleteBtn.addClass('hidden');
+        $('.inline-edit-date')
+            .prop('disabled', true)
+            .addClass('opacity-50 cursor-not-allowed');
     }
 }
 
@@ -791,52 +873,6 @@ function renderDataTable(data) {
     });
 }
 
-async function ProcessCreate() {
-    // โหมดสร้างฟอร์ม (Create Mode) -> ล็อกการซ่อนปุ่มไว้เหมือนเดิม
-
-    $('#SavePlanBtn').addClass('hidden');
-    $('#ApproveBtn').addClass('hidden');
-    $('#ReturnBtn').addClass('hidden');
-    $('#DeleteBtn').addClass('hidden'); // โชว์
-    $('#upload-zone').removeClass('hidden');
-}
-async function ProcessEdit(currentMode) {
-    // PLAN_YEAR: planyear,
-    // PERIOD: period,
-    // REVISION: revision,
-    // REMARK: remark,
-
-    const requesterValue = $('#REQUEST_BYTxt').val() || '';
-    // แนะนำให้ใช้ .includes(empno) ตามเดิมเพื่อความแม่นยำในการตรวจจับข้อความยาว
-    if (requesterValue.includes(empno)) {
-        // Requester
-        $('#SavePlanBtn').removeClass('hidden');
-        $('#ApproveBtn').removeClass('hidden'); // โชว์
-        $('#DeleteBtn').removeClass('hidden'); // โชว์
-        $('#ReturnBtn').addClass('hidden'); // ซ่อน
-        // $('#RejectBtn').addClass('hidden'); // ซ่อน
-        $('#upload-zone').removeClass('hidden');
-        $('#download-zone').removeClass('hidden'); // ผู้อนุมัติเข้ามาตรวจ ให้โหลดได้อย่างเดียว
-    } else {
-        //All Approver
-        $('#ApproveBtn').removeClass('hidden'); // โชว์
-        $('#ReturnBtn').removeClass('hidden'); // โชว์
-        // $('#RejectBtn').removeClass('hidden'); // โชว์
-        $('#download-zone').removeClass('hidden'); // ผู้อนุมัติเข้ามาตรวจ ให้โหลดได้อย่างเดียว
-    }
-}
-async function ProcessView() {
-    // โหมดดูอย่างเดียว (View Mode) -> บังคับซ่อนทุกปุ่ม
-
-    $('#SavePlanBtn').addClass('hidden');
-    $('#ApproveBtn').addClass('hidden');
-    $('#ReturnBtn').addClass('hidden');
-    $('#DeleteBtn').addClass('hidden'); // โชว์
-    $('#upload-zone').removeClass('hidden');
-
-    $('#download-zone').removeClass('hidden'); // ผู้อนุมัติเข้ามาตรวจ ให้โหลดได้อย่างเดียว
-}
-
 // ฟังก์ชันอ่านค่า DesType ที่ User ติ๊กเลือกทั้งหมด
 function getSelectedDesTypes() {
     let selected = [];
@@ -889,6 +925,72 @@ function convertMonthYearToNumber(str) {
     const month = months[parts[0]];
     const year = parts[1];
     return parseInt(year + month.toString().padStart(2, '0')); // ได้ 202602
+}
+
+async function actionFlow(actionType) {
+    const remarkTxt = $('#RemarkTxt').val() || '';
+    const formData = $('.form-info').data() || {};
+
+    const payload = {
+        NFRMNO: formData.nfrmno ? Number(formData.nfrmno) : 0,
+        VORGNO: formData.vorgno ? formData.vorgno.toString() : '',
+        CYEAR: formData.cyear ? formData.cyear.toString() : '',
+        CYEAR2: formData.cyear2 ? formData.cyear2.toString() : '',
+        NRUNNO: formData.nrunno ? Number(formData.nrunno) : 0,
+        ACTION: actionType ? actionType.toString() : '',
+        EMPNO: formData.empno ? formData.empno.toString() : '',
+        REMARK: remarkTxt.toString(),
+    };
+
+    try {
+        $('#loading').removeClass('hidden');
+
+        // 1. ดำเนินการ Action กับ Webflow Core Module
+        const res = await doaction(payload);
+        if (res?.status || res?.status === true || res?.status === 'true') {
+            // 2. ส่งข้อมูลมาอัปเดต Status ใน Tb_Master_DESBM_Header
+            let EndProcessData = new FormData();
+            EndProcessData.append('NFRMNO', formData.nfrmno);
+            EndProcessData.append('VORGNO', formData.vorgno);
+            EndProcessData.append('CYEAR', formData.cyear);
+            EndProcessData.append('CYEAR2', formData.cyear2);
+            EndProcessData.append('NRUNNO', formData.nrunno);
+            EndProcessData.append(
+                'EMPNO',
+                formData.empno ? formData.empno.toString() : '',
+            ); // 🟢 แก้ไขจุดนี้
+            EndProcessData.append('EXTDATA', $('#EXTDATAHid').val() || '');
+            EndProcessData.append(
+                'ACTION',
+                actionType ? actionType.toString() : '',
+            );
+
+            const responseEndProcess = await $.ajax({
+                url: host + 'dedform/DED-MDS/form/ActionFlow',
+                type: 'POST',
+                data: EndProcessData,
+                processData: false,
+                contentType: false,
+                dataType: 'json',
+            });
+
+            if (responseEndProcess && responseEndProcess.status) {
+                redirectWebflow(); // เปลี่ยนหน้าเมื่อ Flow และ Status อัปเดตสมบูรณ์
+            } else {
+                throw new Error(
+                    responseEndProcess?.message ||
+                        'การอัปเดตสถานะระบบไม่สำเร็จ',
+                );
+            }
+        } else {
+            throw new Error(res?.message || 'ไม่สามารถส่งอนุมัติเอกสารได้');
+        }
+    } catch (error) {
+        console.error('Action Flow Error:', error);
+        alert('เกิดข้อผิดพลาด: ' + error.message);
+    } finally {
+        $('#loading').addClass('hidden');
+    }
 }
 
 $(document).on('click', '#SentEmailBtn', async function () {
@@ -964,231 +1066,11 @@ $(document).on('click', '#PdfBtn', function () {
     window.open(pdfUrl, '_blank');
 });
 
-$(document).on('click', '#ApproveBtn', async function () {
-    let val = $(this).val();
-    // เปิด Loader บังหน้าจอไว้ก่อนถ้าระบบโหลดช้า
-    await actionFlow('approve');
-});
-
-// 2. อีเวนต์คลิกปุ่ม Return
-$(document).on('click', '#ReturnBtn', async function () {
-    let val = $(this).val();
-    await actionFlow('return');
-});
 // reject
 $(document).on('click', '#RejectBtn', async function () {
     let val = $(this).val();
     await actionFlow('reject');
 });
-
-$(document).on('click', '#DeleteBtn', async function () {
-    let val = $(this).val();
-    const formData = $('.form-info').data();
-    const { nfrmno, vorgno, cyear, cyear2, nrunno, empno } = formData;
-
-    const payload = {
-        NFRMNO: nfrmno ? Number(nfrmno) : 0,
-        VORGNO: vorgno ? vorgno.toString() : '',
-        CYEAR: cyear ? cyear.toString() : '',
-        CYEAR2: cyear2 ? cyear2.toString() : '',
-        NRUNNO: nrunno ? Number(nrunno) : 0,
-    };
-
-    // 1. รอให้ฟังก์ชันลบทำงานเสร็จก่อน
-    const delform = await deleteFlowandForm(payload);
-
-    if (delform.status) {
-        // alert(delform.status);
-        // ใช้ Promise เพื่อให้สามารถใช้ await กับ $.ajax ได้
-        try {
-            const response = await $.ajax({
-                url: host + 'feform/FE-EIA/form/DeleteFEEIAForm',
-                type: 'POST',
-                dataType: 'json',
-                data: {
-                    NFRMNO: nfrmno,
-                    VORGNO: vorgno,
-                    CYEAR: cyear,
-                    CYEAR2: cyear2,
-                    NRUNNO: nrunno,
-                    EMPNO: empno,
-                },
-            });
-
-            if (
-                response.status === true ||
-                response.status === 'true' ||
-                response.status
-            ) {
-                alert('ลบข้อมูลในตารางเรียบร้อยแล้ว');
-                await redirectWebflow(); // ตอนนี้ใช้ await ได้แล้ว
-            } else {
-                alert(
-                    'ไม่สามารถลบข้อมูลในตารางได้: ' +
-                        (response.message || 'โปรดตรวจสอบข้อผิดพลาดในระบบ'),
-                );
-            }
-        } catch (error) {
-            console.error('Ajax Error: ', error);
-            alert('เกิดข้อผิดพลาดในการเชื่อมต่อฐานข้อมูล');
-            $('#loading').hide();
-        }
-    } else {
-        Swal.fire({
-            icon: 'error',
-            title: 'Failed to Delete Form',
-            text: delform.message || 'Please try again',
-        });
-    }
-});
-
-async function actionFlow(actionType) {
-    const formData = $('.form-info').data();
-    const {
-        nfrmno,
-        vorgno,
-        cyear,
-        cyear2,
-        nrunno,
-        empno,
-        cost_year,
-        cost_month,
-        doc_no,
-    } = formData;
-
-    let result = '0';
-    const remarkTxt = $('#txtRemark').val() || '';
-    const payload = {
-        NFRMNO: nfrmno ? Number(nfrmno) : 0,
-        VORGNO: vorgno ? vorgno.toString() : '',
-        CYEAR: cyear ? cyear.toString() : '',
-        CYEAR2: cyear2 ? cyear2.toString() : '',
-        NRUNNO: nrunno ? Number(nrunno) : 0,
-        ACTION: actionType ? actionType.toString() : '',
-        EMPNO: empno ? empno.toString() : '',
-        REMARK: remarkTxt.toString(),
-    };
-
-    try {
-        // 1. ตรวจสอบว่าผู้ใช้งานคือ Requester หรือไม่
-        if (($('#REQUEST_BYTxt').val() || '').includes(empno)) {
-            const hasFiles =
-                selectedFilesArray.filter((file) => file !== null).length > 0;
-
-            // สมมติว่าต้องการบังคับเฉพาะโหมด Create (currentMode === '1')
-            if (currentMode === '2' && !hasFiles) {
-                alert('กรุณาเลือกไฟล์แนบรายงานก่อนทำการบันทึกครับ');
-                return; // หยุดทำงานทันทีถ้าไม่มีไฟล์
-            }
-            // --- ขั้นตอนที่ 1: จัดการไฟล์ผ่าน NestJS API ---
-            let nestJsData = new FormData();
-            nestJsData.append('NFRMNO', nfrmno);
-            nestJsData.append('VORGNO', vorgno);
-            nestJsData.append('CYEAR', cyear);
-            nestJsData.append('CYEAR2', cyear2);
-            nestJsData.append('NRUNNO', nrunno);
-            nestJsData.append('CREATEBY', empno);
-            nestJsData.append('FORM_TYPE', 'FE');
-
-            if (typeof selectedFilesArray !== 'undefined') {
-                selectedFilesArray.forEach((file) => {
-                    if (file !== null) nestJsData.append('files', file);
-                });
-            }
-
-            // เรียกผ่าน Service ใน data.js ที่เตรียมไว้
-            const responseFile = await createFeEia(nestJsData);
-            if (!responseFile || !responseFile.status) {
-                throw new Error(
-                    responseFile?.message || 'อัปโหลดไฟล์ไป NestJS ไม่สำเร็จ',
-                );
-            }
-
-            // --- ขั้นตอนที่ 2: จัดการบันทึก Detail ผ่าน PHP AddFEEIADetail ---
-            let FEEIADetailData = new FormData();
-            FEEIADetailData.append('NFRMNO', nfrmno);
-            FEEIADetailData.append('VORGNO', vorgno);
-            FEEIADetailData.append('CYEAR', cyear);
-            FEEIADetailData.append('CYEAR2', cyear2);
-            FEEIADetailData.append('NRUNNO', nrunno);
-            FEEIADetailData.append('COST_MONTH', $('#MONTHDrp').val());
-            FEEIADetailData.append('COST_YEAR', $('#YEARDrp').val());
-            FEEIADetailData.append('DATAONHAND', JSON.stringify(dataOnhand));
-            const responsePhp = await $.ajax({
-                url: host + 'feform/FE-EIA/form/AddFEEIADetail',
-                type: 'POST',
-                data: FEEIADetailData,
-                processData: false,
-                contentType: false,
-                dataType: 'json',
-            });
-
-            if (
-                responsePhp &&
-                (responsePhp.status === true || responsePhp.status === 'true')
-            ) {
-                result = '1'; // ผ่านทั้ง NestJS และ PHP
-            } else {
-                throw new Error(
-                    responsePhp?.message || 'บันทึกข้อมูลตารางไม่สำเร็จ',
-                );
-            }
-        } else {
-            // กรณีผู้อนุมัติ (Approver) ไม่ต้องอัปโหลดไฟล์ใหม่
-            result = '1';
-        }
-
-        // --- ขั้นตอนที่ 3: ดำเนินการ Flow (Action) ---
-        if (result === '1') {
-            const res = await doaction(payload);
-            if (res?.status || res?.status === true || res?.status === 'true') {
-                if ($('#EXTDATAHid').val() == '03') {
-                    // sent mail
-
-                    let EndProcessData = new FormData();
-                    EndProcessData.append('NFRMNO', nfrmno);
-                    EndProcessData.append('VORGNO', vorgno);
-                    EndProcessData.append('CYEAR', cyear);
-                    EndProcessData.append('CYEAR2', cyear2);
-                    EndProcessData.append('NRUNNO', nrunno);
-                    EndProcessData.append('COST_MONTH', $('#MONTHDrp').val());
-                    EndProcessData.append('COST_YEAR', $('#YEARDrp').val());
-                    // EndProcessData.append(
-                    //     'DATAONHAND',
-                    //     JSON.stringify(dataOnhand),
-                    // );
-                    const responseEndProcess = await $.ajax({
-                        url: host + 'feform/FE-EIA/form/EndpProcess',
-                        type: 'POST',
-                        data: EndProcessData,
-                        processData: false,
-                        contentType: false,
-                        dataType: 'json',
-                    });
-
-                    if (
-                        responseEndProcess &&
-                        (responseEndProcess.status === true ||
-                            responseEndProcess.status === 'true')
-                    ) {
-                    } else {
-                        throw new Error(
-                            responseEndProcess?.message ||
-                                'end process not completed',
-                        );
-                    }
-                }
-                redirectWebflow(); // Redirect เมื่อทุกอย่างสำเร็จ
-            } else {
-                throw new Error(res?.message || 'ไม่สามารถส่งฟอร์มได้');
-            }
-        }
-    } catch (error) {
-        console.error('Action Flow Error:', error);
-        alert('เกิดข้อผิดพลาด: ' + error.message);
-        $('#loading').hide();
-    }
-}
 
 function submitWebflowAction(actionType) {
     alert('ระบบ Webflow กำลังประมวลผลสถานะ: ' + actionType);
