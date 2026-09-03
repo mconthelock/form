@@ -17,9 +17,6 @@ $(document).ready(async function () {
         await initApp();
         const status = $('#status').val();
         await getPageTitle(status);
-        // const res = [];
-        // const opt = await tableFormOptions(res);
-        // table = await createTable(opt);
         await reloadTable();
         await bindEvents();
     } catch (error) {
@@ -117,7 +114,6 @@ function bindEvents() {
 
 function nextApprover(flow = []) {
     const list = Array.isArray(flow) ? flow : [];
-
     const flowFilter = list
         .sort((a, b) => {
             const stepA = Number(a?.CSTEPST ?? 0);
@@ -144,7 +140,7 @@ function nextApprover(flow = []) {
 async function reloadTable() {
     // const user = $('#user-login').attr('empno');
     // const user = '07086';
-    const user = '96189';
+    const user = '08375';
     const status = $('#status').val();
     const data = await getFormList({ user, status });
     await populateFilters(data);
@@ -158,6 +154,7 @@ async function reloadTable() {
 }
 
 async function createFormTable(data) {
+    const pageId = $('body').attr('menutitle');
     const pagestatus = $('#status').val();
     const status = [
         { id: 0, name: 'Draft', badge: 'badge badge-outline badge-neutral' },
@@ -201,11 +198,7 @@ async function createFormTable(data) {
                         : `http://webflow.mitsubishielevatorasia.co.th/${data.VFORMPAGE}`;
                     const conjunction = serve.includes('?') ? '&' : '?';
                     const url = `${serve}${conjunction}no=${data.NFRMNO}&orgNo=${data.VORGNO}&y=${data.CYEAR}&y2=${data.CYEAR2}&runNo=${data.NRUNNO}&empno=${data.VREQNO}`;
-                    if (data.VFORMPAGE.startsWith('http')) {
-                        return `<a class="text-primary" href="#" data-url="${url}">${formno}</a>`;
-                    } else {
-                        return `<a class="text-primary" href="${url}" target="_blank">${formno}</a>`;
-                    }
+                    return `<a class="text-primary link-self" href="#" data-title="${pageId}" data-url="${url}&empnolv=B0F1A94C71D660191131FF4AB22358DC&bp=${encodeURIComponent('http://localhost:8080/form/webform/form/index/1')}">${formno}</a>`;
                 }
                 return formno;
             },
@@ -447,7 +440,8 @@ async function fillNextApproverInfo(row, flow, id) {
 $(document).on('click', '#table a.link-self', async function (e) {
     e.preventDefault();
     const url = $(this).attr('data-url');
+    const title = $(this).attr('data-title');
     window.location.href = `${
         process.env.APP_ENV
-    }/webform/form/detail?data=${encodeURIComponent(url)}`;
+    }/webform/form/detail?title=${title}&data=${encodeURIComponent(url)}`;
 });

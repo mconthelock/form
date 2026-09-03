@@ -34,7 +34,8 @@ class form extends MY_Controller {
 
     public function detail(){
         $target = $_GET['data']; //$url;
-        $this->views('form/detail', array('target' => $target));
+        $title = $_GET['title']; //$title;
+        $this->views('form/detail', array('target' => $target, 'title' => $title));
     }
 
      public function getFormDept(){
