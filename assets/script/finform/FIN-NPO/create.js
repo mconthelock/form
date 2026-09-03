@@ -38,7 +38,7 @@ $(async function () {
     setEmpName('.reqby-feedback', empName);
     const action = webflowSubmit(
         isReturnMode
-            ? { request: false, save: true }
+            ? { request: false, save: true, flow: true }
             : { request: true, save: false },
     );
 
