@@ -73,7 +73,7 @@
     <div class="hidden apv-data" empno="{{ $empno }}"></div>
 
     <form id="frmmain">
-
+        <input type="hidden" name="ACTION">
         <div class="space-y-6">
             <h1 class="text-3xl text-center text-primary font-bold mb-10">Vendor Master Maintenance</h1>
             <!-- Top Section -->
@@ -93,20 +93,16 @@
                 <div class="grid grid-cols-[170px_1fr] items-center gap-2 required">
                     <span class="font-semibold text-sm required ">Mode:</span>
                     <div class="flex flex-row items-center gap-6 h-8 overflow-x-auto whitespace-nowrap">
-                        <input type="hidden" name="REQTYPE" id="REQTYPE" />
                         <label class="flex items-center gap-2 cursor-pointer">
-                            <input type="radio" name="REQTYPE_SHOW" value="A" r-type="A"
-                                class="radio radio-xs req">
+                            <input type="radio" name="REQTYPE" value="A" r-type="A" class="radio radio-xs req">
                             <span class="text-sm  font-semibold">Add</span>
                         </label>
                         <label class="flex items-center gap-2 cursor-pointer">
-                            <input type="radio" name="REQTYPE_SHOW" value="U" r-type="U"
-                                class="radio radio-xs req">
+                            <input type="radio" name="REQTYPE" value="U" r-type="U" class="radio radio-xs req">
                             <span class="text-sm font-semibold">Update</span>
                         </label>
                         <label class="flex items-center gap-2 cursor-pointer">
-                            <input type="radio" name="REQTYPE_SHOW" value="D" r-type="D"
-                                class="radio radio-xs req">
+                            <input type="radio" name="REQTYPE" value="D" r-type="D" class="radio radio-xs req">
                             <span class="text-sm font-semibold">Delete</span>
                         </label>
                     </div>
@@ -148,7 +144,7 @@
 
                         <div class="grid grid-cols-12 gap-x-4 items-center w-full">
 
-                            <input type="text" name="COMNAME"
+                            <input type="text" name="VENDNAME"
                                 class="col-span-6 input input-sm border border-gray-400 h-8 rounded w-full px-2 req">
                         </div>
                     </div>
@@ -160,9 +156,15 @@
                             <!-- Address Line 1 -->
                             <div>
                                 <label class="block text-xs font-semibold text-gray-600 mb-1">Address (ที่อยู่)</label>
-                                <input type="text" name="ADDRESS_EN" id="ADDRESS_EN"
+                                <input type="text" name="ADDRESS1_EN" id="ADDRESS1_EN"
                                     placeholder="e.g. 43/86 Moo 16, Bangna Road..."
                                     class="input input-sm border border-gray-400 h-8 rounded  px-2 w-full req">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-600 mb-1">Address (ที่อยู่)</label>
+                                <input type="text" name="ADDRESS2_EN" id="ADDRESS2_EN"
+                                    placeholder="e.g. 43/86 Moo 16, Bangna Road..."
+                                    class="input input-sm border border-gray-400 h-8 rounded  px-2 w-full">
                             </div>
                             <div class="grid grid-cols-2 gap-4">
                                 <div>
@@ -245,16 +247,12 @@
                             </div> --}}
                             <div class="grid grid-cols-[170px_1fr] items-center gap-4">
                                 <span class="font-semibold text-sm">Currency Code</span>
-                                <div id="select-wrapper" class="inline-block">
-                                    <select id="stdcur" name="CURCODE"
-                                        class="input input-sm border border-gray-400 h-8 rounded px-2 w-48 currency req">
-                                        <option value="" disabled selected>...</option>
-                                    </select>
-                                </div>
+                                <input type="hidden" name="CURCODE" id="CURCODE" value="" />
+                                <span id="constdcur" class="text-gray-700 text-sm"></span>
                             </div>
                             <div class="grid grid-cols-[170px_1fr] items-center gap-4">
                                 <span class="font-semibold text-sm">Pay to Vendor</span>
-                                <input type="text" name="PAYTO" id="PAYTO" maxlength=""
+                                <input type="text" name="VPAYTO" id="VPAYTO" maxlength=""
                                     class="input input-sm border border-gray-400 h-8 rounded  px-2 w-full">
                             </div>
                             <div class="grid grid-cols-[170px_1fr] items-center gap-4">
@@ -286,8 +284,8 @@
                             </div> --}}
                             <div class="grid grid-cols-[170px_1fr] items-center gap-4">
                                 <span class="font-semibold text-sm">Terms Code</span>
-                                <input type="hidden" id="TERM_PAYMENT_HIDDEN" name="TERMCODE" value="">
-                                <select id="TERM_PAYMENT" name ="TERM_PAYMENT"
+
+                                <select id="TERM_PAYMENT" name ="TERMCODE"
                                     class="select select-sm w-48 min-w-max termcode req">
                                     <option value="" disabled selected>...</option>
                                 </select>
@@ -470,7 +468,7 @@
                             <!-- ย้าย Dropzone ออกมาข้างนอก เพื่อให้ใช้ความกว้างได้เต็ม 100% ของ Container หลัก -->
                             <!-- <div id="attachFile" class="mt-4">
 
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    </div> -->
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        </div> -->
                         </div>
                     </div>
                 </div>
