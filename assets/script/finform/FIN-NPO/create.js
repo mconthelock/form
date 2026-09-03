@@ -4,7 +4,11 @@ import { requiredForm, showMessage } from '@amec/webasset/utils';
 import { setDatePicker } from '@amec/webasset/flatpickr';
 import { webflowSubmit } from '@amec/webasset/components/form';
 import { fetchUtils } from '@amec/webasset/api/fetch-utils';
-import { getExtData, getFormDetail } from '@amec/webasset/api/webform';
+import {
+    getExtData,
+    getFormDetail,
+    showflow,
+} from '@amec/webasset/api/webform';
 import { redirectWebflow } from '@amec/webasset/form';
 import select2 from 'select2';
 import 'select2/dist/css/select2.min.css';
@@ -36,11 +40,20 @@ $(async function () {
     $('#REQBY').val(empno);
     $('#REQBY_NAME').val(empName);
     setEmpName('.reqby-feedback', empName);
-    const action = webflowSubmit(
-        isReturnMode
-            ? { request: false, save: true, flow: true }
-            : { request: true, save: false },
-    );
+
+    let options = { request: true, save: false };
+    if (isReturnMode) {
+        const form = getReturnFormKey();
+        const flow = await showflow(form);
+        options = {
+            request: false,
+            save: true,
+            flow: true,
+            flowhtml: flow.html,
+        };
+    }
+
+    const action = webflowSubmit(options);
 
     console.log(action);
     $('#actionform').html(action);
