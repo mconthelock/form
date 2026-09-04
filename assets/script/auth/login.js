@@ -26,9 +26,9 @@ $(document).ready(async function () {
     const id = $('#appid').val();
     const appdata = await getAppsDB(id);
     $('#login-title').text(appdata.APP_NAME);
-    const cookie = await getCookie(process.env.APP_NAME);
+    const cookie = await getCookie(appdata.APP_NAME);
     if (cookie) {
-        const decrypted = await decryptText(cookie, process.env.APP_NAME);
+        const decrypted = await decryptText(cookie, appdata.APP_NAME);
         const user = await getAppDataById(decrypted);
         if (!user || user.group == null) {
             await deleteCookie(process.env.APP_NAME);

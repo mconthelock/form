@@ -17,9 +17,9 @@ var user;
 $(document).ready(async function () {
     try {
         await initApp();
-        //user = $('#user-login').attr('empno');
+        user = $('#user-login').attr('empno');
         //user = '07086';
-        user = '96244';
+        //user = '08375';
         const status = $('#status').val();
         await getPageTitle(status);
         await reloadTable();
