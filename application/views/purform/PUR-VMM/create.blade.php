@@ -283,7 +283,7 @@
                                     class="input input-sm border border-gray-400 h-8 rounded  px-2 w-full">
                             </div> --}}
                             <div class="grid grid-cols-[170px_1fr] items-center gap-4">
-                                <span class="font-semibold text-sm">Terms Code</span>
+                                <span class="font-semibold text-sm required">Terms Code</span>
 
                                 <select id="TERM_PAYMENT" name ="TERMCODE"
                                     class="select select-sm w-48 min-w-max termcode req">
@@ -468,7 +468,7 @@
                             <!-- ย้าย Dropzone ออกมาข้างนอก เพื่อให้ใช้ความกว้างได้เต็ม 100% ของ Container หลัก -->
                             <!-- <div id="attachFile" class="mt-4">
 
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            </div> -->
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            </div> -->
                         </div>
                     </div>
                 </div>
