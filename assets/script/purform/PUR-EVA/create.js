@@ -1016,7 +1016,10 @@ function setVendorMstInfo(vendorMstData) {
     $('input[name="FAX"]').val(vendorMstData.VND_FAX);
     paymentTermManager.value = vendorMstData.VND_TERM;
     currencyManager.value = vendorMstData.CURRENCY;
-    $('#constdcur').text(vendorMstData.STDCUR.CURR_NAME);
+    if (vendorMstData.STDCUR) {
+        $('#constdcur').text(vendorMstData.STDCUR.CURR_NAME);
+    }
+
     const vendorfilter = vendorMstData.PURVMM.filter(
         (item) => item.FORM.CST == '2',
     );

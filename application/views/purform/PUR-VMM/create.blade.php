@@ -109,7 +109,7 @@
                 </div>
                 <div class="grid grid-cols-[170px_1fr] items-center gap-2 required">
                     <span class="font-semibold text-sm required ">Vendor Code:</span>
-                    <input type="text" name = "VENDCODE" maxlength="5"
+                    <input type="text" name = "VENDCODE" id = "VENDCODE" maxlength="5"
                         class="input input-sm border border-gray-400 h-8 rounded w-48 px-2 req" value="">
                 </div>
             </div>
@@ -468,7 +468,7 @@
                             <!-- ย้าย Dropzone ออกมาข้างนอก เพื่อให้ใช้ความกว้างได้เต็ม 100% ของ Container หลัก -->
                             <!-- <div id="attachFile" class="mt-4">
 
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        </div> -->
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            </div> -->
                         </div>
                     </div>
                 </div>

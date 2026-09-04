@@ -7,7 +7,7 @@ import {
 } from '@amec/webasset/utils';
 import { getCurrency } from '../PUR-EVA/data';
 import { currencyManager, renderFilesByType } from '../PUR-EVA/formManager';
-import { getTermcode } from '../PUR-NVF/data';
+import { getTermcode, getVendor } from '../PUR-NVF/data';
 import {
     addr1EnManager,
     addr2EnManager,
@@ -157,6 +157,43 @@ $(document).ready(async function () {
                 remark: false,
             }),
         );
+    }
+});
+
+$(document).on('input', '#VENDCODE', async function () {
+    const keywordValue = this.value.trim();
+    if (keywordValue.length === 5) {
+        try {
+            const searchData = { VND_CODE: keywordValue, IS_DETAIL: '1' };
+            const vendor = await getVendor(searchData);
+            if (!vendor) {
+                showMessage('Vendor code not found', 'warning');
+                return false;
+            }
+            showLoader();
+            if (vendor.PURVMM) {
+                const vendorfilter = vendor.PURVMM.filter(
+                    (item) => item.FORM.CST == '2',
+                );
+
+                if (vendorfilter) {
+                    const latestVendor = vendorfilter.sort((a, b) => {
+                        // เรียง CYEAR2 จากมากไปน้อย (ปีใหม่กว่าขึ้นก่อน)
+                        if (b.CYEAR2 !== a.CYEAR2) {
+                            return b.CYEAR2.localeCompare(a.CYEAR2);
+                        }
+                        // ถ้าปีเท่ากัน เรียง NRUNNO จากมากไปน้อย
+                        return b.NRUNNO - a.NRUNNO;
+                    })[0];
+                    console.log(latestVendor);
+                }
+            }
+        } catch (err) {
+            console.error('Error get Vendor:', err);
+            showErrorMessage('เกิดข้อผิดพลาดในการดึงข้อมูลคู่ค้า');
+        } finally {
+            showLoader({ show: false });
+        }
     }
 });
 $(document).on('click', '.add-row-btn', function () {
