@@ -1797,3 +1797,20 @@ function validateTablePair(nameClass, perClass, message) {
 
     return true; // ผ่าน ไปทำงานต่อได้
 }
+
+$(document).on('click', '.file-link', async function (e) {
+    console.log('xxxx');
+
+    e.preventDefault();
+    const filePath = $(this).attr('href');
+    const filename = $(this).attr('originalName');
+    const storedName = $(this).attr('storedName');
+    const ext = filename.split('.').pop();
+
+    await downloadOrOpenFile({
+        baseDir: filePath,
+        storedName: storedName,
+        originalName: filename,
+        mode: ext == 'pdf' ? 'open' : 'download',
+    });
+});
