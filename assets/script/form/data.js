@@ -1,6 +1,4 @@
 export async function getFormList({ user, status }) {
-    console.log(user, status);
-
     let url = ``;
     switch (status) {
         case '0':

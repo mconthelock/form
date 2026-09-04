@@ -34,7 +34,7 @@ class form extends MY_Controller {
 
     public function detail(){
         $target = $_GET['data']; //$url;
-        $title = $_GET['title']; //$title;
+        $title = isset($_GET['title']) ? $_GET['title'] : 'nav-form-create'; //$title;
         $this->views('form/detail', array('target' => $target, 'title' => $title));
     }
 

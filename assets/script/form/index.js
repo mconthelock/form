@@ -1,5 +1,6 @@
 import '@amec/webasset/css/dataTable.min.css';
 import dayjs from 'dayjs';
+import CryptoJS from 'crypto-js';
 import { showLoader } from '@amec/webasset/preloader';
 import { showMessage } from '@amec/webasset/utils';
 import { createTable } from '@amec/webasset/dataTable';
@@ -12,9 +13,13 @@ import { initApp, tableOption } from '../utils';
 import { getFormList } from './data';
 
 var table;
+var user;
 $(document).ready(async function () {
     try {
         await initApp();
+        //user = $('#user-login').attr('empno');
+        //user = '07086';
+        user = '96244';
         const status = $('#status').val();
         await getPageTitle(status);
         await reloadTable();
@@ -138,9 +143,6 @@ function nextApprover(flow = []) {
 }
 
 async function reloadTable() {
-    // const user = $('#user-login').attr('empno');
-    // const user = '07086';
-    const user = '08375';
     const status = $('#status').val();
     const data = await getFormList({ user, status });
     await populateFilters(data);
@@ -189,6 +191,7 @@ async function createFormTable(data) {
             title: 'Form No.',
             className: 'text-nowrap',
             render: (data, type, row) => {
+                const hash = CryptoJS.MD5(user);
                 const formno = `${data.formmst.VANAME || ''}${row.CYEAR2.slice(-2)}-${(
                     '000000' + row.NRUNNO
                 ).slice(-6)}`;
@@ -197,8 +200,8 @@ async function createFormTable(data) {
                         ? data.VFORMPAGE.replace('http', 'https')
                         : `http://webflow.mitsubishielevatorasia.co.th/${data.VFORMPAGE}`;
                     const conjunction = serve.includes('?') ? '&' : '?';
-                    const url = `${serve}${conjunction}no=${data.NFRMNO}&orgNo=${data.VORGNO}&y=${data.CYEAR}&y2=${data.CYEAR2}&runNo=${data.NRUNNO}&empno=${data.VREQNO}`;
-                    return `<a class="text-primary link-self" href="#" data-title="${pageId}" data-url="${url}&empnolv=B0F1A94C71D660191131FF4AB22358DC&bp=${encodeURIComponent('http://localhost:8080/form/webform/form/index/1')}">${formno}</a>`;
+                    const url = `${serve}${conjunction}no=${data.NFRMNO}&orgNo=${data.VORGNO}&y=${data.CYEAR}&y2=${data.CYEAR2}&runNo=${data.NRUNNO}&empno=${user}`;
+                    return `<a class="text-primary link-self" href="#" data-title="${pageId}" data-url="${url}&empnolv=${hash.toString().toUpperCase()}&bp=${encodeURIComponent('http://localhost:8080/form/webform/form/index/1')}">${formno}</a>`;
                 }
                 return formno;
             },
@@ -271,8 +274,6 @@ async function createFormTable(data) {
             render: (data, type, row) => {
                 if (type === 'display') {
                     const next = nextApprover(data.flow);
-                    console.log(data.flow);
-
                     const visibleNext = next.slice(0, 2);
                     const remaining = Math.max(
                         next.length - visibleNext.length,
