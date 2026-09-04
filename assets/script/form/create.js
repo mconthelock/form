@@ -1,6 +1,7 @@
+import CryptoJS from 'crypto-js';
 import { showLoader } from '@amec/webasset/preloader';
 import { showMessage } from '@amec/webasset/utils';
-import { getTagColor } from '../utils';
+import { getTagColor, initApp } from '../utils';
 import { getFormMaster, getFormDept } from '../service';
 
 async function loadCreatePage() {
@@ -141,6 +142,9 @@ async function createFormList() {
 }
 
 async function setFormList(data, group) {
+    await initApp();
+    const user = $('#user-login').attr('empno');
+    const hash = CryptoJS.MD5(user);
     const filtered =
         group == null
             ? data.filter((item) => item.formmstGroup == null)
@@ -148,7 +152,7 @@ async function setFormList(data, group) {
     let str = `<ul class="list bg-base-100 rounded-box shadow-md border border-slate-300 mb-8 p-6 pb-5 gap-2">
         <li class="p-4 pb-2 text-xl text-primary font-black tracking-wide">${filtered[0].formmstGroup?.VGROUPNAME || 'General'}</li>`;
     filtered.forEach((item) => {
-        str += `<li class="list-row border border-white cursor-pointer hover:bg-base-300 hover:border-slate-300 create-form-detail" data-url="${item.VFORMPAGE}" data-name="${item.VNAME}" data-desc="${item.VDESC == null ? '' : item.VDESC}" data-code="${item.VANAME}">
+        str += `<li class="list-row border border-white cursor-pointer hover:bg-base-300 hover:border-slate-300 create-form-detail" data-url="${item.VFORMPAGE}?sr=1&empnolv=${hash.toString().toUpperCase()}" data-name="${item.VNAME}" data-desc="${item.VDESC == null ? '' : item.VDESC}" data-code="${item.VANAME}">
             <div class="text-4xl font-thin opacity-30 tabular-nums min-w-37">${item.VANAME}</div>
             <div class="list-col-grow">
                 <div>${item.VNAME}</div>
@@ -176,7 +180,7 @@ $(document).on('click', '.create-form-detail', async function (e) {
             url = `http://webflow/${url}`;
         }
 
-        const detailUrl = `${process.env.APP_ENV}/webform/form/detail?data=${url}`;
+        const detailUrl = `${process.env.APP_ENV}/webform/form/detail?data=${encodeURIComponent(url)}`;
         const formCode = $(this).data('code') || '';
         const formName = $(this).data('name') || 'Untitled form';
         const formDesc = $(this).data('desc') || '';

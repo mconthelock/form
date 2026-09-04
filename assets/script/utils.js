@@ -10,18 +10,11 @@ export const initApp = async (opt = {}) => {
             programName: 'WEBFLOW',
             sidebarClass: `size-xl text-gray-50 bg-primary!`,
         });
-
-        $('.mainmenu').find('details').attr('open', false);
-        if (opt.submenu !== undefined) {
-            $(`.mainmenu${opt.submenu}`).find('details').attr('open', true);
-        }
         return app;
     } catch (error) {
         console.log(error);
         return false;
     }
-    await new Promise((r) => setTimeout(r, 1000));
-    return;
 };
 
 export const deviceType = () => {
@@ -114,6 +107,36 @@ export function sendSession(url, data) {
                 resolve(response);
             },
         });
+    });
+}
+
+// Binds `input` on `searchSelector` to a multi-token, multi-column DataTables search:
+// every whitespace-separated token must match at least one of `columns` (contains match).
+export function bindTableColumnSearch(table, searchSelector, columns) {
+    $.fn.dataTable.ext.search.push(function (settings, data) {
+        if (settings.nTable !== table.table().node()) {
+            return true;
+        }
+
+        const rawValue = $(searchSelector).val()
+            ? $(searchSelector).val().trim().toLowerCase()
+            : '';
+        if (!rawValue) {
+            return true;
+        }
+
+        const tokens = rawValue.split(/\s+/).filter(Boolean);
+        const values = columns.map((col) =>
+            String(data[col] || '').toLowerCase(),
+        );
+
+        return tokens.every((token) =>
+            values.some((value) => value.includes(token)),
+        );
+    });
+
+    $(searchSelector).on('input', function () {
+        table.draw();
     });
 }
 
