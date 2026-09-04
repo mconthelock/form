@@ -16,6 +16,7 @@ import 'select2/dist/css/select2.min.css';
 select2();
 
 const isReturnMode = window.FIN_NPO_RETURN_MODE === true;
+const deletedAttachmentIds = [];
 
 $(async function () {
     const queryString = window.location.search;
@@ -166,29 +167,52 @@ function renderExistingAttachments(files = []) {
 
                 return `<li class="flex items-center justify-between gap-3 rounded-lg border border-info/20 bg-white px-3 py-2">
                     <span class="min-w-0 truncate text-sm font-semibold" title="${escapeHtml(name)}">${escapeHtml(name)}</span>
-                    ${url ? `<a class="btn btn-xs btn-info shrink-0" target="_blank" rel="noopener" href="${escapeHtml(url)}">Download</a>` : ''}
+                    <span class="flex shrink-0 items-center gap-2">
+                        ${url ? `<a class="btn btn-xs btn-info" target="_blank" rel="noopener" href="${escapeHtml(url)}">Download</a>` : ''}
+                        ${id ? `<button type="button" class="delete-existing-attachment btn btn-xs btn-error" data-file-id="${escapeHtml(id)}">Delete</button>` : ''}
+                    </span>
                 </li>`;
             })
             .join('')}</ul>`,
     );
 }
 
+$(document).on('click', '.delete-existing-attachment', function () {
+    if (!confirm('Are you sure you want to delete this attachment?')) return;
+
+    const button = $(this);
+    const id = button.attr('data-file-id');
+    const list = button.closest('ul');
+
+    deletedAttachmentIds.push(id);
+    button.closest('li').remove();
+    if (!list.children().length) {
+        list.prev('p')
+            .attr('class', 'text-xs text-base-content/50')
+            .text('No existing attachment');
+        list.remove();
+    }
+});
+
 $(document).on('change', '#attachfile', function () {
     if (!isReturnMode) return;
 
     const selectedFiles = Array.from(this.files || []);
     const container = $('#existingAttachmentList');
+    container.find('.new-attachment-preview').remove();
 
     if (!selectedFiles.length) return;
 
-    container.removeClass('hidden').html(
-        `<p class="mb-2 text-xs font-semibold text-warning">The existing attachment will be replaced with:</p>
-        <ul class="space-y-1">${selectedFiles
-            .map(
-                (file) =>
-                    `<li class="truncate text-sm font-semibold" title="${escapeHtml(file.name)}">${escapeHtml(file.name)}</li>`,
-            )
-            .join('')}</ul>`,
+    container.removeClass('hidden').append(
+        `<div class="new-attachment-preview mt-3">
+            <p class="mb-2 text-xs font-semibold text-success">New attachment to be added:</p>
+            <ul class="space-y-1">${selectedFiles
+                .map(
+                    (file) =>
+                        `<li class="truncate text-sm font-semibold" title="${escapeHtml(file.name)}">${escapeHtml(file.name)}</li>`,
+                )
+                .join('')}</ul>
+        </div>`,
     );
 });
 
@@ -915,6 +939,7 @@ async function actionReturnForm(payload) {
     Array.from(document.getElementById('attachfile')?.files || []).forEach(
         (file) => formData.append('attachfile', file),
     );
+    formData.append('DELETE_FILE_IDS', JSON.stringify(deletedAttachmentIds));
 
     const updateResult = await fetchUtils({
         url: `${process.env.APP_API}/finform/fin-npo/update`,
