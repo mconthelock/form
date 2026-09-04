@@ -8,7 +8,7 @@ $(document).ready(async function () {
         const startTime = performance.now();
         let loadStabilizeTimer;
         let hidden = false;
-        const STABILIZE_DELAY = 1500;
+        const STABILIZE_DELAY = 0;
         const MAX_WAIT = 15000; // กันเคส iframe ไม่ยิง load event เลย ไม่ให้ loading ค้างตลอดไป
 
         const hideLoading = () => {

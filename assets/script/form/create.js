@@ -177,7 +177,7 @@ $(document).on('click', '.create-form-detail', async function (e) {
         //3. URL ที่เรียกจาก ASP
         let url = $(this).attr('data-url');
         if (url.includes('index.asp')) {
-            url = `http://webflow/${url}`;
+            url = `https://webflow.mitsubishielevatorasia.co.th/${url}`;
         }
 
         const detailUrl = `${process.env.APP_ENV}/webform/form/detail?data=${encodeURIComponent(url)}`;
