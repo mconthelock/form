@@ -1,4 +1,10 @@
-import { getAllAttr } from '@amec/webasset/utils';
+import {
+    filterFormData,
+    getAllAttr,
+    logFormData,
+    showErrorMessage,
+    showMessage,
+} from '@amec/webasset/utils';
 import { getCurrency } from '../PUR-EVA/data';
 import { currencyManager, renderFilesByType } from '../PUR-EVA/formManager';
 import { getTermcode } from '../PUR-NVF/data';
@@ -12,10 +18,14 @@ import {
     postcodeEnManager,
     stateEnManager,
 } from '../PUR-NVF/formManager';
-import { getData } from './data';
+import { getData, update } from './data';
 import { getFormStatus, showflow } from '@amec/webasset/api/webform';
 import { webflowSubmit } from '@amec/webasset/components/form';
 import Swal from 'sweetalert2';
+import { redirectWebflow } from '@amec/webasset/form';
+import { showLoader } from '@amec/webasset/preloader';
+import { classIcofont } from '@amec/webasset/fileExplorer';
+import { downloadOrOpenFile } from '@amec/webasset/api/file';
 
 var form = {};
 var deletefile = [];
@@ -66,7 +76,7 @@ $(document).ready(async function () {
         $('input[name="CANO"], #CANO').val(purvmm.CANO || '');
         $('input[name="BANO"], #BANO').val(purvmm.BANO || '');
         $('#constdcur').text(purvmm.CURRENCY.CURR_NAME || '');
-        $('#CURCODE').text(purvmm.CURCODE || '');
+        $('#CURCODE').val(purvmm.CURCODE || '');
         $('#VPAYTO').val(purvmm.VPAYTO || '');
         $('#VTYPE').val(purvmm.VTYPE).trigger('change');
         $('#VPAYTY').val(purvmm.VPAYTY).trigger('change');
@@ -150,12 +160,10 @@ $(document).ready(async function () {
     }
 });
 $(document).on('click', '.add-row-btn', function () {
-    console.log('cccc');
-
     const tableId = $(this).data('table');
     const tbody = $('#' + tableId + ' tbody');
     const newRow = tbody.find('.row-template').first().clone();
-    newRow.removeClass('row-template');
+    // newRow.removeClass('row-template');
     newRow.find('input').val('');
     newRow
         .find('td:last-child')
@@ -229,6 +237,66 @@ $(document).on('click', '.remove-file', async function (e) {
     });
 });
 
+$(document).on('click', 'button[name="btnAction"]', async function () {
+    const act = $(this).val();
+    $('input[name="ACTION"]').val(act);
+    const formElement = $('#frmmain')[0];
+    let SCMUSER = $('.row-template')
+        .map((_, row) => {
+            let NAME = $(row).find('.scm-name').val();
+            let EMAIL = $(row).find('.scm-mail').val();
+            let USERNAME = $(row).find('.scm-usrname').val();
+
+            // ถ้าว่างหมดให้ return null (jQuery จะไม่เอาเข้า array ให้เอง)
+            return NAME || EMAIL || USERNAME ? { NAME, EMAIL, USERNAME } : null;
+        })
+        .get(); // .get() เพื่อแปลง jQuery Object ให้เป็น Array ปกติ
+    //console.log(SCMUSER);
+
+    const fd = new FormData(formElement);
+    const formInfo = await getAllAttr('.form-info');
+    fd.append('NFRMNO', formInfo.nfrmno);
+    fd.append('VORGNO', formInfo.vorgno);
+    fd.append('CYEAR', formInfo.cyear);
+    fd.append('CYEAR2', formInfo.cyear2);
+    fd.append('NRUNNO', formInfo.nrunno);
+    const apvno = $('.apv-data').attr('empno');
+    fd.append('EMPNO', apvno);
+    const appendObjArray = (key, arr) =>
+        arr.forEach((obj, i) =>
+            Object.entries(obj).forEach(([prop, val]) => {
+                if (val !== undefined) fd.append(`${key}[${i}][${prop}]`, val);
+            }),
+        );
+
+    appendObjArray('SCMUSER', SCMUSER);
+    fd.delete('NAME[]');
+    fd.delete('EMAIL[]');
+    fd.delete('USERNAME[]');
+    deletefile.forEach((fileId) => {
+        fd.append('DELETE_FILES[]', String(fileId));
+    });
+    const formdata = filterFormData(fd, { empty: true });
+    // logFormData(formdata);
+    // return false;
+
+    try {
+        showLoader();
+        const res = await update(formdata);
+        if (res.status == true) {
+            showMessage(res.message, 'success');
+            redirectWebflow();
+        } else {
+            throw new Error(res.message);
+        }
+    } catch (err) {
+        console.error(err);
+        showErrorMessage(err);
+    } finally {
+        showLoader({ show: false });
+    }
+});
+
 function renderNewFilesUI(inputId, dataTransfer, container) {
     let newFilesDiv = container.find('.new-selected-files');
     if (newFilesDiv.length === 0) {
@@ -253,3 +321,18 @@ function renderNewFilesUI(inputId, dataTransfer, container) {
         newFilesDiv.append(fileItemHtml);
     });
 }
+
+$(document).on('click', '.file-link', async function (e) {
+    e.preventDefault();
+    const filePath = $(this).attr('href');
+    const filename = $(this).attr('originalName');
+    const storedName = $(this).attr('storedName');
+    const ext = filename.split('.').pop();
+
+    await downloadOrOpenFile({
+        baseDir: filePath,
+        storedName: storedName,
+        originalName: filename,
+        mode: ext == 'pdf' ? 'open' : 'download',
+    });
+});
