@@ -3,6 +3,8 @@ import { createTable } from '@amec/webasset/dataTable';
 import { writeExcelTemp, exportExcel, readInput } from '@amec/webasset/excel';
 import { getArrayBufferFile } from '@amec/webasset/file';
 import { showLoader } from '@amec/webasset/preloader';
+import { getTemplate } from './function';
+
 import {
     filterFormData,
     requiredForm,
@@ -13,6 +15,14 @@ import {
 import select2 from 'select2';
 import { setSelect2 } from '@amec/webasset/select2';
 import ExcelJS from 'exceljs';
+import {
+    getLocMstData,
+    getPosition,
+    getOrganize,
+    createLoc,
+    importLoc,
+    updateLoc,
+} from './dataloc';
 select2();
 var tableLocMst, locmstdata;
 let posdata, orgdata;
@@ -131,7 +141,8 @@ $(document).ready(async function () {
             }
         } catch (err) {
             // console.error(err);
-            showErrorMessage(err);
+            //showErrorMessage(err);
+            throw new Error(err);
         } finally {
             showLoader({ show: false });
         }
@@ -172,7 +183,7 @@ $(document).ready(async function () {
                     };
                 })
                 .filter((item) => item.LOCCODE !== '');
-            console.log(dataloc);
+            //console.log(dataloc);
             const res = await importLoc(dataloc);
 
             if (res.status == true) {
@@ -184,7 +195,8 @@ $(document).ready(async function () {
                 throw new Error(res.message);
             }
         } catch (err) {
-            showErrorMessage(err);
+            //showErrorMessage(err);
+            throw new Error(err);
         } finally {
             showLoader({ show: false });
         }
@@ -209,31 +221,9 @@ $(document).ready(async function () {
     });
 });
 
-export async function getLocMstData(filters = {}) {
-    return await fetchUtils({
-        url: `${process.env.APP_API}/finform/fxa-locmst/search`,
-        method: 'GET',
-        params: filters,
-    });
-}
-
-export async function getPosition() {
-    return fetchUtils({
-        url: `${process.env.APP_API}/amec/pposition/filter`,
-        method: 'GET',
-    });
-}
-
-export async function getOrganize() {
-    return fetchUtils({
-        url: `${process.env.APP_API}/webform/vorgmst/findactive`,
-        method: 'GET',
-    });
-}
-
-export async function writeExcel(dataList) {
+async function writeExcel(dataList) {
     var workbook = new ExcelJS.Workbook();
-    const templatePath = `${process.env.AMEC_FILE_PATH}${process.env.STATE == 'production' ? 'production' : 'development'}/Form/FIN/FIN-PCK/TEMPLATE`;
+    //const templatePath = `${process.env.AMEC_FILE_PATH}${process.env.STATE == 'production' ? 'production' : 'development'}/Form/FIN/FIN-PCK/TEMPLATE`;
     try {
         // const bfile = await getArrayBufferFile(templatePath, 'TEMPLOCMST.xlsx');
         const bfile = await getTemplate('TEMPLOCMST.xlsx');
@@ -279,33 +269,6 @@ export async function writeExcel(dataList) {
         throw new Error('can not open file');
     }
 }
-
-export const getTemplate = async (filename) => {
-    const data = {
-        path: `${process.env.AMEC_FILE_PATH}${process.env.STATE == 'production' ? 'production' : 'development'}/Form/FIN/FIN-PCK/TEMPLATE/${filename}`,
-        name: filename,
-    };
-    return new Promise((resolve, reject) => {
-        $.ajax({
-            url: `${process.env.APP_API}/files/template/read/`,
-            type: 'POST',
-            dataType: 'json',
-            data: data,
-            success: function (res) {
-                const binaryData = atob(res.content);
-                const buffer = new Uint8Array(binaryData.length);
-                for (let i = 0; i < binaryData.length; i++) {
-                    buffer[i] = binaryData.charCodeAt(i);
-                }
-                res.buffer = buffer;
-                resolve(res);
-            },
-            error: function (error) {
-                reject(error);
-            },
-        });
-    });
-};
 
 export const positionManager = {
     list: ['POS_SELECT'],
@@ -418,30 +381,6 @@ export const organizeManager = {
         }
     },
 };
-
-export async function createLoc(formData) {
-    return fetchUtils({
-        url: `${process.env.APP_API}/finform/fxa-locmst/create`,
-        method: 'POST',
-        data: formData,
-    });
-}
-
-export async function importLoc(formData) {
-    return fetchUtils({
-        url: `${process.env.APP_API}/finform/fxa-locmst/import`,
-        method: 'POST',
-        data: formData,
-    });
-}
-
-export async function updateLoc(formData) {
-    return fetchUtils({
-        url: `${process.env.APP_API}/finform/fxa-locmst/update`,
-        method: 'POST',
-        data: formData,
-    });
-}
 
 async function reloadTableData(tab) {
     locmstdata = await getLocMstData({});

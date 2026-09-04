@@ -3,7 +3,7 @@ import { createTable } from "@amec/webasset/dataTable";
 import { setDatePicker } from "@amec/webasset/flatpickr";
 import { getUrlParams, showMessage } from "@amec/webasset/utils";
 import { data } from "jquery";
-import { getFormData } from "./data";
+import { getEmpData, getFormData } from "./data";
 import { defaultExcel, exportExcel } from "@amec/webasset/excel";
 import { formatDate } from "@amec/webasset/dayjs";
 
@@ -22,6 +22,7 @@ $(async function () {
       responsive: false,
       columns: [
         { title: "FORM NO." },
+        { title: "Request By" },
         { title: "Issue Card No" },
         { title: "Item PUR" },
         { title: "Item" },
@@ -70,9 +71,16 @@ $(document).on("click", "#btnSearch", async function () {
     } 
 
     const report = await getReport(searchReport);
+    const reqNos = [...new Set(report.map((row) => row.VREQNO).filter(Boolean))];
+    const reqDatas = await Promise.all(reqNos.map((empno) => getEmpData(empno)));
+    const reqMap = reqNos.reduce((acc, empno, index) => {
+      acc[empno] = reqDatas[index]?.SNAME || "";
+      return acc;
+    }, {});
     const reportWithFormNo = report.map((row) => ({
       ...row,
       formNo: `${row.VANAME}${row.list_CYEAR2.slice(-2)}-${("000000" + row.list_NRUNNO).slice(-6)}`,
+      reqBy: row.VREQNO ? `${row.VREQNO}_${reqMap[row.VREQNO] || ""}` : "",
     }));
     reportTable = await createTable(
       {
@@ -80,6 +88,7 @@ $(document).on("click", "#btnSearch", async function () {
         data: reportWithFormNo,
         columns: [
           { data: "formNo", title: "FORM NO.", className: "text-nowrap" },
+          { data: "reqBy", title: "Request By", className: "text-nowrap" },
           { data: "list_ISSUECARD", title: "Issue Card No" },
           { data: "list_PURCODE", title: "Item PUR" },
           { data: "list_ITEMNO", title: "Item" },
@@ -150,10 +159,12 @@ $(document).on("click", "#btnExport", async function () {
       return showMessage("Cannot export data because the data table is empty");
     }
 
+
     const excel = await defaultExcel({
       data: exportData,
       column: [
         { key: "formNo", header: "FORM NO." },
+        { key: "reqBy", header: "Request By" },
         { key: "list_PURCODE", header: "Item PUR" },
         { key: "list_ISSUESEQ", header: "Seq" },
         { key: "list_DESCRIPTION", header: "Description" },

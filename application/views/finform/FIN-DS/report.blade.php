@@ -98,15 +98,15 @@
             border-top: 3px solid #64748b !important;
         }
 
-        #stampTable tfoot th:nth-child(2),
-        .dt-scroll-foot tfoot th:nth-child(2),
-        .dataTables_scrollFoot tfoot th:nth-child(2) {
+        #stampTable tfoot th:nth-child(3),
+        .dt-scroll-foot tfoot th:nth-child(3),
+        .dataTables_scrollFoot tfoot th:nth-child(3) {
             text-align: center !important;
         }
 
-        #stampTable tfoot th:nth-child(n+4),
-        .dt-scroll-foot tfoot th:nth-child(n+4),
-        .dataTables_scrollFoot tfoot th:nth-child(n+4) {
+        #stampTable tfoot th:nth-child(n+7),
+        .dt-scroll-foot tfoot th:nth-child(n+7),
+        .dataTables_scrollFoot tfoot th:nth-child(n+7) {
             text-align: right !important;
             font-variant-numeric: tabular-nums;
         }
@@ -156,6 +156,15 @@
 
         #stampTable .report-section {
             min-width: 100px;
+            max-width: 150px;
+            white-space: normal;
+            text-align: center !important;
+            font-weight: 700;
+            color: #7f3f00 !important;
+        }
+
+        #stampTable .report-org {
+            min-width: 92px;
             max-width: 150px;
             white-space: normal;
             text-align: center !important;
@@ -340,7 +349,7 @@
         }
 
         #stampTable th.report-sticky-date,
-        #stampTable td.report-date,
+        #stampTable td.report-request-date,
         .dt-scroll-head th.report-sticky-date,
         .dataTables_scrollHead th.report-sticky-date {
             position: sticky;
@@ -348,15 +357,15 @@
             z-index: 6;
         }
 
-        #stampTable td.report-date {
+        #stampTable td.report-request-date {
             z-index: 5;
         }
 
-        #stampTable tbody tr:nth-child(odd) td.report-date {
+        #stampTable tbody tr:nth-child(odd) td.report-request-date {
             background: #f2f2f2 !important;
         }
 
-        #stampTable tbody tr:nth-child(even) td.report-date {
+        #stampTable tbody tr:nth-child(even) td.report-request-date {
             background: #d9d9d9 !important;
         }
 
@@ -572,6 +581,6 @@
 
 @section('scripts')
 
-<script src="{{ $_ENV['APP_JS'] }}/report.js?ver={{ $GLOBALS['version'] }}-fin-ds-report-colors-20260625"></script>
+<script src="{{ $_ENV['APP_JS'] }}/report.js?ver={{ $GLOBALS['version'] }}"></script>
 
 @endsection

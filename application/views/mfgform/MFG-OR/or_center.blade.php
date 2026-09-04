@@ -188,7 +188,7 @@
                             <th class="w-[80px]">Rev</th>
                             <th>Topic</th>
                             <th class="w-[300px]">Classification</th>
-                            <th class="w-[150px]">Issue Date</th>
+                            <th class="w-[150px]">OR Center Regis Date</th>
                             <th class="w-[150px]">Revise Date</th>
                             <th class="w-[150px]">Form no</th>
                         </tr>

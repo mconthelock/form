@@ -413,10 +413,10 @@
                             </div>
                         </div> --}}
                         <!-- Remark -->
-                        {{-- <div>
+                        <div>
                             <label class="font-semibold text-green-700 mb-1 block">Remark:</label>
-                            <textarea name="remark" id="remark" class="textarea textarea-bordered w-full min-h-[44px] rounded-xl border-green-400 focus:ring-2 focus:ring-green-500" placeholder="หากค่าใช้จ่ายเกิน ให้ระบุเหตุผล (บังคับ)"></textarea>
-                        </div> --}}
+                            <textarea name="remark" id="remark" class="textarea textarea-bordered w-full min-h-[44px] rounded-xl border-green-400 focus:ring-2 focus:ring-green-500"></textarea>
+                        </div>
                     </div>
                     <div class="grid grid-cols-1 gap-6" id="file-group-section" style="display:none;">
                         <div>

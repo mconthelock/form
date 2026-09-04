@@ -132,7 +132,7 @@ class form extends MY_Controller{
     // http://localhost:8080/form/feform/FE-EIA/form/AutoCreateFEEIAForm/?COST_YEAR=2026&COST_MONTH=ALL
     // http://localhost:8080/form/feform/FE-EIA/form/AutoCreateFEEIAForm/
     // https://amecwebtest.mitsubishielevatorasia.co.th/form/feform/FE-EIA/form/AutoCreateFEEIAForm/?COST_YEAR=2026&COST_MONTH=ALL
-    // https://amecwebtest.mitsubishielevatorasia.co.th/form/feform/FE-EIA/form/AutoCreateFEEIAForm/
+    // https://amecwebtest.mitsubishielevatorasia.co.th/form/feform/FE-EIA/form/AutoCreateFEEIAForm/?no=13&orgNo=051001&y=26&y2=2026&runNo=2
     //==============================================================================================================
     public function AutoCreateFEEIAForm()
     {
@@ -596,7 +596,7 @@ class form extends MY_Controller{
                         </table>
 
                         <div style='text-align: center; margin: 30px 0;'>
-                            <a href='http://amecwebtest.mitsubishielevatorasia.co.th/form/feform/FE-EIA/form/main?no={$NFRMNO}&orgNo={$VORGNO}&y={$CYEAR}&y2={$CYEAR2}&runNo={$NRUNNO}&m=3' 
+                            <a href='http://amecweb.mitsubishielevatorasia.co.th/form/feform/FE-EIA/form/main?no={$NFRMNO}&orgNo={$VORGNO}&y={$CYEAR}&y2={$CYEAR2}&runNo={$NRUNNO}&m=3' 
                             style='background-color: #28a745; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold;'>
                             View Report Detail
                             </a>
@@ -639,6 +639,8 @@ class form extends MY_Controller{
 
     //========================================================
     //== Export PDF
+    //== https://amecwebtest.mitsubishielevatorasia.co.th/form/feform/FE-EIA/form/exportPdf/?no=11&orgNo=051001&y=26&y2=2026&runNo=2
+    //== https://amecweb.mitsubishielevatorasia.co.th/form/feform/FE-EIA/form/exportPdf/?no=13&orgNo=051001&y=26&y2=2026&runNo=2
     //========================================================
         public function exportPdf()
         {
@@ -980,11 +982,15 @@ class form extends MY_Controller{
             $pdf->AddPage('L');
             $pdf->SetFont('helvetica', '', 7);
 
+            // 1. จำเลขหน้าที่เปิดใหม่ไว้ (คือ หน้า 2 ที่มีหัวตาราง Stamp)
+            $stampPage = $pdf->getPage();
+
             // --- สร้าง HTML สำหรับตารางที่ 2 ---
             $htmlReceive = $this->generateReceiveHistoryHtml($dataBFStockList,$rows,$dataReceiveHist,  $costyear,$DOC_NO);
             $pdf->writeHTML($htmlReceive, true, false, true, false, '');
 
             // --- วาดตราประทับสำหรับหน้า 2 (ถ้าต้องการให้มีเหมือนกัน) ---
+            $pdf->setPage($stampPage);
             $this->drawStamp($pdf, $approvalList, $startX, $startY, $circleSpace, $radius);
             //-- Paeg 2
 

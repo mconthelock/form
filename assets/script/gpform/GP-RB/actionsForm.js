@@ -61,7 +61,6 @@ $(document).on('change', '#REQBY', async function (e) {
         } else {
             $('#stampCircle-label').html('AMEC');
         }
-
     } catch (error) {
         console.log(error);
     }
@@ -152,4 +151,3 @@ $(document).on('click', '#btnRequest', async function () {
         showMessage(error.message);
     }
 });
-

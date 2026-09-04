@@ -171,6 +171,9 @@ class main_or extends MY_Controller {
                 case 'horizontal':
                     $filePath = rtrim($this->upload_path, "/\\"). DIRECTORY_SEPARATOR. 'temp'. DIRECTORY_SEPARATOR. 'Form_Hori.xlsx';
                     break;
+                case 'user_manual':
+                    $filePath = rtrim($this->upload_path, "/\\"). DIRECTORY_SEPARATOR. 'temp'. DIRECTORY_SEPARATOR. 'usermanual_orform.pdf';
+                    break;
                 default:
                     show_404();
                     return;

@@ -30,9 +30,9 @@ $(document).ready(async function () {
         method: "POST",
         data: { ...formData, FORM_TYPE: 'PS' }
     });
-    console.log("file:", file);
+    console.log("file:", file.data.length);
     // const file = { data: [] };
-    $("#attachFileList").html(file?.length ? file.map(f => `
+    $("#attachFileList").html(file?.data?.length ? file.data.map(f => `
         <li class="flex items-center gap-2 text-sm">
             <i class="icofont-paper-clip text-info"></i>
             <span class="flex-1 truncate">${f.FILE_ONAME}</span>
@@ -618,6 +618,19 @@ $(document).ready(async function () {
                     title: 'กรุณาระบุ Remark',
                     text: `${invalidRows.length} รายการ`
                 });
+
+                const rows = table.rows();
+                const allData = rows.data().toArray();
+                const allNodes = rows.nodes().toArray();
+                const firstInvalidIndex = allData.findIndex(row =>
+                    row.IS_EDITED === 'Y' && (!row.REMARK || row.REMARK.trim() === '')
+                );
+
+                if (firstInvalidIndex !== -1) {
+                    const $invalidInput = $(allNodes[firstInvalidIndex]).find('input.remark');
+                    $invalidInput.get(0)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    $invalidInput.trigger('focus');
+                }
 
                 return;
             }
