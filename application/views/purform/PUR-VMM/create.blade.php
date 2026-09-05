@@ -130,11 +130,11 @@
                         <!-- ปรับให้แสดงผลแบบ Flex เรียงชิดกัน พร้อมเว้นระยะห่างพอดีๆ -->
                         <div class="flex items-center gap-6 text-sm">
                             <label class="flex items-center gap-2 cursor-pointer">
-                                <input type="radio" name="VENDGROUP" value="Direct"
+                                <input type="radio" name="VENDGROUPTYPE" value="Direct"
                                     class="w-4 h-4 accent-blue-600 req radio-typec"> Direct
                             </label>
                             <label class="flex items-center gap-2 cursor-pointer">
-                                <input type="radio" name="VENDGROUP" value="Indirect"
+                                <input type="radio" name="VENDGROUPTYPE" value="Indirect"
                                     class="w-4 h-4 accent-blue-600 req radio-typec"> Indirect
                             </label>
                         </div>
@@ -247,7 +247,7 @@
                             </div> --}}
                             <div class="grid grid-cols-[170px_1fr] items-center gap-4">
                                 <span class="font-semibold text-sm">Currency Code</span>
-                                <input type="hidden" name="CURCODE" id="CURCODE" value="" />
+                                <input type="hidden" name="CURCODE" id="CURCODE" />
                                 <span id="constdcur" class="text-gray-700 text-sm"></span>
                             </div>
                             <div class="grid grid-cols-[170px_1fr] items-center gap-4">
@@ -468,7 +468,7 @@
                             <!-- ย้าย Dropzone ออกมาข้างนอก เพื่อให้ใช้ความกว้างได้เต็ม 100% ของ Container หลัก -->
                             <!-- <div id="attachFile" class="mt-4">
 
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            </div> -->
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                </div> -->
                         </div>
                     </div>
                 </div>

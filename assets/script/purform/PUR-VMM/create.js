@@ -19,7 +19,7 @@ import {
     postcodeEnManager,
     stateEnManager,
 } from '../PUR-NVF/formManager';
-import { getData, update } from './data';
+import { create, getData, update } from './data';
 import { getFormStatus, showflow } from '@amec/webasset/api/webform';
 import { webflowSubmit } from '@amec/webasset/components/form';
 import Swal from 'sweetalert2';
@@ -116,7 +116,7 @@ $(document).ready(async function () {
             true,
         );
         $('input[name="VENDCODE"], #VENDCODE').val(purvmm.VENDCODE);
-        $(`input[name="VENDGROUP"][value="${purvmm.VENDGROUPTYPE}"]`).prop(
+        $(`input[name="VENDGROUPTYPE"][value="${purvmm.VENDGROUPTYPE}"]`).prop(
             'checked',
             true,
         );
@@ -221,7 +221,11 @@ $(document).on('input', '#VENDCODE', async function () {
         if (vendor.length > 0) {
             try {
                 showLoader();
-                if (vendor[0].PURVMM) {
+                console.log(vendor[0].PURVMM);
+
+                if (vendor[0].PURVMM.length > 0) {
+                    console.log('IFFFFFFF');
+
                     const vendorfilter = vendor[0].PURVMM.filter(
                         (item) => item.FORM.CST == '2',
                     );
@@ -238,7 +242,7 @@ $(document).on('input', '#VENDCODE', async function () {
                             `input[name="REQTYPE"][value="${latestVendor.REQTYPE}"]`,
                         ).prop('checked', true);
                         $(
-                            `input[name="VENDGROUP"][value="${latestVendor.VENDGROUPTYPE}"]`,
+                            `input[name="VENDGROUPTYPE"][value="${latestVendor.VENDGROUPTYPE}"]`,
                         ).prop('checked', true);
                         $('input[name="VENDNAME"], #VENDNAME').val(
                             latestVendor.VENDNAME || '',
@@ -342,7 +346,7 @@ $(document).on('input', '#VENDCODE', async function () {
                     }
                 } else {
                     $(
-                        `input[name="VENDGROUP"][value="${vendor[0].VND_TYPE1}"]`,
+                        `input[name="VENDGROUPTYPE"][value="${vendor[0].VND_TYPE1}"]`,
                     ).prop('checked', true);
                     $('input[name="VENDNAME"], #VENDNAME').val(
                         vendor[0].VND_NAME || '',
@@ -357,6 +361,8 @@ $(document).on('input', '#VENDCODE', async function () {
                         vendor[0].VND_BANO || '',
                     );
                     $('#constdcur').text(vendor[0].STDCUR.CURR_NAME || '');
+                    console.log(vendor[0].VND_CURRENCY);
+
                     $('#CURCODE').val(vendor[0].VND_CURRENCY || '');
                     $('#VPAYTO').val(vendor[0].VND_CODE || '');
                     $('#VTYPE').val(vendor[0].VND_TYPE2).trigger('change');
