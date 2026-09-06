@@ -1,5 +1,5 @@
 <?php
-class flowmaster extends MY_Controller {
+class Flowmaster extends MY_Controller {
     public function __construct(){
         parent::__construct();
     }

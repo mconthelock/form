@@ -114,6 +114,7 @@ export async function setRecentApps() {
 }
 
 export async function setAmecwebLinks() {
+    console.log($('#user-login').attr('empno'));
     let amecweb = await amecwebData($('#user-login').attr('empno'));
     if (amecweb.length == 0) {
         $('#amecweb_links').html(

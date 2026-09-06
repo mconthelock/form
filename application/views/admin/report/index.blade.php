@@ -2,15 +2,14 @@
 
 @section('contents')
     <div class="space-y-3 mb-8">
-        <div>
-            <h1 class="text-3xl text-primary font-bold line-clamp-1" id="page-title">
-                Form Master Management
-            </h1>
-            <div class="mt-2 max-w-3xl text-sm text-slate-500" id="page-description">
-                {{-- <div class="skeleton h-8 w-120"></div> --}}
-            </div>
+        <h1 class="text-3xl text-primary font-bold line-clamp-1" id="page-title">
+            Report Master Management
+        </h1>
+        <div class="mt-2 max-w-3xl text-sm text-slate-500" id="page-description">
+            {{-- <div class="skeleton h-8 w-120"></div> --}}
         </div>
     </div>
+
     <section
         class="grid gap-4 xl:grid-cols-[1fr_auto] xl:items-end rounded-3xl border border-slate-200 bg-white p-5 shadow-sm mb-6">
         <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -31,24 +30,29 @@
         </div>
         <div class="flex items-center gap-3">
             <button id="reset-filter" class="btn border-slate-300" type="button">Reset Filters</button>
-            <a id="#" href="{{ $_ENV['APP_ENV'] }}/admin/formmaster/detail/" class="btn btn-primary"
+            <a id="#" href="{{ $_ENV['APP_ENV'] }}/admin/report/detail/" class="btn btn-primary hidden"
                 type="button"><i class="fi fi-ss-add text-xl"></i></i>Add
-                Form</a>
+                Report</a>
             <button id="export" class="btn btn-primary btn-outline" type="button"><i
                     class="fi fi-rr-down-to-line text-xl me-1"></i>Export</button>
         </div>
     </section>
 
-    <div class="space-y-6">
-        <section class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+    <div class="flex gap-5 mb-5">
+        <section class="rounded-xl flex-1 border border-slate-200 bg-white p-5 shadow-sm">
             <div class="overflow-hidden tableArea">
                 @include('layouts/datatable_load')
                 <table id="table" class="table table-zebra display text-sm"></table>
             </div>
         </section>
+
+        <section class="rounded-xl flex-none w-80 border border-slate-200 bg-white p-5 shadow-sm"
+            id="report-detail-section">
+            @include('admin/report/detail')
+        </section>
     </div>
 @endsection
 
 @section('scripts')
-    <script src="{{ $_ENV['APP_JS'] }}/formmst.js?ver={{ $GLOBALS['version'] }}"></script>
+    <script src="{{ $_ENV['APP_JS'] }}/adminReport.js?ver={{ $GLOBALS['version'] }}"></script>
 @endsection

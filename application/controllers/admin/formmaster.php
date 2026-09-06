@@ -1,5 +1,5 @@
 <?php
-class formmaster extends MY_Controller {
+class Formmaster extends MY_Controller {
     public function __construct(){
         parent::__construct();
     }
