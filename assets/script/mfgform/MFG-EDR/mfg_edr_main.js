@@ -663,7 +663,6 @@ $(document).ready(function () {
                             let val = $.trim(
                                 $tr.find('[name="prod_jun[]"]').val(),
                             );
-
                             if (!val) {
                                 return null;
                             }
@@ -671,7 +670,6 @@ $(document).ready(function () {
                             if (val.length > 6) {
                                 val = val.substring(2);
                             }
-
                             return val;
                         })(),
                     };
@@ -693,7 +691,6 @@ $(document).ready(function () {
                 DAILY_MONTH: String($('#daily_month').val() || ''),
                 DAILY_RUNNO: Number($('#daily_runno').val()) || null,
                 REASON_CAUSE: $.trim($('#reason_cause').val()) || null,
-
                 list,
                 att: uploadedFiles.map((file) => ({
                     FILENAME: file,
