@@ -137,6 +137,10 @@
                                 <input type="radio" name="VENDGROUPTYPE" value="Indirect"
                                     class="w-4 h-4 accent-blue-600 req radio-typec"> Indirect
                             </label>
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="radio" name="VENDGROUPTYPE" value="Subcon"
+                                    class="w-4 h-4 accent-blue-600 req radio-typec"> Subcon
+                            </label>
                         </div>
                     </div>
                     <div class="grid grid-cols-[170px_1fr] items-center gap-4 mt-4">
@@ -255,7 +259,7 @@
                                 <input type="text" name="VPAYTO" id="VPAYTO" maxlength=""
                                     class="input input-sm border border-gray-400 h-8 rounded  px-2 w-full">
                             </div>
-                            <div class="grid grid-cols-[170px_1fr] items-center gap-4">
+                            {{-- <div class="grid grid-cols-[170px_1fr] items-center gap-4">
                                 <span class="font-semibold text-sm">Vendor Type</span>
                                 <div id="select-wrapper" class="inline-block">
                                     <select id="VTYPE" name="VTYPE"
@@ -270,12 +274,12 @@
                                 <span class="font-semibold text-sm">Payment Type</span>
                                 <div id="select-wrapper" class="inline-block">
                                     <select id="VPAYTY" name="VPAYTY"
-                                        class="input input-sm border border-gray-400 h-8 rounded px-2 w-48 vtype req">
+                                        class="input input-sm border border-gray-400 h-8 rounded px-2 w-48 vtype ">
                                         <option value="" disabled selected>...</option>
                                         <option value="C">Cash</option>
                                     </select>
                                 </div>
-                            </div>
+                            </div> --}}
                             {{--
                             <div class="grid grid-cols-[170px_1fr] items-center gap-4">
                                 <span class="font-semibold text-sm">Days to Clear</span>
@@ -468,7 +472,7 @@
                             <!-- ย้าย Dropzone ออกมาข้างนอก เพื่อให้ใช้ความกว้างได้เต็ม 100% ของ Container หลัก -->
                             <!-- <div id="attachFile" class="mt-4">
 
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                </div> -->
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                </div> -->
                         </div>
                     </div>
                 </div>

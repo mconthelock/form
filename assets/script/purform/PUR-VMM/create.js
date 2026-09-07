@@ -534,6 +534,18 @@ $(document).on('click', '#btnDraft, #btnRequest', async function () {
 });
 $(document).on('click', 'button[name="btnAction"]', async function () {
     const act = $(this).val();
+
+    $('#frmmain')
+        .find('input, select, textarea')
+        .each(function () {
+            if ($(this).hasClass('req')) {
+                console.log(
+                    $(this).attr('name'),
+                    $(this).attr('id'),
+                    $(this).val(),
+                );
+            }
+        });
     if (act == 'approve') {
         if (!(await requiredForm('#frmmain'))) return;
         if (!checkAttFile()) {
