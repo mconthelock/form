@@ -46,7 +46,7 @@
             </div>
         </section>
 
-        <section class="rounded-xl flex-none w-80 border border-slate-200 bg-white p-5 shadow-sm"
+        <section class="rounded-xl flex-none w-120 border border-slate-200 bg-white p-5 shadow-sm"
             id="report-detail-section">
             @include('admin/report/detail')
         </section>

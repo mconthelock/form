@@ -6,6 +6,7 @@ import { setSelect2 } from '@amec/webasset/select2';
 import { createTable } from '@amec/webasset/dataTable';
 import { tableOption, tableFillSelect } from '../../utils';
 import { getFormDept, getReportMaster } from '../../service';
+import { createReport, updateReport } from './data';
 
 var table;
 select2();
@@ -18,7 +19,7 @@ $(document).ready(async function (e) {
     }
 });
 
-async function populateFilters(data, dept) {
+async function populateFilters(dept) {
     const department = dept.map((owner) => ({
         value: owner.id,
         text: owner.name,
@@ -29,7 +30,11 @@ async function populateFilters(data, dept) {
         placeholder: 'Filter by VORGNO',
     });
 
-    await tableFillSelect('#report-owner', department, 'value', 'text');
+    const report_department = dept.map((owner) => ({
+        value: owner.link[0],
+        text: owner.name,
+    }));
+    await tableFillSelect('#report-owner', report_department, 'value', 'text');
     await setSelect2({
         element: $('#report-owner'),
         placeholder: 'Selected Owner',
@@ -68,12 +73,15 @@ async function reloadTable() {
             deptname: deptInfo ? deptInfo : null,
         };
     });
-    await populateFilters(mergedData, dept);
+
+    console.log(mergedData);
+
+    await populateFilters(dept);
     if (!table) {
         await createTableOption(mergedData);
     } else {
         table.clear();
-        table.rows.add(data);
+        table.rows.add(mergedData);
         table.draw();
     }
 }
@@ -85,21 +93,17 @@ async function createTableOption(data) {
     opt.pageLength = 10;
     opt.order = [[0, 'asc']];
     opt.columns = [
-        { data: 'deptname', title: 'Owner' },
+        { data: 'deptname.name', title: 'Owner' },
         {
             data: 'VNAME',
             title: 'Report Name',
-            render: (data, type, row) => {
-                if (type == 'display') {
-                    return `<div>${data}</div><div>${row.VURL}</div>`;
-                }
-                return data ? data : '';
-            },
         },
+        { data: 'VURL', title: 'Link' },
         {
             data: 'CSTATUS',
             title: 'Status',
             className: 'text-center',
+            sortable: false,
             render: function (data, type, row) {
                 if (type === 'display') {
                     if (data === '1')
@@ -114,6 +118,13 @@ async function createTableOption(data) {
             title: 'Action',
             className: 'text-center w-32',
             sortable: false,
+            render: function (data, type, row) {
+                return `<div>
+                    <button class="btn btn-ghost btn-sm btn-circle row-edit" data-id="${data}"><i class="fi fi-rr-pencil text-xl text-primary"></i></button>
+                    <a href="${process.env.APP_ENV}/admin/report/authen/${data}" class="btn btn-ghost btn-sm btn-circle row-authen" data-id="${data}"><i class="fi fi-rr-users text-xl text-primary"></i></a>
+                    <button class="btn btn-ghost btn-sm btn-circle row-delete" data-id="${data}"><i class="fi fi-rs-circle-xmark text-xl text-red-500"></i></button>
+                </div>`;
+            },
         },
     ];
     table = await createTable(opt);
@@ -146,20 +157,42 @@ $(document).on('click', '#save-report', async function (e) {
     });
     if (!check) return;
 
-    const data = {
-        VORGNO: $('#report-owner').val(),
-        VNAME: $('#report-name').val(),
-        VURL: $('#report-url').val(),
-        CSTAUS: '1',
-    };
+    showLoader();
+    try {
+        const data = {
+            VORGNO: $('#report-owner').val(),
+            VNAME: $('#report-name').val(),
+            VURL: $('#report-url').val(),
+            CSTATUS: $('input[name="reportstatus"]:checked').val(),
+        };
 
-    if ($('#report-id').val() == '') {
-        await createReport(data);
-    } else {
-        data = { ...data, ID: $('#report-id').val() };
-        await updateReport(data);
+        if ($('#report-id').val() == '') {
+            await createReport(data);
+        } else {
+            const update = { ...data, ID: $('#report-id').val() };
+            await updateReport(update, $('#report-id').val());
+        }
+        reloadTable();
+        el.find('.input, .select').val('');
+    } catch (error) {
+        console.error(error);
+    } finally {
+        showLoader({ show: false });
     }
-    // const reportName = $('#report-name').val();
-    // const reportOwner = $('#report-owner').val();
-    // const reportUrl = $('#report-url').val();
+});
+
+$(document).on('click', '.row-edit', function (e) {
+    const id = $(this).data('id');
+    const rowData = table.row($(this).closest('tr')).data();
+    $('#report-id').val(rowData.ID);
+    $('#report-name').val(rowData.VNAME);
+    $('#report-owner').val(rowData.VORGNO).trigger('change');
+    $('#report-url').val(rowData.VURL);
+    $(`.reportstatus[value="${rowData.CSTATUS}"]`).prop('checked', true);
+    console.log($(`.reportstatus[value="${rowData.CSTATUS}"]`).length);
+});
+
+$(document).on('click', '.row-delete', function (e) {
+    const id = $(this).data('id');
+    // Add your delete logic here
 });

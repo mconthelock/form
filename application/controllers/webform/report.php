@@ -8,6 +8,7 @@ class report extends MY_Controller {
 
     public function index(){
         $data['department'] = $this->formdept->setFormDept();
+        $data['title'] = 'nav-report';
         $this->views('report/index', $data);
     }
 

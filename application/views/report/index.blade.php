@@ -12,21 +12,23 @@
         </div>
     </div>
 
-    <div class="flex flex-col w-full px-4 mt-5 mb-20">
-        <div class="flex">
-            <div class="flex-1">
-                <div class="flex flex-wrap justify-start gap-5">
-                    @foreach ($department as $dept)
-                        <a class="bg-white border border-slate-300 hover:shadow-lg hover:bg-primary/20 rounded-lg transition-shadow"
-                            href="{{ base_url() . 'webform/report/detail/' . $dept['id'] }}">@include('form/create/deptcard', $dept)</a>
-                    @endforeach
-                </div>
-            </div>
-            <div class="flex-none w-96">
-                <div class="bg-primary/10 rounded-lg p-5" id="recent-created-forms">
-                    <div>
-                        <h1>Recent Created Forms</h1>
+    <div class="flex gap-5 w-full mb-20">
+        <div class="flex-1 grid grid-cols-2 gap-5 items-start">
+            @foreach ($department as $dept)
+                <details class="collapse bg-base-100 border border-gray-300 shadow-sm" name="my-accordion-det-1" open>
+                    <summary class="collapse-title font-semibold" data-id="{{ $dept['link'][0] }}">{{ $dept['name'] }}
+                    </summary>
+                    <div class="collapse-content text-sm">
+                        <div class="skeleton h-12 w-full"></div>
                     </div>
+                </details>
+            @endforeach
+        </div>
+
+        <div class="flex-none w-96">
+            <div class="bg-primary/10 rounded-lg p-5" id="recent-report-forms">
+                <div>
+                    <h1>Recent Created Forms</h1>
                 </div>
             </div>
         </div>
@@ -34,5 +36,5 @@
 @endsection
 
 @section('scripts')
-    <script src="{{ $_ENV['APP_JS'] }}/form_create.js?ver={{ $GLOBALS['version'] }}"></script>
+    <script src="{{ $_ENV['APP_JS'] }}/form_report.js?ver={{ $GLOBALS['version'] }}"></script>
 @endsection
