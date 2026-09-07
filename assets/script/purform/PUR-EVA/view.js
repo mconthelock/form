@@ -66,7 +66,11 @@ $(async function () {
                 mode: form.MODE === 2 ? 'edit' : 'view',
             });
         }
-
+        if (form.MODE === 2) {
+            $('.txtremark').show();
+        } else {
+            $('.txtremark').hide();
+        }
         //filterFormData(formeva);
         //logFormData(formeva);
 
@@ -409,12 +413,13 @@ function formatAddress(addrObj) {
     if (!addrObj) return '-';
     return (
         [
-            addrObj.ADDR,
+            addrObj.ADDR1 || addrObj.ADDR2,
             addrObj.CITY,
             addrObj.STATE,
             addrObj.POSTCODE,
             addrObj.COUNTRY,
         ]
+            .map((item) => (item ? String(item).trim() : ''))
             .filter(Boolean)
             .join(', ') || '-'
     );

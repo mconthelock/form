@@ -16,4 +16,5 @@ module.exports = {
 
     // PUR-VMM
     purVmm: './assets/script/purform/PUR-VMM/create.js',
+    purVmmView: './assets/script/purform/PUR-VMM/view.js',
 };
