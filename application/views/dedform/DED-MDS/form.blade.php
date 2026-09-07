@@ -36,16 +36,31 @@
         </div>
 
         <form class="card-body hidden" id="form">
-            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-5 border-b border-slate-100 pb-3">
-                <h2 class="card-title m-0">
-                    <u class="text-3xl text-primary font-bold no-underline decoration-transparent">Master Plan DES BM Management</u>
-                </h2>
+           <div class="flex items-center justify-between mb-4">
+                <!-- 🟢 ด้านซ้าย: ปุ่มรูปฟันเฟืองวางหน้าชื่อ Master Plan -->
+                <div class="flex items-center gap-2.5">
+                    <button type="button" 
+                            id="btnOpenCalConfig" 
+                            class="inline-flex items-center justify-center w-9 h-9 rounded-full text-slate-500 hover:text-blue-600 bg-white hover:bg-blue-50 border border-slate-200 hover:border-blue-300 transition duration-150 shadow-sm focus:outline-none"
+                            title="ตั้งค่าวันคำนวณ (Offset Days)">
+                        <svg  class="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                            <path d="M12 15.5A3.5 3.5 0 0 1 8.5 12A3.5 3.5 0 0 1 12 8.5a3.5 3.5 0 0 1 3.5 3.5a3.5 3.5 0 0 1-3.5 3.5m7.43-2.53c.04-.32.07-.64.07-.97c0-.33-.03-.66-.07-1l2.11-1.63c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.31-.61-.22l-2.49 1c-.52-.39-1.06-.73-1.69-.98l-.37-2.65A.506.506 0 0 0 14 2h-4c-.25 0-.46.18-.5.42l-.37 2.65c-.63.25-1.17.59-1.69.98l-2.49-1c-.22-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64L4.57 11c-.04.34-.07.67-.07 1c0 .33.03.65.07.97l-2.11 1.66c-.19.15-.25.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1.01c.52.4 1.06.74 1.69.99l.37 2.65c.04.24.25.42.5.42h4c.25 0 .46-.18.5-.42l.37-2.65c.63-.26 1.17-.59 1.69-.99l2.49 1.01c.22.08.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.66Z"/>
+                        </svg>
+                    </button>
+                                    
+                    <h1 class="text-2xl font-bold text-blue-900 tracking-tight select-none">
+                        Master Plan DES BM Management
+                    </h1>
+                </div>
+
+                <!-- ด้านขวา: แสดง Revision Badge เดิม -->
                 <div class="flex items-center gap-2">
-                    <!-- Badge Revision -->
-                    <span class="badge badge-primary badge-outline font-bold" id="RevBadge">Revision: <?= $REVISION ?? '*' ?></span>
-                    
-                    <!-- Badge Status -->
-                    <span class="badge badge-warning font-bold text-xs" id="StatusBadge">DRAFT</span>
+                    <span class="border border-blue-600 text-blue-600 rounded-full px-3 py-0.5 text-xs font-semibold">
+                        Revision: <span id="lblRevision">-</span>
+                    </span>
+                    <span class="bg-orange-500 text-white rounded-full px-3 py-0.5 text-xs font-bold uppercase tracking-wider">
+                        DRAFT
+                    </span>
                 </div>
             </div>
 
@@ -56,7 +71,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                     </svg> -->
                     <span class="text-sm font-semibold">
-                        เอกสารรอบนี้อยู่ในสถานะ <span id="StatusText" class="font-bold underline">CHECK</span> (รอ Approve เอกสาร Webflow) ไม่สามารถประมวลผลหรือสร้าง Revision ใหม่ได้
+                        เอกสารรอบนี้อยู่ในสถานะ <span id="StatusText" class="font-bold underline">PROCESS</span> (รอ Approve เอกสาร Webflow) ไม่สามารถประมวลผลหรือสร้าง Revision ใหม่ได้
                     </span>
                 </div>
             </div>
@@ -152,6 +167,11 @@
                     <button type="button" id="ProcessBtn" class="btn btn-primary btn-sm flex-1 flex items-center justify-center gap-1.5 text-white">
                         ⚡ Process Calculation
                     </button>
+                    <!-- 🟢 ปุ่มเปิด Modal ตั้งค่า Cal Config -->
+                    <!-- <button type="button" id="btnOpenCalConfig" class="btn btn-outline-secondary flex items-center gap-1" title="ตั้งค่าวันคำนวณ (Offset Days)">
+                        <i class="fa fa-cog"></i>
+                        <span>Cal Config</span>
+                    </button> -->
                 </div>
                 
             </div>
@@ -210,6 +230,44 @@
                 </button> -->
                 
             </div>
+
+            <!-- Modal: Tb_MS_Master_DESBM_Cal Config -->
+            <div id="calConfigModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 hidden">
+                <div class="bg-white rounded-lg shadow-xl w-11/12 max-w-4xl max-h-[90vh] flex flex-col">
+                    <!-- Modal Header -->
+                    <div class="flex justify-between items-center px-6 py-4 border-b">
+                        <h3 class="text-lg font-bold text-gray-800 flex items-center gap-2">
+                            <i class="fa fa-sliders-h text-blue-600"></i> ตั้งค่าสูตรการคำนวณ 
+                        </h3>
+                        <button type="button" class="btn-close-modal text-gray-400 hover:text-gray-600 text-xl font-bold">&times;</button>
+                    </div>
+
+                    <!-- Modal Body: ตารางแสดงรายการ -->
+                    <div class="p-6 overflow-y-auto flex-1">
+                        <table class="table table-bordered table-hover w-full text-sm">
+                            <thead class="bg-gray-100 text-gray-700">
+                                <tr>
+                                    <th class="text-center w-12">#</th>
+                                    <th>Target Field</th>
+                                    <th>P Type</th>
+                                    <th>Base Field</th>
+                                    <th>Base Row Type</th>
+                                    <th class="text-center w-36">Offset Days</th>
+                                </tr>
+                            </thead>
+                            <tbody id="calConfigTbody">
+                                <!-- ข้อมูลจะถูก Render ผ่าน AJAX -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Modal Footer -->
+                    <div class="flex justify-end gap-2 px-6 py-3 border-t bg-gray-50">
+                        <button type="button" class="btn btn-secondary btn-close-modal px-4 py-2">ปิดหน้าต่าง</button>
+                    </div>
+                </div>
+            </div>
+
         </form>
     </div>
 </div>

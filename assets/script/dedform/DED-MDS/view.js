@@ -66,7 +66,6 @@ $(document).ready(async function () {
         REMARK: formData.remark,
         STATUS: formData.status,
     };
-
     $('#DOC_IDTxt').val(form.DOC_NO);
     $('#REQUEST_BYTxt').val(form.EMPNO);
     $('#INPUT_BYTxt').val(form.EMPNO);
@@ -104,13 +103,13 @@ $(document).ready(async function () {
     }
 
     $('#MODEHid').val(currentMode);
-    alert(
-        'MOD:' +
-            $('#MODEHid').val() +
-            '|' +
-            'EXTDATA:' +
-            $('#EXTDATAHid').val(),
-    );
+    // alert(
+    //     'MOD:' +
+    //         $('#MODEHid').val() +
+    //         '|' +
+    //         'EXTDATA:' +
+    //         $('#EXTDATAHid').val(),
+    // );
 
     // 4. สั่งสลับปิด Skeleton Loading ทันทีเมื่อเตรียมโครงตารางหลักเรียบร้อย
     setTimeout(function () {
@@ -164,6 +163,8 @@ $(document).ready(async function () {
             DESTYPES: getSelectedDesTypes(),
             REVISION: $('#RevisionHid').val(),
             EMPNO: empno,
+            MODE: $('#MODEHid').val(), // 🟢 ส่ง MODE ปัจจุบัน
+            EXTDATA: $('#EXTDATAHid').val(), // 🟢 ส่ง EXTDATA
         };
 
         try {
@@ -356,6 +357,15 @@ $(document).ready(async function () {
 
                 setTimeout(() => {
                     $currentInput.removeClass('border-success bg-green-50');
+
+                    // กำหนดให้เป็นสีแดงทันทีเมื่อ User มีการแก้ไขค่าใหม่
+                    $currentInput
+                        .removeClass(
+                            'border-warning border-success bg-amber-50 bg-green-50 text-primary opacity-50 cursor-wait',
+                        )
+                        .addClass(
+                            'border-rose-500 bg-rose-50 text-rose-600 font-bold',
+                        );
                 }, 1500);
             } else {
                 alert('บันทึกไม่สำเร็จ: ' + res.message);
@@ -388,6 +398,118 @@ $(document).ready(async function () {
         // เปิด Loader บังหน้าจอไว้ก่อนถ้าระบบโหลดช้า
         await actionFlow('approve');
     });
+
+    //=======================================================
+    //== Modal: Tb_MS_Master_DESBM_Cal Config
+    //=======================================================
+    // เปิด Modal และโหลดข้อมูล
+    $('#btnOpenCalConfig').on('click', function () {
+        loadCalConfig();
+        $('#calConfigModal').removeClass('hidden');
+    });
+
+    // อัปเดต OffsetDays เมื่อหลุด Focus (Blur) หรือกด Enter
+    $(document).on('change', '.input-offset-days', function () {
+        const input = $(this);
+        const targetField = input.data('target');
+        const pType = input.data('ptype');
+        const newOffset = input.val();
+
+        input.addClass('bg-yellow-100');
+
+        $.ajax({
+            url: host + 'dedform/DED-MDS/form/UpdateCalConfigOffset',
+            type: 'POST',
+            dataType: 'json',
+            data: {
+                TargetField: targetField,
+                P_Type: pType,
+                OffsetDays: newOffset,
+                EMPNO: '<?= $EMPNO ?? "SYSTEM" ?>',
+            },
+            success: function (res) {
+                input.removeClass('bg-yellow-100');
+                if (res.status) {
+                    input.addClass('bg-green-100');
+                    setTimeout(() => input.removeClass('bg-green-100'), 1200);
+                } else {
+                    alert('บันทึกไม่สำเร็จ: ' + res.message);
+                    input.addClass('bg-red-100');
+                }
+            },
+            error: function () {
+                input.removeClass('bg-yellow-100').addClass('bg-red-100');
+                alert('เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์');
+            },
+        });
+    });
+
+    // เปิด Modal
+    $('#btnOpenCalConfig').on('click', function () {
+        loadCalConfig();
+        $('#calConfigModal').removeClass('hidden');
+    });
+
+    // 🟢 ปิด Modal เมื่อคลิกปุ่มปิดใดๆ ที่มีคลาส .btn-close-modal
+    $(document).on('click', '.btn-close-modal', function () {
+        $('#calConfigModal').addClass('hidden');
+    });
+
+    // (เสริม) ปิด Modal เมื่อคลิกพื้นที่ว่างข้างนอกกล่อง Modal
+    $('#calConfigModal').on('click', function (e) {
+        if (e.target === this) {
+            $(this).addClass('hidden');
+        }
+    });
+    // ฟังก์ชันโหลดข้อมูล Config
+    function loadCalConfig() {
+        const tbody = $('#calConfigTbody');
+        tbody.html(
+            '<tr><td colspan="6" class="text-center py-4 text-gray-500">กำลังโหลดข้อมูล...</td></tr>',
+        );
+
+        $.ajax({
+            url: host + 'dedform/DED-MDS/form/GetCalConfigMaster',
+            type: 'GET',
+            dataType: 'json',
+            success: function (res) {
+                if (!res.status || !res.data) {
+                    tbody.html(
+                        '<tr><td colspan="6" class="text-center py-4 text-red-500">ไม่พบข้อมูล</td></tr>',
+                    );
+                    return;
+                }
+
+                let html = '';
+                res.data.forEach((item, index) => {
+                    html += `
+                    <tr>
+                        <td class="text-center align-middle">${index + 1}</td>
+                        <td class="align-middle font-semibold text-gray-800">${item.TargetField || '-'}</td>
+                        <td class="align-middle">${item.P_Type || '-'}</td>
+                        <td class="align-middle">${item.BaseField || '-'}</td>
+                        <td class="align-middle">${item.BaseRowType || '-'}</td>
+                        <td class="text-center align-middle">
+                            <input type="number" 
+                                   class="form-control text-center input-offset-days font-bold text-blue-600" 
+                                   style="width: 90px; margin: 0 auto;"
+                                   data-target="${item.TargetField}" 
+                                   data-ptype="${item.P_Type}" 
+                                   value="${item.OffsetDays}" />
+                        </td>
+                    </tr>
+                `;
+                });
+                tbody.html(html);
+            },
+            error: function () {
+                tbody.html(
+                    '<tr><td colspan="6" class="text-center py-4 text-red-500">เกิดข้อผิดพลาดในการโหลดข้อมูล</td></tr>',
+                );
+            },
+        });
+    }
+    //=======================================================
 
     // ===================================================================
     // == Action Upload File
@@ -520,14 +642,26 @@ async function loadDraftPlan() {
     if (!year || !period) return;
 
     $('#loading').removeClass('hidden');
+    const formData = $('.form-info').data() || {};
+    // alert(
+    //     'MOD:' +
+    //         $('#MODEHid').val() +
+    //         '|' +
+    //         'EXTDATA:' +
+    //         $('#EXTDATAHid').val(),
+    // );
     const payload = {
         YEAR: year,
         PERIOD: period,
         DESTYPES: getSelectedDesTypes(),
         REVISION: $('#RevisionHid').val(),
         EMPNO: typeof empno !== 'undefined' ? empno : 'SYSTEM',
+        MODE: $('#MODEHid').val(), // 🟢 ส่ง MODE ปัจจุบัน
+        EXTDATA: $('#EXTDATAHid').val(), // 🟢 ส่ง EXTDATA
+        VORGNO: formData.vorgno || '', // 🟢 ส่งคีย์ Webflow
+        CYEAR2: formData.cyear2 || '',
+        NRUNNO: formData.nrunno || '',
     };
-
     try {
         const res = await getOrInitDraftPlan(payload);
         if (res.statusTb) {
@@ -569,153 +703,6 @@ async function loadDraftPlan() {
     }
 }
 
-/**
- * ฟังก์ชันจัดการสิทธิ์การแสดงปุ่มตามเงื่อนไข Mode & ExtData
- */
-async function applyButtonPermissions(mode, extData, status = '') {
-    const rawStatus = (status || '').toUpperCase();
-    const isPending = ['CHECK', 'APPROVE'].includes(rawStatus);
-
-    // $('#RemarkTxt').prop('disabled', isPending);
-    // 1. ซ่อนปุ่ม Action ทั้งหมดก่อนเพื่อ Reset State
-    const allButtons = [
-        '#SearchBtn',
-        '#ProcessBtn',
-        '#SavePlanBtn',
-        '#DeleteBtn',
-        '#ApproveBtn',
-        '#ReturnBtn',
-    ];
-    $(allButtons.join(', ')).addClass('hidden');
-
-    if (mode === '1') {
-        // 🟡 Mode 1: ผู้จัดทำ (Requester / Creator)
-        $('#SearchBtn').removeClass('hidden');
-
-        // ถ้าเอกสารรอบนี้อยู่ในสถานะรออนุมัติไปแล้ว ไม่ให้กด Process ซ้ำ
-        if (isPending) {
-            $('#ProcessBtn').addClass('hidden');
-            $('#SavePlanBtn').addClass('hidden');
-            $('#DeleteBtn').addClass('hidden');
-        } else {
-            $('#ProcessBtn').removeClass('hidden');
-            // ปุ่ม Save และ Delete Draft จะแสดงเมื่อมีข้อมูล Draft ให้บันทึก
-            if (rawStatus === 'DRAFT') {
-                $('#SavePlanBtn').removeClass('hidden');
-                $('#DeleteBtn').removeClass('hidden');
-            }
-        }
-
-        $('#YearDrp, #PeriodDrp').prop('disabled', isPending);
-        $('input[name="destype"]').prop('disabled', isPending);
-    } else if (mode === '2') {
-        // 🟠 Mode 2: ขั้นตอนการอนุมัติ (Flow Step)
-        // $('#SearchBtn').removeClass('hidden');
-
-        // ล็อก Header ทั้งหมด
-        // $('#RemarkTxt').prop('disabled', true);
-        $('#YearDrp, #PeriodDrp').prop('disabled', true);
-        $('input[name="destype"]').prop('disabled', true);
-        if (extData === '') {
-            // เหมือน DRAFT
-            if (status === 'CHECK') {
-                $('#ProcessBtn').removeClass('hidden');
-                $('#SavePlanBtn').removeClass('hidden');
-                $('#DeleteBtn').removeClass('hidden');
-            }
-        } else if (extData === '01') {
-            // CHECKER: ตรวจสอบและอนุมัติ หรือ ลบทิ้ง
-            $('#ApproveBtn').removeClass('hidden');
-            $('#ReturnBtn').removeClass('hidden');
-        } else if (extData === '02' || extData === '03') {
-            // ACCEPTOR / APPROVER: อนุมัติ หรือ ตีกลับ
-            $('#ApproveBtn').removeClass('hidden');
-            $('#ReturnBtn').removeClass('hidden');
-        }
-
-        if ($('#EMPNOHid').val() == '13204') {
-            $('#DeleteBtn').removeClass('hidden');
-            $('#ReturnBtn').removeClass('hidden');
-        }
-    } else if (mode === '3') {
-        // Mode 3: ดูอย่างเดียว (View Only)
-        // $('#SearchBtn').removeClass('hidden');
-
-        $('#RemarkTxt').prop('disabled', true);
-        $('#YearDrp, #PeriodDrp').prop('disabled', true);
-        $('input[name="destype"]').prop('disabled', true);
-    }
-}
-
-function updateStatusUI(status, revision, docNo = '') {
-    const rawStatus = (status || 'NONE').toUpperCase();
-    const $statusBadge = $('#StatusBadge');
-    const $pendingAlert = $('#PendingAlert');
-
-    // 1. อัปเดต Revision Badge
-    $('#RevBadge').text('Revision: ' + (revision || '*'));
-
-    // 2. เคลียร์สีเดิมของ Badge
-    $statusBadge.removeClass(
-        'badge-warning badge-success badge-error badge-ghost hidden text-slate-800 text-white',
-    );
-
-    const isPending = ['CHECK', 'PROOF'].includes(rawStatus);
-
-    var mode = $('#MODEHid').val();
-    var extData = $('#EXTDATAHid').val();
-    if (isPending) {
-        alert(
-            'MOD:' +
-                $('#MODEHid').val() +
-                '|' +
-                'EXTDATA:' +
-                $('#EXTDATAHid').val(),
-        );
-        $statusBadge.addClass('badge-warning text-slate-800').text(rawStatus);
-        $('#StatusText').text(rawStatus + (docNo ? ` (Doc No: ${docNo})` : ''));
-        $pendingAlert.removeClass('hidden');
-
-        // สถานะส่งตรวจแล้ว ล็อกไม่ให้แก้ช่องวันที่ในตาราง
-        if (mode === '2' && (extData === '01' || extData === '')) {
-            // เป็น Draft และถ้าอยู่ใน Mode 1 ถึงจะให้แก้ได้
-            const isEditable =
-                typeof $('#MODEHid').val() !== 'undefined' &&
-                $('#MODEHid').val() === '2';
-            $('.inline-edit-date')
-                .prop('disabled', !isEditable)
-                .toggleClass('opacity-50 cursor-not-allowed', !isEditable);
-        } else {
-            $('.inline-edit-date')
-                .prop('disabled', true)
-                .addClass('opacity-50 cursor-not-allowed');
-        }
-    } else if (rawStatus === 'DRAFT') {
-        $statusBadge.addClass('badge-ghost text-slate-600').text(rawStatus);
-        $pendingAlert.addClass('hidden');
-
-        // เป็น Draft และถ้าอยู่ใน Mode 1 ถึงจะให้แก้ได้
-        const isEditable =
-            typeof $('#MODEHid').val() !== 'undefined' &&
-            $('#MODEHid').val() === '1';
-        $('.inline-edit-date')
-            .prop('disabled', !isEditable)
-            .toggleClass('opacity-50 cursor-not-allowed', !isEditable);
-    } else if (rawStatus === 'APPROVE') {
-        $statusBadge.addClass('badge-success text-white').text(rawStatus);
-        $pendingAlert.addClass('hidden');
-        $('.inline-edit-date')
-            .prop('disabled', true)
-            .addClass('opacity-50 cursor-not-allowed');
-    } else {
-        $statusBadge.addClass('hidden');
-        $pendingAlert.addClass('hidden');
-        $('.inline-edit-date')
-            .prop('disabled', true)
-            .addClass('opacity-50 cursor-not-allowed');
-    }
-}
-
 function renderDataTable(data) {
     if ($.fn.DataTable.isDataTable('#table-plan')) {
         $('#table-plan').DataTable().destroy();
@@ -734,11 +721,51 @@ function renderDataTable(data) {
             zeroRecords:
                 '<div class="py-6 text-slate-400 font-semibold text-center text-sm">🔍 ไม่พบข้อมูล</div>',
         },
+        // 🟢 ควบคุมสีระดับแถว (Row Styling)
+        createdRow: function (row, data, dataIndex) {
+            const userAction = (data.UserAction || 'SYSTEM')
+                .toUpperCase()
+                .trim();
+            const isUserEdited = userAction !== 'SYSTEM';
+
+            // เช็คว่ามีค่าใดต่างจาก Rev ก่อนหน้า หรือไม่
+            const hasDiff =
+                data.Diff_MFG_BM == 1 ||
+                data.Diff_DES_BM == 1 ||
+                data.Diff_Go_DES == 1 ||
+                data.IsNewRow == 1;
+
+            if (isUserEdited) {
+                // 🔴 แถวที่คนแก้ (UserAction != 'SYSTEM'): สีแดงอ่อน + ขอบซ้ายสีแดง
+                $(row).addClass(
+                    'bg-rose-50 hover:bg-rose-100/70 border-l-4 border-l-rose-500 transition-colors',
+                );
+                $(row).attr('title', `แก้ไขโดย: ${data.UserAction}`);
+            } else if (hasDiff) {
+                // 🟡 แถวที่ค่าเปลี่ยนจาก Revision ก่อนหน้า (แต่ยังไม่ได้ถูก User แก้สด): สีส้ม/เหลืองอ่อน
+                $(row).addClass(
+                    'bg-amber-50 hover:bg-amber-100/70 border-l-4 border-l-amber-500 transition-colors',
+                );
+                $(row).attr(
+                    'title',
+                    'ข้อมูลเปลี่ยนแปลงเทียบกับ Revision ก่อนหน้า',
+                );
+            }
+        },
         columns: [
             {
                 data: 'SeqNo',
                 title: 'No.',
                 className: 'text-center align-middle',
+                render: function (d, type, row) {
+                    const userAction = (row.UserAction || 'SYSTEM')
+                        .toUpperCase()
+                        .trim();
+                    if (userAction !== 'SYSTEM') {
+                        return `<span class="badge badge-xs badge-error text-white font-bold" title="แก้ไขโดย ${row.UserAction}">${d}*</span>`;
+                    }
+                    return d;
+                },
             },
             {
                 data: 'PROD',
@@ -749,7 +776,15 @@ function renderDataTable(data) {
                 data: 'MFG_BM',
                 title: 'MFG BM',
                 className: 'text-center align-middle',
-                render: (d) => (d ? d.substring(0, 10) : '-'),
+                render: function (d, type, row) {
+                    if (!d) return '-';
+                    const dateVal = d.substring(0, 10);
+                    // ถ้า MFG_BM เปลี่ยนจาก Revision เก่า ให้เน้นข้อความสีแดง
+                    if (row.Diff_MFG_BM == 1) {
+                        return `<span class="text-rose-600 font-extrabold underline decoration-rose-400" title="MFG BM มีการเปลี่ยนจาก AS400">${dateVal}</span>`;
+                    }
+                    return dateVal;
+                },
             },
             {
                 data: 'P_Type',
@@ -764,7 +799,7 @@ function renderDataTable(data) {
                     const dateVal = d ? d.substring(0, 10) : '';
                     return `
                         <input type="date" 
-                               class="input input-bordered input-xs w-36 text-center font-bold text-primary inline-edit-date" 
+                               class="input input-bordered input-xs w-36 text-center font-bold text-slate-700 inline-edit-date bg-white" 
                                data-field="DES_BM" 
                                data-row-index="${meta.row}" 
                                value="${dateVal}">
@@ -784,7 +819,7 @@ function renderDataTable(data) {
                     const dateVal = d ? d.substring(0, 10) : '';
                     return `
                         <input type="date" 
-                               class="input input-bordered input-xs w-36 text-center font-bold text-primary inline-edit-date" 
+                               class="input input-bordered input-xs w-36 text-center font-bold text-slate-700 inline-edit-date bg-white" 
                                data-field="Go_DES" 
                                data-row-index="${meta.row}" 
                                value="${dateVal}">
@@ -858,19 +893,177 @@ function renderDataTable(data) {
                 className: 'text-center align-middle',
                 render: (d) => (d !== null && d !== undefined ? d : '-'),
             },
-
             {
                 data: 'TypeJun',
                 title: 'TypeJun',
                 className: 'text-center align-middle',
             },
-            // {
-            //     data: 'ChangeJunTodate',
-            //     title: 'ChangeJunTodate',
-            //     className: 'text-center align-middle',
-            // },
+            {
+                data: 'UserAction',
+                title: 'UserAction',
+                className: 'text-center align-middle',
+            },
         ],
     });
+}
+
+/**
+ * ฟังก์ชันจัดการสิทธิ์การแสดงปุ่มตามเงื่อนไข Mode & ExtData
+ */
+async function applyButtonPermissions(mode, extData, status = '') {
+    const rawStatus = (status || '').toUpperCase();
+    const isPending = ['PROCESS', 'APPROVE'].includes(rawStatus);
+
+    // $('#RemarkTxt').prop('disabled', isPending);
+    // 1. ซ่อนปุ่ม Action ทั้งหมดก่อนเพื่อ Reset State
+    const allButtons = [
+        '#SearchBtn',
+        '#ProcessBtn',
+        '#SavePlanBtn',
+        '#DeleteBtn',
+        '#ApproveBtn',
+        '#ReturnBtn',
+    ];
+    $(allButtons.join(', ')).addClass('hidden');
+
+    if (mode === '1') {
+        // 🟡 Mode 1: ผู้จัดทำ (Requester / Creator)
+        $('#SearchBtn').removeClass('hidden');
+        $('#ProcessBtn').addClass('hidden');
+
+        // alert(rawStatus);
+        // ถ้าเอกสารรอบนี้อยู่ในสถานะรออนุมัติไปแล้ว ไม่ให้กด Process ซ้ำ
+        if (isPending) {
+            $('#ProcessBtn').addClass('hidden');
+            $('#SavePlanBtn').addClass('hidden');
+            $('#DeleteBtn').addClass('hidden');
+            if (rawStatus == 'APPROVE') {
+                $('#YearDrp, #PeriodDrp').prop('disabled', true);
+                $('input[name="destype"]').prop('disabled', true);
+            }
+        } else {
+            // ปุ่ม Save และ Delete Draft จะแสดงเมื่อมีข้อมูล Draft ให้บันทึก
+            // alert(rawStatus);
+            if (rawStatus === 'DRAFT') {
+                $('#SavePlanBtn').removeClass('hidden');
+                $('#DeleteBtn').removeClass('hidden');
+                $('#ProcessBtn').removeClass('hidden');
+            } else if (rawStatus === '') {
+                $('#ProcessBtn').removeClass('hidden');
+            }
+        }
+    } else if (mode === '2') {
+        // 🟠 Mode 2: ขั้นตอนการอนุมัติ (Flow Step)
+        // $('#SearchBtn').removeClass('hidden');
+
+        // ล็อก Header ทั้งหมด
+        // $('#RemarkTxt').prop('disabled', true);
+        $('#YearDrp, #PeriodDrp').prop('disabled', true);
+        $('input[name="destype"]').prop('disabled', true);
+
+        $('#ProcessBtn').addClass('hidden');
+        if (extData === '') {
+            // เหมือน DRAFT
+            if (rawStatus === 'PROCESS') {
+                // $('#ProcessBtn').removeClass('hidden');
+                $('#SavePlanBtn').removeClass('hidden');
+                $('#DeleteBtn').removeClass('hidden');
+            }
+        } else if (extData === '01') {
+            // CHECKER: ตรวจสอบและอนุมัติ หรือ ลบทิ้ง
+            $('#ApproveBtn').removeClass('hidden');
+            $('#ReturnBtn').removeClass('hidden');
+        } else if (extData === '02' || extData === '03') {
+            // ACCEPTOR / APPROVER: อนุมัติ หรือ ตีกลับ
+            $('#ApproveBtn').removeClass('hidden');
+            $('#ReturnBtn').removeClass('hidden');
+        }
+
+        if ($('#EMPNOHid').val() == '13204') {
+            $('#DeleteBtn').removeClass('hidden');
+            $('#ReturnBtn').removeClass('hidden');
+        }
+    } else if (mode === '3') {
+        // Mode 3: ดูอย่างเดียว (View Only)
+        // $('#SearchBtn').removeClass('hidden');
+
+        $('#RemarkTxt').prop('disabled', true);
+        $('#YearDrp, #PeriodDrp').prop('disabled', true);
+        $('input[name="destype"]').prop('disabled', true);
+    }
+}
+
+function updateStatusUI(status, revision, docNo = '') {
+    const rawStatus = (status || 'NONE').toUpperCase().trim();
+    const $statusBadge = $('#StatusBadge');
+    const $pendingAlert = $('#PendingAlert');
+    const mode = $('#MODEHid').val() || '1';
+    const extData = $('#EXTDATAHid').val() || '';
+
+    // 1. อัปเดต Revision Badge
+    $('#RevBadge').text('Revision: ' + (revision || '*'));
+
+    // 2. ล้างสี Badge เดิม
+    $statusBadge.removeClass(
+        'badge-warning badge-success badge-error badge-ghost hidden text-slate-800 text-white',
+    );
+    // alert(
+    //     'MOD:' +
+    //         $('#MODEHid').val() +
+    //         '|' +
+    //         'EXTDATA:' +
+    //         $('#EXTDATAHid').val(),
+    // );
+    if (rawStatus === 'PROCESS') {
+        // 🟠 กำลังเดิน Flow
+        $statusBadge.addClass('badge-warning text-slate-800').text('PROCESS');
+
+        if (mode === '1') {
+            // Mode 1: แจ้งเตือนว่ารอบนี้กำลังเดิน Flow อยู่ ไม่สามารถสร้างซ้ำได้ ให้เลือก Search รอบอื่น
+            $('#StatusText').html(
+                `<strong>แจ้งเตือน:</strong> รอบแผนงานนี้อยู่ในสถานะ <strong>PROCESS</strong> ${docNo ? `[${docNo}]` : ''} กำลังอยู่ระหว่างการอนุมัติ จึงไม่สามารถสร้างหรือคำนวณใหม่ได้ (กรุณาเลือกค้นหารอบอื่น)`,
+            );
+        } else {
+            // Mode 2/3: แจ้งเตือนปกติ
+            $('#StatusText').html(
+                `<strong>แจ้งเตือน:</strong> เอกสารกำลังอยู่ในขั้นตอนการอนุมัติ (Step: ${extData || '-'}) ${docNo ? `[${docNo}]` : ''}`,
+            );
+        }
+        $pendingAlert.removeClass('hidden');
+
+        // Mode 1 ห้ามแก้ Inline Date ถ้าติด PROCESS
+        // Mode 2 แก้ได้เฉพาะ Step ตรวจสอบ (extData = '01')
+        const canEditInline =
+            mode === '2' && (extData === '01' || extData === '');
+        $('.inline-edit-date')
+            .prop('disabled', !canEditInline)
+            .toggleClass('opacity-50 cursor-not-allowed', !canEditInline);
+    } else if (rawStatus === 'DRAFT') {
+        // ⚪ เพิ่งกดคำนวณแต่ยังไม่ส่งเข้า Flow
+        $statusBadge.addClass('badge-ghost text-slate-600').text('DRAFT');
+        $pendingAlert.addClass('hidden');
+
+        const isEditable = mode === '1';
+        $('.inline-edit-date')
+            .prop('disabled', !isEditable)
+            .toggleClass('opacity-50 cursor-not-allowed', !isEditable);
+    } else if (rawStatus === 'APPROVE' || rawStatus === 'APPROVED') {
+        // 🟢 Approved จบแล้ว
+        $statusBadge.addClass('badge-success text-white').text('APPROVE');
+        $pendingAlert.addClass('hidden');
+
+        $('.inline-edit-date')
+            .prop('disabled', true)
+            .addClass('opacity-50 cursor-not-allowed');
+    } else {
+        // รอบใหม่ที่ยังไม่มีเอกสารใดๆ
+        $statusBadge.addClass('hidden');
+        $pendingAlert.addClass('hidden');
+
+        $('.inline-edit-date')
+            .prop('disabled', true)
+            .addClass('opacity-50 cursor-not-allowed');
+    }
 }
 
 // ฟังก์ชันอ่านค่า DesType ที่ User ติ๊กเลือกทั้งหมด
