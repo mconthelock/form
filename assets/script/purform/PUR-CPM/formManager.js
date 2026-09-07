@@ -1,10 +1,10 @@
-import select2 from "select2";
-import { getUser, searchUser } from "@amec/webasset/api/amec";
-import { doaction, showflow } from "@amec/webasset/api/webform";
-import { webflowSubmit } from "@amec/webasset/components/form";
-import { redirectWebflow, setformDetail } from "@amec/webasset/form";
-import { showLoader } from "@amec/webasset/preloader";
-import { formSubmitSkeleton } from "@amec/webasset/skeleton";
+import select2 from 'select2';
+import { getUser, searchUser } from '@amec/webasset/api/amec';
+import { doaction, showflow } from '@amec/webasset/api/webform';
+import { webflowSubmit } from '@amec/webasset/components/form';
+import { redirectWebflow, setformDetail } from '@amec/webasset/form';
+import { showLoader } from '@amec/webasset/preloader';
+import { formSubmitSkeleton } from '@amec/webasset/skeleton';
 import {
     filterFormData,
     getAllAttr,
@@ -15,15 +15,15 @@ import {
     setRound,
     showErrorMessage,
     showMessage,
-} from "@amec/webasset/utils";
-import { approveReturn, create, getCurrency, getData } from "./data";
-import { dragDropInit } from "@amec/webasset/dragdrop";
-import { setDatefpk, setDatePicker } from "@amec/webasset/flatpickr";
-import { setSelect2 } from "@amec/webasset/select2";
-import { selectAttachType } from "./function";
-import { formatDate } from "@amec/webasset/dayjs";
-import { classIcofont } from "@amec/webasset/fileExplorer";
-import Swal from "sweetalert2";
+} from '@amec/webasset/utils';
+import { approveReturn, create, getCurrency, getData } from './data';
+import { dragDropInit } from '@amec/webasset/dragdrop';
+import { setDatefpk, setDatePicker } from '@amec/webasset/flatpickr';
+import { setSelect2 } from '@amec/webasset/select2';
+import { selectAttachType } from './function';
+import { formatDate } from '@amec/webasset/dayjs';
+import { classIcofont } from '@amec/webasset/fileExplorer';
+import Swal from 'sweetalert2';
 select2();
 
 const state = {
@@ -66,7 +66,7 @@ const state = {
 
 const inputByManager = {
     get input() {
-        return $("#INPUTBY");
+        return $('#INPUTBY');
     },
     get value() {
         return this.input.val();
@@ -78,7 +78,7 @@ const inputByManager = {
 
 export const reqByManager = {
     get input() {
-        return $("#REQBY");
+        return $('#REQBY');
     },
     get value() {
         return this.input.val();
@@ -89,11 +89,11 @@ export const reqByManager = {
     async setEmpRequester(empno) {
         const checked = await getUser(empno);
         if (!checked) {
-            this.value = "";
-            inVoiceTypeManager.unchecked("service");
+            this.value = '';
+            inVoiceTypeManager.unchecked('service');
             showMessage(
-                "Employee not found. Please enter the information again. (ไม่พบข้อมูลพนักงาน กรุณากรอกใหม่อีกครั้ง)",
-                "warning",
+                'Employee not found. Please enter the information again. (ไม่พบข้อมูลพนักงาน กรุณากรอกใหม่อีกครั้ง)',
+                'warning',
             );
             return;
         }
@@ -103,10 +103,10 @@ export const reqByManager = {
 
 export const formManager = {
     get form() {
-        return $("#form");
+        return $('#form');
     },
     get formDetail() {
-        return $("#form-detail");
+        return $('#form-detail');
     },
     set formDetail(html) {
         this.formDetail.html(html);
@@ -114,7 +114,7 @@ export const formManager = {
     async init() {
         try {
             showLoader();
-            const formInfo = await getAllAttr(".form-info");
+            const formInfo = await getAllAttr('.form-info');
             state.FormInfo = {
                 NFRMNO: formInfo.nfrmno,
                 VORGNO: formInfo.vorgno,
@@ -122,10 +122,10 @@ export const formManager = {
                 CYEAR2: formInfo.cyear2 ?? null,
                 NRUNNO: formInfo.nrunno ?? null,
                 MODE: Number(formInfo.mode) ?? null,
-                EMPNO: $(".apv-data").attr("empno"),
+                EMPNO: $('.apv-data').attr('empno'),
                 RETURN: formInfo.return ?? null,
             };
-            state.users = await searchUser({ CSTATUS: "1" });
+            state.users = await searchUser({ CSTATUS: '1' });
             await this.setForm(state.FormInfo.MODE);
         } catch (err) {
             console.error(err);
@@ -163,7 +163,7 @@ export const formManager = {
                 actionFormManager.init(mode, flow.html);
                 attachFileManager.init(data.FILES || []);
                 if (state.FormInfo.RETURN) {
-                    $("#section-0").addClass("hidden!");
+                    $('#section-0').addClass('hidden!');
                     setDatePicker();
                     const curr = await getCurrency();
                     const currData = curr.map((c) => ({
@@ -177,7 +177,7 @@ export const formManager = {
                 }
                 break;
             default:
-                throw new Error("Invalid form mode");
+                throw new Error('Invalid form mode');
         }
     },
     setView(data) {
@@ -186,81 +186,81 @@ export const formManager = {
         // Invoice Type
         inVoiceTypeManager.checkbox.each(function () {
             const value = $(this).val();
-            const type = $(this).attr("i-type");
+            const type = $(this).attr('i-type');
             if (data.INVOICE_TYPE.includes(value)) {
-                $(this).prop("checked", true);
-                if (type == "service") {
+                $(this).prop('checked', true);
+                if (type == 'service') {
                     const thirdParty =
                         state.users
                             .filter((u) => u.SEMPNO == data.THIRD_PARTY)
                             .map((u) => `${u.SNAME} (${u.SEMPNO})`) || null;
                     thirdPartyManager.show();
-                    thirdPartyManager.text = thirdParty || "N/A";
+                    thirdPartyManager.text = thirdParty || 'N/A';
                 }
-                if (type == "other") {
-                    inVoiceTypeOtherManager.text = data.INVOICE_OTHER || "-   ";
+                if (type == 'other') {
+                    inVoiceTypeOtherManager.text = data.INVOICE_OTHER || '-   ';
                 }
             }
         });
         // Subject
-        subjectManager.text = data.SUBJECT || "-";
+        subjectManager.text = data.SUBJECT || '-';
         // Accept PO
         acceptPoManager.checked(true, data.ACCEPT_PO);
-        acceptSubconManager.text = data.ACCEPT_SUBCON || "-";
-        acceptOtherManager.text = data.ACCEPT_OTHER || "-";
+        acceptSubconManager.text = data.ACCEPT_SUBCON || '-';
+        acceptOtherManager.text = data.ACCEPT_OTHER || '-';
         // Quotation
-        quotationManager.text = data.QUOTATION || "-";
+        quotationManager.text = data.QUOTATION || '-';
         quotationDateManager.text = data.QUOTATION_DATE
             ? formatDate(data.QUOTATION_DATE)
-            : "-";
+            : '-';
         // PR/PO
-        poManager.text = data.PONO || "-";
+        poManager.text = data.PONO || '-';
         // Total Amount
         totalAmountManager.text = data.TOTAL_AMOUNT || 0;
         // Currency
         currencyManager.text = data.CURRENCY;
         // Invoice No
-        invoiceNoManager.text = data.INVOICE_NO || "-";
+        invoiceNoManager.text = data.INVOICE_NO || '-';
         // Invoice Amount
         invoiceAmountManager.text = data.INVOICE_AMOUNT || 0;
         // Person In Charge
-        personInChargeManager.text = data.PERSON_INCHARGE || "-";
+        personInChargeManager.text = data.PERSON_INCHARGE || '-';
         // Invoice Date
         invoiceDateManager.text = data.INVOICE_DATE
             ? formatDate(data.INVOICE_DATE)
-            : "-";
+            : '-';
 
         // Payment Type
         paymentTypeManager.radio.each(function () {
             const value = $(this).val();
-            const type = $(this).attr("p-type");
+            const type = $(this).attr('p-type');
             if (data.PAYMENT_TYPE == value) {
-                $(this).prop("checked", true);
-                if (type == "manual") {
+                $(this).prop('checked', true);
+                if (type == 'manual') {
                     // Payment Num
                     paymentNumManager.text =
-                        ordinalIndicator(data?.PAYMENT_NUM) || "-";
+                        ordinalIndicator(data?.PAYMENT_NUM) || '-';
                     selectAttachType(data?.PAYMENT_NUM);
                 }
-                if (type == "final") {
+                if (type == 'final') {
                     selectAttachType(type);
                 }
             }
         });
         // Payment Detail
-        paymentDetailManager.text = data.PAYMENT_DETAIL || "-";
+        paymentDetailManager.text = data.PAYMENT_DETAIL || '-';
         // Payment
         paymentManager.text = data.PAYMENT || 0;
         // Attach Type
-        attachTypeManager.show(["other"]);
+        attachTypeManager.show(['other']);
         attachTypeManager.checkbox.each(function () {
             const value = $(this).val();
-            const type = $(this).attr("a-type");
+            const type = $(this).attr('a-type');
             if (data.ATTACH_TYPE.includes(value)) {
-                $(this).prop("checked", true);
-                if (type == "other") {
+                $(this).prop('checked', true);
+                if (type == 'other') {
                     // Attach Other
-                    attachOtherManager.text = data.ATTACH_OTHER || "-";
+                    attachOtherManager.text = data.ATTACH_OTHER || '-';
                 }
             }
         });
@@ -269,69 +269,69 @@ export const formManager = {
     },
     setReturn(data) {
         // Requester
-        reqByManager.value = state.FormInfo.EMPNO || "-";
-        reqByManager.input.prop("readonly", true);
+        reqByManager.value = state.FormInfo.EMPNO || '-';
+        reqByManager.input.prop('readonly', true);
         // Delivery Location
         deliveryManager.checked(true, data.DELIVELY);
         // Invoice Type
-        inVoiceTypeManager.checked = data.INVOICE_TYPE.split("|");
+        inVoiceTypeManager.checked = data.INVOICE_TYPE.split('|');
         // Invoice Type Other
-        inVoiceTypeOtherManager.value = data.INVOICE_OTHER || "";
+        inVoiceTypeOtherManager.value = data.INVOICE_OTHER || '';
         // THIRD PARTY
         if (data.THIRD_PARTY) {
             thirdPartyManager.value =
                 state.users.find((u) => u.SEMPNO == data.THIRD_PARTY)?.SEMPNO ||
-                "";
+                '';
         }
         // Subject
-        subjectManager.value = data.SUBJECT || "";
+        subjectManager.value = data.SUBJECT || '';
         // Accept PO
-        acceptPoManager.value = data.ACCEPT_PO || "";
-        acceptSubconManager.value = data.ACCEPT_SUBCON || "";
-        acceptOtherManager.value = data.ACCEPT_OTHER || "";
+        acceptPoManager.value = data.ACCEPT_PO || '';
+        acceptSubconManager.value = data.ACCEPT_SUBCON || '';
+        acceptOtherManager.value = data.ACCEPT_OTHER || '';
         // Quotation
-        quotationManager.value = data.QUOTATION || "";
+        quotationManager.value = data.QUOTATION || '';
         quotationDateManager.value = formatDate(data.QUOTATION_DATE);
         // PR/PO
-        poManager.value = data.PONO || "";
+        poManager.value = data.PONO || '';
         // Total Amount
         totalAmountManager.value = data.TOTAL_AMOUNT || 0;
         // Currency
-        currencyManager.value = data.CURRENCY || "";
+        currencyManager.value = data.CURRENCY || '';
         // Invoice No
-        invoiceNoManager.value = data.INVOICE_NO || "";
+        invoiceNoManager.value = data.INVOICE_NO || '';
         // Invoice Amount
         invoiceAmountManager.value = data.INVOICE_AMOUNT || 0;
         // Person In Charge
-        personInChargeManager.value = data.PERSON_INCHARGE || "";
+        personInChargeManager.value = data.PERSON_INCHARGE || '';
         // Invoice Date
         invoiceDateManager.value = formatDate(data.INVOICE_DATE);
         // Payment Type
-        paymentTypeManager.value = data.PAYMENT_TYPE || "";
+        paymentTypeManager.value = data.PAYMENT_TYPE || '';
         // Payment Num
-        paymentNumManager.value = data.PAYMENT_NUM || "";
+        paymentNumManager.value = data.PAYMENT_NUM || '';
         // Payment Detail
-        paymentDetailManager.value = data.PAYMENT_DETAIL || "";
+        paymentDetailManager.value = data.PAYMENT_DETAIL || '';
         // Payment
         paymentManager.value = data.PAYMENT || 0;
         // Attach Type
-        attachTypeManager.checked = data.ATTACH_TYPE.split("|");
+        attachTypeManager.checked = data.ATTACH_TYPE.split('|');
         // Attach Other
-        attachOtherManager.value = data.ATTACH_OTHER || "";
+        attachOtherManager.value = data.ATTACH_OTHER || '';
     },
 };
 
 export const currencyManager = {
-    list: ["curr-total", "curr-invoice", "curr-payment"],
+    list: ['curr-total', 'curr-invoice', 'curr-payment'],
     get select() {
-        return $(".currency");
+        return $('.currency');
     },
     set text(val) {
-        $(".currency").text(val);
+        $('.currency').text(val);
     },
     set value(val) {
         this.list.forEach((id) => {
-            $(`#${id}`).val(val).trigger("change");
+            $(`#${id}`).val(val).trigger('change');
         });
     },
     getValue(id) {
@@ -346,8 +346,8 @@ export const currencyManager = {
             await setSelect2({
                 id: id,
                 data: data,
-                size: "sm",
-                placeholder: "BTH",
+                size: 'sm',
+                placeholder: 'BTH',
                 search: false,
                 clear: false,
                 emptyValue: false,
@@ -361,10 +361,10 @@ export const currencyManager = {
      */
     syncValue(value, element) {
         for (const id of this.list) {
-            if (!$("#" + id).is(element)) {
-                $("#" + id)
+            if (!$('#' + id).is(element)) {
+                $('#' + id)
                     .val(value.toUpperCase())
-                    .trigger("change");
+                    .trigger('change');
             }
         }
     },
@@ -377,7 +377,7 @@ const deliveryManager = {
     checked(isChecked, value) {
         this.radio.each(function () {
             if ($(this).val() == value) {
-                $(this).prop("checked", isChecked);
+                $(this).prop('checked', isChecked);
             }
         });
     },
@@ -391,7 +391,7 @@ export const inVoiceTypeManager = {
     get values() {
         const values = [];
         this.checkbox.each(function () {
-            if ($(this).is(":checked")) {
+            if ($(this).is(':checked')) {
                 values.push($(this).val());
             }
         });
@@ -400,8 +400,8 @@ export const inVoiceTypeManager = {
     get types() {
         const types = [];
         this.checkbox.each(function () {
-            if ($(this).is(":checked")) {
-                types.push($(this).attr("i-type"));
+            if ($(this).is(':checked')) {
+                types.push($(this).attr('i-type'));
             }
         });
         return types;
@@ -409,28 +409,28 @@ export const inVoiceTypeManager = {
     set checked(vals) {
         this.checkbox.each(function () {
             if (vals.includes($(this).val())) {
-                $(this).prop("checked", true);
+                $(this).prop('checked', true);
             }
         });
         this.change();
     },
     unchecked(type) {
         this.checkbox.each(function () {
-            if ($(this).attr("i-type") == type) {
-                $(this).prop("checked", false);
+            if ($(this).attr('i-type') == type) {
+                $(this).prop('checked', false);
             }
         });
         this.change();
     },
     async change() {
         const types = this.types;
-        types.includes("other")
+        types.includes('other')
             ? inVoiceTypeOtherManager.disabled(false)
             : inVoiceTypeOtherManager.disabled(true);
-        if (types.includes("service")) {
-            if (reqByManager.value == "") {
-                showMessage("Please input requester", "warning");
-                this.unchecked("service");
+        if (types.includes('service')) {
+            if (reqByManager.value == '') {
+                showMessage('Please input requester', 'warning');
+                this.unchecked('service');
                 return;
             }
             await thirdPartyManager.init(reqByManager.value);
@@ -442,7 +442,7 @@ export const inVoiceTypeManager = {
 
 const inVoiceTypeOtherManager = {
     get input() {
-        return $("#INVOICE_OTHER");
+        return $('#INVOICE_OTHER');
     },
     get value() {
         return this.input.val();
@@ -454,12 +454,12 @@ const inVoiceTypeOtherManager = {
         this.input.text(val);
     },
     disabled(isDisabled) {
-        this.input.prop("disabled", isDisabled);
+        this.input.prop('disabled', isDisabled);
         if (isDisabled) {
-            this.value = "";
-            this.input.removeClass("req");
+            this.value = '';
+            this.input.removeClass('req');
         } else {
-            this.input.addClass("req");
+            this.input.addClass('req');
         }
         removeClassError(this.input);
     },
@@ -467,55 +467,55 @@ const inVoiceTypeOtherManager = {
 
 const thirdPartyManager = {
     get select() {
-        return $("#THIRD_PARTY");
+        return $('#THIRD_PARTY');
     },
     get fieldset() {
-        return $("#third-party-fieldset");
+        return $('#third-party-fieldset');
     },
     set text(val) {
         this.select.text(val);
     },
     set value(val) {
-        this.select.val(val).trigger("change");
+        this.select.val(val).trigger('change');
     },
     async init(requester) {
         const requesterData = state.users.find((u) => u.SEMPNO == requester);
         const thirdParty = state.users
             .filter(
                 (u) =>
-                    u.SPOSCODE == "30" && u.SSECCODE != requesterData.SSECCODE,
+                    u.SPOSCODE == '30' && u.SSECCODE != requesterData.SSECCODE,
             )
             .sort((a, b) => {
                 return a.SNAME.localeCompare(b.SNAME);
             });
-        if (!this.select.hasClass("select2-hidden-accessible")) {
+        if (!this.select.hasClass('select2-hidden-accessible')) {
             await setSelect2({
-                id: "THIRD_PARTY",
+                id: 'THIRD_PARTY',
                 data: thirdParty.map((u) => ({
                     value: u.SEMPNO,
                     text: `${u.SNAME} (${u.SEMPNO})`,
                 })),
-                width: "24rem",
-                size: "sm",
+                width: '24rem',
+                size: 'sm',
             });
         }
         this.show();
     },
     show() {
-        this.fieldset.removeClass("hidden!");
-        this.select.addClass("req");
+        this.fieldset.removeClass('hidden!');
+        this.select.addClass('req');
     },
     hide() {
-        this.fieldset.addClass("hidden!");
-        this.select.removeClass("req");
-        this.value = "";
+        this.fieldset.addClass('hidden!');
+        this.select.removeClass('req');
+        this.value = '';
     },
 };
 // -------------------------- End of Invoice Type Manager --------------------------
 
 const subjectManager = {
     get input() {
-        return $("#SUBJECT");
+        return $('#SUBJECT');
     },
     set text(val) {
         this.input.text(val);
@@ -533,8 +533,8 @@ export const acceptPoManager = {
     get type() {
         let type = null;
         this.radio.each(function () {
-            if ($(this).is(":checked")) {
-                type = $(this).attr("a-type");
+            if ($(this).is(':checked')) {
+                type = $(this).attr('a-type');
             }
         });
         return type;
@@ -542,7 +542,7 @@ export const acceptPoManager = {
     set value(val) {
         this.radio.each(function () {
             if ($(this).val() == val) {
-                $(this).prop("checked", true);
+                $(this).prop('checked', true);
             }
         });
         this.change();
@@ -550,22 +550,22 @@ export const acceptPoManager = {
     checked(isChecked, value) {
         this.radio.each(function () {
             if ($(this).val() == value) {
-                $(this).prop("checked", isChecked);
+                $(this).prop('checked', isChecked);
             }
         });
     },
     change() {
         const type = this.type;
         if (!type) {
-            showMessage("Please select accept type", "warning");
+            showMessage('Please select accept type', 'warning');
             return;
         }
         switch (type) {
-            case "subcon":
+            case 'subcon':
                 acceptSubconManager.disabled(false);
                 acceptOtherManager.disabled(true);
                 break;
-            case "other":
+            case 'other':
                 acceptOtherManager.disabled(false);
                 acceptSubconManager.disabled(true);
                 break;
@@ -575,7 +575,7 @@ export const acceptPoManager = {
 
 const acceptSubconManager = {
     get input() {
-        return $("#ACCEPT_SUBCON");
+        return $('#ACCEPT_SUBCON');
     },
     set value(val) {
         this.input.val(val);
@@ -584,12 +584,12 @@ const acceptSubconManager = {
         this.input.text(val);
     },
     disabled(isDisabled) {
-        this.input.prop("disabled", isDisabled);
+        this.input.prop('disabled', isDisabled);
         if (isDisabled) {
-            this.value = "";
-            this.input.removeClass("req");
+            this.value = '';
+            this.input.removeClass('req');
         } else {
-            this.input.addClass("req");
+            this.input.addClass('req');
         }
         removeClassError(this.input);
     },
@@ -597,7 +597,7 @@ const acceptSubconManager = {
 
 const acceptOtherManager = {
     get input() {
-        return $("#ACCEPT_OTHER");
+        return $('#ACCEPT_OTHER');
     },
     set value(val) {
         this.input.val(val);
@@ -606,12 +606,12 @@ const acceptOtherManager = {
         this.input.text(val);
     },
     disabled(isDisabled) {
-        this.input.prop("disabled", isDisabled);
+        this.input.prop('disabled', isDisabled);
         if (isDisabled) {
-            this.value = "";
-            this.input.removeClass("req");
+            this.value = '';
+            this.input.removeClass('req');
         } else {
-            this.input.addClass("req");
+            this.input.addClass('req');
         }
         removeClassError(this.input);
     },
@@ -620,7 +620,7 @@ const acceptOtherManager = {
 
 const quotationManager = {
     get input() {
-        return $("#QUOTATION");
+        return $('#QUOTATION');
     },
     set text(val) {
         this.input.text(val);
@@ -632,14 +632,14 @@ const quotationManager = {
 
 const quotationDateManager = {
     get input() {
-        return $("#QUOTATION_DATE");
+        return $('#QUOTATION_DATE');
     },
     set text(val) {
         this.input.text(val);
     },
     set value(val) {
         setDatefpk({
-            name: "QUOTATION_DATE",
+            name: 'QUOTATION_DATE',
             date: val,
         });
     },
@@ -647,7 +647,7 @@ const quotationDateManager = {
 
 const poManager = {
     get input() {
-        return $("#PONO");
+        return $('#PONO');
     },
     set text(val) {
         this.input.text(val);
@@ -659,10 +659,10 @@ const poManager = {
 
 const totalAmountManager = {
     get input() {
-        return $("#TOTAL_AMOUNT");
+        return $('#TOTAL_AMOUNT');
     },
     set text(val) {
-        this.input.text(setRound(val) || "0");
+        this.input.text(setRound(val) || '0');
     },
     set value(val) {
         this.input.val(val);
@@ -671,7 +671,7 @@ const totalAmountManager = {
 
 const invoiceNoManager = {
     get input() {
-        return $("#INVOICE_NO");
+        return $('#INVOICE_NO');
     },
     set text(val) {
         this.input.text(val);
@@ -683,10 +683,10 @@ const invoiceNoManager = {
 
 const invoiceAmountManager = {
     get input() {
-        return $("#INVOICE_AMOUNT");
+        return $('#INVOICE_AMOUNT');
     },
     set text(val) {
-        this.input.text(setRound(val) || "0");
+        this.input.text(setRound(val) || '0');
     },
     set value(val) {
         this.input.val(val);
@@ -695,7 +695,7 @@ const invoiceAmountManager = {
 
 const personInChargeManager = {
     get input() {
-        return $("#PERSON_INCHARGE");
+        return $('#PERSON_INCHARGE');
     },
     set text(val) {
         this.input.text(val);
@@ -707,14 +707,14 @@ const personInChargeManager = {
 
 const invoiceDateManager = {
     get input() {
-        return $("#INVOICE_DATE");
+        return $('#INVOICE_DATE');
     },
     set text(val) {
         this.input.text(val);
     },
     set value(val) {
         setDatefpk({
-            name: "INVOICE_DATE",
+            name: 'INVOICE_DATE',
             date: val,
         });
     },
@@ -722,7 +722,7 @@ const invoiceDateManager = {
 
 const paymentDetailManager = {
     get input() {
-        return $("#PAYMENT_DETAIL");
+        return $('#PAYMENT_DETAIL');
     },
     set text(val) {
         this.input.text(val);
@@ -739,8 +739,8 @@ export const paymentTypeManager = {
     get type() {
         let type = null;
         this.radio.each(function () {
-            if ($(this).is(":checked")) {
-                type = $(this).attr("p-type");
+            if ($(this).is(':checked')) {
+                type = $(this).attr('p-type');
             }
         });
         return type;
@@ -748,23 +748,23 @@ export const paymentTypeManager = {
     set value(val) {
         this.radio.each(function () {
             if ($(this).val() == val) {
-                $(this).prop("checked", true);
+                $(this).prop('checked', true);
             }
         });
         this.change();
     },
     change() {
-        paymentNumManager.value = "";
+        paymentNumManager.value = '';
         paymentManager.disabled(false);
-        attachTypeManager.hide("other");
-        attachTypeManager.reset("other");
+        attachTypeManager.hide('other');
+        attachTypeManager.reset('other');
         const type = this.type;
-        if (type == "manual") {
+        if (type == 'manual') {
             paymentNumManager.disabled(false);
             paymentNumManager.value = 1;
             paymentNumManager.onInput();
             removeClassError(paymentNumManager.input);
-        } else if (type == "final") {
+        } else if (type == 'final') {
             paymentNumManager.disabled(true);
             selectAttachType(type);
         }
@@ -773,7 +773,7 @@ export const paymentTypeManager = {
 
 export const paymentNumManager = {
     get input() {
-        return $("#PAYMENT_NUM");
+        return $('#PAYMENT_NUM');
     },
     set value(val) {
         this.input.val(val);
@@ -782,35 +782,35 @@ export const paymentNumManager = {
         this.input.text(val);
     },
     disabled(isDisabled) {
-        this.input.prop("disabled", isDisabled);
+        this.input.prop('disabled', isDisabled);
         if (isDisabled) {
-            this.value = "";
-            this.input.removeClass("req");
+            this.value = '';
+            this.input.removeClass('req');
         } else {
-            this.input.addClass("req");
+            this.input.addClass('req');
         }
     },
     onInput(value) {
         const payment = !value ? 1 : Number(value);
         this.value = payment;
-        attachTypeManager.hide("other");
-        attachTypeManager.reset("other");
+        attachTypeManager.hide('other');
+        attachTypeManager.reset('other');
         selectAttachType(payment);
     },
 };
 
 const paymentManager = {
     get input() {
-        return $("#PAYMENT");
+        return $('#PAYMENT');
     },
     set text(val) {
-        this.input.text(setRound(val) || "0");
+        this.input.text(setRound(val) || '0');
     },
     set value(val) {
         this.input.val(val);
     },
     disabled(isDisabled) {
-        this.input.prop("disabled", isDisabled);
+        this.input.prop('disabled', isDisabled);
     },
 };
 
@@ -820,25 +820,25 @@ const paymentManager = {
 
 export const attachTypeManager = {
     get label() {
-        return $(".attach-file");
+        return $('.attach-file');
     },
     get checkbox() {
         return $('input[name="ATTACH_TYPE"]');
     },
     _list: [
-        "po",
-        "equipment",
-        "thirdparty",
-        "delivery",
-        "part",
-        "asset",
-        "other",
+        'po',
+        'equipment',
+        'thirdparty',
+        'delivery',
+        'part',
+        'asset',
+        'other',
     ],
     get types() {
         const types = [];
         this.checkbox.each(function () {
-            if ($(this).is(":checked")) {
-                types.push($(this).attr("a-type"));
+            if ($(this).is(':checked')) {
+                types.push($(this).attr('a-type'));
             }
         });
         return types;
@@ -846,42 +846,42 @@ export const attachTypeManager = {
     set checked(vals) {
         this.checkbox.each(function () {
             if (vals.includes($(this).val())) {
-                $(this).prop("checked", true);
+                $(this).prop('checked', true);
             }
         });
         this.change();
     },
     reset(notType = null) {
         this.checkbox.each(function () {
-            const type = $(this).attr("a-type");
+            const type = $(this).attr('a-type');
             if (type != notType) {
-                $(this).prop("checked", false);
+                $(this).prop('checked', false);
             }
         });
         this.change();
     },
     hide(notType = null) {
         this.checkbox.each(function () {
-            const type = $(this).attr("a-type");
+            const type = $(this).attr('a-type');
             if (type != notType) {
-                $(this).prop("checked", false);
-                $(this).removeClass("req");
-                $(`#attach-${type}`).addClass("hidden");
+                $(this).prop('checked', false);
+                $(this).removeClass('req');
+                $(`#attach-${type}`).addClass('hidden');
             }
         });
     },
     show(list) {
         this.checkbox.each(function () {
-            const type = $(this).attr("a-type");
+            const type = $(this).attr('a-type');
             if (list.includes(type)) {
-                $(this).addClass("req");
-                $(`#attach-${type}`).removeClass("hidden");
+                $(this).addClass('req');
+                $(`#attach-${type}`).removeClass('hidden');
             }
         });
     },
     change() {
         const types = this.types;
-        types.includes("other")
+        types.includes('other')
             ? attachOtherManager.disabled(false)
             : attachOtherManager.disabled(true);
     },
@@ -889,7 +889,7 @@ export const attachTypeManager = {
 
 const attachOtherManager = {
     get input() {
-        return $("#ATTACH_OTHER");
+        return $('#ATTACH_OTHER');
     },
     set text(val) {
         this.input.text(val);
@@ -898,12 +898,12 @@ const attachOtherManager = {
         this.input.val(val);
     },
     disabled(isDisabled) {
-        this.input.prop("disabled", isDisabled);
+        this.input.prop('disabled', isDisabled);
         if (isDisabled) {
-            this.input.val("");
-            this.input.removeClass("req");
+            this.input.val('');
+            this.input.removeClass('req');
         } else {
-            this.input.addClass("req");
+            this.input.addClass('req');
         }
         removeClassError(this.input);
     },
@@ -913,15 +913,15 @@ const attachOtherManager = {
 
 export const attachFileManager = {
     get input() {
-        return $("#files");
+        return $('#files');
     },
     get container() {
-        return $("#attachFile");
+        return $('#attachFile');
     },
     get checkedFilesLength() {
         return (
             this.input[0].files.length +
-            this.container.find(".file-link").length
+            this.container.find('.file-link').length
         );
     },
     set container(html) {
@@ -929,16 +929,16 @@ export const attachFileManager = {
     },
     init(files = []) {
         const html =
-            files.length > 0 ? this.setFiles(files, state.FormInfo.RETURN) : "";
+            files.length > 0 ? this.setFiles(files, state.FormInfo.RETURN) : '';
         this.container =
             html +
             (state.FormInfo.RETURN
                 ? dragDropInit()
                 : state.FormInfo.MODE == 1
                   ? dragDropInit({
-                        class: "req",
+                        class: 'req',
                     })
-                  : "");
+                  : '');
     },
     setFiles(files, isReturn = false) {
         let html = "<div class='flex flex-col gap-3 mt-5'>";
@@ -950,25 +950,25 @@ export const attachFileManager = {
                 originalName="${f.FILE_ONAME}"
                 class="file-link text-primary flex items-center gap-3 w-full border rounded-lg bg-base-100 p-3"
             >
-                <i class="${classIcofont(f.FILE_ONAME.split(".").pop())} text-4xl"></i>
+                <i class="${classIcofont(f.FILE_ONAME.split('.').pop())} text-4xl"></i>
                 <span class="link link-primary">${f.FILE_ONAME}</span>
                 <button 
                     type="button"
                     file-id="${f.FILE_ID}"
                     class="flex items-center justify-center ml-auto p-5 w-6 h-6 rounded hover:bg-red-100 text-red-500 hover:text-red-600 transition remove-file 
-                    ${isReturn ? "" : "hidden"}">
+                    ${isReturn ? '' : 'hidden'}">
                     <i class="icofont-trash text-xl"></i>
                 </button>
 
             </a>`;
         });
-        html += "</div>";
+        html += '</div>';
         return html;
     },
     deleteFile(tagA, id) {
         Swal.fire({
-            title: "Are you sure you want to delete this file?",
-            icon: "warning",
+            title: 'Are you sure you want to delete this file?',
+            icon: 'warning',
             showCancelButton: true,
         }).then((result) => {
             if (result.isConfirmed) {
@@ -981,10 +981,10 @@ export const attachFileManager = {
 
 export const actionFormManager = {
     get remark() {
-        return $("#remark");
+        return $('#remark');
     },
     get container() {
-        return $("#form-action-container");
+        return $('#form-action-container');
     },
     init(mode, flow) {
         switch (mode) {
@@ -1013,7 +1013,7 @@ export const actionFormManager = {
                 );
                 break;
             default:
-                this.container.html("");
+                this.container.html('');
                 break;
         }
     },
@@ -1022,21 +1022,21 @@ export const actionFormManager = {
             case 1:
                 formSubmitSkeleton({
                     count: 2,
-                    element: "#form-action-container",
-                    mode: "create",
+                    element: '#form-action-container',
+                    mode: 'create',
                 });
                 break;
             case 2:
                 formSubmitSkeleton({
                     count: state.FormInfo.RETURN ? 3 : 4,
-                    element: "#form-action-container",
-                    mode: "edit",
+                    element: '#form-action-container',
+                    mode: 'edit',
                 });
                 break;
             default:
                 formSubmitSkeleton({
-                    element: "#form-action-container",
-                    mode: "view",
+                    element: '#form-action-container',
+                    mode: 'view',
                 });
                 break;
         }
@@ -1060,15 +1060,15 @@ export const actionFormManager = {
                 {element: attachTypeManager.checkbox, message: "Please select Attach Type."},
                 {element: attachFileManager.input, message: "Please attach files."},
             ].filter(Boolean);
-            if (!(await requiredForm("#form", requiredMessage))) return;
+            if (!(await requiredForm('#form', requiredMessage))) return;
 
-            const formData = new FormData($("#form")[0]);
+            const formData = new FormData($('#form')[0]);
             const data = state.data;
-            formData.set("NFRMNO", data.NFRMNO);
-            formData.set("VORGNO", data.VORGNO);
-            formData.set("CYEAR", data.CYEAR);
-            formData.set("REMARK", this.remark.val());
-            formData.set("CURRENCY", currencyManager.getValue("curr-payment"));
+            formData.set('NFRMNO', data.NFRMNO);
+            formData.set('VORGNO', data.VORGNO);
+            formData.set('CYEAR', data.CYEAR);
+            formData.set('REMARK', this.remark.val());
+            formData.set('CURRENCY', currencyManager.getValue('curr-payment'));
 
             const filteredFormData = filterFormData(formData);
             logFormData(filteredFormData);
@@ -1076,7 +1076,7 @@ export const actionFormManager = {
             const res = await create(filteredFormData);
 
             if (res.status == true) {
-                showMessage(res.message, "success");
+                showMessage(res.message, 'success');
                 redirectWebflow();
             } else {
                 throw new Error(res.message);
@@ -1093,14 +1093,14 @@ export const actionFormManager = {
             showLoader();
             let res = null;
             const data = state.data;
-            if (action === "return" && this.remark.val().trim() === "") {
+            if (action === 'return' && this.remark.val().trim() === '') {
                 showMessage(
-                    "Please input remark for return action.",
-                    "warning",
+                    'Please input remark for return action.',
+                    'warning',
                 );
                 return;
             }
-            if (action === "approve" && state.FormInfo.RETURN) {
+            if (action === 'approve' && state.FormInfo.RETURN) {
                 //prettier-ignore
                 const requiredMessage = [
                     {element: deliveryManager.radio,  message: "Please select Delivery Location."},
@@ -1115,30 +1115,30 @@ export const actionFormManager = {
                     paymentNumManager.input.hasClass('req') ? {element: paymentNumManager.input, message: "Please input Number of Payment."} : null,
                     {element: attachTypeManager.checkbox, message: "Please select Attach Type."},
                 ].filter(Boolean);
-                if (!(await requiredForm("#form", requiredMessage))) return;
+                if (!(await requiredForm('#form', requiredMessage))) return;
                 if (attachFileManager.checkedFilesLength === 0) {
                     showMessage(
-                        "Please upload attached files before approve.",
-                        "warning",
+                        'Please upload attached files before approve.',
+                        'warning',
                     );
                     return;
                 }
-                const formData = new FormData($("#form")[0]);
-                formData.set("NFRMNO", data.NFRMNO);
-                formData.set("VORGNO", data.VORGNO);
-                formData.set("CYEAR", data.CYEAR);
-                formData.set("CYEAR2", data.CYEAR2);
-                formData.set("NRUNNO", data.NRUNNO);
-                formData.set("EMPNO", data.EMPNO);
-                formData.set("ACTION", action);
-                formData.set("REMARK", this.remark.val());
+                const formData = new FormData($('#form')[0]);
+                formData.set('NFRMNO', data.NFRMNO);
+                formData.set('VORGNO', data.VORGNO);
+                formData.set('CYEAR', data.CYEAR);
+                formData.set('CYEAR2', data.CYEAR2);
+                formData.set('NRUNNO', data.NRUNNO);
+                formData.set('EMPNO', data.EMPNO);
+                formData.set('ACTION', action);
+                formData.set('REMARK', this.remark.val());
                 formData.set(
-                    "CURRENCY",
-                    currencyManager.getValue("curr-payment"),
+                    'CURRENCY',
+                    currencyManager.getValue('curr-payment'),
                 );
                 // formData.set("DELETE_FILES", state.deleteFiles || "");
                 state.deleteFiles.forEach((fileId) => {
-                    formData.append("DELETE_FILES[]", String(fileId));
+                    formData.append('DELETE_FILES[]', String(fileId));
                 });
 
                 const filteredFormData = filterFormData(formData);
@@ -1153,7 +1153,7 @@ export const actionFormManager = {
                 });
             }
             if (res.status == true) {
-                showMessage(res.message, "success");
+                showMessage(res.message, 'success');
                 redirectWebflow();
             } else {
                 throw new Error(res.message);

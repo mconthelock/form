@@ -2,56 +2,61 @@
 class form extends MY_Controller {
     public function __construct(){
         parent::__construct();
-        if(!isset($_SESSION['user'])) redirect('welcome');
     }
 
-    public function index($status = 1){
-        $titles = array(
-            0 => 'Under Preparation',
-            1 => 'Waiting for approval',
-            2 => 'Comming Soon',
-            3 => 'Mine',
-            4 => 'Approved/Rejected',
-            5 => 'Representative',
-            6 => 'Finished'
+    public function index($id = 1){
+        $status = array(
+            0 => 'nav-form-draft',
+            1 => 'nav-form-waitapprove',
+            2 => 'nav-form-comming',
+            3 => 'nav-form-mine',
+            4 => 'nav-form-approved',
+            5 => 'nav-form-represent',
+            6 => 'nav-form-finish'
         );
-        $data = array('status' => $status,'title'=>$titles[$status]);
-        $this->views('form/index', $data);
+        $this->views('form/index', array('id' => $id, 'title' => $status[$id]));
     }
 
     public function create(){
-        $data = array('department' => $this->setDept());
+        $data = array('department' => $this->setFormDept(), 'title' => 'nav-form-create');
         $this->views('form/create/index', $data);
     }
 
     public function createdetail($id){
-        $dept = $this->setDept();
+        $dept = $this->setFormDept();
         $selectedDept = array_filter($dept, function($d) use ($id) {
-            return $d['link'] === $id;
+            return $d['id'] == $id;
         });
         $data['department'] = reset($selectedDept);
+        $data['title'] = 'form-create';
         $this->views('form/create/createdetail', $data);
     }
 
     public function detail(){
         $target = $_GET['data']; //$url;
-        $this->views('form/detail', array('target' => $target));
+        $title = isset($_GET['title']) ? $_GET['title'] : 'nav-form-create'; //$title;
+        $this->views('form/detail', array('target' => $target, 'title' => $title));
     }
 
-    private function setDept(){
+     public function getFormDept(){
+        $data = $this->setFormDept();
+        echo json_encode($data);
+     }
+
+    private function setFormDept(){
         return array(
-            array('id' => 'is' , 'name' => 'IS Form', 'link'=> '050601'),
-            array('id' => 'gp' , 'name' => 'GA & HR Form', 'link'=> '030101'),
-            array('id' => 'qa' , 'name' => 'QA Form', 'link'=> '000101'),
-            array('id' => 'fe' , 'name' => 'FE Form', 'link'=> '050401'),
-            array('id' => 'ie' , 'name' => 'IE Form', 'link'=> '050401'),
-            array('id' => 'ps' , 'name' => 'PS Form', 'link'=> '050501'),
-            array('id' => 'fin' , 'name' => 'Fin Form', 'link'=> '#'),
-            array('id' => 'de' , 'name' => 'DED Form', 'link'=> '#'),
-            array('id' => 'pur' , 'name' => 'PUR Form', 'link'=> '#'),
-            array('id' => 'mfg' , 'name' => 'MFG Form', 'link'=> '#'),
-            array('id' => 'epl' , 'name' => 'EPL Form', 'link'=> '#'),
-            array('id' => 'mar' , 'name' => 'MAR Form', 'link'=> '#'),
+            array('id'=> 1, 'code' => 'gp' , 'name' => 'GA & HR Form', 'link'=> array('030101', '020601')),
+            array('id'=> 2, 'code' => 'mfg' , 'name' => 'MFG Form', 'link'=> array('060101', '060701')),
+            array('id'=> 3, 'code' => 'qa' , 'name' => 'QA Form', 'link'=> array('000101', '050301', '000301', '000501')),
+            array('id'=> 4, 'code' => 'is' , 'name' => 'IS Form', 'link'=> array('050601', '050603')),
+            array('id'=> 5, 'code' => 'fe' , 'name' => 'FE Form', 'link'=> array('050401', '051003', '051001')),
+            array('id'=> 6, 'code' => 'ie' , 'name' => 'IE Form', 'link'=> array('051401')),
+            array('id'=> 7, 'code' => 'ps' , 'name' => 'PS Form', 'link'=> array('050501', '050504')),
+            array('id'=> 8, 'code' => 'de' , 'name' => 'DED Form', 'link'=> array('070101')),
+            array('id'=> 9, 'code' => 'epl' , 'name' => 'EPL Form', 'link'=> array('070202')),
+            array('id'=> 10, 'code' => 'pur' , 'name' => 'PUR Form', 'link'=> array('090101', '120101')),
+            array('id'=> 11, 'code' => 'mar' , 'name' => 'MAR Form', 'link'=> array('110101', '110201', '090301')),
+            array('id'=> 12, 'code' => 'fin' , 'name' => 'Fin Form', 'link'=> array('080101')),
         );
     }
 }

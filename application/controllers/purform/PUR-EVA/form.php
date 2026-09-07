@@ -22,7 +22,7 @@ class form extends MY_Controller{
             ];
 
         }else{
-            $form = $this->getFormMasterByVaname('PUR-NVF');
+            $form = $this->getFormMasterByVaname('PUR-EVA');
             
             if(!empty($form)){
                 $data = [

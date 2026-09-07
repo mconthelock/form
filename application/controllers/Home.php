@@ -6,6 +6,7 @@ class Home extends MY_Controller {
 
     public function index(){
         $data['links'] = $this->setLinks();
+        $data['title'] = 'home';
         $this->views('home/index', $data);
     }
 
