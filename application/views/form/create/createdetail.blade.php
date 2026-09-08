@@ -31,7 +31,12 @@
                 <kbd class="kbd kbd-sm">K</kbd>
             </label>
 
-            <div id="formlist"></div>
+            <div>
+                <div class="skeleton h-150 w-full" id="formlist-skeleton"></div>
+                <ul id="formlist"
+                    class="list bg-base-100 rounded-box shadow-md border border-slate-300 mb-8 p-6 pb-5 gap-2 hidden"></ul>
+            </div>
+            <div id="formlist-pagination" class="flex justify-center"></div>
         </div>
         <div class="flex-none w-96">
             <div class="bg-primary/10 rounded-lg p-5" id="recent-created-forms">
