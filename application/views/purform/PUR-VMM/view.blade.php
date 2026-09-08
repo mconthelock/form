@@ -10,8 +10,8 @@
     <h1></h1>
 </div>
 <form id="frmmain" style="visibility: hidden;">
-    <input type="hidden" name="PUREVA" value="" />
-    <input type="hidden" name="REQTERNVF" value="" />
+    <input type="hidden" name="EVANO" value="" />
+    <input type="hidden" name="BUYER" value="" />
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-10">
         <h1 class="text-3xl text-center text-primary font-bold mb-10 mt-6">Vendor Master Maintenance</h1>
 
