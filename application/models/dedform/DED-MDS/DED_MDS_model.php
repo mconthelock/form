@@ -983,7 +983,7 @@ class DED_MDS_model extends my_model
 
         return $prefix . $nextRun;
     }
-    
+
 
     // ประมวลผล Plan ผ่าน Caching Working Days & Temp Table
     // public function processPlanMaster($year, $period, $desTypes, $userSession)

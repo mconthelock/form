@@ -24,6 +24,7 @@
      data-status="{{$STATUS ?? ''}}"
      data-default-destypes="{{ implode('|', $selectedDesTypes ?? []) }}"
      data-doc_no="{{$DOC_NO ?? ''}}"
+     data-planheaderid="{{$PLANHEADERID ??''}}"
      >
 </div>
 
@@ -56,9 +57,9 @@
                 <!-- ด้านขวา: แสดง Revision Badge เดิม -->
                 <div class="flex items-center gap-2">
                     <span class="border border-blue-600 text-blue-600 rounded-full px-3 py-0.5 text-xs font-semibold">
-                        Revision: <span id="lblRevision">-</span>
+                        Revision: <span id="RevBadge">-</span>
                     </span>
-                    <span class="bg-orange-500 text-white rounded-full px-3 py-0.5 text-xs font-bold uppercase tracking-wider">
+                    <span class="bg-orange-500 text-white rounded-full px-3 py-0.5 text-xs font-bold uppercase tracking-wider" id="StatusBadge">
                         DRAFT
                     </span>
                 </div>
@@ -87,6 +88,7 @@
                     <input type="hidden" name="EMPNOHid" id="EMPNOHid" value="{{$EMPNO??''}}" />
                     <input type="hidden" name="EXTDATAHid" id="EXTDATAHid" value="{{$EMPNO??''}}" />
                     <input type="hidden" name="MODEHid" id="MODEHid" value="{{$EMPNO??''}}" />
+                    <input type="hidden" name="PlanHeaderIDHid" id="PlanHeaderIDHid" value="{{$PLANHEADERID??''}}" />
                     
                 </div>
                 <div class="flex flex-col gap-1.5">
@@ -166,6 +168,14 @@
                     </button>
                     <button type="button" id="ProcessBtn" class="btn btn-primary btn-sm flex-1 flex items-center justify-center gap-1.5 text-white">
                         ⚡ Process Calculation
+                    </button>
+                    <button type="button" 
+                            id="ExportExcelBtn" 
+                            class="btn bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-2 rounded shadow flex items-center gap-1.5 text-sm font-medium transition">
+                        <svg  class="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                            <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
+                        </svg>
+                        <span>Export Excel</span>
                     </button>
                     <!-- 🟢 ปุ่มเปิด Modal ตั้งค่า Cal Config -->
                     <!-- <button type="button" id="btnOpenCalConfig" class="btn btn-outline-secondary flex items-center gap-1" title="ตั้งค่าวันคำนวณ (Offset Days)">

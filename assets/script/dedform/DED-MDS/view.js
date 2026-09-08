@@ -1,4 +1,5 @@
 import { redirectWebflow } from '@amec/webasset/form';
+import { writeExcelTemp, exportExcel } from '@amec/webasset/excel';
 import {
     getDesTypeMaster,
     processPlanCalculation,
@@ -13,6 +14,7 @@ import flatpickr from 'flatpickr';
 import 'flatpickr/dist/flatpickr.min.css';
 
 import $ from 'jquery';
+import ExcelJS from 'exceljs';
 
 import select2 from 'select2';
 import { setSelect2 } from '@amec/webasset/select2';
@@ -46,6 +48,8 @@ let currentMode = '1'; // ปรับค่าเริ่มต้นให้
 let currentExtData = ''; // 🟢 ประกาศตัวแปรระดับโมดูล
 let selectedFilesArray = [];
 let currentPlanHeaderID = null;
+let isMasterAdmin = false;
+let currentPlanData = [];
 
 $(document).ready(async function () {
     // 1. ดึงข้อมูลจากก้อนข้อมูลหลักของเบลดฟอร์ม
@@ -65,10 +69,12 @@ $(document).ready(async function () {
         REVISION: formData.revision,
         REMARK: formData.remark,
         STATUS: formData.status,
+        PLANHEADERID: formData.planheaderid,
     };
     $('#DOC_IDTxt').val(form.DOC_NO);
     $('#REQUEST_BYTxt').val(form.EMPNO);
     $('#INPUT_BYTxt').val(form.EMPNO);
+    $('#PlanHeaderIDHid').val(form.PLANHEADERID);
     if (form.PLAN_YEAR) {
         $('#YearDrp').val(form.PLAN_YEAR);
     }
@@ -81,6 +87,7 @@ $(document).ready(async function () {
         // โหมดสร้างใหม่ (Create Mode)
         $('#EXTDATAHid').val('');
         $('#MODEHid').val('1');
+        $('#PlanHeaderIDHid').val('');
         await applyButtonPermissions('1', '', '');
     } else {
         currentMode = String(await getMode({ ...form, EMPNO: form.EMPNO }));
@@ -89,6 +96,7 @@ $(document).ready(async function () {
         );
         $('#EXTDATAHid').val(currentExtData);
         $('#MODEHid').val(currentMode);
+        $('#PlanHeaderIDHid').val(form.PLANHEADERID);
 
         // จัดการสิทธิ์การแสดงปุ่มตาม Mode และ ExtData
         await applyButtonPermissions(currentMode, currentExtData, '');
@@ -165,14 +173,19 @@ $(document).ready(async function () {
             EMPNO: empno,
             MODE: $('#MODEHid').val(), // 🟢 ส่ง MODE ปัจจุบัน
             EXTDATA: $('#EXTDATAHid').val(), // 🟢 ส่ง EXTDATA
+            PLANHEADERID: $('#PlanHeaderIDHid').val(),
         };
 
         try {
+            //ProcessPlan
             const res = await processPlanCalculation(payload);
             if (res.status) {
+                currentPlanData = res.data;
                 currentPlanHeaderID = res.planHeaderID;
                 $('#RevBadge').text('Revision: ' + res.revision);
                 renderDataTable(res.data);
+
+                $('#PlanHeaderIDHid').val(currentPlanHeaderID);
                 $('#SavePlanBtn').removeClass('hidden');
                 $('#DeleteBtn').removeClass('hidden');
             } else {
@@ -206,14 +219,18 @@ $(document).ready(async function () {
                 EMPNO: empno,
                 REMARK: $('#RemarkTxt').val(),
                 DOC_ID: $('#DOC_IDTxt').val(),
+                PLANHEADERID: $('#PlanHeaderIDHid').val(),
             };
 
             try {
+                //SavePlanMaster
                 const res = await savePlanMaster(payload);
                 if (res.status) {
                     alert(res.message);
                     $('#RevBadge').text('Revision: ' + res.revision);
                     $('#SavePlanBtn').addClass('hidden');
+
+                    redirectWebflow(); // เปลี่ยนหน้าเมื่อ Flow และ Status อัปเดตสมบูรณ์
                 } else {
                     alert('เกิดข้อผิดพลาด: ' + res.message);
                 }
@@ -253,11 +270,7 @@ $(document).ready(async function () {
             if (delform.status) {
             } else {
                 chk = 0;
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Failed to Delete Form',
-                    text: delform.message || 'Please try again',
-                });
+                alert('Failed to Delete Form');
             }
         }
         if (chk == 1) {
@@ -327,6 +340,26 @@ $(document).ready(async function () {
                 // 1. นำข้อมูลแถวปัจจุบันใส่เข้าไป (ยังไม่สั่ง .draw())
                 if (res.row) {
                     table.row(rowIndex).data(res.row);
+
+                    // ซิงค์ข้อมูลแถวปัจจุบันลงในตัวแปร currentPlanData สำหรับ Export Excel
+                    if (
+                        typeof currentPlanData !== 'undefined' &&
+                        Array.isArray(currentPlanData)
+                    ) {
+                        const curIndex = currentPlanData.findIndex(
+                            (item) =>
+                                (item.DetailID &&
+                                    item.DetailID == res.row.DetailID) ||
+                                (item.SeqNo && item.SeqNo == res.row.SeqNo),
+                        );
+                        if (curIndex !== -1) {
+                            currentPlanData[curIndex] = Object.assign(
+                                {},
+                                currentPlanData[curIndex],
+                                res.row,
+                            );
+                        }
+                    }
                 }
 
                 // 2. ค้นหาแถวถัดไป (nextRow) และใส่ข้อมูลใหม่เข้าไป
@@ -339,6 +372,25 @@ $(document).ready(async function () {
                             this.data(res.nextRow); // อัปเดตข้อมูลของแถวถัดไป
                         }
                     });
+                    // ซิงค์ข้อมูลแถวถัดไปลงในตัวแปร currentPlanData ด้วย
+                    if (
+                        typeof currentPlanData !== 'undefined' &&
+                        Array.isArray(currentPlanData)
+                    ) {
+                        const nextIndex = currentPlanData.findIndex(
+                            (item) =>
+                                (item.DetailID &&
+                                    item.DetailID == res.nextRow.DetailID) ||
+                                (item.SeqNo && item.SeqNo == res.nextRow.SeqNo),
+                        );
+                        if (nextIndex !== -1) {
+                            currentPlanData[nextIndex] = Object.assign(
+                                {},
+                                currentPlanData[nextIndex],
+                                res.nextRow,
+                            );
+                        }
+                    }
                 }
 
                 // 3. วาดตารางใหม่เพียง "ครั้งเดียว" หลังจากอัปเดต Data ครบทั้งสองแถว
@@ -425,7 +477,7 @@ $(document).ready(async function () {
                 TargetField: targetField,
                 P_Type: pType,
                 OffsetDays: newOffset,
-                EMPNO: '<?= $EMPNO ?? "SYSTEM" ?>',
+                EMPNO: typeof empno !== 'undefined' ? empno : 'SYSTEM',
             },
             success: function (res) {
                 input.removeClass('bg-yellow-100');
@@ -461,6 +513,7 @@ $(document).ready(async function () {
             $(this).addClass('hidden');
         }
     });
+
     // ฟังก์ชันโหลดข้อมูล Config
     function loadCalConfig() {
         const tbody = $('#calConfigTbody');
@@ -472,6 +525,10 @@ $(document).ready(async function () {
             url: host + 'dedform/DED-MDS/form/GetCalConfigMaster',
             type: 'GET',
             dataType: 'json',
+            // ส่ง EMPNO ไปตรวจสอบสิทธิ์
+            data: {
+                EMPNO: typeof empno !== 'undefined' ? empno : 'SYSTEM',
+            },
             success: function (res) {
                 if (!res.status || !res.data) {
                     tbody.html(
@@ -480,25 +537,33 @@ $(document).ready(async function () {
                     return;
                 }
 
+                // 🟢 อ่านค่าสิทธิ์ ms จาก res.ms
+                const canEdit = res.ms === true;
+                const disabledAttr = canEdit ? '' : 'disabled';
+                const inputStyle = canEdit
+                    ? 'background-color: #ffffff; color: #2563eb; cursor: text;'
+                    : 'background-color: #f3f4f6; color: #6b7280; cursor: not-allowed; border-color: #e5e7eb;';
+
                 let html = '';
                 res.data.forEach((item, index) => {
                     html += `
                     <tr>
-                        <td class="text-center align-middle">${index + 1}</td>
+                        <td class="text-center align-middle text-gray-500">${index + 1}</td>
                         <td class="align-middle font-semibold text-gray-800">${item.TargetField || '-'}</td>
-                        <td class="align-middle">${item.P_Type || '-'}</td>
-                        <td class="align-middle">${item.BaseField || '-'}</td>
-                        <td class="align-middle">${item.BaseRowType || '-'}</td>
+                        <td class="align-middle text-gray-700">${item.P_Type || '-'}</td>
+                        <td class="align-middle text-gray-600">${item.BaseField || '-'}</td>
+                        <td class="align-middle text-gray-600">${item.BaseRowType || '-'}</td>
                         <td class="text-center align-middle">
                             <input type="number" 
-                                   class="form-control text-center input-offset-days font-bold text-blue-600" 
-                                   style="width: 90px; margin: 0 auto;"
+                                   class="form-control text-center input-offset-days font-bold" 
+                                   style="width: 85px; margin: 0 auto; ${inputStyle}" 
                                    data-target="${item.TargetField}" 
                                    data-ptype="${item.P_Type}" 
-                                   value="${item.OffsetDays}" />
+                                   value="${item.OffsetDays}" 
+                                   ${disabledAttr} />
                         </td>
                     </tr>
-                `;
+                    `;
                 });
                 tbody.html(html);
             },
@@ -510,6 +575,25 @@ $(document).ready(async function () {
         });
     }
     //=======================================================
+
+    // ===================================================================
+    // == Export Excel
+    // ===================================================================
+    $(document).on('click', '#ExportExcelBtn', async function () {
+        if (!currentPlanData || currentPlanData.length === 0) {
+            alert('ไม่พบข้อมูลที่จะ Export');
+            return;
+        }
+
+        const headerId =
+            $('#PlanHeaderIDHid').val() || currentPlanHeaderID || 'DRAFT';
+        const periodVal = $('#PeriodDrp').val(); // เช่น '04X09C' หรือ '10X03C'
+
+        await exportPlanExcel(currentPlanData, headerId, periodVal);
+    });
+
+    // == Export Excel
+    // ===================================================================
 
     // ===================================================================
     // == Action Upload File
@@ -661,16 +745,22 @@ async function loadDraftPlan() {
         VORGNO: formData.vorgno || '', // 🟢 ส่งคีย์ Webflow
         CYEAR2: formData.cyear2 || '',
         NRUNNO: formData.nrunno || '',
+        PLANHEADERID: (formData.planheaderid = ''),
     };
     try {
+        //GetOrInitDraftPlan
         const res = await getOrInitDraftPlan(payload);
         if (res.statusTb) {
+            currentPlanData = res.data;
             currentPlanHeaderID = res.planHeaderID;
             $('#RevisionHid').val(res.revision);
             $('#STATUSHid').val(res.status);
-
+            $('#PlanHeaderIDHid').val(res.planHeaderID);
+            // alert(res.docNo);
             if (res.docNo) {
                 $('#DOC_IDTxt').val(res.docNo);
+            } else {
+                $('#DOC_IDTxt').val('');
             }
             // if (res.remark) {
             //     $('#RemarkTxt').val(res.remark);
@@ -990,6 +1080,7 @@ async function applyButtonPermissions(mode, extData, status = '') {
         $('#RemarkTxt').prop('disabled', true);
         $('#YearDrp, #PeriodDrp').prop('disabled', true);
         $('input[name="destype"]').prop('disabled', true);
+        $('#lblRevision').text('Revision: ' + (revision || '*'));
     }
 }
 
@@ -1185,6 +1276,231 @@ async function actionFlow(actionType) {
         $('#loading').addClass('hidden');
     }
 }
+
+// ===================================================================
+// == Export Excel
+// ===================================================================
+
+/**
+ * ดึง ArrayBuffer ของไฟล์ Template จาก Controller
+ */
+async function getTemplateFile(templateName) {
+    const res = await fetch(
+        host +
+            `dedform/DED-MDS/form/GetExcelTemplate?template=${encodeURIComponent(templateName)}`,
+    );
+    if (!res.ok)
+        throw new Error(`ไม่สามารถโหลด Template (${templateName}.xlsx) ได้`);
+    return await res.arrayBuffer();
+}
+
+/**
+ * ฟังก์ชันเขียนและส่งออกไฟล์ Excel ตาม Template 04X09C.xlsx
+ * @param {Array} dataList ข้อมูล Detail จาก Tb_Master_DESBM_Detail
+ * @param {String} planHeaderID รหัส PlanHeaderID เพื่อใช้ตั้งชื่อไฟล์
+ */
+async function exportPlanExcel(dataList, planHeaderID, periodCode) {
+    try {
+        showLoader();
+
+        // 1. เลือกว่าจะใช้ไฟล์แม่แบบไหน (รองรับทั้งแบบมีขีดและไม่มีขีด)
+        let templateFileName = '04X-09C';
+        const cleanPeriod = String(periodCode || '').toUpperCase();
+
+        if (cleanPeriod.includes('10X-03C') || cleanPeriod.includes('10X03C')) {
+            templateFileName = '10X-03C';
+        } else if (
+            cleanPeriod.includes('04X-09C') ||
+            cleanPeriod.includes('04X09C')
+        ) {
+            templateFileName = '04X-09C';
+        }
+
+        const templateBuffer = await getTemplateFile(templateFileName);
+
+        const workbook = await writeExcelTemp(templateBuffer, {
+            write: (wb) => {
+                const sheet = wb.getWorksheet('Template') || wb.getWorksheet(1);
+
+                // ป้องกันปัญหา Shared Formula ที่ทำให้ไฟล์พัง
+                sheet.eachRow({ includeEmpty: true }, function (row) {
+                    row.eachCell({ includeEmpty: true }, function (cell) {
+                        if (cell.model && cell.model.sharedFormula) {
+                            cell.value =
+                                cell.result !== undefined ? cell.result : null;
+                        }
+                    });
+                });
+
+                const startRow = 2;
+                const formatDate = (val) => {
+                    if (!val) return '';
+                    const d = new Date(val);
+                    if (isNaN(d.getTime())) return '';
+                    const y = d.getFullYear();
+                    const m = String(d.getMonth() + 1).padStart(2, '0');
+                    const day = String(d.getDate()).padStart(2, '0');
+                    return `${y}-${m}-${day}`;
+                };
+
+                // นิยามสไตล์ฟอนต์แยกชัดเจน
+                const fontBlack = {
+                    name: 'Arial',
+                    size: 8,
+                    bold: false,
+                    color: { argb: 'FF000000' },
+                };
+
+                const fontRed = {
+                    name: 'Arial',
+                    size: 8,
+                    bold: true,
+                    color: { argb: 'FFFF0000' },
+                };
+
+                const cols = [
+                    'A',
+                    'B',
+                    'C',
+                    'D',
+                    'E',
+                    'F',
+                    'G',
+                    'H',
+                    'I',
+                    'J',
+                    'K',
+                    'L',
+                    'M',
+                    'N',
+                    'O',
+                    'P',
+                    'Q',
+                    'R',
+                    'S',
+                ];
+
+                // 🟢 ลูปชุดเดียวตรงๆ (ไม่ซ้อนกัน)
+                dataList.forEach((item, index) => {
+                    const r = startRow + index;
+
+                    // หยอดข้อมูล A - P
+                    sheet.getCell(`A${r}`).value = item.SeqNo || index + 1;
+                    sheet.getCell(`B${r}`).value = item.PROD || '';
+                    sheet.getCell(`C${r}`).value = formatDate(item.MFG_BM);
+                    sheet.getCell(`D${r}`).value = item.P_Type || '';
+                    sheet.getCell(`E${r}`).value = formatDate(item.DES_BM);
+                    sheet.getCell(`F${r}`).value =
+                        item.Time_DESBM_to_MFGBM !== null &&
+                        item.Time_DESBM_to_MFGBM !== ''
+                            ? Number(item.Time_DESBM_to_MFGBM)
+                            : '';
+                    sheet.getCell(`G${r}`).value = formatDate(item.Go_DES);
+                    sheet.getCell(`H${r}`).value =
+                        item.Time_GoDES_to_DESBM !== null &&
+                        item.Time_GoDES_to_DESBM !== ''
+                            ? Number(item.Time_GoDES_to_DESBM)
+                            : '';
+                    sheet.getCell(`I${r}`).value = formatDate(
+                        item.Confirm_MELINA_Portion,
+                    );
+                    sheet.getCell(`J${r}`).value =
+                        item.Time_Confirm_Melina !== null &&
+                        item.Time_Confirm_Melina !== ''
+                            ? Number(item.Time_Confirm_Melina)
+                            : '';
+                    sheet.getCell(`K${r}`).value = formatDate(
+                        item.MSE_to_MELINA,
+                    );
+                    sheet.getCell(`L${r}`).value =
+                        item.Time_MSE_to_MELINA !== null &&
+                        item.Time_MSE_to_MELINA !== ''
+                            ? Number(item.Time_MSE_to_MELINA)
+                            : '';
+                    sheet.getCell(`M${r}`).value = formatDate(item.SW_Assembly);
+                    sheet.getCell(`N${r}`).value =
+                        item.Time_SW_Assembly !== null &&
+                        item.Time_SW_Assembly !== ''
+                            ? Number(item.Time_SW_Assembly)
+                            : '';
+                    sheet.getCell(`O${r}`).value = formatDate(
+                        item.Zero_Level_Check_Temp_DWG,
+                    );
+                    sheet.getCell(`P${r}`).value =
+                        item.Time_Zero_Level !== null &&
+                        item.Time_Zero_Level !== ''
+                            ? Number(item.Time_Zero_Level)
+                            : '';
+
+                    // คอลัมน์ Q
+                    const cellQ = sheet.getCell(`Q${r}`);
+                    cellQ.value =
+                        item.Design_working_day !== null &&
+                        item.Design_working_day !== ''
+                            ? Number(item.Design_working_day)
+                            : '';
+                    cellQ.numFmt = '0';
+
+                    // คอลัมน์ R, S
+                    const cellR = sheet.getCell(`R${r}`);
+                    cellR.value =
+                        item.LeadTime !== null && item.LeadTime !== ''
+                            ? Number(item.LeadTime)
+                            : '';
+                    cellR.numFmt = '0';
+
+                    const cellS = sheet.getCell(`S${r}`);
+                    cellS.value =
+                        item.Time_DESBM_to_MFGBM_2 !== null &&
+                        item.Time_DESBM_to_MFGBM_2 !== ''
+                            ? Number(item.Time_DESBM_to_MFGBM_2)
+                            : '';
+                    cellS.numFmt = '0';
+
+                    // ตรวจสอบเงื่อนไข UserAction (ถ้าไม่ใช่ 'SYSTEM' และไม่ว่าง -> เป็น User แก้ ให้เป็นสีแดง)
+                    const userAction = String(item.UserAction || 'SYSTEM')
+                        .trim()
+                        .toUpperCase();
+                    const isManual =
+                        userAction !== 'SYSTEM' && userAction !== '';
+
+                    cols.forEach((col) => {
+                        const cell = sheet.getCell(`${col}${r}`);
+                        if (isManual) {
+                            cell.font = { ...fontRed };
+                        } else {
+                            cell.font = { ...fontBlack };
+                        }
+                    });
+                });
+            },
+        });
+
+        // 3. กำหนดชื่อไฟล์
+        const now = new Date();
+        const yyyy = now.getFullYear();
+        const mm = String(now.getMonth() + 1).padStart(2, '0');
+        const dd = String(now.getDate()).padStart(2, '0');
+        const hh = String(now.getHours()).padStart(2, '0');
+        const ii = String(now.getMinutes()).padStart(2, '0');
+        const ss = String(now.getSeconds()).padStart(2, '0');
+        const timeStamp = `${yyyy}${mm}${dd}_${hh}${ii}${ss}`;
+
+        const safePlanID = String(planHeaderID || 'PLAN').trim();
+        const fileName = `DESBM_${templateFileName}_${safePlanID}_${timeStamp}`;
+
+        await exportExcel(workbook, fileName);
+    } catch (error) {
+        console.error('Error generating excel from template:', error);
+        alert(
+            'เกิดข้อผิดพลาดในการสร้างไฟล์ Excel: ' + (error.message || error),
+        );
+    } finally {
+        showLoader({ show: false });
+    }
+}
+// == Export Excel
+// ===================================================================
 
 $(document).on('click', '#SentEmailBtn', async function () {
     const formData = $('.form-info').data();

@@ -51,6 +51,7 @@ class form extends MY_Controller {
         $data['REQBY']   = $empno;
         $data['INPUTBY'] = $empno;
         $data['DOC_NO'] = '';
+        $data['PLANHEADERID']    ='';
 
         // 1. ตรวจสอบการส่ง Form Key จาก URL
         if (
@@ -124,7 +125,7 @@ class form extends MY_Controller {
             $data['DOC_NO'] = "DED-MDS-" . $data['CYEAR2'] . "-" . str_pad($data['NRUNNO'], 6, '0', STR_PAD_LEFT);
             
             // ดึงข้อมูล Header เพิ่มเติมจากตารางจริงถ้ามี
-            $sqlHeader = "SELECT TOP 1 PlanYear, PeriodCode, Revision, Remark 
+            $sqlHeader = "SELECT TOP 1 PlanYear, PeriodCode, Revision, Remark ,PlanHeaderID,Status
                         FROM Tb_Master_DESBM_Header 
                         WHERE CYEAR2 = ? and NRUNNO = ?";
             $headerInfo = $this->MDSModel->QuerySetBase($sqlHeader, $this->DDS, [$data['CYEAR2'],(int)$data['NRUNNO']])->row();
@@ -134,6 +135,7 @@ class form extends MY_Controller {
                 $data['REVISION']  = $headerInfo->Revision?? '*';
                 $data['REMARK']    = $headerInfo->Remark ?? '';
                 $data['STATUS']    = $headerInfo->Status ?? '';
+                $data['PLANHEADERID']    = $headerInfo->PlanHeaderID ?? '';
                 // ถ้ามีค่าใน Header เดิมให้ใช้ค่านั้น ถ้าไม่มีให้ fallback ไปยัง default
                 $data['selectedDesTypes'] = !empty($headerInfo->DesType) ? explode('|', $headerInfo->DesType) : $defaultDesTypes;
             }
@@ -145,6 +147,8 @@ class form extends MY_Controller {
             $data['CST']     = '0';
             $data['MODE']    = '1'; // กำหนดให้เป็น Mode 1 (Create) ชัดเจน
             $data['selectedDesTypes'] = $defaultDesTypes;
+            
+            $data['PLANHEADERID']    ='';
                 
         }
 
@@ -175,6 +179,7 @@ class form extends MY_Controller {
             $vorgno  = trim((string)$this->input->post('VORGNO'));
             $cyear2  = trim((string)$this->input->post('CYEAR2'));
             $nrunno  = trim((string)$this->input->post('NRUNNO'));
+            $planheaderid  = trim((string)$this->input->post('PLANHEADERID'));
 
             if (empty($year) || empty($period)) {
                 return $this->output->set_content_type('application/json')->set_output(json_encode([
@@ -186,13 +191,15 @@ class form extends MY_Controller {
                     'planHeaderID' => null,
                     'status'       => '',
                     'docNo'        => '',
-                    'data'         => []
+                    'data'         => [],
                 ]));
             }
 
             $headerRow = null;
 
             $nextRevision = $this->getNextApprovedRevision($year, $period);
+
+
             if ($MODE === '1') {
                 // -------------------------------------------------------------
                 // 🟢 MODE 1: CREATE MODE
@@ -217,7 +224,7 @@ class form extends MY_Controller {
                         'planHeaderID' => null,
                         'status'       => '',
                         'docNo'        => '',
-                        'data'         => []
+                        'data'         => [],
                     ]));
                 }
 
@@ -276,7 +283,7 @@ class form extends MY_Controller {
                     'status'       => $headerRow->Status,
                     'docNo'        => $docNo,
                     'remark'       => $headerRow->Remark ?? '',
-                    'data'         => $dataDetail
+                    'data'         => $dataDetail,    
                 ]));
             }
 
@@ -291,7 +298,7 @@ class form extends MY_Controller {
                 'planHeaderID' => null,
                 'status'       => '',
                 'docNo'        => '',
-                'data'         => []
+                'data'         => [],
             ]));
 
         } catch (\Throwable $e) {
@@ -315,6 +322,7 @@ class form extends MY_Controller {
             $empno    = $this->input->post('EMPNO') ?? 'SYSTEM';
             $MODE    = $this->input->post('MODE') ?? 'SYSTEM';
             $EXTDATA    = $this->input->post('EXTDATA') ?? 'SYSTEM';
+            $PLANHEADERID    = $this->input->post('PLANHEADERID') ;
 
             // 1. Validation กั้นไว้ก่อน: ถ้าไม่ได้ระบุ Year / Period / DesType ห้ามเริ่มงานเด็ดขาด
             if (empty($year) || empty($period)) {
@@ -693,6 +701,7 @@ class form extends MY_Controller {
             $empNo    = $this->input->post('EMPNO') ?? 'SYSTEM';
             $remark   = $this->input->post('REMARK') ?? '';
             $DOC_ID   = $this->input->post('DOC_ID') ?? '';
+            $PLANHEADERID   = $this->input->post('PLANHEADERID') ?? '';
 
             if (empty($year) || empty($period)) {
                 throw new Exception("ข้อมูลไม่ครบถ้วน (Year / Period)");
@@ -954,6 +963,19 @@ class form extends MY_Controller {
     public function GetCalConfigMaster() {
         $this->output->set_content_type('application/json');
         $db = $this->load->database($this->DDS, TRUE);
+        $empno = $this->input->get_post('EMPNO') ;
+
+        //== ตรวจสอบสิทธิ์ Admin/PIC
+        $ms = false;
+        $sqlPic = "SELECT TOP 1 USERID
+                   FROM Tb_MS_Master_DESBM_PIC WITH (NOLOCK)
+                   WHERE USERID = ? AND (STATUS = 'DED-MDS_PIC' OR STATUS = 'DED-MDS_ADMIN')";
+        
+        // 🟢 ใช้ $db แทน $this->db
+        $qPic = $db->query($sqlPic, [$empno]);
+        if ($qPic && $qPic->num_rows() > 0) {
+            $ms = true;
+        }
 
         $sql = "SELECT TargetField, P_Type, BaseField, BaseRowType, OffsetDays 
                 FROM Tb_MS_Master_DESBM_Cal
@@ -963,7 +985,8 @@ class form extends MY_Controller {
 
         return $this->output->set_output(json_encode([
             'status' => true,
-            'data'   => $result
+            'data'   => $result,
+            'ms'    =>$ms,
         ]));
     }
 
@@ -1007,8 +1030,40 @@ class form extends MY_Controller {
     }
     //=======================================================
 
+    // use PhpOffice\PhpSpreadsheet\IOFactory;
+    // use PhpOffice\PhpSpreadsheet\Style\Color;
 
+    public function GetExcelTemplate() {
+        $tplParam = preg_replace('/[^a-zA-Z0-9_-]/', '', (string)$this->input->get('template'));
+        $baseName = !empty($tplParam) ? $tplParam : '04X-09C';
 
+        // ค้นหาทั้งแบบมีขีด (-) และไม่มีขีด เผื่อกรณีชื่อไฟล์ในเครื่อง
+        $possibleFiles = [
+            $baseName . '.xlsx',
+            str_replace('-', '', $baseName) . '.xlsx',
+            str_replace('X', 'X-', $baseName) . '.xlsx'
+        ];
+
+        $filePath = null;
+        foreach ($possibleFiles as $fileName) {
+            $checkPath = __DIR__ . DIRECTORY_SEPARATOR . $fileName;
+            if (file_exists($checkPath)) {
+                $filePath = $checkPath;
+                break;
+            }
+        }
+
+        if (!$filePath) {
+            return $this->output
+                ->set_status_header(404)
+                ->set_output("Template not found: " . $baseName . ".xlsx");
+        }
+
+        $fileContent = file_get_contents($filePath);
+        return $this->output
+            ->set_content_type('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+            ->set_output($fileContent);
+    }
 
 
     
