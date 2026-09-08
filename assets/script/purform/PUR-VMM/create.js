@@ -42,7 +42,7 @@ const requiredMessage = [
         message: 'Please input Vendor Code.',
     },
     {
-        element: $('input[name="VENDGROUP"]'),
+        element: $('input[name="VENDGROUPTYPE"]'),
         message: 'Please input Vendor Group Type.',
     },
     {

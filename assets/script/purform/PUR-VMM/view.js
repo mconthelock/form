@@ -70,6 +70,12 @@ $(async function () {
         $('#BRANCH').text(formvmm.BRANCH || '-');
         $('#ACCNUMBER').text(formvmm.ACCNUMBER || '-');
         $('#BANKADDR').text(formvmm.BANKADDR || '-');
+        $('input[name="EVANO"]').val(formvmm.EVANO);
+        $('input[name="BUYER"]').val(formvmm.FORM.VREQNO);
+        $('input[name="REQTYPE"]').val(mode);
+        $('input[name="VENDGROUPTYPE"]').val(formvmm.VENDGROUPTYPE);
+        $('input[name="VENDCODE"]').val(formvmm.VENDCODE);
+        $('input[name="VENDNAME"]').val(formvmm.VENDNAME);
 
         formvmm.ATTACH_OTHER &&
             $('#ATTACH_OTHER_TEXT').text(formvmm.ATTACH_OTHER);
@@ -161,7 +167,7 @@ function formatAddress(addrObj) {
     if (!addrObj) return '-';
     return (
         [
-            addrObj.ADDR1 || ADDR2,
+            [addrObj.ADDR1, addrObj.ADDR2].filter(Boolean).join(' '),
             addrObj.CITY,
             addrObj.STATE,
             addrObj.POSTCODE,
@@ -177,6 +183,13 @@ $(document).on('click', 'button[name="btnAction"]', async function () {
     const act = $(this).val();
     const remark = $('textarea[name="txtRemark"]').val();
     const apvno = $('.apv-data').attr('empno');
+    const evano = $('input[name="EVANO"]').val();
+    const buyer = $('input[name="BUYER"]').val();
+    const reqtype = $('input[name="REQTYPE"]').val();
+    const vendgrouptype = $('input[name="VENDGROUPTYPE"]').val();
+    const vendcode = $('input[name="VENDCODE"]').val();
+    const vendname = $('input[name="VENDNAME"]').val();
+
     if (act != 'approve' && remark == '') {
         showMessage(
             'Please fill in the reason field for the return or rejection request.',
@@ -196,6 +209,12 @@ $(document).on('click', 'button[name="btnAction"]', async function () {
             EMPNO: form.EMPNO,
             ACTION: act,
             REMARK: remark,
+            EVANO: evano,
+            BUYER: buyer,
+            REQTYPE: reqtype,
+            VENDGROUPTYPE: vendgrouptype,
+            VENDCODE: vendcode,
+            VENDNAME: vendname,
         };
         const resapv = await approve(formData);
         redirectWebflow();

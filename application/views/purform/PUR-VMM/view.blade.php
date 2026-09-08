@@ -10,6 +10,8 @@
     <h1></h1>
 </div>
 <form id="frmmain" style="visibility: hidden;">
+    <input type="hidden" name="EVANO" value="" />
+    <input type="hidden" name="BUYER" value="" />
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-10">
         <h1 class="text-3xl text-center text-primary font-bold mb-10 mt-6">Vendor Master Maintenance</h1>
 
@@ -31,19 +33,23 @@
                 General Information</div>
             <div class="grid grid-cols-[220px_1fr] gap-3 mb-3 items-baseline">
                 <div class="font-semibold text-sm">Mode : </div>
-                <div id="REQTYPE" class="text-gray-700 text-sm"></div>
+                <div id="REQTYPE" class="text-gray-700 text-sm"></div> <input type="hidden" name="REQTYPE"
+                    value="" />
             </div>
             <div class="grid grid-cols-[220px_1fr] gap-3 mb-3 items-baseline">
                 <div class="font-semibold text-sm">Vendor Group Type : </div>
-                <div id="VENDGROUPTYPE" class="text-gray-700 text-sm"></div>
+                <div id="VENDGROUPTYPE" class="text-gray-700 text-sm"></div> <input type="hidden" name="VENDGROUPTYPE"
+                    value="" />
             </div>
             <div class="grid grid-cols-[220px_1fr] gap-3 mb-3 items-baseline">
                 <div class="font-semibold text-sm">Vendor Code : </div>
-                <div id="VENDCODE" class="text-gray-700 text-sm"></div>
+                <div id="VENDCODE" class="text-gray-700 text-sm"></div><input type="hidden" name="VENDCODE"
+                    value="" />
             </div>
             <div class="grid grid-cols-[220px_1fr] gap-3 mb-3 items-baseline">
                 <div class="font-semibold text-sm">Vendor Name: </div>
-                <div id="VENDNAME" class="text-gray-700 text-sm"></div>
+                <div id="VENDNAME" class="text-gray-700 text-sm"></div><input type="hidden" name="VENDNAME"
+                    value="" />
             </div>
             <div class="grid grid-cols-[220px_1fr] gap-3 mb-3 items-baseline">
                 <div class="font-semibold text-sm">Address (EN) :</div>

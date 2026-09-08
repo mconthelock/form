@@ -411,9 +411,11 @@ const operationMap = { N: 'New Vendor', A: 'Annual evaluation' };
 
 function formatAddress(addrObj) {
     if (!addrObj) return '-';
+    console.log(addrObj);
+
     return (
         [
-            addrObj.ADDR1 || addrObj.ADDR2,
+            [addrObj.ADDR1, addrObj.ADDR2].filter(Boolean).join(' '),
             addrObj.CITY,
             addrObj.STATE,
             addrObj.POSTCODE,

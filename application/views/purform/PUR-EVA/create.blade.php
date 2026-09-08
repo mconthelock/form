@@ -520,7 +520,7 @@
                             <!-- ย้าย Dropzone ออกมาข้างนอก เพื่อให้ใช้ความกว้างได้เต็ม 100% ของ Container หลัก -->
                             <!-- <div id="attachFile" class="mt-4">
 
-                                                                                                            </div> -->
+                                                                                                                </div> -->
                         </div>
                     </div>
                 </div>
@@ -1215,10 +1215,9 @@
                     <div class="flex flex-col gap-1">
                         <div class="flex justify-between items-center">
                             <span>Quality Management (ISO9001):</span>
-                            <div class="flex gap-3"><label><input type="radio" name="
-                    "
-                                        value="Y"> Yes</label><label><input type="radio" name="QM_STATUS"
-                                        value="N"> No</label></div>
+                            <div class="flex gap-3"><label><input type="radio" name="QM_STATUS" value="Y">
+                                    Yes</label><label><input type="radio" name="QM_STATUS" value="N">
+                                    No</label></div>
                         </div>
                         <input type="text" name="QM_REASON" placeholder="Certificate No. / Details"
                             class="input input-bordered input-sm w-full bg-gray-50 border-gray-300">
