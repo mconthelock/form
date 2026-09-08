@@ -100,24 +100,15 @@ function bindEvents() {
     bindTableColumnSearch(table, '#table-search', [4, 5, 6, 7, 8]);
 
     $('#table-division-filter').on('change', function () {
-        table
-            .column(0)
-            .search('^' + $(this).val() + '$', true, false)
-            .draw();
+        table.column(0).search($(this).val(), true, false).draw();
     });
 
     $('#table-department-filter').on('change', function () {
-        table
-            .column(1)
-            .search('^' + $(this).val() + '$', true, false)
-            .draw();
+        table.column(1).search($(this).val(), true, false).draw();
     });
 
     $('#table-section-filter').on('change', function () {
-        table
-            .column(2)
-            .search('^' + $(this).val() + '$', true, false)
-            .draw();
+        table.column(2).search($(this).val(), true, false).draw();
     });
 
     $('#reset-filter').on('click', function () {
@@ -228,10 +219,7 @@ $(document).on('click', '.check-all', async function () {
         await showLoader({ show: true });
         const id = Number($(this).data('id'));
         const role = id === 1 ? '001' : id === 2 ? '002' : '003';
-        const no = $('#form-authen-data').data('no');
-        const vorg = $('#form-authen-data').data('org');
-        const cyear = $('#form-authen-data').data('cyear');
-
+        const reportId = $('#id').val();
         const rowIndexes = table
             .rows({ page: 'all', search: 'applied' })
             .indexes()
@@ -249,9 +237,7 @@ $(document).on('click', '.check-all', async function () {
                     }
 
                     await updateReportAuthen({
-                        NFRMNO: no,
-                        VORGNO: vorg,
-                        CYEAR: cyear,
+                        REPORT: reportId,
                         VEMPNO: empNo,
                         CAUTHNO: role,
                     });

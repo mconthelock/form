@@ -17,6 +17,11 @@
 </fieldset>
 
 <fieldset class="fieldset">
+    <legend class="fieldset-legend">Sequence</legend>
+    <input type="number" class="input w-full req" placeholder="Report Seq." id="report-seq" />
+</fieldset>
+
+<fieldset class="fieldset">
     <legend class="fieldset-legend">Status</legend>
     <div class="flex gap-2 items-center text-sm">
         <input type="radio" id="active" class="radio radio-sm reportstatus" name="reportstatus" value="1"

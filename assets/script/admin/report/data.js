@@ -48,10 +48,10 @@ export async function updateReport(data, id) {
     });
 }
 
-export async function updateReportAuthen(data, id) {
+export async function updateReportAuthen(data) {
     return new Promise((resolve, reject) => {
         $.ajax({
-            url: `${process.env.APP_API}/webform/report/auth/${id}`,
+            url: `${process.env.APP_API}/webform/report/auth`,
             type: 'Patch',
             dataType: 'json',
             data: data,

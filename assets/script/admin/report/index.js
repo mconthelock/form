@@ -74,8 +74,6 @@ async function reloadTable() {
         };
     });
 
-    console.log(mergedData);
-
     await populateFilters(dept);
     if (!table) {
         await createTableOption(mergedData);
@@ -91,9 +89,13 @@ async function createTableOption(data) {
     opt.dom = `<"flex mb-3 items-center"<"flex-1"><"flex-none flex flex-row gap-2 table-option">><"bg-white border border-slate-300 rounded-lg overflow-x-auto my-5"t><"flex flex-col items-center gap-3 mt-5 lg:flex-row"<"flex-1"p><"flex-none flex gap-3 items-center table-foot-option"i>>`;
     opt.data = data;
     opt.pageLength = 10;
-    opt.order = [[0, 'asc']];
+    opt.order = [
+        [0, 'asc'],
+        [1, 'asc'],
+    ];
     opt.columns = [
-        { data: 'deptname.name', title: 'Owner' },
+        { data: 'deptname.name', title: 'Owner', className: 'text-nowrap' },
+        { data: 'NSEQ', title: 'Seq.' },
         {
             data: 'VNAME',
             title: 'Report Name',
@@ -163,6 +165,7 @@ $(document).on('click', '#save-report', async function (e) {
             VORGNO: $('#report-owner').val(),
             VNAME: $('#report-name').val(),
             VURL: $('#report-url').val(),
+            NSEQ: $('#report-seq').val(),
             CSTATUS: $('input[name="reportstatus"]:checked').val(),
         };
 
@@ -188,8 +191,8 @@ $(document).on('click', '.row-edit', function (e) {
     $('#report-name').val(rowData.VNAME);
     $('#report-owner').val(rowData.VORGNO).trigger('change');
     $('#report-url').val(rowData.VURL);
+    $('#report-seq').val(rowData.NSEQ);
     $(`.reportstatus[value="${rowData.CSTATUS}"]`).prop('checked', true);
-    console.log($(`.reportstatus[value="${rowData.CSTATUS}"]`).length);
 });
 
 $(document).on('click', '.row-delete', function (e) {

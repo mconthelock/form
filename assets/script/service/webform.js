@@ -112,7 +112,7 @@ export async function getFormMaster() {
     });
 }
 
-export async function getFormDept(id) {
+export async function getFormDept() {
     return new Promise((resolve, reject) => {
         $.ajax({
             url: `${process.env.APP_ENV}/webform/form/getFormDept/`,

@@ -12,18 +12,33 @@
         </div>
     </div>
 
-    <div class="flex gap-5 w-full mb-20">
-        <div class="flex-1 grid grid-cols-2 gap-5 items-start">
+    <div class="flex gap-5 w-full mb-8">
+        {{-- <div class="flex-1 grid grid-cols-2 gap-5 items-start">
             @foreach ($department as $dept)
-                <details class="collapse bg-base-100 border border-gray-300 shadow-sm" name="my-accordion-det-1" open>
-                    <summary class="collapse-title font-semibold" data-id="{{ $dept['link'][0] }}">{{ $dept['name'] }}
-                    </summary>
-                    <div class="collapse-content text-sm">
-                        <div class="skeleton h-12 w-full"></div>
-                    </div>
-                </details>
+                <ul class="list p-4 hidden" id="list-{{ $dept['id'] }}">
+                    <li class="p-4 pb-2 text-md text-primary font-bold tracking-wide">{{ $dept['name'] }}</li>
+                    <li class="list-row skeleton "></li>
+                </ul>
             @endforeach
+        </div> --}}
+        <div class="flex-1 flex flex-col gap-2">
+            <label class="input w-full mb-3">
+                <i class="fi fi-rr-search text-xl text-gray-400"></i>
+                <input type="text" class="grow" placeholder="Search" id="search-form" />
+                <button type="button" class="btn btn-ghost btn-xs btn-circle clear-search-form" aria-label="Clear search">
+                    <i class="fi fi-rr-cross-small text-lg"></i>
+                </button>
+                <kbd class="kbd kbd-sm">Ctrl</kbd>
+                <kbd class="kbd kbd-sm">K</kbd>
+            </label>
+            <div class="grid grid-cols-2 gap-2" id="list-report">
+                @for ($i = 0; $i < 4; $i++)
+                    <div class="skeleton h-90 w-135"></div>
+                @endfor
+            </div>
         </div>
+
+
 
         <div class="flex-none w-96">
             <div class="bg-primary/10 rounded-lg p-5" id="recent-report-forms">
