@@ -109,7 +109,7 @@
                 </div>
                 <div class="grid grid-cols-[170px_1fr] items-center gap-2 required">
                     <span class="font-semibold text-sm required ">Vendor Code:</span>
-                    <input type="text" name = "VENDCODE" maxlength="5"
+                    <input type="text" name = "VENDCODE" id = "VENDCODE" maxlength="5"
                         class="input input-sm border border-gray-400 h-8 rounded w-48 px-2 req" value="">
                 </div>
             </div>
@@ -130,12 +130,16 @@
                         <!-- ปรับให้แสดงผลแบบ Flex เรียงชิดกัน พร้อมเว้นระยะห่างพอดีๆ -->
                         <div class="flex items-center gap-6 text-sm">
                             <label class="flex items-center gap-2 cursor-pointer">
-                                <input type="radio" name="VENDGROUP" value="Direct"
+                                <input type="radio" name="VENDGROUPTYPE" value="Direct"
                                     class="w-4 h-4 accent-blue-600 req radio-typec"> Direct
                             </label>
                             <label class="flex items-center gap-2 cursor-pointer">
-                                <input type="radio" name="VENDGROUP" value="Indirect"
+                                <input type="radio" name="VENDGROUPTYPE" value="Indirect"
                                     class="w-4 h-4 accent-blue-600 req radio-typec"> Indirect
+                            </label>
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="radio" name="VENDGROUPTYPE" value="Subcon"
+                                    class="w-4 h-4 accent-blue-600 req radio-typec"> Subcon
                             </label>
                         </div>
                     </div>
@@ -247,7 +251,7 @@
                             </div> --}}
                             <div class="grid grid-cols-[170px_1fr] items-center gap-4">
                                 <span class="font-semibold text-sm">Currency Code</span>
-                                <input type="hidden" name="CURCODE" id="CURCODE" value="" />
+                                <input type="hidden" name="CURCODE" id="CURCODE" />
                                 <span id="constdcur" class="text-gray-700 text-sm"></span>
                             </div>
                             <div class="grid grid-cols-[170px_1fr] items-center gap-4">
@@ -255,7 +259,7 @@
                                 <input type="text" name="VPAYTO" id="VPAYTO" maxlength=""
                                     class="input input-sm border border-gray-400 h-8 rounded  px-2 w-full">
                             </div>
-                            <div class="grid grid-cols-[170px_1fr] items-center gap-4">
+                            {{-- <div class="grid grid-cols-[170px_1fr] items-center gap-4">
                                 <span class="font-semibold text-sm">Vendor Type</span>
                                 <div id="select-wrapper" class="inline-block">
                                     <select id="VTYPE" name="VTYPE"
@@ -270,12 +274,12 @@
                                 <span class="font-semibold text-sm">Payment Type</span>
                                 <div id="select-wrapper" class="inline-block">
                                     <select id="VPAYTY" name="VPAYTY"
-                                        class="input input-sm border border-gray-400 h-8 rounded px-2 w-48 vtype req">
+                                        class="input input-sm border border-gray-400 h-8 rounded px-2 w-48 vtype ">
                                         <option value="" disabled selected>...</option>
                                         <option value="C">Cash</option>
                                     </select>
                                 </div>
-                            </div>
+                            </div> --}}
                             {{--
                             <div class="grid grid-cols-[170px_1fr] items-center gap-4">
                                 <span class="font-semibold text-sm">Days to Clear</span>
@@ -283,7 +287,7 @@
                                     class="input input-sm border border-gray-400 h-8 rounded  px-2 w-full">
                             </div> --}}
                             <div class="grid grid-cols-[170px_1fr] items-center gap-4">
-                                <span class="font-semibold text-sm">Terms Code</span>
+                                <span class="font-semibold text-sm required">Terms Code</span>
 
                                 <select id="TERM_PAYMENT" name ="TERMCODE"
                                     class="select select-sm w-48 min-w-max termcode req">
@@ -468,7 +472,7 @@
                             <!-- ย้าย Dropzone ออกมาข้างนอก เพื่อให้ใช้ความกว้างได้เต็ม 100% ของ Container หลัก -->
                             <!-- <div id="attachFile" class="mt-4">
 
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        </div> -->
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                </div> -->
                         </div>
                     </div>
                 </div>

@@ -2,12 +2,13 @@ import {
     filterFormData,
     getAllAttr,
     logFormData,
+    requiredForm,
     showErrorMessage,
     showMessage,
 } from '@amec/webasset/utils';
 import { getCurrency } from '../PUR-EVA/data';
 import { currencyManager, renderFilesByType } from '../PUR-EVA/formManager';
-import { getTermcode } from '../PUR-NVF/data';
+import { getTermcode, getVendor } from '../PUR-NVF/data';
 import {
     addr1EnManager,
     addr2EnManager,
@@ -18,7 +19,7 @@ import {
     postcodeEnManager,
     stateEnManager,
 } from '../PUR-NVF/formManager';
-import { getData, update } from './data';
+import { create, getData, update } from './data';
 import { getFormStatus, showflow } from '@amec/webasset/api/webform';
 import { webflowSubmit } from '@amec/webasset/components/form';
 import Swal from 'sweetalert2';
@@ -26,9 +27,58 @@ import { redirectWebflow } from '@amec/webasset/form';
 import { showLoader } from '@amec/webasset/preloader';
 import { classIcofont } from '@amec/webasset/fileExplorer';
 import { downloadOrOpenFile } from '@amec/webasset/api/file';
+import { checkAttFile, renderNewFilesUI } from './function';
 
 var form = {};
 var deletefile = [];
+const requiredMessage = [
+    { element: $('input[name="REQBY"]'), message: 'Please input requester.' },
+    {
+        element: $('input[name="REQTYPE"]'),
+        message: 'Please input Mode.',
+    },
+    {
+        element: $('input[name="VENDCODE"]'),
+        message: 'Please input Vendor Code.',
+    },
+    {
+        element: $('input[name="VENDGROUP"]'),
+        message: 'Please input Vendor Group Type.',
+    },
+    {
+        element: $('input[name="VENDNAME"]'),
+        message: 'Please input Vendor Name.',
+    },
+    {
+        element: $('input[name="ADDRESS1_EN"]'),
+        message: 'Please input Address (EN).',
+    },
+    {
+        element: $('input[name="VENDCAT"]'),
+        message: 'Please input Vendor Category.',
+    },
+    {
+        element: $('input[name="TAXID"]'),
+        message: 'Please input TAX.ID/Swift code',
+    },
+    {
+        element: $('.termcode'),
+        message: 'Please input Payment Term',
+    },
+    {
+        element: $('input[name="CONTACT"]'),
+        message: 'Please input Contact name.',
+    },
+    {
+        element: $('input[name="EMAIL"]'),
+        message: 'Please input Email.',
+    },
+    {
+        element: $('input[name="TELNO"]'),
+        message: 'Please input Tel.no',
+    },
+].filter(Boolean);
+
 $(document).ready(async function () {
     const term = await getTermcode();
     console.log(term);
@@ -66,7 +116,7 @@ $(document).ready(async function () {
             true,
         );
         $('input[name="VENDCODE"], #VENDCODE').val(purvmm.VENDCODE);
-        $(`input[name="VENDGROUP"][value="${purvmm.VENDGROUPTYPE}"]`).prop(
+        $(`input[name="VENDGROUPTYPE"][value="${purvmm.VENDGROUPTYPE}"]`).prop(
             'checked',
             true,
         );
@@ -159,6 +209,188 @@ $(document).ready(async function () {
         );
     }
 });
+
+$(document).on('input', '#VENDCODE', async function () {
+    const keywordValue = this.value.trim();
+    console.log('xxx');
+
+    if (keywordValue.length === 5) {
+        const searchData = { VND_CODE: keywordValue, IS_DETAIL: '1' };
+        const vendor = await getVendor(searchData);
+        console.log(vendor);
+        if (vendor.length > 0) {
+            try {
+                showLoader();
+                console.log(vendor[0].PURVMM);
+
+                if (vendor[0].PURVMM.length > 0) {
+                    console.log('IFFFFFFF');
+
+                    const vendorfilter = vendor[0].PURVMM.filter(
+                        (item) => item.FORM.CST == '2',
+                    );
+                    if (vendorfilter) {
+                        const latestVendor = vendorfilter.sort((a, b) => {
+                            // เรียง CYEAR2 จากมากไปน้อย (ปีใหม่กว่าขึ้นก่อน)
+                            if (b.CYEAR2 !== a.CYEAR2) {
+                                return b.CYEAR2.localeCompare(a.CYEAR2);
+                            }
+                            // ถ้าปีเท่ากัน เรียง NRUNNO จากมากไปน้อย
+                            return b.NRUNNO - a.NRUNNO;
+                        })[0];
+                        $(
+                            `input[name="REQTYPE"][value="${latestVendor.REQTYPE}"]`,
+                        ).prop('checked', true);
+                        $(
+                            `input[name="VENDGROUPTYPE"][value="${latestVendor.VENDGROUPTYPE}"]`,
+                        ).prop('checked', true);
+                        $('input[name="VENDNAME"], #VENDNAME').val(
+                            latestVendor.VENDNAME || '',
+                        );
+                        $('input[name="VENDCAT"], #VENDCAT').val(
+                            latestVendor.VENDCAT || '',
+                        );
+                        $('input[name="TAXID"], #TAXID').val(
+                            latestVendor.TAXID || '',
+                        );
+                        $('input[name="CANO"], #CANO').val(
+                            latestVendor.CANO || '',
+                        );
+                        $('input[name="BANO"], #BANO').val(
+                            latestVendor.BANO || '',
+                        );
+                        $('#constdcur').text(vendor[0].STDCUR.CURR_NAME || '');
+                        $('#CURCODE').val(latestVendor.CURCODE || '');
+                        $('#VPAYTO').val(latestVendor.VPAYTO || '');
+                        $('#VTYPE')
+                            .val(
+                                latestVendor.VTYPE
+                                    ? latestVendor.VTYPE
+                                    : vendor[0].VND_TYPE2,
+                            )
+                            .trigger('change');
+                        $('#VPAYTY')
+                            .val(
+                                latestVendor.VPAYTY
+                                    ? latestVendor.VPAYTY
+                                    : vendor[0].VND_PAYMENT,
+                            )
+                            .trigger('change');
+                        $('#TERM_PAYMENT')
+                            .val(
+                                latestVendor.TERMCODE
+                                    ? latestVendor.TERMCODE
+                                    : vendor[0].VND_TERM,
+                            )
+                            .trigger('change');
+                        $('#V1TIME').val(latestVendor.V1TIME || '');
+                        $('#VNALPH').val(latestVendor.VNALPH || '');
+                        $('#CONTACT').val(
+                            latestVendor.CONTACT
+                                ? latestVendor.CONTACT
+                                : vendor[0].VND_CONTACTNAME,
+                        );
+                        $('#EMAIL').val(latestVendor.EMAIL || '');
+                        $('#WEBSITE').val(latestVendor.WEBSITE || '');
+                        $('#TELNO').val(
+                            latestVendor.TELNO
+                                ? latestVendor.TELNO
+                                : vendor[0].VND_PHONE,
+                        );
+                        $('#FAX').val(
+                            latestVendor.FAX
+                                ? latestVendor.FAX
+                                : vendor[0].VND_FAX,
+                        );
+                        $('#ACCNUMBER').val(latestVendor.ACCNUMBER || '');
+                        $('#BANKNAME').val(latestVendor.BANKNAME || '');
+                        $('#BRANCH').val(latestVendor.BRANCH || '');
+                        $('#BANKADDR').val(latestVendor.BANKADDR || '');
+                        // if (vendorfilter.SCMUSER) {
+                        //     vendorfilter.SCMUSER.sort(
+                        //         (a, b) => a.ID - b.ID,
+                        //     ).forEach((user, index) => {
+                        //         // ถ้ารอบแรก (0) ใช้แถวเดิม, ถ้ารอบอื่นให้ clone แล้วต่อท้ายตารางเลย
+                        //         let $row =
+                        //             index === 0
+                        //                 ? $('#scm-table tbody tr:first')
+                        //                 : $('#scm-table tbody tr:first')
+                        //                       .clone()
+                        //                       .appendTo('#scm-table tbody');
+
+                        //         // เติมค่าลงในแถวที่ได้ (ไม่ว่าจะเป็นแถวเดิมหรือแถวที่ clone มา)
+                        //         $row.find('.scm-name')
+                        //             .val(user.NAME)
+                        //             .end()
+                        //             .find('.scm-mail')
+                        //             .val(user.EMAIL)
+                        //             .end()
+                        //             .find('.scm-usrname')
+                        //             .val(user.USERNAME);
+                        //     });
+                        // }
+
+                        for (const address of latestVendor.ADDRESSES) {
+                            if (address.ADDRTYPE === 'E') {
+                                addr1EnManager.value = address.ADDR1 || '';
+                                addr2EnManager.value = address.ADDR2 || '';
+                                cityEnManager.value = address.CITY || '';
+                                stateEnManager.value = address.STATE || '';
+                                postcodeEnManager.value =
+                                    address.POSTCODE || '';
+                                countryEnManager.value = address.COUNTRY || '';
+                            } else {
+                                addrThManager.value = address.ADDR1 || '';
+                            }
+                        }
+                    }
+                } else {
+                    $(
+                        `input[name="VENDGROUPTYPE"][value="${vendor[0].VND_TYPE1}"]`,
+                    ).prop('checked', true);
+                    $('input[name="VENDNAME"], #VENDNAME').val(
+                        vendor[0].VND_NAME || '',
+                    );
+                    $('input[name="VENDCAT"], #VENDCAT').val(
+                        vendor[0].VND_CATEGORY || '',
+                    );
+                    $('input[name="CANO"], #CANO').val(
+                        vendor[0].VND_CANO || '',
+                    );
+                    $('input[name="BANO"], #BANO').val(
+                        vendor[0].VND_BANO || '',
+                    );
+                    $('#constdcur').text(vendor[0].STDCUR.CURR_NAME || '');
+                    console.log(vendor[0].VND_CURRENCY);
+
+                    $('#CURCODE').val(vendor[0].VND_CURRENCY || '');
+                    $('#VPAYTO').val(vendor[0].VND_CODE || '');
+                    $('#VTYPE').val(vendor[0].VND_TYPE2).trigger('change');
+                    $('#VPAYTY').val(vendor[0].VND_PAYMENT).trigger('change');
+                    $('#TERM_PAYMENT')
+                        .val(vendor[0].VND_TERM)
+                        .trigger('change');
+                    $('#CONTACT').val(vendor[0].VND_CONTACTNAME || '');
+                    $('#TELNO').val(vendor[0].VND_PHONE || '');
+                    $('#FAX').val(vendor[0].VND_FAX || '');
+                    addr1EnManager.value = vendor[0].VND_ADDRESS1 || '';
+                    addr2EnManager.value = vendor[0].VND_ADDRESS2 || '';
+                    cityEnManager.value = vendor[0].VND_CITY || '';
+                    stateEnManager.value = vendor[0].VND_STATE || '';
+                    countryEnManager.value = vendor[0].VND_COUNTRY || '';
+                }
+            } catch (err) {
+                console.error('Error get Vendor:', err);
+                showErrorMessage('เกิดข้อผิดพลาดในการดึงข้อมูลคู่ค้า');
+            } finally {
+                showLoader({ show: false });
+            }
+        } else {
+            showMessage('Vendor code not found', 'warning');
+            return false;
+        }
+    }
+});
 $(document).on('click', '.add-row-btn', function () {
     const tableId = $(this).data('table');
     const tbody = $('#' + tableId + ' tbody');
@@ -237,8 +469,89 @@ $(document).on('click', '.remove-file', async function (e) {
     });
 });
 
+$(document).on('click', '#btnDraft, #btnRequest', async function () {
+    // if (this.id === 'btnRequest') {
+    //     if (!(await requiredForm('#frmmain'))) return;
+    //     if (!checkAttFile()) {
+    //         return false;
+    //     }
+    // }
+    const formElement = $('#frmmain')[0];
+    let SCMUSER = $('.row-template')
+        .map((_, row) => {
+            let NAME = $(row).find('.scm-name').val();
+            let EMAIL = $(row).find('.scm-mail').val();
+            let USERNAME = $(row).find('.scm-usrname').val();
+
+            // ถ้าว่างหมดให้ return null (jQuery จะไม่เอาเข้า array ให้เอง)
+            return NAME || EMAIL || USERNAME ? { NAME, EMAIL, USERNAME } : null;
+        })
+        .get(); // .get() เพื่อแปลง jQuery Object ให้เป็น Array ปกติ
+    //console.log(SCMUSER);
+
+    const fd = new FormData(formElement);
+    const formInfo = await getAllAttr('.form-info');
+    fd.append('NFRMNO', formInfo.nfrmno);
+    fd.append('VORGNO', formInfo.vorgno);
+    fd.append('CYEAR', formInfo.cyear);
+    // fd.append('CYEAR2', formInfo.cyear2);
+    // fd.append('NRUNNO', formInfo.nrunno);
+    // const apvno = $('.apv-data').attr('empno');
+    // fd.append('EMPNO', apvno);
+    const appendObjArray = (key, arr) =>
+        arr.forEach((obj, i) =>
+            Object.entries(obj).forEach(([prop, val]) => {
+                if (val !== undefined) fd.append(`${key}[${i}][${prop}]`, val);
+            }),
+        );
+
+    appendObjArray('SCMUSER', SCMUSER);
+    fd.delete('NAME[]');
+    fd.delete('EMAIL[]');
+    fd.delete('USERNAME[]');
+    if (this.id === 'btnDraft') {
+        fd.append('DRAFT', '0');
+    }
+    const formdata = filterFormData(fd, { empty: true });
+
+    // logFormData(formdata);
+    // return false;
+    try {
+        showLoader();
+        const res = await create(formdata);
+        if (res.status == true) {
+            showMessage(res.message, 'success');
+            redirectWebflow();
+        } else {
+            throw new Error(res.message);
+        }
+    } catch (err) {
+        console.error(err);
+        showErrorMessage(err);
+    } finally {
+        showLoader({ show: false });
+    }
+});
 $(document).on('click', 'button[name="btnAction"]', async function () {
     const act = $(this).val();
+
+    $('#frmmain')
+        .find('input, select, textarea')
+        .each(function () {
+            if ($(this).hasClass('req')) {
+                console.log(
+                    $(this).attr('name'),
+                    $(this).attr('id'),
+                    $(this).val(),
+                );
+            }
+        });
+    if (act == 'approve') {
+        if (!(await requiredForm('#frmmain'))) return;
+        if (!checkAttFile()) {
+            return false;
+        }
+    }
     $('input[name="ACTION"]').val(act);
     const formElement = $('#frmmain')[0];
     let SCMUSER = $('.row-template')
@@ -296,31 +609,6 @@ $(document).on('click', 'button[name="btnAction"]', async function () {
         showLoader({ show: false });
     }
 });
-
-function renderNewFilesUI(inputId, dataTransfer, container) {
-    let newFilesDiv = container.find('.new-selected-files');
-    if (newFilesDiv.length === 0) {
-        container.append('<div class="new-selected-files mt-1"></div>');
-        newFilesDiv = container.find('.new-selected-files');
-    }
-
-    newFilesDiv.empty();
-
-    $.each(dataTransfer.files, function (index, file) {
-        let fileItemHtml = `
-            <div class="flex items-center gap-2 mt-1">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
-                     class="cursor-pointer remove-new-file shrink-0"
-                     data-id="${inputId}" data-index="${index}" title="Remove file">
-                    <circle cx="12" cy="12" r="10" fill="#dc2626"></circle>
-                    <line x1="7" y1="12" x2="17" y2="12" stroke="white" stroke-width="3" stroke-linecap="round"></line>
-                </svg>
-                <span class="text-sm text-gray-700">${file.name}</span>
-            </div>
-        `;
-        newFilesDiv.append(fileItemHtml);
-    });
-}
 
 $(document).on('click', '.file-link', async function (e) {
     e.preventDefault();

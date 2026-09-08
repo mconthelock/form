@@ -27,3 +27,11 @@ export async function update(form) {
         data: form,
     });
 }
+
+export async function approve(form) {
+    return fetchUtils({
+        url: `${process.env.APP_API}/purform/pur-vmm/approve`,
+        method: 'PATCH',
+        data: form,
+    });
+}
