@@ -64,6 +64,7 @@ $(document).ready(async function () {
             NRUNNO: nrunno,
         };
         //console.log(action);
+        //return false;
 
         if (action != 'deleteApv') {
             if ($('#mstatus').val() != '1') {
@@ -204,6 +205,8 @@ $(document).ready(async function () {
                 } else {
                     //console.log("actionfrm");
                     const statusact = await actionfrm(cnformData);
+                    console.log(statusact);
+
                     if (action == 'return') {
                         let param = {
                             ...baseForm,
