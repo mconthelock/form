@@ -1,4 +1,5 @@
 import { redirectWebflow } from '@amec/webasset/form';
+import { writeExcelTemp, exportExcel } from '@amec/webasset/excel';
 import {
     getDesTypeMaster,
     processPlanCalculation,
@@ -13,6 +14,7 @@ import flatpickr from 'flatpickr';
 import 'flatpickr/dist/flatpickr.min.css';
 
 import $ from 'jquery';
+import ExcelJS from 'exceljs';
 
 import select2 from 'select2';
 import { setSelect2 } from '@amec/webasset/select2';
@@ -42,10 +44,13 @@ import { sendmail } from '@amec/webasset/api/mail';
 
 let empno = '';
 let dataOnhand = [];
-let currentMode = '3';
+let currentMode = '1'; // ปรับค่าเริ่มต้นให้เป็น '1' (Create)
+let currentExtData = ''; // 🟢 ประกาศตัวแปรระดับโมดูล
 let selectedFilesArray = [];
-
 let currentPlanHeaderID = null;
+let isMasterAdmin = false;
+let currentPlanData = [];
+
 $(document).ready(async function () {
     // 1. ดึงข้อมูลจากก้อนข้อมูลหลักของเบลดฟอร์ม
     const formData = $('.form-info').data();
@@ -64,53 +69,55 @@ $(document).ready(async function () {
         REVISION: formData.revision,
         REMARK: formData.remark,
         STATUS: formData.status,
+        PLANHEADERID: formData.planheaderid,
     };
-
+    $('#DOC_IDTxt').val(form.DOC_NO);
     $('#REQUEST_BYTxt').val(form.EMPNO);
     $('#INPUT_BYTxt').val(form.EMPNO);
+    $('#PlanHeaderIDHid').val(form.PLANHEADERID);
     if (form.PLAN_YEAR) {
         $('#YearDrp').val(form.PLAN_YEAR);
     }
+    if (form.PERIOD) {
+        $('#PeriodDrp').val(form.PERIOD);
+    }
+
     if (form.NRUNNO == '') // create
     {
-        currentMode = '1';
-        $('#EXTDATAHid').val('00');
-        await ProcessCreate();
+        // โหมดสร้างใหม่ (Create Mode)
+        $('#EXTDATAHid').val('');
+        $('#MODEHid').val('1');
+        $('#PlanHeaderIDHid').val('');
+        await applyButtonPermissions('1', '', '');
     } else {
-        currentMode = String(
-            await getMode({
-                ...form,
-                EMPNO: form.EMPNO,
-            }),
+        currentMode = String(await getMode({ ...form, EMPNO: form.EMPNO }));
+        currentExtData = String(
+            await getExtData({ ...form, EMPNO: form.EMPNO }),
         );
-        const currentExtData = await getExtData({ ...form, EMPNO: form.EMPNO });
         $('#EXTDATAHid').val(currentExtData);
-        alert(currentMode);
+        $('#MODEHid').val(currentMode);
+        $('#PlanHeaderIDHid').val(form.PLANHEADERID);
 
-        if (currentMode === '1') {
-            // โหมดสร้างฟอร์ม (Create Mode) -> ล็อกการซ่อนปุ่มไว้เหมือนเดิม
-            await ProcessCreate();
-        } else if (currentMode === '2') {
-            // next step
-            await ProcessEdit(currentMode);
-        } else if (currentMode === '3') {
-            // โหมดดูอย่างเดียว (View Mode) -> บังคับซ่อนทุกปุ่ม
-            await ProcessView();
-        } else {
-            await ProcessView();
-        }
+        // จัดการสิทธิ์การแสดงปุ่มตาม Mode และ ExtData
+        await applyButtonPermissions(currentMode, currentExtData, '');
 
-        loadExistingFiles(); // สั่งเรียกฟังก์ชันดึงรายการไฟล์มาแสดง
-
-        // 2. เรียกใช้พ่นสเต็ป Flow ของฝั่ง Webflow
-        const flow = await showflow(form);
-        $('.flow').html(flow.html);
+        // loadExistingFiles(); // สั่งเรียกฟังก์ชันดึงรายการไฟล์มาแสดง
 
         // 3. ยิงคำสั่งประมวลผลดึงรายงานมาพ่นลง DataTable โดยตรงบนหน้าจอ
         await loadDraftPlan();
+        // 2. เรียกใช้พ่นสเต็ป Flow ของฝั่ง Webflow
+        const flow = await showflow(form);
+        $('.flow').html(flow.html);
     }
 
     $('#MODEHid').val(currentMode);
+    // alert(
+    //     'MOD:' +
+    //         $('#MODEHid').val() +
+    //         '|' +
+    //         'EXTDATA:' +
+    //         $('#EXTDATAHid').val(),
+    // );
 
     // 4. สั่งสลับปิด Skeleton Loading ทันทีเมื่อเตรียมโครงตารางหลักเรียบร้อย
     setTimeout(function () {
@@ -139,6 +146,7 @@ $(document).ready(async function () {
 
         await loadDraftPlan();
     });
+
     // Event: กดปุ่มคำนวณใหม่ (Process Calculation)
     $('#ProcessBtn').on('click', async function () {
         const selectedDesTypes = getSelectedDesTypes();
@@ -156,23 +164,30 @@ $(document).ready(async function () {
         }
         $('#loading').removeClass('hidden');
         $('#SavePlanBtn').addClass('hidden');
-        $('#DeleteDraftBtn').addClass('hidden');
+        $('#DeleteBtn').addClass('hidden');
         const payload = {
             YEAR: $('#YearDrp').val(),
             PERIOD: $('#PeriodDrp').val(),
             DESTYPES: getSelectedDesTypes(),
             REVISION: $('#RevisionHid').val(),
             EMPNO: empno,
+            MODE: $('#MODEHid').val(), // 🟢 ส่ง MODE ปัจจุบัน
+            EXTDATA: $('#EXTDATAHid').val(), // 🟢 ส่ง EXTDATA
+            PLANHEADERID: $('#PlanHeaderIDHid').val(),
         };
 
         try {
+            //ProcessPlan
             const res = await processPlanCalculation(payload);
             if (res.status) {
+                currentPlanData = res.data;
                 currentPlanHeaderID = res.planHeaderID;
                 $('#RevBadge').text('Revision: ' + res.revision);
                 renderDataTable(res.data);
+
+                $('#PlanHeaderIDHid').val(currentPlanHeaderID);
                 $('#SavePlanBtn').removeClass('hidden');
-                $('#DeleteDraftBtn').removeClass('hidden');
+                $('#DeleteBtn').removeClass('hidden');
             } else {
                 alert('เกิดข้อผิดพลาด: ' + res.message);
             }
@@ -193,30 +208,40 @@ $(document).ready(async function () {
         )
             return;
 
-        const payload = {
-            YEAR: $('#YearDrp').val(),
-            PERIOD: $('#PeriodDrp').val(),
-            DESTYPES: getSelectedDesTypes(),
-            REVISION: $('#RevisionHid').val(),
-            EMPNO: empno,
-        };
+        if ($('#DOC_IDTxt').val() != '') {
+            await actionFlow('approve');
+        } else {
+            const payload = {
+                YEAR: $('#YearDrp').val(),
+                PERIOD: $('#PeriodDrp').val(),
+                DESTYPES: getSelectedDesTypes(),
+                REVISION: $('#RevisionHid').val(),
+                EMPNO: empno,
+                REMARK: $('#RemarkTxt').val(),
+                DOC_ID: $('#DOC_IDTxt').val(),
+                PLANHEADERID: $('#PlanHeaderIDHid').val(),
+            };
 
-        try {
-            const res = await savePlanMaster(payload);
-            if (res.status) {
-                alert(res.message);
-                $('#RevBadge').text('Revision: ' + res.revision);
-                $('#SavePlanBtn').addClass('hidden');
-            } else {
-                alert('เกิดข้อผิดพลาด: ' + res.message);
+            try {
+                //SavePlanMaster
+                const res = await savePlanMaster(payload);
+                if (res.status) {
+                    alert(res.message);
+                    $('#RevBadge').text('Revision: ' + res.revision);
+                    $('#SavePlanBtn').addClass('hidden');
+
+                    redirectWebflow(); // เปลี่ยนหน้าเมื่อ Flow และ Status อัปเดตสมบูรณ์
+                } else {
+                    alert('เกิดข้อผิดพลาด: ' + res.message);
+                }
+            } catch (err) {
+                alert('ไม่สามารถบันทึกข้อมูลได้');
             }
-        } catch (err) {
-            alert('ไม่สามารถบันทึกข้อมูลได้');
         }
     });
 
     // Event: กดปุ่ม Delete Draft
-    $(document).on('click', '#DeleteDraftBtn', async function () {
+    $(document).on('click', '#DeleteBtn', async function () {
         if (!currentPlanHeaderID) {
             alert('ไม่พบฉบับร่างที่ต้องการลบ');
             return;
@@ -224,38 +249,61 @@ $(document).ready(async function () {
 
         if (!confirm('คุณต้องการลบข้อมูลฉบับร่าง (Draft) นี้ใช่หรือไม่?'))
             return;
-
+        var chk = 1;
         $('#loading').removeClass('hidden');
+        if ($('#DOC_IDTxt').val() != '') {
+            let val = $(this).val();
+            const formData = $('.form-info').data();
+            const { nfrmno, vorgno, cyear, cyear2, nrunno, empno } = formData;
 
-        try {
             const payload = {
-                PLAN_HEADER_ID: currentPlanHeaderID,
-                YEAR: $('#YearDrp').val(),
-                PERIOD: $('#PeriodDrp').val(),
+                NFRMNO: nfrmno ? Number(nfrmno) : 0,
+                VORGNO: vorgno ? vorgno.toString() : '',
+                CYEAR: cyear ? cyear.toString() : '',
+                CYEAR2: cyear2 ? cyear2.toString() : '',
+                NRUNNO: nrunno ? Number(nrunno) : 0,
             };
 
-            const res = await deleteDraftPlan(payload);
-            if (res.status) {
-                alert(res.message);
-                currentPlanHeaderID = null;
+            // 1. รอให้ฟังก์ชันลบทำงานเสร็จก่อน
+            const delform = await deleteFlowandForm(payload);
 
-                // เคลียร์ตารางให้เป็นตารางว่าง
-                renderDataTable([]);
-
-                // ซ่อนปุ่ม Action ทั้งสอง
-                $('#DeleteDraftBtn').addClass('hidden');
-                $('#SavePlanBtn').addClass('hidden');
-
-                // โหลดสถานะ Revision ถัดไปรอไว้
-                await loadDraftPlan();
+            if (delform.status) {
             } else {
-                alert('เกิดข้อผิดพลาด: ' + res.message);
+                chk = 0;
+                alert('Failed to Delete Form');
             }
-        } catch (err) {
-            console.error(err);
-            alert('ไม่สามารถลบฉบับร่างได้');
-        } finally {
-            $('#loading').addClass('hidden');
+        }
+        if (chk == 1) {
+            try {
+                const payload = {
+                    PLAN_HEADER_ID: currentPlanHeaderID,
+                    YEAR: $('#YearDrp').val(),
+                    PERIOD: $('#PeriodDrp').val(),
+                };
+
+                const res = await deleteDraftPlan(payload);
+                if (res.status) {
+                    alert(res.message);
+                    currentPlanHeaderID = null;
+
+                    // เคลียร์ตารางให้เป็นตารางว่าง
+                    renderDataTable([]);
+
+                    // ซ่อนปุ่ม Action ทั้งสอง
+                    $('#DeleteBtn').addClass('hidden');
+                    $('#SavePlanBtn').addClass('hidden');
+
+                    // โหลดสถานะ Revision ถัดไปรอไว้
+                    await loadDraftPlan();
+                } else {
+                    alert('เกิดข้อผิดพลาด: ' + res.message);
+                }
+            } catch (err) {
+                console.error(err);
+                alert('ไม่สามารถลบฉบับร่างได้');
+            } finally {
+                $('#loading').addClass('hidden');
+            }
         }
     });
 
@@ -287,20 +335,90 @@ $(document).ready(async function () {
 
         try {
             const res = await updateInlineDetail(payload);
-            if (res.status && res.row) {
-                // นำแถวที่ผ่านการคำนวณสูตรใหม่จาก Backend มาแทนที่ Data Model
-                table.row(rowIndex).data(res.row).draw(false);
 
-                // แจ้งเตือนสถานะสำเร็จ
-                const $updatedInput = $(table.row(rowIndex).node()).find(
+            if (res.status) {
+                // 1. นำข้อมูลแถวปัจจุบันใส่เข้าไป (ยังไม่สั่ง .draw())
+                if (res.row) {
+                    table.row(rowIndex).data(res.row);
+
+                    // ซิงค์ข้อมูลแถวปัจจุบันลงในตัวแปร currentPlanData สำหรับ Export Excel
+                    if (
+                        typeof currentPlanData !== 'undefined' &&
+                        Array.isArray(currentPlanData)
+                    ) {
+                        const curIndex = currentPlanData.findIndex(
+                            (item) =>
+                                (item.DetailID &&
+                                    item.DetailID == res.row.DetailID) ||
+                                (item.SeqNo && item.SeqNo == res.row.SeqNo),
+                        );
+                        if (curIndex !== -1) {
+                            currentPlanData[curIndex] = Object.assign(
+                                {},
+                                currentPlanData[curIndex],
+                                res.row,
+                            );
+                        }
+                    }
+                }
+
+                // 2. ค้นหาแถวถัดไป (nextRow) และใส่ข้อมูลใหม่เข้าไป
+                if (res.nextRow && res.nextRow.SeqNo) {
+                    const targetSeqNo = parseInt(res.nextRow.SeqNo, 10);
+
+                    table.rows().every(function () {
+                        const d = this.data();
+                        if (d && parseInt(d.SeqNo, 10) === targetSeqNo) {
+                            this.data(res.nextRow); // อัปเดตข้อมูลของแถวถัดไป
+                        }
+                    });
+                    // ซิงค์ข้อมูลแถวถัดไปลงในตัวแปร currentPlanData ด้วย
+                    if (
+                        typeof currentPlanData !== 'undefined' &&
+                        Array.isArray(currentPlanData)
+                    ) {
+                        const nextIndex = currentPlanData.findIndex(
+                            (item) =>
+                                (item.DetailID &&
+                                    item.DetailID == res.nextRow.DetailID) ||
+                                (item.SeqNo && item.SeqNo == res.nextRow.SeqNo),
+                        );
+                        if (nextIndex !== -1) {
+                            currentPlanData[nextIndex] = Object.assign(
+                                {},
+                                currentPlanData[nextIndex],
+                                res.nextRow,
+                            );
+                        }
+                    }
+                }
+
+                // 3. วาดตารางใหม่เพียง "ครั้งเดียว" หลังจากอัปเดต Data ครบทั้งสองแถว
+                table.draw(false);
+
+                // Effect แจ้งเตือนสำเร็จ
+                const $updatedNode = $(table.row(rowIndex).node());
+                const $currentInput = $updatedNode.find(
                     `input[data-field="${field}"]`,
                 );
-                $updatedInput.addClass('border-success bg-green-50');
-                setTimeout(
-                    () =>
-                        $updatedInput.removeClass('border-success bg-green-50'),
-                    1500,
-                );
+                $currentInput
+                    .removeClass(
+                        'border-warning bg-amber-50 opacity-50 cursor-wait',
+                    )
+                    .addClass('border-success bg-green-50');
+
+                setTimeout(() => {
+                    $currentInput.removeClass('border-success bg-green-50');
+
+                    // กำหนดให้เป็นสีแดงทันทีเมื่อ User มีการแก้ไขค่าใหม่
+                    $currentInput
+                        .removeClass(
+                            'border-warning border-success bg-amber-50 bg-green-50 text-primary opacity-50 cursor-wait',
+                        )
+                        .addClass(
+                            'border-rose-500 bg-rose-50 text-rose-600 font-bold',
+                        );
+                }, 1500);
             } else {
                 alert('บันทึกไม่สำเร็จ: ' + res.message);
                 $input
@@ -318,6 +436,164 @@ $(document).ready(async function () {
                 .addClass('border-error');
         }
     });
+
+    // Event: ยืนยันบันทึก Master Plan (Confirm & Save)
+    $('#ReturnBtn').on('click', async function () {
+        if (!confirm('ยืนยันการ Return Master DESBM Master ใช่หรือไม่?'))
+            return;
+        let val = $(this).val();
+        await actionFlow('returnp');
+    });
+
+    $(document).on('click', '#ApproveBtn', async function () {
+        let val = $(this).val();
+        // เปิด Loader บังหน้าจอไว้ก่อนถ้าระบบโหลดช้า
+        await actionFlow('approve');
+    });
+
+    //=======================================================
+    //== Modal: Tb_MS_Master_DESBM_Cal Config
+    //=======================================================
+    // เปิด Modal และโหลดข้อมูล
+    $('#btnOpenCalConfig').on('click', function () {
+        loadCalConfig();
+        $('#calConfigModal').removeClass('hidden');
+    });
+
+    // อัปเดต OffsetDays เมื่อหลุด Focus (Blur) หรือกด Enter
+    $(document).on('change', '.input-offset-days', function () {
+        const input = $(this);
+        const targetField = input.data('target');
+        const pType = input.data('ptype');
+        const newOffset = input.val();
+
+        input.addClass('bg-yellow-100');
+
+        $.ajax({
+            url: host + 'dedform/DED-MDS/form/UpdateCalConfigOffset',
+            type: 'POST',
+            dataType: 'json',
+            data: {
+                TargetField: targetField,
+                P_Type: pType,
+                OffsetDays: newOffset,
+                EMPNO: typeof empno !== 'undefined' ? empno : 'SYSTEM',
+            },
+            success: function (res) {
+                input.removeClass('bg-yellow-100');
+                if (res.status) {
+                    input.addClass('bg-green-100');
+                    setTimeout(() => input.removeClass('bg-green-100'), 1200);
+                } else {
+                    alert('บันทึกไม่สำเร็จ: ' + res.message);
+                    input.addClass('bg-red-100');
+                }
+            },
+            error: function () {
+                input.removeClass('bg-yellow-100').addClass('bg-red-100');
+                alert('เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์');
+            },
+        });
+    });
+
+    // เปิด Modal
+    $('#btnOpenCalConfig').on('click', function () {
+        loadCalConfig();
+        $('#calConfigModal').removeClass('hidden');
+    });
+
+    // 🟢 ปิด Modal เมื่อคลิกปุ่มปิดใดๆ ที่มีคลาส .btn-close-modal
+    $(document).on('click', '.btn-close-modal', function () {
+        $('#calConfigModal').addClass('hidden');
+    });
+
+    // (เสริม) ปิด Modal เมื่อคลิกพื้นที่ว่างข้างนอกกล่อง Modal
+    $('#calConfigModal').on('click', function (e) {
+        if (e.target === this) {
+            $(this).addClass('hidden');
+        }
+    });
+
+    // ฟังก์ชันโหลดข้อมูล Config
+    function loadCalConfig() {
+        const tbody = $('#calConfigTbody');
+        tbody.html(
+            '<tr><td colspan="6" class="text-center py-4 text-gray-500">กำลังโหลดข้อมูล...</td></tr>',
+        );
+
+        $.ajax({
+            url: host + 'dedform/DED-MDS/form/GetCalConfigMaster',
+            type: 'GET',
+            dataType: 'json',
+            // ส่ง EMPNO ไปตรวจสอบสิทธิ์
+            data: {
+                EMPNO: typeof empno !== 'undefined' ? empno : 'SYSTEM',
+            },
+            success: function (res) {
+                if (!res.status || !res.data) {
+                    tbody.html(
+                        '<tr><td colspan="6" class="text-center py-4 text-red-500">ไม่พบข้อมูล</td></tr>',
+                    );
+                    return;
+                }
+
+                // 🟢 อ่านค่าสิทธิ์ ms จาก res.ms
+                const canEdit = res.ms === true;
+                const disabledAttr = canEdit ? '' : 'disabled';
+                const inputStyle = canEdit
+                    ? 'background-color: #ffffff; color: #2563eb; cursor: text;'
+                    : 'background-color: #f3f4f6; color: #6b7280; cursor: not-allowed; border-color: #e5e7eb;';
+
+                let html = '';
+                res.data.forEach((item, index) => {
+                    html += `
+                    <tr>
+                        <td class="text-center align-middle text-gray-500">${index + 1}</td>
+                        <td class="align-middle font-semibold text-gray-800">${item.TargetField || '-'}</td>
+                        <td class="align-middle text-gray-700">${item.P_Type || '-'}</td>
+                        <td class="align-middle text-gray-600">${item.BaseField || '-'}</td>
+                        <td class="align-middle text-gray-600">${item.BaseRowType || '-'}</td>
+                        <td class="text-center align-middle">
+                            <input type="number" 
+                                   class="form-control text-center input-offset-days font-bold" 
+                                   style="width: 85px; margin: 0 auto; ${inputStyle}" 
+                                   data-target="${item.TargetField}" 
+                                   data-ptype="${item.P_Type}" 
+                                   value="${item.OffsetDays}" 
+                                   ${disabledAttr} />
+                        </td>
+                    </tr>
+                    `;
+                });
+                tbody.html(html);
+            },
+            error: function () {
+                tbody.html(
+                    '<tr><td colspan="6" class="text-center py-4 text-red-500">เกิดข้อผิดพลาดในการโหลดข้อมูล</td></tr>',
+                );
+            },
+        });
+    }
+    //=======================================================
+
+    // ===================================================================
+    // == Export Excel
+    // ===================================================================
+    $(document).on('click', '#ExportExcelBtn', async function () {
+        if (!currentPlanData || currentPlanData.length === 0) {
+            alert('ไม่พบข้อมูลที่จะ Export');
+            return;
+        }
+
+        const headerId =
+            $('#PlanHeaderIDHid').val() || currentPlanHeaderID || 'DRAFT';
+        const periodVal = $('#PeriodDrp').val(); // เช่น '04X09C' หรือ '10X03C'
+
+        await exportPlanExcel(currentPlanData, headerId, periodVal);
+    });
+
+    // == Export Excel
+    // ===================================================================
 
     // ===================================================================
     // == Action Upload File
@@ -450,39 +726,65 @@ async function loadDraftPlan() {
     if (!year || !period) return;
 
     $('#loading').removeClass('hidden');
+    const formData = $('.form-info').data() || {};
+    // alert(
+    //     'MOD:' +
+    //         $('#MODEHid').val() +
+    //         '|' +
+    //         'EXTDATA:' +
+    //         $('#EXTDATAHid').val(),
+    // );
     const payload = {
-        YEAR: $('#YearDrp').val(),
-        PERIOD: $('#PeriodDrp').val(),
+        YEAR: year,
+        PERIOD: period,
         DESTYPES: getSelectedDesTypes(),
         REVISION: $('#RevisionHid').val(),
-        EMPNO: empno,
+        EMPNO: typeof empno !== 'undefined' ? empno : 'SYSTEM',
+        MODE: $('#MODEHid').val(), // 🟢 ส่ง MODE ปัจจุบัน
+        EXTDATA: $('#EXTDATAHid').val(), // 🟢 ส่ง EXTDATA
+        VORGNO: formData.vorgno || '', // 🟢 ส่งคีย์ Webflow
+        CYEAR2: formData.cyear2 || '',
+        NRUNNO: formData.nrunno || '',
+        PLANHEADERID: (formData.planheaderid = ''),
     };
-
     try {
+        //GetOrInitDraftPlan
         const res = await getOrInitDraftPlan(payload);
         if (res.statusTb) {
+            currentPlanData = res.data;
             currentPlanHeaderID = res.planHeaderID;
-            $('#RevBadge').text('Revision: ' + (res.revision || '*'));
             $('#RevisionHid').val(res.revision);
             $('#STATUSHid').val(res.status);
+            $('#PlanHeaderIDHid').val(res.planHeaderID);
+            // alert(res.docNo);
+            if (res.docNo) {
+                $('#DOC_IDTxt').val(res.docNo);
+            } else {
+                $('#DOC_IDTxt').val('');
+            }
+            // if (res.remark) {
+            //     $('#RemarkTxt').val(res.remark);
+            // }
 
-            // จัดการ Checkbox: ถ้าเจอ Draft ให้ใช้ค่าของ Draft / ถ้าไม่เจอ ให้ Reset กลับเป็นค่า Default
-            if (res.hasDraft && res.desType) {
+            // 1. จัดการ Checkbox
+            if (res.desType) {
                 setSelectedDesTypes(res.desType);
             } else {
                 resetToDefaultDesTypes();
             }
 
+            // 2. วาดตาราง
             renderDataTable(res.data || []);
 
-            // ถ้ามี Draft อยู่จริง ให้แสดงทั้งปุ่ม Delete Draft และ Save Plan
-            if (res.hasDraft && res.data && res.data.length > 0) {
-                $('#DeleteDraftBtn').removeClass('hidden');
-                $('#SavePlanBtn').removeClass('hidden');
-            } else {
-                $('#DeleteDraftBtn').addClass('hidden');
-                $('#SavePlanBtn').addClass('hidden');
-            }
+            // 1. จัดการข้อความ Revision, Alert และ Badge
+            updateStatusUI(res.status, res.revision, res.docNo);
+
+            // 2. จัดการสิทธิ์ปุ่ม Action หลักตาม Mode + สถานะจริงของข้อมูล
+            applyButtonPermissions(currentMode, currentExtData, res.status);
+        } else {
+            alert(
+                'เกิดข้อผิดพลาด: ' + (res.message || 'ไม่สามารถโหลดข้อมูลได้'),
+            );
         }
     } catch (e) {
         console.error('Error loading draft plan', e);
@@ -509,11 +811,51 @@ function renderDataTable(data) {
             zeroRecords:
                 '<div class="py-6 text-slate-400 font-semibold text-center text-sm">🔍 ไม่พบข้อมูล</div>',
         },
+        // 🟢 ควบคุมสีระดับแถว (Row Styling)
+        createdRow: function (row, data, dataIndex) {
+            const userAction = (data.UserAction || 'SYSTEM')
+                .toUpperCase()
+                .trim();
+            const isUserEdited = userAction !== 'SYSTEM';
+
+            // เช็คว่ามีค่าใดต่างจาก Rev ก่อนหน้า หรือไม่
+            const hasDiff =
+                data.Diff_MFG_BM == 1 ||
+                data.Diff_DES_BM == 1 ||
+                data.Diff_Go_DES == 1 ||
+                data.IsNewRow == 1;
+
+            if (isUserEdited) {
+                // 🔴 แถวที่คนแก้ (UserAction != 'SYSTEM'): สีแดงอ่อน + ขอบซ้ายสีแดง
+                $(row).addClass(
+                    'bg-rose-50 hover:bg-rose-100/70 border-l-4 border-l-rose-500 transition-colors',
+                );
+                $(row).attr('title', `แก้ไขโดย: ${data.UserAction}`);
+            } else if (hasDiff) {
+                // 🟡 แถวที่ค่าเปลี่ยนจาก Revision ก่อนหน้า (แต่ยังไม่ได้ถูก User แก้สด): สีส้ม/เหลืองอ่อน
+                $(row).addClass(
+                    'bg-amber-50 hover:bg-amber-100/70 border-l-4 border-l-amber-500 transition-colors',
+                );
+                $(row).attr(
+                    'title',
+                    'ข้อมูลเปลี่ยนแปลงเทียบกับ Revision ก่อนหน้า',
+                );
+            }
+        },
         columns: [
             {
                 data: 'SeqNo',
                 title: 'No.',
                 className: 'text-center align-middle',
+                render: function (d, type, row) {
+                    const userAction = (row.UserAction || 'SYSTEM')
+                        .toUpperCase()
+                        .trim();
+                    if (userAction !== 'SYSTEM') {
+                        return `<span class="badge badge-xs badge-error text-white font-bold" title="แก้ไขโดย ${row.UserAction}">${d}*</span>`;
+                    }
+                    return d;
+                },
             },
             {
                 data: 'PROD',
@@ -524,7 +866,15 @@ function renderDataTable(data) {
                 data: 'MFG_BM',
                 title: 'MFG BM',
                 className: 'text-center align-middle',
-                render: (d) => (d ? d.substring(0, 10) : '-'),
+                render: function (d, type, row) {
+                    if (!d) return '-';
+                    const dateVal = d.substring(0, 10);
+                    // ถ้า MFG_BM เปลี่ยนจาก Revision เก่า ให้เน้นข้อความสีแดง
+                    if (row.Diff_MFG_BM == 1) {
+                        return `<span class="text-rose-600 font-extrabold underline decoration-rose-400" title="MFG BM มีการเปลี่ยนจาก AS400">${dateVal}</span>`;
+                    }
+                    return dateVal;
+                },
             },
             {
                 data: 'P_Type',
@@ -539,7 +889,7 @@ function renderDataTable(data) {
                     const dateVal = d ? d.substring(0, 10) : '';
                     return `
                         <input type="date" 
-                               class="input input-bordered input-xs w-36 text-center font-bold text-primary inline-edit-date" 
+                               class="input input-bordered input-xs w-36 text-center font-bold text-slate-700 inline-edit-date bg-white" 
                                data-field="DES_BM" 
                                data-row-index="${meta.row}" 
                                value="${dateVal}">
@@ -559,7 +909,7 @@ function renderDataTable(data) {
                     const dateVal = d ? d.substring(0, 10) : '';
                     return `
                         <input type="date" 
-                               class="input input-bordered input-xs w-36 text-center font-bold text-primary inline-edit-date" 
+                               class="input input-bordered input-xs w-36 text-center font-bold text-slate-700 inline-edit-date bg-white" 
                                data-field="Go_DES" 
                                data-row-index="${meta.row}" 
                                value="${dateVal}">
@@ -617,78 +967,194 @@ function renderDataTable(data) {
             },
             {
                 data: 'Design_working_day',
-                title: 'TIME (Design working day)',
-                className: 'text-center align-middle',
+                title: 'Design Working Day',
+                className: 'text-center font-bold text-amber-600 align-middle',
+                render: (d) => (d !== null && d !== undefined ? d : '-'),
             },
             {
                 data: 'LeadTime',
-                title: 'TIME (Design working day)',
+                title: 'LeadTime',
                 className: 'text-center align-middle',
+                render: (d) => (d !== null && d !== undefined ? d : '-'),
             },
             {
                 data: 'Time_DESBM_to_MFGBM_2',
-                title: 'TIME (DESBM_to_MFGBM)',
+                title: 'TIME (DES-MFG 2)',
                 className: 'text-center align-middle',
+                render: (d) => (d !== null && d !== undefined ? d : '-'),
             },
-
             {
                 data: 'TypeJun',
                 title: 'TypeJun',
                 className: 'text-center align-middle',
             },
             {
-                data: 'ChangeJunTodate',
-                title: 'ChangeJunTodate',
+                data: 'UserAction',
+                title: 'UserAction',
                 className: 'text-center align-middle',
             },
         ],
     });
 }
 
-async function ProcessCreate() {
-    // โหมดสร้างฟอร์ม (Create Mode) -> ล็อกการซ่อนปุ่มไว้เหมือนเดิม
+/**
+ * ฟังก์ชันจัดการสิทธิ์การแสดงปุ่มตามเงื่อนไข Mode & ExtData
+ */
+async function applyButtonPermissions(mode, extData, status = '') {
+    const rawStatus = (status || '').toUpperCase();
+    const isPending = ['PROCESS', 'APPROVE'].includes(rawStatus);
 
-    $('#SavePlanBtn').addClass('hidden');
-    $('#ApproveBtn').addClass('hidden');
-    $('#ReturnBtn').addClass('hidden');
-    $('#DeleteBtn').addClass('hidden'); // โชว์
-    $('#upload-zone').removeClass('hidden');
-}
-async function ProcessEdit(currentMode) {
-    // PLAN_YEAR: planyear,
-    // PERIOD: period,
-    // REVISION: revision,
-    // REMARK: remark,
+    // $('#RemarkTxt').prop('disabled', isPending);
+    // 1. ซ่อนปุ่ม Action ทั้งหมดก่อนเพื่อ Reset State
+    const allButtons = [
+        '#SearchBtn',
+        '#ProcessBtn',
+        '#SavePlanBtn',
+        '#DeleteBtn',
+        '#ApproveBtn',
+        '#ReturnBtn',
+    ];
+    $(allButtons.join(', ')).addClass('hidden');
 
-    const requesterValue = $('#REQUEST_BYTxt').val() || '';
-    // แนะนำให้ใช้ .includes(empno) ตามเดิมเพื่อความแม่นยำในการตรวจจับข้อความยาว
-    if (requesterValue.includes(empno)) {
-        // Requester
-        $('#SavePlanBtn').removeClass('hidden');
-        $('#ApproveBtn').removeClass('hidden'); // โชว์
-        $('#DeleteBtn').removeClass('hidden'); // โชว์
-        $('#ReturnBtn').addClass('hidden'); // ซ่อน
-        // $('#RejectBtn').addClass('hidden'); // ซ่อน
-        $('#upload-zone').removeClass('hidden');
-        $('#download-zone').removeClass('hidden'); // ผู้อนุมัติเข้ามาตรวจ ให้โหลดได้อย่างเดียว
-    } else {
-        //All Approver
-        $('#ApproveBtn').removeClass('hidden'); // โชว์
-        $('#ReturnBtn').removeClass('hidden'); // โชว์
-        // $('#RejectBtn').removeClass('hidden'); // โชว์
-        $('#download-zone').removeClass('hidden'); // ผู้อนุมัติเข้ามาตรวจ ให้โหลดได้อย่างเดียว
+    if (mode === '1') {
+        // 🟡 Mode 1: ผู้จัดทำ (Requester / Creator)
+        $('#SearchBtn').removeClass('hidden');
+        $('#ProcessBtn').addClass('hidden');
+
+        // alert(rawStatus);
+        // ถ้าเอกสารรอบนี้อยู่ในสถานะรออนุมัติไปแล้ว ไม่ให้กด Process ซ้ำ
+        if (isPending) {
+            $('#ProcessBtn').addClass('hidden');
+            $('#SavePlanBtn').addClass('hidden');
+            $('#DeleteBtn').addClass('hidden');
+            if (rawStatus == 'APPROVE') {
+                $('#YearDrp, #PeriodDrp').prop('disabled', true);
+                $('input[name="destype"]').prop('disabled', true);
+            }
+        } else {
+            // ปุ่ม Save และ Delete Draft จะแสดงเมื่อมีข้อมูล Draft ให้บันทึก
+            // alert(rawStatus);
+            if (rawStatus === 'DRAFT') {
+                $('#SavePlanBtn').removeClass('hidden');
+                $('#DeleteBtn').removeClass('hidden');
+                $('#ProcessBtn').removeClass('hidden');
+            } else if (rawStatus === '') {
+                $('#ProcessBtn').removeClass('hidden');
+            }
+        }
+    } else if (mode === '2') {
+        // 🟠 Mode 2: ขั้นตอนการอนุมัติ (Flow Step)
+        // $('#SearchBtn').removeClass('hidden');
+
+        // ล็อก Header ทั้งหมด
+        // $('#RemarkTxt').prop('disabled', true);
+        $('#YearDrp, #PeriodDrp').prop('disabled', true);
+        $('input[name="destype"]').prop('disabled', true);
+
+        $('#ProcessBtn').addClass('hidden');
+        if (extData === '') {
+            // เหมือน DRAFT
+            if (rawStatus === 'PROCESS') {
+                // $('#ProcessBtn').removeClass('hidden');
+                $('#SavePlanBtn').removeClass('hidden');
+                $('#DeleteBtn').removeClass('hidden');
+            }
+        } else if (extData === '01') {
+            // CHECKER: ตรวจสอบและอนุมัติ หรือ ลบทิ้ง
+            $('#ApproveBtn').removeClass('hidden');
+            $('#ReturnBtn').removeClass('hidden');
+        } else if (extData === '02' || extData === '03') {
+            // ACCEPTOR / APPROVER: อนุมัติ หรือ ตีกลับ
+            $('#ApproveBtn').removeClass('hidden');
+            $('#ReturnBtn').removeClass('hidden');
+        }
+
+        if ($('#EMPNOHid').val() == '13204') {
+            $('#DeleteBtn').removeClass('hidden');
+            $('#ReturnBtn').removeClass('hidden');
+        }
+    } else if (mode === '3') {
+        // Mode 3: ดูอย่างเดียว (View Only)
+        // $('#SearchBtn').removeClass('hidden');
+
+        $('#RemarkTxt').prop('disabled', true);
+        $('#YearDrp, #PeriodDrp').prop('disabled', true);
+        $('input[name="destype"]').prop('disabled', true);
+        $('#lblRevision').text('Revision: ' + (revision || '*'));
     }
 }
-async function ProcessView() {
-    // โหมดดูอย่างเดียว (View Mode) -> บังคับซ่อนทุกปุ่ม
 
-    $('#SavePlanBtn').addClass('hidden');
-    $('#ApproveBtn').addClass('hidden');
-    $('#ReturnBtn').addClass('hidden');
-    $('#DeleteBtn').addClass('hidden'); // โชว์
-    $('#upload-zone').removeClass('hidden');
+function updateStatusUI(status, revision, docNo = '') {
+    const rawStatus = (status || 'NONE').toUpperCase().trim();
+    const $statusBadge = $('#StatusBadge');
+    const $pendingAlert = $('#PendingAlert');
+    const mode = $('#MODEHid').val() || '1';
+    const extData = $('#EXTDATAHid').val() || '';
 
-    $('#download-zone').removeClass('hidden'); // ผู้อนุมัติเข้ามาตรวจ ให้โหลดได้อย่างเดียว
+    // 1. อัปเดต Revision Badge
+    $('#RevBadge').text('Revision: ' + (revision || '*'));
+
+    // 2. ล้างสี Badge เดิม
+    $statusBadge.removeClass(
+        'badge-warning badge-success badge-error badge-ghost hidden text-slate-800 text-white',
+    );
+    // alert(
+    //     'MOD:' +
+    //         $('#MODEHid').val() +
+    //         '|' +
+    //         'EXTDATA:' +
+    //         $('#EXTDATAHid').val(),
+    // );
+    if (rawStatus === 'PROCESS') {
+        // 🟠 กำลังเดิน Flow
+        $statusBadge.addClass('badge-warning text-slate-800').text('PROCESS');
+
+        if (mode === '1') {
+            // Mode 1: แจ้งเตือนว่ารอบนี้กำลังเดิน Flow อยู่ ไม่สามารถสร้างซ้ำได้ ให้เลือก Search รอบอื่น
+            $('#StatusText').html(
+                `<strong>แจ้งเตือน:</strong> รอบแผนงานนี้อยู่ในสถานะ <strong>PROCESS</strong> ${docNo ? `[${docNo}]` : ''} กำลังอยู่ระหว่างการอนุมัติ จึงไม่สามารถสร้างหรือคำนวณใหม่ได้ (กรุณาเลือกค้นหารอบอื่น)`,
+            );
+        } else {
+            // Mode 2/3: แจ้งเตือนปกติ
+            $('#StatusText').html(
+                `<strong>แจ้งเตือน:</strong> เอกสารกำลังอยู่ในขั้นตอนการอนุมัติ (Step: ${extData || '-'}) ${docNo ? `[${docNo}]` : ''}`,
+            );
+        }
+        $pendingAlert.removeClass('hidden');
+
+        // Mode 1 ห้ามแก้ Inline Date ถ้าติด PROCESS
+        // Mode 2 แก้ได้เฉพาะ Step ตรวจสอบ (extData = '01')
+        const canEditInline =
+            mode === '2' && (extData === '01' || extData === '');
+        $('.inline-edit-date')
+            .prop('disabled', !canEditInline)
+            .toggleClass('opacity-50 cursor-not-allowed', !canEditInline);
+    } else if (rawStatus === 'DRAFT') {
+        // ⚪ เพิ่งกดคำนวณแต่ยังไม่ส่งเข้า Flow
+        $statusBadge.addClass('badge-ghost text-slate-600').text('DRAFT');
+        $pendingAlert.addClass('hidden');
+
+        const isEditable = mode === '1';
+        $('.inline-edit-date')
+            .prop('disabled', !isEditable)
+            .toggleClass('opacity-50 cursor-not-allowed', !isEditable);
+    } else if (rawStatus === 'APPROVE' || rawStatus === 'APPROVED') {
+        // 🟢 Approved จบแล้ว
+        $statusBadge.addClass('badge-success text-white').text('APPROVE');
+        $pendingAlert.addClass('hidden');
+
+        $('.inline-edit-date')
+            .prop('disabled', true)
+            .addClass('opacity-50 cursor-not-allowed');
+    } else {
+        // รอบใหม่ที่ยังไม่มีเอกสารใดๆ
+        $statusBadge.addClass('hidden');
+        $pendingAlert.addClass('hidden');
+
+        $('.inline-edit-date')
+            .prop('disabled', true)
+            .addClass('opacity-50 cursor-not-allowed');
+    }
 }
 
 // ฟังก์ชันอ่านค่า DesType ที่ User ติ๊กเลือกทั้งหมด
@@ -744,6 +1210,297 @@ function convertMonthYearToNumber(str) {
     const year = parts[1];
     return parseInt(year + month.toString().padStart(2, '0')); // ได้ 202602
 }
+
+async function actionFlow(actionType) {
+    const remarkTxt = $('#RemarkTxt').val() || '';
+    const formData = $('.form-info').data() || {};
+
+    const payload = {
+        NFRMNO: formData.nfrmno ? Number(formData.nfrmno) : 0,
+        VORGNO: formData.vorgno ? formData.vorgno.toString() : '',
+        CYEAR: formData.cyear ? formData.cyear.toString() : '',
+        CYEAR2: formData.cyear2 ? formData.cyear2.toString() : '',
+        NRUNNO: formData.nrunno ? Number(formData.nrunno) : 0,
+        ACTION: actionType ? actionType.toString() : '',
+        EMPNO: formData.empno ? formData.empno.toString() : '',
+        REMARK: remarkTxt.toString(),
+    };
+
+    try {
+        $('#loading').removeClass('hidden');
+
+        // 1. ดำเนินการ Action กับ Webflow Core Module
+        const res = await doaction(payload);
+        if (res?.status || res?.status === true || res?.status === 'true') {
+            // 2. ส่งข้อมูลมาอัปเดต Status ใน Tb_Master_DESBM_Header
+            let EndProcessData = new FormData();
+            EndProcessData.append('NFRMNO', formData.nfrmno);
+            EndProcessData.append('VORGNO', formData.vorgno);
+            EndProcessData.append('CYEAR', formData.cyear);
+            EndProcessData.append('CYEAR2', formData.cyear2);
+            EndProcessData.append('NRUNNO', formData.nrunno);
+            EndProcessData.append(
+                'EMPNO',
+                formData.empno ? formData.empno.toString() : '',
+            ); // 🟢 แก้ไขจุดนี้
+            EndProcessData.append('EXTDATA', $('#EXTDATAHid').val() || '');
+            EndProcessData.append(
+                'ACTION',
+                actionType ? actionType.toString() : '',
+            );
+
+            const responseEndProcess = await $.ajax({
+                url: host + 'dedform/DED-MDS/form/ActionFlow',
+                type: 'POST',
+                data: EndProcessData,
+                processData: false,
+                contentType: false,
+                dataType: 'json',
+            });
+
+            if (responseEndProcess && responseEndProcess.status) {
+                redirectWebflow(); // เปลี่ยนหน้าเมื่อ Flow และ Status อัปเดตสมบูรณ์
+            } else {
+                throw new Error(
+                    responseEndProcess?.message ||
+                        'การอัปเดตสถานะระบบไม่สำเร็จ',
+                );
+            }
+        } else {
+            throw new Error(res?.message || 'ไม่สามารถส่งอนุมัติเอกสารได้');
+        }
+    } catch (error) {
+        console.error('Action Flow Error:', error);
+        alert('เกิดข้อผิดพลาด: ' + error.message);
+    } finally {
+        $('#loading').addClass('hidden');
+    }
+}
+
+// ===================================================================
+// == Export Excel
+// ===================================================================
+
+/**
+ * ดึง ArrayBuffer ของไฟล์ Template จาก Controller
+ */
+async function getTemplateFile(templateName) {
+    const res = await fetch(
+        host +
+            `dedform/DED-MDS/form/GetExcelTemplate?template=${encodeURIComponent(templateName)}`,
+    );
+    if (!res.ok)
+        throw new Error(`ไม่สามารถโหลด Template (${templateName}.xlsx) ได้`);
+    return await res.arrayBuffer();
+}
+
+/**
+ * ฟังก์ชันเขียนและส่งออกไฟล์ Excel ตาม Template 04X09C.xlsx
+ * @param {Array} dataList ข้อมูล Detail จาก Tb_Master_DESBM_Detail
+ * @param {String} planHeaderID รหัส PlanHeaderID เพื่อใช้ตั้งชื่อไฟล์
+ */
+async function exportPlanExcel(dataList, planHeaderID, periodCode) {
+    try {
+        showLoader();
+
+        // 1. เลือกว่าจะใช้ไฟล์แม่แบบไหน (รองรับทั้งแบบมีขีดและไม่มีขีด)
+        let templateFileName = '04X-09C';
+        const cleanPeriod = String(periodCode || '').toUpperCase();
+
+        if (cleanPeriod.includes('10X-03C') || cleanPeriod.includes('10X03C')) {
+            templateFileName = '10X-03C';
+        } else if (
+            cleanPeriod.includes('04X-09C') ||
+            cleanPeriod.includes('04X09C')
+        ) {
+            templateFileName = '04X-09C';
+        }
+
+        const templateBuffer = await getTemplateFile(templateFileName);
+
+        const workbook = await writeExcelTemp(templateBuffer, {
+            write: (wb) => {
+                const sheet = wb.getWorksheet('Template') || wb.getWorksheet(1);
+
+                // ป้องกันปัญหา Shared Formula ที่ทำให้ไฟล์พัง
+                sheet.eachRow({ includeEmpty: true }, function (row) {
+                    row.eachCell({ includeEmpty: true }, function (cell) {
+                        if (cell.model && cell.model.sharedFormula) {
+                            cell.value =
+                                cell.result !== undefined ? cell.result : null;
+                        }
+                    });
+                });
+
+                const startRow = 2;
+                const formatDate = (val) => {
+                    if (!val) return '';
+                    const d = new Date(val);
+                    if (isNaN(d.getTime())) return '';
+                    const y = d.getFullYear();
+                    const m = String(d.getMonth() + 1).padStart(2, '0');
+                    const day = String(d.getDate()).padStart(2, '0');
+                    return `${y}-${m}-${day}`;
+                };
+
+                // นิยามสไตล์ฟอนต์แยกชัดเจน
+                const fontBlack = {
+                    name: 'Arial',
+                    size: 8,
+                    bold: false,
+                    color: { argb: 'FF000000' },
+                };
+
+                const fontRed = {
+                    name: 'Arial',
+                    size: 8,
+                    bold: true,
+                    color: { argb: 'FFFF0000' },
+                };
+
+                const cols = [
+                    'A',
+                    'B',
+                    'C',
+                    'D',
+                    'E',
+                    'F',
+                    'G',
+                    'H',
+                    'I',
+                    'J',
+                    'K',
+                    'L',
+                    'M',
+                    'N',
+                    'O',
+                    'P',
+                    'Q',
+                    'R',
+                    'S',
+                ];
+
+                // 🟢 ลูปชุดเดียวตรงๆ (ไม่ซ้อนกัน)
+                dataList.forEach((item, index) => {
+                    const r = startRow + index;
+
+                    // หยอดข้อมูล A - P
+                    sheet.getCell(`A${r}`).value = item.SeqNo || index + 1;
+                    sheet.getCell(`B${r}`).value = item.PROD || '';
+                    sheet.getCell(`C${r}`).value = formatDate(item.MFG_BM);
+                    sheet.getCell(`D${r}`).value = item.P_Type || '';
+                    sheet.getCell(`E${r}`).value = formatDate(item.DES_BM);
+                    sheet.getCell(`F${r}`).value =
+                        item.Time_DESBM_to_MFGBM !== null &&
+                        item.Time_DESBM_to_MFGBM !== ''
+                            ? Number(item.Time_DESBM_to_MFGBM)
+                            : '';
+                    sheet.getCell(`G${r}`).value = formatDate(item.Go_DES);
+                    sheet.getCell(`H${r}`).value =
+                        item.Time_GoDES_to_DESBM !== null &&
+                        item.Time_GoDES_to_DESBM !== ''
+                            ? Number(item.Time_GoDES_to_DESBM)
+                            : '';
+                    sheet.getCell(`I${r}`).value = formatDate(
+                        item.Confirm_MELINA_Portion,
+                    );
+                    sheet.getCell(`J${r}`).value =
+                        item.Time_Confirm_Melina !== null &&
+                        item.Time_Confirm_Melina !== ''
+                            ? Number(item.Time_Confirm_Melina)
+                            : '';
+                    sheet.getCell(`K${r}`).value = formatDate(
+                        item.MSE_to_MELINA,
+                    );
+                    sheet.getCell(`L${r}`).value =
+                        item.Time_MSE_to_MELINA !== null &&
+                        item.Time_MSE_to_MELINA !== ''
+                            ? Number(item.Time_MSE_to_MELINA)
+                            : '';
+                    sheet.getCell(`M${r}`).value = formatDate(item.SW_Assembly);
+                    sheet.getCell(`N${r}`).value =
+                        item.Time_SW_Assembly !== null &&
+                        item.Time_SW_Assembly !== ''
+                            ? Number(item.Time_SW_Assembly)
+                            : '';
+                    sheet.getCell(`O${r}`).value = formatDate(
+                        item.Zero_Level_Check_Temp_DWG,
+                    );
+                    sheet.getCell(`P${r}`).value =
+                        item.Time_Zero_Level !== null &&
+                        item.Time_Zero_Level !== ''
+                            ? Number(item.Time_Zero_Level)
+                            : '';
+
+                    // คอลัมน์ Q
+                    const cellQ = sheet.getCell(`Q${r}`);
+                    cellQ.value =
+                        item.Design_working_day !== null &&
+                        item.Design_working_day !== ''
+                            ? Number(item.Design_working_day)
+                            : '';
+                    cellQ.numFmt = '0';
+
+                    // คอลัมน์ R, S
+                    const cellR = sheet.getCell(`R${r}`);
+                    cellR.value =
+                        item.LeadTime !== null && item.LeadTime !== ''
+                            ? Number(item.LeadTime)
+                            : '';
+                    cellR.numFmt = '0';
+
+                    const cellS = sheet.getCell(`S${r}`);
+                    cellS.value =
+                        item.Time_DESBM_to_MFGBM_2 !== null &&
+                        item.Time_DESBM_to_MFGBM_2 !== ''
+                            ? Number(item.Time_DESBM_to_MFGBM_2)
+                            : '';
+                    cellS.numFmt = '0';
+
+                    // ตรวจสอบเงื่อนไข UserAction (ถ้าไม่ใช่ 'SYSTEM' และไม่ว่าง -> เป็น User แก้ ให้เป็นสีแดง)
+                    const userAction = String(item.UserAction || 'SYSTEM')
+                        .trim()
+                        .toUpperCase();
+                    const isManual =
+                        userAction !== 'SYSTEM' && userAction !== '';
+
+                    cols.forEach((col) => {
+                        const cell = sheet.getCell(`${col}${r}`);
+                        if (isManual) {
+                            cell.font = { ...fontRed };
+                        } else {
+                            cell.font = { ...fontBlack };
+                        }
+                    });
+                });
+            },
+        });
+
+        // 3. กำหนดชื่อไฟล์
+        const now = new Date();
+        const yyyy = now.getFullYear();
+        const mm = String(now.getMonth() + 1).padStart(2, '0');
+        const dd = String(now.getDate()).padStart(2, '0');
+        const hh = String(now.getHours()).padStart(2, '0');
+        const ii = String(now.getMinutes()).padStart(2, '0');
+        const ss = String(now.getSeconds()).padStart(2, '0');
+        const timeStamp = `${yyyy}${mm}${dd}_${hh}${ii}${ss}`;
+
+        const safePlanID = String(planHeaderID || 'PLAN').trim();
+        const fileName = `DESBM_${templateFileName}_${safePlanID}_${timeStamp}`;
+
+        await exportExcel(workbook, fileName);
+    } catch (error) {
+        console.error('Error generating excel from template:', error);
+        alert(
+            'เกิดข้อผิดพลาดในการสร้างไฟล์ Excel: ' + (error.message || error),
+        );
+    } finally {
+        showLoader({ show: false });
+    }
+}
+// == Export Excel
+// ===================================================================
 
 $(document).on('click', '#SentEmailBtn', async function () {
     const formData = $('.form-info').data();
@@ -818,231 +1575,11 @@ $(document).on('click', '#PdfBtn', function () {
     window.open(pdfUrl, '_blank');
 });
 
-$(document).on('click', '#ApproveBtn', async function () {
-    let val = $(this).val();
-    // เปิด Loader บังหน้าจอไว้ก่อนถ้าระบบโหลดช้า
-    await actionFlow('approve');
-});
-
-// 2. อีเวนต์คลิกปุ่ม Return
-$(document).on('click', '#ReturnBtn', async function () {
-    let val = $(this).val();
-    await actionFlow('return');
-});
 // reject
 $(document).on('click', '#RejectBtn', async function () {
     let val = $(this).val();
     await actionFlow('reject');
 });
-
-$(document).on('click', '#DeleteBtn', async function () {
-    let val = $(this).val();
-    const formData = $('.form-info').data();
-    const { nfrmno, vorgno, cyear, cyear2, nrunno, empno } = formData;
-
-    const payload = {
-        NFRMNO: nfrmno ? Number(nfrmno) : 0,
-        VORGNO: vorgno ? vorgno.toString() : '',
-        CYEAR: cyear ? cyear.toString() : '',
-        CYEAR2: cyear2 ? cyear2.toString() : '',
-        NRUNNO: nrunno ? Number(nrunno) : 0,
-    };
-
-    // 1. รอให้ฟังก์ชันลบทำงานเสร็จก่อน
-    const delform = await deleteFlowandForm(payload);
-
-    if (delform.status) {
-        // alert(delform.status);
-        // ใช้ Promise เพื่อให้สามารถใช้ await กับ $.ajax ได้
-        try {
-            const response = await $.ajax({
-                url: host + 'feform/FE-EIA/form/DeleteFEEIAForm',
-                type: 'POST',
-                dataType: 'json',
-                data: {
-                    NFRMNO: nfrmno,
-                    VORGNO: vorgno,
-                    CYEAR: cyear,
-                    CYEAR2: cyear2,
-                    NRUNNO: nrunno,
-                    EMPNO: empno,
-                },
-            });
-
-            if (
-                response.status === true ||
-                response.status === 'true' ||
-                response.status
-            ) {
-                alert('ลบข้อมูลในตารางเรียบร้อยแล้ว');
-                await redirectWebflow(); // ตอนนี้ใช้ await ได้แล้ว
-            } else {
-                alert(
-                    'ไม่สามารถลบข้อมูลในตารางได้: ' +
-                        (response.message || 'โปรดตรวจสอบข้อผิดพลาดในระบบ'),
-                );
-            }
-        } catch (error) {
-            console.error('Ajax Error: ', error);
-            alert('เกิดข้อผิดพลาดในการเชื่อมต่อฐานข้อมูล');
-            $('#loading').hide();
-        }
-    } else {
-        Swal.fire({
-            icon: 'error',
-            title: 'Failed to Delete Form',
-            text: delform.message || 'Please try again',
-        });
-    }
-});
-
-async function actionFlow(actionType) {
-    const formData = $('.form-info').data();
-    const {
-        nfrmno,
-        vorgno,
-        cyear,
-        cyear2,
-        nrunno,
-        empno,
-        cost_year,
-        cost_month,
-        doc_no,
-    } = formData;
-
-    let result = '0';
-    const remarkTxt = $('#txtRemark').val() || '';
-    const payload = {
-        NFRMNO: nfrmno ? Number(nfrmno) : 0,
-        VORGNO: vorgno ? vorgno.toString() : '',
-        CYEAR: cyear ? cyear.toString() : '',
-        CYEAR2: cyear2 ? cyear2.toString() : '',
-        NRUNNO: nrunno ? Number(nrunno) : 0,
-        ACTION: actionType ? actionType.toString() : '',
-        EMPNO: empno ? empno.toString() : '',
-        REMARK: remarkTxt.toString(),
-    };
-
-    try {
-        // 1. ตรวจสอบว่าผู้ใช้งานคือ Requester หรือไม่
-        if (($('#REQUEST_BYTxt').val() || '').includes(empno)) {
-            const hasFiles =
-                selectedFilesArray.filter((file) => file !== null).length > 0;
-
-            // สมมติว่าต้องการบังคับเฉพาะโหมด Create (currentMode === '1')
-            if (currentMode === '2' && !hasFiles) {
-                alert('กรุณาเลือกไฟล์แนบรายงานก่อนทำการบันทึกครับ');
-                return; // หยุดทำงานทันทีถ้าไม่มีไฟล์
-            }
-            // --- ขั้นตอนที่ 1: จัดการไฟล์ผ่าน NestJS API ---
-            let nestJsData = new FormData();
-            nestJsData.append('NFRMNO', nfrmno);
-            nestJsData.append('VORGNO', vorgno);
-            nestJsData.append('CYEAR', cyear);
-            nestJsData.append('CYEAR2', cyear2);
-            nestJsData.append('NRUNNO', nrunno);
-            nestJsData.append('CREATEBY', empno);
-            nestJsData.append('FORM_TYPE', 'FE');
-
-            if (typeof selectedFilesArray !== 'undefined') {
-                selectedFilesArray.forEach((file) => {
-                    if (file !== null) nestJsData.append('files', file);
-                });
-            }
-
-            // เรียกผ่าน Service ใน data.js ที่เตรียมไว้
-            const responseFile = await createFeEia(nestJsData);
-            if (!responseFile || !responseFile.status) {
-                throw new Error(
-                    responseFile?.message || 'อัปโหลดไฟล์ไป NestJS ไม่สำเร็จ',
-                );
-            }
-
-            // --- ขั้นตอนที่ 2: จัดการบันทึก Detail ผ่าน PHP AddFEEIADetail ---
-            let FEEIADetailData = new FormData();
-            FEEIADetailData.append('NFRMNO', nfrmno);
-            FEEIADetailData.append('VORGNO', vorgno);
-            FEEIADetailData.append('CYEAR', cyear);
-            FEEIADetailData.append('CYEAR2', cyear2);
-            FEEIADetailData.append('NRUNNO', nrunno);
-            FEEIADetailData.append('COST_MONTH', $('#MONTHDrp').val());
-            FEEIADetailData.append('COST_YEAR', $('#YEARDrp').val());
-            FEEIADetailData.append('DATAONHAND', JSON.stringify(dataOnhand));
-            const responsePhp = await $.ajax({
-                url: host + 'feform/FE-EIA/form/AddFEEIADetail',
-                type: 'POST',
-                data: FEEIADetailData,
-                processData: false,
-                contentType: false,
-                dataType: 'json',
-            });
-
-            if (
-                responsePhp &&
-                (responsePhp.status === true || responsePhp.status === 'true')
-            ) {
-                result = '1'; // ผ่านทั้ง NestJS และ PHP
-            } else {
-                throw new Error(
-                    responsePhp?.message || 'บันทึกข้อมูลตารางไม่สำเร็จ',
-                );
-            }
-        } else {
-            // กรณีผู้อนุมัติ (Approver) ไม่ต้องอัปโหลดไฟล์ใหม่
-            result = '1';
-        }
-
-        // --- ขั้นตอนที่ 3: ดำเนินการ Flow (Action) ---
-        if (result === '1') {
-            const res = await doaction(payload);
-            if (res?.status || res?.status === true || res?.status === 'true') {
-                if ($('#EXTDATAHid').val() == '03') {
-                    // sent mail
-
-                    let EndProcessData = new FormData();
-                    EndProcessData.append('NFRMNO', nfrmno);
-                    EndProcessData.append('VORGNO', vorgno);
-                    EndProcessData.append('CYEAR', cyear);
-                    EndProcessData.append('CYEAR2', cyear2);
-                    EndProcessData.append('NRUNNO', nrunno);
-                    EndProcessData.append('COST_MONTH', $('#MONTHDrp').val());
-                    EndProcessData.append('COST_YEAR', $('#YEARDrp').val());
-                    // EndProcessData.append(
-                    //     'DATAONHAND',
-                    //     JSON.stringify(dataOnhand),
-                    // );
-                    const responseEndProcess = await $.ajax({
-                        url: host + 'feform/FE-EIA/form/EndpProcess',
-                        type: 'POST',
-                        data: EndProcessData,
-                        processData: false,
-                        contentType: false,
-                        dataType: 'json',
-                    });
-
-                    if (
-                        responseEndProcess &&
-                        (responseEndProcess.status === true ||
-                            responseEndProcess.status === 'true')
-                    ) {
-                    } else {
-                        throw new Error(
-                            responseEndProcess?.message ||
-                                'end process not completed',
-                        );
-                    }
-                }
-                redirectWebflow(); // Redirect เมื่อทุกอย่างสำเร็จ
-            } else {
-                throw new Error(res?.message || 'ไม่สามารถส่งฟอร์มได้');
-            }
-        }
-    } catch (error) {
-        console.error('Action Flow Error:', error);
-        alert('เกิดข้อผิดพลาด: ' + error.message);
-        $('#loading').hide();
-    }
-}
 
 function submitWebflowAction(actionType) {
     alert('ระบบ Webflow กำลังประมวลผลสถานะ: ' + actionType);

@@ -50,6 +50,8 @@ class form extends MY_Controller {
         $data['EMPNO']     = (string)$empno;
         $data['REQBY']   = $empno;
         $data['INPUTBY'] = $empno;
+        $data['DOC_NO'] = '';
+        $data['PLANHEADERID']    ='';
 
         // 1. ตรวจสอบการส่ง Form Key จาก URL
         if (
@@ -123,7 +125,7 @@ class form extends MY_Controller {
             $data['DOC_NO'] = "DED-MDS-" . $data['CYEAR2'] . "-" . str_pad($data['NRUNNO'], 6, '0', STR_PAD_LEFT);
             
             // ดึงข้อมูล Header เพิ่มเติมจากตารางจริงถ้ามี
-            $sqlHeader = "SELECT TOP 1 PlanYear, PeriodCode, Revision, Remark 
+            $sqlHeader = "SELECT TOP 1 PlanYear, PeriodCode, Revision, Remark ,PlanHeaderID,Status
                         FROM Tb_Master_DESBM_Header 
                         WHERE CYEAR2 = ? and NRUNNO = ?";
             $headerInfo = $this->MDSModel->QuerySetBase($sqlHeader, $this->DDS, [$data['CYEAR2'],(int)$data['NRUNNO']])->row();
@@ -133,6 +135,7 @@ class form extends MY_Controller {
                 $data['REVISION']  = $headerInfo->Revision?? '*';
                 $data['REMARK']    = $headerInfo->Remark ?? '';
                 $data['STATUS']    = $headerInfo->Status ?? '';
+                $data['PLANHEADERID']    = $headerInfo->PlanHeaderID ?? '';
                 // ถ้ามีค่าใน Header เดิมให้ใช้ค่านั้น ถ้าไม่มีให้ fallback ไปยัง default
                 $data['selectedDesTypes'] = !empty($headerInfo->DesType) ? explode('|', $headerInfo->DesType) : $defaultDesTypes;
             }
@@ -144,6 +147,8 @@ class form extends MY_Controller {
             $data['CST']     = '0';
             $data['MODE']    = '1'; // กำหนดให้เป็น Mode 1 (Create) ชัดเจน
             $data['selectedDesTypes'] = $defaultDesTypes;
+            
+            $data['PLANHEADERID']    ='';
                 
         }
 
@@ -164,67 +169,142 @@ class form extends MY_Controller {
     // ==============================================================================
     public function GetOrInitDraftPlan() {
         try {
-            $year     = $this->input->post('YEAR') ?? '';
-            $period   = $this->input->post('PERIOD') ?? '';
-            $empno    = $this->input->post('EMPNO') ?? 'SYSTEM';
-            $revision = $this->input->post('REVISION');
+            $year    = trim((string)$this->input->post('YEAR'));
+            $period  = trim((string)$this->input->post('PERIOD'));
+            $empno   = $this->input->post('EMPNO') ?? 'SYSTEM';
+            $EXTDATA = trim((string)$this->input->post('EXTDATA'));
+            $MODE    = trim((string)$this->input->post('MODE'));
 
-            // หากยังไม่ได้เลือก Year หรือ Period ให้คืนค่าว่างกลับทันที
+            // รับค่าคีย์อ้างอิงเอกสาร Webflow (ถ้ามี)
+            $vorgno  = trim((string)$this->input->post('VORGNO'));
+            $cyear2  = trim((string)$this->input->post('CYEAR2'));
+            $nrunno  = trim((string)$this->input->post('NRUNNO'));
+            $planheaderid  = trim((string)$this->input->post('PLANHEADERID'));
+
             if (empty($year) || empty($period)) {
                 return $this->output->set_content_type('application/json')->set_output(json_encode([
-                    'statusTb'       => true,
+                    'statusTb'     => true,
                     'hasDraft'     => false,
                     'revision'     => '*',
+                    'nextRevision' => '*',
                     'desType'      => null,
                     'planHeaderID' => null,
                     'status'       => '',
-                    'data'         => []
+                    'docNo'        => '',
+                    'data'         => [],
                 ]));
             }
 
-            // 1. ตรวจสอบว่ามี Header สถานะ DRAFT ค้างอยู่หรือไม่ (เพิ่ม DesType ใน SELECT)
-            $sqlCheckDraft = "SELECT TOP 1 PlanHeaderID, PlanYear, PeriodCode, Revision, DesType, Status, Remark 
+            $headerRow = null;
+
+            $nextRevision = $this->getNextApprovedRevision($year, $period);
+
+
+            if ($MODE === '1') {
+                // -------------------------------------------------------------
+                // 🟢 MODE 1: CREATE MODE
+                // -------------------------------------------------------------
+                // 1. ค้นหาว่ามี DRAFT ค้างอยู่ในระบบหรือไม่
+                $sqlDraft = "SELECT TOP 1 PlanHeaderID, PlanYear, PeriodCode, Revision, DesType, Status, Remark,
+                                        VORGNO, CYEAR2, NRUNNO
                             FROM Tb_Master_DESBM_Header 
-                            WHERE PlanYear = ? AND PeriodCode = ? AND UPPER(Status) = 'DRAFT'
+                            WHERE PlanYear = ? AND PeriodCode = ? AND UPPER(Status) IN ('DRAFT', 'PROCESS')
                             ORDER BY PlanHeaderID DESC";
-            $draftHeader = $this->MDSModel->QuerySetBase($sqlCheckDraft, $this->DDS, [$year, $period])->row();
+                $headerRow = $this->MDSModel->QuerySetBase($sqlDraft, $this->DDS, [$year, $period])->row();
 
-            if ($draftHeader) {
-                // --- CASE A: มี Draft เดิมค้างอยู่ -> ดึง Detail เดิมขึ้นมาแสดง ---
-                $sqlDetail = "SELECT * FROM Tb_Master_DESBM_Detail 
-                            WHERE PlanHeaderID = ? 
-                            ORDER BY SeqNo ASC";
-                $dataDetail = $this->MDSModel->QuerySetBase($sqlDetail, $this->DDS, [$draftHeader->PlanHeaderID])->result();
+                // 2. ถ้าไม่มี DRAFT ให้หา Next Revision สำหรับเตรียมขึ้น Plan ใหม่
+                if (!$headerRow) {
 
-                return $this->output->set_content_type('application/json')->set_output(json_encode([
-                    'statusTb'       => true,
-                    'hasDraft'     => true,
-                    'revision'     => $draftHeader->Revision,
-                    'desType'      => $draftHeader->DesType ?? '', // ส่งค่า "N|T|S"
-                    'planHeaderID' => $draftHeader->PlanHeaderID,
-                    'status'       => $draftHeader->Status,
-                    'data'         => $dataDetail
-                ]));
+                    return $this->output->set_content_type('application/json')->set_output(json_encode([
+                        'statusTb'     => true,
+                        'hasDraft'     => false,
+                        'revision'     => $nextRevision,
+                        'nextRevision' => $nextRevision,
+                        'desType'      => null,
+                        'planHeaderID' => null,
+                        'status'       => '',
+                        'docNo'        => '',
+                        'data'         => [],
+                    ]));
+                }
+
             } else {
+                // -------------------------------------------------------------
+                // MODE อื่นๆ: (PROCESS, APPROVE, VIEW)
+                // -------------------------------------------------------------
+                if (!empty($nrunno) && !empty($cyear2) && !empty($vorgno)) {
+                    // ดึงตรงตามเลขเอกสาร Webflow ของตั๋วใบนี้
+                    $sqlByDoc = "SELECT TOP 1 PlanHeaderID, PlanYear, PeriodCode, Revision, DesType, Status, Remark,
+                                            VORGNO, CYEAR2, NRUNNO
+                                FROM Tb_Master_DESBM_Header 
+                                WHERE  NRUNNO = ? AND CYEAR2 = ? AND VORGNO = ? 
+                                ORDER BY PlanHeaderID DESC";
+                    $headerRow = $this->MDSModel->QuerySetBase($sqlByDoc, $this->DDS, [$nrunno, $cyear2, $vorgno])->row();
+                }
 
-                // --- CASE B: ไม่พบ Draft -> หา Revision ถัดไปรอไว้ และส่งตารางว่างกลับไป ---                
-                $nextRevision = $this->getNextApprovedRevision($year, $period);
+                // ถ้าหาตามตั๋วไม่เจอ ให้ดึงตัวล่าสุดของรอบนั้นมาแสดง
+                if (!$headerRow) {
+                    $sqlLatest = "SELECT TOP 1 PlanHeaderID, PlanYear, PeriodCode, Revision, DesType, Status, Remark,
+                                            VORGNO, CYEAR2, NRUNNO
+                                FROM Tb_Master_DESBM_Header 
+                                WHERE PlanYear = ? AND PeriodCode = ?
+                                ORDER BY PlanHeaderID DESC";
+                    $headerRow = $this->MDSModel->QuerySetBase($sqlLatest, $this->DDS, [$year, $period])->row();
+                }
+            }
+
+            // -------------------------------------------------------------
+            // จัดการดึง Detail ของ Header ที่ค้นพบ
+            // -------------------------------------------------------------
+            if ($headerRow) {
+                $rawStatus = strtoupper(trim($headerRow->Status));
+                $docNo = (!empty($headerRow->VORGNO) && !empty($headerRow->CYEAR2) && !empty($headerRow->NRUNNO))
+                        ? "DED-MDS-" . $headerRow->CYEAR2 . "-" . str_pad($headerRow->NRUNNO, 6, '0', STR_PAD_LEFT)
+                        : '';
+
+                // ดึง Detail พร้อมข้อมูล Diff เทียบกับ Revision ล่าสุดก่อนหน้า
+                // $sql = "select * from Tb_Master_DESBM_Detail where PlanHeaderID = ?";
+                // $dataDetail = $this->MDSModel->QuerySetBase($sql, $this->DDS, [$headerRow->PlanHeaderID])->result();
+                $dataDetail = $this->MDSModel->getPlanDetailWithDiff(
+                    $headerRow->PlanHeaderID, 
+                    $year, 
+                    $period, 
+                    $headerRow->Revision
+                );
+
 
                 return $this->output->set_content_type('application/json')->set_output(json_encode([
-                    'statusTb'       => true,
-                    'hasDraft'     => false,
-                    'revision'     => $nextRevision,
-                    'desType'      => null,
-                    'planHeaderID' => null,
-                    'status'       => '',
-                    'data'         => [] // ส่งตารางว่าง
+                    'statusTb'     => true,
+                    'hasDraft'     => ($rawStatus === 'DRAFT'),
+                    'revision'     => $headerRow->Revision,
+                    'nextRevision' => $nextRevision,
+                    'desType'      => $headerRow->DesType ?? '',
+                    'planHeaderID' => $headerRow->PlanHeaderID,
+                    'status'       => $headerRow->Status,
+                    'docNo'        => $docNo,
+                    'remark'       => $headerRow->Remark ?? '',
+                    'data'         => $dataDetail,    
                 ]));
             }
 
-        } catch (\Exception $e) {
+            // กรณีไม่พบข้อมูลใดๆ เลย
+            $nextRevision = $this->getNextApprovedRevision($year, $period);
             return $this->output->set_content_type('application/json')->set_output(json_encode([
-                'status'  => false,
-                'message' => $e->getMessage()
+                'statusTb'     => true,
+                'hasDraft'     => false,
+                'revision'     => $nextRevision,
+                'nextRevision' => $nextRevision,
+                'desType'      => null,
+                'planHeaderID' => null,
+                'status'       => '',
+                'docNo'        => '',
+                'data'         => [],
+            ]));
+
+        } catch (\Throwable $e) {
+            return $this->output->set_content_type('application/json')->set_output(json_encode([
+                'statusTb' => false,
+                'message'  => $e->getMessage()
             ]));
         }
     }
@@ -233,65 +313,103 @@ class form extends MY_Controller {
     // 2. Controller Method: คำนวณใหม่ทับ DRAFT เดิม (เมื่อกด Process Calculation)  processPlanCalculation
     // ==============================================================================
     public function ProcessPlan() {
+        $this->output->set_content_type('application/json');
+        $db = $this->load->database($this->DDS, TRUE);
         try {
-            $year        = $this->input->post('YEAR');
-            $period      = $this->input->post('PERIOD');
-            $desTypes    = $this->input->post('DESTYPES'); // Array เช่น ['N', 'T', 'S']
-            $REVISION    = $this->input->post('REVISION');
-            $empno       = $this->input->post('EMPNO') ?? 'SYSTEM';
-            
-            $userSession = $empno;
+            $year     = trim((string)$this->input->post('YEAR'));
+            $period   = trim((string)$this->input->post('PERIOD'));
+            $desTypes = $this->input->post('DESTYPES');
+            $empno    = $this->input->post('EMPNO') ?? 'SYSTEM';
+            $MODE    = $this->input->post('MODE') ?? 'SYSTEM';
+            $EXTDATA    = $this->input->post('EXTDATA') ?? 'SYSTEM';
+            $PLANHEADERID    = $this->input->post('PLANHEADERID') ;
 
-            // แปลง Array เป็น String คั่นด้วย '|' เช่น "N|T|S"
-            $desTypeStr = '';
-            if (is_array($desTypes)) {
-                $desTypeStr = implode('|', $desTypes);
-            } elseif (!empty($desTypes)) {
-                $desTypeStr = (string)$desTypes;
+            // 1. Validation กั้นไว้ก่อน: ถ้าไม่ได้ระบุ Year / Period / DesType ห้ามเริ่มงานเด็ดขาด
+            if (empty($year) || empty($period)) {
+                return $this->output->set_output(json_encode([
+                    'status'  => false,
+                    'message' => 'กรุณาเลือก Year และ Period ก่อนกด Process Plan'
+                ]));
             }
 
+            if (empty($desTypes)) {
+                return $this->output->set_output(json_encode([
+                    'status'  => false,
+                    'message' => 'กรุณาเลือก DesType อย่างน้อย 1 รายการ'
+                ]));
+            }
 
-            // 1. ถ้ามี DRAFT เก่าค้างอยู่ ให้ลบทั้ง Detail และ Header ทิ้งทันที
-            $this->MDSModel->DeleteDraftDesBM($year, $period);
+            // if($MODE === '2' && ($EXTDATA === '' || $EXTDATA === '01'))
+            // {
 
-            // 2. คำนวณ Revision ใหม่ตาม Max Approved Plan
+            // }
+            // else{
+
+            // }
+            // 2. ป้องกันการ Process ซ้อน: ตรวจสอบก่อนว่ารอบนี้ติดสถานะ PROCESS ใน Flow อยู่หรือไม่
+            $sqlCheckProcess = "SELECT TOP 1 PlanHeaderID, VORGNO, CYEAR2, NRUNNO 
+                                FROM Tb_Master_DESBM_Header WITH (NOLOCK)
+                                WHERE PlanYear = ? AND PeriodCode = ? AND Status ='PROCESS'";
+            $qProcess = $db->query($sqlCheckProcess, [$year, $period]);
+            if ($qProcess && $qProcess->num_rows() > 0) {
+                $rowProc = $qProcess->row();
+                $docNo = "DED-MDS-{$rowProc->CYEAR2}-" . str_pad($rowProc->NRUNNO, 6, '0', STR_PAD_LEFT);
+                return $this->output->set_output(json_encode([
+                    'status'  => false,
+                    'message' => "รอบแผนงานนี้กำลังอยู่ในขั้นตอนการอนุมัติ [{$docNo}] ไม่สามารถประมวลผลใหม่ได้"
+                ]));
+            }
+
+            // 1. อ่านข้อมูลเตรียมไว้ก่อน (ไม่เปิด Transaction)
             $nextRevision = $this->getNextApprovedRevision($year, $period);
 
-            // 3. ประมวลผลสูตรคำนวณวันทำงานลง Temp Table
-            $this->MDSModel->processPlanMaster($year, $period, $desTypes, $userSession);
+            // 2. เปิด Transaction ให้สั้นที่สุด (มีเฉพาะงานเขียนลง DB)
+            // $db->query("SET LOCK_TIMEOUT 5000;");
+            // $db->trans_begin();
 
-            // 4. บันทึก Header ใหม่เป็น DRAFT
+            // 2.1 ล้าง Draft เดิม
+            $this->MDSModel->DeleteDraftDesBM($year, $period, null, $db);
+            // สร้าง PlanHeaderID รูปแบบ Custom Code (เช่น 202601001)
+            $newPlanHeaderID = $this->MDSModel->generatePlanHeaderID($year, $period, $db);
+            // 3. สร้าง Header ฉบับร่างใหม่
             $headerData = [
+                'PlanHeaderID'   => (string)$newPlanHeaderID,
                 'PlanYear'       => $year,
                 'PeriodCode'     => $period,
                 'Revision'       => $nextRevision,
                 'Status'         => 'DRAFT',
-                'DesType'        => $desTypeStr,
-                'Remark'         => 'Process calculated draft plan',
-                'UserAction'     => $empno,
-                'ComputerAction' => gethostbyaddr($_SERVER['REMOTE_ADDR']),
+                'DesType'        => is_array($desTypes) ? implode('|', $desTypes) : (string)$desTypes,
+                'Remark'         => 'Process draft plan',
+                'UserAction'     => 'SYSTEM',
+                'ComputerAction' => (string)gethostbyaddr($_SERVER['REMOTE_ADDR'] ?? '127.0.0.1'),
                 'DateAction'     => date('Y-m-d H:i:s')
             ];
-            $newPlanHeaderID = $this->MDSModel->InsertDraftDesBM($headerData, $nextRevision, $userSession);
-            if (empty($newPlanHeaderID)) {
-                throw new Exception("ไม่สามารถสร้าง Plan Draft ได้");
+            $db->insert('Tb_Master_DESBM_Header', $headerData);
+
+            // 4. แยกการประมวลผลตาม Revision
+            if ($nextRevision === '*' || $nextRevision === '0') {
+                // 🟢 Rev * : ดึงจาก A002MP และคำนวณใหม่ตามสูตร
+                $this->MDSModel->processPlanMasterDirect($newPlanHeaderID, $year, $period, $desTypes, $nextRevision, 'SYSTEM', $db);
+            } else {
+                // 🟠 Rev อื่นๆ : ดึง Detail ของ Revision ล่าสุดที่ Approved มา Copy ตั้งต้น
+                $this->MDSModel->copyPreviousApprovedRevision($newPlanHeaderID, $year, $period, $desTypes, $nextRevision, $db);
             }
 
-            // 6. ดึงข้อมูล Detail ออกมาแสดงบนหน้าเว็บ
-            $sqlDetail = "SELECT * FROM Tb_Master_DESBM_Detail WHERE PlanHeaderID = ? ORDER BY SeqNo ASC";
-            $data = $this->MDSModel->QuerySetBase($sqlDetail, $this->DDS, [$newPlanHeaderID])->result();
+            // $db->trans_commit();
 
-            return $this->output->set_content_type('application/json')->set_output(json_encode([
+            // 5. ดึงข้อมูลพร้อมข้อมูลเปรียบเทียบกับ Revision ก่อนหน้า
+            $data = $this->MDSModel->getPlanDetailWithDiff($newPlanHeaderID, $year, $period, $nextRevision);
+
+            return $this->output->set_output(json_encode([
                 'status'       => true,
                 'revision'     => $nextRevision,
                 'planHeaderID' => $newPlanHeaderID,
                 'data'         => $data
             ]));
-        } catch (\Exception $e) {
-            return $this->output->set_content_type('application/json')->set_output(json_encode([
-                'status'  => false,
-                'message' => $e->getMessage()
-            ]));
+
+        } catch (\Throwable $e) {
+            // $db->trans_rollback();
+            return $this->output->set_output(json_encode(['status' => false, 'message' => $e->getMessage()]));
         }
     }
 
@@ -299,9 +417,9 @@ class form extends MY_Controller {
         $this->output->set_content_type('application/json');
 
         try {
-            $planHeaderID = $this->input->post('PlanHeaderID');
-            $seqNo        = $this->input->post('SeqNo');
-            $field        = $this->input->post('Field');
+            $planHeaderID = trim((string)$this->input->post('PlanHeaderID'));
+            $seqNo        = (int)$this->input->post('SeqNo');
+            $field        = trim((string)$this->input->post('Field'));
             $value        = $this->input->post('Value');
             $empno        = $this->input->post('EMPNO') ?? 'SYSTEM';
 
@@ -324,9 +442,9 @@ class form extends MY_Controller {
 
             $db = $this->load->database($this->DDS, TRUE);
 
-            // 1. ดึงแถวปัจจุบัน
-            $currentRow = $db->where('PlanHeaderID', (int)$planHeaderID)
-                            ->where('SeqNo', (int)$seqNo)
+            // 1. ดึงแถวปัจจุบันที่กำลังแก้ไข (ชี้ตาม Composite Key: PlanHeaderID + DetailID/SeqNo)
+            $currentRow = $db->where('PlanHeaderID', $planHeaderID)
+                            ->where('DetailID', $seqNo)
                             ->get('Tb_Master_DESBM_Detail')
                             ->row();
 
@@ -334,13 +452,30 @@ class form extends MY_Controller {
                 throw new Exception("ไม่พบข้อมูลแถวที่ต้องการแก้ไข");
             }
 
-            // 2. ดึง Config
-            $calConfigs = $db->where('IsActive', 1)->get('Tb_MS_Master_DESBM_Cal')->result();
-            $configMap = [];
-            foreach ($calConfigs as $cfg) {
-                $configMap[$cfg->TargetField . '_' . $cfg->P_Type] = (int)$cfg->OffsetDays;
-            }
+            $pType   = $currentRow->P_Type;
+            $desType = $currentRow->DesType;
+            $mfgDate = $currentRow->MFG_BM;
+            $a2m01   = $currentRow->A2M01;
 
+            // 2. ดึง Config ทั้งหมดที่ Active จาก Tb_MS_Master_DESBM_Cal
+            $calConfigs = $db->where('IsActive', 1)->get('Tb_MS_Master_DESBM_Cal')->result();
+
+            // ฟังก์ชันช่วยค้นหา Config ตาม TargetField และ P_Type (Fallback ไปหา 'ALL')
+            $getConfig = function($targetField, $currentPType) use ($calConfigs) {
+                foreach ($calConfigs as $cfg) {
+                    if ($cfg->TargetField === $targetField && $cfg->P_Type === $currentPType) {
+                        return $cfg;
+                    }
+                }
+                foreach ($calConfigs as $cfg) {
+                    if ($cfg->TargetField === $targetField && $cfg->P_Type === 'ALL') {
+                        return $cfg;
+                    }
+                }
+                return null;
+            };
+
+            // Helper แปลง CalDate <-> WorkSeq
             $getWorkSeq = function($date) use ($db) {
                 if (empty($date)) return null;
                 $row = $db->select('WorkSeq')
@@ -361,125 +496,188 @@ class form extends MY_Controller {
                 return $row ? $row->CalDate : null;
             };
 
-            // 3. เตรียมคำนวณ WorkSeq
-            $mfgDate  = $currentRow->MFG_BM;
-            $mfgSeq   = $getWorkSeq($mfgDate);
-            $pType    = $currentRow->P_Type;
-
+            // 3. กำหนดค่าเริ่มต้นของแถวปัจจุบันหลังแก้ไข
             $newDesBM = ($field === 'DES_BM') ? $formattedDate : $currentRow->DES_BM;
             $newGoDES = ($field === 'Go_DES') ? $formattedDate : $currentRow->Go_DES;
 
-            $desSeq   = $getWorkSeq($newDesBM);
+            $mfgSeq = $getWorkSeq($mfgDate);
+            $desSeq = $getWorkSeq($newDesBM);
 
-            if ($field === 'DES_BM' && $pType === 'P1' && $desSeq !== null) {
-                $goOffset = $configMap['Go_DES_P1'] ?? -12;
-                $goSeq    = $desSeq + $goOffset;
-                $newGoDES = $getCalDate($goSeq);
-            } else {
-                $goSeq    = $getWorkSeq($newGoDES);
+            // 🟢 แก้ไขจุดที่ 1: ดึงแถว P1_ROW อ้างอิงจาก A2M01 + DesType = 'N' โดยตรง (แม่นยำ ไม่ต้อง LIKE)
+            $p1Row = null;
+            if (!empty($a2m01)) {
+                $p1Row = $db->where('PlanHeaderID', $planHeaderID)
+                            ->where('A2M01', $a2m01)
+                            ->where('DesType', 'N')
+                            ->get('Tb_Master_DESBM_Detail')
+                            ->row();
             }
 
+            // 4. คำนวณ Go_DES แบบ Dynamic ตามตาราง CalConfig
+            $cfgGoDes = $getConfig('Go_DES', $pType);
+            if ($cfgGoDes && $field === 'DES_BM') {
+                if ($cfgGoDes->BaseRowType === 'CURRENT' && $cfgGoDes->BaseField === 'DES_BM' && $desSeq !== null) {
+                    $goSeq = $desSeq + (int)$cfgGoDes->OffsetDays;
+                    $newGoDES = $getCalDate($goSeq);
+                } elseif ($cfgGoDes->BaseRowType === 'P1_ROW' && $p1Row) {
+                    $newGoDES = $p1Row->Go_DES;
+                    $goSeq = $getWorkSeq($newGoDES);
+                } else {
+                    $goSeq = $getWorkSeq($newGoDES);
+                }
+            } else {
+                $goSeq = $getWorkSeq($newGoDES);
+            }
+
+            // 5. คำนวณ Field วันที่อื่นๆ แบบ Dynamic
             $newConfirmMelina = null;
             $newMSE           = null;
-            $newZeroLevel     = null;
             $newSWAssembly    = null;
+            $newZeroLevel     = null;
 
-            if ($desSeq !== null) {
-                $zeroOffset = ($pType === 'P1') ? ($configMap['Zero_Level_Check_P1'] ?? -2) : ($configMap['Zero_Level_Check_last P'] ?? -2);
-                $newZeroLevel = $getCalDate($desSeq + $zeroOffset);
+            // (1) Confirm_MELINA
+            $cfgConfirm = $getConfig('Confirm_MELINA', $pType);
+            if ($cfgConfirm && $goSeq !== null) {
+                $newConfirmMelina = $getCalDate($goSeq + (int)$cfgConfirm->OffsetDays);
+            }
 
-                if ($pType === 'P1') {
-                    $mseOffset = $configMap['MSE_to_MELINA_P1'] ?? 5;
-                    $newMSE = $getCalDate($desSeq + $mseOffset);
+            // (2) MSE_to_MELINA
+            $cfgMse = $getConfig('MSE_to_MELINA', $pType);
+            if ($cfgMse && $desSeq !== null) {
+                $newMSE = $getCalDate($desSeq + (int)$cfgMse->OffsetDays);
+            }
+
+            // (3) SW_Assembly
+            $cfgSw = $getConfig('SW_Assembly', $pType);
+            if ($cfgSw) {
+                if ($cfgSw->BaseRowType === 'CURRENT' && $mfgSeq !== null) {
+                    $newSWAssembly = $getCalDate($mfgSeq + (int)$cfgSw->OffsetDays);
+                } elseif ($cfgSw->BaseRowType === 'P1_ROW' && $p1Row) {
+                    $newSWAssembly = $p1Row->SW_Assembly;
                 }
             }
 
-            if ($pType === 'P1' && $goSeq !== null) {
-                $melOffset = $configMap['Confirm_MELINA_P1'] ?? 4;
-                $newConfirmMelina = $getCalDate($goSeq + $melOffset);
+            // (4) Zero_Level_Check
+            $cfgZero = $getConfig('Zero_Level_Check', $pType);
+            if ($cfgZero && $desSeq !== null) {
+                $newZeroLevel = $getCalDate($desSeq + (int)$cfgZero->OffsetDays);
             }
 
-            if ($mfgSeq !== null) {
-                $swOffset = $configMap['SW_Assembly_P1'] ?? 5;
-                $newSWAssembly = $getCalDate($mfgSeq + $swOffset);
-            }
-
-            // คำนวณช่วงเวลา Networkdays
-            $confirmSeq     = $getWorkSeq($newConfirmMelina);
-            $mseSeq         = $getWorkSeq($newMSE);
-            $zeroSeq        = $getWorkSeq($newZeroLevel);
-            $swSeq          = $getWorkSeq($newSWAssembly);
+            // 6. คำนวณช่วงเวลา Networkdays (ช่อง TIME ต่างๆ)
+            $confirmSeq = $getWorkSeq($newConfirmMelina);
+            $mseSeq     = $getWorkSeq($newMSE);
+            $swSeq      = $getWorkSeq($newSWAssembly);
+            $zeroSeq    = $getWorkSeq($newZeroLevel);
 
             $timeDesToMfg   = ($desSeq && $mfgSeq) ? abs($mfgSeq - $desSeq) : null;
             $timeGoToDes    = ($goSeq && $desSeq) ? abs($desSeq - $goSeq) : null;
-            $timeConfirmMel = ($pType === 'P1' && $goSeq && $confirmSeq) ? abs($confirmSeq - $goSeq) : null;
-            $timeMse        = ($pType === 'P1' && $desSeq && $mseSeq) ? abs($mseSeq - $desSeq) : null;
-            $timeZeroLvl    = ($desSeq && $zeroSeq) ? abs($desSeq - $zeroSeq) : null;
+            $timeConfirmMel = ($goSeq && $confirmSeq) ? abs($confirmSeq - $goSeq) : null;
+            $timeMse        = ($desSeq && $mseSeq) ? abs($mseSeq - $desSeq) : null;
             $timeSw         = ($mfgSeq && $swSeq) ? abs($mfgSeq - $swSeq) : null;
+            $timeZeroLvl    = ($desSeq && $zeroSeq) ? abs($desSeq - $zeroSeq) : null;
 
-            // 🟢 4. คำนวณ 3 ฟิลด์ใหม่เพิ่มเติม
+            // 7. คำนวณ 3 ฟิลด์เสริม
+            // (1) Design_working_day
+            $cfgDwd = $getConfig('Design_working_day', $pType);
+            $dwdOffset = $cfgDwd ? (int)$cfgDwd->OffsetDays : 0;
             
-            // (1) Design_working_day = NETWORKDAYS(F4, F6) - 1
             $prevRow = $db->select('DES_BM')
-                        ->where('PlanHeaderID', (int)$planHeaderID)
-                        ->where('SeqNo <', (int)$seqNo)
+                        ->where('PlanHeaderID', $planHeaderID)
+                        ->where('DesType', $desType)
+                        ->where('SeqNo <', $seqNo)
                         ->order_by('SeqNo', 'DESC')
                         ->limit(1)
                         ->get('Tb_Master_DESBM_Detail')
                         ->row();
-            
-            $prevDesSeq = $prevRow ? $getWorkSeq($prevRow->DES_BM) : null;
-            $designWorkingDay = ($desSeq !== null && $prevDesSeq !== null) ? (abs($desSeq - $prevDesSeq) - 1) : 0;
 
-            // (2) LeadTime = 50 + (MFG_BM - Go_DES)
+            $prevDesSeq = $prevRow ? $getWorkSeq($prevRow->DES_BM) : null;
+            $designWorkingDay = ($desSeq !== null && $prevDesSeq !== null) ? (abs($desSeq - $prevDesSeq) + $dwdOffset) : null;
+
+            // (2) LeadTime
+            $cfgLt = $getConfig('LeadTime', $pType);
+            $ltOffset = $cfgLt ? (int)$cfgLt->OffsetDays : 0;
             $leadTime = null;
             if (!empty($mfgDate) && !empty($newGoDES)) {
                 $diffDays = (strtotime($mfgDate) - strtotime($newGoDES)) / 86400;
-                $leadTime = 50 + (int)round($diffDays);
+                $leadTime = $ltOffset + (int)round($diffDays);
             }
 
-            // (3) Time_DESBM_to_MFGBM_2 = (MFG_BM - DES_BM) + 1
+            // (3) Time_DESBM_to_MFGBM_2
+            $cfgDes2 = $getConfig('Time_DESBM_to_MFGBM_2', $pType);
+            $des2Offset = $cfgDes2 ? (int)$cfgDes2->OffsetDays : 0;
             $timeDesToMfg2 = null;
             if (!empty($mfgDate) && !empty($newDesBM)) {
                 $diffDays = (strtotime($mfgDate) - strtotime($newDesBM)) / 86400;
-                $timeDesToMfg2 = (int)round($diffDays) + 1;
+                $timeDesToMfg2 = (int)round($diffDays) + $des2Offset;
             }
 
-            // 5. บันทึกลงตาราง
+            // 8. บันทึกข้อมูลแถวปัจจุบัน (ระบุชัดทั้ง PlanHeaderID และ DetailID)
             $updateData = [
-                'DES_BM'                     => $newDesBM,
-                'Time_DESBM_to_MFGBM'        => $timeDesToMfg,
-                'Go_DES'                     => $newGoDES,
-                'Time_GoDES_to_DESBM'        => $timeGoToDes,
-                'Confirm_MELINA_Portion'     => $newConfirmMelina,
-                'Time_Confirm_Melina'        => $timeConfirmMel,
-                'MSE_to_MELINA'              => $newMSE,
-                'Time_MSE_to_MELINA'         => $timeMse,
-                'SW_Assembly'                => $newSWAssembly,
-                'Time_SW_Assembly'           => $timeSw,
-                'Zero_Level_Check_Temp_DWG'  => $newZeroLevel,
-                'Time_Zero_Level'            => $timeZeroLvl,
-                'Design_working_day'         => $designWorkingDay,
-                'LeadTime'                   => $leadTime,
-                'Time_DESBM_to_MFGBM_2'       => $timeDesToMfg2,
-                'UserAction'                 => (string)$empno,
-                'DateAction'                 => date('Y-m-d H:i:s')
+                'DES_BM'                    => $newDesBM,
+                'Time_DESBM_to_MFGBM'       => $timeDesToMfg,
+                'Go_DES'                    => $newGoDES,
+                'Time_GoDES_to_DESBM'       => $timeGoToDes,
+                'Confirm_MELINA_Portion'    => $newConfirmMelina,
+                'Time_Confirm_Melina'       => $timeConfirmMel,
+                'MSE_to_MELINA'             => $newMSE,
+                'Time_MSE_to_MELINA'        => $timeMse,
+                'SW_Assembly'               => $newSWAssembly,
+                'Time_SW_Assembly'          => $timeSw,
+                'Zero_Level_Check_Temp_DWG' => $newZeroLevel,
+                'Time_Zero_Level'           => $timeZeroLvl,
+                'Design_working_day'        => $designWorkingDay,
+                'LeadTime'                  => $leadTime,
+                'Time_DESBM_to_MFGBM_2'     => $timeDesToMfg2,
+                'UserAction'                => (string)$empno,
+                'DateAction'                => date('Y-m-d H:i:s')
             ];
 
-            $db->where('PlanHeaderID', (int)$planHeaderID)
-            ->where('SeqNo', (int)$seqNo)
-            ->update('Tb_Master_DESBM_Detail', $updateData);
+            $db->where('PlanHeaderID', $planHeaderID)
+               ->where('DetailID', $seqNo)
+               ->update('Tb_Master_DESBM_Detail', $updateData);
 
-            // ดึงแถวที่อัปเดตแล้วส่งกลับให้ View
-            $updatedRow = $db->where('PlanHeaderID', (int)$planHeaderID)
-                            ->where('SeqNo', (int)$seqNo)
+            // 9. อัปเดต Design_working_day ของแถวถัดไป (Next Row) ที่เป็น DesType เดียวกัน
+            $updatedNextRow = null;
+            if ($field === 'DES_BM') {
+                $nextRow = $db->where('PlanHeaderID', $planHeaderID)
+                            ->where('DesType', $desType)
+                            ->where('SeqNo >', $seqNo)
+                            ->order_by('SeqNo', 'ASC')
+                            ->limit(1)
                             ->get('Tb_Master_DESBM_Detail')
                             ->row();
+
+                if ($nextRow && !empty($nextRow->DES_BM) && $desSeq !== null) {
+                    $nextDesSeq = $getWorkSeq($nextRow->DES_BM);
+                    if ($nextDesSeq !== null) {
+                        $nextDwd = abs($nextDesSeq - $desSeq) + $dwdOffset;
+
+                        $db->where('PlanHeaderID', $planHeaderID)
+                           ->where('DetailID', (int)$nextRow->DetailID)
+                           ->update('Tb_Master_DESBM_Detail', [
+                               'Design_working_day' => (int)$nextDwd,
+                               'DateAction'         => date('Y-m-d H:i:s')
+                           ]);
+
+                        $updatedNextRow = $db->where('PlanHeaderID', $planHeaderID)
+                                            ->where('DetailID', (int)$nextRow->DetailID)
+                                            ->get('Tb_Master_DESBM_Detail')
+                                            ->row();
+                    }
+                }
+            }
+
+            // 10. ดึงข้อมูลแถวปัจจุบันที่อัปเดตเรียบร้อยแล้ว
+            $updatedCurrentRow = $db->where('PlanHeaderID', $planHeaderID)
+                                    ->where('DetailID', $seqNo)
+                                    ->get('Tb_Master_DESBM_Detail')
+                                    ->row();
 
             return $this->output->set_output(json_encode([
                 'status'  => true,
                 'message' => 'Updated successfully',
-                'row'     => $updatedRow
+                'row'     => $updatedCurrentRow,
+                'nextRow' => $updatedNextRow
             ]));
 
         } catch (\Throwable $e) {
@@ -490,73 +688,134 @@ class form extends MY_Controller {
         }
     }
     // ==============================================================================
-    // 3. Controller Method: อนุมัติ/ยืนยัน DRAFT เปลี่ยนสถานะเป็น Approved และรันเลข Rev
+    // 3. Controller Method: อนุมัติ/ยืนยัน DRAFT เปลี่ยนสถานะเป็น Approved และรันเลข Rev savePlanMaster
     // ==============================================================================
     public function SavePlanMaster() {
+        $this->output->set_content_type('application/json');
+
         try {
             $year     = $this->input->post('YEAR');
             $period   = $this->input->post('PERIOD');
-            $empno    = $this->input->post('EMPNO');
-            $headerID = $this->input->post('PLAN_HEADER_ID');
+            $desTypes = $this->input->post('DESTYPES');
+            $revision = $this->input->post('REVISION');
+            $empNo    = $this->input->post('EMPNO') ?? 'SYSTEM';
+            $remark   = $this->input->post('REMARK') ?? '';
+            $DOC_ID   = $this->input->post('DOC_ID') ?? '';
+            $PLANHEADERID   = $this->input->post('PLANHEADERID') ?? '';
 
-            // 1. หาเลข Revision ถัดไปจาก Header ที่เคย Approved แล้ว
-            $sqlLastApproved = "SELECT TOP 1 Revision FROM Tb_Master_DESBM_Header 
-                                WHERE PlanYear = ? AND PeriodCode = ? AND Status = 'Approved' 
-                                ORDER BY PlanHeaderID DESC";
-            $lastAppr = $this->MDSModel->QuerySetBase($sqlLastApproved, $this->DDS, [$year, $period])->row();
-
-            $nextRev = "Rev 0";
-            if ($lastAppr && !empty($lastAppr->Revision)) {
-                $num = (int)str_ireplace("Rev ", "", $lastAppr->Revision);
-                $nextRev = "Rev " . ($num + 1);
+            if (empty($year) || empty($period)) {
+                throw new Exception("ข้อมูลไม่ครบถ้วน (Year / Period)");
             }
 
-            // 2. อัปเดตสถานะ Header จาก DRAFT เป็น Approved พร้อมกำหนดเลข Rev จริง
-            $db = $this->load->database($this->DDS, TRUE);
-            $db->where('PlanHeaderID', $headerID)->update('Tb_Master_DESBM_Header', [
-                'Revision'       => $nextRev,
-                'Status'         => 'Approved',
-                'UserAction'     => $empno,
-                'ComputerAction' => gethostbyaddr($_SERVER['REMOTE_ADDR']),
-                'DateAction'     => date('Y-m-d H:i:s')
-            ]);
+            // เรียกใช้งานฟังก์ชันสร้าง Webflow Ticket
+            $result = $this->createFormDesBM($year, $period, $empNo, $remark);
 
-            // 3. อัปเดต Rev ในตาราง Detail
-            $db->where('PlanHeaderID', $headerID)->update('Tb_Master_DESBM_Detail', [
-                'Rev' => $nextRev
-            ]);
-
-            // 4. Merge Sync เข้าตาราง Master หลัก (Tb_Master_DESBM)
-            $sqlSync = "
-                MERGE INTO Tb_Master_DESBM AS Target
-                USING (
-                    SELECT TypeJun, DES_BM, ChangeJunTodate, DesType, FormatAs400, BeforeEditDesBMDate, MARIssueDES
-                    FROM Tb_Master_DESBM_Detail
-                    WHERE PlanHeaderID = ?
-                ) AS Source
-                ON Target.TypeJun = Source.TypeJun
-                WHEN MATCHED THEN
-                    UPDATE SET 
-                        Target.DesBMDate = Source.DES_BM,
-                        Target.UserAction = ?,
-                        Target.DateAction = GETDATE()
-                WHEN NOT MATCHED THEN
-                    INSERT (TypeJun, DesBMDate, UserAction, ComputerAction, DateAction, BeforeEditDesBMDate, UpdateMKT, ChangeJunTodate, DesType, FormatAs400, MARIssueDES)
-                    VALUES (Source.TypeJun, Source.DES_BM, ?, ?, GETDATE(), Source.BeforeEditDesBMDate, 0, Source.ChangeJunTodate, Source.DesType, Source.FormatAs400, Source.MARIssueDES);
-            ";
-            $this->MDSModel->QuerySetBase($sqlSync, $this->DDS, [$headerID, $empno, $empno, gethostbyaddr($_SERVER['REMOTE_ADDR'])]);
-
-            return $this->output->set_content_type('application/json')->set_output(json_encode([
-                'status'   => true, 
-                'revision' => $nextRev,
-                'message'  => "ยืนยันและบันทึก Master Plan ($nextRev) สำเร็จ"
+            return $this->output->set_output(json_encode([
+                'status'   => true,
+                'message'  => $result['message'],
+                'revision' => $result['revision'],
+                'docNo'    => $result['docNo']
             ]));
-        } catch (\Exception $e) {
-            return $this->output->set_content_type('application/json')->set_output(json_encode([
-                'status'  => false, 
+
+        } catch (\Throwable $e) {
+            return $this->output->set_output(json_encode([
+                'status'  => false,
                 'message' => $e->getMessage()
             ]));
         }
+    }
+        
+
+    // ==============================================================================
+    // 2. ฟังก์ชันประสานงาน Webflow ใน Controller
+    // ==============================================================================
+    public function createFormDesBM($year, $period, $empNo = 'SYSTEM', $remark = '')
+    {
+        $db = $this->load->database($this->DDS, TRUE);
+
+        // 1. ตรวจสอบหา Draft ล่าสุดในระบบ
+        $draftHeader = $db->where('PlanYear', (string)$year)
+                        ->where('PeriodCode', (string)$period)
+                        ->where('UPPER(Status)', 'DRAFT')
+                        ->order_by('PlanHeaderID', 'DESC')
+                        ->get('Tb_Master_DESBM_Header')
+                        ->row();
+
+        if (!$draftHeader) {
+            throw new Exception("ไม่พบข้อมูล Draft Plan ที่พร้อมส่งบันทึก");
+        }
+
+        $planHeaderID = (int)$draftHeader->PlanHeaderID;
+        $currentRevision = $draftHeader->Revision;
+
+        // 2. ดึง Form Master ของ Webflow (DED-MDS)
+        $form = $this->getFormMasterByVaname('DED-MDS');
+        if (empty($form) || !isset($form['status']) || $form['status'] !== 'true') {
+            throw new Exception("ไม่สามารถดึงข้อมูลฟอร์ม Webflow (DED-MDS) ได้");
+        }
+
+        $formData = $form['data'];
+
+        // 3. เตรียมข้อมูลและสร้าง Webflow Ticket
+        $flowData = [
+            'NFRMNO'  => $formData['NNO'],
+            'VORGNO'  => $formData['VORGNO'],
+            'CYEAR'   => $formData['CYEAR'],
+            'REQBY'   => $empNo,
+            'INPUTBY' => $empNo,
+            'REMARK'  => !empty($remark) ? $remark : "Plan Master {$year} ({$period}) Rev.{$currentRevision}",
+            // 'DRAFT'   => '1', // ส่งสร้างโฟลว์อนุมัติทันที
+        ];
+
+        $cyear2 = '';
+        $nrunno = '';
+        $rsf = $this->createForm($flowData);
+        if (!$rsf || empty($rsf['status'])) {
+            throw new Exception("สร้างเอกสาร Webflow ไม่สำเร็จ: " . ($rsf['message'] ?? ''));
+        }
+        else{
+            $cyear2 = $rsf['data']['CYEAR2'];
+            $nrunno = $rsf['data']['NRUNNO'];
+            $flowID = [
+                'NFRMNO'  => $formData['NNO'],
+                'VORGNO'  => $formData['VORGNO'],
+                'CYEAR'   => $formData['CYEAR'],
+                'CYEAR2' => $cyear2,
+                'NRUNNO' => $nrunno,
+                'CEXTDATA' => '01',
+            ];
+            // เรียกฟังก์ชันอัปเดตผู้อนุมัติลงตาราง FLOW
+            $this->MDSModel->updateWebflowApprover($flowID);
+        }
+
+        $docNo = (!empty($formData['VORGNO']) && !empty($cyear2) && !empty($nrunno))
+                        ? "DED-MDS-" . $cyear2 . "-" . str_pad($nrunno, 6, '0', STR_PAD_LEFT)
+                        : '';
+
+        // 4. จัดเตรียมข้อมูลสำหรับ Update Header
+        $headerUpdate = [
+            'NFRMNO'         => $formData['NNO'],
+            'VORGNO'         => $formData['VORGNO'],
+            'CYEAR'          => $formData['CYEAR'],
+            'CYEAR2'         => $cyear2,
+            'NRUNNO'         => $nrunno,
+            'Status'         => 'PROCESS',
+            'Remark'         => $flowData['REMARK'],
+            'UserAction'     => (string)$empNo,
+            'ComputerAction' => (string)gethostbyaddr($_SERVER['REMOTE_ADDR'] ?? '127.0.0.1'),
+            'DateAction'     => date('Y-m-d H:i:s')
+        ];
+
+        // 5. เรียก Model ให้ทำการ Update Database
+        $this->MDSModel->SavePlanTicket($planHeaderID, $headerUpdate);
+
+        // ส่งค่าผลลัพธ์กลับ
+        return [
+            'status'   => true,
+            'revision' => $currentRevision,
+            'docNo'    => $docNo,
+            'message'  => "บันทึกและส่งเอกสารอนุมัติเรียบร้อยแล้ว (Doc No: {$docNo})"
+        ];
     }
 
     // ==============================================================================
@@ -594,6 +853,70 @@ class form extends MY_Controller {
         }
     }
 
+    public function ActionFlow()
+    {
+        $this->output->set_content_type('application/json');
+
+        try {
+            $NFRMNO  = $this->input->post('NFRMNO');
+            $VORGNO  = $this->input->post('VORGNO');
+            $CYEAR   = $this->input->post('CYEAR');
+            $CYEAR2  = $this->input->post('CYEAR2');
+            $NRUNNO  = $this->input->post('NRUNNO');
+            $EMPNO   = $this->input->post('EMPNO') ?? 'SYSTEM';
+            $EXTDATA = trim((string)$this->input->post('EXTDATA'));
+            $ACTION  = strtoupper(trim((string)$this->input->post('ACTION')));
+
+            if (empty($NFRMNO) || empty($VORGNO) || empty($CYEAR2) || empty($NRUNNO)) {
+                throw new Exception("ข้อมูลอ้างอิงเอกสารไม่ครบถ้วน");
+            }
+
+            $formID = [
+                'NFRMNO' => $NFRMNO,
+                'VORGNO' => $VORGNO,
+                'CYEAR'  => $CYEAR,
+                'CYEAR2' => $CYEAR2,
+                'NRUNNO' => $NRUNNO,
+            ];
+
+            $data = [
+                'UserAction'     => (string)$EMPNO,
+                'ComputerAction' => (string)gethostbyaddr($_SERVER['REMOTE_ADDR'] ?? '127.0.0.1'),
+                'DateAction'     => date('Y-m-d H:i:s')
+            ];
+
+            if ($ACTION === 'APPROVE') {
+                if ($EXTDATA === '03') {
+                    // 🟢 Step 03 กด APPROVE -> ถือว่าจบ Flow เป็น APPROVE สมบูรณ์
+                    $data['Status'] = 'APPROVE';
+                } else {
+                    // 🟠 Step 00, 01, 02 กด APPROVE -> เอกสารยังอยู่ระหว่างเดิน Flow
+                    $data['Status'] = 'PROCESS';
+                }
+            } elseif ($ACTION === 'RETURNP') {
+                // โดน Return ตีกลับ -> ยังคงอยู่ในกระบวนการ PROCESS
+                $data['Status'] = 'PROCESS';
+            }elseif ($ACTION === 'RETURN') {
+                // โดน Return ตีกลับ -> ยังคงอยู่ในกระบวนการ PROCESS
+                $data['Status'] = 'PROCESS';
+            }
+
+            $this->MDSModel->UpdateHeader($formID, $data);
+
+            return $this->output->set_output(json_encode([
+                'status'  => true,
+                'message' => "อัปเดตสถานะเป็น {$data['Status']} เรียบร้อยแล้ว"
+            ]));
+
+        } catch (\Throwable $e) {
+            return $this->output->set_output(json_encode([
+                'status'  => false,
+                'message' => $e->getMessage()
+            ]));
+        }
+    }
+    
+    
     /**
      * ดึง Revision ถัดไปของ Plan ตาม Year และ Period (รวม Logic ตรวจสอบและขยับตัวอักษร)
      * @param string $year
@@ -603,7 +926,7 @@ class form extends MY_Controller {
     private function getNextApprovedRevision($year, $period) {
         $sqlLastApproved = "SELECT TOP 1 Revision 
                             FROM Tb_Master_DESBM_Header 
-                            WHERE PlanYear = ? AND PeriodCode = ? AND UPPER(Status) = 'APPROVED'
+                            WHERE PlanYear = ? AND PeriodCode = ? AND UPPER(Status) = 'APPROVE'
                             ORDER BY PlanHeaderID DESC";
 
         $query = $this->MDSModel->QuerySetBase($sqlLastApproved, $this->DDS, [$year, $period]);
@@ -630,6 +953,179 @@ class form extends MY_Controller {
 
         // 4. ขยับตัวอักษรถัดไป: 'A' -> 'B', 'B' -> 'C', ..., 'Z' -> 'AA'
         return ++$char;
+    }
+
+
+    //=======================================================
+    //== Modal: Tb_MS_Master_DESBM_Cal Config
+    //=======================================================
+    // 🟢 1. Ajax ดึง Master Cal Config ทั้งหมด
+    public function GetCalConfigMaster() {
+        $this->output->set_content_type('application/json');
+        $db = $this->load->database($this->DDS, TRUE);
+        $empno = $this->input->get_post('EMPNO') ;
+
+        //== ตรวจสอบสิทธิ์ Admin/PIC
+        $ms = false;
+        $sqlPic = "SELECT TOP 1 USERID
+                   FROM Tb_MS_Master_DESBM_PIC WITH (NOLOCK)
+                   WHERE USERID = ? AND (STATUS = 'DED-MDS_PIC' OR STATUS = 'DED-MDS_ADMIN')";
+        
+        // 🟢 ใช้ $db แทน $this->db
+        $qPic = $db->query($sqlPic, [$empno]);
+        if ($qPic && $qPic->num_rows() > 0) {
+            $ms = true;
+        }
+
+        $sql = "SELECT TargetField, P_Type, BaseField, BaseRowType, OffsetDays 
+                FROM Tb_MS_Master_DESBM_Cal
+                WHERE IsActive = 1
+                ORDER BY TargetField ASC, P_Type ASC";
+        $result = $db->query($sql)->result();
+
+        return $this->output->set_output(json_encode([
+            'status' => true,
+            'data'   => $result,
+            'ms'    =>$ms,
+        ]));
+    }
+
+    // 🟢 2. Ajax บันทึกการแก้ไข OffsetDays
+    public function UpdateCalConfigOffset() {
+        $this->output->set_content_type('application/json');
+
+        try {
+            $targetField = trim((string)$this->input->post('TargetField'));
+            $pType       = trim((string)$this->input->post('P_Type'));
+            $offsetDays  = $this->input->post('OffsetDays');
+            $empno       = $this->input->post('EMPNO') ?? 'SYSTEM';
+
+            if ($targetField === '' || $pType === '' || !is_numeric($offsetDays)) {
+                throw new Exception("ข้อมูลไม่ถูกต้องหรือระบุไม่ครบถ้วน");
+            }
+
+            $db = $this->load->database($this->DDS, TRUE);
+
+            $updateData = [
+                'OffsetDays' => (int)$offsetDays,
+                'UserAction' => (string)$empno,
+                'DateAction' => date('Y-m-d H:i:s')
+            ];
+
+            $db->where('TargetField', $targetField)
+               ->where('P_Type', $pType)
+               ->update('Tb_MS_Master_DESBM_Cal', $updateData);
+
+            return $this->output->set_output(json_encode([
+                'status'  => true,
+                'message' => 'บันทึก Offset Days เรียบร้อยแล้ว'
+            ]));
+
+        } catch (\Throwable $e) {
+            return $this->output->set_output(json_encode([
+                'status'  => false,
+                'message' => $e->getMessage()
+            ]));
+        }
+    }
+    //=======================================================
+
+    // use PhpOffice\PhpSpreadsheet\IOFactory;
+    // use PhpOffice\PhpSpreadsheet\Style\Color;
+
+    public function GetExcelTemplate() {
+        $tplParam = preg_replace('/[^a-zA-Z0-9_-]/', '', (string)$this->input->get('template'));
+        $baseName = !empty($tplParam) ? $tplParam : '04X-09C';
+
+        // ค้นหาทั้งแบบมีขีด (-) และไม่มีขีด เผื่อกรณีชื่อไฟล์ในเครื่อง
+        $possibleFiles = [
+            $baseName . '.xlsx',
+            str_replace('-', '', $baseName) . '.xlsx',
+            str_replace('X', 'X-', $baseName) . '.xlsx'
+        ];
+
+        $filePath = null;
+        foreach ($possibleFiles as $fileName) {
+            $checkPath = __DIR__ . DIRECTORY_SEPARATOR . $fileName;
+            if (file_exists($checkPath)) {
+                $filePath = $checkPath;
+                break;
+            }
+        }
+
+        if (!$filePath) {
+            return $this->output
+                ->set_status_header(404)
+                ->set_output("Template not found: " . $baseName . ".xlsx");
+        }
+
+        $fileContent = file_get_contents($filePath);
+        return $this->output
+            ->set_content_type('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+            ->set_output($fileContent);
+    }
+
+
+    
+    public function SavePlanMaster0() {
+        try {
+            $year     = $this->input->post('YEAR');
+            $period   = $this->input->post('PERIOD');
+            $empno    = $this->input->post('EMPNO');
+            $headerID = $this->input->post('PLAN_HEADER_ID');
+            $Remark = $this->input->post('REMARK')??'';
+            
+
+            // 1. หาเลข Revision ถัดไปจาก Header ที่เคย Approved แล้ว
+            
+            $nextRevision = $this->getNextApprovedRevision($year, $period);
+
+            // 2. อัปเดตสถานะ Header จาก DRAFT เป็น Approved พร้อมกำหนดเลข Rev จริง
+            $db = $this->load->database($this->DDS, TRUE);
+            $db->where('PlanHeaderID', $headerID)->update('Tb_Master_DESBM_Header', [
+                'Revision'       => $nextRevision,
+                'Status'         => 'Approved',
+                'UserAction'     => $empno,
+                'ComputerAction' => gethostbyaddr($_SERVER['REMOTE_ADDR']),
+                'DateAction'     => date('Y-m-d H:i:s')
+            ]);
+
+            // 3. อัปเดต Rev ในตาราง Detail
+            $db->where('PlanHeaderID', $headerID)->update('Tb_Master_DESBM_Detail', [
+                'Rev' => $nextRevision
+            ]);
+
+            // 4. Merge Sync เข้าตาราง Master หลัก (Tb_Master_DESBM)
+            $sqlSync = "
+                MERGE INTO Tb_Master_DESBM AS Target
+                USING (
+                    SELECT TypeJun, DES_BM, ChangeJunTodate, DesType, FormatAs400, BeforeEditDesBMDate, MARIssueDES
+                    FROM Tb_Master_DESBM_Detail
+                    WHERE PlanHeaderID = ?
+                ) AS Source
+                ON Target.TypeJun = Source.TypeJun
+                WHEN MATCHED THEN
+                    UPDATE SET 
+                        Target.DesBMDate = Source.DES_BM,
+                        Target.UserAction = ?,
+                        Target.DateAction = GETDATE()
+                WHEN NOT MATCHED THEN
+                    INSERT (TypeJun, DesBMDate, UserAction, ComputerAction, DateAction, BeforeEditDesBMDate, UpdateMKT, ChangeJunTodate, DesType, FormatAs400, MARIssueDES)
+                    VALUES (Source.TypeJun, Source.DES_BM, ?, ?, GETDATE(), Source.BeforeEditDesBMDate, 0, Source.ChangeJunTodate, Source.DesType, Source.FormatAs400, Source.MARIssueDES);
+            ";
+            $this->MDSModel->QuerySetBase($sqlSync, $this->DDS, [$headerID, $empno, $empno, gethostbyaddr($_SERVER['REMOTE_ADDR'])]);
+
+            return $this->output->set_content_type('application/json')->set_output(json_encode([
+                'status'   => true, 
+                'revision' => $nextRev,
+                'message'  => "ยืนยันและบันทึก Master Plan ($nextRev) สำเร็จ"
+            ]));
+        } catch (\Exception $e) {
+            return $this->output->set_content_type('application/json')->set_output(json_encode([
+                'status'  => false, 
+                'message' => $e->getMessage()
+            ]));
+        }
     }
 
 }
