@@ -37,8 +37,8 @@ class form extends MY_Controller {
         
         $this->DDS = 'DDS';
     }
-
     // === https://amecwebtest.mitsubishielevatorasia.co.th/form/dedform/DED-MDS/form/main/?no=29&orgNo=070101&y=26&empno=13204&bp=http://webflow.mitsubishielevatorasia.co.th/formtest/is/create.asp
+    // === https://amecwebtest.mitsubishielevatorasia.co.th/form/dedform/DED-MDS/form/main?no=29&orgNo=070101&y=26&y2=2026&runNo=1&m=3&empno=13204&bp=%2Fformtest%2Fworkflow%2FmineList%2Easp&menu=1
     // === http://localhost:8080/form/dedform/DED-MDS/form/main
     // === http://localhost:8080/form/dedform/DED-MDS/form/main/?no=29&orgNo=070101&y=26&empno=13204&bp=http://webflow.mitsubishielevatorasia.co.th/formtest/is/create.asp
     // === http://localhost:8080/form/dedform/DED-MDS/form/main?no=29&orgNo=070101&y=26&y2=2026&runNo=1&m=3&empno=13204&bp=%2Fformtest%2Fworkflow%2FmineList%2Easp&menu=1
@@ -372,6 +372,10 @@ class form extends MY_Controller {
             $this->MDSModel->DeleteDraftDesBM($year, $period, null, $db);
             // สร้าง PlanHeaderID รูปแบบ Custom Code (เช่น 202601001)
             $newPlanHeaderID = $this->MDSModel->generatePlanHeaderID($year, $period, $db);
+            
+            $fullHost = (string)gethostbyaddr($_SERVER['REMOTE_ADDR'] ?? '127.0.0.1');
+            $cleanHost = explode('.', $fullHost)[0]; // จะเหลือเฉพาะ 'IS-DELL07'
+            $computerAction = substr($cleanHost, 0, 20); // ป้องกันเกินขนาดฟิลด์
             // 3. สร้าง Header ฉบับร่างใหม่
             $headerData = [
                 'PlanHeaderID'   => (string)$newPlanHeaderID,
@@ -382,7 +386,7 @@ class form extends MY_Controller {
                 'DesType'        => is_array($desTypes) ? implode('|', $desTypes) : (string)$desTypes,
                 'Remark'         => '',
                 'UserAction'     => 'SYSTEM',
-                'ComputerAction' => (string)gethostbyaddr($_SERVER['REMOTE_ADDR'] ?? '127.0.0.1'),
+                'ComputerAction' => $computerAction,
                 'DateAction'     => date('Y-m-d H:i:s')
             ];
             $db->insert('Tb_Master_DESBM_Header', $headerData);
@@ -867,6 +871,7 @@ class form extends MY_Controller {
             $EMPNO   = $this->input->post('EMPNO') ?? 'SYSTEM';
             $EXTDATA = trim((string)$this->input->post('EXTDATA'));
             $ACTION  = strtoupper(trim((string)$this->input->post('ACTION')));
+            $REVISION = $this->input->post('REVISION') ?? '*';
 
             if (empty($NFRMNO) || empty($VORGNO) || empty($CYEAR2) || empty($NRUNNO)) {
                 throw new Exception("ข้อมูลอ้างอิงเอกสารไม่ครบถ้วน");
@@ -888,10 +893,17 @@ class form extends MY_Controller {
 
             if ($ACTION === 'APPROVE') {
                 if ($EXTDATA === '03') {
-                    // 🟢 Step 03 กด APPROVE -> ถือว่าจบ Flow เป็น APPROVE สมบูรณ์
+                    // Step 03 กด APPROVE -> ถือว่าจบ Flow เป็น APPROVE สมบูรณ์
                     $data['Status'] = 'APPROVE';
+                    // Process tranfer data to Tb_Master_DESBM
+                    // 1. ค้นหา Header ปัจจุบันผ่าน Model
+                    $header = $this->MDSModel->GetHeaderByFormID($formID);
+                    if (!$header) {
+                        throw new Exception("ไม่พบข้อมูล Header ที่ผูกกับฟอร์มนี้");
+                    }
+                    $this->MDSModel->SyncPlanToMasterDESBM($header->PlanHeaderID);
                 } else {
-                    // 🟠 Step 00, 01, 02 กด APPROVE -> เอกสารยังอยู่ระหว่างเดิน Flow
+                    // Step 00, 01, 02 กด APPROVE -> เอกสารยังอยู่ระหว่างเดิน Flow
                     $data['Status'] = 'PROCESS';
                 }
             } elseif ($ACTION === 'RETURNP') {
@@ -916,7 +928,165 @@ class form extends MY_Controller {
             ]));
         }
     }
-    
+
+    function TransferToMaster_DESBM($formID, $REVISION)
+    {
+        $db = $this->load->database($this->DDS, TRUE);
+
+        // 1. หา PlanHeaderID ล่าสุดของใบงานนี้ที่กำลัง Approve
+        $sqlHeader = "SELECT TOP 1 PlanHeaderID, PlanYear, PeriodCode, DesType
+                    FROM Tb_Master_DESBM_Header WITH (NOLOCK)
+                    WHERE NFRMNO  = ? 
+                        AND VORGNO  = ? 
+                        AND CYEAR2  = ? 
+                        AND NRUNNO  = ?
+                    ORDER BY PlanHeaderID DESC";
+
+        $queryHeader = $db->query($sqlHeader, [
+            $formID['NFRMNO'],
+            $formID['VORGNO'],
+            $formID['CYEAR2'],
+            $formID['NRUNNO']
+        ]);
+
+        $header = ($queryHeader && $queryHeader->num_rows() > 0) ? $queryHeader->row() : null;
+        if (!$header) {
+            throw new Exception("ไม่พบข้อมูล Header สำหรับฟอร์ม NRUNNO: " . $formID['NRUNNO']);
+        }
+
+        $planHeaderID = (string)$header->PlanHeaderID;
+
+        // 2. หาช่วงวันที่ (ChangeJunTodate) และรายการ DesType ที่มีจริงใน Detail เพื่อกำหนดขอบเขตในการกระทบตาราง Master
+        $sqlScope = "SELECT 
+                        MIN(ChangeJunTodate) AS MinDate,
+                        MAX(ChangeJunTodate) AS MaxDate
+                    FROM Tb_Master_DESBM_Detail WITH (NOLOCK)
+                    WHERE PlanHeaderID = ?";
+        $queryScope = $db->query($sqlScope, [$planHeaderID]);
+        $scope = ($queryScope && $queryScope->num_rows() > 0) ? $queryScope->row() : null;
+
+        if (!$scope || empty($scope->MinDate) || empty($scope->MaxDate)) {
+            throw new Exception("ไม่พบแถวข้อมูลรายการใน Detail (PlanHeaderID: {$planHeaderID})");
+        }
+
+        $minDate = $scope->MinDate;
+        $maxDate = $scope->MaxDate;
+
+        // ดึง DesType ที่มีในรอบนี้ (เช่น 'N', 'T')
+        $sqlDesTypes = "SELECT DISTINCT DesType 
+                        FROM Tb_Master_DESBM_Detail WITH (NOLOCK) 
+                        WHERE PlanHeaderID = ?";
+        $queryDes = $db->query($sqlDesTypes, [$planHeaderID]);
+        $desRows = $queryDes ? $queryDes->result_array() : [];
+        $desTypeList = array_column($desRows, 'DesType');
+
+        $escapedDes = array_map(function ($item) use ($db) {
+            return $db->escape(trim($item));
+        }, $desTypeList);
+        $desTypeInClause = implode(',', $escapedDes);
+
+        // 3. เริ่ม Transaction และรันคำสั่ง MERGE
+        $db->trans_begin();
+
+        try {
+            $sqlMerge = "
+                SET NOCOUNT ON;
+
+                -- ดึง Max IDTYPE ล่าสุดมาตั้งต้นเตรียมไว้กรณี INSERT แถวใหม่
+                DECLARE @CurrentMaxID INT = ISNULL((SELECT MAX(IDTYPE) FROM Tb_Master_DESBM WITH (NOLOCK)), 0);
+
+                ;WITH SourceData AS (
+                    SELECT 
+                        TypeJun,
+                        DES_BM              AS DesBMDate,
+                        BeforeEditDesBMDate,
+                        ChangeJunTodate,
+                        DesType,
+                        FormatAs400,
+                        MARIssueDES,
+                        UserAction,
+                        DateAction,
+                        ROW_NUMBER() OVER (ORDER BY ChangeJunTodate ASC, TypeJun ASC) AS RowNum
+                    FROM Tb_Master_DESBM_Detail WITH (NOLOCK)
+                    WHERE PlanHeaderID = ?
+                )
+                MERGE INTO Tb_Master_DESBM AS TARGET
+                USING SourceData AS SOURCE
+                ON (TARGET.TypeJun = SOURCE.TypeJun)
+
+                -- 🟢 กรณีที่ 1: Source มี และ Target มี -> UPDATE
+                WHEN MATCHED THEN
+                    UPDATE SET 
+                        TARGET.DesBMDate            = SOURCE.DesBMDate,
+                        TARGET.BeforeEditDesBMDate  = SOURCE.BeforeEditDesBMDate,
+                        TARGET.ChangeJunTodate      = SOURCE.ChangeJunTodate,
+                        TARGET.DesType              = SOURCE.DesType,
+                        TARGET.FormatAs400          = SOURCE.FormatAs400,
+                        TARGET.MARIssueDES          = SOURCE.MARIssueDES,
+                        TARGET.UserAction           = SOURCE.UserAction,
+                        TARGET.ComputerAction       = HOST_NAME(),
+                        TARGET.DateAction           = SOURCE.DateAction,
+                        TARGET.UpdateMKT            = 0
+
+                -- 🟢 กรณีที่ 2: Source มี แต่ Target ไม่มี -> INSERT
+                WHEN NOT MATCHED BY TARGET THEN
+                    INSERT (
+                        TypeJun,
+                        DesBMDate,
+                        BeforeEditDesBMDate,
+                        ChangeJunTodate,
+                        DesType,
+                        FormatAs400,
+                        MARIssueDES,
+                        UserAction,
+                        ComputerAction,
+                        DateAction,
+                        UpdateMKT,
+                        CalCplan,
+                        IDTYPE
+                    )
+                    VALUES (
+                        SOURCE.TypeJun,
+                        SOURCE.DesBMDate,
+                        SOURCE.BeforeEditDesBMDate,
+                        SOURCE.ChangeJunTodate,
+                        SOURCE.DesType,
+                        SOURCE.FormatAs400,
+                        SOURCE.MARIssueDES,
+                        SOURCE.UserAction,
+                        HOST_NAME(),
+                        SOURCE.DateAction,
+                        0,
+                        NULL,
+                        @CurrentMaxID + SOURCE.RowNum
+                    )
+
+                -- 🟢 กรณีที่ 3: Source ไม่มี แต่ Target มี -> DELETE 
+                -- (Scope ปลอดภัย: จำกัดเฉพาะช่วง ChangeJunTodate และ DesType ของรอบนี้เท่านั้น)
+                WHEN NOT MATCHED BY SOURCE 
+                    AND TARGET.ChangeJunTodate >= ? 
+                    AND TARGET.ChangeJunTodate <= ? 
+                    AND TARGET.DesType IN ({$desTypeInClause}) THEN
+                    DELETE;
+            ";
+
+            $db->query($sqlMerge, [$planHeaderID, $minDate, $maxDate]);
+
+            if ($db->trans_status() === FALSE) {
+                $db->trans_rollback();
+                throw new Exception("เกิดข้อผิดพลาดในการ Merge ข้อมูลลง Tb_Master_DESBM");
+            }
+
+            $db->trans_commit();
+            return true;
+
+        } catch (\Throwable $ex) {
+            $db->trans_rollback();
+            throw $ex;
+        }
+    }
+
+        
     
     /**
      * ดึง Revision ถัดไปของ Plan ตาม Year และ Period (รวม Logic ตรวจสอบและขยับตัวอักษร)

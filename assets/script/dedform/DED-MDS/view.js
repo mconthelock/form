@@ -838,6 +838,8 @@ async function loadDraftPlan() {
 }
 
 function renderDataTable(data) {
+    console.log($('#table-plan').DataTable().row(1).data()); // ดูแถวที่ 2 (202604XT)
+    console.log($('#table-plan').DataTable().row(3).data()); // ดูแถวที่ 4 (202604AT)
     if ($.fn.DataTable.isDataTable('#table-plan')) {
         $('#table-plan').DataTable().destroy();
         $('#table-plan').empty();
@@ -862,23 +864,22 @@ function renderDataTable(data) {
                 .trim();
             const isUserEdited = userAction !== 'SYSTEM';
 
-            // เช็คว่ามีค่าใดต่างจาก Rev ก่อนหน้า หรือไม่
+            // 🟢 ตรวจสอบความแตกต่าง (ใช้ data แทน row)
             const hasDiff =
                 data.Diff_MFG_BM == 1 ||
+                data.Diff_P_Type == 1 ||
                 data.Diff_DES_BM == 1 ||
                 data.Diff_Go_DES == 1 ||
                 data.IsNewRow == 1;
 
             if (isUserEdited) {
-                // 🔴 แถวที่คนแก้ (UserAction != 'SYSTEM'): สีแดงอ่อน + ขอบซ้ายสีแดง
                 $(row).addClass(
-                    'bg-rose-50 hover:bg-rose-100/70 border-l-4 border-l-rose-500 transition-colors',
+                    'bg-rose-50/50 hover:bg-rose-100/60 border-l-4 border-l-rose-500 transition-colors',
                 );
                 $(row).attr('title', `แก้ไขโดย: ${data.UserAction}`);
             } else if (hasDiff) {
-                // 🟡 แถวที่ค่าเปลี่ยนจาก Revision ก่อนหน้า (แต่ยังไม่ได้ถูก User แก้สด): สีส้ม/เหลืองอ่อน
                 $(row).addClass(
-                    'bg-amber-50 hover:bg-amber-100/70 border-l-4 border-l-amber-500 transition-colors',
+                    'bg-amber-50/50 hover:bg-amber-100/60 border-l-4 border-l-amber-500 transition-colors',
                 );
                 $(row).attr(
                     'title',
@@ -906,24 +907,64 @@ function renderDataTable(data) {
                 title: 'PROD',
                 className: 'text-center font-semibold align-middle',
             },
+            // {
+            //     data: 'MFG_BM',
+            //     title: 'MFG BM',
+            //     className: 'text-center font-semibold align-middle',
+            // },
+            // {
+            //     data: 'P_Type',
+            //     title: 'P',
+            //     className: 'text-center font-semibold align-middle',
+            // },
+            //  คอลัมน์ MFG BM (แดงเมื่อวันที่เปลี่ยน หรือ UserAction เปลี่ยน)
+            // คอลัมน์ MFG BM
             {
                 data: 'MFG_BM',
                 title: 'MFG BM',
-                className: 'text-center align-middle',
-                render: function (d, type, row) {
-                    if (!d) return '-';
-                    const dateVal = d.substring(0, 10);
-                    // ถ้า MFG_BM เปลี่ยนจาก Revision เก่า ให้เน้นข้อความสีแดง
-                    if (row.Diff_MFG_BM == 1) {
-                        return `<span class="text-rose-600 font-extrabold underline decoration-rose-400" title="MFG BM มีการเปลี่ยนจาก AS400">${dateVal}</span>`;
+                // ใส่ whitespace-nowrap และ min-w-[110px] ป้องกันข้อความตกบรรทัด
+                className:
+                    'text-center font-semibold align-middle whitespace-nowrap',
+                width: '110px',
+                render: function (data, type, row) {
+                    if (!data) return '-';
+                    const formattedDate = String(data).substring(0, 10);
+                    const userAction = String(row.UserAction || 'SYSTEM')
+                        .toUpperCase()
+                        .trim();
+
+                    const isChanged = Number(row.Diff_MFG_BM) === 1;
+
+                    if (isChanged) {
+                        return `<span class="text-rose-600 font-bold underline decoration-dotted inline-block whitespace-nowrap" 
+                                      style="color: #e11d48 !important; font-weight: 700 !important; text-decoration: underline !important;" 
+                                      title="Update: ${row.UserAction || 'AS400'}">${formattedDate}</span>`;
                     }
-                    return dateVal;
+                    return `<span class="whitespace-nowrap">${formattedDate}</span>`;
                 },
             },
+
+            // 🟢 คอลัมน์ P (P_Type)
             {
                 data: 'P_Type',
                 title: 'P',
-                className: 'text-center align-middle',
+                className: 'text-center font-semibold align-middle',
+                render: function (data, type, row) {
+                    if (!data) return '-';
+                    const userAction = String(row.UserAction || 'SYSTEM')
+                        .toUpperCase()
+                        .trim();
+
+                    // เช็คว่า User แก้ไข หรือ P เปลี่ยน หรือ วันที่เปลี่ยน
+                    const isChanged = Number(row.Diff_P_Type) === 1;
+
+                    if (isChanged) {
+                        return `<span class="badge badge-error text-white font-bold" 
+                                      style="background-color: #ffe4e6 !important; color: #e11d48 !important; border: 1px solid #fda4af !important; padding: 2px 6px; border-radius: 4px; font-weight: 700;" 
+                                      title="Update: ${row.UserAction || 'AS400'}">${data}</span>`;
+                    }
+                    return data;
+                },
             },
             {
                 data: 'DES_BM',
@@ -1242,6 +1283,7 @@ async function actionFlow(actionType) {
         ACTION: actionType ? actionType.toString() : '',
         EMPNO: formData.empno ? formData.empno.toString() : '',
         REMARK: remarkTxt.toString(),
+        REVISION: $('#RevisionHid').val(),
     };
 
     try {
