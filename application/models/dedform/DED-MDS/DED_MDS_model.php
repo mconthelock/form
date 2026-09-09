@@ -1130,6 +1130,7 @@ class DED_MDS_model extends my_model
 
                 IF OBJECT_ID('tempdb..#TmpA002MP') IS NOT NULL DROP TABLE #TmpA002MP;
 
+                -- 1. ดึงและจัดอันดับข้อมูล P_Type จาก A002MP ทั้งหมดในช่วง Period
                 ;WITH RawPeriodSource AS (
                     SELECT 
                         CAST(CAST(A.A2M01 AS BIGINT) AS VARCHAR(7)) COLLATE DATABASE_DEFAULT AS A2M01,
@@ -1138,10 +1139,11 @@ class DED_MDS_model extends my_model
                             WHEN A.A2M03 IS NULL OR CAST(A.A2M03 AS BIGINT) = 0 THEN NULL
                             ELSE CONVERT(SMALLDATETIME, CAST(CAST(A.A2M03 AS BIGINT) AS VARCHAR(8)), 112)
                         END AS MFG_BM_Date,
+                        -- จัดอันดับจากมากไปน้อยเพื่อหา last P (P ตัวสุดท้ายของ A2M01 นั้น)
                         ROW_NUMBER() OVER (
                             PARTITION BY CAST(CAST(A.A2M01 AS BIGINT) AS VARCHAR(7)) 
-                            ORDER BY A.A2M02 ASC
-                        ) AS rn
+                            ORDER BY A.A2M02 DESC
+                        ) AS rn_desc
                     FROM GG..AMECMFG.A002MP A WITH (NOLOCK)
                     WHERE 
                         (? = '04X-09C' AND CAST(CAST(A.A2M01 AS BIGINT) AS VARCHAR(7)) BETWEEN ? AND ?)
@@ -1151,22 +1153,40 @@ class DED_MDS_model extends my_model
                             OR CAST(CAST(A.A2M01 AS BIGINT) AS VARCHAR(7)) BETWEEN ? + '011' AND ?
                         ))
                 )
-                SELECT A2M01, P_Type, MFG_BM_Date
+                -- 2. นำข้อมูลมา Map กับ Master DesType แบบ Dynamic
+                SELECT 
+                    r.A2M01,
+                    m.DesType,
+                    r.P_Type,
+                    r.MFG_BM_Date
                 INTO #TmpA002MP
-                FROM RawPeriodSource
-                WHERE rn = 1;
+                FROM RawPeriodSource r
+                INNER JOIN [SaeMonitor].[dbo].[Tb_MS_Master_DESBM_DesType] m WITH (NOLOCK)
+                    ON (
+                        (LOWER(LTRIM(RTRIM(m.P_Type))) = 'last p' AND r.rn_desc = 1)
+                        OR
+                        (LOWER(LTRIM(RTRIM(m.P_Type))) <> 'last p' AND r.P_Type = m.P_Type)
+                    )
+                WHERE m.IsActive = 1;
 
-                CREATE UNIQUE CLUSTERED INDEX IX_TmpA002MP ON #TmpA002MP(A2M01);
+                CREATE CLUSTERED INDEX IX_TmpA002MP ON #TmpA002MP(A2M01, DesType);
 
-                -- 🟢 Update ทั้ง MFG_BM และ P_Type โดยเชื่อมด้วย A2M01
+                -- 3. อัปเดตเฉพาะแถวที่มีค่าเปลี่ยน และแสตมป์ UserAction = 'AS400'
                 UPDATE d
                 SET 
-                    d.MFG_BM = t.MFG_BM_Date,
-                    d.P_Type = ISNULL(t.P_Type, d.P_Type)
+                    d.MFG_BM       = t.MFG_BM_Date,
+                    d.P_Type       = t.P_Type,
+                    d.UserAction   = 'AS400',
+                    d.DateAction   = GETDATE()
                 FROM Tb_Master_DESBM_Detail d
                 INNER JOIN #TmpA002MP t
-                    ON d.A2M01 = t.A2M01
-                WHERE d.PlanHeaderID = ?;
+                    ON d.A2M01   = t.A2M01
+                AND d.DesType = t.DesType
+                WHERE d.PlanHeaderID = ?
+                AND (
+                    ISNULL(d.MFG_BM, '1900-01-01') <> ISNULL(t.MFG_BM_Date, '1900-01-01')
+                    OR LTRIM(RTRIM(ISNULL(d.P_Type, ''))) <> LTRIM(RTRIM(ISNULL(t.P_Type, '')))
+                );
 
                 IF OBJECT_ID('tempdb..#TmpA002MP') IS NOT NULL DROP TABLE #TmpA002MP;
             ";
@@ -1214,31 +1234,53 @@ class DED_MDS_model extends my_model
         $db = $this->load->database($this->DDS, TRUE);
         $planHeaderID = (string)$planHeaderID;
 
+        // 1. ค้นหา PlanHeaderID ก่อนหน้าที่มีสถานะ APPROVE สำหรับงวดและปีเดียวกัน
         $sqlPrev = "SELECT TOP 1 PlanHeaderID 
                     FROM Tb_Master_DESBM_Header WITH (NOLOCK)
                     WHERE PlanYear = ? 
-                      AND PeriodCode = ? 
-                      AND PlanHeaderID < ? 
-                      AND Status = 'APPROVE'
+                    AND PeriodCode = ? 
+                    AND PlanHeaderID < ? 
+                    AND Status = 'APPROVE'
                     ORDER BY PlanHeaderID DESC";
-                    
+
         $queryPrev = $db->query($sqlPrev, [(string)$year, (string)$period, $planHeaderID]);
         $prevHeader = ($queryPrev && $queryPrev->num_rows() > 0) ? $queryPrev->row() : null;
         $prevHeaderID = $prevHeader ? (string)$prevHeader->PlanHeaderID : '';
 
+        // 2. ดึงข้อมูล Detail ปัจจุบันพร้อมคำนวณ Flag ความแตกต่างเทียบกับ Rev ก่อนหน้า
         $sql = "SELECT 
                     cur.*,
+                    -- ตรวจสอบว่าถูกแก้ไขด้วยคนหรือ AS400
                     CASE 
                         WHEN UPPER(LTRIM(RTRIM(ISNULL(cur.UserAction, 'SYSTEM')))) <> 'SYSTEM' THEN 1 
                         ELSE 0 
                     END AS IsUserEdited,
                     
+                    -- ตรวจสอบว่าเป็นแถวใหม่ที่เพิ่มเข้ามาในรอบนี้หรือไม่
                     CASE 
                         WHEN ? = '' THEN 0 
                         WHEN prev.DetailID IS NULL THEN 1 
                         ELSE 0 
                     END AS IsNewRow,
 
+                    -- เปรียบเทียบ P_Type (เช่น เปลี่ยนจาก P2 เป็น P3 หรือ P3 เป็น P4)
+                    CASE 
+                        WHEN prev.DetailID IS NOT NULL 
+                            AND LTRIM(RTRIM(ISNULL(cur.P_Type, ''))) <> LTRIM(RTRIM(ISNULL(prev.P_Type, ''))) THEN 1
+                        ELSE 0 
+                    END AS Diff_P_Type,
+
+                    -- เปรียบเทียบ MFG_BM (วันที่ขยับ)
+                    CASE 
+                        WHEN prev.DetailID IS NOT NULL AND (
+                            (cur.MFG_BM IS NOT NULL AND prev.MFG_BM IS NULL) OR
+                            (cur.MFG_BM IS NULL AND prev.MFG_BM IS NOT NULL) OR
+                            (cur.MFG_BM <> prev.MFG_BM)
+                        ) THEN 1 
+                        ELSE 0 
+                    END AS Diff_MFG_BM,
+
+                    -- เปรียบเทียบ DES_BM
                     CASE 
                         WHEN prev.DetailID IS NOT NULL AND (
                             (cur.DES_BM IS NOT NULL AND prev.DES_BM IS NULL) OR
@@ -1248,6 +1290,7 @@ class DED_MDS_model extends my_model
                         ELSE 0 
                     END AS Diff_DES_BM,
 
+                    -- เปรียบเทียบ Go_DES
                     CASE 
                         WHEN prev.DetailID IS NOT NULL AND (
                             (cur.Go_DES IS NOT NULL AND prev.Go_DES IS NULL) OR
@@ -1255,26 +1298,17 @@ class DED_MDS_model extends my_model
                             (cur.Go_DES <> prev.Go_DES)
                         ) THEN 1 
                         ELSE 0 
-                    END AS Diff_Go_DES,
-
-                    CASE 
-                        WHEN prev.DetailID IS NOT NULL AND (
-                            (cur.MFG_BM IS NOT NULL AND prev.MFG_BM IS NULL) OR
-                            (cur.MFG_BM IS NULL AND prev.MFG_BM IS NOT NULL) OR
-                            (cur.MFG_BM <> prev.MFG_BM)
-                        ) THEN 1 
-                        ELSE 0 
-                    END AS Diff_MFG_BM
+                    END AS Diff_Go_DES
 
                 FROM Tb_Master_DESBM_Detail cur WITH (NOLOCK)
                 LEFT JOIN Tb_Master_DESBM_Detail prev WITH (NOLOCK)
-                    ON prev.PlanHeaderID = ? 
-                   AND prev.PROD = cur.PROD 
-                   AND prev.P_Type = cur.P_Type
-                   AND prev.DesType = cur.DesType
-                WHERE cur.PlanHeaderID = ?
+                    ON prev.PlanHeaderID = ?
+                AND prev.PROD         = cur.PROD 
+                AND prev.DesType      = cur.DesType
+                WHERE cur.PlanHeaderID   = ?
                 ORDER BY cur.SeqNo ASC";
 
+        // Binding 3 ตัวแปร: 1. เช็คกรณีไม่มี Rev ก่อนหน้า, 2. HeaderID ของ Rev ก่อนหน้า, 3. HeaderID ของ Rev ปัจจุบัน
         $query = $db->query($sql, [$prevHeaderID, $prevHeaderID, $planHeaderID]);
 
         if (!$query) {
@@ -1315,7 +1349,172 @@ class DED_MDS_model extends my_model
         return $prefix . $nextRun;
     }
 
+    /**
+     * ดึงข้อมูล Header ล่าสุดที่ผูกกับ Webflow ใบนี้
+     */
+    public function GetHeaderByFormID($formID)
+    {
+        $conf = $this->load->database($this->DDS, TRUE); 
+        $sql = "SELECT TOP 1 PlanHeaderID, PlanYear, PeriodCode, Revision, Status, DesType
+                FROM Tb_Master_DESBM_Header WITH (NOLOCK)
+                WHERE NFRMNO  = ? 
+                  AND VORGNO  = ? 
+                  AND CYEAR2  = ? 
+                  AND NRUNNO  = ?
+                ORDER BY PlanHeaderID DESC";
 
+        $query = $conf->query($sql, [
+            $formID['NFRMNO'],
+            $formID['VORGNO'],
+            $formID['CYEAR2'],
+            $formID['NRUNNO']
+        ]);
+
+        return ($query && $query->num_rows() > 0) ? $query->row() : null;
+    }
+
+    /**
+     * ทำ Full Sync (UPSERT & DELETE) จาก Tb_Master_DESBM_Detail ไปยัง Tb_Master_DESBM
+     * @param string $planHeaderID
+     * @return bool
+     * @throws Exception
+     */
+    public function SyncPlanToMasterDESBM($planHeaderID)
+    {
+        // 1. ตรวจสอบขอบเขตวันที่ (Min/Max ChangeJunTodate)
+        
+        $conf = $this->load->database($this->DDS, TRUE); 
+        $sqlScope = "SELECT 
+                        MIN(ChangeJunTodate) AS MinDate,
+                        MAX(ChangeJunTodate) AS MaxDate
+                     FROM Tb_Master_DESBM_Detail WITH (NOLOCK)
+                     WHERE PlanHeaderID = ?";
+        $queryScope = $conf->query($sqlScope, [$planHeaderID]);
+        $scope = ($queryScope && $queryScope->num_rows() > 0) ? $queryScope->row() : null;
+
+        if (!$scope || empty($scope->MinDate) || empty($scope->MaxDate)) {
+            throw new Exception("ไม่พบแถวข้อมูลใน Tb_Master_DESBM_Detail (PlanHeaderID: {$planHeaderID})");
+        }
+
+        $minDate = $scope->MinDate;
+        $maxDate = $scope->MaxDate;
+
+        // 2. ดึงประเภท DesType ที่เกี่ยวข้องในรอบนี้ (เช่น 'N', 'T')
+        $sqlDesTypes = "SELECT DISTINCT DesType 
+                        FROM Tb_Master_DESBM_Detail WITH (NOLOCK) 
+                        WHERE PlanHeaderID = ?";
+        $queryDes = $conf->query($sqlDesTypes, [$planHeaderID]);
+        $desRows = $queryDes ? $queryDes->result_array() : [];
+        $desTypeList = array_column($desRows, 'DesType');
+
+        if (empty($desTypeList)) {
+            throw new Exception("ไม่พบประเภท DesType สำหรับรอบนี้");
+        }
+
+        $escapedDes = array_map(function ($item) {
+            return $conf->escape(trim($item));
+        }, $desTypeList);
+        $desTypeInClause = implode(',', $escapedDes);
+
+        // 3. เริ่ม Transaction และรัน SQL MERGE
+        $conf->trans_begin();
+
+        try {
+            $sqlMerge = "
+                SET NOCOUNT ON;
+
+                    ;WITH SourceData AS (
+                        SELECT 
+                            TypeJun,
+                            DES_BM                      AS DesBMDate,
+                            UserAction,
+                            DateAction,
+                            BeforeEditDesBMDate,
+                            0                           AS UpdateMKT,
+                            ChangeJunTodate,
+                            DesType,
+                            FormatAs400,
+                            NULL                        AS CalCplan,
+                            Go_DES                      AS MARIssueDES, -- 🟢 แมป Go_DES เป็น MARIssueDES ตามในรูป
+                            SeqNo                       AS IDTYPE       -- 🟢 แมป SeqNo เป็น IDTYPE ตามในรูป
+                        FROM Tb_Master_DESBM_Detail WITH (NOLOCK)
+                        WHERE PlanHeaderID = ?
+                    )
+                    MERGE INTO Tb_Master_DESBM AS TARGET
+                    USING SourceData AS SOURCE
+                    ON (TARGET.TypeJun = SOURCE.TypeJun)
+
+                    --  1. MATCHED: กรณีข้อมูลตรงกัน ให้ UPDATE
+                    WHEN MATCHED THEN
+                        UPDATE SET 
+                            TARGET.DesBMDate            = SOURCE.DesBMDate,
+                            TARGET.BeforeEditDesBMDate  = SOURCE.BeforeEditDesBMDate,
+                            TARGET.ChangeJunTodate      = SOURCE.ChangeJunTodate,
+                            TARGET.DesType              = SOURCE.DesType,
+                            TARGET.FormatAs400          = SOURCE.FormatAs400,
+                            TARGET.MARIssueDES          = SOURCE.MARIssueDES,
+                            TARGET.UserAction           = SOURCE.UserAction,
+                            TARGET.ComputerAction       = HOST_NAME(),
+                            TARGET.DateAction           = SOURCE.DateAction,
+                            TARGET.UpdateMKT            = SOURCE.UpdateMKT,
+                            TARGET.IDTYPE               = SOURCE.IDTYPE
+
+                    --  2. NOT MATCHED BY TARGET: กรณีเป็นแถวใหม่ ให้ INSERT
+                    WHEN NOT MATCHED BY TARGET THEN
+                        INSERT (
+                            TypeJun,
+                            DesBMDate,
+                            UserAction,
+                            ComputerAction,
+                            DateAction,
+                            BeforeEditDesBMDate,
+                            UpdateMKT,
+                            ChangeJunTodate,
+                            DesType,
+                            FormatAs400,
+                            CalCplan,
+                            MARIssueDES,
+                            IDTYPE
+                        )
+                        VALUES (
+                            SOURCE.TypeJun,
+                            SOURCE.DesBMDate,
+                            SOURCE.UserAction,
+                            HOST_NAME(),
+                            SOURCE.DateAction,
+                            SOURCE.BeforeEditDesBMDate,
+                            SOURCE.UpdateMKT,
+                            SOURCE.ChangeJunTodate,
+                            SOURCE.DesType,
+                            SOURCE.FormatAs400,
+                            SOURCE.CalCplan,
+                            SOURCE.MARIssueDES,
+                            SOURCE.IDTYPE
+                        )
+
+                    --  3. NOT MATCHED BY SOURCE: รายการที่ถูกตัดออกในรอบนี้ ให้ DELETE
+                    WHEN NOT MATCHED BY SOURCE 
+                        AND TARGET.ChangeJunTodate >= ? 
+                        AND TARGET.ChangeJunTodate <= ? 
+                        AND TARGET.DesType IN ({$desTypeInClause}) THEN
+                        DELETE;
+            ";
+
+            $conf->query($sqlMerge, [$planHeaderID, $minDate, $maxDate]);
+
+            if ($conf->trans_status() === FALSE) {
+                $conf->trans_rollback();
+                throw new Exception("เกิดข้อผิดพลาดในการประมวลผลคำสั่ง MERGE ลงตาราง Master");
+            }
+
+            $conf->trans_commit();
+            return true;
+
+        } catch (\Throwable $ex) {
+            $conf->trans_rollback();
+            throw $ex;
+        }
+    }
     // ประมวลผล Plan ผ่าน Caching Working Days & Temp Table
     // public function processPlanMaster($year, $period, $desTypes, $userSession)
     // {
