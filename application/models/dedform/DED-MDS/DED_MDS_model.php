@@ -144,7 +144,15 @@ class DED_MDS_model extends my_model
                 $newPlanHeaderID, 
                 $nextRevision,
                 $headerData['UserAction'] ?? 'SYSTEM', 
-                $headerData['ComputerAction'] ?? (string)gethostbyaddr($_SERVER['REMOTE_ADDR'] ?? '127.0.0.1'), 
+                $headerData['ComputerAction'] ?? substr(
+    str_replace(
+        '.MitsubishiElevatorAsia.co.th',
+        '',
+        (string)($headerData['ComputerAction'] ?? gethostbyaddr($_SERVER['REMOTE_ADDR'] ?? '127.0.0.1'))
+    ),
+    0,
+    20
+), 
                 $userSession
             ]);
 
@@ -1454,7 +1462,7 @@ class DED_MDS_model extends my_model
                             TARGET.FormatAs400          = SOURCE.FormatAs400,
                             TARGET.MARIssueDES          = SOURCE.MARIssueDES,
                             TARGET.UserAction           = SOURCE.UserAction,
-                            TARGET.ComputerAction       = HOST_NAME(),
+                            TARGET.ComputerAction       = LEFT(REPLACE(HOST_NAME(), '.MitsubishiElevatorAsia.co.th', ''), 20),
                             TARGET.DateAction           = SOURCE.DateAction,
                             TARGET.UpdateMKT            = SOURCE.UpdateMKT,
                             TARGET.IDTYPE               = SOURCE.IDTYPE
@@ -1480,7 +1488,7 @@ class DED_MDS_model extends my_model
                             SOURCE.TypeJun,
                             SOURCE.DesBMDate,
                             SOURCE.UserAction,
-                            HOST_NAME(),
+                            LEFT(REPLACE(HOST_NAME(), '.MitsubishiElevatorAsia.co.th', ''), 20),
                             SOURCE.DateAction,
                             SOURCE.BeforeEditDesBMDate,
                             SOURCE.UpdateMKT,
