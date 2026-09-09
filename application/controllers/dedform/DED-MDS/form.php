@@ -372,7 +372,7 @@ class form extends MY_Controller {
             $this->MDSModel->DeleteDraftDesBM($year, $period, null, $db);
             // สร้าง PlanHeaderID รูปแบบ Custom Code (เช่น 202601001)
             $newPlanHeaderID = $this->MDSModel->generatePlanHeaderID($year, $period, $db);
-            
+
             $fullHost = (string)gethostbyaddr($_SERVER['REMOTE_ADDR'] ?? '127.0.0.1');
             $cleanHost = explode('.', $fullHost)[0]; // จะเหลือเฉพาะ 'IS-DELL07'
             $computerAction = substr($cleanHost, 0, 20); // ป้องกันเกินขนาดฟิลด์
@@ -1014,7 +1014,7 @@ class form extends MY_Controller {
                 USING SourceData AS SOURCE
                 ON (TARGET.TypeJun = SOURCE.TypeJun)
 
-                -- 🟢 กรณีที่ 1: Source มี และ Target มี -> UPDATE
+                -- กรณีที่ 1: Source มี และ Target มี -> UPDATE
                 WHEN MATCHED THEN
                     UPDATE SET 
                         TARGET.DesBMDate            = SOURCE.DesBMDate,
@@ -1024,7 +1024,7 @@ class form extends MY_Controller {
                         TARGET.FormatAs400          = SOURCE.FormatAs400,
                         TARGET.MARIssueDES          = SOURCE.MARIssueDES,
                         TARGET.UserAction           = SOURCE.UserAction,
-                        TARGET.ComputerAction       = HOST_NAME(),
+                        TARGET.ComputerAction       = LEFT(REPLACE(HOST_NAME(), '.MitsubishiElevatorAsia.co.th', ''), 20),
                         TARGET.DateAction           = SOURCE.DateAction,
                         TARGET.UpdateMKT            = 0
 
@@ -1054,7 +1054,7 @@ class form extends MY_Controller {
                         SOURCE.FormatAs400,
                         SOURCE.MARIssueDES,
                         SOURCE.UserAction,
-                        HOST_NAME(),
+                        LEFT(REPLACE(HOST_NAME(), '.MitsubishiElevatorAsia.co.th', ''), 20),
                         SOURCE.DateAction,
                         0,
                         NULL,
@@ -1346,65 +1346,5 @@ class form extends MY_Controller {
 
 
     
-    public function SavePlanMaster0() {
-        try {
-            $year     = $this->input->post('YEAR');
-            $period   = $this->input->post('PERIOD');
-            $empno    = $this->input->post('EMPNO');
-            $headerID = $this->input->post('PLAN_HEADER_ID');
-            $Remark = $this->input->post('REMARK')??'';
-            
-
-            // 1. หาเลข Revision ถัดไปจาก Header ที่เคย Approved แล้ว
-            
-            $nextRevision = $this->getNextApprovedRevision($year, $period);
-
-            // 2. อัปเดตสถานะ Header จาก DRAFT เป็น Approved พร้อมกำหนดเลข Rev จริง
-            $db = $this->load->database($this->DDS, TRUE);
-            $db->where('PlanHeaderID', $headerID)->update('Tb_Master_DESBM_Header', [
-                'Revision'       => $nextRevision,
-                'Status'         => 'Approved',
-                'UserAction'     => $empno,
-                'ComputerAction' => gethostbyaddr($_SERVER['REMOTE_ADDR']),
-                'DateAction'     => date('Y-m-d H:i:s')
-            ]);
-
-            // 3. อัปเดต Rev ในตาราง Detail
-            $db->where('PlanHeaderID', $headerID)->update('Tb_Master_DESBM_Detail', [
-                'Rev' => $nextRevision
-            ]);
-
-            // 4. Merge Sync เข้าตาราง Master หลัก (Tb_Master_DESBM)
-            $sqlSync = "
-                MERGE INTO Tb_Master_DESBM AS Target
-                USING (
-                    SELECT TypeJun, DES_BM, ChangeJunTodate, DesType, FormatAs400, BeforeEditDesBMDate, MARIssueDES
-                    FROM Tb_Master_DESBM_Detail
-                    WHERE PlanHeaderID = ?
-                ) AS Source
-                ON Target.TypeJun = Source.TypeJun
-                WHEN MATCHED THEN
-                    UPDATE SET 
-                        Target.DesBMDate = Source.DES_BM,
-                        Target.UserAction = ?,
-                        Target.DateAction = GETDATE()
-                WHEN NOT MATCHED THEN
-                    INSERT (TypeJun, DesBMDate, UserAction, ComputerAction, DateAction, BeforeEditDesBMDate, UpdateMKT, ChangeJunTodate, DesType, FormatAs400, MARIssueDES)
-                    VALUES (Source.TypeJun, Source.DES_BM, ?, ?, GETDATE(), Source.BeforeEditDesBMDate, 0, Source.ChangeJunTodate, Source.DesType, Source.FormatAs400, Source.MARIssueDES);
-            ";
-            $this->MDSModel->QuerySetBase($sqlSync, $this->DDS, [$headerID, $empno, $empno, gethostbyaddr($_SERVER['REMOTE_ADDR'])]);
-
-            return $this->output->set_content_type('application/json')->set_output(json_encode([
-                'status'   => true, 
-                'revision' => $nextRev,
-                'message'  => "ยืนยันและบันทึก Master Plan ($nextRev) สำเร็จ"
-            ]));
-        } catch (\Exception $e) {
-            return $this->output->set_content_type('application/json')->set_output(json_encode([
-                'status'  => false, 
-                'message' => $e->getMessage()
-            ]));
-        }
-    }
 
 }
