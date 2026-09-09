@@ -1,5 +1,4 @@
 import { redirectWebflow } from '@amec/webasset/form';
-import { writeExcelTemp, exportExcel } from '@amec/webasset/excel';
 import {
     getDesTypeMaster,
     processPlanCalculation,
@@ -7,14 +6,17 @@ import {
     getOrInitDraftPlan,
     deleteDraftPlan,
     updateInlineDetail,
+    getExportData,
 } from './data';
+import { exportPlanExcel } from './export.js';
 import { host } from '../../utils';
 import { showLoader } from '@amec/webasset/preloader';
 import flatpickr from 'flatpickr';
 import 'flatpickr/dist/flatpickr.min.css';
 
 import $ from 'jquery';
-import ExcelJS from 'exceljs';
+// import { writeExcelTemp, exportExcel } from '@amec/webasset/excel';
+// import ExcelJS from 'exceljs';
 
 import select2 from 'select2';
 import { setSelect2 } from '@amec/webasset/select2';
@@ -174,6 +176,7 @@ $(document).ready(async function () {
             MODE: $('#MODEHid').val(), // 🟢 ส่ง MODE ปัจจุบัน
             EXTDATA: $('#EXTDATAHid').val(), // 🟢 ส่ง EXTDATA
             PLANHEADERID: $('#PlanHeaderIDHid').val(),
+            REMARK: $('#RemarkTxt').val(),
         };
 
         try {
@@ -580,16 +583,57 @@ $(document).ready(async function () {
     // == Export Excel
     // ===================================================================
     $(document).on('click', '#ExportExcelBtn', async function () {
-        if (!currentPlanData || currentPlanData.length === 0) {
-            alert('ไม่พบข้อมูลที่จะ Export');
+        const year = $('#YearDrp').val();
+        const periodVal = $('#PeriodDrp').val();
+        const revVal = $('#RevisionHid').val() || '';
+
+        if (!year || !periodVal) {
+            alert('กรุณาเลือก Year และ Period ก่อนทำการ Export');
             return;
         }
 
         const headerId =
-            $('#PlanHeaderIDHid').val() || currentPlanHeaderID || 'DRAFT';
-        const periodVal = $('#PeriodDrp').val(); // เช่น '04X09C' หรือ '10X03C'
+            $('#PlanHeaderIDHid').val() || currentPlanHeaderID || '';
 
-        await exportPlanExcel(currentPlanData, headerId, periodVal);
+        try {
+            showLoader();
+
+            // 1. เรียก API ดึงข้อมูลสด (Backend จัดการหา PlanHeaderID และ 2 Records ก่อนหน้าให้)
+            const res = await $.ajax({
+                url: host + 'dedform/DED-MDS/form/GetExportData',
+                type: 'POST',
+                dataType: 'json',
+                data: {
+                    PlanHeaderID: headerId,
+                    YEAR: year,
+                    PERIOD: periodVal,
+                    REV: revVal,
+                },
+            });
+
+            if (!res.status || !res.data || res.data.length === 0) {
+                alert(res.message || 'ไม่พบข้อมูลสำหรับการ Export');
+                return;
+            }
+
+            // 2. เรียกฟังก์ชัน Export แบบครบกระบวนการ
+            await exportPlanExcel({
+                dataList: res.data,
+                prevRows: res.prevRows || [],
+                planHeaderID: res.planHeaderID,
+                revision: res.revision,
+                revHistory: res.revHistory || [], // 🟢 ส่งจาก response ของ AJAX
+                signatures: res.signatures || null,
+                planStatus: res.planStatus,
+                year: year,
+                periodCode: periodVal,
+            });
+        } catch (err) {
+            console.error(err);
+            alert('เกิดข้อผิดพลาดในการดึงข้อมูลเพื่อ Export');
+        } finally {
+            showLoader({ show: false });
+        }
     });
 
     // == Export Excel
@@ -1001,11 +1045,10 @@ function renderDataTable(data) {
  * ฟังก์ชันจัดการสิทธิ์การแสดงปุ่มตามเงื่อนไข Mode & ExtData
  */
 async function applyButtonPermissions(mode, extData, status = '') {
-    const rawStatus = (status || '').toUpperCase();
+    const rawStatus = (status || '').toUpperCase().trim();
     const isPending = ['PROCESS', 'APPROVE'].includes(rawStatus);
 
-    // $('#RemarkTxt').prop('disabled', isPending);
-    // 1. ซ่อนปุ่ม Action ทั้งหมดก่อนเพื่อ Reset State
+    // 1. ซ่อนปุ่ม Action ทั้งหมดก่อนเสมอ
     const allButtons = [
         '#SearchBtn',
         '#ProcessBtn',
@@ -1016,71 +1059,56 @@ async function applyButtonPermissions(mode, extData, status = '') {
     ];
     $(allButtons.join(', ')).addClass('hidden');
 
-    if (mode === '1') {
+    // แปลง mode ให้อยู่ในรูป String เสมอ
+    const currentMode = String(mode || '1').trim();
+
+    if (currentMode === '1') {
         // 🟡 Mode 1: ผู้จัดทำ (Requester / Creator)
         $('#SearchBtn').removeClass('hidden');
-        $('#ProcessBtn').addClass('hidden');
 
-        // alert(rawStatus);
-        // ถ้าเอกสารรอบนี้อยู่ในสถานะรออนุมัติไปแล้ว ไม่ให้กด Process ซ้ำ
         if (isPending) {
-            $('#ProcessBtn').addClass('hidden');
-            $('#SavePlanBtn').addClass('hidden');
-            $('#DeleteBtn').addClass('hidden');
-            if (rawStatus == 'APPROVE') {
+            // อยู่ใน Flow รออนุมัติ หรือ จบ Approve แล้ว -> ห้ามแก้ไข
+            if (rawStatus === 'APPROVE') {
                 $('#YearDrp, #PeriodDrp').prop('disabled', true);
-                $('input[name="destype"]').prop('disabled', true);
+                $('input[name="DesTypeChk[]"]').prop('disabled', true);
             }
         } else {
-            // ปุ่ม Save และ Delete Draft จะแสดงเมื่อมีข้อมูล Draft ให้บันทึก
-            // alert(rawStatus);
+            // ยังไม่อนุมัติ
             if (rawStatus === 'DRAFT') {
                 $('#SavePlanBtn').removeClass('hidden');
                 $('#DeleteBtn').removeClass('hidden');
                 $('#ProcessBtn').removeClass('hidden');
-            } else if (rawStatus === '') {
+            } else if (rawStatus === '' || rawStatus === 'NONE') {
                 $('#ProcessBtn').removeClass('hidden');
             }
         }
-    } else if (mode === '2') {
-        // 🟠 Mode 2: ขั้นตอนการอนุมัติ (Flow Step)
-        // $('#SearchBtn').removeClass('hidden');
-
-        // ล็อก Header ทั้งหมด
-        // $('#RemarkTxt').prop('disabled', true);
+    } else if (currentMode === '2') {
+        // 🟠 Mode 2: ผู้ตรวจสอบ / ผู้อนุมัติในสาย Flow
         $('#YearDrp, #PeriodDrp').prop('disabled', true);
-        $('input[name="destype"]').prop('disabled', true);
+        $('input[name="DesTypeChk[]"]').prop('disabled', true);
 
-        $('#ProcessBtn').addClass('hidden');
-        if (extData === '') {
-            // เหมือน DRAFT
-            if (rawStatus === 'PROCESS') {
-                // $('#ProcessBtn').removeClass('hidden');
-                $('#SavePlanBtn').removeClass('hidden');
-                $('#DeleteBtn').removeClass('hidden');
-            }
-        } else if (extData === '01') {
-            // CHECKER: ตรวจสอบและอนุมัติ หรือ ลบทิ้ง
+        const currentStep = String(extData || '').trim();
+
+        if (currentStep === '01') {
+            // CHECKER: ตรวจสอบ/อนุมัติ หรือ ตีกลับ
             $('#ApproveBtn').removeClass('hidden');
             $('#ReturnBtn').removeClass('hidden');
-        } else if (extData === '02' || extData === '03') {
+        } else if (currentStep === '02' || currentStep === '03') {
             // ACCEPTOR / APPROVER: อนุมัติ หรือ ตีกลับ
             $('#ApproveBtn').removeClass('hidden');
             $('#ReturnBtn').removeClass('hidden');
+        } else if (currentStep === '') {
+            if (rawStatus === 'DRAFT' || rawStatus === 'PROCESS') {
+                $('#SavePlanBtn').removeClass('hidden');
+                $('#DeleteBtn').removeClass('hidden');
+            }
         }
-
-        if ($('#EMPNOHid').val() == '13204') {
-            $('#DeleteBtn').removeClass('hidden');
-            $('#ReturnBtn').removeClass('hidden');
-        }
-    } else if (mode === '3') {
-        // Mode 3: ดูอย่างเดียว (View Only)
-        // $('#SearchBtn').removeClass('hidden');
-
+    } else if (currentMode === '3') {
+        // ⚪ Mode 3: View Only ดูได้อย่างเดียว
+        $('#SearchBtn').removeClass('hidden');
         $('#RemarkTxt').prop('disabled', true);
         $('#YearDrp, #PeriodDrp').prop('disabled', true);
-        $('input[name="destype"]').prop('disabled', true);
-        $('#lblRevision').text('Revision: ' + (revision || '*'));
+        $('input[name="DesTypeChk[]"]').prop('disabled', true);
     }
 }
 
@@ -1094,43 +1122,33 @@ function updateStatusUI(status, revision, docNo = '') {
     // 1. อัปเดต Revision Badge
     $('#RevBadge').text('Revision: ' + (revision || '*'));
 
-    // 2. ล้างสี Badge เดิม
+    // 2. 🟢 ล้างสี Badge เดิมออกให้หมด (ทั้ง badge-* ของ DaisyUI และ bg-* ของ Tailwind)
     $statusBadge.removeClass(
-        'badge-warning badge-success badge-error badge-ghost hidden text-slate-800 text-white',
+        'badge-warning badge-success badge-error badge-ghost bg-orange-600 bg-emerald-600 bg-amber-500 bg-slate-500 text-slate-800 text-white hidden',
     );
-    // alert(
-    //     'MOD:' +
-    //         $('#MODEHid').val() +
-    //         '|' +
-    //         'EXTDATA:' +
-    //         $('#EXTDATAHid').val(),
-    // );
+
     if (rawStatus === 'PROCESS') {
-        // 🟠 กำลังเดิน Flow
+        // 🟠 กำลังเดิน Flow (สีส้ม/เหลือง)
         $statusBadge.addClass('badge-warning text-slate-800').text('PROCESS');
 
         if (mode === '1') {
-            // Mode 1: แจ้งเตือนว่ารอบนี้กำลังเดิน Flow อยู่ ไม่สามารถสร้างซ้ำได้ ให้เลือก Search รอบอื่น
             $('#StatusText').html(
                 `<strong>แจ้งเตือน:</strong> รอบแผนงานนี้อยู่ในสถานะ <strong>PROCESS</strong> ${docNo ? `[${docNo}]` : ''} กำลังอยู่ระหว่างการอนุมัติ จึงไม่สามารถสร้างหรือคำนวณใหม่ได้ (กรุณาเลือกค้นหารอบอื่น)`,
             );
         } else {
-            // Mode 2/3: แจ้งเตือนปกติ
             $('#StatusText').html(
                 `<strong>แจ้งเตือน:</strong> เอกสารกำลังอยู่ในขั้นตอนการอนุมัติ (Step: ${extData || '-'}) ${docNo ? `[${docNo}]` : ''}`,
             );
         }
         $pendingAlert.removeClass('hidden');
 
-        // Mode 1 ห้ามแก้ Inline Date ถ้าติด PROCESS
-        // Mode 2 แก้ได้เฉพาะ Step ตรวจสอบ (extData = '01')
         const canEditInline =
             mode === '2' && (extData === '01' || extData === '');
         $('.inline-edit-date')
             .prop('disabled', !canEditInline)
             .toggleClass('opacity-50 cursor-not-allowed', !canEditInline);
     } else if (rawStatus === 'DRAFT') {
-        // ⚪ เพิ่งกดคำนวณแต่ยังไม่ส่งเข้า Flow
+        // ⚪ เพิ่งกดคำนวณแต่ยังไม่ส่งเข้า Flow (สีเทาอ่อน)
         $statusBadge.addClass('badge-ghost text-slate-600').text('DRAFT');
         $pendingAlert.addClass('hidden');
 
@@ -1139,7 +1157,7 @@ function updateStatusUI(status, revision, docNo = '') {
             .prop('disabled', !isEditable)
             .toggleClass('opacity-50 cursor-not-allowed', !isEditable);
     } else if (rawStatus === 'APPROVE' || rawStatus === 'APPROVED') {
-        // 🟢 Approved จบแล้ว
+        // 🟢 Approved จบแล้ว (สีเขียว)
         $statusBadge.addClass('badge-success text-white').text('APPROVE');
         $pendingAlert.addClass('hidden');
 
@@ -1282,225 +1300,18 @@ async function actionFlow(actionType) {
 // ===================================================================
 
 /**
- * ดึง ArrayBuffer ของไฟล์ Template จาก Controller
+ * แปลง Index คอลัมน์ตัวเลขเป็นตัวอักษรของ Excel (เช่น 1 -> A, 4 -> D, 27 -> AA, 40 -> AN)
  */
-async function getTemplateFile(templateName) {
-    const res = await fetch(
-        host +
-            `dedform/DED-MDS/form/GetExcelTemplate?template=${encodeURIComponent(templateName)}`,
-    );
-    if (!res.ok)
-        throw new Error(`ไม่สามารถโหลด Template (${templateName}.xlsx) ได้`);
-    return await res.arrayBuffer();
-}
-
-/**
- * ฟังก์ชันเขียนและส่งออกไฟล์ Excel ตาม Template 04X09C.xlsx
- * @param {Array} dataList ข้อมูล Detail จาก Tb_Master_DESBM_Detail
- * @param {String} planHeaderID รหัส PlanHeaderID เพื่อใช้ตั้งชื่อไฟล์
- */
-async function exportPlanExcel(dataList, planHeaderID, periodCode) {
-    try {
-        showLoader();
-
-        // 1. เลือกว่าจะใช้ไฟล์แม่แบบไหน (รองรับทั้งแบบมีขีดและไม่มีขีด)
-        let templateFileName = '04X-09C';
-        const cleanPeriod = String(periodCode || '').toUpperCase();
-
-        if (cleanPeriod.includes('10X-03C') || cleanPeriod.includes('10X03C')) {
-            templateFileName = '10X-03C';
-        } else if (
-            cleanPeriod.includes('04X-09C') ||
-            cleanPeriod.includes('04X09C')
-        ) {
-            templateFileName = '04X-09C';
-        }
-
-        const templateBuffer = await getTemplateFile(templateFileName);
-
-        const workbook = await writeExcelTemp(templateBuffer, {
-            write: (wb) => {
-                const sheet = wb.getWorksheet('Template') || wb.getWorksheet(1);
-
-                // ป้องกันปัญหา Shared Formula ที่ทำให้ไฟล์พัง
-                sheet.eachRow({ includeEmpty: true }, function (row) {
-                    row.eachCell({ includeEmpty: true }, function (cell) {
-                        if (cell.model && cell.model.sharedFormula) {
-                            cell.value =
-                                cell.result !== undefined ? cell.result : null;
-                        }
-                    });
-                });
-
-                const startRow = 2;
-                const formatDate = (val) => {
-                    if (!val) return '';
-                    const d = new Date(val);
-                    if (isNaN(d.getTime())) return '';
-                    const y = d.getFullYear();
-                    const m = String(d.getMonth() + 1).padStart(2, '0');
-                    const day = String(d.getDate()).padStart(2, '0');
-                    return `${y}-${m}-${day}`;
-                };
-
-                // นิยามสไตล์ฟอนต์แยกชัดเจน
-                const fontBlack = {
-                    name: 'Arial',
-                    size: 8,
-                    bold: false,
-                    color: { argb: 'FF000000' },
-                };
-
-                const fontRed = {
-                    name: 'Arial',
-                    size: 8,
-                    bold: true,
-                    color: { argb: 'FFFF0000' },
-                };
-
-                const cols = [
-                    'A',
-                    'B',
-                    'C',
-                    'D',
-                    'E',
-                    'F',
-                    'G',
-                    'H',
-                    'I',
-                    'J',
-                    'K',
-                    'L',
-                    'M',
-                    'N',
-                    'O',
-                    'P',
-                    'Q',
-                    'R',
-                    'S',
-                ];
-
-                // 🟢 ลูปชุดเดียวตรงๆ (ไม่ซ้อนกัน)
-                dataList.forEach((item, index) => {
-                    const r = startRow + index;
-
-                    // หยอดข้อมูล A - P
-                    sheet.getCell(`A${r}`).value = item.SeqNo || index + 1;
-                    sheet.getCell(`B${r}`).value = item.PROD || '';
-                    sheet.getCell(`C${r}`).value = formatDate(item.MFG_BM);
-                    sheet.getCell(`D${r}`).value = item.P_Type || '';
-                    sheet.getCell(`E${r}`).value = formatDate(item.DES_BM);
-                    sheet.getCell(`F${r}`).value =
-                        item.Time_DESBM_to_MFGBM !== null &&
-                        item.Time_DESBM_to_MFGBM !== ''
-                            ? Number(item.Time_DESBM_to_MFGBM)
-                            : '';
-                    sheet.getCell(`G${r}`).value = formatDate(item.Go_DES);
-                    sheet.getCell(`H${r}`).value =
-                        item.Time_GoDES_to_DESBM !== null &&
-                        item.Time_GoDES_to_DESBM !== ''
-                            ? Number(item.Time_GoDES_to_DESBM)
-                            : '';
-                    sheet.getCell(`I${r}`).value = formatDate(
-                        item.Confirm_MELINA_Portion,
-                    );
-                    sheet.getCell(`J${r}`).value =
-                        item.Time_Confirm_Melina !== null &&
-                        item.Time_Confirm_Melina !== ''
-                            ? Number(item.Time_Confirm_Melina)
-                            : '';
-                    sheet.getCell(`K${r}`).value = formatDate(
-                        item.MSE_to_MELINA,
-                    );
-                    sheet.getCell(`L${r}`).value =
-                        item.Time_MSE_to_MELINA !== null &&
-                        item.Time_MSE_to_MELINA !== ''
-                            ? Number(item.Time_MSE_to_MELINA)
-                            : '';
-                    sheet.getCell(`M${r}`).value = formatDate(item.SW_Assembly);
-                    sheet.getCell(`N${r}`).value =
-                        item.Time_SW_Assembly !== null &&
-                        item.Time_SW_Assembly !== ''
-                            ? Number(item.Time_SW_Assembly)
-                            : '';
-                    sheet.getCell(`O${r}`).value = formatDate(
-                        item.Zero_Level_Check_Temp_DWG,
-                    );
-                    sheet.getCell(`P${r}`).value =
-                        item.Time_Zero_Level !== null &&
-                        item.Time_Zero_Level !== ''
-                            ? Number(item.Time_Zero_Level)
-                            : '';
-
-                    // คอลัมน์ Q
-                    const cellQ = sheet.getCell(`Q${r}`);
-                    cellQ.value =
-                        item.Design_working_day !== null &&
-                        item.Design_working_day !== ''
-                            ? Number(item.Design_working_day)
-                            : '';
-                    cellQ.numFmt = '0';
-
-                    // คอลัมน์ R, S
-                    const cellR = sheet.getCell(`R${r}`);
-                    cellR.value =
-                        item.LeadTime !== null && item.LeadTime !== ''
-                            ? Number(item.LeadTime)
-                            : '';
-                    cellR.numFmt = '0';
-
-                    const cellS = sheet.getCell(`S${r}`);
-                    cellS.value =
-                        item.Time_DESBM_to_MFGBM_2 !== null &&
-                        item.Time_DESBM_to_MFGBM_2 !== ''
-                            ? Number(item.Time_DESBM_to_MFGBM_2)
-                            : '';
-                    cellS.numFmt = '0';
-
-                    // ตรวจสอบเงื่อนไข UserAction (ถ้าไม่ใช่ 'SYSTEM' และไม่ว่าง -> เป็น User แก้ ให้เป็นสีแดง)
-                    const userAction = String(item.UserAction || 'SYSTEM')
-                        .trim()
-                        .toUpperCase();
-                    const isManual =
-                        userAction !== 'SYSTEM' && userAction !== '';
-
-                    cols.forEach((col) => {
-                        const cell = sheet.getCell(`${col}${r}`);
-                        if (isManual) {
-                            cell.font = { ...fontRed };
-                        } else {
-                            cell.font = { ...fontBlack };
-                        }
-                    });
-                });
-            },
-        });
-
-        // 3. กำหนดชื่อไฟล์
-        const now = new Date();
-        const yyyy = now.getFullYear();
-        const mm = String(now.getMonth() + 1).padStart(2, '0');
-        const dd = String(now.getDate()).padStart(2, '0');
-        const hh = String(now.getHours()).padStart(2, '0');
-        const ii = String(now.getMinutes()).padStart(2, '0');
-        const ss = String(now.getSeconds()).padStart(2, '0');
-        const timeStamp = `${yyyy}${mm}${dd}_${hh}${ii}${ss}`;
-
-        const safePlanID = String(planHeaderID || 'PLAN').trim();
-        const fileName = `DESBM_${templateFileName}_${safePlanID}_${timeStamp}`;
-
-        await exportExcel(workbook, fileName);
-    } catch (error) {
-        console.error('Error generating excel from template:', error);
-        alert(
-            'เกิดข้อผิดพลาดในการสร้างไฟล์ Excel: ' + (error.message || error),
-        );
-    } finally {
-        showLoader({ show: false });
+function getExcelColumnLetter(colIndex) {
+    let temp,
+        letter = '';
+    while (colIndex > 0) {
+        temp = (colIndex - 1) % 26;
+        letter = String.fromCharCode(temp + 65) + letter;
+        colIndex = Math.floor((colIndex - temp - 1) / 26);
     }
+    return letter;
 }
-// == Export Excel
-// ===================================================================
 
 $(document).on('click', '#SentEmailBtn', async function () {
     const formData = $('.form-info').data();

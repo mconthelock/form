@@ -323,6 +323,7 @@ class form extends MY_Controller {
             $MODE    = $this->input->post('MODE') ?? 'SYSTEM';
             $EXTDATA    = $this->input->post('EXTDATA') ?? 'SYSTEM';
             $PLANHEADERID    = $this->input->post('PLANHEADERID') ;
+            $remark   = $this->input->post('REMARK') ?? '';
 
             // 1. Validation กั้นไว้ก่อน: ถ้าไม่ได้ระบุ Year / Period / DesType ห้ามเริ่มงานเด็ดขาด
             if (empty($year) || empty($period)) {
@@ -379,7 +380,7 @@ class form extends MY_Controller {
                 'Revision'       => $nextRevision,
                 'Status'         => 'DRAFT',
                 'DesType'        => is_array($desTypes) ? implode('|', $desTypes) : (string)$desTypes,
-                'Remark'         => 'Process draft plan',
+                'Remark'         => '',
                 'UserAction'     => 'SYSTEM',
                 'ComputerAction' => (string)gethostbyaddr($_SERVER['REMOTE_ADDR'] ?? '127.0.0.1'),
                 'DateAction'     => date('Y-m-d H:i:s')
@@ -1032,6 +1033,114 @@ class form extends MY_Controller {
 
     // use PhpOffice\PhpSpreadsheet\IOFactory;
     // use PhpOffice\PhpSpreadsheet\Style\Color;
+
+    public function GetExportData() {
+        $this->output->set_content_type('application/json');
+        $planHeaderID = trim((string)$this->input->get_post('PlanHeaderID'));
+        $year         = trim((string)$this->input->get_post('YEAR'));
+        $period       = trim((string)$this->input->get_post('PERIOD'));
+        $rev          = trim((string)$this->input->get_post('REV'));
+
+        if (empty($year) || empty($period)) {
+            return $this->output->set_output(json_encode([
+                'status'  => false, 
+                'message' => 'กรุณาเลือก Year และ Period ก่อนทำการ Export'
+            ]));
+        }
+
+        $revCondition = "";
+        if ($rev !== '') {
+            $revCondition = " AND Revision = " . $this->db->escape($rev);
+        }
+
+        $db = $this->load->database($this->DDS, TRUE);
+
+        // 1. หา PlanHeaderID
+        $headerRow = null;
+        if (!empty($planHeaderID)) {
+            $headerRow = $db->where('PlanHeaderID', $planHeaderID)->get('Tb_Master_DESBM_Header')->row();
+        }
+        
+        if (!$headerRow) {
+            $sqlFind = "SELECT TOP 1 * 
+                        FROM Tb_Master_DESBM_Header WITH (NOLOCK)
+                        WHERE PlanYear = ? AND PeriodCode = ? {$revCondition}
+                        ORDER BY CASE WHEN UPPER(Status) in ('DRAFT','PROCESS') THEN 1 ELSE 2 END ASC, PlanHeaderID DESC";
+            $headerRow = $db->query($sqlFind, [$year, $period])->row();
+        }
+
+        if (!$headerRow) {
+            return $this->output->set_output(json_encode([
+                'status'  => false, 
+                'message' => "ไม่พบข้อมูล Plan ของรอบปี {$year} ({$period})"
+            ]));
+        }
+
+        $targetHeaderID = $headerRow->PlanHeaderID;
+        $revision       = $headerRow->Revision ?? '*';
+        $status         = strtoupper(trim($headerRow->Status ?? ''));
+
+        // 2. ดึง Detail ของ Plan ปัจจุบัน
+        $sqlCurrent = "SELECT * 
+                       FROM Tb_Master_DESBM_Detail WITH (NOLOCK)
+                       WHERE PlanHeaderID = ?
+                       ORDER BY SeqNo ASC";
+        $currentRows = $db->query($sqlCurrent, [$targetHeaderID])->result_array();
+
+        if (empty($currentRows)) {
+            return $this->output->set_output(json_encode([
+                'status'  => false, 
+                'message' => 'ไม่พบข้อมูลแถวรายการ (Detail) ของรอบนี้'
+            ]));
+        }
+
+        // 3. หา 2 Records ย้อนหลังสำหรับอ้างอิงฐานวันทำงาน
+        $firstA2M01 = trim((string)($currentRows[0]['A2M01'] ?? ''));
+        $sqlPrev = "SELECT TOP 2 * 
+                    FROM Tb_Master_DESBM_Detail WITH (NOLOCK)
+                    WHERE A2M01 < ? 
+                      AND PlanHeaderID != ?
+                    ORDER BY A2M01 DESC, SeqNo DESC";
+        $prevQuery = $db->query($sqlPrev, [$firstA2M01, $targetHeaderID]);
+        $prevRowsDesc = $prevQuery ? $prevQuery->result_array() : [];
+        $prevRows = array_reverse($prevRowsDesc);
+
+        // 4. ดึงประวัติ Revision ทั้งหมดของปีและงวดนี้
+        $sqlRevHist = "SELECT Revision, CONVERT(VARCHAR(10), DateAction, 120) AS ApproveDate
+                       FROM Tb_Master_DESBM_Header WITH (NOLOCK)
+                       WHERE PlanYear = ? AND PeriodCode = ? AND UPPER(Status) = 'APPROVE'
+                       ORDER BY PlanHeaderID ASC";
+        $queryRevHist = $db->query($sqlRevHist, [$year, $period]);
+        $revHistory = $queryRevHist ? $queryRevHist->result_array() : [];
+
+        // 5. เตรียมข้อมูลแสตมป์ลายเซ็น (Prepared By, Checked By, Approved By)
+        // ดึงจาก Field ใน Header หรือปรับตามโครงสร้างตาราง Flow ของคุณ
+        $signatures = [
+            'preparedBy' => [
+                'name' => $headerRow->CreateBy ?? $headerRow->UserAction ?? '',
+                'date' => !empty($headerRow->CreateDate) ? substr($headerRow->CreateDate, 0, 10) : date('Y-m-d')
+            ],
+            'checkedBy' => [
+                'name' => $headerRow->CheckedBy ?? '',
+                'date' => !empty($headerRow->CheckedDate) ? substr($headerRow->CheckedDate, 0, 10) : null
+            ],
+            'approvedBy' => [
+                'name' => $headerRow->ApprovedBy ?? '',
+                'date' => !empty($headerRow->ApprovedDate) ? substr($headerRow->ApprovedDate, 0, 10) : null
+            ]
+        ];
+
+        return $this->output->set_output(json_encode([
+            'status'       => true,
+            'planHeaderID' => $targetHeaderID,
+            'revision'     => $revision,
+            'revHistory'   => $revHistory,
+            'signatures'   => $signatures,
+            'planStatus'   => $status,
+            'data'         => $currentRows,
+            'prevRows'     => $prevRows
+        ]));
+    }
 
     public function GetExcelTemplate() {
         $tplParam = preg_replace('/[^a-zA-Z0-9_-]/', '', (string)$this->input->get('template'));
