@@ -3,6 +3,8 @@ import { createTable } from '@amec/webasset/dataTable';
 import { setDatePicker } from '@amec/webasset/flatpickr';
 import { defaultExcel, exportExcel } from '@amec/webasset/excel';
 import { showMessage } from '@amec/webasset/utils';
+import 'datatables.net-dt/css/dataTables.dataTables.min.css';
+import '@amec/webasset/css/dataTable.css';
 
 let reportTable = null;
 
@@ -25,12 +27,6 @@ const columns = [
         render: renderAmount,
     },
     {
-        data: 'VAT_RATE',
-        title: 'Tax Code',
-        className: 'text-center text-nowrap',
-        render: renderVatRate,
-    },
-    {
         data: 'EXPENSE_CODE',
         title: 'Account (Dr)',
         className: 'text-nowrap',
@@ -41,7 +37,12 @@ const columns = [
         className: 'text-nowrap',
         render: renderCostCenters,
     },
-    { data: 'REMARK', title: 'Remark' },
+    { data: 'REMARK', title: 'Reference' },
+    {
+        data: 'WHT',
+        title: 'Tax-Code',
+        className: 'text-right',
+    },
 ];
 
 $(async function () {
@@ -53,7 +54,7 @@ $(async function () {
     ].forEach((element) => setDatePicker({ element }));
 
     await Promise.all([loadSelect('expense'), loadSelect('vendor')]);
-    await renderTable([]);
+    $('#reportSearchForm').trigger('submit');
 });
 //--------------------------------------------  for test
 
@@ -120,7 +121,6 @@ $(document).on('click', '#btnExport', async function () {
 
     const exportRows = rows.map((row) => ({
         ...row,
-        VAT_RATE: formatVatRate(row.VAT_RATE),
         COST_CENTER: splitCostCenters(row.COST_CENTER).join('\n'),
     }));
 
@@ -143,7 +143,12 @@ async function renderTable(data) {
     $('#reportTable').empty();
     reportTable = await createTable(
         { data, columns, responsive: false, order: [[2, 'desc']] },
-        { id: '#reportTable', domScroll: { status: true } },
+        {
+            id: '#reportTable',
+            dataTableCss: false,
+            cssCustom: false,
+            domScroll: { status: true },
+        },
     );
 }
 
@@ -249,11 +254,34 @@ function normalizeReportRows(response) {
 
             if (!costCenters.length) return [normalizedRow];
 
+            const travelerCount = costCenters.length;
+            const amountPerTraveler = isTravelingExportExpense(
+                normalizedRow.EXPENSE_TYPE,
+            )
+                ? (Number(normalizedRow.NET_PRICE) || 0) / travelerCount
+                : normalizedRow.NET_PRICE;
+
             return costCenters.map((costCenter) => ({
                 ...normalizedRow,
                 COST_CENTER: costCenter,
+                NET_PRICE: amountPerTraveler,
             }));
         });
+}
+
+function isTravelingExportExpense(expenseType) {
+    const normalizedType = String(expenseType || '')
+        .trim()
+        .toUpperCase();
+
+    return [
+        'TRAVELING EXPORT',
+        'TRAVELLING EXPORT',
+        'TRAVELING ABROAD',
+        'TRAVELLING ABROAD',
+        // Keep compatibility with the existing expense master spelling.
+        'TRAVELLING ABOARD',
+    ].some((name) => normalizedType.includes(name));
 }
 
 function normalizeRow(row) {
@@ -287,26 +315,16 @@ function normalizeRow(row) {
             'COST_CENTER_CODE',
         ]),
         REMARK: first(row, ['REMARK', 'VREMARK']),
-        INVOICE_DATE: formatDate(first(row, ['INVOICE_DATE', 'DINVOICE_DATE'])),
+        WHT: formatTaxCode(first(row, ['WHT', 'WITHHOLDING_TAX'])),
+        INVOICE_DATE: formatInvoiceDate(
+            first(row, ['INVOICE_DATE', 'DINVOICE_DATE']),
+        ),
         INVOICE_NO: first(row, ['INVOICE_NO', 'VINVOICE_NO']),
         NET_PRICE: first(row, ['NET_PRICE', 'NET_AMT']),
         TOTAL_AMOUNT: first(row, ['TOTAL_AMOUNT', 'TOTAL_AMT']),
-        VAT_RATE: getVatRate(row),
         CURRENCY: first(row, ['CURRENCY', 'SCURCODE']),
         STATUS: first(row, ['STATUS', 'FORM_STATUS', 'CSTATUS']),
     };
-}
-
-function getVatRate(row) {
-    const vatRate = first(row, ['VAT_RATE', 'VAT_RATE_ID', 'VAT_PERCENT']);
-    if (vatRate !== '') return Number(vatRate) || 0;
-
-    const netPrice = Number(first(row, ['NET_PRICE', 'NET_AMT']));
-    const totalAmount = Number(first(row, ['TOTAL_AMOUNT', 'TOTAL_AMT']));
-
-    if (!netPrice || !Number.isFinite(totalAmount)) return 0;
-
-    return Math.round(((totalAmount - netPrice) / netPrice) * 100);
 }
 
 function first(object, keys) {
@@ -328,6 +346,18 @@ function formatDate(value) {
     return match ? `${match[3]}-${match[2]}-${match[1]}` : String(value);
 }
 
+function formatInvoiceDate(value) {
+    if (!value) return '';
+    const match = String(value).match(/^(\d{4})-(\d{2})-(\d{2})/);
+    return match ? `${match[2]}/${match[3]}/${match[1]}` : String(value);
+}
+
+function formatTaxCode(value) {
+    if (value === '' || value === null || value === undefined) return '';
+    const code = String(value).trim().replace(/\.0+$/, '');
+    return /^\d+$/.test(code) ? code.padStart(7, '0') : code;
+}
+
 function renderAmount(value, type) {
     if (type !== 'display') return Number(value) || 0;
     return value === '' || value === null || value === undefined
@@ -336,16 +366,6 @@ function renderAmount(value, type) {
               minimumFractionDigits: 2,
               maximumFractionDigits: 2,
           });
-}
-
-function formatVatRate(value) {
-    if (value === '' || value === null || value === undefined) return '';
-
-    return `${Number(value) || 0}%`;
-}
-
-function renderVatRate(value, type) {
-    return type === 'display' ? formatVatRate(value) : Number(value) || 0;
 }
 
 function splitCostCenters(value) {

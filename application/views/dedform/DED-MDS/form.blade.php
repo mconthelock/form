@@ -1,0 +1,317 @@
+@extends('layouts/webflowTemplate')
+
+@section('styles')
+    <style>
+        /* Custom Fine-tuning Styles */
+        .form-label-custom {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #64748b;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            margin-bottom: 0.375rem;
+            display: block;
+        }
+        .form-control-custom, .form-select-custom {
+            height: 2.5rem;
+            border-radius: 0.5rem;
+            border: 1.5px solid #cbd5e1;
+            font-size: 0.875rem;
+            color: #1e293b;
+            padding: 0 0.75rem;
+            transition: all 0.15s ease-in-out;
+            background-color: #ffffff;
+            width: 100%;
+        }
+        .form-control-custom:focus, .form-select-custom:focus {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+            outline: none;
+        }
+        .form-control-custom[readonly] {
+            background-color: #f8fafc;
+            color: #475569;
+            border-color: #e2e8f0;
+            font-weight: 600;
+        }
+        .destype-pill {
+            align-items: center;
+            gap: 0.375rem;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.5rem;
+            border: 1.5px solid #cbd5e1;
+            background: #ffffff;
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.15s ease-in-out;
+            font-size: 0.8125rem;
+            font-weight: 600;
+            color: #334155;
+        }
+        .destype-pill:hover {
+            border-color: #2563eb;
+            background: #eff6ff;
+        }
+        .destype-pill input[type="checkbox"] {
+            accent-color: #2563eb;
+            width: 1rem;
+            height: 1rem;
+        }
+    </style>
+@endsection
+
+@section('contents')
+
+<div class="hidden form-info" 
+     data-nfrmno="{{$NFRMNO}}" 
+     data-vorgno="{{$VORGNO}}" 
+     data-cyear="{{$CYEAR}}" 
+     data-cyear2="{{$CYEAR2}}" 
+     data-nrunno="{{$NRUNNO}}" 
+     data-empno="{{$EMPNO ?? ''}}" 
+     data-doc_no="{{$DOC_NO}}"
+     data-planyear="{{$PLAN_YEAR ?? ''}}"
+     data-period="{{$PERIOD ?? ''}}"
+     data-revision="{{$REVISION ?? ''}}"
+     data-remark="{{$REMARK ?? ''}}"
+     data-status="{{$STATUS ?? ''}}"
+     data-default-destypes="{{ implode('|', $selectedDesTypes ?? []) }}"
+     data-doc_no="{{$DOC_NO ?? ''}}"
+     data-planheaderid="{{$PLANHEADERID ??''}}">
+</div>
+
+<div class="flex flex-col w-full px-4 my-6 font-sans">
+    <div class="card bg-white w-full place-self-center shadow-md border border-slate-200 rounded-2xl">
+        
+        <!-- Loading Skeleton -->
+        <div class="load flex flex-col gap-5 h-screen w-full p-6">
+            <div class="skeleton h-16 w-full rounded-xl"></div>
+            <div class="skeleton h-[80%] w-full rounded-xl"></div>
+        </div>
+
+        <form class="card-body p-6 sm:p-8 hidden" id="form">
+            <!-- Header Bar -->
+            <div class="flex flex-wrap items-center justify-between gap-4 pb-5 border-b border-slate-100 mb-6">
+                <div class="flex items-center gap-3">
+                    <button type="button" 
+                            id="btnOpenCalConfig" 
+                            class="flex items-center justify-center shrink-0 w-11 h-11 rounded-2xl text-slate-500 hover:text-blue-600 bg-slate-50/80 hover:bg-blue-50 border border-slate-200/90 hover:border-blue-300 transition-all duration-200 shadow-xs focus:outline-none"
+                            title="ตั้งค่าวันคำนวณ (Offset Days)">
+                        <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24">
+                            <path d="M12 15.5A3.5 3.5 0 0 1 8.5 12A3.5 3.5 0 0 1 12 8.5a3.5 3.5 0 0 1 3.5 3.5a3.5 3.5 0 0 1-3.5 3.5m7.43-2.53c.04-.32.07-.64.07-.97c0-.33-.03-.66-.07-1l2.11-1.63c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.31-.61-.22l-2.49 1c-.52-.39-1.06-.73-1.69-.98l-.37-2.65A.506.506 0 0 0 14 2h-4c-.25 0-.46.18-.5.42l-.37 2.65c-.63.25-1.17.59-1.69.98l-2.49-1c-.22-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64L4.57 11c-.04.34-.07.67-.07 1c0 .33.03.65.07.97l-2.11 1.66c-.19.15-.25.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1.01c.52.4 1.06.74 1.69.99l.37 2.65c.04.24.25.42.5.42h4c.25 0 .46-.18.5-.42l.37-2.65c.63-.26 1.17-.59 1.69-.99l2.49 1.01c.22.08.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.66Z"/>
+                        </svg>
+                    </button>
+                    <div>
+                        <h1 class="text-xl sm:text-2xl font-bold text-slate-800 tracking-tight">
+                            Master Plan DES BM Management
+                        </h1>
+                        <p class="text-xs text-slate-400 font-medium">จัดการรอบการคำนวณและส่งออกแผนแม่บท</p>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-2.5">
+                    <span class="inline-flex items-center border border-slate-300 text-slate-600 bg-slate-50 rounded-full px-3 py-1 text-xs font-semibold">
+                        <span id="RevBadge" class="text-blue-600 font-bold">Revision: -</span>
+                    </span>
+                    <!-- เอา bg-orange-600 ออก ให้ JS เป็นตัวคุมสี badge ทั้งหมด -->
+                    <span class="badge badge-sm font-bold uppercase tracking-wider shadow-xs" id="StatusBadge">
+                        DRAFT
+                    </span>
+                </div>
+            </div>
+
+            <!-- Pending Alert -->
+            <div id="PendingAlert" class="alert alert-warning border border-amber-300 bg-amber-50 text-amber-900 shadow-xs mb-6 py-3 rounded-xl hidden">
+                <div class="flex items-center gap-2.5">
+                    <svg  class="stroke-current shrink-0 h-5 w-5 text-amber-600" fill="none" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                    <span class="text-sm font-medium">
+                        เอกสารรอบนี้อยู่ในสถานะ <span id="StatusText" class="font-bold underline">PROCESS</span> (รอ Approve เอกสาร Webflow) ไม่สามารถประมวลผลหรือสร้าง Revision ใหม่ได้
+                    </span>
+                </div>
+            </div>
+
+            <!-- Panel Form Inputs (4 Columns Balanced Layout) -->
+            <div class="p-6 rounded-2xl bg-slate-50/70 border border-slate-200/80 mb-6">
+                <!-- Row 1: Key Metadata -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+                    <div>
+                        <label class="form-label-custom">Form ID</label>
+                        <input type="text" id="DOC_IDTxt" class="form-control-custom text-blue-700" readonly placeholder="Auto Generated" value="{{$DOC_NO ?? ''}}">
+                        <input type="hidden" name="RevisionHid" id="RevisionHid" value="{{$REVISION ?? '*'}}" />
+                        <input type="hidden" name="STATUSHid" id="STATUSHid" value="{{$STATUS ?? ''}}" />
+                        <input type="hidden" name="EMPNOHid" id="EMPNOHid" value="{{$EMPNO ?? ''}}" />
+                        <input type="hidden" name="EXTDATAHid" id="EXTDATAHid" value="{{$EXTDATA ?? ''}}" />
+                        <input type="hidden" name="MODEHid" id="MODEHid" value="{{$MODE ?? '1'}}" />
+                        <input type="hidden" name="PlanHeaderIDHid" id="PlanHeaderIDHid" value="{{$PLANHEADERID ?? ''}}" />
+                    </div>
+
+                    <div>
+                        <label class="form-label-custom">Input By</label>
+                        <input type="text" id="INPUT_BYTxt" name="INPUT_BYTxt" class="form-control-custom" value="{{$EMPNO}}" readonly>
+                    </div>
+
+                    <div>
+                        <label class="form-label-custom">Request By</label>
+                        <input type="text" id="REQUEST_BYTxt" name="REQUEST_BYTxt" class="form-control-custom" value="{{$EMPNO}}" readonly>
+                    </div>
+
+                    <div>
+                        <label class="form-label-custom">Year</label>
+                        <select id="YearDrp" name="YearDrp" class="form-select-custom font-semibold">
+                            <option value="">Please Select</option>
+                            @php
+                                $currentSelectedYear = !empty($PLAN_YEAR) ? (int)$PLAN_YEAR : (int)date('Y');
+                            @endphp
+                            @for ($i = date('Y') + 2; $i >= date('Y') - 3; $i--)
+                                <option value="{{ $i }}" {{ (int)$i === $currentSelectedYear ? 'selected' : '' }}>
+                                    {{ $i }}
+                                </option>
+                            @endfor
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Row 2: Period, DesType, Remark -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div>
+                        <label class="form-label-custom">Period</label>
+                        <select id="PeriodDrp" name="PeriodDrp" class="form-select-custom font-semibold">
+                            <option value="" {{ '' === $PERIOD ? 'selected' : '' }}>Please Select</option>
+                            <option value="04X-09C" {{ '04X-09C' === $PERIOD ? 'selected' : '' }}>04X-09C (Apr - Sep)</option>
+                            <option value="10X-03C" {{ '10X-03C' === $PERIOD ? 'selected' : '' }}>10X-03C (Oct - Mar Next Year)</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between items-center mb-1.5">
+                            <label class="form-label-custom !mb-0">DesType Target</label>
+                            <span class="text-[11px] text-slate-400 font-normal">(Multi-select)</span>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-2 p-1.5 bg-white border border-slate-200 rounded-lg min-h-[40px]">
+                            @if(!empty($desTypeList))
+                                @foreach ($desTypeList as $item)
+                                    <label class="destype-pill">
+                                        <input type="checkbox" 
+                                               name="DesTypeChk[]" 
+                                               value="{{ $item->DesType }}" 
+                                               class="des-type-checkbox" 
+                                               {{ in_array($item->DesType, $selectedDesTypes ?? []) ? 'checked' : '' }}>
+                                        <span class="text-xs font-bold text-slate-800">{{ $item->DesType }}</span>
+                                        <span class="text-[11px] text-slate-400 font-normal">({{ $item->DesTypeName }})</span>
+                                    </label>
+                                @endforeach
+                            @endif
+                        </div>
+                    </div>
+
+                    <div class="sm:col-span-2">
+                        <label class="form-label-custom">Remark</label>
+                        <input type="text" id="RemarkTxt" class="form-control-custom" placeholder="ระบุเหตุผลหรือหมายเหตุประกอบการจัดทำแผน (ถ้ามี)" value="{{$REMARK ?? ''}}">
+                    </div>
+                </div>
+
+                <!-- Action Toolbar Inside Panel -->
+                <div class="flex flex-wrap justify-end items-center gap-2.5 pt-4 mt-5 border-t border-slate-200/60">
+                    <button type="button" id="SearchBtn" class="btn btn-sm bg-slate-700 hover:bg-slate-800 text-white font-medium px-4 h-9.5 rounded-lg border-none shadow-xs transition items-center gap-1.5">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                        </svg>
+                        Search
+                    </button>
+                    <button type="button" id="ProcessBtn" class="btn btn-sm bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 h-9.5 rounded-lg border-none shadow-xs transition items-center gap-1.5">
+                        <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                            <path d="M11 21h-1l1-7H7.5c-.88 0-.33-.75-.31-.78C8.48 10.94 10.42 7.54 13.01 3h1l-1 7h3.5c.49 0 .73.3.43.76l-5.94 10.24Z"/>
+                        </svg>
+                        Process Calculation
+                    </button>
+                    <button type="button" id="ExportExcelBtn" class="btn btn-sm bg-emerald-600 hover:bg-emerald-700 text-white font-medium px-4 h-9.5 rounded-lg border-none shadow-xs transition items-center gap-1.5">
+                        <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                            <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
+                        </svg>
+                        Export Excel
+                    </button>
+                </div>
+            </div>
+
+            <!-- Action Controls ด้านล่างสำหรับ Workflow -->
+            <div class="w-full flex justify-end gap-2.5 mb-3">
+                <!-- ปุ่ม Delete Draft (เริ่มต้นซ่อนไว้) -->
+
+                <button type="button" id="DeleteBtn" class="btn btn-error btn-sm text-white rounded-lg shadow-xs hidden flex items-center gap-1">
+                    🗑️ Delete
+                </button>
+                <!-- ปุ่ม Save Plan -->
+                <button type="button" id="SavePlanBtn" class="btn btn-success btn-sm text-white rounded-lg shadow-xs hidden flex items-center gap-1">
+                    💾 Confirm & Save Plan
+                </button>
+                <!-- <button type="button" id="DeleteBtn" class="btn btn-error btn-sm text-white rounded-lg shadow-xs hidden inline-flex items-center gap-1">
+                    🗑️ Delete 
+                </button>
+                <button type="button" id="SavePlanBtn" class="btn btn-success btn-sm text-white rounded-lg shadow-xs hidden inline-flex items-center gap-1">
+                    💾 Confirm & Save Plan
+                </button> -->
+                <button type="button" name="ApproveBtn" id="ApproveBtn" data-action="approve" class="ApproveBtn btn btn-sm bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg shadow-xs hidden">
+                    Approve
+                </button>
+                <button type="button" name="ReturnBtn" id="ReturnBtn" data-action="return" class="btn btn-sm bg-slate-600 hover:bg-slate-700 text-white rounded-lg shadow-xs hidden">
+                    Return To Requester
+                </button>
+            </div>
+
+            <!-- Data Table Section -->
+            <div class="w-full overflow-x-auto rounded-xl border border-slate-200">
+                <div id="loading" class="text-center py-8 hidden">
+                    <span class="loading loading-spinner loading-lg text-blue-600"></span>
+                    <p class="text-slate-500 font-medium text-sm mt-3">กำลังคำนวณและประมวลผลตารางวันทำงาน...</p>
+                </div>
+
+                <table class="table table-compact table-bordered w-full" id="table-plan" style="width:100%">
+                </table>
+            </div>
+
+            <!-- Modal: Cal Config -->
+            <div id="calConfigModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs hidden">
+                <div class="bg-white rounded-2xl shadow-2xl w-11/12 max-w-4xl max-h-[90vh] flex flex-col border border-slate-100">
+                    <div class="flex justify-between items-center px-6 py-4 border-b border-slate-100">
+                        <h3 class="text-base font-bold text-slate-800 flex items-center gap-2">
+                            <span class="w-2.5 h-2.5 rounded-full bg-blue-600 inline-block"></span>
+                            ตั้งค่าสูตรการคำนวณ (Offset Days)
+                        </h3>
+                        <button type="button" class="btn-close-modal text-slate-400 hover:text-slate-600 text-2xl font-bold leading-none">&times;</button>
+                    </div>
+
+                    <div class="p-6 overflow-y-auto flex-1">
+                        <table class="table table-bordered table-hover w-full text-sm">
+                            <thead class="bg-slate-50 text-slate-600 font-semibold">
+                                <tr>
+                                    <th class="text-center w-12">#</th>
+                                    <th>Target Field</th>
+                                    <th>P Type</th>
+                                    <th>Base Field</th>
+                                    <th>Base Row Type</th>
+                                    <th class="text-center w-36">Offset Days</th>
+                                </tr>
+                            </thead>
+                            <tbody id="calConfigTbody">
+                                <!-- Rendered via AJAX -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="flex justify-end gap-2 px-6 py-3.5 border-t border-slate-100 bg-slate-50/50 rounded-b-2xl">
+                        <button type="button" class="btn btn-sm btn-ghost text-slate-600 btn-close-modal px-4">ปิดหน้าต่าง</button>
+                    </div>
+                </div>
+            </div>
+
+        </form>
+    </div>
+</div>
+<div class="flow mt-5"></div>
+@endsection
+
+@section('scripts')
+<script src="{{ base_url('assets/dist/js/dedmdsview.js') }}"></script>
+@endsection

@@ -24,14 +24,14 @@
         .page-title {
             margin: 0 0 11px 13px;
             color: #0754b8;
-            font-size: 30px;
+            font-size: 36px;
             font-weight: 700;
         }
 
         .page-subtitle {
             display: block;
             margin-top: 3px;
-            font-size: 22px;
+            font-size: 26px;
             color: #0754b8;
         }
 
@@ -77,14 +77,15 @@
             font-weight: 600;
         }
 
-        .area-form input {
+        .area-form input,
+        .area-form select {
             width: 100%;
             height: 34px;
             padding: 0 10px;
             border: 1px solid #c8c8c8;
             border-radius: 3px;
             outline: none;
-            font-size: 13px;
+            font-size: 15px;
         }
 
         .area-form input:focus {
@@ -105,18 +106,8 @@
             border: 0;
             border-radius: 6px;
             cursor: pointer;
-            font-size: 13px;
+            font-size: 15px;
             font-weight: 600;
-        }
-
-        .cancel-area-button {
-            background: #e5e7eb;
-            color: #374151;
-        }
-
-        .save-area-button {
-            background: #0754b8;
-            color: #fff;
         }
 
         .search-input {
@@ -135,13 +126,13 @@
 
         .add-button {
             min-width: 98px;
-            height: 33px;
+            height: 45px;
             padding: 0 14px;
             border: 0;
             border-radius: 9px;
             background: #0754b8;
             color: #fff;
-            font-size: 14px;
+            font-size: 16px;
             font-weight: 600;
             cursor: pointer;
             text-decoration: none;
@@ -165,7 +156,7 @@
             border-spacing: 0;
             border-collapse: separate;
             overflow: hidden;
-            font-size: 13px;
+            font-size: 15px;
         }
 
         .area-table th {
@@ -184,6 +175,11 @@
             padding: 0 10px;
             border-bottom: 1px solid #c6d2e1;
             white-space: nowrap;
+        }
+
+        .area-table th:not(:last-child),
+        .area-table td:not(:last-child) {
+            border-right: 1px solid #c6d2e1;
         }
 
         .area-table tbody tr:last-child td {
@@ -241,22 +237,28 @@
             margin: 0 3px;
             text-decoration: none;
             cursor: pointer;
+
         }
 
         .table-action-button {
-            border: 0;
-            background: transparent;
+            width: 36px;
+            height: 36px;
+            border: 2px solid #e5e5e5;
+            border-radius: 4px;
+            background: #fff;
             font: inherit;
         }
 
         .edit-icon {
             color: #facc15;
             font-size: 21px;
+            border-block: black;
         }
 
         .delete-icon {
             color: #d30b17;
             font-size: 21px;
+            border-block: black;
         }
 
         .empty-row {
@@ -269,6 +271,21 @@
             margin-top: 25px;
             text-align: right;
             font-size: 14px;
+        }
+
+        .search-input {
+            width: 300px;
+            height: 42px;
+            padding: 0 14px;
+            font-size: 16px;
+        }
+
+        .search-input:focus {
+            border-color: #0754b8;
+        }
+
+        .search-input {
+            width: 20%;
         }
 
         @media (max-width: 768px) {
@@ -304,28 +321,21 @@
             }
         }
     </style>
-    
 @endsection
 
 @section('contents')
     <div class="page-wrapper">
-            <div class="text-center">
-                <H1 class="text-3xl font-bold text-primary">พื้นที่ขออนุญาตถ่ายภาพ</H1>
-                <H2 lass="text-xl font-semibold uppercase opacity-50 tracking-wider mt-1">(Photo Permission Area)</H2>
-      
-            </div>
+        <div class="text-center">
+            <H1 class="text-4xl font-bold text-primary">พื้นที่ขออนุญาตถ่ายภาพ</H1>
+            <H2 lass="text-2xl font-semibold uppercase opacity-50 tracking-wider mt-1">(Photo Permission Area)</H2>
+
+        </div>
 
         <div class="content-card">
             <div class="toolbar">
-                <input
-                    type="text"
-                    id="searchArea"
-                    class="search-input"
-                    placeholder="Search record"
-                    autocomplete="off"
-                >
+                <input type="text" id="searchArea" class="search-input " placeholder="Search record" autocomplete="off">
                 <button type="button" id="newAreaButton" class="add-button">
-                    + New Area
+                    + NEW AREA
                 </button>
             </div>
 
@@ -333,7 +343,9 @@
                 <div class="area-form-grid">
                     <div>
                         <label for="areaLocation">Location</label>
-                        <input type="text" id="areaLocation" name="location" required>
+                        <select id="areaLocation" name="location_id" required>
+                            <option value="">Select location</option>
+                        </select>
                     </div>
                     <div>
                         <label for="areaName">Area</label>
@@ -349,8 +361,18 @@
                     </div>
                 </div>
                 <div class="area-form-actions">
-                    <button type="button" id="cancelAreaButton" class="cancel-area-button">Cancel</button>
-                    <button type="submit" class="save-area-button">Save</button>
+                    <button type="button" id="cancelAreaButton" class="btn btn-sm btn-error gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18 18 6M6 6l12 12" />
+                        </svg>
+                        Cancel
+                    </button>
+                    <button type="submit" class="btn btn-sm btn-primary gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 4h11l3 3v13H5V4Zm3 0v6h8V4m-8 16v-6h8v6" />
+                        </svg>
+                        Save
+                    </button>
                 </div>
             </form>
 
@@ -383,7 +405,7 @@
                     </thead>
 
                     <tbody id="areaTableBody">
-                        @forelse ($areas ?? [] as $index => $area)
+                        @forelse ([] as $index => $area)
                             <tr>
                                 <td>{{ $index + 1 }}</td>
                                 <td>{{ $area->location ?? '-' }}</td>
@@ -391,30 +413,18 @@
                                 <td>{{ $area->level ?? '-' }}</td>
                                 <td>{{ $area->area_owner ?? '-' }}</td>
                                 <td>
-                                    <a
-                                        href="{{ url('/photo-permission-area/' . $area->id . '/edit') }}"
-                                        class="action-link"
-                                        title="แก้ไขข้อมูล"
-                                        style="border-block-end-color: gold"
-                                    >
+                                    <a href="{{ url('/photo-permission-area/' . $area->id . '/edit') }}" class="action-link"
+                                        title="แก้ไขข้อมูล" style="border-block-end-color: gold">
                                         <span class="edit-icon">✎</span>
                                     </a>
 
-                                    <form
-                                        action="{{ url('/photo-permission-area/' . $area->id) }}"
-                                        method="POST"
-                                        style="display: inline;"
-                                        onsubmit="return confirm('ยืนยันการลบข้อมูลนี้หรือไม่?');"
-                                    >
+                                    <form action="{{ url('/photo-permission-area/' . $area->id) }}" method="POST"
+                                        style="display: inline;" onsubmit="return confirm('ยืนยันการลบข้อมูลนี้หรือไม่?');">
                                         @csrf
                                         @method('DELETE')
 
-                                        <button
-                                            type="submit"
-                                            class="action-link"
-                                            title="ลบข้อมูล"
-                                            style="border: 0; background: transparent;"
-                                        >
+                                        <button type="submit" class="action-link" title="ลบข้อมูล"
+                                            style="border: 0; background: transparent;">
                                             <span class="delete-icon">🗑</span>
                                         </button>
                                     </form>
@@ -431,17 +441,13 @@
                 </table>
             </div>
 
-            <div class="table-summary">
-                1 to {{ count($areas ?? []) }} of {{ count($areas ?? []) }} row(s)
+            <div id="areaTableSummary" class="table-summary">
+                0 row(s)
             </div>
         </div>
     </div>
-
 @endsection
 
 @section('scripts')
-    <script>
-        window.gpTPHServerAreas = @json($areas ?? []);
-    </script>
-    <script src="{{ $_ENV['APP_JS'] }}/gpTPH.js?ver={{ $GLOBALS['version'] }}"></script>
+    <script src="{{ $_ENV['APP_JS'] }}/gpTPHArea.js?ver={{ $GLOBALS['version'] }}"></script>
 @endsection

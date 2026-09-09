@@ -1,6 +1,11 @@
 import select2 from 'select2';
 import { getUser, searchUser } from '@amec/webasset/api/amec';
-import { doaction, showflow, getFormStatus } from '@amec/webasset/api/webform';
+import {
+    doaction,
+    showflow,
+    getFormStatus,
+    searchFlow,
+} from '@amec/webasset/api/webform';
 import { webflowSubmit, getformDetail } from '@amec/webasset/components/form';
 import { redirectWebflow } from '@amec/webasset/form';
 
@@ -31,11 +36,19 @@ import {
 import { dragDropInit } from '@amec/webasset/dragdrop';
 import { setDatefpk, setDatePicker } from '@amec/webasset/flatpickr';
 import { setSelect2 } from '@amec/webasset/select2';
-import { selectAttachType, clearaddr, resetformid } from './function';
+import {
+    selectAttachType,
+    clearaddr,
+    resetformid,
+    toggleAttachSection,
+    checkAttFile,
+} from './function';
 import { formatDate } from '@amec/webasset/dayjs';
 import { classIcofont } from '@amec/webasset/fileExplorer';
 import Swal from 'sweetalert2';
 import { get } from 'jquery';
+import { renderFilesByType } from '../PUR-EVA/formManager';
+
 select2();
 
 const state = {
@@ -246,12 +259,12 @@ export const vendorTypeManager = {
     change() {
         // paymentNumManager.value = "";
         // paymentManager.disabled(false);
-        attachTypeManager.hide('other');
-        attachTypeManager.reset('other');
+        // attachTypeManager.hide('other');
+        // attachTypeManager.reset('other');
         const type = this.type;
         $('#VENDOR_LOCATION').val(type);
         const reqtype = ReqtypeManager.type;
-        selectAttachType(reqtype, type);
+        // selectAttachType(reqtype, type);
         clearaddr();
         if (type == 'Local') {
             $('.field-local').removeClass('hidden').addClass('req');
@@ -273,9 +286,21 @@ export const vendorTypeManager = {
 
 // -------------------------- End Vendor Type Manager -------------------
 
-export const addrEnManager = {
+export const addr1EnManager = {
     get input() {
-        return $('#ADDRESS_EN');
+        return $('#ADDRESS1_EN');
+    },
+    get value() {
+        return this.input.val();
+    },
+    set value(val) {
+        this.input.val(val);
+    },
+};
+
+export const addr2EnManager = {
+    get input() {
+        return $('#ADDRESS2_EN');
     },
     get value() {
         return this.input.val();
@@ -458,10 +483,10 @@ export const vendorCodeManager = {
             try {
                 showLoader(); // เปิด Loader รอระว่างดึงข้อมูล
 
-                const searchData = { KEYWORD: keywordValue };
+                const searchData = { VND_CODE: keywordValue, IS_DETAIL: '1' };
                 const vendor = await getVendor(searchData);
 
-                //console.log("Vendor Data:", vendor);
+                console.log('Vendor Data:', vendor);
 
                 if (vendor[0]) {
                     typejobManager.removecls('req');
@@ -469,69 +494,82 @@ export const vendorCodeManager = {
                     comnameManager.value = vendor[0].VND_NAME || '';
                     $(`#V-section`).removeClass('hidden');
                     $(`#F-section`).removeClass('hidden');
+                    $('#CONTACT').val(vendor[0].VND_CONTACTNAME || '');
+                    $('#TELNO').val(vendor[0].VND_PHONE || '');
+                    $('#FAXNO').val(vendor[0].VND_FAX || '');
                     // console.log(">>>>>>>>>>"+vendor[0]);
+                    paymentTermManager.value = vendor[0].VND_TERM;
+                    const vendorfilter = vendor[0].PURVMM.filter(
+                        (item) => item.FORM.CST == '2',
+                    );
+                    // console.log(vendorfilter);
+                    const latestVendor = vendorfilter.sort((a, b) => {
+                        // เรียง CYEAR2 จากมากไปน้อย (ปีใหม่กว่าขึ้นก่อน)
+                        if (b.CYEAR2 !== a.CYEAR2) {
+                            return b.CYEAR2.localeCompare(a.CYEAR2);
+                        }
+                        // ถ้าปีเท่ากัน เรียง NRUNNO จากมากไปน้อย
+                        return b.NRUNNO - a.NRUNNO;
+                    })[0];
+                    console.log(latestVendor);
+                    //return false;
+                    if (latestVendor) {
+                        $('#EMAIL').val(latestVendor.EMAIL || '');
+                        $('#WEBSITE').val(latestVendor.WEBSITE || '');
+                        $('#BANKNAME').val(latestVendor.BANKNAME || '');
+                        $('#BRANCH').val(latestVendor.BRANCH || '');
+                        $('#ACCNUMBER').val(latestVendor.ACCNUMBER || '');
+                        if (latestVendor.ADDRESSES) {
+                            //console.log('ifff');
 
-                    $('#CONTACT').val(vendor[0].VND_SALE || '');
-                    $('#EMAIL').val(vendor[0].EMAIL || '');
-                    $('#WEBSITE').val(vendor[0].ADDR_WEB || '');
-                    $('#TELNO').val(vendor[0].ADDR_PHONE || '');
-                    $('#FAXNO').val(vendor[0].FAX || '');
-                    $('#BANKNAME').val(vendor[0].BANKNAME || '');
-                    $('#BRANCH').val(vendor[0].BRANCH || '');
-                    $('#ACCNUMBER').val(vendor[0].ACCNUMBER || '');
-                    paymentTermManager.value =
-                        vendor[0].VENDOR_CODES[0].CODE_PAY;
-                    if (vendor[0].VENDOR_ADDRESS) {
-                        vendor[0].VENDOR_ADDRESS.forEach(function (address) {
-                            // 1. รวมสายอักขระที่อยู่ (Address Line 1 + Line 2) เข้าด้วยกัน
-                            const addrLine =
-                                `${address.ADDR_LINE1 || ''} ${address.ADDR_LINE2 || ''}`.trim();
-                            const province = address.ADDR_STATE || ''; // จังหวัด
-                            const district = address.ADDR_CITY || ''; // อำเภอ (เช็กฟิลด์หลังบ้านอีกทีว่าสลับกันไหม)
-                            const subDistrict = address.ADDR_SUB_CITY || ''; // ตำบล
-                            const postcode = address.ADDR_ZIPCODE || ''; // รหัสไปรษณีย์
-                            const country = address.ADDR_COUNTRY || ''; // ประเทศ
+                            latestVendor.ADDRESSES.forEach(function (address) {
+                                // 1. รวมสายอักขระที่อยู่ (Address Line 1 + Line 2) เข้าด้วยกัน
+                                const addrLine =
+                                    `${address.ADDR1 || ''} ${address.ADDR2 || ''}`.trim();
+                                const state = address.STATE || ''; // จังหวัด
+                                const city = address.CITY || ''; // อำเภอ (เช็กฟิลด์หลังบ้านอีกทีว่าสลับกันไหม)
+                                // const subDistrict = address.ADDR_SUB_CITY || ''; // ตำบล
+                                const postcode = address.POSTCODE || ''; // รหัสไปรษณีย์
+                                const country = address.COUNTRY || ''; // ประเทศ
 
-                            // 2. แยกจัดการตามประเภทที่อยู่ ADDR_TYPE ('T' = ภาษาไทย, 'E' = ภาษาอังกฤษ)
-                            if (address.ADDR_TYPE === 'T') {
-                                addrThManager.value = addrLine;
-                                if (
-                                    address.ADDR_COUNTRY &&
-                                    address.ADDR_COUNTRY == 'ไทย'
-                                ) {
-                                    vendorTypeManager.value = 'Local';
-                                } else {
-                                    vendorTypeManager.value = 'Oversea';
+                                // 2. แยกจัดการตามประเภทที่อยู่ ADDR_TYPE ('T' = ภาษาไทย, 'E' = ภาษาอังกฤษ)
+                                if (address.ADDRTYPE === 'T') {
+                                    const fullAddress = [
+                                        addrLine,
+                                        city,
+                                        state,
+                                        postcode,
+                                        country,
+                                    ]
+                                        .filter(Boolean) // กรองค่า null, undefined, ค่าว่าง ออก
+                                        .join(',');
+                                    addrThManager.value = fullAddress;
+                                } else if (address.ADDRTYPE === 'E') {
+                                    // แปะลงฟิลด์ภาษาอังกฤษ
+                                    addr1EnManager.value = address.ADDR1;
+                                    addr2EnManager.value = address.ADDR2;
+                                    if (
+                                        address.COUNTRY &&
+                                        address.COUNTRY.toUpperCase() ==
+                                            'THAILAND'
+                                    ) {
+                                        vendorTypeManager.value = 'Local';
+                                    } else {
+                                        vendorTypeManager.value = 'Oversea';
+                                    }
+                                    cityEnManager.value = city;
+                                    stateEnManager.value = state;
+                                    postcodeEnManager.value = postcode;
+                                    countryEnManager.value = country;
                                 }
-
-                                provinceThManager.value = province;
-                                districtThManager.value = district;
-                                subDistrictThManager.value = subDistrict;
-                                postcodeThManager.value = postcode;
-                                countryThManager.value = country;
-                            } else if (address.ADDR_TYPE === 'E') {
-                                // แปะลงฟิลด์ภาษาอังกฤษ
-                                addrEnManager.value = addrLine;
-                                if (
-                                    address.ADDR_COUNTRY &&
-                                    address.ADDR_COUNTRY.toUpperCase() ==
-                                        'THAILAND'
-                                ) {
-                                    vendorTypeManager.value = 'Local';
-                                    provinceManager.textToValue = province;
-                                    districtManager.textToValue = district;
-                                    subDistrictManager.textToValue =
-                                        subDistrict;
-                                } else {
-                                    vendorTypeManager.value = 'Oversea';
-                                    provinceEnManager.value = province;
-                                    districtEnManager.value = district;
-                                    subDistrictEnManager.value = subDistrict;
-                                }
-                                postcodeEnManager.value = postcode;
-                                countryEnManager.value = country;
-                            }
-                        });
+                            });
+                        }
+                    } else {
+                        showMessage(
+                            'PUR-VMM not found.ไม่พบข้อมูล PUR-VMM สำหรับรหัสนี้',
+                            'warning',
+                        );
+                        resetformid('V-section');
                     }
                 } else {
                     showMessage(
@@ -551,9 +589,9 @@ export const vendorCodeManager = {
 };
 
 export const formManager = {
-    provinceData: null,
-    districtData: null,
-    subDistrictData: null,
+    // provinceData: null,
+    // districtData: null,
+    // subDistrictData: null,
     get form() {
         return $('#form');
     },
@@ -590,13 +628,6 @@ export const formManager = {
         actionFormManager.loading(mode);
         switch (mode) {
             case 1: // create
-                attachFileManager.init();
-                // setDatePicker();
-                //    const curr = await getCurrency();
-                //     const currData = curr.map((c) => ({
-                //         value: c.CCURNAME,
-                //         text: c.CCURNAME,
-                //     }));
                 const term = await getTermcode();
                 const termdata = term.map((t) => ({
                     value: t.STERMCODE,
@@ -609,45 +640,12 @@ export const formManager = {
                     text: c.nameen,
                     nameth: c.nameth,
                 }));
-                //console.log(countriesData);
-
-                const province = await getProvinces();
-                this.provinceData = province.map((p) => ({
-                    id: p.id,
-                    value: p.nameen,
-                    text: p.nameen,
-                    nameth: p.nameth,
-                }));
-                const district = await getDistricts();
-
-                this.districtData = district.map((d) => ({
-                    id: d.id,
-                    value: d.nameen,
-                    text: d.nameen,
-                    nameth: d.nameth,
-                    province_id: d.province_id,
-                }));
-
-                const subDistrict = await getSubDistricts();
-                this.subDistrictData = subDistrict.map((s) => ({
-                    id: s.id,
-                    value: s.nameen,
-                    text: s.nameen,
-                    nameth: s.nameth,
-                    district_id: s.district_id,
-                    postcode: s.postcode,
-                }));
-                //console.log( this.subDistrictData );
-
                 paymentTermManager.init(termdata);
                 countryManager.init(countriesData);
-                provinceManager.init(this.provinceData);
-                districtManager.init(this.districtData);
-                // currencyManager.init(currData);
-                subDistrictManager.init(this.subDistrictData);
                 actionFormManager.init(mode);
                 break;
             case 2: // edit
+
             case 3: // view
                 const form = {
                     NFRMNO: state.FormInfo.NFRMNO,
@@ -658,55 +656,32 @@ export const formManager = {
                 };
                 const flow = await showflow(form);
                 const data = await getData(form);
-                // this.formDetail = await setformDetail(form);
                 this.formDetail = await getformDetail(form);
                 actionFormManager.init(mode, flow.html);
-                attachFileManager.init(data.FILES || []);
+
                 if (state.FormInfo.RETURN) {
-                    //console.log("inter return");
-                    //$("#section-0").addClass("hidden!");
+                    console.log('yyyyyyyyy');
                     const term = await getTermcode();
                     const termdata = term.map((t) => ({
-                        value: t.TERMCODE,
-                        text: t.TERMNAME,
+                        value: t.STERMCODE,
+                        text: t.STERMDESC,
                     }));
                     const countries = await getCountries();
                     const countriesData = countries.map((c) => ({
-                        id: c.id,
+                        id: c.nameen,
                         value: c.nameen,
                         text: c.nameen,
                         nameth: c.nameth,
                     }));
-                    const province = await getProvinces();
-                    this.provinceData = province.map((p) => ({
-                        id: p.id,
-                        value: p.nameen,
-                        text: p.nameen,
-                        nameth: p.nameth,
-                    }));
-                    const district = await getDistricts();
-                    this.districtData = district.map((d) => ({
-                        id: d.id,
-                        value: d.nameen,
-                        text: d.nameen,
-                        nameth: d.nameth,
-                        province_id: d.province_id,
-                    }));
-                    const subDistrict = await getSubDistricts();
-                    this.subDistrictData = subDistrict.map((s) => ({
-                        id: s.id,
-                        value: s.nameen,
-                        text: s.nameen,
-                        nameth: s.nameth,
-                        district_id: s.district_id,
-                        postcode: s.postcode,
-                    }));
+
                     paymentTermManager.init(termdata);
                     countryManager.init(countriesData);
-                    provinceManager.init(this.provinceData);
-                    districtManager.init(this.districtData);
-                    // currencyManager.init(currData);
-                    subDistrictManager.init(this.subDistrictData);
+
+                    var readyflow = await searchFlow({
+                        ...form,
+                        CSTEPST: '3',
+                    });
+                    $('.txtRemark').val(readyflow[0].VREMARK || '');
                     this.setReturn(data);
                 } else {
                     //console.log(data);
@@ -724,13 +699,19 @@ export const formManager = {
         if (data.REQTYPE == 'A') {
             $('#row-typejob, #row-service, #row-purpose').removeClass('hidden');
             $('#row-reason').addClass('hidden');
+            $('#file-type-15').closest('.mt-4').hide();
         } else if (data.REQTYPE == 'U') {
             $('#row-typejob, #row-service, #row-purpose, #row-reason').addClass(
                 'hidden',
             );
+            $('#file-type-11').closest('.mt-4').hide();
+            $('#file-type-14').closest('.mt-4').hide();
         } else if (data.REQTYPE == 'D') {
             $('#row-typejob, #row-service, #row-purpose').addClass('hidden');
             $('#row-reason').removeClass('hidden');
+            $('#file-type-11').closest('.mt-4').hide();
+            $('#file-type-14').closest('.mt-4').hide();
+            $('#file-type-15').closest('.mt-4').hide();
         }
         typejobManager.text = data.LISTS[0].TYPEJOB || '-';
         serviceManager.text = data.LISTS[0].SERVICE || '-';
@@ -756,7 +737,16 @@ export const formManager = {
         $('#ADDRESS_TH').parent().addClass('hidden');
 
         data.ADDRESSES.forEach(function (address) {
-            const fullAddress = `${address.ADDR} ${address.SUBDISTRICT} ${address.DISTRICT} ${address.PROVINCE} ${address.POSTCODE} ${address.COUNTRY}`;
+            // const fullAddress = `${address.ADDR} ${address.CITY} ${address.STATE} ${address.POSTCODE} ${address.COUNTRY}`;
+            const fullAddress = [
+                address.ADDR1 || ' ' || ADDR2,
+                address.CITY,
+                address.STATE,
+                address.POSTCODE,
+                address.COUNTRY,
+            ]
+                .filter(Boolean) // กรองค่า null, undefined, ค่าว่าง ออก
+                .join(',');
 
             if (address.ADDRTYPE === 'E') {
                 $('#ADDRESS_EN').text(fullAddress);
@@ -771,23 +761,29 @@ export const formManager = {
         $('#BRANCH').text(data.LISTS[0].BRANCH || '-');
         $('#ACCNUMBER').text(data.LISTS[0].ACCNUMBER || '-');
         $('#PAYMENT_TERM').text(data.LISTS[0].TERM.STERMDESC || '-');
-        if (data.ATTACH_TYPE) {
-            selectAttachType(data.REQTYPE, data.LISTS[0].VENDTYPE);
-            // Attach Type
-            attachTypeManager.show(['other']);
-            attachTypeManager.checkbox.each(function () {
-                const value = $(this).val();
-                const type = $(this).attr('a-type');
-                if (data.ATTACH_TYPE.includes(value)) {
-                    // console.log("-------------"+value);
-                    $(this).prop('checked', true);
-                    if (type == 'other') {
-                        // Attach Other
-                        attachOtherManager.text = data.ATTACH_OTHER || '-';
-                    }
-                }
-            });
-        }
+        data.ATTACH_OTHER && $('#ATTACH_OTHER_TEXT').text(data.ATTACH_OTHER);
+        const attachedFiles = data.FILES || [];
+        renderFilesByType(attachedFiles, 11, 'file-type-11');
+        renderFilesByType(attachedFiles, 14, 'file-type-14');
+        renderFilesByType(attachedFiles, 15, 'file-type-15');
+        renderFilesByType(attachedFiles, 2, 'file-type-2');
+        // if (data.ATTACH_TYPE) {
+        //     selectAttachType(data.REQTYPE, data.LISTS[0].VENDTYPE);
+        //     // Attach Type
+        //     attachTypeManager.show(['other']);
+        //     attachTypeManager.checkbox.each(function () {
+        //         const value = $(this).val();
+        //         const type = $(this).attr('a-type');
+        //         if (data.ATTACH_TYPE.includes(value)) {
+        //             // console.log("-------------"+value);
+        //             $(this).prop('checked', true);
+        //             if (type == 'other') {
+        //                 // Attach Other
+        //                 attachOtherManager.text = data.ATTACH_OTHER || '-';
+        //             }
+        //         }
+        //     });
+        // }
 
         // // Attached Files
         // attachFileManager.showFiles(data.FILES);
@@ -814,8 +810,10 @@ export const formManager = {
 
         //Company Name
         comnameManager.value = data.LISTS[0].COMNAME;
+
         //Vendor Type
         vendorTypeManager.value = data.LISTS[0].VENDTYPE;
+
         if (
             data.ADDRESSES &&
             data.ADDRESSES.length > 0 &&
@@ -825,29 +823,18 @@ export const formManager = {
         }
         for (const address of data.ADDRESSES) {
             if (address.ADDRTYPE === 'E') {
-                if (data.LISTS[0].VENDTYPE === 'Local') {
-                    addrEnManager.value = address.ADDR || '';
-                    //provinceManager.value = address.PROVINCE;
-                    provinceManager.textToValue = address.PROVINCE;
-                    districtManager.textToValue = address.DISTRICT;
-                    subDistrictManager.textToValue = address.SUBDISTRICT;
-                } else {
-                    addrEnManager.value = address.ADDR || '';
-                    provinceEnManager.value = address.PROVINCE;
-                    districtEnManager.value = address.DISTRICT;
-                    subDistrictEnManager.value = address.SUBDISTRICT;
-                }
+                addr1EnManager.value = address.ADDR1 || '';
+                addr2EnManager.value = address.ADDR2 || '';
+                cityEnManager.value = address.CITY;
+                stateEnManager.value = address.STATE;
+
                 postcodeEnManager.value = address.POSTCODE;
                 countryEnManager.value = address.COUNTRY;
             } else {
-                addrThManager.value = address.ADDR || '';
-                provinceThManager.value = address.PROVINCE;
-                districtThManager.value = address.DISTRICT;
-                subDistrictThManager.value = address.SUBDISTRICT;
-                postcodeThManager.value = address.POSTCODE;
-                countryThManager.value = address.COUNTRY;
+                addrThManager.value = address.ADDR1 || '';
             }
         }
+
         $('#CONTACT').val(data.LISTS[0].CONTACT || '');
         $('#EMAIL').val(data.LISTS[0].EMAIL || '');
         $('#WEBSITE').val(data.LISTS[0].WEBSITE || '');
@@ -858,12 +845,18 @@ export const formManager = {
         $('#ACCNUMBER').val(data.LISTS[0].ACCNUMBER || '');
 
         paymentTermManager.value = data.LISTS[0].TERMCODE;
-        if (data.ATTACH_TYPE) {
-            // Attach Type
-            attachTypeManager.checked = data.ATTACH_TYPE.split('|');
-            // Attach Other
-            attachOtherManager.value = data.ATTACH_OTHER || '';
-        }
+        const attachedFiles = data.FILES || [];
+        renderFilesByType(attachedFiles, 11, 'file-type-11', true);
+        renderFilesByType(attachedFiles, 14, 'file-type-14', true);
+        renderFilesByType(attachedFiles, 15, 'file-type-15', true);
+        renderFilesByType(attachedFiles, 2, 'file-type-2', true);
+        data.ATTACH_OTHER && $('#ATTACH_OTHER').val(data.ATTACH_OTHER || '');
+        // if (data.ATTACH_TYPE) {
+        // Attach Type
+        // attachTypeManager.checked = data.ATTACH_TYPE.split('|');
+        // Attach Other
+        // attachOtherManager.value = data.ATTACH_OTHER || '';
+        // }
         if (data.REQTYPE == 'U' || data.REQTYPE == 'D') {
             $("[id='V-section']").removeClass('hidden');
             $("[id='F-section']").removeClass('hidden');
@@ -1331,10 +1324,16 @@ export const ReqtypeManager = {
             typejobManager.addcls('req');
             serviceManager.addcls('req');
             purposeManager.addcls('req');
+            toggleAttachSection('cer', true);
+            toggleAttachSection('bank', true);
+            toggleAttachSection('changeaddr', false);
         } else {
             typejobManager.removecls('req');
             serviceManager.removecls('req');
             purposeManager.removecls('req');
+            toggleAttachSection('cer', false);
+            toggleAttachSection('bank', false);
+            toggleAttachSection('changeaddr', true);
         }
         if (type == 'D') {
             $(`#U-section`).removeClass('hidden');
@@ -1349,18 +1348,38 @@ export const ReqtypeManager = {
                 .find('.required')
                 .removeClass('required')
                 .addClass('was-required');
-            fSection
-                .find('.required')
-                .removeClass('required')
-                .addClass('was-required');
-            fSection.find('input, textarea, select').removeClass('req');
+            // fSection
+            //     .find('.required')
+            //     .removeClass('required')
+            //     .addClass('was-required');
+            // fSection.find('input, textarea, select').removeClass('req');
+            toggleAttachSection('cer', false);
+            toggleAttachSection('bank', false);
+            toggleAttachSection('changeaddr', false);
         } else {
-            const ignoredFields =
-                '#FAX, #COUNTRY_SELECT, #ATTACH_OTHER, #ADDRESS_TH, #PROVINCE_TH, #DISTRICT_TH, #SUB_DISTRICT_TH, #POSTCODE_TH, #COUNTRY_TH';
+            console.log('xxxxxxxxxxxx');
+
+            const ignoredFields = [
+                'FAX',
+                'WEBSITE',
+                'BANKNAME',
+                'BRANCH',
+                'ACCNUMBER',
+                'COUNTRY_SELECT',
+                'ATTACH_OTHER',
+                'ADDRESS2_EN',
+                'ADDRESS_TH',
+            ];
             reasonManager.removecls('req');
             vSection
                 .find('input, textarea, select')
-                .not(ignoredFields)
+                .filter(function () {
+                    // ถ้า id หรือ name ตรงกับรายการที่ต้องยกเว้น จะไม่ถูกเลือก
+                    return (
+                        !ignoredFields.includes(this.id) &&
+                        !ignoredFields.includes(this.name)
+                    );
+                })
                 .addClass('req');
             vSection
                 .find('input, textarea')
@@ -1373,11 +1392,11 @@ export const ReqtypeManager = {
                 .find('.was-required')
                 .addClass('required')
                 .removeClass('was-required');
-            fSection
-                .find('.was-required')
-                .addClass('required')
-                .removeClass('was-required');
-            fSection.find('input, textarea, select').addClass('req');
+            // fSection
+            //     .find('.was-required')
+            //     .addClass('required')
+            //     .removeClass('was-required');
+            // fSection.find('input, textarea, select').addClass('req');
         }
     },
     // updateStyles() {
@@ -1623,18 +1642,18 @@ export const attachFileManager = {
         let html = "<div class='flex flex-col gap-3 mt-5'>";
         files.forEach((f) => {
             html += `
-            <a 
-                href="${f.FILE_PATH}" 
-                storedName="${f.FILE_FNAME}" 
+            <a
+                href="${f.FILE_PATH}"
+                storedName="${f.FILE_FNAME}"
                 originalName="${f.FILE_ONAME}"
                 class="file-link text-primary flex items-center gap-3 w-full border rounded-lg bg-base-100 p-3"
             >
                 <i class="${classIcofont(f.FILE_ONAME.split('.').pop())} text-4xl"></i>
                 <span class="link link-primary">${f.FILE_ONAME}</span>
-                <button 
+                <button
                     type="button"
                     file-id="${f.FILE_ID}"
-                    class="flex items-center justify-center ml-auto p-5 w-6 h-6 rounded hover:bg-red-100 text-red-500 hover:text-red-600 transition remove-file 
+                    class="flex items-center justify-center ml-auto p-5 w-6 h-6 rounded hover:bg-red-100 text-red-500 hover:text-red-600 transition remove-file
                     ${isReturn ? '' : 'hidden'}">
                     <i class="icofont-trash text-xl"></i>
                 </button>
@@ -1668,13 +1687,16 @@ export const actionFormManager = {
     init(mode, flow) {
         switch (mode) {
             case 1:
-                this.container.html(webflowSubmit({ request: true }));
+                this.container.html(
+                    webflowSubmit({ request: true, remark: false }),
+                );
                 break;
             case 2:
                 this.container.html(
                     webflowSubmit({
                         flow: true,
                         flowhtml: flow,
+                        remark: false,
                         approve: true,
                         reject: state.FormInfo.RETURN ? false : true,
                         return: state.FormInfo.RETURN ? false : true,
@@ -1735,30 +1757,25 @@ export const actionFormManager = {
                 reasonManager.input.hasClass('req') ? {element: reasonManager.input, message: "Please input Reason."} : null,
                 {element: vendorTypeManager.radio, message: "Please select Local or Overseas."},
                  countryManager.select.hasClass('req') ? {element: countryManager.select, message: "Please select Country."} : null,
-                {element: provinceEnManager.input, message: "Please input Province (English)."},
-                {element: districtEnManager.input, message: "Please input District (English)."},
-                {element: subDistrictEnManager.input, message: "Please input Sub-District (English)."},
-                {element: postcodeEnManager.input, message: "Please input Postcode (English)."},
-                {element: attachTypeManager.checkbox, message: "Please select Attach Type."},
-                {element: attachFileManager.input, message: "Please attach files."},
+                {element: addr1EnManager.input, message: "Please input Address (EN)."},
+                // {element: attachTypeManager.checkbox, message: "Please select Attach Type."},
+                // {element: attachFileManager.input, message: "Please attach files."},
             ].filter(Boolean);
 
-            // $(form)
-            //     .find("input, select, textarea")
-            //     .each(function () {
-            //        if($(this).hasClass('req'))
-            //         {
-            //             console.log($(this).attr('name'),$(this).attr('id'),$(this).val());
-            //         }
-
-            //     });
+            $(form)
+                .find('input, select, textarea')
+                .each(function () {
+                    if ($(this).hasClass('req')) {
+                        console.log(
+                            $(this).attr('name'),
+                            $(this).attr('id'),
+                            $(this).val(),
+                        );
+                    }
+                });
             if (!(await requiredForm('#form', requiredMessage))) return;
-            if (
-                attachTypeManager.types.length > 0 &&
-                attachFileManager.checkedFilesLength === 0 &&
-                attachFileManager.checkedFilesLength === 0
-            ) {
-                showMessage('Please attach files.', 'warning');
+            if (!checkAttFile()) {
+                // showMessage('Please attach files.', 'warning');
                 return;
             }
             if (
@@ -1787,7 +1804,7 @@ export const actionFormManager = {
 
             const filteredFormData = filterFormData(formData);
 
-            //logFormData(filteredFormData);
+            logFormData(filteredFormData);
 
             const res = await create(filteredFormData);
 
@@ -1837,36 +1854,40 @@ export const actionFormManager = {
                     {element: attachFileManager.input, message: "Please attach files."},
                 ].filter(Boolean);
 
-                if (
-                    attachFileManager.checkedFilesLength > 0 &&
-                    attachTypeManager.types.length > 0
-                ) {
-                    $(`#F-section`)
-                        .find('input, textarea, select')
-                        .removeClass('req');
-                }
+                // if (
+                //     attachFileManager.checkedFilesLength > 0 &&
+                //     attachTypeManager.types.length > 0
+                // ) {
+                //     $(`#F-section`)
+                //         .find('input, textarea, select')
+                //         .removeClass('req');
+                // }
                 if (!(await requiredForm('#form', requiredMessage))) return;
-                const noFiles = attachFileManager.checkedFilesLength === 0;
-                const hasFiles = attachFileManager.checkedFilesLength > 0;
+                if (!checkAttFile()) {
+                    // showMessage('Please attach files.', 'warning');
+                    return;
+                }
+                // const noFiles = attachFileManager.checkedFilesLength === 0;
+                // const hasFiles = attachFileManager.checkedFilesLength > 0;
                 const noType = attachTypeManager.types.length === 0;
                 const hasType = attachTypeManager.types.length > 0;
                 const isNotTypeD = $('#REQTYPE').val() !== 'D';
 
                 // 2. ตรวจสอบเงื่อนไขการแจ้งเตือน
                 // เคสที่ 1: ไม่มีไฟล์ (และไม่ใช่ประเภท D) หรือ แอบไปเลือกประเภทไว้แต่ไม่ได้แนบไฟล์
-                if ((noFiles && isNotTypeD) || (hasType && noFiles)) {
-                    showMessage(
-                        'Please upload attached files before approve.',
-                        'warning',
-                    );
-                    return;
-                }
+                // if ((noFiles && isNotTypeD) || (hasType && noFiles)) {
+                //     showMessage(
+                //         'Please upload attached files before approve.',
+                //         'warning',
+                //     );
+                //     return;
+                // }
 
                 // เคสที่ 2: แนบไฟล์มาแล้ว แต่ลืมเลือกประเภทไฟล์
-                if (hasFiles && noType) {
-                    showMessage('Please select Attach Type.', 'warning');
-                    return;
-                }
+                // if (hasFiles && noType) {
+                //     showMessage('Please select Attach Type.', 'warning');
+                //     return;
+                // }
                 const formData = new FormData($('#form')[0]);
                 formData.set('NFRMNO', data.NFRMNO);
                 formData.set('VORGNO', data.VORGNO);
@@ -1885,6 +1906,7 @@ export const actionFormManager = {
                 //  currencyManager.getValue("curr-payment"),
                 // );
                 // formData.set("DELETE_FILES", state.deleteFiles || "");
+
                 state.deleteFiles.forEach((fileId) => {
                     formData.append('DELETE_FILES[]', String(fileId));
                 });
@@ -1906,7 +1928,7 @@ export const actionFormManager = {
             }
             if (res.status == true) {
                 //chechk status form
-                const rescst = await getFormStatus({ ...data });
+                // const rescst = await getFormStatus({ ...data });
                 //console.log(rescst);
                 showMessage(res.message, 'success');
 

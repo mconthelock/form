@@ -1,22 +1,10 @@
 import { createTable } from '@amec/webasset/dataTable';
+import { showMessage } from '@amec/webasset/utils';
 import { getEmpData, getAreas, getLocations } from './data';
 import { data } from 'jquery';
 
 (function () {
-    const areaStorageKey = 'gp-tph-photo-permission-areas';
     let mockupTable = null;
-
-    function getStoredAreas() {
-        try {
-            return JSON.parse(localStorage.getItem(areaStorageKey)) || [];
-        } catch (error) {
-            return [];
-        }
-    }
-
-    function saveStoredAreas(areas) {
-        localStorage.setItem(areaStorageKey, JSON.stringify(areas));
-    }
 
     function initCreatePage() {
         const visitorBody = document.getElementById('visitor-table-body');
@@ -70,7 +58,7 @@ import { data } from 'jquery';
                     responsive: false,
                     columns: [
                         {
-                            title: 'Sel',
+                            title: '<input type="checkbox" id="select-all-areas" aria-label="Select all areas" />',
                             data: null,
                             orderable: false,
                             searchable: false,
@@ -103,6 +91,37 @@ import { data } from 'jquery';
             $('#INPUTBY').val(empno);
         });
 
+        $(document).on('change', '#select-all-areas', function () {
+            $('#modalTable tbody input.row-select-area').prop(
+                'checked',
+                this.checked,
+            );
+        });
+
+        $(document).on(
+            'change',
+            '#modalTable tbody input.row-select-area',
+            function () {
+                const checkboxes = $('#modalTable tbody input.row-select-area');
+                const selectedCount = checkboxes.filter(':checked').length;
+
+                $('#select-all-areas').prop(
+                    'checked',
+                    checkboxes.length > 0 &&
+                        selectedCount === checkboxes.length,
+                );
+            },
+        );
+
+        $(document).on('keydown', '#REQBY', function (e) {
+            if (e.key !== 'Enter') {
+                return;
+            }
+
+            e.preventDefault();
+            $(this).trigger('change');
+        });
+
         $(document).on('change', '#REQBY', async function (e) {
             e.preventDefault();
 
@@ -112,7 +131,6 @@ import { data } from 'jquery';
                     showMessage('Employee data not found', 'error');
                     $(this).val('');
                     $(this).focus();
-                    s;
                     return;
                 }
                 $('#empName').val(empData.SNAME);
@@ -127,10 +145,11 @@ import { data } from 'jquery';
 
         $(document).on(
             'change',
-            '#visitor_empcode',
-            '#REQBY',
+            '#visitor_empcode, input[name="visitor_emp_code[]"]',
             async function (e) {
                 e.preventDefault();
+                const visitorRow = $(this).closest('tr');
+
                 try {
                     const empData = await getEmpData($(this).val());
                     if (!empData || !empData.SNAME) {
@@ -139,13 +158,43 @@ import { data } from 'jquery';
                         $(this).focus();
                         return;
                     }
-                    $('#visitor_name').val(empData.SNAME);
-                    $('#visitor_div').val(empData.SDIV);
-                    $('#visitor_dept').val(empData.SDEPT);
-                    $('#visitor_sec').val(empData.SSEC);
+                    visitorRow
+                        .find(
+                            'input[name="visitor_name"], input[name="visitor_name[]"]',
+                        )
+                        .val(empData.SNAME);
+                    visitorRow
+                        .find(
+                            'input[name="visitor_div"], input[name="visitor_division[]"]',
+                        )
+                        .val(empData.SDIV);
+                    visitorRow
+                        .find(
+                            'input[name="visitor_dept"], input[name="visitor_department[]"]',
+                        )
+                        .val(empData.SDEPT);
+                    visitorRow
+                        .find(
+                            'input[name="visitor_sec"], input[name="visitor_section[]"]',
+                        )
+                        .val(empData.SSEC);
                 } catch (error) {
                     console.log(error);
                 }
+            },
+        );
+
+        // Prevent Enter in any visitor employee-code row from submitting the form.
+        $(document).on(
+            'keydown',
+            '#visitor_empcode, input[name="visitor_emp_code[]"]',
+            function (e) {
+                if (e.key !== 'Enter') {
+                    return;
+                }
+
+                e.preventDefault();
+                $(this).trigger('change');
             },
         );
 
@@ -499,9 +548,110 @@ import { data } from 'jquery';
 
         updateAreaIndexes();
         toggleHostExternalSection();
+
+        const photoPermissionForm = document.getElementById(
+            'photo-permission-form',
+        );
+
+        photoPermissionForm?.addEventListener('submit', function (event) {
+            const errors = [];
+            const valueOf = (selector) =>
+                document.querySelector(selector)?.value.trim() || '';
+            const requestType = document.querySelector(
+                'input[name="reqtype"]:checked',
+            )?.value;
+            const permitOption = document.querySelector(
+                'input[name="permit_option"]:checked',
+            )?.value;
+
+            if (!valueOf('#REQBY')) errors.push('Request By');
+            if (!valueOf('#empName')) errors.push('Name');
+            if (!valueOf('#empDiv')) errors.push('Sect./Dept./Div.');
+            if (!requestType) errors.push('Request Type');
+
+            if (requestType === 'employee') {
+                if (
+                    !document.querySelector('input[name="req_subtype"]:checked')
+                ) {
+                    errors.push('Request Subtype');
+                }
+
+                const visitorRows = Array.from(
+                    visitorBody.querySelectorAll('tr'),
+                );
+                if (!visitorRows.length) {
+                    errors.push('Applicant / Visitor Information');
+                } else {
+                    visitorRows.forEach((row, index) => {
+                        const fields = row.querySelectorAll('input');
+                        if (
+                            Array.from(fields).some(
+                                (field) => !field.value.trim(),
+                            )
+                        ) {
+                            errors.push(`Visitor row ${index + 1}`);
+                        }
+                    });
+                }
+            }
+
+            if (requestType === 'host_external') {
+                if (!valueOf('#host_visitor_name')) {
+                    errors.push('Visitor Name');
+                }
+                if (!valueOf('#host_name')) errors.push('Host Name');
+                if (!valueOf('#host_company_name')) {
+                    errors.push('Company Name');
+                }
+            }
+
+            if (!valueOf('[name="recording_purpose"]')) {
+                errors.push('Purpose of Recording');
+            }
+            if (!permitOption) errors.push('Permit Date');
+            if (permitOption === 'long_term') {
+                if (!valueOf('[name="permit_long_term_years"]')) {
+                    errors.push('Year(s)');
+                }
+            }
+            if (permitOption === 'period') {
+                if (!valueOf('[name="permit_start_date"]')) {
+                    errors.push('Start Date');
+                }
+                if (!valueOf('[name="permit_valid_until"]')) {
+                    errors.push('Valid Until');
+                }
+            }
+            if (
+                !document.querySelector(
+                    'input[name="permit_halmet"]:checked, input[name="permit_photo"]:checked',
+                )
+            ) {
+                errors.push('Permit Type');
+            }
+            if (!areaBody.querySelector('tr:not(#area-empty-row)')) {
+                errors.push('Area to Recorded');
+            }
+
+            if (errors.length) {
+                event.preventDefault();
+                showMessage(
+                    `<div>กรุณากรอกข้อมูลให้ครบ:</div>
+                     <ul class="list-disc pl-5 mt-1 space-y-1">
+                         ${errors.map((error) => `<li>${error}</li>`).join('')}
+                     </ul>`,
+                    'warning',
+                );
+            }
+        });
     }
 
-    function initAreaPage() {
+    /*
+     * Area master data will be supplied by a server-side API.  The former
+     * browser-only CRUD implementation is retained here temporarily as a
+     * reference, but is deliberately excluded from the production bundle.
+     */
+    /* function initAreaPage() {
         const searchArea = document.getElementById('searchArea');
         const newAreaButton = document.getElementById('newAreaButton');
         const cancelAreaButton = document.getElementById('cancelAreaButton');
@@ -689,10 +839,9 @@ import { data } from 'jquery';
                 updateRowNumbers();
             }
         });
-    }
+    } */
 
     document.addEventListener('DOMContentLoaded', function () {
         initCreatePage();
-        initAreaPage();
     });
 })();
