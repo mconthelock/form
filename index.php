@@ -58,6 +58,7 @@
  *
  * NOTE: If you change these, also change the error_reporting() code below
  */
+ if (!defined('TCPDF_SILENCE_DEPRECATION')) { define('TCPDF_SILENCE_DEPRECATION', true);}
 	define('ENVIRONMENT', isset($_SERVER['CI_ENV']) ? $_SERVER['CI_ENV'] : 'development');
 /*
  *---------------------------------------------------------------
