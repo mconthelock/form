@@ -52,3 +52,17 @@ export async function updateInlineDetail(data) {
         dataType: 'json',
     });
 }
+
+export async function getExportData(planHeaderID, year, period, rev) {
+    return $.ajax({
+        url: host + 'dedform/DED-MDS/form/GetExportData',
+        type: 'POST',
+        data: {
+            PlanHeaderID: planHeaderID,
+            YEAR: year,
+            PERIOD: period,
+            REV: rev,
+        },
+        dataType: 'json',
+    });
+}
