@@ -12,16 +12,6 @@ var table;
 select2();
 $(document).ready(async function (e) {
     try {
-        const data = await getFormMaster();
-        const dept = await getFormDept();
-        const mergedData = data.map((item) => {
-            const deptInfo = dept.find((d) => d.link.includes(item.VORGNO));
-            return {
-                ...item,
-                deptname: deptInfo ? deptInfo : null,
-            };
-        });
-
         await reloadTable();
         await bindEvents();
     } catch (error) {
