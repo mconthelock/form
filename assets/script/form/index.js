@@ -196,7 +196,7 @@ async function createFormTable(data) {
                 if (type === 'display') {
                     const serve = data.VFORMPAGE.startsWith('http')
                         ? data.VFORMPAGE.replace('http', 'https')
-                        : `http://webflow.mitsubishielevatorasia.co.th/${data.VFORMPAGE}`;
+                        : `https://webflow.mitsubishielevatorasia.co.th/${data.VFORMPAGE}`;
                     const conjunction = serve.includes('?') ? '&' : '?';
                     const url = `${serve}${conjunction}no=${data.NFRMNO}&orgNo=${data.VORGNO}&y=${data.CYEAR}&y2=${data.CYEAR2}&runNo=${data.NRUNNO}&empno=${user}`;
                     return `<a class="text-primary link-self" href="#" data-title="${pageId}" data-url="${url}&empnolv=${hash.toString().toUpperCase()}&bp=${encodeURIComponent('http://localhost:8080/form/webform/form/index/1')}">${formno}</a>`;
