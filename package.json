@@ -28,6 +28,7 @@
     "datatables.net-responsive-dt": "^3.0.3",
     "datatables.net-select": "^3.0.1",
     "dayjs": "^1.11.19",
+    "driver.js": "^1.8.0",
     "exceljs": "^4.4.0",
     "flatpickr": "^4.6.13",
     "jquery": "^3.7.1",

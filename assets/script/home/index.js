@@ -6,6 +6,7 @@ import { showErrorMessage } from '@amec/webasset/utils';
 import { createCarousel } from '@amec/webasset/api/gpreport';
 import { directlogin } from '@amec/webasset/api/auth';
 import { stampApp } from '../utils';
+import driverObj from '../tour/home';
 import {
     createLinks,
     setRecentApps,
@@ -16,7 +17,6 @@ import {
 $(document).ready(async function (e) {
     showLoader();
     try {
-        const news = await createCarousel();
         const links = await $.getJSON(
             `${process.env.APP_ENV}/assets/files/links.json`,
         );
@@ -27,9 +27,11 @@ $(document).ready(async function (e) {
         await setRecentApps();
         await setAmecwebLinks();
         await rendorFormCount();
+        await createCarousel();
+        // await driverObj.drive();
     } catch (error) {
-        console.log(error);
-        showErrorMessage();
+        console.error(error);
+        showErrorMessage(error);
         return;
     } finally {
         await showLoader({ show: false });

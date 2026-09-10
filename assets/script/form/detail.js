@@ -9,7 +9,7 @@ $(document).ready(async function () {
         let loadStabilizeTimer;
         let hidden = false;
         const STABILIZE_DELAY = 0;
-        const MAX_WAIT = 15000; // กันเคส iframe ไม่ยิง load event เลย ไม่ให้ loading ค้างตลอดไป
+        const MAX_WAIT = 15000;
 
         const hideLoading = () => {
             if (hidden) return;

@@ -6,7 +6,7 @@ import {
     setAmecweb,
 } from '@amec/webasset/indexDB';
 import { getApplication } from '@amec/webasset/api/docinv';
-import { hexToRgb } from '../utils';
+import { hexToRgb, initApp } from '../utils';
 
 //สร้าง Link ของ Other Links section
 export async function createLinks(id, data, obj) {
@@ -114,7 +114,7 @@ export async function setRecentApps() {
 }
 
 export async function setAmecwebLinks() {
-    console.log($('#user-login').attr('empno'));
+    await initApp();
     let amecweb = await amecwebData($('#user-login').attr('empno'));
     if (amecweb.length == 0) {
         $('#amecweb_links').html(
