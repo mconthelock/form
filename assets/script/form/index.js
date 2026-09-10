@@ -363,9 +363,12 @@ async function createFormTable(data) {
         const apvId = `#apv-${data.form.NFRMNO}-${data.form.VORGNO}-${data.form.CYEAR}-${data.form.CYEAR2}-${data.form.NRUNNO}`;
         const nextId = `#next-${data.form.NFRMNO}-${data.form.VORGNO}-${data.form.CYEAR}-${data.form.CYEAR2}-${data.form.NRUNNO}`;
 
-        await fillUserinfo(row, data.form.VREQNO, reqId);
-        if (latest.VAPVNO != undefined && latest.VAPVNO != null)
+        await fillUserinfo(row, data.form.VREQNO, reqId); // Requester image
+
+        // Last Approver
+        if (latest != null) {
             await fillUserinfo(row, latest.VAPVNO, apvId);
+        }
 
         await fillNextApproverInfo(row, data.form.flow, nextId);
     };
