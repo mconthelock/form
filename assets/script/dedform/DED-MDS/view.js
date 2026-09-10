@@ -786,9 +786,14 @@ async function loadDraftPlan() {
         EMPNO: typeof empno !== 'undefined' ? empno : 'SYSTEM',
         MODE: $('#MODEHid').val(), // 🟢 ส่ง MODE ปัจจุบัน
         EXTDATA: $('#EXTDATAHid').val(), // 🟢 ส่ง EXTDATA
-        VORGNO: formData.vorgno || '', // 🟢 ส่งคีย์ Webflow
-        CYEAR2: formData.cyear2 || '',
-        NRUNNO: formData.nrunno || '',
+        NFRMNO: formData.nfrmno ? Number(formData.nfrmno) : 0,
+        VORGNO: formData.vorgno ? formData.vorgno.toString() : '',
+        CYEAR: formData.cyear ? formData.cyear.toString() : '',
+        CYEAR2: formData.cyear2 ? formData.cyear2.toString() : '',
+        NRUNNO: formData.nrunno ? Number(formData.nrunno) : 0,
+        // VORGNO: formData.vorgno || '', // 🟢 ส่งคีย์ Webflow
+        // CYEAR2: formData.cyear2 || '',
+        // NRUNNO: formData.nrunno || '',
         PLANHEADERID: (formData.planheaderid = ''),
     };
     try {
