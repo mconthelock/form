@@ -972,11 +972,23 @@ function renderDataTable(data) {
                 className: 'text-center align-middle',
                 render: function (d, type, row, meta) {
                     const dateVal = d ? d.substring(0, 10) : '';
+                    const isChanged = Number(row.Diff_DES_BM) === 1;
+
+                    // สไตล์สีแดงเมื่อมีการเปลี่ยนแปลง (ขอบแดง, พื้นชมพูอ่อน, ตัวอักษรแดง)
+                    const highlightClass = isChanged
+                        ? 'border-rose-400 bg-rose-50 text-rose-600 ring-1 ring-rose-300'
+                        : 'bg-white text-slate-700 border-slate-300';
+
+                    const tooltip = isChanged
+                        ? `title="Update: ${row.UserAction || 'MANUAL'}"`
+                        : '';
+
                     return `
                         <input type="date" 
-                               class="input input-bordered input-xs w-36 text-center font-bold text-slate-700 inline-edit-date bg-white" 
+                               class="input input-bordered input-xs w-36 text-center font-bold inline-edit-date ${highlightClass}" 
                                data-field="DES_BM" 
                                data-row-index="${meta.row}" 
+                               ${tooltip}
                                value="${dateVal}">
                     `;
                 },
@@ -992,11 +1004,23 @@ function renderDataTable(data) {
                 className: 'text-center align-middle',
                 render: function (d, type, row, meta) {
                     const dateVal = d ? d.substring(0, 10) : '';
+                    const isChanged = Number(row.Diff_Go_DES) === 1;
+
+                    // สไตล์สีแดงเมื่อมีการเปลี่ยนแปลง
+                    const highlightClass = isChanged
+                        ? 'border-rose-400 bg-rose-50 text-rose-600 ring-1 ring-rose-300'
+                        : 'bg-white text-slate-700 border-slate-300';
+
+                    const tooltip = isChanged
+                        ? `title="Update: ${row.UserAction || 'MANUAL'}"`
+                        : '';
+
                     return `
                         <input type="date" 
-                               class="input input-bordered input-xs w-36 text-center font-bold text-slate-700 inline-edit-date bg-white" 
+                               class="input input-bordered input-xs w-36 text-center font-bold inline-edit-date ${highlightClass}" 
                                data-field="Go_DES" 
                                data-row-index="${meta.row}" 
+                               ${tooltip}
                                value="${dateVal}">
                     `;
                 },
@@ -1159,6 +1183,14 @@ function updateStatusUI(status, revision, docNo = '') {
     const $pendingAlert = $('#PendingAlert');
     const mode = $('#MODEHid').val() || '1';
     const extData = $('#EXTDATAHid').val() || '';
+    var step = '';
+    if (extData == '01') {
+        step = 'PREPARED';
+    } else if (extData == '02') {
+        step = 'D/E DDEM';
+    } else if (extData == '03') {
+        step = 'D/E DEM';
+    }
 
     // 1. อัปเดต Revision Badge
     $('#RevBadge').text('Revision: ' + (revision || '*'));
@@ -1178,7 +1210,7 @@ function updateStatusUI(status, revision, docNo = '') {
             );
         } else {
             $('#StatusText').html(
-                `<strong>แจ้งเตือน:</strong> เอกสารกำลังอยู่ในขั้นตอนการอนุมัติ (Step: ${extData || '-'}) ${docNo ? `[${docNo}]` : ''}`,
+                `<strong>แจ้งเตือน:</strong> เอกสารกำลังอยู่ในขั้นตอนการอนุมัติ (Step: ${step || '-'}) ${docNo ? `[${docNo}]` : ''}`,
             );
         }
         $pendingAlert.removeClass('hidden');

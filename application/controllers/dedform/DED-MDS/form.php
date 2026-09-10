@@ -768,7 +768,7 @@ class form extends MY_Controller {
             'CYEAR'   => $formData['CYEAR'],
             'REQBY'   => $empNo,
             'INPUTBY' => $empNo,
-            'REMARK'  => !empty($remark) ? $remark : "Plan Master {$year} ({$period}) Rev.{$currentRevision}",
+            'REMARK'  => !empty($remark) ? $remark : null,
             // 'DRAFT'   => '1', // ส่งสร้างโฟลว์อนุมัติทันที
         ];
 
@@ -1285,21 +1285,65 @@ class form extends MY_Controller {
 
         // 5. เตรียมข้อมูลแสตมป์ลายเซ็น (Prepared By, Checked By, Approved By)
         // ดึงจาก Field ใน Header หรือปรับตามโครงสร้างตาราง Flow ของคุณ
+        $Webflowdb = $this->load->database('DEFAULT', TRUE);
+
+        // 🟢 Query ไวยากรณ์ Oracle
+        $flowSql = "SELECT 
+                        wf.CEXTDATA,
+                        wf.VAPVNO,
+                        wf.VREPNO,
+                        -- ตัดเอาเฉพาะชื่อตัวแรก (ก่อนวรรคแรก) ใน Oracle
+                        TRIM(SUBSTR(emp.SNAME, 1, INSTR(emp.SNAME || ' ', ' ') - 1)) AS EMPNAME,
+                        -- แปลงวันที่เป็น DD/MM/YYYY
+                        TO_CHAR(wf.DAPVDATE, 'DD/MM/YYYY') AS APVDATETEXT,
+                        wf.DAPVDATE
+                    FROM FLOW wf 
+                    LEFT JOIN AMEC.AEMPLOYEE emp 
+                        ON emp.SEMPNO = wf.VAPVNO 
+                    WHERE wf.NFRMNO  = ?
+                      AND wf.VORGNO  = ?
+                      AND wf.CYEAR2  = ?
+                      AND wf.NRUNNO  = ?
+                      AND wf.CEXTDATA IN ('01', '02', '03')
+                      AND wf.CAPVSTNO = '1'
+                    ORDER BY wf.CEXTDATA ASC";
+
+        $flowQuery = $Webflowdb->query($flowSql, [
+            $headerRow->NFRMNO,
+            $headerRow->VORGNO,
+            $headerRow->CYEAR2,
+            $headerRow->NRUNNO
+        ]);
+
+        $flowRows = $flowQuery ? $flowQuery->result_array() : [];
+
         $signatures = [
-            'preparedBy' => [
-                'name' => $headerRow->CreateBy ?? $headerRow->UserAction ?? '',
-                'date' => !empty($headerRow->CreateDate) ? substr($headerRow->CreateDate, 0, 10) : date('Y-m-d')
-            ],
-            'checkedBy' => [
-                'name' => $headerRow->CheckedBy ?? '',
-                'date' => !empty($headerRow->CheckedDate) ? substr($headerRow->CheckedDate, 0, 10) : null
-            ],
-            'approvedBy' => [
-                'name' => $headerRow->ApprovedBy ?? '',
-                'date' => !empty($headerRow->ApprovedDate) ? substr($headerRow->ApprovedDate, 0, 10) : null
-            ]
+            'step01' => null, // ขวาสุด (AJ)
+            'step02' => null, // ถัดมาทางซ้าย (AG)
+            'step03' => null  // ช่องในสุด (AD)
         ];
 
+        foreach ($flowRows as $f) {
+            // 🟢 จัดการให้อ่านได้ทั้งตัวพิมพ์เล็กหรือพิมพ์ใหญ่ที่ Oracle คืนค่ากลับมา
+            $cextdata   = trim((string)($f['CEXTDATA'] ?? $f['cextdata'] ?? ''));
+            $vapvno     = trim((string)($f['VAPVNO'] ?? $f['vapvno'] ?? ''));
+            $empName    = trim((string)($f['EMPNAME'] ?? $f['empname'] ?? $vapvno));
+            $apvDateTxt = trim((string)($f['APVDATETEXT'] ?? $f['apvdatetext'] ?? ''));
+
+            $stampData = [
+                'empNo' => $vapvno,
+                'name'  => strtoupper($empName),
+                'date'  => $apvDateTxt // คืนค่าเป็นรูปแบบ DD/MM/YYYY พร้อมแสตมป์
+            ];
+
+            if ($cextdata === '01') {
+                $signatures['step01'] = $stampData;
+            } elseif ($cextdata === '02') {
+                $signatures['step02'] = $stampData;
+            } elseif ($cextdata === '03') {
+                $signatures['step03'] = $stampData;
+            }
+        }
         return $this->output->set_output(json_encode([
             'status'       => true,
             'planHeaderID' => $targetHeaderID,

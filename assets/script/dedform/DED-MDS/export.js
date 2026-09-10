@@ -7,7 +7,7 @@ import ExcelJS from 'exceljs';
 import { host } from '../../utils';
 
 // =========================================================================
-// 🟢 ประกาศ Helper Functions ไว้ด้านบนสุดของไฟล์ (Global Module Scope)
+// 🟢 Helper Functions
 // =========================================================================
 
 // แปลงหมายเลขคอลัมน์เป็นตัวอักษร Excel (1 -> A, 4 -> D, 28 -> AB)
@@ -87,6 +87,24 @@ async function getTemplateFile(templateName) {
     return await res.arrayBuffer();
 }
 
+function createRedCircleBase64() {
+    const canvas = document.createElement('canvas');
+    canvas.width = 240;
+    canvas.height = 240;
+    const ctx = canvas.getContext('2d');
+
+    ctx.clearRect(0, 0, 240, 240);
+
+    // วาดวงกลมขอบแดง
+    ctx.beginPath();
+    ctx.arc(120, 120, 114, 0, 2 * Math.PI);
+    ctx.strokeStyle = '#f43f5e'; // แดงเฉดเดียวกับแสตมป์ หรือ '#FF0000'
+    ctx.lineWidth = 3.5; // เส้นคมชัดกำลังดี ไม่หนาเกินไป
+    ctx.stroke();
+
+    return canvas.toDataURL('image/png');
+}
+
 // =========================================================================
 // 🟢 ฟังก์ชันหลักสำหรับ Export
 // =========================================================================
@@ -110,6 +128,7 @@ export async function exportPlanExcel({
         const curYY = String(curYearInt).slice(-2);
         const nextYY = String(curYearInt + 1).slice(-2);
 
+        console.log(signatures); // เพิ่มบรรทัดนี้
         // 1. โหลด Master Template
         const templateBuffer = await getTemplateFile('04X-09C');
 
@@ -138,7 +157,7 @@ export async function exportPlanExcel({
                     : `AMEC Design Schedule (04X'${curYY}-9C'${curYY})`;
 
                 const isDraft =
-                    planStatus === 'DRAFT' || !revision || revision === '*';
+                    planStatus === 'DRAFT' || planStatus === 'PROCESS';
                 const titleCell =
                     reportSheet.getCell('G2') || reportSheet.getCell('E5');
                 if (titleCell) {
@@ -184,34 +203,50 @@ export async function exportPlanExcel({
                     ).value = formatDate(todayStr);
                 }
 
-                // กล่องแสตมป์ลายเซ็น
+                // =========================================================================
+                // 🟢 แสตมป์ลายเซ็นการอนุมัติลง Master Cell (Row 1 เพราะ Merge Row 1-7)
+                // =========================================================================
+                // =========================================================================
+                // 🟢 แสตมป์ข้อความ และ วาดกรอบวงกลมสีแดง
+                // =========================================================================
                 if (signatures) {
-                    if (signatures.preparedBy && signatures.preparedBy.name) {
-                        reportSheet.getCell('AD3').value = String(
-                            signatures.preparedBy.name,
-                        );
-                        reportSheet.getCell('AD7').value = formatDate(
-                            signatures.preparedBy.date,
-                        );
-                    }
-                    if (signatures.checkedBy && signatures.checkedBy.name) {
-                        reportSheet.getCell('AG3').value = String(
-                            signatures.checkedBy.name,
-                        );
-                        reportSheet.getCell('AG7').value = formatDate(
-                            signatures.checkedBy.date,
-                        );
-                    }
-                    if (signatures.approvedBy && signatures.approvedBy.name) {
-                        reportSheet.getCell('AJ3').value = String(
-                            signatures.approvedBy.name,
-                        );
-                        reportSheet.getCell('AJ7').value = formatDate(
-                            signatures.approvedBy.date,
-                        );
-                    }
-                }
+                    const stampCellConfigs = [
+                        { key: 'step03', colStr: 'AD' }, // กล่องซ้าย (D/E DEM)
+                        { key: 'step02', colStr: 'AG' }, // กล่องกลาง (D/E DDEM)
+                        { key: 'step01', colStr: 'AJ' }, // กล่องขวา (PREPARED)
+                    ];
 
+                    stampCellConfigs.forEach((cfg) => {
+                        const sign = signatures[cfg.key];
+                        if (sign) {
+                            // เขียนลง Master Cell ตัวจริงของกล่องล่าง (Row 3)
+                            const masterCell = reportSheet.getCell(
+                                `${cfg.colStr}3`,
+                            );
+                            if (masterCell) {
+                                masterCell.value = `AMEC\r\n${sign.date || ''}\r\n${String(sign.name || '').toUpperCase()}`;
+                                masterCell.font = {
+                                    name: 'Arial',
+                                    size: 14, // ปรับลดขนาดจาก 20 ให้พอดีกับความสูงของแถว 3-7
+                                    bold: true,
+                                    color: { argb: 'FFFF0000' }, // สีแดง
+                                };
+                                masterCell.alignment = {
+                                    vertical: 'middle',
+                                    horizontal: 'center',
+                                    wrapText: true, // ตัดขึ้นบรรทัดใหม่
+                                };
+                            }
+                            // // --- ส่วนที่ 2: แปะรูปวงกลมครอบข้อความให้อยู่กึ่งกลางพอดี ---
+                            // reportSheet.addImage(circleImageId, {
+                            //     // ขยับซ้ายลงมาเหลือ + 0.05 และดึงขึ้นไปที่ row: 1.35
+                            //     tl: { col: cfg.centerColIdx + 0.05, row: 1.35 },
+                            //     ext: { width: 220, height: 220 },
+                            //     editAs: 'absolute',
+                            // });
+                        }
+                    });
+                }
                 // Dynamic DesType
                 let activeDesTypes = [];
                 if (Array.isArray(dataList) && dataList.length > 0) {
@@ -497,10 +532,14 @@ export async function exportPlanExcel({
 
         const now = new Date();
         const timeStamp = `${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}_${String(now.getHours()).padStart(2, '0')}${String(now.getMinutes()).padStart(2, '0')}${String(now.getSeconds()).padStart(2, '0')}`;
+        // จัดการ Revision ปลอดภัยต่อชื่อไฟล์ (* -> 0)
+        const safeRev =
+            !revision || String(revision).trim() === '*' ? '0' : revision;
         const revLabel =
-            planStatus === 'DRAFT' || !revision || revision === '*'
-                ? 'DRAFT'
-                : `REV_${revision}`;
+            planStatus === 'DRAFT' || planStatus === 'PROCESS'
+                ? `(DRAFT)REV_${safeRev}`
+                : `REV_${safeRev}`;
+
         const outFileName = `DESBM_${cleanPeriod}_${revLabel}_${timeStamp}`;
 
         await exportExcel(workbook, outFileName);
