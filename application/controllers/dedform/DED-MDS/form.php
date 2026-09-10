@@ -394,9 +394,17 @@ class form extends MY_Controller {
             // สร้าง PlanHeaderID รูปแบบ Custom Code (เช่น 202601001)
             $newPlanHeaderID = $this->MDSModel->generatePlanHeaderID($year, $period, $db);
 
-            $fullHost = (string)gethostbyaddr($_SERVER['REMOTE_ADDR'] ?? '127.0.0.1');
-            $cleanHost = explode('.', $fullHost)[0]; // จะเหลือเฉพาะ 'IS-DELL07'
-            $computerAction = substr($cleanHost, 0, 20); // ป้องกันเกินขนาดฟิลด์
+            
+            
+            
+            // ดึง Hostname หรือ IP
+            $rawHost = (string)gethostbyaddr($_SERVER['REMOTE_ADDR'] ?? '127.0.0.1');                        
+            // 1. ตัดส่วนที่เป็น Domain ออกแบบ Case-Insensitive (ครอบคลุมทั้งตัวเล็ก/ตัวใหญ่)
+            $cleanHost = preg_replace('/\.mitsubishielevatorasia\.co\.th$/i', '', trim($rawHost));
+
+            // 2. ล็อคความยาวให้พอดีกับฟิลด์ (เช่น VARCHAR(20) หรือ VARCHAR(15) ใน DB)
+            // ถ้าระบบเป็น IP (เช่น 192.168.100.254 ยาว 15 ตัว) จะไม่ถูกตัดจุดออก
+            $computerAction = substr($cleanHost, 0, 20);
             // 3. สร้าง Header ฉบับร่างใหม่
             $headerData = [
                 'PlanHeaderID'   => (string)$newPlanHeaderID,
@@ -810,7 +818,7 @@ class form extends MY_Controller {
                 'NRUNNO' => $nrunno,
                 'CEXTDATA' => '01',
             ];
-            // เรียกฟังก์ชันอัปเดตผู้อนุมัติลงตาราง FLOW
+            // เรียกฟังก์ชันอัปเดตผู้อนุมัติ Step 2 (EXTDATA=01)ลงตาราง FLOW
             $this->MDSModel->updateWebflowApprover($flowID);
         }
 
@@ -818,6 +826,17 @@ class form extends MY_Controller {
                         ? "DED-MDS-" . $cyear2 . "-" . str_pad($nrunno, 6, '0', STR_PAD_LEFT)
                         : '';
 
+
+        
+            
+            // ดึง Hostname หรือ IP
+            $rawHost = (string)gethostbyaddr($_SERVER['REMOTE_ADDR'] ?? '127.0.0.1');                        
+            // 1. ตัดส่วนที่เป็น Domain ออกแบบ Case-Insensitive (ครอบคลุมทั้งตัวเล็ก/ตัวใหญ่)
+            $cleanHost = preg_replace('/\.mitsubishielevatorasia\.co\.th$/i', '', trim($rawHost));
+
+            // 2. ล็อคความยาวให้พอดีกับฟิลด์ (เช่น VARCHAR(20) หรือ VARCHAR(15) ใน DB)
+            // ถ้าระบบเป็น IP (เช่น 192.168.100.254 ยาว 15 ตัว) จะไม่ถูกตัดจุดออก
+            $computerAction = substr($cleanHost, 0, 20);
         // 4. จัดเตรียมข้อมูลสำหรับ Update Header
         $headerUpdate = [
             'NFRMNO'         => $formData['NNO'],
@@ -828,7 +847,7 @@ class form extends MY_Controller {
             'Status'         => 'PROCESS',
             'Remark'         => $flowData['REMARK'],
             'UserAction'     => (string)$empNo,
-            'ComputerAction' => (string)gethostbyaddr($_SERVER['REMOTE_ADDR'] ?? '127.0.0.1'),
+            'ComputerAction' => $computerAction ,
             'DateAction'     => date('Y-m-d H:i:s')
         ];
 
@@ -906,9 +925,19 @@ class form extends MY_Controller {
                 'NRUNNO' => $NRUNNO,
             ];
 
+            
+            
+            // ดึง Hostname หรือ IP
+            $rawHost = (string)gethostbyaddr($_SERVER['REMOTE_ADDR'] ?? '127.0.0.1');                        
+            // 1. ตัดส่วนที่เป็น Domain ออกแบบ Case-Insensitive (ครอบคลุมทั้งตัวเล็ก/ตัวใหญ่)
+            $cleanHost = preg_replace('/\.mitsubishielevatorasia\.co\.th$/i', '', trim($rawHost));
+
+            // 2. ล็อคความยาวให้พอดีกับฟิลด์ (เช่น VARCHAR(20) หรือ VARCHAR(15) ใน DB)
+            // ถ้าระบบเป็น IP (เช่น 192.168.100.254 ยาว 15 ตัว) จะไม่ถูกตัดจุดออก
+            $computerAction = substr($cleanHost, 0, 20);
             $data = [
                 'UserAction'     => (string)$EMPNO,
-                'ComputerAction' => (string)gethostbyaddr($_SERVER['REMOTE_ADDR'] ?? '127.0.0.1'),
+                'ComputerAction' => $computerAction ,
                 'DateAction'     => date('Y-m-d H:i:s')
             ];
 
@@ -1008,7 +1037,10 @@ class form extends MY_Controller {
 
         // 3. เริ่ม Transaction และรันคำสั่ง MERGE
         $db->trans_begin();
-
+        // 🟢 2. เตรียม ComputerAction จาก PHP ปลอดภัย ไม่พึ่ง Case-sensitive ใน SQL
+            $rawHost = (string)gethostbyaddr($_SERVER['REMOTE_ADDR'] ?? '127.0.0.1');
+            $cleanHost = preg_replace('/\.mitsubishielevatorasia\.co\.th$/i', '', trim($rawHost));
+            $computerAction = substr($cleanHost, 0, 20);
         try {
             $sqlMerge = "
                 SET NOCOUNT ON;
@@ -1045,7 +1077,7 @@ class form extends MY_Controller {
                         TARGET.FormatAs400          = SOURCE.FormatAs400,
                         TARGET.MARIssueDES          = SOURCE.MARIssueDES,
                         TARGET.UserAction           = SOURCE.UserAction,
-                        TARGET.ComputerAction       = LEFT(REPLACE(HOST_NAME(), '.MitsubishiElevatorAsia.co.th', ''), 20),
+                        TARGET.ComputerAction       = ?,
                         TARGET.DateAction           = SOURCE.DateAction,
                         TARGET.UpdateMKT            = 0
 
@@ -1075,7 +1107,7 @@ class form extends MY_Controller {
                         SOURCE.FormatAs400,
                         SOURCE.MARIssueDES,
                         SOURCE.UserAction,
-                        LEFT(REPLACE(HOST_NAME(), '.MitsubishiElevatorAsia.co.th', ''), 20),
+                        ?,
                         SOURCE.DateAction,
                         0,
                         NULL,
@@ -1091,7 +1123,7 @@ class form extends MY_Controller {
                     DELETE;
             ";
 
-            $db->query($sqlMerge, [$planHeaderID, $minDate, $maxDate]);
+            $db->query($sqlMerge, [$planHeaderID, $computerAction,   $computerAction,$minDate, $maxDate]);
 
             if ($db->trans_status() === FALSE) {
                 $db->trans_rollback();

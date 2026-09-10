@@ -140,19 +140,21 @@ class DED_MDS_model extends my_model
                 WHERE UserSessionID = ?;
             ";
 
+            
+
+            // ดึง Hostname หรือ IP
+            $rawHost = (string)gethostbyaddr($_SERVER['REMOTE_ADDR'] ?? '127.0.0.1');                        
+            // 1. ตัดส่วนที่เป็น Domain ออกแบบ Case-Insensitive (ครอบคลุมทั้งตัวเล็ก/ตัวใหญ่)
+            $cleanHost = preg_replace('/\.mitsubishielevatorasia\.co\.th$/i', '', trim($rawHost));
+
+            // 2. ล็อคความยาวให้พอดีกับฟิลด์ (เช่น VARCHAR(20) หรือ VARCHAR(15) ใน DB)
+            // ถ้าระบบเป็น IP (เช่น 192.168.100.254 ยาว 15 ตัว) จะไม่ถูกตัดจุดออก
+            $computerAction = substr($cleanHost, 0, 20);
             $db->query($sqlTransfer, [
                 $newPlanHeaderID, 
                 $nextRevision,
                 $headerData['UserAction'] ?? 'SYSTEM', 
-                $headerData['ComputerAction'] ?? substr(
-    str_replace(
-        '.MitsubishiElevatorAsia.co.th',
-        '',
-        (string)($headerData['ComputerAction'] ?? gethostbyaddr($_SERVER['REMOTE_ADDR'] ?? '127.0.0.1'))
-    ),
-    0,
-    20
-), 
+                $computerAction , 
                 $userSession
             ]);
 
@@ -1426,7 +1428,9 @@ class DED_MDS_model extends my_model
 
         // 3. เริ่ม Transaction และรัน SQL MERGE
         $conf->trans_begin();
-
+        $rawHost = (string)gethostbyaddr($_SERVER['REMOTE_ADDR'] ?? '127.0.0.1');
+        $cleanHost = preg_replace('/\.mitsubishielevatorasia\.co\.th$/i', '', trim($rawHost));
+        $computerAction = substr($cleanHost, 0, 20);
         try {
             $sqlMerge = "
                 SET NOCOUNT ON;
@@ -1462,7 +1466,7 @@ class DED_MDS_model extends my_model
                             TARGET.FormatAs400          = SOURCE.FormatAs400,
                             TARGET.MARIssueDES          = SOURCE.MARIssueDES,
                             TARGET.UserAction           = SOURCE.UserAction,
-                            TARGET.ComputerAction       = LEFT(REPLACE(HOST_NAME(), '.MitsubishiElevatorAsia.co.th', ''), 20),
+                            TARGET.ComputerAction       = ?,
                             TARGET.DateAction           = SOURCE.DateAction,
                             TARGET.UpdateMKT            = SOURCE.UpdateMKT,
                             TARGET.IDTYPE               = SOURCE.IDTYPE
@@ -1488,7 +1492,7 @@ class DED_MDS_model extends my_model
                             SOURCE.TypeJun,
                             SOURCE.DesBMDate,
                             SOURCE.UserAction,
-                            LEFT(REPLACE(HOST_NAME(), '.MitsubishiElevatorAsia.co.th', ''), 20),
+                            ?,
                             SOURCE.DateAction,
                             SOURCE.BeforeEditDesBMDate,
                             SOURCE.UpdateMKT,
@@ -1508,7 +1512,7 @@ class DED_MDS_model extends my_model
                         DELETE;
             ";
 
-            $conf->query($sqlMerge, [$planHeaderID, $minDate, $maxDate]);
+            $conf->query($sqlMerge, [$planHeaderID, $computerAction,   $computerAction, $minDate, $maxDate]);
 
             if ($conf->trans_status() === FALSE) {
                 $conf->trans_rollback();
