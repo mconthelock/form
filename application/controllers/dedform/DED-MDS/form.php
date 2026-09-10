@@ -53,6 +53,14 @@ class form extends MY_Controller {
         $data['DOC_NO'] = '';
         $data['PLANHEADERID']    ='';
 
+        
+        $data['PLAN_YEAR'] = date('Y');
+        $data['PERIOD']    = '';
+        $data['REVISION']  = '-';
+        $data['DOC_NO']    = '';
+        $data['REMARK']    = '';
+        $data['STATUS']    = '';
+
         // 1. ตรวจสอบการส่ง Form Key จาก URL
         if (
             $this->input->get('no') !== null && $this->input->get('no') !== '' &&
@@ -85,12 +93,6 @@ class form extends MY_Controller {
         $desTypeMasterList = $this->MDSModel->QuerySetBase($sqlDesType, $this->DDS, [])->result();
         $data['desTypeList'] = $desTypeMasterList;
 
-        $data['PLAN_YEAR'] = date('Y');
-        $data['PERIOD']    = '';
-        $data['REVISION']  = '-';
-        $data['DOC_NO']    = '';
-        $data['REMARK']    = '';
-        $data['STATUS']    = '';
 
 
         // หา Default DesTypes จากฐานข้อมูล (ตัวที่ IsDefault = 1)
@@ -127,8 +129,8 @@ class form extends MY_Controller {
             // ดึงข้อมูล Header เพิ่มเติมจากตารางจริงถ้ามี
             $sqlHeader = "SELECT TOP 1 PlanYear, PeriodCode, Revision, Remark ,PlanHeaderID,Status
                         FROM Tb_Master_DESBM_Header 
-                        WHERE CYEAR2 = ? and NRUNNO = ?";
-            $headerInfo = $this->MDSModel->QuerySetBase($sqlHeader, $this->DDS, [$data['CYEAR2'],(int)$data['NRUNNO']])->row();
+                         WHERE NFRMNO = ? AND VORGNO = ? AND CYEAR = ? AND CYEAR2 = ? AND NRUNNO = ? ";
+            $headerInfo = $this->MDSModel->QuerySetBase($sqlHeader, $this->DDS, [ $data['NFRMNO'],$data['VORGNO'],$data['CYEAR'],$data['CYEAR2'] ,$data['NRUNNO'] ])->row();
             if ($headerInfo) {
                 $data['PLAN_YEAR'] = $headerInfo->PlanYear;
                 $data['PERIOD']    = $headerInfo->PeriodCode;
@@ -139,6 +141,15 @@ class form extends MY_Controller {
                 // ถ้ามีค่าใน Header เดิมให้ใช้ค่านั้น ถ้าไม่มีให้ fallback ไปยัง default
                 $data['selectedDesTypes'] = !empty($headerInfo->DesType) ? explode('|', $headerInfo->DesType) : $defaultDesTypes;
             }
+            else {
+                    $sqlDelFlow = "DELETE FROM FLOW WHERE NFRMNO = ? AND VORGNO = ? AND CYEAR = ? AND CYEAR2 = ? AND NRUNNO = ? ";
+                    $sqlDelForm = "DELETE FROM FORM WHERE NFRMNO = ? AND VORGNO = ? AND CYEAR = ? AND CYEAR2 = ? AND NRUNNO = ? ";
+
+                    $Webflowdb = $this->load->database('DEFAULT', TRUE);
+                    $Webflowdb->query($sqlDelFlow, [ $data['NFRMNO'],$data['VORGNO'],$data['CYEAR'],$data['CYEAR2'] ,$data['NRUNNO'] ]);
+                    $Webflowdb->query($sqlDelForm, [ $data['NFRMNO'],$data['VORGNO'],$data['CYEAR'],$data['CYEAR2'] ,$data['NRUNNO'] ]);
+                    $data['DOC_NO'] = 'Form not found.';
+                    }
 
         } else {
             // --- CASE: เตรียมสร้างฟอร์มใหม่ (Create Mode) ---
@@ -185,26 +196,13 @@ class form extends MY_Controller {
             $nrunno  = trim((string)$this->input->post('NRUNNO'));
             $planheaderid  = trim((string)$this->input->post('PLANHEADERID'));
 
-            if (empty($year) || empty($period)) {
-                return $this->output->set_content_type('application/json')->set_output(json_encode([
-                    'statusTb'     => true,
-                    'hasDraft'     => false,
-                    'revision'     => '*',
-                    'nextRevision' => '*',
-                    'desType'      => null,
-                    'planHeaderID' => null,
-                    'status'       => '',
-                    'docNo'        => '',
-                    'data'         => [],
-                ]));
-            }
 
             $headerRow = null;
 
-            $nextRevision = $this->getNextApprovedRevision($year, $period);
-
+            $nextRevision = "-";
 
             if ($MODE === '1') {
+            $nextRevision = $this->getNextApprovedRevision($year, $period);
                 // -------------------------------------------------------------
                 // 🟢 MODE 1: CREATE MODE
                 // -------------------------------------------------------------
@@ -212,7 +210,7 @@ class form extends MY_Controller {
                 $sqlDraft = "SELECT TOP 1 PlanHeaderID, PlanYear, PeriodCode, Revision, DesType, Status, Remark,
                                         VORGNO, CYEAR2, NRUNNO
                             FROM Tb_Master_DESBM_Header 
-                            WHERE NFRMNO = ? AND PeriodCode = ? AND UPPER(Status) IN ('DRAFT', 'PROCESS')
+                            WHERE PlanYear = ? AND PeriodCode = ? AND UPPER(Status) IN ('DRAFT', 'PROCESS')
                             ORDER BY PlanHeaderID DESC";
                 $headerRow = $this->MDSModel->QuerySetBase($sqlDraft, $this->DDS, [$year, $period])->row();
 
@@ -233,40 +231,45 @@ class form extends MY_Controller {
                 }
 
             } else {
+                
                 // -------------------------------------------------------------
                 // MODE อื่นๆ: (PROCESS, APPROVE, VIEW)
                 // -------------------------------------------------------------
-                if (!empty($nrunno) && !empty($cyear2) && !empty($vorgno)) {
-                    // ดึงตรงตามเลขเอกสาร Webflow ของตั๋วใบนี้
-                    
+                if ($nfrmno !== '0' && $cyear2 !== '' ) {
+                    // 1. ดึงข้อมูลจาก Header ตามเลข Webflow ของตั๋วใบนี้
                     $sqlByDoc = "SELECT TOP 1 PlanHeaderID, PlanYear, PeriodCode, Revision, DesType, Status, Remark,
                                             VORGNO, CYEAR2, NRUNNO
-                                FROM Tb_Master_DESBM_Header 
-                                WHERE  NFRMNO = ? AND VORGNO = ? AND CYEAR = ? AND CYEAR2 = ? AND NRUNNO = ? 
-                                ORDER BY PlanHeaderID DESC";
-                    $headerRow = $this->MDSModel->QuerySetBase($sqlByDoc, $this->DDS, [$nfrmno, $vorgno, $cyear, $cyear2, $nrunno])->row();
+                                 FROM Tb_Master_DESBM_Header 
+                                 WHERE NFRMNO = ? AND VORGNO = ? AND CYEAR = ? AND CYEAR2 = ? AND NRUNNO = ? 
+                                 ORDER BY PlanHeaderID DESC";
+                    $headerRow = $this->MDSModel->QuerySetBase($sqlByDoc, $this->DDS, [$nfrmno,$vorgno,$cyear,$cyear2 ,$nrunno])->row();
+
+
+
+                    // // 2. ถ้าในตาราง Header ไม่มีข้อมูลของตั๋วใบนี้ ให้ลบ Flow และ Form ทันที
+                    // if (!$headerRow) {
+                    //     $sqlDelFlow = "DELETE FROM FLOW WHERE NFRMNO = ? AND VORGNO = ? AND CYEAR = ? AND CYEAR2 = ? AND NRUNNO = ? ";
+                    //     $sqlDelForm = "DELETE FROM FORM WHERE NFRMNO = ? AND VORGNO = ? AND CYEAR = ? AND CYEAR2 = ? AND NRUNNO = ? ";
+
+                    //     $Webflowdb = $this->load->database('DEFAULT', TRUE);
+                    //     $Webflowdb->query($sqlDelFlow, [$nfrmno,$vorgno,$cyear,$cyear2 ,$nrunno]);
+                    //     $Webflowdb->query($sqlDelForm, [$nfrmno,$vorgno,$cyear,$cyear2 ,$nrunno]);
+
+                    //     // 🟢 คืนค่า Form not found ออกไปทันที เพื่อให้ Frontend จัดการ Redirect
+                    //     return $this->output->set_content_type('application/json')->set_output(json_encode([
+                    //         'statusTb'     => true,
+                    //         'hasDraft'     => false,
+                    //         'revision'     => '-',
+                    //         'nextRevision' => '-',
+                    //         'desType'      => null,
+                    //         'planHeaderID' => null,
+                    //         'status'       => '',
+                    //         'docNo'        => 'Form not found.',
+                    //         'data'         => [],
+                    //     ]));
+                    // }
                 }
 
-                // ถ้าหาตามตั๋วไม่เจอ ให้ดึงตัวล่าสุดของรอบนั้นมาแสดง
-                if (!$headerRow) {
-                    $sqlLatest = "SELECT TOP 1 PlanHeaderID, PlanYear, PeriodCode, Revision, DesType, Status, Remark,
-                                            VORGNO, CYEAR2, NRUNNO
-                                FROM Tb_Master_DESBM_Header 
-                                WHERE PlanYear = ? AND PeriodCode = ?
-                                ORDER BY PlanHeaderID DESC";
-                    $headerRow = $this->MDSModel->QuerySetBase($sqlLatest, $this->DDS, [$year, $period])->row();
-                    if (!$headerRow) {
-                        if (!empty($nfrmno) && !empty($vorgno) && !empty($cyear) && !empty($cyear2) && !empty($nrunno)) {
-                            // ลบข้อมูล Flow และ Form ใน Oracle (ตัวอย่างชื่อฐานข้อมูล WEBFORM)
-                            $sqlDelFlow = "DELETE FROM WEBFORM_FLOW WHERE  NFRMNO = ? AND VORGNO = ? AND CYEAR = ? AND CYEAR2 = ? AND NRUNNO = ? ";
-                            $sqlDelForm = "DELETE FROM WEBFORM_DATA WHERE  NFRMNO = ? AND VORGNO = ? AND CYEAR = ? AND CYEAR2 = ? AND NRUNNO = ? ";
-
-                            // $this->WEBFORM คือ Connection ไปยัง Oracle DB
-                            $this->WEBFORM->query($sqlDelFlow, [$nfrmno, $vorgno, $cyear, $cyear2, $nrunno]);
-                            $this->WEBFORM->query($sqlDelForm, [$nfrmno, $vorgno, $cyear, $cyear2, $nrunno]);
-                        }
-                    }
-                }
             }
 
 
@@ -315,7 +318,7 @@ class form extends MY_Controller {
                 'desType'      => null,
                 'planHeaderID' => null,
                 'status'       => '',
-                'docNo'        => '',
+                'docNo'        => 'Form not found.',
                 'data'         => [],
             ]));
 

@@ -77,6 +77,12 @@ $(document).ready(async function () {
     $('#REQUEST_BYTxt').val(form.EMPNO);
     $('#INPUT_BYTxt').val(form.EMPNO);
     $('#PlanHeaderIDHid').val(form.PLANHEADERID);
+    if (form.DOC_NO == 'Form not found.') {
+        alert('ไม่พบข้อมูลเอกสารในระบบ กำลังนำท่านกลับสู่หน้าหลัก Webflow');
+        redirectWebflow();
+        return;
+    }
+
     if (form.PLAN_YEAR) {
         $('#YearDrp').val(form.PLAN_YEAR);
     }
@@ -791,15 +797,23 @@ async function loadDraftPlan() {
         CYEAR: formData.cyear ? formData.cyear.toString() : '',
         CYEAR2: formData.cyear2 ? formData.cyear2.toString() : '',
         NRUNNO: formData.nrunno ? Number(formData.nrunno) : 0,
-        // VORGNO: formData.vorgno || '', // 🟢 ส่งคีย์ Webflow
-        // CYEAR2: formData.cyear2 || '',
-        // NRUNNO: formData.nrunno || '',
-        PLANHEADERID: (formData.planheaderid = ''),
+        PLANHEADERID: formData.planheaderid || '',
     };
+
     try {
         //GetOrInitDraftPlan
+
         const res = await getOrInitDraftPlan(payload);
         if (res.statusTb) {
+            // 🟢 ถ้าไม่พบฟอร์ม ให้แจ้งเตือนและ Redirect กลับหน้า Webflow ทันที
+            if (res.docNo === 'Form not found.') {
+                alert(
+                    'ไม่พบข้อมูลเอกสารในระบบ กำลังนำท่านกลับสู่หน้าหลัก Webflow',
+                );
+                redirectWebflow();
+                return;
+            }
+
             currentPlanData = res.data;
             currentPlanHeaderID = res.planHeaderID;
             $('#RevisionHid').val(res.revision);
