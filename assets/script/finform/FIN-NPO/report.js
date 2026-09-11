@@ -355,7 +355,7 @@ function formatInvoiceDate(value) {
 function formatTaxCode(value) {
     if (value === '' || value === null || value === undefined) return '';
     const code = String(value).trim().replace(/\.0+$/, '');
-    return /^\d+$/.test(code) ? code.padStart(7, '0') : code;
+    return /^\d+$/.test(code) ? code.padStart(3, '0') : code;
 }
 
 function renderAmount(value, type) {
