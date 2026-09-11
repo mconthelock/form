@@ -1,8 +1,10 @@
 import { showLoader } from '@amec/webasset/preloader';
 import { showMessage } from '@amec/webasset/utils';
 import { initApp, tableOption } from '../utils';
+import { setPerformance } from './data';
 $(document).ready(async function () {
     try {
+        await initApp();
         const iframe = document.getElementById('my-iframe');
         const loadingIndicator = document.getElementById('loading-indicator');
         const startTime = performance.now();
@@ -11,7 +13,7 @@ $(document).ready(async function () {
         const STABILIZE_DELAY = 0;
         const MAX_WAIT = 15000;
 
-        const hideLoading = () => {
+        const hideLoading = async () => {
             if (hidden) return;
             hidden = true;
 
@@ -20,15 +22,15 @@ $(document).ready(async function () {
             console.log(
                 `⏱️ พร้อมใช้งาน! ใช้เวลาโหลดจริง: ${(actualLoadTimeMs / 1000).toFixed(2)} วินาที`,
             );
+            await setPerformance({
+                loadTime: actualLoadTimeMs,
+                user: `${$('#user-login').attr('name')} ${$('#user-login').attr('empno')}`,
+                url: iframe.src,
+            });
 
-            // 1. เฟด Loading ออก (เปลี่ยน opacity เป็น 0)
             loadingIndicator.classList.remove('opacity-100');
             loadingIndicator.classList.add('opacity-0');
-
-            // ปิดการรับคลิกที่ Loading เพื่อให้ User ทะลุไปคลิก Iframe ด้านล่างได้
             loadingIndicator.classList.add('pointer-events-none');
-
-            // 2. เฟด Iframe เข้ามา (เปลี่ยน opacity เป็น 100)
             iframe.classList.remove('opacity-0');
             iframe.classList.add('opacity-100');
         };

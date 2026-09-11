@@ -48,3 +48,21 @@ export async function getForms(url) {
         });
     });
 }
+
+export async function setPerformance(data) {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `${process.env.APP_API}/logger/form/performance`,
+            type: 'POST',
+            dataType: 'json',
+            data: JSON.stringify(data),
+            contentType: 'application/json',
+            success: function (response) {
+                resolve(response);
+            },
+            error: function (error) {
+                reject(error);
+            },
+        });
+    });
+}
