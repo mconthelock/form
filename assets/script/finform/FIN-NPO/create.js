@@ -649,6 +649,10 @@ function numberValue(value) {
     return Number(value) || 0;
 }
 
+function formatAmount(value) {
+    return value === '' || value == null ? '' : Number(value).toFixed(2);
+}
+
 function emptyInvoiceRow() {
     return {
         LINEID: ++invoiceLineId,
@@ -667,11 +671,11 @@ function invoiceRowHtml(row = {}, removable = false) {
             class="invoice-date input input-sm input-bordered w-full bg-white" required></td>
         <td><input type="text" name="INVOICE_NO[]" value="${escapeHtml(row.INVOICE_NO)}"
             class="invoice-no input input-sm input-bordered w-full bg-white" required></td>
-        <td><input type="number" step="0.01" min="0" name="TOTAL_AMOUNT[]" value="${escapeHtml(row.TOTAL_AMOUNT)}"
+        <td><input type="number" step="0.01" min="0" name="TOTAL_AMOUNT[]" value="${escapeHtml(formatAmount(row.TOTAL_AMOUNT))}"
             class="total-amount input input-sm input-bordered w-full bg-white text-right" required></td>
-        <td><input type="number" step="0.01" min="0" name="VAT[]" value="${escapeHtml(row.VAT)}"
+        <td><input type="number" step="0.01" min="0" name="VAT[]" value="${escapeHtml(formatAmount(row.VAT))}"
             class="vat input input-sm input-bordered w-full bg-white text-right"></td>
-        <td><input type="number" step="0.01" name="NET_PRICE[]" value="${escapeHtml(row.NET_PRICE)}"
+        <td><input type="number" step="0.01" name="NET_PRICE[]" value="${escapeHtml(formatAmount(row.NET_PRICE))}"
             class="net-price input input-sm input-bordered w-full bg-base-200/80 text-right" readonly></td>
         <td><input type="text" name="REFERENCE[]" value="${escapeHtml(row.REFERENCE)}" maxlength="255"
             class="reference input input-sm input-bordered w-full bg-white"></td>
@@ -732,8 +736,21 @@ $(document).on(
     'input',
     '#stampTable .total-amount, #stampTable .vat',
     function () {
+        const [whole, decimals] = this.value.split('.');
+        if (decimals?.length > 2) {
+            this.value = `${whole}.${decimals.slice(0, 2)}`;
+        }
         const row = $(this).closest('tr');
         calculateInvoiceRow(row);
+    },
+);
+
+$(document).on(
+    'blur',
+    '#stampTable .total-amount, #stampTable .vat',
+    function () {
+        if (this.value !== '') this.value = formatAmount(this.value);
+        calculateInvoiceRow($(this).closest('tr'));
     },
 );
 

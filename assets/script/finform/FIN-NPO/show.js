@@ -91,7 +91,7 @@ $(document).on('click', 'button[name="btnAction"]', async function (event) {
     )[0];
 
     if (invalidTaxCode) {
-        showMessage('Tax code must contain exactly 7 digits.', 'warning');
+        showMessage('Tax code must contain exactly 3 digits.', 'warning');
         invalidTaxCode.focus();
         return;
     }
@@ -462,12 +462,12 @@ async function renderInvoiceTable(invoices = [], canEditWht = false) {
                     <td>${escapeHtml(formatNumber(Number(invoice.TOTAL_AMT) - Number(invoice.NET_PRICE)))}</td>
                     <td>${escapeHtml(formatNumber(invoice.TOTAL_AMT))}</td>
                     <td>
-                        <input type="text" inputmode="numeric" pattern="[0-9]{7}" maxlength="7"
+                        <input type="text" inputmode="numeric" pattern="[0-9]{3}" maxlength="3"
                             class="wht-input input input-sm input-bordered w-full"
                             data-invoice-id="${escapeHtml(invoice.ID || invoice.LINE_ID || index + 1)}"
                             value="${escapeHtml(formatTaxCode(invoice.WHT))}"
                             ${canEditWht ? '' : 'readonly'}
-                            placeholder="7 digits" />
+                            placeholder="3 digits" />
                     </td>
                     <td>${escapeHtml(invoice.REFERENCE ?? invoice.REMARK ?? '')}</td>
                 </tr>`,
@@ -598,7 +598,7 @@ function formatNumber(value) {
 
 function formatTaxCode(value) {
     const code = String(value ?? '').trim();
-    return code ? code.padStart(7, '0') : '';
+    return code ? code.padStart(3, '0') : '';
 }
 
 function getCextDataValue(value) {
