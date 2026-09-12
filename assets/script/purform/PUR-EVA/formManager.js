@@ -101,6 +101,152 @@ export const concernManager = {
     },
 };
 
+export const secManager = {
+    list: ['SECTION'],
+    get select() {
+        return $('.sec');
+    },
+    set text(val) {
+        $('.sec').text(val);
+    },
+    set value(val) {
+        this.list.forEach((id) => {
+            $(`#${id}`).val(val).trigger('change');
+        });
+    },
+    getValue(id) {
+        return $(`#${id}`).val();
+    },
+    /**
+     * Initialize select2 for currency fields
+     * @param {{value: string, text: string}[]} data
+     */
+    async init(data) {
+        for (const id of this.list) {
+            await setSelect2({
+                id: id,
+                data: data,
+                size: 'sm',
+                placeholder: '-- Select --',
+                search: true,
+                clear: true,
+                emptyValue: true,
+            });
+        }
+    },
+    /**
+     * Sync value to other select2 element
+     * @param {string} value
+     * @param {HTMLElement} element
+     */
+    syncValue(value, element) {
+        for (const id of this.list) {
+            if (!$('#' + id).is(element)) {
+                $('#' + id)
+                    .val(value.toUpperCase())
+                    .trigger('change');
+            }
+        }
+    },
+};
+
+export const deptManager = {
+    list: ['DEPARTMENT'],
+    get select() {
+        return $('.dept');
+    },
+    set text(val) {
+        $('.dept').text(val);
+    },
+    set value(val) {
+        this.list.forEach((id) => {
+            $(`#${id}`).val(val).trigger('change');
+        });
+    },
+    getValue(id) {
+        return $(`#${id}`).val();
+    },
+    /**
+     * Initialize select2 for currency fields
+     * @param {{value: string, text: string}[]} data
+     */
+    async init(data) {
+        for (const id of this.list) {
+            await setSelect2({
+                id: id,
+                data: data,
+                size: 'sm',
+                placeholder: '-- Select --',
+                search: true,
+                clear: true,
+                emptyValue: true,
+            });
+        }
+    },
+    /**
+     * Sync value to other select2 element
+     * @param {string} value
+     * @param {HTMLElement} element
+     */
+    syncValue(value, element) {
+        for (const id of this.list) {
+            if (!$('#' + id).is(element)) {
+                $('#' + id)
+                    .val(value.toUpperCase())
+                    .trigger('change');
+            }
+        }
+    },
+};
+
+export const divManager = {
+    list: ['DIVISION'],
+    get select() {
+        return $('.div');
+    },
+    set text(val) {
+        $('.div').text(val);
+    },
+    set value(val) {
+        this.list.forEach((id) => {
+            $(`#${id}`).val(val).trigger('change');
+        });
+    },
+    getValue(id) {
+        return $(`#${id}`).val();
+    },
+    /**
+     * Initialize select2 for currency fields
+     * @param {{value: string, text: string}[]} data
+     */
+    async init(data) {
+        for (const id of this.list) {
+            await setSelect2({
+                id: id,
+                data: data,
+                size: 'sm',
+                placeholder: '-- Select --',
+                search: true,
+                clear: true,
+                emptyValue: true,
+            });
+        }
+    },
+    /**
+     * Sync value to other select2 element
+     * @param {string} value
+     * @param {HTMLElement} element
+     */
+    syncValue(value, element) {
+        for (const id of this.list) {
+            if (!$('#' + id).is(element)) {
+                $('#' + id)
+                    .val(value.toUpperCase())
+                    .trigger('change');
+            }
+        }
+    },
+};
 // ตัวอย่างไฟล์ fileHelper.js (หรือไฟล์ utils ของโปรเจกต์คุณ)
 export const renderFilesByType = (
     files,
@@ -122,17 +268,17 @@ export const renderFilesByType = (
     filteredFiles.forEach((f) => {
         const ext = f.FILE_ONAME ? f.FILE_ONAME.split('.').pop() : '';
         html += `
-        <a 
-            href="${f.FILE_PATH}" 
-            storedName="${f.FILE_FNAME}" 
+        <a
+            href="${f.FILE_PATH}"
+            storedName="${f.FILE_FNAME}"
             originalName="${f.FILE_ONAME}"
             target="_blank"
             class="file-link text-primary flex items-center gap-3 w-full border rounded-lg bg-base-100 p-3 hover:bg-gray-50 transition"
         >
             <i class="${classIcofont(ext)} text-4xl"></i>
             <span class="link link-primary">${f.FILE_ONAME}</span>
-            <button 
-                type="button" 
+            <button
+                type="button"
                 file-id="${f.FILE_ID}"
                 class="flex items-center justify-center ml-auto p-5 w-6 h-6 rounded hover:bg-red-100 text-red-500 hover:text-red-600 transition remove-file ${isReturn ? '' : 'hidden'}"
             >
