@@ -60,7 +60,7 @@ export async function renderLink(formno) {
 
         if (formeva) {
             // แนะนำให้เช็คด้วยว่าเจอข้อมูล formeva หรือไม่ เพื่อป้องกัน Error เพิ่มเติม
-            let linkUrl = `${protocol}//${subDomain}/form/purform/PUR-EVA/form/main?no=${formeva.NNO}&orgNo=${formeva.VORGNO}&y=${formeva.CYEAR}&y2=${year}&runNo=${runningNo}`;
+            let linkUrl = `${protocol}//${subDomain}.mitsubishielevatorasia.co.th/form/purform/PUR-EVA/form/main?no=${formeva.NNO}&orgNo=${formeva.VORGNO}&y=${formeva.CYEAR}&y2=${year}&runNo=${runningNo}`;
 
             $('#EVANO').html(
                 formno
