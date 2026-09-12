@@ -41,11 +41,23 @@
                 <div id="VENDGROUPTYPE" class="text-gray-700 text-sm"></div> <input type="hidden" name="VENDGROUPTYPE"
                     value="" />
             </div>
-            <div class="grid grid-cols-[220px_1fr] gap-3 mb-3 items-baseline">
+            {{-- <div class="grid grid-cols-[220px_1fr] gap-3 mb-3 items-baseline">
                 <div class="font-semibold text-sm">Vendor Code : </div>
                 <div id="VENDCODE" class="text-gray-700 text-sm"></div><input type="hidden" name="VENDCODE"
                     value="" />
+            </div> --}}
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="grid grid-cols-[220px_1fr] gap-3 mb-3 items-baseline">
+                    <div class="font-semibold text-sm">Vendor Code :</div>
+                    <div id="VENDCODE" class="text-gray-700 text-sm"></div><input type="hidden" name="VENDCODE"
+                        value="" />
+                </div>
+                <div class="grid grid-cols-[220px_1fr] gap-3 mb-3 items-baseline">
+                    <div class="font-semibold text-sm">EVA No. :</div>
+                    <div id="EVANO" class="text-gray-700 text-sm"></div>
+                </div>
             </div>
+
             <div class="grid grid-cols-[220px_1fr] gap-3 mb-3 items-baseline">
                 <div class="font-semibold text-sm">Vendor Name: </div>
                 <div id="VENDNAME" class="text-gray-700 text-sm"></div><input type="hidden" name="VENDNAME"

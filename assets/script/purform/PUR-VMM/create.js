@@ -28,6 +28,8 @@ import { showLoader } from '@amec/webasset/preloader';
 import { classIcofont } from '@amec/webasset/fileExplorer';
 import { downloadOrOpenFile } from '@amec/webasset/api/file';
 import { checkAttFile, renderNewFilesUI } from './function';
+import { getFormMasterByVaname } from '@amec/webasset/api/webform';
+import { renderLink } from './function';
 
 var form = {};
 var deletefile = [];
@@ -115,6 +117,9 @@ $(document).ready(async function () {
             'checked',
             true,
         );
+        $(`input[name="REQTYPE"]`).on('click', function (e) {
+            e.preventDefault();
+        });
         $('input[name="VENDCODE"], #VENDCODE').val(purvmm.VENDCODE);
         $(`input[name="VENDGROUPTYPE"][value="${purvmm.VENDGROUPTYPE}"]`).prop(
             'checked',
@@ -142,6 +147,10 @@ $(document).ready(async function () {
         $('#BANKNAME').val(purvmm.BANKNAME || '');
         $('#BRANCH').val(purvmm.BRANCH || '');
         $('#BANKADDR').val(purvmm.BANKADDR || '');
+        if (purvmm.EVANO) {
+            await renderLink(purvmm.EVANO);
+        }
+
         purvmm.ATTACH_OTHER && $('#ATTACH_OTHER').val(purvmm.ATTACH_OTHER);
         const attachedFiles = purvmm.FILES || [];
         renderFilesByType(attachedFiles, 11, 'file-type-11', true);
@@ -200,6 +209,7 @@ $(document).ready(async function () {
         }
         console.log(purvmm);
     } else {
+        $('input[name="REQTYPE"][value="A"]').prop('disabled', true);
         $('#form-action-container').html(
             webflowSubmit({
                 request: true,
@@ -224,12 +234,10 @@ $(document).on('input', '#VENDCODE', async function () {
                 console.log(vendor[0].PURVMM);
 
                 if (vendor[0].PURVMM.length > 0) {
-                    console.log('IFFFFFFF');
-
                     const vendorfilter = vendor[0].PURVMM.filter(
                         (item) => item.FORM.CST == '2',
                     );
-                    if (vendorfilter) {
+                    if (vendorfilter?.length > 0) {
                         const latestVendor = vendorfilter.sort((a, b) => {
                             // เรียง CYEAR2 จากมากไปน้อย (ปีใหม่กว่าขึ้นก่อน)
                             if (b.CYEAR2 !== a.CYEAR2) {
