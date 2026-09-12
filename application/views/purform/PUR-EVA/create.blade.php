@@ -263,7 +263,7 @@
                             <!-- Address Line 1 -->
                             <div>
                                 <label class="block text-xs font-semibold text-gray-600 mb-1">Address (ที่อยู่)</label>
-                                <input type="text" name="ADDRESS1_EN" id="ADDRESS1_EN" maxlength="30"
+                                <input type="text" name="ADDRESS1_EN" id="ADDRESS1_EN" maxlength="200"
                                     placeholder="e.g. 43/86 Moo 16, Bangna Road..."
                                     class="input input-sm border border-gray-400 h-8 rounded  px-2 w-full req">
                             </div>
@@ -520,7 +520,7 @@
                             <!-- ย้าย Dropzone ออกมาข้างนอก เพื่อให้ใช้ความกว้างได้เต็ม 100% ของ Container หลัก -->
                             <!-- <div id="attachFile" class="mt-4">
 
-                                                                                                                </div> -->
+                                                                                                                        </div> -->
                         </div>
                     </div>
                 </div>
@@ -1106,13 +1106,13 @@
                         <div class="flex items-center gap-2">
                             <span class="flex-shrink-0 whitespace-nowrap">Direct:</span>
                             <input type="text" name="EMPDIRECT"
-                                class="empnum input-interger flex-1 input input-bordered input-sm bg-gray-50 border-gray-300 req">
+                                class="empnum input-integer  flex-1 input input-bordered input-sm bg-gray-50 border-gray-300 req">
                         </div>
 
                         <div class="flex items-center gap-2">
                             <span class="flex-shrink-0 whitespace-nowrap">Indirect:</span>
                             <input type="text" name = "EMPINDIRECT"
-                                class="empnum input-interger flex-1 input input-bordered input-sm bg-gray-50 border-gray-300 req">
+                                class="empnum input-integer flex-1 input input-bordered input-sm bg-gray-50 border-gray-300 req">
                         </div>
 
                         <div class="flex items-center gap-2">

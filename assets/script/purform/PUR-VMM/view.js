@@ -11,6 +11,7 @@ import { approve, getData } from './data';
 import { renderFilesByType } from '../PUR-EVA/formManager';
 import { downloadOrOpenFile } from '@amec/webasset/api/file';
 import { redirectWebflow } from '@amec/webasset/form';
+import { renderLink } from './function';
 
 var form = {};
 var formvmm = {};
@@ -76,6 +77,9 @@ $(async function () {
         $('input[name="VENDGROUPTYPE"]').val(formvmm.VENDGROUPTYPE);
         $('input[name="VENDCODE"]').val(formvmm.VENDCODE);
         $('input[name="VENDNAME"]').val(formvmm.VENDNAME);
+        if (formvmm.EVANO) {
+            await renderLink(formvmm.EVANO);
+        }
 
         formvmm.ATTACH_OTHER &&
             $('#ATTACH_OTHER_TEXT').text(formvmm.ATTACH_OTHER);

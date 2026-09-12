@@ -107,10 +107,27 @@
                         </label>
                     </div>
                 </div>
-                <div class="grid grid-cols-[170px_1fr] items-center gap-2 required">
+                {{-- <div class="grid grid-cols-[170px_1fr] items-center gap-2 required">
                     <span class="font-semibold text-sm required ">Vendor Code:</span>
                     <input type="text" name = "VENDCODE" id = "VENDCODE" maxlength="5"
                         class="input input-sm border border-gray-400 h-8 rounded w-48 px-2 req" value="">
+                </div> --}}
+                <div class="grid grid-cols-[170px_1fr] items-center gap-2 required">
+                    <span class="font-semibold text-sm required">Vendor Code:</span>
+
+                    <!-- สร้าง div flex มาครอบ input เดิม และเพิ่มเลขอ้างอิงต่อท้าย -->
+                    <div class="flex items-center gap-3">
+                        <input type="text" name="VENDCODE" id="VENDCODE" maxlength="5"
+                            class="input input-sm border border-gray-400 h-8 rounded w-48 px-2 req" value="">
+
+                        <!-- ส่วนที่เพิ่มมาใหม่ (เลขอ้างอิง) -->
+                        <span class="font-semibold text-sm ml-4">EVA. No.:</span>
+                        <span id="EVANO" class="text-sm text-blue-600"></span>
+
+                        <!-- (ถ้าต้องการให้เลขอ้างอิงเป็นช่องกรอก input ให้ใช้โค้ดด้านล่างนี้แทน)
+                                        <input type="text" name="REF_CODE" id="REF_CODE" class="input input-sm border border-gray-400 h-8 rounded w-48 px-2">
+                                        -->
+                    </div>
                 </div>
             </div>
 
@@ -160,13 +177,13 @@
                             <!-- Address Line 1 -->
                             <div>
                                 <label class="block text-xs font-semibold text-gray-600 mb-1">Address (ที่อยู่)</label>
-                                <input type="text" name="ADDRESS1_EN" id="ADDRESS1_EN"
+                                <input type="text" name="ADDRESS1_EN" id="ADDRESS1_EN" maxlength="200"
                                     placeholder="e.g. 43/86 Moo 16, Bangna Road..."
                                     class="input input-sm border border-gray-400 h-8 rounded  px-2 w-full req">
                             </div>
                             <div>
                                 <label class="block text-xs font-semibold text-gray-600 mb-1">Address (ที่อยู่)</label>
-                                <input type="text" name="ADDRESS2_EN" id="ADDRESS2_EN"
+                                <input type="text" name="ADDRESS2_EN" id="ADDRESS2_EN" maxlength="200"
                                     placeholder="e.g. 43/86 Moo 16, Bangna Road..."
                                     class="input input-sm border border-gray-400 h-8 rounded  px-2 w-full">
                             </div>
@@ -472,7 +489,7 @@
                             <!-- ย้าย Dropzone ออกมาข้างนอก เพื่อให้ใช้ความกว้างได้เต็ม 100% ของ Container หลัก -->
                             <!-- <div id="attachFile" class="mt-4">
 
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                </div> -->
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    </div> -->
                         </div>
                     </div>
                 </div>
