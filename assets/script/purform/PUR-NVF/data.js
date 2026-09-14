@@ -30,7 +30,7 @@ export async function getData(form) {
 
 export async function getTermcode() {
     return fetchUtils({
-        url: `${process.env.APP_API}/pursys/termcode`,
+        url: `${process.env.APP_API}/pursys/termcode/payment`,
         method: 'GET',
     });
 }
