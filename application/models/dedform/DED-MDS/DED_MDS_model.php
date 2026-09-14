@@ -1421,9 +1421,10 @@ class DED_MDS_model extends my_model
             throw new Exception("ไม่พบประเภท DesType สำหรับรอบนี้");
         }
 
-        $escapedDes = array_map(function ($item) {
+        $escapedDes = array_map(function ($item) use ($conf) {
             return $conf->escape(trim($item));
         }, $desTypeList);
+
         $desTypeInClause = implode(',', $escapedDes);
 
         // 3. เริ่ม Transaction และรัน SQL MERGE
