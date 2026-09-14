@@ -92,6 +92,27 @@
             border-color: #0754b8;
         }
 
+        .area-form .select2-container {
+            width: 100% !important;
+        }
+
+        .area-form .select2-container .select2-selection--single {
+            height: 34px;
+            padding: 0 10px;
+            border: 1px solid #c8c8c8;
+            border-radius: 3px;
+            font-size: 15px;
+        }
+
+        .area-form .select2-container .select2-selection__rendered {
+            padding: 0;
+            line-height: 32px;
+        }
+
+        .area-form .select2-container .select2-selection__arrow {
+            height: 32px;
+        }
+
         .area-form-actions {
             display: flex;
             justify-content: flex-end;
@@ -342,22 +363,24 @@
             <form id="areaForm" class="area-form">
                 <div class="area-form-grid">
                     <div>
-                        <label for="areaLocation">Location</label>
-                        <select id="areaLocation" name="location_id" required>
+                        <label for="LOCATION_ID">Location</label>
+                        <select id="LOCATION_ID" name="LOCATION_ID" required>
                             <option value="">Select location</option>
                         </select>
                     </div>
                     <div>
-                        <label for="areaName">Area</label>
-                        <input type="text" id="areaName" name="area" required>
+                        <label for="AREA_NAME">Area</label>
+                        <input type="text" id="AREA_NAME" name="AREA_NAME" required>
                     </div>
                     <div>
-                        <label for="areaLevel">Level</label>
-                        <input type="text" id="areaLevel" name="level" required>
+                        <label for="AREA_LEVEL">Level</label>
+                        <input type="number" id="AREA_LEVEL" name="AREA_LEVEL" inputmode="numeric" min="0" step="1" required>
                     </div>
                     <div>
-                        <label for="areaOwner">Area Owner</label>
-                        <input type="text" id="areaOwner" name="area_owner" required>
+                        <label for="AREA_OWNER">Area Owner</label>
+                        <select id="AREA_OWNER" name="AREA_OWNER" required>
+                            <option value="">Select area owner</option>
+                        </select>
                     </div>
                 </div>
                 <div class="area-form-actions">

@@ -3,10 +3,36 @@ import { logFormData, showMessage } from '@amec/webasset/utils';
 import { getEmpData, getAreas, getLocations, createForm } from './data';
 import { webflowSubmit } from '@amec/webasset/components/form';
 import { redirectWebflow } from '@amec/webasset/form';
+import { setDatePicker } from '@amec/webasset/flatpickr';
 
 (function () {
     let mockupTable = null;
     let tableArea = null;
+
+    async function modalTable(data) {
+        const table = await createTable(
+            {
+                data: data,
+                responsive: false,
+                columns: [
+                    { title: 'Location', data: 'LOCATION.LOCATION_NAME' },
+                    { title: 'Area', data: 'AREA_NAME' },
+                    { title: 'Level', data: 'AREA_LEVEL' },
+                    { title: 'Area Owner', data: 'AREA_OWNER' },
+                ],
+            },
+            {
+                id: '#modalTable',
+                domScroll: {
+                    status: true,
+                },
+                columnSelect: {
+                    status: true,
+                },
+            },
+        );
+        return table;
+    }
 
     function initCreatePage() {
         const visitorBody = document.getElementById('visitor-table-body');
@@ -46,6 +72,193 @@ import { redirectWebflow } from '@amec/webasset/form';
             return;
         }
 
+        function updateAreaIndexes() {
+            Array.from(
+                areaBody.querySelectorAll('tr:not(#area-empty-row)'),
+            ).forEach((row, index) => {
+                const cell = row.querySelector('td:first-child');
+                if (cell) {
+                    cell.textContent = index + 1;
+                }
+            });
+        }
+
+        function updateVisitorIndexes() {
+            Array.from(visitorBody.rows).forEach((row, index) => {
+                row.querySelector('.visitor-row-number').textContent =
+                    index + 1;
+            });
+        }
+
+        function makeRadioGroupToggleable(selector, callback) {
+            const radios = document.querySelectorAll(selector);
+
+            radios.forEach(function (radio) {
+                radio.addEventListener('mousedown', function () {
+                    this.dataset.wasChecked = this.checked ? 'true' : 'false';
+                });
+
+                radio.addEventListener('click', function (event) {
+                    if (this.dataset.wasChecked === 'true' && this.checked) {
+                        event.preventDefault();
+                        radios.forEach(function (item) {
+                            item.checked = false;
+                        });
+                    }
+
+                    if (callback) {
+                        callback();
+                    }
+                });
+            });
+        }
+
+        function clearRequestTypeRelatedFields() {
+            const isHostExternal = hostExternalRadio
+                ? hostExternalRadio.checked
+                : false;
+
+            document
+                .querySelectorAll('input[name="REQUEST_SUB_TYPE"]')
+                .forEach(function (radio) {
+                    if (isHostExternal) {
+                        radio.checked = false;
+                    }
+                });
+
+            if (!isHostExternal) {
+                document
+                    .querySelectorAll('#host-external-section input')
+                    .forEach(function (field) {
+                        if (
+                            field.type === 'checkbox' ||
+                            field.type === 'radio'
+                        ) {
+                            field.disabled = true;
+                        }
+                    });
+            } else {
+                document
+                    .querySelectorAll('#host-external-section input')
+                    .forEach(function (field) {
+                        if (
+                            field.type === 'checkbox' ||
+                            field.type === 'radio'
+                        ) {
+                            field.disabled = false;
+                        }
+                    });
+            }
+        }
+
+        function updateAddVisitorButton() {
+            const isIndividualRequest =
+                employeeRadio?.checked &&
+                document.querySelector(
+                    'input[name="REQUEST_SUB_TYPE"][value="I"]',
+                )?.checked;
+
+            addVisitorBtn.disabled = Boolean(isIndividualRequest);
+            addVisitorBtn.classList.toggle(
+                'opacity-50',
+                Boolean(isIndividualRequest),
+            );
+            addVisitorBtn.classList.toggle(
+                'cursor-not-allowed',
+                Boolean(isIndividualRequest),
+            );
+            addVisitorBtn.setAttribute(
+                'aria-disabled',
+                String(Boolean(isIndividualRequest)),
+            );
+        }
+
+        function togglePermitOptionFields() {
+            const selectedPermitOption = document.querySelector(
+                'input[name="permit_option"]:checked',
+            );
+            const longTermYearsInput = document.querySelector(
+                'input[name="LONGTERM_YEARS"]',
+            );
+            const startDateInput = document.querySelector(
+                'input[name="PERMIT_START_DATE"]',
+            );
+            const validUntilInput = document.querySelector(
+                'input[name="PERMIT_END_DATE"]',
+            );
+
+            longTermYearsInput.disabled =
+                selectedPermitOption?.value !== 'long_term';
+            startDateInput.disabled = selectedPermitOption?.value !== 'period';
+            validUntilInput.disabled = selectedPermitOption?.value !== 'period';
+        }
+
+        function updatePermitTypeRestrictions() {
+            const isHostExternal = hostExternalRadio?.checked;
+            const longTermRadio = document.querySelector(
+                'input[name="permit_option"][value="long_term"]',
+            );
+            const periodRadio = document.querySelector(
+                'input[name="permit_option"][value="period"]',
+            );
+            const helmetStickerInput = document.querySelector(
+                'input[name="HELMET_STICKER"]',
+            );
+            const photoPermitBadgeInput = document.querySelector(
+                'input[name="PHOTO_PERMIT_BADGE"]',
+            );
+
+            longTermRadio.disabled = isHostExternal;
+            if (isHostExternal) {
+                periodRadio.checked = true;
+                helmetStickerInput.disabled = true;
+                helmetStickerInput.checked = false;
+                photoPermitBadgeInput.disabled = false;
+                photoPermitBadgeInput.checked = true;
+            } else {
+                helmetStickerInput.disabled = false;
+                photoPermitBadgeInput.disabled = false;
+            }
+
+            togglePermitOptionFields();
+        }
+
+        function toggleHostExternalSection() {
+            const isHostExternal = hostExternalRadio?.checked;
+            const isEmployee = employeeRadio?.checked;
+            const employeeRequestLabels = document.querySelectorAll(
+                '.employee-request-group',
+            );
+            const hostRequestLabel = document.querySelector(
+                '.host-request-group',
+            );
+            const requestSubTypeInputs = document.querySelectorAll(
+                'input[name="REQUEST_SUB_TYPE"]',
+            );
+
+            applicantVisitorSection.classList.toggle('hidden', isHostExternal);
+            hostExternalSection.classList.toggle('hidden', !isHostExternal);
+            employeeRequestLabels.forEach(function (label) {
+                label.classList.toggle('opacity-50', isHostExternal);
+                label.toggleAttribute('aria-disabled', isHostExternal);
+            });
+            if (hostRequestLabel) {
+                hostRequestLabel.classList.toggle('opacity-50', isEmployee);
+                hostRequestLabel.toggleAttribute('aria-disabled', isEmployee);
+            }
+
+            requestSubTypeInputs.forEach(function (radio) {
+                radio.disabled = !isEmployee;
+                if (!isEmployee) {
+                    radio.checked = false;
+                }
+            });
+
+            clearRequestTypeRelatedFields();
+            updateAddVisitorButton();
+            updatePermitTypeRestrictions();
+        }
+
         // ฟังก์ชันหลักที่ทำงานเมื่อโหลดหน้า
         $(async function () {
             const queryString = window.location.search;
@@ -58,6 +271,7 @@ import { redirectWebflow } from '@amec/webasset/form';
             mockupTable = await modalTable(getareas);
             const getName = await getEmpData(empno);
             $('#INPUTBY').val(empno);
+            await setDatePicker();
         });
 
         $(document).on('change', '#select-all-areas', function () {
@@ -102,6 +316,12 @@ import { redirectWebflow } from '@amec/webasset/form';
                     $(this).focus();
                     return;
                 }
+                if (String(empData.CSTATUS) !== '1') {
+                    showMessage('Employee has resigned', 'error');
+                    $(this).val('');
+                    $(this).focus();
+                    return;
+                }
                 $('#empName').val(empData.SNAME);
                 $('#empDiv').val(
                     `${empData.SSEC}/${empData.SDEPT}/${empData.SDIV}`,
@@ -123,6 +343,12 @@ import { redirectWebflow } from '@amec/webasset/form';
                     const empData = await getEmpData($(this).val());
                     if (!empData || !empData.SNAME) {
                         showMessage('Employee data not found', 'error');
+                        $(this).val('');
+                        $(this).focus();
+                        return;
+                    }
+                    if (String(empData.CSTATUS) !== '1') {
+                        showMessage('Employee has resigned', 'error');
                         $(this).val('');
                         $(this).focus();
                         return;
@@ -166,6 +392,16 @@ import { redirectWebflow } from '@amec/webasset/form';
                 $(this).trigger('change');
             },
         );
+
+        addVisitorBtn.addEventListener('click', function () {
+            if (addVisitorBtn.disabled) {
+                return;
+            }
+
+            const clone = visitorTemplate.content.cloneNode(true);
+            visitorBody.appendChild(clone);
+            updateVisitorIndexes();
+        });
 
         $(document).on('click', '#btnaddDatarow', async function (e) {
             e.preventDefault();
@@ -282,203 +518,6 @@ import { redirectWebflow } from '@amec/webasset/form';
             $('#modal-add').prop('checked', false);
         });
 
-        function updateAreaIndexes() {
-            Array.from(
-                areaBody.querySelectorAll('tr:not(#area-empty-row)'),
-            ).forEach((row, index) => {
-                const cell = row.querySelector('td:first-child');
-                if (cell) {
-                    cell.textContent = index + 1;
-                }
-            });
-        }
-
-        function updateVisitorIndexes() {
-            Array.from(visitorBody.rows).forEach((row, index) => {
-                row.querySelector('.visitor-row-number').textContent =
-                    index + 1;
-            });
-        }
-
-        function makeRadioGroupToggleable(selector, callback) {
-            const radios = document.querySelectorAll(selector);
-
-            radios.forEach(function (radio) {
-                radio.addEventListener('mousedown', function () {
-                    this.dataset.wasChecked = this.checked ? 'true' : 'false';
-                });
-
-                radio.addEventListener('click', function (event) {
-                    if (this.dataset.wasChecked === 'true' && this.checked) {
-                        event.preventDefault();
-                        radios.forEach(function (item) {
-                            item.checked = false;
-                        });
-                    }
-
-                    if (callback) {
-                        callback();
-                    }
-                });
-            });
-        }
-
-        function clearRequestTypeRelatedFields() {
-            const isHostExternal = hostExternalRadio
-                ? hostExternalRadio.checked
-                : false;
-
-            document
-                .querySelectorAll('input[name="REQUEST_SUB_TYPE"]')
-                .forEach(function (radio) {
-                    if (isHostExternal) {
-                        radio.checked = false;
-                    }
-                });
-
-            if (!isHostExternal) {
-                document
-                    .querySelectorAll('#host-external-section input')
-                    .forEach(function (field) {
-                        if (
-                            field.type === 'checkbox' ||
-                            field.type === 'radio'
-                        ) {
-                            field.disabled = true;
-                        }
-                    });
-            } else {
-                document
-                    .querySelectorAll('#host-external-section input')
-                    .forEach(function (field) {
-                        if (
-                            field.type === 'checkbox' ||
-                            field.type === 'radio'
-                        ) {
-                            field.disabled = false;
-                        }
-                    });
-            }
-        }
-
-        function toggleHostExternalSection() {
-            const isHostExternal = hostExternalRadio?.checked;
-            const isEmployee = employeeRadio?.checked;
-            const employeeRequestLabels = document.querySelectorAll(
-                '.employee-request-group',
-            );
-            const hostRequestLabel = document.querySelector(
-                '.host-request-group',
-            );
-            const requestSubTypeInputs = document.querySelectorAll(
-                'input[name="REQUEST_SUB_TYPE"]',
-            );
-
-            applicantVisitorSection.classList.toggle('hidden', isHostExternal);
-            hostExternalSection.classList.toggle('hidden', !isHostExternal);
-            employeeRequestLabels.forEach(function (label) {
-                label.classList.toggle('opacity-50', isHostExternal);
-                label.toggleAttribute('aria-disabled', isHostExternal);
-            });
-            if (hostRequestLabel) {
-                hostRequestLabel.classList.toggle('opacity-50', isEmployee);
-                hostRequestLabel.toggleAttribute('aria-disabled', isEmployee);
-            }
-
-            requestSubTypeInputs.forEach(function (radio) {
-                radio.disabled = !isEmployee;
-                if (!isEmployee) {
-                    radio.checked = false;
-                }
-            });
-
-            clearRequestTypeRelatedFields();
-            updateAddVisitorButton();
-            updatePermitTypeRestrictions();
-        }
-
-        function updateAddVisitorButton() {
-            const isIndividualRequest =
-                employeeRadio?.checked &&
-                document.querySelector(
-                    'input[name="REQUEST_SUB_TYPE"][value="I"]',
-                )?.checked;
-
-            addVisitorBtn.disabled = Boolean(isIndividualRequest);
-            addVisitorBtn.classList.toggle(
-                'opacity-50',
-                Boolean(isIndividualRequest),
-            );
-            addVisitorBtn.classList.toggle(
-                'cursor-not-allowed',
-                Boolean(isIndividualRequest),
-            );
-            addVisitorBtn.setAttribute(
-                'aria-disabled',
-                String(Boolean(isIndividualRequest)),
-            );
-        }
-
-        function togglePermitOptionFields() {
-            const selectedPermitOption = document.querySelector(
-                'input[name="permit_option"]:checked',
-            );
-            const longTermYearsInput = document.querySelector(
-                'input[name="LONGTERM_YEARS"]',
-            );
-            const startDateInput = document.querySelector(
-                'input[name="PERMIT_START_DATE"]',
-            );
-            const validUntilInput = document.querySelector(
-                'input[name="PERMIT_END_DATE"]',
-            );
-
-            longTermYearsInput.disabled =
-                selectedPermitOption?.value !== 'long_term';
-            startDateInput.disabled = selectedPermitOption?.value !== 'period';
-            validUntilInput.disabled = selectedPermitOption?.value !== 'period';
-        }
-
-        function updatePermitTypeRestrictions() {
-            const isHostExternal = hostExternalRadio?.checked;
-            const longTermRadio = document.querySelector(
-                'input[name="permit_option"][value="long_term"]',
-            );
-            const periodRadio = document.querySelector(
-                'input[name="permit_option"][value="period"]',
-            );
-            const helmetStickerInput = document.querySelector(
-                'input[name="HELMET_STICKER"]',
-            );
-            const photoPermitBadgeInput = document.querySelector(
-                'input[name="PHOTO_PERMIT_BADGE"]',
-            );
-
-            longTermRadio.disabled = isHostExternal;
-            if (isHostExternal) {
-                periodRadio.checked = true;
-                helmetStickerInput.disabled = true;
-                helmetStickerInput.checked = false;
-                photoPermitBadgeInput.disabled = false;
-                photoPermitBadgeInput.checked = true;
-            } else {
-                helmetStickerInput.disabled = false;
-                photoPermitBadgeInput.disabled = false;
-            }
-
-            togglePermitOptionFields();
-        }
-
-        addVisitorBtn.addEventListener('click', function () {
-            if (addVisitorBtn.disabled) {
-                return;
-            }
-
-            const clone = visitorTemplate.content.cloneNode(true);
-            visitorBody.appendChild(clone);
-            updateVisitorIndexes();
-        });
-
         makeRadioGroupToggleable(
             'input[name="reqtype"]',
             toggleHostExternalSection,
@@ -507,10 +546,6 @@ import { redirectWebflow } from '@amec/webasset/form';
                 updatePermitTypeRestrictions();
             });
         });
-
-        toggleHostExternalSection();
-        togglePermitOptionFields();
-        updatePermitTypeRestrictions();
 
         document.addEventListener('click', function (event) {
             if (event.target.closest('.remove-row')) {
@@ -542,6 +577,9 @@ import { redirectWebflow } from '@amec/webasset/form';
             }
         });
 
+        toggleHostExternalSection();
+        togglePermitOptionFields();
+        updatePermitTypeRestrictions();
         updateAreaIndexes();
         updateVisitorIndexes();
         toggleHostExternalSection();
@@ -772,28 +810,3 @@ import { redirectWebflow } from '@amec/webasset/form';
         }
     });
 })();
-
-async function modalTable(data) {
-    const table = await createTable(
-        {
-            data: data,
-            responsive: false,
-            columns: [
-                { title: 'Location', data: 'LOCATION.LOCATION_NAME' },
-                { title: 'Area', data: 'AREA_NAME' },
-                { title: 'Level', data: 'AREA_LEVEL' },
-                { title: 'Area Owner', data: 'AREA_OWNER' },
-            ],
-        },
-        {
-            id: '#modalTable',
-            domScroll: {
-                status: true,
-            },
-            columnSelect: {
-                status: true,
-            },
-        },
-    );
-    return table;
-}

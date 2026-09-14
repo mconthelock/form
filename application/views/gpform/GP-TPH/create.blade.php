@@ -197,11 +197,11 @@
                     <div class="mt-3 grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label class="block text-sm text-slate-600 mb-1">Start Date</label>
-                            <input type="date" name="PERMIT_START_DATE" class="input input-bordered w-full" id='PERMIT_START_DATE'>
+                            <input type="text" name="PERMIT_START_DATE" class="input fdate input-bordered w-full" id='PERMIT_START_DATE'>
                         </div>
                         <div>
                             <label class="block text-sm text-slate-600 mb-1">Valid Until (ใช้ได้จนถึง)</label>
-                            <input type="date" name="PERMIT_END_DATE" class="input input-bordered w-full" id="PERMIT_END_DATE">
+                            <input type="text" name="PERMIT_END_DATE" class="input fdate input-bordered w-full" id="PERMIT_END_DATE">
                         </div>
                     </div>
                 </div>
