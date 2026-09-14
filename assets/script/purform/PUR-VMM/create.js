@@ -19,7 +19,7 @@ import {
     postcodeEnManager,
     stateEnManager,
 } from '../PUR-NVF/formManager';
-import { create, getData, update } from './data';
+import { create, getData, getTrade, update } from './data';
 import { getFormStatus, showflow } from '@amec/webasset/api/webform';
 import { webflowSubmit } from '@amec/webasset/components/form';
 import Swal from 'sweetalert2';
@@ -30,6 +30,7 @@ import { downloadOrOpenFile } from '@amec/webasset/api/file';
 import { checkAttFile, renderNewFilesUI } from './function';
 import { getFormMasterByVaname } from '@amec/webasset/api/webform';
 import { renderLink } from './function';
+import { tradeManager } from './formManager';
 
 var form = {};
 var deletefile = [];
@@ -83,13 +84,21 @@ const requiredMessage = [
 
 $(document).ready(async function () {
     const term = await getTermcode();
-    console.log(term);
 
     const termdata = term.map((t) => ({
         value: t.STERMCODE,
         text: t.STERMDESC,
     }));
 
+    const trade = await getTrade();
+    const tradedata = trade.map((t) => ({
+        value: t.TRADE_CODE,
+        text: t.TRADE_SHIPBY
+            ? `${t.TRADE_NAME} (${t.TRADE_SHIPBY})`
+            : t.TRADE_NAME,
+    }));
+
+    tradeManager.init(tradedata);
     // const currency = await getCurrency();
     // const currencyData = currency.map((c) => ({
     //     value: c.CURR_CODE,
@@ -110,9 +119,13 @@ $(document).ready(async function () {
         EMPNO: $('.apv-data').attr('empno'),
         RETURN: formInfo.return ?? null,
     };
+    //console.log('xxxxxxxxx');
+
     if (formInfo.return) {
         const flow = await showflow({ ...form, showStep: true });
         const purvmm = await getData(form);
+        //console.log(purvmm);
+
         $(`input[name="REQTYPE"][value="${purvmm.REQTYPE}"]`).prop(
             'checked',
             true,
@@ -136,6 +149,7 @@ $(document).ready(async function () {
         $('#VTYPE').val(purvmm.VTYPE).trigger('change');
         $('#VPAYTY').val(purvmm.VPAYTY).trigger('change');
         $('#TERM_PAYMENT').val(purvmm.TERMCODE).trigger('change');
+        $('#TRADE_CODE').val(purvmm.TRADE_CODE).trigger('change');
         $('#V1TIME').val(purvmm.V1TIME || '');
         $('#VNALPH').val(purvmm.VNALPH || '');
         $('#CONTACT').val(purvmm.CONTACT || '');
@@ -289,6 +303,13 @@ $(document).on('input', '#VENDCODE', async function () {
                                 latestVendor.TERMCODE
                                     ? latestVendor.TERMCODE
                                     : vendor[0].VND_TERM,
+                            )
+                            .trigger('change');
+                        $('#TRADE_CODE')
+                            .val(
+                                latestVendor.TRADE_CODE
+                                    ? latestVendor.TRADE_CODE
+                                    : '',
                             )
                             .trigger('change');
                         $('#V1TIME').val(latestVendor.V1TIME || '');
