@@ -481,6 +481,7 @@
                                         </tfoot>
                                     </table>
                                 </div>
+                                <p class="mt-2 text-xs text-base-content/60">ใส่ , (comma) เช่น 1,070,000.00</p>
                             </div>
                         </div>
                 </div>
@@ -537,5 +538,5 @@
 @endsection
 
 @section('scripts')
-    <script src="{{ $_ENV['APP_JS'] }}/finNpoCreate.js?ver={{ $GLOBALS['version'] }}&rev=1"></script>
+    <script src="{{ $_ENV['APP_JS'] }}/finNpoCreate.js?ver={{ $GLOBALS['version'] }}&rev=2"></script>
 @endsection
