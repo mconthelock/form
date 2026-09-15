@@ -194,9 +194,7 @@ function shouldOpenReturnForm(form, formDetail = {}, modeResponse) {
         .map((employee) => String(employee || '').trim())
         .filter(Boolean);
 
-    return Boolean(
-        currentEmployee && firstEmployees.includes(currentEmployee),
-    );
+    return Boolean(currentEmployee && firstEmployees.includes(currentEmployee));
 }
 
 function normalizeWorkflowMode(response) {
@@ -598,6 +596,7 @@ function formatNumber(value) {
 
 function formatTaxCode(value) {
     const code = String(value ?? '').trim();
+    if (code === '000' || code === '0000000') return code;
     return code ? code.padStart(3, '0') : '';
 }
 
