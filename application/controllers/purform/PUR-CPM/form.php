@@ -23,12 +23,11 @@ class form extends MY_Controller{
 
         }else{
             $form = $this->getFormMasterByVaname('PUR-CPM');
-            var_dump($form);
             if(!empty($form)){
                 $data = [
-                    'NFRMNO' => $form[0]->NNO,
-                    'VORGNO' => $form[0]->VORGNO,
-                    'CYEAR'  =>$form[0]->CYEAR,
+                    'NFRMNO' => $form["data"]["NNO"],
+                    'VORGNO' => $form["data"]["VORGNO"],
+                    'CYEAR'  => $form["data"]["CYEAR"],
                 ];
             }
         }
