@@ -77,6 +77,13 @@ $(async function () {
         $('input[name="VENDGROUPTYPE"]').val(formvmm.VENDGROUPTYPE);
         $('input[name="VENDCODE"]').val(formvmm.VENDCODE);
         $('input[name="VENDNAME"]').val(formvmm.VENDNAME);
+        if (formvmm.TRADE_CODE) {
+            const trade = formvmm.TRADE.TRADE_SHIPBY
+                ? `${formvmm.TRADE.TRADE_NAME} (${formvmm.TRADE.TRADE_SHIPBY})`
+                : formvmm.TRADE.TRADE_NAME;
+            $('#TRADE_CODE').text(trade);
+        }
+
         if (formvmm.EVANO) {
             await renderLink(formvmm.EVANO);
         }
