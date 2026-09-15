@@ -511,7 +511,7 @@ $(document).ready(async function () {
         $('#calConfigModal').removeClass('hidden');
     });
 
-    // 🟢 ปิด Modal เมื่อคลิกปุ่มปิดใดๆ ที่มีคลาส .btn-close-modal
+    // ปิด Modal เมื่อคลิกปุ่มปิดใดๆ ที่มีคลาส .btn-close-modal
     $(document).on('click', '.btn-close-modal', function () {
         $('#calConfigModal').addClass('hidden');
     });
@@ -643,6 +643,97 @@ $(document).ready(async function () {
     });
 
     // == Export Excel
+    // ===================================================================
+
+    // ===================================================================
+    // 1. ตรวจสอบค่า NRUNNO เพื่อแสดง/ซ่อนปุ่ม Send Email
+    // ===================================================================
+    function checkShowEmailButton() {
+        const formData = $('.form-info').data() || {};
+        const nrunno = formData.nrunno || $('#NRUNNOHid').val();
+
+        if (
+            nrunno &&
+            String(nrunno).trim() !== '' &&
+            String(nrunno).trim() !== '0'
+        ) {
+            $('#SentEmailBtn')
+                .removeClass('hidden')
+                .css('display', 'inline-flex');
+        } else {
+            $('#SentEmailBtn').addClass('hidden').css('display', 'none');
+        }
+    }
+    $(document).on('click', '#SentEmailBtn', async function () {
+        const $btn = $(this);
+        const originalHtml = $btn.html();
+
+        const formData = $('.form-info').data() || {};
+        const year = $('#YearDrp').val();
+        const periodVal = $('#PeriodDrp').val();
+        const revVal = $('#RevisionHid').val() || '*';
+        const headerId =
+            $('#PlanHeaderIDHid').val() ||
+            (typeof currentPlanHeaderID !== 'undefined'
+                ? currentPlanHeaderID
+                : '');
+        const status = $('#STATUSHid').val() || '';
+        const { nfrmno, vorgno, cyear, cyear2, nrunno } = formData;
+
+        if (!nrunno) {
+            alert('ไม่พบเลข NRUNNO ไม่สามารถส่งอีเมลได้');
+            return;
+        }
+
+        if (
+            !confirm(
+                'คุณต้องการส่งอีเมลแจ้งเตือน Design Schedule นี้ใช่หรือไม่?',
+            )
+        ) {
+            return;
+        }
+
+        $btn.prop('disabled', true).html(
+            '<i class="fa fa-spinner fa-spin mr-1"></i> Sending...',
+        );
+        if (typeof showLoader === 'function') showLoader();
+
+        try {
+            let phpData = new FormData();
+            phpData.append('NFRMNO', nfrmno);
+            phpData.append('VORGNO', vorgno);
+            phpData.append('CYEAR', cyear);
+            phpData.append('CYEAR2', cyear2);
+            phpData.append('NRUNNO', nrunno);
+            phpData.append('headerId', headerId);
+            phpData.append('YEAR', year);
+            phpData.append('PERIOD', periodVal);
+            phpData.append('REVISION', revVal);
+            phpData.append('STATUS', status);
+
+            const res = await $.ajax({
+                url: host + 'dedform/DED-MDS/form/SendEmail',
+                type: 'POST',
+                data: phpData,
+                processData: false,
+                contentType: false,
+                dataType: 'json',
+            });
+
+            if (res && res.status === true) {
+                alert('ส่งอีเมลแจ้งเตือนเรียบร้อยแล้ว');
+            } else {
+                throw new Error(res?.message || 'ไม่สามารถส่งอีเมลได้');
+            }
+        } catch (error) {
+            console.error('Send Email Error:', error);
+            alert('เกิดข้อผิดพลาด: ' + (error.message || error));
+        } finally {
+            $btn.prop('disabled', false).html(originalHtml);
+            if (typeof showLoader === 'function') showLoader({ show: false });
+            $('#loading').hide();
+        }
+    });
     // ===================================================================
 
     // ===================================================================
@@ -1143,6 +1234,16 @@ async function applyButtonPermissions(mode, extData, status = '') {
     ];
     $(allButtons.join(', ')).addClass('hidden');
 
+    // 2. ตรวจสอบ NRUNNO เพื่อแสดงปุ่ม Send Email เฉพาะเอกสารที่เดิน Flow แล้ว
+    const formData = $('.form-info').data() || {};
+    const nrunno = formData.nrunno || $('#NRUNNOHid').val();
+    const hasTicket =
+        nrunno && String(nrunno).trim() !== '' && String(nrunno).trim() !== '0';
+    // alert(hasTicket);
+    if (hasTicket) {
+        $('#SentEmailBtn').removeClass('hidden');
+    }
+
     // แปลง mode ให้อยู่ในรูป String เสมอ
     const currentMode = String(mode || '1').trim();
 
@@ -1405,56 +1506,6 @@ function getExcelColumnLetter(colIndex) {
     }
     return letter;
 }
-
-$(document).on('click', '#SentEmailBtn', async function () {
-    const formData = $('.form-info').data();
-    const {
-        nfrmno,
-        vorgno,
-        cyear,
-        cyear2,
-        nrunno,
-        empno,
-        cost_year,
-        cost_month,
-        doc_no,
-    } = formData;
-
-    try {
-        let phpData = new FormData();
-        phpData.append('NFRMNO', nfrmno);
-        phpData.append('VORGNO', vorgno);
-        phpData.append('CYEAR', cyear);
-        phpData.append('CYEAR2', cyear2);
-        phpData.append('NRUNNO', nrunno);
-        phpData.append('COST_MONTH', $('#MONTHDrp').val());
-        phpData.append('COST_YEAR', $('#YEARDrp').val());
-        phpData.append('DATAONHAND', JSON.stringify(dataOnhand));
-        const responseEndProcess = await $.ajax({
-            url: host + 'feform/FE-EIA/form/EndpProcess',
-            type: 'POST',
-            data: phpData,
-            processData: false,
-            contentType: false,
-            dataType: 'json',
-        });
-
-        if (
-            responseEndProcess &&
-            (responseEndProcess.status === true ||
-                responseEndProcess.status === 'true')
-        ) {
-        } else {
-            throw new Error(
-                responseEndProcess?.message || 'end process not completed',
-            );
-        }
-    } catch (error) {
-        console.error('Action Flow Error:', error);
-        alert('เกิดข้อผิดพลาด: ' + error.message);
-        $('#loading').hide();
-    }
-});
 
 $(document).on('click', '#PdfBtn', function () {
     // ดักจับ fallback เผื่อก้อนข้อมูลหลักยังโหลดมาไม่สมบูรณ์
