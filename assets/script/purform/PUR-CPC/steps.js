@@ -1,4 +1,5 @@
 import { Steps } from '@amec/webasset/components/steps';
+<<<<<<< HEAD
 import {
     getUrlParams,
     requiredForm,
@@ -185,12 +186,20 @@ export const steps = {
     },
     async init(isReturn = false) {
         this._isReturn = isReturn;
+=======
+import { requiredForm } from '@amec/webasset/utils';
+export const steps = {
+    instance: null,
+    mode: null,
+    init() {
+>>>>>>> e2e73ccd (feat: implement PUR-CPC form and related functionality, add price comparison steps and data handling)
         this.instance = new Steps({
             container: '#price-comparison-steps',
             steps: [
                 { label: 'New or Continue' },
                 { label: 'Choose Pending Items' },
                 { label: 'Input Data' },
+<<<<<<< HEAD
                 { label: 'Select Item Code' },
                 { label: 'Upload File' },
             ],
@@ -451,6 +460,34 @@ export const steps = {
      * @description จัดการการกดปุ่ม previous ของแต่ละ step
      * @param {number} index - เลข step นับตาม index เริ่มที่ 0 จาก step ปัจจุบัน
      */
+=======
+                { label: 'Pre Data' },
+                { label: 'Upload File' },
+            ],
+            currentStep: 0,
+            clickable: true,
+            allowClickForward: false,
+            onChange: async function (currentStep) {
+                await steps.handlePanel(currentStep);
+            },
+        });
+        this.bindEvents();
+    },
+    bindEvents() {
+        const self = this;
+        const stepper = self.instance;
+        $(document).on('click', '.previous-step', function () {
+            self.handlePreviousStep(stepper.currentStep);
+        });
+        $(document).on('click', '.next-step', async function () {
+            if (!(await self.validatePanel(stepper.currentStep))) return;
+            if (stepper.currentStep === 0) {
+                self.mode = $(this).attr('mode');
+            }
+            self.handleNextStep(stepper.currentStep);
+        });
+    },
+>>>>>>> e2e73ccd (feat: implement PUR-CPC form and related functionality, add price comparison steps and data handling)
     handlePreviousStep(index) {
         switch (index) {
             case 3:
@@ -469,6 +506,7 @@ export const steps = {
                 break;
         }
     },
+<<<<<<< HEAD
     /**
      * @author Sutthipong Tangmongkhoncharoen(24008)
      * @since 2026-09-15
@@ -476,6 +514,10 @@ export const steps = {
      * @param {number} index - เลข step นับตาม index เริ่มที่ 0 จาก step ปัจจุบัน
      */
     handleNextStep(index) {
+=======
+    handleNextStep(index) {
+        console.log('mode', this.mode);
+>>>>>>> e2e73ccd (feat: implement PUR-CPC form and related functionality, add price comparison steps and data handling)
         switch (index) {
             case 0:
                 if (this.mode === 'new') {
@@ -489,13 +531,22 @@ export const steps = {
                 }
                 break;
             case 1:
+<<<<<<< HEAD
                 this.instance.skipTo(3);
                 break;
             default:
+=======
+                console.log('2');
+                this.instance.skipTo(3);
+                break;
+            default:
+                console.log('3');
+>>>>>>> e2e73ccd (feat: implement PUR-CPC form and related functionality, add price comparison steps and data handling)
                 this.instance.next();
                 break;
         }
     },
+<<<<<<< HEAD
     bindEvents() {
         const self = this;
         const stepper = self.instance;
@@ -563,5 +614,24 @@ export const steps = {
                 showErrorMessage(error.message);
             }
         });
+=======
+    /** ตรวจสอบข้อมูลของหน้าปัจจุบันก่อนไป step ถัดไป */
+    async validatePanel(index) {
+        // TODO: ใส่ validation ของแต่ละหน้า เช่น
+        if (index === 2) {
+            return await requiredForm('#step-requester');
+        }
+        return true;
+    },
+    async handlePanel(index) {
+        const requester = $('input[name="requester"]');
+        if (index <= 1) {
+            $('#step-requester')[0].reset();
+            $('#requester-card-container').empty();
+            if (index === 1) {
+                requester.trigger('focus');
+            }
+        }
+>>>>>>> e2e73ccd (feat: implement PUR-CPC form and related functionality, add price comparison steps and data handling)
     },
 };

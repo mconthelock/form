@@ -1,5 +1,6 @@
 import { fetchUtils } from '@amec/webasset/api/fetch-utils';
 
+<<<<<<< HEAD
 export const templateBaseDir = `${process.env.AMEC_FILE_PATH}${process.env.STATE == 'production' ? 'production' : 'development'}/webflow/template/price-compare`;
 
 /**
@@ -190,3 +191,11 @@ export async function getLink(data) {
         data: data,
     });
 }
+=======
+export async function getActivePriceConditions() {
+    return await fetchUtils({
+        url: `${process.env.APP_API}/purform/cond-comparison-price/active`,
+        method: 'GET',
+    });
+}
+>>>>>>> e2e73ccd (feat: implement PUR-CPC form and related functionality, add price comparison steps and data handling)
