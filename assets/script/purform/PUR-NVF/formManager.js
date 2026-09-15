@@ -970,7 +970,7 @@ export const countryManager = {
     async change(e) {
         // 💡 แก้ไขตรงนี้: ใช้คอมมา (,) ห้ามใช้เครื่องหมายบวก (+) เด็ดขาด
         //console.log("Data ทั้งก้อนจาก Select2:", e.params.data);
-        console.log('xxxxxxxxxxxx');
+        //console.log('xxxxxxxxxxxx');
 
         if (e && e.params && e.params.data) {
             const selectedCountry = e.params.data;

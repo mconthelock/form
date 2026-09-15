@@ -1,5 +1,7 @@
+import { requiredForm } from '@amec/webasset/utils';
 import { getOrganize } from '../../finform/FIN-PCK/dataloc';
 import { deptManager, divManager, secManager } from './formManager';
+import { searchrpt } from './data';
 
 $(async function () {
     const org = await getOrganize();
@@ -13,17 +15,28 @@ $(async function () {
         acc[item.CTYPE].push(item);
         return acc;
     }, {});
-    console.log(groupedOrg[1]);
 
-    const secdata = groupedOrg[1].map((o) => ({
+    const secData = groupedOrg[1].filter(
+        (item) =>
+            item.VORGNO.startsWith('0905') || item.VORGNO.startsWith('0906'),
+    );
+    const secdata = secData.map((o) => ({
         value: o.VORGNO,
         text: o.VNAME,
     }));
-    const deptdata = groupedOrg[2].map((o) => ({
+    const deptData = groupedOrg[2].filter(
+        (item) =>
+            item.VORGNO.startsWith('0905') || item.VORGNO.startsWith('0906'),
+    );
+
+    const deptdata = deptData.map((o) => ({
         value: o.VORGNO,
         text: o.VNAME,
     }));
-    const divdata = groupedOrg[3].map((o) => ({
+    const divData = groupedOrg[3].filter((item) =>
+        item.VORGNO.startsWith('09'),
+    );
+    const divdata = divData.map((o) => ({
         value: o.VORGNO,
         text: o.VNAME,
     }));
@@ -33,29 +46,38 @@ $(async function () {
 });
 
 $(document).on('click', '#btnExport', async function () {
+    const requiredMessage = [
+        {
+            element: $('#VENDOR_GROUP_TYPE'),
+            message: 'Please input Vendor Group Type',
+        },
+        {
+            element: $('input[name="REQUEST_DATE_FROM"]'),
+            message: 'Please input Request date.',
+        },
+    ];
+    if (!(await requiredForm('#frmmain', requiredMessage))) return;
     const NRUNNO = $('input[name="FORM_NO"]').val();
     const VENDCODE = $('input[name="VENDOR_CODE"]').val();
     const COMNAME = $('input[name="VENDOR_NAME"]').val();
-    const VENDGROUPTYPE = $('input[name="VENDOR_GROUP_TYPE"]').val();
+    const VENDGROUPTYPE = $('#VENDOR_GROUP_TYPE').val();
     const SNAME = $('input[name="REQUESTER"]').val();
-    const CST = $('input[name="CST"]').val();
+    const CST = $('#CST').val();
     const SREQDATE = $('input[name="REQUEST_DATE_FROM"]').val();
     const EREQDATE = $('input[name="REQUEST_DATE_TO"]').val();
     const SEMPNO = $('input[name="EMP_NO"]').val();
-    const SSECCODE = $('input[name="SECTION"]').val();
-    const SDEPCODE = $('input[name="DEPARTMENT"]').val();
-    const SDIVCODE = $('input[name="DIVISION"]').val();
+    const SSECCODE = $('#SECTION').val();
+    const SDEPCODE = $('#DEPARTMENT').val();
+    const SDIVCODE = $('#DIVISION').val();
     const hasReqtorData = SEMPNO || SNAME || SSECCODE || SDEPCODE || SDIVCODE;
     const hasEvaformData = SREQDATE || EREQDATE || CST || hasReqtorData;
-    if (VENDGROUPTYPE == 'Indirect') {
-    } else if (VENDGROUPTYPE == 'Direct') {
-    } else if (VENDGROUPTYPE == 'Subcon') {
-    }
+    console.log('>>>>' + VENDGROUPTYPE);
 
     const payload = {
         ...(NRUNNO && { NRUNNO: NRUNNO }),
         ...(VENDCODE && { VENDCODE: VENDCODE }),
-        ...(COMNAME && { COMNAME: `LIKE ${SNAME}` }),
+        ...(COMNAME && { COMNAME: COMNAME }),
+        ...(VENDGROUPTYPE && { VENDGROUP: VENDGROUPTYPE }),
         // หากต้องการแนบ VENDOR ต่างๆ ไปที่ Root level สามารถเพิ่มตรงนี้ได้เลย เช่น:
         // ...(VENDCODE && { VENDCODE: VENDCODE }),
 
@@ -63,12 +85,12 @@ $(document).on('click', '#btnExport', async function () {
             evaform: {
                 ...(SREQDATE && { START_DREQDATE: SREQDATE }),
                 ...(EREQDATE && { END_DREQDATE: EREQDATE }),
-                ...(CST && { flow: { CST: CST } }),
+                ...(CST && { CST: CST }),
                 // ถ้ามีข้อมูลในกลุ่ม reqtor ค่อยสร้างก้อน reqtor
                 ...(hasReqtorData && {
                     reqtor: {
                         ...(SEMPNO && { SEMPNO: SEMPNO }),
-                        ...(SNAME && { SNAME: `LIKE ${SNAME}` }),
+                        ...(SNAME && { SNAME: SNAME }),
                         ...(SSECCODE && { SSECCODE: SSECCODE }),
                         ...(SDEPCODE && { SDEPCODE: SDEPCODE }),
                         ...(SDIVCODE && { SDIVCODE: SDIVCODE }),
@@ -77,6 +99,7 @@ $(document).on('click', '#btnExport', async function () {
             },
         }),
     };
-
-    console.log(payload);
+    //console.log(payload);
+    const res = await searchrpt(payload);
+    console.log(res);
 });
