@@ -1,5 +1,10 @@
 import { Steps } from '@amec/webasset/components/steps';
 import { requiredForm } from '@amec/webasset/utils';
+/**
+ * @author Sutthipong Tangmongkhoncharoen(24008)
+ * @since 2026-09-15
+ * @description Handles the step navigation and validation for the price comparison form.
+ */
 export const steps = {
     instance: null,
     mode: null,

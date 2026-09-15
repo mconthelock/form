@@ -46,6 +46,9 @@ $(async function () {
     }
 });
 
+/**
+ * Handle input event for requester field and update profile card accordingly.
+ */
 $(document).on('input', 'input[name="requester"]', async function () {
     try {
         const requester = $(this).val();
@@ -60,6 +63,9 @@ $(document).on('input', 'input[name="requester"]', async function () {
     }
 });
 
+/**
+ * Handle change event for requester field and validate its length.
+ */
 $(document).on('change', 'input[name="requester"]', async function () {
     try {
         const requester = $(this).val();

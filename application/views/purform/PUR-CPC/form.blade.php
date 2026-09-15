@@ -42,7 +42,7 @@
                 {{-- Content for step 2 goes here --}}
                 <div data-step-panel class="hidden gap-5">
                     <table class="table table-zebra" id="table-draft"></table>
-                    <button type="button" class="btn previous-step" >Back</button>
+                    <button type="button" class="btn previous-step">Back</button>
                     <button type="button" class="btn next-step">Next</button>
                 </div>
 
@@ -62,11 +62,11 @@
                         <button type="button" class="btn next-step">Next</button>
                     </div>
                 </form>
-                
+
                 {{-- Content for step 4 goes here --}}
                 <div data-step-panel class="hidden">
                     <button type="button" class="btn previous-step">Back</button>
-                    <button type="button" class="btn next-step">Next</button>       
+                    <button type="button" class="btn next-step">Next</button>
                 </div>
 
                 {{-- Content for step 5 goes here --}}
