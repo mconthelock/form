@@ -196,7 +196,7 @@ async function createFormTable(data) {
                 if (type === 'display') {
                     const serve = data.VFORMPAGE.startsWith('http')
                         ? data.VFORMPAGE.replace('http', 'https')
-                        : `http://webflow.mitsubishielevatorasia.co.th/${data.VFORMPAGE}`;
+                        : `https://webflow.mitsubishielevatorasia.co.th/${data.VFORMPAGE}`;
                     const conjunction = serve.includes('?') ? '&' : '?';
                     const url = `${serve}${conjunction}no=${data.NFRMNO}&orgNo=${data.VORGNO}&y=${data.CYEAR}&y2=${data.CYEAR2}&runNo=${data.NRUNNO}&empno=${user}`;
                     return `<a class="text-primary link-self" href="#" data-title="${pageId}" data-url="${url}&empnolv=${hash.toString().toUpperCase()}&bp=${encodeURIComponent('http://localhost:8080/form/webform/form/index/1')}">${formno}</a>`;
@@ -363,9 +363,12 @@ async function createFormTable(data) {
         const apvId = `#apv-${data.form.NFRMNO}-${data.form.VORGNO}-${data.form.CYEAR}-${data.form.CYEAR2}-${data.form.NRUNNO}`;
         const nextId = `#next-${data.form.NFRMNO}-${data.form.VORGNO}-${data.form.CYEAR}-${data.form.CYEAR2}-${data.form.NRUNNO}`;
 
-        await fillUserinfo(row, data.form.VREQNO, reqId);
-        if (latest.VAPVNO != undefined && latest.VAPVNO != null)
+        await fillUserinfo(row, data.form.VREQNO, reqId); // Requester image
+
+        // Last Approver
+        if (latest != null) {
             await fillUserinfo(row, latest.VAPVNO, apvId);
+        }
 
         await fillNextApproverInfo(row, data.form.flow, nextId);
     };

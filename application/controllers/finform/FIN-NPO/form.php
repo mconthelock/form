@@ -98,5 +98,10 @@ class form extends MY_Controller
     {
         $this->views('finform/FIN-NPO/return');
     }
+
+    public function vendor()
+    {
+        $this->views('finform/FIN-NPO/Vendor');
+    }
 }
 
