@@ -207,7 +207,6 @@
                             <div class="overflow-x-auto rounded-xl">
                                 <table id="stampTable" class="table table-xs w-full"></table>
                             </div>
-                            <p class="mt-2 text-xs text-slate-500">Tax code สามารถใส่ได้ทั้ง 3 และ 7 digits</p>
                         </section>
 
                         {{-- Attachment --}}
