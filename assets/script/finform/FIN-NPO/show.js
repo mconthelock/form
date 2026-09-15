@@ -462,7 +462,7 @@ async function renderInvoiceTable(invoices = [], canEditWht = false) {
                     <td>${escapeHtml(formatNumber(Number(invoice.TOTAL_AMT) - Number(invoice.NET_PRICE)))}</td>
                     <td>${escapeHtml(formatNumber(invoice.TOTAL_AMT))}</td>
                     <td>
-                        <input type="text" inputmode="numeric" pattern="[0-9]{3}([0-9]{4})?" maxlength="7"
+                        <input type="text" inputmode="numeric" pattern="[0-9]{3}([0-9]{4})?" maxlength="7" required
                             class="wht-input input input-sm input-bordered w-full"
                             data-invoice-id="${escapeHtml(invoice.ID || invoice.LINE_ID || index + 1)}"
                             value="${escapeHtml(formatTaxCode(invoice.WHT))}"
@@ -489,7 +489,7 @@ function collectInvoiceWht() {
             return {
                 ID: $(input).data('invoice-id'),
                 LINE_ID: $(input).data('invoice-id'),
-                WHT: value === '' ? null : Number(value),
+                WHT: value === '' ? null : value,
             };
         })
         .get();
