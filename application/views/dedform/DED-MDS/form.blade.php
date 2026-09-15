@@ -232,6 +232,15 @@
                         </svg>
                         Export Excel
                     </button>
+                    
+                    <!-- ปุ่ม Send Email แสดงแบบมี Icon ชัดเจน (ซ่อนเริ่มต้นไว้ก่อนด้วยคลาส hidden) -->
+                    <button type="button" id="SentEmailBtn" name="SentEmailBtn" 
+                            class="hidden btn btn-sm bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-4 h-9.5 rounded-lg border-none shadow-xs transition items-center gap-1.5 cursor-pointer">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                        </svg>
+                        <span>Send Email</span>
+                    </button>
                 </div>
             </div>
 

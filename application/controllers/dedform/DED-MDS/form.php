@@ -948,10 +948,25 @@ class form extends MY_Controller {
                     // Process tranfer data to Tb_Master_DESBM
                     // 1. ค้นหา Header ปัจจุบันผ่าน Model
                     $header = $this->MDSModel->GetHeaderByFormID($formID);
+
+
                     if (!$header) {
                         throw new Exception("ไม่พบข้อมูล Header ที่ผูกกับฟอร์มนี้");
                     }
                     $this->MDSModel->SyncPlanToMasterDESBM($header->PlanHeaderID);
+                    // 🟢 3. ส่งอีเมลอัตโนมัติทันที
+                    try {
+                        $this->_executeSendEmail(
+                            $formID, 
+                            $header->PlanYear, 
+                            $header->PeriodCode, 
+                            $header->Revision ?? $REVISION,$ACTION
+
+                        );
+                    } catch (\Throwable $mailEx) {
+                        log_message('error', 'Auto SendEmail Step 03 failed: ' . $mailEx->getMessage());
+                    }
+                    
                 } else {
                     // Step 00, 01, 02 กด APPROVE -> เอกสารยังอยู่ระหว่างเดิน Flow
                     $data['Status'] = 'PROCESS';
@@ -1140,6 +1155,239 @@ class form extends MY_Controller {
     }
 
         
+    
+    /**
+     * Helper ส่งอีเมลแจ้งเตือน AMEC Design Schedule
+     */
+    private function _executeSendEmail($formID, $year, $period, $revision, $status = '')
+    {
+        $NFRMNO  = $formID['NFRMNO'];
+        $VORGNO  = $formID['VORGNO'];
+        $CYEAR   = $formID['CYEAR'];
+        $CYEAR2  = $formID['CYEAR2'];
+        $NRUNNO  = $formID['NRUNNO'];
+
+        $curYY   = substr((string)$year, -2);
+        $nextYY  = str_pad((string)(((int)$curYY + 1) % 100), 2, '0', STR_PAD_LEFT);
+        $isOct   = stripos((string)$period, '10X') !== false;
+
+        // รูปแบบงวด เช่น 10X'26-03C'27 หรือ 04X'26-09C'26
+        $scheduleTitle = $isOct 
+            ? "10X'{$curYY}-03C'{$nextYY}" 
+            : "04X'{$curYY}-09C'{$curYY}";
+
+        $revDisplay = (!empty($revision) && $revision !== '*') ? $revision : '*';
+        $releaseTag = ($revDisplay === '*') ? 'New release' : "Revision {$revDisplay}";
+
+        // 🟢 1. จัดการ Status ให้ชัดเจน
+        $rawStatus = strtoupper(trim((string)$status));
+        if (empty($rawStatus)) {
+            $rawStatus = 'PROCESS';
+        }
+
+        // กำหนดสี Badge และคำอธิบายตามสถานะ
+        $statusBgColor   = '#e2e8f0';
+        $statusTextColor = '#475569';
+        $statusLabel     = $rawStatus;
+
+        if ($rawStatus === 'APPROVE') {
+            $statusBgColor   = '#10b981'; // สีเขียวสดใส
+            $statusTextColor = '#ffffff';
+            $statusLabel     = 'APPROVED';
+        } elseif ($rawStatus === 'PROCESS') {
+            $statusBgColor   = '#f59e0b'; // สีส้ม
+            $statusTextColor = '#ffffff';
+            $statusLabel     = 'IN PROCESS';
+        } elseif ($rawStatus === 'DRAFT') {
+            $statusBgColor   = '#64748b'; // สีเทา
+            $statusTextColor = '#ffffff';
+            $statusLabel     = 'DRAFT';
+        }
+
+        // 🟢 2. หัวข้ออีเมล (Subject) - ระบุ [STATUS] นำหน้าชัดเจน
+        $SUBJECT = "[{$statusLabel}] AMEC DESIGN SCHEDULE ({$scheduleTitle}) REV.{$revDisplay} ({$releaseTag})";
+
+        // 3. ดึงอีเมลผู้รับจากตาราง FLOW
+        $TO = "";
+        $CC = "";
+        
+        $Webflowdb = $this->load->database('DEFAULT', TRUE);
+        $sql = "SELECT LISTAGG(emp.SRECMAIL, ',') WITHIN GROUP (ORDER BY emp.SEMPNO) AS ALL_EMAILS 
+                FROM FLOW wf 
+                LEFT JOIN AMEC.AEMPLOYEE emp ON wf.VAPVNO = emp.SEMPNO
+                WHERE wf.NFRMNO = ? AND wf.VORGNO = ? AND wf.CYEAR = ? AND wf.CYEAR2 = ? AND wf.NRUNNO = ?";
+        
+        $flowQuery  = $Webflowdb->query($sql, [$NFRMNO, $VORGNO, $CYEAR, $CYEAR2, $NRUNNO]);
+        $flowRow    = $flowQuery ? $flowQuery->row() : null;
+        $flowEmails = ($flowRow && !empty($flowRow->ALL_EMAILS)) ? trim($flowRow->ALL_EMAILS) : '';
+
+        if (strpos($this->current_host ?? '', 'test') !== false || strpos($this->current_host ?? '', 'localhost') !== false) {
+            // โหมด Test
+            $TO = "siripapa@mitsubishielevatorasia.co.th";
+            $CC = "siripapa@mitsubishielevatorasia.co.th";
+        } else {
+            // โหมด Production
+            $TO = !empty($flowEmails) ? $flowEmails : "siripapa@mitsubishielevatorasia.co.th";
+            $CC = "siripapa@mitsubishielevatorasia.co.th";
+        }
+
+        // URL เปิดหน้ารายงาน Form Webflow
+        $formUrl = "http://amecweb.mitsubishielevatorasia.co.th/form/dedform/DED-MDS/form/main?" . http_build_query([
+            'no'    => $NFRMNO,
+            'orgNo' => $VORGNO,
+            'y'     => $CYEAR,
+            'y2'    => $CYEAR2,
+            'runNo' => $NRUNNO,
+            'm'     => 3
+        ]);
+
+        // 🟢 4. Body Template ปรับแต่งให้เห็น Status เด่นชัดเจน
+        $BODY = "
+        <div style='background-color: #f1f5f9; padding: 30px 15px; font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif;'>
+            <table align='center' border='0' cellpadding='0' cellspacing='0' width='100%' style='max-width: 600px; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border: 1px solid #e2e8f0;'>
+                <tr>
+                    <td style='background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); padding: 24px 30px; text-align: left;'>
+                        <table width='100%' border='0' cellpadding='0' cellspacing='0'>
+                            <tr>
+                                <td>
+                                    <span style='color: #38bdf8; font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase;'>Design Engineering Department</span>
+                                    <h2 style='color: #ffffff; margin: 6px 0 0 0; font-size: 20px; font-weight: 600;'>AMEC DESIGN SCHEDULE</h2>
+                                </td>
+                                <td align='right' valign='middle'>
+                                    <!-- Badge สถานะมุมขวาบนของ Header -->
+                                    <span style='display: inline-block; background-color: {$statusBgColor}; color: {$statusTextColor}; font-size: 12px; font-weight: 700; padding: 6px 14px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.5px;'>
+                                        {$statusLabel}
+                                    </span>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+                <tr>
+                    <td style='padding: 30px;'>
+                        <p style='font-size: 15px; color: #334155; margin: 0 0 16px 0;'>Dear All,</p>
+                        
+                        <div style='background-color: #f8fafc; border-left: 4px solid " . ($rawStatus === 'APPROVE' ? '#10b981' : '#0284c7') . "; padding: 16px 20px; margin-bottom: 24px; border-radius: 0 6px 6px 0;'>
+                            <div style='font-size: 16px; font-weight: 700; color: #0f172a; margin-bottom: 6px;'>
+                                AMEC DESIGN SCHEDULE ({$scheduleTitle}) REV.{$revDisplay}
+                            </div>
+                            <div style='font-size: 13px; color: #64748b;'>
+                                Release: <strong style='color: #0369a1;'>({$releaseTag})</strong>
+                                &nbsp;|&nbsp; 
+                                Current Status: <span style='display: inline-block; background-color: {$statusBgColor}; color: {$statusTextColor}; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 4px;'>{$statusLabel}</span>
+                            </div>
+                        </div>
+
+                        <p style='font-size: 14px; color: #475569; margin: 0 0 24px 0;'>
+                            Please find as attached and review the schedule details via the system link below:
+                        </p>
+
+                        <table border='0' cellpadding='0' cellspacing='0' width='100%' style='margin-bottom: 26px; font-size: 13px; border-collapse: collapse;'>
+                            <tr>
+                                <td style='padding: 8px 0; border-bottom: 1px solid #f1f5f9; color: #64748b; width: 35%;'><strong>Ticket No:</strong></td>
+                                <td style='padding: 8px 0; border-bottom: 1px solid #f1f5f9; color: #0f172a; font-weight: 600;'>DED_MDS-{$CYEAR2}-" . str_pad($NRUNNO, 6, '0', STR_PAD_LEFT) . "</td>
+                            </tr>
+                            <tr>
+                                <td style='padding: 8px 0; border-bottom: 1px solid #f1f5f9; color: #64748b;'><strong>Document Status:</strong></td>
+                                <td style='padding: 8px 0; border-bottom: 1px solid #f1f5f9;'>
+                                    <strong style='color: " . ($rawStatus === 'APPROVE' ? '#059669' : '#d97706') . ";'>{$statusLabel}</strong>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style='padding: 8px 0; border-bottom: 1px solid #f1f5f9; color: #64748b;'><strong>Plan Year / Period:</strong></td>
+                                <td style='padding: 8px 0; border-bottom: 1px solid #f1f5f9; color: #0f172a;'>{$year} ({$period})</td>
+                            </tr>
+                            <tr>
+                                <td style='padding: 8px 0; border-bottom: 1px solid #f1f5f9; color: #64748b;'><strong>Date Action:</strong></td>
+                                <td style='padding: 8px 0; border-bottom: 1px solid #f1f5f9; color: #0f172a;'>" . date('Y-m-d H:i:s') . "</td>
+                            </tr>
+                        </table>
+
+                        <table border='0' cellpadding='0' cellspacing='0' width='100%'>
+                            <tr>
+                                <td align='center' style='padding: 8px 0 16px 0;'>
+                                    <a href='{$formUrl}' target='_blank' style='display: inline-block; background-color: #0284c7; color: #ffffff; font-size: 14px; font-weight: 600; text-decoration: none; padding: 12px 28px; border-radius: 6px; box-shadow: 0 2px 4px rgba(2, 132, 199, 0.25);'>
+                                        View Design Schedule Detail &rarr;
+                                    </a>
+                                </td>
+                            </tr>
+                        </table>
+
+                        <p style='font-size: 12px; color: #94a3b8; margin: 24px 0 0 0; padding-top: 16px; border-top: 1px solid #e2e8f0; line-height: 1.5;'>
+                            * This is an automated notification from the AMEC Webflow System. Please do not reply directly to this email.
+                        </p>
+                    </td>
+                </tr>
+                <tr>
+                    <td style='background-color: #f8fafc; padding: 16px; text-align: center; font-size: 11px; color: #94a3b8; border-top: 1px solid #e2e8f0;'>
+                        &copy; " . date('Y') . " Mitsubishi Elevator Asia Co., Ltd. All rights reserved.
+                    </td>
+                </tr>
+            </table>
+        </div>";
+
+        if (!empty($TO)) {
+            $dataM = [
+                'SUBJECT' => $SUBJECT,
+                'TO'      => $TO,
+                'CC'      => $CC,
+                'BODY'    => [$BODY]
+            ];
+            $this->mail->sendmail($dataM);
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Endpoint รับ Request สำหรับกดส่ง Email Manual
+     */
+    public function SendEmail()
+    {
+        $this->output->set_content_type('application/json');
+
+        try {
+            $NFRMNO   = $this->input->post('NFRMNO');
+            $VORGNO   = $this->input->post('VORGNO');
+            $CYEAR    = $this->input->post('CYEAR');
+            $CYEAR2   = $this->input->post('CYEAR2');
+            $NRUNNO   = $this->input->post('NRUNNO');
+            $YEAR     = $this->input->post('YEAR');
+            $PERIOD   = $this->input->post('PERIOD');
+            $REVISION = $this->input->post('REVISION');
+            $STATUS   = $this->input->post('STATUS') ?? '';
+
+            if (empty($NRUNNO) || empty($NFRMNO) || empty($VORGNO)) {
+                throw new \Exception("ข้อมูลฟอร์ม (NRUNNO) ไม่ครบถ้วน");
+            }
+
+            $formID = [
+                'NFRMNO' => $NFRMNO,
+                'VORGNO' => $VORGNO,
+                'CYEAR'  => $CYEAR,
+                'CYEAR2' => $CYEAR2,
+                'NRUNNO' => $NRUNNO
+            ];
+            
+            $isSent = $this->_executeSendEmail($formID, $YEAR, $PERIOD, $REVISION, $STATUS);
+
+            if (!$isSent) {
+                throw new \Exception("ไม่พบรายชื่ออีเมลผู้รับในระบบ");
+            }
+
+            return $this->output->set_output(json_encode([
+                'status'  => true,
+                'message' => 'ส่งอีเมลแจ้งเตือนเรียบร้อยแล้ว'
+            ]));
+
+        } catch (\Throwable $e) {
+            return $this->output->set_output(json_encode([
+                'status'  => false,
+                'message' => 'เกิดข้อผิดพลาด: ' . $e->getMessage()
+            ]));
+        }
+    }
     
     /**
      * ดึง Revision ถัดไปของ Plan ตาม Year และ Period (รวม Logic ตรวจสอบและขยับตัวอักษร)
