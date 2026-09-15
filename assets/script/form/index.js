@@ -143,12 +143,29 @@ function nextApprover(flow = []) {
 async function reloadTable() {
     const status = $('#status').val();
     const data = await getFormList({ user, status });
-    await populateFilters(data);
+    const dataFiltered = Array.from(
+        new Map(
+            (Array.isArray(data) ? data : [])
+                .filter((item) => item)
+                .map((item) => {
+                    const form = item?.form || item;
+                    const key = [
+                        form?.NFRMNO ?? '',
+                        form?.VORGNO ?? '',
+                        form?.CYEAR ?? '',
+                        form?.CYEAR2 ?? form?.cyear2 ?? '',
+                        form?.NRUNNO ?? '',
+                    ].join('|');
+                    return [key, item];
+                }),
+        ).values(),
+    );
+    await populateFilters(dataFiltered);
     if (!table) {
-        await createFormTable(data);
+        await createFormTable(dataFiltered);
     } else {
         table.clear();
-        table.rows.add(data);
+        table.rows.add(dataFiltered);
         table.draw();
     }
 }
