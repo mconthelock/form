@@ -284,16 +284,15 @@ $(document).on('click', '.create-form-detail', async function (e) {
         //1. URL ที่เรียกจากภายใน project
         //2. URL ที่เรียกจาก project webflow
         //3. URL ที่เรียกจาก ASP
+        const formCode = $(this).data('code') || '';
+        const formName = $(this).data('name') || 'Untitled form';
+        const formDesc = $(this).data('desc') || '';
         let url = $(this).attr('data-url');
         if (url.includes('index.asp')) {
             url = `https://webflow.mitsubishielevatorasia.co.th/${url}`;
         }
 
         const detailUrl = `${process.env.APP_ENV}/webform/form/detail?data=${encodeURIComponent(url)}`;
-        const formCode = $(this).data('code') || '';
-        const formName = $(this).data('name') || 'Untitled form';
-        const formDesc = $(this).data('desc') || '';
-
         saveRecentCreatedForm({
             code: formCode,
             name: formName,

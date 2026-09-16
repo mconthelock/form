@@ -210,7 +210,7 @@ async function createFormTable(data) {
                     //console.log(document.URL);
                     const serve = data.VFORMPAGE.startsWith('http')
                         ? data.VFORMPAGE.replace('http', 'https')
-                        : `https://webflow.mitsubishielevatorasia.co.th/${data.VFORMPAGE}`;
+                        : `https://webflow.mitsubishielevatorasia.co.th${data.VFORMPAGE}`;
                     const conjunction = serve.includes('?') ? '&' : '?';
                     const url = `${serve}${conjunction}no=${data.NFRMNO}&orgNo=${data.VORGNO}&y=${data.CYEAR}&y2=${data.CYEAR2}&runNo=${data.NRUNNO}&empno=${user}&empnolv=${hash.toString().toUpperCase()}&bp=${encodeURIComponent(document.URL)}`;
                     return `<a class="text-primary link-self" href="#" data-title="${pageId}" data-url="${url}">${formno}</a>`;
