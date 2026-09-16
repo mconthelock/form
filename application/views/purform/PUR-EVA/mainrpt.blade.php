@@ -106,8 +106,8 @@
                     <div class="grid grid-cols-[140px_1fr] items-center gap-2">
                         <label class="text-sm font-medium text-slate-700 whitespace-nowrap">Vendor Group Type <span
                                 class="text-rose-500 font-bold">*</span></label>
-                        <select name="VENDOR_GROUP_TYPE"
-                            class="w-full max-w-sm h-9 px-3.5 text-sm text-slate-700 bg-slate-50 border border-slate-200 rounded-lg shadow-sm outline-none transition-all hover:border-slate-300 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 cursor-pointer appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%24%2024%22%20fill%3D%22none%22%20stroke%3D%22%2364748b%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E')] bg-no-repeat bg-[position:right_0.75rem_center] bg-[length:1em_1em] pr-10">
+                        <select name="VENDOR_GROUP_TYPE" id="VENDOR_GROUP_TYPE"
+                            class="w-full max-w-sm h-9 px-3.5 text-sm text-slate-700 bg-slate-50 border border-slate-200 rounded-lg shadow-sm outline-none transition-all hover:border-slate-300 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 cursor-pointer appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%24%2024%22%20fill%3D%22none%22%20stroke%3D%22%2364748b%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E')] bg-no-repeat bg-[position:right_0.75rem_center] bg-[length:1em_1em] pr-10 req">
                             <option value="">-- Select --</option>
                             <option value="Direct">Direct</option>
                             <option value="Indirect">Indirect</option>
@@ -123,12 +123,13 @@
 
                     <div class="grid grid-cols-[140px_1fr] items-center gap-2">
                         <label class="text-sm font-medium text-slate-700 whitespace-nowrap">Flow status</label>
-                        <select name="CST"
+                        <select name="CST" id="CST"
                             class="w-full max-w-sm h-9 px-3.5 text-sm text-slate-700 bg-slate-50 border border-slate-200 rounded-lg shadow-sm outline-none transition-all hover:border-slate-300 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 cursor-pointer appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%24%2024%22%20fill%3D%22none%22%20stroke%3D%22%2364748b%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E')] bg-no-repeat bg-[position:right_0.75rem_center] bg-[length:1em_1em] pr-10">
                             <option value="">-- Select --</option>
                             <option value="2">Approve</option>
                             <option value="3">Reject</option>
                             <option value="1">Running</option>
+                            <option value="0">Draft</option>
                         </select>
                     </div>
 
@@ -139,7 +140,7 @@
                         <div class="flex items-center gap-4 whitespace-nowrap">
                             <!-- เปลี่ยนจาก w-32 เป็น w-[140px] -->
                             <input type="date" name="REQUEST_DATE_FROM"
-                                class="w-[140px] h-9 px-3 text-sm text-slate-700 bg-slate-50 border border-slate-200 rounded-lg shadow-sm outline-none transition-all hover:border-slate-300 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20">
+                                class="req w-[140px] h-9 px-3 text-sm text-slate-700 bg-slate-50 border border-slate-200 rounded-lg shadow-sm outline-none transition-all hover:border-slate-300 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20">
                             <span class="text-sm font-medium text-slate-400">to</span>
                             <!-- เปลี่ยนจาก w-32 เป็น w-[140px] -->
                             <input type="date" name="REQUEST_DATE_TO"
@@ -150,12 +151,12 @@
                     <!-- Sort by -->
                     <div class="grid grid-cols-[140px_1fr] items-center gap-2">
                         <label class="text-sm font-medium text-slate-700 whitespace-nowrap">Sort by</label>
-                        <select name="SORT_BY"
+                        <select name="SORT_BY" id="SORT_BY"
                             class="w-full max-w-sm h-9 px-3.5 text-sm text-slate-700 bg-slate-50 border border-slate-200 rounded-lg shadow-sm outline-none transition-all hover:border-slate-300 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 cursor-pointer appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%24%2024%22%20fill%3D%22none%22%20stroke%3D%22%2364748b%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E')] bg-no-repeat bg-[position:right_0.75rem_center] bg-[length:1em_1em] pr-10">
                             <option value="VENDCODE">Vendor code</option>
                             <option value="COMNAME">Vendor name</option>
-                            <option value="VREQNAME">Requester</option>
-                            <option value="VREQNO">Emp No.</option>
+                            <option value="SNAME">Requester</option>
+                            <option value="SEMPNO">Emp No.</option>
                         </select>
                     </div>
                 </div>
