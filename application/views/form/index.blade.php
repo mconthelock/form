@@ -1,8 +1,8 @@
-@extends('layouts/template')
+@extends('layouts/itemplate')
 
 @section('contents')
     <input type="text" id="status" value="{{ $id }}" class="hidden" />
-    <div class="space-y-3 mb-8">
+    <div class="space-y-3">
         <div>
             <h1 class="text-3xl text-primary font-bold line-clamp-1" id="page-title">
                 <div class="skeleton h-12 w-96"></div>
@@ -12,7 +12,7 @@
             </div>
         </div>
         <section
-            class="grid gap-4 xl:grid-cols-[1fr_auto] xl:items-end rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+            class="grid gap-4 xl:grid-cols-[1fr_auto] xl:items-end rounded-3xl border border-slate-200 bg-white p-5 shadow-sm mb-5">
             <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                 <label class="form-control w-full" id="requirements-assignee-filter-wrap">
                     <div class="label pb-2">

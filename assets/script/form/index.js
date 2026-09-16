@@ -143,12 +143,29 @@ function nextApprover(flow = []) {
 async function reloadTable() {
     const status = $('#status').val();
     const data = await getFormList({ user, status });
-    await populateFilters(data);
+    const dataFiltered = Array.from(
+        new Map(
+            (Array.isArray(data) ? data : [])
+                .filter((item) => item)
+                .map((item) => {
+                    const form = item?.form || item;
+                    const key = [
+                        form?.NFRMNO ?? '',
+                        form?.VORGNO ?? '',
+                        form?.CYEAR ?? '',
+                        form?.CYEAR2 ?? form?.cyear2 ?? '',
+                        form?.NRUNNO ?? '',
+                    ].join('|');
+                    return [key, item];
+                }),
+        ).values(),
+    );
+    await populateFilters(dataFiltered);
     if (!table) {
-        await createFormTable(data);
+        await createFormTable(dataFiltered);
     } else {
         table.clear();
-        table.rows.add(data);
+        table.rows.add(dataFiltered);
         table.draw();
     }
 }
@@ -194,12 +211,13 @@ async function createFormTable(data) {
                     '000000' + row.NRUNNO
                 ).slice(-6)}`;
                 if (type === 'display') {
+                    //console.log(document.URL);
                     const serve = data.VFORMPAGE.startsWith('http')
                         ? data.VFORMPAGE.replace('http', 'https')
                         : `https://webflow.mitsubishielevatorasia.co.th/${data.VFORMPAGE}`;
                     const conjunction = serve.includes('?') ? '&' : '?';
                     const url = `${serve}${conjunction}no=${data.NFRMNO}&orgNo=${data.VORGNO}&y=${data.CYEAR}&y2=${data.CYEAR2}&runNo=${data.NRUNNO}&empno=${user}`;
-                    return `<a class="text-primary link-self" href="#" data-title="${pageId}" data-url="${url}&empnolv=${hash.toString().toUpperCase()}&bp=${encodeURIComponent('http://localhost:8080/form/webform/form/index/1')}">${formno}</a>`;
+                    return `<a class="text-primary link-self" href="#" data-title="${pageId}" data-url="${url}&empnolv=${hash.toString().toUpperCase()}&bp=${encodeURIComponent(document.URL)}">${formno}</a>`;
                 }
                 return formno;
             },
