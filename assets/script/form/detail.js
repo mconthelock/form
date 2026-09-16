@@ -28,8 +28,10 @@ $(document).ready(async function () {
                     html?.scrollHeight || 0,
                     html?.offsetHeight || 0,
                 );
+
                 if (height > 0) {
                     iframe.style.height = `${height}px`;
+                    $('#frame-container').css('height', `${height}px`);
                 }
             } catch (error) {
                 console.warn(

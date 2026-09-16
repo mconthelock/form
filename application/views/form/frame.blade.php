@@ -1,7 +1,7 @@
-@extends('layouts/itemplate')
+@extends('layouts/template')
 
 @section('contents')
-    <div class="relative w-full h-screen overflow-hidden">
+    <div class="relative w-full h-screen overflow-auto" id="frame-container">
         <div id="loading-indicator"
             class="absolute inset-0 z-10 flex flex-col items-center justify-center bg-white/90 backdrop-blur-sm transition-opacity duration-500 ease-in-out opacity-100 rounded-xl shadow-sm border border-gray-200">
             <div class="w-12 h-12 border-4 border-gray-200 border-t-blue-600 rounded-full animate-spin"></div>

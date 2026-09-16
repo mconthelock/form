@@ -211,7 +211,7 @@ async function createFormTable(data) {
                     '000000' + row.NRUNNO
                 ).slice(-6)}`;
                 if (type === 'display') {
-                    console.log(document.URL);
+                    //console.log(document.URL);
                     const serve = data.VFORMPAGE.startsWith('http')
                         ? data.VFORMPAGE.replace('http', 'https')
                         : `https://webflow.mitsubishielevatorasia.co.th/${data.VFORMPAGE}`;
