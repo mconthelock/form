@@ -34,6 +34,8 @@ class form extends MY_Controller {
         $this->load->model('form_model', 'frm');
         $this->load->model('dedform/DED-MDS/DED_MDS_model', 'MDSModel');
         $this->host = isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : 'amecweb';
+        $this->http = "http" . (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' || (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https') ? "s" : "") . "://" . ($_SERVER['HTTP_HOST'] ?? 'localhost');
+        
         
         $this->DDS = 'DDS';
     }
@@ -1220,26 +1222,38 @@ class form extends MY_Controller {
         $flowQuery  = $Webflowdb->query($sql, [$NFRMNO, $VORGNO, $CYEAR, $CYEAR2, $NRUNNO]);
         $flowRow    = $flowQuery ? $flowQuery->row() : null;
         $flowEmails = ($flowRow && !empty($flowRow->ALL_EMAILS)) ? trim($flowRow->ALL_EMAILS) : '';
-
-        if (strpos($this->current_host ?? '', 'test') !== false || strpos($this->current_host ?? '', 'localhost') !== false) {
+        $formUrl = "";
+        $host = $this->current_host ?? ($_SERVER['HTTP_HOST'] ?? '');
+       if (stripos($host, 'test') !== false || stripos($host, 'localhost') !== false) {
             // โหมด Test
             $TO = "siripapa@mitsubishielevatorasia.co.th";
             $CC = "siripapa@mitsubishielevatorasia.co.th";
+
+            if (stripos($host, 'localhost') !== false) {
+                // กรณีรันบน Local เครื่องตัวเอง
+                $formUrl = $this->http ."//localhost:8080/ids/DED_MDS/masterDesbm_report/index/{$year}/{$period}/";
+                $formUrl = $this->http ."//amecwebtest.mitsubishielevatorasia.co.th/ids/DED_MDS/masterDesbm_report/index/{$year}/{$period}/";
+            } else {
+                // กรณี Test Server (ใส่ https:// ให้ครบถ้วน เพื่อให้คลิกจาก Outlook ได้)
+                $formUrl = $this->http ."//amecwebtest.mitsubishielevatorasia.co.th/ids/DED_MDS/masterDesbm_report/index/{$year}/{$period}/";
+            }
         } else {
             // โหมด Production
             $TO = !empty($flowEmails) ? $flowEmails : "siripapa@mitsubishielevatorasia.co.th";
             $CC = "siripapa@mitsubishielevatorasia.co.th";
-        }
 
+            // ใส่ https:// เสมอสำหรับเมลจริง
+            $formUrl = $this->http ."//amecweb.mitsubishielevatorasia.co.th/ids/DED_MDS/masterDesbm_report/index/{$year}/{$period}/";
+        }
         // URL เปิดหน้ารายงาน Form Webflow
-        $formUrl = "http://amecweb.mitsubishielevatorasia.co.th/form/dedform/DED-MDS/form/main?" . http_build_query([
-            'no'    => $NFRMNO,
-            'orgNo' => $VORGNO,
-            'y'     => $CYEAR,
-            'y2'    => $CYEAR2,
-            'runNo' => $NRUNNO,
-            'm'     => 3
-        ]);
+        // $formUrl = "//amecweb.mitsubishielevatorasia.co.th/form/dedform/DED-MDS/form/main?" . http_build_query([
+        //     'no'    => $NFRMNO,
+        //     'orgNo' => $VORGNO,
+        //     'y'     => $CYEAR,
+        //     'y2'    => $CYEAR2,
+        //     'runNo' => $NRUNNO,
+        //     'm'     => 3
+        // ]);
 
         // 🟢 4. Body Template ปรับแต่งให้เห็น Status เด่นชัดเจน
         $BODY = "
