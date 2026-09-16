@@ -98,10 +98,17 @@ $(document).ready(async function () {
         $('#PlanHeaderIDHid').val('');
         await applyButtonPermissions('1', '', '');
     } else {
-        currentMode = String(await getMode({ ...form, EMPNO: form.EMPNO }));
-        currentExtData = String(
-            await getExtData({ ...form, EMPNO: form.EMPNO }),
-        );
+        if (form.EMPNO == 'SYSTEM') //Viewer
+        {
+            currentMode = '3';
+            currentExtData = '00';
+        } else {
+            currentMode = String(await getMode({ ...form, EMPNO: form.EMPNO }));
+            currentExtData = String(
+                await getExtData({ ...form, EMPNO: form.EMPNO }),
+            );
+        }
+
         $('#EXTDATAHid').val(currentExtData);
         $('#MODEHid').val(currentMode);
         $('#PlanHeaderIDHid').val(form.PLANHEADERID);
@@ -1054,7 +1061,7 @@ function renderDataTable(data) {
                 },
             },
 
-            // 🟢 คอลัมน์ P (P_Type)
+            // คอลัมน์ P (P_Type)
             {
                 data: 'P_Type',
                 title: 'P',
