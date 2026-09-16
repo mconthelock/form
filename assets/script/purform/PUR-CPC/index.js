@@ -7,7 +7,7 @@ import {
 import { getUser, getUserImage } from '@amec/webasset/api/amec';
 
 import { EmployeeProfileCard } from '@amec/webasset/components/profileCard';
-import { getActivePriceConditions } from './data';
+import { getActivePriceConditions, getK850mpData } from './data';
 import { steps } from './steps';
 
 $(async function () {
@@ -46,6 +46,10 @@ $(async function () {
     }
 });
 
+$(document).on('submit', 'form[data-step-panel]', function (e) {
+    e.preventDefault();
+});
+
 /**
  * Handle input event for requester field and update profile card accordingly.
  */
@@ -79,14 +83,38 @@ $(document).on('change', 'input[name="requester"]', async function () {
     }
 });
 
+$(document).on('change', 'input[name="function"]', async function () {
+    try {
+        steps.function = $(this).val();
+    } catch (error) {
+        console.error(error);
+        showErrorMessage(error.message);
+    }
+});
+
 async function setProfileCard(empno, containner, title = 'Requester') {
+    const k850mpData = await getK850mpData();
+    const k850mpRecord = k850mpData.data.filter(
+        (record) => record.K85M03 === empno,
+    );
+    if (k850mpRecord.length === 0) {
+        $(containner).empty();
+        steps.plannerCode = null;
+        $('input[name="requester"]').val('');
+        showMessage('Planner not found', 'warning');
+        return;
+    }
     const empnoData = await getUser(empno);
     const userImage = await getUserImage(empno);
     if (!empnoData) {
+        steps.requester = null;
         $(containner).empty();
+        $('input[name="requester"]').val('');
         showMessage('Requester not found', 'warning');
         return;
     }
+    steps.requester = empno;
+    steps.plannerCode = k850mpRecord.map((record) => record.K85M02);
     new EmployeeProfileCard({
         container: containner,
         name: empnoData.SNAME,

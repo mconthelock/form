@@ -42,12 +42,14 @@
                 {{-- Content for step 2 goes here --}}
                 <div data-step-panel class="hidden gap-5">
                     <table class="table table-zebra" id="table-draft"></table>
-                    <button type="button" class="btn previous-step">Back</button>
-                    <button type="button" class="btn next-step">Next</button>
+                    <div class="flex gap-3">
+                        <button type="button" class="btn previous-step">Back</button>
+                        <button type="button" class="btn next-step">Next</button>
+                    </div>
                 </div>
 
                 {{-- Content for step 3 goes here --}}
-                <form data-step-panel class="hidden flex flex-col gap-3" id="step-requester">
+                <form href="#" data-step-panel class="hidden flex flex-col gap-3" id="step-requester">
                     <fieldset class="fieldset">
                         <legend class="fieldset-legend">Requester</legend>
                         <input type="text" name="requester" placeholder="Enter requester" class="input w-64 mb-4 req"
@@ -57,16 +59,19 @@
                         <legend class="fieldset-legend">Function</legend>
                         <div id="price-cond"></div>
                     </fieldset>
-                    <div class="flex">
+                    <div class="flex gap-3">
                         <button type="button" class="btn previous-step">Back</button>
                         <button type="button" class="btn next-step">Next</button>
                     </div>
                 </form>
 
                 {{-- Content for step 4 goes here --}}
-                <div data-step-panel class="hidden">
-                    <button type="button" class="btn previous-step">Back</button>
-                    <button type="button" class="btn next-step">Next</button>
+                <div data-step-panel class="hidden flex flex-col gap-3">
+                    <table id="table-create-price" class="table table-zebra table-sm"></table>
+                    <div class="flex gap-3 mt-5">
+                        <button type="button" class="btn previous-step">Back</button>
+                        <button type="button" class="btn next-step">Next</button>
+                    </div>
                 </div>
 
                 {{-- Content for step 5 goes here --}}

@@ -1,5 +1,7 @@
 import { Steps } from '@amec/webasset/components/steps';
-import { requiredForm } from '@amec/webasset/utils';
+import { requiredForm, showErrorMessage } from '@amec/webasset/utils';
+import { getPlannerCompareSheet } from './data';
+import { tableCreatePrice } from './table-create-price';
 /**
  * @author Sutthipong Tangmongkhoncharoen(24008)
  * @since 2026-09-15
@@ -8,6 +10,41 @@ import { requiredForm } from '@amec/webasset/utils';
 export const steps = {
     instance: null,
     mode: null,
+    _requester: null,
+    _plannerCode: null,
+    _function: null,
+    set plannerCode(value) {
+        this._plannerCode = value;
+    },
+    get plannerCode() {
+        return this._plannerCode;
+    },
+    set requester(value) {
+        this._requester = value;
+    },
+    get requester() {
+        return this._requester;
+    },
+    set function(value) {
+        this._function = value;
+    },
+    get function() {
+        return this._function;
+    },
+    get data() {
+        return {
+            mode: this.mode,
+            requester: this._requester,
+            plannerCode: this._plannerCode,
+            function: this._function,
+        };
+    },
+    reset() {
+        this.mode = null;
+        this._requester = null;
+        this._plannerCode = null;
+        this._function = null;
+    },
     init() {
         this.instance = new Steps({
             container: '#price-comparison-steps',
@@ -34,12 +71,41 @@ export const steps = {
             self.handlePreviousStep(stepper.currentStep);
         });
         $(document).on('click', '.next-step', async function () {
-            if (!(await self.validatePanel(stepper.currentStep))) return;
-            if (stepper.currentStep === 0) {
-                self.mode = $(this).attr('mode');
+            try {
+                if (!(await self.validatePanel(stepper.currentStep))) return;
+                if (stepper.currentStep === 0) {
+                    self.mode = $(this).attr('mode');
+                }
+                await self.handleNextStep(stepper.currentStep);
+            } catch (error) {
+                console.error(error);
+                showErrorMessage(error.message);
             }
-            self.handleNextStep(stepper.currentStep);
         });
+    },
+    /** ตรวจสอบข้อมูลของหน้าปัจจุบันก่อนไป step ถัดไป */
+    async validatePanel(index) {
+        // TODO: ใส่ validation ของแต่ละหน้า เช่น
+        if (index === 2) {
+            return await requiredForm('#step-requester');
+        }
+        return true;
+    },
+    async handlePanel(index) {
+        const requester = $('input[name="requester"]');
+        if (index <= 1) {
+            // reset ฟอร์ม requester และลบ profile card
+            $('#step-requester')[0].reset();
+            $('#requester-card-container').empty();
+            // เมื่อไปหน้า input data ให้ focus ที่ช่อง requester
+            if (index === 2) {
+                requester.trigger('focus');
+            }
+            // เมื่อกลับไปหน้าแรกให้ reset ค่าทั้งหมด
+            if (index === 0) {
+                this.reset();
+            }
+        }
     },
     handlePreviousStep(index) {
         switch (index) {
@@ -59,8 +125,7 @@ export const steps = {
                 break;
         }
     },
-    handleNextStep(index) {
-        console.log('mode', this.mode);
+    async handleNextStep(index) {
         switch (index) {
             case 0:
                 if (this.mode === 'new') {
@@ -74,31 +139,21 @@ export const steps = {
                 }
                 break;
             case 1:
-                console.log('2');
                 this.instance.skipTo(3);
                 break;
-            default:
-                console.log('3');
+            case 2:
+                const plannerCompareSheet = await getPlannerCompareSheet(
+                    this.plannerCode,
+                );
+                if (!plannerCompareSheet.status) {
+                    throw new Error(plannerCompareSheet.message);
+                }
+                tableCreatePrice.init(plannerCompareSheet.data);
                 this.instance.next();
                 break;
-        }
-    },
-    /** ตรวจสอบข้อมูลของหน้าปัจจุบันก่อนไป step ถัดไป */
-    async validatePanel(index) {
-        // TODO: ใส่ validation ของแต่ละหน้า เช่น
-        if (index === 2) {
-            return await requiredForm('#step-requester');
-        }
-        return true;
-    },
-    async handlePanel(index) {
-        const requester = $('input[name="requester"]');
-        if (index <= 1) {
-            $('#step-requester')[0].reset();
-            $('#requester-card-container').empty();
-            if (index === 1) {
-                requester.trigger('focus');
-            }
+            default:
+                this.instance.next();
+                break;
         }
     },
 };
