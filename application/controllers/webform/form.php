@@ -15,7 +15,12 @@ class form extends MY_Controller {
             5 => 'nav-form-represent',
             6 => 'nav-form-finish'
         );
-        $this->views('form/index', array('id' => $id, 'title' => $status[$id]));
+        $uri = base_url().'webform/form/list/'.$id;
+        $this->views('form/detail', array('id' => $id, 'title' => $status[$id], 'target' => $uri));
+    }
+
+    public function list($id = 1){
+        $this->views('form/index',array('id' => $id));
     }
 
     public function create(){

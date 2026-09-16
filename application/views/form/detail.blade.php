@@ -1,8 +1,7 @@
 @extends('layouts/template')
 
 @section('contents')
-    {{-- bg-gray-50 rounded-xl border border-gray-200  shadow-sm mb-5 --}}
-    <div class="relative w-full h-[95vh] overflow-hidden">
+    <div class="relative w-full h-screen overflow-hidden">
         <div id="loading-indicator"
             class="absolute inset-0 z-10 flex flex-col items-center justify-center bg-white/90 backdrop-blur-sm transition-opacity duration-500 ease-in-out opacity-100 rounded-xl shadow-sm border border-gray-200">
             <div class="w-12 h-12 border-4 border-gray-200 border-t-blue-600 rounded-full animate-spin"></div>
@@ -10,7 +9,7 @@
         </div>
 
         <iframe id="my-iframe" src="{{ $target }}"
-            class="absolute inset-0 w-full h-full border-0 transition-opacity duration-700 ease-in-out opacity-0 bg-white"></iframe>
+            class="absolute inset-0 w-full h-screen border-0 transition-opacity duration-700 ease-in-out opacity-0 bg-white mb-8"></iframe>
 
     </div>
 @endsection
