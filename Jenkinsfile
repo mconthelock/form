@@ -20,7 +20,7 @@ pipeline {
                     } else if (env.BRANCH_NAME == 'main') {
 
                         env.TARGET_DIR = '/var/amecweb/wwwroot/production/form'
-                        env.ENV_DIR = '/var/amecweb/file/env/form/.env.autochecksheet.production'
+                        env.ENV_DIR = '/var/amecweb/file/env/form/.env.form.production'
                         env.NODE_ENV = 'development'
                         env.DEPLOY_ENV = 'production'
 
