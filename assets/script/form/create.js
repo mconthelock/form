@@ -250,11 +250,11 @@ async function createFormList() {
 }
 
 async function setFormList(data, group) {
-    console.log('Setting form list for group:', group);
-    console.log('Filtered data for this group:', data);
     await initApp();
     const user = $('#user-login').attr('empno');
     const hash = CryptoJS.MD5(user);
+    const bp = document.URL;
+    // &empnolv=${hash.toString().toUpperCase()}
     const filtered = data.filter((item) => item.VDIR == group.VGROUP);
     if (!filtered.length) {
         return;
@@ -262,7 +262,7 @@ async function setFormList(data, group) {
     let str = `
         <li class="list-row list-group p-4 pb-2 text-xl text-primary font-black tracking-wide">${group.VGROUPNAME}</li>`;
     filtered.forEach((item) => {
-        str += `<li class="list-row list-data border border-white cursor-pointer hover:bg-base-300 hover:border-slate-300 create-form-detail" data-url="${item.VFORMPAGE}?sr=1&empnolv=${hash.toString().toUpperCase()}&no=${item.NNO}&orgNo=${item.VORGNO}&y=${item.CYEAR}&empno=${user}" data-name="${item.VNAME}" data-desc="${item.VDESC == null ? '' : item.VDESC}" data-code="${item.VANAME}">
+        str += `<li class="list-row list-data border border-white cursor-pointer hover:bg-base-300 hover:border-slate-300 create-form-detail" data-url="${item.VFORMPAGE}?no=${item.NNO}&orgNo=${item.VORGNO}&y=${item.CYEAR}&empno=${user}&bp=${bp}" data-name="${item.VNAME}" data-desc="${item.VDESC == null ? '' : item.VDESC}" data-code="${item.VANAME}">
             <div class="text-4xl font-thin opacity-30 tabular-nums min-w-37">${item.VANAME}</div>
             <div class="list-col-grow">
                 <div>${item.VNAME}</div>
