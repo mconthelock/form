@@ -92,6 +92,28 @@ $(document).on('change', 'input[name="function"]', async function () {
     }
 });
 
+/**
+ * @author Sutthipong Tangmongkhoncharoen(24008)
+ * @since 2026-09-07
+ * @description Handles the selection of an Excel file for upload.
+ */
+$(document).on('change', '#excel-file', function () {
+    const file = this.files[0];
+    if (!file) {
+        $('#selected-file-name')
+            .text('Please select an Excel file')
+            .removeClass('text-success');
+        return;
+    }
+
+    const size = (file.size / 1024 / 1024).toFixed(2);
+    $('#selected-file-name').html(`
+        <i class="fi fi-sr-file-excel text-success"></i>
+        ${file.name}
+        <span class="text-base-content/50">(${size} MB)</span>
+    `);
+});
+
 async function setProfileCard(empno, containner, title = 'Requester') {
     const k850mpData = await getK850mpData();
     const k850mpRecord = k850mpData.data.filter(

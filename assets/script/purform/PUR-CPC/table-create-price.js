@@ -15,6 +15,8 @@ import {
 import XlsxPopulate from 'xlsx-populate/browser/xlsx-populate.js';
 import { steps } from './steps';
 import { getFile } from '@amec/webasset/api/file';
+import { showLoader } from '@amec/webasset/preloader';
+import { getPlannerCompareSheet } from './data';
 
 export const tableCreatePrice = {
     instance: null,
@@ -50,6 +52,7 @@ export const tableCreatePrice = {
         this.skeleton = dataTableSkeleton({
             show: show,
             idLoading: this.tableId,
+            height: 'h-[50vh]',
             searchSize: {
                 width: 'w-96',
             },
@@ -62,10 +65,15 @@ export const tableCreatePrice = {
         await destroyTable(this.tableId);
         this.instance = null;
     },
-    async init(data) {
+    async init(plannerCode) {
+        await this.destroy();
         this.preload();
+        const plannerCompareSheet = await getPlannerCompareSheet(plannerCode);
+        if (!plannerCompareSheet.status) {
+            throw new Error(plannerCompareSheet.message);
+        }
+        await this.createTable(plannerCompareSheet.data);
         this.skeleton.remove();
-        await this.createTable(data);
         this.bindEvents();
     },
     async createTable(data) {
@@ -116,6 +124,11 @@ export const tableCreatePrice = {
     ],
     bindEvents() {
         const self = this;
+        /**
+         * @author Sutthipong Tangmongkhoncharoen(24008)
+         * @since 2026-09-16
+         * @description Exports the selected rows from the price comparison table to an Excel file.
+         */
         $(document)
             .off('click.price-compare-export', '#price-compare-export')
             .on(
@@ -123,6 +136,7 @@ export const tableCreatePrice = {
                 '#price-compare-export',
                 async function () {
                     try {
+                        showLoader();
                         const selected = getSelectedData(self.instance);
                         if (selected.length === 0) {
                             showMessage(
@@ -136,9 +150,9 @@ export const tableCreatePrice = {
                         const data = selected.map((row) => [
                             steps.function,
                             row.IBUYC,
+                            row.IVEND,
                             row.IPROD,
                             row.IDRAW,
-                            row.IVEND,
                         ]);
                         const template = await getFile({
                             baseDir: `${process.env.AMEC_FILE_PATH}${process.env.STATE == 'production' ? 'production' : 'development'}/webflow/template/price-compare`,
@@ -168,8 +182,6 @@ export const tableCreatePrice = {
                         );
                         const startRow = 3;
                         const endRow = startRow + convertedData.length - 1;
-                        console.log('data', data);
-                        console.log('convertedData', convertedData);
 
                         const buffer = await template.arrayBuffer();
                         const workbook =
@@ -195,6 +207,8 @@ export const tableCreatePrice = {
                     } catch (error) {
                         console.error(error);
                         showErrorMessage(error.message);
+                    } finally {
+                        showLoader({ show: false });
                     }
                 },
             );

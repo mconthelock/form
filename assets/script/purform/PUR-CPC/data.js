@@ -38,3 +38,17 @@ export async function getK850mpData() {
         method: 'GET',
     });
 }
+
+/**
+ * @author Sutthipong Tangmongkhoncharoen(24008)
+ * @since 2026-09-17
+ * @description Get data for the price comparison.
+ * @returns
+ */
+export async function getPriceComparison(data) {
+    return await fetchUtils({
+        url: `${process.env.APP_API}/purform/pur-cpc/Price-Comparison`,
+        method: 'POST',
+        data: data,
+    });
+}

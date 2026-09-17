@@ -2,6 +2,7 @@ import { Steps } from '@amec/webasset/components/steps';
 import { requiredForm, showErrorMessage } from '@amec/webasset/utils';
 import { getPlannerCompareSheet } from './data';
 import { tableCreatePrice } from './table-create-price';
+import { showLoader } from '@amec/webasset/preloader';
 /**
  * @author Sutthipong Tangmongkhoncharoen(24008)
  * @since 2026-09-15
@@ -62,16 +63,18 @@ export const steps = {
                 await steps.handlePanel(currentStep);
             },
         });
+        this.handlePanel(0);
         this.bindEvents();
     },
     bindEvents() {
         const self = this;
         const stepper = self.instance;
-        $(document).on('click', '.previous-step', function () {
+        $(document).on('click', '#previous-step', function () {
             self.handlePreviousStep(stepper.currentStep);
         });
-        $(document).on('click', '.next-step', async function () {
+        $(document).on('click', '#next-step, .next-step', async function () {
             try {
+                showLoader();
                 if (!(await self.validatePanel(stepper.currentStep))) return;
                 if (stepper.currentStep === 0) {
                     self.mode = $(this).attr('mode');
@@ -80,6 +83,8 @@ export const steps = {
             } catch (error) {
                 console.error(error);
                 showErrorMessage(error.message);
+            } finally {
+                showLoader({ show: false });
             }
         });
     },
@@ -93,6 +98,34 @@ export const steps = {
     },
     async handlePanel(index) {
         const requester = $('input[name="requester"]');
+        const stepNavigation = $('#step-navigation');
+        const btnPrevious = $('#previous-step');
+        const btnNext = $('#next-step');
+        const btnSaveDraft = $('#save-draft');
+        const btnSubmit = $('#submit-form');
+        const btnNewStep = $('#new-step');
+        const btnDraftStep = $('#draft-step');
+        btnNewStep.addClass('hidden');
+        btnDraftStep.addClass('hidden');
+        stepNavigation.find('button').addClass('hidden');
+        switch (index) {
+            case 0:
+                btnNewStep.removeClass('hidden');
+                btnDraftStep.removeClass('hidden');
+                break;
+            case 1:
+            case 2:
+            case 3:
+                btnPrevious.removeClass('hidden');
+                btnNext.removeClass('hidden');
+                break;
+            case 4:
+                btnPrevious.removeClass('hidden');
+                btnSaveDraft.removeClass('hidden');
+                btnSubmit.removeClass('hidden');
+                break;
+        }
+
         if (index <= 1) {
             // reset ฟอร์ม requester และลบ profile card
             $('#step-requester')[0].reset();
@@ -142,13 +175,7 @@ export const steps = {
                 this.instance.skipTo(3);
                 break;
             case 2:
-                const plannerCompareSheet = await getPlannerCompareSheet(
-                    this.plannerCode,
-                );
-                if (!plannerCompareSheet.status) {
-                    throw new Error(plannerCompareSheet.message);
-                }
-                tableCreatePrice.init(plannerCompareSheet.data);
+                tableCreatePrice.init(this.plannerCode);
                 this.instance.next();
                 break;
             default:
