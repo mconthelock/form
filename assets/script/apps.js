@@ -13,7 +13,7 @@ $(document).ready(async function () {
             sidebarClass: `size-xl text-gray-300 bg-primary`,
         });
     } catch (error) {
-        console.log(error);
+        console.error(error);
     }
     await new Promise((r) => setTimeout(r, 1000));
     return;

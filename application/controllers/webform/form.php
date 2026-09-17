@@ -34,7 +34,7 @@ class form extends MY_Controller {
             return $d['id'] == $id;
         });
         $data['department'] = reset($selectedDept);
-        $data['title'] = 'form-create';
+        $data['title'] = 'nav-form-create';
         $this->views('form/create/createdetail', $data);
     }
 

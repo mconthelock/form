@@ -1,4 +1,4 @@
-@extends('layouts/itemplate')
+@extends('layouts/template')
 
 @section('contents')
     <div class="relative w-full h-screen overflow-hidden">

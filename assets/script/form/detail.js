@@ -63,10 +63,9 @@ $(document).ready(async function () {
             iframe.classList.add('opacity-100');
         };
 
-        iframe.addEventListener('load', function () {
+        iframe.addEventListener('load', async function () {
             console.log('iframe load event fired', iframe.src);
-            resizeIframeToContent();
-
+            await resizeIframeToContent();
             try {
                 const doc =
                     iframe.contentDocument || iframe.contentWindow?.document;
