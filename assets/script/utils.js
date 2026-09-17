@@ -12,7 +12,7 @@ export const initApp = async (opt = {}) => {
         });
         return app;
     } catch (error) {
-        console.log(error);
+        console.error(error);
         return false;
     }
 };
