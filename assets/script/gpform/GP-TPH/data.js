@@ -35,6 +35,13 @@ export async function createForm(data) {
         data: data,
     });
 }
+export async function updateForm(form, data) {
+    return fetchUtils({
+        url: `${process.env.APP_API}/gpform/gp-tph/${encodeURIComponent(form.NFRMNO)}/${encodeURIComponent(form.VORGNO)}/${encodeURIComponent(form.CYEAR)}/${encodeURIComponent(form.CYEAR2)}/${encodeURIComponent(form.NRUNNO)}`,
+        method: 'PATCH',
+        data,
+    });
+}
 export async function createArea(data) {
     return fetchUtils({
         url: `${process.env.APP_API}/gpform/gp-tph/areas`,

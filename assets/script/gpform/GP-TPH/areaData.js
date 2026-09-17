@@ -244,7 +244,11 @@ function openForm(area = null) {
     editingAreaId = area ? getAreaId(area) : null;
 
     if (area) {
-        const ownerValue = area.AREA_OWNER || area.area_owner || '';
+        const ownerCode = area.AREA_OWNER || area.area_owner || '';
+        const ownerPosCode = area.AREA_OWNER_POSCODE || area.area_owner_poscode || '';
+        const ownerValue = ownerPosCode && ownerCode
+            ? `${ownerPosCode}+${ownerCode}`
+            : ownerCode;
         form.elements.LOCATION_ID.value = getLocationId(area) || '';
         form.elements.AREA_NAME.value = area.AREA_NAME || area.area || '';
         form.elements.AREA_LEVEL.value = area.AREA_LEVEL || area.level || '';
@@ -263,6 +267,47 @@ function closeForm() {
         form.classList.remove('is-visible');
     }
     editingAreaId = null;
+}
+
+function confirmAreaDeletion() {
+    const dialog = document.getElementById('deleteAreaDialog');
+    const cancelButton = dialog?.querySelector('[data-delete-area-cancel]');
+    const confirmButton = dialog?.querySelector('[data-delete-area-confirm]');
+
+    if (!dialog || !cancelButton || !confirmButton) {
+        return Promise.resolve(false);
+    }
+
+    return new Promise((resolve) => {
+        const cleanup = () => {
+            dialog.removeEventListener('close', handleClose);
+            dialog.removeEventListener('click', handleBackdropClick);
+            cancelButton.removeEventListener('click', handleCancel);
+            confirmButton.removeEventListener('click', handleConfirm);
+        };
+        const handleClose = () => {
+            cleanup();
+            resolve(false);
+        };
+        const handleBackdropClick = (event) => {
+            if (event.target === dialog) {
+                dialog.close();
+            }
+        };
+        const handleCancel = () => dialog.close();
+        const handleConfirm = () => {
+            cleanup();
+            dialog.close();
+            resolve(true);
+        };
+
+        dialog.addEventListener('close', handleClose);
+        dialog.addEventListener('click', handleBackdropClick);
+        cancelButton.addEventListener('click', handleCancel);
+        confirmButton.addEventListener('click', handleConfirm);
+        dialog.showModal();
+        cancelButton.focus();
+    });
 }
 
 async function loadAreaTable() {
@@ -332,13 +377,14 @@ function bindEvents() {
 
         if (deleteButton) {
             const areaId = deleteButton.dataset.areaId;
-            if (!window.confirm('ยืนยันการลบข้อมูลนี้หรือไม่?')) {
+            if (!await confirmAreaDeletion()) {
                 return;
             }
 
             deleteButton.disabled = true;
             try {
                 await deleteArea(areaId);
+                showMessage('ลบข้อมูลสำเร็จ', 'success');
                 await loadAreaTable();
             } catch (error) {
                 console.error('Unable to delete GP-TPH area.', error);

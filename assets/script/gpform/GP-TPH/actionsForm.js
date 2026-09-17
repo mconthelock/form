@@ -1,6 +1,13 @@
 import { createTable, getSelectedData } from '@amec/webasset/dataTable';
 import { logFormData, showMessage } from '@amec/webasset/utils';
-import { getEmpData, getAreas, getLocations, createForm } from './data';
+import {
+    getEmpData,
+    getAreas,
+    getLocations,
+    getFormData,
+    createForm,
+    updateForm,
+} from './data';
 import { webflowSubmit } from '@amec/webasset/components/form';
 import { redirectWebflow } from '@amec/webasset/form';
 import { setDatePicker } from '@amec/webasset/flatpickr';
@@ -8,6 +15,7 @@ import { setDatePicker } from '@amec/webasset/flatpickr';
 (function () {
     let mockupTable = null;
     let tableArea = null;
+    let editingForm = null;
 
     async function modalTable(data) {
         const table = await createTable(
@@ -88,6 +96,91 @@ import { setDatePicker } from '@amec/webasset/flatpickr';
                 row.querySelector('.visitor-row-number').textContent =
                     index + 1;
             });
+        }
+
+        async function setSelectedAreas(selectedRows) {
+            tableArea = await createTable(
+                {
+                    data: selectedRows,
+                    responsive: false,
+                    columns: [
+                        { title: 'No.', data: null, render: (data, type, row, meta) => meta.row + 1 },
+                        { title: 'Location', data: 'LOCATION.LOCATION_NAME' },
+                        { title: 'Area', data: 'AREA_NAME' },
+                        { title: 'Level', data: 'AREA_LEVEL' },
+                        { title: 'Area Owner', data: 'AREA_OWNER' },
+                        {
+                            title: 'Action',
+                            data: null,
+                            render: () => '<button type="button" class="btn btn-sm btn-error dt-remove-row">ร—</button>',
+                        },
+                    ],
+                },
+                { id: '#table-area', domScroll: { status: true } },
+            );
+            tableArea.on('click', '.dt-remove-row', function () {
+                tableArea.row($(this).closest('tr')).remove().draw();
+            });
+        }
+
+        function populateVisitors(details) {
+            visitorBody.replaceChildren();
+            details.forEach((detail) => {
+                const clone = visitorTemplate.content.cloneNode(true);
+                const inputs = clone.querySelectorAll('input');
+                inputs[0].value = detail.EMP_CODE || '';
+                inputs[1].value = detail.APPLICANT_NAME || '';
+                visitorBody.appendChild(clone);
+            });
+            if (!visitorBody.rows.length) {
+                visitorBody.appendChild(visitorTemplate.content.cloneNode(true));
+            }
+            updateVisitorIndexes();
+        }
+
+        async function loadExistingRequest(areas) {
+            const marker = document.getElementById('gp-tph-form-data');
+            if (!marker) return;
+
+            editingForm = {
+                NFRMNO: marker.dataset.nfrmno,
+                VORGNO: marker.dataset.vorgno,
+                CYEAR: marker.dataset.cyear,
+                CYEAR2: marker.dataset.cyear2,
+                NRUNNO: marker.dataset.nrunno,
+            };
+            const data = await getFormData(
+                editingForm.NFRMNO, editingForm.VORGNO, editingForm.CYEAR,
+                editingForm.CYEAR2, editingForm.NRUNNO,
+            );
+            if (!data) throw new Error('GP-TPH request was not found');
+
+            $('#INPUTBY').val(data.form?.VINPUTER || '');
+            $('#REQBY').val(data.form?.VREQNO || '');
+            $('#PURPOSE').val(data.PURPOSE || '');
+            $('#LONGTERM_YEARS').val(data.LONGTERM_YEARS || '');
+            $('#PERMIT_START_DATE').val(data.PERMIT_START_DATE?.split('T')[0] || '');
+            $('#PERMIT_END_DATE').val(data.PERMIT_END_DATE?.split('T')[0] || '');
+            $(`input[name="REQUEST_TYPE"][value="${data.REQUEST_TYPE}"]`).prop('checked', true);
+            $(`input[name="REQUEST_SUB_TYPE"][value="${data.REQUEST_SUB_TYPE}"]`).prop('checked', true);
+            $(`input[name="permit_option"][value="${data.LONGTERM_YEARS ? 'long_term' : 'period'}"]`).prop('checked', true);
+            $('#HELMET_STICKER').prop('checked', data.HELMET_STICKER === 'Y');
+            $('#PHOTO_PERMIT_BADGE').prop('checked', data.PHOTO_PERMIT_BADGE === 'Y');
+            toggleHostExternalSection();
+            togglePermitOptionFields();
+            updatePermitTypeRestrictions();
+
+            if (data.REQUEST_TYPE === 'H') {
+                const applicant = data.DETAILS?.[0] || {};
+                $('#APPLICANT_NAME').last().val(applicant.APPLICANT_NAME || '');
+                $('#EMP_CODE').val(applicant.EMP_CODE || '');
+                $('#COMPANY_NAME').val(applicant.COMPANY_NAME || '');
+            } else {
+                populateVisitors(data.DETAILS || []);
+            }
+
+            const selectedIds = new Set((data.AREA_RECORDS || []).map((record) => String(record.AREA_ID)));
+            await setSelectedAreas(areas.filter((area) => selectedIds.has(String(area.AREA_ID))));
         }
 
         function makeRadioGroupToggleable(selector, callback) {
@@ -269,9 +362,13 @@ import { setDatePicker } from '@amec/webasset/flatpickr';
             const action = webflowSubmit({ request: true });
             $('#sentRequest').html(action);
             mockupTable = await modalTable(getareas);
-            const getName = await getEmpData(empno);
-            $('#INPUTBY').val(empno);
             await setDatePicker();
+            if (document.getElementById('gp-tph-form-data')) {
+                await loadExistingRequest(getareas);
+            } else {
+                await getEmpData(empno);
+                $('#INPUTBY').val(empno);
+            }
         });
 
         $(document).on('change', '#select-all-areas', function () {
@@ -636,7 +733,7 @@ import { setDatePicker } from '@amec/webasset/flatpickr';
             if (requestType === 'H') {
                 requiredMessage.push(
                     {
-                        element: $('#APPLICANT_NAME'),
+                    element: $('#host-external-section #APPLICANT_NAME'),
                         message: 'Please fill the Visitor Name',
                     },
                     {
@@ -745,9 +842,9 @@ import { setDatePicker } from '@amec/webasset/flatpickr';
                           {
                               SEQ_NO: 1,
                               APPLICANT_TYPE: 'H',
-                              EMP_CODE: $('#REQBY').val(),
-                              APPLICANT_NAME: $('#APPLICANT_NAME').val(),
-                              COMPANY_NAME: $('#COMPANY_NAME').val(),
+                               EMP_CODE: $('#host-external-section #EMP_CODE').val(),
+                               APPLICANT_NAME: $('#host-external-section #APPLICANT_NAME').val(),
+                               COMPANY_NAME: $('#host-external-section #COMPANY_NAME').val(),
                           },
                       ]
                     : details.map((detail) => ({
@@ -783,7 +880,9 @@ import { setDatePicker } from '@amec/webasset/flatpickr';
             console.table(areaRecords);
 
             logFormData(formData);
-            const res = await createForm(formData);
+            const res = editingForm
+                ? await updateForm(editingForm, formData)
+                : await createForm(formData);
             if (res.status == true) {
                 showMessage(res.message, 'success');
                 redirectWebflow();
