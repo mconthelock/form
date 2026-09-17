@@ -262,24 +262,56 @@ async function writeExcelIndirect(dataList) {
                     sheet.getCell(`ฺU${currentRow}`).value = item.CONTACT;
                     sheet.getCell(`ฺV${currentRow}`).value = item.EMAIL;
                     sheet.getCell(`ฺW${currentRow}`).value = item.TELNO;
-                    sheet.getCell(`ฺX${currentRow}`).value = Number(
-                        item.PROFIT_TURNOVERS[0].AMOUNT,
-                    ).toLocaleString('en-US', {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                    });
-                    sheet.getCell(`ฺY${currentRow}`).value = Number(
-                        item.PROFIT_TURNOVERS[1].AMOUNT,
-                    ).toLocaleString('en-US', {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                    });
-                    sheet.getCell(`ฺZ${currentRow}`).value = Number(
-                        item.PROFIT_TURNOVERS[2].AMOUNT,
-                    ).toLocaleString('en-US', {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                    });
+                    // เช็คก่อนว่ามี PROFIT_TURNOVERS หรือไม่ เพื่อป้องกัน Error
+                    if (item.PROFIT_TURNOVERS) {
+                        // เช็ค Index 0
+                        if (item.PROFIT_TURNOVERS[0]) {
+                            sheet.getCell(`X${currentRow}`).value = Number(
+                                item.PROFIT_TURNOVERS[0].AMOUNT,
+                            ).toLocaleString('en-US', {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2,
+                            });
+                        }
+
+                        // เช็ค Index 1
+                        if (item.PROFIT_TURNOVERS[1]) {
+                            sheet.getCell(`Y${currentRow}`).value = Number(
+                                item.PROFIT_TURNOVERS[1].AMOUNT,
+                            ).toLocaleString('en-US', {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2,
+                            });
+                        }
+
+                        // เช็ค Index 2
+                        if (item.PROFIT_TURNOVERS[2]) {
+                            sheet.getCell(`Z${currentRow}`).value = Number(
+                                item.PROFIT_TURNOVERS[2].AMOUNT,
+                            ).toLocaleString('en-US', {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2,
+                            });
+                        }
+                    }
+                    // sheet.getCell(`ฺX${currentRow}`).value = Number(
+                    //     item.PROFIT_TURNOVERS[0].AMOUNT,
+                    // ).toLocaleString('en-US', {
+                    //     minimumFractionDigits: 2,
+                    //     maximumFractionDigits: 2,
+                    // });
+                    // sheet.getCell(`ฺY${currentRow}`).value = Number(
+                    //     item.PROFIT_TURNOVERS[1].AMOUNT,
+                    // ).toLocaleString('en-US', {
+                    //     minimumFractionDigits: 2,
+                    //     maximumFractionDigits: 2,
+                    // });
+                    // sheet.getCell(`ฺZ${currentRow}`).value = Number(
+                    //     item.PROFIT_TURNOVERS[2].AMOUNT,
+                    // ).toLocaleString('en-US', {
+                    //     minimumFractionDigits: 2,
+                    //     maximumFractionDigits: 2,
+                    // });
                     sheet.getCell(`ฺAA${currentRow}`).value =
                         item.SCORES[0].SLEVEL;
                     sheet.getCell(`ฺAB${currentRow}`).value =
