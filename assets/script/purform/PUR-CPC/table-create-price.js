@@ -6,17 +6,14 @@ import {
 import { dataTableSkeleton } from '@amec/webasset/skeleton';
 import { showErrorMessage, showMessage } from '@amec/webasset/utils';
 import {
-    colToNumber,
     convertArrayForXlsxPopulation,
     exportExcel,
-    writeExcelTemp,
 } from '@amec/webasset/excel';
-// import XlsxPopulate from 'xlsx-populate';
-import XlsxPopulate from 'xlsx-populate/browser/xlsx-populate.js';
 import { steps } from './steps';
 import { getFile } from '@amec/webasset/api/file';
 import { showLoader } from '@amec/webasset/preloader';
 import { getPlannerCompareSheet } from './data';
+import XlsxPopulate from 'xlsx-populate/browser/xlsx-populate.js';
 
 export const tableCreatePrice = {
     instance: null,
@@ -145,7 +142,6 @@ export const tableCreatePrice = {
                             );
                             return;
                         }
-                        console.log(selected);
                         //map to array 2 dimensions for Excel export
                         const data = selected.map((row) => [
                             steps.function,
@@ -182,6 +178,7 @@ export const tableCreatePrice = {
                         );
                         const startRow = 3;
                         const endRow = startRow + convertedData.length - 1;
+                        const styleTemplateEndRow = 4500;
 
                         const buffer = await template.arrayBuffer();
                         const workbook =
@@ -190,14 +187,20 @@ export const tableCreatePrice = {
                         sheet
                             .range(`A${startRow}:L${endRow}`)
                             .value(convertedData);
-                        sheet.range(`A${startRow}:AI${endRow}`).style({
-                            border: {
-                                top: { style: 'thin' },
-                                bottom: { style: 'thin' },
-                                left: { style: 'thin' },
-                                right: { style: 'thin' },
-                            },
-                        });
+                        if (endRow > styleTemplateEndRow) {
+                            sheet
+                                .range(
+                                    `A${styleTemplateEndRow + 1}:AI${endRow}`,
+                                )
+                                .style({
+                                    border: {
+                                        top: { style: 'thin' },
+                                        bottom: { style: 'thin' },
+                                        left: { style: 'thin' },
+                                        right: { style: 'thin' },
+                                    },
+                                });
+                        }
                         const newBuffer = await workbook.outputAsync();
                         exportExcel(
                             newBuffer,

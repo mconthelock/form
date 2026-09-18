@@ -52,3 +52,16 @@ export async function getPriceComparison(data) {
         data: data,
     });
 }
+
+/**
+ * @author Sutthipong Tangmongkhoncharoen(24008)
+ * @since 2026-09-18
+ * @description Get currency data.
+ * @returns
+ */
+export async function getCurrenCy() {
+    return await fetchUtils({
+        url: `${process.env.APP_API}/as400/k089kp/currency`,
+        method: 'GET',
+    });
+}

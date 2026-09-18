@@ -1,8 +1,8 @@
 import { Steps } from '@amec/webasset/components/steps';
 import { requiredForm, showErrorMessage } from '@amec/webasset/utils';
-import { getPlannerCompareSheet } from './data';
 import { tableCreatePrice } from './table-create-price';
-import { showLoader } from '@amec/webasset/preloader';
+import { tableComparison } from './table-comparison';
+import { importExcel } from './importExcel';
 /**
  * @author Sutthipong Tangmongkhoncharoen(24008)
  * @since 2026-09-15
@@ -14,6 +14,7 @@ export const steps = {
     _requester: null,
     _plannerCode: null,
     _function: null,
+    _formNo: null,
     set plannerCode(value) {
         this._plannerCode = value;
     },
@@ -27,10 +28,16 @@ export const steps = {
         return this._requester;
     },
     set function(value) {
-        this._function = value;
+        this._function = +value;
     },
     get function() {
         return this._function;
+    },
+    set formNo(value) {
+        this._formNo = value;
+    },
+    get formNo() {
+        return this._formNo;
     },
     get data() {
         return {
@@ -38,6 +45,7 @@ export const steps = {
             requester: this._requester,
             plannerCode: this._plannerCode,
             function: this._function,
+            formNo: this._formNo,
         };
     },
     reset() {
@@ -45,6 +53,7 @@ export const steps = {
         this._requester = null;
         this._plannerCode = null;
         this._function = null;
+        this._formNo = null;
     },
     init() {
         this.instance = new Steps({
@@ -60,7 +69,12 @@ export const steps = {
             clickable: true,
             allowClickForward: false,
             onChange: async function (currentStep) {
-                await steps.handlePanel(currentStep);
+                try {
+                    await steps.handlePanel(currentStep);
+                } catch (error) {
+                    console.error(error);
+                    showErrorMessage(error.message);
+                }
             },
         });
         this.handlePanel(0);
@@ -69,26 +83,25 @@ export const steps = {
     bindEvents() {
         const self = this;
         const stepper = self.instance;
+        // Bind click events for previous buttons
         $(document).on('click', '#previous-step', function () {
             self.handlePreviousStep(stepper.currentStep);
         });
+        // Bind click events for next buttons
         $(document).on('click', '#next-step, .next-step', async function () {
-            try {
-                showLoader();
-                if (!(await self.validatePanel(stepper.currentStep))) return;
-                if (stepper.currentStep === 0) {
-                    self.mode = $(this).attr('mode');
-                }
-                await self.handleNextStep(stepper.currentStep);
-            } catch (error) {
-                console.error(error);
-                showErrorMessage(error.message);
-            } finally {
-                showLoader({ show: false });
+            if (!(await self.validatePanel(stepper.currentStep))) return;
+            if (stepper.currentStep === 0) {
+                self.mode = $(this).attr('mode');
             }
+            self.handleNextStep(stepper.currentStep);
         });
     },
-    /** ตรวจสอบข้อมูลของหน้าปัจจุบันก่อนไป step ถัดไป */
+    /**
+     * @author Sutthipong Tangmongkhoncharoen(24008)
+     * @since 2026-09-15
+     * @description ตรวจสอบข้อมูลของหน้าปัจจุบันก่อนไป step ถัดไป
+     * @param {number} index - เลข step นับตาม index เริ่มที่ 0 จาก step ปัจจุบัน
+     */
     async validatePanel(index) {
         // TODO: ใส่ validation ของแต่ละหน้า เช่น
         if (index === 2) {
@@ -96,6 +109,12 @@ export const steps = {
         }
         return true;
     },
+    /**
+     * @author Sutthipong Tangmongkhoncharoen(24008)
+     * @since 2026-09-15
+     * @description จัดการการแสดงผลของแต่ละ step เมื่อเปลี่ยนหน้า
+     * @param {number} index - เลข step นับตาม index เริ่มที่ 0
+     */
     async handlePanel(index) {
         const requester = $('input[name="requester"]');
         const stepNavigation = $('#step-navigation');
@@ -115,11 +134,18 @@ export const steps = {
                 break;
             case 1:
             case 2:
+                btnPrevious.removeClass('hidden');
+                btnNext.removeClass('hidden');
+                break;
             case 3:
+                tableCreatePrice.init(this.plannerCode);
+                tableComparison.reset();
                 btnPrevious.removeClass('hidden');
                 btnNext.removeClass('hidden');
                 break;
             case 4:
+                importExcel.reset();
+                tableComparison.init({ formNo: this._formNo });
                 btnPrevious.removeClass('hidden');
                 btnSaveDraft.removeClass('hidden');
                 btnSubmit.removeClass('hidden');
@@ -140,6 +166,12 @@ export const steps = {
             }
         }
     },
+    /**
+     * @author Sutthipong Tangmongkhoncharoen(24008)
+     * @since 2026-09-15
+     * @description จัดการการกดปุ่ม previous ของแต่ละ step
+     * @param {number} index - เลข step นับตาม index เริ่มที่ 0 จาก step ปัจจุบัน
+     */
     handlePreviousStep(index) {
         switch (index) {
             case 3:
@@ -158,7 +190,13 @@ export const steps = {
                 break;
         }
     },
-    async handleNextStep(index) {
+    /**
+     * @author Sutthipong Tangmongkhoncharoen(24008)
+     * @since 2026-09-15
+     * @description จัดการการกดปุ่ม next ของแต่ละ step
+     * @param {number} index - เลข step นับตาม index เริ่มที่ 0 จาก step ปัจจุบัน
+     */
+    handleNextStep(index) {
         switch (index) {
             case 0:
                 if (this.mode === 'new') {
@@ -173,10 +211,6 @@ export const steps = {
                 break;
             case 1:
                 this.instance.skipTo(3);
-                break;
-            case 2:
-                tableCreatePrice.init(this.plannerCode);
-                this.instance.next();
                 break;
             default:
                 this.instance.next();

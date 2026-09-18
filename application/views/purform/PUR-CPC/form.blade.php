@@ -2,6 +2,16 @@
 
 @section('styles')
 <style>
+    td:not(:last-child),
+    th:not(:last-child) {
+        border-right-color: color-mix(in oklab, var(--color-base-300), #00000036);
+        border-right-width: 1px;
+    }
+
+    th {
+        text-align: center !important;
+        vertical-align: top !important;
+    }
 </style>
 @endsection
 
@@ -36,16 +46,13 @@
                 {{-- Content for step 1 goes here --}}
                 <div data-step-panel class="flex justify-center gap-5">
                     <button class="btn btn-primary p-5 text-lg next-step hidden" id="new-step" mode="new">New</button>
-                    <button class="btn btn-neutral p-5 text-lg next-step hidden" id="draft-step" mode="draft">Draft</button>
+                    <button class="btn btn-neutral p-5 text-lg next-step hidden" id="draft-step"
+                        mode="draft">Draft</button>
 
                 </div>
                 {{-- Content for step 2 goes here --}}
                 <div data-step-panel class="hidden gap-5">
                     <table class="table table-zebra" id="table-draft"></table>
-                    {{-- <div class="flex justify-center gap-3">
-                        <button type="button" class="btn previous-step">Back</button>
-                        <button type="button" class="btn next-step">Next</button>
-                    </div> --}}
                 </div>
 
                 {{-- Content for step 3 goes here --}}
@@ -59,60 +66,19 @@
                         <legend class="fieldset-legend">Function</legend>
                         <div id="price-cond"></div>
                     </fieldset>
-                    {{-- <div class="flex justify-center gap-3">
-                        <button type="button" class="btn previous-step">Back</button>
-                        <button type="button" class="btn next-step">Next</button>
-                    </div> --}}
                 </form>
 
                 {{-- Content for step 4 goes here --}}
                 <div data-step-panel class="hidden flex flex-col gap-3">
                     <table id="table-create-price" class="table table-zebra table-sm"></table>
-                    {{-- <div class="flex justify-center gap-3 mt-5">
-                        <button type="button" class="btn previous-step">Back</button>
-                        <button type="button" class="btn next-step">Next</button>
-                    </div> --}}
                 </div>
 
                 {{-- Content for step 5 goes here --}}
-                <div data-step-panel class="hidden">
-                    <div class="flex gap-5">
-                        <!-- Upload Area -->
-                        <div class="flex items-center gap-4 p-4 rounded-xl bg-base-200/50 border border-base-300">
-                            <div class="flex items-center justify-center w-12 h-12 rounded-lg bg-primary/10">
-                                <i class="fi fi-sr-file-excel text-2xl text-primary"></i>
-                            </div>
+                <div data-step-panel class="hidden flex flex-col gap-5">
+                    <div id="import-excel-container"></div>
 
-                            <div class="flex-1 min-w-0">
-                                <div class="font-semibold">
-                                    Excel File
-                                </div>
-
-                                <div id="selected-file-name" class="flex gap-2 text-sm text-base-content/60 truncate">
-                                    Please select an Excel file
-                                </div>
-                            </div>
-
-                            <label for="excel-file" class="btn btn-outline btn-sm cursor-pointer">
-                                <i class="fi fi-sr-folder-open"></i>
-                                Choose File
-                            </label>
-
-                            <input type="file" id="excel-file" class="hidden" accept=".xlsx,.xls" />
-
-                        </div>
-
-                        <!-- Actions -->
-                        <div class="flex justify-end gap-3">
-
-                            <button id="upload-excel" class="btn btn-primary" type="button">
-                                <i class="fi fi-sr-file-upload text-lg"></i>
-                                <span>Import & Map</span>
-                            </button>
-
-                        </div>
-                    </div>
-                    <table id="table-price-comparison" class="table table-zebra table-sm"></table>
+                    <table id="table-comparison" class="table table-zebra table-sm">
+                    </table>
                 </div>
                 <div class="flex justify-center gap-3" id="step-navigation">
                     <button type="button" class="hidden btn" id="previous-step">Back</button>

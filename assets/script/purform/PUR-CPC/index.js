@@ -9,6 +9,7 @@ import { getUser, getUserImage } from '@amec/webasset/api/amec';
 import { EmployeeProfileCard } from '@amec/webasset/components/profileCard';
 import { getActivePriceConditions, getK850mpData } from './data';
 import { steps } from './steps';
+import { importExcel } from './importExcel';
 
 $(async function () {
     try {
@@ -40,6 +41,7 @@ $(async function () {
         await setProfileCard(empno, '#inputer-card-container', 'Inputer');
         // Set step
         steps.init();
+        importExcel.init();
     } catch (error) {
         console.error(error);
         showErrorMessage(error.message);
@@ -83,6 +85,10 @@ $(document).on('change', 'input[name="requester"]', async function () {
     }
 });
 
+/**
+ * @author Sutthipong Tangmongkhoncharoen(24008)
+ * @since 2026-09-15
+ */
 $(document).on('change', 'input[name="function"]', async function () {
     try {
         steps.function = $(this).val();
@@ -94,26 +100,13 @@ $(document).on('change', 'input[name="function"]', async function () {
 
 /**
  * @author Sutthipong Tangmongkhoncharoen(24008)
- * @since 2026-09-07
- * @description Handles the selection of an Excel file for upload.
+ * @since 2026-09-15
+ * @description Sets the profile card for the given employee number in the specified container with an optional title.
+ * @param {string} empno
+ * @param {string} containner
+ * @param {string} title
+ * @returns
  */
-$(document).on('change', '#excel-file', function () {
-    const file = this.files[0];
-    if (!file) {
-        $('#selected-file-name')
-            .text('Please select an Excel file')
-            .removeClass('text-success');
-        return;
-    }
-
-    const size = (file.size / 1024 / 1024).toFixed(2);
-    $('#selected-file-name').html(`
-        <i class="fi fi-sr-file-excel text-success"></i>
-        ${file.name}
-        <span class="text-base-content/50">(${size} MB)</span>
-    `);
-});
-
 async function setProfileCard(empno, containner, title = 'Requester') {
     const k850mpData = await getK850mpData();
     const k850mpRecord = k850mpData.data.filter(
