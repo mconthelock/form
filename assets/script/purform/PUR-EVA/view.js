@@ -336,9 +336,13 @@ $(async function () {
         let vendGroup = formeva.VENDGROUP?.includes(':')
             ? formeva.VENDGROUP.split(':')[1]
             : formeva.VENDGROUP;
+        let vendPurpose = formeva.VENDPURPOSE?.includes(':')
+            ? formeva.VENDPURPOSE.split(':')[1]
+            : formeva.VENDGROUP;
 
         $('#OPERATION').text(opText);
         $('#VENDGROUP').text(vendGroup);
+        $('#VENDPURPOSE').text(vendPurpose);
         $('#COMNAME').html(
             `${formeva.COMNAME} <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 ml-2 shrink-0">${formeva.VENDTYPE}</span>`,
         );
