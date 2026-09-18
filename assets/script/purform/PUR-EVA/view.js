@@ -261,7 +261,7 @@ $(async function () {
             $('#VENDCAT').text(formeva.VENDCAT || '-');
             $('#TAX_ID_PRO').text(formeva.TAX_ID || '-');
             $('#CAPITAL').text(
-                `${setRound(Number(formeva.CAPITAL), 2)} ${formeva.CAPCUR.CURR_NAME || '-'}`,
+                `${setRound(Number(formeva.CAPITAL), 2)} ${formeva.CAPCUR?.CURR_NAME || '-'}`,
             );
             $('#COM_TYPE').text(
                 formeva.COM_TYPE === 'อื่นๆ ระบุ'
