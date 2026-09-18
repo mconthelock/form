@@ -34,8 +34,11 @@ class form extends MY_Controller {
         $this->load->model('form_model', 'frm');
         $this->load->model('dedform/DED-MDS/DED_MDS_model', 'MDSModel');
         $this->host = isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : 'amecweb';
-        $this->http = "http" . (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' || (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https') ? "s" : "") . "://" . ($_SERVER['HTTP_HOST'] ?? 'localhost');
         
+        $isHttps = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') 
+        || (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https');
+
+        $this->http = "http" . ($isHttps ? "s" : "");
         
         $this->DDS = 'DDS';
     }
@@ -424,10 +427,10 @@ class form extends MY_Controller {
 
             // 4. แยกการประมวลผลตาม Revision
             if ($nextRevision === '*' || $nextRevision === '0') {
-                // 🟢 Rev * : ดึงจาก A002MP และคำนวณใหม่ตามสูตร
+                // Rev * : ดึงจาก A002MP และคำนวณใหม่ตามสูตร
                 $this->MDSModel->processPlanMasterDirect($newPlanHeaderID, $year, $period, $desTypes, $nextRevision, 'SYSTEM', $db);
             } else {
-                // 🟠 Rev อื่นๆ : ดึง Detail ของ Revision ล่าสุดที่ Approved มา Copy ตั้งต้น
+                // Rev อื่นๆ : ดึง Detail ของ Revision ล่าสุดที่ Approved มา Copy ตั้งต้น
                 $this->MDSModel->copyPreviousApprovedRevision($newPlanHeaderID, $year, $period, $desTypes, $nextRevision, $db);
             }
 
@@ -449,7 +452,45 @@ class form extends MY_Controller {
         }
     }
 
-    public function UpdateInlineDetail() {
+    public function UpdateInlineDetail() 
+    {
+        $this->output->set_content_type('application/json');
+
+        try {
+            $planHeaderID = trim((string)$this->input->post('PlanHeaderID'));
+            $seqNo        = (int)$this->input->post('SeqNo');
+            $field        = trim((string)$this->input->post('Field'));
+            $value        = $this->input->post('Value');
+            $empno        = $this->input->post('EMPNO') ?? 'SYSTEM';
+
+            if (empty($planHeaderID) || empty($seqNo)) {
+                throw new Exception("ข้อมูล PlanHeaderID หรือ SeqNo ไม่ถูกต้อง");
+            }
+
+            $result = $this->MDSModel->updateInlineDetailCascade(
+                $planHeaderID, 
+                $seqNo, 
+                $field, 
+                $value, 
+                $empno
+            );
+
+            return $this->output->set_output(json_encode([
+                'status'       => true,
+                'message'      => 'Updated successfully with cascading relations',
+                'row'          => $result['row'],
+                'affectedRows' => $result['affectedRows']
+            ]));
+
+        } catch (\Throwable $e) {
+            return $this->output->set_output(json_encode([
+                'status'  => false,
+                'message' => $e->getMessage()
+            ]));
+        }
+    }
+
+    public function UpdateInlineDetail0() {
         $this->output->set_content_type('application/json');
 
         try {
