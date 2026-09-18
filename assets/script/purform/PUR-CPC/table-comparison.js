@@ -109,7 +109,7 @@ export const tableComparison = {
             {
                 data: data,
                 columns: this.columns,
-                responsive: false,
+                responsive: data.length == 0 ? true : false,
                 ordering: false,
                 initComplete: function () {
                     const table = this.api();

@@ -66,10 +66,10 @@ export const tableCreatePrice = {
         await this.destroy();
         this.preload();
         const plannerCompareSheet = await getPlannerCompareSheet(plannerCode);
-        if (!plannerCompareSheet.status) {
-            throw new Error(plannerCompareSheet.message);
+        if (plannerCompareSheet.length == 0) {
+            throw new Error('No data found for the given planner code.');
         }
-        await this.createTable(plannerCompareSheet.data);
+        await this.createTable(plannerCompareSheet);
         this.skeleton.remove();
         this.bindEvents();
     },
@@ -115,8 +115,20 @@ export const tableCreatePrice = {
             data: 'IDRAW',
         },
         {
+            title: 'PART NAME',
+            data: 'IDESC',
+        },
+        {
+            title: 'SPEC',
+            data: 'IGLNO',
+        },
+        {
             title: 'VENDOR',
             data: 'IVEND',
+        },
+        {
+            title: 'VENDOR NAME',
+            data: 'VNDNAM',
         },
     ],
     bindEvents() {
