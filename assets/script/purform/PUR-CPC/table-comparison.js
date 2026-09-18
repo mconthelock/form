@@ -8,6 +8,12 @@ import {
 import { showLoader } from '@amec/webasset/preloader';
 import { steps } from './steps';
 import { getCurrenCy } from './data';
+import XlsxPopulate from 'xlsx-populate/browser/xlsx-populate.js';
+import { getFile } from '@amec/webasset/api/file';
+import {
+    convertArrayForXlsxPopulation,
+    exportExcel,
+} from '@amec/webasset/excel';
 
 export const tableComparison = {
     instance: null,
@@ -125,6 +131,103 @@ export const tableComparison = {
             },
         );
     },
+    bindEvents() {
+        const self = this;
+        /**
+         * @author Sutthipong Tangmongkhoncharoen(24008)
+         * @since 2026-09-16
+         * @description Exports the selected rows from the price comparison table to an Excel file.
+         */
+        $(document)
+            .off('click.comparison-export', '#comparison-export')
+            .on(
+                'click.comparison-export',
+                '#comparison-export',
+                async function () {
+                    try {
+                        showLoader();
+                        const data = self.data();
+                        console.log(data);
+                        const template = await getFile({
+                            baseDir: `${process.env.AMEC_FILE_PATH}${process.env.STATE == 'production' ? 'production' : 'development'}/webflow/template/price-compare`,
+                            storedName: 'Price Compare Export Template.xlsx',
+                            mode: 'open',
+                        });
+
+                        const convertedData = convertArrayForXlsxPopulation(
+                            data.map((row) => [
+                                row.SEQ,
+                                row.MODEL_NAME,
+                                row.JOB_ITEMNO,
+                                row.PART_NAME,
+                                row.DRAWING,
+                                row.ITEM_CODE,
+                                row.SPEC,
+                                row.MATERIAL_CODE,
+                                row.QUANTITY_YEAR,
+                                row.VENDOR_NAME,
+                                row.MAKER_NAME,
+                                row.BASE_PRICE,
+                                row.BASE_CURR,
+                                row.PRICE,
+                                row.CURR,
+                                row.AMOUNT,
+                                row.NEW_VENDOR_NAME,
+                                row.NEW_MAKER_NAME,
+                                row.NEW_BASE_PRICE,
+                                row.NEW_BASE_CURR,
+                                row.NEW_PRICE,
+                                row.NEW_CURR,
+                                row.NEW_PRICE_ETA_AMEC,
+                                row.NEW_AMOUNT,
+                                row.COST_PRICE_DIFFERENCE,
+                                row.COST_AMOUNT,
+                                row.COST_RATIO,
+                                row.NEW_PRICE_YEAR,
+                                row.NEW_PRICE_MONTH,
+                            ]),
+                            'A-AD',
+                        );
+                        const startRow = 6;
+                        const endRow = startRow + convertedData.length - 1;
+                        const styleTemplateEndRow = 4500;
+
+                        const buffer = await template.arrayBuffer();
+                        const workbook =
+                            await XlsxPopulate.fromDataAsync(buffer);
+                        const sheet = workbook.sheet(0);
+                        sheet
+                            .range(`A${startRow}:AD${endRow}`)
+                            .value(convertedData);
+                        if (endRow > styleTemplateEndRow) {
+                            sheet
+                                .range(
+                                    `A${styleTemplateEndRow + 1}:AD${endRow}`,
+                                )
+                                .style({
+                                    border: {
+                                        top: { style: 'thin' },
+                                        bottom: { style: 'thin' },
+                                        left: { style: 'thin' },
+                                        right: { style: 'thin' },
+                                    },
+                                });
+                        }
+                        const newBuffer = await workbook.outputAsync();
+                        exportExcel(
+                            newBuffer,
+                            'Price Compare Export Template',
+                            'buffer',
+                        );
+                    } catch (error) {
+                        console.error(error);
+                        showErrorMessage(error.message);
+                    } finally {
+                        showLoader({ show: false });
+                    }
+                },
+            );
+    },
     header: `<thead>
             <tr>
                 <th rowspan="3">No.</th>
@@ -175,6 +278,7 @@ export const tableComparison = {
         {
             data: null,
             render: function (data, type, row, meta) {
+                row.SEQ = meta.row + 1;
                 return meta.row + 1;
             },
         },
@@ -281,6 +385,8 @@ export const tableComparison = {
                         });
                         break;
                 }
+                console.log('currency', tableComparison.currency);
+                console.log('rate', rate, row.NEW_BASE_CURR, row.NEW_CURR);
                 return formatNumber({ value: row.NEW_PRICE_ETA_AMEC });
             },
         },
@@ -315,77 +421,19 @@ export const tableComparison = {
         {
             data: null,
             render: function (data, type, row, meta) {
-                row.COST_RATIO = roundNumber({
-                    value:
-                        (row.COST_PRICE_DIFFERENCE / row.PRICE_ETA_AMEC) * 100,
-                });
+                row.COST_RATIO =
+                    row.PRICE_ETA_AMEC !== 0
+                        ? roundNumber({
+                              value:
+                                  (row.COST_PRICE_DIFFERENCE /
+                                      row.PRICE_ETA_AMEC) *
+                                  100,
+                          })
+                        : 0;
                 return formatNumber({ value: row.COST_RATIO }) + '%';
             },
         },
         { data: 'NEW_PRICE_YEAR', className: 'bg-[#ffff77]' },
         { data: 'NEW_PRICE_MONTH', className: 'bg-[#ffff77]' },
     ],
-    bindEvents() {
-        const self = this;
-        /**
-         * @author Sutthipong Tangmongkhoncharoen(24008)
-         * @since 2026-09-16
-         * @description Exports the selected rows from the price comparison table to an Excel file.
-         */
-        $(document)
-            .off('click.comparison-export', '#comparison-export')
-            .on(
-                'click.comparison-export',
-                '#comparison-export',
-                async function () {
-                    try {
-                        showLoader();
-                        const data = self.data();
-                        console.log(data);
-                    } catch (error) {
-                        console.error(error);
-                        showErrorMessage(error.message);
-                    } finally {
-                        showLoader({ show: false });
-                    }
-                },
-            );
-    },
 };
-
-/**
- * @author Sutthipong Tangmongkhoncharoen(24008)
- * @since 2026-09-18
- * @description ปัดเศษแบบคณิตศาสตร์ (ปัดขึ้นเมื่อ >= 5) ให้เป็น number
- *              ใช้ e-notation เพื่อเลี่ยงปัญหา floating point เช่น 1.005
- *              ค่าที่ได้เก็บใน row data เพื่อนำไปลง database
- * @param {object}  param
- * @param {number|string} param.value ค่าที่ต้องการปัดเศษ (รองรับ string ที่มี comma)
- * @param {number} [param.digit=2] จำนวนตำแหน่งทศนิยม
- */
-export function roundNumber({ value, digit = 2 } = {}) {
-    const num = parseFloat(String(value ?? 0).replace(/,/g, ''));
-    if (isNaN(num)) {
-        return 0;
-    }
-    const sign = Math.sign(num) || 1;
-    return (
-        (sign * Math.round(Number(Math.abs(num) + 'e' + digit))) /
-        Number('1e' + digit)
-    );
-}
-
-/**
- * @author Sutthipong Tangmongkhoncharoen(24008)
- * @since 2026-09-18
- * @description แปลงตัวเลขเป็น string ทศนิยมพร้อม comma คั่นหลักพัน
- *              ใช้สำหรับแสดงผลบนหน้าจอเท่านั้น ห้ามนำไปคำนวณต่อ
- * @param {object}  param
- * @param {number|string} param.value ค่าที่ต้องการแสดงผล (รองรับ string ที่มี comma)
- * @param {number} [param.digit=2] จำนวนตำแหน่งทศนิยม
- */
-export function formatNumber({ value, digit = 2 } = {}) {
-    const parts = roundNumber({ value, digit }).toFixed(digit).split('.');
-    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-    return parts.join('.');
-}

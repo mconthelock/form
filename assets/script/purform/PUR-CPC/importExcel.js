@@ -4,6 +4,7 @@ import { colToNumber, readInput } from '@amec/webasset/excel';
 import { getPriceComparison } from './data';
 import { tableComparison } from './table-comparison';
 import { steps } from './steps';
+import { showLoader } from '@amec/webasset/preloader';
 
 export const importExcel = {
     id: 'import-excel-container',
@@ -96,6 +97,7 @@ export const importExcel = {
          */
         $(document).on('click', '#import-excel', async function () {
             try {
+                showLoader();
                 const file = self.input[0].files[0];
                 if (!file) {
                     showMessage('Please select an Excel file', 'warning');
@@ -125,6 +127,8 @@ export const importExcel = {
             } catch (error) {
                 console.error(error);
                 showErrorMessage(error.message);
+            } finally {
+                showLoader({ show: false });
             }
         });
     },

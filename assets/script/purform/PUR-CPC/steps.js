@@ -29,6 +29,15 @@ export const steps = {
     },
     set function(value) {
         this._function = +value;
+        $('#detail-step-container')
+            .html(`<div class="relative overflow-hidden rounded-2xl shadow-md bg-gradient-to-br from-amber-400 to-orange-500 text-white">
+            <div class="absolute -right-6 -top-6 h-24 w-24 rounded-full bg-white/10"></div>
+            <div class="absolute -right-2 top-10 h-12 w-12 rounded-full bg-white/10"></div>
+            <div class="relative flex flex-col items-center gap-2 px-8 py-6">
+                <p class="text-xs font-semibold uppercase tracking-widest text-white/80">Function</p>
+                <p id="card-sec" class="text-4xl font-extrabold drop-shadow-sm">${+value}</p>
+            </div>
+        </div>`);
     },
     get function() {
         return this._function;
@@ -156,6 +165,7 @@ export const steps = {
             // reset ฟอร์ม requester และลบ profile card
             $('#step-requester')[0].reset();
             $('#requester-card-container').empty();
+            $('#detail-step-container').html('');
             // เมื่อไปหน้า input data ให้ focus ที่ช่อง requester
             if (index === 2) {
                 requester.trigger('focus');

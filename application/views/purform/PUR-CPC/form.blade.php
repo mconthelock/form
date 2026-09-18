@@ -23,9 +23,10 @@
 
     <div class="grid grid-cols-[auto_1fr] gap-5">
         {{-- profile --}}
-        <div class="flex flex-col gap-5">
+        <div class="flex flex-col gap-5 sticky top-20 self-start">
             <div id="inputer-card-container" class="min-w-82 max-w-96"></div>
             <div id="requester-card-container" class="min-w-82 max-w-96"></div>
+            <div id="detail-step-container"></div>
         </div>
 
         {{-- main content --}}
