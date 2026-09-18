@@ -4,6 +4,13 @@ import {
     serializeRequestBody,
 } from '@amec/webasset/api/fetch-utils';
 
+export async function getTrade() {
+    return fetchUtils({
+        url: `${process.env.APP_API}/pursys/termcode/trade`,
+        method: 'GET',
+    });
+}
+
 export async function getData(form) {
     return fetchUtils({
         url: `${process.env.APP_API}/purform/purvmm-form/data`,

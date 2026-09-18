@@ -59,6 +59,14 @@ export async function approvePurEvaForm(form) {
     });
 }
 
+export async function searchrpt(con) {
+    return fetchUtils({
+        url: `${process.env.APP_API}/purform/pureva-form/search`,
+        method: 'POST',
+        data: con,
+    });
+}
+
 // export async function createPurVmmAuto(form) {
 //     return fetchUtils({
 //         url: `${process.env.APP_API}/purform/pur-vmm/createauto`,

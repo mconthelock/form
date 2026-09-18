@@ -23,7 +23,7 @@ class form extends MY_Controller{
 
         }else{
             $form = $this->getFormMasterByVaname('PUR-EVA');
-            
+
             if(!empty($form)){
                 $data = [
                     'NFRMNO' => $form["data"]["NNO"],
@@ -57,5 +57,11 @@ class form extends MY_Controller{
             exit();
         }
         $this->views('purform/PUR-EVA/create', $data);
+    }
+
+    public function mainrpt()
+    {
+         $this->views('purform/PUR-EVA/mainrpt');
+
     }
 }

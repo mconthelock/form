@@ -19,7 +19,7 @@ import {
     postcodeEnManager,
     stateEnManager,
 } from '../PUR-NVF/formManager';
-import { create, getData, update } from './data';
+import { create, getData, getTrade, update } from './data';
 import { getFormStatus, showflow } from '@amec/webasset/api/webform';
 import { webflowSubmit } from '@amec/webasset/components/form';
 import Swal from 'sweetalert2';
@@ -28,6 +28,9 @@ import { showLoader } from '@amec/webasset/preloader';
 import { classIcofont } from '@amec/webasset/fileExplorer';
 import { downloadOrOpenFile } from '@amec/webasset/api/file';
 import { checkAttFile, renderNewFilesUI } from './function';
+import { getFormMasterByVaname } from '@amec/webasset/api/webform';
+import { renderLink } from './function';
+import { tradeManager } from './formManager';
 
 var form = {};
 var deletefile = [];
@@ -81,13 +84,21 @@ const requiredMessage = [
 
 $(document).ready(async function () {
     const term = await getTermcode();
-    console.log(term);
 
     const termdata = term.map((t) => ({
         value: t.STERMCODE,
         text: t.STERMDESC,
     }));
 
+    const trade = await getTrade();
+    const tradedata = trade.map((t) => ({
+        value: t.TRADE_CODE,
+        text: t.TRADE_SHIPBY
+            ? `${t.TRADE_NAME} (${t.TRADE_SHIPBY})`
+            : t.TRADE_NAME,
+    }));
+
+    tradeManager.init(tradedata);
     // const currency = await getCurrency();
     // const currencyData = currency.map((c) => ({
     //     value: c.CURR_CODE,
@@ -108,13 +119,20 @@ $(document).ready(async function () {
         EMPNO: $('.apv-data').attr('empno'),
         RETURN: formInfo.return ?? null,
     };
+    //console.log('xxxxxxxxx');
+
     if (formInfo.return) {
         const flow = await showflow({ ...form, showStep: true });
         const purvmm = await getData(form);
+        //console.log(purvmm);
+
         $(`input[name="REQTYPE"][value="${purvmm.REQTYPE}"]`).prop(
             'checked',
             true,
         );
+        $(`input[name="REQTYPE"]`).on('click', function (e) {
+            e.preventDefault();
+        });
         $('input[name="VENDCODE"], #VENDCODE').val(purvmm.VENDCODE);
         $(`input[name="VENDGROUPTYPE"][value="${purvmm.VENDGROUPTYPE}"]`).prop(
             'checked',
@@ -131,6 +149,7 @@ $(document).ready(async function () {
         $('#VTYPE').val(purvmm.VTYPE).trigger('change');
         $('#VPAYTY').val(purvmm.VPAYTY).trigger('change');
         $('#TERM_PAYMENT').val(purvmm.TERMCODE).trigger('change');
+        $('#TRADE_CODE').val(purvmm.TRADE_CODE).trigger('change');
         $('#V1TIME').val(purvmm.V1TIME || '');
         $('#VNALPH').val(purvmm.VNALPH || '');
         $('#CONTACT').val(purvmm.CONTACT || '');
@@ -142,6 +161,10 @@ $(document).ready(async function () {
         $('#BANKNAME').val(purvmm.BANKNAME || '');
         $('#BRANCH').val(purvmm.BRANCH || '');
         $('#BANKADDR').val(purvmm.BANKADDR || '');
+        if (purvmm.EVANO) {
+            await renderLink(purvmm.EVANO);
+        }
+
         purvmm.ATTACH_OTHER && $('#ATTACH_OTHER').val(purvmm.ATTACH_OTHER);
         const attachedFiles = purvmm.FILES || [];
         renderFilesByType(attachedFiles, 11, 'file-type-11', true);
@@ -200,6 +223,7 @@ $(document).ready(async function () {
         }
         console.log(purvmm);
     } else {
+        $('input[name="REQTYPE"][value="A"]').prop('disabled', true);
         $('#form-action-container').html(
             webflowSubmit({
                 request: true,
@@ -224,12 +248,10 @@ $(document).on('input', '#VENDCODE', async function () {
                 console.log(vendor[0].PURVMM);
 
                 if (vendor[0].PURVMM.length > 0) {
-                    console.log('IFFFFFFF');
-
                     const vendorfilter = vendor[0].PURVMM.filter(
                         (item) => item.FORM.CST == '2',
                     );
-                    if (vendorfilter) {
+                    if (vendorfilter?.length > 0) {
                         const latestVendor = vendorfilter.sort((a, b) => {
                             // เรียง CYEAR2 จากมากไปน้อย (ปีใหม่กว่าขึ้นก่อน)
                             if (b.CYEAR2 !== a.CYEAR2) {
@@ -281,6 +303,13 @@ $(document).on('input', '#VENDCODE', async function () {
                                 latestVendor.TERMCODE
                                     ? latestVendor.TERMCODE
                                     : vendor[0].VND_TERM,
+                            )
+                            .trigger('change');
+                        $('#TRADE_CODE')
+                            .val(
+                                latestVendor.TRADE_CODE
+                                    ? latestVendor.TRADE_CODE
+                                    : '',
                             )
                             .trigger('change');
                         $('#V1TIME').val(latestVendor.V1TIME || '');

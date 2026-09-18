@@ -91,7 +91,7 @@ $(document).on('click', 'button[name="btnAction"]', async function (event) {
     )[0];
 
     if (invalidTaxCode) {
-        showMessage('Tax code must contain exactly 7 digits.', 'warning');
+        showMessage('Tax code must contain 3 or 7 digits.', 'warning');
         invalidTaxCode.focus();
         return;
     }
@@ -194,9 +194,7 @@ function shouldOpenReturnForm(form, formDetail = {}, modeResponse) {
         .map((employee) => String(employee || '').trim())
         .filter(Boolean);
 
-    return Boolean(
-        currentEmployee && firstEmployees.includes(currentEmployee),
-    );
+    return Boolean(currentEmployee && firstEmployees.includes(currentEmployee));
 }
 
 function normalizeWorkflowMode(response) {
@@ -462,12 +460,12 @@ async function renderInvoiceTable(invoices = [], canEditWht = false) {
                     <td>${escapeHtml(formatNumber(Number(invoice.TOTAL_AMT) - Number(invoice.NET_PRICE)))}</td>
                     <td>${escapeHtml(formatNumber(invoice.TOTAL_AMT))}</td>
                     <td>
-                        <input type="text" inputmode="numeric" pattern="[0-9]{7}" maxlength="7"
+                        <input type="text" inputmode="numeric" pattern="[0-9]{3}([0-9]{4})?" maxlength="7" required
                             class="wht-input input input-sm input-bordered w-full"
                             data-invoice-id="${escapeHtml(invoice.ID || invoice.LINE_ID || index + 1)}"
                             value="${escapeHtml(formatTaxCode(invoice.WHT))}"
                             ${canEditWht ? '' : 'readonly'}
-                            placeholder="7 digits" />
+                            placeholder="3 or 7 digits" />
                     </td>
                     <td>${escapeHtml(invoice.REFERENCE ?? invoice.REMARK ?? '')}</td>
                 </tr>`,
@@ -489,7 +487,7 @@ function collectInvoiceWht() {
             return {
                 ID: $(input).data('invoice-id'),
                 LINE_ID: $(input).data('invoice-id'),
-                WHT: value === '' ? null : Number(value),
+                WHT: value === '' ? null : value,
             };
         })
         .get();
@@ -598,7 +596,8 @@ function formatNumber(value) {
 
 function formatTaxCode(value) {
     const code = String(value ?? '').trim();
-    return code ? code.padStart(7, '0') : '';
+    if (code === '000' || code === '0000000') return code;
+    return code ? code.padStart(3, '0') : '';
 }
 
 function getCextDataValue(value) {

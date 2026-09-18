@@ -77,6 +77,12 @@ $(document).ready(async function () {
     $('#REQUEST_BYTxt').val(form.EMPNO);
     $('#INPUT_BYTxt').val(form.EMPNO);
     $('#PlanHeaderIDHid').val(form.PLANHEADERID);
+    if (form.DOC_NO == 'Form not found.') {
+        alert('ไม่พบข้อมูลเอกสารในระบบ กำลังนำท่านกลับสู่หน้าหลัก Webflow');
+        redirectWebflow();
+        return;
+    }
+
     if (form.PLAN_YEAR) {
         $('#YearDrp').val(form.PLAN_YEAR);
     }
@@ -92,10 +98,17 @@ $(document).ready(async function () {
         $('#PlanHeaderIDHid').val('');
         await applyButtonPermissions('1', '', '');
     } else {
-        currentMode = String(await getMode({ ...form, EMPNO: form.EMPNO }));
-        currentExtData = String(
-            await getExtData({ ...form, EMPNO: form.EMPNO }),
-        );
+        if (form.EMPNO == 'SYSTEM') //Viewer
+        {
+            currentMode = '3';
+            currentExtData = '00';
+        } else {
+            currentMode = String(await getMode({ ...form, EMPNO: form.EMPNO }));
+            currentExtData = String(
+                await getExtData({ ...form, EMPNO: form.EMPNO }),
+            );
+        }
+
         $('#EXTDATAHid').val(currentExtData);
         $('#MODEHid').val(currentMode);
         $('#PlanHeaderIDHid').val(form.PLANHEADERID);
@@ -333,95 +346,141 @@ $(document).ready(async function () {
             PROD: rowData.PROD,
             Field: field,
             Value: newVal ? newVal : '',
-            EMPNO: empno,
+            EMPNO: typeof empno !== 'undefined' ? empno : '',
         };
 
         try {
             const res = await updateInlineDetail(payload);
 
             if (res.status) {
-                // 1. นำข้อมูลแถวปัจจุบันใส่เข้าไป (ยังไม่สั่ง .draw())
+                // 1. รวมแถวปัจจุบันและแถวที่ได้รับผลกระทบทั้งหมด (Cascaded Rows) เข้าด้วยกัน
+                const rowsToUpdate = [];
                 if (res.row) {
-                    table.row(rowIndex).data(res.row);
-
-                    // ซิงค์ข้อมูลแถวปัจจุบันลงในตัวแปร currentPlanData สำหรับ Export Excel
-                    if (
-                        typeof currentPlanData !== 'undefined' &&
-                        Array.isArray(currentPlanData)
-                    ) {
-                        const curIndex = currentPlanData.findIndex(
-                            (item) =>
-                                (item.DetailID &&
-                                    item.DetailID == res.row.DetailID) ||
-                                (item.SeqNo && item.SeqNo == res.row.SeqNo),
-                        );
-                        if (curIndex !== -1) {
-                            currentPlanData[curIndex] = Object.assign(
-                                {},
-                                currentPlanData[curIndex],
-                                res.row,
-                            );
-                        }
-                    }
+                    rowsToUpdate.push(res.row);
+                }
+                if (res.affectedRows && Array.isArray(res.affectedRows)) {
+                    rowsToUpdate.push(...res.affectedRows);
+                } else if (res.nextRow) {
+                    rowsToUpdate.push(res.nextRow);
                 }
 
-                // 2. ค้นหาแถวถัดไป (nextRow) และใส่ข้อมูลใหม่เข้าไป
-                if (res.nextRow && res.nextRow.SeqNo) {
-                    const targetSeqNo = parseInt(res.nextRow.SeqNo, 10);
+                // จัดทำ Map ตาม DetailID หรือ SeqNo
+                const updateMap = new Map();
+                rowsToUpdate.forEach((item) => {
+                    const key = item.DetailID
+                        ? `D_${item.DetailID}`
+                        : `S_${item.SeqNo}`;
+                    updateMap.set(key, item);
+                });
 
-                    table.rows().every(function () {
-                        const d = this.data();
-                        if (d && parseInt(d.SeqNo, 10) === targetSeqNo) {
-                            this.data(res.nextRow); // อัปเดตข้อมูลของแถวถัดไป
+                // 2. วนลูปอัปเดตข้อมูลใน DataTable ทุกแถวที่เกี่ยวข้อง
+                table.rows().every(function () {
+                    const currentData = this.data();
+                    if (!currentData) return;
+
+                    const keyDetail = currentData.DetailID
+                        ? `D_${currentData.DetailID}`
+                        : null;
+                    const keySeq = currentData.SeqNo
+                        ? `S_${currentData.SeqNo}`
+                        : null;
+
+                    let updatedItem = null;
+                    if (keyDetail && updateMap.has(keyDetail)) {
+                        updatedItem = updateMap.get(keyDetail);
+                    } else if (keySeq && updateMap.has(keySeq)) {
+                        updatedItem = updateMap.get(keySeq);
+                    }
+
+                    if (updatedItem) {
+                        // 🟢 เซ็ต UserAction ให้เป็นผู้แก้ไข
+                        updatedItem.UserAction = payload.EMPNO || 'MANUAL';
+
+                        // 🟢 จุดสำคัญ: ตรวจสอบและเปิด Flag Diff อัตโนมัติ เพื่อให้ render วาดเป็นสีแดงเหมือนภาพที่ 3
+                        // ตรวจ DES_BM
+                        if (
+                            updatedItem.DES_BM &&
+                            currentData.DES_BM &&
+                            updatedItem.DES_BM !== currentData.DES_BM
+                        ) {
+                            updatedItem.Diff_DES_BM = 1;
+                        }
+                        // ตรวจ Go_DES (ที่คำนวณตามสูตร Master แล้วเปลี่ยน)
+                        if (
+                            updatedItem.Go_DES &&
+                            currentData.Go_DES &&
+                            updatedItem.Go_DES !== currentData.Go_DES
+                        ) {
+                            updatedItem.Diff_Go_DES = 1;
+                        }
+                        // ตรวจ MFG_BM
+                        if (
+                            updatedItem.MFG_BM &&
+                            currentData.MFG_BM &&
+                            updatedItem.MFG_BM !== currentData.MFG_BM
+                        ) {
+                            updatedItem.Diff_MFG_BM = 1;
+                        }
+                        // สำหรับแถวที่ user กดแก้โดยตรง ให้ติด Diff เสมอ
+                        if (currentData.SeqNo === rowData.SeqNo) {
+                            updatedItem[`Diff_${field}`] = 1;
+                        }
+
+                        // อัปเดตข้อมูลกลับเข้าแถว DataTable
+                        this.data(Object.assign({}, currentData, updatedItem));
+                    }
+                });
+
+                // 3. ซิงค์ข้อมูลเข้าตัวแปร currentPlanData (สำหรับ Export Excel)
+                if (
+                    typeof currentPlanData !== 'undefined' &&
+                    Array.isArray(currentPlanData)
+                ) {
+                    updateMap.forEach((updatedItem) => {
+                        const idx = currentPlanData.findIndex(
+                            (item) =>
+                                (item.DetailID &&
+                                    updatedItem.DetailID &&
+                                    item.DetailID == updatedItem.DetailID) ||
+                                (item.SeqNo &&
+                                    updatedItem.SeqNo &&
+                                    item.SeqNo == updatedItem.SeqNo),
+                        );
+                        if (idx !== -1) {
+                            currentPlanData[idx] = Object.assign(
+                                {},
+                                currentPlanData[idx],
+                                updatedItem,
+                            );
                         }
                     });
-                    // ซิงค์ข้อมูลแถวถัดไปลงในตัวแปร currentPlanData ด้วย
-                    if (
-                        typeof currentPlanData !== 'undefined' &&
-                        Array.isArray(currentPlanData)
-                    ) {
-                        const nextIndex = currentPlanData.findIndex(
-                            (item) =>
-                                (item.DetailID &&
-                                    item.DetailID == res.nextRow.DetailID) ||
-                                (item.SeqNo && item.SeqNo == res.nextRow.SeqNo),
-                        );
-                        if (nextIndex !== -1) {
-                            currentPlanData[nextIndex] = Object.assign(
-                                {},
-                                currentPlanData[nextIndex],
-                                res.nextRow,
-                            );
-                        }
-                    }
                 }
 
-                // 3. วาดตารางใหม่เพียง "ครั้งเดียว" หลังจากอัปเดต Data ครบทั้งสองแถว
+                // 4. สั่ง Render หน้าตารางใหม่ (สีแดงจะติดทันทีตรงตามภาพที่ 3)
                 table.draw(false);
 
-                // Effect แจ้งเตือนสำเร็จ
-                const $updatedNode = $(table.row(rowIndex).node());
-                const $currentInput = $updatedNode.find(
-                    `input[data-field="${field}"]`,
-                );
-                $currentInput
-                    .removeClass(
-                        'border-warning bg-amber-50 opacity-50 cursor-wait',
-                    )
-                    .addClass('border-success bg-green-50');
-
-                setTimeout(() => {
-                    $currentInput.removeClass('border-success bg-green-50');
-
-                    // กำหนดให้เป็นสีแดงทันทีเมื่อ User มีการแก้ไขค่าใหม่
-                    $currentInput
-                        .removeClass(
-                            'border-warning border-success bg-amber-50 bg-green-50 text-primary opacity-50 cursor-wait',
-                        )
-                        .addClass(
-                            'border-rose-500 bg-rose-50 text-rose-600 font-bold',
-                        );
-                }, 1500);
+                // 🟢 5. เพิ่ม Effect แวบเขียวเป็นฟีดแบ็คสั้นๆ (Optional)
+                rowsToUpdate.forEach((updatedItem) => {
+                    table.rows().every(function () {
+                        const d = this.data();
+                        if (
+                            (d.DetailID &&
+                                updatedItem.DetailID &&
+                                d.DetailID == updatedItem.DetailID) ||
+                            (d.SeqNo &&
+                                updatedItem.SeqNo &&
+                                d.SeqNo == updatedItem.SeqNo)
+                        ) {
+                            const $rowNode = $(this.node());
+                            const $inputs = $rowNode.find('.inline-edit-date');
+                            $inputs.addClass('ring-2 ring-emerald-400');
+                            setTimeout(() => {
+                                $inputs.removeClass('ring-2 ring-emerald-400');
+                            }, 800);
+                            return false;
+                        }
+                    });
+                });
             } else {
                 alert('บันทึกไม่สำเร็จ: ' + res.message);
                 $input
@@ -505,7 +564,7 @@ $(document).ready(async function () {
         $('#calConfigModal').removeClass('hidden');
     });
 
-    // 🟢 ปิด Modal เมื่อคลิกปุ่มปิดใดๆ ที่มีคลาส .btn-close-modal
+    // ปิด Modal เมื่อคลิกปุ่มปิดใดๆ ที่มีคลาส .btn-close-modal
     $(document).on('click', '.btn-close-modal', function () {
         $('#calConfigModal').addClass('hidden');
     });
@@ -637,6 +696,97 @@ $(document).ready(async function () {
     });
 
     // == Export Excel
+    // ===================================================================
+
+    // ===================================================================
+    // 1. ตรวจสอบค่า NRUNNO เพื่อแสดง/ซ่อนปุ่ม Send Email
+    // ===================================================================
+    function checkShowEmailButton() {
+        const formData = $('.form-info').data() || {};
+        const nrunno = formData.nrunno || $('#NRUNNOHid').val();
+
+        if (
+            nrunno &&
+            String(nrunno).trim() !== '' &&
+            String(nrunno).trim() !== '0'
+        ) {
+            $('#SentEmailBtn')
+                .removeClass('hidden')
+                .css('display', 'inline-flex');
+        } else {
+            $('#SentEmailBtn').addClass('hidden').css('display', 'none');
+        }
+    }
+    $(document).on('click', '#SentEmailBtn', async function () {
+        const $btn = $(this);
+        const originalHtml = $btn.html();
+
+        const formData = $('.form-info').data() || {};
+        const year = $('#YearDrp').val();
+        const periodVal = $('#PeriodDrp').val();
+        const revVal = $('#RevisionHid').val() || '*';
+        const headerId =
+            $('#PlanHeaderIDHid').val() ||
+            (typeof currentPlanHeaderID !== 'undefined'
+                ? currentPlanHeaderID
+                : '');
+        const status = $('#STATUSHid').val() || '';
+        const { nfrmno, vorgno, cyear, cyear2, nrunno } = formData;
+
+        if (!nrunno) {
+            alert('ไม่พบเลข NRUNNO ไม่สามารถส่งอีเมลได้');
+            return;
+        }
+
+        if (
+            !confirm(
+                'คุณต้องการส่งอีเมลแจ้งเตือน Design Schedule นี้ใช่หรือไม่?',
+            )
+        ) {
+            return;
+        }
+
+        $btn.prop('disabled', true).html(
+            '<i class="fa fa-spinner fa-spin mr-1"></i> Sending...',
+        );
+        if (typeof showLoader === 'function') showLoader();
+
+        try {
+            let phpData = new FormData();
+            phpData.append('NFRMNO', nfrmno);
+            phpData.append('VORGNO', vorgno);
+            phpData.append('CYEAR', cyear);
+            phpData.append('CYEAR2', cyear2);
+            phpData.append('NRUNNO', nrunno);
+            phpData.append('headerId', headerId);
+            phpData.append('YEAR', year);
+            phpData.append('PERIOD', periodVal);
+            phpData.append('REVISION', revVal);
+            phpData.append('STATUS', status);
+
+            const res = await $.ajax({
+                url: host + 'dedform/DED-MDS/form/SendEmail',
+                type: 'POST',
+                data: phpData,
+                processData: false,
+                contentType: false,
+                dataType: 'json',
+            });
+
+            if (res && res.status === true) {
+                alert('ส่งอีเมลแจ้งเตือนเรียบร้อยแล้ว');
+            } else {
+                throw new Error(res?.message || 'ไม่สามารถส่งอีเมลได้');
+            }
+        } catch (error) {
+            console.error('Send Email Error:', error);
+            alert('เกิดข้อผิดพลาด: ' + (error.message || error));
+        } finally {
+            $btn.prop('disabled', false).html(originalHtml);
+            if (typeof showLoader === 'function') showLoader({ show: false });
+            $('#loading').hide();
+        }
+    });
     // ===================================================================
 
     // ===================================================================
@@ -786,15 +936,28 @@ async function loadDraftPlan() {
         EMPNO: typeof empno !== 'undefined' ? empno : 'SYSTEM',
         MODE: $('#MODEHid').val(), // 🟢 ส่ง MODE ปัจจุบัน
         EXTDATA: $('#EXTDATAHid').val(), // 🟢 ส่ง EXTDATA
-        VORGNO: formData.vorgno || '', // 🟢 ส่งคีย์ Webflow
-        CYEAR2: formData.cyear2 || '',
-        NRUNNO: formData.nrunno || '',
-        PLANHEADERID: (formData.planheaderid = ''),
+        NFRMNO: formData.nfrmno ? Number(formData.nfrmno) : 0,
+        VORGNO: formData.vorgno ? formData.vorgno.toString() : '',
+        CYEAR: formData.cyear ? formData.cyear.toString() : '',
+        CYEAR2: formData.cyear2 ? formData.cyear2.toString() : '',
+        NRUNNO: formData.nrunno ? Number(formData.nrunno) : 0,
+        PLANHEADERID: formData.planheaderid || '',
     };
+
     try {
         //GetOrInitDraftPlan
+
         const res = await getOrInitDraftPlan(payload);
         if (res.statusTb) {
+            // 🟢 ถ้าไม่พบฟอร์ม ให้แจ้งเตือนและ Redirect กลับหน้า Webflow ทันที
+            if (res.docNo === 'Form not found.') {
+                alert(
+                    'ไม่พบข้อมูลเอกสารในระบบ กำลังนำท่านกลับสู่หน้าหลัก Webflow',
+                );
+                redirectWebflow();
+                return;
+            }
+
             currentPlanData = res.data;
             currentPlanHeaderID = res.planHeaderID;
             $('#RevisionHid').val(res.revision);
@@ -944,7 +1107,7 @@ function renderDataTable(data) {
                 },
             },
 
-            // 🟢 คอลัมน์ P (P_Type)
+            // คอลัมน์ P (P_Type)
             {
                 data: 'P_Type',
                 title: 'P',
@@ -972,11 +1135,23 @@ function renderDataTable(data) {
                 className: 'text-center align-middle',
                 render: function (d, type, row, meta) {
                     const dateVal = d ? d.substring(0, 10) : '';
+                    const isChanged = Number(row.Diff_DES_BM) === 1;
+
+                    // สไตล์สีแดงเมื่อมีการเปลี่ยนแปลง (ขอบแดง, พื้นชมพูอ่อน, ตัวอักษรแดง)
+                    const highlightClass = isChanged
+                        ? 'border-rose-400 bg-rose-50 text-rose-600 ring-1 ring-rose-300'
+                        : 'bg-white text-slate-700 border-slate-300';
+
+                    const tooltip = isChanged
+                        ? `title="Update: ${row.UserAction || 'MANUAL'}"`
+                        : '';
+
                     return `
                         <input type="date" 
-                               class="input input-bordered input-xs w-36 text-center font-bold text-slate-700 inline-edit-date bg-white" 
+                               class="input input-bordered input-xs w-36 text-center font-bold inline-edit-date ${highlightClass}" 
                                data-field="DES_BM" 
                                data-row-index="${meta.row}" 
+                               ${tooltip}
                                value="${dateVal}">
                     `;
                 },
@@ -992,11 +1167,23 @@ function renderDataTable(data) {
                 className: 'text-center align-middle',
                 render: function (d, type, row, meta) {
                     const dateVal = d ? d.substring(0, 10) : '';
+                    const isChanged = Number(row.Diff_Go_DES) === 1;
+
+                    // สไตล์สีแดงเมื่อมีการเปลี่ยนแปลง
+                    const highlightClass = isChanged
+                        ? 'border-rose-400 bg-rose-50 text-rose-600 ring-1 ring-rose-300'
+                        : 'bg-white text-slate-700 border-slate-300';
+
+                    const tooltip = isChanged
+                        ? `title="Update: ${row.UserAction || 'MANUAL'}"`
+                        : '';
+
                     return `
                         <input type="date" 
-                               class="input input-bordered input-xs w-36 text-center font-bold text-slate-700 inline-edit-date bg-white" 
+                               class="input input-bordered input-xs w-36 text-center font-bold inline-edit-date ${highlightClass}" 
                                data-field="Go_DES" 
                                data-row-index="${meta.row}" 
+                               ${tooltip}
                                value="${dateVal}">
                     `;
                 },
@@ -1100,6 +1287,16 @@ async function applyButtonPermissions(mode, extData, status = '') {
     ];
     $(allButtons.join(', ')).addClass('hidden');
 
+    // 2. ตรวจสอบ NRUNNO เพื่อแสดงปุ่ม Send Email เฉพาะเอกสารที่เดิน Flow แล้ว
+    const formData = $('.form-info').data() || {};
+    const nrunno = formData.nrunno || $('#NRUNNOHid').val();
+    const hasTicket =
+        nrunno && String(nrunno).trim() !== '' && String(nrunno).trim() !== '0';
+    // alert(hasTicket);
+    if (hasTicket) {
+        $('#SentEmailBtn').removeClass('hidden');
+    }
+
     // แปลง mode ให้อยู่ในรูป String เสมอ
     const currentMode = String(mode || '1').trim();
 
@@ -1159,6 +1356,14 @@ function updateStatusUI(status, revision, docNo = '') {
     const $pendingAlert = $('#PendingAlert');
     const mode = $('#MODEHid').val() || '1';
     const extData = $('#EXTDATAHid').val() || '';
+    var step = '';
+    if (extData == '01') {
+        step = 'PREPARED';
+    } else if (extData == '02') {
+        step = 'D/E DDEM';
+    } else if (extData == '03') {
+        step = 'D/E DEM';
+    }
 
     // 1. อัปเดต Revision Badge
     $('#RevBadge').text('Revision: ' + (revision || '*'));
@@ -1178,7 +1383,7 @@ function updateStatusUI(status, revision, docNo = '') {
             );
         } else {
             $('#StatusText').html(
-                `<strong>แจ้งเตือน:</strong> เอกสารกำลังอยู่ในขั้นตอนการอนุมัติ (Step: ${extData || '-'}) ${docNo ? `[${docNo}]` : ''}`,
+                `<strong>แจ้งเตือน:</strong> เอกสารกำลังอยู่ในขั้นตอนการอนุมัติ (Step: ${step || '-'}) ${docNo ? `[${docNo}]` : ''}`,
             );
         }
         $pendingAlert.removeClass('hidden');
@@ -1354,56 +1559,6 @@ function getExcelColumnLetter(colIndex) {
     }
     return letter;
 }
-
-$(document).on('click', '#SentEmailBtn', async function () {
-    const formData = $('.form-info').data();
-    const {
-        nfrmno,
-        vorgno,
-        cyear,
-        cyear2,
-        nrunno,
-        empno,
-        cost_year,
-        cost_month,
-        doc_no,
-    } = formData;
-
-    try {
-        let phpData = new FormData();
-        phpData.append('NFRMNO', nfrmno);
-        phpData.append('VORGNO', vorgno);
-        phpData.append('CYEAR', cyear);
-        phpData.append('CYEAR2', cyear2);
-        phpData.append('NRUNNO', nrunno);
-        phpData.append('COST_MONTH', $('#MONTHDrp').val());
-        phpData.append('COST_YEAR', $('#YEARDrp').val());
-        phpData.append('DATAONHAND', JSON.stringify(dataOnhand));
-        const responseEndProcess = await $.ajax({
-            url: host + 'feform/FE-EIA/form/EndpProcess',
-            type: 'POST',
-            data: phpData,
-            processData: false,
-            contentType: false,
-            dataType: 'json',
-        });
-
-        if (
-            responseEndProcess &&
-            (responseEndProcess.status === true ||
-                responseEndProcess.status === 'true')
-        ) {
-        } else {
-            throw new Error(
-                responseEndProcess?.message || 'end process not completed',
-            );
-        }
-    } catch (error) {
-        console.error('Action Flow Error:', error);
-        alert('เกิดข้อผิดพลาด: ' + error.message);
-        $('#loading').hide();
-    }
-});
 
 $(document).on('click', '#PdfBtn', function () {
     // ดักจับ fallback เผื่อก้อนข้อมูลหลักยังโหลดมาไม่สมบูรณ์

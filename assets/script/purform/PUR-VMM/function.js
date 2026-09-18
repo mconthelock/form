@@ -1,3 +1,4 @@
+import { getFormMasterByVaname } from '@amec/webasset/api/webform';
 export function checkAttFile() {
     const hasCer =
         $('#file-cer')[0].files.length > 0 ||
@@ -36,4 +37,36 @@ export function renderNewFilesUI(inputId, dataTransfer, container) {
         `;
         newFilesDiv.append(fileItemHtml);
     });
+}
+
+export async function renderLink(formno) {
+    console.log('ENTER RENDERLINK');
+
+    const protocol = window.location.protocol;
+    const subDomain = window.location.hostname.split('.')[0];
+    console.log(protocol);
+    console.log(subDomain);
+
+    const regex = /^([A-Z-]+)(\d{2})-(\d+)$/;
+    const match = formno.match(regex);
+
+    if (match) {
+        let frmtype = match[1];
+        let year = '20' + match[2];
+        let runningNo = parseInt(match[3], 10);
+
+        // ใช้งาน await ได้ตามปกติแล้วเพราะใส่ async ถูกตำแหน่ง
+        const formeva = await getFormMasterByVaname(frmtype);
+
+        if (formeva) {
+            // แนะนำให้เช็คด้วยว่าเจอข้อมูล formeva หรือไม่ เพื่อป้องกัน Error เพิ่มเติม
+            let linkUrl = `${protocol}//${subDomain}.mitsubishielevatorasia.co.th/form/purform/PUR-EVA/form/main?no=${formeva.NNO}&orgNo=${formeva.VORGNO}&y=${formeva.CYEAR}&y2=${year}&runNo=${runningNo}`;
+
+            $('#EVANO').html(
+                formno
+                    ? `<a href="${linkUrl}" target="_blank" class="text-blue-600 underline hover:text-blue-800">${formno}</a>`
+                    : '',
+            );
+        }
+    }
 }

@@ -35,6 +35,11 @@ class form extends MY_Controller {
         $this->load->model('dedform/DED-MDS/DED_MDS_model', 'MDSModel');
         $this->host = isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : 'amecweb';
         
+        $isHttps = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') 
+        || (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https');
+
+        $this->http = "http" . ($isHttps ? "s" : "");
+        
         $this->DDS = 'DDS';
     }
     // === https://amecwebtest.mitsubishielevatorasia.co.th/form/dedform/DED-MDS/form/main/?no=29&orgNo=070101&y=26&empno=13204&bp=http://webflow.mitsubishielevatorasia.co.th/formtest/is/create.asp
@@ -52,6 +57,14 @@ class form extends MY_Controller {
         $data['INPUTBY'] = $empno;
         $data['DOC_NO'] = '';
         $data['PLANHEADERID']    ='';
+
+        
+        $data['PLAN_YEAR'] = date('Y');
+        $data['PERIOD']    = '';
+        $data['REVISION']  = '-';
+        $data['DOC_NO']    = '';
+        $data['REMARK']    = '';
+        $data['STATUS']    = '';
 
         // 1. ตรวจสอบการส่ง Form Key จาก URL
         if (
@@ -85,12 +98,6 @@ class form extends MY_Controller {
         $desTypeMasterList = $this->MDSModel->QuerySetBase($sqlDesType, $this->DDS, [])->result();
         $data['desTypeList'] = $desTypeMasterList;
 
-        $data['PLAN_YEAR'] = date('Y');
-        $data['PERIOD']    = '';
-        $data['REVISION']  = '-';
-        $data['DOC_NO']    = '';
-        $data['REMARK']    = '';
-        $data['STATUS']    = '';
 
 
         // หา Default DesTypes จากฐานข้อมูล (ตัวที่ IsDefault = 1)
@@ -127,8 +134,8 @@ class form extends MY_Controller {
             // ดึงข้อมูล Header เพิ่มเติมจากตารางจริงถ้ามี
             $sqlHeader = "SELECT TOP 1 PlanYear, PeriodCode, Revision, Remark ,PlanHeaderID,Status
                         FROM Tb_Master_DESBM_Header 
-                        WHERE CYEAR2 = ? and NRUNNO = ?";
-            $headerInfo = $this->MDSModel->QuerySetBase($sqlHeader, $this->DDS, [$data['CYEAR2'],(int)$data['NRUNNO']])->row();
+                         WHERE NFRMNO = ? AND VORGNO = ? AND CYEAR = ? AND CYEAR2 = ? AND NRUNNO = ? ";
+            $headerInfo = $this->MDSModel->QuerySetBase($sqlHeader, $this->DDS, [ $data['NFRMNO'],$data['VORGNO'],$data['CYEAR'],$data['CYEAR2'] ,$data['NRUNNO'] ])->row();
             if ($headerInfo) {
                 $data['PLAN_YEAR'] = $headerInfo->PlanYear;
                 $data['PERIOD']    = $headerInfo->PeriodCode;
@@ -139,6 +146,15 @@ class form extends MY_Controller {
                 // ถ้ามีค่าใน Header เดิมให้ใช้ค่านั้น ถ้าไม่มีให้ fallback ไปยัง default
                 $data['selectedDesTypes'] = !empty($headerInfo->DesType) ? explode('|', $headerInfo->DesType) : $defaultDesTypes;
             }
+            else {
+                    $sqlDelFlow = "DELETE FROM FLOW WHERE NFRMNO = ? AND VORGNO = ? AND CYEAR = ? AND CYEAR2 = ? AND NRUNNO = ? ";
+                    $sqlDelForm = "DELETE FROM FORM WHERE NFRMNO = ? AND VORGNO = ? AND CYEAR = ? AND CYEAR2 = ? AND NRUNNO = ? ";
+
+                    $Webflowdb = $this->load->database('DEFAULT', TRUE);
+                    $Webflowdb->query($sqlDelFlow, [ $data['NFRMNO'],$data['VORGNO'],$data['CYEAR'],$data['CYEAR2'] ,$data['NRUNNO'] ]);
+                    $Webflowdb->query($sqlDelForm, [ $data['NFRMNO'],$data['VORGNO'],$data['CYEAR'],$data['CYEAR2'] ,$data['NRUNNO'] ]);
+                    $data['DOC_NO'] = 'Form not found.';
+                    }
 
         } else {
             // --- CASE: เตรียมสร้างฟอร์มใหม่ (Create Mode) ---
@@ -176,31 +192,22 @@ class form extends MY_Controller {
             $MODE    = trim((string)$this->input->post('MODE'));
 
             // รับค่าคีย์อ้างอิงเอกสาร Webflow (ถ้ามี)
+
+
+            $nfrmno  = trim((string)$this->input->post('NFRMNO'));
             $vorgno  = trim((string)$this->input->post('VORGNO'));
+            $cyear  = trim((string)$this->input->post('CYEAR'));
             $cyear2  = trim((string)$this->input->post('CYEAR2'));
             $nrunno  = trim((string)$this->input->post('NRUNNO'));
             $planheaderid  = trim((string)$this->input->post('PLANHEADERID'));
 
-            if (empty($year) || empty($period)) {
-                return $this->output->set_content_type('application/json')->set_output(json_encode([
-                    'statusTb'     => true,
-                    'hasDraft'     => false,
-                    'revision'     => '*',
-                    'nextRevision' => '*',
-                    'desType'      => null,
-                    'planHeaderID' => null,
-                    'status'       => '',
-                    'docNo'        => '',
-                    'data'         => [],
-                ]));
-            }
 
             $headerRow = null;
 
-            $nextRevision = $this->getNextApprovedRevision($year, $period);
-
+            $nextRevision = "-";
 
             if ($MODE === '1') {
+            $nextRevision = $this->getNextApprovedRevision($year, $period);
                 // -------------------------------------------------------------
                 // 🟢 MODE 1: CREATE MODE
                 // -------------------------------------------------------------
@@ -229,30 +236,49 @@ class form extends MY_Controller {
                 }
 
             } else {
+                
                 // -------------------------------------------------------------
                 // MODE อื่นๆ: (PROCESS, APPROVE, VIEW)
                 // -------------------------------------------------------------
-                if (!empty($nrunno) && !empty($cyear2) && !empty($vorgno)) {
-                    // ดึงตรงตามเลขเอกสาร Webflow ของตั๋วใบนี้
+                if ($nfrmno !== '0' && $cyear2 !== '' ) {
+                    // 1. ดึงข้อมูลจาก Header ตามเลข Webflow ของตั๋วใบนี้
                     $sqlByDoc = "SELECT TOP 1 PlanHeaderID, PlanYear, PeriodCode, Revision, DesType, Status, Remark,
                                             VORGNO, CYEAR2, NRUNNO
-                                FROM Tb_Master_DESBM_Header 
-                                WHERE  NRUNNO = ? AND CYEAR2 = ? AND VORGNO = ? 
-                                ORDER BY PlanHeaderID DESC";
-                    $headerRow = $this->MDSModel->QuerySetBase($sqlByDoc, $this->DDS, [$nrunno, $cyear2, $vorgno])->row();
+                                 FROM Tb_Master_DESBM_Header 
+                                 WHERE NFRMNO = ? AND VORGNO = ? AND CYEAR = ? AND CYEAR2 = ? AND NRUNNO = ? 
+                                 ORDER BY PlanHeaderID DESC";
+                    $headerRow = $this->MDSModel->QuerySetBase($sqlByDoc, $this->DDS, [$nfrmno,$vorgno,$cyear,$cyear2 ,$nrunno])->row();
+
+
+
+                    // // 2. ถ้าในตาราง Header ไม่มีข้อมูลของตั๋วใบนี้ ให้ลบ Flow และ Form ทันที
+                    // if (!$headerRow) {
+                    //     $sqlDelFlow = "DELETE FROM FLOW WHERE NFRMNO = ? AND VORGNO = ? AND CYEAR = ? AND CYEAR2 = ? AND NRUNNO = ? ";
+                    //     $sqlDelForm = "DELETE FROM FORM WHERE NFRMNO = ? AND VORGNO = ? AND CYEAR = ? AND CYEAR2 = ? AND NRUNNO = ? ";
+
+                    //     $Webflowdb = $this->load->database('DEFAULT', TRUE);
+                    //     $Webflowdb->query($sqlDelFlow, [$nfrmno,$vorgno,$cyear,$cyear2 ,$nrunno]);
+                    //     $Webflowdb->query($sqlDelForm, [$nfrmno,$vorgno,$cyear,$cyear2 ,$nrunno]);
+
+                    //     // 🟢 คืนค่า Form not found ออกไปทันที เพื่อให้ Frontend จัดการ Redirect
+                    //     return $this->output->set_content_type('application/json')->set_output(json_encode([
+                    //         'statusTb'     => true,
+                    //         'hasDraft'     => false,
+                    //         'revision'     => '-',
+                    //         'nextRevision' => '-',
+                    //         'desType'      => null,
+                    //         'planHeaderID' => null,
+                    //         'status'       => '',
+                    //         'docNo'        => 'Form not found.',
+                    //         'data'         => [],
+                    //     ]));
+                    // }
                 }
 
-                // ถ้าหาตามตั๋วไม่เจอ ให้ดึงตัวล่าสุดของรอบนั้นมาแสดง
-                if (!$headerRow) {
-                    $sqlLatest = "SELECT TOP 1 PlanHeaderID, PlanYear, PeriodCode, Revision, DesType, Status, Remark,
-                                            VORGNO, CYEAR2, NRUNNO
-                                FROM Tb_Master_DESBM_Header 
-                                WHERE PlanYear = ? AND PeriodCode = ?
-                                ORDER BY PlanHeaderID DESC";
-                    $headerRow = $this->MDSModel->QuerySetBase($sqlLatest, $this->DDS, [$year, $period])->row();
-                }
             }
 
+
+            
             // -------------------------------------------------------------
             // จัดการดึง Detail ของ Header ที่ค้นพบ
             // -------------------------------------------------------------
@@ -297,7 +323,7 @@ class form extends MY_Controller {
                 'desType'      => null,
                 'planHeaderID' => null,
                 'status'       => '',
-                'docNo'        => '',
+                'docNo'        => 'Form not found.',
                 'data'         => [],
             ]));
 
@@ -373,9 +399,17 @@ class form extends MY_Controller {
             // สร้าง PlanHeaderID รูปแบบ Custom Code (เช่น 202601001)
             $newPlanHeaderID = $this->MDSModel->generatePlanHeaderID($year, $period, $db);
 
-            $fullHost = (string)gethostbyaddr($_SERVER['REMOTE_ADDR'] ?? '127.0.0.1');
-            $cleanHost = explode('.', $fullHost)[0]; // จะเหลือเฉพาะ 'IS-DELL07'
-            $computerAction = substr($cleanHost, 0, 20); // ป้องกันเกินขนาดฟิลด์
+            
+            
+            
+            // ดึง Hostname หรือ IP
+            $rawHost = (string)gethostbyaddr($_SERVER['REMOTE_ADDR'] ?? '127.0.0.1');                        
+            // 1. ตัดส่วนที่เป็น Domain ออกแบบ Case-Insensitive (ครอบคลุมทั้งตัวเล็ก/ตัวใหญ่)
+            $cleanHost = preg_replace('/\.mitsubishielevatorasia\.co\.th$/i', '', trim($rawHost));
+
+            // 2. ล็อคความยาวให้พอดีกับฟิลด์ (เช่น VARCHAR(20) หรือ VARCHAR(15) ใน DB)
+            // ถ้าระบบเป็น IP (เช่น 192.168.100.254 ยาว 15 ตัว) จะไม่ถูกตัดจุดออก
+            $computerAction = substr($cleanHost, 0, 20);
             // 3. สร้าง Header ฉบับร่างใหม่
             $headerData = [
                 'PlanHeaderID'   => (string)$newPlanHeaderID,
@@ -393,10 +427,10 @@ class form extends MY_Controller {
 
             // 4. แยกการประมวลผลตาม Revision
             if ($nextRevision === '*' || $nextRevision === '0') {
-                // 🟢 Rev * : ดึงจาก A002MP และคำนวณใหม่ตามสูตร
+                // Rev * : ดึงจาก A002MP และคำนวณใหม่ตามสูตร
                 $this->MDSModel->processPlanMasterDirect($newPlanHeaderID, $year, $period, $desTypes, $nextRevision, 'SYSTEM', $db);
             } else {
-                // 🟠 Rev อื่นๆ : ดึง Detail ของ Revision ล่าสุดที่ Approved มา Copy ตั้งต้น
+                // Rev อื่นๆ : ดึง Detail ของ Revision ล่าสุดที่ Approved มา Copy ตั้งต้น
                 $this->MDSModel->copyPreviousApprovedRevision($newPlanHeaderID, $year, $period, $desTypes, $nextRevision, $db);
             }
 
@@ -418,7 +452,45 @@ class form extends MY_Controller {
         }
     }
 
-    public function UpdateInlineDetail() {
+    public function UpdateInlineDetail() 
+    {
+        $this->output->set_content_type('application/json');
+
+        try {
+            $planHeaderID = trim((string)$this->input->post('PlanHeaderID'));
+            $seqNo        = (int)$this->input->post('SeqNo');
+            $field        = trim((string)$this->input->post('Field'));
+            $value        = $this->input->post('Value');
+            $empno        = $this->input->post('EMPNO') ?? 'SYSTEM';
+
+            if (empty($planHeaderID) || empty($seqNo)) {
+                throw new Exception("ข้อมูล PlanHeaderID หรือ SeqNo ไม่ถูกต้อง");
+            }
+
+            $result = $this->MDSModel->updateInlineDetailCascade(
+                $planHeaderID, 
+                $seqNo, 
+                $field, 
+                $value, 
+                $empno
+            );
+
+            return $this->output->set_output(json_encode([
+                'status'       => true,
+                'message'      => 'Updated successfully with cascading relations',
+                'row'          => $result['row'],
+                'affectedRows' => $result['affectedRows']
+            ]));
+
+        } catch (\Throwable $e) {
+            return $this->output->set_output(json_encode([
+                'status'  => false,
+                'message' => $e->getMessage()
+            ]));
+        }
+    }
+
+    public function UpdateInlineDetail0() {
         $this->output->set_content_type('application/json');
 
         try {
@@ -768,7 +840,7 @@ class form extends MY_Controller {
             'CYEAR'   => $formData['CYEAR'],
             'REQBY'   => $empNo,
             'INPUTBY' => $empNo,
-            'REMARK'  => !empty($remark) ? $remark : "Plan Master {$year} ({$period}) Rev.{$currentRevision}",
+            'REMARK'  => !empty($remark) ? $remark : null,
             // 'DRAFT'   => '1', // ส่งสร้างโฟลว์อนุมัติทันที
         ];
 
@@ -789,7 +861,7 @@ class form extends MY_Controller {
                 'NRUNNO' => $nrunno,
                 'CEXTDATA' => '01',
             ];
-            // เรียกฟังก์ชันอัปเดตผู้อนุมัติลงตาราง FLOW
+            // เรียกฟังก์ชันอัปเดตผู้อนุมัติ Step 2 (EXTDATA=01)ลงตาราง FLOW
             $this->MDSModel->updateWebflowApprover($flowID);
         }
 
@@ -797,6 +869,17 @@ class form extends MY_Controller {
                         ? "DED-MDS-" . $cyear2 . "-" . str_pad($nrunno, 6, '0', STR_PAD_LEFT)
                         : '';
 
+
+        
+            
+            // ดึง Hostname หรือ IP
+            $rawHost = (string)gethostbyaddr($_SERVER['REMOTE_ADDR'] ?? '127.0.0.1');                        
+            // 1. ตัดส่วนที่เป็น Domain ออกแบบ Case-Insensitive (ครอบคลุมทั้งตัวเล็ก/ตัวใหญ่)
+            $cleanHost = preg_replace('/\.mitsubishielevatorasia\.co\.th$/i', '', trim($rawHost));
+
+            // 2. ล็อคความยาวให้พอดีกับฟิลด์ (เช่น VARCHAR(20) หรือ VARCHAR(15) ใน DB)
+            // ถ้าระบบเป็น IP (เช่น 192.168.100.254 ยาว 15 ตัว) จะไม่ถูกตัดจุดออก
+            $computerAction = substr($cleanHost, 0, 20);
         // 4. จัดเตรียมข้อมูลสำหรับ Update Header
         $headerUpdate = [
             'NFRMNO'         => $formData['NNO'],
@@ -807,7 +890,7 @@ class form extends MY_Controller {
             'Status'         => 'PROCESS',
             'Remark'         => $flowData['REMARK'],
             'UserAction'     => (string)$empNo,
-            'ComputerAction' => (string)gethostbyaddr($_SERVER['REMOTE_ADDR'] ?? '127.0.0.1'),
+            'ComputerAction' => $computerAction ,
             'DateAction'     => date('Y-m-d H:i:s')
         ];
 
@@ -885,9 +968,19 @@ class form extends MY_Controller {
                 'NRUNNO' => $NRUNNO,
             ];
 
+            
+            
+            // ดึง Hostname หรือ IP
+            $rawHost = (string)gethostbyaddr($_SERVER['REMOTE_ADDR'] ?? '127.0.0.1');                        
+            // 1. ตัดส่วนที่เป็น Domain ออกแบบ Case-Insensitive (ครอบคลุมทั้งตัวเล็ก/ตัวใหญ่)
+            $cleanHost = preg_replace('/\.mitsubishielevatorasia\.co\.th$/i', '', trim($rawHost));
+
+            // 2. ล็อคความยาวให้พอดีกับฟิลด์ (เช่น VARCHAR(20) หรือ VARCHAR(15) ใน DB)
+            // ถ้าระบบเป็น IP (เช่น 192.168.100.254 ยาว 15 ตัว) จะไม่ถูกตัดจุดออก
+            $computerAction = substr($cleanHost, 0, 20);
             $data = [
                 'UserAction'     => (string)$EMPNO,
-                'ComputerAction' => (string)gethostbyaddr($_SERVER['REMOTE_ADDR'] ?? '127.0.0.1'),
+                'ComputerAction' => $computerAction ,
                 'DateAction'     => date('Y-m-d H:i:s')
             ];
 
@@ -898,10 +991,25 @@ class form extends MY_Controller {
                     // Process tranfer data to Tb_Master_DESBM
                     // 1. ค้นหา Header ปัจจุบันผ่าน Model
                     $header = $this->MDSModel->GetHeaderByFormID($formID);
+
+
                     if (!$header) {
                         throw new Exception("ไม่พบข้อมูล Header ที่ผูกกับฟอร์มนี้");
                     }
                     $this->MDSModel->SyncPlanToMasterDESBM($header->PlanHeaderID);
+                    // 🟢 3. ส่งอีเมลอัตโนมัติทันที
+                    try {
+                        $this->_executeSendEmail(
+                            $formID, 
+                            $header->PlanYear, 
+                            $header->PeriodCode, 
+                            $header->Revision ?? $REVISION,$ACTION
+
+                        );
+                    } catch (\Throwable $mailEx) {
+                        log_message('error', 'Auto SendEmail Step 03 failed: ' . $mailEx->getMessage());
+                    }
+                    
                 } else {
                     // Step 00, 01, 02 กด APPROVE -> เอกสารยังอยู่ระหว่างเดิน Flow
                     $data['Status'] = 'PROCESS';
@@ -987,7 +1095,10 @@ class form extends MY_Controller {
 
         // 3. เริ่ม Transaction และรันคำสั่ง MERGE
         $db->trans_begin();
-
+        // 🟢 2. เตรียม ComputerAction จาก PHP ปลอดภัย ไม่พึ่ง Case-sensitive ใน SQL
+            $rawHost = (string)gethostbyaddr($_SERVER['REMOTE_ADDR'] ?? '127.0.0.1');
+            $cleanHost = preg_replace('/\.mitsubishielevatorasia\.co\.th$/i', '', trim($rawHost));
+            $computerAction = substr($cleanHost, 0, 20);
         try {
             $sqlMerge = "
                 SET NOCOUNT ON;
@@ -1024,7 +1135,7 @@ class form extends MY_Controller {
                         TARGET.FormatAs400          = SOURCE.FormatAs400,
                         TARGET.MARIssueDES          = SOURCE.MARIssueDES,
                         TARGET.UserAction           = SOURCE.UserAction,
-                        TARGET.ComputerAction       = LEFT(REPLACE(HOST_NAME(), '.MitsubishiElevatorAsia.co.th', ''), 20),
+                        TARGET.ComputerAction       = ?,
                         TARGET.DateAction           = SOURCE.DateAction,
                         TARGET.UpdateMKT            = 0
 
@@ -1054,7 +1165,7 @@ class form extends MY_Controller {
                         SOURCE.FormatAs400,
                         SOURCE.MARIssueDES,
                         SOURCE.UserAction,
-                        LEFT(REPLACE(HOST_NAME(), '.MitsubishiElevatorAsia.co.th', ''), 20),
+                        ?,
                         SOURCE.DateAction,
                         0,
                         NULL,
@@ -1070,7 +1181,7 @@ class form extends MY_Controller {
                     DELETE;
             ";
 
-            $db->query($sqlMerge, [$planHeaderID, $minDate, $maxDate]);
+            $db->query($sqlMerge, [$planHeaderID, $computerAction,   $computerAction,$minDate, $maxDate]);
 
             if ($db->trans_status() === FALSE) {
                 $db->trans_rollback();
@@ -1087,6 +1198,251 @@ class form extends MY_Controller {
     }
 
         
+    
+    /**
+     * Helper ส่งอีเมลแจ้งเตือน AMEC Design Schedule
+     */
+    private function _executeSendEmail($formID, $year, $period, $revision, $status = '')
+    {
+        $NFRMNO  = $formID['NFRMNO'];
+        $VORGNO  = $formID['VORGNO'];
+        $CYEAR   = $formID['CYEAR'];
+        $CYEAR2  = $formID['CYEAR2'];
+        $NRUNNO  = $formID['NRUNNO'];
+
+        $curYY   = substr((string)$year, -2);
+        $nextYY  = str_pad((string)(((int)$curYY + 1) % 100), 2, '0', STR_PAD_LEFT);
+        $isOct   = stripos((string)$period, '10X') !== false;
+
+        // รูปแบบงวด เช่น 10X'26-03C'27 หรือ 04X'26-09C'26
+        $scheduleTitle = $isOct 
+            ? "10X'{$curYY}-03C'{$nextYY}" 
+            : "04X'{$curYY}-09C'{$curYY}";
+
+        $revDisplay = (!empty($revision) && $revision !== '*') ? $revision : '*';
+        $releaseTag = ($revDisplay === '*') ? 'New release' : "Revision {$revDisplay}";
+
+        // 🟢 1. จัดการ Status ให้ชัดเจน
+        $rawStatus = strtoupper(trim((string)$status));
+        if (empty($rawStatus)) {
+            $rawStatus = 'PROCESS';
+        }
+
+        // กำหนดสี Badge และคำอธิบายตามสถานะ
+        $statusBgColor   = '#e2e8f0';
+        $statusTextColor = '#475569';
+        $statusLabel     = $rawStatus;
+
+        if ($rawStatus === 'APPROVE') {
+            $statusBgColor   = '#10b981'; // สีเขียวสดใส
+            $statusTextColor = '#ffffff';
+            $statusLabel     = 'APPROVED';
+        } elseif ($rawStatus === 'PROCESS') {
+            $statusBgColor   = '#f59e0b'; // สีส้ม
+            $statusTextColor = '#ffffff';
+            $statusLabel     = 'IN PROCESS';
+        } elseif ($rawStatus === 'DRAFT') {
+            $statusBgColor   = '#64748b'; // สีเทา
+            $statusTextColor = '#ffffff';
+            $statusLabel     = 'DRAFT';
+        }
+
+        // 🟢 2. หัวข้ออีเมล (Subject) - ระบุ [STATUS] นำหน้าชัดเจน
+        $SUBJECT = "[{$statusLabel}] AMEC DESIGN SCHEDULE ({$scheduleTitle}) REV.{$revDisplay} ({$releaseTag})";
+
+        // 3. ดึงอีเมลผู้รับจากตาราง FLOW
+        $TO = "";
+        $CC = "";
+        
+        $Webflowdb = $this->load->database('DEFAULT', TRUE);
+        $sql = "SELECT LISTAGG(emp.SRECMAIL, ',') WITHIN GROUP (ORDER BY emp.SEMPNO) AS ALL_EMAILS 
+                FROM FLOW wf 
+                LEFT JOIN AMEC.AEMPLOYEE emp ON wf.VAPVNO = emp.SEMPNO
+                WHERE wf.NFRMNO = ? AND wf.VORGNO = ? AND wf.CYEAR = ? AND wf.CYEAR2 = ? AND wf.NRUNNO = ?";
+        
+        $flowQuery  = $Webflowdb->query($sql, [$NFRMNO, $VORGNO, $CYEAR, $CYEAR2, $NRUNNO]);
+        $flowRow    = $flowQuery ? $flowQuery->row() : null;
+        $flowEmails = ($flowRow && !empty($flowRow->ALL_EMAILS)) ? trim($flowRow->ALL_EMAILS) : '';
+        $formUrl = "";
+        $host = $this->current_host ?? ($_SERVER['HTTP_HOST'] ?? '');
+       if (stripos($host, 'test') !== false || stripos($host, 'localhost') !== false) {
+            // โหมด Test
+            $TO = "siripapa@mitsubishielevatorasia.co.th";
+            $CC = "siripapa@mitsubishielevatorasia.co.th";
+
+            if (stripos($host, 'localhost') !== false) {
+                // กรณีรันบน Local เครื่องตัวเอง
+                $formUrl = $this->http ."//localhost:8080/ids/DED_MDS/masterDesbm_report/index/{$year}/{$period}/";
+                $formUrl = $this->http ."//amecwebtest.mitsubishielevatorasia.co.th/ids/DED_MDS/masterDesbm_report/index/{$year}/{$period}/";
+            } else {
+                // กรณี Test Server (ใส่ https:// ให้ครบถ้วน เพื่อให้คลิกจาก Outlook ได้)
+                $formUrl = $this->http ."//amecwebtest.mitsubishielevatorasia.co.th/ids/DED_MDS/masterDesbm_report/index/{$year}/{$period}/";
+            }
+        } else {
+            // โหมด Production
+            $TO = !empty($flowEmails) ? $flowEmails : "siripapa@mitsubishielevatorasia.co.th";
+            $CC = "siripapa@mitsubishielevatorasia.co.th";
+
+            // ใส่ https:// เสมอสำหรับเมลจริง
+            $formUrl = $this->http ."//amecweb.mitsubishielevatorasia.co.th/ids/DED_MDS/masterDesbm_report/index/{$year}/{$period}/";
+        }
+        // URL เปิดหน้ารายงาน Form Webflow
+        // $formUrl = "//amecweb.mitsubishielevatorasia.co.th/form/dedform/DED-MDS/form/main?" . http_build_query([
+        //     'no'    => $NFRMNO,
+        //     'orgNo' => $VORGNO,
+        //     'y'     => $CYEAR,
+        //     'y2'    => $CYEAR2,
+        //     'runNo' => $NRUNNO,
+        //     'm'     => 3
+        // ]);
+
+        // 🟢 4. Body Template ปรับแต่งให้เห็น Status เด่นชัดเจน
+        $BODY = "
+        <div style='background-color: #f1f5f9; padding: 30px 15px; font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif;'>
+            <table align='center' border='0' cellpadding='0' cellspacing='0' width='100%' style='max-width: 600px; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border: 1px solid #e2e8f0;'>
+                <tr>
+                    <td style='background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); padding: 24px 30px; text-align: left;'>
+                        <table width='100%' border='0' cellpadding='0' cellspacing='0'>
+                            <tr>
+                                <td>
+                                    <span style='color: #38bdf8; font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase;'>Design Engineering Department</span>
+                                    <h2 style='color: #ffffff; margin: 6px 0 0 0; font-size: 20px; font-weight: 600;'>AMEC DESIGN SCHEDULE</h2>
+                                </td>
+                                <td align='right' valign='middle'>
+                                    <!-- Badge สถานะมุมขวาบนของ Header -->
+                                    <span style='display: inline-block; background-color: {$statusBgColor}; color: {$statusTextColor}; font-size: 12px; font-weight: 700; padding: 6px 14px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.5px;'>
+                                        {$statusLabel}
+                                    </span>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+                <tr>
+                    <td style='padding: 30px;'>
+                        <p style='font-size: 15px; color: #334155; margin: 0 0 16px 0;'>Dear All,</p>
+                        
+                        <div style='background-color: #f8fafc; border-left: 4px solid " . ($rawStatus === 'APPROVE' ? '#10b981' : '#0284c7') . "; padding: 16px 20px; margin-bottom: 24px; border-radius: 0 6px 6px 0;'>
+                            <div style='font-size: 16px; font-weight: 700; color: #0f172a; margin-bottom: 6px;'>
+                                AMEC DESIGN SCHEDULE ({$scheduleTitle}) REV.{$revDisplay}
+                            </div>
+                            <div style='font-size: 13px; color: #64748b;'>
+                                Release: <strong style='color: #0369a1;'>({$releaseTag})</strong>
+                                &nbsp;|&nbsp; 
+                                Current Status: <span style='display: inline-block; background-color: {$statusBgColor}; color: {$statusTextColor}; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 4px;'>{$statusLabel}</span>
+                            </div>
+                        </div>
+
+                        <p style='font-size: 14px; color: #475569; margin: 0 0 24px 0;'>
+                            Please find as attached and review the schedule details via the system link below:
+                        </p>
+
+                        <table border='0' cellpadding='0' cellspacing='0' width='100%' style='margin-bottom: 26px; font-size: 13px; border-collapse: collapse;'>
+                            <tr>
+                                <td style='padding: 8px 0; border-bottom: 1px solid #f1f5f9; color: #64748b; width: 35%;'><strong>Ticket No:</strong></td>
+                                <td style='padding: 8px 0; border-bottom: 1px solid #f1f5f9; color: #0f172a; font-weight: 600;'>DED_MDS-{$CYEAR2}-" . str_pad($NRUNNO, 6, '0', STR_PAD_LEFT) . "</td>
+                            </tr>
+                            <tr>
+                                <td style='padding: 8px 0; border-bottom: 1px solid #f1f5f9; color: #64748b;'><strong>Document Status:</strong></td>
+                                <td style='padding: 8px 0; border-bottom: 1px solid #f1f5f9;'>
+                                    <strong style='color: " . ($rawStatus === 'APPROVE' ? '#059669' : '#d97706') . ";'>{$statusLabel}</strong>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style='padding: 8px 0; border-bottom: 1px solid #f1f5f9; color: #64748b;'><strong>Plan Year / Period:</strong></td>
+                                <td style='padding: 8px 0; border-bottom: 1px solid #f1f5f9; color: #0f172a;'>{$year} ({$period})</td>
+                            </tr>
+                            <tr>
+                                <td style='padding: 8px 0; border-bottom: 1px solid #f1f5f9; color: #64748b;'><strong>Date Action:</strong></td>
+                                <td style='padding: 8px 0; border-bottom: 1px solid #f1f5f9; color: #0f172a;'>" . date('Y-m-d H:i:s') . "</td>
+                            </tr>
+                        </table>
+
+                        <table border='0' cellpadding='0' cellspacing='0' width='100%'>
+                            <tr>
+                                <td align='center' style='padding: 8px 0 16px 0;'>
+                                    <a href='{$formUrl}' target='_blank' style='display: inline-block; background-color: #0284c7; color: #ffffff; font-size: 14px; font-weight: 600; text-decoration: none; padding: 12px 28px; border-radius: 6px; box-shadow: 0 2px 4px rgba(2, 132, 199, 0.25);'>
+                                        View Design Schedule Detail &rarr;
+                                    </a>
+                                </td>
+                            </tr>
+                        </table>
+
+                        <p style='font-size: 12px; color: #94a3b8; margin: 24px 0 0 0; padding-top: 16px; border-top: 1px solid #e2e8f0; line-height: 1.5;'>
+                            * This is an automated notification from the AMEC Webflow System. Please do not reply directly to this email.
+                        </p>
+                    </td>
+                </tr>
+                <tr>
+                    <td style='background-color: #f8fafc; padding: 16px; text-align: center; font-size: 11px; color: #94a3b8; border-top: 1px solid #e2e8f0;'>
+                        &copy; " . date('Y') . " Mitsubishi Elevator Asia Co., Ltd. All rights reserved.
+                    </td>
+                </tr>
+            </table>
+        </div>";
+
+        if (!empty($TO)) {
+            $dataM = [
+                'SUBJECT' => $SUBJECT,
+                'TO'      => $TO,
+                'CC'      => $CC,
+                'BODY'    => [$BODY]
+            ];
+            $this->mail->sendmail($dataM);
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Endpoint รับ Request สำหรับกดส่ง Email Manual
+     */
+    public function SendEmail()
+    {
+        $this->output->set_content_type('application/json');
+
+        try {
+            $NFRMNO   = $this->input->post('NFRMNO');
+            $VORGNO   = $this->input->post('VORGNO');
+            $CYEAR    = $this->input->post('CYEAR');
+            $CYEAR2   = $this->input->post('CYEAR2');
+            $NRUNNO   = $this->input->post('NRUNNO');
+            $YEAR     = $this->input->post('YEAR');
+            $PERIOD   = $this->input->post('PERIOD');
+            $REVISION = $this->input->post('REVISION');
+            $STATUS   = $this->input->post('STATUS') ?? '';
+
+            if (empty($NRUNNO) || empty($NFRMNO) || empty($VORGNO)) {
+                throw new \Exception("ข้อมูลฟอร์ม (NRUNNO) ไม่ครบถ้วน");
+            }
+
+            $formID = [
+                'NFRMNO' => $NFRMNO,
+                'VORGNO' => $VORGNO,
+                'CYEAR'  => $CYEAR,
+                'CYEAR2' => $CYEAR2,
+                'NRUNNO' => $NRUNNO
+            ];
+            
+            $isSent = $this->_executeSendEmail($formID, $YEAR, $PERIOD, $REVISION, $STATUS);
+
+            if (!$isSent) {
+                throw new \Exception("ไม่พบรายชื่ออีเมลผู้รับในระบบ");
+            }
+
+            return $this->output->set_output(json_encode([
+                'status'  => true,
+                'message' => 'ส่งอีเมลแจ้งเตือนเรียบร้อยแล้ว'
+            ]));
+
+        } catch (\Throwable $e) {
+            return $this->output->set_output(json_encode([
+                'status'  => false,
+                'message' => 'เกิดข้อผิดพลาด: ' . $e->getMessage()
+            ]));
+        }
+    }
     
     /**
      * ดึง Revision ถัดไปของ Plan ตาม Year และ Period (รวม Logic ตรวจสอบและขยับตัวอักษร)
@@ -1285,21 +1641,65 @@ class form extends MY_Controller {
 
         // 5. เตรียมข้อมูลแสตมป์ลายเซ็น (Prepared By, Checked By, Approved By)
         // ดึงจาก Field ใน Header หรือปรับตามโครงสร้างตาราง Flow ของคุณ
+        $Webflowdb = $this->load->database('DEFAULT', TRUE);
+
+        // 🟢 Query ไวยากรณ์ Oracle
+        $flowSql = "SELECT 
+                        wf.CEXTDATA,
+                        wf.VAPVNO,
+                        wf.VREPNO,
+                        -- ตัดเอาเฉพาะชื่อตัวแรก (ก่อนวรรคแรก) ใน Oracle
+                        TRIM(SUBSTR(emp.SNAME, 1, INSTR(emp.SNAME || ' ', ' ') - 1)) AS EMPNAME,
+                        -- แปลงวันที่เป็น DD/MM/YYYY
+                        TO_CHAR(wf.DAPVDATE, 'DD/MM/YYYY') AS APVDATETEXT,
+                        wf.DAPVDATE
+                    FROM FLOW wf 
+                    LEFT JOIN AMEC.AEMPLOYEE emp 
+                        ON emp.SEMPNO = wf.VAPVNO 
+                    WHERE wf.NFRMNO  = ?
+                      AND wf.VORGNO  = ?
+                      AND wf.CYEAR2  = ?
+                      AND wf.NRUNNO  = ?
+                      AND wf.CEXTDATA IN ('01', '02', '03')
+                      AND wf.CAPVSTNO = '1'
+                    ORDER BY wf.CEXTDATA ASC";
+
+        $flowQuery = $Webflowdb->query($flowSql, [
+            $headerRow->NFRMNO,
+            $headerRow->VORGNO,
+            $headerRow->CYEAR2,
+            $headerRow->NRUNNO
+        ]);
+
+        $flowRows = $flowQuery ? $flowQuery->result_array() : [];
+
         $signatures = [
-            'preparedBy' => [
-                'name' => $headerRow->CreateBy ?? $headerRow->UserAction ?? '',
-                'date' => !empty($headerRow->CreateDate) ? substr($headerRow->CreateDate, 0, 10) : date('Y-m-d')
-            ],
-            'checkedBy' => [
-                'name' => $headerRow->CheckedBy ?? '',
-                'date' => !empty($headerRow->CheckedDate) ? substr($headerRow->CheckedDate, 0, 10) : null
-            ],
-            'approvedBy' => [
-                'name' => $headerRow->ApprovedBy ?? '',
-                'date' => !empty($headerRow->ApprovedDate) ? substr($headerRow->ApprovedDate, 0, 10) : null
-            ]
+            'step01' => null, // ขวาสุด (AJ)
+            'step02' => null, // ถัดมาทางซ้าย (AG)
+            'step03' => null  // ช่องในสุด (AD)
         ];
 
+        foreach ($flowRows as $f) {
+            // 🟢 จัดการให้อ่านได้ทั้งตัวพิมพ์เล็กหรือพิมพ์ใหญ่ที่ Oracle คืนค่ากลับมา
+            $cextdata   = trim((string)($f['CEXTDATA'] ?? $f['cextdata'] ?? ''));
+            $vapvno     = trim((string)($f['VAPVNO'] ?? $f['vapvno'] ?? ''));
+            $empName    = trim((string)($f['EMPNAME'] ?? $f['empname'] ?? $vapvno));
+            $apvDateTxt = trim((string)($f['APVDATETEXT'] ?? $f['apvdatetext'] ?? ''));
+
+            $stampData = [
+                'empNo' => $vapvno,
+                'name'  => strtoupper($empName),
+                'date'  => $apvDateTxt // คืนค่าเป็นรูปแบบ DD/MM/YYYY พร้อมแสตมป์
+            ];
+
+            if ($cextdata === '01') {
+                $signatures['step01'] = $stampData;
+            } elseif ($cextdata === '02') {
+                $signatures['step02'] = $stampData;
+            } elseif ($cextdata === '03') {
+                $signatures['step03'] = $stampData;
+            }
+        }
         return $this->output->set_output(json_encode([
             'status'       => true,
             'planHeaderID' => $targetHeaderID,
