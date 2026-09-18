@@ -10,9 +10,8 @@ pipeline {
             steps {
                 script {
                     if (env.BRANCH_NAME == 'develop') {
-
                         env.TARGET_DIR = '/var/amecweb/wwwroot/development/form'
-                        env.ENV_CRED_ID = 'form-env-dev'
+                        env.ENV_DIR = '/var/amecweb/file/env/form/.env.form.development'
                         env.NODE_ENV = 'development'
                         env.DEPLOY_ENV = 'development'
 
@@ -21,7 +20,7 @@ pipeline {
                     } else if (env.BRANCH_NAME == 'main') {
 
                         env.TARGET_DIR = '/var/amecweb/wwwroot/production/form'
-                        env.ENV_CRED_ID = 'form-env-prod'
+                        env.ENV_DIR = '/var/amecweb/file/env/form/.env.form.production'
                         env.NODE_ENV = 'development'
                         env.DEPLOY_ENV = 'production'
 
@@ -43,10 +42,14 @@ pipeline {
 
         stage('Install & Build') {
             steps {
-                withCredentials([file(credentialsId: "${env.ENV_CRED_ID}", variable: 'ENV_FILE')]) {
                     withCredentials([usernamePassword(credentialsId: 'gitlab-auth-id', passwordVariable: 'GIT_PASS', usernameVariable: 'GIT_USER')]) {
                         sh '''
-                            cp ${ENV_FILE} .env
+                            if [ ! -f "${ENV_DIR}" ]; then
+                                echo "❌ Environment file not found: ${ENV_DIR}"
+                                exit 1
+                            fi
+
+                            cp ${ENV_DIR} .env
 
                             git config --global url."https://${GIT_USER}:${GIT_PASS}@webhub.mitsubishielevatorasia.co.th/".insteadOf "https://webhub.mitsubishielevatorasia.co.th/"
 
@@ -58,7 +61,6 @@ pipeline {
                             git config --global --unset url."https://${GIT_USER}:${GIT_PASS}@webhub.mitsubishielevatorasia.co.th/".insteadOf
                         '''
                     }
-                }
             }
         }
 

@@ -4,11 +4,7 @@ import CryptoJS from 'crypto-js';
 import { showLoader } from '@amec/webasset/preloader';
 import { showMessage } from '@amec/webasset/utils';
 import { createTable } from '@amec/webasset/dataTable';
-import {
-    displayEmpInfo,
-    displayEmpImage,
-    fillImages,
-} from '@amec/webasset/indexDB';
+import { displayEmpInfo } from '@amec/webasset/indexDB';
 import { initApp, tableOption } from '../utils';
 import { getFormList } from './data';
 
@@ -143,12 +139,29 @@ function nextApprover(flow = []) {
 async function reloadTable() {
     const status = $('#status').val();
     const data = await getFormList({ user, status });
-    await populateFilters(data);
+    const dataFiltered = Array.from(
+        new Map(
+            (Array.isArray(data) ? data : [])
+                .filter((item) => item)
+                .map((item) => {
+                    const form = item?.form || item;
+                    const key = [
+                        form?.NFRMNO ?? '',
+                        form?.VORGNO ?? '',
+                        form?.CYEAR ?? '',
+                        form?.CYEAR2 ?? form?.cyear2 ?? '',
+                        form?.NRUNNO ?? '',
+                    ].join('|');
+                    return [key, item];
+                }),
+        ).values(),
+    );
+    await populateFilters(dataFiltered);
     if (!table) {
-        await createFormTable(data);
+        await createFormTable(dataFiltered);
     } else {
         table.clear();
-        table.rows.add(data);
+        table.rows.add(dataFiltered);
         table.draw();
     }
 }
@@ -194,12 +207,16 @@ async function createFormTable(data) {
                     '000000' + row.NRUNNO
                 ).slice(-6)}`;
                 if (type === 'display') {
+                    //console.log(document.URL);
                     const serve = data.VFORMPAGE.startsWith('http')
-                        ? data.VFORMPAGE.replace('http', 'https')
-                        : `https://webflow.mitsubishielevatorasia.co.th/${data.VFORMPAGE}`;
+                        ? data.VFORMPAGE.startsWith('https')
+                            ? data.VFORMPAGE
+                            : data.VFORMPAGE.replace('http', 'https')
+                        : `https://webflow.mitsubishielevatorasia.co.th${data.VFORMPAGE}`;
                     const conjunction = serve.includes('?') ? '&' : '?';
-                    const url = `${serve}${conjunction}no=${data.NFRMNO}&orgNo=${data.VORGNO}&y=${data.CYEAR}&y2=${data.CYEAR2}&runNo=${data.NRUNNO}&empno=${user}`;
-                    return `<a class="text-primary link-self" href="#" data-title="${pageId}" data-url="${url}&empnolv=${hash.toString().toUpperCase()}&bp=${encodeURIComponent('http://localhost:8080/form/webform/form/index/1')}">${formno}</a>`;
+                    const url = `${serve}${conjunction}no=${data.NFRMNO}&orgNo=${data.VORGNO}&y=${data.CYEAR}&y2=${data.CYEAR2}&runNo=${data.NRUNNO}&empno=${user}&empnolv=${hash.toString().toUpperCase()}&bp=${encodeURIComponent(document.URL)}`;
+                    return `<a class="text-primary link-self" href="#" data-title="${pageId}" data-url="${url}">${formno}</a>`;
+                    //return `<a class="text-primary" href="${url}">${formno}</a>`;
                 }
                 return formno;
             },
@@ -442,8 +459,7 @@ async function fillNextApproverInfo(row, flow, id) {
 $(document).on('click', '#table a.link-self', async function (e) {
     e.preventDefault();
     const url = $(this).attr('data-url');
-    const title = $(this).attr('data-title');
-    window.location.href = `${
-        process.env.APP_ENV
-    }/webform/form/detail?title=${title}&data=${encodeURIComponent(url)}`;
+    // เด้งออกจาก iframe ของพอร์ทัลไปยัง top window โดยตรง แทนการพึ่ง listener ฝั่งพอร์ทัลภายนอก
+    //window.top.location.href = url;
+    window.location.href = url;
 });
