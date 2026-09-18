@@ -79,8 +79,8 @@ $(async function () {
         $('input[name="VENDNAME"]').val(formvmm.VENDNAME);
         if (formvmm.TRADE_CODE) {
             const trade = formvmm.TRADE.TRADE_SHIPBY
-                ? `${formvmm.TRADE.TRADE_NAME} (${formvmm.TRADE.TRADE_SHIPBY})`
-                : formvmm.TRADE.TRADE_NAME;
+                ? `${formvmm.TRADE_CODE}_${formvmm.TRADE.TRADE_NAME} (${formvmm.TRADE.TRADE_SHIPBY})`
+                : `${formvmm.TRADE_CODE}_${formvmm.TRADE.TRADE_NAME}`;
             $('#TRADE_CODE').text(trade);
         }
 
