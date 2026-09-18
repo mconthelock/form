@@ -1,6 +1,10 @@
 import { createTable, destroyTable } from '@amec/webasset/dataTable';
 import { dataTableSkeleton } from '@amec/webasset/skeleton';
-import { showErrorMessage } from '@amec/webasset/utils';
+import {
+    showErrorMessage,
+    formatNumber,
+    roundNumber,
+} from '@amec/webasset/utils';
 import { showLoader } from '@amec/webasset/preloader';
 import { steps } from './steps';
 import { getCurrenCy } from './data';
@@ -131,23 +135,23 @@ export const tableComparison = {
                 <th rowspan="3">Item Code</th>
                 <th rowspan="3">Spec.</th>
                 <th rowspan="3">Material Code</th>
-                <th rowspan="3">Quantity/year</th>
-                <th colspan="8">Present</th>
-                <th colspan="8">New</th>
+                <th rowspan="3">Quantity/year <br> &lt;A&gt; </th>
+                <th colspan="8" class="bg-[#ccffcc]">Present</th>
+                <th colspan="8" class="bg-[#ccffff]">New</th>
                 <th colspan="3">Cost down(+) / Cost up(-)</th>
-                <th colspan="2">New price parts 1st delivered</th>
+                <th colspan="2" class="bg-[#ffff77]">New price parts 1st delivered</th>
             </tr>
             <tr>
                 <th rowspan="2">Vendor Name</th>
                 <th rowspan="2">Maker Name</th>
-                <th colspan="2">Base Price</th>
-                <th colspan="2">Price</th>
+                <th colspan="2" class="bg-[#ccffcc]">Base Price</th>
+                <th colspan="2" class="bg-[#ccffcc]">Price</th>
                 <th rowspan="2">Price ETA AMEC <br> &lt;B&gt; <br> [THB/pcs] </th>
                 <th rowspan="2">Amount <br> &lt;C=B*A&gt; <br> [KB/year]</th>
                 <th rowspan="2">Vendor Name</th>
                 <th rowspan="2">Maker Name</th>
-                <th colspan="2">Base Price</th>
-                <th colspan="2">Price</th>
+                <th colspan="2" class="bg-[#ccffff]">Base Price</th>
+                <th colspan="2" class="bg-[#ccffff]">Price</th>
                 <th rowspan="2">Price ETA AMEC <br> &lt;D&gt; <br> [THB/pcs] </th>
                 <th rowspan="2">Amount <br> &lt;E=D*A&gt; <br> [KB/year]</th>
                 <th rowspan="2">Price difference <br> &lt;F=B-D&gt; <br> [THB/pcs]</th>
@@ -175,17 +179,18 @@ export const tableComparison = {
             },
         },
         { data: 'MODEL_NAME' },
-        { data: 'JOB_ITEMNO' },
+        { data: 'JOB_ITEMNO', className: 'sticky-column' },
         { data: 'PART_NAME' },
-        { data: 'DRAWING' },
-        { data: 'ITEM_CODE' },
+        { data: 'DRAWING', className: 'sticky-column' },
+        { data: 'ITEM_CODE', className: 'sticky-column' },
         { data: 'SPEC' },
-        { data: 'MATERIAL_CODE' },
+        { data: 'MATERIAL_CODE', className: 'sticky-column' },
         { data: 'QUANTITY_YEAR' },
-        { data: 'VENDOR_NAME' },
-        { data: 'MAKER_NAME' },
+        { data: 'VENDOR_NAME', className: 'bg-[#ffff77]' },
+        { data: 'MAKER_NAME', className: 'bg-[#ffff77]' },
         {
             data: 'BASE_PRICE',
+            className: 'bg-[#ccffcc]',
             render: function (data, type, row, meta) {
                 row.BASE_PRICE = roundNumber({ value: data });
                 return formatNumber({ value: row.BASE_PRICE });
@@ -194,6 +199,7 @@ export const tableComparison = {
         { data: 'BASE_CURR' },
         {
             data: 'PRICE',
+            className: 'bg-[#ccffcc]',
             render: function (data, type, row, meta) {
                 row.PRICE = roundNumber({ value: data });
                 return formatNumber({ value: row.PRICE });
@@ -202,6 +208,7 @@ export const tableComparison = {
         { data: 'CURR' },
         {
             data: 'PRICE_ETA_AMEC',
+            className: 'bg-[#ccffcc]',
             render: function (data, type, row, meta) {
                 row.PRICE_ETA_AMEC = roundNumber({ value: data });
                 return formatNumber({ value: row.PRICE_ETA_AMEC });
@@ -216,18 +223,21 @@ export const tableComparison = {
         },
         {
             data: 'NEW_VENDOR_NAME',
+            className: 'bg-[#ffff77]',
             render: function (data, type, row, meta) {
                 return data || row.VENDOR_NAME;
             },
         },
         {
             data: 'NEW_MAKER_NAME',
+            className: 'bg-[#ffff77]',
             render: function (data, type, row, meta) {
                 return data || row.MAKER_NAME;
             },
         },
         {
             data: 'NEW_BASE_PRICE',
+            className: 'bg-[#ccffff]',
             render: function (data, type, row, meta) {
                 row.NEW_BASE_PRICE = roundNumber({ value: data });
                 return formatNumber({ value: row.NEW_BASE_PRICE });
@@ -236,6 +246,7 @@ export const tableComparison = {
         { data: 'NEW_BASE_CURR' },
         {
             data: 'NEW_PRICE',
+            className: 'bg-[#ccffff]',
             render: function (data, type, row, meta) {
                 row.NEW_PRICE = roundNumber({ value: data });
                 return formatNumber({ value: row.NEW_PRICE });
@@ -244,6 +255,7 @@ export const tableComparison = {
         { data: 'NEW_CURR' },
         {
             data: null,
+            className: 'bg-[#ccffff]',
             render: function (data, type, row) {
                 let rate = 1;
                 switch (steps.function) {
@@ -307,11 +319,11 @@ export const tableComparison = {
                     value:
                         (row.COST_PRICE_DIFFERENCE / row.PRICE_ETA_AMEC) * 100,
                 });
-                return formatNumber({ value: row.COST_RATIO });
+                return formatNumber({ value: row.COST_RATIO }) + '%';
             },
         },
-        { data: 'NEW_PRICE_YEAR' },
-        { data: 'NEW_PRICE_MONTH' },
+        { data: 'NEW_PRICE_YEAR', className: 'bg-[#ffff77]' },
+        { data: 'NEW_PRICE_MONTH', className: 'bg-[#ffff77]' },
     ],
     bindEvents() {
         const self = this;
