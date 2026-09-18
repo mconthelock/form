@@ -1272,11 +1272,11 @@ class form extends MY_Controller {
 
             if (stripos($host, 'localhost') !== false) {
                 // กรณีรันบน Local เครื่องตัวเอง
-                $formUrl = $this->http ."//localhost:8080/ids/DED_MDS/masterDesbm_report/index/{$year}/{$period}/";
-                $formUrl = $this->http ."//amecwebtest.mitsubishielevatorasia.co.th/ids/DED_MDS/masterDesbm_report/index/{$year}/{$period}/";
+                $formUrl = $this->http ."://localhost:8080/ids/DED_MDS/masterDesbm_report/index/{$year}/{$period}/";
+                $formUrl = $this->http ."://amecwebtest.mitsubishielevatorasia.co.th/ids/DED_MDS/masterDesbm_report/index/{$year}/{$period}/";
             } else {
                 // กรณี Test Server (ใส่ https:// ให้ครบถ้วน เพื่อให้คลิกจาก Outlook ได้)
-                $formUrl = $this->http ."//amecwebtest.mitsubishielevatorasia.co.th/ids/DED_MDS/masterDesbm_report/index/{$year}/{$period}/";
+                $formUrl = $this->http ."://amecwebtest.mitsubishielevatorasia.co.th/ids/DED_MDS/masterDesbm_report/index/{$year}/{$period}/";
             }
         } else {
             // โหมด Production
@@ -1284,7 +1284,7 @@ class form extends MY_Controller {
             $CC = "siripapa@mitsubishielevatorasia.co.th";
 
             // ใส่ https:// เสมอสำหรับเมลจริง
-            $formUrl = $this->http ."//amecweb.mitsubishielevatorasia.co.th/ids/DED_MDS/masterDesbm_report/index/{$year}/{$period}/";
+            $formUrl = $this->http ."://amecweb.mitsubishielevatorasia.co.th/ids/DED_MDS/masterDesbm_report/index/{$year}/{$period}/";
         }
         // URL เปิดหน้ารายงาน Form Webflow
         // $formUrl = "//amecweb.mitsubishielevatorasia.co.th/form/dedform/DED-MDS/form/main?" . http_build_query([
