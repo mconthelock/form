@@ -108,7 +108,7 @@
                     <div id="VTYPE" class="text-gray-700 text-sm"></div>
                 </div>
                 <div class="grid grid-cols-[220px_1fr] gap-3 mb-3 items-baseline">
-                    <div class="font-semibold text-sm">Payment TYpe :</div>
+                    <div class="font-semibold text-sm">Payment Type :</div>
                     <div id="VPAYTY" class="text-gray-700 text-sm"></div>
                 </div>
             </div>
