@@ -91,10 +91,12 @@ $(document).ready(async function () {
     }));
 
     const trade = await getTrade();
+    console.log('>>>>' + trade);
+
     const tradedata = trade.map((t) => ({
         value: t.TRADE_CODE,
         text: t.TRADE_SHIPBY
-            ? `${t.TRADE_CODE}_${t.TRADE_NAME} to ${t.TRADE.TRADE_SHIPTO}(${t.TRADE_SHIPBY})`
+            ? `${t.TRADE_CODE}_${t.TRADE_NAME} to ${t.TRADE_SHIPTO}(${t.TRADE_SHIPBY})`
             : `${t.TRADE_CODE}_${t.TRADE_NAME} `,
     }));
 
