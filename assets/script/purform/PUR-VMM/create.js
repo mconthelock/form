@@ -91,7 +91,6 @@ $(document).ready(async function () {
     }));
 
     const trade = await getTrade();
-    console.log('>>>>' + trade);
 
     const tradedata = trade.map((t) => ({
         value: t.TRADE_CODE,
