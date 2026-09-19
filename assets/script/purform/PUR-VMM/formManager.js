@@ -29,7 +29,7 @@ export const tradeManager = {
                 data: data,
                 size: 'sm',
                 placeholder: '----Select----',
-                search: false,
+                search: true,
                 clear: false,
                 width: '60%',
                 emptyValue: false,
