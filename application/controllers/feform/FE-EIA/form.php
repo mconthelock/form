@@ -24,7 +24,7 @@ class form extends MY_Controller{
         $this->client = new Client(['verify' => false]);
         
         $this->load->library('Mail');
-        $this->load->library('pdf');
+        
         
         $this->load->model('form_model', 'frm');
         $this->load->model('feform/FE-EIA/eia_model', 'MainModel');
@@ -35,8 +35,8 @@ class form extends MY_Controller{
         $this->host = isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : 'amecweb'; // เช่น localhost, amecwebtest, amecweb , case !isset($_SERVER['HTTP_HOST'])  run job
         
     }
+    //https://amecweb.mitsubishielevatorasia.co.th/form/feform/FE-EIA/form/main?no=13&orgNo=051001&y=26&y2=2026&runNo=5&m=3&empno=13204&bp=%2Fform%2Fworkflow%2FmineList%2Easp&menu=1
     //https://amecwebtest.mitsubishielevatorasia.co.th/form/feform/FE-EIA/form/main?no=11&orgNo=051001&y=26&y2=2026&runNo=1&m=3&empno=13204&bp=%2Fformtest%2Fworkflow%2FmineList%2Easp&menu=1
-    // http://localhost:8080/form/isform/IS-TID/form/main/?no=17&orgNo=050601&y=16&empno=13204&bp=http://webflow.mitsubishielevatorasia.co.th/formtest/is/create.asp
     // http://localhost:8080/form/feform/FE-EIA/form/main?no=11&orgNo=051001&y=26&y2=2026&runNo=1&m=3&empno=13204&bp=%2Fformtest%2Fworkflow%2FmineList%2Easp&menu=1
     public function main(){
         
@@ -644,6 +644,7 @@ class form extends MY_Controller{
     //========================================================
         public function exportPdf()
         {
+            
             $data = [
                 'NFRMNO' => (int)$this->input->get('no'),
                 'VORGNO' => (string)$this->input->get('orgNo'),
@@ -891,6 +892,7 @@ class form extends MY_Controller{
         // 📄 ฟังก์ชันย่อยสำหรับวาดโครงสร้างหน้าตาเอกสาร HTML สำหรับ Print Layout
         private function generateHtmlTemplate($formInfo, $approvalList, $rows, $dataBFStockList,$dataReceiveHist, $totalReceived, $totalIssued, $totalDiff)
         {
+            $this->load->library('pdf');
             $costyear = $formInfo->COST_YEAR;
             $DOC_NO = $formInfo->DOC_NO;
             
@@ -982,11 +984,15 @@ class form extends MY_Controller{
             $pdf->AddPage('L');
             $pdf->SetFont('helvetica', '', 7);
 
+            // 1. จำเลขหน้าที่เปิดใหม่ไว้ (คือ หน้า 2 ที่มีหัวตาราง Stamp)
+            $stampPage = $pdf->getPage();
+
             // --- สร้าง HTML สำหรับตารางที่ 2 ---
             $htmlReceive = $this->generateReceiveHistoryHtml($dataBFStockList,$rows,$dataReceiveHist,  $costyear,$DOC_NO);
             $pdf->writeHTML($htmlReceive, true, false, true, false, '');
 
             // --- วาดตราประทับสำหรับหน้า 2 (ถ้าต้องการให้มีเหมือนกัน) ---
+            $pdf->setPage($stampPage);
             $this->drawStamp($pdf, $approvalList, $startX, $startY, $circleSpace, $radius);
             //-- Paeg 2
 

@@ -1,14 +1,14 @@
 <?php
 defined('BASEPATH') or exit('No direct script access allowed');
 require_once APPPATH . 'models/my_model.php';
-class vms_model extends my_model 
+class vms_model extends my_model
 {
     public function __construct()
     {
         parent::__construct();
         $this->load->database();
-        
-        
+
+
     }
 
     public function generate_attfile_id($cyear2,$nrunno)
@@ -45,7 +45,8 @@ class vms_model extends my_model
         ->where('SPOSCODE <=', 40)
         ->or_where('SPOSCODE', 49)
         ->or_where('SPOSCODE', 50)
-        ->group_end() 
+        ->or_where('SPOSCODE', 90)
+        ->group_end()
         ->order_by('SNAME', 'asc');
     return $this->db->get()->result();
 
@@ -67,7 +68,7 @@ class vms_model extends my_model
 
     }
 
-    
+
     public function get_guest_type()
     {
         $this->db
@@ -153,7 +154,7 @@ class vms_model extends my_model
           return $this->db->get()->result();
     }
 
-    
+
     public function get_group($cond = '')
     {
         if($cond != ''){
@@ -233,7 +234,7 @@ class vms_model extends my_model
         $this->db->where('S.TYPEEMP', $typeno);
         $this->db->where('A.CSTATUS', '1');
         $query = $this->db->get();
-        $result = $query->result_array(); 
+        $result = $query->result_array();
         $emails = array_column($result, 'SRECMAIL');
         return  $emails;*/
        $this->db->distinct();
@@ -244,7 +245,7 @@ class vms_model extends my_model
         $this->db->where('S.NRUNNO', $nrunno);
         $this->db->where('S.TYPEEMP', $typeno);
         $query = $this->db->get();
-        $result = $query->result_array(); 
+        $result = $query->result_array();
         $emails = array_column($result, 'SRECMAIL');
         return  $emails;
     }
@@ -260,25 +261,25 @@ class vms_model extends my_model
             SEMPPRE || ' ' || a.SNAME AS ISSUEBY, a.SRECMAIL ,
             TO_CHAR(v.VISITDATE, 'DD-Mon-YY') AS VISITDATE,
             v.RECEPTROOM,
-            (SELECT COUNT(*) 
+            (SELECT COUNT(*)
             FROM VMS_VISITINF vi
             WHERE vi.CYEAR2 = v.CYEAR2
             AND vi.NRUNNO = v.NRUNNO) AS VISITOR_COUNT,
             vt.VTYPE,
             v.PURPOSEDETAIL
         FROM VMS_VISIT v
-        JOIN FORM f 
-        ON v.CYEAR2 = f.CYEAR2 
+        JOIN FORM f
+        ON v.CYEAR2 = f.CYEAR2
         AND v.NRUNNO = f.NRUNNO
-        JOIN FLOW fl 
-        ON f.NFRMNO = fl.NFRMNO 
-        AND f.VORGNO = fl.VORGNO 
-        AND f.CYEAR  = fl.CYEAR 
-        AND f.CYEAR2 = fl.CYEAR2 
+        JOIN FLOW fl
+        ON f.NFRMNO = fl.NFRMNO
+        AND f.VORGNO = fl.VORGNO
+        AND f.CYEAR  = fl.CYEAR
+        AND f.CYEAR2 = fl.CYEAR2
         AND f.NRUNNO = fl.NRUNNO
-        JOIN AMECUSERALL a 
+        JOIN AMECUSERALL a
         ON f.VREQNO = a.SEMPNO
-        LEFT JOIN VMS_VISIT_TYPE vt 
+        LEFT JOIN VMS_VISIT_TYPE vt
         ON v.VISITTYPE = vt.VTID
         WHERE f.NFRMNO  = '{$nfrmno}'
         AND f.VORGNO  = '{$vorgno}'
@@ -296,7 +297,7 @@ class vms_model extends my_model
         $this->db
         ->select("
             V.BOARD,
-            CASE 
+            CASE
                 WHEN V.LUNCH = 'Y' AND V.LUNCH_LOC = 'I' THEN V.LUNCH_PLACE
                 ELSE ''
             END AS ROOMLUNCH,
@@ -334,13 +335,13 @@ class vms_model extends my_model
     {
             $this->db
             ->select('COUNT(*) AS CNT, DIETREQ')
-            ->from("( 
-                SELECT DIETREQ 
-                FROM VMS_VISITINF 
+            ->from("(
+                SELECT DIETREQ
+                FROM VMS_VISITINF
                 WHERE LUNCH = 'Y' AND CYEAR2 = '{$cyear2}' AND NRUNNO = '{$nrunno}'
                 UNION ALL
-                SELECT DIETREQ 
-                FROM VMS_AMEC_MEAL 
+                SELECT DIETREQ
+                FROM VMS_AMEC_MEAL
                 WHERE LUNCH = 'Y' AND CYEAR2 = '{$cyear2}' AND NRUNNO = '{$nrunno}'
             )", FALSE)  // FALSE เพื่อไม่ให้ CI escape SQL
             ->group_by('DIETREQ');
@@ -351,59 +352,59 @@ class vms_model extends my_model
     public function get_visitor_raw_data_report($date_mode, $start_date, $end_date)
     {
         $where = [];
-        $params = []; 
-    
+        $params = [];
+
         if($start_date && $end_date){
             $params[] = $start_date;
             $params[] = $end_date;
-        
+
             if($date_mode == 'date'){
                 $where[] = "VT1.VISITDATE BETWEEN TO_DATE(?, 'YYYY-MM-DD') AND TO_DATE(?, 'YYYY-MM-DD')";
             }
-        
+
             if($date_mode == 'month'){
                 $where[] = "TO_DATE(TO_CHAR(VT1.VISITDATE,'YYYY-MM'),'YYYY-MM') BETWEEN TO_DATE(?, 'YYYY-MM') AND TO_DATE(?, 'YYYY-MM')";
             }
-        
+
             if($date_mode == 'year'){
                 $where[] = "EXTRACT(YEAR FROM VT1.VISITDATE) BETWEEN ? AND ?";
             }
-        
+
         } elseif($start_date && !$end_date) {
             $params[] = $start_date;
-        
+
             if($date_mode == 'date'){
                 $where[] = "VT1.VISITDATE >= TO_DATE(?, 'YYYY-MM-DD')";
             }
-        
+
             if($date_mode == 'month'){
                 $where[] = "TO_DATE(TO_CHAR(VT1.VISITDATE,'YYYY-MM'),'YYYY-MM') >= TO_DATE(?, 'YYYY-MM')";
             }
-        
+
             if($date_mode == 'year'){
                 $where[] = "EXTRACT(YEAR FROM VT1.VISITDATE) >= ?";
             }
-        
+
         } elseif(!$start_date && $end_date) {
             $params[] = $end_date;
-        
+
             if($date_mode == 'date'){
                 $where[] = "VT1.VISITDATE <= TO_DATE(?, 'YYYY-MM-DD')";
             }
-        
+
             if($date_mode == 'month'){
                 $where[] = "TO_DATE(TO_CHAR(VT1.VISITDATE,'YYYY-MM'),'YYYY-MM') <= TO_DATE(?, 'YYYY-MM')";
             }
-        
+
             if($date_mode == 'year'){
                 $where[] = "EXTRACT(YEAR FROM VT1.VISITDATE) <= ?";
             }
-        }    
+        }
         $where_sql = '';
         if(count($where) > 0){
             $where_sql = 'WHERE ' . implode(' AND ', $where);
         }
-        
+
         $sql = "
             SELECT
                 VI1.NAME,
@@ -423,7 +424,7 @@ class vms_model extends my_model
             $where_sql
             ORDER BY VI1.NAME, VT1.VISITDATE
         ";
-        
+
         $query = $this->db->query($sql, $params);
         return $query->result_array();
     }
@@ -431,53 +432,53 @@ class vms_model extends my_model
     public function get_visitor_overview_report($date_mode, $start_date, $end_date)
     {
         $where = [];
-        $params = []; 
+        $params = [];
         if($start_date && $end_date){
             $params[] = $start_date;
             $params[] = $end_date;
-        
+
             if($date_mode == 'date'){
                 $where[] = "VT1.VISITDATE BETWEEN TO_DATE(?, 'YYYY-MM-DD') AND TO_DATE(?, 'YYYY-MM-DD')";
             }
-        
+
             if($date_mode == 'month'){
                 $where[] = "TO_DATE(TO_CHAR(VT1.VISITDATE,'YYYY-MM'),'YYYY-MM') BETWEEN TO_DATE(?, 'YYYY-MM') AND TO_DATE(?, 'YYYY-MM')";
             }
-        
+
             if($date_mode == 'year'){
                 $where[] = "EXTRACT(YEAR FROM VT1.VISITDATE) BETWEEN ? AND ?";
             }
-        
+
         } elseif($start_date && !$end_date) {
             $params[] = $start_date;
-        
+
             if($date_mode == 'date'){
                 $where[] = "VT1.VISITDATE >= TO_DATE(?, 'YYYY-MM-DD')";
             }
-        
+
             if($date_mode == 'month'){
                 $where[] = "TO_DATE(TO_CHAR(VT1.VISITDATE,'YYYY-MM'),'YYYY-MM') >= TO_DATE(?, 'YYYY-MM')";
             }
-        
+
             if($date_mode == 'year'){
                 $where[] = "EXTRACT(YEAR FROM VT1.VISITDATE) >= ?";
             }
-        
+
         } elseif(!$start_date && $end_date) {
             $params[] = $end_date;
-        
+
             if($date_mode == 'date'){
                 $where[] = "VT1.VISITDATE <= TO_DATE(?, 'YYYY-MM-DD')";
             }
-        
+
             if($date_mode == 'month'){
                 $where[] = "TO_DATE(TO_CHAR(VT1.VISITDATE,'YYYY-MM'),'YYYY-MM') <= TO_DATE(?, 'YYYY-MM')";
             }
-        
+
             if($date_mode == 'year'){
                 $where[] = "EXTRACT(YEAR FROM VT1.VISITDATE) <= ?";
             }
-        }    
+        }
         $where_sql = '';
         if(count($where) > 0){
             $where_sql = 'WHERE ' . implode(' AND ', $where);
@@ -497,57 +498,57 @@ class vms_model extends my_model
         $query = $this->db->query($sql, $params);
         return $query->result_array();
     }
-    
+
     public function get_visitor_Frequency_report($date_mode, $start_date, $end_date)
     {
         $where = [];
-        $params = []; 
+        $params = [];
         if($start_date && $end_date){
             $params[] = $start_date;
             $params[] = $end_date;
-        
+
             if($date_mode == 'date'){
                 $where[] = "VT1.VISITDATE BETWEEN TO_DATE(?, 'YYYY-MM-DD') AND TO_DATE(?, 'YYYY-MM-DD')";
             }
-        
+
             if($date_mode == 'month'){
                 $where[] = "TO_DATE(TO_CHAR(VT1.VISITDATE,'YYYY-MM'),'YYYY-MM') BETWEEN TO_DATE(?, 'YYYY-MM') AND TO_DATE(?, 'YYYY-MM')";
             }
-        
+
             if($date_mode == 'year'){
                 $where[] = "EXTRACT(YEAR FROM VT1.VISITDATE) BETWEEN ? AND ?";
             }
-        
+
         } elseif($start_date && !$end_date) {
             $params[] = $start_date;
-        
+
             if($date_mode == 'date'){
                 $where[] = "VT1.VISITDATE >= TO_DATE(?, 'YYYY-MM-DD')";
             }
-        
+
             if($date_mode == 'month'){
                 $where[] = "TO_DATE(TO_CHAR(VT1.VISITDATE,'YYYY-MM'),'YYYY-MM') >= TO_DATE(?, 'YYYY-MM')";
             }
-        
+
             if($date_mode == 'year'){
                 $where[] = "EXTRACT(YEAR FROM VT1.VISITDATE) >= ?";
             }
-        
+
         } elseif(!$start_date && $end_date) {
             $params[] = $end_date;
-        
+
             if($date_mode == 'date'){
                 $where[] = "VT1.VISITDATE <= TO_DATE(?, 'YYYY-MM-DD')";
             }
-        
+
             if($date_mode == 'month'){
                 $where[] = "TO_DATE(TO_CHAR(VT1.VISITDATE,'YYYY-MM'),'YYYY-MM') <= TO_DATE(?, 'YYYY-MM')";
             }
-        
+
             if($date_mode == 'year'){
                 $where[] = "EXTRACT(YEAR FROM VT1.VISITDATE) <= ?";
             }
-        }    
+        }
         $where_sql = '';
         if(count($where) > 0){
             $where_sql = 'WHERE ' . implode(' AND ', $where);
@@ -570,11 +571,11 @@ class vms_model extends my_model
         $query = $this->db->query($sql, $params);
         return $query->result_array();
     }
-    
+
     public function get_activity_duration_report($date_mode, $start_date, $end_date)
     {
         $where = [];
-        $params = []; 
+        $params = [];
 
         if($start_date && $end_date){
             $params[] = $start_date;
@@ -705,14 +706,14 @@ public function get_gpent_report($date_mode, $start_date, $end_date)
             ACTUAL_COST
         FROM VMS_VISIT V
         JOIN VMS_GPENT EN ON V.CYEAR2 = EN.VMSCYEAR2 AND V.NRUNNO = EN.VMSNRUNNO
-        JOIN GPENT_GUEST_TYPE GT ON V.GUESTTYPE  = GT.GT_ID 
+        JOIN GPENT_GUEST_TYPE GT ON V.GUESTTYPE  = GT.GT_ID
         JOIN GPENT_FORM EF ON EN.ENTCYEAR2 = EF.CYEAR2 AND EN.ENTNRUNNO = EF.NRUNNO
         JOIN GPENT_ESTIMATE E ON EF.CYEAR2 = E.CYEAR2 AND EF.NRUNNO = E.NRUNNO
         LEFT JOIN GPCLER_FORM C ON C.FORM_ENT = 'GP-ENT'||SUBSTR(EF.CYEAR2, -2)||'-'||LPAD(EF.NRUNNO , 6, '0')
         $where_sql
-        
+
         UNION ALL
-        
+
         SELECT
             'Total ' AS ITEM,
             NULL AS DETAILS,

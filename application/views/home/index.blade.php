@@ -1,7 +1,7 @@
 @extends('layouts/template')
 
 @section('contents')
-    <div class="card rounded-lg h-72 w-full bordered mb-3 overflow-hidden relative">
+    <div class="card rounded-lg h-72 w-full bordered mb-8 overflow-hidden relative">
         <div class="f-carousel" id="news-carousel">
             <div class="f-carousel__slide">
                 <img class="w-full h-72 object-cover object-center" src="{{ base_url() }}assets/images/start_images.png"
@@ -21,16 +21,16 @@
     <div class="flex flex-col w-full max-w-[100vw] mb-3">
         <div class="flex overflow-x-scroll hide-scroll-bar">
             <div class="flex gap-5 pb-3 flex-nowrap w-full">
-                @include('home.stats', ['id' => 'wait', 'text' => 'Waiting for Approval'])
-                @include('home.stats', ['id' => 'prepare', 'text' => 'Under preparation'])
-                @include('home.stats', ['id' => 'mine', 'text' => 'Mine'])
-                @include('home.stats', ['id' => 'finish', 'text' => 'Approved/Rejected'])
+                @include('home.stats', ['id' => 'wait', 'text' => 'Waiting for Approval', 'value' => 1])
+                @include('home.stats', ['id' => 'prepare', 'text' => 'Under preparation', 'value' => 0])
+                @include('home.stats', ['id' => 'mine', 'text' => 'Mine', 'value' => 3])
+                @include('home.stats', ['id' => 'comming', 'text' => 'Comming Soon', 'value' => 2])
             </div>
         </div>
     </div>
 
     {{-- Recent Link --}}
-    <h1 class="text-3xl text-primary font-bold mb-5 recent-apps border-b-primary border-b-4 pb-[10px]">Recent Link</h1>
+    <h1 class="text-3xl text-primary font-bold mb-5 recent-apps border-b-primary border-b-4 pb-2">Recent Link</h1>
     <div class="flex flex-wrap justify-center gap-8 mb-8 lg:justify-start recent-apps" id="recent-apps">
         @for ($i = 0; $i < 3; $i++)
             <a href="#" class="flex flex-col items-center gap-3 w-28">
@@ -41,17 +41,14 @@
     </div>
 
     {{-- AMEC WEB --}}
-    <h1 class="mb-5 flex amecweb_links border-b-primary border-b-4 pb-[10px]">
+    <h1 class="mb-5 flex amecweb_links border-b-primary border-b-4 pb-2">
         <div class="flex-1 text-3xl text-primary font-bold">AMEC WEB</div>
-        <div class="flex-none"><button class="btn btn-circle btn-ghost text-2xl" type="button" id="reload_amecweb"><i
-                    class="icofont-refresh"></i></button>
-        </div>
     </h1>
     <div class="flex flex-col gap-3 mb-8 lg:flex-row lg:flex-wrap amecweb_links" id="amecweb_links">
         @for ($i = 0; $i < 8; $i++)
             <div
                 class="card bg-white
-            bordered w-full h-28 shadow-xl flex gap-3 flex-row items-center p-3 lg:w-72">
+            border border-slate-300 w-full h-28 shadow-xl flex gap-3 flex-row items-center p-3 lg:w-72">
                 <div class="flex-none skeleton h-16 w-16 rounded-full"></div>
                 <div class="flex-1 flex flex-col gap-3">
                     <div class="skeleton h-8 w-32"></div>
@@ -61,8 +58,7 @@
         @endfor
     </div>
     {{-- Other Link --}}
-    <h1 class="text-3xl text-primary font-bold mb-5 border-b-primary border-b-4 pb-[10px]">Other Link</h1>
-    {{-- md, lg: 2cols,  xl: 4 --}}
+    <h1 class="text-3xl text-primary font-bold mb-5 border-b-primary border-b-4 pb-2">Other Link</h1>
     <div class="flex flex-col gap-8 mb-5 lg:flex-row lg:flex-wrap">
         @include('home/links', ['links' => $links['electronic']])
         @include('home/links', ['links' => $links['utility']])

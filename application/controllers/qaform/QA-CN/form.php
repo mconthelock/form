@@ -50,7 +50,7 @@ class form extends MY_Controller{
                 'json' => $condition
             ]);
             $result = trim($response->getBody());
-            // $result = json_decode($response->getBody(), true); 
+            // $result = json_decode($response->getBody(), true);
             return $result;
         }catch(guzzlehttp\Exception\RequestException $e){
             throw new Exception(json_encode(['status' => "false", 'message' => 'Failed to create form', 'e' => $e->getMessage()]), 1);
@@ -78,15 +78,15 @@ class form extends MY_Controller{
             }
 
         }
-        $data['empno'] = isset($_GET["empno"]) ? $_GET['empno'] : '' ; 
+        $data['empno'] = isset($_GET["empno"]) ? $_GET['empno'] : '' ;
         if($data['empno'] <> "")
         {
             $data['empinf']   = $this->cn->customSelect("AMEC.AEMPLOYEE",array('SEMPNO' =>  $data['empno'] ),'*');
         }
         $data['cncls'] = $this->cn->customSelect("CNCLSCHANGE",array(),'CLSNO , CLSCHANGE');
         $data['cnreason'] = $this->cn->customSelect("CNREASON",array(),'RSNNO , REASON');
-      
-          
+
+
         if(isset($_GET["runNo"]) && $_GET["runNo"] != "")
         {
            // $data['return']   = false;
@@ -131,10 +131,10 @@ class form extends MY_Controller{
                 'CYEAR2' => $data['CYEAR2'],
                 'NRUNNO' => $data['NRUNNO'],
                 'CSTEPST'=> '3'
-            ));  
+            ));
             if(!empty($data['empinf']))
             {
-                
+
                 $data['jstaff'] = $this->getjstaff($data['empinf'], 'J');
                 $data['eng'] = $this->getjstaff($data['empinf'], 'E');
                 $data['foreman'] = $this->getForeman($data['empno']);
@@ -142,7 +142,7 @@ class form extends MY_Controller{
                 //mode edit
                 if($data['mode'] == "2")
                 {
-                    if($data['cextData'] == 2)  
+                    if($data['cextData'] == 2)
                     {
                         $data['pic'] = $this->getjstaff($data['empinf'], 'J', $data['empinf'][0]->SEMPNO);
                     }else if($data['cextData'] == 7)
@@ -150,7 +150,7 @@ class form extends MY_Controller{
                         $data['pic'] =  $this->getOpr($data['cnform']->MSTATUS, $data['empinf'], $data['empinf'][0]->SEMPNO);
                     }
                 }
-          
+
             }
            // var_dump($data['reqinf']);
            // exit;
@@ -167,39 +167,39 @@ class form extends MY_Controller{
     {
         $excludePic = ($pic != '') ? " and SEMPNO != '" . $pic . "' " : "";
         if ($head[0]->SDEPCODE == "000401") {
-            
+
             // ถ้า type เป็น 'E' ใช้ '35','40' ถ้าไม่ใช่ ให้ใช้ค่าเดิมของเงื่อนไขนี้
             $posCode = ($type == 'E') ? "'35','40','33'" : "'64','41','42','43','40','35','33'";
             if($type == 'E')
             {
                 $sql = "select SEMPNO , SNAME from AMEC.AEMPLOYEE where CSTATUS = '1' and SSECCODE = '000404' and  SPOSCODE in (".$posCode.") " .$excludePic."  order by sname";
-            
+
             }else
             {
                 $sql = "select SEMPNO , SNAME from AMEC.AEMPLOYEE where CSTATUS = '1' and SSECCODE = '000404' and SPOSCODE in (".$posCode.") " . $excludePic . " order by sname";
-            
+
             }
-       
+
         } else if ($head[0]->SDEPCODE == "000501") {
-            
+
             $posCode = ($type == 'E') ? "'35','40','33'" : "'40','41','42','43'";
             if ($head[0]->SSECCODE == "00") {
                 $sql = "select SEMPNO , SNAME from AMEC.AEMPLOYEE where CSTATUS = '1' and SSECCODE = '000502' and SPOSCODE in (".$posCode.") " . $excludePic . " order by sname";
             } else {
                 $sql = "select SEMPNO , SNAME from AMEC.AEMPLOYEE where CSTATUS = '1' and SSECCODE = '".$head[0]->SSECCODE."' and SPOSCODE in (".$posCode.") " . $excludePic . " order by sname";
             }
-            
+
         } else {
-            
+
             $posCode = ($type == 'E') ? "'35','40','33'" : "'41','42','43'";
             $sql = "select SEMPNO , SNAME from AMEC.AEMPLOYEE where CSTATUS = '1' and SSECCODE = '000303' and SPOSCODE in (".$posCode.") " . $excludePic . " order by sname";
-            
+
         }
-        
+
         $data = $this->cn->getdatasql($sql);
         return $data;
     }
-    
+
     public function geteng($head)
     {
         if(($head[0]->SDEPCODE=="000401") && ($head[0]->SSECCODE=="00"))
@@ -238,10 +238,10 @@ class form extends MY_Controller{
         {
             if($head[0]->SSECCODE == "000404")
             {
-                $sql = "select SEMPNO , SNAME from AMEC.AEMPLOYEE A , SEQUENCEORG S where A.SEMPNO = S.EMPNO and S.HEADNO ='".$head[0]->SEMPNO."' and A.CSTATUS = '1' and A.SPOSCODE in ('64','65') " . $excludePic . " order by SNAME ";      
+                $sql = "select SEMPNO , SNAME from AMEC.AEMPLOYEE A , SEQUENCEORG S where A.SEMPNO = S.EMPNO and S.HEADNO ='".$head[0]->SEMPNO."' and A.CSTATUS = '1' and A.SPOSCODE in ('64','65') " . $excludePic . " order by SNAME ";
             }else
             {
-                $sql = "select SEMPNO , SNAME from AMEC.AEMPLOYEE where  CSTATUS = '1' and SPOSCODE in ('64','65') and SSECCODE = '".$head[0]->SSECCODE."' " . $excludePic . "   order by SNAME";    
+                $sql = "select SEMPNO , SNAME from AMEC.AEMPLOYEE where  CSTATUS = '1' and SPOSCODE in ('64','65') and SSECCODE = '".$head[0]->SSECCODE."' " . $excludePic . "   order by SNAME";
             }
         }else{
             $sql = "select SEMPNO , SNAME from AMEC.AEMPLOYEE where CSTATUS = '1' and SSECCODE = '000404' and SPOSCODE in ('64','65') order by SNAME";
@@ -251,10 +251,13 @@ class form extends MY_Controller{
        // echo json_encode($data);
        return   $data;
     }
-    
+
     public function action()
     {
+
         $act = $_POST["action"];
+
+
         $cextData = intval($_POST["cextData"]);
         $apvno =  $_POST["empno"];
         $nfrmno = $_POST["nfrmno"];
@@ -263,7 +266,7 @@ class form extends MY_Controller{
         $cyear2 = $_POST["cyear2"];
         $nrunno = $_POST["nrunno"];
         $stepno = $_POST["stepready"];
-     
+
         $form  = ['NFRMNO' => $nfrmno,
                   'VORGNO' => $vorgno,
                   'CYEAR'  => $cyear,
@@ -273,7 +276,7 @@ class form extends MY_Controller{
          $status = true;
          $message = "";
         try{
-             
+
             if (isset($_POST['selJInchrg'])  && $_POST['selJInchrg'] != '') {
                 $rep = $this->getRep(array('NFRMNO' =>  $nfrmno , 'VORGNO' => $vorgno , 'CYEAR' => $cyear , 'VEMPNO' => $_POST['selJInchrg']));
                 $dataapv = [
@@ -283,7 +286,7 @@ class form extends MY_Controller{
                 $form["CEXTDATA"] = '02';
                 $this->cn->update("FLOW",  $dataapv , $form);
             }
- 
+
             if (isset($_POST['selEInchrg'])  && $_POST['selEInchrg'] != '') {
                 $rep = $this->getRep(array('NFRMNO' =>  $nfrmno , 'VORGNO' => $vorgno , 'CYEAR' => $cyear , 'VEMPNO' => $_POST['selEInchrg']));
                 $dataapv = [
@@ -293,9 +296,9 @@ class form extends MY_Controller{
                 $form["CEXTDATA"] = '03';
                 $this->cn->update("FLOW",  $dataapv , $form);
             }
-          
+
             if (isset($_POST['Operator'])  && $_POST['Operator'] != ''){
-                  
+
                 $rep = $this->getRep(array('NFRMNO' =>  $nfrmno , 'VORGNO' => $vorgno , 'CYEAR' => $cyear , 'VEMPNO' => $_POST['Operator']));
                 $dataapv = [
                         'VAPVNO' => $_POST['Operator'],
@@ -304,7 +307,7 @@ class form extends MY_Controller{
                 $form["CEXTDATA"] = '07';
                 $this->cn->update("FLOW",  $dataapv , $form);
             }
-  
+
             if(($cextData >= 2) && ($cextData < 8))
             {
                 unset($form["CEXTDATA"]);
@@ -347,7 +350,7 @@ class form extends MY_Controller{
                             $this->deleteFlowStep($condition);
 
             }
- 
+
             if($act == "approve")
             {
                     if($stepno == "--")
@@ -356,19 +359,19 @@ class form extends MY_Controller{
                        $this->updaterequest($form);
                        $this->insertdwg($form);
                     }
-             
                     if($cextData == 8)
                     {
                         if($_POST["chkClass"] == "2")
                         {
                             if (isset($_POST['txtInvNo']) && strlen($_POST['txtInvNo']) >= 8) {
                                 $pono = substr($_POST['txtInvNo'], 0, 8);
-                                if (is_numeric($pono)) 
+                                if (is_numeric($pono))
                                 {
                                         $pord  = substr($pono, 0, 2) . substr($pono, 4, 4);
                                         $pprod = $_POST['txtPurItem'];
-                                        $sqlOra = "update BPCSFVNEW.HPO SET PCMT = '".$this->toFormNumber($nfrmno,  $vorgno, $cyear,  $cyear2,  $nrunno)." WHERE PORD = ".$pord." AND PPROD = '".$pprod."'";
+                                        $sqlOra = "update BPCSFVNEW.HPO SET PCMT = '".$this->toFormNumber($nfrmno,  $vorgno, $cyear,  $cyear2,  $nrunno)."' WHERE PORD = '".$pord."' AND PPROD = '".$pprod."'";
                                         $this->cn->execAssql($sqlOra);
+
                                 }
 
                             }
@@ -378,7 +381,7 @@ class form extends MY_Controller{
                         $sqlOra = "update RTNLIBF.J736KP set J36K05 = 'Y' where J36K04 = '".$this->toFormNumber($nfrmno,  $vorgno, $cyear,  $cyear2,  $nrunno)."'";
                         $this->cn->execAssql($sqlOra);
                     }
-                    // กรณี flow ไป QIC กรณี case subcon จะมีการลบ flow step 07 (foreman) และ 61 (job monitor) ออก 
+                    // กรณี flow ไป QIC กรณี case subcon จะมีการลบ flow step 07 (foreman) และ 61 (job monitor) ออก
                     if(isset($_POST["selJobType"]) && $_POST["selJobType"] == "S")
                     {
                             $condition = [
@@ -394,7 +397,7 @@ class form extends MY_Controller{
                             $this->deleteFlowStep($condition);
 
                     }
-                    
+
             }else if($act == "reject")
             {
                 if($cextData == 7)
@@ -421,10 +424,11 @@ class form extends MY_Controller{
                 }
             }else if($act == "return")
             {
-                
+
                 $sqlOra = "update flow set CSTEPST = '1',  VREMARK = '' where NFRMNO = '".$nfrmno."' AND VORGNO = '".$vorgno."' and CYEAR = '".$cyear."' and CYEAR2 = '".$cyear2."' and NRUNNO = '".$nrunno."' and CSTEPST = '2'";
                 $this->cn->execsql($sqlOra);
                 $remark = $_POST['txtRemark'] ?? '';
+                $remark = str_replace("'", "''", $remark);
                 $sqlOra = "update flow set CSTEPST = '2' , VREMARK = '".$remark."' where NFRMNO = '".$nfrmno."' AND VORGNO = '".$vorgno."' and CYEAR = '".$cyear."' and CYEAR2 = '".$cyear2."' and NRUNNO = '".$nrunno."' and CSTEPST = '3'";
                 $this->cn->execsql($sqlOra);
                 $sqlOra = "update flow set CSTEPST = '3' , CAPVSTNO = '0' , DAPVDATE ='' , CAPVTIME = '' , VREMARK = ''  where NFRMNO = '".$nfrmno."' AND VORGNO = '".$vorgno."' and CYEAR = '".$cyear."' and CYEAR2 = '".$cyear2."' and NRUNNO = '".$nrunno."' and CSTART = '1'";
@@ -436,6 +440,7 @@ class form extends MY_Controller{
                 $sqlOra = "update flow set CSTEPST = '1' , VREMARK = '' where NFRMNO = '".$nfrmno."' AND VORGNO = '".$vorgno."' and CYEAR = '".$cyear."' and CYEAR2 = '".$cyear2."' and NRUNNO = '".$nrunno."' and CSTEPST = '2'";
                 $this->cn->execsql($sqlOra);
                 $remark = $_POST['txtRemark'] ?? '';
+                $remark = str_replace("'", "''", $remark);
                 $sqlOra = "update flow set CSTEPST = '2' , VREMARK = '".$remark."' where NFRMNO = '".$nfrmno."' AND VORGNO = '".$vorgno."' and CYEAR = '".$cyear."' and CYEAR2 = '".$cyear2."' and NRUNNO = '".$nrunno."' and CSTEPST = '3'";
                 $this->cn->execsql($sqlOra);
                 $sqlOra = "update flow set CSTEPST = '3' , CAPVSTNO = '0' , DAPVDATE ='' , CAPVTIME = '' , VREMARK = '' where NFRMNO = '".$nfrmno."' AND VORGNO = '".$vorgno."' and CYEAR = '".$cyear."' and CYEAR2 = '".$cyear2."' and NRUNNO = '".$nrunno."' and  CEXTDATA = '03'";
@@ -446,26 +451,7 @@ class form extends MY_Controller{
                 $sqlOra = "update flow set CSTEPST = '1' , VREMARK = '' where NFRMNO = '".$nfrmno."' AND VORGNO = '".$vorgno."' and CYEAR = '".$cyear."' and CYEAR2 = '".$cyear2."' and NRUNNO = '".$nrunno."' and CSTEPST = '2'";
                 $this->cn->execsql($sqlOra);
                 $remark = $_POST['txtRemark'] ?? '';
-                $sqlOra = "update flow set CSTEPST = '2' , VREMARK = '".$remark."' where NFRMNO = '".$nfrmno."' AND VORGNO = '".$vorgno."' and CYEAR = '".$cyear."' and CYEAR2 = '".$cyear2."' and NRUNNO = '".$nrunno."' and CSTEPST = '3'";
-                $this->cn->execsql($sqlOra);
-                $sqlOra = "update flow set CSTEPST = '3' , CAPVSTNO = '0' , DAPVDATE ='' , CAPVTIME = '' , VREMARK = ''  where NFRMNO = '".$nfrmno."' AND VORGNO = '".$vorgno."' and CYEAR = '".$cyear."' and CYEAR2 = '".$cyear2."' and NRUNNO = '".$nrunno."' and  CEXTDATA = '02'";
-                $this->cn->execsql($sqlOra);
-
-            }else if($act == "returnqastaff")
-            {
-                $sqlOra = "update flow set CSTEPST = '1' , VREMARK = '' where NFRMNO = '".$nfrmno."' AND VORGNO = '".$vorgno."' and CYEAR = '".$cyear."' and CYEAR2 = '".$cyear2."' and NRUNNO = '".$nrunno."' and CSTEPST = '2'";
-                $this->cn->execsql($sqlOra);
-                $remark = $_POST['txtRemark'] ?? '';
-                $sqlOra = "update flow set CSTEPST = '2' , VREMARK = '".$remark."' where NFRMNO = '".$nfrmno."' AND VORGNO = '".$vorgno."' and CYEAR = '".$cyear."' and CYEAR2 = '".$cyear2."' and NRUNNO = '".$nrunno."' and CSTEPST = '3'";
-                $this->cn->execsql($sqlOra);
-                $sqlOra = "update flow set CSTEPST = '3' , CAPVSTNO = '0' , DAPVDATE ='' , CAPVTIME = '' , VREMARK = '' where NFRMNO = '".$nfrmno."' AND VORGNO = '".$vorgno."' and CYEAR = '".$cyear."' and CYEAR2 = '".$cyear2."' and NRUNNO = '".$nrunno."' and  CEXTDATA = '03'";
-                $this->cn->execsql($sqlOra);
-
-            }else if($act == "returnass")
-            {
-                $sqlOra = "update flow set CSTEPST = '1' , VREMARK = '' where NFRMNO = '".$nfrmno."' AND VORGNO = '".$vorgno."' and CYEAR = '".$cyear."' and CYEAR2 = '".$cyear2."' and NRUNNO = '".$nrunno."' and CSTEPST = '2'";
-                $this->cn->execsql($sqlOra);
-                $remark = $_POST['txtRemark'] ?? '';
+                $remark = str_replace("'", "''", $remark);
                 $sqlOra = "update flow set CSTEPST = '2' , VREMARK = '".$remark."' where NFRMNO = '".$nfrmno."' AND VORGNO = '".$vorgno."' and CYEAR = '".$cyear."' and CYEAR2 = '".$cyear2."' and NRUNNO = '".$nrunno."' and CSTEPST = '3'";
                 $this->cn->execsql($sqlOra);
                 $sqlOra = "update flow set CSTEPST = '3' , CAPVSTNO = '0' , DAPVDATE ='' , CAPVTIME = '' , VREMARK = ''  where NFRMNO = '".$nfrmno."' AND VORGNO = '".$vorgno."' and CYEAR = '".$cyear."' and CYEAR2 = '".$cyear2."' and NRUNNO = '".$nrunno."' and  CEXTDATA = '02'";
@@ -515,7 +501,7 @@ class form extends MY_Controller{
                 $this->cn->update("FLOW",  $dataapv , $form);
                 $form["CEXTDATA"] = '03';
                 $this->cn->update("FLOW",  $dataapv , $form);
-                
+
             }else if($act == "changepic")
             {
                 $rep = $this->getRep(array('NFRMNO' =>  $nfrmno , 'VORGNO' => $vorgno , 'CYEAR' => $cyear , 'VEMPNO' => $_POST['Pic']));
@@ -569,7 +555,7 @@ class form extends MY_Controller{
                 'DETTRANS' => ($_POST["radSample"]==2? $_POST["txtReturn"] : ($_POST["radSample"]==3? $_POST["txtOth"] : "")),
                 'PRDCTNAME' => $_POST["part_date"],
                 'ORDERNO' => $_POST["txtOrder"]
-                
+
             );
             if(isset($_POST["submit_date"]) && $_POST["submit_date"] != "")
             {
@@ -593,8 +579,8 @@ class form extends MY_Controller{
                 ];
                  $this->cn->update("CNFORM",  $data , $form);
             }
-  
-  
+
+
 
     }
 
@@ -616,9 +602,9 @@ class form extends MY_Controller{
         $l = $_POST["txtL"];
         $r = $_POST["revNo"];
         $i = 0;
-        
+
         foreach($dwg as $d)
-        { 
+        {
             if($d <> "")
             {
                 $data = array(
@@ -639,14 +625,14 @@ class form extends MY_Controller{
 
     public function insertcn()
     {
-    
+
         if ($this->chkdup400($_POST["txtInvNo"], $_POST["txtPurItem"])) {
 
         echo json_encode([
             "status" => false,
             "message" => "CN NO. duplicate, Please check"
         ]);
-            return;  
+            return;
         }
 
         $status = true;
@@ -659,7 +645,7 @@ class form extends MY_Controller{
             'REQBY'  => $_POST["txtReqId"],
             'INPUTBY' => $_POST["txtInput"],
             'REMARK'  => $_POST["txtRemark"]
-        ); 
+        );
         if($act == "save")
         {
             $form["DRAFT"] = '0';
@@ -682,7 +668,7 @@ class form extends MY_Controller{
             'PRTLOC' => ($_POST["radLoc"] == "1"? "WareHouse Receive": $_POST["txtLoc"]) ,
             'RQCNREF' => $_POST["txtNoRef"],
             'TRANSNO' => $_POST["radSample"],
-            'DETTRANS' => ($_POST["radSample"] == "1"? "": ($_POST["radSample"] == "2"? $_POST["txtReturn"]: ($_POST["radSample"] == "3"? $_POST["txtOth"]: "" ))) 
+            'DETTRANS' => ($_POST["radSample"] == "1"? "": ($_POST["radSample"] == "2"? $_POST["txtReturn"]: ($_POST["radSample"] == "3"? $_POST["txtOth"]: "" )))
         );
         try{
 
@@ -696,7 +682,7 @@ class form extends MY_Controller{
                 $rsf = $this->createForm($form);
                 if ($rsf['status']) {
                         $datacn["NFRMNO"]  = $form["NFRMNO"];
-                        $datacn["VORGNO"]  = $form["VORGNO"];  
+                        $datacn["VORGNO"]  = $form["VORGNO"];
                         $datacn["CYEAR"]  =  $form["CYEAR"];
                         $datacn["CYEAR2"]  = $rsf["data"]["CYEAR2"];
                         $datacn["NRUNNO"]  = $rsf["data"]["NRUNNO"];
@@ -714,7 +700,7 @@ class form extends MY_Controller{
                                 {
                                     $datacn["EXPCHGDATE"] =  $_POST["expchg_date"];
                                 }
-                             
+
                                 $this->cn->insert("CNFORM",$datacn);
                                 $con = array(
                                         'NFRMNO' => $form["NFRMNO"],
@@ -726,7 +712,7 @@ class form extends MY_Controller{
                                 $this->insertdwg($con );
                                 $path = $this->upload_path .$con["NFRMNO"]."_".$con["VORGNO"]."_".$con["CYEAR"]."_".$con["CYEAR2"]."_".$con["NRUNNO"]. "/";
                                 $this->savefile( $con,$path);
-                      
+
                     $status = true;
                     $message = "Success to save data";
 
@@ -736,7 +722,7 @@ class form extends MY_Controller{
                 }
 
               }
-             
+
         }catch ( Exception $e) {
             $status = false;
             $message = "Failed to save data.".$e->getMessage();
@@ -758,7 +744,7 @@ class form extends MY_Controller{
 
     private function cnflow($form)
     {
-        $radsec = $_POST["radsec"];                       
+        $radsec = $_POST["radsec"];
         /* เจาะจงแผนก*/
         if($radsec == "1")
         {
@@ -902,7 +888,7 @@ class form extends MY_Controller{
             }
         } // end ไม่เจาะจงแผนก
 
-      
+
 
     }
 
@@ -1069,7 +1055,7 @@ class form extends MY_Controller{
         if ($extra > 0) {
             $this->insertEmptyRowsWithTemplate($sheet, $templateStart ,$templateCount ,  $extra );
         }
-        
+
         foreach($data["flow"] as $i => $row)
         {
             $currentRow = $templateStart + $i;
@@ -1099,7 +1085,7 @@ class form extends MY_Controller{
             $sheet->setCellValue("G{$currentRow}", $data["empinf"][$row["VAPVNO"]][0]->SSEC."/".$data["empinf"][$row["VAPVNO"]][0]->SDEPT."/".$data["empinf"][$row["VAPVNO"]][0]->SDIV);
             $sheet->setCellValue("H{$currentRow}", (!is_null($row["DAPVDATE"])? date('d-M-Y', strtotime($row["DAPVDATE"])):"") );
             $sheet->setCellValue("I{$currentRow}", $row["CAPVTIME"] );
-            $sheet->setCellValue("J{$currentRow}", $row["VREMARK"] ); 
+            $sheet->setCellValue("J{$currentRow}", $row["VREMARK"] );
         }
         $templateStart =  $currentRow+ 1;
         $status = "";
@@ -1130,8 +1116,8 @@ class form extends MY_Controller{
         }
 
         $sheet->setCellValue("B{$templateStart}",  $richText);
-        //$sheet->setCellValue("B{$templateStart}", $status); 
-        
+        //$sheet->setCellValue("B{$templateStart}", $status);
+
 
         $writer = new Xlsx($spreadsheet);
         $filename = 'CN.xlsx';
@@ -1142,12 +1128,12 @@ class form extends MY_Controller{
 
         $dFile = array(
             'content'  => $excelContent,
-            'filename' => $filename, 
+            'filename' => $filename,
         );
         return $dFile;
 
     }
-    
+
      public function create_save_cnexcel($data)
     {
 
@@ -1202,7 +1188,7 @@ class form extends MY_Controller{
 
         $dFile = array(
             'content'  => $excelContent,
-            'filename' => $filename, 
+            'filename' => $filename,
         );
         return $dFile;
     }
@@ -1232,7 +1218,7 @@ class form extends MY_Controller{
     /* function check for flow approve of QIC */
     private function chkopr($nfrmno,$vorgno,$cyear,$cyear2,$nrunno)
     {
-        
+
        // $rs = $this->cn->customSelect("FLOW",array( 'NFRMNO' => $nfrmno,'VORGNO' => $vorgno,'CYEAR'  => $cyear,'CYEAR2' => $cyear2,'NRUNNO' => $nrunno ,'CEXTDATA' => '07' ),'');
        // return  count($rs) == 0;
         $rsqic = $this->cn->customSelect("ORGPOS", array('VPOSNO' => '30' , 'VORGNO' => '000404'),'');
@@ -1313,13 +1299,13 @@ HTML;
                     if($i == 1)
                     {
                         $data["html"] .= "<div>Drawing No.: ".$r->DWGNO."</div>";
-                    }else{ 
+                    }else{
                         $data["html"] .= "<div>&nbsp;&nbsp;&nbsp;&nbsp;".$r->DWGNO."</div>";
                     }
                     $i++;
                 }
          }
-         
+
     }else if ($mtype === "PIC") {
          $data["subject"] = "Result of ".$formno;
          $data["html"] = "<div>Changing notice no.: ".$formno."</div>";
@@ -1331,15 +1317,15 @@ HTML;
                     if($i == 1)
                     {
                         $data["html"] .= "<div>Drawing No.: ".$r->DWGNO."</div>";
-                    }else{ 
+                    }else{
                         $data["html"] .= "<div>&nbsp;&nbsp;&nbsp;&nbsp;".$r->DWGNO."</div>";
                     }
                     $data["html"] .= "<div>Status: ". ($r->RESULT == "0" ? "<font color='green'>OK</font>" : ($r->RESULT == "1" ? "<font color='red'>NG</font>" : "")) ."</div>";
                     $i++;
                 }
-                
+
          }
-         
+
     }else if( $mtype === "REQUESTER"){
             $data["subject"] = "E-Form ".$formno." has been returned";
             $data["html"] = "<div>Changing notice no.: ".$formno."</div>";
@@ -1351,7 +1337,7 @@ HTML;
                         if($i == 1)
                         {
                             $data["html"] .= "<div>Drawing No.: ".$r->DWGNO."</div>";
-                        }else{ 
+                        }else{
                             $data["html"] .= "<div>&nbsp;&nbsp;&nbsp;&nbsp;".$r->DWGNO."</div>";
                         }
                         $i++;
@@ -1368,17 +1354,17 @@ private function getApvEmail($data)
         {
                  $sql = " SELECT DISTINCT e.SRECMAIL AS EMAIL
                 FROM FLOW f
-                JOIN AMEC.AEMPLOYEE e 
+                JOIN AMEC.AEMPLOYEE e
                     ON f.VAPVNO = e.SEMPNO
                 WHERE f.NFRMNO  = '".$data['NFRMNO']."'
                 AND f.VORGNO  = '".$data['VORGNO']."'
                 AND f.CYEAR   = '".$data['CYEAR']."'
                 AND f.CYEAR2  = '".$data['CYEAR2']."'
                 AND f.NRUNNO  = '".$data['NRUNNO']."'
-                AND e.CSTATUS = '1' AND CSTEPNO in ('--') union 
+                AND e.CSTATUS = '1' AND CSTEPNO in ('--') union
                 SELECT DISTINCT e.SRECMAIL AS EMAIL
                 FROM FLOW f
-                JOIN AMEC.AEMPLOYEE e 
+                JOIN AMEC.AEMPLOYEE e
                     ON f.VREPNO = e.SEMPNO
                 WHERE f.NFRMNO  = '".$data['NFRMNO']."'
                 AND f.VORGNO  = '".$data['VORGNO']."'
@@ -1392,7 +1378,7 @@ private function getApvEmail($data)
         }else if($data['TYPE'] == "REQUESTER")
         { $sql = " SELECT DISTINCT e.SRECMAIL AS EMAIL
                 FROM FLOW f
-                JOIN AMEC.AEMPLOYEE e 
+                JOIN AMEC.AEMPLOYEE e
                     ON f.VREALAPV = e.SEMPNO
                 WHERE f.NFRMNO  = '".$data['NFRMNO']."'
                 AND f.VORGNO  = '".$data['VORGNO']."'
@@ -1403,7 +1389,7 @@ private function getApvEmail($data)
         }else{
             $sql = " SELECT DISTINCT e.SRECMAIL AS EMAIL
                 FROM FLOW f
-                JOIN AMEC.AEMPLOYEE e 
+                JOIN AMEC.AEMPLOYEE e
                     ON f.VREALAPV = e.SEMPNO
                 WHERE f.NFRMNO  = '".$data['NFRMNO']."'
                 AND f.VORGNO  = '".$data['VORGNO']."'
@@ -1416,7 +1402,7 @@ private function getApvEmail($data)
             }else if ($data['TYPE'] === "ALL") {
                 $sql .= " AND f.CSTEPNO NOT IN ('05','04','11') ";
             }
-    }    
+    }
         return $this->cn->getdatasql($sql);
     }
 
@@ -1434,7 +1420,7 @@ public function createcnng()
             'NFRMNO' => $nfrmno,
             'VORGNO' => $vorgno,
             'CYEAR'  => $cyear
-        );         
+        );
         $firstno = $this->cn->getfirstno($nfrmno, $vorgno, $cyear, $cyear2, $nrunno);
         if (count($firstno) > 0) {
             $sqlas = "SELECT
@@ -1446,7 +1432,7 @@ public function createcnng()
                     RIGHT(
                         (SELECT MAX(R27M09)
                         FROM DATALIBO.R027MP1 WHERE R27M09 LIKE 'F'||VARCHAR_FORMAT(CURRENT DATE, 'YY')||'%'
-                        
+
                         ),
                         4
                     )
@@ -1495,10 +1481,10 @@ WHERE L.R27M09 = '".trim($firstno[0]->FIRSTNO)."'";
                    // $newcnng="F260239";
                     $cnform    = $this->frm->getForm($nfrmno,  $vorgno, $cyear,  $cyear2,  $nrunno);
                     $form["REQBY"] = $cnform[0]->VREQNO;
-                    $form["INPUTBY"] = $cnform[0]->VINPUTER; 
+                    $form["INPUTBY"] = $cnform[0]->VINPUTER;
                     $form["REMARK"] = "";
-                
-                    
+
+
                     $rsf = $this->createForm($form);
                     //var_dump($rsf);
                     if ($rsf['status']) {
@@ -1569,7 +1555,7 @@ WHERE L.R27M09 = '".trim($firstno[0]->FIRSTNO)."'";
                                         AND CYEAR  = '".$cyear."'
                                         AND CYEAR2 = '".$cyear2."'
                                         AND NRUNNO = '".$nrunno."'";
-                                $this->cn->execsql($sqlOra); 
+                                $this->cn->execsql($sqlOra);
                                 $cnflowpre = $this->cn->customSelect("FLOW",array( 'NFRMNO' => $nfrmno,'VORGNO' => $vorgno,'CYEAR'  => $cyear,'CYEAR2' => $cyear2,'NRUNNO' => $nrunno ,'CEXTDATA' => '06'),'*');
                                 if(count($cnflowpre) > 0)
                                 {
@@ -1619,24 +1605,24 @@ WHERE L.R27M09 = '".trim($firstno[0]->FIRSTNO)."'";
                         $status = false;
                         $message = "Failed to create new CN/NG form.";
                     }
-    
+
                 }
             } else {
                 $status = false;
                 $message = "Failed to generate new CN/NG number.";
             }
-            
+
         } else {
             $status = false;
             $message = "Failed to retrieve first no.";
         }
 
-            
+
      }catch ( Exception $e) {
         $status = false;
         $message = "Failed to save data.";
         //var_dump($e->getMessage());
-        
+
     } finally {
         $res = [
             'status' => $status,
@@ -1692,7 +1678,7 @@ function insertEmptyRowsWithTemplate(Worksheet $sheet, int $templateStart, int $
     }
 }
 
-public function printcn() 
+public function printcn()
 {
     $nfrmno = $_GET['no'];
     $vorgno = $_GET['orgNo'];
@@ -1706,7 +1692,7 @@ public function printcn()
         'drawings' => $drawings,
         'formno'   => $this->toFormNumber($nfrmno,$vorgno,$cyear,$cyear2,$nrunno)
     ]);
-    
+
 }
 
 
