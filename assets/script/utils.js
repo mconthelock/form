@@ -198,47 +198,6 @@ export async function generateSchemaHash(schema) {
     return hashHex;
 }
 
-// ดึงรูปภาพจาก IndexedDB 2025-01-17
-// export async function displayEmpImage(id) {
-// 	const cachedImage = await getImage(id);
-// 	if (cachedImage) {
-// 		return `${cachedImage}`;
-// 	} else {
-// 		// ดึงรูปภาพจาก API
-// 		const response = await fetch(
-// 			`${process.env.APP_WEBSERVICE}/webflow/amecusers/images/${id}`
-// 		);
-// 		const data = await response.json();
-// 		const base64Image = data;
-// 		// บันทึกลง IndexedDB
-// 		await setImage(id, base64Image);
-// 		return `${base64Image}`;
-// 	}
-// }
-
-// ดึงข้อมูลพนักงานจาก IndexedDB 2025-01-17
-// export async function displayEmpInfo(id) {
-// 	const cachedInfo = await getInfo(id);
-// 	if (cachedInfo) {
-// 		return cachedInfo.data;
-// 	} else {
-// 		// ดึงข้อมูลจาก API
-// 		const response = await fetch(
-// 			`${process.env.APP_WEBSERVICE}/webflow/amecusers/users/`,
-// 			{
-// 				method: "POST",
-// 				headers: {
-// 					"Content-Type": "application/json",
-// 				},
-// 				body: JSON.stringify({ id: id, mode: 1 }),
-// 			}
-// 		);
-// 		const data = await response.json();
-// 		await setInfo(id, data[0]);
-// 		return data[0];
-// 	}
-// }
-
 export function setSha256(text) {
     const shaObj = new jsSHA('SHA-256', 'TEXT');
     shaObj.update(text);
@@ -299,4 +258,21 @@ export function getTagColor(tagName) {
     const index = Math.abs(hash) % colors.length;
 
     return colors[index];
+}
+
+export function clientIp() {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `${process.env.APP_API}/auth/check-ip/`,
+            type: 'get',
+            dataType: 'json',
+            success: function (res) {
+                resolve(res);
+            },
+            error: function (xhr, err) {
+                console.log(err);
+                reject(err);
+            },
+        });
+    });
 }
