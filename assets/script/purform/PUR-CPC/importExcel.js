@@ -104,7 +104,7 @@ export const importExcel = {
                     return;
                 }
                 const data = await self.readExcelFile(file);
-                const itemCode = data.map((row) => row.ITEM_CODE);
+                const itemCode = data.map((row) => row.VITEM_CODE);
                 const res = await getPriceComparison({
                     FUNC: steps.function,
                     ITEM: itemCode,
@@ -115,7 +115,7 @@ export const importExcel = {
                 }
                 const mapData = data.map((row) => {
                     const matched = res.find(
-                        (r) => r.ITEM_CODE === row.ITEM_CODE,
+                        (r) => r.VITEM_CODE === row.VITEM_CODE,
                     );
                     return {
                         ...row,
@@ -139,7 +139,7 @@ export const importExcel = {
         }
 
         // * ตรวจสอบข้อมูลในไฟล์ Excel ว่าตรงกับฟังก์ชันที่เลือกหรือไม่
-        if (data.find((row) => row.FUNCTIONS !== steps.function)) {
+        if (data.find((row) => row.NFUNCTIONS !== steps.function)) {
             showMessage(
                 'The selected Excel file contains rows with a different function',
                 'warning',
@@ -155,41 +155,41 @@ export const importExcel = {
             startRow: 3,
             endCol: colToNumber('AI'),
             headerName: [
-                { key: 'FUNCTIONS', column: 'A' },
-                { key: 'NEW_VENDOR_CODE', column: 'B' },
-                { key: 'NEW_MAKER_NAME', column: 'C' },
-                { key: 'NEW_PRICE_YEAR', column: 'D' },
-                { key: 'NEW_PRICE_MONTH', column: 'E' },
-                { key: 'MODEL_NAME', column: 'F' },
-                { key: 'OLD_ITEM_COMPARE', column: 'G' },
-                { key: 'PLANNER', column: 'H' },
-                { key: 'MODE', column: 'I' },
-                { key: 'VENDOR_CODE', column: 'J' },
-                { key: 'ITEM_CODE', column: 'K' },
-                { key: 'DRAWING', column: 'L' },
-                { key: 'QTY', column: 'M' },
-                { key: 'QTY2', column: 'N' },
-                { key: 'QTY3', column: 'O' },
-                { key: 'QTY4', column: 'P' },
-                { key: 'QTY5', column: 'Q' },
-                { key: 'QTY6', column: 'R' },
-                { key: 'QTY7', column: 'S' },
-                { key: 'QTY8', column: 'T' },
-                { key: 'NEW_PRICE', column: 'U' },
-                { key: 'NEW_PRICE2', column: 'V' },
-                { key: 'NEW_PRICE3', column: 'W' },
-                { key: 'NEW_PRICE4', column: 'X' },
-                { key: 'NEW_PRICE5', column: 'Y' },
-                { key: 'NEW_PRICE6', column: 'Z' },
-                { key: 'NEW_PRICE7', column: 'AA' },
-                { key: 'NEW_PRICE8', column: 'AB' },
-                { key: 'NEW_CURR', column: 'AC' },
-                { key: 'QUOTATION_NO', column: 'AD' },
-                { key: 'NEW_BASE_CURR', column: 'AE' },
-                { key: 'NEW_BASE_PRICE', column: 'AF' },
-                { key: 'COMMENT', column: 'AG' },
-                { key: 'QUOTATION_DATE', column: 'AH' },
-                { key: 'PUR_DIM_APV_DATE', column: 'AI' },
+                { key: 'NFUNCTIONS', column: 'A' },
+                { key: 'VNEW_VENDOR', column: 'B' },
+                { key: 'VNEW_MAKER', column: 'C' },
+                { key: 'CNEW_PRICE_YEAR', column: 'D' },
+                { key: 'VNEW_PRICE_MONTH', column: 'E' },
+                { key: 'VMODEL', column: 'F' },
+                { key: 'VOLD_ITEM_COMPARE', column: 'G' },
+                { key: 'CPLANNER', column: 'H' },
+                { key: 'CMODE', column: 'I' },
+                { key: 'VPRES_VENDOR', column: 'J' },
+                { key: 'VITEM_CODE', column: 'K' },
+                { key: 'VDRAWING', column: 'L' },
+                { key: 'NQTY1', column: 'M' },
+                { key: 'NQTY2', column: 'N' },
+                { key: 'NQTY3', column: 'O' },
+                { key: 'NQTY4', column: 'P' },
+                { key: 'NQTY5', column: 'Q' },
+                { key: 'NQTY6', column: 'R' },
+                { key: 'NQTY7', column: 'S' },
+                { key: 'NQTY8', column: 'T' },
+                { key: 'NPRICE1', column: 'U' },
+                { key: 'NPRICE2', column: 'V' },
+                { key: 'NPRICE3', column: 'W' },
+                { key: 'NPRICE4', column: 'X' },
+                { key: 'NPRICE5', column: 'Y' },
+                { key: 'NPRICE6', column: 'Z' },
+                { key: 'NPRICE7', column: 'AA' },
+                { key: 'NPRICE8', column: 'AB' },
+                { key: 'VNEW_PRICE_CURR', column: 'AC' },
+                { key: 'VQUOTATION_NO', column: 'AD' },
+                { key: 'VNEW_BASE_CURR', column: 'AE' },
+                { key: 'NNEW_BASE_PRICE', column: 'AF' },
+                { key: 'VCOMMENT', column: 'AG' },
+                { key: 'DQUOTATION_DATE', column: 'AH' },
+                { key: 'DDIMAPV_DATE', column: 'AI' },
             ],
         });
     },

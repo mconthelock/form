@@ -305,86 +305,86 @@ export const tableComparison = {
                 return meta.row + 1;
             },
         },
-        { data: 'MODEL_NAME' },
-        { data: 'JOB_ITEMNO', className: 'sticky-column' },
-        { data: 'PART_NAME', className: 'text-nowrap' },
-        { data: 'DRAWING', className: 'sticky-column text-nowrap' },
-        { data: 'ITEM_CODE', className: 'sticky-column' },
-        { data: 'SPEC', className: 'text-nowrap' },
-        { data: 'MATERIAL_CODE', className: 'sticky-column' },
-        { data: 'QUANTITY_YEAR' },
-        { data: 'VENDOR_NAME', className: 'bg-[#ffff77] text-nowrap' },
-        { data: 'MAKER_NAME', className: 'bg-[#ffff77] text-nowrap' },
+        { data: 'VMODEL' },
+        { data: 'VJOB_ITEMNO', className: 'sticky-column' },
+        { data: 'VPART_NAME', className: 'text-nowrap' },
+        { data: 'VDRAWING', className: 'sticky-column text-nowrap' },
+        { data: 'VITEM_CODE', className: 'sticky-column' },
+        { data: 'VSPEC', className: 'text-nowrap' },
+        { data: 'VMATERIAL_CODE', className: 'sticky-column' },
+        { data: 'NQUANTITY_YEAR' },
+        { data: 'VPRES_VENDOR_NAME', className: 'bg-[#ffff77] text-nowrap' },
+        { data: 'VPRES_MAKER', className: 'bg-[#ffff77] text-nowrap' },
         {
-            data: 'BASE_PRICE',
+            data: 'NPRES_BASE_PRICE',
             className: 'bg-[#ccffcc]',
             render: function (data, type, row, meta) {
-                row.BASE_PRICE = roundNumber({ value: data });
-                return formatNumber({ value: row.BASE_PRICE });
+                row.NPRES_BASE_PRICE = roundNumber({ value: data });
+                return formatNumber({ value: row.NPRES_BASE_PRICE });
             },
         },
-        { data: 'BASE_CURR' },
+        { data: 'VPRES_BASE_CURR' },
         {
-            data: 'PRICE',
+            data: 'NPRES_PRICE',
             className: 'bg-[#ccffcc]',
             render: function (data, type, row, meta) {
-                row.PRICE = roundNumber({ value: data });
-                return formatNumber({ value: row.PRICE });
+                row.NPRES_PRICE = roundNumber({ value: data });
+                return formatNumber({ value: row.NPRES_PRICE });
             },
         },
-        { data: 'CURR' },
+        { data: 'VPRES_PRICE_CURR' },
         {
-            data: 'PRICE_ETA_AMEC',
+            data: 'NPRES_PRICE_ETA_AMEC',
             className: 'bg-[#ccffcc]',
             render: function (data, type, row, meta) {
-                row.PRICE_ETA_AMEC = roundNumber({ value: data });
-                return formatNumber({ value: row.PRICE_ETA_AMEC });
+                row.NPRES_PRICE_ETA_AMEC = roundNumber({ value: data });
+                return formatNumber({ value: row.NPRES_PRICE_ETA_AMEC });
             },
         },
         {
-            data: 'AMOUNT',
+            data: 'NPRES_AMOUNT',
             render: function (data, type, row, meta) {
-                row.AMOUNT = roundNumber({ value: data });
-                return formatNumber({ value: row.AMOUNT });
+                row.NPRES_AMOUNT = roundNumber({ value: data });
+                return formatNumber({ value: row.NPRES_AMOUNT });
             },
         },
         {
-            data: 'NEW_VENDOR_NAME',
+            data: 'VNEW_VENDOR',
             className: 'bg-[#ffff77] text-nowrap',
             render: function (data, type, row, meta) {
-                row.NEW_VENDOR_NAME = vendors.find(
-                    (v) => v.VENDOR === row.NEW_VENDOR_CODE,
+                row.VNEW_VENDOR_NAME = vendors.find(
+                    (v) => v.VENDOR === row.VNEW_VENDOR,
                 )?.VNDNAM;
-                return row.NEW_VENDOR_CODE
-                    ? row.NEW_VENDOR_NAME
-                    : row.VENDOR_NAME;
+                return row.VNEW_VENDOR
+                    ? row.VNEW_VENDOR_NAME
+                    : row.VPRES_VENDOR_NAME;
             },
         },
         {
-            data: 'NEW_MAKER_NAME',
+            data: 'VNEW_MAKER',
             className: 'bg-[#ffff77]',
             render: function (data, type, row, meta) {
-                return data || row.MAKER_NAME;
+                return data || row.VPRES_MAKER;
             },
         },
         {
-            data: 'NEW_BASE_PRICE',
+            data: 'NNEW_BASE_PRICE',
             className: 'bg-[#ccffff]',
             render: function (data, type, row, meta) {
-                row.NEW_BASE_PRICE = roundNumber({ value: data });
-                return formatNumber({ value: row.NEW_BASE_PRICE });
+                row.NNEW_BASE_PRICE = roundNumber({ value: data });
+                return formatNumber({ value: row.NNEW_BASE_PRICE });
             },
         },
-        { data: 'NEW_BASE_CURR' },
+        { data: 'VNEW_BASE_CURR' },
         {
-            data: 'NEW_PRICE',
+            data: 'NNEW_PRICE',
             className: 'bg-[#ccffff]',
             render: function (data, type, row, meta) {
-                row.NEW_PRICE = roundNumber({ value: data });
-                return formatNumber({ value: row.NEW_PRICE });
+                row.NNEW_PRICE = roundNumber({ value: row.NPRICE1 });
+                return formatNumber({ value: row.NNEW_PRICE });
             },
         },
-        { data: 'NEW_CURR' },
+        { data: 'VNEW_PRICE_CURR' },
         {
             data: null,
             className: 'bg-[#ccffff]',
@@ -393,73 +393,71 @@ export const tableComparison = {
                 switch (steps.function) {
                     case 1:
                         rate = tableComparison.currency.find(
-                            (item) => item.CURRNAME === row.NEW_BASE_CURR,
+                            (item) => item.CURRNAME === row.VNEW_BASE_CURR,
                         )?.CURRENCY;
-                        row.NEW_PRICE_ETA_AMEC = roundNumber({
-                            value: row.NEW_BASE_PRICE * rate,
+                        row.NNEW_PRICE_ETA_AMEC = roundNumber({
+                            value: row.NNEW_BASE_PRICE * rate,
                         });
                         break;
                     case 2:
                     case 3:
-                        row.NEW_PRICE_ETA_AMEC = row.NEW_PRICE;
+                        row.NNEW_PRICE_ETA_AMEC = row.NNEW_PRICE;
                         break;
                     case 4:
                     case 5:
                         rate = tableComparison.currency.find(
-                            (item) => item.CURRNAME === row.NEW_CURR,
+                            (item) => item.CURRNAME === row.VNEW_PRICE_CURR,
                         )?.CURRENCY;
-                        row.NEW_PRICE_ETA_AMEC = roundNumber({
-                            value: row.NEW_PRICE * rate,
+                        row.NNEW_PRICE_ETA_AMEC = roundNumber({
+                            value: row.NNEW_PRICE * rate,
                         });
                         break;
                 }
-                return formatNumber({ value: row.NEW_PRICE_ETA_AMEC });
+                return formatNumber({ value: row.NNEW_PRICE_ETA_AMEC });
             },
         },
         {
             data: null,
             render: function (data, type, row, meta) {
-                row.NEW_AMOUNT = roundNumber({
-                    value: (row.NEW_PRICE_ETA_AMEC * row.QUANTITY_YEAR) / 1000,
+                row.NNEW_AMOUNT = roundNumber({
+                    value: (row.NNEW_PRICE_ETA_AMEC * row.QUANTITY_YEAR) / 1000,
                 });
-                return formatNumber({ value: row.NEW_AMOUNT });
+                return formatNumber({ value: row.NNEW_AMOUNT });
             },
         },
         {
             data: null,
             render: function (data, type, row, meta) {
-                row.COST_PRICE_DIFFERENCE = roundNumber({
-                    value: row.PRICE_ETA_AMEC - row.NEW_PRICE_ETA_AMEC,
+                row.NCOST_DIFF = roundNumber({
+                    value: row.NPRES_PRICE_ETA_AMEC - row.NNEW_PRICE_ETA_AMEC,
                 });
-                return formatNumber({ value: row.COST_PRICE_DIFFERENCE });
+                return formatNumber({ value: row.NCOST_DIFF });
             },
         },
         {
             data: null,
             render: function (data, type, row, meta) {
-                row.COST_AMOUNT = roundNumber({
-                    value:
-                        (row.COST_PRICE_DIFFERENCE * row.QUANTITY_YEAR) / 1000,
+                row.NCOST_AMOUNT = roundNumber({
+                    value: (row.NCOST_DIFF * row.NQUANTITY_YEAR) / 1000,
                 });
-                return formatNumber({ value: row.COST_AMOUNT });
+                return formatNumber({ value: row.NCOST_AMOUNT });
             },
         },
         {
             data: null,
             render: function (data, type, row, meta) {
-                row.COST_RATIO =
-                    row.PRICE_ETA_AMEC !== 0
+                row.NCOST_RATIO =
+                    row.NPRES_PRICE_ETA_AMEC !== 0
                         ? roundNumber({
                               value:
-                                  (row.COST_PRICE_DIFFERENCE /
-                                      row.PRICE_ETA_AMEC) *
+                                  (row.NCOST_DIFF / row.NPRES_PRICE_ETA_AMEC) *
                                   100,
                           })
                         : 0;
-                return formatNumber({ value: row.COST_RATIO }) + '%';
+                return formatNumber({ value: row.NCOST_RATIO }) + '%';
             },
         },
-        { data: 'NEW_PRICE_YEAR', className: 'bg-[#ffff77]' },
-        { data: 'NEW_PRICE_MONTH', className: 'bg-[#ffff77]' },
+        { data: 'CNEW_PRICE_YEAR', className: 'bg-[#ffff77]' },
+        { data: 'VNEW_PRICE_MONTH', className: 'bg-[#ffff77]' },
     ],
 };
