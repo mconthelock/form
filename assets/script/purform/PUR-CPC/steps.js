@@ -9,6 +9,8 @@ import { tableComparison } from './table-comparison';
 import { importExcel } from './importExcel';
 import { tableDraft } from './table.draft';
 import { getActivePriceConditions } from './data';
+import { webflowSubmit } from '@amec/webasset/components/form';
+import { skeletons } from '@amec/webasset/skeleton';
 /**
  * @author Sutthipong Tangmongkhoncharoen(24008)
  * @since 2026-09-15
@@ -158,13 +160,23 @@ export const steps = {
         const stepNavigation = $('#step-navigation');
         const btnPrevious = $('#previous-step');
         const btnNext = $('#next-step');
-        const btnSaveDraft = $('#save-draft');
-        const btnSubmit = $('#submit-form');
+        const webformSubmitContainer = $('#webform-submit');
         const btnNewStep = $('#new-step');
         const btnDraftStep = $('#draft-step');
         btnNewStep.addClass('hidden');
         btnDraftStep.addClass('hidden');
+        webformSubmitContainer.addClass('hidden');
         stepNavigation.find('button').addClass('hidden');
+        if (index <= 2) {
+            // reset ฟอร์ม requester และลบ profile card
+            $('#step-requester')[0].reset();
+            $('#requester-card-container').empty();
+            // เมื่อกลับไปหน้าแรกให้ reset ค่าทั้งหมด
+            if (index === 0) {
+                $('#detail-step-container').html('');
+                this.reset();
+            }
+        }
         switch (index) {
             case 0:
                 btnNewStep.removeClass('hidden');
@@ -172,7 +184,7 @@ export const steps = {
                 break;
             case 1:
                 // this.inputer
-                const draftData = []; // Replace this with actual draft data
+                const draftData = []; // TODO: ดึงข้อมูล draft จากแหล่งข้อมูลจริง
                 if (draftData.length === 0) {
                     showMessage('No draft data available', 'warning');
                     this.instance.skipTo(2);
@@ -184,13 +196,22 @@ export const steps = {
                 btnNext.removeClass('hidden');
                 break;
             case 2:
-                btnNext.prop('disabled', true);
                 this.function = null;
+                btnNext.prop('disabled', true);
+                btnPrevious.removeClass('hidden');
+                btnNext.removeClass('hidden');
+                requester.trigger('focus');
+                const priceCondContainer = $('#price-cond');
+                priceCondContainer.html('');
+                skeletons({
+                    element: '#price-cond',
+                    count: 5,
+                    pattern: [{ width: 'w-1/2', height: 'h-8' }],
+                });
                 const activePriceConditions = await getActivePriceConditions();
                 if (!activePriceConditions.status) {
                     throw new Error(activePriceConditions.message);
                 }
-                const priceCondContainer = $('#price-cond');
                 priceCondContainer.html(
                     activePriceConditions.data
                         .map(
@@ -205,9 +226,6 @@ export const steps = {
                         )
                         .join(''),
                 );
-                requester.trigger('focus');
-                btnPrevious.removeClass('hidden');
-                btnNext.removeClass('hidden');
                 break;
             case 3:
                 tableCreatePrice.init(this.plannerCode);
@@ -217,22 +235,25 @@ export const steps = {
                 break;
             case 4:
                 importExcel.reset();
-                tableComparison.init({ formNo: this._formNo });
+                tableComparison.init({ formNo: this.formNo });
                 btnPrevious.removeClass('hidden');
-                btnSaveDraft.removeClass('hidden');
-                btnSubmit.removeClass('hidden');
+                const submitOpt = {
+                    remark: false,
+                    draft: true,
+                    request: true,
+                    back: false,
+                };
+                if (this.mode !== 'new') {
+                    submitOpt.draft = false;
+                    submitOpt.request = false;
+                    submitOpt.save = true;
+                    submitOpt.approve = true;
+                    submitOpt.flow = true;
+                    submitOpt.flowHtml = ''; // TODO หาก user ตัดสินใจ ว่าให้ approve ค่อยมากำหนดค่า
+                }
+                const submitHtml = webflowSubmit(submitOpt);
+                webformSubmitContainer.html(submitHtml).removeClass('hidden');
                 break;
-        }
-
-        if (index <= 2) {
-            // reset ฟอร์ม requester และลบ profile card
-            $('#step-requester')[0].reset();
-            $('#requester-card-container').empty();
-            // เมื่อกลับไปหน้าแรกให้ reset ค่าทั้งหมด
-            if (index === 0) {
-                $('#detail-step-container').html('');
-                this.reset();
-            }
         }
     },
     /**

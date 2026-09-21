@@ -77,15 +77,13 @@
                 {{-- Content for step 5 goes here --}}
                 <div data-step-panel class="hidden flex flex-col gap-5">
                     <div id="import-excel-container"></div>
-
                     <table id="table-comparison" class="table table-zebra table-sm">
                     </table>
                 </div>
-                <div class="flex justify-center gap-3" id="step-navigation">
-                    <button type="button" class="hidden btn" id="previous-step">Back</button>
-                    <button type="button" class="hidden btn" id="next-step">Next</button>
-                    <button type="button" class="hidden btn btn-neutral" id="save-draft">Save Draft</button>
-                    <button type="button" class="hidden btn btn-primary" id="submit-form">Submit</button>
+                <div id="webform-submit" class="hidden"></div>
+                <div class="flex justify-between gap-3" id="step-navigation">
+                    <button type="button" class="hidden btn" id="previous-step"><i class="fi fi-rr-angle-circle-left"></i>Back</button>
+                    <button type="button" class="hidden btn" id="next-step">Next<i class="fi fi-rr-angle-circle-right"></i></button>
                 </div>
             </div>
         </div>

@@ -99,6 +99,7 @@ export const tableComparison = {
         await this.destroy();
         this.preload();
 
+        // TODO: ดึงข้อมูล draft หากมี formNo
         if (formNo) {
             this._draftData = []; // รอรองรับ draft
         }
