@@ -122,7 +122,6 @@ export const importExcel = {
                         ...matched,
                     };
                 });
-                console.log(mapData);
                 tableComparison.init({ newData: mapData });
             } catch (error) {
                 console.error(error);
@@ -157,7 +156,7 @@ export const importExcel = {
             endCol: colToNumber('AI'),
             headerName: [
                 { key: 'FUNCTIONS', column: 'A' },
-                { key: 'NEW_VENDOR_NAME', column: 'B' },
+                { key: 'NEW_VENDOR_CODE', column: 'B' },
                 { key: 'NEW_MAKER_NAME', column: 'C' },
                 { key: 'NEW_PRICE_YEAR', column: 'D' },
                 { key: 'NEW_PRICE_MONTH', column: 'E' },

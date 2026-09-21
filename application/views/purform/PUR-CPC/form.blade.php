@@ -65,7 +65,7 @@
                     </fieldset>
                     <fieldset class="fieldset">
                         <legend class="fieldset-legend">Function</legend>
-                        <div id="price-cond"></div>
+                        <div id="price-cond" class="flex flex-col gap-2"></div>
                     </fieldset>
                 </form>
 

@@ -48,10 +48,9 @@ export const tableDraft = {
         await destroyTable(this.tableId);
         this.instance = null;
     },
-    async init(empno) {
+    async init(data) {
         await this.destroy();
         this.preload();
-        const data = [];
         await this.createTable(data);
         this.skeleton.remove();
         this.bindEvents();
@@ -78,6 +77,9 @@ export const tableDraft = {
                 },
             },
         );
+    },
+    bindEvents() {
+        const self = this;
     },
     columns: [
         {
@@ -136,7 +138,4 @@ export const tableDraft = {
             data: 'STATUS',
         },
     ],
-    bindEvents() {
-        const self = this;
-    },
 };

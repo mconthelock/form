@@ -1,13 +1,14 @@
 import {
     getUrlParams,
     logtest,
+    renderLoadError,
     showErrorMessage,
     showMessage,
 } from '@amec/webasset/utils';
 import { getUser, getUserImage } from '@amec/webasset/api/amec';
 
 import { EmployeeProfileCard } from '@amec/webasset/components/profileCard';
-import { getActivePriceConditions, getK850mpData } from './data';
+import { getK850mpData } from './data';
 import { steps } from './steps';
 import { importExcel } from './importExcel';
 
@@ -16,25 +17,6 @@ $(async function () {
         const params = getUrlParams();
         const empno = params.EMPNO;
         logtest(params);
-        const activePriceConditions = await getActivePriceConditions();
-        if (!activePriceConditions.status) {
-            throw new Error(activePriceConditions.message);
-        }
-        const priceCondContainer = $('#price-cond');
-        priceCondContainer.replaceWith(
-            activePriceConditions.data
-                .map(
-                    (condition) => `
-                <label class="label">
-                    <input type="radio" name="function" value="${condition.NO}" class="radio req"
-                        data-message="Please enter function">
-                    ${condition.NO}
-                    ${condition.DESCRIPTION}
-                </label>
-            `,
-                )
-                .join(''),
-        );
 
         // Set the inputer field with the empno
         $('#INPUTBY').val(empno);
@@ -44,6 +26,7 @@ $(async function () {
         importExcel.init();
     } catch (error) {
         console.error(error);
+        renderLoadError(error.message);
         showErrorMessage(error.message);
     }
 });

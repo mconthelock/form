@@ -1,5 +1,7 @@
 import { fetchUtils } from '@amec/webasset/api/fetch-utils';
 
+export const templateBaseDir = `${process.env.AMEC_FILE_PATH}${process.env.STATE == 'production' ? 'production' : 'development'}/webflow/template/price-compare`;
+
 /**
  * @author Sutthipong Tangmongkhoncharoen(24008)
  * @since 2026-09-15
@@ -62,6 +64,19 @@ export async function getPriceComparison(data) {
 export async function getCurrenCy() {
     return await fetchUtils({
         url: `${process.env.APP_API}/as400/k089kp/currency`,
+        method: 'GET',
+    });
+}
+
+/**
+ * @author Sutthipong Tangmongkhoncharoen(24008)
+ * @since 2026-09-21
+ * @description Fetches the vendor data.
+ * @returns
+ */
+export async function getVendors() {
+    return await fetchUtils({
+        url: `${process.env.APP_API}/avm`,
         method: 'GET',
     });
 }

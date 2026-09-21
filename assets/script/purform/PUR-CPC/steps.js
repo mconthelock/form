@@ -1,9 +1,14 @@
 import { Steps } from '@amec/webasset/components/steps';
-import { requiredForm, showErrorMessage } from '@amec/webasset/utils';
+import {
+    requiredForm,
+    showErrorMessage,
+    showMessage,
+} from '@amec/webasset/utils';
 import { tableCreatePrice } from './table-create-price';
 import { tableComparison } from './table-comparison';
 import { importExcel } from './importExcel';
 import { tableDraft } from './table.draft';
+import { getActivePriceConditions } from './data';
 /**
  * @author Sutthipong Tangmongkhoncharoen(24008)
  * @since 2026-09-15
@@ -11,7 +16,7 @@ import { tableDraft } from './table.draft';
  */
 export const steps = {
     instance: null,
-    mode: null,
+    _mode: null,
     _inputer: null,
     _requester: null,
     _plannerCode: null,
@@ -35,17 +40,30 @@ export const steps = {
     get requester() {
         return this._requester;
     },
-    set function(value) {
-        this._function = +value;
+    set mode(value) {
+        this._mode = value;
         $('#detail-step-container')
             .html(`<div class="relative overflow-hidden rounded-2xl shadow-md bg-gradient-to-br from-amber-400 to-orange-500 text-white">
             <div class="absolute -right-6 -top-6 h-24 w-24 rounded-full bg-white/10"></div>
             <div class="absolute -right-2 top-10 h-12 w-12 rounded-full bg-white/10"></div>
-            <div class="relative flex flex-col items-center gap-2 px-8 py-6">
-                <p class="text-xs font-semibold uppercase tracking-widest text-white/80">Function</p>
-                <p id="card-sec" class="text-4xl font-extrabold drop-shadow-sm">${+value}</p>
+            <div class="flex gap-5">
+                <div class="relative flex flex-col items-center gap-2 px-8 py-6">
+                    <p class="text-xs font-semibold uppercase tracking-widest text-white/80">Mode</p>
+                    <p class="text-4xl font-extrabold drop-shadow-sm">${this.mode.toUpperCase()}</p>
+                </div>
+                <div class="relative flex flex-col items-center gap-2 px-8 py-6">
+                    <p class="text-xs font-semibold uppercase tracking-widest text-white/80">Function</p>
+                    <p id="card-func" class="text-4xl font-extrabold drop-shadow-sm">${this.function || '-'}</p>
+                </div>
             </div>
         </div>`);
+    },
+    get mode() {
+        return this._mode;
+    },
+    set function(value) {
+        this._function = value ? +value : null;
+        $('#card-func').text(this.function || '-');
     },
     get function() {
         return this._function;
@@ -58,7 +76,7 @@ export const steps = {
     },
     get data() {
         return {
-            mode: this.mode,
+            mode: this._mode,
             inputer: this._inputer,
             requester: this._requester,
             plannerCode: this._plannerCode,
@@ -67,7 +85,7 @@ export const steps = {
         };
     },
     reset() {
-        this.mode = null;
+        this._mode = null;
         this._inputer = null;
         this._requester = null;
         this._plannerCode = null;
@@ -153,11 +171,39 @@ export const steps = {
                 btnDraftStep.removeClass('hidden');
                 break;
             case 1:
-                tableDraft.init(this.inputer);
+                // this.inputer
+                const draftData = []; // Replace this with actual draft data
+                if (draftData.length === 0) {
+                    showMessage('No draft data available', 'warning');
+                    this.instance.skipTo(2);
+                    this.mode = 'new';
+                    return;
+                }
+                tableDraft.init(draftData);
                 btnPrevious.removeClass('hidden');
                 btnNext.removeClass('hidden');
                 break;
             case 2:
+                this.function = null;
+                const activePriceConditions = await getActivePriceConditions();
+                if (!activePriceConditions.status) {
+                    throw new Error(activePriceConditions.message);
+                }
+                const priceCondContainer = $('#price-cond');
+                priceCondContainer.html(
+                    activePriceConditions.data
+                        .map(
+                            (condition) => `
+                                <label class="label">
+                                    <input type="radio" name="function" value="${condition.NO}" class="radio req"
+                                        data-message="Please enter function">
+                                    ${condition.NO}
+                                    ${condition.DESCRIPTION}
+                                </label>
+                            `,
+                        )
+                        .join(''),
+                );
                 requester.trigger('focus');
                 btnPrevious.removeClass('hidden');
                 btnNext.removeClass('hidden');
@@ -177,13 +223,13 @@ export const steps = {
                 break;
         }
 
-        if (index <= 1) {
+        if (index <= 2) {
             // reset ฟอร์ม requester และลบ profile card
             $('#step-requester')[0].reset();
             $('#requester-card-container').empty();
-            $('#detail-step-container').html('');
             // เมื่อกลับไปหน้าแรกให้ reset ค่าทั้งหมด
             if (index === 0) {
+                $('#detail-step-container').html('');
                 this.reset();
             }
         }

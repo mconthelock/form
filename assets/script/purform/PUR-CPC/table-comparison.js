@@ -4,10 +4,11 @@ import {
     showErrorMessage,
     formatNumber,
     roundNumber,
+    showMessage,
 } from '@amec/webasset/utils';
 import { showLoader } from '@amec/webasset/preloader';
 import { steps } from './steps';
-import { getCurrenCy } from './data';
+import { getCurrenCy, getVendors, templateBaseDir } from './data';
 import XlsxPopulate from 'xlsx-populate/browser/xlsx-populate.js';
 import { getFile } from '@amec/webasset/api/file';
 import {
@@ -20,6 +21,7 @@ export const tableComparison = {
     tableId: '#table-comparison',
     skeleton: null,
     _currency: null,
+    _vendorData: [],
     _draftData: [],
     _newData: [],
     get currency() {
@@ -39,6 +41,12 @@ export const tableComparison = {
     },
     set newData(value) {
         this._newData = value;
+    },
+    set vendors(value) {
+        this._vendorData = value;
+    },
+    get vendors() {
+        return this._vendorData;
     },
     reset() {
         this._draftData = [];
@@ -90,9 +98,7 @@ export const tableComparison = {
     async init({ formNo = null, newData = [] } = {}) {
         await this.destroy();
         this.preload();
-        this.currency = await getCurrenCy();
-        console.log(this.currency);
-        $(this.tableId).html(this.header);
+
         if (formNo) {
             this._draftData = []; // รอรองรับ draft
         }
@@ -100,6 +106,17 @@ export const tableComparison = {
             this._newData = newData;
         }
         const data = [...this._draftData, ...this._newData];
+        if (data.length > 0) {
+            this.currency = await getCurrenCy();
+            const vendors = await getVendors();
+            if (!vendors || vendors.length === 0) {
+                showMessage('No vendor data found', 'warning');
+                return;
+            }
+            this.vendors = vendors;
+        }
+
+        $(this.tableId).html(this.header);
         await this.createTable(data);
         this.skeleton.remove();
         this.bindEvents();
@@ -108,7 +125,7 @@ export const tableComparison = {
         this.instance = await createTable(
             {
                 data: data,
-                columns: this.columns,
+                columns: this.columns(this.vendors),
                 responsive: data.length == 0 ? true : false,
                 ordering: false,
                 initComplete: function () {
@@ -147,9 +164,15 @@ export const tableComparison = {
                     try {
                         showLoader();
                         const data = self.data();
-                        console.log(data);
+                        if (data.length === 0) {
+                            showMessage(
+                                'No data available to export.',
+                                'warning',
+                            );
+                            return;
+                        }
                         const template = await getFile({
-                            baseDir: `${process.env.AMEC_FILE_PATH}${process.env.STATE == 'production' ? 'production' : 'development'}/webflow/template/price-compare`,
+                            baseDir: templateBaseDir,
                             storedName: 'Price Compare Export Template.xlsx',
                             mode: 'open',
                         });
@@ -216,7 +239,7 @@ export const tableComparison = {
                         const newBuffer = await workbook.outputAsync();
                         exportExcel(
                             newBuffer,
-                            'Price Compare Export Template',
+                            `Price Compare Export Template - ${steps.function} [${new Date().toISOString().split('T')[0]}]`,
                             'buffer',
                         );
                     } catch (error) {
@@ -274,7 +297,7 @@ export const tableComparison = {
                 <th>Cur.</th>
             </tr>
         </thead>`,
-    columns: [
+    columns: (vendors) => [
         {
             data: null,
             render: function (data, type, row, meta) {
@@ -284,14 +307,14 @@ export const tableComparison = {
         },
         { data: 'MODEL_NAME' },
         { data: 'JOB_ITEMNO', className: 'sticky-column' },
-        { data: 'PART_NAME' },
-        { data: 'DRAWING', className: 'sticky-column' },
+        { data: 'PART_NAME', className: 'text-nowrap' },
+        { data: 'DRAWING', className: 'sticky-column text-nowrap' },
         { data: 'ITEM_CODE', className: 'sticky-column' },
-        { data: 'SPEC' },
+        { data: 'SPEC', className: 'text-nowrap' },
         { data: 'MATERIAL_CODE', className: 'sticky-column' },
         { data: 'QUANTITY_YEAR' },
-        { data: 'VENDOR_NAME', className: 'bg-[#ffff77]' },
-        { data: 'MAKER_NAME', className: 'bg-[#ffff77]' },
+        { data: 'VENDOR_NAME', className: 'bg-[#ffff77] text-nowrap' },
+        { data: 'MAKER_NAME', className: 'bg-[#ffff77] text-nowrap' },
         {
             data: 'BASE_PRICE',
             className: 'bg-[#ccffcc]',
@@ -327,9 +350,14 @@ export const tableComparison = {
         },
         {
             data: 'NEW_VENDOR_NAME',
-            className: 'bg-[#ffff77]',
+            className: 'bg-[#ffff77] text-nowrap',
             render: function (data, type, row, meta) {
-                return data || row.VENDOR_NAME;
+                row.NEW_VENDOR_NAME = vendors.find(
+                    (v) => v.VENDOR === row.NEW_VENDOR_CODE,
+                )?.VNDNAM;
+                return row.NEW_VENDOR_CODE
+                    ? row.NEW_VENDOR_NAME
+                    : row.VENDOR_NAME;
             },
         },
         {
@@ -385,8 +413,6 @@ export const tableComparison = {
                         });
                         break;
                 }
-                console.log('currency', tableComparison.currency);
-                console.log('rate', rate, row.NEW_BASE_CURR, row.NEW_CURR);
                 return formatNumber({ value: row.NEW_PRICE_ETA_AMEC });
             },
         },

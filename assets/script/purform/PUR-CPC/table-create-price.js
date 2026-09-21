@@ -12,7 +12,7 @@ import {
 import { steps } from './steps';
 import { getFile } from '@amec/webasset/api/file';
 import { showLoader } from '@amec/webasset/preloader';
-import { getPlannerCompareSheet } from './data';
+import { getPlannerCompareSheet, templateBaseDir } from './data';
 import XlsxPopulate from 'xlsx-populate/browser/xlsx-populate.js';
 
 export const tableCreatePrice = {
@@ -101,36 +101,6 @@ export const tableCreatePrice = {
             },
         );
     },
-    columns: [
-        {
-            title: 'PLANNER CODE',
-            data: 'IBUYC',
-        },
-        {
-            title: 'ITEM',
-            data: 'IPROD',
-        },
-        {
-            title: 'DRAWING',
-            data: 'IDRAW',
-        },
-        {
-            title: 'PART NAME',
-            data: 'IDESC',
-        },
-        {
-            title: 'SPEC',
-            data: 'IGLNO',
-        },
-        {
-            title: 'VENDOR',
-            data: 'IVEND',
-        },
-        {
-            title: 'VENDOR NAME',
-            data: 'VNDNAM',
-        },
-    ],
     bindEvents() {
         const self = this;
         /**
@@ -163,7 +133,7 @@ export const tableCreatePrice = {
                             row.IDRAW,
                         ]);
                         const template = await getFile({
-                            baseDir: `${process.env.AMEC_FILE_PATH}${process.env.STATE == 'production' ? 'production' : 'development'}/webflow/template/price-compare`,
+                            baseDir: templateBaseDir,
                             storedName: 'Price Compare Upload Template.xlsx',
                             mode: 'open',
                         });
@@ -216,7 +186,7 @@ export const tableCreatePrice = {
                         const newBuffer = await workbook.outputAsync();
                         exportExcel(
                             newBuffer,
-                            'Price Compare Upload Template',
+                            `Price Compare Upload Template - ${steps.function} [${new Date().toISOString().split('T')[0]}]`,
                             'buffer',
                         );
                     } catch (error) {
@@ -228,4 +198,34 @@ export const tableCreatePrice = {
                 },
             );
     },
+    columns: [
+        {
+            title: 'PLANNER CODE',
+            data: 'IBUYC',
+        },
+        {
+            title: 'ITEM',
+            data: 'IPROD',
+        },
+        {
+            title: 'DRAWING',
+            data: 'IDRAW',
+        },
+        {
+            title: 'PART NAME',
+            data: 'IDESC',
+        },
+        {
+            title: 'SPEC',
+            data: 'IGLNO',
+        },
+        {
+            title: 'VENDOR',
+            data: 'IVEND',
+        },
+        {
+            title: 'VENDOR NAME',
+            data: 'VNDNAM',
+        },
+    ],
 };
