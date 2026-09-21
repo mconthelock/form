@@ -24,6 +24,7 @@ var camera;
 $(document).ready(async function () {
     await splashScreen();
     await createCarousel('login');
+    await initBarcodeScanner();
     const id = $('#appid').val();
     const appdata = await getAppsDB(id);
     $('#login-title').text(appdata.APP_NAME);
@@ -44,7 +45,7 @@ $(document).ready(async function () {
     const isLeaveNode = leaveNode.some((node) => node.ip === ip);
     if (isLeaveNode) {
         $('.toggle-login').data('type', 'frm-rfid').click();
-        initBarcodeScanner();
+
         return;
     }
 
@@ -310,6 +311,7 @@ async function getLeaveNode() {
 export function initBarcodeScanner() {
     let scanValue = '';
     $(document).on('keydown', async function (e) {
+        if ($('#frm-rfid').hasClass('hidden')) return;
         if (
             e.key === 'Shift' ||
             e.key === 'F12' ||
@@ -338,7 +340,6 @@ export function initBarcodeScanner() {
         scanValue += e.key;
         if (scanValue.length == 8) {
             await showLoader();
-
             const user = await cardLogin(scanValue);
             if (user.status !== undefined) {
                 await showErrorMessage(user.message);
