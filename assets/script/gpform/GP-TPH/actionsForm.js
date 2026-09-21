@@ -1,10 +1,46 @@
-import { createTable } from '@amec/webasset/dataTable';
-import { showMessage } from '@amec/webasset/utils';
-import { getEmpData, getAreas, getLocations } from './data';
-import { data } from 'jquery';
+import { createTable, getSelectedData } from '@amec/webasset/dataTable';
+import { logFormData, showMessage } from '@amec/webasset/utils';
+import {
+    getEmpData,
+    getAreas,
+    getLocations,
+    getFormData,
+    createForm,
+    updateForm,
+} from './data';
+import { webflowSubmit } from '@amec/webasset/components/form';
+import { redirectWebflow } from '@amec/webasset/form';
+import { setDatePicker } from '@amec/webasset/flatpickr';
 
 (function () {
     let mockupTable = null;
+    let tableArea = null;
+    let editingForm = null;
+
+    async function modalTable(data) {
+        const table = await createTable(
+            {
+                data: data,
+                responsive: false,
+                columns: [
+                    { title: 'Location', data: 'LOCATION.LOCATION_NAME' },
+                    { title: 'Area', data: 'AREA_NAME' },
+                    { title: 'Level', data: 'AREA_LEVEL' },
+                    { title: 'Area Owner', data: 'AREA_OWNER' },
+                ],
+            },
+            {
+                id: '#modalTable',
+                domScroll: {
+                    status: true,
+                },
+                columnSelect: {
+                    status: true,
+                },
+            },
+        );
+        return table;
+    }
 
     function initCreatePage() {
         const visitorBody = document.getElementById('visitor-table-body');
@@ -18,19 +54,19 @@ import { data } from 'jquery';
             'applicant-visitor-section',
         );
         const requestTypeRadios = document.querySelectorAll(
-            'input[name="reqtype"]',
+            'input[name="REQUEST_TYPE"]',
         );
         const requestSubTypeRadios = document.querySelectorAll(
-            'input[name="req_subtype"]',
+            'input[name="REQUEST_SUB_TYPE"]',
         );
         const permitOptionRadios = document.querySelectorAll(
             'input[name="permit_option"]',
         );
         const hostExternalRadio = document.querySelector(
-            'input[name="reqtype"][value="host_external"]',
+            'input[name="REQUEST_TYPE"][value="H"]',
         );
         const employeeRadio = document.querySelector(
-            'input[name="reqtype"][value="employee"]',
+            'input[name="REQUEST_TYPE"][value="E"]',
         );
 
         if (
@@ -43,6 +79,279 @@ import { data } from 'jquery';
         ) {
             return;
         }
+
+        function updateAreaIndexes() {
+            Array.from(
+                areaBody.querySelectorAll('tr:not(#area-empty-row)'),
+            ).forEach((row, index) => {
+                const cell = row.querySelector('td:first-child');
+                if (cell) {
+                    cell.textContent = index + 1;
+                }
+            });
+        }
+
+        function updateVisitorIndexes() {
+            Array.from(visitorBody.rows).forEach((row, index) => {
+                row.querySelector('.visitor-row-number').textContent =
+                    index + 1;
+            });
+        }
+
+        async function setSelectedAreas(selectedRows) {
+            tableArea = await createTable(
+                {
+                    data: selectedRows,
+                    responsive: false,
+                    columns: [
+                        { title: 'No.', data: null, render: (data, type, row, meta) => meta.row + 1 },
+                        { title: 'Location', data: 'LOCATION.LOCATION_NAME' },
+                        { title: 'Area', data: 'AREA_NAME' },
+                        { title: 'Level', data: 'AREA_LEVEL' },
+                        { title: 'Area Owner', data: 'AREA_OWNER' },
+                        {
+                            title: 'Action',
+                            data: null,
+                            render: () => '<button type="button" class="btn btn-sm btn-error dt-remove-row">ร—</button>',
+                        },
+                    ],
+                },
+                { id: '#table-area', domScroll: { status: true } },
+            );
+            tableArea.on('click', '.dt-remove-row', function () {
+                tableArea.row($(this).closest('tr')).remove().draw();
+            });
+        }
+
+        function populateVisitors(details) {
+            visitorBody.replaceChildren();
+            details.forEach((detail) => {
+                const clone = visitorTemplate.content.cloneNode(true);
+                const inputs = clone.querySelectorAll('input');
+                inputs[0].value = detail.EMP_CODE || '';
+                inputs[1].value = detail.APPLICANT_NAME || '';
+                visitorBody.appendChild(clone);
+            });
+            if (!visitorBody.rows.length) {
+                visitorBody.appendChild(visitorTemplate.content.cloneNode(true));
+            }
+            updateVisitorIndexes();
+        }
+
+        async function loadExistingRequest(areas) {
+            const marker = document.getElementById('gp-tph-form-data');
+            if (!marker) return;
+
+            editingForm = {
+                NFRMNO: marker.dataset.nfrmno,
+                VORGNO: marker.dataset.vorgno,
+                CYEAR: marker.dataset.cyear,
+                CYEAR2: marker.dataset.cyear2,
+                NRUNNO: marker.dataset.nrunno,
+            };
+            const data = await getFormData(
+                editingForm.NFRMNO, editingForm.VORGNO, editingForm.CYEAR,
+                editingForm.CYEAR2, editingForm.NRUNNO,
+            );
+            if (!data) throw new Error('GP-TPH request was not found');
+
+            $('#INPUTBY').val(data.form?.VINPUTER || '');
+            $('#REQBY').val(data.form?.VREQNO || '');
+            $('#PURPOSE').val(data.PURPOSE || '');
+            $('#LONGTERM_YEARS').val(data.LONGTERM_YEARS || '');
+            $('#PERMIT_START_DATE').val(data.PERMIT_START_DATE?.split('T')[0] || '');
+            $('#PERMIT_END_DATE').val(data.PERMIT_END_DATE?.split('T')[0] || '');
+            $(`input[name="REQUEST_TYPE"][value="${data.REQUEST_TYPE}"]`).prop('checked', true);
+            $(`input[name="REQUEST_SUB_TYPE"][value="${data.REQUEST_SUB_TYPE}"]`).prop('checked', true);
+            $(`input[name="permit_option"][value="${data.LONGTERM_YEARS ? 'long_term' : 'period'}"]`).prop('checked', true);
+            $('#HELMET_STICKER').prop('checked', data.HELMET_STICKER === 'Y');
+            $('#PHOTO_PERMIT_BADGE').prop('checked', data.PHOTO_PERMIT_BADGE === 'Y');
+            toggleHostExternalSection();
+            togglePermitOptionFields();
+            updatePermitTypeRestrictions();
+
+            if (data.REQUEST_TYPE === 'H') {
+                const applicant = data.DETAILS?.[0] || {};
+                $('#APPLICANT_NAME').last().val(applicant.APPLICANT_NAME || '');
+                $('#EMP_CODE').val(applicant.EMP_CODE || '');
+                $('#COMPANY_NAME').val(applicant.COMPANY_NAME || '');
+            } else {
+                populateVisitors(data.DETAILS || []);
+            }
+
+            const selectedIds = new Set((data.AREA_RECORDS || []).map((record) => String(record.AREA_ID)));
+            await setSelectedAreas(areas.filter((area) => selectedIds.has(String(area.AREA_ID))));
+        }
+
+        function makeRadioGroupToggleable(selector, callback) {
+            const radios = document.querySelectorAll(selector);
+
+            radios.forEach(function (radio) {
+                radio.addEventListener('mousedown', function () {
+                    this.dataset.wasChecked = this.checked ? 'true' : 'false';
+                });
+
+                radio.addEventListener('click', function (event) {
+                    if (this.dataset.wasChecked === 'true' && this.checked) {
+                        event.preventDefault();
+                        radios.forEach(function (item) {
+                            item.checked = false;
+                        });
+                    }
+
+                    if (callback) {
+                        callback();
+                    }
+                });
+            });
+        }
+
+        function clearRequestTypeRelatedFields() {
+            const isHostExternal = hostExternalRadio
+                ? hostExternalRadio.checked
+                : false;
+
+            document
+                .querySelectorAll('input[name="REQUEST_SUB_TYPE"]')
+                .forEach(function (radio) {
+                    if (isHostExternal) {
+                        radio.checked = false;
+                    }
+                });
+
+            if (!isHostExternal) {
+                document
+                    .querySelectorAll('#host-external-section input')
+                    .forEach(function (field) {
+                        if (
+                            field.type === 'checkbox' ||
+                            field.type === 'radio'
+                        ) {
+                            field.disabled = true;
+                        }
+                    });
+            } else {
+                document
+                    .querySelectorAll('#host-external-section input')
+                    .forEach(function (field) {
+                        if (
+                            field.type === 'checkbox' ||
+                            field.type === 'radio'
+                        ) {
+                            field.disabled = false;
+                        }
+                    });
+            }
+        }
+
+        function updateAddVisitorButton() {
+            const isIndividualRequest =
+                employeeRadio?.checked &&
+                document.querySelector(
+                    'input[name="REQUEST_SUB_TYPE"][value="I"]',
+                )?.checked;
+
+            addVisitorBtn.disabled = Boolean(isIndividualRequest);
+            addVisitorBtn.classList.toggle(
+                'opacity-50',
+                Boolean(isIndividualRequest),
+            );
+            addVisitorBtn.classList.toggle(
+                'cursor-not-allowed',
+                Boolean(isIndividualRequest),
+            );
+            addVisitorBtn.setAttribute(
+                'aria-disabled',
+                String(Boolean(isIndividualRequest)),
+            );
+        }
+
+        function togglePermitOptionFields() {
+            const selectedPermitOption = document.querySelector(
+                'input[name="permit_option"]:checked',
+            );
+            const longTermYearsInput = document.querySelector(
+                'input[name="LONGTERM_YEARS"]',
+            );
+            const startDateInput = document.querySelector(
+                'input[name="PERMIT_START_DATE"]',
+            );
+            const validUntilInput = document.querySelector(
+                'input[name="PERMIT_END_DATE"]',
+            );
+
+            longTermYearsInput.disabled =
+                selectedPermitOption?.value !== 'long_term';
+            startDateInput.disabled = selectedPermitOption?.value !== 'period';
+            validUntilInput.disabled = selectedPermitOption?.value !== 'period';
+        }
+
+        function updatePermitTypeRestrictions() {
+            const isHostExternal = hostExternalRadio?.checked;
+            const longTermRadio = document.querySelector(
+                'input[name="permit_option"][value="long_term"]',
+            );
+            const periodRadio = document.querySelector(
+                'input[name="permit_option"][value="period"]',
+            );
+            const helmetStickerInput = document.querySelector(
+                'input[name="HELMET_STICKER"]',
+            );
+            const photoPermitBadgeInput = document.querySelector(
+                'input[name="PHOTO_PERMIT_BADGE"]',
+            );
+
+            longTermRadio.disabled = isHostExternal;
+            if (isHostExternal) {
+                periodRadio.checked = true;
+                helmetStickerInput.disabled = true;
+                helmetStickerInput.checked = false;
+                photoPermitBadgeInput.disabled = false;
+                photoPermitBadgeInput.checked = true;
+            } else {
+                helmetStickerInput.disabled = false;
+                photoPermitBadgeInput.disabled = false;
+            }
+
+            togglePermitOptionFields();
+        }
+
+        function toggleHostExternalSection() {
+            const isHostExternal = hostExternalRadio?.checked;
+            const isEmployee = employeeRadio?.checked;
+            const employeeRequestLabels = document.querySelectorAll(
+                '.employee-request-group',
+            );
+            const hostRequestLabel = document.querySelector(
+                '.host-request-group',
+            );
+            const requestSubTypeInputs = document.querySelectorAll(
+                'input[name="REQUEST_SUB_TYPE"]',
+            );
+
+            applicantVisitorSection.classList.toggle('hidden', isHostExternal);
+            hostExternalSection.classList.toggle('hidden', !isHostExternal);
+            employeeRequestLabels.forEach(function (label) {
+                label.classList.toggle('opacity-50', isHostExternal);
+                label.toggleAttribute('aria-disabled', isHostExternal);
+            });
+            if (hostRequestLabel) {
+                hostRequestLabel.classList.toggle('opacity-50', isEmployee);
+                hostRequestLabel.toggleAttribute('aria-disabled', isEmployee);
+            }
+
+            requestSubTypeInputs.forEach(function (radio) {
+                radio.disabled = !isEmployee;
+                if (!isEmployee) {
+                    radio.checked = false;
+                }
+            });
+
+            clearRequestTypeRelatedFields();
+            updateAddVisitorButton();
+            updatePermitTypeRestrictions();
+        }
+
         // ฟังก์ชันหลักที่ทำงานเมื่อโหลดหน้า
         $(async function () {
             const queryString = window.location.search;
@@ -50,45 +359,16 @@ import { data } from 'jquery';
             const empno = urlParams.get('empno');
             const getareas = await getAreas();
             const getlocations = await getLocations();
-
-            mockupTable = await createTable(
-                {
-                    data: getareas,
-                    getLocations,
-                    responsive: false,
-                    columns: [
-                        {
-                            title: '<input type="checkbox" id="select-all-areas" aria-label="Select all areas" />',
-                            data: null,
-                            orderable: false,
-                            searchable: false,
-                            render: function (data, type, row) {
-                                return `
-                        <input
-                            type="checkbox"
-                            class="row-select-area "
-                            style="width: 18px; height: 18px; accent-color: #1e40af;"
-                            value="${row.AREA_ID || row.id || row.LOCATION_NAME || ''}"
-                        />
-                    `;
-                            },
-                        },
-                        { title: 'Location', data: 'LOCATION.LOCATION_NAME' },
-                        { title: 'Area', data: 'AREA_NAME' },
-                        { title: 'Level', data: 'AREA_LEVEL' },
-                        { title: 'Area Owner', data: 'AREA_OWNER' },
-                    ],
-                },
-                {
-                    id: '#modalTable',
-                    domScroll: {
-                        status: true,
-                    },
-                },
-            );
-
-            const getName = await getEmpData(empno);
-            $('#INPUTBY').val(empno);
+            const action = webflowSubmit({ request: true });
+            $('#sentRequest').html(action);
+            mockupTable = await modalTable(getareas);
+            await setDatePicker();
+            if (document.getElementById('gp-tph-form-data')) {
+                await loadExistingRequest(getareas);
+            } else {
+                await getEmpData(empno);
+                $('#INPUTBY').val(empno);
+            }
         });
 
         $(document).on('change', '#select-all-areas', function () {
@@ -133,11 +413,17 @@ import { data } from 'jquery';
                     $(this).focus();
                     return;
                 }
+                if (String(empData.CSTATUS) !== '1') {
+                    showMessage('Employee has resigned', 'error');
+                    $(this).val('');
+                    $(this).focus();
+                    return;
+                }
                 $('#empName').val(empData.SNAME);
                 $('#empDiv').val(
                     `${empData.SSEC}/${empData.SDEPT}/${empData.SDIV}`,
                 );
-                $('#host_name').val(empData.SNAME);
+                $('#EMP_CODE').val(empData.SNAME);
             } catch (error) {
                 console.log(error);
             }
@@ -154,6 +440,12 @@ import { data } from 'jquery';
                     const empData = await getEmpData($(this).val());
                     if (!empData || !empData.SNAME) {
                         showMessage('Employee data not found', 'error');
+                        $(this).val('');
+                        $(this).focus();
+                        return;
+                    }
+                    if (String(empData.CSTATUS) !== '1') {
+                        showMessage('Employee has resigned', 'error');
                         $(this).val('');
                         $(this).focus();
                         return;
@@ -198,291 +490,129 @@ import { data } from 'jquery';
             },
         );
 
-        $(document).on('click', '#btnaddDatarow', function (e) {
-            e.preventDefault();
-
-            const location = $('#LOCATION').val();
-            const area = $('#AREANAME').val();
-            const level = $('#AREALEVEL').val();
-            const areaOwner = $('#AREAOWNER').val();
-
-            $('#modal-add').prop('checked', true);
-        });
-
-        $(document).on('click', '#addData', function (e) {
-            e.preventDefault();
-
-            if (!mockupTable) {
+        addVisitorBtn.addEventListener('click', function () {
+            if (addVisitorBtn.disabled) {
                 return;
             }
 
-            const rows = mockupTable.rows({ page: 'all' }).data().toArray();
-            const checkboxes = document.querySelectorAll(
-                '#modalTable tbody input.row-select-area',
-            );
-            const selectedRows = [];
+            const clone = visitorTemplate.content.cloneNode(true);
+            visitorBody.appendChild(clone);
+            updateVisitorIndexes();
+        });
 
-            checkboxes.forEach(function (checkbox, index) {
-                if (checkbox.checked) {
-                    selectedRows.push(rows[index]);
+        $(document).on('click', '#btnaddDatarow', async function (e) {
+            e.preventDefault();
+            const selectData = tableArea?.rows().data().toArray() ?? [];
+            const mockData = mockupTable.rows().data().toArray();
+            const data = mockData.map((row) => {
+                const isDuplicate = selectData.some(
+                    (selectedRow) => selectedRow.AREA_ID === row.AREA_ID,
+                );
+                if (!isDuplicate) {
+                    delete row.selected;
                 }
+                return row;
             });
+            console.log('Mock Data:', mockData);
+            console.log('Selected Data:', selectData);
+            console.log('data:', data);
+            mockupTable = await modalTable(data);
+            $('#modal-add').prop('checked', true);
+        });
+
+        $(document).on('click', '#addData', async function (e) {
+            e.preventDefault();
+
+            // if (!mockupTable) {
+            //     return;
+            // }
+
+            // const rows = mockupTable.rows({ page: 'all' }).data().toArray();
+            // const checkboxes = document.querySelectorAll(
+            //     '#modalTable tbody input.row-select-area',
+            // );
+            // const selectedRows = [];
+
+            // checkboxes.forEach(function (checkbox, index) {
+            //     if (checkbox.checked) {
+            //         selectedRows.push(rows[index]);
+            //     }
+            // });
+
+            const selectedRows = getSelectedData(mockupTable);
+            console.log('Selected Rows:', selectedRows);
 
             if (!selectedRows.length) {
                 alert('กรุณาเลือกข้อมูลก่อน');
                 return;
             }
 
-            const areaTemplate = document.getElementById('area-row-template');
-            const emptyRow = document.getElementById('area-empty-row');
+            tableArea = await createTable(
+                {
+                    data: selectedRows,
+                    responsive: false,
+                    columns: [
+                        {
+                            title: 'No.',
+                            data: null,
+                            render: (data, type, row, meta) => meta.row + 1,
+                        },
+                        { title: 'Location', data: 'LOCATION.LOCATION_NAME' },
+                        { title: 'Area', data: 'AREA_NAME' },
+                        { title: 'Level', data: 'AREA_LEVEL' },
+                        { title: 'Area Owner', data: 'AREA_OWNER' },
+                        {
+                            title: 'Action',
+                            data: null,
+                            render: (data, type, row, meta) =>
+                                '<button type="button" class="btn btn-sm btn-error dt-remove-row">×</button>',
+                        },
+                    ],
+                },
+                {
+                    id: '#table-area',
+                    domScroll: {
+                        status: true,
+                    },
+                },
+            );
 
-            if (emptyRow) {
-                emptyRow.remove();
-            }
-
-            selectedRows.forEach(function (row) {
-                if (!areaTemplate) {
-                    return;
-                }
-
-                const clone = areaTemplate.content.cloneNode(true);
-                const rowIndex =
-                    areaBody.querySelectorAll('tr:not(#area-empty-row)')
-                        .length + 1;
-
-                clone.querySelector('td:first-child').textContent = rowIndex;
-                clone.querySelector('input[name="area_location[]"]').value =
-                    row.LOCATION?.LOCATION_NAME || '';
-                clone.querySelector('input[name="area_name[]"]').value =
-                    row.AREA_NAME || '';
-                clone.querySelector('input[name="area_level[]"]').value =
-                    row.AREA_LEVEL || '';
-                clone.querySelector('input[name="area_owner[]"]').value =
-                    row.AREA_OWNER || '';
-
-                areaBody.appendChild(clone);
+            tableArea.on('click', '.dt-remove-row', function () {
+                const row = tableArea.row($(this).closest('tr'));
+                row.remove().draw();
             });
+
+            // const areaTemplate = document.getElementById('area-row-template');
+            // const emptyRow = document.getElementById('area-empty-row');
+
+            // if (emptyRow) {
+            //     emptyRow.remove();
+            // }
+
+            // selectedRows.forEach(function (row) {
+            //     if (!areaTemplate) {
+            //         return;
+            //     }
+
+            //     const clone = areaTemplate.content.cloneNode(true);
+            //     const rowIndex =
+            //         areaBody.querySelectorAll('tr:not(#area-empty-row)')
+            //             .length + 1;
+
+            //     clone.querySelector('td:first-child').textContent = rowIndex;
+            //     clone.querySelector('input[name="area_location[]"]').value =
+            //         row.LOCATION?.LOCATION_NAME || '';
+            //     clone.querySelector('input[name="area_name[]"]').value =
+            //         row.AREA_NAME || '';
+            //     clone.querySelector('input[name="area_level[]"]').value =
+            //         row.AREA_LEVEL || '';
+            //     clone.querySelector('input[name="area_owner[]"]').value =
+            //         row.AREA_OWNER || '';
+
+            //     areaBody.appendChild(clone);
+            // });
 
             $('#modal-add').prop('checked', false);
-        });
-
-        function updateAreaIndexes() {
-            Array.from(
-                areaBody.querySelectorAll('tr:not(#area-empty-row)'),
-            ).forEach((row, index) => {
-                const cell = row.querySelector('td:first-child');
-                if (cell) {
-                    cell.textContent = index + 1;
-                }
-            });
-        }
-
-        function makeRadioGroupToggleable(selector, callback) {
-            const radios = document.querySelectorAll(selector);
-
-            radios.forEach(function (radio) {
-                radio.addEventListener('mousedown', function () {
-                    this.dataset.wasChecked = this.checked ? 'true' : 'false';
-                });
-
-                radio.addEventListener('click', function (event) {
-                    if (this.dataset.wasChecked === 'true' && this.checked) {
-                        event.preventDefault();
-                        radios.forEach(function (item) {
-                            item.checked = false;
-                        });
-
-                        if (callback) {
-                            callback();
-                        }
-                    }
-                });
-            });
-        }
-
-        function clearRequestTypeRelatedFields() {
-            const isHostExternal = hostExternalRadio
-                ? hostExternalRadio.checked
-                : false;
-
-            document
-                .querySelectorAll('input[name="req_subtype"]')
-                .forEach(function (radio) {
-                    if (isHostExternal) {
-                        radio.checked = false;
-                    }
-                });
-
-            // Don't clear values from the hidden section when switching request type.
-            // Keep the user's input so it remains visible when they switch back.
-            if (!isHostExternal) {
-                document
-                    .querySelectorAll('#host-external-section input')
-                    .forEach(function (field) {
-                        if (
-                            field.type === 'checkbox' ||
-                            field.type === 'radio'
-                        ) {
-                            field.disabled = true;
-                        }
-                    });
-            } else {
-                document
-                    .querySelectorAll('#host-external-section input')
-                    .forEach(function (field) {
-                        if (
-                            field.type === 'checkbox' ||
-                            field.type === 'radio'
-                        ) {
-                            field.disabled = false;
-                        }
-                    });
-            }
-        }
-
-        function toggleHostExternalSection() {
-            const isHostExternal = hostExternalRadio
-                ? hostExternalRadio.checked
-                : false;
-            const isEmployee = employeeRadio ? employeeRadio.checked : false;
-            const employeeRequestLabels = document.querySelectorAll(
-                '.employee-request-group',
-            );
-            const hostRequestLabel = document.querySelector(
-                '.host-request-group',
-            );
-
-            if (isHostExternal) {
-                applicantVisitorSection.classList.add('hidden');
-                hostExternalSection.classList.remove('hidden');
-                employeeRequestLabels.forEach(function (label) {
-                    label.classList.add('opacity-50');
-                    label.setAttribute('aria-disabled', 'true');
-                });
-                if (hostRequestLabel) {
-                    hostRequestLabel.classList.remove('opacity-50');
-                    hostRequestLabel.removeAttribute('aria-disabled');
-                }
-            } else if (isEmployee) {
-                applicantVisitorSection.classList.remove('hidden');
-                hostExternalSection.classList.add('hidden');
-                employeeRequestLabels.forEach(function (label) {
-                    label.classList.remove('opacity-50');
-                    label.removeAttribute('aria-disabled');
-                });
-                if (hostRequestLabel) {
-                    hostRequestLabel.classList.add('opacity-50');
-                    hostRequestLabel.setAttribute('aria-disabled', 'true');
-                }
-            } else {
-                applicantVisitorSection.classList.remove('hidden');
-                hostExternalSection.classList.add('hidden');
-                employeeRequestLabels.forEach(function (label) {
-                    label.classList.remove('opacity-50');
-                    label.removeAttribute('aria-disabled');
-                });
-                if (hostRequestLabel) {
-                    hostRequestLabel.classList.remove('opacity-50');
-                    hostRequestLabel.removeAttribute('aria-disabled');
-                }
-            }
-
-            clearRequestTypeRelatedFields();
-            updatePermitTypeRestrictions();
-        }
-
-        function togglePermitOptionFields() {
-            const selectedPermitOption = document.querySelector(
-                'input[name="permit_option"]:checked',
-            );
-            const longTermYearsInput = document.querySelector(
-                'input[name="permit_long_term_years"]',
-            );
-            const startDateInput = document.querySelector(
-                'input[name="permit_start_date"]',
-            );
-            const validUntilInput = document.querySelector(
-                'input[name="permit_valid_until"]',
-            );
-
-            if (!longTermYearsInput || !startDateInput || !validUntilInput) {
-                return;
-            }
-
-            const isLongTerm = selectedPermitOption?.value === 'long_term';
-            const isPeriod = selectedPermitOption?.value === 'period';
-
-            longTermYearsInput.disabled = !isLongTerm;
-            startDateInput.disabled = !isPeriod;
-            validUntilInput.disabled = !isPeriod;
-        }
-
-        function updatePermitTypeRestrictions() {
-            const isHostExternal = hostExternalRadio
-                ? hostExternalRadio.checked
-                : false;
-            const longTermRadio = document.querySelector(
-                'input[name="permit_option"][value="long_term"]',
-            );
-            const periodRadio = document.querySelector(
-                'input[name="permit_option"][value="period"]',
-            );
-            const permitTypeInputs = document.querySelectorAll(
-                'input[name="permit_type[]"], input[name="permit_halmet"], input[name="permit_photo"]',
-            );
-            const photoPermitBadgeInput = document.querySelector(
-                'input[value="photo_permit_badge"], input[name="permit_photo"]',
-            );
-
-            if (isHostExternal) {
-                if (periodRadio) {
-                    periodRadio.checked = true;
-                }
-                if (longTermRadio) {
-                    longTermRadio.disabled = true;
-                }
-                if (periodRadio) {
-                    periodRadio.disabled = false;
-                }
-
-                permitTypeInputs.forEach(function (field) {
-                    const isPhotoPermit =
-                        field.value === 'photo_permit_badge' ||
-                        field.name === 'permit_photo';
-
-                    if (isPhotoPermit) {
-                        field.disabled = false;
-                        if (!field.checked) {
-                            field.checked = true;
-                        }
-                    } else {
-                        field.disabled = true;
-                        field.checked = false;
-                    }
-                });
-            } else {
-                if (longTermRadio) {
-                    longTermRadio.disabled = false;
-                }
-                if (periodRadio) {
-                    periodRadio.disabled = false;
-                }
-
-                permitTypeInputs.forEach(function (field) {
-                    field.disabled = false;
-                });
-            }
-
-            if (photoPermitBadgeInput) {
-                photoPermitBadgeInput.checked = isHostExternal;
-            }
-
-            togglePermitOptionFields();
-        }
-
-        addVisitorBtn.addEventListener('click', function () {
-            const clone = visitorTemplate.content.cloneNode(true);
-            visitorBody.appendChild(clone);
         });
 
         makeRadioGroupToggleable(
@@ -497,6 +627,7 @@ import { data } from 'jquery';
             togglePermitOptionFields();
             updatePermitTypeRestrictions();
         });
+        makeRadioGroupToggleable('#HELMET_STICKER, #PHOTO_PERMIT_BADGE');
 
         requestTypeRadios.forEach(function (radio) {
             radio.addEventListener('change', toggleHostExternalSection);
@@ -513,16 +644,13 @@ import { data } from 'jquery';
             });
         });
 
-        toggleHostExternalSection();
-        togglePermitOptionFields();
-        updatePermitTypeRestrictions();
-
         document.addEventListener('click', function (event) {
             if (event.target.closest('.remove-row')) {
                 const row = event.target.closest('tr');
                 if (row && visitorBody.contains(row)) {
                     if (visitorBody.rows.length > 1) {
                         row.remove();
+                        updateVisitorIndexes();
                     }
                 }
             }
@@ -546,95 +674,142 @@ import { data } from 'jquery';
             }
         });
 
-        updateAreaIndexes();
         toggleHostExternalSection();
+        togglePermitOptionFields();
+        updatePermitTypeRestrictions();
+        updateAreaIndexes();
+        updateVisitorIndexes();
+        toggleHostExternalSection();
+    }
 
-        const photoPermissionForm = document.getElementById(
-            'photo-permission-form',
-        );
+    $(document).on('click', '#btnRequest', async function (event) {
+        try {
+            event.preventDefault();
+            const requestType = $('input[name="REQUEST_TYPE"]:checked').val();
+            const permitOption = $('input[name="permit_option"]:checked').val();
+            const requiredMessage = [
+                {
+                    element: $('#REQBY'),
+                    message: 'Please fill RequestBy',
+                },
+                {
+                    element: $('input[name="REQUEST_TYPE"]'),
+                    message: 'Please select RequestType',
+                },
+                {
+                    element: $('#PURPOSE'),
+                    message: 'Please fill Purpose',
+                },
+                {
+                    element: $('input[name="permit_option"]'),
+                    message: 'Please select Permit Date',
+                },
+                {
+                    element: $('#HELMET_STICKER, #PHOTO_PERMIT_BADGE').not(
+                        ':disabled',
+                    ),
+                    message: 'Please select Permit Type',
+                },
+            ];
 
-        photoPermissionForm?.addEventListener('submit', function (event) {
-            const errors = [];
-            const valueOf = (selector) =>
-                document.querySelector(selector)?.value.trim() || '';
-            const requestType = document.querySelector(
-                'input[name="reqtype"]:checked',
-            )?.value;
-            const permitOption = document.querySelector(
-                'input[name="permit_option"]:checked',
-            )?.value;
+            if (requestType === 'E') {
+                requiredMessage.push({
+                    element: $('input[name="REQUEST_SUB_TYPE"]'),
+                    message: 'Please select the Request Subtype',
+                });
 
-            if (!valueOf('#REQBY')) errors.push('Request By');
-            if (!valueOf('#empName')) errors.push('Name');
-            if (!valueOf('#empDiv')) errors.push('Sect./Dept./Div.');
-            if (!requestType) errors.push('Request Type');
+                $('#visitor-table-body tr').each(function (index) {
+                    $(this)
+                        .find('input')
+                        .each(function () {
+                            requiredMessage.push({
+                                element: $(this),
+                                message: `Please fill Visitor row ${index + 1}`,
+                            });
+                        });
+                });
+            }
 
-            if (requestType === 'employee') {
-                if (
-                    !document.querySelector('input[name="req_subtype"]:checked')
-                ) {
-                    errors.push('Request Subtype');
-                }
-
-                const visitorRows = Array.from(
-                    visitorBody.querySelectorAll('tr'),
+            if (requestType === 'H') {
+                requiredMessage.push(
+                    {
+                    element: $('#host-external-section #APPLICANT_NAME'),
+                        message: 'Please fill the Visitor Name',
+                    },
+                    {
+                        element: $('#EMP_CODE'),
+                        message: 'Please fill the Host Name',
+                    },
+                    {
+                        element: $('#COMPANY_NAME'),
+                        message: 'Please fill the Company Name',
+                    },
                 );
-                if (!visitorRows.length) {
-                    errors.push('Applicant / Visitor Information');
-                } else {
-                    visitorRows.forEach((row, index) => {
-                        const fields = row.querySelectorAll('input');
-                        if (
-                            Array.from(fields).some(
-                                (field) => !field.value.trim(),
-                            )
-                        ) {
-                            errors.push(`Visitor row ${index + 1}`);
-                        }
-                    });
-                }
             }
 
-            if (requestType === 'host_external') {
-                if (!valueOf('#host_visitor_name')) {
-                    errors.push('Visitor Name');
-                }
-                if (!valueOf('#host_name')) errors.push('Host Name');
-                if (!valueOf('#host_company_name')) {
-                    errors.push('Company Name');
-                }
-            }
-
-            if (!valueOf('[name="recording_purpose"]')) {
-                errors.push('Purpose of Recording');
-            }
-            if (!permitOption) errors.push('Permit Date');
             if (permitOption === 'long_term') {
-                if (!valueOf('[name="permit_long_term_years"]')) {
-                    errors.push('Year(s)');
-                }
+                requiredMessage.push({
+                    element: $('#LONGTERM_YEARS'),
+                    message: 'Please fill the Year(s)',
+                });
             }
+
             if (permitOption === 'period') {
-                if (!valueOf('[name="permit_start_date"]')) {
-                    errors.push('Start Date');
-                }
-                if (!valueOf('[name="permit_valid_until"]')) {
-                    errors.push('Valid Until');
-                }
+                requiredMessage.push(
+                    {
+                        element: $('#PERMIT_START_DATE'),
+                        message: 'Please fill the Start Date',
+                    },
+                    {
+                        element: $('#PERMIT_END_DATE'),
+                        message: 'Please fill the Valid Until',
+                    },
+                );
             }
-            if (
-                !document.querySelector(
-                    'input[name="permit_halmet"]:checked, input[name="permit_photo"]:checked',
-                )
-            ) {
-                errors.push('Permit Type');
+
+            const areaRecords = (tableArea?.rows().data().toArray() ?? []).map(
+                (row) => row.AREA_ID,
+            );
+
+            console.log('Area Records:', areaRecords);
+
+            const areaRows = $('#area-table-body tr:not(#area-empty-row)');
+            if (!areaRecords.length) {
+                requiredMessage.push({
+                    element: $('#area-table-body'),
+                    message: 'Please fill Area to Recorded',
+                });
             }
-            if (!areaBody.querySelector('tr:not(#area-empty-row)')) {
-                errors.push('Area to Recorded');
-            }
+
+            areaRows.each(function (index) {
+                $(this)
+                    .find('input')
+                    .each(function () {
+                        requiredMessage.push({
+                            element: $(this),
+                            message: `Please fill Area to Recorded row ${index + 1}`,
+                        });
+                    });
+            });
+
+            const errors = requiredMessage
+                .filter(({ element }) => {
+                    if (!element.length) return true;
+                    if (element.is(':radio, :checkbox')) {
+                        return !element.is(':checked');
+                    }
+                    if (element.is('#area-table-body')) {
+                        return !areaRows.length;
+                    }
+                    return !element
+                        .toArray()
+                        .some((field) => field.value.trim());
+                })
+                .map(({ message }) =>
+                    message.replace(/^Please (fill|select) /, ''),
+                );
 
             if (errors.length) {
-                event.preventDefault();
                 showMessage(
                     `<div>กรุณากรอกข้อมูลให้ครบ:</div>
                      <ul class="list-disc pl-5 mt-1 space-y-1">
@@ -642,206 +817,95 @@ import { data } from 'jquery';
                      </ul>`,
                     'warning',
                 );
+                return;
             }
-        });
-    }
 
-    /*
-     * Area master data will be supplied by a server-side API.  The former
-     * browser-only CRUD implementation is retained here temporarily as a
-     * reference, but is deliberately excluded from the production bundle.
-     */
-    /* function initAreaPage() {
-        const searchArea = document.getElementById('searchArea');
-        const newAreaButton = document.getElementById('newAreaButton');
-        const cancelAreaButton = document.getElementById('cancelAreaButton');
-        const areaForm = document.getElementById('areaForm');
-        const areaTableBody = document.getElementById('areaTableBody');
-
-        if (
-            !searchArea ||
-            !newAreaButton ||
-            !cancelAreaButton ||
-            !areaForm ||
-            !areaTableBody
-        ) {
-            return;
-        }
-
-        const serverAreas = Array.isArray(window.gpTPHServerAreas)
-            ? window.gpTPHServerAreas
-            : [];
-        let editingRow = null;
-
-        function syncServerAreas() {
-            const storedAreas = getStoredAreas();
-            const storedIds = new Set(
-                storedAreas.map((area) => String(area.id)),
+            const details = Array.from($('#visitor-table-body tr')).map(
+                (row, index) => ({
+                    seqNo: index + 1,
+                    empCode: $(row).find('input').eq(0).val(),
+                    name: $(row).find('input').eq(1).val(),
+                    division: $(row).find('input').eq(2).val(),
+                    department: $(row).find('input').eq(3).val(),
+                    section: $(row).find('input').eq(4).val(),
+                }),
             );
-            const mergedAreas = storedAreas.slice();
 
-            serverAreas.forEach(function (area) {
-                if (!storedIds.has(String(area.id))) {
-                    mergedAreas.push({
-                        id: String(area.id),
-                        location: area.location || '',
-                        area: area.area || '',
-                        level: area.level || '',
-                        area_owner: area.area_owner || '',
-                    });
-                }
-            });
-
-            saveStoredAreas(mergedAreas);
-        }
-
-        function addStoredAreaRow(area) {
-            const row = document.createElement('tr');
-            row.dataset.localId = area.id;
-            row.innerHTML = `
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td>
-                    <button type="button" class="action-link table-action-button edit-row" title="แก้ไขข้อมูล">
-                        <span class="edit-icon">✎</span>
-                    </button>
-                    <button type="button" class="action-link table-action-button delete-row" title="ลบข้อมูล">
-                        <span class="delete-icon">🗑</span>
-                    </button>
-                </td>
-            `;
-
-            row.cells[1].textContent = area.location;
-            row.cells[2].textContent = area.area;
-            row.cells[3].textContent = area.level;
-            row.cells[4].textContent = area.area_owner;
-            areaTableBody.appendChild(row);
-        }
-
-        function renderStoredAreas() {
-            const areas = getStoredAreas();
-
-            if (areas.length > 0) {
-                const emptyRow = areaTableBody.querySelector('.empty-row');
-                if (emptyRow) {
-                    emptyRow.closest('tr').remove();
-                }
+            if (!details.length) {
+                showMessage('Please Add Visitor');
+                return;
             }
 
-            areas.forEach(function (area) {
-                addStoredAreaRow(area);
-            });
-            updateRowNumbers();
-        }
+            const submitDetails =
+                requestType === 'H'
+                    ? [
+                          {
+                              SEQ_NO: 1,
+                              APPLICANT_TYPE: 'H',
+                               EMP_CODE: $('#host-external-section #EMP_CODE').val(),
+                               APPLICANT_NAME: $('#host-external-section #APPLICANT_NAME').val(),
+                               COMPANY_NAME: $('#host-external-section #COMPANY_NAME').val(),
+                          },
+                      ]
+                    : details.map((detail) => ({
+                          SEQ_NO: detail.seqNo,
+                          APPLICANT_TYPE: 'E',
+                          EMP_CODE: detail.empCode,
+                          APPLICANT_NAME: detail.name,
+                          COMPANY_NAME: '',
+                      }));
 
-        function updateRowNumbers() {
-            areaTableBody
-                .querySelectorAll('tr:not(.empty-row)')
-                .forEach(function (row, index) {
-                    row.cells[0].textContent = index + 1;
+            const formData = new FormData($('#tphForm')[0]);
+            formData.set('REMARK', $('#remark').val());
+            formData.set(
+                'HELMET_STICKER',
+                $('#HELMET_STICKER').is(':checked') ? 'Y' : 'N',
+            );
+            formData.set(
+                'PHOTO_PERMIT_BADGE',
+                $('#PHOTO_PERMIT_BADGE').is(':checked') ? 'Y' : 'N',
+            );
+
+            submitDetails.forEach((detail, index) => {
+                Object.entries(detail).forEach(([key, value]) => {
+                    formData.append(`DETAILS[${index}][${key}]`, value);
                 });
-        }
-
-        function closeAreaForm() {
-            areaForm.reset();
-            editingRow = null;
-            areaForm.classList.remove('is-visible');
-        }
-
-        syncServerAreas();
-        renderStoredAreas();
-
-        searchArea.addEventListener('input', function () {
-            const keyword = this.value.toLowerCase();
-            const rows = areaTableBody.querySelectorAll('tr');
-
-            rows.forEach(function (row) {
-                const text = row.textContent.toLowerCase();
-                row.style.display = text.includes(keyword) ? '' : 'none';
             });
-        });
 
-        newAreaButton.addEventListener('click', function () {
-            areaForm.classList.add('is-visible');
-            areaForm.querySelector('input').focus();
-        });
+            areaRecords.forEach((record, index) => {
+                formData.append(`AREA_ID[${index}]`, record ?? '');
+            });
 
-        cancelAreaButton.addEventListener('click', function () {
-            closeAreaForm();
-        });
+            console.table(submitDetails);
+            console.table(areaRecords);
 
-        areaForm.addEventListener('submit', function (event) {
-            event.preventDefault();
-
-            const formData = new FormData(areaForm);
-            const emptyRow = areaTableBody.querySelector('.empty-row');
-
-            if (emptyRow) {
-                emptyRow.closest('tr').remove();
-            }
-
-            const areas = getStoredAreas();
-            const area = {
-                id: editingRow?.dataset.localId || Date.now().toString(),
-                location: formData.get('location'),
-                area: formData.get('area'),
-                level: formData.get('level'),
-                area_owner: formData.get('area_owner'),
-            };
-
-            if (editingRow?.dataset.localId) {
-                const index = areas.findIndex((item) => item.id === area.id);
-                if (index !== -1) {
-                    areas[index] = area;
-                }
-                editingRow.remove();
+            logFormData(formData);
+            const res = editingForm
+                ? await updateForm(editingForm, formData)
+                : await createForm(formData);
+            if (res.status == true) {
+                showMessage(res.message, 'success');
+                redirectWebflow();
             } else {
-                areas.push(area);
+                throw new Error(res.message);
             }
-
-            saveStoredAreas(areas);
-            addStoredAreaRow(area);
-
-            updateRowNumbers();
-            closeAreaForm();
-        });
-
-        areaTableBody.addEventListener('click', function (event) {
-            const editButton = event.target.closest('.edit-row');
-            const deleteButton = event.target.closest('.delete-row');
-
-            if (editButton) {
-                editingRow = editButton.closest('tr');
-                areaForm.elements.location.value =
-                    editingRow.cells[1].textContent;
-                areaForm.elements.area.value = editingRow.cells[2].textContent;
-                areaForm.elements.level.value = editingRow.cells[3].textContent;
-                areaForm.elements.area_owner.value =
-                    editingRow.cells[4].textContent;
-                areaForm.classList.add('is-visible');
-                areaForm.elements.location.focus();
-            }
-
-            if (deleteButton && confirm('ยืนยันการลบข้อมูลนี้หรือไม่?')) {
-                const row = deleteButton.closest('tr');
-                const localId = row.dataset.localId;
-
-                if (localId) {
-                    saveStoredAreas(
-                        getStoredAreas().filter((area) => area.id !== localId),
-                    );
-                }
-
-                row.remove();
-                updateRowNumbers();
-            }
-        });
-    } */
+        } catch (error) {
+            console.error('GP-TPH form submission failed', {
+                name: error?.name,
+                message: error?.message,
+                response: error?.response,
+                data: error?.response?.data,
+                error,
+            });
+            showMessage(error?.message || 'Unable to submit the form');
+        }
+    });
 
     document.addEventListener('DOMContentLoaded', function () {
-        initCreatePage();
+        try {
+            initCreatePage();
+        } catch (error) {
+            console.error('Error initializing the create page:', error);
+        }
     });
 })();

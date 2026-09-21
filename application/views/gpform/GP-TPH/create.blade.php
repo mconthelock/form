@@ -26,7 +26,7 @@
 @section('contents')
     <div
         class="bg-base-200 min-h-screen p-4 md:p-8 flex justify-center text-[13px] leading-relaxed font-sans text-base-content">
-        <form id="photo-permission-form" action="#" method="post"
+        <form id="tphForm" action="#" method="post"
             class="max-w-6xl mx-auto bg-white rounded-3xl shadow-xl border border-slate-200 p-6 space-y-6">
             <div class="text-center">
                 <H1 class="text-3xl font-bold text-primary">แบบฟอร์มขออนุญาตถ่ายภาพ</H1>
@@ -39,7 +39,7 @@
                 <div class="space-y-2">
                     <label class="text-sm font-semibold text-slate-700">Input By:</label>
                     <input type="text" name="INPUTBY" id="INPUTBY" class="input input-bordered w-full" placeholder=""
-                        readonly disabled>
+                        readonly>
                 </div>
                 <div class="space-y-2">
                     <label class="text-sm font-semibold text-slate-700">Request By:</label>
@@ -64,25 +64,25 @@
                 <div class="space-y-3">
                     <div>
                         <label class="employee-request-group inline-flex items-center gap-3">
-                            <input type="radio" name="reqtype" id="reqtype" value="employee"
+                            <input type="radio" name="REQUEST_TYPE" id="REQUEST_TYPE" value="E"
                                 class="radio radio-primary">
                             <span>Employee Request</span>
                         </label>
                         <div class="ml-8 mt-2 space-y-2">
                             <label class="employee-request-group flex flex-row items-center gap-2">
-                                <input type="radio" name="req_subtype" id="req_subtype" value="individual"
+                                <input type="radio" name="REQUEST_SUB_TYPE" id="REQUEST_SUB_TYPE" value="I"
                                     class="radio radio-primary">
                                 <span>Individual Request</span>
                             </label>
                             <label class="employee-request-group flex flex-row items-center gap-2">
-                                <input type="radio" name="req_subtype" id="req_subtype" value="group"
+                                <input type="radio" name="REQUEST_SUB_TYPE" id="REQUEST_SUB_TYPE" value="G"
                                     class="radio radio-primary">
                                 <span>Group Request</span>
                             </label>
                         </div>
                     </div>
                     <label class="host-request-group inline-flex items-center gap-3">
-                        <input type="radio" name="reqtype" id="reqtype" value="host_external"
+                        <input type="radio" name="REQUEST_TYPE" id="REQUEST_TYPE" value="H"
                             class="radio radio-primary">
                         <span>Host Request for External Personnel (พนักงานขอแทนบุคคลภายนอก)</span>
                     </label>
@@ -92,12 +92,13 @@
                 <!สำหรับพนักงาน>
                     <div class="flex items-center justify-between mb-4">
                         <div class="section-title text-base font-bold">Applicant / Visitor Information (ข้อมูลผู้ขอ)</div>
-                            <button type="button" id="add-visitor-row" class="btn btn-sm btn-primary">+</button>           
+                        <button type="button" id="add-visitor-row" class="btn btn-sm btn-primary">+</button>
                     </div>
                     <div class="overflow-x-auto">
                         <table class="table w-full border border-slate-200">
                             <thead class="table-header">
                                 <tr>
+                                    <th class="p-3 text-center">No.</th>
                                     <th class="p-3 text-left">EMP Code</th>
                                     <th class="p-3 text-left">Name</th>
                                     <th class="p-3 text-left">Division</th>
@@ -108,9 +109,10 @@
                             </thead>
                             <tbody id="visitor-table-body">
                                 <tr>
+                                    <td class="border p-2 text-center visitor-row-number">1</td>
                                     <td class="border p-2"><input type="text" name="visitor_Empcode" id="visitor_empcode"
                                             class="input input-sm input-bordered w-full"></td>
-                                    <td class="border p-2"><input type="text" name="visitor_name" id= "visitor_name"
+                                    <td class="border p-2"><input type="text" name="APPLICANT_NAME" id= "APPLICANT_NAME"
                                             class="input input-sm input-bordered w-full"></td>
                                     <td class="border p-2"><input type="text" name="visitor_div" id="visitor_div"
                                             class="input input-sm input-bordered w-full"></td>
@@ -126,6 +128,24 @@
                         </table>
                     </div>
             </div>
+            
+            <template id="visitor-row-template">
+                <tr>
+                    <td class="border p-2 text-center visitor-row-number" name="SEQ_NO"></td>
+                    <td class="border p-2"><input type="text" name="visitor_emp_code[]"
+                            class="input input-sm input-bordered w-full"></td>
+                    <td class="border p-2"><input type="text" name="APPLICANT_NAME"
+                            class="input input-sm input-bordered w-full"></td>
+                    <td class="border p-2"><input type="text" name="visitor_division[]"
+                            class="input input-sm input-bordered w-full"></td>
+                    <td class="border p-2"><input type="text" name="visitor_department[]"
+                            class="input input-sm input-bordered w-full"></td>
+                    <td class="border p-2"><input type="text" name="visitor_section[]"
+                            class="input input-sm input-bordered w-full"></td>
+                    <td class="border p-2 text-center"><button type="button"
+                            class="btn btn-sm btn-error remove-row">×</button></td>
+                </tr>
+            </template>
 
             <div id="host-external-section" class="section-box p-5 hidden">
                 <!สำหรับบุคคลภายนอก>
@@ -134,15 +154,15 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div class="space-y-2">
                             <label class="text-sm font-semibold text-slate-700">Visitor Name (ชื่อบุคคลภายนอก)</label>
-                            <input type="text" name="host_visitor_name" id="host_visitor_name"
+                            <input type="text" name="APPLICANT_NAME" id="APPLICANT_NAME"
                                 class="input input-bordered w-full" placeholder="Visitor Name">
                             <label class="text-sm font-semibold text-slate-700">Host Name (ชื่อผู้รับผิดชอบ)</label>
-                            <input type="tel" name="host_name" id="host_name" class="input input-bordered w-full"
+                            <input type="tel" name="EMP_CODE" id="EMP_CODE" class="input input-bordered w-full"
                                 placeholder="Host Name">
                         </div>
                         <div class="space-y-2">
                             <label class="text-sm font-semibold text-slate-700">Company Name (ชื่อบริษัท)</label>
-                            <input type="text" name="host_company_name" id="host_company_name"
+                            <input type="text" name="COMPANY_NAME" id="COMPANY_NAME"
                                 class="input input-bordered w-full" placeholder="Company Name">
 
                         </div>
@@ -155,7 +175,7 @@
 
             <div class="section-box p-5">
                 <div class="section-title text-base font-bold mb-3">Recording Details (รายละเอียดการถ่ายภาพ)</div>
-                <textarea name="recording_purpose" rows="4" class="textarea textarea-bordered w-full"
+                <textarea name="PURPOSE" id="PURPOSE" rows="4" class="textarea textarea-bordered w-full"
                     placeholder="Purpose of Recording (วัตถุประสงค์)"></textarea>
             </div>
 
@@ -167,21 +187,21 @@
                         <span>Long-Term Use (ใช้ระยะยาว)</span>
                     </label>
                     <div class="mt-3">
-                        <input type="number" name="permit_long_term_years" class="input input-bordered w-full"
+                        <input type="number" name="LONGTERM_YEARS" id = "LONGTERM_YEARS" class="input input-bordered w-full"
                             placeholder="Year(s)" inputmode="numeric" pattern="[0-9]*" min="0" step="1">
                     </div>
                     <label class="inline-flex items-center gap-2 mt-4">
-                        <input type="radio" name="permit_option" class="radio radio-primary" value="period">
+                        <input type="radio" name="permit_option" class="radio radio-primary" id='period' value="period">
                         <span>Use within period Date & Time (ใช้ในระยะเวลาที่กำหนด)</span>
                     </label>
                     <div class="mt-3 grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <label class="block text-sm text-slate-600 mb-1">Start Date</label>
-                            <input type="date" name="permit_start_date" class="input input-bordered w-full">
+                            <input type="text" name="PERMIT_START_DATE" class="input fdate input-bordered w-full" id='PERMIT_START_DATE'>
                         </div>
                         <div>
                             <label class="block text-sm text-slate-600 mb-1">Valid Until (ใช้ได้จนถึง)</label>
-                            <input type="date" name="permit_valid_until" class="input input-bordered w-full">
+                            <input type="text" name="PERMIT_END_DATE" class="input fdate input-bordered w-full" id="PERMIT_END_DATE">
                         </div>
                     </div>
                 </div>
@@ -190,12 +210,12 @@
                     <div class="section-title text-base font-bold mb-3">Permit Type (ประเภทที่ต้องการอนุญาต)</div>
                     <div class="space-y-3">
                         <label class="flex flex-row items-center gap-2">
-                            <input type="radio" name="permit_halmet" id="permit_halmet" value="helmet_sticker"
+                            <input type="radio" name="HELMET_STICKER" id="HELMET_STICKER" value="Y"
                                 class="radio radio-primary">
                             <span>Helmet Sticker (สติกเกอร์ติดหมวก)</span>
                         </label>
                         <label class="flex flex-row items-center gap-2">
-                            <input type="radio" name="permit_photo" id="permit_photo" value="photo_permit_badge"
+                            <input type="radio" name="PHOTO_PERMIT_BADGE" id="PHOTO_PERMIT_BADGE" value="Y"
                                 class="radio radio-primary">
                             <span>Photo Permit Badge (บัตรอนุญาตถ่ายภาพ)</span>
                         </label>
@@ -216,7 +236,7 @@
                     </label>
                 </div>
                 <div class="overflow-x-auto">
-                    <table class="table w-full border border-slate-200">
+                    <table class="table w-full border border-slate-200" id='table-area'>
                         <thead class="table-header">
                             <tr>
                                 <th class="border p-2 text-left">No</th>
@@ -237,29 +257,7 @@
                     </table>
                 </div>
 
-
-                <div class="flex justify-start">
-                    <button type="submit" class="btn btn-primary px-12">Save</button>
-                </div>
-
-                <template id="visitor-row-template">
-                    <tr>
-                        <td class="border p-2"><input type="text" name="visitor_emp_code[]"
-                                class="input input-sm input-bordered w-full"></td>
-                        <td class="border p-2"><input type="text" name="visitor_name[]"
-                                class="input input-sm input-bordered w-full"></td>
-                        <td class="border p-2"><input type="text" name="visitor_division[]"
-                                class="input input-sm input-bordered w-full"></td>
-                        <td class="border p-2"><input type="text" name="visitor_department[]"
-                                class="input input-sm input-bordered w-full"></td>
-                        <td class="border p-2"><input type="text" name="visitor_section[]"
-                                class="input input-sm input-bordered w-full"></td>
-                        <td class="border p-2 text-center"><button type="button"
-                                class="btn btn-sm btn-error remove-row">×</button></td>
-                    </tr>
-                </template>
-
-                <template id="area-row-template">
+                {{-- <template id="area-row-template">
                     <tr>
                         <td class="border p-2 text-center"></td>
                         <td class="border p-2"><input type="text" name="area_location[]"
@@ -273,7 +271,8 @@
                         <td class="border p-2 text-center"><button type="button"
                                 class="btn btn-sm btn-error remove-area-row">×</button></td>
                     </tr>
-                </template>
+                </template> --}}
+                <div id="sentRequest"></div>
         </form>
     </div>
 
@@ -364,9 +363,8 @@
                         <!-- Modal Footer -->
                         <div class="flex flex-wrap justify-end gap-2 border-t border-base-300 bg-base-100 px-6 py-4">
                             <label class="btn btn-outline btn-success text-success" for="modal-add" id="addData">
-                                <svg class="h-4 w-4 text-current" aria-hidden="true"
-                                    xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none"
-                                    viewBox="0 0 24 24">
+                                <svg class="h-4 w-4 text-current" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
+                                    width="24" height="24" fill="none" viewBox="0 0 24 24">
                                     <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
                                         stroke-width="2"
                                         d="M12 7.757v8.486M7.757 12h8.486M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
@@ -375,9 +373,8 @@
                             </label>
 
                             <label class="btn btn-outline btn-error text-error" for="modal-add">
-                                <svg class="h-4 w-4 text-current" aria-hidden="true"
-                                    xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none"
-                                    viewBox="0 0 24 24">
+                                <svg class="h-4 w-4 text-current" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"
+                                    width="24" height="24" fill="none" viewBox="0 0 24 24">
                                     <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
                                         stroke-width="2" d="m15 9-6 6m0-6 6 6m6-3a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                                 </svg>

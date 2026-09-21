@@ -20,14 +20,9 @@ class form extends MY_Controller{
         if(empty($data)) throw new Exception("Error Processing Request", 1);
 
         $data['mode'] = 1;
-        if(isset($data["NRUNNO"]) && $data["NRUNNO"] != 0) {
-            //Approve or view mode
-            $this->views("gpform/{$this->formname}/show", $data);
-
-        }else{
-            //Create mode
-            $this->views("gpform/{$this->formname}/create", $data);
-        }
+        // Use one form for both creation and editing.  The page detects an
+        // existing NRUNNO and loads that request before it is submitted.
+        $this->views("gpform/{$this->formname}/create", $data);
 
 
     }
