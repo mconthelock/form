@@ -124,31 +124,24 @@ const JigDashboard = {
         $('#summary-fy').text(String(selected).slice(-2));
     },
     renderSummary(summary) {
-        const total = Number(summary.total || 0);
+        const total = Number(summary.total ?? this.data.length);
         const completed = Number(summary.completed || 0);
-        const dueSoon = Number(summary.dueSoon || 0);
-        const overdue = Number(summary.overdue || 0);
-
-        const sixMonth = this.data.filter(item =>
-            Number(item.INSPEC_PERIOD) === 6
-        ).length;
-
-        /*
-         * API ปัจจุบันยังไม่ได้ส่ง CREATE_DATE
-         * ดังนั้นยังไม่สามารถระบุ New JIG ตาม Fiscal Year ได้อย่างถูกต้อง
-         */
-        const newJig = 0;
-
         $('#summary-total').text(total);
         $('#summary-completed').text(completed);
-        $('#summary-due-soon').text(dueSoon);
-        $('#summary-overdue').text(overdue);
-        $('#summary-new').text(newJig);
+        $('#summary-due-soon').text(Number(summary.dueSoon || 0));
+        $('#summary-overdue').text(Number(summary.overdue || 0));
+        $('#summary-new').text(Math.max(0, total - completed));
+        $('#filter-total').text(this.data.length);
+        $('#filter-due-soon').text(this.data.filter(item => (item.DUE_STATUS || item.DASHBOARD_STATUS) === 'DUE_SOON').length);
+        $('#filter-overdue').text(this.data.filter(item => (item.DUE_STATUS || item.DASHBOARD_STATUS) === 'OVERDUE').length);
+        $('#filter-new').text(this.data.filter(item => this.isNewJig(item)).length);
+        $('#filter-12m').text(this.data.filter(item => Number(item.INSPEC_PERIOD) === 12).length);
+        $('#filter-6m').text(this.data.filter(item => Number(item.INSPEC_PERIOD) === 6).length);
+    },
 
-        $('#filter-total').text(total);
-        $('#filter-due-soon').text(dueSoon);
-        $('#filter-new').text(newJig);
-        $('#filter-6m').text(sixMonth);
+    isNewJig(item) {
+        const date = this.parseDate(item.START_USE_DATE);
+        return !!date && date >= new Date(this.fiscalYear, 3, 1) && date < new Date(this.fiscalYear + 1, 3, 1);
     },
 
     applyFilter() {
@@ -157,15 +150,18 @@ const JigDashboard = {
         switch (this.currentFilter) {
             case 'due-soon':
                 items = items.filter(item =>
-                    item.DASHBOARD_STATUS === 'DUE_SOON'
+                    (item.DUE_STATUS || item.DASHBOARD_STATUS) === 'DUE_SOON'
                 );
                 break;
 
             case 'new':
-                /*
-                 * รอ CREATE_DATE จาก API
-                 */
-                items = [];
+                items = items.filter(item => this.isNewJig(item));
+                break;
+            case 'overdue':
+                items = items.filter(item => (item.DUE_STATUS || item.DASHBOARD_STATUS) === 'OVERDUE');
+                break;
+            case '12m':
+                items = items.filter(item => Number(item.INSPEC_PERIOD) === 12);
                 break;
 
             case '6m':
@@ -250,7 +246,7 @@ const JigDashboard = {
 
                     <td>
                         <span class="jig-name">
-                            ${this.escapeHtml(item.JIG_NAME || '-')}
+                            ${this.escapeHtml(item.JIG_NAME || '-')} ${this.isNewJig(item) ? '<span class="legend-status status-new">New</span>' : ''}
                         </span>
                     </td>
 
@@ -287,38 +283,11 @@ const JigDashboard = {
     },
 
     renderSchedule(item) {
-        const inspections = Array.isArray(item.INSPECTIONS)
-            ? item.INSPECTIONS
-            : [];
-
-        if (!inspections.length) {
-            return '';
-        }
-
-        return inspections.map(inspection => {
-            const date = this.parseDate(inspection.SCHEDULE_DATE);
-
-            if (!date) return '';
-
-            const month = this.getMonthShort(date.getMonth());
-            const status = String(inspection.INSPEC_STATUS || '').toUpperCase();
-
-            if (status === 'FINISH') {
-                return `
-                    <span class="schedule-month schedule-finished"
-                          title="ตรวจแล้ว">
-                        ${month}
-                    </span>
-                `;
-            }
-
-            return `
-                <span class="schedule-month schedule-planned"
-                      title="กำหนดตรวจ ${month}">
-                    ${month}
-                </span>
-            `;
-        }).join('');
+        const date = this.parseDate(item.NEXT_INSPEC_DATE);
+        if (!date) return '-';
+        const hues = [210, 270, 330, 150, 35, 185, 240, 15, 290, 80, 170, 350];
+        const hue = hues[date.getMonth()];
+        return '<span style="display:inline-block;padding:5px 12px;border-radius:8px;font-weight:700;background:hsl(' + hue + ',80%,94%);color:hsl(' + hue + ',70%,28%);border:1px solid hsl(' + hue + ',65%,78%)" title="เดือนตรวจครั้งถัดไป">' + this.getMonthShort(date.getMonth()) + '</span>';
     },
 
     renderStatus(status) {
@@ -466,34 +435,15 @@ const JigDashboard = {
         ];
     },
 
-    renderPeriod(period) {
-        if (!period || !period.from || !period.to) {
-            $('#period-label').text('');
-            return;
-        }
-
-        const from = this.parseDate(period.from);
-        const to = this.parseDate(period.to);
-
-        if (!from || !to) return;
-
-        const fyShort = String(this.fiscalYear + 543).slice(-2);
-
-        $('#period-label').text(
-            `FY${fyShort}: ${this.getMonthShort(from.getMonth())} ${from.getFullYear()} – ` +
-            `${this.getMonthShort(to.getMonth())} ${to.getFullYear()}`
-        );
+    renderPeriod() {
+        const fy = this.fiscalYear;
+        $('#period-label').text('FY' + String(fy).slice(-2) + ' (1 Apr ' + fy + ' - 31 Mar ' + (fy + 1) + ')');
     },
 
     getControllerName(item) {
+        const empno = String(item.PIC_EMPNO || '').trim();
         const name = String(item.PIC_NAME || '').trim();
-        const process = String(item.PROCESS_CODE || '').trim();
-
-        if (name && process) return `${name}/${process}`;
-        if (name) return name;
-        if (item.PIC_EMPNO) return item.PIC_EMPNO;
-
-        return '-';
+        return [empno ? '(' + empno + ')' : '', name].filter(Boolean).join(' ') || '-';
     },
 
     getInspectionPeriod(item) {
@@ -501,7 +451,7 @@ const JigDashboard = {
 
         if (!period) return '-';
 
-        if (period === 12) return '1Y';
+        if (period === 12) return '12M';
 
         return `${period}M`;
     },
@@ -523,10 +473,15 @@ const JigDashboard = {
 
     parseDate(value) {
         if (!value) return null;
-
-        const date = new Date(value);
-
-        return isNaN(date.getTime()) ? null : date;
+        if (/^\d{4}-\d{2}-\d{2}$/.test(String(value))) {
+            const [y, m, d] = value.split('-').map(Number);
+            return new Date(y, m - 1, d);
+        }
+        const instant = new Date(value);
+        if (Number.isNaN(instant.getTime())) return null;
+        const parts = new Intl.DateTimeFormat('en-US', {timeZone: 'Asia/Bangkok', year: 'numeric', month: 'numeric', day: 'numeric'}).formatToParts(instant);
+        const part = type => Number(parts.find(p => p.type === type).value);
+        return new Date(part('year'), part('month') - 1, part('day'));
     },
 
     getMonthShort(month) {

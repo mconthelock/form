@@ -1,0 +1,124 @@
+import Swal from 'sweetalert2';
+import { createForm, getFormDetail, showflow, doaction } from '@amec/webasset/api/webform';
+import { insertJigForm, saveJigForm, loadJigForm, uploadJigFiles, finishJigForm } from './data';
+import { collectJigPayload, calendarDate } from './payload';
+
+const keyNames = ['NFRMNO','VORGNO','CYEAR','CYEAR2','NRUNNO'];
+const keyOf = data => Object.fromEntries(keyNames.map(name => [name, ['NFRMNO','NRUNNO'].includes(name) ? Number(data[name]) : String(data[name] ?? '')]));
+const checkResponse = result => { if (result?.status === false) throw new Error(typeof result.message === 'string' ? result.message : 'ดำเนินการไม่สำเร็จ'); return result; };
+
+export function initializeJigWorkflow(editor) {
+    const {form, rows, pageMode} = editor;
+    const context = document.querySelector('.form-data').dataset;
+    let key = keyOf(Object.fromEntries(keyNames.map(name => [name, context[name.toLowerCase()]])));
+    const actor = context.empno;
+    const recoveryId = `jig-pending:${key.NFRMNO}:${key.VORGNO}:${key.CYEAR}:${actor}`;
+    let busy = false, loaded = pageMode === 'create', approved = false;
+    const approval = document.querySelector('#jig-approval');
+    function navigate() {
+        const url = new URL(window.location.href);
+        for (const [field,param] of Object.entries({NFRMNO:'no',VORGNO:'orgNo',CYEAR:'y',CYEAR2:'y2',NRUNNO:'runNo'})) url.searchParams.set(param,key[field]);
+        url.searchParams.set('empno',actor);
+        window.location.assign(url.href);
+    }
+    async function withBusy(action) {
+        if (busy || !loaded) return;
+        busy = true;
+        const controls = Array.from(document.querySelectorAll('#jig-form input,#jig-form select,#jig-form textarea,#jig-form button,#jig-approval button'));
+        const disabled = controls.map(el => el.disabled);
+        try { return await action(() => controls.forEach(el => { el.disabled = true; })); }
+        catch (error) { await Swal.fire({icon:'error',title:'ดำเนินการไม่สำเร็จ',text:error.message || 'กรุณาลองใหม่'}); return false; }
+        finally { controls.forEach((el,i) => { el.disabled = disabled[i]; }); busy = false; }
+    }
+    async function persist(lock) {
+        if (pageMode === 'view') return false;
+        await editor.ready;
+        if (!await editor.validate()) return false;
+        const files = editor.files();
+        const hasNg = Array.from(rows.querySelectorAll('.result')).some(el => el.textContent === 'NG');
+        const payload = collectJigPayload(form, rows, files.stored, hasNg);
+        const reqby = form.elements.requested_by.value;
+        const inputby = form.elements.input_by.value;
+        lock();
+        if (pageMode === 'create') {
+            const pending = JSON.parse(sessionStorage.getItem(recoveryId) || 'null');
+            if (pending?.uncertain) throw new Error('ยังยืนยันผลสร้างเลข Form ครั้งก่อนไม่ได้ กรุณาตรวจรายการ Webflow ก่อนสร้างซ้ำ');
+            if (pending?.key) {
+                key = keyOf(pending.key);
+                if (await loadJigForm(key,true)) { sessionStorage.removeItem(recoveryId); navigate(); return true; }
+            } else {
+                sessionStorage.setItem(recoveryId, JSON.stringify({uncertain:true}));
+                const result = checkResponse(await createForm({NFRMNO:key.NFRMNO,VORGNO:key.VORGNO,CYEAR:key.CYEAR,REQBY:reqby,INPUTBY:inputby,DRAFT:'0',REMARK:''}));
+                if (!result?.data?.NRUNNO) throw new Error('API ไม่คืนเลข Form กรุณาตรวจรายการ Webflow ก่อนสร้างซ้ำ');
+                key = keyOf(result.data);
+                sessionStorage.setItem(recoveryId,JSON.stringify({key}));
+            }
+            const webform = await getFormDetail(key);
+            if (String(webform.VINPUTER).trim() !== inputby || String(webform.VREQNO).trim() !== reqby) throw new Error('Requested By ไม่ตรงกับ Form ที่สร้างไว้ก่อนหน้า กรุณาใช้ผู้ร้องขอเดิม');
+            form.elements.reg_date._flatpickr.setDate(calendarDate(webform.DREQDATE,true),false,'Y-m-d');
+            payload.FILES = [...files.stored,...await uploadJigFiles(key,actor,files.incoming)].map((file,i) => ({...file,FILE_SEQ:i+1}));
+            checkResponse(await insertJigForm({...payload,...key,FORM_TYPE:'CREATE',CREATE_BY:actor}));
+            sessionStorage.removeItem(recoveryId);
+            navigate();
+        } else {
+            payload.FILES = [...payload.FILES,...await uploadJigFiles(key,actor,files.incoming)].map((file,i) => ({...file,FILE_SEQ:i+1}));
+            delete payload.REV; delete payload.START_USE_DATE;
+            checkResponse(await saveJigForm(key,{...payload,UPDATE_BY:actor,REPLACE_DETAILS:true,REPLACE_FILES:true}));
+        }
+        return true;
+    }
+    async function load() {
+        if (pageMode === 'create') return;
+        try {
+            const [snapshot,webform,flow] = await Promise.all([loadJigForm(key),getFormDetail(key),showflow(key)]);
+            await editor.hydrate(snapshot,webform,key);
+            document.querySelector('.flow').innerHTML = flow.html || '';
+            approval.hidden = context.mode !== '2';
+            loaded = true;
+        } catch (error) {
+            document.querySelector('#jig-load-status').textContent = 'โหลดข้อมูลไม่สำเร็จ: ' + error.message;
+            await Swal.fire({icon:'error',title:'โหลดข้อมูลไม่สำเร็จ',text:error.message});
+        }
+    }
+    async function act(action) {
+        return withBusy(async lock => {
+            if (context.mode !== '2' || approved) return false;
+            const result = await Swal.fire({title:action === 'approve' ? 'ยืนยัน Approve?' : 'ส่งกลับเพื่อแก้ไข',input:action === 'returnb' ? 'textarea' : undefined,showCancelButton:true,confirmButtonText:'ยืนยัน',cancelButtonText:'ยกเลิก',inputValidator:action === 'returnb' ? value => !value?.trim() ? 'กรุณาระบุเหตุผล' : undefined : undefined});
+            if (!result.isConfirmed) return false;
+            if (action === 'approve' && pageMode === 'edit' && !await persist(lock)) return false;
+            lock();
+            checkResponse(await doaction({...key,ACTION:action,EMPNO:actor,REMARK:result.value || '',CEXTDATA:context.exdata || ''}));
+            approved = true;
+            approval.hidden = true;
+            try {
+                const webform = await getFormDetail(key);
+                if (String(webform.CST) === '2') checkResponse(await finishJigForm(key,actor));
+            } catch (error) {
+                await Swal.fire({icon:'warning',title:'บันทึก Flow แล้ว',text:'ยังยืนยันการอัปเดต JIG_MASTER ไม่ได้: '+error.message+' กรุณาตรวจสอบก่อนอนุมัติซ้ำ'});
+                const retry = document.createElement('button');
+                retry.type = 'button'; retry.className = 'btn mt-4'; retry.textContent = 'ลองอัปเดต JIG_MASTER อีกครั้ง';
+                retry.onclick = () => void withBusy(async lock => {
+                    lock(); retry.disabled = true;
+                    try {
+                        const current = await getFormDetail(key);
+                        if (String(current.CST) === '2') checkResponse(await finishJigForm(key,actor));
+                        window.location.reload();
+                    } finally { retry.disabled = false; }
+                });
+                document.querySelector('#jig-page').append(retry);
+                return false;
+            }
+            window.location.reload();
+            return true;
+        });
+    }
+    document.querySelector('#jig-approve').onclick = () => void act('approve');
+    document.querySelector('#jig-return').onclick = () => void act('returnb');
+    void load();
+    return {save: () => withBusy(async lock => {
+        if (await persist(lock) && pageMode === 'edit') {
+            await Swal.fire({icon:'success',title:'บันทึกเรียบร้อย'});
+            window.location.reload();
+        }
+    })};
+}
