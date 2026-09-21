@@ -46,6 +46,7 @@ $(document).on('input', 'input[name="requester"]', async function () {
             return;
         }
         await setProfileCard(requester, '#requester-card-container');
+        $('#next-step').prop('disabled', false);
     } catch (error) {
         console.error(error);
         showErrorMessage(error.message);

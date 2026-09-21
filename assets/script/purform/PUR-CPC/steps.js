@@ -184,6 +184,7 @@ export const steps = {
                 btnNext.removeClass('hidden');
                 break;
             case 2:
+                btnNext.prop('disabled', true);
                 this.function = null;
                 const activePriceConditions = await getActivePriceConditions();
                 if (!activePriceConditions.status) {
