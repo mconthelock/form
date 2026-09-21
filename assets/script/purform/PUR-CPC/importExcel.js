@@ -140,7 +140,7 @@ export const importExcel = {
         }
 
         // * ตรวจสอบข้อมูลในไฟล์ Excel ว่าตรงกับฟังก์ชันที่เลือกหรือไม่
-        if (data.find((row) => row.FUNCTION !== steps.function)) {
+        if (data.find((row) => row.FUNCTIONS !== steps.function)) {
             showMessage(
                 'The selected Excel file contains rows with a different function',
                 'warning',
@@ -156,7 +156,7 @@ export const importExcel = {
             startRow: 3,
             endCol: colToNumber('AI'),
             headerName: [
-                { key: 'FUNCTION', column: 'A' },
+                { key: 'FUNCTIONS', column: 'A' },
                 { key: 'NEW_VENDOR_NAME', column: 'B' },
                 { key: 'NEW_MAKER_NAME', column: 'C' },
                 { key: 'NEW_PRICE_YEAR', column: 'D' },

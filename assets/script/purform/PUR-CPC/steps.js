@@ -3,6 +3,7 @@ import { requiredForm, showErrorMessage } from '@amec/webasset/utils';
 import { tableCreatePrice } from './table-create-price';
 import { tableComparison } from './table-comparison';
 import { importExcel } from './importExcel';
+import { tableDraft } from './table.draft';
 /**
  * @author Sutthipong Tangmongkhoncharoen(24008)
  * @since 2026-09-15
@@ -11,6 +12,7 @@ import { importExcel } from './importExcel';
 export const steps = {
     instance: null,
     mode: null,
+    _inputer: null,
     _requester: null,
     _plannerCode: null,
     _function: null,
@@ -20,6 +22,12 @@ export const steps = {
     },
     get plannerCode() {
         return this._plannerCode;
+    },
+    set inputer(value) {
+        this._inputer = value;
+    },
+    get inputer() {
+        return this._inputer;
     },
     set requester(value) {
         this._requester = value;
@@ -51,6 +59,7 @@ export const steps = {
     get data() {
         return {
             mode: this.mode,
+            inputer: this._inputer,
             requester: this._requester,
             plannerCode: this._plannerCode,
             function: this._function,
@@ -59,12 +68,14 @@ export const steps = {
     },
     reset() {
         this.mode = null;
+        this._inputer = null;
         this._requester = null;
         this._plannerCode = null;
         this._function = null;
         this._formNo = null;
     },
-    init() {
+    init(inputer) {
+        this.inputer = inputer;
         this.instance = new Steps({
             container: '#price-comparison-steps',
             steps: [
@@ -142,7 +153,12 @@ export const steps = {
                 btnDraftStep.removeClass('hidden');
                 break;
             case 1:
+                tableDraft.init(this.inputer);
+                btnPrevious.removeClass('hidden');
+                btnNext.removeClass('hidden');
+                break;
             case 2:
+                requester.trigger('focus');
                 btnPrevious.removeClass('hidden');
                 btnNext.removeClass('hidden');
                 break;
@@ -166,10 +182,6 @@ export const steps = {
             $('#step-requester')[0].reset();
             $('#requester-card-container').empty();
             $('#detail-step-container').html('');
-            // เมื่อไปหน้า input data ให้ focus ที่ช่อง requester
-            if (index === 2) {
-                requester.trigger('focus');
-            }
             // เมื่อกลับไปหน้าแรกให้ reset ค่าทั้งหมด
             if (index === 0) {
                 this.reset();

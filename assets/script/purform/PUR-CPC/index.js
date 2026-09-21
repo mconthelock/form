@@ -40,7 +40,7 @@ $(async function () {
         $('#INPUTBY').val(empno);
         await setProfileCard(empno, '#inputer-card-container', 'Inputer');
         // Set step
-        steps.init();
+        steps.init(empno);
         importExcel.init();
     } catch (error) {
         console.error(error);
