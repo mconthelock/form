@@ -14,9 +14,10 @@ import { directlogin, passwordLogin } from '@amec/webasset/api/auth';
 import { createCarousel } from '@amec/webasset/api/gpreport';
 import { showMessage, showErrorMessage } from '@amec/webasset/utils';
 
-import { sendSession, host, uri } from '../utils';
+import { sendSession, host, uri, clientIp } from '../utils';
 import { getAppsList } from '../service/docinv';
 import { splashScreen } from './login-utils';
+import { showLoader } from '@amec/webasset/preloader';
 
 var camera;
 
@@ -38,6 +39,15 @@ $(document).ready(async function () {
             window.location.href = `${process.env.APP_ENV}/${group}`;
         }
     }
+    const leaveNode = await getLeaveNode();
+    const { ip } = await clientIp();
+    const isLeaveNode = leaveNode.some((node) => node.ip === ip);
+    if (isLeaveNode) {
+        $('.toggle-login').data('type', 'frm-rfid').click();
+        initBarcodeScanner();
+        return;
+    }
+
     $('.loginform:visible').find('input').first().focus();
 });
 
@@ -209,10 +219,6 @@ export async function getAuth(appid) {
     return app.data.APP_LOGIN;
 }
 
-function cardLogin(data) {
-    return new Promise((resolve) => {});
-}
-
 async function barcodeLogin(empcode) {
     if (user.status !== undefined) {
         await showErrorMessage(user.message);
@@ -294,4 +300,77 @@ async function getAppsDB(id) {
         await setApplication(app);
     });
     return apps.find((app) => app.APP_ID == id);
+}
+
+async function getLeaveNode() {
+    const data = await fetch('/form/leave.json').then((res) => res.json());
+    return data;
+}
+
+export function initBarcodeScanner() {
+    let scanValue = '';
+    $(document).on('keydown', async function (e) {
+        if (
+            e.key === 'Shift' ||
+            e.key === 'F12' ||
+            e.key === 'CapsLock' ||
+            e.key === 'F5' ||
+            e.key === 'Enter'
+        ) {
+            return;
+        }
+
+        const key = e.key;
+        if (key === 'Enter') {
+            console.log('Enter อัตโนมัติจาก Scanner, ข้าม');
+            return;
+        }
+
+        // Validate input (only alphanumeric)
+        if (!/^[a-zA-Z0-9]$/.test(key)) {
+            console.log('กดตัวไม่ใช่ตัวอักษร/ตัวเลข ข้าม');
+            showMessage('กรุณาเปลี่ยนภาษาที่คีย์บอร์ด', 'error');
+            return;
+        }
+
+        // Build scan value
+        //8914A0B2 บัตรยืม
+        scanValue += e.key;
+        if (scanValue.length == 8) {
+            await showLoader();
+
+            const user = await cardLogin(scanValue);
+            if (user.status !== undefined) {
+                await showErrorMessage(user.message);
+                frm.find('.loading').addClass('hidden');
+                frm.find('input').attr('readonly', false);
+                frm.find('.btn').attr('disabled', false);
+                return;
+            }
+            const url = await successLogin(user);
+            window.location.replace(url);
+            scanValue = '';
+        }
+    });
+}
+
+function cardLogin(data) {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `${process.env.APP_API}/auth/cardlogin/`,
+            type: 'post',
+            dataType: 'json',
+            data: { username: data, appid: $('#appid').val() },
+            xhrFields: {
+                withCredentials: true,
+            },
+            success: function (res) {
+                resolve(res);
+            },
+            error: function (xhr, err) {
+                console.log(err);
+                reject(err);
+            },
+        });
+    });
 }
