@@ -245,10 +245,12 @@ function openForm(area = null) {
 
     if (area) {
         const ownerCode = area.AREA_OWNER || area.area_owner || '';
-        const ownerPosCode = area.AREA_OWNER_POSCODE || area.area_owner_poscode || '';
-        const ownerValue = ownerPosCode && ownerCode
-            ? `${ownerPosCode}+${ownerCode}`
-            : ownerCode;
+        const ownerPosCode =
+            area.AREA_OWNER_POSCODE || area.area_owner_poscode || '';
+        const ownerValue =
+            ownerPosCode && ownerCode
+                ? `${ownerPosCode}+${ownerCode}`
+                : ownerCode;
         form.elements.LOCATION_ID.value = getLocationId(area) || '';
         form.elements.AREA_NAME.value = area.AREA_NAME || area.area || '';
         form.elements.AREA_LEVEL.value = area.AREA_LEVEL || area.level || '';
@@ -377,7 +379,7 @@ function bindEvents() {
 
         if (deleteButton) {
             const areaId = deleteButton.dataset.areaId;
-            if (!await confirmAreaDeletion()) {
+            if (!(await confirmAreaDeletion())) {
                 return;
             }
 
