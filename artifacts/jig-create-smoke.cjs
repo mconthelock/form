@@ -1,0 +1,13 @@
+const fs=require('fs'),assert=require('assert/strict');const {chromium}=require('D:/for_dev/src/api/node_modules/playwright');
+(async()=>{const browser=await chromium.launch({headless:true});try{const page=await browser.newPage();const errors=[],requests=[];page.on('pageerror',e=>errors.push(e.message));const html=fs.readFileSync('artifacts/jig-create-rendered.html','utf8');
+await page.route('**/*',async route=>{const url=route.request().url();requests.push(url);let body=[];
+if(url==='http://jig.test/form/')return route.fulfill({contentType:'text/html',body:html});
+if(url.includes('/assets/dist/js/iejig.js'))return route.fulfill({contentType:'application/javascript',body:fs.readFileSync('assets/dist/js/iejig.js','utf8')});
+if(url.endsWith('/mfg-processes'))body=[{PROCESS:'A'}];else if(url.endsWith('/locations'))body=[{SHOPCODE:'K4',SHOPDESC:'Assembly'}];else if(url.endsWith('/ie-pics'))body=[{SEMPNO:'15199',SNAME:'PIC'}];else if(url.includes('/amec/'))body=[{SEMPNO:'15199',SNAME:'Test',CSTATUS:'1'}];
+return route.fulfill({contentType:'application/json',body:JSON.stringify(body)});});
+await page.goto('http://jig.test/form/');await page.waitForFunction(()=>document.querySelector('#checkpoint-rows')?.children.length===1,{},{timeout:10000});
+assert.deepEqual(errors,[]);assert.equal(await page.locator('#jig-fields').isEnabled(),true);assert.equal(await page.locator('#loading-box').isChecked(),false);assert.equal(await page.locator('#jig-form').isVisible(),true);
+await page.locator('#add-checkpoint').click();assert.equal(await page.locator('#checkpoint-rows tr').count(),2);
+assert.equal(requests.some(url=>/getFormDetail|showflow|\/jig\/forms\//.test(url)),false);
+console.log('PASS: actual Blade Create + current JS bundle initializes, enables fields, hides loader, adds checkpoint; no existing-form API calls.');console.log('Page errors:',errors);
+}finally{await browser.close();}})().catch(e=>{console.error(e);process.exitCode=1;});

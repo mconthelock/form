@@ -1,25 +1,42 @@
-import { initializeJigWorkflow } from './workflow';
-import { calendarDate, displayDate, headerFields, parseActions } from './payload';
+//import { initializeJigWorkflow } from './workflow';
+import {
+    calendarDate,
+    displayDate,
+    headerFields,
+    parseActions,
+} from './payload';
 import { jigFileUrl } from './data';
 import Swal from 'sweetalert2';
 import { setDatePicker } from '@amec/webasset/flatpickr';
 import { evaluateCheckpoint } from './checkpoint';
-import { getJigProcesses, getJigLocations, getJigEmployee, getJigPics } from './data';
+import {
+    getJigProcesses,
+    getJigLocations,
+    getJigEmployee,
+    getJigPics,
+} from './data';
 
 $(function () {
     const form = document.querySelector('#jig-form');
     const rows = document.querySelector('#checkpoint-rows');
     if (!form) return;
     $('#loading-box').prop('checked', false);
-    const parts = new Intl.DateTimeFormat('en-GB', {timeZone:'Asia/Bangkok',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());
-    const part = type => parts.find(p => p.type === type).value;
+    const parts = new Intl.DateTimeFormat('en-GB', {
+        timeZone: 'Asia/Bangkok',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+    }).formatToParts(new Date());
+    const part = (type) => parts.find((p) => p.type === type).value;
     const pageMode = document.querySelector('#jig-page').dataset.mode;
     let storedFiles = [];
     let storedKey;
     let workflow;
     const today = part('year') + '-' + part('month') + '-' + part('day');
-    form.elements.start_use_date.value = part('year') + '-' + part('month') + '-01';
-    form.elements.start_use_display.value = '01/' + part('month') + '/' + part('year');
+    form.elements.start_use_date.value =
+        part('year') + '-' + part('month') + '-01';
+    form.elements.start_use_display.value =
+        '01/' + part('month') + '/' + part('year');
     setDatePicker({
         element: '[name="reg_date"]',
         defaultDate: calendarDate(today, true),
@@ -29,7 +46,10 @@ $(function () {
         altInput: true,
         altFormat: 'd/m/Y',
         disableMobile: true,
-        onReady: (_dates, _value, instance) => { instance.set('altFormat', 'd/m/Y'); instance.set('clickOpens', false); },
+        onReady: (_dates, _value, instance) => {
+            instance.set('altFormat', 'd/m/Y');
+            instance.set('clickOpens', false);
+        },
     });
     setDatePicker({
         element: '[name="ng_plan_date"]',
@@ -37,7 +57,8 @@ $(function () {
         altInput: true,
         altFormat: 'd/m/Y',
         disableMobile: true,
-        onReady: (_dates, _value, instance) => instance.set('altFormat', 'd/m/Y'),
+        onReady: (_dates, _value, instance) =>
+            instance.set('altFormat', 'd/m/Y'),
     });
     const ngActions = Array.from(form.querySelectorAll('[name="ng_action[]"]'));
     const validateNgActions = () =>
@@ -52,30 +73,75 @@ $(function () {
     validateNgActions();
     async function validate() {
         const errors = [];
-        const hasNg = Array.from(rows.querySelectorAll('.result')).some(cell => cell.textContent === 'NG');
-        const labelOf = input => input.closest('label')?.firstChild?.textContent.trim() || input.getAttribute('aria-label') || input.name;
+        const hasNg = Array.from(rows.querySelectorAll('.result')).some(
+            (cell) => cell.textContent === 'NG',
+        );
+        const labelOf = (input) =>
+            input.closest('label')?.firstChild?.textContent.trim() ||
+            input.getAttribute('aria-label') ||
+            input.name;
         for (const input of form.querySelectorAll('input, select, textarea')) {
             if (input.closest('#ng-fields') && !hasNg) continue;
-            if (input.required && (input.disabled || !input.value.trim())) errors.push('กรุณากรอก/เลือก ' + labelOf(input));
-            else if (!input.matches(':disabled') && input.willValidate && !input.checkValidity()) errors.push(labelOf(input) + ': ' + input.validationMessage);
-            if (input.maxLength > 0 && input.value.length > input.maxLength) errors.push(labelOf(input) + ' ยาวเกิน ' + input.maxLength + ' ตัวอักษร');
+            if (input.required && (input.disabled || !input.value.trim()))
+                errors.push('กรุณากรอก/เลือก ' + labelOf(input));
+            else if (
+                !input.matches(':disabled') &&
+                input.willValidate &&
+                !input.checkValidity()
+            )
+                errors.push(labelOf(input) + ': ' + input.validationMessage);
+            if (input.maxLength > 0 && input.value.length > input.maxLength)
+                errors.push(
+                    labelOf(input) +
+                        ' ยาวเกิน ' +
+                        input.maxLength +
+                        ' ตัวอักษร',
+                );
         }
-        if (!requester.value || requester.dataset.verified !== requester.value) errors.push('กรุณารอผลตรวจสอบ Requested By และใช้พนักงานที่ Active');
-        if (rows.children.length < 1) errors.push('ต้องมี Check Points อย่างน้อย 1 รายการ');
-        if (!attachments.length && !storedFiles.length) errors.push('กรุณาแนบรูปภาพ / DWG อ้างอิงอย่างน้อย 1 ไฟล์');
-        Array.from(rows.children).forEach((row,index) => {
-            const value = name => row.querySelector('[data-field="' + name + '"]').value;
-            if (!value('point').trim()) errors.push('Check Point แถว ' + (index+1) + ': กรุณากรอกชื่อจุดตรวจ');
-            if (!['OK','NG'].includes(evaluateCheckpoint(value('min'),value('max'),value('measured')))) errors.push('Check Point แถว ' + (index+1) + ': กรุณากรอก MIN, MAX และ Measured ให้ถูกต้อง');
+        if (!requester.value || requester.dataset.verified !== requester.value)
+            errors.push(
+                'กรุณารอผลตรวจสอบ Requested By และใช้พนักงานที่ Active',
+            );
+        if (rows.children.length < 1)
+            errors.push('ต้องมี Check Points อย่างน้อย 1 รายการ');
+        if (!attachments.length && !storedFiles.length)
+            errors.push('กรุณาแนบรูปภาพ / DWG อ้างอิงอย่างน้อย 1 ไฟล์');
+        Array.from(rows.children).forEach((row, index) => {
+            const value = (name) =>
+                row.querySelector('[data-field="' + name + '"]').value;
+            if (!value('point').trim())
+                errors.push(
+                    'Check Point แถว ' + (index + 1) + ': กรุณากรอกชื่อจุดตรวจ',
+                );
+            if (
+                !['OK', 'NG'].includes(
+                    evaluateCheckpoint(
+                        value('min'),
+                        value('max'),
+                        value('measured'),
+                    ),
+                )
+            )
+                errors.push(
+                    'Check Point แถว ' +
+                        (index + 1) +
+                        ': กรุณากรอก MIN, MAX และ Measured ให้ถูกต้อง',
+                );
         });
-        if (hasNg && !ngActions.some(input => input.checked)) errors.push('NG Detail: กรุณาเลือกวิธีแก้ไขอย่างน้อย 1 วิธี');
+        if (hasNg && !ngActions.some((input) => input.checked))
+            errors.push('NG Detail: กรุณาเลือกวิธีแก้ไขอย่างน้อย 1 วิธี');
         if (errors.length) {
-            await Swal.fire({icon:'warning', title:'ข้อมูลยังไม่ครบถ้วน', text:[...new Set(errors)].join('\n'), confirmButtonText:'ตกลง'});
+            await Swal.fire({
+                icon: 'warning',
+                title: 'ข้อมูลยังไม่ครบถ้วน',
+                text: [...new Set(errors)].join('\n'),
+                confirmButtonText: 'ตกลง',
+            });
             return false;
         }
         return true;
     }
-    form.addEventListener('submit', event => {
+    form.addEventListener('submit', (event) => {
         event.preventDefault();
         if (workflow) void workflow.save();
     });
@@ -113,13 +179,20 @@ $(function () {
                 text:
                     name === 'location'
                         ? 'ไม่สามารถโหลด Location ได้ กรุณาลองใหม่'
-                        : name === 'pic_empno' ? 'ไม่สามารถโหลดรายชื่อ PIC ได้ กรุณาลองใหม่' : 'ไม่สามารถโหลด MFG Process Code ได้ กรุณาลองใหม่',
+                        : name === 'pic_empno'
+                          ? 'ไม่สามารถโหลดรายชื่อ PIC ได้ กรุณาลองใหม่'
+                          : 'ไม่สามารถโหลด MFG Process Code ได้ กรุณาลองใหม่',
             });
         }
     }
     // ie-pics applies department, active status and position filters on the server.
     // Its response contains SEMPNO/SNAME/SPOSNAME, not CSTATUS.
-    const picReady = loadSelect('pic_empno', getJigPics, data => data.map(u => ({value: String(u.SEMPNO).trim(), label: '(' + String(u.SEMPNO).trim() + ') ' + (u.SNAME || '')})));
+    const picReady = loadSelect('pic_empno', getJigPics, (data) =>
+        data.map((u) => ({
+            value: String(u.SEMPNO).trim(),
+            label: '(' + String(u.SEMPNO).trim() + ') ' + (u.SNAME || ''),
+        })),
+    );
     const processReady = loadSelect('process_code', getJigProcesses, (data) =>
         [
             ...new Set(
@@ -142,13 +215,14 @@ $(function () {
     );
 
     const inputName = document.querySelector('#input-by-name');
-    if (pageMode === 'create') getJigEmployee(form.elements.input_by.value)
-        .then((user) => {
-            inputName.textContent = user?.SNAME || 'ไม่พบข้อมูลพนักงาน';
-        })
-        .catch(() => {
-            inputName.textContent = 'โหลดชื่อพนักงานไม่สำเร็จ';
-        });
+    if (pageMode === 'create')
+        getJigEmployee(form.elements.input_by.value)
+            .then((user) => {
+                inputName.textContent = user?.SNAME || 'ไม่พบข้อมูลพนักงาน';
+            })
+            .catch(() => {
+                inputName.textContent = 'โหลดชื่อพนักงานไม่สำเร็จ';
+            });
 
     const requester = form.elements.requested_by;
     const requesterName = document.querySelector('#requested-by-name');
@@ -283,29 +357,36 @@ $(function () {
     let attachments = [];
     function renderFiles() {
         const transfer = new DataTransfer();
-        attachments.forEach(file => transfer.items.add(file));
+        attachments.forEach((file) => transfer.items.add(file));
         fileInput.files = transfer.files;
         const list = document.querySelector('#file-list');
         list.replaceChildren();
-        storedFiles.forEach((file,index) => {
+        storedFiles.forEach((file, index) => {
             const item = document.createElement('li');
             const link = document.createElement('a');
             link.textContent = file.FILE_NAME;
             link.href = jigFileUrl(storedKey, file);
-            link.target = '_blank'; link.rel = 'noopener';
+            link.target = '_blank';
+            link.rel = 'noopener';
             link.className = 'text-indigo-700 underline';
             item.append(link);
             if (pageMode === 'edit') {
                 const remove = document.createElement('button');
-                remove.type = 'button'; remove.className = 'btn btn-ghost btn-xs'; remove.textContent = 'ลบ';
-                remove.onclick = () => { storedFiles.splice(index,1); renderFiles(); };
+                remove.type = 'button';
+                remove.className = 'btn btn-ghost btn-xs';
+                remove.textContent = 'ลบ';
+                remove.onclick = () => {
+                    storedFiles.splice(index, 1);
+                    renderFiles();
+                };
                 item.append(remove);
             }
             list.append(item);
         });
         attachments.forEach((file, index) => {
             const item = document.createElement('li');
-            item.className = 'flex items-center justify-between gap-3 rounded-lg bg-slate-50 px-3 py-2 text-slate-600';
+            item.className =
+                'flex items-center justify-between gap-3 rounded-lg bg-slate-50 px-3 py-2 text-slate-600';
             const name = document.createElement('span');
             name.className = 'min-w-0 break-all';
             name.textContent = `${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`;
@@ -314,7 +395,10 @@ $(function () {
             remove.className = 'btn btn-ghost btn-xs shrink-0';
             remove.textContent = 'ลบ';
             remove.setAttribute('aria-label', `ลบ ${file.name}`);
-            remove.addEventListener('click', () => { attachments.splice(index, 1); renderFiles(); });
+            remove.addEventListener('click', () => {
+                attachments.splice(index, 1);
+                renderFiles();
+            });
             item.append(name, remove);
             list.append(item);
         });
@@ -322,12 +406,32 @@ $(function () {
     async function addFiles(incoming) {
         if (fileInput.matches(':disabled')) return;
         const next = [...attachments];
-        Array.from(incoming).forEach(file => {
-            if (!next.some(old => old.name === file.name && old.size === file.size && old.lastModified === file.lastModified)) next.push(file);
+        Array.from(incoming).forEach((file) => {
+            if (
+                !next.some(
+                    (old) =>
+                        old.name === file.name &&
+                        old.size === file.size &&
+                        old.lastModified === file.lastModified,
+                )
+            )
+                next.push(file);
         });
-        if (next.length + storedFiles.length > 5 || next.some(file => file.size > 10 * 1024 * 1024 || !/\.(jpe?g|png|pdf)$/i.test(file.name))) {
+        if (
+            next.length + storedFiles.length > 5 ||
+            next.some(
+                (file) =>
+                    file.size > 10 * 1024 * 1024 ||
+                    !/\.(jpe?g|png|pdf)$/i.test(file.name),
+            )
+        ) {
             renderFiles(); // Keep previously accepted files when a new selection is invalid.
-            await Swal.fire({icon: 'warning', title: 'ตรวจสอบไฟล์แนบ', text: 'เลือก JPG, PNG หรือ PDF สูงสุด 5 ไฟล์ ขนาดไม่เกิน 10 MB ต่อไฟล์', confirmButtonText: 'ตกลง'});
+            await Swal.fire({
+                icon: 'warning',
+                title: 'ตรวจสอบไฟล์แนบ',
+                text: 'เลือก JPG, PNG หรือ PDF สูงสุด 5 ไฟล์ ขนาดไม่เกิน 10 MB ต่อไฟล์',
+                confirmButtonText: 'ตกลง',
+            });
             return;
         }
         attachments = next;
@@ -335,26 +439,28 @@ $(function () {
     }
     fileInput.addEventListener('change', () => void addFiles(fileInput.files));
     let dragDepth = 0;
-    const highlight = active => {
+    const highlight = (active) => {
         dropzone.classList.toggle('ring-2', active);
         dropzone.classList.toggle('ring-indigo-400', active);
     };
-    dropzone.addEventListener('dragenter', event => {
+    dropzone.addEventListener('dragenter', (event) => {
         event.preventDefault();
         if (fileInput.matches(':disabled')) return;
         dragDepth++;
         highlight(true);
     });
-    dropzone.addEventListener('dragover', event => {
+    dropzone.addEventListener('dragover', (event) => {
         event.preventDefault();
-        event.dataTransfer.dropEffect = fileInput.matches(':disabled') ? 'none' : 'copy';
+        event.dataTransfer.dropEffect = fileInput.matches(':disabled')
+            ? 'none'
+            : 'copy';
     });
-    dropzone.addEventListener('dragleave', event => {
+    dropzone.addEventListener('dragleave', (event) => {
         event.preventDefault();
         dragDepth = Math.max(0, dragDepth - 1);
         if (!dragDepth) highlight(false);
     });
-    dropzone.addEventListener('drop', event => {
+    dropzone.addEventListener('drop', (event) => {
         event.preventDefault();
         dragDepth = 0;
         highlight(false);
@@ -376,11 +482,18 @@ $(function () {
         const setValue = (name, value) => {
             const input = form.elements[name];
             const text = value == null ? '' : String(value).trim();
-            if (input.tagName === 'SELECT' && text && !Array.from(input.options).some(o => o.value === text)) input.add(new Option(text, text));
-            if (input._flatpickr) input._flatpickr.setDate(text, false, 'Y-m-d');
+            if (
+                input.tagName === 'SELECT' &&
+                text &&
+                !Array.from(input.options).some((o) => o.value === text)
+            )
+                input.add(new Option(text, text));
+            if (input._flatpickr)
+                input._flatpickr.setDate(text, false, 'Y-m-d');
             else input.value = text;
         };
-        for (const [name, column] of Object.entries(headerFields)) setValue(name, snapshot[column]);
+        for (const [name, column] of Object.entries(headerFields))
+            setValue(name, snapshot[column]);
         setValue('input_by', webform.VINPUTER);
         setValue('requested_by', webform.VREQNO);
         requester.dataset.verified = requester.value;
@@ -392,12 +505,29 @@ $(function () {
         setValue('reg_date', calendarDate(webform.DREQDATE, true));
         setValue('start_use_date', calendarDate(snapshot.START_USE_DATE));
         setValue('start_use_display', displayDate(snapshot.START_USE_DATE));
-        form.querySelector('[aria-label="Revision"]').value = Number(snapshot.REV) === 0 ? '*' : snapshot.REV;
+        form.querySelector('[aria-label="Revision"]').value =
+            Number(snapshot.REV) === 0 ? '*' : snapshot.REV;
         rows.replaceChildren();
         for (const detail of snapshot.DETAILS || []) {
             const row = addRow();
-            for (const [field,column] of Object.entries({point:'CHECK_POINT',tool:'INSPECTION_TOOL',min:'MIN',max:'MAX',measured:'MEASURED_VALUE',unit:'UNIT'})) row.querySelector('[data-field="'+field+'"]').value = detail[column] ?? '';
-            renderResult(row, evaluateCheckpoint(detail.MIN,detail.MAX,detail.MEASURED_VALUE));
+            for (const [field, column] of Object.entries({
+                point: 'CHECK_POINT',
+                tool: 'INSPECTION_TOOL',
+                min: 'MIN',
+                max: 'MAX',
+                measured: 'MEASURED_VALUE',
+                unit: 'UNIT',
+            }))
+                row.querySelector('[data-field="' + field + '"]').value =
+                    detail[column] ?? '';
+            renderResult(
+                row,
+                evaluateCheckpoint(
+                    detail.MIN,
+                    detail.MAX,
+                    detail.MEASURED_VALUE,
+                ),
+            );
         }
         const ng = snapshot.NG || {};
         setValue('ng_defect_detail', ng.DEFECT_DETAIL);
@@ -405,17 +535,26 @@ $(function () {
         setValue('ng_plan_date', calendarDate(ng.PLAN_DATE));
         setValue('ng_location', ng.LOCATION);
         const actions = parseActions(ng.ACTION);
-        ngActions.forEach(input => { input.checked = actions.includes(input.value); });
-        validateNgActions(); summarize();
-        storedKey = key; storedFiles = snapshot.FILES || []; renderFiles();
+        ngActions.forEach((input) => {
+            input.checked = actions.includes(input.value);
+        });
+        validateNgActions();
+        summarize();
+        storedKey = key;
+        storedFiles = snapshot.FILES || [];
+        renderFiles();
         document.querySelector('#jig-fields').disabled = pageMode !== 'edit';
         if (pageMode === 'view') {
-            form.querySelectorAll('.remove-row, #add-checkpoint, #validate-jig, #jig-file-dropzone, #generate-ng-pdf').forEach(el => { el.hidden = true; });
+            form.querySelectorAll(
+                '.remove-row, #add-checkpoint, #validate-jig, #jig-file-dropzone, #generate-ng-pdf',
+            ).forEach((el) => {
+                el.hidden = true;
+            });
         }
         document.querySelector('#jig-load-status').hidden = true;
     }
-    workflow = initializeJigWorkflow({form, rows, pageMode, validate, hydrate,
+    /* workflow = initializeJigWorkflow({form, rows, pageMode, validate, hydrate,
         files: () => ({stored: storedFiles, incoming: attachments}),
         ready: Promise.all([picReady,processReady,locationReady])});
-
+*/
 });

@@ -21,6 +21,8 @@ class jig extends MY_Controller {
     }
 
     public function show_create_jig_form(){
+        echo "test";
+        exit;
         $data = [];
         $parameters = [
             'NFRMNO' => 'no', 'VORGNO' => 'orgNo', 'CYEAR' => 'y',
