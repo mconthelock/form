@@ -103,5 +103,10 @@ class form extends MY_Controller
     {
         $this->views('finform/FIN-NPO/Vendor');
     }
+
+    public function acccode()
+    {
+        $this->views('finform/FIN-NPO/acccode');
+    }
 }
 
