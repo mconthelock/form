@@ -1,3 +1,4 @@
+import '@flaticon/flaticon-uicons/css/all/all.css';
 import '@amec/webasset/css/select2.min.css';
 import dayjs from 'dayjs';
 import select2 from 'select2';

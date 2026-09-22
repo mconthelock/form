@@ -5,8 +5,8 @@
         <input type="text" class="hidden" id="NFRMNO" value="{{ $NFRMNO }}" />
         <input type="text" class="hidden" id="VORGNO" value="{{ $VORGNO }}" />
         <input type="text" class="hidden" id="CYEAR" value="{{ $CYEAR }}" />
-        <input type="text" class="hidden" id="CYEAR2" value="{{ $CYEAR }}" />
-        <input type="text" class="hidden" id="NRUNNO" value="{{ $NRUNNO }}" />
+        {{-- <input type="text" class="hidden" id="CYEAR2" value="{{ $CYEAR }}" /> --}}
+        {{-- <input type="text" class="hidden" id="NRUNNO" value="{{ $NRUNNO }}" /> --}}
         <input type="text" class="hidden" id="EMPNO" value="{{ $EMPNO }}" name="input_by" />
         <section class="flex flex-col gap-3 mb-4">
             <h1 class="text-3xl font-bold text-primary"> Computer program Requisition Form </h1>
@@ -138,9 +138,11 @@
                         <fieldset class="fieldset">
                             <legend class="fieldset-legend">Objective</legend>
                             <div class="flex items-center gap-3">
-                                <select class="select s2 req-2" id="req-objective"></select>
+                                <select class="select s2 req-2" id="req-objective">
+                                    <option value=""></option>
+                                </select>
                                 <input type="text" placeholder="Other Objective" class="input"
-                                    id="req-objective-other" />
+                                    id="req-objective-other" readonly />
                             </div>
                         </fieldset>
                     </div>
@@ -220,7 +222,7 @@
 @endsection
 
 @section('scripts')
-    <script src="{{ $_ENV['APP_JS'] }}/isDev.js"></script>
+    <script src="{{ $_ENV['APP_JS'] }}/devForm.js?ver={{ time() }}"></script>
 @endsection
 
 @section('styles')
