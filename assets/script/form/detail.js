@@ -13,6 +13,34 @@ $(document).ready(async function () {
         const STABILIZE_DELAY = 0;
         const MAX_WAIT = 15000;
 
+        // ปรับความสูง iframe ให้เท่ากับ/มากกว่าเนื้อหาภายใน เพื่อไม่ให้เกิด scrollbar (ใช้ได้เฉพาะ same-origin)
+        const resizeIframeToContent = () => {
+            try {
+                const doc =
+                    iframe.contentDocument || iframe.contentWindow?.document;
+                if (!doc) return;
+                const body = doc.body;
+                const html = doc.documentElement;
+                const height = Math.max(
+                    body?.scrollHeight || 0,
+                    body?.offsetHeight || 0,
+                    html?.clientHeight || 0,
+                    html?.scrollHeight || 0,
+                    html?.offsetHeight || 0,
+                );
+
+                if (height > 0) {
+                    iframe.style.height = `${height}px`;
+                    $('#frame-container').css('height', `${height}px`);
+                }
+            } catch (error) {
+                console.warn(
+                    'ไม่สามารถปรับความสูง iframe ได้ (อาจเป็น cross-origin)',
+                    error,
+                );
+            }
+        };
+
         const hideLoading = async () => {
             if (hidden) return;
             hidden = true;
@@ -35,8 +63,22 @@ $(document).ready(async function () {
             iframe.classList.add('opacity-100');
         };
 
-        iframe.addEventListener('load', function () {
+        iframe.addEventListener('load', async function () {
             console.log('iframe load event fired', iframe.src);
+            await resizeIframeToContent();
+            try {
+                const doc =
+                    iframe.contentDocument || iframe.contentWindow?.document;
+                if (doc?.body && 'ResizeObserver' in window) {
+                    new ResizeObserver(resizeIframeToContent).observe(doc.body);
+                }
+            } catch (error) {
+                console.warn(
+                    'ไม่สามารถ observe การเปลี่ยนแปลงขนาดเนื้อหา iframe ได้',
+                    error,
+                );
+            }
+
             clearTimeout(loadStabilizeTimer);
             loadStabilizeTimer = setTimeout(hideLoading, STABILIZE_DELAY);
         });
