@@ -1,4 +1,4 @@
-//import { initializeJigWorkflow } from './workflow';
+import { initializeJigWorkflow } from './workflow';
 import {
     calendarDate,
     displayDate,
@@ -480,7 +480,7 @@ $(function () {
     async function hydrate(snapshot, webform, key) {
         await Promise.all([picReady, processReady, locationReady]);
         const setValue = (name, value) => {
-            const input = form.elements[name];
+            const input = form.elements.namedItem(name);
             const text = value == null ? '' : String(value).trim();
             if (
                 input.tagName === 'SELECT' &&
@@ -553,8 +553,7 @@ $(function () {
         }
         document.querySelector('#jig-load-status').hidden = true;
     }
-    /* workflow = initializeJigWorkflow({form, rows, pageMode, validate, hydrate,
+    workflow = initializeJigWorkflow({form, rows, pageMode, validate, hydrate,
         files: () => ({stored: storedFiles, incoming: attachments}),
         ready: Promise.all([picReady,processReady,locationReady])});
-*/
 });

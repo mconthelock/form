@@ -11,24 +11,19 @@ require_once APPPATH.'controllers/_file.php';
 class jig extends MY_Controller {
     use _Form, _File;
     public function __construct(){
-        /*parent::__construct();
+        parent::__construct();
         $this->load->model('form_model', 'form');
-        $this->load->model('user_model', 'usr');*/
+        $this->load->model('user_model', 'usr');
         //$this->upload_path = $_ENV['AMEC_FILE_PATH'] . ($this->_servername() == 'amecweb' ? 'production' : 'development') . "/Form/IE/IE-JIG/"; 
-        $this->upload_path = $_ENV['AMEC_FILE_PATH'] . "/Form/IE/IE-JIG/"; 
+        $this->upload_path = "D:/test_file/Form/IE/IE-JIG/"; 
     }
 
     public function index(){
         $this->show_create_jig_form();
     }
 
-    public function show_create_jig_form(){
-        echo "5555 TEST 5555";
-    }
 
-    public function bk_show_create_jig_form(){
-        echo "test";
-        exit;
+    public function show_create_jig_form(){
         $data = [];
         $parameters = [
             'NFRMNO' => 'no', 'VORGNO' => 'orgNo', 'CYEAR' => 'y',

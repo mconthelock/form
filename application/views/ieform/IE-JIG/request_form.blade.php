@@ -31,13 +31,13 @@
             <p class="mb-4 mt-6 border-t border-dashed border-slate-200 pt-4 text-sm font-bold text-slate-900">ข้อมูลการผลิต</p>
             <div class="grid grid-cols-[minmax(0,2fr)_minmax(0,1fr)] gap-4">
                 <label class="block text-xs font-semibold text-slate-700">MFG Process Code <span class="text-red-600">*</span><select name="process_code" required disabled class="select mt-1 w-full rounded-lg border-slate-200 bg-white text-sm text-slate-800"><option value="">รอข้อมูล Process Code</option></select></label>
-                <label class="block text-xs font-semibold text-slate-700">Proc. Code / Item<input name="proc_item" maxlength="4" type="text"  class="input mt-1 w-full rounded-lg border-slate-200 bg-white text-sm text-slate-800"></label>
+                <label class="block text-xs font-semibold text-slate-700">Item<input id="itemno" name="itemno" maxlength="4" type="text"  class="input mt-1 w-full rounded-lg border-slate-200 bg-white text-sm text-slate-800"></label>
                 <label class="col-span-2 block text-xs font-semibold text-slate-700">Location <span class="text-red-600">*</span><select name="location" required disabled class="select mt-1 w-full rounded-lg border-slate-200 bg-white text-sm text-slate-800"><option value="">รอข้อมูล Location</option></select></label>
             </div>
             <label class="mt-4 block text-xs font-semibold text-slate-700">PIC<select name="pic_empno" disabled class="select mt-1 w-full rounded-lg border-slate-200 bg-white text-sm text-slate-800"><option value="">กำลังโหลดพนักงาน</option></select></label>
             <p class="mb-4 mt-6 border-t border-dashed border-slate-200 pt-4 text-sm font-bold text-slate-900">รายละเอียด JIG</p>
             <div class="grid gap-4 md:grid-cols-3">
-                <label class="block text-xs font-semibold text-slate-700">Item<input name="item" maxlength="100" type="text"  class="input mt-1 w-full rounded-lg border-slate-200 bg-white text-sm text-slate-800"></label>
+                <label class="block text-xs font-semibold text-slate-700">Description<input id="desc" name="desc" maxlength="100" type="text"  class="input mt-1 w-full rounded-lg border-slate-200 bg-white text-sm text-slate-800"></label>
                 <label class="block text-xs font-semibold text-slate-700">Maker<input name="maker" maxlength="100" type="text"  class="input mt-1 w-full rounded-lg border-slate-200 bg-white text-sm text-slate-800"></label>
                 <label class="block text-xs font-semibold text-slate-700">Start Use<input name="start_use_display" type="text" readonly class="input mt-1 w-full rounded-lg border-slate-200 bg-slate-50 text-sm text-slate-800"><input name="start_use_date" type="hidden"></label>
                 <label class="block text-xs font-semibold text-slate-700">Qty (ชิ้น)<input name="qty" max="99999" type="number" min="1" step="1" class="input mt-1 w-full rounded-lg border-slate-200 bg-white text-sm text-slate-800"></label>

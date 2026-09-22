@@ -1,7 +1,7 @@
 export const headerFields = {
     jig_name: 'JIG_NAME', drawing_no: 'DWG', revision: 'REV', qty: 'JIG_QTY',
-    price: 'PRICE', maker: 'MAKER', start_use_date: 'START_USE_DATE', proc_item: 'ITEMNO',
-    item: 'JIG_DESC', process_code: 'PROCESS_CODE', location: 'LOCATION', pic_empno: 'PIC_EMPNO', period: 'INSPEC_PERIOD',
+    price: 'PRICE', maker: 'MAKER', start_use_date: 'START_USE_DATE', itemno: 'ITEMNO',
+    desc: 'PARTS', process_code: 'PROCESS_CODE', location: 'LOCATION', pic_empno: 'PIC_EMPNO', period: 'INSPEC_PERIOD',
 };
 
 // Keep date-only values calendar-based; interpret timestamps in the site's timezone.
@@ -27,7 +27,12 @@ export const parseActions = value => String(value || '').split(',').map(v => v.t
 export function collectJigPayload(form, rows, files, hasNg) {
     const payload = {};
     for (const [name, column] of Object.entries(headerFields)) {
-        const value = form.elements[name].value.trim();
+        // Resolve controls by name without colliding with collection methods.
+        const input = form.elements.namedItem(name);
+        if (!input || typeof input.value !== 'string') {
+            throw new Error(`ไม่พบช่องข้อมูล ${name} ในฟอร์ม`);
+        }
+        const value = input.value.trim();
         payload[column] = value === '' ? null : ['qty', 'price', 'period'].includes(name) ? Number(value) : value;
     }
     payload.DETAILS = Array.from(rows.children, (row, index) => {
