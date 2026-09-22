@@ -1,5 +1,11 @@
-import { createTable, destroyTable } from '@amec/webasset/dataTable';
+import {
+    createTable,
+    destroyTable,
+    getSelectedData,
+} from '@amec/webasset/dataTable';
 import { dataTableSkeleton } from '@amec/webasset/skeleton';
+import { showErrorMessage } from '@amec/webasset/utils';
+import { steps } from './steps';
 
 export const tableDraft = {
     instance: null,
@@ -59,6 +65,7 @@ export const tableDraft = {
         this.instance = await createTable(
             {
                 data: data,
+                responsive: data.length == 0 ? true : false,
                 columns: this.columns,
                 initComplete: function () {
                     const table = this.api();
@@ -70,28 +77,55 @@ export const tableDraft = {
                 join: true,
                 columnSelect: {
                     status: true,
+                    type: 'radio',
                 },
                 domScroll: {
                     status: true,
-                    // maxHeight: '60vh',
                 },
             },
         );
     },
     bindEvents() {
         const self = this;
+        /**
+         * @author Sutthipong Tangmongkhoncharoen(24008)
+         * @since 2026-09-22
+         * @description Set form number
+         */
+        $(document).on(
+            'click',
+            'input[name="select-dt-row-radio"]',
+            async function () {
+                try {
+                    const selected = getSelectedData(self.instance);
+                    const data = selected[0];
+                    steps.formNo = data.FORMNO;
+                    steps.function = data.FUNCTION;
+                } catch (error) {
+                    console.error(error);
+                    showErrorMessage(error.message);
+                }
+            },
+        );
     },
     columns: [
         {
             title: 'No.',
             data: null,
             render: function (data, type, row, meta) {
+                if (Array.isArray(meta.row)) {
+                    return meta.row[0] + 1;
+                }
                 return meta.row + 1;
             },
         },
         {
             title: 'Price Comparison no.',
             data: 'FORMNO',
+        },
+        {
+            title: 'Function',
+            data: 'FUNCTION',
         },
         {
             title: 'Request by',

@@ -8,9 +8,12 @@ import { tableCreatePrice } from './table-create-price';
 import { tableComparison } from './table-comparison';
 import { importExcel } from './importExcel';
 import { tableDraft } from './table.draft';
-import { getActivePriceConditions } from './data';
+import { getActivePriceConditions, getK850mpData } from './data';
 import { webflowSubmit } from '@amec/webasset/components/form';
 import { skeletons } from '@amec/webasset/skeleton';
+import { getUser, getUserImage } from '@amec/webasset/api/amec';
+import { EmployeeProfileCard } from '@amec/webasset/components/profileCard';
+import { getSelectedData } from '@amec/webasset/dataTable';
 /**
  * @author Sutthipong Tangmongkhoncharoen(24008)
  * @since 2026-09-15
@@ -88,14 +91,25 @@ export const steps = {
     },
     reset() {
         this._mode = null;
-        this._inputer = null;
         this._requester = null;
         this._plannerCode = null;
         this._function = null;
         this._formNo = null;
     },
-    init(inputer) {
+    resetRequester() {
+        this.requester = null;
+        this.plannerCode = null;
+        $('input[name="requester"]').val('');
+        $('#requester-card-container').empty();
+    },
+    async init(inputer) {
         this.inputer = inputer;
+        await this.setProfileCard(
+            inputer,
+            '#inputer-card-container',
+            'Inputer',
+        );
+
         this.instance = new Steps({
             container: '#price-comparison-steps',
             steps: [
@@ -120,20 +134,53 @@ export const steps = {
         this.handlePanel(0);
         this.bindEvents();
     },
-    bindEvents() {
-        const self = this;
-        const stepper = self.instance;
-        // Bind click events for previous buttons
-        $(document).on('click', '#previous-step', function () {
-            self.handlePreviousStep(stepper.currentStep);
-        });
-        // Bind click events for next buttons
-        $(document).on('click', '#next-step, .next-step', async function () {
-            if (!(await self.validatePanel(stepper.currentStep))) return;
-            if (stepper.currentStep === 0) {
-                self.mode = $(this).attr('mode');
+    /**
+     * @author Sutthipong Tangmongkhoncharoen(24008)
+     * @since 2026-09-15
+     * @description Sets the profile card for the given employee number in the specified container with an optional title.
+     * @param {string} empno
+     * @param {string} containner
+     * @param {string} title
+     * @returns
+     */
+    async setProfileCard(empno, containner, title = 'Requester') {
+        const isRequester = title == 'Requester';
+        const k850mpData = await getK850mpData();
+        const k850mpRecord = k850mpData.data.filter(
+            (record) => record.K85M03 === empno,
+        );
+        if (k850mpRecord.length === 0) {
+            $(containner).empty();
+            if (isRequester) {
+                this.resetRequester();
             }
-            self.handleNextStep(stepper.currentStep);
+            showMessage('Planner not found', 'warning');
+            return;
+        }
+        const empnoData = await getUser(empno);
+        const userImage = await getUserImage(empno);
+        if (!empnoData) {
+            $(containner).empty();
+            if (isRequester) {
+                this.resetRequester();
+            }
+            showMessage('User not found', 'warning');
+            return;
+        }
+        if (isRequester) {
+            this.requester = empno;
+            this.plannerCode = k850mpRecord.map((record) => record.K85M02);
+        }
+
+        new EmployeeProfileCard({
+            container: containner,
+            name: empnoData.SNAME,
+            empno: empno,
+            position: empnoData.SPOSITION,
+            sec: empnoData.SSEC || '-',
+            dept: empnoData.SDEPT || '-',
+            image: userImage,
+            title: title,
         });
     },
     /**
@@ -144,6 +191,10 @@ export const steps = {
      */
     async validatePanel(index) {
         // TODO: ใส่ validation ของแต่ละหน้า เช่น
+        if (index === 1 && this.mode == 'draft' && this.formNo == null) {
+            showMessage('Please select a draft form.', 'warning');
+            return;
+        }
         if (index === 2) {
             return await requiredForm('#step-requester');
         }
@@ -170,7 +221,9 @@ export const steps = {
         if (index <= 2) {
             // reset ฟอร์ม requester และลบ profile card
             $('#step-requester')[0].reset();
-            $('#requester-card-container').empty();
+            this.function = null;
+            this.formNo = null;
+            this.resetRequester();
             // เมื่อกลับไปหน้าแรกให้ reset ค่าทั้งหมด
             if (index === 0) {
                 $('#detail-step-container').html('');
@@ -184,7 +237,44 @@ export const steps = {
                 break;
             case 1:
                 // this.inputer
-                const draftData = []; // TODO: ดึงข้อมูล draft จากแหล่งข้อมูลจริง
+                await this.setProfileCard(
+                    this.inputer,
+                    '#requester-card-container',
+                );
+                // TODO: ดึงข้อมูล draft จากแหล่งข้อมูลจริง
+                // * mockdata
+                const draftData = [
+                    {
+                        FORMNO: 'COMP-2026-000001',
+                        REQBY_NAME: 'John Doe',
+                        PLANNER_CODE: 'X',
+                        MODE: 'E',
+                        VENDOR: '70006',
+                        AMOUNT_PRESENT: 28500,
+                        AMOUNT_NEW: 30000,
+                        AMOUNT_DIFF: -1500,
+                        RATIO: '5%',
+                        REQ_DATE: '2026-08-15 09:59',
+                        QUOTATION: null,
+                        FUNCTION: 1,
+                        STATUS: 0,
+                    },
+                    {
+                        FORMNO: 'COMP-2026-000002',
+                        REQBY_NAME: 'John Doo',
+                        PLANNER_CODE: 'X',
+                        MODE: 'E',
+                        VENDOR: '70006',
+                        AMOUNT_PRESENT: 25500,
+                        AMOUNT_NEW: 30000,
+                        AMOUNT_DIFF: -4500,
+                        RATIO: '7%',
+                        REQ_DATE: '2026-08-16 09:59',
+                        QUOTATION: null,
+                        FUNCTION: 2,
+                        STATUS: 1,
+                    },
+                ];
                 if (draftData.length === 0) {
                     showMessage('No draft data available', 'warning');
                     this.instance.skipTo(2);
@@ -194,6 +284,7 @@ export const steps = {
                 tableDraft.init(draftData);
                 btnPrevious.removeClass('hidden');
                 btnNext.removeClass('hidden');
+                btnNext.prop('disabled', false);
                 break;
             case 2:
                 this.function = null;
@@ -306,5 +397,73 @@ export const steps = {
                 this.instance.next();
                 break;
         }
+    },
+    bindEvents() {
+        const self = this;
+        const stepper = self.instance;
+        // Bind click events for previous buttons
+        $(document).on('click', '#previous-step', function () {
+            self.handlePreviousStep(stepper.currentStep);
+        });
+        // Bind click events for next buttons
+        $(document).on('click', '#next-step, .next-step', async function () {
+            if (!(await self.validatePanel(stepper.currentStep))) return;
+            if (stepper.currentStep === 0) {
+                self.mode = $(this).attr('mode');
+            }
+            self.handleNextStep(stepper.currentStep);
+        });
+        /**
+         * Handle input event for requester field and update profile card accordingly.
+         */
+        $(document).on('input', 'input[name="requester"]', async function () {
+            try {
+                const requester = $(this).val();
+                if (requester.length < 5) {
+                    $('#requester-card-container').empty();
+                    return;
+                }
+                await self.setProfileCard(
+                    requester,
+                    '#requester-card-container',
+                );
+                $('#next-step').prop('disabled', false);
+            } catch (error) {
+                console.error(error);
+                showErrorMessage(error.message);
+            }
+        });
+
+        /**
+         * Handle change event for requester field and validate its length.
+         */
+        $(document).on('change', 'input[name="requester"]', async function () {
+            try {
+                const requester = $(this).val();
+                if (requester.length < 5) {
+                    showMessage(
+                        'Requester must be at least 5 characters',
+                        'warning',
+                    );
+                    $(this).val('');
+                }
+            } catch (error) {
+                console.error(error);
+                showErrorMessage(error.message);
+            }
+        });
+
+        /**
+         * @author Sutthipong Tangmongkhoncharoen(24008)
+         * @since 2026-09-15
+         */
+        $(document).on('change', 'input[name="function"]', async function () {
+            try {
+                self.function = $(this).val();
+            } catch (error) {
+                console.error(error);
+                showErrorMessage(error.message);
+            }
+        });
     },
 };
