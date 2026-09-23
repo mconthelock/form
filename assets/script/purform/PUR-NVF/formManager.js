@@ -634,11 +634,12 @@ export const formManager = {
                     text: t.STERMDESC,
                 }));
                 const countries = await getCountries();
+                countries.sort((a, b) => a.name_en.localeCompare(b.name_en));
                 const countriesData = countries.map((c) => ({
-                    id: c.nameen,
-                    value: c.nameen,
-                    text: c.nameen,
-                    nameth: c.nameth,
+                    id: c.name_en,
+                    value: c.name_en,
+                    text: c.name_en,
+                    nameth: c.name_th,
                 }));
                 paymentTermManager.init(termdata);
                 countryManager.init(countriesData);
@@ -667,11 +668,14 @@ export const formManager = {
                         text: t.STERMDESC,
                     }));
                     const countries = await getCountries();
+                    countries.sort((a, b) =>
+                        a.name_en.localeCompare(b.name_en),
+                    );
                     const countriesData = countries.map((c) => ({
-                        id: c.nameen,
-                        value: c.nameen,
-                        text: c.nameen,
-                        nameth: c.nameth,
+                        id: c.name_en,
+                        value: c.name_en,
+                        text: c.name_en,
+                        nameth: c.name_th,
                     }));
 
                     paymentTermManager.init(termdata);

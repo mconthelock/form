@@ -216,6 +216,10 @@
                         <div id="CAPITAL" class="text-gray-700 text-sm"></div>
                     </div>
                     <div class="grid grid-cols-[220px_1fr] gap-3 items-baseline eval-row">
+                        <div class="font-semibold text-sm">Established :</div>
+                        <div id="ESTABLISHED" class="text-gray-700 text-sm"></div>
+                    </div>
+                    <div class="grid grid-cols-[220px_1fr] gap-3 items-baseline eval-row">
                         <div class="font-semibold text-sm">Type of Company :</div>
                         <div id="COM_TYPE" class="text-gray-700 text-sm"></div>
                     </div>

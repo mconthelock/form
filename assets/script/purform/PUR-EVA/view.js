@@ -263,6 +263,8 @@ $(async function () {
             $('#CAPITAL').text(
                 `${setRound(Number(formeva.CAPITAL), 2)} ${formeva.CAPCUR?.CURR_NAME || '-'}`,
             );
+
+            $('#ESTABLISHED').text(formeva.ESTABLISHED || '-');
             $('#COM_TYPE').text(
                 formeva.COM_TYPE === 'อื่นๆ ระบุ'
                     ? `อื่นๆ ระบุ : ${formeva.COM_OTHER || '-'}`
