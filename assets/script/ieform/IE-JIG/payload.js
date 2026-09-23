@@ -94,8 +94,10 @@ export function collectJigPayload(form, rows, files, hasNg) {
               ).join(','),
               CORRECTIVE: form.elements.ng_corrective_action.value.trim(),
               PLAN_DATE: form.elements.ng_plan_date.value,
-              LOCATION: form.elements.ng_location.value,
           }
         : null;
+    if (hasNg) {
+        payload.PICCODE = form.elements.namedItem('location').selectedOptions[0]?.dataset.piccode || null;
+    }
     return payload;
 }

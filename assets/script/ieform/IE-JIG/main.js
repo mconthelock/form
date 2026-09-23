@@ -228,12 +228,13 @@ $(document).ready(function () {
                 getJigLocations,
                 (data) =>
                     data
-                        .filter((item) => item.SHOPCODE)
-                        .sort((a, b) => a.SHOPCODE.localeCompare(b.SHOPCODE))
                         .map((item) => ({
-                            value: item.SHOPCODE.trim(),
-                            label: `${item.SHOPCODE.trim()}-${(item.SHOPDESC ?? '').trim()}`,
-                        })),
+                            value: String(item?.SHOPCODE ?? '').trim(),
+                            label: `${String(item?.SHOPCODE ?? '').trim()}-${String(item?.SHOPDESC ?? '').trim()}`,
+                            piccode: String(item?.PICCODE ?? '').trim(),
+                        }))
+                        .filter((option) => option.value)
+                        .sort((a, b) => a.value.localeCompare(b.value)),
             );
         },
 
@@ -242,7 +243,7 @@ $(document).ready(function () {
             try {
                 const data = await loader();
                 if (!Array.isArray(data))
-                    throw new Error('Invalid API response');
+                    throw new Error(`API ${name} ต้องส่งข้อมูลเป็น array`);
                 const options = mapOptions(data);
                 select.replaceChildren(
                     new Option(
@@ -250,20 +251,14 @@ $(document).ready(function () {
                         '',
                     ),
                 );
-                options.forEach(({ value, label }) =>
-                    select.add(new Option(label, value)),
-                );
+                options.forEach(({ value, label, piccode }) => {
+                    const option = new Option(label, value);
+                    if (piccode !== undefined) option.dataset.piccode = piccode;
+                    select.add(option);
+                });
                 select.disabled = options.length === 0;
-                if (name === 'location') {
-                    const ngLocation = form.elements.ng_location;
-                    ngLocation.replaceChildren(
-                        ...Array.from(select.options, (option) =>
-                            option.cloneNode(true),
-                        ),
-                    );
-                    ngLocation.disabled = select.disabled;
-                }
             } catch (error) {
+                console.error(`JIG dropdown ${name}:`, error);
                 select.replaceChildren(
                     new Option('โหลดข้อมูลไม่สำเร็จ กรุณาโหลดหน้าใหม่', ''),
                 );
@@ -272,11 +267,13 @@ $(document).ready(function () {
                     icon: 'error',
                     title: 'โหลดข้อมูลไม่สำเร็จ',
                     text:
-                        name === 'location'
+                        (name === 'location'
                             ? 'ไม่สามารถโหลด Location ได้ กรุณาลองใหม่'
                             : name === 'pic_empno'
                               ? 'ไม่สามารถโหลดรายชื่อ PIC ได้ กรุณาลองใหม่'
-                              : 'ไม่สามารถโหลด MFG Process Code ได้ กรุณาลองใหม่',
+                              : 'ไม่สามารถโหลด MFG Process Code ได้ กรุณาลองใหม่') +
+                        '\n' +
+                        (error?.message || 'ไม่ทราบสาเหตุ'),
                 });
             }
         },
@@ -631,7 +628,6 @@ $(document).ready(function () {
             setValue('ng_defect_detail', ng.DEFECT_DETAIL);
             setValue('ng_corrective_action', ng.CORRECTIVE);
             setValue('ng_plan_date', calendarDate(ng.PLAN_DATE));
-            setValue('ng_location', ng.LOCATION);
             const actions = parseActions(ng.ACTION);
             ngActions.forEach((input) => {
                 input.checked = actions.includes(input.value);

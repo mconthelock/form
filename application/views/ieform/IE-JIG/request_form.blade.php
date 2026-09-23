@@ -60,7 +60,7 @@
                 <label class="block text-xs font-semibold text-slate-700">Item<span class="text-red-600">*</span><input id="itemno" name="itemno" maxlength="4" type="text"  class="input mt-1 w-full rounded-lg border-slate-200 bg-white text-sm text-slate-800"></label>
                 <label class="col-span-2 block text-xs font-semibold text-slate-700">Location <span class="text-red-600">*</span><select name="location" required disabled class="select mt-1 w-full rounded-lg border-slate-200 bg-white text-sm text-slate-800"><option value="">รอข้อมูล Location</option></select></label>
             </div>
-            <label class="mt-4 block text-xs font-semibold text-slate-700">PIC<select name="pic_empno" disabled class="select mt-1 w-full rounded-lg border-slate-200 bg-white text-sm text-slate-800"><option value="">กำลังโหลดพนักงาน</option></select></label>
+            <label class="mt-4 block text-xs font-semibold text-slate-700">IE Person in charge<select name="pic_empno" disabled class="select mt-1 w-full rounded-lg border-slate-200 bg-white text-sm text-slate-800"><option value="">กำลังโหลดพนักงาน</option></select></label>
             <p class="mb-4 mt-6 border-t border-dashed border-slate-200 pt-4 text-sm font-bold text-slate-900">รายละเอียด JIG</p>
             <div class="grid gap-4 md:grid-cols-3">
                 <label class="block text-xs font-semibold text-slate-700">Description<input id="desc" name="desc" maxlength="100" type="text"  class="input mt-1 w-full rounded-lg border-slate-200 bg-white text-sm text-slate-800"></label>
@@ -127,7 +127,6 @@
                 </label>
                 <div class="grid gap-4 md:grid-cols-2">
                     <label class="block text-xs font-semibold text-slate-700">Plan Date (กำหนดแก้ไขแล้วเสร็จ) <span class="text-red-600">*</span><input name="ng_plan_date" required placeholder="dd/mm/yyyy" class="input mt-1 w-full bg-white"></label>
-                    <label class="block text-xs font-semibold text-slate-700">Location (ส่งต่อซ่อม) <span class="text-red-600">*</span><select name="ng_location" required disabled class="select mt-1 w-full bg-white"><option value="">รอข้อมูล Location</option></select></label>
                 </div>
             </fieldset>
             <div class="mt-5 border-t border-slate-100 pt-4"><button id="generate-ng-pdf" type="button" disabled class="btn w-full bg-white">Generate NG Tag PDF</button></div>
@@ -148,5 +147,5 @@
 </div>
 @endsection
 @section('scripts')
-<script src="{{ base_url() }}assets/dist/js/iejig.js?ver={{ $GLOBALS['version'] }}"></script>
+<script src="{{ base_url() }}assets/dist/js/iejig.js?ver={{ $GLOBALS['version'] }}-{{ is_file(FCPATH . 'assets/dist/js/iejig.js') ? filemtime(FCPATH . 'assets/dist/js/iejig.js') : 'missing' }}"></script>
 @endsection
