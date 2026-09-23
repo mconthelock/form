@@ -520,7 +520,7 @@
                             <!-- ย้าย Dropzone ออกมาข้างนอก เพื่อให้ใช้ความกว้างได้เต็ม 100% ของ Container หลัก -->
                             <!-- <div id="attachFile" class="mt-4">
 
-                                                                                                                                                                                    </div> -->
+                                                                                                                                                                                        </div> -->
                         </div>
                     </div>
                 </div>
@@ -1118,7 +1118,7 @@
                         <div class="flex items-center gap-2">
                             <span class="flex-shrink-0 whitespace-nowrap">Total:</span>
                             <input type="text"
-                                class="totemp flex-1 input input-bordered input-sm bg-gray-50 border-gray-300 readonly">
+                                class="totemp input-integer flex-1 input input-bordered input-sm bg-gray-50 border-gray-300 readonly">
                         </div>
 
                         <div class="flex items-center gap-2">

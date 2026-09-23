@@ -125,8 +125,8 @@
                         <span id="EVANO" class="text-sm text-blue-600"></span>
 
                         <!-- (ถ้าต้องการให้เลขอ้างอิงเป็นช่องกรอก input ให้ใช้โค้ดด้านล่างนี้แทน)
-                                                                <input type="text" name="REF_CODE" id="REF_CODE" class="input input-sm border border-gray-400 h-8 rounded w-48 px-2">
-                                                                -->
+                                                                    <input type="text" name="REF_CODE" id="REF_CODE" class="input input-sm border border-gray-400 h-8 rounded w-48 px-2">
+                                                                    -->
                     </div>
                 </div>
             </div>
@@ -367,7 +367,7 @@
                             </div>
                             <div class="grid grid-cols-[170px_1fr] items-center gap-4">
                                 <span class="font-semibold text-sm required">Tel.no</span>
-                                <input type="text" name="TELNO" id="TELNO" maxlength="12"
+                                <input type="text" name="TELNO" id="TELNO" maxlength="15"
                                     class="input input-sm border border-gray-400 h-8 rounded  px-2 w-full req">
                             </div>
                             <div class="grid grid-cols-[170px_1fr] items-center gap-4">
@@ -497,7 +497,7 @@
                             <!-- ย้าย Dropzone ออกมาข้างนอก เพื่อให้ใช้ความกว้างได้เต็ม 100% ของ Container หลัก -->
                             <!-- <div id="attachFile" class="mt-4">
 
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            </div> -->
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                </div> -->
                         </div>
                     </div>
                 </div>

@@ -282,7 +282,7 @@
                                     <span class="required w-32 shrink-0 pt-2 font-semibold">Tel.no</span>
                                     <label class="flex-1">
                                         <input type="text" type="tel" name="TELNO" id="TELNO"
-                                            maxlength="12" class="input input-sm w-full req">
+                                            maxlength="15" class="input input-sm w-full req">
                                     </label>
                                 </div>
                                 <div class="flex items-start gap-4 w-full md:w-1/2">

@@ -314,6 +314,7 @@ $(document).on('change', '.radio-type', async function () {
         countryManager.disabled(false);
         countryEnManager.value = '';
     }
+    paymentTermManager.filterByRadio(val);
 });
 
 $(document).on('input', '#AMOUNT', async function () {
@@ -709,7 +710,7 @@ $(document).on('click', '#btnDraft, #btnRequest', async function () {
     $('input[name="ACTION"]').val('save');
     const formElement = $('#frmmain')[0];
     const filteredFormData = await packPurevaFormData(formElement);
-    //console.log('ddddddddddddddddd');
+    console.log('ddddddddddddddddd');
     logFormData(filteredFormData);
     //console.log(filteredFormData);
     //console.log('ddddddddddddddddd');
@@ -831,10 +832,12 @@ $(document).on('click', 'button[name="btnAction"]', async function () {
     }
 });
 $(document).on('input', '.empnum', function () {
-    const directValue = Number($('input[name="EMPDIRECT"]').val()) || 0;
-    const indirectValue = Number($('input[name="EMPINDIRECT"]').val()) || 0;
+    const directValue =
+        Number($('input[name="EMPDIRECT"]').val().replace(/,/g, '')) || 0;
+    const indirectValue =
+        Number($('input[name="EMPINDIRECT"]').val().replace(/,/g, '')) || 0;
     const total = directValue + indirectValue;
-    $('.totemp').val(total);
+    $('.totemp').val(total).trigger('input');
 });
 
 $(document).on('change', 'input[name="VENDGROUP"]', function () {
