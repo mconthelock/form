@@ -33,7 +33,7 @@
         <div class="overflow-hidden rounded-2xl border border-slate-200/60 bg-white/80 shadow-lg backdrop-blur-sm">
             <div class="bg-gradient-to-r from-slate-50 to-slate-100 px-5 py-4 border-b border-slate-200">
                 <div class="flex items-center gap-2">
-                    <i class="fi fi-rr-code-compare text-lg text-slate-600"></i>
+                    <i class="fi fi-sr-scale-comparison-alt text-lg text-slate-600"></i>
                     <h2 class="text-base font-bold text-slate-800">Price Comparison</h2>
                 </div>
             </div>

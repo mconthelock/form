@@ -13,7 +13,6 @@ import { webflowSubmit } from '@amec/webasset/components/form';
 import { skeletons } from '@amec/webasset/skeleton';
 import { getUser, getUserImage } from '@amec/webasset/api/amec';
 import { EmployeeProfileCard } from '@amec/webasset/components/profileCard';
-import { getSelectedData } from '@amec/webasset/dataTable';
 /**
  * @author Sutthipong Tangmongkhoncharoen(24008)
  * @since 2026-09-15
@@ -26,7 +25,14 @@ export const steps = {
     _requester: null,
     _plannerCode: null,
     _function: null,
+    _db: null,
     _formNo: null,
+    set db(value) {
+        this._db = value;
+    },
+    get db() {
+        return this._db;
+    },
     set plannerCode(value) {
         this._plannerCode = value;
     },
@@ -85,6 +91,7 @@ export const steps = {
             inputer: this._inputer,
             requester: this._requester,
             plannerCode: this._plannerCode,
+            db: this._db,
             function: this._function,
             formNo: this._formNo,
         };
@@ -94,6 +101,7 @@ export const steps = {
         this._requester = null;
         this._plannerCode = null;
         this._function = null;
+        this._db = null;
         this._formNo = null;
     },
     resetRequester() {
@@ -102,7 +110,7 @@ export const steps = {
         $('input[name="requester"]').val('');
         $('#requester-card-container').empty();
     },
-    async init(inputer) {
+    async init(inputer, returnOrDraft = false) {
         this.inputer = inputer;
         await this.setProfileCard(
             inputer,
@@ -119,7 +127,8 @@ export const steps = {
                 { label: 'Pre Data' },
                 { label: 'Upload File' },
             ],
-            currentStep: 0,
+            currentStep: returnOrDraft ? 3 : 0,
+            disabledSteps: returnOrDraft ? [0, 1, 2] : [],
             clickable: true,
             allowClickForward: false,
             onChange: async function (currentStep) {
@@ -128,10 +137,15 @@ export const steps = {
                 } catch (error) {
                     console.error(error);
                     showErrorMessage(error.message);
+                    steps.handlePreviousStep();
                 }
             },
         });
-        this.handlePanel(0);
+        if (returnOrDraft) {
+            this.handlePanel(3);
+        } else {
+            this.handlePanel(0);
+        }
         this.bindEvents();
     },
     /**
@@ -148,6 +162,12 @@ export const steps = {
         const k850mpData = await getK850mpData();
         const k850mpRecord = k850mpData.data.filter(
             (record) => record.K85M03 === empno,
+        );
+        const buyers = k850mpData.data.filter((record) =>
+            record.K85M10.startsWith('BUY'),
+        );
+        const purs = k850mpData.data.filter((record) =>
+            record.K85M10.startsWith('PUR'),
         );
         if (k850mpRecord.length === 0) {
             $(containner).empty();
@@ -168,6 +188,24 @@ export const steps = {
             return;
         }
         if (isRequester) {
+            const enableFuncAs400 = buyers.some(
+                (record) => record.K85M03 === empno,
+            );
+            const enebleFuncMitsu = purs.some(
+                (record) => record.K85M03 === empno,
+            );
+            if (enableFuncAs400) {
+                $('input[name="function"][data-db="AS400"]').prop(
+                    'disabled',
+                    false,
+                );
+            }
+            if (enebleFuncMitsu) {
+                $('input[name="function"][data-db="MITSU"]').prop(
+                    'disabled',
+                    false,
+                );
+            }
             this.requester = empno;
             this.plannerCode = k850mpRecord.map((record) => record.K85M02);
         }
@@ -222,6 +260,7 @@ export const steps = {
             // reset ฟอร์ม requester และลบ profile card
             $('#step-requester')[0].reset();
             this.function = null;
+            this.db = null;
             this.formNo = null;
             this.resetRequester();
             // เมื่อกลับไปหน้าแรกให้ reset ค่าทั้งหมด
@@ -236,7 +275,6 @@ export const steps = {
                 btnDraftStep.removeClass('hidden');
                 break;
             case 1:
-                // this.inputer
                 await this.setProfileCard(
                     this.inputer,
                     '#requester-card-container',
@@ -257,6 +295,7 @@ export const steps = {
                         REQ_DATE: '2026-08-15 09:59',
                         QUOTATION: null,
                         FUNCTION: 1,
+                        DB: 'AS400',
                         STATUS: 0,
                     },
                     {
@@ -272,6 +311,7 @@ export const steps = {
                         REQ_DATE: '2026-08-16 09:59',
                         QUOTATION: null,
                         FUNCTION: 2,
+                        DB: 'AS400',
                         STATUS: 1,
                     },
                 ];
@@ -288,6 +328,7 @@ export const steps = {
                 break;
             case 2:
                 this.function = null;
+                this.db = null;
                 btnNext.prop('disabled', true);
                 btnPrevious.removeClass('hidden');
                 btnNext.removeClass('hidden');
@@ -309,7 +350,7 @@ export const steps = {
                             (condition) => `
                                 <label class="label">
                                     <input type="radio" name="function" value="${condition.NO}" class="radio req"
-                                        data-message="Please enter function">
+                                        data-message="Please enter function" data-db="${condition.DB}" disabled>
                                     ${condition.NO}
                                     ${condition.DESCRIPTION}
                                 </label>
@@ -319,14 +360,14 @@ export const steps = {
                 );
                 break;
             case 3:
-                tableCreatePrice.init(this.plannerCode);
+                await tableCreatePrice.init(this.plannerCode);
                 tableComparison.reset();
                 btnPrevious.removeClass('hidden');
                 btnNext.removeClass('hidden');
                 break;
             case 4:
                 importExcel.reset();
-                tableComparison.init({ formNo: this.formNo });
+                await tableComparison.init({ formNo: this.formNo });
                 btnPrevious.removeClass('hidden');
                 const submitOpt = {
                     remark: false,
@@ -334,11 +375,11 @@ export const steps = {
                     request: true,
                     back: false,
                 };
-                if (this.mode !== 'new') {
+                if (this.mode == 'draft') {
                     submitOpt.draft = false;
-                    submitOpt.request = false;
+                    // submitOpt.request = false;
                     submitOpt.save = true;
-                    submitOpt.approve = true;
+                    // submitOpt.approve = true;
                     submitOpt.flow = true;
                     submitOpt.flowHtml = ''; // TODO หาก user ตัดสินใจ ว่าให้ approve ค่อยมากำหนดค่า
                 }
@@ -420,6 +461,7 @@ export const steps = {
             try {
                 const requester = $(this).val();
                 if (requester.length < 5) {
+                    $('input[name="function"]').prop('disabled', true);
                     $('#requester-card-container').empty();
                     return;
                 }
@@ -441,6 +483,7 @@ export const steps = {
             try {
                 const requester = $(this).val();
                 if (requester.length < 5) {
+                    $('input[name="function"]').prop('disabled', true);
                     showMessage(
                         'Requester must be at least 5 characters',
                         'warning',
@@ -460,6 +503,7 @@ export const steps = {
         $(document).on('change', 'input[name="function"]', async function () {
             try {
                 self.function = $(this).val();
+                self.db = $(this).data('db');
             } catch (error) {
                 console.error(error);
                 showErrorMessage(error.message);
