@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import { getUrlParams, renderLoadError } from '@amec/webasset/utils';
 import { steps } from './steps';
 import { tableComparison } from './table/table-comparison';
@@ -55,5 +56,30 @@ $(async function () {
         renderLoadError(error.message);
     } finally {
         showLoader({ show: false });
+=======
+import { getUrlParams } from '@amec/webasset/utils';
+import { steps } from './steps';
+import { tableComparison } from './table-comparison';
+import { webflowSubmit } from '@amec/webasset/components/form';
+
+$(async function () {
+    try {
+        const params = getUrlParams();
+        const { EMPNO: empno, ...form } = params;
+        console.log(empno, form);
+        await steps.setProfileCard(empno, '#inputer-card-container', 'Inputer');
+        await steps.setProfileCard(empno, '#requester-card-container');
+
+        tableComparison.init({ formNo: '' });
+        const submitHtml = webflowSubmit({
+            remark: false,
+            flow: true,
+            flowHtml: '',
+        });
+        $('#webform-submit').html(submitHtml).removeClass('hidden');
+    } catch (error) {
+        console.error(error);
+        renderLoadError(error.message);
+>>>>>>> fa21af55 (feat(price-apv): implement view logic and modal confirmation for price approval requests, enhance step handling and data management)
     }
 });

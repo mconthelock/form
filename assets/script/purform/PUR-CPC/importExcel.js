@@ -113,6 +113,7 @@ export const importExcel = {
                     return;
                 }
                 const data = await self.readExcelFile(file);
+<<<<<<< HEAD
                 const mode = steps.compareMode;
                 // โหมด Edit จะใช้ item เดียวกันเปรียบเทียบ
                 // โหมด Add จะใช้ item เก่าเปรียบเทียบหาก user กรอกมา
@@ -200,6 +201,17 @@ export const importExcel = {
                         }
                         return newItem;
                     });
+=======
+                const itemCode = data.map((row) => row.VITEM_CODE);
+                const res = await getPriceComparison({
+                    FUNC: steps.function,
+                    ITEM: itemCode,
+                    DB: steps.db,
+                });
+                if (res.length === 0) {
+                    showMessage('No price comparison data found', 'warning');
+                    return;
+>>>>>>> fa21af55 (feat(price-apv): implement view logic and modal confirmation for price approval requests, enhance step handling and data management)
                 }
                 const mapData = data.map((row) => {
                     // หา old data ที่ตรงกับ row ปัจจุบันก่อน

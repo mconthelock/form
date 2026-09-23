@@ -50,6 +50,9 @@
             <div class="bg-gradient-to-r from-slate-50 to-slate-100 px-5 py-4 border-b border-slate-200">
                 <div class="flex items-center gap-2">
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> fa21af55 (feat(price-apv): implement view logic and modal confirmation for price approval requests, enhance step handling and data management)
                     <i class="fi fi-sr-scale-comparison-alt text-lg text-slate-600"></i>
                     <h2 class="text-base font-bold text-slate-800">Price Comparison</h2>
                 </div>

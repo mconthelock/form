@@ -16,6 +16,12 @@
 @endsection
 
 @section('contents')
+<<<<<<< HEAD
+=======
+{{-- <div class="hidden form-info" nfrmno="{{$NFRMNO}}" vorgno="{{$VORGNO}}" cyear="{{$CYEAR}}" mode="{{$mode}}"
+    cyear2="{{$mode !=1 ? $CYEAR2 : '' }}" nrunno="{{$mode !=1 ? $NRUNNO : '' }}" return="{{$return ?? ''}}"></div> --}}
+{{-- <div class="hidden apv-data" empno="{{$empno}}"></div> --}}
+>>>>>>> fa21af55 (feat(price-apv): implement view logic and modal confirmation for price approval requests, enhance step handling and data management)
 <div class="min-h-[calc(100vh-3rem)] p-4 md:p-6 lg:p-8 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
 
     <div class="grid grid-cols-[auto_1fr] gap-5">
@@ -23,7 +29,10 @@
         <div class="flex flex-col gap-5 sticky top-20 self-start">
             <div id="inputer-card-container" class="min-w-82 max-w-96"></div>
             <div id="requester-card-container" class="min-w-82 max-w-96"></div>
+<<<<<<< HEAD
             <div id="detail-step-container"></div>
+=======
+>>>>>>> fa21af55 (feat(price-apv): implement view logic and modal confirmation for price approval requests, enhance step handling and data management)
         </div>
 
         {{-- main content --}}
