@@ -1,2 +1,0 @@
-
-<?php echo $__env->make('ieform/IE-JIG/request_form', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH D:\for_dev\src\form\application\views/ieform/IE-JIG/approve_form.blade.php ENDPATH**/ ?>
