@@ -127,10 +127,10 @@ export const tableCreatePrice = {
                         //map to array 2 dimensions for Excel export
                         const data = selected.map((row) => [
                             steps.function,
-                            row.IBUYC,
-                            row.IVEND,
-                            row.IPROD,
-                            row.IDRAW,
+                            row.VPLANNER_CODE,
+                            row.VPRES_VENDOR,
+                            row.VITEM_CODE,
+                            row.VDRAWING,
                         ]);
                         const template = await getFile({
                             baseDir: templateBaseDir,
@@ -201,31 +201,31 @@ export const tableCreatePrice = {
     columns: [
         {
             title: 'PLANNER CODE',
-            data: 'IBUYC',
+            data: 'VPLANNER_CODE',
         },
         {
             title: 'ITEM',
-            data: 'IPROD',
+            data: 'VITEM_CODE',
         },
         {
             title: 'DRAWING',
-            data: 'IDRAW',
+            data: 'VDRAWING',
         },
         {
             title: 'PART NAME',
-            data: 'IDESC',
+            data: 'VPART_NAME',
         },
         {
             title: 'SPEC',
-            data: 'IGLNO',
+            data: 'VSPEC',
         },
         {
             title: 'VENDOR',
-            data: 'IVEND',
+            data: 'VPRES_VENDOR',
         },
         {
             title: 'VENDOR NAME',
-            data: 'VNDNAM',
+            data: 'VPRES_VENDOR_NAME',
         },
     ],
 };
