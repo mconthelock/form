@@ -360,7 +360,10 @@ export const steps = {
                 );
                 break;
             case 3:
-                await tableCreatePrice.init(this.plannerCode);
+                await tableCreatePrice.init({
+                    PLANNER: this.plannerCode,
+                    DB: this.db,
+                });
                 tableComparison.reset();
                 btnPrevious.removeClass('hidden');
                 btnNext.removeClass('hidden');

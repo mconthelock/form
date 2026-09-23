@@ -21,10 +21,11 @@ export async function getActivePriceConditions() {
  * @description Fetches the planner compare sheet for the specified planner.
  * @returns
  */
-export async function getPlannerCompareSheet(planner) {
+export async function getPlannerCompareSheet(data) {
     return await fetchUtils({
-        url: `${process.env.APP_API}/purform/pur-cpc/planner-compare-sheet/${planner}`,
-        method: 'GET',
+        url: `${process.env.APP_API}/purform/pur-cpc/planner-compare-sheet`,
+        method: 'POST',
+        data: data,
     });
 }
 

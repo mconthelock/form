@@ -62,10 +62,10 @@ export const tableCreatePrice = {
         await destroyTable(this.tableId);
         this.instance = null;
     },
-    async init(plannerCode) {
+    async init(data) {
         await this.destroy();
         this.preload();
-        const plannerCompareSheet = await getPlannerCompareSheet(plannerCode);
+        const plannerCompareSheet = await getPlannerCompareSheet(data);
         if (plannerCompareSheet.length == 0) {
             throw new Error('No data found for the given planner code.');
         }
