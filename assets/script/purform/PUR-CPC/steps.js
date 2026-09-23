@@ -201,7 +201,7 @@ export const steps = {
                 );
             }
             if (enebleFuncMitsu) {
-                $('input[name="function"][data-db="MITSU"]').prop(
+                $('input[name="function"][data-db="PROCUREMENT"]').prop(
                     'disabled',
                     false,
                 );
