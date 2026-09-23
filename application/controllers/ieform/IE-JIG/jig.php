@@ -83,6 +83,22 @@ class jig extends MY_Controller {
         return $key;
     }
 
+    private function jigFileDirectory($key) {
+        if (!preg_match('/^[0-9]{4}$/D', (string)$key['CYEAR2']) || (int)$key['NRUNNO'] < 1) {
+            throw new Exception('Invalid file year or running number');
+        }
+        return 'IE-JIG' . substr($key['CYEAR2'], -2) . '-' . str_pad((string)(int)$key['NRUNNO'], 6, '0', STR_PAD_LEFT);
+    }
+
+    private function jigStoredFilename($name, $tmp, $ext) {
+        $base = pathinfo(basename(str_replace('\\', '/', $name)), PATHINFO_FILENAME);
+        $base = preg_replace('/[^A-Za-z0-9_-]+/', '_', $base);
+        $base = trim(substr($base, 0, 80), '_-');
+        if ($base === '') $base = 'attachment';
+        // Prefix avoids reserved Windows names; the hash avoids name collisions on retry.
+        return 'file_' . $base . '_' . hash_file('sha256', $tmp) . '.' . $ext;
+    }
+
     public function uploadfile() {
         try {
             $key = $this->fileKey();
@@ -96,8 +112,9 @@ class jig extends MY_Controller {
             if (empty($_FILES['files']['name']) || !is_array($_FILES['files']['name'])) throw new Exception('No files');
             $incoming = $_FILES['files'];
             if (count($incoming['name']) > 5) throw new Exception('Maximum 5 files');
-            $directory = rtrim($this->upload_path, '/\\') . DIRECTORY_SEPARATOR . implode('_', $key);
-            if (!is_dir($directory) && !mkdir($directory, 0770, true)) throw new Exception('Cannot create upload directory');
+            $folder = $this->jigFileDirectory($key);
+            $directory = rtrim($this->upload_path, '/\\') . DIRECTORY_SEPARATOR . $folder;
+            if (!is_dir($directory) && !mkdir($directory, 0770, true) && !is_dir($directory)) throw new Exception('Cannot create upload directory');
             $allowed = ['jpg' => 'image/jpeg', 'jpeg' => 'image/jpeg', 'png' => 'image/png', 'pdf' => 'application/pdf'];
             $files = [];
             foreach ($incoming['name'] as $i => $name) {
@@ -108,10 +125,10 @@ class jig extends MY_Controller {
                 $mime = (new finfo(FILEINFO_MIME_TYPE))->file($tmp);
                 if ($mime !== $allowed[$ext]) throw new Exception('Attachment content does not match file type');
                 // Content-addressed names make retries safe and avoid overwriting a different file.
-                $stored = hash_file('sha256', $tmp) . '.' . $ext;
+                $stored = $this->jigStoredFilename($name, $tmp, $ext);
                 $destination = $directory . DIRECTORY_SEPARATOR . $stored;
                 if (!is_file($destination) && !move_uploaded_file($tmp, $destination)) throw new Exception('Upload failed');
-                $files[] = ['FILE_NAME' => basename($name), 'FILE_PATH' => implode('_', $key) . '/' . $stored, 'FILE_TYPE' => $mime, 'FILE_SIZE' => (int)$incoming['size'][$i]];
+                $files[] = ['FILE_NAME' => $stored, 'FILE_PATH' => $folder . '/' . $stored, 'FILE_TYPE' => $mime, 'FILE_SIZE' => (int)$incoming['size'][$i]];
             }
             $this->output->set_content_type('application/json')->set_output(json_encode(['status' => true, 'files' => $files]));
         } catch (Exception $e) {
@@ -124,8 +141,13 @@ class jig extends MY_Controller {
             $key = $this->fileKey('get');
             if (!$this->form->getRequestNo($key)) throw new Exception('Form not found');
             $name = $this->input->get('file');
-            if (!is_string($name) || !preg_match('/^[a-f0-9]{64}\.(jpg|jpeg|png|pdf)$/D', $name)) throw new Exception('Invalid filename');
-            $path = rtrim($this->upload_path, '/\\') . DIRECTORY_SEPARATOR . implode('_', $key) . DIRECTORY_SEPARATOR . $name;
+            if (!is_string($name) || !preg_match('/^(?:file_[A-Za-z0-9_-]{1,80}_)?[a-f0-9]{64}\.(jpg|jpeg|png|pdf)$/D', $name)) throw new Exception('Invalid filename');
+            $root = rtrim($this->upload_path, '/\\') . DIRECTORY_SEPARATOR;
+            $path = $root . $this->jigFileDirectory($key) . DIRECTORY_SEPARATOR . $name;
+            // Keep attachments saved before the directory change readable.
+            if (!is_file($path) && preg_match('/^[a-f0-9]{64}\.(jpg|jpeg|png|pdf)$/D', $name)) {
+                $path = $root . implode('_', $key) . DIRECTORY_SEPARATOR . $name;
+            }
             if (!is_file($path)) throw new Exception('File not found');
             $this->output->set_header('X-Content-Type-Options: nosniff');
             $this->output->set_content_type((new finfo(FILEINFO_MIME_TYPE))->file($path));
