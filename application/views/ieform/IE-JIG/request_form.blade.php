@@ -1,4 +1,30 @@
 @extends('layouts/webflowTemplate')
+@section('styles')
+<style>
+#jig-page input:disabled,
+#jig-page select:disabled,
+#jig-page textarea:disabled,
+#jig-page input[readonly]:not([data-editable-calendar="true"]),
+#jig-page textarea[readonly] {
+    background-color: #e0f2fe !important;
+    opacity: 1;
+}
+#jig-page #checkpoint-rows input {
+    color: #0f172a !important;
+    -webkit-text-fill-color: #0f172a;
+    font-weight: 600;
+    border-color: #94a3b8 !important;
+    opacity: 1;
+}
+#jig-page #checkpoint-rows .row-number {
+    color: #475569;
+    font-weight: 600;
+}
+#jig-approval-actions {
+    gap: 2rem;
+}
+</style>
+@endsection
 @section('contents')
 <div class="form-data" data-nfrmno="{{ $NFRMNO }}" data-vorgno="{{ $VORGNO }}" data-cyear="{{ $CYEAR }}" data-cyear2="{{ $CYEAR2 }}" data-nrunno="{{ $NRUNNO }}" data-empno="{{ $EMPNO }}" data-mode="{{ $mode }}" data-exdata="{{ $exdata ?? '' }}"></div>
 <div id="jig-page" data-mode="{{ $pageMode }}" class="mx-auto w-full max-w-6xl pb-8 text-slate-800">
@@ -7,11 +33,11 @@
         <div class="mb-5 grid items-center gap-4 md:grid-cols-2 rounded-xl border border-slate-200 bg-white p-4 text-sm">
             <div class="flex flex-wrap items-center gap-3">
             <span class="font-semibold">Input By</span>
-            <input name="input_by" aria-label="Input By" value="{{ $inputBy }}" readonly class="w-24 bg-transparent text-sm font-semibold text-indigo-700">
+            <input name="input_by" aria-label="Input By" value="{{ $inputBy }}" readonly class="input input-sm w-36 bg-white">
             <span id="input-by-name" class="text-sm font-semibold text-indigo-700" aria-live="polite"></span>
             </div>
             <div class="flex flex-wrap items-center gap-3">
-            <label class="flex items-center gap-3 font-semibold">Requested By <span class="text-red-600">*</span><input name="requested_by" required maxlength="5" inputmode="numeric" pattern="[0-9]{5}" aria-describedby="requested-by-name" class="input input-sm w-36 bg-white" placeholder="รหัสพนักงาน"></label><span id="requested-by-name" aria-live="polite" class="text-sm font-semibold text-indigo-700"></span>
+            <label class="flex items-center gap-3 font-semibold">Requested By <span class="text-red-600">*</span><input name="requested_by" required maxlength="5" aria-describedby="requested-by-name" class="input input-sm w-36 bg-white" placeholder="รหัสพนักงาน"></label><span id="requested-by-name" aria-live="polite" class="text-sm font-semibold text-indigo-700"></span>
             </div>
         </div>
         @if ($pageMode !== 'create')
@@ -31,7 +57,7 @@
             <p class="mb-4 mt-6 border-t border-dashed border-slate-200 pt-4 text-sm font-bold text-slate-900">ข้อมูลการผลิต</p>
             <div class="grid grid-cols-[minmax(0,2fr)_minmax(0,1fr)] gap-4">
                 <label class="block text-xs font-semibold text-slate-700">MFG Process Code <span class="text-red-600">*</span><select name="process_code" required disabled class="select mt-1 w-full rounded-lg border-slate-200 bg-white text-sm text-slate-800"><option value="">รอข้อมูล Process Code</option></select></label>
-                <label class="block text-xs font-semibold text-slate-700">Item<input id="itemno" name="itemno" maxlength="4" type="text"  class="input mt-1 w-full rounded-lg border-slate-200 bg-white text-sm text-slate-800"></label>
+                <label class="block text-xs font-semibold text-slate-700">Item<span class="text-red-600">*</span><input id="itemno" name="itemno" maxlength="4" type="text"  class="input mt-1 w-full rounded-lg border-slate-200 bg-white text-sm text-slate-800"></label>
                 <label class="col-span-2 block text-xs font-semibold text-slate-700">Location <span class="text-red-600">*</span><select name="location" required disabled class="select mt-1 w-full rounded-lg border-slate-200 bg-white text-sm text-slate-800"><option value="">รอข้อมูล Location</option></select></label>
             </div>
             <label class="mt-4 block text-xs font-semibold text-slate-700">PIC<select name="pic_empno" disabled class="select mt-1 w-full rounded-lg border-slate-200 bg-white text-sm text-slate-800"><option value="">กำลังโหลดพนักงาน</option></select></label>
@@ -40,7 +66,7 @@
                 <label class="block text-xs font-semibold text-slate-700">Description<input id="desc" name="desc" maxlength="100" type="text"  class="input mt-1 w-full rounded-lg border-slate-200 bg-white text-sm text-slate-800"></label>
                 <label class="block text-xs font-semibold text-slate-700">Maker<input name="maker" maxlength="100" type="text"  class="input mt-1 w-full rounded-lg border-slate-200 bg-white text-sm text-slate-800"></label>
                 <label class="block text-xs font-semibold text-slate-700">Start Use<input name="start_use_display" type="text" readonly class="input mt-1 w-full rounded-lg border-slate-200 bg-slate-50 text-sm text-slate-800"><input name="start_use_date" type="hidden"></label>
-                <label class="block text-xs font-semibold text-slate-700">Qty (ชิ้น)<input name="qty" max="99999" type="number" min="1" step="1" class="input mt-1 w-full rounded-lg border-slate-200 bg-white text-sm text-slate-800"></label>
+                <label class="block text-xs font-semibold text-slate-700">Qty (ชิ้น)<span class="text-red-600">*</span><input name="qty" max="99999" type="number" min="1" step="1" class="input mt-1 w-full rounded-lg border-slate-200 bg-white text-sm text-slate-800"></label>
                 <label class="block text-xs font-semibold text-slate-700">Price (บาท)<input name="price" max="9999999999" type="number" min="0" step="1" inputmode="numeric" class="input mt-1 w-full rounded-lg border-slate-200 bg-white text-sm text-slate-800"></label>
                 <label class="block text-xs font-semibold text-slate-700">Inspection Period <span class="text-red-600">*</span><select name="period" required class="select mt-1 w-full rounded-lg border-slate-200 bg-white text-sm text-slate-800"><option value="">เลือกช่วงเวลา</option><option value="6">6 เดือน</option><option value="12">12 เดือน</option></select></label>
             </div>
@@ -58,8 +84,26 @@
         <section class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
             <div class="mb-5 flex flex-wrap items-center justify-between gap-3"><h2 class="flex items-center gap-3 font-bold text-slate-900"><span class="flex size-7 items-center justify-center rounded-full bg-sky-100 text-sm text-sky-700">3</span>Check Points <span class="text-xs font-normal text-slate-400">Inspection Data</span></h2><span id="checkpoint-summary" class="text-xs text-slate-500" aria-live="polite"></span></div>
             <div class="overflow-x-auto rounded-xl border border-slate-200">
-                <table class="w-full min-w-[900px] table-fixed text-sm"><colgroup><col style="width:4%"><col style="width:25%"><col style="width:17%"><col style="width:11%"><col style="width:11%"><col style="width:12%"><col style="width:7%"><col style="width:9%"><col style="width:4%"></colgroup>
-                    <thead class="bg-slate-50 text-xs font-bold text-slate-800"><tr><th rowspan="2" class="p-3">#</th><th rowspan="2">Check Point <span class="text-red-600">*</span></th><th rowspan="2">Inspection Tool</th><th colspan="2" class="p-2">Standard</th><th rowspan="2">Measured <span class="text-red-600">*</span></th><th rowspan="2">Unit</th><th rowspan="2">Result</th><th rowspan="2"><span class="sr-only">ลบ</span></th></tr><tr><th class="p-2">MIN</th><th>MAX</th></tr></thead>
+                <table class="w-full min-w-[900px] table-fixed text-sm">
+                    <colgroup>
+                        <col style="width:4%"><col style="width:25%"><col style="width:17%">
+                        <col style="width:9%"><col style="width:9%"><col style="width:10%">
+                        <col style="width:13%"><col style="width:9%"><col style="width:4%">
+                    </colgroup>
+                    <thead class="bg-slate-50 text-xs font-bold text-slate-800">
+                        <tr>
+                            <th rowspan="2" class="p-3">#</th>
+                            <th rowspan="2">Check Point <span class="text-red-600">*</span></th>
+                            <th rowspan="2">Inspection Tool</th><th colspan="2" class="p-2">Standard</th>
+                            <th rowspan="2">Measured <span class="text-red-600">*</span></th>
+                            <th rowspan="2">Unit</th><th rowspan="2">Result</th>
+                            <th rowspan="2"><span class="sr-only">ลบ</span></th>
+                        </tr>
+                        <tr>
+                            <th class="p-2">MIN<span class="text-red-600">*</span></th>
+                            <th>MAX<span class="text-red-600">*</span></th>
+                        </tr>
+                    </thead>
                     <tbody id="checkpoint-rows"></tbody>
                 </table>
             </div>
@@ -88,10 +132,18 @@
             </fieldset>
             <div class="mt-5 border-t border-slate-100 pt-4"><button id="generate-ng-pdf" type="button" disabled class="btn w-full bg-white">Generate NG Tag PDF</button></div>
         </section>
+        @if ($pageMode === 'create')
         <footer class="mt-6 flex flex-wrap items-center justify-between gap-3"><p class="text-xs text-slate-500">ตรวจสอบข้อมูลก่อนบันทึก</p><button id="validate-jig" type="submit" class="btn btn-primary rounded-xl">บันทึก</button></footer>
+        @endif
         </fieldset>
     </form>
-    <div id="jig-approval" hidden class="mt-6 flex justify-end gap-3"><button id="jig-return" type="button" class="btn">Return</button><button id="jig-approve" type="button" class="btn btn-primary">Approve</button></div>
+    <section id="jig-approval" hidden class="mt-6">
+        <label for="jig-remark" class="block text-sm font-semibold text-slate-700">Remark</label>
+        <textarea id="jig-remark" name="approval_remark" rows="3" aria-describedby="jig-remark-hint jig-remark-error" class="textarea mt-2 w-full bg-white text-sm" placeholder="ระบุความคิดเห็นหรือเหตุผลในการส่งกลับ"></textarea>
+        <p id="jig-remark-hint" class="mt-1 text-xs text-slate-500">Return ต้องกรอก Remark · Approve ไม่บังคับ</p>
+        <p id="jig-remark-error" hidden role="alert" class="mt-1 text-sm text-red-600">กรุณากรอก Remark ก่อน Return</p>
+        <div id="jig-approval-actions" class="mt-6 flex justify-center"><button id="jig-approve" type="button" class="btn btn-primary">Approve</button><button id="jig-return" type="button" class="btn">Return</button></div>
+    </section>
     <div class="flow mt-6"></div>
 </div>
 @endsection

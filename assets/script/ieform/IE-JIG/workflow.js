@@ -15,16 +15,28 @@ export function initializeJigWorkflow(editor) {
     const recoveryId = `jig-pending:${key.NFRMNO}:${key.VORGNO}:${key.CYEAR}:${actor}`;
     let busy = false, loaded = pageMode === 'create', approved = false;
     const approval = document.querySelector('#jig-approval');
-    function navigate() {
+    const remarkInput = document.querySelector('#jig-remark');
+    const remarkError = document.querySelector('#jig-remark-error');
+    remarkInput.addEventListener('input', () => {
+        remarkError.hidden = true;
+        remarkInput.removeAttribute('aria-invalid');
+    });
+    async function completeCreate(saved) {
+        const record = saved?.JIG_NO ? saved : await loadJigForm(key);
+        if (!record?.JIG_NO) throw new Error('บันทึกแล้ว แต่ยังไม่พบ JIGNO จาก API กรุณาลองอีกครั้งเพื่อยืนยันผล');
+        loaded = false;
+        sessionStorage.removeItem(recoveryId);
+        await Swal.fire({icon:'success', title:'บันทึกเรียบร้อย', text:`บันทึกข้อมูล JIGNO : ${record.JIG_NO} เรียบร้อย`, confirmButtonText:'ตกลง'});
         const url = new URL(window.location.href);
-        for (const [field,param] of Object.entries({NFRMNO:'no',VORGNO:'orgNo',CYEAR:'y',CYEAR2:'y2',NRUNNO:'runNo'})) url.searchParams.set(param,key[field]);
+        for (const [field,param] of Object.entries({NFRMNO:'no',VORGNO:'orgNo',CYEAR:'y'})) url.searchParams.set(param,key[field]);
+        for (const param of ['y2','runNo','mode']) url.searchParams.delete(param);
         url.searchParams.set('empno',actor);
-        window.location.assign(url.href);
+        window.location.replace(url.href);
     }
     async function withBusy(action) {
         if (busy || !loaded) return;
         busy = true;
-        const controls = Array.from(document.querySelectorAll('#jig-form input,#jig-form select,#jig-form textarea,#jig-form button,#jig-approval button'));
+        const controls = Array.from(document.querySelectorAll('#jig-form input,#jig-form select,#jig-form textarea,#jig-form button,#jig-approval button,#jig-approval textarea'));
         const disabled = controls.map(el => el.disabled);
         try { return await action(() => controls.forEach(el => { el.disabled = true; })); }
         catch (error) { await Swal.fire({icon:'error',title:'ดำเนินการไม่สำเร็จ',text:error.message || 'กรุณาลองใหม่'}); return false; }
@@ -45,7 +57,8 @@ export function initializeJigWorkflow(editor) {
             if (pending?.uncertain) throw new Error('ยังยืนยันผลสร้างเลข Form ครั้งก่อนไม่ได้ กรุณาตรวจรายการ Webflow ก่อนสร้างซ้ำ');
             if (pending?.key) {
                 key = keyOf(pending.key);
-                if (await loadJigForm(key,true)) { sessionStorage.removeItem(recoveryId); navigate(); return true; }
+                const existing = await loadJigForm(key,true);
+                if (existing) { await completeCreate(existing); return true; }
             } else {
                 sessionStorage.setItem(recoveryId, JSON.stringify({uncertain:true}));
                 const result = checkResponse(await createForm({NFRMNO:key.NFRMNO,VORGNO:key.VORGNO,CYEAR:key.CYEAR,REQBY:reqby,INPUTBY:inputby,DRAFT:'0',REMARK:''}));
@@ -57,12 +70,12 @@ export function initializeJigWorkflow(editor) {
             if (String(webform.VINPUTER).trim() !== inputby || String(webform.VREQNO).trim() !== reqby) throw new Error('Requested By ไม่ตรงกับ Form ที่สร้างไว้ก่อนหน้า กรุณาใช้ผู้ร้องขอเดิม');
             form.elements.reg_date._flatpickr.setDate(calendarDate(webform.DREQDATE,true),false,'Y-m-d');
             payload.FILES = [...files.stored,...await uploadJigFiles(key,actor,files.incoming)].map((file,i) => ({...file,FILE_SEQ:i+1}));
-            checkResponse(await insertJigForm({...payload,...key,FORM_TYPE:'CREATE',CREATE_BY:actor}));
-            sessionStorage.removeItem(recoveryId);
-            navigate();
+            const saved = checkResponse(await insertJigForm({...payload,...key,FORM_TYPE:'CREATE',CREATE_BY:actor}));
+            await completeCreate(saved);
         } else {
             payload.FILES = [...payload.FILES,...await uploadJigFiles(key,actor,files.incoming)].map((file,i) => ({...file,FILE_SEQ:i+1}));
             delete payload.REV; delete payload.START_USE_DATE;
+            delete payload.PIC_EMPNO;
             checkResponse(await saveJigForm(key,{...payload,UPDATE_BY:actor,REPLACE_DETAILS:true,REPLACE_FILES:true}));
         }
         return true;
@@ -83,11 +96,20 @@ export function initializeJigWorkflow(editor) {
     async function act(action) {
         return withBusy(async lock => {
             if (context.mode !== '2' || approved) return false;
-            const result = await Swal.fire({title:action === 'approve' ? 'ยืนยัน Approve?' : 'ส่งกลับเพื่อแก้ไข',input:action === 'returnb' ? 'textarea' : undefined,showCancelButton:true,confirmButtonText:'ยืนยัน',cancelButtonText:'ยกเลิก',inputValidator:action === 'returnb' ? value => !value?.trim() ? 'กรุณาระบุเหตุผล' : undefined : undefined});
+            const remark = remarkInput.value.trim();
+            if (action === 'returnb' && !remark) {
+                remarkError.hidden = false;
+                remarkInput.setAttribute('aria-invalid', 'true');
+                remarkInput.focus();
+                return false;
+            }
+            remarkError.hidden = true;
+            remarkInput.removeAttribute('aria-invalid');
+            const result = await Swal.fire({title:action === 'approve' ? 'ยืนยัน Approve?' : 'ยืนยัน Return?',showCancelButton:true,confirmButtonText:'ยืนยัน',cancelButtonText:'ยกเลิก'});
             if (!result.isConfirmed) return false;
             if (action === 'approve' && pageMode === 'edit' && !await persist(lock)) return false;
             lock();
-            checkResponse(await doaction({...key,ACTION:action,EMPNO:actor,REMARK:result.value || '',CEXTDATA:context.exdata || ''}));
+            checkResponse(await doaction({...key,ACTION:action,EMPNO:actor,REMARK:remark,CEXTDATA:context.exdata || ''}));
             approved = true;
             approval.hidden = true;
             try {
