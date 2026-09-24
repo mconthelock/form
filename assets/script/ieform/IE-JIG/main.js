@@ -6,6 +6,7 @@ import {
     getJigEmployee,
     getJigPics,
     jigFileUrl,
+    deleteJigFile,
 } from './data';
 import { evaluateCheckpoint } from './checkpoint';
 import {
@@ -67,26 +68,10 @@ $(document).ready(function () {
             const part = (type) => parts.find((p) => p.type === type).value;
             pageMode = document.querySelector('#jig-page').dataset.mode;
             storedFiles = [];
-            const today =
-                part('year') + '-' + part('month') + '-' + part('day');
             form.elements.start_use_date.value =
                 part('year') + '-' + part('month') + '-01';
             form.elements.start_use_display.value =
                 '01/' + part('month') + '/' + part('year');
-            setDatePicker({
-                element: '[name="reg_date"]',
-                defaultDate: calendarDate(today, true),
-                clickOpens: false,
-                allowInput: false,
-                dateFormat: 'Y-m-d',
-                altInput: true,
-                altFormat: 'd/m/Y',
-                disableMobile: true,
-                onReady: (_dates, _value, instance) => {
-                    instance.set('altFormat', 'd/m/Y');
-                    instance.set('clickOpens', false);
-                },
-            });
             setDatePicker({
                 element: '[name="ng_plan_date"]',
                 dateFormat: 'Y-m-d',
@@ -508,9 +493,22 @@ $(document).ready(function () {
                     remove.type = 'button';
                     remove.className = 'btn btn-ghost btn-xs';
                     remove.textContent = 'ลบ';
-                    remove.onclick = () => {
-                        storedFiles.splice(index, 1);
-                        JIG.renderFiles();
+                    remove.onclick = async () => {
+                        const confirmed = await Swal.fire({icon:'warning', title:'ยืนยันลบไฟล์?', text:file.FILE_NAME, showCancelButton:true, confirmButtonText:'ลบ', cancelButtonText:'ยกเลิก'});
+                        if (!confirmed.isConfirmed) return;
+                        const controls = Array.from(document.querySelectorAll('#jig-form button, #jig-approval button'));
+                        const disabled = controls.map(control => control.disabled);
+                        controls.forEach(control => { control.disabled = true; });
+                        try {
+                            const result = await deleteJigFile(storedKey, file.FILE_SEQ);
+                            storedFiles = storedFiles.filter(saved => saved !== file);
+                            JIG.renderFiles();
+                            if (result.warning) await Swal.fire({icon:'warning', title:'ลบรายการแล้ว', text:result.warning});
+                        } catch (error) {
+                            await Swal.fire({icon:'error', title:'ลบไฟล์ไม่สำเร็จ', text:error.message});
+                        } finally {
+                            controls.forEach((control, i) => { control.disabled = disabled[i]; });
+                        }
                     };
                     item.append(remove);
                 }
@@ -573,6 +571,11 @@ $(document).ready(function () {
         },
 
         async hydrate(snapshot, webform, key) {
+            const typeBadge = document.querySelector('#jig-form-type');
+            const formType = String(snapshot.FORM_TYPE ?? '').trim().toUpperCase();
+            typeBadge.textContent = formType;
+            typeBadge.dataset.type = formType;
+            typeBadge.hidden = !['CREATE', 'INSPECTION'].includes(formType);
             await Promise.all([picReady, processReady, locationReady]);
             const setValue = (name, value) => {
                 const input = form.elements.namedItem(name);
@@ -597,7 +600,6 @@ $(document).ready(function () {
             requesterName.textContent = webform.VREQNAME || '';
             setValue('form_no', webform.FORMNO);
             setValue('jig_no', snapshot.JIG_NO);
-            setValue('reg_date', calendarDate(webform.DREQDATE, true));
             setValue('start_use_date', calendarDate(snapshot.START_USE_DATE));
             setValue('start_use_display', displayDate(snapshot.START_USE_DATE));
             form.querySelector('[aria-label="Revision"]').value =
@@ -639,7 +641,7 @@ $(document).ready(function () {
             JIG.renderFiles();
             document.querySelector('#jig-fields').disabled =
                 pageMode !== 'edit';
-            form.elements.namedItem('pic_empno').disabled = true;
+            form.elements.namedItem('pic_empno').disabled = pageMode !== 'edit';
             if (pageMode === 'view') {
                 form.querySelectorAll(
                     '.remove-row, #add-checkpoint, #validate-jig, #jig-file-dropzone, #generate-ng-pdf',
