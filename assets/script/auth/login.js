@@ -161,7 +161,11 @@ $(document).on('submit', '#rfidLogin', async function (e) {
 });
 
 //Barcode Login Button
-$(document).on('keyup', '#barcode-input', async function (e) {});
+$(document).on('keyup', '#barcode-input', async function (e) {
+    if (e.key == 'Enter') {
+        await barcodeLogin($(this).val());
+    }
+});
 
 $(document).on('click', '#opencamera', async function (e) {
     e.preventDefault();
@@ -220,16 +224,23 @@ export async function getAuth(appid) {
     return app.data.APP_LOGIN;
 }
 
-async function barcodeLogin(empcode) {
+async function barcodeLogin(barcode) {
+    const empcode = ('00000' + (barcode / 4 - 92).toString()).slice(-5);
+    const appid = $('#appid').val();
+    const frm = $('.form-cover');
+    frm.find('.loading').removeClass('hidden');
+    frm.find('input').attr('readonly', true);
+    frm.find('.btn').attr('disabled', true);
+    const user = await directlogin(empcode, appid);
     if (user.status !== undefined) {
         await showErrorMessage(user.message);
-        // frm.find(".loading").addClass("hidden");
-        // frm.find("input").attr("readonly", false);
-        // frm.find(".btn").attr("disabled", false);
+        frm.find('.loading').addClass('hidden');
+        frm.find('input').attr('readonly', false);
+        frm.find('.btn').attr('disabled', false);
         return;
     }
     const url = await successLogin(user);
-    window.location.href = url;
+    window.location.replace(url);
 }
 
 async function showCamera(target) {
