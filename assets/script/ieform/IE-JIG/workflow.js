@@ -13,6 +13,7 @@ import {
     uploadJigFiles,
     finishJigForm,
     startJigForm,
+    configureJigRequesterFlow,
 } from './data';
 import { collectJigPayload } from './payload';
 import { trackInspectionRevision } from './revision';
@@ -260,6 +261,15 @@ export function initializeJigWorkflow(editor) {
             if (!result.isConfirmed) return false;
             if (action === 'approve' && requesterStep) {
                 if (!(await persist(lock))) return false;
+                const hasNg = Array.from(rows.querySelectorAll('.result')).some(
+                    (element) => element.textContent === 'NG',
+                );
+                const picCode = hasNg
+                    ? form.elements
+                          .namedItem('location')
+                          .selectedOptions[0]?.dataset.piccode?.trim()
+                    : undefined;
+                checkResponse(await configureJigRequesterFlow(key, picCode));
                 checkResponse(await startJigForm(key, actor));
             }
             lock();
