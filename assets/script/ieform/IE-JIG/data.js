@@ -23,6 +23,21 @@ export async function loadJigForm(key, allowMissing = false) {
     return data;
 }
 const localBase = () => document.querySelector('meta[name="base_url"]').content;
+export async function startJigForm(key, actor) {
+    const data = new FormData();
+    Object.entries(key).forEach(([name, value]) => data.append(name, value));
+    data.append('EMPNO', actor);
+    return fetchUtils({url: `${localBase()}ieform/IE-JIG/jig/start_request`, method: 'POST', data});
+}
+export async function deleteJigFile(key, fileSeq) {
+    const data = new FormData();
+    Object.entries(key).forEach(([name, value]) => data.append(name, value));
+    data.append('EMPNO', document.querySelector('.form-data').dataset.empno);
+    data.append('FILE_SEQ', fileSeq);
+    const result = await fetchUtils({url: `${localBase()}ieform/IE-JIG/jig/deletefile`, method:'POST', data});
+    if (!result.status) throw new Error(result.message || 'ลบไฟล์ไม่สำเร็จ');
+    return result;
+}
 export async function uploadJigFiles(key, actor, files) {
     if (!files.length) return [];
     const data = new FormData();
