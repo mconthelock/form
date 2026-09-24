@@ -1,8 +1,8 @@
-// Measurements and results do not change the checkpoint specification.
-const fields = {point: 'CHECK_POINT', tool: 'INSPECTION_TOOL', min: 'MIN', max: 'MAX', unit: 'UNIT'};
+// Track all six checkpoint inputs, including the measured value.
+const fields = {point: 'CHECK_POINT', tool: 'INSPECTION_TOOL', min: 'MIN', max: 'MAX', measured: 'MEASURED_VALUE', unit: 'UNIT'};
 const normalize = (field, value) => {
     if (value == null || value === '') return '';
-    return field === 'min' || field === 'max' ? String(Number(value)) : String(value);
+    return ['min', 'max', 'measured'].includes(field) ? String(Number(value)) : String(value);
 };
 
 export function nextRevision(value) {

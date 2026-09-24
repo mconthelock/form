@@ -91,8 +91,8 @@
                 <label class="block text-xs font-semibold text-slate-700">Form No. (Auto)<input name="form_no" type="text" readonly placeholder="สร้างอัตโนมัติเมื่อบันทึก" class="input mt-1 w-full rounded-lg border-slate-200 bg-white text-sm text-slate-800"></label>
                 <label class="block text-xs font-semibold text-slate-700">Jig Control No. (Auto)<input name="jig_no" maxlength="20" type="text" readonly placeholder="สร้างอัตโนมัติเมื่อบันทึก" class="input mt-1 w-full rounded-lg border-slate-200 bg-white text-sm text-slate-800"></label>
                 <label class="block text-xs font-semibold text-slate-700">Jig Name <span class="text-red-600">*</span><input name="jig_name" maxlength="200" type="text" required class="input mt-1 w-full rounded-lg border-slate-200 bg-white text-sm text-slate-800"></label>
-                <label class="block text-xs font-semibold text-slate-700">Drawing No.<span class="text-red-600">*</span><input name="drawing_no" maxlength="100" type="text"  class="input mt-1 w-full rounded-lg border-slate-200 bg-white text-sm text-slate-800"></label>
-                <label class="block text-xs font-semibold text-slate-700">Revision<input aria-label="Revision" value="*" readonly class="input mt-1 w-full rounded-lg border-slate-200 bg-slate-50 text-sm"><input name="revision" type="hidden" value="0"></label>
+                <label class="block text-xs font-semibold text-slate-700">Drawing No.<input name="drawing_no" maxlength="100" type="text" class="input mt-1 w-full rounded-lg border-slate-200 bg-white text-sm text-slate-800"></label>
+                <label class="block text-xs font-semibold text-slate-700">Revision<input aria-label="Revision" value="*" readonly class="input mt-1 w-full rounded-lg border-slate-200 bg-slate-50 text-sm"><input name="revision" type="hidden" value="0" class="input mt-1 w-full rounded-lg border-slate-200 bg-white text-sm text-slate-800"></label>
             </div>
             <p class="mb-4 mt-6 border-t border-dashed border-slate-200 pt-4 text-sm font-bold text-slate-900">ข้อมูลการผลิต</p>
             <div class="grid grid-cols-[minmax(0,2fr)_minmax(0,1fr)] gap-4">

@@ -14,6 +14,11 @@ export const getJigPics = () => fetchUtils({ url: `${getConfig().APP_API}/iedoc/
 export const formPath = key => ['NFRMNO', 'VORGNO', 'CYEAR', 'CYEAR2', 'NRUNNO'].map(name => encodeURIComponent(key[name])).join('/');
 export const insertJigForm = data => fetchUtils({ url: `${getConfig().APP_API}/iedoc/jig`, method: 'POST', data });
 export const saveJigForm = (key, data) => fetchUtils({ url: `${getConfig().APP_API}/iedoc/jig/forms/${formPath(key)}`, method: 'PATCH', data });
+export const configureJigRequesterFlow = (key, picCode) => fetchUtils({
+    url: `${getConfig().APP_API}/iedoc/jig/forms/${formPath(key)}/requester-flow`,
+    method: 'POST',
+    data: picCode ? { PICCODE: picCode } : {},
+});
 export const finishJigForm = (key, actor) => fetchUtils({ url: `${getConfig().APP_API}/iedoc/jig/forms/${formPath(key)}/finish`, method: 'POST', data: { UPDATE_BY: actor } });
 export async function loadJigForm(key, allowMissing = false) {
     const response = await fetch(`${getConfig().APP_API}/iedoc/jig/forms/${formPath(key)}`);
