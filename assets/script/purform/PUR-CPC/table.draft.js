@@ -101,7 +101,7 @@ export const tableDraft = {
                     const data = selected[0];
                     steps.formNo = data.FORMNO;
                     steps.function = data.FUNCTION;
-                    steps.db = data.DB;
+                    steps.system = data.SYSTEM;
                 } catch (error) {
                     console.error(error);
                     showErrorMessage(error.message);

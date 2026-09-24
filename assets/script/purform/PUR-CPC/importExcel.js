@@ -108,7 +108,7 @@ export const importExcel = {
                 const res = await getPriceComparison({
                     FUNC: steps.function,
                     ITEM: itemCode,
-                    DB: steps.db,
+                    SYSTEM: steps.system,
                 });
                 if (res.length === 0) {
                     showMessage('No price comparison data found', 'warning');

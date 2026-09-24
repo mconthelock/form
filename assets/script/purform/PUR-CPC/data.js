@@ -10,7 +10,7 @@ export const templateBaseDir = `${process.env.AMEC_FILE_PATH}${process.env.STATE
  */
 export async function getActivePriceConditions() {
     return await fetchUtils({
-        url: `${process.env.APP_API}/purform/cond-comparison-price/active`,
+        url: `${process.env.APP_API}/purform/pur-cpc/cond-comparison-price/active`,
         method: 'GET',
     });
 }

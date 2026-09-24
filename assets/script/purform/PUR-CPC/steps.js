@@ -25,13 +25,13 @@ export const steps = {
     _requester: null,
     _plannerCode: null,
     _function: null,
-    _db: null,
+    _system: null,
     _formNo: null,
-    set db(value) {
-        this._db = value;
+    set system(value) {
+        this._system = value;
     },
-    get db() {
-        return this._db;
+    get system() {
+        return this._system;
     },
     set plannerCode(value) {
         this._plannerCode = value;
@@ -91,7 +91,7 @@ export const steps = {
             inputer: this._inputer,
             requester: this._requester,
             plannerCode: this._plannerCode,
-            db: this._db,
+            system: this._system,
             function: this._function,
             formNo: this._formNo,
         };
@@ -101,7 +101,7 @@ export const steps = {
         this._requester = null;
         this._plannerCode = null;
         this._function = null;
-        this._db = null;
+        this._system = null;
         this._formNo = null;
     },
     resetRequester() {
@@ -195,13 +195,13 @@ export const steps = {
                 (record) => record.K85M03 === empno,
             );
             if (enableFuncAs400) {
-                $('input[name="function"][data-db="AS400"]').prop(
+                $('input[name="function"][data-system="AS400"]').prop(
                     'disabled',
                     false,
                 );
             }
             if (enebleFuncMitsu) {
-                $('input[name="function"][data-db="PROCUREMENT"]').prop(
+                $('input[name="function"][data-system="PROCUREMENT"]').prop(
                     'disabled',
                     false,
                 );
@@ -260,7 +260,7 @@ export const steps = {
             // reset ฟอร์ม requester และลบ profile card
             $('#step-requester')[0].reset();
             this.function = null;
-            this.db = null;
+            this.system = null;
             this.formNo = null;
             this.resetRequester();
             // เมื่อกลับไปหน้าแรกให้ reset ค่าทั้งหมด
@@ -328,7 +328,7 @@ export const steps = {
                 break;
             case 2:
                 this.function = null;
-                this.db = null;
+                this.system = null;
                 btnNext.prop('disabled', true);
                 btnPrevious.removeClass('hidden');
                 btnNext.removeClass('hidden');
@@ -350,7 +350,7 @@ export const steps = {
                             (condition) => `
                                 <label class="label">
                                     <input type="radio" name="function" value="${condition.NO}" class="radio req"
-                                        data-message="Please enter function" data-db="${condition.DB}" disabled>
+                                        data-message="Please enter function" data-system="${condition.DB}" disabled>
                                     ${condition.NO}
                                     ${condition.DESCRIPTION}
                                 </label>
@@ -362,7 +362,7 @@ export const steps = {
             case 3:
                 await tableCreatePrice.init({
                     PLANNER: this.plannerCode,
-                    DB: this.db,
+                    SYSTEM: this.system,
                 });
                 tableComparison.reset();
                 btnPrevious.removeClass('hidden');
@@ -506,7 +506,7 @@ export const steps = {
         $(document).on('change', 'input[name="function"]', async function () {
             try {
                 self.function = $(this).val();
-                self.db = $(this).data('db');
+                self.system = $(this).data('system');
             } catch (error) {
                 console.error(error);
                 showErrorMessage(error.message);
