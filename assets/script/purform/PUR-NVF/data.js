@@ -36,8 +36,12 @@ export async function getTermcode() {
 }
 
 export async function getCountries() {
+    // return fetchUtils({
+    //     url: `${process.env.APP_API}/purform/purnvf-location/countries`,
+    //     method: 'GET',
+    // });
     return fetchUtils({
-        url: `${process.env.APP_API}/purform/purnvf-location/countries`,
+        url: `${process.env.APP_API}/countries`,
         method: 'GET',
     });
 }

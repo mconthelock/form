@@ -341,7 +341,7 @@
                             </div>
                             <div class="grid grid-cols-[170px_1fr] items-center gap-4">
                                 <span class="font-semibold text-sm required">Tel.no</span>
-                                <input type="text" name="TELNO" id="TELNO" maxlength="12"
+                                <input type="text" name="TELNO" id="TELNO" maxlength="15"
                                     class="input input-sm border border-gray-400 h-8 rounded  px-2 w-full req">
                             </div>
                             <div class="grid grid-cols-[170px_1fr] items-center gap-4">
@@ -520,7 +520,7 @@
                             <!-- ย้าย Dropzone ออกมาข้างนอก เพื่อให้ใช้ความกว้างได้เต็ม 100% ของ Container หลัก -->
                             <!-- <div id="attachFile" class="mt-4">
 
-                                                                                                                        </div> -->
+                                                                                                                                                                                        </div> -->
                         </div>
                     </div>
                 </div>
@@ -651,7 +651,7 @@
                                     <tr>
                                         <td class="border border-gray-400 p-2">
                                             <input type="text" name="FY[]"
-                                                class="input-integer w-full border-none bg-transparent text-center focus:outline-none thisy"
+                                                class="input-year w-full border-none bg-transparent text-center focus:outline-none thisy"
                                                 maxlength="4" placeholder="Year (e.g., 2026)">
                                         </td>
                                         <td class="border border-gray-400 p-2">
@@ -663,7 +663,7 @@
                                     <tr>
                                         <td class="border border-gray-400 p-2">
                                             <input type="text" name="FY[]"
-                                                class="input-integer w-full border-none bg-transparent text-center focus:outline-none lasty"
+                                                class="input-year  w-full border-none bg-transparent text-center focus:outline-none lasty"
                                                 maxlength="4" placeholder="Year">
                                         </td>
                                         <td class="border border-gray-400 p-2">
@@ -675,7 +675,7 @@
                                     <tr>
                                         <td class="border border-gray-400 p-2">
                                             <input type="text" name="FY[]"
-                                                class="input-integer w-full border-none bg-transparent text-center focus:outline-none last2y"
+                                                class="input-year w-full border-none bg-transparent text-center focus:outline-none last2y"
                                                 maxlength="4" placeholder="Year">
                                         </td>
                                         <td class="border border-gray-400 p-2">
@@ -736,7 +736,7 @@
                                 <div>
                                     <label class="block text-xs font-semibold text-gray-600">Fiscal Year</label>
                                     <input type="text" name="FY_AMOUNT"
-                                        class="input-integer w-full border border-gray-400 h-8 p-2 rounded text-sm">
+                                        class="input-year  w-full border border-gray-400 h-8 p-2 rounded text-sm">
                                 </div>
                                 <div>
                                     <label class="block text-xs font-semibold text-gray-600">Total Amount [Bht]</label>
@@ -1032,8 +1032,8 @@
                     <!-- ส่วนที่เพิ่มใหม่: วันที่ก่อตั้ง (Establishment Date) -->
                     <div class="mt-4">
                         <label class="block font-bold text-sm text-gray-700 mb-2 required">Established</label>
-                        <input type="text" name="ESTABLISHED"
-                            class="input input-sm border border-gray-400 h-8 rounded px-2 w-full req">
+                        <input type="date" name="ESTABLISHED"
+                            class="input input-sm border border-gray-400 h-8 rounded px-2 w-full req fdate">
                     </div>
                 </div>
 
@@ -1118,7 +1118,7 @@
                         <div class="flex items-center gap-2">
                             <span class="flex-shrink-0 whitespace-nowrap">Total:</span>
                             <input type="text"
-                                class="totemp flex-1 input input-bordered input-sm bg-gray-50 border-gray-300 readonly">
+                                class="totemp input-integer flex-1 input input-bordered input-sm bg-gray-50 border-gray-300 readonly">
                         </div>
 
                         <div class="flex items-center gap-2">
@@ -1169,7 +1169,7 @@
                         <tr>
                             <td class="border border-gray-400 p-2">
                                 <input type="text" name="FYT[]"
-                                    class="input-integer w-full border-none bg-transparent text-center focus:outline-none"
+                                    class="input-year w-full border-none bg-transparent text-center focus:outline-none"
                                     maxlength="4" placeholder="Year (e.g., 2026)">
                             </td>
                             <td class="border border-gray-400 p-2">
@@ -1181,7 +1181,7 @@
                         <tr>
                             <td class="border border-gray-400 p-2">
                                 <input type="text" name="FYT[]"
-                                    class="input-integer w-full border-none bg-transparent text-center focus:outline-none"
+                                    class="input-year w-full border-none bg-transparent text-center focus:outline-none"
                                     maxlength="4" placeholder="Year">
                             </td>
                             <td class="border border-gray-400 p-2">
@@ -1193,7 +1193,7 @@
                         <tr>
                             <td class="border border-gray-400 p-2">
                                 <input type="text" name="FYT[]"
-                                    class="input-integer w-full border-none bg-transparent text-center focus:outline-none"
+                                    class="input-year w-full border-none bg-transparent text-center focus:outline-none"
                                     maxlength="4" placeholder="ํํYear">
                             </td>
                             <td class="border border-gray-400 p-2">

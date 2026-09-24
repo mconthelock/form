@@ -134,7 +134,10 @@ $(document).ready(async function () {
         $(`input[name="REQTYPE"]`).on('click', function (e) {
             e.preventDefault();
         });
-        $('input[name="VENDCODE"], #VENDCODE').val(purvmm.VENDCODE);
+        $('input[name="VENDCODE"], #VENDCODE')
+            .val(purvmm.VENDCODE)
+            .prop('readonly', true);
+
         $(`input[name="VENDGROUPTYPE"][value="${purvmm.VENDGROUPTYPE}"]`).prop(
             'checked',
             true,
@@ -237,7 +240,7 @@ $(document).ready(async function () {
 
 $(document).on('input', '#VENDCODE', async function () {
     const keywordValue = this.value.trim();
-    console.log('xxx');
+    console.log('xxxxxxxxxx');
 
     if (keywordValue.length === 5) {
         const searchData = { VND_CODE: keywordValue, IS_DETAIL: '1' };
