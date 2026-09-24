@@ -391,7 +391,8 @@ $(async function () {
         renderFilesByType(attachedFiles, 13, 'file-type-13');
         renderFilesByType(attachedFiles, 2, 'file-type-2');
         $('input[name="JUDGEMENT"]').val(formeva.JUDGEMENT);
-        console.log(form.MODE);
+        //console.log(form.MODE);
+        //console.log('extdata =' + cextdata + '<<<<<');
         if (cst != '0') {
             $('#form-action-container').html(
                 webflowSubmit({
@@ -399,13 +400,15 @@ $(async function () {
                     flowhtml: flow.html,
                     approve: form.MODE == 2 ? true : false,
                     reject:
-                        form.MODE == 2 && ['01', '02', '03'].includes(cextdata)
+                        form.MODE == 2 &&
+                        ['01', '02', '03', 'MG'].includes(cextdata)
                             ? true
                             : false,
                     remark: false,
                     back: form.MODE == 2 ? true : false,
                     return:
-                        form.MODE == 2 && ['01', '02'].includes(cextdata)
+                        form.MODE == 2 &&
+                        ['01', '02', , 'MG'].includes(cextdata)
                             ? true
                             : false,
                     returnb: form.MODE == 2 && cextdata == '03' ? true : false,
