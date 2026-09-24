@@ -264,7 +264,15 @@ $(async function () {
                 `${setRound(Number(formeva.CAPITAL), 2)} ${formeva.CAPCUR?.CURR_NAME || '-'}`,
             );
 
-            $('#ESTABLISHED').text(formeva.ESTABLISHED || '-');
+            const isYyyyMmDd = /^\d{4}-\d{2}-\d{2}$/.test(formeva.ESTABLISHED);
+
+            const established = formeva.ESTABLISHED
+                ? isYyyyMmDd
+                    ? formatDate(formeva.ESTABLISHED, 'DD/MM/YYYY')
+                    : formeva.ESTABLISHED
+                : '';
+
+            $('#ESTABLISHED').text(established || '-');
             $('#COM_TYPE').text(
                 formeva.COM_TYPE === 'อื่นๆ ระบุ'
                     ? `อื่นๆ ระบุ : ${formeva.COM_OTHER || '-'}`

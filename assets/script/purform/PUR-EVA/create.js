@@ -1601,7 +1601,7 @@ async function packPurevaFormData(formElement) {
     appendObjArray('PROFIT_TURNOVERS', PROFIT_TURNOVERS);
     appendObjArray('RELATIONS', RELATIONS);
 
-    return filterFormData(fd);
+    return filterFormData(fd, { empty: true });
 }
 
 function checkAttFile() {
