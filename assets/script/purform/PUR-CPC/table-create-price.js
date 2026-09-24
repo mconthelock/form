@@ -77,7 +77,10 @@ export const tableCreatePrice = {
         this.instance = await createTable(
             {
                 data: data,
-                columns: this.columns,
+                columns:
+                    steps.system == 'PROCUREMENT'
+                        ? this.columnProcurement
+                        : this.columns,
                 initComplete: function () {
                     const table = this.api();
                     const wrapper = table.table().container();
@@ -125,13 +128,23 @@ export const tableCreatePrice = {
                             return;
                         }
                         //map to array 2 dimensions for Excel export
-                        const data = selected.map((row) => [
-                            steps.function,
-                            row.VPLANNER_CODE,
-                            row.VPRES_VENDOR,
-                            row.VITEM_CODE,
-                            row.VDRAWING,
-                        ]);
+                        const data = selected.map((row) =>
+                            steps.system == 'PROCUREMENT'
+                                ? [
+                                      steps.function,
+                                      row.VPLANNER_CODE,
+                                      row.VPRES_VENDOR,
+                                      row.VPROD_CODE,
+                                      null,
+                                  ]
+                                : [
+                                      steps.function,
+                                      row.VPLANNER_CODE,
+                                      row.VPRES_VENDOR,
+                                      row.VITEM_CODE,
+                                      row.VDRAWING,
+                                  ],
+                        );
                         const template = await getFile({
                             baseDir: templateBaseDir,
                             storedName: 'Price Compare Upload Template.xlsx',
@@ -206,6 +219,7 @@ export const tableCreatePrice = {
         {
             title: 'ITEM',
             data: 'VITEM_CODE',
+            className: 'text-nowrap',
         },
         {
             title: 'DRAWING',
@@ -218,6 +232,37 @@ export const tableCreatePrice = {
         {
             title: 'SPEC',
             data: 'VSPEC',
+        },
+        {
+            title: 'VENDOR',
+            data: 'VPRES_VENDOR',
+        },
+        {
+            title: 'VENDOR NAME',
+            data: 'VPRES_VENDOR_NAME',
+        },
+    ],
+    columnProcurement: [
+        {
+            title: 'PLANNER CODE',
+            data: 'VPLANNER_CODE',
+        },
+        {
+            title: 'EXPENSE TYPE',
+            data: 'VSEXPTYPE',
+        },
+        {
+            title: 'PRODUCT CODE',
+            data: 'VPROD_CODE',
+            className: 'text-nowrap',
+        },
+        {
+            title: 'PRODUCT NAME',
+            data: 'VPROD_NAME',
+        },
+        {
+            title: 'DESCRIPTION',
+            data: 'VDESCRIPTION',
         },
         {
             title: 'VENDOR',

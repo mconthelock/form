@@ -12,6 +12,10 @@
         text-align: center !important;
         vertical-align: top !important;
     }
+
+    label:has(input:disabled){
+        cursor: not-allowed;
+    }
 </style>
 @endsection
 

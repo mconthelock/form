@@ -116,7 +116,7 @@ export const tableComparison = {
             }
             this.vendors = vendors;
         }
-
+        console.log(data);
         $(this.tableId).html(this.header);
         await this.createTable(data);
         this.skeleton.remove();

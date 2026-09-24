@@ -295,7 +295,6 @@ export const steps = {
                         REQ_DATE: '2026-08-15 09:59',
                         QUOTATION: null,
                         FUNCTION: 1,
-                        DB: 'AS400',
                         STATUS: 0,
                     },
                     {
@@ -311,7 +310,6 @@ export const steps = {
                         REQ_DATE: '2026-08-16 09:59',
                         QUOTATION: null,
                         FUNCTION: 2,
-                        DB: 'AS400',
                         STATUS: 1,
                     },
                 ];
@@ -350,7 +348,7 @@ export const steps = {
                             (condition) => `
                                 <label class="label">
                                     <input type="radio" name="function" value="${condition.NO}" class="radio req"
-                                        data-message="Please enter function" data-system="${condition.DB}" disabled>
+                                        data-message="Please enter function" data-system="${condition.SYSTEM}" disabled>
                                     ${condition.NO}
                                     ${condition.DESCRIPTION}
                                 </label>
