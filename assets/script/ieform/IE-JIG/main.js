@@ -186,7 +186,13 @@ $(document).ready(function () {
         loadMaster() {
             // ie-pics filters active employees, department and position on the server.
             picReady = JIG.loadSelect('pic_empno', getJigPics, (data) =>
-                data.map((u) => ({
+                [...data].sort((a, b) =>
+                    String(a.SNAME ?? '').trim().localeCompare(
+                        String(b.SNAME ?? '').trim(),
+                        'th',
+                        { sensitivity: 'base' },
+                    ),
+                ).map((u) => ({
                     value: String(u.SEMPNO).trim(),
                     label:
                         '(' + String(u.SEMPNO).trim() + ') ' + (u.SNAME || ''),
