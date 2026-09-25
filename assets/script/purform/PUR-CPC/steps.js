@@ -385,10 +385,12 @@ export const steps = {
                 btnPrevious.removeClass('hidden');
                 const submitOpt = {
                     remark: false,
-                    draft: true,
-                    request: true,
                     back: false,
                 };
+                if (this.mode == 'new') {
+                    submitOpt.draft = true;
+                    submitOpt.request = true;
+                }
                 if (this.mode == 'draft') {
                     submitOpt.draft = false;
                     submitOpt.save = true;
