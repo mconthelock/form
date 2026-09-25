@@ -102,6 +102,7 @@ export const tableDraft = {
                     steps.formNo = data.FORMNO;
                     steps.function = data.FUNCTION;
                     steps.system = data.SYSTEM;
+                    steps.priceApvForm = data.PRICE_APV_FORM;
                 } catch (error) {
                     console.error(error);
                     showErrorMessage(error.message);

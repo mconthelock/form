@@ -27,6 +27,13 @@ export const steps = {
     _function: null,
     _system: null,
     _formNo: null,
+    _priceApvForm: null,
+    set priceApvForm(value) {
+        this._priceApvForm = value;
+    },
+    get priceApvForm() {
+        return this._priceApvForm;
+    },
     set system(value) {
         this._system = value;
     },
@@ -94,6 +101,7 @@ export const steps = {
             system: this._system,
             function: this._function,
             formNo: this._formNo,
+            priceApvForm: this._priceApvForm,
         };
     },
     reset() {
@@ -103,10 +111,12 @@ export const steps = {
         this._function = null;
         this._system = null;
         this._formNo = null;
+        this._priceApvForm = null;
     },
     resetRequester() {
         this.requester = null;
         this.plannerCode = null;
+        this.priceApvForm = null;
         $('input[name="requester"]').val('');
         $('#requester-card-container').empty();
     },
@@ -262,6 +272,7 @@ export const steps = {
             this.function = null;
             this.system = null;
             this.formNo = null;
+            this.priceApvForm = null;
             this.resetRequester();
             // เมื่อกลับไปหน้าแรกให้ reset ค่าทั้งหมด
             if (index === 0) {
@@ -296,6 +307,7 @@ export const steps = {
                         QUOTATION: null,
                         FUNCTION: 1,
                         STATUS: 0,
+                        SYSTEM: 'AS400',
                     },
                     {
                         FORMNO: 'COMP-2026-000002',
@@ -311,6 +323,7 @@ export const steps = {
                         QUOTATION: null,
                         FUNCTION: 2,
                         STATUS: 1,
+                        SYSTEM: 'AS400',
                     },
                 ];
                 if (draftData.length === 0) {
@@ -378,11 +391,10 @@ export const steps = {
                 };
                 if (this.mode == 'draft') {
                     submitOpt.draft = false;
-                    // submitOpt.request = false;
                     submitOpt.save = true;
-                    // submitOpt.approve = true;
-                    submitOpt.flow = true;
-                    submitOpt.flowHtml = ''; // TODO หาก user ตัดสินใจ ว่าให้ approve ค่อยมากำหนดค่า
+                }
+                if (this.priceApvForm != null) {
+                    submitOpt.form = this.priceApvForm;
                 }
                 const submitHtml = webflowSubmit(submitOpt);
                 webformSubmitContainer.html(submitHtml).removeClass('hidden');
