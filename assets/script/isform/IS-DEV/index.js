@@ -30,13 +30,14 @@ $(document).ready(async function () {
 
     $('#add-row-labor').trigger('click');
     // $('#add-row-investment').trigger('click');
-    $('#not-improve-investment').trigger('click');
+    //$('#not-improve-investment').trigger('click');
     await setSelect2();
     await setDatePicker({
         mode: 'month',
         dateFormat: 'Y-M',
         minDate: dayjs().format('YYYY-MM'),
     });
+    $('.flatpickr-input').removeClass('input');
 });
 
 $(document).on('click', '#change-req-employee', async function (e) {

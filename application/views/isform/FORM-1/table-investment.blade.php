@@ -1,5 +1,5 @@
-<table class="table">
-    <thead>
+<table class="table table-edit">
+    <thead class="bg-primary text-white font-bold text-center">
         <tr>
             <th>Item</th>
             <th class="w-[10%]">Qty</th>
