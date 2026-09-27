@@ -1,5 +1,5 @@
-<table class="table">
-    <thead>
+<table class="table table-edit" id="table-benefit">
+    <thead class="bg-primary text-white font-bold text-center">
         <tr>
             <th rowspan="2" colspan="2">Item</th>
             <th colspan="2">Condition (KB)</th>
@@ -13,9 +13,9 @@
     <tbody>
         <tr>
             <th colspan="2">Running Cost</th>
-            <td><input type="text" class="input-number input-benefit"></td>
-            <td><input type="text" class="input-number input-benefit"></td>
-            <td><input type="text" class="input-number input-benefit" readonly></td>
+            <td><input type="text" class="input-number input-benefit present-cost"></td>
+            <td><input type="text" class="input-number input-benefit future-cost"></td>
+            <td><input type="text" class="input-number input-benefit subtotal-cost" readonly></td>
         </tr>
         <tr>
             <th colspan="2">Production Volumn/Output</th>
@@ -32,14 +32,14 @@
         <tr>
             <th rowspan="2">Manpower</th>
             <th>Labor Cost</th>
-            <td><input type="text" class="input-number input-benefit"></td>
-            <td><input type="text" class="input-number input-benefit"></td>
+            <td><input type="text" class="input-number input-benefit" readonly></td>
+            <td><input type="text" class="input-number input-benefit" readonly></td>
             <td><input type="text" class="input-number input-benefit" readonly></td>
         </tr>
         <tr>
             <th>Subcon/Outsource Cost</th>
-            <td><input type="text" class="input-number input-benefit"></td>
-            <td><input type="text" class="input-number input-benefit"></td>
+            <td><input type="text" class="input-number input-benefit" readonly></td>
+            <td><input type="text" class="input-number input-benefit" readonly></td>
             <td><input type="text" class="input-number input-benefit" readonly></td>
         </tr>
         <tr>
@@ -65,9 +65,9 @@
     <tfoot class="bg-primary/20">
         <tr>
             <th colspan="2" class="font-semibold">Total</th>
-            <td><input type="text" class="text-end outline-0 w-full" readonly></td>
-            <td><input type="text" class="text-end outline-0 w-full" readonly></td>
-            <td><input type="text" class="text-end outline-0 w-full" readonly></td>
+            <td><input type="text" class="text-end outline-0 w-full total-present" readonly></td>
+            <td><input type="text" class="text-end outline-0 w-full total-future" readonly></td>
+            <td><input type="text" class="text-end outline-0 w-full total-benefit" readonly></td>
         </tr>
     </tfoot>
 </table>

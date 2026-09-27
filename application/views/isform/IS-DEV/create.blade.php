@@ -186,7 +186,7 @@
                 </fieldset>
 
 
-                <div class="table-wrap overflow-x-auto mt-3">
+                <div class="table-wrap overflow-x-auto mt-3 border border-slate-300 rounded-xl">
                     @include('isform.FORM-1.table-benefit')
                 </div>
                 <p class="label mt-1 text-xs"></p>
@@ -194,14 +194,14 @@
 
             <fieldset class="bg-primary/10 border border-primary rounded-xl p-5 form-roi">
                 <legend class="font-semibold text-lg px-1">Efficiency Gains</legend>
-                <div class="table-wrap overflow-x-auto">
+                <div class="table-wrap overflow-x-auto border border-slate-300 rounded-xl">
                     @include('isform.FORM-1.table-labor')
                 </div>
             </fieldset>
 
             <fieldset class="bg-primary/10 border border-primary rounded-xl p-5 form-roi">
                 <legend class="font-semibold text-lg px-1">Investment in equipment.</legend>
-                <div class="table-wrap overflow-x-auto">
+                <div class="table-wrap overflow-x-auto border border-slate-300 rounded-xl">
                     @include('isform.FORM-1.table-investment')
                 </div>
             </fieldset>
@@ -212,7 +212,6 @@
                     id="roi-total-full">0</span>
                 Baht)
             </div>
-
 
             <div class="flex gap-3 mt-3 ">
                 <button class="btn btn-primary" id="confirm-form"><i class="fi fi-tr-multiple"></i>Confirm</button>
@@ -227,6 +226,11 @@
 
 @section('styles')
     <style>
+        .table-edit tbody tr th {
+            font-weight: bold;
+
+        }
+
         .table-edit tbody tr td {
             padding: 0 !important;
         }
@@ -249,7 +253,8 @@
             padding: 10px;
             border: none;
             text-align: right;
-            font-size: 1.25em
+            font-size: 1.25em;
+            background: var(--color-white);
         }
 
         .table-edit tbody tr td input:hover:not(:read-only) {
@@ -264,6 +269,10 @@
         .table-edit tbody tr td input:focus:not(:read-only) {
             background: var(--color-primary);
             color: var(--color-white);
+        }
+
+        .table-edit tbody tr td input[readonly] {
+            background: var(--color-gray-200);
         }
     </style>
 @endsection

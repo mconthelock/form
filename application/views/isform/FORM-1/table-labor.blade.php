@@ -1,5 +1,5 @@
-<table class="table">
-    <thead>
+<table class="table table-edit">
+    <thead class="bg-primary text-white font-bold text-center">
         <tr>
             <th rowspan="2">Postion</th>
             <th rowspan="2" class="w-[15%] text-wrap">Cost</th>
