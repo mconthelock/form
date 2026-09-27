@@ -19,47 +19,50 @@
         </tr>
         <tr>
             <th colspan="2">Production Volumn/Output</th>
-            <td><input type="text" class="input-number input-benefit"></td>
-            <td><input type="text" class="input-number input-benefit"></td>
-            <td><input type="text" class="input-number input-benefit" readonly></td>
+            <td><input type="text" class="input-number input-benefit present-cost"></td>
+            <td><input type="text" class="input-number input-benefit future-cost"></td>
+            <td><input type="text" class="input-number input-benefit subtotal-cost" readonly></td>
         </tr>
         <tr>
             <th colspan="2">Lost (Material/Order)</th>
-            <td><input type="text" class="input-number input-benefit"></td>
-            <td><input type="text" class="input-number input-benefit"></td>
-            <td><input type="text" class="input-number input-benefit" readonly></td>
+            <td><input type="text" class="input-number input-benefit present-cost"></td>
+            <td><input type="text" class="input-number input-benefit future-cost"></td>
+            <td><input type="text" class="input-number input-benefit subtotal-cost" readonly></td>
         </tr>
         <tr>
             <th rowspan="2">Manpower</th>
             <th>Labor Cost</th>
-            <td><input type="text" class="input-number input-benefit" readonly></td>
-            <td><input type="text" class="input-number input-benefit" readonly></td>
-            <td><input type="text" class="input-number input-benefit" readonly></td>
+            <td><input type="text" class="input-number input-benefit present-cost" id="labor-present-benefit"
+                    readonly></td>
+            <td><input type="text" class="input-number input-benefit future-cost" id="labor-future-benefit" readonly>
+            </td>
+            <td><input type="text" class="input-number input-benefit subtotal-cost" id="labor-total-benefit"
+                    readonly></td>
         </tr>
         <tr>
             <th>Subcon/Outsource Cost</th>
-            <td><input type="text" class="input-number input-benefit" readonly></td>
-            <td><input type="text" class="input-number input-benefit" readonly></td>
-            <td><input type="text" class="input-number input-benefit" readonly></td>
+            <td><input type="text" class="input-number input-benefit present-cost"></td>
+            <td><input type="text" class="input-number input-benefit future-cost"></td>
+            <td><input type="text" class="input-number input-benefit subtotal-cost" readonly></td>
         </tr>
         <tr>
             <th rowspan="3">Other</th>
             <th>Preparing Cost</th>
-            <td><input type="text" class="input-number input-benefit"></td>
-            <td><input type="text" class="input-number input-benefit"></td>
-            <td><input type="text" class="input-number input-benefit" readonly></td>
+            <td><input type="text" class="input-number input-benefit present-cost"></td>
+            <td><input type="text" class="input-number input-benefit future-cost"></td>
+            <td><input type="text" class="input-number input-benefit subtotal-cost" readonly></td>
         </tr>
         <tr>
             <th>Equipment Cost</th>
-            <td><input type="text" class="input-number input-benefit"></td>
-            <td><input type="text" class="input-number input-benefit"></td>
-            <td><input type="text" class="input-number input-benefit" readonly></td>
+            <td><input type="text" class="input-number input-benefit present-cost"></td>
+            <td><input type="text" class="input-number input-benefit future-cost"></td>
+            <td><input type="text" class="input-number input-benefit subtotal-cost" readonly></td>
         </tr>
         <tr>
             <th>Area Cost</th>
-            <td><input type="text" class="input-number input-benefit"></td>
-            <td><input type="text" class="input-number input-benefit"></td>
-            <td><input type="text" class="input-number input-benefit" readonly></td>
+            <td><input type="text" class="input-number input-benefit present-cost"></td>
+            <td><input type="text" class="input-number input-benefit future-cost"></td>
+            <td><input type="text" class="input-number input-benefit subtotal-cost" readonly></td>
         </tr>
     </tbody>
     <tfoot class="bg-primary/20">

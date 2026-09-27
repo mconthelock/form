@@ -29,8 +29,7 @@ $(document).ready(async function () {
     });
 
     $('#add-row-labor').trigger('click');
-    // $('#add-row-investment').trigger('click');
-    //$('#not-improve-investment').trigger('click');
+    $('#add-row-investment').trigger('click');
     await setSelect2();
     await setDatePicker({
         mode: 'month',
@@ -199,6 +198,7 @@ $(document).on('change', '.select-position', async function (e) {
 
     row.find('.labor-cost').val(costYear.COST);
     await totalLabor();
+    await totalBenefit();
 });
 
 $(document).on('change', '.input-labor', async function (e) {
@@ -211,12 +211,17 @@ $(document).on('change', '.input-labor', async function (e) {
     row.find('.labor-time').val(totalTime);
     row.find('.labor-total').val(showDigits(totalLaborCost));
     await totalLabor();
+    await totalBenefit();
 });
 
 $(document).on('click', '.remove-row-labor', async function (e) {
     e.preventDefault();
     $(this).closest('tr').remove();
     await totalLabor();
+    await totalBenefit();
+});
+
+$(document).on('change', '#req-roi-years', async function (e) {
     await totalBenefit();
 });
 
@@ -255,7 +260,8 @@ $(document).on('click', '#not-improve-investment', async function (e) {
         $('#add-row-investment').prop('disabled', false);
         $('#add-row-investment').trigger('click');
     }
-    totalInvestment();
+    await totalInvestment();
+    await totalBenefit();
 });
 
 $(document).on('click', '.select-device', async function (e) {
@@ -273,7 +279,8 @@ $(document).on('click', '.select-device', async function (e) {
             device.STANDARD_COST * (intVal(row.find('.device-qty').val()) || 0),
         ),
     );
-    totalInvestment();
+    await totalInvestment();
+    await totalBenefit();
 });
 
 $(document).on('change', '.device-qty', async function (e) {
@@ -281,13 +288,15 @@ $(document).on('change', '.device-qty', async function (e) {
     const qty = intVal($(this).val()) || 0;
     const cost = intVal(row.find('.device-cost').val()) || 0;
     row.find('.device-total').val(showDigits(qty * cost));
-    totalInvestment();
+    await totalInvestment();
+    await totalBenefit();
 });
 
 $(document).on('click', '.remove-row-investment', async function (e) {
     e.preventDefault();
     $(this).closest('tr').remove();
-    totalInvestment();
+    await totalInvestment();
+    await totalBenefit();
 });
 
 //Save Form
