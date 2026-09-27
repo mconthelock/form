@@ -150,7 +150,8 @@
                         <fieldset class="fieldset">
                             <legend class="fieldset-legend">ROI Payback Period</legend>
                             <div class="flex items-center gap-3">
-                                <input type="text" placeholder="จำนวนปีที่คาดว่าจะคืนทุน" class="input req-2" />
+                                <input type="text" placeholder="จำนวนปีที่คาดว่าจะคืนทุน" class="input req-2"
+                                    value="1" id="req-roi-years" />
                                 <span class="text-gray-500 text-xs"> Year(s)</span>
                             </div>
                         </fieldset>
@@ -194,23 +195,26 @@
 
             <fieldset class="bg-primary/10 border border-primary rounded-xl p-5 form-roi">
                 <legend class="font-semibold text-lg px-1">Efficiency Gains</legend>
-                <div class="table-wrap overflow-x-auto border border-slate-300 rounded-xl">
+                <div class="table-wrap overflow-x-auto">
                     @include('isform.FORM-1.table-labor')
                 </div>
             </fieldset>
 
             <fieldset class="bg-primary/10 border border-primary rounded-xl p-5 form-roi">
                 <legend class="font-semibold text-lg px-1">Investment in equipment.</legend>
-                <div class="table-wrap overflow-x-auto border border-slate-300 rounded-xl">
+                <div class="table-wrap overflow-x-auto">
                     @include('isform.FORM-1.table-investment')
                 </div>
             </fieldset>
 
             <div class="form-roi bg-accent/10 border border-accent rounded-xl p-5 mt-3">
-                This project will return on investment (ROI) <span class="font-bold text-lg text-primary"
-                    id="roi-total-kb">0</span>KB (<span class="font-bold text-lg text-primary"
-                    id="roi-total-full">0</span>
-                Baht)
+                This project will return on investment (ROI)
+                <span class="font-bold text-lg text-primary" id="roi-total-kb">0 KB</span>
+                <span class="font-bold text-lg text-primary" id="roi-total-full">(0
+                    Baht)</span>
+
+                <span class="font-bold text-lg text-primary mx-1" id="roi-total-year"></span>
+
             </div>
 
             <div class="flex gap-3 mt-3 ">
