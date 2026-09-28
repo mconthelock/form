@@ -212,9 +212,7 @@
                 <span class="font-bold text-lg text-primary" id="roi-total-kb">0 KB</span>
                 <span class="font-bold text-lg text-primary" id="roi-total-full">(0
                     Baht)</span>
-
                 <span class="font-bold text-lg text-primary mx-1" id="roi-total-year"></span>
-
             </div>
 
             <div class="flex gap-3 mt-3 ">
@@ -225,7 +223,7 @@
 @endsection
 
 @section('scripts')
-    <script src="{{ $_ENV['APP_JS'] }}/devForm.js?ver={{ time() }}"></script>
+    <script src="{{ $_ENV['APP_JS'] }}/devForm.js?ver={{ $GLOBALS['version'] }}"></script>
 @endsection
 
 @section('styles')

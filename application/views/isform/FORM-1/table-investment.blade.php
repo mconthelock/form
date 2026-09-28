@@ -1,4 +1,4 @@
-<label class="label mb-5">
+<label class="label mb-5 {{ isset($view) ? 'hidden' : '' }}">
     <input type="checkbox" class="checkbox checkbox-primary" id="not-improve-investment" />
     <span class="label-text">This project does not need more Equipment / โครงการนี้ไม่มีการเพิ่มอุปกรณ์</span>
 </label>
@@ -26,7 +26,7 @@
         </tfoot>
     </table>
 </div>
-<div class="flex mt-3 ">
+<div class="flex mt-3 {{ isset($view) ? 'hidden' : '' }}">
     <button class="btn btn-outline btn-primary" id="add-row-investment"><i class="fi fi-tr-multiple"></i>+ More
         Item</button>
 </div>
