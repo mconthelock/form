@@ -28,4 +28,12 @@ class Form extends MY_Controller{
             $this->views("isform/{$this->formname}/create", $data);
         }
     }
+
+    public function show(){
+        $data = $this->setFormProp($this->formname);
+        if(empty($data)) throw new Exception("Error Processing Request", 1);
+
+        $data['mode'] = 2; // Show mode
+        $this->views("isform/{$this->formname}/show", $data);
+    }
 }
