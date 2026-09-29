@@ -14,8 +14,8 @@ class jig extends MY_Controller {
         parent::__construct();
         $this->load->model('form_model', 'form');
         $this->load->model('user_model', 'usr');
-        //$this->upload_path = $_ENV['AMEC_FILE_PATH'] . ($this->_servername() == 'amecweb' ? 'production' : 'development') . "/Form/IE/IE-JIG/"; 
-        $this->upload_path = "D:/test_file/Form/IE/IE-JIG/"; 
+        $this->upload_path = $_ENV['AMEC_FILE_PATH'] . ($this->_servername() == 'amecweb' ? 'production' : 'development') . "/Form/IE/IE-JIG/"; 
+        //$this->upload_path = "D:/test_file/Form/IE/IE-JIG/"; 
     }
 
     public function index(){
@@ -217,41 +217,41 @@ class jig extends MY_Controller {
     }
 
     public function deletefile() {
-        $staged = null;
-        $path = null;
         try {
             $key = $this->fileKey();
             $actor = (string)$this->input->post('EMPNO');
-            if (!preg_match('/^[A-Za-z0-9]{1,10}$/D', $actor)) throw new Exception('Invalid employee');
-            if (isset($_SESSION['user']) && (string)$_SESSION['user']->SEMPNO !== $actor) throw new Exception('Employee does not match login');
+            $seq = $this->input->post('FILE_SEQ');
+            if (!preg_match('/^[1-9][0-9]*$/D', $seq)) throw new Exception('Invalid file sequence');
+
             $mode = $this->getMode($key['NFRMNO'], $key['VORGNO'], $key['CYEAR'], $key['CYEAR2'], $key['NRUNNO'], $actor);
             if ((string)$mode !== '2' || $this->currentJigStep($key, $actor) !== '--') throw new Exception('Only requester can delete attachments');
-            $seq = $this->input->post('FILE_SEQ');
-            if (!is_string($seq) || !preg_match('/^[1-9][0-9]*$/D', $seq)) throw new Exception('Invalid file sequence');
-            $client = new Client(['timeout' => 30]);
+
+            $client = new Client(['timeout' => 30, 'verify' => false]);
             $url = rtrim($_ENV['APP_API'], '/') . '/iedoc/jig/forms/' . implode('/', array_map('rawurlencode', array_values($key)));
+
             $snapshot = json_decode($client->get($url)->getBody(), true);
             $file = null;
-            foreach ($snapshot['FILES'] ?? [] as $entry) {
-                if ((string)$entry['FILE_SEQ'] === $seq) { $file = $entry; break; }
+            foreach ($snapshot['FILES'] ?? [] as $item) {
+                if ((string)$item['FILE_SEQ'] === (string)$seq) {
+                    $file = $item;
+                    break;
+                }
             }
             if (!$file) throw new Exception('Attachment not found');
+
             $name = basename(str_replace('\\', '/', $file['FILE_PATH']));
-            $path = $this->jigAttachmentPath($key, $name, false, $file['FILE_PATH'])['path'];
-            if (is_file($path)) {
-                // Restore the physical file if deleting its database record fails.
-                $staged = $path . '.deleting-' . bin2hex(random_bytes(8));
-                if (!rename($path, $staged)) throw new Exception('Cannot remove attachment from directory');
-            }
+            $path = $this->jigAttachmentPath($key, $name)['path'];
+
             $result = json_decode($client->delete($url . '/files/' . rawurlencode($seq))->getBody(), true);
-            if (empty($result['deleted'])) throw new Exception('API did not confirm attachment deletion');
-            $warning = null;
-            if ($staged && !unlink($staged)) $warning = 'ลบรายการในฐานข้อมูลแล้ว แต่ลบไฟล์จริงไม่สำเร็จ กรุณาแจ้งผู้ดูแลระบบ';
-            $staged = null;
-            $this->output->set_content_type('application/json')->set_output(json_encode(['status' => true, 'warning' => $warning]));
+            if (empty($result['deleted'])) throw new Exception('Delete attachment failed');
+
+            if (is_file($path) && !unlink($path)) throw new Exception('ลบข้อมูลสำเร็จ แต่ไม่สามารถลบไฟล์จริงได้');
+
+            $this->output->set_content_type('application/json')
+                ->set_output(json_encode(['status' => true]));
         } catch (Exception $e) {
-            if ($staged && is_file($staged)) rename($staged, $path);
-            $this->output->set_status_header(400)->set_content_type('application/json')->set_output(json_encode(['status' => false, 'message' => $e->getMessage()]));
+            $this->output->set_status_header(400)->set_content_type('application/json')
+                ->set_output(json_encode(['status' => false, 'message' => $e->getMessage()]));
         }
     }
 
