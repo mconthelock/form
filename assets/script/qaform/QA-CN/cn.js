@@ -52,7 +52,6 @@ $(document).ready(async function () {
     const { nfrmno, vorgno, cyear, empno } = formData;
     $('.btn-submit').click(async function () {
         let action = $(this).data('action');
-
         if (!(await requiredForm('#cn-form'))) return;
         if (checkData()) {
             const puritm = $('input[name="txtPurItem"]').val();
@@ -70,6 +69,7 @@ $(document).ready(async function () {
             const submitVal = $('#submit_date').val();
             const inspecVal = $('#inspec_date').val();
             const expchgVal = $('#expchg_date').val();
+
             // const submitDate = submitVal
             //     ? new Date(
             //           formatDate(submitVal)
@@ -134,9 +134,27 @@ $(document).ready(async function () {
                 // ...(submitDate && { SUBMITDATE: submitDate }),
                 // ...(inspecDate && { INSPECDATE: inspecDate }),
                 // ...(expchgDate && { EXPCHGDATE: expchgDate }),
-                SUBMITDATE: formatDate(submitVal, 'YYYY-MM-DD'),
-                INSPECDATE: formatDate(inspecVal, 'YYYY-MM-DD'),
-                EXPCHGDATE: formatDate(expchgVal, 'YYYY-MM-DD'),
+                ...(submitVal && {
+                    SUBMITDATE: formatDate(
+                        submitVal,
+                        'YYYY-MM-DD',
+                        'DD/MM/YYYY',
+                    ),
+                }),
+                ...(inspecVal && {
+                    INSPECDATE: formatDate(
+                        inspecVal,
+                        'YYYY-MM-DD',
+                        'DD/MM/YYYY',
+                    ),
+                }),
+                ...(expchgVal && {
+                    EXPCHGDATE: formatDate(
+                        expchgVal,
+                        'YYYY-MM-DD',
+                        'DD/MM/YYYY',
+                    ),
+                }),
                 PRTNAME: $('input[name="txtPrtName"]').val(),
                 PURITEM: puritm,
                 INVNO: invno,
@@ -164,6 +182,20 @@ $(document).ready(async function () {
                     }
                 }
             }
+            cnformData.append(
+                'RADSEC',
+                $('input[name="radsec"]:checked').val(),
+            );
+            cnformData.append('SEC', $('input[name="Sec"]:checked').val());
+            cnformData.append(
+                'RADPROCAMEC',
+                $('input[name="radProcAMEC"]:checked').val(),
+            );
+            cnformData.append(
+                'RADOBJ',
+                $('input[name="radobj"]:checked').val(),
+            );
+
             filterFormData(cnformData, { empty: true });
             logFormData(cnformData);
             //console.log(cnformData);
