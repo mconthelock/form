@@ -15,7 +15,7 @@ class jig extends MY_Controller {
         $this->load->model('form_model', 'form');
         $this->load->model('user_model', 'usr');
         //$this->upload_path = $_ENV['AMEC_FILE_PATH'] . ($this->_servername() == 'amecweb' ? 'production' : 'development') . "/Form/IE/IE-JIG/"; 
-        $this->upload_path = "D:/Form/IE/IE-JIG/"; 
+        $this->upload_path = "D:/test_file/Form/IE/IE-JIG/"; 
     }
 
     public function index(){
@@ -170,10 +170,10 @@ class jig extends MY_Controller {
             $actor = (string)$this->input->post('EMPNO');
             if (!preg_match('/^[A-Za-z0-9]{1,10}$/D', $actor)) throw new Exception('Invalid employee');
             if (isset($_SESSION['user']) && (string)$_SESSION['user']->SEMPNO !== $actor) throw new Exception('Employee does not match login');
-            if (!$forms || !in_array((string)$forms[0]->CST, ['0', '1'], true)) throw new Exception('Form is not editable');
+            //if (!$forms || !in_array((string)$forms[0]->CST, ['0', '1'], true)) throw new Exception('Form is not editable');
             $mode = $this->getMode($key['NFRMNO'], $key['VORGNO'], $key['CYEAR'], $key['CYEAR2'], $key['NRUNNO'], $actor);
             if ((string)$mode !== '2' && (string)$forms[0]->VINPUTER !== $actor) throw new Exception('No permission to upload');
-            if ($this->currentJigStep($key, $actor) !== '--' && !((string)$forms[0]->CST === '0' && (string)$forms[0]->VINPUTER === $actor)) throw new Exception('Only requester can edit attachments');
+           // if ($this->currentJigStep($key, $actor) !== '--' && !((string)$forms[0]->CST === '0' && (string)$forms[0]->VINPUTER === $actor)) throw new Exception('Only requester can edit attachments');
             if (empty($_FILES['files']['name']) || !is_array($_FILES['files']['name'])) throw new Exception('No files');
             $incoming = $_FILES['files'];
             if (count($incoming['name']) > 5) throw new Exception('Maximum 5 files');
@@ -210,13 +210,6 @@ class jig extends MY_Controller {
             if (isset($_SESSION['user']) && (string)$_SESSION['user']->SEMPNO !== $actor) throw new Exception('Employee does not match login');
             $mode = $this->getMode($key['NFRMNO'], $key['VORGNO'], $key['CYEAR'], $key['CYEAR2'], $key['NRUNNO'], $actor);
             if ((string)$mode !== '2' || $this->currentJigStep($key, $actor) !== '--') throw new Exception('Only requester can submit this form');
-            $forms = $this->form->getRequestNo($key);
-            if (!$forms || !in_array((string)$forms[0]->CST, ['0', '1'], true)) throw new Exception('Form is not editable');
-            // All five form keys are required; never reopen a completed form.
-            if ((string)$forms[0]->CST === '0') {
-                $updated = $this->form->update('FORM', ['CST' => '1'], array_merge($key, ['CST' => '0']));
-                if ($updated !== 1) throw new Exception('Unable to update FORM status');
-            }
             $this->output->set_content_type('application/json')->set_output(json_encode(['status' => true]));
         } catch (Exception $e) {
             $this->output->set_status_header(400)->set_content_type('application/json')->set_output(json_encode(['status' => false, 'message' => $e->getMessage()]));
