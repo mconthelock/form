@@ -165,6 +165,7 @@ $(async function () {
             };
 
             let htmlContent = '';
+            console.log('xxxx' + formeva.MJUDGEMENT);
 
             if (cextdata == '02') {
                 // สร้าง Radio ทั้งหมดแบบสั้นๆ ด้วยการวนลูปจาก Map
@@ -185,16 +186,20 @@ $(async function () {
             <div class="flex flex-col gap-2">${radios}</div>
         </div>
     `;
-            } else if (formeva?.MJUDGEMENT) {
+                $('#CONJUDGEMENT').html(htmlContent);
+            }
+            if (formeva?.MJUDGEMENT && form.MODE != 2) {
                 htmlContent = `
-        <div class="flex flex-col gap-2 border border-gray-200 rounded-md p-3 bg-gray-50 text-sm">
+        <div class="flex flex-col gap-2 border border-gray-200 rounded-md p-3 bg-white text-sm">
             <span class="font-semibold underline">TOTAL EVALUATION</span>
             <div class="font-medium text-gray-800">${judgementMap[formeva.MJUDGEMENT] || formeva.MJUDGEMENT}</div>
         </div>
     `;
+                $('#SHOWCONJUDGEMENT').html(htmlContent);
             }
+            console.log(htmlContent);
+
             // นำไปใส่ใน div ที่กำหนด
-            $('#CONJUDGEMENT').html(htmlContent);
         }
 
         if (isNonPro) {
