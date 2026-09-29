@@ -12,6 +12,8 @@ import {
     getData,
     showMessage,
     requiredForm,
+    filterFormData,
+    logFormData,
 } from '@amec/webasset/utils';
 import {
     showflow,
@@ -25,6 +27,7 @@ import {
     fetchUtils,
     serializeRequestBody,
 } from '@amec/webasset/api/fetch-utils';
+import { formatDate } from '@amec/webasset/dayjs';
 
 $(document).ready(async function () {
     const formData = $('.form-data').data();
@@ -54,17 +57,40 @@ $(document).ready(async function () {
         if (checkData()) {
             const puritm = $('input[name="txtPurItem"]').val();
             const invno = $('input[name="txtInvNo"]').val();
-            const res = await searchAs400(invno, puritm);
-            if (res.data && res.data.length > 0) {
-                showMessage('CN NO. duplicate, Please check', 'warning');
-                return false;
+            if (puritm || invno) {
+                const res = await searchAs400(invno, puritm);
+                if (res.data && res.data.length > 0) {
+                    showMessage('CN NO. duplicate, Please check', 'warning');
+                    return false;
+                }
             }
 
             const rsnno = $('input[name="radReason"]:checked').val();
             const radSample = $('input[name="radSample"]:checked').val();
-            const submitDate = $('#submit_date').val();
-            const inspecDate = $('#inspec_date').val();
-            const expchgDate = $('#expchg_date').val();
+            const submitVal = $('#submit_date').val();
+            const inspecVal = $('#inspec_date').val();
+            const expchgVal = $('#expchg_date').val();
+            // const submitDate = submitVal
+            //     ? new Date(
+            //           formatDate(submitVal)
+            //       )
+            //     : null;
+            // const inspecDate = inspecVal
+            //     ? new Date(
+            //           inspecVal.replace(
+            //               /(\d{2})\/(\d{2})\/(\d{4})/,
+            //               '$3-$2-$1',
+            //           ),
+            //       )
+            //     : null;
+            // const expchgDate = expchgVal
+            //     ? new Date(
+            //           expchgVal.replace(
+            //               /(\d{2})\/(\d{2})\/(\d{4})/,
+            //               '$3-$2-$1',
+            //           ),
+            //       )
+            //     : null;
             const dwgArray = [];
             $('#dwg-body tr').each(function () {
                 let dwgNo = $(this).find('input[name="txtDwgNo[]"]').val();
@@ -105,9 +131,12 @@ $(document).ready(async function () {
                           : '',
                 BEFCHANGE: $('#txtBefChg').val(),
                 AFTCHANGE: $('#txtAftChg').val(),
-                ...(submitDate && { SUBMITDATE: submitDate }),
-                ...(inspecDate && { INSPECDATE: inspecDate }),
-                ...(expchgDate && { EXPCHGDATE: expchgDate }),
+                // ...(submitDate && { SUBMITDATE: submitDate }),
+                // ...(inspecDate && { INSPECDATE: inspecDate }),
+                // ...(expchgDate && { EXPCHGDATE: expchgDate }),
+                SUBMITDATE: formatDate(submitVal, 'YYYY-MM-DD'),
+                INSPECDATE: formatDate(inspecVal, 'YYYY-MM-DD'),
+                EXPCHGDATE: formatDate(expchgVal, 'YYYY-MM-DD'),
                 PRTNAME: $('input[name="txtPrtName"]').val(),
                 PURITEM: puritm,
                 INVNO: invno,
@@ -135,8 +164,10 @@ $(document).ready(async function () {
                     }
                 }
             }
-            console.log(cnformData);
-            return false;
+            filterFormData(cnformData, { empty: true });
+            logFormData(cnformData);
+            //console.log(cnformData);
+            //return false;
             const status = await create(cnformData);
             // cnformData.append('nfrmno', nfrmno);
             // cnformData.append('vorgno', vorgno);
