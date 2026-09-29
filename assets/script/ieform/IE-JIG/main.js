@@ -6,6 +6,7 @@ import {
     getJigEmployee,
     getJigPics,
     jigFileUrl,
+    jigNgTagPdfUrl,
     deleteJigFile,
 } from './data';
 import { evaluateCheckpoint } from './checkpoint';
@@ -87,6 +88,11 @@ $(document).ready(function () {
         },
 
         initNgActions() {
+            document.querySelector('#generate-ng-pdf').addEventListener('click', (event) => {
+                if (storedKey) return;
+                event.preventDefault();
+                void Swal.fire({icon: 'info', title: 'กรุณาบันทึกฟอร์มก่อน', text: 'ต้องมีเลขฟอร์มที่บันทึกแล้วจึงจะสร้าง NG Tag PDF ได้', confirmButtonText: 'ตกลง'});
+            });
             ngActions = Array.from(
                 form.querySelectorAll('[name="ng_action[]"]'),
             );
@@ -643,6 +649,7 @@ $(document).ready(function () {
             JIG.validateNgActions();
             JIG.summarize();
             storedKey = key;
+            document.querySelector('#generate-ng-pdf').href = jigNgTagPdfUrl(key);
             storedFiles = snapshot.FILES || [];
             JIG.renderFiles();
             document.querySelector('#jig-fields').disabled =
@@ -650,7 +657,7 @@ $(document).ready(function () {
             form.elements.namedItem('pic_empno').disabled = pageMode !== 'edit';
             if (pageMode === 'view') {
                 form.querySelectorAll(
-                    '.remove-row, #add-checkpoint, #validate-jig, #jig-file-dropzone, #generate-ng-pdf',
+                    '.remove-row, #add-checkpoint, #validate-jig, #jig-file-dropzone',
                 ).forEach((el) => {
                     el.hidden = true;
                 });

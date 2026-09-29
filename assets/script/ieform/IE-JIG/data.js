@@ -10,8 +10,10 @@ export async function getJigEmployee(empno) {
 }
 
 export const getJigPics = () => fetchUtils({ url: `${getConfig().APP_API}/iedoc/jig/ie-pics`, method: 'GET' });
+export const getJigMaster = jigNo => fetchUtils({ url: `${getConfig().APP_API}/iedoc/jig/${encodeURIComponent(jigNo)}`, method: 'GET' });
 
 export const formPath = key => ['NFRMNO', 'VORGNO', 'CYEAR', 'CYEAR2', 'NRUNNO'].map(name => encodeURIComponent(key[name])).join('/');
+export const jigNgTagPdfUrl = key => `${getConfig().APP_API}/iedoc/jig/forms/${formPath(key)}/ng-tag.pdf`;
 export const insertJigForm = data => fetchUtils({ url: `${getConfig().APP_API}/iedoc/jig`, method: 'POST', data });
 export const saveJigForm = (key, data) => fetchUtils({ url: `${getConfig().APP_API}/iedoc/jig/forms/${formPath(key)}`, method: 'PATCH', data });
 export const configureJigRequesterFlow = (key, picCode) => fetchUtils({
@@ -34,10 +36,12 @@ export async function startJigForm(key, actor) {
     data.append('EMPNO', actor);
     return fetchUtils({url: `${localBase()}ieform/IE-JIG/jig/start_request`, method: 'POST', data});
 }
-export async function deleteJigFile(key, fileSeq) {
+export async function deleteJigFile(key, fileSeq, actor) {
     const data = new FormData();
     Object.entries(key).forEach(([name, value]) => data.append(name, value));
-    data.append('EMPNO', document.querySelector('.form-data').dataset.empno);
+    const empno = actor ?? document.querySelector('.form-data, #jig-delete-page')?.dataset.empno;
+    if (!empno) throw new Error('ไม่พบรหัสพนักงานสำหรับลบไฟล์');
+    data.append('EMPNO', empno);
     data.append('FILE_SEQ', fileSeq);
     const result = await fetchUtils({url: `${localBase()}ieform/IE-JIG/jig/deletefile`, method:'POST', data});
     if (!result.status) throw new Error(result.message || 'ลบไฟล์ไม่สำเร็จ');
@@ -53,7 +57,8 @@ export async function uploadJigFiles(key, actor, files) {
     if (!result.status) throw new Error(result.message || 'อัปโหลดไฟล์ไม่สำเร็จ');
     return result.files;
 }
-export function jigFileUrl(key, file) {
+export function jigFileUrl(key, file, { download = false } = {}) {
     const query = new URLSearchParams({ ...key, file: String(file.FILE_PATH).split(/[\\/]/).pop() });
-    return `${localBase()}ieform/IE-JIG/jig/preview_file?${query}`;
+    const action = download ? 'download_file' : 'preview_file';
+    return `${localBase()}ieform/IE-JIG/jig/${action}?${query}`;
 }

@@ -231,6 +231,13 @@ export function initializeJigWorkflow(editor) {
         }
     }
     async function act(action) {
+        const navigateAfterAction = () => {
+            if (action === 'approve' && context.cstepno?.trim() === '07') {
+                window.location.reload();
+            } else {
+                redirectWebflow();
+            }
+        };
         return withBusy(async (lock) => {
             if (context.mode !== '2' || approved) return false;
             if (action === 'returnb' && requesterStep) return false;
@@ -309,7 +316,7 @@ export function initializeJigWorkflow(editor) {
                             const current = await getFormDetail(key);
                             if (String(current.CST) === '2')
                                 checkResponse(await finishJigForm(key, actor));
-                            redirectWebflow();
+                            navigateAfterAction();
                         } finally {
                             retry.disabled = false;
                         }
@@ -317,7 +324,7 @@ export function initializeJigWorkflow(editor) {
                 document.querySelector('#jig-page').append(retry);
                 return false;
             }
-            redirectWebflow();
+            navigateAfterAction();
             return true;
         });
     }

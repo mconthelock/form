@@ -1,6 +1,33 @@
 @extends('layouts/webflowTemplate')
 @section('styles')
 <style>
+#generate-ng-pdf {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.65rem;
+    width: 100%;
+    min-height: 48px;
+    padding: 0.75rem 1.25rem;
+    border: 1px solid #b91c1c;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #dc2626, #991b1b);
+    color: #fff;
+    font-size: 0.875rem;
+    font-weight: 700;
+    text-decoration: none;
+    box-shadow: 0 4px 10px rgb(153 27 27 / 18%);
+    transition: background 150ms, box-shadow 150ms;
+}
+#generate-ng-pdf:hover {
+    background: #991b1b;
+    box-shadow: 0 6px 14px rgb(153 27 27 / 28%);
+}
+#generate-ng-pdf:focus-visible {
+    outline: 3px solid #f87171;
+    outline-offset: 3px;
+}
+#generate-ng-pdf svg { width: 22px; height: 22px; flex-shrink: 0; }
 #jig-form-type {
     display: inline-flex;
     align-items: center;
@@ -169,7 +196,13 @@
                     <label class="block text-xs font-semibold text-slate-700">Plan Date (กำหนดแก้ไขแล้วเสร็จ) <span class="text-red-600">*</span><input name="ng_plan_date" required placeholder="dd/mm/yyyy" class="input mt-1 w-full bg-white"></label>
                 </div>
             </fieldset>
-            <div class="mt-5 border-t border-slate-100 pt-4"><button id="generate-ng-pdf" type="button" disabled class="btn w-full bg-white">Generate NG Tag PDF</button></div>
+            <div class="mt-5 border-t border-slate-100 pt-4">
+                <a id="generate-ng-pdf" href="#" target="_blank" rel="noopener noreferrer">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></svg>
+                    <span>Generate NG Tag PDF</span>
+                </a>
+                <p class="mt-2 text-center text-xs text-slate-500">เปิด PDF ในแท็บใหม่ · ใช้ข้อมูลที่บันทึกแล้วล่าสุด</p>
+            </div>
         </section>
         @if ($pageMode === 'create')
         <footer class="mt-6 flex flex-wrap items-center justify-between gap-3"><p class="text-xs text-slate-500">ตรวจสอบข้อมูลก่อนบันทึก</p><button id="validate-jig" type="submit" class="btn btn-primary rounded-xl">บันทึก</button></footer>

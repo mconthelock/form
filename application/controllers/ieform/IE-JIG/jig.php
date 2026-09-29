@@ -22,6 +22,16 @@ class jig extends MY_Controller {
         $this->show_create_jig_form();
     }
 
+    public function show_jig_form(){
+        $_GET['empno'] = $this->input->get('empno');
+        $_GET['no'] = $this->input->get('no');
+        $_GET['orgNo'] = $this->input->get('orgNo');
+        $_GET['y'] = $this->input->get('y');
+        $_GET['y2'] = $this->input->get('ref_cyear2');
+        $_GET['runNo'] = $this->input->get('ref_nrunno');
+
+        $this->show_create_jig_form();
+    }
 
     public function show_create_jig_form(){
         $data = [];
@@ -96,8 +106,52 @@ class jig extends MY_Controller {
         if (!preg_match('/^[0-9]{4}$/D', (string)$key['CYEAR2']) || (int)$key['NRUNNO'] < 1) {
             throw new Exception('Invalid file year or running number');
         }
-        return 'IE-JIG' . substr($key['CYEAR2'], -2) . '-' . str_pad((string)(int)$key['NRUNNO'], 6, '0', STR_PAD_LEFT);
+        $master = $this->form->getFormMasterByNo($key['NFRMNO'], $key['VORGNO'], $key['CYEAR']);
+        $prefix = $master ? strtoupper(trim((string)$master[0]->VANAME)) : '';
+        // Resolve the form type on the server; never accept a directory from the caller.
+        if (!in_array($prefix, ['IE-JIG', 'IE-DELJIG'], true)) throw new Exception('Unsupported attachment form');
+        return $prefix . substr($key['CYEAR2'], -2) . '-' . str_pad((string)(int)$key['NRUNNO'], 6, '0', STR_PAD_LEFT);
     }
+
+    private function jigAttachmentPath($key, $name, $createDirectory = false, $storedPath = null) {
+        if (!is_string($name) || strlen($name) > 255 || !preg_match('/^[\p{L}\p{M}\p{N}_-]+\.(jpg|jpeg|png|pdf)$/iuD', $name)) {
+            throw new Exception('Invalid filename');
+        }
+        $folder = $this->jigFileDirectory($key);
+        $legacy = strpos($folder, 'IE-JIG') === 0 && preg_match('/^[a-f0-9]{64}\.(jpg|jpeg|png|pdf)$/D', $name);
+        $legacyFolder = implode('_', array_map(function ($field) use ($key) { return $key[$field]; }, ['NFRMNO', 'VORGNO', 'CYEAR', 'CYEAR2', 'NRUNNO']));
+        if ($storedPath !== null) {
+            $relative = str_replace('\\', '/', $storedPath);
+            if ($relative !== $folder . '/' . $name && !($legacy && $relative === $legacyFolder . '/' . $name)) {
+                throw new Exception('Attachment path does not match this form');
+            }
+        }
+        $configuredRoot = rtrim($this->upload_path, '/\\');
+        if ($createDirectory && !is_dir($configuredRoot) && !mkdir($configuredRoot, 0770, true) && !is_dir($configuredRoot)) {
+            throw new Exception('Cannot create upload directory');
+        }
+        $root = realpath($configuredRoot);
+        if ($root === false) throw new Exception('Upload directory not found');
+        $directory = $root . DIRECTORY_SEPARATOR . $folder;
+        if (is_link($directory)) throw new Exception('Invalid attachment directory');
+        if ($createDirectory && !is_dir($directory) && !mkdir($directory, 0770) && !is_dir($directory)) {
+            throw new Exception('Cannot create upload directory');
+        }
+        $path = $directory . DIRECTORY_SEPARATOR . $name;
+        if (!$createDirectory && !is_file($path) && $legacy) {
+            $directory = $root . DIRECTORY_SEPARATOR . $legacyFolder;
+            if (is_link($directory)) throw new Exception('Invalid attachment directory');
+            $path = $directory . DIRECTORY_SEPARATOR . $name;
+        }
+        if (is_link($path)) throw new Exception('Invalid attachment path');
+        if (is_file($path)) {
+            $resolved = realpath($path);
+            if ($resolved === false || strpos($resolved, $root . DIRECTORY_SEPARATOR) !== 0) throw new Exception('Invalid attachment path');
+            $path = $resolved;
+        }
+        return ['path' => $path, 'relative' => $folder . '/' . $name];
+    }
+
 
     private function jigStoredFilename($name) {
         $base = pathinfo(basename(str_replace('\\', '/', $name)), PATHINFO_FILENAME);
@@ -123,9 +177,6 @@ class jig extends MY_Controller {
             if (empty($_FILES['files']['name']) || !is_array($_FILES['files']['name'])) throw new Exception('No files');
             $incoming = $_FILES['files'];
             if (count($incoming['name']) > 5) throw new Exception('Maximum 5 files');
-            $folder = $this->jigFileDirectory($key);
-            $directory = rtrim($this->upload_path, '/\\') . DIRECTORY_SEPARATOR . $folder;
-            if (!is_dir($directory) && !mkdir($directory, 0770, true) && !is_dir($directory)) throw new Exception('Cannot create upload directory');
             $allowed = ['jpg' => 'image/jpeg', 'jpeg' => 'image/jpeg', 'png' => 'image/png', 'pdf' => 'application/pdf'];
             $files = [];
             foreach ($incoming['name'] as $i => $name) {
@@ -136,13 +187,14 @@ class jig extends MY_Controller {
                 $mime = (new finfo(FILEINFO_MIME_TYPE))->file($tmp);
                 if ($mime !== $allowed[$ext]) throw new Exception('Attachment content does not match file type');
                 $stored = $this->jigStoredFilename($name);
-                $destination = $directory . DIRECTORY_SEPARATOR . $stored;
+                $attachment = $this->jigAttachmentPath($key, $stored, true);
+                $destination = $attachment['path'];
                 // Reuse identical retries, but never silently substitute an older file with the same name.
                 if (is_file($destination) && hash_file('sha256', $destination) !== hash_file('sha256', $tmp)) {
                     throw new Exception('มีไฟล์ชื่อ ' . $stored . ' อยู่แล้ว กรุณาเปลี่ยนชื่อไฟล์ก่อนอัปโหลด');
                 }
                 if (!is_file($destination) && !move_uploaded_file($tmp, $destination)) throw new Exception('Upload failed');
-                $files[] = ['FILE_NAME' => $stored, 'FILE_PATH' => $folder . '/' . $stored, 'FILE_TYPE' => $mime, 'FILE_SIZE' => (int)$incoming['size'][$i]];
+                $files[] = ['FILE_NAME' => $stored, 'FILE_PATH' => $attachment['relative'], 'FILE_TYPE' => $mime, 'FILE_SIZE' => (int)$incoming['size'][$i]];
             }
             $this->output->set_content_type('application/json')->set_output(json_encode(['status' => true, 'files' => $files]));
         } catch (Exception $e) {
@@ -192,16 +244,8 @@ class jig extends MY_Controller {
             }
             if (!$file) throw new Exception('Attachment not found');
             $name = basename(str_replace('\\', '/', $file['FILE_PATH']));
-            if (!preg_match('/^[\p{L}\p{M}\p{N}_-]+\.(jpg|jpeg|png|pdf)$/iuD', $name)) throw new Exception('Invalid filename');
-            $root = realpath($this->upload_path);
-            if ($root === false) throw new Exception('Upload directory not found');
-            $path = $root . DIRECTORY_SEPARATOR . $this->jigFileDirectory($key) . DIRECTORY_SEPARATOR . $name;
-            if (!is_file($path) && preg_match('/^[a-f0-9]{64}\.(jpg|jpeg|png|pdf)$/D', $name)) {
-                $path = $root . DIRECTORY_SEPARATOR . implode('_', $key) . DIRECTORY_SEPARATOR . $name;
-            }
+            $path = $this->jigAttachmentPath($key, $name, false, $file['FILE_PATH'])['path'];
             if (is_file($path)) {
-                $path = realpath($path);
-                if (strpos($path, $root . DIRECTORY_SEPARATOR) !== 0) throw new Exception('Invalid attachment path');
                 // Restore the physical file if deleting its database record fails.
                 $staged = $path . '.deleting-' . bin2hex(random_bytes(8));
                 if (!rename($path, $staged)) throw new Exception('Cannot remove attachment from directory');
@@ -219,21 +263,43 @@ class jig extends MY_Controller {
     }
 
     public function preview_file() {
+        $this->sendJigAttachment(false);
+    }
+
+    public function download_file() {
+        $this->sendJigAttachment(true);
+    }
+
+    private function sendJigAttachment($download) {
         try {
             $key = $this->fileKey('get');
             if (!$this->form->getRequestNo($key)) throw new Exception('Form not found');
             $name = $this->input->get('file');
-            if (!is_string($name) || strlen($name) > 255 || !preg_match('/^[\p{L}\p{M}\p{N}_-]+\.(jpg|jpeg|png|pdf)$/iuD', $name)) throw new Exception('Invalid filename');
-            $root = rtrim($this->upload_path, '/\\') . DIRECTORY_SEPARATOR;
-            $path = $root . $this->jigFileDirectory($key) . DIRECTORY_SEPARATOR . $name;
-            // Keep attachments saved before the directory change readable.
-            if (!is_file($path) && preg_match('/^[a-f0-9]{64}\.(jpg|jpeg|png|pdf)$/D', $name)) {
-                $path = $root . implode('_', $key) . DIRECTORY_SEPARATOR . $name;
-            }
+            $path = $this->jigAttachmentPath($key, $name)['path'];
             if (!is_file($path)) throw new Exception('File not found');
             $this->output->set_header('X-Content-Type-Options: nosniff');
+            if ($download) {
+                $fallback = 'attachment.' . strtolower(pathinfo($name, PATHINFO_EXTENSION));
+                $this->output->set_header('Content-Disposition: attachment; filename="' . $fallback . '"; filename*=UTF-8\'\'' . rawurlencode($name));
+            }
             $this->output->set_content_type((new finfo(FILEINFO_MIME_TYPE))->file($path));
             $this->output->set_output(file_get_contents($path));
         } catch (Exception $e) { show_404(); }
     }
+
+    public function show_create_delete_form(){
+        $data = [];
+        $data['EMPNO'] = $this->input->get('empno');
+        $data['NFRMNO'] = $this->input->get('no');
+        $data['VORGNO'] = $this->input->get('orgNo');
+        $data['CYEAR'] = $this->input->get('y');
+        $data['JIGNO'] = $this->input->get('jigno');
+        if (!is_string($data['JIGNO']) || trim($data['JIGNO']) === '' || strlen($data['JIGNO']) > 20) {
+            show_error('Missing or invalid parameter: jigno', 400);
+            return;
+        }
+        $data['JIGNO'] = trim($data['JIGNO']);
+        $this->views('ieform/IE-JIG/delete_form', $data);
+    }
+
 }
