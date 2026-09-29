@@ -155,7 +155,6 @@ export function initializeJigWorkflow(editor) {
                         CYEAR: key.CYEAR,
                         REQBY: reqby,
                         INPUTBY: inputby,
-                        DRAFT: '1',
                         REMARK: '',
                     }),
                 );
