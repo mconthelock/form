@@ -217,19 +217,28 @@ class jig extends MY_Controller {
     }
 
     public function deletefile() {
+        $stage = 'ตรวจสอบสิทธิ์ลบไฟล์';
         try {
             $key = $this->fileKey();
             $actor = (string)$this->input->post('EMPNO');
+            if (!preg_match('/^[A-Za-z0-9]{1,10}$/D', $actor)) throw new Exception('Invalid employee');
+            if (isset($_SESSION['user']) && trim((string)$_SESSION['user']->SEMPNO) !== $actor) throw new Exception('Employee does not match login');
             $seq = $this->input->post('FILE_SEQ');
-            if (!preg_match('/^[1-9][0-9]*$/D', $seq)) throw new Exception('Invalid file sequence');
+            if (!is_string($seq) || !preg_match('/^[1-9][0-9]*$/D', $seq)) throw new Exception('Invalid file sequence');
 
             $mode = $this->getMode($key['NFRMNO'], $key['VORGNO'], $key['CYEAR'], $key['CYEAR2'], $key['NRUNNO'], $actor);
             if ((string)$mode !== '2' || $this->currentJigStep($key, $actor) !== '--') throw new Exception('Only requester can delete attachments');
 
-            $client = new Client(['timeout' => 30, 'verify' => false]);
-            $url = rtrim($_ENV['APP_API'], '/') . '/iedoc/jig/forms/' . implode('/', array_map('rawurlencode', array_values($key)));
+            // PHP uses the server-side API address, as in the shared Webform API traits.
+            $apiBase = trim((string)($_ENV['APP_APIPHP'] ?? ''));
+            if ($apiBase === '') $apiBase = trim((string)($_ENV['APP_API'] ?? ''));
+            if ($apiBase === '') throw new Exception('API URL is not configured');
+            $client = new Client(['connect_timeout' => 10, 'timeout' => 30, 'headers' => ['Accept' => 'application/json']]);
+            $url = rtrim($apiBase, '/') . '/iedoc/jig/forms/' . implode('/', array_map('rawurlencode', array_values($key)));
 
+            $stage = 'อ่านข้อมูลไฟล์จาก API';
             $snapshot = json_decode($client->get($url)->getBody(), true);
+            if (!is_array($snapshot) || !isset($snapshot['FILES']) || !is_array($snapshot['FILES'])) throw new Exception('Invalid attachment response from API');
             $file = null;
             foreach ($snapshot['FILES'] ?? [] as $item) {
                 if ((string)$item['FILE_SEQ'] === (string)$seq) {
@@ -240,18 +249,21 @@ class jig extends MY_Controller {
             if (!$file) throw new Exception('Attachment not found');
 
             $name = basename(str_replace('\\', '/', $file['FILE_PATH']));
-            $path = $this->jigAttachmentPath($key, $name)['path'];
+            $path = $this->jigAttachmentPath($key, $name, false, $file['FILE_PATH'])['path'];
 
+            $stage = 'ลบรายการไฟล์ผ่าน API';
             $result = json_decode($client->delete($url . '/files/' . rawurlencode($seq))->getBody(), true);
-            if (empty($result['deleted'])) throw new Exception('Delete attachment failed');
+            if (!is_array($result) || ($result['deleted'] ?? false) !== true) throw new Exception('API did not confirm attachment deletion');
 
-            if (is_file($path) && !unlink($path)) throw new Exception('ลบข้อมูลสำเร็จ แต่ไม่สามารถลบไฟล์จริงได้');
+            $warning = null;
+            if (is_file($path) && !@unlink($path)) $warning = 'ลบรายการในฐานข้อมูลแล้ว แต่ลบไฟล์จริงไม่สำเร็จ กรุณาแจ้งผู้ดูแลระบบ';
 
             $this->output->set_content_type('application/json')
-                ->set_output(json_encode(['status' => true]));
+                ->set_output(json_encode(['status' => true, 'warning' => $warning]));
         } catch (Exception $e) {
-            $this->output->set_status_header(400)->set_content_type('application/json')
-                ->set_output(json_encode(['status' => false, 'message' => $e->getMessage()]));
+            $code = $e instanceof \GuzzleHttp\Exception\GuzzleException ? 502 : 400;
+            $this->output->set_status_header($code)->set_content_type('application/json')
+                ->set_output(json_encode(['status' => false, 'message' => $stage . ': ' . $e->getMessage()]));
         }
     }
 
