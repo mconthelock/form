@@ -32,12 +32,11 @@ class jig extends MY_Controller {
             'runNo' => $this->input->get('ref_nrunno'),
         ];
 
-        if(in_array(null, $params, true) || in_array('', $params, true)){
-            show_error('ข้อมูลไม่ครบ', 400);
-            return;
-        }
-
         foreach($params as $key => $value){
+            if($value === null || $value === ''){
+                show_error('Missing parameter: '.$key, 400);
+                return;
+            }
             $_GET[$key] = $value;
         }
 
