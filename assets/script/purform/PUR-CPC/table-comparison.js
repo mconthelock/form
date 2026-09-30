@@ -21,30 +21,76 @@ import {
     exportExcel,
 } from '@amec/webasset/excel';
 
+/**
+ * @author Sutthipong Tangmongkhoncharoen(24008)
+ * @since 2026-09-30
+ * @description คำนวณ New Price ETA AMEC ตาม step function ปัจจุบัน
+ */
+const calcNewPriceEta = (row) => {
+    let rate = 1;
+    switch (steps.function) {
+        case 1:
+            rate = tableComparison.currency.find(
+                (item) => item.CURRNAME === row.VNEW_BASE_CURR,
+            )?.CURRENCY;
+            return roundNumber({ value: row.NNEW_BASE_PRICE * rate });
+        case 2:
+        case 3:
+            return row.NNEW_PRICE;
+        case 4:
+        case 5:
+            rate = tableComparison.currency.find(
+                (item) => item.CURRNAME === row.VNEW_PRICE_CURR,
+            )?.CURRENCY;
+            return roundNumber({ value: row.NNEW_PRICE * rate });
+    }
+};
+
 export const tableComparison = {
     instance: null,
     tableId: '#table-comparison',
     skeleton: null,
     _currency: null,
     _vendorData: [],
+    _totalPres: 0,
+    _totalNew: 0,
+    _totalCost: 0,
+    _ratio: 0,
+    get totalPres() {
+        return this._totalPres;
+    },
+    set totalPres(value) {
+        this._totalPres = value;
+    },
+    get totalNew() {
+        return this._totalNew;
+    },
+    set totalNew(value) {
+        this._totalNew = value;
+    },
+    get totalCost() {
+        return this._totalCost;
+    },
+    set totalCost(value) {
+        this._totalCost = value;
+    },
+    get ratio() {
+        return this._ratio;
+    },
+    set ratio(value) {
+        this._ratio = value;
+    },
     get currency() {
         return this._currency;
     },
     set currency(value) {
         this._currency = value;
     },
-    get draftData() {
-        return this._draftData;
-    },
     set vendors(value) {
         this._vendorData = value;
     },
     get vendors() {
         return this._vendorData;
-    },
-    reset() {
-        this._draftData = [];
-        this._newData = [];
     },
     handleInstance() {
         if (!this.instance) {
@@ -118,10 +164,59 @@ export const tableComparison = {
             }
             this.vendors = vendors;
         }
+        await this.sumTotal(data);
         $(this.tableId).html(this.header);
         await this.createTable(data);
         this.skeleton.remove();
         this.bindEvents();
+    },
+    async sumTotal(data) {
+        let totalPres = 0,
+            totalNew = 0,
+            totalCost = 0;
+        data.forEach((row) => {
+            const presEta = row.NPRES_PRICE_ETA_AMEC;
+            const presAmount =
+                row.NPRES_AMOUNT != null
+                    ? roundNumber({
+                          value: row.NPRES_AMOUNT,
+                      })
+                    : roundNumber({
+                          value: (presEta * row.NQUANTITY_YEAR) / 1000,
+                      });
+            const newEta = calcNewPriceEta(row);
+            const newAmount = roundNumber({
+                value:
+                    (newEta * (row.QUANTITY_YEAR ?? row.NQUANTITY_YEAR)) / 1000,
+            });
+            const costAmount = roundNumber({
+                value: ((presEta - newEta) * row.NQUANTITY_YEAR) / 1000,
+            });
+            totalPres += presAmount || 0;
+            totalNew += newAmount || 0;
+            totalCost += costAmount || 0;
+        });
+        const ratio = totalPres !== 0 ? (totalCost / totalPres) * 100 : 0;
+        this.totalPres = formatNumber({
+            value: roundNumber({
+                value: totalPres,
+            }),
+        });
+        this.totalNew = formatNumber({
+            value: roundNumber({
+                value: totalNew,
+            }),
+        });
+        this.totalCost = formatNumber({
+            value: roundNumber({
+                value: totalCost,
+            }),
+        });
+        this.ratio = formatNumber({
+            value: roundNumber({
+                value: ratio,
+            }),
+        });
     },
     async createTable(data) {
         this.instance = await createTable(
@@ -138,6 +233,36 @@ export const tableComparison = {
                             <i class="fi fi-sr-file-excel text-lg text-white"></i>
                             Price Compare Export  
                         </button>`);
+                    const footer = tableComparison
+                        .columns()
+                        .map((col) => {
+                            switch (col.name) {
+                                case 'NPRES_AMOUNT':
+                                    return `<th id="total-pres-amount" class="bg-amber-500 text-right!">${tableComparison.totalPres}</th>`;
+                                case 'NNEW_AMOUNT':
+                                    return `<th id="total-new-amount" class="bg-amber-500 text-right!">${tableComparison.totalNew}</th>`;
+                                case 'NCOST_AMOUNT':
+                                    return `<th id="total-cost-amount" class="bg-amber-500 text-right!">${tableComparison.totalCost}</th>`;
+                                case 'NCOST_RATIO':
+                                    return `<th id="total-cost-ratio" class="bg-amber-500 text-right!">${tableComparison.ratio} %</th>`;
+                                case 'NPRES_PRICE_ETA_AMEC':
+                                case 'NNEW_PRICE_ETA_AMEC':
+                                case 'NCOST_DIFF':
+                                    return `<th class="bg-amber-500 text-center">Total</th>`;
+                            }
+                            if (
+                                col.className &&
+                                col.className.includes('sticky-column')
+                            ) {
+                                return `<th class="bg-gray-200! text-center sticky-column"></th>`;
+                            }
+                            return `<th class="bg-gray-200!"></th>`;
+                        })
+                        .join('');
+                    $(table.table().node()).append(`
+                        <tfoot>
+                            ${footer}
+                        </tfoot>`);
                 },
             },
             {
@@ -239,6 +364,33 @@ export const tableComparison = {
                                     },
                                 });
                         }
+                        const totalRows = endRow + 1;
+                        const columnTotal = [
+                            { col: 'P', value: 'Total' },
+                            { col: 'X', value: 'Total' },
+                            { col: 'Z', value: 'Total' },
+                            { col: 'Q', value: self.totalPres },
+                            { col: 'Y', value: self.totalNew },
+                            { col: 'AA', value: self.totalCost },
+                            { col: 'AB', value: self.ratio },
+                        ];
+                        columnTotal.forEach((item) => {
+                            sheet
+                                .cell(`${item.col}${totalRows}`)
+                                .value(item.value);
+                            sheet.cell(`${item.col}${totalRows}`).style({
+                                border: {
+                                    top: { style: 'thin' },
+                                    bottom: { style: 'thin' },
+                                    left: { style: 'thin' },
+                                    right: { style: 'thin' },
+                                },
+                            });
+                            sheet
+                                .cell(`${item.col}${totalRows}`)
+                                .style('fill', 'FFC000');
+                        });
+
                         const newBuffer = await workbook.outputAsync();
                         exportExcel(
                             newBuffer,
@@ -338,6 +490,7 @@ export const tableComparison = {
         { data: 'VPRES_PRICE_CURR' },
         {
             data: 'NPRES_PRICE_ETA_AMEC',
+            name: 'NPRES_PRICE_ETA_AMEC',
             className: 'bg-[#ccffcc]',
             render: function (data, type, row, meta) {
                 row.NPRES_PRICE_ETA_AMEC = roundNumber({ value: data });
@@ -346,6 +499,7 @@ export const tableComparison = {
         },
         {
             data: 'NPRES_AMOUNT',
+            name: 'NPRES_AMOUNT',
             render: function (data, type, row, meta) {
                 row.NPRES_AMOUNT = roundNumber({ value: data });
                 return formatNumber({ value: row.NPRES_AMOUNT });
@@ -390,37 +544,16 @@ export const tableComparison = {
         { data: 'VNEW_PRICE_CURR' },
         {
             data: null,
+            name: 'NNEW_PRICE_ETA_AMEC',
             className: 'bg-[#ccffff]',
             render: function (data, type, row) {
-                let rate = 1;
-                switch (steps.function) {
-                    case 1:
-                        rate = tableComparison.currency.find(
-                            (item) => item.CURRNAME === row.VNEW_BASE_CURR,
-                        )?.CURRENCY;
-                        row.NNEW_PRICE_ETA_AMEC = roundNumber({
-                            value: row.NNEW_BASE_PRICE * rate,
-                        });
-                        break;
-                    case 2:
-                    case 3:
-                        row.NNEW_PRICE_ETA_AMEC = row.NNEW_PRICE;
-                        break;
-                    case 4:
-                    case 5:
-                        rate = tableComparison.currency.find(
-                            (item) => item.CURRNAME === row.VNEW_PRICE_CURR,
-                        )?.CURRENCY;
-                        row.NNEW_PRICE_ETA_AMEC = roundNumber({
-                            value: row.NNEW_PRICE * rate,
-                        });
-                        break;
-                }
+                row.NNEW_PRICE_ETA_AMEC = calcNewPriceEta(row);
                 return formatNumber({ value: row.NNEW_PRICE_ETA_AMEC });
             },
         },
         {
             data: null,
+            name: 'NNEW_AMOUNT',
             render: function (data, type, row, meta) {
                 row.NNEW_AMOUNT = roundNumber({
                     value: (row.NNEW_PRICE_ETA_AMEC * row.QUANTITY_YEAR) / 1000,
@@ -430,6 +563,7 @@ export const tableComparison = {
         },
         {
             data: null,
+            name: 'NCOST_DIFF',
             render: function (data, type, row, meta) {
                 row.NCOST_DIFF = roundNumber({
                     value: row.NPRES_PRICE_ETA_AMEC - row.NNEW_PRICE_ETA_AMEC,
@@ -439,6 +573,7 @@ export const tableComparison = {
         },
         {
             data: null,
+            name: 'NCOST_AMOUNT',
             render: function (data, type, row, meta) {
                 row.NCOST_AMOUNT = roundNumber({
                     value: (row.NCOST_DIFF * row.NQUANTITY_YEAR) / 1000,
@@ -448,6 +583,7 @@ export const tableComparison = {
         },
         {
             data: null,
+            name: 'NCOST_RATIO',
             render: function (data, type, row, meta) {
                 row.NCOST_RATIO =
                     row.NPRES_PRICE_ETA_AMEC !== 0

@@ -283,10 +283,10 @@ export const steps = {
                 this.reset();
             }
         }
+        const params = getUrlParams();
+        const empno = params.EMPNO;
         switch (index) {
             case 0:
-                const params = getUrlParams();
-                const empno = params.EMPNO;
                 await this.setInputer(empno);
                 btnNewStep.removeClass('hidden');
                 btnDraftStep.removeClass('hidden');
@@ -301,6 +301,7 @@ export const steps = {
                     this.mode = 'new';
                     return;
                 }
+                await this.setInputer(empno);
                 await this.setRequester(this.inputer);
                 tableDraft.init(draftData.data);
                 btnPrevious.removeClass('hidden');
