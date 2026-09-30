@@ -43,6 +43,20 @@ class jig extends MY_Controller {
         $this->show_create_jig_form();
     }
 
+    public function open_from_asp($empno,$no,$orgNo, $y, $y2, $runNo) {
+        $parameters = [
+            'empno' => $empno,
+            'no'    => $no,
+            'orgNo' => $orgNo,
+            'y'     => $y,
+            'y2'    => $y2,
+            'runNo' => $runNo,
+        ];
+
+        $query = http_build_query($parameters,'','&',PHP_QUERY_RFC3986);
+        redirect(site_url('ieform/IE-JIG/jig/show_create_jig_form'). '?' . $query,'location',302);
+    }
+
     public function show_create_jig_form(){
         $data = [];
         $parameters = [
