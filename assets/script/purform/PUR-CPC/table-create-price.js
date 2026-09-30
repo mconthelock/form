@@ -207,6 +207,13 @@ export const tableCreatePrice = {
                             );
                             return;
                         }
+                        if (steps.compareMode === null) {
+                            showMessage(
+                                'Please select a compare mode before exporting.',
+                                'warning',
+                            );
+                            return;
+                        }
                         const duplicateVendorCheck = selected.map(
                             (row) => row.VPRES_VENDOR,
                         );
@@ -224,7 +231,7 @@ export const tableCreatePrice = {
                                 ? [
                                       steps.function,
                                       row.VPLANNER_CODE,
-                                      'E',
+                                      steps.compareMode,
                                       row.VPRES_VENDOR,
                                       row.VPROD_CODE,
                                       null,
@@ -232,7 +239,7 @@ export const tableCreatePrice = {
                                 : [
                                       steps.function,
                                       row.VPLANNER_CODE,
-                                      'E',
+                                      steps.compareMode,
                                       row.VPRES_VENDOR,
                                       row.VITEM_CODE,
                                       row.VDRAWING,

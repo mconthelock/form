@@ -160,7 +160,7 @@ export const steps = {
                 { label: 'New or Continue' },
                 { label: 'Choose Pending Items' },
                 { label: 'Input Data' },
-                { label: 'Pre Data' },
+                { label: 'Select Item Code' },
                 { label: 'Upload File' },
             ],
             currentStep: returnOrDraft ? 3 : 0,
