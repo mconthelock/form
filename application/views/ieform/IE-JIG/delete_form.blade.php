@@ -121,11 +121,9 @@
     </form>
     <section id="delete-approval" class="delete-card" hidden>
         <div class="section-heading"><h2>การอนุมัติคำขอลบ</h2></div>
-        <label class="block text-sm font-semibold" for="delete-remark">Remark <span class="font-normal text-slate-500">(บังคับเมื่อ Return / Reject)</span></label>
         <textarea id="delete-remark" rows="3" class="textarea mt-2 w-full bg-white" placeholder="ระบุความเห็น"></textarea>
         <div class="approval-buttons">
             <button id="delete-approve" type="button" class="btn btn-primary">Approve</button>
-            <button id="delete-return" type="button" class="btn btn-warning">Return</button>
             <button id="delete-reject" type="button" class="btn delete-submit">Reject</button>
         </div>
     </section>

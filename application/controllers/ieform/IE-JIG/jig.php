@@ -23,12 +23,23 @@ class jig extends MY_Controller {
     }
 
     public function show_jig_form(){
-        $_GET['empno'] = $this->input->get('empno');
-        $_GET['no'] = $this->input->get('no');
-        $_GET['orgNo'] = $this->input->get('orgNo');
-        $_GET['y'] = $this->input->get('y');
-        $_GET['y2'] = $this->input->get('ref_cyear2');
-        $_GET['runNo'] = $this->input->get('ref_nrunno');
+        $params = [
+            'empno' => $this->input->get('empno'),
+            'no' => $this->input->get('no'),
+            'orgNo' => $this->input->get('orgNo'),
+            'y' => $this->input->get('y'),
+            'y2' => $this->input->get('ref_cyear2'),
+            'runNo' => $this->input->get('ref_nrunno'),
+        ];
+
+        if(in_array(null, $params, true) || in_array('', $params, true)){
+            show_error('ข้อมูลไม่ครบ', 400);
+            return;
+        }
+
+        foreach($params as $key => $value){
+            $_GET[$key] = $value;
+        }
 
         $this->show_create_jig_form();
     }
