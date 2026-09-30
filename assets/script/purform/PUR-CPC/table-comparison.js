@@ -8,7 +8,12 @@ import {
 } from '@amec/webasset/utils';
 import { showLoader } from '@amec/webasset/preloader';
 import { steps } from './steps';
-import { getCurrenCy, getVendors, templateBaseDir } from './data';
+import {
+    getCurrenCy,
+    getformComparison,
+    getVendors,
+    templateBaseDir,
+} from './data';
 import XlsxPopulate from 'xlsx-populate/browser/xlsx-populate.js';
 import { getFile } from '@amec/webasset/api/file';
 import {
@@ -22,8 +27,6 @@ export const tableComparison = {
     skeleton: null,
     _currency: null,
     _vendorData: [],
-    _draftData: [],
-    _newData: [],
     get currency() {
         return this._currency;
     },
@@ -32,15 +35,6 @@ export const tableComparison = {
     },
     get draftData() {
         return this._draftData;
-    },
-    get newData() {
-        return this._newData;
-    },
-    set draftData(value) {
-        this._draftData = value;
-    },
-    set newData(value) {
-        this._newData = value;
     },
     set vendors(value) {
         this._vendorData = value;
@@ -98,15 +92,23 @@ export const tableComparison = {
     async init({ formNo = null, newData = [] } = {}) {
         await this.destroy();
         this.preload();
-
-        // TODO: ดึงข้อมูล draft หากมี formNo
+        let data = [];
         if (formNo) {
-            this._draftData = []; // รอรองรับ draft
+            const oldData = await getformComparison(formNo);
+            if (!oldData.status) {
+                throw new Error(oldData.message);
+            }
+
+            data = oldData.data.flatMap((parent) =>
+                parent.DETAILS.map((child) => ({
+                    ...parent,
+                    ...child,
+                })),
+            );
         }
         if (newData && newData.length > 0) {
-            this._newData = newData;
+            data = newData;
         }
-        const data = [...this._draftData, ...this._newData];
         if (data.length > 0) {
             this.currency = await getCurrenCy();
             const vendors = await getVendors();

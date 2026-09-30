@@ -113,3 +113,16 @@ export async function getListDraft(empno) {
         },
     });
 }
+
+/**
+ * @author Sutthipong Tangmongkhoncharoen(24008)
+ * @since 2026-09-30
+ * @description ดึงข้อมูล form ตามหมายเลขฟอร์ม
+ * @returns
+ */
+export async function getformComparison(form) {
+    return await fetchUtils({
+        url: `${process.env.APP_API}/purform/pur-cpc/form/${form}`,
+        method: 'GET',
+    });
+}

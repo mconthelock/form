@@ -292,6 +292,8 @@ export const steps = {
                 btnDraftStep.removeClass('hidden');
                 break;
             case 1:
+                await tableDraft.destroy();
+                tableDraft.preload();
                 const draftData = await getListDraft(this.inputer);
                 if (!draftData.status) {
                     showMessage('No draft data available', 'warning');
@@ -343,7 +345,6 @@ export const steps = {
                     PLANNER: this.plannerCode,
                     SYSTEM: this.system,
                 });
-                tableComparison.reset();
                 btnPrevious.removeClass('hidden');
                 btnNext.removeClass('hidden');
                 break;
