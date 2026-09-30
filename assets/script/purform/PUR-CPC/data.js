@@ -81,3 +81,35 @@ export async function getVendors() {
         method: 'GET',
     });
 }
+
+/**
+ * @author Sutthipong Tangmongkhoncharoen(24008)
+ * @since 2026-09-29
+ * @description Creates a price comparison.
+ * @param {CreateFormDto} data
+ * @returns
+ */
+export async function createComparison(data) {
+    return await fetchUtils({
+        url: `${process.env.APP_API}/purform/pur-cpc`,
+        method: 'POST',
+        data: data,
+    });
+}
+
+/**
+ * @author Sutthipong Tangmongkhoncharoen(24008)
+ * @since 2026-09-29
+ * @description ดึงข้อมูล Create price comparison draft.
+ * @returns
+ */
+export async function getListDraft(empno) {
+    return await fetchUtils({
+        url: `${process.env.APP_API}/purform/pur-cpc/lists`,
+        method: 'POST',
+        data: {
+            NSTATUS: 0,
+            VREQNO: empno,
+        },
+    });
+}

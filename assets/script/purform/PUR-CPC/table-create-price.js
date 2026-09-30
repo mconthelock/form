@@ -133,6 +133,7 @@ export const tableCreatePrice = {
                                 ? [
                                       steps.function,
                                       row.VPLANNER_CODE,
+                                      'E',
                                       row.VPRES_VENDOR,
                                       row.VPROD_CODE,
                                       null,
@@ -140,6 +141,7 @@ export const tableCreatePrice = {
                                 : [
                                       steps.function,
                                       row.VPLANNER_CODE,
+                                      'E',
                                       row.VPRES_VENDOR,
                                       row.VITEM_CODE,
                                       row.VDRAWING,
@@ -169,7 +171,7 @@ export const tableCreatePrice = {
 
                         const convertedData = convertArrayForXlsxPopulation(
                             data,
-                            'A,H,J-L',
+                            'A,H-L',
                         );
                         const startRow = 3;
                         const endRow = startRow + convertedData.length - 1;
@@ -196,6 +198,50 @@ export const tableCreatePrice = {
                                     },
                                 });
                         }
+                        sheet.range(`D${startRow}:D${endRow}`).dataValidation({
+                            type: 'decimal',
+                            operator: 'between',
+                            allowBlank: true,
+                            showErrorMessage: true,
+                            errorTitle: 'Invalid Input',
+                            error: 'Please enter a year between 2025 and 3000.',
+                            formula1: '2025',
+                            formula2: '3000',
+                        });
+                        sheet.range(`M${startRow}:AB${endRow}`).dataValidation({
+                            type: 'decimal',
+                            operator: 'between',
+                            allowBlank: true,
+                            showErrorMessage: true,
+                            errorTitle: 'Invalid Input',
+                            error: 'Please enter a numeric between 0 and 1000000000',
+                            formula1: '0',
+                            formula2: '1000000000',
+                        });
+                        sheet
+                            .range(`AF${startRow}:AF${endRow}`)
+                            .dataValidation({
+                                type: 'decimal',
+                                operator: 'between',
+                                allowBlank: true,
+                                showErrorMessage: true,
+                                errorTitle: 'Invalid Input',
+                                error: 'Please enter a numeric between 0 and 1000000000',
+                                formula1: '0',
+                                formula2: '1000000000',
+                            });
+                        sheet
+                            .range(`AH${startRow}:AI${endRow}`)
+                            .dataValidation({
+                                type: 'date',
+                                operator: 'between',
+                                allowBlank: true,
+                                showErrorMessage: true,
+                                errorTitle: 'Invalid Input',
+                                error: 'Please enter a date between 1/1/1900 and 12/31/9999',
+                                formula1: 'DATE(1900,1,1)',
+                                formula2: 'DATE(9999,12,31)',
+                            });
                         const newBuffer = await workbook.outputAsync();
                         exportExcel(
                             newBuffer,

@@ -1,5 +1,6 @@
 import { Steps } from '@amec/webasset/components/steps';
 import {
+    getUrlParams,
     requiredForm,
     showErrorMessage,
     showMessage,
@@ -8,7 +9,7 @@ import { tableCreatePrice } from './table-create-price';
 import { tableComparison } from './table-comparison';
 import { importExcel } from './importExcel';
 import { tableDraft } from './table.draft';
-import { getActivePriceConditions, getK850mpData } from './data';
+import { getActivePriceConditions, getK850mpData, getListDraft } from './data';
 import { webflowSubmit } from '@amec/webasset/components/form';
 import { skeletons } from '@amec/webasset/skeleton';
 import { getUser, getUserImage } from '@amec/webasset/api/amec';
@@ -46,14 +47,31 @@ export const steps = {
     get plannerCode() {
         return this._plannerCode;
     },
-    set inputer(value) {
+    async setInputer(value) {
         this._inputer = value;
+        await this.setProfileCard(value, '#inputer-card-container', 'Inputer');
     },
     get inputer() {
         return this._inputer;
     },
     set requester(value) {
         this._requester = value;
+    },
+    async setRequester(value) {
+        this.requester = value;
+        if (!value) {
+            this.requester = null;
+            this.plannerCode = null;
+            this.priceApvForm = null;
+            $('input[name="requester"]').val('');
+            $('#requester-card-container').empty();
+        } else {
+            await this.setProfileCard(
+                value,
+                '#requester-card-container',
+                'Requester',
+            );
+        }
     },
     get requester() {
         return this._requester;
@@ -113,21 +131,7 @@ export const steps = {
         this._formNo = null;
         this._priceApvForm = null;
     },
-    resetRequester() {
-        this.requester = null;
-        this.plannerCode = null;
-        this.priceApvForm = null;
-        $('input[name="requester"]').val('');
-        $('#requester-card-container').empty();
-    },
-    async init(inputer, returnOrDraft = false) {
-        this.inputer = inputer;
-        await this.setProfileCard(
-            inputer,
-            '#inputer-card-container',
-            'Inputer',
-        );
-
+    async init(returnOrDraft = false) {
         this.instance = new Steps({
             container: '#price-comparison-steps',
             steps: [
@@ -182,7 +186,7 @@ export const steps = {
         if (k850mpRecord.length === 0) {
             $(containner).empty();
             if (isRequester) {
-                this.resetRequester();
+                this.setRequester(null);
             }
             showMessage('Planner not found', 'warning');
             return;
@@ -192,7 +196,7 @@ export const steps = {
         if (!empnoData) {
             $(containner).empty();
             if (isRequester) {
-                this.resetRequester();
+                this.setRequester(null);
             }
             showMessage('User not found', 'warning');
             return;
@@ -272,8 +276,7 @@ export const steps = {
             this.function = null;
             this.system = null;
             this.formNo = null;
-            this.priceApvForm = null;
-            this.resetRequester();
+            this.setRequester(null);
             // เมื่อกลับไปหน้าแรกให้ reset ค่าทั้งหมด
             if (index === 0) {
                 $('#detail-step-container').html('');
@@ -282,57 +285,22 @@ export const steps = {
         }
         switch (index) {
             case 0:
+                const params = getUrlParams();
+                const empno = params.EMPNO;
+                await this.setInputer(empno);
                 btnNewStep.removeClass('hidden');
                 btnDraftStep.removeClass('hidden');
                 break;
             case 1:
-                await this.setProfileCard(
-                    this.inputer,
-                    '#requester-card-container',
-                );
-                // TODO: ดึงข้อมูล draft จากแหล่งข้อมูลจริง
-                // * mockdata
-                const draftData = [
-                    {
-                        FORMNO: 'COMP-2026-000001',
-                        REQBY_NAME: 'John Doe',
-                        PLANNER_CODE: 'X',
-                        MODE: 'E',
-                        VENDOR: '70006',
-                        AMOUNT_PRESENT: 28500,
-                        AMOUNT_NEW: 30000,
-                        AMOUNT_DIFF: -1500,
-                        RATIO: '5%',
-                        REQ_DATE: '2026-08-15 09:59',
-                        QUOTATION: null,
-                        FUNCTION: 1,
-                        STATUS: 0,
-                        SYSTEM: 'AS400',
-                    },
-                    {
-                        FORMNO: 'COMP-2026-000002',
-                        REQBY_NAME: 'John Doo',
-                        PLANNER_CODE: 'X',
-                        MODE: 'E',
-                        VENDOR: '70006',
-                        AMOUNT_PRESENT: 25500,
-                        AMOUNT_NEW: 30000,
-                        AMOUNT_DIFF: -4500,
-                        RATIO: '7%',
-                        REQ_DATE: '2026-08-16 09:59',
-                        QUOTATION: null,
-                        FUNCTION: 2,
-                        STATUS: 1,
-                        SYSTEM: 'AS400',
-                    },
-                ];
-                if (draftData.length === 0) {
+                const draftData = await getListDraft(this.inputer);
+                if (!draftData.status) {
                     showMessage('No draft data available', 'warning');
                     this.instance.skipTo(2);
                     this.mode = 'new';
                     return;
                 }
-                tableDraft.init(draftData);
+                await this.setRequester(this.inputer);
+                tableDraft.init(draftData.data);
                 btnPrevious.removeClass('hidden');
                 btnNext.removeClass('hidden');
                 btnNext.prop('disabled', false);
@@ -394,6 +362,7 @@ export const steps = {
                 if (this.mode == 'draft') {
                     submitOpt.draft = false;
                     submitOpt.save = true;
+                    submitOpt.request = true;
                 }
                 if (this.priceApvForm != null) {
                     submitOpt.form = this.priceApvForm;
@@ -480,10 +449,7 @@ export const steps = {
                     $('#requester-card-container').empty();
                     return;
                 }
-                await self.setProfileCard(
-                    requester,
-                    '#requester-card-container',
-                );
+                await self.setRequester(requester);
                 $('#next-step').prop('disabled', false);
             } catch (error) {
                 console.error(error);

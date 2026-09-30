@@ -1,4 +1,9 @@
-import { createModal, setModal } from '@amec/webasset/components/modal';
+import { createModal } from '@amec/webasset/components/modal';
+import { showErrorMessage, showMessage } from '@amec/webasset/utils';
+import { tableComparison } from './table-comparison';
+import { steps } from './steps';
+import { createComparison } from './data';
+import { showLoader } from '@amec/webasset/preloader';
 
 export const modalConfirmRequest = {
     id: 'modal-confirm-request',
@@ -64,5 +69,38 @@ export const modalConfirmRequest = {
     },
     bindEvent: function () {
         const self = this;
+        $(document).on('click', '#submit-confirm-request', async function () {
+            try {
+                showLoader();
+                const details = tableComparison.data();
+                if (details.length === 0) {
+                    showMessage('No data available for request.', 'warning');
+                    return;
+                }
+                const stepData = steps.data;
+
+                const data = {
+                    FUNC: stepData.function,
+                    REQBY: stepData.requester,
+                    INPUTBY: stepData.inputer,
+                    STATUS: 0,
+                    ISEDIT: stepData.formNo != null,
+                    FORMEDIT: stepData.formNo,
+                    DETAILS: details,
+                };
+                data.STATUS = $('#createPriceApproval').is(':checked') ? 2 : 1;
+                const res = await createComparison(data);
+                if (!res.status) {
+                    throw new Error('Failed to create comparison.');
+                }
+                showMessage('Comparison created successfully.', 'success');
+                self.show(false);
+            } catch (error) {
+                console.error(error);
+                showErrorMessage(error.message);
+            } finally {
+                showLoader({ show: false });
+            }
+        });
     },
 };

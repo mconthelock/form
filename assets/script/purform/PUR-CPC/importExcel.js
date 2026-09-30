@@ -163,7 +163,7 @@ export const importExcel = {
                 { key: 'VNEW_PRICE_MONTH', column: 'E' },
                 { key: 'VMODEL', column: 'F' },
                 { key: 'VOLD_ITEM_COMPARE', column: 'G' },
-                { key: 'CPLANNER', column: 'H' },
+                { key: 'VPLANNER', column: 'H' },
                 { key: 'CMODE', column: 'I' },
                 { key: 'VPRES_VENDOR', column: 'J' },
                 { key: 'VITEM_CODE', column: 'K' },

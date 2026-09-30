@@ -6,6 +6,7 @@ import {
 import { dataTableSkeleton } from '@amec/webasset/skeleton';
 import { showErrorMessage } from '@amec/webasset/utils';
 import { steps } from './steps';
+import { formatDate } from '@amec/webasset/dayjs';
 
 export const tableDraft = {
     instance: null,
@@ -99,10 +100,12 @@ export const tableDraft = {
                 try {
                     const selected = getSelectedData(self.instance);
                     const data = selected[0];
-                    steps.formNo = data.FORMNO;
-                    steps.function = data.FUNCTION;
-                    steps.system = data.SYSTEM;
+                    steps.formNo = data.VFORMNO;
+                    steps.function = data.NFUNCTIONS;
+                    steps.system = data.VSYSTEM;
                     steps.priceApvForm = data.PRICE_APV_FORM;
+                    steps.setRequester(data.VREQNO);
+                    steps.setInputer(data.VINPUTER);
                 } catch (error) {
                     console.error(error);
                     showErrorMessage(error.message);
@@ -114,6 +117,7 @@ export const tableDraft = {
         {
             title: 'No.',
             data: null,
+            className: 'sticky-column',
             render: function (data, type, row, meta) {
                 if (Array.isArray(meta.row)) {
                     return meta.row[0] + 1;
@@ -123,55 +127,70 @@ export const tableDraft = {
         },
         {
             title: 'Price Comparison no.',
-            data: 'FORMNO',
+            data: 'VFORMNO',
+            className: 'sticky-column',
         },
         {
-            title: 'Function',
-            data: 'FUNCTION',
+            title: 'Input by',
+            data: 'VINPUTBY_NAME',
+            className: 'text-nowrap',
         },
         {
             title: 'Request by',
-            data: 'REQBY_NAME',
+            data: 'VREQBY_NAME',
+            className: 'text-nowrap',
+        },
+        {
+            title: 'Function',
+            data: 'NFUNCTIONS',
         },
         {
             title: 'PLANNER',
-            data: 'PLANNER_CODE',
+            data: 'VPLANNER_CODE',
         },
         {
             title: 'MODE',
-            data: 'MODE',
-        },
-        {
-            title: 'VENDOR',
-            data: 'VENDOR',
+            data: 'VMODE',
         },
         {
             title: 'Amount of Present price(KB/Y)',
-            data: 'AMOUNT_PRESENT',
+            data: 'NAMOUNT_PRESENT',
         },
         {
             title: 'Amount of New price(KB/Y)',
-            data: 'AMOUNT_NEW',
+            data: 'NAMOUNT_NEW',
         },
         {
             title: 'Amount of Difference(KB/Y)',
-            data: 'AMOUNT_DIFF',
+            data: 'NAMOUNT_DIFF',
         },
         {
             title: 'Ratio',
-            data: 'RATIO',
+            data: 'NRATIO',
         },
         {
             title: 'Request Date',
-            data: 'REQ_DATE',
-        },
-        {
-            title: 'QUOTATION',
-            data: 'QUOTATION',
+            data: 'DREQDATE',
+            className: 'text-nowrap',
+            render: function (data, type, row, meta) {
+                return formatDate(data, 'DD-MMM-YY HH:mm');
+            },
         },
         {
             title: 'Status',
-            data: 'STATUS',
+            data: 'NSTATUS',
+            render: function (data, type, row, meta) {
+                switch (data) {
+                    case 0:
+                        return 'Draft';
+                    case 1:
+                        return '<span class="text-primary">Created</span>';
+                    case 2:
+                        return '<span class="text-success">Used</span>';
+                    default:
+                        return 'Unknown';
+                }
+            },
         },
     ],
 };
