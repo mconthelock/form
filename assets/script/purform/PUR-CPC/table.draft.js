@@ -106,6 +106,8 @@ export const tableDraft = {
                     steps.priceApvForm = data.PRICE_APV_FORM;
                     steps.setRequester(data.VREQNO);
                     steps.setInputer(data.VINPUTER);
+                    steps.compareMode = data.CMODE;
+                    steps.vendor = data.VVENDOR;
                 } catch (error) {
                     console.error(error);
                     showErrorMessage(error.message);
@@ -150,22 +152,26 @@ export const tableDraft = {
         },
         {
             title: 'MODE',
-            data: 'VMODE',
+            data: 'CMODE',
         },
         {
-            title: 'Amount of Present price(KB/Y)',
+            title: 'VENDER <br> CODE',
+            data: 'VVENDOR',
+        },
+        {
+            title: 'Amount of <br> Present price <br> (KB/Y)',
             data: 'NAMOUNT_PRESENT',
         },
         {
-            title: 'Amount of New price(KB/Y)',
+            title: 'Amount of <br> New price <br> (KB/Y)',
             data: 'NAMOUNT_NEW',
         },
         {
-            title: 'Amount of Difference(KB/Y)',
+            title: 'Amount of <br> Difference <br> (KB/Y)',
             data: 'NAMOUNT_DIFF',
         },
         {
-            title: 'Ratio',
+            title: 'Ratio <br> (%)',
             data: 'NRATIO',
         },
         {
@@ -182,13 +188,13 @@ export const tableDraft = {
             render: function (data, type, row, meta) {
                 switch (data) {
                     case 0:
-                        return 'Draft';
+                        return '<span class="badge badge-secondary">Draft</span>';
                     case 1:
-                        return '<span class="text-primary">Created</span>';
+                        return '<span class="badge badge-primary">Created</span>';
                     case 2:
-                        return '<span class="text-success">Used</span>';
+                        return '<span class="badge badge-success">Used</span>';
                     default:
-                        return 'Unknown';
+                        return '<span class="badge badge-error">Unknown</span>';
                 }
             },
         },

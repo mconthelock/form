@@ -74,9 +74,30 @@
                 </form>
 
                 {{-- Content for step 4 goes here --}}
-                <div data-step-panel class="hidden flex flex-col gap-3">
+                <form href="#" data-step-panel class="hidden flex flex-col gap-3" id="step-vendor">
+                    <section class="flex gap-10 rounded-xl border border-slate-200 p-4">
+                        <fieldset class="fieldset">
+                            <legend class="fieldset-legend">Vendor</legend>
+                            <select id="filter-vendor" class="select w-96 req" placeholder="Select vendor" data-message="Please select Vendor"></select>
+                        </fieldset>
+                        <fieldset class="fieldset">
+                            <legend class="fieldset-legend">Mode</legend>
+                            <div class="flex gap-5">
+                                <label class="label">
+                                    <input type="radio" name="compare-mode" value="A" class="radio req"
+                                        data-message="Please enter mode">
+                                    Add
+                                </label>
+                                <label class="label">
+                                    <input type="radio" name="compare-mode" value="E" class="radio req"
+                                        data-message="Please enter mode">
+                                    Edit
+                                </label>
+                            </div>
+                        </fieldset>
+                    </section>
                     <table id="table-create-price" class="table table-zebra table-sm"></table>
-                </div>
+                </form>
 
                 {{-- Content for step 5 goes here --}}
                 <div data-step-panel class="hidden flex flex-col gap-5">

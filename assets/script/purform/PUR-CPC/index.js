@@ -55,6 +55,9 @@ $(document).on(
                 ISEDIT: stepData.formNo != null,
                 FORMEDIT: stepData.formNo,
                 DETAILS: details,
+                VENDOR: stepData.vendor,
+                MODE: stepData.compareMode,
+                ...tableComparison.total,
             };
             let res;
             switch (val) {

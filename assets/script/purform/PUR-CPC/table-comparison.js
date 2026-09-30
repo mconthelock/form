@@ -92,6 +92,14 @@ export const tableComparison = {
     get vendors() {
         return this._vendorData;
     },
+    get total() {
+        return {
+            TOTAL_PRES: this.totalPres,
+            TOTAL_NEW: this.totalNew,
+            TOTAL_COST: this.totalCost,
+            TOTAL_RATIO: this.ratio,
+        };
+    },
     handleInstance() {
         if (!this.instance) {
             throw new Error(
@@ -164,7 +172,6 @@ export const tableComparison = {
             }
             this.vendors = vendors;
         }
-        await this.sumTotal(data);
         $(this.tableId).html(this.header);
         await this.createTable(data);
         this.skeleton.remove();
@@ -186,8 +193,7 @@ export const tableComparison = {
                       });
             const newEta = calcNewPriceEta(row);
             const newAmount = roundNumber({
-                value:
-                    (newEta * (row.QUANTITY_YEAR ?? row.NQUANTITY_YEAR)) / 1000,
+                value: (newEta * row.NQUANTITY_YEAR) / 1000,
             });
             const costAmount = roundNumber({
                 value: ((presEta - newEta) * row.NQUANTITY_YEAR) / 1000,
@@ -225,7 +231,7 @@ export const tableComparison = {
                 columns: this.columns(this.vendors),
                 responsive: data.length == 0 ? true : false,
                 ordering: false,
-                initComplete: function () {
+                initComplete: async function () {
                     const table = this.api();
                     const wrapper = table.table().container();
                     $(wrapper).find('.right-menu')
@@ -233,6 +239,10 @@ export const tableComparison = {
                             <i class="fi fi-sr-file-excel text-lg text-white"></i>
                             Price Compare Export  
                         </button>`);
+                    if (data.length == 0) {
+                        return;
+                    }
+                    await tableComparison.sumTotal(data);
                     const footer = tableComparison
                         .columns()
                         .map((col) => {
@@ -556,7 +566,8 @@ export const tableComparison = {
             name: 'NNEW_AMOUNT',
             render: function (data, type, row, meta) {
                 row.NNEW_AMOUNT = roundNumber({
-                    value: (row.NNEW_PRICE_ETA_AMEC * row.QUANTITY_YEAR) / 1000,
+                    value:
+                        (row.NNEW_PRICE_ETA_AMEC * row.NQUANTITY_YEAR) / 1000,
                 });
                 return formatNumber({ value: row.NNEW_AMOUNT });
             },

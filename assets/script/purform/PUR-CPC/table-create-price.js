@@ -14,7 +14,10 @@ import { getFile } from '@amec/webasset/api/file';
 import { showLoader } from '@amec/webasset/preloader';
 import { getPlannerCompareSheet, templateBaseDir } from './data';
 import XlsxPopulate from 'xlsx-populate/browser/xlsx-populate.js';
+import select2 from 'select2';
+import { setSelect2 } from '@amec/webasset/select2';
 
+select2();
 export const tableCreatePrice = {
     instance: null,
     tableId: '#table-create-price',
@@ -40,6 +43,22 @@ export const tableCreatePrice = {
     row(tr) {
         this.handleInstance();
         return this.instance.row(tr).data();
+    },
+    /**
+     * @author Sutthipong Tangmongkhoncharoen(24008)
+     * @since 2026-09-30
+     * @description Filters the table by vendor code (exact match). Pass an empty value to show all rows.
+     */
+    search(vendor = '') {
+        this.handleInstance();
+        const column = this.instance.column('vendor:name');
+        if (!vendor) {
+            column.search('').draw(false);
+            return;
+        }
+        column
+            .search(`^${$.fn.dataTable.util.escapeRegex(vendor)}$`, true, false)
+            .draw(false);
     },
     updateRow(tr, data) {
         this.handleInstance();
@@ -103,9 +122,70 @@ export const tableCreatePrice = {
                 },
             },
         );
+        await setSelect2({
+            id: 'filter-vendor',
+            destroy: true,
+            data: data
+                .filter(
+                    (row, index, self) =>
+                        index ===
+                        self.findIndex(
+                            (r) => r.VPRES_VENDOR === row.VPRES_VENDOR,
+                        ),
+                )
+                .sort((a, b) =>
+                    String(a.VPRES_VENDOR).localeCompare(
+                        String(b.VPRES_VENDOR),
+                        undefined,
+                        { numeric: true, sensitivity: 'base' },
+                    ),
+                )
+                .map((row) => ({
+                    id: row.VPRES_VENDOR,
+                    text: `${row.VPRES_VENDOR_NAME} (${row.VPRES_VENDOR})`,
+                })),
+            defaultValue: steps.vendor || null,
+        });
     },
     bindEvents() {
         const self = this;
+        /**
+         * @author Sutthipong Tangmongkhoncharoen(24008)
+         * @since 2026-09-30
+         * @description เลือก vendor จาก dropdown เพื่อกรองข้อมูลในตาราง
+         */
+        $(document)
+            .off('change.filter-vendor', '#filter-vendor')
+            .on('change.filter-vendor', '#filter-vendor', function () {
+                try {
+                    const vendor = $(this).val();
+                    self.search(vendor);
+                    steps.vendor = vendor;
+                } catch (error) {
+                    console.error(error);
+                    showErrorMessage(error.message);
+                }
+            });
+        /**
+         * @author Sutthipong Tangmongkhoncharoen(24008)
+         * @since 2026-09-30
+         * @description เลือกโหมดการเปรียบเทียบจาก radio button เพื่อกำหนดค่าใน steps.compareMode
+         */
+        $(document)
+            .off('change.compare-mode', 'input[name="compare-mode"]')
+            .on(
+                'change.compare-mode',
+                'input[name="compare-mode"]',
+                function () {
+                    try {
+                        const mode = $(this).val();
+                        steps.compareMode = mode;
+                    } catch (error) {
+                        console.error(error);
+                        showErrorMessage(error.message);
+                    }
+                },
+            );
         /**
          * @author Sutthipong Tangmongkhoncharoen(24008)
          * @since 2026-09-16
@@ -127,6 +207,17 @@ export const tableCreatePrice = {
                             );
                             return;
                         }
+                        const duplicateVendorCheck = selected.map(
+                            (row) => row.VPRES_VENDOR,
+                        );
+                        if (new Set(duplicateVendorCheck).size > 1) {
+                            showMessage(
+                                'Please select rows with the same vendor only.',
+                                'warning',
+                            );
+                            return;
+                        }
+
                         //map to array 2 dimensions for Excel export
                         const data = selected.map((row) =>
                             steps.system == 'PROCUREMENT'
@@ -282,6 +373,7 @@ export const tableCreatePrice = {
         {
             title: 'VENDOR',
             data: 'VPRES_VENDOR',
+            name: 'vendor',
         },
         {
             title: 'VENDOR NAME',
@@ -313,6 +405,7 @@ export const tableCreatePrice = {
         {
             title: 'VENDOR',
             data: 'VPRES_VENDOR',
+            name: 'vendor',
         },
         {
             title: 'VENDOR NAME',

@@ -148,6 +148,14 @@ export const importExcel = {
             this.reset();
             return false;
         }
+        if (data.find((row) => row.VPRES_VENDOR != steps.vendor)) {
+            showMessage(
+                'The selected Excel file contains rows with a different vendor',
+                'warning',
+            );
+            this.reset();
+            return false;
+        }
         return true;
     },
     async readExcelFile(file) {

@@ -87,6 +87,9 @@ export const modalConfirmRequest = {
                     ISEDIT: stepData.formNo != null,
                     FORMEDIT: stepData.formNo,
                     DETAILS: details,
+                    VENDOR: stepData.vendor,
+                    MODE: stepData.compareMode,
+                    ...tableComparison.total,
                 };
                 data.STATUS = $('#createPriceApproval').is(':checked') ? 2 : 1;
                 const res = await createComparison(data);

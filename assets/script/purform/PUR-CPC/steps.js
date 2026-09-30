@@ -29,11 +29,29 @@ export const steps = {
     _system: null,
     _formNo: null,
     _priceApvForm: null,
+    _vendor: null,
+    _compareMode: null,
+    set compareMode(value) {
+        $('input[name="compare-mode"][value="' + value + '"]').prop(
+            'checked',
+            true,
+        );
+        this._compareMode = value;
+    },
+    get compareMode() {
+        return this._compareMode;
+    },
     set priceApvForm(value) {
         this._priceApvForm = value;
     },
     get priceApvForm() {
         return this._priceApvForm;
+    },
+    set vendor(value) {
+        this._vendor = value;
+    },
+    get vendor() {
+        return this._vendor;
     },
     set system(value) {
         this._system = value;
@@ -120,6 +138,8 @@ export const steps = {
             function: this._function,
             formNo: this._formNo,
             priceApvForm: this._priceApvForm,
+            vendor: this._vendor,
+            compareMode: this._compareMode,
         };
     },
     reset() {
@@ -130,6 +150,8 @@ export const steps = {
         this._system = null;
         this._formNo = null;
         this._priceApvForm = null;
+        this._vendor = null;
+        this._compareMode = null;
     },
     async init(returnOrDraft = false) {
         this.instance = new Steps({
@@ -250,6 +272,9 @@ export const steps = {
         if (index === 2) {
             return await requiredForm('#step-requester');
         }
+        if (index === 3) {
+            return await requiredForm('#step-vendor');
+        }
         return true;
     },
     /**
@@ -277,6 +302,9 @@ export const steps = {
             this.system = null;
             this.formNo = null;
             this.setRequester(null);
+            $('#step-vendor')[0].reset();
+            this.vendor = null;
+            this.compareMode = null;
             // เมื่อกลับไปหน้าแรกให้ reset ค่าทั้งหมด
             if (index === 0) {
                 $('#detail-step-container').html('');
