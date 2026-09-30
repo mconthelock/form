@@ -11,8 +11,21 @@ export async function getJigEmployee(empno) {
 
 export const getJigPics = () => fetchUtils({ url: `${getConfig().APP_API}/iedoc/jig/ie-pics`, method: 'GET' });
 export const getJigMaster = jigNo => fetchUtils({ url: `${getConfig().APP_API}/iedoc/jig/${encodeURIComponent(jigNo)}`, method: 'GET' });
+export const getJigMasterCheckpoints = jigNo => fetchUtils({ url: `${getConfig().APP_API}/iedoc/jig/${encodeURIComponent(jigNo)}/checkpoints`, method: 'GET' });
+export const getJigMasterDefect = jigNo => fetchUtils({ url: `${getConfig().APP_API}/iedoc/jig/${encodeURIComponent(jigNo)}/defect-ng`, method: 'GET' });
 
 export const formPath = key => ['NFRMNO', 'VORGNO', 'CYEAR', 'CYEAR2', 'NRUNNO'].map(name => encodeURIComponent(key[name])).join('/');
+export const createJigDeleteForm = data => fetchUtils({ url: `${getConfig().APP_API}/iedoc/jig/delete-forms`, method: 'POST', data });
+export const saveJigDeleteForm = (key, data) => fetchUtils({ url: `${getConfig().APP_API}/iedoc/jig/delete-forms/${formPath(key)}`, method: 'PATCH', data });
+export const finishJigDeleteForm = key => fetchUtils({ url: `${getConfig().APP_API}/iedoc/jig/delete-forms/${formPath(key)}/finish`, method: 'POST', data: {} });
+export const rejectJigDeleteForm = key => fetchUtils({ url: `${getConfig().APP_API}/iedoc/jig/delete-forms/${formPath(key)}/reject`, method: 'POST', data: {} });
+export async function loadJigDeleteForm(key, allowMissing = false) {
+    const response = await fetch(`${getConfig().APP_API}/iedoc/jig/delete-forms/${formPath(key)}`);
+    if (allowMissing && response.status === 404) return null;
+    const data = await response.json();
+    if (!response.ok) throw new Error(Array.isArray(data.message) ? data.message.join('\n') : data.message || 'โหลดคำขอลบ JIG ไม่สำเร็จ');
+    return data;
+}
 export const jigNgTagPdfUrl = key => `${getConfig().APP_API}/iedoc/jig/forms/${formPath(key)}/ng-tag.pdf`;
 export const insertJigForm = data => fetchUtils({ url: `${getConfig().APP_API}/iedoc/jig`, method: 'POST', data });
 export const saveJigForm = (key, data) => fetchUtils({ url: `${getConfig().APP_API}/iedoc/jig/forms/${formPath(key)}`, method: 'PATCH', data });

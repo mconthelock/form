@@ -81,6 +81,7 @@ class jig extends MY_Controller {
             $data['exdata'] = $this->getExtData($data['NFRMNO'], $data['VORGNO'], $data['CYEAR'], $data['CYEAR2'], $data['NRUNNO'], $data['EMPNO']);
             $data['formno'] = $this->toFormNumber($data['NFRMNO'], $data['VORGNO'], $data['CYEAR'], $data['CYEAR2'], $data['NRUNNO']);
         }
+        
         $this->views($data['NRUNNO'] === '' ? 'ieform/IE-JIG/request_form' : 'ieform/IE-JIG/approve_form', $data);
     }
 
@@ -167,12 +168,17 @@ class jig extends MY_Controller {
         try {
             $key = $this->fileKey();
             $forms = $this->form->getRequestNo($key);
+            if (!$forms) throw new Exception('Form not found');
             $actor = (string)$this->input->post('EMPNO');
             if (!preg_match('/^[A-Za-z0-9]{1,10}$/D', $actor)) throw new Exception('Invalid employee');
             if (isset($_SESSION['user']) && (string)$_SESSION['user']->SEMPNO !== $actor) throw new Exception('Employee does not match login');
             //if (!$forms || !in_array((string)$forms[0]->CST, ['0', '1'], true)) throw new Exception('Form is not editable');
             $mode = $this->getMode($key['NFRMNO'], $key['VORGNO'], $key['CYEAR'], $key['CYEAR2'], $key['NRUNNO'], $actor);
             if ((string)$mode !== '2' && (string)$forms[0]->VINPUTER !== $actor) throw new Exception('No permission to upload');
+            if (strpos($this->jigFileDirectory($key), 'IE-DELJIG') === 0) {
+                if (!in_array((string)$forms[0]->CST, ['0', '1'], true)) throw new Exception('Form is not editable');
+                if ($this->currentJigStep($key, $actor) !== '--' && trim((string)$forms[0]->VINPUTER) !== $actor) throw new Exception('Only requester can edit attachments');
+            }
            // if ($this->currentJigStep($key, $actor) !== '--' && !((string)$forms[0]->CST === '0' && (string)$forms[0]->VINPUTER === $actor)) throw new Exception('Only requester can edit attachments');
             if (empty($_FILES['files']['name']) || !is_array($_FILES['files']['name'])) throw new Exception('No files');
             $incoming = $_FILES['files'];
@@ -234,7 +240,8 @@ class jig extends MY_Controller {
             if ($apiBase === '') $apiBase = trim((string)($_ENV['APP_API'] ?? ''));
             if ($apiBase === '') throw new Exception('API URL is not configured');
             $client = new Client(['connect_timeout' => 10, 'timeout' => 30, 'headers' => ['Accept' => 'application/json']]);
-            $url = rtrim($apiBase, '/') . '/iedoc/jig/forms/' . implode('/', array_map('rawurlencode', array_values($key)));
+            $endpoint = strpos($this->jigFileDirectory($key), 'IE-DELJIG') === 0 ? 'delete-forms' : 'forms';
+            $url = rtrim($apiBase, '/') . '/iedoc/jig/' . $endpoint . '/' . implode('/', array_map('rawurlencode', array_values($key)));
 
             $stage = 'อ่านข้อมูลไฟล์จาก API';
             $snapshot = json_decode($client->get($url)->getBody(), true);
@@ -294,16 +301,45 @@ class jig extends MY_Controller {
 
     public function show_create_delete_form(){
         $data = [];
-        $data['EMPNO'] = $this->input->get('empno');
-        $data['NFRMNO'] = $this->input->get('no');
-        $data['VORGNO'] = $this->input->get('orgNo');
-        $data['CYEAR'] = $this->input->get('y');
-        $data['JIGNO'] = $this->input->get('jigno');
-        if (!is_string($data['JIGNO']) || trim($data['JIGNO']) === '' || strlen($data['JIGNO']) > 20) {
-            show_error('Missing or invalid parameter: jigno', 400);
-            return;
+        $parameters = ['NFRMNO' => 'no', 'VORGNO' => 'orgNo', 'CYEAR' => 'y',
+            'CYEAR2' => 'y2', 'NRUNNO' => 'runNo', 'EMPNO' => 'empno'];
+        foreach ($parameters as $key => $parameter) {
+            $value = $this->input->get($parameter);
+            $pattern = $key === 'EMPNO' ? '/^[A-Za-z0-9]{0,10}$/D' : '/^[0-9]{0,6}$/D';
+            if ($value !== null && (!is_string($value) || !preg_match($pattern, $value))) {
+                show_error('Invalid parameter: ' . $parameter, 400); return;
+            }
+            $data[$key] = $value ?? '';
         }
-        $data['JIGNO'] = trim($data['JIGNO']);
+        foreach (['NFRMNO', 'VORGNO', 'CYEAR', 'EMPNO'] as $key) {
+            if ($data[$key] === '') { show_error('Missing parameter: ' . $parameters[$key], 400); return; }
+        }
+        $data['JIGNO'] = '';
+        $data['mode'] = '1';
+        $data['pageMode'] = 'create';
+        $data['CSTEPNO'] = '';
+        $data['cst'] = '';
+        $data['exdata'] = '';
+        $data['formno'] = '';
+        if ($data['NRUNNO'] === '') {
+            $jigNo = $this->input->get('jigno');
+            if (!is_string($jigNo) || trim($jigNo) === '' || strlen($jigNo) > 20) {
+                show_error('Missing or invalid parameter: jigno', 400); return;
+            }
+            $data['JIGNO'] = trim($jigNo);
+        } else {
+            if ($data['CYEAR2'] === '') { show_error('Missing parameter: y2', 400); return; }
+            $key = array_intersect_key($data, array_flip(['NFRMNO', 'VORGNO', 'CYEAR', 'CYEAR2', 'NRUNNO']));
+            $webforms = $this->form->getRequestNo($key);
+            if (!$webforms) { show_404(); return; }
+            $data['cst'] = (string)$webforms[0]->CST;
+            $data['mode'] = (string)$this->getMode($data['NFRMNO'], $data['VORGNO'], $data['CYEAR'], $data['CYEAR2'], $data['NRUNNO'], $data['EMPNO']);
+            $data['CSTEPNO'] = $this->currentJigStep($key, $data['EMPNO']);
+            $data['pageMode'] = $data['mode'] === '2' && $data['CSTEPNO'] === '--' ? 'edit' : 'view';
+            $data['exdata'] = $this->getExtData($data['NFRMNO'], $data['VORGNO'], $data['CYEAR'], $data['CYEAR2'], $data['NRUNNO'], $data['EMPNO']);
+            $data['formno'] = $this->toFormNumber($data['NFRMNO'], $data['VORGNO'], $data['CYEAR'], $data['CYEAR2'], $data['NRUNNO']);
+        }
+
         $this->views('ieform/IE-JIG/delete_form', $data);
     }
 
