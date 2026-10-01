@@ -21,4 +21,7 @@ module.exports = {
     // PUR-CPC
     purCpc: './assets/script/purform/PUR-CPC/index.js',
     purCpcView: './assets/script/purform/PUR-CPC/view.js',
+
+    // PUR-PRA
+    purPra: './assets/script/purform/PUR-PRA/index.js',
 };
