@@ -536,7 +536,7 @@ export const tableComparison = {
             className: 'bg-[#ffff77] text-nowrap',
             render: function (data, type, row, meta) {
                 row.VNEW_VENDOR_NAME = vendors.find(
-                    (v) => v.VENDOR === row.VNEW_VENDOR,
+                    (v) => v.VENDOR == row.VNEW_VENDOR,
                 )?.VNDNAM;
                 return row.VNEW_VENDOR
                     ? row.VNEW_VENDOR_NAME
