@@ -148,9 +148,19 @@ export const importExcel = {
             this.reset();
             return false;
         }
+        // * ตรวจสอบข้อมูลในไฟล์ Excel ว่าตรงกับ vendor ที่เลือกหรือไม่
         if (data.find((row) => row.VPRES_VENDOR != steps.vendor)) {
             showMessage(
                 'The selected Excel file contains rows with a different vendor',
+                'warning',
+            );
+            this.reset();
+            return false;
+        }
+        // * ตรวจสอบข้อมูลในไฟล์ Excel ว่าตรงกับ compare mode ที่เลือกหรือไม่
+        if (data.find((row) => row.CMODE != steps.compareMode)) {
+            showMessage(
+                'The selected Excel file contains rows with a different mode',
                 'warning',
             );
             this.reset();

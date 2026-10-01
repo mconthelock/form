@@ -172,35 +172,55 @@ export const tableComparison = {
             }
             this.vendors = vendors;
         }
+        const map = await tableComparison.calCulate(data);
         $(this.tableId).html(this.header);
-        await this.createTable(data);
+        await this.createTable(map);
         this.skeleton.remove();
         this.bindEvents();
     },
-    async sumTotal(data) {
+    /**
+     * @author Sutthipong Tangmongkhoncharoen(24008)
+     * @since 2026-10-01
+     * @description คำนวณผลรวมและอัตราส่วนของข้อมูลตาราง
+     * @returns
+     */
+    async calCulate(data) {
         let totalPres = 0,
             totalNew = 0,
             totalCost = 0;
-        data.forEach((row) => {
-            const presEta = row.NPRES_PRICE_ETA_AMEC;
-            const presAmount =
-                row.NPRES_AMOUNT != null
+        const mapData = data.map((row) => {
+            row.NPRES_BASE_PRICE = roundNumber({ value: row.NPRES_BASE_PRICE });
+            row.NPRES_PRICE = roundNumber({ value: row.NPRES_PRICE });
+            row.NPRES_PRICE_ETA_AMEC = roundNumber({
+                value: row.NPRES_PRICE_ETA_AMEC,
+            });
+            row.NPRES_AMOUNT = roundNumber({ value: row.NPRES_AMOUNT });
+
+            row.NNEW_BASE_PRICE = roundNumber({ value: row.NNEW_BASE_PRICE });
+            row.NNEW_PRICE = roundNumber({ value: row.NPRICE1 });
+            row.NNEW_PRICE_ETA_AMEC = calcNewPriceEta(row);
+            row.NNEW_AMOUNT = roundNumber({
+                value: (row.NNEW_PRICE_ETA_AMEC * row.NQUANTITY_YEAR) / 1000,
+            });
+
+            row.NCOST_DIFF = roundNumber({
+                value: row.NPRES_PRICE_ETA_AMEC - row.NNEW_PRICE_ETA_AMEC,
+            });
+            row.NCOST_AMOUNT = roundNumber({
+                value: (row.NCOST_DIFF * row.NQUANTITY_YEAR) / 1000,
+            });
+            row.NCOST_RATIO =
+                row.NPRES_PRICE_ETA_AMEC !== 0
                     ? roundNumber({
-                          value: row.NPRES_AMOUNT,
+                          value:
+                              (row.NCOST_DIFF / row.NPRES_PRICE_ETA_AMEC) * 100,
                       })
-                    : roundNumber({
-                          value: (presEta * row.NQUANTITY_YEAR) / 1000,
-                      });
-            const newEta = calcNewPriceEta(row);
-            const newAmount = roundNumber({
-                value: (newEta * row.NQUANTITY_YEAR) / 1000,
-            });
-            const costAmount = roundNumber({
-                value: ((presEta - newEta) * row.NQUANTITY_YEAR) / 1000,
-            });
-            totalPres += presAmount || 0;
-            totalNew += newAmount || 0;
-            totalCost += costAmount || 0;
+                    : 0;
+
+            totalPres += row.NPRES_AMOUNT || 0;
+            totalNew += row.NNEW_AMOUNT || 0;
+            totalCost += row.NCOST_AMOUNT || 0;
+            return row;
         });
         const ratio = totalPres !== 0 ? (totalCost / totalPres) * 100 : 0;
         this.totalPres = formatNumber({
@@ -223,6 +243,7 @@ export const tableComparison = {
                 value: ratio,
             }),
         });
+        return mapData;
     },
     async createTable(data) {
         this.instance = await createTable(
@@ -242,7 +263,6 @@ export const tableComparison = {
                     if (data.length == 0) {
                         return;
                     }
-                    await tableComparison.sumTotal(data);
                     const footer = tableComparison
                         .columns()
                         .map((col) => {
@@ -484,8 +504,7 @@ export const tableComparison = {
             data: 'NPRES_BASE_PRICE',
             className: 'bg-[#ccffcc]',
             render: function (data, type, row, meta) {
-                row.NPRES_BASE_PRICE = roundNumber({ value: data });
-                return formatNumber({ value: row.NPRES_BASE_PRICE });
+                return formatNumber({ value: data });
             },
         },
         { data: 'VPRES_BASE_CURR' },
@@ -493,8 +512,7 @@ export const tableComparison = {
             data: 'NPRES_PRICE',
             className: 'bg-[#ccffcc]',
             render: function (data, type, row, meta) {
-                row.NPRES_PRICE = roundNumber({ value: data });
-                return formatNumber({ value: row.NPRES_PRICE });
+                return formatNumber({ value: data });
             },
         },
         { data: 'VPRES_PRICE_CURR' },
@@ -503,16 +521,14 @@ export const tableComparison = {
             name: 'NPRES_PRICE_ETA_AMEC',
             className: 'bg-[#ccffcc]',
             render: function (data, type, row, meta) {
-                row.NPRES_PRICE_ETA_AMEC = roundNumber({ value: data });
-                return formatNumber({ value: row.NPRES_PRICE_ETA_AMEC });
+                return formatNumber({ value: data });
             },
         },
         {
             data: 'NPRES_AMOUNT',
             name: 'NPRES_AMOUNT',
             render: function (data, type, row, meta) {
-                row.NPRES_AMOUNT = roundNumber({ value: data });
-                return formatNumber({ value: row.NPRES_AMOUNT });
+                return formatNumber({ value: data });
             },
         },
         {
@@ -538,8 +554,7 @@ export const tableComparison = {
             data: 'NNEW_BASE_PRICE',
             className: 'bg-[#ccffff]',
             render: function (data, type, row, meta) {
-                row.NNEW_BASE_PRICE = roundNumber({ value: data });
-                return formatNumber({ value: row.NNEW_BASE_PRICE });
+                return formatNumber({ value: data });
             },
         },
         { data: 'VNEW_BASE_CURR' },
@@ -547,8 +562,7 @@ export const tableComparison = {
             data: 'NNEW_PRICE',
             className: 'bg-[#ccffff]',
             render: function (data, type, row, meta) {
-                row.NNEW_PRICE = roundNumber({ value: row.NPRICE1 });
-                return formatNumber({ value: row.NNEW_PRICE });
+                return formatNumber({ value: data });
             },
         },
         { data: 'VNEW_PRICE_CURR' },
@@ -557,7 +571,6 @@ export const tableComparison = {
             name: 'NNEW_PRICE_ETA_AMEC',
             className: 'bg-[#ccffff]',
             render: function (data, type, row) {
-                row.NNEW_PRICE_ETA_AMEC = calcNewPriceEta(row);
                 return formatNumber({ value: row.NNEW_PRICE_ETA_AMEC });
             },
         },
@@ -565,10 +578,6 @@ export const tableComparison = {
             data: null,
             name: 'NNEW_AMOUNT',
             render: function (data, type, row, meta) {
-                row.NNEW_AMOUNT = roundNumber({
-                    value:
-                        (row.NNEW_PRICE_ETA_AMEC * row.NQUANTITY_YEAR) / 1000,
-                });
                 return formatNumber({ value: row.NNEW_AMOUNT });
             },
         },
@@ -576,9 +585,6 @@ export const tableComparison = {
             data: null,
             name: 'NCOST_DIFF',
             render: function (data, type, row, meta) {
-                row.NCOST_DIFF = roundNumber({
-                    value: row.NPRES_PRICE_ETA_AMEC - row.NNEW_PRICE_ETA_AMEC,
-                });
                 return formatNumber({ value: row.NCOST_DIFF });
             },
         },
@@ -586,9 +592,6 @@ export const tableComparison = {
             data: null,
             name: 'NCOST_AMOUNT',
             render: function (data, type, row, meta) {
-                row.NCOST_AMOUNT = roundNumber({
-                    value: (row.NCOST_DIFF * row.NQUANTITY_YEAR) / 1000,
-                });
                 return formatNumber({ value: row.NCOST_AMOUNT });
             },
         },
@@ -596,14 +599,6 @@ export const tableComparison = {
             data: null,
             name: 'NCOST_RATIO',
             render: function (data, type, row, meta) {
-                row.NCOST_RATIO =
-                    row.NPRES_PRICE_ETA_AMEC !== 0
-                        ? roundNumber({
-                              value:
-                                  (row.NCOST_DIFF / row.NPRES_PRICE_ETA_AMEC) *
-                                  100,
-                          })
-                        : 0;
                 return formatNumber({ value: row.NCOST_RATIO }) + '%';
             },
         },
