@@ -2,8 +2,9 @@ import { createModal } from '@amec/webasset/components/modal';
 import { showErrorMessage, showMessage } from '@amec/webasset/utils';
 import { getSelectedData } from '@amec/webasset/dataTable';
 import { tableDraft } from '../../PUR-CPC/table-draft';
-import { getAutoField } from '../function';
+import { setAutoField } from '../function';
 import { getVendors } from '../../PUR-CPC/data';
+import { tableComparison } from '../../PUR-CPC/table-comparison';
 
 export const modalSelectPriceComparison = {
     id: 'modal-select-price-comparison',
@@ -48,18 +49,27 @@ export const modalSelectPriceComparison = {
                         return;
                     }
                     const data = selected[0];
-                    const autoField = getAutoField();
-                    autoField.formComparison.val(data.VFORMNO);
-                    autoField.vendor.val(data.VVENDOR);
-                    autoField.vendorName.val(
-                        vendors.find((v) => v.VENDOR == data.VVENDOR)?.VNDNAM,
-                    );
-                    autoField.planner.val(data.VPLANNER_CODE);
-                    autoField.totalPresent.val(data.NAMOUNT_PRESENT);
-                    autoField.totalNew.val(data.NAMOUNT_NEW);
-                    autoField.totalCost.val(data.NAMOUNT_DIFF);
-                    autoField.totalRatio.val(data.NRATIO);
+                    setAutoField({
+                        data: {
+                            formComparison: data.VFORMNO,
+                            vendor: data.VVENDOR,
+                            vendorName: vendors.find(
+                                (v) => v.VENDOR == data.VVENDOR,
+                            )?.VNDNAM,
+                            planner: data.VPLANNER_CODE,
+                            totalPresent: data.NAMOUNT_PRESENT,
+                            totalNew: data.NAMOUNT_NEW,
+                            totalCost: data.NAMOUNT_DIFF,
+                            totalRatio: data.NRATIO,
+                        },
+                        mode: 1,
+                    });
+
                     self.show(false);
+                    await tableComparison.init({
+                        formNo: data.VFORMNO,
+                        function: data.NFUNCTIONS,
+                    });
                 } catch (error) {
                     console.error(error);
                     showErrorMessage(error.message);

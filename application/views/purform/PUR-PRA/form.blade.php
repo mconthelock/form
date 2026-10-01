@@ -48,7 +48,7 @@
                             Auto input (จาก Price Comparison)
                         </label>
                         <label class="label">
-                            <input type="radio" name="form-mode" value="0" class="radio radio-secondary req"
+                            <input type="radio" name="form-mode" value="0" class="radio radio-neutral req"
                                 data-message="Please select an option">
                             กรอกข้อมูลเอง (แนบไฟล์ Price Comparison)
                         </label>
@@ -62,14 +62,14 @@
                         <h3 class="font-semibold text-slate-700">ข้อมูลเอกสาร</h3>
                     </header>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 p-4">
-                        <fieldset class="fieldset hidden" id="request-form-no">
+                        {{-- <fieldset class="fieldset hidden" id="request-form-no">
                             <legend class="fieldset-legend">Request form no.</legend>
-                            <label class="input w-full bg-amber-50 border-amber-200">
+                            <label class="input w-full">
                                 <i class="fi fi-rr-barcode-read text-slate-400"></i>
                                 <input type="text" name="form_no" value="PA-2026-0000XX" readonly class="grow">
                                 <span class="badge badge-ghost badge-sm">Auto Running</span>
                             </label>
-                        </fieldset>
+                        </fieldset> --}}
                         {{-- <fieldset class="fieldset">
                             <legend class="fieldset-legend">Request for quotation no.</legend>
                             <label class="input w-full border-error/40 bg-error/5">
@@ -77,25 +77,62 @@
                                 <input type="text" name="quotation_no" value="PUR-QTA-26-00XXXXX" readonly class="grow">
                             </label>
                         </fieldset> --}}
+
+                        {{-- Inputer --}}
                         <fieldset class="fieldset">
-                            <legend class="fieldset-legend">Inputer <span class="text-error">*</span></legend>
-                            <input type="text" name="INPUTBY" id="INPUTBY" class="input w-full req" placeholder="กรอกรหัสพนักงาน" data-message="Please enter inputer" readonly>
+                            <legend class="fieldset-legend req">Inputer</legend>
+                            <input type="text" name="INPUTBY" id="INPUTBY" class="input w-full bg-amber-50 req" placeholder="กรอกรหัสพนักงาน" data-message="Please enter inputer" readonly>
                         </fieldset>
+                        {{-- Requester --}}
                         <fieldset class="fieldset">
-                            <legend class="fieldset-legend">Requester <span class="text-error">*</span></legend>
+                            <legend class="fieldset-legend req">Requester</legend>
                             <input type="text" name="REQBY" id="REQBY" class="input w-full req" placeholder="กรอกรหัสพนักงาน" data-message="Please enter requester">
                         </fieldset>
-                        <fieldset class="fieldset">
-                            <legend class="fieldset-legend">Refer Price compare no.</legend>
-                            <div class="join w-full">
-                                <label class="input join-item w-full bg-amber-50 border-amber-200">
-                                    <input type="text" name="PRICE_COMPARE_NO" id="PRICE_COMPARE_NO" readonly class="grow">
+                        {{-- Refer Price compare no. --}}
+                        <fieldset class="hidden fieldset" id="price-compare-input-fieldset">
+                            <legend class="fieldset-legend req">Refer Price compare no.</legend>
+                            <div class="join w-full" >
+                                <label class="input join-item w-full bg-amber-50">
+                                    <input type="text" name="PRICE_COMPARE_NO" id="PRICE_COMPARE_NO" readonly class="grow req">
                                 </label>
                                 <button type="button" class="btn btn-neutral join-item" id="btn-view-compare">
                                     <i class="fi fi-rr-eye"></i>View record
                                 </button>
                             </div>
                         </fieldset>
+                        {{-- Refer Price compare file. --}}
+                        <fieldset class="hidden fieldset" id="price-compare-file-fieldset">
+                            <legend class="fieldset-legend req">Refer Price compare file.</legend>
+                            <div
+                                class="flex flex-wrap items-center gap-4 p-5 rounded-xl bg-base-200/50 border border-base-300">
+                                <div
+                                    class="flex items-center justify-center w-12 h-12 rounded-lg bg-error/10 shrink-0">
+                                    <i class="fi fi-sr-file-pdf text-2xl text-error"></i>
+                                </div>
+
+                                <div class="flex-1 min-w-40">
+                                    <div class="font-semibold">Excel File</div>
+                                    <div id="price-compare-file-name" class="text-sm text-base-content/60 truncate">
+                                        Please select an Excel file
+                                    </div>
+                                </div>
+
+                                <!-- Actions -->
+                                <div class="flex items-center gap-3 ms-auto">
+                                    <label for="PRICE_COMPARE_FILE" class="btn btn-outline btn-sm cursor-pointer">
+                                        <i class="fi fi-sr-folder-open"></i>
+                                        Choose File
+                                    </label>
+                                </div>
+
+                                <input type="file" id="PRICE_COMPARE_FILE" class="hidden" accept=".xlsx,.xls" />
+                            </div>
+                        </fieldset>
+                        <div></div>
+                        <div class="col-span-2">
+                            <table id="table-comparison" class="table table-zebra table-sm">
+                            </table>
+                        </div>
                     </div>
                 </section>
 
@@ -107,27 +144,27 @@
                     </header>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 p-4">
                         <fieldset class="fieldset">
-                            <legend class="fieldset-legend">Vendor Name</legend>
-                            <input type="text" name="VVENDOR_NAME" id="VVENDOR_NAME" class="input w-full bg-amber-50 border-amber-200" readonly>
+                            <legend class="fieldset-legend req">Vendor Name</legend>
+                            <input type="text" name="VVENDOR_NAME" id="VVENDOR_NAME" class="input w-full" readonly>
                         </fieldset>
                         <fieldset class="fieldset">
-                            <legend class="fieldset-legend">Vendor Code</legend>
-                            <input type="text" name="VVENDOR" id="VVENDOR" class="input w-full bg-amber-50 border-amber-200" readonly>
+                            <legend class="fieldset-legend req">Vendor Code</legend>
+                            <input type="text" name="VVENDOR" id="VVENDOR" class="input w-full" readonly>
                         </fieldset>
                         <fieldset class="fieldset">
-                            <legend class="fieldset-legend">Planner Code</legend>
-                            <input type="text" name="VPLANNER" id="VPLANNER" class="input w-full bg-amber-50 border-amber-200" readonly>
+                            <legend class="fieldset-legend req">Planner Code</legend>
+                            <input type="text" name="VPLANNER" id="VPLANNER" class="input w-full" readonly>
                         </fieldset>
                         <fieldset class="fieldset">
-                            <legend class="fieldset-legend">Material Code <span class="text-error">*</span></legend>
+                            <legend class="fieldset-legend">Material Code</legend>
                             <input type="text" name="VMATERIAL_CODE" id="VMATERIAL_CODE" class="input w-full req" placeholder="กรอก Material Code" data-message="Please enter material code">
                         </fieldset>
                         <fieldset class="fieldset">
-                            <legend class="fieldset-legend">Maker (Business route) <span class="text-error">*</span></legend>
+                            <legend class="fieldset-legend">Maker (Business route)</legend>
                             <input type="text" name="VMAKER" id="VMAKER" class="input w-full req" placeholder="กรอก Maker" data-message="Please enter maker">
                         </fieldset>
                         <fieldset class="fieldset">
-                            <legend class="fieldset-legend">Part Name <span class="text-error">*</span></legend>
+                            <legend class="fieldset-legend">Part Name</legend>
                             <input type="text" name="VPART_NAME" id="VPART_NAME" class="input w-full req" placeholder="กรอก Part Name" data-message="Please enter part name">
                         </fieldset>
                         <fieldset class="fieldset">
@@ -168,7 +205,7 @@
 
                         {{-- Group --}}
                         <fieldset class="fieldset md:col-span-2">
-                            <legend class="fieldset-legend">Group <span class="text-error">*</span></legend>
+                            <legend class="fieldset-legend">Group</legend>
                             <div class="flex flex-wrap gap-2">
                                 <label class="label cursor-pointer gap-2 rounded-lg border border-slate-200 px-4 py-2 has-checked:border-primary has-checked:bg-primary/5">
                                     <input type="radio" name="group" value="Bulk" class="radio radio-sm radio-primary">
@@ -207,36 +244,36 @@
                     </header>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 p-4">
                         <fieldset class="fieldset">
-                            <legend class="fieldset-legend">Present Total Price</legend>
-                            <label class="input w-full bg-amber-50 border-amber-200">
+                            <legend class="fieldset-legend req">Present Total Price</legend>
+                            <label class="input w-full">
                                 <input type="text" name="NTOTAL_PRES" id="NTOTAL_PRES" class="grow text-right" readonly>
                                 <span class="badge badge-ghost badge-sm">Col. AA</span>
                             </label>
                         </fieldset>
                         <fieldset class="fieldset">
-                            <legend class="fieldset-legend">New Total Price</legend>
-                            <label class="input w-full bg-amber-50 border-amber-200">
+                            <legend class="fieldset-legend req">New Total Price</legend>
+                            <label class="input w-full">
                                 <input type="text" name="NTOTAL_NEW" id="NTOTAL_NEW" class="grow text-right" readonly>
                                 <span class="badge badge-ghost badge-sm">Col. BB</span>
                             </label>
                         </fieldset>
                         <fieldset class="fieldset">
-                            <legend class="fieldset-legend">Cost Down (+) / Cost Up (-) Amount</legend>
-                            <label class="input w-full bg-amber-50 border-amber-200">
+                            <legend class="fieldset-legend req">Cost Down (+) / Cost Up (-) Amount</legend>
+                            <label class="input w-full">
                                 <input type="text" name="NTOTAL_COST" id="NTOTAL_COST" class="grow text-right" readonly>
                                 <span class="badge badge-ghost badge-sm">Col. CC</span>
                             </label>
                         </fieldset>
                         <fieldset class="fieldset">
-                            <legend class="fieldset-legend">Cost Down (+) / Cost Up (-) Ratio %</legend>
-                            <label class="input w-full bg-amber-50 border-amber-200">
+                            <legend class="fieldset-legend req">Cost Down (+) / Cost Up (-) Ratio %</legend>
+                            <label class="input w-full">
                                 <input type="text" name="NTOTAL_RATIO" id="NTOTAL_RATIO" class="grow text-right" readonly>
                                 <span class="badge badge-ghost badge-sm">Col. DD</span>
                             </label>
                             <p class="label">จาก Price comparison</p>
                         </fieldset>
                         <fieldset class="fieldset">
-                            <legend class="fieldset-legend">Effective Month <span class="text-error">*</span></legend>
+                            <legend class="fieldset-legend">Effective Month</legend>
                             <input type="month" name="effective_month" class="input w-full req" data-message="Please select effective month">
                         </fieldset>
                         <fieldset class="fieldset">
@@ -429,7 +466,7 @@
                     </header>
                     <div class="flex flex-col gap-4 p-4">
                         <fieldset class="fieldset">
-                            <legend class="fieldset-legend">Quotation price (E-Stamp) <span class="text-error">*</span></legend>
+                            <legend class="fieldset-legend">Quotation price (E-Stamp)</legend>
                             <div class="join w-full">
                                 <input type="file" name="file_quotation" accept="application/pdf" class="file-input join-item w-full req" data-message="Please attach quotation price file">
                                 <button type="button" class="btn btn-neutral join-item" data-view-record="quotation">

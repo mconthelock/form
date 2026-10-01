@@ -26,9 +26,9 @@ import {
  * @since 2026-09-30
  * @description คำนวณ New Price ETA AMEC ตาม step function ปัจจุบัน
  */
-const calcNewPriceEta = (row) => {
+const calcNewPriceEta = (row, func = null) => {
     let rate = 1;
-    switch (steps.function) {
+    switch (func ?? steps.function) {
         case 1:
             rate = tableComparison.currency.find(
                 (item) => item.CURRNAME === row.VNEW_BASE_CURR,
@@ -143,7 +143,7 @@ export const tableComparison = {
         await destroyTable(this.tableId);
         this.instance = null;
     },
-    async init({ formNo = null, newData = [] } = {}) {
+    async init({ formNo = null, newData = [], function: func = null } = {}) {
         await this.destroy();
         this.preload();
         let data = [];
@@ -172,7 +172,7 @@ export const tableComparison = {
             }
             this.vendors = vendors;
         }
-        const map = await tableComparison.calCulate(data);
+        const map = await tableComparison.calCulate(data, func);
         $(this.tableId).html(this.header);
         await this.createTable(map);
         this.skeleton.remove();
@@ -184,7 +184,7 @@ export const tableComparison = {
      * @description คำนวณผลรวมและอัตราส่วนของข้อมูลตาราง
      * @returns
      */
-    async calCulate(data) {
+    async calCulate(data, func = null) {
         let totalPres = 0,
             totalNew = 0,
             totalCost = 0;
@@ -198,7 +198,7 @@ export const tableComparison = {
 
             row.NNEW_BASE_PRICE = roundNumber({ value: row.NNEW_BASE_PRICE });
             row.NNEW_PRICE = roundNumber({ value: row.NPRICE1 });
-            row.NNEW_PRICE_ETA_AMEC = calcNewPriceEta(row);
+            row.NNEW_PRICE_ETA_AMEC = calcNewPriceEta(row, func);
             row.NNEW_AMOUNT = roundNumber({
                 value: (row.NNEW_PRICE_ETA_AMEC * row.NQUANTITY_YEAR) / 1000,
             });
