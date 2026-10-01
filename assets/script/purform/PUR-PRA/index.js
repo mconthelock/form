@@ -4,9 +4,10 @@ import {
     showErrorMessage,
     showMessage,
 } from '@amec/webasset/utils';
-import { getUser } from '@amec/webasset/api/amec';
-import { getK850mpData } from '../PUR-CPC/data';
 import { getListCreate } from './data';
+import { modalSelectPriceComparison } from './modal/select-price-comparison';
+import { tableDraft } from '../PUR-CPC/table-draft';
+import { checkPlanner } from './function';
 
 $(async function () {
     try {
@@ -16,6 +17,7 @@ $(async function () {
             throw new Error('User not found');
         }
         $('#INPUTBY').val(empno);
+        modalSelectPriceComparison.init();
     } catch (error) {
         console.error(error);
         renderLoadError(error.message);
@@ -51,32 +53,10 @@ $(document).on('click', '#btn-view-compare', async function () {
             showMessage(`Price comparison not found for ${req}`, 'warning');
             return;
         }
+        modalSelectPriceComparison.show(true);
+        tableDraft.init(lists.data, 'table-select-price-comparison');
     } catch (error) {
         console.error(error);
         showErrorMessage(error.message);
     }
 });
-
-/**
- * @author Sutthipong Tangmongkhoncharoen(24008)
- * @since 2026-09-30
- * @description ตรวจสอบว่า Planner มีอยู่ในระบบหรือไม่
- * @param {string} empno
- * @returns
- */
-async function checkPlanner(empno) {
-    const k850mpData = await getK850mpData();
-    const k850mpRecord = k850mpData.data.filter(
-        (record) => record.K85M03 === empno,
-    );
-    if (k850mpRecord.length === 0) {
-        showMessage('Planner not found', 'warning');
-        return false;
-    }
-    const empnoData = await getUser(empno);
-    if (!empnoData) {
-        showMessage('User not found', 'warning');
-        return false;
-    }
-    return true;
-}

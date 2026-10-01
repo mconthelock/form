@@ -43,18 +43,16 @@
                     
                     <div class="flex gap-5">
                         <label class="label">
-                            <input type="radio" name="compare-mode" value="A" class="radio req"
-                                data-message="Please enter mode">
-                            Add
+                            <input type="radio" name="form-mode" value="1" class="radio radio-secondary req"
+                                data-message="Please select an option">
+                            Auto input (จาก Price Comparison)
                         </label>
                         <label class="label">
-                            <input type="radio" name="compare-mode" value="E" class="radio req"
-                                data-message="Please enter mode">
-                            Edit
+                            <input type="radio" name="form-mode" value="0" class="radio radio-secondary req"
+                                data-message="Please select an option">
+                            กรอกข้อมูลเอง (แนบไฟล์ Price Comparison)
                         </label>
                     </div>
-                    <span class="inline-flex items-center gap-1.5"><span class="w-3 h-3 rounded-sm bg-amber-200 border border-amber-300"></span>Auto input (จาก Price Comparison)</span>
-                    <span class="inline-flex items-center gap-1.5"><span class="w-3 h-3 rounded-sm bg-white border border-slate-300"></span>กรอกข้อมูลเอง</span>
                 </div>
 
                 {{-- Section 1: ข้อมูลเอกสาร --}}
@@ -91,13 +89,12 @@
                             <legend class="fieldset-legend">Refer Price compare no.</legend>
                             <div class="join w-full">
                                 <label class="input join-item w-full bg-amber-50 border-amber-200">
-                                    <input type="text" name="PRICE_COMPARE_NO" readonly class="grow">
+                                    <input type="text" name="PRICE_COMPARE_NO" id="PRICE_COMPARE_NO" readonly class="grow">
                                 </label>
                                 <button type="button" class="btn btn-neutral join-item" id="btn-view-compare">
                                     <i class="fi fi-rr-eye"></i>View record
                                 </button>
                             </div>
-                            <p class="label text-error">สร้างรอเลือกข้อมูลที่เรากรอกไว้</p>
                         </fieldset>
                     </div>
                 </section>
@@ -111,35 +108,35 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 p-4">
                         <fieldset class="fieldset">
                             <legend class="fieldset-legend">Vendor Name</legend>
-                            <input type="text" name="vendor_name" class="input w-full bg-amber-50 border-amber-200" readonly>
+                            <input type="text" name="VVENDOR_NAME" id="VVENDOR_NAME" class="input w-full bg-amber-50 border-amber-200" readonly>
                         </fieldset>
                         <fieldset class="fieldset">
                             <legend class="fieldset-legend">Vendor Code</legend>
-                            <input type="text" name="vendor_code" class="input w-full bg-amber-50 border-amber-200" readonly>
+                            <input type="text" name="VVENDOR" id="VVENDOR" class="input w-full bg-amber-50 border-amber-200" readonly>
                         </fieldset>
                         <fieldset class="fieldset">
                             <legend class="fieldset-legend">Planner Code</legend>
-                            <input type="text" name="planner_code" class="input w-full bg-amber-50 border-amber-200" readonly>
+                            <input type="text" name="VPLANNER" id="VPLANNER" class="input w-full bg-amber-50 border-amber-200" readonly>
                         </fieldset>
                         <fieldset class="fieldset">
                             <legend class="fieldset-legend">Material Code <span class="text-error">*</span></legend>
-                            <input type="text" name="material_code" class="input w-full req" placeholder="กรอก Material Code" data-message="Please enter material code">
+                            <input type="text" name="VMATERIAL_CODE" id="VMATERIAL_CODE" class="input w-full req" placeholder="กรอก Material Code" data-message="Please enter material code">
                         </fieldset>
                         <fieldset class="fieldset">
                             <legend class="fieldset-legend">Maker (Business route) <span class="text-error">*</span></legend>
-                            <input type="text" name="maker" class="input w-full req" placeholder="กรอก Maker" data-message="Please enter maker">
+                            <input type="text" name="VMAKER" id="VMAKER" class="input w-full req" placeholder="กรอก Maker" data-message="Please enter maker">
                         </fieldset>
                         <fieldset class="fieldset">
                             <legend class="fieldset-legend">Part Name <span class="text-error">*</span></legend>
-                            <input type="text" name="part_name" class="input w-full req" placeholder="กรอก Part Name" data-message="Please enter part name">
+                            <input type="text" name="VPART_NAME" id="VPART_NAME" class="input w-full req" placeholder="กรอก Part Name" data-message="Please enter part name">
                         </fieldset>
                         <fieldset class="fieldset">
                             <legend class="fieldset-legend">Model Name</legend>
-                            <input type="text" name="model_name" class="input w-full" placeholder="กรอก Model Name">
+                            <input type="text" name="VMODEL_NAME" id="VMODEL_NAME" class="input w-full" placeholder="กรอก Model Name">
                         </fieldset>
                         <fieldset class="fieldset">
                             <legend class="fieldset-legend">Job Item</legend>
-                            <input type="text" name="job_item" class="input w-full" placeholder="กรอก Job Item">
+                            <input type="text" name="VJOB_ITEM" id="VJOB_ITEM" class="input w-full" placeholder="กรอก Job Item">
                         </fieldset>
 
                         {{-- PCS Committee --}}
@@ -212,28 +209,28 @@
                         <fieldset class="fieldset">
                             <legend class="fieldset-legend">Present Total Price</legend>
                             <label class="input w-full bg-amber-50 border-amber-200">
-                                <input type="text" name="present_total_price" class="grow text-right" readonly>
+                                <input type="text" name="NTOTAL_PRES" id="NTOTAL_PRES" class="grow text-right" readonly>
                                 <span class="badge badge-ghost badge-sm">Col. AA</span>
                             </label>
                         </fieldset>
                         <fieldset class="fieldset">
                             <legend class="fieldset-legend">New Total Price</legend>
                             <label class="input w-full bg-amber-50 border-amber-200">
-                                <input type="text" name="new_total_price" class="grow text-right" readonly>
+                                <input type="text" name="NTOTAL_NEW" id="NTOTAL_NEW" class="grow text-right" readonly>
                                 <span class="badge badge-ghost badge-sm">Col. BB</span>
                             </label>
                         </fieldset>
                         <fieldset class="fieldset">
                             <legend class="fieldset-legend">Cost Down (+) / Cost Up (-) Amount</legend>
                             <label class="input w-full bg-amber-50 border-amber-200">
-                                <input type="text" name="cost_diff_amount" class="grow text-right" readonly>
+                                <input type="text" name="NTOTAL_COST" id="NTOTAL_COST" class="grow text-right" readonly>
                                 <span class="badge badge-ghost badge-sm">Col. CC</span>
                             </label>
                         </fieldset>
                         <fieldset class="fieldset">
                             <legend class="fieldset-legend">Cost Down (+) / Cost Up (-) Ratio %</legend>
                             <label class="input w-full bg-amber-50 border-amber-200">
-                                <input type="text" name="cost_diff_ratio" class="grow text-right" readonly>
+                                <input type="text" name="NTOTAL_RATIO" id="NTOTAL_RATIO" class="grow text-right" readonly>
                                 <span class="badge badge-ghost badge-sm">Col. DD</span>
                             </label>
                             <p class="label">จาก Price comparison</p>
