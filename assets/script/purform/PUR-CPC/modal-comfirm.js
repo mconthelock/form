@@ -7,13 +7,6 @@ import { showLoader } from '@amec/webasset/preloader';
 
 export const modalConfirmRequest = {
     id: 'modal-confirm-request',
-    _data: null,
-    set data(data) {
-        this._data = data;
-    },
-    get data() {
-        return this._data;
-    },
     show(isShow) {
         $('#' + this.id).prop('checked', isShow ? 'checked' : false);
         if (isShow) {
