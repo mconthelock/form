@@ -68,10 +68,6 @@ export const tableDraft = {
                 data: data,
                 responsive: data.length == 0 ? true : false,
                 columns: this.columns,
-                initComplete: function () {
-                    const table = this.api();
-                    const wrapper = table.table().container();
-                },
             },
             {
                 id: this.tableId,
