@@ -19,6 +19,16 @@ export const tableDraft = {
             );
         }
     },
+    get id() {
+        return this.tableId;
+    },
+    set id(value) {
+        if (value.startsWith('#')) {
+            this.tableId = value;
+        } else {
+            this.tableId = `#${value}`;
+        }
+    },
     get() {
         this.handleInstance();
         return this.instance;
@@ -55,8 +65,9 @@ export const tableDraft = {
         await destroyTable(this.tableId);
         this.instance = null;
     },
-    async init(data) {
+    async init(data, id = '#table-draft') {
         await this.destroy();
+        this.id = id;
         this.preload();
         await this.createTable(data);
         this.skeleton.remove();
@@ -84,6 +95,9 @@ export const tableDraft = {
     },
     bindEvents() {
         const self = this;
+        if (self.id != '#table-draft') {
+            return;
+        }
         /**
          * @author Sutthipong Tangmongkhoncharoen(24008)
          * @since 2026-09-22

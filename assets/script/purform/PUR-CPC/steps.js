@@ -8,7 +8,7 @@ import {
 import { tableCreatePrice } from './table-create-price';
 import { tableComparison } from './table-comparison';
 import { importExcel } from './importExcel';
-import { tableDraft } from './table.draft';
+import { tableDraft } from './table-draft';
 import { getActivePriceConditions, getK850mpData, getListDraft } from './data';
 import { webflowSubmit } from '@amec/webasset/components/form';
 import { skeletons } from '@amec/webasset/skeleton';
