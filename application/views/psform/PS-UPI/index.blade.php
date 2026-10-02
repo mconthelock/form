@@ -122,10 +122,7 @@
 
                         <!-- PUR Code -->
                         <td>
-                            <div class="join w-full">
-                                <input type="text" class="input input-bordered input-sm join-item w-full part-purcode" placeholder="PUR Code" />
-                                <button type="button" class="btn btn-sm join-item btn-search-pur" title="Search PUR Code"><i class="fi fi-rr-search"></i></button>
-                            </div>
+                            <input type="text" class="input input-bordered input-sm w-full part-purcode" placeholder="PUR Code" />
                         </td>
 
                         <!-- Description -->

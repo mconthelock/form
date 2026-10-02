@@ -56,11 +56,12 @@
                 </div>
                 <span id="upiReportSummary" class="text-sm font-medium text-base-content/70">Search to display report data.</span>
             </div>
-            <div class="overflow-x-auto">
+            <div class="overflow-x-auto p-3">
                 <table class="table table-zebra table-sm min-w-full whitespace-nowrap" id="ReportTable">
                     <thead>
                         <tr class="bg-base-200">
                             <th>Form No.</th>
+                            <th>Request Date</th>
                             <th>Section Request</th>
                             <th>Requester</th>
                             <th>Status approve</th>
@@ -68,7 +69,7 @@
                         </tr>
                     </thead>
                     <tbody id="upiReportBody">
-                        <tr><td colspan="5" class="py-8 text-center text-base-content/50">Search to display requisitions.</td></tr>
+                        <tr><td colspan="6" class="py-8 text-center text-base-content/50">Search to display requisitions.</td></tr>
                     </tbody>
                 </table>
             </div>
