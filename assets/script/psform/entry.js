@@ -27,4 +27,8 @@ module.exports = {
     psClm: './assets/script/psform/PS-CLM/create.js',
     psClmShow: './assets/script/psform/PS-CLM/show.js',
     psClmReport: './assets/script/psform/PS-CLM/report.js',
+    // PS-UPI
+    psUpi: './assets/script/psform/PS-UPI/index.js', //UPI page
+    psUpiView: './assets/script/psform/PS-UPI/views.js', //UPI detail page
+    psUpiReport: './assets/script/psform/PS-UPI/report.js', //UPI report page
 };
