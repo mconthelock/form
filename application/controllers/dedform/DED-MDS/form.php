@@ -1253,7 +1253,7 @@ class form extends MY_Controller {
         // 3. ดึงอีเมลผู้รับจากตาราง FLOW
         $TO = "";
         $CC = "";
-        
+
         $Webflowdb = $this->load->database('DEFAULT', TRUE);
         $sql = "SELECT LISTAGG(emp.SRECMAIL, ',') WITHIN GROUP (ORDER BY emp.SEMPNO) AS ALL_EMAILS 
                 FROM FLOW wf 
@@ -1281,7 +1281,7 @@ class form extends MY_Controller {
         } else {
             // โหมด Production
             $TO = !empty($flowEmails) ? $flowEmails : "siripapa@mitsubishielevatorasia.co.th";
-            $CC = "siripapa@mitsubishielevatorasia.co.th";
+            $CC = "Master_Design_Schedule@mitsubishielevatorasia.co.th,siripapa@mitsubishielevatorasia.co.th";
 
             // ใส่ https:// เสมอสำหรับเมลจริง
             $formUrl = $this->http ."://amecweb.mitsubishielevatorasia.co.th/ids/DED_MDS/masterDesbm_report/index/{$year}/{$period}/";
