@@ -539,7 +539,7 @@ class form extends MY_Controller{
             // 1. แก้ไข Syntax วันที่
             $SUBJECT = "MIMS : Maintenance Stock Cost Report (FE-EIA)_" . $COST_YEAR . "/" . $COST_MONTH;
             $TO = "";
-            $CC = "";
+            $CC = "Master_Design_Schedule@mitsubishielevatorasia.co.th,";
 
             $sql = "SELECT  LISTAGG(SRECMAIL, ',') WITHIN GROUP (ORDER BY SEMPNO) AS ALL_EMAILS FROM WPS_MIMS_EIAFORM_USERCREATE_VIEW WHERE  GROUPTYPE = 'EIA_CC' ";
             $emailResult = $this->MainModel->QuerySetBase($sql, $this->mimsBase)->row();
