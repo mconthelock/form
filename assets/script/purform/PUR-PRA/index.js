@@ -4,13 +4,13 @@ import {
     showErrorMessage,
     showMessage,
 } from '@amec/webasset/utils';
-import { getListCreate } from './data';
-import { modalSelectPriceComparison } from './modal/select-price-comparison';
-import { tableDraft } from '../PUR-CPC/table-draft';
-import { checkPlanner, setAutoField } from './function';
 import { showLoader } from '@amec/webasset/preloader';
-import { FileUpload } from './fileUpload';
 import { PdfViewer } from '@amec/webasset/components/pdfViewer';
+import { FileUpload } from '@amec/webasset/components/fileUpload';
+import { tableDraft } from '../PUR-CPC/table-draft';
+import { getListCreate } from './data';
+import { checkPlanner, setAutoField } from './function';
+import { modalSelectPriceComparison } from './modal/select-price-comparison';
 
 $(async function () {
     try {

@@ -1,9 +1,9 @@
-import { showMessage } from '@amec/webasset/utils';
-import { getK850mpData } from '../PUR-CPC/data';
 import { getUser } from '@amec/webasset/api/amec';
-import { tableComparison } from '../PUR-CPC/table-comparison';
+import { showMessage } from '@amec/webasset/utils';
 import { getPdfViewer } from '@amec/webasset/components/pdfViewer';
-import { getFileUploadInstance } from './fileUpload';
+import { getFileUploadInstance } from '@amec/webasset/components/fileUpload';
+import { getK850mpData } from '../PUR-CPC/data';
+import { tableComparison } from '../PUR-CPC/table-comparison';
 
 /**
  * @author Sutthipong Tangmongkhoncharoen(24008)
