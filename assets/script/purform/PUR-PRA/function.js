@@ -3,6 +3,7 @@ import { getK850mpData } from '../PUR-CPC/data';
 import { getUser } from '@amec/webasset/api/amec';
 import { tableComparison } from '../PUR-CPC/table-comparison';
 import { getPdfViewer } from '@amec/webasset/components/pdfViewer';
+import { getFileUploadInstance } from './fileUpload';
 
 /**
  * @author Sutthipong Tangmongkhoncharoen(24008)
@@ -66,7 +67,8 @@ export const setAutoField = ({ data, mode = 1 } = {}) => {
     priceCompareFile.toggleClass('hidden', mode === 1);
     priceCompareInput.toggleClass('hidden', mode !== 1);
     tableComparison.destroy();
-    getPdfViewer('PRICE_COMPARE_FILE')?.reset();
+    getPdfViewer('price-compare-container')?.reset();
+    getFileUploadInstance('PRICE_COMPARE_FILE')?.reset();
     Object.keys(autoField).forEach((key) => {
         const label = autoField[key].closest('label');
         const element = label.length ? label : autoField[key];

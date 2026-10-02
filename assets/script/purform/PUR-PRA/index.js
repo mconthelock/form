@@ -41,6 +41,17 @@ $(async function () {
             onError(file, uploader) {
                 pdfViewer.reset();
             },
+            buttons: [
+                {
+                    id: 'clear-file',
+                    label: '<i class="fi fi-sr-trash"></i> Clear',
+                    className: 'btn btn-error btn-outline btn-sm',
+                    onClick: (file, instance, event) => {
+                        instance.reset();
+                        pdfViewer.reset();
+                    },
+                },
+            ],
         });
     } catch (error) {
         console.error(error);
