@@ -14,7 +14,12 @@ import {
     jigFileUrl,
 } from './data';
 import { displayDate } from './payload';
-import { deleteFormKey, checkDeleteResponse, initializeDeleteCreation, initializeDeleteApproval } from './delete-workflow';
+import {
+    deleteFormKey,
+    checkDeleteResponse,
+    initializeDeleteCreation,
+    initializeDeleteApproval,
+} from './delete-workflow';
 
 $(document).ready(function () {
     const page = document.querySelector('#jig-delete-page');
@@ -27,10 +32,17 @@ $(document).ready(function () {
     const picker = document.querySelector('#delete-files');
     const dropzone = document.querySelector('#delete-dropzone');
     const creating = page.dataset.pageMode === 'create';
-    let editable = creating || (page.dataset.mode === '2' && page.dataset.cstepno?.trim() === '--');
-    const key = deleteFormKey(Object.fromEntries(
-        ['NFRMNO', 'VORGNO', 'CYEAR', 'CYEAR2', 'NRUNNO'].map((name) => [name, page.dataset[name.toLowerCase()]]),
-    ));
+    let editable =
+        creating ||
+        (page.dataset.mode === '2' && page.dataset.cstepno?.trim() === '--');
+    const key = deleteFormKey(
+        Object.fromEntries(
+            ['NFRMNO', 'VORGNO', 'CYEAR', 'CYEAR2', 'NRUNNO'].map((name) => [
+                name,
+                page.dataset[name.toLowerCase()],
+            ]),
+        ),
+    );
     dropzone.hidden = !editable;
     let attachments = [];
     let storedFiles = [];
@@ -45,7 +57,9 @@ $(document).ready(function () {
         value == null || value === '' ? '—' : String(value);
     const locationLabel = (code) => {
         const location = locations.find(
-            (item) => String(item.SHOPCODE ?? '').trim() === String(code ?? '').trim(),
+            (item) =>
+                String(item.SHOPCODE ?? '').trim() ===
+                String(code ?? '').trim(),
         );
         return location ? `${location.SHOPCODE} - ${location.SHOPDESC}` : code;
     };
@@ -76,20 +90,32 @@ $(document).ready(function () {
                 let webform;
                 if (!creating) {
                     const [snapshot, detail, flow] = await Promise.all([
-                        loadJigDeleteForm(key), getFormDetail(key), showflow(key),
+                        loadJigDeleteForm(key),
+                        getFormDetail(key),
+                        showflow(key),
                     ]);
                     webform = detail;
-                    if (['2', '3'].includes(String(webform.CST).trim())) editable = false;
-                    if (!snapshot?.JIG_NO) throw new Error('ไม่พบข้อมูลคำขอลบ JIG');
-                    if (!Array.isArray(snapshot.FILES)) throw new Error('API ยังไม่ส่งรายการไฟล์แนบของคำขอลบ กรุณาอัปเดต API');
+                    if (['2', '3'].includes(String(webform.CST).trim()))
+                        editable = false;
+                    if (!snapshot?.JIG_NO)
+                        throw new Error('ไม่พบข้อมูลคำขอลบ JIG');
+                    if (!Array.isArray(snapshot.FILES))
+                        throw new Error(
+                            'API ยังไม่ส่งรายการไฟล์แนบของคำขอลบ กรุณาอัปเดต API',
+                        );
                     page.dataset.jigno = snapshot.JIG_NO;
                     storedFiles = snapshot.FILES;
                     form.elements.delete_reason.value = snapshot.REASON ?? '';
                     form.elements.delete_detail.value = snapshot.DETAIL ?? '';
-                    document.querySelector('#delete-formno').textContent = webform.FORMNO || document.querySelector('#delete-formno').textContent;
-                    document.querySelector('#delete-input-by').textContent = `${webform.VINPUTER ?? ''} ${webform.VINPUTNAME ?? ''}`.trim();
-                    document.querySelector('#delete-requested-by').textContent = `${webform.VREQNO ?? ''} ${webform.VREQNAME ?? ''}`.trim();
-                    document.querySelector('#delete-flow').innerHTML = flow.html || '';
+                    document.querySelector('#delete-formno').textContent =
+                        webform.FORMNO ||
+                        document.querySelector('#delete-formno').textContent;
+                    document.querySelector('#delete-input-by').textContent =
+                        `${webform.VINPUTER ?? ''} ${webform.VINPUTNAME ?? ''}`.trim();
+                    document.querySelector('#delete-requested-by').textContent =
+                        `${webform.VREQNO ?? ''} ${webform.VREQNAME ?? ''}`.trim();
+                    document.querySelector('#delete-flow').innerHTML =
+                        flow.html || '';
                 }
                 const jig = await getJigMaster(page.dataset.jigno);
                 if (!jig?.JIG_NO) throw new Error('ไม่พบข้อมูล JIG');
@@ -135,10 +161,18 @@ $(document).ready(function () {
                 status.hidden = true;
                 if (!creating && !approvalInitialized) {
                     initializeDeleteApproval({
-                        page, context: page.dataset, key, webform,
-                        validate: () => VIEW.validate(), persist: () => VIEW.persist(),
+                        page,
+                        context: page.dataset,
+                        key,
+                        webform,
+                        validate: () => VIEW.validate(),
+                        persist: () => VIEW.persist(),
                         onIdle: (acted) => {
-                            if (acted) { editable = false; fields.disabled = true; dropzone.hidden = true; }
+                            if (acted) {
+                                editable = false;
+                                fields.disabled = true;
+                                dropzone.hidden = true;
+                            }
                             VIEW.renderFiles();
                         },
                     });
@@ -152,7 +186,9 @@ $(document).ready(function () {
         },
         async loadCheckpoints() {
             const message = document.querySelector('#delete-checkpoint-status');
-            const retryButton = document.querySelector('#delete-checkpoint-retry');
+            const retryButton = document.querySelector(
+                '#delete-checkpoint-retry',
+            );
             const table = document.querySelector('#delete-checkpoint-table');
             const rows = document.querySelector('#delete-checkpoint-rows');
             const count = document.querySelector('#delete-checkpoint-count');
@@ -164,13 +200,23 @@ $(document).ready(function () {
             message.classList.remove('is-error');
             message.textContent = 'กำลังโหลดข้อมูล Checkpoint…';
             try {
-                const checkpoints = await getJigMasterCheckpoints(page.dataset.jigno);
+                const checkpoints = await getJigMasterCheckpoints(
+                    page.dataset.jigno,
+                );
                 if (!Array.isArray(checkpoints))
                     throw new Error('รูปแบบข้อมูล Checkpoint ไม่ถูกต้อง');
                 count.textContent = `${checkpoints.length} รายการ`;
                 checkpoints.forEach((checkpoint) => {
                     const row = document.createElement('tr');
-                    ['CHECK_SEQ', 'CHECK_POINT', 'INSPECTION_TOOL', 'MIN', 'MAX', 'MEASURED_VALUE', 'UNIT'].forEach((column) => {
+                    [
+                        'CHECK_SEQ',
+                        'CHECK_POINT',
+                        'INSPECTION_TOOL',
+                        'MIN',
+                        'MAX',
+                        'MEASURED_VALUE',
+                        'UNIT',
+                    ].forEach((column) => {
                         const cell = document.createElement('td');
                         cell.textContent = displayValue(checkpoint[column]);
                         if (['MIN', 'MAX', 'MEASURED_VALUE'].includes(column))
@@ -184,7 +230,9 @@ $(document).ready(function () {
                 message.textContent = 'ยังไม่มีข้อมูล Checkpoint';
             } catch (error) {
                 message.classList.add('is-error');
-                message.textContent = 'โหลด Checkpoint ไม่สำเร็จ: ' + (error.message || 'กรุณาลองใหม่');
+                message.textContent =
+                    'โหลด Checkpoint ไม่สำเร็จ: ' +
+                    (error.message || 'กรุณาลองใหม่');
                 retryButton.hidden = false;
             }
         },
@@ -204,8 +252,12 @@ $(document).ready(function () {
             try {
                 // The master endpoint returns { NG: object | null }.
                 const response = await getJigMasterDefect(page.dataset.jigno);
-                if (!response || !Object.prototype.hasOwnProperty.call(response, 'NG') ||
-                    (response.NG !== null && (!response.NG?.JIG_NO || Array.isArray(response.NG))))
+                if (
+                    !response ||
+                    !Object.prototype.hasOwnProperty.call(response, 'NG') ||
+                    (response.NG !== null &&
+                        (!response.NG?.JIG_NO || Array.isArray(response.NG)))
+                )
                     throw new Error('รูปแบบข้อมูล NG ไม่ถูกต้อง');
                 defect = response.NG;
                 section.hidden = defect === null;
@@ -214,7 +266,9 @@ $(document).ready(function () {
                 if (defect) VIEW.renderDefect(defect);
             } catch (error) {
                 message.classList.add('is-error');
-                message.textContent = 'โหลดข้อมูล NG ไม่สำเร็จ: ' + (error.message || 'กรุณาลองใหม่');
+                message.textContent =
+                    'โหลดข้อมูล NG ไม่สำเร็จ: ' +
+                    (error.message || 'กรุณาลองใหม่');
                 retryButton.hidden = false;
             }
         },
@@ -225,11 +279,21 @@ $(document).ready(function () {
             const grid = document.createElement('dl');
             grid.className = 'defect-grid';
             const details = [
-                ['Defect Detail · รายละเอียดข้อบกพร่อง', ng.DEFECT_DETAIL, true],
-                ['Action · วิธีดำเนินการ', String(ng.ACTION ?? '').split(',').map((value) => value.trim()).filter(Boolean).join(', ')],
+                [
+                    'Defect Detail · รายละเอียดข้อบกพร่อง',
+                    ng.DEFECT_DETAIL,
+                    true,
+                ],
+                [
+                    'Action · วิธีดำเนินการ',
+                    String(ng.ACTION ?? '')
+                        .split(',')
+                        .map((value) => value.trim())
+                        .filter(Boolean)
+                        .join(', '),
+                ],
                 ['Plan Date · กำหนดดำเนินการ', displayDate(ng.PLAN_DATE)],
                 ['Corrective Action · การแก้ไข', ng.CORRECTIVE, true],
-                ['Location · สถานที่', locationLabel(ng.LOCATION), true],
             ];
             details.forEach(([label, value, wide]) => {
                 const field = document.createElement('div');
@@ -275,20 +339,49 @@ $(document).ready(function () {
                     remove.onclick = async () => {
                         if (fileBusy) return;
                         fileBusy = true;
-                        const controls = [...page.querySelectorAll('button,input,textarea')];
-                        const disabled = controls.map(control => control.disabled);
+                        const controls = [
+                            ...page.querySelectorAll('button,input,textarea'),
+                        ];
+                        const disabled = controls.map(
+                            (control) => control.disabled,
+                        );
                         try {
-                            controls.forEach(control => { control.disabled = true; });
-                            const confirmation = await Swal.fire({ icon: 'warning', title: 'ยืนยันลบไฟล์?', text: file.FILE_NAME,
-                                showCancelButton: true, confirmButtonText: 'ลบไฟล์', cancelButtonText: 'ยกเลิก' });
+                            controls.forEach((control) => {
+                                control.disabled = true;
+                            });
+                            const confirmation = await Swal.fire({
+                                icon: 'warning',
+                                title: 'ยืนยันลบไฟล์?',
+                                text: file.FILE_NAME,
+                                showCancelButton: true,
+                                confirmButtonText: 'ลบไฟล์',
+                                cancelButtonText: 'ยกเลิก',
+                            });
                             if (!confirmation.isConfirmed) return;
-                            const result = await deleteJigFile(key, file.FILE_SEQ, page.dataset.empno);
-                            storedFiles = storedFiles.filter(item => item.FILE_SEQ !== file.FILE_SEQ);
-                            if (result.warning) await Swal.fire({ icon: 'warning', title: 'ลบรายการไฟล์แล้ว', text: result.warning });
+                            const result = await deleteJigFile(
+                                key,
+                                file.FILE_SEQ,
+                                page.dataset.empno,
+                            );
+                            storedFiles = storedFiles.filter(
+                                (item) => item.FILE_SEQ !== file.FILE_SEQ,
+                            );
+                            if (result.warning)
+                                await Swal.fire({
+                                    icon: 'warning',
+                                    title: 'ลบรายการไฟล์แล้ว',
+                                    text: result.warning,
+                                });
                         } catch (error) {
-                            await Swal.fire({ icon: 'error', title: 'ลบไฟล์ไม่สำเร็จ', text: error.message });
+                            await Swal.fire({
+                                icon: 'error',
+                                title: 'ลบไฟล์ไม่สำเร็จ',
+                                text: error.message,
+                            });
                         } finally {
-                            controls.forEach((control, i) => { control.disabled = disabled[i]; });
+                            controls.forEach((control, i) => {
+                                control.disabled = disabled[i];
+                            });
                             fileBusy = false;
                             VIEW.renderFiles();
                         }
@@ -329,10 +422,17 @@ $(document).ready(function () {
         },
         async validate() {
             if (!loaded || !editable || fileBusy) return false;
-            for (const [name, label] of [['delete_reason', 'เหตุผลการลบ'], ['delete_detail', 'รายละเอียดเพิ่มเติม']]) {
+            for (const [name, label] of [
+                ['delete_reason', 'เหตุผลการลบ'],
+                ['delete_detail', 'รายละเอียดเพิ่มเติม'],
+            ]) {
                 const input = form.elements.namedItem(name);
                 if (!input.value.trim() || input.value.trim().length > 1000) {
-                    await Swal.fire({ icon: 'warning', title: `กรุณากรอก${label}`, text: 'กรอกข้อมูลไม่เกิน 1,000 ตัวอักษร' });
+                    await Swal.fire({
+                        icon: 'warning',
+                        title: `กรุณากรอก${label}`,
+                        text: 'กรอกข้อมูลไม่เกิน 1,000 ตัวอักษร',
+                    });
                     input.focus();
                     return false;
                 }
@@ -340,28 +440,72 @@ $(document).ready(function () {
             return true;
         },
         async payload(formKey) {
-            const incoming = await uploadJigFiles(formKey, page.dataset.empno, attachments);
-            const next = Math.max(0, ...storedFiles.map(file => Number(file.FILE_SEQ))) + 1;
+            const incoming = await uploadJigFiles(
+                formKey,
+                page.dataset.empno,
+                attachments,
+            );
+            const next =
+                Math.max(
+                    0,
+                    ...storedFiles.map((file) => Number(file.FILE_SEQ)),
+                ) + 1;
             return {
                 REASON: form.elements.delete_reason.value.trim(),
                 DETAIL: form.elements.delete_detail.value.trim(),
-                FILES: [...storedFiles, ...incoming.map((file, i) => ({ ...file, FILE_SEQ: next + i, CREATE_BY: page.dataset.empno }))]
-                    .map(file => Object.fromEntries(['FILE_SEQ', 'FILE_NAME', 'FILE_PATH', 'FILE_TYPE', 'FILE_SIZE', 'CREATE_BY']
-                        .filter(name => file[name] != null).map(name => [name, file[name]]))),
+                FILES: [
+                    ...storedFiles,
+                    ...incoming.map((file, i) => ({
+                        ...file,
+                        FILE_SEQ: next + i,
+                        CREATE_BY: page.dataset.empno,
+                    })),
+                ].map((file) =>
+                    Object.fromEntries(
+                        [
+                            'FILE_SEQ',
+                            'FILE_NAME',
+                            'FILE_PATH',
+                            'FILE_TYPE',
+                            'FILE_SIZE',
+                            'CREATE_BY',
+                        ]
+                            .filter((name) => file[name] != null)
+                            .map((name) => [name, file[name]]),
+                    ),
+                ),
             };
         },
         async persist() {
             const payload = await VIEW.payload(key);
-            const snapshot = checkDeleteResponse(await saveJigDeleteForm(key, { ...payload, UPDATE_BY: page.dataset.empno }));
+            const snapshot = checkDeleteResponse(
+                await saveJigDeleteForm(key, {
+                    ...payload,
+                    UPDATE_BY: page.dataset.empno,
+                }),
+            );
             storedFiles = snapshot.FILES;
             attachments = [];
         },
         async persistCreation(formKey) {
             const payload = await VIEW.payload(formKey);
-            checkDeleteResponse(await createJigDeleteForm({ ...formKey, JIG_NO: page.dataset.jigno, ...payload }));
+            checkDeleteResponse(
+                await createJigDeleteForm({
+                    ...formKey,
+                    JIG_NO: page.dataset.jigno,
+                    ...payload,
+                }),
+            );
         },
         async addFiles(files) {
-            if (!loaded || !editable || fileBusy || fields.disabled || picker.disabled) return;
+            if (
+                !loaded ||
+                !editable ||
+                fileBusy ||
+                fields.disabled ||
+                picker.disabled
+            )
+                return;
             const next = [...attachments];
             Array.from(files).forEach((file) => {
                 if (
@@ -396,8 +540,10 @@ $(document).ready(function () {
         },
     };
     retry.onclick = () => void VIEW.load();
-    document.querySelector('#delete-checkpoint-retry').onclick = () => void VIEW.loadCheckpoints();
-    document.querySelector('#delete-defect-retry').onclick = () => void VIEW.loadDefect();
+    document.querySelector('#delete-checkpoint-retry').onclick = () =>
+        void VIEW.loadCheckpoints();
+    document.querySelector('#delete-defect-retry').onclick = () =>
+        void VIEW.loadDefect();
     picker.onchange = () => void VIEW.addFiles(picker.files);
     dropzone.addEventListener('dragenter', (event) => {
         event.preventDefault();
@@ -418,7 +564,9 @@ $(document).ready(function () {
         void VIEW.addFiles(event.dataTransfer.files);
     });
     const send = initializeDeleteCreation({
-        page, context: page.dataset, validate: () => VIEW.validate(),
+        page,
+        context: page.dataset,
+        validate: () => VIEW.validate(),
         persistCreation: (formKey) => VIEW.persistCreation(formKey),
     });
     form.addEventListener('submit', (event) => {

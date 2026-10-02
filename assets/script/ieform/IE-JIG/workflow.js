@@ -239,13 +239,13 @@ export function initializeJigWorkflow(editor) {
         };
         return withBusy(async (lock) => {
             if (context.mode !== '2' || approved) return false;
-            if (action === 'returnb' && requesterStep) return false;
+            if (action === 'return' && requesterStep) return false;
             if (action === 'approve' && requesterStep) {
                 await editor.ready;
                 if (!(await editor.validate())) return false;
             }
             const remark = remarkInput.value.trim();
-            if (action === 'returnb' && !remark) {
+            if (action === 'return' && !remark) {
                 remarkInput.setAttribute('aria-invalid', 'true');
                 await Swal.fire({
                     icon: 'warning',
@@ -328,7 +328,7 @@ export function initializeJigWorkflow(editor) {
         });
     }
     document.querySelector('#jig-approve').onclick = () => void act('approve');
-    returnButton.onclick = () => void act('returnb');
+    document.querySelector('#jig-return').onclick = () => void act('return');
     void load();
     return {
         save: () =>
