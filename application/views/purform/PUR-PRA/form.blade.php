@@ -103,30 +103,7 @@
                         {{-- Refer Price compare file. --}}
                         <fieldset class="hidden fieldset" id="price-compare-file-fieldset">
                             <legend class="fieldset-legend req">Refer Price compare file.</legend>
-                            <div
-                                class="flex flex-wrap items-center gap-4 p-5 rounded-xl bg-base-200/50 border border-base-300">
-                                <div
-                                    class="flex items-center justify-center w-12 h-12 rounded-lg bg-error/10 shrink-0">
-                                    <i class="fi fi-sr-file-pdf text-2xl text-error"></i>
-                                </div>
-
-                                <div class="flex-1 min-w-40">
-                                    <div class="font-semibold">PDF File</div>
-                                    <div id="price-compare-file-name" class="text-sm text-base-content/60 truncate">
-                                        Please select a PDF file
-                                    </div>
-                                </div>
-
-                                <!-- Actions -->
-                                <div class="flex items-center gap-3 ms-auto">
-                                    <label for="PRICE_COMPARE_FILE" class="btn btn-outline btn-sm cursor-pointer">
-                                        <i class="fi fi-sr-folder-open"></i>
-                                        Choose File
-                                    </label>
-                                </div>
-
-                                <input type="file" id="PRICE_COMPARE_FILE" class="hidden" accept=".pdf" />
-                            </div>
+                            <div id="price-compare-file-container"></div>
                         </fieldset>
                         <div></div>
                         <div class="col-span-2">

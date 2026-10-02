@@ -2,7 +2,7 @@ import { showMessage } from '@amec/webasset/utils';
 import { getK850mpData } from '../PUR-CPC/data';
 import { getUser } from '@amec/webasset/api/amec';
 import { tableComparison } from '../PUR-CPC/table-comparison';
-import { getPdfViewer } from './pdfViewer';
+import { getPdfViewer } from '@amec/webasset/components/pdfViewer';
 
 /**
  * @author Sutthipong Tangmongkhoncharoen(24008)
