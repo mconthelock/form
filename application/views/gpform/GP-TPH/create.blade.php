@@ -103,8 +103,8 @@
                                     <th class="p-3 text-left">Name</th>
                                     <th class="p-3 text-left">Division</th>
                                     <th class="p-3 text-left">Department</th>
-                                    <th class="p-3 text-left">Section</th>
-                                    <th class="p-3 text-center">Action</th>
+                                    <th class="p-3 text-left">SECTION</th>
+                                    <th class="p-3 text-center" data-action-column>Action</th>
                                 </tr>
                             </thead>
                             <tbody id="visitor-table-body">
@@ -120,7 +120,7 @@
                                             class="input input-sm input-bordered w-full"></td>
                                     <td class="border p-2"><input type="text" name="visitor_sec" id="visitor_sec"
                                             class="input input-sm input-bordered w-full"></td>
-                                    <td class="border p-2 text-center">
+                                        <td class="border p-2 text-center" data-action-column>
                                         <button type="button" class="btn btn-sm btn-error remove-row">×</button>
                                     </td>
                                 </tr>
@@ -142,7 +142,7 @@
                             class="input input-sm input-bordered w-full"></td>
                     <td class="border p-2"><input type="text" name="visitor_section[]"
                             class="input input-sm input-bordered w-full"></td>
-                    <td class="border p-2 text-center"><button type="button"
+                        <td class="border p-2 text-center" data-action-column><button type="button"
                             class="btn btn-sm btn-error remove-row">×</button></td>
                 </tr>
             </template>
@@ -244,7 +244,7 @@
                                 <th class="border p-2 text-left">Area</th>
                                 <th class="border p-2 text-left">Level</th>
                                 <th class="border p-2 text-left">Area Owner</th>
-                                <th class="border p-2 text-center">Action</th>
+                                <th class="border p-2 text-center" data-action-column>Action</th>
                             </tr>
                         </thead>
                         <tbody id="area-table-body">
@@ -273,6 +273,7 @@
                     </tr>
                 </template> --}}
                 <div id="sentRequest"></div>
+                <div id="sentApprove" class="mt-6"></div>
         </form>
     </div>
 
