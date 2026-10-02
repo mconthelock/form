@@ -314,6 +314,7 @@ $(document).on('change', '.radio-type', async function () {
         countryManager.disabled(false);
         countryEnManager.value = '';
     }
+    paymentTermManager.filterByRadio(val);
 });
 
 $(document).on('input', '#AMOUNT', async function () {
@@ -339,10 +340,23 @@ $(document).on('input', '.input-decimal', async function () {
     value = value.replace(/[^0-9.]/g, '');
     value = value.replace(/(\..*)\./g, '$1');
     value = value.replace(/(\.\d{2})\d+/g, '$1');
-    $(this).val(value);
+    let parts = value.split('.');
+    if (parts[0]) {
+        parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    }
+    $(this).val(parts.join('.'));
 });
 
 $(document).on('input', '.input-integer', function () {
+    let value = $(this).val();
+    value = value.replace(/[^0-9]/g, '');
+    if (value) {
+        value = value.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    }
+    $(this).val(value);
+});
+
+$(document).on('input', '.input-year', function () {
     let value = $(this).val();
     value = value.replace(/[^0-9]/g, '');
     $(this).val(value);
@@ -696,8 +710,8 @@ $(document).on('click', '#btnDraft, #btnRequest', async function () {
     $('input[name="ACTION"]').val('save');
     const formElement = $('#frmmain')[0];
     const filteredFormData = await packPurevaFormData(formElement);
-    //console.log('ddddddddddddddddd');
-    //logFormData(filteredFormData);
+    console.log('ddddddddddddddddd');
+    logFormData(filteredFormData);
     //console.log(filteredFormData);
     //console.log('ddddddddddddddddd');
 
@@ -818,10 +832,12 @@ $(document).on('click', 'button[name="btnAction"]', async function () {
     }
 });
 $(document).on('input', '.empnum', function () {
-    const directValue = Number($('input[name="EMPDIRECT"]').val()) || 0;
-    const indirectValue = Number($('input[name="EMPINDIRECT"]').val()) || 0;
+    const directValue =
+        Number($('input[name="EMPDIRECT"]').val().replace(/,/g, '')) || 0;
+    const indirectValue =
+        Number($('input[name="EMPINDIRECT"]').val().replace(/,/g, '')) || 0;
     const total = directValue + indirectValue;
-    $('.totemp').val(total);
+    $('.totemp').val(total).trigger('input');
 });
 
 $(document).on('change', 'input[name="VENDGROUP"]', function () {
@@ -861,11 +877,12 @@ $(document).on('change', 'input[name="VENDGROUP"]', function () {
 
 $(document).ready(async function () {
     const countries = await getCountries();
+    countries.sort((a, b) => a.name_en.localeCompare(b.name_en));
     const countriesData = countries.map((c) => ({
-        id: c.nameen,
-        value: c.nameen,
-        text: c.nameen,
-        nameth: c.nameth,
+        id: c.name_en,
+        value: c.name_en,
+        text: c.name_en,
+        nameth: c.name_th,
     }));
 
     // const province = await getProvinces();
@@ -1459,6 +1476,19 @@ function renderNewFilesUI(inputId, dataTransfer, container) {
 
 async function packPurevaFormData(formElement) {
     const fd = new FormData(formElement);
+    $('.input-decimal, .input-integer').each(function () {
+        let name = $(this).attr('name'); // ดึงชื่อ name ของช่องนั้นๆ
+        let valueWithComma = $(this).val();
+
+        // ถ้าช่องนี้มีการตั้งค่า name ไว้
+        if (name) {
+            // ลบจุลภาคออก
+            let cleanValue = valueWithComma.replace(/,/g, '');
+
+            // อัปเดตทับค่าเดิมใน FormData ด้วย .set()
+            fd.set(name, cleanValue);
+        }
+    });
     const getAll = (key) => fd.getAll(key);
     const getStr = (key) => fd.get(key) || '';
 
@@ -1571,7 +1601,7 @@ async function packPurevaFormData(formElement) {
     appendObjArray('PROFIT_TURNOVERS', PROFIT_TURNOVERS);
     appendObjArray('RELATIONS', RELATIONS);
 
-    return filterFormData(fd);
+    return filterFormData(fd, { empty: true });
 }
 
 function checkAttFile() {

@@ -29,10 +29,10 @@ export const tradeManager = {
                 data: data,
                 size: 'sm',
                 placeholder: '----Select----',
-                search: false,
-                clear: false,
+                search: true,
+                clear: true,
                 width: '60%',
-                emptyValue: false,
+                emptyValue: true,
             });
             $(`#${id}`).on('change', function () {
                 $(`#${id}_HIDDEN`).val($(this).val());

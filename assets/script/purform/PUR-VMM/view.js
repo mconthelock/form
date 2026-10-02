@@ -55,7 +55,7 @@ $(async function () {
         $('#TAXID').text(formvmm.TAXID);
         $('#CANO').text(formvmm.CANO);
         $('#BANO').text(formvmm.BANO);
-        $('#constdcur').text(formvmm.CURRENCY.CURR_NAME);
+        $('#constdcur').text(formvmm.CURRENCY?.CURR_NAME);
         $('#VPAYTO').text(formvmm.VPAYTO || '-');
         $('#VTYPE').text(formvmm.VTYPE || '-');
         $('#VPAYTY').text(formvmm.VPAYTY || '-');
@@ -79,8 +79,8 @@ $(async function () {
         $('input[name="VENDNAME"]').val(formvmm.VENDNAME);
         if (formvmm.TRADE_CODE) {
             const trade = formvmm.TRADE.TRADE_SHIPBY
-                ? `${formvmm.TRADE.TRADE_NAME} (${formvmm.TRADE.TRADE_SHIPBY})`
-                : formvmm.TRADE.TRADE_NAME;
+                ? `${formvmm.TRADE_CODE}_${formvmm.TRADE.TRADE_NAME} to ${formvmm.TRADE.TRADE_SHIPTO} (${formvmm.TRADE.TRADE_SHIPBY})`
+                : `${formvmm.TRADE_CODE}_${formvmm.TRADE.TRADE_NAME}`;
             $('#TRADE_CODE').text(trade);
         }
 

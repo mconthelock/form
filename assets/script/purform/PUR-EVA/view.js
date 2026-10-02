@@ -71,8 +71,6 @@ $(async function () {
         } else {
             $('.txtremark').hide();
         }
-        //filterFormData(formeva);
-        //logFormData(formeva);
 
         cextdata = await getExtData({ ...form, EMPNO: apvno });
         $('#form-detail').html(formDetail);
@@ -102,47 +100,6 @@ $(async function () {
         };
         bindScoreData(formeva.SCORES);
 
-        // const topicMap = {
-        //     'FINANCIAL STATEMENT': 'FIN_LEVEL',
-        //     'QUALITY CLASSIFICATION': 'QA_LEVEL',
-        //     ENVIRONMENTAL: 'ENV_LEVEL',
-        //     'ADVANCE VERIFYING': 'VERIFYING',
-        //     'PRICE LEVEL': 'PRICE_LEVEL',
-        //     'ORDER MANAGEMENT': 'ORDER_LEVEL',
-        //     'CUSTOMER SERVICE': 'CUSTOMER_LEVEL',
-        //     'STANDARD DELIVERY': 'DELIVERY_LEVEL',
-        // };
-
-        // let totalScore = 0;
-        // formeva.SCORES?.forEach((item) => {
-        //     const group = topicMap[item.TOPIC];
-        //     if (group)
-        //         $(`input[name="${group}"][value="${item.SCORE}"]`).prop(
-        //             'checked',
-        //             true,
-        //         );
-        //     totalScore += Number(item.SCORE || 0);
-        // });
-
-        // const grades = [
-        //     { min: 80, text: 'EXCELLENT (80 UP)', class: 'text-green-600' },
-        //     { min: 70, text: 'GOOD (70 UP)', class: 'text-blue-600' },
-        //     { min: 60, text: 'FAIR (60 UP)', class: 'text-orange-500' },
-        //     { min: 40, text: 'POOR (40 UP)', class: 'text-orange-500' },
-        //     {
-        //         min: 0,
-        //         text: 'NOT APPRICABLE (LESSTHAN 40)',
-        //         class: 'text-red-600',
-        //     },
-        // ].find((g) => totalScore >= g.min);
-
-        // $('.total-score').text(totalScore);
-        // $('.judgement-result')
-        //     .text(grades.text)
-        //     .attr(
-        //         'class',
-        //         `uppercase italic ml-2 judgement-result ${grades.class}`,
-        //     );
         const isNonPro = formeva.VENDGROUP === '6:Non-Production (6)';
         $('.nonpro').toggle(isNonPro);
         $('.pro').toggle(!isNonPro);
@@ -153,8 +110,8 @@ $(async function () {
         $('#thprofit').text(isNonPro ? 'Net Profit/Loss' : 'Turnover');
         $('#VENDPURPOSE').closest('.info-row').toggle(!isNonPro);
 
-        console.log(isNonPro);
-        console.log(cextdata);
+        // console.log(isNonPro);
+        // console.log(cextdata);
         if (!isNonPro) {
             const judgementMap = {
                 A: 'A: EXCELLENT (80 UP)',
@@ -165,6 +122,7 @@ $(async function () {
             };
 
             let htmlContent = '';
+            //console.log('xxxx' + formeva.MJUDGEMENT);
 
             if (cextdata == '02') {
                 // สร้าง Radio ทั้งหมดแบบสั้นๆ ด้วยการวนลูปจาก Map
@@ -185,16 +143,20 @@ $(async function () {
             <div class="flex flex-col gap-2">${radios}</div>
         </div>
     `;
-            } else if (formeva?.MJUDGEMENT) {
+                $('#CONJUDGEMENT').html(htmlContent);
+            }
+            if (formeva?.MJUDGEMENT && form.MODE != 2) {
                 htmlContent = `
-        <div class="flex flex-col gap-2 border border-gray-200 rounded-md p-3 bg-gray-50 text-sm">
+        <div class="flex flex-col gap-2 border border-gray-200 rounded-md p-3 bg-white text-sm">
             <span class="font-semibold underline">TOTAL EVALUATION</span>
             <div class="font-medium text-gray-800">${judgementMap[formeva.MJUDGEMENT] || formeva.MJUDGEMENT}</div>
         </div>
     `;
+                $('#SHOWCONJUDGEMENT').html(htmlContent);
             }
+            // console.log(htmlContent);
+
             // นำไปใส่ใน div ที่กำหนด
-            $('#CONJUDGEMENT').html(htmlContent);
         }
 
         if (isNonPro) {
@@ -261,8 +223,18 @@ $(async function () {
             $('#VENDCAT').text(formeva.VENDCAT || '-');
             $('#TAX_ID_PRO').text(formeva.TAX_ID || '-');
             $('#CAPITAL').text(
-                `${setRound(Number(formeva.CAPITAL), 2)} ${formeva.CAPCUR.CURR_NAME || '-'}`,
+                `${setRound(Number(formeva.CAPITAL), 2)} ${formeva.CAPCUR?.CURR_NAME || '-'}`,
             );
+
+            const isYyyyMmDd = /^\d{4}-\d{2}-\d{2}$/.test(formeva.ESTABLISHED);
+
+            const established = formeva.ESTABLISHED
+                ? isYyyyMmDd
+                    ? formatDate(formeva.ESTABLISHED, 'DD/MM/YYYY')
+                    : formeva.ESTABLISHED
+                : '';
+
+            $('#ESTABLISHED').text(established || '-');
             $('#COM_TYPE').text(
                 formeva.COM_TYPE === 'อื่นๆ ระบุ'
                     ? `อื่นๆ ระบุ : ${formeva.COM_OTHER || '-'}`
@@ -336,11 +308,15 @@ $(async function () {
         let vendGroup = formeva.VENDGROUP?.includes(':')
             ? formeva.VENDGROUP.split(':')[1]
             : formeva.VENDGROUP;
+        let vendPurpose = formeva.VENDPURPOSE?.includes(':')
+            ? formeva.VENDPURPOSE.split(':')[1]
+            : formeva.VENDGROUP;
 
         $('#OPERATION').text(opText);
         $('#VENDGROUP').text(vendGroup);
+        $('#VENDPURPOSE').text(vendPurpose);
         $('#COMNAME').html(
-            `${formeva.COMNAME} <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 ml-2 shrink-0">${formeva.VENDTYPE}</span>`,
+            `${formeva.COMNAME} <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 ml-2 shrink-0">${formeva.VENDTYPE || ''}</span>`,
         );
 
         $('#ADDREN').text(
@@ -377,7 +353,8 @@ $(async function () {
         renderFilesByType(attachedFiles, 13, 'file-type-13');
         renderFilesByType(attachedFiles, 2, 'file-type-2');
         $('input[name="JUDGEMENT"]').val(formeva.JUDGEMENT);
-        console.log(form.MODE);
+        //console.log(form.MODE);
+        //console.log('extdata =' + cextdata + '<<<<<');
         if (cst != '0') {
             $('#form-action-container').html(
                 webflowSubmit({
@@ -385,13 +362,15 @@ $(async function () {
                     flowhtml: flow.html,
                     approve: form.MODE == 2 ? true : false,
                     reject:
-                        form.MODE == 2 && ['01', '02', '03'].includes(cextdata)
+                        form.MODE == 2 &&
+                        ['01', '02', '03', 'MG'].includes(cextdata)
                             ? true
                             : false,
                     remark: false,
                     back: form.MODE == 2 ? true : false,
                     return:
-                        form.MODE == 2 && ['01', '02'].includes(cextdata)
+                        form.MODE == 2 &&
+                        ['01', '02', , 'MG'].includes(cextdata)
                             ? true
                             : false,
                     returnb: form.MODE == 2 && cextdata == '03' ? true : false,

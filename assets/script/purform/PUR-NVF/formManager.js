@@ -281,6 +281,7 @@ export const vendorTypeManager = {
             countryThManager.value = '';
             countryManager.disabled(false);
         }
+        paymentTermManager.filterByRadio(type);
     },
 };
 
@@ -634,11 +635,12 @@ export const formManager = {
                     text: t.STERMDESC,
                 }));
                 const countries = await getCountries();
+                countries.sort((a, b) => a.name_en.localeCompare(b.name_en));
                 const countriesData = countries.map((c) => ({
-                    id: c.nameen,
-                    value: c.nameen,
-                    text: c.nameen,
-                    nameth: c.nameth,
+                    id: c.name_en,
+                    value: c.name_en,
+                    text: c.name_en,
+                    nameth: c.name_th,
                 }));
                 paymentTermManager.init(termdata);
                 countryManager.init(countriesData);
@@ -667,11 +669,14 @@ export const formManager = {
                         text: t.STERMDESC,
                     }));
                     const countries = await getCountries();
+                    countries.sort((a, b) =>
+                        a.name_en.localeCompare(b.name_en),
+                    );
                     const countriesData = countries.map((c) => ({
-                        id: c.nameen,
-                        value: c.nameen,
-                        text: c.nameen,
-                        nameth: c.nameth,
+                        id: c.name_en,
+                        value: c.name_en,
+                        text: c.name_en,
+                        nameth: c.name_th,
                     }));
 
                     paymentTermManager.init(termdata);
@@ -866,6 +871,7 @@ export const formManager = {
 
 export const paymentTermManager = {
     list: ['TERM_PAYMENT'],
+    originalData: [],
     get select() {
         return $('.termcode');
     },
@@ -886,6 +892,7 @@ export const paymentTermManager = {
      * @param {{value: string, text: string}[]} data
      */
     async init(data) {
+        this.originalData = data;
         for (const id of this.list) {
             await setSelect2({
                 id: id,
@@ -901,6 +908,60 @@ export const paymentTermManager = {
                 $(`#${id}_HIDDEN`).val($(this).val());
             });
         }
+    },
+    filterByRadio(radioValue) {
+        let filteredData = this.originalData;
+
+        if (radioValue === 'Local') {
+            // สมมติว่าถ้าเลือก Radio A ให้กรองข้อมูล
+
+            // กรองให้เหลือเฉพาะ item.value ที่ขึ้นต้นด้วย 'C' หรือ 'T'
+            filteredData = this.originalData.filter((item) => {
+                // แปลงเป็นตัวพิมพ์ใหญ่ก่อนเผื่อข้อมูลมีพิมพ์เล็กพิมพ์ใหญ่ผสมกัน
+                const val = item.value.toUpperCase();
+                return val.startsWith('C');
+            });
+        } else if (radioValue === 'Oversea') {
+            // กรองให้เหลือเฉพาะ item.value ที่ขึ้นต้นด้วย 'C' หรือ 'T'
+            filteredData = this.originalData.filter((item) => {
+                // แปลงเป็นตัวพิมพ์ใหญ่ก่อนเผื่อข้อมูลมีพิมพ์เล็กพิมพ์ใหญ่ผสมกัน
+                const val = item.value.toUpperCase();
+                return val.startsWith('T');
+            });
+        } else {
+            // ถ้าเลือก Radio อื่นๆ อาจจะให้แสดงทั้งหมด หรือกรองแบบอื่น
+            filteredData = this.originalData;
+        }
+
+        // --- ส่วนอัปเดตค่าลง Select2 ---
+        this.list.forEach((id) => {
+            const $select = $(`#${id}`);
+            const currentValue = $select.val();
+
+            $select.empty();
+
+            filteredData.forEach((item) => {
+                const newOption = new Option(
+                    item.text,
+                    item.value,
+                    false,
+                    false,
+                );
+                $select.append(newOption);
+            });
+
+            const isValueStillExist = filteredData.some(
+                (item) => item.value === currentValue,
+            );
+
+            if (isValueStillExist) {
+                $select.val(currentValue).trigger('change');
+            } else {
+                const firstVal =
+                    filteredData.length > 0 ? filteredData[0].value : null;
+                $select.val(firstVal).trigger('change');
+            }
+        });
     },
     /**
      * Sync value to other select2 element

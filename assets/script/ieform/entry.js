@@ -1,5 +1,7 @@
 const path = require("path");
 module.exports = {
+	iejig: "./assets/script/ieform/IE-JIG/main.js",
+	iejigDelete: "./assets/script/ieform/IE-JIG/delete.js",
 	//IE-BGR: Budget Requisition Form
 	iebgrReport: "./assets/script/ieform/IE-BGR/report.js",
 

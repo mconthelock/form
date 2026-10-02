@@ -216,6 +216,10 @@
                         <div id="CAPITAL" class="text-gray-700 text-sm"></div>
                     </div>
                     <div class="grid grid-cols-[220px_1fr] gap-3 items-baseline eval-row">
+                        <div class="font-semibold text-sm">Established :</div>
+                        <div id="ESTABLISHED" class="text-gray-700 text-sm"></div>
+                    </div>
+                    <div class="grid grid-cols-[220px_1fr] gap-3 items-baseline eval-row">
                         <div class="font-semibold text-sm">Type of Company :</div>
                         <div id="COM_TYPE" class="text-gray-700 text-sm"></div>
                     </div>
@@ -860,7 +864,7 @@
                 </div>
             </div>
         </div>
-
+        <div id="SHOWCONJUDGEMENT"></div>
         <div class="border border-gray-300 shadow-sm rounded-lg pt-5 px-5 pb-5 mt-8 mb-5 bg-white relative txtremark">
             <div id="CONJUDGEMENT"></div>
             <div>
