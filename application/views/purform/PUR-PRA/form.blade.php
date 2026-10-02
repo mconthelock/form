@@ -111,9 +111,9 @@
                                 </div>
 
                                 <div class="flex-1 min-w-40">
-                                    <div class="font-semibold">Excel File</div>
+                                    <div class="font-semibold">PDF File</div>
                                     <div id="price-compare-file-name" class="text-sm text-base-content/60 truncate">
-                                        Please select an Excel file
+                                        Please select a PDF file
                                     </div>
                                 </div>
 
@@ -125,13 +125,15 @@
                                     </label>
                                 </div>
 
-                                <input type="file" id="PRICE_COMPARE_FILE" class="hidden" accept=".xlsx,.xls" />
+                                <input type="file" id="PRICE_COMPARE_FILE" class="hidden" accept=".pdf" />
                             </div>
                         </fieldset>
                         <div></div>
                         <div class="col-span-2">
                             <table id="table-comparison" class="table table-zebra table-sm">
                             </table>
+                        </div>
+                        <div class="col-span-2" id="price-compare-container">
                         </div>
                     </div>
                 </section>

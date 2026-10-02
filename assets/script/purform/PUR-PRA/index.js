@@ -9,6 +9,7 @@ import { modalSelectPriceComparison } from './modal/select-price-comparison';
 import { tableDraft } from '../PUR-CPC/table-draft';
 import { checkPlanner, setAutoField } from './function';
 import { showLoader } from '@amec/webasset/preloader';
+import { PdfViewer } from './pdfViewer';
 
 $(async function () {
     try {
@@ -22,6 +23,12 @@ $(async function () {
         $('input[name="form-mode"][value="1"]').prop('checked', true);
         setAutoField({ mode: 1 });
         modalSelectPriceComparison.init();
+        new PdfViewer({
+            inputId: 'PRICE_COMPARE_FILE',
+            containerId: 'price-compare-container',
+            iframeId: 'price-compare-iframe',
+            selectedFileNameId: 'price-compare-file-name',
+        });
     } catch (error) {
         console.error(error);
         renderLoadError(error.message);
