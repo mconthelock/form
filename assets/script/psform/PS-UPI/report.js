@@ -1,5 +1,6 @@
 import { fetchUtils } from '@amec/webasset/api/fetch-utils';
 import { createTable } from '@amec/webasset/dataTable';
+import { formatDate } from '@amec/webasset/dayjs';
 
 let reportTable = null;
 
@@ -19,8 +20,28 @@ const columns = [
             `;
         },
     },
-    { title: 'Section Request', data: 'VORGNO', defaultContent: '' },
-    { title: 'Requester', data: 'VREQNO', defaultContent: '' },
+    {
+        title: 'Request Date',
+        data: 'DREQDATE',
+        className: 'text-left!',
+        render(data, type, row) {
+            return formatDate(data, 'YYYY-MM-DD') || '';
+        },
+    },
+    {
+        title: 'Section Request',
+        data: null,
+        render(data, type, row) {
+            return `${row.SDEPT} / ${row.SSEC}`;
+        },
+    },
+    {
+        title: 'Requester',
+        data: 'VREQNO',
+        render(data, type, row) {
+            return `${row.SEMPNO} - ${row.SNAME}`;
+        },
+    },
     {
         title: 'Status approve',
         data: 'CST',
@@ -105,7 +126,7 @@ async function renderReport(rows) {
 function clearReportTable() {
     destroyReportTable();
     $('#ReportTable tbody').html(
-        '<tr><td colspan="5" class="py-8 text-center text-base-content/50">Search to display requisitions.</td></tr>',
+        '<tr><td colspan="6" class="py-8 text-center text-base-content/50">Search to display requisitions.</td></tr>',
     );
 }
 

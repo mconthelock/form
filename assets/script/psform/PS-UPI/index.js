@@ -182,23 +182,18 @@ $(document).ready(async function () {
 
     $('#btnAddPart').on('click', addRow);
 
-    $(document).on('click', '.btn-search-pur', async function () {
-        const $row = $(this).closest('tr');
-        const currentPurCode = $row.find('.part-purcode').val();
-        $row.removeData('foundPurCode');
+    $(document).on('blur', '.part-purcode', async function () {
+        const $input = $(this);
+        const $row = $input.closest('tr');
+        const currentPurCode = String($input.val() || '').trim();
 
         if (!currentPurCode) {
-            showMessage('Please enter a PUR Code');
-            $(this).closest('tr').find('.part-purcode').focus();
-            $(this).closest('tr').find('.part-purcode').addClass('input-error');
+            $input.removeClass('input-error');
             return;
-        } else {
-            $(this)
-                .closest('tr')
-                .find('.part-purcode')
-                .removeClass('input-error');
         }
+        if (String($row.data('foundPurCode') || '') === currentPurCode) return;
 
+        $input.removeClass('input-error');
         const dataPart = await fetchUtils({
             url: process.env.APP_API + '/warehouse/itemmaster/findall',
             data: { IPROD: currentPurCode },
@@ -206,6 +201,7 @@ $(document).ready(async function () {
 
         const part = dataPart?.[0];
         if (!part) {
+            $input.addClass('input-error');
             showMessage('PUR Code not found');
             $row.find(
                 '.part-desc, .part-drawing, .part-address, .part-whi',
