@@ -114,8 +114,8 @@
                                 {{-- @if (($mode == $MODE_EDIT && $cextData >= 2) || (($form[0]->CST == '0' || $mode == $MODE_EDIT) && in_array($empno, [$form[0]->VREQNO, $form[0]->VINPUTER]))) --}}
                                 @if (($form[0]->CST == '0' || $mode == $MODE_EDIT) && in_array($empno, [$form[0]->VREQNO, $form[0]->VINPUTER]))
                                     <input type="text" name="txtOrder"
-                                        class="w-1/3 h-8 px-2 border border-gray-300 bg-white focus:outline-none focus:ring-1 focus:ring-sky-400 rounded-sm req"
-                                        value="{{ $cnform->ORDERNO ?? 'New item' }}" maxlength="9" maxlength>
+                                        class="w-1/3 h-8 px-2 border border-gray-300 bg-white focus:outline-none focus:ring-1 focus:ring-sky-400 rounded-sm "
+                                        value="{{ $cnform->ORDERNO }}" maxlength="9" maxlength>
                                 @else
                                     {{ $cnform->ORDERNO }}
                                 @endif
@@ -185,15 +185,15 @@
                                                     @endif
 
                                                     <!-- <span class="px-2">Rev no. :</span>
-                                <span>
-                                    @if (($form[0]->CST == '0' || $mode == $MODE_EDIT) && in_array($empno, [$form[0]->VREQNO, $form[0]->VINPUTER]))
+                                            <span>
+                                                @if (($form[0]->CST == '0' || $mode == $MODE_EDIT) && in_array($empno, [$form[0]->VREQNO, $form[0]->VINPUTER]))
     <input type="text" name="revNo[]"
-                                    class="w-20 h-8 px-2 border border-gray-300 bg-white focus:outline-none focus:ring-1 focus:ring-sky-400 rounded-sm"
-                                    value="{{ !empty($d->REVNO) ? $d->REVNO : '' }}">
+                                                class="w-20 h-8 px-2 border border-gray-300 bg-white focus:outline-none focus:ring-1 focus:ring-sky-400 rounded-sm"
+                                                value="{{ !empty($d->REVNO) ? $d->REVNO : '' }}">
 @else
     {{ !empty($d->REVNO) ? $d->REVNO : '' }}
     @endif
-                                </span> -->
+                                            </span> -->
 
                                                     @if (($cextData >= 1 && $cextData <= 3) || $cextData == 6 || $cextData == 7)
                                                         <span class="px-2 text-red-600 font-semibold">

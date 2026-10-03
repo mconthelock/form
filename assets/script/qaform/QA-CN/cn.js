@@ -66,6 +66,7 @@ $(document).ready(async function () {
 
             const rsnno = $('input[name="radReason"]:checked').val();
             const radSample = $('input[name="radSample"]:checked').val();
+            const radLoc = $('input[name="radLoc"]:checked').val();
             const submitVal = $('#submit_date').val();
             const inspecVal = $('#inspec_date').val();
             const expchgVal = $('#expchg_date').val();
@@ -159,7 +160,10 @@ $(document).ready(async function () {
                 PURITEM: puritm,
                 INVNO: invno,
                 ORDQ: $('input[name="txtOrdQ"]').val(),
-                PRTLOC: $('input[name="txtprtLoc"]').val(),
+                PRTLOC:
+                    radLoc == '1'
+                        ? 'WareHouse Receive'
+                        : $('input[name="txtprtLoc"]').val(),
                 RQCNREF: $('input[name="txtNoRef"]').val(),
                 ORDERNO: $('input[name="txtOrder"]').val(),
                 DWGNO: dwgArray,
@@ -421,14 +425,6 @@ export async function create(form) {
     return fetchUtils({
         url: `${process.env.APP_API}/qaform/qa-cn/create`,
         method: 'POST',
-        data: form,
-    });
-}
-
-export async function approve(form) {
-    return fetchUtils({
-        url: `${process.env.APP_API}/qaform/qa-cn/approve`,
-        method: 'PATCH',
         data: form,
     });
 }
