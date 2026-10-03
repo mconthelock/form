@@ -20,7 +20,6 @@ import { splashScreen } from './login-utils';
 import { showLoader } from '@amec/webasset/preloader';
 
 var camera;
-
 $(document).ready(async function () {
     await splashScreen();
     await createCarousel('login');
@@ -51,6 +50,29 @@ $(document).ready(async function () {
 
     $('.loginform:visible').find('input').first().focus();
 });
+
+const MAX_IDLE_MS = 30 * 60 * 1000;
+let lastActive = Date.now();
+
+function reloadIfStale() {
+    if (Date.now() - lastActive < MAX_IDLE_MS) return;
+    const typing = $('.loginform:visible input').filter(function () {
+        return $(this).val();
+    }).length;
+    if (typing) return;
+    window.location.reload();
+}
+
+['keydown', 'mousemove', 'touchstart', 'click'].forEach((evt) =>
+    document.addEventListener(evt, () => (lastActive = Date.now()), {
+        passive: true,
+    }),
+);
+document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) reloadIfStale();
+});
+window.addEventListener('online', reloadIfStale);
+setInterval(reloadIfStale, 60 * 1000);
 
 $(document).on('click', '#show-password', function (e) {
     e.preventDefault();
