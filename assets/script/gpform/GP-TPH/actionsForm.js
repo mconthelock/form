@@ -660,7 +660,6 @@ import { setDatePicker } from '@amec/webasset/flatpickr';
             togglePermitOptionFields();
             updatePermitTypeRestrictions();
         });
-        makeRadioGroupToggleable('#HELMET_STICKER, #PHOTO_PERMIT_BADGE');
 
         requestTypeRadios.forEach(function (radio) {
             radio.addEventListener('change', toggleHostExternalSection);
