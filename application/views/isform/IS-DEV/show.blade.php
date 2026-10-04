@@ -30,14 +30,6 @@
 
                     <fieldset class="fieldset flex">
                         <div>
-                            <legend class="fieldset-legend">System Name</legend>
-                            <div class="p-2 border border-gray-300 border-dotted rounded-xl bg-white map-data"
-                                data-key="" data-group="">
-                                <div class="skeleton h-6 w-32"></div>
-                            </div>
-                        </div>
-
-                        <div>
                             <legend class="fieldset-legend">Request Type</legend>
                             <div class="p-2 border border-gray-300 border-dotted rounded-xl bg-white map-data"
                                 data-key="CATEGORY_NAME" data-group="category">

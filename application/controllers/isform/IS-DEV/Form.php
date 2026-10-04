@@ -21,11 +21,10 @@ class Form extends MY_Controller{
 
         $data['mode'] = 1;
         if(isset($data["NRUNNO"]) && $data["NRUNNO"] != 0) {
-            $this->views("isform/{$this->formname}/show", $data);
+            $this->views("isform/IS-DEV/show", $data);
         }else{
             //Create mode
-            // Array ( [NFRMNO] => 5 [VORGNO] => 050601 [CYEAR] => 14 [CYEAR2] => 2026 [NRUNNO] => 0 [EMPNO] => 12069 [mode] => 1 )
-            $this->views("isform/{$this->formname}/create", $data);
+            $this->views("isform/IS-DEV/create", $data);
         }
     }
 

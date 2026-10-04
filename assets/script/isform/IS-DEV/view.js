@@ -23,12 +23,14 @@ async function initForm() {
         EMPNO: $('#EMPNO').val(),
     });
 
-    console.log(data[0]);
+    console.log(data);
 
     const res = {
         ...data[0],
         OBJECTIVE_TXT:
-            data[0].OBJECTIVE == '99' ? '' : data[0].objective.OBJ_NAME,
+            data[0].OBJECTIVE == '8'
+                ? `${data[0].objective.OBJ_NAME}: ${data[0].OBJECTIVE_OTHER}`
+                : data[0].objective.OBJ_NAME,
     };
 
     const element = $('#form-data').find('.map-data');
@@ -37,8 +39,6 @@ async function initForm() {
         const group = $(el).data('group');
         const value =
             group == '' ? res[key] : res[group] ? res[group][key] : undefined;
-        console.log(value);
-        // escape HTML then convert newlines to <br> so multi-line text renders correctly
         const escaped = $('<div>')
             .text(value ?? '')
             .html();
