@@ -1,13 +1,13 @@
 @extends('layouts/webflowTemplate')
 
 @section('contents')
-    <input type="text" class="hidden" id="NFRMNO" value="{{ $NFRMNO }}" />
-    <input type="text" class="hidden" id="VORGNO" value="{{ $VORGNO }}" />
-    <input type="text" class="hidden" id="CYEAR" value="{{ $CYEAR }}" />
-    <input type="text" class="hidden" id="CYEAR2" value="{{ $CYEAR }}" />
-    <input type="text" class="hidden" id="NRUNNO" value="{{ $NRUNNO }}" />
-    <input type="text" class="hidden" id="EMPNO" value="{{ $EMPNO }}" />
-    <section class="flex flex-col gap-3 mb-4">
+    <input type="text" class="hiddenx" id="NFRMNO" value="{{ $NFRMNO }}" />
+    <input type="text" class="hiddenx" id="VORGNO" value="{{ $VORGNO }}" />
+    <input type="text" class="hiddenx" id="CYEAR" value="{{ $CYEAR }}" />
+    <input type="text" class="hiddenx" id="CYEAR2" value="{{ $CYEAR2 }}" />
+    <input type="text" class="hiddenx" id="NRUNNO" value="{{ $NRUNNO }}" />
+    <input type="text" class="hiddenx" id="EMPNO" value="{{ $EMPNO }}" />
+    <section class="flex flex-col gap-3 mb-4" id="form-data">
         <h1 class="text-3xl font-bold text-primary"> Computer program Requisition Form </h1>
         {{-- Request User --}}
         <fieldset class="bg-primary/10 border border-primary rounded-xl p-5">
@@ -31,21 +31,24 @@
                     <fieldset class="fieldset flex">
                         <div>
                             <legend class="fieldset-legend">System Name</legend>
-                            <div class="p-2 border border-gray-300 border-dotted rounded-xl bg-white">
+                            <div class="p-2 border border-gray-300 border-dotted rounded-xl bg-white map-data"
+                                data-key="" data-group="">
                                 <div class="skeleton h-6 w-32"></div>
                             </div>
                         </div>
 
                         <div>
                             <legend class="fieldset-legend">Request Type</legend>
-                            <div class="p-2 border border-gray-300 border-dotted rounded-xl bg-white">
+                            <div class="p-2 border border-gray-300 border-dotted rounded-xl bg-white map-data"
+                                data-key="CATEGORY_NAME" data-group="category">
                                 <div class="skeleton h-6 w-56"></div>
                             </div>
                         </div>
 
                         <div>
                             <legend class="fieldset-legend">Program Name</legend>
-                            <div class="p-2 border border-gray-300 border-dotted rounded-xl bg-white">
+                            <div class="p-2 border border-gray-300 border-dotted rounded-xl bg-white map-data"
+                                data-key="SYSTEMNAME" data-group="">
                                 <div class="skeleton h-6 w-72"></div>
                             </div>
                         </div>
@@ -53,14 +56,16 @@
 
                     <fieldset class="fieldset">
                         <legend class="fieldset-legend">Title</legend>
-                        <div class="p-2 border border-gray-300 border-dotted rounded-xl bg-white">
+                        <div class="p-2 border border-gray-300 border-dotted rounded-xl bg-white map-data" data-key="TITLE"
+                            data-group="">
                             <div class="skeleton h-6 w-120"></div>
                         </div>
                     </fieldset>
 
                     <fieldset class="fieldset">
                         <legend class="fieldset-legend">Detail</legend>
-                        <div class="p-2 border border-gray-300 border-dotted rounded-xl bg-white min-h-30">
+                        <div class="p-2 border border-gray-300 border-dotted rounded-xl bg-white min-h-30 map-data"
+                            data-key="PURPOSE" data-group="">
                             <div class="skeleton h-6 w-160"></div>
                         </div>
                     </fieldset>
@@ -114,21 +119,24 @@
             <fieldset class="fieldset flex">
                 <div>
                     <legend class="fieldset-legend">Objective</legend>
-                    <div class="p-2 border border-gray-300 border-dotted rounded-xl bg-white">
+                    <div class="p-2 border border-gray-300 border-dotted rounded-xl bg-white map-data"
+                        data-key="OBJECTIVE_TXT" data-group="">
                         <div class="skeleton h-6 w-56"></div>
                     </div>
                 </div>
 
                 <div>
                     <legend class="fieldset-legend">ROI Payback Period</legend>
-                    <div class="p-2 border border-gray-300 border-dotted rounded-xl bg-white">
+                    <div class="p-2 border border-gray-300 border-dotted rounded-xl bg-white map-data" data-key=""
+                        data-group="">
                         <div class="skeleton h-6 w-32"></div>
                     </div>
                 </div>
 
                 <div>
                     <legend class="fieldset-legend">Preferred Requirement Gathering Period</legend>
-                    <div class="p-2 border border-gray-300 border-dotted rounded-xl bg-white">
+                    <div class="p-2 border border-gray-300 border-dotted rounded-xl bg-white map-data" data-key=""
+                        data-group="">
                         <div class="skeleton h-6 w-32"></div>
                     </div>
                     <p class="label italic">กำหนดการที่พร้อมสำหรับการเก็บรวบรวมข้อกำหนดและ Developer เริ่มงานได้</p>
@@ -137,14 +145,16 @@
 
             <fieldset class="fieldset">
                 <legend class="fieldset-legend">Current Workflow</legend>
-                <div class="p-2 border border-gray-300 border-dashed rounded-xl bg-white/70 min-h-30 text-gray-700">
+                <div class="p-2 border border-gray-300 border-dashed rounded-xl bg-white/70 min-h-30 text-gray-700 map-data"
+                    data-key="CURRENT_WORKFLOW" data-group="">
                     <div class="skeleton h-6 w-160"></div>
                 </div>
             </fieldset>
 
             <fieldset class="fieldset">
                 <legend class="fieldset-legend">Expected Workflow</legend>
-                <div class="p-2 border border-gray-300 border-dotted rounded-xl bg-white min-h-30">
+                <div class="p-2 border border-gray-300 border-dotted rounded-xl bg-white min-h-30 map-data"
+                    data-key="EXPECTED_WORKFLOW" data-group="">
                     <div class="skeleton h-6 w-160"></div>
                 </div>
             </fieldset>

@@ -12,7 +12,7 @@ class Form extends MY_Controller{
     public function __construct(){
         parent::__construct();
          $this->client = new Client(['verify' => false]);
-        $this->formname = 'IS-DEV';
+        $this->formname = 'DEV';
     }
 
     public function main(){
@@ -33,7 +33,7 @@ class Form extends MY_Controller{
         $data = $this->setFormProp($this->formname);
         if(empty($data)) throw new Exception("Error Processing Request", 1);
 
-        $data['mode'] = 2; // Show mode
-        $this->views("isform/{$this->formname}/show", $data);
+        $data['mode'] = 2;
+        $this->views("isform/IS-DEV/show", $data);
     }
 }

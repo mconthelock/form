@@ -169,3 +169,20 @@ export async function totalInvestment() {
     $('#total-investment-cost').val(showDigits(totalCost));
     return totalCost;
 }
+
+export async function getFormIsDev(data) {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `${process.env.APP_API}/form/is/is-dev/search`,
+            type: 'POST',
+            dataType: 'json',
+            data: data,
+            success: function (response) {
+                resolve(response);
+            },
+            error: function (error) {
+                reject(error);
+            },
+        });
+    });
+}
