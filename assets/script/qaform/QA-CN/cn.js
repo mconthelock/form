@@ -7,26 +7,13 @@ import flatpickr from 'flatpickr';
 //import { setDatePicker } from "@public/_flatpickr";
 import 'flatpickr/dist/flatpickr.min.css';
 import {
-    ajaxOptions,
-    getAllAttr,
-    getData,
     showMessage,
     requiredForm,
     filterFormData,
     logFormData,
+    showErrorMessage,
 } from '@amec/webasset/utils';
-import {
-    showflow,
-    doaction,
-    getFormStatus,
-    getFormno,
-} from '@amec/webasset/api/webform';
-import { sendmail } from '@amec/webasset/api/mail';
-import {
-    fetchMsgErr,
-    fetchUtils,
-    serializeRequestBody,
-} from '@amec/webasset/api/fetch-utils';
+import { fetchUtils } from '@amec/webasset/api/fetch-utils';
 import { formatDate } from '@amec/webasset/dayjs';
 
 $(document).ready(async function () {
@@ -51,173 +38,178 @@ $(document).ready(async function () {
 
     const { nfrmno, vorgno, cyear, empno } = formData;
     $('.btn-submit').click(async function () {
-        let action = $(this).data('action');
-        if (!(await requiredForm('#cn-form'))) return;
-        if (checkData()) {
-            const puritm = $('input[name="txtPurItem"]').val();
-            const invno = $('input[name="txtInvNo"]').val();
-            if (puritm || invno) {
-                const res = await searchAs400(invno, puritm);
-                if (res.data && res.data.length > 0) {
-                    showMessage('CN NO. duplicate, Please check', 'warning');
+        try {
+            showLoader();
+            let action = $(this).data('action');
+            if (!(await requiredForm('#cn-form'))) return;
+            if (checkData()) {
+                const puritm = $('input[name="txtPurItem"]').val();
+                const invno = $('input[name="txtInvNo"]').val();
+                if (puritm || invno) {
+                    const res = await searchAs400(invno, puritm);
+                    if (res.data && res.data.length > 0) {
+                        showMessage(
+                            'CN NO. duplicate, Please check',
+                            'warning',
+                        );
+                        return false;
+                    }
+                }
+
+                const rsnno = $('input[name="radReason"]:checked').val();
+                const radSample = $('input[name="radSample"]:checked').val();
+                const radLoc = $('input[name="radLoc"]:checked').val();
+                const submitVal = $('#submit_date').val();
+                const inspecVal = $('#inspec_date').val();
+                const expchgVal = $('#expchg_date').val();
+
+                // const submitDate = submitVal
+                //     ? new Date(
+                //           formatDate(submitVal)
+                //       )
+                //     : null;
+                // const inspecDate = inspecVal
+                //     ? new Date(
+                //           inspecVal.replace(
+                //               /(\d{2})\/(\d{2})\/(\d{4})/,
+                //               '$3-$2-$1',
+                //           ),
+                //       )
+                //     : null;
+                // const expchgDate = expchgVal
+                //     ? new Date(
+                //           expchgVal.replace(
+                //               /(\d{2})\/(\d{2})\/(\d{4})/,
+                //               '$3-$2-$1',
+                //           ),
+                //       )
+                //     : null;
+                const dwgArray = [];
+                $('#dwg-body tr').each(function () {
+                    let dwgNo = $(this).find('input[name="txtDwgNo[]"]').val();
+                    let txtG = $(this).find('input[name="txtG[]"]').val();
+                    let txtL = $(this).find('input[name="txtL[]"]').val();
+                    let revNo = $(this).find('input[name="revNo[]"]').val();
+                    let fullDwgNo = [dwgNo, txtG, txtL]
+                        .filter(Boolean)
+                        .join(' ');
+
+                    if (dwgNo) {
+                        dwgArray.push({
+                            DWGNO: fullDwgNo,
+                            REVNO: revNo,
+                        });
+                    }
+                });
+
+                const frm2 = {
+                    NFRMNO: nfrmno,
+                    VORGNO: vorgno,
+                    CYEAR: cyear,
+                    REQBY: $('input[name="txtReqId"]').val(),
+                    INPUTBY: $('input[name="txtInput"]').val(),
+                    REMARK: $('input[name="txtRemark"]').val(),
+                    ACTION: action,
+                    TITLE: $('input[name="txtTitle"]').val(),
+                    ITEMNO: $('input[name="txtItemno"]').val(),
+                    SVENDNAME: $('input[name="txtSupName"]').val(),
+                    CLSNO: $('input[name="chkClass"]:checked').val(),
+                    RSNNO: rsnno,
+                    RSNOTHER:
+                        rsnno == '5' ? $('input[name="txtOther"]').val() : '',
+                    PRDCTNAME: $('input[name="part_date"]').val(),
+                    TRANSNO: radSample,
+                    DETTRANS:
+                        radSample == '2'
+                            ? $('input[name="txtReturn"]').val()
+                            : radSample == '3'
+                              ? $('input[name="txtOth"]').val()
+                              : '',
+                    BEFCHANGE: $('#txtBefChg').val(),
+                    AFTCHANGE: $('#txtAftChg').val(),
+                    // ...(submitDate && { SUBMITDATE: submitDate }),
+                    // ...(inspecDate && { INSPECDATE: inspecDate }),
+                    // ...(expchgDate && { EXPCHGDATE: expchgDate }),
+                    ...(submitVal && {
+                        SUBMITDATE: formatDate(
+                            submitVal,
+                            'YYYY-MM-DD',
+                            'DD/MM/YYYY',
+                        ),
+                    }),
+                    ...(inspecVal && {
+                        INSPECDATE: formatDate(
+                            inspecVal,
+                            'YYYY-MM-DD',
+                            'DD/MM/YYYY',
+                        ),
+                    }),
+                    ...(expchgVal && {
+                        EXPCHGDATE: formatDate(
+                            expchgVal,
+                            'YYYY-MM-DD',
+                            'DD/MM/YYYY',
+                        ),
+                    }),
+                    PRTNAME: $('input[name="txtPrtName"]').val(),
+                    PURITEM: puritm,
+                    INVNO: invno,
+                    ORDQ: $('input[name="txtOrdQ"]').val(),
+                    PRTLOC:
+                        radLoc == '1'
+                            ? 'WareHouse Receive'
+                            : $('input[name="txtprtLoc"]').val(),
+                    RQCNREF: $('input[name="txtNoRef"]').val(),
+                    ORDERNO: $('input[name="txtOrder"]').val(),
+                    DWGNO: dwgArray,
+                };
+
+                const frm = $('#cn-form');
+                var cnformData = new FormData(frm[0]);
+                for (const key in frm2) {
+                    if (frm2.hasOwnProperty(key)) {
+                        const value = frm2[key];
+
+                        // เช็คว่าถ้าค่าเป็น Array หรือ Object (เช่น dwgArray) ให้แปลงเป็น String ก่อน
+                        if (typeof value === 'object' && value !== null) {
+                            // ใช้ .append() หรือ .set() ก็ได้ (แนะนำ .set() เพื่อให้มันทับค่าเดิมถ้าใน HTML มีชื่อซ้ำกัน)
+                            cnformData.set(key, JSON.stringify(value));
+                        }
+                        // ถ้าเป็นค่าว่าง, ข้อความ หรือ ตัวเลขปกติ
+                        else if (value !== undefined) {
+                            cnformData.set(key, value);
+                        }
+                    }
+                }
+                cnformData.append(
+                    'RADSEC',
+                    $('input[name="radsec"]:checked').val(),
+                );
+                cnformData.append('SEC', $('input[name="Sec"]:checked').val());
+                cnformData.append(
+                    'RADPROCAMEC',
+                    $('input[name="radProcAMEC"]:checked').val(),
+                );
+                cnformData.append(
+                    'RADOBJ',
+                    $('input[name="radobj"]:checked').val(),
+                );
+
+                filterFormData(cnformData, { empty: true });
+
+                const status = await create(cnformData);
+                if (!status.status) {
+                    showMessage(status.message, 'warning');
                     return false;
+                } else {
+                    redirectWebflow();
                 }
             }
-
-            const rsnno = $('input[name="radReason"]:checked').val();
-            const radSample = $('input[name="radSample"]:checked').val();
-            const radLoc = $('input[name="radLoc"]:checked').val();
-            const submitVal = $('#submit_date').val();
-            const inspecVal = $('#inspec_date').val();
-            const expchgVal = $('#expchg_date').val();
-
-            // const submitDate = submitVal
-            //     ? new Date(
-            //           formatDate(submitVal)
-            //       )
-            //     : null;
-            // const inspecDate = inspecVal
-            //     ? new Date(
-            //           inspecVal.replace(
-            //               /(\d{2})\/(\d{2})\/(\d{4})/,
-            //               '$3-$2-$1',
-            //           ),
-            //       )
-            //     : null;
-            // const expchgDate = expchgVal
-            //     ? new Date(
-            //           expchgVal.replace(
-            //               /(\d{2})\/(\d{2})\/(\d{4})/,
-            //               '$3-$2-$1',
-            //           ),
-            //       )
-            //     : null;
-            const dwgArray = [];
-            $('#dwg-body tr').each(function () {
-                let dwgNo = $(this).find('input[name="txtDwgNo[]"]').val();
-                let txtG = $(this).find('input[name="txtG[]"]').val();
-                let txtL = $(this).find('input[name="txtL[]"]').val();
-                let revNo = $(this).find('input[name="revNo[]"]').val();
-                let fullDwgNo = [dwgNo, txtG, txtL].filter(Boolean).join(' ');
-
-                if (dwgNo) {
-                    dwgArray.push({
-                        DWGNO: fullDwgNo,
-                        REVNO: revNo,
-                    });
-                }
-            });
-
-            const frm2 = {
-                NFRMNO: nfrmno,
-                VORGNO: vorgno,
-                CYEAR: cyear,
-                REQBY: $('input[name="txtReqId"]').val(),
-                INPUTBY: $('input[name="txtInput"]').val(),
-                REMARK: $('input[name="txtRemark"]').val(),
-                ACTION: action,
-                TITLE: $('input[name="txtTitle"]').val(),
-                ITEMNO: $('input[name="txtItemno"]').val(),
-                SVENDNAME: $('input[name="txtSupName"]').val(),
-                CLSNO: $('input[name="chkClass"]:checked').val(),
-                RSNNO: rsnno,
-                RSNOTHER: rsnno == '5' ? $('input[name="txtOther"]').val() : '',
-                PRDCTNAME: $('input[name="part_date"]').val(),
-                TRANSNO: radSample,
-                DETTRANS:
-                    radSample == '2'
-                        ? $('input[name="txtReturn"]').val()
-                        : radSample == '3'
-                          ? $('input[name="txtOth"]').val()
-                          : '',
-                BEFCHANGE: $('#txtBefChg').val(),
-                AFTCHANGE: $('#txtAftChg').val(),
-                // ...(submitDate && { SUBMITDATE: submitDate }),
-                // ...(inspecDate && { INSPECDATE: inspecDate }),
-                // ...(expchgDate && { EXPCHGDATE: expchgDate }),
-                ...(submitVal && {
-                    SUBMITDATE: formatDate(
-                        submitVal,
-                        'YYYY-MM-DD',
-                        'DD/MM/YYYY',
-                    ),
-                }),
-                ...(inspecVal && {
-                    INSPECDATE: formatDate(
-                        inspecVal,
-                        'YYYY-MM-DD',
-                        'DD/MM/YYYY',
-                    ),
-                }),
-                ...(expchgVal && {
-                    EXPCHGDATE: formatDate(
-                        expchgVal,
-                        'YYYY-MM-DD',
-                        'DD/MM/YYYY',
-                    ),
-                }),
-                PRTNAME: $('input[name="txtPrtName"]').val(),
-                PURITEM: puritm,
-                INVNO: invno,
-                ORDQ: $('input[name="txtOrdQ"]').val(),
-                PRTLOC:
-                    radLoc == '1'
-                        ? 'WareHouse Receive'
-                        : $('input[name="txtprtLoc"]').val(),
-                RQCNREF: $('input[name="txtNoRef"]').val(),
-                ORDERNO: $('input[name="txtOrder"]').val(),
-                DWGNO: dwgArray,
-            };
-
-            const frm = $('#cn-form');
-            var cnformData = new FormData(frm[0]);
-            for (const key in frm2) {
-                if (frm2.hasOwnProperty(key)) {
-                    const value = frm2[key];
-
-                    // เช็คว่าถ้าค่าเป็น Array หรือ Object (เช่น dwgArray) ให้แปลงเป็น String ก่อน
-                    if (typeof value === 'object' && value !== null) {
-                        // ใช้ .append() หรือ .set() ก็ได้ (แนะนำ .set() เพื่อให้มันทับค่าเดิมถ้าใน HTML มีชื่อซ้ำกัน)
-                        cnformData.set(key, JSON.stringify(value));
-                    }
-                    // ถ้าเป็นค่าว่าง, ข้อความ หรือ ตัวเลขปกติ
-                    else if (value !== undefined) {
-                        cnformData.set(key, value);
-                    }
-                }
-            }
-            cnformData.append(
-                'RADSEC',
-                $('input[name="radsec"]:checked').val(),
-            );
-            cnformData.append('SEC', $('input[name="Sec"]:checked').val());
-            cnformData.append(
-                'RADPROCAMEC',
-                $('input[name="radProcAMEC"]:checked').val(),
-            );
-            cnformData.append(
-                'RADOBJ',
-                $('input[name="radobj"]:checked').val(),
-            );
-
-            filterFormData(cnformData, { empty: true });
-            logFormData(cnformData);
-            //console.log(cnformData);
-            //return false;
-            const status = await create(cnformData);
-            // cnformData.append('nfrmno', nfrmno);
-            // cnformData.append('vorgno', vorgno);
-            // cnformData.append('cyear', cyear);
-            // cnformData.append('act', action);
-            // cnformData.append('empno', empno);
-            // console.log(cnformData);
-            // const status = await insertfrm(cnformData);
-            if (!status.status) {
-                showMessage(status.message, 'warning');
-                return false;
-            } else {
-                redirectWebflow();
-            }
+        } catch (err) {
+            console.error(err);
+            showErrorMessage(err);
+        } finally {
+            showLoader({ show: false });
         }
     });
 });
