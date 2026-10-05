@@ -123,36 +123,36 @@
                     </header>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 p-4">
                         <fieldset class="fieldset">
-                            <legend class="fieldset-legend req">Vendor Name</legend>
-                            <input type="text" name="VVENDOR_NAME" id="VVENDOR_NAME" class="input w-full" readonly>
+                            <legend class="fieldset-legend req">Vendor Code</legend>
+                            <input type="text" name="VVENDOR" id="VVENDOR" class="input w-full req" readonly data-message="Please Enter Vendor code">
                         </fieldset>
                         <fieldset class="fieldset">
-                            <legend class="fieldset-legend req">Vendor Code</legend>
-                            <input type="text" name="VVENDOR" id="VVENDOR" class="input w-full" readonly>
+                            <legend class="fieldset-legend req">Vendor Name</legend>
+                            <input type="text" name="VVENDOR_NAME" id="VVENDOR_NAME" class="input w-full req" readonly data-message="Please Enter Vendor name">
                         </fieldset>
                         <fieldset class="fieldset">
                             <legend class="fieldset-legend req">Planner Code</legend>
-                            <input type="text" name="VPLANNER" id="VPLANNER" class="input w-full" readonly>
+                            <input type="text" name="VPLANNER" id="VPLANNER" class="input w-full req" readonly data-message="Please Enter Planner code">
                         </fieldset>
                         <fieldset class="fieldset">
-                            <legend class="fieldset-legend">Material Code</legend>
+                            <legend class="fieldset-legend req">Material Code</legend>
                             <input type="text" name="VMATERIAL_CODE" id="VMATERIAL_CODE" class="input w-full req" placeholder="กรอก Material Code" data-message="Please enter material code">
                         </fieldset>
                         <fieldset class="fieldset">
-                            <legend class="fieldset-legend">Maker (Business route)</legend>
+                            <legend class="fieldset-legend req">Maker (Business route)</legend>
                             <input type="text" name="VMAKER" id="VMAKER" class="input w-full req" placeholder="กรอก Maker" data-message="Please enter maker">
                         </fieldset>
                         <fieldset class="fieldset">
-                            <legend class="fieldset-legend">Part Name</legend>
+                            <legend class="fieldset-legend req">Part Name</legend>
                             <input type="text" name="VPART_NAME" id="VPART_NAME" class="input w-full req" placeholder="กรอก Part Name" data-message="Please enter part name">
                         </fieldset>
                         <fieldset class="fieldset">
-                            <legend class="fieldset-legend">Model Name</legend>
-                            <input type="text" name="VMODEL_NAME" id="VMODEL_NAME" class="input w-full" placeholder="กรอก Model Name">
+                            <legend class="fieldset-legend req">Model Name</legend>
+                            <input type="text" name="VMODEL_NAME" id="VMODEL_NAME" class="input w-full req" placeholder="กรอก Model Name" data-message="Please enter model name">
                         </fieldset>
                         <fieldset class="fieldset">
-                            <legend class="fieldset-legend">Job Item</legend>
-                            <input type="text" name="VJOB_ITEM" id="VJOB_ITEM" class="input w-full" placeholder="กรอก Job Item">
+                            <legend class="fieldset-legend req">Job Item</legend>
+                            <input type="text" name="VJOB_ITEM" id="VJOB_ITEM" class="input w-full req" placeholder="กรอก Job Item" data-message="Please enter job item">
                         </fieldset>
 
                         {{-- PCS Committee --}}
@@ -225,28 +225,28 @@
                         <fieldset class="fieldset">
                             <legend class="fieldset-legend req">Present Total Price</legend>
                             <label class="input w-full">
-                                <input type="text" name="NTOTAL_PRES" id="NTOTAL_PRES" class="grow text-right" readonly>
+                                <input type="text" name="NTOTAL_PRES" id="NTOTAL_PRES" class="grow text-right req" readonly>
                                 <span class="badge badge-ghost badge-sm">Col. AA</span>
                             </label>
                         </fieldset>
                         <fieldset class="fieldset">
                             <legend class="fieldset-legend req">New Total Price</legend>
                             <label class="input w-full">
-                                <input type="text" name="NTOTAL_NEW" id="NTOTAL_NEW" class="grow text-right" readonly>
+                                <input type="text" name="NTOTAL_NEW" id="NTOTAL_NEW" class="grow text-right req" readonly>
                                 <span class="badge badge-ghost badge-sm">Col. BB</span>
                             </label>
                         </fieldset>
                         <fieldset class="fieldset">
                             <legend class="fieldset-legend req">Cost Down (+) / Cost Up (-) Amount</legend>
                             <label class="input w-full">
-                                <input type="text" name="NTOTAL_COST" id="NTOTAL_COST" class="grow text-right" readonly>
+                                <input type="text" name="NTOTAL_COST" id="NTOTAL_COST" class="grow text-right req" readonly>
                                 <span class="badge badge-ghost badge-sm">Col. CC</span>
                             </label>
                         </fieldset>
                         <fieldset class="fieldset">
                             <legend class="fieldset-legend req">Cost Down (+) / Cost Up (-) Ratio %</legend>
                             <label class="input w-full">
-                                <input type="text" name="NTOTAL_RATIO" id="NTOTAL_RATIO" class="grow text-right" readonly>
+                                <input type="text" name="NTOTAL_RATIO" id="NTOTAL_RATIO" class="grow text-right req" readonly>
                                 <span class="badge badge-ghost badge-sm">Col. DD</span>
                             </label>
                             <p class="label">จาก Price comparison</p>
@@ -495,7 +495,7 @@
                 </section>
 
             </form>
-
+            <div id="btnRequest" class="p-5"></div>
             {{-- <div class="flex justify-end gap-3 px-6 pb-6">
                 <button type="button" class="btn btn-ghost" id="btn-cancel">Cancel</button>
                 <button type="submit" form="form-price-approval" class="btn btn-primary">

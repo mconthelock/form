@@ -9,8 +9,9 @@ import { PdfViewer } from '@amec/webasset/components/pdfViewer';
 import { FileUpload } from '@amec/webasset/components/fileUpload';
 import { tableDraft } from '../PUR-CPC/table-draft';
 import { getListCreate } from './data';
-import { checkPlanner, setAutoField } from './function';
+import { checkPlanner, checkVendor, setAutoField } from './function';
 import { modalSelectPriceComparison } from './modal/select-price-comparison';
+import { webflowSubmit } from '@amec/webasset/components/form';
 
 $(async function () {
     try {
@@ -22,7 +23,7 @@ $(async function () {
         }
         $('#INPUTBY').val(empno);
         $('input[name="form-mode"][value="1"]').prop('checked', true);
-        setAutoField({ mode: 1 });
+        setAutoField({ mode: 1, trigger: false });
         modalSelectPriceComparison.init();
         const pdfViewer = new PdfViewer({
             // inputId: 'PRICE_COMPARE_FILE',
@@ -53,6 +54,12 @@ $(async function () {
                 },
             ],
         });
+        $('#btnRequest').html(
+            webflowSubmit({
+                request: true,
+                draft: true,
+            }),
+        );
     } catch (error) {
         console.error(error);
         renderLoadError(error.message);
@@ -106,7 +113,36 @@ $(document).on('click', '#btn-view-compare', async function () {
 $(document).on('change', 'input[name="form-mode"]', function () {
     try {
         const mode = $(this).val();
-        setAutoField({ mode: +mode });
+        setAutoField({ mode: +mode, trigger: false });
+    } catch (error) {
+        console.error(error);
+        showErrorMessage(error.message);
+    }
+});
+
+/**
+ * @author Sutthipong Tangmongkhoncharoen(24008)
+ * @since 2026-10-02
+ * @description ตรวจสอบและตั้งค่า Vendor อัตโนมัติเมื่อกรอกข้อมูลในฟิลด์ VVENDOR
+ */
+$(document).on('change', '#VVENDOR', async function () {
+    try {
+        if ($('input[name="form-mode"]:checked').val() == 1) {
+            return;
+        }
+        const vendor = $(this).val();
+        const checked = await checkVendor(vendor);
+        if (!checked) {
+            $(this).val('');
+            return;
+        }
+        setAutoField({
+            data: {
+                vendor: checked.data.VENDOR,
+                vendorName: checked.data.VNDNAM,
+            },
+            mode: 0,
+        });
     } catch (error) {
         console.error(error);
         showErrorMessage(error.message);

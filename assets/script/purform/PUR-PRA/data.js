@@ -16,3 +16,19 @@ export async function getListCreate(empno) {
         },
     });
 }
+
+/**
+ * @author Sutthipong Tangmongkhoncharoen(24008)
+ * @since 2026-10-05
+ * @description ดึงข้อมูล Vendor จากระบบ AVM โดยใช้รหัส Vendor
+ * @returns
+ */
+export async function getVendor(vendor) {
+    return await fetchUtils({
+        url: `${process.env.APP_API}/avm/search`,
+        method: 'POST',
+        data: {
+            VENDOR: vendor,
+        },
+    });
+}
