@@ -12,6 +12,8 @@ import {
     getData,
     showMessage,
     requiredForm,
+    logFormData,
+    filterFormData,
 } from '@amec/webasset/utils';
 import {
     showflow,
@@ -20,6 +22,8 @@ import {
     getFormno,
 } from '@amec/webasset/api/webform';
 import { sendmail } from '@amec/webasset/api/mail';
+import { fetchUtils } from '@amec/webasset/api/fetch-utils';
+import { formatDate } from '@amec/webasset/dayjs';
 
 $(document).ready(async function () {
     const formData = $('.form-data').data();
@@ -53,6 +57,275 @@ $(document).ready(async function () {
     $('.flow').html(flow.html);
 
     $('.btn-submit').click(async function () {
+        let action = $(this).data('action');
+        if (action !== 'deleteApv') {
+            if ($('#mstatus').val() != '1') {
+                // --- โค้ดสำหรับ Debug ดูค่าของ class req ---
+                console.log('--- ตรวจสอบช่องที่บังคับกรอก (.req) ---');
+                $('#cn-form .req').each(function () {
+                    // ดึงชื่อ ID หรือ Name เพื่อให้รู้ว่าเป็นช่องไหน
+                    const elemName =
+                        $(this).attr('id') ||
+                        $(this).attr('name') ||
+                        'ไม่ทราบชื่อ';
+                    const elemValue = $(this).val();
+
+                    if (!elemValue || elemValue.trim() === '') {
+                        console.log('❌ ว่าง (ไม่มีค่า) :', elemName);
+                    } else {
+                        console.log('✅ มีค่า :', elemName, '=>', elemValue);
+                    }
+                });
+                console.log('------------------------------------');
+                // ------------------------------------------
+
+                if (!(await requiredForm('#cn-form'))) return;
+            }
+
+            // *จุดที่แก้ไขให้: ถ้า checkData ไม่ผ่าน ให้หยุดการทำงาน (return)
+            if (!checkData(action)) {
+                console.log('checko');
+
+                return;
+            }
+        }
+        console.log('xxxxxxxxxxx');
+        const txtRemark = $('#txtRemark').val();
+
+        if (action == 'deleteApv') {
+            var cnformData = new FormData();
+            cnformData.append('NFRMNO', nfrmno);
+            cnformData.append('VORGNO', vorgno);
+            cnformData.append('CYEAR', cyear);
+            cnformData.append('CYEAR2', cyear2);
+            cnformData.append('NRUNNO', nrunno);
+            cnformData.append('ACTION', action);
+            cnformData.append('EMPNO', empno);
+            cnformData.append('APVNO', empno);
+            cnformData.append('REMARK', txtRemark);
+        } else {
+            action = action === 'returnrem' ? 'return' : action;
+            let targetInput = $('input[name="chkClass"]');
+            let inputType;
+            let clsNoValue = '';
+            let rsnno = '';
+            let prdctname = '';
+            let radSample = '';
+            let txtBefChg = '';
+            let txtAftChg = '';
+            let submitVal = '';
+            let inspecVal = '';
+            let expchgVal = '';
+            let txtPrtName = '';
+            let txtOrdQ = '';
+            let txtprtLoc = '';
+            let txtNoRef = '';
+            let txtOrder = '';
+            const puritm = $('input[name="txtPurItem"]').val();
+            const invno = $('input[name="txtInvNo"]').val();
+            const dwgArray = [];
+            if (targetInput.length > 0) {
+                // เช็คว่ามี element นี้อยู่บนหน้าจอ
+                inputType = targetInput.prop('type');
+
+                if (inputType === 'radio') {
+                    clsNoValue = targetInput.filter(':checked').val();
+                } else {
+                    clsNoValue = targetInput.val();
+                }
+            }
+            targetInput = $('input[name="radReason"]');
+            if (targetInput.length > 0) {
+                // เช็คว่ามี element นี้อยู่บนหน้าจอ
+                inputType = targetInput.prop('type');
+                if (inputType === 'radio') {
+                    rsnno = targetInput.filter(':checked').val();
+                }
+            }
+            targetInput = $('input[name="part_date"]');
+            if (targetInput.length > 0) {
+                prdctname = targetInput.val();
+            }
+            targetInput = $('input[name="radSample"]');
+            if (targetInput.length > 0) {
+                // เช็คว่ามี element นี้อยู่บนหน้าจอ
+                inputType = targetInput.prop('type');
+                if (inputType === 'radio') {
+                    radSample = targetInput.filter(':checked').val();
+                }
+            }
+            targetInput = $('textarea[name="txtBefChg"]');
+            if (targetInput.length > 0) {
+                txtBefChg = targetInput.val();
+            }
+            targetInput = $('textarea[name="txtAftChg"]');
+            if (targetInput.length > 0) {
+                txtAftChg = targetInput.val();
+            }
+            targetInput = $('input[name="submit_date"]');
+            if (targetInput.length > 0) {
+                submitVal = targetInput.val();
+            }
+            targetInput = $('input[name="inspec_date"]');
+            if (targetInput.length > 0) {
+                inspecVal = targetInput.val();
+            }
+            targetInput = $('input[name="expchg_date"]');
+            if (targetInput.length > 0) {
+                expchgVal = targetInput.val();
+            }
+            targetInput = $('input[name="txtPrtName"]');
+            if (targetInput.length > 0) {
+                txtPrtName = targetInput.val();
+            }
+            targetInput = $('input[name="txtOrdQ"]');
+            if (targetInput.length > 0) {
+                txtOrdQ = targetInput.val();
+            }
+            targetInput = $('input[name="txtprtLoc"]');
+            if (targetInput.length > 0) {
+                txtprtLoc = targetInput.val();
+            }
+            targetInput = $('input[name="txtNoRef"]');
+            if (targetInput.length > 0) {
+                txtNoRef = targetInput.val();
+            }
+            targetInput = $('input[name="txtOrder"]');
+            if (targetInput.length > 0) {
+                txtOrder = targetInput.val();
+            }
+            let dwgInputs = $('input[name="txtDwgNo[]"]');
+            if (dwgInputs.length > 0) {
+                $('#dwg-body tr').each(function () {
+                    let dwgNo = $(this).find('input[name="txtDwgNo[]"]').val();
+                    let txtG = $(this).find('input[name="txtG[]"]').val();
+                    let txtL = $(this).find('input[name="txtL[]"]').val();
+                    let revNo = $(this).find('input[name="revNo[]"]').val();
+                    let fullDwgNo = [dwgNo, txtG, txtL]
+                        .filter(Boolean)
+                        .join(' ');
+
+                    if (dwgNo) {
+                        dwgArray.push({
+                            DWGNO: fullDwgNo,
+                            REVNO: revNo,
+                        });
+                    }
+                });
+            } else {
+                $('#dwg-body tr').each(function () {
+                    let dwgNo = $(this).find('.btn-open').data('dwgfull');
+                    let radValue = $(this).find('.radDwg:checked').val();
+                    let remark = $(this).find('.txtDwgRem').val();
+                    // นำข้อมูลของแถวนี้มาจัดรูปเป็น Object แล้วใส่ใน Array
+                    if (dwgNo) {
+                        dwgArray.push({
+                            DWGNO: dwgNo,
+                            RESULT: radValue !== undefined ? radValue : null, // ถ้าไม่ได้เลือกให้เป็น null
+                            REMARK: remark,
+                        });
+                    }
+                });
+            }
+
+            const frm2 = {
+                NFRMNO: nfrmno,
+                VORGNO: vorgno,
+                CYEAR: cyear,
+                CYEAR2: cyear2,
+                NRUNNO: nrunno,
+                APVNO: empno,
+                EMPNO: empno,
+                REMARK: txtRemark,
+                ACTION: action,
+                TITLE: $('input[name="txtTitle"]').val(),
+                ITEMNO: $('input[name="txtItemno"]').val(),
+                SVENDNAME: $('input[name="txtSupName"]').val(),
+                CLSNO: clsNoValue,
+                ...(rsnno && { RSNNO: rsnno }),
+                ...(rsnno && {
+                    RSNOTHER:
+                        rsnno == '5' ? $('input[name="txtOther"]').val() : '',
+                }),
+                ...(prdctname && { PRDCTNAME: prdctname }),
+                ...(radSample && { TRANSNO: radSample }),
+                ...(radSample && {
+                    DETTRANS:
+                        radSample == '2'
+                            ? $('input[name="txtReturn"]').val()
+                            : radSample == '3'
+                              ? $('input[name="txtOth"]').val()
+                              : '',
+                }),
+
+                ...(txtBefChg && { BEFCHANGE: txtBefChg }),
+                ...(txtAftChg && { AFTCHANGE: txtAftChg }),
+                ...(submitVal && {
+                    SUBMITDATE: formatDate(
+                        submitVal,
+                        'YYYY-MM-DD',
+                        'DD/MM/YYYY',
+                    ),
+                }),
+                ...(inspecVal && {
+                    INSPECDATE: formatDate(
+                        inspecVal,
+                        'YYYY-MM-DD',
+                        'DD/MM/YYYY',
+                    ),
+                }),
+                ...(expchgVal && {
+                    EXPCHGDATE: formatDate(
+                        expchgVal,
+                        'YYYY-MM-DD',
+                        'DD/MM/YYYY',
+                    ),
+                }),
+                ...(txtPrtName && { PRTNAME: txtPrtName }),
+                PURITEM: puritm,
+                INVNO: invno,
+                ...(txtOrdQ && { ORDQ: txtOrdQ }),
+                ...(txtprtLoc && { PRTLOC: txtprtLoc }),
+                ...(txtNoRef && { RQCNREF: txtNoRef }),
+                ...(txtOrder && { ORDERNO: txtOrder }),
+                DWGNO: dwgArray,
+            };
+            const frm = $('#cn-form');
+            var originalData = new FormData(frm[0]);
+            var cnformData = new FormData(); // สร้างตัวใหม่มารองรับ
+            for (let [key, value] of originalData.entries()) {
+                // เปลี่ยน key เป็นตัวพิมพ์ใหญ่ แล้วเก็บลง FormData ตัวใหม่
+                cnformData.append(key.toUpperCase(), value);
+            }
+            for (const key in frm2) {
+                if (frm2.hasOwnProperty(key)) {
+                    const value = frm2[key];
+
+                    // เช็คว่าถ้าค่าเป็น Array หรือ Object (เช่น dwgArray) ให้แปลงเป็น String ก่อน
+                    if (typeof value === 'object' && value !== null) {
+                        // ใช้ .append() หรือ .set() ก็ได้ (แนะนำ .set() เพื่อให้มันทับค่าเดิมถ้าใน HTML มีชื่อซ้ำกัน)
+                        cnformData.set(key, JSON.stringify(value));
+                    }
+                    // ถ้าเป็นค่าว่าง, ข้อความ หรือ ตัวเลขปกติ
+                    else if (value !== undefined) {
+                        cnformData.set(key, value);
+                    }
+                }
+            }
+        }
+        filterFormData(cnformData, { empty: true });
+        logFormData(cnformData);
+
+        const status = await approve(cnformData);
+        if (!status.status) {
+            showMessage(status.message, 'warning');
+            return false;
+        } else {
+            redirectWebflow();
+        }
+    });
+
+    $('.btn-submitxxx').click(async function () {
         //console.log("xxxxxxxxxx");
 
         let action = $(this).data('action');
@@ -710,6 +983,13 @@ $(document).on('click', '.btn-open', function () {
     );
 });
 
+export async function approve(form) {
+    return fetchUtils({
+        url: `${process.env.APP_API}/qaform/qa-cn/approve`,
+        method: 'PATCH',
+        data: form,
+    });
+}
 //function opendwg(dwg , rev) {
 // console.log(dwg);
 // console.log(rev);
