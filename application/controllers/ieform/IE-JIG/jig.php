@@ -323,6 +323,20 @@ class jig extends MY_Controller {
         } catch (Exception $e) { show_404(); }
     }
 
+     public function open_from_asp_jigdel($empno,$no,$orgNo, $y, $y2, $runNo) {
+        $parameters = [
+            'empno' => $empno,
+            'no'    => $no,
+            'orgNo' => $orgNo,
+            'y'     => $y,
+            'y2'    => $y2,
+            'runNo' => $runNo,
+        ];
+
+        $query = http_build_query($parameters,'','&',PHP_QUERY_RFC3986);
+        redirect(site_url('ieform/IE-JIG/jig/show_create_delete_form'). '?' . $query,'location',302);
+    }
+
     public function show_create_delete_form(){
         $data = [];
         $parameters = ['NFRMNO' => 'no', 'VORGNO' => 'orgNo', 'CYEAR' => 'y',
