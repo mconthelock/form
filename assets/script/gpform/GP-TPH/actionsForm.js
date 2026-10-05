@@ -56,6 +56,21 @@ import { setDatePicker } from '@amec/webasset/flatpickr';
         return table;
     }
 
+    function filterAreaModal() {
+        if (!mockupTable) {
+            return;
+        }
+
+        mockupTable
+            .column(1)
+            .search($('#LOCATION').val().trim())
+            .column(2)
+            .search($('#AREANAME').val().trim())
+            .column(3)
+            .search($('#AREALEVEL').val().trim())
+            .draw();
+    }
+
     function initCreatePage() {
         const visitorBody = document.getElementById('visitor-table-body');
         const addVisitorBtn = document.getElementById('add-visitor-row');
@@ -438,6 +453,26 @@ import { setDatePicker } from '@amec/webasset/flatpickr';
             },
         );
 
+        $(document).on('click', '#btnSearch', function () {
+            filterAreaModal();
+        });
+
+        $(document).on('click', '#btnClear', function () {
+            $('#AREANAME, #AREALEVEL, #LOCATION').val('');
+            filterAreaModal();
+        });
+
+        $(document).on(
+            'keydown',
+            '#AREANAME, #AREALEVEL, #LOCATION',
+            function (event) {
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    filterAreaModal();
+                }
+            },
+        );
+
         $(document).on('keydown', '#REQBY', function (e) {
             if (e.key !== 'Enter') {
                 return;
@@ -656,11 +691,6 @@ import { setDatePicker } from '@amec/webasset/flatpickr';
             'input[name="req_subtype"]',
             toggleHostExternalSection,
         );
-        makeRadioGroupToggleable('input[name="permit_option"]', function () {
-            togglePermitOptionFields();
-            updatePermitTypeRestrictions();
-        });
-
         requestTypeRadios.forEach(function (radio) {
             radio.addEventListener('change', toggleHostExternalSection);
         });

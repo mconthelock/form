@@ -88,6 +88,15 @@
         .tph-page .table th { font-size: 13px; font-weight: 700; white-space: nowrap; }
         .tph-page .table tbody tr:hover { background: var(--tph-soft); }
         .tph-page #applicant-visitor-section table { min-width: 700px; }
+        #modalTable_wrapper .dt-search { display: none; }
+        #modalTable_wrapper .dt-length { color: var(--color-neutral); font-size: 13px; }
+        #modalTable_wrapper .dt-length .dt-input {
+            height: 34px; margin-inline: 6px; padding: 0 28px 0 10px; border: 1px solid var(--tph-field-border);
+            border-radius: 8px; background-color: var(--tph-field); color: var(--color-base-content); font: inherit;
+        }
+        #modalTable_wrapper .dt-length .dt-input:focus-visible {
+            outline: 2px solid var(--color-primary); outline-offset: 2px;
+        }
         .tph-page .overflow-x-auto { border: 1px solid var(--tph-line); border-radius: 10px; }
         .tph-page .tph-hint { font-size: 12px; color: var(--color-neutral); margin-top: 6px; }
         .tph-page #area-empty-row td { padding: 28px 16px; background: var(--color-base-200); }
@@ -393,6 +402,16 @@
                     <!-- Search Area -->
                     <div class="w-full rounded-xl border border-base-300 bg-base-200/60 p-4 shadow-sm">
                         <div class="grid w-full grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                            <div class="form-control w-full min-w-0" id="hiddenLOCATION">
+                                <label class="label py-1">
+                                    <span class="label-text font-bold text-base-content/80">
+                                        LOCATION
+                                    </span>
+                                </label>
+                                <input type="text" id="LOCATION" name="LOCATION"
+                                    class="input input-bordered input-sm w-full min-w-0 bg-base-100 focus:input-primary" />
+                            </div>
+
                             <div class="form-control w-full min-w-0" id="hiddenAREANAME">
                                 <label class="label py-1">
                                     <span class="label-text font-bold text-base-content/80">
@@ -411,16 +430,6 @@
                                     </span>
                                 </label>
                                 <input type="text" id="AREALEVEL" name="AREALEVEL"
-                                    class="input input-bordered input-sm w-full min-w-0 bg-base-100 focus:input-primary" />
-                            </div>
-
-                            <div class="form-control w-full min-w-0" id="hiddenLOCATION">
-                                <label class="label py-1">
-                                    <span class="label-text font-bold text-base-content/80">
-                                        LOCATION
-                                    </span>
-                                </label>
-                                <input type="text" id="LOCATION" name="LOCATION"
                                     class="input input-bordered input-sm w-full min-w-0 bg-base-100 focus:input-primary" />
                             </div>
                         </div>
