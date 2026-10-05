@@ -22,14 +22,16 @@ $(async function () {
             throw new Error('User not found');
         }
         $('#INPUTBY').val(empno);
-        $('input[name="form-mode"][value="1"]').prop('checked', true);
+        // ตั้งค่าโหมดฟอร์มเริ่มต้นเป็น 1
         setAutoField({ mode: 1, trigger: false });
+        // สร้าง modal สำหรับเลือก Price Comparison
         modalSelectPriceComparison.init();
+        // สร้าง instance ของ PdfViewer และ FileUpload สำหรับไฟล์ Price Comparison
         const pdfViewer = new PdfViewer({
-            // inputId: 'PRICE_COMPARE_FILE',
             containerId: 'price-compare-container',
             iframeId: 'price-compare-iframe',
         });
+        // สร้างช่องสำหรับอัปโหลดไฟล์ Price Comparison ที่ผู้ใช้สามารถเลือกไฟล์ PDF ได้และแสดงชื่อไฟล์ที่เลือกและตัวอย่างไฟล์ใน PDF Viewer
         new FileUpload({
             inputId: 'PRICE_COMPARE_FILE',
             selectFileNameId: 'price-compare-file-name',
@@ -54,6 +56,7 @@ $(async function () {
                 },
             ],
         });
+        // สร้างปุ่ม สำหรับ request form
         $('#btnRequest').html(
             webflowSubmit({
                 request: true,

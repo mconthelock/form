@@ -67,6 +67,7 @@ export const setAutoField = ({
     const priceCompareInput = $('#price-compare-input-fieldset');
     const input = $('#PRICE_COMPARE_NO');
     const file = $('#PRICE_COMPARE_FILE');
+    $(`input[name="form-mode"][value="${mode}"]`).prop('checked', true);
 
     input.toggleClass('req', mode === 1);
     file.toggleClass('req', mode !== 1);
@@ -80,14 +81,14 @@ export const setAutoField = ({
         const element = label.length ? label : autoField[key];
         autoField[key].prop('readonly', mode === 1);
         autoField[key].val(data?.[key] || '');
+        if (removeError) removeClassError(autoField[key]);
+        if (trigger) autoField[key].trigger('blur');
         if (mode == 1) {
             element.addClass('bg-amber-50');
         } else {
             if (key === 'vendorName') return;
             element.removeClass('bg-amber-50');
         }
-        if (removeError) removeClassError(autoField[key]);
-        if (trigger) autoField[key].trigger('blur');
     });
 };
 
