@@ -4,7 +4,7 @@ import { getPdfViewer } from '@amec/webasset/components/pdfViewer';
 import { getFileUploadInstance } from '@amec/webasset/components/fileUpload';
 import { getK850mpData } from '../PUR-CPC/data';
 import { tableComparison } from '../PUR-CPC/table-comparison';
-import { getVendor } from './data';
+import { getCommittee, getGroup, getVendor } from './data';
 
 /**
  * @author Sutthipong Tangmongkhoncharoen(24008)
@@ -107,3 +107,55 @@ export async function checkVendor(vendor) {
     }
     return { status: true, data: vendors[0] };
 }
+
+/**
+ * @author Sutthipong Tangmongkhoncharoen(24008)
+ * @since 2026-10-05
+ * @description โหลดข้อมูลคณะกรรมการและแสดงใน container สามารถส่งค่า committeeId เพื่อกำหนดค่าเริ่มต้นได้
+ * @param {number} committeeId
+ * @returns {Promise<void>}
+ */
+export const committees = async function (committeeId) {
+    const container = $('#committee-container');
+    if (!container.length) throw new Error('Committee container not found');
+    const committees = await getCommittee();
+    if (!committees.status) throw new Error('Failed to fetch committees');
+    container.html(
+        committees.data
+            .map((val) => {
+                return `
+                <label class="label cursor-pointer gap-2 rounded-lg border border-slate-200 px-3 py-2 has-checked:border-primary has-checked:bg-primary/5">
+                    <input type="radio" name="VCOMMITTEE" value="${val.NID}" class="radio radio-sm radio-primary req" ${val.NID === committeeId ? 'checked' : ''}>
+                    <span class="label-text">${val.VCODE}: ${val.VNAME}</span>
+                </label>
+            `;
+            })
+            .join(''),
+    );
+};
+
+/**
+ * @author Sutthipong Tangmongkhoncharoen(24008)
+ * @since 2026-10-05
+ * @description โหลดข้อมูลกลุ่มและแสดงใน container สามารถส่งค่า groupId เพื่อกำหนดค่าเริ่มต้นได้
+ * @param {number} groupId
+ * @returns {Promise<void>}
+ */
+export const groups = async function (groupId) {
+    const container = $('#group-container');
+    if (!container.length) throw new Error('Group container not found');
+    const groups = await getGroup();
+    if (!groups.status) throw new Error('Failed to fetch groups');
+    container.html(
+        groups.data
+            .map((val) => {
+                return `
+                <label class="label cursor-pointer gap-2 rounded-lg border border-slate-200 px-4 py-2 has-checked:border-primary has-checked:bg-primary/5">
+                    <input type="radio" name="group" value="${val.NID}" class="radio radio-sm radio-primary req" ${val.NID === groupId ? 'checked' : ''}>
+                    <span class="label-text">${val.VNAME}</span>
+                </label>
+            `;
+            })
+            .join(''),
+    );
+};

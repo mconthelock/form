@@ -157,59 +157,15 @@
 
                         {{-- PCS Committee --}}
                         <fieldset class="fieldset md:col-span-2">
-                            <legend class="fieldset-legend">PCS Committee</legend>
-                            <div class="flex flex-wrap gap-2">
-                                <label class="label cursor-pointer gap-2 rounded-lg border border-slate-200 px-3 py-2 has-checked:border-primary has-checked:bg-primary/5">
-                                    <input type="checkbox" name="pcs_committee[]" value="AB" class="checkbox checkbox-sm checkbox-primary">
-                                    <span class="label-text">AB : [SPR], [R&amp;D]</span>
-                                </label>
-                                <label class="label cursor-pointer gap-2 rounded-lg border border-slate-200 px-3 py-2 has-checked:border-primary has-checked:bg-primary/5">
-                                    <input type="checkbox" name="pcs_committee[]" value="C" class="checkbox checkbox-sm checkbox-primary">
-                                    <span class="label-text">C : [IE]</span>
-                                </label>
-                                <label class="label cursor-pointer gap-2 rounded-lg border border-slate-200 px-3 py-2 has-checked:border-primary has-checked:bg-primary/5">
-                                    <input type="checkbox" name="pcs_committee[]" value="D" class="checkbox checkbox-sm checkbox-primary">
-                                    <span class="label-text">D : [MCC]</span>
-                                </label>
-                                <label class="label cursor-pointer gap-2 rounded-lg border border-slate-200 px-3 py-2 has-checked:border-primary has-checked:bg-primary/5">
-                                    <input type="checkbox" name="pcs_committee[]" value="E" class="checkbox checkbox-sm checkbox-primary">
-                                    <span class="label-text">E : [PS]</span>
-                                </label>
-                                <label class="label cursor-pointer gap-2 rounded-lg border border-slate-200 px-3 py-2 has-checked:border-primary has-checked:bg-primary/5">
-                                    <input type="checkbox" name="pcs_committee[]" value="F" class="checkbox checkbox-sm checkbox-primary">
-                                    <span class="label-text">F : [ESE]</span>
-                                </label>
+                            <legend class="fieldset-legend req">PCS Committee</legend>
+                            <div class="flex flex-wrap gap-2" id="committee-container">
                             </div>
                         </fieldset>
 
                         {{-- Group --}}
                         <fieldset class="fieldset md:col-span-2">
-                            <legend class="fieldset-legend">Group</legend>
-                            <div class="flex flex-wrap gap-2">
-                                <label class="label cursor-pointer gap-2 rounded-lg border border-slate-200 px-4 py-2 has-checked:border-primary has-checked:bg-primary/5">
-                                    <input type="radio" name="group" value="Bulk" class="radio radio-sm radio-primary">
-                                    <span class="label-text">Bulk</span>
-                                </label>
-                                <label class="label cursor-pointer gap-2 rounded-lg border border-slate-200 px-4 py-2 has-checked:border-primary has-checked:bg-primary/5">
-                                    <input type="radio" name="group" value="JOP" class="radio radio-sm radio-primary">
-                                    <span class="label-text">JOP</span>
-                                </label>
-                                <label class="label cursor-pointer gap-2 rounded-lg border border-slate-200 px-4 py-2 has-checked:border-primary has-checked:bg-primary/5">
-                                    <input type="radio" name="group" value="Sub-Con" class="radio radio-sm radio-primary">
-                                    <span class="label-text">Sub-Con</span>
-                                </label>
-                                <label class="label cursor-pointer gap-2 rounded-lg border border-slate-200 px-4 py-2 has-checked:border-primary has-checked:bg-primary/5">
-                                    <input type="radio" name="group" value="Indirect" class="radio radio-sm radio-primary">
-                                    <span class="label-text">Indirect</span>
-                                </label>
-                                <label class="label cursor-pointer gap-2 rounded-lg border border-slate-200 px-4 py-2 has-checked:border-primary has-checked:bg-primary/5">
-                                    <input type="radio" name="group" value="Sample" class="radio radio-sm radio-primary">
-                                    <span class="label-text">Sample</span>
-                                </label>
-                                <label class="label cursor-pointer gap-2 rounded-lg border border-slate-200 px-4 py-2 has-checked:border-primary has-checked:bg-primary/5">
-                                    <input type="radio" name="group" value="Others" class="radio radio-sm radio-primary">
-                                    <span class="label-text">Others</span>
-                                </label>
+                            <legend class="fieldset-legend req">Group</legend>
+                            <div class="flex flex-wrap gap-2" id="group-container">
                             </div>
                         </fieldset>
                     </div>
@@ -253,15 +209,15 @@
                         </fieldset>
                         <fieldset class="fieldset">
                             <legend class="fieldset-legend">Effective Month</legend>
-                            <input type="month" name="effective_month" class="input w-full req" data-message="Please select effective month">
+                            <input type="month" name="EFT_MONTH" class="input w-full req" data-message="Please select effective month">
                         </fieldset>
                         <fieldset class="fieldset">
                             <legend class="fieldset-legend">Effective Type</legend>
                             <label class="label cursor-pointer justify-start gap-2 rounded-lg border border-slate-200 px-4 py-2 has-checked:border-primary has-checked:bg-primary/5">
-                                <input type="radio" name="effective_type" value="Others" class="radio radio-sm radio-primary">
+                                <input type="checkbox" name="EFT_TYPE" value="Others" class="checkbox checkbox-sm checkbox-primary">
                                 <span class="label-text">Others</span>
                             </label>
-                            <input type="text" name="effective_type_other" class="input w-full mt-2" placeholder="Incase other ; need to input data">
+                            <input type="text" name="EFT_TYPE_OTHER" class="input w-full mt-2" placeholder="Incase other ; need to input data">
                         </fieldset>
                     </div>
                 </section>

@@ -32,3 +32,29 @@ export async function getVendor(vendor) {
         },
     });
 }
+
+/**
+ * @author Sutthipong Tangmongkhoncharoen(24008)
+ * @since 2026-10-05
+ * @description ดึงข้อมูลคณะกรรมการ PCS จากระบบ
+ * @returns
+ */
+export async function getCommittee() {
+    return await fetchUtils({
+        url: `${process.env.APP_API}/purform/pur-pra/committees`,
+        method: 'GET',
+    });
+}
+
+/**
+ * @author Sutthipong Tangmongkhoncharoen(24008)
+ * @since 2026-10-05
+ * @description ดึงข้อมูลกลุ่มจากระบบ
+ * @returns
+ */
+export async function getGroup() {
+    return await fetchUtils({
+        url: `${process.env.APP_API}/purform/pur-pra/groups`,
+        method: 'GET',
+    });
+}

@@ -9,7 +9,13 @@ import { PdfViewer } from '@amec/webasset/components/pdfViewer';
 import { FileUpload } from '@amec/webasset/components/fileUpload';
 import { tableDraft } from '../PUR-CPC/table-draft';
 import { getListCreate } from './data';
-import { checkPlanner, checkVendor, setAutoField } from './function';
+import {
+    checkPlanner,
+    checkVendor,
+    committees,
+    groups,
+    setAutoField,
+} from './function';
 import { modalSelectPriceComparison } from './modal/select-price-comparison';
 import { webflowSubmit } from '@amec/webasset/components/form';
 
@@ -56,6 +62,10 @@ $(async function () {
                 },
             ],
         });
+        // เรียกใช้งานฟังก์ชันเพื่อโหลดข้อมูลคณะกรรมการและกลุ่ม
+        committees();
+        // เรียกใช้งานฟังก์ชันเพื่อโหลดข้อมูลกลุ่ม
+        groups();
         // สร้างปุ่ม สำหรับ request form
         $('#btnRequest').html(
             webflowSubmit({
