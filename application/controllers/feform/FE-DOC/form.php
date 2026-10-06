@@ -418,7 +418,7 @@ class form extends MY_Controller {
         return $this->output->set_content_type('application/json')->set_output(json_encode(['status' => true]));
     }
 
-    public function PreviewStampedPdf() {
+   public function PreviewStampedPdf() {
         $formKeys = [
             'NFRMNO' => (int)$this->input->get('no'),
             'VORGNO' => (string)$this->input->get('orgNo'),
@@ -432,7 +432,7 @@ class form extends MY_Controller {
         $header = $dbSmmt->where($formKeys)->get('FE_DOC_HEADER')->row();
         if (!$header) show_error('Document not found in SMMT', 404);
 
-        // 2. ดึงไฟล์ PDF แนบจากตาราง FE_FILE ใน DEFAULT (Webflow Base)
+        // 2. ดึงไฟล์ PDF จากตาราง FE_FILE
         $dbWebflow = $this->load->database($this->webflowBase, TRUE);
         $filePdf = $dbWebflow->where($formKeys)
                              ->group_start()
@@ -454,15 +454,18 @@ class form extends MY_Controller {
             }
         }
 
-        // 3. ดึง Step จาก SMMT และ Log จาก DEFAULT
+        // คลายการบีบอัด PDF เป็นเวอร์ชัน 1.4 ก่อนส่งให้ FPDI อ่าน
+        $cleanPdfPath = $this->repairPdfForFpdi($fullPath);
+
+        // 3. ดึง Step และ Log อนุมัติ
         $steps = $this->MainModel->getStepsByDocType($header->DOC_TYPE_CODE);
         $approvalLogs = $this->MainModel->getApprovalLogList($formKeys);
 
-        // 4. โหลด PDF และ Stamp ตราอนุมัติ
+        // 4. นำมา Stamp และ Preview บน Browser
         $pdf = new Fpdi();
         $pdf->setPrintHeader(false);
         $pdf->setPrintFooter(false);
-        $pageCount = $pdf->setSourceFile($fullPath);
+        $pageCount = $pdf->setSourceFile($cleanPdfPath);
 
         for ($p = 1; $p <= $pageCount; $p++) {
             $tplId = $pdf->importPage($p);
@@ -472,12 +475,54 @@ class form extends MY_Controller {
             $pdf->AddPage($orientation, [$size['width'], $size['height']]);
             $pdf->useTemplate($tplId, 0, 0, $size['width'], $size['height'], true);
 
+            // Stamp เฉพาะหน้าแรก
             if ($p === 1) {
                 $this->drawDynamicStamp($pdf, $steps, $approvalLogs, $size['width']);
             }
         }
 
-        $pdf->Output('Stamped_' . $header->DOC_NO . '.pdf', 'I');
+        // ลบ Temp PDF ที่แปลงไว้
+        if ($cleanPdfPath !== $fullPath && file_exists($cleanPdfPath)) {
+            @unlink($cleanPdfPath);
+        }
+
+        // แสดงผล Preview บน Browser ทันที ('I' = Inline)
+        $pdf->Output('Preview_' . $header->DOC_NO . '.pdf', 'I');
+    }
+
+    /**
+     * ฟังก์ชันแปลง PDF 1.5+ หรือไฟล์ที่มี compressed xref streams ให้เป็น PDF 1.4
+     * เพื่อให้ FPDI เวอร์ชันฟรีอ่านได้โดยไม่เกิด CrossReferenceException
+     */
+    private function repairPdfForFpdi($inputPath) {
+        $tempPath = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'fpdi_fixed_' . uniqid() . '.pdf';
+
+        // 1. ลองใช้ Ghostscript (gs) แปลงเป็น PDF 1.4 (เข้ากันได้กับ FPDI ฟรี)
+        $cmdGs = sprintf(
+            'gs -sDEVICE=pdfwrite -dCompatibilityLevel=1.4 -dNOPAUSE -dQUIET -dBATCH -sOutputFile=%s %s 2>&1',
+            escapeshellarg($tempPath),
+            escapeshellarg($inputPath)
+        );
+        exec($cmdGs, $outputGs, $returnCodeGs);
+
+        if ($returnCodeGs === 0 && file_exists($tempPath) && filesize($tempPath) > 0) {
+            return $tempPath;
+        }
+
+        // 2. Fallback: กรณีเครื่องติดตั้ง qpdf
+        $cmdQpdf = sprintf(
+            'qpdf --qdf --object-streams=disable %s %s 2>&1',
+            escapeshellarg($inputPath),
+            escapeshellarg($tempPath)
+        );
+        exec($cmdQpdf, $outputQpdf, $returnCodeQpdf);
+
+        if ($returnCodeQpdf === 0 && file_exists($tempPath) && filesize($tempPath) > 0) {
+            return $tempPath;
+        }
+
+        // หากสภาพแวดล้อมไม่มีคำสั่งแปลงไฟล์ ให้คืน path เดิม
+        return $inputPath;
     }
     
     private function drawDynamicStamp($pdf, $steps, $approvalLogs, $pageWidth) {
