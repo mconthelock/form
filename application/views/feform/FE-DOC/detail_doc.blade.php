@@ -35,17 +35,20 @@
     </div>
 
     <!-- โซนแนบไฟล์เอกสาร (PDF & Excel) -->
+    <!-- โซนแนบไฟล์เอกสาร (เฉพาะ PDF) -->
     <div class="mt-4">
         <label class="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">
-            Attachment Files (รองรับ PDF, XLSX, XLS) <span class="text-rose-500">*</span>
+            ATTACHMENT FILES (รองรับเฉพาะไฟล์ PDF เท่านั้น) <span class="text-rose-500">*</span>
         </label>
         
+        <!-- ซ่อน file input ไว้นอก drop-zone และรับเฉพาะ .pdf -->
+        <input type="file" id="files" name="files[]" class="hidden" accept=".pdf,application/pdf" multiple>
+
         <div id="drop-zone" class="border-2 border-dashed border-slate-300 hover:border-blue-500 bg-white rounded-2xl p-6 text-center cursor-pointer transition-all">
-            <input type="file" id="files" class="hidden" accept=".pdf,.xlsx,.xls" multiple>
-            <div class="flex flex-col items-center justify-center gap-1.5">
-                <span class="text-3xl">📁</span>
+            <div class="flex flex-col items-center justify-center gap-1.5 pointer-events-none">
+                <span class="text-3xl">📄</span>
                 <p class="text-sm font-semibold text-slate-700">คลิกเลือกไฟล์ หรือลากไฟล์มาวางที่นี่</p>
-                <p class="text-xs text-slate-400">PDF หรือ Excel สูงสุด 20MB</p>
+                <p class="text-xs text-rose-500 font-medium">รองรับเฉพาะไฟล์ PDF (สูงสุด 5MB)</p>
             </div>
         </div>
 
@@ -59,4 +62,5 @@
             <ul id="uploaded-files-list" class="divide-y divide-slate-100 border border-slate-200 rounded-xl bg-white p-2 shadow-sm"></ul>
         </div>
     </div>
+
 </div>

@@ -280,9 +280,10 @@ class form extends MY_Controller {
                 'REMARK'        => $remark,
                 'STATUS'        => 'PROCESS',
                 'USER_ACTION'   => $requesterEmpNo,
-                'DATE_ACTION'   => date('Y-m-d H:i:s')
+                // 'DATE_ACTION'   => date('Y-m-d H:i:s')
             ];
             $dbSmmt = $this->load->database($this->SmmtBase, TRUE);
+            $dbSmmt->set('DATE_ACTION', 'SYSDATE', FALSE);
             $dbSmmt->insert('FE_DOC_HEADER', $headerData);
 
             // 8. บันทึกไฟล์แนบ (PDF / Excel)
@@ -336,7 +337,8 @@ class form extends MY_Controller {
                 'NRUNNO'  => $nrunno
             ]);
             $dbSmmt->set('STATUS', $status);
-            $dbSmmt->set('DATE_ACTION', "TO_DATE('" . date('Y-m-d H:i:s') . "', 'YYYY-MM-DD HH24:MI:SS')", FALSE);
+            // $dbSmmt->set('DATE_ACTION', "TO_DATE('" . date('Y-m-d H:i:s') . "', 'YYYY-MM-DD HH24:MI:SS')", FALSE);
+            $dbSmmt->set('DATE_ACTION', 'SYSDATE', FALSE);
             $dbSmmt->update('FE_DOC_HEADER');
 
             return $this->output->set_output(json_encode(['status' => true, 'statusDoc' => $status]));
@@ -374,6 +376,16 @@ class form extends MY_Controller {
 
         if ($file) {
             $fullPath = rtrim($file->FILE_PATH, '/\\') . DIRECTORY_SEPARATOR . $file->FILE_FNAME;
+
+            // Fallback เช็คกรณีสลับ Path ระหว่าง Server กับ Local
+            if (!file_exists($fullPath)) {
+                $localFallback = "D:\\Project\\src\\File_Sys\\form\\feform\\FE-DOC\\" . $file->FILE_FNAME;
+                if (file_exists($localFallback)) {
+                    $fullPath = $localFallback;
+                }
+            }
+
+
             if (file_exists($fullPath)) {
                 $this->load->helper('download');
                 force_download($file->FILE_ONAME, file_get_contents($fullPath));
@@ -420,18 +432,33 @@ class form extends MY_Controller {
         $header = $dbSmmt->where($formKeys)->get('FE_DOC_HEADER')->row();
         if (!$header) show_error('Document not found in SMMT', 404);
 
-        // 2. ดึงไฟล์ PDF จากตาราง FE_FILE ใน DEFAULT (Webflow Base)
+        // 2. ดึงไฟล์ PDF แนบจากตาราง FE_FILE ใน DEFAULT (Webflow Base)
         $dbWebflow = $this->load->database($this->webflowBase, TRUE);
-        $filePdf = $dbWebflow->where($formKeys)->like('FILE_TYPE', 'PDF')->get('FE_FILE')->row();
+        $filePdf = $dbWebflow->where($formKeys)
+                             ->group_start()
+                                 ->like('LOWER(FILE_ONAME)', '.pdf')
+                                 ->or_like('LOWER(FILE_FNAME)', '.pdf')
+                             ->group_end()
+                             ->order_by('FILE_ID', 'ASC')
+                             ->get('FE_FILE')->row();
+
         if (!$filePdf) show_error('No PDF file attached to this document', 404);
 
         $fullPath = rtrim($filePdf->FILE_PATH, '/\\') . DIRECTORY_SEPARATOR . $filePdf->FILE_FNAME;
-        if (!file_exists($fullPath)) show_error('File not found on server', 404);
+        if (!file_exists($fullPath)) {
+            $localFallback = "D:\\Project\\src\\File_Sys\\form\\feform\\FE-DOC\\" . $filePdf->FILE_FNAME;
+            if (file_exists($localFallback)) {
+                $fullPath = $localFallback;
+            } else {
+                show_error('File not found on server: ' . $fullPath, 404);
+            }
+        }
 
         // 3. ดึง Step จาก SMMT และ Log จาก DEFAULT
         $steps = $this->MainModel->getStepsByDocType($header->DOC_TYPE_CODE);
         $approvalLogs = $this->MainModel->getApprovalLogList($formKeys);
 
+        // 4. โหลด PDF และ Stamp ตราอนุมัติ
         $pdf = new Fpdi();
         $pdf->setPrintHeader(false);
         $pdf->setPrintFooter(false);
@@ -452,7 +479,7 @@ class form extends MY_Controller {
 
         $pdf->Output('Stamped_' . $header->DOC_NO . '.pdf', 'I');
     }
-
+    
     private function drawDynamicStamp($pdf, $steps, $approvalLogs, $pageWidth) {
         $stepCount = count($steps);
         if ($stepCount === 0) return;
@@ -511,31 +538,52 @@ class form extends MY_Controller {
     }
 
     private function uploadAttachmentFiles($nfrmno, $vorgno, $cyear, $cyear2, $nrunno) {
-        $uploadPath = $_ENV['AMEC_FILE_PATH'] . "Form/FE/FE_DOC/";
-        if (!is_dir($uploadPath)) mkdir($uploadPath, 0777, true);
+        $host = $_SERVER['HTTP_HOST'] ?? '';
+        if (strpos($host, 'localhost') !== false || strpos($host, '127.0.0.1') !== false) {
+            $uploadPath = "D:/Project/src/File_Sys/form/feform/FE-DOC/";
+        } else {
+            $uploadPath = rtrim($_ENV['AMEC_FILE_PATH'], '/\\') . "/Form/FE/FE_DOC/";
+        }
 
-        // บันทึกลงตาราง FE_FILE ใน DEFAULT (Webflow Base)
+        if (!is_dir($uploadPath)) {
+            mkdir($uploadPath, 0777, true);
+        }
+
         $dbWebflow = $this->load->database($this->webflowBase, TRUE);
         $count = count($_FILES['files']['name']);
+        $currentEmpNo = $this->input->get_post('empno') ?? ($this->input->post('EMPNO') ?? 'SYSTEM');
 
         for ($i = 0; $i < $count; $i++) {
             $origName = $_FILES['files']['name'][$i];
-            $ext = pathinfo($origName, PATHINFO_EXTENSION);
+            if (empty($origName)) continue;
+
+            $ext = strtolower(pathinfo($origName, PATHINFO_EXTENSION));
+
+            // ตรวจสอบความถูกต้อง: บันทึกเฉพาะไฟล์ PDF เท่านั้น
+            if ($ext !== 'pdf') {
+                continue; 
+            }
+
             $sysName = "FE_DOC_{$cyear2}_{$nrunno}_" . uniqid() . "." . $ext;
-            $dest = $uploadPath . $sysName;
+            $dest = rtrim($uploadPath, '/\\') . DIRECTORY_SEPARATOR . $sysName;
 
             if (move_uploaded_file($_FILES['files']['tmp_name'][$i], $dest)) {
-                $dbWebflow->insert('FE_FILE', [
-                    'NFRMNO'     => $nfrmno,
-                    'VORGNO'     => $vorgno,
-                    'CYEAR'      => $cyear,
-                    'CYEAR2'     => $cyear2,
-                    'NRUNNO'     => $nrunno,
-                    'FILE_ONAME' => $origName,
-                    'FILE_FNAME' => $sysName,
-                    'FILE_PATH'  => $uploadPath,
-                    'FILE_TYPE'  => strtoupper($ext)
-                ]);
+                $fileData = [
+                    'NFRMNO'          => (int)$nfrmno,
+                    'VORGNO'          => (string)$vorgno,
+                    'CYEAR'           => (string)$cyear,
+                    'CYEAR2'          => (string)$cyear2,
+                    'NRUNNO'          => (int)$nrunno,
+                    'FILE_ONAME'      => $origName,
+                    'FILE_FNAME'      => $sysName,
+                    'FILE_USERCREATE' => (string)$currentEmpNo,
+                    'FILE_TYPE'       => null,
+                    'FILE_STATUS'     => 1,
+                    'FILE_PATH'       => $uploadPath
+                ];
+
+                $dbWebflow->set('FILE_DATECREATE', 'SYSDATE', FALSE);
+                $dbWebflow->insert('FE_FILE', $fileData);
             }
         }
     }
