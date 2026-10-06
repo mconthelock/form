@@ -93,7 +93,7 @@
                             <legend class="fieldset-legend req">Refer Price compare no.</legend>
                             <div class="join w-full" >
                                 <label class="input join-item w-full bg-amber-50">
-                                    <input type="text" name="PRICE_COMPARE_NO" id="PRICE_COMPARE_NO" readonly class="grow req">
+                                    <input type="text" name="PRICE_COMPARE_NO" id="PRICE_COMPARE_NO" readonly class="grow req" placeholder="PUR-CPC26-000001">
                                 </label>
                                 <button type="button" class="btn btn-neutral join-item" id="btn-view-compare">
                                     <i class="fi fi-rr-eye"></i>View record
@@ -124,15 +124,15 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 p-4">
                         <fieldset class="fieldset">
                             <legend class="fieldset-legend req">Vendor Code</legend>
-                            <input type="text" name="VVENDOR" id="VVENDOR" class="input w-full req" readonly data-message="Please Enter Vendor code">
+                            <input type="text" name="VVENDOR" id="VVENDOR" class="input w-full req" readonly placeholder="10003" data-message="Please Enter Vendor code">
                         </fieldset>
                         <fieldset class="fieldset">
                             <legend class="fieldset-legend req">Vendor Name</legend>
-                            <input type="text" name="VVENDOR_NAME" id="VVENDOR_NAME" class="input w-full req" readonly data-message="Please Enter Vendor name">
+                            <input type="text" name="VVENDOR_NAME" id="VVENDOR_NAME" class="input w-full req" readonly placeholder="MITSUBISHI ELECTRIC TRADING CO" data-message="Please Enter Vendor name">
                         </fieldset>
                         <fieldset class="fieldset">
                             <legend class="fieldset-legend req">Planner Code</legend>
-                            <input type="text" name="VPLANNER" id="VPLANNER" class="input w-full req" readonly data-message="Please Enter Planner code">
+                            <input type="text" name="VPLANNER" id="VPLANNER" class="input w-full req uppercase" readonly placeholder="G" data-message="Please Enter Planner code">
                         </fieldset>
                         <fieldset class="fieldset">
                             <legend class="fieldset-legend req">Material Code</legend>
@@ -213,11 +213,21 @@
                         </fieldset>
                         <fieldset class="fieldset">
                             <legend class="fieldset-legend">Effective Type</legend>
-                            <label class="label cursor-pointer justify-start gap-2 rounded-lg border border-slate-200 px-4 py-2 has-checked:border-primary has-checked:bg-primary/5">
-                                <input type="checkbox" name="VEFT_TYPE" value="1" class="checkbox checkbox-sm checkbox-primary">
-                                <span class="label-text">Others</span>
-                            </label>
-                            <textarea name="VEFT_TYPE_OTHER" id="VEFT_TYPE_OTHER" class="textarea w-full" rows="5" disabled></textarea>
+                            <div class="flex flex-wrap gap-2">
+                                <label class="label cursor-pointer justify-start gap-2 rounded-lg border border-slate-200 px-4 py-2 has-checked:border-primary has-checked:bg-primary/5">
+                                    <input type="radio" name="VEFT_TYPE" value="PO issue basis" class="radio radio-sm radio-primary">
+                                    <span class="label-text">PO issue basis</span>
+                                </label>
+                                <label class="label cursor-pointer justify-start gap-2 rounded-lg border border-slate-200 px-4 py-2 has-checked:border-primary has-checked:bg-primary/5">
+                                    <input type="radio" name="VEFT_TYPE" value="Delivery basis" class="radio radio-sm radio-primary">
+                                    <span class="label-text">Delivery basis</span>
+                                </label>
+                                <label class="label cursor-pointer justify-start gap-2 rounded-lg border border-slate-200 px-4 py-2 has-checked:border-primary has-checked:bg-primary/5">
+                                    <input type="radio" name="VEFT_TYPE" value="Others" class="radio radio-sm radio-primary">
+                                    <span class="label-text">Others</span>
+                                </label>
+                                <textarea name="VEFT_TYPE_OTHER" id="VEFT_TYPE_OTHER" class="textarea w-full" rows="5" disabled></textarea>
+                            </div>
                         </fieldset>
                     </div>
                 </section>

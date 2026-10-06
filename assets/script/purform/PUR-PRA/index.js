@@ -174,10 +174,19 @@ $(document).on('change', '#VVENDOR', async function () {
     }
 });
 
+/**
+ * @author Sutthipong Tangmongkhoncharoen(24008)
+ * @since 2026-10-05
+ * @description จัดการการเปิด/ปิดฟิลด์ VEFT_TYPE_OTHER ตามการเลือก VEFT_TYPE
+ */
 $(document).on('click', 'input[name="VEFT_TYPE"]', function () {
     try {
         const checked = $(this).prop('checked');
-        $('#VEFT_TYPE_OTHER').prop('disabled', !checked);
+        const value = $(this).val();
+        $('#VEFT_TYPE_OTHER').prop(
+            'disabled',
+            !(checked && value === 'Others'),
+        );
     } catch (error) {
         console.error(error);
         showErrorMessage(error.message);
