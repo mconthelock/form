@@ -59,9 +59,47 @@ $(document).ready(async function () {
     }, 10);
 
     // File Selection & Drag & Drop
-    $('#drop-zone').on('click', () => $('#files').trigger('click'));
+    // $('#drop-zone').on('click', () => $('#files').trigger('click'));
+    // $(document).on('change', '#files', function () {
+    //     handleFileSelect(this.files);
+    // });
+    // ป้องกัน Event Loop และเปิด File Dialog
+    $('#drop-zone').on('click', function (e) {
+        e.preventDefault();
+        $('#files').click();
+    });
+
+    $('#files').on('click', function (e) {
+        e.stopPropagation();
+    });
+
     $(document).on('change', '#files', function () {
         handleFileSelect(this.files);
+        $(this).val(''); // ล้างค่าเพื่อให้เลือกไฟล์เดิมซ้ำได้
+    });
+
+    // รองรับ Drag & Drop
+    $('#drop-zone').on('dragover dragenter', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        $(this).addClass('border-blue-500 bg-blue-50/40');
+    });
+
+    $('#drop-zone').on('dragleave dragend', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        $(this).removeClass('border-blue-500 bg-blue-50/40');
+    });
+
+    $('#drop-zone').on('drop', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        $(this).removeClass('border-blue-500 bg-blue-50/40');
+
+        const dt = e.originalEvent.dataTransfer;
+        if (dt && dt.files && dt.files.length > 0) {
+            handleFileSelect(dt.files);
+        }
     });
 
     // Submit Document Action
@@ -73,10 +111,10 @@ $(document).ready(async function () {
         }
 
         const validFiles = selectedFilesArray.filter((f) => f !== null);
-        // if ($('#DocHeaderIDHid').val() === '' && validFiles.length === 0) {
-        //     alert('กรุณาแนบไฟล์เอกสาร (PDF หรือ Excel) อย่างน้อย 1 ไฟล์');
-        //     return;
-        // }
+        if ($('#DocHeaderIDHid').val() === '' && validFiles.length === 0) {
+            alert('กรุณาแนบไฟล์เอกสาร PDF อย่างน้อย 1 ไฟล์');
+            return;
+        }
 
         if (
             !confirm('ยืนยันการบันทึกและส่งเอกสารเข้าระบบ Approval ใช่หรือไม่?')
@@ -209,7 +247,7 @@ async function actionFlow(actionType) {
     }
 }
 
-function handleFileSelect(files) {
+function handleFileSelect0(files) {
     if (!files || files.length === 0) return;
     $('#file-list-container').removeClass('hidden');
 
@@ -228,6 +266,46 @@ function handleFileSelect(files) {
                 <button type="button" class="btn-remove-selected-file text-rose-500 font-bold text-xs" data-index="${idx}">Remove</button>
             </li>`;
         $('#selected-files-list').append(html);
+    }
+}
+
+function handleFileSelect(files) {
+    if (!files || files.length === 0) return;
+
+    let hasInvalid = false;
+
+    for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const ext = file.name.split('.').pop().toLowerCase();
+
+        // ตรวจสอบว่าต้องเป็นไฟล์ PDF เท่านั้น
+        if (ext !== 'pdf' && file.type !== 'application/pdf') {
+            hasInvalid = true;
+            continue; // ข้ามไฟล์ที่ไม่ใช่ PDF
+        }
+
+        selectedFilesArray.push(file);
+        let idx = selectedFilesArray.length - 1;
+        let fileSize = (file.size / (1024 * 1024)).toFixed(2) + ' MB';
+
+        let html = `
+            <li class="flex items-center justify-between py-2 px-3 text-sm" id="file-item-${idx}">
+                <div class="flex items-center gap-2 truncate">
+                    <span class="text-rose-500 font-bold text-xs bg-rose-50 px-1.5 py-0.5 rounded border border-rose-200">PDF</span>
+                    <span class="font-medium text-slate-700 truncate">${file.name}</span>
+                    <span class="text-xs text-slate-400">(${fileSize})</span>
+                </div>
+                <button type="button" class="btn-remove-selected-file text-rose-500 font-bold text-xs" data-index="${idx}">Remove</button>
+            </li>`;
+        $('#selected-files-list').append(html);
+    }
+
+    if (hasInvalid) {
+        alert('ระบบรองรับเฉพาะไฟล์ PDF เท่านั้น ไฟล์ที่ไม่ใช่ PDF จะถูกตัดออก');
+    }
+
+    if (selectedFilesArray.filter(Boolean).length > 0) {
+        $('#file-list-container').removeClass('hidden');
     }
 }
 
