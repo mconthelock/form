@@ -125,7 +125,7 @@ export const committees = async function (committeeId) {
             .map((val) => {
                 return `
                 <label class="label cursor-pointer gap-2 rounded-lg border border-slate-200 px-3 py-2 has-checked:border-primary has-checked:bg-primary/5">
-                    <input type="radio" name="VCOMMITTEE" value="${val.NID}" class="radio radio-sm radio-primary req" ${val.NID === committeeId ? 'checked' : ''}>
+                    <input type="radio" name="NCOMMITTEE" value="${val.NID}" class="radio radio-sm radio-primary req" ${val.NID === committeeId ? 'checked' : ''}>
                     <span class="label-text">${val.VCODE}: ${val.VNAME}</span>
                 </label>
             `;
@@ -151,7 +151,7 @@ export const groups = async function (groupId) {
             .map((val) => {
                 return `
                 <label class="label cursor-pointer gap-2 rounded-lg border border-slate-200 px-4 py-2 has-checked:border-primary has-checked:bg-primary/5">
-                    <input type="radio" name="group" value="${val.NID}" class="radio radio-sm radio-primary req" ${val.NID === groupId ? 'checked' : ''}>
+                    <input type="radio" name="NGROUP" value="${val.NID}" class="radio radio-sm radio-primary req" ${val.NID === groupId ? 'checked' : ''}>
                     <span class="label-text">${val.VNAME}</span>
                 </label>
             `;

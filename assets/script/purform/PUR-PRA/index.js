@@ -18,6 +18,8 @@ import {
 } from './function';
 import { modalSelectPriceComparison } from './modal/select-price-comparison';
 import { webflowSubmit } from '@amec/webasset/components/form';
+import { setDatePicker } from '@amec/webasset/flatpickr';
+import { formatDate } from '@amec/webasset/dayjs';
 
 $(async function () {
     try {
@@ -66,6 +68,16 @@ $(async function () {
         committees();
         // เรียกใช้งานฟังก์ชันเพื่อโหลดข้อมูลกลุ่ม
         groups();
+        // ตั้งค่า Date Picker สำหรับฟิลด์ Effective Month
+        setDatePicker({
+            element: '#VEFT_MONTH',
+            mode: 'month',
+            dateFormat: "M'y",
+            onChange: function (selectedDates, dateStr, instance) {
+                console.log(dateStr);
+                console.log(formatDate(selectedDates[0]));
+            },
+        });
         // สร้างปุ่ม สำหรับ request form
         $('#btnRequest').html(
             webflowSubmit({
@@ -156,6 +168,16 @@ $(document).on('change', '#VVENDOR', async function () {
             },
             mode: 0,
         });
+    } catch (error) {
+        console.error(error);
+        showErrorMessage(error.message);
+    }
+});
+
+$(document).on('click', 'input[name="VEFT_TYPE"]', function () {
+    try {
+        const checked = $(this).prop('checked');
+        $('#VEFT_TYPE_OTHER').prop('disabled', !checked);
     } catch (error) {
         console.error(error);
         showErrorMessage(error.message);

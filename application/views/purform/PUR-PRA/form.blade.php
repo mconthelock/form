@@ -209,15 +209,15 @@
                         </fieldset>
                         <fieldset class="fieldset">
                             <legend class="fieldset-legend">Effective Month</legend>
-                            <input type="month" name="EFT_MONTH" class="input w-full req" data-message="Please select effective month">
+                            <input type="month" name="VEFT_MONTH" id="VEFT_MONTH" class="input w-full req" data-message="Please select effective month">
                         </fieldset>
                         <fieldset class="fieldset">
                             <legend class="fieldset-legend">Effective Type</legend>
                             <label class="label cursor-pointer justify-start gap-2 rounded-lg border border-slate-200 px-4 py-2 has-checked:border-primary has-checked:bg-primary/5">
-                                <input type="checkbox" name="EFT_TYPE" value="Others" class="checkbox checkbox-sm checkbox-primary">
+                                <input type="checkbox" name="VEFT_TYPE" value="1" class="checkbox checkbox-sm checkbox-primary">
                                 <span class="label-text">Others</span>
                             </label>
-                            <input type="text" name="EFT_TYPE_OTHER" class="input w-full mt-2" placeholder="Incase other ; need to input data">
+                            <textarea name="VEFT_TYPE_OTHER" id="VEFT_TYPE_OTHER" class="textarea w-full" rows="5" disabled></textarea>
                         </fieldset>
                     </div>
                 </section>
@@ -236,15 +236,27 @@
                             <div class="flex flex-col gap-2">
                                 <label class="label cursor-pointer justify-start gap-2">
                                     <input type="radio" name="reason" value="neg_compare" class="radio radio-sm radio-primary">
-                                    <span class="label-text">Compare with Other vendors / MELINA or AMEC's Price / Other</span>
+                                    <span class="label-text">Compare with Other vendors</span>
+                                </label>
+                                <label class="label cursor-pointer justify-start gap-2">
+                                    <input type="radio" name="reason" value="neg_compare" class="radio radio-sm radio-primary">
+                                    <span class="label-text">Compare with MELINA or AMEC's Price</span>
                                 </label>
                                 <label class="label cursor-pointer justify-start gap-2">
                                     <input type="radio" name="reason" value="neg_hq" class="radio radio-sm radio-primary">
-                                    <span class="label-text">MELCO HQ Central purchasing / MELINA Global integrated price</span>
+                                    <span class="label-text">MELCO HQ Central purchasing</span>
+                                </label>
+                                <label class="label cursor-pointer justify-start gap-2">
+                                    <input type="radio" name="reason" value="neg_hq" class="radio radio-sm radio-primary">
+                                    <span class="label-text">MELINA Global integrated price</span>
                                 </label>
                                 <label class="label cursor-pointer justify-start gap-2">
                                     <input type="radio" name="reason" value="neg_material" class="radio radio-sm radio-primary">
-                                    <span class="label-text">Material Cost / Freight Cost</span>
+                                    <span class="label-text">Material Cost</span>
+                                </label>
+                                <label class="label cursor-pointer justify-start gap-2">
+                                    <input type="radio" name="reason" value="neg_material" class="radio radio-sm radio-primary">
+                                    <span class="label-text">Freight Cost</span>
                                 </label>
                                 <label class="label cursor-pointer justify-start gap-2">
                                     <input type="radio" name="reason" value="neg_moq" class="radio radio-sm radio-primary">
@@ -313,10 +325,13 @@
                                     <input type="radio" name="reason" value="air_fee" class="radio radio-sm radio-primary">
                                     <span class="label-text">Air fee</span>
                                 </label>
-                                <label class="label cursor-pointer justify-start gap-2">
-                                    <input type="radio" name="reason" value="other" class="radio radio-sm radio-primary">
-                                    <span class="label-text">Other</span>
-                                </label>
+                                <div class="flex items-center gap-2">
+                                     <label class="label cursor-pointer justify-start gap-2">
+                                         <input type="radio" name="reason" value="other" class="radio radio-sm radio-primary">
+                                         <span class="label-text">Other</span>
+                                    </label>
+                                    <input type="text" name="reason_neg_other" class="input input-sm w-full max-w-xs" placeholder="ระบุเหตุผล">
+                                </div>
                             </div>
                         </fieldset>
 
@@ -338,7 +353,7 @@
                                 </label>
                                 <label class="label cursor-pointer justify-start gap-2">
                                     <input type="radio" name="reason" value="bcr_mts" class="radio radio-sm radio-primary">
-                                    <span class="label-text">MT-S</span>
+                                    <span class="label-text">MT-Self</span>
                                 </label>
                                 <label class="label cursor-pointer justify-start gap-2">
                                     <input type="radio" name="reason" value="bcr_mtt" class="radio radio-sm radio-primary">
@@ -376,13 +391,19 @@
                                     <input type="text" name="reason_bcr_others" class="input input-sm w-full max-w-[10rem]">
                                 </div>
                             </div>
-                            <div class="flex flex-wrap items-center gap-3 mt-2">
-                                <label class="label cursor-pointer justify-start gap-2">
-                                    <input type="radio" name="reason" value="estimate_price" class="radio radio-sm radio-primary">
-                                    <span class="label-text">Estimate price</span>
-                                </label>
-                                <span class="badge badge-info badge-outline">PO issue with temporary price</span>
-                            </div>
+                        </fieldset>
+
+                          {{-- Estimate price --}}
+                        <fieldset class="fieldset lg:col-span-2">
+                            <legend class="fieldset-legend font-semibold">Estimate price</legend>
+                            <label class="label cursor-pointer justify-start gap-2">
+                                <input type="radio" name="estimate_price" value="po" class="radio radio-sm radio-primary">
+                                <span class="label-text">PO issue with temporary price</span>
+                            </label>
+                            <label class="label cursor-pointer justify-start gap-2">
+                                <input type="radio" name="estimate_price" value="change" class="radio radio-sm radio-primary">
+                                <span class="label-text">Change Temporary price to Fixed price</span>
+                            </label>
                         </fieldset>
 
                         {{-- Detail contents --}}
@@ -404,9 +425,6 @@
                             <legend class="fieldset-legend">Quotation price (E-Stamp)</legend>
                             <div class="join w-full">
                                 <input type="file" name="file_quotation" accept="application/pdf" class="file-input join-item w-full req" data-message="Please attach quotation price file">
-                                <button type="button" class="btn btn-neutral join-item" data-view-record="quotation">
-                                    <i class="fi fi-rr-eye"></i>View record
-                                </button>
                             </div>
                             <p class="label">Attach file by pdf file</p>
                         </fieldset>
@@ -414,9 +432,6 @@
                             <legend class="fieldset-legend">Special Price Compare (E-Stamp)</legend>
                             <div class="join w-full">
                                 <input type="file" name="file_price_compare" accept="application/pdf" class="file-input join-item w-full">
-                                <button type="button" class="btn btn-neutral join-item" data-view-record="price_compare">
-                                    <i class="fi fi-rr-eye"></i>View record
-                                </button>
                             </div>
                             <p class="label">Attach file by pdf file</p>
                         </fieldset>
@@ -424,9 +439,6 @@
                             <legend class="fieldset-legend">Additional document</legend>
                             <div class="join w-full">
                                 <input type="file" name="file_additional" accept="application/pdf" class="file-input join-item w-full">
-                                <button type="button" class="btn btn-neutral join-item" data-view-record="additional">
-                                    <i class="fi fi-rr-eye"></i>View record
-                                </button>
                             </div>
                             <p class="label">Attach file by pdf file</p>
                         </fieldset>
