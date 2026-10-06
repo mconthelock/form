@@ -72,10 +72,12 @@ $(async function () {
         setDatePicker({
             element: '#VEFT_MONTH',
             mode: 'month',
+            range: true,
             dateFormat: "M'y",
             onChange: function (selectedDates, dateStr, instance) {
                 console.log(dateStr);
                 console.log(formatDate(selectedDates[0]));
+                console.log(selectedDates);
             },
         });
         // สร้างปุ่ม สำหรับ request form

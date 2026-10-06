@@ -180,36 +180,47 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 p-4">
                         <fieldset class="fieldset">
                             <legend class="fieldset-legend req">Present Total Price</legend>
-                            <label class="input w-full">
-                                <input type="text" name="NTOTAL_PRES" id="NTOTAL_PRES" class="grow text-right req" readonly>
-                                <span class="badge badge-ghost badge-sm">Col. AA</span>
-                            </label>
+                            <div class="join">
+                                <label class="input w-full join-item">
+                                    <input type="text" name="NTOTAL_PRES" id="NTOTAL_PRES" class="grow text-right req" placeholder="0" readonly>
+                                    {{-- <span class="badge badge-ghost badge-sm">Col. AA</span> --}}
+                                </label>
+                                <div class="flex items-center px-2 text-white bg-neutral join-item">KB/YEAR</div>
+                            </div>
                         </fieldset>
                         <fieldset class="fieldset">
                             <legend class="fieldset-legend req">New Total Price</legend>
-                            <label class="input w-full">
-                                <input type="text" name="NTOTAL_NEW" id="NTOTAL_NEW" class="grow text-right req" readonly>
-                                <span class="badge badge-ghost badge-sm">Col. BB</span>
-                            </label>
+                            <div class="join">
+                                <label class="input w-full join-item">
+                                    <input type="text" name="NTOTAL_NEW" id="NTOTAL_NEW" class="grow text-right req" placeholder="0" readonly>
+                                    {{-- <span class="badge badge-ghost badge-sm">Col. BB</span> --}}
+                                </label>
+                                <div class="flex items-center px-2 text-white bg-neutral join-item">KB/YEAR</div>
+                            </div>
                         </fieldset>
                         <fieldset class="fieldset">
                             <legend class="fieldset-legend req">Cost Down (+) / Cost Up (-) Amount</legend>
-                            <label class="input w-full">
-                                <input type="text" name="NTOTAL_COST" id="NTOTAL_COST" class="grow text-right req" readonly>
-                                <span class="badge badge-ghost badge-sm">Col. CC</span>
-                            </label>
+                            <div class="join">
+                                <label class="input w-full join-item">
+                                    <input type="text" name="NTOTAL_COST" id="NTOTAL_COST" class="grow text-right req" placeholder="0" readonly>
+                                    {{-- <span class="badge badge-ghost badge-sm">Col. CC</span> --}}
+                                </label>
+                                <div class="flex items-center px-2 text-white bg-neutral join-item">KB/YEAR</div>
+                            </div>
                         </fieldset>
                         <fieldset class="fieldset">
                             <legend class="fieldset-legend req">Cost Down (+) / Cost Up (-) Ratio %</legend>
-                            <label class="input w-full">
-                                <input type="text" name="NTOTAL_RATIO" id="NTOTAL_RATIO" class="grow text-right req" readonly>
-                                <span class="badge badge-ghost badge-sm">Col. DD</span>
-                            </label>
-                            <p class="label">จาก Price comparison</p>
+                            <div class="join">
+                                <label class="input w-full join-item">
+                                    <input type="text" name="NTOTAL_RATIO" id="NTOTAL_RATIO" class="grow text-right req" placeholder="0" readonly>
+                                    {{-- <span class="badge badge-ghost badge-sm">Col. DD</span> --}}
+                                </label>
+                                <div class="flex items-center px-2 text-white bg-neutral join-item">%</div>
+                            </div>
                         </fieldset>
                         <fieldset class="fieldset">
                             <legend class="fieldset-legend">Effective Month</legend>
-                            <input type="month" name="VEFT_MONTH" id="VEFT_MONTH" class="input w-full req" data-message="Please select effective month">
+                            <input type="month" name="VEFT_MONTH" id="VEFT_MONTH" class="input w-full req" data-message="Please select effective month" placeholder="Feb'26">
                         </fieldset>
                         <fieldset class="fieldset">
                             <legend class="fieldset-legend">Effective Type</legend>
