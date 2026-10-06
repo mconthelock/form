@@ -105,8 +105,8 @@ $(document).on('click', '#btnExport', async function () {
         console.log(payload);
         const res = await searchrpt(payload);
         console.log(res);
-
-        // const ressort = await sortrptData(res, sortby, 'asc');
+        const ressort = await sortrptData(res, sortby, 'asc');
+        await writeExcel(ressort);
         // if (VENDGROUPTYPE == 'Indirect') {
         //     await writeExcelIndirect(ressort);
         // } else {
@@ -119,10 +119,10 @@ $(document).on('click', '#btnExport', async function () {
     }
 });
 
-async function writeExcelIndirect(dataList) {
+async function writeExcel(dataList) {
     var workbook = new ExcelJS.Workbook();
     try {
-        const bfile = await getTemplate('temprptIndirect.xlsx');
+        const bfile = await getTemplate('temprpt.xlsx');
         const workbook = await writeExcelTemp(bfile.buffer, {
             write: (wb) => {
                 const now = new Date();
@@ -131,6 +131,89 @@ async function writeExcelIndirect(dataList) {
 
                 dataList.forEach((item, index) => {
                     const currentRow = startRow + index;
+                    const addrObj = item.ADDRESSES?.find(
+                        (addr) => addr.ADDRTYPE === 'E',
+                    );
+                    sheet.getCell(`A${currentRow}`).value =
+                        'PUR-VMM' +
+                        item.CYEAR2.slice(-2) +
+                        '-' +
+                        String(item.NRUNNO).padStart(6, '0');
+                    const SEMSTEP = item.FORM.flow.find(
+                        (flowRecord) => flowRecord.CSTEPNO === '06',
+                    );
+                    const DEMSTEP = item.FORM.flow.find(
+                        (flowRecord) => flowRecord.CSTEPNO === '04',
+                    );
+                    sheet.getCell(`ฺฺB${currentRow}`).value = item.REQTYPE;
+                    sheet.getCell(`ฺฺC${currentRow}`).value = item.VENDCODE;
+                    sheet.getCell(`ฺฺD${currentRow}`).value =
+                        item.VENDGROUPTYPE;
+                    sheet.getCell(`ฺฺE${currentRow}`).value = item.VENDNAME;
+                    sheet.getCell(`ฺฺF${currentRow}`).value =
+                        item.FORM.creator.SEMPNO;
+                    sheet.getCell(`ฺฺG${currentRow}`).value =
+                        item.FORM.reqtor.SEMPNO;
+                    sheet.getCell(`ฺฺH${currentRow}`).value =
+                        item.FORM.reqtor.SSEC;
+                    sheet.getCell(`ฺฺI${currentRow}`).value =
+                        item.FORM.reqtor.SDEPT;
+                    sheet.getCell(`ฺฺJ${currentRow}`).value =
+                        item.FORM.reqtor.SDIV;
+                    sheet.getCell(`ฺฺK${currentRow}`).value = [
+                        addrObj?.ADDR1,
+                        addrObj?.ADDR2,
+                    ]
+                        .filter(Boolean)
+                        .join(' ');
+                    sheet.getCell(`ฺฺL${currentRow}`).value = addrObj?.CITY;
+                    sheet.getCell(`ฺฺM${currentRow}`).value = addrObj?.STATE;
+                    sheet.getCell(`ฺฺN${currentRow}`).value = addrObj?.POSTCODE;
+                    sheet.getCell(`ฺฺO${currentRow}`).value = addrObj?.COUNTRY;
+                    sheet.getCell(`ฺฺP${currentRow}`).value = item.VENDCAT;
+                    sheet.getCell(`ฺฺQ${currentRow}`).value = item.TAXID;
+                    sheet.getCell(`ฺฺR${currentRow}`).value = item.CANO;
+                    sheet.getCell(`ฺฺS${currentRow}`).value = item.BANO;
+                    sheet.getCell(`ฺฺT${currentRow}`).value =
+                        item.TERM?.STERMDESC;
+                    sheet.getCell(`ฺฺU${currentRow}`).value = item.TRADE
+                        ? [
+                              `${item.TRADE.TRADE_CODE}_${item.TRADE.TRADE_NAME}`,
+                              item.TRADE.TRADE_SHIPTO
+                                  ? `to ${item.TRADE.TRADE_SHIPTO}`
+                                  : null,
+                              item.TRADE.TRADE_SHIPBY
+                                  ? `(${item.TRADE.TRADE_SHIPBY})`
+                                  : null,
+                          ]
+                              .filter(Boolean)
+                              .join(' ')
+                        : '';
+                    sheet.getCell(`ฺฺV${currentRow}`).value = item.CONTACT;
+                    sheet.getCell(`ฺฺW${currentRow}`).value = item.EMAIL;
+                    sheet.getCell(`ฺฺX${currentRow}`).value = item.TELNO;
+                    sheet.getCell(`ฺฺY${currentRow}`).value = item.CURCODE;
+                    sheet.getCell(`ฺฺZ${currentRow}`).value = item.FORM.DREQDATE
+                        ? formattedDate(item.FORM.DREQDATE)
+                        : '';
+                    sheet.getCell(`ฺฺAA${currentRow}`).value =
+                        item.FORM.CREQTIME;
+                    sheet.getCell(`ฺฺAB${currentRow}`).value =
+                        SEMSTEP?.VREALAPV || '';
+                    sheet.getCell(`ฺฺAC${currentRow}`).value =
+                        SEMSTEP && SEMSTEP.DAPVDATE
+                            ? formattedDate(SEMSTEP.DAPVDATE)
+                            : '';
+                    sheet.getCell(`ฺฺAD${currentRow}`).value =
+                        SEMSTEP && SEMSTEP.CAPVTIME ? SEMSTEP.CAPVTIME : '';
+                    sheet.getCell(`ฺฺAE${currentRow}`).value =
+                        DEMSTEP?.VREALAPV || '';
+                    sheet.getCell(`ฺฺAF${currentRow}`).value =
+                        DEMSTEP && DEMSTEP.DAPVDATE
+                            ? formattedDate(DEMSTEP.DAPVDATE)
+                            : '';
+                    sheet.getCell(`ฺฺAG${currentRow}`).value =
+                        DEMSTEP && DEMSTEP.CAPVTIME ? DEMSTEP.CAPVTIME : '';
                 });
             },
         });
@@ -153,6 +236,43 @@ async function writeExcelIndirect(dataList) {
     }
 }
 
+async function sortrptData(data, sortBy, direction = 'asc') {
+    // ใช้ [...data] เพื่อสร้าง Array ใหม่ จะได้ไม่กระทบข้อมูลต้นฉบับ
+    return [...data].sort((a, b) => {
+        let valA = '';
+        let valB = '';
+
+        // กำหนดวิธีดึงค่าตาม Key ที่ต้องการ
+        switch (sortBy) {
+            case 'VENDCODE':
+                // ถ้าเป็น null ให้มองเป็น String ว่าง ('') จะได้ไม่พังตอนเปรียบเทียบ
+                valA = a.VENDCODE || '';
+                valB = b.VENDCODE || '';
+                break;
+            case 'COMNAME':
+                valA = a.VENDNAME || '';
+                valB = b.VENDNAME || '';
+                break;
+            case 'SNAME':
+                // ใช้ Optional Chaining (?.) เผื่อในกรณีที่ object ย่อยไม่มีค่า
+                valA = a.FORM?.reqtor?.SNAME || '';
+                valB = b.FORM?.reqtor?.SNAME || '';
+                break;
+            case 'SEMPNO':
+                valA = a.FORM?.reqtor?.SEMPNO || '';
+                valB = b.FORM?.reqtor?.SEMPNO || '';
+                break;
+            default:
+                return 0;
+        }
+
+        // ใช้ localeCompare สำหรับเปรียบเทียบ String เรียงลำดับตัวอักษร
+        const comparison = valA.localeCompare(valB);
+
+        // ถ้า direction เป็น 'desc' (น้อยไปมาก) ให้คูณ -1 เพื่อกลับด้านผลลัพธ์
+        return direction === 'desc' ? comparison * -1 : comparison;
+    });
+}
 function formattedDate(rawDate) {
     const datePart = rawDate.split('T')[0];
     const [year, month, day] = datePart.split('-');
