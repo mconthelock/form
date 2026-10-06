@@ -73,10 +73,10 @@ $(document).ready(async function () {
         }
 
         const validFiles = selectedFilesArray.filter((f) => f !== null);
-        // if ($('#DocHeaderIDHid').val() === '' && validFiles.length === 0) {
-        //     alert('กรุณาแนบไฟล์เอกสาร (PDF หรือ Excel) อย่างน้อย 1 ไฟล์');
-        //     return;
-        // }
+        if ($('#DocHeaderIDHid').val() === '' && validFiles.length === 0) {
+            alert('กรุณาแนบไฟล์เอกสาร (PDF หรือ Excel) อย่างน้อย 1 ไฟล์');
+            return;
+        }
 
         if (
             !confirm('ยืนยันการบันทึกและส่งเอกสารเข้าระบบ Approval ใช่หรือไม่?')
