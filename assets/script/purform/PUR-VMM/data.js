@@ -42,3 +42,11 @@ export async function approve(form) {
         data: form,
     });
 }
+
+export async function searchrpt(con) {
+    return fetchUtils({
+        url: `${process.env.APP_API}/purform/purvmm-form/search`,
+        method: 'POST',
+        data: con,
+    });
+}

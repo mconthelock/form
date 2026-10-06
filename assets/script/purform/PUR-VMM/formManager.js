@@ -55,3 +55,150 @@ export const tradeManager = {
         }
     },
 };
+
+export const secManager = {
+    list: ['SECTION'],
+    get select() {
+        return $('.sec');
+    },
+    set text(val) {
+        $('.sec').text(val);
+    },
+    set value(val) {
+        this.list.forEach((id) => {
+            $(`#${id}`).val(val).trigger('change');
+        });
+    },
+    getValue(id) {
+        return $(`#${id}`).val();
+    },
+    /**
+     * Initialize select2 for currency fields
+     * @param {{value: string, text: string}[]} data
+     */
+    async init(data) {
+        for (const id of this.list) {
+            await setSelect2({
+                id: id,
+                data: data,
+                size: 'sm',
+                placeholder: '-- Select --',
+                search: true,
+                clear: true,
+                emptyValue: true,
+            });
+        }
+    },
+    /**
+     * Sync value to other select2 element
+     * @param {string} value
+     * @param {HTMLElement} element
+     */
+    syncValue(value, element) {
+        for (const id of this.list) {
+            if (!$('#' + id).is(element)) {
+                $('#' + id)
+                    .val(value.toUpperCase())
+                    .trigger('change');
+            }
+        }
+    },
+};
+
+export const deptManager = {
+    list: ['DEPARTMENT'],
+    get select() {
+        return $('.dept');
+    },
+    set text(val) {
+        $('.dept').text(val);
+    },
+    set value(val) {
+        this.list.forEach((id) => {
+            $(`#${id}`).val(val).trigger('change');
+        });
+    },
+    getValue(id) {
+        return $(`#${id}`).val();
+    },
+    /**
+     * Initialize select2 for currency fields
+     * @param {{value: string, text: string}[]} data
+     */
+    async init(data) {
+        for (const id of this.list) {
+            await setSelect2({
+                id: id,
+                data: data,
+                size: 'sm',
+                placeholder: '-- Select --',
+                search: true,
+                clear: true,
+                emptyValue: true,
+            });
+        }
+    },
+    /**
+     * Sync value to other select2 element
+     * @param {string} value
+     * @param {HTMLElement} element
+     */
+    syncValue(value, element) {
+        for (const id of this.list) {
+            if (!$('#' + id).is(element)) {
+                $('#' + id)
+                    .val(value.toUpperCase())
+                    .trigger('change');
+            }
+        }
+    },
+};
+
+export const divManager = {
+    list: ['DIVISION'],
+    get select() {
+        return $('.div');
+    },
+    set text(val) {
+        $('.div').text(val);
+    },
+    set value(val) {
+        this.list.forEach((id) => {
+            $(`#${id}`).val(val).trigger('change');
+        });
+    },
+    getValue(id) {
+        return $(`#${id}`).val();
+    },
+    /**
+     * Initialize select2 for currency fields
+     * @param {{value: string, text: string}[]} data
+     */
+    async init(data) {
+        for (const id of this.list) {
+            await setSelect2({
+                id: id,
+                data: data,
+                size: 'sm',
+                placeholder: '-- Select --',
+                search: true,
+                clear: true,
+                emptyValue: true,
+            });
+        }
+    },
+    /**
+     * Sync value to other select2 element
+     * @param {string} value
+     * @param {HTMLElement} element
+     */
+    syncValue(value, element) {
+        for (const id of this.list) {
+            if (!$('#' + id).is(element)) {
+                $('#' + id)
+                    .val(value.toUpperCase())
+                    .trigger('change');
+            }
+        }
+    },
+};
