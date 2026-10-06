@@ -56,10 +56,3 @@ export async function updateArea(areaId, data) {
         data,
     });
 }
-
-export async function deleteArea(areaId) {
-    return fetchUtils({
-        url: `${process.env.APP_API}/gpform/gp-tph/areas/${encodeURIComponent(areaId)}`,
-        method: 'DELETE',
-    });
-}
