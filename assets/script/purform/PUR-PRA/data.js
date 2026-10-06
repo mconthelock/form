@@ -58,3 +58,16 @@ export async function getGroup() {
         method: 'GET',
     });
 }
+
+/**
+ * @author Sutthipong Tangmongkhoncharoen(24008)
+ * @since 2026-10-06
+ * @description ดึงข้อมูล Planner จากระบบ
+ * @returns
+ */
+export async function getPlanner(planner) {
+    return await fetchUtils({
+        url: `${process.env.APP_API}/datacenter/k850mp/planner/${planner}`,
+        method: 'GET',
+    });
+}

@@ -8,7 +8,7 @@ import { showLoader } from '@amec/webasset/preloader';
 import { PdfViewer } from '@amec/webasset/components/pdfViewer';
 import { FileUpload } from '@amec/webasset/components/fileUpload';
 import { tableDraft } from '../PUR-CPC/table-draft';
-import { getListCreate } from './data';
+import { getListCreate, getPlanner } from './data';
 import {
     checkPlanner,
     checkVendor,
@@ -168,6 +168,27 @@ $(document).on('change', '#VVENDOR', async function () {
             },
             mode: 0,
         });
+    } catch (error) {
+        console.error(error);
+        showErrorMessage(error.message);
+    }
+});
+
+/**
+ * @author Sutthipong Tangmongkhoncharoen(24008)
+ * @since 2026-10-06
+ * @description ตรวจสอบ Planner อัตโนมัติเมื่อกรอกข้อมูลในฟิลด์ VPLANNER
+ */
+$(document).on('change', '#VPLANNER', async function () {
+    try {
+        const planner = $(this).val();
+        if (!planner) return;
+        const checked = await getPlanner(planner);
+        if (!checked.status) {
+            showMessage(`Planner not found for ${planner}`, 'warning');
+            $(this).val('');
+            return;
+        }
     } catch (error) {
         console.error(error);
         showErrorMessage(error.message);
