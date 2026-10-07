@@ -57,8 +57,8 @@ class form extends MY_Controller {
         $this->webflowBase = 'DEFAULT'; // โครงสร้าง Webflow (FORM, FLOW)
     }
 
-    // === https://amecweb.mitsubishielevatorasia.co.th/form/feform/FE-DOC/form/main/?no=27&orgNo=051001&y=26&empno=13204&bp=http://webflow.mitsubishielevatorasia.co.th/formtest/is/create.asp
-    //===  https://amecweb.mitsubishielevatorasia.co.th/form/feform/FE-DOC/form/main?no=27&orgNo=051001&y=26&y2=2026&runNo=1&m=3&empno=13204&bp=%2Fformtest%2Fworkflow%2FmineList.asp&menu=1
+    // === https://amecwebtest.mitsubishielevatorasia.co.th/form/feform/FE-DOC/form/main/?no=27&orgNo=051001&y=26&empno=13204&bp=http://webflow.mitsubishielevatorasia.co.th/formtest/is/create.asp
+    //===  https://amecwebtest.mitsubishielevatorasia.co.th/form/feform/FE-DOC/form/main?no=11&orgNo=051001&y=26&y2=2026&runNo=1&m=3&empno=13204&bp=%2Fformtest%2Fworkflow%2FmineList%2Easp&menu=1
     // === http://localhost:8080/form/feform/FE-DOC/form/main/?no=27&orgNo=051001&y=26&empno=13204&bp=http://webflow.mitsubishielevatorasia.co.th/formtest/is/create.asp
     //===  http://localhost:8080/form/feform/FE-DOC/form/main?no=27&orgNo=051001&y=26&y2=2026&runNo=1&m=3&empno=13204&bp=%2Fformtest%2Fworkflow%2FmineList.asp&menu=1
     public function main() {
@@ -375,13 +375,17 @@ class form extends MY_Controller {
                      ->get('FE_FILE')->row();
 
         if ($file) {
-            $fullPath = rtrim($file->FILE_PATH, '/\\') . DIRECTORY_SEPARATOR . $file->FILE_FNAME;
-
-            // Fallback เช็คกรณีสลับ Path ระหว่าง Server กับ Local
+            $fullPath = rtrim($filePdf->FILE_PATH, '/\\') . DIRECTORY_SEPARATOR . $filePdf->FILE_FNAME;
+        
             if (!file_exists($fullPath)) {
-                $localFallback = "D:\\Project\\src\\File_Sys\\form\\feform\\FE-DOC\\" . $file->FILE_FNAME;
+                // Fallback เช็คกรณีทดสอบใน Localhost
+                $subDocFolder = "FE-DOC" . $filePdf->CYEAR . "-" . str_pad($filePdf->NRUNNO, 6, '0', STR_PAD_LEFT);
+                $localFallback = "D:\\Project\\src\\File_Sys\\form\\feform\\FE-DOC\\" . $subDocFolder . "\\" . $filePdf->FILE_FNAME;
+                
                 if (file_exists($localFallback)) {
                     $fullPath = $localFallback;
+                } else {
+                    show_error('File not found on server: ' . $fullPath, 404);
                 }
             }
 
@@ -445,8 +449,12 @@ class form extends MY_Controller {
         if (!$filePdf) show_error('No PDF file attached to this document', 404);
 
         $fullPath = rtrim($filePdf->FILE_PATH, '/\\') . DIRECTORY_SEPARATOR . $filePdf->FILE_FNAME;
+        
         if (!file_exists($fullPath)) {
-            $localFallback = "D:\\Project\\src\\File_Sys\\form\\feform\\FE-DOC\\" . $filePdf->FILE_FNAME;
+            // Fallback เช็คกรณีทดสอบใน Localhost
+            $subDocFolder = "FE-DOC" . $filePdf->CYEAR . "-" . str_pad($filePdf->NRUNNO, 6, '0', STR_PAD_LEFT);
+            $localFallback = "D:\\Project\\src\\File_Sys\\form\\feform\\FE-DOC\\" . $subDocFolder . "\\" . $filePdf->FILE_FNAME;
+            
             if (file_exists($localFallback)) {
                 $fullPath = $localFallback;
             } else {
@@ -584,15 +592,25 @@ class form extends MY_Controller {
 
     private function uploadAttachmentFiles($nfrmno, $vorgno, $cyear, $cyear2, $nrunno) {
         $host = $_SERVER['HTTP_HOST'] ?? '';
+        
+        // รูปแบบ Document Folder เช่น FE-DOC26-000001
+        $subDocFolder = "FE-DOC" . $cyear . "-" . str_pad($nrunno, 6, '0', STR_PAD_LEFT);
+
         if (strpos($host, 'localhost') !== false || strpos($host, '127.0.0.1') !== false) {
-            $uploadPath = "D:/Project/src/File_Sys/form/feform/FE-DOC/";
+            // กรณี Localhost
+            $basePath = "D:/Project/src/File_Sys/form/feform/FE-DOC/" . $subDocFolder;
         } else {
-            $uploadPath = rtrim($_ENV['AMEC_FILE_PATH'], '/\\') . "/Form/FE/FE_DOC/";
+            // กรณี Server จริง
+            $basePath = rtrim($_ENV['AMEC_FILE_PATH'], '/\\') . "/Form/FE/FE-DOC/" . $subDocFolder;
         }
 
-        if (!is_dir($uploadPath)) {
-            mkdir($uploadPath, 0777, true);
+        // ตรวจสอบและสร้างโฟลเดอร์ตามเลขเอกสารหากยังไม่มี
+        if (!is_dir($basePath)) {
+            mkdir($basePath, 0777, true);
         }
+
+        // 🟢 แปลง Path ให้เป็นรูปแบบ Windows Backslash และไม่มีขีดปิดท้ายตามรูปตัวอย่าง
+        $dbSavePath = str_replace('/', '\\', rtrim($basePath, '/\\'));
 
         $dbWebflow = $this->load->database($this->webflowBase, TRUE);
         $count = count($_FILES['files']['name']);
@@ -604,13 +622,14 @@ class form extends MY_Controller {
 
             $ext = strtolower(pathinfo($origName, PATHINFO_EXTENSION));
 
-            // ตรวจสอบความถูกต้อง: บันทึกเฉพาะไฟล์ PDF เท่านั้น
+            // บันทึกเฉพาะไฟล์ PDF เท่านั้น
             if ($ext !== 'pdf') {
                 continue; 
             }
 
-            $sysName = "FE_DOC_{$cyear2}_{$nrunno}_" . uniqid() . "." . $ext;
-            $dest = rtrim($uploadPath, '/\\') . DIRECTORY_SEPARATOR . $sysName;
+            // ตั้งชื่อไฟล์ระบบ (ตามรูปแบบระบบเดิม เช่น Time + Random หรือชื่อเฉพาะ)
+            $sysName = round(microtime(true) * 1000) . '-' . mt_rand(10000000, 99999999) . '.' . $ext;
+            $dest = rtrim($basePath, '/\\') . DIRECTORY_SEPARATOR . $sysName;
 
             if (move_uploaded_file($_FILES['files']['tmp_name'][$i], $dest)) {
                 $fileData = [
@@ -624,7 +643,7 @@ class form extends MY_Controller {
                     'FILE_USERCREATE' => (string)$currentEmpNo,
                     'FILE_TYPE'       => null,
                     'FILE_STATUS'     => 1,
-                    'FILE_PATH'       => $uploadPath
+                    'FILE_PATH'       => $dbSavePath // 🟢 บันทึกเป็น \\amecnas\... หรือ D:\Project\...
                 ];
 
                 $dbWebflow->set('FILE_DATECREATE', 'SYSDATE', FALSE);
