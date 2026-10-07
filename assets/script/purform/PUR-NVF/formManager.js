@@ -567,7 +567,7 @@ export const vendorCodeManager = {
                         }
                     } else {
                         showMessage(
-                            'PUR-VMM not found.ไม่พบข้อมูล PUR-VMM สำหรับรหัสนี้',
+                            'PRO-VMM not found.ไม่พบข้อมูล PRO-VMM สำหรับรหัสนี้',
                             'warning',
                         );
                         resetformid('V-section');

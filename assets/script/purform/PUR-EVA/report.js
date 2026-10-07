@@ -227,7 +227,7 @@ async function writeExcelIndirect(dataList) {
                             ?.replace(/\(\d+\)$/, '')
                             ?.trim() || '';
                     sheet.getCell(`A${currentRow}`).value =
-                        'PUR-EVA' +
+                        'PRO-EVA' +
                         item.CYEAR2.slice(-2) +
                         '-' +
                         String(item.NRUNNO).padStart(6, '0');
@@ -405,7 +405,7 @@ async function writeExcelDirectSub(dataList) {
                             ?.replace(/\(\d+\)$/, '')
                             ?.trim() || '';
                     sheet.getCell(`A${currentRow}`).value =
-                        'PUR-EVA' +
+                        'PRO-EVA' +
                         item.CYEAR2.slice(-2) +
                         '-' +
                         String(item.NRUNNO).padStart(6, '0');

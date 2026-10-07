@@ -135,7 +135,7 @@ async function writeExcel(dataList) {
                         (addr) => addr.ADDRTYPE === 'E',
                     );
                     sheet.getCell(`A${currentRow}`).value =
-                        'PUR-VMM' +
+                        'PRO-VMM' +
                         item.CYEAR2.slice(-2) +
                         '-' +
                         String(item.NRUNNO).padStart(6, '0');
