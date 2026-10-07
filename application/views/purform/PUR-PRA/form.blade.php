@@ -257,23 +257,23 @@
                             </div>
                         </fieldset>
 
-                        <fieldset class="fieldset">
+                        <fieldset class="fieldset lg:col-span-2">
                             <legend class="fieldset-legend font-semibold">Cost Up</legend>
-                            <div class="flex flex-col gap-2" id="reason-cost-up-container">
+                            <div class="grid grid-cols-1 gap-2" id="reason-cost-up-container">
                             </div>
                         </fieldset>
 
                         {{-- Basic condition revise --}}
                         <fieldset class="fieldset lg:col-span-2">
                             <legend class="fieldset-legend font-semibold">Basic condition revise</legend>
-                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2" id="basic-condition-revise-container">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2" id="reason-basic-condition-container">
                             </div>
                         </fieldset>
 
                           {{-- Estimate price --}}
                         <fieldset class="fieldset lg:col-span-2">
                             <legend class="fieldset-legend font-semibold">Estimate price</legend>
-                            <div id="estimate-price-container">
+                            <div id="reason-estimate-price-container" class="grid grid-cols-1 gap-2">
                             </div>
                         </fieldset>
 

@@ -14,13 +14,13 @@ import {
     checkVendor,
     committees,
     groups,
-    reasonsCostDown,
     setAutoField,
 } from './function';
 import { modalSelectPriceComparison } from './modal/select-price-comparison';
 import { webflowSubmit } from '@amec/webasset/components/form';
 import { setDatePicker } from '@amec/webasset/flatpickr';
 import { formatDate } from '@amec/webasset/dayjs';
+import { ChangeReason } from './reason';
 
 $(async function () {
     try {
@@ -69,7 +69,28 @@ $(async function () {
         committees();
         // เรียกใช้งานฟังก์ชันเพื่อโหลดข้อมูลกลุ่ม
         groups();
-        reasonsCostDown();
+        ChangeReason.create({
+            containerId: 'reason-cost-down-container',
+            name: 'NREASON_COST_DOWN',
+            type: 'down',
+            halfColumn: true,
+        });
+        ChangeReason.create({
+            containerId: 'reason-cost-up-container',
+            name: 'NREASON_COST_UP',
+            type: 'up',
+            halfColumn: true,
+        });
+        ChangeReason.create({
+            containerId: 'reason-basic-condition-container',
+            name: 'NREASON_BASIC_CONDITION',
+            type: 'basic',
+        });
+        ChangeReason.create({
+            containerId: 'reason-estimate-price-container',
+            name: 'NREASON_ESTIMATE_PRICE',
+            type: 'estimate',
+        });
         // ตั้งค่า Date Picker สำหรับฟิลด์ Effective Month
         setDatePicker({
             element: '#VEFT_MONTH',
