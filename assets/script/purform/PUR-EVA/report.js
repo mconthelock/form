@@ -231,42 +231,52 @@ async function writeExcelIndirect(dataList) {
                         item.CYEAR2.slice(-2) +
                         '-' +
                         String(item.NRUNNO).padStart(6, '0');
-                    sheet.getCell(`ฺฺB${currentRow}`).value = strdate;
-                    sheet.getCell(`ฺฺC${currentRow}`).value = item.VENDCODE;
-                    sheet.getCell(`ฺฺD${currentRow}`).value = item.COMNAME;
-                    sheet.getCell(`ฺฺE${currentRow}`).value =
+                    sheet.getCell(`ฺฺB${currentRow}`).value =
+                        item.FORM.CST == '0'
+                            ? 'Draft'
+                            : item.FORM.CST == '1'
+                              ? 'Running'
+                              : item.FORM.CST == '2'
+                                ? 'Approve'
+                                : item.FORM.CST == '3'
+                                  ? 'Reject'
+                                  : '';
+                    sheet.getCell(`ฺฺC${currentRow}`).value = strdate;
+                    sheet.getCell(`ฺฺD${currentRow}`).value = item.VENDCODE;
+                    sheet.getCell(`ฺฺE${currentRow}`).value = item.COMNAME;
+                    sheet.getCell(`ฺฺF${currentRow}`).value =
                         item.OPERATION == 'N' ? 'New' : 'Annual evaluation';
-                    sheet.getCell(`ฺF${currentRow}`).value = vendgrouptype;
-                    sheet.getCell(`ฺG${currentRow}`).value = item.VENDTYPE;
-                    sheet.getCell(`ฺH${currentRow}`).value = item.FY_AMOUNT;
-                    sheet.getCell(`ฺI${currentRow}`).value = amount;
-                    sheet.getCell(`ฺJ${currentRow}`).value = item.PUR_LEVEL;
-                    sheet.getCell(`ฺK${currentRow}`).value =
+                    sheet.getCell(`ฺG${currentRow}`).value = vendgrouptype;
+                    sheet.getCell(`ฺH${currentRow}`).value = item.VENDTYPE;
+                    sheet.getCell(`ฺI${currentRow}`).value = item.FY_AMOUNT;
+                    sheet.getCell(`ฺJ${currentRow}`).value = amount;
+                    sheet.getCell(`ฺK${currentRow}`).value = item.PUR_LEVEL;
+                    sheet.getCell(`ฺL${currentRow}`).value =
                         item.TERM?.STERMDESC;
-                    sheet.getCell(`ฺL${currentRow}`).value = item.CURCODE;
-                    sheet.getCell(`ฺM${currentRow}`).value = item.CORPORATE_ID;
-                    sheet.getCell(`ฺN${currentRow}`).value = item.TAX_ID;
-                    sheet.getCell(`ฺO${currentRow}`).value =
+                    sheet.getCell(`ฺM${currentRow}`).value = item.CURCODE;
+                    sheet.getCell(`ฺN${currentRow}`).value = item.CORPORATE_ID;
+                    sheet.getCell(`ฺO${currentRow}`).value = item.TAX_ID;
+                    sheet.getCell(`ฺP${currentRow}`).value =
                         item.FORM.creator.SEMPPRE +
                         ' ' +
                         item.FORM.creator.SNAME;
-                    sheet.getCell(`ฺP${currentRow}`).value =
-                        item.FORM.reqtor.SEMPPRE + ' ' + item.FORM.reqtor.SNAME;
                     sheet.getCell(`ฺQ${currentRow}`).value =
-                        item.FORM.reqtor.SSEC;
+                        item.FORM.reqtor.SEMPPRE + ' ' + item.FORM.reqtor.SNAME;
                     sheet.getCell(`ฺR${currentRow}`).value =
-                        item.FORM.reqtor.SDEPT;
+                        item.FORM.reqtor.SSEC;
                     sheet.getCell(`ฺS${currentRow}`).value =
+                        item.FORM.reqtor.SDEPT;
+                    sheet.getCell(`ฺT${currentRow}`).value =
                         item.FORM.reqtor.SDIV;
-                    sheet.getCell(`ฺT${currentRow}`).value = formattedAddress;
-                    sheet.getCell(`ฺU${currentRow}`).value = item.CONTACT;
-                    sheet.getCell(`ฺV${currentRow}`).value = item.EMAIL;
-                    sheet.getCell(`ฺW${currentRow}`).value = item.TELNO;
+                    sheet.getCell(`ฺU${currentRow}`).value = formattedAddress;
+                    sheet.getCell(`ฺV${currentRow}`).value = item.CONTACT;
+                    sheet.getCell(`ฺW${currentRow}`).value = item.EMAIL;
+                    sheet.getCell(`ฺX${currentRow}`).value = item.TELNO;
                     // เช็คก่อนว่ามี PROFIT_TURNOVERS หรือไม่ เพื่อป้องกัน Error
                     if (item.PROFIT_TURNOVERS) {
                         // เช็ค Index 0
                         if (item.PROFIT_TURNOVERS[0]) {
-                            sheet.getCell(`X${currentRow}`).value = Number(
+                            sheet.getCell(`Y${currentRow}`).value = Number(
                                 item.PROFIT_TURNOVERS[0].AMOUNT,
                             ).toLocaleString('en-US', {
                                 minimumFractionDigits: 2,
@@ -276,7 +286,7 @@ async function writeExcelIndirect(dataList) {
 
                         // เช็ค Index 1
                         if (item.PROFIT_TURNOVERS[1]) {
-                            sheet.getCell(`Y${currentRow}`).value = Number(
+                            sheet.getCell(`Z${currentRow}`).value = Number(
                                 item.PROFIT_TURNOVERS[1].AMOUNT,
                             ).toLocaleString('en-US', {
                                 minimumFractionDigits: 2,
@@ -286,7 +296,7 @@ async function writeExcelIndirect(dataList) {
 
                         // เช็ค Index 2
                         if (item.PROFIT_TURNOVERS[2]) {
-                            sheet.getCell(`Z${currentRow}`).value = Number(
+                            sheet.getCell(`AA${currentRow}`).value = Number(
                                 item.PROFIT_TURNOVERS[2].AMOUNT,
                             ).toLocaleString('en-US', {
                                 minimumFractionDigits: 2,
@@ -312,18 +322,18 @@ async function writeExcelIndirect(dataList) {
                     //     minimumFractionDigits: 2,
                     //     maximumFractionDigits: 2,
                     // });
-                    sheet.getCell(`ฺAA${currentRow}`).value =
-                        item.SCORES[0].SLEVEL;
                     sheet.getCell(`ฺAB${currentRow}`).value =
-                        item.SCORES[1].SLEVEL;
+                        item.SCORES[0].SLEVEL;
                     sheet.getCell(`ฺAC${currentRow}`).value =
-                        item.SCORES[2].SLEVEL;
+                        item.SCORES[1].SLEVEL;
                     sheet.getCell(`ฺAD${currentRow}`).value =
+                        item.SCORES[2].SLEVEL;
+                    sheet.getCell(`ฺAE${currentRow}`).value =
                         item.SCORES[3].SLEVEL;
-                    sheet.getCell(`ฺAE${currentRow}`).value = totalScore;
-                    sheet.getCell(`ฺAF${currentRow}`).value =
+                    sheet.getCell(`ฺAF${currentRow}`).value = totalScore;
+                    sheet.getCell(`ฺAG${currentRow}`).value =
                         judgementMap[item.JUDGEMENT] || '';
-                    sheet.getCell(`ฺAG${currentRow}`).value = comment;
+                    sheet.getCell(`ฺAH${currentRow}`).value = comment;
                 });
             },
         });
@@ -409,36 +419,47 @@ async function writeExcelDirectSub(dataList) {
                         item.CYEAR2.slice(-2) +
                         '-' +
                         String(item.NRUNNO).padStart(6, '0');
-                    sheet.getCell(`ฺฺB${currentRow}`).value = strdate;
-                    sheet.getCell(`ฺฺC${currentRow}`).value =
-                        item.FORM.creator.SNAME;
+                    sheet.getCell(`ฺฺB${currentRow}`).value =
+                        item.FORM.CST == '0'
+                            ? 'Draft'
+                            : item.FORM.CST == '1'
+                              ? 'Running'
+                              : item.FORM.CST == '2'
+                                ? 'Approve'
+                                : item.FORM.CST == '3'
+                                  ? 'Reject'
+                                  : '';
+
+                    sheet.getCell(`ฺฺC${currentRow}`).value = strdate;
                     sheet.getCell(`ฺฺD${currentRow}`).value =
+                        item.FORM.creator.SNAME;
+                    sheet.getCell(`ฺฺE${currentRow}`).value =
                         item.FORM.reqtor.SNAME;
-                    sheet.getCell(`ฺE${currentRow}`).value =
+                    sheet.getCell(`ฺF${currentRow}`).value =
                         item.FORM.reqtor.SSEC;
-                    sheet.getCell(`ฺฺF${currentRow}`).value = item.VENDCODE;
-                    sheet.getCell(`ฺฺG${currentRow}`).value = item.COMNAME;
-                    sheet.getCell(`ฺฺH${currentRow}`).value =
+                    sheet.getCell(`ฺฺG${currentRow}`).value = item.VENDCODE;
+                    sheet.getCell(`ฺฺH${currentRow}`).value = item.COMNAME;
+                    sheet.getCell(`ฺฺI${currentRow}`).value =
                         item.OPERATION == 'N' ? 'New' : 'Annual evaluation';
-                    sheet.getCell(`ฺI${currentRow}`).value = vendgrouptype;
-                    sheet.getCell(`ฺJ${currentRow}`).value = item.VENDTYPE;
-                    sheet.getCell(`ฺK${currentRow}`).value = item.CONTACT;
-                    sheet.getCell(`ฺL${currentRow}`).value = formattedAddress;
-                    sheet.getCell(`ฺM${currentRow}`).value = item.EMAIL;
-                    sheet.getCell(`ฺN${currentRow}`).value = item.TELNO;
-                    sheet.getCell(`ฺO${currentRow}`).value = Number(
+                    sheet.getCell(`ฺJ${currentRow}`).value = vendgrouptype;
+                    sheet.getCell(`ฺK${currentRow}`).value = item.VENDTYPE;
+                    sheet.getCell(`ฺL${currentRow}`).value = item.CONTACT;
+                    sheet.getCell(`ฺM${currentRow}`).value = formattedAddress;
+                    sheet.getCell(`ฺN${currentRow}`).value = item.EMAIL;
+                    sheet.getCell(`ฺO${currentRow}`).value = item.TELNO;
+                    sheet.getCell(`ฺP${currentRow}`).value = Number(
                         item.CAPITAL,
                     ).toLocaleString('en-US', {
                         minimumFractionDigits: 2,
                         maximumFractionDigits: 2,
                     });
-                    sheet.getCell(`ฺP${currentRow}`).value = item.ESTABLISHED;
-                    sheet.getCell(`ฺQ${currentRow}`).value =
+                    sheet.getCell(`ฺQ${currentRow}`).value = item.ESTABLISHED;
+                    sheet.getCell(`ฺR${currentRow}`).value =
                         item.TERM?.STERMDESC;
-                    sheet.getCell(`ฺR${currentRow}`).value = item.CURCODE;
-                    sheet.getCell(`ฺS${currentRow}`).value = item.TAX_ID;
-                    sheet.getCell(`ฺT${currentRow}`).value = item.VENDCAT;
-                    ['U', 'V', 'W'].forEach((col, index) => {
+                    sheet.getCell(`ฺS${currentRow}`).value = item.CURCODE;
+                    sheet.getCell(`ฺT${currentRow}`).value = item.TAX_ID;
+                    sheet.getCell(`ฺU${currentRow}`).value = item.VENDCAT;
+                    ['V', 'W', 'X'].forEach((col, index) => {
                         const amount = sortedTurnOverData[index]?.AMOUNT;
                         if (amount != null) {
                             sheet.getCell(`${col}${currentRow}`).value = Number(
@@ -449,16 +470,16 @@ async function writeExcelDirectSub(dataList) {
                             });
                         }
                     });
-                    sheet.getCell(`ฺX${currentRow}`).value =
-                        item.SCORES[0]?.SCORE;
                     sheet.getCell(`ฺY${currentRow}`).value =
-                        item.SCORES[1]?.SCORE;
+                        item.SCORES[0]?.SCORE;
                     sheet.getCell(`ฺZ${currentRow}`).value =
-                        item.SCORES[2]?.SCORE;
+                        item.SCORES[1]?.SCORE;
                     sheet.getCell(`ฺAA${currentRow}`).value =
+                        item.SCORES[2]?.SCORE;
+                    sheet.getCell(`ฺAB${currentRow}`).value =
                         item.SCORES[3]?.SCORE;
-                    sheet.getCell(`ฺAB${currentRow}`).value = totalScore;
-                    sheet.getCell(`ฺAC${currentRow}`).value =
+                    sheet.getCell(`ฺAC${currentRow}`).value = totalScore;
+                    sheet.getCell(`ฺAD${currentRow}`).value =
                         judgementMap[item.JUDGEMENT] || '';
                 });
             },

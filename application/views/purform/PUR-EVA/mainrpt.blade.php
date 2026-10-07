@@ -86,9 +86,11 @@
 
                     <!-- ปรับช่อง label ซ้ายสุดเป็น 140px ทั้งหมด -->
                     <div class="grid grid-cols-[140px_1fr] items-center gap-2">
-                        <label class="text-sm font-medium text-slate-700 whitespace-nowrap">Form no. (Ext.26)</label>
+                        <label class="text-sm font-medium text-slate-700 whitespace-nowrap">Form no. <span
+                                style="color: red;">(Ext.26)</span></label>
                         <input type="text" name="FORM_NO"
-                            class="w-full max-w-sm h-9 px-3.5 text-sm text-slate-700 bg-slate-50 border border-slate-200 rounded-lg shadow-sm outline-none transition-all hover:border-slate-300 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20">
+                            class="w-full max-w-sm h-9 px-3.5 text-sm text-slate-700 bg-slate-50 border border-slate-200 rounded-lg shadow-sm outline-none transition-all hover:border-slate-300 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                            placeholder="26">
                     </div>
 
                     <div class="grid grid-cols-[140px_1fr] items-center gap-2">
