@@ -71,3 +71,55 @@ export async function getPlanner(planner) {
         method: 'GET',
     });
 }
+
+/**
+ * @author Sutthipong Tangmongkhoncharoen(24008)
+ * @since 2026-10-06
+ * @description ดึงข้อมูลเหตุผล Cost Up จากระบบ
+ * @returns
+ */
+export async function getReasonCostUp() {
+    return await fetchUtils({
+        url: `${process.env.APP_API}/purform/pur-pra/reasons/costup`,
+        method: 'GET',
+    });
+}
+
+/**
+ * @author Sutthipong Tangmongkhoncharoen(24008)
+ * @since 2026-10-06
+ * @description ดึงข้อมูลเหตุผล Cost Down จากระบบ
+ * @returns
+ */
+export async function getReasonCostDown() {
+    return await fetchUtils({
+        url: `${process.env.APP_API}/purform/pur-pra/reasons/costdown`,
+        method: 'GET',
+    });
+}
+
+/**
+ * @author Sutthipong Tangmongkhoncharoen(24008)
+ * @since 2026-10-06
+ * @description ดึงข้อมูลเหตุผล Condition Revise จากระบบ
+ * @returns
+ */
+export async function getReasonConditionRevise() {
+    return await fetchUtils({
+        url: `${process.env.APP_API}/purform/pur-pra/reasons/condition-revise`,
+        method: 'GET',
+    });
+}
+
+/**
+ * @author Sutthipong Tangmongkhoncharoen(24008)
+ * @since 2026-10-06
+ * @description ดึงข้อมูลเหตุผล Estimate Price จากระบบ
+ * @returns
+ */
+export async function getReasonEstimatePrice() {
+    return await fetchUtils({
+        url: `${process.env.APP_API}/purform/pur-pra/reasons/estimate-price`,
+        method: 'GET',
+    });
+}

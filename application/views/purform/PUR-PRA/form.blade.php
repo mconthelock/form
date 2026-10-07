@@ -251,180 +251,30 @@
                     </header>
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-x-8 gap-y-6 p-4">
 
-                        {{-- Negotiation --}}
-                        <fieldset class="fieldset">
-                            <legend class="fieldset-legend font-semibold">Negotiation</legend>
-                            <div class="flex flex-col gap-2">
-                                <label class="label cursor-pointer justify-start gap-2">
-                                    <input type="radio" name="reason" value="neg_compare" class="radio radio-sm radio-primary">
-                                    <span class="label-text">Compare with Other vendors</span>
-                                </label>
-                                <label class="label cursor-pointer justify-start gap-2">
-                                    <input type="radio" name="reason" value="neg_compare" class="radio radio-sm radio-primary">
-                                    <span class="label-text">Compare with MELINA or AMEC's Price</span>
-                                </label>
-                                <label class="label cursor-pointer justify-start gap-2">
-                                    <input type="radio" name="reason" value="neg_hq" class="radio radio-sm radio-primary">
-                                    <span class="label-text">MELCO HQ Central purchasing</span>
-                                </label>
-                                <label class="label cursor-pointer justify-start gap-2">
-                                    <input type="radio" name="reason" value="neg_hq" class="radio radio-sm radio-primary">
-                                    <span class="label-text">MELINA Global integrated price</span>
-                                </label>
-                                <label class="label cursor-pointer justify-start gap-2">
-                                    <input type="radio" name="reason" value="neg_material" class="radio radio-sm radio-primary">
-                                    <span class="label-text">Material Cost</span>
-                                </label>
-                                <label class="label cursor-pointer justify-start gap-2">
-                                    <input type="radio" name="reason" value="neg_material" class="radio radio-sm radio-primary">
-                                    <span class="label-text">Freight Cost</span>
-                                </label>
-                                <label class="label cursor-pointer justify-start gap-2">
-                                    <input type="radio" name="reason" value="neg_moq" class="radio radio-sm radio-primary">
-                                    <span class="label-text">MOQ Change</span>
-                                </label>
-                                <label class="label cursor-pointer justify-start gap-2">
-                                    <input type="radio" name="reason" value="neg_cost_eval" class="radio radio-sm radio-primary">
-                                    <span class="label-text">Cost evaluation</span>
-                                </label>
-                                <div class="flex items-center gap-2">
-                                    <label class="label cursor-pointer justify-start gap-2 shrink-0">
-                                        <input type="radio" name="reason" value="neg_other" class="radio radio-sm radio-primary">
-                                        <span class="label-text">Other</span>
-                                    </label>
-                                    <input type="text" name="reason_neg_other" class="input input-sm w-full max-w-xs" placeholder="ระบุเหตุผล">
-                                </div>
+                        <fieldset class="fieldset col-span-2">
+                            <legend class="fieldset-legend font-semibold">Cost Down</legend>
+                            <div class="grid grid-flow-col grid-cols-2 gap-2" id="reason-cost-down-container">
                             </div>
                         </fieldset>
 
-                        {{-- Change --}}
                         <fieldset class="fieldset">
-                            <legend class="fieldset-legend font-semibold">Change</legend>
-                            <div class="flex flex-col gap-2">
-                                <div class="flex flex-wrap items-center gap-2">
-                                    <label class="label cursor-pointer justify-start gap-2 shrink-0">
-                                        <input type="radio" name="reason" value="share_shift" class="radio radio-sm radio-primary">
-                                        <span class="label-text">Share Shift</span>
-                                    </label>
-                                    <span class="text-xs text-slate-400">from</span>
-                                    <input type="text" name="share_shift_from" class="input input-sm w-32">
-                                    <span class="text-xs text-slate-400">to</span>
-                                    <input type="text" name="share_shift_to" class="input input-sm w-32">
-                                </div>
-                                <div class="flex flex-wrap items-center gap-2">
-                                    <label class="label cursor-pointer justify-start gap-2 shrink-0">
-                                        <input type="radio" name="reason" value="maker_change" class="radio radio-sm radio-primary">
-                                        <span class="label-text">Maker Change</span>
-                                    </label>
-                                    <span class="text-xs text-slate-400">from</span>
-                                    <input type="text" name="maker_change_from" class="input input-sm w-32">
-                                    <span class="text-xs text-slate-400">to</span>
-                                    <input type="text" name="maker_change_to" class="input input-sm w-32">
-                                </div>
-                                <div class="flex flex-wrap items-center gap-2">
-                                    <label class="label cursor-pointer justify-start gap-2 shrink-0">
-                                        <input type="radio" name="reason" value="route_change" class="radio radio-sm radio-primary">
-                                        <span class="label-text">Business route change</span>
-                                    </label>
-                                    <span class="text-xs text-slate-400">from</span>
-                                    <input type="text" name="route_change_from" class="input input-sm w-32">
-                                    <span class="text-xs text-slate-400">to</span>
-                                    <input type="text" name="route_change_to" class="input input-sm w-32">
-                                </div>
-                                <label class="label cursor-pointer justify-start gap-2">
-                                    <input type="radio" name="reason" value="localization" class="radio radio-sm radio-primary">
-                                    <span class="label-text">Localization</span>
-                                </label>
-                                <div class="flex items-center gap-2">
-                                    <label class="label cursor-pointer justify-start gap-2 shrink-0">
-                                        <input type="radio" name="reason" value="ve_proposal" class="radio radio-sm radio-primary">
-                                        <span class="label-text">VE proposal</span>
-                                    </label>
-                                    <input type="text" name="ve_proposal_detail" class="input input-sm w-full max-w-xs">
-                                </div>
-                                <label class="label cursor-pointer justify-start gap-2">
-                                    <input type="radio" name="reason" value="air_fee" class="radio radio-sm radio-primary">
-                                    <span class="label-text">Air fee</span>
-                                </label>
-                                <div class="flex items-center gap-2">
-                                     <label class="label cursor-pointer justify-start gap-2">
-                                         <input type="radio" name="reason" value="other" class="radio radio-sm radio-primary">
-                                         <span class="label-text">Other</span>
-                                    </label>
-                                    <input type="text" name="reason_neg_other" class="input input-sm w-full max-w-xs" placeholder="ระบุเหตุผล">
-                                </div>
+                            <legend class="fieldset-legend font-semibold">Cost Up</legend>
+                            <div class="flex flex-col gap-2" id="reason-cost-up-container">
                             </div>
                         </fieldset>
 
                         {{-- Basic condition revise --}}
                         <fieldset class="fieldset lg:col-span-2">
                             <legend class="fieldset-legend font-semibold">Basic condition revise</legend>
-                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-                                <label class="label cursor-pointer justify-start gap-2">
-                                    <input type="radio" name="reason" value="bcr_validity" class="radio radio-sm radio-primary">
-                                    <span class="label-text">Update period of validity</span>
-                                </label>
-                                <label class="label cursor-pointer justify-start gap-2">
-                                    <input type="radio" name="reason" value="bcr_exchange" class="radio radio-sm radio-primary">
-                                    <span class="label-text">Exchange rate</span>
-                                </label>
-                                <label class="label cursor-pointer justify-start gap-2">
-                                    <input type="radio" name="reason" value="bcr_mt" class="radio radio-sm radio-primary">
-                                    <span class="label-text">MT (MELINA Knockdown)</span>
-                                </label>
-                                <label class="label cursor-pointer justify-start gap-2">
-                                    <input type="radio" name="reason" value="bcr_mts" class="radio radio-sm radio-primary">
-                                    <span class="label-text">MT-Self</span>
-                                </label>
-                                <label class="label cursor-pointer justify-start gap-2">
-                                    <input type="radio" name="reason" value="bcr_mtt" class="radio radio-sm radio-primary">
-                                    <span class="label-text">MT-T</span>
-                                </label>
-                                <label class="label cursor-pointer justify-start gap-2">
-                                    <input type="radio" name="reason" value="bcr_copper" class="radio radio-sm radio-primary">
-                                    <span class="label-text">Copper</span>
-                                </label>
-                                <label class="label cursor-pointer justify-start gap-2">
-                                    <input type="radio" name="reason" value="bcr_aluminum" class="radio radio-sm radio-primary">
-                                    <span class="label-text">Aluminum</span>
-                                </label>
-                                <label class="label cursor-pointer justify-start gap-2">
-                                    <input type="radio" name="reason" value="bcr_adc12" class="radio radio-sm radio-primary">
-                                    <span class="label-text">ADC12</span>
-                                </label>
-                                <label class="label cursor-pointer justify-start gap-2">
-                                    <input type="radio" name="reason" value="bcr_nddy" class="radio radio-sm radio-primary">
-                                    <span class="label-text">Nd, Dy</span>
-                                </label>
-                                <label class="label cursor-pointer justify-start gap-2">
-                                    <input type="radio" name="reason" value="bcr_nicr" class="radio radio-sm radio-primary">
-                                    <span class="label-text">Ni, Cr</span>
-                                </label>
-                                <label class="label cursor-pointer justify-start gap-2">
-                                    <input type="radio" name="reason" value="bcr_oil" class="radio radio-sm radio-primary">
-                                    <span class="label-text">Oil</span>
-                                </label>
-                                <div class="flex items-center gap-2">
-                                    <label class="label cursor-pointer justify-start gap-2 shrink-0">
-                                        <input type="radio" name="reason" value="bcr_others" class="radio radio-sm radio-primary">
-                                        <span class="label-text">Others</span>
-                                    </label>
-                                    <input type="text" name="reason_bcr_others" class="input input-sm w-full max-w-[10rem]">
-                                </div>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2" id="basic-condition-revise-container">
                             </div>
                         </fieldset>
 
                           {{-- Estimate price --}}
                         <fieldset class="fieldset lg:col-span-2">
                             <legend class="fieldset-legend font-semibold">Estimate price</legend>
-                            <label class="label cursor-pointer justify-start gap-2">
-                                <input type="radio" name="estimate_price" value="po" class="radio radio-sm radio-primary">
-                                <span class="label-text">PO issue with temporary price</span>
-                            </label>
-                            <label class="label cursor-pointer justify-start gap-2">
-                                <input type="radio" name="estimate_price" value="change" class="radio radio-sm radio-primary">
-                                <span class="label-text">Change Temporary price to Fixed price</span>
-                            </label>
+                            <div id="estimate-price-container">
+                            </div>
                         </fieldset>
 
                         {{-- Detail contents --}}

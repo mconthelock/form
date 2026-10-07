@@ -4,7 +4,7 @@ import { getPdfViewer } from '@amec/webasset/components/pdfViewer';
 import { getFileUploadInstance } from '@amec/webasset/components/fileUpload';
 import { getK850mpData } from '../PUR-CPC/data';
 import { tableComparison } from '../PUR-CPC/table-comparison';
-import { getCommittee, getGroup, getVendor } from './data';
+import { getCommittee, getGroup, getReasonCostDown, getVendor } from './data';
 
 /**
  * @author Sutthipong Tangmongkhoncharoen(24008)
@@ -159,3 +159,128 @@ export const groups = async function (groupId) {
             .join(''),
     );
 };
+
+export const reasonsCostDown = async function () {
+    const container = $('#reason-cost-down-container');
+    if (!container.length)
+        throw new Error('Reason Cost Down container not found');
+    const reasons = await getReasonCostDown();
+    if (!reasons.status)
+        throw new Error('Failed to fetch reasons for Cost Down');
+    container.html(mapReasonsToHtml(reasons.data, 'NREASON_COST_DOWN'));
+    console.log(reasons.data.length / 2);
+    const rows = Math.ceil(reasons.data.length / 2);
+    container.css('grid-template-rows', `repeat(${rows}, auto)`);
+};
+
+function mapReasonsToHtml(reasons, name) {
+    return reasons.map((r) => renderReason(r, name)).join('');
+}
+
+function renderReason(r, name) {
+    const type = r.VINPUT_TYPE.toLowerCase();
+
+    let inputClass =
+        type === 'radio'
+            ? 'radio radio-sm radio-primary'
+            : 'checkbox checkbox-sm checkbox-primary';
+
+    let valueHtml = '';
+
+    if (r.VVALUE_TYPE) {
+        valueHtml = mapReasonsValueType(r.VVALUE_TYPE, `${name}_${r.NID}`);
+    }
+
+    let html = `
+        <div class="rounded-lg border border-slate-200 px-3 py-2">
+
+            <label class="flex items-start gap-2 cursor-pointer">
+                <input
+                    type="${type}"
+                    name="${name}"
+                    value="${r.NID}"
+                    class="${inputClass} handle-value-type"
+                >
+
+                <span class="label-text">
+                    ${r.NSEQ}. ${r.VNAME}
+                </span>
+
+                ${valueHtml}
+            </label>
+    `;
+
+    if (r.children?.length) {
+        html += `
+            <div class="ml-8 mt-2 flex flex-wrap gap-2" data-parent-id="${r.NID}">
+                ${r.children.map((child) => renderChild(child, name)).join('')}
+            </div>
+        `;
+    }
+
+    html += `</div>`;
+
+    return html;
+}
+
+function renderChild(r, name) {
+    const type = r.VINPUT_TYPE.toLowerCase();
+
+    const inputClass =
+        type === 'radio'
+            ? 'radio radio-sm radio-primary'
+            : 'checkbox checkbox-sm checkbox-primary';
+
+    let valueHtml = '';
+
+    if (r.VVALUE_TYPE) {
+        valueHtml = mapReasonsValueType(r.VVALUE_TYPE, `${name}_${r.NID}`);
+    }
+
+    return `
+        <label class="flex items-start gap-2 cursor-pointer rounded-lg border border-slate-200 px-3 py-2">
+            <input
+                type="${type}"
+                name="${name}_${r.NPARENT_ID}"
+                value="${r.NID}"
+                class="${inputClass}"
+            >
+
+            <span class="label-text">
+                ${r.VNAME}
+            </span>
+
+            ${valueHtml}
+        </label>
+    `;
+}
+
+function mapReasonsValueType(type, name) {
+    type = type.toLowerCase();
+    switch (type) {
+        case 'text':
+            return `<input type="text" name="${name}" class="input input-sm hidden" disabled data-parent="${name}">`;
+        case 'number':
+            return `<input type="number" name="${name}" class="input input-sm hidden" disabled data-parent="${name}">`;
+        case 'area':
+            return `<textarea name="${name}" class="textarea w-full hidden" rows="2" disabled data-parent="${name}"></textarea>`;
+        case 'from_to_percent':
+            return `
+            <div class="flex items-center gap-2 hidden" data-parent="${name}">
+                <span class="text-xs text-slate-400">from</span>
+                <input type="number" name="${name}_from" class="input input-sm w-32" step="0.01" min="0" max="100" disabled>
+                <span class="text-xs text-slate-400">to</span>
+                <input type="number" name="${name}_to" class="input input-sm w-32" step="0.01" min="0" max="100" disabled>
+            </div>`;
+        case 'from_to':
+            return `
+            <div class="flex items-center gap-2 hidden" data-parent="${name}">
+                <span class="text-xs text-slate-400">from</span>
+                <input type="text" name="${name}_from" class="input input-sm w-32" disabled>
+                <span class="text-xs text-slate-400">to</span>
+                <input type="text" name="${name}_to" class="input input-sm w-32" disabled>
+            </div>`;
+        default:
+            throw new Error(`Unsupported type: ${type}`);
+    }
+}

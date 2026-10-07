@@ -14,6 +14,7 @@ import {
     checkVendor,
     committees,
     groups,
+    reasonsCostDown,
     setAutoField,
 } from './function';
 import { modalSelectPriceComparison } from './modal/select-price-comparison';
@@ -68,6 +69,7 @@ $(async function () {
         committees();
         // เรียกใช้งานฟังก์ชันเพื่อโหลดข้อมูลกลุ่ม
         groups();
+        reasonsCostDown();
         // ตั้งค่า Date Picker สำหรับฟิลด์ Effective Month
         setDatePicker({
             element: '#VEFT_MONTH',
