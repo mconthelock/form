@@ -48,7 +48,7 @@
             </form>
         </section>
 
-        <section class="card overflow-hidden border border-base-300 bg-base-100 shadow-sm">
+        {{-- <section class="card overflow-hidden border border-base-300 bg-base-100 shadow-sm">
             <div class="flex flex-col gap-2 border-b border-base-300 bg-base-200/60 px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6">
                 <div>
                     <h2 class="text-base font-semibold text-base-content">Detail report</h2>
@@ -73,7 +73,7 @@
                     </tbody>
                 </table>
             </div>
-        </section>
+        </section> --}}
     </div>
 @endsection
 
