@@ -51,11 +51,14 @@ export async function renderLink(formno) {
     const match = formno.match(regex);
 
     if (match) {
-        let frmtype = match[1];
+        // let frmtype = match[1];
+        let frmtype = 'PRO-VMM';
         let year = '20' + match[2];
         let runningNo = parseInt(match[3], 10);
 
         // ใช้งาน await ได้ตามปกติแล้วเพราะใส่ async ถูกตำแหน่ง
+        console.log(frmtype);
+
         const formeva = await getFormMasterByVaname(frmtype);
 
         if (formeva) {
