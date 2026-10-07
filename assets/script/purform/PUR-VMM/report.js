@@ -78,7 +78,7 @@ $(document).on('click', '#btnExport', async function () {
     const payload = {
         ...(NRUNNO && { NRUNNO: NRUNNO }),
         ...(VENDCODE && { VENDCODE: VENDCODE }),
-        ...(VENDNAME && { VENDNAME: COMNAME }),
+        ...(VENDNAME && { VENDNAME: VENDNAME }),
         // หากต้องการแนบ VENDOR ต่างๆ ไปที่ Root level สามารถเพิ่มตรงนี้ได้เลย เช่น:
         // ...(VENDCODE && { VENDCODE: VENDCODE }),
 
@@ -135,7 +135,7 @@ async function writeExcel(dataList) {
                         (addr) => addr.ADDRTYPE === 'E',
                     );
                     sheet.getCell(`A${currentRow}`).value =
-                        'PUR-VMM' +
+                        'PRO-VMM' +
                         item.CYEAR2.slice(-2) +
                         '-' +
                         String(item.NRUNNO).padStart(6, '0');
@@ -145,38 +145,48 @@ async function writeExcel(dataList) {
                     const DEMSTEP = item.FORM.flow.find(
                         (flowRecord) => flowRecord.CSTEPNO === '04',
                     );
-                    sheet.getCell(`ฺฺB${currentRow}`).value = item.REQTYPE;
-                    sheet.getCell(`ฺฺC${currentRow}`).value = item.VENDCODE;
-                    sheet.getCell(`ฺฺD${currentRow}`).value =
+                    sheet.getCell(`ฺฺB${currentRow}`).value =
+                        item.FORM.CST == '0'
+                            ? 'Draft'
+                            : item.FORM.CST == '1'
+                              ? 'Running'
+                              : item.FORM.CST == '2'
+                                ? 'Approve'
+                                : item.FORM.CST == '3'
+                                  ? 'Reject'
+                                  : '';
+                    sheet.getCell(`ฺฺC${currentRow}`).value = item.REQTYPE;
+                    sheet.getCell(`ฺฺD${currentRow}`).value = item.VENDCODE;
+                    sheet.getCell(`ฺฺE${currentRow}`).value =
                         item.VENDGROUPTYPE;
-                    sheet.getCell(`ฺฺE${currentRow}`).value = item.VENDNAME;
-                    sheet.getCell(`ฺฺF${currentRow}`).value =
-                        item.FORM.creator.SEMPNO;
+                    sheet.getCell(`ฺฺF${currentRow}`).value = item.VENDNAME;
                     sheet.getCell(`ฺฺG${currentRow}`).value =
-                        item.FORM.reqtor.SEMPNO;
+                        item.FORM.creator.SEMPNO;
                     sheet.getCell(`ฺฺH${currentRow}`).value =
-                        item.FORM.reqtor.SSEC;
+                        item.FORM.reqtor.SEMPNO;
                     sheet.getCell(`ฺฺI${currentRow}`).value =
-                        item.FORM.reqtor.SDEPT;
+                        item.FORM.reqtor.SSEC;
                     sheet.getCell(`ฺฺJ${currentRow}`).value =
+                        item.FORM.reqtor.SDEPT;
+                    sheet.getCell(`ฺฺK${currentRow}`).value =
                         item.FORM.reqtor.SDIV;
-                    sheet.getCell(`ฺฺK${currentRow}`).value = [
+                    sheet.getCell(`ฺฺL${currentRow}`).value = [
                         addrObj?.ADDR1,
                         addrObj?.ADDR2,
                     ]
                         .filter(Boolean)
                         .join(' ');
-                    sheet.getCell(`ฺฺL${currentRow}`).value = addrObj?.CITY;
-                    sheet.getCell(`ฺฺM${currentRow}`).value = addrObj?.STATE;
-                    sheet.getCell(`ฺฺN${currentRow}`).value = addrObj?.POSTCODE;
-                    sheet.getCell(`ฺฺO${currentRow}`).value = addrObj?.COUNTRY;
-                    sheet.getCell(`ฺฺP${currentRow}`).value = item.VENDCAT;
-                    sheet.getCell(`ฺฺQ${currentRow}`).value = item.TAXID;
-                    sheet.getCell(`ฺฺR${currentRow}`).value = item.CANO;
-                    sheet.getCell(`ฺฺS${currentRow}`).value = item.BANO;
-                    sheet.getCell(`ฺฺT${currentRow}`).value =
+                    sheet.getCell(`ฺฺM${currentRow}`).value = addrObj?.CITY;
+                    sheet.getCell(`ฺฺN${currentRow}`).value = addrObj?.STATE;
+                    sheet.getCell(`ฺฺO${currentRow}`).value = addrObj?.POSTCODE;
+                    sheet.getCell(`ฺฺP${currentRow}`).value = addrObj?.COUNTRY;
+                    sheet.getCell(`ฺฺQ${currentRow}`).value = item.VENDCAT;
+                    sheet.getCell(`ฺฺR${currentRow}`).value = item.TAXID;
+                    sheet.getCell(`ฺฺS${currentRow}`).value = item.CANO;
+                    sheet.getCell(`ฺฺT${currentRow}`).value = item.BANO;
+                    sheet.getCell(`ฺฺU${currentRow}`).value =
                         item.TERM?.STERMDESC;
-                    sheet.getCell(`ฺฺU${currentRow}`).value = item.TRADE
+                    sheet.getCell(`ฺฺV${currentRow}`).value = item.TRADE
                         ? [
                               `${item.TRADE.TRADE_CODE}_${item.TRADE.TRADE_NAME}`,
                               item.TRADE.TRADE_SHIPTO
@@ -189,30 +199,31 @@ async function writeExcel(dataList) {
                               .filter(Boolean)
                               .join(' ')
                         : '';
-                    sheet.getCell(`ฺฺV${currentRow}`).value = item.CONTACT;
-                    sheet.getCell(`ฺฺW${currentRow}`).value = item.EMAIL;
-                    sheet.getCell(`ฺฺX${currentRow}`).value = item.TELNO;
-                    sheet.getCell(`ฺฺY${currentRow}`).value = item.CURCODE;
-                    sheet.getCell(`ฺฺZ${currentRow}`).value = item.FORM.DREQDATE
+                    sheet.getCell(`ฺฺW${currentRow}`).value = item.CONTACT;
+                    sheet.getCell(`ฺฺX${currentRow}`).value = item.EMAIL;
+                    sheet.getCell(`ฺฺY${currentRow}`).value = item.TELNO;
+                    sheet.getCell(`ฺฺZ${currentRow}`).value = item.CURCODE;
+                    sheet.getCell(`ฺฺAA${currentRow}`).value = item.FORM
+                        .DREQDATE
                         ? formattedDate(item.FORM.DREQDATE)
                         : '';
-                    sheet.getCell(`ฺฺAA${currentRow}`).value =
-                        item.FORM.CREQTIME;
                     sheet.getCell(`ฺฺAB${currentRow}`).value =
-                        SEMSTEP?.VREALAPV || '';
+                        item.FORM.CREQTIME;
                     sheet.getCell(`ฺฺAC${currentRow}`).value =
+                        SEMSTEP?.VREALAPV || '';
+                    sheet.getCell(`ฺฺAD${currentRow}`).value =
                         SEMSTEP && SEMSTEP.DAPVDATE
                             ? formattedDate(SEMSTEP.DAPVDATE)
                             : '';
-                    sheet.getCell(`ฺฺAD${currentRow}`).value =
-                        SEMSTEP && SEMSTEP.CAPVTIME ? SEMSTEP.CAPVTIME : '';
                     sheet.getCell(`ฺฺAE${currentRow}`).value =
-                        DEMSTEP?.VREALAPV || '';
+                        SEMSTEP && SEMSTEP.CAPVTIME ? SEMSTEP.CAPVTIME : '';
                     sheet.getCell(`ฺฺAF${currentRow}`).value =
+                        DEMSTEP?.VREALAPV || '';
+                    sheet.getCell(`ฺฺAG${currentRow}`).value =
                         DEMSTEP && DEMSTEP.DAPVDATE
                             ? formattedDate(DEMSTEP.DAPVDATE)
                             : '';
-                    sheet.getCell(`ฺฺAG${currentRow}`).value =
+                    sheet.getCell(`ฺฺAH${currentRow}`).value =
                         DEMSTEP && DEMSTEP.CAPVTIME ? DEMSTEP.CAPVTIME : '';
                 });
             },
@@ -249,7 +260,7 @@ async function sortrptData(data, sortBy, direction = 'asc') {
                 valA = a.VENDCODE || '';
                 valB = b.VENDCODE || '';
                 break;
-            case 'COMNAME':
+            case 'VENDNAME':
                 valA = a.VENDNAME || '';
                 valB = b.VENDNAME || '';
                 break;

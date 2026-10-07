@@ -59,7 +59,7 @@ $(async function () {
         $('#VPAYTO').text(formvmm.VPAYTO || '-');
         $('#VTYPE').text(formvmm.VTYPE || '-');
         $('#VPAYTY').text(formvmm.VPAYTY || '-');
-        $('#TERMCODE').text(formvmm.TERM.STERMDESC || '-');
+        $('#TERMCODE').text(formvmm.TERM?.STERMDESC || '-');
         $('#V1TIME').text(formvmm.V1TIME || '-');
         $('#VNALPH').text(formvmm.VNALPH || '-');
         $('#CONTACT').text(formvmm.CONTACT || '-');

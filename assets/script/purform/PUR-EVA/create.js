@@ -413,7 +413,7 @@ $(document).on('click', '#tableContainer #tableSearch tbody tr', function () {
     const table = $('#tableSearch').DataTable();
     const rowData = table.row(this).data();
     const nvfno =
-        'PUR-NVF' +
+        'PRO-NVF' +
         rowData.CYEAR2.slice(-2) +
         '-' +
         String(rowData.NRUNNO).padStart(6, '0');
@@ -966,7 +966,7 @@ $(document).ready(async function () {
                 let runNo = row.NRUNNO
                     ? String(row.NRUNNO).padStart(6, '0')
                     : '000000';
-                return `<span class="font-semibold text-blue-600">PUR-NVF${year2}-${runNo}</span>`;
+                return `<span class="font-semibold text-blue-600">PRO-NVF${year2}-${runNo}</span>`;
             },
         },
         {
