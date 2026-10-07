@@ -11,11 +11,15 @@
      data-doc_no="{{ $DOC_NO ?? '' }}"
      data-doc_header_id="{{ $DOC_HEADER_ID ?? '' }}"
      data-doc_type_code="{{ $DOC_TYPE_CODE ?? '' }}"
-     data-status="{{ $STATUS ?? '' }}">
+     data-status="{{ $STATUS ?? '' }}"
+     data-reqby="{{ $REQBY ?? '' }}"
+     data-inputby="{{ $INPUTBY ?? '' }}"
+     >
 </div>
 
 <input type="hidden" name="MODEHid" id="MODEHid" value="{{ $MODE ?? '1' }}" />
 <input type="hidden" name="EXTDATAHid" id="EXTDATAHid" value="{{ $EXTDATA ?? '' }}" />
+<input type="hidden" name="EMPNOHid" id="EMPNOHid" value="{{ $EMPNO }}" />
 
 <div class="flex flex-col w-full px-4 my-6 font-sans max-w-6xl mx-auto">
     <div class="card bg-white w-full shadow-md border border-slate-200 rounded-2xl">

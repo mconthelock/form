@@ -8,12 +8,12 @@
 
         <div>
             <label class="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Input By</label>
-            <input type="text" id="INPUT_BYTxt" class="w-full h-10 px-3 bg-slate-100 border border-slate-200 rounded-lg text-sm text-slate-600 cursor-not-allowed" value="{{ $EMPNO }}" readonly>
+            <input type="text" id="INPUT_BYTxt" class="w-full h-10 px-3 bg-slate-100 border border-slate-200 rounded-lg text-sm text-slate-600 cursor-not-allowed" value="{{$INPUTBY}}" readonly>
         </div>
 
         <div>
             <label class="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Request By</label>
-            <input type="text" id="REQUEST_BYTxt" class="w-full h-10 px-3 bg-slate-100 border border-slate-200 rounded-lg text-sm text-slate-600 cursor-not-allowed" value="{{ $EMPNO }}" readonly>
+            <input type="text" id="REQUEST_BYTxt" class="w-full h-10 px-3 bg-slate-100 border border-slate-200 rounded-lg text-sm text-slate-600 cursor-not-allowed" value="{{$REQBY}}" readonly>
         </div>
 
         <!-- Dropdown Document Type (Master) -->

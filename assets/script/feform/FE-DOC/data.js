@@ -1,4 +1,5 @@
 import { host } from '../../utils';
+import { fetchMsgErr } from '@amec/webasset/api/fetch-utils';
 
 export async function getDocTypeSteps(docTypeCode) {
     return $.ajax({
@@ -36,4 +37,24 @@ export async function getFilesDisplay(payload) {
         data: payload,
         dataType: 'json',
     });
+}
+
+/**
+ * อัปโหลดไฟล์ผ่าน NestJS API เข้าตาราง FE_FILE และ File Storage ของ AMEC
+ */
+export async function uploadDocFiles(formData) {
+    const res = await fetch(`${process.env.APP_API}/webform/file`, {
+        method: 'POST',
+        body: formData,
+    });
+
+    if (!res.ok) {
+        return {
+            status: false,
+            message: `Failed to upload file: ${await fetchMsgErr(res)}`,
+        };
+    }
+
+    const data = await res.json();
+    return data;
 }

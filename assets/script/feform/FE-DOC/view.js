@@ -1,19 +1,11 @@
 import $ from 'jquery';
 import { redirectWebflow } from '@amec/webasset/form';
-import {
-    getMode,
-    getExtData,
-    showflow,
-    doaction,
-    deleteFlowandForm,
-} from '@amec/webasset/api/webform';
 import { showLoader } from '@amec/webasset/preloader';
 import { host } from '../../utils';
-import { saveDocMaster, deleteDraftDoc, getFilesDisplay } from './data';
+import { uploadDocFiles, saveDocMaster, getFilesDisplay } from './data';
+import { initFlow } from './flow';
 
 let empno = '';
-let currentMode = '1';
-let currentExtData = '';
 let selectedFilesArray = [];
 
 $(document).ready(async function () {
@@ -30,27 +22,18 @@ $(document).ready(async function () {
         DOC_NO: formData.doc_no,
     };
 
+    // Binding ข้อมูลเข้าฟอร์ม
     $('#DOC_IDTxt').val(form.DOC_NO);
-    $('#REQUEST_BYTxt').val(form.EMPNO);
-    $('#INPUT_BYTxt').val(form.EMPNO);
+    $('#REQUEST_BYTxt').val(formData.reqby || '');
+    $('#INPUT_BYTxt').val(formData.inputby || '');
     $('#DocHeaderIDHid').val(formData.doc_header_id || '');
+    // alert(formData.inputby);
 
-    if (!form.NRUNNO) {
-        currentMode = '1';
-        $('#MODEHid').val('1');
-        $('#EXTDATAHid').val('');
-        applyButtonPermissions('1', '', '');
-    } else {
-        currentMode = String(await getMode(form));
-        currentExtData = String(await getExtData(form));
-        $('#MODEHid').val(currentMode);
-        $('#EXTDATAHid').val(currentExtData);
+    // เริ่มต้นระบบ Flow & Permissions จากไฟล์ flow.js
+    await initFlow(form, formData.status);
 
-        applyButtonPermissions(currentMode, currentExtData, formData.status);
+    if (form.NRUNNO) {
         loadExistingFiles();
-
-        const flow = await showflow(form);
-        $('.flow').html(flow.html);
     }
 
     setTimeout(function () {
@@ -58,51 +41,10 @@ $(document).ready(async function () {
         $('#form').removeClass('hidden');
     }, 10);
 
-    // File Selection & Drag & Drop
-    // $('#drop-zone').on('click', () => $('#files').trigger('click'));
-    // $(document).on('change', '#files', function () {
-    //     handleFileSelect(this.files);
-    // });
-    // ป้องกัน Event Loop และเปิด File Dialog
-    $('#drop-zone').on('click', function (e) {
-        e.preventDefault();
-        $('#files').click();
-    });
+    // Event จัดการเลือกไฟล์แนบ
+    initFileDropEvents();
 
-    $('#files').on('click', function (e) {
-        e.stopPropagation();
-    });
-
-    $(document).on('change', '#files', function () {
-        handleFileSelect(this.files);
-        $(this).val(''); // ล้างค่าเพื่อให้เลือกไฟล์เดิมซ้ำได้
-    });
-
-    // รองรับ Drag & Drop
-    $('#drop-zone').on('dragover dragenter', function (e) {
-        e.preventDefault();
-        e.stopPropagation();
-        $(this).addClass('border-blue-500 bg-blue-50/40');
-    });
-
-    $('#drop-zone').on('dragleave dragend', function (e) {
-        e.preventDefault();
-        e.stopPropagation();
-        $(this).removeClass('border-blue-500 bg-blue-50/40');
-    });
-
-    $('#drop-zone').on('drop', function (e) {
-        e.preventDefault();
-        e.stopPropagation();
-        $(this).removeClass('border-blue-500 bg-blue-50/40');
-
-        const dt = e.originalEvent.dataTransfer;
-        if (dt && dt.files && dt.files.length > 0) {
-            handleFileSelect(dt.files);
-        }
-    });
-
-    // Submit Document Action
+    // ปุ่มบันทึกเอกสาร & อัปโหลดไฟล์
     $('#SaveDocBtn').on('click', async function () {
         const docType = $('#DocTypeDrp').val();
         if (!docType) {
@@ -118,67 +60,60 @@ $(document).ready(async function () {
 
         if (
             !confirm('ยืนยันการบันทึกและส่งเอกสารเข้าระบบ Approval ใช่หรือไม่?')
-        )
+        ) {
             return;
-
-        let formDataPayload = new FormData();
-        formDataPayload.append('DOC_TYPE_CODE', docType);
-        formDataPayload.append('REMARK', $('#RemarkTxt').val());
-        formDataPayload.append('EMPNO', empno);
-        formDataPayload.append('DOC_HEADER_ID', $('#DocHeaderIDHid').val());
-
-        validFiles.forEach((file) => {
-            formDataPayload.append('files[]', file);
-        });
+        }
 
         try {
             showLoader();
-            const res = await saveDocMaster(formDataPayload);
-            if (res.status) {
-                alert(res.message);
-                redirectWebflow();
-            } else {
-                alert('เกิดข้อผิดพลาด: ' + res.message);
+
+            let headerPayload = new FormData();
+            headerPayload.append('DOC_TYPE_CODE', docType);
+            headerPayload.append('REMARK', $('#RemarkTxt').val() || '');
+            headerPayload.append('EMPNO', empno);
+            headerPayload.append('DOC_HEADER_ID', $('#DocHeaderIDHid').val());
+
+            const resHeader = await saveDocMaster(headerPayload);
+            if (!resHeader || !resHeader.status) {
+                throw new Error(
+                    resHeader?.message || 'บันทึกข้อมูลเอกสารไม่สำเร็จ',
+                );
             }
+
+            const createdDoc = resHeader.data || {};
+
+            // อัปโหลดไฟล์ผ่าน NestJS API
+            if (validFiles.length > 0) {
+                let nestJsData = new FormData();
+                nestJsData.append('NFRMNO', createdDoc.NFRMNO || form.NFRMNO);
+                nestJsData.append('VORGNO', createdDoc.VORGNO || form.VORGNO);
+                nestJsData.append('CYEAR', createdDoc.CYEAR || form.CYEAR);
+                nestJsData.append('CYEAR2', createdDoc.CYEAR2 || form.CYEAR2);
+                nestJsData.append('NRUNNO', createdDoc.NRUNNO || form.NRUNNO);
+                nestJsData.append('CREATEBY', empno);
+                nestJsData.append('FORM_TYPE', 'FE');
+
+                validFiles.forEach((file) => nestJsData.append('files', file));
+
+                const resFile = await uploadDocFiles(nestJsData);
+                if (!resFile || !resFile.status) {
+                    throw new Error(
+                        resFile?.message || 'อัปโหลดไฟล์ผ่าน API ไม่สำเร็จ',
+                    );
+                }
+            }
+
+            alert(resHeader.message || 'บันทึกเอกสารและอัปโหลดไฟล์สำเร็จ');
+            redirectWebflow();
         } catch (err) {
-            console.error(err);
-            alert('ไม่สามารถบันทึกเอกสารได้');
+            console.error('Save & Upload Error:', err);
+            alert('เกิดข้อผิดพลาด: ' + err.message);
         } finally {
             showLoader({ show: false });
         }
     });
 
-    // Flow Action Buttons
-    $(document).on('click', '#ApproveBtn', async () => actionFlow('approve'));
-    $(document).on('click', '#ReturnBtn', async () => {
-        if (confirm('ยืนยันการ Return เอกสารกลับผู้จัดทำใช่หรือไม่?'))
-            actionFlow('return');
-    });
-
-    // Delete Action Button
-    $(document).on('click', '#DeleteBtn', async function () {
-        if (!confirm('ยืนยันการลบแบบฟอร์มนี้ใช่หรือไม่?')) return;
-
-        showLoader();
-        try {
-            const delFlow = await deleteFlowandForm(form);
-            if (delFlow.status) {
-                await deleteDraftDoc({
-                    DOC_HEADER_ID: $('#DocHeaderIDHid').val(),
-                });
-                alert('ลบข้อมูลเรียบร้อยแล้ว');
-                redirectWebflow();
-            } else {
-                alert('ไม่สามารถลบ Flow ได้');
-            }
-        } catch (e) {
-            alert('เกิดข้อผิดพลาด: ' + e.message);
-        } finally {
-            showLoader({ show: false });
-        }
-    });
-
-    // Preview PDF
+    // ปุ่ม Preview Stamped PDF
     $(document).on('click', '#PreviewPdfBtn', function () {
         const url =
             host +
@@ -187,101 +122,57 @@ $(document).ready(async function () {
     });
 });
 
-function applyButtonPermissions(mode, extData, status = '') {
-    const rawStatus = (status || '').toUpperCase().trim();
-    $('#SaveDocBtn, #DeleteBtn, #ApproveBtn, #ReturnBtn').addClass('hidden');
+function initFileDropEvents() {
+    $('#drop-zone').on('click', function (e) {
+        e.preventDefault();
+        $('#files').click();
+    });
 
-    if (mode === '1') {
-        $('#DocTypeDrp').prop('disabled', false);
-        $('#drop-zone').removeClass('hidden');
-        if (rawStatus === 'DRAFT' || rawStatus === '') {
-            $('#SaveDocBtn').removeClass('hidden');
-            if (rawStatus === 'DRAFT') $('#DeleteBtn').removeClass('hidden');
+    $('#files').on('click', (e) => e.stopPropagation());
+
+    $(document).on('change', '#files', function () {
+        handleFileSelect(this.files);
+        $(this).val('');
+    });
+
+    $('#drop-zone').on('dragover dragenter', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        $(this).addClass('border-blue-500 bg-blue-50/40');
+    });
+
+    $('#drop-zone').on('dragleave dragend drop', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        $(this).removeClass('border-blue-500 bg-blue-50/40');
+        if (e.type === 'drop') {
+            const dt = e.originalEvent.dataTransfer;
+            if (dt && dt.files && dt.files.length > 0)
+                handleFileSelect(dt.files);
         }
-    } else if (mode === '2') {
-        $('#DocTypeDrp').prop('disabled', true);
-        $('#drop-zone').addClass('hidden');
-        $('#ApproveBtn, #ReturnBtn').removeClass('hidden');
-    } else {
-        $('#DocTypeDrp').prop('disabled', true);
-        $('#drop-zone').addClass('hidden');
-    }
-}
+    });
 
-async function actionFlow(actionType) {
-    const formData = $('.form-info').data() || {};
-    const payload = {
-        NFRMNO: Number(formData.nfrmno || 0),
-        VORGNO: String(formData.vorgno || ''),
-        CYEAR: String(formData.cyear || ''),
-        CYEAR2: String(formData.cyear2 || ''),
-        NRUNNO: Number(formData.nrunno || 0),
-        ACTION: actionType,
-        EMPNO: empno,
-        REMARK: $('#RemarkTxt').val() || '',
-    };
-
-    try {
-        showLoader();
-        const res = await doaction(payload);
-        if (res?.status) {
-            await $.ajax({
-                url: host + 'feform/FE-DOC/form/ActionFlow',
-                type: 'POST',
-                data: {
-                    ...payload,
-                    EXTDATA: $('#EXTDATAHid').val(),
-                    DOC_HEADER_ID: $('#DocHeaderIDHid').val(),
-                },
-                dataType: 'json',
-            });
-            redirectWebflow();
-        } else {
-            alert(res?.message || 'ส่งสถานะ Flow ไม่สำเร็จ');
+    $(document).on('click', '.btn-remove-selected-file', function () {
+        let idx = $(this).data('index');
+        selectedFilesArray[idx] = null;
+        $(`#file-item-${idx}`).remove();
+        if (selectedFilesArray.filter(Boolean).length === 0) {
+            $('#file-list-container').addClass('hidden');
         }
-    } catch (e) {
-        console.error(e);
-        alert('เกิดข้อผิดพลาดในการทำ Action');
-    } finally {
-        showLoader({ show: false });
-    }
-}
-
-function handleFileSelect0(files) {
-    if (!files || files.length === 0) return;
-    $('#file-list-container').removeClass('hidden');
-
-    for (let i = 0; i < files.length; i++) {
-        selectedFilesArray.push(files[i]);
-        let idx = selectedFilesArray.length - 1;
-        let fileSize = (files[i].size / (1024 * 1024)).toFixed(2) + ' MB';
-
-        let html = `
-            <li class="flex items-center justify-between py-2 px-3 text-sm" id="file-item-${idx}">
-                <div class="flex items-center gap-2 truncate">
-                    <span>📄</span>
-                    <span class="font-medium text-slate-700 truncate">${files[i].name}</span>
-                    <span class="text-xs text-slate-400">(${fileSize})</span>
-                </div>
-                <button type="button" class="btn-remove-selected-file text-rose-500 font-bold text-xs" data-index="${idx}">Remove</button>
-            </li>`;
-        $('#selected-files-list').append(html);
-    }
+    });
 }
 
 function handleFileSelect(files) {
     if (!files || files.length === 0) return;
-
     let hasInvalid = false;
 
     for (let i = 0; i < files.length; i++) {
         const file = files[i];
         const ext = file.name.split('.').pop().toLowerCase();
 
-        // ตรวจสอบว่าต้องเป็นไฟล์ PDF เท่านั้น
         if (ext !== 'pdf' && file.type !== 'application/pdf') {
             hasInvalid = true;
-            continue; // ข้ามไฟล์ที่ไม่ใช่ PDF
+            continue;
         }
 
         selectedFilesArray.push(file);
@@ -300,52 +191,111 @@ function handleFileSelect(files) {
         $('#selected-files-list').append(html);
     }
 
-    if (hasInvalid) {
-        alert('ระบบรองรับเฉพาะไฟล์ PDF เท่านั้น ไฟล์ที่ไม่ใช่ PDF จะถูกตัดออก');
-    }
-
-    if (selectedFilesArray.filter(Boolean).length > 0) {
+    if (hasInvalid) alert('ระบบรองรับเฉพาะไฟล์ PDF เท่านั้น');
+    if (selectedFilesArray.filter(Boolean).length > 0)
         $('#file-list-container').removeClass('hidden');
-    }
 }
-
-$(document).on('click', '.btn-remove-selected-file', function () {
-    let idx = $(this).data('index');
-    selectedFilesArray[idx] = null;
-    $(`#file-item-${idx}`).remove();
-    if (selectedFilesArray.filter(Boolean).length === 0) {
-        $('#file-list-container').addClass('hidden');
-    }
-});
 
 function loadExistingFiles() {
     const formData = $('.form-info').data() || {};
-    getFilesDisplay({
-        NFRMNO: formData.nfrmno,
-        VORGNO: formData.vorgno,
-        CYEAR2: formData.cyear2,
-        NRUNNO: formData.nrunno,
-    }).then((res) => {
-        if (res.status && res.files.length > 0) {
-            const $list = $('#uploaded-files-list');
-            $list.empty();
-            $('#download-zone').removeClass('hidden');
+    const mode = $('#MODEHid').val() || '1'; // 🟢 ดึงค่า mode จาก Hidden Input แทน
+    let isRequester = false;
 
-            res.files.forEach((file) => {
-                const downloadUrl =
-                    host + 'feform/FE-DOC/form/DownloadFile?id=' + file.FILE_ID;
-                $list.append(`
-                    <li class="flex items-center justify-between py-2.5 px-3 text-sm hover:bg-slate-50 transition-colors">
-                        <div class="flex items-center gap-2.5 truncate">
-                            <span>📁</span>
-                            <span class="font-medium text-slate-700 truncate">${file.FILE_ONAME}</span>
-                        </div>
-                        <a href="${downloadUrl}" target="_blank" class="bg-slate-100 hover:bg-primary hover:text-white text-slate-600 font-semibold text-xs px-2.5 py-1.5 rounded-lg transition-all">
-                            ⬇️ Download
-                        </a>
-                    </li>
-                `);
-            });
-        }
+    // เช็คสิทธิ์ว่าเป็นคนสร้างเอกสารหรือไม่
+    if (mode === '1' || mode === '2') {
+        const reqBy = (
+            $('#REQUEST_BYTxt').val() ||
+            formData.reqby ||
+            ''
+        ).toString();
+        isRequester = reqBy.includes(empno);
+    }
+
+    const $list = $('#uploaded-files-list');
+
+    $.ajax({
+        url: host + 'feform/FE-DOC/form/GetFilesDisplay',
+        type: 'POST',
+        cache: false,
+        dataType: 'json',
+        data: {
+            NFRMNO: formData.nfrmno,
+            VORGNO: formData.vorgno,
+            CYEAR2: formData.cyear2,
+            NRUNNO: formData.nrunno,
+        },
+        success: function (response) {
+            $list.empty();
+            if (
+                response?.status === true &&
+                response.files &&
+                response.files.length > 0
+            ) {
+                $('#download-zone').removeClass('hidden');
+
+                response.files.forEach(function (file) {
+                    let downloadUrl =
+                        host +
+                        'feform/FE-DOC/form/DownloadFile?id=' +
+                        file.FILE_ID;
+
+                    // แสดงปุ่ม Delete เมื่อผู้เปิดเป็น Requester
+                    let deleteBtn = isRequester
+                        ? `<button type="button" 
+                                   class="btn-delete-file text-rose-500 hover:text-rose-700 font-bold text-xs px-2 cursor-pointer transition-colors" 
+                                   data-id="${file.FILE_ID}">
+                               🗑️ Delete
+                           </button>`
+                        : '';
+
+                    let itemHtml = `
+                        <li class="flex items-center justify-between py-2.5 px-3 text-sm hover:bg-slate-50 transition-colors" id="uploaded-file-${file.FILE_ID}">
+                            <div class="flex items-center gap-2.5 truncate">
+                                <span class="text-rose-500 font-bold text-xs bg-rose-50 px-1.5 py-0.5 rounded border border-rose-200">PDF</span>
+                                <span class="font-medium text-slate-700 truncate">${file.FILE_ONAME}</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <a href="${downloadUrl}" target="_blank" class="bg-slate-100 hover:bg-primary hover:text-white text-slate-600 font-semibold text-xs px-2.5 py-1.5 rounded-lg transition-all">
+                                    ⬇️ Download
+                                </a>
+                                ${deleteBtn}
+                            </div>
+                        </li>`;
+                    $list.append(itemHtml);
+                });
+            } else {
+                $('#download-zone').addClass('hidden');
+            }
+        },
     });
 }
+
+// Event สำหรับกดปุ่ม Delete ไฟล์แนบเดิม
+$(document).on('click', '.btn-delete-file', function () {
+    const fileId = $(this).data('id');
+    if (!confirm('ยืนยันการลบไฟล์แนบนี้ใช่หรือไม่?')) return;
+
+    showLoader();
+    $.ajax({
+        url: host + 'feform/FE-DOC/form/DeleteFile',
+        type: 'POST',
+        data: { id: fileId },
+        dataType: 'json',
+        success: function (res) {
+            if (res && res.status) {
+                $(`#uploaded-file-${fileId}`).remove();
+                if ($('#uploaded-files-list li').length === 0) {
+                    $('#download-zone').addClass('hidden');
+                }
+            } else {
+                alert('ไม่สามารถลบไฟล์ได้: ' + (res?.message || ''));
+            }
+        },
+        error: function () {
+            alert('เกิดข้อผิดพลาดในการเชื่อมต่อเพื่อลบไฟล์');
+        },
+        complete: function () {
+            showLoader({ show: false });
+        },
+    });
+});
