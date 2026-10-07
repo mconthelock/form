@@ -5,7 +5,7 @@
     <style>
         /* Hallmark · compact workbench · DaisyUI system · centered area management.
            Pre-emit critique: P4 H4 E4 S4 R5 V4 */
-        .area-data-shell, .area-delete-dialog {
+        .area-data-shell {
             --area-soft: color-mix(in srgb, var(--color-primary) 6%, var(--color-base-100));
             --area-shadow: color-mix(in srgb, var(--color-primary) 10%, transparent);
             --area-backdrop: color-mix(in srgb, var(--color-neutral) 55%, transparent);
@@ -33,23 +33,30 @@
         .area-data-body { padding: 24px; }
         .area-data-shell .toolbar { display: flex; justify-content: flex-start; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; }
         .area-data-shell .search-input { width: min(100%, 380px); height: 40px; text-align: left; border-radius: 10px; }
-        .area-data-shell .btn, .area-delete-dialog .btn { border-radius: 9px; box-shadow: none; white-space: nowrap; }
-        .area-data-shell .area-form { display: none; padding: 20px; margin-bottom: 20px; border: 1px solid var(--color-base-300); border-radius: 14px; background: var(--area-soft); }
-        .area-data-shell .area-form.is-visible { display: block; }
-        .area-data-shell .area-form-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; }
+        .area-data-shell .btn { border-radius: 9px; box-shadow: none; white-space: nowrap; }
+        .area-form-dialog { width: min(calc(100% - 32px), 1200px); margin: auto; padding: 0; overflow: visible; border: 1px solid var(--color-base-300); border-radius: 20px; background: var(--color-base-100); color: var(--color-base-content); font-size: 15px; box-shadow: 0 16px 48px var(--area-shadow); }
+        .area-form-dialog::backdrop { background: var(--area-backdrop); }
+        .area-form-dialog__content { max-height: calc(100dvh - 32px); overflow-y: auto; padding: 30px; }
+        .area-form-dialog__header { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 20px; text-align: left; }
+        .area-form-dialog__title { font-size: 22px; font-weight: 700; }
+        .area-form-dialog__close { display: grid; place-items: center; width: 42px; height: 42px; border: 1px solid var(--color-base-300); border-radius: 9px; background: var(--color-base-100); color: var(--color-base-content); font-size: 24px; }
+        .area-data-shell .area-form { padding: 24px; border: 1px solid var(--color-base-300); border-radius: 14px; background: var(--area-soft); }
+        .area-data-shell .area-form-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 20px 18px; }
         .area-data-shell .area-form-grid > div { min-width: 0; }
-        .area-data-shell .area-form label { display: block; margin-bottom: 6px; font-size: 13px; font-weight: 600; }
+        .area-data-shell .area-form label { display: block; margin-bottom: 8px; font-size: 15px; font-weight: 600; }
         .area-data-shell .area-form :is(input, select) {
-            width: 100%; height: 40px; padding: 0 10px; border: 1px solid var(--color-base-300);
+            width: 100%; height: 48px; padding: 0 12px; border: 1px solid var(--color-base-300);
             border-radius: 8px; background: var(--color-base-100); color: var(--color-base-content);
             font: inherit; text-align: center;
         }
         .area-data-shell .area-form .select2-container { width: 100% !important; text-align: center; }
-        .area-data-shell .select2-selection--single { height: 40px; border: 1px solid var(--color-base-300); border-radius: 8px; background: var(--color-base-100); }
-        .area-data-shell .select2-selection__rendered { line-height: 38px !important; color: var(--color-base-content) !important; }
-        .area-data-shell .select2-selection__arrow { height: 38px !important; }
-        .area-data-shell .area-form-actions, .area-delete-dialog__actions { display: flex; justify-content: center; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
-        .area-data-shell :is(input, select, button):focus-visible, .area-delete-dialog button:focus-visible {
+        .area-data-shell .select2-selection--single { height: 48px; border: 1px solid var(--color-base-300); border-radius: 8px; background: var(--color-base-100); }
+        .area-data-shell .select2-selection__rendered { line-height: 46px !important; color: var(--color-base-content) !important; font-size: 15px; }
+        .area-data-shell .select2-selection__arrow { height: 46px !important; }
+        .area-form-dialog .select2-results__option { padding: 10px 14px; font-size: 15px; }
+        .area-data-shell .area-form-actions { display: flex; justify-content: center; flex-wrap: wrap; gap: 12px; margin-top: 22px; }
+        .area-form-dialog .area-form-actions .btn { min-height: 44px; padding-inline: 18px; font-size: 15px; }
+        .area-data-shell :is(input, select, button):focus-visible {
             outline: 2px solid var(--color-primary); outline-offset: 3px;
         }
         .area-data-shell .table-wrapper { overflow-x: auto; border: 1px solid var(--color-base-300); border-radius: 12px; }
@@ -66,15 +73,11 @@
         .area-data-shell .table-action-button { width: 34px; height: 34px; border: 1px solid var(--color-base-300); border-radius: 8px; background: var(--color-base-100); }
         .area-data-shell .table-action-button:hover { border-color: var(--color-primary); background: var(--area-soft); }
         .area-data-shell .edit-area span { color: var(--color-yellow-400); }
-        .area-data-shell .delete-area span { color: var(--color-error); }
         .area-data-shell .empty-row { height: 150px; color: var(--color-neutral); }
         .area-data-shell .table-summary { margin-top: 16px; font-size: 12px; color: var(--color-neutral); text-align: center; }
-        .area-delete-dialog { width: min(calc(100% - 32px), 420px); max-height: calc(100dvh - 32px); margin: auto; padding: 24px; border: 1px solid var(--color-base-300); border-radius: 18px; background: var(--color-base-100); }
-        .area-delete-dialog::backdrop { background: var(--area-backdrop); }
-        .area-delete-dialog__mark { display: grid; place-items: center; width: 44px; height: 44px; margin: 0 auto 16px; border-radius: 50%; background: var(--color-error); color: var(--color-error-content); font-weight: 700; font-size: 24px; }
-        .area-delete-dialog__title { font-size: 20px; font-weight: 700; }
-        .area-delete-dialog__text { margin-top: 8px; font-size: 14px; line-height: 1.7; }
-        @media (max-width: 768px) {
+        .area-data-shell .area-pagination { display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
+        .area-data-shell .area-pagination__status { min-width: 72px; font-size: 12px; color: var(--color-neutral); }
+        @media (max-width: 640px) {
             .area-data-shell .area-form-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
         }
         @media (max-width: 480px) {
@@ -83,7 +86,8 @@
             .area-data-header { padding: 22px 14px; }
             .area-data-shell .toolbar { flex-direction: column; align-items: stretch; }
             .area-data-shell .toolbar .btn { width: 100%; }
-            .area-data-shell .area-form { padding: 14px; }
+            .area-form-dialog__content { padding: 16px; }
+            .area-data-shell .area-form { padding: 16px; }
             .area-data-shell .area-form-grid { grid-template-columns: minmax(0, 1fr); }
         }
     </style>
@@ -110,6 +114,12 @@
                 </button>
             </div>
 
+            <dialog id="areaFormDialog" class="area-form-dialog" aria-labelledby="areaFormTitle">
+            <div class="area-form-dialog__content">
+            <header class="area-form-dialog__header">
+                <h2 id="areaFormTitle" class="area-form-dialog__title">เพิ่มพื้นที่</h2>
+                <button type="button" id="closeAreaFormButton" class="area-form-dialog__close" aria-label="ปิด">×</button>
+            </header>
             <form id="areaForm" class="area-form">
                 <div class="area-form-grid">
                     <div>
@@ -148,6 +158,8 @@
                     </button>
                 </div>
             </form>
+            </div>
+            </dialog>
 
             <div class="table-wrapper border-slate-200">
                 <table class="area-table">
@@ -172,63 +184,22 @@
                         </tr>
                     </thead>
 
-                    <tbody id="areaTableBody">
-                        @forelse ([] as $index => $area)
-                            <tr>
-                                <td>{{ $index + 1 }}</td>
-                                <td>{{ $area->location ?? '-' }}</td>
-                                <td>{{ $area->area ?? '-' }}</td>
-                                <td>{{ $area->level ?? '-' }}</td>
-                                <td>{{ $area->area_owner ?? '-' }}</td>
-                                <td>
-                                    <a href="{{ url('/photo-permission-area/' . $area->id . '/edit') }}" class="action-link"
-                                        title="แก้ไขข้อมูล" style="border-block-end-color: gold">
-                                        <span class="edit-icon">✎</span>
-                                    </a>
-
-                                    <form action="{{ url('/photo-permission-area/' . $area->id) }}" method="POST"
-                                        style="display: inline;" onsubmit="return confirm('ยืนยันการลบข้อมูลนี้หรือไม่?');">
-                                        @csrf
-                                        @method('DELETE')
-
-                                        <button type="submit" class="action-link" title="ลบข้อมูล"
-                                            style="border: 0; background: transparent;">
-                                            <span class="delete-icon">🗑</span>
-                                        </button>
-                                    </form>
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="6" class="empty-row">
-                                    ไม่พบข้อมูล
-                                </td>
-                            </tr>
-                        @endforelse
-                    </tbody>
+                    <tbody id="areaTableBody"></tbody>
                 </table>
             </div>
 
             <div id="areaTableSummary" class="table-summary">
                 0 row(s)
             </div>
+            <nav id="areaPagination" class="area-pagination" aria-label="Area pagination">
+                <button type="button" id="previousAreaPage" class="btn btn-sm" aria-label="Previous page">ก่อนหน้า</button>
+                <span id="areaPageStatus" class="area-pagination__status">หน้า 1 / 1</span>
+                <button type="button" id="nextAreaPage" class="btn btn-sm" aria-label="Next page">ถัดไป</button>
+            </nav>
             </div>
         </div>
     </div>
 
-    <dialog id="deleteAreaDialog" class="area-delete-dialog" aria-labelledby="deleteAreaDialogTitle" aria-describedby="deleteAreaDialogText">
-        <div class="area-delete-dialog__content">
-            <div class="area-delete-dialog__mark" aria-hidden="true">!</div>
-            <h2 id="deleteAreaDialogTitle" class="area-delete-dialog__title">ยืนยันการลบ Area</h2>
-            <p id="deleteAreaDialogText" class="area-delete-dialog__text">
-                ต้องการลบข้อมูล Area นี้ใช่หรือไม่? ข้อมูลที่ลบแล้วไม่สามารถกู้คืนได้
-            </p>
-            <div class="area-delete-dialog__actions">
-                <button type="button" class="btn area-delete-dialog__button" data-delete-area-cancel>ยกเลิก</button>
-                <button type="button" class="btn btn-error area-delete-dialog__button area-delete-dialog__button--danger" data-delete-area-confirm>ลบ Area</button>
-            </div>
-        </div>
-    </dialog>
 @endsection
 
 @section('scripts')
