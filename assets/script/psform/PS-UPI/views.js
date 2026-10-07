@@ -1,4 +1,5 @@
 import { fetchUtils } from '@amec/webasset/api/fetch-utils';
+import { downloadOrOpenFile } from '@amec/webasset/api/file';
 import {
     doaction,
     showflow,
@@ -50,6 +51,57 @@ $(document).ready(async function () {
     if (mode === '2') {
         $('.action-form').html(actionButton);
     }
+
+    const fileKey = { ...formKey };
+    delete fileKey.EMPNO;
+    const $uploadedFiles = $('#uploaded-files-list');
+    try {
+        const fileResponse = await fetchUtils({
+            url: `${process.env.APP_API}/webform/file/get-file`,
+            method: 'POST',
+            data: { ...fileKey, FORM_TYPE: 'PS' },
+        });
+        const files = Array.isArray(fileResponse?.data)
+            ? fileResponse.data.filter((file) => file.FILE_TYPE === null)
+            : [];
+
+        if (!files.length) {
+            $uploadedFiles.html(
+                '<tr><td colspan="2" class="py-4 text-center text-base-content/50">No files uploaded</td></tr>',
+            );
+        } else {
+            $uploadedFiles.empty();
+            files.forEach((file) => {
+                const $downloadLink = $('<a>', {
+                    href: 'javascript:void(0);',
+                    class: 'link link-primary font-medium upi-download-file',
+                    text: 'Download',
+                })
+                    .attr('data-url', file.FILE_PATH)
+                    .attr('storedName', file.FILE_FNAME)
+                    .attr('originalName', file.FILE_ONAME);
+                const $row = $('<tr>');
+                $row.append($('<td>').text(file.FILE_ONAME || 'Unnamed file'));
+                $row.append(
+                    $('<td class="text-center">').append($downloadLink),
+                );
+                $uploadedFiles.append($row);
+            });
+        }
+    } catch {
+        $uploadedFiles.html(
+            '<tr><td colspan="2" class="py-4 text-center text-error">Could not load uploaded files.</td></tr>',
+        );
+    }
+
+    $(document).on('click', '.upi-download-file', function () {
+        downloadOrOpenFile({
+            baseDir: $(this).data('url'),
+            storedName: $(this).attr('storedName'),
+            originalName: $(this).attr('originalName'),
+            mode: 'download',
+        });
+    });
 
     const $tbody = $('#partTableBody');
     const showValue = (value) =>
@@ -128,13 +180,36 @@ $(document).ready(async function () {
     $(document).on('click', "button[name='btnAction']", async function () {
         const remark = $('#remark').val();
         const action = $(this).val();
+        let worker;
 
         if (extData === '01') {
-            const worker = $('#workerSelect').val();
+            worker = $('#workerSelect').val();
             if (!worker) {
                 alert('Please select a worker.');
                 return;
             }
+        }
+
+        const file = $('#fileInput')[0]?.files?.[0];
+
+        if (file) {
+            const formData = new FormData();
+            formData.append('NFRMNO', formKey.NFRMNO);
+            formData.append('VORGNO', formKey.VORGNO);
+            formData.append('CYEAR', formKey.CYEAR);
+            formData.append('CYEAR2', formKey.CYEAR2);
+            formData.append('NRUNNO', formKey.NRUNNO);
+            formData.append('FORM_TYPE', 'PS');
+            formData.append('CREATEBY', formKey.EMPNO);
+            formData.append('file', file);
+            await fetchUtils({
+                url: `${process.env.APP_API}/webform/file`,
+                method: 'POST',
+                data: formData,
+            });
+        }
+
+        if (extData === '01') {
             const formData = { ...formKey };
             delete formData.EMPNO;
 
