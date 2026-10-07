@@ -58,4 +58,10 @@ class form extends MY_Controller{
         }
         $this->views('purform/PUR-VMM/create', $data);
     }
+
+       public function mainrpt()
+    {
+         $this->views('purform/PUR-VMM/mainrpt');
+
+    }
 }
