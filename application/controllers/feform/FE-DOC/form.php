@@ -414,7 +414,6 @@ class form extends MY_Controller {
         }
     }
 
-
     public function DownloadFile0()
     {
         $file_id = $this->input->get('id'); 
@@ -426,16 +425,31 @@ class form extends MY_Controller {
             show_error('ไม่พบข้อมูลไฟล์ในฐานข้อมูล', 404);
         }
 
-        // 🟢 เรียกใช้ฟังก์ชันแปลง Path
-        $fullPath = $this->getRealFilePath($file->FILE_PATH, $file->FILE_FNAME);
+        // 1. ตรวจสอบบน Disk ตรงๆ (สำหรับ Production Server หรือ Windows Native)
+        $cleanDirPath = rtrim($file->FILE_PATH, '/\\');
+        $fullPath = $cleanDirPath . '\\' . $file->FILE_FNAME;
 
-        if (file_exists($fullPath) || @is_readable($fullPath)) {
+        if (@file_exists($fullPath)) {
             $this->load->helper('download');
             force_download($file->FILE_ONAME, file_get_contents($fullPath));
-        } else {
-            show_error('ไม่พบไฟล์จริงในระบบ: ' . $fullPath, 404);
+            return;
         }
+
+        // 2. Fallback สำหรับ Docker Local: ดึง Stream ตรงจาก NestJS API
+        // บน Docker Linux เรียกหา Host ด้วย host.docker.internal
+        $apiUrl = 'http://host.docker.internal:3000/webform/file/' . $file_id;
+        $fileContent = @file_get_contents($apiUrl);
+
+        if ($fileContent !== false && !empty($fileContent)) {
+            $this->load->helper('download');
+            force_download($file->FILE_ONAME, $fileContent);
+            return;
+        }
+
+        show_error('ไม่พบไฟล์จริงในระบบ: ' . $fullPath, 404);
     }
+
+
 
     private function getRealFilePath($dbFilePath, $fileName) {
         $cleanDirPath = rtrim($dbFilePath, '/\\');
@@ -619,13 +633,28 @@ class form extends MY_Controller {
             }
         }
 
-        // ลบ Temp PDF ที่แปลงไว้ (ถ้ามีสร้างไว้)
-        if ($cleanPdfPath !== $fullPath && file_exists($cleanPdfPath)) {
-            @unlink($cleanPdfPath);
+        // 1. คลาย Handle ของ FPDI ออกจากไฟล์ต้นฉบับ
+        if (method_exists($pdf, 'cleanUp')) {
+            $pdf->cleanUp();
         }
 
-        // แสดงผล Preview บน Browser ทันที ('I' = Inline)
+        // 2. หน่วงเวลาลบไฟล์ Temp หลังสคริปต์ทำงานเสร็จสิ้น ป้องกัน Windows Lock
+        if ($cleanPdfPath !== $fullPath && file_exists($cleanPdfPath)) {
+            register_shutdown_function(function () use ($cleanPdfPath) {
+                if (file_exists($cleanPdfPath)) {
+                    @unlink($cleanPdfPath);
+                }
+            });
+        }
+
+        // 3. ล้าง Buffer ทั้งหมด เพื่อไม่ให้ Warning ใดๆ หลุดไปก่อน PDF Headers
+        while (ob_get_level() > 0) {
+            ob_end_clean();
+        }
+
+        // 4. แสดงผล Preview บน Browser ('I' = Inline) แล้วหยุดการทำงานทันที
         $pdf->Output('Preview_' . $header->DOC_NO . '.pdf', 'I');
+        exit;
     }
 
     
@@ -637,31 +666,35 @@ class form extends MY_Controller {
     private function repairPdfForFpdi($inputPath) {
         $tempPath = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'fpdi_fixed_' . uniqid() . '.pdf';
 
-        // 1. ลองใช้ Ghostscript (gs) แปลงเป็น PDF 1.4 (เข้ากันได้กับ FPDI ฟรี)
+        // 1. ลองใช้ Ghostscript (gs)
         $cmdGs = sprintf(
             'gs -sDEVICE=pdfwrite -dCompatibilityLevel=1.4 -dNOPAUSE -dQUIET -dBATCH -sOutputFile=%s %s 2>&1',
             escapeshellarg($tempPath),
             escapeshellarg($inputPath)
         );
-        exec($cmdGs, $outputGs, $returnCodeGs);
+        @exec($cmdGs, $outputGs, $returnCodeGs);
 
         if ($returnCodeGs === 0 && file_exists($tempPath) && filesize($tempPath) > 0) {
             return $tempPath;
         }
 
-        // 2. Fallback: กรณีเครื่องติดตั้ง qpdf
+        // 2. Fallback: qpdf
         $cmdQpdf = sprintf(
             'qpdf --qdf --object-streams=disable %s %s 2>&1',
             escapeshellarg($inputPath),
             escapeshellarg($tempPath)
         );
-        exec($cmdQpdf, $outputQpdf, $returnCodeQpdf);
+        @exec($cmdQpdf, $outputQpdf, $returnCodeQpdf);
 
         if ($returnCodeQpdf === 0 && file_exists($tempPath) && filesize($tempPath) > 0) {
             return $tempPath;
         }
 
-        // หากสภาพแวดล้อมไม่มีคำสั่งแปลงไฟล์ ให้คืน path เดิม
+        // ถ้าแปลงไม่สำเร็จ ให้ลบ Temp ที่สร้างค้างไว้ทิ้ง
+        if (file_exists($tempPath)) {
+            @unlink($tempPath);
+        }
+
         return $inputPath;
     }
     
