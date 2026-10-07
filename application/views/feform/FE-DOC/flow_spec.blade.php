@@ -11,9 +11,9 @@
 
     <!-- ปุ่ม Action สำหรับควบคุม Webflow -->
     <div class="flex flex-wrap justify-end items-center gap-2.5">
-        <button type="button" id="PreviewPdfBtn" class="btn btn-sm bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg border-none shadow-xs">
+        <!-- <button type="button" id="PreviewPdfBtn" class="btn btn-sm bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg border-none shadow-xs">
             📄 Preview Stamp PDF
-        </button>
+        </button> -->
         <button type="button" id="DeleteBtn" class="btn btn-sm btn-error text-white rounded-lg shadow-xs hidden">
             🗑️ Delete
         </button>
