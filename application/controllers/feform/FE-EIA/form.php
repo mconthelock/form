@@ -48,6 +48,13 @@ class form extends MY_Controller{
          * URL ตัวอย่าง show:
          * /main?no=11&orgNo=051001&y=26&y2=2026&runNo=1&empno=13204
          */
+        
+        $data['CYEAR2'] = '';
+        $data['NRUNNO'] = '';
+        $data['COST_MONTH'] = '';
+        $data['COST_YEAR']  = '';
+        $data['DOC_NO']     = '';
+        
         if (
             isset($_GET['no']) && $_GET['no'] !== '' &&
             isset($_GET['orgNo']) && $_GET['orgNo'] !== '' &&

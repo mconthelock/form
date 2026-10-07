@@ -16,6 +16,7 @@ require_once APPPATH.'controllers/api/webform/flow.php';
 require_once APPPATH.'controllers/api/webform/formmst.php';
 require_once APPPATH . 'controllers/_file.php';
 
+
 use setasign\Fpdi\Tcpdf\Fpdi;
 
 class form extends MY_Controller {
@@ -51,16 +52,16 @@ class form extends MY_Controller {
 
         $this->http = "http" . ($isHttps ? "s" : "");
         
-
+        
         // แยก Database Configuration ชัดเจน
         $this->SmmtBase    = 'SMMT';    // ข้อมูลของ FE (Header, File, Master Type/Step)
         $this->webflowBase = 'DEFAULT'; // โครงสร้าง Webflow (FORM, FLOW)
     }
 
     // === https://amecwebtest.mitsubishielevatorasia.co.th/form/feform/FE-DOC/form/main/?no=27&orgNo=051001&y=26&empno=13204&bp=http://webflow.mitsubishielevatorasia.co.th/formtest/is/create.asp
-    //===  https://amecwebtest.mitsubishielevatorasia.co.th/form/feform/FE-DOC/form/main?no=11&orgNo=051001&y=26&y2=2026&runNo=1&m=3&empno=13204&bp=%2Fformtest%2Fworkflow%2FmineList%2Easp&menu=1
-    // === http://localhost:8080/form/feform/FE-DOC/form/main/?no=27&orgNo=051001&y=26&empno=13204&bp=http://webflow.mitsubishielevatorasia.co.th/formtest/is/create.asp
-    //===  http://localhost:8080/form/feform/FE-DOC/form/main?no=27&orgNo=051001&y=26&y2=2026&runNo=1&m=3&empno=13204&bp=%2Fformtest%2Fworkflow%2FmineList.asp&menu=1
+    //===  https://amecwebtest.mitsubishielevatorasia.co.th/form/feform/FE-DOC/form/main?no=27&orgNo=051001&y=26&y2=2026&runNo=1&m=3&empno=13204&bp=%2Fformtest%2Fworkflow%2FmineList%2Easp&menu=1
+    // === https://localhost:8080/form/feform/FE-DOC/form/main/?no=27&orgNo=051001&y=26&empno=13204&bp=http://webflow.mitsubishielevatorasia.co.th/formtest/is/create.asp
+    //===  https://localhost:8080/form/feform/FE-DOC/form/main?no=27&orgNo=051001&y=26&y2=2026&runNo=1&m=3&empno=13204&bp=%2Fformtest%2Fworkflow%2FmineList.asp&menu=1
     public function main() {
         $empno = $this->input->get('empno') ?? '';
         $data['CYEAR2'] = $this->input->get('y2') ?? '';
@@ -102,6 +103,13 @@ class form extends MY_Controller {
                 $data['REMARK']        = $header->REMARK;
                 $data['STATUS']        = $header->STATUS;
             }
+
+            
+            $detailform    = $this->frm->getForm((int)$data['NFRMNO'],  (string)$data['VORGNO'], (string)$data['CYEAR'],  (string)$data['CYEAR2'],  (int)$data['NRUNNO']);
+            $data["REQBY"] = $detailform[0]->VREQNO;
+            $data["INPUTBY"] = $detailform[0]->VINPUTER; 
+            $data['CST']     = $detailform[0]->CST;
+            $data["REMARK"] = "";
         }
 
         $this->views('feform/FE-DOC/form', $data);
@@ -286,15 +294,23 @@ class form extends MY_Controller {
             $dbSmmt->set('DATE_ACTION', 'SYSDATE', FALSE);
             $dbSmmt->insert('FE_DOC_HEADER', $headerData);
 
-            // 8. บันทึกไฟล์แนบ (PDF / Excel)
-            if (!empty($_FILES['files']['name'][0])) {
-                $this->uploadAttachmentFiles($formData['NNO'], $formData['VORGNO'], $formData['CYEAR'], $cyear2, $nrunno);
-            }
+            // // 8. บันทึกไฟล์แนบ (PDF / Excel)
+            // if (!empty($_FILES['files']['name'][0])) {
+            //     $this->uploadAttachmentFiles($formData['NNO'], $formData['VORGNO'], $formData['CYEAR'], $cyear2, $nrunno);
+            // }
 
             return $this->output->set_output(json_encode([
                 'status'  => true,
                 'message' => "บันทึกและสร้างเอกสารสำเร็จ ({$docNo})",
-                'docNo'   => $docNo
+                'docNo'   => $docNo,
+                'data'    => [
+                    'NFRMNO'        => $formData['NNO'],
+                    'VORGNO'        => $formData['VORGNO'],
+                    'CYEAR'         => $formData['CYEAR'],
+                    'CYEAR2'        => $cyear2,
+                    'NRUNNO'        => $nrunno,
+                    'DOC_HEADER_ID' => $docHeaderId
+                ]
             ]));
         } catch (\Throwable $e) {
             return $this->output->set_output(json_encode(['status' => false, 'message' => $e->getMessage()]));
@@ -347,51 +363,48 @@ class form extends MY_Controller {
         }
     }
 
-    public function GetFilesDisplay() {
-        $formKeys = [
-            'NFRMNO'  => (int)$this->input->post('NFRMNO'),
-            'VORGNO'  => (string)$this->input->post('VORGNO'),
-            'CYEAR2'  => (string)$this->input->post('CYEAR2'),
-            'NRUNNO'  => (int)$this->input->post('NRUNNO'),
-        ];
+    public function GetFilesDisplay()
+    {
+        $this->output->set_content_type('application/json');
+        $nfrmno = $this->input->post('NFRMNO');
+        $vorgno = $this->input->post('VORGNO');
+        $cyear2 = $this->input->post('CYEAR2');
+        $nrunno = $this->input->post('NRUNNO');
 
-        // ดึงไฟล์จากตาราง FE_FILE ฝั่ง DEFAULT (Webflow Base)
-        $files = $this->load->database($this->webflowBase, TRUE)
-                     ->where($formKeys)
-                     ->order_by('FILE_ID', 'ASC')
-                     ->get('FE_FILE')->result();
+        $sql = "SELECT FILE_ID, FILE_ONAME, FILE_FNAME, FILE_PATH, FILE_DATECREATE 
+                FROM FE_FILE 
+                WHERE NFRMNO = ? AND VORGNO = ? AND CYEAR2 = ? AND NRUNNO = ?
+                ORDER BY FILE_ID ASC";
 
-        return $this->output->set_content_type('application/json')->set_output(json_encode([
-            'status' => true, 
+        $files = $this->MainModel->QuerySetBase($sql, $this->webflowBase, [
+            (int)$nfrmno,
+            (string)$vorgno,
+            (string)$cyear2,
+            (int)$nrunno
+        ])->result();
+
+        return $this->output->set_output(json_encode([
+            'status' => true,
             'files'  => $files
         ]));
     }
 
-    public function DownloadFile() {
-        $id = $this->input->get('id');
-        // ดึงจาก DEFAULT
-        $file = $this->load->database($this->webflowBase, TRUE)
-                     ->where('FILE_ID', $id)
-                     ->get('FE_FILE')->row();
-
-        if ($file) {
-            $fullPath = rtrim($filePdf->FILE_PATH, '/\\') . DIRECTORY_SEPARATOR . $filePdf->FILE_FNAME;
+    
+    
+    
+    public function DownloadFile()
+    {
+        $file_id = $this->input->get('id'); 
         
-            if (!file_exists($fullPath)) {
-                // Fallback เช็คกรณีทดสอบใน Localhost
-                $subDocFolder = "FE-DOC" . $filePdf->CYEAR . "-" . str_pad($filePdf->NRUNNO, 6, '0', STR_PAD_LEFT);
-                $localFallback = "D:\\Project\\src\\File_Sys\\form\\feform\\FE-DOC\\" . $subDocFolder . "\\" . $filePdf->FILE_FNAME;
-                
-                if (file_exists($localFallback)) {
-                    $fullPath = $localFallback;
-                } else {
-                    show_error('File not found on server: ' . $fullPath, 404);
-                }
-            }
-
+        $sql = "SELECT * FROM FE_FILE WHERE FILE_ID = ?";
+        $file = $this->MainModel->QuerySetBase($sql, $this->webflowBase, [$file_id])->row();
+        if ($file) {
+            $fullPath = rtrim($file->FILE_PATH, '/\\') . DIRECTORY_SEPARATOR . $file->FILE_FNAME;
 
             if (file_exists($fullPath)) {
                 $this->load->helper('download');
+                
+                // ใช้ FILE_ONAME เป็นชื่อตอนโหลดลงเครื่อง และอ่านไฟล์จาก $fullPath
                 force_download($file->FILE_ONAME, file_get_contents($fullPath));
             } else {
                 show_error('ไม่พบไฟล์จริงในระบบ: ' . $fullPath, 404);
@@ -401,28 +414,151 @@ class form extends MY_Controller {
         }
     }
 
-    public function DeleteDraftDoc() {
-        $docHeaderId = $this->input->post('DOC_HEADER_ID');
-        $dbSmmt = $this->load->database($this->SmmtBase, TRUE);
-        $dbWebflow = $this->load->database($this->webflowBase, TRUE);
 
-        $header = $dbSmmt->where('DOC_HEADER_ID', $docHeaderId)->get('FE_DOC_HEADER')->row();
-        if ($header) {
-            // ลบจาก FE_FILE ใน DEFAULT
-            $dbWebflow->where([
-                'NFRMNO' => $header->NFRMNO, 
-                'VORGNO' => $header->VORGNO, 
-                'CYEAR2' => $header->CYEAR2, 
-                'NRUNNO' => $header->NRUNNO
-            ])->delete('FE_FILE');
-
-            // ลบ Header ใน SMMT
-            $dbSmmt->where('DOC_HEADER_ID', $docHeaderId)->delete('FE_DOC_HEADER');
+    public function DownloadFile0()
+    {
+        $file_id = $this->input->get('id'); 
+        
+        $sql = "SELECT * FROM FE_FILE WHERE FILE_ID = ?";
+        $file = $this->MainModel->QuerySetBase($sql, $this->webflowBase, [$file_id])->row();
+        
+        if (!$file) {
+            show_error('ไม่พบข้อมูลไฟล์ในฐานข้อมูล', 404);
         }
+
+        // 🟢 เรียกใช้ฟังก์ชันแปลง Path
+        $fullPath = $this->getRealFilePath($file->FILE_PATH, $file->FILE_FNAME);
+
+        if (file_exists($fullPath) || @is_readable($fullPath)) {
+            $this->load->helper('download');
+            force_download($file->FILE_ONAME, file_get_contents($fullPath));
+        } else {
+            show_error('ไม่พบไฟล์จริงในระบบ: ' . $fullPath, 404);
+        }
+    }
+
+    private function getRealFilePath($dbFilePath, $fileName) {
+        $cleanDirPath = rtrim($dbFilePath, '/\\');
+        
+        // 1. รวม Path ปกติแบบ Windows Backslash
+        $fullPath = str_replace('/', '\\', $cleanDirPath) . '\\' . $fileName;
+
+        // ถ้าไฟล์เปิดอ่านได้ทันที (กรณี Production Server หรือ Windows Native)
+        if (@file_exists($fullPath) || @is_readable($fullPath)) {
+            return $fullPath;
+        }
+
+        // 2. กรณีรันบน Linux Container (Docker) หรือเครื่อง Localhost
+        // ให้ดึงชื่อโฟลเดอร์เอกสารปลายทาง เช่น FE-DOC26-000001
+        $pathParts = explode('\\', str_replace('/', '\\', $cleanDirPath));
+        $docFolder = end($pathParts); // จะได้ FE-DOC26-000001
+
+        // 2.1 ตรวจสอบ Path ในโฟลเดอร์ File_Sys ข้างเคียงโปรเจกต์
+        $localFallback = realpath(FCPATH . '../File_Sys/form/feform/FE-DOC/' . $docFolder) . DIRECTORY_SEPARATOR . $fileName;
+        if (@file_exists($localFallback)) {
+            return $localFallback;
+        }
+
+        // 2.2 กรณี Docker มีการ mount drive ไว้ที่ /mnt หรือ /amecnas
+        $linuxSmbPath = str_replace('\\', '/', $cleanDirPath) . '/' . $fileName;
+        $linuxSmbPath = preg_replace('/^\/\/[^\/]+/', '', $linuxSmbPath); // ตัด //amecnas ออก
+        if (@file_exists($linuxSmbPath)) {
+            return $linuxSmbPath;
+        }
+
+        return $fullPath;
+    }
+
+    public function DeleteFile() 
+    {
+        $file_id = $this->input->post('id');
+        if (!$file_id) {
+            return $this->output->set_content_type('application/json')->set_output(json_encode(['status' => false, 'message' => 'No ID provided']));
+        }
+
+        $sql = "SELECT * FROM FE_FILE WHERE FILE_ID = ?";
+        $file = $this->MainModel->QuerySetBase($sql, $this->webflowBase, [$file_id])->row();
+        if (!$file) {
+            return $this->output->set_content_type('application/json')->set_output(json_encode(['status' => false, 'message' => 'File not found in DB']));
+        }
+
+        $fullPath = rtrim($file->FILE_PATH, '/\\') . DIRECTORY_SEPARATOR . $file->FILE_FNAME;
+
+        if (file_exists($fullPath) && is_file($fullPath)) {
+            @unlink($fullPath);
+        }
+        
+        $this->MainModel->deleteData($this->webflowBase, 'FE_FILE', ['FILE_ID' => $file_id]);
+
         return $this->output->set_content_type('application/json')->set_output(json_encode(['status' => true]));
     }
 
-   public function PreviewStampedPdf() {
+    public function DeleteDraftDoc() 
+    {
+        $this->output->set_content_type('application/json');
+        try {
+            $docHeaderId = $this->input->post('DOC_HEADER_ID');
+            $nfrmno      = (int)$this->input->post('NFRMNO');
+            $vorgno      = (string)$this->input->post('VORGNO');
+            $cyear       = (string)$this->input->post('CYEAR');
+            $cyear2      = (string)$this->input->post('CYEAR2');
+            $nrunno      = (int)$this->input->post('NRUNNO');
+
+            $formKeys = [
+                'NFRMNO' => $nfrmno,
+                'VORGNO' => $vorgno,
+                'CYEAR'  => $cyear,
+                'CYEAR2' => $cyear2,
+                'NRUNNO' => $nrunno
+            ];
+
+            $dbWebflow = $this->load->database($this->webflowBase, TRUE);
+            $dbSmmt    = $this->load->database($this->SmmtBase, TRUE);
+
+            // 1. ค้นหาไฟล์แนบทั้งหมดของเอกสารนี้เพื่อลบไฟล์จริงออกจาก Storage
+            $attachedFiles = $dbWebflow->where($formKeys)->get('FE_FILE')->result();
+            $folderToDelete = null;
+
+            foreach ($attachedFiles as $file) {
+                $fullPath = rtrim($file->FILE_PATH, '/\\') . DIRECTORY_SEPARATOR . $file->FILE_FNAME;
+                if (file_exists($fullPath) && is_file($fullPath)) {
+                    @unlink($fullPath);
+                    $folderToDelete = dirname($fullPath);
+                }
+            }
+
+            // ถ้าโฟลเดอร์ว่างเปล่า ให้ลบโฟลเดอร์ทิ้งด้วย
+            if ($folderToDelete && is_dir($folderToDelete)) {
+                $filesInFolder = array_diff(scandir($folderToDelete), ['.', '..']);
+                if (empty($filesInFolder)) {
+                    @rmdir($folderToDelete);
+                }
+            }
+
+            // 2. ลบออกจากตาราง FE_FILE ฝั่ง Webflow Base
+            $dbWebflow->where($formKeys)->delete('FE_FILE');
+
+            // 3. ลบออกจากตาราง FE_DOC_HEADER ฝั่ง SMMT
+            if (!empty($docHeaderId)) {
+                $dbSmmt->where('DOC_HEADER_ID', $docHeaderId)->delete('FE_DOC_HEADER');
+            } else {
+                $dbSmmt->where($formKeys)->delete('FE_DOC_HEADER');
+            }
+
+            return $this->output->set_output(json_encode([
+                'status'  => true,
+                'message' => 'ลบข้อมูลเอกสารและไฟล์แนบเรียบร้อยแล้ว'
+            ]));
+
+        } catch (\Throwable $e) {
+            return $this->output->set_output(json_encode([
+                'status'  => false,
+                'message' => 'เกิดข้อผิดพลาดในการลบ: ' . $e->getMessage()
+            ]));
+        }
+    }
+
+    public function PreviewStampedPdf() {
         $formKeys = [
             'NFRMNO' => (int)$this->input->get('no'),
             'VORGNO' => (string)$this->input->get('orgNo'),
@@ -436,7 +572,7 @@ class form extends MY_Controller {
         $header = $dbSmmt->where($formKeys)->get('FE_DOC_HEADER')->row();
         if (!$header) show_error('Document not found in SMMT', 404);
 
-        // 2. ดึงไฟล์ PDF จากตาราง FE_FILE
+        // 2. ดึงไฟล์ PDF จากตาราง FE_FILE ใน Webflow Base
         $dbWebflow = $this->load->database($this->webflowBase, TRUE);
         $filePdf = $dbWebflow->where($formKeys)
                              ->group_start()
@@ -448,21 +584,15 @@ class form extends MY_Controller {
 
         if (!$filePdf) show_error('No PDF file attached to this document', 404);
 
-        $fullPath = rtrim($filePdf->FILE_PATH, '/\\') . DIRECTORY_SEPARATOR . $filePdf->FILE_FNAME;
-        
+        // เชื่อม Path ด้วย \ ให้ตรงตามโครงสร้างของ NAS
+        $cleanDirPath = rtrim($filePdf->FILE_PATH, '/\\');
+        $fullPath = $cleanDirPath . '\\' . $filePdf->FILE_FNAME;
+
         if (!file_exists($fullPath)) {
-            // Fallback เช็คกรณีทดสอบใน Localhost
-            $subDocFolder = "FE-DOC" . $filePdf->CYEAR . "-" . str_pad($filePdf->NRUNNO, 6, '0', STR_PAD_LEFT);
-            $localFallback = "D:\\Project\\src\\File_Sys\\form\\feform\\FE-DOC\\" . $subDocFolder . "\\" . $filePdf->FILE_FNAME;
-            
-            if (file_exists($localFallback)) {
-                $fullPath = $localFallback;
-            } else {
-                show_error('File not found on server: ' . $fullPath, 404);
-            }
+            show_error('File not found on server: ' . $fullPath, 404);
         }
 
-        // คลายการบีบอัด PDF เป็นเวอร์ชัน 1.4 ก่อนส่งให้ FPDI อ่าน
+        // ส่งเข้ากระบวนการคลายบีบอัดและ Stamp ผ่าน FPDI
         $cleanPdfPath = $this->repairPdfForFpdi($fullPath);
 
         // 3. ดึง Step และ Log อนุมัติ
@@ -489,7 +619,7 @@ class form extends MY_Controller {
             }
         }
 
-        // ลบ Temp PDF ที่แปลงไว้
+        // ลบ Temp PDF ที่แปลงไว้ (ถ้ามีสร้างไว้)
         if ($cleanPdfPath !== $fullPath && file_exists($cleanPdfPath)) {
             @unlink($cleanPdfPath);
         }
@@ -497,6 +627,8 @@ class form extends MY_Controller {
         // แสดงผล Preview บน Browser ทันที ('I' = Inline)
         $pdf->Output('Preview_' . $header->DOC_NO . '.pdf', 'I');
     }
+
+    
 
     /**
      * ฟังก์ชันแปลง PDF 1.5+ หรือไฟล์ที่มี compressed xref streams ให้เป็น PDF 1.4
@@ -590,65 +722,5 @@ class form extends MY_Controller {
         $pdf->SetTextColor(0, 0, 0);
     }
 
-    private function uploadAttachmentFiles($nfrmno, $vorgno, $cyear, $cyear2, $nrunno) {
-        $host = $_SERVER['HTTP_HOST'] ?? '';
-        
-        // รูปแบบ Document Folder เช่น FE-DOC26-000001
-        $subDocFolder = "FE-DOC" . $cyear . "-" . str_pad($nrunno, 6, '0', STR_PAD_LEFT);
 
-        if (strpos($host, 'localhost') !== false || strpos($host, '127.0.0.1') !== false) {
-            // กรณี Localhost
-            $basePath = "D:/Project/src/File_Sys/form/feform/FE-DOC/" . $subDocFolder;
-        } else {
-            // กรณี Server จริง
-            $basePath = rtrim($_ENV['AMEC_FILE_PATH'], '/\\') . "/Form/FE/FE-DOC/" . $subDocFolder;
-        }
-
-        // ตรวจสอบและสร้างโฟลเดอร์ตามเลขเอกสารหากยังไม่มี
-        if (!is_dir($basePath)) {
-            mkdir($basePath, 0777, true);
-        }
-
-        // 🟢 แปลง Path ให้เป็นรูปแบบ Windows Backslash และไม่มีขีดปิดท้ายตามรูปตัวอย่าง
-        $dbSavePath = str_replace('/', '\\', rtrim($basePath, '/\\'));
-
-        $dbWebflow = $this->load->database($this->webflowBase, TRUE);
-        $count = count($_FILES['files']['name']);
-        $currentEmpNo = $this->input->get_post('empno') ?? ($this->input->post('EMPNO') ?? 'SYSTEM');
-
-        for ($i = 0; $i < $count; $i++) {
-            $origName = $_FILES['files']['name'][$i];
-            if (empty($origName)) continue;
-
-            $ext = strtolower(pathinfo($origName, PATHINFO_EXTENSION));
-
-            // บันทึกเฉพาะไฟล์ PDF เท่านั้น
-            if ($ext !== 'pdf') {
-                continue; 
-            }
-
-            // ตั้งชื่อไฟล์ระบบ (ตามรูปแบบระบบเดิม เช่น Time + Random หรือชื่อเฉพาะ)
-            $sysName = round(microtime(true) * 1000) . '-' . mt_rand(10000000, 99999999) . '.' . $ext;
-            $dest = rtrim($basePath, '/\\') . DIRECTORY_SEPARATOR . $sysName;
-
-            if (move_uploaded_file($_FILES['files']['tmp_name'][$i], $dest)) {
-                $fileData = [
-                    'NFRMNO'          => (int)$nfrmno,
-                    'VORGNO'          => (string)$vorgno,
-                    'CYEAR'           => (string)$cyear,
-                    'CYEAR2'          => (string)$cyear2,
-                    'NRUNNO'          => (int)$nrunno,
-                    'FILE_ONAME'      => $origName,
-                    'FILE_FNAME'      => $sysName,
-                    'FILE_USERCREATE' => (string)$currentEmpNo,
-                    'FILE_TYPE'       => null,
-                    'FILE_STATUS'     => 1,
-                    'FILE_PATH'       => $dbSavePath // 🟢 บันทึกเป็น \\amecnas\... หรือ D:\Project\...
-                ];
-
-                $dbWebflow->set('FILE_DATECREATE', 'SYSDATE', FALSE);
-                $dbWebflow->insert('FE_FILE', $fileData);
-            }
-        }
-    }
 }
