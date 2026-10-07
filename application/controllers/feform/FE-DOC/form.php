@@ -60,8 +60,8 @@ class form extends MY_Controller {
 
     // === https://amecwebtest.mitsubishielevatorasia.co.th/form/feform/FE-DOC/form/main/?no=27&orgNo=051001&y=26&empno=13204&bp=http://webflow.mitsubishielevatorasia.co.th/formtest/is/create.asp
     //===  https://amecwebtest.mitsubishielevatorasia.co.th/form/feform/FE-DOC/form/main?no=27&orgNo=051001&y=26&y2=2026&runNo=1&m=3&empno=13204&bp=%2Fformtest%2Fworkflow%2FmineList%2Easp&menu=1
-    // === https://localhost:8080/form/feform/FE-DOC/form/main/?no=27&orgNo=051001&y=26&empno=13204&bp=http://webflow.mitsubishielevatorasia.co.th/formtest/is/create.asp
-    //===  https://localhost:8080/form/feform/FE-DOC/form/main?no=27&orgNo=051001&y=26&y2=2026&runNo=1&m=3&empno=13204&bp=%2Fformtest%2Fworkflow%2FmineList.asp&menu=1
+    // === http://localhost:8080/form/feform/FE-DOC/form/main/?no=27&orgNo=051001&y=26&empno=13204&bp=http://webflow.mitsubishielevatorasia.co.th/formtest/is/create.asp
+    //===  http://localhost:8080/form/feform/FE-DOC/form/main?no=27&orgNo=051001&y=26&y2=2026&runNo=1&m=3&empno=13204&bp=%2Fformtest%2Fworkflow%2FmineList.asp&menu=1
     public function main() {
         $empno = $this->input->get('empno') ?? '';
         $data['CYEAR2'] = $this->input->get('y2') ?? '';
@@ -392,63 +392,6 @@ class form extends MY_Controller {
     
     
     
-    public function DownloadFile()
-    {
-        $file_id = $this->input->get('id'); 
-        
-        $sql = "SELECT * FROM FE_FILE WHERE FILE_ID = ?";
-        $file = $this->MainModel->QuerySetBase($sql, $this->webflowBase, [$file_id])->row();
-        if ($file) {
-            $fullPath = rtrim($file->FILE_PATH, '/\\') . DIRECTORY_SEPARATOR . $file->FILE_FNAME;
-
-            if (file_exists($fullPath)) {
-                $this->load->helper('download');
-                
-                // ใช้ FILE_ONAME เป็นชื่อตอนโหลดลงเครื่อง และอ่านไฟล์จาก $fullPath
-                force_download($file->FILE_ONAME, file_get_contents($fullPath));
-            } else {
-                show_error('ไม่พบไฟล์จริงในระบบ: ' . $fullPath, 404);
-            }
-        } else {
-            show_error('ไม่พบข้อมูลไฟล์ในฐานข้อมูล', 404);
-        }
-    }
-
-    public function DownloadFile0()
-    {
-        $file_id = $this->input->get('id'); 
-        
-        $sql = "SELECT * FROM FE_FILE WHERE FILE_ID = ?";
-        $file = $this->MainModel->QuerySetBase($sql, $this->webflowBase, [$file_id])->row();
-        
-        if (!$file) {
-            show_error('ไม่พบข้อมูลไฟล์ในฐานข้อมูล', 404);
-        }
-
-        // 1. ตรวจสอบบน Disk ตรงๆ (สำหรับ Production Server หรือ Windows Native)
-        $cleanDirPath = rtrim($file->FILE_PATH, '/\\');
-        $fullPath = $cleanDirPath . '\\' . $file->FILE_FNAME;
-
-        if (@file_exists($fullPath)) {
-            $this->load->helper('download');
-            force_download($file->FILE_ONAME, file_get_contents($fullPath));
-            return;
-        }
-
-        // 2. Fallback สำหรับ Docker Local: ดึง Stream ตรงจาก NestJS API
-        // บน Docker Linux เรียกหา Host ด้วย host.docker.internal
-        $apiUrl = 'http://host.docker.internal:3000/webform/file/' . $file_id;
-        $fileContent = @file_get_contents($apiUrl);
-
-        if ($fileContent !== false && !empty($fileContent)) {
-            $this->load->helper('download');
-            force_download($file->FILE_ONAME, $fileContent);
-            return;
-        }
-
-        show_error('ไม่พบไฟล์จริงในระบบ: ' . $fullPath, 404);
-    }
-
 
 
     private function getRealFilePath($dbFilePath, $fileName) {
@@ -490,18 +433,7 @@ class form extends MY_Controller {
             return $this->output->set_content_type('application/json')->set_output(json_encode(['status' => false, 'message' => 'No ID provided']));
         }
 
-        $sql = "SELECT * FROM FE_FILE WHERE FILE_ID = ?";
-        $file = $this->MainModel->QuerySetBase($sql, $this->webflowBase, [$file_id])->row();
-        if (!$file) {
-            return $this->output->set_content_type('application/json')->set_output(json_encode(['status' => false, 'message' => 'File not found in DB']));
-        }
-
-        $fullPath = rtrim($file->FILE_PATH, '/\\') . DIRECTORY_SEPARATOR . $file->FILE_FNAME;
-
-        if (file_exists($fullPath) && is_file($fullPath)) {
-            @unlink($fullPath);
-        }
-        
+        // ลบ Record ออกจาก FE_FILE
         $this->MainModel->deleteData($this->webflowBase, 'FE_FILE', ['FILE_ID' => $file_id]);
 
         return $this->output->set_content_type('application/json')->set_output(json_encode(['status' => true]));
@@ -572,188 +504,71 @@ class form extends MY_Controller {
         }
     }
 
-    public function PreviewStampedPdf() {
-        $formKeys = [
-            'NFRMNO' => (int)$this->input->get('no'),
-            'VORGNO' => (string)$this->input->get('orgNo'),
-            'CYEAR'  => (string)$this->input->get('y'),
-            'CYEAR2' => (string)$this->input->get('y2'),
-            'NRUNNO' => (int)$this->input->get('runNo'),
-        ];
+    public function GetStampData() {
+        $this->output->set_content_type('application/json');
 
-        // 1. ดึง Header จาก SMMT
-        $dbSmmt = $this->load->database($this->SmmtBase, TRUE);
-        $header = $dbSmmt->where($formKeys)->get('FE_DOC_HEADER')->row();
-        if (!$header) show_error('Document not found in SMMT', 404);
+        try {
+            $formKeys = [
+                'NFRMNO' => (int)$this->input->get_post('no'),
+                'VORGNO' => (string)$this->input->get_post('orgNo'),
+                'CYEAR'  => (string)$this->input->get_post('y'),
+                'CYEAR2' => (string)$this->input->get_post('y2'),
+                'NRUNNO' => (int)$this->input->get_post('runNo'),
+            ];
 
-        // 2. ดึงไฟล์ PDF จากตาราง FE_FILE ใน Webflow Base
-        $dbWebflow = $this->load->database($this->webflowBase, TRUE);
-        $filePdf = $dbWebflow->where($formKeys)
-                             ->group_start()
-                                 ->like('LOWER(FILE_ONAME)', '.pdf')
-                                 ->or_like('LOWER(FILE_FNAME)', '.pdf')
-                             ->group_end()
-                             ->order_by('FILE_ID', 'ASC')
-                             ->get('FE_FILE')->row();
-
-        if (!$filePdf) show_error('No PDF file attached to this document', 404);
-
-        // เชื่อม Path ด้วย \ ให้ตรงตามโครงสร้างของ NAS
-        $cleanDirPath = rtrim($filePdf->FILE_PATH, '/\\');
-        $fullPath = $cleanDirPath . '\\' . $filePdf->FILE_FNAME;
-
-        if (!file_exists($fullPath)) {
-            show_error('File not found on server: ' . $fullPath, 404);
-        }
-
-        // ส่งเข้ากระบวนการคลายบีบอัดและ Stamp ผ่าน FPDI
-        $cleanPdfPath = $this->repairPdfForFpdi($fullPath);
-
-        // 3. ดึง Step และ Log อนุมัติ
-        $steps = $this->MainModel->getStepsByDocType($header->DOC_TYPE_CODE);
-        $approvalLogs = $this->MainModel->getApprovalLogList($formKeys);
-
-        // 4. นำมา Stamp และ Preview บน Browser
-        $pdf = new Fpdi();
-        $pdf->setPrintHeader(false);
-        $pdf->setPrintFooter(false);
-        $pageCount = $pdf->setSourceFile($cleanPdfPath);
-
-        for ($p = 1; $p <= $pageCount; $p++) {
-            $tplId = $pdf->importPage($p);
-            $size = $pdf->getTemplateSize($tplId);
-            $orientation = ($size['width'] > $size['height']) ? 'L' : 'P';
-
-            $pdf->AddPage($orientation, [$size['width'], $size['height']]);
-            $pdf->useTemplate($tplId, 0, 0, $size['width'], $size['height'], true);
-
-            // Stamp เฉพาะหน้าแรก
-            if ($p === 1) {
-                $this->drawDynamicStamp($pdf, $steps, $approvalLogs, $size['width']);
+            $dbSmmt = $this->load->database($this->SmmtBase, TRUE);
+            $header = $dbSmmt->where($formKeys)->get('FE_DOC_HEADER')->row();
+            if (!$header) {
+                throw new Exception('ไม่พบข้อมูลเอกสารในระบบ');
             }
-        }
 
-        // 1. คลาย Handle ของ FPDI ออกจากไฟล์ต้นฉบับ
-        if (method_exists($pdf, 'cleanUp')) {
-            $pdf->cleanUp();
-        }
-
-        // 2. หน่วงเวลาลบไฟล์ Temp หลังสคริปต์ทำงานเสร็จสิ้น ป้องกัน Windows Lock
-        if ($cleanPdfPath !== $fullPath && file_exists($cleanPdfPath)) {
-            register_shutdown_function(function () use ($cleanPdfPath) {
-                if (file_exists($cleanPdfPath)) {
-                    @unlink($cleanPdfPath);
+            // 1. ดึง Master Steps เพื่อเอาชื่อตำแหน่ง (POSITION_TITLE)
+            $masterSteps = $this->MainModel->getStepsByDocType($header->DOC_TYPE_CODE);
+            $posTitleMap = [];
+            foreach ($masterSteps as $ms) {
+                if (!empty($ms->CEXTDATA)) {
+                    $posTitleMap[trim($ms->CEXTDATA)] = trim($ms->POSITION_TITLE);
                 }
-            });
-        }
-
-        // 3. ล้าง Buffer ทั้งหมด เพื่อไม่ให้ Warning ใดๆ หลุดไปก่อน PDF Headers
-        while (ob_get_level() > 0) {
-            ob_end_clean();
-        }
-
-        // 4. แสดงผล Preview บน Browser ('I' = Inline) แล้วหยุดการทำงานทันที
-        $pdf->Output('Preview_' . $header->DOC_NO . '.pdf', 'I');
-        exit;
-    }
-
-    
-
-    /**
-     * ฟังก์ชันแปลง PDF 1.5+ หรือไฟล์ที่มี compressed xref streams ให้เป็น PDF 1.4
-     * เพื่อให้ FPDI เวอร์ชันฟรีอ่านได้โดยไม่เกิด CrossReferenceException
-     */
-    private function repairPdfForFpdi($inputPath) {
-        $tempPath = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'fpdi_fixed_' . uniqid() . '.pdf';
-
-        // 1. ลองใช้ Ghostscript (gs)
-        $cmdGs = sprintf(
-            'gs -sDEVICE=pdfwrite -dCompatibilityLevel=1.4 -dNOPAUSE -dQUIET -dBATCH -sOutputFile=%s %s 2>&1',
-            escapeshellarg($tempPath),
-            escapeshellarg($inputPath)
-        );
-        @exec($cmdGs, $outputGs, $returnCodeGs);
-
-        if ($returnCodeGs === 0 && file_exists($tempPath) && filesize($tempPath) > 0) {
-            return $tempPath;
-        }
-
-        // 2. Fallback: qpdf
-        $cmdQpdf = sprintf(
-            'qpdf --qdf --object-streams=disable %s %s 2>&1',
-            escapeshellarg($inputPath),
-            escapeshellarg($tempPath)
-        );
-        @exec($cmdQpdf, $outputQpdf, $returnCodeQpdf);
-
-        if ($returnCodeQpdf === 0 && file_exists($tempPath) && filesize($tempPath) > 0) {
-            return $tempPath;
-        }
-
-        // ถ้าแปลงไม่สำเร็จ ให้ลบ Temp ที่สร้างค้างไว้ทิ้ง
-        if (file_exists($tempPath)) {
-            @unlink($tempPath);
-        }
-
-        return $inputPath;
-    }
-    
-    private function drawDynamicStamp($pdf, $steps, $approvalLogs, $pageWidth) {
-        $stepCount = count($steps);
-        if ($stepCount === 0) return;
-
-        $colW = 24;
-        $tableW = $colW * $stepCount;
-        $startX = $pageWidth - $tableW - 8;
-        $startY = 8;
-        $boxH = 22;
-
-        $pdf->SetFont('helvetica', 'B', 6.5);
-        $pdf->SetDrawColor(80, 80, 80);
-        $pdf->SetLineWidth(0.2);
-
-        $x = $startX;
-        foreach ($steps as $st) {
-            $pdf->SetXY($x, $startY);
-            $pdf->SetFillColor(240, 243, 246);
-            $pdf->Cell($colW, 5.5, $st->POSITION_TITLE, 1, 0, 'C', 1);
-            $pdf->SetXY($x, $startY + 5.5);
-            $pdf->Cell($colW, $boxH, '', 1, 0, 'C');
-            $x += $colW;
-        }
-
-        $appMap = [];
-        foreach ($approvalLogs as $log) { $appMap[$log->CEXTDATA] = $log; }
-
-        $pdf->SetAlpha(0.75);
-        $pdf->SetDrawColor(220, 38, 38);
-        $pdf->SetTextColor(220, 38, 38);
-
-        foreach ($steps as $idx => $st) {
-            $app = $appMap[$st->CEXTDATA] ?? null;
-            if ($app && !empty($app->APPROVE_DATE)) {
-                $cx = $startX + ($idx * $colW) + ($colW / 2);
-                $cy = $startY + 5.5 + ($boxH / 2);
-
-                $pdf->Circle($cx, $cy, 7, 0, 360, 'D');
-
-                $pdf->SetFont('helvetica', 'B', 6);
-                $pdf->SetXY($cx - 10, $cy - 4);
-                $pdf->Cell(20, 3, 'AMEC', 0, 1, 'C');
-
-                $pdf->SetFont('helvetica', '', 4.5);
-                $pdf->SetXY($cx - 10, $cy - 1);
-                $pdf->Cell(20, 3, $app->APPROVE_DATE, 0, 1, 'C');
-
-                $pdf->SetFont('helvetica', 'B', 5.5);
-                $pdf->SetXY($cx - 10, $cy + 2);
-                $pdf->Cell(20, 3, $app->APPROVER_NAME, 0, 1, 'C');
             }
+
+            // 2. ดึงทุก Step ที่มีอยู่ในตาราง FLOW ของเอกสารใบนี้จริง ๆ
+            $dbWebflow = $this->load->database($this->webflowBase, TRUE);
+            $flowRows = $dbWebflow->select('CSTEPNO, CEXTDATA, CSTART')
+                                  ->where($formKeys)
+                                  ->order_by('CSTART', 'DESC') // เอา Requester (CSTART=1) ขึ้นเป็น Step แรก
+                                  ->order_by('CEXTDATA', 'ASC')
+                                  ->order_by('CSTEPNO', 'ASC')
+                                  ->get('FLOW')
+                                  ->result();
+
+            $steps = [];
+            foreach ($flowRows as $row) {
+                $ext = trim($row->CEXTDATA ?? '');
+                $posTitle = $posTitleMap[$ext] ?? ($row->CSTART == '1' ? 'REPORTER' : 'APPROVER');
+
+                $steps[] = [
+                    'CSTEPNO'        => trim($row->CSTEPNO),
+                    'CEXTDATA'       => $ext,
+                    'CSTART'         => (string)$row->CSTART,
+                    'POSITION_TITLE' => $posTitle
+                ];
+            }
+
+            // 3. ดึงเฉพาะรายการที่อนุมัติแล้ว (CAPVSTNO = '1')
+            $approvalLogs = $this->MainModel->getApprovalLogList($formKeys);
+
+            return $this->output->set_output(json_encode([
+                'status' => true,
+                'steps'  => $steps,
+                'logs'   => $approvalLogs
+            ]));
+
+        } catch (\Throwable $e) {
+            return $this->output->set_status_header(500)->set_output(json_encode([
+                'status'  => false,
+                'message' => $e->getMessage()
+            ]));
         }
-
-        $pdf->SetAlpha(1);
-        $pdf->SetTextColor(0, 0, 0);
     }
-
 
 }

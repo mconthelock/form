@@ -36,6 +36,11 @@ export function applyButtonPermissions(mode, extData, status = '', empno = '') {
     const requestBy = ($('#REQUEST_BYTxt').val() || '').trim();
     const currentEmpNo = (empno || '').trim();
 
+    // เช็คว่าเป็นเจ้าของเอกสารหรือไม่
+    const isOwner =
+        requestBy !== '' && currentEmpNo !== '' && requestBy === currentEmpNo;
+
+    // ซ่อนปุ่มการทำงานทั้งหมดเป็นค่าเริ่มต้น
     $('#SaveDocBtn, #DeleteBtn, #ApproveBtn, #ReturnBtn').addClass('hidden');
 
     if (mode === '1') {
@@ -46,29 +51,34 @@ export function applyButtonPermissions(mode, extData, status = '', empno = '') {
             $('#SaveDocBtn').removeClass('hidden');
         }
     } else if (mode === '2') {
-        $('#DocTypeDrp').prop('disabled', true);
-        $('#drop-zone').addClass('hidden');
-        $('#ApproveBtn, #ReturnBtn').removeClass('hidden');
+        if (isOwner) {
+            // โดน Return กลับมาหา Requester: ปลดล็อกให้อัปโหลดใหม่และส่งซ้ำได้
+            $('#DocTypeDrp').prop('disabled', false);
+            $('#drop-zone').removeClass('hidden');
+            $('#SaveDocBtn').removeClass('hidden');
+            $('#DeleteBtn').removeClass('hidden');
+        } else {
+            // กรณีเป็น Approver
+            $('#DocTypeDrp').prop('disabled', true);
+            $('#drop-zone').addClass('hidden');
+            $('#ApproveBtn, #ReturnBtn').removeClass('hidden');
+        }
     } else {
+        // Mode 3 หรือ View Only
         $('#DocTypeDrp').prop('disabled', true);
         $('#drop-zone').addClass('hidden');
     }
 
-    // สิทธิ์ลบเอกสารสำหรับ Requester
-    if (requestBy !== '' && currentEmpNo !== '' && requestBy === currentEmpNo) {
-        if (
-            (rawStatus === 'DRAFT' || rawStatus === '') &&
-            $('#DocHeaderIDHid').val() !== ''
-        ) {
-            $('#DeleteBtn').removeClass('hidden');
-        } else if (rawStatus === 'PROCESS') {
-            $('#DeleteBtn').removeClass('hidden');
-        }
+    if (
+        isOwner &&
+        (rawStatus === 'DRAFT' || rawStatus === '') &&
+        $('#DocHeaderIDHid').val() !== ''
+    ) {
+        $('#DeleteBtn').removeClass('hidden');
     }
 }
 
 function bindFlowEvents(form) {
-    // Flow Action Buttons
     $(document)
         .off('click', '#ApproveBtn')
         .on('click', '#ApproveBtn', () => actionFlow('approve', form));
@@ -81,7 +91,6 @@ function bindFlowEvents(form) {
             }
         });
 
-    // Delete Action Button
     $(document)
         .off('click', '#DeleteBtn')
         .on('click', '#DeleteBtn', async function () {
@@ -120,7 +129,7 @@ function bindFlowEvents(form) {
         });
 }
 
-async function actionFlow(actionType, form) {
+export async function actionFlow(actionType, form) {
     const payload = {
         NFRMNO: Number(form.NFRMNO || 0),
         VORGNO: String(form.VORGNO || ''),
