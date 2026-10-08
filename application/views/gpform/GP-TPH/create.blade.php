@@ -262,8 +262,8 @@
                             <input type="text" name="APPLICANT_NAME" id="APPLICANT_NAME"
                                 class="input input-bordered w-full" placeholder="Visitor Name">
                             <label class="text-sm font-semibold text-slate-700">Host Name (ชื่อผู้รับผิดชอบ)</label>
-                            <input type="tel" name="EMP_CODE" id="EMP_CODE" class="input input-bordered w-full"
-                                placeholder="Host Name">
+                            <input type="text" name="HOST_NAME" id="HOST_NAME" class="input input-bordered w-full"
+                                placeholder="Host Name" readonly>
                         </div>
                         <div class="space-y-2">
                             <label class="text-sm font-semibold text-slate-700">Company Name (ชื่อบริษัท)</label>
@@ -293,7 +293,16 @@
                     </label>
                     <div class="mt-3">
                         <input type="number" name="LONGTERM_YEARS" id = "LONGTERM_YEARS" class="input input-bordered w-full"
-                            placeholder="Year(s)" inputmode="numeric" pattern="[0-9]*" min="0" step="1">
+                            placeholder="Year(s)" inputmode="numeric" pattern="[0-9]*" min="1" max="2" step="1" aria-describedby="long-term-years-hint">
+                        <p id="long-term-years-hint" class="tph-hint">ขออนุญาตได้สูงสุด 2 ปี (1–2 years)</p>
+                    </div>
+                    <div id="long-term-valid-until" class="mt-3 hidden rounded-lg border border-slate-200 bg-slate-50 p-3"
+                        aria-live="polite">
+                        <div class="text-sm font-semibold text-slate-700">Valid Until (ใช้ได้จนถึง)</div>
+                        <div id="LONGTERM_VALID_UNTIL_DISPLAY" class="mt-1 font-medium text-slate-900">
+                            Enter year(s) to calculate the end date.
+                        </div>
+                        <p class="tph-hint">Calculated from today and the selected year(s).</p>
                     </div>
                     <label class="inline-flex items-center gap-2 mt-4">
                         <input type="radio" name="permit_option" class="radio radio-primary" id='period' value="period">
