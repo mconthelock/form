@@ -16,7 +16,7 @@
                     </p>
                 </div>
                 <div class="flex items-center gap-2 self-start sm:self-auto">
-                    <a href="{{ base_url('psform/PS-UPI/main/report') }}" class="btn btn-outline btn-sm">View report</a>
+                    {{-- <a href="{{ base_url('psform/PS-UPI/main/report') }}" class="btn btn-outline btn-sm">View report</a> --}}
                     <div class="rounded-md border border-base-300 bg-base-200 px-3 py-2 text-xs font-medium text-base-content/70">
                         New requisition
                     </div>
