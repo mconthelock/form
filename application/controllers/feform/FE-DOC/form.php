@@ -363,29 +363,27 @@ class form extends MY_Controller {
         }
     }
 
-    public function GetFilesDisplay()
-    {
+    public function GetFilesDisplay() {
         $this->output->set_content_type('application/json');
-        $nfrmno = $this->input->post('NFRMNO');
-        $vorgno = $this->input->post('VORGNO');
-        $cyear2 = $this->input->post('CYEAR2');
-        $nrunno = $this->input->post('NRUNNO');
 
-        $sql = "SELECT FILE_ID, FILE_ONAME, FILE_FNAME, FILE_PATH, FILE_DATECREATE 
-                FROM FE_FILE 
-                WHERE NFRMNO = ? AND VORGNO = ? AND CYEAR2 = ? AND NRUNNO = ?
-                ORDER BY FILE_ID ASC";
+        $formKeys = [
+            'NFRMNO' => (int)$this->input->post('NFRMNO'),
+            'VORGNO' => (string)$this->input->post('VORGNO'),
+            'CYEAR2' => (string)$this->input->post('CYEAR2'),
+            'NRUNNO' => (int)$this->input->post('NRUNNO'),
+        ];
 
-        $files = $this->MainModel->QuerySetBase($sql, $this->webflowBase, [
-            (int)$nfrmno,
-            (string)$vorgno,
-            (string)$cyear2,
-            (int)$nrunno
-        ])->result();
+        $dbWebflow = $this->load->database($this->webflowBase, TRUE);
+        
+        // 🟢 ดึงทุกไฟล์ของ NRUNNO นี้ โดยไม่จำกัดเฉพาะ .pdf
+        $files = $dbWebflow->where($formKeys)
+                           ->order_by('FILE_ID', 'ASC')
+                           ->get('FE_FILE')
+                           ->result();
 
         return $this->output->set_output(json_encode([
             'status' => true,
-            'files'  => $files
+            'files'  => $files ?: []
         ]));
     }
 
@@ -504,6 +502,7 @@ class form extends MY_Controller {
         }
     }
 
+    // get flow approve webflow
     public function GetStampData() {
         $this->output->set_content_type('application/json');
 
@@ -568,6 +567,125 @@ class form extends MY_Controller {
                 'status'  => false,
                 'message' => $e->getMessage()
             ]));
+        }
+    }
+
+    public function StampExcelDirect() {
+        try {
+            if (empty($_FILES['file']['tmp_name'])) {
+                show_error('No file uploaded', 400);
+                return;
+            }
+
+            $formKeys = [
+                'NFRMNO' => (int)$this->input->post('no'),
+                'VORGNO' => (string)$this->input->post('orgNo'),
+                'CYEAR'  => (string)$this->input->post('y'),
+                'CYEAR2' => (string)$this->input->post('y2'),
+                'NRUNNO' => (int)$this->input->post('runNo'),
+            ];
+
+            // 1. ดึงข้อมูลตำแหน่งและประวัติอนุมัติ
+            $dbSmmt = $this->load->database($this->SmmtBase, TRUE);
+            $header = $dbSmmt->where($formKeys)->get('FE_DOC_HEADER')->row();
+            $masterSteps = $this->MainModel->getStepsByDocType($header->DOC_TYPE_CODE);
+            $posTitleMap = [];
+            foreach ($masterSteps as $ms) {
+                if (!empty($ms->CEXTDATA)) {
+                    $posTitleMap[trim($ms->CEXTDATA)] = trim($ms->POSITION_TITLE);
+                }
+            }
+
+            $dbWebflow = $this->load->database($this->webflowBase, TRUE);
+            $flowRows = $dbWebflow->select('CSTEPNO, CEXTDATA, CSTART')
+                                  ->where($formKeys)
+                                  ->order_by('CSTART', 'DESC')
+                                  ->order_by('CEXTDATA', 'ASC')
+                                  ->order_by('CSTEPNO', 'ASC')
+                                  ->get('FLOW')
+                                  ->result();
+
+            $steps = [];
+            foreach ($flowRows as $row) {
+                $ext = trim($row->CEXTDATA ?? '');
+                $steps[] = [
+                    'CSTEPNO'        => trim($row->CSTEPNO),
+                    'CEXTDATA'       => $ext,
+                    'POSITION_TITLE' => $posTitleMap[$ext] ?? ($row->CSTART == '1' ? 'REPORTER' : 'APPROVER'),
+                ];
+            }
+
+            $approvalLogs = $this->MainModel->getApprovalLogList($formKeys);
+            $appMap = [];
+            foreach ($approvalLogs as $log) {
+                $appMap[trim($log->CEXTDATA ?? '')] = $log;
+                $appMap[trim($log->CSTEPNO ?? '')] = $log;
+            }
+
+            // 2. โหลดไฟล์ Excel จาก $_FILES ชั่วคราวโดยตรง
+            $spreadsheet = IOFactory::load($_FILES['file']['tmp_name']);
+            $sheet = $spreadsheet->getActiveSheet();
+
+            // แทรก 4 บรรทัดบนสุด
+            $sheet->insertNewRowBefore(1, 4);
+
+            $stepCount = count($steps);
+            $startColIndex = max(1, 10 - $stepCount); 
+
+            // วาดตารางตรายาง: Step 0 อยู่ขวาสุด
+            foreach ($steps as $idx => $st) {
+                $colFromRight = ($stepCount - 1) - $idx;
+                $colNum = $startColIndex + $colFromRight;
+                $colLetter = Coordinate::stringFromColumnIndex($colNum);
+
+                // รวมเซลล์สำหรับวางตรายาง
+                $sheet->mergeCells("{$colLetter}1:{$colLetter}3");
+                
+                $extKey = trim($st['CEXTDATA'] ?? '');
+                $stepKey = trim($st['CSTEPNO'] ?? '');
+                $app = $appMap[$extKey] ?? ($appMap[$stepKey] ?? null);
+
+                if ($app && !empty($app->DAPVDATE_STR)) {
+                    $firstName = explode(' ', trim($app->SNAME ?? ''))[0];
+                    $stampText = "AMEC\n" . $app->DAPVDATE_STR . "\n" . $firstName;
+                    $sheet->setCellValue("{$colLetter}1", $stampText);
+                    $sheet->getStyle("{$colLetter}1")->applyFromArray([
+                        'font' => ['bold' => true, 'size' => 8, 'color' => ['rgb' => 'D32F2F']],
+                        'alignment' => [
+                            'horizontal' => Alignment::HORIZONTAL_CENTER,
+                            'vertical' => Alignment::VERTICAL_CENTER,
+                            'wrapText' => true
+                        ]
+                    ]);
+                }
+
+                if ($hasBorder) {
+                    $sheet->getStyle("{$colLetter}1:{$colLetter}3")->applyFromArray([
+                        'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['rgb' => '999999']]]
+                    ]);
+                }
+
+                $sheet->getColumnDimension($colLetter)->setWidth(16);
+            }
+
+            // ล้าง Buffer
+            while (ob_get_level() > 0) {
+                ob_end_clean();
+            }
+
+            $origName = $this->input->post('origName') ?: 'document.xlsx';
+            $outputFileName = 'Stamped_' . $origName;
+
+            header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+            header('Content-Disposition: attachment;filename="' . rawurlencode($outputFileName) . '"');
+            header('Cache-Control: max-age=0');
+
+            $writer = new Xlsx($spreadsheet);
+            $writer->save('php://output');
+            exit;
+
+        } catch (\Throwable $e) {
+            show_error('Stamp Excel Error: ' . $e->getMessage(), 500);
         }
     }
 
