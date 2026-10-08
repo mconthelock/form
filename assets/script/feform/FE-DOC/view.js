@@ -31,8 +31,8 @@ $(document).ready(async function () {
 
     // Binding ข้อมูลเข้าฟอร์ม
     $('#DOC_IDTxt').val(form.DOC_NO);
-    $('#REQUEST_BYTxt').val(formData.reqby || '');
-    $('#INPUT_BYTxt').val(formData.inputby || '');
+    $('#REQUEST_BYTxt').val(formData.reqby || empno);
+    $('#INPUT_BYTxt').val(formData.inputby || empno);
     $('#DocHeaderIDHid').val(formData.doc_header_id || '');
     // alert(formData.inputby);
 
@@ -90,7 +90,13 @@ $(document).ready(async function () {
                 let headerPayload = new FormData();
                 headerPayload.append('DOC_TYPE_CODE', docType);
                 headerPayload.append('REMARK', $('#RemarkTxt').val() || ''); // Remark สำหรับ createForm
-                headerPayload.append('EMPNO', empno);
+                const userEmpNo =
+                    empno ||
+                    $('#REQUEST_BYTxt').val() ||
+                    $('#EMPNOHid').val() ||
+                    '';
+                headerPayload.append('EMPNO', userEmpNo);
+                headerPayload.append('REQBY', userEmpNo);
 
                 const resHeader = await saveDocMaster(headerPayload);
                 if (!resHeader || !resHeader.status) {

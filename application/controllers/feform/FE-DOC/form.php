@@ -127,17 +127,27 @@ class form extends MY_Controller {
         try {
             $docTypeCode  = $this->input->post('DOC_TYPE_CODE');
             $remark       = $this->input->post('REMARK') ?? '';
-            $currentEmpNo = $this->input->get_post('empno') ?? ($this->input->post('EMPNO') ?? 'SYSTEM');
+            
+            // ดึงรหัสพนักงานจากหลายแหล่ง ป้องกันค่าว่าง
+            $currentEmpNo = $this->input->post('EMPNO') 
+                         ?: ($this->input->post('REQBY') 
+                         ?: ($this->input->get('empno') 
+                         ?: ($this->session->userdata('empno') ?? '')));
 
             if (empty($docTypeCode)) {
                 throw new Exception("กรุณาระบุประเภทเอกสาร (DOC_TYPE_CODE)");
             }
 
-            // 1. ตรวจสอบ Step 00 (REQUESTER) ว่ามีการ Fix TARGET_EMPNO ไว้หรือไม่
+            // 1. ตรวจสอบ Step 00 (REQUESTER)
             $step00 = $this->MainModel->getStepByDocAndExtData($docTypeCode, '00');
-            $requesterEmpNo = ($step00 && !empty($step00->TARGET_EMPNO)) 
+            $requesterEmpNo = ($step00 && !empty(trim($step00->TARGET_EMPNO))) 
                               ? trim($step00->TARGET_EMPNO) 
-                              : trim($currentEmpNo);
+                              : trim((string)$currentEmpNo);
+
+            // 🟢 หากยังว่างอยู่ ให้แจ้งเตือนก่อนยิงไป NestJS
+            if (empty($requesterEmpNo)) {
+                throw new Exception("ไม่พบรหัสผู้ขออนุมัติ (REQBY) กรุณาเข้าสู่ระบบใหม่อีกครั้ง");
+            }
 
             // 2. ดึง Master Form FE-DOC จาก Webflow Base (DEFAULT)
             $formMst  = $this->getFormMasterByVaname('FE-DOC');
