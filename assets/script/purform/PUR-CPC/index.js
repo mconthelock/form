@@ -9,6 +9,7 @@ import { modalConfirmRequest } from './modal/modal-comfirm';
 import { tableComparison } from './table/table-comparison';
 import { createComparison } from './data';
 import { showLoader } from '@amec/webasset/preloader';
+import { prepareFormData } from './function';
 
 $(async function () {
     try {
@@ -43,20 +44,21 @@ $(document).on(
                 showMessage('No data available for request.', 'warning');
                 return;
             }
-            const stepData = steps.data;
+            // const stepData = steps.data;
 
-            const data = {
-                FUNC: stepData.function,
-                REQBY: stepData.requester,
-                INPUTBY: stepData.inputer,
-                STATUS: 0,
-                ISEDIT: stepData.formNo != null,
-                FORMEDIT: stepData.formNo,
-                DETAILS: details,
-                VENDOR: stepData.vendor,
-                MODE: stepData.compareMode,
-                ...tableComparison.total,
-            };
+            // const data = {
+            //     FUNC: stepData.function,
+            //     REQBY: stepData.requester,
+            //     INPUTBY: stepData.inputer,
+            //     STATUS: 0,
+            //     ISEDIT: stepData.formNo != null,
+            //     FORMEDIT: stepData.formNo,
+            //     DETAILS: details,
+            //     VENDOR: stepData.vendor,
+            //     MODE: stepData.compareMode,
+            //     ...tableComparison.total,
+            // };
+            const data = prepareFormData(details);
             let res;
             switch (val) {
                 case 'draft':

@@ -7,7 +7,11 @@ import {
 import { showLoader } from '@amec/webasset/preloader';
 import { PdfViewer } from '@amec/webasset/components/pdfViewer';
 import { FileUpload } from '@amec/webasset/components/fileUpload';
-import { tableDraft } from '../PUR-CPC/table-draft';
+import { webflowSubmit } from '@amec/webasset/components/form';
+import { setDatePicker } from '@amec/webasset/flatpickr';
+import { formatDate } from '@amec/webasset/dayjs';
+import { dragDropInit, handleFiles } from '@amec/webasset/dragdrop';
+import { tableDraft } from '../PUR-CPC/table/table-draft';
 import { getListCreate, getPlanner } from './data';
 import {
     checkPlanner,
@@ -17,11 +21,7 @@ import {
     setAutoField,
 } from './function';
 import { modalSelectPriceComparison } from './modal/select-price-comparison';
-import { webflowSubmit } from '@amec/webasset/components/form';
-import { setDatePicker } from '@amec/webasset/flatpickr';
-import { formatDate } from '@amec/webasset/dayjs';
 import { ChangeReason } from './reason';
-import { dragDropInit, handleFiles } from '@amec/webasset/dragdrop';
 
 $(async function () {
     try {
