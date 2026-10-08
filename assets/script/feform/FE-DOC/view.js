@@ -160,7 +160,8 @@ $(document).ready(async function () {
 
         const baseDir = $(this).data('base-dir');
         const storedName = $(this).data('stored-name');
-        const originalName = $(this).data('original-name');
+        const originalName = $(this).data('original-name') || 'download';
+        const ext = originalName.split('.').pop().toLowerCase();
 
         try {
             showLoader();
@@ -172,7 +173,22 @@ $(document).ready(async function () {
             });
 
             const blobUrl = URL.createObjectURL(file);
-            window.open(blobUrl, '_blank');
+
+            if (ext === 'pdf') {
+                // ถ้าเป็น PDF ให้เปิดดูในแท็บใหม่ตามปกติ
+                window.open(blobUrl, '_blank');
+            } else {
+                // 🟢 ถ้าเป็น Excel ให้ดาวน์โหลดโดยบังคับใช้ชื่อไฟล์เดิม (originalName)
+                const a = document.createElement('a');
+                a.href = blobUrl;
+                a.download = originalName;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+            }
+
+            // คืนหน่วยความจำหลังใช้งานเสร็จ
+            setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
         } catch (err) {
             console.error('Open file error:', err);
             alert('เกิดข้อผิดพลาดในการเปิดไฟล์: ' + err.message);
@@ -220,6 +236,255 @@ $(document).ready(async function () {
             showLoader({ show: false });
         }
     });
+
+    // ========================================================
+    // จัดการ Master Document Type & Steps Modal
+    // ========================================================
+
+    const FLOW_EXT_LIST = [
+        { ext: '00', title: 'REQUESTER', apvType: 'EMP' },
+        { ext: '01', title: 'EFC SEM', apvType: 'POS' },
+        { ext: '02', title: 'MAT SEM', apvType: 'POS' },
+        { ext: '03', title: 'FE DEM', apvType: 'POS' },
+        { ext: '04', title: 'E/P DDIM', apvType: 'POS' },
+        { ext: '05', title: 'E/P DIM', apvType: 'POS' },
+    ];
+
+    // 1. เปิด Modal
+    $(document).on('click', '#btn-open-master-modal', function (e) {
+        e.preventDefault();
+        const currentSelected = $('#DocTypeDrp').val();
+        if (currentSelected) {
+            $('#modal-select-doctype').val(currentSelected).trigger('change');
+        } else {
+            $('#modal-select-doctype').val('__NEW__').trigger('change');
+        }
+        $('#master-modal').removeClass('hidden');
+    });
+
+    // 2. ปิด Modal
+    $(document).on('click', '.btn-close-master-modal', function (e) {
+        e.preventDefault();
+        $('#master-modal').addClass('hidden');
+    });
+
+    // 3. เปลี่ยน Document Type ใน Modal
+    $('#modal-select-doctype').on('change', function () {
+        const selectedCode = $(this).val();
+        $('#master-steps-tbody').empty();
+
+        if (selectedCode === '__NEW__') {
+            $('#m_doc_code').val('').prop('readonly', false);
+            $('#m_doc_name').val('');
+            $('#btn-del-doctype').addClass('hidden');
+            appendStepRow({ STEP_NO: 1, CEXTDATA: '00', TARGET_EMPNO: '' });
+        } else {
+            $('#m_doc_code').val(selectedCode).prop('readonly', true);
+            $('#btn-del-doctype').removeClass('hidden');
+
+            showLoader();
+            $.getJSON(
+                host +
+                    'feform/FE-DOC/form/GetMasterDetail?docTypeCode=' +
+                    selectedCode,
+                function (res) {
+                    showLoader({ show: false });
+                    if (res.status) {
+                        $('#m_doc_name').val(res.type?.DOC_TYPE_NAME || '');
+                        if (res.steps && res.steps.length > 0) {
+                            res.steps.forEach((s) => appendStepRow(s));
+                        } else {
+                            appendStepRow({
+                                STEP_NO: 1,
+                                CEXTDATA: '00',
+                                TARGET_EMPNO: '',
+                            });
+                        }
+                    }
+                },
+            ).fail(function () {
+                showLoader({ show: false });
+                alert('ไม่สามารถโหลดข้อมูล Master ได้');
+            });
+        }
+    });
+
+    // 4. วาดแถว Step ลงตาราง
+    function appendStepRow(data = {}) {
+        const rowCount = $('#master-steps-tbody tr').length;
+        const stepNo = data.STEP_NO || rowCount + 1;
+        const selectedExt =
+            data.CEXTDATA !== undefined && data.CEXTDATA !== null
+                ? data.CEXTDATA.toString()
+                : '01';
+        const isStep00 = selectedExt === '00';
+
+        let optionsHtml = '';
+        FLOW_EXT_LIST.forEach((item) => {
+            if (rowCount === 0 && item.ext !== '00') return; // แถวแรกมีแค่ 00
+            if (rowCount > 0 && item.ext === '00') return; // แถวอื่นห้ามเป็น 00
+
+            optionsHtml += `<option value="${item.ext}" data-title="${item.title}" data-type="${item.apvType}" ${selectedExt === item.ext ? 'selected' : ''}>
+                ${item.ext} : ${item.title}
+            </option>`;
+        });
+
+        const html = `
+            <tr class="step-row hover:bg-slate-50/60 transition-colors">
+                <td class="p-2.5 text-center font-bold text-slate-700 row-step-no">${stepNo}</td>
+                <td class="p-2.5 text-center">
+                    <span class="inline-block px-2 py-1 bg-slate-100 border border-slate-200 rounded font-mono font-bold text-xs ext-badge">${selectedExt}</span>
+                </td>
+                <td class="p-2.5">
+                    <select class="w-full h-8 px-2 border border-slate-200 rounded text-xs font-semibold select-step-preset focus:ring-2 focus:ring-blue-500/20" ${isStep00 ? 'disabled' : ''}>
+                        ${optionsHtml}
+                    </select>
+                </td>
+                <td class="p-2.5">
+                    ${
+                        isStep00
+                            ? `<input type="text" class="w-full h-8 px-2 border border-slate-200 rounded text-xs in-target-empno font-medium" 
+                                  value="${data.TARGET_EMPNO || ''}" 
+                                  placeholder="เว้นว่าง = ใช้รหัสผู้สร้างเอกสาร">`
+                            : `<span class="text-xs text-slate-400 italic">สายอนุมัติตาม Webflow</span>`
+                    }
+                </td>
+                <td class="p-2.5 text-center">
+                    ${isStep00 ? '' : '<button type="button" class="btn-remove-step-row text-rose-500 hover:text-rose-700 font-bold text-lg cursor-pointer">&times;</button>'}
+                </td>
+            </tr>
+        `;
+        $('#master-steps-tbody').append(html);
+    }
+
+    // 5. เปลี่ยน Dropdown แล้วอัปเดต Badge EXT
+    $(document).on('change', '.select-step-preset', function () {
+        const ext = $(this).val();
+        $(this).closest('tr').find('.ext-badge').text(ext);
+    });
+
+    // 6. กดปุ่มเพิ่ม Step ใหม่
+    $('#btn-add-step-row').on('click', function () {
+        const existingExts = [];
+        $('#master-steps-tbody .select-step-preset').each(function () {
+            existingExts.push($(this).val());
+        });
+
+        const available = ['01', '02', '03', '04', '05'];
+        const nextExt =
+            available.find((ext) => !existingExts.includes(ext)) || '01';
+
+        appendStepRow({ CEXTDATA: nextExt });
+    });
+
+    // 7. ลบแถว Step
+    $(document).on('click', '.btn-remove-step-row', function () {
+        $(this).closest('tr').remove();
+        $('#master-steps-tbody tr').each(function (idx) {
+            $(this)
+                .find('.row-step-no')
+                .text(idx + 1);
+        });
+    });
+
+    // 8. บันทึก Master
+    $('#btn-save-master-data').on('click', async function () {
+        const docCode = $('#m_doc_code').val().trim().toUpperCase();
+        const docName = $('#m_doc_name').val().trim();
+
+        if (!docCode || !docName) {
+            alert('กรุณากรอก DOC TYPE CODE และ DOC TYPE NAME');
+            return;
+        }
+
+        const steps = [];
+        $('#master-steps-tbody tr').each(function (idx) {
+            const $tr = $(this);
+            let ext = '00';
+            let title = 'REQUESTER';
+            let apvType = 'EMP';
+            let targetEmp = $tr.find('.in-target-empno').val()?.trim() || '';
+
+            if (idx > 0) {
+                const $opt = $tr.find('.select-step-preset option:selected');
+                ext = $opt.val();
+                title = $opt.data('title');
+                apvType = $opt.data('type');
+                targetEmp = '';
+            }
+
+            steps.push({
+                STEP_NO: idx + 1,
+                CEXTDATA: ext,
+                POSITION_TITLE: title,
+                APV_TYPE: apvType,
+                TARGET_EMPNO: targetEmp,
+            });
+        });
+
+        try {
+            showLoader();
+            const res = await $.ajax({
+                url: host + 'feform/FE-DOC/form/SaveMaster',
+                type: 'POST',
+                data: {
+                    DOC_TYPE_CODE: docCode,
+                    DOC_TYPE_NAME: docName,
+                    EMPNO: empno,
+                    STEPS: JSON.stringify(steps),
+                },
+                dataType: 'json',
+            });
+
+            if (res && res.status) {
+                alert('บันทึก Master สำเร็จ');
+                location.reload();
+            } else {
+                alert('บันทึกไม่สำเร็จ: ' + (res?.message || ''));
+            }
+        } catch (e) {
+            console.error(e);
+            alert('เกิดข้อผิดพลาดในการบันทึก Master');
+        } finally {
+            showLoader({ show: false });
+        }
+    });
+
+    // 9. ลบประเภทเอกสาร
+    $('#btn-del-doctype').on('click', async function () {
+        const docCode = $('#m_doc_code').val().trim();
+        if (!docCode) return;
+
+        if (
+            !confirm(
+                `ยืนยันการลบประเภทเอกสาร [${docCode}] พร้อม Flow ทั้งหมดใช่หรือไม่?`,
+            )
+        )
+            return;
+
+        try {
+            showLoader();
+            const res = await $.ajax({
+                url: host + 'feform/FE-DOC/form/DeleteDocType',
+                type: 'POST',
+                data: { DOC_TYPE_CODE: docCode, EMPNO: empno },
+                dataType: 'json',
+            });
+
+            if (res && res.status) {
+                alert('ลบประเภทเอกสารเรียบร้อยแล้ว');
+                location.reload();
+            } else {
+                alert('ลบไม่สำเร็จ: ' + (res?.message || ''));
+            }
+        } catch (e) {
+            console.error(e);
+            alert('เกิดข้อผิดพลาดในการลบ');
+        } finally {
+            showLoader({ show: false });
+        }
+    });
+    // ==========================================
 });
 
 function initFileDropEvents() {
@@ -406,6 +671,7 @@ function renderFileList(files) {
                             ↕️ แนวตั้ง
                         </button>
                     </div>`;
+                stampBtn = ``;
             }
 
             const viewOriginalBtn = `

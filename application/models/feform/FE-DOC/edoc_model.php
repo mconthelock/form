@@ -52,7 +52,7 @@ class edoc_model extends my_model
     public function getStepsByDocType($docTypeCode)
     {
         $sql = "SELECT  DOC_TYPE_CODE, STEP_NO, CEXTDATA, POSITION_TITLE, 
-                       APV_TYPE, TARGET_EMPNO, SPOSCODE, SDIVCODE, SDEPCODE, SSECCODE, IS_ACTIVE
+                       APV_TYPE, TARGET_EMPNO,  IS_ACTIVE
                 FROM FE_DOC_STEP_MST 
                 WHERE DOC_TYPE_CODE = ? AND IS_ACTIVE = 1 
                 ORDER BY STEP_NO ASC";
@@ -62,7 +62,7 @@ class edoc_model extends my_model
     public function getStepByDocAndExtData($docTypeCode, $extData)
     {
         $sql = "SELECT DOC_TYPE_CODE, STEP_NO, CEXTDATA, POSITION_TITLE, 
-                       APV_TYPE, TARGET_EMPNO, SPOSCODE, SDIVCODE, SDEPCODE, SSECCODE, IS_ACTIVE
+                       APV_TYPE, TARGET_EMPNO, IS_ACTIVE
                 FROM FE_DOC_STEP_MST 
                 WHERE DOC_TYPE_CODE = ? AND CEXTDATA = ? AND IS_ACTIVE = 1";
         return $this->QuerySetBase($sql, $this->smmtBase, [$docTypeCode, $extData])->row();
@@ -163,4 +163,92 @@ class edoc_model extends my_model
 
         return $dbWebflow->query($sql, $binds)->result();
     }
+
+    
+    //========================================================
+    // -- Master Document Types --
+    //========================================================
+    /**
+     * ตรวจสอบสิทธิ์ Admin จากตาราง FE_FORM_ADMIN
+     */
+    public function isFormAdmin($formCode, $empno) {
+        $db = $this->load->database($this->SmmtBase, TRUE);
+        $count = $db->where('EMPNO', trim((string)$empno))
+                    ->where('IS_ACTIVE', 1)
+                    ->group_start()
+                        ->where('FORM_CODE', (string)$formCode)
+                        ->or_where('FORM_CODE', 'ALL')
+                    ->group_end()
+                    ->count_all_results('FE_FORM_ADMIN');
+        return $count > 0;
+    }
+
+    /**
+     * ดึงรายละเอียด DocType และ Step ที่เรียงตาม STEP_NO
+     */
+    public function getMasterDocDetail($docTypeCode) {
+        $db = $this->load->database($this->SmmtBase, TRUE);
+        $type = $db->where('DOC_TYPE_CODE', trim((string)$docTypeCode))->get('FE_DOC_TYPE_MST')->row();
+        $steps = $db->where('DOC_TYPE_CODE', trim((string)$docTypeCode))
+                    ->where('IS_ACTIVE', 1)
+                    ->order_by('STEP_NO', 'ASC')
+                    ->get('FE_DOC_STEP_MST')
+                    ->result();
+        return ['type' => $type, 'steps' => $steps ?: []];
+    }
+
+    /**
+     * บันทึกหรือแทนที่ Doc Type และ Steps ทั้งหมด (ตัด SPOS/SDIV/SDEP/SSEC ออก)
+     */
+    public function saveDocTypeAndSteps($docTypeCode, $docTypeName, array $steps) {
+        $db = $this->load->database($this->SmmtBase, TRUE);
+        $db->trans_start();
+
+        // 1. อัปเดต / บันทึก FE_DOC_TYPE_MST
+        $exists = $db->where('DOC_TYPE_CODE', $docTypeCode)->get('FE_DOC_TYPE_MST')->row();
+        if ($exists) {
+            $db->where('DOC_TYPE_CODE', $docTypeCode)->update('FE_DOC_TYPE_MST', [
+                'DOC_TYPE_NAME' => $docTypeName,
+                'IS_ACTIVE'     => 1
+            ]);
+        } else {
+            $db->insert('FE_DOC_TYPE_MST', [
+                'DOC_TYPE_CODE' => $docTypeCode,
+                'DOC_TYPE_NAME' => $docTypeName,
+                'IS_ACTIVE'     => 1
+            ]);
+        }
+
+        // 2. เคลียร์ Step เดิม แล้วเพิ่มชุด Step ใหม่
+        $db->where('DOC_TYPE_CODE', $docTypeCode)->delete('FE_DOC_STEP_MST');
+
+        foreach ($steps as $idx => $st) {
+            $db->insert('FE_DOC_STEP_MST', [
+                'DOC_TYPE_CODE'  => $docTypeCode,
+                'STEP_NO'        => (int)($idx + 1),
+                'CEXTDATA'       => trim((string)$st['CEXTDATA']),
+                'POSITION_TITLE' => trim((string)$st['POSITION_TITLE']),
+                'APV_TYPE'       => trim((string)($st['APV_TYPE'] ?: 'POS')),
+                'TARGET_EMPNO'   => !empty($st['TARGET_EMPNO']) ? trim((string)$st['TARGET_EMPNO']) : null,
+                'IS_ACTIVE'      => 1
+            ]);
+        }
+
+        $db->trans_complete();
+        return $db->trans_status();
+    }
+
+    /**
+     * ลบประเภทเอกสารพร้อมลำดับ Step
+     */
+    public function deleteDocTypeCascade($docTypeCode) {
+        $db = $this->load->database($this->SmmtBase, TRUE);
+        $db->trans_start();
+        $db->where('DOC_TYPE_CODE', $docTypeCode)->delete('FE_DOC_STEP_MST');
+        $db->where('DOC_TYPE_CODE', $docTypeCode)->delete('FE_DOC_TYPE_MST');
+        $db->trans_complete();
+        return $db->trans_status();
+    }
+    //========================================================
+
 }
