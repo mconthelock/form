@@ -8,6 +8,7 @@ use PhpOffice\PhpSpreadsheet\Style\{Border, Fill, Alignment};
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\RichText\RichText;
 use PhpOffice\PhpSpreadsheet\Style\Color;
+use PhpOffice\PhpSpreadsheet\Worksheet\Drawing;
 
 defined('BASEPATH') OR exit('No direct script access allowed');
 require_once APPPATH.'controllers/_form.php';
@@ -643,14 +644,18 @@ class form extends MY_Controller {
             $startColIndex = max(1, 10 - $stepCount); 
 
             // วาดตารางตรายาง: Step 0 อยู่ขวาสุด
+            // วาดตรายาง: Step 0 อยู่ขวาสุด
             foreach ($steps as $idx => $st) {
                 $colFromRight = ($stepCount - 1) - $idx;
                 $colNum = $startColIndex + $colFromRight;
                 $colLetter = Coordinate::stringFromColumnIndex($colNum);
 
-                // รวมเซลล์สำหรับวางตรายาง
+                // รวมเซลล์บรรทัด 1 ถึง 3 เพื่อให้มีพื้นที่สำหรับตรายาง
                 $sheet->mergeCells("{$colLetter}1:{$colLetter}3");
-                
+                $sheet->getRowDimension(1)->setRowHeight(20);
+                $sheet->getRowDimension(2)->setRowHeight(20);
+                $sheet->getRowDimension(3)->setRowHeight(20);
+
                 $extKey = trim($st['CEXTDATA'] ?? '');
                 $stepKey = trim($st['CSTEPNO'] ?? '');
                 $app = $appMap[$extKey] ?? ($appMap[$stepKey] ?? null);
@@ -658,15 +663,57 @@ class form extends MY_Controller {
                 if ($app && !empty($app->DAPVDATE_STR)) {
                     $firstName = explode(' ', trim($app->SNAME ?? ''))[0];
                     $stampText = "AMEC\n" . $app->DAPVDATE_STR . "\n" . $firstName;
+                    
+                    // 1. ใส่ข้อความตัวหนังสือสีแดง
                     $sheet->setCellValue("{$colLetter}1", $stampText);
                     $sheet->getStyle("{$colLetter}1")->applyFromArray([
-                        'font' => ['bold' => true, 'size' => 8, 'color' => ['rgb' => 'D32F2F']],
+                        'font' => [
+                            'bold' => true, 
+                            'size' => 8, 
+                            'color' => ['rgb' => 'D32F2F']
+                        ],
                         'alignment' => [
                             'horizontal' => Alignment::HORIZONTAL_CENTER,
-                            'vertical' => Alignment::VERTICAL_CENTER,
-                            'wrapText' => true
+                            'vertical'   => Alignment::VERTICAL_CENTER,
+                            'wrapText'   => true
                         ]
                     ]);
+
+                    // 2. 🟢 สร้างรูปภาพวงกลมสีแดงโปร่งใสแปะทับลงไป
+                    if (function_exists('imagecreatetruecolor')) {
+                        $circleImgPath = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'stamp_circle_' . uniqid() . '.png';
+                        $imgW = 120;
+                        $imgH = 120;
+                        $img = imagecreatetruecolor($imgW, $imgH);
+                        
+                        // ทำพื้นหลังโปร่งใส
+                        imagesavealpha($img, true);
+                        $transColor = imagecolorallocatealpha($img, 0, 0, 0, 127);
+                        imagefill($img, 0, 0, $transColor);
+
+                        // สีแดงขอบตรายาง (#D32F2F)
+                        $redColor = imagecolorallocate($img, 211, 47, 47);
+                        imagesetthickness($img, 3); // ความหนาของเส้นขอบวงกลม
+                        imageellipse($img, $imgW / 2, $imgH / 2, $imgW - 6, $imgH - 6, $redColor);
+
+                        imagepng($img, $circleImgPath);
+                        imagedestroy($img);
+
+                        // แทรก Drawing ลงบนเซลล์
+                        $drawing = new Drawing();
+                        $drawing->setName('ApprovalStamp');
+                        $drawing->setDescription('Approval Stamp Circle');
+                        $drawing->setPath($circleImgPath);
+                        $drawing->setCoordinates("{$colLetter}1");
+                        
+                        // ปรับขนาดรูปและกึ่งกลางในเซลล์
+                        $drawing->setWidth(68);
+                        $drawing->setHeight(68);
+                        $drawing->setOffsetX(18); // ชดเชยแนวนอนให้อยู่กึ่งกลางพอดีกับข้อความ
+                        $drawing->setOffsetY(4);  // ชดเชยแนวตั้ง
+                        
+                        $drawing->setWorksheet($sheet);
+                    }
                 }
 
                 if ($hasBorder) {
