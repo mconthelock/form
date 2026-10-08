@@ -34,7 +34,7 @@ $(document).ready(async function () {
     // เริ่มต้นระบบ Flow & Permissions จากไฟล์ flow.js
     await initFlow(form, formData.status);
 
-    // 🟢 แสดงรายการไฟล์ทันที (ถ้ามี INITIAL_ATTACHED_FILES จะไม่ยิง AJAX)
+    // แสดงรายการไฟล์ทันที (ถ้ามี INITIAL_ATTACHED_FILES จะไม่ยิง AJAX)
     if (form.NRUNNO) {
         loadExistingFiles();
     }
@@ -149,8 +149,9 @@ $(document).ready(async function () {
             FILE_FNAME: $(this).data('stored-name'),
             FILE_ONAME: $(this).data('original-name'),
         };
+        const orientation = $(this).data('orientation') || 'auto';
 
-        await previewStampedPdfWithPdfLib(fileObj, form, false);
+        await previewStampedPdfWithPdfLib(fileObj, form, false, orientation);
     });
 
     // ปุ่มเปิดดูไฟล์ต้นฉบับในแท็บใหม่
@@ -316,7 +317,8 @@ function handleFileSelect(files) {
     }
 }
 
-// 🟢 ฟังก์ชันวาด DOM รายการไฟล์
+// ฟังก์ชันวาด DOM รายการไฟล์
+// ปรับปรุงในส่วน renderFileList():
 function renderFileList(files) {
     const formData = $('.form-info').data() || {};
     const mode = $('#MODEHid').val() || '1';
@@ -357,18 +359,54 @@ function renderFileList(files) {
                   ? `<span class="text-emerald-600 font-bold text-xs bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">EXCEL</span>`
                   : `<span class="text-slate-500 font-bold text-xs bg-slate-50 px-1.5 py-0.5 rounded border border-slate-200">FILE</span>`;
 
-            // แสดงปุ่ม Preview Stamp สำหรับไฟล์ PDF และ Excel
-            const stampBtn =
-                isPdf || isExcel
-                    ? `<button type="button" 
-                           class="btn-preview-file bg-blue-50 hover:bg-blue-600 hover:text-white text-blue-600 font-semibold text-xs px-2.5 py-1.5 rounded-lg transition-all cursor-pointer"
-                           data-file-id="${file.FILE_ID}" 
-                           data-base-dir="${formattedBaseDir}" 
-                           data-stored-name="${file.FILE_FNAME}" 
-                           data-original-name="${file.FILE_ONAME}">
-                       👁️ Preview Stamp
-                   </button>`
-                    : '';
+            // ปุ่ม Preview Stamp (ถ้าเป็น Excel ให้มีปุ่มสลับแนวหน้ากระดาษเพิ่มเติม)
+            let stampBtn = '';
+            if (isPdf) {
+                stampBtn = `
+                    <button type="button" 
+                            class="btn-preview-file bg-blue-50 hover:bg-blue-600 hover:text-white text-blue-600 font-semibold text-xs px-2.5 py-1.5 rounded-lg transition-all cursor-pointer"
+                            data-file-id="${file.FILE_ID}" 
+                            data-base-dir="${formattedBaseDir}" 
+                            data-stored-name="${file.FILE_FNAME}" 
+                            data-original-name="${file.FILE_ONAME}"
+                            data-orientation="auto">
+                        👁️ Preview Stamp
+                    </button>`;
+            } else if (isExcel) {
+                stampBtn = `
+                    <div class="inline-flex rounded-lg shadow-xs" role="group">
+                        <button type="button" 
+                                class="btn-preview-file bg-blue-50 hover:bg-blue-600 hover:text-white text-blue-600 font-semibold text-xs px-2.5 py-1.5 rounded-l-lg border-r border-blue-200 transition-all cursor-pointer"
+                                title="Preview Stamp (Auto Detect)"
+                                data-file-id="${file.FILE_ID}" 
+                                data-base-dir="${formattedBaseDir}" 
+                                data-stored-name="${file.FILE_FNAME}" 
+                                data-original-name="${file.FILE_ONAME}"
+                                data-orientation="auto">
+                            👁️ Preview
+                        </button>
+                        <button type="button" 
+                                class="btn-preview-file bg-blue-50 hover:bg-blue-600 hover:text-white text-blue-600 font-semibold text-xs px-2 py-1.5 border-r border-blue-200 transition-all cursor-pointer"
+                                title="บังคับแปลงเป็น แนวนอน (Landscape)"
+                                data-file-id="${file.FILE_ID}" 
+                                data-base-dir="${formattedBaseDir}" 
+                                data-stored-name="${file.FILE_FNAME}" 
+                                data-original-name="${file.FILE_ONAME}"
+                                data-orientation="landscape">
+                            ↔️ แนวนอน
+                        </button>
+                        <button type="button" 
+                                class="btn-preview-file bg-blue-50 hover:bg-blue-600 hover:text-white text-blue-600 font-semibold text-xs px-2 py-1.5 rounded-r-lg transition-all cursor-pointer"
+                                title="บังคับแปลงเป็น แนวตั้ง (Portrait)"
+                                data-file-id="${file.FILE_ID}" 
+                                data-base-dir="${formattedBaseDir}" 
+                                data-stored-name="${file.FILE_FNAME}" 
+                                data-original-name="${file.FILE_ONAME}"
+                                data-orientation="portrait">
+                            ↕️ แนวตั้ง
+                        </button>
+                    </div>`;
+            }
 
             const viewOriginalBtn = `
                 <button type="button" 
@@ -408,7 +446,7 @@ function renderFileList(files) {
     }
 }
 
-// 🟢 ฟังก์ชันโหลดไฟล์ตัวเดียว: ถ้ามีแคชจาก Server แสดงผลทันที 0ms
+// ฟังก์ชันโหลดไฟล์ตัวเดียว: ถ้ามีแคชจาก Server แสดงผลทันที 0ms
 function loadExistingFiles(forceRefresh = false) {
     if (
         !forceRefresh &&
@@ -441,7 +479,12 @@ function loadExistingFiles(forceRefresh = false) {
 }
 
 // ฟังก์ชันทำ Preview Stamp
-async function previewStampedPdfWithPdfLib(fileObj, form, hasBorder = false) {
+async function previewStampedPdfWithPdfLib(
+    fileObj,
+    form,
+    hasBorder = false,
+    orientation = 'auto',
+) {
     try {
         showLoader();
 
@@ -475,9 +518,11 @@ async function previewStampedPdfWithPdfLib(fileObj, form, hasBorder = false) {
         let pdfSourceBuffer = null;
 
         if (ext === 'xlsx' || ext === 'xls') {
+            // ส่งค่า orientation ('auto', 'landscape', หรือ 'portrait') ไปแปลง
             pdfSourceBuffer = await convertExcelToPdfBuffer(
                 file,
                 fileObj.FILE_ONAME,
+                orientation,
             );
         } else {
             pdfSourceBuffer = await file.arrayBuffer();

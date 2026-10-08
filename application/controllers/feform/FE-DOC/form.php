@@ -594,13 +594,19 @@ class form extends MY_Controller {
     /**
      * แปลงไฟล์ Excel ที่ส่งเข้ามาให้กลายเป็นไฟล์ PDF Stream (Reusable Endpoint)
      */
+    /**
+     * แปลงไฟล์ Excel เป็น PDF Stream พร้อมระบบคำนวณและรองรับการเลือกแนวหน้ากระดาษ
+     */
     public function ConvertExcelToPdf() {
         try {
             if (empty($_FILES['file']['tmp_name']) || !is_uploaded_file($_FILES['file']['tmp_name'])) {
                 throw new Exception('ไม่พบไฟล์ Excel ที่ต้องการแปลง');
             }
 
-            // เลือก PDF Engine ที่ติดตั้งไว้ในโปรเจกต์
+            // รับค่า orientation จาก Client: 'auto' | 'landscape' | 'portrait'
+            $requestedOrientation = strtolower(trim((string)$this->input->post('orientation') ?: 'auto'));
+
+            // เลือก PDF Engine ที่มีในระบบ
             if (class_exists('\PhpOffice\PhpSpreadsheet\Writer\Pdf\Tcpdf')) {
                 \PhpOffice\PhpSpreadsheet\IOFactory::registerWriter('Pdf', \PhpOffice\PhpSpreadsheet\Writer\Pdf\Tcpdf::class);
             } elseif (class_exists('\PhpOffice\PhpSpreadsheet\Writer\Pdf\Mpdf')) {
@@ -608,11 +614,54 @@ class form extends MY_Controller {
             }
 
             $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($_FILES['file']['tmp_name']);
-            
-            // ตั้งค่าให้พอดีกับหน้ากระดาษ
+
             foreach ($spreadsheet->getAllSheets() as $sheet) {
-                $sheet->getPageSetup()->setFitToWidth(1);
-                $sheet->getPageSetup()->setFitToHeight(0);
+                $pageSetup = $sheet->getPageSetup();
+
+                // 🟢 คำนวณแนวหน้ากระดาษ (Orientation)
+                if ($requestedOrientation === 'landscape') {
+                    $pageSetup->setOrientation(\PhpOffice\PhpSpreadsheet\Worksheet\PageSetup::ORIENTATION_LANDSCAPE);
+                } elseif ($requestedOrientation === 'portrait') {
+                    $pageSetup->setOrientation(\PhpOffice\PhpSpreadsheet\Worksheet\PageSetup::ORIENTATION_PORTRAIT);
+                } else {
+                    // 🟢 Auto Detect: คำนวณขนาดพื้นที่ตารางจริง
+                    $highestCol = $sheet->getHighestDataColumn();
+                    $highestColIndex = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::columnIndexFromString($highestCol);
+                    $highestRow = (int)$sheet->getHighestDataRow();
+
+                    // คำนวณความกว้างรวมของคอลัมน์
+                    $totalWidth = 0;
+                    for ($c = 1; $c <= $highestColIndex; $c++) {
+                        $colLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($c);
+                        $dim = $sheet->getColumnDimension($colLetter)->getWidth();
+                        $totalWidth += ($dim > 0) ? $dim : 11;
+                    }
+
+                    // เกณฑ์: ถ้าความกว้างรวมเกิน 110 หรือคอลัมน์เกิน 10 หรือกว้างกว่าความสูงมาก -> Landscape
+                    $isWide = ($totalWidth > 110) || ($highestColIndex > 10) || (($totalWidth / max(1, $highestRow)) > 3.0);
+
+                    if ($isWide || $pageSetup->getOrientation() === \PhpOffice\PhpSpreadsheet\Worksheet\PageSetup::ORIENTATION_LANDSCAPE) {
+                        $pageSetup->setOrientation(\PhpOffice\PhpSpreadsheet\Worksheet\PageSetup::ORIENTATION_LANDSCAPE);
+                    } else {
+                        $pageSetup->setOrientation(\PhpOffice\PhpSpreadsheet\Worksheet\PageSetup::ORIENTATION_PORTRAIT);
+                    }
+                }
+
+                // กำหนดขนาดกระดาษ A4
+                $pageSetup->setPaperSize(\PhpOffice\PhpSpreadsheet\Worksheet\PageSetup::PAPERSIZE_A4);
+
+                // 🟢 สำคัญ: สั่ง Fit ความกว้างลง 1 หน้าแนวนอน/แนวตั้งพอดี
+                $pageSetup->setFitToPage(true);
+                $pageSetup->setFitToWidth(1);
+                $pageSetup->setFitToHeight(0); // ให้ความสูงไหลลงหน้าถัดไปตามธรรมชาติ ไม่บีบจนตัวหนังสือบี้
+
+                // ตั้งขอบกระดาษแคบ (0.3 นิ้ว) เพื่อเพิ่มพื้นที่แสดงผล
+                $sheet->getPageMargins()->setTop(0.3);
+                $sheet->getPageMargins()->setRight(0.3);
+                $sheet->getPageMargins()->setLeft(0.3);
+                $sheet->getPageMargins()->setBottom(0.3);
+
+                $sheet->setShowGridLines(true);
             }
 
             $pdfWriter = \PhpOffice\PhpSpreadsheet\IOFactory::createWriter($spreadsheet, 'Pdf');
