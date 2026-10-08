@@ -61,7 +61,7 @@ $(document).on('click', '#btnExport', async function () {
     const NRUNNO = $('input[name="FORM_NO"]').val();
     const VENDCODE = $('input[name="VENDOR_CODE"]').val();
     const VENDNAME = $('input[name="VENDOR_NAME"]').val();
-    // const VENDGROUPTYPE = $('#VENDOR_GROUP_TYPE').val();
+    const VENDGROUPTYPE = $('#VENDOR_GROUP_TYPE').val();
     const SNAME = $('input[name="REQUESTER"]').val();
     const CST = $('#CST').val();
     const SREQDATE = $('input[name="REQUEST_DATE_FROM"]').val();
@@ -79,6 +79,7 @@ $(document).on('click', '#btnExport', async function () {
         ...(NRUNNO && { NRUNNO: NRUNNO }),
         ...(VENDCODE && { VENDCODE: VENDCODE }),
         ...(VENDNAME && { VENDNAME: VENDNAME }),
+        ...(VENDGROUPTYPE && { VENDGROUPTYPE: VENDGROUPTYPE }),
         // หากต้องการแนบ VENDOR ต่างๆ ไปที่ Root level สามารถเพิ่มตรงนี้ได้เลย เช่น:
         // ...(VENDCODE && { VENDCODE: VENDCODE }),
 
