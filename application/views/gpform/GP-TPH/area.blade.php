@@ -54,8 +54,21 @@
         .area-data-shell .select2-selection__rendered { line-height: 46px !important; color: var(--color-base-content) !important; font-size: 15px; }
         .area-data-shell .select2-selection__arrow { height: 46px !important; }
         .area-form-dialog .select2-results__option { padding: 10px 14px; font-size: 15px; }
-        .area-data-shell .area-form-actions { display: flex; justify-content: center; flex-wrap: wrap; gap: 12px; margin-top: 22px; }
+        .area-data-shell .area-form-actions { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 12px; margin-top: 22px; }
         .area-form-dialog .area-form-actions .btn { min-height: 44px; padding-inline: 18px; font-size: 15px; }
+        .swal2-popup.area-popup {
+            width: min(460px, calc(100vw - 32px)); padding: 24px;
+            border: 1px solid var(--color-base-300); border-radius: 20px;
+            background: var(--color-base-100); color: var(--color-base-content);
+            font-family: var(--font-sans); box-shadow: 0 16px 48px rgb(15 23 42 / 18%);
+        }
+        .area-popup .area-popup__title { padding: 0; font-size: 22px; line-height: 1.5; }
+        .area-popup .area-popup__message { margin: 12px 0 0; font-size: 15px; line-height: 1.7; overflow-wrap: anywhere; }
+        .area-popup .swal2-icon { margin: 4px auto 20px; }
+        .area-popup .area-popup__actions { width: 100%; justify-content: flex-end; gap: 12px; margin-top: 24px; }
+        .area-popup .btn { min-height: 44px; padding-inline: 18px; border-radius: 9px; font-size: 15px; }
+        .area-popup .area-popup__confirm { order: 1; }
+        .area-popup .btn:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 3px; }
         .area-data-shell :is(input, select, button):focus-visible {
             outline: 2px solid var(--color-primary); outline-offset: 3px;
         }
@@ -73,6 +86,8 @@
         .area-data-shell .table-action-button { width: 34px; height: 34px; border: 1px solid var(--color-base-300); border-radius: 8px; background: var(--color-base-100); }
         .area-data-shell .table-action-button:hover { border-color: var(--color-primary); background: var(--area-soft); }
         .area-data-shell .toggle-area-status { width: auto; padding-inline: 8px; font-size: 11px; }
+        .area-data-shell .delete-area { width: 34px; padding: 0; color: #dc2626; }
+        .area-data-shell .inactive-area-option { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; }
         .area-data-shell .edit-area span { color: var(--color-yellow-400); }
         .area-data-shell .empty-row { height: 150px; color: var(--color-neutral); }
         .area-data-shell .table-summary { margin-top: 16px; font-size: 12px; color: var(--color-neutral); text-align: center; }
@@ -113,6 +128,10 @@
                 <button type="button" id="newAreaButton" class="btn btn-primary add-button">
                     + เพิ่มพื้นที่
                 </button>
+                <label class="inactive-area-option">
+                    <input type="checkbox" id="showInactiveAreas">
+                    แสดงพื้นที่ปิดใช้งาน
+                </label>
             </div>
 
             <dialog id="areaFormDialog" class="area-form-dialog" aria-labelledby="areaFormTitle">
@@ -145,13 +164,13 @@
                     </div>
                 </div>
                 <div class="area-form-actions">
-                    <button type="button" id="cancelAreaButton" class="btn btn-sm btn-ghost gap-2">
+                    <button type="button" id="cancelAreaButton" class="btn btn-sm btn-error text-white gap-2">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18 18 6M6 6l12 12" />
                         </svg>
                         Cancel
                     </button>
-                    <button type="submit" class="btn btn-sm btn-primary gap-2">
+                    <button type="submit" class="btn btn-sm btn-success text-white gap-2">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 4h11l3 3v13H5V4Zm3 0v6h8V4m-8 16v-6h8v6" />
                         </svg>
@@ -180,9 +199,6 @@
                             </th>
                             <th class ="border p-2">
                                 Area Owner
-                            </th>
-                            <th class="border p-2">
-                                Status
                             </th>
                             <th>Action</th>
                         </tr>

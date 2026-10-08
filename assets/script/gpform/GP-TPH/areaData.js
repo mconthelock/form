@@ -1,4 +1,4 @@
-import { showMessage } from '@amec/webasset/utils';
+import Swal from 'sweetalert2';
 import {
     getAllDepartment,
     getAllDivision,
@@ -28,6 +28,34 @@ const divisionNames = new Map();
 const positionNames = new Map();
 const cancelledDepartmentCodes = new Set();
 const cancelledDivisionCodes = new Set();
+
+function areaPopup(options) {
+    const formDialog = document.getElementById('areaFormDialog');
+    return Swal.fire({
+        target: formDialog?.open ? formDialog : document.body,
+        buttonsStyling: false,
+        confirmButtonText: 'ตกลง',
+        cancelButtonText: 'ยกเลิก',
+        customClass: {
+            popup: 'area-popup',
+            title: 'area-popup__title',
+            htmlContainer: 'area-popup__message',
+            actions: 'area-popup__actions',
+            confirmButton: 'btn btn-success text-white area-popup__confirm',
+            cancelButton: 'btn btn-error text-white',
+        },
+        ...options,
+    });
+}
+
+function showMessage(message, type) {
+    const titles = {
+        success: 'ดำเนินการสำเร็จ',
+        error: 'ดำเนินการไม่สำเร็จ',
+        warning: 'ตรวจสอบข้อมูล',
+    };
+    return areaPopup({ icon: type, title: titles[type], text: message });
+}
 
 function getItems(response) {
     if (Array.isArray(response)) {
@@ -377,12 +405,15 @@ function getFilteredAreas() {
     const keyword = document.getElementById('searchArea')?.value
         .trim()
         .toLowerCase();
-
-    if (!keyword) {
-        return areas;
-    }
+    const showInactive = document.getElementById('showInactiveAreas')?.checked;
 
     return areas.filter((area) => {
+        if (!showInactive && !isAreaActive(area)) {
+            return false;
+        }
+        if (!keyword) {
+            return true;
+        }
         const ownerValue = getAreaOwnerValue(area);
         return [
             getLocationName(area),
@@ -451,15 +482,21 @@ function addActionCell(row, areaId) {
     statusButton.type = 'button';
     statusButton.className =
         'action-link table-action-button toggle-area-status';
+    statusButton.classList.toggle('delete-area', nextStatus === '0');
     statusButton.dataset.areaId = areaId;
     statusButton.dataset.nextStatus = nextStatus;
     statusButton.title =
-        nextStatus === '0' ? 'Deactivate area' : 'Activate area';
+        nextStatus === '0' ? 'Delete area' : 'Activate area';
     statusButton.setAttribute(
         'aria-label',
-        nextStatus === '0' ? 'Deactivate area' : 'Activate area',
+        nextStatus === '0' ? 'Delete area' : 'Activate area',
     );
-    statusButton.textContent = nextStatus === '0' ? 'Disable' : 'Enable';
+    if (nextStatus === '0') {
+        statusButton.innerHTML =
+            '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M9 6V4h6v2M5 6l1 14h12l1-14M10 10v6M14 10v6" /></svg>';
+    } else {
+        statusButton.textContent = 'Enable';
+    }
 
     cell.append(editButton, statusButton);
     row.appendChild(cell);
@@ -478,7 +515,7 @@ function renderTable() {
 
     if (!filteredAreas.length) {
         tableBody.innerHTML =
-            '<tr><td colspan="7" class="empty-row">ไม่พบข้อมูล</td></tr>';
+            '<tr><td colspan="6" class="empty-row">ไม่พบข้อมูล</td></tr>';
         setSummary(filteredAreas);
         return;
     }
@@ -496,7 +533,6 @@ function renderTable() {
         addCell(row, area.AREA_NAME || area.area);
         addCell(row, area.AREA_LEVEL ?? area.level);
         addCell(row, ownerLabel);
-        addCell(row, isAreaActive(area) ? 'ใช้งาน' : 'ไม่ใช้งาน');
         addActionCell(row, getAreaId(area));
         tableBody.appendChild(row);
         });
@@ -596,7 +632,7 @@ async function loadAreaTable() {
     }
 
     tableBody.innerHTML =
-        '<tr><td colspan="7" class="empty-row">Loading...</td></tr>';
+        '<tr><td colspan="6" class="empty-row">Loading...</td></tr>';
 
     try {
         const [areaResponse, locationResponse] = await Promise.all([
@@ -611,7 +647,7 @@ async function loadAreaTable() {
     } catch (error) {
         console.error('Unable to load GP-TPH areas.', error);
         tableBody.innerHTML =
-            '<tr><td colspan="7" class="empty-row">ไม่สามารถโหลดข้อมูลได้</td></tr>';
+            '<tr><td colspan="6" class="empty-row">ไม่สามารถโหลดข้อมูลได้</td></tr>';
         areas = [];
         setSummary([]);
     }
@@ -652,6 +688,11 @@ function bindEvents() {
     });
 
     searchInput?.addEventListener('input', (event) => {
+        currentPage = 1;
+        renderTable();
+    });
+
+    document.getElementById('showInactiveAreas')?.addEventListener('change', () => {
         currentPage = 1;
         renderTable();
     });
@@ -697,17 +738,28 @@ function bindEvents() {
             }
 
             const nextStatus = statusButton.dataset.nextStatus;
-            const action = nextStatus === '0' ? 'deactivate' : 'activate';
-            if (
-                !window.confirm(
-                    `Are you sure you want to ${action} "${area.AREA_NAME}"?`,
-                )
-            ) {
-                return;
-            }
-
             statusButton.disabled = true;
             try {
+                const disabling = nextStatus === '0';
+                const result = await areaPopup({
+                    icon: disabling ? 'warning' : 'question',
+                    title: disabling ? 'ปิดใช้งานพื้นที่?' : 'เปิดใช้งานพื้นที่?',
+                    text: `ต้องการ${disabling ? 'ปิด' : 'เปิด'}ใช้งานพื้นที่ "${area.AREA_NAME || area.area}" ใช่หรือไม่`,
+                    showCancelButton: true,
+                    focusCancel: true,
+                    confirmButtonText: disabling ? 'ปิดใช้งาน' : 'เปิดใช้งาน',
+                    customClass: {
+                        popup: 'area-popup',
+                        title: 'area-popup__title',
+                        htmlContainer: 'area-popup__message',
+                        actions: 'area-popup__actions',
+                        confirmButton: `btn ${disabling ? 'btn-error' : 'btn-success'} text-white area-popup__confirm`,
+                        cancelButton: 'btn btn-ghost',
+                    },
+                });
+                if (!result.isConfirmed) {
+                    return;
+                }
                 await updateArea(getAreaId(area), {
                     AREA_STATUS: nextStatus,
                 });
@@ -732,14 +784,14 @@ function bindEvents() {
         const saveButton = form.querySelector('[type="submit"]');
         const areaLevel = form.elements.AREA_LEVEL.value.trim();
         if (!/^\d+$/.test(areaLevel) || Number(areaLevel) > 4) {
-            showMessage('AREA_LEVEL ต้องเป็นตัวเลขตั้งแต่ 0 ถึง 4 เท่านั้น', 'warning');
+            await showMessage('AREA_LEVEL ต้องเป็นตัวเลขตั้งแต่ 0 ถึง 4 เท่านั้น', 'warning');
             form.elements.AREA_LEVEL.focus();
             return;
         }
 
         const ownerValue = form.elements.AREA_OWNER.value.trim();
         if (!ownerValue) {
-            showMessage('กรุณาเลือก Area Owner', 'warning');
+            await showMessage('กรุณาเลือก Area Owner', 'warning');
             form.elements.AREA_OWNER.focus();
             return;
         }
@@ -759,11 +811,11 @@ function bindEvents() {
             } else {
                 await createArea(data);
             }
+            closeForm();
             showMessage(
                 isEditing ? 'แก้ไขข้อมูลสำเร็จ' : 'บันทึกข้อมูลสำเร็จ',
                 'success',
             );
-            closeForm();
             await loadAreaTable();
         } catch (error) {
             console.error('Unable to save GP-TPH area.', error);

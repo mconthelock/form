@@ -24,6 +24,27 @@ import {
     let longTermValidUntil = '';
     const areaOwnerLabels = new Map();
 
+    async function validateGroupApplicants(employeeCodes) {
+        const requestBy = $('#REQBY').val().trim();
+        if (!requestBy) {
+            throw new Error('กรุณาระบุ Request By ก่อนเพิ่มรายชื่อ Group Request');
+        }
+        const codes = [requestBy, ...employeeCodes];
+        const employees = await Promise.all(codes.map(getEmpData));
+        const departments = new Set();
+        employees.forEach((employee, index) => {
+            const department = String(employee?.SDEPCODE || '').trim();
+            if (!employee?.SNAME || String(employee.CSTATUS) !== '1' || !department) {
+                throw new Error(`ไม่สามารถตรวจสอบ Department ของพนักงาน ${codes[index]} ได้`);
+            }
+            departments.add(department);
+        });
+        if (departments.size > 1) {
+            throw new Error('รายชื่อใน Group Request ต้องอยู่ใน Department เดียวกับ Request By');
+        }
+        return employees.slice(1);
+    }
+
     function getItems(response) {
         if (Array.isArray(response)) {
             return response;
@@ -119,7 +140,7 @@ import {
 
     function calculateLongTermValidUntil(yearsValue) {
         const years = Number(yearsValue);
-        if (!Number.isSafeInteger(years) || years < 1) {
+        if (!Number.isSafeInteger(years) || years < 1 || years > 2) {
             return '';
         }
 
@@ -282,33 +303,45 @@ import {
             inputs[4].value = empData.SSEC || '';
         }
 
-        async function populateRequesterForSelectedDesign() {
+        async function populateRequesterForSelectedDesign(defaultToIndividual = false) {
+            const requestBy = $('#REQBY').val().trim();
+            if (!requestBy) {
+                return;
+            }
+
+            const empData = await populateRequester(requestBy);
+            if (
+                defaultToIndividual &&
+                requestBy === $('#INPUTBY').val().trim()
+            ) {
+                employeeRadio.checked = true;
+                document.querySelector(
+                    'input[name="REQUEST_SUB_TYPE"][value="I"]',
+                ).checked = true;
+                toggleHostExternalSection();
+            }
+
             const requestType = document.querySelector(
                 'input[name="REQUEST_TYPE"]:checked',
             )?.value;
             const requestSubType = document.querySelector(
                 'input[name="REQUEST_SUB_TYPE"]:checked',
             )?.value;
-            const requestBy = $('#REQBY').val().trim();
-            if (
-                !requestBy ||
-                (requestType === 'E' && !requestSubType) ||
-                (requestType !== 'E' && requestType !== 'H')
-            ) {
-                return;
-            }
-
-            const empData = await populateRequester(requestBy);
             if (requestType === 'E' && requestSubType === 'I') {
                 populateIndividualRequester(empData);
+            } else if (requestType === 'E' && requestSubType === 'G') {
+                const employeeCodes = Array.from(visitorBody.rows)
+                    .map((row) => row.querySelector('input').value.trim())
+                    .filter(Boolean);
+                await validateGroupApplicants(employeeCodes);
             } else if (requestType === 'H') {
-                $('#EMP_CODE').val(empData.SNAME);
+                $('#HOST_NAME').val(empData.SNAME);
             }
         }
 
-        async function refreshRequesterForSelectedDesign() {
+        async function refreshRequesterForSelectedDesign(defaultToIndividual = false) {
             try {
-                await populateRequesterForSelectedDesign();
+                await populateRequesterForSelectedDesign(defaultToIndividual);
             } catch (error) {
                 console.error(
                     'Unable to load Request By employee data.',
@@ -430,7 +463,8 @@ import {
                 $('#APPLICANT_NAME')
                     .last()
                     .val(applicant.APPLICANT_NAME || '');
-                $('#EMP_CODE').val(applicant.EMP_CODE || '');
+                const host = await populateRequester($('#REQBY').val().trim());
+                $('#HOST_NAME').val(host.SNAME);
                 $('#COMPANY_NAME').val(applicant.COMPANY_NAME || '');
             } else {
                 populateVisitors(data.DETAILS || []);
@@ -702,7 +736,7 @@ import {
 
         $(document).on('change', '#REQBY', async function (e) {
             e.preventDefault();
-            await refreshRequesterForSelectedDesign();
+            await refreshRequesterForSelectedDesign(true);
         });
 
         $(document).on(
@@ -711,9 +745,23 @@ import {
             async function (e) {
                 e.preventDefault();
                 const visitorRow = $(this).closest('tr');
+                visitorRow.find('input').slice(1).val('');
 
                 try {
-                    const empData = await getEmpData($(this).val());
+                    const employeeCode = $(this).val().trim();
+                    if (!employeeCode) return;
+                    const isGroup = employeeRadio?.checked &&
+                        $('input[name="REQUEST_SUB_TYPE"]:checked').val() === 'G';
+                    let empData;
+                    if (isGroup) {
+                        const employeeCodes = Array.from(visitorBody.rows)
+                            .map((row) => row.querySelector('input').value.trim())
+                            .filter(Boolean);
+                        const employees = await validateGroupApplicants(employeeCodes);
+                        empData = employees[employeeCodes.indexOf(employeeCode)];
+                    } else {
+                        empData = await getEmpData(employeeCode);
+                    }
                     if (!empData || !empData.SNAME) {
                         showMessage('Employee data not found', 'error');
                         $(this).val('');
@@ -745,7 +793,11 @@ import {
                         )
                         .val(empData.SSEC);
                 } catch (error) {
-                    console.log(error);
+                    console.error('Unable to load visitor employee data.', error);
+                    $(this).val('');
+                    visitorRow.find('input').slice(1).val('');
+                    showMessage(error.message || 'ไม่สามารถตรวจสอบข้อมูลพนักงานได้', 'error');
+                    $(this).focus();
                 }
             },
         );
@@ -1042,7 +1094,7 @@ import {
                         message: 'Please fill the Visitor Name',
                     },
                     {
-                        element: $('#EMP_CODE'),
+                        element: $('#HOST_NAME'),
                         message: 'Please fill the Host Name',
                     },
                     {
@@ -1128,9 +1180,10 @@ import {
             if (
                 permitOption === 'long_term' &&
                 (!Number.isSafeInteger(Number($('#LONGTERM_YEARS').val())) ||
-                    Number($('#LONGTERM_YEARS').val()) < 1)
+                    Number($('#LONGTERM_YEARS').val()) < 1 ||
+                    Number($('#LONGTERM_YEARS').val()) > 2)
             ) {
-                showMessage('Please enter a whole number of years greater than zero.', 'warning');
+                showMessage('กรุณาระบุจำนวนปีเป็นจำนวนเต็มตั้งแต่ 1 ถึง 2 ปี', 'warning');
                 $('#LONGTERM_YEARS').focus();
                 return;
             }
@@ -1151,15 +1204,20 @@ import {
                 return;
             }
 
+            if (
+                requestType === 'E' &&
+                $('input[name="REQUEST_SUB_TYPE"]:checked').val() === 'G'
+            ) {
+                await validateGroupApplicants(details.map((detail) => detail.empCode.trim()));
+            }
+
             const submitDetails =
                 requestType === 'H'
                     ? [
                           {
                               SEQ_NO: 1,
                               APPLICANT_TYPE: 'H',
-                              EMP_CODE: $(
-                                  '#host-external-section #EMP_CODE',
-                              ).val(),
+                              EMP_CODE: $('#REQBY').val().trim(),
                               APPLICANT_NAME: $(
                                   '#host-external-section #APPLICANT_NAME',
                               ).val(),
