@@ -595,9 +595,7 @@ function formatNumber(value) {
 }
 
 function formatTaxCode(value) {
-    const code = String(value ?? '').trim();
-    if (code === '000' || code === '0000000') return code;
-    return code ? code.padStart(3, '0') : '';
+    return String(value ?? '').trim();
 }
 
 function getCextDataValue(value) {
