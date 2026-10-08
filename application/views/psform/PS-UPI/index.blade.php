@@ -170,6 +170,31 @@
                 </template>
             </div>
         </div>
+
+        <section class="card overflow-hidden border border-base-300 bg-base-100 shadow-sm">
+            <div class="border-b border-base-300 bg-base-200/60 px-5 py-4 sm:px-6">
+                <div class="flex items-center gap-3">
+                    <span class="flex h-8 w-8 items-center justify-center rounded-md bg-primary text-primary-content">
+                        <i class="fi fi-rr-clip"></i>
+                    </span>
+                    <div>
+                        <h2 class="text-base font-semibold text-base-content">Attachments</h2>
+                        <p class="text-xs text-base-content/60">Attach supporting files to this borrowing request.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body gap-3 p-5 sm:p-6">
+                <div class="form-control max-w-xl">
+                    <label for="attachmentInput" class="label">
+                        <span class="label-text font-medium">Select file(s)</span>
+                    </label>
+                    <input type="file" id="attachmentInput" name="attachments[]" multiple
+                        class="file-input file-input-bordered file-input-sm w-full">
+                    <ul id="selectedAttachmentList" class="mt-2 space-y-1 text-sm text-base-content/70" aria-live="polite"></ul>
+                </div>
+            </div>
+        </section>
+
         <div class="flex justify-end">
             <button type="button" id="btnSubmit" class="btn btn-primary gap-2">
                 <i class="fi fi-rr-paper-plane"></i>

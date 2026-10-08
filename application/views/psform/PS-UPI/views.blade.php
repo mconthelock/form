@@ -82,7 +82,7 @@
                     </table>
                 </div>
 
-                <div class="form-group max-w-md">
+                <div class="form-group max-w-md upload-section hidden">
                     <label for="fileInput" class="mb-1 block text-sm font-medium text-base-content">Upload a file</label>
                     <input type="file" id="fileInput" name="file"
                         class="file-input file-input-bordered file-input-sm w-full">
