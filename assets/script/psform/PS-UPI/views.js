@@ -50,6 +50,7 @@ $(document).ready(async function () {
     });
     if (mode === '2') {
         $('.action-form').html(actionButton);
+        $('.upload-section').removeClass('hidden');
     }
 
     const fileKey = { ...formKey };

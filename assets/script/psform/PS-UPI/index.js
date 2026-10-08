@@ -180,6 +180,79 @@ $(document).ready(async function () {
             .toggleClass('btn-disabled', onlyOneRow);
     }
 
+    function getSubmittedFormKey(response) {
+        const aliases = {
+            NFRMNO: ['NFRMNO', 'nfrmno'],
+            VORGNO: ['VORGNO', 'vorgno'],
+            CYEAR: ['CYEAR', 'cyear'],
+            CYEAR2: ['CYEAR2', 'cyear2'],
+            NRUNNO: ['NRUNNO', 'nrunno', 'runno'],
+        };
+        const values = { ...formKey };
+        const pending = [response];
+        const visited = new Set();
+
+        while (pending.length) {
+            const current = pending.shift();
+            if (
+                !current ||
+                typeof current !== 'object' ||
+                visited.has(current)
+            ) {
+                continue;
+            }
+            visited.add(current);
+
+            for (const [field, names] of Object.entries(aliases)) {
+                if (values[field]) continue;
+                const matchingKey = names.find((name) => current[name] != null);
+                if (matchingKey) values[field] = current[matchingKey];
+            }
+            pending.push(...Object.values(current));
+        }
+
+        return values;
+    }
+
+    $('#attachmentInput').on('change', function () {
+        const files = Array.from(this.files || []);
+        $('#selectedAttachmentList').html(
+            files
+                .map((file) => $('<li>').text(file.name).prop('outerHTML'))
+                .join(''),
+        );
+    });
+
+    async function uploadAttachments(response) {
+        const files = Array.from($('#attachmentInput')[0]?.files || []);
+        if (!files.length) return;
+
+        const uploadedFormKey = getSubmittedFormKey(response);
+        if (!uploadedFormKey.CYEAR2 || !uploadedFormKey.NRUNNO) {
+            throw new Error(
+                'ส่งคำขอแล้ว แต่ไม่พบเลขที่ฟอร์มสำหรับบันทึกไฟล์แนบ',
+            );
+        }
+
+        for (const file of files) {
+            const uploadData = new FormData();
+            uploadData.append('NFRMNO', uploadedFormKey.NFRMNO);
+            uploadData.append('VORGNO', uploadedFormKey.VORGNO);
+            uploadData.append('CYEAR', uploadedFormKey.CYEAR);
+            uploadData.append('CYEAR2', uploadedFormKey.CYEAR2);
+            uploadData.append('NRUNNO', uploadedFormKey.NRUNNO);
+            uploadData.append('FORM_TYPE', 'PS');
+            uploadData.append('CREATEBY', empno);
+            uploadData.append('file', file);
+
+            await fetchUtils({
+                url: `${process.env.APP_API}/webform/file`,
+                method: 'POST',
+                data: uploadData,
+            });
+        }
+    }
+
     $('#btnAddPart').on('click', addRow);
 
     $(document).on('blur', '.part-purcode', async function () {
@@ -353,11 +426,21 @@ $(document).ready(async function () {
 
         // console.log('Submitting form data:', formData);
         // return;
-        await fetchUtils({
+        const submitResponse = await fetchUtils({
             url: process.env.APP_API + '/ps-upi/submit',
             method: 'POST',
             data: formData,
         });
+
+        try {
+            await uploadAttachments(submitResponse);
+        } catch (error) {
+            showMessage(
+                error?.message || 'ไม่สามารถอัปโหลดไฟล์แนบได้',
+                'error',
+            );
+            return;
+        }
 
         redirectWebflow();
     });
