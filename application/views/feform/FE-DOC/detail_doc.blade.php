@@ -1,3 +1,9 @@
+
+<script>
+    // ส่งข้อมูลไฟล์แนบตั้งแต่วินาทีแรกที่ Server โหลดหน้าเสร็จ
+    window.INITIAL_ATTACHED_FILES = @json($attachedFiles ?? []);
+</script>
+
 <div class="p-6 rounded-2xl bg-slate-50/80 border border-slate-200/80 mb-6">
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
         <div>

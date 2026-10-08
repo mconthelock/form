@@ -1,16 +1,12 @@
 import $ from 'jquery';
 import { redirectWebflow } from '@amec/webasset/form';
 import { showLoader } from '@amec/webasset/preloader';
-import {
-    downloadOrOpenFile,
-    deleteFile,
-    getFile,
-} from '@amec/webasset/api/file';
+import { deleteFile, getFile } from '@amec/webasset/api/file';
 import { host } from '../../utils';
-import { uploadDocFiles, saveDocMaster, getFilesDisplay } from './data';
+import { uploadDocFiles, saveDocMaster } from './data';
 import { initFlow, actionFlow } from './flow';
-import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 import { stampPdfDocument } from './pdfStamper';
+import { convertExcelToPdfBuffer } from './excelConverter';
 
 let empno = '';
 let selectedFilesArray = [];
@@ -34,11 +30,11 @@ $(document).ready(async function () {
     $('#REQUEST_BYTxt').val(formData.reqby || empno);
     $('#INPUT_BYTxt').val(formData.inputby || empno);
     $('#DocHeaderIDHid').val(formData.doc_header_id || '');
-    // alert(formData.inputby);
 
     // เริ่มต้นระบบ Flow & Permissions จากไฟล์ flow.js
     await initFlow(form, formData.status);
 
+    // 🟢 แสดงรายการไฟล์ทันที (ถ้ามี INITIAL_ATTACHED_FILES จะไม่ยิง AJAX)
     if (form.NRUNNO) {
         loadExistingFiles();
     }
@@ -51,11 +47,10 @@ $(document).ready(async function () {
     // Event จัดการเลือกไฟล์แนบ
     initFileDropEvents();
 
-    // ปุ่มบันทึกเอกสาร & อัปโหลดไฟล์
     // ปุ่มบันทึกเอกสาร & อัปโหลดไฟล์ / ส่งซ้ำหลังโดน Return
     $('#SaveDocBtn').on('click', async function () {
         const docHeaderId = $('#DocHeaderIDHid').val();
-        const isResubmit = !!(docHeaderId && form.NRUNNO); // true = โดน Return มาแล้วส่งซ้ำ
+        const isResubmit = !!(docHeaderId && form.NRUNNO);
 
         const docType = $('#DocTypeDrp').val();
         if (!docType) {
@@ -66,9 +61,8 @@ $(document).ready(async function () {
         const existingFileCount = $('#uploaded-files-list li').length;
         const validFiles = selectedFilesArray.filter((f) => f !== null);
 
-        // ต้องมีไฟล์เดิมหลงเหลืออยู่ หรือมีการแนบไฟล์ใหม่เข้ามาเพิ่ม
         if (existingFileCount === 0 && validFiles.length === 0) {
-            alert('กรุณาแนบไฟล์เอกสาร PDF อย่างน้อย 1 ไฟล์');
+            alert('กรุณาแนบไฟล์เอกสาร PDF หรือ Excel อย่างน้อย 1 ไฟล์');
             return;
         }
 
@@ -80,16 +74,12 @@ $(document).ready(async function () {
 
         try {
             showLoader();
-
             let targetForm = { ...form };
 
             if (!isResubmit) {
-                // ========================================================
-                // กรณีที่ 1: สร้างเอกสารใหม่ครั้งแรก (DRAFT -> SUBMIT)
-                // ========================================================
                 let headerPayload = new FormData();
                 headerPayload.append('DOC_TYPE_CODE', docType);
-                headerPayload.append('REMARK', $('#RemarkTxt').val() || ''); // Remark สำหรับ createForm
+                headerPayload.append('REMARK', $('#RemarkTxt').val() || '');
                 const userEmpNo =
                     empno ||
                     $('#REQUEST_BYTxt').val() ||
@@ -113,9 +103,7 @@ $(document).ready(async function () {
                 targetForm.NRUNNO = createdDoc.NRUNNO || form.NRUNNO;
             }
 
-            // ========================================================
-            // อัปโหลดไฟล์ใหม่เข้า Storage เดิม (ถ้ามีการแนบไฟล์เพิ่ม)
-            // ========================================================
+            // อัปโหลดไฟล์ใหม่เข้า Storage
             if (validFiles.length > 0) {
                 let nestJsData = new FormData();
                 nestJsData.append('NFRMNO', targetForm.NFRMNO);
@@ -136,10 +124,6 @@ $(document).ready(async function () {
                 }
             }
 
-            // ========================================================
-            // กรณี Resubmit: เตะ Flow ต่อด้วย actionFlow ('approve')
-            // RemarkTxt จะถูกดึงและแนบลง Flow ในฟังก์ชัน actionFlow เองอัตโนมัติ
-            // ========================================================
             if (isResubmit) {
                 await actionFlow('approve', targetForm);
                 return;
@@ -155,7 +139,7 @@ $(document).ready(async function () {
         }
     });
 
-    // Event สำหรับกดดู Preview Stamped PDF รายไฟล์
+    // ปุ่ม Preview Stamp สำหรับไฟล์ PDF และ Excel
     $(document).on('click', '.btn-preview-file', async function (e) {
         e.preventDefault();
 
@@ -166,41 +150,13 @@ $(document).ready(async function () {
             FILE_ONAME: $(this).data('original-name'),
         };
 
-        // เรียกฟังก์ชัน Stamp ด้วย pdf-lib
         await previewStampedPdfWithPdfLib(fileObj, form, false);
     });
 
-    // ปุ่ม Preview Stamped PDF
-    // $(document).on('click', '#PreviewPdfBtn', function () {
-    //     const url =
-    //         host +
-    //         `feform/FE-DOC/form/PreviewStampedPdf?no=${form.NFRMNO}&orgNo=${form.VORGNO}&y=${form.CYEAR}&y2=${form.CYEAR2}&runNo=${form.NRUNNO}`;
-    //     window.open(url, '_blank');
-    // });
-
-    // $(document).on('click', '.btn-download-file', async function (e) {
-    //     e.preventDefault();
-    //     const baseDir = $(this).data('base-dir');
-    //     const storedName = $(this).data('stored-name');
-    //     const originalName = $(this).data('original-name');
-
-    //     try {
-    //         showLoader();
-    //         await downloadOrOpenFile({
-    //             baseDir: baseDir,
-    //             storedName: storedName,
-    //             originalName: originalName,
-    //             mode: 'download',
-    //         });
-    //     } catch (err) {
-    //         console.error('Download error:', err);
-    //     } finally {
-    //         showLoader({ show: false });
-    //     }
-    // });
-
+    // ปุ่มเปิดดูไฟล์ต้นฉบับในแท็บใหม่
     $(document).on('click', '.btn-open-file', async function (e) {
         e.preventDefault();
+
         const baseDir = $(this).data('base-dir');
         const storedName = $(this).data('stored-name');
         const originalName = $(this).data('original-name');
@@ -214,7 +170,6 @@ $(document).ready(async function () {
                 mode: 'open',
             });
 
-            // สร้าง URL และเปิดในแท็บใหม่
             const blobUrl = URL.createObjectURL(file);
             window.open(blobUrl, '_blank');
         } catch (err) {
@@ -225,89 +180,21 @@ $(document).ready(async function () {
         }
     });
 
-    // Event สำหรับ Stamp Excel โดยดึงไฟล์ผ่าน getFile ก่อน
-    $(document).on('click', '.btn-stamp-excel', async function (e) {
-        e.preventDefault();
-
-        const baseDir = $(this).data('base-dir');
-        const storedName = $(this).data('stored-name');
-        const originalName = $(this).data('original-name');
-        const hasBorder = false; // 🟢 ตั้งค่า default: false = ไม่มีกรอบ
-
-        try {
-            showLoader();
-
-            const file = await getFile({
-                baseDir: baseDir,
-                storedName: storedName,
-                originalName: originalName,
-                mode: 'open',
-            });
-
-            const formData = new FormData();
-            formData.append('file', file, originalName);
-            formData.append('no', form.NFRMNO);
-            formData.append('orgNo', form.VORGNO);
-            formData.append('y', form.CYEAR);
-            formData.append('y2', form.CYEAR2);
-            formData.append('runNo', form.NRUNNO);
-            formData.append('origName', originalName);
-            formData.append('hasBorder', hasBorder ? '1' : '0');
-
-            const response = await fetch(
-                host + 'feform/FE-DOC/form/StampExcelDirect',
-                {
-                    method: 'POST',
-                    body: formData,
-                },
-            );
-
-            if (!response.ok) {
-                const errData = await response.json().catch(() => ({}));
-                throw new Error(
-                    errData.message ||
-                        'เซิร์ฟเวอร์เกิดข้อผิดพลาดในการ Stamp Excel (HTTP ' +
-                            response.status +
-                            ')',
-                );
-            }
-
-            const stampedBlob = await response.blob();
-            const downloadUrl = window.URL.createObjectURL(stampedBlob);
-
-            // ดาวน์โหลดไฟล์ Excel
-            const a = document.createElement('a');
-            a.href = downloadUrl;
-            a.download = 'Stamped_' + originalName;
-            document.body.appendChild(a);
-            a.click();
-            a.remove();
-            window.URL.revokeObjectURL(downloadUrl);
-        } catch (err) {
-            console.error('Download Stamped Excel error:', err);
-            alert('เกิดข้อผิดพลาดในการทำตรายาง Excel: ' + err.message);
-        } finally {
-            showLoader({ show: false });
-        }
-    });
-
+    // ปุ่มลบไฟล์แนบ
     $(document).on('click', '.btn-delete-file', async function () {
         const fileId = $(this).data('id');
-        const filePath = $(this).data('path'); // e.g. //amecnas/AMECWEB/File/development/.../filename.pdf
+        const filePath = $(this).data('path');
 
         if (!confirm('ยืนยันการลบไฟล์แนบนี้ใช่หรือไม่?')) return;
 
         showLoader();
         try {
-            // 🟢 1. สั่ง API NestJS ลบไฟล์จริงบน NAS ผ่านฟังก์ชันกลาง
             try {
                 await deleteFile(filePath);
             } catch (apiErr) {
                 console.warn('API delete physical file warning:', apiErr);
-                // ดำเนินการต่อเพื่อลบ record ในฐานข้อมูลออกด้วย
             }
 
-            // 🟢 2. สั่ง PHP ลบข้อมูล Record ในตาราง FE_FILE
             const res = await $.ajax({
                 url: host + 'feform/FE-DOC/form/DeleteFile',
                 type: 'POST',
@@ -320,6 +207,8 @@ $(document).ready(async function () {
                 if ($('#uploaded-files-list li').length === 0) {
                     $('#download-zone').addClass('hidden');
                 }
+                // สั่งล้าง cache ข้อมูลเริ่มต้น
+                window.INITIAL_ATTACHED_FILES = null;
             } else {
                 alert('ลบข้อมูลไม่สำเร็จ: ' + (res?.message || ''));
             }
@@ -376,19 +265,17 @@ function handleFileSelect(files) {
     if (!files || files.length === 0) return;
     let hasInvalid = false;
 
-    // นามสกุลที่อนุญาต และ MIME Types ของ Excel + PDF
     const allowedExtensions = ['pdf', 'xlsx', 'xls'];
     const allowedMimeTypes = [
         'application/pdf',
-        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // .xlsx
-        'application/vnd.ms-excel', // .xls
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'application/vnd.ms-excel',
     ];
 
     for (let i = 0; i < files.length; i++) {
         const file = files[i];
         const ext = file.name.split('.').pop().toLowerCase();
 
-        // ตรวจสอบทั้งนามสกุลไฟล์ และ MIME type
         const isValidExt = allowedExtensions.includes(ext);
         const isValidMime =
             allowedMimeTypes.includes(file.type) || file.type === '';
@@ -402,7 +289,6 @@ function handleFileSelect(files) {
         let idx = selectedFilesArray.length - 1;
         let fileSize = (file.size / (1024 * 1024)).toFixed(2) + ' MB';
 
-        // แยกสี Badge ระหว่าง PDF กับ EXCEL
         const isPdf = ext === 'pdf';
         const badgeColor = isPdf
             ? 'text-rose-500 bg-rose-50 border-rose-200'
@@ -430,8 +316,8 @@ function handleFileSelect(files) {
     }
 }
 
-// 1. ปรับปรุง loadExistingFiles: เปลี่ยนเป็นปุ่มเปิดดู Preview แท็บใหม่
-function loadExistingFiles() {
+// 🟢 ฟังก์ชันวาด DOM รายการไฟล์
+function renderFileList(files) {
     const formData = $('.form-info').data() || {};
     const mode = $('#MODEHid').val() || '1';
     let isRequester = false;
@@ -446,7 +332,94 @@ function loadExistingFiles() {
     }
 
     const $list = $('#uploaded-files-list');
+    $list.empty();
 
+    if (files && files.length > 0) {
+        $('#download-zone').removeClass('hidden');
+
+        files.forEach(function (file) {
+            const formattedBaseDir = (file.FILE_PATH || '').replace(/\\/g, '/');
+            let fullFilePath = (
+                (file.FILE_PATH || '').replace(/\\/g, '/') +
+                '/' +
+                file.FILE_FNAME
+            ).replace(/\/+/g, '/');
+            if (!fullFilePath.startsWith('//'))
+                fullFilePath = '/' + fullFilePath;
+
+            const ext = (file.FILE_ONAME || '').split('.').pop().toLowerCase();
+            const isPdf = ext === 'pdf';
+            const isExcel = ext === 'xlsx' || ext === 'xls';
+
+            const badgeHtml = isPdf
+                ? `<span class="text-rose-500 font-bold text-xs bg-rose-50 px-1.5 py-0.5 rounded border border-rose-200">PDF</span>`
+                : isExcel
+                  ? `<span class="text-emerald-600 font-bold text-xs bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">EXCEL</span>`
+                  : `<span class="text-slate-500 font-bold text-xs bg-slate-50 px-1.5 py-0.5 rounded border border-slate-200">FILE</span>`;
+
+            // แสดงปุ่ม Preview Stamp สำหรับไฟล์ PDF และ Excel
+            const stampBtn =
+                isPdf || isExcel
+                    ? `<button type="button" 
+                           class="btn-preview-file bg-blue-50 hover:bg-blue-600 hover:text-white text-blue-600 font-semibold text-xs px-2.5 py-1.5 rounded-lg transition-all cursor-pointer"
+                           data-file-id="${file.FILE_ID}" 
+                           data-base-dir="${formattedBaseDir}" 
+                           data-stored-name="${file.FILE_FNAME}" 
+                           data-original-name="${file.FILE_ONAME}">
+                       👁️ Preview Stamp
+                   </button>`
+                    : '';
+
+            const viewOriginalBtn = `
+                <button type="button" 
+                        class="btn-open-file bg-slate-100 hover:bg-slate-700 hover:text-white text-slate-600 font-semibold text-xs px-2.5 py-1.5 rounded-lg transition-all cursor-pointer"
+                        data-base-dir="${formattedBaseDir}" 
+                        data-stored-name="${file.FILE_FNAME}" 
+                        data-original-name="${file.FILE_ONAME}">
+                    🔗 Open File
+                </button>`;
+
+            const deleteBtn = isRequester
+                ? `<button type="button" 
+                           class="btn-delete-file text-rose-500 hover:text-rose-700 font-bold text-xs px-2 cursor-pointer transition-colors" 
+                           data-id="${file.FILE_ID}" 
+                           data-path="${fullFilePath}">
+                       🗑️ Delete
+                   </button>`
+                : '';
+
+            let itemHtml = `
+                <li class="flex items-center justify-between py-2.5 px-3 text-sm hover:bg-slate-50 transition-colors" id="uploaded-file-${file.FILE_ID}">
+                    <div class="flex items-center gap-2.5 truncate">
+                        ${badgeHtml}
+                        <span class="font-medium text-slate-700 truncate">${file.FILE_ONAME}</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        ${stampBtn}
+                        ${viewOriginalBtn}
+                        ${deleteBtn}
+                    </div>
+                </li>`;
+
+            $list.append(itemHtml);
+        });
+    } else {
+        $('#download-zone').addClass('hidden');
+    }
+}
+
+// 🟢 ฟังก์ชันโหลดไฟล์ตัวเดียว: ถ้ามีแคชจาก Server แสดงผลทันที 0ms
+function loadExistingFiles(forceRefresh = false) {
+    if (
+        !forceRefresh &&
+        Array.isArray(window.INITIAL_ATTACHED_FILES) &&
+        window.INITIAL_ATTACHED_FILES.length > 0
+    ) {
+        renderFileList(window.INITIAL_ATTACHED_FILES);
+        return;
+    }
+
+    const formData = $('.form-info').data() || {};
     $.ajax({
         url: host + 'feform/FE-DOC/form/GetFilesDisplay',
         type: 'POST',
@@ -459,92 +432,19 @@ function loadExistingFiles() {
             NRUNNO: formData.nrunno,
         },
         success: function (response) {
-            $list.empty();
-            if (
-                response?.status === true &&
-                response.files &&
-                response.files.length > 0
-            ) {
-                $('#download-zone').removeClass('hidden');
-
-                response.files.forEach(function (file) {
-                    const formattedBaseDir = (file.FILE_PATH || '').replace(
-                        /\\/g,
-                        '/',
-                    );
-                    let fullFilePath = (
-                        (file.FILE_PATH || '').replace(/\\/g, '/') +
-                        '/' +
-                        file.FILE_FNAME
-                    ).replace(/\/+/g, '/');
-                    if (!fullFilePath.startsWith('//'))
-                        fullFilePath = '/' + fullFilePath;
-
-                    const ext = (file.FILE_ONAME || '')
-                        .split('.')
-                        .pop()
-                        .toLowerCase();
-                    const isPdf = ext === 'pdf';
-                    const isExcel = ext === 'xlsx' || ext === 'xls';
-
-                    const badgeHtml = isPdf
-                        ? `<span class="text-rose-500 font-bold text-xs bg-rose-50 px-1.5 py-0.5 rounded border border-rose-200">PDF</span>`
-                        : `<span class="text-emerald-600 font-bold text-xs bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">EXCEL</span>`;
-
-                    // ปุ่ม Stamp Action
-                    const stampBtn = isPdf
-                        ? `<button type="button" class="btn-preview-file bg-blue-50 hover:bg-blue-600 hover:text-white text-blue-600 font-semibold text-xs px-2.5 py-1.5 rounded-lg transition-all cursor-pointer"
-                                data-file-id="${file.FILE_ID}" data-base-dir="${formattedBaseDir}" data-stored-name="${file.FILE_FNAME}" data-original-name="${file.FILE_ONAME}">
-                                👁️ Preview Stamp
-                           </button>`
-                        : `<button type="button" class="btn-stamp-excel bg-emerald-50 hover:bg-emerald-600 hover:text-white text-emerald-700 font-semibold text-xs px-2.5 py-1.5 rounded-lg transition-all cursor-pointer"
-                                data-file-id="${file.FILE_ID}" data-base-dir="${formattedBaseDir}" data-stored-name="${file.FILE_FNAME}" data-original-name="${file.FILE_ONAME}">
-                                📑 Download Stamped
-                           </button>`;
-
-                    // 🟢 เปลี่ยนจากดาวน์โหลดลงเครื่อง เป็นปุ่ม "เปิดดูไฟล์ต้นฉบับในแท็บใหม่"
-                    const viewOriginalBtn = `
-                        <button type="button" class="btn-open-file bg-slate-100 hover:bg-slate-700 hover:text-white text-slate-600 font-semibold text-xs px-2.5 py-1.5 rounded-lg transition-all cursor-pointer"
-                                data-base-dir="${formattedBaseDir}" data-stored-name="${file.FILE_FNAME}" data-original-name="${file.FILE_ONAME}">
-                            🔗 Open File
-                        </button>`;
-
-                    const deleteBtn = isRequester
-                        ? `<button type="button" class="btn-delete-file text-rose-500 hover:text-rose-700 font-bold text-xs px-2 cursor-pointer transition-colors" 
-                                data-id="${file.FILE_ID}" data-path="${fullFilePath}">
-                            🗑️ Delete
-                           </button>`
-                        : '';
-
-                    let itemHtml = `
-                        <li class="flex items-center justify-between py-2.5 px-3 text-sm hover:bg-slate-50 transition-colors" id="uploaded-file-${file.FILE_ID}">
-                            <div class="flex items-center gap-2.5 truncate">
-                                ${badgeHtml}
-                                <span class="font-medium text-slate-700 truncate">${file.FILE_ONAME}</span>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                ${stampBtn}
-                                ${viewOriginalBtn}
-                                ${deleteBtn}
-                            </div>
-                        </li>`;
-
-                    $list.append(itemHtml);
-                });
-            } else {
-                $('#download-zone').addClass('hidden');
+            if (response?.status === true && response.files) {
+                window.INITIAL_ATTACHED_FILES = response.files;
+                renderFileList(response.files);
             }
         },
     });
 }
 
-// Event สำหรับกดปุ่ม Delete ไฟล์แนบเดิม
-// ตัวอย่างการเรียกใช้ (default: hasBorder = false ไม่มีกรอบ)
+// ฟังก์ชันทำ Preview Stamp
 async function previewStampedPdfWithPdfLib(fileObj, form, hasBorder = false) {
     try {
         showLoader();
 
-        // 1. ดึง Step และ Log
         const stampRes = await $.ajax({
             url: host + 'feform/FE-DOC/form/GetStampData',
             type: 'POST',
@@ -558,12 +458,12 @@ async function previewStampedPdfWithPdfLib(fileObj, form, hasBorder = false) {
             dataType: 'json',
         });
 
-        if (!stampRes?.status)
+        if (!stampRes?.status) {
             throw new Error(
                 stampRes?.message || 'ไม่สามารถดึงข้อมูล Stamp ได้',
             );
+        }
 
-        // 2. ดึงไฟล์ PDF ผ่าน API กลาง
         const file = await getFile({
             baseDir: (fileObj.FILE_PATH || '').replace(/\\/g, '/'),
             storedName: fileObj.FILE_FNAME,
@@ -571,17 +471,25 @@ async function previewStampedPdfWithPdfLib(fileObj, form, hasBorder = false) {
             mode: 'open',
         });
 
-        // 3. เรียก Library กลาง (ส่ง hasBorder เข้าไปได้เลย)
+        const ext = (fileObj.FILE_ONAME || '').split('.').pop().toLowerCase();
+        let pdfSourceBuffer = null;
+
+        if (ext === 'xlsx' || ext === 'xls') {
+            pdfSourceBuffer = await convertExcelToPdfBuffer(
+                file,
+                fileObj.FILE_ONAME,
+            );
+        } else {
+            pdfSourceBuffer = await file.arrayBuffer();
+        }
+
         const pdfBytes = await stampPdfDocument(
-            file,
+            pdfSourceBuffer,
             stampRes.steps,
             stampRes.logs,
-            {
-                hasBorder: hasBorder, // false = มีแต่วงกลม Stamp ไม่มีกรอบตารางครอบ
-            },
+            { hasBorder: hasBorder },
         );
 
-        // 4. เปิดในแท็บใหม่
         const blob = new Blob([pdfBytes], { type: 'application/pdf' });
         const blobUrl = URL.createObjectURL(blob);
         window.open(blobUrl, '_blank');
