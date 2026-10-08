@@ -121,6 +121,7 @@ class form extends MY_Controller {
                 'NRUNNO' => (int)$data['NRUNNO'],
             ])->get('FE_FILE')->result();
         }
+        $data['isAdmin'] = $this->MainModel->isFormAdmin('FE-DOC', $data['EMPNO']);
 
         $this->views('feform/FE-DOC/form', $data);
     }
@@ -133,6 +134,180 @@ class form extends MY_Controller {
     }
 
     public function SaveDocMaster() {
+        $this->output->set_content_type('application/json');
+        try {
+            $docTypeCode = $this->input->post('DOC_TYPE_CODE');
+            $remark      = $this->input->post('REMARK') ?? '';
+            
+            // ดึงรหัสพนักงานจากหลายแหล่ง ป้องกันค่าว่าง
+            $currentEmpNo = $this->input->post('EMPNO') 
+                         ?: ($this->input->post('REQBY') 
+                         ?: ($this->input->get('empno') 
+                         ?: ($this->session->userdata('empno') ?? '')));
+
+            if (empty($docTypeCode)) {
+                throw new Exception("กรุณาระบุประเภทเอกสาร (DOC_TYPE_CODE)");
+            }
+
+            // 1. ตรวจสอบ Step 00 (REQUESTER)
+            $step00 = $this->MainModel->getStepByDocAndExtData($docTypeCode, '00');
+            $requesterEmpNo = ($step00 && !empty(trim($step00->TARGET_EMPNO))) 
+                            ? trim($step00->TARGET_EMPNO) 
+                            : trim((string)$currentEmpNo);
+
+            if (empty($requesterEmpNo)) {
+                throw new Exception("ไม่พบรหัสผู้ขออนุมัติ (REQBY) กรุณาเข้าสู่ระบบใหม่อีกครั้ง");
+            }
+
+            // 2. ดึง Master Form FE-DOC จาก Webflow Base (DEFAULT)
+            $formMst  = $this->getFormMasterByVaname('FE-DOC');
+            $formData = $formMst['data'];
+
+            // 3. สั่งสร้าง Form Webflow (ระบบจะสร้าง Step 01-05 ไว้ล่วงหน้าทั้งหมดในตาราง FLOW)
+            $flowData = [
+                'NFRMNO'  => $formData['NNO'],
+                'VORGNO'  => $formData['VORGNO'],
+                'CYEAR'   => $formData['CYEAR'],
+                'REQBY'   => $requesterEmpNo,
+                'INPUTBY' => $requesterEmpNo,
+                'REMARK'  => $remark,
+            ];
+            $rsf = $this->createForm($flowData);
+            if (!$rsf || empty($rsf['status'])) {
+                throw new Exception("สร้างเอกสาร Webflow ไม่สำเร็จ: " . ($rsf['message'] ?? ''));
+            }
+
+            $cyear2      = $rsf['data']['CYEAR2'];
+            $nrunno      = $rsf['data']['NRUNNO'];
+            $docNo       = "FE-DOC-" . $cyear2 . "-" . str_pad($nrunno, 6, '0', STR_PAD_LEFT);
+            $docHeaderId = date('Ymd') . str_pad($nrunno, 4, '0', STR_PAD_LEFT);
+
+            // 4. ดึง Master Steps ของ DOC_TYPE นี้จากตาราง FE_DOC_STEP_MST (ฝั่ง SMMT)
+            $activeSteps = $this->MainModel->getStepsByDocType($docTypeCode);
+
+            $validExtDataList = [];
+            foreach ($activeSteps as $st) {
+                // เก็บเฉพาะ CEXTDATA ที่ไม่ใช่ 00 (เช่น '01', '02', '03')
+                if (!empty($st->CEXTDATA) && trim($st->CEXTDATA) !== '00') {
+                    $validExtDataList[] = trim($st->CEXTDATA);
+                }
+            }
+
+            $dbWebflow = $this->load->database($this->webflowBase, TRUE); // ต่อฐานข้อมูล DEFAULT
+
+            // 5. ลบ Step ในตาราง FLOW ที่ไม่มีอยู่ใน FE_DOC_STEP_MST ของประเภทเอกสารนี้ทิ้ง
+            $dbWebflow->where('NFRMNO', $formData['NNO'])
+                      ->where('VORGNO', $formData['VORGNO'])
+                      ->where('CYEAR', $formData['CYEAR'])
+                      ->where('CYEAR2', $cyear2)
+                      ->where('NRUNNO', $nrunno)
+                      ->where("CEXTDATA != '00'"); // ไม่ลบ step ของ Requester
+
+            if (!empty($validExtDataList)) {
+                $dbWebflow->where_not_in('CEXTDATA', $validExtDataList);
+            }
+            $dbWebflow->delete('FLOW');
+
+            // -------------------------------------------------------------------------
+            // 6. Re-sequence FLOW: อัปเดต CSTEPST และต่อสาย CSTEPNEXTNO ใหม่ทั้งหมด
+            // -------------------------------------------------------------------------
+            // 6.1 ดึงเฉพาะแถว Approver ที่เหลืออยู่จริง (CSTART = 0) เรียงตาม CEXTDATA
+            $approverRows = $dbWebflow->select('CSTEPNO, CEXTDATA')
+                                      ->where([
+                                          'NFRMNO' => $formData['NNO'],
+                                          'VORGNO' => $formData['VORGNO'],
+                                          'CYEAR'  => $formData['CYEAR'],
+                                          'CYEAR2' => $cyear2,
+                                          'NRUNNO' => $nrunno,
+                                          'CSTART' => 0, // เฉพาะแถว Approver
+                                      ])
+                                      ->where("CEXTDATA IS NOT NULL")
+                                      ->order_by('CEXTDATA', 'ASC')
+                                      ->get('FLOW')
+                                      ->result();
+
+            if (!empty($approverRows)) {
+                $totalApprovers = count($approverRows);
+
+                // 6.2 อัปเดต CSTEPNEXTNO ของแถว Requester (CSTART = 1) ชี้ไปยัง Approver คนแรก
+                $firstApproverStepNo = trim($approverRows[0]->CSTEPNO);
+                $dbWebflow->where([
+                    'NFRMNO' => $formData['NNO'],
+                    'VORGNO' => $formData['VORGNO'],
+                    'CYEAR'  => $formData['CYEAR'],
+                    'CYEAR2' => $cyear2,
+                    'NRUNNO' => $nrunno,
+                    'CSTART' => 1,
+                ])->update('FLOW', [
+                    'CSTEPNEXTNO' => $firstApproverStepNo
+                ]);
+
+                // 6.3 วนลูปอัปเดต CSTEPST และ CSTEPNEXTNO ของ Approver แต่ละสเต็ป
+                foreach ($approverRows as $index => $row) {
+                    $newStepSt = '1';
+                    if ($index === 0) {
+                        $newStepSt = '3'; // คนแรกเริ่มรออนุมัติ
+                    } elseif ($index === 1) {
+                        $newStepSt = '2'; // คนถัดไปสแตนด์บาย
+                    }
+
+                    // หา Step ถัดไป (คนสุดท้ายจบที่ '00')
+                    $nextStepNo = '00';
+                    if ($index + 1 < $totalApprovers) {
+                        $nextStepNo = trim($approverRows[$index + 1]->CSTEPNO);
+                    }
+
+                    $dbWebflow->where([
+                        'NFRMNO'  => $formData['NNO'],
+                        'VORGNO'  => $formData['VORGNO'],
+                        'CYEAR'   => $formData['CYEAR'],
+                        'CYEAR2'  => $cyear2,
+                        'NRUNNO'  => $nrunno,
+                        'CSTEPNO' => trim($row->CSTEPNO),
+                    ])->update('FLOW', [
+                        'CSTEPST'     => $newStepSt,
+                        'CSTEPNEXTNO' => $nextStepNo
+                    ]);
+                }
+            }
+
+            // 7. บันทึกข้อมูลลง FE_DOC_HEADER (ฝั่ง SMMT)
+            $headerData = [
+                'DOC_HEADER_ID' => $docHeaderId,
+                'NFRMNO'        => $formData['NNO'],
+                'VORGNO'        => $formData['VORGNO'],
+                'CYEAR'         => $formData['CYEAR'],
+                'CYEAR2'        => $cyear2,
+                'NRUNNO'        => $nrunno,
+                'DOC_NO'        => $docNo,
+                'DOC_TYPE_CODE' => $docTypeCode,
+                'REMARK'        => $remark,
+                'STATUS'        => 'PROCESS',
+                'USER_ACTION'   => $requesterEmpNo,
+            ];
+            $dbSmmt = $this->load->database($this->SmmtBase, TRUE);
+            $dbSmmt->set('DATE_ACTION', 'SYSDATE', FALSE);
+            $dbSmmt->insert('FE_DOC_HEADER', $headerData);
+
+            return $this->output->set_output(json_encode([
+                'status'  => true,
+                'message' => "บันทึกและสร้างเอกสารสำเร็จ ({$docNo})",
+                'docNo'   => $docNo,
+                'data'    => [
+                    'NFRMNO'        => $formData['NNO'],
+                    'VORGNO'        => $formData['VORGNO'],
+                    'CYEAR'         => $formData['CYEAR'],
+                    'CYEAR2'        => $cyear2,
+                    'NRUNNO'        => $nrunno,
+                    'DOC_HEADER_ID' => $docHeaderId
+                ]
+            ]));
+        } catch (\Throwable $e) {
+            return $this->output->set_output(json_encode(['status' => false, 'message' => $e->getMessage()]));
+        }
+    }
+    
+    public function SaveDocMaster0() {
         $this->output->set_content_type('application/json');
         try {
             $docTypeCode  = $this->input->post('DOC_TYPE_CODE');
@@ -209,26 +384,26 @@ class form extends MY_Controller {
             }
             $dbWebflow->delete('FLOW');
 
-            // 6. อัปเดตรายชื่อ Approver ลงใน Step ที่คงเหลืออยู่จริง
-            foreach ($activeSteps as $st) {
-                if (trim($st->CEXTDATA) === '00') continue; // ข้าม Requester
+            // // 6. อัปเดตรายชื่อ Approver ลงใน Step ที่คงเหลืออยู่จริง
+            // foreach ($activeSteps as $st) {
+            //     if (trim($st->CEXTDATA) === '00') continue; // ข้าม Requester
 
-                $approverEmpNo = $this->MainModel->resolveApproverEmpNo($st, $requesterEmpNo);
+            //     $approverEmpNo = $this->MainModel->resolveApproverEmpNo($st, $requesterEmpNo);
 
-                if (!empty($approverEmpNo)) {
-                    $dbWebflow->where([
-                        'NFRMNO'   => $formData['NNO'],
-                        'VORGNO'   => $formData['VORGNO'],
-                        'CYEAR'    => $formData['CYEAR'],
-                        'CYEAR2'   => $cyear2,
-                        'NRUNNO'   => $nrunno,
-                        'CEXTDATA' => trim($st->CEXTDATA),
-                    ])->update('FLOW', [
-                        'VAPVNO' => $approverEmpNo,
-                        'VREPNO' => $approverEmpNo
-                    ]);
-                }
-            }
+            //     if (!empty($approverEmpNo)) {
+            //         $dbWebflow->where([
+            //             'NFRMNO'   => $formData['NNO'],
+            //             'VORGNO'   => $formData['VORGNO'],
+            //             'CYEAR'    => $formData['CYEAR'],
+            //             'CYEAR2'   => $cyear2,
+            //             'NRUNNO'   => $nrunno,
+            //             'CEXTDATA' => trim($st->CEXTDATA),
+            //         ])->update('FLOW', [
+            //             'VAPVNO' => $approverEmpNo,
+            //             'VREPNO' => $approverEmpNo
+            //         ]);
+            //     }
+            // }
 
             // -------------------------------------------------------------------------
             // 7. Re-sequence FLOW: อัปเดต CSTEPST และต่อสาย CSTEPNEXTNO ใหม่ทั้งหมด
@@ -597,16 +772,18 @@ class form extends MY_Controller {
     /**
      * แปลงไฟล์ Excel เป็น PDF Stream พร้อมระบบคำนวณและรองรับการเลือกแนวหน้ากระดาษ
      */
+    /**
+     * แปลงไฟล์ Excel เป็น PDF Stream พร้อมตั้งค่าฟอนต์รองรับภาษาไทย UTF-8
+     */
     public function ConvertExcelToPdf() {
         try {
             if (empty($_FILES['file']['tmp_name']) || !is_uploaded_file($_FILES['file']['tmp_name'])) {
                 throw new Exception('ไม่พบไฟล์ Excel ที่ต้องการแปลง');
             }
 
-            // รับค่า orientation จาก Client: 'auto' | 'landscape' | 'portrait'
             $requestedOrientation = strtolower(trim((string)$this->input->post('orientation') ?: 'auto'));
 
-            // เลือก PDF Engine ที่มีในระบบ
+            // 🟢 1. กำหนด PDF Engine และตั้งค่า Font ภาษาไทย
             if (class_exists('\PhpOffice\PhpSpreadsheet\Writer\Pdf\Tcpdf')) {
                 \PhpOffice\PhpSpreadsheet\IOFactory::registerWriter('Pdf', \PhpOffice\PhpSpreadsheet\Writer\Pdf\Tcpdf::class);
             } elseif (class_exists('\PhpOffice\PhpSpreadsheet\Writer\Pdf\Mpdf')) {
@@ -615,21 +792,23 @@ class form extends MY_Controller {
 
             $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($_FILES['file']['tmp_name']);
 
+            // 🟢 2. กำหนดฟอนต์เริ่มต้นของเอกสารให้เป็นฟอนต์ที่รองรับ Unicode ภาษาไทย
+            // TCPDF มักจะมี freeserif หรือ freesans ติดมากับตัว library
+            $spreadsheet->getDefaultStyle()->getFont()->setName('freeserif');
+
             foreach ($spreadsheet->getAllSheets() as $sheet) {
                 $pageSetup = $sheet->getPageSetup();
 
-                // 🟢 คำนวณแนวหน้ากระดาษ (Orientation)
+                // ตั้งแนวหน้ากระดาษ
                 if ($requestedOrientation === 'landscape') {
                     $pageSetup->setOrientation(\PhpOffice\PhpSpreadsheet\Worksheet\PageSetup::ORIENTATION_LANDSCAPE);
                 } elseif ($requestedOrientation === 'portrait') {
                     $pageSetup->setOrientation(\PhpOffice\PhpSpreadsheet\Worksheet\PageSetup::ORIENTATION_PORTRAIT);
                 } else {
-                    // 🟢 Auto Detect: คำนวณขนาดพื้นที่ตารางจริง
                     $highestCol = $sheet->getHighestDataColumn();
                     $highestColIndex = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::columnIndexFromString($highestCol);
                     $highestRow = (int)$sheet->getHighestDataRow();
 
-                    // คำนวณความกว้างรวมของคอลัมน์
                     $totalWidth = 0;
                     for ($c = 1; $c <= $highestColIndex; $c++) {
                         $colLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($c);
@@ -637,9 +816,7 @@ class form extends MY_Controller {
                         $totalWidth += ($dim > 0) ? $dim : 11;
                     }
 
-                    // เกณฑ์: ถ้าความกว้างรวมเกิน 110 หรือคอลัมน์เกิน 10 หรือกว้างกว่าความสูงมาก -> Landscape
                     $isWide = ($totalWidth > 110) || ($highestColIndex > 10) || (($totalWidth / max(1, $highestRow)) > 3.0);
-
                     if ($isWide || $pageSetup->getOrientation() === \PhpOffice\PhpSpreadsheet\Worksheet\PageSetup::ORIENTATION_LANDSCAPE) {
                         $pageSetup->setOrientation(\PhpOffice\PhpSpreadsheet\Worksheet\PageSetup::ORIENTATION_LANDSCAPE);
                     } else {
@@ -647,15 +824,11 @@ class form extends MY_Controller {
                     }
                 }
 
-                // กำหนดขนาดกระดาษ A4
                 $pageSetup->setPaperSize(\PhpOffice\PhpSpreadsheet\Worksheet\PageSetup::PAPERSIZE_A4);
-
-                // 🟢 สำคัญ: สั่ง Fit ความกว้างลง 1 หน้าแนวนอน/แนวตั้งพอดี
                 $pageSetup->setFitToPage(true);
                 $pageSetup->setFitToWidth(1);
-                $pageSetup->setFitToHeight(0); // ให้ความสูงไหลลงหน้าถัดไปตามธรรมชาติ ไม่บีบจนตัวหนังสือบี้
+                $pageSetup->setFitToHeight(0);
 
-                // ตั้งขอบกระดาษแคบ (0.3 นิ้ว) เพื่อเพิ่มพื้นที่แสดงผล
                 $sheet->getPageMargins()->setTop(0.3);
                 $sheet->getPageMargins()->setRight(0.3);
                 $sheet->getPageMargins()->setLeft(0.3);
@@ -664,7 +837,14 @@ class form extends MY_Controller {
                 $sheet->setShowGridLines(true);
             }
 
+            // 🟢 3. สร้าง PDF Writer และตั้งค่าฟอนต์ภาษาไทยให้ TCPDF Writer
+            /** @var \PhpOffice\PhpSpreadsheet\Writer\Pdf\Tcpdf $pdfWriter */
             $pdfWriter = \PhpOffice\PhpSpreadsheet\IOFactory::createWriter($spreadsheet, 'Pdf');
+
+            // บังคับฟอนต์ของ PDF Writer ให้ใช้ 'freeserif' หรือฟอนต์ไทย
+            if (method_exists($pdfWriter, 'setFont')) {
+                $pdfWriter->setFont('freeserif');
+            }
 
             while (ob_get_level() > 0) {
                 ob_end_clean();
@@ -686,4 +866,73 @@ class form extends MY_Controller {
                                 ]));
         }
     }
+
+
+
+    //========================================================
+    // -- Master Document Types --
+    //========================================================
+        public function GetMasterDetail() {
+        $this->output->set_content_type('application/json');
+        try {
+            $code = trim((string)$this->input->get('docTypeCode'));
+            $res = $this->MainModel->getMasterDocDetail($code);
+            return $this->output->set_output(json_encode([
+                'status' => true,
+                'type'   => $res['type'],
+                'steps'  => $res['steps']
+            ]));
+        } catch (\Throwable $e) {
+            return $this->output->set_output(json_encode(['status' => false, 'message' => $e->getMessage()]));
+        }
+    }
+
+    public function SaveMaster() {
+        $this->output->set_content_type('application/json');
+        try {
+            $currentEmp = (string)($this->input->post('EMPNO') ?: $this->input->get('empno'));
+            if (!$this->MainModel->isFormAdmin('FE-DOC', $currentEmp)) {
+                throw new Exception('คุณไม่มีสิทธิ์จัดการ Master');
+            }
+
+            $docTypeCode = strtoupper(trim((string)$this->input->post('DOC_TYPE_CODE')));
+            $docTypeName = trim((string)$this->input->post('DOC_TYPE_NAME'));
+            $steps       = json_decode($this->input->post('STEPS'), true);
+
+            if (empty($docTypeCode) || empty($docTypeName)) {
+                throw new Exception('กรุณากรอกรหัสและชื่อประเภทเอกสาร');
+            }
+            if (empty($steps) || !is_array($steps)) {
+                throw new Exception('กรุณาระบุข้อมูล Steps อย่างน้อย 1 Step');
+            }
+
+            $ok = $this->MainModel->saveDocTypeAndSteps($docTypeCode, $docTypeName, $steps);
+            if (!$ok) throw new Exception('บันทึกข้อมูลไม่สำเร็จ');
+
+            return $this->output->set_output(json_encode(['status' => true, 'message' => 'บันทึก Master สำเร็จ']));
+        } catch (\Throwable $e) {
+            return $this->output->set_output(json_encode(['status' => false, 'message' => $e->getMessage()]));
+        }
+    }
+
+    public function DeleteDocType() {
+        $this->output->set_content_type('application/json');
+        try {
+            $currentEmp = (string)($this->input->post('EMPNO') ?: $this->input->get('empno'));
+            if (!$this->MainModel->isFormAdmin('FE-DOC', $currentEmp)) {
+                throw new Exception('คุณไม่มีสิทธิ์ดำเนินการ');
+            }
+
+            $docTypeCode = trim((string)$this->input->post('DOC_TYPE_CODE'));
+            $ok = $this->MainModel->deleteDocTypeCascade($docTypeCode);
+            if (!$ok) throw new Exception('ลบข้อมูลไม่สำเร็จ');
+
+            return $this->output->set_output(json_encode(['status' => true, 'message' => 'ลบข้อมูลสำเร็จ']));
+        } catch (\Throwable $e) {
+            return $this->output->set_output(json_encode(['status' => false, 'message' => $e->getMessage()]));
+        }
+    }
+    
+    //========================================================
+    
 }
