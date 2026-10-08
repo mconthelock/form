@@ -353,13 +353,7 @@ function formatInvoiceDate(value) {
 }
 
 function formatTaxCode(value) {
-    if (value === '' || value === null || value === undefined) return '';
-    const code = String(value).trim().replace(/\.0+$/, '');
-    if (code === '0') return '000';
-    if (code === '000' || code === '0000000') return code;
-    if (!/^\d+$/.test(code) || code.startsWith('0')) return code;
-    if (code.length === 6) return `0${code}`;
-    return code.padStart(3, '0');
+    return String(value ?? '').trim();
 }
 
 function renderAmount(value, type) {
