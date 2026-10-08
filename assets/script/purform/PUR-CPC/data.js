@@ -126,3 +126,20 @@ export async function getformComparison(form) {
         method: 'GET',
     });
 }
+
+/**
+ * @author Sutthipong Tangmongkhoncharoen(24008)
+ * @since 2026-10-08
+ * @description ดึงข้อมูล IIM
+ * @param {string|string[]} prod
+ * @returns
+ */
+export async function getIimByProd(prod) {
+    return await fetchUtils({
+        url: `${process.env.APP_API}/datacenter/iim/prod`,
+        method: 'POST',
+        data: {
+            IPROD: prod,
+        },
+    });
+}

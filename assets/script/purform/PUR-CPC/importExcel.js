@@ -1,7 +1,7 @@
 import { showErrorMessage, showMessage } from '@amec/webasset/utils';
 import { checkFileFormat, fileExcelFormat } from '@amec/webasset/file';
 import { colToNumber, readInput } from '@amec/webasset/excel';
-import { getPriceComparison } from './data';
+import { getIimByProd, getPriceComparison } from './data';
 import { tableComparison } from './table/table-comparison';
 import { steps } from './steps';
 import { showLoader } from '@amec/webasset/preloader';
@@ -64,30 +64,38 @@ export const importExcel = {
          * @description Handles the selection of an Excel file for upload.
          */
         $(document).on('change', '#excel-file', async function () {
-            const file = this.files[0];
-            if (!file) {
-                self.reset();
-                return;
-            }
-            if (
-                !checkFileFormat(
-                    self.input,
-                    fileExcelFormat.extension,
-                    fileExcelFormat.msgEn,
-                )
-            ) {
-                return;
-            }
-            const data = await self.readExcelFile(file);
-            if (self.checkFileData(data) === false) {
-                return;
-            }
+            try {
+                showLoader();
+                const file = this.files[0];
+                if (!file) {
+                    self.reset();
+                    return;
+                }
+                if (
+                    !checkFileFormat(
+                        self.input,
+                        fileExcelFormat.extension,
+                        fileExcelFormat.msgEn,
+                    )
+                ) {
+                    return;
+                }
+                const data = await self.readExcelFile(file);
+                if ((await self.checkFileData(data)) === false) {
+                    return;
+                }
 
-            const size = (file.size / 1024 / 1024).toFixed(2);
-            self.selectFileName.html(`
+                const size = (file.size / 1024 / 1024).toFixed(2);
+                self.selectFileName.html(`
                 ${file.name}
                 <span class="text-base-content/50">(${size} MB)</span>
             `);
+            } catch (error) {
+                console.error(error);
+                showErrorMessage(error.message);
+            } finally {
+                showLoader({ show: false });
+            }
         });
 
         /**
@@ -132,41 +140,77 @@ export const importExcel = {
             }
         });
     },
-    checkFileData(data) {
-        if (data.length === 0) {
+    async checkFileData(data) {
+        const fail = (message) => {
+            showMessage(message, 'warning');
             this.reset();
-            showMessage('The selected Excel file is empty', 'warning');
             return false;
-        }
+        };
+        const rules = [
+            {
+                fail: () => data.length === 0,
+                message: 'The selected Excel file is empty',
+            },
+            {
+                fail: () =>
+                    data.some((row) => row.NFUNCTIONS != steps.function),
+                message:
+                    'The selected Excel file contains rows with a different function',
+            },
+            {
+                fail: () =>
+                    data.some((row) => row.VPRES_VENDOR != steps.vendor),
+                message:
+                    'The selected Excel file contains rows with a different vendor',
+            },
+            {
+                fail: () => data.some((row) => row.CMODE != steps.compareMode),
+                message:
+                    'The selected Excel file contains rows with a different mode',
+            },
+            {
+                // Edit mode: ไม่ต้องกรอก old item compare
+                fail: () =>
+                    steps.compareMode === 'E' &&
+                    data.some((row) => row.VOLD_ITEM_COMPARE),
+                message:
+                    'The selected Excel file contains rows with an old item compare',
+            },
+        ];
 
-        // * ตรวจสอบข้อมูลในไฟล์ Excel ว่าตรงกับฟังก์ชันที่เลือกหรือไม่
-        if (data.find((row) => row.NFUNCTIONS !== steps.function)) {
-            showMessage(
-                'The selected Excel file contains rows with a different function',
-                'warning',
-            );
-            this.reset();
-            return false;
+        const failed = rules.find((rule) => rule.fail());
+        if (failed) {
+            return fail(failed.message);
         }
-        // * ตรวจสอบข้อมูลในไฟล์ Excel ว่าตรงกับ vendor ที่เลือกหรือไม่
-        if (data.find((row) => row.VPRES_VENDOR != steps.vendor)) {
-            showMessage(
-                'The selected Excel file contains rows with a different vendor',
-                'warning',
+        if (steps.compareMode != 'A') return true;
+        // Add mode
+        const filters = data.filter((row) => row.VOLD_ITEM_COMPARE);
+        // ตรวจสอบว่ามีการกรอก old item compare หรือไม่
+        // กรอกบางแถวแต่ไม่ครบ → ไม่ผ่าน
+        if (filters.length > 0 && filters.length < data.length) {
+            return fail(
+                'The selected Excel file contains rows with an old item compare but not all rows have it',
             );
-            this.reset();
-            return false;
         }
-        // * ตรวจสอบข้อมูลในไฟล์ Excel ว่าตรงกับ compare mode ที่เลือกหรือไม่
-        if (data.find((row) => row.CMODE != steps.compareMode)) {
-            showMessage(
-                'The selected Excel file contains rows with a different mode',
-                'warning',
-            );
-            this.reset();
-            return false;
+        // ตรวจสอบว่า old item compare ทั้งหมดมีอยู่ในฐานข้อมูลหรือไม่
+        if (filters.length > 0) {
+            const oldItems = filters.map((row) => row.VOLD_ITEM_COMPARE);
+            const iim = await getIimByProd(oldItems);
+            // ไม่พบ old item compare ในฐานข้อมูล
+            if (!iim.status) {
+                return fail('Old items could not be found in the database');
+            }
+            const found = iim.data.map((item) => item.IPROD);
+            const foundSet = new Set(found);
+
+            const notFound = oldItems.filter((id) => !foundSet.has(id));
+            // ไม่พบ old item compare บางรายการในฐานข้อมูล
+            if (notFound.length > 0) {
+                return fail(
+                    'Some old items could not be found in the database',
+                );
+            }
         }
-        return true;
     },
     async readExcelFile(file) {
         return await readInput(file, {
