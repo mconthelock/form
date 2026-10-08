@@ -67,16 +67,17 @@ class form extends MY_Controller {
         $empno = $this->input->get('empno') ?? '';
         $data['CYEAR2'] = $this->input->get('y2') ?? '';
         $data['NRUNNO'] = $this->input->get('runNo') ?? '';
-        $data['EMPNO']  = (string)$empno;
-        $data['REQBY']  = (string)$empno;
+        $data['EMPNO']   = (string)$empno;
+        $data['REQBY']   = (string)$empno;
         $data['INPUTBY'] = (string)$empno;
 
-        // กำหนดค่า Default ป้องกัน Undefined Variable ใน Blade
+        // กำหนดค่า Default ป้องกัน Undefined Variable ใน Blade / View
         $data['DOC_HEADER_ID'] = '';
         $data['DOC_TYPE_CODE'] = '';
         $data['DOC_NO']        = '';
         $data['REMARK']        = '';
         $data['STATUS']        = '';
+        $data['attachedFiles'] = []; // 🟢 กำหนดค่าเริ่มต้นเป็น array ว่าง
 
         if ($this->input->get('no') !== null) {
             $data['NFRMNO'] = $this->input->get('no');
@@ -105,12 +106,20 @@ class form extends MY_Controller {
                 $data['STATUS']        = $header->STATUS;
             }
 
-            
-            $detailform    = $this->frm->getForm((int)$data['NFRMNO'],  (string)$data['VORGNO'], (string)$data['CYEAR'],  (string)$data['CYEAR2'],  (int)$data['NRUNNO']);
-            $data["REQBY"] = $detailform[0]->VREQNO;
+            $detailform     = $this->frm->getForm((int)$data['NFRMNO'], (string)$data['VORGNO'], (string)$data['CYEAR'], (string)$data['CYEAR2'], (int)$data['NRUNNO']);
+            $data["REQBY"]   = $detailform[0]->VREQNO;
             $data["INPUTBY"] = $detailform[0]->VINPUTER; 
             $data['CST']     = $detailform[0]->CST;
-            $data["REMARK"] = "";
+            $data["REMARK"]  = "";
+
+            // 🟢 ดึงรายการไฟล์แนบจากฐานข้อมูล Webflow (FE_FILE) ส่งไปพร้อมหน้า View ทันที
+            $dbWebflow = $this->load->database($this->webflowBase, TRUE);
+            $data['attachedFiles'] = $dbWebflow->where([
+                'NFRMNO' => (int)$data['NFRMNO'],
+                'VORGNO' => (string)$data['VORGNO'],
+                'CYEAR2' => (string)$data['CYEAR2'],
+                'NRUNNO' => (int)$data['NRUNNO'],
+            ])->get('FE_FILE')->result();
         }
 
         $this->views('feform/FE-DOC/form', $data);
@@ -581,169 +590,51 @@ class form extends MY_Controller {
         }
     }
 
-    public function StampExcelDirect() {
+
+    /**
+     * แปลงไฟล์ Excel ที่ส่งเข้ามาให้กลายเป็นไฟล์ PDF Stream (Reusable Endpoint)
+     */
+    public function ConvertExcelToPdf() {
         try {
-            if (empty($_FILES['file']['tmp_name'])) {
-                show_error('No file uploaded', 400);
-                return;
+            if (empty($_FILES['file']['tmp_name']) || !is_uploaded_file($_FILES['file']['tmp_name'])) {
+                throw new Exception('ไม่พบไฟล์ Excel ที่ต้องการแปลง');
             }
 
-            $formKeys = [
-                'NFRMNO' => (int)$this->input->post('no'),
-                'VORGNO' => (string)$this->input->post('orgNo'),
-                'CYEAR'  => (string)$this->input->post('y'),
-                'CYEAR2' => (string)$this->input->post('y2'),
-                'NRUNNO' => (int)$this->input->post('runNo'),
-            ];
-
-            // 1. ดึงข้อมูลตำแหน่งและประวัติอนุมัติ
-            $dbSmmt = $this->load->database($this->SmmtBase, TRUE);
-            $header = $dbSmmt->where($formKeys)->get('FE_DOC_HEADER')->row();
-            $masterSteps = $this->MainModel->getStepsByDocType($header->DOC_TYPE_CODE);
-            $posTitleMap = [];
-            foreach ($masterSteps as $ms) {
-                if (!empty($ms->CEXTDATA)) {
-                    $posTitleMap[trim($ms->CEXTDATA)] = trim($ms->POSITION_TITLE);
-                }
+            // เลือก PDF Engine ที่ติดตั้งไว้ในโปรเจกต์
+            if (class_exists('\PhpOffice\PhpSpreadsheet\Writer\Pdf\Tcpdf')) {
+                \PhpOffice\PhpSpreadsheet\IOFactory::registerWriter('Pdf', \PhpOffice\PhpSpreadsheet\Writer\Pdf\Tcpdf::class);
+            } elseif (class_exists('\PhpOffice\PhpSpreadsheet\Writer\Pdf\Mpdf')) {
+                \PhpOffice\PhpSpreadsheet\IOFactory::registerWriter('Pdf', \PhpOffice\PhpSpreadsheet\Writer\Pdf\Mpdf::class);
             }
 
-            $dbWebflow = $this->load->database($this->webflowBase, TRUE);
-            $flowRows = $dbWebflow->select('CSTEPNO, CEXTDATA, CSTART')
-                                  ->where($formKeys)
-                                  ->order_by('CSTART', 'DESC')
-                                  ->order_by('CEXTDATA', 'ASC')
-                                  ->order_by('CSTEPNO', 'ASC')
-                                  ->get('FLOW')
-                                  ->result();
-
-            $steps = [];
-            foreach ($flowRows as $row) {
-                $ext = trim($row->CEXTDATA ?? '');
-                $steps[] = [
-                    'CSTEPNO'        => trim($row->CSTEPNO),
-                    'CEXTDATA'       => $ext,
-                    'POSITION_TITLE' => $posTitleMap[$ext] ?? ($row->CSTART == '1' ? 'REPORTER' : 'APPROVER'),
-                ];
+            $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($_FILES['file']['tmp_name']);
+            
+            // ตั้งค่าให้พอดีกับหน้ากระดาษ
+            foreach ($spreadsheet->getAllSheets() as $sheet) {
+                $sheet->getPageSetup()->setFitToWidth(1);
+                $sheet->getPageSetup()->setFitToHeight(0);
             }
 
-            $approvalLogs = $this->MainModel->getApprovalLogList($formKeys);
-            $appMap = [];
-            foreach ($approvalLogs as $log) {
-                $appMap[trim($log->CEXTDATA ?? '')] = $log;
-                $appMap[trim($log->CSTEPNO ?? '')] = $log;
-            }
+            $pdfWriter = \PhpOffice\PhpSpreadsheet\IOFactory::createWriter($spreadsheet, 'Pdf');
 
-            // 2. โหลดไฟล์ Excel จาก $_FILES ชั่วคราวโดยตรง
-            $spreadsheet = IOFactory::load($_FILES['file']['tmp_name']);
-            $sheet = $spreadsheet->getActiveSheet();
-
-            // แทรก 4 บรรทัดบนสุด
-            $sheet->insertNewRowBefore(1, 4);
-
-            $stepCount = count($steps);
-            $startColIndex = max(1, 10 - $stepCount); 
-
-            // วาดตารางตรายาง: Step 0 อยู่ขวาสุด
-            // วาดตรายาง: Step 0 อยู่ขวาสุด
-            foreach ($steps as $idx => $st) {
-                $colFromRight = ($stepCount - 1) - $idx;
-                $colNum = $startColIndex + $colFromRight;
-                $colLetter = Coordinate::stringFromColumnIndex($colNum);
-
-                // รวมเซลล์บรรทัด 1 ถึง 3 เพื่อให้มีพื้นที่สำหรับตรายาง
-                $sheet->mergeCells("{$colLetter}1:{$colLetter}3");
-                $sheet->getRowDimension(1)->setRowHeight(20);
-                $sheet->getRowDimension(2)->setRowHeight(20);
-                $sheet->getRowDimension(3)->setRowHeight(20);
-
-                $extKey = trim($st['CEXTDATA'] ?? '');
-                $stepKey = trim($st['CSTEPNO'] ?? '');
-                $app = $appMap[$extKey] ?? ($appMap[$stepKey] ?? null);
-
-                if ($app && !empty($app->DAPVDATE_STR)) {
-                    $firstName = explode(' ', trim($app->SNAME ?? ''))[0];
-                    $stampText = "AMEC\n" . $app->DAPVDATE_STR . "\n" . $firstName;
-                    
-                    // 1. ใส่ข้อความตัวหนังสือสีแดง
-                    $sheet->setCellValue("{$colLetter}1", $stampText);
-                    $sheet->getStyle("{$colLetter}1")->applyFromArray([
-                        'font' => [
-                            'bold' => true, 
-                            'size' => 8, 
-                            'color' => ['rgb' => 'D32F2F']
-                        ],
-                        'alignment' => [
-                            'horizontal' => Alignment::HORIZONTAL_CENTER,
-                            'vertical'   => Alignment::VERTICAL_CENTER,
-                            'wrapText'   => true
-                        ]
-                    ]);
-
-                    // 2. 🟢 สร้างรูปภาพวงกลมสีแดงโปร่งใสแปะทับลงไป
-                    if (function_exists('imagecreatetruecolor')) {
-                        $circleImgPath = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'stamp_circle_' . uniqid() . '.png';
-                        $imgW = 120;
-                        $imgH = 120;
-                        $img = imagecreatetruecolor($imgW, $imgH);
-                        
-                        // ทำพื้นหลังโปร่งใส
-                        imagesavealpha($img, true);
-                        $transColor = imagecolorallocatealpha($img, 0, 0, 0, 127);
-                        imagefill($img, 0, 0, $transColor);
-
-                        // สีแดงขอบตรายาง (#D32F2F)
-                        $redColor = imagecolorallocate($img, 211, 47, 47);
-                        imagesetthickness($img, 3); // ความหนาของเส้นขอบวงกลม
-                        imageellipse($img, $imgW / 2, $imgH / 2, $imgW - 6, $imgH - 6, $redColor);
-
-                        imagepng($img, $circleImgPath);
-                        imagedestroy($img);
-
-                        // แทรก Drawing ลงบนเซลล์
-                        $drawing = new Drawing();
-                        $drawing->setName('ApprovalStamp');
-                        $drawing->setDescription('Approval Stamp Circle');
-                        $drawing->setPath($circleImgPath);
-                        $drawing->setCoordinates("{$colLetter}1");
-                        
-                        // ปรับขนาดรูปและกึ่งกลางในเซลล์
-                        $drawing->setWidth(68);
-                        $drawing->setHeight(68);
-                        $drawing->setOffsetX(18); // ชดเชยแนวนอนให้อยู่กึ่งกลางพอดีกับข้อความ
-                        $drawing->setOffsetY(4);  // ชดเชยแนวตั้ง
-                        
-                        $drawing->setWorksheet($sheet);
-                    }
-                }
-
-                if ($hasBorder) {
-                    $sheet->getStyle("{$colLetter}1:{$colLetter}3")->applyFromArray([
-                        'borders' => ['allBorders' => ['borderStyle' => Border::BORDER_THIN, 'color' => ['rgb' => '999999']]]
-                    ]);
-                }
-
-                $sheet->getColumnDimension($colLetter)->setWidth(16);
-            }
-
-            // ล้าง Buffer
             while (ob_get_level() > 0) {
                 ob_end_clean();
             }
 
-            $origName = $this->input->post('origName') ?: 'document.xlsx';
-            $outputFileName = 'Stamped_' . $origName;
-
-            header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-            header('Content-Disposition: attachment;filename="' . rawurlencode($outputFileName) . '"');
+            header('Content-Type: application/pdf');
+            header('Content-Disposition: inline; filename="converted.pdf"');
             header('Cache-Control: max-age=0');
 
-            $writer = new Xlsx($spreadsheet);
-            $writer->save('php://output');
+            $pdfWriter->save('php://output');
             exit;
 
         } catch (\Throwable $e) {
-            show_error('Stamp Excel Error: ' . $e->getMessage(), 500);
+            return $this->output->set_status_header(500)
+                                ->set_content_type('application/json')
+                                ->set_output(json_encode([
+                                    'status' => false,
+                                    'message' => 'แปลง Excel เป็น PDF ไม่สำเร็จ: ' . $e->getMessage()
+                                ]));
         }
     }
-
 }
