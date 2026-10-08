@@ -1,4 +1,5 @@
 import { fetchUtils } from '@amec/webasset/api/fetch-utils';
+import { downloadOrOpenFile } from '@amec/webasset/api/file';
 import {
     doaction,
     showflow,
@@ -26,11 +27,9 @@ $(document).ready(async function () {
         EMPNO: params.get('empno'),
     };
     const mode = await getMode(formKey);
-    console.log('Form mode:', mode);
     const flow = await showflow(formKey);
     $('.flow').html(flow.html);
     const extData = await getExtData(formKey);
-    console.log('Ext Data:', extData);
     if (extData === '01') {
         const workers = await searchUser({ SSECCODE: '050504', CSTATUS: '1' });
         $('#worker-form').removeClass('hidden');
@@ -43,55 +42,101 @@ $(document).ready(async function () {
         });
     }
 
-    const action_button = webflowSubmit({
+    const actionButton = webflowSubmit({
         approve: true,
         reject: true,
         returnp: true,
         back: false,
     });
     if (mode === '2') {
-        $('.action-form').html(action_button);
+        $('.action-form').html(actionButton);
+        $('.upload-section').removeClass('hidden');
     }
+
+    const fileKey = { ...formKey };
+    delete fileKey.EMPNO;
+    const $uploadedFiles = $('#uploaded-files-list');
+    try {
+        const fileResponse = await fetchUtils({
+            url: `${process.env.APP_API}/webform/file/get-file`,
+            method: 'POST',
+            data: { ...fileKey, FORM_TYPE: 'PS' },
+        });
+        const files = Array.isArray(fileResponse?.data)
+            ? fileResponse.data.filter((file) => file.FILE_TYPE === null)
+            : [];
+
+        if (!files.length) {
+            $uploadedFiles.html(
+                '<tr><td colspan="2" class="py-4 text-center text-base-content/50">No files uploaded</td></tr>',
+            );
+        } else {
+            $uploadedFiles.empty();
+            files.forEach((file) => {
+                const $downloadLink = $('<a>', {
+                    href: 'javascript:void(0);',
+                    class: 'link link-primary font-medium upi-download-file',
+                    text: 'Download',
+                })
+                    .attr('data-url', file.FILE_PATH)
+                    .attr('storedName', file.FILE_FNAME)
+                    .attr('originalName', file.FILE_ONAME);
+                const $row = $('<tr>');
+                $row.append($('<td>').text(file.FILE_ONAME || 'Unnamed file'));
+                $row.append(
+                    $('<td class="text-center">').append($downloadLink),
+                );
+                $uploadedFiles.append($row);
+            });
+        }
+    } catch {
+        $uploadedFiles.html(
+            '<tr><td colspan="2" class="py-4 text-center text-error">Could not load uploaded files.</td></tr>',
+        );
+    }
+
+    $(document).on('click', '.upi-download-file', function () {
+        downloadOrOpenFile({
+            baseDir: $(this).data('url'),
+            storedName: $(this).attr('storedName'),
+            originalName: $(this).attr('originalName'),
+            mode: 'download',
+        });
+    });
 
     const $tbody = $('#partTableBody');
     const showValue = (value) =>
         value === null || value === undefined || value === ''
             ? '—'
             : String(value);
-    const appendCell = ($row, value, className = '') => {
-        $('<td>').addClass(className).text(showValue(value)).appendTo($row);
-    };
-
     try {
         const formDetail = await setformDetail(formKey);
         $('#formDetail').html(formDetail);
-        const [response, reasons] = await Promise.all([
-            fetchUtils({
-                url: `${process.env.APP_API}/ps-upi/getDataForm`,
-                data: formKey,
-            }),
-            fetchUtils({
-                url: `${process.env.APP_API}/ps-upi/reason`,
-                method: 'GET',
-            }).catch(() => []),
-        ]);
+        const response = await fetchUtils({
+            url: `${process.env.APP_API}/ps-upi/getDataForm`,
+            method: 'POST',
+            data: formKey,
+        });
+        const payload = response?.data ?? response;
+        const header = Array.isArray(payload)
+            ? payload[0]
+            : (payload?.form ?? payload?.header ?? payload);
+        let items = Array.isArray(payload)
+            ? payload
+            : (payload?.LIST_DATA ??
+              payload?.items ??
+              payload?.rows ??
+              payload?.details ??
+              []);
 
-        const detail = Array.isArray(response)
-            ? response[0]
-            : (response?.data ?? response);
-        if (!detail) throw new Error('Requisition data was not found.');
+        if (!header) throw new Error('Requisition data was not found.');
+        if (!Array.isArray(items) && items && typeof items === 'object') {
+            items = [items];
+        }
+        if (!items.length && payload?.PUR_CODE) items = [payload];
 
-        const formData = response;
-        const items = formData ?? [];
-        const reasonNames = new Map(
-            (Array.isArray(reasons) ? reasons : []).map((reason) => [
-                String(reason.REASON_CODE),
-                reason.REASON_NAME,
-            ]),
-        );
-
-        $('#inputByValue').text(showValue(formData.INPUT_BY));
-        $('#requestByValue').text(showValue(formData.REQUEST_BY));
+        $('#inputByValue').text(showValue(header.INPUT_BY));
+        $('#requestByValue').text(showValue(header.REQUEST_BY));
 
         await createTable(
             {
@@ -113,8 +158,7 @@ $(document).ready(async function () {
                     { data: 'REASON_DETAIL' },
                     {
                         data: 'PLAN_RETURN_DATE',
-                        render: (data, type, row, meta) =>
-                            formatDate(data, 'YYYY-MM-DD'),
+                        render: (data) => formatDate(data, 'YYYY-MM-DD'),
                     },
                 ],
             },
@@ -122,44 +166,9 @@ $(document).ready(async function () {
                 id: '#partTable',
             },
         );
-        // $tbody.empty();
-
-        // if (!Array.isArray(items) || items.length === 0) {
-        //     $tbody.append(
-        //         '<tr><td colspan="11" class="py-8 text-center text-base-content/50">No items in this requisition.</td></tr>',
-        //     );
-        // } else {
-        //     items.forEach((item, index) => {
-        //         const $row = $('<tr>');
-        //         appendCell($row, index + 1, 'text-center');
-        //         appendCell($row, item.PUR_CODE);
-        //         appendCell($row, item.DESCRIPTION);
-        //         appendCell($row, item.DRAWING_NO);
-        //         appendCell($row, item.ADDRESS);
-        //         appendCell($row, item.WHI_USER);
-        //         appendCell($row, item.QUANTITY);
-        //         appendCell($row, item.PRODUCTION);
-        //         appendCell($row, item.ISSUE_TO);
-
-        //         const reasonName =
-        //             reasonNames.get(String(item.REASON_CODE)) ??
-        //             item.REASON_CODE;
-        //         const reasonText = item.REASON_DETAIL
-        //             ? `${showValue(reasonName)}: ${item.REASON_DETAIL}`
-        //             : reasonName;
-        //         appendCell($row, reasonText);
-        //         appendCell(
-        //             $row,
-        //             formatDate(item.PLAN_RETURN_DATE, 'YYYY-MM-DD'),
-        //         );
-        //         $tbody.append($row);
-        //     });
-        // }
-
-        // $('#partRowCount').text(Array.isArray(items) ? items.length : 0);
     } catch (error) {
         $tbody.html(
-            '<tr><td colspan="11" class="py-8 text-center text-base-content/50">Could not load requisition items.</td></tr>',
+            '<tr><td colspan="12" class="py-8 text-center text-base-content/50">Could not load requisition items.</td></tr>',
         );
         $('#viewErrorMessage').text(
             error?.message || 'Unable to load requisition details.',
@@ -172,13 +181,36 @@ $(document).ready(async function () {
     $(document).on('click', "button[name='btnAction']", async function () {
         const remark = $('#remark').val();
         const action = $(this).val();
-        console.log(action);
+        let worker;
 
-        if (extData == '01') {
-            if (!$('#workerSelect').val()) {
+        if (extData === '01') {
+            worker = $('#workerSelect').val();
+            if (!worker) {
                 alert('Please select a worker.');
                 return;
             }
+        }
+
+        const file = $('#fileInput')[0]?.files?.[0];
+
+        if (file) {
+            const formData = new FormData();
+            formData.append('NFRMNO', formKey.NFRMNO);
+            formData.append('VORGNO', formKey.VORGNO);
+            formData.append('CYEAR', formKey.CYEAR);
+            formData.append('CYEAR2', formKey.CYEAR2);
+            formData.append('NRUNNO', formKey.NRUNNO);
+            formData.append('FORM_TYPE', 'PS');
+            formData.append('CREATEBY', formKey.EMPNO);
+            formData.append('file', file);
+            await fetchUtils({
+                url: `${process.env.APP_API}/webform/file`,
+                method: 'POST',
+                data: formData,
+            });
+        }
+
+        if (extData === '01') {
             const formData = { ...formKey };
             delete formData.EMPNO;
 
@@ -187,8 +219,8 @@ $(document).ready(async function () {
                     ...formData,
                     CSTEPNO: '19',
                 },
-                VAPVNO: $('#workerSelect').val(),
-                VREPNO: $('#workerSelect').val(),
+                VAPVNO: worker,
+                VREPNO: worker,
             });
         }
 
