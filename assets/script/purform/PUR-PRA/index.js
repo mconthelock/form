@@ -21,6 +21,7 @@ import { webflowSubmit } from '@amec/webasset/components/form';
 import { setDatePicker } from '@amec/webasset/flatpickr';
 import { formatDate } from '@amec/webasset/dayjs';
 import { ChangeReason } from './reason';
+import { dragDropInit, handleFiles } from '@amec/webasset/dragdrop';
 
 $(async function () {
     try {
@@ -110,6 +111,31 @@ $(async function () {
                 draft: true,
             }),
         );
+        $('#drop-image').html(
+            dragDropInit({
+                id: 'IMAGE_DETAIL',
+                name: 'IMAGE_DETAIL',
+                format: 'image',
+                showImg: true,
+                text: 'Drag & Drop Image here or click to select',
+            }),
+        );
+        $('#drop-quotation').html(
+            dragDropInit({
+                id: 'FILE_QUOTATION',
+                name: 'FILE_QUOTATION',
+                format: 'pdf',
+                text: 'Drag & Drop PDF files here or click to select',
+            }),
+        );
+        $('#drop-additional').html(
+            dragDropInit({
+                id: 'FILE_ADDITIONAL',
+                name: 'FILE_ADDITIONAL',
+                format: 'pdf',
+                text: 'Drag & Drop PDF files here or click to select',
+            }),
+        );
     } catch (error) {
         console.error(error);
         renderLoadError(error.message);
@@ -117,6 +143,19 @@ $(async function () {
         showLoader({ show: false });
     }
 });
+
+/**
+ * @author Sutthipong Tangmongkhoncharoen(24008)
+ * @since 2026-10-07
+ * @description จัดการการเปลี่ยนแปลงของไฟล์แนบ (Attachment)
+ */
+$(document).on(
+    'change',
+    '#IMAGE_DETAIL, #FILE_QUOTATION, #FILE_ADDITIONAL',
+    function () {
+        handleFiles({ element: $(this) });
+    },
+);
 
 /**
  * @author Sutthipong Tangmongkhoncharoen(24008)

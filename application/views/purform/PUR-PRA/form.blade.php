@@ -199,7 +199,7 @@
                             </div>
                         </fieldset>
                         <fieldset class="fieldset">
-                            <legend class="fieldset-legend req">Cost Down (+) / Cost Up (-) Amount</legend>
+                            <legend class="fieldset-legend req">Cost Down (-) / Cost Up (+) Amount</legend>
                             <div class="join">
                                 <label class="input w-full join-item">
                                     <input type="text" name="NTOTAL_COST" id="NTOTAL_COST" class="grow text-right req" placeholder="0" readonly>
@@ -209,7 +209,7 @@
                             </div>
                         </fieldset>
                         <fieldset class="fieldset">
-                            <legend class="fieldset-legend req">Cost Down (+) / Cost Up (-) Ratio %</legend>
+                            <legend class="fieldset-legend req">Cost Down (-) / Cost Up (+) Ratio %</legend>
                             <div class="join">
                                 <label class="input w-full join-item">
                                     <input type="text" name="NTOTAL_RATIO" id="NTOTAL_RATIO" class="grow text-right req" placeholder="0" readonly>
@@ -251,12 +251,14 @@
                     </header>
                     <div class="grid grid-cols-1 lg:grid-cols-2 gap-x-8 gap-y-6 p-4">
 
+                        {{-- Cost Down --}}
                         <fieldset class="fieldset col-span-2">
                             <legend class="fieldset-legend font-semibold">Cost Down</legend>
                             <div class="grid grid-flow-col grid-cols-2 gap-2" id="reason-cost-down-container">
                             </div>
                         </fieldset>
 
+                        {{-- Cost Up --}}
                         <fieldset class="fieldset lg:col-span-2">
                             <legend class="fieldset-legend font-semibold">Cost Up</legend>
                             <div class="grid grid-cols-1 gap-2" id="reason-cost-up-container">
@@ -281,6 +283,7 @@
                         <fieldset class="fieldset lg:col-span-2">
                             <legend class="fieldset-legend font-semibold">Detail contents</legend>
                             <textarea name="detail_contents" class="textarea w-full" rows="4" placeholder="ระบุรายละเอียดเพิ่มเติม..."></textarea>
+                            <div id="drop-image"></div>
                         </fieldset>
                     </div>
                 </section>
@@ -294,30 +297,12 @@
                     <div class="flex flex-col gap-4 p-4">
                         <fieldset class="fieldset">
                             <legend class="fieldset-legend">Quotation price (E-Stamp)</legend>
-                            <div class="join w-full">
-                                <input type="file" name="file_quotation" accept="application/pdf" class="file-input join-item w-full req" data-message="Please attach quotation price file">
-                            </div>
-                            <p class="label">Attach file by pdf file</p>
-                        </fieldset>
-                        <fieldset class="fieldset">
-                            <legend class="fieldset-legend">Special Price Compare (E-Stamp)</legend>
-                            <div class="join w-full">
-                                <input type="file" name="file_price_compare" accept="application/pdf" class="file-input join-item w-full">
-                            </div>
-                            <p class="label">Attach file by pdf file</p>
+                            <div id="drop-quotation"></div>
                         </fieldset>
                         <fieldset class="fieldset">
                             <legend class="fieldset-legend">Additional document</legend>
-                            <div class="join w-full">
-                                <input type="file" name="file_additional" accept="application/pdf" class="file-input join-item w-full">
-                            </div>
-                            <p class="label">Attach file by pdf file</p>
+                            <div id="drop-additional"></div>
                         </fieldset>
-                        {{-- <fieldset class="fieldset">
-                            <legend class="fieldset-legend">Send Approved quotation to other section</legend>
-                            <input type="text" name="send_approve_to" class="input w-full" placeholder="เช่น หัวหน้างาน, แผนก, e-mail">
-                            <p class="label">ระบุตาม Current organize ได้เลย ระบุผู้ที่ต้องการส่ง เช่น หัวหน้างาน, แผนก, e-mail</p>
-                        </fieldset> --}}
                     </div>
                 </section>
 
@@ -335,12 +320,6 @@
 
             </form>
             <div id="btnRequest" class="p-5"></div>
-            {{-- <div class="flex justify-end gap-3 px-6 pb-6">
-                <button type="button" class="btn btn-ghost" id="btn-cancel">Cancel</button>
-                <button type="submit" form="form-price-approval" class="btn btn-primary">
-                    <i class="fi fi-rr-paper-plane"></i>Submit
-                </button>
-            </div> --}}
         </div>
 
     </div>
