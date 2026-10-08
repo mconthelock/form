@@ -60,7 +60,7 @@
             outline: 2px solid var(--color-primary); outline-offset: 3px;
         }
         .area-data-shell .table-wrapper { overflow-x: auto; border: 1px solid var(--color-base-300); border-radius: 12px; }
-        .area-data-shell .area-table { width: 100%; min-width: 640px; border-collapse: collapse; font-size: 13px; }
+        .area-data-shell .area-table { width: 100%; min-width: 760px; border-collapse: collapse; font-size: 13px; }
         .area-data-shell .area-table :is(th, td) { text-align: center; vertical-align: middle; padding: 12px 14px; border: 0; border-bottom: 1px solid var(--color-base-300); }
         .area-data-shell .area-table th { background: var(--area-soft); color: var(--color-primary); font-weight: 700; white-space: nowrap; }
         .area-data-shell .area-table td:last-child { white-space: nowrap; }
@@ -72,6 +72,7 @@
         .area-data-shell .action-link { display: inline-flex; justify-content: center; align-items: center; margin: 0 3px; cursor: pointer; }
         .area-data-shell .table-action-button { width: 34px; height: 34px; border: 1px solid var(--color-base-300); border-radius: 8px; background: var(--color-base-100); }
         .area-data-shell .table-action-button:hover { border-color: var(--color-primary); background: var(--area-soft); }
+        .area-data-shell .toggle-area-status { width: auto; padding-inline: 8px; font-size: 11px; }
         .area-data-shell .edit-area span { color: var(--color-yellow-400); }
         .area-data-shell .empty-row { height: 150px; color: var(--color-neutral); }
         .area-data-shell .table-summary { margin-top: 16px; font-size: 12px; color: var(--color-neutral); text-align: center; }
@@ -134,7 +135,7 @@
                     </div>
                     <div>
                         <label for="AREA_LEVEL">Level</label>
-                        <input type="number" id="AREA_LEVEL" name="AREA_LEVEL" inputmode="numeric" min="0" step="1" required>
+                        <input type="number" id="AREA_LEVEL" name="AREA_LEVEL" inputmode="numeric" min="0" max="4" step="1" required>
                     </div>
                     <div>
                         <label for="AREA_OWNER">Area Owner</label>
@@ -179,6 +180,9 @@
                             </th>
                             <th class ="border p-2">
                                 Area Owner
+                            </th>
+                            <th class="border p-2">
+                                Status
                             </th>
                             <th>Action</th>
                         </tr>

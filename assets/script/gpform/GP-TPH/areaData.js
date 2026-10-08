@@ -20,6 +20,7 @@ let locations = [];
 
 let editingAreaId = null;
 let currentPage = 1;
+let renderedLocationSignature = null;
 const areasPerPage = 20;
 const areaOwnerLabels = new Map();
 const departmentNames = new Map();
@@ -51,7 +52,15 @@ function getAreaOwnerValue(area) {
 }
 
 function getLocationId(area) {
-    return area.LOCATION_ID || area.location_id || area.LOCATION?.LOCATION_ID;
+    return (
+        area.LOCATION_ID ??
+        area.location_id ??
+        area.LOCATION?.LOCATION_ID
+    );
+}
+
+function isAreaActive(area) {
+    return String(area.AREA_STATUS ?? '1') !== '0';
 }
 
 function getLocationName(area) {
@@ -170,10 +179,33 @@ function setOwnerSelect(value = '') {
 }
 
 function setLocationSelect(value = '') {
-    const $location = $('#LOCATION_ID');
-    if ($location.length) {
-        $location.val(value).trigger('change');
+    const locationInput = document.getElementById('LOCATION_ID');
+    if (!locationInput) {
+        return;
     }
+
+    const locationId = String(value ?? '');
+    if (
+        locationId &&
+        !Array.from(locationInput.options).some(
+            (option) => option.value === locationId,
+        )
+    ) {
+        const location = locations.find(
+            (item) =>
+                String(item.LOCATION_ID ?? item.id) === locationId,
+        );
+        locationInput.add(
+            new Option(
+                location?.LOCATION_NAME ||
+                    location?.name ||
+                    `Unknown location (${locationId})`,
+                locationId,
+            ),
+        );
+    }
+    locationInput.value = locationId;
+    $(locationInput).trigger('change');
 }
 
 function forceSelect2Below(selectElement) {
@@ -358,6 +390,7 @@ function getFilteredAreas() {
             area.AREA_LEVEL || area.level,
             getAreaOwnerLabel(ownerValue),
             ownerValue,
+            isAreaActive(area) ? 'active ใช้งาน' : 'inactive ไม่ใช้งาน',
         ]
             .join(' ')
             .toLowerCase()
@@ -393,13 +426,18 @@ function setSummary(filteredAreas) {
 
 function addCell(row, value) {
     const cell = document.createElement('td');
-    cell.textContent = value || '-';
+    cell.textContent = value === 0 ? '0' : value || '-';
     row.appendChild(cell);
 }
 
 function addActionCell(row, areaId) {
     const cell = document.createElement('td');
     const editButton = document.createElement('button');
+    const statusButton = document.createElement('button');
+    const area = areas.find(
+        (item) => String(getAreaId(item)) === String(areaId),
+    );
+    const nextStatus = isAreaActive(area || {}) ? '0' : '1';
 
     editButton.type = 'button';
     editButton.className =
@@ -410,7 +448,20 @@ function addActionCell(row, areaId) {
     editButton.innerHTML =
         '<span class="text-[28px] leading-none text-yellow-400">✎</span>';
 
-    cell.append(editButton);
+    statusButton.type = 'button';
+    statusButton.className =
+        'action-link table-action-button toggle-area-status';
+    statusButton.dataset.areaId = areaId;
+    statusButton.dataset.nextStatus = nextStatus;
+    statusButton.title =
+        nextStatus === '0' ? 'Deactivate area' : 'Activate area';
+    statusButton.setAttribute(
+        'aria-label',
+        nextStatus === '0' ? 'Deactivate area' : 'Activate area',
+    );
+    statusButton.textContent = nextStatus === '0' ? 'Disable' : 'Enable';
+
+    cell.append(editButton, statusButton);
     row.appendChild(cell);
 }
 
@@ -427,7 +478,7 @@ function renderTable() {
 
     if (!filteredAreas.length) {
         tableBody.innerHTML =
-            '<tr><td colspan="6" class="empty-row">ไม่พบข้อมูล</td></tr>';
+            '<tr><td colspan="7" class="empty-row">ไม่พบข้อมูล</td></tr>';
         setSummary(filteredAreas);
         return;
     }
@@ -443,8 +494,9 @@ function renderTable() {
         addCell(row, startIndex + index + 1);
         addCell(row, getLocationName(area));
         addCell(row, area.AREA_NAME || area.area);
-        addCell(row, area.AREA_LEVEL || area.level);
+        addCell(row, area.AREA_LEVEL ?? area.level);
         addCell(row, ownerLabel);
+        addCell(row, isAreaActive(area) ? 'ใช้งาน' : 'ไม่ใช้งาน');
         addActionCell(row, getAreaId(area));
         tableBody.appendChild(row);
         });
@@ -455,6 +507,16 @@ function renderTable() {
 async function renderLocationOptions() {
     const locationInput = document.getElementById('LOCATION_ID');
     if (!locationInput) {
+        return;
+    }
+
+    const locationSignature = JSON.stringify(
+        locations.map((location) => [
+            location.LOCATION_ID ?? location.id,
+            location.LOCATION_NAME || location.name,
+        ]),
+    );
+    if (locationSignature === renderedLocationSignature) {
         return;
     }
 
@@ -477,6 +539,7 @@ async function renderLocationOptions() {
         destroy: true,
         dropdownParent: $('#areaFormDialog'),
     });
+    renderedLocationSignature = locationSignature;
     forceSelect2Below(locationInput);
 }
 
@@ -496,15 +559,17 @@ function openForm(area = null) {
         title.textContent = area ? 'แก้ไขข้อมูลพื้นที่' : 'เพิ่มพื้นที่';
     }
 
+    const locationId = area ? getLocationId(area) : '';
     if (area) {
         const ownerValue = getAreaOwnerValue(area);
-        setLocationSelect(getLocationId(area) || '');
         form.elements.AREA_NAME.value = area.AREA_NAME || area.area || '';
-        form.elements.AREA_LEVEL.value = area.AREA_LEVEL || area.level || '';
+        form.elements.AREA_LEVEL.value =
+            area.AREA_LEVEL ?? area.level ?? '';
         setOwnerSelect(ownerValue);
     }
 
     dialog.showModal();
+    setLocationSelect(locationId);
     document
         .querySelector('#LOCATION_ID + .select2-container .select2-selection')
         ?.focus();
@@ -531,7 +596,7 @@ async function loadAreaTable() {
     }
 
     tableBody.innerHTML =
-        '<tr><td colspan="6" class="empty-row">Loading...</td></tr>';
+        '<tr><td colspan="7" class="empty-row">Loading...</td></tr>';
 
     try {
         const [areaResponse, locationResponse] = await Promise.all([
@@ -546,7 +611,7 @@ async function loadAreaTable() {
     } catch (error) {
         console.error('Unable to load GP-TPH areas.', error);
         tableBody.innerHTML =
-            '<tr><td colspan="6" class="empty-row">ไม่สามารถโหลดข้อมูลได้</td></tr>';
+            '<tr><td colspan="7" class="empty-row">ไม่สามารถโหลดข้อมูลได้</td></tr>';
         areas = [];
         setSummary([]);
     }
@@ -573,6 +638,9 @@ function bindEvents() {
         }
     });
     formDialog?.addEventListener('close', () => {
+        if (formDialog.open) {
+            return;
+        }
         form?.reset();
         setLocationSelect();
         setOwnerSelect();
@@ -605,8 +673,9 @@ function bindEvents() {
         }
     });
 
-    tableBody?.addEventListener('click', (event) => {
+    tableBody?.addEventListener('click', async (event) => {
         const editButton = event.target.closest('.edit-area');
+        const statusButton = event.target.closest('.toggle-area-status');
 
         if (editButton) {
             const area = areas.find(
@@ -615,6 +684,46 @@ function bindEvents() {
             if (area) {
                 openForm(area);
             }
+            return;
+        }
+
+        if (statusButton) {
+            const area = areas.find(
+                (item) =>
+                    String(getAreaId(item)) === statusButton.dataset.areaId,
+            );
+            if (!area) {
+                return;
+            }
+
+            const nextStatus = statusButton.dataset.nextStatus;
+            const action = nextStatus === '0' ? 'deactivate' : 'activate';
+            if (
+                !window.confirm(
+                    `Are you sure you want to ${action} "${area.AREA_NAME}"?`,
+                )
+            ) {
+                return;
+            }
+
+            statusButton.disabled = true;
+            try {
+                await updateArea(getAreaId(area), {
+                    AREA_STATUS: nextStatus,
+                });
+                showMessage(
+                    nextStatus === '0'
+                        ? 'ปิดใช้งานพื้นที่สำเร็จ'
+                        : 'เปิดใช้งานพื้นที่สำเร็จ',
+                    'success',
+                );
+                await loadAreaTable();
+            } catch (error) {
+                console.error('Unable to update GP-TPH area status.', error);
+                showMessage('ไม่สามารถแก้ไขสถานะพื้นที่ได้', 'error');
+            } finally {
+                statusButton.disabled = false;
+            }
         }
     });
 
@@ -622,8 +731,8 @@ function bindEvents() {
         event.preventDefault();
         const saveButton = form.querySelector('[type="submit"]');
         const areaLevel = form.elements.AREA_LEVEL.value.trim();
-        if (!/^\d+$/.test(areaLevel)) {
-            showMessage('AREA_LEVEL ต้องเป็นตัวเลขเท่านั้น', 'warning');
+        if (!/^\d+$/.test(areaLevel) || Number(areaLevel) > 4) {
+            showMessage('AREA_LEVEL ต้องเป็นตัวเลขตั้งแต่ 0 ถึง 4 เท่านั้น', 'warning');
             form.elements.AREA_LEVEL.focus();
             return;
         }

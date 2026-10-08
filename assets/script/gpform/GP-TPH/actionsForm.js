@@ -11,11 +11,144 @@ import {
 import { webflowSubmit } from '@amec/webasset/components/form';
 import { redirectWebflow } from '@amec/webasset/form';
 import { setDatePicker } from '@amec/webasset/flatpickr';
+import {
+    getAllDepartment,
+    getAllDivision,
+    searchUser,
+} from '@amec/webasset/api/amec';
 
 (function () {
     let mockupTable = null;
     let tableArea = null;
     let editingForm = null;
+    let longTermValidUntil = '';
+    const areaOwnerLabels = new Map();
+
+    function getItems(response) {
+        if (Array.isArray(response)) {
+            return response;
+        }
+
+        return Array.isArray(response?.data) ? response.data : [];
+    }
+
+    function getShortOrganizationName(shortName, fullName) {
+        const abbreviation = String(shortName || '').trim();
+        if (abbreviation) {
+            return abbreviation
+                .replace(/\(\s*cancel\s*\)/gi, '')
+                .replace(/\s{2,}/g, ' ')
+                .trim();
+        }
+
+        const name = String(fullName || '').trim();
+        const commaIndex = name.lastIndexOf(',');
+        return (commaIndex >= 0 ? name.slice(commaIndex + 1).trim() || name : name)
+            .replace(/\(\s*cancel\s*\)/gi, '')
+            .replace(/\s{2,}/g, ' ')
+            .trim();
+    }
+
+    async function loadAreaOwnerLabels() {
+        const [employees, departments, divisions] = await Promise.all([
+            searchUser(),
+            getAllDepartment(),
+            getAllDivision(),
+        ]);
+        const departmentNames = new Map(
+            getItems(departments)
+                .map((department) => [
+                    String(department.SDEPCODE || '').trim(),
+                    getShortOrganizationName(
+                        department.SDEPT,
+                        department.SDEPARTMENT,
+                    ),
+                ])
+                .filter(([code, name]) => code && name),
+        );
+        const divisionNames = new Map(
+            getItems(divisions)
+                .map((division) => [
+                    String(division.SDIVCODE || '').trim(),
+                    getShortOrganizationName(
+                        division.SDIV,
+                        division.SDIVISION,
+                    ),
+                ])
+                .filter(([code, name]) => code && name),
+        );
+        const positionNames = new Map();
+
+        getItems(employees).forEach((employee) => {
+            const positionCode = String(employee.SPOSCODE || '').trim();
+            const positionName = String(
+                employee.SPOSNAME || employee.SPOSITION || '',
+            ).trim();
+            if (positionCode && positionName && !positionNames.has(positionCode)) {
+                positionNames.set(positionCode, positionName);
+            }
+        });
+
+        areaOwnerLabels.clear();
+        positionNames.forEach((positionName, positionCode) => {
+            departmentNames.forEach((departmentName, departmentCode) => {
+                areaOwnerLabels.set(
+                    `${positionCode}+${departmentCode}`,
+                    `${departmentName} / ${positionName}`,
+                );
+            });
+            divisionNames.forEach((divisionName, divisionCode) => {
+                areaOwnerLabels.set(
+                    `${positionCode}+${divisionCode}`,
+                    `${divisionName} / ${positionName}`,
+                );
+            });
+        });
+    }
+
+    function getAreaOwnerLabel(area) {
+        const organizationCode = String(area.AREA_OWNER || '').trim();
+        const positionCode = String(area.AREA_OWNER_POSCODE || '').trim();
+        const ownerValue =
+            positionCode && organizationCode
+                ? `${positionCode}+${organizationCode}`
+                : organizationCode;
+
+        return areaOwnerLabels.get(ownerValue) || ownerValue || '-';
+    }
+
+    function calculateLongTermValidUntil(yearsValue) {
+        const years = Number(yearsValue);
+        if (!Number.isSafeInteger(years) || years < 1) {
+            return '';
+        }
+
+        const validUntil = new Date();
+        const originalMonth = validUntil.getMonth();
+        validUntil.setFullYear(validUntil.getFullYear() + years);
+        if (Number.isNaN(validUntil.getTime())) {
+            return '';
+        }
+        if (validUntil.getMonth() !== originalMonth) {
+            validUntil.setDate(0);
+        }
+
+        const year = validUntil.getFullYear();
+        const month = String(validUntil.getMonth() + 1).padStart(2, '0');
+        const day = String(validUntil.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
+
+    function setLongTermValidUntil(value) {
+        longTermValidUntil = value;
+        const display = document.getElementById(
+            'LONGTERM_VALID_UNTIL_DISPLAY',
+        );
+        if (display) {
+            display.textContent =
+                value || 'Enter year(s) to calculate the end date.';
+        }
+    }
 
     async function populateRequester(empno) {
         const empData = await getEmpData(empno);
@@ -40,7 +173,11 @@ import { setDatePicker } from '@amec/webasset/flatpickr';
                     { title: 'Location', data: 'LOCATION.LOCATION_NAME' },
                     { title: 'Area', data: 'AREA_NAME' },
                     { title: 'Level', data: 'AREA_LEVEL' },
-                    { title: 'Area Owner', data: 'AREA_OWNER' },
+                    {
+                        title: 'Area Owner',
+                        data: null,
+                        render: (data, type, row) => getAreaOwnerLabel(row),
+                    },
                 ],
             },
             {
@@ -127,6 +264,60 @@ import { setDatePicker } from '@amec/webasset/flatpickr';
             });
         }
 
+        function populateIndividualRequester(empData) {
+            const row = visitorBody.rows[0];
+            if (!row) {
+                return;
+            }
+
+            while (visitorBody.rows.length > 1) {
+                visitorBody.deleteRow(1);
+            }
+
+            const inputs = row.querySelectorAll('input');
+            inputs[0].value = $('#REQBY').val().trim();
+            inputs[1].value = empData.SNAME || '';
+            inputs[2].value = empData.SDIV || '';
+            inputs[3].value = empData.SDEPT || '';
+            inputs[4].value = empData.SSEC || '';
+        }
+
+        async function populateRequesterForSelectedDesign() {
+            const requestType = document.querySelector(
+                'input[name="REQUEST_TYPE"]:checked',
+            )?.value;
+            const requestSubType = document.querySelector(
+                'input[name="REQUEST_SUB_TYPE"]:checked',
+            )?.value;
+            const requestBy = $('#REQBY').val().trim();
+            if (
+                !requestBy ||
+                (requestType === 'E' && !requestSubType) ||
+                (requestType !== 'E' && requestType !== 'H')
+            ) {
+                return;
+            }
+
+            const empData = await populateRequester(requestBy);
+            if (requestType === 'E' && requestSubType === 'I') {
+                populateIndividualRequester(empData);
+            } else if (requestType === 'H') {
+                $('#EMP_CODE').val(empData.SNAME);
+            }
+        }
+
+        async function refreshRequesterForSelectedDesign() {
+            try {
+                await populateRequesterForSelectedDesign();
+            } catch (error) {
+                console.error(
+                    'Unable to load Request By employee data.',
+                    error,
+                );
+                showMessage(error.message, 'error');
+            }
+        }
+
         async function setSelectedAreas(selectedRows) {
             tableArea = await createTable(
                 {
@@ -141,7 +332,12 @@ import { setDatePicker } from '@amec/webasset/flatpickr';
                         { title: 'Location', data: 'LOCATION.LOCATION_NAME' },
                         { title: 'Area', data: 'AREA_NAME' },
                         { title: 'Level', data: 'AREA_LEVEL' },
-                        { title: 'Area Owner', data: 'AREA_OWNER' },
+                        {
+                            title: 'Area Owner',
+                            data: null,
+                            render: (data, type, row) =>
+                                getAreaOwnerLabel(row),
+                        },
                         {
                             title: 'Action',
                             data: null,
@@ -222,6 +418,12 @@ import { setDatePicker } from '@amec/webasset/flatpickr';
             toggleHostExternalSection();
             togglePermitOptionFields();
             updatePermitTypeRestrictions();
+            if (data.LONGTERM_YEARS) {
+                setLongTermValidUntil(
+                    data.PERMIT_END_DATE?.split('T')[0] ||
+                        calculateLongTermValidUntil(data.LONGTERM_YEARS),
+                );
+            }
 
             if (data.REQUEST_TYPE === 'H') {
                 const applicant = data.DETAILS?.[0] || {};
@@ -345,6 +547,12 @@ import { setDatePicker } from '@amec/webasset/flatpickr';
                 selectedPermitOption?.value !== 'long_term';
             startDateInput.disabled = selectedPermitOption?.value !== 'period';
             validUntilInput.disabled = selectedPermitOption?.value !== 'period';
+            document
+                .getElementById('long-term-valid-until')
+                ?.classList.toggle(
+                    'hidden',
+                    selectedPermitOption?.value !== 'long_term',
+                );
         }
 
         function updatePermitTypeRestrictions() {
@@ -418,11 +626,21 @@ import { setDatePicker } from '@amec/webasset/flatpickr';
             const queryString = window.location.search;
             const urlParams = new URLSearchParams(queryString);
             const empno = urlParams.get('empno');
-            const getareas = await getAreas();
-            const getlocations = await getLocations();
+            const [getareas] = await Promise.all([
+                getAreas(),
+                getLocations(),
+                loadAreaOwnerLabels().catch((error) => {
+                    console.error('Unable to load GP-TPH area owner labels.', error);
+                    showMessage('ไม่สามารถโหลดชื่อ Area Owner ได้', 'error');
+                }),
+            ]);
             const action = webflowSubmit({ request: true });
             $('#sentRequest').html(action);
-            mockupTable = await modalTable(getareas);
+            mockupTable = await modalTable(
+                getareas.filter(
+                    (area) => String(area.AREA_STATUS ?? '1') !== '0',
+                ),
+            );
             await setDatePicker();
             if (document.getElementById('gp-tph-form-data')) {
                 await loadExistingRequest(getareas);
@@ -484,19 +702,7 @@ import { setDatePicker } from '@amec/webasset/flatpickr';
 
         $(document).on('change', '#REQBY', async function (e) {
             e.preventDefault();
-
-            try {
-                const empData = await populateRequester($(this).val());
-                $('#EMP_CODE').val(empData.SNAME);
-            } catch (error) {
-                console.error(
-                    'Unable to load Request By employee data.',
-                    error,
-                );
-                showMessage(error.message, 'error');
-                $(this).val('');
-                $(this).focus();
-            }
+            await refreshRequesterForSelectedDesign();
         });
 
         $(document).on(
@@ -628,7 +834,12 @@ import { setDatePicker } from '@amec/webasset/flatpickr';
                         { title: 'Location', data: 'LOCATION.LOCATION_NAME' },
                         { title: 'Area', data: 'AREA_NAME' },
                         { title: 'Level', data: 'AREA_LEVEL' },
-                        { title: 'Area Owner', data: 'AREA_OWNER' },
+                        {
+                            title: 'Area Owner',
+                            data: null,
+                            render: (data, type, row) =>
+                                getAreaOwnerLabel(row),
+                        },
                         {
                             title: 'Action',
                             data: null,
@@ -692,18 +903,50 @@ import { setDatePicker } from '@amec/webasset/flatpickr';
             toggleHostExternalSection,
         );
         requestTypeRadios.forEach(function (radio) {
-            radio.addEventListener('change', toggleHostExternalSection);
+            radio.addEventListener('change', async function () {
+                toggleHostExternalSection();
+                if (this.value === 'H' && this.checked) {
+                    await refreshRequesterForSelectedDesign();
+                }
+            });
         });
 
         requestSubTypeRadios.forEach(function (radio) {
-            radio.addEventListener('change', toggleHostExternalSection);
+            radio.addEventListener('change', async function () {
+                toggleHostExternalSection();
+                if (!this.checked) {
+                    return;
+                }
+
+                await refreshRequesterForSelectedDesign();
+            });
         });
 
         permitOptionRadios.forEach(function (radio) {
             radio.addEventListener('change', function () {
+                $('#PERMIT_START_DATE, #PERMIT_END_DATE').val('');
+                setLongTermValidUntil(
+                    this.value === 'long_term'
+                        ? calculateLongTermValidUntil(
+                              $('#LONGTERM_YEARS').val(),
+                          )
+                        : '',
+                );
                 togglePermitOptionFields();
                 updatePermitTypeRestrictions();
             });
+        });
+
+        $('#LONGTERM_YEARS').on('input change', function () {
+            if (
+                document.querySelector(
+                    'input[name="permit_option"][value="long_term"]',
+                )?.checked
+            ) {
+                    setLongTermValidUntil(
+                    calculateLongTermValidUntil(this.value),
+                );
+            }
         });
 
         document.addEventListener('click', function (event) {
@@ -882,6 +1125,16 @@ import { setDatePicker } from '@amec/webasset/flatpickr';
                 return;
             }
 
+            if (
+                permitOption === 'long_term' &&
+                (!Number.isSafeInteger(Number($('#LONGTERM_YEARS').val())) ||
+                    Number($('#LONGTERM_YEARS').val()) < 1)
+            ) {
+                showMessage('Please enter a whole number of years greater than zero.', 'warning');
+                $('#LONGTERM_YEARS').focus();
+                return;
+            }
+
             const details = Array.from($('#visitor-table-body tr')).map(
                 (row, index) => ({
                     seqNo: index + 1,
@@ -924,6 +1177,9 @@ import { setDatePicker } from '@amec/webasset/flatpickr';
                       }));
 
             const formData = new FormData($('#tphForm')[0]);
+            if (permitOption === 'long_term') {
+                formData.set('PERMIT_END_DATE', longTermValidUntil);
+            }
             formData.set('REMARK', $('#remark').val());
             formData.set(
                 'HELMET_STICKER',
