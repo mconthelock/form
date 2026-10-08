@@ -1,10 +1,10 @@
 import { createModal } from '@amec/webasset/components/modal';
 import { showErrorMessage, showMessage } from '@amec/webasset/utils';
 import { getSelectedData } from '@amec/webasset/dataTable';
-import { tableDraft } from '../../PUR-CPC/table-draft';
+import { tableDraft } from '../../PUR-CPC/table/table-draft';
+import { tableComparison } from '../../PUR-CPC/table/table-comparison';
 import { setAutoField } from '../function';
 import { getVendors } from '../../PUR-CPC/data';
-import { tableComparison } from '../../PUR-CPC/table-comparison';
 
 export const modalSelectPriceComparison = {
     id: 'modal-select-price-comparison',

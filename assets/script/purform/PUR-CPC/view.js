@@ -1,6 +1,6 @@
 import { getUrlParams } from '@amec/webasset/utils';
 import { steps } from './steps';
-import { tableComparison } from './table-comparison';
+import { tableComparison } from './table/table-comparison';
 import { webflowSubmit } from '@amec/webasset/components/form';
 
 $(async function () {

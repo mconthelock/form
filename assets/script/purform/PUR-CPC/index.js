@@ -1,14 +1,12 @@
 import {
-    getUrlParams,
-    logtest,
     renderLoadError,
     showErrorMessage,
     showMessage,
 } from '@amec/webasset/utils';
 import { steps } from './steps';
 import { importExcel } from './importExcel';
-import { modalConfirmRequest } from './modal-comfirm';
-import { tableComparison } from './table-comparison';
+import { modalConfirmRequest } from './modal/modal-comfirm';
+import { tableComparison } from './table/table-comparison';
 import { createComparison } from './data';
 import { showLoader } from '@amec/webasset/preloader';
 

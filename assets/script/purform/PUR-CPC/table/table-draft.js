@@ -5,7 +5,7 @@ import {
 } from '@amec/webasset/dataTable';
 import { dataTableSkeleton } from '@amec/webasset/skeleton';
 import { showErrorMessage } from '@amec/webasset/utils';
-import { steps } from './steps';
+import { steps } from '../steps';
 import { formatDate } from '@amec/webasset/dayjs';
 
 export const tableDraft = {

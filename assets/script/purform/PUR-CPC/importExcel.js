@@ -2,7 +2,7 @@ import { showErrorMessage, showMessage } from '@amec/webasset/utils';
 import { checkFileFormat, fileExcelFormat } from '@amec/webasset/file';
 import { colToNumber, readInput } from '@amec/webasset/excel';
 import { getPriceComparison } from './data';
-import { tableComparison } from './table-comparison';
+import { tableComparison } from './table/table-comparison';
 import { steps } from './steps';
 import { showLoader } from '@amec/webasset/preloader';
 

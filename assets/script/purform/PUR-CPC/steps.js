@@ -5,10 +5,10 @@ import {
     showErrorMessage,
     showMessage,
 } from '@amec/webasset/utils';
-import { tableCreatePrice } from './table-create-price';
-import { tableComparison } from './table-comparison';
+import { tableCreatePrice } from './table/table-create-price';
+import { tableComparison } from './table/table-comparison';
 import { importExcel } from './importExcel';
-import { tableDraft } from './table-draft';
+import { tableDraft } from './table/table-draft';
 import { getActivePriceConditions, getK850mpData, getListDraft } from './data';
 import { webflowSubmit } from '@amec/webasset/components/form';
 import { skeletons } from '@amec/webasset/skeleton';

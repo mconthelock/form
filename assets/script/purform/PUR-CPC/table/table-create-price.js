@@ -9,10 +9,10 @@ import {
     convertArrayForXlsxPopulation,
     exportExcel,
 } from '@amec/webasset/excel';
-import { steps } from './steps';
+import { steps } from '../steps';
 import { getFile } from '@amec/webasset/api/file';
 import { showLoader } from '@amec/webasset/preloader';
-import { getPlannerCompareSheet, templateBaseDir } from './data';
+import { getPlannerCompareSheet, templateBaseDir } from '../data';
 import XlsxPopulate from 'xlsx-populate/browser/xlsx-populate.js';
 import select2 from 'select2';
 import { setSelect2 } from '@amec/webasset/select2';

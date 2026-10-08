@@ -1,8 +1,8 @@
 import { createModal } from '@amec/webasset/components/modal';
 import { showErrorMessage, showMessage } from '@amec/webasset/utils';
-import { tableComparison } from './table-comparison';
-import { steps } from './steps';
-import { createComparison } from './data';
+import { tableComparison } from '../table/table-comparison';
+import { steps } from '../steps';
+import { createComparison } from '../data';
 import { showLoader } from '@amec/webasset/preloader';
 
 export const modalConfirmRequest = {

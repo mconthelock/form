@@ -3,7 +3,7 @@ import { removeClassError, showMessage } from '@amec/webasset/utils';
 import { getPdfViewer } from '@amec/webasset/components/pdfViewer';
 import { getFileUploadInstance } from '@amec/webasset/components/fileUpload';
 import { getK850mpData } from '../PUR-CPC/data';
-import { tableComparison } from '../PUR-CPC/table-comparison';
+import { tableComparison } from '../PUR-CPC/table/table-comparison';
 import { getCommittee, getGroup, getVendor } from './data';
 
 /**
