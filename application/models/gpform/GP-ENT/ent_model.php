@@ -373,12 +373,12 @@ class Ent_model extends CI_Model {
                 WHERE REIMBURSEMENT='1' AND CST = '2'";
 
         if (!empty($filters['start_date']) && !empty($filters['end_date'])) {
-            $sql .= " AND F.DREQDATE >= TO_DATE(" . $this->db->escape($filters['start_date']) . ", 'YYYY-MM-DD')";
-            $sql .= " AND F.DREQDATE < TO_DATE(" . $this->db->escape($filters['end_date']) . ", 'YYYY-MM-DD') + 1";
+            $sql .= " AND gf.ENTERTAINMENT_DATE >= TO_DATE(" . $this->db->escape($filters['start_date']) . ", 'YYYY-MM-DD')";
+            $sql .= " AND gf.ENTERTAINMENT_DATE < TO_DATE(" . $this->db->escape($filters['end_date']) . ", 'YYYY-MM-DD') + 1";
         } elseif (!empty($filters['start_date'])) {
-            $sql .= " AND F.DREQDATE >= TO_DATE(" . $this->db->escape($filters['start_date']) . ", 'YYYY-MM-DD')";
+            $sql .= " AND gf.ENTERTAINMENT_DATE >= TO_DATE(" . $this->db->escape($filters['start_date']) . ", 'YYYY-MM-DD')";
         } elseif (!empty($filters['end_date'])) {
-            $sql .= " AND F.DREQDATE < TO_DATE(" . $this->db->escape($filters['end_date']) . ", 'YYYY-MM-DD') + 1";
+            $sql .= " AND gf.ENTERTAINMENT_DATE < TO_DATE(" . $this->db->escape($filters['end_date']) . ", 'YYYY-MM-DD') + 1";
         }
 
         if (!empty($filters['SEMPNO'])) {
