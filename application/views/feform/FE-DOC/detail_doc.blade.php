@@ -46,12 +46,11 @@
     </div>
 
     <!-- โซนแนบไฟล์เอกสาร (PDF & Excel) -->
-    <div class="mt-4">
+    <!-- <div class="mt-4">
         <label class="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">
             ATTACHMENT FILES (รองรับไฟล์ PDF และ Excel) <span class="text-rose-500">*</span>
         </label>
         
-        <!-- รองรับทั้ง PDF และ Excel (.xlsx, .xls) -->
         <input type="file" id="files" class="hidden" multiple accept=".pdf,.xlsx,.xls,application/pdf,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel">
 
         <div id="drop-zone" class="border-2 border-dashed border-slate-300 hover:border-blue-500 bg-white rounded-2xl p-6 text-center cursor-pointer transition-all">
@@ -59,6 +58,30 @@
                 <span class="text-3xl">📁</span>
                 <p class="text-sm font-semibold text-slate-700">คลิกเลือกไฟล์ หรือลากไฟล์มาวางที่นี่</p>
                 <p class="text-xs text-slate-500 font-medium">รองรับไฟล์ PDF, Excel (.xlsx, .xls) สูงสุด 5MB ต่อไฟล์</p>
+            </div>
+        </div>
+
+        <div id="file-list-container" class="mt-3 hidden">
+            <ul id="selected-files-list" class="divide-y divide-slate-100 border border-slate-200 rounded-xl bg-white p-2"></ul>
+        </div>
+
+        <div id="download-zone" class="mt-3 hidden">
+            <ul id="uploaded-files-list" class="divide-y divide-slate-100 border border-slate-200 rounded-xl bg-white p-2 shadow-sm"></ul>
+        </div>
+    </div> -->
+    <div class="mt-4">
+        <label class="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">
+            ATTACHMENT FILES (รองรับเฉพาะไฟล์ PDF สำหรับประทับตรา) <span class="text-rose-500">*</span>
+        </label>
+        
+        <!-- 🟢 บังคับรับเฉพาะไฟล์ .pdf เท่านั้น -->
+        <input type="file" id="files" class="hidden" multiple accept=".pdf,application/pdf">
+
+        <div id="drop-zone" class="border-2 border-dashed border-slate-300 hover:border-blue-500 bg-white rounded-2xl p-6 text-center cursor-pointer transition-all">
+            <div class="flex flex-col items-center justify-center gap-1.5 pointer-events-none">
+                <span class="text-3xl">📄</span>
+                <p class="text-sm font-semibold text-slate-700">คลิกเลือกไฟล์ หรือลากไฟล์มาวางที่นี่</p>
+                <p class="text-xs text-rose-500 font-medium">รองรับเฉพาะไฟล์ PDF (.pdf) สูงสุด 5MB ต่อไฟล์</p>
             </div>
         </div>
 
