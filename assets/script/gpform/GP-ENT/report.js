@@ -58,11 +58,11 @@ $(function () {
 
     const sheet = workbook.addWorksheet("Entertainment & Clearance");
     sheet.addRow([
-      "วันที่ส่ง ENT", "Requester ENT", "Section", "Form no. ENT", "Entertainment Date", "Time/Location", "Purpose",
-      "Details of guest", "Estimate cost (Detail:Amount/Cost per Person)",
-      "Quantity of guest & จำนวน", "ฝ่าย AMEC", "วันที่ CLEAR", "Requester CLEAR", "Section CLEAR", "Form no. CLEAR",
-      "Clearance Date", "Receipt no", "Cost", "Actual Cost", "Remain", "Remark",
-      "Status (Return cash to company / Reimbursement to Employee)",
+      "Requester ENT", "Section", "Form no. ENT", "Entertainment Date", "Time/Location", "Purpose", "Details of guest" , "Quantity of guest & จำนวน",
+      "ฝ่าย GUEST","ฝ่าย AMEC", "Main Approver", "Status Form",
+      "วันที่ CLEAR", "Requester CLEAR", "Section CLEAR", "Form no. CLEAR",
+      "Clearance Date", "Receipt no","Actual Cost", "Remain",
+      "Main Approver",
     ]);
     setHeaderStyle(sheet.getRow(1));
 
@@ -91,30 +91,29 @@ $(function () {
       const hasClearance = Boolean(item.FORM_NUMBER_CLEAR || item.ACTUAL_COST != null || receipts.length > 0);
 
       addDataRow(sheet, [
-        item.PAYDATE ?? "",
         item.SNAME ?? "",
         item?.SSEC ?? "",
         item.FORM_NUMBER_ENT ?? "",
-        item.PAYDATE ?? "",
+        item.ENTERTAINMENT_DATE ?? "",
         item.TYPE_TIME ?? "" + " / " + (item.LOCATION_TYPE ?? ""),
         item.PURPOSE ?? "",
         detailGuests,
-        "",
         estimateCost,
         guestNames,
         amecGuests,
-        hasClearance ? item.PAYDATE ?? "" : "",
+        item.ENT_APV,
+        item.ENT_STATUS === '1' ? "Pending" : "Success",
+        hasClearance ? item.CLEARANCE_DATE ?? "" : "",
         hasClearance ? item.SNAME ?? "" : "",
         hasClearance ? item.SSEC ?? "" : "",
         hasClearance ? item.FORM_NUMBER_CLEAR ?? "" : "",
         hasClearance ? item.PAYDATE ?? "" : "",
         hasClearance ? receiptList : "",
-        hasClearance ? receiptTotal || Number(item.TOTAL_AMOUNT) || 0 : "",
         hasClearance ? item.ACTUAL_COST ?? "" : "",
         hasClearance && item.ACTUAL_COST != null && item.ACTUAL_COST !== "" && Number.isFinite(totalAmount) && Number.isFinite(actualCost)
           ? totalAmount - actualCost
           : "",
-        "",
+        hasClearance ? item.CLR_APV : "", 
       ]);
     });
 
