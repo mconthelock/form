@@ -507,11 +507,11 @@
                     {{-- <button type="button" class="btn btn-info w-32 transition btn-submit" data-action="return">
                             Return
                         </button> --}}
-                    @if (in_array($flowstep[0]->CSTEPNO, ['34', '13']))
+                    {{-- @if (in_array($flowstep[0]->CSTEPNO, ['34', '13'])) --}}
                         <button type="button" class="btn btn-info w-32 transition btn-submit" data-action="return">
                             Return
                         </button>
-                    @endif
+                    {{-- @endif --}}
                 </div>
 
                 <div class="flex justify-center mt-4 no-print">
