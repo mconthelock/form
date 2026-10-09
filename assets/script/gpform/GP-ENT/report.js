@@ -23,9 +23,8 @@ $(function () {
 
   async function exportEntertainmentReport(data) {
     const workbook = new ExcelJS.Workbook();
-    let file_name = "";
     const setHeaderStyle = (row) => {
-      for (let i = 1; i <= 12; i++) {
+      for (let i = 1; i <= row.cellCount; i++) {
         const cell = row.getCell(i);
         cell.font = { bold: true };
         cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFF00" } };
@@ -51,57 +50,83 @@ $(function () {
       });
     }
 
-    if (data[0].ENTERTAIN_TYPE === "type1") {
-      file_name = "Entertainment";
-      const sheet = workbook.addWorksheet("Requesting Approval");
-      sheet.addRow(["วันที่ส่ง", "Requester", "แผนก", "Form no.", "Entertainment Date", "Time/Location", "Purpose", "Details of guest", "Guest type & Type of Guest", "Estimate cost (Detail:Amount/Cost per Person)", "Quantity of guest & จำนวน", "ฝ่าย AMEC"]);
-      setHeaderStyle(sheet.getRow(1));
+    const addDataRow = (sheet, values) => {
+      const row = sheet.addRow(values);
+      row.eachCell((cell) => (cell.alignment = { vertical: "middle", wrapText: true }));
+      setBorder(row);
+    };
 
-      data.forEach((item) => {
-        const detailGuests = (item.detail_guest || []).map((d) => `${d.COMPANY_NAME} (${d.COMPANY_TYPE === "1" ? "Non-Government" : "Government"})`).join(",\r\n");
-        const estimateCost = (item.estimate_cost || []).map((d) => `${d.DETAILS} (${d.UNIT_COST}/person)`).join(",\r\n");
-        let guestCount = 0,
-          amecCount = 0;
-        const guest = (item.guest || [])
-          .filter((g) => g.TYPE === "guest")
-          .map((g) => `${++guestCount}. ${g.NAME}`)
-          .join("\r\n");
-        const amec = (item.guest || [])
-          .filter((g) => g.TYPE === "amec")
-          .map((g) => `${++amecCount}. ${g.STNAME}`)
-          .join("\r\n");
+    const sheet = workbook.addWorksheet("Entertainment & Clearance");
+    sheet.addRow([
+      "วันที่ส่ง ENT", "Requester ENT", "Section", "Form no. ENT", "Entertainment Date", "Time/Location", "Purpose",
+      "Details of guest", "Estimate cost (Detail:Amount/Cost per Person)",
+      "Quantity of guest & จำนวน", "ฝ่าย AMEC", "วันที่ CLEAR", "Requester CLEAR", "Section CLEAR", "Form no. CLEAR",
+      "Clearance Date", "Receipt no", "Cost", "Actual Cost", "Remain", "Remark",
+      "Status (Return cash to company / Reimbursement to Employee)",
+    ]);
+    setHeaderStyle(sheet.getRow(1));
 
-        const newRow = sheet.addRow([item.ENTERTAINMENT_DATE, item.STNAME, item.SDEPT, item.FORM_NUMBER, item.ENTERTAINMENT_DATE, item.LOCATION_TYPE, item.PURPOSE, detailGuests, item.TYPE_NAME, estimateCost, guest, amec]);
-        newRow.eachCell((cell) => (cell.alignment = { vertical: "middle", wrapText: true }));
-        setBorder(newRow);
-      });
+    data.forEach((item) => {
+      const guests = Array.isArray(item.guest) ? item.guest : [];
+      const detailGuests = (item.detail_guest || [])
+        .map((guest) => `${guest.COMPANY_NAME || ""} (${guest.COMPANY_TYPE === "1" ? "Non-Government" : "Government"})`)
+        .join(",\r\n");
+      const estimateCost = (item.estimate_cost || [])
+        .map((cost) => `${cost.DETAILS || ""} (${cost.QTY || 0} x ${cost.UNIT_COST || 0}/person = ${cost.TOTAL_COST || 0})`)
+        .join(",\r\n");
+      const guestNames = guests
+        .filter((guest) => guest.TYPE === "guest")
+        .map((guest, index) => `${index + 1}. ${guest.NAME || ""}`)
+        .join("\r\n");
+      const amecGuests = guests
+        .filter((guest) => guest.TYPE === "amec")
+        .map((guest, index) => `${index + 1}. ${guest.STNAME || guest.SNAME || ""}`)
+        .join("\r\n");
+      const amecRequester = guests.find((guest) => guest.TYPE === "amec");
+      const receipts = Array.isArray(item.RECEIPT) ? item.RECEIPT : [];
+      const receiptList = receipts.map((receipt) => `${receipt.RECEIPT || ""} / ${receipt.COST ?? 0}฿`).join("\r\n");
+      const receiptTotal = receipts.reduce((sum, receipt) => sum + (Number(receipt.COST) || 0), 0);
+      const actualCost = Number(item.ACTUAL_COST);
+      const totalAmount = Number(item.TOTAL_AMOUNT);
+      const hasClearance = Boolean(item.FORM_NUMBER_CLEAR || item.ACTUAL_COST != null || receipts.length > 0);
 
-      // Set column widths
-      [12, 22, 12, 18, 11, 16, 20, 20, 18, 25, 18, 24].forEach((w, i) => (sheet.getColumn(i + 1).width = w));
-    } else if (data[0].ENTERTAIN_TYPE === "type2") {
-      file_name = "clearance";
-      const sheet = workbook.addWorksheet("Clearance Expense");
-      sheet.addRow(["วันที่", "Requester", "Section", "Form no.", "Clearance Date", "Receipt no", "Cost", "President (Join / Not Join)", "Actual Cost", "Remain", "Remark", "Status (Return cash to company / Reimbursement to Employee)"]);
-      setHeaderStyle(sheet.getRow(1));
+      addDataRow(sheet, [
+        item.PAYDATE ?? "",
+        item.SNAME ?? "",
+        item?.SSEC ?? "",
+        item.FORM_NUMBER_ENT ?? "",
+        item.PAYDATE ?? "",
+        item.TYPE_TIME ?? "" + " / " + (item.LOCATION_TYPE ?? ""),
+        item.PURPOSE ?? "",
+        detailGuests,
+        "",
+        estimateCost,
+        guestNames,
+        amecGuests,
+        hasClearance ? item.PAYDATE ?? "" : "",
+        hasClearance ? item.SNAME ?? "" : "",
+        hasClearance ? item.SSEC ?? "" : "",
+        hasClearance ? item.FORM_NUMBER_CLEAR ?? "" : "",
+        hasClearance ? item.PAYDATE ?? "" : "",
+        hasClearance ? receiptList : "",
+        hasClearance ? receiptTotal || Number(item.TOTAL_AMOUNT) || 0 : "",
+        hasClearance ? item.ACTUAL_COST ?? "" : "",
+        hasClearance && item.ACTUAL_COST != null && item.ACTUAL_COST !== "" && Number.isFinite(totalAmount) && Number.isFinite(actualCost)
+          ? totalAmount - actualCost
+          : "",
+        "",
+      ]);
+    });
 
-      data.forEach((item) => {
-        const receiptList = (item.RECEIPT || []).map((r) => `${r.RECEIPT} / ${r.COST}฿`).join("\r\n");
-        const sum = (item.RECEIPT || []).reduce((s, r) => s + Number(r.COST), 0);
-
-        const newRow = sheet.addRow([item.DREQDATE, item.STNAME, item.SSEC, item.FORM_NUMBER, item.DREQDATE, receiptList, sum, item.PRESIDENT_JOIN === "1" ? "join" : "NotJoin", item.ACTUAL_COST ?? "", item.REMAIN_BUDGET ?? "", item.REMARK ?? "", ""]);
-        newRow.eachCell((cell) => (cell.alignment = { vertical: "middle", wrapText: true }));
-        setBorder(newRow);
-      });
-
-      [12, 15, 12, 19, 16, 19, 10, 20, 12, 10, 16, 32].forEach((w, i) => (sheet.getColumn(i + 1).width = w));
-    }
+    [12, 22, 16, 22, 16, 16, 24, 25, 20, 34, 28, 24, 12, 22, 16, 22, 16, 22, 12, 26, 14, 12, 20, 38]
+      .forEach((width, index) => (sheet.getColumn(index + 1).width = width));
 
     // Download section
     const buffer = await workbook.xlsx.writeBuffer();
     const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
-    link.download = file_name + "_Report.xlsx";
+    link.download = "Entertainment_Clearance_Report.xlsx";
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -110,13 +135,6 @@ $(function () {
   $("#search_btn").on("click", function (e) {
     e.preventDefault();
 
-    const entertainType = $("#entertain_type").val();
-    if (!entertainType) {
-      // $(".alert-error").removeClass("hidden");
-      // $(".alert-error").fadeIn().delay(3000).fadeOut();
-      $(".alert-error").fadeIn().delay(3000).fadeOut();
-      return;
-    }
     const empCode = $("#emp_code").val();
     const section = $("#section").val();
     const department = $("#department").val();
@@ -137,7 +155,6 @@ $(function () {
     // console.log(startDate, endDate);
 
     const formData = new FormData();
-    formData.append("type", entertainType);
     formData.append("SEMPNO", empCode);
     formData.append("SSECCODE", section);
     formData.append("SDEPCODE", department);
@@ -156,17 +173,15 @@ $(function () {
         $("#loading-overlay").removeClass("hidden"); // <<== show loading
       },
       success: function (response) {
-        if (response.length == 0) {
+        if (!Array.isArray(response) || response.length === 0) {
           alert("ไม่พบข้อมูล");
           return;
-        } else {
-          const data = response.map((item) => ({
-            ...item,
-            ENTERTAIN_TYPE: entertainType,
-          }));
-          console.log(data);
-          exportEntertainmentReport(data);
         }
+        exportEntertainmentReport(response);
+      },
+      error: function (xhr, status, error) {
+        console.error("Failed to load report:", status, error, xhr.responseText);
+        alert("ดึงข้อมูลรายงานไม่สำเร็จ กรุณาลองใหม่อีกครั้ง");
       },
       complete: function () {
         $("#loading-overlay").addClass("hidden"); // <<== hide loading ไม่ว่าจะ success หรือ error

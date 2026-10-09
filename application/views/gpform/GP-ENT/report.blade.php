@@ -32,13 +32,6 @@
                     Entertainment Report
 
                 </h2>
-                <div role="alert" class="alert alert-error" style="display: none;">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 shrink-0 stroke-current" fill="none" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <span>กรุณาเลือก Entertainment Type !</span>
-                </div>
-
                 <div class="divider"></div>
 
                 <form action="#" method="GET">
@@ -51,18 +44,6 @@
                                 <span class="label-text">EmpCode</span>
                             </label>
                             <input type="text" id="emp_code" name="emp_code" placeholder="Enter employee code" class="input input-bordered rounded-xl w-full" />
-                        </div>
-
-                        {{-- Entertainment Type --}}
-                        <div class="form-control w-full">
-                            <label class="label" for="entertain_type">
-                                <span class="label-text">Entertainment Type<span class="text-red-500">*</span></span>
-                            </label>
-                            <select id="entertain_type" name="entertain_type" class="select select-bordered rounded-xl w-full" required>
-                                <option disabled selected value="">Please Select</option>
-                                <option value="type1">Requesting Approval for Entertainment</option>
-                                <option value="type2">Clearance Expense for Entertainment</option>
-                            </select>
                         </div>
 
                         {{-- Entertainment Date --}}
