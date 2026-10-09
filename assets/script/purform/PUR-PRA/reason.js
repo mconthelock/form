@@ -216,6 +216,7 @@ export class ChangeReason {
                                 if (radio !== target) {
                                     child.disabled = true;
                                     child.classList.add('hidden');
+                                    child.value = '';
                                     if (this.#isFromTo(child)) {
                                         child
                                             .closest('fieldset')
@@ -229,6 +230,7 @@ export class ChangeReason {
                                 // หาก radio button ตรงกับ target ให้เปิดใช้งานและแสดง children ของมัน.
                                 child.disabled = !checked;
                                 child.classList.toggle('hidden', !checked);
+                                child.value = '';
                                 if (this.#isFromTo(child)) {
                                     child
                                         .closest('fieldset')
@@ -246,6 +248,7 @@ export class ChangeReason {
                     // วนลูปผ่าน children ของ target เพื่อตรวจสอบและจัดการสถานะการเปิดใช้งานและการแสดงผล.
                     children.forEach((child) => {
                         child.disabled = !checked;
+                        child.value = '';
                         child.classList.toggle('hidden', !checked);
                         if (this.#isFromTo(child)) {
                             child

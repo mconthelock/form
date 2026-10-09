@@ -268,10 +268,10 @@ $(document).on('click', 'input[name="VEFT_TYPE"]', function () {
     try {
         const checked = $(this).prop('checked');
         const value = $(this).val();
-        $('#VEFT_TYPE_OTHER').prop(
-            'disabled',
-            !(checked && value === 'Others'),
-        );
+        $('#VEFT_TYPE_OTHER')
+            .val('')
+            .toggleClass('hidden', !(checked && value === 'Others'))
+            .prop('disabled', !(checked && value === 'Others'));
     } catch (error) {
         console.error(error);
         showErrorMessage(error.message);

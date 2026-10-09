@@ -237,7 +237,7 @@
                                     <input type="radio" name="VEFT_TYPE" value="Others" class="radio radio-sm radio-primary">
                                     <span class="label-text">Others</span>
                                 </label>
-                                <textarea name="VEFT_TYPE_OTHER" id="VEFT_TYPE_OTHER" class="textarea w-full" rows="5" disabled></textarea>
+                                <textarea name="VEFT_TYPE_OTHER" id="VEFT_TYPE_OTHER" class="textarea w-full hidden" rows="5" disabled></textarea>
                             </div>
                         </fieldset>
                     </div>
