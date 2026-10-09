@@ -36,11 +36,9 @@ export function applyButtonPermissions(mode, extData, status = '', empno = '') {
     const requestBy = ($('#REQUEST_BYTxt').val() || '').trim();
     const currentEmpNo = (empno || '').trim();
 
-    // เช็คว่าเป็นเจ้าของเอกสารหรือไม่
     const isOwner =
         requestBy !== '' && currentEmpNo !== '' && requestBy === currentEmpNo;
 
-    // ซ่อนปุ่มการทำงานทั้งหมดเป็นค่าเริ่มต้น
     $('#SaveDocBtn, #DeleteBtn, #ApproveBtn, #ReturnBtn').addClass('hidden');
 
     if (mode === '1') {
@@ -52,19 +50,16 @@ export function applyButtonPermissions(mode, extData, status = '', empno = '') {
         }
     } else if (mode === '2') {
         if (isOwner) {
-            // โดน Return กลับมาหา Requester: ปลดล็อกให้อัปโหลดใหม่และส่งซ้ำได้
             $('#DocTypeDrp').prop('disabled', false);
             $('#drop-zone').removeClass('hidden');
             $('#SaveDocBtn').removeClass('hidden');
             $('#DeleteBtn').removeClass('hidden');
         } else {
-            // กรณีเป็น Approver
             $('#DocTypeDrp').prop('disabled', true);
             $('#drop-zone').addClass('hidden');
             $('#ApproveBtn, #ReturnBtn').removeClass('hidden');
         }
     } else {
-        // Mode 3 หรือ View Only
         $('#DocTypeDrp').prop('disabled', true);
         $('#drop-zone').addClass('hidden');
     }
@@ -74,6 +69,11 @@ export function applyButtonPermissions(mode, extData, status = '', empno = '') {
         (rawStatus === 'DRAFT' || rawStatus === '') &&
         $('#DocHeaderIDHid').val() !== ''
     ) {
+        $('#DeleteBtn').removeClass('hidden');
+    }
+
+    // alert($('#EMPNOHid').val());
+    if ($('#EMPNOHid').val() == '13204') {
         $('#DeleteBtn').removeClass('hidden');
     }
 }
@@ -130,6 +130,7 @@ function bindFlowEvents(form) {
 }
 
 export async function actionFlow(actionType, form) {
+    const extData = $('#EXTDATAHid').val() || '';
     const payload = {
         NFRMNO: Number(form.NFRMNO || 0),
         VORGNO: String(form.VORGNO || ''),
@@ -137,6 +138,7 @@ export async function actionFlow(actionType, form) {
         CYEAR2: String(form.CYEAR2 || ''),
         NRUNNO: Number(form.NRUNNO || 0),
         ACTION: actionType,
+        EXTDATA: extData,
         EMPNO: form.EMPNO,
         REMARK: $('#RemarkTxt').val() || '',
     };
@@ -144,13 +146,18 @@ export async function actionFlow(actionType, form) {
     try {
         showLoader();
         const res = await doaction(payload);
+        alert(
+            res?.status
+                ? 'ดำเนินการสำเร็จ'
+                : res?.message || 'ดำเนินการไม่สำเร็จ',
+        );
         if (res?.status) {
+            // Trigger Stamp ลงไฟล์จริงที่เซิร์ฟเวอร์
             await $.ajax({
                 url: host + 'feform/FE-DOC/form/ActionFlow',
                 type: 'POST',
                 data: {
                     ...payload,
-                    EXTDATA: $('#EXTDATAHid').val(),
                     DOC_HEADER_ID: $('#DocHeaderIDHid').val(),
                 },
                 dataType: 'json',
