@@ -1,10 +1,13 @@
-const path = require("path");
+const path = require('path');
 module.exports = {
-	iejig: "./assets/script/ieform/IE-JIG/main.js",
-	iejigDelete: "./assets/script/ieform/IE-JIG/delete.js",
-	//IE-BGR: Budget Requisition Form
-	iebgrReport: "./assets/script/ieform/IE-BGR/report.js",
+    iejig: './assets/script/ieform/IE-JIG/main.js',
+    iejigDelete: './assets/script/ieform/IE-JIG/delete.js',
+    //IE-BGR: Budget Requisition Form
+    iebgrReport: './assets/script/ieform/IE-BGR/report.js',
 
-	//IE-CHR: Crimp Height Record
-	iechr: "./assets/script/ieform/IE-CHR/index.js",
+    //IE-CHR: Crimp Height Record
+    iechr: './assets/script/ieform/IE-CHR/index.js',
+
+    //IE-TS
+    iets: './assets/script/ieform/IE-TS/create.js',
 };
