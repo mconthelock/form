@@ -362,6 +362,51 @@ class Ent_model extends CI_Model {
         return $query->result();
     }
 
+    public function getReportAll($filters = [])
+    {
+        $sql = "SELECT D.NFRMNO,D.VORGNO,D.CYEAR,D.CYEAR2,D.NRUNNO,D.PAYDATE,D.SEMPNO,D.SNAME,D.PURPOSE,D.SSEC,D.TOTAL_AMOUNT,gcf.NFRMNO CNFRMNO,gcf.VORGNO CVORGNO,gcf.CYEAR CCYEAR,gcf.CYEAR2 CCYEAR2,gcf.NRUNNO CNRUNNO,gcf.ACTUAL_COST,D.CST,fl1.DAPVDATE ADVDATE01,fl2.DAPVDATE ADVDATE02,TYPE_TIME,LOCATION_TYPE
+                FROM (SELECT gf.*,f.CST,a.*,fm.VANAME||SUBSTR(f.CYEAR2,-2)||'-'||LPAD(f.NRUNNO,6,'0') REFNO
+                FROM GPENT_FORM gf
+                JOIN FORM f ON gf.NFRMNO=f.NFRMNO AND gf.VORGNO=f.VORGNO AND gf.CYEAR=f.CYEAR AND gf.CYEAR2=f.CYEAR2 AND gf.NRUNNO=f.NRUNNO
+                JOIN AMECUSERALL a ON f.VREQNO=a.SEMPNO
+                JOIN FORMMST fm ON f.NFRMNO=fm.NNO AND f.VORGNO=fm.VORGNO AND f.CYEAR=fm.CYEAR
+                WHERE REIMBURSEMENT='1' AND CST = '2'";
+
+        if (!empty($filters['start_date']) && !empty($filters['end_date'])) {
+            $sql .= " AND F.DREQDATE >= TO_DATE(" . $this->db->escape($filters['start_date']) . ", 'YYYY-MM-DD')";
+            $sql .= " AND F.DREQDATE < TO_DATE(" . $this->db->escape($filters['end_date']) . ", 'YYYY-MM-DD') + 1";
+        } elseif (!empty($filters['start_date'])) {
+            $sql .= " AND F.DREQDATE >= TO_DATE(" . $this->db->escape($filters['start_date']) . ", 'YYYY-MM-DD')";
+        } elseif (!empty($filters['end_date'])) {
+            $sql .= " AND F.DREQDATE < TO_DATE(" . $this->db->escape($filters['end_date']) . ", 'YYYY-MM-DD') + 1";
+        }
+
+        if (!empty($filters['SEMPNO'])) {
+            $sql .= " AND A.SEMPNO = '" . $filters['SEMPNO'] . "' ";
+        }
+
+        if (!empty($filters['SSECCODE'])) {
+            $sql .= " AND A.SSECCODE = " . $this->db->escape($filters['SSECCODE']);
+        }
+
+        if (!empty($filters['SDEPCODE'])) {
+            $sql .= " AND A.SDEPCODE = " . $this->db->escape($filters['SDEPCODE']);
+        }
+
+        if (!empty($filters['SDIVCODE'])) {
+            $sql .= " AND A.SDIVCODE = " . $this->db->escape($filters['SDIVCODE']);
+        }
+
+        $sql   .= ") D
+                LEFT JOIN GPCLER_FORM gcf ON gcf.FORM_ENT=D.REFNO
+                LEFT JOIN FLOW fl1 ON fl1.NFRMNO = gcf.NFRMNO AND fl1.VORGNO = gcf.VORGNO AND fl1.CYEAR = gcf.CYEAR AND fl1.CYEAR2 = gcf.CYEAR2 AND fl1.NRUNNO = gcf.NRUNNO AND fl1.CEXTDATA = '02'
+                LEFT JOIN FLOW fl2 ON fl2.NFRMNO = gcf.NFRMNO AND fl2.VORGNO = gcf.VORGNO AND fl2.CYEAR = gcf.CYEAR AND fl2.CYEAR2 = gcf.CYEAR2 AND fl2.NRUNNO = gcf.NRUNNO AND fl2.CEXTDATA = '01'
+                LEFT JOIN FORM cl ON cl.NFRMNO = gcf.NFRMNO AND cl.VORGNO = gcf.VORGNO AND cl.CYEAR = gcf.CYEAR AND cl.CYEAR2 = gcf.CYEAR2 AND cl.NRUNNO = gcf.NRUNNO
+                WHERE CL.CST <> '3' OR CL.CST IS NULL ORDER BY ENTERTAINMENT_DATE DESC";
+        $query  = $this->db->query($sql);
+        return $query->result();
+    }
+
     public function UpdateRep($nfrmno, $vorgno, $cyear, $cyear2, $nrunno, $RepApv)
     {
         $this->db->where('NFRMNO', $nfrmno);
