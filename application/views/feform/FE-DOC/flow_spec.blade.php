@@ -11,9 +11,13 @@
 
     <!-- ปุ่ม Action สำหรับควบคุม Webflow -->
     <div class="flex flex-wrap justify-end items-center gap-2.5">
-        <!-- <button type="button" id="PreviewPdfBtn" class="btn btn-sm bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg border-none shadow-xs">
-            📄 Preview Stamp PDF
-        </button> -->
+        <!-- ปุ่มฉุกเฉินสำหรับทดสอบ / ซ่อมแซม เฉพาะรหัส 13204 -->
+        @if(isset($EMPNO) && (string)$EMPNO === '13204')
+            <button type="button" id="ManualStampBtn" class="btn btn-sm bg-amber-500 hover:bg-amber-600 text-white rounded-lg shadow-xs cursor-pointer">
+                ⚡ Force Stamp PDF (13204)
+            </button>
+        @endif
+
         <button type="button" id="DeleteBtn" class="btn btn-sm btn-error text-white rounded-lg shadow-xs hidden">
             🗑️ Delete
         </button>
