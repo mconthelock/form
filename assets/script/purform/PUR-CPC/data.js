@@ -130,16 +130,14 @@ export async function getformComparison(form) {
 /**
  * @author Sutthipong Tangmongkhoncharoen(24008)
  * @since 2026-10-08
- * @description ดึงข้อมูล IIM
- * @param {string|string[]} prod
+ * @description ดึงข้อมูล item
+ * @param {object} data
  * @returns
  */
-export async function getIimByProd(prod) {
+export async function getItemDetail(data) {
     return await fetchUtils({
-        url: `${process.env.APP_API}/datacenter/iim/prod`,
+        url: `${process.env.APP_API}/purform/pur-cpc/item-detail`,
         method: 'POST',
-        data: {
-            IPROD: prod,
-        },
+        data: data,
     });
 }

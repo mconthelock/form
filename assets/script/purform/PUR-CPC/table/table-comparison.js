@@ -204,7 +204,7 @@ export const tableComparison = {
             });
 
             row.NCOST_DIFF = roundNumber({
-                value: row.NPRES_PRICE_ETA_AMEC - row.NNEW_PRICE_ETA_AMEC,
+                value: row.NNEW_PRICE_ETA_AMEC - row.NPRES_PRICE_ETA_AMEC,
             });
             row.NCOST_AMOUNT = roundNumber({
                 value: (row.NCOST_DIFF * row.NQUANTITY_YEAR) / 1000,
@@ -353,6 +353,12 @@ export const tableComparison = {
                                 row.VPRES_PRICE_CURR,
                                 row.NPRES_PRICE_ETA_AMEC,
                                 row.NPRES_AMOUNT,
+                                row.VNEWJOB_ITEMNO,
+                                row.VNEWPART_NAME,
+                                row.VNEWDRAWING,
+                                row.VNEWITEM_CODE,
+                                row.VNEWSPEC,
+                                row.VNEWMATERIAL_CODE,
                                 row.VNEW_VENDOR_NAME,
                                 row.VNEW_MAKER,
                                 row.NNEW_BASE_PRICE,
@@ -367,7 +373,7 @@ export const tableComparison = {
                                 row.CNEW_PRICE_YEAR,
                                 row.VNEW_PRICE_MONTH,
                             ]),
-                            'A-AD',
+                            'A-AJ',
                         );
                         const startRow = 6;
                         const endRow = startRow + convertedData.length - 1;
@@ -397,12 +403,12 @@ export const tableComparison = {
                         const totalRows = endRow + 1;
                         const columnTotal = [
                             { col: 'P', value: 'Total' },
-                            { col: 'X', value: 'Total' },
-                            { col: 'Z', value: 'Total' },
+                            { col: 'AD', value: 'Total' },
+                            { col: 'AF', value: 'Total' },
                             { col: 'Q', value: self.totalPres },
-                            { col: 'Y', value: self.totalNew },
-                            { col: 'AA', value: self.totalCost },
-                            { col: 'AB', value: self.ratio },
+                            { col: 'AE', value: self.totalNew },
+                            { col: 'AG', value: self.totalCost },
+                            { col: 'AH', value: self.ratio },
                         ];
                         columnTotal.forEach((item) => {
                             sheet
@@ -440,32 +446,38 @@ export const tableComparison = {
             <tr>
                 <th rowspan="3">No.</th>
                 <th rowspan="3">Model Name</th>
-                <th rowspan="3">Job Item No.</th>
-                <th rowspan="3">Part Name</th>
-                <th rowspan="3">Drawing No.</th>
-                <th rowspan="3">Item Code</th>
-                <th rowspan="3">Spec.</th>
-                <th rowspan="3">Material Code</th>
-                <th rowspan="3">Quantity/year <br> &lt;A&gt; </th>
-                <th colspan="8" class="bg-[#ccffcc]">Present</th>
-                <th colspan="8" class="bg-[#ccffff]">New</th>
-                <th colspan="3">Cost down(+) / Cost up(-)</th>
+                <th colspan="15" class="bg-[#ccffcc]">Present</th>
+                <th colspan="14" class="bg-[#ccffff]">New</th>
+                <th colspan="3">Cost down(-) / Cost up(+)</th>
                 <th colspan="2" class="bg-[#ffff77]">New price parts 1st delivered</th>
             </tr>
             <tr>
+                <th rowspan="2">Job Item No.</th>
+                <th rowspan="2">Part Name</th>
+                <th rowspan="2">Drawing No.</th>
+                <th rowspan="2">Item Code</th>
+                <th rowspan="2">Spec.</th>
+                <th rowspan="2">Material Code</th>
+                <th rowspan="2">Quantity/year <br> &lt;A&gt; </th>
                 <th rowspan="2">Vendor Name</th>
                 <th rowspan="2">Maker Name</th>
                 <th colspan="2" class="bg-[#ccffcc]">Base Price</th>
                 <th colspan="2" class="bg-[#ccffcc]">Price</th>
                 <th rowspan="2">Price ETA AMEC <br> &lt;B&gt; <br> [THB/pcs] </th>
                 <th rowspan="2">Amount <br> &lt;C=B*A&gt; <br> [KB/year]</th>
+                <th rowspan="2">Job Item No.</th>
+                <th rowspan="2">Part Name</th>
+                <th rowspan="2">Drawing No.</th>
+                <th rowspan="2">Item Code</th>
+                <th rowspan="2">Spec.</th>
+                <th rowspan="2">Material Code</th>
                 <th rowspan="2">Vendor Name</th>
                 <th rowspan="2">Maker Name</th>
                 <th colspan="2" class="bg-[#ccffff]">Base Price</th>
                 <th colspan="2" class="bg-[#ccffff]">Price</th>
                 <th rowspan="2">Price ETA AMEC <br> &lt;D&gt; <br> [THB/pcs] </th>
                 <th rowspan="2">Amount <br> &lt;E=D*A&gt; <br> [KB/year]</th>
-                <th rowspan="2">Price difference <br> &lt;F=B-D&gt; <br> [THB/pcs]</th>
+                <th rowspan="2">Price difference <br> &lt;F=D-B&gt; <br> [THB/pcs]</th>
                 <th rowspan="2">Amount <br> &lt;F*A&gt; <br> [KB/year]</th>
                 <th rowspan="2">Ratio <br> &lt;F/B&gt; <br> [%]</th>
                 <th rowspan="2">Year</th>
@@ -491,12 +503,12 @@ export const tableComparison = {
             },
         },
         { data: 'VMODEL' },
-        { data: 'VJOB_ITEMNO', className: 'sticky-column' },
+        { data: 'VJOB_ITEMNO', className: '' },
         { data: 'VPART_NAME', className: 'text-nowrap' },
-        { data: 'VDRAWING', className: 'sticky-column text-nowrap' },
-        { data: 'VITEM_CODE', className: 'sticky-column' },
+        { data: 'VDRAWING', className: ' text-nowrap' },
+        { data: 'VITEM_CODE', className: '' },
         { data: 'VSPEC', className: 'text-nowrap' },
-        { data: 'VMATERIAL_CODE', className: 'sticky-column' },
+        { data: 'VMATERIAL_CODE', className: '' },
         { data: 'NQUANTITY_YEAR' },
         { data: 'VPRES_VENDOR_NAME', className: 'bg-[#ffff77] text-nowrap' },
         { data: 'VPRES_MAKER', className: 'bg-[#ffff77] text-nowrap' },
@@ -531,6 +543,12 @@ export const tableComparison = {
                 return formatNumber({ value: data });
             },
         },
+        { data: 'VNEWJOB_ITEMNO' },
+        { data: 'VNEWPART_NAME', className: 'text-nowrap' },
+        { data: 'VNEWDRAWING', className: 'text-nowrap' },
+        { data: 'VNEWITEM_CODE' },
+        { data: 'VNEWSPEC', className: 'text-nowrap' },
+        { data: 'VNEWMATERIAL_CODE' },
         {
             data: 'VNEW_VENDOR',
             className: 'bg-[#ffff77] text-nowrap',

@@ -10,6 +10,7 @@ import { tableComparison } from './table/table-comparison';
 import { createComparison } from './data';
 import { showLoader } from '@amec/webasset/preloader';
 import { prepareFormData } from './function';
+import { redirectWebflow } from '@amec/webasset/form';
 
 $(async function () {
     try {
@@ -44,20 +45,6 @@ $(document).on(
                 showMessage('No data available for request.', 'warning');
                 return;
             }
-            // const stepData = steps.data;
-
-            // const data = {
-            //     FUNC: stepData.function,
-            //     REQBY: stepData.requester,
-            //     INPUTBY: stepData.inputer,
-            //     STATUS: 0,
-            //     ISEDIT: stepData.formNo != null,
-            //     FORMEDIT: stepData.formNo,
-            //     DETAILS: details,
-            //     VENDOR: stepData.vendor,
-            //     MODE: stepData.compareMode,
-            //     ...tableComparison.total,
-            // };
             const data = prepareFormData(details);
             let res;
             switch (val) {
@@ -76,6 +63,8 @@ $(document).on(
             }
             modalConfirmRequest.show(false);
             showMessage('Comparison created successfully.', 'success');
+            await steps.instance.setStep(0);
+            redirectWebflow();
         } catch (error) {
             console.error(error);
             showErrorMessage(error.message);

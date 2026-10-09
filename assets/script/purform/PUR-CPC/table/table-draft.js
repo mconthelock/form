@@ -110,6 +110,7 @@ export const tableDraft = {
                 try {
                     const selected = getSelectedData(self.instance);
                     const data = selected[0];
+                    if (data.VFORMNO == steps.formNo) return;
                     steps.formNo = data.VFORMNO;
                     steps.function = data.NFUNCTIONS;
                     steps.system = data.VSYSTEM;

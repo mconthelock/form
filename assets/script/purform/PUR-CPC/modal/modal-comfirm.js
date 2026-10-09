@@ -4,6 +4,7 @@ import { tableComparison } from '../table/table-comparison';
 import { createComparison } from '../data';
 import { showLoader } from '@amec/webasset/preloader';
 import { prepareFormData } from '../function';
+import { steps } from '../steps';
 
 export const modalConfirmRequest = {
     id: 'modal-confirm-request',
@@ -70,20 +71,6 @@ export const modalConfirmRequest = {
                     showMessage('No data available for request.', 'warning');
                     return;
                 }
-                // const stepData = steps.data;
-
-                // const data = {
-                //     FUNC: stepData.function,
-                //     REQBY: stepData.requester,
-                //     INPUTBY: stepData.inputer,
-                //     STATUS: 0,
-                //     ISEDIT: stepData.formNo != null,
-                //     FORMEDIT: stepData.formNo,
-                //     DETAILS: details,
-                //     VENDOR: stepData.vendor,
-                //     MODE: stepData.compareMode,
-                //     ...tableComparison.total,
-                // };
                 const data = prepareFormData(details);
                 data.STATUS = $('#createPriceApproval').is(':checked') ? 2 : 1;
                 const res = await createComparison(data);
@@ -92,6 +79,8 @@ export const modalConfirmRequest = {
                 }
                 showMessage('Comparison created successfully.', 'success');
                 self.show(false);
+                steps.instance.setStep(0);
+                redirectWebflow();
             } catch (error) {
                 console.error(error);
                 showErrorMessage(error.message);

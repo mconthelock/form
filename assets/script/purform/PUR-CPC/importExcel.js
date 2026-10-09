@@ -1,7 +1,7 @@
 import { showErrorMessage, showMessage } from '@amec/webasset/utils';
 import { checkFileFormat, fileExcelFormat } from '@amec/webasset/file';
 import { colToNumber, readInput } from '@amec/webasset/excel';
-import { getIimByProd, getPriceComparison } from './data';
+import { getItemDetail, getPriceComparison, getVendors } from './data';
 import { tableComparison } from './table/table-comparison';
 import { steps } from './steps';
 import { showLoader } from '@amec/webasset/preloader';
@@ -66,6 +66,7 @@ export const importExcel = {
         $(document).on('change', '#excel-file', async function () {
             try {
                 showLoader();
+                tableComparison.init(); // เคลียร์ตารางก่อนเลือกไฟล์ใหม่
                 const file = this.files[0];
                 if (!file) {
                     self.reset();
@@ -112,20 +113,118 @@ export const importExcel = {
                     return;
                 }
                 const data = await self.readExcelFile(file);
-                const itemCode = data.map((row) => row.VITEM_CODE);
-                const res = await getPriceComparison({
-                    FUNC: steps.function,
-                    ITEM: itemCode,
-                    SYSTEM: steps.system,
-                });
-                if (res.length === 0) {
-                    showMessage('No price comparison data found', 'warning');
-                    return;
+                const mode = steps.compareMode;
+                // โหมด Edit จะใช้ item เดียวกันเปรียบเทียบ
+                // โหมด Add จะใช้ item เก่าเปรียบเทียบหาก user กรอกมา
+                const oldItems = data
+                    .map((row) =>
+                        mode == 'E' ? row.VITEM_CODE : row.VOLD_ITEM_COMPARE,
+                    )
+                    .filter(Boolean);
+                const newItems = data.map((row) => row.VITEM_CODE);
+                let newData = [];
+                let oldData = [];
+
+                // Edit เอา oldItems ไปหา priceComparison และเอา ค่ามาใส่ new ด้วย
+                if (oldItems.length > 0) {
+                    const res = await getPriceComparison({
+                        FUNC: steps.function,
+                        ITEM: oldItems,
+                        SYSTEM: steps.system,
+                    });
+                    if (res.length === 0) {
+                        showMessage(
+                            'No price comparison data found',
+                            'warning',
+                        );
+                        return;
+                    }
+                    oldData = res;
+                    newData = res.map((row) => ({
+                        VNEWITEM_CODE: row.VITEM_CODE,
+                        VNEWJOB_ITEMNO: row.VJOB_ITEMNO,
+                        VNEWSPEC: row.VSPEC,
+                        VNEWMATERIAL_CODE: row.VMATERIAL_CODE,
+                        VNEWDRAWING: row.VDRAWING,
+                        VNEWPART_NAME: row.VPART_NAME,
+                        VNEW_VENDOR: row.VPRES_VENDOR,
+                        VNEW_VENDOR_NAME: row.VPRES_VENDOR_NAME,
+                        VNEW_MAKER: row.VPRES_MAKER,
+                    }));
+                }
+                // Edit เอา newItems ไปหา detail และเอา ค่ามาใส่ new ด้วย
+                if (mode == 'A') {
+                    const item = await getItemDetail({
+                        SYSTEM: steps.system,
+                        ITEM: newItems,
+                    });
+                    if (item.length === 0) {
+                        showMessage('New Item not found in IIM', 'error');
+                        return;
+                    }
+                    newData = item.map((row) => {
+                        const newItem = {
+                            VNEWITEM_CODE: row.ITEM_CODE,
+                            VNEWJOB_ITEMNO: row.JOB_ITEMNO,
+                            VNEWSPEC: row.SPEC,
+                            VNEWMATERIAL_CODE: row.MATERIAL_CODE,
+                            VNEWDRAWING: row.DRAWING,
+                            VNEWPART_NAME: row.PART_NAME,
+                            VNEW_VENDOR: row.VENDOR,
+                            VNEW_VENDOR_NAME: row.VENDOR_NAME,
+                            VNEW_MAKER: row.MAKER,
+                        };
+                        // หากไม่มี oldItems ให้เติมค่า default ให้ newItem
+                        if (oldItems.length === 0) {
+                            return {
+                                VJOB_ITEMNO: null,
+                                VPART_NAME: null,
+                                VDRAWING: null,
+                                VITEM_CODE: null,
+                                VSPEC: null,
+                                VMATERIAL_CODE: null,
+                                NQUANTITY_YEAR: 0,
+                                VPRES_VENDOR: null,
+                                VPRES_VENDOR_NAME: null,
+                                VPRES_MAKER: null,
+                                NPRES_BASE_PRICE: 0,
+                                VPRES_BASE_CURR: null,
+                                NPRES_BASE_CURRENCY: 0,
+                                NPRES_PRICE: 0,
+                                VPRES_PRICE_CURR: null,
+                                NPRES_PRICE_CURRENCY: 0,
+                                BASE_CURRENCY: null,
+                                NPRES_PRICE_ETA_AMEC: 0,
+                                ...newItem,
+                            };
+                        }
+                        return newItem;
+                    });
                 }
                 const mapData = data.map((row) => {
-                    const matched = res.find(
-                        (r) => r.VITEM_CODE === row.VITEM_CODE,
+                    // หา old data ที่ตรงกับ row ปัจจุบันก่อน
+                    const matched = oldData.find(
+                        (r) =>
+                            r.VITEM_CODE ===
+                            (mode == 'E'
+                                ? row.VITEM_CODE
+                                : row.VOLD_ITEM_COMPARE),
                     );
+                    // หา new data ที่ตรงกับ row ปัจจุบันก่อน
+                    if (newData.length > 0) {
+                        const newItem = newData.find(
+                            (n) => n.VNEWITEM_CODE === row.VITEM_CODE,
+                        );
+                        if (newItem) {
+                            Object.assign(row, {
+                                ...newItem,
+                                VNEW_VENDOR:
+                                    row.VNEW_VENDOR || newItem.VNEW_VENDOR,
+                                VNEW_MAKER:
+                                    row.VNEW_MAKER || newItem.VNEW_MAKER,
+                            });
+                        }
+                    }
                     return {
                         ...row,
                         ...matched,
@@ -150,6 +249,11 @@ export const importExcel = {
             {
                 fail: () => data.length === 0,
                 message: 'The selected Excel file is empty',
+            },
+            {
+                fail: () => data.some((row) => !row.NFUNCTIONS),
+                message:
+                    'The uploaded data exceeds the number of assigned functions.',
             },
             {
                 fail: () =>
@@ -182,6 +286,26 @@ export const importExcel = {
         if (failed) {
             return fail(failed.message);
         }
+
+        // ตรวจสอบว่า new vendor มีในระบบไหม
+        const newVendors = data.map((row) => row.VNEW_VENDOR).filter(Boolean);
+        if (newVendors.length > 0) {
+            const vendors = await getVendors();
+            if (!vendors || vendors.length === 0) {
+                return fail('No vendor data found in the system');
+            }
+            const vendorCodes = new Set(vendors.map((v) => v.VENDOR));
+            const notFoundVendors = newVendors.filter(
+                (v) => !vendorCodes.has(v),
+            );
+            console.log('Not found vendors:', notFoundVendors);
+            if (notFoundVendors.length > 0) {
+                return fail(
+                    'Some new vendors could not be found in the system: ' +
+                        notFoundVendors.join(', '),
+                );
+            }
+        }
         if (steps.compareMode != 'A') return true;
         // Add mode
         const filters = data.filter((row) => row.VOLD_ITEM_COMPARE);
@@ -195,12 +319,15 @@ export const importExcel = {
         // ตรวจสอบว่า old item compare ทั้งหมดมีอยู่ในฐานข้อมูลหรือไม่
         if (filters.length > 0) {
             const oldItems = filters.map((row) => row.VOLD_ITEM_COMPARE);
-            const iim = await getIimByProd(oldItems);
+            const item = await getItemDetail({
+                SYSTEM: steps.system,
+                ITEM: oldItems,
+            });
             // ไม่พบ old item compare ในฐานข้อมูล
-            if (!iim.status) {
+            if (item.length === 0) {
                 return fail('Old items could not be found in the database');
             }
-            const found = iim.data.map((item) => item.IPROD);
+            const found = item.map((item) => item.ITEM_CODE);
             const foundSet = new Set(found);
 
             const notFound = oldItems.filter((id) => !foundSet.has(id));
@@ -211,6 +338,7 @@ export const importExcel = {
                 );
             }
         }
+        return true;
     },
     async readExcelFile(file) {
         return await readInput(file, {
