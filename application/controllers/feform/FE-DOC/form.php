@@ -242,23 +242,23 @@ class form extends MY_Controller {
         }
     }
 
-    public function StampRequesterStep() {
-        $this->output->set_content_type('application/json');
-        try {
-            $nfrmno  = (int)$this->input->post('NFRMNO');
-            $vorgno  = (string)$this->input->post('VORGNO');
-            $cyear2  = (string)$this->input->post('CYEAR2');
-            $nrunno  = (int)$this->input->post('NRUNNO');
-            $empno   = trim((string)$this->input->post('EMPNO'));
+    // public function StampRequesterStep() {
+    //     $this->output->set_content_type('application/json');
+    //     try {
+    //         $nfrmno  = (int)$this->input->post('NFRMNO');
+    //         $vorgno  = (string)$this->input->post('VORGNO');
+    //         $cyear2  = (string)$this->input->post('CYEAR2');
+    //         $nrunno  = (int)$this->input->post('NRUNNO');
+    //         $empno   = trim((string)$this->input->post('EMPNO'));
 
-            // แสตมป์เฉพาะตราของ Requester (EXT 00) ดวงเดียวลงไฟล์
-            $this->stampSingleApproverOnFiles($nfrmno, $vorgno, $cyear2, $nrunno, $empno, '00');
+    //         // แสตมป์เฉพาะตราของ Requester (EXT 00) ดวงเดียวลงไฟล์
+    //         $this->stampSingleApproverOnFiles($nfrmno, $vorgno, $cyear2, $nrunno, $empno, '00');
 
-            return $this->output->set_output(json_encode(['status' => true]));
-        } catch (\Throwable $e) {
-            return $this->output->set_output(json_encode(['status' => false, 'message' => $e->getMessage()]));
-        }
-    }
+    //         return $this->output->set_output(json_encode(['status' => true]));
+    //     } catch (\Throwable $e) {
+    //         return $this->output->set_output(json_encode(['status' => false, 'message' => $e->getMessage()]));
+    //     }
+    // }
 
     //==========================================================
     //=== stamp PDF on server ===
@@ -270,7 +270,6 @@ class form extends MY_Controller {
             $vorgno   = (string)$this->input->post('VORGNO');
             $cyear2   = (string)$this->input->post('CYEAR2');
             $nrunno   = (int)$this->input->post('NRUNNO');
-            // 🟢 ปรับให้รับทั้ง approve และ APPROVE
             $action   = strtoupper(trim((string)$this->input->post('ACTION')));
             $extdata  = trim((string)$this->input->post('EXTDATA'));
             $empno    = (string)($this->input->post('EMPNO') ?: ($this->session->userdata('empno') ?? ''));
@@ -293,12 +292,10 @@ class form extends MY_Controller {
                                    ->order_by('STEP_NO', 'DESC')
                                    ->get('FE_DOC_STEP_MST')->row();
 
+                // ถ้า EXT ตรงกับ Step สุดท้าย ให้เปลี่ยนสถานะเป็น APPROVE
                 if ($lastStep && trim($lastStep->CEXTDATA) === $extdata) {
                     $status = 'APPROVE';
                 }
-
-                // 🟢 เรียก Stamp และปล่อยให้โยน Exception ออกมาหากเกิดปัญหา
-                $this->stampSingleApproverOnFiles($nfrmno, $vorgno, $cyear2, $nrunno, $empno, $extdata);
             } elseif ($action === 'REJECT') {
                 $status = 'REJECT';
             }
@@ -316,310 +313,140 @@ class form extends MY_Controller {
 
             return $this->output->set_output(json_encode([
                 'status'    => true, 
-                'statusDoc' => $status,
-                'message'   => 'ดำเนินการสำเร็จและประทับตราลงเอกสารเรียบร้อยแล้ว'
+                'statusDoc' => $status
             ]));
         } catch (\Throwable $e) {
-            return $this->output->set_output(json_encode(['status' => false, 'message' => 'ActionFlow Error: ' . $e->getMessage()]));
+            return $this->output->set_output(json_encode(['status' => false, 'message' => $e->getMessage()]));
         }
     }
-
-    private function stampSingleApproverOnFiles($nfrmno, $vorgno, $cyear2, $nrunno, $empno, $extdata) {
-        $dbWebflow = $this->load->database($this->webflowBase, TRUE);
-        $dbSmmt    = $this->load->database($this->SmmtBase, TRUE);
-
-        $files = $dbWebflow->where([
-            'NFRMNO' => $nfrmno,
-            'VORGNO' => $vorgno,
-            'CYEAR2' => $cyear2,
-            'NRUNNO' => $nrunno
-        ])->get('FE_FILE')->result();
-
-        if (empty($files)) {
-            throw new Exception("ไม่พบรายการไฟล์แนบในระบบ (NRUNNO: {$nrunno})");
-        }
-
-        $header = $dbSmmt->where([
-            'NFRMNO' => $nfrmno, 'VORGNO' => $vorgno, 'CYEAR2' => $cyear2, 'NRUNNO' => $nrunno
-        ])->get('FE_DOC_HEADER')->row();
-
-        if (!$header) {
-            throw new Exception("ไม่พบ Header สำหรับคำนวณตำแหน่ง Step");
-        }
-
-        $masterSteps = $dbSmmt->where('DOC_TYPE_CODE', $header->DOC_TYPE_CODE)
-                              ->where('IS_ACTIVE', 1)
-                              ->order_by('STEP_NO', 'ASC')
-                              ->get('FE_DOC_STEP_MST')
-                              ->result();
-
-        $totalSteps = count($masterSteps);
-        $currentStepIndex = -1;
-
-        foreach ($masterSteps as $idx => $st) {
-            if (trim((string)$st->CEXTDATA) === trim((string)$extdata)) {
-                $currentStepIndex = $idx;
-                break;
-            }
-        }
-
-        // หากหา Step ไม่เจอ (เช่น Requester ส่ง extdata ว่างมา) ให้ default ช่องแรก (0)
-        if ($currentStepIndex === -1) {
-            $currentStepIndex = 0;
-        }
-
-        // ดึงชื่อภาษาอังกฤษจาก SNAME ใน AMECUSERALL
-        $userRow = $dbWebflow->select('SNAME')
-                             ->where('SEMPNO', trim((string)$empno))
-                             ->get('AMECUSERALL')
-                             ->row();
-
-        $fullName = $userRow && !empty($userRow->SNAME) ? trim((string)$userRow->SNAME) : (string)$empno;
-        
-        // ตัดเอาเฉพาะชื่อตัวแรก (First Name) เช่น "SOMCHAI P." ได้ "SOMCHAI"
-        $firstName = explode(' ', $fullName)[0] ?: $fullName;
-
-        $stampInfo = [
-            'stepIndex'  => $currentStepIndex,
-            'totalSteps' => max(1, $totalSteps),
-            'orgName'    => 'AMEC',
-            'dateStr'    => date('d/m/Y'),
-            'empName'    => substr($firstName, 0, 14)
-        ];
-
-        foreach ($files as $file) {
-            $ext = strtolower(pathinfo($file->FILE_ONAME, PATHINFO_EXTENSION));
-            if ($ext !== 'pdf') continue;
-
-            $realPath = $this->getRealFilePath($file->FILE_PATH, $file->FILE_FNAME);
-
-            // 🟢 ตรวจสอบไฟล์จริง หากไม่พบค่อยแจ้งเตือนตรงๆ แทนการเงียบ
-            if (!file_exists($realPath)) {
-                throw new Exception("ไม่พบไฟล์จริงบน Storage: " . $realPath);
-            }
-
-            // นำเงื่อนไข is_writable() ออก แล้วสั่ง Stamp ทันที
-            $this->stampSingleCircleOnPdf($realPath, $stampInfo);
-        }
-    }
-
-    private function stampSingleCircleOnPdf($pdfPath, array $stamp) {
-        $pdf = new Fpdi();
-        $pdf->setPrintHeader(false);
-        $pdf->setPrintFooter(false);
-        $pdf->SetAutoPageBreak(false);
-
-        // ดึงไฟล์ต้นฉบับ
-        $pageCount = $pdf->setSourceFile($pdfPath);
-
-        $stampWidth  = 26; // mm
-        $marginRight = 10;
-        $marginTop   = 10;
-        $gap         = 28;
-
-        for ($pageNo = 1; $pageNo <= $pageCount; $pageNo++) {
-            $templateId = $pdf->importPage($pageNo);
-            $size       = $pdf->getTemplateSize($templateId);
-
-            $orientation = ($size['width'] > $size['height']) ? 'L' : 'P';
-            $pdf->AddPage($orientation, [$size['width'], $size['height']]);
-            $pdf->useTemplate($templateId);
-
-            if ($pageNo === 1) {
-                $idx        = (int)$stamp['stepIndex'];
-                $totalSteps = (int)$stamp['totalSteps'];
-
-                $colFromRight = ($totalSteps - 1) - $idx;
-
-                $centerX = $size['width'] - $marginRight - ($stampWidth / 2) - ($colFromRight * $gap);
-                $centerY = $marginTop + ($stampWidth / 2);
-                $radius  = $stampWidth / 2;
-
-                // วงกลมสีแดง
-                $pdf->SetDrawColor(200, 30, 30);
-                $pdf->SetLineWidth(0.4);
-                $pdf->Circle($centerX, $centerY, $radius);
-                $pdf->Circle($centerX, $centerY, $radius - 0.8);
-
-                // ข้อความตรายาง
-                $pdf->SetTextColor(200, 30, 30);
-                $pdf->SetFont('freeserif', 'B', 7);
-
-                $pdf->SetXY($centerX - $radius, $centerY - 6.5);
-                $pdf->Cell($stampWidth, 4, $stamp['orgName'], 0, 0, 'C');
-
-                $pdf->SetFont('freeserif', '', 6);
-                $pdf->SetXY($centerX - $radius, $centerY - 2);
-                $pdf->Cell($stampWidth, 4, $stamp['dateStr'], 0, 0, 'C');
-
-                $pdf->SetFont('freeserif', 'B', 6);
-                $pdf->SetXY($centerX - $radius, $centerY + 2.5);
-                $pdf->Cell($stampWidth, 4, $stamp['empName'], 0, 0, 'C');
-            }
-        }
-
-        // 🟢 เขียนทับลงไฟล์เดิมโดยตรง หากติด Permission ให้แจ้ง Error ทันที
-        $pdf->Output($pdfPath, 'F');
-    }
-    //==========================================================
-
-    
-    /**
-     * ค้นหาไฟล์ PDF ของเอกสาร แล้ว Stamp ทุกตราที่มีการ Approve แล้ว (จาก getApprovalLogList)
-     */
-    private function stampAllFilesForCurrentStep($nfrmno, $vorgno, $cyear2, $nrunno) {
-        $dbWebflow = $this->load->database($this->webflowBase, TRUE);
-        $dbSmmt    = $this->load->database($this->SmmtBase, TRUE);
-
-        // 1. ดึงไฟล์แนบทั้งหมดของ NRUNNO นี้
-        $files = $dbWebflow->where([
-            'NFRMNO' => $nfrmno,
-            'VORGNO' => $vorgno,
-            'CYEAR2' => $cyear2,
-            'NRUNNO' => $nrunno
-        ])->get('FE_FILE')->result();
-
-        if (empty($files)) return;
-
-        // 2. ดึง Header เพื่อหา CYEAR และ DOC_TYPE_CODE
-        $header = $dbSmmt->where([
-            'NFRMNO' => $nfrmno, 
-            'VORGNO' => $vorgno, 
-            'CYEAR2' => $cyear2, 
-            'NRUNNO' => $nrunno
-        ])->get('FE_DOC_HEADER')->row();
-
-        if (!$header) return;
-
-        // 3. ดึง Step ทั้งหมดของ Doc Type นี้เพื่อทำ Map ลำดับการวางตรายาง (Index 0, 1, 2, ...)
-        $masterSteps = $this->MainModel->getStepsByDocType($header->DOC_TYPE_CODE);
-        $stepIndexMap = [];
-        foreach ($masterSteps as $idx => $st) {
-            $ext = trim((string)$st->CEXTDATA);
-            if ($ext !== '') {
-                $stepIndexMap[$ext] = $idx;
-            }
-        }
-
-        // 4. ดึงรายการ Log ที่อนุมัติแล้วทั้งหมดจาก FLOW
-        $formKeys = [
-            'NFRMNO' => (int)$nfrmno,
-            'VORGNO' => (string)$vorgno,
-            'CYEAR'  => (string)$header->CYEAR,
-            'CYEAR2' => (string)$cyear2,
-            'NRUNNO' => (int)$nrunno
-        ];
-        $approvedLogs = $this->MainModel->getApprovalLogList($formKeys);
-        if (empty($approvedLogs)) return;
-
-        // 5. เตรียมรายการตรายางที่จะประทับ
-        $stampsToApply = [];
-        foreach ($approvedLogs as $log) {
-            $ext = trim((string)$log->CEXTDATA);
-            
-            // หา Index ช่องวางตราประทับจาก Master Steps
-            $idx = isset($stepIndexMap[$ext]) ? $stepIndexMap[$ext] : (int)$ext;
-            
-            // ตัดเฉพาะชื่อหน้า เช่น "SOMCHAI P." ให้พอดีกับขอบเขตวงกลม
-            $fullName = trim((string)($log->SNAME ?: $log->VREALAPV));
-            $shortName = explode(' ', $fullName)[0] ?: $fullName;
-
-            $stampsToApply[] = [
-                'stepIndex' => $idx,
-                'orgName'   => 'AMEC',
-                'dateStr'   => trim((string)$log->DAPVDATE_STR), // วันที่จริง DD/MM/YYYY จาก DB
-                'empName'   => substr($shortName, 0, 14)
-            ];
-        }
-
-        // 6. ประทับตรายางลงไฟล์ PDF ทุกไฟล์
-        foreach ($files as $file) {
-            $ext = strtolower(pathinfo($file->FILE_ONAME, PATHINFO_EXTENSION));
-            if ($ext !== 'pdf') continue;
-
-            $realPath = $this->getRealFilePath($file->FILE_PATH, $file->FILE_FNAME);
-            if (file_exists($realPath) && is_writable($realPath)) {
-                $this->stampPdfOnServer($realPath, $stampsToApply);
-            }
-        }
-    }
-
-    
 
     /**
-     * วาดวงกลมตรายางทั้งหมดลงบนหน้าแรกของ PDF (FPDI + TCPDF)
-     * 
-     * @param string $pdfPath        Path ของไฟล์จริง
-     * @param array  $stampsToApply  รายการตราประทับ [['stepIndex' => 0, 'orgName' => 'AMEC', 'dateStr' => '09/10/2026', 'empName' => '...'], ...]
+     * API บันทึกทับไฟล์ PDF ตัวจริงบน NAS ด้วยไฟล์ที่ Stamp แล้ว
      */
-    private function stampPdfOnServer($pdfPath, array $stampsToApply) {
-        if (empty($stampsToApply)) return false;
+    public function OverwriteStampedPdf() {
+        // เคลียร์ buffer ป้องกัน whitespace ปนใน json
+        if (ob_get_length()) ob_clean();
+        $this->output->set_content_type('application/json');
 
         try {
-            $pdf = new Fpdi();
-            $pdf->setPrintHeader(false);
-            $pdf->setPrintFooter(false);
-            $pdf->SetAutoPageBreak(false);
+            $fileId = (int)$this->input->post('FILE_ID');
+            if (empty($fileId) || empty($_FILES['file']['tmp_name'])) {
+                throw new Exception('ไม่พบไฟล์ที่ส่งมาบันทึก');
+            }
 
-            $pageCount = $pdf->setSourceFile($pdfPath);
+            $dbWebflow = $this->load->database($this->webflowBase, TRUE);
+            $fileRec = $dbWebflow->where('FILE_ID', $fileId)->get('FE_FILE')->row();
+            if (!$fileRec) {
+                throw new Exception("ไม่พบข้อมูลไฟล์ ID: {$fileId}");
+            }
 
-            $stampWidth  = 26; // เส้นผ่านศูนย์กลาง (mm)
-            $marginRight = 10;
-            $marginTop   = 10;
-            $gap         = 28;
+            $realPath = $this->getRealFilePath($fileRec->FILE_PATH, $fileRec->FILE_FNAME);
 
-            for ($pageNo = 1; $pageNo <= $pageCount; $pageNo++) {
-                $templateId = $pdf->importPage($pageNo);
-                $size       = $pdf->getTemplateSize($templateId);
+            // ดึงข้อมูล Content ของไฟล์ที่ Stamp แล้ว
+            $newContent = file_get_contents($_FILES['file']['tmp_name']);
+            if (empty($newContent)) {
+                throw new Exception('ไฟล์ที่ส่งมามีขนาด 0 Bytes');
+            }
 
-                $orientation = ($size['width'] > $size['height']) ? 'L' : 'P';
-                $pdf->AddPage($orientation, [$size['width'], $size['height']]);
-                $pdf->useTemplate($templateId);
-
-                // Stamp เฉพาะหน้าแรก
-                if ($pageNo === 1) {
-                    foreach ($stampsToApply as $st) {
-                        $idx = (int)$st['stepIndex'];
-                        $centerX = $size['width'] - $marginRight - ($stampWidth / 2) - ($idx * $gap);
-                        $centerY = $marginTop + ($stampWidth / 2);
-                        $radius  = $stampWidth / 2;
-
-                        // วาดวงกลมขอบคู่สีแดง
-                        $pdf->SetDrawColor(200, 30, 30);
-                        $pdf->SetLineWidth(0.4);
-                        $pdf->Circle($centerX, $centerY, $radius);
-                        $pdf->Circle($centerX, $centerY, $radius - 0.8);
-
-                        // ข้อความตรายาง
-                        $pdf->SetTextColor(200, 30, 30);
-                        $pdf->SetFont('freeserif', 'B', 7);
-
-                        // แถว 1: ORG
-                        $pdf->SetXY($centerX - $radius, $centerY - 6.5);
-                        $pdf->Cell($stampWidth, 4, $st['orgName'], 0, 0, 'C');
-
-                        // แถว 2: วันที่จริง
-                        $pdf->SetFont('freeserif', '', 6);
-                        $pdf->SetXY($centerX - $radius, $centerY - 2);
-                        $pdf->Cell($stampWidth, 4, $st['dateStr'], 0, 0, 'C');
-
-                        // แถว 3: ชื่อผู้อนุมัติ
-                        $pdf->SetFont('freeserif', 'B', 6);
-                        $pdf->SetXY($centerX - $radius, $centerY + 2.5);
-                        $pdf->Cell($stampWidth, 4, $st['empName'], 0, 0, 'C');
-                    }
+            // บันทึกทับไฟล์จริงบน NAS
+            $written = @file_put_contents($realPath, $newContent);
+            if ($written === false) {
+                // หากติด permission ให้ลอง copy ตรงๆ
+                if (!@copy($_FILES['file']['tmp_name'], $realPath)) {
+                    throw new Exception("ไม่สามารถเขียนทับไฟล์บน NAS ได้: {$realPath}");
                 }
             }
 
-            // บันทึกทับไฟล์เดิมบนเซิร์ฟเวอร์
-            $pdf->Output($pdfPath, 'F');
-            return true;
+            // อัปเดตเวลาแก้ไขในฐานข้อมูล FE_FILE เพื่อแก้ปัญหา Browser Cache
+            $dbWebflow->where('FILE_ID', $fileId)->update('FE_FILE', [
+                'FILE_DATEUPDATE' => date('Y-m-d H:i:s')
+            ]);
+
+            return $this->output->set_output(json_encode([
+                'status'  => true,
+                'message' => 'บันทึกทับไฟล์จริงบน NAS เรียบร้อยแล้ว',
+                'path'    => $realPath
+            ]));
         } catch (\Throwable $e) {
-            log_message('error', 'Stamp PDF Error: ' . $e->getMessage());
-            return false;
+            return $this->output->set_status_header(500)->set_output(json_encode([
+                'status'  => false,
+                'message' => $e->getMessage()
+            ]));
         }
     }
+    //==========================================================
 
+
+
+    /**
+     * ดึงข้อมูล Steps และประวัติการ Approve ทั้งหมดสำหรับ Stamp ตรายาง
+     */
+    public function GetStampData() {
+        $this->output->set_content_type('application/json');
+
+        try {
+            $formKeys = [
+                'NFRMNO' => (int)$this->input->post('no'),
+                'VORGNO' => (string)$this->input->post('orgNo'),
+                'CYEAR'  => (string)$this->input->post('y'),
+                'CYEAR2' => (string)$this->input->post('y2'),
+                'NRUNNO' => (int)$this->input->post('runNo'),
+            ];
+
+            $dbSmmt = $this->load->database($this->SmmtBase, TRUE);
+            $header = $dbSmmt->where($formKeys)->get('FE_DOC_HEADER')->row();
+            if (!$header) {
+                throw new Exception('ไม่พบข้อมูลเอกสารในระบบ');
+            }
+
+            // 1. ดึง Master Steps ของประเภทเอกสารนี้จาก SMMT
+            $masterSteps = $this->MainModel->getStepsByDocType($header->DOC_TYPE_CODE);
+            $posTitleMap = [];
+            foreach ($masterSteps as $ms) {
+                if (!empty($ms->CEXTDATA)) {
+                    $posTitleMap[trim($ms->CEXTDATA)] = trim($ms->POSITION_TITLE);
+                }
+            }
+
+            // 2. ดึง Step ที่มีอยู่ในตาราง FLOW ของเอกสารใบนี้
+            $dbWebflow = $this->load->database($this->webflowBase, TRUE);
+            $flowRows = $dbWebflow->select('CSTEPNO, CEXTDATA, CSTART')
+                                  ->where($formKeys)
+                                  ->order_by('CSTART', 'DESC')
+                                  ->order_by('CEXTDATA', 'ASC')
+                                  ->order_by('CSTEPNO', 'ASC')
+                                  ->get('FLOW')
+                                  ->result();
+
+            $steps = [];
+            foreach ($flowRows as $row) {
+                $ext = trim($row->CEXTDATA ?? '');
+                $posTitle = $posTitleMap[$ext] ?? ($row->CSTART == '1' ? 'REPORTER' : 'APPROVER');
+
+                $steps[] = [
+                    'CSTEPNO'        => trim($row->CSTEPNO),
+                    'CEXTDATA'       => $ext,
+                    'CSTART'         => (string)$row->CSTART,
+                    'POSITION_TITLE' => $posTitle
+                ];
+            }
+
+            // 3. ดึง Log ประวัติการอนุมัติ (CAPVSTNO = '1')
+            $approvalLogs = $this->MainModel->getApprovalLogList($formKeys);
+
+            return $this->output->set_output(json_encode([
+                'status' => true,
+                'steps'  => $steps,
+                'logs'   => $approvalLogs ?: []
+            ]));
+
+        } catch (\Throwable $e) {
+            return $this->output->set_status_header(500)->set_output(json_encode([
+                'status'  => false,
+                'message' => $e->getMessage()
+            ]));
+        }
+    }
 
     public function GetFilesDisplay() {
         $this->output->set_content_type('application/json');

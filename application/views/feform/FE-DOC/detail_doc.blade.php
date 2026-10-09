@@ -74,23 +74,21 @@
             ATTACHMENT FILES (รองรับเฉพาะไฟล์ PDF สำหรับประทับตรา) <span class="text-rose-500">*</span>
         </label>
         
-        <!-- 🟢 บังคับรับเฉพาะไฟล์ .pdf เท่านั้น -->
         <input type="file" id="files" class="hidden" multiple accept=".pdf,application/pdf">
 
         <div id="drop-zone" class="border-2 border-dashed border-slate-300 hover:border-blue-500 bg-white rounded-2xl p-6 text-center cursor-pointer transition-all">
             <div class="flex flex-col items-center justify-center gap-1.5 pointer-events-none">
                 <span class="text-3xl">📄</span>
                 <p class="text-sm font-semibold text-slate-700">คลิกเลือกไฟล์ หรือลากไฟล์มาวางที่นี่</p>
-                <p class="text-xs text-rose-500 font-medium">รองรับเฉพาะไฟล์ PDF (.pdf) สูงสุด 5MB ต่อไฟล์</p>
+                <!-- 🟢 นำข้อความจำกัด 5MB ออก -->
+                <p class="text-xs text-slate-500 font-medium">รองรับไฟล์ PDF (.pdf) </p>
             </div>
         </div>
 
-        <!-- รายการไฟล์ที่เลือกใหม่ -->
         <div id="file-list-container" class="mt-3 hidden">
             <ul id="selected-files-list" class="divide-y divide-slate-100 border border-slate-200 rounded-xl bg-white p-2"></ul>
         </div>
 
-        <!-- รายการไฟล์เดิมที่บันทึกแล้วใน DB -->
         <div id="download-zone" class="mt-3 hidden">
             <ul id="uploaded-files-list" class="divide-y divide-slate-100 border border-slate-200 rounded-xl bg-white p-2 shadow-sm"></ul>
         </div>

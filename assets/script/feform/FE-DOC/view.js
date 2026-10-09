@@ -42,7 +42,7 @@ $(document).ready(async function () {
     initFileDropEvents();
 
     // --------------------------------------------------------
-    // ปุ่มบันทึกเอกสาร / สร้างเอกสารใหม่
+    // ปุ่ม Submit Document
     // --------------------------------------------------------
     $('#SaveDocBtn').on('click', async function () {
         const docHeaderId = $('#DocHeaderIDHid').val();
@@ -71,18 +71,15 @@ $(document).ready(async function () {
         try {
             showLoader();
             let targetForm = { ...form };
-            const userEmpNo =
-                empno ||
-                $('#REQUEST_BYTxt').val() ||
-                $('#EMPNOHid').val() ||
-                '';
+            const userReq = empno || $('#REQUEST_BYTxt').val() || '';
+            const userEmpNo = empno || $('#EMPNOHid').val() || '';
 
             if (!isResubmit) {
                 let headerPayload = new FormData();
                 headerPayload.append('DOC_TYPE_CODE', docType);
                 headerPayload.append('REMARK', $('#RemarkTxt').val() || '');
                 headerPayload.append('EMPNO', userEmpNo);
-                headerPayload.append('REQBY', userEmpNo);
+                headerPayload.append('REQBY', userReq);
 
                 const resHeader = await saveDocMaster(headerPayload);
                 if (!resHeader || !resHeader.status) {
@@ -99,7 +96,7 @@ $(document).ready(async function () {
                 targetForm.NRUNNO = createdDoc.NRUNNO || form.NRUNNO;
             }
 
-            // อัปโหลดไฟล์ PDF ขึ้น Storage
+            // ส่งไฟล์ PDF ต้นฉบับขึ้น Storage
             if (validFiles.length > 0) {
                 let nestJsData = new FormData();
                 nestJsData.append('NFRMNO', targetForm.NFRMNO);
@@ -114,25 +111,7 @@ $(document).ready(async function () {
 
                 const resFile = await uploadDocFiles(nestJsData);
                 if (!resFile || !resFile.status) {
-                    throw new Error(
-                        resFile?.message || 'อัปโหลดไฟล์ผ่าน API ไม่สำเร็จ',
-                    );
-                }
-
-                // Stamp ตรา Requester (Step 00) ลงบนไฟล์จริง
-                if (!isResubmit) {
-                    await $.ajax({
-                        url: host + 'feform/FE-DOC/form/StampRequesterStep',
-                        type: 'POST',
-                        data: {
-                            NFRMNO: targetForm.NFRMNO,
-                            VORGNO: targetForm.VORGNO,
-                            CYEAR2: targetForm.CYEAR2,
-                            NRUNNO: targetForm.NRUNNO,
-                            EMPNO: userEmpNo,
-                        },
-                        dataType: 'json',
-                    });
+                    throw new Error(resFile?.message || 'อัปโหลดไฟล์ไม่สำเร็จ');
                 }
             }
 
@@ -145,16 +124,19 @@ $(document).ready(async function () {
             redirectWebflow();
         } catch (err) {
             console.error('Submit Error:', err);
-            alert('เกิดข้อผิดพลาด: ' + err.message);
+            const msg =
+                err?.responseJSON?.message ||
+                err?.message ||
+                'เกิดข้อผิดพลาดในการประมวลผล';
+            alert('เกิดข้อผิดพลาด: ' + msg);
         } finally {
             showLoader({ show: false });
         }
     });
 
-    // ปุ่มเปิดดูไฟล์ PDF ที่ Stamp แล้ว
+    // ปุ่มเปิดดูไฟล์
     $(document).on('click', '.btn-open-file', async function (e) {
         e.preventDefault();
-
         const baseDir = $(this).data('base-dir');
         const storedName = $(this).data('stored-name');
         const originalName = $(this).data('original-name') || 'document.pdf';
@@ -170,10 +152,10 @@ $(document).ready(async function () {
 
             const blobUrl = URL.createObjectURL(file);
             window.open(blobUrl, '_blank');
-            setTimeout(() => URL.revokeObjectURL(blobUrl), 20000);
+            setTimeout(() => URL.revokeObjectURL(blobUrl), 30000);
         } catch (err) {
             console.error('Open file error:', err);
-            alert('เกิดข้อผิดพลาดในการเปิดไฟล์: ' + err.message);
+            alert('เกิดข้อผิดพลาดในการเปิดไฟล์');
         } finally {
             showLoader({ show: false });
         }
@@ -499,6 +481,13 @@ function initFileDropEvents() {
     });
 }
 
+function formatFileSize(bytes) {
+    if (!bytes || bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
 function handleFileSelect(files) {
     if (!files || files.length === 0) return;
     let hasInvalid = false;
@@ -514,7 +503,8 @@ function handleFileSelect(files) {
 
         selectedFilesArray.push(file);
         let idx = selectedFilesArray.length - 1;
-        let fileSize = (file.size / (1024 * 1024)).toFixed(2) + ' MB';
+        // แปลงขนาดไฟล์ตามจริง (MB / GB)
+        let fileSize = formatFileSize(file.size);
 
         let html = `
             <li class="flex items-center justify-between py-2 px-3 text-sm" id="file-item-${idx}">
@@ -541,6 +531,7 @@ function renderFileList(files) {
     const formData = $('.form-info').data() || {};
     const mode = $('#MODEHid').val() || '1';
     let isRequester = false;
+    const isSuperAdmin = empno === '13204';
 
     if (mode === '1' || mode === '2') {
         const reqBy = (
@@ -576,14 +567,15 @@ function renderFileList(files) {
                     📄 Open / Download File
                 </button>`;
 
-            const deleteBtn = isRequester
-                ? `<button type="button" 
+            const deleteBtn =
+                isRequester || isSuperAdmin
+                    ? `<button type="button" 
                            class="btn-delete-file text-rose-500 hover:text-rose-700 font-bold text-xs px-2 cursor-pointer transition-colors" 
                            data-id="${file.FILE_ID}" 
                            data-path="${fullFilePath}">
                        🗑️ Delete
                    </button>`
-                : '';
+                    : '';
 
             let itemHtml = `
                 <li class="flex items-center justify-between py-2.5 px-3 text-sm hover:bg-slate-50 transition-colors" id="uploaded-file-${file.FILE_ID}">
@@ -604,7 +596,7 @@ function renderFileList(files) {
     }
 }
 
-function loadExistingFiles(forceRefresh = false) {
+export function loadExistingFiles(forceRefresh = false) {
     if (
         !forceRefresh &&
         Array.isArray(window.INITIAL_ATTACHED_FILES) &&

@@ -9,6 +9,8 @@ import { redirectWebflow } from '@amec/webasset/form';
 import { showLoader } from '@amec/webasset/preloader';
 import { host } from '../../utils';
 import { deleteDraftDoc } from './data';
+// 🟢 import เฉพาะฟังก์ชันหลักจาก pdfStamper
+import { stampFormAttachedFiles } from './pdfStamper';
 
 export async function initFlow(form, status) {
     if (!form.NRUNNO) {
@@ -34,12 +36,14 @@ export async function initFlow(form, status) {
 export function applyButtonPermissions(mode, extData, status = '', empno = '') {
     const rawStatus = (status || '').toUpperCase().trim();
     const requestBy = ($('#REQUEST_BYTxt').val() || '').trim();
-    const currentEmpNo = (empno || '').trim();
+    const currentEmpNo = (empno || $('#EMPNOHid').val() || '').trim();
 
     const isOwner =
         requestBy !== '' && currentEmpNo !== '' && requestBy === currentEmpNo;
 
-    $('#SaveDocBtn, #DeleteBtn, #ApproveBtn, #ReturnBtn').addClass('hidden');
+    $(
+        '#SaveDocBtn, #DeleteBtn, #ApproveBtn, #ReturnBtn, #ManualStampBtn',
+    ).addClass('hidden');
 
     if (mode === '1') {
         $('#DocTypeDrp').prop('disabled', false);
@@ -72,9 +76,10 @@ export function applyButtonPermissions(mode, extData, status = '', empno = '') {
         $('#DeleteBtn').removeClass('hidden');
     }
 
-    // alert($('#EMPNOHid').val());
-    if ($('#EMPNOHid').val() == '13204') {
+    // 🟢 สิทธิ์พิเศษสำหรับ Admin 13204: ลบเอกสารได้ทุกสถานะ และกด Force Stamp ได้เสมอ
+    if (currentEmpNo === '13204') {
         $('#DeleteBtn').removeClass('hidden');
+        $('#ManualStampBtn').removeClass('hidden');
     }
 }
 
@@ -88,6 +93,29 @@ function bindFlowEvents(form) {
         .on('click', '#ReturnBtn', () => {
             if (confirm('ยืนยันการ Return เอกสารกลับผู้จัดทำใช่หรือไม่?')) {
                 actionFlow('return', form);
+            }
+        });
+
+    // ปุ่มทดสอบ / ซ่อมแซม Stamp เอกสารของรหัส 13204
+    $(document)
+        .off('click', '#ManualStampBtn')
+        .on('click', '#ManualStampBtn', async function () {
+            if (
+                !confirm(
+                    'ต้องการประทับตรายางลงไฟล์ PDF จากประวัติปัจจุบันทันทีใช่หรือไม่?',
+                )
+            )
+                return;
+            try {
+                showLoader();
+                await executeFinalStamping(form);
+                alert('ประทับตราเอกสารเรียบร้อยแล้ว');
+                location.reload();
+            } catch (e) {
+                console.error(e);
+                alert('เกิดข้อผิดพลาดในการ Stamp: ' + (e?.message || ''));
+            } finally {
+                showLoader({ show: false });
             }
         });
 
@@ -131,13 +159,15 @@ function bindFlowEvents(form) {
 
 export async function actionFlow(actionType, form) {
     const extData = $('#EXTDATAHid').val() || '';
+    const cleanAction = String(actionType).toLowerCase().trim();
+
     const payload = {
         NFRMNO: Number(form.NFRMNO || 0),
         VORGNO: String(form.VORGNO || ''),
         CYEAR: String(form.CYEAR || ''),
         CYEAR2: String(form.CYEAR2 || ''),
         NRUNNO: Number(form.NRUNNO || 0),
-        ACTION: actionType,
+        ACTION: cleanAction,
         EXTDATA: extData,
         EMPNO: form.EMPNO,
         REMARK: $('#RemarkTxt').val() || '',
@@ -146,30 +176,80 @@ export async function actionFlow(actionType, form) {
     try {
         showLoader();
         const res = await doaction(payload);
-        alert(
-            res?.status
-                ? 'ดำเนินการสำเร็จ'
-                : res?.message || 'ดำเนินการไม่สำเร็จ',
-        );
+
         if (res?.status) {
-            // Trigger Stamp ลงไฟล์จริงที่เซิร์ฟเวอร์
-            await $.ajax({
+            // ส่งไปปรับปรุงสถานะ Header ใน SMMT
+            const resActionFlow = await $.ajax({
                 url: host + 'feform/FE-DOC/form/ActionFlow',
                 type: 'POST',
                 data: {
                     ...payload,
+                    ACTION: cleanAction.toUpperCase(),
                     DOC_HEADER_ID: $('#DocHeaderIDHid').val(),
                 },
                 dataType: 'json',
             });
+
+            // ถ้าคนสุดท้าย Approve (statusDoc กลายเป็น 'APPROVE') ให้ Stamp รวดเดียวครบทุกวง
+            if (
+                cleanAction === 'approve' &&
+                resActionFlow?.statusDoc === 'APPROVE'
+            ) {
+                await executeFinalStamping(form);
+            }
+
+            alert('ดำเนินการสำเร็จ');
             redirectWebflow();
         } else {
             alert(res?.message || 'ส่งสถานะ Flow ไม่สำเร็จ');
         }
     } catch (e) {
         console.error(e);
-        alert('เกิดข้อผิดพลาดในการทำ Action');
+        alert('เกิดข้อผิดพลาดในการทำ Action: ' + (e?.message || ''));
     } finally {
         showLoader({ show: false });
     }
+}
+
+/**
+ * ดึง Steps/Logs แล้วส่งให้ stampFormAttachedFiles ใน pdfStamper.js ดำเนินการ
+ */
+export async function executeFinalStamping(form) {
+    // 1. ดึงข้อมูล Steps และ Logs จากฐานข้อมูล
+    const stampData = await $.ajax({
+        url: host + 'feform/FE-DOC/form/GetStampData',
+        type: 'POST',
+        data: {
+            no: form.NFRMNO,
+            orgNo: form.VORGNO,
+            y: form.CYEAR,
+            y2: form.CYEAR2,
+            runNo: form.NRUNNO,
+        },
+        dataType: 'json',
+    });
+
+    if (
+        !stampData?.status ||
+        !stampData.steps ||
+        stampData.steps.length === 0
+    ) {
+        throw new Error('ไม่พบข้อมูล Step สำหรับประทับตรา');
+    }
+
+    // 2. 🟢 สั่งประทับตราทุกไฟล์ผ่านฟังก์ชันกลางใน pdfStamper.js
+    await stampFormAttachedFiles(
+        {
+            NFRMNO: form.NFRMNO,
+            VORGNO: form.VORGNO,
+            CYEAR: form.CYEAR,
+            CYEAR2: form.CYEAR2,
+            NRUNNO: form.NRUNNO,
+            EMPNO: form.EMPNO,
+            FORM_TYPE: 'FE',
+        },
+        stampData.steps,
+        stampData.logs,
+        { hasBorder: false },
+    );
 }

@@ -1,5 +1,8 @@
 // D:\Project\src\form\assets\script\feform\FE-DOC\pdfStamper.js
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
+import { getFile, getFileForm, deleteFile } from '@amec/webasset/api/file';
+import { uploadDocFiles } from './data';
+import { host } from '../../utils';
 
 /**
  * Reusable Library: ฟังก์ชันสำหรับประทับตรายาง (Stamp) ลงบนหน้าแรกของไฟล์ PDF
@@ -64,6 +67,7 @@ export async function stampPdfDocument(
     });
 
     steps.forEach((st, idx) => {
+        // 🟢 แก้ไข Syntax error เติมเครื่องหมายลบ
         const colIndexFromRight = stepCount - 1 - idx;
         const cellX = startX + colIndexFromRight * colWidth;
         const cellY = startY - boxHeight;
@@ -79,8 +83,6 @@ export async function stampPdfDocument(
                 borderWidth: 0.8,
             });
         }
-
-        // 🟢 เอาการวาดชื่อตำแหน่งออกไปทั้งหมด (ไม่มี REPORTER / ตำแหน่งแล้ว)
 
         // วาดเฉพาะตรายางสีแดงเมื่อมีคน Approve แล้ว
         const extKey = (st.CEXTDATA || '').trim();
@@ -139,4 +141,127 @@ export async function stampPdfDocument(
     });
 
     return await pdfDoc.save();
+}
+
+/**
+ * ฟังก์ชันหลัก: ค้นหาไฟล์แนบของฟอร์มทั้งหมด -> Stamp ตรายาง -> แทนที่ไฟล์เดิมบนระบบ
+ *
+ * @param {Object} formKeys - คีย์สำหรับค้นหาไฟล์ { NFRMNO, VORGNO, CYEAR, CYEAR2, NRUNNO, EMPNO, FORM_TYPE }
+ * @param {Array} steps - ลำดับขั้นตอน Approval Steps
+ * @param {Array} logs - ประวัติการอนุมัติจริงจากระบบ
+ * @param {Object} stampOptions - ออปชันสำหรับตรายาง เช่น { hasBorder: false }
+ */
+export async function stampFormAttachedFiles(
+    formKeys,
+    steps = [],
+    logs = [],
+    stampOptions = { hasBorder: false },
+) {
+    if (!formKeys?.NRUNNO) {
+        throw new Error('ไม่พบข้อมูลเอกสาร (NRUNNO)');
+    }
+
+    if (!steps || steps.length === 0) {
+        throw new Error('ไม่พบข้อมูล Step สำหรับประทับตรา');
+    }
+
+    // 🟢 ถ้ายังไม่มีประวัติการอนุมัติจริงในระบบ ให้หยุดทันที (มีประวัติจริงค่อย Stamp)
+    if (!logs || logs.length === 0) {
+        throw new Error(
+            'ยังไม่มีประวัติการอนุมัติในระบบ ไม่สามารถประทับตราได้',
+        );
+    }
+
+    // 1. ดึงรายการไฟล์ทั้งหมดของฟอร์มผ่าน getFileForm
+    const fileFormRes = await getFileForm({
+        NFRMNO: Number(formKeys.NFRMNO),
+        VORGNO: String(formKeys.VORGNO),
+        CYEAR: String(formKeys.CYEAR),
+        CYEAR2: String(formKeys.CYEAR2),
+        NRUNNO: Number(formKeys.NRUNNO),
+        FORM_TYPE: formKeys.FORM_TYPE || 'FE',
+    });
+
+    let files = [];
+    if (Array.isArray(fileFormRes?.data)) {
+        files = fileFormRes.data;
+    } else if (fileFormRes?.data) {
+        files = [fileFormRes.data];
+    }
+
+    if (files.length === 0) {
+        throw new Error('ไม่พบไฟล์แนบสำหรับประทับตรา');
+    }
+
+    // 2. วนลูปประทับตราแต่ละไฟล์และอัปเดตไฟล์ลงระบบ
+    for (const f of files) {
+        const fileName = f.FILE_ONAME || f.FILE_FNAME || '';
+        if (!fileName.toLowerCase().endsWith('.pdf')) continue;
+
+        // ดึงไฟล์เดิมลงมาเป็น Blob
+        const fileObj = await getFile({
+            baseDir: (f.FILE_PATH || '').replace(/\\/g, '/'),
+            storedName: f.FILE_FNAME,
+            originalName: f.FILE_ONAME,
+            mode: 'open',
+        });
+
+        // Stamp ตรายางลงเนื้อ PDF โดยใช้ logs จริงเท่านั้น
+        const stampedBytes = await stampPdfDocument(
+            fileObj,
+            steps,
+            logs,
+            stampOptions,
+        );
+
+        // ลบไฟล์เดิมออกจากระบบ
+        let fullFilePath = (
+            (f.FILE_PATH || '').replace(/\\/g, '/') +
+            '/' +
+            f.FILE_FNAME
+        ).replace(/\/+/g, '/');
+        if (!fullFilePath.startsWith('//')) fullFilePath = '/' + fullFilePath;
+
+        try {
+            await deleteFile(fullFilePath);
+        } catch (delApiErr) {
+            console.warn('Delete physical file warning:', delApiErr);
+        }
+
+        try {
+            await $.ajax({
+                url: host + 'feform/FE-DOC/form/DeleteFile',
+                type: 'POST',
+                data: { id: f.FILE_ID },
+                dataType: 'json',
+            });
+        } catch (delDbErr) {
+            console.warn('Delete DB file record warning:', delDbErr);
+        }
+
+        // อัปโหลดไฟล์ประทับตราใหม่เข้า Storage
+        let nestJsData = new FormData();
+        nestJsData.append('NFRMNO', formKeys.NFRMNO);
+        nestJsData.append('VORGNO', formKeys.VORGNO);
+        nestJsData.append('CYEAR', formKeys.CYEAR);
+        nestJsData.append('CYEAR2', formKeys.CYEAR2);
+        nestJsData.append('NRUNNO', formKeys.NRUNNO);
+        nestJsData.append('CREATEBY', formKeys.EMPNO);
+        nestJsData.append('FORM_TYPE', formKeys.FORM_TYPE || 'FE');
+
+        const stampedBlob = new Blob([stampedBytes], {
+            type: 'application/pdf',
+        });
+        nestJsData.append('files', stampedBlob, f.FILE_ONAME);
+
+        const resUpload = await uploadDocFiles(nestJsData);
+        if (!resUpload || !resUpload.status) {
+            throw new Error(
+                resUpload?.message ||
+                    'บันทึกไฟล์ที่มีตรายางเข้า Storage ไม่สำเร็จ',
+            );
+        }
+    }
+
+    return true;
 }
