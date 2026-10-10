@@ -6,8 +6,8 @@ import {
     showflow,
 } from '@amec/webasset/api/webform';
 import { webflowSubmit } from '@amec/webasset/components/form';
-import { redirectWebflow } from '@amec/webasset/form';
 import { showMessage } from '@amec/webasset/utils';
+import { redirectWebflow } from '@amec/webasset/form';
 
 let isActionProcessing = false;
 let cextData = '';
@@ -24,13 +24,19 @@ $(async function () {
     }
 
     try {
-        const [formDetail, showData] = await Promise.all([
+        const [formDetail, showData, modeResponse] = await Promise.all([
             getFormDetail(form),
             getShowData(form),
+            getMode(form),
         ]);
 
         if (showData?.status === false) {
             throw new Error(showData.message || 'FIN-NPO data not found');
+        }
+
+        if (shouldOpenReturnForm(form, formDetail, modeResponse)) {
+            redirectToReturnForm();
+            return;
         }
 
         renderFormDetail(formDetail || {});
@@ -49,8 +55,20 @@ $(async function () {
         renderHeader(data.head, data.expense, data.vendor);
         await renderTravelers(form, data.head, data.expense);
         renderAttachments(data.files);
-        await renderInvoiceTable(data.invoices);
-        await renderWorkflowAction(form);
+        let canEditWht = false;
+
+        if (form.EMPNO) {
+            try {
+                const currentEmployee = await getEmployee(form.EMPNO);
+                canEditWht =
+                    String(currentEmployee?.SSECCODE || '').trim() === '040403';
+            } catch (error) {
+                console.error('Cannot verify WHT permission:', error);
+            }
+        }
+
+        await renderInvoiceTable(data.invoices, canEditWht);
+        await renderWorkflowAction(form, modeResponse);
     } catch (error) {
         console.error(error);
         showMessage(error.message || 'Cannot load FIN-NPO data', 'error');
@@ -65,11 +83,23 @@ $(document).on('click', 'button[name="btnAction"]', async function (event) {
 
     if (isActionProcessing) return;
 
-    const action = $(this).val();
+    const buttonAction = String($(this).val() || '').toLowerCase();
+    const action = buttonAction === 'save' ? 'approve' : buttonAction;
     const remark = String($('#remark').val() || '').trim();
+    const invalidTaxCode = $('.wht-input').filter(
+        (_, input) => !input.checkValidity(),
+    )[0];
 
-    if (action === 'reject' && !remark) {
-        showMessage('Please input remark for reject.', 'warning');
+    if (invalidTaxCode) {
+        showMessage('Tax code must contain 3 or 7 digits.', 'warning');
+        invalidTaxCode.focus();
+        return;
+    }
+
+    const invoiceData = collectInvoiceWht();
+
+    if (['return', 'reject'].includes(action) && !remark) {
+        showMessage('Please input remark for return or reject.', 'warning');
         $('#remark').trigger('focus');
         return;
     }
@@ -84,6 +114,7 @@ $(document).on('click', 'button[name="btnAction"]', async function (event) {
             ACTION: action,
             REMARK: remark,
             CEXTDATA: getCextDataValue(cextData),
+            DATA: invoiceData,
         });
 
         if (result?.status === false) {
@@ -91,7 +122,7 @@ $(document).on('click', 'button[name="btnAction"]', async function (event) {
         }
 
         showMessage(result?.message || 'Workflow action completed', 'success');
-        redirectWebflow();
+        returnToWebflow();
     } catch (error) {
         console.error(error);
         showMessage(error.message || 'Cannot process workflow action', 'error');
@@ -100,6 +131,36 @@ $(document).on('click', 'button[name="btnAction"]', async function (event) {
         $('button[name="btnAction"]').prop('disabled', false);
     }
 });
+
+$(document).on('click', '.fin-npo-back', function (event) {
+    event.preventDefault();
+    redirectBackToWebflow();
+});
+
+function redirectBackToWebflow() {
+    const params = new URLSearchParams(window.location.search);
+    const backPath = params.get('bp');
+    const webflowBase = new URL(
+        process.env.APP_WEBFLOW || window.location.origin,
+    );
+
+    if (backPath) {
+        window.location.assign(new URL(backPath, webflowBase).toString());
+        return;
+    }
+
+    returnToWebflow();
+}
+
+function returnToWebflow() {
+    if (window.opener && !window.opener.closed) {
+        window.opener.focus();
+        window.close();
+        return;
+    }
+
+    redirectWebflow();
+}
 
 function getFormKeyFromUrl() {
     const params = new URLSearchParams(window.location.search);
@@ -118,6 +179,42 @@ function hasFormKey(form) {
     return Boolean(
         form.NFRMNO && form.VORGNO && form.CYEAR && form.CYEAR2 && form.NRUNNO,
     );
+}
+
+function shouldOpenReturnForm(form, formDetail = {}, modeResponse) {
+    if (normalizeWorkflowMode(modeResponse) !== '2') return false;
+
+    const currentEmployee = String(form.EMPNO || '').trim();
+    const firstEmployees = [
+        formDetail.VINPUTER,
+        formDetail.INPUTBY,
+        formDetail.VREQNO,
+        formDetail.REQBY,
+    ]
+        .map((employee) => String(employee || '').trim())
+        .filter(Boolean);
+
+    return Boolean(currentEmployee && firstEmployees.includes(currentEmployee));
+}
+
+function normalizeWorkflowMode(response) {
+    return String(
+        response?.data?.mode ??
+            response?.data?.MODE ??
+            response?.data ??
+            response?.mode ??
+            response?.MODE ??
+            response ??
+            '',
+    )
+        .replace(/^['"]|['"]$/g, '')
+        .trim();
+}
+
+function redirectToReturnForm() {
+    const returnUrl = new URL('returnForm', window.location.href);
+    returnUrl.search = window.location.search;
+    window.location.replace(returnUrl.toString());
 }
 
 async function getShowData(form) {
@@ -188,7 +285,6 @@ function renderEmployee(employee = {}) {
             .filter(Boolean)
             .join(' / '),
     );
-    $('#Pos').text(employee.SPOSNAME || employee.POSITION || 'Employee');
 }
 
 function normalizeShowData(response) {
@@ -206,8 +302,6 @@ function normalizeShowData(response) {
 }
 
 function renderHeader(head = {}, expense = {}, vendor = {}) {
-    $('#SUBJECT').val(head.SUBJECT || '');
-    $('#REMARK').val(head.REMARK || '');
     $('#EXPENSE_CODE').val(head.EXPENSE_CODE || expense.EXPENSE_CODE || '');
     $('#EXPENSE_NAME').val(
         [expense.EXPENSE_TNAME, expense.EXPENSE_ENAME]
@@ -354,7 +448,7 @@ function getEmployeeName(item) {
     ).trim();
 }
 
-async function renderInvoiceTable(invoices = []) {
+async function renderInvoiceTable(invoices = [], canEditWht = false) {
     const rows = invoices.length
         ? invoices
               .map(
@@ -363,18 +457,40 @@ async function renderInvoiceTable(invoices = []) {
                     <td>${escapeHtml(formatDate(invoice.INVOICE_DATE))}</td>
                     <td>${escapeHtml(invoice.INVOICE_NO || '')}</td>
                     <td>${escapeHtml(formatNumber(invoice.NET_PRICE))}</td>
-                    <td>${escapeHtml(formatVat(invoice.VAT_RATE_ID))}</td>
+                    <td>${escapeHtml(formatNumber(Number(invoice.TOTAL_AMT) - Number(invoice.NET_PRICE)))}</td>
                     <td>${escapeHtml(formatNumber(invoice.TOTAL_AMT))}</td>
-                    <td>${escapeHtml(invoice.SCURCODE || '')}</td>
+                    <td>
+                        <input type="text" inputmode="numeric" pattern="[0-9]{3}([0-9]{4})?" maxlength="7" required
+                            class="wht-input input input-sm input-bordered w-full"
+                            data-invoice-id="${escapeHtml(invoice.ID || invoice.LINE_ID || index + 1)}"
+                            value="${escapeHtml(formatTaxCode(invoice.WHT))}"
+                            ${canEditWht ? '' : 'readonly'}
+                            placeholder="3 or 7 digits" />
+                    </td>
+                    <td>${escapeHtml(invoice.REFERENCE ?? invoice.REMARK ?? '')}</td>
                 </tr>`,
               )
               .join('')
-        : '<tr><td colspan="7" class="text-center">No invoice information</td></tr>';
+        : '<tr><td colspan="8" class="text-center">No invoice information</td></tr>';
 
     $('#stampTable').html(`<thead><tr>
         <th>No.</th><th>Invoice Date</th><th>Invoice No.</th>
-        <th>Net Price</th><th>VAT Rate</th><th>Total Amount</th><th>Currency</th>
+        <th>Net Price</th><th>VAT</th><th>Total Amount</th><th>Tax code</th><th>Reference</th>
     </tr></thead><tbody>${rows}</tbody>`);
+}
+
+function collectInvoiceWht() {
+    return $('.wht-input')
+        .map((_, input) => {
+            const value = String($(input).val() || '').trim();
+
+            return {
+                ID: $(input).data('invoice-id'),
+                LINE_ID: $(input).data('invoice-id'),
+                WHT: value === '' ? null : value,
+            };
+        })
+        .get();
 }
 
 function renderAttachments(files = []) {
@@ -402,9 +518,9 @@ function renderAttachments(files = []) {
     );
 }
 
-async function renderWorkflowAction(form) {
+async function renderWorkflowAction(form, modeResponse) {
     try {
-        const mode = String(await getMode(form));
+        const mode = normalizeWorkflowMode(modeResponse);
         cextData = getCextDataValue(await getExtData(form));
         const flow = await showflow(form);
         const action =
@@ -414,6 +530,7 @@ async function renderWorkflowAction(form) {
                       flowhtml: flow?.html || flow?.data?.html || '',
                       approve: true,
                       reject: true,
+                      return: true,
                   })
                 : webflowSubmit({
                       flow: true,
@@ -422,6 +539,10 @@ async function renderWorkflowAction(form) {
                   });
 
         $('#sentApprove').html(action);
+        $('#sentApprove button')
+            .filter((_, button) => $(button).text().trim() === 'Back')
+            .removeAttr('onclick')
+            .addClass('fin-npo-back');
     } catch (error) {
         console.error('Cannot load workflow action:', error);
         $('#sentApprove').html(
@@ -473,9 +594,8 @@ function formatNumber(value) {
     });
 }
 
-function formatVat(value) {
-    const text = formatNumber(value);
-    return `${text}%`;
+function formatTaxCode(value) {
+    return String(value ?? '').trim();
 }
 
 function getCextDataValue(value) {

@@ -22,8 +22,8 @@ class form extends MY_Controller{
             ];
 
         }else{
-            $form = $this->getFormMasterByVaname('PUR-NVF');
-            
+            $form = $this->getFormMasterByVaname('PRO-NVF');
+
             if(!empty($form)){
                 $data = [
                     'NFRMNO' => $form["data"]["NNO"],

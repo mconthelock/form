@@ -3,356 +3,183 @@
 
 @section('styles')
     <style>
-        * {
-            box-sizing: border-box;
-        }
-
-        body {
-            margin: 0;
-            padding: 0;
-            background: #e6e7ea;
-            font-family: Arial, Helvetica, sans-serif;
-            color: #111;
-        }
-
-        .page-wrapper {
-            min-height: 100vh;
-            border-top: 2px solid #222;
-            padding: 22px 19px;
-        }
-
-        .page-title {
-            margin: 0 0 11px 13px;
-            color: #0754b8;
-            font-size: 30px;
-            font-weight: 700;
-        }
-
-        .page-subtitle {
-            display: block;
-            margin-top: 3px;
-            font-size: 22px;
-            color: #0754b8;
-        }
-
-        .content-card {
-            width: 100%;
-            min-height: 344px;
-            padding: 31px 32px;
-            background: #fff;
-            border-radius: 4px;
-        }
-
-        .toolbar {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 20px;
-        }
-
-        .area-form {
-            display: none;
-            margin-bottom: 20px;
-            padding: 20px;
-            border: 1px solid #c6d2e1;
-            border-radius: 8px;
-            background: #f8fafc;
-        }
-
-        .area-form.is-visible {
-            display: block;
-        }
-
-        .area-form-grid {
-            display: grid;
-            grid-template-columns: repeat(4, minmax(0, 1fr));
-            gap: 12px;
-        }
-
-        .area-form label {
-            display: block;
-            margin-bottom: 5px;
-            color: #4a596d;
-            font-size: 13px;
-            font-weight: 600;
-        }
-
-        .area-form input {
-            width: 100%;
-            height: 34px;
-            padding: 0 10px;
-            border: 1px solid #c8c8c8;
-            border-radius: 3px;
-            outline: none;
-            font-size: 13px;
-        }
-
-        .area-form input:focus {
-            border-color: #0754b8;
-        }
-
-        .area-form-actions {
-            display: flex;
-            justify-content: flex-end;
-            gap: 8px;
-            margin-top: 16px;
-        }
-
-        .area-form-actions button {
-            min-width: 80px;
-            height: 33px;
-            padding: 0 14px;
-            border: 0;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 13px;
-            font-weight: 600;
-        }
-
-        .cancel-area-button {
-            background: #e5e7eb;
-            color: #374151;
-        }
-
-        .save-area-button {
-            background: #0754b8;
-            color: #fff;
-        }
-
-        .search-input {
-            width: 185px;
-            height: 32px;
-            padding: 0 12px;
-            border: 1px solid #c8c8c8;
-            border-radius: 3px;
-            outline: none;
-            font-size: 13px;
-        }
-
-        .search-input:focus {
-            border-color: #0754b8;
-        }
-
-        .add-button {
-            min-width: 98px;
-            height: 33px;
-            padding: 0 14px;
-            border: 0;
-            border-radius: 9px;
-            background: #0754b8;
-            color: #fff;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .add-button:hover {
-            background: #06449a;
-        }
-
-        .table-wrapper {
-            overflow-x: auto;
-        }
-
-        .area-table {
-            width: 100%;
-            border: 1px solid #c6d2e1;
-            border-radius: 8px;
-            border-spacing: 0;
-            border-collapse: separate;
-            overflow: hidden;
-            font-size: 13px;
-        }
-
-        .area-table th {
-            height: 37px;
-            padding: 0 10px;
-            background: #fff;
-            color: #4a596d;
-            text-align: left;
-            font-weight: 600;
-            white-space: nowrap;
-            border-bottom: 1px solid #c6d2e1;
-        }
-
-        .area-table td {
-            height: 49px;
-            padding: 0 10px;
-            border-bottom: 1px solid #c6d2e1;
-            white-space: nowrap;
-        }
-
-        .area-table tbody tr:last-child td {
-            border-bottom: 0;
-        }
-
-        .area-table tbody tr:nth-child(even) {
-            background: #e9e9e9;
-        }
-
-        .area-table th:nth-child(1),
-        .area-table td:nth-child(1) {
-            width: 8%;
-        }
-
-        .area-table th:nth-child(2),
-        .area-table td:nth-child(2) {
-            width: 23%;
-        }
-
-        .area-table th:nth-child(3),
-        .area-table td:nth-child(3) {
-            width: 22%;
-        }
-
-        .area-table th:nth-child(4),
-        .area-table td:nth-child(4) {
-            width: 12%;
-        }
-
-        .area-table th:nth-child(5),
-        .area-table td:nth-child(5) {
-            width: 25%;
-        }
-
-        .area-table th:last-child,
-        .area-table td:last-child {
-            width: 120px;
+        /* Hallmark · compact workbench · DaisyUI system · centered area management.
+           Pre-emit critique: P4 H4 E4 S4 R5 V4 */
+        .area-data-shell {
+            --area-soft: color-mix(in srgb, var(--color-primary) 6%, var(--color-base-100));
+            --area-shadow: color-mix(in srgb, var(--color-primary) 10%, transparent);
+            --area-backdrop: color-mix(in srgb, var(--color-neutral) 55%, transparent);
+            font-family: var(--font-sans);
+            color: var(--color-base-content);
             text-align: center;
         }
-
-        .sort-icon {
-            float: right;
-            color: #e5e5e5;
-            font-size: 13px;
-            line-height: 12px;
+        .area-data-shell { width: 100%; max-width: 1040px; margin: 16px auto; }
+        .area-data-card {
+            width: 100%; min-width: 0; overflow: hidden;
+            background: var(--color-base-100); border: 1px solid var(--color-base-300);
+            border-radius: 20px; box-shadow: 0 8px 28px var(--area-shadow);
         }
-
-        .action-link {
-            display: inline-flex;
-            width: 27px;
-            height: 30px;
-            align-items: center;
-            justify-content: center;
-            margin: 0 3px;
-            text-decoration: none;
-            cursor: pointer;
+        .area-data-header {
+            display: grid; grid-template-columns: 52px minmax(0, 1fr); column-gap: 18px;
+            align-items: center; padding: 28px; background: #0d4db5;
+            color: #fff; text-align: left;
         }
-
-        .table-action-button {
-            border: 0;
-            background: transparent;
-            font: inherit;
+        .area-data-mark {
+            display: grid; grid-row: span 2; place-items: center; width: 52px; height: 52px;
+            margin: 0; border: 1px solid currentColor; border-radius: 14px;
         }
-
-        .edit-icon {
-            color: #facc15;
-            font-size: 21px;
+        .area-data-title { font-size: clamp(21px, 3vw, 28px); font-weight: 700; line-height: 1.4; overflow-wrap: anywhere; }
+        .area-data-subtitle { font-size: 13px; margin-top: 2px; }
+        .area-data-body { padding: 24px; }
+        .area-data-shell .toolbar { display: flex; justify-content: flex-start; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; }
+        .area-data-shell .search-input { width: min(100%, 380px); height: 40px; text-align: left; border-radius: 10px; }
+        .area-data-shell .btn { border-radius: 9px; box-shadow: none; white-space: nowrap; }
+        .area-form-dialog { width: min(calc(100% - 32px), 1200px); margin: auto; padding: 0; overflow: visible; border: 1px solid var(--color-base-300); border-radius: 20px; background: var(--color-base-100); color: var(--color-base-content); font-size: 15px; box-shadow: 0 16px 48px var(--area-shadow); }
+        .area-form-dialog::backdrop { background: var(--area-backdrop); }
+        .area-form-dialog__content { max-height: calc(100dvh - 32px); overflow-y: auto; padding: 30px; }
+        .area-form-dialog__header { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 20px; text-align: left; }
+        .area-form-dialog__title { font-size: 22px; font-weight: 700; }
+        .area-form-dialog__close { display: grid; place-items: center; width: 42px; height: 42px; border: 1px solid var(--color-base-300); border-radius: 9px; background: var(--color-base-100); color: var(--color-base-content); font-size: 24px; }
+        .area-data-shell .area-form { padding: 24px; border: 1px solid var(--color-base-300); border-radius: 14px; background: var(--area-soft); }
+        .area-data-shell .area-form-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 20px 18px; }
+        .area-data-shell .area-form-grid > div { min-width: 0; }
+        .area-data-shell .area-form label { display: block; margin-bottom: 8px; font-size: 15px; font-weight: 600; }
+        .area-data-shell .area-form :is(input, select) {
+            width: 100%; height: 48px; padding: 0 12px; border: 1px solid var(--color-base-300);
+            border-radius: 8px; background: var(--color-base-100); color: var(--color-base-content);
+            font: inherit; text-align: center;
         }
-
-        .delete-icon {
-            color: #d30b17;
-            font-size: 21px;
+        .area-data-shell .area-form .select2-container { width: 100% !important; text-align: center; }
+        .area-data-shell .select2-selection--single { height: 48px; border: 1px solid var(--color-base-300); border-radius: 8px; background: var(--color-base-100); }
+        .area-data-shell .select2-selection__rendered { line-height: 46px !important; color: var(--color-base-content) !important; font-size: 15px; }
+        .area-data-shell .select2-selection__arrow { height: 46px !important; }
+        .area-form-dialog .select2-results__option { padding: 10px 14px; font-size: 15px; }
+        .area-data-shell .area-form-actions { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 12px; margin-top: 22px; }
+        .area-form-dialog .area-form-actions .btn { min-height: 44px; padding-inline: 18px; font-size: 15px; }
+        .swal2-popup.area-popup {
+            width: min(460px, calc(100vw - 32px)); padding: 24px;
+            border: 1px solid var(--color-base-300); border-radius: 20px;
+            background: var(--color-base-100); color: var(--color-base-content);
+            font-family: var(--font-sans); box-shadow: 0 16px 48px rgb(15 23 42 / 18%);
         }
-
-        .empty-row {
-            height: 80px !important;
-            text-align: center;
-            color: #777;
+        .area-popup .area-popup__title { padding: 0; font-size: 22px; line-height: 1.5; }
+        .area-popup .area-popup__message { margin: 12px 0 0; font-size: 15px; line-height: 1.7; overflow-wrap: anywhere; }
+        .area-popup .swal2-icon { margin: 4px auto 20px; }
+        .area-popup .area-popup__actions { width: 100%; justify-content: flex-end; gap: 12px; margin-top: 24px; }
+        .area-popup .btn { min-height: 44px; padding-inline: 18px; border-radius: 9px; font-size: 15px; }
+        .area-popup .area-popup__confirm { order: 1; }
+        .area-popup .btn:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 3px; }
+        .area-data-shell :is(input, select, button):focus-visible {
+            outline: 2px solid var(--color-primary); outline-offset: 3px;
         }
-
-        .table-summary {
-            margin-top: 25px;
-            text-align: right;
-            font-size: 14px;
+        .area-data-shell .table-wrapper { overflow-x: auto; border: 1px solid var(--color-base-300); border-radius: 12px; }
+        .area-data-shell .area-table { width: 100%; min-width: 760px; border-collapse: collapse; font-size: 13px; }
+        .area-data-shell .area-table :is(th, td) { text-align: center; vertical-align: middle; padding: 12px 14px; border: 0; border-bottom: 1px solid var(--color-base-300); }
+        .area-data-shell .area-table th { background: var(--area-soft); color: var(--color-primary); font-weight: 700; white-space: nowrap; }
+        .area-data-shell .area-table td:last-child { white-space: nowrap; }
+        .area-data-shell .area-table tbody tr:nth-child(even) { background: var(--color-base-200); }
+        .area-data-shell .area-table tbody tr:hover { background: var(--area-soft); }
+        .area-data-shell .area-table tbody tr:last-child td { border-bottom: 0; }
+        .area-data-shell .area-table td:first-child { font-variant-numeric: tabular-nums; color: var(--color-neutral); }
+        .area-data-shell .area-table td:nth-child(3) { font-weight: 600; }
+        .area-data-shell .action-link { display: inline-flex; justify-content: center; align-items: center; margin: 0 3px; cursor: pointer; }
+        .area-data-shell .table-action-button { width: 34px; height: 34px; border: 1px solid var(--color-base-300); border-radius: 8px; background: var(--color-base-100); }
+        .area-data-shell .table-action-button:hover { border-color: var(--color-primary); background: var(--area-soft); }
+        .area-data-shell .toggle-area-status { width: auto; padding-inline: 8px; font-size: 11px; }
+        .area-data-shell .delete-area { width: 34px; padding: 0; color: #dc2626; }
+        .area-data-shell .inactive-area-option { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; }
+        .area-data-shell .edit-area span { color: var(--color-yellow-400); }
+        .area-data-shell .empty-row { height: 150px; color: var(--color-neutral); }
+        .area-data-shell .table-summary { margin-top: 16px; font-size: 12px; color: var(--color-neutral); text-align: center; }
+        .area-data-shell .area-pagination { display: flex; justify-content: center; align-items: center; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
+        .area-data-shell .area-pagination__status { min-width: 72px; font-size: 12px; color: var(--color-neutral); }
+        @media (max-width: 640px) {
+            .area-data-shell .area-form-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
         }
-
-        @media (max-width: 768px) {
-            .content-card {
-                padding: 20px 14px;
-            }
-
-            .page-title {
-                margin-left: 0;
-                font-size: 25px;
-            }
-
-            .toolbar {
-                gap: 12px;
-                align-items: stretch;
-                flex-direction: column;
-            }
-
-            .search-input {
-                width: 100%;
-            }
-
-            .add-button {
-                align-self: flex-end;
-            }
-
-            .area-form-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .area-table {
-                min-width: 850px;
-            }
+        @media (max-width: 480px) {
+            .area-data-shell { margin-block: 8px; }
+            .area-data-body { padding: 14px; }
+            .area-data-header { padding: 22px 14px; }
+            .area-data-shell .toolbar { flex-direction: column; align-items: stretch; }
+            .area-data-shell .toolbar .btn { width: 100%; }
+            .area-form-dialog__content { padding: 16px; }
+            .area-data-shell .area-form { padding: 16px; }
+            .area-data-shell .area-form-grid { grid-template-columns: minmax(0, 1fr); }
         }
     </style>
-    
 @endsection
 
 @section('contents')
-    <div class="page-wrapper">
-            <div class="text-center">
-                <H1 class="text-3xl font-bold text-primary">พื้นที่ขออนุญาตถ่ายภาพ</H1>
-                <H2 lass="text-xl font-semibold uppercase opacity-50 tracking-wider mt-1">(Photo Permission Area)</H2>
-      
-            </div>
-
-        <div class="content-card">
+    <div class="area-data-shell bg-base-200 flex justify-center text-[13px] leading-relaxed font-sans text-base-content">
+        <div class="area-data-card">
+            <header class="area-data-header">
+                <div class="area-data-mark" aria-hidden="true">
+                    <svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7">
+                        <path d="M19 10c0 5-7 11-7 11S5 15 5 10a7 7 0 1 1 14 0Z" />
+                        <circle cx="12" cy="10" r="2.5" />
+                    </svg>
+                </div>
+                <h1 class="area-data-title">พื้นที่ขออนุญาตถ่ายภาพ</h1>
+                <p class="area-data-subtitle">GP-TPH · Photo Permission Areas</p>
+            </header>
+            <div class="area-data-body">
             <div class="toolbar">
-                <input
-                    type="text"
-                    id="searchArea"
-                    class="search-input"
-                    placeholder="Search record"
-                    autocomplete="off"
-                >
-                <button type="button" id="newAreaButton" class="add-button">
-                    + New Area
+                <input type="text" id="searchArea" class="input search-input" placeholder="ค้นหาพื้นที่ สถานที่ หรือเจ้าของพื้นที่" aria-label="ค้นหาพื้นที่" autocomplete="off">
+                <button type="button" id="newAreaButton" class="btn btn-primary add-button">
+                    + เพิ่มพื้นที่
                 </button>
+                <label class="inactive-area-option">
+                    <input type="checkbox" id="showInactiveAreas">
+                    แสดงพื้นที่ปิดใช้งาน
+                </label>
             </div>
 
+            <dialog id="areaFormDialog" class="area-form-dialog" aria-labelledby="areaFormTitle">
+            <div class="area-form-dialog__content">
+            <header class="area-form-dialog__header">
+                <h2 id="areaFormTitle" class="area-form-dialog__title">เพิ่มพื้นที่</h2>
+                <button type="button" id="closeAreaFormButton" class="area-form-dialog__close" aria-label="ปิด">×</button>
+            </header>
             <form id="areaForm" class="area-form">
                 <div class="area-form-grid">
                     <div>
-                        <label for="areaLocation">Location</label>
-                        <input type="text" id="areaLocation" name="location" required>
+                        <label for="LOCATION_ID">Location</label>
+                        <select id="LOCATION_ID" name="LOCATION_ID" required>
+                            <option value="">Select location</option>
+                        </select>
                     </div>
                     <div>
-                        <label for="areaName">Area</label>
-                        <input type="text" id="areaName" name="area" required>
+                        <label for="AREA_NAME">Area</label>
+                        <input type="text" id="AREA_NAME" name="AREA_NAME" required>
                     </div>
                     <div>
-                        <label for="areaLevel">Level</label>
-                        <input type="text" id="areaLevel" name="level" required>
+                        <label for="AREA_LEVEL">Level</label>
+                        <input type="number" id="AREA_LEVEL" name="AREA_LEVEL" inputmode="numeric" min="0" max="4" step="1" required>
                     </div>
                     <div>
-                        <label for="areaOwner">Area Owner</label>
-                        <input type="text" id="areaOwner" name="area_owner" required>
+                        <label for="AREA_OWNER">Area Owner</label>
+                        <select id="AREA_OWNER" name="AREA_OWNER" required>
+                            <option value="">Select area owner</option>
+                        </select>
                     </div>
                 </div>
                 <div class="area-form-actions">
-                    <button type="button" id="cancelAreaButton" class="cancel-area-button">Cancel</button>
-                    <button type="submit" class="save-area-button">Save</button>
+                    <button type="button" id="cancelAreaButton" class="btn btn-sm btn-error text-white gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18 18 6M6 6l12 12" />
+                        </svg>
+                        Cancel
+                    </button>
+                    <button type="submit" class="btn btn-sm btn-success text-white gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 4h11l3 3v13H5V4Zm3 0v6h8V4m-8 16v-6h8v6" />
+                        </svg>
+                        Save
+                    </button>
                 </div>
             </form>
+            </div>
+            </dialog>
 
             <div class="table-wrapper border-slate-200">
                 <table class="area-table">
@@ -360,79 +187,35 @@
                         <tr>
                             <th class ="border p-2 bg-blue-500 text-white">
                                 NO
-                                <span class="sort-icon">▲<br>▼</span>
                             </th>
                             <th class ="border p-2">
                                 Location
-                                <span class="sort-icon">▲<br>▼</span>
                             </th>
                             <th class ="border p-2">
                                 Area
-                                <span class="sort-icon">▲<br>▼</span>
                             </th>
                             <th class ="border p-2">
                                 Level
-                                <span class="sort-icon">▲<br>▼</span>
                             </th>
                             <th class ="border p-2">
                                 Area Owner
-                                <span class="sort-icon">▲<br>▼</span>
                             </th>
                             <th>Action</th>
                         </tr>
                     </thead>
 
-                    <tbody id="areaTableBody">
-                        @forelse ($areas ?? [] as $index => $area)
-                            <tr>
-                                <td>{{ $index + 1 }}</td>
-                                <td>{{ $area->location ?? '-' }}</td>
-                                <td>{{ $area->area ?? '-' }}</td>
-                                <td>{{ $area->level ?? '-' }}</td>
-                                <td>{{ $area->area_owner ?? '-' }}</td>
-                                <td>
-                                    <a
-                                        href="{{ url('/photo-permission-area/' . $area->id . '/edit') }}"
-                                        class="action-link"
-                                        title="แก้ไขข้อมูล"
-                                        style="border-block-end-color: gold"
-                                    >
-                                        <span class="edit-icon">✎</span>
-                                    </a>
-
-                                    <form
-                                        action="{{ url('/photo-permission-area/' . $area->id) }}"
-                                        method="POST"
-                                        style="display: inline;"
-                                        onsubmit="return confirm('ยืนยันการลบข้อมูลนี้หรือไม่?');"
-                                    >
-                                        @csrf
-                                        @method('DELETE')
-
-                                        <button
-                                            type="submit"
-                                            class="action-link"
-                                            title="ลบข้อมูล"
-                                            style="border: 0; background: transparent;"
-                                        >
-                                            <span class="delete-icon">🗑</span>
-                                        </button>
-                                    </form>
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="6" class="empty-row">
-                                    ไม่พบข้อมูล
-                                </td>
-                            </tr>
-                        @endforelse
-                    </tbody>
+                    <tbody id="areaTableBody"></tbody>
                 </table>
             </div>
 
-            <div class="table-summary">
-                1 to {{ count($areas ?? []) }} of {{ count($areas ?? []) }} row(s)
+            <div id="areaTableSummary" class="table-summary">
+                0 row(s)
+            </div>
+            <nav id="areaPagination" class="area-pagination" aria-label="Area pagination">
+                <button type="button" id="previousAreaPage" class="btn btn-sm" aria-label="Previous page">ก่อนหน้า</button>
+                <span id="areaPageStatus" class="area-pagination__status">หน้า 1 / 1</span>
+                <button type="button" id="nextAreaPage" class="btn btn-sm" aria-label="Next page">ถัดไป</button>
+            </nav>
             </div>
         </div>
     </div>
@@ -440,8 +223,5 @@
 @endsection
 
 @section('scripts')
-    <script>
-        window.gpTPHServerAreas = @json($areas ?? []);
-    </script>
-    <script src="{{ $_ENV['APP_JS'] }}/gpTPH.js?ver={{ $GLOBALS['version'] }}"></script>
+    <script src="{{ $_ENV['APP_JS'] }}/gpTPHArea.js?ver={{ $GLOBALS['version'] }}"></script>
 @endsection

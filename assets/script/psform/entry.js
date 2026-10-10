@@ -28,7 +28,13 @@ module.exports = {
     psClmShow: './assets/script/psform/PS-CLM/show.js',
     psClmReport: './assets/script/psform/PS-CLM/report.js',
 
+
     //PS-JUN
     psMasterSchedule: './assets/script/psform/PS-JUN/create.js',
     psShowMasterSchedule: './assets/script/psform/PS-JUN/show.js',
+
+    // PS-UPI
+    psUpi: './assets/script/psform/PS-UPI/index.js', //UPI page
+    psUpiView: './assets/script/psform/PS-UPI/views.js', //UPI detail page
+    psUpiReport: './assets/script/psform/PS-UPI/report.js', //UPI report page
 };

@@ -18,18 +18,16 @@ class form extends MY_Controller{
     public function main(){
         $data = $this->setFormProp($this->formname);
         if(empty($data)) throw new Exception("Error Processing Request", 1);
+        $data['EMPNO'] = isset($_GET['empno']) ? trim($_GET['empno']) : '';
 
-        $data['mode'] = 1;
-        if(isset($data["NRUNNO"]) && $data["NRUNNO"] != 0) {
-            //Approve or view mode
+        if (!empty($data['NRUNNO'])) {
+            $data['mode'] = 3;
             $this->views("gpform/{$this->formname}/show", $data);
-
-        }else{
-            //Create mode
-            $this->views("gpform/{$this->formname}/create", $data);
+            return;
         }
 
-
+        $data['mode'] = 1;
+        $this->views("gpform/{$this->formname}/create", $data);
     }
 
     public function report(){

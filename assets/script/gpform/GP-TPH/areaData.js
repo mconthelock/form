@@ -1,0 +1,832 @@
+import Swal from 'sweetalert2';
+import {
+    getAllDepartment,
+    getAllDivision,
+    searchUser,
+} from '@amec/webasset/api/amec';
+import { setSelect2 } from '@amec/webasset/select2';
+import select2 from 'select2';
+import {
+    createArea,
+    getAreas,
+    getLocations,
+    updateArea,
+} from './data';
+
+select2();
+
+let areas = [];
+let locations = [];
+
+let editingAreaId = null;
+let currentPage = 1;
+let renderedLocationSignature = null;
+const areasPerPage = 20;
+const areaOwnerLabels = new Map();
+const departmentNames = new Map();
+const divisionNames = new Map();
+const positionNames = new Map();
+const cancelledDepartmentCodes = new Set();
+const cancelledDivisionCodes = new Set();
+
+function areaPopup(options) {
+    const formDialog = document.getElementById('areaFormDialog');
+    return Swal.fire({
+        target: formDialog?.open ? formDialog : document.body,
+        buttonsStyling: false,
+        confirmButtonText: 'ตกลง',
+        cancelButtonText: 'ยกเลิก',
+        customClass: {
+            popup: 'area-popup',
+            title: 'area-popup__title',
+            htmlContainer: 'area-popup__message',
+            actions: 'area-popup__actions',
+            confirmButton: 'btn btn-success text-white area-popup__confirm',
+            cancelButton: 'btn btn-error text-white',
+        },
+        ...options,
+    });
+}
+
+function showMessage(message, type) {
+    const titles = {
+        success: 'ดำเนินการสำเร็จ',
+        error: 'ดำเนินการไม่สำเร็จ',
+        warning: 'ตรวจสอบข้อมูล',
+    };
+    return areaPopup({ icon: type, title: titles[type], text: message });
+}
+
+function getItems(response) {
+    if (Array.isArray(response)) {
+        return response;
+    }
+
+    return Array.isArray(response?.data) ? response.data : [];
+}
+
+function getAreaId(area) {
+    return area.AREA_ID || area.id;
+}
+
+function getAreaOwnerValue(area) {
+    const ownerCode = area.AREA_OWNER || area.area_owner || '';
+    const positionCode =
+        area.AREA_OWNER_POSCODE || area.area_owner_poscode || '';
+
+    return positionCode && ownerCode
+        ? `${positionCode}+${ownerCode}`
+        : ownerCode;
+}
+
+function getLocationId(area) {
+    return (
+        area.LOCATION_ID ??
+        area.location_id ??
+        area.LOCATION?.LOCATION_ID
+    );
+}
+
+function isAreaActive(area) {
+    return String(area.AREA_STATUS ?? '1') !== '0';
+}
+
+function getLocationName(area) {
+    if (area.LOCATION?.LOCATION_NAME) {
+        return area.LOCATION.LOCATION_NAME;
+    }
+
+    const locationId = getLocationId(area);
+    const location = locations.find(
+        (item) => String(item.LOCATION_ID || item.id) === String(locationId),
+    );
+
+    return location?.LOCATION_NAME || '-';
+}
+
+function getShortOrganizationName(shortName, fullName) {
+    const abbreviation = String(shortName || '').trim();
+    if (abbreviation) {
+        return abbreviation
+            .replace(/\(\s*cancel\s*\)/gi, '')
+            .replace(/\s{2,}/g, ' ')
+            .trim();
+    }
+
+    const name = String(fullName || '').trim();
+    const commaIndex = name.lastIndexOf(',');
+    return (commaIndex >= 0 ? name.slice(commaIndex + 1).trim() || name : name)
+        .replace(/\(\s*cancel\s*\)/gi, '')
+        .replace(/\s{2,}/g, ' ')
+        .trim();
+}
+
+function hasCancelledMarker(...names) {
+    return names.some((name) => /\(\s*cancel\s*\)/i.test(String(name || '')));
+}
+
+function getOwnerOrg(emp) {
+    const deptCode = String(emp.SDEPCODE || emp.SDEPCOD || '').trim();
+    if (deptCode && deptCode !== '00') {
+        return {
+            code: deptCode,
+            name:
+                departmentNames.get(deptCode) ||
+                getShortOrganizationName(emp.SDEPT, emp.SDEPARTMENT),
+        };
+    }
+
+    const divisionCode = String(emp.SDIVCODE || '').trim();
+    return {
+        code: divisionCode,
+        name:
+            divisionNames.get(divisionCode) ||
+            getShortOrganizationName(emp.SDIV, emp.SDIVISION),
+    };
+}
+
+function getOwnerPositionName(emp) {
+    const posCode = String(emp.SPOSCODE || '').trim();
+    const shortName = String(emp.SPOSNAME || '').trim();
+
+    if (shortName && shortName !== posCode) {
+        return shortName;
+    }
+
+    return String(emp.SPOSITION || '').trim() || shortName;
+}
+
+function getAreaOwnerOption(emp) {
+    const posCode = String(emp.SPOSCODE || '').trim();
+    const posName =
+        positionNames.get(posCode) ||
+        getOwnerPositionName(emp) ||
+        posCode;
+    const org = getOwnerOrg(emp);
+    if (!posCode || !org.code) {
+        return null;
+    }
+
+    return {
+        value: `${posCode}+${org.code}`,
+        text: `${org.name || '-'} / ${posName}`,
+    };
+}
+
+function getAreaOwnerLabel(value) {
+    const ownerValue = String(value ?? '').trim();
+    if (!ownerValue) {
+        return '-';
+    }
+
+    if (areaOwnerLabels.has(ownerValue)) {
+        return areaOwnerLabels.get(ownerValue);
+    }
+
+    const [positionCode, organizationCode] = ownerValue.split('+');
+    const organizationName =
+        departmentNames.get(organizationCode) ||
+        divisionNames.get(organizationCode);
+    const positionName = positionNames.get(positionCode);
+
+    return organizationName && positionName
+        ? `${organizationName} / ${positionName}`
+        : ownerValue;
+}
+
+function setOwnerSelect(value = '') {
+    const $owner = $('#AREA_OWNER');
+    if (!$owner.length) {
+        return;
+    }
+
+    if (value && !$owner.find(`option[value="${value}"]`).length) {
+        $owner.append(new Option(getAreaOwnerLabel(value), value, true, true));
+    }
+    $owner.val(value).trigger('change');
+}
+
+function setLocationSelect(value = '') {
+    const locationInput = document.getElementById('LOCATION_ID');
+    if (!locationInput) {
+        return;
+    }
+
+    const locationId = String(value ?? '');
+    if (
+        locationId &&
+        !Array.from(locationInput.options).some(
+            (option) => option.value === locationId,
+        )
+    ) {
+        const location = locations.find(
+            (item) =>
+                String(item.LOCATION_ID ?? item.id) === locationId,
+        );
+        locationInput.add(
+            new Option(
+                location?.LOCATION_NAME ||
+                    location?.name ||
+                    `Unknown location (${locationId})`,
+                locationId,
+            ),
+        );
+    }
+    locationInput.value = locationId;
+    $(locationInput).trigger('change');
+}
+
+function forceSelect2Below(selectElement) {
+    const $select = $(selectElement);
+    let directionObserver;
+
+    const applyBelowDirection = () => {
+        const dialog = document.getElementById('areaFormDialog');
+        const dropdown = dialog?.querySelector('.select2-dropdown');
+        const dropdownContainer = dropdown?.parentElement;
+        const selectionContainer = $select.next('.select2-container')[0];
+        if (!dialog || !dropdown || !dropdownContainer || !selectionContainer) {
+            return;
+        }
+
+        let $positionParent = $(dialog);
+        if ($positionParent.css('position') === 'static') {
+            $positionParent = $positionParent.offsetParent();
+        }
+
+        const selectionOffset = $(selectionContainer).offset();
+        const parentOffset = $positionParent.offset() || { top: 0 };
+        const top =
+            selectionOffset.top +
+            $(selectionContainer).outerHeight() -
+            parentOffset.top +
+            ($positionParent.scrollTop() || 0);
+        if (Math.abs((parseFloat(dropdownContainer.style.top) || 0) - top) > 1) {
+            dropdownContainer.style.top = `${top}px`;
+        }
+
+        if (
+            dropdown.classList.contains('select2-dropdown--above') ||
+            !dropdown.classList.contains('select2-dropdown--below')
+        ) {
+            dropdown.classList.remove('select2-dropdown--above');
+            dropdown.classList.add('select2-dropdown--below');
+        }
+        if (
+            selectionContainer.classList.contains('select2-container--above') ||
+            !selectionContainer.classList.contains('select2-container--below')
+        ) {
+            selectionContainer.classList.remove('select2-container--above');
+            selectionContainer.classList.add('select2-container--below');
+        }
+    };
+
+    $select.off('select2:open.gpTphBelow select2:close.gpTphBelow');
+    $select.on('select2:open.gpTphBelow', () => {
+        directionObserver?.disconnect();
+
+        const dialog = document.getElementById('areaFormDialog');
+        if (!dialog) {
+            return;
+        }
+
+        directionObserver = new MutationObserver(applyBelowDirection);
+        directionObserver.observe(dialog, {
+            attributes: true,
+            attributeFilter: ['class', 'style'],
+            subtree: true,
+        });
+        requestAnimationFrame(() =>
+            requestAnimationFrame(applyBelowDirection),
+        );
+    });
+    $select.on('select2:close.gpTphBelow', () => {
+        directionObserver?.disconnect();
+    });
+}
+
+async function loadAreaOwners() {
+    const ownerInput = document.getElementById('AREA_OWNER');
+    if (!ownerInput) {
+        return;
+    }
+
+    try {
+        const [employees, departments, divisions] = await Promise.all([
+            searchUser(),
+            getAllDepartment(),
+            getAllDivision(),
+        ]);
+        const options = new Map();
+        areaOwnerLabels.clear();
+        departmentNames.clear();
+        divisionNames.clear();
+        positionNames.clear();
+        cancelledDepartmentCodes.clear();
+        cancelledDivisionCodes.clear();
+
+        getItems(departments).forEach((department) => {
+            const code = String(department.SDEPCODE || '').trim();
+            const name = getShortOrganizationName(
+                department.SDEPT,
+                department.SDEPARTMENT,
+            );
+            if (code && name) {
+                departmentNames.set(code, name);
+            }
+            if (
+                code &&
+                hasCancelledMarker(department.SDEPT, department.SDEPARTMENT)
+            ) {
+                cancelledDepartmentCodes.add(code);
+            }
+        });
+        getItems(divisions).forEach((division) => {
+            const code = String(division.SDIVCODE || '').trim();
+            const name = getShortOrganizationName(
+                division.SDIV,
+                division.SDIVISION,
+            );
+            if (code && name) {
+                divisionNames.set(code, name);
+            }
+            if (
+                code &&
+                hasCancelledMarker(division.SDIV, division.SDIVISION)
+            ) {
+                cancelledDivisionCodes.add(code);
+            }
+        });
+
+        getItems(employees).forEach((emp) => {
+            const posCode = String(emp.SPOSCODE || '').trim();
+            const posName = getOwnerPositionName(emp);
+            if (posCode && posName && !positionNames.has(posCode)) {
+                positionNames.set(posCode, posName);
+            }
+
+            const deptCode = String(emp.SDEPCODE || emp.SDEPCOD || '').trim();
+            const divisionCode = String(emp.SDIVCODE || '').trim();
+            if (
+                cancelledDepartmentCodes.has(deptCode) ||
+                cancelledDivisionCodes.has(divisionCode)
+            ) {
+                return;
+            }
+
+            const option = getAreaOwnerOption(emp);
+            if (option && !options.has(option.value)) {
+                options.set(option.value, option.text);
+                areaOwnerLabels.set(option.value, option.text);
+            }
+        });
+
+        ownerInput.replaceChildren(new Option('Select area owner', ''));
+        [...options.entries()]
+            .sort((a, b) => a[1].localeCompare(b[1]))
+            .forEach(([value, text]) =>
+                ownerInput.add(new Option(text, value)),
+            );
+
+        await setSelect2({
+            id: '#AREA_OWNER',
+            placeholder: 'Select area owner',
+            destroy: true,
+            dropdownParent: $('#areaFormDialog'),
+        });
+        forceSelect2Below(ownerInput);
+    } catch (error) {
+        console.error('Unable to load GP-TPH area owners.', error);
+        showMessage('ไม่สามารถโหลด Area Owner ได้', 'error');
+    }
+}
+
+function getFilteredAreas() {
+    const keyword = document.getElementById('searchArea')?.value
+        .trim()
+        .toLowerCase();
+    const showInactive = document.getElementById('showInactiveAreas')?.checked;
+
+    return areas.filter((area) => {
+        if (!showInactive && !isAreaActive(area)) {
+            return false;
+        }
+        if (!keyword) {
+            return true;
+        }
+        const ownerValue = getAreaOwnerValue(area);
+        return [
+            getLocationName(area),
+            area.AREA_NAME || area.area,
+            area.AREA_LEVEL || area.level,
+            getAreaOwnerLabel(ownerValue),
+            ownerValue,
+            isAreaActive(area) ? 'active ใช้งาน' : 'inactive ไม่ใช้งาน',
+        ]
+            .join(' ')
+            .toLowerCase()
+            .includes(keyword);
+    });
+}
+
+function setPagination(filteredAreas) {
+    const totalPages = Math.max(1, Math.ceil(filteredAreas.length / areasPerPage));
+    currentPage = Math.min(currentPage, totalPages);
+
+    const pageStatus = document.getElementById('areaPageStatus');
+    const previousButton = document.getElementById('previousAreaPage');
+    const nextButton = document.getElementById('nextAreaPage');
+
+    if (pageStatus) {
+        pageStatus.textContent = `หน้า ${currentPage} / ${totalPages}`;
+    }
+    if (previousButton) {
+        previousButton.disabled = currentPage === 1;
+    }
+    if (nextButton) {
+        nextButton.disabled = currentPage === totalPages;
+    }
+}
+
+function setSummary(filteredAreas) {
+    const summary = document.getElementById('areaTableSummary');
+    if (summary) {
+        summary.textContent = `${filteredAreas.length} รายการ จากทั้งหมด ${areas.length} รายการ · แสดงหน้าละ ${areasPerPage} รายการ`;
+    }
+}
+
+function addCell(row, value) {
+    const cell = document.createElement('td');
+    cell.textContent = value === 0 ? '0' : value || '-';
+    row.appendChild(cell);
+}
+
+function addActionCell(row, areaId) {
+    const cell = document.createElement('td');
+    const editButton = document.createElement('button');
+    const statusButton = document.createElement('button');
+    const area = areas.find(
+        (item) => String(getAreaId(item)) === String(areaId),
+    );
+    const nextStatus = isAreaActive(area || {}) ? '0' : '1';
+
+    editButton.type = 'button';
+    editButton.className =
+        'action-link table-action-button edit-area h-9 w-9 rounded border border-black';
+    editButton.title = 'Edit area';
+    editButton.dataset.areaId = areaId;
+    editButton.setAttribute('aria-label', 'Edit area');
+    editButton.innerHTML =
+        '<span class="text-[28px] leading-none text-yellow-400">✎</span>';
+
+    statusButton.type = 'button';
+    statusButton.className =
+        'action-link table-action-button toggle-area-status';
+    statusButton.classList.toggle('delete-area', nextStatus === '0');
+    statusButton.dataset.areaId = areaId;
+    statusButton.dataset.nextStatus = nextStatus;
+    statusButton.title =
+        nextStatus === '0' ? 'Delete area' : 'Activate area';
+    statusButton.setAttribute(
+        'aria-label',
+        nextStatus === '0' ? 'Delete area' : 'Activate area',
+    );
+    if (nextStatus === '0') {
+        statusButton.innerHTML =
+            '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M9 6V4h6v2M5 6l1 14h12l1-14M10 10v6M14 10v6" /></svg>';
+    } else {
+        statusButton.textContent = 'Enable';
+    }
+
+    cell.append(editButton, statusButton);
+    row.appendChild(cell);
+}
+
+function renderTable() {
+    const tableBody = document.getElementById('areaTableBody');
+    if (!tableBody) {
+        return;
+    }
+
+    tableBody.replaceChildren();
+
+    const filteredAreas = getFilteredAreas();
+    setPagination(filteredAreas);
+
+    if (!filteredAreas.length) {
+        tableBody.innerHTML =
+            '<tr><td colspan="6" class="empty-row">ไม่พบข้อมูล</td></tr>';
+        setSummary(filteredAreas);
+        return;
+    }
+
+    const startIndex = (currentPage - 1) * areasPerPage;
+    filteredAreas
+        .slice(startIndex, startIndex + areasPerPage)
+        .forEach((area, index) => {
+        const row = document.createElement('tr');
+        const ownerValue = getAreaOwnerValue(area);
+        const ownerLabel = getAreaOwnerLabel(ownerValue);
+
+        addCell(row, startIndex + index + 1);
+        addCell(row, getLocationName(area));
+        addCell(row, area.AREA_NAME || area.area);
+        addCell(row, area.AREA_LEVEL ?? area.level);
+        addCell(row, ownerLabel);
+        addActionCell(row, getAreaId(area));
+        tableBody.appendChild(row);
+        });
+
+    setSummary(filteredAreas);
+}
+
+async function renderLocationOptions() {
+    const locationInput = document.getElementById('LOCATION_ID');
+    if (!locationInput) {
+        return;
+    }
+
+    const locationSignature = JSON.stringify(
+        locations.map((location) => [
+            location.LOCATION_ID ?? location.id,
+            location.LOCATION_NAME || location.name,
+        ]),
+    );
+    if (locationSignature === renderedLocationSignature) {
+        return;
+    }
+
+    const selectedLocationId = locationInput.value;
+    locationInput.replaceChildren(new Option('Select location', ''));
+
+    locations.forEach((location) => {
+        locationInput.add(
+            new Option(
+                location.LOCATION_NAME || location.name,
+                location.LOCATION_ID || location.id,
+            ),
+        );
+    });
+
+    locationInput.value = selectedLocationId;
+    await setSelect2({
+        id: '#LOCATION_ID',
+        placeholder: 'Select location',
+        destroy: true,
+        dropdownParent: $('#areaFormDialog'),
+    });
+    renderedLocationSignature = locationSignature;
+    forceSelect2Below(locationInput);
+}
+
+function openForm(area = null) {
+    const form = document.getElementById('areaForm');
+    const dialog = document.getElementById('areaFormDialog');
+    const title = document.getElementById('areaFormTitle');
+    if (!form || !dialog) {
+        return;
+    }
+
+    form.reset();
+    setLocationSelect();
+    setOwnerSelect();
+    editingAreaId = area ? getAreaId(area) : null;
+    if (title) {
+        title.textContent = area ? 'แก้ไขข้อมูลพื้นที่' : 'เพิ่มพื้นที่';
+    }
+
+    const locationId = area ? getLocationId(area) : '';
+    if (area) {
+        const ownerValue = getAreaOwnerValue(area);
+        form.elements.AREA_NAME.value = area.AREA_NAME || area.area || '';
+        form.elements.AREA_LEVEL.value =
+            area.AREA_LEVEL ?? area.level ?? '';
+        setOwnerSelect(ownerValue);
+    }
+
+    dialog.showModal();
+    setLocationSelect(locationId);
+    document
+        .querySelector('#LOCATION_ID + .select2-container .select2-selection')
+        ?.focus();
+}
+
+function closeForm() {
+    const form = document.getElementById('areaForm');
+    const dialog = document.getElementById('areaFormDialog');
+    if (dialog?.open) {
+        dialog.close();
+    }
+    if (form) {
+        form.reset();
+        setLocationSelect();
+        setOwnerSelect();
+    }
+    editingAreaId = null;
+}
+
+async function loadAreaTable() {
+    const tableBody = document.getElementById('areaTableBody');
+    if (!tableBody) {
+        return;
+    }
+
+    tableBody.innerHTML =
+        '<tr><td colspan="6" class="empty-row">Loading...</td></tr>';
+
+    try {
+        const [areaResponse, locationResponse] = await Promise.all([
+            getAreas(),
+            getLocations(),
+        ]);
+        areas = getItems(areaResponse);
+        locations = getItems(locationResponse);
+        await loadAreaOwners();
+        await renderLocationOptions();
+        renderTable();
+    } catch (error) {
+        console.error('Unable to load GP-TPH areas.', error);
+        tableBody.innerHTML =
+            '<tr><td colspan="6" class="empty-row">ไม่สามารถโหลดข้อมูลได้</td></tr>';
+        areas = [];
+        setSummary([]);
+    }
+}
+
+function bindEvents() {
+    const form = document.getElementById('areaForm');
+    const formDialog = document.getElementById('areaFormDialog');
+    const tableBody = document.getElementById('areaTableBody');
+    const searchInput = document.getElementById('searchArea');
+
+    document.getElementById('newAreaButton')?.addEventListener('click', () => {
+        openForm();
+    });
+    document
+        .getElementById('cancelAreaButton')
+        ?.addEventListener('click', closeForm);
+    document
+        .getElementById('closeAreaFormButton')
+        ?.addEventListener('click', closeForm);
+    formDialog?.addEventListener('click', (event) => {
+        if (event.target === formDialog) {
+            closeForm();
+        }
+    });
+    formDialog?.addEventListener('close', () => {
+        if (formDialog.open) {
+            return;
+        }
+        form?.reset();
+        setLocationSelect();
+        setOwnerSelect();
+        editingAreaId = null;
+    });
+
+    form?.elements.AREA_LEVEL?.addEventListener('input', (event) => {
+        event.target.value = event.target.value.replace(/\D/g, '');
+    });
+
+    searchInput?.addEventListener('input', (event) => {
+        currentPage = 1;
+        renderTable();
+    });
+
+    document.getElementById('showInactiveAreas')?.addEventListener('change', () => {
+        currentPage = 1;
+        renderTable();
+    });
+
+    document
+        .getElementById('previousAreaPage')
+        ?.addEventListener('click', () => {
+            if (currentPage > 1) {
+                currentPage -= 1;
+                renderTable();
+            }
+        });
+
+    document.getElementById('nextAreaPage')?.addEventListener('click', () => {
+        const totalPages = Math.ceil(getFilteredAreas().length / areasPerPage);
+        if (currentPage < totalPages) {
+            currentPage += 1;
+            renderTable();
+        }
+    });
+
+    tableBody?.addEventListener('click', async (event) => {
+        const editButton = event.target.closest('.edit-area');
+        const statusButton = event.target.closest('.toggle-area-status');
+
+        if (editButton) {
+            const area = areas.find(
+                (item) => String(getAreaId(item)) === editButton.dataset.areaId,
+            );
+            if (area) {
+                openForm(area);
+            }
+            return;
+        }
+
+        if (statusButton) {
+            const area = areas.find(
+                (item) =>
+                    String(getAreaId(item)) === statusButton.dataset.areaId,
+            );
+            if (!area) {
+                return;
+            }
+
+            const nextStatus = statusButton.dataset.nextStatus;
+            statusButton.disabled = true;
+            try {
+                const disabling = nextStatus === '0';
+                const result = await areaPopup({
+                    icon: disabling ? 'warning' : 'question',
+                    title: disabling ? 'ปิดใช้งานพื้นที่?' : 'เปิดใช้งานพื้นที่?',
+                    text: `ต้องการ${disabling ? 'ปิด' : 'เปิด'}ใช้งานพื้นที่ "${area.AREA_NAME || area.area}" ใช่หรือไม่`,
+                    showCancelButton: true,
+                    focusCancel: true,
+                    confirmButtonText: disabling ? 'ปิดใช้งาน' : 'เปิดใช้งาน',
+                    customClass: {
+                        popup: 'area-popup',
+                        title: 'area-popup__title',
+                        htmlContainer: 'area-popup__message',
+                        actions: 'area-popup__actions',
+                        confirmButton: `btn ${disabling ? 'btn-error' : 'btn-success'} text-white area-popup__confirm`,
+                        cancelButton: 'btn btn-ghost',
+                    },
+                });
+                if (!result.isConfirmed) {
+                    return;
+                }
+                await updateArea(getAreaId(area), {
+                    AREA_STATUS: nextStatus,
+                });
+                showMessage(
+                    nextStatus === '0'
+                        ? 'ปิดใช้งานพื้นที่สำเร็จ'
+                        : 'เปิดใช้งานพื้นที่สำเร็จ',
+                    'success',
+                );
+                await loadAreaTable();
+            } catch (error) {
+                console.error('Unable to update GP-TPH area status.', error);
+                showMessage('ไม่สามารถแก้ไขสถานะพื้นที่ได้', 'error');
+            } finally {
+                statusButton.disabled = false;
+            }
+        }
+    });
+
+    form?.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const saveButton = form.querySelector('[type="submit"]');
+        const areaLevel = form.elements.AREA_LEVEL.value.trim();
+        if (!/^\d+$/.test(areaLevel) || Number(areaLevel) > 4) {
+            await showMessage('AREA_LEVEL ต้องเป็นตัวเลขตั้งแต่ 0 ถึง 4 เท่านั้น', 'warning');
+            form.elements.AREA_LEVEL.focus();
+            return;
+        }
+
+        const ownerValue = form.elements.AREA_OWNER.value.trim();
+        if (!ownerValue) {
+            await showMessage('กรุณาเลือก Area Owner', 'warning');
+            form.elements.AREA_OWNER.focus();
+            return;
+        }
+
+        const data = {
+            LOCATION_ID: form.elements.LOCATION_ID.value,
+            AREA_NAME: form.elements.AREA_NAME.value.trim(),
+            AREA_LEVEL: areaLevel,
+            AREA_OWNER: ownerValue,
+        };
+
+        saveButton.disabled = true;
+        try {
+            const isEditing = Boolean(editingAreaId);
+            if (isEditing) {
+                await updateArea(editingAreaId, data);
+            } else {
+                await createArea(data);
+            }
+            closeForm();
+            showMessage(
+                isEditing ? 'แก้ไขข้อมูลสำเร็จ' : 'บันทึกข้อมูลสำเร็จ',
+                'success',
+            );
+            await loadAreaTable();
+        } catch (error) {
+            console.error('Unable to save GP-TPH area.', error);
+            showMessage('บันทึกข้อมูลไม่สำเร็จ', 'error');
+        } finally {
+            saveButton.disabled = false;
+        }
+    });
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    bindEvents();
+    loadAreaTable();
+});
