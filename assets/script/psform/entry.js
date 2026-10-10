@@ -27,4 +27,8 @@ module.exports = {
     psClm: './assets/script/psform/PS-CLM/create.js',
     psClmShow: './assets/script/psform/PS-CLM/show.js',
     psClmReport: './assets/script/psform/PS-CLM/report.js',
+
+    //PS-JUN
+    psMasterSchedule: './assets/script/psform/PS-JUN/create.js',
+    psShowMasterSchedule: './assets/script/psform/PS-JUN/show.js',
 };
