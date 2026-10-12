@@ -93,11 +93,6 @@ class form extends MY_Controller {
         $this->views('feform/FE-DOC/form', $data);
     }
 
-    public function GetDocTypeSteps() {
-        $docTypeCode = $this->input->get('docTypeCode');
-        $steps = $this->MainModel->getStepsByDocType($docTypeCode);
-        return $this->output->set_content_type('application/json')->set_output(json_encode(['status' => true, 'data' => $steps]));
-    }
 
     public function SaveDocMaster() {
         $this->output->set_content_type('application/json');
@@ -248,23 +243,6 @@ class form extends MY_Controller {
         }
     }
 
-    // public function StampRequesterStep() {
-    //     $this->output->set_content_type('application/json');
-    //     try {
-    //         $nfrmno  = (int)$this->input->post('NFRMNO');
-    //         $vorgno  = (string)$this->input->post('VORGNO');
-    //         $cyear2  = (string)$this->input->post('CYEAR2');
-    //         $nrunno  = (int)$this->input->post('NRUNNO');
-    //         $empno   = trim((string)$this->input->post('EMPNO'));
-
-    //         // แสตมป์เฉพาะตราของ Requester (EXT 00) ดวงเดียวลงไฟล์
-    //         $this->stampSingleApproverOnFiles($nfrmno, $vorgno, $cyear2, $nrunno, $empno, '00');
-
-    //         return $this->output->set_output(json_encode(['status' => true]));
-    //     } catch (\Throwable $e) {
-    //         return $this->output->set_output(json_encode(['status' => false, 'message' => $e->getMessage()]));
-    //     }
-    // }
 
     //==========================================================
     //=== stamp PDF on server ===
@@ -326,64 +304,11 @@ class form extends MY_Controller {
         }
     }
 
-    /**
-     * API บันทึกทับไฟล์ PDF ตัวจริงบน NAS ด้วยไฟล์ที่ Stamp แล้ว
-     */
-    public function OverwriteStampedPdf() {
-        // เคลียร์ buffer ป้องกัน whitespace ปนใน json
-        if (ob_get_length()) ob_clean();
-        $this->output->set_content_type('application/json');
-
-        try {
-            $fileId = (int)$this->input->post('FILE_ID');
-            if (empty($fileId) || empty($_FILES['file']['tmp_name'])) {
-                throw new Exception('ไม่พบไฟล์ที่ส่งมาบันทึก');
-            }
-
-            $dbWebflow = $this->load->database($this->webflowBase, TRUE);
-            $fileRec = $dbWebflow->where('FILE_ID', $fileId)->get('FE_FILE')->row();
-            if (!$fileRec) {
-                throw new Exception("ไม่พบข้อมูลไฟล์ ID: {$fileId}");
-            }
-
-            $realPath = $this->getRealFilePath($fileRec->FILE_PATH, $fileRec->FILE_FNAME);
-
-            // ดึงข้อมูล Content ของไฟล์ที่ Stamp แล้ว
-            $newContent = file_get_contents($_FILES['file']['tmp_name']);
-            if (empty($newContent)) {
-                throw new Exception('ไฟล์ที่ส่งมามีขนาด 0 Bytes');
-            }
-
-            // บันทึกทับไฟล์จริงบน NAS
-            $written = @file_put_contents($realPath, $newContent);
-            if ($written === false) {
-                // หากติด permission ให้ลอง copy ตรงๆ
-                if (!@copy($_FILES['file']['tmp_name'], $realPath)) {
-                    throw new Exception("ไม่สามารถเขียนทับไฟล์บน NAS ได้: {$realPath}");
-                }
-            }
-
-            // อัปเดตเวลาแก้ไขในฐานข้อมูล FE_FILE เพื่อแก้ปัญหา Browser Cache
-            $dbWebflow->where('FILE_ID', $fileId)->update('FE_FILE', [
-                'FILE_DATEUPDATE' => date('Y-m-d H:i:s')
-            ]);
-
-            return $this->output->set_output(json_encode([
-                'status'  => true,
-                'message' => 'บันทึกทับไฟล์จริงบน NAS เรียบร้อยแล้ว',
-                'path'    => $realPath
-            ]));
-        } catch (\Throwable $e) {
-            return $this->output->set_status_header(500)->set_output(json_encode([
-                'status'  => false,
-                'message' => $e->getMessage()
-            ]));
-        }
-    }
     //==========================================================
 
 
 
+    //==========================================================
     /**
      * ดึงข้อมูล Steps และประวัติการ Approve ทั้งหมดสำหรับ Stamp ตรายาง
      */
@@ -428,30 +353,6 @@ class form extends MY_Controller {
         return $this->output->set_output(json_encode(['status' => true, 'files' => $files ?: []]));
     }
 
-    private function getRealFilePath($dbFilePath, $fileName) {
-        $cleanDirPath = rtrim($dbFilePath, '/\\');
-        $fullPath = str_replace('/', '\\', $cleanDirPath) . '\\' . $fileName;
-
-        if (@file_exists($fullPath) || @is_readable($fullPath)) {
-            return $fullPath;
-        }
-
-        $pathParts = explode('\\', str_replace('/', '\\', $cleanDirPath));
-        $docFolder = end($pathParts);
-
-        $localFallback = realpath(FCPATH . '../File_Sys/form/feform/FE-DOC/' . $docFolder) . DIRECTORY_SEPARATOR . $fileName;
-        if (@file_exists($localFallback)) {
-            return $localFallback;
-        }
-
-        $linuxSmbPath = str_replace('\\', '/', $cleanDirPath) . '/' . $fileName;
-        $linuxSmbPath = preg_replace('/^\/\/[^\/]+/', '', $linuxSmbPath);
-        if (@file_exists($linuxSmbPath)) {
-            return $linuxSmbPath;
-        }
-
-        return $fullPath;
-    }
 
     public function DeleteFile() {
         $file_id = $this->input->post('id');
@@ -518,6 +419,9 @@ class form extends MY_Controller {
         }
     }
 
+    //==========================================================
+    //== Master Data Management (DocType & Steps)
+    //==========================================================
     public function GetMasterDetail() {
         $this->output->set_content_type('application/json');
         try {
@@ -578,4 +482,6 @@ class form extends MY_Controller {
             return $this->output->set_output(json_encode(['status' => false, 'message' => $e->getMessage()]));
         }
     }
+    //==========================================================
+
 }
