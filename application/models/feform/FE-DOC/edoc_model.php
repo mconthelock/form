@@ -251,4 +251,70 @@ class edoc_model extends my_model
     }
     //========================================================
 
+
+    //=========================================================
+    /**
+     * ดึงข้อมูลสำหรับหน้ารายงาน FeDocReport
+     */
+    public function getReportList($filter = [])
+    {
+        $dbSmmt = $this->load->database($this->smmtBase, TRUE);
+
+        $sql = "SELECT 
+                    H.DOC_HEADER_ID,
+                    H.NFRMNO,
+                    H.VORGNO,
+                    H.CYEAR,
+                    H.CYEAR2,
+                    H.NRUNNO,
+                    H.DOC_NO,
+                    H.DOC_TYPE_CODE,
+                    T.DOC_TYPE_NAME,
+                    H.STATUS,
+                    H.REMARK,
+                    H.USER_ACTION,
+                    TO_CHAR(H.DATE_ACTION, 'YYYY-MM-DD HH24:MI:SS') AS DATE_ACTION_STR,
+                    TO_CHAR(H.DATE_ACTION, 'DD/MM/YYYY') AS DOC_DATE_FORMAT
+                FROM FE_DOC_HEADER H
+                LEFT JOIN FE_DOC_TYPE_MST T ON H.DOC_TYPE_CODE = T.DOC_TYPE_CODE
+                WHERE 1=1 ";
+
+        $binds = [];
+
+        // กรองตามประเภทเอกสาร
+        if (!empty($filter['doc_type'])) {
+            $sql .= " AND H.DOC_TYPE_CODE = ? ";
+            $binds[] = trim($filter['doc_type']);
+        }
+
+        // กรองตามสถานะ
+        if (!empty($filter['status'])) {
+            $sql .= " AND H.STATUS = ? ";
+            $binds[] = strtoupper(trim($filter['status']));
+        }
+
+        // กรองตามช่วงวันที่ออกเอกสาร (DATE_ACTION)
+        if (!empty($filter['date_from'])) {
+            $sql .= " AND H.DATE_ACTION >= TO_DATE(?, 'YYYY-MM-DD') ";
+            $binds[] = trim($filter['date_from']);
+        }
+        if (!empty($filter['date_to'])) {
+            $sql .= " AND H.DATE_ACTION <= TO_DATE(? || ' 23:59:59', 'YYYY-MM-DD HH24:MI:SS') ";
+            $binds[] = trim($filter['date_to']);
+        }
+
+        // กรองค้นหาเลขที่เอกสาร
+        if (!empty($filter['keyword'])) {
+            $sql .= " AND (UPPER(H.DOC_NO) LIKE UPPER(?) OR UPPER(H.DOC_HEADER_ID) LIKE UPPER(?)) ";
+            $kw = '%' . trim($filter['keyword']) . '%';
+            $binds[] = $kw;
+            $binds[] = $kw;
+        }
+
+        $sql .= " ORDER BY H.DATE_ACTION DESC NULLS LAST, H.NRUNNO DESC ";
+
+        return $dbSmmt->query($sql, $binds)->result();
+    }
+    //=========================================================
+
 }
