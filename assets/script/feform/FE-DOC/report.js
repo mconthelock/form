@@ -83,12 +83,12 @@ const columns = [
         render: (item, type) => {
             if (type !== 'display') return '';
 
-            // 🟢 1. ใช้ Origin ปัจจุบันของเบราว์เซอร์เสมอ (ได้ Full Domain เช่น https://amecwebtest.mitsubishielevatorasia.co.th)
-            const origin = window.location.origin;
             const empno = ($('#EMPNOHid').val() || '').trim();
 
             // 🟢 2. เพิ่ม m=3 เข้าไปในพารามิเตอร์
-            const formUrl = `${origin}/form/feform/FE-DOC/form/main?no=${item.NFRMNO}&orgNo=${item.VORGNO}&y=${item.CYEAR}&y2=${item.CYEAR2}&runNo=${item.NRUNNO}&m=3&empno=${empno}&bp=%2Fformtest%2Fworkflow%2FmineList%2Easp&menu=1`;
+            const formUrl =
+                host +
+                `feform/FE-DOC/form/main?no=${item.NFRMNO}&orgNo=${item.VORGNO}&y=${item.CYEAR}&y2=${item.CYEAR2}&runNo=${item.NRUNNO}&m=3&empno=${empno}&bp=%2Fformtest%2Fworkflow%2FmineList%2Easp&menu=1`;
 
             return `
                 <a href="${formUrl}" target="_blank" 
