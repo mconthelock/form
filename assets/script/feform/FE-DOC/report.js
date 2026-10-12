@@ -82,15 +82,17 @@ const columns = [
         orderable: false,
         render: (item, type) => {
             if (type !== 'display') return '';
-            const baseUrl = host || window.location.origin + '/';
+
+            // 🟢 1. ใช้ Origin ปัจจุบันของเบราว์เซอร์เสมอ (ได้ Full Domain เช่น https://amecwebtest.mitsubishielevatorasia.co.th)
+            const origin = window.location.origin;
             const empno = ($('#EMPNOHid').val() || '').trim();
-            const formUrl =
-                baseUrl +
-                `feform/FE-DOC/form/main?no=${item.NFRMNO}&orgNo=${item.VORGNO}&y=${item.CYEAR}&y2=${item.CYEAR2}&runNo=${item.NRUNNO}&empno=${empno}`;
+
+            // 🟢 2. เพิ่ม m=3 เข้าไปในพารามิเตอร์
+            const formUrl = `${origin}/form/feform/FE-DOC/form/main?no=${item.NFRMNO}&orgNo=${item.VORGNO}&y=${item.CYEAR}&y2=${item.CYEAR2}&runNo=${item.NRUNNO}&m=3&empno=${empno}&bp=%2Fformtest%2Fworkflow%2FmineList%2Easp&menu=1`;
 
             return `
                 <a href="${formUrl}" target="_blank" 
-                   class="inline-flex items-center gap-1 px-2.5 py-1.5 bg-slate-100 hover:bg-blue-600 hover:text-white text-slate-700 rounded-lg text-xs font-semibold transition-all">
+                   class="inline-flex items-center gap-1 px-2.5 py-1.5 bg-slate-100 hover:bg-blue-600 hover:text-white text-slate-700 rounded-lg text-xs font-semibold transition-all shadow-sm">
                     📂 เปิดเอกสาร
                 </a>
             `;

@@ -12,7 +12,7 @@ class FeDocReport extends MY_Controller
     /**
      * หน้าแรกของ Report
      * http://localhost:8080/form/feform/FE-DOC/FeDocReport/
-     * https://amecwebtest.mitsubishielevatorasia.co.th/form/feform/FE-DOC/FeDocReport/uid=13204
+     * https://amecwebtest.mitsubishielevatorasia.co.th/form/feform/FE-DOC/FeDocReport?uid=13204
      */
     public function index($uid = null)
     {
