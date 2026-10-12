@@ -18,13 +18,16 @@ class form extends MY_Controller{
     public function main(){
         $data = $this->setFormProp($this->formname);
         if(empty($data)) throw new Exception("Error Processing Request", 1);
+        $data['EMPNO'] = isset($_GET['empno']) ? trim($_GET['empno']) : '';
+
+        if (!empty($data['NRUNNO'])) {
+            $data['mode'] = 3;
+            $this->views("gpform/{$this->formname}/show", $data);
+            return;
+        }
 
         $data['mode'] = 1;
-        // Use one form for both creation and editing.  The page detects an
-        // existing NRUNNO and loads that request before it is submitted.
         $this->views("gpform/{$this->formname}/create", $data);
-
-
     }
 
     public function report(){

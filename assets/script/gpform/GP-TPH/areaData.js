@@ -1,10 +1,13 @@
 import { showMessage } from '@amec/webasset/utils';
-import { searchUser } from '@amec/webasset/api/amec';
+import {
+    getAllDepartment,
+    getAllDivision,
+    searchUser,
+} from '@amec/webasset/api/amec';
 import { setSelect2 } from '@amec/webasset/select2';
 import select2 from 'select2';
 import {
     createArea,
-    deleteArea,
     getAreas,
     getLocations,
     updateArea,
@@ -16,7 +19,14 @@ let areas = [];
 let locations = [];
 
 let editingAreaId = null;
+let currentPage = 1;
+const areasPerPage = 20;
 const areaOwnerLabels = new Map();
+const departmentNames = new Map();
+const divisionNames = new Map();
+const positionNames = new Map();
+const cancelledDepartmentCodes = new Set();
+const cancelledDivisionCodes = new Set();
 
 function getItems(response) {
     if (Array.isArray(response)) {
@@ -28,6 +38,16 @@ function getItems(response) {
 
 function getAreaId(area) {
     return area.AREA_ID || area.id;
+}
+
+function getAreaOwnerValue(area) {
+    const ownerCode = area.AREA_OWNER || area.area_owner || '';
+    const positionCode =
+        area.AREA_OWNER_POSCODE || area.area_owner_poscode || '';
+
+    return positionCode && ownerCode
+        ? `${positionCode}+${ownerCode}`
+        : ownerCode;
 }
 
 function getLocationId(area) {
@@ -47,21 +67,64 @@ function getLocationName(area) {
     return location?.LOCATION_NAME || '-';
 }
 
-function getOwnerOrg(emp) {
-    const deptCode = emp.SDEPCODE || emp.SDEPCOD || '';
-    if (deptCode) {
-        return { code: deptCode, name: emp.SDEPT || emp.SDIV || '' };
+function getShortOrganizationName(shortName, fullName) {
+    const abbreviation = String(shortName || '').trim();
+    if (abbreviation) {
+        return abbreviation
+            .replace(/\(\s*cancel\s*\)/gi, '')
+            .replace(/\s{2,}/g, ' ')
+            .trim();
     }
 
+    const name = String(fullName || '').trim();
+    const commaIndex = name.lastIndexOf(',');
+    return (commaIndex >= 0 ? name.slice(commaIndex + 1).trim() || name : name)
+        .replace(/\(\s*cancel\s*\)/gi, '')
+        .replace(/\s{2,}/g, ' ')
+        .trim();
+}
+
+function hasCancelledMarker(...names) {
+    return names.some((name) => /\(\s*cancel\s*\)/i.test(String(name || '')));
+}
+
+function getOwnerOrg(emp) {
+    const deptCode = String(emp.SDEPCODE || emp.SDEPCOD || '').trim();
+    if (deptCode && deptCode !== '00') {
+        return {
+            code: deptCode,
+            name:
+                departmentNames.get(deptCode) ||
+                getShortOrganizationName(emp.SDEPT, emp.SDEPARTMENT),
+        };
+    }
+
+    const divisionCode = String(emp.SDIVCODE || '').trim();
     return {
-        code: emp.SDIVCODE || '',
-        name: emp.SDIV || emp.SDEPT || '',
+        code: divisionCode,
+        name:
+            divisionNames.get(divisionCode) ||
+            getShortOrganizationName(emp.SDIV, emp.SDIVISION),
     };
+}
+
+function getOwnerPositionName(emp) {
+    const posCode = String(emp.SPOSCODE || '').trim();
+    const shortName = String(emp.SPOSNAME || '').trim();
+
+    if (shortName && shortName !== posCode) {
+        return shortName;
+    }
+
+    return String(emp.SPOSITION || '').trim() || shortName;
 }
 
 function getAreaOwnerOption(emp) {
     const posCode = String(emp.SPOSCODE || '').trim();
-    const posName = emp.SPOSNAME || posCode;
+    const posName =
+        positionNames.get(posCode) ||
+        getOwnerPositionName(emp) ||
+        posCode;
     const org = getOwnerOrg(emp);
     if (!posCode || !org.code) {
         return null;
@@ -69,7 +132,7 @@ function getAreaOwnerOption(emp) {
 
     return {
         value: `${posCode}+${org.code}`,
-        text: `${posName} / ${org.name || '-'}`,
+        text: `${org.name || '-'} / ${posName}`,
     };
 }
 
@@ -79,7 +142,19 @@ function getAreaOwnerLabel(value) {
         return '-';
     }
 
-    return areaOwnerLabels.get(ownerValue) || ownerValue;
+    if (areaOwnerLabels.has(ownerValue)) {
+        return areaOwnerLabels.get(ownerValue);
+    }
+
+    const [positionCode, organizationCode] = ownerValue.split('+');
+    const organizationName =
+        departmentNames.get(organizationCode) ||
+        divisionNames.get(organizationCode);
+    const positionName = positionNames.get(positionCode);
+
+    return organizationName && positionName
+        ? `${organizationName} / ${positionName}`
+        : ownerValue;
 }
 
 function setOwnerSelect(value = '') {
@@ -94,6 +169,82 @@ function setOwnerSelect(value = '') {
     $owner.val(value).trigger('change');
 }
 
+function setLocationSelect(value = '') {
+    const $location = $('#LOCATION_ID');
+    if ($location.length) {
+        $location.val(value).trigger('change');
+    }
+}
+
+function forceSelect2Below(selectElement) {
+    const $select = $(selectElement);
+    let directionObserver;
+
+    const applyBelowDirection = () => {
+        const dialog = document.getElementById('areaFormDialog');
+        const dropdown = dialog?.querySelector('.select2-dropdown');
+        const dropdownContainer = dropdown?.parentElement;
+        const selectionContainer = $select.next('.select2-container')[0];
+        if (!dialog || !dropdown || !dropdownContainer || !selectionContainer) {
+            return;
+        }
+
+        let $positionParent = $(dialog);
+        if ($positionParent.css('position') === 'static') {
+            $positionParent = $positionParent.offsetParent();
+        }
+
+        const selectionOffset = $(selectionContainer).offset();
+        const parentOffset = $positionParent.offset() || { top: 0 };
+        const top =
+            selectionOffset.top +
+            $(selectionContainer).outerHeight() -
+            parentOffset.top +
+            ($positionParent.scrollTop() || 0);
+        if (Math.abs((parseFloat(dropdownContainer.style.top) || 0) - top) > 1) {
+            dropdownContainer.style.top = `${top}px`;
+        }
+
+        if (
+            dropdown.classList.contains('select2-dropdown--above') ||
+            !dropdown.classList.contains('select2-dropdown--below')
+        ) {
+            dropdown.classList.remove('select2-dropdown--above');
+            dropdown.classList.add('select2-dropdown--below');
+        }
+        if (
+            selectionContainer.classList.contains('select2-container--above') ||
+            !selectionContainer.classList.contains('select2-container--below')
+        ) {
+            selectionContainer.classList.remove('select2-container--above');
+            selectionContainer.classList.add('select2-container--below');
+        }
+    };
+
+    $select.off('select2:open.gpTphBelow select2:close.gpTphBelow');
+    $select.on('select2:open.gpTphBelow', () => {
+        directionObserver?.disconnect();
+
+        const dialog = document.getElementById('areaFormDialog');
+        if (!dialog) {
+            return;
+        }
+
+        directionObserver = new MutationObserver(applyBelowDirection);
+        directionObserver.observe(dialog, {
+            attributes: true,
+            attributeFilter: ['class', 'style'],
+            subtree: true,
+        });
+        requestAnimationFrame(() =>
+            requestAnimationFrame(applyBelowDirection),
+        );
+    });
+    $select.on('select2:close.gpTphBelow', () => {
+        directionObserver?.disconnect();
+    });
+}
+
 async function loadAreaOwners() {
     const ownerInput = document.getElementById('AREA_OWNER');
     if (!ownerInput) {
@@ -101,11 +252,68 @@ async function loadAreaOwners() {
     }
 
     try {
-        const employees = await searchUser({ CSTATUS: '1' });
+        const [employees, departments, divisions] = await Promise.all([
+            searchUser(),
+            getAllDepartment(),
+            getAllDivision(),
+        ]);
         const options = new Map();
         areaOwnerLabels.clear();
+        departmentNames.clear();
+        divisionNames.clear();
+        positionNames.clear();
+        cancelledDepartmentCodes.clear();
+        cancelledDivisionCodes.clear();
+
+        getItems(departments).forEach((department) => {
+            const code = String(department.SDEPCODE || '').trim();
+            const name = getShortOrganizationName(
+                department.SDEPT,
+                department.SDEPARTMENT,
+            );
+            if (code && name) {
+                departmentNames.set(code, name);
+            }
+            if (
+                code &&
+                hasCancelledMarker(department.SDEPT, department.SDEPARTMENT)
+            ) {
+                cancelledDepartmentCodes.add(code);
+            }
+        });
+        getItems(divisions).forEach((division) => {
+            const code = String(division.SDIVCODE || '').trim();
+            const name = getShortOrganizationName(
+                division.SDIV,
+                division.SDIVISION,
+            );
+            if (code && name) {
+                divisionNames.set(code, name);
+            }
+            if (
+                code &&
+                hasCancelledMarker(division.SDIV, division.SDIVISION)
+            ) {
+                cancelledDivisionCodes.add(code);
+            }
+        });
 
         getItems(employees).forEach((emp) => {
+            const posCode = String(emp.SPOSCODE || '').trim();
+            const posName = getOwnerPositionName(emp);
+            if (posCode && posName && !positionNames.has(posCode)) {
+                positionNames.set(posCode, posName);
+            }
+
+            const deptCode = String(emp.SDEPCODE || emp.SDEPCOD || '').trim();
+            const divisionCode = String(emp.SDIVCODE || '').trim();
+            if (
+                cancelledDepartmentCodes.has(deptCode) ||
+                cancelledDivisionCodes.has(divisionCode)
+            ) {
+                return;
+            }
+
             const option = getAreaOwnerOption(emp);
             if (option && !options.has(option.value)) {
                 options.set(option.value, option.text);
@@ -124,17 +332,62 @@ async function loadAreaOwners() {
             id: '#AREA_OWNER',
             placeholder: 'Select area owner',
             destroy: true,
+            dropdownParent: $('#areaFormDialog'),
         });
+        forceSelect2Below(ownerInput);
     } catch (error) {
         console.error('Unable to load GP-TPH area owners.', error);
         showMessage('ไม่สามารถโหลด Area Owner ได้', 'error');
     }
 }
 
-function setSummary() {
+function getFilteredAreas() {
+    const keyword = document.getElementById('searchArea')?.value
+        .trim()
+        .toLowerCase();
+
+    if (!keyword) {
+        return areas;
+    }
+
+    return areas.filter((area) => {
+        const ownerValue = getAreaOwnerValue(area);
+        return [
+            getLocationName(area),
+            area.AREA_NAME || area.area,
+            area.AREA_LEVEL || area.level,
+            getAreaOwnerLabel(ownerValue),
+            ownerValue,
+        ]
+            .join(' ')
+            .toLowerCase()
+            .includes(keyword);
+    });
+}
+
+function setPagination(filteredAreas) {
+    const totalPages = Math.max(1, Math.ceil(filteredAreas.length / areasPerPage));
+    currentPage = Math.min(currentPage, totalPages);
+
+    const pageStatus = document.getElementById('areaPageStatus');
+    const previousButton = document.getElementById('previousAreaPage');
+    const nextButton = document.getElementById('nextAreaPage');
+
+    if (pageStatus) {
+        pageStatus.textContent = `หน้า ${currentPage} / ${totalPages}`;
+    }
+    if (previousButton) {
+        previousButton.disabled = currentPage === 1;
+    }
+    if (nextButton) {
+        nextButton.disabled = currentPage === totalPages;
+    }
+}
+
+function setSummary(filteredAreas) {
     const summary = document.getElementById('areaTableSummary');
     if (summary) {
-        summary.textContent = `${areas.length} row(s)`;
+        summary.textContent = `${filteredAreas.length} รายการ จากทั้งหมด ${areas.length} รายการ · แสดงหน้าละ ${areasPerPage} รายการ`;
     }
 }
 
@@ -147,7 +400,6 @@ function addCell(row, value) {
 function addActionCell(row, areaId) {
     const cell = document.createElement('td');
     const editButton = document.createElement('button');
-    const deleteButton = document.createElement('button');
 
     editButton.type = 'button';
     editButton.className =
@@ -158,16 +410,7 @@ function addActionCell(row, areaId) {
     editButton.innerHTML =
         '<span class="text-[28px] leading-none text-yellow-400">✎</span>';
 
-    deleteButton.type = 'button';
-    deleteButton.className =
-        'action-link table-action-button delete-area h-9 w-9 rounded border border-black';
-    deleteButton.title = 'Delete area';
-    deleteButton.dataset.areaId = areaId;
-    deleteButton.setAttribute('aria-label', 'Delete area');
-    deleteButton.innerHTML =
-        '<span class="text-[28px] leading-none text-red-600">🗑</span>';
-
-    cell.append(editButton, deleteButton);
+    cell.append(editButton);
     row.appendChild(cell);
 }
 
@@ -179,40 +422,37 @@ function renderTable() {
 
     tableBody.replaceChildren();
 
-    if (!areas.length) {
+    const filteredAreas = getFilteredAreas();
+    setPagination(filteredAreas);
+
+    if (!filteredAreas.length) {
         tableBody.innerHTML =
             '<tr><td colspan="6" class="empty-row">ไม่พบข้อมูล</td></tr>';
-        setSummary();
+        setSummary(filteredAreas);
         return;
     }
 
-    areas.forEach((area, index) => {
+    const startIndex = (currentPage - 1) * areasPerPage;
+    filteredAreas
+        .slice(startIndex, startIndex + areasPerPage)
+        .forEach((area, index) => {
         const row = document.createElement('tr');
-        const ownerValue = area.AREA_OWNER || area.area_owner;
+        const ownerValue = getAreaOwnerValue(area);
         const ownerLabel = getAreaOwnerLabel(ownerValue);
-        row.dataset.search = [
-            getLocationName(area),
-            area.AREA_NAME || area.area,
-            area.AREA_LEVEL || area.level,
-            ownerLabel,
-            ownerValue,
-        ]
-            .join(' ')
-            .toLowerCase();
 
-        addCell(row, index + 1);
+        addCell(row, startIndex + index + 1);
         addCell(row, getLocationName(area));
         addCell(row, area.AREA_NAME || area.area);
         addCell(row, area.AREA_LEVEL || area.level);
         addCell(row, ownerLabel);
         addActionCell(row, getAreaId(area));
         tableBody.appendChild(row);
-    });
+        });
 
-    setSummary();
+    setSummary(filteredAreas);
 }
 
-function renderLocationOptions() {
+async function renderLocationOptions() {
     const locationInput = document.getElementById('LOCATION_ID');
     if (!locationInput) {
         return;
@@ -231,85 +471,57 @@ function renderLocationOptions() {
     });
 
     locationInput.value = selectedLocationId;
+    await setSelect2({
+        id: '#LOCATION_ID',
+        placeholder: 'Select location',
+        destroy: true,
+        dropdownParent: $('#areaFormDialog'),
+    });
+    forceSelect2Below(locationInput);
 }
 
 function openForm(area = null) {
     const form = document.getElementById('areaForm');
-    if (!form) {
+    const dialog = document.getElementById('areaFormDialog');
+    const title = document.getElementById('areaFormTitle');
+    if (!form || !dialog) {
         return;
     }
 
     form.reset();
+    setLocationSelect();
     setOwnerSelect();
     editingAreaId = area ? getAreaId(area) : null;
+    if (title) {
+        title.textContent = area ? 'แก้ไขข้อมูลพื้นที่' : 'เพิ่มพื้นที่';
+    }
 
     if (area) {
-        const ownerCode = area.AREA_OWNER || area.area_owner || '';
-        const ownerPosCode =
-            area.AREA_OWNER_POSCODE || area.area_owner_poscode || '';
-        const ownerValue =
-            ownerPosCode && ownerCode
-                ? `${ownerPosCode}+${ownerCode}`
-                : ownerCode;
-        form.elements.LOCATION_ID.value = getLocationId(area) || '';
+        const ownerValue = getAreaOwnerValue(area);
+        setLocationSelect(getLocationId(area) || '');
         form.elements.AREA_NAME.value = area.AREA_NAME || area.area || '';
         form.elements.AREA_LEVEL.value = area.AREA_LEVEL || area.level || '';
         setOwnerSelect(ownerValue);
     }
 
-    form.classList.add('is-visible');
-    form.elements.LOCATION_ID.focus();
+    dialog.showModal();
+    document
+        .querySelector('#LOCATION_ID + .select2-container .select2-selection')
+        ?.focus();
 }
 
 function closeForm() {
     const form = document.getElementById('areaForm');
+    const dialog = document.getElementById('areaFormDialog');
+    if (dialog?.open) {
+        dialog.close();
+    }
     if (form) {
         form.reset();
+        setLocationSelect();
         setOwnerSelect();
-        form.classList.remove('is-visible');
     }
     editingAreaId = null;
-}
-
-function confirmAreaDeletion() {
-    const dialog = document.getElementById('deleteAreaDialog');
-    const cancelButton = dialog?.querySelector('[data-delete-area-cancel]');
-    const confirmButton = dialog?.querySelector('[data-delete-area-confirm]');
-
-    if (!dialog || !cancelButton || !confirmButton) {
-        return Promise.resolve(false);
-    }
-
-    return new Promise((resolve) => {
-        const cleanup = () => {
-            dialog.removeEventListener('close', handleClose);
-            dialog.removeEventListener('click', handleBackdropClick);
-            cancelButton.removeEventListener('click', handleCancel);
-            confirmButton.removeEventListener('click', handleConfirm);
-        };
-        const handleClose = () => {
-            cleanup();
-            resolve(false);
-        };
-        const handleBackdropClick = (event) => {
-            if (event.target === dialog) {
-                dialog.close();
-            }
-        };
-        const handleCancel = () => dialog.close();
-        const handleConfirm = () => {
-            cleanup();
-            dialog.close();
-            resolve(true);
-        };
-
-        dialog.addEventListener('close', handleClose);
-        dialog.addEventListener('click', handleBackdropClick);
-        cancelButton.addEventListener('click', handleCancel);
-        confirmButton.addEventListener('click', handleConfirm);
-        dialog.showModal();
-        cancelButton.focus();
-    });
 }
 
 async function loadAreaTable() {
@@ -329,19 +541,20 @@ async function loadAreaTable() {
         areas = getItems(areaResponse);
         locations = getItems(locationResponse);
         await loadAreaOwners();
-        renderLocationOptions();
+        await renderLocationOptions();
         renderTable();
     } catch (error) {
         console.error('Unable to load GP-TPH areas.', error);
         tableBody.innerHTML =
             '<tr><td colspan="6" class="empty-row">ไม่สามารถโหลดข้อมูลได้</td></tr>';
         areas = [];
-        setSummary();
+        setSummary([]);
     }
 }
 
 function bindEvents() {
     const form = document.getElementById('areaForm');
+    const formDialog = document.getElementById('areaFormDialog');
     const tableBody = document.getElementById('areaTableBody');
     const searchInput = document.getElementById('searchArea');
 
@@ -351,21 +564,49 @@ function bindEvents() {
     document
         .getElementById('cancelAreaButton')
         ?.addEventListener('click', closeForm);
+    document
+        .getElementById('closeAreaFormButton')
+        ?.addEventListener('click', closeForm);
+    formDialog?.addEventListener('click', (event) => {
+        if (event.target === formDialog) {
+            closeForm();
+        }
+    });
+    formDialog?.addEventListener('close', () => {
+        form?.reset();
+        setLocationSelect();
+        setOwnerSelect();
+        editingAreaId = null;
+    });
 
     form?.elements.AREA_LEVEL?.addEventListener('input', (event) => {
         event.target.value = event.target.value.replace(/\D/g, '');
     });
 
     searchInput?.addEventListener('input', (event) => {
-        const keyword = event.target.value.trim().toLowerCase();
-        tableBody?.querySelectorAll('tr[data-search]').forEach((row) => {
-            row.hidden = !row.dataset.search.includes(keyword);
-        });
+        currentPage = 1;
+        renderTable();
     });
 
-    tableBody?.addEventListener('click', async (event) => {
+    document
+        .getElementById('previousAreaPage')
+        ?.addEventListener('click', () => {
+            if (currentPage > 1) {
+                currentPage -= 1;
+                renderTable();
+            }
+        });
+
+    document.getElementById('nextAreaPage')?.addEventListener('click', () => {
+        const totalPages = Math.ceil(getFilteredAreas().length / areasPerPage);
+        if (currentPage < totalPages) {
+            currentPage += 1;
+            renderTable();
+        }
+    });
+
+    tableBody?.addEventListener('click', (event) => {
         const editButton = event.target.closest('.edit-area');
-        const deleteButton = event.target.closest('.delete-area');
 
         if (editButton) {
             const area = areas.find(
@@ -373,25 +614,6 @@ function bindEvents() {
             );
             if (area) {
                 openForm(area);
-            }
-            return;
-        }
-
-        if (deleteButton) {
-            const areaId = deleteButton.dataset.areaId;
-            if (!(await confirmAreaDeletion())) {
-                return;
-            }
-
-            deleteButton.disabled = true;
-            try {
-                await deleteArea(areaId);
-                showMessage('ลบข้อมูลสำเร็จ', 'success');
-                await loadAreaTable();
-            } catch (error) {
-                console.error('Unable to delete GP-TPH area.', error);
-                showMessage('ลบข้อมูลไม่สำเร็จ', 'error');
-                deleteButton.disabled = false;
             }
         }
     });
