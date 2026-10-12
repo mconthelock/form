@@ -204,7 +204,7 @@
             <div class="flex justify-center items-center gap-4 mt-6 pb-8">
 
                 <!-- SAVE: พาสเทลเทา (ดูเป็นปุ่มรอง) -->
-                <button type="button" id="btnDraft" name="btnRequest" value="draft"
+                <button type="button" id="btnDraft" name="btnDraft" value="draft"
                     class="bg-slate-100 hover:bg-slate-200 border border-slate-200 text-slate-600 font-bold py-2.5 px-8 rounded-lg shadow-sm transition">
                     SAVE
                 </button>

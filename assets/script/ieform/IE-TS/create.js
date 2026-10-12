@@ -6,7 +6,191 @@ import 'flatpickr/dist/flatpickr.min.css';
 import monthSelectPlugin from 'flatpickr/dist/plugins/monthSelect/index.js';
 import 'flatpickr/dist/plugins/monthSelect/style.css';
 import { getTsAdjustData } from './data';
+let tsTableInstance = null;
+const transformDataForTable = (apiData, startIndex = 0) => {
+    const flatData = [];
 
+    apiData.forEach((item, index) => {
+        const no = startIndex + index + 1;
+
+        const dwgNo = item.F01R04 ? item.F01R04.trim() : '-';
+        const name = item.F01R09 ? item.F01R09.trim() : '-';
+        const shop = item.F01R03 ? item.F01R03.trim() : '-';
+        const qty = item.QTY || 0;
+
+        let currentTP = 0;
+        let currentTC = 0;
+
+        // 1. คำนวณยอดรวมของ Process ทั้งหมดก่อน
+        if (item.PROCESS && Array.isArray(item.PROCESS)) {
+            item.PROCESS.forEach((process) => {
+                currentTP += process.F02R04 || 0;
+                currentTC += process.F02R05 || 0;
+            });
+        }
+
+        const currentTS = currentTP + qty * currentTC;
+        const afterTP = currentTP;
+        const afterTC = currentTC;
+        const afterTS = afterTP + qty * afterTC;
+        const totalReq = afterTS - currentTS;
+
+        // 2. สร้างแถวหลัก (Parent Row) ใส่เข้าไปก่อน
+        flatData.push([
+            no, // [0] No
+            name, // [1] PART NAME
+            shop, // [2] Shop/Section
+            dwgNo, // [3] DWG No
+            qty, // [4] QTY
+            '', // [5]
+            'K', // [6] (ตรงตำแหน่งเดียวกับชื่อ Process)
+            currentTP.toFixed(4), // [7]
+            currentTC.toFixed(4), // [8]
+            currentTS.toFixed(4), // [9]
+            afterTP.toFixed(4), // [10]
+            afterTC.toFixed(4), // [11]
+            afterTS.toFixed(4), // [12]
+            totalReq.toFixed(4), // [13]
+            '-', // [14] Date/Remarks
+            'parent', // [15] ซ่อนไว้เพื่อใช้เช็คประเภทแถวตอนจัด CSS
+        ]);
+
+        // 3. วนลูปสร้างแถวย่อย (Child Row) สำหรับแต่ละ Process
+        if (item.PROCESS && Array.isArray(item.PROCESS)) {
+            item.PROCESS.forEach((process) => {
+                const pTP = process.F02R04 || 0;
+                const pTC = process.F02R05 || 0;
+
+                // คำนวณค่าเริ่มต้น
+                const pTS = pTP + qty * pTC;
+                const pAfterTP = pTP;
+                const pAfterTC = pTC;
+                const pAfterTS = pAfterTP + qty * pAfterTC;
+                const pTotalReq = pAfterTS - pTS;
+
+                // สร้าง Input HTML (จัด Style ด้วย Tailwind)
+                const inputAfterTP = `<input type="number" step="0.0001" class="w-full text-center border border-gray-300 rounded px-1 input-after-tp bg-white" value="${pAfterTP.toFixed(4)}" data-qty="${qty}" data-pts="${pTS}">`;
+                const inputAfterTC = `<input type="number" step="0.0001" class="w-full text-center border border-gray-300 rounded px-1 input-after-tc bg-white" value="${pAfterTC.toFixed(4)}" data-qty="${qty}" data-pts="${pTS}">`;
+
+                // สร้าง Span สำหรับแสดงผลลัพธ์ที่คำนวณอัตโนมัติ
+                const spanAfterTS = `<span class="span-after-ts">${pAfterTS.toFixed(4)}</span>`;
+                const spanTotalReq = `<span class="span-total-req ${pTotalReq !== 0 ? 'text-red-600 font-bold' : ''}">${pTotalReq.toFixed(4)}</span>`;
+
+                flatData.push([
+                    '', // [0]
+                    '', // [1]
+                    '', // [2]
+                    '', // [3]
+                    '', // [4]
+                    process.F02R03 ? process.F02R03.trim() : '-', // [5] เปลี่ยน index ตรงนี้ให้ตรงกับ DataTables ของคุณ
+                    '', // [6]
+                    pTP.toFixed(4), // [7]
+                    pTC.toFixed(4), // [8]
+                    pTS.toFixed(4), // [9]
+                    inputAfterTP, // [10] กลายเป็นช่องกรอก
+                    inputAfterTC, // [11] กลายเป็นช่องกรอก
+                    spanAfterTS, // [12] ผลลัพธ์
+                    spanTotalReq, // [13] ผลลัพธ์
+                    '-', // [14]
+                    'child', // [15] ตัวบอกว่าเป็นแถวย่อย
+                ]);
+            });
+        }
+    });
+
+    return flatData;
+};
+
+// 2. ฟังก์ชันอัปเดตหรือสร้างตาราง
+async function updateOrCreateTable(rawData) {
+    if (tsTableInstance) {
+        // --- กรณีที่ 1: มีตารางอยู่แล้ว (กด Add ตัวที่ 2, 3...) ---
+        // นับจำนวนแถวเดิมก่อน เพื่อส่งไปให้ฟังก์ชันแปลงข้อมูลรันเลข No. ต่อ
+        const currentRowCount = tsTableInstance.rows().count();
+        const tableData = transformDataForTable(rawData, currentRowCount);
+
+        // เอาข้อมูลใหม่ต่อท้าย แล้วสั่งวาดตารางใหม่ (ยอดรวมด้านบนจะอัปเดตเองอัตโนมัติ)
+        tsTableInstance.rows.add(tableData).draw(false);
+    } else {
+        // --- กรณีที่ 2: เพิ่งกด Add ครั้งแรก (ยังไม่มีตาราง) ---
+        const tableData = transformDataForTable(rawData, 0);
+
+        const tableOption = {
+            data: tableData,
+            searching: false,
+            paging: false,
+            ordering: false,
+            info: false,
+            createdRow: function (row, data, dataIndex) {
+                // เช็คจากคอลัมน์ที่ 15 ที่เราแอบใส่คำว่า parent/child ไว้
+                if (data[15] === 'child') {
+                    // ถ้าเป็นแถว Process: ลบเส้นขอบบน, เปลี่ยนสีตัวหนังสือให้ดูจางลง
+                    $(row).addClass('text-gray-500 border-t-0 bg-transparent');
+                    // จัดตัวหนังสือคอลัมน์ Process Name ให้อยู่ชิดขวาหรือรูปแบบตามต้องการ
+                    $('td:eq(6)', row).addClass('text-right text-xs');
+                } else {
+                    // ถ้าเป็นแถวหลัก: ทำตัวหนา
+                    $(row).addClass(
+                        'font-bold bg-white border-b-2 border-gray-200',
+                    );
+                }
+            },
+            columns: Array(15).fill({ defaultContent: '-' }),
+            columnDefs: [
+                { targets: 9, className: 'bg-[#d9d9d9] text-center border-r' },
+                { targets: [10, 11], className: 'bg-[#ffffe6] text-center' },
+                { targets: 12, className: 'bg-[#ffff99] text-center border-r' },
+                {
+                    targets: 13,
+                    className:
+                        'bg-[#ffe6e6] text-red-600 font-bold text-center border-r',
+                },
+                { targets: [0, 4, 5, 6, 14], className: 'text-center' },
+            ],
+            drawCallback: function (settings) {
+                const api = this.api();
+                const allData = api.rows({ page: 'current' }).data().toArray();
+
+                // กรองเอาเฉพาะ "แถวหลัก" มาบวกเลข (ป้องกันยอดเบิ้ล)
+                const parentRows = allData.filter(
+                    (row) => row[15] === 'parent',
+                );
+
+                const sumCurrentTS = parentRows.reduce(
+                    (sum, row) => sum + parseFloat(row[9] || 0),
+                    0,
+                );
+                const sumAfterTS = parentRows.reduce(
+                    (sum, row) => sum + parseFloat(row[12] || 0),
+                    0,
+                );
+                const sumTotal = parentRows.reduce(
+                    (sum, row) => sum + parseFloat(row[13] || 0),
+                    0,
+                );
+
+                document.getElementById('sum-current-ts').innerHTML =
+                    sumCurrentTS.toFixed(4);
+                document.getElementById('sum-after-ts').innerHTML =
+                    sumAfterTS.toFixed(4);
+
+                const totalPrefix =
+                    sumTotal > 0 ? '+ ' : sumTotal < 0 ? '- ' : '';
+                document.getElementById('sum-total').innerHTML =
+                    totalPrefix + Math.abs(sumTotal).toFixed(4);
+            },
+        };
+
+        const setupOpt = {
+            id: 'TsTable', // ต้องตรงกับ ID ของ <table id="TsTable"> ใน HTML
+            domScroll: { status: true, type: 'default', maxHeight: '400px' },
+            headerSticky: { status: true },
+        };
+
+        // สร้างตารางและเก็บ instance ไว้
+        tsTableInstance = await createTable(tableOption, setupOpt);
+    }
+}
 $(document).ready(async function () {
     flatpickr('#jun', {
         dateFormat: 'm/Y',
@@ -199,6 +383,11 @@ $(document).on('click', '#btnAdd', async function () {
         month: month,
         dwgNo: dwgList,
     });
+    if (res && res.length > 0) {
+        await updateOrCreateTable(res);
+    } else {
+        showMessage('Can not this DWG No.', 'warning');
+    }
     console.log(res);
 });
 
