@@ -84,11 +84,28 @@ const columns = [
             if (type !== 'display') return '';
 
             const empno = ($('#EMPNOHid').val() || '').trim();
+            const fqdnSuffix = '.mitsubishielevatorasia.co.th';
 
-            // 🟢 2. เพิ่ม m=3 เข้าไปในพารามิเตอร์
-            const formUrl =
-                host +
-                `feform/FE-DOC/form/main?no=${item.NFRMNO}&orgNo=${item.VORGNO}&y=${item.CYEAR}&y2=${item.CYEAR2}&runNo=${item.NRUNNO}&m=3&empno=${empno}&bp=%2Fformtest%2Fworkflow%2FmineList%2Easp&menu=1`;
+            // จัดการ URL จาก host ให้มี FQDN ต่อท้าย domain name เสมอ
+            let baseHost = (host || window.location.origin + '/form/').trim();
+
+            if (!baseHost.includes(fqdnSuffix)) {
+                // แยก protocol://domain ออกจาก path ด้านหลัง
+                const match = baseHost.match(/^(https?:\/\/[^\/]+)(.*)$/i);
+                if (match) {
+                    const domainPart = match[1]; // เช่น https://amecwebtest
+                    const pathPart = match[2]; // เช่น /form/ หรือ /
+                    baseHost = `${domainPart}${fqdnSuffix}${pathPart}`;
+                }
+            }
+
+            // ตัด slash ท้ายสุดออก (ถ้ามี) เพื่อนำไปต่อ path ย่อยได้สะอาด
+            baseHost = baseHost.replace(/\/+$/, '');
+
+            const backPath = encodeURIComponent(
+                '/formtest/workflow/mineList.asp',
+            );
+            const formUrl = `${baseHost}/feform/FE-DOC/form/main?no=${item.NFRMNO}&orgNo=${item.VORGNO}&y=${item.CYEAR}&y2=${item.CYEAR2}&runNo=${item.NRUNNO}&m=3&empno=${empno}&bp=${backPath}&menu=1`;
 
             return `
                 <a href="${formUrl}" target="_blank" 
