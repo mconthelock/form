@@ -60,5 +60,5 @@
 @endsection
 
 @section('scripts')
-<script src="{{ base_url('assets/dist/js/feedocview.js') }}"></script>
+<script src="{{ base_url('assets/dist/js/fedocview.js') }}"></script>
 @endsection

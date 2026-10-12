@@ -215,8 +215,8 @@ export async function actionFlow(actionType, form) {
  * ดึง Steps/Logs แล้วส่งให้ stampFormAttachedFiles ใน pdfStamper.js ดำเนินการ
  */
 export async function executeFinalStamping(form) {
-    // 1. ดึงข้อมูล Steps และ Logs จากฐานข้อมูล
-    const stampData = await $.ajax({
+    // 1. ดึง Log ประวัติการอนุมัติจริง
+    const res = await $.ajax({
         url: host + 'feform/FE-DOC/form/GetStampData',
         type: 'POST',
         data: {
@@ -229,15 +229,11 @@ export async function executeFinalStamping(form) {
         dataType: 'json',
     });
 
-    if (
-        !stampData?.status ||
-        !stampData.steps ||
-        stampData.steps.length === 0
-    ) {
-        throw new Error('ไม่พบข้อมูล Step สำหรับประทับตรา');
+    if (!res?.status || !res.logs || res.logs.length === 0) {
+        throw new Error('ไม่พบประวัติการอนุมัติในระบบ');
     }
 
-    // 2. 🟢 สั่งประทับตราทุกไฟล์ผ่านฟังก์ชันกลางใน pdfStamper.js
+    // 2. เรียก Stamp โดยใช้เฉพาะ logs
     await stampFormAttachedFiles(
         {
             NFRMNO: form.NFRMNO,
@@ -248,8 +244,7 @@ export async function executeFinalStamping(form) {
             EMPNO: form.EMPNO,
             FORM_TYPE: 'FE',
         },
-        stampData.steps,
-        stampData.logs,
+        res.logs,
         { hasBorder: false },
     );
 }

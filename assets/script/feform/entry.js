@@ -4,5 +4,6 @@ module.exports = {
     mscview: './assets/script/feform/FE-EIA/mscview.js', //MSC view page
 
     // FE-DOC
-    feedocview: './assets/script/feform/FE-DOC/view.js',
+    fedocview: './assets/script/feform/FE-DOC/view.js',
+    fedocreport: './assets/script/feform/FE-DOC/report.js',
 };

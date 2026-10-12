@@ -30,6 +30,12 @@ class form extends MY_Controller {
         $this->webflowBase = 'DEFAULT'; // DEFAULT: FORM, FLOW, FE_FILE, AMECUSERALL
     }
 
+    
+    // === https://amecwebtest.mitsubishielevatorasia.co.th/form/feform/FE-DOC/form/main/?no=27&orgNo=051001&y=26&empno=13204&bp=http://webflow.mitsubishielevatorasia.co.th/formtest/is/create.asp
+    // === https://amecwebtest.mitsubishielevatorasia.co.th/form/feform/FE-DOC/form/main?no=27&orgNo=051001&y=26&y2=2026&runNo=1&m=3&empno=13204&bp=%2Fformtest%2Fworkflow%2FmineList%2Easp&menu=1
+
+    // === http://localhost:8080/form/feform/FE-DOC/form/main/?no=27&orgNo=051001&y=26&empno=13204&bp=http://webflow.mitsubishielevatorasia.co.th/formtest/is/create.asp
+    // === http://localhost:8080/form/feform/FE-DOC/form/main?no=27&orgNo=051001&y=26&y2=2026&runNo=2&m=3&empno=13204&bp=%2Fformtest%2Fworkflow%2FmineList.asp&menu=1
     public function main() {
         $empno          = $this->input->get('empno') ?? '';
         $data['CYEAR2'] = $this->input->get('y2') ?? '';
@@ -383,7 +389,6 @@ class form extends MY_Controller {
      */
     public function GetStampData() {
         $this->output->set_content_type('application/json');
-
         try {
             $formKeys = [
                 'NFRMNO' => (int)$this->input->post('no'),
@@ -393,53 +398,13 @@ class form extends MY_Controller {
                 'NRUNNO' => (int)$this->input->post('runNo'),
             ];
 
-            $dbSmmt = $this->load->database($this->SmmtBase, TRUE);
-            $header = $dbSmmt->where($formKeys)->get('FE_DOC_HEADER')->row();
-            if (!$header) {
-                throw new Exception('ไม่พบข้อมูลเอกสารในระบบ');
-            }
-
-            // 1. ดึง Master Steps ของประเภทเอกสารนี้จาก SMMT
-            $masterSteps = $this->MainModel->getStepsByDocType($header->DOC_TYPE_CODE);
-            $posTitleMap = [];
-            foreach ($masterSteps as $ms) {
-                if (!empty($ms->CEXTDATA)) {
-                    $posTitleMap[trim($ms->CEXTDATA)] = trim($ms->POSITION_TITLE);
-                }
-            }
-
-            // 2. ดึง Step ที่มีอยู่ในตาราง FLOW ของเอกสารใบนี้
-            $dbWebflow = $this->load->database($this->webflowBase, TRUE);
-            $flowRows = $dbWebflow->select('CSTEPNO, CEXTDATA, CSTART')
-                                  ->where($formKeys)
-                                  ->order_by('CSTART', 'DESC')
-                                  ->order_by('CEXTDATA', 'ASC')
-                                  ->order_by('CSTEPNO', 'ASC')
-                                  ->get('FLOW')
-                                  ->result();
-
-            $steps = [];
-            foreach ($flowRows as $row) {
-                $ext = trim($row->CEXTDATA ?? '');
-                $posTitle = $posTitleMap[$ext] ?? ($row->CSTART == '1' ? 'REPORTER' : 'APPROVER');
-
-                $steps[] = [
-                    'CSTEPNO'        => trim($row->CSTEPNO),
-                    'CEXTDATA'       => $ext,
-                    'CSTART'         => (string)$row->CSTART,
-                    'POSITION_TITLE' => $posTitle
-                ];
-            }
-
-            // 3. ดึง Log ประวัติการอนุมัติ (CAPVSTNO = '1')
+            // ดึงเฉพาะ Log ที่มีการ Approve สำเร็จ (CAPVSTNO = '1')
             $approvalLogs = $this->MainModel->getApprovalLogList($formKeys);
 
             return $this->output->set_output(json_encode([
                 'status' => true,
-                'steps'  => $steps,
                 'logs'   => $approvalLogs ?: []
             ]));
-
         } catch (\Throwable $e) {
             return $this->output->set_status_header(500)->set_output(json_encode([
                 'status'  => false,
