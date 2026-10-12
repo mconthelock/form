@@ -12,11 +12,28 @@ class FeDocReport extends MY_Controller
     /**
      * หน้าแรกของ Report
      * http://localhost:8080/form/feform/FE-DOC/FeDocReport/
-     * https://amecwebtest.mitsubishielevatorasia.co.th/form/feform/FE-DOC/FeDocReport/
+     * https://amecwebtest.mitsubishielevatorasia.co.th/form/feform/FE-DOC/FeDocReport/uid=13204
      */
-    public function index()
+    public function index($uid = null)
     {
-        $empno = $this->input->get('empno') ||  '';
+        // 1. ดึงจาก URI Segment parameter ก่อน ($uid)
+        $empno = $uid;
+
+        // 2. ถ้ามาในรูปแบบ "uid=13204" ใน URI Segment ให้ตัดเอาเฉพาะตัวเลข
+        if (!empty($empno) && strpos($empno, 'uid=') !== false) {
+            $empno = str_replace('uid=', '', $empno);
+        }
+
+        // 3. ถ้าไม่มีใน URI Segment ให้ลองหาจาก Query String (?uid=... หรือ ?empno=...)
+        if (empty($empno)) {
+            $empno = $this->input->get('uid') 
+                  ?? $this->input->get('empno') 
+                  ?? $this->session->userdata('empno') 
+                  ?? '';
+        }
+
+        // คลีนค่ารหัสพนักงาน
+        $empno = trim((string)$empno);
         $data['EMPNO'] = (string)$empno;
         $data['docTypes'] = $this->MainModel->getActiveDocTypes();
 
