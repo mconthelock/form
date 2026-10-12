@@ -28,7 +28,6 @@ class FeDocReport extends MY_Controller
         if (empty($empno)) {
             $empno = $this->input->get('uid') 
                   ?? $this->input->get('empno') 
-                  ?? $this->session->userdata('empno') 
                   ?? '';
         }
 
