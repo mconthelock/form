@@ -43,12 +43,12 @@
                     
                     <div class="flex gap-5">
                         <label class="label">
-                            <input type="radio" name="form-mode" value="1" class="radio radio-secondary req"
+                            <input type="radio" name="NMODE" value="1" class="radio radio-secondary req"
                                 data-message="Please select an option">
                             Auto input (จาก Price Comparison)
                         </label>
                         <label class="label">
-                            <input type="radio" name="form-mode" value="0" class="radio radio-neutral req"
+                            <input type="radio" name="NMODE" value="0" class="radio radio-neutral req"
                                 data-message="Please select an option">
                             กรอกข้อมูลเอง (แนบไฟล์ Price Comparison)
                         </label>
@@ -93,7 +93,7 @@
                             <legend class="fieldset-legend req">Refer Price compare no.</legend>
                             <div class="join w-full" >
                                 <label class="input join-item w-full bg-amber-50">
-                                    <input type="text" name="PRICE_COMPARE_NO" id="PRICE_COMPARE_NO" readonly class="grow req" placeholder="PUR-CPC26-000001">
+                                    <input type="text" name="PRICE_COMPARE_NO" id="PRICE_COMPARE_NO" readonly class="grow req" placeholder="PUR-CPC26-000001" data-message="Please select Price Comparison">
                                 </label>
                                 <button type="button" class="btn btn-neutral join-item" id="btn-view-compare">
                                     <i class="fi fi-rr-eye"></i>View record
@@ -219,7 +219,7 @@
                             </div>
                         </fieldset>
                         <fieldset class="fieldset">
-                            <legend class="fieldset-legend">Effective Month</legend>
+                            <legend class="fieldset-legend req">Effective Month</legend>
                             <input type="month" name="VEFT_MONTH" id="VEFT_MONTH" class="input w-full req" data-message="Please select effective month" placeholder="Feb'26">
                         </fieldset>
                         <fieldset class="fieldset">

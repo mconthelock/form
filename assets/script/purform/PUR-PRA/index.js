@@ -1,6 +1,8 @@
 import {
     getUrlParams,
+    logFormData,
     renderLoadError,
+    requiredForm,
     showErrorMessage,
     showMessage,
 } from '@amec/webasset/utils';
@@ -8,7 +10,7 @@ import { showLoader } from '@amec/webasset/preloader';
 import { PdfViewer } from '@amec/webasset/components/pdfViewer';
 import { FileUpload } from '@amec/webasset/components/fileUpload';
 import { webflowSubmit } from '@amec/webasset/components/form';
-import { setDatePicker } from '@amec/webasset/flatpickr';
+import { getFlatpickrDate, setDatePicker } from '@amec/webasset/flatpickr';
 import { formatDate } from '@amec/webasset/dayjs';
 import { dragDropInit, handleFiles } from '@amec/webasset/dragdrop';
 import { tableDraft } from '../PUR-CPC/table/table-draft';
@@ -21,7 +23,8 @@ import {
     setAutoField,
 } from './function';
 import { modalSelectPriceComparison } from './modal/select-price-comparison';
-import { ChangeReason } from './reason';
+import { ChangeReason, getReasons } from './reason';
+import { redirectWebflow } from '@amec/webasset/form';
 
 $(async function () {
     try {
@@ -199,7 +202,7 @@ $(document).on('click', '#btn-view-compare', async function () {
  * @since 2026-10-01
  * @description จัดการการเปลี่ยนแปลงโหมดฟอร์ม (form mode)
  */
-$(document).on('change', 'input[name="form-mode"]', function () {
+$(document).on('change', 'input[name="NMODE"]', function () {
     try {
         const mode = $(this).val();
         setAutoField({ mode: +mode, trigger: false });
@@ -216,7 +219,7 @@ $(document).on('change', 'input[name="form-mode"]', function () {
  */
 $(document).on('change', '#VVENDOR', async function () {
     try {
-        if ($('input[name="form-mode"]:checked').val() == 1) {
+        if ($('input[name="NMODE"]:checked').val() == 1) {
             return;
         }
         const vendor = $(this).val();
@@ -277,3 +280,49 @@ $(document).on('click', 'input[name="VEFT_TYPE"]', function () {
         showErrorMessage(error.message);
     }
 });
+
+$(document).on(
+    'click',
+    'button[name="btnRequest"], button[name="btnAction"]',
+    async function () {
+        try {
+            showLoader();
+            const val = $(this).val();
+            // if (!(await requiredForm('#form-price-approval'))) return;
+            const formData = setFormData();
+            let res;
+            switch (val) {
+                case 'draft':
+                    break;
+                case 'save':
+                    break;
+                case 'request':
+                    return;
+            }
+            // // if (!res.status) {
+            // //     throw new Error('Failed to create price approval.');
+            // // }
+            // showMessage('Price approval created successfully.', 'success');
+            // redirectWebflow();
+        } catch (error) {
+            console.error(error);
+            showErrorMessage(error.message);
+        } finally {
+            showLoader({ show: false });
+        }
+    },
+);
+
+function setFormData() {
+    const formData = new FormData($('#form-price-approval')[0]);
+    formData.set('DEFT_MONTH_START', getFlatpickrDate('#VEFT_MONTH', 0));
+    formData.set('DEFT_MONTH_END', getFlatpickrDate('#VEFT_MONTH', 1));
+    const costDown = getReasons('reason-cost-down-container').getValue();
+    const costUp = getReasons('reason-cost-up-container').getValue();
+    const basic = getReasons('reason-basic-condition-container').getValue();
+    const estimate = getReasons('reason-estimate-price-container').getValue();
+    formData.set('reson', JSON.stringify(costDown));
+
+    // logFormData(formData);
+    return formData;
+}
