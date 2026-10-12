@@ -6,6 +6,8 @@ import {
     getReasonEstimatePrice,
 } from './data';
 
+const reasons = new Map();
+export const getReasons = (containerId) => reasons.get(containerId);
 /**
  * @class ChangeReason
  * @description จัดการเหตุผลในการเปลี่ยนแปลง (Change Reason) สำหรับฟอร์ม PUR-PRA
@@ -46,6 +48,47 @@ export class ChangeReason {
             this.container.style.gridTemplateRows = `repeat(${rows}, auto)`;
         }
         this.#bindEvents();
+        reasons.set(this.containerId, this);
+    }
+    getValue() {
+        const lists = Array.from(
+            this.container.querySelectorAll('input:checked'),
+        ).map((input) => input.value);
+
+        const input = Array.from(
+            this.container.querySelectorAll('input[type="text"], textarea'),
+        )
+            .filter((input) => input.value != '')
+            .map((input) => ({
+                name: input.name,
+                value: input.value,
+                parent: input.dataset.parent,
+                input: input.dataset.input,
+            }));
+        const res = lists.map((list) => {
+            const reason = {
+                NREASON_ID: list,
+            };
+
+            input
+                .filter((i) => i.parent === list)
+                .forEach((i) => {
+                    switch (i.input) {
+                        case 'from':
+                            reason.VFROM = i.value;
+                            break;
+                        case 'to':
+                            reason.VTO = i.value;
+                            break;
+                        default:
+                            reason.VVALUE = i.value;
+                            break;
+                    }
+                });
+
+            return reason;
+        });
+        return res;
     }
     /**
      * @author Sutthipong tangmongkhoncharoen(24008)
@@ -85,7 +128,7 @@ export class ChangeReason {
      * @param {boolean} parent - ระบุว่ารายการนี้เป็น parent หรือไม่
      * @returns {string} HTML ของ input element
      */
-    #render(r, name, parent = true) {
+    #render(r, name, parent = false) {
         const type = r.VINPUT_TYPE.toLowerCase();
 
         let inputClass =
@@ -97,31 +140,33 @@ export class ChangeReason {
         let valueHtml2 = ''; // สำหรับ input แบบ from_to
         const childrenName = `${name}_${r.NID}`; // ชื่อของ input element สำหรับรายการลูก (child)
         let label = `${r.NSEQ}. ${r.VNAME}`; // ป้ายชื่อของรายการเหตุผล
-        if (!parent) {
+        let parentId = null;
+        if (parent) {
             label = r.VNAME; // ป้ายชื่อของรายการเหตุผลสำหรับรายการลูก (child)
+            parentId = r.NPARENT_ID;
         }
 
         if (r.VVALUE_TYPE) {
             switch (r.VVALUE_TYPE.toLowerCase()) {
                 case 'text':
-                    valueHtml = `<input type="text" name="${childrenName}" class="input w-full hidden" disabled>`;
+                    valueHtml = `<input type="text" name="${childrenName}_text" class="input w-full hidden" data-parent="${r.NID}" disabled>`;
                     break;
                 case 'number':
-                    valueHtml = `<input type="number" name="${childrenName}" class="input w-full hidden" disabled>`;
+                    valueHtml = `<input type="number" name="${childrenName}_number" class="input w-full hidden" data-parent="${r.NID}" disabled>`;
                     break;
                 case 'area':
-                    valueHtml = `<textarea name="${childrenName}" class="textarea w-full hidden" rows="2" disabled></textarea>`;
+                    valueHtml = `<textarea name="${childrenName}_area" class="textarea w-full hidden" rows="2" data-parent="${r.NID}" disabled></textarea>`;
                     break;
                 case 'from_to_percent':
                     valueHtml2 = `
                         <fieldset class="hidden flex flex-col gap-2 w-full mt-2 pl-8">
                             <label class="input w-full">
                                 <span class="label">From</span>
-                                <input type="number" name="${childrenName}_from" class="w-32" step="0.01" min="0" max="100" disabled>
+                                <input type="number" name="${childrenName}_from" class="w-32" step="0.01" min="0" max="100" data-parent="${r.NID}" data-input="from" disabled>
                             </label>
                             <label class="input w-full">
                                 <span class="label">To</span>
-                                <input type="number" name="${childrenName}_to" class="w-32" step="0.01" min="0" max="100" disabled>
+                                <input type="number" name="${childrenName}_to" class="w-32" step="0.01" min="0" max="100" data-parent="${r.NID}" data-input="to" disabled>
                             </label>
                         </fieldset>`;
                     break;
@@ -130,11 +175,11 @@ export class ChangeReason {
                         <fieldset class="hidden flex flex-col gap-2 w-full mt-2 pl-8">
                             <label class="input w-full">
                                 <span class="label">From</span>
-                                <input type="text" name="${childrenName}_from" disabled>
+                                <input type="text" name="${childrenName}_from" data-parent="${r.NID}" data-input="from" disabled>
                             </label>
                             <label class="input w-full">
                                 <span class="label">To</span>
-                                <input type="text" name="${childrenName}_to" disabled>
+                                <input type="text" name="${childrenName}_to" data-parent="${r.NID}" data-input="to" disabled>
                             </label>
                         </fieldset>`;
                     break;
@@ -142,7 +187,6 @@ export class ChangeReason {
                     throw new Error(`Unsupported type: ${type}`);
             }
         }
-
         let html = `
             <div class="rounded-lg border border-slate-200 px-3 py-2">
 
@@ -151,10 +195,11 @@ export class ChangeReason {
                         type="${type}"
                         name="${name}"
                         value="${r.NID}"
-                        class="${inputClass} handle-children ${!parent ? 'hidden' : ''}"
+                        class="${inputClass} handle-children ${parent ? 'hidden' : ''}"
                         data-children="${childrenName}"
                         data-container-id="${this.containerId}"
-                        ${!parent ? 'disabled' : ''}
+                        data-parent="${parentId}"
+                        ${parent ? 'disabled' : ''}
                     >
 
                     <span class="label-text text-nowrap">
@@ -170,7 +215,7 @@ export class ChangeReason {
         if (r.children?.length) {
             html += `
                 <div class="pl-8 mt-2 flex flex-wrap gap-2" data-parent-id="${r.NID}">
-                    ${r.children.map((child) => this.#render(child, childrenName, false)).join('')}
+                    ${r.children.map((child) => this.#render(child, childrenName, true)).join('')}
                 </div>
             `;
         }
@@ -196,6 +241,11 @@ export class ChangeReason {
                 try {
                     const checked = target.checked;
                     const type = target.getAttribute('type');
+                    const checkedElement = (child) =>
+                        (child.tagName === 'INPUT' &&
+                            child.type !== 'radio' &&
+                            child.type !== 'checkbox') ||
+                        child.tagName === 'TEXTAREA';
                     // ตรวจสอบประเภทของ input ว่าเป็น radio หรือไม่.
                     if (type === 'radio') {
                         const radioGroupName = target.getAttribute('name'); // ชื่อกลุ่มของ radio buttons
@@ -208,7 +258,7 @@ export class ChangeReason {
                             const childrenName =
                                 radio.getAttribute('data-children');
                             const children = document.querySelectorAll(
-                                `[name="${childrenName}"], [name="${childrenName}_to"], [name="${childrenName}_from"]`,
+                                `[name="${childrenName}"], [name="${childrenName}_to"], [name="${childrenName}_from"], [name="${childrenName}_text"], [name="${childrenName}_number"], [name="${childrenName}_area"]`,
                             );
                             if (!children.length) return;
                             children.forEach((child) => {
@@ -216,7 +266,9 @@ export class ChangeReason {
                                 if (radio !== target) {
                                     child.disabled = true;
                                     child.classList.add('hidden');
-                                    child.value = '';
+                                    if (checkedElement(child)) {
+                                        child.value = '';
+                                    }
                                     if (this.#isFromTo(child)) {
                                         child
                                             .closest('fieldset')
@@ -230,7 +282,9 @@ export class ChangeReason {
                                 // หาก radio button ตรงกับ target ให้เปิดใช้งานและแสดง children ของมัน.
                                 child.disabled = !checked;
                                 child.classList.toggle('hidden', !checked);
-                                child.value = '';
+                                if (checkedElement(child)) {
+                                    child.value = '';
+                                }
                                 if (this.#isFromTo(child)) {
                                     child
                                         .closest('fieldset')
@@ -242,13 +296,15 @@ export class ChangeReason {
                     }
                     const childrenName = target.getAttribute('data-children');
                     const children = document.querySelectorAll(
-                        `[name="${childrenName}"], [name="${childrenName}_to"], [name="${childrenName}_from"]`,
+                        `[name="${childrenName}"], [name="${childrenName}_to"], [name="${childrenName}_from"], [name="${childrenName}_text"], [name="${childrenName}_number"], [name="${childrenName}_area"]`,
                     );
                     if (!children.length) return;
                     // วนลูปผ่าน children ของ target เพื่อตรวจสอบและจัดการสถานะการเปิดใช้งานและการแสดงผล.
                     children.forEach((child) => {
                         child.disabled = !checked;
-                        child.value = '';
+                        if (checkedElement(child)) {
+                            child.value = '';
+                        }
                         child.classList.toggle('hidden', !checked);
                         if (this.#isFromTo(child)) {
                             child
