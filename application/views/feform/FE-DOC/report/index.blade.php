@@ -39,8 +39,8 @@
                     <option value="">-- ทั้งหมด (All Status) --</option>
                     <option value="PROCESS">PROCESS</option>
                     <option value="APPROVE">APPROVE</option>
-                    <option value="REJECT">REJECT</option>
-                    <option value="DRAFT">DRAFT</option>
+                    <!-- <option value="REJECT">REJECT</option>
+                    <option value="DRAFT">DRAFT</option> -->
                 </select>
             </div>
 

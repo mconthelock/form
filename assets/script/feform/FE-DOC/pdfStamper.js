@@ -5,105 +5,6 @@ import { uploadDocFiles } from './data';
 import { host } from '../../utils';
 
 /**
- * วาดตรายางลง PDF โดยอิงตามรายการ logs ที่อนุมัติจริง
- *
- * @param {ArrayBuffer|Uint8Array|Blob|File} pdfSource - ข้อมูลไฟล์ PDF เดิม
- * @param {Array} logs - ประวัติการอนุมัติจริง [{SNAME, DAPVDATE_STR, ...}]
- * @param {Object} options - ตัวเลือกการแสดงผล
- * @returns {Promise<Uint8Array>}
- */
-export async function stampPdfDocument(pdfSource, logs = [], options = {}) {
-    const {
-        colWidth = 68,
-        boxHeight = 56,
-        marginRight = 20,
-        marginTop = 20,
-    } = options;
-
-    let buffer = pdfSource;
-    if (
-        pdfSource instanceof Blob ||
-        (typeof File !== 'undefined' && pdfSource instanceof File)
-    ) {
-        buffer = await pdfSource.arrayBuffer();
-    }
-
-    const pdfDoc = await PDFDocument.load(buffer);
-    const pages = pdfDoc.getPages();
-    if (pages.length === 0 || !logs || logs.length === 0) {
-        return await pdfDoc.save();
-    }
-
-    const firstPage = pages[0];
-    const { width, height } = firstPage.getSize();
-
-    const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
-    const fontRegular = await pdfDoc.embedFont(StandardFonts.Helvetica);
-
-    const logCount = logs.length;
-    const totalTableW = colWidth * logCount;
-    const startX = width - totalTableW - marginRight;
-    const startY = height - marginTop;
-
-    // วนลูปวาดตรายางตามประวัติการอนุมัติจริงที่ส่งมา
-    logs.forEach((app, idx) => {
-        const colIndex = idx;
-        const cellX = startX + colIndex * colWidth;
-        const cellY = startY - boxHeight;
-
-        const centerX = cellX + colWidth / 2;
-        const centerY = cellY + boxHeight / 2;
-
-        // วงกลมสีแดง
-        firstPage.drawEllipse({
-            x: centerX,
-            y: centerY,
-            xScale: 21,
-            yScale: 21,
-            borderColor: rgb(0.85, 0.1, 0.1),
-            borderWidth: 1.2,
-            opacity: 0.95,
-        });
-
-        // ข้อความ AMEC
-        const orgText = 'AMEC';
-        const orgW = fontBold.widthOfTextAtSize(orgText, 7.5);
-        firstPage.drawText(orgText, {
-            x: centerX - orgW / 2,
-            y: centerY + 8,
-            size: 7.5,
-            font: fontBold,
-            color: rgb(0.85, 0.1, 0.1),
-        });
-
-        // วันที่อนุมัติจริงจากตาราง FLOW
-        const dateText = (app.DAPVDATE_STR || '').trim();
-        const dateW = fontRegular.widthOfTextAtSize(dateText, 6.5);
-        firstPage.drawText(dateText, {
-            x: centerX - dateW / 2,
-            y: centerY - 1.5,
-            size: 6.5,
-            font: fontRegular,
-            color: rgb(0.85, 0.1, 0.1),
-        });
-
-        // ชื่อผู้อนุมัติจาก AMECUSERALL
-        const fullName = (app.SNAME || app.VREALAPV || '').trim();
-        const firstName = fullName.split(' ')[0] || fullName;
-        const nameW = fontBold.widthOfTextAtSize(firstName, 7);
-        firstPage.drawText(firstName, {
-            x: centerX - nameW / 2,
-            y: centerY - 11,
-            size: 7,
-            font: fontBold,
-            color: rgb(0.85, 0.1, 0.1),
-        });
-    });
-
-    return await pdfDoc.save();
-}
-
-/**
  * ฟังก์ชันหลัก: ค้นหาไฟล์แนบของฟอร์มทั้งหมด -> Stamp ตรายางตาม logs -> แทนที่ไฟล์เดิมบนระบบ
  *
  * @param {Object} formKeys - คีย์สำหรับค้นหาไฟล์ { NFRMNO, VORGNO, CYEAR, CYEAR2, NRUNNO, EMPNO, FORM_TYPE }
@@ -213,4 +114,103 @@ export async function stampFormAttachedFiles(
     }
 
     return true;
+}
+
+/**
+ * วาดตรายางลง PDF โดยอิงตามรายการ logs ที่อนุมัติจริง
+ *
+ * @param {ArrayBuffer|Uint8Array|Blob|File} pdfSource - ข้อมูลไฟล์ PDF เดิม
+ * @param {Array} logs - ประวัติการอนุมัติจริง [{SNAME, DAPVDATE_STR, ...}]
+ * @param {Object} options - ตัวเลือกการแสดงผล
+ * @returns {Promise<Uint8Array>}
+ */
+export async function stampPdfDocument(pdfSource, logs = [], options = {}) {
+    const {
+        colWidth = 68,
+        boxHeight = 56,
+        marginRight = 20,
+        marginTop = 20,
+    } = options;
+
+    let buffer = pdfSource;
+    if (
+        pdfSource instanceof Blob ||
+        (typeof File !== 'undefined' && pdfSource instanceof File)
+    ) {
+        buffer = await pdfSource.arrayBuffer();
+    }
+
+    const pdfDoc = await PDFDocument.load(buffer);
+    const pages = pdfDoc.getPages();
+    if (pages.length === 0 || !logs || logs.length === 0) {
+        return await pdfDoc.save();
+    }
+
+    const firstPage = pages[0];
+    const { width, height } = firstPage.getSize();
+
+    const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+    const fontRegular = await pdfDoc.embedFont(StandardFonts.Helvetica);
+
+    const logCount = logs.length;
+    const totalTableW = colWidth * logCount;
+    const startX = width - totalTableW - marginRight;
+    const startY = height - marginTop;
+
+    // วนลูปวาดตรายางตามประวัติการอนุมัติจริงที่ส่งมา
+    logs.forEach((app, idx) => {
+        const colIndex = idx;
+        const cellX = startX + colIndex * colWidth;
+        const cellY = startY - boxHeight;
+
+        const centerX = cellX + colWidth / 2;
+        const centerY = cellY + boxHeight / 2;
+
+        // วงกลมสีแดง
+        firstPage.drawEllipse({
+            x: centerX,
+            y: centerY,
+            xScale: 21,
+            yScale: 21,
+            borderColor: rgb(0.85, 0.1, 0.1),
+            borderWidth: 1.2,
+            opacity: 0.95,
+        });
+
+        // ข้อความ AMEC
+        const orgText = 'AMEC';
+        const orgW = fontBold.widthOfTextAtSize(orgText, 7.5);
+        firstPage.drawText(orgText, {
+            x: centerX - orgW / 2,
+            y: centerY + 8,
+            size: 7.5,
+            font: fontBold,
+            color: rgb(0.85, 0.1, 0.1),
+        });
+
+        // วันที่อนุมัติจริงจากตาราง FLOW
+        const dateText = (app.DAPVDATE_STR || '').trim();
+        const dateW = fontRegular.widthOfTextAtSize(dateText, 6.5);
+        firstPage.drawText(dateText, {
+            x: centerX - dateW / 2,
+            y: centerY - 1.5,
+            size: 6.5,
+            font: fontRegular,
+            color: rgb(0.85, 0.1, 0.1),
+        });
+
+        // ชื่อผู้อนุมัติจาก AMECUSERALL
+        const fullName = (app.SNAME || app.VREALAPV || '').trim();
+        const firstName = fullName.split(' ')[0] || fullName;
+        const nameW = fontBold.widthOfTextAtSize(firstName, 7);
+        firstPage.drawText(firstName, {
+            x: centerX - nameW / 2,
+            y: centerY - 11,
+            size: 7,
+            font: fontBold,
+            color: rgb(0.85, 0.1, 0.1),
+        });
+    });
+
+    return await pdfDoc.save();
 }
