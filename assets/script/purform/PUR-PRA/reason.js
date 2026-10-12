@@ -240,77 +240,98 @@ export class ChangeReason {
             if (target.matches(`[data-container-id="${this.containerId}"]`)) {
                 try {
                     const checked = target.checked;
-                    const type = target.getAttribute('type');
-                    const checkedElement = (child) =>
+                    const textElement = (child) =>
                         (child.tagName === 'INPUT' &&
                             child.type !== 'radio' &&
                             child.type !== 'checkbox') ||
                         child.tagName === 'TEXTAREA';
-                    // ตรวจสอบประเภทของ input ว่าเป็น radio หรือไม่.
-                    if (type === 'radio') {
-                        const radioGroupName = target.getAttribute('name'); // ชื่อกลุ่มของ radio buttons
-                        // เลือกกลุ่มของ radio buttons ทั้งหมดที่มีชื่อเดียวกัน
-                        const radioGroup = document.querySelectorAll(
-                            `[name="${radioGroupName}"]`,
+                    const radioElement = (child) =>
+                        child.tagName === 'INPUT' && child.type === 'radio';
+                    const checkboxElement = (child) =>
+                        child.tagName === 'INPUT' && child.type === 'checkbox';
+                    const getChildren = (name) =>
+                        document.querySelectorAll(
+                            `[name="${name}"], [name="${name}_to"], [name="${name}_from"], [name="${name}_text"], [name="${name}_number"], [name="${name}_area"]`,
                         );
-                        // วนลูปผ่าน radio buttons ในกลุ่มเพื่อตรวจสอบและจัดการ children ของแต่ละ radio.
-                        radioGroup.forEach((radio) => {
-                            const childrenName =
-                                radio.getAttribute('data-children');
-                            const children = document.querySelectorAll(
-                                `[name="${childrenName}"], [name="${childrenName}_to"], [name="${childrenName}_from"], [name="${childrenName}_text"], [name="${childrenName}_number"], [name="${childrenName}_area"]`,
-                            );
-                            if (!children.length) return;
-                            children.forEach((child) => {
-                                // หาก radio button ไม่ตรงกับ target ให้ปิดใช้งานและซ่อน children ของมัน.
-                                if (radio !== target) {
-                                    child.disabled = true;
-                                    child.classList.add('hidden');
-                                    if (checkedElement(child)) {
-                                        child.value = '';
-                                    }
-                                    if (this.#isFromTo(child)) {
-                                        child
-                                            .closest('fieldset')
-                                            .classList.toggle(
-                                                'hidden',
-                                                !checked,
-                                            );
-                                    }
-                                    return;
-                                }
-                                // หาก radio button ตรงกับ target ให้เปิดใช้งานและแสดง children ของมัน.
-                                child.disabled = !checked;
-                                child.classList.toggle('hidden', !checked);
-                                if (checkedElement(child)) {
+                    const handleChildren = ({ children, radio }) => {
+                        children.forEach((child) => {
+                            // ตรวจสอบและจัดการ children ของ radio button
+                            // หาก child เป็น radio button ให้จัดการกลุ่มของ radio buttons ทั้งหมดที่มีชื่อเดียวกัน.
+                            if (child.getAttribute('type') === 'radio') {
+                                const radioGroupName =
+                                    child.getAttribute('name'); // ชื่อกลุ่มของ radio buttons
+                                // เลือกกลุ่มของ radio buttons ทั้งหมดที่มีชื่อเดียวกัน
+                                const radioGroup = document.querySelectorAll(
+                                    `[name="${radioGroupName}"]`,
+                                );
+                                radioGroup.forEach((r) => {
+                                    const childrenName =
+                                        r.getAttribute('data-children');
+                                    handleChildren({
+                                        children: getChildren(childrenName),
+                                        radio: r,
+                                    });
+                                });
+                            }
+
+                            // หาก radio button ไม่ตรงกับ target ให้ปิดใช้งานและซ่อน children.
+                            if (radio && radio !== target) {
+                                child.disabled = true;
+                                child.classList.add('hidden');
+                                if (textElement(child)) {
                                     child.value = '';
+                                }
+                                if (
+                                    radioElement(child) ||
+                                    checkboxElement(child)
+                                ) {
+                                    child.checked = false;
                                 }
                                 if (this.#isFromTo(child)) {
                                     child
                                         .closest('fieldset')
                                         .classList.toggle('hidden', !checked);
                                 }
+                                return;
+                            }
+                            // เปิดใช้งานและแสดง children
+                            child.disabled = !checked;
+                            child.classList.toggle('hidden', !checked);
+                            if (textElement(child)) {
+                                child.value = '';
+                            }
+                            if (radioElement(child) || checkboxElement(child)) {
+                                child.checked = false;
+                            }
+                            if (this.#isFromTo(child)) {
+                                child
+                                    .closest('fieldset')
+                                    .classList.toggle('hidden', !checked);
+                            }
+                        });
+                    };
+                    // ตรวจสอบว่า target เป็น radio button หรือไม่
+                    // หาก target เป็น radio button จะต้องจัดการ children ของกลุ่ม radio buttons ทั้งหมด
+                    if (target.getAttribute('type') == 'radio') {
+                        const radioGroupName = target.getAttribute('name'); // ชื่อกลุ่มของ radio buttons
+                        // เลือกกลุ่มของ radio buttons ทั้งหมดที่มีชื่อเดียวกัน
+                        const radioGroup = document.querySelectorAll(
+                            `[name="${radioGroupName}"]`,
+                        );
+                        radioGroup.forEach((radio) => {
+                            const childrenName =
+                                radio.getAttribute('data-children');
+                            handleChildren({
+                                children: getChildren(childrenName),
+                                radio,
                             });
                         });
                         return;
                     }
+                    // หาก target ไม่ใช่ radio button จะต้องจัดการ children ของ target element โดยตรง
                     const childrenName = target.getAttribute('data-children');
-                    const children = document.querySelectorAll(
-                        `[name="${childrenName}"], [name="${childrenName}_to"], [name="${childrenName}_from"], [name="${childrenName}_text"], [name="${childrenName}_number"], [name="${childrenName}_area"]`,
-                    );
-                    if (!children.length) return;
-                    // วนลูปผ่าน children ของ target เพื่อตรวจสอบและจัดการสถานะการเปิดใช้งานและการแสดงผล.
-                    children.forEach((child) => {
-                        child.disabled = !checked;
-                        if (checkedElement(child)) {
-                            child.value = '';
-                        }
-                        child.classList.toggle('hidden', !checked);
-                        if (this.#isFromTo(child)) {
-                            child
-                                .closest('fieldset')
-                                .classList.toggle('hidden', !checked);
-                        }
+                    handleChildren({
+                        children: getChildren(childrenName),
                     });
                 } catch (error) {
                     console.error(error);
