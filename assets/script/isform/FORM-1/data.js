@@ -106,13 +106,25 @@ export async function totalBenefit() {
         total += presentCost - futureCost;
     });
 
+    const invest = (await totalInvestment()) / 1000;
+    const roiyears = intVal($('#req-roi-years').val()) || 1;
+
+    const roi = (total - invest) / roiyears;
+
     $('#table-benefit tfoot .total-present').val(
         showDigits(totalPresentCost, 2),
     );
     $('#table-benefit tfoot .total-future').val(showDigits(totalFutureCost, 2));
     $('#table-benefit tfoot .total-benefit').val(showDigits(total, 2));
-    $('#roi-total-kb').html(showDigits(total, 2));
-    $('#roi-total-full').html(showDigits(total * 1000, 0));
+
+    $('#roi-total-kb').html(`${showDigits(roi, 2)} KBath/Year`);
+    $('#roi-total-full').html(` (${showDigits(roi * 1000, 0)} Bath/Year) `);
+
+    if (roiyears > 1) {
+        $('#roi-total-year').html(
+            `or ${showDigits(total - invest, 2)}KBath (${showDigits((total - invest) * 1000, 0)} Bath) with in ${roiyears} Years`,
+        );
+    }
     return total;
 }
 
@@ -156,4 +168,21 @@ export async function totalInvestment() {
 
     $('#total-investment-cost').val(showDigits(totalCost));
     return totalCost;
+}
+
+export async function getFormIsDev(data) {
+    return new Promise((resolve, reject) => {
+        $.ajax({
+            url: `${process.env.APP_API}/form/is/is-dev/search`,
+            type: 'POST',
+            dataType: 'json',
+            data: data,
+            success: function (response) {
+                resolve(response);
+            },
+            error: function (error) {
+                reject(error);
+            },
+        });
+    });
 }

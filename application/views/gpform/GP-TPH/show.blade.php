@@ -9,6 +9,9 @@
 			-webkit-text-fill-color: #0f172a;
 			opacity: 1;
 		}
+		#long-term-valid-until .tph-hint {
+			display: none;
+		}
 	</style>
 @endsection
 

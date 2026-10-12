@@ -150,7 +150,8 @@
                         <fieldset class="fieldset">
                             <legend class="fieldset-legend">ROI Payback Period</legend>
                             <div class="flex items-center gap-3">
-                                <input type="text" placeholder="จำนวนปีที่คาดว่าจะคืนทุน" class="input req-2" />
+                                <input type="text" placeholder="จำนวนปีที่คาดว่าจะคืนทุน" class="input req-2"
+                                    value="1" />
                                 <span class="text-gray-500 text-xs"> Year(s)</span>
                             </div>
                         </fieldset>
