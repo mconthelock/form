@@ -7,27 +7,23 @@ import {
     showMessage,
 } from '@amec/webasset/utils';
 import { showLoader } from '@amec/webasset/preloader';
-import { PdfViewer } from '@amec/webasset/components/pdfViewer';
-import { FileUpload } from '@amec/webasset/components/fileUpload';
-import { webflowSubmit } from '@amec/webasset/components/form';
-import { getFlatpickrDate, setDatePicker } from '@amec/webasset/flatpickr';
-import { formatDate } from '@amec/webasset/dayjs';
-import { dragDropInit, handleFiles } from '@amec/webasset/dragdrop';
+import { getFlatpickrDate } from '@amec/webasset/flatpickr';
+import { handleFiles } from '@amec/webasset/dragdrop';
 import { tableDraft } from '../PUR-CPC/table/table-draft';
 import { createPriceApproveForm, getListCreate, getPlanner } from './data';
 import {
     checkPlanner,
     checkVendor,
-    committees,
     getFormByUrlParam,
-    getReturn,
-    groups,
+    setReturn,
     setAutoField,
 } from './function';
+import { setForm } from './function';
 import { modalSelectPriceComparison } from './modal/select-price-comparison';
-import { ChangeReason, getReasons } from './reason';
+import { getReasons } from './reason';
 import { redirectWebflow } from '@amec/webasset/form';
 import { doaction } from '@amec/webasset/api/webform';
+import { webflowSubmit } from '@amec/webasset/components/form';
 
 $(async function () {
     try {
@@ -37,117 +33,21 @@ $(async function () {
         if (!(await checkPlanner(empno))) {
             throw new Error('User not found');
         }
-        const data = await getReturn(params);
-        let form = {};
-        if (data.isReturn) {
-            form = data.form;
+        if (await setReturn()) {
+            setTimeout(() => {
+                const costDown = getReasons(
+                    'reason-cost-down-container',
+                ).getValue();
+                console.log(costDown);
+            }, 5000);
+            return;
         }
-        $('#INPUTBY').val(empno);
-        // ตั้งค่าโหมดฟอร์มเริ่มต้นเป็น 1
-        setAutoField({ mode: 1, trigger: false });
-        // สร้าง modal สำหรับเลือก Price Comparison
-        modalSelectPriceComparison.init();
-        // สร้าง instance ของ PdfViewer และ FileUpload สำหรับไฟล์ Price Comparison
-        const pdfViewer = new PdfViewer({
-            containerId: 'price-compare-container',
-            iframeId: 'price-compare-iframe',
-        });
-        // สร้างช่องสำหรับอัปโหลดไฟล์ Price Comparison ที่ผู้ใช้สามารถเลือกไฟล์ PDF ได้และแสดงชื่อไฟล์ที่เลือกและตัวอย่างไฟล์ใน PDF Viewer
-        new FileUpload({
-            inputId: 'PRICE_COMPARE_FILE',
-            inputAttributes: {
-                'data-message': 'Please select a Comparison PDF file',
-            },
-            selectFileNameId: 'price-compare-file-name',
-            containerId: 'price-compare-file-container',
-            type: 'pdf',
-            resetText: 'Please select a PDF file',
-            onChange(file, uploader) {
-                pdfViewer.setViewer(file);
-            },
-            onError(file, uploader) {
-                pdfViewer.reset();
-            },
-            buttons: [
-                {
-                    id: 'clear-file',
-                    label: '<i class="fi fi-sr-trash"></i> Clear',
-                    className: 'btn btn-error btn-outline btn-sm',
-                    onClick: (file, instance, event) => {
-                        instance.reset();
-                        pdfViewer.reset();
-                    },
-                },
-            ],
-        });
-        // เรียกใช้งานฟังก์ชันเพื่อโหลดข้อมูลคณะกรรมการและกลุ่ม
-        committees();
-        // เรียกใช้งานฟังก์ชันเพื่อโหลดข้อมูลกลุ่ม
-        groups();
-        ChangeReason.create({
-            containerId: 'reason-cost-down-container',
-            name: 'NREASON_COST_DOWN',
-            type: 'down',
-            halfColumn: true,
-        });
-        ChangeReason.create({
-            containerId: 'reason-cost-up-container',
-            name: 'NREASON_COST_UP',
-            type: 'up',
-            halfColumn: true,
-        });
-        ChangeReason.create({
-            containerId: 'reason-basic-condition-container',
-            name: 'NREASON_BASIC_CONDITION',
-            type: 'basic',
-        });
-        ChangeReason.create({
-            containerId: 'reason-estimate-price-container',
-            name: 'NREASON_ESTIMATE_PRICE',
-            type: 'estimate',
-        });
-        // ตั้งค่า Date Picker สำหรับฟิลด์ Effective Month
-        setDatePicker({
-            element: '#VEFT_MONTH',
-            mode: 'month',
-            range: true,
-            dateFormat: "M'y",
-            onChange: function (selectedDates, dateStr, instance) {
-                console.log(dateStr);
-                console.log(formatDate(selectedDates[0]));
-                console.log(selectedDates);
-            },
-        });
+        await setForm({ inputer: empno });
         // สร้างปุ่ม สำหรับ request form
         $('#btnRequest').html(
             webflowSubmit({
                 request: true,
                 draft: true,
-            }),
-        );
-        $('#drop-image').html(
-            dragDropInit({
-                id: 'IMAGE_DETAIL',
-                name: 'IMAGE_DETAIL',
-                format: 'image',
-                showImg: true,
-                text: 'Drag & Drop Image here or click to select',
-            }),
-        );
-        $('#drop-quotation').html(
-            dragDropInit({
-                id: 'FILE_QUOTATION',
-                name: 'FILE_QUOTATION',
-                format: 'pdf',
-                text: 'Drag & Drop PDF files here or click to select',
-            }),
-        );
-        $('#drop-additional').html(
-            dragDropInit({
-                id: 'FILE_ADDITIONAL',
-                name: 'FILE_ADDITIONAL',
-                format: 'pdf',
-                text: 'Drag & Drop PDF files here or click to select',
             }),
         );
     } catch (error) {

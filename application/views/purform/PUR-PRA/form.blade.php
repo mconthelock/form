@@ -282,7 +282,7 @@
                         {{-- Detail contents --}}
                         <fieldset class="fieldset lg:col-span-2">
                             <legend class="fieldset-legend font-semibold">Detail contents</legend>
-                            <textarea name="VDETAIL" class="textarea w-full" rows="4" placeholder="ระบุรายละเอียดเพิ่มเติม..."></textarea>
+                            <textarea name="VDETAIL" id="VDETAIL" class="textarea w-full" rows="4" placeholder="ระบุรายละเอียดเพิ่มเติม..."></textarea>
                             <div id="drop-image"></div>
                         </fieldset>
                     </div>

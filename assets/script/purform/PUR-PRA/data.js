@@ -153,3 +153,17 @@ export async function getFormPriceApprove(form) {
         data: form,
     });
 }
+
+/**
+ * @author Sutthipong Tangmongkhoncharoen(24008)
+ * @since 2026-10-13
+ * @description ดึงข้อมูล Price Comparison ตามฟอร์มจากระบบ
+ * @param {string} form หมายเลขฟอร์ม Price Approve
+ * @returns {Promise<Object>} ข้อมูล Price Comparison ที่เกี่ยวข้องกับฟอร์มจากระบบ
+ */
+export async function getComparisonListByForm(form) {
+    return await fetchUtils({
+        url: `${process.env.APP_API}/purform/pur-cpc/lists/${form}`,
+        method: 'GET',
+    });
+}

@@ -7,10 +7,10 @@ class form extends MY_Controller{
     }
 
     public function main(){
-        if (isset($_GET['runNo']) && $_GET['runNo'] !== '') {
-            $this->views('purform/PUR-PRA/view');
-        } else{
+        // if (isset($_GET['runNo']) && $_GET['runNo'] !== '') {
+        //     $this->views('purform/PUR-PRA/view');
+        // } else{
             $this->views('purform/PUR-PRA/form');
-        }
+        // }
     }
 }

@@ -90,6 +90,40 @@ export class ChangeReason {
         });
         return res;
     }
+    setValue(value) {
+        const checkboxes = this.container.querySelectorAll(
+            'input[type="checkbox"], input[type="radio"]',
+        );
+        const textInputs = this.container.querySelectorAll(
+            'input[type="text"], input[type="number"], textarea',
+        );
+
+        checkboxes.forEach((checkbox) => {
+            checkbox.checked = value.some(
+                (v) => v.NREASON_ID == checkbox.value,
+            );
+            checkbox.dispatchEvent(new Event('change', { bubbles: true }));
+        });
+
+        textInputs.forEach((input) => {
+            const matched = value.find(
+                (v) => v.NREASON_ID == input.dataset.parent,
+            );
+            if (matched) {
+                switch (input.dataset.input) {
+                    case 'from':
+                        input.value = matched.VFROM || '';
+                        break;
+                    case 'to':
+                        input.value = matched.VTO || '';
+                        break;
+                    default:
+                        input.value = matched.VVALUE || '';
+                        break;
+                }
+            }
+        });
+    }
     /**
      * @author Sutthipong tangmongkhoncharoen(24008)
      * @since 2026-10-07
