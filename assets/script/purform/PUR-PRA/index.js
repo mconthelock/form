@@ -19,6 +19,8 @@ import {
     checkPlanner,
     checkVendor,
     committees,
+    getFormByUrlParam,
+    getReturn,
     groups,
     setAutoField,
 } from './function';
@@ -34,6 +36,11 @@ $(async function () {
         const empno = params.EMPNO;
         if (!(await checkPlanner(empno))) {
             throw new Error('User not found');
+        }
+        const data = await getReturn(params);
+        let form = {};
+        if (data.isReturn) {
+            form = data.form;
         }
         $('#INPUTBY').val(empno);
         // ตั้งค่าโหมดฟอร์มเริ่มต้นเป็น 1
@@ -318,27 +325,18 @@ $(document).on(
                     return;
                 default:
                     const params = getUrlParams();
-                    const form = {
-                        NFRMNO: params.NFRMNO,
-                        VORGNO: params.VORGNO,
-                        CYEAR: params.CYEAR,
-                        CYEAR2: params.CYEAR2,
-                        NRUNNO: params.NRUNNO,
+                    const form = getFormByUrlParam();
+                    if (!params.EMPNO || val === '')
+                        throw new Error(
+                            'Missing required EMPNO or action value',
+                        );
+
+                    res = doaction({
+                        ...form,
                         EMPNO: params.EMPNO,
                         ACTION: val,
                         REMARK: $('#remark').val(),
-                    };
-                    for (const key in form) {
-                        if (
-                            form[key] === undefined ||
-                            (form[key] === null && key !== 'REMARK')
-                        ) {
-                            throw new Error(
-                                `Missing required form field: ${key}`,
-                            );
-                        }
-                    }
-                    res = doaction(form);
+                    });
             }
             if (!res.status) {
                 throw new Error('Failed to create price approval.');

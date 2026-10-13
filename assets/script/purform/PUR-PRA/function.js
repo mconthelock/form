@@ -1,10 +1,15 @@
 import { getUser } from '@amec/webasset/api/amec';
-import { removeClassError, showMessage } from '@amec/webasset/utils';
+import {
+    getUrlParams,
+    removeClassError,
+    showMessage,
+} from '@amec/webasset/utils';
 import { getPdfViewer } from '@amec/webasset/components/pdfViewer';
 import { getFileUploadInstance } from '@amec/webasset/components/fileUpload';
 import { getK850mpData } from '../PUR-CPC/data';
 import { tableComparison } from '../PUR-CPC/table/table-comparison';
-import { getCommittee, getGroup, getVendor } from './data';
+import { getCommittee, getFormPriceApprove, getGroup, getVendor } from './data';
+import { checkReturn } from '@amec/webasset/api/webform';
 
 /**
  * @author Sutthipong Tangmongkhoncharoen(24008)
@@ -159,3 +164,46 @@ export const groups = async function (groupId) {
             .join(''),
     );
 };
+
+export async function getReturn(params) {
+    if (!params.NRUNNO)
+        return {
+            form: {},
+            isReturn: false,
+        };
+    const form = getFormByUrlParam();
+    const isReturn = await checkReturn({
+        ...form,
+        EMPNO: params.EMPNO,
+    });
+    const data = await getFormPriceApprove(form);
+
+    return {
+        form,
+        isReturn,
+        data,
+    };
+}
+
+/**
+ * @author Sutthipong Tangmongkhoncharoen(24008)
+ * @since 2026-10-13
+ * @description ดึงข้อมูลฟอร์มจากพารามิเตอร์ใน URL
+ * @returns {Object} ข้อมูลฟอร์มที่ถูกดึงจาก URL
+ */
+export function getFormByUrlParam() {
+    const params = getUrlParams();
+    const form = {
+        NFRMNO: params.NFRMNO,
+        VORGNO: params.VORGNO,
+        CYEAR: params.CYEAR,
+        CYEAR2: params.CYEAR2,
+        NRUNNO: params.NRUNNO,
+    };
+    for (const key in form) {
+        if (form[key] === undefined || form[key] === null) {
+            throw new Error(`Missing required form field: ${key}`);
+        }
+    }
+    return form;
+}
