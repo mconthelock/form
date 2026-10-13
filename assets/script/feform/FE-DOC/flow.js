@@ -54,21 +54,49 @@ export function applyButtonPermissions(mode, extData, status = '', empno = '') {
         $('#DocTypeDrp').prop('disabled', false);
         $('#drop-zone').removeClass('hidden');
 
+        // แก้ไข Request By ได้เฉพาะตอนสร้างเอกสารใหม่ครั้งแรกสุดเท่านั้น
+        if (rawStatus === '' && !$('#DocHeaderIDHid').val()) {
+            $('#REQUEST_BYTxt')
+                .prop('readonly', false)
+                .removeClass('bg-slate-100 cursor-not-allowed text-slate-600')
+                .addClass('bg-white text-slate-800');
+        } else {
+            // ถ้าเคยบันทึกแล้ว/มี ID แล้ว -> ล็อกห้ามแก้ไข
+            $('#REQUEST_BYTxt')
+                .prop('readonly', true)
+                .addClass('bg-slate-100 cursor-not-allowed text-slate-600')
+                .removeClass('bg-white text-slate-800');
+        }
+
         if (rawStatus === 'DRAFT' || rawStatus === '') {
             $('#SaveDocBtn').removeClass('hidden');
         }
     } else if (mode === '2') {
+        // ล็อก Request By ให้เป็น Readonly เสมอ (รวมถึงกรณี Return กลับมาหา Owner ด้วย)
+        $('#REQUEST_BYTxt')
+            .prop('readonly', true)
+            .addClass('bg-slate-100 cursor-not-allowed text-slate-600')
+            .removeClass('bg-white text-slate-800');
+
         if (isOwner) {
+            // เจ้าของเอกสารที่ได้รับ Return: แก้ไขประเภทเอกสาร, แก้ไขรายละเอียด, และแนบไฟล์ใหม่ได้ แต่ห้ามแก้ Request By
             $('#DocTypeDrp').prop('disabled', false);
             $('#drop-zone').removeClass('hidden');
             $('#SaveDocBtn').removeClass('hidden');
             $('#DeleteBtn').removeClass('hidden');
         } else {
+            // ผู้อนุมัติคนอื่นๆ ใน Flow
             $('#DocTypeDrp').prop('disabled', true);
             $('#drop-zone').addClass('hidden');
             $('#ApproveBtn, #ReturnBtn').removeClass('hidden');
         }
     } else {
+        // Mode 3 (View Mode): ล็อกทั้งหมด
+        $('#REQUEST_BYTxt')
+            .prop('readonly', true)
+            .addClass('bg-slate-100 cursor-not-allowed text-slate-600')
+            .removeClass('bg-white text-slate-800');
+
         $('#DocTypeDrp').prop('disabled', true);
         $('#drop-zone').addClass('hidden');
     }

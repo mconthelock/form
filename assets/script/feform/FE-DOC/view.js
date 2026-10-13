@@ -47,7 +47,7 @@ $(document).ready(async function () {
     initFileDropEvents();
 
     // --------------------------------------------------------
-    // ปุ่ม Submit Document
+    // ปุ่ม Submit Document (กรณี Create ใหม่ หรือ Resubmit หลัง Return)
     // --------------------------------------------------------
     $('#SaveDocBtn').on('click', async function () {
         const docHeaderId = $('#DocHeaderIDHid').val();
@@ -92,20 +92,26 @@ $(document).ready(async function () {
             await showLoader({ show: true });
             let targetForm = { ...form };
 
+            // 🟢 ไม่ว่าจะสร้างใหม่ หรือ Resubmit ให้อัปเดตข้อมูล Header (Doc Type, Request By, Remark)
+            let headerPayload = new FormData();
+            headerPayload.append('DOC_TYPE_CODE', docType);
+            headerPayload.append('REMARK', $('#RemarkTxt').val() || '');
+            headerPayload.append('EMPNO', userEmpNo);
+            headerPayload.append('REQBY', userReq); // ค่า Request By ที่แก้ไขใหม่
+
+            if (isResubmit) {
+                headerPayload.append('DOC_HEADER_ID', docHeaderId);
+                headerPayload.append('IS_RESUBMIT', '1');
+            }
+
+            const resHeader = await saveDocMaster(headerPayload);
+            if (!resHeader || !resHeader.status) {
+                throw new Error(
+                    resHeader?.message || 'บันทึกข้อมูลเอกสารไม่สำเร็จ',
+                );
+            }
+
             if (!isResubmit) {
-                let headerPayload = new FormData();
-                headerPayload.append('DOC_TYPE_CODE', docType);
-                headerPayload.append('REMARK', $('#RemarkTxt').val() || '');
-                headerPayload.append('EMPNO', userEmpNo);
-                headerPayload.append('REQBY', userReq);
-
-                const resHeader = await saveDocMaster(headerPayload);
-                if (!resHeader || !resHeader.status) {
-                    throw new Error(
-                        resHeader?.message || 'บันทึกข้อมูลเอกสารไม่สำเร็จ',
-                    );
-                }
-
                 const createdDoc = resHeader.data || {};
                 targetForm.NFRMNO = createdDoc.NFRMNO || form.NFRMNO;
                 targetForm.VORGNO = createdDoc.VORGNO || form.VORGNO;
@@ -114,7 +120,7 @@ $(document).ready(async function () {
                 targetForm.NRUNNO = createdDoc.NRUNNO || form.NRUNNO;
             }
 
-            // ส่งไฟล์ PDF ต้นฉบับขึ้น Storage
+            // ส่งไฟล์ PDF แนบใหม่ (ถ้ามีการแนบเพิ่ม)
             if (validFiles.length > 0) {
                 let nestJsData = new FormData();
                 nestJsData.append('NFRMNO', targetForm.NFRMNO);
@@ -133,6 +139,7 @@ $(document).ready(async function () {
                 }
             }
 
+            // ถ้าเป็นการ Resubmit ให้ส่ง Action Approve ของผู้จัดทำเพื่อเริ่มเดิน Flow อีกครั้ง
             if (isResubmit) {
                 await actionFlow('approve', targetForm);
                 return;
