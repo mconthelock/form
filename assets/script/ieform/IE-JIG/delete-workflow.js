@@ -163,9 +163,12 @@ export function initializeDeleteApproval(editor) {
     }
 
     page.querySelector('#delete-approve').onclick = () => void act('approve');
-    page.querySelector('#delete-return').onclick = () => void act('returnb');
+    const returnButton = page.querySelector('#delete-return');
+    if (returnButton) {
+        returnButton.onclick = () => void act('returnb');
+        returnButton.hidden = requester;
+    }
     page.querySelector('#delete-reject').onclick = () => void act('reject');
-    page.querySelector('#delete-return').hidden = requester;
     page.querySelector('#delete-reject').hidden = requester;
     approval.hidden = context.mode !== '2' || ['2', '3'].includes(String(editor.webform.CST).trim());
     syncRetry.onclick = async () => {
