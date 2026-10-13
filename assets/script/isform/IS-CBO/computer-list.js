@@ -14,8 +14,8 @@ $(document).on('keyup', '#computer-uid', async function (e) {
         $(this).val('');
         return;
     }
-    // if(NET_NAME)
-    $('#computer-name').text(`Computer Name: ${computerName[0].NET_NAME}`);
+
+    $('#computer-name').text(`Computer Name: ${computerName[0].PC_NAME}`);
 });
 
 async function fetchComputerName(uid) {
