@@ -92,7 +92,7 @@ $(document).ready(async function () {
             await showLoader({ show: true });
             let targetForm = { ...form };
 
-            // 🟢 ไม่ว่าจะสร้างใหม่ หรือ Resubmit ให้อัปเดตข้อมูล Header (Doc Type, Request By, Remark)
+            // ไม่ว่าจะสร้างใหม่ หรือ Resubmit ให้อัปเดตข้อมูล Header (Doc Type, Request By, Remark)
             let headerPayload = new FormData();
             headerPayload.append('DOC_TYPE_CODE', docType);
             headerPayload.append('REMARK', $('#RemarkTxt').val() || '');
