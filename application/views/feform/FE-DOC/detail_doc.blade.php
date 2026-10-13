@@ -18,10 +18,17 @@
         </div>
 
         <div>
-            <label class="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Request By *</label>
-            <input type="text" id="REQUEST_BYTxt" name="REQUEST_BY" maxlength="10" placeholder="กรอกรหัสพนักงาน"
-                   class="w-full h-10 px-3 bg-white border border-slate-300 rounded-lg text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all" 
-                   value="{{$REQBY}}">
+            <label class="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1">
+                Request By <span class="{{ empty($NRUNNO) ? 'text-rose-500' : 'hidden' }}">*</span>
+            </label>
+            <input type="text" 
+                id="REQUEST_BYTxt" 
+                name="REQUEST_BY" 
+                maxlength="5" 
+                placeholder="กรอกรหัสพนักงาน"
+                value="{{ $REQBY }}"
+                {{ !empty($NRUNNO) ? 'readonly' : '' }}
+                class="w-full h-10 px-3 border border-slate-200 rounded-lg text-sm font-semibold transition-all {{ !empty($NRUNNO) ? 'bg-slate-100 text-slate-600 cursor-not-allowed' : 'bg-white text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500' }}">
         </div>
 
         <!-- Dropdown Document Type (Master) -->
