@@ -81,6 +81,29 @@ class edoc_model extends my_model
         return $this->QuerySetBase($sql, $this->smmtBase, $binds)->row();
     }
 
+    public function getEmpName($EmpNo)
+    {
+        $empNo = trim((string)$EmpNo);
+        if (empty($empNo)) {
+            return '';
+        }
+
+        $dbWebflow = $this->load->database($this->webflowBase, TRUE);
+        $user = $dbWebflow->select('SEMPNO, SNAME')
+                        ->from('AMECUSERALL')
+                        ->where('SEMPNO', $empNo)
+                        ->limit(1)
+                        ->get()
+                        ->row();
+
+        if ($user && !empty($user->SNAME)) {
+            return $empNo . ':' . trim($user->SNAME);
+        }
+
+        // กรณีหาไม่พบ ให้คืนเฉพาะรหัสพนักงานตามรูปแบบ SEMPNO:
+        return $empNo . ':';
+    }
+
     /**
      * ค้นหา EMPNO ของผู้อนุมัติจากตาราง AMECUSERALL (ฐานข้อมูล DEFAULT)
      */

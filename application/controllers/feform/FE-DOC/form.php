@@ -75,8 +75,13 @@ class form extends MY_Controller {
             }
 
             $detailform     = $this->frm->getForm((int)$data['NFRMNO'], (string)$data['VORGNO'], (string)$data['CYEAR'], (string)$data['CYEAR2'], (int)$data['NRUNNO']);
-            $data["REQBY"]   = $detailform[0]->VREQNO ?? '';
-            $data["INPUTBY"] = $detailform[0]->VINPUTER ?? ''; 
+            
+            $reqEmpNo   = $detailform[0]->VREQNO ?? '';
+            $inputEmpNo = $detailform[0]->VINPUTER ?? '';
+
+            // แปลงเป็นรูปแบบ SEMPNO:SNAME
+            $data["REQBY"]   = !empty($reqEmpNo) ? $this->MainModel->getEmpName($reqEmpNo) : '';
+            $data["INPUTBY"] = !empty($inputEmpNo) ? $this->MainModel->getEmpName($inputEmpNo) : '';
             $data['CST']     = $detailform[0]->CST ?? '';
 
             $dbWebflow = $this->load->database($this->webflowBase, TRUE);
