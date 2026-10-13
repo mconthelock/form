@@ -123,3 +123,18 @@ export async function getReasonEstimatePrice() {
         method: 'GET',
     });
 }
+
+/**
+ * @author Sutthipong Tangmongkhoncharoen(24008)
+ * @since 2026-10-06
+ * @description สร้างฟอร์ม Price Approve ในระบบ
+ * @param {Object} data  ข้อมูลฟอร์ม Price Approve
+ * @returns
+ */
+export async function createPriceApproveForm(data) {
+    return await fetchUtils({
+        url: `${process.env.APP_API}/purform/pur-pra`,
+        method: 'POST',
+        data,
+    });
+}

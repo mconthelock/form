@@ -14,7 +14,7 @@ import { getFlatpickrDate, setDatePicker } from '@amec/webasset/flatpickr';
 import { formatDate } from '@amec/webasset/dayjs';
 import { dragDropInit, handleFiles } from '@amec/webasset/dragdrop';
 import { tableDraft } from '../PUR-CPC/table/table-draft';
-import { getListCreate, getPlanner } from './data';
+import { createPriceApproveForm, getListCreate, getPlanner } from './data';
 import {
     checkPlanner,
     checkVendor,
@@ -25,6 +25,7 @@ import {
 import { modalSelectPriceComparison } from './modal/select-price-comparison';
 import { ChangeReason, getReasons } from './reason';
 import { redirectWebflow } from '@amec/webasset/form';
+import { doaction } from '@amec/webasset/api/webform';
 
 $(async function () {
     try {
@@ -47,6 +48,9 @@ $(async function () {
         // สร้างช่องสำหรับอัปโหลดไฟล์ Price Comparison ที่ผู้ใช้สามารถเลือกไฟล์ PDF ได้และแสดงชื่อไฟล์ที่เลือกและตัวอย่างไฟล์ใน PDF Viewer
         new FileUpload({
             inputId: 'PRICE_COMPARE_FILE',
+            inputAttributes: {
+                'data-message': 'Please select a Comparison PDF file',
+            },
             selectFileNameId: 'price-compare-file-name',
             containerId: 'price-compare-file-container',
             type: 'pdf',
@@ -281,6 +285,11 @@ $(document).on('click', 'input[name="VEFT_TYPE"]', function () {
     }
 });
 
+/**
+ * @author Sutthipong Tangmongkhoncharoen(24008)
+ * @since 2026-10-12
+ * @description จัดการการส่งคำขอและการดำเนินการสำหรับฟอร์ม Price Approval
+ */
 $(document).on(
     'click',
     'button[name="btnRequest"], button[name="btnAction"]',
@@ -288,22 +297,54 @@ $(document).on(
         try {
             showLoader();
             const val = $(this).val();
-            // if (!(await requiredForm('#form-price-approval'))) return;
+            if (
+                !(await requiredForm('#form-price-approval')) &&
+                (val === 'draft' || val === 'request')
+            )
+                return;
             const formData = setFormData();
             let res;
             switch (val) {
                 case 'draft':
+                    formData.set('isDraft', true);
+                    formData.set('DRAFT', '0');
+                    res = await createPriceApproveForm(formData);
                     break;
                 case 'save':
+                    formData.set('isSave', true);
+                    res = await createPriceApproveForm(formData);
                     break;
                 case 'request':
                     return;
+                default:
+                    const params = getUrlParams();
+                    const form = {
+                        NFRMNO: params.NFRMNO,
+                        VORGNO: params.VORGNO,
+                        CYEAR: params.CYEAR,
+                        CYEAR2: params.CYEAR2,
+                        NRUNNO: params.NRUNNO,
+                        EMPNO: params.EMPNO,
+                        ACTION: val,
+                        REMARK: $('#remark').val(),
+                    };
+                    for (const key in form) {
+                        if (
+                            form[key] === undefined ||
+                            (form[key] === null && key !== 'REMARK')
+                        ) {
+                            throw new Error(
+                                `Missing required form field: ${key}`,
+                            );
+                        }
+                    }
+                    res = doaction(form);
             }
-            // // if (!res.status) {
-            // //     throw new Error('Failed to create price approval.');
-            // // }
-            // showMessage('Price approval created successfully.', 'success');
-            // redirectWebflow();
+            if (!res.status) {
+                throw new Error('Failed to create price approval.');
+            }
+            showMessage(res.message, 'success');
+            redirectWebflow();
         } catch (error) {
             console.error(error);
             showErrorMessage(error.message);
@@ -313,6 +354,12 @@ $(document).on(
     },
 );
 
+/**
+ * @author Sutthipong Tangmongkhoncharoen(24008)
+ * @since 2026-10-12
+ * @description สร้างและจัดการข้อมูลฟอร์ม Price Approval
+ * @returns {FormData} ข้อมูลฟอร์มที่ถูกจัดเตรียมสำหรับการส่ง
+ */
 function setFormData() {
     const formData = new FormData($('#form-price-approval')[0]);
     formData.set('DEFT_MONTH_START', getFlatpickrDate('#VEFT_MONTH', 0));
@@ -321,8 +368,13 @@ function setFormData() {
     const costUp = getReasons('reason-cost-up-container').getValue();
     const basic = getReasons('reason-basic-condition-container').getValue();
     const estimate = getReasons('reason-estimate-price-container').getValue();
-    formData.set('reson', JSON.stringify(costDown));
-
-    // logFormData(formData);
+    const reasons = [...costDown, ...costUp, ...basic, ...estimate];
+    reasons.forEach((item, i) => {
+        // NestJS จะมองเป็น data[0][field], data[1][field]
+        Object.keys(item).forEach((key) => {
+            formData.append(`REASONS[${i}][${key}]`, item[key] ?? '');
+        });
+    });
+    logFormData(formData);
     return formData;
 }
