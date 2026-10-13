@@ -1,4 +1,5 @@
 // D:\Project\src\form\assets\script\feform\FE-DOC\pdfStamper.js
+import $ from 'jquery';
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 import { getFile, getFileForm, deleteFile } from '@amec/webasset/api/file';
 import { uploadDocFiles } from './data';
@@ -7,9 +8,9 @@ import { host } from '../../utils';
 /**
  * ฟังก์ชันหลัก: ค้นหาไฟล์แนบของฟอร์มทั้งหมด -> Stamp ตรายางตาม logs -> แทนที่ไฟล์เดิมบนระบบ
  *
- * @param {Object} formKeys - คีย์สำหรับค้นหาไฟล์ { NFRMNO, VORGNO, CYEAR, CYEAR2, NRUNNO, EMPNO, FORM_TYPE }
- * @param {Array} logs - ประวัติการอนุมัติจริงจากระบบ
- * @param {Object} stampOptions - ออปชันสำหรับตรายาง
+ * @param {Object} formKeys คีย์สำหรับค้นหาไฟล์ { NFRMNO, VORGNO, CYEAR, CYEAR2, NRUNNO, EMPNO, FORM_TYPE }
+ * @param {Array} logs ประวัติการอนุมัติจริงจากระบบ
+ * @param {Object} stampOptions ออปชันสำหรับตรายาง
  */
 export async function stampFormAttachedFiles(
     formKeys,
@@ -57,7 +58,7 @@ export async function stampFormAttachedFiles(
             mode: 'open',
         });
 
-        // ประทับตราลงเนื้อ PDF ตามประวัติจริง
+        // ประทับตราลงเนื้อ PDF ตามประวัติจริง (เรียงจากขวาไปซ้าย)
         const stampedBytes = await stampPdfDocument(
             fileObj,
             logs,
@@ -117,11 +118,11 @@ export async function stampFormAttachedFiles(
 }
 
 /**
- * วาดตรายางลง PDF โดยอิงตามรายการ logs ที่อนุมัติจริง
+ * วาดตรายางลง PDF โดยอิงตามรายการ logs ที่อนุมัติจริง เรียงจาก ขวา ไป ซ้าย
  *
- * @param {ArrayBuffer|Uint8Array|Blob|File} pdfSource - ข้อมูลไฟล์ PDF เดิม
- * @param {Array} logs - ประวัติการอนุมัติจริง [{SNAME, DAPVDATE_STR, ...}]
- * @param {Object} options - ตัวเลือกการแสดงผล
+ * @param {ArrayBuffer|Uint8Array|Blob|File} pdfSource ข้อมูลไฟล์ PDF เดิม
+ * @param {Array} logs ประวัติการอนุมัติจริง [{SNAME, DAPVDATE_STR, ...}]
+ * @param {Object} options ตัวเลือกการแสดงผล
  * @returns {Promise<Uint8Array>}
  */
 export async function stampPdfDocument(pdfSource, logs = [], options = {}) {
@@ -152,15 +153,12 @@ export async function stampPdfDocument(pdfSource, logs = [], options = {}) {
     const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
     const fontRegular = await pdfDoc.embedFont(StandardFonts.Helvetica);
 
-    const logCount = logs.length;
-    const totalTableW = colWidth * logCount;
-    const startX = width - totalTableW - marginRight;
     const startY = height - marginTop;
 
-    // วนลูปวาดตรายางตามประวัติการอนุมัติจริงที่ส่งมา
+    // วนลูปวาดตรายาง: คนแรก (idx = 0) อยู่ชิดขวา และคนถัดไปจะขยับไปทางซ้ายเรื่อยๆ
     logs.forEach((app, idx) => {
-        const colIndex = idx;
-        const cellX = startX + colIndex * colWidth;
+        // คำนวณพิกัดแกน X จากขอบขวาถอยไปทางซ้าย
+        const cellX = width - marginRight - (idx + 1) * colWidth;
         const cellY = startY - boxHeight;
 
         const centerX = cellX + colWidth / 2;

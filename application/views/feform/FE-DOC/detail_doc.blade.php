@@ -14,12 +14,14 @@
 
         <div>
             <label class="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Input By</label>
-            <input type="text" id="INPUT_BYTxt" class="w-full h-10 px-3 bg-slate-100 border border-slate-200 rounded-lg text-sm text-slate-600 cursor-not-allowed" value="{{$INPUTBY}}" readonly>
+            <input type="text" id="INPUT_BYTxt" name="INPUT_BY" class="w-full h-10 px-3 bg-slate-100 border border-slate-200 rounded-lg text-sm text-slate-600 cursor-not-allowed" value="{{$INPUTBY}}" readonly>
         </div>
 
         <div>
-            <label class="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Request By</label>
-            <input type="text" id="REQUEST_BYTxt" class="w-full h-10 px-3 bg-slate-100 border border-slate-200 rounded-lg text-sm text-slate-600 cursor-not-allowed" value="{{$REQBY}}" readonly>
+            <label class="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Request By *</label>
+            <input type="text" id="REQUEST_BYTxt" name="REQUEST_BY" maxlength="10" placeholder="กรอกรหัสพนักงาน"
+                   class="w-full h-10 px-3 bg-white border border-slate-300 rounded-lg text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all" 
+                   value="{{$REQBY}}">
         </div>
 
         <!-- Dropdown Document Type (Master) -->

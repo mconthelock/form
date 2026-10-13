@@ -100,8 +100,8 @@ class form extends MY_Controller {
             $docTypeCode  = $this->input->post('DOC_TYPE_CODE');
             $remark       = $this->input->post('REMARK') ?? '';
             
-            $currentEmpNo = $this->input->post('EMPNO') 
-                         ?: ($this->input->post('REQBY') 
+            $currentEmpNo =$this->input->post('REQBY') 
+                         ?: ( $this->input->post('EMPNO') 
                          ?: ($this->input->get('empno') 
                          ?: ($this->session->userdata('empno') ?? '')));
 
