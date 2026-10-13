@@ -2,6 +2,11 @@ import $ from 'jquery';
 import { redirectWebflow } from '@amec/webasset/form';
 import { showLoader } from '@amec/webasset/preloader';
 import { deleteFile, getFile } from '@amec/webasset/api/file';
+import {
+    showMessage,
+    showErrorMessage,
+    showConfirm,
+} from '@amec/webasset/utils';
 import { host } from '../../utils';
 import { uploadDocFiles, saveDocMaster } from './data';
 import { initFlow, actionFlow } from './flow';
@@ -42,7 +47,7 @@ $(document).ready(async function () {
     initFileDropEvents();
 
     // --------------------------------------------------------
-    // ปุ่ม Submit Document
+    // ปุ่ม Submit Document (กรณี Create ใหม่ หรือ Resubmit หลัง Return)
     // --------------------------------------------------------
     $('#SaveDocBtn').on('click', async function () {
         const docHeaderId = $('#DocHeaderIDHid').val();
@@ -50,7 +55,8 @@ $(document).ready(async function () {
 
         const docType = $('#DocTypeDrp').val();
         if (!docType) {
-            alert('กรุณาเลือก Document Type');
+            showMessage('กรุณาเลือก Document Type', 'warning');
+            $('#DocTypeDrp').focus();
             return;
         }
 
@@ -58,36 +64,54 @@ $(document).ready(async function () {
         const validFiles = selectedFilesArray.filter((f) => f !== null);
 
         if (existingFileCount === 0 && validFiles.length === 0) {
-            alert('กรุณาแนบไฟล์เอกสาร PDF อย่างน้อย 1 ไฟล์');
+            showMessage('กรุณาแนบไฟล์เอกสาร PDF อย่างน้อย 1 ไฟล์', 'warning');
             return;
         }
 
-        const confirmMsg = isResubmit
-            ? 'ยืนยันการส่งเอกสารกลับเข้าระบบพิจารณาอีกครั้งใช่หรือไม่?'
-            : 'ยืนยันการบันทึกและสร้างเอกสารใหม่ใช่หรือไม่?';
+        const userReq = ($('#REQUEST_BYTxt').val() || '').trim();
+        const userEmpNo = empno || $('#EMPNOHid').val() || '';
 
-        if (!confirm(confirmMsg)) return;
+        if (!userReq) {
+            showMessage('กรุณากรอก Request By', 'warning');
+            $('#REQUEST_BYTxt').focus();
+            return;
+        }
+
+        const isConfirm = await showConfirm({
+            title: isResubmit ? 'ยืนยันการส่งเอกสาร' : 'ยืนยันการสร้างเอกสาร',
+            message: isResubmit
+                ? 'ยืนยันการส่งเอกสารกลับเข้าระบบพิจารณาอีกครั้ง ใช่หรือไม่?'
+                : 'ยืนยันการบันทึกและสร้างเอกสารใหม่ ใช่หรือไม่?',
+            acceptText: 'ยืนยัน',
+            cancelText: 'ยกเลิก',
+        });
+
+        if (!isConfirm) return;
 
         try {
-            showLoader();
+            await showLoader({ show: true });
             let targetForm = { ...form };
-            const userReq = empno || $('#REQUEST_BYTxt').val() || '';
-            const userEmpNo = empno || $('#EMPNOHid').val() || '';
+
+            // ไม่ว่าจะสร้างใหม่ หรือ Resubmit ให้อัปเดตข้อมูล Header (Doc Type, Request By, Remark)
+            let headerPayload = new FormData();
+            headerPayload.append('DOC_TYPE_CODE', docType);
+            headerPayload.append('REMARK', $('#RemarkTxt').val() || '');
+            headerPayload.append('EMPNO', userEmpNo);
+            headerPayload.append('REQBY', userReq); // ค่า Request By ที่แก้ไขใหม่
+
+            if (isResubmit) {
+                headerPayload.append('DOC_HEADER_ID', docHeaderId);
+                headerPayload.append('IS_RESUBMIT', '1');
+            }
+
+            const resHeader = await saveDocMaster(headerPayload);
+            if (!resHeader || !resHeader.status) {
+                throw new Error(
+                    resHeader?.message || 'บันทึกข้อมูลเอกสารไม่สำเร็จ',
+                );
+            }
 
             if (!isResubmit) {
-                let headerPayload = new FormData();
-                headerPayload.append('DOC_TYPE_CODE', docType);
-                headerPayload.append('REMARK', $('#RemarkTxt').val() || '');
-                headerPayload.append('EMPNO', userEmpNo);
-                headerPayload.append('REQBY', userReq);
-
-                const resHeader = await saveDocMaster(headerPayload);
-                if (!resHeader || !resHeader.status) {
-                    throw new Error(
-                        resHeader?.message || 'บันทึกข้อมูลเอกสารไม่สำเร็จ',
-                    );
-                }
-
                 const createdDoc = resHeader.data || {};
                 targetForm.NFRMNO = createdDoc.NFRMNO || form.NFRMNO;
                 targetForm.VORGNO = createdDoc.VORGNO || form.VORGNO;
@@ -96,7 +120,7 @@ $(document).ready(async function () {
                 targetForm.NRUNNO = createdDoc.NRUNNO || form.NRUNNO;
             }
 
-            // ส่งไฟล์ PDF ต้นฉบับขึ้น Storage
+            // ส่งไฟล์ PDF แนบใหม่ (ถ้ามีการแนบเพิ่ม)
             if (validFiles.length > 0) {
                 let nestJsData = new FormData();
                 nestJsData.append('NFRMNO', targetForm.NFRMNO);
@@ -115,22 +139,23 @@ $(document).ready(async function () {
                 }
             }
 
+            // ถ้าเป็นการ Resubmit ให้ส่ง Action Approve ของผู้จัดทำเพื่อเริ่มเดิน Flow อีกครั้ง
             if (isResubmit) {
                 await actionFlow('approve', targetForm);
                 return;
             }
 
-            alert('สร้างและส่งเอกสารเรียบร้อยแล้ว');
-            redirectWebflow();
+            showMessage('สร้างและส่งเอกสารเรียบร้อยแล้ว', 'success');
+            setTimeout(() => redirectWebflow(), 1200);
         } catch (err) {
             console.error('Submit Error:', err);
             const msg =
                 err?.responseJSON?.message ||
                 err?.message ||
                 'เกิดข้อผิดพลาดในการประมวลผล';
-            alert('เกิดข้อผิดพลาด: ' + msg);
+            showErrorMessage(msg);
         } finally {
-            showLoader({ show: false });
+            await showLoader({ show: false });
         }
     });
 
@@ -142,7 +167,7 @@ $(document).ready(async function () {
         const originalName = $(this).data('original-name') || 'document.pdf';
 
         try {
-            showLoader();
+            await showLoader({ show: true });
             const file = await getFile({
                 baseDir: baseDir,
                 storedName: storedName,
@@ -155,9 +180,9 @@ $(document).ready(async function () {
             setTimeout(() => URL.revokeObjectURL(blobUrl), 30000);
         } catch (err) {
             console.error('Open file error:', err);
-            alert('เกิดข้อผิดพลาดในการเปิดไฟล์');
+            showErrorMessage('เกิดข้อผิดพลาดในการเปิดไฟล์');
         } finally {
-            showLoader({ show: false });
+            await showLoader({ show: false });
         }
     });
 
@@ -166,10 +191,17 @@ $(document).ready(async function () {
         const fileId = $(this).data('id');
         const filePath = $(this).data('path');
 
-        if (!confirm('ยืนยันการลบไฟล์แนบนี้ใช่หรือไม่?')) return;
+        const isConfirm = await showConfirm({
+            title: 'ยืนยันการลบไฟล์',
+            message: 'ต้องการลบไฟล์แนบนี้ ใช่หรือไม่?',
+            acceptText: 'ยืนยัน',
+            cancelText: 'ยกเลิก',
+        });
 
-        showLoader();
+        if (!isConfirm) return;
+
         try {
+            await showLoader({ show: true });
             try {
                 await deleteFile(filePath);
             } catch (apiErr) {
@@ -189,14 +221,15 @@ $(document).ready(async function () {
                     $('#download-zone').addClass('hidden');
                 }
                 window.INITIAL_ATTACHED_FILES = null;
+                showMessage('ลบไฟล์เรียบร้อยแล้ว', 'success');
             } else {
-                alert('ลบข้อมูลไม่สำเร็จ: ' + (res?.message || ''));
+                showErrorMessage('ลบข้อมูลไม่สำเร็จ: ' + (res?.message || ''));
             }
         } catch (e) {
             console.error(e);
-            alert('เกิดข้อผิดพลาดในการลบไฟล์');
+            showErrorMessage('เกิดข้อผิดพลาดในการลบไฟล์');
         } finally {
-            showLoader({ show: false });
+            await showLoader({ show: false });
         }
     });
 
@@ -228,7 +261,7 @@ $(document).ready(async function () {
         $('#master-modal').addClass('hidden');
     });
 
-    $('#modal-select-doctype').on('change', function () {
+    $('#modal-select-doctype').on('change', async function () {
         const selectedCode = $(this).val();
         $('#master-steps-tbody').empty();
 
@@ -241,30 +274,30 @@ $(document).ready(async function () {
             $('#m_doc_code').val(selectedCode).prop('readonly', true);
             $('#btn-del-doctype').removeClass('hidden');
 
-            showLoader();
-            $.getJSON(
-                host +
-                    'feform/FE-DOC/form/GetMasterDetail?docTypeCode=' +
-                    selectedCode,
-                function (res) {
-                    showLoader({ show: false });
-                    if (res.status) {
-                        $('#m_doc_name').val(res.type?.DOC_TYPE_NAME || '');
-                        if (res.steps && res.steps.length > 0) {
-                            res.steps.forEach((s) => appendStepRow(s));
-                        } else {
-                            appendStepRow({
-                                STEP_NO: 1,
-                                CEXTDATA: '00',
-                                TARGET_EMPNO: '',
-                            });
-                        }
+            try {
+                await showLoader({ show: true });
+                const res = await $.getJSON(
+                    host +
+                        'feform/FE-DOC/form/GetMasterDetail?docTypeCode=' +
+                        selectedCode,
+                );
+                if (res.status) {
+                    $('#m_doc_name').val(res.type?.DOC_TYPE_NAME || '');
+                    if (res.steps && res.steps.length > 0) {
+                        res.steps.forEach((s) => appendStepRow(s));
+                    } else {
+                        appendStepRow({
+                            STEP_NO: 1,
+                            CEXTDATA: '00',
+                            TARGET_EMPNO: '',
+                        });
                     }
-                },
-            ).fail(function () {
-                showLoader({ show: false });
-                alert('ไม่สามารถโหลดข้อมูล Master ได้');
-            });
+                }
+            } catch {
+                showErrorMessage('ไม่สามารถโหลดข้อมูล Master ได้');
+            } finally {
+                await showLoader({ show: false });
+            }
         }
     });
 
@@ -346,7 +379,7 @@ $(document).ready(async function () {
         const docName = $('#m_doc_name').val().trim();
 
         if (!docCode || !docName) {
-            alert('กรุณากรอก DOC TYPE CODE และ DOC TYPE NAME');
+            showMessage('กรุณากรอก DOC TYPE CODE และ DOC TYPE NAME', 'warning');
             return;
         }
 
@@ -376,7 +409,7 @@ $(document).ready(async function () {
         });
 
         try {
-            showLoader();
+            await showLoader({ show: true });
             const res = await $.ajax({
                 url: host + 'feform/FE-DOC/form/SaveMaster',
                 type: 'POST',
@@ -390,16 +423,16 @@ $(document).ready(async function () {
             });
 
             if (res && res.status) {
-                alert('บันทึก Master สำเร็จ');
-                location.reload();
+                showMessage('บันทึก Master สำเร็จ', 'success');
+                setTimeout(() => location.reload(), 1000);
             } else {
-                alert('บันทึกไม่สำเร็จ: ' + (res?.message || ''));
+                showErrorMessage('บันทึกไม่สำเร็จ: ' + (res?.message || ''));
             }
         } catch (e) {
             console.error(e);
-            alert('เกิดข้อผิดพลาดในการบันทึก Master');
+            showErrorMessage('เกิดข้อผิดพลาดในการบันทึก Master');
         } finally {
-            showLoader({ show: false });
+            await showLoader({ show: false });
         }
     });
 
@@ -407,15 +440,17 @@ $(document).ready(async function () {
         const docCode = $('#m_doc_code').val().trim();
         if (!docCode) return;
 
-        if (
-            !confirm(
-                `ยืนยันการลบประเภทเอกสาร [${docCode}] พร้อม Flow ทั้งหมดใช่หรือไม่?`,
-            )
-        )
-            return;
+        const isConfirm = await showConfirm({
+            title: 'ยืนยันการลบประเภทเอกสาร',
+            message: `ต้องการลบประเภทเอกสาร [${docCode}] พร้อม Flow ทั้งหมด ใช่หรือไม่?`,
+            acceptText: 'ยืนยัน',
+            cancelText: 'ยกเลิก',
+        });
+
+        if (!isConfirm) return;
 
         try {
-            showLoader();
+            await showLoader({ show: true });
             const res = await $.ajax({
                 url: host + 'feform/FE-DOC/form/DeleteDocType',
                 type: 'POST',
@@ -424,19 +459,18 @@ $(document).ready(async function () {
             });
 
             if (res && res.status) {
-                alert('ลบประเภทเอกสารเรียบร้อยแล้ว');
-                location.reload();
+                showMessage('ลบประเภทเอกสารเรียบร้อยแล้ว', 'success');
+                setTimeout(() => location.reload(), 1000);
             } else {
-                alert('ลบไม่สำเร็จ: ' + (res?.message || ''));
+                showErrorMessage('ลบไม่สำเร็จ: ' + (res?.message || ''));
             }
         } catch (e) {
             console.error(e);
-            alert('เกิดข้อผิดพลาดในการลบ');
+            showErrorMessage('เกิดข้อผิดพลาดในการลบ');
         } finally {
-            showLoader({ show: false });
+            await showLoader({ show: false });
         }
     });
-    // ========================================================
 });
 
 // ==========================================
@@ -489,6 +523,7 @@ function formatFileSize(bytes) {
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 }
+
 function handleFileSelect(files) {
     if (!files || files.length === 0) return;
     let hasInvalid = false;
@@ -504,7 +539,6 @@ function handleFileSelect(files) {
 
         selectedFilesArray.push(file);
         let idx = selectedFilesArray.length - 1;
-        // แปลงขนาดไฟล์ตามจริง (MB / GB)
         let fileSize = formatFileSize(file.size);
 
         let html = `
@@ -520,7 +554,7 @@ function handleFileSelect(files) {
     }
 
     if (hasInvalid) {
-        alert('ระบบรองรับเฉพาะไฟล์ PDF (.pdf) เท่านั้น');
+        showMessage('ระบบรองรับเฉพาะไฟล์ PDF (.pdf) เท่านั้น', 'warning');
     }
 
     if (selectedFilesArray.filter(Boolean).length > 0) {
@@ -627,5 +661,3 @@ export function loadExistingFiles(forceRefresh = false) {
         },
     });
 }
-
-// ==========================================

@@ -1,3 +1,4 @@
+import $ from 'jquery';
 import {
     getMode,
     getExtData,
@@ -7,9 +8,13 @@ import {
 } from '@amec/webasset/api/webform';
 import { redirectWebflow } from '@amec/webasset/form';
 import { showLoader } from '@amec/webasset/preloader';
+import {
+    showMessage,
+    showErrorMessage,
+    showConfirm,
+} from '@amec/webasset/utils';
 import { host } from '../../utils';
 import { deleteDraftDoc } from './data';
-// 🟢 import เฉพาะฟังก์ชันหลักจาก pdfStamper
 import { stampFormAttachedFiles } from './pdfStamper';
 
 export async function initFlow(form, status) {
@@ -49,21 +54,49 @@ export function applyButtonPermissions(mode, extData, status = '', empno = '') {
         $('#DocTypeDrp').prop('disabled', false);
         $('#drop-zone').removeClass('hidden');
 
+        // แก้ไข Request By ได้เฉพาะตอนสร้างเอกสารใหม่ครั้งแรกสุดเท่านั้น
+        if (rawStatus === '' && !$('#DocHeaderIDHid').val()) {
+            $('#REQUEST_BYTxt')
+                .prop('readonly', false)
+                .removeClass('bg-slate-100 cursor-not-allowed text-slate-600')
+                .addClass('bg-white text-slate-800');
+        } else {
+            // ถ้าเคยบันทึกแล้ว/มี ID แล้ว -> ล็อกห้ามแก้ไข
+            $('#REQUEST_BYTxt')
+                .prop('readonly', true)
+                .addClass('bg-slate-100 cursor-not-allowed text-slate-600')
+                .removeClass('bg-white text-slate-800');
+        }
+
         if (rawStatus === 'DRAFT' || rawStatus === '') {
             $('#SaveDocBtn').removeClass('hidden');
         }
     } else if (mode === '2') {
+        // ล็อก Request By ให้เป็น Readonly เสมอ (รวมถึงกรณี Return กลับมาหา Owner ด้วย)
+        $('#REQUEST_BYTxt')
+            .prop('readonly', true)
+            .addClass('bg-slate-100 cursor-not-allowed text-slate-600')
+            .removeClass('bg-white text-slate-800');
+
         if (isOwner) {
+            // เจ้าของเอกสารที่ได้รับ Return: แก้ไขประเภทเอกสาร, แก้ไขรายละเอียด, และแนบไฟล์ใหม่ได้ แต่ห้ามแก้ Request By
             $('#DocTypeDrp').prop('disabled', false);
             $('#drop-zone').removeClass('hidden');
             $('#SaveDocBtn').removeClass('hidden');
             $('#DeleteBtn').removeClass('hidden');
         } else {
+            // ผู้อนุมัติคนอื่นๆ ใน Flow
             $('#DocTypeDrp').prop('disabled', true);
             $('#drop-zone').addClass('hidden');
             $('#ApproveBtn, #ReturnBtn').removeClass('hidden');
         }
     } else {
+        // Mode 3 (View Mode): ล็อกทั้งหมด
+        $('#REQUEST_BYTxt')
+            .prop('readonly', true)
+            .addClass('bg-slate-100 cursor-not-allowed text-slate-600')
+            .removeClass('bg-white text-slate-800');
+
         $('#DocTypeDrp').prop('disabled', true);
         $('#drop-zone').addClass('hidden');
     }
@@ -76,7 +109,6 @@ export function applyButtonPermissions(mode, extData, status = '', empno = '') {
         $('#DeleteBtn').removeClass('hidden');
     }
 
-    // 🟢 สิทธิ์พิเศษสำหรับ Admin 13204: ลบเอกสารได้ทุกสถานะ และกด Force Stamp ได้เสมอ
     if (currentEmpNo === '13204') {
         $('#DeleteBtn').removeClass('hidden');
         $('#ManualStampBtn').removeClass('hidden');
@@ -90,8 +122,15 @@ function bindFlowEvents(form) {
 
     $(document)
         .off('click', '#ReturnBtn')
-        .on('click', '#ReturnBtn', () => {
-            if (confirm('ยืนยันการ Return เอกสารกลับผู้จัดทำใช่หรือไม่?')) {
+        .on('click', '#ReturnBtn', async function () {
+            const isConfirm = await showConfirm({
+                title: 'ยืนยันการ Return',
+                message: 'ต้องการ Return เอกสารกลับผู้จัดทำ ใช่หรือไม่?',
+                acceptText: 'ยืนยัน',
+                cancelText: 'ยกเลิก',
+            });
+
+            if (isConfirm) {
                 actionFlow('return', form);
             }
         });
@@ -100,32 +139,45 @@ function bindFlowEvents(form) {
     $(document)
         .off('click', '#ManualStampBtn')
         .on('click', '#ManualStampBtn', async function () {
-            if (
-                !confirm(
-                    'ต้องการประทับตรายางลงไฟล์ PDF จากประวัติปัจจุบันทันทีใช่หรือไม่?',
-                )
-            )
-                return;
+            const isConfirm = await showConfirm({
+                title: 'ยืนยันการประทับตรา',
+                message:
+                    'ต้องการประทับตรายางลงไฟล์ PDF จากประวัติปัจจุบันทันที ใช่หรือไม่?',
+                acceptText: 'ยืนยัน',
+                cancelText: 'ยกเลิก',
+            });
+
+            if (!isConfirm) return;
+
             try {
-                showLoader();
+                await showLoader({ show: true });
                 await executeFinalStamping(form);
-                alert('ประทับตราเอกสารเรียบร้อยแล้ว');
-                location.reload();
+                showMessage('ประทับตราเอกสารเรียบร้อยแล้ว', 'success');
+                setTimeout(() => location.reload(), 1000);
             } catch (e) {
                 console.error(e);
-                alert('เกิดข้อผิดพลาดในการ Stamp: ' + (e?.message || ''));
+                showErrorMessage(
+                    'เกิดข้อผิดพลาดในการ Stamp: ' + (e?.message || ''),
+                );
             } finally {
-                showLoader({ show: false });
+                await showLoader({ show: false });
             }
         });
 
     $(document)
         .off('click', '#DeleteBtn')
         .on('click', '#DeleteBtn', async function () {
-            if (!confirm('ยืนยันการลบแบบฟอร์มนี้ใช่หรือไม่?')) return;
+            const isConfirm = await showConfirm({
+                title: 'ยืนยันการลบแบบฟอร์ม',
+                message: 'ต้องการลบแบบฟอร์มนี้ ใช่หรือไม่?',
+                acceptText: 'ยืนยัน',
+                cancelText: 'ยกเลิก',
+            });
 
-            showLoader();
+            if (!isConfirm) return;
+
             try {
+                await showLoader({ show: true });
                 const delFlow = await deleteFlowandForm(form);
                 if (delFlow && delFlow.status) {
                     const resDel = await deleteDraftDoc({
@@ -138,21 +190,24 @@ function bindFlowEvents(form) {
                     });
 
                     if (resDel.status) {
-                        alert('ลบข้อมูลและไฟล์เรียบร้อยแล้ว');
+                        showMessage('ลบข้อมูลและไฟล์เรียบร้อยแล้ว', 'success');
                     } else {
-                        alert(
+                        showMessage(
                             'ลบข้อมูลสำเร็จบางส่วน: ' + (resDel.message || ''),
+                            'warning',
                         );
                     }
-                    redirectWebflow();
+                    setTimeout(() => redirectWebflow(), 1200);
                 } else {
-                    alert('ไม่สามารถลบ Flow ได้: ' + (delFlow?.message || ''));
+                    showErrorMessage(
+                        'ไม่สามารถลบ Flow ได้: ' + (delFlow?.message || ''),
+                    );
                 }
             } catch (e) {
                 console.error(e);
-                alert('เกิดข้อผิดพลาด: ' + e.message);
+                showErrorMessage('เกิดข้อผิดพลาด: ' + e.message);
             } finally {
-                showLoader({ show: false });
+                await showLoader({ show: false });
             }
         });
 }
@@ -174,11 +229,10 @@ export async function actionFlow(actionType, form) {
     };
 
     try {
-        showLoader();
+        await showLoader({ show: true });
         const res = await doaction(payload);
 
         if (res?.status) {
-            // ส่งไปปรับปรุงสถานะ Header ใน SMMT
             const resActionFlow = await $.ajax({
                 url: host + 'feform/FE-DOC/form/ActionFlow',
                 type: 'POST',
@@ -190,7 +244,6 @@ export async function actionFlow(actionType, form) {
                 dataType: 'json',
             });
 
-            // ถ้าคนสุดท้าย Approve (statusDoc กลายเป็น 'APPROVE') ให้ Stamp รวดเดียวครบทุกวง
             if (
                 cleanAction === 'approve' &&
                 resActionFlow?.statusDoc === 'APPROVE'
@@ -198,16 +251,16 @@ export async function actionFlow(actionType, form) {
                 await executeFinalStamping(form);
             }
 
-            alert('ดำเนินการสำเร็จ');
-            redirectWebflow();
+            showMessage('ดำเนินการสำเร็จ', 'success');
+            setTimeout(() => redirectWebflow(), 1200);
         } else {
-            alert(res?.message || 'ส่งสถานะ Flow ไม่สำเร็จ');
+            showErrorMessage(res?.message || 'ส่งสถานะ Flow ไม่สำเร็จ');
         }
     } catch (e) {
         console.error(e);
-        alert('เกิดข้อผิดพลาดในการทำ Action: ' + (e?.message || ''));
+        showErrorMessage('เกิดข้อผิดพลาดในการทำ Action: ' + (e?.message || ''));
     } finally {
-        showLoader({ show: false });
+        await showLoader({ show: false });
     }
 }
 
@@ -215,7 +268,6 @@ export async function actionFlow(actionType, form) {
  * ดึง Steps/Logs แล้วส่งให้ stampFormAttachedFiles ใน pdfStamper.js ดำเนินการ
  */
 export async function executeFinalStamping(form) {
-    // 1. ดึง Log ประวัติการอนุมัติจริง
     const res = await $.ajax({
         url: host + 'feform/FE-DOC/form/GetStampData',
         type: 'POST',
@@ -233,7 +285,6 @@ export async function executeFinalStamping(form) {
         throw new Error('ไม่พบประวัติการอนุมัติในระบบ');
     }
 
-    // 2. เรียก Stamp โดยใช้เฉพาะ logs
     await stampFormAttachedFiles(
         {
             NFRMNO: form.NFRMNO,
