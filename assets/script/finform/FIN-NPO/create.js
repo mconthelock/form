@@ -719,7 +719,7 @@ function calculateInvoiceRow(row) {
 }
 
 function createTableStamp(data = []) {
-    invoiceLineId = 0;
+    invoiceLineId = Math.max(0, ...data.map((row) => Number(row.LINEID) || 0));
     const tableData = data.length ? data : [emptyInvoiceRow()];
 
     $('#stampTable').html(`<thead>
@@ -823,7 +823,7 @@ $(document).on(
             $('#stampTable tbody tr').each(function (index) {
                 const row = $(this);
                 const invoice = {
-                    LINE_ID: index + 1,
+                    LINE_ID: Number(row.attr('data-lineid')) || index + 1,
                     INVOICE_DATE: row.find('.invoice-date').val() || '',
                     INVOICE_NO: row.find('.invoice-no').val()?.trim() || '',
                     TOTAL_AMOUNT: numberValue(row.find('.total-amount').val()),
