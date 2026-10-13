@@ -78,15 +78,16 @@ export function applyButtonPermissions(mode, extData, status = '', empno = '') {
             .addClass('bg-slate-100 cursor-not-allowed text-slate-600')
             .removeClass('bg-white text-slate-800');
 
+        $('#DocTypeDrp').prop('disabled', true);
         if (isOwner) {
             // เจ้าของเอกสารที่ได้รับ Return: แก้ไขประเภทเอกสาร, แก้ไขรายละเอียด, และแนบไฟล์ใหม่ได้ แต่ห้ามแก้ Request By
-            $('#DocTypeDrp').prop('disabled', false);
+            // $('#DocTypeDrp').prop('disabled', false);
             $('#drop-zone').removeClass('hidden');
             $('#SaveDocBtn').removeClass('hidden');
             $('#DeleteBtn').removeClass('hidden');
         } else {
             // ผู้อนุมัติคนอื่นๆ ใน Flow
-            $('#DocTypeDrp').prop('disabled', true);
+            // $('#DocTypeDrp').prop('disabled', true);
             $('#drop-zone').addClass('hidden');
             $('#ApproveBtn, #ReturnBtn').removeClass('hidden');
         }
@@ -123,6 +124,13 @@ function bindFlowEvents(form) {
     $(document)
         .off('click', '#ReturnBtn')
         .on('click', '#ReturnBtn', async function () {
+            const Remark = ($('#RemarkTxt').val() || '').trim();
+
+            if (!Remark) {
+                showMessage('กรุณากรอก Remark', 'warning');
+                $('#RemarkTxt').focus();
+                return;
+            }
             const isConfirm = await showConfirm({
                 title: 'ยืนยันการ Return',
                 message: 'ต้องการ Return เอกสารกลับผู้จัดทำ ใช่หรือไม่?',
