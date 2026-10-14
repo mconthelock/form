@@ -136,7 +136,7 @@ function bindFlowEvents(form) {
             });
 
             if (isConfirm) {
-                actionFlow('return', form);
+                actionFlow('returnp', form);
             }
         });
 

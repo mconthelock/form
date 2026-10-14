@@ -6,11 +6,31 @@ import { uploadDocFiles } from './data';
 import { host } from '../../utils';
 
 /**
+ * ฟังก์ชันช่วยตัดชื่อผู้อนุมัติ:
+ * - รหัสพนักงานขึ้นต้นด้วย J (ญี่ปุ่น) -> ใช้นามสกุล (คำสุดท้าย)
+ * - รหัสพนักงานคนไทย -> ใช้ชื่อตัว (คำแรก)
+ */
+function getDisplayStampName(empNo, rawName) {
+    const fullName = (rawName || '').trim();
+    if (!fullName) return '';
+
+    // ตัดช่องว่างหลายตัวให้เหลือตัวเดียว และแยกเป็นคำๆ
+    const nameParts = fullName.split(/\s+/).filter(Boolean);
+    if (nameParts.length === 0) return '';
+
+    const emp = (empNo || '').toString().trim().toUpperCase();
+
+    // กรณีพนักงานญี่ปุ่น (ขึ้นต้นด้วย J) -> ใช้นามสกุล (คำสุดท้าย)
+    if (emp.startsWith('J')) {
+        return nameParts[nameParts.length - 1];
+    }
+
+    // กรณีทั่วไป (พนักงานไทย) -> ใช้ชื่อจริง (คำแรก)
+    return nameParts[0];
+}
+
+/**
  * ฟังก์ชันหลัก: ค้นหาไฟล์แนบของฟอร์มทั้งหมด -> Stamp ตรายางตาม logs -> แทนที่ไฟล์เดิมบนระบบ
- *
- * @param {Object} formKeys คีย์สำหรับค้นหาไฟล์ { NFRMNO, VORGNO, CYEAR, CYEAR2, NRUNNO, EMPNO, FORM_TYPE }
- * @param {Array} logs ประวัติการอนุมัติจริงจากระบบ
- * @param {Object} stampOptions ออปชันสำหรับตรายาง
  */
 export async function stampFormAttachedFiles(
     formKeys,
@@ -119,11 +139,6 @@ export async function stampFormAttachedFiles(
 
 /**
  * วาดตรายางลง PDF โดยอิงตามรายการ logs ที่อนุมัติจริง เรียงจาก ขวา ไป ซ้าย
- *
- * @param {ArrayBuffer|Uint8Array|Blob|File} pdfSource ข้อมูลไฟล์ PDF เดิม
- * @param {Array} logs ประวัติการอนุมัติจริง [{SNAME, DAPVDATE_STR, ...}]
- * @param {Object} options ตัวเลือกการแสดงผล
- * @returns {Promise<Uint8Array>}
  */
 export async function stampPdfDocument(pdfSource, logs = [], options = {}) {
     const {
@@ -147,6 +162,17 @@ export async function stampPdfDocument(pdfSource, logs = [], options = {}) {
         return await pdfDoc.save();
     }
 
+    // 1. กรองตัด Requester (Step 00 หรือ CSTART == 1) ออก ไม่นำมา Stamp
+    const approverLogs = logs.filter((item) => {
+        const ext = String(item.CEXTDATA || '').trim();
+        const isStartStep = String(item.CSTART || '') === '1';
+        return ext !== '00' && !isStartStep;
+    });
+
+    if (approverLogs.length === 0) {
+        return await pdfDoc.save();
+    }
+
     const firstPage = pages[0];
     const { width, height } = firstPage.getSize();
 
@@ -155,9 +181,8 @@ export async function stampPdfDocument(pdfSource, logs = [], options = {}) {
 
     const startY = height - marginTop;
 
-    // วนลูปวาดตรายาง: คนแรก (idx = 0) อยู่ชิดขวา และคนถัดไปจะขยับไปทางซ้ายเรื่อยๆ
-    logs.forEach((app, idx) => {
-        // คำนวณพิกัดแกน X จากขอบขวาถอยไปทางซ้าย
+    // วนลูปวาดเฉพาะผู้อนุมัติ (คนแรก idx = 0 อยู่ชิดขวา คนถัดไปขยับไปซ้าย)
+    approverLogs.forEach((app, idx) => {
         const cellX = width - marginRight - (idx + 1) * colWidth;
         const cellY = startY - boxHeight;
 
@@ -186,7 +211,7 @@ export async function stampPdfDocument(pdfSource, logs = [], options = {}) {
             color: rgb(0.85, 0.1, 0.1),
         });
 
-        // วันที่อนุมัติจริงจากตาราง FLOW
+        // วันที่อนุมัติจริง
         const dateText = (app.DAPVDATE_STR || '').trim();
         const dateW = fontRegular.widthOfTextAtSize(dateText, 6.5);
         firstPage.drawText(dateText, {
@@ -197,11 +222,13 @@ export async function stampPdfDocument(pdfSource, logs = [], options = {}) {
             color: rgb(0.85, 0.1, 0.1),
         });
 
-        // ชื่อผู้อนุมัติจาก AMECUSERALL
-        const fullName = (app.SNAME || app.VREALAPV || '').trim();
-        const firstName = fullName.split(' ')[0] || fullName;
-        const nameW = fontBold.widthOfTextAtSize(firstName, 7);
-        firstPage.drawText(firstName, {
+        // 2. ดึงชื่อ/นามสกุล ตามเงื่อนไขรหัสพนักงาน (ถ้าขึ้นต้นด้วย J ใช้นามสกุล)
+        const empCode = app.SEMPNO || app.VREALAPV || app.EMPNO || '';
+        const rawName = app.SNAME || app.VREALAPV || '';
+        const displayName = getDisplayStampName(empCode, rawName);
+
+        const nameW = fontBold.widthOfTextAtSize(displayName, 7);
+        firstPage.drawText(displayName, {
             x: centerX - nameW / 2,
             y: centerY - 11,
             size: 7,
