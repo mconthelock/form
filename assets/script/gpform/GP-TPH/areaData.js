@@ -644,7 +644,6 @@ async function loadAreaTable() {
         ]);
         areas = getItems(areaResponse);
         locations = getItems(locationResponse);
-        await loadAreaOwners();
         await renderLocationOptions();
         renderTable();
     } catch (error) {
@@ -831,5 +830,5 @@ function bindEvents() {
 
 document.addEventListener('DOMContentLoaded', () => {
     bindEvents();
-    loadAreaTable();
+    loadAreaOwners().then(loadAreaTable);
 });
