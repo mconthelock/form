@@ -87,7 +87,12 @@
         .tph-page .table :is(th, td) { border: 0; border-bottom: 1px solid var(--tph-line); padding: 10px 8px; }
         .tph-page .table th { font-size: 13px; font-weight: 700; white-space: nowrap; }
         .tph-page .table tbody tr:hover { background: var(--tph-soft); }
-        .tph-page #applicant-visitor-section table { min-width: 700px; }
+        .tph-page #applicant-visitor-section table { min-width: 912px; table-layout: fixed; }
+        .tph-page .visitor-col-number { width: 48px; }
+        .tph-page .visitor-col-employee { width: 90px; }
+        .tph-page .visitor-col-name { width: 320px; }
+        .tph-page .visitor-col-organization { width: 130px; }
+        .tph-page .visitor-col-action { width: 64px; }
         #modalTable_wrapper .dt-search { display: none; }
         #modalTable_wrapper .dt-length { color: var(--color-neutral); font-size: 13px; }
         #modalTable_wrapper .dt-length .dt-input {
@@ -201,6 +206,15 @@
                     </div>
                     <div class="overflow-x-auto">
                         <table class="table w-full border border-slate-200">
+                            <colgroup>
+                                <col class="visitor-col-number">
+                                <col class="visitor-col-employee">
+                                <col class="visitor-col-name">
+                                <col class="visitor-col-organization">
+                                <col class="visitor-col-organization">
+                                <col class="visitor-col-organization">
+                                <col class="visitor-col-action">
+                            </colgroup>
                             <thead class="table-header">
                                 <tr>
                                     <th class="p-3 text-center">No.</th>
@@ -208,7 +222,7 @@
                                     <th class="p-3 text-left">Name</th>
                                     <th class="p-3 text-left">Division</th>
                                     <th class="p-3 text-left">Department</th>
-                                    <th class="p-3 text-left">SECTION</th>
+                                    <th class="p-3 text-left">Section</Section></th>
                                     <th class="p-3 text-center" data-action-column>Action</th>
                                 </tr>
                             </thead>

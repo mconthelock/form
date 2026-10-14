@@ -12,6 +12,13 @@
 		#long-term-valid-until .tph-hint {
 			display: none;
 		}
+		#applicant-visitor-section table {
+			min-width: 848px;
+		}
+		#applicant-visitor-section table col:last-child,
+		#applicant-visitor-section [data-action-column] {
+			display: none;
+		}
 		#tphForm .tph-choice:has(input[name="REQUEST_TYPE"]):not(:has(input[name="REQUEST_TYPE"]:checked)),
 		#tphForm label:has(input[name="REQUEST_SUB_TYPE"]:not(:checked)) {
 			display: none;
