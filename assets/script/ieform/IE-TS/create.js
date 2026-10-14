@@ -43,16 +43,15 @@ const transformDataForTable = (apiData, startIndex = 0) => {
             dwgNo, // [3] DWG No
             qty, // [4] QTY
             '', // [5]
-            'K', // [6] (ตรงตำแหน่งเดียวกับชื่อ Process)
-            currentTP.toFixed(4), // [7]
-            currentTC.toFixed(4), // [8]
-            currentTS.toFixed(4), // [9]
-            afterTP.toFixed(4), // [10]
-            afterTC.toFixed(4), // [11]
-            afterTS.toFixed(4), // [12]
-            totalReq.toFixed(4), // [13]
-            '-', // [14] Date/Remarks
-            'parent', // [15] ซ่อนไว้เพื่อใช้เช็คประเภทแถวตอนจัด CSS
+            currentTP.toFixed(4), // [6]
+            currentTC.toFixed(4), // [7]
+            currentTS.toFixed(4), // [8]
+            afterTP.toFixed(4), // [9]
+            afterTC.toFixed(4), // [10]
+            afterTS.toFixed(4), // [11]
+            totalReq.toFixed(4), // [12]
+            '-', // [13] Date/Remarks
+            'parent', // [14] ซ่อนไว้เพื่อใช้เช็คประเภทแถวตอนจัด CSS
         ]);
 
         // 3. วนลูปสร้างแถวย่อย (Child Row) สำหรับแต่ละ Process
@@ -69,8 +68,15 @@ const transformDataForTable = (apiData, startIndex = 0) => {
                 const pTotalReq = pAfterTS - pTS;
 
                 // สร้าง Input HTML (จัด Style ด้วย Tailwind)
-                const inputAfterTP = `<input type="number" step="0.0001" class="w-full text-center border border-gray-300 rounded px-1 input-after-tp bg-white" value="${pAfterTP.toFixed(4)}" data-qty="${qty}" data-pts="${pTS}">`;
-                const inputAfterTC = `<input type="number" step="0.0001" class="w-full text-center border border-gray-300 rounded px-1 input-after-tc bg-white" value="${pAfterTC.toFixed(4)}" data-qty="${qty}" data-pts="${pTS}">`;
+                // 💡 แก้ไข inputAfterTP
+                const inputAfterTP = `<input type="number" step="0.0001"
+    class="w-[85px] block mx-auto text-center py-1 px-2 text-amber-950 font-medium bg-white border border-amber-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all duration-200 hover:border-amber-400 input-after-tp"
+    value="${pAfterTP.toFixed(4)}" data-qty="${qty}" data-pts="${pTS}">`;
+
+                // 💡 แก้ไข inputAfterTC
+                const inputAfterTC = `<input type="number" step="0.0001"
+    class="w-[85px] block mx-auto text-center py-1 px-2 text-amber-950 font-medium bg-white border border-amber-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent transition-all duration-200 hover:border-amber-400 input-after-tc"
+    value="${pAfterTC.toFixed(4)}" data-qty="${qty}" data-pts="${pTS}">`;
 
                 // สร้าง Span สำหรับแสดงผลลัพธ์ที่คำนวณอัตโนมัติ
                 const spanAfterTS = `<span class="span-after-ts">${pAfterTS.toFixed(4)}</span>`;
@@ -83,16 +89,15 @@ const transformDataForTable = (apiData, startIndex = 0) => {
                     '', // [3]
                     '', // [4]
                     process.F02R03 ? process.F02R03.trim() : '-', // [5] เปลี่ยน index ตรงนี้ให้ตรงกับ DataTables ของคุณ
-                    '', // [6]
-                    pTP.toFixed(4), // [7]
-                    pTC.toFixed(4), // [8]
-                    pTS.toFixed(4), // [9]
-                    inputAfterTP, // [10] กลายเป็นช่องกรอก
-                    inputAfterTC, // [11] กลายเป็นช่องกรอก
-                    spanAfterTS, // [12] ผลลัพธ์
-                    spanTotalReq, // [13] ผลลัพธ์
-                    '-', // [14]
-                    'child', // [15] ตัวบอกว่าเป็นแถวย่อย
+                    pTP.toFixed(4), // [6]
+                    pTC.toFixed(4), // [7]
+                    pTS.toFixed(4), // [8]
+                    inputAfterTP, // [9] กลายเป็นช่องกรอก
+                    inputAfterTC, // [10] กลายเป็นช่องกรอก
+                    spanAfterTS, // [11] ผลลัพธ์
+                    spanTotalReq, // [12] ผลลัพธ์
+                    '-', // [13]
+                    'child', // [14] ตัวบอกว่าเป็นแถวย่อย
                 ]);
             });
         }
@@ -106,8 +111,13 @@ async function updateOrCreateTable(rawData) {
     if (tsTableInstance) {
         // --- กรณีที่ 1: มีตารางอยู่แล้ว (กด Add ตัวที่ 2, 3...) ---
         // นับจำนวนแถวเดิมก่อน เพื่อส่งไปให้ฟังก์ชันแปลงข้อมูลรันเลข No. ต่อ
-        const currentRowCount = tsTableInstance.rows().count();
-        const tableData = transformDataForTable(rawData, currentRowCount);
+        // const currentRowCount = tsTableInstance.rows().count();
+        // const tableData = transformDataForTable(rawData, currentRowCount);
+        const allCurrentData = tsTableInstance.rows().data().toArray();
+        const parentRowsCount = allCurrentData.filter(
+            (row) => row[14] === 'parent',
+        ).length;
+        const tableData = transformDataForTable(rawData, parentRowsCount);
 
         // เอาข้อมูลใหม่ต่อท้าย แล้วสั่งวาดตารางใหม่ (ยอดรวมด้านบนจะอัปเดตเองอัตโนมัติ)
         tsTableInstance.rows.add(tableData).draw(false);
@@ -122,53 +132,48 @@ async function updateOrCreateTable(rawData) {
             ordering: false,
             info: false,
             createdRow: function (row, data, dataIndex) {
-                // เช็คจากคอลัมน์ที่ 15 ที่เราแอบใส่คำว่า parent/child ไว้
-                if (data[15] === 'child') {
-                    // ถ้าเป็นแถว Process: ลบเส้นขอบบน, เปลี่ยนสีตัวหนังสือให้ดูจางลง
+                if (data[14] === 'child') {
+                    // <--- เปลี่ยนจาก 15 เป็น 14
                     $(row).addClass('text-gray-500 border-t-0 bg-transparent');
-                    // จัดตัวหนังสือคอลัมน์ Process Name ให้อยู่ชิดขวาหรือรูปแบบตามต้องการ
-                    $('td:eq(6)', row).addClass('text-right text-xs');
+                    $('td:eq(5)', row).addClass('text-right text-xs'); // <--- เปลี่ยนจาก 6 เป็น 5
                 } else {
-                    // ถ้าเป็นแถวหลัก: ทำตัวหนา
                     $(row).addClass(
                         'font-bold bg-white border-b-2 border-gray-200',
                     );
                 }
             },
-            columns: Array(15).fill({ defaultContent: '-' }),
+            columns: Array(14).fill({ defaultContent: '-' }),
             columnDefs: [
-                { targets: 9, className: 'bg-[#d9d9d9] text-center border-r' },
-                { targets: [10, 11], className: 'bg-[#ffffe6] text-center' },
-                { targets: 12, className: 'bg-[#ffff99] text-center border-r' },
+                { targets: 8, className: 'bg-[#d9d9d9] text-center border-r' }, // จาก 9 เป็น 8
+                { targets: [9, 10], className: 'bg-[#ffffe6] text-center' }, // จาก 10,11 เป็น 9,10
+                { targets: 11, className: 'bg-[#ffff99] text-center border-r' }, // จาก 12 เป็น 11
                 {
-                    targets: 13,
+                    targets: 12, // จาก 13 เป็น 12
                     className:
                         'bg-[#ffe6e6] text-red-600 font-bold text-center border-r',
                 },
-                { targets: [0, 4, 5, 6, 14], className: 'text-center' },
+                { targets: [0, 4, 5, 13], className: 'text-center' }, // จาก [0,4,5,6,14] เป็น [0,4,5,13]
             ],
             drawCallback: function (settings) {
                 const api = this.api();
                 const allData = api.rows({ page: 'current' }).data().toArray();
 
-                // กรองเอาเฉพาะ "แถวหลัก" มาบวกเลข (ป้องกันยอดเบิ้ล)
                 const parentRows = allData.filter(
-                    (row) => row[15] === 'parent',
+                    (row) => row[14] === 'parent',
                 );
 
                 const sumCurrentTS = parentRows.reduce(
-                    (sum, row) => sum + parseFloat(row[9] || 0),
+                    (sum, row) => sum + parseFloat(row[8] || 0),
                     0,
                 );
                 const sumAfterTS = parentRows.reduce(
-                    (sum, row) => sum + parseFloat(row[12] || 0),
+                    (sum, row) => sum + parseFloat(row[11] || 0),
                     0,
                 );
                 const sumTotal = parentRows.reduce(
-                    (sum, row) => sum + parseFloat(row[13] || 0),
+                    (sum, row) => sum + parseFloat(row[12] || 0),
                     0,
                 );
-
                 document.getElementById('sum-current-ts').innerHTML =
                     sumCurrentTS.toFixed(4);
                 document.getElementById('sum-after-ts').innerHTML =
@@ -222,21 +227,22 @@ const generateMockData = () => {
         );
 
         return [
-            no,
-            `PART NAME TEST EXAM ${no}`,
-            'XXX',
-            dwgNo, // <--- ใส่รหัส DWG 19 ตัวอักษรตรงนี้
-            'X',
-            'K',
-            '-',
-            '0.0500',
-            '0.2500',
-            currentTS,
-            '0.0500',
-            '0.3000',
-            afterTS,
-            totalReq,
-            no === 3 ? '20-Feb-26' : '-',
+            no, // [0]
+            `PART NAME TEST EXAM ${no}`, // [1]
+            'XXX', // [2]
+            dwgNo, // [3]
+            'X', // [4]
+            'K', // [5]
+            // '-', <--- ลบบรรทัดนี้ออก (Rev)
+            '0.0500', // [6]
+            '0.2500', // [7]
+            currentTS, // [8]
+            '0.0500', // [9]
+            '0.3000', // [10]
+            afterTS, // [11]
+            totalReq, // [12]
+            no === 3 ? '20-Feb-26' : '-', // [13]
+            'parent', // [14] (แนะนำให้ใส่ flag เข้าไปด้วยเพื่อให้ drawCallback ใน init ทำงานถูกถ้าใช้ filter)
         ];
     });
 };
@@ -254,27 +260,18 @@ async function initMyTable() {
         paging: false, // ปิดแบ่งหน้าเพื่อเน้น scroll
         ordering: false, // ปิดการเรียงลำดับ
         info: false,
-        columns: Array(15).fill({ defaultContent: '-' }),
+        columns: Array(14).fill({ defaultContent: '-' }),
         // กำหนดสีพื้นหลังให้แต่ละคอลัมน์ด้วย Tailwind CSS
         columnDefs: [
-            // Current TS (คอลัมน์ที่ 10 - index 9)
-            { targets: 9, className: 'bg-[#d9d9d9] text-center border-r' },
-
-            // After TP, TC (คอลัมน์ที่ 11, 12 - index 10, 11)
-            { targets: [10, 11], className: 'bg-[#ffffe6] text-center' },
-
-            // After TS (คอลัมน์ที่ 13 - index 12)
-            { targets: 12, className: 'bg-[#ffff99] text-center border-r' },
-
-            // Total Request (คอลัมน์ที่ 14 - index 13)
+            { targets: 8, className: 'bg-[#d9d9d9] text-center border-r' }, // จาก 9 เป็น 8
+            { targets: [9, 10], className: 'bg-[#ffffe6] text-center' }, // จาก 10,11 เป็น 9,10
+            { targets: 11, className: 'bg-[#ffff99] text-center border-r' }, // จาก 12 เป็น 11
             {
-                targets: 13,
+                targets: 12,
                 className:
                     'bg-[#ffe6e6] text-red-600 font-bold text-center border-r',
-            },
-
-            // จัดกึ่งกลางคอลัมน์อื่นๆ ที่ต้องการ
-            { targets: [0, 4, 5, 6, 14], className: 'text-center' },
+            }, // จาก 13 เป็น 12
+            { targets: [0, 4, 5, 13], className: 'text-center' }, // จาก [0,4,5,6,14] เป็น [0,4,5,13]
         ],
         // คำนวณยอดรวมทุกครั้งที่มีการวาดตาราง (เช่น โหลดครั้งแรก หรือค้นหาข้อมูล)
         drawCallback: function (settings) {
@@ -288,15 +285,15 @@ async function initMyTable() {
             };
 
             const sumCurrentTS = api
-                .column(9, { page: 'current' })
+                .column(8, { page: 'current' })
                 .data()
                 .reduce((a, b) => intVal(a) + intVal(b), 0);
             const sumAfterTS = api
-                .column(12, { page: 'current' })
+                .column(11, { page: 'current' })
                 .data()
                 .reduce((a, b) => intVal(a) + intVal(b), 0);
             const sumTotal = api
-                .column(13, { page: 'current' })
+                .column(12, { page: 'current' })
                 .data()
                 .reduce((a, b) => intVal(a) + intVal(b), 0);
 
@@ -366,11 +363,13 @@ $(document).on('click', '#btnAdd', async function () {
         if (endL && endL >= startL) {
             // กรณีมี L1 ถึง L2 (เช่น L2 - L5)
             for (let i = startL; i <= endL; i++) {
-                dwgList.push(`${baseString} L${i}`);
+                let paddedI = String(i).padStart(2, '0');
+                dwgList.push(`${baseString} L${paddedI}`);
             }
         } else if (!isNaN(startL)) {
             // กรณีมีแค่ L1 ตัวเดียว
-            dwgList.push(`${baseString} L${startL}`);
+            let paddedStartL = String(startL).padStart(2, '0');
+            dwgList.push(`${baseString} L${paddedStartL}`);
         } else {
             // เผื่อกรณีพิมพ์ L1 แปลกๆ
             dwgList.push(`${baseString} ${l1Str}`);
@@ -384,9 +383,44 @@ $(document).on('click', '#btnAdd', async function () {
         dwgNo: dwgList,
     });
     if (res && res.length > 0) {
+        // 💡 --- เริ่มส่วนตรวจสอบข้อมูลซ้ำ ---
+        if (tsTableInstance) {
+            // 1. ดึงข้อมูลทั้งหมดในตารางปัจจุบัน
+            const allData = tsTableInstance.rows().data().toArray();
+
+            // 2. ดึงเฉพาะชื่อ DWG ที่มีอยู่แล้ว (คอลัมน์ที่ 4 -> Index 3 ของแถว parent)
+            const existingDwgs = allData
+                .filter((row) => row[14] === 'parent')
+                .map((row) => (row[3] ? row[3].trim() : ''));
+
+            // 3. กรองเอาเฉพาะข้อมูลจาก API ที่ยังไม่มีในตาราง
+            const newRecords = res.filter((item) => {
+                const itemDwg = item.F01R04 ? item.F01R04.trim() : '';
+                return !existingDwgs.includes(itemDwg);
+            });
+
+            // 4. เช็คผลลัพธ์หลังกรอง
+            if (newRecords.length === 0) {
+                showMessage('This DWG No. is already in the table.', 'warning');
+                return; // หยุดการทำงาน ไม่เพิ่มลงตาราง
+            } else if (newRecords.length < res.length) {
+                // ถ้ารายการมีทั้งตัวเก่าและตัวใหม่ปนกัน
+                showMessage(
+                    'Some DWG Nos. already exist. Only new items will be added.',
+                    'warning',
+                );
+            }
+
+            // 5. เอาเฉพาะรายการใหม่ไปอัปเดตตาราง
+            res = newRecords;
+        }
         await updateOrCreateTable(res);
+        $('#dwgNo').val('');
+        $('#gNo').val('');
+        $('#l1No').val('');
+        $('#l2No').val('');
     } else {
-        showMessage('Can not this DWG No.', 'warning');
+        showMessage('Dwg No. not found.', 'warning');
     }
     console.log(res);
 });
@@ -421,4 +455,108 @@ $(document).on('paste', '#dwgNo', function (e) {
         // เคลียร์ค่าช่อง L2 เผื่อไว้ (กรณีผู้ใช้เคยวางอันอื่นไว้ก่อนหน้า)
         $('#l2No').val('');
     }
+});
+
+// ดักจับ Event เมื่อมีการพิมพ์หรือเปลี่ยนตัวเลขในช่อง TP หรือ TC
+$(document).on('input', '.input-after-tp, .input-after-tc', function () {
+    // 1. หาแถวลูก (Child Row) ปัจจุบันที่กำลังพิมพ์อยู่
+    const childTr = $(this).closest('tr');
+
+    // ดึงค่า QTY และ PTS เดิมของบรรทัดนี้ (ที่ฝังไว้ใน data-attribute ตอนสร้าง Input)
+    const qty = parseFloat($(this).data('qty')) || 0;
+    const pts = parseFloat($(this).data('pts')) || 0;
+
+    // ดึงตัวเลขล่าสุดที่ผู้ใช้กำลังพิมพ์อยู่
+    const newTP = parseFloat(childTr.find('.input-after-tp').val()) || 0;
+    const newTC = parseFloat(childTr.find('.input-after-tc').val()) || 0;
+
+    // คำนวณ TS และ Total Request ของแถวลูกใหม่ ( TS = TP + (QTY * TC) )
+    const newAfterTS = newTP + qty * newTC;
+    const newTotalReq = newAfterTS - pts;
+
+    // 2. อัปเดตตัวเลขหน้าจอในแถวลูกทันที
+    childTr.find('.span-after-ts').text(newAfterTS.toFixed(4));
+
+    const spanReq = childTr.find('.span-total-req');
+    spanReq.text(newTotalReq.toFixed(4));
+    // ถ้า Total Request ไม่เป็น 0 ให้ทำตัวหนาสีแดง
+    if (newTotalReq !== 0) {
+        spanReq.addClass('text-red-600 font-bold');
+    } else {
+        spanReq.removeClass('text-red-600 font-bold');
+    }
+
+    // 3. หาแถวหลัก (Parent Row) ของกลุ่ม Process นี้ เพื่ออัปเดตยอดรวมระดับ Item
+    // โดยถอยกลับไปเรื่อยๆ จนกว่าจะเจอแถวที่คอลัมน์แรก (NO.) ไม่เป็นค่าว่าง
+    let parentTr = childTr.prev();
+    while (
+        parentTr.length > 0 &&
+        parentTr.find('td:eq(0)').text().trim() === ''
+    ) {
+        parentTr = parentTr.prev();
+    }
+
+    if (parentTr.length > 0 && tsTableInstance) {
+        const parentRow = tsTableInstance.row(parentTr);
+        const parentData = parentRow.data();
+
+        // วนลูปบวกผลรวม TP, TC จากแถวลูกทุกๆ แถวที่อยู่ใต้ Parent นี้
+        let sumTP = 0,
+            sumTC = 0;
+        let nextTr = parentTr.next();
+
+        while (
+            nextTr.length > 0 &&
+            nextTr.find('td:eq(0)').text().trim() === ''
+        ) {
+            sumTP += parseFloat(nextTr.find('.input-after-tp').val()) || 0;
+            sumTC += parseFloat(nextTr.find('.input-after-tc').val()) || 0;
+            nextTr = nextTr.next();
+        }
+
+        const parentQty = parseFloat(parentData[4]) || 0; // Index 4 คือ Q'ty
+        const parentCurrentTS = parseFloat(parentData[8]) || 0; // Index 8 คือ Current TS
+
+        // คำนวณยอด Parent TS แบบใหม่
+        const parentAfterTS = sumTP + parentQty * sumTC;
+        const parentTotalReq = parentAfterTS - parentCurrentTS;
+
+        // อัปเดตตัวเลขขึ้นบนจอของแถว Parent (Index 9, 10, 11, 12)
+        parentTr.find('td:eq(9)').text(sumTP.toFixed(4));
+        parentTr.find('td:eq(10)').text(sumTC.toFixed(4));
+        parentTr.find('td:eq(11)').text(parentAfterTS.toFixed(4));
+        parentTr.find('td:eq(12)').text(parentTotalReq.toFixed(4));
+
+        // สำคัญ: อัปเดตข้อมูลเบื้องหลัง (Array) ของ DataTables
+        // เพื่อให้ฟังก์ชัน drawCallback มีข้อมูลล่าสุดไว้ใช้คำนวณ Grand Total รวมด้านบนสุด
+        parentData[9] = sumTP.toFixed(4);
+        parentData[10] = sumTC.toFixed(4);
+        parentData[11] = parentAfterTS.toFixed(4);
+        parentData[12] = parentTotalReq.toFixed(4);
+    }
+
+    // 4. คำนวณ Grand Total (แถว Sum ด้านบนสุดของตาราง) ใหม่ทันที
+    let sumGrandAfterTS = 0;
+    let sumGrandTotalReq = 0;
+
+    // วนลูปเฉพาะข้อมูลที่เป็น 'parent' เพื่อหายอดรวมทั้งหมด
+    if (tsTableInstance) {
+        const allData = tsTableInstance.rows().data().toArray();
+        allData.forEach((row) => {
+            if (row[14] === 'parent') {
+                // Index 14 คือตัวเช็ค flag
+                sumGrandAfterTS += parseFloat(row[11] || 0); // Index 11 คือ After TS
+                sumGrandTotalReq += parseFloat(row[12] || 0); // Index 12 คือ Total Req
+            }
+        });
+    }
+
+    // อัปเดตยอดรวมสูงสุด (ช่อง Badge สีเหลืองและสีแดง)
+    document.getElementById('sum-after-ts').innerHTML =
+        sumGrandAfterTS.toFixed(4);
+
+    const totalPrefix =
+        sumGrandTotalReq > 0 ? '+ ' : sumGrandTotalReq < 0 ? '- ' : '';
+    document.getElementById('sum-total').innerHTML =
+        totalPrefix + Math.abs(sumGrandTotalReq).toFixed(4);
 });

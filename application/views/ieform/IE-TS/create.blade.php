@@ -1,6 +1,18 @@
 @extends('layouts/webflowTemplate')
 @section('styles')
-    <style></style>
+    <style>
+        /* ซ่อนลูกศรขึ้นลงของ input number ให้ดูคลีนขึ้น */
+        input[type=number]::-webkit-inner-spin-button,
+        input[type=number]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        input[type=number] {
+            -moz-appearance: textfield;
+            /* สำหรับ Firefox */
+        }
+    </style>
 @endsection
 @section('contents')
     <form id="frmmain">
@@ -89,20 +101,17 @@
                     ADD
                 </button>
             </div>
-            <!-- เพิ่ม border-t border-l ที่ table เพื่อตีเส้นปิดขอบบนและซ้ายสุด -->
-            <!-- ปรับขอบนอกให้ดูนุ่มนวลขึ้น และกำหนดขนาดตัวอักษร/ความหนาที่เหมาะสม -->
             <table id="TsTable"
                 class="display w-full whitespace-nowrap border-separate border-spacing-0 text-xs font-medium border-t border-l border-slate-200">
                 <thead>
-                    <!-- แถวที่ 1: หัวตารางหลัก (ปรับสีและดีไซน์ให้ดู Modern มากขึ้น) -->
+                    <!-- แถวที่ 1: หัวตารางหลัก -->
                     <tr class="bg-slate-50 text-slate-700">
                         <th rowspan="2"
                             class="border-b border-r border-slate-200 px-3 py-2.5 text-center font-bold tracking-wider">NO
                         </th>
                         <th rowspan="2"
                             class="border-b border-r border-slate-200 px-3 py-2.5 text-left font-bold tracking-wider">PART
-                            NAME
-                        </th>
+                            NAME</th>
                         <th rowspan="2"
                             class="border-b border-r border-slate-200 px-3 py-2.5 text-center font-bold tracking-wider">ITEM
                         </th>
@@ -114,23 +123,21 @@
                         </th>
                         <th rowspan="2"
                             class="border-b border-r border-slate-200 px-3 py-2.5 text-center font-bold tracking-wider">
-                            Process
-                        </th>
-                        <th rowspan="2"
-                            class="border-b border-r border-slate-200 px-3 py-2.5 text-center font-bold tracking-wider">Rev.
-                        </th>
+                            Process</th>
 
-                        <!-- Current: ปรับเป็นน้ำเงินนวล (slate-100/text-blue-900) -->
+                        <!-- เอา Rev ออกไปแล้ว -->
+
+                        <!-- Current -->
                         <th colspan="3"
                             class="border-b border-r border-slate-200 px-3 py-2 text-center bg-slate-100 text-blue-900 font-bold">
                             Current : STD Time (AS400)</th>
 
-                        <!-- After: ปรับเป็นเหลืองนวล (amber-50/text-amber-900) -->
+                        <!-- After -->
                         <th colspan="3"
                             class="border-b border-r border-slate-200 px-3 py-2 text-center bg-amber-50 text-amber-900 font-bold">
                             After : Present Time Adjusts</th>
 
-                        <!-- Total Request: แดงนวล (red-50/text-red-700) -->
+                        <!-- Total Request -->
                         <th rowspan="2"
                             class="border-b border-r border-slate-200 px-3 py-2.5 text-center bg-red-50 text-red-700 font-bold leading-tight">
                             Total Request<br><span class="text-[10px] font-normal">(Hr)</span></th>
@@ -158,9 +165,10 @@
                             TS <span class="text-[9px]">(Hr)</span></th>
                     </tr>
 
-                    <!-- แถวที่ 3: แถว Sum (ดีไซน์ช่อง Sum เป็นรูปแบบ Pill/Badge และรวมพื้นที่ว่าง) -->
+                    <!-- แถวที่ 3: แถว Sum -->
                     <tr class="bg-white">
-                        <th colspan="7" class="border-b border-slate-200"></th>
+                        <!-- แก้ไขตรงนี้จาก colspan="7" เป็น colspan="6" -->
+                        <th colspan="6" class="border-b border-slate-200"></th>
 
                         <!-- Sum Current -->
                         <th colspan="2"
@@ -180,17 +188,12 @@
                                 class="inline-block w-full px-2 py-1 text-center font-bold rounded-md bg-amber-100 text-amber-900 border border-amber-200 shadow-sm">0.0000</span>
                         </th>
 
-                        <!-- ช่อง Sum Total Request (ปรับช่องไฟ) -->
+                        <!-- ช่อง Sum Total Request -->
                         <th class="border-b border-r border-slate-200 px-2 py-1.5 bg-red-50/50">
                             <div
                                 class="flex items-center justify-between bg-red-100/80 border border-red-200 rounded-md px-2 py-1 text-red-700 font-bold shadow-sm">
-
-                                <!-- เพิ่ม mr-3 ตรงนี้ เพื่อเว้นระยะห่างด้านขวาของคำว่า Sum -->
                                 <span class="text-[10px] text-red-600/80 font-normal mr-3">Sum</span>
-
-                                <!-- ปรับจาก text-center เป็น text-right (หรือคง text-center ไว้ก็ได้) เพื่อให้ตัวเลขมีพื้นที่หายใจ -->
                                 <span id="sum-total" class="flex-1 text-right text-xs">+ 0.0000</span>
-
                             </div>
                         </th>
 
