@@ -106,26 +106,35 @@ class Fe_asp_model extends my_model
         return $this->QuerySetBase($sql, $this->smmtBase)->result_array();
     }
 
+    
+    /**
+     * ดึงข้อมูล Control พร้อมรวมรายชื่อแผนกทั้งหมด (รองรับ 1 Control No. มีหลายแผนก)
+     */
     public function getControlMasterWithOrg($controlNo) {
         $sql = "SELECT 
                     M.CONTROL_NO,
                     M.CONTROL_NAME,
-                    M.POSITION,
-                    M.SDIVCODE,
-                    M.SDEPCODE,
-                    M.SSECODE,
                     M.RESP_EMPNO,
-                    U_DIV.SDIV AS DIVISION_NAME,
-                    CASE WHEN M.SDEPCODE = '00' THEN '-' ELSE U_DEP.SDEPT END AS DEPARTMENT_NAME,
-                    CASE WHEN M.SSECODE = '00' THEN '-' ELSE U_SEC.SSEC END AS SECTION_NAME
-                FROM FE_ASP_CONTROL_MST M
+                    MAX(U_DIV.SDIV) AS DIVISION_NAME,
+                    LISTAGG(
+                        CASE 
+                            WHEN O.POSITION = 'SEC' THEN U_SEC.SSEC 
+                            WHEN O.POSITION = 'DEP' THEN U_DEP.SDEPT 
+                            ELSE U_DIV.SDIV 
+                        END, ', '
+                    ) WITHIN GROUP (ORDER BY O.ORG_MAP_ID) AS DEPARTMENT_NAME
+                FROM SMARTMAT.FE_ASP_CONTROL_MST M
+                LEFT JOIN SMARTMAT.FE_ASP_CONTROL_ORG O 
+                    ON M.CONTROL_NO = O.CONTROL_NO AND O.ACTIVE_FLAG = 'Y'
                 LEFT JOIN (SELECT DISTINCT SDIVCODE, SDIV FROM AMECUSERALL WHERE SDIVCODE IS NOT NULL) U_DIV 
-                    ON M.SDIVCODE = U_DIV.SDIVCODE
+                    ON O.SDIVCODE = U_DIV.SDIVCODE
                 LEFT JOIN (SELECT DISTINCT SDEPCODE, SDEPT FROM AMECUSERALL WHERE SDEPCODE IS NOT NULL) U_DEP 
-                    ON M.SDEPCODE = U_DEP.SDEPCODE
+                    ON O.SDEPCODE = U_DEP.SDEPCODE
                 LEFT JOIN (SELECT DISTINCT SSECODE, SSEC FROM AMECUSERALL WHERE SSECODE IS NOT NULL) U_SEC 
-                    ON M.SSECODE = U_SEC.SSECODE
-                WHERE M.CONTROL_NO = ? AND M.ACTIVE_FLAG = 'Y'";
+                    ON O.SSECODE = U_SEC.SSECODE
+                WHERE M.CONTROL_NO = ? AND M.ACTIVE_FLAG = 'Y'
+                GROUP BY M.CONTROL_NO, M.CONTROL_NAME, M.RESP_EMPNO";
+
         return $this->QuerySetBase($sql, $this->smmtBase, [$controlNo])->row_array();
     }
 
