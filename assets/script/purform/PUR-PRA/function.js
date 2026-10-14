@@ -211,11 +211,9 @@ export function getFormByUrlParam() {
 export async function setForm({
     inputer,
     requester,
-    mode = 1,
     committee = '',
     group = '',
     eftMonth = [],
-    comparisonData = {},
 } = {}) {
     if (inputer) {
         $('#INPUTBY').val(inputer);
@@ -223,8 +221,6 @@ export async function setForm({
     if (requester) {
         $('#REQBY').val(requester).prop('readonly', true);
     }
-    // ตั้งค่าโหมดฟอร์มเริ่มต้นตามค่าที่ส่งเข้ามา
-    setAutoField({ mode: +mode, trigger: false, data: comparisonData });
     // สร้าง modal สำหรับเลือก Price Comparison
     modalSelectPriceComparison.init();
     // สร้าง instance ของ PdfViewer และ FileUpload สำหรับไฟล์ Price Comparison
@@ -299,6 +295,7 @@ export async function setForm({
             console.log(selectedDates);
         },
     });
+    // สร้างส่วนของ Drag & Drop สำหรับไฟล์แนบ
     $('#drop-image').html(
         dragDropInit({
             id: 'IMAGE_DETAIL',
@@ -333,9 +330,13 @@ export async function setForm({
  * @returns {Promise<boolean>} สถานะการคืน (Return) ของฟอร์ม
  */
 export async function setReturn() {
+    // ดึงพารามิเตอร์จาก URL
     const params = getUrlParams();
+    // หากไม่มี NRUNNO ในพารามิเตอร์ แสดงว่าฟอร์มไม่ใช่การ Return
     if (!params.NRUNNO) return false;
+    // ดึงข้อมูลฟอร์มตามพารามิเตอร์ใน URL
     const form = getFormByUrlParam();
+    // ตรวจสอบว่าฟอร์มเป็นการ Return หรือไม่
     const isReturn = await checkReturn({
         ...form,
         EMPNO: params.EMPNO,
@@ -343,6 +344,7 @@ export async function setReturn() {
     if (!isReturn) {
         return false;
     }
+    // หากฟอร์มเป็นการ Return ให้ดึงข้อมูลฟอร์มเพื่อใช้ในการตั้งค่าฟิลด์ต่าง ๆ
     const formData = await getFormPriceApprove(form);
     if (!formData.status) {
         throw new Error(formData.message);
@@ -354,54 +356,69 @@ export async function setReturn() {
             return;
         $(`#${key}`).val(data?.[key] || '');
     });
+    // ตั้งค่าฟิลด์ (VEFT_TYPE)
     $(`input[name="VEFT_TYPE"][value="${data.VEFT_TYPE}"]`).prop(
         'checked',
         true,
     );
 
-    // ตรวจสอบว่าประเภทการเปลี่ยนแปลงเป็น "Others" หรือไม่ หากใช่ ให้แสดงช่องกรอกข้อมูลเพิ่มเติม
+    // ตรวจสอบว่าประเภทการเปลี่ยนแปลงเป็น "Others" หรือไม่ หากใช่ ให้แสดงช่องกรอกข้อมูลเพิ่มเติม (VEFT_TYPE_OTHER)
     if (data.VEFT_TYPE === 'Others') {
         $('#VEFT_TYPE_OTHER')
             .removeClass('hidden')
             .prop('disabled', false)
             .val(data.VEFT_TYPE_OTHER || '');
     }
-    // ดึงรายการเปรียบเทียบจากฟอร์มที่ลิงก์มา
-    const comparisonList = await getComparisonListByForm(data.LINK_FORM.CNO);
-    if (!comparisonList.status) {
-        throw new Error(comparisonList.message);
+    // ตรวจสอบว่ามีฟอร์มที่ลิงก์มาหรือไม่ (LINK_FORM)
+    if (data.LINK_FORM) {
+        // ดึงรายการเปรียบเทียบจากฟอร์มที่ลิงก์มา
+        const comparisonList = await getComparisonListByForm(
+            data.LINK_FORM.CNO,
+        );
+        if (!comparisonList.status) {
+            throw new Error(comparisonList.message);
+        }
+        const comparisonData = {
+            formComparison: comparisonList.data.VFORMNO,
+            vendor: comparisonList.data.VVENDOR,
+            vendorName: comparisonList.data.VVENDOR_NAME,
+            planner: comparisonList.data.VPLANNER_CODE,
+            totalPresent: comparisonList.data.NAMOUNT_PRESENT,
+            totalNew: comparisonList.data.NAMOUNT_NEW,
+            totalCost: comparisonList.data.NAMOUNT_DIFF,
+            totalRatio: comparisonList.data.NRATIO,
+        };
+        // ตั้งค่าฟิลด์อัตโนมัติด้วยข้อมูลจากการเปรียบเทียบ
+        setAutoField({
+            mode: data.NMODE,
+            trigger: false,
+            data: comparisonData,
+        });
+
+        // แสดงตารางการเปรียบเทียบหลังจากตั้งค่าฟิลด์อัตโนมัติ
+        await tableComparison.init({
+            formNo: comparisonList.data.VFORMNO,
+            function: comparisonList.data.NFUNCTIONS,
+        });
+    } else {
+        // หากไม่มีฟอร์มที่ลิงก์มา ให้ตั้งค่าฟิลด์อัตโนมัติด้วยโหมดปัจจุบันเท่านั้น
+        setAutoField({ mode: data.NMODE, trigger: false });
     }
-    const comparisonData = comparisonList.data;
+
+    // ตั้งค่าฟอร์มด้วยข้อมูลจากฟอร์มที่ดึงมา
     await setForm({
         inputer: data.FORM.VINPUTER,
         requester: data.FORM.VREQNO,
-        mode: data.NMODE,
         committee: data.COMMITTEE.NID,
         group: data.GROUP.NID,
         eftMonth: [data.DEFT_MONTH_END, data.DEFT_MONTH_START].filter(Boolean),
-        comparisonData: {
-            formComparison: comparisonData.VFORMNO,
-            vendor: comparisonData.VVENDOR,
-            vendorName: comparisonData.VVENDOR_NAME,
-            planner: comparisonData.VPLANNER_CODE,
-            totalPresent: comparisonData.NAMOUNT_PRESENT,
-            totalNew: comparisonData.NAMOUNT_NEW,
-            totalCost: comparisonData.NAMOUNT_DIFF,
-            totalRatio: comparisonData.NRATIO,
-        },
     });
-    const costDown = getReasons('reason-cost-down-container').setValue(
-        data.REASONS,
-    );
-    const costUp = getReasons('reason-cost-up-container').setValue(
-        data.REASONS,
-    );
-    const basic = getReasons('reason-basic-condition-container').setValue(
-        data.REASONS,
-    );
-    const estimate = getReasons('reason-estimate-price-container').setValue(
-        data.REASONS,
-    );
+
+    // ตั้งค่าฟิลด์เหตุผล (Reasons) ด้วยข้อมูลจากฟอร์มที่ดึงมา
+    getReasons('reason-cost-down-container').setValue(data.REASONS);
+    getReasons('reason-cost-up-container').setValue(data.REASONS);
+    getReasons('reason-basic-condition-container').setValue(data.REASONS);
+    getReasons('reason-estimate-price-container').setValue(data.REASONS);
     // สร้างปุ่ม สำหรับ request form
     $('#btnRequest').html(
         await webflowSubmit({

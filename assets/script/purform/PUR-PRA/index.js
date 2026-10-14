@@ -42,6 +42,9 @@ $(async function () {
             }, 5000);
             return;
         }
+        // ตั้งค่าโหมดฟอร์มเริ่มต้นตามค่าที่ส่งเข้ามา
+        setAutoField({ mode: 1, trigger: false });
+
         await setForm({ inputer: empno });
         // สร้างปุ่ม สำหรับ request form
         $('#btnRequest').html(
