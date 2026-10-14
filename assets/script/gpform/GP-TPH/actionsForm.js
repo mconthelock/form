@@ -27,20 +27,30 @@ import {
     async function validateGroupApplicants(employeeCodes) {
         const requestBy = $('#REQBY').val().trim();
         if (!requestBy) {
-            throw new Error('กรุณาระบุ Request By ก่อนเพิ่มรายชื่อ Group Request');
+            throw new Error(
+                'กรุณาระบุ Request By ก่อนเพิ่มรายชื่อ Group Request',
+            );
         }
         const codes = [requestBy, ...employeeCodes];
         const employees = await Promise.all(codes.map(getEmpData));
         const departments = new Set();
         employees.forEach((employee, index) => {
             const department = String(employee?.SDEPCODE || '').trim();
-            if (!employee?.SNAME || String(employee.CSTATUS) !== '1' || !department) {
-                throw new Error(`ไม่สามารถตรวจสอบ Department ของพนักงาน ${codes[index]} ได้`);
+            if (
+                !employee?.SNAME ||
+                String(employee.CSTATUS) !== '1' ||
+                !department
+            ) {
+                throw new Error(
+                    `ไม่สามารถตรวจสอบ Department ของพนักงาน ${codes[index]} ได้`,
+                );
             }
             departments.add(department);
         });
         if (departments.size > 1) {
-            throw new Error('รายชื่อใน Group Request ต้องอยู่ใน Department เดียวกับ Request By');
+            throw new Error(
+                'รายชื่อใน Group Request ต้องอยู่ใน Department เดียวกับ Request By',
+            );
         }
         return employees.slice(1);
     }
@@ -64,7 +74,9 @@ import {
 
         const name = String(fullName || '').trim();
         const commaIndex = name.lastIndexOf(',');
-        return (commaIndex >= 0 ? name.slice(commaIndex + 1).trim() || name : name)
+        return (
+            commaIndex >= 0 ? name.slice(commaIndex + 1).trim() || name : name
+        )
             .replace(/\(\s*cancel\s*\)/gi, '')
             .replace(/\s{2,}/g, ' ')
             .trim();
@@ -91,10 +103,7 @@ import {
             getItems(divisions)
                 .map((division) => [
                     String(division.SDIVCODE || '').trim(),
-                    getShortOrganizationName(
-                        division.SDIV,
-                        division.SDIVISION,
-                    ),
+                    getShortOrganizationName(division.SDIV, division.SDIVISION),
                 ])
                 .filter(([code, name]) => code && name),
         );
@@ -105,7 +114,11 @@ import {
             const positionName = String(
                 employee.SPOSNAME || employee.SPOSITION || '',
             ).trim();
-            if (positionCode && positionName && !positionNames.has(positionCode)) {
+            if (
+                positionCode &&
+                positionName &&
+                !positionNames.has(positionCode)
+            ) {
                 positionNames.set(positionCode, positionName);
             }
         });
@@ -144,27 +157,13 @@ import {
             return '';
         }
 
-        const validUntil = new Date();
-        const originalMonth = validUntil.getMonth();
-        validUntil.setFullYear(validUntil.getFullYear() + years);
-        if (Number.isNaN(validUntil.getTime())) {
-            return '';
-        }
-        if (validUntil.getMonth() !== originalMonth) {
-            validUntil.setDate(0);
-        }
-
-        const year = validUntil.getFullYear();
-        const month = String(validUntil.getMonth() + 1).padStart(2, '0');
-        const day = String(validUntil.getDate()).padStart(2, '0');
-        return `${year}-${month}-${day}`;
+        const year = new Date().getFullYear() + years;
+        return `${year}-03-31`;
     }
 
     function setLongTermValidUntil(value) {
         longTermValidUntil = value;
-        const display = document.getElementById(
-            'LONGTERM_VALID_UNTIL_DISPLAY',
-        );
+        const display = document.getElementById('LONGTERM_VALID_UNTIL_DISPLAY');
         if (display) {
             display.textContent =
                 value || 'Enter year(s) to calculate the end date.';
@@ -303,7 +302,9 @@ import {
             inputs[4].value = empData.SSEC || '';
         }
 
-        async function populateRequesterForSelectedDesign(defaultToIndividual = false) {
+        async function populateRequesterForSelectedDesign(
+            defaultToIndividual = false,
+        ) {
             const requestBy = $('#REQBY').val().trim();
             if (!requestBy) {
                 return;
@@ -339,7 +340,9 @@ import {
             }
         }
 
-        async function refreshRequesterForSelectedDesign(defaultToIndividual = false) {
+        async function refreshRequesterForSelectedDesign(
+            defaultToIndividual = false,
+        ) {
             try {
                 await populateRequesterForSelectedDesign(defaultToIndividual);
             } catch (error) {
@@ -368,8 +371,7 @@ import {
                         {
                             title: 'Area Owner',
                             data: null,
-                            render: (data, type, row) =>
-                                getAreaOwnerLabel(row),
+                            render: (data, type, row) => getAreaOwnerLabel(row),
                         },
                         {
                             title: 'Action',
@@ -453,8 +455,9 @@ import {
             updatePermitTypeRestrictions();
             if (data.LONGTERM_YEARS) {
                 setLongTermValidUntil(
-                    data.PERMIT_END_DATE?.split('T')[0] ||
-                        calculateLongTermValidUntil(data.LONGTERM_YEARS),
+                    data.PERMIT_END_DATE
+                        ? `${data.PERMIT_END_DATE.slice(0, 4)}-03-31`
+                        : calculateLongTermValidUntil(data.LONGTERM_YEARS),
                 );
             }
 
@@ -664,7 +667,10 @@ import {
                 getAreas(),
                 getLocations(),
                 loadAreaOwnerLabels().catch((error) => {
-                    console.error('Unable to load GP-TPH area owner labels.', error);
+                    console.error(
+                        'Unable to load GP-TPH area owner labels.',
+                        error,
+                    );
                     showMessage('ไม่สามารถโหลดชื่อ Area Owner ได้', 'error');
                 }),
             ]);
@@ -672,7 +678,9 @@ import {
             $('#sentRequest').html(action);
             mockupTable = await modalTable(
                 getareas.filter(
-                    (area) => String(area.AREA_STATUS ?? '1') !== '0',
+                    (area) =>
+                        String(area.AREA_STATUS ?? '1') !== '0' &&
+                        area.HAS_ACTIVE_AREA_OWNER === true,
                 ),
             );
             await setDatePicker();
@@ -750,15 +758,21 @@ import {
                 try {
                     const employeeCode = $(this).val().trim();
                     if (!employeeCode) return;
-                    const isGroup = employeeRadio?.checked &&
-                        $('input[name="REQUEST_SUB_TYPE"]:checked').val() === 'G';
+                    const isGroup =
+                        employeeRadio?.checked &&
+                        $('input[name="REQUEST_SUB_TYPE"]:checked').val() ===
+                            'G';
                     let empData;
                     if (isGroup) {
                         const employeeCodes = Array.from(visitorBody.rows)
-                            .map((row) => row.querySelector('input').value.trim())
+                            .map((row) =>
+                                row.querySelector('input').value.trim(),
+                            )
                             .filter(Boolean);
-                        const employees = await validateGroupApplicants(employeeCodes);
-                        empData = employees[employeeCodes.indexOf(employeeCode)];
+                        const employees =
+                            await validateGroupApplicants(employeeCodes);
+                        empData =
+                            employees[employeeCodes.indexOf(employeeCode)];
                     } else {
                         empData = await getEmpData(employeeCode);
                     }
@@ -793,10 +807,16 @@ import {
                         )
                         .val(empData.SSEC);
                 } catch (error) {
-                    console.error('Unable to load visitor employee data.', error);
+                    console.error(
+                        'Unable to load visitor employee data.',
+                        error,
+                    );
                     $(this).val('');
                     visitorRow.find('input').slice(1).val('');
-                    showMessage(error.message || 'ไม่สามารถตรวจสอบข้อมูลพนักงานได้', 'error');
+                    showMessage(
+                        error.message || 'ไม่สามารถตรวจสอบข้อมูลพนักงานได้',
+                        'error',
+                    );
                     $(this).focus();
                 }
             },
@@ -889,8 +909,7 @@ import {
                         {
                             title: 'Area Owner',
                             data: null,
-                            render: (data, type, row) =>
-                                getAreaOwnerLabel(row),
+                            render: (data, type, row) => getAreaOwnerLabel(row),
                         },
                         {
                             title: 'Action',
@@ -995,9 +1014,7 @@ import {
                     'input[name="permit_option"][value="long_term"]',
                 )?.checked
             ) {
-                    setLongTermValidUntil(
-                    calculateLongTermValidUntil(this.value),
-                );
+                setLongTermValidUntil(calculateLongTermValidUntil(this.value));
             }
         });
 
@@ -1183,7 +1200,10 @@ import {
                     Number($('#LONGTERM_YEARS').val()) < 1 ||
                     Number($('#LONGTERM_YEARS').val()) > 2)
             ) {
-                showMessage('กรุณาระบุจำนวนปีเป็นจำนวนเต็มตั้งแต่ 1 ถึง 2 ปี', 'warning');
+                showMessage(
+                    'กรุณาระบุจำนวนปีเป็นจำนวนเต็มตั้งแต่ 1 ถึง 2 ปี',
+                    'warning',
+                );
                 $('#LONGTERM_YEARS').focus();
                 return;
             }
@@ -1208,7 +1228,9 @@ import {
                 requestType === 'E' &&
                 $('input[name="REQUEST_SUB_TYPE"]:checked').val() === 'G'
             ) {
-                await validateGroupApplicants(details.map((detail) => detail.empCode.trim()));
+                await validateGroupApplicants(
+                    details.map((detail) => detail.empCode.trim()),
+                );
             }
 
             const submitDetails =
