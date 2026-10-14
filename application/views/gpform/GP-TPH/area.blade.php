@@ -87,6 +87,8 @@
         .area-data-shell .table-action-button:hover { border-color: var(--color-primary); background: var(--area-soft); }
         .area-data-shell .toggle-area-status { width: auto; padding-inline: 8px; font-size: 11px; }
         .area-data-shell .delete-area { width: 34px; padding: 0; color: #dc2626; }
+        .area-data-shell .enable-area { width: 34px; padding: 0; color: #dc2626; }
+        .area-data-shell .enable-area:hover { color: #b91c1c; }
         .area-data-shell .inactive-area-option { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; }
         .area-data-shell .edit-area span { color: var(--color-yellow-400); }
         .area-data-shell .empty-row { height: 150px; color: var(--color-neutral); }
@@ -200,6 +202,7 @@
                             <th class ="border p-2">
                                 Area Owner
                             </th>
+                            <th>Status</th>
                             <th>Action</th>
                         </tr>
                     </thead>

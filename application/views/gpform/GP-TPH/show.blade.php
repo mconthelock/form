@@ -12,6 +12,10 @@
 		#long-term-valid-until .tph-hint {
 			display: none;
 		}
+		#tphForm .tph-choice:has(input[name="REQUEST_TYPE"]):not(:has(input[name="REQUEST_TYPE"]:checked)),
+		#tphForm label:has(input[name="REQUEST_SUB_TYPE"]:not(:checked)) {
+			display: none;
+		}
 	</style>
 @endsection
 
