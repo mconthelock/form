@@ -4,15 +4,18 @@ import { fetchUtils } from '@amec/webasset/api/fetch-utils';
  * @author Sutthipong Tangmongkhoncharoen(24008)
  * @since 2026-09-30
  * @description ดึงข้อมูล Create price comparison ที่ created ไว้แต่ไม่ได้สร้าง Price approve อัตโนมัติ
- * @returns
+ * @param {string} empno รหัสพนักงาน
+ * @param {string} [form] หมายเลขฟอร์ม Price Comparison
+ * @returns {Promise<Object>} รายการ Create price comparison ที่สร้างโดยพนักงานแต่ยังไม่ได้สร้าง Price approve อัตโนมัติ
  */
-export async function getListCreate(empno) {
+export async function getListCreate(empno, form = null) {
     return await fetchUtils({
         url: `${process.env.APP_API}/purform/pur-cpc/lists`,
         method: 'POST',
         data: {
             NSTATUS: 1,
             VREQNO: empno,
+            VFORMNO: form,
         },
     });
 }

@@ -323,6 +323,9 @@ export async function setForm({
     );
 }
 
+var priceComparisonForms = null;
+export const getComparisonForm = () => priceComparisonForms;
+
 /**
  * @author Sutthipong Tangmongkhoncharoen(24008)
  * @since 2026-10-13
@@ -371,6 +374,7 @@ export async function setReturn() {
     }
     // ตรวจสอบว่ามีฟอร์มที่ลิงก์มาหรือไม่ (LINK_FORM)
     if (data.LINK_FORM) {
+        priceComparisonForms = data.LINK_FORM.CNO;
         // ดึงรายการเปรียบเทียบจากฟอร์มที่ลิงก์มา
         const comparisonList = await getComparisonListByForm(
             data.LINK_FORM.CNO,

@@ -17,6 +17,7 @@ import {
     getFormByUrlParam,
     setReturn,
     setAutoField,
+    getComparisonForm,
 } from './function';
 import { setForm } from './function';
 import { modalSelectPriceComparison } from './modal/select-price-comparison';
@@ -93,14 +94,17 @@ $(document).on('change', '#REQBY', async function () {
  */
 $(document).on('click', '#btn-view-compare', async function () {
     try {
+        showLoader();
         const req = $('#REQBY').val();
         if (!req) {
             showMessage('Please enter the requester.', 'warning');
+            showLoader({ show: false });
             return;
         }
-        const lists = await getListCreate(req);
+        const lists = await getListCreate(req, getComparisonForm());
         if (!lists.status) {
             showMessage(`Price comparison not found for ${req}`, 'warning');
+            showLoader({ show: false });
             return;
         }
         modalSelectPriceComparison.show(true);
@@ -108,6 +112,8 @@ $(document).on('click', '#btn-view-compare', async function () {
     } catch (error) {
         console.error(error);
         showErrorMessage(error.message);
+    } finally {
+        showLoader({ show: false });
     }
 });
 
