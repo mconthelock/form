@@ -6,4 +6,8 @@ module.exports = {
     // FE-DOC
     fedocview: './assets/script/feform/FE-DOC/view.js',
     fedocreport: './assets/script/feform/FE-DOC/report.js',
+
+    // FE-ASP
+    feaspview: './assets/script/feform/FE-ASP/view.js',
+    // feaspreport: './assets/script/feform/FE-ASP/report.js',
 };

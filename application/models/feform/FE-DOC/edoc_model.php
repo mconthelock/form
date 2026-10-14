@@ -85,7 +85,7 @@ class edoc_model extends my_model
     {
         $empNo = trim((string)$EmpNo);
         if (empty($empNo)) {
-            return '';
+            return ['empno' => '', 'name' => ''];
         }
 
         $dbWebflow = $this->load->database($this->webflowBase, TRUE);
@@ -96,12 +96,10 @@ class edoc_model extends my_model
                         ->get()
                         ->row();
 
-        if ($user && !empty($user->SNAME)) {
-            return $empNo . ':' . trim($user->SNAME);
-        }
-
-        // กรณีหาไม่พบ ให้คืนเฉพาะรหัสพนักงานตามรูปแบบ SEMPNO:
-        return $empNo . ':';
+        return [
+            'empno' => $empNo,
+            'name'  => ($user && !empty($user->SNAME)) ? trim($user->SNAME) : ''
+        ];
     }
 
     /**
