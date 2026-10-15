@@ -12,7 +12,7 @@ class Fe_asp_model extends my_model
         parent::__construct();
         $this->load->database();
         $this->smmtBase    = 'SMMT';    // ฐานข้อมูล SMMT
-        $this->webflowBase = 'DEFAULT'; // ฐานข้อมูล Webflow กลาง
+        $this->webflowBase = 'DEFAULT'; // ฐานข้อมูล Webflow / AMEC กลาง
     }
 
     public function QuerySetBase($q, $base = "", $bindData = array())
@@ -45,7 +45,12 @@ class Fe_asp_model extends my_model
         return (int)$q->row_array()['NEXT_ID'];
     }
 
-    // --- CRUD FE_ASP_HEADER ---
+    public function getNextRespId() {
+        $q = $this->QuerySetBase("SELECT NVL(MAX(RESP_ID), 0) + 1 AS NEXT_ID FROM FE_ASP_CONTROL_RESP", $this->smmtBase);
+        return (int)$q->row_array()['NEXT_ID'];
+    }
+
+    // --- Header CRUD ---
     public function insertHeader($data) {
         $data['HEADER_ID'] = $this->getNextHeaderId();
         $db = $this->load->database($this->smmtBase, TRUE);
@@ -95,52 +100,127 @@ class Fe_asp_model extends my_model
         return $this->QuerySetBase($sql, $this->smmtBase, [$headerId])->result_array();
     }
 
-    // --- Master Data Access ---
-    public function getAllActiveControls() {
-        $sql = "SELECT * FROM FE_ASP_CONTROL_MST WHERE ACTIVE_FLAG = 'Y' ORDER BY CONTROL_NO ASC";
+    /**
+     * ดึงรายการ Control No. ตาม Division ของผู้สร้าง (ยกเว้น 13204 เห็นทั้งหมด)
+     */
+    public function getAllActiveControls($empNo = '', $divCode = '') {
+        $empNo   = trim((string)$empNo);
+        $divCode = trim((string)$divCode);
+
+        $sql = "SELECT M.CONTROL_NO, M.CONTROL_NAME, M.SDIVCODE, U.SDIV AS DIVISION_NAME
+                FROM SMARTMAT.FE_ASP_CONTROL_MST M
+                LEFT JOIN (SELECT DISTINCT SDIVCODE, SDIV FROM AMEC.AMECUSERALL WHERE SDIVCODE IS NOT NULL) U
+                    ON M.SDIVCODE = U.SDIVCODE
+                WHERE M.ACTIVE_FLAG = 'Y'";
+
+        // สิทธิ์ Super Admin: 13204 เห็นทั้งหมด
+        if ($empNo === '13204') {
+            $sql .= " ORDER BY M.CONTROL_NO ASC";
+            return $this->QuerySetBase($sql, $this->smmtBase)->result_array();
+        }
+
+        // พนักงานทั่วไป: กรองตาม SDIVCODE
+        if (!empty($divCode)) {
+            $sql .= " AND M.SDIVCODE = ? ORDER BY M.CONTROL_NO ASC";
+            return $this->QuerySetBase($sql, $this->smmtBase, [$divCode])->result_array();
+        }
+
+        $sql .= " ORDER BY M.CONTROL_NO ASC";
         return $this->QuerySetBase($sql, $this->smmtBase)->result_array();
+    }
+
+    public function getControlMasterInfo($controlNo) {
+        $sql = "SELECT M.CONTROL_NO, M.CONTROL_NAME, M.SDIVCODE, U.SDIV AS DIVISION_NAME
+                FROM SMARTMAT.FE_ASP_CONTROL_MST M
+                LEFT JOIN (SELECT DISTINCT SDIVCODE, SDIV FROM AMEC.AMECUSERALL WHERE SDIVCODE IS NOT NULL) U
+                    ON M.SDIVCODE = U.SDIVCODE
+                WHERE M.CONTROL_NO = ? AND M.ACTIVE_FLAG = 'Y'";
+        return $this->QuerySetBase($sql, $this->smmtBase, [$controlNo])->row_array();
     }
 
     public function getActiveTopics() {
-        $sql = "SELECT * FROM FE_ASP_TOPIC_MST WHERE ACTIVE_FLAG = 'Y' ORDER BY TOPIC_GROUP ASC, TOPIC_SEQ ASC";
+        $sql = "SELECT * FROM SMARTMAT.FE_ASP_TOPIC_MST WHERE ACTIVE_FLAG = 'Y' ORDER BY TOPIC_GROUP ASC, TOPIC_SEQ ASC";
         return $this->QuerySetBase($sql, $this->smmtBase)->result_array();
     }
 
-    
     /**
-     * ดึงข้อมูล Control พร้อมรวมรายชื่อแผนกทั้งหมด (รองรับ 1 Control No. มีหลายแผนก)
+     * ดึงสังกัดเต็มของพนักงานจาก AMEC.AMECUSERALL
      */
-    public function getControlMasterWithOrg($controlNo) {
-        $sql = "SELECT 
-                    M.CONTROL_NO,
-                    M.CONTROL_NAME,
-                    M.RESP_EMPNO,
-                    MAX(U_DIV.SDIV) AS DIVISION_NAME,
-                    LISTAGG(
-                        CASE 
-                            WHEN O.POSITION = 'SEC' THEN U_SEC.SSEC 
-                            WHEN O.POSITION = 'DEP' THEN U_DEP.SDEPT 
-                            ELSE U_DIV.SDIV 
-                        END, ', '
-                    ) WITHIN GROUP (ORDER BY O.ORG_MAP_ID) AS DEPARTMENT_NAME
-                FROM SMARTMAT.FE_ASP_CONTROL_MST M
-                LEFT JOIN SMARTMAT.FE_ASP_CONTROL_ORG O 
-                    ON M.CONTROL_NO = O.CONTROL_NO AND O.ACTIVE_FLAG = 'Y'
-                LEFT JOIN (SELECT DISTINCT SDIVCODE, SDIV FROM AMECUSERALL WHERE SDIVCODE IS NOT NULL) U_DIV 
-                    ON O.SDIVCODE = U_DIV.SDIVCODE
-                LEFT JOIN (SELECT DISTINCT SDEPCODE, SDEPT FROM AMECUSERALL WHERE SDEPCODE IS NOT NULL) U_DEP 
-                    ON O.SDEPCODE = U_DEP.SDEPCODE
-                LEFT JOIN (SELECT DISTINCT SSECODE, SSEC FROM AMECUSERALL WHERE SSECODE IS NOT NULL) U_SEC 
-                    ON O.SSECODE = U_SEC.SSECODE
-                WHERE M.CONTROL_NO = ? AND M.ACTIVE_FLAG = 'Y'
-                GROUP BY M.CONTROL_NO, M.CONTROL_NAME, M.RESP_EMPNO";
+    public function getUserOrgSnapshot($empNo) {
+        $empNo = trim((string)$empNo);
+        if (empty($empNo)) return null;
 
-        return $this->QuerySetBase($sql, $this->smmtBase, [$controlNo])->row_array();
+        $sql = "SELECT SEMPNO, SNAME, SDIVCODE, SDIV, SDEPCODE, SDEPT, SSECCODE, SSEC
+                FROM AMEC.AMECUSERALL
+                WHERE SEMPNO = ?";
+        return $this->QuerySetBase($sql, $this->webflowBase, [$empNo])->row_array();
+    }
+
+    
+
+
+    /**
+     * ดึง Master Department ตาม Division ที่เลือก
+     * รหัส 6 หลัก: หลักที่ 1-2 คือ Division
+     */
+    public function getDepartments($divCode = null) {
+        $divCode = trim((string)$divCode);
+
+        $sql = "SELECT SDEPCODE, SDEPARTMENT AS DEPT_NAME, SDEPT 
+                FROM AMEC.PDEPARTMENT 
+                WHERE SDEPARTMENT NOT LIKE '(Cancel)%' ";
+
+        if (!empty($divCode) && $divCode !== '00') {
+            // ดึง 2 หลักแรกของ Division เช่น '040101' -> '04'
+            $prefixDiv = substr($divCode, 0, 2);
+            $sql .= " AND (SUBSTR(SDEPCODE, 1, 2) = ? OR SDEPCODE = '00') 
+                     ORDER BY CASE WHEN SDEPCODE = '00' THEN 0 ELSE 1 END, SDEPCODE ASC";
+            return $this->QuerySetBase($sql, $this->webflowBase, [$prefixDiv])->result_array();
+        }
+
+        $sql .= " ORDER BY SDEPCODE ASC";
+        return $this->QuerySetBase($sql, $this->webflowBase)->result_array();
+    }
+
+    /**
+     * ดึง Master Section ตาม Department ที่เลือก
+     * รหัส 6 หลัก: หลักที่ 1-4 คือคู่ Division + Department
+     */
+    public function getSections($depCode = null) {
+        $depCode = trim((string)$depCode);
+
+        $sql = "SELECT SSECCODE, SSECTION AS SEC_NAME, SSEC 
+                FROM AMEC.PSECTION 
+                WHERE SSECTION NOT LIKE '(Cancel)%' ";
+
+        if (!empty($depCode) && $depCode !== '00') {
+            // ดึง 4 หลักแรกของ Department เช่น '040401' -> '0404'
+            $prefixDept = substr($depCode, 0, 4);
+            $sql .= " AND (SUBSTR(SSECCODE, 1, 4) = ? OR SSECCODE = '00') 
+                     ORDER BY CASE WHEN SSECCODE = '00' THEN 0 ELSE 1 END, SSECCODE ASC";
+            return $this->QuerySetBase($sql, $this->webflowBase, [$prefixDept])->result_array();
+        }
+
+        // กรณีเลือก '00' หรือยังไม่ได้เลือก Department ให้มีเฉพาะตัวเลือก '00' (No Section)
+        $sql .= " AND SSECCODE = '00' ORDER BY SSECCODE ASC";
+        return $this->QuerySetBase($sql, $this->webflowBase)->result_array();
+    }
+
+    /**
+     * ดึงรายชื่อผู้รับผิดชอบของ Control No (1:N)
+     */
+    public function getControlResponders($controlNo) {
+        $sql = "SELECT R.RESP_ID, R.CONTROL_NO, R.RESP_EMPNO, U.SNAME, U.SDIV, U.SDEPT, U.SSEC
+                FROM SMARTMAT.FE_ASP_CONTROL_RESP R
+                LEFT JOIN AMEC.AMECUSERALL U ON R.RESP_EMPNO = U.SEMPNO
+                WHERE R.CONTROL_NO = ? AND R.ACTIVE_FLAG = 'Y'
+                ORDER BY R.RESP_EMPNO ASC";
+        return $this->QuerySetBase($sql, $this->smmtBase, [$controlNo])->result_array();
     }
 
     public function getLatestApprovedFile($controlNo) {
         $sqlHeader = "SELECT NFRMNO, VORGNO, CYEAR2, NRUNNO 
-                      FROM FE_ASP_HEADER 
+                      FROM SMARTMAT.FE_ASP_HEADER 
                       WHERE CONTROL_NO = ? AND STATUS = 'APPROVE'
                       ORDER BY CYEAR DESC, NRUNNO DESC";
         $header = $this->QuerySetBase($sqlHeader, $this->smmtBase, [$controlNo])->row_array();
@@ -163,8 +243,8 @@ class Fe_asp_model extends my_model
         $empNo = trim((string)$EmpNo);
         if (empty($empNo)) return ['empno' => '', 'name' => ''];
 
-        $dbWebflow = $this->load->database($this->webflowBase, TRUE);
-        $user = $dbWebflow->select('SEMPNO, SNAME')->from('AMECUSERALL')->where('SEMPNO', $empNo)->limit(1)->get()->row();
+        $sql = "SELECT SEMPNO, SNAME FROM AMEC.AMECUSERALL WHERE SEMPNO = ?";
+        $user = $this->QuerySetBase($sql, $this->webflowBase, [$empNo])->row();
 
         return [
             'empno' => $empNo,
@@ -188,8 +268,12 @@ class Fe_asp_model extends my_model
                     U.SNAME,
                     U.SPOSNAME
                 FROM FLOW F
-                LEFT JOIN AMECUSERALL U ON TRIM(F.VREALAPV) = TRIM(U.SEMPNO)
-                WHERE F.NFRMNO = ? AND F.VORGNO = ? AND F.CYEAR = ? AND F.CYEAR2 = ? AND F.NRUNNO = ?
+                LEFT JOIN AMEC.AMECUSERALL U ON TRIM(F.VREALAPV) = TRIM(U.SEMPNO)
+                WHERE F.NFRMNO = ? 
+                  AND F.VORGNO = ? 
+                  AND F.CYEAR = ? 
+                  AND F.CYEAR2 = ? 
+                  AND F.NRUNNO = ?
                   AND F.CAPVSTNO = '1'
                 ORDER BY F.CEXTDATA ASC NULLS FIRST, F.CSTEPNO ASC";
 
@@ -212,14 +296,62 @@ class Fe_asp_model extends my_model
     }
 
     public function isFormAdmin($formCode, $empno) {
-        $db = $this->load->database($this->smmtBase, TRUE);
-        $count = $db->where('EMPNO', trim((string)$empno))
-                    ->where('IS_ACTIVE', 1)
-                    ->group_start()
-                        ->where('FORM_CODE', (string)$formCode)
-                        ->or_where('FORM_CODE', 'ALL')
-                    ->group_end()
-                    ->count_all_results('FE_FORM_ADMIN');
-        return $count > 0;
+        $sql = "SELECT COUNT(*) AS CNT FROM FE_FORM_ADMIN 
+                WHERE EMPNO = ? AND IS_ACTIVE = 1 
+                  AND (FORM_CODE = ? OR FORM_CODE = 'ALL')";
+        $row = $this->QuerySetBase($sql, $this->smmtBase, [trim((string)$empno), (string)$formCode])->row_array();
+        return ((int)($row['CNT'] ?? 0)) > 0;
+    }
+
+    /**
+     * ดึง Department ตาม Division ที่เลือก (อิง Prefix 2 ตัวแรกตามโครงสร้าง AMEC)
+     */
+    public function getDepartmentsByDiv($divCode) {
+        $divCode = trim((string)$divCode);
+        
+        // ถ้าไม่ระบุ Division หรือเป็น 00 ให้แสดงทั้งหมด
+        if (empty($divCode) || $divCode === '00') {
+            $sql = "SELECT SDEPCODE, SDEPARTMENT, SDEPT 
+                    FROM AMEC.PDEPARTMENT 
+                    WHERE SDEPARTMENT NOT LIKE '(Cancel)%'
+                    ORDER BY CASE WHEN SDEPCODE = '00' THEN 0 ELSE 1 END, SDEPCODE ASC";
+            return $this->QuerySetBase($sql, $this->webflowBase)->result_array();
+        }
+
+        // ตัดเอา 2 ตัวแรก เช่น '040101' -> '04'
+        $prefix = substr($divCode, 0, 2);
+
+        $sql = "SELECT SDEPCODE, SDEPARTMENT, SDEPT 
+                FROM AMEC.PDEPARTMENT 
+                WHERE SDEPARTMENT NOT LIKE '(Cancel)%'
+                  AND (SUBSTR(SDEPCODE, 1, 2) = ? OR SDEPCODE = '00')
+                ORDER BY CASE WHEN SDEPCODE = '00' THEN 0 ELSE 1 END, SDEPCODE ASC";
+
+        return $this->QuerySetBase($sql, $this->webflowBase, [$prefix])->result_array();
+    }
+
+    /**
+     * ดึง Section ตาม Department ที่เลือก (อิง Prefix 4 ตัวแรกตามโครงสร้าง AMEC)
+     */
+    public function getSectionsByDept($depCode) {
+        $depCode = trim((string)$depCode);
+
+        if (empty($depCode) || $depCode === '00') {
+            $sql = "SELECT SSECCODE, SSECTION, SSEC 
+                    FROM AMEC.PSECTION 
+                    WHERE SSECCODE = '00'";
+            return $this->QuerySetBase($sql, $this->webflowBase)->result_array();
+        }
+
+        // ตัดเอา 4 ตัวแรก เช่น '040401' -> '0404'
+        $prefix = substr($depCode, 0, 4);
+
+        $sql = "SELECT SSECCODE, SSECTION, SSEC 
+                FROM AMEC.PSECTION 
+                WHERE SSECTION NOT LIKE '(Cancel)%'
+                  AND (SUBSTR(SSECCODE, 1, 4) = ? OR SSECCODE = '00')
+                ORDER BY CASE WHEN SSECCODE = '00' THEN 0 ELSE 1 END, SSECCODE ASC";
+
+        return $this->QuerySetBase($sql, $this->webflowBase, [$prefix])->result_array();
     }
 }

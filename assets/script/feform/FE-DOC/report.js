@@ -34,7 +34,7 @@ const columns = [
         },
     },
     {
-        title: 'สถานะ',
+        title: 'STATUS',
         data: 'STATUS',
         className: 'text-center',
         defaultContent: 'DRAFT',
@@ -52,14 +52,14 @@ const columns = [
         },
     },
     {
-        title: 'วันที่เอกสาร',
+        title: 'CREATE DATE',
         data: 'DOC_DATE_FORMAT',
         className: 'text-center text-slate-600',
         defaultContent: '-',
         render: renderText,
     },
     {
-        title: 'USER ล่าสุด',
+        title: 'CREATE BY',
         data: 'USER_ACTION',
         className: 'text-slate-600 font-mono',
         defaultContent: '-',
@@ -86,20 +86,26 @@ const columns = [
             const empno = ($('#EMPNOHid').val() || '').trim();
             const fqdnSuffix = '.mitsubishielevatorasia.co.th';
 
-            // จัดการ URL จาก host ให้มี FQDN ต่อท้าย domain name เสมอ
+            // ดึง baseHost เริ่มต้น
             let baseHost = (host || window.location.origin + '/form/').trim();
 
-            if (!baseHost.includes(fqdnSuffix)) {
-                // แยก protocol://domain ออกจาก path ด้านหลัง
-                const match = baseHost.match(/^(https?:\/\/[^\/]+)(.*)$/i);
+            // ตรวจสอบว่ากำลังรันบน localhost หรือไม่
+            const isLocal =
+                /^(https?:\/\/)?(localhost|127\.0\.0\.1)(:\d+)?/i.test(
+                    baseHost,
+                );
+
+            // ถ้าไม่ใช่ localhost และยังไม่มี FQDN ค่อยเติม suffix
+            if (!isLocal && !baseHost.includes(fqdnSuffix)) {
+                const match = baseHost.match(/^(https?:\/\/[^\/:]+)(.*)$/i);
                 if (match) {
-                    const domainPart = match[1]; // เช่น https://amecwebtest
-                    const pathPart = match[2]; // เช่น /form/ หรือ /
-                    baseHost = `${domainPart}${fqdnSuffix}${pathPart}`;
+                    const domainPart = match[1];
+                    const restPart = match[2];
+                    baseHost = `${domainPart}${fqdnSuffix}${restPart}`;
                 }
             }
 
-            // ตัด slash ท้ายสุดออก (ถ้ามี) เพื่อนำไปต่อ path ย่อยได้สะอาด
+            // ตัด slash ท้ายสุดออก (ถ้ามี)
             baseHost = baseHost.replace(/\/+$/, '');
 
             const backPath = encodeURIComponent(
@@ -108,7 +114,7 @@ const columns = [
             const formUrl = `${baseHost}/feform/FE-DOC/form/main?no=${item.NFRMNO}&orgNo=${item.VORGNO}&y=${item.CYEAR}&y2=${item.CYEAR2}&runNo=${item.NRUNNO}&m=3&empno=${empno}&bp=${backPath}&menu=1`;
 
             return `
-                <a href="${formUrl}" target="_blank" 
+                <a href="${formUrl}" target="_blank" rel="noopener noreferrer"
                    class="inline-flex items-center gap-1 px-2.5 py-1.5 bg-slate-100 hover:bg-blue-600 hover:text-white text-slate-700 rounded-lg text-xs font-semibold transition-all shadow-sm">
                     📂 เปิดเอกสาร
                 </a>
