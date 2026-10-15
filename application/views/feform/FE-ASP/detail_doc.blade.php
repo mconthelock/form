@@ -2,6 +2,10 @@
     window.INITIAL_ATTACHED_FILES = @json($attachedFiles ?? []);
     window.INITIAL_SAVED_DETAILS  = @json($savedDetails ?? []);
     window.INITIAL_PREV_FILE      = @json($prevApprovedFile ?? null);
+    window.IS_ADMIN               = @json($isAdmin ?? false);
+    window.IS_SUPER_ADMIN         = @json($isSuperAdmin ?? false);
+    window.IS_FIRST_STEP_APPROVED = @json($isFirstStepApproved ?? false);
+    window.IS_LOCKED              = @json($isLocked ?? false);
 </script>
 
 <div class="p-6 rounded-2xl bg-slate-50/80 border border-slate-200/80 mb-6 shadow-xs">
@@ -47,7 +51,8 @@
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
         <div>
             <label class="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Division (ฝ่าย)</label>
-            <input type="text" id="DivisionTxt" readonly value="{{ $DIVISION_NAME ?? '' }}" class="w-full h-10 px-3 bg-slate-100 border border-slate-200 rounded-lg text-sm font-medium text-slate-600 cursor-not-allowed">
+            <input type="text" id="DivisionTxt" readonly value="{{ $DIVISION_NAME ?? '' }}" 
+                   class="w-full h-10 px-3 bg-slate-100 border border-slate-200 rounded-lg text-sm font-medium text-slate-600 cursor-not-allowed">
             <input type="hidden" id="SDIVCODEHid" name="SDIVCODE" value="{{ $SDIVCODE ?? '' }}">
         </div>
 
@@ -59,8 +64,12 @@
                 <option value="">-- Choose Department --</option>
                 @if(!empty($departments))
                     @foreach ($departments as $d)
-                        <option value="{{ $d['SDEPCODE'] }}" {{ (isset($SDEPCODE) && $SDEPCODE == $d['SDEPCODE']) ? 'selected' : '' }}>
-                            {{ $d['DEPT_NAME'] }}
+                        @php
+                            $depCode = $d['SDEPCODE'] ?? '';
+                            $depName = $d['DEPT_NAME'] ?? ($d['SDEPT'] ?? ($d['SDEPARTMENT'] ?? ''));
+                        @endphp
+                        <option value="{{ $depCode }}" {{ (isset($SDEPCODE) && $SDEPCODE == $depCode) ? 'selected' : '' }}>
+                            {{ $depCode }} : {{ $depName }}
                         </option>
                     @endforeach
                 @endif
@@ -70,11 +79,15 @@
         <div>
             <label class="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Section (ส่วนงาน)</label>
             <select id="SecDrp" name="SSECCODE" class="w-full h-10 px-3 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/20">
-                <option value="00">-- None / 00 --</option>
+                <option value="00">00 : No Section</option>
                 @if(!empty($sections))
                     @foreach ($sections as $s)
-                        <option value="{{ $s['SSECCODE'] }}" {{ (isset($SSECCODE) && $SSECCODE == $s['SSECCODE']) ? 'selected' : '' }}>
-                            {{ $s['SEC_NAME'] }}
+                        @php
+                            $secCode = $s['SSECCODE'] ?? '';
+                            $secName = $s['SEC_NAME'] ?? ($s['SSEC'] ?? ($s['SSECTION'] ?? ''));
+                        @endphp
+                        <option value="{{ $secCode }}" {{ (isset($SSECCODE) && $SSECCODE == $secCode) ? 'selected' : '' }}>
+                            {{ $secCode }} : {{ $secName }}
                         </option>
                     @endforeach
                 @endif
@@ -133,8 +146,8 @@
                 $isManual = ($CREATE_MODE ?? 'MANUAL') === 'MANUAL';
             @endphp
             <div class="flex gap-6 text-xs font-bold text-slate-700">
-                <!-- YEARLY REVIEW: ล็อกห้ามเลือกถ้าเป็น MANUAL -->
-                <label class="flex items-center gap-1.5 {{ $isManual ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer' }}">
+                <!-- YEARLY REVIEW: ล็อกห้ามคลิกถ้าเป็น MANUAL -->
+                <label class="flex items-center gap-1.5 {{ $isManual ? 'opacity-40 cursor-not-allowed pointer-events-none' : 'cursor-pointer' }}">
                     <input type="radio" 
                            id="radio_yearly"
                            name="REVIEW_PERIOD" 
@@ -144,8 +157,8 @@
                     YEARLY REVIEW
                 </label>
 
-                <!-- REVIEW ON CHANGING: ล็อกห้ามเลือกถ้าเป็น AUTO -->
-                <label class="flex items-center gap-1.5 {{ !$isManual ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer' }}">
+                <!-- REVIEW ON CHANGING: ล็อกห้ามคลิกถ้าเป็น AUTO -->
+                <label class="flex items-center gap-1.5 {{ !$isManual ? 'opacity-40 cursor-not-allowed pointer-events-none' : 'cursor-pointer' }}">
                     <input type="radio" 
                            id="radio_changing"
                            name="REVIEW_PERIOD" 
@@ -170,7 +183,14 @@
         </div>
 
         <!-- กล่องสำหรับกรอกเมื่อเลือก CHANGE -->
-        <div id="change-detail-box" class="p-4 bg-white border border-slate-200 rounded-xl space-y-3 {{ ($REVIEW_DETAILS ?? '') === 'CHANGE' ? '' : 'hidden' }}">
+        @php
+            $isChangeDetail = (($REVIEW_DETAILS ?? 'NO_CHANGE') === 'CHANGE');
+        @endphp
+
+        <!-- กล่องสำหรับกรอกเมื่อเลือก CHANGE -->
+        <div id="change-detail-box" 
+             class="p-4 bg-white border border-slate-200 rounded-xl space-y-3 {{ $isChangeDetail ? '' : 'hidden' }}"
+             style="{{ $isChangeDetail ? '' : 'display: none;' }}">
             <div>
                 <label class="text-[11px] font-bold text-slate-600 uppercase tracking-wider block mb-1">
                     1. Detail of Change <span class="text-rose-500">*</span>

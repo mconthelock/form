@@ -11,7 +11,7 @@ import { host } from '../../utils';
 import { uploadDocFiles, saveDocMaster } from './data';
 import { initFlow, actionFlow } from './flow';
 import {
-    currentPrevFile,
+    getCurrentPrevFile,
     initFormControls,
     loadDepartmentDropdown,
     loadSectionDropdown,
@@ -42,51 +42,18 @@ $(document).ready(async function () {
     $('#DOC_IDTxt').val(form.DOC_NO);
     $('#DocHeaderIDHid').val(formData.doc_header_id || '');
 
-    // 1. กำหนดค่าเริ่มต้น Request By และ Input By
-    const initialReq = (
-        $('#REQUEST_BY_EMPNO').val() ||
-        formData.reqby ||
-        empno
-    ).toString();
-    const initialInput = (
-        $('#INPUT_BY_EMPNO').val() ||
-        formData.inputby ||
-        empno
-    ).toString();
-
-    $('#REQUEST_BY_EMPNO').val(initialReq);
-    $('#INPUT_BY_EMPNO').val(initialInput);
-
-    // 2. ผูกฟังก์ชันการทำงานพื้นฐานของ Form
+    // ผูก Event คอนโทรลหน้าจอ
     bindEmpSearchEvent();
     initFormControls();
     applyReviewPeriodRules();
 
-    const isCreateMode = !$('#DocHeaderIDHid').val() && !form.NRUNNO;
+    // 🟢 ไม่ต้องสั่ง fetchEmpNameAndOrg() หรือ loadDepartmentDropdown() ในหน้าแรกอีก
+    // ข้อมูลถูก Render ผ่าน PHP ฝั่ง Server ครบถ้วนตั้งแต่เปิดหน้า
 
-    if (isCreateMode) {
-        // หน้า Create: โหลดสังกัดและ Default Select ตามผู้สร้าง/Request By
-        if (initialReq && initialReq.length === 5) {
-            await fetchEmpNameAndOrg(initialReq);
-        }
-    } else {
-        // หน้า Edit / View: โหลดสังกัดตาม Snapshot ใน Header เดิม
-        const currentDivCode = $('#SDIVCODEHid').val();
-        const currentDepCode = $('#DeptDrp').val();
-        const currentSecCode = $('#SecDrp').val();
-
-        if (currentDivCode) {
-            await loadDepartmentDropdown(currentDivCode, currentDepCode);
-            if (currentDepCode) {
-                await loadSectionDropdown(currentDepCode, currentSecCode);
-            }
-        }
-    }
-
-    // 3. ป้อนคำตอบตารางประเมินเดิม (ถ้ามี)
+    // เติมคำตอบตารางประเมินเดิม (ถ้ามี)
     populateSavedDetails(window.INITIAL_SAVED_DETAILS || []);
 
-    // 4. ผูก Flow Bar และควบคุมสิทธิ์ของปุ่ม
+    // เริ่มต้นระบบ Flow
     await initFlow(form, formData.status);
 
     if (form.NRUNNO) {
@@ -157,13 +124,15 @@ $(document).ready(async function () {
     // ปุ่มเปิดดู Active Revision เดิม
     // --------------------------------------------------------
     $(document).on('click', '#btn-open-prev-file', async function () {
-        if (!currentPrevFile) return;
+        const fileObj = getCurrentPrevFile();
+        if (!fileObj) return;
+
         try {
             await showLoader({ show: true });
             const file = await getFile({
-                baseDir: (currentPrevFile.FILE_PATH || '').replace(/\\/g, '/'),
-                storedName: currentPrevFile.FILE_FNAME,
-                originalName: currentPrevFile.FILE_ONAME,
+                baseDir: (fileObj.FILE_PATH || '').replace(/\\/g, '/'),
+                storedName: fileObj.FILE_FNAME,
+                originalName: fileObj.FILE_ONAME,
                 mode: 'open',
             });
             const blobUrl = URL.createObjectURL(file);
@@ -413,8 +382,8 @@ function renderFileList(files) {
             const deleteBtn =
                 isRequester || isSuperAdmin
                     ? `<button type="button" class="btn-delete-file text-rose-500 hover:text-rose-700 font-bold text-xs px-2 cursor-pointer transition-colors" data-id="${file.FILE_ID}" data-path="${fullFilePath}">
-                       🗑️ Delete
-                   </button>`
+                           🗑️ Delete
+                       </button>`
                     : '';
 
             let itemHtml = `
