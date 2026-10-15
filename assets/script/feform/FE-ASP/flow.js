@@ -14,7 +14,9 @@ import {
     showConfirm,
 } from '@amec/webasset/utils';
 import { host } from '../../utils';
+import { deleteDraftDoc } from './data';
 import { stampFormAttachedFiles } from '../FE-DOC/pdfStamper';
+import { applyReviewPeriodRules } from './form';
 
 export async function initFlow(form, status) {
     if (!form.NRUNNO) {
@@ -39,73 +41,84 @@ export async function initFlow(form, status) {
 
 export function applyButtonPermissions(mode, extData, status = '', empno = '') {
     const rawStatus = (status || '').toUpperCase().trim();
-    const requestBy = ($('#REQUEST_BYTxt').val() || '').trim();
+    const requestBy = ($('#REQUEST_BY_EMPNO').val() || '').trim();
     const currentEmpNo = (empno || $('#EMPNOHid').val() || '').trim();
     const isOwner =
         requestBy !== '' && currentEmpNo !== '' && requestBy === currentEmpNo;
     const isAutoJob = ($('#IS_AUTO_JOBHid').val() || 'N') === 'Y';
+    const isSuperAdmin = currentEmpNo === '13204';
+
+    // ตรวจสอบว่า Step 1 Approve แล้วหรือไม่
+    const isFirstStepApproved = Boolean(window.IS_FIRST_STEP_APPROVED);
 
     $(
-        '#btnSaveDraft, #btnSendFlow, #ApproveBtn, #ReturnBtn, #RejectBtn, #DeleteBtn, #ManualStampBtn',
+        '#btnSaveDraft, #SaveDocBtn, #ApproveBtn, #ReturnBtn, #RejectBtn, #DeleteBtn, #ManualStampBtn',
     ).addClass('hidden');
 
-    // 🔒 Request By ล็อกเป็น Readonly เสมอ หากไม่ใช่ขั้นตอนสร้างใหม่ครั้งแรกสุด (รวมถึงกรณี Return)
+    const setFormEditable = (editable) => {
+        $('#ControlNoDrp, #DeptDrp, #SecDrp').prop('disabled', !editable);
+        $('input[name="REVIEW_DETAILS"]').prop('disabled', !editable);
+        $('#DetailChangeTxt').prop('readonly', !editable);
+        $('input[name="EFFECT_STATUS"]').prop('disabled', !editable);
+        $('#confirmation-table-zone input[type="radio"]').prop(
+            'disabled',
+            !editable,
+        );
+        $('.topic-detail-in').prop('readonly', !editable);
+
+        if (editable) {
+            applyReviewPeriodRules();
+            $('#drop-zone').removeClass('hidden');
+            $('.btn-delete-file').show();
+        } else {
+            $('input[name="REVIEW_PERIOD"]').prop('disabled', true);
+            $('#drop-zone').addClass('hidden');
+            $('.btn-delete-file').hide();
+        }
+    };
+
+    // ล็อกช่อง Request By ถ้าไม่ใช่การสร้างใหม่ครั้งแรก
     if (mode === '1' && rawStatus === '' && !$('#DocHeaderIDHid').val()) {
-        $('#REQUEST_BYTxt')
+        $('#REQUEST_BY_EMPNO')
             .prop('readonly', false)
-            .removeClass('bg-slate-100 cursor-not-allowed')
-            .addClass('bg-white');
+            .removeClass('bg-slate-100 cursor-not-allowed text-slate-600')
+            .addClass('bg-white text-slate-800');
     } else {
-        $('#REQUEST_BYTxt')
+        $('#REQUEST_BY_EMPNO')
             .prop('readonly', true)
-            .addClass('bg-slate-100 cursor-not-allowed')
-            .removeClass('bg-white');
+            .addClass('bg-slate-100 cursor-not-allowed text-slate-600')
+            .removeClass('bg-white text-slate-800');
     }
 
     if (mode === '1') {
-        $('#ControlNoDrp').prop('disabled', false);
-        $('input[name="REVIEW_PERIOD"], input[name="REVIEW_DETAILS"]').prop(
-            'disabled',
-            false,
-        );
-
-        if (rawStatus === 'DRAFT' || rawStatus === '') {
-            $('#btnSaveDraft, #btnSendFlow').removeClass('hidden');
+        if (isFirstStepApproved) {
+            setFormEditable(false);
+        } else {
+            setFormEditable(true);
+            if (rawStatus === 'DRAFT' || rawStatus === '') {
+                $('#btnSaveDraft, #SaveDocBtn').removeClass('hidden');
+            }
         }
     } else if (mode === '2') {
         if (isOwner) {
-            // เมื่อเอกสาร Return กลับมาหาผู้สร้าง
-            $('#ControlNoDrp').prop('disabled', false);
-            $('input[name="REVIEW_PERIOD"], input[name="REVIEW_DETAILS"]').prop(
-                'disabled',
-                false,
-            );
-            $('#btnSaveDraft, #btnSendFlow').removeClass('hidden');
-
+            // เมื่อเอกสารถูก Return กลับมาหา Requester (สถานะจะกลับมาเป็น DRAFT และ Step ยังไม่สมบูรณ์)
+            setFormEditable(true);
+            $('#btnSaveDraft, #SaveDocBtn').removeClass('hidden');
             if (!isAutoJob) $('#DeleteBtn').removeClass('hidden');
         } else {
-            // Approver ในสาย
-            $('#ControlNoDrp').prop('disabled', true);
-            $('input[name="REVIEW_PERIOD"], input[name="REVIEW_DETAILS"]').prop(
-                'disabled',
-                true,
-            );
+            // ผู้อนุมัติในสาย (Approver)
+            setFormEditable(false);
             $('#ApproveBtn, #ReturnBtn').removeClass('hidden');
-
-            // ⚠️ ห้าม Reject หากเป็น Yearly Review (Auto Job)
             if (!isAutoJob) $('#RejectBtn').removeClass('hidden');
         }
     } else {
-        // View Mode
-        $('#ControlNoDrp').prop('disabled', true);
-        $('input[name="REVIEW_PERIOD"], input[name="REVIEW_DETAILS"]').prop(
-            'disabled',
-            true,
-        );
+        // Mode 3: View Mode
+        setFormEditable(false);
     }
 
-    if (currentEmpNo === '13204') {
-        $('#ManualStampBtn').removeClass('hidden');
+    // ปุ่มฟังก์ชันเฉพาะของ 13204
+    if (isSuperAdmin && !isAutoJob) {
+        $('#ManualStampBtn, #DeleteBtn').removeClass('hidden');
     }
 }
 
@@ -117,18 +130,32 @@ function bindFlowButtons(form) {
     $(document)
         .off('click', '#ReturnBtn')
         .on('click', '#ReturnBtn', async function () {
+            const remark = ($('#RemarkTxt').val() || '').trim();
+            if (!remark) {
+                showMessage('กรุณากรอก Remark สำหรับ Return', 'warning');
+                $('#RemarkTxt').focus();
+                return;
+            }
+
             const isConfirm = await showConfirm({
                 title: 'ยืนยันการ Return',
                 message: 'ต้องการส่งเอกสารกลับผู้จัดทำ ใช่หรือไม่?',
                 acceptText: 'ยืนยัน',
                 cancelText: 'ยกเลิก',
             });
-            if (isConfirm) actionFlow('return', form);
+            if (isConfirm) actionFlow('returnp', form);
         });
 
     $(document)
         .off('click', '#RejectBtn')
         .on('click', '#RejectBtn', async function () {
+            const remark = ($('#RemarkTxt').val() || '').trim();
+            if (!remark) {
+                showMessage('กรุณากรอก Remark สำหรับ Reject', 'warning');
+                $('#RemarkTxt').focus();
+                return;
+            }
+
             const isConfirm = await showConfirm({
                 title: 'ยืนยันการ Reject',
                 message: 'ต้องการปฏิเสธเอกสารนี้ ใช่หรือไม่?',
@@ -141,13 +168,23 @@ function bindFlowButtons(form) {
     $(document)
         .off('click', '#ManualStampBtn')
         .on('click', '#ManualStampBtn', async function () {
+            const isConfirm = await showConfirm({
+                title: 'ยืนยันการประทับตรา',
+                message:
+                    'ต้องการประทับตรายางลงไฟล์ PDF จากประวัติปัจจุบันทันที ใช่หรือไม่?',
+                acceptText: 'ยืนยัน',
+                cancelText: 'ยกเลิก',
+            });
+            if (!isConfirm) return;
+
             try {
                 await showLoader({ show: true });
                 await executeFinalStamping(form);
                 showMessage('ประทับตราเรียบร้อยแล้ว', 'success');
                 setTimeout(() => location.reload(), 1000);
             } catch (e) {
-                showErrorMessage('Stamp ล้มเหลว: ' + e.message);
+                console.error(e);
+                showErrorMessage('Stamp ล้มเหลว: ' + (e?.message || ''));
             } finally {
                 await showLoader({ show: false });
             }
@@ -168,11 +205,13 @@ function bindFlowButtons(form) {
                 await showLoader({ show: true });
                 const delFlow = await deleteFlowandForm(form);
                 if (delFlow?.status) {
-                    await $.ajax({
-                        url: host + 'feform/FE-ASP/form/DeleteDraft',
-                        type: 'POST',
-                        data: { HEADER_ID: $('#DocHeaderIDHid').val() },
-                        dataType: 'json',
+                    await deleteDraftDoc({
+                        DOC_HEADER_ID: $('#DocHeaderIDHid').val(),
+                        NFRMNO: form.NFRMNO,
+                        VORGNO: form.VORGNO,
+                        CYEAR: form.CYEAR,
+                        CYEAR2: form.CYEAR2,
+                        NRUNNO: form.NRUNNO,
                     });
                     showMessage('ลบแบบฟอร์มเรียบร้อยแล้ว', 'success');
                     setTimeout(() => redirectWebflow(), 1200);
@@ -216,12 +255,12 @@ export async function actionFlow(actionType, form) {
                 data: {
                     ...payload,
                     ACTION: cleanAction.toUpperCase(),
-                    HEADER_ID: $('#DocHeaderIDHid').val(),
+                    DOC_HEADER_ID: $('#DocHeaderIDHid').val(),
                 },
                 dataType: 'json',
             });
 
-            // ตรวจสอบ Final Approve สำหรับประทับตรายาง
+            // ตรวจสอบ Final Approve สำหรับประทับตรายาง (เฉพาะกรณี CHANGE)
             if (
                 cleanAction === 'approve' &&
                 resActionFlow?.statusDoc === 'APPROVE'
@@ -246,7 +285,7 @@ export async function actionFlow(actionType, form) {
     }
 }
 
-async function executeFinalStamping(form) {
+export async function executeFinalStamping(form) {
     const res = await $.ajax({
         url: host + 'feform/FE-ASP/form/GetStampData',
         type: 'POST',
@@ -264,7 +303,6 @@ async function executeFinalStamping(form) {
         throw new Error('ไม่พบประวัติการอนุมัติในระบบ');
     }
 
-    // เรียกใช้ pdfStamper (ซึ่งปรับแต่งให้ Stamp จากขวาไปซ้ายเรียบร้อยแล้ว)
     await stampFormAttachedFiles(
         {
             NFRMNO: form.NFRMNO,
@@ -276,5 +314,6 @@ async function executeFinalStamping(form) {
             FORM_TYPE: 'FE',
         },
         res.logs,
+        { hasBorder: false },
     );
 }

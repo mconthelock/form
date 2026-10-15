@@ -21,8 +21,6 @@
 <input type="hidden" id="EMPNOHid" value="{{ $EMPNO ?? '' }}">
 <input type="hidden" id="IS_AUTO_JOBHid" value="{{ $IS_AUTO_JOB ?? 'N' }}">
 
-<!-- Webflow Flow Progress Bar -->
-<div class="flow mb-4"></div>
 
 <div class="load flex justify-center items-center py-12">
     <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
@@ -33,6 +31,8 @@
     @include('feform.FE-ASP.flow_spec')
 </div>
 
+<!-- Webflow Flow Progress Bar -->
+<div class="flow mb-4"></div>
 @endsection
 
 @section('scripts')

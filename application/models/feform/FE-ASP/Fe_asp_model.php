@@ -166,7 +166,7 @@ class Fe_asp_model extends my_model
     public function getDepartments($divCode = null) {
         $divCode = trim((string)$divCode);
 
-        $sql = "SELECT SDEPCODE, SDEPARTMENT AS DEPT_NAME, SDEPT 
+        $sql = "SELECT SDEPCODE, SDEPT AS DEPT_NAME, SDEPARTMENT, SDEPT 
                 FROM AMEC.PDEPARTMENT 
                 WHERE SDEPARTMENT NOT LIKE '(Cancel)%' ";
 
@@ -189,7 +189,7 @@ class Fe_asp_model extends my_model
     public function getSections($depCode = null) {
         $depCode = trim((string)$depCode);
 
-        $sql = "SELECT SSECCODE, SSECTION AS SEC_NAME, SSEC 
+        $sql = "SELECT SSECCODE, SSEC AS SEC_NAME, SSECTION, SSEC 
                 FROM AMEC.PSECTION 
                 WHERE SSECTION NOT LIKE '(Cancel)%' ";
 
@@ -304,24 +304,22 @@ class Fe_asp_model extends my_model
     }
 
     /**
-     * ดึง Department ตาม Division ที่เลือก (อิง Prefix 2 ตัวแรกตามโครงสร้าง AMEC)
+     * ดึง Master Department ตาม Division พร้อมใส่ Alias กัน Blade Notice Warning
      */
     public function getDepartmentsByDiv($divCode) {
         $divCode = trim((string)$divCode);
         
-        // ถ้าไม่ระบุ Division หรือเป็น 00 ให้แสดงทั้งหมด
         if (empty($divCode) || $divCode === '00') {
-            $sql = "SELECT SDEPCODE, SDEPARTMENT, SDEPT 
+            $sql = "SELECT SDEPCODE, SDEPT AS DEPT_NAME, SDEPARTMENT, SDEPT 
                     FROM AMEC.PDEPARTMENT 
                     WHERE SDEPARTMENT NOT LIKE '(Cancel)%'
                     ORDER BY CASE WHEN SDEPCODE = '00' THEN 0 ELSE 1 END, SDEPCODE ASC";
             return $this->QuerySetBase($sql, $this->webflowBase)->result_array();
         }
 
-        // ตัดเอา 2 ตัวแรก เช่น '040101' -> '04'
         $prefix = substr($divCode, 0, 2);
 
-        $sql = "SELECT SDEPCODE, SDEPARTMENT, SDEPT 
+        $sql = "SELECT SDEPCODE, SDEPT AS DEPT_NAME, SDEPARTMENT, SDEPT 
                 FROM AMEC.PDEPARTMENT 
                 WHERE SDEPARTMENT NOT LIKE '(Cancel)%'
                   AND (SUBSTR(SDEPCODE, 1, 2) = ? OR SDEPCODE = '00')
@@ -331,22 +329,21 @@ class Fe_asp_model extends my_model
     }
 
     /**
-     * ดึง Section ตาม Department ที่เลือก (อิง Prefix 4 ตัวแรกตามโครงสร้าง AMEC)
+     * ดึง Section ตาม Department พร้อมใส่ Alias กัน Blade Notice Warning
      */
     public function getSectionsByDept($depCode) {
         $depCode = trim((string)$depCode);
 
         if (empty($depCode) || $depCode === '00') {
-            $sql = "SELECT SSECCODE, SSECTION, SSEC 
+            $sql = "SELECT SSECCODE, SSEC AS SEC_NAME, SSECTION, SSEC 
                     FROM AMEC.PSECTION 
                     WHERE SSECCODE = '00'";
             return $this->QuerySetBase($sql, $this->webflowBase)->result_array();
         }
 
-        // ตัดเอา 4 ตัวแรก เช่น '040401' -> '0404'
         $prefix = substr($depCode, 0, 4);
 
-        $sql = "SELECT SSECCODE, SSECTION, SSEC 
+        $sql = "SELECT SSECCODE, SSEC AS SEC_NAME, SSECTION, SSEC 
                 FROM AMEC.PSECTION 
                 WHERE SSECTION NOT LIKE '(Cancel)%'
                   AND (SUBSTR(SSECCODE, 1, 4) = ? OR SSECCODE = '00')
@@ -354,4 +351,26 @@ class Fe_asp_model extends my_model
 
         return $this->QuerySetBase($sql, $this->webflowBase, [$prefix])->result_array();
     }
+
+    /**
+     * ตรวจสอบว่า Step แรกของ Webflow ผ่านการ Approve แล้วหรือไม่
+     */
+    public function isFirstStepApproved($nFrmNo, $vOrgNo, $cYear, $cYear2, $nRunNo) {
+        $sql = "SELECT COUNT(*) AS CNT 
+                FROM FLOW 
+                WHERE NFRMNO = ? AND VORGNO = ? AND CYEAR = ? AND CYEAR2 = ? AND NRUNNO = ?
+                  AND CSTEPNO = '01' 
+                  AND CAPVSTNO = '1'";
+
+        $row = $this->QuerySetBase($sql, $this->webflowBase, [
+            (int)$nFrmNo,
+            (string)$vOrgNo,
+            (string)$cYear,
+            (string)$cYear2,
+            (int)$nRunNo
+        ])->row_array();
+
+        return ((int)($row['CNT'] ?? 0)) > 0;
+    }
+
 }
