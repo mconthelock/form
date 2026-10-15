@@ -23,7 +23,7 @@ import { setForm } from './function';
 import { modalSelectPriceComparison } from './modal/select-price-comparison';
 import { getReasons } from './reason';
 import { redirectWebflow } from '@amec/webasset/form';
-import { doaction } from '@amec/webasset/api/webform';
+import { doaction, getMode } from '@amec/webasset/api/webform';
 import { webflowSubmit } from '@amec/webasset/components/form';
 import { ShowFile } from '@amec/webasset/components/showFile';
 
@@ -32,25 +32,49 @@ $(async function () {
     try {
         showLoader();
         const params = getUrlParams();
+        const form = getFormByUrlParam();
         const empno = params.EMPNO;
-        if (!(await checkPlanner(empno))) {
-            throw new Error('User not found');
-        }
-        isReturn = await setReturn();
-        if (isReturn) {
-            return;
-        }
-        // ตั้งค่าโหมดฟอร์มเริ่มต้นตามค่าที่ส่งเข้ามา
-        setAutoField({ mode: 1, trigger: false });
 
-        await setForm({ inputer: empno });
-        // สร้างปุ่ม สำหรับ request form
-        $('#btnRequest').html(
-            webflowSubmit({
-                request: true,
-                draft: true,
-            }),
-        );
+        let formMode = 1;
+        if (params.NRUNNO) {
+            formMode = await getMode({
+                ...form,
+                EMPNO: empno,
+            });
+        }
+        console.log('mode', formMode);
+        switch (+formMode) {
+            case 1:
+                if (!(await checkPlanner(empno))) {
+                    throw new Error('User not found');
+                }
+                // ตั้งค่าโหมดฟอร์มเริ่มต้นตามค่าที่ส่งเข้ามา
+                setAutoField({ mode: 1, trigger: false });
+
+                await setForm({ inputer: empno });
+                // สร้างปุ่ม สำหรับ request form
+                $('#btnRequest').html(
+                    webflowSubmit({
+                        request: true,
+                        draft: true,
+                    }),
+                );
+                break;
+            case 2:
+                isReturn = await setReturn();
+                console.log('isReturn', isReturn);
+                if (!isReturn) {
+                    await setView();
+                    return;
+                }
+
+                break;
+            case 3:
+                await setView();
+                break;
+            default:
+                throw new Error('Invalid form mode');
+        }
     } catch (error) {
         console.error(error);
         renderLoadError(error.message);

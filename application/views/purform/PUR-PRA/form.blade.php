@@ -79,12 +79,12 @@
                         </fieldset> --}}
 
                         {{-- Inputer --}}
-                        <fieldset class="fieldset">
+                        <fieldset class="fieldset" id="inputer-fieldset">
                             <legend class="fieldset-legend req">Inputer</legend>
                             <input type="text" name="INPUTBY" id="INPUTBY" class="input w-full bg-amber-50 req" placeholder="กรอกรหัสพนักงาน" data-message="Please enter inputer" readonly>
                         </fieldset>
                         {{-- Requester --}}
-                        <fieldset class="fieldset">
+                        <fieldset class="fieldset" id="requester-fieldset">
                             <legend class="fieldset-legend req">Requester</legend>
                             <input type="text" name="REQBY" id="REQBY" class="input w-full req" placeholder="กรอกรหัสพนักงาน" data-message="Please enter requester">
                         </fieldset>

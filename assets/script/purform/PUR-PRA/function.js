@@ -1,4 +1,4 @@
-import { getUser } from '@amec/webasset/api/amec';
+import { getUser, getUserImage } from '@amec/webasset/api/amec';
 import {
     getUrlParams,
     removeClassError,
@@ -21,13 +21,13 @@ import {
 import { checkReturn } from '@amec/webasset/api/webform';
 import { ChangeReason, getReasons } from './reason';
 import { setDatePicker } from '@amec/webasset/flatpickr';
-import { formatDate } from '@amec/webasset/dayjs';
 import { webflowSubmit } from '@amec/webasset/components/form';
 import { dragDropInit, dragDropListImage } from '@amec/webasset/dragdrop';
 import { ShowFile } from '@amec/webasset/components/showFile';
 import { modalSelectPriceComparison } from './modal/select-price-comparison';
 import { fancybox } from '@amec/webasset/fancybox';
 import { getFile } from '@amec/webasset/api/file';
+import { EmployeeProfileCard } from '@amec/webasset/components/profileCard';
 
 /**
  * @author Sutthipong Tangmongkhoncharoen(24008)
@@ -97,8 +97,10 @@ export const setAutoField = ({
     priceCompareFile.toggleClass('hidden', mode === 1);
     priceCompareInput.toggleClass('hidden', mode !== 1);
     tableComparison.destroy();
-    getPdfViewer('price-compare-container')?.reset();
-    getFileUploadInstance('PRICE_COMPARE_FILE')?.reset();
+    if (mode === 1) {
+        getPdfViewer('price-compare-container')?.reset();
+        getFileUploadInstance('PRICE_COMPARE_FILE')?.reset();
+    }
     Object.keys(autoField).forEach((key) => {
         const label = autoField[key].closest('label');
         const element = label.length ? label : autoField[key];
@@ -343,6 +345,7 @@ export async function setReturn() {
     if (!params.NRUNNO) return false;
     // ดึงข้อมูลฟอร์มตามพารามิเตอร์ใน URL
     const form = getFormByUrlParam();
+
     // ตรวจสอบว่าฟอร์มเป็นการ Return หรือไม่
     const isReturn = await checkReturn({
         ...form,
@@ -357,6 +360,9 @@ export async function setReturn() {
         throw new Error(formData.message);
     }
     const data = formData.data;
+    // ตั้งค่าข้อมูลบัตรพนักงาน (Employee Profile Card) สำหรับผู้ขอและผู้กรอกฟอร์ม
+    await setEmpCard(data.FORM.VREQNO, data.FORM.VINPUTER);
+
     // ตั้งค่าฟิลด์ของฟอร์มตามข้อมูลที่ดึงมา
     Object.keys(data).forEach((key) => {
         if (typeof data?.[key] === 'object' || Array.isArray(data?.[key]))
@@ -526,4 +532,38 @@ async function setFiles(files, fromDB = false) {
             btnDel: true,
         });
     }
+}
+
+/**
+ * @author Sutthipong Tangmongkhoncharoen(24008)
+ * @since 2026-10-15
+ * @description Sets the employee profile cards for the requester and inputer.
+ * @param {string} req - Requester's employee number
+ * @param {string} inputer - Inputer's employee number
+ */
+async function setEmpCard(req, inputer) {
+    const inputerData = await getUser(inputer);
+    const inputerImage = await getUserImage(inputer);
+    const requester = await getUser(req);
+    const requesterImage = await getUserImage(req);
+    new EmployeeProfileCard({
+        container: '#inputer-fieldset',
+        name: inputerData.SNAME,
+        empno: inputer,
+        position: inputerData.SPOSITION,
+        sec: inputerData.SSEC || '-',
+        dept: inputerData.SDEPT || '-',
+        image: inputerImage,
+        title: 'Inputer',
+    });
+    new EmployeeProfileCard({
+        container: '#requester-fieldset',
+        name: requester.SNAME,
+        empno: req,
+        position: requester.SPOSITION,
+        sec: requester.SSEC || '-',
+        dept: requester.SDEPT || '-',
+        image: requesterImage,
+        title: 'Requester',
+    });
 }
