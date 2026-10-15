@@ -156,7 +156,7 @@
                     </div>
                     <div>
                         <label for="AREA_LEVEL">Level</label>
-                        <input type="number" id="AREA_LEVEL" name="AREA_LEVEL" inputmode="numeric" min="0" max="4" step="1" required>
+                        <input type="number" id="AREA_LEVEL" name="AREA_LEVEL" inputmode="numeric" min="1" max="4" step="1" required>
                     </div>
                     <div>
                         <label for="AREA_OWNER">Area Owner</label>
