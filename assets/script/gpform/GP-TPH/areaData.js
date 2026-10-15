@@ -785,12 +785,26 @@ function bindEvents() {
         event.preventDefault();
         const saveButton = form.querySelector('[type="submit"]');
         const areaLevel = form.elements.AREA_LEVEL.value.trim();
-        if (!/^\d+$/.test(areaLevel) || Number(areaLevel) > 4) {
-            await showMessage('AREA_LEVEL ต้องเป็นตัวเลขตั้งแต่ 0 ถึง 4 เท่านั้น', 'warning');
+        if (!/^\d+$/.test(areaLevel) ||         Number(areaLevel) < 1 || Number(areaLevel) > 4) {
+                    await showMessage('AREA_LEVEL ต้องเป็นตัวเลขตั้งแต่ 1 ถึง 4 เท่านั้น', 'warning');
             form.elements.AREA_LEVEL.focus();
             return;
         }
 
+                const normalize = (value) => String(value ?? '').trim().toLowerCase();
+                const newName = normalize(form.elements.AREA_NAME.value);
+                const newLocation = String(form.elements.LOCATION_ID.value);
+                const isDuplicate = areas.some(
+                    (area) =>
+                        String(getAreaId(area)) !== String(editingAreaId ?? '') &&
+                        String(getLocationId(area) ?? '') === newLocation &&
+                        normalize(area.AREA_NAME || area.area) === newName,
+                );
+                if (isDuplicate) {
+                    await showMessage('มีพื้นที่นี้อยู่แล้ว ไม่สามารถเพิ่มซ้ำได้', 'warning');
+                    form.elements.AREA_NAME.focus();
+                    return;
+                }
         const ownerValue = form.elements.AREA_OWNER.value.trim();
         if (!ownerValue) {
             await showMessage('กรุณาเลือก Area Owner', 'warning');
