@@ -23,8 +23,11 @@ import { ChangeReason, getReasons } from './reason';
 import { setDatePicker } from '@amec/webasset/flatpickr';
 import { formatDate } from '@amec/webasset/dayjs';
 import { webflowSubmit } from '@amec/webasset/components/form';
-import { dragDropInit } from '@amec/webasset/dragdrop';
+import { dragDropInit, dragDropListImage } from '@amec/webasset/dragdrop';
+import { ShowFile } from '@amec/webasset/components/showFile';
 import { modalSelectPriceComparison } from './modal/select-price-comparison';
+import { fancybox } from '@amec/webasset/fancybox';
+import { getFile } from '@amec/webasset/api/file';
 
 /**
  * @author Sutthipong Tangmongkhoncharoen(24008)
@@ -232,6 +235,7 @@ export async function setForm({
     new FileUpload({
         inputId: 'PRICE_COMPARE_FILE',
         inputAttributes: {
+            name: 'PRICE_COMPARE_FILE',
             'data-message': 'Please select a Comparison PDF file',
         },
         selectFileNameId: 'price-compare-file-name',
@@ -289,14 +293,14 @@ export async function setForm({
         range: true,
         dateFormat: "M'y",
         defaultDate: eftMonth,
-        onChange: function (selectedDates, dateStr, instance) {
-            console.log(dateStr);
-            console.log(formatDate(selectedDates[0]));
-            console.log(selectedDates);
-        },
+        // onChange: function (selectedDates, dateStr, instance) {
+        //     console.log(dateStr);
+        //     console.log(formatDate(selectedDates[0]));
+        //     console.log(selectedDates);
+        // },
     });
     // สร้างส่วนของ Drag & Drop สำหรับไฟล์แนบ
-    $('#drop-image').html(
+    $('#drop-image').append(
         dragDropInit({
             id: 'IMAGE_DETAIL',
             name: 'IMAGE_DETAIL',
@@ -305,7 +309,7 @@ export async function setForm({
             text: 'Drag & Drop Image here or click to select',
         }),
     );
-    $('#drop-quotation').html(
+    $('#drop-quotation').append(
         dragDropInit({
             id: 'FILE_QUOTATION',
             name: 'FILE_QUOTATION',
@@ -313,7 +317,7 @@ export async function setForm({
             text: 'Drag & Drop PDF files here or click to select',
         }),
     );
-    $('#drop-additional').html(
+    $('#drop-additional').append(
         dragDropInit({
             id: 'FILE_ADDITIONAL',
             name: 'FILE_ADDITIONAL',
@@ -413,10 +417,15 @@ export async function setReturn() {
     await setForm({
         inputer: data.FORM.VINPUTER,
         requester: data.FORM.VREQNO,
-        committee: data.COMMITTEE.NID,
-        group: data.GROUP.NID,
+        committee: data.COMMITTEE?.NID,
+        group: data.GROUP?.NID,
         eftMonth: [data.DEFT_MONTH_END, data.DEFT_MONTH_START].filter(Boolean),
     });
+
+    // ตรวจสอบว่ามีไฟล์ image detail หรือไม่ หากมีให้ตั้งค่าไฟล์ด้วยฟังก์ชัน setFiles
+    if (data.FILES.length > 0) {
+        await setFiles(data.FILES, true);
+    }
 
     // ตั้งค่าฟิลด์เหตุผล (Reasons) ด้วยข้อมูลจากฟอร์มที่ดึงมา
     getReasons('reason-cost-down-container').setValue(data.REASONS);
@@ -433,4 +442,88 @@ export async function setReturn() {
         }),
     );
     return true;
+}
+
+/**
+ * @author Sutthipong Tangmongkhoncharoen(24008)
+ * @since 2026-10-15
+ * @description ตั้งค่าไฟล์สำหรับฟอร์ม Price Approval
+ * @param {Array} files รายการไฟล์ที่จะตั้งค่า
+ * @param {boolean} fromDB ระบุว่าข้อมูลมาจากฐานข้อมูลหรือไม่
+ * @example
+ * const files = [
+ *     {
+ *         TYPE: { VCODE: 'PURPRA_DTL' },
+ *         FILE_ID: '1',
+ *         FILE_PATH: '/path/to/file',
+ *         FILE_FNAME: 'file.jpg',
+ *         FILE_ONAME: 'file.jpg',
+ *     }
+ * ];
+ * await setFiles(files, true);
+ */
+async function setFiles(files, fromDB = false) {
+    const comparisonFiles = files.filter(
+        (file) => file.TYPE.VCODE === 'PURPRA_PCP',
+    );
+    const images = files.filter((file) => file.TYPE.VCODE === 'PURPRA_DTL');
+    const quotations = files.filter((file) => file.TYPE.VCODE === 'PURPRA_QUO');
+    const additionals = files.filter(
+        (file) => file.TYPE.VCODE === 'PURPRA_ADT',
+    );
+    let imageHtml = '';
+    if (images.length > 0) {
+        for (const image of images) {
+            imageHtml += await dragDropListImage({
+                attr: `data-id="${image.FILE_ID}"`,
+                fromDB: fromDB,
+                fileInfo: {
+                    baseDir: image.FILE_PATH,
+                    storedName: image.FILE_FNAME,
+                    originalName: image.FILE_ONAME,
+                },
+            });
+        }
+        $('#drop-image').append(`
+            <div class="w-full rounded border bg-base-100 overflow-auto">
+                <ul class="flex flex-wrap w-full items-start text-gray-500 gap-5 p-5">
+                    ${imageHtml}
+                </ul>
+            </div>`);
+        fancybox();
+    }
+    if (comparisonFiles.length > 0) {
+        const file = await getFile({
+            baseDir: comparisonFiles[0].FILE_PATH,
+            storedName: comparisonFiles[0].FILE_FNAME,
+            originalName: comparisonFiles[0].FILE_ONAME,
+            mode: 'download',
+        });
+        getPdfViewer('price-compare-container').setViewer(file);
+    }
+    if (quotations.length > 0) {
+        new ShowFile({
+            containerId: 'drop-quotation',
+            lists: quotations.map((file) => ({
+                id: file.FILE_ID,
+                baseDir: file.FILE_PATH,
+                storedName: file.FILE_FNAME,
+                originalName: file.FILE_ONAME,
+            })),
+            btnDel: true,
+        });
+    }
+
+    if (additionals.length > 0) {
+        new ShowFile({
+            containerId: 'drop-additional',
+            lists: additionals.map((file) => ({
+                id: file.FILE_ID,
+                baseDir: file.FILE_PATH,
+                storedName: file.FILE_FNAME,
+                originalName: file.FILE_ONAME,
+            })),
+            btnDel: true,
+        });
+    }
 }

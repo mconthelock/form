@@ -25,7 +25,9 @@ import { getReasons } from './reason';
 import { redirectWebflow } from '@amec/webasset/form';
 import { doaction } from '@amec/webasset/api/webform';
 import { webflowSubmit } from '@amec/webasset/components/form';
+import { ShowFile } from '@amec/webasset/components/showFile';
 
+let isReturn = false;
 $(async function () {
     try {
         showLoader();
@@ -34,13 +36,8 @@ $(async function () {
         if (!(await checkPlanner(empno))) {
             throw new Error('User not found');
         }
-        if (await setReturn()) {
-            setTimeout(() => {
-                const costDown = getReasons(
-                    'reason-cost-down-container',
-                ).getValue();
-                console.log(costDown);
-            }, 5000);
+        isReturn = await setReturn();
+        if (isReturn) {
             return;
         }
         // ตั้งค่าโหมดฟอร์มเริ่มต้นตามค่าที่ส่งเข้ามา
@@ -210,16 +207,54 @@ $(document).on(
     'click',
     'button[name="btnRequest"], button[name="btnAction"]',
     async function () {
+        // disable form elements during the request/action process
+        const disabledElementsForm = (flag = true) => {
+            $('#form-price-approval')
+                .find('input, button, select, textarea')
+                .prop('disabled', flag);
+            $('#btnRequest').find('textarea, button').prop('disabled', flag);
+        };
         try {
             showLoader();
-            const val = $(this).val();
-            if (
-                !(await requiredForm('#form-price-approval')) &&
-                (val === 'draft' || val === 'request')
-            )
-                return;
-            const formData = setFormData();
             let res;
+            let redirect = true;
+            let reload = false;
+            const params = getUrlParams();
+            const form = getFormByUrlParam();
+            const val = $(this).val();
+            // กรณีเป็น draft หรือ save ให้ตรวจสอบว่า REQBY ถูกกรอกหรือไม่
+            if (val === 'draft' || val === 'save') {
+                if ($('#REQBY').val() === '') {
+                    showMessage(
+                        'REQBY is required for draft or save actions',
+                        'warning',
+                    );
+                    return;
+                }
+            }
+            // กรณีที่ไม่ใช่ draft หรือ save ให้ตรวจสอบความถูกต้องของฟอร์ม
+            else if (
+                !(await requiredForm('#form-price-approval')) &&
+                (val === 'request' || val === 'approve')
+            ) {
+                return;
+            }
+            const formData = setFormData();
+
+            disabledElementsForm();
+
+            // ดึงรายการไฟล์ที่ถูกลบ
+            const deleteList = [
+                ...ShowFile.getDeleteLists('drop-quotation'),
+                ...ShowFile.getDeleteLists('drop-additional'),
+            ];
+            $('.delete-from-db').each(function (i, el) {
+                deleteList.push($(el).data('id'));
+            });
+            deleteList.forEach((fileId, index) => {
+                formData.append(`DELETE_LISTS[${index}]`, +fileId);
+            });
+
             switch (val) {
                 case 'draft':
                     formData.set('isDraft', true);
@@ -227,33 +262,62 @@ $(document).on(
                     res = await createPriceApproveForm(formData);
                     break;
                 case 'save':
+                    redirect = false;
+                    reload = true;
                     formData.set('isSave', true);
+                    Object.keys(form).forEach((key) => {
+                        formData.set(key, form[key]);
+                    });
                     res = await createPriceApproveForm(formData);
                     break;
                 case 'request':
-                    return;
+                    res = await createPriceApproveForm(formData);
+                    break;
+                case 'approve':
+                    if (isReturn) {
+                        formData.set('isReturn', true);
+                        Object.keys(form).forEach((key) => {
+                            formData.set(key, form[key]);
+                        });
+                        formData.set('EMPNO', params.EMPNO);
+                        res = await createPriceApproveForm(formData);
+                    } else {
+                        if (!params.EMPNO || val === '')
+                            throw new Error(
+                                'Missing required EMPNO or action value',
+                            );
+
+                        res = await doaction({
+                            ...form,
+                            EMPNO: params.EMPNO,
+                            ACTION: val,
+                            REMARK: $('#remark').val(),
+                        });
+                    }
+                    break;
                 default:
-                    const params = getUrlParams();
-                    const form = getFormByUrlParam();
                     if (!params.EMPNO || val === '')
                         throw new Error(
                             'Missing required EMPNO or action value',
                         );
 
-                    res = doaction({
+                    res = await doaction({
                         ...form,
                         EMPNO: params.EMPNO,
                         ACTION: val,
                         REMARK: $('#remark').val(),
                     });
+                    break;
             }
             if (!res.status) {
                 throw new Error('Failed to create price approval.');
             }
             showMessage(res.message, 'success');
-            redirectWebflow();
+            if (redirect) redirectWebflow();
+            if (reload) window.location.reload();
         } catch (error) {
             console.error(error);
+            disabledElementsForm(false);
             showErrorMessage(error.message);
         } finally {
             showLoader({ show: false });
@@ -269,8 +333,14 @@ $(document).on(
  */
 function setFormData() {
     const formData = new FormData($('#form-price-approval')[0]);
-    formData.set('DEFT_MONTH_START', getFlatpickrDate('#VEFT_MONTH', 0));
-    formData.set('DEFT_MONTH_END', getFlatpickrDate('#VEFT_MONTH', 1));
+    const startDate = getFlatpickrDate('#VEFT_MONTH', 0);
+    const endDate = getFlatpickrDate('#VEFT_MONTH', 1);
+    if (startDate) {
+        formData.set('DEFT_MONTH_START', startDate);
+    }
+    if (endDate) {
+        formData.set('DEFT_MONTH_END', endDate);
+    }
     const costDown = getReasons('reason-cost-down-container').getValue();
     const costUp = getReasons('reason-cost-up-container').getValue();
     const basic = getReasons('reason-basic-condition-container').getValue();
@@ -282,6 +352,5 @@ function setFormData() {
             formData.append(`REASONS[${i}][${key}]`, item[key] ?? '');
         });
     });
-    logFormData(formData);
     return formData;
 }
