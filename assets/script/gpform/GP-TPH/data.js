@@ -1,5 +1,13 @@
 import { fetchUtils } from '@amec/webasset/api/fetch-utils';
 
+export async function doaction(data) {
+    return fetchUtils({
+        url: `${process.env.APP_API}/gpform/gp-tph/doaction`,
+        method: 'POST',
+        data,
+    });
+}
+
 export async function getEmpData(empno) {
     return await fetchUtils({
         url: `${process.env.APP_API}/users/${empno}`,
@@ -54,12 +62,5 @@ export async function updateArea(areaId, data) {
         url: `${process.env.APP_API}/gpform/gp-tph/areas/${encodeURIComponent(areaId)}`,
         method: 'PATCH',
         data,
-    });
-}
-
-export async function deleteArea(areaId) {
-    return fetchUtils({
-        url: `${process.env.APP_API}/gpform/gp-tph/areas/${encodeURIComponent(areaId)}`,
-        method: 'DELETE',
     });
 }

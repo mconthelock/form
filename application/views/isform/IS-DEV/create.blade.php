@@ -150,7 +150,8 @@
                         <fieldset class="fieldset">
                             <legend class="fieldset-legend">ROI Payback Period</legend>
                             <div class="flex items-center gap-3">
-                                <input type="text" placeholder="จำนวนปีที่คาดว่าจะคืนทุน" class="input req-2" />
+                                <input type="text" placeholder="จำนวนปีที่คาดว่าจะคืนทุน" class="input req-2"
+                                    value="1" id="req-roi-years" />
                                 <span class="text-gray-500 text-xs"> Year(s)</span>
                             </div>
                         </fieldset>
@@ -186,7 +187,7 @@
                 </fieldset>
 
 
-                <div class="table-wrap overflow-x-auto mt-3">
+                <div class="table-wrap overflow-x-auto mt-3 border border-slate-300 rounded-xl">
                     @include('isform.FORM-1.table-benefit')
                 </div>
                 <p class="label mt-1 text-xs"></p>
@@ -207,12 +208,12 @@
             </fieldset>
 
             <div class="form-roi bg-accent/10 border border-accent rounded-xl p-5 mt-3">
-                This project will return on investment (ROI) <span class="font-bold text-lg text-primary"
-                    id="roi-total-kb">0</span>KB (<span class="font-bold text-lg text-primary"
-                    id="roi-total-full">0</span>
-                Baht)
+                This project will return on investment (ROI)
+                <span class="font-bold text-lg text-primary" id="roi-total-kb">0 KB</span>
+                <span class="font-bold text-lg text-primary" id="roi-total-full">(0
+                    Baht)</span>
+                <span class="font-bold text-lg text-primary mx-1" id="roi-total-year"></span>
             </div>
-
 
             <div class="flex gap-3 mt-3 ">
                 <button class="btn btn-primary" id="confirm-form"><i class="fi fi-tr-multiple"></i>Confirm</button>
@@ -222,11 +223,16 @@
 @endsection
 
 @section('scripts')
-    <script src="{{ $_ENV['APP_JS'] }}/devForm.js?ver={{ time() }}"></script>
+    <script src="{{ $_ENV['APP_JS'] }}/devForm.js?ver={{ $GLOBALS['version'] }}"></script>
 @endsection
 
 @section('styles')
     <style>
+        .table-edit tbody tr th {
+            font-weight: bold;
+
+        }
+
         .table-edit tbody tr td {
             padding: 0 !important;
         }
@@ -249,7 +255,8 @@
             padding: 10px;
             border: none;
             text-align: right;
-            font-size: 1.25em
+            font-size: 1.25em;
+            background: var(--color-white);
         }
 
         .table-edit tbody tr td input:hover:not(:read-only) {
@@ -264,6 +271,10 @@
         .table-edit tbody tr td input:focus:not(:read-only) {
             background: var(--color-primary);
             color: var(--color-white);
+        }
+
+        .table-edit tbody tr td input[readonly] {
+            background: var(--color-gray-200);
         }
     </style>
 @endsection

@@ -44,27 +44,18 @@ trait formmst{
 
     private function setFormProp($name){
         $data = [];
-        if(isset($_GET["no"]) && $_GET["no"] != "" && isset($_GET["orgNo"]) && $_GET["orgNo"] != "" && isset($_GET["y"]) && $_GET["y"] != "" ) {
+        $form = $this->getFormMasterByVaname($name);
+        if(!empty($form)){
+            // $_GET keys are case-sensitive in PHP, normalize to lowercase before reading
+            $get = array_change_key_case($_GET, CASE_LOWER);
             $data = [
-                'NFRMNO' => (int)$_GET['no'],
-                'VORGNO' => $_GET['orgNo'],
-                'CYEAR'  => $_GET['y'],
-                'CYEAR2' => isset($_GET['y2']) ? $_GET['y2'] : date('Y'),
-                'NRUNNO' => isset($_GET['runNo']) ? (int)$_GET['runNo'] : 0,
-                'EMPNO'  => isset($_GET['empno']) ? $_GET['empno'] : '',
+                'NFRMNO' => isset($get['no']) ? $get['no'] : $form['data']['NNO'],
+                'VORGNO' => isset($get['orgNo']) ? $get['orgNo'] : $form['data']['VORGNO'],
+                'CYEAR'  => isset($get['y']) ? $get['y'] : $form['data']['CYEAR'],
+                'CYEAR2' => isset($get['y2']) ? $get['y2'] : date('Y'),
+                'NRUNNO' => isset($get['runno']) ? $get['runno'] : 0,
+                'EMPNO'  => isset($get['empno']) ? $get['empno'] : '',
             ];
-        }else{
-            $form = $this->getFormMasterByVaname($name);
-            if(!empty($form)){
-                $data = [
-                    'NFRMNO' => (int)$form['data']['NNO'],
-                    'VORGNO' => $form['data']['VORGNO'],
-                    'CYEAR'  => $form['data']['CYEAR'],
-                    'CYEAR2' => date('Y'),
-                    'NRUNNO' => 0,
-                    'EMPNO'  => '',
-                ];
-            }
         }
         return $data;
     }
