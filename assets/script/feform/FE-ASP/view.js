@@ -10,11 +10,20 @@ import {
 import { host } from '../../utils';
 import { uploadDocFiles, saveDocMaster } from './data';
 import { initFlow, actionFlow } from './flow';
+import {
+    currentPrevFile,
+    initFormControls,
+    loadDepartmentDropdown,
+    loadSectionDropdown,
+    applyReviewPeriodRules,
+    bindEmpSearchEvent,
+    fetchEmpNameAndOrg,
+    populateSavedDetails,
+    buildSavePayload,
+} from './form';
 
 let empno = '';
 let selectedFilesArray = [];
-const empCache = {};
-let currentPrevFile = window.INITIAL_PREV_FILE || null;
 
 $(document).ready(async function () {
     const formData = $('.form-info').data() || {};
@@ -33,40 +42,51 @@ $(document).ready(async function () {
     $('#DOC_IDTxt').val(form.DOC_NO);
     $('#DocHeaderIDHid').val(formData.doc_header_id || '');
 
-    // ค่าเริ่มต้น Request By & Input By
-    const initialReq = $('#REQUEST_BY_EMPNO').val() || formData.reqby || empno;
-    const initialInput =
-        $('#INPUT_BY_EMPNO').val() || formData.inputby || empno;
+    // 1. กำหนดค่าเริ่มต้น Request By และ Input By
+    const initialReq = (
+        $('#REQUEST_BY_EMPNO').val() ||
+        formData.reqby ||
+        empno
+    ).toString();
+    const initialInput = (
+        $('#INPUT_BY_EMPNO').val() ||
+        formData.inputby ||
+        empno
+    ).toString();
 
     $('#REQUEST_BY_EMPNO').val(initialReq);
     $('#INPUT_BY_EMPNO').val(initialInput);
 
-    const initialReqName = $('#REQUEST_BY_NAME').val();
-    if (initialReq && initialReqName) {
-        empCache[initialReq.trim()] = initialReqName.trim();
-    }
-
+    // 2. ผูกฟังก์ชันการทำงานพื้นฐานของ Form
     bindEmpSearchEvent();
     initFormControls();
+    applyReviewPeriodRules();
 
-    // เติมข้อมูลคำตอบตารางประเมินเดิม (ถ้ามี)
-    if (
-        window.INITIAL_SAVED_DETAILS &&
-        window.INITIAL_SAVED_DETAILS.length > 0
-    ) {
-        window.INITIAL_SAVED_DETAILS.forEach((d) => {
-            $(
-                `input[name="cond_${d.TOPIC_ID}"][value="${d.CONDITION_VAL}"]`,
-            ).prop('checked', true);
-            $(
-                `input[name="change_${d.TOPIC_ID}"][value="${d.CHANGE_VAL}"]`,
-            ).prop('checked', true);
-            $(`tr[data-topic-id="${d.TOPIC_ID}"] .topic-detail-in`).val(
-                d.DETAILS || '',
-            );
-        });
+    const isCreateMode = !$('#DocHeaderIDHid').val() && !form.NRUNNO;
+
+    if (isCreateMode) {
+        // หน้า Create: โหลดสังกัดและ Default Select ตามผู้สร้าง/Request By
+        if (initialReq && initialReq.length === 5) {
+            await fetchEmpNameAndOrg(initialReq);
+        }
+    } else {
+        // หน้า Edit / View: โหลดสังกัดตาม Snapshot ใน Header เดิม
+        const currentDivCode = $('#SDIVCODEHid').val();
+        const currentDepCode = $('#DeptDrp').val();
+        const currentSecCode = $('#SecDrp').val();
+
+        if (currentDivCode) {
+            await loadDepartmentDropdown(currentDivCode, currentDepCode);
+            if (currentDepCode) {
+                await loadSectionDropdown(currentDepCode, currentSecCode);
+            }
+        }
     }
 
+    // 3. ป้อนคำตอบตารางประเมินเดิม (ถ้ามี)
+    populateSavedDetails(window.INITIAL_SAVED_DETAILS || []);
+
+    // 4. ผูก Flow Bar และควบคุมสิทธิ์ของปุ่ม
     await initFlow(form, formData.status);
 
     if (form.NRUNNO) {
@@ -81,7 +101,7 @@ $(document).ready(async function () {
     initFileDropEvents();
 
     // --------------------------------------------------------
-    // ปุ่ม SAVE DRAFT (บันทึกร่าง สามารถกลับมาแก้ต่อได้)
+    // ปุ่ม SAVE DRAFT (บันทึกแบบร่าง)
     // --------------------------------------------------------
     $('#btnSaveDraft').on('click', async function () {
         const isConfirm = await showConfirm({
@@ -133,7 +153,9 @@ $(document).ready(async function () {
         }
     });
 
-    // ปุ่มเปิดดูไฟล์ Revision เดิม (แสดงผลทุกเคส)
+    // --------------------------------------------------------
+    // ปุ่มเปิดดู Active Revision เดิม
+    // --------------------------------------------------------
     $(document).on('click', '#btn-open-prev-file', async function () {
         if (!currentPrevFile) return;
         try {
@@ -155,7 +177,9 @@ $(document).ready(async function () {
         }
     });
 
-    // ปุ่มเปิดดูไฟล์ที่แนบใหม่
+    // --------------------------------------------------------
+    // ปุ่มเปิดดูไฟล์แนบใหม่
+    // --------------------------------------------------------
     $(document).on('click', '.btn-open-file', async function (e) {
         e.preventDefault();
         const baseDir = $(this).data('base-dir');
@@ -181,7 +205,9 @@ $(document).ready(async function () {
         }
     });
 
+    // --------------------------------------------------------
     // ปุ่มลบไฟล์แนบใหม่
+    // --------------------------------------------------------
     $(document).on('click', '.btn-delete-file', async function () {
         const fileId = $(this).data('id');
         const filePath = $(this).data('path');
@@ -222,117 +248,14 @@ $(document).ready(async function () {
     });
 });
 
-function initFormControls() {
-    // เมื่อเลือก Control No. -> ดึง Org และ Active Revision PDF
-    $('#ControlNoDrp').on('change', async function () {
-        const val = $(this).val();
-        if (!val) {
-            $('#DivisionTxt').val('');
-            $('#DeptSecTxt').val('');
-            $('#prev-revision-zone').addClass('hidden');
-            currentPrevFile = null;
-            return;
-        }
-
-        try {
-            await showLoader({ show: true });
-            const res = await $.getJSON(
-                host +
-                    'feform/FE-ASP/form/GetControlInfo?controlNo=' +
-                    encodeURIComponent(val),
-            );
-            if (res.status) {
-                $('#DivisionTxt').val(res.control.DIVISION_NAME || '-');
-                $('#DeptSecTxt').val(
-                    `${res.control.DEPARTMENT_NAME || '-'} / ${res.control.SECTION_NAME || '-'}`,
-                );
-
-                if (res.prevFile) {
-                    currentPrevFile = res.prevFile;
-                    $('#prev-file-name').text(res.prevFile.FILE_ONAME);
-                    $('#prev-revision-zone').removeClass('hidden');
-                } else {
-                    currentPrevFile = null;
-                    $('#prev-revision-zone').addClass('hidden');
-                }
-            }
-        } catch (e) {
-            showErrorMessage('ไม่สามารถโหลดข้อมูล Control No. ได้');
-        } finally {
-            await showLoader({ show: false });
-        }
-    });
-
-    // Toggle Review Details
-    $('input[name="REVIEW_DETAILS"]').on('change', function () {
-        if ($(this).val() === 'CHANGE') {
-            $('#change-detail-box').removeClass('hidden');
-        } else {
-            $('#change-detail-box').addClass('hidden');
-        }
-    });
-}
-
+/**
+ * บันทึกเอกสารผ่าน saveDocMaster และอัปโหลดไฟล์ผ่าน NestJS API
+ */
 async function executeSaveProcess(form, isDraft = false) {
-    const controlNo = $('#ControlNoDrp').val();
-    if (!controlNo) {
-        showMessage('กรุณาเลือก Control No.', 'warning');
-        $('#ControlNoDrp').focus();
-        return null;
-    }
-
-    const userReq = ($('#REQUEST_BY_EMPNO').val() || '').trim();
-    if (!userReq || userReq.length !== 5) {
-        showMessage(
-            'รหัสผู้จัดทำ (Request By) ต้องมีความยาว 5 หลัก',
-            'warning',
-        );
-        $('#REQUEST_BY_EMPNO').focus();
-        return null;
-    }
-
-    const topicsData = [];
-    $('#topics-tbody tr').each(function () {
-        const topicId = $(this).data('topic-id');
-        topicsData.push({
-            TOPIC_ID: topicId,
-            CONDITION_VAL:
-                $(`input[name="cond_${topicId}"]:checked`).val() || null,
-            CHANGE_VAL:
-                $(`input[name="change_${topicId}"]:checked`).val() || null,
-            DETAILS: $(this).find('.topic-detail-in').val() || '',
-        });
-    });
+    const payload = buildSavePayload(form, isDraft, empno);
+    if (!payload) return null;
 
     const validFiles = selectedFilesArray.filter((f) => f !== null);
-
-    const payload = new FormData();
-    payload.append('DOC_HEADER_ID', $('#DocHeaderIDHid').val() || '');
-    payload.append('CONTROL_NO', controlNo);
-    payload.append(
-        'REVIEW_PERIOD',
-        $('input[name="REVIEW_PERIOD"]:checked').val(),
-    );
-    payload.append(
-        'REVIEW_DETAILS',
-        $('input[name="REVIEW_DETAILS"]:checked').val(),
-    );
-    payload.append('DETAIL_OF_CHANGE', $('#DetailChangeTxt').val() || '');
-    payload.append(
-        'EFFECT_STATUS',
-        $('input[name="EFFECT_STATUS"]:checked').val() || 'NO_EFFECT',
-    );
-    payload.append('TOPICS_JSON', JSON.stringify(topicsData));
-    payload.append('REMARK', $('#RemarkTxt').val() || '');
-    payload.append('REQBY', userReq);
-    payload.append('EMPNO', empno);
-    payload.append('IS_DRAFT', isDraft ? '1' : '0');
-
-    payload.append('NFRMNO', form.NFRMNO || '');
-    payload.append('VORGNO', form.VORGNO || '');
-    payload.append('CYEAR', form.CYEAR || '');
-    payload.append('CYEAR2', form.CYEAR2 || '');
-    payload.append('NRUNNO', form.NRUNNO || '');
 
     try {
         await showLoader({ show: true });
@@ -349,7 +272,7 @@ async function executeSaveProcess(form, isDraft = false) {
         form.NRUNNO = createdDoc.NRUNNO || form.NRUNNO;
         $('#DocHeaderIDHid').val(createdDoc.DOC_HEADER_ID);
 
-        // แนบไฟล์ใหม่ผ่าน NestJS API
+        // ส่งไฟล์ผ่าน NestJS API เข้า Storage กลาง
         if (validFiles.length > 0) {
             let nestData = new FormData();
             nestData.append('NFRMNO', form.NFRMNO);
@@ -378,52 +301,6 @@ async function executeSaveProcess(form, isDraft = false) {
     } finally {
         await showLoader({ show: false });
     }
-}
-
-function bindEmpSearchEvent() {
-    const $empInput = $('#REQUEST_BY_EMPNO');
-    const $nameInput = $('#REQUEST_BY_NAME');
-
-    if ($empInput.length === 0 || $empInput.prop('readonly')) return;
-
-    function fetchEmpName(empNo) {
-        empNo = (empNo || '').trim();
-        if (empNo.length !== 5) {
-            $nameInput.val('');
-            return;
-        }
-
-        if (empCache[empNo] !== undefined) {
-            $nameInput.val(empCache[empNo]);
-            return;
-        }
-
-        $nameInput.val('กำลังค้นหา...');
-        $.ajax({
-            url: host + 'feform/FE-ASP/form/ajaxGetEmpName',
-            type: 'GET',
-            data: { empno: empNo },
-            dataType: 'json',
-            success: function (res) {
-                const name =
-                    res.status && res.name ? res.name : 'ไม่พบข้อมูลพนักงาน';
-                empCache[empNo] = name;
-                $nameInput.val(name);
-            },
-            error: function () {
-                $nameInput.val('');
-            },
-        });
-    }
-
-    $empInput.on('input', function () {
-        if (this.value.length === 5) fetchEmpName(this.value);
-        else $nameInput.val('');
-    });
-
-    $empInput.on('blur', function () {
-        fetchEmpName(this.value);
-    });
 }
 
 function initFileDropEvents() {

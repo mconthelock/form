@@ -1,21 +1,26 @@
 <script>
-    // ส่งข้อมูลตั้งแต่วินาทีแรกที่ Server โหลดเสร็จ
     window.INITIAL_ATTACHED_FILES = @json($attachedFiles ?? []);
     window.INITIAL_SAVED_DETAILS  = @json($savedDetails ?? []);
     window.INITIAL_PREV_FILE      = @json($prevApprovedFile ?? null);
 </script>
 
 <div class="p-6 rounded-2xl bg-slate-50/80 border border-slate-200/80 mb-6 shadow-xs">
-    <h2 class="text-sm font-bold text-slate-800 uppercase tracking-wide mb-4 pb-2 border-b border-slate-200/60 flex items-center gap-2">
-        🌿 REVIEW TABLE OF ENVIRONMENTAL ASPECT EVALUATION AND ENVIRONMENTAL RISK (FE-ASP)
-    </h2>
+    <div class="flex items-center justify-between pb-3 mb-4 border-b border-slate-200/60">
+        <h2 class="text-sm font-bold text-slate-800 uppercase tracking-wide flex items-center gap-2">
+            🌿 REVIEW TABLE OF ENVIRONMENTAL ASPECT EVALUATION AND ENVIRONMENTAL RISK (FE-ASP)
+        </h2>
+        <span class="px-2.5 py-0.5 rounded-full text-xs font-bold {{ ($CREATE_MODE ?? 'MANUAL') === 'AUTO' ? 'bg-indigo-100 text-indigo-700' : 'bg-amber-100 text-amber-700' }}">
+            Mode: {{ $CREATE_MODE ?? 'MANUAL' }}
+        </span>
+    </div>
 
-    <!-- แถวที่ 1: Doc No. และ Control No. -->
+    <!-- แถวที่ 1: Doc No. & Control No. -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
         <div>
             <label class="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Doc No.</label>
             <input type="text" id="DOC_IDTxt" class="w-full h-10 px-3 bg-white border border-slate-200 rounded-lg text-sm font-semibold text-emerald-700 cursor-not-allowed" readonly value="{{ $DOC_NO ?? '' }}">
             <input type="hidden" name="DocHeaderIDHid" id="DocHeaderIDHid" value="{{ $DOC_HEADER_ID ?? '' }}" />
+            <input type="hidden" name="CREATE_MODEHid" id="CREATE_MODEHid" value="{{ $CREATE_MODE ?? 'MANUAL' }}" />
         </div>
 
         <div>
@@ -26,7 +31,10 @@
                 <option value="">-- Choose Control No. --</option>
                 @if(!empty($controls))
                     @foreach ($controls as $item)
-                        <option value="{{ $item['CONTROL_NO'] }}" {{ (isset($CONTROL_NO) && $CONTROL_NO == $item['CONTROL_NO']) ? 'selected' : '' }}>
+                        <option value="{{ $item['CONTROL_NO'] }}" 
+                                data-divcode="{{ $item['SDIVCODE'] }}"
+                                data-divname="{{ $item['DIVISION_NAME'] }}"
+                                {{ (isset($CONTROL_NO) && $CONTROL_NO == $item['CONTROL_NO']) ? 'selected' : '' }}>
                             {{ $item['CONTROL_NO'] }} : {{ $item['CONTROL_NAME'] }}
                         </option>
                     @endforeach
@@ -35,19 +43,46 @@
         </div>
     </div>
 
-    <!-- แถวที่ 2: Division & Department / Section (ดึงจาก Master อัตโนมัติ) -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+    <!-- แถวที่ 2: Organization Snapshot (DIV, DEPT, SEC) -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
         <div>
-            <label class="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Division</label>
-            <input type="text" id="DivisionTxt" readonly value="{{ $controlInfo['DIVISION_NAME'] ?? '' }}" class="w-full h-10 px-3 bg-slate-100 border border-slate-200 rounded-lg text-sm font-medium text-slate-600 cursor-not-allowed">
+            <label class="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Division (ฝ่าย)</label>
+            <input type="text" id="DivisionTxt" readonly value="{{ $DIVISION_NAME ?? '' }}" class="w-full h-10 px-3 bg-slate-100 border border-slate-200 rounded-lg text-sm font-medium text-slate-600 cursor-not-allowed">
+            <input type="hidden" id="SDIVCODEHid" name="SDIVCODE" value="{{ $SDIVCODE ?? '' }}">
         </div>
+
         <div>
-            <label class="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Department / Section</label>
-            <input type="text" id="DeptSecTxt" readonly value="{{ !empty($controlInfo) ? (($controlInfo['DEPARTMENT_NAME'] ?? '-') . ' / ' . ($controlInfo['SECTION_NAME'] ?? '-')) : '' }}" class="w-full h-10 px-3 bg-slate-100 border border-slate-200 rounded-lg text-sm font-medium text-slate-600 cursor-not-allowed">
+            <label class="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1">
+                Department (แผนก) <span class="text-rose-500">*</span>
+            </label>
+            <select id="DeptDrp" name="SDEPCODE" class="w-full h-10 px-3 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/20">
+                <option value="">-- Choose Department --</option>
+                @if(!empty($departments))
+                    @foreach ($departments as $d)
+                        <option value="{{ $d['SDEPCODE'] }}" {{ (isset($SDEPCODE) && $SDEPCODE == $d['SDEPCODE']) ? 'selected' : '' }}>
+                            {{ $d['DEPT_NAME'] }}
+                        </option>
+                    @endforeach
+                @endif
+            </select>
+        </div>
+
+        <div>
+            <label class="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Section (ส่วนงาน)</label>
+            <select id="SecDrp" name="SSECCODE" class="w-full h-10 px-3 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500/20">
+                <option value="00">-- None / 00 --</option>
+                @if(!empty($sections))
+                    @foreach ($sections as $s)
+                        <option value="{{ $s['SSECCODE'] }}" {{ (isset($SSECCODE) && $SSECCODE == $s['SSECCODE']) ? 'selected' : '' }}>
+                            {{ $s['SEC_NAME'] }}
+                        </option>
+                    @endforeach
+                @endif
+            </select>
         </div>
     </div>
 
-    <!-- แถวที่ 3: Input By และ Request By (ตาม Pattern FE-DOC ค้นหาชื่ออัตโนมัติ) -->
+    <!-- แถวที่ 3: Input By & Request By -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
         <div>
             <label class="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Input By</label>
@@ -76,7 +111,7 @@
         </div>
     </div>
 
-    <!-- ส่วนที่ 2: โซนไฟล์ Revision เดิม (Previous Approved PDF - แสดงผลเสมอทุก Case) -->
+    <!-- โซน Active Revision PDF (Previous Approved File) -->
     <div id="prev-revision-zone" class="mt-5 p-4 rounded-xl bg-blue-50/70 border border-blue-200 {{ empty($prevApprovedFile) ? 'hidden' : '' }}">
         <span class="text-xs font-bold text-blue-900 block mb-2">📑 ACTIVE REVISION PDF (เอกสารเวอร์ชันล่าสุดที่ได้รับอนุมัติแล้ว - อ้างอิงทุกกรณี)</span>
         <div class="flex items-center justify-between bg-white p-3 rounded-lg border border-blue-100 shadow-xs">
@@ -94,12 +129,30 @@
     <div class="mt-5 pt-4 border-t border-slate-200/60 space-y-4">
         <div>
             <label class="text-[11px] font-bold text-slate-500 uppercase tracking-wider block mb-2">REVIEW PERIOD</label>
+            @php
+                $isManual = ($CREATE_MODE ?? 'MANUAL') === 'MANUAL';
+            @endphp
             <div class="flex gap-6 text-xs font-bold text-slate-700">
-                <label class="flex items-center gap-1.5 cursor-pointer">
-                    <input type="radio" name="REVIEW_PERIOD" value="YEARLY" {{ ($REVIEW_PERIOD ?? 'YEARLY') === 'YEARLY' ? 'checked' : '' }}> YEARLY REVIEW
+                <!-- YEARLY REVIEW: ล็อกห้ามเลือกถ้าเป็น MANUAL -->
+                <label class="flex items-center gap-1.5 {{ $isManual ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer' }}">
+                    <input type="radio" 
+                           id="radio_yearly"
+                           name="REVIEW_PERIOD" 
+                           value="YEARLY" 
+                           {{ ($REVIEW_PERIOD ?? '') === 'YEARLY' ? 'checked' : '' }}
+                           {{ $isManual ? 'disabled' : '' }}> 
+                    YEARLY REVIEW
                 </label>
-                <label class="flex items-center gap-1.5 cursor-pointer">
-                    <input type="radio" name="REVIEW_PERIOD" value="CHANGING" {{ ($REVIEW_PERIOD ?? '') === 'CHANGING' ? 'checked' : '' }}> REVIEW ON CHANGING
+
+                <!-- REVIEW ON CHANGING: ล็อกห้ามเลือกถ้าเป็น AUTO -->
+                <label class="flex items-center gap-1.5 {{ !$isManual ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer' }}">
+                    <input type="radio" 
+                           id="radio_changing"
+                           name="REVIEW_PERIOD" 
+                           value="CHANGING" 
+                           {{ ($REVIEW_PERIOD ?? '') === 'CHANGING' ? 'checked' : '' }}
+                           {{ !$isManual ? 'disabled' : '' }}> 
+                    REVIEW ON CHANGING
                 </label>
             </div>
         </div>
@@ -138,7 +191,7 @@
                 </div>
             </div>
 
-            <!-- โซน Dropzone สำหรับแนบไฟล์ Revision ใหม่ -->
+            <!-- แนบไฟล์ Revision ใหม่ -->
             <div class="pt-2">
                 <label class="text-[11px] font-bold text-slate-600 uppercase tracking-wider block mb-1">
                     Upload New Revision PDF <span class="text-rose-500">*</span>
@@ -160,7 +213,7 @@
         </div>
     </div>
 
-    <!-- ส่วนที่ 4: ตาราง Confirmation สีเขียว (แสดงผลตลอด / บังคับตอบ) -->
+    <!-- ส่วนที่ 4: ตาราง Confirmation สีเขียว -->
     <div id="confirmation-table-zone" class="mt-6 pt-4 border-t border-slate-200/60">
         <h3 class="text-xs font-bold text-emerald-900 bg-emerald-100/70 px-3 py-2.5 rounded-t-xl border border-emerald-300">
             ASPECT AND RISK REVIEW CONFIRMATION - ISO14001

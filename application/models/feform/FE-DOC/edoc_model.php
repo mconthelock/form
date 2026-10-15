@@ -293,11 +293,12 @@ class edoc_model extends my_model
                     T.DOC_TYPE_NAME,
                     H.STATUS,
                     H.REMARK,
-                    H.USER_ACTION,
+                    H.USER_ACTION || ' : ' || U.SNAME AS USER_ACTION,
                     TO_CHAR(H.DATE_ACTION, 'YYYY-MM-DD HH24:MI:SS') AS DATE_ACTION_STR,
                     TO_CHAR(H.DATE_ACTION, 'DD/MM/YYYY') AS DOC_DATE_FORMAT
                 FROM FE_DOC_HEADER H
                 LEFT JOIN FE_DOC_TYPE_MST T ON H.DOC_TYPE_CODE = T.DOC_TYPE_CODE
+                left join AMEC.AMECUSERALL U on trim(H.USER_ACTION) = trim(U.sempno)
                 WHERE 1=1 ";
 
         $binds = [];
