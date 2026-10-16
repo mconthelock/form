@@ -41,7 +41,7 @@ export class ChangeReason {
         this.halfColumn = halfColumn;
 
         this.container.innerHTML = lists
-            .map((r) => this.#render(r, name))
+            .map((r) => this.#render({ list: r }))
             .join('');
         if (this.halfColumn) {
             const rows = Math.ceil(this.lists.length / 2);
@@ -90,7 +90,7 @@ export class ChangeReason {
         });
         return res;
     }
-    setValue(value) {
+    setValue(value, disabled = false) {
         const checkboxes = this.container.querySelectorAll(
             'input[type="checkbox"], input[type="radio"]',
         );
@@ -103,6 +103,9 @@ export class ChangeReason {
                 (v) => v.NREASON_ID == checkbox.value,
             );
             checkbox.dispatchEvent(new Event('change', { bubbles: true }));
+            if (disabled) {
+                checkbox.disabled = true;
+            }
         });
 
         textInputs.forEach((input) => {
@@ -121,6 +124,9 @@ export class ChangeReason {
                         input.value = matched.VVALUE || '';
                         break;
                 }
+            }
+            if (disabled) {
+                input.disabled = true;
             }
         });
     }
@@ -162,8 +168,8 @@ export class ChangeReason {
      * @param {boolean} parent - ระบุว่ารายการนี้เป็น parent หรือไม่
      * @returns {string} HTML ของ input element
      */
-    #render(r, name, parent = false) {
-        const type = r.VINPUT_TYPE.toLowerCase();
+    #render({ list, name = this.name, parent = false } = {}) {
+        const type = list.VINPUT_TYPE.toLowerCase();
 
         let inputClass =
             type === 'radio'
@@ -172,35 +178,35 @@ export class ChangeReason {
 
         let valueHtml = ''; // สำหรับ input ปกติ
         let valueHtml2 = ''; // สำหรับ input แบบ from_to
-        const childrenName = `${name}_${r.NID}`; // ชื่อของ input element สำหรับรายการลูก (child)
-        let label = `${r.NSEQ}. ${r.VNAME}`; // ป้ายชื่อของรายการเหตุผล
+        const childrenName = `${name}_${list.NID}`; // ชื่อของ input element สำหรับรายการลูก (child)
+        let label = `${list.NSEQ}. ${list.VNAME}`; // ป้ายชื่อของรายการเหตุผล
         let parentId = null;
         if (parent) {
-            label = r.VNAME; // ป้ายชื่อของรายการเหตุผลสำหรับรายการลูก (child)
-            parentId = r.NPARENT_ID;
+            label = list.VNAME; // ป้ายชื่อของรายการเหตุผลสำหรับรายการลูก (child)
+            parentId = list.NPARENT_ID;
         }
 
-        if (r.VVALUE_TYPE) {
-            switch (r.VVALUE_TYPE.toLowerCase()) {
+        if (list.VVALUE_TYPE) {
+            switch (list.VVALUE_TYPE.toLowerCase()) {
                 case 'text':
-                    valueHtml = `<input type="text" name="${childrenName}_text" class="input w-full hidden" data-parent="${r.NID}" disabled>`;
+                    valueHtml = `<input type="text" name="${childrenName}_text" class="input w-full hidden" data-parent="${list.NID}" disabled>`;
                     break;
                 case 'number':
-                    valueHtml = `<input type="number" name="${childrenName}_number" class="input w-full hidden" data-parent="${r.NID}" disabled>`;
+                    valueHtml = `<input type="number" name="${childrenName}_number" class="input w-full hidden" data-parent="${list.NID}" disabled>`;
                     break;
                 case 'area':
-                    valueHtml = `<textarea name="${childrenName}_area" class="textarea w-full hidden" rows="2" data-parent="${r.NID}" disabled></textarea>`;
+                    valueHtml = `<textarea name="${childrenName}_area" class="textarea w-full hidden" rows="2" data-parent="${list.NID}" disabled></textarea>`;
                     break;
                 case 'from_to_percent':
                     valueHtml2 = `
                         <fieldset class="hidden flex flex-col gap-2 w-full mt-2 pl-8">
                             <label class="input w-full">
                                 <span class="label">From</span>
-                                <input type="number" name="${childrenName}_from" class="w-32" step="0.01" min="0" max="100" data-parent="${r.NID}" data-input="from" disabled>
+                                <input type="number" name="${childrenName}_from" class="w-32" step="0.01" min="0" max="100" data-parent="${list.NID}" data-input="from" disabled>
                             </label>
                             <label class="input w-full">
                                 <span class="label">To</span>
-                                <input type="number" name="${childrenName}_to" class="w-32" step="0.01" min="0" max="100" data-parent="${r.NID}" data-input="to" disabled>
+                                <input type="number" name="${childrenName}_to" class="w-32" step="0.01" min="0" max="100" data-parent="${list.NID}" data-input="to" disabled>
                             </label>
                         </fieldset>`;
                     break;
@@ -209,11 +215,11 @@ export class ChangeReason {
                         <fieldset class="hidden flex flex-col gap-2 w-full mt-2 pl-8">
                             <label class="input w-full">
                                 <span class="label">From</span>
-                                <input type="text" name="${childrenName}_from" data-parent="${r.NID}" data-input="from" disabled>
+                                <input type="text" name="${childrenName}_from" data-parent="${list.NID}" data-input="from" disabled>
                             </label>
                             <label class="input w-full">
                                 <span class="label">To</span>
-                                <input type="text" name="${childrenName}_to" data-parent="${r.NID}" data-input="to" disabled>
+                                <input type="text" name="${childrenName}_to" data-parent="${list.NID}" data-input="to" disabled>
                             </label>
                         </fieldset>`;
                     break;
@@ -228,7 +234,7 @@ export class ChangeReason {
                     <input
                         type="${type}"
                         name="${name}"
-                        value="${r.NID}"
+                        value="${list.NID}"
                         class="${inputClass} handle-children ${parent ? 'hidden' : ''}"
                         data-children="${childrenName}"
                         data-container-id="${this.containerId}"
@@ -246,10 +252,10 @@ export class ChangeReason {
         `;
 
         // ตรวจสอบว่ามีรายการลูก (child) หรือไม่ และสร้าง HTML สำหรับรายการลูก (child) ถ้ามี
-        if (r.children?.length) {
+        if (list.children?.length) {
             html += `
-                <div class="pl-8 mt-2 flex flex-wrap gap-2" data-parent-id="${r.NID}">
-                    ${r.children.map((child) => this.#render(child, childrenName, true)).join('')}
+                <div class="pl-8 mt-2 flex flex-wrap gap-2" data-parent-id="${list.NID}">
+                    ${list.children.map((child) => this.#render({ list: child, name: childrenName, parent: true })).join('')}
                 </div>
             `;
         }

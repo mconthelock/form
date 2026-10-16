@@ -11,14 +11,8 @@ import {
 } from '@amec/webasset/components/fileUpload';
 import { getK850mpData } from '../PUR-CPC/data';
 import { tableComparison } from '../PUR-CPC/table/table-comparison';
-import {
-    getCommittee,
-    getComparisonListByForm,
-    getFormPriceApprove,
-    getGroup,
-    getVendor,
-} from './data';
-import { checkReturn } from '@amec/webasset/api/webform';
+import { getCommittee, getFormPriceApprove, getGroup, getVendor } from './data';
+import { checkReturn, getFormDetail } from '@amec/webasset/api/webform';
 import { ChangeReason, getReasons } from './reason';
 import { setDatePicker } from '@amec/webasset/flatpickr';
 import { webflowSubmit } from '@amec/webasset/components/form';
@@ -28,6 +22,7 @@ import { modalSelectPriceComparison } from './modal/select-price-comparison';
 import { fancybox } from '@amec/webasset/fancybox';
 import { getFile } from '@amec/webasset/api/file';
 import { EmployeeProfileCard } from '@amec/webasset/components/profileCard';
+import { formatDate } from '@amec/webasset/dayjs';
 
 /**
  * @author Sutthipong Tangmongkhoncharoen(24008)
@@ -266,28 +261,8 @@ export async function setForm({
     committees(committee);
     // เรียกใช้งานฟังก์ชันเพื่อโหลดข้อมูลกลุ่ม
     groups(group);
-    await ChangeReason.create({
-        containerId: 'reason-cost-down-container',
-        name: 'NREASON_COST_DOWN',
-        type: 'down',
-        halfColumn: true,
-    });
-    await ChangeReason.create({
-        containerId: 'reason-cost-up-container',
-        name: 'NREASON_COST_UP',
-        type: 'up',
-        halfColumn: true,
-    });
-    await ChangeReason.create({
-        containerId: 'reason-basic-condition-container',
-        name: 'NREASON_BASIC_CONDITION',
-        type: 'basic',
-    });
-    await ChangeReason.create({
-        containerId: 'reason-estimate-price-container',
-        name: 'NREASON_ESTIMATE_PRICE',
-        type: 'estimate',
-    });
+    // เรียกใช้งานฟังก์ชันเพื่อสร้างส่วนของเหตุผลการเปลี่ยนแปลง (Change Reason)
+    await initReason();
     // ตั้งค่า Date Picker สำหรับฟิลด์ Effective Month
     setDatePicker({
         element: '#VEFT_MONTH',
@@ -329,6 +304,40 @@ export async function setForm({
     );
 }
 
+/**
+ * @author Sutthipong Tangmongkhoncharoen(24008)
+ * @since 2026-10-16
+ * @description ฟังก์ชันเพื่อสร้างส่วนของเหตุผลการเปลี่ยนแปลง (Change Reason)
+ */
+async function initReason(readonly = false) {
+    await ChangeReason.create({
+        containerId: 'reason-cost-down-container',
+        name: 'NREASON_COST_DOWN',
+        type: 'down',
+        halfColumn: true,
+        readonly: readonly,
+    });
+    await ChangeReason.create({
+        containerId: 'reason-cost-up-container',
+        name: 'NREASON_COST_UP',
+        type: 'up',
+        halfColumn: true,
+        readonly: readonly,
+    });
+    await ChangeReason.create({
+        containerId: 'reason-basic-condition-container',
+        name: 'NREASON_BASIC_CONDITION',
+        type: 'basic',
+        readonly: readonly,
+    });
+    await ChangeReason.create({
+        containerId: 'reason-estimate-price-container',
+        name: 'NREASON_ESTIMATE_PRICE',
+        type: 'estimate',
+        readonly: readonly,
+    });
+}
+
 var priceComparisonForms = null;
 export const getComparisonForm = () => priceComparisonForms;
 
@@ -363,6 +372,47 @@ export async function setReturn() {
     // ตั้งค่าข้อมูลบัตรพนักงาน (Employee Profile Card) สำหรับผู้ขอและผู้กรอกฟอร์ม
     await setEmpCard(data.FORM.VREQNO, data.FORM.VINPUTER);
 
+    // ตรวจสอบว่าประเภทการเปลี่ยนแปลงเป็น "Others" หรือไม่ หากใช่ ให้แสดงช่องกรอกข้อมูลเพิ่มเติม (VEFT_TYPE_OTHER)
+    if (data.VEFT_TYPE === 'Others') {
+        $('#VEFT_TYPE_OTHER')
+            .removeClass('hidden')
+            .prop('disabled', false)
+            .val(data.VEFT_TYPE_OTHER || '');
+    }
+    // ตรวจสอบว่ามีฟอร์มที่ลิงก์มาหรือไม่ (LINK_FORM)
+    if (data.LINK_FORM) {
+        priceComparisonForms = data.LINK_FORM.CNO;
+        const vendor = await checkVendor(data.VVENDOR);
+        if (!vendor.status) {
+            throw new Error('Vendor Name not found');
+        }
+        const comparisonData = {
+            formComparison: priceComparisonForms,
+            vendor: data.VVENDOR,
+            vendorName: vendor.data.VNDNAM,
+            planner: data.VPLANNER,
+            totalPresent: data.NTOTAL_PRES,
+            totalNew: data.NTOTAL_NEW,
+            totalCost: data.NTOTAL_COST,
+            totalRatio: data.NTOTAL_RATIO,
+        };
+        // ตั้งค่าฟิลด์อัตโนมัติด้วยข้อมูลจากการเปรียบเทียบ
+        setAutoField({
+            mode: data.NMODE,
+            trigger: false,
+            data: comparisonData,
+        });
+
+        // แสดงตารางการเปรียบเทียบหลังจากตั้งค่าฟิลด์อัตโนมัติ
+        await tableComparison.init({
+            formNo: priceComparisonForms,
+            function: data.NMODE,
+        });
+    } else {
+        // หากไม่มีฟอร์มที่ลิงก์มา ให้ตั้งค่าฟิลด์อัตโนมัติด้วยโหมดปัจจุบันเท่านั้น
+        setAutoField({ mode: data.NMODE, trigger: false });
+    }
+
     // ตั้งค่าฟิลด์ของฟอร์มตามข้อมูลที่ดึงมา
     Object.keys(data).forEach((key) => {
         if (typeof data?.[key] === 'object' || Array.isArray(data?.[key]))
@@ -375,50 +425,6 @@ export async function setReturn() {
         true,
     );
 
-    // ตรวจสอบว่าประเภทการเปลี่ยนแปลงเป็น "Others" หรือไม่ หากใช่ ให้แสดงช่องกรอกข้อมูลเพิ่มเติม (VEFT_TYPE_OTHER)
-    if (data.VEFT_TYPE === 'Others') {
-        $('#VEFT_TYPE_OTHER')
-            .removeClass('hidden')
-            .prop('disabled', false)
-            .val(data.VEFT_TYPE_OTHER || '');
-    }
-    // ตรวจสอบว่ามีฟอร์มที่ลิงก์มาหรือไม่ (LINK_FORM)
-    if (data.LINK_FORM) {
-        priceComparisonForms = data.LINK_FORM.CNO;
-        // ดึงรายการเปรียบเทียบจากฟอร์มที่ลิงก์มา
-        const comparisonList = await getComparisonListByForm(
-            data.LINK_FORM.CNO,
-        );
-        if (!comparisonList.status) {
-            throw new Error(comparisonList.message);
-        }
-        const comparisonData = {
-            formComparison: comparisonList.data.VFORMNO,
-            vendor: comparisonList.data.VVENDOR,
-            vendorName: comparisonList.data.VVENDOR_NAME,
-            planner: comparisonList.data.VPLANNER_CODE,
-            totalPresent: comparisonList.data.NAMOUNT_PRESENT,
-            totalNew: comparisonList.data.NAMOUNT_NEW,
-            totalCost: comparisonList.data.NAMOUNT_DIFF,
-            totalRatio: comparisonList.data.NRATIO,
-        };
-        // ตั้งค่าฟิลด์อัตโนมัติด้วยข้อมูลจากการเปรียบเทียบ
-        setAutoField({
-            mode: data.NMODE,
-            trigger: false,
-            data: comparisonData,
-        });
-
-        // แสดงตารางการเปรียบเทียบหลังจากตั้งค่าฟิลด์อัตโนมัติ
-        await tableComparison.init({
-            formNo: comparisonList.data.VFORMNO,
-            function: comparisonList.data.NFUNCTIONS,
-        });
-    } else {
-        // หากไม่มีฟอร์มที่ลิงก์มา ให้ตั้งค่าฟิลด์อัตโนมัติด้วยโหมดปัจจุบันเท่านั้น
-        setAutoField({ mode: data.NMODE, trigger: false });
-    }
-
     // ตั้งค่าฟอร์มด้วยข้อมูลจากฟอร์มที่ดึงมา
     await setForm({
         inputer: data.FORM.VINPUTER,
@@ -430,7 +436,7 @@ export async function setReturn() {
 
     // ตรวจสอบว่ามีไฟล์ image detail หรือไม่ หากมีให้ตั้งค่าไฟล์ด้วยฟังก์ชัน setFiles
     if (data.FILES.length > 0) {
-        await setFiles(data.FILES, true);
+        await setFiles({ files: data.FILES, fromDB: true, btnDel: true });
     }
 
     // ตั้งค่าฟิลด์เหตุผล (Reasons) ด้วยข้อมูลจากฟอร์มที่ดึงมา
@@ -456,6 +462,7 @@ export async function setReturn() {
  * @description ตั้งค่าไฟล์สำหรับฟอร์ม Price Approval
  * @param {Array} files รายการไฟล์ที่จะตั้งค่า
  * @param {boolean} fromDB ระบุว่าข้อมูลมาจากฐานข้อมูลหรือไม่
+ * @param {boolean} btnDel ระบุว่าจะแสดงปุ่มลบไฟล์หรือไม่
  * @example
  * const files = [
  *     {
@@ -466,9 +473,9 @@ export async function setReturn() {
  *         FILE_ONAME: 'file.jpg',
  *     }
  * ];
- * await setFiles(files, true);
+ * await setFiles({ files, fromDB: true, btnDel: true });
  */
-async function setFiles(files, fromDB = false) {
+async function setFiles({ files, fromDB = false, btnDel = false } = {}) {
     const comparisonFiles = files.filter(
         (file) => file.TYPE.VCODE === 'PURPRA_PCP',
     );
@@ -483,6 +490,7 @@ async function setFiles(files, fromDB = false) {
             imageHtml += await dragDropListImage({
                 attr: `data-id="${image.FILE_ID}"`,
                 fromDB: fromDB,
+                remove: btnDel,
                 fileInfo: {
                     baseDir: image.FILE_PATH,
                     storedName: image.FILE_FNAME,
@@ -516,7 +524,7 @@ async function setFiles(files, fromDB = false) {
                 storedName: file.FILE_FNAME,
                 originalName: file.FILE_ONAME,
             })),
-            btnDel: true,
+            btnDel: btnDel,
         });
     }
 
@@ -529,7 +537,7 @@ async function setFiles(files, fromDB = false) {
                 storedName: file.FILE_FNAME,
                 originalName: file.FILE_ONAME,
             })),
-            btnDel: true,
+            btnDel: btnDel,
         });
     }
 }
@@ -566,4 +574,119 @@ async function setEmpCard(req, inputer) {
         image: requesterImage,
         title: 'Requester',
     });
+}
+
+/**
+ * @author Sutthipong Tangmongkhoncharoen(24008)
+ * @since 2026-10-16
+ * @description Sets the content
+ * @param {string} t
+ * @returns {void}
+ */
+export function setContent(t) {
+    if (t == 'view') {
+        $('#view-form').removeClass('hidden');
+        $('#create-form').empty();
+        return;
+    }
+    $('#view-form').empty();
+    $('#create-form').removeClass('hidden');
+}
+
+export async function setView() {
+    // ดึงพารามิเตอร์จาก URL
+    const params = getUrlParams();
+    // หากไม่มี NRUNNO ในพารามิเตอร์ แสดงว่าฟอร์มไม่ใช่การ Return
+    if (!params.NRUNNO) throw new Error('NRUNNO is required');
+
+    // แสดงฟอร์มในโหมดดู (view mode)
+    setContent('view');
+
+    // ดึงข้อมูลฟอร์มตามพารามิเตอร์ใน URL
+    const form = getFormByUrlParam();
+
+    // หากฟอร์มเป็นการ Return ให้ดึงข้อมูลฟอร์มเพื่อใช้ในการตั้งค่าฟิลด์ต่าง ๆ
+    const formData = await getFormPriceApprove(form);
+    if (!formData.status) {
+        throw new Error(formData.message);
+    }
+    const data = formData.data;
+    const formDetail = await getFormDetail(form);
+    // แสดง Request no
+    $('#req-form').text(formDetail.FORMNO);
+
+    // ตั้งค่าข้อมูลบัตรพนักงาน (Employee Profile Card) สำหรับผู้ขอและผู้กรอกฟอร์ม
+    await setEmpCard(data.FORM.VREQNO, data.FORM.VINPUTER);
+
+    if (data.NMODE === 0) {
+        // สร้าง instance ของ PdfViewer และ FileUpload สำหรับไฟล์ Price Comparison
+        new PdfViewer({
+            containerId: 'price-compare-container',
+            iframeId: 'price-compare-iframe',
+        });
+    }
+    // ตั้งค่าไฟล์ที่เกี่ยวข้องกับฟอร์ม
+    setFiles({ files: data.FILES });
+
+    // ตรวจสอบว่ามีฟอร์มที่ลิงก์มาหรือไม่ (LINK_FORM)
+    if (data.LINK_FORM) {
+        // แสดงตารางการเปรียบเทียบหลังจากตั้งค่าฟิลด์อัตโนมัติ
+        await tableComparison.init({
+            formNo: data.LINK_FORM.CNO,
+            function: data.NMODE,
+        });
+    }
+
+    // ตรวจสอบและตั้งค่าข้อมูล Vendor
+    const vendor = await checkVendor(data.VVENDOR);
+    if (!vendor.status) {
+        throw new Error('Vendor Name not found');
+    }
+    data.VVENDOR_NAME = vendor.data.VNDNAM;
+
+    // เพิ่มข้อมูลตาม fieald
+    Object.keys(data).forEach((key) => {
+        if (typeof data?.[key] === 'object' || Array.isArray(data?.[key]))
+            return;
+        const element = $(`#${key}`);
+        if (element.length) {
+            element.text(data?.[key] === 0 ? '0' : data?.[key] || '-');
+        }
+    });
+
+    $('#committee').html(
+        data.COMMITTEE
+            ? `<span class="badge badge-soft badge-info">${data.COMMITTEE.VCODE}: ${data.COMMITTEE.VNAME}</span>`
+            : '-',
+    );
+    $('#group').html(
+        data.GROUP
+            ? `<span class="badge badge-soft badge-info">${data.GROUP.VNAME}</span>`
+            : '-',
+    );
+    $('#EFT_MONTH').text(
+        data.DEFT_MONTH_END && data.DEFT_MONTH_START
+            ? `${formatDate(data.DEFT_MONTH_START, "MMM'YY")} - ${formatDate(data.DEFT_MONTH_END, "MMM'YY")}`
+            : '-',
+    );
+    if (data.VEFT_TYPE_OTHER) {
+        $('#VEFT_TYPE_OTHER').removeClass('hidden');
+    }
+    await initReason();
+
+    // ตั้งค่าฟิลด์เหตุผล (Reasons) ด้วยข้อมูลจากฟอร์มที่ดึงมา
+    getReasons('reason-cost-down-container').setValue(data.REASONS, true);
+    getReasons('reason-cost-up-container').setValue(data.REASONS, true);
+    getReasons('reason-basic-condition-container').setValue(data.REASONS, true);
+    getReasons('reason-estimate-price-container').setValue(data.REASONS, true);
+
+    // สร้างปุ่ม สำหรับ request form
+    $('#btnRequest').html(
+        await webflowSubmit({
+            approve: true,
+            reject: true,
+            return: true,
+            form: form,
+        }),
+    );
 }

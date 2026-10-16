@@ -18,6 +18,8 @@ import {
     setReturn,
     setAutoField,
     getComparisonForm,
+    setView,
+    setContent,
 } from './function';
 import { setForm } from './function';
 import { modalSelectPriceComparison } from './modal/select-price-comparison';
@@ -48,6 +50,7 @@ $(async function () {
                 if (!(await checkPlanner(empno))) {
                     throw new Error('User not found');
                 }
+                setContent('create');
                 // ตั้งค่าโหมดฟอร์มเริ่มต้นตามค่าที่ส่งเข้ามา
                 setAutoField({ mode: 1, trigger: false });
 
@@ -67,6 +70,7 @@ $(async function () {
                     await setView();
                     return;
                 }
+                setContent('create');
 
                 break;
             case 3:
@@ -165,7 +169,7 @@ $(document).on('change', '#VVENDOR', async function () {
         }
         const vendor = $(this).val();
         const checked = await checkVendor(vendor);
-        if (!checked) {
+        if (!checked.status) {
             $(this).val('');
             return;
         }
