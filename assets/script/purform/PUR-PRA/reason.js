@@ -105,6 +105,7 @@ export class ChangeReason {
             checkbox.dispatchEvent(new Event('change', { bubbles: true }));
             if (disabled) {
                 checkbox.disabled = true;
+                checkbox.hidden = true;
             }
         });
 
@@ -228,7 +229,7 @@ export class ChangeReason {
             }
         }
         let html = `
-            <div class="rounded-lg border border-slate-200 px-3 py-2">
+            <div class="rounded-lg border border-slate-200 px-3 py-2 ${parent ? 'bg-base-100' : ''}">
 
                 <label class="flex items-start gap-2 cursor-pointer!">
                     <input
@@ -238,7 +239,7 @@ export class ChangeReason {
                         class="${inputClass} handle-children ${parent ? 'hidden' : ''}"
                         data-children="${childrenName}"
                         data-container-id="${this.containerId}"
-                        data-parent="${parentId}"
+                        ${parentId ? `data-parent="${parentId}"` : ''}
                         ${parent ? 'disabled' : ''}
                     >
 
@@ -280,6 +281,42 @@ export class ChangeReason {
             if (target.matches(`[data-container-id="${this.containerId}"]`)) {
                 try {
                     const checked = target.checked;
+                    // ฟังก์ชันสำหรับตั้งค่าสีพื้นหลังขององค์ประกอบตามสถานะ checked.
+                    function setBgColor(element, checked) {
+                        const labelElement = element.parentElement;
+                        const divElement = labelElement.parentElement;
+                        const parent = element.getAttribute('data-parent');
+                        if (checked) {
+                            divElement.style.backgroundColor =
+                                'oklch(0.97 0.01 256.9)';
+                            if (parent) {
+                                divElement.style.backgroundColor =
+                                    'oklch(0.92 0.03 261.1)';
+                                divElement.style.color =
+                                    'oklch(0.48 0.26 267.11)';
+                            }
+                        } else {
+                            divElement.style.backgroundColor = 'white';
+                            if (parent) {
+                                divElement.style.backgroundColor =
+                                    'var(--color-base-100)';
+                                divElement.style.color = 'black';
+                            }
+                        }
+                    }
+                    // ตั้งค่าสีพื้นหลังขององค์ประกอบเป้าหมายตามสถานะ checked.
+                    // หากเป็น radio button ให้จัดการกลุ่มของ radio buttons ทั้งหมดที่มีชื่อเดียวกัน.
+                    if (target.getAttribute('type') === 'radio') {
+                        const radioGroupName = target.getAttribute('name');
+                        const radioGroup = document.querySelectorAll(
+                            `[name="${radioGroupName}"]`,
+                        );
+                        radioGroup.forEach((r) => {
+                            setBgColor(r, r.checked);
+                        });
+                    } else {
+                        setBgColor(target, checked);
+                    }
                     const textElement = (child) =>
                         (child.tagName === 'INPUT' &&
                             child.type !== 'radio' &&
@@ -326,6 +363,7 @@ export class ChangeReason {
                                     checkboxElement(child)
                                 ) {
                                     child.checked = false;
+                                    setBgColor(child, false);
                                 }
                                 if (this.#isFromTo(child)) {
                                     child
@@ -342,6 +380,7 @@ export class ChangeReason {
                             }
                             if (radioElement(child) || checkboxElement(child)) {
                                 child.checked = false;
+                                setBgColor(child, false);
                             }
                             if (this.#isFromTo(child)) {
                                 child
