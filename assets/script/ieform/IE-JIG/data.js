@@ -28,6 +28,7 @@ export async function loadJigDeleteForm(key, allowMissing = false) {
 }
 export const jigNgTagPdfUrl = key => `${getConfig().APP_API}/iedoc/jig/forms/${formPath(key)}/ng-tag.pdf`;
 export const insertJigForm = data => fetchUtils({ url: `${getConfig().APP_API}/iedoc/jig`, method: 'POST', data });
+export const saveJigRecheck = (key, data) => fetchUtils({ url: `${getConfig().APP_API}/iedoc/jig/forms/${formPath(key)}/recheck`, method: 'PATCH', data });
 export const saveJigForm = (key, data) => fetchUtils({ url: `${getConfig().APP_API}/iedoc/jig/forms/${formPath(key)}`, method: 'PATCH', data });
 export const configureJigRequesterFlow = (key, picCode) => fetchUtils({
     url: `${getConfig().APP_API}/iedoc/jig/forms/${formPath(key)}/requester-flow`,
@@ -60,18 +61,19 @@ export async function deleteJigFile(key, fileSeq, actor) {
     if (!result.status) throw new Error(result.message || 'ลบไฟล์ไม่สำเร็จ');
     return result;
 }
-export async function uploadJigFiles(key, actor, files) {
+export async function uploadJigFiles(key, actor, files, group = 'REFERENCE') {
     if (!files.length) return [];
     const data = new FormData();
     Object.entries(key).forEach(([name, value]) => data.append(name, value));
     data.append('EMPNO', actor);
+    data.append('FILE_GROUP', group);
     files.forEach(file => data.append('files[]', file));
     const result = await fetchUtils({ url: `${localBase()}ieform/IE-JIG/jig/uploadfile`, method: 'POST', data });
     if (!result.status) throw new Error(result.message || 'อัปโหลดไฟล์ไม่สำเร็จ');
     return result.files;
 }
 export function jigFileUrl(key, file, { download = false } = {}) {
-    const query = new URLSearchParams({ ...key, file: String(file.FILE_PATH).split(/[\\/]/).pop() });
+    const query = new URLSearchParams({ ...key, group: file.FILE_GROUP || 'REFERENCE', file: String(file.FILE_PATH).split(/[\\/]/).pop() });
     const action = download ? 'download_file' : 'preview_file';
     return `${localBase()}ieform/IE-JIG/jig/${action}?${query}`;
 }

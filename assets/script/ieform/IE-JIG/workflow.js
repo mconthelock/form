@@ -55,6 +55,8 @@ export function initializeJigWorkflow(editor) {
     const remarkInput = document.querySelector('#jig-remark');
     const returnButton = document.querySelector('#jig-return');
     const requesterStep = context.cstepno === '--';
+    const recheckStep = context.cstepno === '19';
+    const hideReturn = requesterStep || context.cstepno === '07';
     let updateRevision = () => {};
     let inspection = false;
     remarkInput.addEventListener('input', () => {
@@ -140,6 +142,9 @@ export function initializeJigWorkflow(editor) {
                 key = keyOf(pending.key);
                 const existing = await loadJigForm(key, true);
                 if (existing) {
+                    // The JIG snapshot may be saved even if the separate WEBFORM transaction failed.
+                    const picCode = form.elements.namedItem('location').selectedOptions[0]?.dataset.piccode?.trim();
+                    checkResponse(await configureJigRequesterFlow(key, picCode));
                     await completeCreate(existing);
                     return true;
                 }
@@ -187,10 +192,12 @@ export function initializeJigWorkflow(editor) {
             );
             await completeCreate(saved);
         } else {
+            const uploaded = await uploadJigFiles(key, actor, files.incoming);
             payload.FILES = [
-                ...payload.FILES,
-                ...(await uploadJigFiles(key, actor, files.incoming)),
-            ].map((file, i) => ({ ...file, FILE_SEQ: i + 1 }));
+                ...files.stored.map(({ FILE_SEQ, FILE_NAME, FILE_PATH, FILE_TYPE, FILE_SIZE }) => ({ FILE_SEQ, FILE_NAME, FILE_PATH, FILE_TYPE, FILE_SIZE, FILE_GROUP: 'REFERENCE' })),
+                ...uploaded.map((file, i) => ({ ...file, FILE_SEQ: files.nextSeq + i, FILE_GROUP: 'REFERENCE' })),
+            ];
+            editor.filesSaved(payload.FILES);
             if (!inspection || !requesterStep) delete payload.REV;
             delete payload.START_USE_DATE;
             checkResponse(
@@ -216,7 +223,7 @@ export function initializeJigWorkflow(editor) {
             inspection = String(snapshot.FORM_TYPE).trim() === 'INSPECTION';
             updateRevision = trackInspectionRevision(form, rows, snapshot);
             document.querySelector('.flow').innerHTML = flow.html || '';
-            returnButton.hidden = requesterStep;
+            returnButton.hidden = hideReturn;
             approval.hidden = context.mode !== '2';
             loaded = true;
         } catch (error) {
@@ -239,11 +246,12 @@ export function initializeJigWorkflow(editor) {
         };
         return withBusy(async (lock) => {
             if (context.mode !== '2' || approved) return false;
-            if (action === 'return' && requesterStep) return false;
+            if (action === 'return' && hideReturn) return false;
             if (action === 'approve' && requesterStep) {
                 await editor.ready;
                 if (!(await editor.validate())) return false;
             }
+            if (action === 'approve' && recheckStep && !(await editor.recheck.validate())) return false;
             const remark = remarkInput.value.trim();
             if (action === 'return' && !remark) {
                 remarkInput.setAttribute('aria-invalid', 'true');
@@ -277,6 +285,10 @@ export function initializeJigWorkflow(editor) {
                     : undefined;
                 checkResponse(await configureJigRequesterFlow(key, picCode));
                 checkResponse(await startJigForm(key, actor));
+            }
+            if (action === 'approve' && recheckStep) {
+                lock();
+                if (!(await editor.recheck.persist())) return false;
             }
             lock();
             checkResponse(
