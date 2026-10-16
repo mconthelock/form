@@ -71,7 +71,6 @@ $(async function () {
                     return;
                 }
                 setContent('create');
-
                 break;
             case 3:
                 await setView();

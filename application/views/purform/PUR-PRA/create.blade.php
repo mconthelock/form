@@ -34,34 +34,20 @@
                     <h3 class="font-semibold text-slate-700">ข้อมูลเอกสาร</h3>
                 </header>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 p-4">
-                    <fieldset class="fieldset col-span-2 hidden" id="request-form-no">
-                        <legend class="fieldset-legend">Request form no.</legend>
-                        <label class="input w-full">
-                            <i class="fi fi-rr-barcode-read text-slate-400"></i>
-                            <input type="text" name="form_no" value="PA-2026-0000XX" readonly class="grow">
-                            <span class="badge badge-ghost badge-sm">Auto Running</span>
-                        </label>
-                    </fieldset>
-                    {{-- <fieldset class="fieldset">
-                        <legend class="fieldset-legend">Request for quotation no.</legend>
-                        <label class="input w-full border-error/40 bg-error/5">
-                            <i class="fi fi-rr-document text-slate-400"></i>
-                            <input type="text" name="quotation_no" value="PUR-QTA-26-00XXXXX" readonly class="grow">
-                        </label>
-                    </fieldset> --}}
-
-                    {{-- Inputer --}}
-                    <fieldset class="fieldset" id="inputer-fieldset">
-                        <legend class="fieldset-legend req">Inputer</legend>
-                        <input type="text" name="INPUTBY" id="INPUTBY" class="input w-full bg-amber-50 req"
-                            placeholder="กรอกรหัสพนักงาน" data-message="Please enter inputer" readonly>
-                    </fieldset>
-                    {{-- Requester --}}
-                    <fieldset class="fieldset" id="requester-fieldset">
-                        <legend class="fieldset-legend req">Requester</legend>
-                        <input type="text" name="REQBY" id="REQBY" class="input w-full req"
-                            placeholder="กรอกรหัสพนักงาน" data-message="Please enter requester">
-                    </fieldset>
+                    <div class="col-span-2" id="form-detail">
+                        {{-- Inputer --}}
+                        <fieldset class="fieldset" id="inputer-fieldset">
+                            <legend class="fieldset-legend req">Inputer</legend>
+                            <input type="text" name="INPUTBY" id="INPUTBY" class="input w-full bg-amber-50 req"
+                                placeholder="กรอกรหัสพนักงาน" data-message="Please enter inputer" readonly>
+                        </fieldset>
+                        {{-- Requester --}}
+                        <fieldset class="fieldset" id="requester-fieldset">
+                            <legend class="fieldset-legend req">Requester</legend>
+                            <input type="text" name="REQBY" id="REQBY" class="input w-full req"
+                                placeholder="กรอกรหัสพนักงาน" data-message="Please enter requester">
+                        </fieldset>
+                    </div>
                     {{-- Refer Price compare no. --}}
                     <fieldset class="hidden fieldset" id="price-compare-input-fieldset">
                         <legend class="fieldset-legend req">Refer Price compare no.</legend>
@@ -167,7 +153,7 @@
                         <div class="join">
                             <label class="input w-full join-item">
                                 <input type="text" name="NTOTAL_PRES" id="NTOTAL_PRES" class="grow text-right req"
-                                    placeholder="0" readonly>
+                                    placeholder="0" data-message="Please enter Present Total Price" readonly>
                                 {{-- <span class="badge badge-ghost badge-sm">Col. AA</span> --}}
                             </label>
                             <div class="flex items-center px-2 text-white bg-neutral join-item">KB/YEAR</div>
@@ -178,7 +164,7 @@
                         <div class="join">
                             <label class="input w-full join-item">
                                 <input type="text" name="NTOTAL_NEW" id="NTOTAL_NEW" class="grow text-right req"
-                                    placeholder="0" readonly>
+                                    placeholder="0" data-message="Please enter New Total Price" readonly>
                                 {{-- <span class="badge badge-ghost badge-sm">Col. BB</span> --}}
                             </label>
                             <div class="flex items-center px-2 text-white bg-neutral join-item">KB/YEAR</div>
@@ -189,7 +175,7 @@
                         <div class="join">
                             <label class="input w-full join-item">
                                 <input type="text" name="NTOTAL_COST" id="NTOTAL_COST" class="grow text-right req"
-                                    placeholder="0" readonly>
+                                    placeholder="0" data-message="Please enter Cost Down (-) / Cost Up (+) Amount" readonly>
                                 {{-- <span class="badge badge-ghost badge-sm">Col. CC</span> --}}
                             </label>
                             <div class="flex items-center px-2 text-white bg-neutral join-item">KB/YEAR</div>
@@ -200,7 +186,7 @@
                         <div class="join">
                             <label class="input w-full join-item">
                                 <input type="text" name="NTOTAL_RATIO" id="NTOTAL_RATIO" class="grow text-right req"
-                                    placeholder="0" readonly>
+                                    placeholder="0" data-message="Please enter Cost Down (-) / Cost Up (+) Ratio %" readonly>
                                 {{-- <span class="badge badge-ghost badge-sm">Col. DD</span> --}}
                             </label>
                             <div class="flex items-center px-2 text-white bg-neutral join-item">%</div>
@@ -217,19 +203,19 @@
                             <label
                                 class="label cursor-pointer justify-start gap-2 rounded-lg border border-slate-200 px-4 py-2 has-checked:border-primary has-checked:bg-primary/5">
                                 <input type="radio" name="VEFT_TYPE" value="PO issue basis"
-                                    class="radio radio-sm radio-primary">
+                                    class="radio radio-sm radio-primary req" data-message="Please select effective type">
                                 <span class="label-text">PO issue basis</span>
                             </label>
                             <label
                                 class="label cursor-pointer justify-start gap-2 rounded-lg border border-slate-200 px-4 py-2 has-checked:border-primary has-checked:bg-primary/5">
                                 <input type="radio" name="VEFT_TYPE" value="Delivery basis"
-                                    class="radio radio-sm radio-primary">
+                                    class="radio radio-sm radio-primary req" data-message="Please select effective type">
                                 <span class="label-text">Delivery basis</span>
                             </label>
                             <label
                                 class="label cursor-pointer justify-start gap-2 rounded-lg border border-slate-200 px-4 py-2 has-checked:border-primary has-checked:bg-primary/5">
                                 <input type="radio" name="VEFT_TYPE" value="Others"
-                                    class="radio radio-sm radio-primary">
+                                    class="radio radio-sm radio-primary req" data-message="Please select effective type">
                                 <span class="label-text">Others</span>
                             </label>
                             <textarea name="VEFT_TYPE_OTHER" id="VEFT_TYPE_OTHER" class="textarea w-full hidden"

@@ -18,25 +18,7 @@
                     <h3 class="font-semibold text-slate-700">ข้อมูลเอกสาร</h3>
                 </header>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 p-4">
-                    <div class="grid grid-cols-[max-content_auto_auto] gap-5 col-span-2 w-full">
-                        <fieldset class="fieldset" id="request-form-no">
-                            <legend class="fieldset-legend">Request form no.</legend>
-                            <span class="text-xl font-bold" id="req-form"></span>
-                        </fieldset>
-                        {{-- Inputer --}}
-                        <fieldset class="fieldset ml-10" id="inputer-fieldset">
-                        </fieldset>
-                        {{-- Requester --}}
-                        <fieldset class="fieldset" id="requester-fieldset">
-                        </fieldset>
-                    </div>
-                    <div class="col-span-2">
-                        <legend class="text-xs font-bold mb-5">Refer Price compare</legend>
-                        <table id="table-comparison" class="table table-zebra table-sm">
-                        </table>
-                        <div id="price-compare-container">
-                        </div>
-                    </div>
+                    <div class="col-span-2" id="form-detail"></div>
                 </div>
             </section>
 
@@ -205,7 +187,7 @@
                     {{-- Detail contents --}}
                     <fieldset class="fieldset lg:col-span-2">
                         <legend class="fieldset-legend font-semibold">Detail contents</legend>
-                        <textarea name="VDETAIL" id="VDETAIL" class="textarea w-full" rows="4" readonly></textarea>
+                        <textarea name="VDETAIL" id="VDETAIL" class="textarea w-full" rows="4" readonly>-</textarea>
                         <div id="drop-image"></div>
                     </fieldset>
                 </div>
@@ -220,11 +202,11 @@
                 <div class="flex flex-col gap-4 p-4">
                     <fieldset class="fieldset">
                         <legend class="fieldset-legend">Quotation price (E-Stamp)</legend>
-                        <div id="drop-quotation">-</div>
+                        <div id="drop-quotation"></div>
                     </fieldset>
                     <fieldset class="fieldset">
                         <legend class="fieldset-legend">Additional document</legend>
-                        <div id="drop-additional">-</div>
+                        <div id="drop-additional"></div>
                     </fieldset>
                 </div>
             </section>

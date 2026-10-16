@@ -69,28 +69,30 @@
     </div>
 </div>
 
-<template>
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 p-4">
-        <div class="grid grid-cols-[max-content_auto_auto] gap-5 col-span-2 w-full">
-            <fieldset class="fieldset" id="request-form-no">
-                <legend class="fieldset-legend">Request form no.</legend>
-                <span class="text-xl font-bold" id="req-form"></span>
-            </fieldset>
-            {{-- Inputer --}}
-            <fieldset class="fieldset ml-10" id="inputer-fieldset">
-            </fieldset>
-            {{-- Requester --}}
-            <fieldset class="fieldset" id="requester-fieldset">
-            </fieldset>
-        </div>
-        <fieldset class="fieldset col-span-2">
-            <legend class="fieldset-legend">Refer Price compare</legend>
-            <table id="table-comparison" class="table table-zebra table-sm">
-            </table>
-            <div id="price-compare-container">
-            </div>
+<template id="template-form-detail">
+    <div class="grid grid-cols-[max-content_auto_auto] gap-5 col-span-2 w-full" >
+        <fieldset class="fieldset" id="request-form-no">
+            <legend class="fieldset-legend">Request form no.</legend>
+            <span class="text-xl font-bold" id="req-form"></span>
+        </fieldset>
+        {{-- Inputer --}}
+        <fieldset class="fieldset ml-10" id="inputer-fieldset">
+        </fieldset>
+        {{-- Requester --}}
+        <fieldset class="fieldset" id="requester-fieldset">
         </fieldset>
     </div>
+    <div id="comparison-container"></div>
+</template>
+
+<template id="template-price-comparison">
+    <fieldset class="fieldset col-span-2">
+        <legend class="fieldset-legend">Refer Price compare</legend>
+        <table id="table-comparison" class="table table-zebra table-sm">
+        </table>
+        <div id="price-compare-container">
+        </div>
+    </fieldset>
 </template>
 
 @endsection

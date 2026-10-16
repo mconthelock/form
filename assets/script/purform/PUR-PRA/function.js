@@ -292,6 +292,10 @@ export async function setForm({
             name: 'FILE_QUOTATION',
             format: 'pdf',
             text: 'Drag & Drop PDF files here or click to select',
+            class: 'req',
+            attributes: {
+                'data-message': 'Please select a Quotation PDF file',
+            },
         }),
     );
     $('#drop-additional').append(
@@ -300,6 +304,10 @@ export async function setForm({
             name: 'FILE_ADDITIONAL',
             format: 'pdf',
             text: 'Drag & Drop PDF files here or click to select',
+            class: 'req',
+            attributes: {
+                'data-message': 'Please select an Additional PDF file',
+            },
         }),
     );
 }
@@ -369,7 +377,14 @@ export async function setReturn() {
         throw new Error(formData.message);
     }
     const data = formData.data;
+    const formDetail = await getFormDetail(form);
+
     // ตั้งค่าข้อมูลบัตรพนักงาน (Employee Profile Card) สำหรับผู้ขอและผู้กรอกฟอร์ม
+    const tempForm = $('#template-form-detail').html();
+    $('#form-detail').html(tempForm);
+
+    // แสดง Request no
+    $('#req-form').text(formDetail.FORMNO);
     await setEmpCard(data.FORM.VREQNO, data.FORM.VINPUTER);
 
     // ตรวจสอบว่าประเภทการเปลี่ยนแปลงเป็น "Others" หรือไม่ หากใช่ ให้แสดงช่องกรอกข้อมูลเพิ่มเติม (VEFT_TYPE_OTHER)
@@ -475,7 +490,12 @@ export async function setReturn() {
  * ];
  * await setFiles({ files, fromDB: true, btnDel: true });
  */
-async function setFiles({ files, fromDB = false, btnDel = false } = {}) {
+async function setFiles({
+    files,
+    fromDB = false,
+    btnDel = false,
+    view = false,
+} = {}) {
     const comparisonFiles = files.filter(
         (file) => file.TYPE.VCODE === 'PURPRA_PCP',
     );
@@ -526,6 +546,10 @@ async function setFiles({ files, fromDB = false, btnDel = false } = {}) {
             })),
             btnDel: btnDel,
         });
+    } else {
+        if (view) {
+            $('#drop-quotation').text(`-`);
+        }
     }
 
     if (additionals.length > 0) {
@@ -539,6 +563,10 @@ async function setFiles({ files, fromDB = false, btnDel = false } = {}) {
             })),
             btnDel: btnDel,
         });
+    } else {
+        if (view) {
+            $('#drop-additional').text(`-`);
+        }
     }
 }
 
@@ -593,6 +621,12 @@ export function setContent(t) {
     $('#create-form').removeClass('hidden');
 }
 
+/**
+ * @author Sutthipong Tangmongkhoncharoen(24008)
+ * @since 2026-10-16
+ * @description Sets the view mode for the form based on URL parameters.
+ * @returns {Promise<void>}
+ */
 export async function setView() {
     // ดึงพารามิเตอร์จาก URL
     const params = getUrlParams();
@@ -612,6 +646,12 @@ export async function setView() {
     }
     const data = formData.data;
     const formDetail = await getFormDetail(form);
+    // ตั้งค่าข้อมูลบัตรพนักงาน (Employee Profile Card) สำหรับผู้ขอและผู้กรอกฟอร์ม
+    const tempForm = $('#template-form-detail').html();
+    const tempComp = $('#template-price-comparison').html();
+    $('#form-detail').html(tempForm);
+    $('#comparison-container').append(tempComp);
+
     // แสดง Request no
     $('#req-form').text(formDetail.FORMNO);
 
@@ -626,7 +666,7 @@ export async function setView() {
         });
     }
     // ตั้งค่าไฟล์ที่เกี่ยวข้องกับฟอร์ม
-    setFiles({ files: data.FILES });
+    setFiles({ files: data.FILES, view: true });
 
     // ตรวจสอบว่ามีฟอร์มที่ลิงก์มาหรือไม่ (LINK_FORM)
     if (data.LINK_FORM) {
@@ -685,7 +725,7 @@ export async function setView() {
         await webflowSubmit({
             approve: true,
             reject: true,
-            return: true,
+            returnp: true,
             form: form,
         }),
     );
